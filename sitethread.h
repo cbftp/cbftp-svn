@@ -1,0 +1,44 @@
+#pragma once
+#include <string>
+#include <vector>
+#include <list>
+#include <pthread.h>
+#include <semaphore.h>
+#include "sitemanager.h"
+#include "ftpthread.h"
+#include "siterace.h"
+#include "globalcontext.h"
+#include "ftpthreadcom.h"
+
+extern GlobalContext * global;
+
+class SiteThread {
+  private:
+    std::vector<FTPThread *> conns;
+    std::vector<SiteRace *> races;
+    FTPThreadCom * ftpthreadcom;
+    pthread_t thread;
+    pthread_mutex_t slots;
+    sem_t notifysem;
+    int slots_dn;
+    int slots_up;
+    int available;
+    Site * site;
+    void activate();
+  public:
+    SiteThread(std::string);
+    void addRace(std::string, std::string);
+    void runInstance();
+    Site * getSite();
+    SiteRace * getRace(std::string);
+    bool getDownloadThread(SiteRace *, std::string, FTPThread **);
+    bool getUploadThread(SiteRace *, std::string, FTPThread **);
+    bool getReadyThread(SiteRace *, FTPThread **);
+    bool getReadyThread(SiteRace *, std::string, FTPThread **, bool, bool);
+    bool downloadSlotAvailable();
+    bool uploadSlotAvailable();
+    void transferComplete(bool isdownload);
+    bool getSlot(bool);
+};
+
+void * run(void *);
