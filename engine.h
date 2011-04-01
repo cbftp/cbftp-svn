@@ -4,12 +4,15 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include "scoreboard.h"
+#include "scoreboardelement.h"
 #include "globalcontext.h"
 #include "sitethread.h"
 #include "filelist.h"
 #include "sitethreadmanager.h"
 #include "transfermanager.h"
 #include "race.h"
+
+#define SPREAD 0
 
 extern GlobalContext * global;
 
@@ -25,7 +28,7 @@ class Engine {
     void refreshScoreBoard();
     void issueOptimalTransfers();
     void setSpeedScale();
-    int calculateScore(File *, SiteThread *, SiteRace *, SiteThread *, SiteRace *, int);
+    int calculateScore(File *, SiteThread *, SiteRace *, SiteThread *, SiteRace *, int, bool);
   public:
     Engine();
     void newRace(std::string, std::string, std::list<std::string>);

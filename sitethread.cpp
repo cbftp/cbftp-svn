@@ -7,6 +7,7 @@ SiteThread::SiteThread(std::string sitename) {
   site = global->getSiteManager()->getSite(sitename);
   slots_dn = site->getMaxDown();
   slots_up = site->getMaxUp();
+  ptrack = new PotentialTracker(slots_dn);
   available = 0;
   int logins = site->getMaxLogins();
   for (int i = 0; i < logins; i++) {
@@ -185,4 +186,17 @@ bool SiteThread::getSlot(bool isdownload) {
   available--;
   pthread_mutex_unlock(&slots);
   return true;
+}
+
+void SiteThread::pushPotential(int score, std::string file, SiteThread * dst) {
+  int threads = getSite()->getMaxDown();
+  ptrack->getFront()->update(dst, threads, dst->getSite()->getMaxDown(), score, file);
+}
+
+bool SiteThread::potentialCheck(int score) {
+  int max = ptrack->getMaxAvailablePotential();
+  if (score > max/2) {
+    return true;
+  }
+  return false;
 }

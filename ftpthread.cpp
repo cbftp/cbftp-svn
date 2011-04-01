@@ -565,10 +565,11 @@ void FTPThread::runInstance() {
 
 void FTPThread::runTickInstance() {
   srand(time(NULL));
-  usleep (rand() % SLEEPDELAY);
+  int sleep_period = SLEEPDELAY * 1000;
+  usleep (rand() % sleep_period);
   int val;
   while(1) {
-    usleep(SLEEPDELAY * 1000);
+    usleep(sleep_period);
     postTick();
   }
 }

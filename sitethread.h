@@ -9,11 +9,14 @@
 #include "siterace.h"
 #include "globalcontext.h"
 #include "ftpthreadcom.h"
+#include "scoreboardelement.h"
+#include "potentialtracker.h"
 
 extern GlobalContext * global;
 
 class SiteThread {
   private:
+    PotentialTracker * ptrack;
     std::vector<FTPThread *> conns;
     std::vector<SiteRace *> races;
     FTPThreadCom * ftpthreadcom;
@@ -27,8 +30,8 @@ class SiteThread {
     void activate();
   public:
     SiteThread(std::string);
-    void addRace(std::string, std::string);
     void runInstance();
+    void addRace(std::string, std::string);
     Site * getSite();
     SiteRace * getRace(std::string);
     bool getDownloadThread(SiteRace *, std::string, FTPThread **);
@@ -39,6 +42,8 @@ class SiteThread {
     bool uploadSlotAvailable();
     void transferComplete(bool isdownload);
     bool getSlot(bool);
+    void pushPotential(int, std::string, SiteThread *);
+    bool potentialCheck(int);
 };
 
 void * run(void *);

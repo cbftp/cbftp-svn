@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
-#include "sitethread.h"
+
+class SiteThread;
+class SiteRace;
 
 class ScoreBoardElement {
   private:

@@ -47,13 +47,11 @@ void Engine::refreshScoreBoard() {
   scoreboard->wipe();
   for (std::list<Race *>::iterator itr = races.begin(); itr != races.end(); itr++) {
     for (std::list<SiteThread *>::iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
-      if (!(*its)->downloadSlotAvailable()) continue;
       SiteRace * srs = (*its)->getRace((*itr)->getName());
       FileList * fls = srs->getFileList();
       if (!fls->isFilled()) continue;
       for (std::list<SiteThread *>::iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
         if (*itd == *its) continue;
-        if (!(*itd)->uploadSlotAvailable()) continue;
         SiteRace * srd = (*itd)->getRace((*itr)->getName());
         FileList * fld = srd->getFileList();
         int avgspeed = (*its)->getSite()->getAverageSpeed((*itd)->getSite()->getName());
@@ -64,7 +62,7 @@ void Engine::refreshScoreBoard() {
           File * f = (*itf).second;
           std::string name = f->getName();
           if (fld->contains(name) || f->isDirectory() || f->getSize() == 0) continue;
-          scoreboard->add(name, calculateScore(f, *its, srs, *itd, srd, avgspeed), *its, srs, *itd, srd);
+          scoreboard->add(name, calculateScore(f, *its, srs, *itd, srd, avgspeed, (SPREAD ? false : true)), *its, srs, *itd, srd);
         }
         fls->unlockFileList();
       }
@@ -76,17 +74,28 @@ void Engine::refreshScoreBoard() {
 void Engine::issueOptimalTransfers() {
   std::vector<ScoreBoardElement *>::iterator it;
   for (it = scoreboard->begin(); it != scoreboard->end(); it++) {
-    global->getTransferManager()->newTransfer(*it);
+    //potentiality handling
+    (*it)->getSource()->pushPotential((*it)->getScore(), (*it)->fileName(), (*it)->getDestination());
+    if (!(*it)->getSource()->downloadSlotAvailable()) continue;
+    if (!(*it)->getDestination()->uploadSlotAvailable()) continue;
+    if ((*it)->getSource()->potentialCheck((*it)->getScore())) {
+      global->getTransferManager()->newTransfer(*it);
+    }
   }
 }
 
-int Engine::calculateScore(File * f, SiteThread * sts, SiteRace * srs, SiteThread * std, SiteRace * srd, int avgspeed) {
+int Engine::calculateScore(File * f, SiteThread * sts, SiteRace * srs, SiteThread * std, SiteRace * srd, int avgspeed, bool racemode) {
   int points = 0;
   points += f->getSize() / (srs->getFileList()->getMaxFileSize() / 2000);
   points = (points * (avgspeed / 100)) / (maxavgspeed / 100);
-  // give points for owning a low percentage of the race on the target
-  points += ((100 - srd->getFileList()->getOwnedPercentage()) * 30);
-  // sfv and nfo files have top priority
+  if (racemode) {
+    // give points for owning a low percentage of the race on the target
+    points += ((100 - srd->getFileList()->getOwnedPercentage()) * 30);
+    // sfv and nfo files have top priority
+  }
+  else {
+    // add points for low progress
+  }
   if (f->getExtension().compare("sfv") == 0) return 10000;
   else if (f->getExtension().compare("nfo") == 0) return 10000;
   return points;

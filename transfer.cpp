@@ -87,8 +87,8 @@ void Transfer::run() {
 }
 
 void Transfer::cancelTransfer() {
-  src->setReady();
   sts->transferComplete(true);
-  dst->setReady();
   std->transferComplete(false);
+  src->setReady();
+  dst->setReady();
 }
