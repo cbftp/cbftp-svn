@@ -36,7 +36,6 @@ class FTPThread {
     sem_t commandsem;
     sem_t transfersem;
     sem_t tick;
-    sem_t * list_refresh;
     std::list<CommandQueueElement *> commandqueue;
     pthread_mutex_t commandq_mutex;
     bool controlssl;

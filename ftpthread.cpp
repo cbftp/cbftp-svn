@@ -19,7 +19,6 @@ FTPThread::FTPThread(int id, Site * site, FTPThreadCom * ftpthreadcom) {
   sem_init(&transfersem, 0, 0);
   sem_init(&tick, 0, 0);
   pthread_mutex_init(&commandq_mutex, NULL);
-  list_refresh = global->getListRefreshSem();
   pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
   pthread_create(&tickthread, global->getPthreadAttr(), runTick, (void *) this);
 }

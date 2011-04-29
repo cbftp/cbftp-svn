@@ -94,7 +94,7 @@ int Engine::calculateScore(File * f, Race * itr, SiteThread * sts, SiteRace * sr
   }
   else {
     // give points for low progress on the target
-    points += ((srd->getFileList()->getSizeUploaded() * 3000) / itr->getMaxSiteProgress()); // gives max 3000 points
+    points += 3000 - ((srd->getFileList()->getSizeUploaded() * 3000) / itr->getMaxSiteProgress()); // gives max 3000 points
   }
   // sfv and nfo files have top priority
   if (f->getExtension().compare("sfv") == 0) return 10000;
