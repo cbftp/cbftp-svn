@@ -13,7 +13,7 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
   Race * race = new Race(release, section);
   for (std::list<std::string>::iterator it = sites.begin(); it != sites.end(); it++) {
     SiteThread * st = global->getSiteThreadManager()->getSiteThread(*it);
-    st->addRace(section, release);
+    st->addRace(race, section, release);
     race->addSite(st);
   }
   races.push_back(race);
@@ -62,7 +62,7 @@ void Engine::refreshScoreBoard() {
           File * f = (*itf).second;
           std::string name = f->getName();
           if (fld->contains(name) || f->isDirectory() || f->getSize() == 0) continue;
-          scoreboard->add(name, calculateScore(f, *its, srs, *itd, srd, avgspeed, (SPREAD ? false : true)), *its, srs, *itd, srd);
+          scoreboard->add(name, calculateScore(f, *itr, *its, srs, *itd, srd, avgspeed, (SPREAD ? false : true)), *its, srs, *itd, srd);
         }
         fls->unlockFileList();
       }
@@ -84,18 +84,19 @@ void Engine::issueOptimalTransfers() {
   }
 }
 
-int Engine::calculateScore(File * f, SiteThread * sts, SiteRace * srs, SiteThread * std, SiteRace * srd, int avgspeed, bool racemode) {
+int Engine::calculateScore(File * f, Race * itr, SiteThread * sts, SiteRace * srs, SiteThread * std, SiteRace * srd, int avgspeed, bool racemode) {
   int points = 0;
-  points += f->getSize() / (srs->getFileList()->getMaxFileSize() / 2000);
+  points += f->getSize() / (srs->getFileList()->getMaxFileSize() / 2000); // gives max 2000 points
   points = (points * (avgspeed / 100)) / (maxavgspeed / 100);
   if (racemode) {
     // give points for owning a low percentage of the race on the target
-    points += ((100 - srd->getFileList()->getOwnedPercentage()) * 30);
-    // sfv and nfo files have top priority
+    points += ((100 - srd->getFileList()->getOwnedPercentage()) * 30); // gives max 3000 points
   }
   else {
-    // add points for low progress
+    // give points for low progress on the target
+    points += ((srd->getFileList()->getSizeUploaded() * 3000) / itr->getMaxSiteProgress()); // gives max 3000 points
   }
+  // sfv and nfo files have top priority
   if (f->getExtension().compare("sfv") == 0) return 10000;
   else if (f->getExtension().compare("nfo") == 0) return 10000;
   return points;

@@ -17,6 +17,7 @@ bool FileList::updateFile(std::string start, int touch) {
   File * updatefile;
   pthread_mutex_lock(&filelist_mutex);
   if ((updatefile = getFileIntern(name)) != NULL) {
+    if (updatefile->getSize() == 0 && file->getSize() > 0) uploadedfiles++;
     updatefile->setSize(file->getSize());
     if (file->getSize() > maxfilesize) maxfilesize = file->getSize();
     if (updatefile->getOwner().compare(file->getOwner()) != 0) {
@@ -43,6 +44,7 @@ bool FileList::updateFile(std::string start, int touch) {
     return true;
   }
   files[name] = file;
+  if (file->getSize() > 0) uploadedfiles++;
   if (file->getSize() > maxfilesize) maxfilesize = file->getSize();
   if (file->getOwner().compare(username) == 0) {
     editOwnedFileCount(true);
@@ -127,6 +129,14 @@ int FileList::getSize() {
   return ret;
 }
 
+int FileList::getSizeUploaded() {
+  int ret;
+  pthread_mutex_lock(&filelist_mutex);
+  ret = uploadedfiles;
+  pthread_mutex_unlock(&filelist_mutex);
+  return ret;
+}
+
 int FileList::getOwnedPercentage() {
   int ret;
   pthread_mutex_lock(&owned_mutex);
@@ -157,6 +167,7 @@ void FileList::cleanSweep(int touch) {
         editOwnedFileCount(false);
       }
       files.erase(it);
+      if (f->getSize() > 0) uploadedfiles--;
       if (f->getSize() == maxfilesize) {
         maxfilesize = 0;
         std::map<std::string, File *>::iterator it2;
@@ -177,6 +188,8 @@ void FileList::flush() {
     delete (*it).second;
   }
   files.clear();
+  maxfilesize = 0;
+  uploadedfiles = 0;  
   pthread_mutex_lock(&owned_mutex);
   owned = 0;
   ownpercentage = 0;

@@ -265,9 +265,7 @@ int FTPThread::updateFileList(FileList * filelist) {
     delete reply;
     std::cout << "[" << site->getName() << " " << id << "] File list retrieved." << std::endl;
     if (!filelist->isFilled()) filelist->setFilled();
-    int tmpi;
-    sem_getvalue(list_refresh, &tmpi);
-    if (tmpi == 0) sem_post(list_refresh);
+    ftpthreadcom->fileListUpdated(id);
   }
 }
 

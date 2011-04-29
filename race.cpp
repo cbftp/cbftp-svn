@@ -20,3 +20,11 @@ std::list<SiteThread *>::iterator Race::end() {
 std::string Race::getName() {
   return name;
 }
+
+void Race::updateSiteProgress(int in) {
+  if (maxfilelistsize < in) maxfilelistsize = in;
+}
+
+int Race::getMaxSiteProgress() {
+  return maxfilelistsize;
+}

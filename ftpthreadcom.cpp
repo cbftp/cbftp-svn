@@ -51,6 +51,10 @@ void FTPThreadCom::connectionClosedUnexpectedly(int id) {
   putCommand(id, 6);
 }
 
+void FTPThreadCom::fileListUpdated(int id) {
+  putCommand(id, 10);
+}
+
 void FTPThreadCom::putCommand(int id, int cid) {
   putCommand(id, cid, 0, NULL);
 }

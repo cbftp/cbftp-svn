@@ -12,7 +12,7 @@
 #include "transfermanager.h"
 #include "race.h"
 
-#define SPREAD 0
+#define SPREAD 1
 
 extern GlobalContext * global;
 
@@ -28,7 +28,7 @@ class Engine {
     void refreshScoreBoard();
     void issueOptimalTransfers();
     void setSpeedScale();
-    int calculateScore(File *, SiteThread *, SiteRace *, SiteThread *, SiteRace *, int, bool);
+    int calculateScore(File *, Race *, SiteThread *, SiteRace *, SiteThread *, SiteRace *, int, bool);
   public:
     Engine();
     void newRace(std::string, std::string, std::list<std::string>);

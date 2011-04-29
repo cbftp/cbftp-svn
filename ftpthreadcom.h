@@ -22,6 +22,7 @@ class FTPThreadCom {
     void loginPasswordDenied(int, int, char *);
     void loginKillFailed(int, int, char *);
     void connectionClosedUnexpectedly(int);
+    void fileListUpdated(int);
     void putCommand(int, int);
     void putCommand(int, int, int);
     void putCommand(int, int, int, char *);

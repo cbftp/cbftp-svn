@@ -23,6 +23,7 @@ class SiteThread {
     pthread_t thread;
     pthread_mutex_t slots;
     sem_t notifysem;
+    sem_t * list_refresh;
     int slots_dn;
     int slots_up;
     int available;
@@ -31,7 +32,7 @@ class SiteThread {
   public:
     SiteThread(std::string);
     void runInstance();
-    void addRace(std::string, std::string);
+    void addRace(Race *, std::string, std::string);
     Site * getSite();
     SiteRace * getRace(std::string);
     bool getDownloadThread(SiteRace *, std::string, FTPThread **);

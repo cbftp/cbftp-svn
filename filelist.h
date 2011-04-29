@@ -17,6 +17,7 @@ class FileList {
     int owned;
     int ownpercentage;
     int maxfilesize;
+    int uploadedfiles;
     File * getFileIntern(std::string);
     void editOwnedFileCount(bool);
   public:
@@ -32,6 +33,7 @@ class FileList {
     std::map<std::string, File *>::iterator end();
     bool contains(std::string);
     int getSize();
+    int getSizeUploaded();
     int getOwnedPercentage();
     long int getMaxFileSize();
     void lockFileList();

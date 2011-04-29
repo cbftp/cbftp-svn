@@ -1,9 +1,11 @@
 #pragma once
 #include <string>
 #include "filelist.h"
+#include "race.h"
 
 class SiteRace {
   private:
+    Race * race;
     std::string section;
     std::string release;
     std::string path;
@@ -12,6 +14,7 @@ class SiteRace {
     std::string getSection();
     std::string getRelease();
     std::string getPath();
-    SiteRace(std::string, std::string, std::string);
+    SiteRace(Race *, std::string, std::string, std::string);
     FileList * getFileList();
+    void updateNumFilesUploaded();
 };

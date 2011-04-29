@@ -10,6 +10,7 @@ SiteThread::SiteThread(std::string sitename) {
   ptrack = new PotentialTracker(slots_dn);
   available = 0;
   int logins = site->getMaxLogins();
+  list_refresh = global->getListRefreshSem();
   for (int i = 0; i < logins; i++) {
     conns.push_back(new FTPThread(i, site, ftpthreadcom));
   }
@@ -20,8 +21,8 @@ void SiteThread::activate() {
   for (int i = 0; i < conns.size(); i++) conns[i]->loginAsync();
 }
 
-void SiteThread::addRace(std::string section, std::string release) {
-  SiteRace * race = new SiteRace(site->getSectionPath(section), release, site->getUser());
+void SiteThread::addRace(Race * enginerace, std::string section, std::string release) {
+  SiteRace * race = new SiteRace(enginerace, site->getSectionPath(section), release, site->getUser());
   races.push_back(race);
   activate();
 }
@@ -93,6 +94,13 @@ void SiteThread::runInstance() {
       case 7: // login kill failed
         delete (char *)command->getArg3();
         conns[id]->doQUITAsync();
+        break;
+      case 10: // file list refreshed
+        //SiteRace * sr = (SiteRace *)command->getArg3();
+        race->updateNumFilesUploaded();
+        int tmpi;
+        sem_getvalue(list_refresh, &tmpi);
+        if (tmpi == 0) sem_post(list_refresh);
         break;
     }
     ftpthreadcom->commandProcessed();

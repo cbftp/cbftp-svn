@@ -1,6 +1,7 @@
 #include "siterace.h"
 
-SiteRace::SiteRace(std::string section, std::string release, std::string username) {
+SiteRace::SiteRace(Race * race, std::string section, std::string release, std::string username) {
+  this->race = race;
   this->section = section;
   this->release = release;
   path = section.append("/").append(release);
@@ -21,4 +22,8 @@ std::string SiteRace::getPath() {
 
 FileList * SiteRace::getFileList() {
   return filelist;
+}
+
+void SiteRace::updateNumFilesUploaded() {
+  race->updateSiteProgress(filelist->getSizeUploaded());
 }
