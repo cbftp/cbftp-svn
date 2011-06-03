@@ -13,16 +13,24 @@ void GlobalContext::init() {
   sem_init(&list_refresh, 0, 0);
 }
 
-void GlobalContext::linkManagers(SiteManager * sm, SiteThreadManager * stm, TransferManager * tm) {
+void GlobalContext::linkManagers(UserInterface * ui, SiteManager * sm, SiteThreadManager * stm, TransferManager * tm) {
+  this->ui = ui;
   this->sm = sm;
   this->stm = stm;
   this->tm = tm;
+}
+
+void GlobalContext::linkEngine(Engine * e) {
+  this->e = e;
 }
 
 SSL_CTX * GlobalContext::getSSLCTX() {
   return ssl_ctx;
 }
 
+UserInterface * GlobalContext::getUI() {
+  return ui;
+}
 
 SiteManager * GlobalContext::getSiteManager() {
   return sm;

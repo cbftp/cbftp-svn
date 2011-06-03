@@ -1,31 +1,42 @@
 #include "main.h"
 
-int main(int argc, char * argv[]) {
+Main::Main() {
   forever = true;
-  if (argc < 4) {
+  global = new GlobalContext();
+  ui = new UserInterface();
+  sm = new SiteManager();
+  stm = new SiteThreadManager();
+  tm = new TransferManager();
+  global->linkManagers(ui, sm, stm, tm);
+  Engine * e = new Engine();
+  global->linkEngine(e);
+  if (!ui->init()) exit(1);
+  while(forever) {
+    sleep(1);
+  }
+}
+
+int main(int argc, char * argv[]) {
+  /*if (argc < 4) {
     std::cout << "Usage:\n./clusterbomb <release> <section> <site1> <site2> [site3 [site4 [ ... ] ] ]" << std::endl;
     exit(0);
   }
-  global = new GlobalContext();
-  global->linkManagers(new SiteManager(), new SiteThreadManager(), new TransferManager());
-  Engine * e = new Engine();
   std::list<std::string> sites;
   for (int i = 3; i < argc; i++) {
     sites.push_back(argv[i]);
   }
-  e->newRace(argv[1], argv[2], sites);
+  e->newRace(argv[1], argv[2], sites);*/
   
   signal(SIGABRT, &sighandler);
   signal(SIGTERM, &sighandler);
   signal(SIGINT, &sighandler);
-  while(forever) {
-    sleep(1);
-  }
+  new Main();
 }
 
 void sighandler(int sig) {
   std::cout << "Saving data to file..." << std::endl;
   global->getSiteManager()->writeDataFile();
   std::cout << "Done, exiting..." << std::endl << std::flush;
+  global->getUI()->kill();
   forever = false;
 }

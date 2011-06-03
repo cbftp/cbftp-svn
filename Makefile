@@ -1,20 +1,16 @@
-all:
-	wc -l *.h *.cpp;
-	g++ -O0 -m32 -lssl -lpthread -o clusterbomb main.cpp engine.cpp \
-        ftpthread.cpp sitethread.cpp filelist.cpp scoreboard.cpp \
-        sitemanager.cpp site.cpp file.cpp scoreboardelement.cpp race.cpp \
-        siterace.cpp globalcontext.cpp sitethreadmanager.cpp \
-        commandqueueelement.cpp transfer.cpp transfermanager.cpp \
-        ftpthreadcom.cpp potentialelement.cpp potentialtracker.cpp \
-        potentiallistelement.cpp
-64:
-	wc -l *.h *.cpp;
-	g++ -O0 -m64 -lssl -lpthread -o clusterbomb main.cpp engine.cpp \
-        ftpthread.cpp sitethread.cpp filelist.cpp scoreboard.cpp \
-        sitemanager.cpp site.cpp file.cpp scoreboardelement.cpp race.cpp \
-        siterace.cpp globalcontext.cpp sitethreadmanager.cpp \
-        commandqueueelement.cpp transfer.cpp transfermanager.cpp \
-        ftpthreadcom.cpp potentialelement.cpp potentialtracker.cpp \
-        potentiallistelement.cpp
+CCFLAGS=-m32
+LINKFLAGS=-O0 -lncurses -lpthread -lssl
+OBJECTS = commandqueueelement.o ftpthreadcom.o potentialelement.o scoreboardelement.o \
+	siterace.o transfer.o engine.o ftpthread.o potentiallistelement.o scoreboard.o \
+	sitethreadmanager.o ui.o filelist.o globalcontext.o potentialtracker.o \
+	sitemanager.o sitethread.o file.o main.o race.o site.o transfermanager.o
+
+all: $(OBJECTS)
+	g++ -o clusterbomb $(LINKFLAGS) $(OBJECTS)
+	
+main.o:
+commandqueueelement.o:
+ftpthreadcom.o: commandqueueelement.h
+
 clean:
 	rm clusterbomb

@@ -6,10 +6,22 @@
 #include "sitemanager.h"
 #include "globalcontext.h"
 #include "engine.h"
+#include "ui.h"
 
 GlobalContext * global;
 
-bool forever;
-int main(int, char **);
+class Main {
+  private:
+    Engine * e;
+    UserInterface * ui;
+    SiteManager * sm;
+    SiteThreadManager * stm;
+    TransferManager * tm;
+  public:
+    Main();
+};
 
+int main(int, char **);
 void sighandler(int);
+
+bool forever;
