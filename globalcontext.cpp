@@ -59,3 +59,22 @@ int GlobalContext::ctimeMSec() {
   return count;
 }
 
+std::string GlobalContext::getSVNRevision() {
+  return svnrev;
+}
+
+std::string GlobalContext::getCompileTime() {
+  return compiletime;
+}
+
+void GlobalContext::signal_catch() {
+  signal(SIGABRT, &sighandler);
+  signal(SIGTERM, &sighandler);
+  signal(SIGINT, &sighandler);
+}
+
+void GlobalContext::signal_ignore() {
+  signal(SIGABRT, &sighandler_ignore);
+  signal(SIGTERM, &sighandler_ignore);
+  signal(SIGINT, &sighandler_ignore);
+}

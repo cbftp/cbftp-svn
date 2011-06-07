@@ -1,6 +1,5 @@
 #include <iostream>
 #include <list>
-#include <signal.h>
 #include "sitethreadmanager.h"
 #include "transfermanager.h"
 #include "sitemanager.h"
@@ -22,6 +21,10 @@ class Main {
 };
 
 int main(int, char **);
-void sighandler(int);
 
 bool forever;
+
+void sighandler(int);
+void sighandler_ignore(int);
+
+

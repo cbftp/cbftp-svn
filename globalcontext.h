@@ -1,8 +1,11 @@
 #pragma once
+#include <signal.h>
+#include <iostream>
 #include <openssl/ssl.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <sys/timeb.h>
+#include <string>
 
 class Engine;
 class UserInterface;
@@ -20,6 +23,8 @@ class GlobalContext {
     SiteThreadManager * stm;
     TransferManager * tm;
     sem_t list_refresh;
+    std::string compiletime;
+    std::string svnrev;
   public:
     void init();
     GlobalContext();
@@ -34,4 +39,12 @@ class GlobalContext {
     pthread_attr_t * getPthreadAttr();
     sem_t * getListRefreshSem();
     int ctimeMSec();
+    std::string getSVNRevision();
+    std::string getCompileTime();
+    void signal_catch();
+    void signal_ignore();
+
 };
+
+extern void sighandler(int);
+extern void sighandler_ignore(int);

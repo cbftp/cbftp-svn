@@ -27,9 +27,7 @@ int main(int argc, char * argv[]) {
   }
   e->newRace(argv[1], argv[2], sites);*/
   
-  signal(SIGABRT, &sighandler);
-  signal(SIGTERM, &sighandler);
-  signal(SIGINT, &sighandler);
+  global->signal_catch();
   new Main();
 }
 
@@ -40,3 +38,7 @@ void sighandler(int sig) {
   global->getUI()->kill();
   forever = false;
 }
+
+void sighandler_ignore(int sig) {
+}
+
