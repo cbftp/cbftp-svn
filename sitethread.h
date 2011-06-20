@@ -29,6 +29,7 @@ class SiteThread {
     int available;
     Site * site;
     void activate();
+    static void * run(void *);
   public:
     SiteThread(std::string);
     void runInstance();
@@ -46,5 +47,3 @@ class SiteThread {
     void pushPotential(int, std::string, SiteThread *);
     bool potentialCheck(int);
 };
-
-void * run(void *);

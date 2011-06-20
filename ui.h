@@ -5,22 +5,37 @@
 #include <ncurses.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <map>
 
 #include "globalcontext.h"
+#include "sitemanager.h"
+#include "site.h"
 
 extern GlobalContext * global;
 
 class UserInterface {
   private:
     WINDOW * loginscreen;
+    WINDOW * mainscreen;
     WINDOW * front;
+    std::map<std::string, WINDOW *> sitestatusscreen;
     int col;
     int row;
+    bool initret;
+    pthread_t thread;
+    sem_t action;
+    sem_t initdone;
     void refreshFront();
-    void showLoginScreen();
+    void loginScreen();
+    void mainScreen();
+    void siteStatus(Site *);
     std::string getStringField(WINDOW *, int, int, std::string, int, int, bool);
+    void initIntern();
+    static void * run(void *);
   public:
     UserInterface();
+    void runInstance();
     bool init();
     void kill();
 };
+

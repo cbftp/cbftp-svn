@@ -67,6 +67,19 @@ std::string GlobalContext::getCompileTime() {
   return compiletime;
 }
 
+int GlobalContext::str2Int(std::string str) {
+  int num;
+  std::istringstream ss(str);
+  ss >> num;
+  return num;
+}
+
+std::string GlobalContext::int2Str(int i) {
+  std::stringstream out;
+  out << i;
+  return out.str();
+}
+
 void GlobalContext::signal_catch() {
   signal(SIGABRT, &sighandler);
   signal(SIGTERM, &sighandler);

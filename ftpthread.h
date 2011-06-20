@@ -54,6 +54,8 @@ class FTPThread {
     int readall(char **, bool);
     int readallsub(char **, char *, bool);
     bool pendingread();
+    static void * run(void *);
+    static void * runTick(void *);
   public:
     void loginAsync();
     bool loginT();
@@ -98,8 +100,6 @@ class FTPThread {
     void disconnectAsync();
     void disconnectT();
     std::list<CommandQueueElement *> * getCommandQueue();
-    static void * run(void *);
-    static void * runTick(void *);
     void runInstance();
     void runTickInstance();
     void postTick();

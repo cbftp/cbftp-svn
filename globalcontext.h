@@ -6,6 +6,7 @@
 #include <semaphore.h>
 #include <sys/timeb.h>
 #include <string>
+#include <sstream>
 
 class Engine;
 class UserInterface;
@@ -41,6 +42,8 @@ class GlobalContext {
     int ctimeMSec();
     std::string getSVNRevision();
     std::string getCompileTime();
+    int str2Int(std::string);
+    std::string int2Str(int);
     void signal_catch();
     void signal_ignore();
 

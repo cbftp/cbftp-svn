@@ -36,13 +36,13 @@ SiteManager::SiteManager() {
       if (!value.compare("true")) site->setBrokenPASV(true);
     }
     else if (!setting.compare("logins")) {
-      site->setMaxLogins(strToInt(value));
+      site->setMaxLogins(global->str2Int(value));
     }
     else if (!setting.compare("maxdn")) {
-      site->setMaxDn(strToInt(value));
+      site->setMaxDn(global->str2Int(value));
     }
     else if (!setting.compare("maxup")) {
-      site->setMaxUp(strToInt(value));
+      site->setMaxUp(global->str2Int(value));
     }
     else if (!setting.compare("section")) {
       int split = value.find('$');
@@ -53,7 +53,7 @@ SiteManager::SiteManager() {
     else if (!setting.compare("avgspeed")) {
       int split = value.find('$');
       std::string sitename = value.substr(0, split);
-      int avgspeed = strToInt(value.substr(split + 1));
+      int avgspeed = global->str2Int(value.substr(split + 1));
       site->setAverageSpeed(sitename, avgspeed);
     }
   }
@@ -88,15 +88,20 @@ void SiteManager::writeDataFile() {
   }
 }
 
+int SiteManager::getNumSites() {
+  return sites.size();
+}
+
 Site * SiteManager::getSite(std::string name) {
   std::map<std::string, Site *>::iterator it = sites.find(name);
   if (it == sites.end()) return NULL;
   else return (*it).second;
 }
 
-int SiteManager::strToInt(std::string str) {
-  int num;
-  std::istringstream ss(str);
-  ss >> num;
-  return num;
+std::map<std::string, Site *>::iterator SiteManager::getSitesIteratorBegin() {
+  return sites.begin();
+}
+
+std::map<std::string, Site *>::iterator SiteManager::getSitesIteratorEnd() {
+  return sites.end();
 }

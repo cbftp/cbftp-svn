@@ -26,7 +26,7 @@ int main(int argc, char * argv[]) {
     sites.push_back(argv[i]);
   }
   e->newRace(argv[1], argv[2], sites);*/
-  
+
   global->signal_catch();
   new Main();
 }

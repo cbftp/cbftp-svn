@@ -27,7 +27,7 @@ void SiteThread::addRace(Race * enginerace, std::string section, std::string rel
   activate();
 }
 
-void * run(void * arg) {
+void * SiteThread::run(void * arg) {
   ((SiteThread *) arg)->runInstance();
 }
 

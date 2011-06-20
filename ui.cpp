@@ -1,18 +1,30 @@
 #include "ui.h"
 
 UserInterface::UserInterface() {
+  sem_init(&action, 0, 0);
+  sem_init(&initdone, 0, 0);
+  loginscreen = NULL;
+  mainscreen = NULL;
+  pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
 }
 
 bool UserInterface::init() {
+  initret = true;
+  sem_post(&action);
+  sem_wait(&initdone);
+  return initret;
+}
+
+void UserInterface::initIntern() {
   initscr();
   getmaxyx(stdscr, row, col);
   if (row < 24 || col < 80) {
     kill();
     printf("Error: terminal too small. 80x24 required. (Current %dx%d)\n", col, row);
-    return false;
+    initret = false;
   }
-  showLoginScreen();
-  return true;
+  sem_post(&initdone);
+  loginScreen();
 }
 
 void UserInterface::kill() {
@@ -23,7 +35,7 @@ void UserInterface::refreshFront() {
   wrefresh(front);
 }
 
-void UserInterface::showLoginScreen() {
+void UserInterface::loginScreen() {
   loginscreen = newwin(row, col, 0, 0);
   mvwhline(loginscreen, row-4, col-29, 0, 29);
   mvwvline(loginscreen, row-4, col-29, 0, 4);
@@ -40,7 +52,38 @@ void UserInterface::showLoginScreen() {
   mvwprintw(loginscreen, row-2, 1, " |  T                         -\\  \\     /  /-");
   mvwprintw(loginscreen, row-1, 1, "/ \\[_]..........................\\  \\   /  /");
   front = loginscreen;
-  std::string key = getStringField(loginscreen, row-2, col-27, "", 26, 32, true);
+  refreshFront();
+  std::string key = getStringField(loginscreen, row-2, col-27, "", 25, 32, true);
+  // insert decryption stuff here
+  mainScreen();
+}
+
+void UserInterface::mainScreen() {
+  if (mainscreen == NULL) {
+    mainscreen = newwin(row, col, 0, 0);
+    mvwprintw(mainscreen, 1, 1, "-=== MAIN SCREEN ===-");
+    mvwprintw(mainscreen, 3, 1, std::string("Sites added: " + global->int2Str(global->getSiteManager()->getNumSites())).c_str());
+    int x = 1;
+    int y = 5;
+    for (std::map<std::string, Site *>::iterator it = global->getSiteManager()->getSitesIteratorBegin(); it != global->getSiteManager()->getSitesIteratorEnd(); it++) {
+      mvwprintw(mainscreen, y, x++, it->first.c_str());
+    }
+  }
+  front = mainscreen;
+  refreshFront();
+}
+
+void UserInterface::siteStatus(Site * site) {
+  WINDOW * window;
+  std::map<std::string, WINDOW *>::iterator it = sitestatusscreen.find(site->getName());
+  if (it != sitestatusscreen.end()) {
+    window = it->second;
+  }
+  else {
+    window = sitestatusscreen[site->getName()] = newwin(row, col, 0, 0);
+    mvwprintw(window, row/2-5, 0, std::string("Detailed status for " + site->getName()).c_str());
+  }
+  front = window;
   refreshFront();
 }
 
@@ -91,4 +134,15 @@ std::string UserInterface::getStringField(WINDOW * window, int row, int col, std
       }
     }
   }
+}
+
+void UserInterface::runInstance() {
+  while(1) {
+    sem_wait(&action);
+    initIntern();
+  }
+}
+
+void * UserInterface::run(void * arg) {
+  ((UserInterface *) arg)->runInstance();
 }
