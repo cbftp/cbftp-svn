@@ -3,6 +3,7 @@
 MenuSelectSite::MenuSelectSite(WINDOW * window) {
   this->window = window;
   pointer = 0;
+  maxheight = 0;
 }
 
 void MenuSelectSite::goNext() {
@@ -31,8 +32,13 @@ Site * MenuSelectSite::getSite() {
   return sites[pointer-1].getSite();
 }
 
+void MenuSelectSite::prepareRefill() {
+  sites.clear();
+}
+
 void MenuSelectSite::print() {
   for (int i = 0; i < sites.size(); i++) {
+    while (pointer > sites.size()) pointer--;
     print(i, i+1 == pointer);
   }
 }

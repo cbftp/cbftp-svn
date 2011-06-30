@@ -15,6 +15,7 @@ extern GlobalContext * global;
 class MenuSelectSite {
   private:
     int pointer;
+    int maxheight;
     WINDOW * window;
     std::vector<MenuSelectSiteElement> sites;
   public:
@@ -22,7 +23,9 @@ class MenuSelectSite {
     void goNext();
     void goPrev();
     void add(Site *, int, int);
+    void remove(Site *);
     Site * getSite();
+    void prepareRefill();
     void print();
     void print(int, bool);
 };

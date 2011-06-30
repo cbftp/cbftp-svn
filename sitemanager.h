@@ -18,6 +18,8 @@ class SiteManager {
   public:
     SiteManager();
     int getNumSites();
+    void addSite(Site *);
+    void deleteSite(std::string);
     Site * getSite(std::string);
     std::map<std::string, Site *>::iterator getSitesIteratorBegin();
     std::map<std::string, Site *>::iterator getSitesIteratorEnd();

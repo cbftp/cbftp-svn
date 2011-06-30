@@ -33,8 +33,9 @@ void UserInterface::kill() {
   endwin();
 }
 
-void UserInterface::refreshFront() {
-  wnoutrefresh(front);
+void UserInterface::putTopRefresh(WINDOW * window) {
+  touchwin(window);
+  wnoutrefresh(window);
   doupdate();
 }
 
@@ -54,35 +55,35 @@ void UserInterface::loginScreen() {
   mvwprintw(loginscreen, row-3, 1, " |\\\\                     -   (\\- |  \\ /  |  /)  -");
   mvwprintw(loginscreen, row-2, 1, " |  T                         -\\  \\     /  /-");
   mvwprintw(loginscreen, row-1, 1, "/ \\[_]..........................\\  \\   /  /");
-  front = loginscreen;
-  refreshFront();
+  putTopRefresh(loginscreen);
   std::string key = getStringField(loginscreen, row-2, col-27, "", 25, 32, true);
   // insert decryption stuff here
   mainScreen();
 }
 
 void UserInterface::mainScreen() {
+  if (mainscreen == NULL) {
+    mainscreen = newwin(row, col, 0, 0);
+  }
+  MenuSelectSite mss(mainscreen);
   bool redraw = false;
   while (true) {
-    redraw = false;
-    if (mainscreen == NULL) {
-      mainscreen = newwin(row, col, 0, 0);
-    }
-    MenuSelectSite mss(mainscreen);
+    werase(mainscreen);
     mvwprintw(mainscreen, 1, 1, "-=== MAIN SCREEN ===-");
     mvwprintw(mainscreen, 3, 1, std::string("Sites added: " + global->int2Str(global->getSiteManager()->getNumSites())).c_str());
+    mvwprintw(mainscreen, 5, 1, "Site    Logins  Uploads  Downloads");
     int x = 1;
-    int y = 5;
-    mvwprintw(mainscreen, y, x, "Site    Logins  Uploads  Downloads");
-    y = y+2;
+    int y = 7;
+    mss.prepareRefill();
     for (std::map<std::string, Site *>::iterator it = global->getSiteManager()->getSitesIteratorBegin(); it != global->getSiteManager()->getSitesIteratorEnd(); it++) {
       mss.add(it->second, y++, x);
     }
     mss.print();
-    front = mainscreen;
+    putTopRefresh(mainscreen);
     keypad(mainscreen, TRUE);
+    redraw = false;
+    Site * site;
     while(!redraw) {
-      refreshFront();
       switch(wgetch(mainscreen)) {
         case KEY_UP:
           mss.goPrev();
@@ -92,20 +93,36 @@ void UserInterface::mainScreen() {
           break;
         case 10:
           siteStatusScreen(mss.getSite());
+          putTopRefresh(mainscreen);
           break;
-        case 'e':
+        case 'E':
           if (editSiteScreen(mss.getSite())) redraw = true;
+          else putTopRefresh(mainscreen);
           break;
-        case 'a':
-          // add a new site
-          if (editSiteScreen(mss.getSite())) redraw = true;
+        case 'A':
+          site = new Site("SUNET");
+          if (editSiteScreen(site)) {
+            redraw = true;
+            global->getSiteManager()->addSite(site);
+          }
+          else {
+            delete site;
+            putTopRefresh(mainscreen);
+          }
           break;
-        case 'c':
-          //copy
-          if (editSiteScreen(mss.getSite())) redraw = true;
+        case 'C':
+          site = new Site(*mss.getSite());
+          site->setName(site->getName() + "-c");
+          global->getSiteManager()->addSite(site);
+          redraw = true;
           break;
         case 'D':
-          if (confirmationScreen()) redraw = true;
+          if (confirmationScreen()) {
+            redraw = true;
+            global->getSiteThreadManager()->deleteSiteThread(mss.getSite()->getName());
+            global->getSiteManager()->deleteSite(mss.getSite()->getName());
+          }
+          else putTopRefresh(mainscreen);
           break;
       }
     }
@@ -116,6 +133,7 @@ int UserInterface::editSiteScreen(Site * site) {
   if (editsitescreen == NULL) {
     editsitescreen = newwin(row, col, 0, 0);
   }
+  else wclear(editsitescreen);
   int y = 1;
   int x = 1;
   mvwprintw(editsitescreen, y++, x, std::string("Name: " + site->getName()).c_str());
@@ -126,8 +144,13 @@ int UserInterface::editSiteScreen(Site * site) {
   mvwprintw(editsitescreen, y++, x, std::string("Login slots: " + global->int2Str(site->getMaxLogins())).c_str());
   mvwprintw(editsitescreen, y++, x, std::string("Upload slots: " + global->int2Str(site->getMaxUp())).c_str());
   mvwprintw(editsitescreen, y++, x, std::string("Download slots: " + global->int2Str(site->getMaxDown())).c_str());
-  front = editsitescreen;
-  refreshFront();
+  putTopRefresh(editsitescreen);
+  while(true) {
+    switch(wgetch(editsitescreen)) {
+      case 10:
+        return 1;
+    }
+  }
 }
 
 void UserInterface::siteStatusScreen(Site * site) {
@@ -140,20 +163,16 @@ void UserInterface::siteStatusScreen(Site * site) {
     window = sitestatusscreen[site->getName()] = newwin(row, col, 0, 0);
     mvwprintw(window, 1, 1, std::string("Detailed status for " + site->getName()).c_str());
   }
-  front = window;
-  refreshFront();
+  putTopRefresh(window);
 }
 
 int UserInterface::confirmationScreen() {
-  WINDOW * parent = front;
   if (confirmationscreen == NULL) {
     confirmationscreen = newwin(row, col, 0, 0);
   }
   mvwprintw(confirmationscreen, 1, 1, "CONFIRM YOUR CHOICE");
   mvwprintw(confirmationscreen, 3, 1, "Are you sure (y/N)? ");
-  front = confirmationscreen;
-  refreshFront();
-  front = parent;
+  putTopRefresh(confirmationscreen);
   while(1) {
     switch(wgetch(confirmationscreen)) {
       case 'y':

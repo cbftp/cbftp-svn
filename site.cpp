@@ -2,6 +2,13 @@
 
 Site::Site(std::string name) {
   this->name = name;
+  address = "ftp.sunet.se";
+  port = "21";
+  user = "anonymous";
+  pass = "anonymous";
+  logins = 0;
+  max_up = 0;
+  max_dn = 0;
   pret = false;
   brokenpasv = false;
 }
@@ -99,6 +106,10 @@ std::string Site::getUser() {
 
 std::string Site::getPass() {
   return pass;
+}
+
+void Site::setName(std::string name) {
+  this->name = name;
 }
 
 void Site::setAddress(std::string addr) {

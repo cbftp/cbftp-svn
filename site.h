@@ -38,6 +38,7 @@ class Site {
     std::string getPort();
     std::string getUser();
     std::string getPass();
+    void setName(std::string);
     void setAddress(std::string);
     void setPort(std::string);
     void setUser(std::string);

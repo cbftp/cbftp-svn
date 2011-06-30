@@ -98,6 +98,17 @@ Site * SiteManager::getSite(std::string name) {
   else return (*it).second;
 }
 
+void SiteManager::deleteSite(std::string site) {
+  std::map<std::string, Site *>::iterator it;
+  it = sites.find(site);
+  if (it != sites.end()) sites.erase(it);
+  delete it->second;
+}
+
+void SiteManager::addSite(Site * site) {
+  sites[site->getName()] = site;
+}
+
 std::map<std::string, Site *>::iterator SiteManager::getSitesIteratorBegin() {
   return sites.begin();
 }

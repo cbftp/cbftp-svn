@@ -10,3 +10,11 @@ SiteThread * SiteThreadManager::getSiteThread(std::string name) {
   sitethreads[name] = x;
   return x;
 }
+
+void SiteThreadManager::deleteSiteThread(std::string name) {
+  std::map<std::string, SiteThread *>::iterator it = sitethreads.find(name);
+  if (it != sitethreads.end()) {
+    sitethreads.erase(it);
+    delete it->second;
+  }
+}

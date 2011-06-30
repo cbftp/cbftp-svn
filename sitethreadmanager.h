@@ -8,4 +8,5 @@ class SiteThreadManager {
   public:
     SiteThreadManager();
     SiteThread * getSiteThread(std::string);
+    void deleteSiteThread(std::string);
 };

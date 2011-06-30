@@ -9,6 +9,7 @@ SiteThread::SiteThread(std::string sitename) {
   slots_up = site->getMaxUp();
   ptrack = new PotentialTracker(slots_dn);
   available = 0;
+  loggedin = 0;
   int logins = site->getMaxLogins();
   list_refresh = global->getListRefreshSem();
   for (int i = 0; i < logins; i++) {

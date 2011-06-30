@@ -30,7 +30,7 @@ class UserInterface {
     pthread_t thread;
     sem_t action;
     sem_t initdone;
-    void refreshFront();
+    void putTopRefresh(WINDOW *);
     void loginScreen();
     void mainScreen();
     int editSiteScreen(Site *);
