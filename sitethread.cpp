@@ -48,6 +48,7 @@ void SiteThread::runInstance() {
         conns[id]->setReady();
         pthread_mutex_lock(&slots);
         available++;
+        loggedin++;
         pthread_mutex_unlock(&slots);
         break;
       case 1: // connection failed
@@ -207,4 +208,16 @@ bool SiteThread::potentialCheck(int score) {
     return true;
   }
   return false;
+}
+
+int SiteThread::getCurrLogins() {
+  return loggedin;
+}
+
+int SiteThread::getCurrDown() {
+  return site->getMaxDown() - slots_dn;
+}
+
+int SiteThread::getCurrUp() {
+  return site->getMaxUp() - slots_up;
 }

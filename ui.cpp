@@ -5,6 +5,8 @@ UserInterface::UserInterface() {
   sem_init(&initdone, 0, 0);
   loginscreen = NULL;
   mainscreen = NULL;
+  confirmationscreen = NULL;
+  editsitescreen = NULL;
   pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
 }
 
@@ -59,21 +61,75 @@ void UserInterface::loginScreen() {
 }
 
 void UserInterface::mainScreen() {
-  if (mainscreen == NULL) {
-    mainscreen = newwin(row, col, 0, 0);
+  bool redraw = false;
+  while (true) {
+    redraw = false;
+    if (mainscreen == NULL) {
+      mainscreen = newwin(row, col, 0, 0);
+    }
+    MenuSelectSite mss(mainscreen);
     mvwprintw(mainscreen, 1, 1, "-=== MAIN SCREEN ===-");
     mvwprintw(mainscreen, 3, 1, std::string("Sites added: " + global->int2Str(global->getSiteManager()->getNumSites())).c_str());
     int x = 1;
     int y = 5;
+    mvwprintw(mainscreen, y, x, "Site    Logins  Uploads  Downloads");
+    y = y+2;
     for (std::map<std::string, Site *>::iterator it = global->getSiteManager()->getSitesIteratorBegin(); it != global->getSiteManager()->getSitesIteratorEnd(); it++) {
-      mvwprintw(mainscreen, y, x++, it->first.c_str());
+      mss.add(it->second, y++, x);
+    }
+    mss.print();
+    front = mainscreen;
+    keypad(mainscreen, TRUE);
+    while(!redraw) {
+      refreshFront();
+      switch(wgetch(mainscreen)) {
+        case KEY_UP:
+          mss.goPrev();
+          break;
+        case KEY_DOWN:
+          mss.goNext();
+          break;
+        case 10:
+          siteStatusScreen(mss.getSite());
+          break;
+        case 'e':
+          if (editSiteScreen(mss.getSite())) redraw = true;
+          break;
+        case 'a':
+          // add a new site
+          if (editSiteScreen(mss.getSite())) redraw = true;
+          break;
+        case 'c':
+          //copy
+          if (editSiteScreen(mss.getSite())) redraw = true;
+          break;
+        case 'D':
+          if (confirmationScreen()) redraw = true;
+          break;
+      }
     }
   }
-  front = mainscreen;
+}
+
+int UserInterface::editSiteScreen(Site * site) {
+  if (editsitescreen == NULL) {
+    editsitescreen = newwin(row, col, 0, 0);
+  }
+  int y = 1;
+  int x = 1;
+  mvwprintw(editsitescreen, y++, x, std::string("Name: " + site->getName()).c_str());
+  mvwprintw(editsitescreen, y++, x, std::string("Address: " + site->getAddress()).c_str());
+  mvwprintw(editsitescreen, y++, x, std::string("Port: " + site->getPort()).c_str());
+  mvwprintw(editsitescreen, y++, x, std::string("Username: " + site->getUser()).c_str());
+  mvwprintw(editsitescreen, y++, x, std::string("Password: " + site->getPass()).c_str());
+  mvwprintw(editsitescreen, y++, x, std::string("Login slots: " + global->int2Str(site->getMaxLogins())).c_str());
+  mvwprintw(editsitescreen, y++, x, std::string("Upload slots: " + global->int2Str(site->getMaxUp())).c_str());
+  mvwprintw(editsitescreen, y++, x, std::string("Download slots: " + global->int2Str(site->getMaxDown())).c_str());
+  front = editsitescreen;
   refreshFront();
 }
 
-void UserInterface::siteStatus(Site * site) {
+void UserInterface::siteStatusScreen(Site * site) {
   WINDOW * window;
   std::map<std::string, WINDOW *>::iterator it = sitestatusscreen.find(site->getName());
   if (it != sitestatusscreen.end()) {
@@ -81,10 +137,31 @@ void UserInterface::siteStatus(Site * site) {
   }
   else {
     window = sitestatusscreen[site->getName()] = newwin(row, col, 0, 0);
-    mvwprintw(window, row/2-5, 0, std::string("Detailed status for " + site->getName()).c_str());
+    mvwprintw(window, 1, 1, std::string("Detailed status for " + site->getName()).c_str());
   }
   front = window;
   refreshFront();
+}
+
+int UserInterface::confirmationScreen() {
+  WINDOW * parent = front;
+  if (confirmationscreen == NULL) {
+    confirmationscreen = newwin(row, col, 0, 0);
+  }
+  mvwprintw(confirmationscreen, 1, 1, "CONFIRM YOUR CHOICE");
+  mvwprintw(confirmationscreen, 3, 1, "Are you sure (y/N)? ");
+  front = confirmationscreen;
+  refreshFront();
+  front = parent;
+  while(1) {
+    switch(wgetch(confirmationscreen)) {
+      case 'y':
+        return 1;
+      case 'n':
+      case 10:
+        return 0;
+    }
+  }
 }
 
 std::string UserInterface::getStringField(WINDOW * window, int row, int col, std::string startstr, int fieldlen, int maxlen, bool secret) {

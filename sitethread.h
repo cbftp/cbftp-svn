@@ -27,6 +27,7 @@ class SiteThread {
     int slots_dn;
     int slots_up;
     int available;
+    int loggedin;
     Site * site;
     void activate();
     static void * run(void *);
@@ -42,6 +43,9 @@ class SiteThread {
     bool getReadyThread(SiteRace *, std::string, FTPThread **, bool, bool);
     bool downloadSlotAvailable();
     bool uploadSlotAvailable();
+    int getCurrDown();
+    int getCurrUp();
+    int getCurrLogins();
     void transferComplete(bool isdownload);
     bool getSlot(bool);
     void pushPotential(int, std::string, SiteThread *);
