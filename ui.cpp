@@ -34,7 +34,8 @@ void UserInterface::kill() {
 }
 
 void UserInterface::refreshFront() {
-  wrefresh(front);
+  wnoutrefresh(front);
+  doupdate();
 }
 
 void UserInterface::loginScreen() {

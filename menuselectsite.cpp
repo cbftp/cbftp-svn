@@ -38,6 +38,7 @@ void MenuSelectSite::print() {
 }
 
 void MenuSelectSite::print(int index, bool highlight) {
+  if (index < 0) return;
   std::string line = " ";
   std::string add = "";
   int linelen;
