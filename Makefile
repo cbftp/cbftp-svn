@@ -1,4 +1,4 @@
-CPPFLAGS=-m32 -O3 -DBUILDTIME="\"`date`\"" -DSVNREV="\"`svn info|grep Revision|awk '{ print $$2 }'`\"" -o build/
+CPPFLAGS=-m32 -O3 -DBUILDTIME="\"`date`\"" -DSVNREV="\"`svn info|grep Revision|awk '{ print $$2 }'`\""
 FINALFLAGS=-m32 -O3 -lncurses -lpthread -lssl
 OBJECTS = commandqueueelement.o ftpthreadcom.o potentialelement.o scoreboardelement.o \
 	siterace.o transfer.o engine.o ftpthread.o potentiallistelement.o scoreboard.o \

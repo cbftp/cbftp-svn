@@ -41,20 +41,25 @@ void UserInterface::putTopRefresh(WINDOW * window) {
 
 void UserInterface::loginScreen() {
   loginscreen = newwin(row, col, 0, 0);
+  std::string svnstring = " This is Project Clusterbomb SVN r" + std::string(SVNREV) + " ";
+  std::string compilestring = " Compiled: " + std::string(BUILDTIME) + " ";
+  mvwhline(loginscreen, 0, 0, 0, col);
+  mvwhline(loginscreen, row-1, 0, 0, col-29);
   mvwhline(loginscreen, row-4, col-29, 0, 29);
   mvwvline(loginscreen, row-4, col-29, 0, 4);
   mvwaddch(loginscreen, row-4, col-29, 4194412);
+  mvwaddch(loginscreen, row-1, col-29, 4194410);
   mvwprintw(loginscreen, row-3, col-27, "AES passphrase required:");
-  mvwprintw(loginscreen, 1, 1, std::string("This is Project Clusterbomb SVN r" + std::string(SVNREV)).c_str());
-  mvwprintw(loginscreen, 2, 1, std::string("Compiled: " + std::string(BUILDTIME)).c_str());
-  mvwprintw(loginscreen, row-8, 1, "                              \\         .  ./");
-  mvwprintw(loginscreen, row-7, 1, "                           \\      .:\";'.:..\"   /");
-  mvwprintw(loginscreen, row-6, 1, "                               (M^^.^~~:.'\").");
-  mvwprintw(loginscreen, row-5, 1, "                         -   (/  .    . . \\ \\)  -");
-  mvwprintw(loginscreen, row-4, 1, "  O                         ((| :. ~ ^  :. .|))");
-  mvwprintw(loginscreen, row-3, 1, " |\\\\                     -   (\\- |  \\ /  |  /)  -");
-  mvwprintw(loginscreen, row-2, 1, " |  T                         -\\  \\     /  /-");
-  mvwprintw(loginscreen, row-1, 1, "/ \\[_]..........................\\  \\   /  /");
+  mvwprintw(loginscreen, 0, 3, svnstring.c_str());
+  mvwprintw(loginscreen, 0, col - compilestring.length() - 3, compilestring.c_str());
+  mvwprintw(loginscreen, row-9, 1, "                              \\         .  ./");
+  mvwprintw(loginscreen, row-8, 1, "                           \\      .:\";'.:..\"   /");
+  mvwprintw(loginscreen, row-7, 1, "                               (M^^.^~~:.'\").");
+  mvwprintw(loginscreen, row-6, 1, "                         -   (/  .    . . \\ \\)  -");
+  mvwprintw(loginscreen, row-5, 1, "  O                         ((| :. ~ ^  :. .|))");
+  mvwprintw(loginscreen, row-4, 1, " |\\\\                     -   (\\- |  \\ /  |  /)  -");
+  mvwprintw(loginscreen, row-3, 1, " |  T                         -\\  \\     /  /-");
+  mvwprintw(loginscreen, row-2, 1, "/ \\[_]..........................\\  \\   /  /");
   putTopRefresh(loginscreen);
   std::string key = getStringField(loginscreen, row-2, col-27, "", 25, 32, true);
   // insert decryption stuff here
@@ -86,16 +91,20 @@ void UserInterface::mainScreen() {
     while(!redraw) {
       switch(wgetch(mainscreen)) {
         case KEY_UP:
+          if (mss.getSite() == NULL) break;
           mss.goPrev();
           break;
         case KEY_DOWN:
+          if (mss.getSite() == NULL) break;
           mss.goNext();
           break;
         case 10:
+          if (mss.getSite() == NULL) break;
           siteStatusScreen(mss.getSite());
           putTopRefresh(mainscreen);
           break;
         case 'E':
+          if (mss.getSite() == NULL) break;
           if (editSiteScreen(mss.getSite())) redraw = true;
           else putTopRefresh(mainscreen);
           break;
@@ -111,12 +120,16 @@ void UserInterface::mainScreen() {
           }
           break;
         case 'C':
+          if (mss.getSite() == NULL) break;
           site = new Site(*mss.getSite());
-          site->setName(site->getName() + "-c");
+          int i;
+          for (i = 0; global->getSiteManager()->getSite(site->getName() + "-" + global->int2Str(i)) != NULL; i++);
+          site->setName(site->getName() + "-" + global->int2Str(i));
           global->getSiteManager()->addSite(site);
           redraw = true;
           break;
         case 'D':
+          if (mss.getSite() == NULL) break;
           if (confirmationScreen()) {
             redraw = true;
             global->getSiteThreadManager()->deleteSiteThread(mss.getSite()->getName());

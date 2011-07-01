@@ -29,6 +29,7 @@ void MenuSelectSite::add(Site * site, int row, int col) {
 }
 
 Site * MenuSelectSite::getSite() {
+  if (sites.size() == 0) return NULL;
   return sites[pointer-1].getSite();
 }
 
@@ -49,17 +50,17 @@ void MenuSelectSite::print(int index, bool highlight) {
   std::string add = "";
   int linelen;
   int addlen;
-  line.append(sites[index].getSite()->getName());
+  line.append(sites[index].getSite()->getName() + " ");
   add = global->int2Str(sites[index].getSiteThread()->getCurrLogins()) + "/" + global->int2Str(sites[index].getSite()->getMaxLogins());
   linelen = line.length();
   addlen = add.length();
   for (int i = 0; i < 14 - linelen - addlen; i++) line.append(" ");
-  line.append(add);
+  line.append(add + " ");
   add = global->int2Str(sites[index].getSiteThread()->getCurrUp()) + "/" + global->int2Str(sites[index].getSite()->getMaxUp());
   linelen = line.length();
   addlen = add.length();
   for (int i = 0; i < 23 - linelen - addlen; i++) line.append(" ");
-  line.append(add);
+  line.append(add + " ");
   add = global->int2Str(sites[index].getSiteThread()->getCurrDown()) + "/" + global->int2Str(sites[index].getSite()->getMaxDown());
   linelen = line.length();
   addlen = add.length();
