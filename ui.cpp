@@ -43,23 +43,30 @@ void UserInterface::loginScreen() {
   loginscreen = newwin(row, col, 0, 0);
   std::string svnstring = " This is Project Clusterbomb SVN r" + std::string(SVNREV) + " ";
   std::string compilestring = " Compiled: " + std::string(BUILDTIME) + " ";
-  mvwhline(loginscreen, 0, 0, 0, col);
-  mvwhline(loginscreen, row-1, 0, 0, col-29);
-  mvwhline(loginscreen, row-4, col-29, 0, 29);
-  mvwvline(loginscreen, row-4, col-29, 0, 4);
-  mvwaddch(loginscreen, row-4, col-29, 4194412);
-  mvwaddch(loginscreen, row-1, col-29, 4194410);
+  int boxchar = 0;
+  for(int i = 1; i < row; i++) {
+    for(int j = 0; j < col; j++) {
+      if(i == 1) boxchar = (i+j)%2==0 ? 4194423 : 4194417;
+      else if (i == row-1) {
+        if (j < col-29) boxchar = (i+j)%2==0 ? 4194417 : 4194422;
+        else if (j == col-29) boxchar = 4194410;
+        else continue;
+      }
+      else if ((i == row-2 || i == row-3) && j >= col-29) {
+        if (j == col-29) boxchar = (i+j)%2==0 ? 4194424 : 4194421;
+        else continue;
+      }
+      else if (i == row-4 && j >= col-29) {
+        if (j == col-29) boxchar = (i+j)%2==0 ? 4194412 : 4194414;
+        else boxchar = (i+j)%2==0 ? 4194417 : 4194422;
+      }
+      else boxchar = (i+j)%2==0 ? 4194412 : 4194410;
+      if (boxchar) mvwaddch(loginscreen, i, j, boxchar);
+    }
+  }
   mvwprintw(loginscreen, row-3, col-27, "AES passphrase required:");
   mvwprintw(loginscreen, 0, 3, svnstring.c_str());
   mvwprintw(loginscreen, 0, col - compilestring.length() - 3, compilestring.c_str());
-  mvwprintw(loginscreen, row-9, 1, "                              \\         .  ./");
-  mvwprintw(loginscreen, row-8, 1, "                           \\      .:\";'.:..\"   /");
-  mvwprintw(loginscreen, row-7, 1, "                               (M^^.^~~:.'\").");
-  mvwprintw(loginscreen, row-6, 1, "                         -   (/  .    . . \\ \\)  -");
-  mvwprintw(loginscreen, row-5, 1, "  O                         ((| :. ~ ^  :. .|))");
-  mvwprintw(loginscreen, row-4, 1, " |\\\\                     -   (\\- |  \\ /  |  /)  -");
-  mvwprintw(loginscreen, row-3, 1, " |  T                         -\\  \\     /  /-");
-  mvwprintw(loginscreen, row-2, 1, "/ \\[_]..........................\\  \\   /  /");
   putTopRefresh(loginscreen);
   std::string key = getStringField(loginscreen, row-2, col-27, "", 25, 32, true);
   // insert decryption stuff here
@@ -76,7 +83,8 @@ void UserInterface::mainScreen() {
     werase(mainscreen);
     mvwprintw(mainscreen, 1, 1, "-=== MAIN SCREEN ===-");
     mvwprintw(mainscreen, 3, 1, std::string("Sites added: " + global->int2Str(global->getSiteManager()->getNumSites())).c_str());
-    mvwprintw(mainscreen, 5, 1, "Site    Logins  Uploads  Downloads");
+    if (global->getSiteManager()->getNumSites()) mvwprintw(mainscreen, 5, 1, "Site    Logins  Uploads  Downloads");
+    else mvwprintw(mainscreen, 5, 1, "Press 'A' to add a site");
     int x = 1;
     int y = 7;
     mss.prepareRefill();
