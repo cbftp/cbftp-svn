@@ -13,6 +13,7 @@
 #include "sitethread.h"
 #include "sitethreadmanager.h"
 #include "menuselectsite.h"
+#include "menuselectoption.h"
 
 extern GlobalContext * global;
 
@@ -37,6 +38,7 @@ class UserInterface {
     void siteStatusScreen(Site *);
     int confirmationScreen();
     std::string getStringField(WINDOW *, int, int, std::string, int, int, bool);
+    int getNumArrow(WINDOW *, int, int, int);
     void initIntern();
     static void * run(void *);
   public:

@@ -1,12 +1,8 @@
 #include "sitemanager.h"
 
 SiteManager::SiteManager() {
-  std::ifstream sitedbfile;
+  std::fstream sitedbfile;
   sitedbfile.open(SITEDB);
-  if (!sitedbfile) {
-    std::cerr << "Error: Unable to open sitedb file" << std::endl;
-    exit(1);
-  }
   std::string line;
   while (std::getline(sitedbfile, line)) {
     if (line.length() == 0 ||line[0] == '#') continue;

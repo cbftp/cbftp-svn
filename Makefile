@@ -4,7 +4,8 @@ OBJECTS = commandqueueelement.o ftpthreadcom.o potentialelement.o scoreboardelem
 	siterace.o transfer.o engine.o ftpthread.o potentiallistelement.o scoreboard.o \
 	sitethreadmanager.o ui.o filelist.o globalcontext.o potentialtracker.o \
 	sitemanager.o sitethread.o file.o main.o race.o site.o transfermanager.o \
-	menuselectsite.o menuselectsiteelement.o
+	menuselectsite.o menuselectsiteelement.o menuselectoption.o \
+	menuselectoptionelement.o
 
 all: $(OBJECTS)
 	wc -l *.cpp *.h;

@@ -154,22 +154,66 @@ int UserInterface::editSiteScreen(Site * site) {
   if (editsitescreen == NULL) {
     editsitescreen = newwin(row, col, 0, 0);
   }
-  else wclear(editsitescreen);
-  int y = 1;
-  int x = 1;
-  mvwprintw(editsitescreen, y++, x, std::string("Name: " + site->getName()).c_str());
-  mvwprintw(editsitescreen, y++, x, std::string("Address: " + site->getAddress()).c_str());
-  mvwprintw(editsitescreen, y++, x, std::string("Port: " + site->getPort()).c_str());
-  mvwprintw(editsitescreen, y++, x, std::string("Username: " + site->getUser()).c_str());
-  mvwprintw(editsitescreen, y++, x, std::string("Password: " + site->getPass()).c_str());
-  mvwprintw(editsitescreen, y++, x, std::string("Login slots: " + global->int2Str(site->getMaxLogins())).c_str());
-  mvwprintw(editsitescreen, y++, x, std::string("Upload slots: " + global->int2Str(site->getMaxUp())).c_str());
-  mvwprintw(editsitescreen, y++, x, std::string("Download slots: " + global->int2Str(site->getMaxDown())).c_str());
-  putTopRefresh(editsitescreen);
-  while(true) {
-    switch(wgetch(editsitescreen)) {
-      case 10:
-        return 1;
+  MenuSelectOption mso(editsitescreen);
+  bool redraw = false;
+  while (true) {
+    mso.clear();
+    werase(editsitescreen);
+    int y = 3;
+    int x = 1;
+    mvwprintw(editsitescreen, 1, 1, "-== SITE OPTIONS ==-");
+    mso.addStringField(y++, x, "name", "Name:", site->getName());
+    mso.addStringField(y++, x, "addr", "Address:", site->getAddress());
+    mso.addStringField(y++, x, "port", "Port:", site->getPort());
+    mso.addStringField(y++, x, "user", "Username:", site->getUser());
+    mso.addStringField(y++, x, "pass", "Password:", site->getPass());
+    mso.addIntArrowField(y++, x, "logins", "Login slots:", site->getMaxLogins());
+    mso.addIntArrowField(y++, x, "maxup", "Upload slots:", site->getMaxUp());
+    mso.addIntArrowField(y++, x, "maxdn", "Download slots:", site->getMaxDown());
+    mso.print();
+    keypad(editsitescreen, TRUE);
+    putTopRefresh(editsitescreen);
+    redraw = false;
+    while(!redraw) {
+      switch(wgetch(editsitescreen)) {
+        case KEY_UP:
+          mso.goPrev();
+          break;
+        case KEY_DOWN:
+          mso.goNext();
+          break;
+        case 10:
+          int datacol = mso.getSelectionDataCol();
+          int datarow = mso.getSelectionDataRow();
+          std::string id = mso.getSelection().getIdentifier();
+          if (id.compare("name") == 0) {
+            site->setName(getStringField(editsitescreen, datarow, datacol, mso.getSelection().getContent(), 10, 10, false));
+          }
+          else if (id.compare("addr") == 0) {
+            site->setAddress(getStringField(editsitescreen, datarow, datacol, mso.getSelection().getContent(), 50, 50, false));
+          }
+          else if (id.compare("port") == 0) {
+            site->setPort(getStringField(editsitescreen, datarow, datacol, mso.getSelection().getContent(), 5, 5, false));
+          }
+          else if (id.compare("user") == 0) {
+            site->setUser(getStringField(editsitescreen, datarow, datacol, mso.getSelection().getContent(), 32, 32, false));
+          }
+          else if (id.compare("pass") == 0) {
+            site->setPass(getStringField(editsitescreen, datarow, datacol, mso.getSelection().getContent(), 32, 32, false));
+          }
+          else if (id.compare("logins") == 0) {
+            site->setMaxLogins(getNumArrow(editsitescreen, datarow, datacol, mso.getSelection().getIntContent()));
+          }
+          else if (id.compare("maxup") == 0) {
+            site->setMaxUp(getNumArrow(editsitescreen, datarow, datacol, mso.getSelection().getIntContent()));
+          }
+          else if (id.compare("maxdn") == 0) {
+            site->setMaxDn(getNumArrow(editsitescreen, datarow, datacol, mso.getSelection().getIntContent()));
+          }
+
+          redraw = true;
+          break;
+      }
     }
   }
 }
@@ -252,6 +296,9 @@ std::string UserInterface::getStringField(WINDOW * window, int row, int col, std
       }
     }
   }
+}
+
+int UserInterface::getNumArrow(WINDOW * window, int row, int col, int startval) {
 }
 
 void UserInterface::runInstance() {
