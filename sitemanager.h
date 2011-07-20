@@ -14,14 +14,14 @@ extern GlobalContext * global;
 
 class SiteManager {
   private:
-    std::map<std::string, Site *> sites;
+    std::vector<Site *> sites;
   public:
     SiteManager();
     int getNumSites();
     void addSite(Site *);
-    void deleteSite(std::string);
     Site * getSite(std::string);
-    std::map<std::string, Site *>::iterator getSitesIteratorBegin();
-    std::map<std::string, Site *>::iterator getSitesIteratorEnd();
+    void deleteSite(std::string);
+    std::vector<Site *>::iterator getSitesIteratorBegin();
+    std::vector<Site *>::iterator getSitesIteratorEnd();
     void writeDataFile();
 };

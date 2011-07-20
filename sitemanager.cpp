@@ -12,7 +12,10 @@ SiteManager::SiteManager() {
     std::string setting = line.substr(tok1 + 1, (tok2 - tok1 - 1));
     std::string value = line.substr(tok2 + 1);
     Site * site = getSite(name);
-    if (site == NULL) site = sites[name] = new Site(name);
+    if (site == NULL) {
+      site = new Site(name);
+      addSite(site);
+    }
     if (!setting.compare("addr")) {
       site->setAddress(value);
     }
@@ -60,10 +63,10 @@ void SiteManager::writeDataFile() {
   std::ofstream sitedbfile;
   sitedbfile.open (SITEDB, std::ios::trunc);
   sitedbfile << "# this is an example entry\n#SITENAME$addr=123.345.567.789\n#SITENAME$port=1337\n#SITENAME$user=yourusername\n#SITENAME$pass=yourpassword\n#SITENAME$logins=3\n#SITENAME$maxup=2\n#SITENAME$maxdn=1\n#SITENAME$section=TV-X264$/tv-720p\n#SITENAME$section=GAMES$/games\n" << std::endl;
-  std::map<std::string, Site *>::iterator it;
+  std::vector<Site *>::iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {
-    Site * site = it->second;
-    std::string name = it->second->getName();
+    Site * site = *it;
+    std::string name = site->getName();
     sitedbfile << name << "$addr=" << site->getAddress() << std::endl;
     sitedbfile << name << "$port=" << site->getPort() << std::endl;
     sitedbfile << name << "$user=" << site->getUser() << std::endl;
@@ -88,27 +91,35 @@ int SiteManager::getNumSites() {
   return sites.size();
 }
 
-Site * SiteManager::getSite(std::string name) {
-  std::map<std::string, Site *>::iterator it = sites.find(name);
-  if (it == sites.end()) return NULL;
-  else return (*it).second;
+Site * SiteManager::getSite(std::string site) {
+  std::vector<Site *>::iterator it;
+  for (it = sites.begin(); it != sites.end(); it++) {
+    if ((*it)->getName().compare(site) == 0) {
+      return *it;
+    }
+  }
+  return NULL;
 }
 
 void SiteManager::deleteSite(std::string site) {
-  std::map<std::string, Site *>::iterator it;
-  it = sites.find(site);
-  if (it != sites.end()) sites.erase(it);
-  delete it->second;
+  std::vector<Site *>::iterator it;
+  for (it = sites.begin(); it != sites.end(); it++) {
+    if ((*it)->getName().compare(site) == 0) {
+      delete *it;
+      sites.erase(it);
+      break;
+    }
+  }
 }
 
 void SiteManager::addSite(Site * site) {
-  sites[site->getName()] = site;
+  sites.push_back(site);
 }
 
-std::map<std::string, Site *>::iterator SiteManager::getSitesIteratorBegin() {
+std::vector<Site *>::iterator SiteManager::getSitesIteratorBegin() {
   return sites.begin();
 }
 
-std::map<std::string, Site *>::iterator SiteManager::getSitesIteratorEnd() {
+std::vector<Site *>::iterator SiteManager::getSitesIteratorEnd() {
   return sites.end();
 }

@@ -43,6 +43,7 @@ void MenuSelectOptionElement::setContent(std::string str) {
 }
 
 bool MenuSelectOptionElement::hasStrValue() {
+  return str;
 }
 
 int MenuSelectOptionElement::getCol() {

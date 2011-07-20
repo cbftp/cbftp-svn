@@ -4,7 +4,7 @@
 
 class SiteThreadManager {
   private:
-    std::map<std::string, SiteThread *> sitethreads;
+    std::vector<SiteThread *> sitethreads;
   public:
     SiteThreadManager();
     SiteThread * getSiteThread(std::string);

@@ -4,17 +4,22 @@ SiteThreadManager::SiteThreadManager() {
 }
 
 SiteThread * SiteThreadManager::getSiteThread(std::string name) {
-  std::map<std::string, SiteThread *>::iterator it = sitethreads.find(name);
-  if (it != sitethreads.end()) return it->second;
+  std::vector<SiteThread *>::iterator it;
+  for(it = sitethreads.begin(); it != sitethreads.end(); it++) {
+    if ((*it)->getSite()->getName().compare(name) == 0) return *it;
+  }
   SiteThread * x = new SiteThread(name);
-  sitethreads[name] = x;
+  sitethreads.push_back(x);
   return x;
 }
 
 void SiteThreadManager::deleteSiteThread(std::string name) {
-  std::map<std::string, SiteThread *>::iterator it = sitethreads.find(name);
-  if (it != sitethreads.end()) {
-    sitethreads.erase(it);
-    delete it->second;
+  std::vector<SiteThread *>::iterator it;
+  for(it = sitethreads.begin(); it != sitethreads.end(); it++) {
+    if ((*it)->getSite()->getName().compare(name) == 0) {
+      delete *it;
+      sitethreads.erase(it);
+      break;
+    }
   }
 }

@@ -13,6 +13,21 @@ Site::Site(std::string name) {
   brokenpasv = false;
 }
 
+void Site::copy(Site * site) {
+  this->name = site->name;
+  this->address = site->address;
+  this->port = site->port;
+  this->user = site->user;
+  this->pass = site->pass;
+  this->logins = site->logins;
+  this->max_up = site->max_up;
+  this->max_dn = site->max_dn;
+  this->pret = site->pret;
+  this->brokenpasv = site->brokenpasv;
+  this->sections = site->sections;
+  this->avgspeed = site->avgspeed;
+}
+
 std::map<std::string, std::string>::iterator Site::sectionsBegin() {
   return sections.begin();
 }

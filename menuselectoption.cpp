@@ -23,10 +23,12 @@ void MenuSelectOption::goPrev() {
 }
 
 void MenuSelectOption::addStringField(int row, int col, std::string identifier, std::string label, std::string starttext) {
+  if (options.size() == 0 && pointer == 0) pointer++;
   options.push_back(MenuSelectOptionElement(row, col, identifier, label, starttext));
 }
 
 void MenuSelectOption::addIntArrowField(int row, int col, std::string identifier, std::string label, int startval) {
+  if (options.size() == 0 && pointer == 0) pointer++;
   options.push_back(MenuSelectOptionElement(row, col, identifier, label, startval));
 }
 
