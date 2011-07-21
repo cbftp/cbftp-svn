@@ -49,12 +49,10 @@ int Site::getMaxLogins() {
 }
 
 int Site::getMaxUp() {
-  if (max_up == 0) return logins;
   return max_up;
 }
 
 int Site::getMaxDown() {
-  if (max_dn == 0) return logins;
   return max_dn;
 }
 
@@ -148,11 +146,11 @@ void Site::setMaxLogins(int num) {
 }
 
 void Site::setMaxDn(int num) {
-  max_dn = num;
+  max_dn = num > logins ? logins : num;
 }
 
 void Site::setMaxUp(int num) {
-  max_up = num;
+  max_up = num > logins ? logins : num;
 }
 
 void Site::addSection(std::string name, std::string path) {

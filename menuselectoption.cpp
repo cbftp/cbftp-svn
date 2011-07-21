@@ -27,9 +27,14 @@ void MenuSelectOption::addStringField(int row, int col, std::string identifier, 
   options.push_back(MenuSelectOptionElement(row, col, identifier, label, starttext));
 }
 
-void MenuSelectOption::addIntArrowField(int row, int col, std::string identifier, std::string label, int startval) {
+void MenuSelectOption::addIntArrow(int row, int col, std::string identifier, std::string label, int startval) {
   if (options.size() == 0 && pointer == 0) pointer++;
-  options.push_back(MenuSelectOptionElement(row, col, identifier, label, startval));
+  options.push_back(MenuSelectOptionElement(row, col, identifier, label, startval, false));
+}
+
+void MenuSelectOption::addCheckBox(int row, int col, std::string identifier, std::string label, int startval) {
+  if (options.size() == 0 && pointer == 0) pointer++;
+  options.push_back(MenuSelectOptionElement(row, col, identifier, label, startval, true));
 }
 
 int MenuSelectOption::getSelectionDataCol() {
@@ -58,7 +63,10 @@ void MenuSelectOption::print() {
 void MenuSelectOption::print(int index, bool highlight) {
   if (index < 0) return;
   std::string labelout = options[index].getLabel();
-  std::string dataout = " " + (options[index].hasStrValue() ? options[index].getContent() : global->int2Str(options[index].getIntContent()));
+  std::string dataout = " ";
+  if (options[index].hasStrValue()) dataout += options[index].getContent();
+  else if (!options[index].isCheckBox()) dataout += global->int2Str(options[index].getIntContent());
+  else dataout += std::string("[") + std::string(options[index].getIntContent() ? "X" : " ") + std::string("]");
   if (highlight) wattron(window, A_REVERSE);
   mvwprintw(window, options[index].getRow(), options[index].getCol(), labelout.c_str());
   if (highlight) wattroff(window, A_REVERSE);

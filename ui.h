@@ -39,6 +39,7 @@ class UserInterface {
     int confirmationScreen();
     std::string getStringField(WINDOW *, int, int, std::string, int, int, bool);
     int getNumArrow(WINDOW *, int, int, int);
+    bool getCheckBoxBool(WINDOW *, int, int, int);
     void initIntern();
     static void * run(void *);
   public:

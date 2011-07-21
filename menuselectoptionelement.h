@@ -5,6 +5,7 @@
 class MenuSelectOptionElement {
   private:
     bool str;
+    bool checkbox;
     std::string identifier;
     std::string label;
     std::string strcontent;
@@ -13,7 +14,7 @@ class MenuSelectOptionElement {
     int row;
   public:
     MenuSelectOptionElement(int, int, std::string, std::string, std::string);
-    MenuSelectOptionElement(int, int, std::string, std::string, int);
+    MenuSelectOptionElement(int, int, std::string, std::string, int, bool);
     std::string getIdentifier();
     std::string getLabel();
     std::string getContent();
@@ -21,6 +22,7 @@ class MenuSelectOptionElement {
     void setIntContent(int);
     int getIntContent();
     bool hasStrValue();
+    bool isCheckBox();
     int getCol();
     int getRow();
 };

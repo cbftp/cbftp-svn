@@ -19,7 +19,7 @@ void SiteThreadManager::deleteSiteThread(std::string name) {
     if ((*it)->getSite()->getName().compare(name) == 0) {
       delete *it;
       sitethreads.erase(it);
-      break;
+      return;
     }
   }
 }

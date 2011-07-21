@@ -20,7 +20,8 @@ class MenuSelectOption {
     void goNext();
     void goPrev();
     void addStringField(int, int, std::string, std::string, std::string);
-    void addIntArrowField(int, int, std::string, std::string, int);
+    void addIntArrow(int, int, std::string, std::string, int);
+    void addCheckBox(int, int, std::string, std::string, int);
     int getSelectionDataCol();
     int getSelectionDataRow();
     MenuSelectOptionElement & getSelection();

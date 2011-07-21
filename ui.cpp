@@ -171,9 +171,11 @@ int UserInterface::editSiteScreen(Site * site) {
     mso.addStringField(y++, x, "port", "Port:", modsite.getPort());
     mso.addStringField(y++, x, "user", "Username:", modsite.getUser());
     mso.addStringField(y++, x, "pass", "Password:", modsite.getPass());
-    mso.addIntArrowField(y++, x, "logins", "Login slots:", modsite.getMaxLogins());
-    mso.addIntArrowField(y++, x, "maxup", "Upload slots:", modsite.getMaxUp());
-    mso.addIntArrowField(y++, x, "maxdn", "Download slots:", modsite.getMaxDown());
+    mso.addIntArrow(y++, x, "logins", "Login slots:", modsite.getMaxLogins());
+    mso.addIntArrow(y++, x, "maxup", "Upload slots:", modsite.getMaxUp());
+    mso.addIntArrow(y++, x, "maxdn", "Download slots:", modsite.getMaxDown());
+    mso.addCheckBox(y++, x, "pret", "Needs PRET:", modsite.needsPRET());
+    mso.addCheckBox(y++, x, "brokenpasv", "Broken PASV:", modsite.hasBrokenPASV());
     mso.print();
     keypad(editsitescreen, TRUE);
     putTopRefresh(editsitescreen);
@@ -189,6 +191,7 @@ int UserInterface::editSiteScreen(Site * site) {
         case KEY_DOWN:
           mso.goNext();
           break;
+        case 32:
         case 10:
           datacol = mso.getSelectionDataCol();
           datarow = mso.getSelectionDataRow();
@@ -216,6 +219,12 @@ int UserInterface::editSiteScreen(Site * site) {
           }
           else if (id.compare("maxdn") == 0) {
             modsite.setMaxDn(getNumArrow(editsitescreen, datarow, datacol, mso.getSelection().getIntContent()));
+          }
+          else if (id.compare("pret") == 0) {
+            modsite.setPRET(getCheckBoxBool(editsitescreen, datarow, datacol, mso.getSelection().getIntContent()));
+          }
+          else if (id.compare("brokenpasv") == 0) {
+            modsite.setBrokenPASV(getCheckBoxBool(editsitescreen, datarow, datacol, mso.getSelection().getIntContent()));
           }
 
           redraw = true;
@@ -330,11 +339,21 @@ int UserInterface::getNumArrow(WINDOW * window, int row, int col, int startval) 
         if (value < 99) value++;
         break;
       case 10:
+      case 32:
         done = true;
         break;
     }
   }
   return value;
+}
+
+bool UserInterface::getCheckBoxBool(WINDOW * window, int row, int col, int startval) {
+  if (startval) {
+    mvwprintw(window, row, col, "[ ]");
+    return false;
+  }
+  mvwprintw(window, row, col, "[X]");
+  return true;
 }
 
 void UserInterface::runInstance() {

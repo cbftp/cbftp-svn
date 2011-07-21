@@ -5,8 +5,8 @@ SiteThread::SiteThread(std::string sitename) {
   sem_init(&notifysem, 0, 0);
   ftpthreadcom = new FTPThreadCom(&notifysem);
   site = global->getSiteManager()->getSite(sitename);
-  slots_dn = site->getMaxDown();
-  slots_up = site->getMaxUp();
+  slots_dn = site->getMaxDown() > 0 ? site->getMaxDown() : site->getMaxLogins();
+  slots_up = site->getMaxUp() > 0 ? site->getMaxUp() : site->getMaxLogins();
   ptrack = new PotentialTracker(slots_dn);
   available = 0;
   loggedin = 0;

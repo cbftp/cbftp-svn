@@ -107,7 +107,7 @@ void SiteManager::deleteSite(std::string site) {
     if ((*it)->getName().compare(site) == 0) {
       delete *it;
       sites.erase(it);
-      break;
+      return;
     }
   }
 }

@@ -9,13 +9,14 @@ MenuSelectOptionElement::MenuSelectOptionElement(int row, int col, std::string i
   this->str = true;
 }
 
-MenuSelectOptionElement::MenuSelectOptionElement(int row, int col, std::string identifier, std::string label, int startval) {
+MenuSelectOptionElement::MenuSelectOptionElement(int row, int col, std::string identifier, std::string label, int startval, bool checkbox) {
   this->row = row;
   this->col = col;
   this->identifier = identifier;
   this->label = label;
   this->intcontent = startval;
   this->str = false;
+  this->checkbox = checkbox;
 }
 
 std::string MenuSelectOptionElement::getIdentifier() {
@@ -44,6 +45,10 @@ void MenuSelectOptionElement::setContent(std::string str) {
 
 bool MenuSelectOptionElement::hasStrValue() {
   return str;
+}
+
+bool MenuSelectOptionElement::isCheckBox() {
+  return checkbox;
 }
 
 int MenuSelectOptionElement::getCol() {
