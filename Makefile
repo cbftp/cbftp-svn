@@ -5,7 +5,7 @@ OBJECTS = commandqueueelement.o ftpthreadcom.o potentialelement.o scoreboardelem
 	sitethreadmanager.o ui.o filelist.o globalcontext.o potentialtracker.o \
 	sitemanager.o sitethread.o file.o main.o race.o site.o transfermanager.o \
 	menuselectsite.o menuselectsiteelement.o menuselectoption.o \
-	menuselectoptionelement.o
+	menuselectoptionelement.o rawbuffer.o
 
 all: $(OBJECTS)
 	wc -l *.cpp *.h;
@@ -35,6 +35,7 @@ site.o:
 transfermanager.o:
 menuselectsite.o:
 menuselectsiteelement.o:
+rawbuffer.o:
 
 clean:
 	rm clusterbomb $(OBJECTS)

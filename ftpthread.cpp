@@ -1,9 +1,10 @@
 #include "ftpthread.h"
 
-FTPThread::FTPThread(int id, Site * site, FTPThreadCom * ftpthreadcom) {
+FTPThread::FTPThread(int id, Site * site, FTPThreadCom * ftpthreadcom, RawBuffer * rawbuf) {
   this->id = id;
   this->site = site;
   this->ftpthreadcom = ftpthreadcom;
+  this->rawbuf = rawbuf;
   ready = false;
   controlssl = false;
   refreshloop = false;
@@ -46,7 +47,8 @@ bool FTPThread::loginT() {
     SSL_set_fd(ssl, sockfd);
     SSL_connect(ssl);
     const char * cipher = SSL_CIPHER_get_name(SSL_get_current_cipher(ssl));
-    std::cout << "[Cipher: " << cipher << "]" << std::endl;
+    std::string output = "[Cipher: " + std::string(cipher) + "]";
+    rawbuf->writeLine(output);
     controlssl = true;
   }
   else {
@@ -81,11 +83,10 @@ void FTPThread::doUSERPASST(bool killer) {
   }
   delete reply;
   std::string pass = site->getPass();
-  char * passc = new char[pass.length()+1];
-  for (int i = 0; i < pass.length(); i++) passc[i] = '*';
-  passc[pass.length()] = '\0';
-  std::cout << "PASS " << passc << std::endl;
-  delete[] passc;
+  std::string passc = "";
+  for (int i = 0; i < pass.length(); i++) passc.append("*");
+  std::string output = "PASS " + std::string(passc);
+  rawbuf->writeLine(output);
   write((std::string("PASS ") + site->getPass()).data(), false);
   if ((status = readall(&reply, true)) != 230) {
     if (!killer) ftpthreadcom->loginPasswordDenied(id, status, reply);
@@ -132,7 +133,10 @@ int FTPThread::write(const char * command, bool echo) {
     return 0;
   }
   else if (b_sent >= len) {
-    if (echo) std::cout << "[" << site->getName() << " " << id << "] " << out << std::flush;
+    if (echo) {
+      std::string output = "[" + site->getName() + " " + global->int2Str(id) + "] " + std::string(out);
+      rawbuf->write(output);
+    }
     return 0;
   } else {
     write(out + b_sent);
@@ -149,7 +153,8 @@ int FTPThread::read() {
     return 0;
   }
   buf[b_recv] = '\0';
-  std::cout << "[" << site->getName() << " " << id << "] " << buf << std::flush;
+  std::string output = "[" + site->getName() + " " + global->int2Str(id) + "] " + std::string(buf);
+  rawbuf->write(output);
   if (b_recv && buf[b_recv-1] == '\n') {
     char * loc = buf + b_recv - 5;
     while (loc >= buf) {
@@ -190,7 +195,10 @@ int FTPThread::readallsub(char ** reply, char * tmp, bool print) {
     return 0;
   }
   buf[b_recv] = '\0';
-  if (print) std::cout << "[" << site->getName() << " " << id << "] " << buf << std::flush;
+  if (print) {
+    std::string output = "[" + site->getName() + " " + global->int2Str(id) + std::string(buf);
+    rawbuf->write(output);
+  }
   int tmplen = strlen(tmp);
   char * build = (char *) malloc(tmplen + b_recv + 1);
   strcpy(build, tmp);
@@ -262,7 +270,8 @@ int FTPThread::updateFileList(FileList * filelist) {
       filelist->cleanSweep(touch);
     }
     delete reply;
-    std::cout << "[" << site->getName() << " " << id << "] File list retrieved." << std::endl;
+    std::string output = "[" + site->getName() + " " + global->int2Str(id) + "] File list retrieved.";
+    rawbuf->writeLine(output);
     if (!filelist->isFilled()) filelist->setFilled();
     ftpthreadcom->fileListUpdated(id);
   }

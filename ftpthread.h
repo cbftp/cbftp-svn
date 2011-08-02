@@ -15,6 +15,7 @@
 #include "siterace.h"
 #include "globalcontext.h"
 #include "commandqueueelement.h"
+#include "rawbuffer.h"
 
 extern GlobalContext * global;
 
@@ -31,6 +32,7 @@ class FTPThread {
     int id;
     Site * site;
     FTPThreadCom * ftpthreadcom;
+    RawBuffer * rawbuf;
     pthread_t thread;
     pthread_t tickthread;
     sem_t commandsem;
@@ -65,7 +67,7 @@ class FTPThread {
     void doUSERPASST(bool);
     void loginKillAsync();
     void loginKillT();
-    FTPThread(int, Site *, FTPThreadCom *);
+    FTPThread(int, Site *, FTPThreadCom *, RawBuffer *);
     bool isReady();
     void setBusy();
     void setReady();

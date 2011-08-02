@@ -13,7 +13,9 @@ SiteThread::SiteThread(std::string sitename) {
   int logins = site->getMaxLogins();
   list_refresh = global->getListRefreshSem();
   for (int i = 0; i < logins; i++) {
-    conns.push_back(new FTPThread(i, site, ftpthreadcom));
+    RawBuffer * rawbuf = new RawBuffer(RAWBUFMAXLEN, sitename, global->int2Str(i));
+    rawbufs.push_back(rawbuf);
+    conns.push_back(new FTPThread(i, site, ftpthreadcom, rawbuf));
   }
   pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
 }
