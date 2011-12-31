@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <sys/timeb.h>
+#include <time.h>
 #include <string>
 #include <sstream>
 
@@ -40,6 +41,7 @@ class GlobalContext {
     pthread_attr_t * getPthreadAttr();
     sem_t * getListRefreshSem();
     int ctimeMSec();
+    std::string ctimeLog();
     std::string getSVNRevision();
     std::string getCompileTime();
     int str2Int(std::string);

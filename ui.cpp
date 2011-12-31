@@ -1,18 +1,24 @@
 #include "ui.h"
 
 UserInterface::UserInterface() {
-  sem_init(&action, 0, 0);
+  sem_init(&initstart, 0, 0);
   sem_init(&initdone, 0, 0);
+  sem_init(&update, 0, 0);
+  sem_init(&tickeractivate, 0, 0);
   loginscreen = NULL;
   mainscreen = NULL;
   confirmationscreen = NULL;
   editsitescreen = NULL;
-  pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
+  rawdatascreen = NULL;
+  tickerrun = false;
+  pthread_create(&thread, global->getPthreadAttr(), runKeyListener, (void *) this);
+  pthread_create(&thread, global->getPthreadAttr(), runUpdater, (void *) this);
+  pthread_create(&thread, global->getPthreadAttr(), runTicker, (void *) this);
 }
 
 bool UserInterface::init() {
   initret = true;
-  sem_post(&action);
+  sem_post(&initstart);
   sem_wait(&initdone);
   return initret;
 }
@@ -109,6 +115,7 @@ void UserInterface::mainScreen() {
           if (mss.getSite() == NULL) break;
           mss.goNext();
           break;
+        case ' ':
         case 10:
           if (mss.getSite() == NULL) break;
           siteStatusScreen(mss.getSite());
@@ -249,7 +256,32 @@ void UserInterface::siteStatusScreen(Site * site) {
     window = sitestatusscreen[site->getName()] = newwin(row, col, 0, 0);
     mvwprintw(window, 1, 1, std::string("Detailed status for " + site->getName()).c_str());
   }
-  putTopRefresh(window);
+  SiteThread * st = global->getSiteThreadManager()->getSiteThread(site->getName());
+  mvwprintw(window, 3, 1, std::string("Login slots:    " + global->int2Str(st->getCurrLogins()) + "/" + global->int2Str(site->getMaxLogins())).c_str());
+  mvwprintw(window, 4, 1, std::string("Upload slots:   " + global->int2Str(st->getCurrUp()) + "/" + global->int2Str(site->getMaxUp())).c_str());
+  mvwprintw(window, 5, 1, std::string("Download slots: " + global->int2Str(st->getCurrDown()) + "/" + global->int2Str(site->getMaxDown())).c_str());
+  mvwprintw(window, 7, 1, "Login threads:");
+  int i = 8;
+  std::vector<FTPThread *>::iterator it2;
+  for(it2 = st->getConns()->begin(); it2 != st->getConns()->end(); it2++) {
+    int id = (*it2)->getId();
+    std::string status = (*it2)->getStatus();
+    mvwprintw(window, i++, 1, std::string("#" + global->int2Str(id) + " - " + status).c_str());
+  }
+  keypad(window, TRUE);
+  while(1) {
+    putTopRefresh(window);
+    switch(wgetch(window)) {
+      case KEY_UP:
+        return;
+      case KEY_DOWN:
+        rawDataScreen(*(st->getConns()->begin()));
+        break;
+      case ' ':
+      case 10:
+        return;
+    }
+  }
 }
 
 int UserInterface::confirmationScreen() {
@@ -266,6 +298,30 @@ int UserInterface::confirmationScreen() {
       case 'n':
       case 10:
         return 0;
+    }
+  }
+}
+
+int UserInterface::rawDataScreen(FTPThread * ftpthread) {
+  RawBuffer * rawbuf = ftpthread->getRawBuffer();
+  if (rawdatascreen == NULL) {
+    rawdatascreen = newwin(row, col, 0, 0);
+  }
+  std::string line;
+  int numlinestoprint = rawbuf->getSize() < row ? rawbuf->getSize() : row;
+  for (int i = 0; i < numlinestoprint; i++) {
+    mvwprintw(rawdatascreen, i, 0, rawbuf->getLine(numlinestoprint - i - 1).c_str());
+  }
+  putTopRefresh(rawdatascreen);
+  keypad(rawdatascreen, TRUE);
+  while(1) {
+    switch(wgetch(rawdatascreen)) {
+      case 10:
+        return -1;
+      case KEY_RIGHT:
+        return ftpthread->getId() + 1;
+      case KEY_LEFT:
+        return ftpthread->getId() - 1;
     }
   }
 }
@@ -325,6 +381,7 @@ int UserInterface::getNumArrow(WINDOW * window, int row, int col, int startval) 
   int value = startval;
   mvwprintw(window, row, col, "< ");
   bool done = false;
+  keypad(window, TRUE);
   while(!done) {
     std::string outstr = global->int2Str(value) + " >";
     mvwprintw(window, row, col + 2, "     ");
@@ -356,13 +413,47 @@ bool UserInterface::getCheckBoxBool(WINDOW * window, int row, int col, int start
   return true;
 }
 
-void UserInterface::runInstance() {
+void UserInterface::stopTicker() {
+  tickerrun = false;
+}
+
+void UserInterface::startTicker(int updateinterval) {
+  this->updateinterval = updateinterval;
+  tickerrun = true;
+  sem_post(&tickeractivate);
+}
+
+void UserInterface::runKeyListenerInstance() {
   while(1) {
-    sem_wait(&action);
+    sem_wait(&initstart);
     initIntern();
   }
 }
 
-void * UserInterface::run(void * arg) {
-  ((UserInterface *) arg)->runInstance();
+void UserInterface::runUpdaterInstance() {
+  while(1) {
+    sem_wait(&update);
+  }
+}
+
+void UserInterface::runTickerInstance() {
+  while(1) {
+    sem_wait(&tickeractivate);
+    while(tickerrun) {
+      sem_post(&update);
+      usleep(updateinterval);
+    }
+  }
+}
+
+void * UserInterface::runKeyListener(void * arg) {
+  ((UserInterface *) arg)->runKeyListenerInstance();
+}
+
+void * UserInterface::runUpdater(void * arg) {
+  ((UserInterface *) arg)->runUpdaterInstance();
+}
+
+void * UserInterface::runTicker(void * arg) {
+  ((UserInterface *) arg)->runTickerInstance();
 }

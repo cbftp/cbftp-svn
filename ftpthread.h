@@ -20,6 +20,7 @@
 extern GlobalContext * global;
 
 #define MAXDATASIZE 2048
+#define RAWBUFMAXLEN 1024
 
 //minimum sleep delay (between refreshes / hammer attempts) in ms
 #define SLEEPDELAY 150
@@ -28,11 +29,12 @@ extern SSL_CTX * ssl_ctx;
 
 class FTPThread {
   private:
+    RawBuffer * rawbuf;
     struct addrinfo sock, *res;
     int id;
+    std::string status;
     Site * site;
     FTPThreadCom * ftpthreadcom;
-    RawBuffer * rawbuf;
     pthread_t thread;
     pthread_t tickthread;
     sem_t commandsem;
@@ -59,6 +61,8 @@ class FTPThread {
     static void * run(void *);
     static void * runTick(void *);
   public:
+    int getId();
+    std::string getStatus();
     void loginAsync();
     bool loginT();
     void reconnectAsync();
@@ -67,7 +71,7 @@ class FTPThread {
     void doUSERPASST(bool);
     void loginKillAsync();
     void loginKillT();
-    FTPThread(int, Site *, FTPThreadCom *, RawBuffer *);
+    FTPThread(int, Site *, FTPThreadCom *);
     bool isReady();
     void setBusy();
     void setReady();
@@ -107,4 +111,5 @@ class FTPThread {
     void postTick();
     void putCommand(CommandQueueElement *);
     void putCommand(CommandQueueElement *, bool);
+    RawBuffer * getRawBuffer();
 };

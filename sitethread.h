@@ -12,14 +12,11 @@
 #include "scoreboardelement.h"
 #include "potentialtracker.h"
 
-#define RAWBUFMAXLEN 1024
-
 extern GlobalContext * global;
 
 class SiteThread {
   private:
     PotentialTracker * ptrack;
-    std::vector<RawBuffer *> rawbufs;
     std::vector<FTPThread *> conns;
     std::vector<SiteRace *> races;
     FTPThreadCom * ftpthreadcom;
@@ -53,4 +50,5 @@ class SiteThread {
     bool getSlot(bool);
     void pushPotential(int, std::string, SiteThread *);
     bool potentialCheck(int);
+    std::vector<FTPThread *> * getConns();
 };

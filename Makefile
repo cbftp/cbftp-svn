@@ -8,7 +8,6 @@ OBJECTS = commandqueueelement.o ftpthreadcom.o potentialelement.o scoreboardelem
 	menuselectoptionelement.o rawbuffer.o
 
 all: $(OBJECTS)
-	wc -l *.cpp *.h;
 	g++ -o clusterbomb $(FINALFLAGS) $(OBJECTS)
 	
 main.o:

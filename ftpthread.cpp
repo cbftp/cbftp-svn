@@ -1,10 +1,11 @@
 #include "ftpthread.h"
 
-FTPThread::FTPThread(int id, Site * site, FTPThreadCom * ftpthreadcom, RawBuffer * rawbuf) {
+FTPThread::FTPThread(int id, Site * site, FTPThreadCom * ftpthreadcom) {
   this->id = id;
   this->site = site;
   this->ftpthreadcom = ftpthreadcom;
-  this->rawbuf = rawbuf;
+  this->status = "disconnected";
+  rawbuf = new RawBuffer(RAWBUFMAXLEN, site->getName(), global->int2Str(id));
   ready = false;
   controlssl = false;
   refreshloop = false;
@@ -22,6 +23,14 @@ FTPThread::FTPThread(int id, Site * site, FTPThreadCom * ftpthreadcom, RawBuffer
   pthread_mutex_init(&commandq_mutex, NULL);
   pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
   pthread_create(&tickthread, global->getPthreadAttr(), runTick, (void *) this);
+}
+
+int FTPThread::getId() {
+  return id;
+}
+
+std::string FTPThread::getStatus() {
+  return status;
 }
 
 void FTPThread::loginAsync() {
@@ -95,6 +104,7 @@ void FTPThread::doUSERPASST(bool killer) {
   }
   delete reply;
   ftpthreadcom->loginSuccessful(id);
+  this->status = "connected";
 }
 
 void FTPThread::loginKillAsync() {
@@ -134,7 +144,9 @@ int FTPThread::write(const char * command, bool echo) {
   }
   else if (b_sent >= len) {
     if (echo) {
-      std::string output = "[" + site->getName() + " " + global->int2Str(id) + "] " + std::string(out);
+      std::string outstring = std::string(out);
+      std::string output = "[" + site->getName() + " " + global->int2Str(id) + "] " + outstring;
+      this->status = outstring;
       rawbuf->write(output);
     }
     return 0;
@@ -596,4 +608,8 @@ void FTPThread::putCommand(CommandQueueElement * cqe, bool interruptsleep) {
   pthread_mutex_unlock(&commandq_mutex);
   sem_post(&commandsem);
   if (!interruptsleep) postTick();
+}
+
+RawBuffer * FTPThread::getRawBuffer() {
+  return rawbuf;
 }

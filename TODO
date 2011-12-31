@@ -1,0 +1,98 @@
+ui-omskrivning till fler trådar
+
+status: på g
+
+UI't delas upp i tre trådar:
+
+-keylistener
+-updater
+-ticker
+
+keylistenern väntar på knapptryckningar och emittar eventuellt update-events,
+updatern väntar på update-events och uppdaterar skärmen,
+tickern tickar och emittar update-events med varje tick.
+
+andra saker som borde kunna emitta update-events:
+filöverföring startad,
+filöverföring avslutad,
+race färdigt,
+fil skapad,
+fil borttagen,
+mapp skapad,
+mapp borttagen
+
+i nuläget:
+-trådarna initieras, men allt händer för närvarande i keylistener-tråden.
+
+
+
+race-start-ruta
+
+status: inte påbörjad
+
+en ruta för att initiera race. mest i testsyfte tills riktig funktionalitet
+är klar.
+
+
+
+AES
+
+status: inte påbörjad
+
+AES-kryptering för sitedb/config.
+
+
+
+race-complete-identifiering
+
+status: inte påbörjad
+
+motorn behöver veta när det är dags att avbryta uppdateringshetsen,
+(och sluta försöka lägga till nya filer)
+(och disconnecta överflödiga trådar)
+
+
+
+socket-lyssnare för race-instruktioner
+
+status: inte påbörjad
+
+klienten behöver kunna ta emot meddelanden utifrån om att påbörja race.
+bör lämpligtvis skyddas med någon form av kryptering.
+(annars kan release/sitenamn exponeras i klartext över nätet)
+
+
+
+race status screen
+
+status: inte påbörjad
+
+en ui-ruta som visar status för ett pågående race med info
+om status på alla inblandade siter, anslutningar som görs etc
+
+
+
+skippa oönskade filer
+
+status: inte påbörjad
+
+när en fil failar av en känd anledning ska det eventuellt hanteras
+genom att filen tas bort från racet.
+
+
+
+ta bort site från race
+
+status: inte påbörjad
+
+möjlighet att ta bort en site från ett race medan racet pågår.
+
+
+
+play-and-replay-funktionalitet
+
+status: inte påbörjad
+
+möjlighet att spara hela transferflödet från ett race till fil och
+spela upp igen vid senare tillfälle. skulle vara jävligt coolt :)
+kräver lämplig obfuskering+kryptering på den lagrade filen.

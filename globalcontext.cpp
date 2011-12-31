@@ -59,6 +59,13 @@ int GlobalContext::ctimeMSec() {
   return count;
 }
 
+std::string GlobalContext::ctimeLog() {
+  time_t rawtime;
+  time(&rawtime);
+  std::string readabletime = asctime(localtime(&rawtime));
+  return readabletime.substr(11, 8);
+}
+
 std::string GlobalContext::getSVNRevision() {
   return svnrev;
 }
