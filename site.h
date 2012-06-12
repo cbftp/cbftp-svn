@@ -17,6 +17,7 @@ class Site {
     std::map<std::string, std::string> sections;
     std::map<std::string, int> avgspeed;
   public:
+    Site();
     Site(std::string);
     void copy(Site *);
     std::map<std::string, std::string>::iterator sectionsBegin();

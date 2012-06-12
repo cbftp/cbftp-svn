@@ -19,7 +19,8 @@ class MenuSelectSite {
     WINDOW * window;
     std::vector<MenuSelectSiteElement> sites;
   public:
-    MenuSelectSite(WINDOW *);
+    MenuSelectSite();
+    void setWindow(WINDOW *);
     void goNext();
     void goPrev();
     void add(Site *, int, int);

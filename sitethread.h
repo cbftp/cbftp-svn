@@ -51,4 +51,5 @@ class SiteThread {
     void pushPotential(int, std::string, SiteThread *);
     bool potentialCheck(int);
     std::vector<FTPThread *> * getConns();
+    FTPThread * getConn(int);
 };

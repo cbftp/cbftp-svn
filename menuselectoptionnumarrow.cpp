@@ -1,0 +1,36 @@
+#include "menuselectoptionnumarrow.h"
+
+MenuSelectOptionNumArrow::MenuSelectOptionNumArrow(std::string identifier, int row, int col, std::string label, int value, int min, int max) {
+  arrow = NumInputArrow(value, min, max);
+  init(identifier, row, col, label);
+}
+
+std::string MenuSelectOptionNumArrow::getContentText() {
+  return arrow.getVisual();
+}
+
+void MenuSelectOptionNumArrow::inputChar(int ch) {
+  switch(ch) {
+    case KEY_DOWN:
+    case KEY_LEFT:
+      arrow.decrease();
+      break;
+    case KEY_UP:
+    case KEY_RIGHT:
+      arrow.increase();
+      break;
+  }
+}
+
+bool MenuSelectOptionNumArrow::activate() {
+  arrow.activate();
+  return true;
+}
+
+void MenuSelectOptionNumArrow::deactivate() {
+  arrow.deactivate();
+}
+
+int MenuSelectOptionNumArrow::getData() {
+  return arrow.getValue();
+}

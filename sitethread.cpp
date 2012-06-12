@@ -227,3 +227,12 @@ std::vector<FTPThread *> * SiteThread::getConns() {
   return &conns;
 }
 
+FTPThread * SiteThread::getConn(int id) {
+  std::vector<FTPThread *>:: iterator it;
+  for (it = conns.begin(); it != conns.end(); it++) {
+    if ((*it)->getId() == id) {
+      return *it;
+    }
+  }
+  return NULL;
+}

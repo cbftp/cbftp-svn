@@ -1,5 +1,9 @@
 #include "site.h"
 
+Site::Site() {
+
+}
+
 Site::Site(std::string name) {
   this->name = name;
   address = "ftp.sunet.se";

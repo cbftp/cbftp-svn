@@ -50,10 +50,8 @@ std::string RawBuffer::getLine(int num) {
 
 std::string RawBuffer::getLine(int num, bool fromcopy) {
   int size = getSize();
-  std::cout << "getting line " << num << " " << getSize() << std::endl;
   if (num >= size || num < 0) return "";
   int pos = num <= latestp ? latestp - num - 1 : size - latestp - num;
-  std::cout << "found pos: " << pos << std::endl;
   return fromcopy ? logcopy[pos] : log[pos];
 }
 

@@ -32,6 +32,7 @@ int main(int argc, char * argv[]) {
 }
 
 void sighandler(int sig) {
+  global->signal_ignore();
   std::cout << "Saving data to file..." << std::endl;
   global->getSiteManager()->writeDataFile();
   std::cout << "Done, exiting..." << std::endl << std::flush;

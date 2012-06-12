@@ -1,74 +1,63 @@
 #include "menuselectoption.h"
 
-MenuSelectOption::MenuSelectOption(WINDOW * window) {
-  this->window = window;
+MenuSelectOption::MenuSelectOption() {
   pointer = 0;
-  maxheight = 0;
+  lastpointer = 0;
 }
 
-void MenuSelectOption::goNext() {
-  print(pointer-1, false);
-  if (pointer < options.size()) pointer++;
-  else if (options.size() > 0) pointer = 1;
-  print(pointer-1, true);
-  wrefresh(window);
+
+bool MenuSelectOption::goNext() {
+  if (pointer == size() - 1) {
+    return false;
+  }
+  lastpointer = pointer;
+  pointer++;
+  return true;
 }
 
-void MenuSelectOption::goPrev() {
-  print(pointer-1, false);
-  if (pointer > 0) pointer--;
-  if (pointer == 0) pointer = options.size();
-  print(pointer-1, true);
-  wrefresh(window);
+bool MenuSelectOption::goPrev() {
+  if (pointer == 0) {
+    return false;
+  }
+  lastpointer = pointer;
+  pointer--;
+  return true;
 }
 
-void MenuSelectOption::addStringField(int row, int col, std::string identifier, std::string label, std::string starttext) {
-  if (options.size() == 0 && pointer == 0) pointer++;
-  options.push_back(MenuSelectOptionElement(row, col, identifier, label, starttext));
+void MenuSelectOption::addStringField(int row, int col, std::string identifier, std::string label, std::string starttext, bool secret) {
+  options.push_back(new MenuSelectOptionTextField(identifier, row, col, label, starttext, 32, 32, secret));
 }
 
-void MenuSelectOption::addIntArrow(int row, int col, std::string identifier, std::string label, int startval) {
-  if (options.size() == 0 && pointer == 0) pointer++;
-  options.push_back(MenuSelectOptionElement(row, col, identifier, label, startval, false));
+void MenuSelectOption::addIntArrow(int row, int col, std::string identifier, std::string label, int startval, int min, int max) {
+  options.push_back(new MenuSelectOptionNumArrow(identifier, row, col, label, startval, min, max));
 }
 
-void MenuSelectOption::addCheckBox(int row, int col, std::string identifier, std::string label, int startval) {
-  if (options.size() == 0 && pointer == 0) pointer++;
-  options.push_back(MenuSelectOptionElement(row, col, identifier, label, startval, true));
+void MenuSelectOption::addCheckBox(int row, int col, std::string identifier, std::string label, bool startval) {
+  options.push_back(new MenuSelectOptionCheckBox(identifier, row, col, label, startval));
 }
 
-int MenuSelectOption::getSelectionDataCol() {
-  return options[pointer-1].getCol() + options[pointer-1].getLabel().length() + 1;
+MenuSelectOptionElement * MenuSelectOption::getElement(int i) {
+  if (i < 0 || i > size()) {
+    return NULL;
+  }
+  return options[i];
 }
 
-int MenuSelectOption::getSelectionDataRow() {
-  return options[pointer-1].getRow();
+int MenuSelectOption::getLastSelectionPointer() {
+  return lastpointer;
 }
 
-MenuSelectOptionElement & MenuSelectOption::getSelection() {
-  return options[pointer-1];
+int MenuSelectOption::getSelectionPointer() {
+  return pointer;
 }
-
 void MenuSelectOption::clear() {
+  std::vector<MenuSelectOptionElement *>::iterator it;
+  for (it = options.begin(); it != options.end(); it++) {
+    delete *it;
+  }
   options.clear();
 }
 
-void MenuSelectOption::print() {
-  for (int i = 0; i < options.size(); i++) {
-    while (pointer > options.size()) pointer--;
-    print(i, i+1 == pointer);
-  }
-}
-
-void MenuSelectOption::print(int index, bool highlight) {
-  if (index < 0) return;
-  std::string labelout = options[index].getLabel();
-  std::string dataout = " ";
-  if (options[index].hasStrValue()) dataout += options[index].getContent();
-  else if (!options[index].isCheckBox()) dataout += global->int2Str(options[index].getIntContent());
-  else dataout += std::string("[") + std::string(options[index].getIntContent() ? "X" : " ") + std::string("]");
-  if (highlight) wattron(window, A_REVERSE);
-  mvwprintw(window, options[index].getRow(), options[index].getCol(), labelout.c_str());
-  if (highlight) wattroff(window, A_REVERSE);
-  mvwprintw(window, options[index].getRow(), options[index].getCol() + labelout.length(), dataout.c_str());
+int MenuSelectOption::size() {
+  return options.size();
 }

@@ -1,6 +1,9 @@
 #include "menuselectsite.h"
 
-MenuSelectSite::MenuSelectSite(WINDOW * window) {
+MenuSelectSite::MenuSelectSite() {
+}
+
+void MenuSelectSite::setWindow(WINDOW * window) {
   this->window = window;
   pointer = 0;
   maxheight = 0;
@@ -11,7 +14,6 @@ void MenuSelectSite::goNext() {
   if (pointer < sites.size()) pointer++;
   else if (sites.size() > 0) pointer = 1;
   print(pointer-1, true);
-  wrefresh(window);
 }
 
 void MenuSelectSite::goPrev() {
@@ -19,7 +21,6 @@ void MenuSelectSite::goPrev() {
   if (pointer > 0) pointer--;
   if (pointer == 0) pointer = sites.size();
   print(pointer-1, true);
-  wrefresh(window);
 }
 
 void MenuSelectSite::add(Site * site, int row, int col) {

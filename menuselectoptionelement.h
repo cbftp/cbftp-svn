@@ -4,25 +4,21 @@
 
 class MenuSelectOptionElement {
   private:
-    bool str;
-    bool checkbox;
     std::string identifier;
     std::string label;
-    std::string strcontent;
-    int intcontent;
     int col;
     int row;
+    bool active;
   public:
-    MenuSelectOptionElement(int, int, std::string, std::string, std::string);
-    MenuSelectOptionElement(int, int, std::string, std::string, int, bool);
+    void init(std::string, int, int, std::string);
+    virtual ~MenuSelectOptionElement();
+    std::string getLabelText();
     std::string getIdentifier();
-    std::string getLabel();
-    std::string getContent();
-    void setContent(std::string);
-    void setIntContent(int);
-    int getIntContent();
-    bool hasStrValue();
-    bool isCheckBox();
+    virtual std::string getContentText() = 0;
+    virtual bool activate();
+    virtual void deactivate();
+    virtual int cursorPosition();
+    virtual void inputChar(int);
     int getCol();
     int getRow();
 };

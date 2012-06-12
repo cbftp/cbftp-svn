@@ -1,6 +1,6 @@
 ui-omskrivning till fler trådar
 
-status: på g
+status: TYP KLAR
 
 UI't delas upp i tre trådar:
 
@@ -23,6 +23,12 @@ mapp borttagen
 
 i nuläget:
 -trådarna initieras, men allt händer för närvarande i keylistener-tråden.
+
+ideer:
+- basklass för fönster
+- en init-metod som körs vid första fönsterrendering
+- en update-metod som körs vid update-events
+- update-frekvens lagras här?
 
 
 
