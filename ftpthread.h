@@ -1,5 +1,5 @@
 #pragma once
-#include <iostream>
+
 #include <stdlib.h>
 #include <list>
 #include <sys/socket.h>
@@ -9,6 +9,7 @@
 #include <openssl/ssl.h>
 #include <pthread.h>
 #include <semaphore.h>
+
 #include "filelist.h"
 #include "ftpthreadcom.h"
 #include "site.h"

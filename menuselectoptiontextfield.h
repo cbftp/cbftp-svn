@@ -1,9 +1,10 @@
 #pragma once
 
-#include "textinputfield.h"
-#include "menuselectoptionelement.h"
 #include <string>
 #include <ncurses.h>
+
+#include "textinputfield.h"
+#include "menuselectoptionelement.h"
 
 class MenuSelectOptionTextField : public MenuSelectOptionElement {
 private:

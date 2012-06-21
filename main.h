@@ -1,5 +1,8 @@
+#pragma once
+
 #include <iostream>
 #include <list>
+
 #include "sitethreadmanager.h"
 #include "transfermanager.h"
 #include "sitemanager.h"

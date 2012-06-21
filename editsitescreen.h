@@ -1,11 +1,11 @@
 #pragma once
+
 #include "uiwindow.h"
 #include "uiwindowcommand.h"
 #include "sitemanager.h"
 #include "site.h"
 #include "menuselectoption.h"
 #include "menuselectoptionelement.h"
-#include <iostream>
 
 class EditSiteScreen : public UIWindow {
 public:

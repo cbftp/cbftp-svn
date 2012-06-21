@@ -1,9 +1,11 @@
 #pragma once
+
 #include <string>
 #include <vector>
 #include <list>
 #include <pthread.h>
 #include <semaphore.h>
+
 #include "sitemanager.h"
 #include "ftpthread.h"
 #include "siterace.h"

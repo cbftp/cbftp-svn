@@ -1,8 +1,8 @@
 #pragma once
+
 #include "uiwindow.h"
 #include "uiwindowcommand.h"
 #include "textinputfield.h"
-#include <iostream>
 
 class LoginScreen : public UIWindow {
 public:

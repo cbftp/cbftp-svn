@@ -1,5 +1,7 @@
 #pragma once
+
 #include <string>
+
 #include "filelist.h"
 #include "race.h"
 

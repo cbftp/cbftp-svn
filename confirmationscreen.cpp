@@ -14,7 +14,6 @@ void ConfirmationScreen::redraw() {
 void ConfirmationScreen::keyPressed(int ch) {
   if (ch == 'y') {
     windowcommand->newCommand("yes");
-    std::cout << "MJEHEZ" << std::endl;
   }
   else {
     windowcommand->newCommand("no");

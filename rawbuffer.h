@@ -1,6 +1,8 @@
 #pragma once
+
 #include <string>
 #include <vector>
+
 #include "globalcontext.h"
 
 extern GlobalContext * global;

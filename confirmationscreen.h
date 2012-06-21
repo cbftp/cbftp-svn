@@ -1,7 +1,7 @@
 #pragma once
+
 #include "uiwindow.h"
 #include "uiwindowcommand.h"
-#include <iostream>
 
 class ConfirmationScreen : public UIWindow {
 public:

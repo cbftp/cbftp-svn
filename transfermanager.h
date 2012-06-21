@@ -1,14 +1,15 @@
 #pragma once
 
-#define MAX_THREADS 256
-
 #include <string>
 #include <pthread.h>
 #include <semaphore.h>
+
 #include "globalcontext.h"
 #include "sitethread.h"
 #include "scoreboardelement.h"
 #include "transfer.h"
+
+#define MAX_THREADS 256
 
 extern GlobalContext * global;
 

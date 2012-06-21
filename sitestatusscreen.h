@@ -1,4 +1,7 @@
 #pragma once
+
+#include <vector>
+
 #include "uiwindow.h"
 #include "uiwindowcommand.h"
 #include "globalcontext.h"
@@ -6,8 +9,6 @@
 #include "sitethread.h"
 #include "sitethreadmanager.h"
 #include "ftpthread.h"
-#include <vector>
-#include <iostream>
 
 extern GlobalContext * global;
 

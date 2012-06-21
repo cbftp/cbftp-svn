@@ -1,9 +1,9 @@
 #pragma once
+
 #include "uiwindow.h"
 #include "menuselectsite.h"
 #include "uiwindowcommand.h"
 #include "site.h"
-#include <iostream>
 
 class MainScreen : public UIWindow {
 public:

@@ -1,8 +1,11 @@
+#pragma once
+
 #include <string>
 #include <list>
 #include <stdlib.h>
 #include <pthread.h>
 #include <semaphore.h>
+
 #include "scoreboard.h"
 #include "scoreboardelement.h"
 #include "globalcontext.h"

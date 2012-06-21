@@ -1,6 +1,8 @@
 #pragma once
+
 #include <vector>
 #include <algorithm>
+
 #include "scoreboardelement.h"
 
 bool comparator(ScoreBoardElement *, ScoreBoardElement *);

@@ -1,8 +1,9 @@
 #pragma once
 
-#include "menuselectoptionelement.h"
 #include <string>
 #include <ncurses.h>
+
+#include "menuselectoptionelement.h"
 
 class MenuSelectOptionCheckBox : public MenuSelectOptionElement {
 private:

@@ -1,4 +1,5 @@
 #pragma once
+
 #include <signal.h>
 #include <iostream>
 #include <openssl/ssl.h>
@@ -14,6 +15,7 @@ class UserInterface;
 class SiteThreadManager;
 class SiteManager;
 class TransferManager;
+class DataFileHandler;
 
 class GlobalContext {
   private:
@@ -40,7 +42,7 @@ class GlobalContext {
     TransferManager * getTransferManager();
     pthread_attr_t * getPthreadAttr();
     sem_t * getListRefreshSem();
-    int ctimeMSec();
+    static int ctimeMSec();
     std::string ctimeLog();
     std::string getSVNRevision();
     std::string getCompileTime();

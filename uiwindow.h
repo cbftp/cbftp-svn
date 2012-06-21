@@ -1,4 +1,5 @@
 #pragma once
+
 #include <ncurses.h>
 #include <unistd.h>
 #include <string>
@@ -6,7 +7,6 @@
 class UserInterface;
 
 class UIWindow {
-
 protected:
   UserInterface * ui;
   WINDOW * window;

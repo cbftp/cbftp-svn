@@ -85,6 +85,7 @@ void SiteManager::writeDataFile() {
       sitedbfile << name << "$avgspeed=" << sit2->first << "$" << sit2->second << std::endl;
     }
   }
+  sitedbfile.close();
 }
 
 int SiteManager::getNumSites() {

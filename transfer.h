@@ -1,3 +1,5 @@
+#pragma once
+
 #include <semaphore.h>
 
 #include "sitethread.h"

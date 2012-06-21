@@ -1,9 +1,10 @@
 #pragma once
+
 #include <string>
 #include <list>
-#include <iostream>
 #include <pthread.h>
 #include <semaphore.h>
+
 #include "globalcontext.h"
 #include "potentialelement.h"
 #include "potentiallistelement.h"
