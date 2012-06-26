@@ -104,7 +104,7 @@ void EditSiteScreen::keyPressed(int ch) {
         if (identifier == "name") {
             site->setName(((MenuSelectOptionTextField *)msoe)->getData());
         }
-        else if (identifier == "address") {
+        else if (identifier == "addr") {
             site->setAddress(((MenuSelectOptionTextField *)msoe)->getData());
         }
         else if (identifier == "port") {
