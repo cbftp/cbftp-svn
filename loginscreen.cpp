@@ -5,6 +5,7 @@ LoginScreen::LoginScreen(WINDOW * window, UIWindowCommand * windowcommand, int r
   passfield = TextInputField(25, 32, true);
   pass_row = row-2;
   pass_col = col-27;
+  attempt = false;
   init(window, row, col);
 }
 
@@ -34,7 +35,6 @@ void LoginScreen::redraw() {
       if (boxchar) mvwaddch(window, i, j, boxchar);
     }
   }
-  mvwprintw(window, row-3, col-27, "AES passphrase required:");
   mvwprintw(window, 0, 3, svnstring.c_str());
   mvwprintw(window, 0, col - compilestring.length() - 3, compilestring.c_str());
   update();
@@ -42,6 +42,11 @@ void LoginScreen::redraw() {
 }
 
 void LoginScreen::update() {
+  std::string passtext = "AES passphrase required:";
+  if (attempt) {
+    passtext = "Invalid key, try again: ";
+  }
+  mvwprintw(window, pass_row-1, pass_col, passtext.c_str());
   mvwprintw(window, pass_row, pass_col, passfield.getVisualText().c_str());
   wmove(window, pass_row, pass_col + passfield.getLastCharPosition());
 }
@@ -59,7 +64,9 @@ void LoginScreen::keyPressed(int ch) {
       case 10:
       case 13:
         curs_set(0);
+        attempt = true;
         windowcommand->newCommand("key", passfield.getText());
+        passfield.clear();
         return;
     }
   }

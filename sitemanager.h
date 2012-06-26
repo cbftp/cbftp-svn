@@ -8,6 +8,7 @@
 
 #include "globalcontext.h"
 #include "site.h"
+#include "datafilehandler.h"
 
 #define SITEDB "sitedb"
 
@@ -18,11 +19,12 @@ class SiteManager {
     std::vector<Site *> sites;
   public:
     SiteManager();
+    void readSites();
     int getNumSites();
     void addSite(Site *);
     Site * getSite(std::string);
     void deleteSite(std::string);
     std::vector<Site *>::iterator getSitesIteratorBegin();
     std::vector<Site *>::iterator getSitesIteratorEnd();
-    void writeDataFile();
+    void writeState();
 };

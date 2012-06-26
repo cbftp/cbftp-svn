@@ -16,4 +16,5 @@ private:
   TextInputField passfield;
   int pass_row;
   int pass_col;
+  bool attempt;
 };

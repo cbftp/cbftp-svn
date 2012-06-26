@@ -16,6 +16,7 @@
 #include "uiwindow.h"
 #include "uiwindowcommand.h"
 #include "loginscreen.h"
+#include "newkeyscreen.h"
 #include "mainscreen.h"
 #include "editsitescreen.h"
 #include "confirmationscreen.h"

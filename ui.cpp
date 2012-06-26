@@ -80,14 +80,20 @@ void UserInterface::runUserInterfaceInstance() {
   sem_wait(&initstart);
   initIntern();
   main = newwin(row, col, 0, 0);
-  UIWindow * loginscreen = new LoginScreen(main, &windowcommand, row, col);
+  UIWindow * startscreen;
   UIWindow * confirmationscreen;
   UIWindow * mainscreen;
   UIWindow * editsitescreen;
   UIWindow * sitestatusscreen;
   UIWindow * rawdatascreen;
   std::list<UIWindow *> history;
-  topwindow = loginscreen;
+  if (global->getDataFileHandler()->fileExists()) {
+    startscreen = new LoginScreen(main, &windowcommand, row, col);
+  }
+  else {
+    startscreen = new NewKeyScreen(main, &windowcommand, row, col);
+  }
+  topwindow = startscreen;
   putTopRefresh(main);
   keypad(main, TRUE);
   noecho();
@@ -146,7 +152,22 @@ void UserInterface::runUserInterfaceInstance() {
       else if (command == "key") {
         std::string key = windowcommand.getArg1();
         windowcommand.checkoutCommand();
-        //decrypt config/sitedb with the given key
+        bool result = global->getDataFileHandler()->tryDecrypt(key);
+        if (result) {
+          global->getSiteManager()->readSites();
+          mainscreen = new MainScreen(main, &windowcommand, row, col);
+          topwindow = mainscreen;
+          putTopRefresh(main);
+        }
+        else {
+          topwindow->update();
+          putTopRefresh(main);
+        }
+      }
+      else if (command == "newkey") {
+        std::string key = windowcommand.getArg1();
+        windowcommand.checkoutCommand();
+        global->getDataFileHandler()->newDataFile(key);
         mainscreen = new MainScreen(main, &windowcommand, row, col);
         topwindow = mainscreen;
         putTopRefresh(main);
@@ -171,8 +192,9 @@ void UserInterface::runUserInterfaceInstance() {
         putTopRefresh(main);
       }
       else if (command == "yes" || command == "no") {
-        history.push_back(topwindow);
-        topwindow->redraw();
+        topwindow = history.back();
+        history.pop_back();
+        topwindow->update();
         putTopRefresh(main);
       }
     }

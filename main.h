@@ -2,7 +2,11 @@
 
 #include <iostream>
 #include <list>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <error.h>
 
+#include "datafilehandler.h"
 #include "sitethreadmanager.h"
 #include "transfermanager.h"
 #include "sitemanager.h"
@@ -10,17 +14,15 @@
 #include "engine.h"
 #include "ui.h"
 
+#define DATAFILE "data"
+#define DATAPATH ".clusterbomb"
+
 GlobalContext * global;
 
 class Main {
-  private:
-    Engine * e;
-    UserInterface * ui;
-    SiteManager * sm;
-    SiteThreadManager * stm;
-    TransferManager * tm;
-  public:
-    Main();
+private:
+public:
+  Main();
 };
 
 int main(int, char **);

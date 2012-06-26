@@ -15,4 +15,5 @@ public:
   void inputChar(int);
   int cursorPosition();
   std::string getData();
+  void clear();
 };

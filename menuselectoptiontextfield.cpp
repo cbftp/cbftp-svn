@@ -25,3 +25,7 @@ int MenuSelectOptionTextField::cursorPosition() {
 std::string MenuSelectOptionTextField::getData() {
   return textfield.getText();
 }
+
+void MenuSelectOptionTextField::clear() {
+  textfield.clear();
+}

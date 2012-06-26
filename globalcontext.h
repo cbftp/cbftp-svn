@@ -22,6 +22,7 @@ class GlobalContext {
     SSL_CTX * ssl_ctx;
     pthread_attr_t attr;
     Engine * e;
+    DataFileHandler * dfh;
     UserInterface * ui;
     SiteManager * sm;
     SiteThreadManager * stm;
@@ -32,10 +33,10 @@ class GlobalContext {
   public:
     void init();
     GlobalContext();
-    void linkManagers(UserInterface *, SiteManager *, SiteThreadManager *, TransferManager *);
-    void linkEngine(Engine *);
+    void linkComponents(DataFileHandler *, Engine *, UserInterface *, SiteManager *, SiteThreadManager *, TransferManager *);
     SSL_CTX * getSSLCTX();
     Engine * getEngine();
+    DataFileHandler * getDataFileHandler();
     UserInterface * getUI();
     SiteManager * getSiteManager();
     SiteThreadManager * getSiteThreadManager();
