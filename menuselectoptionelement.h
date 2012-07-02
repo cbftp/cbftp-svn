@@ -19,6 +19,7 @@ class MenuSelectOptionElement {
     virtual void deactivate();
     virtual int cursorPosition();
     virtual void inputChar(int);
+    virtual std::string getLegendText();
     int getCol();
     int getRow();
 };

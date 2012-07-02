@@ -2,6 +2,8 @@
 
 NewKeyScreen::NewKeyScreen(WINDOW * window, UIWindowCommand * windowcommand, int row, int col) {
   this->windowcommand = windowcommand;
+  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one";
+  currentlegendtext = defaultlegendtext;
   active = false;
   mismatch = false;
   tooshort = false;
@@ -15,13 +17,13 @@ NewKeyScreen::NewKeyScreen(WINDOW * window, UIWindowCommand * windowcommand, int
 
 void NewKeyScreen::redraw() {
   werase(window);
-  mvwprintw(window, 1, 1, "-== CREATE DATA FILE ==-");
-  mvwprintw(window, 3, 1, "Welcome!");
-  mvwprintw(window, 5, 1, "Your site and configuration data will be encrypted with AES-256-CBC.");
-  mvwprintw(window, 6, 1, "A 256-bit (32 characters) AES key will be generated from the given passphrase.");
-  mvwprintw(window, 7, 1, "This means that the level of security increases with the length of the given");
-  mvwprintw(window, 8, 1, "passphrase.");
-  mvwprintw(window, 9, 1, "The passphrase is not considered secure if it is shorter than 16 characters.");
+  TermInt::printStr(window, 1, 1, "-== CREATE DATA FILE ==-");
+  TermInt::printStr(window, 3, 1, "Welcome!");
+  TermInt::printStr(window, 5, 1, "Your site and configuration data will be encrypted with AES-256-CBC.");
+  TermInt::printStr(window, 6, 1, "A 256-bit (32 characters) AES key will be generated from the given passphrase.");
+  TermInt::printStr(window, 7, 1, "This means that the level of security increases with the length of the given");
+  TermInt::printStr(window, 8, 1, "passphrase.");
+  TermInt::printStr(window, 9, 1, "The passphrase is not considered secure if it is shorter than 16 characters.");
   bool highlight;
   for (int i = 0; i < mso.size(); i++) {
     MenuSelectOptionElement * msoe = mso.getElement(i);
@@ -30,21 +32,21 @@ void NewKeyScreen::redraw() {
       highlight = true;
     }
     if (highlight) wattron(window, A_REVERSE);
-    mvwprintw(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText().c_str());
+    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
     if (highlight) wattroff(window, A_REVERSE);
-    mvwprintw(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText().c_str());
+    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
 }
 
 void NewKeyScreen::update() {
   MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
-  mvwprintw(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText().c_str());
-  mvwprintw(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText().c_str());
+  TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+  TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
   wattron(window, A_REVERSE);
-  mvwprintw(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText().c_str());
+  TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
   wattroff(window, A_REVERSE);
-  mvwprintw(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText().c_str());
+  TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   std::string error = "                                                          ";
   if (tooshort) {
     error = "Failed: The passphrase must be at least " + global->int2Str(SHORTESTKEY) + " characters long.";
@@ -52,11 +54,11 @@ void NewKeyScreen::update() {
   else if (mismatch) {
     error = "Failed: The keys did not match.";
   }
-  mvwprintw(window, 14, 1, error.c_str());
+  TermInt::printStr(window, 14, 1, error);
 
   if (active && msoe->cursorPosition() >= 0) {
     curs_set(1);
-    wmove(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
+    TermInt::moveCursor(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
   }
   else {
     curs_set(0);
@@ -65,13 +67,15 @@ void NewKeyScreen::update() {
 
 void NewKeyScreen::keyPressed(int ch) {
   if (active) {
-    windowcommand->newCommand("update");
     if (ch == 10) {
       activeelement->deactivate();
       active = false;
+      currentlegendtext = defaultlegendtext;
+      windowcommand->newCommand("updatesetlegend");
       return;
     }
     activeelement->inputChar(ch);
+    windowcommand->newCommand("update");
     return;
   }
   bool activation;
@@ -85,15 +89,18 @@ void NewKeyScreen::keyPressed(int ch) {
       windowcommand->newCommand("update");
       break;
     case 10:
-      windowcommand->newCommand("update");
+
       activation = mso.getElement(mso.getSelectionPointer())->activate();
       tooshort = false;
       mismatch = false;
       if (!activation) {
+        windowcommand->newCommand("update");
         break;
       }
       active = true;
       activeelement = mso.getElement(mso.getSelectionPointer());
+      currentlegendtext = activeelement->getLegendText();
+      windowcommand->newCommand("updatesetlegend");
       break;
     case 'd':
       MenuSelectOptionTextField * field1 = (MenuSelectOptionTextField *)mso.getElement(0);
@@ -115,4 +122,8 @@ void NewKeyScreen::keyPressed(int ch) {
       windowcommand->newCommand("update");
       break;
   }
+}
+
+std::string NewKeyScreen::getLegendText() {
+  return currentlegendtext;
 }

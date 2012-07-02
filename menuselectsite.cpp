@@ -68,6 +68,6 @@ void MenuSelectSite::print(int index, bool highlight) {
   for (int i = 0; i < 34 - linelen - addlen; i++) line.append(" ");
   line.append(add + " ");
   if (highlight) wattron(window, A_REVERSE);
-  mvwprintw(window, sites[index].getRow(), sites[index].getCol(), line.c_str());
+  TermInt::printStr(window, sites[index].getRow(), sites[index].getCol(), line);
   if (highlight) wattroff(window, A_REVERSE);
 }

@@ -1,5 +1,5 @@
-CPPFLAGS=-m32 -O3 -DBUILDTIME="\"`date`\"" -DSVNREV="\"`svn info|grep Revision|awk '{ print $$2 }'`\""
-FINALFLAGS=-m32 -O3 -lncurses -lpthread -lssl
+CPPFLAGS= -O3 -DBUILDTIME="\"`date`\"" -DVERSION="\"svn:r`svn info|grep Revision|awk '{ print $$2 }'`\""
+FINALFLAGS= -O3 -lncurses -lpthread -lssl
 
 BINS = clusterbomb datafilecat
 
@@ -12,7 +12,7 @@ OBJECTS = commandqueueelement.o ftpthreadcom.o potentialelement.o scoreboardelem
 	editsitescreen.o confirmationscreen.o uiwindowcommand.o textinputfield.o \
 	numinputarrow.o menuselectoptionnumarrow.o menuselectoptiontextfield.o \
 	menuselectoptioncheckbox.o sitestatusscreen.o rawdatascreen.o crypto.o \
-	datafilehandler.o newkeyscreen.o
+	datafilehandler.o newkeyscreen.o legendwindow.o termint.o
 
 all: ${BINS}
 	
@@ -52,6 +52,8 @@ sitestatusscreen.o:
 crypto.o:
 datafilehandler.o:
 newkeyscreen.o:
+legendwindow.o:
+termint.o:
 
 clusterbomb: ${OBJECTS}
 	g++ -o clusterbomb $(FINALFLAGS) $(OBJECTS)

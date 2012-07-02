@@ -22,26 +22,34 @@
 #include "confirmationscreen.h"
 #include "sitestatusscreen.h"
 #include "rawdatascreen.h"
+#include "legendwindow.h"
+
+#define TICKLENGTH 250000
 
 extern GlobalContext * global;
 
 class UserInterface {
   private:
     WINDOW * main;
+    WINDOW * legend;
+    std::vector<UIWindow *> mainwindows;
     UIWindow * topwindow;
+    LegendWindow * legendwindow;
+    int mainrow;
+    int maincol;
     int col;
     int row;
     int updateinterval;
     bool initret;
-    bool tickerrun;
+    bool tickerenabled;
+    bool legendenabled;
     std::string eventtext;
     pthread_t thread[3];
     sem_t initstart;
     sem_t initdone;
-    sem_t update;
     sem_t event;
     sem_t event_ready;
-    sem_t tickeractivate;
+    sem_t keyeventdone;
     UIWindowCommand windowcommand;
     void putTopRefresh(WINDOW *);
     void loginScreen();
@@ -56,6 +64,9 @@ class UserInterface {
     void initIntern();
     void startTicker(int);
     void stopTicker();
+    void enableLegend();
+    void disableLegend();
+    void redrawAll();
     static void * runKeyListener(void *);
     static void * runUserInterface(void *);
     static void * runTicker(void *);

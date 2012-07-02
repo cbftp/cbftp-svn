@@ -7,8 +7,8 @@ ConfirmationScreen::ConfirmationScreen(WINDOW * window, UIWindowCommand * window
 
 void ConfirmationScreen::redraw() {
   werase(window);
-  mvwprintw(window, 1, 1, "CONFIRM YOUR CHOICE");
-  mvwprintw(window, 3, 1, "Are you sure (y/N)? ");
+  TermInt::printStr(window, 1, 1, "CONFIRM YOUR CHOICE");
+  TermInt::printStr(window, 3, 1, "Are you sure (y/N)? ");
 }
 
 void ConfirmationScreen::keyPressed(int ch) {
@@ -20,6 +20,6 @@ void ConfirmationScreen::keyPressed(int ch) {
   }
 }
 
-
-
-
+std::string ConfirmationScreen::getLegendText() {
+  return "[y]es - [Any] No";
+}

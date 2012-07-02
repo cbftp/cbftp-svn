@@ -10,6 +10,7 @@
 #include "site.h"
 #include "menuselectsiteelement.h"
 #include "globalcontext.h"
+#include "termint.h"
 
 extern GlobalContext * global;
 

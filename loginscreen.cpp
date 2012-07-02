@@ -12,7 +12,7 @@ LoginScreen::LoginScreen(WINDOW * window, UIWindowCommand * windowcommand, int r
 void LoginScreen::redraw() {
   werase(window);
   curs_set(1);
-  std::string svnstring = " This is Project Clusterbomb SVN r" + std::string(SVNREV) + " ";
+  std::string svnstring = " This is Project Clusterbomb. Version tag: " + std::string(VERSION) + " ";
   std::string compilestring = " Compiled: " + std::string(BUILDTIME) + " ";
   int boxchar = 0;
   for(int i = 1; i < row; i++) {
@@ -32,11 +32,11 @@ void LoginScreen::redraw() {
         else boxchar = (i+j)%2==0 ? 4194417 : 4194422;
       }
       else boxchar = (i+j)%2==0 ? 4194412 : 4194410;
-      if (boxchar) mvwaddch(window, i, j, boxchar);
+      if (boxchar) TermInt::printChar(window, i, j, boxchar);
     }
   }
-  mvwprintw(window, 0, 3, svnstring.c_str());
-  mvwprintw(window, 0, col - compilestring.length() - 3, compilestring.c_str());
+  TermInt::printStr(window, 0, 3, svnstring);
+  TermInt::printStr(window, 0, col - compilestring.length() - 3, compilestring);
   update();
 
 }
@@ -46,9 +46,9 @@ void LoginScreen::update() {
   if (attempt) {
     passtext = "Invalid key, try again: ";
   }
-  mvwprintw(window, pass_row-1, pass_col, passtext.c_str());
-  mvwprintw(window, pass_row, pass_col, passfield.getVisualText().c_str());
-  wmove(window, pass_row, pass_col + passfield.getLastCharPosition());
+  TermInt::printStr(window, pass_row-1, pass_col, passtext);
+  TermInt::printStr(window, pass_row, pass_col, passfield.getVisualText());
+  TermInt::moveCursor(window, pass_row, pass_col + passfield.getLastCharPosition());
 }
 
 void LoginScreen::keyPressed(int ch) {

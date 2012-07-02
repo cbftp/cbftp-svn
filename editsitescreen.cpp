@@ -3,6 +3,8 @@
 EditSiteScreen::EditSiteScreen(WINDOW * window, UIWindowCommand * windowcommand, int row, int col) {
   this->windowcommand = windowcommand;
   active = false;
+  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one, save changes - [c]ancel, undo changes";
+  currentlegendtext = defaultlegendtext;
   operation = windowcommand->getArg1();
   std::string arg2 = windowcommand->getArg2();
   windowcommand->checkoutCommand();
@@ -31,7 +33,7 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UIWindowCommand * windowcommand,
 
 void EditSiteScreen::redraw() {
   werase(window);
-  mvwprintw(window, 1, 1, "-== SITE OPTIONS ==-");
+  TermInt::printStr(window, 1, 1, "-== SITE OPTIONS ==-");
   bool highlight;
   for (int i = 0; i < mso.size(); i++) {
     MenuSelectOptionElement * msoe = mso.getElement(i);
@@ -40,24 +42,24 @@ void EditSiteScreen::redraw() {
       highlight = true;
     }
     if (highlight) wattron(window, A_REVERSE);
-    mvwprintw(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText().c_str());
+    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
     if (highlight) wattroff(window, A_REVERSE);
-    mvwprintw(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText().c_str());
+    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
 }
 
 void EditSiteScreen::update() {
   MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
-  mvwprintw(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText().c_str());
-  mvwprintw(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText().c_str());
+  TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+  TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
   wattron(window, A_REVERSE);
-  mvwprintw(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText().c_str());
+  TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
   wattroff(window, A_REVERSE);
-  mvwprintw(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText().c_str());
+  TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   if (active && msoe->cursorPosition() >= 0) {
     curs_set(1);
-    wmove(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
+    TermInt::moveCursor(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
   }
   else {
     curs_set(0);
@@ -66,13 +68,15 @@ void EditSiteScreen::update() {
 
 void EditSiteScreen::keyPressed(int ch) {
   if (active) {
-    windowcommand->newCommand("update");
     if (ch == 10) {
       activeelement->deactivate();
       active = false;
+      currentlegendtext = defaultlegendtext;
+      windowcommand->newCommand("updatesetlegend");
       return;
     }
     activeelement->inputChar(ch);
+    windowcommand->newCommand("update");
     return;
   }
   bool activation;
@@ -86,13 +90,15 @@ void EditSiteScreen::keyPressed(int ch) {
       windowcommand->newCommand("update");
       break;
     case 10:
-      windowcommand->newCommand("update");
       activation = mso.getElement(mso.getSelectionPointer())->activate();
       if (!activation) {
+        windowcommand->newCommand("update");
         break;
       }
       active = true;
       activeelement = mso.getElement(mso.getSelectionPointer());
+      currentlegendtext = activeelement->getLegendText();
+      windowcommand->newCommand("updatesetlegend");
       break;
     case 'd':
       if (operation == "add") {
@@ -141,4 +147,8 @@ void EditSiteScreen::keyPressed(int ch) {
       windowcommand->newCommand("return");
       break;
   }
+}
+
+std::string EditSiteScreen::getLegendText() {
+  return currentlegendtext;
 }

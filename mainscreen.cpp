@@ -8,13 +8,13 @@ MainScreen::MainScreen(WINDOW * window, UIWindowCommand * windowcommand, int row
 
 void MainScreen::redraw() {
   werase(window);
-  mvwprintw(window, 1, 1, "-=== MAIN SCREEN ===-");
-  mvwprintw(window, 3, 1, std::string("Sites added: " + global->int2Str(global->getSiteManager()->getNumSites())).c_str());
+  TermInt::printStr(window, 1, 1, "-=== MAIN SCREEN ===-");
+  TermInt::printStr(window, 3, 1, "Sites added: " + global->int2Str(global->getSiteManager()->getNumSites()));
   if (global->getSiteManager()->getNumSites()) {
-    mvwprintw(window, 5, 1, "Site    Logins  Uploads  Downloads");
+    TermInt::printStr(window, 5, 1, "Site    Logins  Uploads  Downloads");
   }
   else {
-    mvwprintw(window, 5, 1, "Press 'A' to add a site");
+    TermInt::printStr(window, 5, 1, "Press 'A' to add a site");
   }
   int x = 1;
   int y = 7;
@@ -80,6 +80,6 @@ void MainScreen::keyPressed(int ch) {
   }
 }
 
-
-
-
+std::string MainScreen::getLegendText() {
+  return "[Enter] Details - [Down] Next option - [Up] Previous option - [E]dit site - [C]opy site - [D]elete site";
+}

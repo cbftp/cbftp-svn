@@ -9,6 +9,7 @@
 #include "sitethread.h"
 #include "sitethreadmanager.h"
 #include "ftpthread.h"
+#include "termint.h"
 
 extern GlobalContext * global;
 
@@ -18,6 +19,7 @@ public:
   void redraw();
   void update();
   void keyPressed(int);
+  std::string getLegendText();
 private:
   std::string sitename;
   Site * site;

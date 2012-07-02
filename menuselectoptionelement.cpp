@@ -29,6 +29,10 @@ void MenuSelectOptionElement::deactivate() {
   active = false;
 }
 
+std::string MenuSelectOptionElement::getLegendText() {
+  return "";
+}
+
 int MenuSelectOptionElement::getCol() {
   return col;
 }

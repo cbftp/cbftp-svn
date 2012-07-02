@@ -14,7 +14,7 @@ void RawDataScreen::redraw() {
   werase(window);
   int numlinestoprint = rawbuf->getSize() < row ? rawbuf->getSize() : row;
   for (int i = 0; i < numlinestoprint; i++) {
-    mvwprintw(window, i, 0, rawbuf->getLine(numlinestoprint - i - 1).c_str());
+    TermInt::printStr(window, i, 0, rawbuf->getLine(numlinestoprint - i - 1));
   }
 }
 
@@ -43,6 +43,6 @@ void RawDataScreen::keyPressed(int ch) {
   }
 }
 
-
-
-
+std::string RawDataScreen::getLegendText() {
+  return "[Left] Previous screen - [Right] Next screen - [Enter] Return";
+}

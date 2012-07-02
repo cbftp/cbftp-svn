@@ -29,3 +29,7 @@ std::string MenuSelectOptionTextField::getData() {
 void MenuSelectOptionTextField::clear() {
   textfield.clear();
 }
+
+std::string MenuSelectOptionTextField::getLegendText() {
+  return "[Enter] Finish editing - [Any] Input to text";
+}

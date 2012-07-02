@@ -34,3 +34,7 @@ void MenuSelectOptionNumArrow::deactivate() {
 int MenuSelectOptionNumArrow::getData() {
   return arrow.getValue();
 }
+
+std::string MenuSelectOptionNumArrow::getLegendText() {
+  return "[Enter] Finish editing - [Left] Decrease value - [Right] Increase value";
+}

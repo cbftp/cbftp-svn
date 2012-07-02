@@ -3,6 +3,7 @@
 #include "uiwindow.h"
 #include "uiwindowcommand.h"
 #include "textinputfield.h"
+#include "termint.h"
 
 class LoginScreen : public UIWindow {
 public:

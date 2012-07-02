@@ -16,4 +16,5 @@ public:
   bool activate();
   void deactivate();
   int getData();
+  std::string getLegendText();
 };

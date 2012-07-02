@@ -21,14 +21,13 @@ fil borttagen,
 mapp skapad,
 mapp borttagen
 
-i nuläget:
--trådarna initieras, men allt händer för närvarande i keylistener-tråden.
 
-ideer:
-- basklass för fönster
-- en init-metod som körs vid första fönsterrendering
-- en update-metod som körs vid update-events
-- update-frekvens lagras här?
+
+legend-window
+
+status: KLAR
+
+en liten marquee-bar längst ner i programmet som tipsar om tillgängliga keybinds.
 
 
 
@@ -43,7 +42,7 @@ en ruta för att initiera race. mest i testsyfte tills riktig funktionalitet
 
 AES
 
-status: inte påbörjad
+status: KLAR
 
 AES-kryptering för sitedb/config.
 

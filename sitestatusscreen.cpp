@@ -10,18 +10,18 @@ SiteStatusScreen::SiteStatusScreen(WINDOW * window, UIWindowCommand * windowcomm
 
 void SiteStatusScreen::redraw() {
   werase(window);
-  mvwprintw(window, 1, 1, std::string("Detailed status for " + site->getName()).c_str());
+  TermInt::printStr(window, 1, 1, "Detailed status for " + site->getName());
   SiteThread * st = global->getSiteThreadManager()->getSiteThread(site->getName());
-  mvwprintw(window, 3, 1, std::string("Login slots:    " + global->int2Str(st->getCurrLogins()) + "/" + global->int2Str(site->getMaxLogins())).c_str());
-  mvwprintw(window, 4, 1, std::string("Upload slots:   " + global->int2Str(st->getCurrUp()) + "/" + global->int2Str(site->getMaxUp())).c_str());
-  mvwprintw(window, 5, 1, std::string("Download slots: " + global->int2Str(st->getCurrDown()) + "/" + global->int2Str(site->getMaxDown())).c_str());
-  mvwprintw(window, 7, 1, "Login threads:");
+  TermInt::printStr(window, 3, 1, "Login slots:    " + global->int2Str(st->getCurrLogins()) + "/" + global->int2Str(site->getMaxLogins()));
+  TermInt::printStr(window, 4, 1, "Upload slots:   " + global->int2Str(st->getCurrUp()) + "/" + global->int2Str(site->getMaxUp()));
+  TermInt::printStr(window, 5, 1, "Download slots: " + global->int2Str(st->getCurrDown()) + "/" + global->int2Str(site->getMaxDown()));
+  TermInt::printStr(window, 7, 1, "Login threads:");
   int i = 8;
   std::vector<FTPThread *>::iterator it2;
   for(it2 = st->getConns()->begin(); it2 != st->getConns()->end(); it2++) {
     int id = (*it2)->getId();
     std::string status = (*it2)->getStatus();
-    mvwprintw(window, i++, 1, std::string("#" + global->int2Str(id) + " - " + status).c_str());
+    TermInt::printStr(window, i++, 1, "#" + global->int2Str(id) + " - " + status);
   }
 }
 
@@ -42,4 +42,8 @@ void SiteStatusScreen::keyPressed(int ch) {
       windowcommand->newCommand("return");
       break;
   }
+}
+
+std::string SiteStatusScreen::getLegendText() {
+  return "[Right] Raw data screens - [Enter] Return - [E]dit site";
 }

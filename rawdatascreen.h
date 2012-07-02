@@ -7,6 +7,7 @@
 #include "sitethread.h"
 #include "sitethreadmanager.h"
 #include "globalcontext.h"
+#include "termint.h"
 
 extern GlobalContext * global;
 
@@ -16,6 +17,7 @@ public:
   void redraw();
   void update();
   void keyPressed(int);
+  std::string getLegendText();
 private:
   int threads;
   std::string sitename;

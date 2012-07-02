@@ -23,3 +23,6 @@ void UIWindow::keyPressed(int key) {
 
 }
 
+std::string UIWindow::getLegendText() {
+  return "";
+}

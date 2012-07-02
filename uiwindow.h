@@ -8,17 +8,15 @@ class UserInterface;
 
 class UIWindow {
 protected:
-  UserInterface * ui;
   WINDOW * window;
   int row;
   int col;
-  int startrow;
-  int startcol;
 public:
   void init(WINDOW *, int, int);
   virtual ~UIWindow();
   virtual void redraw() = 0;
   void redraw(int, int);
   virtual void update();
+  virtual std::string getLegendText();
   virtual void keyPressed(int);
 };
