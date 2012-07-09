@@ -132,6 +132,7 @@ void UserInterface::runUserInterfaceInstance() {
     startscreen = new NewKeyScreen(main, &windowcommand, mainrow, maincol);
     legendwindow->setText(startscreen->getLegendText());
     mainwindows.push_back(startscreen);
+    putTopRefresh(legend);
   }
   topwindow = startscreen;
   putTopRefresh(main);
