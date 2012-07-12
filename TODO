@@ -31,20 +31,39 @@ en liten marquee-bar lÃ¤ngst ner i programmet som tipsar om tillgÃ¤ngliga keybin
 
 
 
+AES
+
+status: KLAR
+
+AES-kryptering fÃ¶r sitedb/config.
+
+
+
 race-start-ruta
 
-status: inte pÃ¥bÃ¶rjad
+status: utgår, ersätts av browse mode
 
 en ruta fÃ¶r att initiera race. mest i testsyfte tills riktig funktionalitet
 Ã¤r klar.
 
 
 
-AES
+Browse mode
 
-status: KLAR
+status: påbörjad
 
-AES-kryptering fÃ¶r sitedb/config.
+möjlighet att logga in och bläddra runt på en site, samt att därifrån:
+
+- initiera ett race
+- titta på (små) filer
+
+
+
+terminal resize awareness
+
+status: påbörjad
+
+Klienten ska anpassa sig när/om terminalen ändrar storlek.
 
 
 
