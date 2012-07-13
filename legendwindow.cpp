@@ -21,12 +21,6 @@ void LegendWindow::redraw() {
   update();
 }
 
-void LegendWindow::redraw(int row, int col) {
-  this->row = row;
-  this->col = col;
-  redraw();
-}
-
 void LegendWindow::update() {
   int printpos = 4;
   int textlen = text.length();

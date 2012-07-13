@@ -30,6 +30,7 @@ int main(int, char **);
 bool forever;
 
 void sighandler(int);
+void sighandler_winch(int);
 void sighandler_ignore(int);
 
 

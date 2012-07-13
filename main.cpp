@@ -67,6 +67,10 @@ void sighandler(int sig) {
   forever = false;
 }
 
+void sighandler_winch(int sig) {
+	global->getUI()->terminalSizeChanged();
+}
+
 void sighandler_ignore(int sig) {
 }
 

@@ -1,13 +1,14 @@
 #include "mainscreen.h"
 
 MainScreen::MainScreen(WINDOW * window, UIWindowCommand * windowcommand, int row, int col) {
-  mss.setWindow(window);
+	mss.setWindow(window);
   this->windowcommand = windowcommand;
   init(window, row, col);
 }
 
 void MainScreen::redraw() {
   werase(window);
+  curs_set(0);
   TermInt::printStr(window, 1, 1, "-=== MAIN SCREEN ===-");
   TermInt::printStr(window, 3, 1, "Sites added: " + global->int2Str(global->getSiteManager()->getNumSites()));
   if (global->getSiteManager()->getNumSites()) {

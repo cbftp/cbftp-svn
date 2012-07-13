@@ -3,14 +3,14 @@
 LoginScreen::LoginScreen(WINDOW * window, UIWindowCommand * windowcommand, int row, int col) {
   this->windowcommand = windowcommand;
   passfield = TextInputField(25, 32, true);
-  pass_row = row-2;
-  pass_col = col-27;
   attempt = false;
   init(window, row, col);
 }
 
 void LoginScreen::redraw() {
   werase(window);
+  pass_row = row-2;
+  pass_col = col-27;
   curs_set(1);
   std::string svnstring = " This is Project Clusterbomb. Version tag: " + std::string(VERSION) + " ";
   std::string compilestring = " Compiled: " + std::string(BUILDTIME) + " ";

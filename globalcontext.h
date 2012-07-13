@@ -55,4 +55,5 @@ class GlobalContext {
 };
 
 extern void sighandler(int);
+extern void sighandler_winch(int);
 extern void sighandler_ignore(int);

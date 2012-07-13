@@ -51,7 +51,7 @@ class UserInterface {
     sem_t event_ready;
     sem_t keyeventdone;
     UIWindowCommand windowcommand;
-    void putTopRefresh(WINDOW *);
+    void refreshAll();
     void loginScreen();
     void mainScreen();
     int editSiteScreen(Site *);
@@ -78,5 +78,6 @@ class UserInterface {
     bool init();
     void kill();
     void updateMain();
+    void terminalSizeChanged();
 };
 
