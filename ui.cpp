@@ -24,7 +24,9 @@ bool UserInterface::init() {
 
 void UserInterface::initIntern() {
   initscr();
+  cbreak();
   curs_set(0);
+  refresh();
   getmaxyx(stdscr, row, col);
   if (row < 24 || col < 80) {
     kill();
@@ -40,10 +42,8 @@ void UserInterface::kill() {
 
 void UserInterface::refreshAll() {
   if (legendenabled) {
-    touchwin(legend);
     wnoutrefresh(legend);
   }
-  touchwin(main);
   wnoutrefresh(main);
   doupdate();
 }
@@ -87,7 +87,6 @@ void UserInterface::enableLegend() {
     legendenabled = true;
     mainrow = mainrow - 2;
     wresize(main, mainrow, maincol);
-    std::cout << "LOL" << std::endl;
     redrawAll();
     curs_set(0);
     refreshAll();
@@ -150,9 +149,9 @@ void UserInterface::runUserInterfaceInstance() {
     mainwindows.push_back(startscreen);
   }
   topwindow = startscreen;
-  refreshAll();
   keypad(stdscr, TRUE);
   noecho();
+  refreshAll();
   while(1) {
     sem_wait(&event);
     std::string currentevent = eventtext;
@@ -174,6 +173,10 @@ void UserInterface::runUserInterfaceInstance() {
       refreshAll();
     }
     else if (currentevent == "resize") {
+      struct winsize size;
+      if (ioctl(fileno(stdout), TIOCGWINSZ, &size) == 0) {
+        resizeterm(size.ws_row, size.ws_col);
+      }
       endwin();
       timeout(0);
       while (getch() != ERR);

@@ -7,6 +7,7 @@
 #include <semaphore.h>
 #include <map>
 #include <sys/select.h>
+#include <sys/ioctl.h>
 
 #include "globalcontext.h"
 #include "sitemanager.h"
