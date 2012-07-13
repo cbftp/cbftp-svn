@@ -48,7 +48,7 @@ void NumInputArrow::deactivate() {
   active = false;
 }
 std::string NumInputArrow::getVisual() {
-  int maxlen = max + 4;
+  int maxlen = global->int2Str(max).length() + 4;
   std::string out = "";
   if (active) {
     out = "< " + global->int2Str(val) + " >";
