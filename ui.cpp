@@ -7,6 +7,7 @@ UserInterface::UserInterface() {
   sem_init(&event_ready, 0, 1);
   sem_init(&keyeventdone, 0, 0);
   main = NULL;
+  topwindow = NULL;
   tickerenabled = false;
   legendenabled = false;
   pthread_create(&thread[0], global->getPthreadAttr(), runKeyListener, (void *) this);
@@ -86,6 +87,7 @@ void UserInterface::enableLegend() {
     legendenabled = true;
     mainrow = mainrow - 2;
     wresize(main, mainrow, maincol);
+    std::cout << "LOL" << std::endl;
     redrawAll();
     curs_set(0);
     refreshAll();
@@ -100,7 +102,9 @@ void UserInterface::redrawAll() {
   if (legendenabled) {
     legendwindow->resize(row, col);
   }
-  topwindow->redraw();
+  if (topwindow != NULL) {
+    topwindow->redraw();
+  }
 }
 
 void UserInterface::disableLegend() {
