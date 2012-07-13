@@ -158,9 +158,6 @@ void UserInterface::runUserInterfaceInstance() {
     sem_post(&event_ready);
     if (currentevent == "keyboard") {
       int ch = getch();
-      while (ch == KEY_RESIZE) {
-        ch = getch();
-      }
       sem_post(&keyeventdone);
       topwindow->keyPressed(ch);
     }

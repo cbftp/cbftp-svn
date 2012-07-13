@@ -68,7 +68,9 @@ void sighandler(int sig) {
 }
 
 void sighandler_winch(int sig) {
+  signal(SIGWINCH, &sighandler_ignore);
 	global->getUI()->terminalSizeChanged();
+	signal(SIGWINCH, &sighandler_winch);
 }
 
 void sighandler_ignore(int sig) {
