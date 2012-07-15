@@ -1,5 +1,6 @@
-CPPFLAGS= -O3 -DBUILDTIME="\"`date`\"" -DVERSION="\"svn:r`svn info|grep Revision|awk '{ print $$2 }'`\""
-FINALFLAGS= -O3 -lncurses -lpthread -lssl
+CPPFLAGS=-O3 -DBUILDTIME="\"`date`\"" -DVERSION="\"svn:r`svn info|grep Revision|awk '{ print $$2 }'`\""
+FINALFLAGS=-O3
+LINKFLAGS=-lncurses -lpthread -lssl -lcrypto
 
 BINS = clusterbomb datafilecat
 
@@ -56,10 +57,10 @@ legendwindow.o:
 termint.o:
 
 clusterbomb: ${OBJECTS}
-	g++ -o clusterbomb $(FINALFLAGS) $(OBJECTS)
+	g++ -o clusterbomb $(FINALFLAGS) $(OBJECTS) $(LINKFLAGS)
 	
 datafilecat: crypto.cpp datafilecat.cpp
-	g++ -o datafilecat ${FINALFLAGS} -DNO_LOCAL_DEPS crypto.cpp datafilecat.cpp
+	g++ -o datafilecat ${FINALFLAGS} -DNO_LOCAL_DEPS crypto.cpp datafilecat.cpp $(LINKFLAGS)
 	
 clean:
 	rm -f ${BINS} $(OBJECTS)
