@@ -15,7 +15,7 @@
 #include "sitethread.h"
 #include "sitethreadmanager.h"
 #include "uiwindow.h"
-#include "uiwindowcommand.h"
+#include "uicommunicator.h"
 #include "loginscreen.h"
 #include "newkeyscreen.h"
 #include "mainscreen.h"
@@ -24,6 +24,7 @@
 #include "sitestatusscreen.h"
 #include "rawdatascreen.h"
 #include "legendwindow.h"
+#include "browsescreen.h"
 
 #define TICKLENGTH 250000
 
@@ -48,10 +49,8 @@ class UserInterface {
     pthread_t thread[3];
     sem_t initstart;
     sem_t initdone;
-    sem_t event;
-    sem_t event_ready;
     sem_t keyeventdone;
-    UIWindowCommand windowcommand;
+    UICommunicator uicommunicator;
     void refreshAll();
     void loginScreen();
     void mainScreen();
@@ -77,8 +76,6 @@ class UserInterface {
     void runUserInterfaceInstance();
     void runTickerInstance();
     bool init();
-    void kill();
-    void updateMain();
-    void terminalSizeChanged();
+    UICommunicator * getCommunicator();
 };
 

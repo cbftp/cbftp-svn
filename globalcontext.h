@@ -11,7 +11,7 @@
 #include <sstream>
 
 class Engine;
-class UserInterface;
+class UICommunicator;
 class SiteThreadManager;
 class SiteManager;
 class TransferManager;
@@ -23,7 +23,7 @@ class GlobalContext {
     pthread_attr_t attr;
     Engine * e;
     DataFileHandler * dfh;
-    UserInterface * ui;
+    UICommunicator * uic;
     SiteManager * sm;
     SiteThreadManager * stm;
     TransferManager * tm;
@@ -33,11 +33,11 @@ class GlobalContext {
   public:
     void init();
     GlobalContext();
-    void linkComponents(DataFileHandler *, Engine *, UserInterface *, SiteManager *, SiteThreadManager *, TransferManager *);
+    void linkComponents(DataFileHandler *, Engine *, UICommunicator *, SiteManager *, SiteThreadManager *, TransferManager *);
     SSL_CTX * getSSLCTX();
     Engine * getEngine();
     DataFileHandler * getDataFileHandler();
-    UserInterface * getUI();
+    UICommunicator * getUICommunicator();
     SiteManager * getSiteManager();
     SiteThreadManager * getSiteThreadManager();
     TransferManager * getTransferManager();

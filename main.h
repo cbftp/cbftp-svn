@@ -13,6 +13,7 @@
 #include "globalcontext.h"
 #include "engine.h"
 #include "ui.h"
+#include "uicommunicator.h"
 
 #define DATAFILE "data"
 #define DATAPATH ".clusterbomb"

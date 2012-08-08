@@ -8,11 +8,15 @@
 
 #include "sitemanager.h"
 #include "ftpthread.h"
+#include "filelist.h"
 #include "siterace.h"
 #include "globalcontext.h"
 #include "ftpthreadcom.h"
 #include "scoreboardelement.h"
 #include "potentialtracker.h"
+#include "sitethreadrequest.h"
+#include "sitethreadrequestready.h"
+#include "uicommunicator.h"
 
 extern GlobalContext * global;
 
@@ -30,6 +34,10 @@ class SiteThread {
     int slots_up;
     int available;
     int loggedin;
+    std::list<SiteThreadRequest> requests;
+    std::list<SiteThreadRequest> requestsinprogress;
+    std::list<SiteThreadRequestReady> requestsready;
+    int requestidcounter;
     Site * site;
     void activate();
     static void * run(void *);
@@ -50,6 +58,10 @@ class SiteThread {
     int getCurrLogins();
     void transferComplete(bool isdownload);
     bool getSlot(bool);
+    int requestFileList(std::string);
+    bool requestReady(int);
+    FileList * getFileList(int);
+    void requestViewFile(std::string);
     void pushPotential(int, std::string, SiteThread *);
     bool potentialCheck(int);
     std::vector<FTPThread *> * getConns();

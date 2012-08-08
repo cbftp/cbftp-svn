@@ -10,6 +10,7 @@ class FileList {
   private:
     std::map<std::string, File *> files;
     std::string username;
+    std::string path;
     pthread_mutex_t filelist_mutex;
     pthread_mutex_t owned_mutex;
     pthread_mutex_t filled_mutex;
@@ -21,7 +22,7 @@ class FileList {
     File * getFileIntern(std::string);
     void editOwnedFileCount(bool);
   public:
-    FileList(std::string);
+    FileList(std::string, std::string);
     bool updateFile(std::string, int);
     void touchFile(std::string, std::string);
     void setFileUpdateFlag(std::string, int, Site *, std::string);
@@ -33,6 +34,7 @@ class FileList {
     std::map<std::string, File *>::iterator end();
     bool contains(std::string);
     int getSize();
+    std::string getPath();
     int getSizeUploaded();
     int getOwnedPercentage();
     long int getMaxFileSize();

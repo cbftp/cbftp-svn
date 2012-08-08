@@ -3,8 +3,6 @@
 UserInterface::UserInterface() {
   sem_init(&initstart, 0, 0);
   sem_init(&initdone, 0, 0);
-  sem_init(&event, 0, 0);
-  sem_init(&event_ready, 0, 1);
   sem_init(&keyeventdone, 0, 0);
   main = NULL;
   topwindow = NULL;
@@ -29,16 +27,14 @@ void UserInterface::initIntern() {
   refresh();
   getmaxyx(stdscr, row, col);
   if (row < 24 || col < 80) {
-    kill();
+    uicommunicator.kill();
     printf("Error: terminal too small. 80x24 required. (Current %dx%d)\n", col, row);
     initret = false;
   }
   sem_post(&initdone);
 }
 
-void UserInterface::kill() {
-  endwin();
-}
+
 
 void UserInterface::refreshAll() {
   if (legendenabled) {
@@ -46,10 +42,6 @@ void UserInterface::refreshAll() {
   }
   wnoutrefresh(main);
   doupdate();
-}
-
-void UserInterface::updateMain() {
-
 }
 
 void UserInterface::stopTicker() {
@@ -74,9 +66,7 @@ void UserInterface::runKeyListenerInstance() {
     }
     else if (FD_ISSET(STDIN_FILENO, &readfds)) {
       //incoming keypress!
-      sem_wait(&event_ready);
-      eventtext = "keyboard";
-      sem_post(&event);
+      uicommunicator.emitEvent("keyboard");
       sem_wait(&keyeventdone);
     }
   }
@@ -117,12 +107,6 @@ void UserInterface::disableLegend() {
   }
 }
 
-void UserInterface::terminalSizeChanged() {
-  sem_wait(&event_ready);
-  eventtext = "resize";
-  sem_post(&event);
-}
-
 void UserInterface::runUserInterfaceInstance() {
   sem_wait(&initstart);
   initIntern();
@@ -136,15 +120,16 @@ void UserInterface::runUserInterfaceInstance() {
   UIWindow * editsitescreen;
   UIWindow * sitestatusscreen;
   UIWindow * rawdatascreen;
+  UIWindow * browsescreen;
   legendwindow = new LegendWindow(legend, 2, col);
   std::list<UIWindow *> history;
   if (global->getDataFileHandler()->fileExists()) {
-    startscreen = new LoginScreen(main, &windowcommand, mainrow, maincol);
+    startscreen = new LoginScreen(main, &uicommunicator, mainrow, maincol);
     mainwindows.push_back(startscreen);
   }
   else {
     enableLegend();
-    startscreen = new NewKeyScreen(main, &windowcommand, mainrow, maincol);
+    startscreen = new NewKeyScreen(main, &uicommunicator, mainrow, maincol);
     legendwindow->setText(startscreen->getLegendText());
     mainwindows.push_back(startscreen);
   }
@@ -153,9 +138,7 @@ void UserInterface::runUserInterfaceInstance() {
   noecho();
   refreshAll();
   while(1) {
-    sem_wait(&event);
-    std::string currentevent = eventtext;
-    sem_post(&event_ready);
+    std::string currentevent = uicommunicator.awaitEvent();
     if (currentevent == "keyboard") {
       int ch = getch();
       sem_post(&keyeventdone);
@@ -194,66 +177,66 @@ void UserInterface::runUserInterfaceInstance() {
       refreshAll();
     }
 
-    if (windowcommand.hasNewCommand()) {
-      std::string command = windowcommand.getCommand();
+    if (uicommunicator.hasNewCommand()) {
+      std::string command = uicommunicator.getCommand();
       if (command == "editsite") {
         history.push_back(topwindow);
-        editsitescreen = new EditSiteScreen(main, &windowcommand, mainrow, maincol);
+        editsitescreen = new EditSiteScreen(main, &uicommunicator, mainrow, maincol);
         legendwindow->setText(editsitescreen->getLegendText());
         mainwindows.push_back(editsitescreen);
         topwindow = editsitescreen;
         refreshAll();
-        windowcommand.checkoutCommand();
+        uicommunicator.checkoutCommand();
       }
       else if (command == "sitestatus") {
         history.push_back(topwindow);
-        sitestatusscreen = new SiteStatusScreen(main, &windowcommand, mainrow, maincol);
+        sitestatusscreen = new SiteStatusScreen(main, &uicommunicator, mainrow, maincol);
         legendwindow->setText(sitestatusscreen->getLegendText());
         mainwindows.push_back(sitestatusscreen);
         topwindow = sitestatusscreen;
         refreshAll();
-        windowcommand.checkoutCommand();
+        uicommunicator.checkoutCommand();
       }
       else if (command == "rawdata") {
         history.push_back(topwindow);
-        rawdatascreen = new RawDataScreen(main, &windowcommand, mainrow, maincol);
+        rawdatascreen = new RawDataScreen(main, &uicommunicator, mainrow, maincol);
         legendwindow->setText(rawdatascreen->getLegendText());
         mainwindows.push_back(rawdatascreen);
         topwindow = rawdatascreen;
         refreshAll();
-        windowcommand.checkoutCommand();
+        uicommunicator.checkoutCommand();
       }
       else if (command == "rawdatajump") {
-        rawdatascreen = new RawDataScreen(main, &windowcommand, mainrow, maincol);
+        rawdatascreen = new RawDataScreen(main, &uicommunicator, mainrow, maincol);
         mainwindows.push_back(rawdatascreen);
         topwindow = rawdatascreen;
         refreshAll();
-        windowcommand.checkoutCommand();
+        uicommunicator.checkoutCommand();
       }
       else if (command == "update") {
         topwindow->update();
         refreshAll();
-        windowcommand.checkoutCommand();
+        uicommunicator.checkoutCommand();
       }
       else if (command == "updatesetlegend") {
         topwindow->update();
         legendwindow->setText(topwindow->getLegendText());
         refreshAll();
-        windowcommand.checkoutCommand();
+        uicommunicator.checkoutCommand();
       }
       else if (command == "redraw") {
         topwindow->redraw();
         refreshAll();
-        windowcommand.checkoutCommand();
+        uicommunicator.checkoutCommand();
       }
       else if (command == "key") {
-        std::string key = windowcommand.getArg1();
-        windowcommand.checkoutCommand();
+        std::string key = uicommunicator.getArg1();
+        uicommunicator.checkoutCommand();
         bool result = global->getDataFileHandler()->tryDecrypt(key);
         if (result) {
           global->getSiteManager()->readSites();
           enableLegend();
-          mainscreen = new MainScreen(main, &windowcommand, mainrow, maincol);
+          mainscreen = new MainScreen(main, &uicommunicator, mainrow, maincol);
           legendwindow->setText(mainscreen->getLegendText());
           mainwindows.push_back(mainscreen);
           topwindow = mainscreen;
@@ -265,19 +248,28 @@ void UserInterface::runUserInterfaceInstance() {
         }
       }
       else if (command == "newkey") {
-        std::string key = windowcommand.getArg1();
-        windowcommand.checkoutCommand();
+        std::string key = uicommunicator.getArg1();
+        uicommunicator.checkoutCommand();
         global->getDataFileHandler()->newDataFile(key);
-        mainscreen = new MainScreen(main, &windowcommand, mainrow, maincol);
+        mainscreen = new MainScreen(main, &uicommunicator, mainrow, maincol);
         legendwindow->setText(mainscreen->getLegendText());
         mainwindows.push_back(mainscreen);
         topwindow = mainscreen;
         refreshAll();
       }
+      if (command == "browse") {
+        history.push_back(topwindow);
+        browsescreen = new BrowseScreen(main, &uicommunicator, mainrow, maincol);
+        legendwindow->setText(browsescreen->getLegendText());
+        mainwindows.push_back(browsescreen);
+        topwindow = browsescreen;
+        refreshAll();
+        uicommunicator.checkoutCommand();
+      }
       else if (command == "confirmation") {
         history.push_back(topwindow);
-        windowcommand.checkoutCommand();
-        confirmationscreen = new ConfirmationScreen(main, &windowcommand, mainrow, maincol);
+        uicommunicator.checkoutCommand();
+        confirmationscreen = new ConfirmationScreen(main, &uicommunicator, mainrow, maincol);
         legendwindow->setText(confirmationscreen->getLegendText());
         mainwindows.push_back(mainscreen);
         topwindow = confirmationscreen;
@@ -288,12 +280,12 @@ void UserInterface::runUserInterfaceInstance() {
         topwindow = mainscreen;
         legendwindow->setText(mainscreen->getLegendText());
         refreshAll();
-        windowcommand.checkoutCommand();
+        uicommunicator.checkoutCommand();
       }
       else if (command == "return") {
         topwindow = history.back();
         history.pop_back();
-        windowcommand.checkoutCommand();
+        uicommunicator.checkoutCommand();
         legendwindow->setText(topwindow->getLegendText());
         topwindow->redraw();
         refreshAll();
@@ -314,14 +306,10 @@ void UserInterface::runTickerInstance() {
   while(1) {
     usleep(TICKLENGTH);
     if (tickerenabled) {
-      sem_wait(&event_ready);
-      eventtext = "update";
-      sem_post(&event);
+      uicommunicator.emitEvent("update");
     }
     if (legendenabled) {
-      sem_wait(&event_ready);
-      eventtext = "updatelegend";
-      sem_post(&event);
+      uicommunicator.emitEvent("updatelegend");
     }
   }
 }
@@ -336,4 +324,8 @@ void * UserInterface::runUserInterface(void * arg) {
 
 void * UserInterface::runTicker(void * arg) {
   ((UserInterface *) arg)->runTickerInstance();
+}
+
+UICommunicator * UserInterface::getCommunicator() {
+  return &uicommunicator;
 }

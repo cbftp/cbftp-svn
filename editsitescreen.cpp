@@ -1,13 +1,13 @@
 #include "editsitescreen.h"
 
-EditSiteScreen::EditSiteScreen(WINDOW * window, UIWindowCommand * windowcommand, int row, int col) {
-  this->windowcommand = windowcommand;
+EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator, int row, int col) {
+  this->uicommunicator = uicommunicator;
   active = false;
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one, save changes - [c]ancel, undo changes";
   currentlegendtext = defaultlegendtext;
-  operation = windowcommand->getArg1();
-  std::string arg2 = windowcommand->getArg2();
-  windowcommand->checkoutCommand();
+  operation = uicommunicator->getArg1();
+  std::string arg2 = uicommunicator->getArg2();
+  uicommunicator->checkoutCommand();
   if (operation == "add") {
     modsite = Site("SUNET");
   }
@@ -72,33 +72,33 @@ void EditSiteScreen::keyPressed(int ch) {
       activeelement->deactivate();
       active = false;
       currentlegendtext = defaultlegendtext;
-      windowcommand->newCommand("updatesetlegend");
+      uicommunicator->newCommand("updatesetlegend");
       return;
     }
     activeelement->inputChar(ch);
-    windowcommand->newCommand("update");
+    uicommunicator->newCommand("update");
     return;
   }
   bool activation;
   switch(ch) {
     case KEY_UP:
       mso.goPrev();
-      windowcommand->newCommand("update");
+      uicommunicator->newCommand("update");
       break;
     case KEY_DOWN:
       mso.goNext();
-      windowcommand->newCommand("update");
+      uicommunicator->newCommand("update");
       break;
     case 10:
       activation = mso.getElement(mso.getSelectionPointer())->activate();
       if (!activation) {
-        windowcommand->newCommand("update");
+        uicommunicator->newCommand("update");
         break;
       }
       active = true;
       activeelement = mso.getElement(mso.getSelectionPointer());
       currentlegendtext = activeelement->getLegendText();
-      windowcommand->newCommand("updatesetlegend");
+      uicommunicator->newCommand("updatesetlegend");
       break;
     case 'd':
       if (operation == "add") {
@@ -141,10 +141,10 @@ void EditSiteScreen::keyPressed(int ch) {
       if (operation == "add") {
         global->getSiteManager()->addSite(site);
       }
-      windowcommand->newCommand("return");
+      uicommunicator->newCommand("return");
       return;
     case 'c':
-      windowcommand->newCommand("return");
+      uicommunicator->newCommand("return");
       break;
   }
 }

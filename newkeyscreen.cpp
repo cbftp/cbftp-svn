@@ -1,7 +1,7 @@
 #include "newkeyscreen.h"
 
-NewKeyScreen::NewKeyScreen(WINDOW * window, UIWindowCommand * windowcommand, int row, int col) {
-  this->windowcommand = windowcommand;
+NewKeyScreen::NewKeyScreen(WINDOW * window, UICommunicator * uicommunicator, int row, int col) {
+  this->uicommunicator = uicommunicator;
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one";
   currentlegendtext = defaultlegendtext;
   active = false;
@@ -71,22 +71,22 @@ void NewKeyScreen::keyPressed(int ch) {
       activeelement->deactivate();
       active = false;
       currentlegendtext = defaultlegendtext;
-      windowcommand->newCommand("updatesetlegend");
+      uicommunicator->newCommand("updatesetlegend");
       return;
     }
     activeelement->inputChar(ch);
-    windowcommand->newCommand("update");
+    uicommunicator->newCommand("update");
     return;
   }
   bool activation;
   switch(ch) {
     case KEY_UP:
       mso.goPrev();
-      windowcommand->newCommand("update");
+      uicommunicator->newCommand("update");
       break;
     case KEY_DOWN:
       mso.goNext();
-      windowcommand->newCommand("update");
+      uicommunicator->newCommand("update");
       break;
     case 10:
 
@@ -94,13 +94,13 @@ void NewKeyScreen::keyPressed(int ch) {
       tooshort = false;
       mismatch = false;
       if (!activation) {
-        windowcommand->newCommand("update");
+        uicommunicator->newCommand("update");
         break;
       }
       active = true;
       activeelement = mso.getElement(mso.getSelectionPointer());
       currentlegendtext = activeelement->getLegendText();
-      windowcommand->newCommand("updatesetlegend");
+      uicommunicator->newCommand("updatesetlegend");
       break;
     case 'd':
       MenuSelectOptionTextField * field1 = (MenuSelectOptionTextField *)mso.getElement(0);
@@ -111,7 +111,7 @@ void NewKeyScreen::keyPressed(int ch) {
       field2->clear();
       if (key == key2) {
         if (key.length() >= SHORTESTKEY) {
-          windowcommand->newCommand("newkey", key);
+          uicommunicator->newCommand("newkey", key);
           break;
         }
         tooshort = true;
@@ -119,7 +119,7 @@ void NewKeyScreen::keyPressed(int ch) {
       else {
         mismatch = true;
       }
-      windowcommand->newCommand("update");
+      uicommunicator->newCommand("update");
       break;
   }
 }

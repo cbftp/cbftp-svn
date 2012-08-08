@@ -1,27 +1,24 @@
 #pragma once
 
-#include <vector>
-
 #include "uiwindow.h"
 #include "uicommunicator.h"
-#include "globalcontext.h"
-#include "site.h"
+#include "termint.h"
 #include "sitethread.h"
 #include "sitethreadmanager.h"
-#include "ftpthread.h"
-#include "termint.h"
+#include "site.h"
+//#include "uifilelist.h"
 
-extern GlobalContext * global;
-
-class SiteStatusScreen : public UIWindow {
+class BrowseScreen : public UIWindow {
 public:
-  SiteStatusScreen(WINDOW *, UICommunicator *, int, int);
+  BrowseScreen(WINDOW *, UICommunicator *, int, int);
   void redraw();
   void update();
   void keyPressed(int);
   std::string getLegendText();
 private:
-  std::string sitename;
   Site * site;
+  //UIFileList list;
+  SiteThread * sitethread;
+  int requestid;
   UICommunicator * uicommunicator;
 };

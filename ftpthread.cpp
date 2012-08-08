@@ -12,6 +12,8 @@ FTPThread::FTPThread(int id, Site * site, FTPThreadCom * ftpthreadcom) {
   currentpath = "/";
   tv.tv_sec = 0;
   tv.tv_usec = 500000;
+  tvsocket.tv_sec = 10;
+  tvsocket.tv_usec = 0;
   memset(&sock, 0, sizeof(sock));
   sock.ai_family = AF_UNSPEC;
   sock.ai_socktype = SOCK_STREAM;
@@ -40,9 +42,19 @@ void FTPThread::loginAsync() {
 bool FTPThread::loginT() {
   int status;
   sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-  int loggedin = connect(sockfd, res->ai_addr, res->ai_addrlen);
+  fcntl(sockfd, F_SETFL, O_NONBLOCK);
+  connect(sockfd, res->ai_addr, res->ai_addrlen);
   FD_SET(sockfd, &readfd);
-  if (loggedin < 0) {
+  int loggedin;
+  if (select(sockfd+1, NULL, &readfd, NULL, &tvsocket) == 1) {
+    socklen_t len = sizeof loggedin;
+    getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &loggedin, &len);
+  }
+  else {
+    loggedin = -1;
+  }
+  fcntl(sockfd, F_SETFL, 0);
+  if (loggedin != 0) {
     ftpthreadcom->loginConnectFailed(id);
     return false;
   }
@@ -138,7 +150,7 @@ int FTPThread::write(const char * command, bool echo) {
   int b_sent = -1;
   if (controlssl) b_sent = SSL_write(ssl, out, len);
   else b_sent = send(sockfd, out, len, 0);
-  if (b_sent == 0) {
+  if (b_sent <= 0) {
     ftpthreadcom->connectionClosedUnexpectedly(id);
     return 0;
   }
@@ -160,14 +172,14 @@ int FTPThread::read() {
   int b_recv = -1;
   if (controlssl) b_recv = SSL_read(ssl, buf, MAXDATASIZE);
   else b_recv = recv(sockfd, buf, MAXDATASIZE, 0);
-  if (b_recv == 0) {
+  if (b_recv <= 0) {
     ftpthreadcom->connectionClosedUnexpectedly(id);
     return 0;
   }
   buf[b_recv] = '\0';
   std::string output = "[" + site->getName() + " " + global->int2Str(id) + "] " + std::string(buf);
   rawbuf->write(output);
-  if (b_recv && buf[b_recv-1] == '\n') {
+  if (b_recv > 0 && buf[b_recv-1] == '\n') {
     char * loc = buf + b_recv - 5;
     while (loc >= buf) {
       if (*loc >= 48 && *loc <= 57 && *(loc+1) >= 48 && *(loc+1) <= 57 && *(loc+2) >= 48 && *(loc+2) <= 57) {
@@ -188,7 +200,10 @@ int FTPThread::read() {
     }
     return read();
   }
-  else return read();
+  else {
+    usleep(10000);
+    return read();
+  }
 }
 
 int FTPThread::readall(char ** reply, bool print) {
@@ -202,7 +217,7 @@ int FTPThread::readallsub(char ** reply, char * tmp, bool print) {
   int b_recv = -1;
   if (controlssl) b_recv = SSL_read(ssl, buf, MAXDATASIZE);
   else b_recv = recv(sockfd, buf, MAXDATASIZE, 0);
-  if (b_recv == 0) {
+  if (b_recv <= 0) {
     ftpthreadcom->connectionClosedUnexpectedly(id);
     return 0;
   }
@@ -216,7 +231,7 @@ int FTPThread::readallsub(char ** reply, char * tmp, bool print) {
   strcpy(build, tmp);
   strcat (build, buf);
   delete tmp;
-  if (b_recv && build[tmplen + b_recv - 1] == '\n') {
+  if (b_recv > 0 && build[tmplen + b_recv - 1] == '\n') {
     char * loc = build + tmplen + b_recv - 5;
     while (loc >= build) {
       if (*loc >= 48 && *loc <= 57 && *(loc+1) >= 48 && *(loc+1) <= 57 && *(loc+2) >= 48 && *(loc+2) <= 57) {
@@ -254,14 +269,14 @@ void FTPThread::refreshLoopT() {
   if (currentpath != currentsiterace->getPath()) doCWDT(currentsiterace->getPath());
   int val;
   while(true) {
-    updateFileList(currentsiterace->getFileList());
+    updateFileList(currentsiterace->getFileList(), true);
     sleepTickT();
     sem_getvalue(&commandsem, &val);
     if (val > 0) return;
   }
 }
 
-int FTPThread::updateFileList(FileList * filelist) {
+int FTPThread::updateFileList(FileList * filelist, bool inrace) {
   char * reply;
   write("STAT -l");
   if (readall(&reply, false) == 213) {
@@ -285,8 +300,23 @@ int FTPThread::updateFileList(FileList * filelist) {
     std::string output = "[" + site->getName() + " " + global->int2Str(id) + "] File list retrieved.";
     rawbuf->writeLine(output);
     if (!filelist->isFilled()) filelist->setFilled();
-    ftpthreadcom->fileListUpdated(id);
+    if (inrace) {
+      ftpthreadcom->fileListUpdated(id);
+    }
   }
+  return 0;
+}
+
+void FTPThread::getFileListAsync(std::string path) {
+  putCommand(new CommandQueueElement(12, (void *) new std::string(path)));
+}
+
+void FTPThread::getFileListT(std::string path) {
+  FileList * filelist = new FileList(site->getUser(), path);
+  if (doCWDT(path)) {
+    updateFileList(filelist, false);
+  }
+  ftpthreadcom->fileListRetrieved(id, filelist);
 }
 
 std::string FTPThread::getCurrentPath() {
@@ -543,6 +573,9 @@ void FTPThread::runInstance() {
         break;
       case 11:
         doPORTT(*(std::string *)command->getArg1(), command->getDoneSem());
+        break;
+      case 12:
+        getFileListT(*(std::string *)command->getArg1());
         break;
       case 20:
         ret = doRETRAsyncT(*(std::string *)command->getArg1(), (int *)command->getArg2(), command->getDoneSem());

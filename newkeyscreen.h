@@ -1,7 +1,7 @@
 #pragma once
 
 #include "uiwindow.h"
-#include "uiwindowcommand.h"
+#include "uicommunicator.h"
 #include "menuselectoption.h"
 #include "menuselectoptionelement.h"
 #include "termint.h"
@@ -10,7 +10,7 @@
 
 class NewKeyScreen : public UIWindow {
 public:
-  NewKeyScreen(WINDOW *, UIWindowCommand *, int, int);
+  NewKeyScreen(WINDOW *, UICommunicator *, int, int);
   void update();
   void redraw();
   void keyPressed(int);
@@ -24,5 +24,5 @@ private:
   MenuSelectOptionElement * activeelement;
   MenuSelectOption mso;
   std::string operation;
-  UIWindowCommand * windowcommand;
+  UICommunicator * uicommunicator;
 };

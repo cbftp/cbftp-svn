@@ -13,10 +13,10 @@ void GlobalContext::init() {
   sem_init(&list_refresh, 0, 0);
 }
 
-void GlobalContext::linkComponents(DataFileHandler * dfh, Engine * e, UserInterface * ui, SiteManager * sm, SiteThreadManager * stm, TransferManager * tm) {
+void GlobalContext::linkComponents(DataFileHandler * dfh, Engine * e, UICommunicator * uic, SiteManager * sm, SiteThreadManager * stm, TransferManager * tm) {
   this->dfh = dfh;
   this->e = e;
-  this->ui = ui;
+  this->uic = uic;
   this->sm = sm;
   this->stm = stm;
   this->tm = tm;
@@ -30,8 +30,8 @@ DataFileHandler * GlobalContext::getDataFileHandler() {
   return dfh;
 }
 
-UserInterface * GlobalContext::getUI() {
-  return ui;
+UICommunicator * GlobalContext::getUICommunicator() {
+  return uic;
 }
 
 SiteManager * GlobalContext::getSiteManager() {

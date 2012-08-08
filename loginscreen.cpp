@@ -1,7 +1,7 @@
 #include "loginscreen.h"
 
-LoginScreen::LoginScreen(WINDOW * window, UIWindowCommand * windowcommand, int row, int col) {
-  this->windowcommand = windowcommand;
+LoginScreen::LoginScreen(WINDOW * window, UICommunicator * uicommunicator, int row, int col) {
+  this->uicommunicator = uicommunicator;
   passfield = TextInputField(25, 32, true);
   attempt = false;
   init(window, row, col);
@@ -65,12 +65,12 @@ void LoginScreen::keyPressed(int ch) {
       case 13:
         curs_set(0);
         attempt = true;
-        windowcommand->newCommand("key", passfield.getText());
+        uicommunicator->newCommand("key", passfield.getText());
         passfield.clear();
         return;
     }
   }
-  windowcommand->newCommand("update");
+  uicommunicator->newCommand("update");
 }
 
 

@@ -3,6 +3,7 @@
 SiteThread::SiteThread(std::string sitename) {
   pthread_mutex_init(&slots, NULL);
   sem_init(&notifysem, 0, 0);
+  requestidcounter = 0;
   ftpthreadcom = new FTPThreadCom(&notifysem);
   site = global->getSiteManager()->getSite(sitename);
   slots_dn = site->getMaxDown() > 0 ? site->getMaxDown() : site->getMaxLogins();
@@ -36,21 +37,33 @@ void SiteThread::runInstance() {
   while(1) {
     sem_wait(&notifysem);
     CommandQueueElement * command = ftpthreadcom->getCommand();
-    SiteRace * race = races[0];
+    SiteRace * race;
     int id = *(int *)command->getArg1();
-    int status = *(int *)command->getArg2();
+    int status;
     std::string reply;
+    std::list<SiteThreadRequest>::iterator it;
     delete (int *)command->getArg1();
-    delete (int *)command->getArg2();
     switch(command->getOpcode()) {
       case 0: // login successful
-        conns[id]->doCWDorMKDirAsync(race->getSection(), race->getRelease());
-        conns[id]->refreshLoopAsync(race);
-        conns[id]->setReady();
         pthread_mutex_lock(&slots);
-        available++;
         loggedin++;
         pthread_mutex_unlock(&slots);
+        if (requests.size() > 0) {
+          conns[id]->getFileListAsync(requests.front().requestPath());
+          requestsinprogress.push_back(requests.front());
+          requests.pop_front();
+        }
+        else {
+          if (races.size() > 0) {
+            race = races[0];
+            conns[id]->doCWDorMKDirAsync(race->getSection(), race->getRelease());
+            conns[id]->refreshLoopAsync(race);
+            conns[id]->setReady();
+          }
+          pthread_mutex_lock(&slots);
+          available++;
+          pthread_mutex_unlock(&slots);
+        }
         break;
       case 1: // connection failed
         std::cout << "CONNECTION FAILED" << std::endl;
@@ -59,6 +72,8 @@ void SiteThread::runInstance() {
         conns[id]->disconnectAsync();
         break;
       case 3: // login user denied
+        status = *(int *)command->getArg2();
+        delete (int *)command->getArg2();
         reply = std::string((char *)command->getArg3());
         delete (char *)command->getArg3();
         if (status == 530 || status == 550) {
@@ -75,6 +90,8 @@ void SiteThread::runInstance() {
         conns[id]->doQUITAsync();
         break;
       case 4: // login password denied
+        status = *(int *)command->getArg2();
+        delete (int *)command->getArg2();
         reply = std::string((char *)command->getArg3());
         delete (char *)command->getArg3();
         if (status == 530 || status == 550) {
@@ -91,7 +108,8 @@ void SiteThread::runInstance() {
         conns[id]->doQUITAsync();
         break;
       case 6: // connection closed unexpectedly
-        conns[id]->reconnectAsync();
+        std::cout << "Disconnected." << std::endl;
+        conns[id]->disconnectAsync();
         break;
       case 7: // login kill failed
         delete (char *)command->getArg3();
@@ -99,14 +117,56 @@ void SiteThread::runInstance() {
         break;
       case 10: // file list refreshed
         //SiteRace * sr = (SiteRace *)command->getArg3();
+        race = races[0];
         race->updateNumFilesUploaded();
         int tmpi;
         sem_getvalue(list_refresh, &tmpi);
         if (tmpi == 0) sem_post(list_refresh);
         break;
+      case 11: // file list retrieved
+        FileList * filelist = (FileList *)command->getArg2();
+        for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
+          if (it->requestPath() == filelist->getPath()) {
+            requestsready.push_back(SiteThreadRequestReady(it->requestId(), filelist));
+            requestsinprogress.erase(it);
+            global->getUICommunicator()->backendPush();
+            break;
+          }
+        }
+        break;
+
     }
     ftpthreadcom->commandProcessed();
   }
+}
+
+int SiteThread::requestFileList(std::string path) {
+  int requestid = requestidcounter++;
+  requests.push_back(SiteThreadRequest(requestid, path));
+  if (loggedin == 0) {
+    activate();
+  }
+  return requestid;
+}
+
+bool SiteThread::requestReady(int requestid) {
+  std::list<SiteThreadRequestReady>::iterator it;
+  for (it = requestsready.begin(); it != requestsready.end(); it++) {
+    if (it->requestId() == requestid) {
+      return true;
+    }
+  }
+  return false;
+}
+
+FileList * SiteThread::getFileList(int requestid) {
+  std::list<SiteThreadRequestReady>::iterator it;
+  for (it = requestsready.begin(); it != requestsready.end(); it++) {
+    if (it->requestId() == requestid) {
+      return it->requestFileList();
+    }
+  }
+  return NULL;
 }
 
 Site * SiteThread::getSite() {
@@ -117,6 +177,7 @@ SiteRace * SiteThread::getRace(std::string race) {
   for (std::vector<SiteRace *>::iterator it = races.begin(); it != races.end(); it++) {
     if ((*it)->getRelease().compare(race) == 0) return *it;
   }
+  return NULL;
 }
 
 bool SiteThread::getDownloadThread(SiteRace * sr, std::string file, FTPThread ** ret) {

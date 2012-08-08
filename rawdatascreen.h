@@ -3,7 +3,7 @@
 #include "uiwindow.h"
 #include "ftpthread.h"
 #include "rawbuffer.h"
-#include "uiwindowcommand.h"
+#include "uicommunicator.h"
 #include "sitethread.h"
 #include "sitethreadmanager.h"
 #include "globalcontext.h"
@@ -13,7 +13,7 @@ extern GlobalContext * global;
 
 class RawDataScreen : public UIWindow {
 public:
-  RawDataScreen(WINDOW *, UIWindowCommand *, int, int);
+  RawDataScreen(WINDOW *, UICommunicator *, int, int);
   void redraw();
   void update();
   void keyPressed(int);
@@ -22,6 +22,6 @@ private:
   int threads;
   std::string sitename;
   int threadid;
-  UIWindowCommand * windowcommand;
+  UICommunicator * uicommunicator;
   RawBuffer * rawbuf;
 };

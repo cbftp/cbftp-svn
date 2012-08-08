@@ -2,19 +2,19 @@
 
 #include "uiwindow.h"
 #include "menuselectsite.h"
-#include "uiwindowcommand.h"
+#include "uicommunicator.h"
 #include "site.h"
 #include "termint.h"
 
 class MainScreen : public UIWindow {
 public:
-  MainScreen(WINDOW *, UIWindowCommand *, int, int);
+  MainScreen(WINDOW *, UICommunicator *, int, int);
   void update();
   void redraw();
   void keyPressed(int);
   std::string getLegendText();
 private:
   std::string deletesite;
-  UIWindowCommand * windowcommand;
+  UICommunicator * uicommunicator;
   MenuSelectSite mss;
 };

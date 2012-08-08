@@ -6,6 +6,8 @@
 
 #include "commandqueueelement.h"
 
+class FileList;
+
 class FTPThreadCom {
   private:
     std::list<CommandQueueElement *> commandqueue;
@@ -24,7 +26,9 @@ class FTPThreadCom {
     void loginKillFailed(int, int, char *);
     void connectionClosedUnexpectedly(int);
     void fileListUpdated(int);
+    void fileListRetrieved(int, FileList *);
     void putCommand(int, int);
     void putCommand(int, int, int);
     void putCommand(int, int, int, char *);
+    void putCommand(int, int, void *, void *);
 };

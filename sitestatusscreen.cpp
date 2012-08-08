@@ -1,9 +1,9 @@
 #include "sitestatusscreen.h"
 
-SiteStatusScreen::SiteStatusScreen(WINDOW * window, UIWindowCommand * windowcommand, int row, int col) {
-  this->windowcommand = windowcommand;
-  sitename = windowcommand->getArg1();
-  windowcommand->checkoutCommand();
+SiteStatusScreen::SiteStatusScreen(WINDOW * window, UICommunicator * uicommunicator, int row, int col) {
+  this->uicommunicator = uicommunicator;
+  sitename = uicommunicator->getArg1();
+  uicommunicator->checkoutCommand();
   site = global->getSiteManager()->getSite(sitename);
   init(window, row, col);
 }
@@ -32,14 +32,17 @@ void SiteStatusScreen::update() {
 void SiteStatusScreen::keyPressed(int ch) {
   switch(ch) {
     case KEY_RIGHT:
-      windowcommand->newCommand("rawdata", sitename, "0");
+      uicommunicator->newCommand("rawdata", sitename, "0");
       break;
     case 'E':
-      windowcommand->newCommand("editsite", "edit", sitename);
+      uicommunicator->newCommand("editsite", "edit", sitename);
       break;
     case ' ':
     case 10:
-      windowcommand->newCommand("return");
+      uicommunicator->newCommand("return");
+      break;
+    case 'b':
+      uicommunicator->newCommand("browse", site->getName());
       break;
   }
 }

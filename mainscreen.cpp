@@ -1,8 +1,8 @@
 #include "mainscreen.h"
 
-MainScreen::MainScreen(WINDOW * window, UIWindowCommand * windowcommand, int row, int col) {
+MainScreen::MainScreen(WINDOW * window, UICommunicator * uicommunicator, int row, int col) {
 	mss.setWindow(window);
-  this->windowcommand = windowcommand;
+  this->uicommunicator = uicommunicator;
   init(window, row, col);
 }
 
@@ -27,14 +27,14 @@ void MainScreen::redraw() {
 }
 
 void MainScreen::update() {
-  if (windowcommand->hasNewCommand()) {
-    if (windowcommand->getCommand() == "yes") {
+  if (uicommunicator->hasNewCommand()) {
+    if (uicommunicator->getCommand() == "yes") {
       global->getSiteThreadManager()->deleteSiteThread(deletesite);
       global->getSiteManager()->deleteSite(deletesite);
     }
-    windowcommand->checkoutCommand();
+    uicommunicator->checkoutCommand();
     redraw();
-    windowcommand->newCommand("update");
+    uicommunicator->newCommand("update");
   }
 }
 
@@ -44,24 +44,24 @@ void MainScreen::keyPressed(int ch) {
     case KEY_UP:
       if (mss.getSite() == NULL) break;
       mss.goPrev();
-      windowcommand->newCommand("update");
+      uicommunicator->newCommand("update");
       break;
     case KEY_DOWN:
       if (mss.getSite() == NULL) break;
       mss.goNext();
-      windowcommand->newCommand("update");
+      uicommunicator->newCommand("update");
       break;
     case ' ':
     case 10:
       if (mss.getSite() == NULL) break;
-      windowcommand->newCommand("sitestatus", mss.getSite()->getName());
+      uicommunicator->newCommand("sitestatus", mss.getSite()->getName());
       break;
     case 'E':
       if (mss.getSite() == NULL) break;
-      windowcommand->newCommand("editsite", "edit", mss.getSite()->getName());
+      uicommunicator->newCommand("editsite", "edit", mss.getSite()->getName());
       break;
     case 'A':
-      windowcommand->newCommand("editsite", "add");
+      uicommunicator->newCommand("editsite", "add");
       break;
     case 'C':
       if (mss.getSite() == NULL) break;
@@ -70,17 +70,21 @@ void MainScreen::keyPressed(int ch) {
       for (i = 0; global->getSiteManager()->getSite(site->getName() + "-" + global->int2Str(i)) != NULL; i++);
       site->setName(site->getName() + "-" + global->int2Str(i));
       global->getSiteManager()->addSite(site);
-      windowcommand->newCommand("redraw");
+      uicommunicator->newCommand("redraw");
       break;
     case 'D':
       site = mss.getSite();
       if (site == NULL) break;
       deletesite = site->getName();
-      windowcommand->newCommand("confirmation");
+      uicommunicator->newCommand("confirmation");
+      break;
+    case 'b':
+      if (mss.getSite() == NULL) break;
+      uicommunicator->newCommand("browse", mss.getSite()->getName());
       break;
   }
 }
 
 std::string MainScreen::getLegendText() {
-  return "[Enter] Details - [Down] Next option - [Up] Previous option - [E]dit site - [C]opy site - [D]elete site";
+  return "[Enter] Details - [Down] Next option - [Up] Previous option - [b]rowse site - [E]dit site - [C]opy site - [D]elete site";
 }

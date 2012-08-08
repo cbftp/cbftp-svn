@@ -55,6 +55,14 @@ void FTPThreadCom::fileListUpdated(int id) {
   putCommand(id, 10);
 }
 
+void FTPThreadCom::fileListRetrieved(int id, FileList * filelist) {
+  int * idp = new int(id);
+  pthread_mutex_lock(&commandqueue_mutex);
+  commandqueue.push_back(new CommandQueueElement(11, (void *) idp, (void *) filelist, (void *) NULL));
+  pthread_mutex_unlock(&commandqueue_mutex);
+  sem_post(notifysem);
+}
+
 void FTPThreadCom::putCommand(int id, int cid) {
   putCommand(id, cid, 0, NULL);
 }
@@ -64,10 +72,14 @@ void FTPThreadCom::putCommand(int id, int cid, int status) {
 }
 
 void FTPThreadCom::putCommand(int id, int cid, int status, char * reply) {
-  int * idp = new int(id);
   int * statusp = new int(status);
+  putCommand(id, cid, (void *) statusp, (void *) reply);
+}
+
+void FTPThreadCom::putCommand(int id, int cid, void * arg3, void * arg4) {
+  int * idp = new int(id);
   pthread_mutex_lock(&commandqueue_mutex);
-  commandqueue.push_back(new CommandQueueElement(cid, (void *) idp, (void *) statusp, (void *) reply));
+  commandqueue.push_back(new CommandQueueElement(cid, (void *) idp, arg3, arg4));
   pthread_mutex_unlock(&commandqueue_mutex);
   sem_post(notifysem);
 }

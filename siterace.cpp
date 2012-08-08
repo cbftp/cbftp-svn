@@ -5,7 +5,7 @@ SiteRace::SiteRace(Race * race, std::string section, std::string release, std::s
   this->section = section;
   this->release = release;
   path = section.append("/").append(release);
-  filelist = new FileList(username);
+  filelist = new FileList(username, path);
 }
 
 std::string SiteRace::getSection() {

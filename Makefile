@@ -1,6 +1,6 @@
-CPPFLAGS=-O3 -DBUILDTIME="\"`date`\"" -DVERSION="\"svn:r`svn info|grep Revision|awk '{ print $$2 }'`\""
-FINALFLAGS=-O3
-LINKFLAGS=-lncurses -lpthread -lssl -lcrypto
+CPPFLAGS=-g -O0 -DBUILDTIME="\"`date`\"" -DVERSION="\"svn:r`svn info|grep Revision|awk '{ print $$2 }'`\""
+FINALFLAGS=-g -O0
+LINKFLAGS=-g -lncurses -lpthread -lssl -lcrypto
 
 BINS = clusterbomb datafilecat
 
@@ -10,10 +10,11 @@ OBJECTS = commandqueueelement.o ftpthreadcom.o potentialelement.o scoreboardelem
 	sitemanager.o sitethread.o file.o main.o race.o site.o transfermanager.o \
 	menuselectsite.o menuselectsiteelement.o menuselectoption.o \
 	menuselectoptionelement.o rawbuffer.o uiwindow.o loginscreen.o mainscreen.o \
-	editsitescreen.o confirmationscreen.o uiwindowcommand.o textinputfield.o \
+	editsitescreen.o confirmationscreen.o uicommunicator.o textinputfield.o \
 	numinputarrow.o menuselectoptionnumarrow.o menuselectoptiontextfield.o \
 	menuselectoptioncheckbox.o sitestatusscreen.o rawdatascreen.o crypto.o \
-	datafilehandler.o newkeyscreen.o legendwindow.o termint.o
+	datafilehandler.o newkeyscreen.o legendwindow.o termint.o browsescreen.o \
+	sitethreadrequest.o sitethreadrequestready.o
 
 all: ${BINS}
 	
@@ -47,7 +48,7 @@ loginscreen.o:
 mainscreen.o:
 editsitescreen.o:
 confirmationscreen.o:
-uiwindowcommand.o:
+uicommunicator.o:
 textinputfield.o:
 sitestatusscreen.o:
 crypto.o:
@@ -55,9 +56,12 @@ datafilehandler.o:
 newkeyscreen.o:
 legendwindow.o:
 termint.o:
+browsescreen.o:
+sitethreadrequest.o:
+sitethreadrequestready.o:
 
 clusterbomb: ${OBJECTS}
-	g++ -o clusterbomb $(FINALFLAGS) $(OBJECTS) $(LINKFLAGS)
+	g++ -g -o clusterbomb $(FINALFLAGS) $(OBJECTS) $(LINKFLAGS)
 	
 datafilecat: crypto.cpp datafilecat.cpp
 	g++ -o datafilecat ${FINALFLAGS} -DNO_LOCAL_DEPS crypto.cpp datafilecat.cpp $(LINKFLAGS)

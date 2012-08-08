@@ -33,7 +33,7 @@ Main::Main() {
   SiteManager * sm = new SiteManager();
   SiteThreadManager * stm = new SiteThreadManager();
   TransferManager * tm = new TransferManager();
-  global->linkComponents(dfh, e, ui, sm, stm, tm);
+  global->linkComponents(dfh, e, ui->getCommunicator(), sm, stm, tm);
   if (!ui->init()) exit(1);
   while(forever) {
     sleep(1);
@@ -57,7 +57,7 @@ int main(int argc, char * argv[]) {
 
 void sighandler(int sig) {
   global->signal_ignore();
-  global->getUI()->kill();
+  global->getUICommunicator()->kill();
   if (global->getDataFileHandler()->isInitialized()) {
     std::cout << "Saving data to file..." << std::endl;
     global->getSiteManager()->writeState();
@@ -69,7 +69,7 @@ void sighandler(int sig) {
 
 void sighandler_winch(int sig) {
   signal(SIGWINCH, &sighandler_ignore);
-	global->getUI()->terminalSizeChanged();
+	global->getUICommunicator()->terminalSizeChanged();
 	signal(SIGWINCH, &sighandler_winch);
 }
 

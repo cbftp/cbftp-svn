@@ -1,18 +1,18 @@
 #pragma once
 
 #include "uiwindow.h"
-#include "uiwindowcommand.h"
+#include "uicommunicator.h"
 #include "textinputfield.h"
 #include "termint.h"
 
 class LoginScreen : public UIWindow {
 public:
-  LoginScreen(WINDOW *, UIWindowCommand *, int, int);
+  LoginScreen(WINDOW *, UICommunicator *, int, int);
   void update();
   void redraw();
   void keyPressed(int);
 private:
-  UIWindowCommand * windowcommand;
+  UICommunicator * uicommunicator;
   std::string passphrase;
   TextInputField passfield;
   int pass_row;

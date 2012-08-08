@@ -1,10 +1,11 @@
 #include "filelist.h"
 
-FileList::FileList(std::string username) {
+FileList::FileList(std::string username, std::string path) {
   pthread_mutex_init(&filelist_mutex, NULL);
   pthread_mutex_init(&owned_mutex, NULL);
   pthread_mutex_init(&filled_mutex, NULL);
   this->username = username;
+  this->path = path;
   filled = false;
   owned = 0;
   ownpercentage = 0;
@@ -147,6 +148,10 @@ int FileList::getOwnedPercentage() {
 
 long int FileList::getMaxFileSize() {
   return maxfilesize;
+}
+
+std::string FileList::getPath() {
+  return path;
 }
 
 void FileList::lockFileList() {

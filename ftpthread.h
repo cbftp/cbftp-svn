@@ -9,6 +9,7 @@
 #include <openssl/ssl.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <fcntl.h>
 
 #include "filelist.h"
 #include "ftpthreadcom.h"
@@ -52,6 +53,7 @@ class FTPThread {
     std::string currentpath;
     SiteRace * currentsiterace;
     struct timeval tv;
+    struct timeval tvsocket;
     fd_set readfd;
     int write(const char *);
     int write(const char *, bool);
@@ -78,7 +80,7 @@ class FTPThread {
     void setReady();
     void refreshLoopAsync(SiteRace *);
     void refreshLoopT();
-    int updateFileList(FileList *);
+    int updateFileList(FileList *, bool);
     std::string getCurrentPath();
     std::string doPWD();
     void sleepTickAsync();
@@ -106,6 +108,8 @@ class FTPThread {
     void doQUITT();
     void disconnectAsync();
     void disconnectT();
+    void getFileListAsync(std::string);
+    void getFileListT(std::string);
     std::list<CommandQueueElement *> * getCommandQueue();
     void runInstance();
     void runTickInstance();

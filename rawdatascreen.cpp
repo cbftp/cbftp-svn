@@ -1,9 +1,9 @@
 #include "rawdatascreen.h"
 
-RawDataScreen::RawDataScreen(WINDOW * window, UIWindowCommand * windowcommand, int row, int col) {
-  this->windowcommand = windowcommand;
-  sitename = windowcommand->getArg1();
-  threadid = global->str2Int(windowcommand->getArg2());
+RawDataScreen::RawDataScreen(WINDOW * window, UICommunicator * uicommunicator, int row, int col) {
+  this->uicommunicator = uicommunicator;
+  sitename = uicommunicator->getArg1();
+  threadid = global->str2Int(uicommunicator->getArg2());
   SiteThread * sitethread = global->getSiteThreadManager()->getSiteThread(sitename);
   threads = sitethread->getConns()->size();
   this->rawbuf = sitethread->getConn(threadid)->getRawBuffer();
@@ -26,19 +26,19 @@ void RawDataScreen::keyPressed(int ch) {
   switch(ch) {
     case KEY_RIGHT:
       if (threadid + 1 < threads) {
-        windowcommand->newCommand("rawdatajump", sitename, global->int2Str(threadid + 1));
+        uicommunicator->newCommand("rawdatajump", sitename, global->int2Str(threadid + 1));
       }
       break;
     case KEY_LEFT:
       if (threadid == 0) {
-        windowcommand->newCommand("return");
+        uicommunicator->newCommand("return");
       }
       else {
-        windowcommand->newCommand("rawdatajump", sitename, global->int2Str(threadid - 1));
+        uicommunicator->newCommand("rawdatajump", sitename, global->int2Str(threadid - 1));
       }
       break;
     case 10:
-      windowcommand->newCommand("return");
+      uicommunicator->newCommand("return");
       break;
   }
 }

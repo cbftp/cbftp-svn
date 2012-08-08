@@ -1,7 +1,7 @@
 #include "confirmationscreen.h"
 
-ConfirmationScreen::ConfirmationScreen(WINDOW * window, UIWindowCommand * windowcommand, int row, int col) {
-  this->windowcommand = windowcommand;
+ConfirmationScreen::ConfirmationScreen(WINDOW * window, UICommunicator * uicommunicator, int row, int col) {
+  this->uicommunicator = uicommunicator;
   init(window, row, col);
 }
 
@@ -13,10 +13,10 @@ void ConfirmationScreen::redraw() {
 
 void ConfirmationScreen::keyPressed(int ch) {
   if (ch == 'y') {
-    windowcommand->newCommand("yes");
+    uicommunicator->newCommand("yes");
   }
   else {
-    windowcommand->newCommand("no");
+    uicommunicator->newCommand("no");
   }
 }
 

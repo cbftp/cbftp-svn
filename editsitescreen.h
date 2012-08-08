@@ -1,7 +1,7 @@
 #pragma once
 
 #include "uiwindow.h"
-#include "uiwindowcommand.h"
+#include "uicommunicator.h"
 #include "sitemanager.h"
 #include "site.h"
 #include "menuselectoption.h"
@@ -10,7 +10,7 @@
 
 class EditSiteScreen : public UIWindow {
 public:
-  EditSiteScreen(WINDOW *, UIWindowCommand *, int, int);
+  EditSiteScreen(WINDOW *, UICommunicator *, int, int);
   void update();
   void redraw();
   void keyPressed(int);
@@ -24,5 +24,5 @@ private:
   Site * site;
   Site modsite;
   std::string operation;
-  UIWindowCommand * windowcommand;
+  UICommunicator * uicommunicator;
 };
