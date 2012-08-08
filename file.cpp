@@ -39,7 +39,13 @@ File::File(std::string statline, int touch) {
   start = pos;
   while (statline[++pos] != '\r');
   name = statline.substr(start, pos - start);
-  extension = name.substr(name.length()-3);
+  int suffixdotpos = name.rfind(".");
+  if (suffixdotpos > 0) {
+    extension = name.substr(suffixdotpos + 1);
+  }
+  else {
+    extension = "";
+  }
   this->touch = touch;
   updateflag = false;
 }
