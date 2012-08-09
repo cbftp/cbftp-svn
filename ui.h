@@ -25,6 +25,7 @@
 #include "rawdatascreen.h"
 #include "legendwindow.h"
 #include "browsescreen.h"
+#include "tickpoke.h"
 
 #define TICKLENGTH 250000
 
@@ -46,7 +47,7 @@ class UserInterface {
     bool tickerenabled;
     bool legendenabled;
     std::string eventtext;
-    pthread_t thread[3];
+    pthread_t thread[2];
     sem_t initstart;
     sem_t initdone;
     sem_t keyeventdone;
@@ -69,12 +70,10 @@ class UserInterface {
     void redrawAll();
     static void * runKeyListener(void *);
     static void * runUserInterface(void *);
-    static void * runTicker(void *);
   public:
     UserInterface();
     void runKeyListenerInstance();
     void runUserInterfaceInstance();
-    void runTickerInstance();
     bool init();
     UICommunicator * getCommunicator();
 };

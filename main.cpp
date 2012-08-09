@@ -33,7 +33,8 @@ Main::Main() {
   SiteManager * sm = new SiteManager();
   SiteThreadManager * stm = new SiteThreadManager();
   TransferManager * tm = new TransferManager();
-  global->linkComponents(dfh, e, ui->getCommunicator(), sm, stm, tm);
+  TickPoke * tp = new TickPoke();
+  global->linkComponents(dfh, e, ui->getCommunicator(), sm, stm, tm, tp);
   if (!ui->init()) exit(1);
   while(forever) {
     sleep(1);

@@ -10,7 +10,6 @@ UserInterface::UserInterface() {
   legendenabled = false;
   pthread_create(&thread[0], global->getPthreadAttr(), runKeyListener, (void *) this);
   pthread_create(&thread[1], global->getPthreadAttr(), runUserInterface, (void *) this);
-  pthread_create(&thread[2], global->getPthreadAttr(), runTicker, (void *) this);
 }
 
 bool UserInterface::init() {
@@ -121,6 +120,8 @@ void UserInterface::runUserInterfaceInstance() {
   UIWindow * sitestatusscreen;
   UIWindow * rawdatascreen;
   UIWindow * browsescreen;
+  sem_t * eventsem = uicommunicator.getEventSem();
+  global->getTickPoke()->startPoke(eventsem, 250, 0);
   legendwindow = new LegendWindow(legend, 2, col);
   std::list<UIWindow *> history;
   if (global->getDataFileHandler()->fileExists()) {
@@ -139,7 +140,17 @@ void UserInterface::runUserInterfaceInstance() {
   refreshAll();
   while(1) {
     std::string currentevent = uicommunicator.awaitEvent();
-    if (currentevent == "keyboard") {
+    if (global->getTickPoke()->isPoked(eventsem)) {
+      global->getTickPoke()->getMessage(eventsem);
+      if (tickerenabled) {
+        topwindow->update();
+      }
+      if (legendenabled) {
+        legendwindow->update();
+      }
+      refreshAll();
+    }
+    else if (currentevent == "keyboard") {
       int ch = getch();
       sem_post(&keyeventdone);
       topwindow->keyPressed(ch);
@@ -301,29 +312,12 @@ void UserInterface::runUserInterfaceInstance() {
   }
 }
 
-void UserInterface::runTickerInstance() {
-  int i = 0;
-  while(1) {
-    usleep(TICKLENGTH);
-    if (tickerenabled) {
-      uicommunicator.emitEvent("update");
-    }
-    if (legendenabled) {
-      uicommunicator.emitEvent("updatelegend");
-    }
-  }
-}
-
 void * UserInterface::runKeyListener(void * arg) {
   ((UserInterface *) arg)->runKeyListenerInstance();
 }
 
 void * UserInterface::runUserInterface(void * arg) {
   ((UserInterface *) arg)->runUserInterfaceInstance();
-}
-
-void * UserInterface::runTicker(void * arg) {
-  ((UserInterface *) arg)->runTickerInstance();
 }
 
 UICommunicator * UserInterface::getCommunicator() {

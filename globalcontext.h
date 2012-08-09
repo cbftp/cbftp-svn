@@ -16,6 +16,7 @@ class SiteThreadManager;
 class SiteManager;
 class TransferManager;
 class DataFileHandler;
+class TickPoke;
 
 class GlobalContext {
   private:
@@ -27,13 +28,14 @@ class GlobalContext {
     SiteManager * sm;
     SiteThreadManager * stm;
     TransferManager * tm;
+    TickPoke * tp;
     sem_t list_refresh;
     std::string compiletime;
     std::string svnrev;
   public:
     void init();
     GlobalContext();
-    void linkComponents(DataFileHandler *, Engine *, UICommunicator *, SiteManager *, SiteThreadManager *, TransferManager *);
+    void linkComponents(DataFileHandler *, Engine *, UICommunicator *, SiteManager *, SiteThreadManager *, TransferManager *, TickPoke *);
     SSL_CTX * getSSLCTX();
     Engine * getEngine();
     DataFileHandler * getDataFileHandler();
@@ -41,6 +43,7 @@ class GlobalContext {
     SiteManager * getSiteManager();
     SiteThreadManager * getSiteThreadManager();
     TransferManager * getTransferManager();
+    TickPoke * getTickPoke();
     pthread_attr_t * getPthreadAttr();
     sem_t * getListRefreshSem();
     static int ctimeMSec();

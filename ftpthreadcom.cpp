@@ -11,7 +11,13 @@ void FTPThreadCom::loginSuccessful(int id) {
 
 CommandQueueElement * FTPThreadCom::getCommand() {
   pthread_mutex_lock(&commandqueue_mutex);
-  CommandQueueElement * cqe = commandqueue.front();
+  CommandQueueElement * cqe;
+  if (commandqueue.size() > 0) {
+    cqe = commandqueue.front();
+  }
+  else {
+    cqe = NULL;
+  }
   pthread_mutex_unlock(&commandqueue_mutex);
   return cqe;
 }

@@ -56,6 +56,10 @@ std::string UICommunicator::getArg2() {
   return arg2;
 }
 
+sem_t * UICommunicator::getEventSem() {
+  return &event;
+}
+
 void UICommunicator::emitEvent(std::string eventtext) {
   sem_wait(&event_ready);
   this->eventtext = eventtext;

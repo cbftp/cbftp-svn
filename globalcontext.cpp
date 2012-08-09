@@ -13,13 +13,14 @@ void GlobalContext::init() {
   sem_init(&list_refresh, 0, 0);
 }
 
-void GlobalContext::linkComponents(DataFileHandler * dfh, Engine * e, UICommunicator * uic, SiteManager * sm, SiteThreadManager * stm, TransferManager * tm) {
+void GlobalContext::linkComponents(DataFileHandler * dfh, Engine * e, UICommunicator * uic, SiteManager * sm, SiteThreadManager * stm, TransferManager * tm, TickPoke * tp) {
   this->dfh = dfh;
   this->e = e;
   this->uic = uic;
   this->sm = sm;
   this->stm = stm;
   this->tm = tm;
+  this->tp = tp;
 }
 
 SSL_CTX * GlobalContext::getSSLCTX() {
@@ -44,6 +45,10 @@ SiteThreadManager * GlobalContext::getSiteThreadManager() {
 
 TransferManager * GlobalContext::getTransferManager() {
   return tm;
+}
+
+TickPoke * GlobalContext::getTickPoke() {
+  return tp;
 }
 
 pthread_attr_t * GlobalContext::getPthreadAttr() {

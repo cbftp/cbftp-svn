@@ -14,6 +14,7 @@
 #include "engine.h"
 #include "ui.h"
 #include "uicommunicator.h"
+#include "tickpoke.h"
 
 #define DATAFILE "data"
 #define DATAPATH ".clusterbomb"

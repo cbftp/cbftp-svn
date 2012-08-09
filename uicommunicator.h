@@ -28,6 +28,7 @@ public:
   std::string getCommand();
   std::string getArg1();
   std::string getArg2();
+  sem_t * getEventSem();
   void emitEvent(std::string);
   std::string awaitEvent();
   void kill();
