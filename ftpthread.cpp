@@ -43,6 +43,8 @@ bool FTPThread::loginT() {
   int status;
   sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
   fcntl(sockfd, F_SETFL, O_NONBLOCK);
+  std::string output = "[Connecting to " + site->getAddress() + ":" + site->getPort() + "]";
+  rawbuf->writeLine(output);
   connect(sockfd, res->ai_addr, res->ai_addrlen);
   FD_SET(sockfd, &readfd);
   int loggedin;
@@ -55,10 +57,13 @@ bool FTPThread::loginT() {
   }
   fcntl(sockfd, F_SETFL, 0);
   if (loggedin != 0) {
+    rawbuf->writeLine("[Connection failed]");
     ftpthreadcom->loginConnectFailed(id);
     return false;
   }
+  rawbuf->writeLine("[Connection established]");
   if (read() != 220) {
+    rawbuf->writeLine("[Unknown response]");
     ftpthreadcom->loginUnknownResponse(id);
     return false;
   }
@@ -157,9 +162,8 @@ int FTPThread::write(const char * command, bool echo) {
   else if (b_sent >= len) {
     if (echo) {
       std::string outstring = std::string(out);
-      std::string output = "[" + site->getName() + " " + global->int2Str(id) + "] " + outstring;
       this->status = outstring;
-      rawbuf->write(output);
+      rawbuf->write(outstring);
     }
     return 0;
   } else {
@@ -177,7 +181,7 @@ int FTPThread::read() {
     return 0;
   }
   buf[b_recv] = '\0';
-  std::string output = "[" + site->getName() + " " + global->int2Str(id) + "] " + std::string(buf);
+  std::string output = std::string(buf);
   rawbuf->write(output);
   if (b_recv > 0 && buf[b_recv-1] == '\n') {
     char * loc = buf + b_recv - 5;
@@ -223,7 +227,7 @@ int FTPThread::readallsub(char ** reply, char * tmp, bool print) {
   }
   buf[b_recv] = '\0';
   if (print) {
-    std::string output = "[" + site->getName() + " " + global->int2Str(id) + std::string(buf);
+    std::string output = std::string(buf);
     rawbuf->write(output);
   }
   int tmplen = strlen(tmp);
@@ -297,7 +301,7 @@ int FTPThread::updateFileList(FileList * filelist, bool inrace) {
       filelist->cleanSweep(touch);
     }
     delete reply;
-    std::string output = "[" + site->getName() + " " + global->int2Str(id) + "] File list retrieved.";
+    std::string output = "[File list retrieved]";
     rawbuf->writeLine(output);
     if (!filelist->isFilled()) filelist->setFilled();
     if (inrace) {

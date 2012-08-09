@@ -7,9 +7,6 @@ RawBuffer::RawBuffer(int maxlength, std::string site, std::string id) {
   this->id = id;
   inprogress = false;
   writeLine("Log window initialized. Site: " + site + " Thread id: " + id);
-  writeLine("this is the second command.");
-  write("jak er snel he");
-  writeLine("st!");
 }
 
 void RawBuffer::write(std::string s) {
