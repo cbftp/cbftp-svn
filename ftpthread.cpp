@@ -7,7 +7,7 @@ FTPThread::FTPThread(int id, Site * site, FTPThreadCom * ftpthreadcom) {
   this->status = "disconnected";
   rawbuf = new RawBuffer(RAWBUFMAXLEN, site->getName(), global->int2Str(id));
   controlssl = false;
-  currentpath = "/";
+  currentpath = "";
   tv.tv_sec = 0;
   tv.tv_usec = 500000;
   tvsocket.tv_sec = 10;
@@ -297,9 +297,12 @@ void FTPThread::getFileListAsync(std::string path) {
 
 void FTPThread::getFileListT(std::string path) {
   FileList * filelist = new FileList(site->getUser(), path);
-  if (doCWDT(path)) {
-    updateFileList(filelist, false);
+  if (currentpath != path) {
+    if (!doCWDT(path)) {
+      return;
+    }
   }
+  updateFileList(filelist, false);
   ftpthreadcom->fileListRetrieved(id, filelist);
 }
 
