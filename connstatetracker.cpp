@@ -7,7 +7,7 @@ ConnStateTracker::ConnStateTracker() {
 }
 
 void ConnStateTracker::delayedCommand(std::string command, int delay) {
-  delayedcommands.push_back(DelayedCommand(command, delay));
+  delayedcommands.push_back(DelayedCommand(command, delay + time));
 }
 
 void ConnStateTracker::timePassed(int time) {
@@ -44,16 +44,19 @@ std::string ConnStateTracker::getCommand() {
 }
 
 void ConnStateTracker::setIdle() {
+  delayedcommands.clear();
   time = 0;
   state = 1;
 }
 
 void ConnStateTracker::setReady() {
+  delayedcommands.clear();
   time = 0;
   state = 2;
 }
 
 void ConnStateTracker::setBusy() {
+  delayedcommands.clear();
   time = 0;
   state = 3;
 }

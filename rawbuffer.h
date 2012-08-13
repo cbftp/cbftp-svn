@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "globalcontext.h"
+#include "uicommunicator.h"
 
 extern GlobalContext * global;
 
@@ -16,6 +17,7 @@ class RawBuffer {
     std::string site;
     std::string id;
     bool inprogress;
+    bool uiwatching;
     std::string getLine(int, bool);
   public:
     RawBuffer(int, std::string, std::string);
@@ -25,4 +27,5 @@ class RawBuffer {
     std::string getLine(int);
     std::string getLineCopy(int);
     void freezeCopy();
+    void uiWatching(bool);
 };

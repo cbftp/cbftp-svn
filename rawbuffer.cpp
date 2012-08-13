@@ -6,6 +6,7 @@ RawBuffer::RawBuffer(int maxlength, std::string site, std::string id) {
   this->site = site;
   this->id = id;
   inprogress = false;
+  uiwatching = false;
   writeLine("Log window initialized. Site: " + site + " Thread id: " + id);
 }
 
@@ -31,6 +32,9 @@ void RawBuffer::write(std::string s) {
       inprogress = true;
     }
   }
+  if (uiwatching) {
+    global->getUICommunicator()->backendPush();
+  }
 }
 
 void RawBuffer::writeLine(std::string s) {
@@ -48,7 +52,7 @@ std::string RawBuffer::getLine(int num) {
 std::string RawBuffer::getLine(int num, bool fromcopy) {
   int size = getSize();
   if (num >= size || num < 0) return "";
-  int pos = num <= latestp ? latestp - num - 1 : size - latestp - num;
+  int pos = (num < latestp ? latestp - num - 1 : size - latestp - num - 1);
   return fromcopy ? logcopy[pos] : log[pos];
 }
 
@@ -58,4 +62,8 @@ int RawBuffer::getSize() {
 
 void RawBuffer::freezeCopy() {
   logcopy = log;
+}
+
+void RawBuffer::uiWatching(bool watching) {
+  uiwatching = watching;
 }
