@@ -14,7 +14,8 @@ OBJECTS = commandqueueelement.o ftpthreadcom.o potentialelement.o scoreboardelem
 	numinputarrow.o menuselectoptionnumarrow.o menuselectoptiontextfield.o \
 	menuselectoptioncheckbox.o sitestatusscreen.o rawdatascreen.o crypto.o \
 	datafilehandler.o newkeyscreen.o legendwindow.o termint.o browsescreen.o \
-	sitethreadrequest.o sitethreadrequestready.o tickpoke.o tickpoketarget.o
+	sitethreadrequest.o sitethreadrequestready.o tickpoke.o tickpoketarget.o \
+	connstatetracker.o delayedcommand.o
 
 all: ${BINS}
 	
@@ -61,6 +62,8 @@ sitethreadrequest.o:
 sitethreadrequestready.o:
 tickpoke.o:
 tickpoketarget.o:
+connstatetracker.o:
+delayedcommand.o:
 
 clusterbomb: ${OBJECTS}
 	g++ -g -o clusterbomb $(FINALFLAGS) $(OBJECTS) $(LINKFLAGS)

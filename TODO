@@ -41,7 +41,7 @@ AES-kryptering fÃ¶r sitedb/config.
 
 race-start-ruta
 
-status: utgår, ersätts av browse mode
+status: utgï¿½r, ersï¿½tts av browse mode
 
 en ruta fÃ¶r att initiera race. mest i testsyfte tills riktig funktionalitet
 Ã¤r klar.
@@ -50,20 +50,20 @@ en ruta fÃ¶r att initiera race. mest i testsyfte tills riktig funktionalitet
 
 Browse mode
 
-status: påbörjad
+status: backend typ klart
 
-möjlighet att logga in och bläddra runt på en site, samt att därifrån:
+mï¿½jlighet att logga in och blï¿½ddra runt pï¿½ en site, samt att dï¿½rifrï¿½n:
 
 - initiera ett race
-- titta på (små) filer
+- titta pï¿½ (smï¿½) filer
 
 
 
 terminal resize awareness
 
-status: påbörjad
+status: KLAR
 
-Klienten ska anpassa sig när/om terminalen ändrar storlek.
+Klienten ska anpassa sig nï¿½r/om terminalen ï¿½ndrar storlek.
 
 
 
