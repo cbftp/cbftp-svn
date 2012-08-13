@@ -17,6 +17,11 @@
 #include "sitethreadrequest.h"
 #include "sitethreadrequestready.h"
 #include "uicommunicator.h"
+#include "tickpoke.h"
+#include "connstatetracker.h"
+
+//minimum sleep delay (between refreshes / hammer attempts) in ms
+#define SLEEPDELAY 150
 
 extern GlobalContext * global;
 
@@ -24,6 +29,7 @@ class SiteThread {
   private:
     PotentialTracker * ptrack;
     std::vector<FTPThread *> conns;
+    std::vector<ConnStateTracker> connstatetracker;
     std::vector<SiteRace *> races;
     FTPThreadCom * ftpthreadcom;
     pthread_t thread;
@@ -40,6 +46,8 @@ class SiteThread {
     int requestidcounter;
     Site * site;
     void activate();
+    void handleConnection(int);
+    void handleRequest(int);
     static void * run(void *);
   public:
     SiteThread(std::string);
@@ -51,6 +59,7 @@ class SiteThread {
     bool getUploadThread(SiteRace *, std::string, FTPThread **);
     bool getReadyThread(SiteRace *, FTPThread **);
     bool getReadyThread(SiteRace *, std::string, FTPThread **, bool, bool);
+    void returnThread(FTPThread *);
     bool downloadSlotAvailable();
     bool uploadSlotAvailable();
     int getCurrDown();

@@ -24,9 +24,6 @@ extern GlobalContext * global;
 #define MAXDATASIZE 2048
 #define RAWBUFMAXLEN 1024
 
-//minimum sleep delay (between refreshes / hammer attempts) in ms
-#define SLEEPDELAY 150
-
 extern SSL_CTX * ssl_ctx;
 
 class FTPThread {
@@ -38,20 +35,15 @@ class FTPThread {
     Site * site;
     FTPThreadCom * ftpthreadcom;
     pthread_t thread;
-    pthread_t tickthread;
     sem_t commandsem;
     sem_t transfersem;
-    sem_t tick;
     std::list<CommandQueueElement *> commandqueue;
     pthread_mutex_t commandq_mutex;
     bool controlssl;
     int sockfd;
     SSL * ssl;
-    bool ready;
-    bool refreshloop;
     bool aborted;
     std::string currentpath;
-    SiteRace * currentsiterace;
     struct timeval tv;
     struct timeval tvsocket;
     fd_set readfd;
@@ -62,7 +54,6 @@ class FTPThread {
     int readallsub(char **, char *, bool);
     bool pendingread();
     static void * run(void *);
-    static void * runTick(void *);
   public:
     int getId();
     std::string getStatus();
@@ -75,16 +66,9 @@ class FTPThread {
     void loginKillAsync();
     void loginKillT();
     FTPThread(int, Site *, FTPThreadCom *);
-    bool isReady();
-    void setBusy();
-    void setReady();
-    void refreshLoopAsync(SiteRace *);
-    void refreshLoopT();
     int updateFileList(FileList *, bool);
     std::string getCurrentPath();
     std::string doPWD();
-    void sleepTickAsync();
-    void sleepTickT();
     bool doPASV(std::string **);
     void doPASVT(std::string **, sem_t *);
     bool doPORT(std::string);
@@ -108,13 +92,12 @@ class FTPThread {
     void doQUITT();
     void disconnectAsync();
     void disconnectT();
+    void refreshRaceFileListAsync(SiteRace *);
+    void refreshRaceFileListT(SiteRace *);
     void getFileListAsync(std::string);
     void getFileListT(std::string);
     std::list<CommandQueueElement *> * getCommandQueue();
     void runInstance();
-    void runTickInstance();
-    void postTick();
     void putCommand(CommandQueueElement *);
-    void putCommand(CommandQueueElement *, bool);
     RawBuffer * getRawBuffer();
 };

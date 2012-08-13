@@ -12,6 +12,7 @@ class SiteRace {
     std::string release;
     std::string path;
     FileList * filelist;
+    bool done;
   public:
     std::string getSection();
     std::string getRelease();
@@ -19,4 +20,5 @@ class SiteRace {
     SiteRace(Race *, std::string, std::string, std::string);
     FileList * getFileList();
     void updateNumFilesUploaded();
+    bool isDone();
 };

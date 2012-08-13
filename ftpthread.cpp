@@ -6,9 +6,7 @@ FTPThread::FTPThread(int id, Site * site, FTPThreadCom * ftpthreadcom) {
   this->ftpthreadcom = ftpthreadcom;
   this->status = "disconnected";
   rawbuf = new RawBuffer(RAWBUFMAXLEN, site->getName(), global->int2Str(id));
-  ready = false;
   controlssl = false;
-  refreshloop = false;
   currentpath = "/";
   tv.tv_sec = 0;
   tv.tv_usec = 500000;
@@ -21,10 +19,8 @@ FTPThread::FTPThread(int id, Site * site, FTPThreadCom * ftpthreadcom) {
   FD_ZERO(&readfd);
   sem_init(&commandsem, 0, 0);
   sem_init(&transfersem, 0, 0);
-  sem_init(&tick, 0, 0);
   pthread_mutex_init(&commandq_mutex, NULL);
   pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
-  pthread_create(&tickthread, global->getPthreadAttr(), runTick, (void *) this);
 }
 
 int FTPThread::getId() {
@@ -86,7 +82,7 @@ bool FTPThread::loginT() {
 }
 
 void FTPThread::reconnectAsync() {
-  putCommand(new CommandQueueElement(8), false);
+  putCommand(new CommandQueueElement(8));
 }
 
 void FTPThread::reconnectT() {
@@ -95,7 +91,7 @@ void FTPThread::reconnectT() {
 }
 
 void FTPThread::doUSERPASSAsync() {
-  putCommand(new CommandQueueElement(4), false);
+  putCommand(new CommandQueueElement(4));
 }
 
 void FTPThread::doUSERPASST(bool killer) {
@@ -132,18 +128,6 @@ void FTPThread::loginKillT() {
   doUSERPASST(true);
 }
 
-bool FTPThread::isReady() {
-  return ready;
-}
-
-void FTPThread::setBusy() {
-  ready = false;
-}
-
-void FTPThread::setReady() {
-  putCommand(new CommandQueueElement(5));
-}
-
 int FTPThread::write(const char * command) {
   return FTPThread::write(command, true);
 }
@@ -169,6 +153,7 @@ int FTPThread::write(const char * command, bool echo) {
   } else {
     write(out + b_sent);
   }
+  return 0;
 }
 
 int FTPThread::read() {
@@ -264,20 +249,15 @@ bool FTPThread::pendingread() {
   else return (select(sockfd+1, &readfd, NULL, NULL, &tv) > 0);
 }
 
-void FTPThread::refreshLoopAsync(SiteRace * race) {
-  putCommand(new CommandQueueElement(2, (void *) race));
+void FTPThread::refreshRaceFileListAsync(SiteRace * siterace) {
+  putCommand(new CommandQueueElement(7, (void *) siterace));
 }
 
-void FTPThread::refreshLoopT() {
-  refreshloop = true;
-  if (currentpath != currentsiterace->getPath()) doCWDT(currentsiterace->getPath());
-  int val;
-  while(true) {
-    updateFileList(currentsiterace->getFileList(), true);
-    sleepTickT();
-    sem_getvalue(&commandsem, &val);
-    if (val > 0) return;
+void FTPThread::refreshRaceFileListT(SiteRace * siterace) {
+  if (currentpath != siterace->getPath()) {
+    doCWDT(siterace->getPath());
   }
+  updateFileList(siterace->getFileList(), true);
 }
 
 int FTPThread::updateFileList(FileList * filelist, bool inrace) {
@@ -339,14 +319,6 @@ std::string FTPThread::doPWD() {
     return line.substr(start, loc - start);
   }
   return "";
-}
-
-void FTPThread::sleepTickAsync() {
-  putCommand(new CommandQueueElement(7));
-}
-
-void FTPThread::sleepTickT() {
-  sem_wait(&tick);
 }
 
 bool FTPThread::doPASV(std::string ** ret) {
@@ -525,10 +497,6 @@ void * FTPThread::run(void * arg) {
   ((FTPThread *) arg)->runInstance();
 }
 
-void * FTPThread::runTick(void * arg) {
-  ((FTPThread *) arg)->runTickInstance();
-}
-
 void FTPThread::runInstance() {
   bool ret;
   while(1) {
@@ -536,7 +504,6 @@ void FTPThread::runInstance() {
     pthread_mutex_lock(&commandq_mutex);
     CommandQueueElement * command = commandqueue.front();
     pthread_mutex_unlock(&commandq_mutex);
-    ready = false;
     switch(command->getOpcode()) {
       case 0:
         loginT();
@@ -544,30 +511,20 @@ void FTPThread::runInstance() {
       case 1:
         doCWDT(*(std::string *)command->getArg1());
         delete (std::string *)command->getArg1();
-        ready = true;
-        break;
-      case 2:
-        ready = true;
-        refreshloop = true;
-        currentsiterace = (SiteRace *)command->getArg1();
         break;
       case 3:
         doCWDorMKDirT(*(std::string *)command->getArg1(), *(std::string *)command->getArg2());
         delete (std::string *)command->getArg1();
         delete (std::string *)command->getArg2();
-        ready = true;
         break;
       case 4:
         doUSERPASST(false);
-        break;
-      case 5:
-        ready = true;
         break;
       case 6:
         loginKillT();
         break;
       case 7:
-        sleepTickT();
+        refreshRaceFileListT((SiteRace *)command->getArg1());
         break;
       case 8:
         reconnectT();
@@ -584,12 +541,10 @@ void FTPThread::runInstance() {
       case 20:
         ret = doRETRAsyncT(*(std::string *)command->getArg1(), (int *)command->getArg2(), command->getDoneSem());
         delete (std::string *)command->getArg1();
-        if (ret) ready = true;
         break;
       case 21:
         ret = doSTORAsyncT(*(std::string *)command->getArg1(), (int *)command->getArg2(), (bool *)command->getArg3(), command->getDoneSem());
         delete (std::string *)command->getArg1();
-        if (ret) ready = true;
         break;
       case 22:
         doPRETRETRT(*(std::string *)command->getArg1(), (int *)command->getArg2(), command->getDoneSem());
@@ -610,41 +565,14 @@ void FTPThread::runInstance() {
     commandqueue.pop_front();
     pthread_mutex_unlock(&commandq_mutex);
     delete command;
-    int val;
-    sem_getvalue(&commandsem, &val);
-    if (ready && refreshloop && val == 0) {
-      refreshLoopT();
-    }
   }
-}
-
-void FTPThread::runTickInstance() {
-  srand(time(NULL));
-  int sleep_period = SLEEPDELAY * 1000;
-  usleep (rand() % sleep_period);
-  int val;
-  while(1) {
-    usleep(sleep_period);
-    postTick();
-  }
-}
-
-void FTPThread::postTick() {
-  int val;
-  sem_getvalue(&tick, &val);
-  if (val == 0) sem_post(&tick);
 }
 
 void FTPThread::putCommand(CommandQueueElement * cqe) {
-  putCommand(cqe, true);
-}
-
-void FTPThread::putCommand(CommandQueueElement * cqe, bool interruptsleep) {
   pthread_mutex_lock(&commandq_mutex);
   commandqueue.push_back(cqe);
   pthread_mutex_unlock(&commandq_mutex);
   sem_post(&commandsem);
-  if (!interruptsleep) postTick();
 }
 
 RawBuffer * FTPThread::getRawBuffer() {

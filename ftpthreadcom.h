@@ -17,6 +17,7 @@ class FTPThreadCom {
     FTPThreadCom(sem_t *);
     void loginSuccessful(int);
     CommandQueueElement * getCommand();
+    bool hasCommand();
     void commandProcessed();
     void loginConnectFailed(int);
     void loginUnknownResponse(int);

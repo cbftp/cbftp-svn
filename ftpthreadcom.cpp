@@ -22,6 +22,10 @@ CommandQueueElement * FTPThreadCom::getCommand() {
   return cqe;
 }
 
+bool FTPThreadCom::hasCommand() {
+  return commandqueue.size() > 0;
+}
+
 void FTPThreadCom::commandProcessed() {
   pthread_mutex_lock(&commandqueue_mutex);
   delete commandqueue.front();

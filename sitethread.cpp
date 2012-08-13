@@ -13,7 +13,9 @@ SiteThread::SiteThread(std::string sitename) {
   loggedin = 0;
   int logins = site->getMaxLogins();
   list_refresh = global->getListRefreshSem();
+  global->getTickPoke()->startPoke(&notifysem, 50, 0);
   for (int i = 0; i < logins; i++) {
+    connstatetracker.push_back(ConnStateTracker());
     conns.push_back(new FTPThread(i, site, ftpthreadcom));
   }
   pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
@@ -34,118 +36,187 @@ void * SiteThread::run(void * arg) {
 }
 
 void SiteThread::runInstance() {
+  SiteRace * race;
   while(1) {
     sem_wait(&notifysem);
-    CommandQueueElement * command = ftpthreadcom->getCommand();
-    SiteRace * race;
-    int id = *(int *)command->getArg1();
-    int status;
-    std::string reply;
-    std::list<SiteThreadRequest>::iterator it;
-    delete (int *)command->getArg1();
-    switch(command->getOpcode()) {
-      case 0: // login successful
-        pthread_mutex_lock(&slots);
-        loggedin++;
-        pthread_mutex_unlock(&slots);
-        if (requests.size() > 0) {
-          conns[id]->getFileListAsync(requests.front().requestPath());
-          requestsinprogress.push_back(requests.front());
-          requests.pop_front();
+
+    if (global->getTickPoke()->isPoked(&notifysem)) {
+      global->getTickPoke()->getMessage(&notifysem);
+      for (int i = 0; i < connstatetracker.size(); i++) {
+        connstatetracker[i].timePassed(50);
+        if (connstatetracker[i].hasReleasedCommand()) {
+          std::string event = connstatetracker[i].getCommand();
+          if (event == "refreshrace") {
+            race = races[0];
+            connstatetracker[i].setReady();
+            conns[i]->refreshRaceFileListAsync(race);
+          }
+          else if (event == "userpass") {
+            conns[i]->doUSERPASSAsync();
+          }
+          else if (event == "reconnect") {
+            conns[i]->reconnectAsync();
+          }
+        }
+      }
+      continue;
+    }
+    if (!ftpthreadcom->hasCommand()) {
+      if (requests.size() > 0) {
+        if (loggedin == 0) {
+          conns[0]->loginAsync();
         }
         else {
-          if (races.size() > 0) {
-            race = races[0];
-            conns[id]->doCWDorMKDirAsync(race->getSection(), race->getRelease());
-            conns[id]->refreshLoopAsync(race);
-            conns[id]->setReady();
+          int conn = -1;
+          for (int i = 0; i < conns.size(); i++) {
+            if (connstatetracker[i].isIdle()) {
+              conn = i;
+              break;
+            }
           }
-          pthread_mutex_lock(&slots);
-          available++;
-          pthread_mutex_unlock(&slots);
-        }
-        break;
-      case 1: // connection failed
-        std::cout << "CONNECTION FAILED" << std::endl;
-        break;
-      case 2: // unknown connect response
-        conns[id]->disconnectAsync();
-        break;
-      case 3: // login user denied
-        status = *(int *)command->getArg2();
-        delete (int *)command->getArg2();
-        reply = std::string((char *)command->getArg3());
-        delete (char *)command->getArg3();
-        if (status == 530 || status == 550) {
-          if (reply.find("site") != std::string::npos && reply.find("full") != std::string::npos) {
-            conns[id]->sleepTickAsync();
-            conns[id]->doUSERPASSAsync();
-            break;
+          if (conn < 0) {
+            for (int i = 0; i < conns.size(); i++) {
+              if (connstatetracker[i].isReady()) {
+                conn = i;
+                break;
+              }
+            }
           }
-          else if (reply.find("simultaneous") != std::string::npos) {
-            conns[id]->loginKillAsync();
-            break;
+          if (conn >= 0) {
+            handleRequest(conn);
           }
         }
-        conns[id]->doQUITAsync();
-        break;
-      case 4: // login password denied
-        status = *(int *)command->getArg2();
-        delete (int *)command->getArg2();
-        reply = std::string((char *)command->getArg3());
-        delete (char *)command->getArg3();
-        if (status == 530 || status == 550) {
-          if (reply.find("site") != std::string::npos && reply.find("full") != std::string::npos) {
-            conns[id]->sleepTickAsync();
-            conns[id]->reconnectAsync();
-          }
-          else if (reply.find("simultaneous") != std::string::npos) {
-            conns[id]->loginKillAsync();
-          }
-        }
-        break;
-      case 5: // TLS request failed
-        conns[id]->doQUITAsync();
-        break;
-      case 6: // connection closed unexpectedly
-        std::cout << "Disconnected." << std::endl;
-        conns[id]->disconnectAsync();
-        break;
-      case 7: // login kill failed
-        delete (char *)command->getArg3();
-        conns[id]->doQUITAsync();
-        break;
-      case 10: // file list refreshed
-        //SiteRace * sr = (SiteRace *)command->getArg3();
-        race = races[0];
-        race->updateNumFilesUploaded();
-        int tmpi;
-        sem_getvalue(list_refresh, &tmpi);
-        if (tmpi == 0) sem_post(list_refresh);
-        break;
-      case 11: // file list retrieved
-        FileList * filelist = (FileList *)command->getArg2();
-        for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
-          if (it->requestPath() == filelist->getPath()) {
-            requestsready.push_back(SiteThreadRequestReady(it->requestId(), filelist));
-            requestsinprogress.erase(it);
-            global->getUICommunicator()->backendPush();
-            break;
-          }
-        }
-        break;
-
+      }
     }
-    ftpthreadcom->commandProcessed();
+    else {
+      CommandQueueElement * command = ftpthreadcom->getCommand();
+      int id = *(int *)command->getArg1();
+      int status;
+      std::string reply;
+      std::list<SiteThreadRequest>::iterator it;
+      delete (int *)command->getArg1();
+      switch(command->getOpcode()) {
+        case 0: // login successful / ready to work
+          pthread_mutex_lock(&slots);
+          loggedin++;
+          pthread_mutex_unlock(&slots);
+          handleConnection(id);
+          break;
+        case 1: // connection failed
+          std::cout << "CONNECTION FAILED" << std::endl;
+          break;
+        case 2: // unknown connect response
+          conns[id]->disconnectAsync();
+          break;
+        case 3: // login user denied
+          status = *(int *)command->getArg2();
+          delete (int *)command->getArg2();
+          reply = std::string((char *)command->getArg3());
+          delete (char *)command->getArg3();
+          if (status == 530 || status == 550) {
+            if (reply.find("site") != std::string::npos && reply.find("full") != std::string::npos) {
+              connstatetracker[id].delayedCommand("userpass", SLEEPDELAY);
+              break;
+            }
+            else if (reply.find("simultaneous") != std::string::npos) {
+              conns[id]->loginKillAsync();
+              break;
+            }
+          }
+          conns[id]->doQUITAsync();
+          break;
+        case 4: // login password denied
+          status = *(int *)command->getArg2();
+          delete (int *)command->getArg2();
+          reply = std::string((char *)command->getArg3());
+          delete (char *)command->getArg3();
+          if (status == 530 || status == 550) {
+            if (reply.find("site") != std::string::npos && reply.find("full") != std::string::npos) {
+              connstatetracker[id].delayedCommand("reconnect", SLEEPDELAY);
+            }
+            else if (reply.find("simultaneous") != std::string::npos) {
+              conns[id]->loginKillAsync();
+            }
+          }
+          break;
+        case 5: // TLS request failed
+          conns[id]->doQUITAsync();
+          break;
+        case 6: // connection closed unexpectedly
+          std::cout << "Disconnected." << std::endl;
+          conns[id]->disconnectAsync();
+          break;
+        case 7: // login kill failed
+          delete (char *)command->getArg3();
+          conns[id]->doQUITAsync();
+          break;
+        case 8: // returned from transfer job
+          handleConnection(id);
+          break;
+        case 10: // file list refreshed
+          //SiteRace * sr = (SiteRace *)command->getArg3();
+          connstatetracker[id].setIdle();
+          race = races[0];
+          race->updateNumFilesUploaded();
+          if (!race->isDone()) {
+            connstatetracker[id].delayedCommand("refresh", SLEEPDELAY);
+          }
+          int tmpi;
+          sem_getvalue(list_refresh, &tmpi);
+          if (tmpi == 0) sem_post(list_refresh);
+
+          break;
+        case 11: // file list retrieved
+          connstatetracker[id].setIdle();
+          FileList * filelist = (FileList *)command->getArg2();
+          for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
+            if (it->requestPath() == filelist->getPath()) {
+              requestsready.push_back(SiteThreadRequestReady(it->requestId(), filelist));
+              requestsinprogress.erase(it);
+              global->getUICommunicator()->backendPush();
+              break;
+            }
+          }
+          break;
+
+      }
+      ftpthreadcom->commandProcessed();
+    }
   }
+}
+
+void SiteThread::handleConnection(int id) {
+  SiteRace * race;
+  if (requests.size() > 0) {
+    handleRequest(id);
+  }
+  else {
+    if (races.size() > 0) {
+      race = races[0];
+      conns[id]->doCWDorMKDirAsync(race->getSection(), race->getRelease());
+      conns[id]->refreshRaceFileListAsync(race);
+      connstatetracker[id].setReady();
+    }
+    else {
+      connstatetracker[id].setIdle();
+    }
+    pthread_mutex_lock(&slots);
+    available++;
+    pthread_mutex_unlock(&slots);
+  }
+}
+
+void SiteThread::handleRequest(int id) {
+  connstatetracker[id].setReady();
+  conns[id]->getFileListAsync(requests.front().requestPath());
+  requestsinprogress.push_back(requests.front());
+  requests.pop_front();
 }
 
 int SiteThread::requestFileList(std::string path) {
   int requestid = requestidcounter++;
   requests.push_back(SiteThreadRequest(requestid, path));
-  if (loggedin == 0) {
-    activate();
-  }
+  sem_post(&notifysem);
   return requestid;
 }
 
@@ -194,18 +265,37 @@ bool SiteThread::getReadyThread(SiteRace * sr, FTPThread ** ret) {
 
 bool SiteThread::getReadyThread(SiteRace * sr, std::string file, FTPThread ** ret, bool istransfer, bool isdownload) {
   FTPThread * lastready;
+  int lastreadyid;
   bool foundreadythread = false;
   for (int i = 0; i < conns.size(); i++) {
-    if(conns[i]->isReady()) {
+    if(connstatetracker[i].isIdle()) {
       foundreadythread = true;
       lastready = conns[i];
+      lastreadyid = i;
       if (conns[i]->getCurrentPath().compare(sr->getPath()) == 0) {
         *ret = conns[i];
         if (istransfer) {
           if (!getSlot(isdownload)) return false;
         }
-        conns[i]->setBusy();
+        connstatetracker[i].setBusy();
         return true;
+      }
+    }
+  }
+  if (!foundreadythread) {
+    for (int i = 0; i < conns.size(); i++) {
+      if (connstatetracker[i].isReady()) {
+        foundreadythread = true;
+        lastready = conns[i];
+        lastreadyid = i;
+        if (conns[i]->getCurrentPath().compare(sr->getPath()) == 0) {
+          *ret = conns[i];
+          if (istransfer) {
+            if (!getSlot(isdownload)) return false;
+          }
+          connstatetracker[i].setBusy();
+          return true;
+        }
       }
     }
   }
@@ -215,10 +305,14 @@ bool SiteThread::getReadyThread(SiteRace * sr, std::string file, FTPThread ** re
     if (istransfer) {
       if (!getSlot(isdownload)) return false;
     }
-    lastready->setBusy();
+    connstatetracker[lastreadyid].setBusy();
     return true;
   }
   else return false;
+}
+
+void SiteThread::returnThread(FTPThread * ftpthread) {
+  ftpthreadcom->putCommand(ftpthread->getId(), 8);
 }
 
 bool SiteThread::downloadSlotAvailable() {

@@ -12,7 +12,7 @@ void Transfer::run() {
   if (sts->getSite()->hasBrokenPASV() && std->getSite()->hasBrokenPASV()) return;
   if (!sts->getDownloadThread(srs, file, &src)) return;
   if (!std->getUploadThread(srd, file, &dst)) {
-    src->setReady();
+    sts->returnThread(src);
     sts->transferComplete(true);
     return;
   }
@@ -38,10 +38,11 @@ void Transfer::run() {
     }
     if (!src->doRETR(file)) {
       src->doPASV(&addr);
-      src->setReady();
+      sts->returnThread(src);
       sts->transferComplete(true);
       dst->awaitTransferComplete();
       std->transferComplete(false);
+      std->returnThread(dst);
       return;
     }
   }
@@ -66,10 +67,11 @@ void Transfer::run() {
     }
     if (srd->getFileList()->getFile(file) || !dst->doSTOR(file)) {
       dst->doPASV(&addr);
-      dst->setReady();
       std->transferComplete(false);
+      std->returnThread(dst);
       src->awaitTransferComplete();
       sts->transferComplete(true);
+      sts->returnThread(src);
       return;
     }
   }
@@ -77,8 +79,10 @@ void Transfer::run() {
   srd->getFileList()->touchFile(file, std->getSite()->getUser());
   src->awaitTransferComplete();
   sts->transferComplete(true);
+  sts->returnThread(src);
   dst->awaitTransferComplete();
   std->transferComplete(false);
+  std->returnThread(dst);
   int span = global->ctimeMSec() - start;
   int size = srs->getFileList()->getFile(file)->getSize();
   int speed = size / span;
@@ -89,6 +93,6 @@ void Transfer::run() {
 void Transfer::cancelTransfer() {
   sts->transferComplete(true);
   std->transferComplete(false);
-  src->setReady();
-  dst->setReady();
+  sts->returnThread(src);
+  std->returnThread(dst);
 }

@@ -6,6 +6,7 @@ SiteRace::SiteRace(Race * race, std::string section, std::string release, std::s
   this->release = release;
   path = section.append("/").append(release);
   filelist = new FileList(username, path);
+  done = false;
 }
 
 std::string SiteRace::getSection() {
@@ -26,4 +27,8 @@ FileList * SiteRace::getFileList() {
 
 void SiteRace::updateNumFilesUploaded() {
   race->updateSiteProgress(filelist->getSizeUploaded());
+}
+
+bool SiteRace::isDone() {
+  return done;
 }
