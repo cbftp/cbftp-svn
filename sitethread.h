@@ -22,6 +22,7 @@
 
 //minimum sleep delay (between refreshes / hammer attempts) in ms
 #define SLEEPDELAY 150
+#define IDLETIME 60000
 
 extern GlobalContext * global;
 
@@ -75,4 +76,5 @@ class SiteThread {
     bool potentialCheck(int);
     std::vector<FTPThread *> * getConns();
     FTPThread * getConn(int);
+    std::string getStatus(int);
 };

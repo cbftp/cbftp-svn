@@ -57,6 +57,11 @@ void SiteThread::runInstance() {
           else if (event == "reconnect") {
             conns[i]->reconnectAsync();
           }
+          else if (event == "quit") {
+            conns[i]->doQUITAsync();
+            connstatetracker[i].setDisconnected();
+            loggedin--;
+          }
         }
       }
       continue;
@@ -84,6 +89,14 @@ void SiteThread::runInstance() {
           }
           if (conn >= 0) {
             handleRequest(conn);
+          }
+          else if (loggedin < conns.size()) {
+            for (int i = 0; i < conns.size(); i++) {
+              if (connstatetracker[i].isDisconnected()) {
+                conns[i]->loginAsync();
+                break;
+              }
+            }
           }
         }
       }
@@ -115,6 +128,7 @@ void SiteThread::runInstance() {
           delete (char *)command->getArg3();
           if (status == 530 || status == 550) {
             if (reply.find("site") != std::string::npos && reply.find("full") != std::string::npos) {
+              conns[id]->disconnectAsync();
               connstatetracker[id].delayedCommand("userpass", SLEEPDELAY);
               break;
             }
@@ -132,6 +146,7 @@ void SiteThread::runInstance() {
           delete (char *)command->getArg3();
           if (status == 530 || status == 550) {
             if (reply.find("site") != std::string::npos && reply.find("full") != std::string::npos) {
+              conns[id]->disconnectAsync();
               connstatetracker[id].delayedCommand("reconnect", SLEEPDELAY);
             }
             else if (reply.find("simultaneous") != std::string::npos) {
@@ -161,6 +176,9 @@ void SiteThread::runInstance() {
           if (!race->isDone()) {
             connstatetracker[id].delayedCommand("refresh", SLEEPDELAY);
           }
+          else {
+            connstatetracker[id].delayedCommand("quit", IDLETIME);
+          }
           int tmpi;
           sem_getvalue(list_refresh, &tmpi);
           if (tmpi == 0) sem_post(list_refresh);
@@ -168,6 +186,7 @@ void SiteThread::runInstance() {
           break;
         case 11: // file list retrieved
           connstatetracker[id].setIdle();
+          connstatetracker[id].delayedCommand("quit", IDLETIME);
           FileList * filelist = (FileList *)command->getArg2();
           for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
             if (it->requestPath() == filelist->getPath()) {
@@ -199,6 +218,7 @@ void SiteThread::handleConnection(int id) {
     }
     else {
       connstatetracker[id].setIdle();
+      connstatetracker[id].delayedCommand("quit", IDLETIME);
     }
     pthread_mutex_lock(&slots);
     available++;
@@ -390,4 +410,12 @@ FTPThread * SiteThread::getConn(int id) {
     }
   }
   return NULL;
+}
+
+std::string SiteThread::getStatus(int id) {
+  if (connstatetracker[id].isIdle()) {
+    int idletime = connstatetracker[id].getTimePassed()/1000;
+    return "IDLE " + global->int2Str(idletime) + "s";
+  }
+  return conns[id]->getStatus();
 }

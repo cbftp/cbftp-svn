@@ -201,6 +201,7 @@ void UserInterface::runUserInterfaceInstance() {
       }
       else if (command == "sitestatus") {
         history.push_back(topwindow);
+        tickerenabled = true;
         sitestatusscreen = new SiteStatusScreen(main, &uicommunicator, mainrow, maincol);
         legendwindow->setText(sitestatusscreen->getLegendText());
         mainwindows.push_back(sitestatusscreen);

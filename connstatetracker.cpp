@@ -30,6 +30,10 @@ void ConnStateTracker::timePassed(int time) {
   }
 }
 
+int ConnStateTracker::getTimePassed() {
+  return time;
+}
+
 bool ConnStateTracker::hasReleasedCommand() {
   return releasedcommands.size() > 0;
 }
@@ -41,6 +45,12 @@ std::string ConnStateTracker::getCommand() {
     return command;
   }
   return "";
+}
+
+void ConnStateTracker::setDisconnected() {
+  delayedcommands.clear();
+  time = 0;
+  state = 0;
 }
 
 void ConnStateTracker::setIdle() {
@@ -59,6 +69,10 @@ void ConnStateTracker::setBusy() {
   delayedcommands.clear();
   time = 0;
   state = 3;
+}
+
+bool ConnStateTracker::isDisconnected() {
+  return state == 0;
 }
 
 bool ConnStateTracker::isIdle() {

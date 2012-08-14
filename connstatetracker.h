@@ -15,11 +15,14 @@ public:
   ConnStateTracker();
   void delayedCommand(std::string, int);
   void timePassed(int);
+  int getTimePassed();
   bool hasReleasedCommand();
   std::string getCommand();
+  void setDisconnected();
   void setIdle();
   void setReady();
   void setBusy();
+  bool isDisconnected();
   bool isIdle();
   bool isReady();
 };
