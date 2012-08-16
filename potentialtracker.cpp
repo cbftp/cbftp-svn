@@ -7,8 +7,8 @@ PotentialTracker::PotentialTracker(int slots) {
   for (int i = 0; i < slots; i++) top.push_back(new PotentialElement());
   pthread_mutex_init(&listmutex, NULL);
   sem_init(&tick, 0, 0);
+  global->getTickPoke()->startPoke(&tick, POTENTIALITY_LIFESPAN * 1000 / POTENTIALITY_SLICES, 0);
   pthread_create(&thread, global->getPthreadAttr(), runPotentialTracker, (void *) this);
-  pthread_create(&tickthread, global->getPthreadAttr(), runTickPotentialTracker, (void *) this);
 }
 
 int PotentialTracker::getMaxAvailablePotential() {
@@ -80,27 +80,6 @@ void PotentialTracker::runInstance() {
     potentiallist.pop_back();
     pthread_mutex_unlock(&listmutex);
   }
-}
-
-void * runTickPotentialTracker(void * arg) {
-  ((PotentialTracker *) arg)->runTickInstance();
-}
-
-void PotentialTracker::runTickInstance() {
-  srand(time(NULL));
-  int sleep_period = POTENTIALITY_LIFESPAN * 1000 / POTENTIALITY_SLICES;
-  usleep (rand() % sleep_period);
-  int val;
-  while(1) {
-    usleep(sleep_period);
-    postTick();
-  }
-}
-
-void PotentialTracker::postTick() {
-  int val;
-  sem_getvalue(&tick, &val);
-  if (val == 0) sem_post(&tick);
 }
 
 std::list<PotentialElement *>::iterator PotentialTracker::findFirstOfSite(SiteThread * st) {

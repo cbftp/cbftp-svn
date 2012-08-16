@@ -8,6 +8,7 @@
 #include "globalcontext.h"
 #include "potentialelement.h"
 #include "potentiallistelement.h"
+#include "tickpoke.h"
 
 #define POTENTIALITY_LIFESPAN 3000
 #define POTENTIALITY_SLICES 10
@@ -21,7 +22,6 @@ class PotentialTracker {
     std::list<PotentialListElement *> potentiallist;
     std::list<PotentialElement *> top;
     pthread_t thread;
-    pthread_t tickthread;
     pthread_mutex_t listmutex;
     sem_t tick;
     std::list<PotentialListElement *>::iterator itple;
@@ -36,8 +36,6 @@ class PotentialTracker {
     PotentialListElement * getFront();
     std::list<PotentialElement *>::iterator findFirstOfSite(SiteThread *);
     bool allTopSlotsUsedForSite(PotentialElement *);
-    void postTick();
 };
 
 void * runPotentialTracker(void *);
-void * runTickPotentialTracker(void *);
