@@ -1,6 +1,6 @@
 #include "rawdatascreen.h"
 
-RawDataScreen::RawDataScreen(WINDOW * window, UICommunicator * uicommunicator, int row, int col) {
+RawDataScreen::RawDataScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   sitename = uicommunicator->getArg1();
   threadid = global->str2Int(uicommunicator->getArg2());
@@ -14,8 +14,8 @@ RawDataScreen::RawDataScreen(WINDOW * window, UICommunicator * uicommunicator, i
 
 void RawDataScreen::redraw() {
   werase(window);
-  int numlinestoprint = rawbuf->getSize() < row ? rawbuf->getSize() : row;
-  for (int i = 0; i < numlinestoprint; i++) {
+  unsigned int numlinestoprint = rawbuf->getSize() < row ? rawbuf->getSize() : row;
+  for (unsigned int i = 0; i < numlinestoprint; i++) {
     TermInt::printStr(window, i, 0, rawbuf->getLine(numlinestoprint - i - 1));
   }
 }
@@ -24,7 +24,7 @@ void RawDataScreen::update() {
   redraw();
 }
 
-void RawDataScreen::keyPressed(int ch) {
+void RawDataScreen::keyPressed(unsigned int ch) {
   switch(ch) {
     case KEY_RIGHT:
       if (threadid + 1 < threads) {

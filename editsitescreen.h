@@ -10,10 +10,10 @@
 
 class EditSiteScreen : public UIWindow {
 public:
-  EditSiteScreen(WINDOW *, UICommunicator *, int, int);
+  EditSiteScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
   void update();
   void redraw();
-  void keyPressed(int);
+  void keyPressed(unsigned int);
   std::string getLegendText();
 private:
   std::string currentlegendtext;

@@ -11,5 +11,5 @@ public:
   void setText(std::string);
 private:
   std::string text;
-  int currentpos;
+  unsigned int currentpos;
 };

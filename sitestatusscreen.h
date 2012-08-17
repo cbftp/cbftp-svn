@@ -15,10 +15,10 @@ extern GlobalContext * global;
 
 class SiteStatusScreen : public UIWindow {
 public:
-  SiteStatusScreen(WINDOW *, UICommunicator *, int, int);
+  SiteStatusScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
   void redraw();
   void update();
-  void keyPressed(int);
+  void keyPressed(unsigned int);
   std::string getLegendText();
 private:
   std::string sitename;

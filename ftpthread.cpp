@@ -330,8 +330,8 @@ bool FTPThread::doPASV(std::string ** ret) {
   sem_wait(&donesem);
   sem_destroy(&donesem);
   if ((**ret).substr(0, 3).compare("227") != 0) return false;
-  int start = (**ret).find('(') + 1;
-  int end = (**ret).find(')');
+  size_t start = (**ret).find('(') + 1;
+  size_t end = (**ret).find(')');
   std::string * tmp = new std::string((**ret).substr(start, end-start));
   delete *ret;
   *ret = tmp;

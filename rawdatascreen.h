@@ -13,10 +13,10 @@ extern GlobalContext * global;
 
 class RawDataScreen : public UIWindow {
 public:
-  RawDataScreen(WINDOW *, UICommunicator *, int, int);
+  RawDataScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
   void redraw();
   void update();
-  void keyPressed(int);
+  void keyPressed(unsigned int);
   std::string getLegendText();
 private:
   int threads;

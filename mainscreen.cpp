@@ -1,6 +1,6 @@
 #include "mainscreen.h"
 
-MainScreen::MainScreen(WINDOW * window, UICommunicator * uicommunicator, int row, int col) {
+MainScreen::MainScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
 	mss.setWindow(window);
   this->uicommunicator = uicommunicator;
   init(window, row, col);
@@ -38,7 +38,7 @@ void MainScreen::update() {
   }
 }
 
-void MainScreen::keyPressed(int ch) {
+void MainScreen::keyPressed(unsigned int ch) {
   Site * site;
   switch(ch) {
     case KEY_UP:

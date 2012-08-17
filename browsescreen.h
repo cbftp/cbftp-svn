@@ -6,19 +6,19 @@
 #include "sitethread.h"
 #include "sitethreadmanager.h"
 #include "site.h"
-//#include "uifilelist.h"
+#include "uifilelist.h"
 
 class BrowseScreen : public UIWindow {
 public:
-  BrowseScreen(WINDOW *, UICommunicator *, int, int);
+  BrowseScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
   void redraw();
   void update();
-  void keyPressed(int);
+  void keyPressed(unsigned int);
   std::string getLegendText();
 private:
   Site * site;
-  //UIFileList list;
+  UIFileList list;
   SiteThread * sitethread;
-  int requestid;
+  unsigned int requestid;
   UICommunicator * uicommunicator;
 };

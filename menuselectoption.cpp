@@ -36,18 +36,18 @@ void MenuSelectOption::addCheckBox(int row, int col, std::string identifier, std
   options.push_back(new MenuSelectOptionCheckBox(identifier, row, col, label, startval));
 }
 
-MenuSelectOptionElement * MenuSelectOption::getElement(int i) {
+MenuSelectOptionElement * MenuSelectOption::getElement(unsigned int i) {
   if (i < 0 || i > size()) {
     return NULL;
   }
   return options[i];
 }
 
-int MenuSelectOption::getLastSelectionPointer() {
+unsigned int MenuSelectOption::getLastSelectionPointer() {
   return lastpointer;
 }
 
-int MenuSelectOption::getSelectionPointer() {
+unsigned int MenuSelectOption::getSelectionPointer() {
   return pointer;
 }
 void MenuSelectOption::clear() {
@@ -58,6 +58,6 @@ void MenuSelectOption::clear() {
   options.clear();
 }
 
-int MenuSelectOption::size() {
+unsigned int MenuSelectOption::size() {
   return options.size();
 }

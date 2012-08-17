@@ -10,10 +10,10 @@
 
 class NewKeyScreen : public UIWindow {
 public:
-  NewKeyScreen(WINDOW *, UICommunicator *, int, int);
+  NewKeyScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
   void update();
   void redraw();
-  void keyPressed(int);
+  void keyPressed(unsigned int);
   std::string getLegendText();
 private:
   std::string currentlegendtext;

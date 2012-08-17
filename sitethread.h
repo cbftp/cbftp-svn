@@ -71,6 +71,7 @@ class SiteThread {
     int requestFileList(std::string);
     bool requestReady(int);
     FileList * getFileList(int);
+    void finishRequest(int);
     void requestViewFile(std::string);
     void pushPotential(int, std::string, SiteThread *);
     bool potentialCheck(int);

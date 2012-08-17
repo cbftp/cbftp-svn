@@ -1,6 +1,6 @@
 #include "editsitescreen.h"
 
-EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator, int row, int col) {
+EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   active = false;
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one, save changes - [c]ancel, undo changes";
@@ -15,8 +15,8 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
     site = global->getSiteManager()->getSite(arg2);
     modsite = Site(*site);
   }
-  int y = 3;
-  int x = 1;
+  unsigned int y = 3;
+  unsigned int x = 1;
 
   mso.addStringField(y++, x, "name", "Name:", modsite.getName(), false);
   mso.addStringField(y++, x, "addr", "Address:", modsite.getAddress(), false);
@@ -35,7 +35,7 @@ void EditSiteScreen::redraw() {
   werase(window);
   TermInt::printStr(window, 1, 1, "-== SITE OPTIONS ==-");
   bool highlight;
-  for (int i = 0; i < mso.size(); i++) {
+  for (unsigned int i = 0; i < mso.size(); i++) {
     MenuSelectOptionElement * msoe = mso.getElement(i);
     highlight = false;
     if (mso.getSelectionPointer() == i) {
@@ -66,7 +66,7 @@ void EditSiteScreen::update() {
   }
 }
 
-void EditSiteScreen::keyPressed(int ch) {
+void EditSiteScreen::keyPressed(unsigned int ch) {
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
@@ -104,7 +104,7 @@ void EditSiteScreen::keyPressed(int ch) {
       if (operation == "add") {
         site = new Site();
       }
-      for(int i = 0; i < mso.size(); i++) {
+      for(unsigned int i = 0; i < mso.size(); i++) {
         MenuSelectOptionElement * msoe = mso.getElement(i);
         std::string identifier = msoe->getIdentifier();
         if (identifier == "name") {

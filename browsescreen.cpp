@@ -1,6 +1,6 @@
 #include "browsescreen.h"
 
-BrowseScreen::BrowseScreen(WINDOW * window, UICommunicator * uicommunicator, int row, int col) {
+BrowseScreen::BrowseScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   sitethread = global->getSiteThreadManager()->getSiteThread(uicommunicator->getArg1());
   site = sitethread->getSite();
@@ -17,12 +17,28 @@ void BrowseScreen::redraw() {
 
 void BrowseScreen::update() {
   if (sitethread->requestReady(requestid)) {
-    //list.parse(sitethread->getFileList(requestid));
-    TermInt::printStr(window, 4, 1, "LIST FETCHED!");
+    FileList * filelist = sitethread->getFileList(requestid);
+    sitethread->finishRequest(requestid);
+    list.parse(filelist);
+    //delete filelist;
+    werase(window);
+  }
+  std::vector<UIFile *> * uilist = list.getSortedList();
+  for (unsigned int i = 0; i < uilist->size() && i < row; i++) {
+    if ( i == list.currentCursorPosition()) {
+      wattron(window, A_REVERSE);
+    }
+    TermInt::printStr(window, i, 1, (*uilist)[i]->getName());
+    if (i == list.currentCursorPosition()) {
+      wattroff(window, A_REVERSE);
+    }
+    TermInt::printStr(window, i, 50, global->int2Str((*uilist)[i]->getSize()));
+    TermInt::printStr(window, i, 70, (*uilist)[i]->getLastModified());
+    TermInt::printStr(window, i, 90, (*uilist)[i]->getOwner() + "/" + (*uilist)[i]->getGroup());
   }
 }
 
-void BrowseScreen::keyPressed(int ch) {
+void BrowseScreen::keyPressed(unsigned int ch) {
   switch (ch) {
     case 'c':
       uicommunicator->newCommand("return");
@@ -38,9 +54,11 @@ void BrowseScreen::keyPressed(int ch) {
       break;
     case KEY_RIGHT:
     case 10:
-      //sitethread->requestFileList(currentpath + list.selected());
-      //enter the selected directory, do nothing if a file is selected
-      uicommunicator->newCommand("update");
+      if (list.cursoredFile()->isDirectory()) {
+        requestid = sitethread->requestFileList(list.getPath() + "/" + list.cursoredFile()->getName());
+        //enter the selected directory, do nothing if a file is selected
+        uicommunicator->newCommand("update");
+      }
       break;
     case KEY_LEFT:
     case KEY_BACKSPACE:
@@ -49,11 +67,15 @@ void BrowseScreen::keyPressed(int ch) {
       break;
     case KEY_DOWN:
       //go down and highlight next item (if not at bottom already)
-      uicommunicator->newCommand("update");
+      if (list.goNext()) {
+        uicommunicator->newCommand("update");
+      }
       break;
     case KEY_UP:
       //go up and highlight previous item (if not at top already)
-      uicommunicator->newCommand("update");
+      if (list.goPrevious()) {
+        uicommunicator->newCommand("update");
+      }
       break;
   }
 }

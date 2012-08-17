@@ -1,4 +1,4 @@
-CPPFLAGS=-g -O0 -DBUILDTIME="\"`date`\"" -DVERSION="\"svn:r`svn info|grep Revision|awk '{ print $$2 }'`\""
+CPPFLAGS=-g -Wall -O0 -DBUILDTIME="\"`date`\"" -DVERSION="\"svn:r`svn info|grep Revision|awk '{ print $$2 }'`\""
 FINALFLAGS=-g -O0
 LINKFLAGS=-g -lncurses -lpthread -lssl -lcrypto
 
@@ -15,7 +15,7 @@ OBJECTS = commandqueueelement.o ftpthreadcom.o potentialelement.o scoreboardelem
 	menuselectoptioncheckbox.o sitestatusscreen.o rawdatascreen.o crypto.o \
 	datafilehandler.o newkeyscreen.o legendwindow.o termint.o browsescreen.o \
 	sitethreadrequest.o sitethreadrequestready.o tickpoke.o tickpoketarget.o \
-	connstatetracker.o delayedcommand.o
+	connstatetracker.o delayedcommand.o uifilelist.o uifile.o
 
 all: ${BINS}
 	
@@ -64,6 +64,8 @@ tickpoke.o:
 tickpoketarget.o:
 connstatetracker.o:
 delayedcommand.o:
+uifilelist.o:
+uifile.o:
 
 clusterbomb: ${OBJECTS}
 	g++ -g -o clusterbomb $(FINALFLAGS) $(OBJECTS) $(LINKFLAGS)

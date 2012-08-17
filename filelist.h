@@ -36,6 +36,8 @@ class FileList {
     int getSize();
     std::string getPath();
     int getSizeUploaded();
+    std::map<std::string, File *>::iterator filesBegin();
+    std::map<std::string, File *>::iterator filesEnd();
     int getOwnedPercentage();
     long int getMaxFileSize();
     void lockFileList();

@@ -1,6 +1,6 @@
 #include "confirmationscreen.h"
 
-ConfirmationScreen::ConfirmationScreen(WINDOW * window, UICommunicator * uicommunicator, int row, int col) {
+ConfirmationScreen::ConfirmationScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   init(window, row, col);
 }
@@ -11,7 +11,7 @@ void ConfirmationScreen::redraw() {
   TermInt::printStr(window, 3, 1, "Are you sure (y/N)? ");
 }
 
-void ConfirmationScreen::keyPressed(int ch) {
+void ConfirmationScreen::keyPressed(unsigned int ch) {
   if (ch == 'y') {
     uicommunicator->newCommand("yes");
   }

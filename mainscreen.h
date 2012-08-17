@@ -8,10 +8,10 @@
 
 class MainScreen : public UIWindow {
 public:
-  MainScreen(WINDOW *, UICommunicator *, int, int);
+  MainScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
   void update();
   void redraw();
-  void keyPressed(int);
+  void keyPressed(unsigned int);
   std::string getLegendText();
 private:
   std::string deletesite;

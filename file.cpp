@@ -39,7 +39,7 @@ File::File(std::string statline, int touch) {
   start = pos;
   while (statline[++pos] != '\r');
   name = statline.substr(start, pos - start);
-  int suffixdotpos = name.rfind(".");
+  size_t suffixdotpos = name.rfind(".");
   if (suffixdotpos > 0) {
     extension = name.substr(suffixdotpos + 1);
   }

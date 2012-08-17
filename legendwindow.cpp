@@ -15,17 +15,17 @@ void LegendWindow::redraw() {
   TermInt::printChar(window, 1, col - 1, 4194417);
   TermInt::printChar(window, 1, col - 2, 4194413);
   TermInt::printChar(window, 0, col - 2, 4194411);
-  for (int i = 2; i < col - 2; i++) {
+  for (unsigned int i = 2; i < col - 2; i++) {
     TermInt::printChar(window, 0, i, 4194417);
   }
   update();
 }
 
 void LegendWindow::update() {
-  int printpos = 4;
-  int textlen = text.length();
+  unsigned int printpos = 4;
+  unsigned int textlen = text.length();
   if (textlen > 0) {
-    int internalpos = printpos - currentpos++;
+    unsigned int internalpos = printpos - currentpos++;
     if (currentpos >= textlen) currentpos = 0;
     while (printpos < col - 4) {
       while (printpos - internalpos < textlen && printpos < col - 4) {

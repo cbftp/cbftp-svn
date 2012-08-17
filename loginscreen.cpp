@@ -1,6 +1,6 @@
 #include "loginscreen.h"
 
-LoginScreen::LoginScreen(WINDOW * window, UICommunicator * uicommunicator, int row, int col) {
+LoginScreen::LoginScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   passfield = TextInputField(25, 32, true);
   attempt = false;
@@ -15,8 +15,8 @@ void LoginScreen::redraw() {
   std::string svnstring = " This is Project Clusterbomb. Version tag: " + std::string(VERSION) + " ";
   std::string compilestring = " Compiled: " + std::string(BUILDTIME) + " ";
   int boxchar = 0;
-  for(int i = 1; i < row; i++) {
-    for(int j = 0; j < col; j++) {
+  for(unsigned int i = 1; i < row; i++) {
+    for(unsigned int j = 0; j < col; j++) {
       if(i == 1) boxchar = (i+j)%2==0 ? 4194423 : 4194417;
       else if (i == row-1) {
         if (j < col-29) boxchar = (i+j)%2==0 ? 4194417 : 4194422;
@@ -51,7 +51,7 @@ void LoginScreen::update() {
   TermInt::moveCursor(window, pass_row, pass_col + passfield.getLastCharPosition());
 }
 
-void LoginScreen::keyPressed(int ch) {
+void LoginScreen::keyPressed(unsigned int ch) {
   if (ch >= 32 && ch <= 126) {
     passfield.addchar(ch);
   }

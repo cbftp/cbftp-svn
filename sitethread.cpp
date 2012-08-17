@@ -261,6 +261,23 @@ FileList * SiteThread::getFileList(int requestid) {
   return NULL;
 }
 
+void SiteThread::finishRequest(int requestid) {
+  std::list<SiteThreadRequestReady>::iterator it;
+  for (it = requestsready.begin(); it != requestsready.end(); it++) {
+    if (it->requestId() == requestid) {
+      requestsready.erase(it);
+      return;
+    }
+  }
+  std::list<SiteThreadRequest>::iterator it2;
+  for (it2 = requestsinprogress.begin(); it2 != requestsinprogress.end(); it2++) {
+    if (it->requestId() == requestid) {
+      requestsinprogress.erase(it2);
+      return;
+    }
+  }
+}
+
 Site * SiteThread::getSite() {
   return site;
 }

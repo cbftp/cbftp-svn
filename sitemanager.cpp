@@ -1,62 +1,7 @@
 #include "sitemanager.h"
 
 SiteManager::SiteManager() {
-  /*std::fstream sitedbfile;
-  sitedbfile.open(SITEDB);
-  std::string line;
-  while (std::getline(sitedbfile, line)) {
-    if (line.length() == 0 ||line[0] == '#') continue;
-    int tok1 = line.find('$');
-    int tok2 = line.find('=', tok1);
-    std::string name = line.substr(0, tok1);
-    std::string setting = line.substr(tok1 + 1, (tok2 - tok1 - 1));
-    std::string value = line.substr(tok2 + 1);
-    Site * site = getSite(name);
-    if (site == NULL) {
-      site = new Site(name);
-      addSite(site);
-    }
-    if (!setting.compare("addr")) {
-      site->setAddress(value);
-    }
-    else if (!setting.compare("port")) {
-      site->setPort(value);
-    }
-    else if (!setting.compare("user")) {
-      site->setUser(value);
-    }
-    else if (!setting.compare("pass")) {
-      site->setPass(value);
-    }
-    else if (!setting.compare("pret")) {
-      if (!value.compare("true")) site->setPRET(true);
-    }
-    else if (!setting.compare("brokenpasv")) {
-      if (!value.compare("true")) site->setBrokenPASV(true);
-    }
-    else if (!setting.compare("logins")) {
-      site->setMaxLogins(global->str2Int(value));
-    }
-    else if (!setting.compare("maxdn")) {
-      site->setMaxDn(global->str2Int(value));
-    }
-    else if (!setting.compare("maxup")) {
-      site->setMaxUp(global->str2Int(value));
-    }
-    else if (!setting.compare("section")) {
-      int split = value.find('$');
-      std::string sectionname = value.substr(0, split);
-      std::string sectionpath = value.substr(split + 1);
-      site->addSection(sectionname, sectionpath);
-    }
-    else if (!setting.compare("avgspeed")) {
-      int split = value.find('$');
-      std::string sitename = value.substr(0, split);
-      int avgspeed = global->str2Int(value.substr(split + 1));
-      site->setAverageSpeed(sitename, avgspeed);
-    }
-  }
-  sitedbfile.close();*/
+
 }
 
 void SiteManager::readSites() {
@@ -67,8 +12,8 @@ void SiteManager::readSites() {
   for (it = lines.begin(); it != lines.end(); it++) {
     line = *it;
     if (line.length() == 0 ||line[0] == '#') continue;
-    int tok1 = line.find('$');
-    int tok2 = line.find('=', tok1);
+    size_t tok1 = line.find('$');
+    size_t tok2 = line.find('=', tok1);
     std::string name = line.substr(0, tok1);
     std::string setting = line.substr(tok1 + 1, (tok2 - tok1 - 1));
     std::string value = line.substr(tok2 + 1);
@@ -105,13 +50,13 @@ void SiteManager::readSites() {
       site->setMaxUp(global->str2Int(value));
     }
     else if (!setting.compare("section")) {
-      int split = value.find('$');
+      size_t split = value.find('$');
       std::string sectionname = value.substr(0, split);
       std::string sectionpath = value.substr(split + 1);
       site->addSection(sectionname, sectionpath);
     }
     else if (!setting.compare("avgspeed")) {
-      int split = value.find('$');
+      size_t split = value.find('$');
       std::string sitename = value.substr(0, split);
       int avgspeed = global->str2Int(value.substr(split + 1));
       site->setAverageSpeed(sitename, avgspeed);

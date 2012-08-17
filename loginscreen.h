@@ -7,10 +7,10 @@
 
 class LoginScreen : public UIWindow {
 public:
-  LoginScreen(WINDOW *, UICommunicator *, int, int);
+  LoginScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
   void update();
   void redraw();
-  void keyPressed(int);
+  void keyPressed(unsigned int);
 private:
   UICommunicator * uicommunicator;
   std::string passphrase;

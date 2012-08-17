@@ -1,14 +1,14 @@
 #include "newkeyscreen.h"
 
-NewKeyScreen::NewKeyScreen(WINDOW * window, UICommunicator * uicommunicator, int row, int col) {
+NewKeyScreen::NewKeyScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one";
   currentlegendtext = defaultlegendtext;
   active = false;
   mismatch = false;
   tooshort = false;
-  int y = 11;
-  int x = 1;
+  unsigned int y = 11;
+  unsigned int x = 1;
 
   mso.addStringField(y++, x, "newkey", "Passphrase:", "", true);
   mso.addStringField(y++, x, "newkey2", "Verify:", "", true);
@@ -25,7 +25,7 @@ void NewKeyScreen::redraw() {
   TermInt::printStr(window, 8, 1, "passphrase.");
   TermInt::printStr(window, 9, 1, "The passphrase is not considered secure if it is shorter than 16 characters.");
   bool highlight;
-  for (int i = 0; i < mso.size(); i++) {
+  for (unsigned int i = 0; i < mso.size(); i++) {
     MenuSelectOptionElement * msoe = mso.getElement(i);
     highlight = false;
     if (mso.getSelectionPointer() == i) {
@@ -65,7 +65,7 @@ void NewKeyScreen::update() {
   }
 }
 
-void NewKeyScreen::keyPressed(int ch) {
+void NewKeyScreen::keyPressed(unsigned int ch) {
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();

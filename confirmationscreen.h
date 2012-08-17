@@ -6,9 +6,9 @@
 
 class ConfirmationScreen : public UIWindow {
 public:
-  ConfirmationScreen(WINDOW *, UICommunicator *, int, int);
+  ConfirmationScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
   void redraw();
-  void keyPressed(int);
+  void keyPressed(unsigned int);
   std::string getLegendText();
 private:
   UICommunicator * uicommunicator;

@@ -1,6 +1,6 @@
 #include "sitestatusscreen.h"
 
-SiteStatusScreen::SiteStatusScreen(WINDOW * window, UICommunicator * uicommunicator, int row, int col) {
+SiteStatusScreen::SiteStatusScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   sitename = uicommunicator->getArg1();
   uicommunicator->checkoutCommand();
@@ -27,7 +27,7 @@ void SiteStatusScreen::update() {
   }
 }
 
-void SiteStatusScreen::keyPressed(int ch) {
+void SiteStatusScreen::keyPressed(unsigned int ch) {
   switch(ch) {
     case KEY_RIGHT:
       uicommunicator->newCommand("rawdata", sitename, "0");
