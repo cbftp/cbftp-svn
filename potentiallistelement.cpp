@@ -11,7 +11,7 @@ void PotentialListElement::update(SiteThread * dst, int threads, int dstdnslots,
   PotentialElement * lowelem;
   int lowest;
   bool initialized = false;
-  for (int i = 0; i < slots.size(); i++) {
+  for (unsigned int i = 0; i < slots.size(); i++) {
     if (allthreadsused && slots[i]->getSite() != dst) continue;
     if (!initialized || slots[i]->getPotential() < lowest) {
       lowest = slots[i]->getPotential();
@@ -27,14 +27,14 @@ std::vector<PotentialElement *> & PotentialListElement::getSlotsVector() {
 }
 
 void PotentialListElement::reset() {
-  for (int i = 0; i < slots.size(); i++) {
+  for (unsigned int i = 0; i < slots.size(); i++) {
     slots[i]->update(NULL, 0, 0, "");
   }
 }
 
 bool PotentialListElement::allThreadsUsedForSite(SiteThread * dst, int threads) {
   int sitematch = 0;
-  for (int i = 0; i < slots.size(); i++) {
+  for (unsigned int i = 0; i < slots.size(); i++) {
     if(slots[i]->getSite() == dst) {
       sitematch++;
     }

@@ -15,7 +15,7 @@ FTPThread::FTPThread(int id, Site * site, FTPThreadCom * ftpthreadcom) {
   memset(&sock, 0, sizeof(sock));
   sock.ai_family = AF_UNSPEC;
   sock.ai_socktype = SOCK_STREAM;
-  int status = getaddrinfo(site->getAddress().data(), site->getPort().data(), &sock, &res);
+  getaddrinfo(site->getAddress().data(), site->getPort().data(), &sock, &res);
   FD_ZERO(&readfd);
   sem_init(&commandsem, 0, 0);
   sem_init(&transfersem, 0, 0);
@@ -107,7 +107,7 @@ void FTPThread::doUSERPASST(bool killer) {
   delete reply;
   std::string pass = site->getPass();
   std::string passc = "";
-  for (int i = 0; i < pass.length(); i++) passc.append("*");
+  for (unsigned int i = 0; i < pass.length(); i++) passc.append("*");
   std::string output = "PASS " + std::string(passc);
   rawbuf->writeLine(output);
   write((std::string("PASS ") + site->getPass()).data(), false);
@@ -265,8 +265,7 @@ int FTPThread::updateFileList(FileList * filelist, bool inrace) {
   char * reply;
   write("STAT -l");
   if (readall(&reply, false) == 213) {
-    char * loc = reply, * start, * tmp;
-    int linelen;
+    char * loc = reply, * start;
     while(*++loc != '\n');
     while(*++loc != '\n');
     int files = 0;
@@ -501,6 +500,7 @@ std::list<CommandQueueElement *> * FTPThread::getCommandQueue() {
 
 void * FTPThread::run(void * arg) {
   ((FTPThread *) arg)->runInstance();
+  return NULL;
 }
 
 void FTPThread::runInstance() {

@@ -28,6 +28,7 @@ void TransferManager::newTransfer(ScoreBoardElement * sbe) {
 
 void * runTransfer(void * arg) {
   ((TransferManager *) arg)->runTransferInstance();
+  return NULL;
 }
 
 void TransferManager::runTransferInstance() {

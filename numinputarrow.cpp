@@ -56,6 +56,6 @@ std::string NumInputArrow::getVisual() {
   else {
     out = global->int2Str(val);
   }
-  while (out.length() < maxlen) out += ' ';
+  while ((int) out.length() < maxlen) out += ' ';
   return out;
 }

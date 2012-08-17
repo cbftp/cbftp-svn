@@ -53,7 +53,7 @@ int TextInputField::getLastCharPosition() {
 }
 
 bool TextInputField::addchar(char c) {
-  if (text.length() < maxlen) {
+  if ((int) text.length() < maxlen) {
     text += c;
     return true;
   }

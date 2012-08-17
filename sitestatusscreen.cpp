@@ -21,7 +21,7 @@ void SiteStatusScreen::update() {
   TermInt::printStr(window, 5, 1, "Download slots: " + global->int2Str(st->getCurrDown()) + "/" + global->int2Str(site->getMaxDown()));
   TermInt::printStr(window, 7, 1, "Login threads:");
   int i = 8;
-  for(int j = 0; j < st->getConns()->size(); j++) {
+  for(unsigned int j = 0; j < st->getConns()->size(); j++) {
     std::string status = st->getStatus(j);
     TermInt::printStr(window, i++, 1, "#" + global->int2Str(j) + " - " + status);
   }

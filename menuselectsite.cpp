@@ -11,7 +11,7 @@ void MenuSelectSite::setWindow(WINDOW * window) {
 
 void MenuSelectSite::goNext() {
   print(pointer-1, false);
-  if (pointer < sites.size()) pointer++;
+  if ((unsigned int) pointer < sites.size()) pointer++;
   else if (sites.size() > 0) pointer = 1;
   print(pointer-1, true);
 }
@@ -39,9 +39,9 @@ void MenuSelectSite::prepareRefill() {
 }
 
 void MenuSelectSite::print() {
-  for (int i = 0; i < sites.size(); i++) {
-    while (pointer > sites.size()) pointer--;
-    print(i, i+1 == pointer);
+  for (unsigned int i = 0; i < sites.size(); i++) {
+    while ((unsigned int) pointer > sites.size()) pointer--;
+    print(i, i+1 == (unsigned int) pointer);
   }
 }
 

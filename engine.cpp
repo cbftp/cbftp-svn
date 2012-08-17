@@ -24,6 +24,7 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
 
 void * Engine::run(void * arg) {
   ((Engine *) arg)->runInstance();
+  return NULL;
 }
 
 void Engine::runInstance() {
@@ -34,7 +35,7 @@ void Engine::runInstance() {
       refreshScoreBoard();
       std::vector<ScoreBoardElement *> possibles = scoreboard->getElementVector();
       std::cout << "Possible transfers (run " << runs++ << "): " << scoreboard->size() << std::endl;
-      for (int i = 0; i < possibles.size(); i++) {
+      for (unsigned int i = 0; i < possibles.size(); i++) {
         std::cout << possibles[i]->fileName() << " - " << possibles[i]->getScore() << " - " << possibles[i]->getSource()->getSite()->getName() << " -> " << possibles[i]->getDestination()->getSite()->getName() << std::endl;
       }
       issueOptimalTransfers();

@@ -22,7 +22,7 @@ SiteThread::SiteThread(std::string sitename) {
 }
 
 void SiteThread::activate() {
-  for (int i = 0; i < conns.size(); i++) conns[i]->loginAsync();
+  for (unsigned int i = 0; i < conns.size(); i++) conns[i]->loginAsync();
 }
 
 void SiteThread::addRace(Race * enginerace, std::string section, std::string release) {
@@ -33,6 +33,7 @@ void SiteThread::addRace(Race * enginerace, std::string section, std::string rel
 
 void * SiteThread::run(void * arg) {
   ((SiteThread *) arg)->runInstance();
+  return NULL;
 }
 
 void SiteThread::runInstance() {
@@ -42,7 +43,7 @@ void SiteThread::runInstance() {
 
     if (global->getTickPoke()->isPoked(&notifysem)) {
       global->getTickPoke()->getMessage(&notifysem);
-      for (int i = 0; i < connstatetracker.size(); i++) {
+      for (unsigned int i = 0; i < connstatetracker.size(); i++) {
         connstatetracker[i].timePassed(50);
         if (connstatetracker[i].hasReleasedCommand()) {
           std::string event = connstatetracker[i].getCommand();
@@ -73,14 +74,14 @@ void SiteThread::runInstance() {
         }
         else {
           int conn = -1;
-          for (int i = 0; i < conns.size(); i++) {
+          for (unsigned int i = 0; i < conns.size(); i++) {
             if (connstatetracker[i].isIdle()) {
               conn = i;
               break;
             }
           }
           if (conn < 0) {
-            for (int i = 0; i < conns.size(); i++) {
+            for (unsigned int i = 0; i < conns.size(); i++) {
               if (connstatetracker[i].isReady()) {
                 conn = i;
                 break;
@@ -91,7 +92,7 @@ void SiteThread::runInstance() {
             handleRequest(conn);
           }
           else if (loggedin < conns.size()) {
-            for (int i = 0; i < conns.size(); i++) {
+            for (unsigned int i = 0; i < conns.size(); i++) {
               if (connstatetracker[i].isDisconnected()) {
                 conns[i]->loginAsync();
                 break;
@@ -287,7 +288,7 @@ bool SiteThread::getReadyThread(SiteRace * sr, std::string file, FTPThread ** re
   FTPThread * lastready;
   int lastreadyid;
   bool foundreadythread = false;
-  for (int i = 0; i < conns.size(); i++) {
+  for (unsigned int i = 0; i < conns.size(); i++) {
     if(connstatetracker[i].isIdle()) {
       foundreadythread = true;
       lastready = conns[i];
@@ -303,7 +304,7 @@ bool SiteThread::getReadyThread(SiteRace * sr, std::string file, FTPThread ** re
     }
   }
   if (!foundreadythread) {
-    for (int i = 0; i < conns.size(); i++) {
+    for (unsigned int i = 0; i < conns.size(); i++) {
       if (connstatetracker[i].isReady()) {
         foundreadythread = true;
         lastready = conns[i];

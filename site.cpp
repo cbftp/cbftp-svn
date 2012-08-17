@@ -80,7 +80,7 @@ void Site::pushTransferSpeed(std::string target, int speed) {
     oldspeed = it->second;
     avgspeed.erase(it);
   }
-  avgspeed[target] = (speed / 5) + (oldspeed * 0.8);
+  avgspeed[target] = (int) ((speed / 5) + (oldspeed * 0.8));
 }
 
 bool Site::needsPRET() {

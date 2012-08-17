@@ -14,7 +14,6 @@ DataFileHandler::DataFileHandler(std::string path) {
   fileexists = true;
   std::fstream infile;
   infile.open(path.c_str());
-  int total = 0;
   int gcount;
   while (!infile.eof() && infile.good()) {
     unsigned char * rawdatablock = new unsigned char[READBLOCKSIZE];
@@ -51,8 +50,6 @@ bool DataFileHandler::tryDecrypt(std::string key) {
   }
   delete rawdata;
   int lastbreakpos = 0;
-  unsigned char * nextpos;
-  unsigned char * lastpos = decryptedtext;
   for (int currentpos = 0; currentpos <= decryptedlen; currentpos++) {
     if (decryptedtext[currentpos] == '\n' || currentpos == decryptedlen) {
       decryptedlines.push_back(std::string((const char *)(decryptedtext + lastbreakpos), currentpos - lastbreakpos));

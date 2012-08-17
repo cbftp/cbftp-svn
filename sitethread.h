@@ -37,10 +37,10 @@ class SiteThread {
     pthread_mutex_t slots;
     sem_t notifysem;
     sem_t * list_refresh;
-    int slots_dn;
-    int slots_up;
-    int available;
-    int loggedin;
+    unsigned int slots_dn;
+    unsigned int slots_up;
+    unsigned int available;
+    unsigned int loggedin;
     std::list<SiteThreadRequest> requests;
     std::list<SiteThreadRequest> requestsinprogress;
     std::list<SiteThreadRequestReady> requestsready;

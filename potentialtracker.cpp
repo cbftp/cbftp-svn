@@ -69,6 +69,7 @@ PotentialListElement * PotentialTracker::getFront() {
 
 void * runPotentialTracker(void * arg) {
   ((PotentialTracker *) arg)->runInstance();
+  return NULL;
 }
 
 void PotentialTracker::runInstance() {

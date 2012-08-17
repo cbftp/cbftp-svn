@@ -315,10 +315,12 @@ void UserInterface::runUserInterfaceInstance() {
 
 void * UserInterface::runKeyListener(void * arg) {
   ((UserInterface *) arg)->runKeyListenerInstance();
+  return NULL;
 }
 
 void * UserInterface::runUserInterface(void * arg) {
   ((UserInterface *) arg)->runUserInterfaceInstance();
+  return NULL;
 }
 
 UICommunicator * UserInterface::getCommunicator() {

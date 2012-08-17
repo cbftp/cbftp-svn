@@ -11,7 +11,7 @@ RawBuffer::RawBuffer(int maxlength, std::string site, std::string id) {
 }
 
 void RawBuffer::write(std::string s) {
-  int split = s.find("\n");
+  unsigned int split = s.find("\n");
   if (!split) {
     if (s.length() > 1) write(s.substr(1));
   }
@@ -26,7 +26,7 @@ void RawBuffer::write(std::string s) {
     }
     else {
       s = "[" + global->ctimeLog() + " " + site + " " + id + "] " + s;
-      if (log.size() < maxlength) log.push_back(s);
+      if ((int) log.size() < maxlength) log.push_back(s);
       else log[latestp] = s;
       if (++latestp == maxlength) latestp = 0;
       inprogress = true;
