@@ -57,6 +57,7 @@ void LoginScreen::keyPressed(unsigned int ch) {
   }
   else {
     switch(ch) {
+      case 8:
       case KEY_BACKSPACE:
         passfield.eraseLast();
         break;

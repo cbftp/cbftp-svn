@@ -16,6 +16,8 @@ public:
   void keyPressed(unsigned int);
   std::string getLegendText();
 private:
+  unsigned int currentviewspan;
+  bool virgin;
   Site * site;
   UIFileList list;
   SiteThread * sitethread;

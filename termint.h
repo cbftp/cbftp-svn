@@ -4,12 +4,13 @@
 
 class TermInt {
 private:
-  static int cursorrow;
-  static int cursorcol;
+  static unsigned int cursorrow;
+  static unsigned int cursorcol;
   static WINDOW * cursorwindow;
 public:
-  static void printChar(WINDOW *, int, int, int);
-  static void printStr(WINDOW *, int, int, std::string);
-  static void moveCursor(WINDOW *, int, int);
+  static void printChar(WINDOW *, unsigned int, unsigned int, unsigned int);
+  static void printStr(WINDOW *, unsigned int, unsigned int, std::string);
+  static void printStr(WINDOW *, unsigned int, unsigned int, std::string, unsigned int);
+  static void moveCursor(WINDOW *, unsigned int, unsigned int);
 };
 
