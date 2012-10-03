@@ -16,7 +16,7 @@
 #include "potentialtracker.h"
 #include "sitethreadrequest.h"
 #include "sitethreadrequestready.h"
-#include "uicommunicator.h"
+#include "ui/uicommunicator.h"
 #include "tickpoke.h"
 #include "connstatetracker.h"
 

@@ -504,7 +504,6 @@ void * FTPThread::run(void * arg) {
 }
 
 void FTPThread::runInstance() {
-  bool ret;
   while(1) {
     sem_wait(&commandsem);
     pthread_mutex_lock(&commandq_mutex);
@@ -545,11 +544,11 @@ void FTPThread::runInstance() {
         getFileListT(*(std::string *)command->getArg1());
         break;
       case 20:
-        ret = doRETRAsyncT(*(std::string *)command->getArg1(), (int *)command->getArg2(), command->getDoneSem());
+        doRETRAsyncT(*(std::string *)command->getArg1(), (int *)command->getArg2(), command->getDoneSem());
         delete (std::string *)command->getArg1();
         break;
       case 21:
-        ret = doSTORAsyncT(*(std::string *)command->getArg1(), (int *)command->getArg2(), (bool *)command->getArg3(), command->getDoneSem());
+        doSTORAsyncT(*(std::string *)command->getArg1(), (int *)command->getArg2(), (bool *)command->getArg3(), command->getDoneSem());
         delete (std::string *)command->getArg1();
         break;
       case 22:

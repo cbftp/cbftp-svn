@@ -12,8 +12,8 @@
 #include "sitemanager.h"
 #include "globalcontext.h"
 #include "engine.h"
-#include "ui.h"
-#include "uicommunicator.h"
+#include "ui/ui.h"
+#include "ui/uicommunicator.h"
 #include "tickpoke.h"
 
 #define DATAFILE "data"

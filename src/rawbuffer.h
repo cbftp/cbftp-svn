@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "globalcontext.h"
-#include "uicommunicator.h"
+#include "ui/uicommunicator.h"
 
 extern GlobalContext * global;
 
