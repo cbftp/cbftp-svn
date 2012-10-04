@@ -10,8 +10,6 @@ endif
 DATE := "\"${shell date}\""
 
 CPPFLAGS :=-g -Wall -O0
-
 FINALFLAGS=-g -O0
-
-LINKFLAGS=-g -lncurses -lpthread -lssl -lcrypto
+LINKFLAGS=-lncurses -lpthread -lssl -lcrypto
 
