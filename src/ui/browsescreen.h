@@ -19,9 +19,12 @@ public:
 private:
   unsigned int currentviewspan;
   bool virgin;
+  bool resort;
+  unsigned int sortmethod;
   Site * site;
   UIFileList list;
   SiteThread * sitethread;
   unsigned int requestid;
   UICommunicator * uicommunicator;
+  void sort();
 };

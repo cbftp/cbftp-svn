@@ -10,6 +10,10 @@ void GlobalContext::init() {
   ssl_ctx = SSL_CTX_new(TLSv1_client_method());
   pthread_attr_init(&attr);
   pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
+  time_t rawtime;
+  time(&rawtime);
+  struct tm * timedata = localtime(&rawtime);
+  currentyear = timedata->tm_year + 1900;
   sem_init(&list_refresh, 0, 0);
 }
 
@@ -64,6 +68,10 @@ int GlobalContext::ctimeMSec() {
   ftime(&tb);
   int count = tb.millitm + tb.time * 1000;
   return count;
+}
+
+int GlobalContext::currentYear() {
+  return currentyear;
 }
 
 std::string GlobalContext::ctimeLog() {

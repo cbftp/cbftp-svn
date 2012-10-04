@@ -9,6 +9,7 @@
 #include <time.h>
 #include <string>
 #include <sstream>
+#include <ctime>
 
 class Engine;
 class UICommunicator;
@@ -32,6 +33,7 @@ class GlobalContext {
     sem_t list_refresh;
     std::string compiletime;
     std::string svnrev;
+    int currentyear;
   public:
     void init();
     GlobalContext();
@@ -47,6 +49,7 @@ class GlobalContext {
     pthread_attr_t * getPthreadAttr();
     sem_t * getListRefreshSem();
     static int ctimeMSec();
+    int currentYear();
     std::string ctimeLog();
     std::string getSVNRevision();
     std::string getCompileTime();

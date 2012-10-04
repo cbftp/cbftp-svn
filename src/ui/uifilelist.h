@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <list>
+#include <algorithm>
 
 #include "../filelist.h"
 #include "../file.h"
@@ -15,11 +16,16 @@ private:
   std::list<unsigned int> selectedfiles;
   UIFile * current;
   unsigned int currentposition;
+  UIFile * currentcursored;
   std::string path;
+  void setNewCurrentPosition();
 public:
   UIFileList();
+  void sortCombined();
   void sortName(bool);
   void sortTime(bool);
+  void sortSize(bool);
+  void sortOwner(bool);
   void parse(FileList *);
   UIFile * cursoredFile();
   bool goNext();
@@ -31,3 +37,13 @@ public:
   unsigned int currentCursorPosition();
   std::string getPath();
 };
+
+bool combinedSort(UIFile *, UIFile *);
+bool nameSortAsc(UIFile *, UIFile *);
+bool nameSortDesc(UIFile *, UIFile *);
+bool timeSortAsc(UIFile *, UIFile *);
+bool timeSortDesc(UIFile *, UIFile *);
+bool sizeSortAsc(UIFile *, UIFile *);
+bool sizeSortDesc(UIFile *, UIFile *);
+bool ownerSortAsc(UIFile *, UIFile *);
+bool ownerSortDesc(UIFile *, UIFile *);

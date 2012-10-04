@@ -7,14 +7,18 @@ BrowseScreen::BrowseScreen(WINDOW * window, UICommunicator * uicommunicator, uns
   uicommunicator->expectBackendPush();
   requestid = sitethread->requestFileList("/");
   virgin = true;
+  resort = false;
   currentviewspan = 0;
+  sortmethod = 0;
   init(window, row, col);
 }
 
 void BrowseScreen::redraw() {
   werase(window);
+  if (resort == true) sort();
   unsigned int position = list.currentCursorPosition();
   unsigned int pagerows = (unsigned int) row / 2;
+
   if (position < currentviewspan || position >= currentviewspan + row) {
     if (position < pagerows) {
       currentviewspan = 0;
@@ -23,8 +27,11 @@ void BrowseScreen::redraw() {
       currentviewspan = position - pagerows;
     }
   }
-  if (currentviewspan + row > list.size()) {
-    currentviewspan = list.size() - row + 1;
+  if (currentviewspan + row >= list.size() && list.size() + 1 >= row) {
+    currentviewspan = list.size() + 1 - row;
+    if (currentviewspan > position) {
+      currentviewspan = position;
+    }
   }
   if (virgin) {
     TermInt::printStr(window, 1, 1, "Let's browse this shit!");
@@ -39,6 +46,7 @@ void BrowseScreen::update() {
     FileList * filelist = sitethread->getFileList(requestid);
     sitethread->finishRequest(requestid);
     list.parse(filelist);
+    sort();
     currentviewspan = 0;
     //delete filelist;
     werase(window);
@@ -52,25 +60,25 @@ void BrowseScreen::update() {
     }
   }
   unsigned int sizelen = 8;
-  unsigned int timelen = 16;
-  unsigned int ownerlen = 15;
+  unsigned int timelen = 18;
+  unsigned int ownerlen = 18;
   bool printsize = false;
   bool printlastmodified = false;
   bool printowner = false;
   int namelimit = 0;
   if (col > 60 + sizelen + timelen + ownerlen + 3) {
-    namelimit = col - sizelen - timelen - ownerlen - 3 - 1;
+    namelimit = col - sizelen - timelen - ownerlen - 3 - 1 - 2;
     printsize = true;
     printlastmodified = true;
     printowner = true;
   }
   else if (col > 60 + sizelen + timelen + 2) {
-    namelimit = col - sizelen - timelen - 2 - 1;
+    namelimit = col - sizelen - timelen - 2 - 1 - 2;
     printsize = true;
     printlastmodified = true;
   }
   else if (col > 40 + sizelen + 1) {
-    namelimit = col - sizelen - 1 - 1;
+    namelimit = col - sizelen - 1 - 1 - 2;
     printsize = true;
   }
   else {
@@ -80,11 +88,14 @@ void BrowseScreen::update() {
   unsigned int timepos = col - timelen - (printowner ? ownerlen : 0);
   for (unsigned int i = 0; i + currentviewspan < uilist->size() && i < row; i++) {
     unsigned int listi = i + currentviewspan;
-    bool selected = listi == list.currentCursorPosition();
+    bool selected = (*uilist)[listi] == list.cursoredFile();
+    if ((*uilist)[listi]->isDirectory()) {
+      TermInt::printStr(window, i, 1, "#");
+    }
     if (selected) {
       wattron(window, A_REVERSE);
     }
-    TermInt::printStr(window, i, 1, (*uilist)[listi]->getName(), namelimit);
+    TermInt::printStr(window, i, 3, (*uilist)[listi]->getName(), namelimit);
     if (selected) {
       wattroff(window, A_REVERSE);
     }
@@ -93,7 +104,7 @@ void BrowseScreen::update() {
       if (printlastmodified) {
         TermInt::printStr(window, i, timepos, (*uilist)[listi]->getLastModified(), timelen);
         if (printowner) {
-          TermInt::printStr(window, i, col-15, (*uilist)[listi]->getOwner() + "/" + (*uilist)[listi]->getGroup(), ownerlen);
+          TermInt::printStr(window, i, col-ownerlen, (*uilist)[listi]->getOwner() + "/" + (*uilist)[listi]->getGroup(), ownerlen-1);
         }
       }
     }
@@ -119,6 +130,11 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       break;
     case 'v':
       //view selected file, do nothing if a directory is selected
+      break;
+    case 's':
+      sortmethod++;
+      resort = true;
+      uicommunicator->newCommand("redraw");
       break;
     case KEY_RIGHT:
     case 10:
@@ -208,5 +224,38 @@ void BrowseScreen::keyPressed(unsigned int ch) {
 }
 
 std::string BrowseScreen::getLegendText() {
-  return "[c]ancel - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [b]ind to section";
+  return "[c]ancel - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [b]ind to section - [s]ort";
+}
+
+void BrowseScreen::sort() {
+  switch (sortmethod % 9) {
+    case 0:
+      list.sortCombined();
+      break;
+    case 1:
+      list.sortName(true);
+      break;
+    case 2:
+      list.sortName(false);
+      break;
+    case 3:
+      list.sortSize(false);
+      break;
+    case 4:
+      list.sortSize(true);
+      break;
+    case 5:
+      list.sortTime(false);
+      break;
+    case 6:
+      list.sortTime(true);
+      break;
+    case 7:
+      list.sortOwner(true);
+      break;
+    case 8:
+      list.sortOwner(false);
+      break;
+  }
+  resort = false;
 }

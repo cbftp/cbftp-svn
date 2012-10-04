@@ -2,7 +2,10 @@
 
 #include <string>
 
+#include "../globalcontext.h"
 #include "../file.h"
+
+extern GlobalContext * global;
 
 class UIFile {
 private:
@@ -10,10 +13,12 @@ private:
   long int size;
   std::string owner;
   std::string group;
-  std::string lastmodified;
+  int lastmodified;
+  std::string lastmodifiedrepr;
   bool directory;
   bool selected;
   bool cursored;
+  void parseTimeStamp(std::string);
 public:
   UIFile(File *);
   bool isDirectory();
@@ -21,6 +26,7 @@ public:
   std::string getGroup();
   long int getSize();
   std::string getLastModified();
+  int getModifyTime();
   std::string getName();
   bool isSelected();
   bool isCursored();
