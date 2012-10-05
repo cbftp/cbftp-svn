@@ -28,6 +28,7 @@ public:
   void sortOwner(bool);
   void parse(FileList *);
   UIFile * cursoredFile();
+  void selectFileName(std::string);
   bool goNext();
   bool goPrevious();
   void toggleSelectCurrent();

@@ -115,6 +115,16 @@ void UIFileList::setNewCurrentPosition() {
   }
 }
 
+void UIFileList::selectFileName(std::string filename) {
+  for (unsigned int i = 0; i < sortedfiles.size(); i++) {
+    if (sortedfiles[i]->getName() == filename) {
+      currentposition = i;
+      currentcursored = sortedfiles[i];
+      return;
+    }
+  }
+}
+
 void UIFileList::parse(FileList * filelist) {
   files.clear();
   sortedfiles.clear();
@@ -139,7 +149,7 @@ UIFile * UIFileList::cursoredFile() {
 }
 
 bool UIFileList::goNext() {
-  if (currentposition < size() - 1) {
+  if (size() > 0 && currentposition < size() - 1) {
     currentposition++;
     currentcursored = sortedfiles[currentposition];
     return true;
@@ -148,7 +158,7 @@ bool UIFileList::goNext() {
 }
 
 bool UIFileList::goPrevious() {
-  if (currentposition > 0) {
+  if (size() > 0 && currentposition > 0) {
     currentposition--;
     currentcursored = sortedfiles[currentposition];
     return true;

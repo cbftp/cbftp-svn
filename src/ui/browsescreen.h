@@ -1,5 +1,7 @@
 #pragma once
 
+#include <list>
+
 #include "../sitethread.h"
 #include "../sitethreadmanager.h"
 #include "../site.h"
@@ -8,6 +10,7 @@
 #include "uicommunicator.h"
 #include "termint.h"
 #include "uifilelist.h"
+#include "selectionpair.h"
 
 class BrowseScreen : public UIWindow {
 public:
@@ -16,6 +19,7 @@ public:
   void update();
   void keyPressed(unsigned int);
   std::string getLegendText();
+  std::list<SelectionPair> selectionhistory;
 private:
   unsigned int currentviewspan;
   bool virgin;

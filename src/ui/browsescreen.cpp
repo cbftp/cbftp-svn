@@ -15,6 +15,27 @@ BrowseScreen::BrowseScreen(WINDOW * window, UICommunicator * uicommunicator, uns
 
 void BrowseScreen::redraw() {
   werase(window);
+  if (requestid >= 0 && sitethread->requestReady(requestid)) {
+    if (!virgin) {
+      selectionhistory.push_front(SelectionPair(list.getPath(), list.cursoredFile()->getName()));
+    }
+    virgin = false;
+    FileList * filelist = sitethread->getFileList(requestid);
+    sitethread->finishRequest(requestid);
+    requestid = -1;
+    list.parse(filelist);
+    sort();
+    currentviewspan = 0;
+    std::string path = list.getPath();
+    for (std::list<SelectionPair>::iterator it = selectionhistory.begin(); it != selectionhistory.end(); it++) {
+      if (it->getPath() == path) {
+        list.selectFileName(it->getSelection());
+        selectionhistory.erase(it);
+        break;
+      }
+    }
+    //delete filelist;
+  }
   if (resort == true) sort();
   unsigned int position = list.currentCursorPosition();
   unsigned int pagerows = (unsigned int) row / 2;
@@ -41,15 +62,9 @@ void BrowseScreen::redraw() {
 }
 
 void BrowseScreen::update() {
-  if (sitethread->requestReady(requestid)) {
-    virgin = false;
-    FileList * filelist = sitethread->getFileList(requestid);
-    sitethread->finishRequest(requestid);
-    list.parse(filelist);
-    sort();
-    currentviewspan = 0;
-    //delete filelist;
-    werase(window);
+  if (requestid >= 0 && sitethread->requestReady(requestid)) {
+    uicommunicator->newCommand("redraw");
+    return;
   }
   std::vector<UIFile *> * uilist = list.getSortedList();
   int maxnamelen;
@@ -138,10 +153,9 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       break;
     case KEY_RIGHT:
     case 10:
-      if (list.cursoredFile()->isDirectory()) {
+      if (list.cursoredFile() != NULL && list.cursoredFile()->isDirectory()) {
         oldpath = list.getPath();
-        endswithslash = oldpath.rfind("/") + 1 == oldpath.length();
-        requestid = sitethread->requestFileList(oldpath + (endswithslash ? "" : "/") + list.cursoredFile()->getName());
+        requestid = sitethread->requestFileList(oldpath + list.cursoredFile()->getName());
         //enter the selected directory, do nothing if a file is selected
         uicommunicator->newCommand("update");
       }
@@ -151,7 +165,10 @@ void BrowseScreen::keyPressed(unsigned int ch) {
     case KEY_BACKSPACE:
       oldpath = list.getPath();
       endswithslash = oldpath.rfind("/") + 1 == oldpath.length();
-      if (oldpath == "/") {
+      if (oldpath == "") {
+        break;
+      }
+      if (oldpath == "/" ) {
         uicommunicator->newCommand("return");
         break;
       }

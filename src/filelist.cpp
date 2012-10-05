@@ -6,6 +6,9 @@ FileList::FileList(std::string username, std::string path) {
   pthread_mutex_init(&filled_mutex, NULL);
   this->username = username;
   this->path = path;
+  if (this->path.rfind("/") + 1 != this->path.length()) {
+        this->path += "/";
+      }
   filled = false;
   owned = 0;
   ownpercentage = 0;

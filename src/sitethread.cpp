@@ -236,6 +236,9 @@ void SiteThread::handleRequest(int id) {
 
 int SiteThread::requestFileList(std::string path) {
   int requestid = requestidcounter++;
+  if (path.rfind("/") != path.length() - 1) {
+    path += "/";
+  }
   requests.push_back(SiteThreadRequest(requestid, path));
   sem_post(&notifysem);
   return requestid;
