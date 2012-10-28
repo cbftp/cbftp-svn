@@ -21,6 +21,12 @@ SiteThread::SiteThread(std::string sitename) {
   pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
 }
 
+SiteThread::~SiteThread() {
+  global->getTickPoke()->stopPoke(&notifysem, 0);
+  delete ftpthreadcom;
+  delete ptrack;
+}
+
 void SiteThread::activate() {
   for (unsigned int i = 0; i < conns.size(); i++) conns[i]->loginAsync();
 }

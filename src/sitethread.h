@@ -52,6 +52,7 @@ class SiteThread {
     static void * run(void *);
   public:
     SiteThread(std::string);
+    ~SiteThread();
     void runInstance();
     void addRace(Race *, std::string, std::string);
     Site * getSite();
