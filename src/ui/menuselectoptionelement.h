@@ -8,6 +8,7 @@ class MenuSelectOptionElement {
     std::string label;
     int col;
     int row;
+  protected:
     bool active;
   public:
     void init(std::string, int, int, std::string);

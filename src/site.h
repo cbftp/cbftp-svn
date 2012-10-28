@@ -49,5 +49,6 @@ class Site {
     void setMaxLogins(int);
     void setMaxDn(int);
     void setMaxUp(int);
+    void clearSections();
     void addSection(std::string, std::string);
 };

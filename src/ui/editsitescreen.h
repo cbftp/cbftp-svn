@@ -8,6 +8,8 @@
 #include "menuselectoption.h"
 #include "menuselectoptionelement.h"
 #include "termint.h"
+#include "menusection.h"
+#include "focusablearea.h"
 
 class EditSiteScreen : public UIWindow {
 public:
@@ -17,11 +19,14 @@ public:
   void keyPressed(unsigned int);
   std::string getLegendText();
 private:
+  FocusableArea * focusedarea;
+  FocusableArea * defocusedarea;
   std::string currentlegendtext;
   std::string defaultlegendtext;
   bool active;
   MenuSelectOptionElement * activeelement;
   MenuSelectOption mso;
+  MenuSection ms;
   Site * site;
   Site modsite;
   std::string operation;

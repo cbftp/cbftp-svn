@@ -81,11 +81,11 @@ void NewKeyScreen::keyPressed(unsigned int ch) {
   bool activation;
   switch(ch) {
     case KEY_UP:
-      mso.goPrev();
+      mso.goUp();
       uicommunicator->newCommand("update");
       break;
     case KEY_DOWN:
-      mso.goNext();
+      mso.goDown();
       uicommunicator->newCommand("update");
       break;
     case 10:

@@ -10,7 +10,7 @@
 #include "uicommunicator.h"
 #include "termint.h"
 #include "uifilelist.h"
-#include "selectionpair.h"
+#include "stringpair.h"
 
 class BrowseScreen : public UIWindow {
 public:
@@ -19,7 +19,7 @@ public:
   void update();
   void keyPressed(unsigned int);
   std::string getLegendText();
-  std::list<SelectionPair> selectionhistory;
+  std::list<StringPair> selectionhistory;
 private:
   unsigned int currentviewspan;
   bool virgin;

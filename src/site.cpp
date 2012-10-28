@@ -157,6 +157,10 @@ void Site::setMaxUp(int num) {
   max_up = num > logins ? logins : num;
 }
 
+void Site::clearSections() {
+  sections.clear();
+}
+
 void Site::addSection(std::string name, std::string path) {
   sections[name] = path;
 }

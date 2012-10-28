@@ -17,7 +17,7 @@ void BrowseScreen::redraw() {
   werase(window);
   if (requestid >= 0 && sitethread->requestReady(requestid)) {
     if (!virgin) {
-      selectionhistory.push_front(SelectionPair(list.getPath(), list.cursoredFile()->getName()));
+      selectionhistory.push_front(StringPair(list.getPath(), list.cursoredFile()->getName()));
     }
     virgin = false;
     FileList * filelist = sitethread->getFileList(requestid);
@@ -27,9 +27,9 @@ void BrowseScreen::redraw() {
     sort();
     currentviewspan = 0;
     std::string path = list.getPath();
-    for (std::list<SelectionPair>::iterator it = selectionhistory.begin(); it != selectionhistory.end(); it++) {
-      if (it->getPath() == path) {
-        list.selectFileName(it->getSelection());
+    for (std::list<StringPair>::iterator it = selectionhistory.begin(); it != selectionhistory.end(); it++) {
+      if (it->getKey() == path) {
+        list.selectFileName(it->getValue());
         selectionhistory.erase(it);
         break;
       }

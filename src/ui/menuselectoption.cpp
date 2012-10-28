@@ -6,8 +6,13 @@ MenuSelectOption::MenuSelectOption() {
 }
 
 
-bool MenuSelectOption::goNext() {
+bool MenuSelectOption::goDown() {
   if (pointer == size() - 1) {
+    if (leavedown) {
+      lastpointer = pointer;
+      focus = false;
+      return true;
+    }
     return false;
   }
   lastpointer = pointer;
@@ -15,13 +20,34 @@ bool MenuSelectOption::goNext() {
   return true;
 }
 
-bool MenuSelectOption::goPrev() {
+bool MenuSelectOption::goUp() {
   if (pointer == 0) {
+    if (leaveup) {
+      lastpointer = pointer;
+      focus = false;
+      return true;
+    }
     return false;
   }
   lastpointer = pointer;
   pointer--;
   return true;
+}
+
+bool MenuSelectOption::goRight() {
+  if (leaveright) {
+    focus = false;
+    return true;
+  }
+  return false;
+}
+
+bool MenuSelectOption::goLeft() {
+  if (leaveleft) {
+    focus = false;
+    return true;
+  }
+  return false;
 }
 
 void MenuSelectOption::addStringField(int row, int col, std::string identifier, std::string label, std::string starttext, bool secret) {
@@ -37,7 +63,7 @@ void MenuSelectOption::addCheckBox(int row, int col, std::string identifier, std
 }
 
 MenuSelectOptionElement * MenuSelectOption::getElement(unsigned int i) {
-  if (i < 0 || i > size()) {
+  if (i < 0 || i >= size()) {
     return NULL;
   }
   return options[i];
@@ -50,12 +76,27 @@ unsigned int MenuSelectOption::getLastSelectionPointer() {
 unsigned int MenuSelectOption::getSelectionPointer() {
   return pointer;
 }
+
+bool MenuSelectOption::activateSelected() {
+  return getElement(pointer)->activate();
+}
+
 void MenuSelectOption::clear() {
   std::vector<MenuSelectOptionElement *>::iterator it;
   for (it = options.begin(); it != options.end(); it++) {
     delete *it;
   }
   options.clear();
+}
+
+void MenuSelectOption::enterFocusFrom(int dir) {
+  focus = true;
+  if (dir == 2) { // bottom
+    pointer = size() - 1;
+  }
+  else {
+    pointer = 0;
+  }
 }
 
 unsigned int MenuSelectOption::size() {

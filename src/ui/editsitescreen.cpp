@@ -28,6 +28,12 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
   mso.addIntArrow(y++, x, "maxdn", "Download slots:", modsite.getMaxDown(), 0, 99);
   mso.addCheckBox(y++, x, "pret", "Needs PRET:", modsite.needsPRET());
   mso.addCheckBox(y++, x, "brokenpasv", "Broken PASV:", modsite.hasBrokenPASV());
+  y++;
+  ms.initialize(y++, x, modsite.sectionsBegin(), modsite.sectionsEnd());
+  focusedarea = &mso;
+  mso.makeLeavableDown();
+  ms.makeLeavableUp();
+  mso.enterFocusFrom(0);
   init(window, row, col);
 }
 
@@ -38,7 +44,7 @@ void EditSiteScreen::redraw() {
   for (unsigned int i = 0; i < mso.size(); i++) {
     MenuSelectOptionElement * msoe = mso.getElement(i);
     highlight = false;
-    if (mso.getSelectionPointer() == i) {
+    if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
     }
     if (highlight) wattron(window, A_REVERSE);
@@ -46,23 +52,113 @@ void EditSiteScreen::redraw() {
     if (highlight) wattroff(window, A_REVERSE);
     TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
+  int headrow = ms.getHeaderRow();
+  int headcol = ms.getHeaderCol();
+  TermInt::printStr(window, headrow, headcol, "Sections");
+  int selected = ms.getSelectionPointer();
+  highlight = false;
+  if (ms.isFocused() && selected == 0) {
+    highlight = true;
+  }
+  if (highlight) wattron(window, A_REVERSE);
+  TermInt::printStr(window, headrow, headcol + 9, ms.getElement(0)->getContentText());
+  if (highlight) wattroff(window, A_REVERSE);
+  for (unsigned int i = 0; i < ms.size(); i++) {
+    MenuSelectOptionContainer * msoc = ms.getSectionContainer(i);
+    for (unsigned int j = 0; j < 3; j++) {
+      highlight = ((i * 3) + 1 + j) == selected;
+      if (highlight) wattron(window, A_REVERSE);
+      TermInt::printStr(window, headrow + 1 + i, headcol + (j * 10), msoc->getOption(j)->getContentText());
+      if (highlight) wattroff(window, A_REVERSE);
+    }
+  }
 }
 
 void EditSiteScreen::update() {
-  MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
-  msoe = mso.getElement(mso.getSelectionPointer());
-  wattron(window, A_REVERSE);
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-  wattroff(window, A_REVERSE);
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
-  if (active && msoe->cursorPosition() >= 0) {
-    curs_set(1);
-    TermInt::moveCursor(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
+  if (defocusedarea != NULL) {
+    if (defocusedarea == &mso) {
+      MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
+      TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+      TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    }
+    else if (defocusedarea == &ms) {
+      int headrow = ms.getHeaderRow();
+      int headcol = ms.getHeaderCol();
+      int lastsel = ms.getLastSelectionPointer();
+      if (lastsel == 0) {
+        TermInt::printStr(window, headrow, headcol + 9, ms.getElement(0)->getContentText());
+      }
+      else {
+        MenuSelectOptionContainer * msoc = ms.getSectionContainer((lastsel - 1) / 3);
+        int internalid = (lastsel - 1) % 3;
+        int add = 0;
+        if (internalid == 1) add = 10;
+        else if (internalid == 2) add = 20;
+        TermInt::printStr(window, headrow + 1 + ((lastsel - 1) / 3), headcol + add, msoc->getOption(internalid)->getContentText());
+      }
+    }
+    defocusedarea = NULL;
   }
-  else {
-    curs_set(0);
+  if (focusedarea == &mso) {
+    MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
+    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    msoe = mso.getElement(mso.getSelectionPointer());
+    wattron(window, A_REVERSE);
+    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+    wattroff(window, A_REVERSE);
+    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    if (active && msoe->cursorPosition() >= 0) {
+      curs_set(1);
+      TermInt::moveCursor(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
+    }
+    else {
+      curs_set(0);
+    }
+  }
+  else if (focusedarea == &ms) {
+    if (ms.needsRedraw()) {
+      redraw();
+      return;
+    }
+    int headrow = ms.getHeaderRow();
+    int headcol = ms.getHeaderCol();
+    int lastsel = ms.getLastSelectionPointer();
+    int sel = ms.getSelectionPointer();
+    if (lastsel == 0) {
+      TermInt::printStr(window, headrow, headcol + 9, ms.getElement(0)->getContentText());
+    }
+    else {
+      MenuSelectOptionContainer * msoc = ms.getSectionContainer((lastsel - 1) / 3);
+      int internalid = (lastsel - 1) % 3;
+      int add = 0;
+      if (internalid == 1) add = 10;
+      else if (internalid == 2) add = 20;
+      TermInt::printStr(window, headrow + 1 + ((lastsel - 1) / 3), headcol + add, msoc->getOption(internalid)->getContentText());
+    }
+    if (sel == 0) {
+      wattron(window, A_REVERSE);
+      TermInt::printStr(window, headrow, headcol + 9, ms.getElement(0)->getContentText());
+      wattroff(window, A_REVERSE);
+    }
+    else {
+      MenuSelectOptionContainer * msoc = ms.getSectionContainer((sel - 1) / 3);
+      int internalid = (sel - 1) % 3;
+      int add = 0;
+      if (internalid == 1) add = 10;
+      else if (internalid == 2) add = 20;
+      wattron(window, A_REVERSE);
+      TermInt::printStr(window, headrow + 1 + ((sel - 1) / 3), headcol + add, msoc->getOption(internalid)->getContentText());
+      wattroff(window, A_REVERSE);
+      int cursorpos = msoc->getOption(internalid)->cursorPosition();
+      if (active && cursorpos >= 0) {
+        curs_set(1);
+        TermInt::moveCursor(window, headrow + 1 + ((sel - 1) / 3), headcol + add + cursorpos);
+      }
+      else {
+        curs_set(0);
+      }
+    }
   }
 }
 
@@ -82,21 +178,49 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
   bool activation;
   switch(ch) {
     case KEY_UP:
-      mso.goPrev();
-      uicommunicator->newCommand("update");
+      if (focusedarea->goUp()) {
+        if (!focusedarea->isFocused()) {
+          defocusedarea = focusedarea;
+          focusedarea = &mso;
+          focusedarea->enterFocusFrom(2);
+        }
+        uicommunicator->newCommand("update");
+      }
       break;
     case KEY_DOWN:
-      mso.goNext();
-      uicommunicator->newCommand("update");
+      if (focusedarea->goDown()) {
+        if (!focusedarea->isFocused()) {
+          defocusedarea = focusedarea;
+          focusedarea = &ms;
+          focusedarea->enterFocusFrom(0);
+        }
+        uicommunicator->newCommand("update");
+      }
+      break;
+    case KEY_LEFT:
+      if (focusedarea->goLeft()) {
+        if (!focusedarea->isFocused()) {
+          // shouldn't happen
+        }
+        uicommunicator->newCommand("update");
+      }
+      break;
+    case KEY_RIGHT:
+      if (focusedarea->goRight()) {
+        if (!focusedarea->isFocused()) {
+          // shouldn't happen
+        }
+        uicommunicator->newCommand("update");
+      }
       break;
     case 10:
-      activation = mso.getElement(mso.getSelectionPointer())->activate();
+      activation = focusedarea->activateSelected();
       if (!activation) {
         uicommunicator->newCommand("update");
         break;
       }
       active = true;
-      activeelement = mso.getElement(mso.getSelectionPointer());
+      activeelement = focusedarea->getElement(focusedarea->getSelectionPointer());
       currentlegendtext = activeelement->getLegendText();
       uicommunicator->newCommand("updatesetlegend");
       break;
@@ -136,6 +260,15 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "brokenpasv") {
             site->setBrokenPASV(((MenuSelectOptionCheckBox *)msoe)->getData());
+        }
+      }
+      site->clearSections();
+      for (unsigned int i = 0; i < ms.size(); i++) {
+        MenuSelectOptionContainer * msoc = ms.getSectionContainer(i);
+        std::string name = ((MenuSelectOptionTextField *)msoc->getOption(0))->getData();
+        std::string path = ((MenuSelectOptionTextField *)msoc->getOption(1))->getData();
+        if (name.length() > 0 && path.length() > 0) {
+          site->addSection(name, path);
         }
       }
       if (operation == "add") {
