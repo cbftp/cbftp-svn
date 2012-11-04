@@ -7,7 +7,7 @@ NewKeyScreen::NewKeyScreen(WINDOW * window, UICommunicator * uicommunicator, uns
   active = false;
   mismatch = false;
   tooshort = false;
-  unsigned int y = 11;
+  unsigned int y = 13;
   unsigned int x = 1;
 
   mso.addStringField(y++, x, "newkey", "Passphrase:", "", true);
@@ -24,6 +24,7 @@ void NewKeyScreen::redraw() {
   TermInt::printStr(window, 7, 1, "This means that the level of security increases with the length of the given");
   TermInt::printStr(window, 8, 1, "passphrase.");
   TermInt::printStr(window, 9, 1, "The passphrase is not considered secure if it is shorter than 16 characters.");
+  TermInt::printStr(window, 11, 1, "Good password practice is described well by XKCD: http://xkcd.com/936/");
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     MenuSelectOptionElement * msoe = mso.getElement(i);
@@ -54,7 +55,7 @@ void NewKeyScreen::update() {
   else if (mismatch) {
     error = "Failed: The keys did not match.";
   }
-  TermInt::printStr(window, 14, 1, error);
+  TermInt::printStr(window, 16, 1, error);
 
   if (active && msoe->cursorPosition() >= 0) {
     curs_set(1);
