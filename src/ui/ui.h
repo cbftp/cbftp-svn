@@ -12,17 +12,18 @@
 #include "../globalcontext.h"
 #include "../tickpoke.h"
 
+#include "legendwindow.h"
 #include "uiwindow.h"
 #include "uicommunicator.h"
-#include "loginscreen.h"
-#include "newkeyscreen.h"
-#include "mainscreen.h"
-#include "editsitescreen.h"
-#include "confirmationscreen.h"
-#include "sitestatusscreen.h"
-#include "rawdatascreen.h"
-#include "legendwindow.h"
-#include "browsescreen.h"
+
+#include "screens/loginscreen.h"
+#include "screens/newkeyscreen.h"
+#include "screens/mainscreen.h"
+#include "screens/editsitescreen.h"
+#include "screens/confirmationscreen.h"
+#include "screens/sitestatusscreen.h"
+#include "screens/rawdatascreen.h"
+#include "screens/browsescreen.h"
 
 #define TICKLENGTH 250000
 

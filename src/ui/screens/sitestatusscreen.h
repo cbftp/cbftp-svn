@@ -2,15 +2,15 @@
 
 #include <vector>
 
-#include "../globalcontext.h"
-#include "../site.h"
-#include "../sitethread.h"
-#include "../sitethreadmanager.h"
-#include "../ftpthread.h"
+#include "../../globalcontext.h"
+#include "../../site.h"
+#include "../../sitethread.h"
+#include "../../sitethreadmanager.h"
+#include "../../ftpthread.h"
 
-#include "uiwindow.h"
-#include "uicommunicator.h"
-#include "termint.h"
+#include "../uiwindow.h"
+#include "../uicommunicator.h"
+#include "../termint.h"
 
 extern GlobalContext * global;
 

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "uiwindow.h"
-#include "uicommunicator.h"
-#include "textinputfield.h"
-#include "termint.h"
+#include "../uiwindow.h"
+#include "../uicommunicator.h"
+#include "../textinputfield.h"
+#include "../termint.h"
 
 class LoginScreen : public UIWindow {
 public:

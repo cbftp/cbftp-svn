@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../site.h"
+#include "../../site.h"
 
-#include "uiwindow.h"
-#include "menuselectsite.h"
-#include "uicommunicator.h"
-#include "termint.h"
+#include "../uiwindow.h"
+#include "../menuselectsite.h"
+#include "../uicommunicator.h"
+#include "../termint.h"
 
 class MainScreen : public UIWindow {
 public:

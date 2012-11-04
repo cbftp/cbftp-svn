@@ -13,7 +13,7 @@ sources:
 	@cd src; ${MAKE}
 	
 clusterbomb: sources mkdirs
-	g++ -o bin/clusterbomb $(FINALFLAGS) src/*.o src/ui/*.o $(LINKFLAGS)
+	g++ -o bin/clusterbomb $(FINALFLAGS) src/*.o src/ui/*.o src/ui/screens/*.o $(LINKFLAGS)
 	
 datafilecat: src/crypto.cpp src/datafilecat.cpp mkdirs
 	g++ -o bin/datafilecat ${FINALFLAGS} -DNO_LOCAL_DEPS src/crypto.cpp src/datafilecat.cpp $(LINKFLAGS)

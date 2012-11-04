@@ -1,10 +1,10 @@
 #pragma once
 
-#include "uiwindow.h"
-#include "uicommunicator.h"
-#include "menuselectoption.h"
-#include "menuselectoptionelement.h"
-#include "termint.h"
+#include "../uiwindow.h"
+#include "../uicommunicator.h"
+#include "../menuselectoption.h"
+#include "../menuselectoptionelement.h"
+#include "../termint.h"
 
 #define SHORTESTKEY 4
 

@@ -2,15 +2,15 @@
 
 #include <list>
 
-#include "../sitethread.h"
-#include "../sitethreadmanager.h"
-#include "../site.h"
+#include "../../sitethread.h"
+#include "../../sitethreadmanager.h"
+#include "../../site.h"
 
-#include "uiwindow.h"
-#include "uicommunicator.h"
-#include "termint.h"
-#include "uifilelist.h"
-#include "stringpair.h"
+#include "../uiwindow.h"
+#include "../uicommunicator.h"
+#include "../termint.h"
+#include "../uifilelist.h"
+#include "../stringpair.h"
 
 class BrowseScreen : public UIWindow {
 public:

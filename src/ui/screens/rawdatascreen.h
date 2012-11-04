@@ -1,14 +1,14 @@
 #pragma once
 
-#include "../ftpthread.h"
-#include "../rawbuffer.h"
-#include "../sitethread.h"
-#include "../sitethreadmanager.h"
-#include "../globalcontext.h"
+#include "../../ftpthread.h"
+#include "../../rawbuffer.h"
+#include "../../sitethread.h"
+#include "../../sitethreadmanager.h"
+#include "../../globalcontext.h"
 
-#include "uiwindow.h"
-#include "uicommunicator.h"
-#include "termint.h"
+#include "../uiwindow.h"
+#include "../uicommunicator.h"
+#include "../termint.h"
 
 extern GlobalContext * global;
 
