@@ -2,14 +2,14 @@
 
 AddSectionScreen::AddSectionScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one";
+  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel";
   currentlegendtext = defaultlegendtext;
   active = false;
   unsigned int y = 3;
   unsigned int x = 1;
-
-  mso.addStringField(y++, x, "name", "Name:", "", true);
-  mso.addStringField(y++, x, "path", "Path:", "", true);
+  modsite = global->getSiteManager()->getSite(uicommunicator->getArg1());
+  mso.addStringField(y++, x, "name", "Name:", "", false);
+  mso.addStringField(y++, x, "path", "Path:", uicommunicator->getArg2(), false);
   init(window, row, col);
 }
 
@@ -83,14 +83,16 @@ void AddSectionScreen::keyPressed(unsigned int ch) {
       currentlegendtext = activeelement->getLegendText();
       uicommunicator->newCommand("updatesetlegend");
       break;
+    case 'c':
+      uicommunicator->newCommand("return");
+      break;
     case 'd':
       MenuSelectOptionTextField * field1 = (MenuSelectOptionTextField *)mso.getElement(0);
       MenuSelectOptionTextField * field2 = (MenuSelectOptionTextField *)mso.getElement(1);
-      std::string key = field1->getData();
-      std::string key2 = field2->getData();
-      field1->clear();
-      field2->clear();
-      uicommunicator->newCommand("update");
+      std::string name = field1->getData();
+      std::string path = field2->getData();
+      modsite->addSection(name, path);
+      uicommunicator->newCommand("return");
       break;
   }
 }

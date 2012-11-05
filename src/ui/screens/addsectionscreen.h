@@ -1,5 +1,8 @@
 #pragma once
 
+#include "../../site.h"
+#include "../../sitemanager.h"
+
 #include "../uiwindow.h"
 #include "../uicommunicator.h"
 #include "../menuselectoption.h"
@@ -14,6 +17,7 @@ public:
   void keyPressed(unsigned int);
   std::string getLegendText();
 private:
+  Site * modsite;
   std::string currentlegendtext;
   std::string defaultlegendtext;
   bool active;

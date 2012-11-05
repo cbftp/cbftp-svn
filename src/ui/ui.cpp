@@ -120,6 +120,7 @@ void UserInterface::runUserInterfaceInstance() {
   UIWindow * sitestatusscreen;
   UIWindow * rawdatascreen;
   UIWindow * browsescreen;
+  UIWindow * addsectionscreen;
   sem_t * eventsem = uicommunicator.getEventSem();
   global->getTickPoke()->startPoke(eventsem, 250, 0);
   legendwindow = new LegendWindow(legend, 2, col);
@@ -196,6 +197,15 @@ void UserInterface::runUserInterfaceInstance() {
         legendwindow->setText(editsitescreen->getLegendText());
         mainwindows.push_back(editsitescreen);
         topwindow = editsitescreen;
+        refreshAll();
+        uicommunicator.checkoutCommand();
+      }
+      else if (command == "addsection") {
+        history.push_back(topwindow);
+        addsectionscreen = new AddSectionScreen(main, &uicommunicator, mainrow, maincol);
+        legendwindow->setText(addsectionscreen->getLegendText());
+        mainwindows.push_back(addsectionscreen);
+        topwindow = addsectionscreen;
         refreshAll();
         uicommunicator.checkoutCommand();
       }

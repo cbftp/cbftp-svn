@@ -17,7 +17,9 @@ void BrowseScreen::redraw() {
   werase(window);
   if (requestid >= 0 && sitethread->requestReady(requestid)) {
     if (!virgin) {
-      selectionhistory.push_front(StringPair(list.getPath(), list.cursoredFile()->getName()));
+      if (list.cursoredFile() != NULL) {
+        selectionhistory.push_front(StringPair(list.getPath(), list.cursoredFile()->getName()));
+      }
     }
     virgin = false;
     FileList * filelist = sitethread->getFileList(requestid);
@@ -131,7 +133,6 @@ void BrowseScreen::keyPressed(unsigned int ch) {
   bool success = false;
   unsigned int pagerows = (unsigned int) row * 0.6;
   std::string oldpath;
-  bool endswithslash;
   unsigned int position;
   switch (ch) {
     case 'c':
@@ -141,7 +142,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       //start a race of the selected dir, do nothing if a file is selected
       break;
     case 'b':
-      //bind selected dir to section, do nothing if a file is selected
+      uicommunicator->newCommand("addsection", site->getName(), list.getPath());
       break;
     case 'v':
       //view selected file, do nothing if a directory is selected
@@ -155,8 +156,10 @@ void BrowseScreen::keyPressed(unsigned int ch) {
     case 10:
       if (list.cursoredFile() != NULL && list.cursoredFile()->isDirectory()) {
         oldpath = list.getPath();
+        if (oldpath.length() > 1) {
+          oldpath += "/";
+        }
         requestid = sitethread->requestFileList(oldpath + list.cursoredFile()->getName());
-        //enter the selected directory, do nothing if a file is selected
         uicommunicator->newCommand("update");
       }
       break;
@@ -164,16 +167,12 @@ void BrowseScreen::keyPressed(unsigned int ch) {
     case 8:
     case KEY_BACKSPACE:
       oldpath = list.getPath();
-      endswithslash = oldpath.rfind("/") + 1 == oldpath.length();
       if (oldpath == "") {
         break;
       }
       if (oldpath == "/" ) {
         uicommunicator->newCommand("return");
         break;
-      }
-      if (endswithslash) {
-        oldpath = oldpath.substr(0, oldpath.length() - 1);
       }
       position = oldpath.rfind("/");
       if (position == 0) {

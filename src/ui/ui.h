@@ -24,6 +24,7 @@
 #include "screens/sitestatusscreen.h"
 #include "screens/rawdatascreen.h"
 #include "screens/browsescreen.h"
+#include "screens/addsectionscreen.h"
 
 #define TICKLENGTH 250000
 

@@ -5,10 +5,11 @@ FileList::FileList(std::string username, std::string path) {
   pthread_mutex_init(&owned_mutex, NULL);
   pthread_mutex_init(&filled_mutex, NULL);
   this->username = username;
+  bool endswithslash = path.rfind("/") + 1 == path.length();
+  if (endswithslash && path.length() > 1) {
+    path = path.substr(0, path.length() - 1);
+  }
   this->path = path;
-  if (this->path.rfind("/") + 1 != this->path.length()) {
-        this->path += "/";
-      }
   filled = false;
   owned = 0;
   ownpercentage = 0;
