@@ -11,6 +11,7 @@ public:
   static void printChar(WINDOW *, unsigned int, unsigned int, unsigned int);
   static void printStr(WINDOW *, unsigned int, unsigned int, std::string);
   static void printStr(WINDOW *, unsigned int, unsigned int, std::string, unsigned int);
+  static void printStr(WINDOW *, unsigned int, unsigned int, std::string, unsigned int, bool);
   static void moveCursor(WINDOW *, unsigned int, unsigned int);
 };
 

@@ -62,7 +62,7 @@ std::string File::getGroup() {
   return group;
 }
 
-long int File::getSize() {
+unsigned long long int File::getSize() {
   return size;
 }
 
@@ -78,7 +78,7 @@ std::string File::getExtension() {
   return extension;
 }
 
-int File::getCurrentSpeed() {
+unsigned int File::getCurrentSpeed() {
   return 1024;
 }
 
@@ -86,7 +86,7 @@ bool File::updateFlagSet() {
   return updateflag;
 }
 
-int File::getUpdateSpeed() {
+unsigned int File::getUpdateSpeed() {
   return updatespeed;
 }
 

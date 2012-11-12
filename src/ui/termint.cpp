@@ -11,12 +11,20 @@ void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, std:
 }
 
 void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, std::string str, unsigned int maxlen) {
+  printStr(window, row, col, str, maxlen, false);
+}
+
+void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, std::string str, unsigned int maxlen, bool rightalign) {
   unsigned int len = str.length();
   if (len > maxlen) {
     len = maxlen;
   }
+  int rightadjust = 0;
+  if (rightalign) {
+    rightadjust = maxlen - len;
+  }
   for (unsigned int i = 0; i < len; i++) {
-    mvwaddch(window, row, col + i, (unsigned int)str[i]);
+    mvwaddch(window, row, col + i + rightadjust, (unsigned int)str[i]);
   }
   wmove(cursorwindow, cursorrow, cursorcol);
 }

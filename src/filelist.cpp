@@ -71,7 +71,7 @@ void FileList::touchFile(std::string name, std::string user) {
   pthread_mutex_unlock(&filelist_mutex);
 }
 
-void FileList::setFileUpdateFlag(std::string name, int speed, Site * src, std::string dst) {
+void FileList::setFileUpdateFlag(std::string name, unsigned int speed, Site * src, std::string dst) {
   File * file;
   pthread_mutex_lock(&filelist_mutex);
   if ((file = getFileIntern(name)) != NULL) {
@@ -158,7 +158,7 @@ int FileList::getOwnedPercentage() {
   return ret;
 }
 
-long int FileList::getMaxFileSize() {
+unsigned long long int FileList::getMaxFileSize() {
   return maxfilesize;
 }
 

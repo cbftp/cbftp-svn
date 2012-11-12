@@ -9,7 +9,7 @@ AddSectionScreen::AddSectionScreen(WINDOW * window, UICommunicator * uicommunica
   unsigned int x = 1;
   modsite = global->getSiteManager()->getSite(uicommunicator->getArg1());
   mso.addStringField(y++, x, "name", "Name:", "", false);
-  mso.addStringField(y++, x, "path", "Path:", uicommunicator->getArg2(), false);
+  mso.addStringField(y++, x, "path", "Path:", uicommunicator->getArg2(), false, 64);
   init(window, row, col);
 }
 

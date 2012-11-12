@@ -102,6 +102,12 @@ std::string GlobalContext::int2Str(int i) {
   return out.str();
 }
 
+std::string GlobalContext::int2Str(unsigned long long int i) {
+  std::stringstream out;
+  out << i;
+  return out.str();
+}
+
 void GlobalContext::signal_catch() {
   signal(SIGABRT, &sighandler);
   signal(SIGTERM, &sighandler);

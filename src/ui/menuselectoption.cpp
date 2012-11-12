@@ -51,7 +51,11 @@ bool MenuSelectOption::goLeft() {
 }
 
 void MenuSelectOption::addStringField(int row, int col, std::string identifier, std::string label, std::string starttext, bool secret) {
-  options.push_back(new MenuSelectOptionTextField(identifier, row, col, label, starttext, 32, 32, secret));
+  addStringField(row, col, identifier, label, starttext, secret, 32);
+}
+
+void MenuSelectOption::addStringField(int row, int col, std::string identifier, std::string label, std::string starttext, bool secret, int maxlen) {
+  options.push_back(new MenuSelectOptionTextField(identifier, row, col, label, starttext, maxlen, maxlen, secret));
 }
 
 void MenuSelectOption::addIntArrow(int row, int col, std::string identifier, std::string label, int startval, int min, int max) {

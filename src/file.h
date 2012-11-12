@@ -11,11 +11,11 @@ class File {
   private:
     std::string name;
     std::string extension;
-    long int size;
+    unsigned long long int size;
     std::string owner;
     std::string group;
     std::string lastmodified;
-    int updatespeed;
+    unsigned int updatespeed;
     Site * updatesrc;
     std::string updatedst;
     bool updateflag;
@@ -27,15 +27,15 @@ class File {
     bool isDirectory();
     std::string getOwner();
     std::string getGroup();
-    long int getSize();
+    unsigned long long int getSize();
     std::string getLastModified();
     std::string getName();
     std::string getExtension();
     Site * getUpdateSrc();
     std::string getUpdateDst();
-    int getUpdateSpeed();
+    unsigned int getUpdateSpeed();
     bool updateFlagSet();
-    int getCurrentSpeed();
+    unsigned int getCurrentSpeed();
     void setUpdateFlag(Site *, std::string, int);
     void unsetUpdateFlag();
     void setSize(long int);

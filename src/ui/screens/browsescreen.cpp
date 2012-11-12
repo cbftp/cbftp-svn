@@ -76,7 +76,7 @@ void BrowseScreen::update() {
       maxnamelen = len;
     }
   }
-  unsigned int sizelen = 8;
+  unsigned int sizelen = 10;
   unsigned int timelen = 18;
   unsigned int ownerlen = 18;
   bool printsize = false;
@@ -117,7 +117,7 @@ void BrowseScreen::update() {
       wattroff(window, A_REVERSE);
     }
     if (printsize) {
-      TermInt::printStr(window, i, sizepos, global->int2Str((*uilist)[listi]->getSize()), sizelen);
+      TermInt::printStr(window, i, sizepos, (*uilist)[listi]->getSizeRepr(), sizelen, true);
       if (printlastmodified) {
         TermInt::printStr(window, i, timepos, (*uilist)[listi]->getLastModified(), timelen);
         if (printowner) {

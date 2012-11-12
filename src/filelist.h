@@ -17,7 +17,7 @@ class FileList {
     bool filled;
     int owned;
     int ownpercentage;
-    int maxfilesize;
+    unsigned long long int maxfilesize;
     int uploadedfiles;
     File * getFileIntern(std::string);
     void editOwnedFileCount(bool);
@@ -25,7 +25,7 @@ class FileList {
     FileList(std::string, std::string);
     bool updateFile(std::string, int);
     void touchFile(std::string, std::string);
-    void setFileUpdateFlag(std::string, int, Site *, std::string);
+    void setFileUpdateFlag(std::string, unsigned int, Site *, std::string);
     File * getFile(std::string);
     File * getFile(std::string, bool);
     bool isFilled();
@@ -39,7 +39,7 @@ class FileList {
     std::map<std::string, File *>::iterator filesBegin();
     std::map<std::string, File *>::iterator filesEnd();
     int getOwnedPercentage();
-    long int getMaxFileSize();
+    unsigned long long int getMaxFileSize();
     void lockFileList();
     void unlockFileList();
     void cleanSweep(int);
