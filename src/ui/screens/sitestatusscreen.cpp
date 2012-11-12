@@ -23,7 +23,7 @@ void SiteStatusScreen::update() {
   int i = 8;
   for(unsigned int j = 0; j < st->getConns()->size(); j++) {
     std::string status = st->getStatus(j);
-    TermInt::printStr(window, i++, 1, "#" + global->int2Str(j) + " - " + status);
+    TermInt::printStr(window, i++, 1, "#" + global->int2Str((int)j) + " - " + status);
   }
 }
 
