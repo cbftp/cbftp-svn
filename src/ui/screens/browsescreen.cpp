@@ -76,7 +76,7 @@ void BrowseScreen::update() {
       maxnamelen = len;
     }
   }
-  unsigned int sizelen = 10;
+  unsigned int sizelen = 9;
   unsigned int timelen = 18;
   unsigned int ownerlen = 18;
   bool printsize = false;
