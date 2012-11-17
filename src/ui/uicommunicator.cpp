@@ -8,20 +8,24 @@ UICommunicator::UICommunicator() {
 }
 
 void UICommunicator::newCommand(std::string command) {
-  newCommand(command, "", "");
+  newCommand(command, "", "", "");
 }
 
 void UICommunicator::newCommand(std::string command, std::string arg1) {
-  newCommand(command, arg1, "");
+  newCommand(command, arg1, "", "");
 }
 
 void UICommunicator::newCommand(std::string command, std::string arg1, std::string arg2) {
+  newCommand(command, arg1, arg2, "");
+}
+
+void UICommunicator::newCommand(std::string command, std::string arg1, std::string arg2, std::string arg3) {
   this->command = command;
   this->arg1 = arg1;
   this->arg2 = arg2;
+  this->arg3 = arg3;
   newcommand = true;
 }
-
 void UICommunicator::expectBackendPush() {
   careaboutbackend = true;
 }
@@ -54,6 +58,10 @@ std::string UICommunicator::getArg1() {
 
 std::string UICommunicator::getArg2() {
   return arg2;
+}
+
+std::string UICommunicator::getArg3() {
+  return arg3;
 }
 
 sem_t * UICommunicator::getEventSem() {

@@ -86,7 +86,7 @@ void Transfer::run() {
   int span = global->ctimeMSec() - start;
   int size = srs->getFileList()->getFile(file)->getSize();
   int speed = size / span;
-  std::cout << "[ " << sts->getSite()->getName() << " -> " << std->getSite()->getName() << " ] - " << file << " - " << speed << " kB/s" << std::endl;
+  //std::cout << "[ " << sts->getSite()->getName() << " -> " << std->getSite()->getName() << " ] - " << file << " - " << speed << " kB/s" << std::endl;
   srd->getFileList()->setFileUpdateFlag(file, speed, sts->getSite(), std->getSite()->getName());
 }
 

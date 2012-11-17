@@ -31,6 +31,10 @@ SSL_CTX * GlobalContext::getSSLCTX() {
   return ssl_ctx;
 }
 
+Engine * GlobalContext::getEngine() {
+  return e;
+}
+
 DataFileHandler * GlobalContext::getDataFileHandler() {
   return dfh;
 }

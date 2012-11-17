@@ -109,6 +109,12 @@ std::string Site::getSectionPath(std::string sectionname) {
   return it->second;
 }
 
+bool Site::hasSection(std::string sectionname) {
+  std::map<std::string, std::string>::iterator it = sections.find(sectionname);
+  if (it == sections.end()) return false;
+  return true;
+}
+
 std::string Site::getAddress() {
   return address;
 }
@@ -163,4 +169,14 @@ void Site::clearSections() {
 
 void Site::addSection(std::string name, std::string path) {
   sections[name] = path;
+}
+
+std::string Site::getSectionForPath(std::string path) {
+  std::map<std::string, std::string>::iterator it;
+  for (it = sections.begin(); it!= sections.end(); it++) {
+    if (it->second == path) {
+      return it->first;
+    }
+  }
+  return "";
 }

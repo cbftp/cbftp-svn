@@ -11,6 +11,7 @@ private:
   std::string command;
   std::string arg1;
   std::string arg2;
+  std::string arg3;
   bool careaboutbackend;
   std::string eventtext;
   sem_t event;
@@ -20,6 +21,7 @@ public:
   void newCommand(std::string);
   void newCommand(std::string, std::string);
   void newCommand(std::string, std::string, std::string);
+  void newCommand(std::string, std::string, std::string, std::string);
   void expectBackendPush();
   void backendPush();
   void windowChanged();
@@ -28,6 +30,7 @@ public:
   std::string getCommand();
   std::string getArg1();
   std::string getArg2();
+  std::string getArg3();
   sem_t * getEventSem();
   void emitEvent(std::string);
   std::string awaitEvent();

@@ -121,6 +121,7 @@ void UserInterface::runUserInterfaceInstance() {
   UIWindow * rawdatascreen;
   UIWindow * browsescreen;
   UIWindow * addsectionscreen;
+  UIWindow * newracescreen;
   sem_t * eventsem = uicommunicator.getEventSem();
   global->getTickPoke()->startPoke(eventsem, 250, 0);
   legendwindow = new LegendWindow(legend, 2, col);
@@ -206,6 +207,15 @@ void UserInterface::runUserInterfaceInstance() {
         legendwindow->setText(addsectionscreen->getLegendText());
         mainwindows.push_back(addsectionscreen);
         topwindow = addsectionscreen;
+        refreshAll();
+        uicommunicator.checkoutCommand();
+      }
+      else if (command == "newrace") {
+        history.push_back(topwindow);
+        newracescreen = new NewRaceScreen(main, &uicommunicator, mainrow, maincol);
+        legendwindow->setText(newracescreen->getLegendText());
+        mainwindows.push_back(newracescreen);
+        topwindow = newracescreen;
         refreshAll();
         uicommunicator.checkoutCommand();
       }

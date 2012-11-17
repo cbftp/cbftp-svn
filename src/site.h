@@ -37,6 +37,7 @@ class Site {
     void setBrokenPASV(bool);
     std::string getName();
     std::string getSectionPath(std::string);
+    bool hasSection(std::string);
     std::string getAddress();
     std::string getPort();
     std::string getUser();
@@ -51,4 +52,5 @@ class Site {
     void setMaxUp(int);
     void clearSections();
     void addSection(std::string, std::string);
+    std::string getSectionForPath(std::string);
 };

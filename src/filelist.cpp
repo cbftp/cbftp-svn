@@ -40,7 +40,7 @@ bool FileList::updateFile(std::string start, int touch) {
     if (updatefile->updateFlagSet()) {
       if (updatefile->getOwner().compare(username) == 0) {
         updatefile->getUpdateSrc()->pushTransferSpeed(updatefile->getUpdateDst(), updatefile->getUpdateSpeed());
-        std::cout << "pushed new transfer speed..." << std::endl;
+        //std::cout << "pushed new transfer speed..." << std::endl;
       }
       updatefile->unsetUpdateFlag();
     }

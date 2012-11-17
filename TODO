@@ -1,122 +1,53 @@
-ui-omskrivning till fler trådar
+bygg om menuselectsite till nya ui-formatet
+status: inte påbörjad
+menuselectsite ska inte printa till terminalen direkt. Detta ska ske i uiscreens.
 
-status: TYP KLAR
-
-UI't delas upp i tre trådar:
-
--keylistener
--updater
--ticker
-
-keylistenern väntar på knapptryckningar och emittar eventuellt update-events,
-updatern väntar på update-events och uppdaterar skärmen,
-tickern tickar och emittar update-events med varje tick.
-
-andra saker som borde kunna emitta update-events:
-filöverföring startad,
-filöverföring avslutad,
-race färdigt,
-fil skapad,
-fil borttagen,
-mapp skapad,
-mapp borttagen
-
-
-
-legend-window
-
-status: KLAR
-
-en liten marquee-bar längst ner i programmet som tipsar om tillgängliga keybinds.
-
-
-
-AES
-
-status: KLAR
-
-AES-kryptering för sitedb/config.
-
-
-
-race-start-ruta
-
-status: utg�r, ers�tts av browse mode
-
-en ruta för att initiera race. mest i testsyfte tills riktig funktionalitet
-är klar.
-
-
+local downloads
+status: inte påbörjad
+möjlighet att ladda ner saker till klienten, i första hand nfo-filer för direkt visning.
 
 Browse mode
-
-status: GANSKA KLAR
-
+status: GANSKA KLAR, saknas localdownloads
 m�jlighet att logga in och bl�ddra runt p� en site, samt att d�rifr�n:
-
 - initiera ett race
 - titta p� (sm�) filer
 
-
-
-terminal resize awareness
-
-status: KLAR
-
-Klienten ska anpassa sig n�r/om terminalen �ndrar storlek.
-
-
-
 race-complete-identifiering
-
 status: inte påbörjad
-
 motorn behöver veta när det är dags att avbryta uppdateringshetsen,
 (och sluta försöka lägga till nya filer)
 (och disconnecta överflödiga trådar)
 
-
-
 socket-lyssnare för race-instruktioner
-
 status: inte påbörjad
-
 klienten behöver kunna ta emot meddelanden utifrån om att påbörja race.
 bör lämpligtvis skyddas med någon form av kryptering.
 (annars kan release/sitenamn exponeras i klartext över nätet)
 
-
+global options screen
+status: inte påbörjad
+ett options-fönster för globala inställningar, typ udp-port och sånt
 
 race status screen
-
 status: inte påbörjad
-
 en ui-ruta som visar status för ett pågående race med info
 om status på alla inblandade siter, anslutningar som görs etc
 
-
+about screen
+status: inte påbörjad
+screen med lite info om projektet.
 
 skippa oönskade filer
-
 status: inte påbörjad
-
 när en fil failar av en känd anledning ska det eventuellt hanteras
 genom att filen tas bort från racet.
 
-
-
 ta bort site från race
-
 status: inte påbörjad
-
 möjlighet att ta bort en site från ett race medan racet pågår.
 
-
-
 play-and-replay-funktionalitet
-
 status: inte påbörjad
-
 möjlighet att spara hela transferflödet från ett race till fil och
 spela upp igen vid senare tillfälle. skulle vara jävligt coolt :)
 kräver lämplig obfuskering+kryptering på den lagrade filen.

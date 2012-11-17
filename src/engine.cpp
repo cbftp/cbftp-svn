@@ -34,9 +34,9 @@ void Engine::runInstance() {
       sem_wait(list_refresh);
       refreshScoreBoard();
       std::vector<ScoreBoardElement *> possibles = scoreboard->getElementVector();
-      std::cout << "Possible transfers (run " << runs++ << "): " << scoreboard->size() << std::endl;
+      //std::cout << "Possible transfers (run " << runs++ << "): " << scoreboard->size() << std::endl;
       for (unsigned int i = 0; i < possibles.size(); i++) {
-        std::cout << possibles[i]->fileName() << " - " << possibles[i]->getScore() << " - " << possibles[i]->getSource()->getSite()->getName() << " -> " << possibles[i]->getDestination()->getSite()->getName() << std::endl;
+        //std::cout << possibles[i]->fileName() << " - " << possibles[i]->getScore() << " - " << possibles[i]->getSource()->getSite()->getName() << " -> " << possibles[i]->getDestination()->getSite()->getName() << std::endl;
       }
       issueOptimalTransfers();
     }

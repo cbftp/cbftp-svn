@@ -25,6 +25,7 @@
 #include "screens/rawdatascreen.h"
 #include "screens/browsescreen.h"
 #include "screens/addsectionscreen.h"
+#include "screens/newracescreen.h"
 
 #define TICKLENGTH 250000
 
