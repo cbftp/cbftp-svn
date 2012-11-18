@@ -23,7 +23,7 @@ void MainScreen::redraw() {
   for (std::vector<Site *>::iterator it = global->getSiteManager()->getSitesIteratorBegin(); it != global->getSiteManager()->getSitesIteratorEnd(); it++) {
     mss.add(*it, y++, x);
   }
-  mss.print();
+  update();
 }
 
 void MainScreen::update() {
@@ -35,6 +35,19 @@ void MainScreen::update() {
     uicommunicator->checkoutCommand();
     redraw();
     uicommunicator->newCommand("update");
+  }
+  else {
+    unsigned int selected = mss.getSelectionPointer();
+    for (int i = 0; i < mss.size(); i++) {
+      MenuSelectSiteElement * msse = mss.getSiteElement(i);
+      if (i == selected) {
+        wattron(window, A_REVERSE);
+      }
+      TermInt::printStr(window, msse->getRow(), msse->getCol(), mss.getSiteLine(i));
+      if (i == selected) {
+        wattroff(window, A_REVERSE);
+      }
+    }
   }
 }
 

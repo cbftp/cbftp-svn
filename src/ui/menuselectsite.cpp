@@ -10,17 +10,13 @@ void MenuSelectSite::setWindow(WINDOW * window) {
 }
 
 void MenuSelectSite::goNext() {
-  print(pointer-1, false);
   if ((unsigned int) pointer < sites.size()) pointer++;
   else if (sites.size() > 0) pointer = 1;
-  print(pointer-1, true);
 }
 
 void MenuSelectSite::goPrev() {
-  print(pointer-1, false);
   if (pointer > 0) pointer--;
   if (pointer == 0) pointer = sites.size();
-  print(pointer-1, true);
 }
 
 void MenuSelectSite::add(Site * site, int row, int col) {
@@ -38,15 +34,19 @@ void MenuSelectSite::prepareRefill() {
   sites.clear();
 }
 
-void MenuSelectSite::print() {
-  for (unsigned int i = 0; i < sites.size(); i++) {
-    while ((unsigned int) pointer > sites.size()) pointer--;
-    print(i, i+1 == (unsigned int) pointer);
-  }
+MenuSelectSiteElement * MenuSelectSite::getSiteElement(unsigned int i) {
+  return sites[i];
 }
 
-void MenuSelectSite::print(int index, bool highlight) {
-  if (index < 0) return;
+unsigned int MenuSelectSite::size() {
+  return sites.size();
+}
+
+unsigned int MenuSelectSite::getSelectionPointer() {
+  return pointer;
+}
+
+std::string MenuSelectSite::getSiteLine(unsigned int index) {
   std::string line = " ";
   std::string add = "";
   int linelen;
@@ -67,7 +67,5 @@ void MenuSelectSite::print(int index, bool highlight) {
   addlen = add.length();
   for (int i = 0; i < 34 - linelen - addlen; i++) line.append(" ");
   line.append(add + " ");
-  if (highlight) wattron(window, A_REVERSE);
-  TermInt::printStr(window, sites[index].getRow(), sites[index].getCol(), line);
-  if (highlight) wattroff(window, A_REVERSE);
+  return line;
 }

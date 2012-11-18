@@ -29,7 +29,9 @@ class MenuSelectSite {
     void add(Site *, int, int);
     void remove(Site *);
     Site * getSite();
+    MenuSelectSiteElement * getSiteElement(unsigned int);
+    unsigned int size();
+    unsigned int getSelectionPointer();
+    std::string getSiteLine(unsigned int);
     void prepareRefill();
-    void print();
-    void print(int, bool);
 };

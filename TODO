@@ -1,16 +1,7 @@
-bygg om menuselectsite till nya ui-formatet
+race status screen
 status: inte påbörjad
-menuselectsite ska inte printa till terminalen direkt. Detta ska ske i uiscreens.
-
-local downloads
-status: inte påbörjad
-möjlighet att ladda ner saker till klienten, i första hand nfo-filer för direkt visning.
-
-Browse mode
-status: GANSKA KLAR, saknas localdownloads
-m�jlighet att logga in och bl�ddra runt p� en site, samt att d�rifr�n:
-- initiera ett race
-- titta p� (sm�) filer
+en ui-ruta som visar status för ett pågående race med info
+om status på alla inblandade siter, anslutningar som görs etc
 
 race-complete-identifiering
 status: inte påbörjad
@@ -28,10 +19,15 @@ global options screen
 status: inte påbörjad
 ett options-fönster för globala inställningar, typ udp-port och sånt
 
-race status screen
+local downloads
 status: inte påbörjad
-en ui-ruta som visar status för ett pågående race med info
-om status på alla inblandade siter, anslutningar som görs etc
+möjlighet att ladda ner saker till klienten, i första hand nfo-filer för direkt visning.
+
+Browse mode
+status: GANSKA KLAR, saknas localdownloads
+m�jlighet att logga in och bl�ddra runt p� en site, samt att d�rifr�n:
+- initiera ett race
+- titta p� (sm�) filer
 
 about screen
 status: inte påbörjad
@@ -45,6 +41,10 @@ genom att filen tas bort från racet.
 ta bort site från race
 status: inte påbörjad
 möjlighet att ta bort en site från ett race medan racet pågår.
+
+support för sslfxp
+status: inte påbörjad
+möjlighet att använda sslfxp på siter som kräver det.
 
 play-and-replay-funktionalitet
 status: inte påbörjad
