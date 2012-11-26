@@ -17,6 +17,8 @@ class Race {
     std::list<SiteThread *>::iterator begin();
     std::list<SiteThread *>::iterator end();
     std::string getName();
+    std::string getSection();
+    int numSites();
     void updateSiteProgress(int);
     int getMaxSiteProgress();
 };

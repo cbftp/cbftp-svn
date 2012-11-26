@@ -21,6 +21,14 @@ std::string Race::getName() {
   return name;
 }
 
+std::string Race::getSection() {
+  return section;
+}
+
+int Race::numSites() {
+  return sites.size();
+}
+
 void Race::updateSiteProgress(int in) {
   if (maxfilelistsize < in) maxfilelistsize = in;
 }

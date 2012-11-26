@@ -37,4 +37,8 @@ class Engine {
     void newRace(std::string, std::string, std::list<std::string>);
     static void * run(void *);
     void runInstance();
+    int currentRaces();
+    Race * getRace(std::string);
+    std::list<Race *>::iterator getRacesIteratorBegin();
+    std::list<Race *>::iterator getRacesIteratorEnd();
 };

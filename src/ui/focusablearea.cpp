@@ -51,3 +51,15 @@ void FocusableArea::makeLeavableLeft() {
 void FocusableArea::makeLeavableRight() {
   leaveright = true;
 }
+
+unsigned int FocusableArea::getLastSelectionPointer() {
+  return 0;
+}
+
+bool FocusableArea::activateSelected() {
+  return false;
+}
+
+MenuSelectOptionElement * FocusableArea::getElement(unsigned int i) {
+  return NULL;
+}

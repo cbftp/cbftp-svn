@@ -3,6 +3,11 @@ status: inte påbörjad
 en ui-ruta som visar status för ett pågående race med info
 om status på alla inblandade siter, anslutningar som görs etc
 
+UI info-bars
+status: inte påbörjad
+ett område/window högst upp som ger utrymme för nyttig info om var man är,
+felmeddelanden etc
+
 race-complete-identifiering
 status: inte påbörjad
 motorn behöver veta när det är dags att avbryta uppdateringshetsen,
@@ -19,15 +24,17 @@ global options screen
 status: inte påbörjad
 ett options-fönster för globala inställningar, typ udp-port och sånt
 
+backlog i console-log-fönstret
+status: inte påbörjad
+möjlighet att browsa bakåt i logfönstrena.
+
 local downloads
 status: inte påbörjad
 möjlighet att ladda ner saker till klienten, i första hand nfo-filer för direkt visning.
 
-Browse mode
-status: GANSKA KLAR, saknas localdownloads
-m�jlighet att logga in och bl�ddra runt p� en site, samt att d�rifr�n:
-- initiera ett race
-- titta p� (sm�) filer
+view file
+status: inte påbörjad
+möjlighet att ifrån browsescreen titta på små filer, mha localdownload
 
 about screen
 status: inte påbörjad

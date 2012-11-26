@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdlib.h>
+
 class MenuSelectOptionElement;
 
 class FocusableArea {
@@ -22,8 +24,8 @@ public:
   void makeLeavableDown();
   void makeLeavableLeft();
   void makeLeavableRight();
-  virtual bool activateSelected() = 0;
-  virtual unsigned int getLastSelectionPointer() = 0;
+  virtual bool activateSelected();
+  virtual unsigned int getLastSelectionPointer();
   virtual unsigned int getSelectionPointer() = 0;
-  virtual MenuSelectOptionElement * getElement(unsigned int) = 0;
+  virtual MenuSelectOptionElement * getElement(unsigned int);
 };

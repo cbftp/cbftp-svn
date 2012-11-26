@@ -1,11 +1,18 @@
 #pragma once
 
 #include "../../site.h"
+#include "../../race.h"
+#include "../../engine.h"
+#include "../../sitemanager.h"
+#include "../../site.h"
 
 #include "../uiwindow.h"
 #include "../menuselectsite.h"
+#include "../menuselectoption.h"
+#include "../menuselectoptioncheckbox.h"
 #include "../uicommunicator.h"
 #include "../termint.h"
+#include "../focusablearea.h"
 
 class MainScreen : public UIWindow {
 public:
@@ -15,7 +22,12 @@ public:
   void keyPressed(unsigned int);
   std::string getLegendText();
 private:
+  std::string msolegendtext;
+  std::string msslegendtext;
+  FocusableArea * focusedarea;
+  FocusableArea * defocusedarea;
   std::string deletesite;
   UICommunicator * uicommunicator;
   MenuSelectSite mss;
+  MenuSelectOption mso;
 };

@@ -9,25 +9,38 @@ void MenuSelectSite::setWindow(WINDOW * window) {
   maxheight = 0;
 }
 
-void MenuSelectSite::goNext() {
-  if ((unsigned int) pointer < sites.size()) pointer++;
-  else if (sites.size() > 0) pointer = 1;
+bool MenuSelectSite::goDown() {
+  if ((unsigned int) pointer + 1 < sites.size()) {
+    pointer++;
+    return true;
+  }
+  else if (leavedown) {
+    focus = false;
+    return true;
+  }
+  return false;
 }
 
-void MenuSelectSite::goPrev() {
-  if (pointer > 0) pointer--;
-  if (pointer == 0) pointer = sites.size();
+bool MenuSelectSite::goUp() {
+  if (pointer > 0) {
+    pointer--;
+    return true;
+  }
+  else if (leaveup) {
+    focus = false;
+    return true;
+  }
+  return false;
 }
 
 void MenuSelectSite::add(Site * site, int row, int col) {
   SiteThread * st = global->getSiteThreadManager()->getSiteThread(site->getName());
   sites.push_back(MenuSelectSiteElement(site, st, row, col));
-  if (pointer == 0) pointer = 1;
 }
 
 Site * MenuSelectSite::getSite() {
   if (sites.size() == 0) return NULL;
-  return sites[pointer-1].getSite();
+  return sites[pointer].getSite();
 }
 
 void MenuSelectSite::prepareRefill() {
@@ -35,7 +48,7 @@ void MenuSelectSite::prepareRefill() {
 }
 
 MenuSelectSiteElement * MenuSelectSite::getSiteElement(unsigned int i) {
-  return sites[i];
+  return &sites[i];
 }
 
 unsigned int MenuSelectSite::size() {
@@ -44,6 +57,16 @@ unsigned int MenuSelectSite::size() {
 
 unsigned int MenuSelectSite::getSelectionPointer() {
   return pointer;
+}
+
+void MenuSelectSite::enterFocusFrom(int dir) {
+  focus = true;
+  if (dir == 2) { // bottom
+    pointer = size() - 1;
+  }
+  else {
+    pointer = 0;
+  }
 }
 
 std::string MenuSelectSite::getSiteLine(unsigned int index) {
@@ -68,4 +91,13 @@ std::string MenuSelectSite::getSiteLine(unsigned int index) {
   for (int i = 0; i < 34 - linelen - addlen; i++) line.append(" ");
   line.append(add + " ");
   return line;
+}
+
+void MenuSelectSite::checkPointer() {
+  if (pointer >= size()) {
+    pointer = size() - 1;
+  }
+  if (size() == 0) {
+    pointer = 0;
+  }
 }

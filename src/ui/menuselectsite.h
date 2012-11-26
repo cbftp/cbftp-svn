@@ -10,22 +10,23 @@
 #include "../site.h"
 #include "../globalcontext.h"
 
+#include "focusablearea.h"
 #include "menuselectsiteelement.h"
 #include "termint.h"
 
 extern GlobalContext * global;
 
-class MenuSelectSite {
+class MenuSelectSite : public FocusableArea {
   private:
-    int pointer;
-    int maxheight;
+    unsigned int pointer;
+    unsigned int maxheight;
     WINDOW * window;
     std::vector<MenuSelectSiteElement> sites;
   public:
     MenuSelectSite();
     void setWindow(WINDOW *);
-    void goNext();
-    void goPrev();
+    bool goDown();
+    bool goUp();
     void add(Site *, int, int);
     void remove(Site *);
     Site * getSite();
@@ -33,5 +34,7 @@ class MenuSelectSite {
     unsigned int size();
     unsigned int getSelectionPointer();
     std::string getSiteLine(unsigned int);
+    void enterFocusFrom(int);
     void prepareRefill();
+    void checkPointer();
 };

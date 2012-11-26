@@ -28,7 +28,7 @@ void * Engine::run(void * arg) {
 }
 
 void Engine::runInstance() {
-  int runs = 0;
+  //int runs = 0;
   while(true) {
     if (race) {
       sem_wait(list_refresh);
@@ -115,3 +115,24 @@ void Engine::setSpeedScale() {
   }
 }
 
+int Engine::currentRaces() {
+  return races.size();
+}
+
+Race * Engine::getRace(std::string releasename) {
+  std::list<Race *>::iterator it;
+  for (it = races.begin(); it != races.end(); it++) {
+    if ((*it)->getName() == releasename) {
+      return *it;
+    }
+  }
+  return NULL;
+}
+
+std::list<Race *>::iterator Engine::getRacesIteratorBegin() {
+  return races.begin();
+}
+
+std::list<Race *>::iterator Engine::getRacesIteratorEnd() {
+  return races.end();
+}
