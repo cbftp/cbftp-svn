@@ -21,7 +21,7 @@ void MainScreen::redraw() {
   werase(window);
   curs_set(0);
   TermInt::printStr(window, 1, 1, "-=== MAIN SCREEN ===-");
-  bool listraces = global->getEngine()->currentRaces();
+  bool listraces = global->getEngine()->allRaces();
   unsigned int irow = 3;
   if (listraces) {
     mss.makeLeavableUp();

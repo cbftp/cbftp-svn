@@ -34,8 +34,10 @@ class FileList {
     std::map<std::string, File *>::iterator end();
     bool contains(std::string);
     int getSize();
+    int getNumUploadedFiles();
     std::string getPath();
     int getSizeUploaded();
+    bool hasSFV();
     std::map<std::string, File *>::iterator filesBegin();
     std::map<std::string, File *>::iterator filesEnd();
     int getOwnedPercentage();

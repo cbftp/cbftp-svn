@@ -67,6 +67,8 @@ class SiteThread {
     int getCurrDown();
     int getCurrUp();
     int getCurrLogins();
+    void raceGlobalComplete();
+    void raceLocalComplete(SiteRace *);
     void transferComplete(bool isdownload);
     bool getSlot(bool);
     int requestFileList(std::string);

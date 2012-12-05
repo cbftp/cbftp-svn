@@ -7,6 +7,13 @@ File::File(std::string name, std::string user) {
   size = 0;
   lastmodified = "0";
   this->name = name;
+  size_t suffixdotpos = name.rfind(".");
+  if (suffixdotpos != std::string::npos && suffixdotpos > 0) {
+    extension = name.substr(suffixdotpos + 1);
+  }
+  else {
+    extension = "";
+  }
   touch = 0;
   updateflag = false;
 }
@@ -40,7 +47,7 @@ File::File(std::string statline, int touch) {
   while (statline[++pos] != '\r');
   name = statline.substr(start, pos - start);
   size_t suffixdotpos = name.rfind(".");
-  if (suffixdotpos > 0) {
+  if (suffixdotpos != std::string::npos && suffixdotpos > 0) {
     extension = name.substr(suffixdotpos + 1);
   }
   else {

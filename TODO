@@ -8,12 +8,6 @@ status: inte påbörjad
 ett område/window högst upp som ger utrymme för nyttig info om var man är,
 felmeddelanden etc
 
-race-complete-identifiering
-status: inte påbörjad
-motorn behöver veta när det är dags att avbryta uppdateringshetsen,
-(och sluta försöka lägga till nya filer)
-(och disconnecta överflödiga trådar)
-
 socket-lyssnare för race-instruktioner
 status: inte påbörjad
 klienten behöver kunna ta emot meddelanden utifrån om att påbörja race.

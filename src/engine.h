@@ -21,13 +21,14 @@ extern GlobalContext * global;
 
 class Engine {
   private:
-    std::list<Race *> races;
+    std::list<Race *> allraces;
+    std::list<Race *> currentraces;
     ScoreBoard * scoreboard;
     int maxavgspeed;
     pthread_t thread;
     sem_t race_sem;
     sem_t * list_refresh;
-    bool race;
+    void estimateRaceSizes();
     void refreshScoreBoard();
     void issueOptimalTransfers();
     void setSpeedScale();
@@ -38,6 +39,7 @@ class Engine {
     static void * run(void *);
     void runInstance();
     int currentRaces();
+    int allRaces();
     Race * getRace(std::string);
     std::list<Race *>::iterator getRacesIteratorBegin();
     std::list<Race *>::iterator getRacesIteratorEnd();

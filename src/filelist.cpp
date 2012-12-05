@@ -48,11 +48,13 @@ bool FileList::updateFile(std::string start, int touch) {
     delete file;
     return true;
   }
-  files[name] = file;
-  if (file->getSize() > 0) uploadedfiles++;
-  if (file->getSize() > maxfilesize) maxfilesize = file->getSize();
-  if (file->getOwner().compare(username) == 0) {
-    editOwnedFileCount(true);
+  else {
+    files[name] = file;
+    if (file->getSize() > 0) uploadedfiles++;
+    if (file->getSize() > maxfilesize) maxfilesize = file->getSize();
+    if (file->getOwner().compare(username) == 0) {
+      editOwnedFileCount(true);
+    }
   }
   pthread_mutex_unlock(&filelist_mutex);
   return true;
@@ -134,12 +136,39 @@ int FileList::getSize() {
   return ret;
 }
 
+int FileList::getNumUploadedFiles() {
+  int count = 0;
+  std::map<std::string, File *>::iterator it;
+  pthread_mutex_lock(&filelist_mutex);
+  for (it = files.begin(); it != files.end(); it++) {
+    if (!it->second->isDirectory() && it->second->getSize() > 0) {
+      ++count;
+    }
+  }
+  pthread_mutex_unlock(&filelist_mutex);
+  return count;
+}
+
 int FileList::getSizeUploaded() {
   int ret;
   pthread_mutex_lock(&filelist_mutex);
   ret = uploadedfiles;
   pthread_mutex_unlock(&filelist_mutex);
   return ret;
+}
+
+bool FileList::hasSFV() {
+  std::map<std::string, File *>::iterator it;
+  pthread_mutex_lock(&filelist_mutex);
+  for (it = files.begin(); it != files.end(); it++) {
+    if(it->second->getExtension() == ("sfv") &&
+        it->second->getSize() > 0) {
+      pthread_mutex_unlock(&filelist_mutex);
+      return true;
+    }
+  }
+  pthread_mutex_unlock(&filelist_mutex);
+  return false;
 }
 
 std::map<std::string, File *>::iterator FileList::filesBegin() {

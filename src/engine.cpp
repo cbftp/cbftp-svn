@@ -2,7 +2,6 @@
 
 Engine::Engine() {
   scoreboard = new ScoreBoard();
-  race = false;
   maxavgspeed = 1024;
   list_refresh = global->getListRefreshSem();
   sem_init(&race_sem, 0, 0);
@@ -16,9 +15,9 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
     st->addRace(race, section, release);
     race->addSite(st);
   }
-  races.push_back(race);
+  currentraces.push_back(race);
+  allraces.push_back(race);
   setSpeedScale();
-  this->race = true;
   sem_post(&race_sem);
 }
 
@@ -30,8 +29,9 @@ void * Engine::run(void * arg) {
 void Engine::runInstance() {
   //int runs = 0;
   while(true) {
-    if (race) {
+    if (currentraces.size() > 0) {
       sem_wait(list_refresh);
+      estimateRaceSizes();
       refreshScoreBoard();
       std::vector<ScoreBoardElement *> possibles = scoreboard->getElementVector();
       //std::cout << "Possible transfers (run " << runs++ << "): " << scoreboard->size() << std::endl;
@@ -44,13 +44,69 @@ void Engine::runInstance() {
   }
 }
 
+void Engine::estimateRaceSizes() {
+  for (std::list<Race *>::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
+    if ((*itr)->sizeEstimated()) {
+      continue;
+    }
+    for (std::list<SiteThread *>::iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
+      SiteRace * srs = (*its)->getRace((*itr)->getName());
+      if (srs->sizeEstimated()) {
+        continue;
+      }
+      FileList * fls = srs->getFileList();
+      if (!fls->hasSFV()) {
+        continue;
+      }
+
+      std::list<std::string> uniques;
+      std::map<std::string, File *>::iterator itf;
+      fls->lockFileList();
+      for (itf = fls->begin(); itf != fls->end(); itf++) {
+        if (itf->second->isDirectory()) {
+          continue;
+        }
+        std::string filename = itf->second->getName();
+        size_t lastdotpos = filename.rfind(".");
+        if (lastdotpos != std::string::npos && lastdotpos < filename.length() - 4) {
+          filename = filename.substr(0, lastdotpos + 4);
+        }
+        std::list<std::string>::iterator it;
+        bool exists = false;
+        for (it = uniques.begin(); it != uniques.end(); it++) {
+          if ((*it) == filename) {
+            exists = true;
+            break;
+          }
+        }
+        if (!exists) {
+          uniques.push_back(filename);
+        }
+      }
+      fls->unlockFileList();
+      srs->reportSize(uniques.size());
+    }
+  }
+}
+
 void Engine::refreshScoreBoard() {
   scoreboard->wipe();
-  for (std::list<Race *>::iterator itr = races.begin(); itr != races.end(); itr++) {
+  for (std::list<Race *>::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
     for (std::list<SiteThread *>::iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
       SiteRace * srs = (*its)->getRace((*itr)->getName());
       FileList * fls = srs->getFileList();
       if (!fls->isFilled()) continue;
+      if ((*itr)->sizeEstimated() && fls->getNumUploadedFiles() == (*itr)->estimatedSize()) {
+        (*its)->raceLocalComplete(srs);
+        if ((*itr)->isDone()) {
+          for (std::list<SiteThread *>::iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
+            (*itd)->raceGlobalComplete();
+          }
+          currentraces.erase(itr);
+          refreshScoreBoard();
+          return;
+        }
+      }
       for (std::list<SiteThread *>::iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
         if (*itd == *its) continue;
         SiteRace * srd = (*itd)->getRace((*itr)->getName());
@@ -105,7 +161,7 @@ int Engine::calculateScore(File * f, Race * itr, SiteThread * sts, SiteRace * sr
 
 void Engine::setSpeedScale() {
   maxavgspeed = 1024;
-  for (std::list<Race *>::iterator itr = races.begin(); itr != races.end(); itr++) {
+  for (std::list<Race *>::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
     for (std::list<SiteThread *>::iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
       for (std::list<SiteThread *>::iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
         int avgspeed = (*its)->getSite()->getAverageSpeed((*itd)->getSite()->getName());
@@ -116,12 +172,16 @@ void Engine::setSpeedScale() {
 }
 
 int Engine::currentRaces() {
-  return races.size();
+  return currentraces.size();
+}
+
+int Engine::allRaces() {
+  return allraces.size();
 }
 
 Race * Engine::getRace(std::string releasename) {
   std::list<Race *>::iterator it;
-  for (it = races.begin(); it != races.end(); it++) {
+  for (it = allraces.begin(); it != allraces.end(); it++) {
     if ((*it)->getName() == releasename) {
       return *it;
     }
@@ -130,9 +190,9 @@ Race * Engine::getRace(std::string releasename) {
 }
 
 std::list<Race *>::iterator Engine::getRacesIteratorBegin() {
-  return races.begin();
+  return allraces.begin();
 }
 
 std::list<Race *>::iterator Engine::getRacesIteratorEnd() {
-  return races.end();
+  return allraces.end();
 }

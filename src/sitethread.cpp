@@ -28,7 +28,11 @@ SiteThread::~SiteThread() {
 }
 
 void SiteThread::activate() {
-  for (unsigned int i = 0; i < conns.size(); i++) conns[i]->loginAsync();
+  for (unsigned int i = 0; i < conns.size(); i++) {
+    if (connstatetracker[i].isDisconnected()) {
+      conns[i]->loginAsync();
+    }
+  }
 }
 
 void SiteThread::addRace(Race * enginerace, std::string section, std::string release) {
@@ -212,13 +216,26 @@ void SiteThread::runInstance() {
 }
 
 void SiteThread::handleConnection(int id) {
-  SiteRace * race;
+  SiteRace * race = NULL;
   if (requests.size() > 0) {
     handleRequest(id);
   }
   else {
-    if (races.size() > 0) {
-      race = races[0];
+    for (unsigned int i = 0; i < races.size(); i++) {
+      if (!races[i]->isDone()) {
+        race = races[i];
+        break;
+      }
+    }
+    if (race == NULL) {
+      for (unsigned int i = 0; i < races.size(); i++) {
+        if (!races[i]->getRace()->isDone()) {
+          race = races[i];
+          break;
+        }
+      }
+    }
+    if (race != NULL) {
       conns[id]->doCWDorMKDirAsync(race->getSection(), race->getRelease());
       conns[id]->refreshRaceFileListAsync(race);
       connstatetracker[id].setReady();
@@ -420,6 +437,50 @@ int SiteThread::getCurrDown() {
 
 int SiteThread::getCurrUp() {
   return site->getMaxUp() - slots_up;
+}
+
+void SiteThread::raceGlobalComplete() {
+  bool stillactive = false;
+  for (unsigned int i = 0; i < races.size(); i++) {
+    if (!races[i]->getRace()->isDone()) {
+      stillactive = true;
+      break;
+    }
+  }
+  if (!stillactive) {
+    for (unsigned int i = 0; i < conns.size(); i++) {
+      if (connstatetracker[i].isIdle()) {
+        connstatetracker[i].setDisconnected();
+        conns[i]->doQUITAsync();
+        loggedin--;
+      }
+    }
+  }
+}
+
+void SiteThread::raceLocalComplete(SiteRace * sr) {
+  sr->complete();
+  bool stillactive = false;
+  for (unsigned int i = 0; i < races.size(); i++) {
+    if (!races[i]->isDone()) {
+      stillactive = true;
+      break;
+    }
+  }
+  if (!stillactive) {
+    int killnum = site->getMaxLogins() - site->getMaxDown();
+    if (killnum < 0) {
+      killnum = 0;
+    }
+    for (unsigned int i = 0; i < conns.size() && killnum > 0; i++) {
+      if (connstatetracker[i].isIdle()) {
+        connstatetracker[i].setDisconnected();
+        conns[i]->doQUITAsync();
+        loggedin--;
+        killnum--;
+      }
+    }
+  }
 }
 
 std::vector<FTPThread *> * SiteThread::getConns() {
