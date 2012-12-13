@@ -1,7 +1,10 @@
 #pragma once
 
+#include "../../globalcontext.h"
 #include "../../sitemanager.h"
 #include "../../site.h"
+#include "../../sitethread.h"
+#include "../../sitethreadmanager.h"
 
 #include "../uiwindow.h"
 #include "../uicommunicator.h"
@@ -10,6 +13,8 @@
 #include "../termint.h"
 #include "../menusection.h"
 #include "../focusablearea.h"
+
+extern GlobalContext * global;
 
 class EditSiteScreen : public UIWindow {
 public:

@@ -41,6 +41,10 @@ void RawBuffer::writeLine(std::string s) {
   write(s + "\n");
 }
 
+void RawBuffer::setId(int id) {
+  this->id = global->int2Str(id);
+}
+
 std::string RawBuffer::getLineCopy(unsigned int num) {
   return getLine(num, true);
 }

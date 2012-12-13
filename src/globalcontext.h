@@ -55,6 +55,7 @@ class GlobalContext {
     std::string getCompileTime();
     int str2Int(std::string);
     std::string int2Str(int);
+    std::string int2Str(unsigned int);
     std::string int2Str(unsigned long long int);
     void signal_catch();
     void signal_ignore();

@@ -23,9 +23,9 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
   mso.addStringField(y++, x, "port", "Port:", modsite.getPort(), false);
   mso.addStringField(y++, x, "user", "Username:", modsite.getUser(), false);
   mso.addStringField(y++, x, "pass", "Password:", modsite.getPass(), true);
-  mso.addIntArrow(y++, x, "logins", "Login slots:", modsite.getMaxLogins(), 0, 99);
-  mso.addIntArrow(y++, x, "maxup", "Upload slots:", modsite.getMaxUp(), 0, 99);
-  mso.addIntArrow(y++, x, "maxdn", "Download slots:", modsite.getMaxDown(), 0, 99);
+  mso.addIntArrow(y++, x, "logins", "Login slots:", modsite.getInternMaxLogins(), 0, 99);
+  mso.addIntArrow(y++, x, "maxup", "Upload slots:", modsite.getInternMaxUp(), 0, 99);
+  mso.addIntArrow(y++, x, "maxdn", "Download slots:", modsite.getInternMaxDown(), 0, 99);
   mso.addCheckBox(y++, x, "pret", "Needs PRET:", modsite.needsPRET());
   mso.addCheckBox(y++, x, "brokenpasv", "Broken PASV:", modsite.hasBrokenPASV());
   y++;
@@ -274,6 +274,7 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
       if (operation == "add") {
         global->getSiteManager()->addSite(site);
       }
+      global->getSiteThreadManager()->getSiteThread(site->getName())->setNumConnections(site->getMaxLogins());
       uicommunicator->newCommand("return");
       return;
     case 'c':

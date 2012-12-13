@@ -56,6 +56,7 @@ class FTPThread {
     static void * run(void *);
   public:
     int getId();
+    void setId(int);
     std::string getStatus();
     void loginAsync();
     bool loginT();

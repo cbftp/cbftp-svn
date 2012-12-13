@@ -37,6 +37,8 @@ class SiteThread {
     pthread_mutex_t slots;
     sem_t notifysem;
     sem_t * list_refresh;
+    unsigned int max_slots_up;
+    unsigned int max_slots_dn;
     unsigned int slots_dn;
     unsigned int slots_up;
     unsigned int available;
@@ -62,6 +64,7 @@ class SiteThread {
     bool getReadyThread(SiteRace *, FTPThread **);
     bool getReadyThread(SiteRace *, std::string, FTPThread **, bool, bool);
     void returnThread(FTPThread *);
+    void setNumConnections(unsigned int);
     bool downloadSlotAvailable();
     bool uploadSlotAvailable();
     int getCurrDown();

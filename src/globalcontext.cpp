@@ -100,6 +100,10 @@ int GlobalContext::str2Int(std::string str) {
   return num;
 }
 
+std::string GlobalContext::int2Str(unsigned int i) {
+  return int2Str((int)i);
+}
+
 std::string GlobalContext::int2Str(int i) {
   std::stringstream out;
   out << i;

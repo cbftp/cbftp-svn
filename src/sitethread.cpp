@@ -6,8 +6,8 @@ SiteThread::SiteThread(std::string sitename) {
   requestidcounter = 0;
   ftpthreadcom = new FTPThreadCom(&notifysem);
   site = global->getSiteManager()->getSite(sitename);
-  slots_dn = site->getMaxDown() > 0 ? site->getMaxDown() : site->getMaxLogins();
-  slots_up = site->getMaxUp() > 0 ? site->getMaxUp() : site->getMaxLogins();
+  max_slots_dn = slots_dn = site->getMaxDown();
+  max_slots_up = slots_up = site->getMaxUp();
   ptrack = new PotentialTracker(slots_dn);
   available = 0;
   loggedin = 0;
@@ -374,6 +374,65 @@ bool SiteThread::getReadyThread(SiteRace * sr, std::string file, FTPThread ** re
 
 void SiteThread::returnThread(FTPThread * ftpthread) {
   ftpthreadcom->putCommand(ftpthread->getId(), 8);
+}
+
+void SiteThread::setNumConnections(unsigned int num) {
+  while (num < conns.size()) {
+    bool success = false;
+    for (unsigned int i = 0; i < conns.size(); i++) {
+      if (connstatetracker[i].isDisconnected()) {
+        connstatetracker.erase(connstatetracker.begin() + i);
+        delete conns[i];
+        conns.erase(conns.begin() + i);
+        success = true;
+        break;
+      }
+    }
+    if (success) {
+      continue;
+    }
+    for (unsigned int i = 0; i < conns.size(); i++) {
+      if (connstatetracker[i].isIdle()) {
+        conns[i]->doQUITT();
+        connstatetracker.erase(connstatetracker.begin() + i);
+        delete conns[i];
+        conns.erase(conns.begin() + i);
+        success = true;
+        break;
+      }
+    }
+    if (success) {
+      continue;
+    }
+    if (conns.size() > 0) {
+      connstatetracker.erase(connstatetracker.begin());
+      delete conns[0];
+      conns.erase(conns.begin());
+    }
+  }
+  while (num > conns.size()) {
+    connstatetracker.push_back(ConnStateTracker());
+    conns.push_back(new FTPThread(conns.size(), site, ftpthreadcom));
+  }
+  for (unsigned int i = 0; i < conns.size(); i++) {
+    conns[i]->setId(i);
+  }
+  if (max_slots_up < site->getMaxUp()) {
+    slots_up += site->getMaxUp() - max_slots_up;
+    max_slots_up = site->getMaxUp();
+  }
+  if (max_slots_dn < site->getMaxDown()) {
+    slots_dn += site->getMaxDown() - max_slots_dn;
+    max_slots_dn = site->getMaxDown();
+  }
+  if (max_slots_up > site->getMaxUp()) {
+    slots_up -= (max_slots_up - site->getMaxUp());
+    max_slots_up = site->getMaxUp();
+  }
+  if (max_slots_dn > site->getMaxDown()) {
+    slots_dn -= (max_slots_dn - site->getMaxDown());
+    max_slots_dn = site->getMaxDown();
+  }
 }
 
 bool SiteThread::downloadSlotAvailable() {

@@ -48,16 +48,49 @@ std::map<std::string, int>::iterator Site::avgspeedEnd() {
   return avgspeed.end();
 }
 
-int Site::getMaxLogins() {
+unsigned int Site::getMaxLogins() {
+  if (logins == 0) {
+    return REPORT_LOGINS_IF_UNLIMITED;
+  }
   return logins;
 }
 
-int Site::getMaxUp() {
+unsigned int Site::getMaxUp() {
+  if (max_up == 0) {
+    return getMaxLogins();
+  }
   return max_up;
 }
 
-int Site::getMaxDown() {
+unsigned int Site::getMaxDown() {
+  if (max_dn == 0) {
+    return getMaxLogins();
+  }
   return max_dn;
+}
+
+unsigned int Site::getInternMaxLogins() {
+  return logins;
+}
+
+unsigned int Site::getInternMaxUp() {
+  return max_up;
+}
+
+unsigned int Site::getInternMaxDown() {
+  return max_dn;
+}
+
+bool Site::unlimitedLogins() {
+  return logins == 0;
+}
+
+bool Site::unlimitedUp() {
+  return max_up == 0;
+}
+
+bool Site::unlimitedDown() {
+  return max_dn == 0;
 }
 
 int Site::getAverageSpeed(std::string target) {
@@ -151,16 +184,22 @@ void Site::setPass(std::string pass) {
   this->pass = pass;
 }
 
-void Site::setMaxLogins(int num) {
+void Site::setMaxLogins(unsigned int num) {
   logins = num;
+  if (num > 0 && max_dn > 0 && max_dn < num) {
+    max_dn = num;
+  }
+  if (num > 0 && max_up > 0 && max_up < num) {
+    max_up = num;
+  }
 }
 
-void Site::setMaxDn(int num) {
-  max_dn = num > logins ? logins : num;
+void Site::setMaxDn(unsigned int num) {
+  max_dn = num > logins && logins > 0 ? logins : num;
 }
 
-void Site::setMaxUp(int num) {
-  max_up = num > logins ? logins : num;
+void Site::setMaxUp(unsigned int num) {
+  max_up = num > logins && logins > 0 ? logins : num;
 }
 
 void Site::clearSections() {

@@ -16,9 +16,21 @@ void SiteStatusScreen::redraw() {
 
 void SiteStatusScreen::update() {
   SiteThread * st = global->getSiteThreadManager()->getSiteThread(site->getName());
-  TermInt::printStr(window, 3, 1, "Login slots:    " + global->int2Str(st->getCurrLogins()) + "/" + global->int2Str(site->getMaxLogins()));
-  TermInt::printStr(window, 4, 1, "Upload slots:   " + global->int2Str(st->getCurrUp()) + "/" + global->int2Str(site->getMaxUp()));
-  TermInt::printStr(window, 5, 1, "Download slots: " + global->int2Str(st->getCurrDown()) + "/" + global->int2Str(site->getMaxDown()));
+  std::string loginslots = "Login slots:    " + global->int2Str(st->getCurrLogins());
+  if (!site->unlimitedLogins()) {
+    loginslots += "/" + global->int2Str(site->getMaxLogins());
+  }
+  std::string upslots = "Upload slots:   " + global->int2Str(st->getCurrUp());
+  if (!site->unlimitedUp()) {
+    upslots += "/" + global->int2Str(site->getMaxUp());
+  }
+  std::string downslots = "Download slots: " + global->int2Str(st->getCurrDown());
+  if (!site->unlimitedDown()) {
+    downslots += "/" + global->int2Str(site->getMaxDown());
+  }
+  TermInt::printStr(window, 3, 1, loginslots);
+  TermInt::printStr(window, 4, 1, upslots);
+  TermInt::printStr(window, 5, 1, downslots);
   TermInt::printStr(window, 7, 1, "Login threads:");
   int i = 8;
   for(unsigned int j = 0; j < st->getConns()->size(); j++) {

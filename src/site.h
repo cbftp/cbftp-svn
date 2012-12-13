@@ -3,6 +3,8 @@
 #include <string>
 #include <map>
 
+#define REPORT_LOGINS_IF_UNLIMITED 10
+
 class Site {
   private:
     std::string name;
@@ -12,9 +14,9 @@ class Site {
     std::string pass;
     bool pret;
     bool brokenpasv;
-    int logins;
-    int max_up;
-    int max_dn;
+    unsigned int logins;
+    unsigned int max_up;
+    unsigned int max_dn;
     std::map<std::string, std::string> sections;
     std::map<std::string, int> avgspeed;
   public:
@@ -25,9 +27,15 @@ class Site {
     std::map<std::string, std::string>::iterator sectionsEnd();
     std::map<std::string, int>::iterator avgspeedBegin();
     std::map<std::string, int>::iterator avgspeedEnd();
-    int getMaxLogins();
-    int getMaxUp();
-    int getMaxDown();
+    unsigned int getMaxLogins();
+    unsigned int getMaxUp();
+    unsigned int getMaxDown();
+    unsigned int getInternMaxLogins();
+    unsigned int getInternMaxUp();
+    unsigned int getInternMaxDown();
+    bool unlimitedLogins();
+    bool unlimitedUp();
+    bool unlimitedDown();
     int getAverageSpeed(std::string);
     void setAverageSpeed(std::string, int);
     void pushTransferSpeed(std::string, int);
@@ -47,9 +55,9 @@ class Site {
     void setPort(std::string);
     void setUser(std::string);
     void setPass(std::string);
-    void setMaxLogins(int);
-    void setMaxDn(int);
-    void setMaxUp(int);
+    void setMaxLogins(unsigned int);
+    void setMaxDn(unsigned int);
+    void setMaxUp(unsigned int);
     void clearSections();
     void addSection(std::string, std::string);
     std::string getSectionForPath(std::string);

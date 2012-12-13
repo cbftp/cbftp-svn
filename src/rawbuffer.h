@@ -21,6 +21,7 @@ class RawBuffer {
     std::string getLine(unsigned int, bool);
   public:
     RawBuffer(unsigned int, std::string, std::string);
+    void setId(int);
     void write(std::string);
     void writeLine(std::string);
     unsigned int getSize();

@@ -74,9 +74,9 @@ void SiteManager::writeState() {
     filehandler->addOutputLine("SiteManager", name + "$port=" + site->getPort());
     filehandler->addOutputLine("SiteManager", name + "$user=" + site->getUser());
     filehandler->addOutputLine("SiteManager", name + "$pass=" + site->getPass());
-    filehandler->addOutputLine("SiteManager", name + "$logins=" + global->int2Str(site->getMaxLogins()));
-    filehandler->addOutputLine("SiteManager", name + "$maxup=" + global->int2Str(site->getMaxUp()));
-    filehandler->addOutputLine("SiteManager", name + "$maxdn=" + global->int2Str(site->getMaxDown()));
+    filehandler->addOutputLine("SiteManager", name + "$logins=" + global->int2Str(site->getInternMaxLogins()));
+    filehandler->addOutputLine("SiteManager", name + "$maxup=" + global->int2Str(site->getInternMaxUp()));
+    filehandler->addOutputLine("SiteManager", name + "$maxdn=" + global->int2Str(site->getInternMaxDown()));
     if (site->needsPRET()) filehandler->addOutputLine("SiteManager", name + "$pret=true");
     if (site->hasBrokenPASV()) filehandler->addOutputLine("SiteManager", name + "$brokenpasv=true");
     std::map<std::string, std::string>::iterator sit;

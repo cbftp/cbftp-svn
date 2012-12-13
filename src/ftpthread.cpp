@@ -27,6 +27,11 @@ int FTPThread::getId() {
   return id;
 }
 
+void FTPThread::setId(int id) {
+  this->id = id;
+  rawbuf->setId(id);
+}
+
 std::string FTPThread::getStatus() {
   return status;
 }
