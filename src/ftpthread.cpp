@@ -263,10 +263,11 @@ void FTPThread::refreshRaceFileListT(SiteRace * siterace) {
   if (currentpath != siterace->getPath()) {
     doCWDT(siterace->getPath());
   }
-  updateFileList(siterace->getFileList(), true);
+  updateFileList(siterace->getFileList());
+  ftpthreadcom->fileListUpdated(id, siterace);
 }
 
-int FTPThread::updateFileList(FileList * filelist, bool inrace) {
+int FTPThread::updateFileList(FileList * filelist) {
   char * reply;
   write("STAT -l");
   if (readall(&reply, false) == 213) {
@@ -289,9 +290,6 @@ int FTPThread::updateFileList(FileList * filelist, bool inrace) {
     std::string output = "[File list retrieved]";
     rawbuf->writeLine(output);
     if (!filelist->isFilled()) filelist->setFilled();
-    if (inrace) {
-      ftpthreadcom->fileListUpdated(id);
-    }
   }
   return 0;
 }
@@ -307,7 +305,7 @@ void FTPThread::getFileListT(std::string path) {
       return;
     }
   }
-  updateFileList(filelist, false);
+  updateFileList(filelist);
   ftpthreadcom->fileListRetrieved(id, filelist);
 }
 
@@ -373,6 +371,9 @@ void FTPThread::doCWDAsync(std::string path) {
 }
 
 bool FTPThread::doCWDT(std::string path) {
+  if (path == currentpath) {
+    return true;
+  }
   write (("CWD " + path).c_str());
   if (read() == 250) {
     currentpath = path;

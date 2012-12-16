@@ -50,6 +50,7 @@ class SiteThread {
     Site * site;
     void activate();
     void handleConnection(int);
+    void handleConnection(int, bool);
     void handleRequest(int);
     static void * run(void *);
   public:

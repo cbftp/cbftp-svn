@@ -32,6 +32,9 @@ void SiteThread::activate() {
     if (connstatetracker[i].isDisconnected()) {
       conns[i]->loginAsync();
     }
+    else if (connstatetracker[i].isIdle()) {
+      handleConnection(i);
+    }
   }
 }
 
@@ -56,9 +59,10 @@ void SiteThread::runInstance() {
       for (unsigned int i = 0; i < connstatetracker.size(); i++) {
         connstatetracker[i].timePassed(50);
         if (connstatetracker[i].hasReleasedCommand()) {
-          std::string event = connstatetracker[i].getCommand();
-          if (event == "refreshrace") {
-            race = races[0];
+          DelayedCommand eventcommand = connstatetracker[i].getCommand();
+          std::string event = eventcommand.getCommand();
+          if (event == "refresh") {
+            race = (SiteRace *) eventcommand.getArg();
             connstatetracker[i].setReady();
             conns[i]->refreshRaceFileListAsync(race);
           }
@@ -179,25 +183,15 @@ void SiteThread::runInstance() {
         case 8: // returned from transfer job
           handleConnection(id);
           break;
-        case 10: // file list refreshed
-          //SiteRace * sr = (SiteRace *)command->getArg3();
-          connstatetracker[id].setIdle();
-          race = races[0];
+        case 10: // file list refreshed in race
+          race = (SiteRace *) command->getArg2();
           race->updateNumFilesUploaded();
-          if (!race->isDone()) {
-            connstatetracker[id].delayedCommand("refresh", SLEEPDELAY);
-          }
-          else {
-            connstatetracker[id].delayedCommand("quit", IDLETIME);
-          }
           int tmpi;
           sem_getvalue(list_refresh, &tmpi);
           if (tmpi == 0) sem_post(list_refresh);
-
+          handleConnection(id, true);
           break;
         case 11: // file list retrieved
-          connstatetracker[id].setIdle();
-          connstatetracker[id].delayedCommand("quit", IDLETIME);
           FileList * filelist = (FileList *)command->getArg2();
           for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
             if (it->requestPath() == filelist->getPath()) {
@@ -207,8 +201,8 @@ void SiteThread::runInstance() {
               break;
             }
           }
+          handleConnection(id);
           break;
-
       }
       ftpthreadcom->commandProcessed();
     }
@@ -216,14 +210,20 @@ void SiteThread::runInstance() {
 }
 
 void SiteThread::handleConnection(int id) {
+  handleConnection(id, false);
+}
+
+void SiteThread::handleConnection(int id, bool backfromrefresh) {
   SiteRace * race = NULL;
   if (requests.size() > 0) {
     handleRequest(id);
   }
   else {
+    bool refresh = false;
     for (unsigned int i = 0; i < races.size(); i++) {
       if (!races[i]->isDone()) {
         race = races[i];
+        refresh = true;
         break;
       }
     }
@@ -237,8 +237,18 @@ void SiteThread::handleConnection(int id) {
     }
     if (race != NULL) {
       conns[id]->doCWDorMKDirAsync(race->getSection(), race->getRelease());
-      conns[id]->refreshRaceFileListAsync(race);
-      connstatetracker[id].setReady();
+      if (refresh) {
+        connstatetracker[id].setReady();
+        if (backfromrefresh) {
+          connstatetracker[id].delayedCommand("refresh", SLEEPDELAY, (void *) race);
+        }
+        else {
+          conns[id]->refreshRaceFileListAsync(race);
+        }
+      }
+      else {
+        connstatetracker[id].setIdle();
+      }
     }
     else {
       connstatetracker[id].setIdle();

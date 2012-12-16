@@ -10,6 +10,7 @@ void GlobalContext::init() {
   ssl_ctx = SSL_CTX_new(TLSv1_client_method());
   pthread_attr_init(&attr);
   pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
+  pthread_mutex_init(&time_mutex, NULL);
   time_t rawtime;
   time(&rawtime);
   struct tm * timedata = localtime(&rawtime);
@@ -79,9 +80,11 @@ int GlobalContext::currentYear() {
 }
 
 std::string GlobalContext::ctimeLog() {
+  pthread_mutex_lock(&time_mutex);
   time_t rawtime;
   time(&rawtime);
   std::string readabletime = asctime(localtime(&rawtime));
+  pthread_mutex_unlock(&time_mutex);
   return readabletime.substr(11, 8);
 }
 

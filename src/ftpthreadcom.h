@@ -7,6 +7,7 @@
 #include "commandqueueelement.h"
 
 class FileList;
+class SiteRace;
 
 class FTPThreadCom {
   private:
@@ -26,7 +27,7 @@ class FTPThreadCom {
     void loginPasswordDenied(int, int, char *);
     void loginKillFailed(int, int, char *);
     void connectionClosedUnexpectedly(int);
-    void fileListUpdated(int);
+    void fileListUpdated(int, SiteRace *);
     void fileListRetrieved(int, FileList *);
     void putCommand(int, int);
     void putCommand(int, int, int);

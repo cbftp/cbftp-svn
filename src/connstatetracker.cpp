@@ -10,6 +10,10 @@ void ConnStateTracker::delayedCommand(std::string command, int delay) {
   delayedcommands.push_back(DelayedCommand(command, delay + time));
 }
 
+void ConnStateTracker::delayedCommand(std::string command, int delay, void * arg) {
+  delayedcommands.push_back(DelayedCommand(command, delay + time, arg));
+}
+
 void ConnStateTracker::timePassed(int time) {
   this->time += time;
   std::list<DelayedCommand>::iterator it;
@@ -18,7 +22,7 @@ void ConnStateTracker::timePassed(int time) {
     found = false;
     for (it = delayedcommands.begin(); it != delayedcommands.end(); it++) {
       if (this->time >= it->getDelay()) {
-        releasedcommands.push_back(it->getCommand());
+        releasedcommands.push_back(*it);
         delayedcommands.erase(it);
         found = true;
         break;
@@ -38,13 +42,14 @@ bool ConnStateTracker::hasReleasedCommand() {
   return releasedcommands.size() > 0;
 }
 
-std::string ConnStateTracker::getCommand() {
+DelayedCommand ConnStateTracker::getCommand() {
   if (releasedcommands.size() > 0) {
-    std::string command = releasedcommands.front();
+    DelayedCommand command = releasedcommands.front();
     releasedcommands.pop_front();
     return command;
   }
-  return "";
+  //undefined behavior
+  return DelayedCommand("error", 0);
 }
 
 void ConnStateTracker::setDisconnected() {

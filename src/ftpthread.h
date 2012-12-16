@@ -67,7 +67,7 @@ class FTPThread {
     void loginKillAsync();
     void loginKillT();
     FTPThread(int, Site *, FTPThreadCom *);
-    int updateFileList(FileList *, bool);
+    int updateFileList(FileList *);
     std::string getCurrentPath();
     std::string doPWD();
     bool doPASV(std::string **);

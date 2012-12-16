@@ -61,8 +61,8 @@ void FTPThreadCom::connectionClosedUnexpectedly(int id) {
   putCommand(id, 6);
 }
 
-void FTPThreadCom::fileListUpdated(int id) {
-  putCommand(id, 10);
+void FTPThreadCom::fileListUpdated(int id, SiteRace * sr) {
+  putCommand(id, 10, (void *) sr, NULL);
 }
 
 void FTPThreadCom::fileListRetrieved(int id, FileList * filelist) {

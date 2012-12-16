@@ -9,15 +9,16 @@ class ConnStateTracker {
 private:
   int state;
   int time;
-  std::list<std::string> releasedcommands;
+  std::list<DelayedCommand> releasedcommands;
   std::list<DelayedCommand> delayedcommands;
 public:
   ConnStateTracker();
   void delayedCommand(std::string, int);
+  void delayedCommand(std::string, int, void *);
   void timePassed(int);
   int getTimePassed();
   bool hasReleasedCommand();
-  std::string getCommand();
+  DelayedCommand getCommand();
   void setDisconnected();
   void setIdle();
   void setReady();

@@ -31,6 +31,7 @@ class GlobalContext {
     TransferManager * tm;
     TickPoke * tp;
     sem_t list_refresh;
+    pthread_mutex_t time_mutex;
     std::string compiletime;
     std::string svnrev;
     int currentyear;
