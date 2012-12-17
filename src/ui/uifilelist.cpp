@@ -135,7 +135,7 @@ void UIFileList::parse(FileList * filelist) {
   int size = filelist->getSize();
   files.reserve(size);
   sortedfiles.reserve(size);
-  for (it = filelist->filesBegin(); it != filelist->filesEnd(); it++) {
+  for (it = filelist->begin(); it != filelist->end(); it++) {
     files.push_back(UIFile(it->second));
   }
   for (unsigned int i = 0; i < files.size(); i++) {

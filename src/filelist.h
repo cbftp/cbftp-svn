@@ -38,8 +38,6 @@ class FileList {
     std::string getPath();
     int getSizeUploaded();
     bool hasSFV();
-    std::map<std::string, File *>::iterator filesBegin();
-    std::map<std::string, File *>::iterator filesEnd();
     int getOwnedPercentage();
     unsigned long long int getMaxFileSize();
     void lockFileList();

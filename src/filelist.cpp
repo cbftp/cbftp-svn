@@ -171,14 +171,6 @@ bool FileList::hasSFV() {
   return false;
 }
 
-std::map<std::string, File *>::iterator FileList::filesBegin() {
-  return files.begin();
-}
-
-std::map<std::string, File *>::iterator FileList::filesEnd() {
-  return files.end();
-}
-
 int FileList::getOwnedPercentage() {
   int ret;
   pthread_mutex_lock(&owned_mutex);
