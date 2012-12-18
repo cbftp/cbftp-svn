@@ -260,10 +260,10 @@ void FTPThread::refreshRaceFileListAsync(SiteRace * siterace) {
 }
 
 void FTPThread::refreshRaceFileListT(SiteRace * siterace) {
-  if (currentpath != siterace->getPath()) {
+  if (currentpath.find(siterace->getPath()) == std::string::npos) {
     doCWDT(siterace->getPath());
   }
-  updateFileList(siterace->getFileList());
+  updateFileList(siterace->getFileListForFullPath(currentpath));
   ftpthreadcom->fileListUpdated(id, siterace);
 }
 
@@ -385,7 +385,7 @@ bool FTPThread::doCWDT(std::string path) {
 bool FTPThread::doMKDirT(std::string dir) {
   write(("MKD " + dir).c_str());
   if (read() == 257) return true;
-  else return false;
+  return false;
 }
 
 void FTPThread::doCWDorMKDirAsync(std::string section, std::string release) {
@@ -394,9 +394,26 @@ void FTPThread::doCWDorMKDirAsync(std::string section, std::string release) {
 
 void FTPThread::doCWDorMKDirT(std::string section, std::string release) {
   if (doCWDT(section + "/" + release)) return;
+  size_t lastpos = 0;
+  std::list<std::string> subdirs;
+  while (true) {
+    size_t splitpos = release.find("/", lastpos);
+    if (splitpos != std::string::npos) {
+      subdirs.push_back(release.substr(lastpos, splitpos - lastpos));
+    }
+    else {
+      subdirs.push_back(release.substr(lastpos));
+      break;
+    }
+    lastpos = splitpos + 1;
+  }
   if (!doCWDT(section)) return;
-  doMKDirT(release);
-  doCWDT(release);
+  for (std::list<std::string>::iterator it = subdirs.begin(); it != subdirs.end(); it++) {
+    if (!doCWDT(currentpath + "/" + *it)) {
+      doMKDirT(currentpath + "/" + *it);
+      doCWDT(currentpath + "/" + *it);
+    }
+  }
 }
 
 bool FTPThread::doPRETRETR(std::string file) {

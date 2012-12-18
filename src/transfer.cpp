@@ -1,17 +1,17 @@
 #include "transfer.h"
 
-Transfer::Transfer(std::string file, SiteThread * sts, SiteRace * srs, SiteThread * std, SiteRace * srd) {
+Transfer::Transfer(std::string file, SiteThread * sts, FileList * fls, SiteThread * std, FileList * fld) {
   this->sts = sts;
   this->std = std;
-  this->srs = srs;
-  this->srd = srd;
+  this->fls = fls;
+  this->fld = fld;
   this->file = file;
 }
 
 void Transfer::run() {
   if (sts->getSite()->hasBrokenPASV() && std->getSite()->hasBrokenPASV()) return;
-  if (!sts->getDownloadThread(srs, file, &src)) return;
-  if (!std->getUploadThread(srd, file, &dst)) {
+  if (!sts->getDownloadThread(fls, file, &src)) return;
+  if (!std->getUploadThread(fld, file, &dst)) {
     sts->returnThread(src);
     sts->transferComplete(true);
     return;
@@ -24,15 +24,15 @@ void Transfer::run() {
         return;
       }
     }
-    if (srd->getFileList()->getFile(file) || !src->doPASV(&addr)) {
+    if (fld->getFile(file) || !src->doPASV(&addr)) {
       cancelTransfer();
       return;
     }
-    if (srd->getFileList()->getFile(file) || !dst->doPORT(*addr)) {
+    if (fld->getFile(file) || !dst->doPORT(*addr)) {
       cancelTransfer();
       return;
     }
-    if (srd->getFileList()->getFile(file) || !dst->doSTOR(file)) {
+    if (fld->getFile(file) || !dst->doSTOR(file)) {
       cancelTransfer();
       return;
     }
@@ -53,19 +53,19 @@ void Transfer::run() {
         return;
       }
     }
-    if (srd->getFileList()->getFile(file) || !dst->doPASV(&addr)) {
+    if (fld->getFile(file) || !dst->doPASV(&addr)) {
       cancelTransfer();
       return;
     }
-    if (srd->getFileList()->getFile(file) || !src->doPORT(*addr)) {
+    if (fld->getFile(file) || !src->doPORT(*addr)) {
       cancelTransfer();
       return;
     }
-    if(srd->getFileList()->getFile(file) || !src->doRETR(file)) {
+    if(fld->getFile(file) || !src->doRETR(file)) {
       cancelTransfer();
       return;
     }
-    if (srd->getFileList()->getFile(file) || !dst->doSTOR(file)) {
+    if (fld->getFile(file) || !dst->doSTOR(file)) {
       dst->doPASV(&addr);
       std->transferComplete(false);
       std->returnThread(dst);
@@ -76,7 +76,7 @@ void Transfer::run() {
     }
   }
   int start = global->ctimeMSec();
-  srd->getFileList()->touchFile(file, std->getSite()->getUser());
+  fld->touchFile(file, std->getSite()->getUser());
   src->awaitTransferComplete();
   sts->transferComplete(true);
   sts->returnThread(src);
@@ -84,10 +84,10 @@ void Transfer::run() {
   std->transferComplete(false);
   std->returnThread(dst);
   int span = global->ctimeMSec() - start;
-  int size = srs->getFileList()->getFile(file)->getSize();
+  int size = fls->getFile(file)->getSize();
   int speed = size / span;
   //std::cout << "[ " << sts->getSite()->getName() << " -> " << std->getSite()->getName() << " ] - " << file << " - " << speed << " kB/s" << std::endl;
-  srd->getFileList()->setFileUpdateFlag(file, speed, sts->getSite(), std->getSite()->getName());
+  fld->setFileUpdateFlag(file, speed, sts->getSite(), std->getSite()->getName());
 }
 
 void Transfer::cancelTransfer() {

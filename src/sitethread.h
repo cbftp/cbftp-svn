@@ -60,10 +60,10 @@ class SiteThread {
     void addRace(Race *, std::string, std::string);
     Site * getSite();
     SiteRace * getRace(std::string);
-    bool getDownloadThread(SiteRace *, std::string, FTPThread **);
-    bool getUploadThread(SiteRace *, std::string, FTPThread **);
-    bool getReadyThread(SiteRace *, FTPThread **);
-    bool getReadyThread(SiteRace *, std::string, FTPThread **, bool, bool);
+    bool getDownloadThread(FileList *, std::string, FTPThread **);
+    bool getUploadThread(FileList *, std::string, FTPThread **);
+    bool getReadyThread(FileList *, FTPThread **);
+    bool getReadyThread(FileList *, std::string, FTPThread **, bool, bool);
     void returnThread(FTPThread *);
     void setNumConnections(unsigned int);
     bool downloadSlotAvailable();
@@ -73,6 +73,7 @@ class SiteThread {
     int getCurrLogins();
     void raceGlobalComplete();
     void raceLocalComplete(SiteRace *);
+    void createRaceSubdirectory(SiteRace *, std::string);
     void transferComplete(bool isdownload);
     bool getSlot(bool);
     int requestFileList(std::string);

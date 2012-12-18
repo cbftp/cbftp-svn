@@ -7,8 +7,8 @@ bool comparator(ScoreBoardElement * e1, ScoreBoardElement * e2) {
 ScoreBoard::ScoreBoard() {
 }
 
-void ScoreBoard::add(std::string name, int score, SiteThread * src, SiteRace * srs, SiteThread * dst, SiteRace * srd) {
-  elements.push_back(new ScoreBoardElement(name, score, src, srs, dst, srd));
+void ScoreBoard::add(std::string name, int score, SiteThread * src, FileList * fls, SiteThread * dst, FileList * fld) {
+  elements.push_back(new ScoreBoardElement(name, score, src, fls, dst, fld));
 }
 
 void ScoreBoard::sort() {

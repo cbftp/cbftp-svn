@@ -54,7 +54,7 @@ void Engine::estimateRaceSizes() {
       if (srs->sizeEstimated()) {
         continue;
       }
-      FileList * fls = srs->getFileList();
+      FileList * fls = srs->getFileListForPath("");
       if (!fls->hasSFV()) {
         continue;
       }
@@ -94,9 +94,7 @@ void Engine::refreshScoreBoard() {
   for (std::list<Race *>::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
     for (std::list<SiteThread *>::iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
       SiteRace * srs = (*its)->getRace((*itr)->getName());
-      FileList * fls = srs->getFileList();
-      if (!fls->isFilled()) continue;
-      if ((*itr)->sizeEstimated() && fls->getNumUploadedFiles() == (*itr)->estimatedSize()) {
+      if ((*itr)->sizeEstimated() && srs->getNumUploadedFiles() == (*itr)->estimatedSize()) {
         (*its)->raceLocalComplete(srs);
         if ((*itr)->isDone()) {
           for (std::list<SiteThread *>::iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
@@ -110,18 +108,29 @@ void Engine::refreshScoreBoard() {
       for (std::list<SiteThread *>::iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
         if (*itd == *its) continue;
         SiteRace * srd = (*itd)->getRace((*itr)->getName());
-        FileList * fld = srd->getFileList();
         int avgspeed = (*its)->getSite()->getAverageSpeed((*itd)->getSite()->getName());
-        if (!fld->isFilled()) continue;
-        std::map<std::string, File *>::iterator itf;
-        fls->lockFileList();
-        for (itf = fls->begin(); itf != fls->end(); itf++) {
-          File * f = (*itf).second;
-          std::string name = f->getName();
-          if (fld->contains(name) || f->isDirectory() || f->getSize() == 0) continue;
-          scoreboard->add(name, calculateScore(f, *itr, *its, srs, *itd, srd, avgspeed, (SPREAD ? false : true)), *its, srs, *itd, srd);
+        for (std::map<std::string, FileList *>::iterator itfls = srs->fileListsBegin(); itfls != srs->fileListsEnd(); itfls++) {
+          FileList * fls = itfls->second;
+          FileList * fld = srd->getFileListForPath(itfls->first);
+          if (fld != NULL) {
+            if (!fld->isFilled()) continue;
+            std::map<std::string, File *>::iterator itf;
+            fls->lockFileList();
+            for (itf = fls->begin(); itf != fls->end(); itf++) {
+              File * f = itf->second;
+              if (itf->first.find(" ") != std::string::npos) {
+                continue;
+              }
+              std::string name = f->getName();
+              if (fld->contains(name) || f->isDirectory() || f->getSize() == 0) continue;
+              scoreboard->add(name, calculateScore(f, *itr, fls, srs, fld, srd, avgspeed, (SPREAD ? false : true)), *its, fls, *itd, fld);
+            }
+            fls->unlockFileList();
+          }
+          else {
+            (*itd)->createRaceSubdirectory(srd, itfls->first);
+          }
         }
-        fls->unlockFileList();
       }
     }
   }
@@ -141,17 +150,17 @@ void Engine::issueOptimalTransfers() {
   }
 }
 
-int Engine::calculateScore(File * f, Race * itr, SiteThread * sts, SiteRace * srs, SiteThread * std, SiteRace * srd, int avgspeed, bool racemode) {
+int Engine::calculateScore(File * f, Race * itr, FileList * fls, SiteRace * srs, FileList * fld, SiteRace * srd, int avgspeed, bool racemode) {
   int points = 0;
-  points += f->getSize() / (srs->getFileList()->getMaxFileSize() / 2000); // gives max 2000 points
+  points += f->getSize() / ((srs->getMaxFileSize() + 2000) / 2000); // gives max 2000 points
   points = (points * (avgspeed / 100)) / (maxavgspeed / 100);
   if (racemode) {
     // give points for owning a low percentage of the race on the target
-    points += ((100 - srd->getFileList()->getOwnedPercentage()) * 30); // gives max 3000 points
+    points += ((100 - fld->getOwnedPercentage()) * 30); // gives max 3000 points
   }
   else {
     // give points for low progress on the target
-    points += 3000 - ((srd->getFileList()->getSizeUploaded() * 3000) / itr->getMaxSiteProgress()); // gives max 3000 points
+    points += 3000 - ((fld->getSizeUploaded() * 3000) / itr->getMaxSiteProgress()); // gives max 3000 points
   }
   // sfv and nfo files have top priority
   if (f->getExtension().compare("sfv") == 0) return 10000;

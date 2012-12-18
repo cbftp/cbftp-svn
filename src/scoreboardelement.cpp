@@ -1,11 +1,11 @@
 #include "scoreboardelement.h"
 
-ScoreBoardElement::ScoreBoardElement(std::string filename, int score, SiteThread * src, SiteRace * srs, SiteThread * dst, SiteRace * srd) {
+ScoreBoardElement::ScoreBoardElement(std::string filename, int score, SiteThread * src, FileList * fls, SiteThread * dst, FileList * fld) {
   this->filename = filename;
   this->src = src;
-  this->srs = srs;
+  this->fls = fls;
   this->dst = dst;
-  this->srd = srd;
+  this->fld = fld;
   this->score = score;
 }
 
@@ -21,12 +21,12 @@ SiteThread * ScoreBoardElement::getDestination() {
   return dst;
 }
 
-SiteRace * ScoreBoardElement::getSourceSiteRace() {
-  return srs;
+FileList * ScoreBoardElement::getSourceFileList() {
+  return fls;
 }
 
-SiteRace * ScoreBoardElement::getDestinationSiteRace() {
-  return srd;
+FileList * ScoreBoardElement::getDestinationFileList() {
+  return fld;
 }
 
 int ScoreBoardElement::getScore() {

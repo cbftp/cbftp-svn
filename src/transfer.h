@@ -5,6 +5,7 @@
 #include "sitethread.h"
 #include "siterace.h"
 #include "ftpthread.h"
+#include "filelist.h"
 
 class Transfer {
   private:
@@ -15,10 +16,10 @@ class Transfer {
     FTPThread * dst;
     SiteThread * sts;
     SiteThread * std;
-    SiteRace * srs;
-    SiteRace * srd;
+    FileList * fls;
+    FileList * fld;
   public:
-    Transfer(std::string, SiteThread *, SiteRace *, SiteThread *, SiteRace *);
+    Transfer(std::string, SiteThread *, FileList *, SiteThread *, FileList *);
     void run();
     void cancelTransfer();
 };

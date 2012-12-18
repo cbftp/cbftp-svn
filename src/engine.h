@@ -32,7 +32,7 @@ class Engine {
     void refreshScoreBoard();
     void issueOptimalTransfers();
     void setSpeedScale();
-    int calculateScore(File *, Race *, SiteThread *, SiteRace *, SiteThread *, SiteRace *, int, bool);
+    int calculateScore(File *, Race *, FileList *, SiteRace *, FileList *, SiteRace *, int, bool);
   public:
     Engine();
     void newRace(std::string, std::string, std::list<std::string>);

@@ -14,6 +14,7 @@ FileList::FileList(std::string username, std::string path) {
   owned = 0;
   ownpercentage = 0;
   maxfilesize = 0;
+  locked = false;
 }
 
 bool FileList::updateFile(std::string start, int touch) {
@@ -130,9 +131,9 @@ bool FileList::contains(std::string name) {
 
 int FileList::getSize() {
   int ret;
-  pthread_mutex_lock(&filelist_mutex);
+  if (!locked) pthread_mutex_lock(&filelist_mutex);
   ret = files.size();
-  pthread_mutex_unlock(&filelist_mutex);
+  if (!locked) pthread_mutex_unlock(&filelist_mutex);
   return ret;
 }
 
@@ -189,9 +190,11 @@ std::string FileList::getPath() {
 
 void FileList::lockFileList() {
   pthread_mutex_lock(&filelist_mutex);
+  locked = true;
 }
 
 void FileList::unlockFileList() {
+  locked = false;
   pthread_mutex_unlock(&filelist_mutex);
 }
 

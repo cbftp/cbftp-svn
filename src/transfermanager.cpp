@@ -15,9 +15,9 @@ void TransferManager::newTransfer(ScoreBoardElement * sbe) {
   std::string name = sbe->fileName();
   SiteThread * src = sbe->getSource();
   SiteThread * dst = sbe->getDestination();
-  SiteRace * srs = sbe->getSourceSiteRace();
-  SiteRace * srd = sbe->getDestinationSiteRace();
-  transfertmp = new Transfer(name, src, srs, dst, srd);
+  FileList * fls = sbe->getSourceFileList();
+  FileList * fld = sbe->getDestinationFileList();
+  transfertmp = new Transfer(name, src, fls, dst, fld);
   transfers.push_back(transfertmp);
   if (inuse >= threads-1 && threads < MAX_THREADS) {
     pthread_create(&threadid[threads++], global->getPthreadAttr(), runTransfer, (void *) this);

@@ -12,7 +12,7 @@ class ScoreBoard {
     std::vector<ScoreBoardElement *> elements;
   public:
     ScoreBoard();
-    void add(std::string, int, SiteThread *, SiteRace *, SiteThread *, SiteRace *);
+    void add(std::string, int, SiteThread *, FileList *, SiteThread *, FileList *);
     int size();
     std::vector<ScoreBoardElement *>::iterator begin();
     std::vector<ScoreBoardElement *>::iterator end();

@@ -32,7 +32,7 @@ void SiteThread::activate() {
     if (connstatetracker[i].isDisconnected()) {
       conns[i]->loginAsync();
     }
-    else if (connstatetracker[i].isIdle()) {
+    else if (connstatetracker[i].isReady()) {
       handleConnection(i);
     }
   }
@@ -128,6 +128,7 @@ void SiteThread::runInstance() {
           pthread_mutex_lock(&slots);
           loggedin++;
           pthread_mutex_unlock(&slots);
+          connstatetracker[id].setIdle();
           handleConnection(id);
           break;
         case 1: // connection failed
@@ -186,6 +187,7 @@ void SiteThread::runInstance() {
         case 10: // file list refreshed in race
           race = (SiteRace *) command->getArg2();
           race->updateNumFilesUploaded();
+          race->addNewDirectories();
           int tmpi;
           sem_getvalue(list_refresh, &tmpi);
           if (tmpi == 0) sem_post(list_refresh);
@@ -214,6 +216,9 @@ void SiteThread::handleConnection(int id) {
 }
 
 void SiteThread::handleConnection(int id, bool backfromrefresh) {
+  if (!connstatetracker[id].isReady()) {
+    return;
+  }
   SiteRace * race = NULL;
   if (requests.size() > 0) {
     handleRequest(id);
@@ -236,7 +241,7 @@ void SiteThread::handleConnection(int id, bool backfromrefresh) {
       }
     }
     if (race != NULL) {
-      conns[id]->doCWDorMKDirAsync(race->getSection(), race->getRelease());
+      conns[id]->doCWDorMKDirAsync(race->getSection(), race->getRelease() + race->getLeastRecentlyVisitedSubPath());
       if (refresh) {
         connstatetracker[id].setReady();
         if (backfromrefresh) {
@@ -322,19 +327,19 @@ SiteRace * SiteThread::getRace(std::string race) {
   return NULL;
 }
 
-bool SiteThread::getDownloadThread(SiteRace * sr, std::string file, FTPThread ** ret) {
-  return getReadyThread(sr, file, ret, true, true);
+bool SiteThread::getDownloadThread(FileList * fl, std::string file, FTPThread ** ret) {
+  return getReadyThread(fl, file, ret, true, true);
 }
 
-bool SiteThread::getUploadThread(SiteRace * sr, std::string file, FTPThread ** ret) {
-  return getReadyThread(sr, file, ret, true, false);
+bool SiteThread::getUploadThread(FileList * fl, std::string file, FTPThread ** ret) {
+  return getReadyThread(fl, file, ret, true, false);
 }
 
-bool SiteThread::getReadyThread(SiteRace * sr, FTPThread ** ret) {
-  return getReadyThread(sr, "", ret, false, false);
+bool SiteThread::getReadyThread(FileList * fl, FTPThread ** ret) {
+  return getReadyThread(fl, "", ret, false, false);
 }
 
-bool SiteThread::getReadyThread(SiteRace * sr, std::string file, FTPThread ** ret, bool istransfer, bool isdownload) {
+bool SiteThread::getReadyThread(FileList * fl, std::string file, FTPThread ** ret, bool istransfer, bool isdownload) {
   FTPThread * lastready;
   int lastreadyid;
   bool foundreadythread = false;
@@ -343,12 +348,13 @@ bool SiteThread::getReadyThread(SiteRace * sr, std::string file, FTPThread ** re
       foundreadythread = true;
       lastready = conns[i];
       lastreadyid = i;
-      if (conns[i]->getCurrentPath().compare(sr->getPath()) == 0) {
-        *ret = conns[i];
+      if (conns[i]->getCurrentPath().compare(fl->getPath()) == 0) {
         if (istransfer) {
           if (!getSlot(isdownload)) return false;
         }
         connstatetracker[i].setBusy();
+        conns[i]->doCWDAsync(fl->getPath());
+        *ret = conns[i];
         return true;
       }
     }
@@ -359,31 +365,34 @@ bool SiteThread::getReadyThread(SiteRace * sr, std::string file, FTPThread ** re
         foundreadythread = true;
         lastready = conns[i];
         lastreadyid = i;
-        if (conns[i]->getCurrentPath().compare(sr->getPath()) == 0) {
-          *ret = conns[i];
+        if (conns[i]->getCurrentPath().compare(fl->getPath()) == 0) {
           if (istransfer) {
             if (!getSlot(isdownload)) return false;
           }
           connstatetracker[i].setBusy();
+          conns[i]->doCWDAsync(fl->getPath());
+          *ret = conns[i];
           return true;
         }
       }
     }
   }
   if (foundreadythread) {
-    lastready->doCWDAsync(sr->getPath());
-    *ret = lastready;
     if (istransfer) {
       if (!getSlot(isdownload)) return false;
     }
     connstatetracker[lastreadyid].setBusy();
+    lastready->doCWDAsync(fl->getPath());
+    *ret = lastready;
     return true;
   }
   else return false;
 }
 
 void SiteThread::returnThread(FTPThread * ftpthread) {
-  ftpthreadcom->putCommand(ftpthread->getId(), 8);
+  int id = ftpthread->getId();
+  connstatetracker[id].setIdle();
+  ftpthreadcom->putCommand(id, 8);
 }
 
 void SiteThread::setNumConnections(unsigned int num) {
@@ -451,6 +460,14 @@ bool SiteThread::downloadSlotAvailable() {
 
 bool SiteThread::uploadSlotAvailable() {
   return (available > 0 && slots_up > 0);
+}
+
+void SiteThread::createRaceSubdirectory(SiteRace * siterace, std::string subdir) {
+  siterace->addSubDirectory(subdir);
+  FTPThread * ftpthread;
+  if (getReadyThread(siterace->getFileListForPath(""), "", &ftpthread, false, false)) {
+    ftpthread->doCWDorMKDirAsync(siterace->getSection(), siterace->getPath() + "/" + subdir);
+  }
 }
 
 void SiteThread::transferComplete(bool isdownload) {

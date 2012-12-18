@@ -15,6 +15,7 @@ class FileList {
     pthread_mutex_t owned_mutex;
     pthread_mutex_t filled_mutex;
     bool filled;
+    bool locked;
     int owned;
     int ownpercentage;
     unsigned long long int maxfilesize;
