@@ -14,6 +14,7 @@ private:
   std::string arg3;
   bool careaboutbackend;
   std::string eventtext;
+  pthread_mutex_t event_mutex;
   sem_t event;
   sem_t event_ready;
 public:
