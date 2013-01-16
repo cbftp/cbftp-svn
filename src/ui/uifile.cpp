@@ -141,6 +141,11 @@ void UIFile::parseTimeStamp(std::string uglytime) {
   }
   else {
     year = global->currentYear();
+    int currentmonth = global->currentMonth();
+    int currentday = global->currentDay();
+    if (month > currentmonth || (month == currentmonth && day > currentday)) {
+      year--;
+    }
     hour = global->str2Int(meta.substr(0, metabreak));
     minute = global->str2Int(meta.substr(metabreak + 1));
   }

@@ -10,6 +10,8 @@ BrowseScreen::BrowseScreen(WINDOW * window, UICommunicator * uicommunicator, uns
   resort = false;
   currentviewspan = 0;
   sortmethod = 0;
+  list = UIFileList();
+  global->updateTime();
   init(window, row, col);
 }
 

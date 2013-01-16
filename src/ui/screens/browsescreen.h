@@ -5,12 +5,15 @@
 #include "../../sitethread.h"
 #include "../../sitethreadmanager.h"
 #include "../../site.h"
+#include "../../globalcontext.h"
 
 #include "../uiwindow.h"
 #include "../uicommunicator.h"
 #include "../termint.h"
 #include "../uifilelist.h"
 #include "../stringpair.h"
+
+extern GlobalContext * global;
 
 class BrowseScreen : public UIWindow {
 public:

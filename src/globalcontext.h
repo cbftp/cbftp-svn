@@ -35,6 +35,8 @@ class GlobalContext {
     std::string compiletime;
     std::string svnrev;
     int currentyear;
+    int currentmonth;
+    int currentday;
   public:
     void init();
     GlobalContext();
@@ -50,7 +52,10 @@ class GlobalContext {
     pthread_attr_t * getPthreadAttr();
     sem_t * getListRefreshSem();
     static int ctimeMSec();
+    void updateTime();
     int currentYear();
+    int currentMonth();
+    int currentDay();
     std::string ctimeLog();
     std::string getSVNRevision();
     std::string getCompileTime();

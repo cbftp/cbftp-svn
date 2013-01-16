@@ -11,10 +11,7 @@ void GlobalContext::init() {
   pthread_attr_init(&attr);
   pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
   pthread_mutex_init(&time_mutex, NULL);
-  time_t rawtime;
-  time(&rawtime);
-  struct tm * timedata = localtime(&rawtime);
-  currentyear = timedata->tm_year + 1900;
+  updateTime();
   sem_init(&list_refresh, 0, 0);
 }
 
@@ -75,8 +72,25 @@ int GlobalContext::ctimeMSec() {
   return count;
 }
 
+void GlobalContext::updateTime() {
+  time_t rawtime;
+  time(&rawtime);
+  struct tm * timedata = localtime(&rawtime);
+  currentyear = timedata->tm_year + 1900;
+  currentmonth = timedata->tm_mon + 1;
+  currentday = timedata->tm_mday;
+}
+
 int GlobalContext::currentYear() {
   return currentyear;
+}
+
+int GlobalContext::currentMonth() {
+  return currentmonth;
+}
+
+int GlobalContext::currentDay() {
+  return currentday;
 }
 
 std::string GlobalContext::ctimeLog() {
