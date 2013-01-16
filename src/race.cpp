@@ -3,8 +3,8 @@
 Race::Race(std::string release, std::string section) {
   this->name = release;
   this->section = section;
-  sizeestimated = false;
   done = false;
+  estimatedsubpaths.push_back("");
 }
 
 void Race::addSite(SiteThread * sitethread) {
@@ -31,12 +31,20 @@ int Race::numSites() {
   return sites.size();
 }
 
-bool Race::sizeEstimated() {
-  return sizeestimated;
+bool Race::sizeEstimated(std::string subpath) {
+  return estimatedsize.find(subpath) != estimatedsize.end();
 }
 
-int Race::estimatedSize() {
-  return estimatedsize;
+unsigned int Race::estimatedSize(std::string subpath) {
+  std::map<std::string, unsigned int>::iterator it = estimatedsize.find(subpath);
+  if (it != estimatedsize.end()) {
+    return it->second;
+  }
+  return 0;
+}
+
+std::list<std::string> Race::getSubPaths() {
+  return estimatedsubpaths;
 }
 
 void Race::updateSiteProgress(int in) {
@@ -49,6 +57,28 @@ int Race::getMaxSiteProgress() {
 
 bool Race::isDone() {
   return done;
+}
+
+void Race::reportNewSubDir(SiteRace * sr, std::string subdir) {
+  if (subpathoccurences.find(subdir) == subpathoccurences.end()) {
+    subpathoccurences[subdir] = std::list<SiteRace *>();
+  }
+  std::list<SiteRace *>::iterator it;
+  for (it = subpathoccurences[subdir].begin(); it != subpathoccurences[subdir].end(); it++) {
+    if (*it == sr) {
+      return;
+    }
+  }
+  subpathoccurences[subdir].push_back(sr);
+  if (subpathoccurences[subdir].size() >= sites.size() * 0.5) {
+    std::list<std::string>::iterator it2;
+    for (it2 = estimatedsubpaths.begin(); it2 != estimatedsubpaths.end(); it2++) {
+      if (*it2 == subdir) {
+        return;
+      }
+    }
+    estimatedsubpaths.push_back(subdir);
+  }
 }
 
 void Race::reportDone(SiteRace * sr) {
@@ -64,21 +94,24 @@ void Race::reportDone(SiteRace * sr) {
   }
 }
 
-void Race::reportSize(SiteRace * sr, unsigned int size) {
+void Race::reportSize(SiteRace * sr, std::string subpath, unsigned int size) {
   if (sizes.find(sr) == sizes.end()) {
-    sizes[sr] = size;
+    sizes[sr] = std::map<std::string, unsigned int>();
+  }
+  sizes[sr][subpath] = size;
+  std::map<SiteRace *, std::map<std::string, unsigned int> >::iterator it;
+  std::map<std::string, unsigned int>::iterator it2;
+  std::vector<unsigned int> subpathsizes;
+  for (it = sizes.begin(); it != sizes.end(); it++) {
+    it2 = it->second.find(subpath);
+    if (it2 != it->second.end()) {
+      subpathsizes.push_back(it2->second);
+    }
   }
   // stupid formula, replace with time check from race start
-  if (sizes.size() == sites.size() ||
-    (sizes.size() >= sites.size() * 0.8 && sites.size() > 2)) {
-    std::vector<unsigned int> singledsizes;
-    std::map<SiteRace *, unsigned int>::iterator it;
-    for (it = sizes.begin(); it != sizes.end(); it++) {
-      singledsizes.push_back(it->second);
-    }
-    std::sort(singledsizes.begin(), singledsizes.end());
-    estimatedsize = singledsizes[singledsizes.size()/2];
-    sizeestimated = true;
+  if (subpathsizes.size() == sites.size() ||
+    (subpathsizes.size() >= sites.size() * 0.8 && sites.size() > 2)) {
+    std::sort(subpathsizes.begin(), subpathsizes.end());
+    estimatedsize[subpath] = subpathsizes[subpathsizes.size()/2];
   }
-
 }

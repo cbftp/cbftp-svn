@@ -129,16 +129,16 @@ bool FileList::contains(std::string name) {
   return ret;
 }
 
-int FileList::getSize() {
-  int ret;
+unsigned int FileList::getSize() {
+  unsigned int ret;
   if (!locked) pthread_mutex_lock(&filelist_mutex);
   ret = files.size();
   if (!locked) pthread_mutex_unlock(&filelist_mutex);
   return ret;
 }
 
-int FileList::getNumUploadedFiles() {
-  int count = 0;
+unsigned int FileList::getNumUploadedFiles() {
+  unsigned int count = 0;
   std::map<std::string, File *>::iterator it;
   pthread_mutex_lock(&filelist_mutex);
   for (it = files.begin(); it != files.end(); it++) {

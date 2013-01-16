@@ -1,3 +1,7 @@
+support för sslfxp
+status: inte påbörjad
+möjlighet att använda sslfxp på siter som kräver det.
+
 race status screen
 status: inte påbörjad
 en ui-ruta som visar status för ett pågående race med info
@@ -42,10 +46,6 @@ genom att filen tas bort från racet.
 ta bort site från race
 status: inte påbörjad
 möjlighet att ta bort en site från ett race medan racet pågår.
-
-support för sslfxp
-status: inte påbörjad
-möjlighet att använda sslfxp på siter som kräver det.
 
 play-and-replay-funktionalitet
 status: inte påbörjad

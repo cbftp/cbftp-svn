@@ -34,8 +34,8 @@ class FileList {
     std::map<std::string, File *>::iterator begin();
     std::map<std::string, File *>::iterator end();
     bool contains(std::string);
-    int getSize();
-    int getNumUploadedFiles();
+    unsigned int getSize();
+    unsigned int getNumUploadedFiles();
     std::string getPath();
     int getSizeUploaded();
     bool hasSFV();

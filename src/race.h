@@ -15,11 +15,12 @@ class Race {
     std::string name;
     std::string section;
     std::list<SiteThread *> sites;
-    std::map<SiteRace *, unsigned int> sizes;
+    std::map<SiteRace *, std::map<std::string, unsigned int> > sizes;
     std::list<SiteRace *> donesites;
     int maxfilelistsize;
-    unsigned int estimatedsize;
-    bool sizeestimated;
+    std::map<std::string, unsigned int> estimatedsize;
+    std::map<std::string, std::list<SiteRace *> > subpathoccurences;
+    std::list<std::string> estimatedsubpaths;
     bool done;
   public:
     Race(std::string, std::string);
@@ -28,12 +29,14 @@ class Race {
     std::list<SiteThread *>::iterator end();
     std::string getName();
     std::string getSection();
-    bool sizeEstimated();
-    int estimatedSize();
+    bool sizeEstimated(std::string);
+    unsigned int estimatedSize(std::string);
+    std::list<std::string> getSubPaths();
     int numSites();
     void updateSiteProgress(int);
     int getMaxSiteProgress();
     bool isDone();
+    void reportNewSubDir(SiteRace *, std::string);
     void reportDone(SiteRace *);
-    void reportSize(SiteRace *, unsigned int);
+    void reportSize(SiteRace *, std::string, unsigned int);
 };

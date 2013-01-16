@@ -274,7 +274,7 @@ int FTPThread::updateFileList(FileList * filelist) {
     char * loc = reply, * start;
     while(*++loc != '\n');
     while(*++loc != '\n');
-    int files = 0;
+    unsigned int files = 0;
     int touch = rand();
     while (*++loc != '2') {
       start = loc;

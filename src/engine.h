@@ -29,6 +29,7 @@ class Engine {
     sem_t race_sem;
     sem_t * list_refresh;
     void estimateRaceSizes();
+    void reportCurrentSizeAsFinal(SiteRace *, FileList *);
     void refreshScoreBoard();
     void issueOptimalTransfers();
     void setSpeedScale();

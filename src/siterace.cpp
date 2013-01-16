@@ -5,12 +5,10 @@ SiteRace::SiteRace(Race * race, std::string section, std::string release, std::s
   this->section = section;
   this->release = release;
   this->username = username;
-  sizeestimated = false;
   recentlyvisited.push_back("");
   path = section.append("/").append(release);
   FileList * rootdir = new FileList(username, path);
   filelists[""] = rootdir;
-  recentlyvisited.push_back("");
   done = false;
 }
 
@@ -33,6 +31,7 @@ void SiteRace::addSubDirectory(std::string subpath) {
   FileList * subdir = new FileList(username, path + "/" + subpath);
   filelists[subpath] = subdir;
   recentlyvisited.push_front(subpath);
+  race->reportNewSubDir(this, subpath);
 }
 
 std::string SiteRace::getSubPath(FileList * filelist) {
@@ -48,6 +47,13 @@ std::string SiteRace::getSubPath(FileList * filelist) {
 
 std::string SiteRace::getLeastRecentlyVisitedSubPath() {
   std::string leastrecentlyvisited = recentlyvisited.front();
+  while (isSubPathComplete(leastrecentlyvisited) && recentlyvisited.size() > 0) {
+    recentlyvisited.pop_front();
+    leastrecentlyvisited = recentlyvisited.front();
+  }
+  if (recentlyvisited.size() == 0) {
+    return "";
+  }
   recentlyvisited.push_back(leastrecentlyvisited);
   recentlyvisited.pop_front();
   if (leastrecentlyvisited.length() > 0) {
@@ -75,6 +81,16 @@ FileList * SiteRace::getFileListForFullPath(std::string path) {
   }
   std::cout << "None found LOL" << std::endl;
   return NULL;
+}
+
+std::string SiteRace::getSubPathForFileList(FileList * fl) {
+  std::map<std::string, FileList *>::iterator it;
+  for (it = filelists.begin(); it != filelists.end(); it++) {
+    if (it->second == fl) {
+      return it->first;
+    }
+  }
+  return "";
 }
 
 std::map<std::string, FileList *>::iterator SiteRace::fileListsBegin() {
@@ -119,8 +135,14 @@ int SiteRace::getNumUploadedFiles() {
   return sum;
 }
 
-bool SiteRace::sizeEstimated() {
-  return sizeestimated;
+bool SiteRace::sizeEstimated(FileList * fl) {
+  std::list<FileList *>::iterator it;
+  for (it = sizeestimated.begin(); it != sizeestimated.end(); it++) {
+    if (*it == fl) {
+      return true;
+    }
+  }
+  return false;
 }
 
 unsigned long long int SiteRace::getMaxFileSize() {
@@ -151,13 +173,59 @@ void SiteRace::complete() {
   race->reportDone(this);
 }
 
+void SiteRace::subPathComplete(FileList * fl) {
+  std::string subpath = getSubPathForFileList(fl);
+  if (isSubPathComplete(subpath)) {
+    return;
+  }
+  completesubdirs.push_back(subpath);
+}
+
+bool SiteRace::isSubPathComplete(std::string subpath) {
+  std::list<std::string>::iterator it;
+  for (it = completesubdirs.begin(); it != completesubdirs.end(); it++) {
+    if (*it == subpath) {
+      return true;
+    }
+  }
+  return false;
+}
+
 Race * SiteRace::getRace() {
   return race;
 }
 
-void SiteRace::reportSize(unsigned int size) {
-  if (!sizeestimated) {
-    race->reportSize(this, size);
+void SiteRace::reportSize(FileList * fl, unsigned int size) {
+  if (!sizeEstimated(fl)) {
+    std::map<std::string, FileList *>::iterator it;
+    for (it = filelists.begin(); it != filelists.end(); it++) {
+      if (it->second == fl) {
+        race->reportSize(this, it->first, size);
+        sizeestimated.push_back(fl);
+        return;
+      }
+    }
   }
-  sizeestimated = true;
+}
+
+int SiteRace::getObservedTime(FileList * fl) {
+  std::map<FileList *, int>::iterator it;
+  for (it = observestarts.begin(); it != observestarts.end(); it++) {
+    if (it->first == fl) {
+      return global->ctimeMSec() - it->second;
+    }
+  }
+  observestarts[fl] = global->ctimeMSec();
+  return 0;
+}
+
+int SiteRace::getSFVObservedTime(FileList * fl) {
+  std::map<FileList *, int>::iterator it;
+  for (it = sfvobservestarts.begin(); it != sfvobservestarts.end(); it++) {
+    if (it->first == fl) {
+      return global->ctimeMSec() - it->second;
+    }
+  }
+  sfvobservestarts[fl] = global->ctimeMSec();
+  return 0;
 }

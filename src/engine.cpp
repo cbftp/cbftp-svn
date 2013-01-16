@@ -46,47 +46,56 @@ void Engine::runInstance() {
 
 void Engine::estimateRaceSizes() {
   for (std::list<Race *>::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
-    if ((*itr)->sizeEstimated()) {
-      continue;
-    }
     for (std::list<SiteThread *>::iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
       SiteRace * srs = (*its)->getRace((*itr)->getName());
-      if (srs->sizeEstimated()) {
-        continue;
-      }
-      FileList * fls = srs->getFileListForPath("");
-      if (!fls->hasSFV()) {
-        continue;
-      }
-
-      std::list<std::string> uniques;
-      std::map<std::string, File *>::iterator itf;
-      fls->lockFileList();
-      for (itf = fls->begin(); itf != fls->end(); itf++) {
-        if (itf->second->isDirectory()) {
+      std::map<std::string, FileList *>::iterator itfl;
+      for (itfl = srs->fileListsBegin(); itfl != srs->fileListsEnd(); itfl++) {
+        FileList * fls = itfl->second;
+        if (srs->sizeEstimated(fls)) {
           continue;
         }
-        std::string filename = itf->second->getName();
-        size_t lastdotpos = filename.rfind(".");
-        if (lastdotpos != std::string::npos && lastdotpos < filename.length() - 4) {
-          filename = filename.substr(0, lastdotpos + 4);
-        }
-        std::list<std::string>::iterator it;
-        bool exists = false;
-        for (it = uniques.begin(); it != uniques.end(); it++) {
-          if ((*it) == filename) {
-            exists = true;
-            break;
+        if (fls->hasSFV()) {
+          if (srs->getSFVObservedTime(fls) > 5000) {
+            reportCurrentSizeAsFinal(srs, fls);
           }
         }
-        if (!exists) {
-          uniques.push_back(filename);
+        else {
+          if (srs->getObservedTime(fls) > 30000) {
+            reportCurrentSizeAsFinal(srs, fls);
+          }
         }
       }
-      fls->unlockFileList();
-      srs->reportSize(uniques.size());
     }
   }
+}
+
+void Engine::reportCurrentSizeAsFinal(SiteRace * srs, FileList * fls) {
+  std::list<std::string> uniques;
+  std::map<std::string, File *>::iterator itf;
+  fls->lockFileList();
+  for (itf = fls->begin(); itf != fls->end(); itf++) {
+    if (itf->second->isDirectory()) {
+      continue;
+    }
+    std::string filename = itf->second->getName();
+    size_t lastdotpos = filename.rfind(".");
+    if (lastdotpos != std::string::npos && lastdotpos < filename.length() - 4) {
+      filename = filename.substr(0, lastdotpos + 4);
+    }
+    std::list<std::string>::iterator it;
+    bool exists = false;
+    for (it = uniques.begin(); it != uniques.end(); it++) {
+      if ((*it) == filename) {
+        exists = true;
+        break;
+      }
+    }
+    if (!exists) {
+      uniques.push_back(filename);
+    }
+  }
+  fls->unlockFileList();
+  srs->reportSize(fls, uniques.size());
 }
 
 void Engine::refreshScoreBoard() {
@@ -94,15 +103,28 @@ void Engine::refreshScoreBoard() {
   for (std::list<Race *>::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
     for (std::list<SiteThread *>::iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
       SiteRace * srs = (*its)->getRace((*itr)->getName());
-      if ((*itr)->sizeEstimated() && srs->getNumUploadedFiles() == (*itr)->estimatedSize()) {
-        (*its)->raceLocalComplete(srs);
-        if ((*itr)->isDone()) {
-          for (std::list<SiteThread *>::iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
-            (*itd)->raceGlobalComplete();
+      if (!srs->isDone()) {
+        bool racecomplete = true;
+        std::list<std::string> subpaths = (*itr)->getSubPaths();
+        for (std::list<std::string>::iterator itsp = subpaths.begin(); itsp != subpaths.end(); itsp++) {
+          FileList * spfl = srs->getFileListForPath(*itsp);
+          if ((*itr)->sizeEstimated(*itsp) && spfl->getNumUploadedFiles() >= (*itr)->estimatedSize(*itsp)) {
+            srs->subPathComplete(spfl);
           }
-          currentraces.erase(itr);
-          refreshScoreBoard();
-          return;
+          else {
+            racecomplete = false;
+          }
+        }
+        if (racecomplete) {
+          (*its)->raceLocalComplete(srs);
+          if ((*itr)->isDone()) {
+            for (std::list<SiteThread *>::iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
+              (*itd)->raceGlobalComplete();
+            }
+            currentraces.erase(itr);
+            refreshScoreBoard();
+            return;
+          }
         }
       }
       for (std::list<SiteThread *>::iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
