@@ -37,6 +37,9 @@ void SiteManager::readSites() {
     else if (!setting.compare("pret")) {
       if (!value.compare("true")) site->setPRET(true);
     }
+    else if (!setting.compare("sslfxpforced")) {
+      if (!value.compare("true")) site->setSSLFXPForced(true);
+    }
     else if (!setting.compare("brokenpasv")) {
       if (!value.compare("true")) site->setBrokenPASV(true);
     }
@@ -78,6 +81,7 @@ void SiteManager::writeState() {
     filehandler->addOutputLine("SiteManager", name + "$maxup=" + global->int2Str(site->getInternMaxUp()));
     filehandler->addOutputLine("SiteManager", name + "$maxdn=" + global->int2Str(site->getInternMaxDown()));
     if (site->needsPRET()) filehandler->addOutputLine("SiteManager", name + "$pret=true");
+    if (site->SSLFXPForced()) filehandler->addOutputLine("SiteManager", name + "$sslfxpforced=true");
     if (site->hasBrokenPASV()) filehandler->addOutputLine("SiteManager", name + "$brokenpasv=true");
     std::map<std::string, std::string>::iterator sit;
     for (sit = site->sectionsBegin(); sit != site->sectionsEnd(); sit++) {

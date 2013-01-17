@@ -27,6 +27,7 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
   mso.addIntArrow(y++, x, "maxup", "Upload slots:", modsite.getInternMaxUp(), 0, 99);
   mso.addIntArrow(y++, x, "maxdn", "Download slots:", modsite.getInternMaxDown(), 0, 99);
   mso.addCheckBox(y++, x, "pret", "Needs PRET:", modsite.needsPRET());
+  mso.addCheckBox(y++, x, "forcesslfxp", "Force SSL FXP:", modsite.SSLFXPForced());
   mso.addCheckBox(y++, x, "brokenpasv", "Broken PASV:", modsite.hasBrokenPASV());
   y++;
   ms.initialize(y++, x, modsite.sectionsBegin(), modsite.sectionsEnd());
@@ -232,34 +233,37 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         MenuSelectOptionElement * msoe = mso.getElement(i);
         std::string identifier = msoe->getIdentifier();
         if (identifier == "name") {
-            site->setName(((MenuSelectOptionTextField *)msoe)->getData());
+          site->setName(((MenuSelectOptionTextField *)msoe)->getData());
         }
         else if (identifier == "addr") {
-            site->setAddress(((MenuSelectOptionTextField *)msoe)->getData());
+          site->setAddress(((MenuSelectOptionTextField *)msoe)->getData());
         }
         else if (identifier == "port") {
-            site->setPort(((MenuSelectOptionTextField *)msoe)->getData());
+          site->setPort(((MenuSelectOptionTextField *)msoe)->getData());
         }
         else if (identifier == "user") {
-            site->setUser(((MenuSelectOptionTextField *)msoe)->getData());
+          site->setUser(((MenuSelectOptionTextField *)msoe)->getData());
         }
         else if (identifier == "pass") {
-            site->setPass(((MenuSelectOptionTextField *)msoe)->getData());
+          site->setPass(((MenuSelectOptionTextField *)msoe)->getData());
         }
         else if (identifier == "logins") {
-            site->setMaxLogins(((MenuSelectOptionNumArrow *)msoe)->getData());
+          site->setMaxLogins(((MenuSelectOptionNumArrow *)msoe)->getData());
         }
         else if (identifier == "maxup") {
-            site->setMaxUp(((MenuSelectOptionNumArrow *)msoe)->getData());
+          site->setMaxUp(((MenuSelectOptionNumArrow *)msoe)->getData());
         }
         else if (identifier == "maxdn") {
-            site->setMaxDn(((MenuSelectOptionNumArrow *)msoe)->getData());
+          site->setMaxDn(((MenuSelectOptionNumArrow *)msoe)->getData());
         }
         else if (identifier == "pret") {
-            site->setPRET(((MenuSelectOptionCheckBox *)msoe)->getData());
+          site->setPRET(((MenuSelectOptionCheckBox *)msoe)->getData());
+        }
+        else if (identifier == "forcesslfxp") {
+          site->setSSLFXPForced(((MenuSelectOptionCheckBox *)msoe)->getData());
         }
         else if (identifier == "brokenpasv") {
-            site->setBrokenPASV(((MenuSelectOptionCheckBox *)msoe)->getData());
+          site->setBrokenPASV(((MenuSelectOptionCheckBox *)msoe)->getData());
         }
       }
       site->clearSections();

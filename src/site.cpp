@@ -14,6 +14,7 @@ Site::Site(std::string name) {
   max_up = 0;
   max_dn = 0;
   pret = false;
+  sslfxpforced = false;
   brokenpasv = false;
 }
 
@@ -27,6 +28,7 @@ void Site::copy(Site * site) {
   this->max_up = site->max_up;
   this->max_dn = site->max_dn;
   this->pret = site->pret;
+  this->sslfxpforced = site->sslfxpforced;
   this->brokenpasv = site->brokenpasv;
   this->sections = site->sections;
   this->avgspeed = site->avgspeed;
@@ -122,6 +124,14 @@ bool Site::needsPRET() {
 
 void Site::setPRET(bool val) {
   pret = val;
+}
+
+bool Site::SSLFXPForced() {
+  return sslfxpforced;
+}
+
+void Site::setSSLFXPForced(bool val) {
+  sslfxpforced = val;
 }
 
 bool Site::hasBrokenPASV() {

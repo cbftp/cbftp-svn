@@ -17,6 +17,16 @@ void Transfer::run() {
     return;
   }
   std::string * addr;
+  bool sslfxp = false;
+  if (sts->getSite()->SSLFXPForced() || std->getSite()->SSLFXPForced()) {
+    src->setProtectedModeAsync();
+    dst->setProtectedModeAsync();
+    sslfxp = true;
+  }
+  else {
+    src->unsetProtectedModeAsync();
+    dst->unsetProtectedModeAsync();
+  }
   if (!sts->getSite()->hasBrokenPASV()) {
     if (sts->getSite()->needsPRET()) {
       if (!src->doPRETRETR(file)) {
@@ -24,7 +34,7 @@ void Transfer::run() {
         return;
       }
     }
-    if (fld->getFile(file) || !src->doPASV(&addr)) {
+    if (fld->getFile(file) || !src->doPASV(&addr, sslfxp)) {
       cancelTransfer();
       return;
     }
@@ -53,7 +63,7 @@ void Transfer::run() {
         return;
       }
     }
-    if (fld->getFile(file) || !dst->doPASV(&addr)) {
+    if (fld->getFile(file) || !dst->doPASV(&addr, sslfxp)) {
       cancelTransfer();
       return;
     }

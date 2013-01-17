@@ -13,6 +13,7 @@ class Site {
     std::string user;
     std::string pass;
     bool pret;
+    bool sslfxpforced;
     bool brokenpasv;
     unsigned int logins;
     unsigned int max_up;
@@ -41,6 +42,8 @@ class Site {
     void pushTransferSpeed(std::string, int);
     bool needsPRET();
     void setPRET(bool);
+    bool SSLFXPForced();
+    void setSSLFXPForced(bool);
     bool hasBrokenPASV();
     void setBrokenPASV(bool);
     std::string getName();

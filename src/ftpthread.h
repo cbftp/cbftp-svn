@@ -47,6 +47,7 @@ class FTPThread {
     struct timeval tv;
     struct timeval tvsocket;
     fd_set readfd;
+    bool protectedmode;
     int write(const char *);
     int write(const char *, bool);
     int read();
@@ -70,7 +71,14 @@ class FTPThread {
     int updateFileList(FileList *);
     std::string getCurrentPath();
     std::string doPWD();
+    void setProtectedModeAsync();
+    void unsetProtectedModeAsync();
+    void doPROTPT();
+    void doPROTCT();
+    bool doCPSV(std::string **);
+    void doCPSVT(std::string **, sem_t *);
     bool doPASV(std::string **);
+    bool doPASV(std::string **, bool);
     void doPASVT(std::string **, sem_t *);
     bool doPORT(std::string);
     void doPORTT(std::string, sem_t *);

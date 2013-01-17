@@ -7,6 +7,7 @@ FTPThread::FTPThread(int id, Site * site, FTPThreadCom * ftpthreadcom) {
   this->status = "disconnected";
   rawbuf = new RawBuffer(RAWBUFMAXLEN, site->getName(), global->int2Str(id));
   controlssl = false;
+  protectedmode = false;
   currentpath = "";
   tv.tv_sec = 0;
   tv.tv_usec = 500000;
@@ -327,7 +328,63 @@ std::string FTPThread::doPWD() {
   return "";
 }
 
+void FTPThread::setProtectedModeAsync() {
+  if (!protectedmode) {
+    putCommand(new CommandQueueElement(17));
+  }
+}
+
+void FTPThread::unsetProtectedModeAsync() {
+  if (protectedmode) {
+    putCommand(new CommandQueueElement(16));
+  }
+}
+
+void FTPThread::doPROTPT() {
+  write("PROT P");
+  if (read() == 200) {
+    protectedmode = true;
+  }
+}
+
+void FTPThread::doPROTCT() {
+  write("PROT C");
+  if (read() == 200) {
+    protectedmode = false;
+  }
+}
+
+bool FTPThread::doCPSV(std::string ** ret) {
+  sem_t donesem;
+  putCommand(new CommandQueueElement(13, &donesem, (void *) ret));
+  sem_wait(&donesem);
+  sem_destroy(&donesem);
+  if ((**ret).substr(0, 3).compare("227") != 0) return false;
+  size_t start = (**ret).find('(') + 1;
+  size_t end = (**ret).find(')');
+  std::string * tmp = new std::string((**ret).substr(start, end-start));
+  delete *ret;
+  *ret = tmp;
+  return true;
+}
+
+void FTPThread::doCPSVT(std::string ** ret, sem_t * donesem) {
+  write("CPSV");
+  char * reply;
+  readall(&reply, true);
+  *ret = new std::string(reply);
+  delete reply;
+  sem_post(donesem);
+}
+
 bool FTPThread::doPASV(std::string ** ret) {
+  return doPASV(ret, false);
+}
+
+bool FTPThread::doPASV(std::string ** ret, bool sslfxp) {
+  if (sslfxp) {
+    return doCPSV(ret);
+  }
   sem_t donesem;
   putCommand(new CommandQueueElement(10, &donesem, (void *) ret));
   sem_wait(&donesem);
@@ -565,6 +622,15 @@ void FTPThread::runInstance() {
         break;
       case 12:
         getFileListT(*(std::string *)command->getArg1());
+        break;
+      case 13:
+        doCPSVT((std::string **)command->getArg1(), command->getDoneSem());
+        break;
+      case 16:
+        doPROTCT();
+        break;
+      case 17:
+        doPROTPT();
         break;
       case 20:
         doRETRAsyncT(*(std::string *)command->getArg1(), (int *)command->getArg2(), command->getDoneSem());
