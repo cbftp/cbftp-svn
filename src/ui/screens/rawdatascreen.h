@@ -21,6 +21,9 @@ public:
   std::string getLegendText();
 private:
   int threads;
+  bool readfromcopy;
+  unsigned int copyreadpos;
+  unsigned int copysize;
   std::string sitename;
   int threadid;
   UICommunicator * uicommunicator;

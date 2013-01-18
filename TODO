@@ -18,10 +18,6 @@ global options screen
 status: inte påbörjad
 ett options-fönster för globala inställningar, typ udp-port och sånt
 
-backlog i console-log-fönstret
-status: inte påbörjad
-möjlighet att browsa bakåt i logfönstrena.
-
 local downloads
 status: inte påbörjad
 möjlighet att ladda ner saker till klienten, i första hand nfo-filer för direkt visning.
