@@ -89,7 +89,7 @@ void SiteManager::writeState() {
     }
     std::map<std::string, int>::iterator sit2;
     for (sit2 = site->avgspeedBegin(); sit2 != site->avgspeedEnd(); sit2++) {
-      filehandler->addOutputLine("SiteManager", name + "$avgspeed=" + sit->first + "$" + sit->second);
+      filehandler->addOutputLine("SiteManager", name + "$avgspeed=" + sit2->first + "$" + global->int2Str(sit2->second));
     }
   }
 }
