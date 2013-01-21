@@ -45,7 +45,7 @@ std::string SiteRace::getSubPath(FileList * filelist) {
   return "";
 }
 
-std::string SiteRace::getLeastRecentlyVisitedSubPath() {
+std::string SiteRace::getRelevantSubPath() {
   std::string leastrecentlyvisited = recentlyvisited.front();
   while (isSubPathComplete(leastrecentlyvisited) && recentlyvisited.size() > 0) {
     recentlyvisited.pop_front();

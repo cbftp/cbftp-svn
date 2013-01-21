@@ -28,7 +28,7 @@ class SiteRace {
     std::string getSection();
     std::string getRelease();
     std::string getPath();
-    std::string getLeastRecentlyVisitedSubPath();
+    std::string getRelevantSubPath();
     SiteRace(Race *, std::string, std::string, std::string);
     FileList * getFileListForPath(std::string);
     FileList * getFileListForFullPath(std::string);

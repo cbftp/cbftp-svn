@@ -241,7 +241,7 @@ void SiteThread::handleConnection(int id, bool backfromrefresh) {
       }
     }
     if (race != NULL) {
-      conns[id]->doCWDorMKDirAsync(race->getSection(), race->getRelease() + race->getLeastRecentlyVisitedSubPath());
+      conns[id]->doCWDorMKDirAsync(race->getSection(), race->getRelease() + race->getRelevantSubPath());
       if (refresh) {
         connstatetracker[id].setReady();
         if (backfromrefresh) {
