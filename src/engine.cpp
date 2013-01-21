@@ -150,7 +150,7 @@ void Engine::refreshScoreBoard() {
             fls->unlockFileList();
           }
           else {
-            (*itd)->createRaceSubdirectory(srd, itfls->first);
+            srd->addSubDirectory(itfls->first);
           }
         }
       }

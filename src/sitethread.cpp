@@ -462,14 +462,6 @@ bool SiteThread::uploadSlotAvailable() {
   return (available > 0 && slots_up > 0);
 }
 
-void SiteThread::createRaceSubdirectory(SiteRace * siterace, std::string subdir) {
-  siterace->addSubDirectory(subdir);
-  FTPThread * ftpthread;
-  if (getReadyThread(siterace->getFileListForPath(""), "", &ftpthread, false, false)) {
-    ftpthread->doCWDorMKDirAsync(siterace->getSection(), siterace->getRelease() + "/" + subdir);
-  }
-}
-
 void SiteThread::transferComplete(bool isdownload) {
   pthread_mutex_lock(&slots);
   if (isdownload) {

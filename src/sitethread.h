@@ -73,7 +73,6 @@ class SiteThread {
     int getCurrLogins();
     void raceGlobalComplete();
     void raceLocalComplete(SiteRace *);
-    void createRaceSubdirectory(SiteRace *, std::string);
     void transferComplete(bool isdownload);
     bool getSlot(bool);
     int requestFileList(std::string);
