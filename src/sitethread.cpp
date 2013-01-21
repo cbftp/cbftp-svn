@@ -466,7 +466,7 @@ void SiteThread::createRaceSubdirectory(SiteRace * siterace, std::string subdir)
   siterace->addSubDirectory(subdir);
   FTPThread * ftpthread;
   if (getReadyThread(siterace->getFileListForPath(""), "", &ftpthread, false, false)) {
-    ftpthread->doCWDorMKDirAsync(siterace->getSection(), siterace->getPath() + "/" + subdir);
+    ftpthread->doCWDorMKDirAsync(siterace->getSection(), siterace->getRelease() + "/" + subdir);
   }
 }
 
