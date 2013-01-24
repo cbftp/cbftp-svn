@@ -12,6 +12,7 @@
 #include "../uicommunicator.h"
 #include "../menuselectoption.h"
 #include "../menuselectoptionelement.h"
+#include "../focusablearea.h"
 #include "../termint.h"
 
 extern GlobalContext * global;
@@ -25,13 +26,19 @@ public:
   std::string getLegendText();
 private:
   Site * modsite;
+  std::string getSectionButtonText(MenuSelectOptionElement *);
   std::string currentlegendtext;
   std::string defaultlegendtext;
   bool active;
   bool toggleall;
+  bool sectionupdate;
+  std::string section;
   MenuSelectOptionElement * activeelement;
+  FocusableArea * focusedarea;
+  FocusableArea * defocusedarea;
+  MenuSelectOption msos;
   MenuSelectOption mso;
   UICommunicator * uicommunicator;
-  std::string section;
+  std::list<std::string> sections;
   std::string release;
 };

@@ -143,9 +143,14 @@ void BrowseScreen::keyPressed(unsigned int ch) {
     case 'r':
       //start a race of the selected dir, do nothing if a file is selected
       if (list.cursoredFile() != NULL && list.cursoredFile()->isDirectory()) {
-        std::string section = site->getSectionForPath(list.getPath());
-        if (section != "") {
-          uicommunicator->newCommand("newrace", site->getName(), section, list.cursoredFile()->getName());
+        std::list<std::string> sections = site->getSectionsForPath(list.getPath());
+        if (sections.size() > 0) {
+          std::string sectionstring;
+          for (std::list<std::string>::iterator it = sections.begin(); it != sections.end(); it++) {
+            sectionstring += *it + ";";
+          }
+          sectionstring = sectionstring.substr(0, sectionstring.length() - 1);
+          uicommunicator->newCommand("newrace", site->getName(), sectionstring, list.cursoredFile()->getName());
         }
       }
       break;

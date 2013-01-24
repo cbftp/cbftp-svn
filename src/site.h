@@ -2,6 +2,7 @@
 
 #include <string>
 #include <map>
+#include <list>
 
 #define REPORT_LOGINS_IF_UNLIMITED 10
 
@@ -63,5 +64,5 @@ class Site {
     void setMaxUp(unsigned int);
     void clearSections();
     void addSection(std::string, std::string);
-    std::string getSectionForPath(std::string);
+    std::list<std::string> getSectionsForPath(std::string);
 };

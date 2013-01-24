@@ -220,12 +220,13 @@ void Site::addSection(std::string name, std::string path) {
   sections[name] = path;
 }
 
-std::string Site::getSectionForPath(std::string path) {
+std::list<std::string> Site::getSectionsForPath(std::string path) {
   std::map<std::string, std::string>::iterator it;
+  std::list<std::string> retsections;
   for (it = sections.begin(); it!= sections.end(); it++) {
     if (it->second == path) {
-      return it->first;
+      retsections.push_back(it->first);
     }
   }
-  return "";
+  return retsections;
 }

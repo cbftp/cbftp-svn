@@ -33,11 +33,11 @@ std::string MenuSelectOptionElement::getLegendText() {
   return "";
 }
 
-int MenuSelectOptionElement::getCol() {
+unsigned int MenuSelectOptionElement::getCol() {
   return col;
 }
 
-int MenuSelectOptionElement::getRow() {
+unsigned int MenuSelectOptionElement::getRow() {
   return row;
 }
 

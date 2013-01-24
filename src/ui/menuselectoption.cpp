@@ -7,35 +7,86 @@ MenuSelectOption::MenuSelectOption() {
 
 
 bool MenuSelectOption::goDown() {
-  if (pointer == size() - 1) {
-    if (leavedown) {
-      lastpointer = pointer;
-      focus = false;
-      return true;
+  unsigned int ccol = options[pointer]->getCol();
+  unsigned int crow = options[pointer]->getRow();
+  unsigned int closestelem;
+  bool movefound = false;
+  unsigned int closest = -1;
+  for (unsigned int i = 0; i < options.size(); i++) {
+    unsigned int row = options[i]->getRow();
+    if (row > crow && options[i]->getCol() == ccol) {
+      if (row < closest || closest == (unsigned int)-1) {
+        closest = row;
+        closestelem = i;
+        movefound = true;
+      }
     }
-    return false;
   }
-  lastpointer = pointer;
-  pointer++;
-  return true;
+  if (movefound) {
+    lastpointer = pointer;
+    pointer = closestelem;
+    return true;
+  }
+  if (leavedown) {
+    lastpointer = pointer;
+    focus = false;
+    return true;
+  }
+  return false;
 }
 
 bool MenuSelectOption::goUp() {
-  if (pointer == 0) {
-    if (leaveup) {
-      lastpointer = pointer;
-      focus = false;
-      return true;
+  unsigned int ccol = options[pointer]->getCol();
+  unsigned int crow = options[pointer]->getRow();
+  unsigned int closestelem;
+  bool movefound = false;
+  unsigned int closest = -1;
+  for (unsigned int i = 0; i < options.size(); i++) {
+    unsigned int row = options[i]->getRow();
+    if (row < crow && options[i]->getCol() == ccol) {
+      if (row > closest || closest == (unsigned int)-1) {
+        closest = row;
+        closestelem = i;
+        movefound = true;
+      }
     }
-    return false;
   }
-  lastpointer = pointer;
-  pointer--;
-  return true;
+  if (movefound) {
+    lastpointer = pointer;
+    pointer = closestelem;
+    return true;
+  }
+  if (leaveup) {
+    lastpointer = pointer;
+    focus = false;
+    return true;
+  }
+  return false;
 }
 
 bool MenuSelectOption::goRight() {
+  unsigned int ccol = options[pointer]->getCol();
+  unsigned int crow = options[pointer]->getRow();
+  unsigned int closestelem;
+  bool movefound = false;
+  unsigned int closest = -1;
+  for (unsigned int i = 0; i < options.size(); i++) {
+    unsigned int col = options[i]->getCol();
+    if (col > ccol && options[i]->getRow() == crow) {
+      if (col < closest || closest == (unsigned int)-1) {
+        closest = col;
+        closestelem = i;
+        movefound = true;
+      }
+    }
+  }
+  if (movefound) {
+    lastpointer = pointer;
+    pointer = closestelem;
+    return true;
+  }
   if (leaveright) {
+    lastpointer = pointer;
     focus = false;
     return true;
   }
@@ -43,7 +94,28 @@ bool MenuSelectOption::goRight() {
 }
 
 bool MenuSelectOption::goLeft() {
+  unsigned int ccol = options[pointer]->getCol();
+  unsigned int crow = options[pointer]->getRow();
+  unsigned int closestelem;
+  bool movefound = false;
+  unsigned int closest = -1;
+  for (unsigned int i = 0; i < options.size(); i++) {
+    unsigned int col = options[i]->getCol();
+    if (col < ccol && options[i]->getRow() == crow) {
+      if (col > closest || closest == (unsigned int)-1) {
+        closest = col;
+        closestelem = i;
+        movefound = true;
+      }
+    }
+  }
+  if (movefound) {
+    lastpointer = pointer;
+    pointer = closestelem;
+    return true;
+  }
   if (leaveleft) {
+    lastpointer = pointer;
     focus = false;
     return true;
   }
@@ -64,6 +136,10 @@ void MenuSelectOption::addIntArrow(int row, int col, std::string identifier, std
 
 void MenuSelectOption::addCheckBox(int row, int col, std::string identifier, std::string label, bool startval) {
   options.push_back(new MenuSelectOptionCheckBox(identifier, row, col, label, startval));
+}
+
+void MenuSelectOption::addTextButton(int row, int col, std::string identifier, std::string label) {
+  options.push_back(new MenuSelectOptionTextButton(identifier, row, col, label));
 }
 
 MenuSelectOptionElement * MenuSelectOption::getElement(unsigned int i) {
