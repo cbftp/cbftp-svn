@@ -44,6 +44,7 @@ void FTPThread::loginAsync() {
 bool FTPThread::loginT() {
   int status;
   controlssl = false;
+  protectedmode = false;
   sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
   fcntl(sockfd, F_SETFL, O_NONBLOCK);
   std::string output = "[Connecting to " + site->getAddress() + ":" + site->getPort() + "]";
@@ -93,7 +94,6 @@ void FTPThread::reconnectAsync() {
 }
 
 void FTPThread::reconnectT() {
-  controlssl = false;
   loginT();
 }
 
