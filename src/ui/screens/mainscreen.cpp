@@ -1,7 +1,7 @@
 #include "mainscreen.h"
 
 MainScreen::MainScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  msslegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [b]rowse site - [E]dit site - [C]opy site - [D]elete site";
+  msslegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [b]rowse site - [A]dd site - [E]dit site - [C]opy site - [D]elete site";
   msolegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option";
   this->uicommunicator = uicommunicator;
   mso.makeLeavableDown();
