@@ -5,6 +5,10 @@ void UIWindow::init(WINDOW * window, unsigned int row, unsigned int col) {
   resize(row, col);
 }
 
+UIWindow::UIWindow() {
+  autoupdate = false;
+}
+
 UIWindow::~UIWindow() {
 
 }
@@ -25,4 +29,8 @@ void UIWindow::keyPressed(unsigned int key) {
 
 std::string UIWindow::getLegendText() {
   return "";
+}
+
+bool UIWindow::autoUpdate() {
+  return autoupdate;
 }

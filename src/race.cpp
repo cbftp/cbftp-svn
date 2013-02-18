@@ -43,6 +43,19 @@ unsigned int Race::estimatedSize(std::string subpath) {
   return 0;
 }
 
+unsigned int Race::guessedSize(std::string subpath) {
+  std::map<std::string, unsigned int>::iterator it = guessedsize.find(subpath);
+  if (it != guessedsize.end()) {
+    return it->second;
+  }
+  return 10;
+}
+
+bool Race::SFVReported(std::string subpath) {
+  std::map<std::string, std::list<SiteRace *> >::iterator it = sfvreports.find(subpath);
+  return it != sfvreports.end();
+}
+
 std::list<std::string> Race::getSubPaths() {
   return estimatedsubpaths;
 }
@@ -78,7 +91,21 @@ void Race::reportNewSubDir(SiteRace * sr, std::string subdir) {
       }
     }
     estimatedsubpaths.push_back(subdir);
+    guessedsize[subdir] = 2;
   }
+}
+
+void Race::reportSFV(SiteRace * sr, std::string subpath) {
+  std::map<std::string, std::list<SiteRace *> >::iterator it = sfvreports.find(subpath);
+  if (it == sfvreports.end()) {
+    sfvreports[subpath] = std::list<SiteRace *>();
+  }
+  for (std::list<SiteRace *>::iterator it2 = sfvreports[subpath].begin(); it2 != sfvreports[subpath].end(); it2++) {
+    if (*it2 == sr) {
+      return;
+    }
+  }
+  sfvreports[subpath].push_back(sr);
 }
 
 void Race::reportDone(SiteRace * sr) {
@@ -114,4 +141,5 @@ void Race::reportSize(SiteRace * sr, std::string subpath, unsigned int size) {
     std::sort(subpathsizes.begin(), subpathsizes.end());
     estimatedsize[subpath] = subpathsizes[subpathsizes.size()/2];
   }
+  guessedsize[subpath] = subpathsizes[subpathsizes.size()/2];
 }

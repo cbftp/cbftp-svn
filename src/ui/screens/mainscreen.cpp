@@ -5,6 +5,7 @@ MainScreen::MainScreen(WINDOW * window, UICommunicator * uicommunicator, unsigne
   msolegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option";
   this->uicommunicator = uicommunicator;
   mso.makeLeavableDown();
+  autoupdate = true;
   if (global->getEngine()->currentRaces()) {
     focusedarea = &mso;
     mso.enterFocusFrom(0);

@@ -2,7 +2,8 @@ include ../../../Makefile.inc
 
 OBJECTS = loginscreen.o mainscreen.o sitestatusscreen.o editsitescreen.o \
 	confirmationscreen.o rawdatascreen.o newkeyscreen.o browsescreen.o \
-	addsectionscreen.o globaloptionsscreen.o newracescreen.o racestatusscreen.o
+	addsectionscreen.o globaloptionsscreen.o newracescreen.o \
+	racestatusscreen.o scoreboardscreen.o
 
 all: ${OBJECTS}
 

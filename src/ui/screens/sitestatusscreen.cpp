@@ -5,6 +5,7 @@ SiteStatusScreen::SiteStatusScreen(WINDOW * window, UICommunicator * uicommunica
   sitename = uicommunicator->getArg1();
   uicommunicator->checkoutCommand();
   site = global->getSiteManager()->getSite(sitename);
+  autoupdate = true;
   init(window, row, col);
 }
 

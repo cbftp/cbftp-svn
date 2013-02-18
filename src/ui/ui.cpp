@@ -6,7 +6,6 @@ UserInterface::UserInterface() {
   sem_init(&keyeventdone, 0, 0);
   main = NULL;
   topwindow = NULL;
-  tickerenabled = false;
   legendenabled = false;
   pthread_create(&thread[0], global->getPthreadAttr(), runKeyListener, (void *) this);
   pthread_create(&thread[1], global->getPthreadAttr(), runUserInterface, (void *) this);
@@ -122,6 +121,7 @@ void UserInterface::runUserInterfaceInstance() {
   UIWindow * browsescreen;
   UIWindow * addsectionscreen;
   UIWindow * newracescreen;
+  UIWindow * racestatusscreen;
   sem_t * eventsem = uicommunicator.getEventSem();
   global->getTickPoke()->startPoke(eventsem, 250, 0);
   legendwindow = new LegendWindow(legend, 2, col);
@@ -144,7 +144,7 @@ void UserInterface::runUserInterfaceInstance() {
     std::string currentevent = uicommunicator.awaitEvent();
     if (global->getTickPoke()->isPoked(eventsem)) {
       global->getTickPoke()->getMessage(eventsem);
-      if (tickerenabled) {
+      if (topwindow->autoUpdate()) {
         topwindow->update();
       }
       if (legendenabled) {
@@ -201,6 +201,15 @@ void UserInterface::runUserInterfaceInstance() {
         refreshAll();
         uicommunicator.checkoutCommand();
       }
+      else if (command == "racestatus") {
+        history.push_back(topwindow);
+        racestatusscreen = new RaceStatusScreen(main, &uicommunicator, mainrow, maincol);
+        legendwindow->setText(racestatusscreen->getLegendText());
+        mainwindows.push_back(racestatusscreen);
+        topwindow = racestatusscreen;
+        refreshAll();
+        uicommunicator.checkoutCommand();
+      }
       else if (command == "addsection") {
         history.push_back(topwindow);
         addsectionscreen = new AddSectionScreen(main, &uicommunicator, mainrow, maincol);
@@ -221,7 +230,6 @@ void UserInterface::runUserInterfaceInstance() {
       }
       else if (command == "sitestatus") {
         history.push_back(topwindow);
-        tickerenabled = true;
         sitestatusscreen = new SiteStatusScreen(main, &uicommunicator, mainrow, maincol);
         legendwindow->setText(sitestatusscreen->getLegendText());
         mainwindows.push_back(sitestatusscreen);
