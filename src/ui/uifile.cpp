@@ -168,7 +168,9 @@ void UIFile::parseTimeStamp(std::string uglytime) {
     meta = "0" + meta;
   }
 
-  lastmodified = ((year - 1970) * 365 * 24 * 60) +
+  // somewhat incorrect formula, but since the exact stamp will only be used for sorting,
+  // there's no need to bother
+  lastmodified = ((year - 1970) * 372 * 24 * 60) +
                   (month * 31 * 24 * 60) +
                    (day * 24 * 60) +
                    (hour * 60) +
