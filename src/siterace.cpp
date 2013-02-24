@@ -106,6 +106,9 @@ void SiteRace::updateNumFilesUploaded() {
   int sum = 0;
   for (it = filelists.begin(); it != filelists.end(); it++) {
     sum += it->second->getSize();
+    if (it->second->hasSFV()) {
+      race->reportSFV(this, it->first);
+    }
   }
   race->updateSiteProgress(sum);
 }
