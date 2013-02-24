@@ -503,7 +503,7 @@ bool FTPThread::doRETRAsyncT(std::string file, int * status, sem_t * donesem) {
   if (stat == 559) stat = *status = read(); // workaround for a glftpd bug causing an extra reply
   sem_post(donesem);
   if (stat != 150) return false;
-  stat = read();
+  stat = transferstatus = read();
   // status 226 on transfer complete
   sem_post(&transfersem);
   return true;
@@ -539,7 +539,7 @@ bool FTPThread::doSTORAsyncT(std::string file, int * status, bool * timeout, sem
   if (stat == 559) stat = *status = read(); // workaround for a glftpd bug causing an extra reply
   sem_post(donesem);
   if (stat != 150) return false;
-  stat = read();
+  stat = transferstatus = read();
   // status 226 on transfer complete
   sem_post(&transfersem);
   return true;
@@ -549,8 +549,10 @@ void FTPThread::abortTransfer() {
   write("ABOR");
 }
 
-void FTPThread::awaitTransferComplete() {
+bool FTPThread::awaitTransferComplete() {
   sem_wait(&transfersem);
+  if (transferstatus != 226) return false;
+  return true;
 }
 
 void FTPThread::doQUITAsync() {

@@ -87,17 +87,26 @@ void Transfer::run() {
   }
   int start = global->ctimeMSec();
   fld->touchFile(file, std->getSite()->getUser());
-  src->awaitTransferComplete();
+  if (!src->awaitTransferComplete()) {
+    dst->awaitTransferComplete();
+    cancelTransfer();
+    return;
+  }
   sts->transferComplete(true);
   sts->returnThread(src);
-  dst->awaitTransferComplete();
+  bool transferstatus = dst->awaitTransferComplete();
   std->transferComplete(false);
   std->returnThread(dst);
-  int span = global->ctimeMSec() - start;
-  int size = fls->getFile(file)->getSize();
-  int speed = size / span;
-  //std::cout << "[ " << sts->getSite()->getName() << " -> " << std->getSite()->getName() << " ] - " << file << " - " << speed << " kB/s" << std::endl;
-  fld->setFileUpdateFlag(file, speed, sts->getSite(), std->getSite()->getName());
+  if (transferstatus) {
+    int span = global->ctimeMSec() - start;
+    File * srcfile = fls->getFile(file);
+    if (srcfile) {
+      int size = srcfile->getSize();
+      int speed = size / span;
+      //std::cout << "[ " << sts->getSite()->getName() << " -> " << std->getSite()->getName() << " ] - " << file << " - " << speed << " kB/s" << std::endl;
+      fld->setFileUpdateFlag(file, speed, sts->getSite(), std->getSite()->getName());
+    }
+  }
 }
 
 void Transfer::cancelTransfer() {

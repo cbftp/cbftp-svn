@@ -37,6 +37,7 @@ class FTPThread {
     pthread_t thread;
     sem_t commandsem;
     sem_t transfersem;
+    int transferstatus;
     std::list<CommandQueueElement *> commandqueue;
     pthread_mutex_t commandq_mutex;
     bool controlssl;
@@ -96,7 +97,7 @@ class FTPThread {
     bool doSTOR(std::string);
     bool doSTORAsyncT(std::string, int *, bool *, sem_t *);
     void abortTransfer();
-    void awaitTransferComplete();
+    bool awaitTransferComplete();
     void doQUITAsync();
     void doQUITT();
     void disconnectAsync();
