@@ -11,6 +11,7 @@ SiteThread::SiteThread(std::string sitename) {
   ptrack = new PotentialTracker(slots_dn);
   available = 0;
   loggedin = 0;
+  wantedloggedin = 0;
   int logins = site->getMaxLogins();
   list_refresh = global->getListRefreshSem();
   global->getTickPoke()->startPoke(&notifysem, 50, 0);
@@ -28,11 +29,16 @@ SiteThread::~SiteThread() {
 }
 
 void SiteThread::activate() {
+  wantedloggedin = conns.size();
   for (unsigned int i = 0; i < conns.size(); i++) {
     if (connstatetracker[i].isDisconnected()) {
       conns[i]->loginAsync();
     }
     else if (connstatetracker[i].isReady()) {
+      handleConnection(i);
+    }
+    else if (connstatetracker[i].isIdle()) {
+      connstatetracker[i].setReady();
       handleConnection(i);
     }
   }
@@ -76,6 +82,9 @@ void SiteThread::runInstance() {
             conns[i]->doQUITAsync();
             connstatetracker[i].setDisconnected();
             loggedin--;
+            if (wantedloggedin > loggedin) {
+              wantedloggedin = loggedin;
+            }
           }
         }
       }
@@ -84,6 +93,9 @@ void SiteThread::runInstance() {
     if (!ftpthreadcom->hasCommand()) {
       if (requests.size() > 0) {
         if (loggedin == 0) {
+          if (wantedloggedin == 0) {
+            wantedloggedin++;
+          }
           conns[0]->loginAsync();
         }
         else {
@@ -106,6 +118,7 @@ void SiteThread::runInstance() {
             handleRequest(conn);
           }
           else if (loggedin < conns.size()) {
+            wantedloggedin++;
             for (unsigned int i = 0; i < conns.size(); i++) {
               if (connstatetracker[i].isDisconnected()) {
                 conns[i]->loginAsync();
@@ -216,6 +229,12 @@ void SiteThread::handleConnection(int id) {
 }
 
 void SiteThread::handleConnection(int id, bool backfromrefresh) {
+  if (loggedin > wantedloggedin) {
+    connstatetracker[id].setDisconnected();
+    conns[id]->doQUITAsync();
+    loggedin--;
+    return;
+  }
   if (!connstatetracker[id].isReady()) {
     return;
   }
@@ -546,6 +565,7 @@ void SiteThread::raceGlobalComplete() {
         loggedin--;
       }
     }
+    wantedloggedin = 0;
   }
 }
 
@@ -571,6 +591,7 @@ void SiteThread::raceLocalComplete(SiteRace * sr) {
         killnum--;
       }
     }
+    wantedloggedin = site->getMaxDown();
   }
 }
 

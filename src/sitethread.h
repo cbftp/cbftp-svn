@@ -46,6 +46,7 @@ class SiteThread {
     unsigned int slots_up;
     unsigned int available;
     unsigned int loggedin;
+    unsigned int wantedloggedin;
     std::list<SiteThreadRequest> requests;
     std::list<SiteThreadRequest> requestsinprogress;
     std::list<SiteThreadRequestReady> requestsready;
