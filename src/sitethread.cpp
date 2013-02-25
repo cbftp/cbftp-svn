@@ -226,7 +226,7 @@ void SiteThread::handleConnection(int id, bool backfromrefresh) {
   else {
     bool refresh = false;
     SiteRace * lastchecked = connstatetracker[id].lastChecked();
-    if (!lastchecked->isDone() && connstatetracker[id].checkCount() < MAXCHECKSROW) {
+    if (lastchecked && !lastchecked->isDone() && connstatetracker[id].checkCount() < MAXCHECKSROW) {
       race = lastchecked;
       refresh = true;
       connstatetracker[id].check(race);
