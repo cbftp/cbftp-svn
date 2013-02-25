@@ -225,11 +225,24 @@ void SiteThread::handleConnection(int id, bool backfromrefresh) {
   }
   else {
     bool refresh = false;
-    for (unsigned int i = 0; i < races.size(); i++) {
-      if (!races[i]->isDone()) {
-        race = races[i];
-        refresh = true;
-        break;
+    SiteRace * lastchecked = connstatetracker[id].lastChecked();
+    if (!lastchecked->isDone() && connstatetracker[id].checkCount() < MAXCHECKSROW) {
+      race = lastchecked;
+      refresh = true;
+      connstatetracker[id].check(race);
+    }
+    else {
+      for (unsigned int i = 0; i < races.size(); i++) {
+        if (!races[i]->isDone()) {
+          race = races[i];
+          refresh = true;
+          if (races[i] == lastchecked) {
+            connstatetracker[id].check(race);
+            continue;
+          }
+          connstatetracker[id].check(race);
+          break;
+        }
       }
     }
     if (race == NULL) {

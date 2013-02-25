@@ -4,6 +4,8 @@
 ConnStateTracker::ConnStateTracker() {
   state = 0;
   time = 0;
+  lastchecked = NULL;
+  lastcheckedcount = 0;
 }
 
 void ConnStateTracker::delayedCommand(std::string command, int delay) {
@@ -36,6 +38,24 @@ void ConnStateTracker::timePassed(int time) {
 
 int ConnStateTracker::getTimePassed() {
   return time;
+}
+
+void ConnStateTracker::check(SiteRace * sr) {
+  if (lastchecked == sr) {
+    lastcheckedcount++;
+  }
+  else {
+    lastchecked = sr;
+    lastcheckedcount = 1;
+  }
+}
+
+SiteRace * ConnStateTracker::lastChecked() {
+  return lastchecked;
+}
+
+int ConnStateTracker::checkCount() {
+    return lastcheckedcount;
 }
 
 bool ConnStateTracker::hasReleasedCommand() {
