@@ -194,6 +194,11 @@ bool SiteRace::isSubPathComplete(std::string subpath) {
   return false;
 }
 
+bool SiteRace::isSubPathComplete(FileList * fl) {
+  std::string subpath = getSubPathForFileList(fl);
+  return isSubPathComplete(subpath);
+}
+
 Race * SiteRace::getRace() {
   return race;
 }

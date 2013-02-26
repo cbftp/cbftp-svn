@@ -109,7 +109,9 @@ void Engine::refreshScoreBoard() {
         for (std::list<std::string>::iterator itsp = subpaths.begin(); itsp != subpaths.end(); itsp++) {
           FileList * spfl = srs->getFileListForPath(*itsp);
           if ((*itr)->sizeEstimated(*itsp) && spfl->getNumUploadedFiles() >= (*itr)->estimatedSize(*itsp)) {
-            srs->subPathComplete(spfl);
+            if (!srs->isSubPathComplete(spfl)) {
+              srs->subPathComplete(spfl);
+            }
           }
           else {
             racecomplete = false;

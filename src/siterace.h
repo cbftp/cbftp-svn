@@ -47,6 +47,7 @@ class SiteRace {
     void complete();
     void subPathComplete(FileList *);
     bool isSubPathComplete(std::string);
+    bool isSubPathComplete(FileList *);
     void reportSize(FileList *, unsigned int);
     int getObservedTime(FileList *);
     int getSFVObservedTime(FileList *);
