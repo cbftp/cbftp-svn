@@ -29,9 +29,11 @@ void RawDataScreen::update() {
   if (rawcommandswitch) {
     if (rawcommandmode) {
       rawcommandmode = false;
+      curs_set(0);
     }
     else {
       rawcommandmode = true;
+      curs_set(1);
     }
     rawcommandswitch = false;
     redraw();
@@ -55,7 +57,10 @@ void RawDataScreen::update() {
     }
   }
   if (rawcommandmode) {
-    TermInt::printStr(window, rownum, 0, "[Raw command]: " + rawcommandfield.getContentText());
+    std::string pretag = "[Raw command]: ";
+    TermInt::printStr(window, rownum, 0, pretag + rawcommandfield.getContentText());
+
+    TermInt::moveCursor(window, rownum, pretag.length() + rawcommandfield.cursorPosition());
   }
 }
 
