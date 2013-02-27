@@ -195,6 +195,10 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       uicommunicator->newCommand("update");
       //go up one directory level, or return if at top already
       break;
+    case KEY_F(5):
+      requestid = sitethread->requestFileList(list.getPath());
+      uicommunicator->newCommand("update");
+      break;
     case KEY_DOWN:
       //go down and highlight next item (if not at bottom already)
       update = list.goNext();
