@@ -1,5 +1,9 @@
 #include "menuselectoptiontextfield.h"
 
+MenuSelectOptionTextField::MenuSelectOptionTextField() {
+  textfield = TextInputField("", 0, 0, false);
+  init("none", 0, 0, "none");
+}
 MenuSelectOptionTextField::MenuSelectOptionTextField(std::string identifier, int row, int col, std::string label, std::string starttext, int visiblelen, int maxlen, bool secret) {
   textfield = TextInputField(starttext, visiblelen, maxlen, secret);
   init(identifier, row, col, label);

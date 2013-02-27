@@ -5,36 +5,98 @@ RawDataScreen::RawDataScreen(WINDOW * window, UICommunicator * uicommunicator, u
   sitename = uicommunicator->getArg1();
   threadid = global->str2Int(uicommunicator->getArg2());
   uicommunicator->expectBackendPush();
-  SiteThread * sitethread = global->getSiteThreadManager()->getSiteThread(sitename);
+  sitethread = global->getSiteThreadManager()->getSiteThread(sitename);
   threads = sitethread->getConns()->size();
   this->rawbuf = sitethread->getConn(threadid)->getRawBuffer();
   rawbuf->uiWatching(true);
   readfromcopy = false;
+  rawcommandmode = false;
+  rawcommandswitch = false;
   copyreadpos = 0;
   init(window, row, col);
 }
 
 void RawDataScreen::redraw() {
   werase(window);
+  if (rawcommandmode) {
+    std::string oldtext = rawcommandfield.getData();
+    rawcommandfield = MenuSelectOptionTextField("rawcommand", row-1, 10, "", oldtext, col-10, 65536, false);
+  }
+  update();
+}
+
+void RawDataScreen::update() {
+  if (rawcommandswitch) {
+    if (rawcommandmode) {
+      rawcommandmode = false;
+    }
+    else {
+      rawcommandmode = true;
+    }
+    rawcommandswitch = false;
+    redraw();
+    return;
+  }
+  werase(window);
+  unsigned int rownum = row;
+  if (rawcommandmode) {
+    rownum = row - 1;
+  }
   if (!readfromcopy) {
-    unsigned int numlinestoprint = rawbuf->getSize() < row ? rawbuf->getSize() : row;
+    unsigned int numlinestoprint = rawbuf->getSize() < rownum ? rawbuf->getSize() : rownum;
     for (unsigned int i = 0; i < numlinestoprint; i++) {
       TermInt::printStr(window, i, 0, rawbuf->getLine(numlinestoprint - i - 1));
     }
   }
   else {
-    unsigned int numlinestoprint = copysize < row ? copysize : row;
+    unsigned int numlinestoprint = copysize < rownum ? copysize : rownum;
     for (unsigned int i = 0; i < numlinestoprint; i++) {
       TermInt::printStr(window, i, 0, rawbuf->getLineCopy(numlinestoprint - i - 1 + copyreadpos));
     }
   }
-}
-
-void RawDataScreen::update() {
-  redraw();
+  if (rawcommandmode) {
+    TermInt::printStr(window, rownum, 0, "[Raw command]: " + rawcommandfield.getContentText());
+  }
 }
 
 void RawDataScreen::keyPressed(unsigned int ch) {
+  if (rawcommandmode) {
+    if ((ch >= 32 && ch <= 126) || ch == 10 || ch == 27 || ch == KEY_LEFT || ch == KEY_RIGHT || ch == KEY_BACKSPACE || ch == 8) {
+      if ((ch >= 32 && ch <= 126) || ch == KEY_BACKSPACE || ch == 8) {
+        rawcommandfield.inputChar(ch);
+      }
+      else if (ch == 10) {
+        std::string command = rawcommandfield.getData();
+        if (command == "") {
+          rawcommandswitch = true;
+          uicommunicator->newCommand("updatesetlegend");
+          return;
+        }
+        else {
+          readfromcopy = false;
+          sitethread->issueRawCommand(threadid, command);
+          rawcommandfield.clear();
+        }
+      }
+      else if (ch == 27) {
+        if (rawcommandfield.getData() != "") {
+          rawcommandfield.clear();
+        }
+        else {
+          rawcommandswitch = true;
+          uicommunicator->newCommand("updatesetlegend");
+          return;
+        }
+      }
+      else if (ch == KEY_LEFT) {
+      }
+      else if (ch == KEY_RIGHT) {
+
+      }
+      uicommunicator->newCommand("update");
+      return;
+    }
+  }
   switch(ch) {
     case KEY_RIGHT:
       if (threadid + 1 < threads) {
@@ -88,9 +150,27 @@ void RawDataScreen::keyPressed(unsigned int ch) {
       rawbuf->uiWatching(false);
       uicommunicator->newCommand("return");
       break;
+    case 'c':
+      sitethread->connectThread(threadid);
+      break;
+    case 'd':
+      sitethread->disconnectThread(threadid);
+      break;
+    case 'w':
+      rawcommandswitch = true;
+      uicommunicator->newCommand("updatesetlegend");
+      break;
+    case 27: // esc
+      rawbuf->uiWatching(false);
+      uicommunicator->newCommand("return");
+      break;
+
   }
 }
 
 std::string RawDataScreen::getLegendText() {
-  return "[Left] Previous screen - [Right] Next screen - [Enter] Return - [Pgup] Scroll up - [Pgdn] Scroll down";
+  if (rawcommandmode) {
+    return "[Enter] Send command - [Pgup] Scroll up - [Pgdn] Scroll down - [ESC] clear / exit - [Any] Input to text";
+  }
+  return "[Left] Previous screen - [Right] Next screen - [Enter] Return - [Pgup] Scroll up - [Pgdn] Scroll down - [c]onnect - [d]isconnect - ra[w] command";
 }

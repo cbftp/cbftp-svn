@@ -10,6 +10,7 @@ class MenuSelectOptionTextField : public MenuSelectOptionElement {
 private:
   TextInputField textfield;
 public:
+  MenuSelectOptionTextField();
   MenuSelectOptionTextField(std::string, int, int, std::string, std::string, int, int, bool);
   std::string getContentText();
   void inputChar(int);

@@ -549,6 +549,32 @@ int SiteThread::getCurrUp() {
   return site->getMaxUp() - slots_up;
 }
 
+void SiteThread::connectThread(int id) {
+  if (connstatetracker[id].isDisconnected()) {
+    if (wantedloggedin < site->getMaxLogins()) {
+      wantedloggedin++;
+    }
+    connstatetracker[id].setIdle();
+    conns[id]->loginAsync();
+  }
+}
+
+void SiteThread::disconnectThread(int id) {
+  if (!connstatetracker[id].isDisconnected()) {
+    if (wantedloggedin > 0) {
+      wantedloggedin--;
+    }
+    connstatetracker[id].setDisconnected();
+    conns[id]->doQUITAsync();
+    loggedin--;
+  }
+}
+
+void SiteThread::issueRawCommand(unsigned int id, std::string command) {
+  connectThread(id);
+  conns[id]->doRaw(command);
+}
+
 void SiteThread::raceGlobalComplete() {
   bool stillactive = false;
   for (unsigned int i = 0; i < races.size(); i++) {

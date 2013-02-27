@@ -29,6 +29,7 @@ void UserInterface::initIntern() {
     printf("Error: terminal too small. 80x24 required. (Current %dx%d)\n", col, row);
     initret = false;
   }
+  set_escdelay(25);
   sem_post(&initdone);
 }
 

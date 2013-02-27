@@ -76,6 +76,8 @@ class FTPThread {
     void unsetProtectedModeAsync();
     void doPROTPT();
     void doPROTCT();
+    void doRaw(std::string);
+    void doRawT(std::string);
     bool doCPSV(std::string **);
     void doCPSVT(std::string **, sem_t *);
     bool doPASV(std::string **);

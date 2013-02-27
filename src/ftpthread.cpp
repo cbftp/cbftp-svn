@@ -354,6 +354,15 @@ void FTPThread::doPROTCT() {
   }
 }
 
+void FTPThread::doRaw(std::string command) {
+  putCommand(new CommandQueueElement(18, (void *) new std::string(command)));
+}
+
+void FTPThread::doRawT(std::string command) {
+  write(command.c_str());
+  read();
+}
+
 bool FTPThread::doCPSV(std::string ** ret) {
   sem_t donesem;
   putCommand(new CommandQueueElement(13, &donesem, (void *) ret));
@@ -633,6 +642,10 @@ void FTPThread::runInstance() {
         break;
       case 17:
         doPROTPT();
+        break;
+      case 18:
+        doRawT(*(std::string *)command->getArg1());
+        delete (std::string *)command->getArg1();
         break;
       case 20:
         doRETRAsyncT(*(std::string *)command->getArg1(), (int *)command->getArg2(), command->getDoneSem());

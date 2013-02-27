@@ -75,6 +75,9 @@ class SiteThread {
     int getCurrDown();
     int getCurrUp();
     int getCurrLogins();
+    void connectThread(int);
+    void disconnectThread(int);
+    void issueRawCommand(unsigned int, std::string);
     void raceGlobalComplete();
     void raceLocalComplete(SiteRace *);
     void transferComplete(bool isdownload);
