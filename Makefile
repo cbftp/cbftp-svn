@@ -1,6 +1,6 @@
 include Makefile.inc
 
-BINS = clusterbomb datafilecat
+BINS = clusterbomb datafilecat datafilewrite
 
 BINDIR = bin
 
@@ -17,6 +17,9 @@ clusterbomb: sources mkdirs
 	
 datafilecat: src/crypto.cpp src/datafilecat.cpp mkdirs
 	g++ -o bin/datafilecat ${FINALFLAGS} -DNO_LOCAL_DEPS src/crypto.cpp src/datafilecat.cpp $(LINKFLAGS)
+
+datafilewrite: src/crypto.cpp src/datafilewrite.cpp mkdirs
+	g++ -o bin/datafilewrite ${FINALFLAGS} -DNO_LOCAL_DEPS src/crypto.cpp src/datafilewrite.cpp $(LINKFLAGS)
 	
 clean:
 	@cd src; ${MAKE} clean
