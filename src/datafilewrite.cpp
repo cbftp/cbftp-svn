@@ -2,7 +2,7 @@
 
 int main(int argc, char ** argv) {
   if (argc < 4) {
-    std::cout << "datafilewrite: encrypts the content of a clusterbomb plain text data file.\n\nUsage: datafilecat <plaintextfile> <crypto key> <datafile>" << std::endl;
+    std::cout << "datafilewrite: encrypts the content of a clusterbomb plain text data file.\n\nUsage: datafilecat <plaintextdatafile> <crypto key> <outdatafile>" << std::endl;
     return 0;
   }
   char * path = argv[1];
