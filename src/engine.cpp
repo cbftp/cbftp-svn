@@ -6,6 +6,7 @@ Engine::Engine() {
   list_refresh = global->getListRefreshSem();
   sem_init(&race_sem, 0, 0);
   pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
+  pthread_setname_np(thread, "EngineThread");
 }
 
 void Engine::newRace(std::string release, std::string section, std::list<std::string> sites) {

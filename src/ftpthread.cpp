@@ -22,6 +22,7 @@ FTPThread::FTPThread(int id, Site * site, FTPThreadCom * ftpthreadcom) {
   sem_init(&transfersem, 0, 0);
   pthread_mutex_init(&commandq_mutex, NULL);
   pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
+  pthread_setname_np(thread, "FTPThread");
 }
 
 int FTPThread::getId() {

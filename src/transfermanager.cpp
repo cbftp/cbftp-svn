@@ -7,7 +7,8 @@ TransferManager::TransferManager() {
   sem_init(&transfercheckoutsem, 0, 0);
   pthread_mutex_init(&inuse_mutex, NULL);
   for (int i = 0; i < 10; i++) {
-    pthread_create(&threadid[threads++], global->getPthreadAttr(), runTransfer, (void *) this);
+    pthread_create(&threadid[threads], global->getPthreadAttr(), runTransfer, (void *) this);
+    pthread_setname_np(threadid[threads++], "TransferThread");
   }
 }
 

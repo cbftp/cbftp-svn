@@ -20,6 +20,7 @@ SiteThread::SiteThread(std::string sitename) {
     conns.push_back(new FTPThread(i, site, ftpthreadcom));
   }
   pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
+  pthread_setname_np(thread, "SiteThread");
 }
 
 SiteThread::~SiteThread() {

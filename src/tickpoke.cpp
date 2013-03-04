@@ -2,6 +2,7 @@
 
 TickPoke::TickPoke() {
   pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
+  pthread_setname_np(thread, "TickPokeThread");
 }
 
 void TickPoke::runInstance() {

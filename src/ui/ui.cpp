@@ -7,8 +7,10 @@ UserInterface::UserInterface() {
   main = NULL;
   topwindow = NULL;
   legendenabled = false;
-  pthread_create(&thread[0], global->getPthreadAttr(), runKeyListener, (void *) this);
-  pthread_create(&thread[1], global->getPthreadAttr(), runUserInterface, (void *) this);
+  pthread_create(&klthread, global->getPthreadAttr(), runKeyListener, (void *) this);
+  pthread_create(&uithread, global->getPthreadAttr(), runUserInterface, (void *) this);
+  pthread_setname_np(klthread, "UIKeyThread");
+  pthread_setname_np(uithread, "UIThread");
 }
 
 bool UserInterface::init() {

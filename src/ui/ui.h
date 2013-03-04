@@ -48,7 +48,8 @@ class UserInterface {
     bool tickerenabled;
     bool legendenabled;
     std::string eventtext;
-    pthread_t thread[2];
+    pthread_t uithread;
+    pthread_t klthread;
     sem_t initstart;
     sem_t initdone;
     sem_t keyeventdone;
