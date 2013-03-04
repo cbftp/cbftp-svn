@@ -9,7 +9,7 @@ PotentialTracker::PotentialTracker(int slots) {
   sem_init(&tick, 0, 0);
   global->getTickPoke()->startPoke(&tick, POTENTIALITY_LIFESPAN * 1000 / POTENTIALITY_SLICES, 0);
   pthread_create(&thread, global->getPthreadAttr(), runPotentialTracker, (void *) this);
-  pthread_setname_np(thread, "PotentialTrackerThread");
+  pthread_setname_np(thread, "PTrackerThread");
 }
 
 int PotentialTracker::getMaxAvailablePotential() {
