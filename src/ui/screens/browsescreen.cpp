@@ -253,11 +253,14 @@ void BrowseScreen::keyPressed(unsigned int ch) {
         uicommunicator->newCommand("update");
       }
       break;
+    case 'w':
+      uicommunicator->newCommand("rawcommand", site->getName());
+      break;
   }
 }
 
 std::string BrowseScreen::getLegendText() {
-  return "[c]ancel - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [b]ind to section - [s]ort";
+  return "[c]ancel - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [b]ind to section - [s]ort - ra[w] command";
 }
 
 void BrowseScreen::sort() {

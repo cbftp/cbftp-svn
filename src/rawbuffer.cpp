@@ -1,5 +1,6 @@
 #include "rawbuffer.h"
 #include <iostream>
+
 RawBuffer::RawBuffer(unsigned int maxlength, std::string site, std::string id) {
   latestp = 0;
   latestpcopy = 0;
@@ -8,7 +9,19 @@ RawBuffer::RawBuffer(unsigned int maxlength, std::string site, std::string id) {
   this->id = id;
   inprogress = false;
   uiwatching = false;
+  threads = true;
   writeLine("Log window initialized. Site: " + site + " Thread id: " + id);
+}
+
+RawBuffer::RawBuffer(std::string site) {
+  latestp = 0;
+  latestpcopy = 0;
+  this->maxlength = 1024;
+  this->site = site;
+  inprogress = false;
+  uiwatching = false;
+  threads = false;
+  writeLine("Raw command window initialized. Site: " + site);
 }
 
 void RawBuffer::write(std::string s) {
@@ -26,7 +39,7 @@ void RawBuffer::write(std::string s) {
       log[(latestp > 0 ? latestp : maxlength) - 1].append(s);
     }
     else {
-      s = "[" + global->ctimeLog() + " " + site + " " + id + "] " + s;
+      s = "[" + global->ctimeLog() + " " + site + (threads ? " " + id : "") + "] " + s;
       if (log.size() < maxlength) log.push_back(s);
       else log[latestp] = s;
       if (++latestp == maxlength) latestp = 0;

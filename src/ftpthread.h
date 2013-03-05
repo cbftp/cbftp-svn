@@ -77,7 +77,8 @@ class FTPThread {
     void doPROTPT();
     void doPROTCT();
     void doRaw(std::string);
-    void doRawT(std::string);
+    void getRawAsync(std::string, int);
+    void getRawT(std::string, int);
     bool doCPSV(std::string **);
     void doCPSVT(std::string **, sem_t *);
     bool doPASV(std::string **);
@@ -107,7 +108,8 @@ class FTPThread {
     void refreshRaceFileListAsync(SiteRace *);
     void refreshRaceFileListT(SiteRace *);
     void getFileListAsync(std::string);
-    void getFileListT(std::string);
+    void getFileListAsync(std::string, int);
+    void getFileListT(std::string, int);
     std::list<CommandQueueElement *> * getCommandQueue();
     void runInstance();
     void putCommand(CommandQueueElement *);

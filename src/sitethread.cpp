@@ -12,6 +12,7 @@ SiteThread::SiteThread(std::string sitename) {
   available = 0;
   loggedin = 0;
   wantedloggedin = 0;
+  rawbuf = new RawBuffer(site->getName());
   int logins = site->getMaxLogins();
   list_refresh = global->getListRefreshSem();
   global->getTickPoke()->startPoke(&notifysem, 50, 0);
@@ -133,9 +134,14 @@ void SiteThread::runInstance() {
     else {
       CommandQueueElement * command = ftpthreadcom->getCommand();
       int id = *(int *)command->getArg1();
+      int * reqidp;
+      int reqid;
+      FileList * ret;
+      std::string * rets;
       int status;
       std::string reply;
       std::list<SiteThreadRequest>::iterator it;
+      bool matchingrequest = false;
       delete (int *)command->getArg1();
       switch(command->getOpcode()) {
         case 0: // login successful / ready to work
@@ -207,15 +213,44 @@ void SiteThread::runInstance() {
           if (tmpi == 0) sem_post(list_refresh);
           handleConnection(id, true);
           break;
-        case 11: // file list retrieved
-          FileList * filelist = (FileList *)command->getArg2();
+        case 11: // filelist request retrieved
+          reqidp = (int *)command->getArg2();
+          reqid = *reqidp;
+          delete reqidp;
+          ret = (FileList *) command->getArg3();
+          matchingrequest = false;
           for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
-            if (it->requestPath() == filelist->getPath()) {
-              requestsready.push_back(SiteThreadRequestReady(it->requestId(), filelist));
+            if (it->requestId() == reqid) {
+              requestsready.push_back(SiteThreadRequestReady(it->requestId(), ret));
               requestsinprogress.erase(it);
               global->getUICommunicator()->backendPush();
+              matchingrequest = true;
               break;
             }
+          }
+          if (!matchingrequest) {
+            delete ret;
+          }
+          handleConnection(id);
+          break;
+        case 12: // rawcommand result retrieved
+          reqidp = (int *)command->getArg2();
+          reqid = *reqidp;
+          delete reqidp;
+          rets = (std::string *) command->getArg3();
+          rawbuf->writeLine(std::string(*rets));
+          matchingrequest = false;
+          for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
+            if (it->requestId() == reqid) {
+              requestsready.push_back(SiteThreadRequestReady(it->requestId(), rets));
+              requestsinprogress.erase(it);
+              global->getUICommunicator()->backendPush();
+              matchingrequest = true;
+              break;
+            }
+          }
+          if (!matchingrequest) {
+            delete rets;
           }
           handleConnection(id);
           break;
@@ -300,14 +335,27 @@ void SiteThread::handleConnection(int id, bool backfromrefresh) {
 
 void SiteThread::handleRequest(int id) {
   connstatetracker[id].setReady();
-  conns[id]->getFileListAsync(requests.front().requestPath());
+  if (requests.front().requestType() == 0) {
+    conns[id]->getFileListAsync(requests.front().requestData(), requests.front().requestId());
+  }
+  else {
+    rawbuf->writeLine(requests.front().requestData());
+    conns[id]->getRawAsync(requests.front().requestData(), requests.front().requestId());
+  }
   requestsinprogress.push_back(requests.front());
   requests.pop_front();
 }
 
 int SiteThread::requestFileList(std::string path) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteThreadRequest(requestid, path));
+  requests.push_back(SiteThreadRequest(requestid, 0, path));
+  sem_post(&notifysem);
+  return requestid;
+}
+
+int SiteThread::requestRawCommand(std::string command) {
+  int requestid = requestidcounter++;
+  requests.push_back(SiteThreadRequest(requestid, 1, command));
   sem_post(&notifysem);
   return requestid;
 }
@@ -326,10 +374,22 @@ FileList * SiteThread::getFileList(int requestid) {
   std::list<SiteThreadRequestReady>::iterator it;
   for (it = requestsready.begin(); it != requestsready.end(); it++) {
     if (it->requestId() == requestid) {
-      return it->requestFileList();
+      return (FileList *) it->requestData();
     }
   }
   return NULL;
+}
+
+std::string SiteThread::getRawCommandResult(int requestid) {
+  std::list<SiteThreadRequestReady>::iterator it;
+  for (it = requestsready.begin(); it != requestsready.end(); it++) {
+    if (it->requestId() == requestid) {
+      std::string ret = *(std::string *) it->requestData();
+      delete (std::string *) it->requestData();
+      return ret;
+    }
+  }
+  return "";
 }
 
 void SiteThread::finishRequest(int requestid) {
@@ -573,7 +633,12 @@ void SiteThread::disconnectThread(int id) {
 
 void SiteThread::issueRawCommand(unsigned int id, std::string command) {
   connectThread(id);
+  rawbuf->writeLine(command);
   conns[id]->doRaw(command);
+}
+
+RawBuffer * SiteThread::getRawCommandBuffer() {
+  return rawbuf;
 }
 
 void SiteThread::raceGlobalComplete() {

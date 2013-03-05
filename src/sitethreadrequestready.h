@@ -7,9 +7,9 @@ class FileList;
 class SiteThreadRequestReady {
 private:
   int requestid;
-  FileList * filelist;
+  void * data;
 public:
-  SiteThreadRequestReady(int, FileList *);
+  SiteThreadRequestReady(int, void *);
   int requestId();
-  FileList * requestFileList();
+  void * requestData();
 };

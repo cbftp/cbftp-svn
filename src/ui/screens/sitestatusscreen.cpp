@@ -55,9 +55,12 @@ void SiteStatusScreen::keyPressed(unsigned int ch) {
     case 'b':
       uicommunicator->newCommand("browse", site->getName());
       break;
+    case 'w':
+      uicommunicator->newCommand("rawcommand", site->getName());
+      break;
   }
 }
 
 std::string SiteStatusScreen::getLegendText() {
-  return "[Right] Raw data screens - [Enter] Return - [E]dit site";
+  return "[Right] Raw data screens - [Enter] Return - ra[w] command - [E]dit site";
 }

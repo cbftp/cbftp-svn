@@ -5,9 +5,11 @@
 class SiteThreadRequest {
 private:
   int requestid;
-  std::string path;
+  int requesttype;
+  std::string data;
 public:
-  SiteThreadRequest(int, std::string);
+  SiteThreadRequest(int, int, std::string);
   int requestId();
-  std::string requestPath();
+  int requestType();
+  std::string requestData();
 };

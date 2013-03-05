@@ -1,14 +1,14 @@
 #include "sitethreadrequestready.h"
 
-SiteThreadRequestReady::SiteThreadRequestReady(int requestid, FileList * filelist) {
+SiteThreadRequestReady::SiteThreadRequestReady(int requestid, void * data) {
   this->requestid = requestid;
-  this->filelist = filelist;
+  this->data = data;
 }
 
 int SiteThreadRequestReady::requestId() {
   return requestid;
 }
 
-FileList * SiteThreadRequestReady::requestFileList() {
-  return filelist;
+void * SiteThreadRequestReady::requestData() {
+  return data;
 }

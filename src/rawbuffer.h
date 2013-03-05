@@ -18,9 +18,11 @@ class RawBuffer {
     std::string site;
     std::string id;
     bool inprogress;
+    bool threads;
     bool uiwatching;
   public:
     RawBuffer(unsigned int, std::string, std::string);
+    RawBuffer(std::string);
     void setId(int);
     void write(std::string);
     void writeLine(std::string);

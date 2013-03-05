@@ -65,10 +65,20 @@ void FTPThreadCom::fileListUpdated(int id, SiteRace * sr) {
   putCommand(id, 10, (void *) sr, NULL);
 }
 
-void FTPThreadCom::fileListRetrieved(int id, FileList * filelist) {
+void FTPThreadCom::fileListRetrieved(int id, int reqid, FileList * filelist) {
   int * idp = new int(id);
+  int * reqidp = new int(reqid);
   pthread_mutex_lock(&commandqueue_mutex);
-  commandqueue.push_back(new CommandQueueElement(11, (void *) idp, (void *) filelist, (void *) NULL));
+  commandqueue.push_back(new CommandQueueElement(11, (void *) idp, (void *) reqidp, (void *) filelist));
+  pthread_mutex_unlock(&commandqueue_mutex);
+  sem_post(notifysem);
+}
+
+void FTPThreadCom::rawCommandResultRetrieved(int id, int reqid, std::string * ret) {
+  int * idp = new int(id);
+  int * reqidp = new int(reqid);
+  pthread_mutex_lock(&commandqueue_mutex);
+  commandqueue.push_back(new CommandQueueElement(12, (void *) idp, (void *) reqidp, (void *) ret));
   pthread_mutex_unlock(&commandqueue_mutex);
   sem_post(notifysem);
 }

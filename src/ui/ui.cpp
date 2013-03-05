@@ -121,6 +121,7 @@ void UserInterface::runUserInterfaceInstance() {
   UIWindow * editsitescreen;
   UIWindow * sitestatusscreen;
   UIWindow * rawdatascreen;
+  UIWindow * rawcommandscreen;
   UIWindow * browsescreen;
   UIWindow * addsectionscreen;
   UIWindow * newracescreen;
@@ -246,6 +247,15 @@ void UserInterface::runUserInterfaceInstance() {
         legendwindow->setText(rawdatascreen->getLegendText());
         mainwindows.push_back(rawdatascreen);
         topwindow = rawdatascreen;
+        refreshAll();
+        uicommunicator.checkoutCommand();
+      }
+      else if (command  == "rawcommand") {
+        history.push_back(topwindow);
+        rawcommandscreen = new RawCommandScreen(main, &uicommunicator, mainrow, maincol);
+        legendwindow->setText(rawcommandscreen->getLegendText());
+        mainwindows.push_back(rawcommandscreen);
+        topwindow = rawcommandscreen;
         refreshAll();
         uicommunicator.checkoutCommand();
       }

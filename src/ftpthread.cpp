@@ -297,10 +297,14 @@ int FTPThread::updateFileList(FileList * filelist) {
 }
 
 void FTPThread::getFileListAsync(std::string path) {
-  putCommand(new CommandQueueElement(12, (void *) new std::string(path)));
+  getFileListAsync(path, -1);
 }
 
-void FTPThread::getFileListT(std::string path) {
+void FTPThread::getFileListAsync(std::string path, int id) {
+  putCommand(new CommandQueueElement(12, (void *) new std::string(path), (void *) new int(id)));
+}
+
+void FTPThread::getFileListT(std::string path, int id) {
   FileList * filelist = new FileList(site->getUser(), path);
   if (currentpath != path) {
     if (!doCWDT(path)) {
@@ -308,7 +312,7 @@ void FTPThread::getFileListT(std::string path) {
     }
   }
   updateFileList(filelist);
-  ftpthreadcom->fileListRetrieved(id, filelist);
+  ftpthreadcom->fileListRetrieved(this->id, id, filelist);
 }
 
 std::string FTPThread::getCurrentPath() {
@@ -356,12 +360,20 @@ void FTPThread::doPROTCT() {
 }
 
 void FTPThread::doRaw(std::string command) {
-  putCommand(new CommandQueueElement(18, (void *) new std::string(command)));
+  getRawAsync(command, -1);
 }
 
-void FTPThread::doRawT(std::string command) {
+void FTPThread::getRawAsync(std::string command, int id) {
+  putCommand(new CommandQueueElement(18, (void *) new std::string(command), (void *) new int(id)));
+}
+
+void FTPThread::getRawT(std::string command, int id) {
   write(command.c_str());
-  read();
+  char * reply;
+  readall(&reply, true);
+  std::string * ret = new std::string(reply);
+  delete reply;
+  ftpthreadcom->rawCommandResultRetrieved(this->id, id, ret);
 }
 
 bool FTPThread::doCPSV(std::string ** ret) {
@@ -633,7 +645,9 @@ void FTPThread::runInstance() {
         doPORTT(*(std::string *)command->getArg1(), command->getDoneSem());
         break;
       case 12:
-        getFileListT(*(std::string *)command->getArg1());
+        getFileListT(*(std::string *)command->getArg1(), *(int *)command->getArg2());
+        delete (std::string *)command->getArg1();
+        delete (int *)command->getArg2();
         break;
       case 13:
         doCPSVT((std::string **)command->getArg1(), command->getDoneSem());
@@ -645,8 +659,9 @@ void FTPThread::runInstance() {
         doPROTPT();
         break;
       case 18:
-        doRawT(*(std::string *)command->getArg1());
+        getRawT(*(std::string *)command->getArg1(), *(int *)command->getArg2());
         delete (std::string *)command->getArg1();
+        delete (int *)command->getArg2();
         break;
       case 20:
         doRETRAsyncT(*(std::string *)command->getArg1(), (int *)command->getArg2(), command->getDoneSem());

@@ -3,6 +3,7 @@
 #include <list>
 #include <pthread.h>
 #include <semaphore.h>
+#include <string>
 
 #include "commandqueueelement.h"
 
@@ -28,7 +29,8 @@ class FTPThreadCom {
     void loginKillFailed(int, int, char *);
     void connectionClosedUnexpectedly(int);
     void fileListUpdated(int, SiteRace *);
-    void fileListRetrieved(int, FileList *);
+    void fileListRetrieved(int, int, FileList *);
+    void rawCommandResultRetrieved(int, int, std::string *);
     void putCommand(int, int);
     void putCommand(int, int, int);
     void putCommand(int, int, int, char *);

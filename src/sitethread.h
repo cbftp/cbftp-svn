@@ -19,6 +19,7 @@
 #include "ui/uicommunicator.h"
 #include "tickpoke.h"
 #include "connstatetracker.h"
+#include "rawbuffer.h"
 
 //minimum sleep delay (between refreshes / hammer attempts) in ms
 #define SLEEPDELAY 150
@@ -36,6 +37,7 @@ class SiteThread {
     std::vector<ConnStateTracker> connstatetracker;
     std::vector<SiteRace *> races;
     FTPThreadCom * ftpthreadcom;
+    RawBuffer * rawbuf;
     pthread_t thread;
     pthread_mutex_t slots;
     sem_t notifysem;
@@ -78,13 +80,16 @@ class SiteThread {
     void connectThread(int);
     void disconnectThread(int);
     void issueRawCommand(unsigned int, std::string);
+    RawBuffer * getRawCommandBuffer();
     void raceGlobalComplete();
     void raceLocalComplete(SiteRace *);
     void transferComplete(bool isdownload);
     bool getSlot(bool);
     int requestFileList(std::string);
+    int requestRawCommand(std::string);
     bool requestReady(int);
     FileList * getFileList(int);
+    std::string getRawCommandResult(int);
     void finishRequest(int);
     void requestViewFile(std::string);
     void pushPotential(int, std::string, SiteThread *);

@@ -1,7 +1,7 @@
 #include "mainscreen.h"
 
 MainScreen::MainScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  msslegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [b]rowse site - [A]dd site - [E]dit site - [C]opy site - [D]elete site";
+  msslegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site";
   msolegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option";
   this->uicommunicator = uicommunicator;
   mso.makeLeavableDown();
@@ -162,6 +162,10 @@ void MainScreen::keyPressed(unsigned int ch) {
       case 'b':
         if (mss.getSite() == NULL) break;
         uicommunicator->newCommand("browse", mss.getSite()->getName());
+        break;
+      case 'w':
+        if (mss.getSite() == NULL) break;
+        uicommunicator->newCommand("rawcommand", mss.getSite()->getName());
         break;
     }
   }

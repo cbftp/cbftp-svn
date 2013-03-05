@@ -1,14 +1,19 @@
 #include "sitethreadrequest.h"
 
-SiteThreadRequest::SiteThreadRequest(int requestid, std::string path) {
+SiteThreadRequest::SiteThreadRequest(int requestid, int requesttype, std::string data) {
   this->requestid = requestid;
-  this->path = path;
+  this->requesttype = requesttype;
+  this->data = data;
 }
 
 int SiteThreadRequest::requestId() {
   return requestid;
 }
 
-std::string SiteThreadRequest::requestPath() {
-  return path;
+int SiteThreadRequest::requestType() {
+  return requesttype;
+}
+
+std::string SiteThreadRequest::requestData() {
+  return data;
 }
