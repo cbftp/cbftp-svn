@@ -17,6 +17,7 @@ BrowseScreen::BrowseScreen(WINDOW * window, UICommunicator * uicommunicator, uns
 
 void BrowseScreen::redraw() {
   werase(window);
+  curs_set(0);
   if (requestid >= 0 && sitethread->requestReady(requestid)) {
     if (!virgin) {
       if (list.cursoredFile() != NULL) {

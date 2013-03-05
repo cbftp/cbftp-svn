@@ -11,6 +11,7 @@ SiteStatusScreen::SiteStatusScreen(WINDOW * window, UICommunicator * uicommunica
 
 void SiteStatusScreen::redraw() {
   werase(window);
+  curs_set(0);
   TermInt::printStr(window, 1, 1, "Detailed status for " + site->getName());
   update();
 }
