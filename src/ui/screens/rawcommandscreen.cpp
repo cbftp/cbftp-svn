@@ -41,6 +41,7 @@ void RawCommandScreen::update() {
 }
 
 void RawCommandScreen::keyPressed(unsigned int ch) {
+  unsigned int rownum = row - 1;
   if ((ch >= 32 && ch <= 126) || ch == KEY_BACKSPACE || ch == 8) {
     rawcommandfield.inputChar(ch);
     uicommunicator->newCommand("update");
@@ -75,12 +76,12 @@ void RawCommandScreen::keyPressed(unsigned int ch) {
           readfromcopy = true;
         }
         else {
-          copyreadpos = copyreadpos + row / 2;
-          if (row >= copysize) {
+          copyreadpos = copyreadpos + rownum / 2;
+          if (rownum >= copysize) {
             copyreadpos = 0;
           }
-          else if (copyreadpos + row > copysize) {
-            copyreadpos = copysize - row;
+          else if (copyreadpos + rownum > copysize) {
+            copyreadpos = copysize - rownum;
           }
         }
         uicommunicator->newCommand("update");
@@ -90,11 +91,11 @@ void RawCommandScreen::keyPressed(unsigned int ch) {
           if (copyreadpos == 0) {
             readfromcopy = false;
           }
-          else if (copyreadpos < row / 2) {
+          else if (copyreadpos < rownum / 2) {
             copyreadpos = 0;
           }
           else {
-            copyreadpos = copyreadpos - row / 2;
+            copyreadpos = copyreadpos - rownum / 2;
           }
         }
         uicommunicator->newCommand("update");
