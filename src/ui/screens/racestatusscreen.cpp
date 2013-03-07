@@ -6,6 +6,9 @@ RaceStatusScreen::RaceStatusScreen(WINDOW * window, UICommunicator * uicommunica
   race = global->getEngine()->getRace(release);
   sitestr = "";
   autoupdate = true;
+  spaceous = false;
+  currnumsubpaths = 0;
+  currguessedsize = 0;
   for (std::list<SiteThread *>::iterator it = race->begin(); it != race->end(); it++) {
     sitestr += (*it)->getSite()->getName() + ",";
   }
@@ -18,19 +21,40 @@ RaceStatusScreen::RaceStatusScreen(WINDOW * window, UICommunicator * uicommunica
 
 void RaceStatusScreen::redraw() {
   werase(window);
+  spaceous = false;
   TermInt::printStr(window, 1, 1, "Race status for " + release);
   TermInt::printStr(window, 2, 1, "Section: " + race->getSection());
   TermInt::printStr(window, 2, 20, "Sites: " + sitestr);
   std::list<std::string> currsubpaths = race->getSubPaths();
+  currnumsubpaths = currsubpaths.size();
+  currsubpaths.sort();
+  std::string subpathpresent = "";
   subpaths.clear();
+  unsigned int sumguessedsize = 0;
   for (std::list<std::string>::iterator it = currsubpaths.begin(); it != currsubpaths.end(); it++) {
-    if (race->guessedSize(*it) >= 5 || race->SFVReported(*it)) {
+    if (subpathpresent.length() > 0) {
+      subpathpresent += ", ";
+    }
+    int guessedsize = race->guessedSize(*it);
+    bool sfvreported = race->SFVReported(*it);
+    std::string pathshow = *it;
+    if (pathshow == "") {
+      pathshow = "/";
+    }
+    subpathpresent += pathshow + " (" + global->int2Str(guessedsize) + "f";
+    if (sfvreported) {
+      subpathpresent += "/sfv";
+    }
+    subpathpresent += ")";
+    if (guessedsize >= 5 || sfvreported) {
       subpaths.push_back(*it);
     }
+    sumguessedsize += guessedsize;
   }
-  subpaths.sort();
+  currguessedsize = sumguessedsize;
+  TermInt::printStr(window, 3, 1, "Subpaths: " + subpathpresent);
   bool listed = false;
-  int y = 4;
+  int y = 5;
   int x = 1;
   unsigned int longestsubpath = 0;
   bool pathlencheck = false;
@@ -51,7 +75,16 @@ void RaceStatusScreen::redraw() {
               if (dotpos != std::string::npos && filename.length() > dotpos + 3) {
                 filename = filename.substr(0, dotpos + 4);
               }
-              filenames.push_back(filename);
+              bool duplicate = false;
+              for (std::list<std::string>::iterator it3 = filenames.begin(); it3 != filenames.end(); it3++) {
+                if (filename == *it3) {
+                  duplicate = true;
+                  break;
+                }
+              }
+              if (!duplicate) {
+                filenames.push_back(filename);
+              }
             }
           }
           filenames.sort();
@@ -94,11 +127,21 @@ void RaceStatusScreen::redraw() {
     longestsubpath++;
   }
   int tagx = 8 + longestsubpath;
+  if (filenames.size() * 2 + 10 < col) {
+    spaceous = true;
+  }
   for (std::list<std::string>::iterator it = filenames.begin(); it != filenames.end(); it++) {
-    std::string lastchars = it->substr(it->length() - 3);
+    std::string filename = *it;
+    while (filename.length() < 3) {
+      filename += " ";
+    }
+    std::string lastchars = filename.substr(filename.length() - 3);
     TermInt::printStr(window, y, tagx, lastchars.substr(0, 1));
     TermInt::printStr(window, y+1, tagx, lastchars.substr(1, 1));
     TermInt::printStr(window, y+2, tagx++, lastchars.substr(2));
+    if (spaceous) {
+      tagx++;
+    }
   }
   y = y + 4;
   for (std::list<SiteThread *>::iterator it = race->begin(); it != race->end(); it++) {
@@ -116,15 +159,11 @@ void RaceStatusScreen::redraw() {
 
 void RaceStatusScreen::update() {
   std::list<std::string> currsubpaths = race->getSubPaths();
-  std::list<std::string> carepaths;
+  unsigned int sumguessedsize = 0;
   for (std::list<std::string>::iterator it = currsubpaths.begin(); it != currsubpaths.end(); it++) {
-    if (race->guessedSize(*it) >= 5 || race->SFVReported(*it)) {
-      carepaths.push_back(*it);
-    }
+    sumguessedsize += race->guessedSize(*it);
   }
-  carepaths.sort();
-  if (carepaths != subpaths) {
-    subpaths = carepaths;
+  if (currsubpaths.size() != currnumsubpaths || sumguessedsize != currguessedsize) {
     redraw();
     return;
   }

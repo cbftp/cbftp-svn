@@ -24,6 +24,9 @@ public:
   std::string getLegendText();
 private:
   Race * race;
+  bool spaceous;
+  unsigned int currnumsubpaths;
+  unsigned int currguessedsize;
   std::string release;
   std::string sitestr;
   std::list<std::string> subpaths;
