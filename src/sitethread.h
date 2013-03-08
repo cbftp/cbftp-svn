@@ -36,6 +36,7 @@ class SiteThread {
     std::vector<FTPThread *> conns;
     std::vector<ConnStateTracker> connstatetracker;
     std::vector<SiteRace *> races;
+    std::list<SiteRace *> recentlylistedraces;
     FTPThreadCom * ftpthreadcom;
     RawBuffer * rawbuf;
     pthread_t thread;
@@ -58,6 +59,8 @@ class SiteThread {
     void handleConnection(int);
     void handleConnection(int, bool);
     void handleRequest(int);
+    void addRecentList(SiteRace *);
+    bool wasRecentlyListed(SiteRace *);
     static void * run(void *);
   public:
     SiteThread(std::string);

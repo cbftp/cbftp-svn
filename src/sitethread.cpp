@@ -288,16 +288,23 @@ void SiteThread::handleConnection(int id, bool backfromrefresh) {
     }
     else {
       for (unsigned int i = 0; i < races.size(); i++) {
-        if (!races[i]->isDone()) {
+        if (!races[i]->isDone() && !wasRecentlyListed(races[i])) {
           race = races[i];
-          refresh = true;
-          if (races[i] == lastchecked) {
-            connstatetracker[id].check(race);
-            continue;
-          }
-          connstatetracker[id].check(race);
           break;
         }
+      }
+      if (race == NULL) {
+        for (std::list<SiteRace *>::iterator it = recentlylistedraces.begin(); it != recentlylistedraces.end(); it++) {
+          if (!(*it)->isDone()) {
+            race = *it;
+            break;
+          }
+        }
+      }
+      if (race != NULL) {
+        refresh = true;
+        connstatetracker[id].check(race);
+        addRecentList(race);
       }
     }
     if (race == NULL) {
@@ -344,6 +351,25 @@ void SiteThread::handleRequest(int id) {
   }
   requestsinprogress.push_back(requests.front());
   requests.pop_front();
+}
+
+void SiteThread::addRecentList(SiteRace * sr) {
+  for (std::list<SiteRace *>::iterator it = recentlylistedraces.begin(); it != recentlylistedraces.end(); it++) {
+    if (*it == sr) {
+      recentlylistedraces.erase(it);
+      break;
+    }
+  }
+  recentlylistedraces.push_back(sr);
+}
+
+bool SiteThread::wasRecentlyListed(SiteRace * sr) {
+  for (std::list<SiteRace *>::iterator it = recentlylistedraces.begin(); it != recentlylistedraces.end(); it++) {
+    if (*it == sr) {
+      return true;
+    }
+  }
+  return false;
 }
 
 int SiteThread::requestFileList(std::string path) {
