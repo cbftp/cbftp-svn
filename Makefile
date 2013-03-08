@@ -20,7 +20,10 @@ datafilecat: src/crypto.cpp src/datafilecat.cpp mkdirs
 
 datafilewrite: src/crypto.cpp src/datafilewrite.cpp mkdirs
 	g++ -o bin/datafilewrite ${FINALFLAGS} -DNO_LOCAL_DEPS src/crypto.cpp src/datafilewrite.cpp $(LINKFLAGS)
-	
+
+linecount:
+	find|grep -e '\.h$$' -e '\.cpp$$'|awk '{print $$1}'|xargs wc -l	
+
 clean:
 	@cd src; ${MAKE} clean
 	rm -rf ${BINDIR}
