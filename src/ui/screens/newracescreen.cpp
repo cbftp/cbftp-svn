@@ -6,7 +6,7 @@ NewRaceScreen::NewRaceScreen(WINDOW * window, UICommunicator * uicommunicator, u
   currentlegendtext = defaultlegendtext;
   active = false;
   toggleall = true;
-  unsigned int y = 4;
+  unsigned int y = 2;
   unsigned int x = 1;
   sectionupdate = false;
   std::string sectionstring = uicommunicator->getArg2();
@@ -54,9 +54,8 @@ void NewRaceScreen::redraw() {
     }
   }
   werase(window);
-  TermInt::printStr(window, 1, 1, "-== NEW RACE ==-");
-  TermInt::printStr(window, 3, 1, "Release: " + release);
-  TermInt::printStr(window, 4, 1, "Section: ");
+  TermInt::printStr(window, 1, 1, "Release: " + release);
+  TermInt::printStr(window, 2, 1, "Section: ");
   bool highlight;
   for (unsigned int i = 0; i < msos.size(); i++) {
     MenuSelectOptionElement * msoe = msos.getElement(i);
@@ -220,6 +219,10 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
 
 std::string NewRaceScreen::getLegendText() {
   return currentlegendtext;
+}
+
+std::string NewRaceScreen::getInfoLabel() {
+  return "START NEW RACE";
 }
 
 std::string NewRaceScreen::getSectionButtonText(MenuSelectOptionElement * msoe) {

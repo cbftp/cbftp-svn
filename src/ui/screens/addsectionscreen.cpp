@@ -5,7 +5,7 @@ AddSectionScreen::AddSectionScreen(WINDOW * window, UICommunicator * uicommunica
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel";
   currentlegendtext = defaultlegendtext;
   active = false;
-  unsigned int y = 3;
+  unsigned int y = 1;
   unsigned int x = 1;
   modsite = global->getSiteManager()->getSite(uicommunicator->getArg1());
   mso.addStringField(y++, x, "name", "Name:", "", false);
@@ -15,7 +15,6 @@ AddSectionScreen::AddSectionScreen(WINDOW * window, UICommunicator * uicommunica
 
 void AddSectionScreen::redraw() {
   werase(window);
-  TermInt::printStr(window, 1, 1, "-== ADD SECTION ==-");
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     MenuSelectOptionElement * msoe = mso.getElement(i);
@@ -99,4 +98,8 @@ void AddSectionScreen::keyPressed(unsigned int ch) {
 
 std::string AddSectionScreen::getLegendText() {
   return currentlegendtext;
+}
+
+std::string AddSectionScreen::getInfoLabel() {
+  return "ADD SECTION";
 }

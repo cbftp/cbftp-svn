@@ -181,3 +181,7 @@ std::string RawDataScreen::getLegendText() {
   }
   return "[Left] Previous screen - [Right] Next screen - [Enter] Return - [Pgup] Scroll up - [Pgdn] Scroll down - [c]onnect - [d]isconnect - ra[w] command";
 }
+
+std::string RawDataScreen::getInfoLabel() {
+  return "RAW DATA: " + sitename + " #" + global->int2Str(threadid);
+}

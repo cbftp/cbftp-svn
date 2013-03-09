@@ -264,6 +264,10 @@ std::string BrowseScreen::getLegendText() {
   return "[c]ancel - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [b]ind to section - [s]ort - ra[w] command";
 }
 
+std::string BrowseScreen::getInfoLabel() {
+  return "BROWSING: " + site->getName();
+}
+
 void BrowseScreen::sort() {
   switch (sortmethod % 9) {
     case 0:

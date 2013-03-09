@@ -22,9 +22,8 @@ RaceStatusScreen::RaceStatusScreen(WINDOW * window, UICommunicator * uicommunica
 void RaceStatusScreen::redraw() {
   werase(window);
   spaceous = false;
-  TermInt::printStr(window, 1, 1, "Race status for " + release);
-  TermInt::printStr(window, 2, 1, "Section: " + race->getSection());
-  TermInt::printStr(window, 2, 20, "Sites: " + sitestr);
+  TermInt::printStr(window, 1, 1, "Section: " + race->getSection());
+  TermInt::printStr(window, 1, 20, "Sites: " + sitestr);
   std::list<std::string> currsubpaths = race->getSubPaths();
   currnumsubpaths = currsubpaths.size();
   currsubpaths.sort();
@@ -52,9 +51,9 @@ void RaceStatusScreen::redraw() {
     sumguessedsize += guessedsize;
   }
   currguessedsize = sumguessedsize;
-  TermInt::printStr(window, 3, 1, "Subpaths: " + subpathpresent);
+  TermInt::printStr(window, 2, 1, "Subpaths: " + subpathpresent);
   bool listed = false;
-  int y = 5;
+  int y = 4;
   int x = 1;
   unsigned int longestsubpath = 0;
   bool pathlencheck = false;
@@ -180,4 +179,8 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
 
 std::string RaceStatusScreen::getLegendText() {
   return "[Enter] Return";
+}
+
+std::string RaceStatusScreen::getInfoLabel() {
+  return "RACE STATUS: " + release;
 }

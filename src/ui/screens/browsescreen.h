@@ -22,6 +22,7 @@ public:
   void update();
   void keyPressed(unsigned int);
   std::string getLegendText();
+  std::string getInfoLabel();
   std::list<StringPair> selectionhistory;
 private:
   unsigned int currentviewspan;

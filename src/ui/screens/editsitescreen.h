@@ -23,6 +23,7 @@ public:
   void redraw();
   void keyPressed(unsigned int);
   std::string getLegendText();
+  std::string getInfoLabel();
 private:
   FocusableArea * focusedarea;
   FocusableArea * defocusedarea;

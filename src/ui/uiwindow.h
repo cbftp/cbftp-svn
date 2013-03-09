@@ -19,6 +19,8 @@ public:
   virtual void redraw() = 0;
   void resize(unsigned int, unsigned int);
   virtual void update();
+  virtual std::string getInfoLabel();
+  virtual std::string getInfoText();
   virtual std::string getLegendText();
   virtual void keyPressed(unsigned int);
   bool autoUpdate();

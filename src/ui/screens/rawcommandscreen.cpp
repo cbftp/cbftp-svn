@@ -107,3 +107,7 @@ void RawCommandScreen::keyPressed(unsigned int ch) {
 std::string RawCommandScreen::getLegendText() {
   return "[Enter] Send command - [ESC] clear / exit - [Any] Input to text - [Pgup] Scroll up - [Pgdn] Scroll down";
 }
+
+std::string RawCommandScreen::getInfoLabel() {
+  return "RAW COMMAND INPUT: " + sitename;
+}

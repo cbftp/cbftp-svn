@@ -20,6 +20,7 @@ public:
   void update();
   void keyPressed(unsigned int);
   std::string getLegendText();
+  std::string getInfoLabel();
 private:
   bool readfromcopy;
   unsigned int copyreadpos;

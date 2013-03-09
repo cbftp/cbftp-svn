@@ -27,6 +27,14 @@ void UIWindow::keyPressed(unsigned int key) {
 
 }
 
+std::string UIWindow::getInfoLabel() {
+  return "";
+}
+
+std::string UIWindow::getInfoText() {
+  return "";
+}
+
 std::string UIWindow::getLegendText() {
   return "";
 }

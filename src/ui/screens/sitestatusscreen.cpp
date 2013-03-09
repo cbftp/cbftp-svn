@@ -12,7 +12,6 @@ SiteStatusScreen::SiteStatusScreen(WINDOW * window, UICommunicator * uicommunica
 void SiteStatusScreen::redraw() {
   werase(window);
   curs_set(0);
-  TermInt::printStr(window, 1, 1, "Detailed status for " + site->getName());
   update();
 }
 
@@ -30,10 +29,10 @@ void SiteStatusScreen::update() {
   if (!site->unlimitedDown()) {
     downslots += "/" + global->int2Str(site->getMaxDown());
   }
-  TermInt::printStr(window, 3, 1, loginslots);
-  TermInt::printStr(window, 4, 1, upslots);
-  TermInt::printStr(window, 5, 1, downslots);
-  TermInt::printStr(window, 7, 1, "Login threads:");
+  TermInt::printStr(window, 1, 1, loginslots);
+  TermInt::printStr(window, 2, 1, upslots);
+  TermInt::printStr(window, 3, 1, downslots);
+  TermInt::printStr(window, 5, 1, "Login threads:");
   int i = 8;
   for(unsigned int j = 0; j < st->getConns()->size(); j++) {
     std::string status = st->getStatus(j);
@@ -64,4 +63,8 @@ void SiteStatusScreen::keyPressed(unsigned int ch) {
 
 std::string SiteStatusScreen::getLegendText() {
   return "[Right] Raw data screens - [Enter] Return - ra[w] command - [E]dit site";
+}
+
+std::string SiteStatusScreen::getInfoLabel() {
+  return "DETAILED STATUS: " + sitename;
 }

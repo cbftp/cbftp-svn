@@ -7,7 +7,7 @@ NewKeyScreen::NewKeyScreen(WINDOW * window, UICommunicator * uicommunicator, uns
   active = false;
   mismatch = false;
   tooshort = false;
-  unsigned int y = 13;
+  unsigned int y = 11;
   unsigned int x = 1;
 
   mso.addStringField(y++, x, "newkey", "Passphrase:", "", true);
@@ -17,14 +17,14 @@ NewKeyScreen::NewKeyScreen(WINDOW * window, UICommunicator * uicommunicator, uns
 
 void NewKeyScreen::redraw() {
   werase(window);
-  TermInt::printStr(window, 1, 1, "-== CREATE DATA FILE ==-");
-  TermInt::printStr(window, 3, 1, "Welcome!");
-  TermInt::printStr(window, 5, 1, "Your site and configuration data will be encrypted with AES-256-CBC.");
-  TermInt::printStr(window, 6, 1, "A 256-bit (32 characters) AES key will be generated from the given passphrase.");
-  TermInt::printStr(window, 7, 1, "This means that the level of security increases with the length of the given");
-  TermInt::printStr(window, 8, 1, "passphrase.");
-  TermInt::printStr(window, 9, 1, "The passphrase is not considered secure if it is shorter than 16 characters.");
-  TermInt::printStr(window, 11, 1, "Good password practice is described well by xkcd: http://xkcd.com/936/");
+  unsigned int y = 1;
+  TermInt::printStr(window, y, 1, "Welcome!");
+  TermInt::printStr(window, y+2, 1, "Your site and configuration data will be encrypted with AES-256-CBC.");
+  TermInt::printStr(window, y+3, 1, "A 256-bit (32 characters) AES key will be generated from the given passphrase.");
+  TermInt::printStr(window, y+4, 1, "This means that the level of security increases with the length of the given");
+  TermInt::printStr(window, y+5, 1, "passphrase.");
+  TermInt::printStr(window, y+6, 1, "The passphrase is not considered secure if it is shorter than 16 characters.");
+  TermInt::printStr(window, y+8, 1, "Good password practice is described well by xkcd: http://xkcd.com/936/");
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     MenuSelectOptionElement * msoe = mso.getElement(i);
@@ -127,4 +127,8 @@ void NewKeyScreen::keyPressed(unsigned int ch) {
 
 std::string NewKeyScreen::getLegendText() {
   return currentlegendtext;
+}
+
+std::string NewKeyScreen::getInfoLabel() {
+  return "CREATE DATA FILE";
 }

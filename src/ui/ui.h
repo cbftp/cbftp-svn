@@ -6,6 +6,8 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <map>
+#include <iostream>
+#include <istream>
 #include <sys/select.h>
 #include <sys/ioctl.h>
 
@@ -13,6 +15,7 @@
 #include "../tickpoke.h"
 
 #include "legendwindow.h"
+#include "infowindow.h"
 #include "uiwindow.h"
 #include "uicommunicator.h"
 
@@ -36,9 +39,11 @@ extern GlobalContext * global;
 class UserInterface {
   private:
     WINDOW * main;
+    WINDOW * info;
     WINDOW * legend;
     std::vector<UIWindow *> mainwindows;
     UIWindow * topwindow;
+    InfoWindow * infowindow;
     LegendWindow * legendwindow;
     int mainrow;
     int maincol;
@@ -48,6 +53,7 @@ class UserInterface {
     bool initret;
     bool tickerenabled;
     bool legendenabled;
+    bool infoenabled;
     std::string eventtext;
     pthread_t uithread;
     pthread_t klthread;
@@ -55,6 +61,7 @@ class UserInterface {
     sem_t initdone;
     sem_t keyeventdone;
     UICommunicator uicommunicator;
+    std::list<UIWindow *> history;
     void refreshAll();
     void loginScreen();
     void mainScreen();
@@ -66,11 +73,12 @@ class UserInterface {
     int getNumArrow(WINDOW *, int, int, int);
     bool getCheckBoxBool(WINDOW *, int, int, int);
     void initIntern();
-    void startTicker(int);
-    void stopTicker();
+    void enableInfo();
+    void disableInfo();
     void enableLegend();
     void disableLegend();
     void redrawAll();
+    void switchToWindow(UIWindow *);
     static void * runKeyListener(void *);
     static void * runUserInterface(void *);
   public:

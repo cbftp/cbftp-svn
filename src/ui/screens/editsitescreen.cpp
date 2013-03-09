@@ -15,7 +15,7 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
     site = global->getSiteManager()->getSite(arg2);
     modsite = Site(*site);
   }
-  unsigned int y = 3;
+  unsigned int y = 1;
   unsigned int x = 1;
 
   mso.addStringField(y++, x, "name", "Name:", modsite.getName(), false);
@@ -40,7 +40,6 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
 
 void EditSiteScreen::redraw() {
   werase(window);
-  TermInt::printStr(window, 1, 1, "-== SITE OPTIONS ==-");
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     MenuSelectOptionElement * msoe = mso.getElement(i);
@@ -289,4 +288,8 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
 
 std::string EditSiteScreen::getLegendText() {
   return currentlegendtext;
+}
+
+std::string EditSiteScreen::getInfoLabel() {
+  return "SITE OPTIONS";
 }

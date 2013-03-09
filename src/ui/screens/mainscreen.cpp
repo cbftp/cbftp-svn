@@ -21,9 +21,8 @@ MainScreen::MainScreen(WINDOW * window, UICommunicator * uicommunicator, unsigne
 void MainScreen::redraw() {
   werase(window);
   curs_set(0);
-  TermInt::printStr(window, 1, 1, "-=== MAIN SCREEN ===-");
   bool listraces = global->getEngine()->allRaces();
-  unsigned int irow = 3;
+  unsigned int irow = 1;
   if (listraces) {
     mss.makeLeavableUp();
     mso.clear();
@@ -176,4 +175,8 @@ std::string MainScreen::getLegendText() {
     return msslegendtext;
   }
   return msolegendtext;
+}
+
+std::string MainScreen::getInfoLabel() {
+  return "CLUSTERBOMB MAIN";
 }

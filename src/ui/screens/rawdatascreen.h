@@ -20,6 +20,7 @@ public:
   void update();
   void keyPressed(unsigned int);
   std::string getLegendText();
+  std::string getInfoLabel();
 private:
   bool rawcommandmode;
   bool rawcommandswitch;
