@@ -5,6 +5,7 @@
 #include <vector>
 #include <stdlib.h>
 #include <iostream>
+#include <algorithm>
 
 #include "globalcontext.h"
 #include "site.h"
@@ -28,3 +29,5 @@ class SiteManager {
     std::vector<Site *>::iterator getSitesIteratorEnd();
     void writeState();
 };
+
+bool siteNameComparator(Site *, Site *);

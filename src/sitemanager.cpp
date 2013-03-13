@@ -65,6 +65,7 @@ void SiteManager::readSites() {
       site->setAverageSpeed(sitename, avgspeed);
     }
   }
+  std::sort(sites.begin(), sites.end(), siteNameComparator);
 }
 
 void SiteManager::writeState() {
@@ -121,6 +122,7 @@ void SiteManager::deleteSite(std::string site) {
 
 void SiteManager::addSite(Site * site) {
   sites.push_back(site);
+  std::sort(sites.begin(), sites.end(), siteNameComparator);
 }
 
 std::vector<Site *>::iterator SiteManager::getSitesIteratorBegin() {
@@ -129,4 +131,8 @@ std::vector<Site *>::iterator SiteManager::getSitesIteratorBegin() {
 
 std::vector<Site *>::iterator SiteManager::getSitesIteratorEnd() {
   return sites.end();
+}
+
+bool siteNameComparator(Site * a, Site * b) {
+  return a->getName().compare(b->getName()) < 0;
 }
