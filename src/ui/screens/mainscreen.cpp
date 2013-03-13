@@ -205,6 +205,9 @@ void MainScreen::keyPressed(unsigned int ch) {
           else if (!update) {
             update = true;
           }
+          if (!focusedarea->isFocused()) {
+            focusedarea->enterFocusFrom(2);
+          }
         }
         if (mss.getSelectionPointer() >= currentviewspan + row - sitestartrow) {
           uicommunicator->newCommand("redraw");
@@ -220,6 +223,9 @@ void MainScreen::keyPressed(unsigned int ch) {
           }
           else if (!update) {
             update = true;
+          }
+          if (!focusedarea->isFocused()) {
+            focusedarea->enterFocusFrom(0);
           }
         }
         if (mss.getSelectionPointer() < currentviewspan) {
