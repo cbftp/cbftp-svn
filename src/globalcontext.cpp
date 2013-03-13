@@ -10,7 +10,7 @@ void GlobalContext::init() {
   ssl_ctx = SSL_CTX_new(TLSv1_client_method());
   pthread_attr_init(&attr);
   pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
-  pthread_setname_np(pthread_self(), "MainThread");
+  pthread_setname_np(pthread_self(), "clusterbomb");
   pthread_mutex_init(&time_mutex, NULL);
   updateTime();
   sem_init(&list_refresh, 0, 0);
