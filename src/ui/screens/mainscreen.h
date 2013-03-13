@@ -23,6 +23,8 @@ public:
   std::string getLegendText();
   std::string getInfoLabel();
 private:
+  unsigned int currentviewspan;
+  unsigned int sitestartrow;
   std::string msolegendtext;
   std::string msslegendtext;
   FocusableArea * focusedarea;

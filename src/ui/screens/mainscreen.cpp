@@ -6,6 +6,8 @@ MainScreen::MainScreen(WINDOW * window, UICommunicator * uicommunicator, unsigne
   this->uicommunicator = uicommunicator;
   mso.makeLeavableDown();
   autoupdate = true;
+  currentviewspan = 0;
+  sitestartrow = 0;
   if (global->getEngine()->currentRaces()) {
     focusedarea = &mso;
     mso.enterFocusFrom(0);
@@ -26,7 +28,6 @@ void MainScreen::redraw() {
   if (listraces) {
     mss.makeLeavableUp();
     mso.clear();
-    TermInt::printStr(window, irow++, 1, "Active races: " + global->int2Str(global->getEngine()->currentRaces()));
     irow++;
     TermInt::printStr(window, irow++, 1, "Section  Name");
     std::list<Race *>::iterator it;
@@ -50,6 +51,23 @@ void MainScreen::redraw() {
     mss.add(*it, y++, x);
   }
   mss.checkPointer();
+  unsigned int position = mss.getSelectionPointer();
+  sitestartrow = irow + 4;
+  unsigned int pagerows = (unsigned int) (row - sitestartrow) / 2;
+  if (position < currentviewspan || position >= currentviewspan + row - sitestartrow) {
+    if (position < pagerows) {
+      currentviewspan = 0;
+    }
+    else {
+      currentviewspan = position - pagerows;
+    }
+  }
+  if (currentviewspan + row >= mss.size() && mss.size() + 1 >= row - sitestartrow) {
+    currentviewspan = mss.size() + 1 - row + sitestartrow;
+    if (currentviewspan > position) {
+      currentviewspan = position;
+    }
+  }
   update();
 }
 
@@ -64,6 +82,7 @@ void MainScreen::update() {
     uicommunicator->newCommand("update");
   }
   else {
+    TermInt::printStr(window, 1, 1, "Active races: " + global->int2Str(global->getEngine()->currentRaces()));
     bool highlight;
     unsigned int selected = mso.getSelectionPointer();
     for (unsigned int i = 0; i < mso.size(); i++) {
@@ -79,14 +98,14 @@ void MainScreen::update() {
       if (highlight) wattroff(window, A_REVERSE);
     }
     selected = mss.getSelectionPointer();
-    for (unsigned int i = 0; i < mss.size(); i++) {
+    for (unsigned int i = 0; i + currentviewspan < mss.size() && i < row - sitestartrow; i++) {
+      unsigned int listi = i + currentviewspan;
       highlight = false;
-      MenuSelectSiteElement * msse = mss.getSiteElement(i);
-      if (mss.isFocused() && selected == i) {
+      if (mss.isFocused() && selected == listi) {
         highlight = true;
       }
       if (highlight) wattron(window, A_REVERSE);
-      TermInt::printStr(window, msse->getRow(), msse->getCol(), mss.getSiteLine(i));
+      TermInt::printStr(window, i + sitestartrow, 1, mss.getSiteLine(listi));
       if (highlight) wattroff(window, A_REVERSE);
     }
   }
@@ -95,6 +114,8 @@ void MainScreen::update() {
 void MainScreen::keyPressed(unsigned int ch) {
   Site * site;
   std::string target;
+  bool update = false;
+  unsigned int pagerows = (unsigned int) (row - sitestartrow) * 0.6;
   switch(ch) {
     case KEY_UP:
       if (focusedarea->goUp()) {
@@ -105,7 +126,12 @@ void MainScreen::keyPressed(unsigned int ch) {
           uicommunicator->newCommand("updatesetlegend");
         }
         else {
-          uicommunicator->newCommand("update");
+          if (mss.getSelectionPointer() < currentviewspan) {
+            uicommunicator->newCommand("redraw");
+          }
+          else {
+            uicommunicator->newCommand("update");
+          }
         }
       }
       break;
@@ -118,7 +144,12 @@ void MainScreen::keyPressed(unsigned int ch) {
           uicommunicator->newCommand("updatesetlegend");
         }
         else {
-          uicommunicator->newCommand("update");
+          if (mss.getSelectionPointer() >= currentviewspan + row - sitestartrow) {
+            uicommunicator->newCommand("redraw");
+          }
+          else {
+            uicommunicator->newCommand("update");
+          }
         }
       }
       break;
@@ -165,6 +196,38 @@ void MainScreen::keyPressed(unsigned int ch) {
       case 'w':
         if (mss.getSite() == NULL) break;
         uicommunicator->newCommand("rawcommand", mss.getSite()->getName());
+        break;
+      case KEY_NPAGE:
+        for (unsigned int i = 0; i < pagerows; i++) {
+          if (!mss.goDown()) {
+            break;
+          }
+          else if (!update) {
+            update = true;
+          }
+        }
+        if (mss.getSelectionPointer() >= currentviewspan + row - sitestartrow) {
+          uicommunicator->newCommand("redraw");
+        }
+        else if (update) {
+          uicommunicator->newCommand("update");
+        }
+        break;
+      case KEY_PPAGE:
+        for (unsigned int i = 0; i < pagerows; i++) {
+          if (!mss.goUp()) {
+            break;
+          }
+          else if (!update) {
+            update = true;
+          }
+        }
+        if (mss.getSelectionPointer() < currentviewspan) {
+          uicommunicator->newCommand("redraw");
+        }
+        else if (update) {
+          uicommunicator->newCommand("update");
+        }
         break;
     }
   }
