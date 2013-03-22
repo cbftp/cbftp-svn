@@ -1,10 +1,15 @@
 #include "sitemanager.h"
 
 SiteManager::SiteManager() {
-
+  defaultusername = DEFAULTUSERNAME;
+  defaultpassword = DEFAULTPASSWORD;
+  defaultmaxlogins = DEFAULTMAXLOGINS;
+  defaultmaxup = DEFAULTMAXUP;
+  defaultmaxdown = DEFAULTMAXDOWN;
+  defaultsslfxpforced = DEFAULTSSLFXPFORCED;
 }
 
-void SiteManager::readSites() {
+void SiteManager::readConfiguration() {
   std::vector<std::string> lines;
   global->getDataFileHandler()->getDataFor("SiteManager", &lines);
   std::vector<std::string>::iterator it;
@@ -65,6 +70,35 @@ void SiteManager::readSites() {
       site->setAverageSpeed(sitename, avgspeed);
     }
   }
+  lines.clear();
+  global->getDataFileHandler()->getDataFor("SiteManagerDefaults", &lines);
+  for (it = lines.begin(); it != lines.end(); it++) {
+    line = *it;
+    if (line.length() == 0 ||line[0] == '#') continue;
+    size_t tok = line.find('=');
+    std::string setting = line.substr(0, tok);
+    std::string value = line.substr(tok + 1);
+    if (!setting.compare("username")) {
+      setDefaultUserName(value);
+    }
+    else if (!setting.compare("password")) {
+      setDefaultPassword(value);
+    }
+    else if (!setting.compare("maxlogins")) {
+      setDefaultMaxLogins(global->str2Int(value));
+    }
+    else if (!setting.compare("maxup")) {
+      setDefaultMaxUp(global->str2Int(value));
+    }
+    else if (!setting.compare("maxdown")) {
+      setDefaultMaxDown(global->str2Int(value));
+    }
+    else if (!setting.compare("sslfxpforced")) {
+      if (!value.compare("true")) {
+        setDefaultSSLFXPForced(true);
+      }
+    }
+  }
   std::sort(sites.begin(), sites.end(), siteNameComparator);
 }
 
@@ -93,6 +127,12 @@ void SiteManager::writeState() {
       filehandler->addOutputLine("SiteManager", name + "$avgspeed=" + sit2->first + "$" + global->int2Str(sit2->second));
     }
   }
+  filehandler->addOutputLine("SiteManagerDefaults", "username=" + getDefaultUserName());
+  filehandler->addOutputLine("SiteManagerDefaults", "password=" + getDefaultPassword());
+  filehandler->addOutputLine("SiteManagerDefaults", "maxlogins=" + global->int2Str(getDefaultMaxLogins()));
+  filehandler->addOutputLine("SiteManagerDefaults", "maxup=" + global->int2Str(getDefaultMaxUp()));
+  filehandler->addOutputLine("SiteManagerDefaults", "maxdown=" + global->int2Str(getDefaultMaxDown()));
+  if (getDefaultSSLFXPForced()) filehandler->addOutputLine("SiteManagerDefaults", "sslfxpforced=true");
 }
 
 int SiteManager::getNumSites() {
@@ -135,4 +175,52 @@ std::vector<Site *>::iterator SiteManager::getSitesIteratorEnd() {
 
 bool siteNameComparator(Site * a, Site * b) {
   return a->getName().compare(b->getName()) < 0;
+}
+
+std::string SiteManager::getDefaultUserName() {
+  return defaultusername;
+}
+
+void SiteManager::setDefaultUserName(std::string username) {
+  defaultusername = username;
+}
+
+std::string SiteManager::getDefaultPassword() {
+  return defaultpassword;
+}
+
+void SiteManager::setDefaultPassword(std::string password) {
+  defaultpassword = password;
+}
+
+unsigned int SiteManager::getDefaultMaxLogins() {
+  return defaultmaxlogins;
+}
+
+void SiteManager::setDefaultMaxLogins(unsigned int maxlogins) {
+  defaultmaxlogins = maxlogins;
+}
+
+unsigned int SiteManager::getDefaultMaxUp() {
+  return defaultmaxup;
+}
+
+void SiteManager::setDefaultMaxUp(unsigned int maxup) {
+  defaultmaxup = maxup;
+}
+
+unsigned int SiteManager::getDefaultMaxDown() {
+  return defaultmaxdown;
+}
+
+void SiteManager::setDefaultMaxDown(unsigned int maxdown) {
+  defaultmaxdown = maxdown;
+}
+
+bool SiteManager::getDefaultSSLFXPForced() {
+  return defaultsslfxpforced;
+}
+
+void SiteManager::setDefaultSSLFXPForced(bool sslfxpforced) {
+  defaultsslfxpforced = sslfxpforced;
 }

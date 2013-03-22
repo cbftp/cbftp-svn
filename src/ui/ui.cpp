@@ -148,6 +148,7 @@ void UserInterface::runUserInterfaceInstance() {
   UIWindow * addsectionscreen;
   UIWindow * newracescreen;
   UIWindow * racestatusscreen;
+  UIWindow * globaloptionsscreen;
   sem_t * eventsem = uicommunicator.getEventSem();
   global->getTickPoke()->startPoke(eventsem, 250, 0);
   legendwindow = new LegendWindow(legend, 2, col);
@@ -266,6 +267,10 @@ void UserInterface::runUserInterfaceInstance() {
         browsescreen = new BrowseScreen(main, &uicommunicator, mainrow, maincol);
         switchToWindow(browsescreen);
       }
+      else if (command == "globaloptions") {
+        globaloptionsscreen = new GlobalOptionsScreen(main, &uicommunicator, mainrow, maincol);
+        switchToWindow(globaloptionsscreen);
+      }
       else if (command == "confirmation") {
         confirmationscreen = new ConfirmationScreen(main, &uicommunicator, mainrow, maincol);
         switchToWindow(confirmationscreen);
@@ -300,7 +305,8 @@ void UserInterface::runUserInterfaceInstance() {
         uicommunicator.checkoutCommand();
         bool result = global->getDataFileHandler()->tryDecrypt(key);
         if (result) {
-          global->getSiteManager()->readSites();
+          global->getSiteManager()->readConfiguration();
+          global->getRemoteCommandHandler()->readConfiguration();
           enableInfo();
           enableLegend();
           mainscreen = new MainScreen(main, &uicommunicator, mainrow, maincol);

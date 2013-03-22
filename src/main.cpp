@@ -34,7 +34,8 @@ Main::Main() {
   SiteThreadManager * stm = new SiteThreadManager();
   TransferManager * tm = new TransferManager();
   TickPoke * tp = new TickPoke();
-  global->linkComponents(dfh, e, ui->getCommunicator(), sm, stm, tm, tp);
+  RemoteCommandHandler * rch = new RemoteCommandHandler();
+  global->linkComponents(dfh, e, ui->getCommunicator(), sm, stm, tm, tp, rch);
   if (!ui->init()) exit(1);
   while(forever) {
     sleep(1);
@@ -62,6 +63,7 @@ void sighandler(int sig) {
   if (global->getDataFileHandler()->isInitialized()) {
     std::cout << "Saving data to file..." << std::endl;
     global->getSiteManager()->writeState();
+    global->getRemoteCommandHandler()->writeState();
     global->getDataFileHandler()->writeFile();
     std::cout << "Done, exiting..." << std::endl << std::flush;
   }

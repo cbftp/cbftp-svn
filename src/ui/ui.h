@@ -31,6 +31,7 @@
 #include "screens/newracescreen.h"
 #include "screens/racestatusscreen.h"
 #include "screens/rawcommandscreen.h"
+#include "screens/globaloptionsscreen.h"
 
 #define TICKLENGTH 250000
 

@@ -1,8 +1,8 @@
 #include "mainscreen.h"
 
 MainScreen::MainScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  msslegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site";
-  msolegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option";
+  msslegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [G]lobal settings";
+  msolegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [G]lobal settings";
   this->uicommunicator = uicommunicator;
   mso.makeLeavableDown();
   autoupdate = true;
@@ -163,6 +163,9 @@ void MainScreen::keyPressed(unsigned int ch) {
         target = mso.getElement(mso.getSelectionPointer())->getIdentifier();
         uicommunicator->newCommand("racestatus", target);
       }
+      break;
+    case 'G':
+      uicommunicator->newCommand("globaloptions");
       break;
   }
   if (mss.isFocused()) {

@@ -6,7 +6,7 @@ OBJECTS = commandqueueelement.o ftpthreadcom.o potentialelement.o scoreboardelem
 	sitemanager.o sitethread.o file.o main.o race.o site.o transfermanager.o \
 	rawbuffer.o crypto.o datafilehandler.o \
 	sitethreadrequest.o sitethreadrequestready.o tickpoke.o tickpoketarget.o \
-	connstatetracker.o delayedcommand.o
+	connstatetracker.o delayedcommand.o remotecommandhandler.o
 
 all: ${OBJECTS}
 	@cd ui; ${MAKE}
@@ -41,6 +41,7 @@ tickpoke.o:
 tickpoketarget.o:
 connstatetracker.o:
 delayedcommand.o:
+remotecommandhandler.o:
 
 clean:
 	rm -f ${OBJECTS}

@@ -3,11 +3,6 @@ status: inte påbörjad
 en ui-ruta som visar status för ett pågående race med info
 om status på alla inblandade siter, anslutningar som görs etc
 
-UI info-bars
-status: inte påbörjad
-ett område/window högst upp som ger utrymme för nyttig info om var man är,
-felmeddelanden etc
-
 socket-lyssnare för race-instruktioner
 status: inte påbörjad
 klienten behöver kunna ta emot meddelanden utifrån om att påbörja race.

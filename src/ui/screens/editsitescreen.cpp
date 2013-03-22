@@ -8,8 +8,15 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
   operation = uicommunicator->getArg1();
   std::string arg2 = uicommunicator->getArg2();
   uicommunicator->checkoutCommand();
+  SiteManager * sm = global->getSiteManager();
   if (operation == "add") {
     modsite = Site("SUNET");
+    modsite.setUser(sm->getDefaultUserName());
+    modsite.setPass(sm->getDefaultPassword());
+    modsite.setMaxLogins(sm->getDefaultMaxLogins());
+    modsite.setMaxUp(sm->getDefaultMaxUp());
+    modsite.setMaxDn(sm->getDefaultMaxDown());
+    modsite.setSSLFXPForced(sm->getDefaultSSLFXPForced());
   }
   else if (operation == "edit") {
     site = global->getSiteManager()->getSite(arg2);
