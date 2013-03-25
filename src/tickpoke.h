@@ -4,6 +4,7 @@
 #include <semaphore.h>
 #include <list>
 #include <map>
+#include <unistd.h>
 
 #include "globalcontext.h"
 #include "tickpoketarget.h"

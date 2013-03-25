@@ -10,6 +10,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #include "filelist.h"
 #include "ftpthreadcom.h"
