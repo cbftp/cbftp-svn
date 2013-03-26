@@ -62,7 +62,7 @@ void EditSiteScreen::redraw() {
   int headrow = ms.getHeaderRow();
   int headcol = ms.getHeaderCol();
   TermInt::printStr(window, headrow, headcol, "Sections");
-  int selected = ms.getSelectionPointer();
+  unsigned int selected = ms.getSelectionPointer();
   highlight = false;
   if (ms.isFocused() && selected == 0) {
     highlight = true;

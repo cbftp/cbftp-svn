@@ -44,8 +44,6 @@ feature: extensive info in the header of most screens
 
 bug: crash mid-race, reason unknown
 
-warnings: fix warnings when compiling with -O3 or s/us integer comparisons ==
-
 feature: disable legend
 
 feature: max idle time
@@ -61,3 +59,7 @@ feature: adaptive-length section fields in the editsitescreen
 feature: disable uploading/downloading per site
 
 feature: debug log
+
+feature: stepping backward-forward in text fields
+
+cosmetic: enter site ip:port in the same field

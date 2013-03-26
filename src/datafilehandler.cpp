@@ -14,7 +14,7 @@ DataFileHandler::DataFileHandler(std::string path) {
   fileexists = true;
   std::fstream infile;
   infile.open(path.c_str());
-  int gcount;
+  int gcount = 0;
   while (!infile.eof() && infile.good()) {
     unsigned char * rawdatablock = new unsigned char[READBLOCKSIZE];
     rawdatablocks.push_back(rawdatablock);

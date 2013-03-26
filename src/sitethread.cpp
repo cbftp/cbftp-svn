@@ -459,8 +459,8 @@ bool SiteThread::getReadyThread(FileList * fl, FTPThread ** ret) {
 }
 
 bool SiteThread::getReadyThread(FileList * fl, std::string file, FTPThread ** ret, bool istransfer, bool isdownload) {
-  FTPThread * lastready;
-  int lastreadyid;
+  FTPThread * lastready = NULL;
+  int lastreadyid = -1;
   bool foundreadythread = false;
   for (unsigned int i = 0; i < conns.size(); i++) {
     if(connstatetracker[i].isIdle()) {

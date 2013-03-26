@@ -8,7 +8,7 @@ PotentialListElement::PotentialListElement(int numslots) {
 
 void PotentialListElement::update(SiteThread * dst, int threads, int dstdnslots, int potential, std::string filename) {
   bool allthreadsused = allThreadsUsedForSite(dst, threads);
-  PotentialElement * lowelem;
+  PotentialElement * lowelem = NULL;
   int lowest;
   bool initialized = false;
   for (unsigned int i = 0; i < slots.size(); i++) {
@@ -19,7 +19,9 @@ void PotentialListElement::update(SiteThread * dst, int threads, int dstdnslots,
       if (!initialized) initialized = true;
     }
   }
-  lowelem->update(dst, dstdnslots, potential, filename);
+  if (lowelem) {
+    lowelem->update(dst, dstdnslots, potential, filename);
+  }
 }
 
 std::vector<PotentialElement *> & PotentialListElement::getSlotsVector() {
