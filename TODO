@@ -53,3 +53,7 @@ feature: disable legend
 feature: max idle time
 
 feature: help screen with key binding info etc
+
+feature: proxy support with proxy-per-site
+
+feature: extensive statistics screens

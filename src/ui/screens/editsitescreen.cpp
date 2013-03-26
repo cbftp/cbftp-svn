@@ -74,8 +74,15 @@ void EditSiteScreen::redraw() {
     MenuSelectOptionContainer * msoc = ms.getSectionContainer(i);
     for (unsigned int j = 0; j < 3; j++) {
       highlight = ((i * 3) + 1 + j) == selected;
+      int indentation = 0;
+      if (j == 1) {
+        indentation = 12;
+      }
+      else if (j == 2) {
+        indentation = 43;
+      }
       if (highlight) wattron(window, A_REVERSE);
-      TermInt::printStr(window, headrow + 1 + i, headcol + (j * 10), msoc->getOption(j)->getContentText());
+      TermInt::printStr(window, headrow + 1 + i, headcol + indentation, msoc->getOption(j)->getContentText());
       if (highlight) wattroff(window, A_REVERSE);
     }
   }
@@ -93,14 +100,14 @@ void EditSiteScreen::update() {
       int headcol = ms.getHeaderCol();
       int lastsel = ms.getLastSelectionPointer();
       if (lastsel == 0) {
-        TermInt::printStr(window, headrow, headcol + 9, ms.getElement(0)->getContentText());
+        TermInt::printStr(window, headrow, headcol + 12, ms.getElement(0)->getContentText());
       }
       else {
         MenuSelectOptionContainer * msoc = ms.getSectionContainer((lastsel - 1) / 3);
         int internalid = (lastsel - 1) % 3;
         int add = 0;
-        if (internalid == 1) add = 10;
-        else if (internalid == 2) add = 20;
+        if (internalid == 1) add = 12;
+        else if (internalid == 2) add = 43;
         TermInt::printStr(window, headrow + 1 + ((lastsel - 1) / 3), headcol + add, msoc->getOption(internalid)->getContentText());
       }
     }
@@ -139,8 +146,8 @@ void EditSiteScreen::update() {
       MenuSelectOptionContainer * msoc = ms.getSectionContainer((lastsel - 1) / 3);
       int internalid = (lastsel - 1) % 3;
       int add = 0;
-      if (internalid == 1) add = 10;
-      else if (internalid == 2) add = 20;
+      if (internalid == 1) add = 12;
+      else if (internalid == 2) add = 43;
       TermInt::printStr(window, headrow + 1 + ((lastsel - 1) / 3), headcol + add, msoc->getOption(internalid)->getContentText());
     }
     if (sel == 0) {
@@ -152,8 +159,8 @@ void EditSiteScreen::update() {
       MenuSelectOptionContainer * msoc = ms.getSectionContainer((sel - 1) / 3);
       int internalid = (sel - 1) % 3;
       int add = 0;
-      if (internalid == 1) add = 10;
-      else if (internalid == 2) add = 20;
+      if (internalid == 1) add = 12;
+      else if (internalid == 2) add = 43;
       wattron(window, A_REVERSE);
       TermInt::printStr(window, headrow + 1 + ((sel - 1) / 3), headcol + add, msoc->getOption(internalid)->getContentText());
       wattroff(window, A_REVERSE);
