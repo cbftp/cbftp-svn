@@ -16,7 +16,6 @@ FTPThread::FTPThread(int id, Site * site, FTPThreadCom * ftpthreadcom) {
   memset(&sock, 0, sizeof(sock));
   sock.ai_family = AF_UNSPEC;
   sock.ai_socktype = SOCK_STREAM;
-  getaddrinfo(site->getAddress().data(), site->getPort().data(), &sock, &res);
   FD_ZERO(&readfd);
   sem_init(&commandsem, 0, 0);
   sem_init(&transfersem, 0, 0);
@@ -46,6 +45,7 @@ bool FTPThread::loginT() {
   int status;
   controlssl = false;
   protectedmode = false;
+  getaddrinfo(site->getAddress().data(), site->getPort().data(), &sock, &res);
   sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
   fcntl(sockfd, F_SETFL, O_NONBLOCK);
   std::string output = "[Connecting to " + site->getAddress() + ":" + site->getPort() + "]";
