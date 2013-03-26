@@ -1,7 +1,5 @@
 feature: race status screen
 
-feature: remote connection handling
-
 feature: local downloads
 
 feature: view file
@@ -57,3 +55,9 @@ feature: help screen with key binding info etc
 feature: proxy support with proxy-per-site
 
 feature: extensive statistics screens
+
+feature: adaptive-length section fields in the editsitescreen
+
+feature: disable uploading/downloading per site
+
+feature: debug log

@@ -8,6 +8,7 @@ MainScreen::MainScreen(WINDOW * window, UICommunicator * uicommunicator, unsigne
   autoupdate = true;
   currentviewspan = 0;
   sitestartrow = 0;
+  currentraces = 0;
   if (global->getEngine()->currentRaces()) {
     focusedarea = &mso;
     mso.enterFocusFrom(0);
@@ -82,7 +83,14 @@ void MainScreen::update() {
     uicommunicator->newCommand("update");
   }
   else {
-    TermInt::printStr(window, 1, 1, "Active races: " + global->int2Str(global->getEngine()->currentRaces()));
+    int newcurrentraces = global->getEngine()->currentRaces();
+    if (newcurrentraces != currentraces) {
+      currentraces = newcurrentraces;
+      redraw();
+      return;
+    }
+    currentraces = newcurrentraces;
+    TermInt::printStr(window, 1, 1, "Active races: " + global->int2Str(currentraces));
     bool highlight;
     unsigned int selected = mso.getSelectionPointer();
     for (unsigned int i = 0; i < mso.size(); i++) {

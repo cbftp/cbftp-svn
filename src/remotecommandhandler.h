@@ -2,12 +2,20 @@
 
 #include <string>
 #include <vector>
+#include <list>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <poll.h>
 
 #include "globalcontext.h"
 #include "datafilehandler.h"
+#include "engine.h"
 
 #define DEFAULTPORT 55477
 #define DEFAULTPASS "DEFAULT"
+#define MAXDATASIZE 2048
 
 extern GlobalContext * global;
 
@@ -16,8 +24,19 @@ private:
   bool enabled;
   std::string password;
   int port;
+  int sockfd;
+  pthread_t thread;
+  sem_t commandsem;
+  std::list<int> commandqueue;
+  pthread_mutex_t commandq_mutex;
+  static void * run(void *);
+  void connect();
+  void disconnect();
+  void awaitIncoming();
+  void handleMessage(std::string);
 public:
   RemoteCommandHandler();
+  void runInstance();
   bool isEnabled();
   int getUDPPort();
   std::string getPassword();

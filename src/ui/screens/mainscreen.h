@@ -25,6 +25,7 @@ public:
 private:
   unsigned int currentviewspan;
   unsigned int sitestartrow;
+  int currentraces;
   std::string msolegendtext;
   std::string msslegendtext;
   FocusableArea * focusedarea;

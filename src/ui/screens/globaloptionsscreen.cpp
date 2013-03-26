@@ -108,7 +108,7 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
         else if (identifier == "udpport") {
           rch->setPort(global->str2Int(((MenuSelectOptionTextField *)msoe)->getData()));
         }
-        else if (identifier == "udppassword") {
+        else if (identifier == "udppass") {
           rch->setPassword(((MenuSelectOptionTextField *)msoe)->getData());
         }
         else if (identifier == "defuser") {
