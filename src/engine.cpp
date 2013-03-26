@@ -78,6 +78,9 @@ void Engine::reportCurrentSizeAsFinal(SiteRace * srs, FileList * fls) {
     if (itf->second->isDirectory()) {
       continue;
     }
+    else if (itf->first.find(" ") != std::string::npos) {
+      continue;
+    }
     std::string filename = itf->second->getName();
     size_t lastdotpos = filename.rfind(".");
     if (lastdotpos != std::string::npos && lastdotpos < filename.length() - 4) {
