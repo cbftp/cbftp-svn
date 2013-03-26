@@ -12,8 +12,8 @@ void MenuSection::initialize(int row, int col, std::map<std::string, std::string
   std::map<std::string, std::string>::iterator it;
   addbutton = new MenuSelectOptionTextButton("add", 0, 0, "<Add>");
   for(it = sectionsbegin; it != sectionsend; it++) {
-    MenuSelectOptionElement * name = new MenuSelectOptionTextField("name", 0, 0, "Name:", it->first, 9, 32, false);
-    MenuSelectOptionElement * path = new MenuSelectOptionTextField("path", 0, 0, "Path:", it->second, 9, 64, false);
+    MenuSelectOptionElement * name = new MenuSelectOptionTextField("name", 0, 0, "Name:", it->first, 11, 32, false);
+    MenuSelectOptionElement * path = new MenuSelectOptionTextField("path", 0, 0, "Path:", it->second, 30, 64, false);
     MenuSelectOptionElement * del = new MenuSelectOptionTextButton("delete", 0, 0, "<X>");
     MenuSelectOptionContainer msoc = MenuSelectOptionContainer();
     msoc.addElement(name);
