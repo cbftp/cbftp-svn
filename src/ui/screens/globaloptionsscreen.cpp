@@ -13,6 +13,8 @@ GlobalOptionsScreen::GlobalOptionsScreen(WINDOW * window, UICommunicator * uicom
   mso.addStringField(y++, x, "udpport", "Remote command UDP Port:", global->int2Str(rch->getUDPPort()), false, 5);
   mso.addStringField(y++, x, "udppass", "Remote command password:", rch->getPassword(), true);
   y++;
+  mso.addCheckBox(y++, x, "legend", "Show legend bar:", global->getUICommunicator()->legendEnabled());
+  y++;
   mso.addStringField(y++, x, "defuser", "Default site username:", sm->getDefaultUserName(), false);
   mso.addStringField(y++, x, "defpass", "Default site password:", sm->getDefaultPassword(), true);
   mso.addIntArrow(y++, x, "deflogins", "Default site login slots:", sm->getDefaultMaxLogins(), 0, 99);
@@ -132,6 +134,9 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "defidletime") {
           sm->setDefaultMaxIdleTime(global->str2Int(((MenuSelectOptionTextField *)msoe)->getData()));
+        }
+        else if (identifier == "legend") {
+          global->getUICommunicator()->showLegend(((MenuSelectOptionCheckBox *)msoe)->getData());
         }
       }
       rch->setEnabled(udpenable);

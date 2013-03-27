@@ -4,6 +4,12 @@
 #include <string>
 #include <semaphore.h>
 #include <ncurses.h>
+#include <vector>
+
+#include "../globalcontext.h"
+#include "../datafilehandler.h"
+
+extern GlobalContext * global;
 
 class UICommunicator {
 private:
@@ -17,6 +23,7 @@ private:
   pthread_mutex_t event_mutex;
   sem_t event;
   sem_t event_ready;
+  bool legendenabled;
 public:
   UICommunicator();
   void newCommand(std::string);
@@ -37,4 +44,8 @@ public:
   std::string awaitEvent();
   void kill();
   void terminalSizeChanged();
+  bool legendEnabled();
+  void showLegend(bool);
+  void readConfiguration();
+  void writeState();
 };

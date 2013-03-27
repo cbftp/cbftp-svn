@@ -44,8 +44,6 @@ feature: extensive info in the header of most screens
 
 bug: crash mid-race, reason unknown
 
-feature: disable legend
-
 feature: help screen with key binding info etc
 
 feature: proxy support with proxy-per-site

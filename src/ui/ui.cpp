@@ -159,7 +159,9 @@ void UserInterface::runUserInterfaceInstance() {
   }
   else {
     enableInfo();
-    enableLegend();
+    if (uicommunicator.legendEnabled()) {
+      enableLegend();
+    }
     startscreen = new NewKeyScreen(main, &uicommunicator, mainrow, maincol);
     legendwindow->setText(startscreen->getLegendText());
     mainwindows.push_back(startscreen);
@@ -198,6 +200,12 @@ void UserInterface::runUserInterfaceInstance() {
     else if (currentevent == "updatelegend") {
       legendwindow->update();
       refreshAll();
+    }
+    else if (currentevent == "showlegend") {
+      enableLegend();
+    }
+    else if (currentevent == "hidelegend") {
+      disableLegend();
     }
     else if (currentevent == "resize") {
       struct winsize size;
@@ -307,8 +315,11 @@ void UserInterface::runUserInterfaceInstance() {
         if (result) {
           global->getSiteManager()->readConfiguration();
           global->getRemoteCommandHandler()->readConfiguration();
+          uicommunicator.readConfiguration();
           enableInfo();
-          enableLegend();
+          if (uicommunicator.legendEnabled()) {
+            enableLegend();
+          }
           mainscreen = new MainScreen(main, &uicommunicator, mainrow, maincol);
           switchToWindow(mainscreen);
         }

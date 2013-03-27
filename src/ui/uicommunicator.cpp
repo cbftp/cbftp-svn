@@ -6,6 +6,7 @@ UICommunicator::UICommunicator() {
   pthread_mutex_init(&event_mutex, NULL);
   newcommand = false;
   careaboutbackend = false;
+  legendenabled = true;
 }
 
 void UICommunicator::newCommand(std::string command) {
@@ -93,4 +94,44 @@ void UICommunicator::kill() {
 
 void UICommunicator::terminalSizeChanged() {
   emitEvent("resize");
+}
+
+bool UICommunicator::legendEnabled() {
+  return legendenabled;
+}
+
+void UICommunicator::showLegend(bool show) {
+  if (show) {
+    emitEvent("showlegend");
+  }
+  else {
+    emitEvent("hidelegend");
+  }
+  legendenabled = show;
+}
+
+void UICommunicator::readConfiguration() {
+  std::vector<std::string> lines;
+  global->getDataFileHandler()->getDataFor("UICommunicator", &lines);
+  std::vector<std::string>::iterator it;
+  std::string line;
+  for (it = lines.begin(); it != lines.end(); it++) {
+    line = *it;
+    if (line.length() == 0 ||line[0] == '#') continue;
+    size_t tok = line.find('=');
+    std::string setting = line.substr(0, tok);
+    std::string value = line.substr(tok + 1);
+    if (!setting.compare("legend")) {
+      if (!value.compare("true")) {
+        showLegend(true);
+      }
+      else {
+        showLegend(false);
+      }
+    }
+  }
+}
+
+void UICommunicator::writeState() {
+  global->getDataFileHandler()->addOutputLine("UICommunicator", "legend=" + legendEnabled());
 }

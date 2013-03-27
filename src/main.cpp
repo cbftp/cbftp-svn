@@ -64,6 +64,7 @@ void sighandler(int sig) {
     std::cout << "Saving data to file..." << std::endl;
     global->getSiteManager()->writeState();
     global->getRemoteCommandHandler()->writeState();
+    global->getUICommunicator()->writeState();
     global->getDataFileHandler()->writeFile();
     std::cout << "Done, exiting..." << std::endl << std::flush;
   }
