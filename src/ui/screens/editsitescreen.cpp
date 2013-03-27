@@ -17,6 +17,7 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
     modsite.setMaxUp(sm->getDefaultMaxUp());
     modsite.setMaxDn(sm->getDefaultMaxDown());
     modsite.setSSLFXPForced(sm->getDefaultSSLFXPForced());
+    modsite.setMaxIdleTime(sm->getDefaultMaxIdleTime());
   }
   else if (operation == "edit") {
     site = global->getSiteManager()->getSite(arg2);
@@ -33,6 +34,7 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
   mso.addIntArrow(y++, x, "logins", "Login slots:", modsite.getInternMaxLogins(), 0, 99);
   mso.addIntArrow(y++, x, "maxup", "Upload slots:", modsite.getInternMaxUp(), 0, 99);
   mso.addIntArrow(y++, x, "maxdn", "Download slots:", modsite.getInternMaxDown(), 0, 99);
+  mso.addStringField(y++, x, "idletime", "Max idle time (s):", global->int2Str(modsite.getMaxIdleTime()), false);
   mso.addCheckBox(y++, x, "pret", "Needs PRET:", modsite.needsPRET());
   mso.addCheckBox(y++, x, "forcesslfxp", "Force SSL FXP:", modsite.SSLFXPForced());
   mso.addCheckBox(y++, x, "brokenpasv", "Broken PASV:", modsite.hasBrokenPASV());
@@ -277,6 +279,9 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "brokenpasv") {
           site->setBrokenPASV(((MenuSelectOptionCheckBox *)msoe)->getData());
+        }
+        else if (identifier == "idletime") {
+          site->setMaxIdleTime(global->str2Int(((MenuSelectOptionTextField *)msoe)->getData()));
         }
       }
       site->clearSections();

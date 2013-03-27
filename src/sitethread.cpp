@@ -332,7 +332,9 @@ void SiteThread::handleConnection(int id, bool backfromrefresh) {
     }
     else {
       connstatetracker[id].setIdle();
-      connstatetracker[id].delayedCommand("quit", IDLETIME);
+      if (site->getMaxIdleTime()) {
+        connstatetracker[id].delayedCommand("quit", site->getMaxIdleTime() * 1000);
+      }
     }
     pthread_mutex_lock(&slots);
     available++;

@@ -13,6 +13,7 @@ Site::Site(std::string name) {
   logins = 0;
   max_up = 0;
   max_dn = 0;
+  max_idletime = 60;
   pret = false;
   sslfxpforced = false;
   brokenpasv = false;
@@ -69,6 +70,10 @@ unsigned int Site::getMaxDown() {
     return getMaxLogins();
   }
   return max_dn;
+}
+
+unsigned int Site::getMaxIdleTime() {
+  return max_idletime;
 }
 
 unsigned int Site::getInternMaxLogins() {
@@ -210,6 +215,10 @@ void Site::setMaxDn(unsigned int num) {
 
 void Site::setMaxUp(unsigned int num) {
   max_up = num > logins && logins > 0 ? logins : num;
+}
+
+void Site::setMaxIdleTime(unsigned int idletime) {
+  max_idletime = idletime;
 }
 
 void Site::clearSections() {

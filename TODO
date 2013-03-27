@@ -46,8 +46,6 @@ bug: crash mid-race, reason unknown
 
 feature: disable legend
 
-feature: max idle time
-
 feature: help screen with key binding info etc
 
 feature: proxy support with proxy-per-site
@@ -63,3 +61,5 @@ feature: debug log
 feature: stepping backward-forward in text fields
 
 cosmetic: enter site ip:port in the same field
+
+bug: ui refreshing breaks when getting updated too much

@@ -19,6 +19,7 @@ GlobalOptionsScreen::GlobalOptionsScreen(WINDOW * window, UICommunicator * uicom
   mso.addIntArrow(y++, x, "defmaxup", "Default site upload slots:", sm->getDefaultMaxUp(), 0, 99);
   mso.addIntArrow(y++, x, "defmaxdn", "Default site download slots:", sm->getDefaultMaxDown(), 0, 99);
   mso.addCheckBox(y++, x, "defforcesslfxp", "Default site forced SSL FXP:", sm->getDefaultSSLFXPForced());
+  mso.addStringField(y++, x, "defidletime", "Default site max idle time (s):", global->int2Str(sm->getDefaultMaxIdleTime()), false);
   init(window, row, col);
 }
 
@@ -128,6 +129,9 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "defforcesslfxp") {
           sm->setDefaultSSLFXPForced(((MenuSelectOptionCheckBox *)msoe)->getData());
+        }
+        else if (identifier == "defidletime") {
+          sm->setDefaultMaxIdleTime(global->str2Int(((MenuSelectOptionTextField *)msoe)->getData()));
         }
       }
       rch->setEnabled(udpenable);

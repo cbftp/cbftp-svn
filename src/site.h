@@ -19,6 +19,7 @@ class Site {
     unsigned int logins;
     unsigned int max_up;
     unsigned int max_dn;
+    unsigned int max_idletime;
     std::map<std::string, std::string> sections;
     std::map<std::string, int> avgspeed;
   public:
@@ -47,6 +48,7 @@ class Site {
     void setSSLFXPForced(bool);
     bool hasBrokenPASV();
     void setBrokenPASV(bool);
+    unsigned int getMaxIdleTime();
     std::string getName();
     std::string getSectionPath(std::string);
     bool hasSection(std::string);
@@ -62,6 +64,7 @@ class Site {
     void setMaxLogins(unsigned int);
     void setMaxDn(unsigned int);
     void setMaxUp(unsigned int);
+    void setMaxIdleTime(unsigned int);
     void clearSections();
     void addSection(std::string, std::string);
     std::list<std::string> getSectionsForPath(std::string);

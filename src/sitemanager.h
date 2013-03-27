@@ -16,6 +16,7 @@
 #define DEFAULTMAXLOGINS 3
 #define DEFAULTMAXUP 0
 #define DEFAULTMAXDOWN 2
+#define DEFAULTMAXIDLETIME 60
 #define DEFAULTSSLFXPFORCED false
 
 extern GlobalContext * global;
@@ -28,6 +29,7 @@ class SiteManager {
     unsigned int defaultmaxlogins;
     unsigned int defaultmaxup;
     unsigned int defaultmaxdown;
+    unsigned int defaultmaxidletime;
     bool defaultsslfxpforced;
   public:
     SiteManager();
@@ -48,6 +50,8 @@ class SiteManager {
     void setDefaultMaxUp(unsigned int);
     unsigned int getDefaultMaxDown();
     void setDefaultMaxDown(unsigned int);
+    unsigned int getDefaultMaxIdleTime();
+    void setDefaultMaxIdleTime(unsigned int);
     bool getDefaultSSLFXPForced();
     void setDefaultSSLFXPForced(bool);
     void writeState();

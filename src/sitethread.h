@@ -23,8 +23,6 @@
 
 //minimum sleep delay (between refreshes / hammer attempts) in ms
 #define SLEEPDELAY 150
-//maximum site idle time before disconnecting automatically
-#define IDLETIME 60000
 //maximum number of dir refreshes in a row in the same race
 #define MAXCHECKSROW 5
 

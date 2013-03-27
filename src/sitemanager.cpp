@@ -7,6 +7,7 @@ SiteManager::SiteManager() {
   defaultmaxup = DEFAULTMAXUP;
   defaultmaxdown = DEFAULTMAXDOWN;
   defaultsslfxpforced = DEFAULTSSLFXPFORCED;
+  defaultmaxidletime = DEFAULTMAXIDLETIME;
 }
 
 void SiteManager::readConfiguration() {
@@ -38,6 +39,9 @@ void SiteManager::readConfiguration() {
     }
     else if (!setting.compare("pass")) {
       site->setPass(value);
+    }
+    else if (!setting.compare("idletime")) {
+      site->setMaxIdleTime(global->str2Int(value));
     }
     else if (!setting.compare("pret")) {
       if (!value.compare("true")) site->setPRET(true);
@@ -98,6 +102,9 @@ void SiteManager::readConfiguration() {
         setDefaultSSLFXPForced(true);
       }
     }
+    else if (!setting.compare("maxidletime")) {
+      setDefaultMaxIdleTime(global->str2Int(value));
+    }
   }
   std::sort(sites.begin(), sites.end(), siteNameComparator);
 }
@@ -115,6 +122,7 @@ void SiteManager::writeState() {
     filehandler->addOutputLine("SiteManager", name + "$logins=" + global->int2Str(site->getInternMaxLogins()));
     filehandler->addOutputLine("SiteManager", name + "$maxup=" + global->int2Str(site->getInternMaxUp()));
     filehandler->addOutputLine("SiteManager", name + "$maxdn=" + global->int2Str(site->getInternMaxDown()));
+    filehandler->addOutputLine("SiteManager", name + "$idletime=" + global->int2Str(site->getMaxIdleTime()));
     if (site->needsPRET()) filehandler->addOutputLine("SiteManager", name + "$pret=true");
     if (site->SSLFXPForced()) filehandler->addOutputLine("SiteManager", name + "$sslfxpforced=true");
     if (site->hasBrokenPASV()) filehandler->addOutputLine("SiteManager", name + "$brokenpasv=true");
@@ -132,6 +140,7 @@ void SiteManager::writeState() {
   filehandler->addOutputLine("SiteManagerDefaults", "maxlogins=" + global->int2Str(getDefaultMaxLogins()));
   filehandler->addOutputLine("SiteManagerDefaults", "maxup=" + global->int2Str(getDefaultMaxUp()));
   filehandler->addOutputLine("SiteManagerDefaults", "maxdown=" + global->int2Str(getDefaultMaxDown()));
+  filehandler->addOutputLine("SiteManagerDefaults", "maxidletime=" + global->int2Str(getDefaultMaxIdleTime()));
   if (getDefaultSSLFXPForced()) filehandler->addOutputLine("SiteManagerDefaults", "sslfxpforced=true");
 }
 
@@ -215,6 +224,14 @@ unsigned int SiteManager::getDefaultMaxDown() {
 
 void SiteManager::setDefaultMaxDown(unsigned int maxdown) {
   defaultmaxdown = maxdown;
+}
+
+unsigned int SiteManager::getDefaultMaxIdleTime() {
+  return defaultmaxidletime;
+}
+
+void SiteManager::setDefaultMaxIdleTime(unsigned int idletime) {
+  defaultmaxidletime = idletime;
 }
 
 bool SiteManager::getDefaultSSLFXPForced() {
