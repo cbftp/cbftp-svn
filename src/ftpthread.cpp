@@ -45,6 +45,7 @@ bool FTPThread::loginT() {
   int status;
   controlssl = false;
   protectedmode = false;
+  currentpath = "";
   getaddrinfo(site->getAddress().data(), site->getPort().data(), &sock, &res);
   sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
   fcntl(sockfd, F_SETFL, O_NONBLOCK);

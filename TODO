@@ -16,8 +16,6 @@ bug: crash when unable to resolve server dns
 
 bug: crash when unable to cwd to wanted dir during race
 
-bug: ultra-bad mkdir entire root tree after disconnect
-
 feature: force SSL off
 
 feature: disable specific site1->site2
@@ -61,3 +59,5 @@ feature: stepping backward-forward in text fields
 cosmetic: enter site ip:port in the same field
 
 bug: ui refreshing breaks when getting updated too much
+
+feature: base path per site
