@@ -7,7 +7,7 @@ PotentialTracker::PotentialTracker(int slots) {
   for (int i = 0; i < slots; i++) top.push_back(new PotentialElement());
   pthread_mutex_init(&listmutex, NULL);
   sem_init(&tick, 0, 0);
-  global->getTickPoke()->startPoke(&tick, POTENTIALITY_LIFESPAN * 1000 / POTENTIALITY_SLICES, 0);
+  global->getTickPoke()->startPoke(&tick, POTENTIALITY_LIFESPAN / POTENTIALITY_SLICES, 0);
   pthread_create(&thread, global->getPthreadAttr(), runPotentialTracker, (void *) this);
   pthread_setname_np(thread, "PTrackerThread");
 }
