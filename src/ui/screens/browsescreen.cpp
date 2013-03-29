@@ -254,6 +254,32 @@ void BrowseScreen::keyPressed(unsigned int ch) {
         uicommunicator->newCommand("update");
       }
       break;
+    case KEY_HOME:
+      while (list.goPrevious()) {
+        if (!update) {
+          update = true;
+        }
+      }
+      if (list.currentCursorPosition() < currentviewspan) {
+        uicommunicator->newCommand("redraw");
+      }
+      else if (update) {
+        uicommunicator->newCommand("update");
+      }
+      break;
+    case KEY_END:
+      while (list.goNext()) {
+        if (!update) {
+          update = true;
+        }
+      }
+      if (list.currentCursorPosition() >= currentviewspan + row) {
+        uicommunicator->newCommand("redraw");
+      }
+      else if (update) {
+        uicommunicator->newCommand("update");
+      }
+      break;
     case 'w':
       uicommunicator->newCommand("rawcommand", site->getName());
       break;
