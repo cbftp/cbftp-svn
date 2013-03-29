@@ -133,5 +133,10 @@ void UICommunicator::readConfiguration() {
 }
 
 void UICommunicator::writeState() {
-  global->getDataFileHandler()->addOutputLine("UICommunicator", "legend=" + legendEnabled());
+  if (legendEnabled()) {
+    global->getDataFileHandler()->addOutputLine("UICommunicator", "legend=true");
+  }
+  else {
+    global->getDataFileHandler()->addOutputLine("UICommunicator", "legend=false");
+  }
 }
