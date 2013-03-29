@@ -31,7 +31,6 @@ class PotentialTracker {
   public:
     PotentialTracker(int);
     void runInstance();
-    void runTickInstance();
     int getMaxAvailablePotential();
     PotentialListElement * getFront();
     std::list<PotentialElement *>::iterator findFirstOfSite(SiteThread *);
