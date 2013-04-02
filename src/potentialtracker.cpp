@@ -7,9 +7,16 @@ PotentialTracker::PotentialTracker(int slots) {
   for (int i = 0; i < slots; i++) top.push_back(new PotentialElement());
   pthread_mutex_init(&listmutex, NULL);
   sem_init(&tick, 0, 0);
+  running = true;
   global->getTickPoke()->startPoke(&tick, POTENTIALITY_LIFESPAN / POTENTIALITY_SLICES, 0);
   pthread_create(&thread, global->getPthreadAttr(), runPotentialTracker, (void *) this);
   pthread_setname_np(thread, "PTrackerThread");
+}
+
+PotentialTracker::~PotentialTracker() {
+  running = false;
+  global->getTickPoke()->stopPoke(&tick, 0);
+  sem_post(&tick);
 }
 
 int PotentialTracker::getMaxAvailablePotential() {
@@ -76,6 +83,9 @@ void * runPotentialTracker(void * arg) {
 void PotentialTracker::runInstance() {
   while(1) {
     sem_wait(&tick);
+    if (!running) {
+      return;
+    }
     pthread_mutex_lock(&listmutex);
     potentiallist.back()->reset();
     potentiallist.push_front(potentiallist.back());

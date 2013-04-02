@@ -28,8 +28,10 @@ class PotentialTracker {
     std::vector<PotentialElement *>::iterator itpe;
     std::list<PotentialElement *>::iterator ittop;
     std::list<PotentialElement *>::iterator ittop2;
+    bool running;
   public:
     PotentialTracker(int);
+    ~PotentialTracker();
     void runInstance();
     int getMaxAvailablePotential();
     PotentialListElement * getFront();
