@@ -43,10 +43,10 @@ void SiteStatusScreen::update() {
 void SiteStatusScreen::keyPressed(unsigned int ch) {
   switch(ch) {
     case KEY_RIGHT:
-      uicommunicator->newCommand("rawdata", sitename, "0");
+      uicommunicator->newCommand("rawdata", site->getName(), "0");
       break;
     case 'E':
-      uicommunicator->newCommand("editsite", "edit", sitename);
+      uicommunicator->newCommand("editsite", "edit", site->getName());
       break;
     case ' ':
     case 10:

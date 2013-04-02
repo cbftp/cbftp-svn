@@ -194,8 +194,14 @@ void SiteThread::runInstance() {
           conns[id]->doQUITAsync();
           break;
         case 6: // connection closed unexpectedly
-          std::cout << "Disconnected." << std::endl;
-          conns[id]->disconnectAsync();
+          if (!connstatetracker[id].isDisconnected()) {
+            connstatetracker[id].setDisconnected();
+            loggedin--;
+            conns[id]->reconnectAsync();
+          }
+          else {
+            conns[id]->disconnectAsync();
+          }
           break;
         case 7: // login kill failed
           delete (char *)command->getArg3();
@@ -624,6 +630,12 @@ bool SiteThread::potentialCheck(int score) {
     return true;
   }
   return false;
+}
+
+void SiteThread::updateName() {
+  for (unsigned int i = 0; i < conns.size(); i++) {
+    conns[i]->updateName();
+  }
 }
 
 int SiteThread::getCurrLogins() {

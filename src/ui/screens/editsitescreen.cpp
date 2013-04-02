@@ -192,6 +192,7 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
     return;
   }
   bool activation;
+  bool changedname = false;
   switch(ch) {
     case KEY_UP:
       if (focusedarea->goUp()) {
@@ -248,7 +249,11 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         MenuSelectOptionElement * msoe = mso.getElement(i);
         std::string identifier = msoe->getIdentifier();
         if (identifier == "name") {
-          site->setName(((MenuSelectOptionTextField *)msoe)->getData());
+          std::string newname = ((MenuSelectOptionTextField *)msoe)->getData();
+          if (newname != site->getName()) {
+            changedname = true;
+          }
+          site->setName(newname);
         }
         else if (identifier == "addr") {
           site->setAddress(((MenuSelectOptionTextField *)msoe)->getData());
@@ -300,6 +305,9 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         global->getSiteManager()->sortSites();
       }
       global->getSiteThreadManager()->getSiteThread(site->getName())->setNumConnections(site->getMaxLogins());
+      if (changedname) {
+        global->getSiteThreadManager()->getSiteThread(site->getName())->updateName();
+      }
       uicommunicator->newCommand("return");
       return;
     case 'c':

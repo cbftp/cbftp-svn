@@ -71,6 +71,7 @@ class FTPThread {
     void loginKillT();
     FTPThread(int, Site *, FTPThreadCom *);
     int updateFileList(FileList *);
+    void updateName();
     std::string getCurrentPath();
     std::string doPWD();
     void setProtectedModeAsync();

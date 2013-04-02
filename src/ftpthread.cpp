@@ -68,7 +68,11 @@ bool FTPThread::loginT() {
     return false;
   }
   rawbuf->writeLine("[Connection established]");
-  if (read() != 220) {
+  status = read();
+  if (status < 0) {
+    return false;
+  }
+  if (status != 220) {
     rawbuf->writeLine("[Unknown response]");
     ftpthreadcom->loginUnknownResponse(id);
     return false;
@@ -84,6 +88,9 @@ bool FTPThread::loginT() {
     controlssl = true;
   }
   else {
+    if (status < 0) {
+      return false;
+    }
     ftpthreadcom->loginTLSFailed(id, status);
     return false;
   }
@@ -106,10 +113,14 @@ void FTPThread::doUSERPASSAsync() {
 void FTPThread::doUSERPASST(bool killer) {
   int status;
   char * reply;
-  write((std::string("USER ") + (killer ? "!" : "") + site->getUser()).data());
+  if (write((std::string("USER ") + (killer ? "!" : "") + site->getUser()).data()) < 0) {
+    return;
+  }
   if ((status = readall(&reply, true)) != 331) {
-    if (!killer) ftpthreadcom->loginUserDenied(id, status, reply);
-    else ftpthreadcom->loginKillFailed(id, status, reply);
+    if (status >= 0) {
+      if (!killer) ftpthreadcom->loginUserDenied(id, status, reply);
+      else ftpthreadcom->loginKillFailed(id, status, reply);
+    }
     return;
   }
   delete reply;
@@ -118,10 +129,14 @@ void FTPThread::doUSERPASST(bool killer) {
   for (unsigned int i = 0; i < pass.length(); i++) passc.append("*");
   std::string output = "PASS " + std::string(passc);
   rawbuf->writeLine(output);
-  write((std::string("PASS ") + site->getPass()).data(), false);
+  if (write((std::string("PASS ") + site->getPass()).data(), false) < 0) {
+    return;
+  }
   if ((status = readall(&reply, true)) != 230) {
-    if (!killer) ftpthreadcom->loginPasswordDenied(id, status, reply);
-    else ftpthreadcom->loginKillFailed(id, status, reply);
+    if (status >= 0) {
+      if (!killer) ftpthreadcom->loginPasswordDenied(id, status, reply);
+      else ftpthreadcom->loginKillFailed(id, status, reply);
+    }
     return;
   }
   delete reply;
@@ -150,7 +165,7 @@ int FTPThread::write(const char * command, bool echo) {
   else b_sent = send(sockfd, out, len, 0);
   if (b_sent <= 0) {
     ftpthreadcom->connectionClosedUnexpectedly(id);
-    return 0;
+    return -1;
   }
   else if (b_sent >= len) {
     if (echo) {
@@ -172,7 +187,7 @@ int FTPThread::read() {
   else b_recv = recv(sockfd, buf, MAXDATASIZE, 0);
   if (b_recv <= 0) {
     ftpthreadcom->connectionClosedUnexpectedly(id);
-    return 0;
+    return -1;
   }
   buf[b_recv] = '\0';
   std::string output = std::string(buf);
@@ -217,7 +232,7 @@ int FTPThread::readallsub(char ** reply, char * tmp, bool print) {
   else b_recv = recv(sockfd, buf, MAXDATASIZE, 0);
   if (b_recv <= 0) {
     ftpthreadcom->connectionClosedUnexpectedly(id);
-    return 0;
+    return -1;
   }
   buf[b_recv] = '\0';
   if (print) {
@@ -272,7 +287,9 @@ void FTPThread::refreshRaceFileListT(SiteRace * siterace) {
 
 int FTPThread::updateFileList(FileList * filelist) {
   char * reply;
-  write("STAT -l");
+  if (write("STAT -l") < 0) {
+    return -1;
+  }
   if (readall(&reply, false) == 213) {
     char * loc = reply, * start;
     while(*++loc != '\n');
@@ -295,6 +312,10 @@ int FTPThread::updateFileList(FileList * filelist) {
     if (!filelist->isFilled()) filelist->setFilled();
   }
   return 0;
+}
+
+void FTPThread::updateName() {
+  rawbuf->rename(site->getName());
 }
 
 void FTPThread::getFileListAsync(std::string path) {
@@ -320,7 +341,9 @@ std::string FTPThread::getCurrentPath() {
   return currentpath;
 }
 std::string FTPThread::doPWD() {
-  write("PWD");
+  if (write("PWD") < 0) {
+    return "";
+  }
   char * reply;
   if (readall(&reply, true) == 257) {
     std::string line(reply);
@@ -347,14 +370,18 @@ void FTPThread::unsetProtectedModeAsync() {
 }
 
 void FTPThread::doPROTPT() {
-  write("PROT P");
+  if (write("PROT P") < 0) {
+    return;
+  }
   if (read() == 200) {
     protectedmode = true;
   }
 }
 
 void FTPThread::doPROTCT() {
-  write("PROT C");
+  if (write("PROT C") < 0) {
+    return;
+  }
   if (read() == 200) {
     protectedmode = false;
   }
@@ -369,9 +396,14 @@ void FTPThread::getRawAsync(std::string command, int id) {
 }
 
 void FTPThread::getRawT(std::string command, int id) {
-  write(command.c_str());
+  if (write(command.c_str()) < 0) {
+    return;
+  }
   char * reply;
-  readall(&reply, true);
+  int status = readall(&reply, true);
+  if (status < 0) {
+    return;
+  }
   std::string * ret = new std::string(reply);
   delete reply;
   ftpthreadcom->rawCommandResultRetrieved(this->id, id, ret);
@@ -392,9 +424,15 @@ bool FTPThread::doCPSV(std::string ** ret) {
 }
 
 void FTPThread::doCPSVT(std::string ** ret, sem_t * donesem) {
-  write("CPSV");
+  if (write("CPSV") < 0) {
+    return;
+  }
   char * reply;
-  readall(&reply, true);
+  if (readall(&reply, true) < 0) {
+    *ret = new std::string("000");
+    sem_post(donesem);
+    return;
+  }
   *ret = new std::string(reply);
   delete reply;
   sem_post(donesem);
@@ -422,9 +460,15 @@ bool FTPThread::doPASV(std::string ** ret, bool sslfxp) {
 }
 
 void FTPThread::doPASVT(std::string ** ret, sem_t * donesem) {
-  write("PASV");
+  if (write("PASV") < 0) {
+    return;
+  }
   char * reply;
-  readall(&reply, true);
+  if (readall(&reply, true) < 0) {
+    *ret = new std::string("000");
+    sem_post(donesem);
+    return;
+  }
   *ret = new std::string(reply);
   delete reply;
   sem_post(donesem);
@@ -439,7 +483,9 @@ bool FTPThread::doPORT(std::string addr) {
 }
 
 void FTPThread::doPORTT(std::string addr, sem_t * donesem) {
-  write(("PORT " + addr).c_str());
+  if (write(("PORT " + addr).c_str()) < 0) {
+    return;
+  }
   if (read() == 200) {
     // can this command even fail? :)
   }
@@ -454,7 +500,9 @@ bool FTPThread::doCWDT(std::string path) {
   if (path == currentpath) {
     return true;
   }
-  write (("CWD " + path).c_str());
+  if (write (("CWD " + path).c_str()) < 0) {
+    return false;
+  }
   if (read() == 250) {
     currentpath = path;
     return true;
@@ -463,7 +511,9 @@ bool FTPThread::doCWDT(std::string path) {
 }
 
 bool FTPThread::doMKDirT(std::string dir) {
-  write(("MKD " + dir).c_str());
+  if (write(("MKD " + dir).c_str()) < 0) {
+    return false;
+  }
   if (read() == 257) return true;
   return false;
 }
@@ -506,7 +556,9 @@ bool FTPThread::doPRETRETR(std::string file) {
 }
 
 void FTPThread::doPRETRETRT(std::string file, int * status, sem_t * donesem) {
-  write (("PRET RETR " + file).c_str());
+  if (write (("PRET RETR " + file).c_str())) {
+    return;
+  }
   *status = read();
   sem_post(donesem);
 }
@@ -521,7 +573,9 @@ bool FTPThread::doRETR(std::string file) {
 }
 
 bool FTPThread::doRETRAsyncT(std::string file, int * status, sem_t * donesem) {
-  write (("RETR " + file).c_str());
+  if (write (("RETR " + file).c_str()) < 0) {
+    return false;
+  }
   int stat = *status = read();
   if (stat == 559) stat = *status = read(); // workaround for a glftpd bug causing an extra reply
   sem_post(donesem);
@@ -542,7 +596,9 @@ bool FTPThread::doPRETSTOR(std::string file) {
 }
 
 void FTPThread::doPRETSTORT(std::string file, int * status, sem_t * donesem) {
-  write (("PRET STOR " + file).c_str());
+  if (write (("PRET STOR " + file).c_str()) < 0) {
+    return;
+  }
   *status = read();
   sem_post(donesem);
 }
@@ -557,7 +613,9 @@ bool FTPThread::doSTOR(std::string file) {
 }
 
 bool FTPThread::doSTORAsyncT(std::string file, int * status, bool * timeout, sem_t * donesem) {
-  write (("STOR " + file).c_str());
+  if (write (("STOR " + file).c_str()) < 0) {
+    return false;
+  }
   int stat = *status = read();
   if (stat == 559) stat = *status = read(); // workaround for a glftpd bug causing an extra reply
   sem_post(donesem);
@@ -583,8 +641,9 @@ void FTPThread::doQUITAsync() {
 }
 
 void FTPThread::doQUITT() {
-  write("QUIT");
-  read();
+  if (write("QUIT") >= 0) {
+    read();
+  }
   disconnectT();
 }
 
@@ -614,6 +673,7 @@ void FTPThread::runInstance() {
     pthread_mutex_lock(&commandq_mutex);
     CommandQueueElement * command = commandqueue.front();
     pthread_mutex_unlock(&commandq_mutex);
+    bool emptyqueue = false;
     switch(command->getOpcode()) {
       case 0:
         loginT();
@@ -682,15 +742,25 @@ void FTPThread::runInstance() {
         break;
       case 100:
         doQUITT();
+        emptyqueue = true;
         break;
       case 101:
         disconnectT();
+        emptyqueue = true;
         break;
     }
     pthread_mutex_lock(&commandq_mutex);
+    if (emptyqueue) {
+      while(commandqueue.size() > 1) {
+        sem_wait(&commandsem);
+        CommandQueueElement * tmpcom = commandqueue.back();
+        commandqueue.pop_back();
+        delete tmpcom;
+      }
+    }
     commandqueue.pop_front();
-    pthread_mutex_unlock(&commandq_mutex);
     delete command;
+    pthread_mutex_unlock(&commandq_mutex);
   }
 }
 

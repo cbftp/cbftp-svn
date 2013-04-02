@@ -95,6 +95,7 @@ class SiteThread {
     void requestViewFile(std::string);
     void pushPotential(int, std::string, SiteThread *);
     bool potentialCheck(int);
+    void updateName();
     std::vector<FTPThread *> * getConns();
     FTPThread * getConn(int);
     std::string getStatus(int);

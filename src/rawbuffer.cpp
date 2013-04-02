@@ -55,6 +55,11 @@ void RawBuffer::writeLine(std::string s) {
   write(s + "\n");
 }
 
+void RawBuffer::rename(std::string name) {
+  writeLine("Changing site name to: " + name);
+  site = name;
+}
+
 void RawBuffer::setId(int id) {
   this->id = global->int2Str(id);
 }

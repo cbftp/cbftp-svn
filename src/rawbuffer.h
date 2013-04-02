@@ -26,6 +26,7 @@ class RawBuffer {
     void setId(int);
     void write(std::string);
     void writeLine(std::string);
+    void rename(std::string);
     unsigned int getSize();
     unsigned int getCopySize();
     std::string getLine(unsigned int);
