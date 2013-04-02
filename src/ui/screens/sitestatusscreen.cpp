@@ -66,5 +66,5 @@ std::string SiteStatusScreen::getLegendText() {
 }
 
 std::string SiteStatusScreen::getInfoLabel() {
-  return "DETAILED STATUS: " + sitename;
+  return "DETAILED STATUS: " + site->getName();
 }
