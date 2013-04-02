@@ -55,6 +55,7 @@ class SiteManager {
     bool getDefaultSSLFXPForced();
     void setDefaultSSLFXPForced(bool);
     void writeState();
+    void sortSites();
 };
 
 bool siteNameComparator(Site *, Site *);

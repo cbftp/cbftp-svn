@@ -296,6 +296,9 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
       if (operation == "add") {
         global->getSiteManager()->addSite(site);
       }
+      else {
+        global->getSiteManager()->sortSites();
+      }
       global->getSiteThreadManager()->getSiteThread(site->getName())->setNumConnections(site->getMaxLogins());
       uicommunicator->newCommand("return");
       return;

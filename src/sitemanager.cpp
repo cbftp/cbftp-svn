@@ -171,6 +171,10 @@ void SiteManager::deleteSite(std::string site) {
 
 void SiteManager::addSite(Site * site) {
   sites.push_back(site);
+  sortSites();
+}
+
+void SiteManager::sortSites() {
   std::sort(sites.begin(), sites.end(), siteNameComparator);
 }
 
