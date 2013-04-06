@@ -12,10 +12,11 @@ SiteThread::SiteThread(std::string sitename) {
   available = 0;
   loggedin = 0;
   wantedloggedin = 0;
+  poke = false;
   rawbuf = new RawBuffer(site->getName());
   int logins = site->getMaxLogins();
   list_refresh = global->getListRefreshSem();
-  global->getTickPoke()->startPoke(&notifysem, 50, 0);
+  global->getTickPoke()->startPoke(this, 50, 0);
   for (int i = 0; i < logins; i++) {
     connstatetracker.push_back(ConnStateTracker());
     conns.push_back(new FTPThread(i, site, ftpthreadcom));
@@ -25,7 +26,7 @@ SiteThread::SiteThread(std::string sitename) {
 }
 
 SiteThread::~SiteThread() {
-  global->getTickPoke()->stopPoke(&notifysem, 0);
+  global->getTickPoke()->stopPoke(this, 0);
   delete ftpthreadcom;
   delete ptrack;
 }
@@ -57,13 +58,17 @@ void * SiteThread::run(void * arg) {
   return NULL;
 }
 
+void SiteThread::tick(int message) {
+  poke = true;
+  sem_post(&notifysem);
+}
+
 void SiteThread::runInstance() {
   SiteRace * race;
   while(1) {
     sem_wait(&notifysem);
-
-    if (global->getTickPoke()->isPoked(&notifysem)) {
-      global->getTickPoke()->getMessage(&notifysem);
+    if (poke) {
+      poke = false;
       for (unsigned int i = 0; i < connstatetracker.size(); i++) {
         connstatetracker[i].timePassed(50);
         if (connstatetracker[i].hasReleasedCommand()) {

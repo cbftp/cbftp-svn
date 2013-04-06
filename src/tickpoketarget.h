@@ -1,16 +1,17 @@
 #pragma once
 
 #include <semaphore.h>
+#include "eventreceiver.h"
 
 class TickPokeTarget {
 private:
-  sem_t * pokee;
+  EventReceiver * pokee;
   int interval;
   int currentval;
   int message;
 public:
-  TickPokeTarget(sem_t *, int, int);
+  TickPokeTarget(EventReceiver *, int, int);
   int getMessage();
-  sem_t * getPokee();
+  EventReceiver * getPokee();
   bool tick(int);
 };

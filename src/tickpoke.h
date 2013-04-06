@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include "globalcontext.h"
+#include "eventreceiver.h"
 #include "tickpoketarget.h"
 
 extern GlobalContext * global;
@@ -15,15 +16,15 @@ extern GlobalContext * global;
 
 class TickPoke {
 private:
-  pthread_t thread;
+  pthread_t thread[2];
+  sem_t tick;
+  static void * runTicker(void *);
   static void * run(void *);
   std::list<TickPokeTarget> targets;
-  std::map<sem_t *, std::list<int> > pokes;
 public:
   TickPoke();
+  void runTickerInstance();
   void runInstance();
-  void startPoke(sem_t *, int, int);
-  void stopPoke(sem_t *, int);
-  int getMessage(sem_t *);
-  bool isPoked(sem_t *);
+  void startPoke(EventReceiver *, int, int);
+  void stopPoke(EventReceiver *, int);
 };

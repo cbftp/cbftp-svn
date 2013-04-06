@@ -129,6 +129,10 @@ void UserInterface::disableLegend() {
   }
 }
 
+void UserInterface::tick(int message) {
+  uicommunicator.emitEvent("poke");
+}
+
 void UserInterface::runUserInterfaceInstance() {
   sem_wait(&initstart);
   initIntern();
@@ -149,8 +153,7 @@ void UserInterface::runUserInterfaceInstance() {
   UIWindow * newracescreen = NULL;
   UIWindow * racestatusscreen = NULL;
   UIWindow * globaloptionsscreen = NULL;
-  sem_t * eventsem = uicommunicator.getEventSem();
-  global->getTickPoke()->startPoke(eventsem, 250, 0);
+  global->getTickPoke()->startPoke(this, 250, 0);
   legendwindow = new LegendWindow(legend, 2, col);
   infowindow = new InfoWindow(info, 2, col);
   if (global->getDataFileHandler()->fileExists()) {
@@ -173,8 +176,7 @@ void UserInterface::runUserInterfaceInstance() {
   refreshAll();
   while(1) {
     std::string currentevent = uicommunicator.awaitEvent();
-    if (global->getTickPoke()->isPoked(eventsem)) {
-      global->getTickPoke()->getMessage(eventsem);
+    if (currentevent == "poke") {
       if (topwindow->autoUpdate()) {
         topwindow->update();
       }

@@ -20,6 +20,7 @@
 #include "tickpoke.h"
 #include "connstatetracker.h"
 #include "rawbuffer.h"
+#include "eventreceiver.h"
 
 //minimum sleep delay (between refreshes / hammer attempts) in ms
 #define SLEEPDELAY 150
@@ -28,7 +29,7 @@
 
 extern GlobalContext * global;
 
-class SiteThread {
+class SiteThread : private EventReceiver {
   private:
     PotentialTracker * ptrack;
     std::vector<FTPThread *> conns;
@@ -60,6 +61,8 @@ class SiteThread {
     void addRecentList(SiteRace *);
     bool wasRecentlyListed(SiteRace *);
     static void * run(void *);
+    bool poke;
+    void tick(int);
   public:
     SiteThread(std::string);
     ~SiteThread();

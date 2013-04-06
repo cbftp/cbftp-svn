@@ -1,6 +1,6 @@
 #include "tickpoketarget.h"
 
-TickPokeTarget::TickPokeTarget(sem_t * pokee, int interval, int message) {
+TickPokeTarget::TickPokeTarget(EventReceiver * pokee, int interval, int message) {
   this->pokee = pokee;
   this->interval = interval;
   this->message = message;
@@ -11,7 +11,7 @@ int TickPokeTarget::getMessage() {
   return message;
 }
 
-sem_t * TickPokeTarget::getPokee() {
+EventReceiver * TickPokeTarget::getPokee() {
   return pokee;
 }
 

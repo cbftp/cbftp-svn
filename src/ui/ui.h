@@ -13,6 +13,7 @@
 
 #include "../globalcontext.h"
 #include "../tickpoke.h"
+#include "../eventreceiver.h"
 
 #include "legendwindow.h"
 #include "infowindow.h"
@@ -37,7 +38,7 @@
 
 extern GlobalContext * global;
 
-class UserInterface {
+class UserInterface : private EventReceiver {
   private:
     WINDOW * main;
     WINDOW * info;
@@ -82,6 +83,7 @@ class UserInterface {
     void switchToWindow(UIWindow *);
     static void * runKeyListener(void *);
     static void * runUserInterface(void *);
+    void tick(int);
   public:
     UserInterface();
     void runKeyListenerInstance();
