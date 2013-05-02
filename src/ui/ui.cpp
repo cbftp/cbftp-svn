@@ -8,10 +8,8 @@ UserInterface::UserInterface() {
   topwindow = NULL;
   legendenabled = false;
   infoenabled = false;
-  pthread_create(&klthread, global->getPthreadAttr(), runKeyListener, (void *) this);
-  pthread_create(&uithread, global->getPthreadAttr(), runUserInterface, (void *) this);
-  pthread_setname_np(klthread, "UIKeyThread");
-  pthread_setname_np(uithread, "UIThread");
+  pthread_create(&uithread, global->getPthreadAttr(), run, (void *) this);
+  pthread_setname_np(uithread, "UserInterface");
 }
 
 bool UserInterface::init() {
@@ -33,6 +31,8 @@ void UserInterface::initIntern() {
     initret = false;
   }
   set_escdelay(25);
+  global->getIOManager()->registerStdin(this);
+  global->getTickPoke()->startPoke(this, 250, 0);
   sem_post(&initdone);
 }
 
@@ -49,22 +49,9 @@ void UserInterface::refreshAll() {
   doupdate();
 }
 
-void UserInterface::runKeyListenerInstance() {
-  fd_set readfds;
-  int select_result;
-  while(1) {
-    FD_ZERO(&readfds);
-    FD_SET(STDIN_FILENO, &readfds);
-    select_result = select(STDIN_FILENO+1, &readfds, NULL, NULL, NULL);
-    if (select_result < 0) {
-      perror("Error in select() on stdin");
-    }
-    else if (FD_ISSET(STDIN_FILENO, &readfds)) {
-      //incoming keypress!
-      uicommunicator.emitEvent("keyboard");
-      sem_wait(&keyeventdone);
-    }
-  }
+void UserInterface::FDData() {
+  keyqueue.push_back(getch());
+  uicommunicator.emitEvent("keyboard");
 }
 
 void UserInterface::enableInfo() {
@@ -133,7 +120,7 @@ void UserInterface::tick(int message) {
   uicommunicator.emitEvent("poke");
 }
 
-void UserInterface::runUserInterfaceInstance() {
+void UserInterface::runInstance() {
   sem_wait(&initstart);
   initIntern();
   mainrow = row;
@@ -153,7 +140,6 @@ void UserInterface::runUserInterfaceInstance() {
   UIWindow * newracescreen = NULL;
   UIWindow * racestatusscreen = NULL;
   UIWindow * globaloptionsscreen = NULL;
-  global->getTickPoke()->startPoke(this, 250, 0);
   legendwindow = new LegendWindow(legend, 2, col);
   infowindow = new InfoWindow(info, 2, col);
   if (global->getDataFileHandler()->fileExists()) {
@@ -189,11 +175,9 @@ void UserInterface::runUserInterfaceInstance() {
       refreshAll();
     }
     else if (currentevent == "keyboard") {
-      if (std::cin.peek() != EOF) {
-        int ch = getch();
-        sem_post(&keyeventdone);
-        topwindow->keyPressed(ch);
-      }
+      int ch = keyqueue.front();
+      keyqueue.pop_front();
+      topwindow->keyPressed(ch);
     }
     else if (currentevent == "update") {
       topwindow->update();
@@ -380,13 +364,8 @@ void UserInterface::switchToWindow(UIWindow * window) {
   uicommunicator.checkoutCommand();
 }
 
-void * UserInterface::runKeyListener(void * arg) {
-  ((UserInterface *) arg)->runKeyListenerInstance();
-  return NULL;
-}
-
-void * UserInterface::runUserInterface(void * arg) {
-  ((UserInterface *) arg)->runUserInterfaceInstance();
+void * UserInterface::run(void * arg) {
+  ((UserInterface *) arg)->runInstance();
   return NULL;
 }
 

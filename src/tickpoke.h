@@ -9,21 +9,21 @@
 #include "globalcontext.h"
 #include "eventreceiver.h"
 #include "tickpoketarget.h"
+#include "workmanager.h"
 
 extern GlobalContext * global;
 
 #define SLEEPINTERVAL 50
 
-class TickPoke {
+class TickPoke : private EventReceiver {
 private:
-  pthread_t thread[2];
-  sem_t tick;
-  static void * runTicker(void *);
+  pthread_t thread;
   static void * run(void *);
+  WorkManager * wm;
   std::list<TickPokeTarget> targets;
 public:
   TickPoke();
-  void runTickerInstance();
+  void tick(int);
   void runInstance();
   void startPoke(EventReceiver *, int, int);
   void stopPoke(EventReceiver *, int);

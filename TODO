@@ -61,3 +61,5 @@ cosmetic: enter site ip:port in the same field
 bug: ui refreshing breaks when getting updated too much
 
 feature: base path per site
+
+feature: multi-bnc support

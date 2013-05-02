@@ -16,8 +16,13 @@ void GlobalContext::init() {
   sem_init(&list_refresh, 0, 0);
 }
 
-void GlobalContext::linkComponents(DataFileHandler * dfh, Engine * e, UICommunicator * uic, SiteManager * sm, SiteThreadManager * stm, TransferManager * tm, TickPoke * tp, RemoteCommandHandler * rch) {
+void GlobalContext::linkWorkManager(WorkManager * wm) {
+  this->wm = wm;
+}
+
+void GlobalContext::linkComponents(DataFileHandler * dfh, IOManager * iom, Engine * e, UICommunicator * uic, SiteManager * sm, SiteThreadManager * stm, TransferManager * tm, TickPoke * tp, RemoteCommandHandler * rch) {
   this->dfh = dfh;
+  this->iom = iom;
   this->e = e;
   this->uic = uic;
   this->sm = sm;
@@ -37,6 +42,14 @@ Engine * GlobalContext::getEngine() {
 
 DataFileHandler * GlobalContext::getDataFileHandler() {
   return dfh;
+}
+
+IOManager * GlobalContext::getIOManager() {
+  return iom;
+}
+
+WorkManager * GlobalContext::getWorkManager() {
+  return wm;
 }
 
 UICommunicator * GlobalContext::getUICommunicator() {

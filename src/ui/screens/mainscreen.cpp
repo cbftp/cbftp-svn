@@ -90,7 +90,9 @@ void MainScreen::update() {
       return;
     }
     currentraces = newcurrentraces;
-    TermInt::printStr(window, 1, 1, "Active races: " + global->int2Str(currentraces));
+    if (currentraces) {
+      TermInt::printStr(window, 1, 1, "Active races: " + global->int2Str(currentraces));
+    }
     bool highlight;
     unsigned int selected = mso.getSelectionPointer();
     for (unsigned int i = 0; i < mso.size(); i++) {

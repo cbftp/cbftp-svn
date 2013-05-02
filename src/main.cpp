@@ -27,15 +27,18 @@ Main::Main() {
   }
   forever = true;
   global = new GlobalContext();
+  WorkManager * wm = new WorkManager();
+  global->linkWorkManager(wm);
   DataFileHandler * dfh = new DataFileHandler(datapath);
+  TickPoke * tp = new TickPoke();
+  IOManager * iom = new IOManager();
   Engine * e = new Engine();
   UserInterface * ui = new UserInterface();
   SiteManager * sm = new SiteManager();
   SiteThreadManager * stm = new SiteThreadManager();
   TransferManager * tm = new TransferManager();
-  TickPoke * tp = new TickPoke();
   RemoteCommandHandler * rch = new RemoteCommandHandler();
-  global->linkComponents(dfh, e, ui->getCommunicator(), sm, stm, tm, tp, rch);
+  global->linkComponents(dfh, iom, e, ui->getCommunicator(), sm, stm, tm, tp, rch);
   if (!ui->init()) exit(1);
   while(forever) {
     sleep(1);

@@ -16,6 +16,8 @@
 #include "ui/uicommunicator.h"
 #include "tickpoke.h"
 #include "remotecommandhandler.h"
+#include "iomanager.h"
+#include "workmanager.h"
 
 #define DATAFILE "data"
 #define DATAPATH ".clusterbomb"

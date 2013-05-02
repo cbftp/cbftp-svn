@@ -14,6 +14,7 @@
 #include "../globalcontext.h"
 #include "../tickpoke.h"
 #include "../eventreceiver.h"
+#include "../iomanager.h"
 
 #include "legendwindow.h"
 #include "infowindow.h"
@@ -64,6 +65,8 @@ class UserInterface : private EventReceiver {
     sem_t keyeventdone;
     UICommunicator uicommunicator;
     std::list<UIWindow *> history;
+    std::list<int> keyqueue;
+    void FDData();
     void refreshAll();
     void loginScreen();
     void mainScreen();
@@ -81,13 +84,11 @@ class UserInterface : private EventReceiver {
     void disableLegend();
     void redrawAll();
     void switchToWindow(UIWindow *);
-    static void * runKeyListener(void *);
-    static void * runUserInterface(void *);
+    static void * run(void *);
     void tick(int);
   public:
     UserInterface();
-    void runKeyListenerInstance();
-    void runUserInterfaceInstance();
+    void runInstance();
     bool init();
     UICommunicator * getCommunicator();
 };

@@ -12,6 +12,10 @@ void EventReceiver::FDConnected() {
 
 }
 
+void EventReceiver::FDData() {
+
+}
+
 void EventReceiver::FDData(char * data, unsigned int len) {
 
 }

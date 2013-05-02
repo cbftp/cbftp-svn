@@ -19,6 +19,8 @@ class TransferManager;
 class DataFileHandler;
 class TickPoke;
 class RemoteCommandHandler;
+class IOManager;
+class WorkManager;
 
 class GlobalContext {
   private:
@@ -26,6 +28,8 @@ class GlobalContext {
     pthread_attr_t attr;
     Engine * e;
     DataFileHandler * dfh;
+    IOManager * iom;
+    WorkManager * wm;
     UICommunicator * uic;
     SiteManager * sm;
     SiteThreadManager * stm;
@@ -42,10 +46,13 @@ class GlobalContext {
   public:
     void init();
     GlobalContext();
-    void linkComponents(DataFileHandler *, Engine *, UICommunicator *, SiteManager *, SiteThreadManager *, TransferManager *, TickPoke *, RemoteCommandHandler *);
+    void linkWorkManager(WorkManager *);
+    void linkComponents(DataFileHandler *, IOManager *, Engine *, UICommunicator *, SiteManager *, SiteThreadManager *, TransferManager *, TickPoke *, RemoteCommandHandler *);
     SSL_CTX * getSSLCTX();
     Engine * getEngine();
     DataFileHandler * getDataFileHandler();
+    WorkManager * getWorkManager();
+    IOManager * getIOManager();
     UICommunicator * getUICommunicator();
     SiteManager * getSiteManager();
     SiteThreadManager * getSiteThreadManager();
