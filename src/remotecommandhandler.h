@@ -12,14 +12,15 @@
 #include "globalcontext.h"
 #include "datafilehandler.h"
 #include "engine.h"
+#include "eventreceiver.h"
+#include "iomanager.h"
 
 #define DEFAULTPORT 55477
 #define DEFAULTPASS "DEFAULT"
-#define MAXDATASIZE 2048
 
 extern GlobalContext * global;
 
-class RemoteCommandHandler {
+class RemoteCommandHandler : private EventReceiver {
 private:
   bool enabled;
   std::string password;
@@ -29,14 +30,11 @@ private:
   sem_t commandsem;
   std::list<int> commandqueue;
   pthread_mutex_t commandq_mutex;
-  static void * run(void *);
   void connect();
   void disconnect();
-  void awaitIncoming();
   void handleMessage(std::string);
 public:
   RemoteCommandHandler();
-  void runInstance();
   bool isEnabled();
   int getUDPPort();
   std::string getPassword();
@@ -45,4 +43,5 @@ public:
   void setEnabled(bool);
   void readConfiguration();
   void writeState();
+  void FDData(char *, unsigned int);
 };

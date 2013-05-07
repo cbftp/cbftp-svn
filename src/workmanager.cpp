@@ -14,7 +14,7 @@ void WorkManager::dispatchFDData(EventReceiver * er) {
 }
 
 void WorkManager::dispatchFDData(EventReceiver * er, char * buf, int len) {
-  dataqueue.push_back(Event(er, 1));
+  dataqueue.push_back(Event(er, 1, buf, len));
   sem_post(&dispatch);
 }
 
@@ -23,7 +23,12 @@ void WorkManager::dispatchTick(EventReceiver * er, int interval) {
   sem_post(&dispatch);
 }
 
+DataBlockPool * WorkManager::getBlockPool() {
+  return &blockpool;
+}
+
 void WorkManager::runInstance() {
+  char * data;
   while(1) {
     sem_wait(&dispatch);
     Event event = dataqueue.front();
@@ -34,7 +39,9 @@ void WorkManager::runInstance() {
         sem_post(&readdata);
         break;
       case 1:
-        event.getReceiver()->FDData();
+        data = event.getData();
+        event.getReceiver()->FDData(data, event.getDataLen());
+        blockpool.returnBlock(data);
         break;
       case 2:
         event.getReceiver()->tick(event.getInterval());

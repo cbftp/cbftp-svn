@@ -5,6 +5,9 @@
 #include <semaphore.h>
 #include <sys/epoll.h>
 #include <sys/socket.h>
+#include <netdb.h>
+#include <fcntl.h>
+#include <openssl/ssl.h>
 #include <iostream>
 #include <map>
 
@@ -14,7 +17,6 @@
 class EventReceiver;
 
 #define MAXEVENTS 32
-#define MAXDATASIZE 2048
 
 extern GlobalContext * global;
 
@@ -23,6 +25,7 @@ private:
   pthread_t thread;
   std::map<int, int> typemap;
   std::map<int, EventReceiver *> receivermap;
+  std::map<int, SSL *> sslmap;
   static void * run(void *);
   WorkManager * wm;
   int epollfd;

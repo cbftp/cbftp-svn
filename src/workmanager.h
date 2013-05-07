@@ -7,6 +7,7 @@
 #include "eventreceiver.h"
 #include "globalcontext.h"
 #include "event.h"
+#include "datablockpool.h"
 
 #define MAXDATASIZE 2048
 #define BUFSSIZE 32
@@ -20,10 +21,12 @@ private:
   static void * run(void *);
   sem_t dispatch;
   sem_t readdata;
+  DataBlockPool blockpool;
 public:
   WorkManager();
   void dispatchFDData(EventReceiver *);
   void dispatchFDData(EventReceiver *, char *, int);
   void dispatchTick(EventReceiver *, int);
+  DataBlockPool * getBlockPool();
   void runInstance();
 };

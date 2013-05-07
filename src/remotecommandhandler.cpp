@@ -4,10 +4,6 @@ RemoteCommandHandler::RemoteCommandHandler() {
   enabled = false;
   password = DEFAULTPASS;
   port = DEFAULTPORT;
-  sem_init(&commandsem, 0, 0);
-  pthread_mutex_init(&commandq_mutex, NULL);
-  pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
-  pthread_setname_np(thread, "RemoteCommand");
 }
 
 bool RemoteCommandHandler::isEnabled() {
@@ -38,57 +34,12 @@ void RemoteCommandHandler::setPort(int newport) {
   }
 }
 
-void * RemoteCommandHandler::run(void * arg) {
-  ((RemoteCommandHandler *) arg)->runInstance();
-  return NULL;
-}
-
-void RemoteCommandHandler::runInstance() {
-  while(1) {
-    sem_wait(&commandsem);
-    pthread_mutex_lock(&commandq_mutex);
-    int command = commandqueue.front();
-    commandqueue.pop_front();
-    pthread_mutex_unlock(&commandq_mutex);
-    switch (command) {
-      case 0: // connect
-        connect();
-        awaitIncoming();
-        break;
-      case 1: // disconnect
-        disconnect();
-        break;
-    }
-  }
-}
-
-void RemoteCommandHandler::awaitIncoming() {
-  struct pollfd fd;
-  fd.fd = sockfd;
-  fd.events = POLLIN;
-  char buf[MAXDATASIZE+1];
-  int len;
-  while(1) {
-    if (poll(&fd, 1, 500) > 0) {
-      len = recvfrom(sockfd, buf, MAXDATASIZE, 0, (struct sockaddr *) 0, (socklen_t *) 0);
-      buf[len] = '\0';
-      handleMessage(std::string(buf));
-    }
-    else if (commandqueue.size() > 0) {
-      return;
-    }
-  }
-}
-
 void RemoteCommandHandler::connect() {
-  struct addrinfo sock, *res;
-  memset(&sock, 0, sizeof(sock));
-  sock.ai_family = AF_UNSPEC;
-  sock.ai_socktype = SOCK_DGRAM;
-  sock.ai_protocol = IPPROTO_UDP;
-  getaddrinfo("0.0.0.0", global->int2Str(getUDPPort()).data(), &sock, &res);
-  sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-  bind(sockfd, res->ai_addr, res->ai_addrlen);
+  sockfd = global->getIOManager()->registerUDPServerSocket(this, getUDPPort());
+}
+
+void RemoteCommandHandler::FDData(char * data, unsigned int datalen) {
+  handleMessage(std::string(data, datalen));
 }
 
 void RemoteCommandHandler::handleMessage(std::string message) {
@@ -121,22 +72,19 @@ void RemoteCommandHandler::handleMessage(std::string message) {
 }
 
 void RemoteCommandHandler::disconnect() {
-  close(sockfd);
+  global->getIOManager()->closeSocket(sockfd);
 }
 
 void RemoteCommandHandler::setEnabled(bool enabled) {
   if ((isEnabled() && enabled) || (!isEnabled() && !enabled)) {
     return;
   }
-  pthread_mutex_lock(&commandq_mutex);
   if (enabled) {
-    commandqueue.push_back(0);
+    connect();
   }
   else {
-    commandqueue.push_back(1);
+    disconnect();
   }
-  pthread_mutex_unlock(&commandq_mutex);
-  sem_post(&commandsem);
   this->enabled = enabled;
 }
 

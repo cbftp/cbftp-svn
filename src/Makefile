@@ -7,7 +7,7 @@ OBJECTS = commandqueueelement.o ftpthreadcom.o potentialelement.o scoreboardelem
 	rawbuffer.o crypto.o datafilehandler.o \
 	sitethreadrequest.o sitethreadrequestready.o tickpoke.o tickpoketarget.o \
 	connstatetracker.o delayedcommand.o remotecommandhandler.o eventreceiver.o \
-	iomanager.o workmanager.o event.o
+	iomanager.o workmanager.o event.o datablockpool.o
 
 all: ${OBJECTS}
 	@cd ui; ${MAKE}
@@ -47,6 +47,7 @@ eventreceiver.o:
 iomanager.o:
 workmanager.o:
 event.o:
+datablockpool.o:
 
 clean:
 	rm -f ${OBJECTS}
