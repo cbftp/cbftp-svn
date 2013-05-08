@@ -3,11 +3,6 @@
 #include <string>
 #include <vector>
 #include <list>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <pthread.h>
-#include <semaphore.h>
-#include <poll.h>
 
 #include "globalcontext.h"
 #include "datafilehandler.h"
@@ -26,10 +21,6 @@ private:
   std::string password;
   int port;
   int sockfd;
-  pthread_t thread;
-  sem_t commandsem;
-  std::list<int> commandqueue;
-  pthread_mutex_t commandq_mutex;
   void connect();
   void disconnect();
   void handleMessage(std::string);
