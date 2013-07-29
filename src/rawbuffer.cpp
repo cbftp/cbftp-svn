@@ -67,14 +67,14 @@ void RawBuffer::setId(int id) {
 std::string RawBuffer::getLineCopy(unsigned int num) {
   unsigned int size = getCopySize();
   if (num >= size) return "";
-  int pos = (num < latestpcopy ? latestpcopy - num - 1 : size - latestpcopy - num - 1);
+  int pos = (num < latestpcopy ? latestpcopy - num - 1 : size + latestpcopy - num - 1);
   return logcopy[pos];
 }
 
 std::string RawBuffer::getLine(unsigned int num) {
   unsigned int size = getSize();
   if (num >= size) return "";
-  int pos = (num < latestp ? latestp - num - 1 : size - latestp - num - 1);
+  int pos = (num < latestp ? latestp - num - 1 : size + latestp - num - 1);
   return log[pos];
 }
 
