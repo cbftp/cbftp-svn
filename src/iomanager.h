@@ -13,6 +13,8 @@
 
 #include "workmanager.h"
 #include "globalcontext.h"
+#include "datablock.h"
+#include "datablockpool.h"
 
 class EventReceiver;
 
@@ -26,9 +28,12 @@ private:
   std::map<int, int> typemap;
   std::map<int, EventReceiver *> receivermap;
   std::map<int, SSL *> sslmap;
+  std::map<int, std::list<DataBlock> > sendqueuemap;
   static void * run(void *);
   WorkManager * wm;
   int epollfd;
+  DataBlockPool * blockpool;
+  int blocksize;
 public:
   IOManager();
   void runInstance();
@@ -36,6 +41,8 @@ public:
   int registerTCPClientSocket(EventReceiver *, std::string, int);
   void negotiateSSL(int);
   int registerUDPServerSocket(EventReceiver *, int);
-  void send(int, std::string);
+  void sendData(int, std::string);
+  void sendData(int, char *, unsigned int);
+  std::string getCipher(int);
   void closeSocket(int);
 };

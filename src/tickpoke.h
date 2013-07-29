@@ -1,9 +1,6 @@
 #pragma once
 
-#include <pthread.h>
-#include <semaphore.h>
 #include <list>
-#include <map>
 #include <unistd.h>
 
 #include "globalcontext.h"
@@ -17,14 +14,14 @@ extern GlobalContext * global;
 
 class TickPoke : private EventReceiver {
 private:
-  pthread_t thread;
-  static void * run(void *);
   WorkManager * wm;
   std::list<TickPokeTarget> targets;
+  bool forever;
 public:
   TickPoke();
   void tick(int);
-  void runInstance();
+  void tickerLoop();
+  void breakLoop();
   void startPoke(EventReceiver *, int, int);
   void stopPoke(EventReceiver *, int);
 };

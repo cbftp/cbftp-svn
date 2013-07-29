@@ -1,34 +1,32 @@
 include ../Makefile.inc
 
-OBJECTS = commandqueueelement.o ftpthreadcom.o potentialelement.o scoreboardelement.o \
-	siterace.o transfer.o engine.o ftpthread.o potentiallistelement.o scoreboard.o \
-	sitethreadmanager.o filelist.o globalcontext.o potentialtracker.o \
-	sitemanager.o sitethread.o file.o main.o race.o site.o transfermanager.o \
-	rawbuffer.o crypto.o datafilehandler.o \
-	sitethreadrequest.o sitethreadrequestready.o tickpoke.o tickpoketarget.o \
+OBJECTS = commandqueueelement.o potentialelement.o scoreboardelement.o \
+	siterace.o engine.o ftpconn.o potentiallistelement.o scoreboard.o \
+	sitelogicmanager.o filelist.o globalcontext.o potentialtracker.o \
+	sitemanager.o sitelogic.o file.o main.o race.o site.o transfermanager.o \
+	rawbuffer.o crypto.o datafilehandler.o transfermonitor.o \
+	sitelogicrequest.o sitelogicrequestready.o tickpoke.o tickpoketarget.o \
 	connstatetracker.o delayedcommand.o remotecommandhandler.o eventreceiver.o \
-	iomanager.o workmanager.o event.o datablockpool.o
+	iomanager.o workmanager.o event.o datablockpool.o datablock.o enginebase.o
 
 all: ${OBJECTS}
 	@cd ui; ${MAKE}
 	
 main.o:
 commandqueueelement.o:
-ftpthreadcom.o:
 potentialelement.o: 
 scoreboardelement.o:
 siterace.o:
-transfer.o:
 engine.o:
-ftpthread.o:
+ftpconn.o:
 potentiallistelement.o: 
 scoreboard.o:
-sitethreadmanager.o:
+sitelogicmanager.o:
 filelist.o:
 globalcontext.o:
 potentialtracker.o: 
 sitemanager.o:
-sitethread.o:
+sitelogic.o:
 file.o:
 race.o:
 site.o:
@@ -36,8 +34,8 @@ transfermanager.o:
 rawbuffer.o:
 crypto.o:
 datafilehandler.o:
-sitethreadrequest.o:
-sitethreadrequestready.o:
+sitelogicrequest.o:
+sitelogicrequestready.o:
 tickpoke.o:
 tickpoketarget.o:
 connstatetracker.o:
@@ -48,6 +46,9 @@ iomanager.o:
 workmanager.o:
 event.o:
 datablockpool.o:
+datablock.o:
+enginebase.o:
+transfermonitor.o:
 
 clean:
 	rm -f ${OBJECTS}

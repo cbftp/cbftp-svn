@@ -225,7 +225,11 @@ void UserInterface::runInstance() {
         refreshAll();
       }
     }
-
+    else if (currentevent == "kill") {
+      endwin();
+      uicommunicator.dead();
+      return;
+    }
     if (uicommunicator.hasNewCommand()) {
       std::string command = uicommunicator.getCommand();
       if (command == "editsite") {

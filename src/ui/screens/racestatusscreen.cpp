@@ -9,7 +9,7 @@ RaceStatusScreen::RaceStatusScreen(WINDOW * window, UICommunicator * uicommunica
   spaceous = false;
   currnumsubpaths = 0;
   currguessedsize = 0;
-  for (std::list<SiteThread *>::iterator it = race->begin(); it != race->end(); it++) {
+  for (std::list<SiteLogic *>::iterator it = race->begin(); it != race->end(); it++) {
     sitestr += (*it)->getSite()->getName() + ",";
   }
   if (sitestr.length() > 0) {
@@ -58,7 +58,7 @@ void RaceStatusScreen::redraw() {
   unsigned int longestsubpath = 0;
   bool pathlencheck = false;
   std::list<std::string> filenames;
-  for (std::list<SiteThread *>::iterator it = race->begin(); it != race->end(); it++) {
+  for (std::list<SiteLogic *>::iterator it = race->begin(); it != race->end(); it++) {
     SiteRace * sr = (*it)->getRace(release);
     for (std::list<std::string>::iterator it2 = subpaths.begin(); it2 != subpaths.end(); it2++) {
       if (!pathlencheck && it2->length() > longestsubpath) {
@@ -143,7 +143,7 @@ void RaceStatusScreen::redraw() {
     }
   }
   y = y + 4;
-  for (std::list<SiteThread *>::iterator it = race->begin(); it != race->end(); it++) {
+  for (std::list<SiteLogic *>::iterator it = race->begin(); it != race->end(); it++) {
     TermInt::printStr(window, y, x, (*it)->getSite()->getName(), 4);
     for (std::list<std::string>::iterator it2 = subpaths.begin(); it2 != subpaths.end(); it2++) {
       std::string subpath = *it2;

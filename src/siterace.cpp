@@ -56,9 +56,6 @@ std::string SiteRace::getRelevantSubPath() {
   }
   recentlyvisited.push_back(leastrecentlyvisited);
   recentlyvisited.pop_front();
-  if (leastrecentlyvisited.length() > 0) {
-    leastrecentlyvisited = "/" + leastrecentlyvisited;
-  }
   return leastrecentlyvisited;
 }
 

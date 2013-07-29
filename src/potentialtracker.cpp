@@ -77,7 +77,7 @@ void PotentialTracker::tick(int message) {
   pthread_mutex_unlock(&listmutex);
 }
 
-std::list<PotentialElement *>::iterator PotentialTracker::findFirstOfSite(SiteThread * st) {
+std::list<PotentialElement *>::iterator PotentialTracker::findFirstOfSite(SiteLogic * st) {
   for (ittop = top.begin(); ittop != top.end(); ittop++) {
     if ((*ittop)->getSite() == st) return ittop;
   }

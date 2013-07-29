@@ -2,11 +2,11 @@
 
 UICommunicator::UICommunicator() {
   sem_init(&event, 0, 0);
-  sem_init(&event_ready, 0, 1);
   pthread_mutex_init(&event_mutex, NULL);
   newcommand = false;
   careaboutbackend = false;
   legendenabled = true;
+  died = false;
 }
 
 void UICommunicator::newCommand(std::string command) {
@@ -71,9 +71,8 @@ sem_t * UICommunicator::getEventSem() {
 }
 
 void UICommunicator::emitEvent(std::string eventtext) {
-  sem_wait(&event_ready);
   pthread_mutex_lock(&event_mutex);
-  this->eventtext = eventtext;
+  eventqueue.push_back(eventtext);
   pthread_mutex_unlock(&event_mutex);
   sem_post(&event);
 }
@@ -82,14 +81,27 @@ std::string UICommunicator::awaitEvent() {
   std::string eventtext;
   sem_wait(&event);
   pthread_mutex_lock(&event_mutex);
-  eventtext = this->eventtext;
+  eventtext = eventqueue.front();
+  eventqueue.pop_front();
   pthread_mutex_unlock(&event_mutex);
-  sem_post(&event_ready);
   return eventtext;
 }
 
 void UICommunicator::kill() {
-  endwin();
+  emitEvent("kill");
+  for (int i = 0; i < 10; i++) {
+    usleep(100000);
+    if (died) {
+      break;
+    }
+  }
+  if (!died) {
+    endwin();
+  }
+}
+
+void UICommunicator::dead() {
+  died = true;
 }
 
 void UICommunicator::terminalSizeChanged() {

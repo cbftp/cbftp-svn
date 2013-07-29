@@ -4,7 +4,6 @@
 #include <iostream>
 #include <openssl/ssl.h>
 #include <pthread.h>
-#include <semaphore.h>
 #include <sys/timeb.h>
 #include <time.h>
 #include <string>
@@ -13,7 +12,7 @@
 
 class Engine;
 class UICommunicator;
-class SiteThreadManager;
+class SiteLogicManager;
 class SiteManager;
 class TransferManager;
 class DataFileHandler;
@@ -32,11 +31,10 @@ class GlobalContext {
     WorkManager * wm;
     UICommunicator * uic;
     SiteManager * sm;
-    SiteThreadManager * stm;
+    SiteLogicManager * slm;
     TransferManager * tm;
     TickPoke * tp;
     RemoteCommandHandler * rch;
-    sem_t list_refresh;
     pthread_mutex_t time_mutex;
     std::string compiletime;
     std::string svnrev;
@@ -47,7 +45,7 @@ class GlobalContext {
     void init();
     GlobalContext();
     void linkWorkManager(WorkManager *);
-    void linkComponents(DataFileHandler *, IOManager *, Engine *, UICommunicator *, SiteManager *, SiteThreadManager *, TransferManager *, TickPoke *, RemoteCommandHandler *);
+    void linkComponents(DataFileHandler *, IOManager *, Engine *, UICommunicator *, SiteManager *, SiteLogicManager *, TransferManager *, TickPoke *, RemoteCommandHandler *);
     SSL_CTX * getSSLCTX();
     Engine * getEngine();
     DataFileHandler * getDataFileHandler();
@@ -55,12 +53,11 @@ class GlobalContext {
     IOManager * getIOManager();
     UICommunicator * getUICommunicator();
     SiteManager * getSiteManager();
-    SiteThreadManager * getSiteThreadManager();
+    SiteLogicManager * getSiteLogicManager();
     TransferManager * getTransferManager();
     TickPoke * getTickPoke();
     RemoteCommandHandler * getRemoteCommandHandler();
     pthread_attr_t * getPthreadAttr();
-    sem_t * getListRefreshSem();
     static int ctimeMSec();
     void updateTime();
     int currentYear();

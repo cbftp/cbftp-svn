@@ -6,7 +6,7 @@ PotentialListElement::PotentialListElement(int numslots) {
   }
 }
 
-void PotentialListElement::update(SiteThread * dst, int threads, int dstdnslots, int potential, std::string filename) {
+void PotentialListElement::update(SiteLogic * dst, int threads, int dstdnslots, int potential, std::string filename) {
   bool allthreadsused = allThreadsUsedForSite(dst, threads);
   PotentialElement * lowelem = NULL;
   int lowest;
@@ -34,7 +34,7 @@ void PotentialListElement::reset() {
   }
 }
 
-bool PotentialListElement::allThreadsUsedForSite(SiteThread * dst, int threads) {
+bool PotentialListElement::allThreadsUsedForSite(SiteLogic * dst, int threads) {
   int sitematch = 0;
   for (unsigned int i = 0; i < slots.size(); i++) {
     if(slots[i]->getSite() == dst) {

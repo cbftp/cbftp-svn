@@ -14,6 +14,7 @@ FileList::FileList(std::string username, std::string path) {
   owned = 0;
   ownpercentage = 0;
   maxfilesize = 0;
+  uploadedfiles = 0;
   locked = false;
 }
 

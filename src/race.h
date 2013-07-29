@@ -7,14 +7,14 @@
 #include <algorithm>
 #include <iostream>
 
-class SiteThread;
+class SiteLogic;
 class SiteRace;
 
 class Race {
   private:
     std::string name;
     std::string section;
-    std::list<SiteThread *> sites;
+    std::list<SiteLogic *> sites;
     std::map<SiteRace *, std::map<std::string, unsigned int> > sizes;
     std::list<SiteRace *> donesites;
     int maxfilelistsize;
@@ -26,9 +26,9 @@ class Race {
     bool done;
   public:
     Race(std::string, std::string);
-    void addSite(SiteThread *);
-    std::list<SiteThread *>::iterator begin();
-    std::list<SiteThread *>::iterator end();
+    void addSite(SiteLogic *);
+    std::list<SiteLogic *>::iterator begin();
+    std::list<SiteLogic *>::iterator end();
     std::string getName();
     std::string getSection();
     bool sizeEstimated(std::string);

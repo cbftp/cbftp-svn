@@ -2,22 +2,22 @@
 
 #include <string>
 
-class SiteThread;
+class SiteLogic;
 class FileList;
 
 class ScoreBoardElement {
   private:
     std::string filename;
-    SiteThread * src;
-    SiteThread * dst;
+    SiteLogic * src;
+    SiteLogic * dst;
     FileList * fls;
     FileList * fld;
     int score;
   public:
-    ScoreBoardElement(std::string, int, SiteThread *, FileList *, SiteThread *, FileList *);
+    ScoreBoardElement(std::string, int, SiteLogic *, FileList *, SiteLogic *, FileList *);
     std::string fileName();
-    SiteThread * getSource();
-    SiteThread * getDestination();
+    SiteLogic * getSource();
+    SiteLogic * getDestination();
     FileList * getSourceFileList();
     FileList * getDestinationFileList();
     int getScore();

@@ -3,19 +3,19 @@
 #include <string>
 #include <list>
 
-class SiteThread;
+class SiteLogic;
 
 class PotentialElement {
   private:
-    SiteThread * site;
+    SiteLogic * site;
     int potential;
     int site_dnslots;
     std::string filename;
   public:
     PotentialElement();
-    SiteThread * getSite();
+    SiteLogic * getSite();
     int getSiteDownloadSlots();
     int getPotential();
     std::string getFileName();
-    void update(SiteThread *, int, int, std::string);
+    void update(SiteLogic *, int, int, std::string);
 };

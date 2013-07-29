@@ -4,18 +4,19 @@ Race::Race(std::string release, std::string section) {
   this->name = release;
   this->section = section;
   done = false;
+  maxfilelistsize = 0;
   estimatedsubpaths.push_back("");
 }
 
-void Race::addSite(SiteThread * sitethread) {
-  sites.push_back(sitethread);
+void Race::addSite(SiteLogic * sitelogic) {
+  sites.push_back(sitelogic);
 }
 
-std::list<SiteThread *>::iterator Race::begin() {
+std::list<SiteLogic *>::iterator Race::begin() {
   return sites.begin();
 }
 
-std::list<SiteThread *>::iterator Race::end() {
+std::list<SiteLogic *>::iterator Race::end() {
   return sites.end();
 }
 

@@ -304,9 +304,9 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
       else {
         global->getSiteManager()->sortSites();
       }
-      global->getSiteThreadManager()->getSiteThread(site->getName())->setNumConnections(site->getMaxLogins());
+      global->getSiteLogicManager()->getSiteLogic(site->getName())->setNumConnections(site->getMaxLogins());
       if (changedname) {
-        global->getSiteThreadManager()->getSiteThread(site->getName())->updateName();
+        global->getSiteLogicManager()->getSiteLogic(site->getName())->updateName();
       }
       uicommunicator->newCommand("return");
       return;

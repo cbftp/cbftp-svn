@@ -73,7 +73,7 @@ class UserInterface : private EventReceiver {
     int editSiteScreen(Site *);
     void siteStatusScreen(Site *);
     int confirmationScreen();
-    int rawDataScreen(FTPThread *);
+    int rawDataScreen(FTPConn *);
     std::string getStringField(WINDOW *, int, int, std::string, int, int, bool);
     int getNumArrow(WINDOW *, int, int, int);
     bool getCheckBoxBool(WINDOW *, int, int, int);

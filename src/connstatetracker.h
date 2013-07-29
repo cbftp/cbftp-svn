@@ -6,6 +6,8 @@
 #include "delayedcommand.h"
 
 class SiteRace;
+class FileList;
+class TransferMonitorBase;
 
 class ConnStateTracker {
 private:
@@ -15,6 +17,13 @@ private:
   SiteRace * lastchecked;
   std::list<DelayedCommand> releasedcommands;
   std::list<DelayedCommand> delayedcommands;
+  bool transfer;
+  TransferMonitorBase * tmb;
+  FileList * fls;
+  std::string file;
+  bool download;
+  bool passive;
+  std::string addr;
 public:
   ConnStateTracker();
   void delayedCommand(std::string, int);
@@ -33,4 +42,14 @@ public:
   bool isDisconnected();
   bool isIdle();
   bool isReady();
+  void setTransfer(TransferMonitorBase *, FileList *, std::string, bool, bool);
+  void setTransfer(TransferMonitorBase *, FileList *, std::string, bool, bool, std::string);
+  bool hasTransfer();
+  void finishTransfer();
+  TransferMonitorBase * getTransferMonitor();
+  FileList * getTransferFileList();
+  std::string getTransferFile();
+  bool getTransferDownload();
+  bool getTransferPassive();
+  std::string getTransferAddr();
 };

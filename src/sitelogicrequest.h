@@ -2,14 +2,17 @@
 
 #include <string>
 
-class SiteThreadRequest {
+class SiteLogicRequest {
 private:
   int requestid;
+  int connid;
   int requesttype;
   std::string data;
 public:
-  SiteThreadRequest(int, int, std::string);
+  SiteLogicRequest(int, int, std::string);
   int requestId();
   int requestType();
   std::string requestData();
+  void setConnId(int);
+  int connId();
 };

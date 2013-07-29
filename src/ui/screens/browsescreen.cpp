@@ -2,10 +2,10 @@
 
 BrowseScreen::BrowseScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
-  sitethread = global->getSiteThreadManager()->getSiteThread(uicommunicator->getArg1());
-  site = sitethread->getSite();
+  sitelogic = global->getSiteLogicManager()->getSiteLogic(uicommunicator->getArg1());
+  site = sitelogic->getSite();
   uicommunicator->expectBackendPush();
-  requestid = sitethread->requestFileList("/");
+  requestid = sitelogic->requestFileList("/");
   virgin = true;
   resort = false;
   currentviewspan = 0;
@@ -18,17 +18,17 @@ BrowseScreen::BrowseScreen(WINDOW * window, UICommunicator * uicommunicator, uns
 void BrowseScreen::redraw() {
   werase(window);
   curs_set(0);
-  if (requestid >= 0 && sitethread->requestReady(requestid)) {
+  if (requestid >= 0 && sitelogic->requestReady(requestid)) {
     if (!virgin) {
       if (list.cursoredFile() != NULL) {
         selectionhistory.push_front(StringPair(list.getPath(), list.cursoredFile()->getName()));
       }
     }
     virgin = false;
-    FileList * filelist = sitethread->getFileList(requestid);
-    sitethread->finishRequest(requestid);
+    FileList * filelist = sitelogic->getFileList(requestid);
     requestid = -1;
     list.parse(filelist);
+    sitelogic->finishRequest(requestid);
     sort();
     currentviewspan = 0;
     std::string path = list.getPath();
@@ -67,7 +67,7 @@ void BrowseScreen::redraw() {
 }
 
 void BrowseScreen::update() {
-  if (requestid >= 0 && sitethread->requestReady(requestid)) {
+  if (requestid >= 0 && sitelogic->requestReady(requestid)) {
     uicommunicator->newCommand("redraw");
     return;
   }
@@ -173,7 +173,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
         if (oldpath.length() > 1) {
           oldpath += "/";
         }
-        requestid = sitethread->requestFileList(oldpath + list.cursoredFile()->getName());
+        requestid = sitelogic->requestFileList(oldpath + list.cursoredFile()->getName());
         uicommunicator->newCommand("update");
       }
       break;
@@ -192,12 +192,12 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       if (position == 0) {
         position = 1;
       }
-      requestid = sitethread->requestFileList(oldpath.substr(0, position));
+      requestid = sitelogic->requestFileList(oldpath.substr(0, position));
       uicommunicator->newCommand("update");
       //go up one directory level, or return if at top already
       break;
     case KEY_F(5):
-      requestid = sitethread->requestFileList(list.getPath());
+      requestid = sitelogic->requestFileList(list.getPath());
       uicommunicator->newCommand("update");
       break;
     case KEY_DOWN:

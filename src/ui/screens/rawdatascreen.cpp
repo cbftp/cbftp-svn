@@ -3,11 +3,11 @@
 RawDataScreen::RawDataScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   sitename = uicommunicator->getArg1();
-  threadid = global->str2Int(uicommunicator->getArg2());
+  connid = global->str2Int(uicommunicator->getArg2());
   uicommunicator->expectBackendPush();
-  sitethread = global->getSiteThreadManager()->getSiteThread(sitename);
-  threads = sitethread->getConns()->size();
-  this->rawbuf = sitethread->getConn(threadid)->getRawBuffer();
+  sitelogic = global->getSiteLogicManager()->getSiteLogic(sitename);
+  threads = sitelogic->getConns()->size();
+  this->rawbuf = sitelogic->getConn(connid)->getRawBuffer();
   rawbuf->uiWatching(true);
   readfromcopy = false;
   rawcommandmode = false;
@@ -81,7 +81,7 @@ void RawDataScreen::keyPressed(unsigned int ch) {
         }
         else {
           readfromcopy = false;
-          sitethread->issueRawCommand(threadid, command);
+          sitelogic->issueRawCommand(connid, command);
           rawcommandfield.clear();
         }
       }
@@ -106,19 +106,19 @@ void RawDataScreen::keyPressed(unsigned int ch) {
   }
   switch(ch) {
     case KEY_RIGHT:
-      if (threadid + 1 < threads) {
+      if (connid + 1 < threads) {
         rawbuf->uiWatching(false);
-        uicommunicator->newCommand("rawdatajump", sitename, global->int2Str(threadid + 1));
+        uicommunicator->newCommand("rawdatajump", sitename, global->int2Str(connid + 1));
       }
       break;
     case KEY_LEFT:
-      if (threadid == 0) {
+      if (connid == 0) {
         rawbuf->uiWatching(false);
         uicommunicator->newCommand("return");
       }
       else {
         rawbuf->uiWatching(false);
-        uicommunicator->newCommand("rawdatajump", sitename, global->int2Str(threadid - 1));
+        uicommunicator->newCommand("rawdatajump", sitename, global->int2Str(connid - 1));
       }
       break;
     case KEY_PPAGE:
@@ -158,10 +158,10 @@ void RawDataScreen::keyPressed(unsigned int ch) {
       uicommunicator->newCommand("return");
       break;
     case 'c':
-      sitethread->connectThread(threadid);
+      sitelogic->connectConn(connid);
       break;
     case 'd':
-      sitethread->disconnectThread(threadid);
+      sitelogic->disconnectConn(connid);
       break;
     case 'w':
       rawcommandswitch = true;
@@ -171,7 +171,6 @@ void RawDataScreen::keyPressed(unsigned int ch) {
       rawbuf->uiWatching(false);
       uicommunicator->newCommand("return");
       break;
-
   }
 }
 
@@ -183,5 +182,5 @@ std::string RawDataScreen::getLegendText() {
 }
 
 std::string RawDataScreen::getInfoLabel() {
-  return "RAW DATA: " + sitename + " #" + global->int2Str(threadid);
+  return "RAW DATA: " + sitename + " #" + global->int2Str(connid);
 }

@@ -16,7 +16,7 @@ void SiteStatusScreen::redraw() {
 }
 
 void SiteStatusScreen::update() {
-  SiteThread * st = global->getSiteThreadManager()->getSiteThread(site->getName());
+  SiteLogic * st = global->getSiteLogicManager()->getSiteLogic(site->getName());
   std::string loginslots = "Login slots:    " + global->int2Str(st->getCurrLogins());
   if (!site->unlimitedLogins()) {
     loginslots += "/" + global->int2Str(site->getMaxLogins());

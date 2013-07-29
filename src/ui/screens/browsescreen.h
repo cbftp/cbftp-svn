@@ -2,8 +2,8 @@
 
 #include <list>
 
-#include "../../sitethread.h"
-#include "../../sitethreadmanager.h"
+#include "../../sitelogic.h"
+#include "../../sitelogicmanager.h"
 #include "../../site.h"
 #include "../../globalcontext.h"
 
@@ -31,7 +31,7 @@ private:
   unsigned int sortmethod;
   Site * site;
   UIFileList list;
-  SiteThread * sitethread;
+  SiteLogic * sitelogic;
   unsigned int requestid;
   UICommunicator * uicommunicator;
   void sort();

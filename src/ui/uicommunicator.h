@@ -5,6 +5,8 @@
 #include <semaphore.h>
 #include <ncurses.h>
 #include <vector>
+#include <list>
+#include <unistd.h>
 
 #include "../globalcontext.h"
 #include "../datafilehandler.h"
@@ -20,10 +22,11 @@ private:
   std::string arg3;
   bool careaboutbackend;
   std::string eventtext;
+  std::list<std::string> eventqueue;
   pthread_mutex_t event_mutex;
   sem_t event;
-  sem_t event_ready;
   bool legendenabled;
+  bool died;
 public:
   UICommunicator();
   void newCommand(std::string);
@@ -43,6 +46,7 @@ public:
   void emitEvent(std::string);
   std::string awaitEvent();
   void kill();
+  void dead();
   void terminalSizeChanged();
   bool legendEnabled();
   void showLegend(bool);

@@ -1,3 +1,11 @@
+bug: crash when unable to resolve server dns
+
+bug: crash when unable to cwd to wanted dir during race
+
+bug: crash mid-race, reason unknown
+
+bug: ui refreshing breaks when getting updated too much
+
 feature: race status screen
 
 feature: local downloads
@@ -11,10 +19,6 @@ feature/bug: skip unwanted/failing files
 feature: remove site from race
 
 feature: play-and-replay
-
-bug: crash when unable to resolve server dns
-
-bug: crash when unable to cwd to wanted dir during race
 
 feature: force SSL off
 
@@ -30,17 +34,9 @@ feature: allowed subdir list
 
 feature: skiplist
 
-feature: optimize transfer handling (threads)
-
-feature: optimize ftpthread handling (threads)
-
-feature: optimize sitethread handling (threads)
-
 feature: ui stats everywhere!
 
 feature: extensive info in the header of most screens
-
-bug: crash mid-race, reason unknown
 
 feature: help screen with key binding info etc
 
@@ -52,14 +48,14 @@ feature: adaptive-length section fields in the editsitescreen
 
 feature: disable uploading/downloading per site
 
-feature: debug log
+feature: (debug) log
 
 feature: stepping backward-forward in text fields
 
 cosmetic: enter site ip:port in the same field
 
-bug: ui refreshing breaks when getting updated too much
-
 feature: base path per site
 
 feature: multi-bnc support
+
+feature: affils list per site, to avoid uploading on latepres

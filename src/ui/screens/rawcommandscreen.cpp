@@ -4,8 +4,8 @@ RawCommandScreen::RawCommandScreen(WINDOW * window, UICommunicator * uicommunica
   this->uicommunicator = uicommunicator;
   sitename = uicommunicator->getArg1();
   uicommunicator->expectBackendPush();
-  sitethread = global->getSiteThreadManager()->getSiteThread(sitename);
-  this->rawbuf = sitethread->getRawCommandBuffer();
+  sitelogic = global->getSiteLogicManager()->getSiteLogic(sitename);
+  this->rawbuf = sitelogic->getRawCommandBuffer();
   rawbuf->uiWatching(true);
   readfromcopy = false;
   copyreadpos = 0;
@@ -53,7 +53,7 @@ void RawCommandScreen::keyPressed(unsigned int ch) {
           command = rawcommandfield.getData();
           if (command != "") {
             readfromcopy = false;
-            sitethread->requestRawCommand(command);
+            sitelogic->requestRawCommand(command);
             rawcommandfield.clear();
             uicommunicator->newCommand("update");
           }

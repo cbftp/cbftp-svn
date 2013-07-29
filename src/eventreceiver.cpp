@@ -23,3 +23,11 @@ void EventReceiver::FDData(char * data, unsigned int len) {
 void EventReceiver::FDDisconnected() {
 
 }
+
+void EventReceiver::FDSSLSuccess() {
+
+}
+
+void EventReceiver::FDSSLFail() {
+
+}

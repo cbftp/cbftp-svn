@@ -3,31 +3,27 @@
 #include <string>
 #include <list>
 #include <stdlib.h>
-#include <pthread.h>
-#include <semaphore.h>
 
 #include "scoreboard.h"
 #include "scoreboardelement.h"
 #include "globalcontext.h"
-#include "sitethread.h"
+#include "sitelogic.h"
 #include "filelist.h"
-#include "sitethreadmanager.h"
+#include "sitelogicmanager.h"
 #include "transfermanager.h"
 #include "race.h"
+#include "enginebase.h"
 
 #define SPREAD 1
 
 extern GlobalContext * global;
 
-class Engine {
+class Engine : public EngineBase {
   private:
     std::list<Race *> allraces;
     std::list<Race *> currentraces;
     ScoreBoard * scoreboard;
     int maxavgspeed;
-    pthread_t thread;
-    sem_t race_sem;
-    sem_t * list_refresh;
     void estimateRaceSizes();
     void reportCurrentSizeAsFinal(SiteRace *, FileList *);
     void refreshScoreBoard();
@@ -37,8 +33,7 @@ class Engine {
   public:
     Engine();
     void newRace(std::string, std::string, std::list<std::string>);
-    static void * run(void *);
-    void runInstance();
+    void someRaceFileListRefreshed();
     int currentRaces();
     int allRaces();
     Race * getRace(std::string);

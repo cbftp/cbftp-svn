@@ -35,33 +35,12 @@ Main::Main() {
   Engine * e = new Engine();
   UserInterface * ui = new UserInterface();
   SiteManager * sm = new SiteManager();
-  SiteThreadManager * stm = new SiteThreadManager();
+  SiteLogicManager * slm = new SiteLogicManager();
   TransferManager * tm = new TransferManager();
   RemoteCommandHandler * rch = new RemoteCommandHandler();
-  global->linkComponents(dfh, iom, e, ui->getCommunicator(), sm, stm, tm, tp, rch);
+  global->linkComponents(dfh, iom, e, ui->getCommunicator(), sm, slm, tm, tp, rch);
   if (!ui->init()) exit(1);
-  while(forever) {
-    sleep(1);
-  }
-}
-
-int main(int argc, char * argv[]) {
-  /*if (argc < 4) {
-    std::cout << "Usage:\n./clusterbomb <release> <section> <site1> <site2> [site3 [site4 [ ... ] ] ]" << std::endl;
-    exit(0);
-  }
-  std::list<std::string> sites;
-  for (int i = 3; i < argc; i++) {
-    sites.push_back(argv[i]);
-  }
-  e->newRace(argv[1], argv[2], sites);*/
-
-  global->signal_catch();
-  new Main();
-}
-
-void sighandler(int sig) {
-  global->signal_ignore();
+  tp->tickerLoop();
   global->getUICommunicator()->kill();
   if (global->getDataFileHandler()->isInitialized()) {
     std::cout << "Saving data to file..." << std::endl;
@@ -71,7 +50,16 @@ void sighandler(int sig) {
     global->getDataFileHandler()->writeFile();
     std::cout << "Done, exiting..." << std::endl << std::flush;
   }
-  forever = false;
+}
+
+int main(int argc, char * argv[]) {
+  global->signal_catch();
+  new Main();
+}
+
+void sighandler(int sig) {
+  global->signal_ignore();
+  global->getTickPoke()->breakLoop();
 }
 
 void sighandler_winch(int sig) {

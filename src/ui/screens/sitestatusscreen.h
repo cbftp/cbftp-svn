@@ -4,9 +4,9 @@
 
 #include "../../globalcontext.h"
 #include "../../site.h"
-#include "../../sitethread.h"
-#include "../../sitethreadmanager.h"
-#include "../../ftpthread.h"
+#include "../../sitelogic.h"
+#include "../../sitelogicmanager.h"
+#include "../../ftpconn.h"
 
 #include "../uiwindow.h"
 #include "../uicommunicator.h"

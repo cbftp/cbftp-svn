@@ -2,15 +2,18 @@
 
 TickPoke::TickPoke() {
   wm = global->getWorkManager();
-  pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
-  pthread_setname_np(thread, "Ticker");
+  forever = true;
 }
 
-void TickPoke::runInstance() {
-  while(1) {
+void TickPoke::tickerLoop() {
+  while(forever) {
     usleep(SLEEPINTERVAL * 1000);
     wm->dispatchTick(this, SLEEPINTERVAL);
   }
+}
+
+void TickPoke::breakLoop() {
+  forever = false;
 }
 
 void TickPoke::tick(int interval) {
@@ -35,10 +38,3 @@ void TickPoke::stopPoke(EventReceiver * pokee, int message) {
     }
   }
 }
-
-void * TickPoke::run(void * arg) {
-  ((TickPoke *) arg)->runInstance();
-  return NULL;
-}
-
-

@@ -8,4 +8,6 @@ public:
   virtual void FDData();
   virtual void FDData(char *, unsigned int);
   virtual void FDDisconnected();
+  virtual void FDSSLSuccess();
+  virtual void FDSSLFail();
 };

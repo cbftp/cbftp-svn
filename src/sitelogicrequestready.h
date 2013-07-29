@@ -4,12 +4,12 @@
 
 class FileList;
 
-class SiteThreadRequestReady {
+class SiteLogicRequestReady {
 private:
   int requestid;
   void * data;
 public:
-  SiteThreadRequestReady(int, void *);
+  SiteLogicRequestReady(int, void *);
   int requestId();
   void * requestData();
 };

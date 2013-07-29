@@ -3,51 +3,36 @@
 Engine::Engine() {
   scoreboard = new ScoreBoard();
   maxavgspeed = 1024;
-  list_refresh = global->getListRefreshSem();
-  sem_init(&race_sem, 0, 0);
-  pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
-  pthread_setname_np(thread, "EngineThread");
 }
 
 void Engine::newRace(std::string release, std::string section, std::list<std::string> sites) {
   Race * race = new Race(release, section);
   for (std::list<std::string>::iterator it = sites.begin(); it != sites.end(); it++) {
-    SiteThread * st = global->getSiteThreadManager()->getSiteThread(*it);
-    st->addRace(race, section, release);
-    race->addSite(st);
+    SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(*it);
+    sl->addRace(race, section, release);
+    race->addSite(sl);
   }
   currentraces.push_back(race);
   allraces.push_back(race);
   setSpeedScale();
-  sem_post(&race_sem);
 }
 
-void * Engine::run(void * arg) {
-  ((Engine *) arg)->runInstance();
-  return NULL;
-}
-
-void Engine::runInstance() {
-  //int runs = 0;
-  while(true) {
-    if (currentraces.size() > 0) {
-      sem_wait(list_refresh);
-      estimateRaceSizes();
-      refreshScoreBoard();
-      std::vector<ScoreBoardElement *> possibles = scoreboard->getElementVector();
-      //std::cout << "Possible transfers (run " << runs++ << "): " << scoreboard->size() << std::endl;
-      for (unsigned int i = 0; i < possibles.size(); i++) {
-        //std::cout << possibles[i]->fileName() << " - " << possibles[i]->getScore() << " - " << possibles[i]->getSource()->getSite()->getName() << " -> " << possibles[i]->getDestination()->getSite()->getName() << std::endl;
-      }
-      issueOptimalTransfers();
-    }
-    else sem_wait(&race_sem);
+void Engine::someRaceFileListRefreshed() {
+  if (currentraces.size() > 0) {
+    estimateRaceSizes();
+    refreshScoreBoard();
+    /*std::vector<ScoreBoardElement *> possibles = scoreboard->getElementVector();
+    std::cout << "Possible transfers (run " << runs++ << "): " << scoreboard->size() << std::endl;
+    for (unsigned int i = 0; i < possibles.size(); i++) {
+      std::cout << possibles[i]->fileName() << " - " << possibles[i]->getScore() << " - " << possibles[i]->getSource()->getSite()->getName() << " -> " << possibles[i]->getDestination()->getSite()->getName() << std::endl;
+    }*/
+    issueOptimalTransfers();
   }
 }
 
 void Engine::estimateRaceSizes() {
   for (std::list<Race *>::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
-    for (std::list<SiteThread *>::iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
+    for (std::list<SiteLogic *>::iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
       SiteRace * srs = (*its)->getRace((*itr)->getName());
       std::map<std::string, FileList *>::iterator itfl;
       for (itfl = srs->fileListsBegin(); itfl != srs->fileListsEnd(); itfl++) {
@@ -105,7 +90,7 @@ void Engine::reportCurrentSizeAsFinal(SiteRace * srs, FileList * fls) {
 void Engine::refreshScoreBoard() {
   scoreboard->wipe();
   for (std::list<Race *>::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
-    for (std::list<SiteThread *>::iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
+    for (std::list<SiteLogic *>::iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
       SiteRace * srs = (*its)->getRace((*itr)->getName());
       if (!srs->isDone()) {
         bool racecomplete = true;
@@ -124,7 +109,7 @@ void Engine::refreshScoreBoard() {
         if (racecomplete) {
           (*its)->raceLocalComplete(srs);
           if ((*itr)->isDone()) {
-            for (std::list<SiteThread *>::iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
+            for (std::list<SiteLogic *>::iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
               (*itd)->raceGlobalComplete();
             }
             currentraces.erase(itr);
@@ -133,7 +118,7 @@ void Engine::refreshScoreBoard() {
           }
         }
       }
-      for (std::list<SiteThread *>::iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
+      for (std::list<SiteLogic *>::iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
         if (*itd == *its) continue;
         SiteRace * srd = (*itd)->getRace((*itr)->getName());
         int avgspeed = (*its)->getSite()->getAverageSpeed((*itd)->getSite()->getName());
@@ -172,8 +157,10 @@ void Engine::issueOptimalTransfers() {
     (*it)->getSource()->pushPotential((*it)->getScore(), (*it)->fileName(), (*it)->getDestination());
     if (!(*it)->getSource()->downloadSlotAvailable()) continue;
     if (!(*it)->getDestination()->uploadSlotAvailable()) continue;
+    if ((*it)->getSource()->getSite()->hasBrokenPASV() &&
+        (*it)->getDestination()->getSite()->hasBrokenPASV()) continue;
     if ((*it)->getSource()->potentialCheck((*it)->getScore())) {
-      global->getTransferManager()->newTransfer(*it);
+      global->getTransferManager()->suggestTransfer(*it);
     }
   }
 }
@@ -188,7 +175,10 @@ int Engine::calculateScore(File * f, Race * itr, FileList * fls, SiteRace * srs,
   }
   else {
     // give points for low progress on the target
-    points += 3000 - ((fld->getSizeUploaded() * 3000) / itr->getMaxSiteProgress()); // gives max 3000 points
+    int maxprogress = itr->getMaxSiteProgress();
+    if (maxprogress > 0) {
+      points += 3000 - ((fld->getSizeUploaded() * 3000) / maxprogress); // gives max 3000 points
+    }
   }
   // sfv and nfo files have top priority
   if (f->getExtension().compare("sfv") == 0) return 10000;
@@ -199,8 +189,8 @@ int Engine::calculateScore(File * f, Race * itr, FileList * fls, SiteRace * srs,
 void Engine::setSpeedScale() {
   maxavgspeed = 1024;
   for (std::list<Race *>::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
-    for (std::list<SiteThread *>::iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
-      for (std::list<SiteThread *>::iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
+    for (std::list<SiteLogic *>::iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
+      for (std::list<SiteLogic *>::iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
         int avgspeed = (*its)->getSite()->getAverageSpeed((*itd)->getSite()->getName());
         if (avgspeed > maxavgspeed) maxavgspeed = avgspeed;
       }

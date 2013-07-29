@@ -5,8 +5,8 @@
 #include <vector>
 #include <ncurses.h>
 
-#include "../sitethreadmanager.h"
-#include "../sitethread.h"
+#include "../sitelogicmanager.h"
+#include "../sitelogic.h"
 #include "../site.h"
 #include "../globalcontext.h"
 

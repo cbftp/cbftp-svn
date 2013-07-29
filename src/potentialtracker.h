@@ -14,7 +14,7 @@
 
 extern GlobalContext * global;
 
-class SiteThread;
+class SiteLogic;
 
 class PotentialTracker : private EventReceiver {
   private:
@@ -31,6 +31,6 @@ class PotentialTracker : private EventReceiver {
     ~PotentialTracker();
     int getMaxAvailablePotential();
     PotentialListElement * getFront();
-    std::list<PotentialElement *>::iterator findFirstOfSite(SiteThread *);
+    std::list<PotentialElement *>::iterator findFirstOfSite(SiteLogic *);
     bool allTopSlotsUsedForSite(PotentialElement *);
 };

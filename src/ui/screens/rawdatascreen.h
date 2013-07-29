@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../../ftpthread.h"
+#include "../../ftpconn.h"
 #include "../../rawbuffer.h"
-#include "../../sitethread.h"
-#include "../../sitethreadmanager.h"
+#include "../../sitelogic.h"
+#include "../../sitelogicmanager.h"
 #include "../../globalcontext.h"
 
 #include "../uiwindow.h"
@@ -30,8 +30,8 @@ private:
   unsigned int copysize;
   MenuSelectOptionTextField rawcommandfield;
   std::string sitename;
-  int threadid;
-  SiteThread * sitethread;
+  int connid;
+  SiteLogic * sitelogic;
   UICommunicator * uicommunicator;
   RawBuffer * rawbuf;
 };

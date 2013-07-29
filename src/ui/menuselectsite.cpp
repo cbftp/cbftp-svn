@@ -34,7 +34,7 @@ bool MenuSelectSite::goUp() {
 }
 
 void MenuSelectSite::add(Site * site, int row, int col) {
-  SiteThread * st = global->getSiteThreadManager()->getSiteThread(site->getName());
+  SiteLogic * st = global->getSiteLogicManager()->getSiteLogic(site->getName());
   sites.push_back(MenuSelectSiteElement(site, st, row, col));
 }
 
@@ -71,13 +71,13 @@ void MenuSelectSite::enterFocusFrom(int dir) {
 
 std::string MenuSelectSite::getSiteLine(unsigned int index) {
   Site * site = sites[index].getSite();
-  SiteThread * sitethread = sites[index].getSiteThread();
+  SiteLogic * sitelogic = sites[index].getSiteLogic();
   std::string line = " ";
   std::string add = "";
   int linelen;
   int addlen;
   line.append(site->getName() + " ");
-  add = global->int2Str(sitethread->getCurrLogins());
+  add = global->int2Str(sitelogic->getCurrLogins());
   if (!site->unlimitedLogins()) {
     add += "/" + global->int2Str(site->getMaxLogins());
   }
@@ -85,7 +85,7 @@ std::string MenuSelectSite::getSiteLine(unsigned int index) {
   addlen = add.length();
   for (int i = 0; i < 14 - linelen - addlen; i++) line.append(" ");
   line.append(add + " ");
-  add = global->int2Str(sitethread->getCurrUp());
+  add = global->int2Str(sitelogic->getCurrUp());
   if (!site->unlimitedUp()) {
     add += "/" + global->int2Str(site->getMaxUp());
   }
@@ -93,7 +93,7 @@ std::string MenuSelectSite::getSiteLine(unsigned int index) {
   addlen = add.length();
   for (int i = 0; i < 23 - linelen - addlen; i++) line.append(" ");
   line.append(add + " ");
-  add = global->int2Str(sitethread->getCurrDown());
+  add = global->int2Str(sitelogic->getCurrDown());
   if (!site->unlimitedDown()) {
     add += "/" + global->int2Str(site->getMaxDown());
   }

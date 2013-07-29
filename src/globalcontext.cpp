@@ -13,20 +13,19 @@ void GlobalContext::init() {
   pthread_setname_np(pthread_self(), "clusterbomb");
   pthread_mutex_init(&time_mutex, NULL);
   updateTime();
-  sem_init(&list_refresh, 0, 0);
 }
 
 void GlobalContext::linkWorkManager(WorkManager * wm) {
   this->wm = wm;
 }
 
-void GlobalContext::linkComponents(DataFileHandler * dfh, IOManager * iom, Engine * e, UICommunicator * uic, SiteManager * sm, SiteThreadManager * stm, TransferManager * tm, TickPoke * tp, RemoteCommandHandler * rch) {
+void GlobalContext::linkComponents(DataFileHandler * dfh, IOManager * iom, Engine * e, UICommunicator * uic, SiteManager * sm, SiteLogicManager * slm, TransferManager * tm, TickPoke * tp, RemoteCommandHandler * rch) {
   this->dfh = dfh;
   this->iom = iom;
   this->e = e;
   this->uic = uic;
   this->sm = sm;
-  this->stm = stm;
+  this->slm = slm;
   this->tm = tm;
   this->tp = tp;
   this->rch = rch;
@@ -60,8 +59,8 @@ SiteManager * GlobalContext::getSiteManager() {
   return sm;
 }
 
-SiteThreadManager * GlobalContext::getSiteThreadManager() {
-  return stm;
+SiteLogicManager * GlobalContext::getSiteLogicManager() {
+  return slm;
 }
 
 TransferManager * GlobalContext::getTransferManager() {
@@ -78,10 +77,6 @@ RemoteCommandHandler * GlobalContext::getRemoteCommandHandler() {
 
 pthread_attr_t * GlobalContext::getPthreadAttr() {
   return &attr;
-}
-
-sem_t * GlobalContext::getListRefreshSem() {
-  return &list_refresh;
 }
 
 int GlobalContext::ctimeMSec() {

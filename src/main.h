@@ -7,7 +7,7 @@
 #include <error.h>
 
 #include "datafilehandler.h"
-#include "sitethreadmanager.h"
+#include "sitelogicmanager.h"
 #include "transfermanager.h"
 #include "sitemanager.h"
 #include "globalcontext.h"

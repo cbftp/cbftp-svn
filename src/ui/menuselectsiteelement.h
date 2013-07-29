@@ -1,18 +1,18 @@
 #pragma once
 
 class Site;
-class SiteThread;
+class SiteLogic;
 
 class MenuSelectSiteElement {
   private:
     Site * site;
-    SiteThread * sitethread;
+    SiteLogic * sitelogic;
     int col;
     int row;
   public:
-    MenuSelectSiteElement(Site *, SiteThread *, int, int);
+    MenuSelectSiteElement(Site *, SiteLogic *, int, int);
     Site * getSite();
-    SiteThread * getSiteThread();
+    SiteLogic * getSiteLogic();
     int getCol();
     int getRow();
 };

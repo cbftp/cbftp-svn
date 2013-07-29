@@ -6,7 +6,7 @@ PotentialElement::PotentialElement() {
   this->site_dnslots = 0;
 }
 
-SiteThread * PotentialElement::getSite() {
+SiteLogic * PotentialElement::getSite() {
   return site;
 }
 
@@ -14,7 +14,7 @@ int PotentialElement::getPotential() {
   return potential;
 }
 
-void PotentialElement::update(SiteThread * site, int site_dnslots, int potential, std::string filename) {
+void PotentialElement::update(SiteLogic * site, int site_dnslots, int potential, std::string filename) {
   this->site = site;
   this->site_dnslots = site_dnslots;
   this->potential = potential;

@@ -1,0 +1,625 @@
+#include "ftpconn.h"
+
+FTPConn::FTPConn(SiteLogicBase * slb, int id) {
+  this->slb = slb;
+  this->id = id;
+  this->site = slb->getSite();
+  this->status = "disconnected";
+  processing = false;
+  rawbuf = new RawBuffer(RAWBUFMAXLEN, site->getName(), global->int2Str(id));
+  iom = global->getIOManager();
+  databuflen = DATABUF;
+  databuf = (char *) malloc(databuflen);
+  databufpos = 0;
+  protectedmode = false;
+  mkdtarget = false;
+  currentpath = "";
+  state = 0;
+}
+
+int FTPConn::getId() {
+  return id;
+}
+
+void FTPConn::setId(int id) {
+  this->id = id;
+  rawbuf->setId(id);
+}
+
+std::string FTPConn::getStatus() {
+  return status;
+}
+
+void FTPConn::login() {
+
+  if (state != 0) {
+    return;
+  }
+  protectedmode = false;
+  mkdtarget = false;
+  databufpos = 0;
+  processing = true;
+  currentpath = "";
+  rawbuf->writeLine("[Connecting to " + site->getAddress() + ":" + site->getPort() + "]");
+  state = 1;
+  sockfd = iom->registerTCPClientSocket(this, site->getAddress(), global->str2Int(site->getPort()));
+}
+
+void FTPConn::FDConnected() {
+  rawbuf->writeLine("[Connection established]");
+  state = 2;
+}
+
+void FTPConn::FDDisconnected() {
+  if (state != 0) {
+    rawbuf->writeLine("[Disconnected]");
+    this->status = "disconnected";
+    state = 0;
+  }
+}
+
+void FTPConn::FDSSLSuccess() {
+  rawbuf->writeLine("[Cipher: " + iom->getCipher(sockfd) + "]");
+  doUSER(false);
+}
+
+void FTPConn::FDSSLFail() {
+
+}
+
+void FTPConn::FDData(char * data, unsigned int datalen) {
+  if (state != 6) {
+    rawbuf->write(std::string(data, datalen));
+  }
+  if (databufpos + datalen > databuflen) {
+    databuflen = databuflen * 2;
+    char * newdatabuf = (char *) malloc(databuflen);
+    memcpy(newdatabuf, databuf, databufpos);
+    delete databuf;
+    databuf = newdatabuf;
+  }
+  memcpy(databuf + databufpos, data, datalen);
+  databufpos += datalen;
+  bool messagecomplete = false;
+  char * loc;
+  if(databuf[databufpos - 1] == '\n') {
+    loc = databuf + databufpos - 5;
+        while (loc >= databuf) {
+          if (*loc >= 48 && *loc <= 57 && *(loc+1) >= 48 && *(loc+1) <= 57 && *(loc+2) >= 48 && *(loc+2) <= 57) {
+            if ((*(loc+3) == ' ' || *(loc+3) == '\n') && (loc == databuf || *(loc-1) == '\n')) {
+              messagecomplete = true;
+              databufcode = atoi(std::string(loc, 3).data());
+              break;
+            }
+          }
+          --loc;
+        }
+  }
+  if (messagecomplete) {
+    if (databufcode == 550) {
+      // workaround for a glftpd bug causing an extra row '550 Unable to load your own user file!.' on retr/stor
+      if (*(loc+4) == 'U' && *(loc+5) == 'n' && *(loc+28) == 'u' && *(loc+33) == 'f') {
+        databufpos = 0;
+        return;
+      }
+    }
+    switch(state) {
+      case 2: // awaiting welcome on connect
+        welcomeReceived();
+        break;
+      case 3: // awaiting AUTH TLS response
+        AUTHTLSResponse();
+        break;
+      case 4: // awaiting USER response
+        USERResponse();
+        break;
+      case 5: // awaiting PASS response
+        PASSResponse();
+        break;
+      case 6: // awaiting STAT response
+        STATResponse();
+        break;
+      case 7: // awaiting PWD response
+        PWDResponse();
+        break;
+      case 8: // awaiting PROT P response
+        PROTPResponse();
+        break;
+      case 9:  // awaiting PROT C response
+        PROTCResponse();
+        break;
+      case 10: // awaiting raw response
+        RawResponse();
+        break;
+      case 11: // awaiting CPSV response
+        CPSVResponse();
+        break;
+      case 12: // awaiting PASV response
+        PASVResponse();
+        break;
+      case 13: // awaiting PORT response
+        PORTResponse();
+        break;
+      case 14: // awaiting CWD response
+        CWDResponse();
+        break;
+      case 15: // awaiting MKD response
+        MKDResponse();
+        break;
+      case 16: // awaiting PRET RETR response
+        PRETRETRResponse();
+        break;
+      case 17: // awaiting PRET STOR response
+        PRETSTORResponse();
+        break;
+      case 18: // awaiting RETR response
+        RETRResponse();
+        break;
+      case 19: // awaiting RETR complete
+        RETRComplete();
+        break;
+      case 20: // awaiting STOR response
+        STORResponse();
+        break;
+      case 21: // awaiting STOR complete
+        STORComplete();
+        break;
+      case 22: // awaiting ABOR response
+        ABORResponse();
+        break;
+      case 23: // awaiting QUIT response
+        QUITResponse();
+        break;
+    }
+    databufpos = 0;
+  }
+}
+
+void FTPConn::sendEcho(std::string data) {
+  rawbuf->writeLine(data);
+  processing = true;
+  status = data;
+  iom->sendData(sockfd, data + "\n");
+}
+
+void FTPConn::welcomeReceived() {
+  if (databufcode == 220) {
+    state = 3;
+    sendEcho("AUTH TLS");
+  }
+  else {
+    rawbuf->writeLine("[Unknown response]");
+    state = 0;
+    processing = false;
+    iom->closeSocket(sockfd);
+    slb->unexpectedResponse(id);
+  }
+}
+
+void FTPConn::AUTHTLSResponse() {
+  if (databufcode == 234) {
+    iom->negotiateSSL(sockfd);
+  }
+  else {
+    rawbuf->writeLine("[Unknown response]");
+    state = 0;
+    processing = false;
+    iom->closeSocket(sockfd);
+    slb->TLSFailed(id);
+  }
+}
+
+void FTPConn::doUSER(bool killer) {
+  state = 4;
+  sendEcho((std::string("USER ") + (killer ? "!" : "") + site->getUser()).data());
+}
+
+void FTPConn::USERResponse() {
+  if (databufcode == 331) {
+    std::string pass = site->getPass();
+    std::string passc = "";
+    for (unsigned int i = 0; i < pass.length(); i++) passc.append("*");
+    std::string output = "PASS " + std::string(passc);
+    rawbuf->writeLine(output);
+    status = output;
+    state = 5;
+    iom->sendData(sockfd, std::string("PASS ") + site->getPass()  + "\n");
+  }
+  else {
+    processing = false;
+    slb->userDenied(id);
+  }
+}
+
+void FTPConn::PASSResponse() {
+  processing = false;
+  if (databufcode == 230) {
+    this->status = "connected";
+    slb->commandSuccess(id);
+  }
+  else {
+    slb->commandFail(id);
+  }
+}
+
+void FTPConn::reconnect() {
+  if (state != 0) {
+    iom->closeSocket(sockfd);
+    state = 0;
+  }
+  login();
+}
+
+void FTPConn::doSTAT() {
+  doSTAT(NULL, new FileList(site->getUser(), currentpath));
+}
+
+void FTPConn::doSTAT(SiteRace * race, FileList * filelist) {
+  state = 6;
+  currentrace = race;
+  currentfl = filelist;
+  sendEcho("STAT -l");
+}
+
+void FTPConn::STATResponse() {
+  processing = false;
+  if (databufcode == 213) {
+    char * loc = databuf, * start;
+    while(*++loc != '\n');
+    while(*++loc != '\n');
+    unsigned int files = 0;
+    int touch = rand();
+    while (*++loc != '2') {
+      start = loc;
+      while(*++loc != '\n');
+      *loc = '\0';
+      files++;
+      currentfl->updateFile(start, touch);
+    }
+    if (currentfl->getSize() > files) {
+      currentfl->cleanSweep(touch);
+    }
+    std::string output = "[File list retrieved]";
+    rawbuf->writeLine(output);
+    if (!currentfl->isFilled()) currentfl->setFilled();
+    slb->listRefreshed(id);
+  }
+  else {
+    slb->commandFail(id);
+  }
+}
+
+void FTPConn::updateName() {
+  rawbuf->rename(site->getName());
+}
+
+std::string FTPConn::getCurrentPath() {
+  return currentpath;
+}
+void FTPConn::doPWD() {
+  state = 7;
+  sendEcho("PWD");
+}
+
+void FTPConn::PWDResponse() {
+  processing = false;
+  if (databufcode == 257) {
+    std::string line(databuf, databufpos);
+    int loc = 0;
+    while(line[++loc] != '"');
+    int start = loc + 1;
+    while(line[++loc] != '"');
+    slb->gotPath(id, line.substr(start, loc - start));
+  }
+  else {
+    slb->commandFail(id);
+  }
+}
+
+void FTPConn::doPROTP() {
+  state = 8;
+  sendEcho("PROT P");
+}
+
+void FTPConn::PROTPResponse() {
+  processing = false;
+  if (databufcode == 200) {
+    protectedmode = true;
+    slb->commandSuccess(id);
+  }
+  else {
+    slb->commandFail(id);
+  }
+}
+
+void FTPConn::doPROTC() {
+  state = 9;
+  sendEcho("PROT C");
+}
+
+void FTPConn::PROTCResponse() {
+  processing = false;
+  if (databufcode == 200) {
+    protectedmode = false;
+    slb->commandSuccess(id);
+  }
+  else {
+    slb->commandFail(id);
+  }
+}
+
+void FTPConn::doRaw(std::string command) {
+  state = 10;
+  sendEcho(command.c_str());
+}
+
+void FTPConn::RawResponse() {
+  processing = false;
+  std::string ret = std::string(databuf, databufpos);
+  slb->rawCommandResultRetrieved(id, ret);
+}
+
+void FTPConn::doCPSV() {
+  state = 11;
+  sendEcho("CPSV");
+}
+
+void FTPConn::CPSVResponse() {
+  processing = false;
+  if (databufcode == 227) {
+    std::string data = std::string(databuf, databufpos);
+    size_t start = data.find('(') + 1;
+    size_t end = data.find(')');
+    slb->gotPassiveAddress(id, data.substr(start, end-start));
+  }
+  else {
+    slb->commandFail(id);
+  }
+}
+
+void FTPConn::doPASV() {
+  state = 12;
+  sendEcho("PASV");
+}
+
+void FTPConn::PASVResponse() {
+  processing = false;
+  if (databufcode == 227) {
+    std::string data = std::string(databuf, databufpos);
+    size_t start = data.find('(') + 1;
+    size_t end = data.find(')');
+    slb->gotPassiveAddress(id, data.substr(start, end-start));
+  }
+  else {
+    slb->commandFail(id);
+  }
+}
+
+void FTPConn::doPORT(std::string addr) {
+  state = 13;
+  sendEcho(("PORT " + addr).c_str());
+}
+
+void FTPConn::PORTResponse() {
+  processing = false;
+  if (databufcode == 200) {
+    slb->commandSuccess(id);
+  }
+  else {
+    slb->commandFail(id);
+  }
+}
+
+void FTPConn::doCWD(std::string path) {
+  if (path == currentpath) {
+    return;
+  }
+  targetpath = path;
+  state = 14;
+  sendEcho(("CWD " + path).c_str());
+}
+
+void FTPConn::CWDResponse() {
+  processing = false;
+  if (databufcode == 250) {
+    currentpath = targetpath;
+    slb->commandSuccess(id);
+  }
+  else {
+    slb->commandFail(id);
+  }
+}
+
+void FTPConn::doMKD(std::string dir) {
+  targetpath = dir;
+  state = 15;
+  sendEcho(("MKD " + dir).c_str());
+}
+
+void FTPConn::MKDResponse() {
+  processing = false;
+  if (databufcode == 257) {
+    slb->commandSuccess(id);
+  }
+  else {
+    if (databufcode == 550 &&
+        std::string(databuf, databufpos).find("File exist") !=
+            std::string::npos) {
+      slb->commandSuccess(id);
+    }
+    else {
+      slb->commandFail(id);
+    }
+  }
+}
+
+void FTPConn::doPRETRETR(std::string file) {
+  state = 16;
+  sendEcho(("PRET RETR " + file).c_str());
+}
+
+void FTPConn::PRETRETRResponse() {
+  processing = false;
+  if (databufcode == 200) {
+    slb->commandSuccess(id);
+  }
+  else {
+    slb->commandFail(id);
+  }
+}
+
+void FTPConn::doPRETSTOR(std::string file) {
+  state = 17;
+  sendEcho(("PRET STOR " + file).c_str());
+}
+
+void FTPConn::PRETSTORResponse() {
+  processing = false;
+  if (databufcode == 200) {
+    slb->commandSuccess(id);
+  }
+  else {
+    slb->commandFail(id);
+  }
+}
+
+void FTPConn::doRETR(std::string file) {
+  state = 18;
+  sendEcho(("RETR " + file).c_str());
+}
+
+void FTPConn::RETRResponse() {
+  if (databufcode == 150) {
+    slb->commandSuccess(id);
+  }
+  else {
+    slb->commandFail(id);
+  }
+  state = 19;
+}
+
+void FTPConn::RETRComplete() {
+  processing = false;
+  if (databufcode == 226) {
+    slb->commandSuccess(id);
+  }
+  else {
+    slb->commandFail(id);
+  }
+}
+
+void FTPConn::doSTOR(std::string file) {
+  state = 20;
+  sendEcho(("STOR " + file).c_str());
+}
+
+void FTPConn::STORResponse() {
+  if (databufcode == 150) {
+    slb->commandSuccess(id);
+  }
+  else {
+    slb->commandFail(id);
+  }
+  state = 21;
+}
+
+void FTPConn::STORComplete() {
+  processing = false;
+  if (databufcode == 226) {
+    slb->commandSuccess(id);
+  }
+  else {
+    slb->commandFail(id);
+  }
+}
+
+void FTPConn::abortTransfer() {
+  state = 22;
+  sendEcho("ABOR");
+}
+
+void FTPConn::ABORResponse() {
+  processing = false;
+  slb->commandSuccess(id);
+}
+
+void FTPConn::doQUIT() {
+  state = 23;
+  sendEcho("QUIT");
+}
+
+void FTPConn::QUITResponse() {
+  processing = false;
+  disconnect();
+}
+
+void FTPConn::disconnect() {
+  if (state != 0) {
+    state = 0;
+    iom->closeSocket(sockfd);
+    this->status = "disconnected";
+    rawbuf->writeLine("[Disconnected]");
+  }
+}
+
+RawBuffer * FTPConn::getRawBuffer() {
+  return rawbuf;
+}
+
+int FTPConn::getState() {
+  return state;
+}
+
+void FTPConn::setMKDCWDTarget(std::string section, std::string subpath) {
+  mkdtarget = true;
+  mkdsect = section;
+  mkdpath = subpath;
+  size_t lastpos = 0;
+  mkdsubdirs.clear();
+  while (true) {
+    size_t splitpos = mkdpath.find("/", lastpos);
+    if (splitpos != std::string::npos) {
+      mkdsubdirs.push_back(mkdpath.substr(lastpos, splitpos - lastpos));
+    }
+    else {
+      mkdsubdirs.push_back(mkdpath.substr(lastpos));
+      break;
+    }
+    lastpos = splitpos + 1;
+  }
+}
+
+void FTPConn::finishMKDCWDTarget() {
+  mkdtarget = false;
+}
+
+bool FTPConn::hasMKDCWDTarget() {
+  return mkdtarget;
+}
+
+std::string FTPConn::getTargetPath() {
+  return targetpath;
+}
+
+std::string FTPConn::getMKDCWDTargetSection() {
+  return mkdsect;
+}
+std::string FTPConn::getMKDCWDTargetPath() {
+  return mkdpath;
+}
+
+std::list<std::string> * FTPConn::getMKDSubdirs() {
+  return &mkdsubdirs;
+}
+
+FileList * FTPConn::currentFileList() {
+  return currentfl;
+}
+
+SiteRace * FTPConn::currentSiteRace() {
+  return currentrace;
+}
+
+bool FTPConn::isProcessing() {
+  return processing;
+}

@@ -3,24 +3,24 @@
 #include <string>
 #include <vector>
 #include <list>
-#include <pthread.h>
-#include <semaphore.h>
 
 #include "sitemanager.h"
-#include "ftpthread.h"
+#include "ftpconn.h"
 #include "filelist.h"
 #include "siterace.h"
 #include "globalcontext.h"
-#include "ftpthreadcom.h"
 #include "scoreboardelement.h"
 #include "potentialtracker.h"
-#include "sitethreadrequest.h"
-#include "sitethreadrequestready.h"
+#include "sitelogicrequest.h"
+#include "sitelogicrequestready.h"
 #include "ui/uicommunicator.h"
 #include "tickpoke.h"
 #include "connstatetracker.h"
 #include "rawbuffer.h"
 #include "eventreceiver.h"
+#include "sitelogicbase.h"
+#include "enginebase.h"
+#include "transfermonitorbase.h"
 
 //minimum sleep delay (between refreshes / hammer attempts) in ms
 #define SLEEPDELAY 150
@@ -29,19 +29,14 @@
 
 extern GlobalContext * global;
 
-class SiteThread : private EventReceiver {
+class SiteLogic : public SiteLogicBase {
   private:
     PotentialTracker * ptrack;
-    std::vector<FTPThread *> conns;
+    std::vector<FTPConn *> conns;
     std::vector<ConnStateTracker> connstatetracker;
     std::vector<SiteRace *> races;
     std::list<SiteRace *> recentlylistedraces;
-    FTPThreadCom * ftpthreadcom;
     RawBuffer * rawbuf;
-    pthread_t thread;
-    pthread_mutex_t slots;
-    sem_t notifysem;
-    sem_t * list_refresh;
     unsigned int max_slots_up;
     unsigned int max_slots_dn;
     unsigned int slots_dn;
@@ -49,40 +44,55 @@ class SiteThread : private EventReceiver {
     unsigned int available;
     unsigned int loggedin;
     unsigned int wantedloggedin;
-    std::list<SiteThreadRequest> requests;
-    std::list<SiteThreadRequest> requestsinprogress;
-    std::list<SiteThreadRequestReady> requestsready;
+    std::list<SiteLogicRequest> requests;
+    std::list<SiteLogicRequest> requestsinprogress;
+    std::list<SiteLogicRequestReady> requestsready;
     int requestidcounter;
     Site * site;
     void activate();
-    void handleConnection(int);
     void handleConnection(int, bool);
     void handleRequest(int);
     void addRecentList(SiteRace *);
     bool wasRecentlyListed(SiteRace *);
+    void refreshChangePath(int, SiteRace *, bool);
+    void initTransfer(int);
     static void * run(void *);
     bool poke;
-    void tick(int);
   public:
-    SiteThread(std::string);
-    ~SiteThread();
+    SiteLogic(std::string);
+    ~SiteLogic();
     void runInstance();
     void addRace(Race *, std::string, std::string);
+    void tick(int);
+    void connectFailed(int);
+    void userDenied(int);
+    void loginKillFailed(int);
+    void passDenied(int);
+    void TLSFailed(int);
+    void listRefreshed(int);
+    void unexpectedResponse(int);
+    void commandSuccess(int);
+    void commandFail(int);
+    void gotPath(int, std::string);
+    void rawCommandResultRetrieved(int, std::string);
+    void gotPassiveAddress(int, std::string);
+    void timedout(int);
+    void requestSelect();
     Site * getSite();
     SiteRace * getRace(std::string);
-    bool getDownloadThread(FileList *, std::string, FTPThread **);
-    bool getUploadThread(FileList *, std::string, FTPThread **);
-    bool getReadyThread(FileList *, FTPThread **);
-    bool getReadyThread(FileList *, std::string, FTPThread **, bool, bool);
-    void returnThread(FTPThread *);
+    bool lockDownloadConn(FileList *, std::string, int *);
+    bool lockUploadConn(FileList *, std::string, int *);
+    bool getReadyConn(FileList *, int *);
+    bool getReadyConn(FileList *, std::string, int *, bool, bool);
+    void returnConn(int);
     void setNumConnections(unsigned int);
     bool downloadSlotAvailable();
     bool uploadSlotAvailable();
     int getCurrDown();
     int getCurrUp();
     int getCurrLogins();
-    void connectThread(int);
-    void disconnectThread(int);
+    void connectConn(int);
+    void disconnectConn(int);
     void issueRawCommand(unsigned int, std::string);
     RawBuffer * getRawCommandBuffer();
     void raceGlobalComplete();
@@ -96,10 +106,16 @@ class SiteThread : private EventReceiver {
     std::string getRawCommandResult(int);
     void finishRequest(int);
     void requestViewFile(std::string);
-    void pushPotential(int, std::string, SiteThread *);
+    void pushPotential(int, std::string, SiteLogic *);
     bool potentialCheck(int);
     void updateName();
-    std::vector<FTPThread *> * getConns();
-    FTPThread * getConn(int);
+    std::vector<FTPConn *> * getConns();
+    FTPConn * getConn(int);
     std::string getStatus(int);
+    void preparePassiveDownload(int, TransferMonitorBase *, FileList *, std::string);
+    void preparePassiveUpload(int, TransferMonitorBase *, FileList *, std::string);
+    void passiveDownload(int);
+    void passiveUpload(int);
+    void activeUpload(int, TransferMonitorBase *, FileList *, std::string, std::string);
+    void activeDownload(int, TransferMonitorBase *, FileList *, std::string, std::string);
 };

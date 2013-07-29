@@ -6,6 +6,7 @@ ConnStateTracker::ConnStateTracker() {
   time = 0;
   lastchecked = NULL;
   lastcheckedcount = 0;
+  transfer = false;
 }
 
 void ConnStateTracker::delayedCommand(std::string command, int delay) {
@@ -106,4 +107,51 @@ bool ConnStateTracker::isIdle() {
 
 bool ConnStateTracker::isReady() {
   return (state == 1 || state == 2);
+}
+
+void ConnStateTracker::setTransfer(TransferMonitorBase * tmb, FileList * fls, std::string file, bool download, bool passive) {
+  setTransfer(tmb, fls, file, download, passive, "");
+}
+
+void ConnStateTracker::setTransfer(TransferMonitorBase * tmb, FileList * fls, std::string file, bool download, bool passive, std::string addr) {
+  this->transfer = true;
+  this->tmb = tmb;
+  this->fls = fls;
+  this->file = file;
+  this->download = download;
+  this->passive = passive;
+  this->addr = addr;
+}
+
+bool ConnStateTracker::hasTransfer() {
+  return transfer;
+}
+
+void ConnStateTracker::finishTransfer() {
+  transfer = false;
+  setIdle();
+}
+
+TransferMonitorBase * ConnStateTracker::getTransferMonitor() {
+  return tmb;
+}
+
+FileList * ConnStateTracker::getTransferFileList() {
+  return fls;
+}
+
+std::string ConnStateTracker::getTransferFile() {
+  return file;
+}
+
+bool ConnStateTracker::getTransferDownload() {
+  return download;
+}
+
+bool ConnStateTracker::getTransferPassive() {
+  return passive;
+}
+
+std::string ConnStateTracker::getTransferAddr() {
+  return addr;
 }

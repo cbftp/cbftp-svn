@@ -75,7 +75,7 @@ void MainScreen::redraw() {
 void MainScreen::update() {
   if (uicommunicator->hasNewCommand()) {
     if (uicommunicator->getCommand() == "yes") {
-      global->getSiteThreadManager()->deleteSiteThread(deletesite);
+      global->getSiteLogicManager()->deleteSiteLogic(deletesite);
       global->getSiteManager()->deleteSite(deletesite);
     }
     uicommunicator->checkoutCommand();

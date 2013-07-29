@@ -1,8 +1,8 @@
 #include "menuselectsiteelement.h"
 
-MenuSelectSiteElement::MenuSelectSiteElement(Site * site, SiteThread * sitethread, int row, int col) {
+MenuSelectSiteElement::MenuSelectSiteElement(Site * site, SiteLogic * sitelogic, int row, int col) {
   this->site = site;
-  this->sitethread = sitethread;
+  this->sitelogic = sitelogic;
   this->row = row;
   this->col = col;
 }
@@ -11,8 +11,8 @@ Site * MenuSelectSiteElement::getSite() {
   return site;
 }
 
-SiteThread * MenuSelectSiteElement::getSiteThread() {
-  return sitethread;
+SiteLogic * MenuSelectSiteElement::getSiteLogic() {
+  return sitelogic;
 }
 
 int MenuSelectSiteElement::getCol() {
