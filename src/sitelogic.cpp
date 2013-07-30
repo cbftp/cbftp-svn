@@ -131,6 +131,12 @@ void SiteLogic::commandSuccess(int id) {
     loggedin++;
     connstatetracker[id].setIdle();
   }
+  if (state == 8 || state == 9) { // PROT
+    if (connstatetracker[id].hasTransfer()) {
+      initTransfer(id);
+      return;
+    }
+  }
   else if (state == 14) { // CWD
     if (conns[id]->hasMKDCWDTarget()) {
       if (conns[id]->getCurrentPath() == conns[id]->getMKDCWDTargetSection() +
@@ -185,7 +191,12 @@ void SiteLogic::commandSuccess(int id) {
   else if (state == 16 || state == 17) { // PRET RETR/STOR
     if (connstatetracker[id].hasTransfer()) {
       if (connstatetracker[id].getTransferPassive()) {
-        conns[id]->doPASV();
+        if (!connstatetracker[id].getTransferSSL()) {
+          conns[id]->doPASV();
+        }
+        else {
+          conns[id]->doCPSV();
+        }
         return;
       }
     }
@@ -462,8 +473,17 @@ void SiteLogic::refreshChangePath(int id, SiteRace * race, bool refresh) {
 
 void SiteLogic::initTransfer(int id) {
   std::string transferpath = connstatetracker[id].getTransferFileList()->getPath();
+  bool transferssl = connstatetracker[id].getTransferSSL();
   if (conns[id]->getCurrentPath() != transferpath) {
     conns[id]->doCWD(transferpath);
+    return;
+  }
+  if (transferssl && !conns[id]->getProtectedMode()) {
+    conns[id]->doPROTP();
+    return;
+  }
+  else if (!transferssl && conns[id]->getProtectedMode()) {
+    conns[id]->doPROTC();
     return;
   }
   if (!connstatetracker[id].getTransferPassive()) {
@@ -479,7 +499,12 @@ void SiteLogic::initTransfer(int id) {
       }
     }
     else {
-      conns[id]->doPASV();
+      if (!transferssl) {
+        conns[id]->doPASV();
+      }
+      else {
+        conns[id]->doCPSV();
+      }
     }
   }
 }
@@ -849,15 +874,15 @@ std::string SiteLogic::getStatus(int id) {
   return conns[id]->getStatus();
 }
 
-void SiteLogic::preparePassiveDownload(int id, TransferMonitorBase * tmb, FileList * fls, std::string file) {
-  connstatetracker[id].setTransfer(tmb, fls, file, true, true);
+void SiteLogic::preparePassiveDownload(int id, TransferMonitorBase * tmb, FileList * fls, std::string file, bool ssl) {
+  connstatetracker[id].setTransfer(tmb, fls, file, true, true, ssl);
   if (!conns[id]->isProcessing()) {
     initTransfer(id);
   }
 }
 
-void SiteLogic::preparePassiveUpload(int id, TransferMonitorBase * tmb, FileList * fls, std::string file) {
-  connstatetracker[id].setTransfer(tmb, fls, file, false, true);
+void SiteLogic::preparePassiveUpload(int id, TransferMonitorBase * tmb, FileList * fls, std::string file, bool ssl) {
+  connstatetracker[id].setTransfer(tmb, fls, file, false, true, ssl);
   if (!conns[id]->isProcessing()) {
     initTransfer(id);
   }
@@ -871,15 +896,15 @@ void SiteLogic::passiveUpload(int id) {
   conns[id]->doSTOR(connstatetracker[id].getTransferFile());
 }
 
-void SiteLogic::activeDownload(int id, TransferMonitorBase * tmb, FileList * fls, std::string file, std::string addr) {
-  connstatetracker[id].setTransfer(tmb, fls, file, true, false, addr);
+void SiteLogic::activeDownload(int id, TransferMonitorBase * tmb, FileList * fls, std::string file, std::string addr, bool ssl) {
+  connstatetracker[id].setTransfer(tmb, fls, file, true, false, addr, ssl);
   if (!conns[id]->isProcessing()) {
     initTransfer(id);
   }
 }
 
-void SiteLogic::activeUpload(int id, TransferMonitorBase * tmb, FileList * fls, std::string file, std::string addr) {
-  connstatetracker[id].setTransfer(tmb, fls, file, false, false, addr);
+void SiteLogic::activeUpload(int id, TransferMonitorBase * tmb, FileList * fls, std::string file, std::string addr, bool ssl) {
+  connstatetracker[id].setTransfer(tmb, fls, file, false, false, addr, ssl);
   if (!conns[id]->isProcessing()) {
     initTransfer(id);
   }

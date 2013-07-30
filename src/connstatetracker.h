@@ -23,6 +23,7 @@ private:
   std::string file;
   bool download;
   bool passive;
+  bool ssl;
   std::string addr;
 public:
   ConnStateTracker();
@@ -42,8 +43,8 @@ public:
   bool isDisconnected();
   bool isIdle();
   bool isReady();
-  void setTransfer(TransferMonitorBase *, FileList *, std::string, bool, bool);
-  void setTransfer(TransferMonitorBase *, FileList *, std::string, bool, bool, std::string);
+  void setTransfer(TransferMonitorBase *, FileList *, std::string, bool, bool, bool);
+  void setTransfer(TransferMonitorBase *, FileList *, std::string, bool, bool, std::string, bool);
   bool hasTransfer();
   void finishTransfer();
   TransferMonitorBase * getTransferMonitor();
@@ -51,5 +52,6 @@ public:
   std::string getTransferFile();
   bool getTransferDownload();
   bool getTransferPassive();
+  bool getTransferSSL();
   std::string getTransferAddr();
 };

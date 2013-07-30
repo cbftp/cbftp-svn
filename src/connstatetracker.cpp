@@ -109,12 +109,13 @@ bool ConnStateTracker::isReady() {
   return (state == 1 || state == 2);
 }
 
-void ConnStateTracker::setTransfer(TransferMonitorBase * tmb, FileList * fls, std::string file, bool download, bool passive) {
-  setTransfer(tmb, fls, file, download, passive, "");
+void ConnStateTracker::setTransfer(TransferMonitorBase * tmb, FileList * fls, std::string file, bool download, bool passive, bool ssl) {
+  setTransfer(tmb, fls, file, download, passive, "", ssl);
 }
 
-void ConnStateTracker::setTransfer(TransferMonitorBase * tmb, FileList * fls, std::string file, bool download, bool passive, std::string addr) {
+void ConnStateTracker::setTransfer(TransferMonitorBase * tmb, FileList * fls, std::string file, bool download, bool passive, std::string addr, bool ssl) {
   this->transfer = true;
+  this->ssl = ssl;
   this->tmb = tmb;
   this->fls = fls;
   this->file = file;
@@ -154,4 +155,8 @@ bool ConnStateTracker::getTransferPassive() {
 
 std::string ConnStateTracker::getTransferAddr() {
   return addr;
+}
+
+bool ConnStateTracker::getTransferSSL() {
+  return ssl;
 }

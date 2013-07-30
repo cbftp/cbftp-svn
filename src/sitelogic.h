@@ -112,10 +112,10 @@ class SiteLogic : public SiteLogicBase {
     std::vector<FTPConn *> * getConns();
     FTPConn * getConn(int);
     std::string getStatus(int);
-    void preparePassiveDownload(int, TransferMonitorBase *, FileList *, std::string);
-    void preparePassiveUpload(int, TransferMonitorBase *, FileList *, std::string);
+    void preparePassiveDownload(int, TransferMonitorBase *, FileList *, std::string, bool);
+    void preparePassiveUpload(int, TransferMonitorBase *, FileList *, std::string, bool);
     void passiveDownload(int);
     void passiveUpload(int);
-    void activeUpload(int, TransferMonitorBase *, FileList *, std::string, std::string);
-    void activeDownload(int, TransferMonitorBase *, FileList *, std::string, std::string);
+    void activeUpload(int, TransferMonitorBase *, FileList *, std::string, std::string, bool);
+    void activeDownload(int, TransferMonitorBase *, FileList *, std::string, std::string, bool);
 };

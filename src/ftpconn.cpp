@@ -570,6 +570,10 @@ int FTPConn::getState() {
   return state;
 }
 
+bool FTPConn::getProtectedMode() {
+  return protectedmode;
+}
+
 void FTPConn::setMKDCWDTarget(std::string section, std::string subpath) {
   mkdtarget = true;
   mkdsect = section;

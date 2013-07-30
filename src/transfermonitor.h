@@ -19,6 +19,7 @@ class TransferMonitor : public TransferMonitorBase {
     bool activedownload;
     bool sourcecomplete;
     bool targetcomplete;
+    bool ssl;
   public:
     TransferMonitor();
     void tick(int);
