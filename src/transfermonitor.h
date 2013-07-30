@@ -16,7 +16,7 @@ class TransferMonitor : public TransferMonitorBase {
     SiteLogic * std;
     FileList * fls;
     FileList * fld;
-    bool passivedownload;
+    bool activedownload;
     bool sourcecomplete;
     bool targetcomplete;
   public:

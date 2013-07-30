@@ -2,7 +2,7 @@
 
 TransferMonitor::TransferMonitor() {
   status = 0;
-  passivedownload = false;
+  activedownload = false;
 }
 
 bool TransferMonitor::idle() {
@@ -15,7 +15,7 @@ void TransferMonitor::engage(std::string file, SiteLogic * sts, FileList * fls, 
   this->fls = fls;
   this->fld = fld;
   this->file = file;
-  passivedownload = false;
+  activedownload = false;
   sourcecomplete = false;
   targetcomplete = false;
   if (!sts->lockDownloadConn(fls, file, &src)) return;
@@ -25,11 +25,11 @@ void TransferMonitor::engage(std::string file, SiteLogic * sts, FileList * fls, 
   }
   status = 1;
   if (!sts->getSite()->hasBrokenPASV()) {
-    passivedownload = true;
-    sts->preparePassiveDownload(src, this, fls, file);
+    activedownload = true;
+    std->preparePassiveUpload(dst, this, fld, file);
   }
   else {
-    std->preparePassiveUpload(dst, this, fld, file);
+    sts->preparePassiveDownload(src, this, fls, file);
   }
 }
 
@@ -38,13 +38,13 @@ void TransferMonitor::tick(int msg) {
 }
 
 void TransferMonitor::passiveReady(std::string addr) {
-  if (passivedownload) {
-    std->activeUpload(dst, this, fld, file, addr);
-    sts->passiveDownload(src);
-  }
-  else {
+  if (activedownload) {
     sts->activeDownload(src, this, fls, file, addr);
     std->passiveUpload(dst);
+  }
+  else {
+    std->activeUpload(dst, this, fld, file, addr);
+    sts->passiveDownload(src);
   }
   fld->touchFile(file, std->getSite()->getUser());
 }
