@@ -56,6 +56,7 @@ class SiteLogic : public SiteLogicBase {
     bool wasRecentlyListed(SiteRace *);
     void refreshChangePath(int, SiteRace *, bool);
     void initTransfer(int);
+    void handleTransferFail(int, bool, int);
     static void * run(void *);
     bool poke;
   public:
@@ -118,4 +119,5 @@ class SiteLogic : public SiteLogicBase {
     void passiveUpload(int);
     void activeUpload(int, TransferMonitorBase *, FileList *, std::string, std::string, bool);
     void activeDownload(int, TransferMonitorBase *, FileList *, std::string, std::string, bool);
+    void abortTransfer(int);
 };

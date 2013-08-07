@@ -12,8 +12,8 @@ class TransferMonitor : public TransferMonitorBase {
     std::string file;
     int src;
     int dst;
-    SiteLogic * sts;
-    SiteLogic * std;
+    SiteLogic * sls;
+    SiteLogic * sld;
     FileList * fls;
     FileList * fld;
     bool activedownload;

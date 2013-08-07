@@ -152,15 +152,25 @@ void Engine::refreshScoreBoard() {
 
 void Engine::issueOptimalTransfers() {
   std::vector<ScoreBoardElement *>::iterator it;
+  ScoreBoardElement * sbe;
+  SiteLogic * sls;
+  SiteLogic * sld;
+  std::string filename;
   for (it = scoreboard->begin(); it != scoreboard->end(); it++) {
+    sbe = *it;
+    sls = sbe->getSource();
+    sld = sbe->getDestination();
+    filename = sbe->fileName();
+    if (sbe->getSourceFileList()->hasFailedDownload(filename)) continue;
+    if (sbe->getDestinationFileList()->hasFailedUpload(filename)) continue;
     //potentiality handling
-    (*it)->getSource()->pushPotential((*it)->getScore(), (*it)->fileName(), (*it)->getDestination());
-    if (!(*it)->getSource()->downloadSlotAvailable()) continue;
-    if (!(*it)->getDestination()->uploadSlotAvailable()) continue;
-    if ((*it)->getSource()->getSite()->hasBrokenPASV() &&
-        (*it)->getDestination()->getSite()->hasBrokenPASV()) continue;
-    if ((*it)->getSource()->potentialCheck((*it)->getScore())) {
-      global->getTransferManager()->suggestTransfer(*it);
+    sls->pushPotential(sbe->getScore(), filename, sld);
+    if (!sls->downloadSlotAvailable()) continue;
+    if (!sld->uploadSlotAvailable()) continue;
+    if (sls->getSite()->hasBrokenPASV() &&
+        sld->getSite()->hasBrokenPASV()) continue;
+    if (sls->potentialCheck(sbe->getScore())) {
+      global->getTransferManager()->suggestTransfer(sbe);
     }
   }
 }

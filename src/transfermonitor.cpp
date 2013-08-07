@@ -9,9 +9,9 @@ bool TransferMonitor::idle() {
   return status == 0;
 }
 
-void TransferMonitor::engage(std::string file, SiteLogic * sts, FileList * fls, SiteLogic * std, FileList * fld) {
-  this->sts = sts;
-  this->std = std;
+void TransferMonitor::engage(std::string file, SiteLogic * sls, FileList * fls, SiteLogic * sld, FileList * fld) {
+  this->sls = sls;
+  this->sld = sld;
   this->fls = fls;
   this->fld = fld;
   this->file = file;
@@ -19,21 +19,21 @@ void TransferMonitor::engage(std::string file, SiteLogic * sts, FileList * fls, 
   sourcecomplete = false;
   targetcomplete = false;
   ssl = false;
-  if (!sts->lockDownloadConn(fls, file, &src)) return;
-  if (!std->lockUploadConn(fld, file, &dst)) {
-    sts->returnConn(src);
+  if (!sls->lockDownloadConn(fls, file, &src)) return;
+  if (!sld->lockUploadConn(fld, file, &dst)) {
+    sls->returnConn(src);
     return;
   }
   status = 1;
-  if (sts->getSite()->SSLFXPForced() || std->getSite()->SSLFXPForced()) {
+  if (sls->getSite()->SSLFXPForced() || sld->getSite()->SSLFXPForced()) {
     ssl = true;
   }
-  if (!sts->getSite()->hasBrokenPASV()) {
+  if (!sls->getSite()->hasBrokenPASV()) {
     activedownload = true;
-    std->preparePassiveUpload(dst, this, fld, file, ssl);
+    sld->preparePassiveUpload(dst, this, fld, file, ssl);
   }
   else {
-    sts->preparePassiveDownload(src, this, fls, file, ssl);
+    sls->preparePassiveDownload(src, this, fls, file, ssl);
   }
 }
 
@@ -43,14 +43,14 @@ void TransferMonitor::tick(int msg) {
 
 void TransferMonitor::passiveReady(std::string addr) {
   if (activedownload) {
-    sts->activeDownload(src, this, fls, file, addr, ssl);
-    std->passiveUpload(dst);
+    sls->activeDownload(src, this, fls, file, addr, ssl);
+    sld->passiveUpload(dst);
   }
   else {
-    std->activeUpload(dst, this, fld, file, addr, ssl);
-    sts->passiveDownload(src);
+    sld->activeUpload(dst, this, fld, file, addr, ssl);
+    sls->passiveDownload(src);
   }
-  fld->touchFile(file, std->getSite()->getUser());
+  fld->touchFile(file, sld->getSite()->getUser());
 }
 
 void TransferMonitor::sourceComplete() {
@@ -68,9 +68,33 @@ void TransferMonitor::targetComplete() {
 }
 
 void TransferMonitor::sourceError(int err) {
-
+  switch (err) {
+    case 0: // PRET RETR failed
+      fls->downloadFail(file);
+      break;
+    case 1: // RETR failed
+      fls->downloadFail(file);
+      break;
+    case 2: // RETR post failed
+      fls->downloadAttemptFail(file);
+      break;
+  }
+  sld->abortTransfer(dst);
+  status = 0;
 }
 
 void TransferMonitor::targetError(int err) {
-
+  switch (err) {
+    case 0: // PRET STOR failed
+      fld->uploadFail(file);
+      break;
+    case 1: // STOR failed
+      fld->uploadFail(file);
+      break;
+    case 2: // STOR post failed
+      fld->uploadAttemptFail(file);
+      break;
+  }
+  sls->abortTransfer(src);
+  status = 0;
 }

@@ -246,3 +246,45 @@ void FileList::editOwnedFileCount(bool add) {
  ownpercentage = (owned * 100) / files.size();
  pthread_mutex_unlock(&owned_mutex);
 }
+
+void FileList::uploadFail(std::string file) {
+  uploadfails[file] = 3;
+}
+
+void FileList::downloadFail(std::string file) {
+  downloadfails[file] = 3;
+}
+
+void FileList::uploadAttemptFail(std::string file) {
+  if (uploadfails.find(file) == uploadfails.end()) {
+    uploadfails[file] = 0;
+  }
+  uploadfails[file]++;
+}
+
+void FileList::downloadAttemptFail(std::string file) {
+  if (downloadfails.find(file) == uploadfails.end()) {
+    downloadfails[file] = 0;
+  }
+  downloadfails[file]++;
+}
+
+bool FileList::hasFailedDownload(std::string file) {
+  if (downloadfails.find(file) == uploadfails.end()) {
+    return false;
+  }
+  if (downloadfails[file] < 3) {
+    return false;
+  }
+  return true;
+}
+
+bool FileList::hasFailedUpload(std::string file) {
+  if (uploadfails.find(file) == uploadfails.end()) {
+    return false;
+  }
+  if (uploadfails[file] < 3) {
+    return false;
+  }
+  return true;
+}

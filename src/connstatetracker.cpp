@@ -7,6 +7,8 @@ ConnStateTracker::ConnStateTracker() {
   lastchecked = NULL;
   lastcheckedcount = 0;
   transfer = false;
+  transferlocked = false;
+  lockeddownload = false;
 }
 
 void ConnStateTracker::delayedCommand(std::string command, int delay) {
@@ -81,12 +83,14 @@ void ConnStateTracker::setDisconnected() {
 
 void ConnStateTracker::setIdle() {
   delayedcommands.clear();
+  transferlocked = false;
   time = 0;
   state = 1;
 }
 
 void ConnStateTracker::setReady() {
   delayedcommands.clear();
+  transferlocked = false;
   time = 0;
   state = 2;
 }
@@ -130,7 +134,14 @@ bool ConnStateTracker::hasTransfer() {
 
 void ConnStateTracker::finishTransfer() {
   transfer = false;
+  transferlocked = false;
   setIdle();
+}
+
+void ConnStateTracker::abortTransfer() {
+  transfer = false;
+  transferlocked = false;
+  setReady();
 }
 
 TransferMonitorBase * ConnStateTracker::getTransferMonitor() {
@@ -159,4 +170,17 @@ std::string ConnStateTracker::getTransferAddr() {
 
 bool ConnStateTracker::getTransferSSL() {
   return ssl;
+}
+
+void ConnStateTracker::lockForTransfer(bool download) {
+  transferlocked = true;
+  lockeddownload = download;
+}
+
+bool ConnStateTracker::isLockedForDownload() {
+  return transferlocked && lockeddownload;
+}
+
+bool ConnStateTracker::isLockedForUpload() {
+  return transferlocked && !lockeddownload;
 }

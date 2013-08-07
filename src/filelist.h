@@ -9,6 +9,8 @@
 class FileList {
   private:
     std::map<std::string, File *> files;
+    std::map<std::string, int> downloadfails;
+    std::map<std::string, int> uploadfails;
     std::string username;
     std::string path;
     pthread_mutex_t filelist_mutex;
@@ -45,4 +47,10 @@ class FileList {
     void unlockFileList();
     void cleanSweep(int);
     void flush();
+    void uploadFail(std::string);
+    void downloadFail(std::string);
+    void uploadAttemptFail(std::string);
+    void downloadAttemptFail(std::string);
+    bool hasFailedDownload(std::string);
+    bool hasFailedUpload(std::string);
 };

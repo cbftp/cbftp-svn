@@ -233,6 +233,9 @@ void SiteLogic::commandSuccess(int id) {
         connstatetracker[id].finishTransfer();
       }
       break;
+    case 22: // ABOR
+      connstatetracker[id].setIdle();
+      break;
   }
   handleConnection(id, false);
 }
@@ -242,10 +245,12 @@ void SiteLogic::commandFail(int id) {
   std::string targetcwdsect;
   std::string targetcwdpath;
   std::list<std::string> * subdirs;
+  std::string file;
   switch (state) {
     case 14: // cwd fail
       if (conns[id]->hasMKDCWDTarget()) {
         conns[id]->doMKD(conns[id]->getTargetPath());
+        return;
       }
       break;
     case 15: // mkd fail
@@ -257,6 +262,7 @@ void SiteLogic::commandFail(int id) {
           std::string sub = subdirs->front();
           subdirs->pop_front();
           conns[id]->doMKD(targetcwdsect + "/" + sub);
+          return;
         }
         else {
           // failed mkd and no target subdirs. shouldn't happen.
@@ -267,17 +273,45 @@ void SiteLogic::commandFail(int id) {
       }
       break;
     case 16: // PRET RETR fail
-      break;
+      handleTransferFail(id, true, 0);
+      return;
     case 17: // PRET STOR fail
-      break;
+      handleTransferFail(id, false, 0);
+      return;
     case 18: // RETR fail
-      break;
+      handleTransferFail(id, true, 1);
+      return;
     case 19: // RETR post fail
-      break;
+      handleTransferFail(id, true, 2);
+      return;
     case 20: // STOR fail
-      break;
+      handleTransferFail(id, false, 1);
+      return;
     case 21: // STOR post fail
-      break;
+      handleTransferFail(id, false, 2);
+      return;
+  }
+  // default handling: reconnect
+  conns[id]->reconnect();
+}
+
+void SiteLogic::handleTransferFail(int id, bool download, int err) {
+  if (connstatetracker[id].hasTransfer()) {
+    if (download) {
+      connstatetracker[id].getTransferMonitor()->sourceError(err);
+    }
+    else {
+      connstatetracker[id].getTransferMonitor()->targetError(err);
+    }
+    transferComplete(download);
+    connstatetracker[id].finishTransfer();
+  }
+  connstatetracker[id].setIdle();
+  if (err == 1) {
+    conns[id]->abortTransfer();
+  }
+  else {
+    handleConnection(id, false);
   }
 }
 
@@ -603,11 +637,17 @@ SiteRace * SiteLogic::getRace(std::string race) {
 }
 
 bool SiteLogic::lockDownloadConn(FileList * fl, std::string file, int * ret) {
-  return getReadyConn(fl, file, ret, true, true);
+  bool locked = getReadyConn(fl, file, ret, true, true);
+  if (!locked) return false;
+  connstatetracker[*ret].lockForTransfer(true);
+  return true;
 }
 
 bool SiteLogic::lockUploadConn(FileList * fl, std::string file, int * ret) {
-  return getReadyConn(fl, file, ret, true, false);
+  bool locked = getReadyConn(fl, file, ret, true, false);
+  if (!locked) return false;
+  connstatetracker[*ret].lockForTransfer(false);
+  return true;
 }
 
 bool SiteLogic::getReadyConn(FileList * fl, int * ret) {
@@ -668,8 +708,16 @@ bool SiteLogic::getReadyConn(FileList * fl, std::string file, int * ret, bool is
 }
 
 void SiteLogic::returnConn(int id) {
+  if (connstatetracker[id].isLockedForDownload()) {
+    transferComplete(true);
+  }
+  else if (connstatetracker[id].isLockedForUpload()) {
+    transferComplete(false);
+  }
   connstatetracker[id].setIdle();
-  handleConnection(id, false);
+  if (!conns[id]->isProcessing()) {
+    handleConnection(id, false);
+  }
 }
 
 void SiteLogic::setNumConnections(unsigned int num) {
@@ -926,5 +974,12 @@ void SiteLogic::activeUpload(int id, TransferMonitorBase * tmb, FileList * fls, 
   connstatetracker[id].setTransfer(tmb, fls, file, false, false, addr, ssl);
   if (!conns[id]->isProcessing()) {
     initTransfer(id);
+  }
+}
+
+void SiteLogic::abortTransfer(int id) {
+  if (connstatetracker[id].hasTransfer()) {
+    transferComplete(connstatetracker[id].getTransferDownload());
+    connstatetracker[id].abortTransfer();
   }
 }

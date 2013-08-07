@@ -24,6 +24,8 @@ private:
   bool download;
   bool passive;
   bool ssl;
+  bool transferlocked;
+  bool lockeddownload;
   std::string addr;
 public:
   ConnStateTracker();
@@ -47,6 +49,10 @@ public:
   void setTransfer(TransferMonitorBase *, FileList *, std::string, bool, bool, std::string, bool);
   bool hasTransfer();
   void finishTransfer();
+  void abortTransfer();
+  void lockForTransfer(bool);
+  bool isLockedForDownload();
+  bool isLockedForUpload();
   TransferMonitorBase * getTransferMonitor();
   FileList * getTransferFileList();
   std::string getTransferFile();
