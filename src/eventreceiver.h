@@ -15,6 +15,6 @@ public:
   virtual void FDDisconnected();
   virtual void FDSSLSuccess();
   virtual void FDSSLFail();
-  void lock();
-  void unlock();
+  virtual void lock();
+  virtual void unlock();
 };

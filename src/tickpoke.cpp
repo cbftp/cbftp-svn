@@ -20,7 +20,10 @@ void TickPoke::tick(int interval) {
   std::list<TickPokeTarget>::iterator it;
   for(it = targets.begin(); it != targets.end(); it++) {
     if (it->tick(interval)) {
-      it->getPokee()->tick(it->getMessage());
+      EventReceiver * er = it->getPokee();
+      er->lock();
+      er->tick(it->getMessage());
+      er->unlock();
     }
   }
 }

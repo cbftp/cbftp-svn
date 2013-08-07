@@ -122,4 +122,6 @@ class FTPConn : private EventReceiver {
     void FDSSLFail();
     FileList * currentFileList();
     SiteRace * currentSiteRace();
+    void lock();
+    void unlock();
 };

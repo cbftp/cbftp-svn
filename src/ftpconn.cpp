@@ -627,3 +627,11 @@ SiteRace * FTPConn::currentSiteRace() {
 bool FTPConn::isProcessing() {
   return processing;
 }
+
+void FTPConn::lock() {
+  slb->lock();
+}
+
+void FTPConn::unlock() {
+  slb->unlock();
+}
