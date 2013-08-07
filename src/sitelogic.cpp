@@ -127,139 +127,158 @@ void SiteLogic::unexpectedResponse(int id) {
 
 void SiteLogic::commandSuccess(int id) {
   int state = conns[id]->getState();
-  if (state == 5) { // PASS, logged in
-    loggedin++;
-    connstatetracker[id].setIdle();
-  }
-  if (state == 8 || state == 9) { // PROT
-    if (connstatetracker[id].hasTransfer()) {
-      initTransfer(id);
-      return;
-    }
-  }
-  else if (state == 14) { // CWD
-    if (conns[id]->hasMKDCWDTarget()) {
-      if (conns[id]->getCurrentPath() == conns[id]->getMKDCWDTargetSection() +
-          "/" + conns[id]->getMKDCWDTargetPath()) {
-        conns[id]->finishMKDCWDTarget();
+  std::list<SiteLogicRequest>::iterator it;
+  switch (state) {
+    case 5: // PASS, logged in
+      loggedin++;
+      connstatetracker[id].setIdle();
+      break;
+    case 8: // PROT P
+    case 9: // PROT C
+      if (connstatetracker[id].hasTransfer()) {
+        initTransfer(id);
+        return;
       }
-    }
-    if (connstatetracker[id].hasTransfer()) {
-      initTransfer(id);
-      return;
-    }
-    std::list<SiteLogicRequest>::iterator it;
-    for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
-      if (it->connId() == id) {
-        if (it->requestType() == 0) {
-          conns[id]->doSTAT();
+      break;
+    case 13: // PORT
+      if (connstatetracker[id].hasTransfer()) {
+        if (connstatetracker[id].getTransferDownload()) {
+          conns[id]->doRETR(connstatetracker[id].getTransferFile());
           return;
         }
-        break;
-      }
-    }
-  }
-  else if (state == 15) { // MKD
-    if (conns[id]->hasMKDCWDTarget()) {
-      std::string targetcwdsect = conns[id]->getMKDCWDTargetSection();
-      std::string targetcwdpath = conns[id]->getMKDCWDTargetPath();
-      std::list<std::string> * subdirs = conns[id]->getMKDSubdirs();
-      if (conns[id]->getTargetPath() == targetcwdsect + "/" + targetcwdpath) {
-        conns[id]->doCWD(conns[id]->getTargetPath());
-        return;
-      }
-      else if (subdirs->size() > 0) {
-        std::string sub = subdirs->front();
-        subdirs->pop_front();
-        conns[id]->doMKD(conns[id]->getTargetPath() + "/" + sub);
-        return;
-      }
-    }
-  }
-  else if (state == 13) { // PORT
-    if (connstatetracker[id].hasTransfer()) {
-      if (connstatetracker[id].getTransferDownload()) {
-        conns[id]->doRETR(connstatetracker[id].getTransferFile());
-        return;
-      }
-      else {
-        conns[id]->doSTOR(connstatetracker[id].getTransferFile());
-        return;
-      }
-    }
-  }
-  else if (state == 16 || state == 17) { // PRET RETR/STOR
-    if (connstatetracker[id].hasTransfer()) {
-      if (connstatetracker[id].getTransferPassive()) {
-        if (!connstatetracker[id].getTransferSSL()) {
-          conns[id]->doPASV();
-        }
         else {
-          conns[id]->doCPSV();
+          conns[id]->doSTOR(connstatetracker[id].getTransferFile());
+          return;
         }
+      }
+      break;
+    case 14: // CWD
+      if (conns[id]->hasMKDCWDTarget()) {
+        if (conns[id]->getCurrentPath() == conns[id]->getMKDCWDTargetSection() +
+            "/" + conns[id]->getMKDCWDTargetPath()) {
+          conns[id]->finishMKDCWDTarget();
+        }
+      }
+      if (connstatetracker[id].hasTransfer()) {
+        initTransfer(id);
         return;
       }
-    }
-  }
-  else if (state == 18) { // RETR started
-    // no action yet, maybe for stats later on
-    /*if (connstatetracker[id].isReady()) {
-      std::cout << "NOT BUSY!>" << site->getName() << id << " " << connstatetracker[id].getTransferFile()<< connstatetracker[id].isIdle() << std::endl;
-      sleep(5);
-    }*/
-    return;
-  }
-  else if (state == 19) { // RETR complete
-    if (connstatetracker[id].hasTransfer()) {
-      connstatetracker[id].getTransferMonitor()->sourceComplete();
-      transferComplete(true);
-      connstatetracker[id].finishTransfer();
-    }
-  }
-  else if (state == 20) { // STOR started
-    // no action yet, maybe for stats later on
-    /*if (connstatetracker[id].isReady()) {
-      std::cout << "NOT BUSY!>" << site->getName() << id << " " << connstatetracker[id].getTransferFile()<< connstatetracker[id].isIdle() << std::endl;
-      sleep(5);
-    }*/
-    return;
-  }
-  else if (state == 21) { // STOR complete
-    if (connstatetracker[id].hasTransfer()) {
-      connstatetracker[id].getTransferMonitor()->targetComplete();
-      transferComplete(false);
-      connstatetracker[id].finishTransfer();
-    }
+      for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
+        if (it->connId() == id) {
+          if (it->requestType() == 0) {
+            conns[id]->doSTAT();
+            return;
+          }
+          break;
+        }
+      }
+      break;
+    case 15: // MKD
+      if (conns[id]->hasMKDCWDTarget()) {
+        std::string targetcwdsect = conns[id]->getMKDCWDTargetSection();
+        std::string targetcwdpath = conns[id]->getMKDCWDTargetPath();
+        std::list<std::string> * subdirs = conns[id]->getMKDSubdirs();
+        if (conns[id]->getTargetPath() == targetcwdsect + "/" + targetcwdpath) {
+          conns[id]->doCWD(conns[id]->getTargetPath());
+          return;
+        }
+        else if (subdirs->size() > 0) {
+          std::string sub = subdirs->front();
+          subdirs->pop_front();
+          conns[id]->doMKD(conns[id]->getTargetPath() + "/" + sub);
+          return;
+        }
+      }
+      break;
+
+    case 16: // PRET RETR
+    case 17: // PRET STOR
+      if (connstatetracker[id].hasTransfer()) {
+        if (connstatetracker[id].getTransferPassive()) {
+          if (!connstatetracker[id].getTransferSSL()) {
+            conns[id]->doPASV();
+          }
+          else {
+            conns[id]->doCPSV();
+          }
+          return;
+        }
+      }
+      break;
+    case 18: // RETR started
+      // no action yet, maybe for stats later on
+      /*if (connstatetracker[id].isReady()) {
+        std::cout << "NOT BUSY!>" << site->getName() << id << " " << connstatetracker[id].getTransferFile()<< connstatetracker[id].isIdle() << std::endl;
+        sleep(5);
+      }*/
+      return;
+    case 19: // RETR complete
+      if (connstatetracker[id].hasTransfer()) {
+        connstatetracker[id].getTransferMonitor()->sourceComplete();
+        transferComplete(true);
+        connstatetracker[id].finishTransfer();
+      }
+      break;
+    case 20: // STOR started
+      // no action yet, maybe for stats later on
+      /*if (connstatetracker[id].isReady()) {
+        std::cout << "NOT BUSY!>" << site->getName() << id << " " << connstatetracker[id].getTransferFile()<< connstatetracker[id].isIdle() << std::endl;
+        sleep(5);
+      }*/
+      return;
+    case 21: // STOR complete
+      if (connstatetracker[id].hasTransfer()) {
+        connstatetracker[id].getTransferMonitor()->targetComplete();
+        transferComplete(false);
+        connstatetracker[id].finishTransfer();
+      }
+      break;
   }
   handleConnection(id, false);
 }
 
 void SiteLogic::commandFail(int id) {
   int state = conns[id]->getState();
-  if (state == 14) { // cwd
-    if (conns[id]->hasMKDCWDTarget()) {
-      conns[id]->doMKD(conns[id]->getTargetPath());
-    }
-  }
-  else if (state == 15) { // mkd
-    std::string targetcwdsect = conns[id]->getMKDCWDTargetSection();
-    std::string targetcwdpath = conns[id]->getMKDCWDTargetPath();
-    std::list<std::string> * subdirs = conns[id]->getMKDSubdirs();
-    if (conns[id]->getTargetPath() == targetcwdsect + "/" + targetcwdpath) {
-      if (subdirs->size() > 0) {
-        std::string sub = subdirs->front();
-        subdirs->pop_front();
-        conns[id]->doMKD(targetcwdsect + "/" + sub);
+  std::string targetcwdsect;
+  std::string targetcwdpath;
+  std::list<std::string> * subdirs;
+  switch (state) {
+    case 14: // cwd fail
+      if (conns[id]->hasMKDCWDTarget()) {
+        conns[id]->doMKD(conns[id]->getTargetPath());
+      }
+      break;
+    case 15: // mkd fail
+      targetcwdsect = conns[id]->getMKDCWDTargetSection();
+      targetcwdpath = conns[id]->getMKDCWDTargetPath();
+      subdirs = conns[id]->getMKDSubdirs();
+      if (conns[id]->getTargetPath() == targetcwdsect + "/" + targetcwdpath) {
+        if (subdirs->size() > 0) {
+          std::string sub = subdirs->front();
+          subdirs->pop_front();
+          conns[id]->doMKD(targetcwdsect + "/" + sub);
+        }
+        else {
+          // failed mkd and no target subdirs. shouldn't happen.
+        }
       }
       else {
-        // failed mkd and no target subdirs. shouldn't happen.
+        // cwdmkd failed.
       }
-    }
-    else {
-      // cwdmkd failed.
-    }
+      break;
+    case 16: // PRET RETR fail
+      break;
+    case 17: // PRET STOR fail
+      break;
+    case 18: // RETR fail
+      break;
+    case 19: // RETR post fail
+      break;
+    case 20: // STOR fail
+      break;
+    case 21: // STOR post fail
+      break;
   }
-  // unhandled error! default handling = reconnect
 }
 
 void SiteLogic::gotPath(int id, std::string path) {
