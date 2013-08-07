@@ -6,6 +6,10 @@ SiteStatusScreen::SiteStatusScreen(WINDOW * window, UICommunicator * uicommunica
   uicommunicator->checkoutCommand();
   site = global->getSiteManager()->getSite(sitename);
   autoupdate = true;
+  st = global->getSiteLogicManager()->getSiteLogic(site->getName());
+  for(unsigned int j = 0; j < st->getConns()->size(); j++) {
+    previousstatuslength.push_back(0);
+  }
   init(window, row, col);
 }
 
@@ -16,7 +20,6 @@ void SiteStatusScreen::redraw() {
 }
 
 void SiteStatusScreen::update() {
-  SiteLogic * st = global->getSiteLogicManager()->getSiteLogic(site->getName());
   std::string loginslots = "Login slots:    " + global->int2Str(st->getCurrLogins());
   if (!site->unlimitedLogins()) {
     loginslots += "/" + global->int2Str(site->getMaxLogins());
@@ -36,6 +39,11 @@ void SiteStatusScreen::update() {
   int i = 8;
   for(unsigned int j = 0; j < st->getConns()->size(); j++) {
     std::string status = st->getStatus(j);
+    int statuslength = status.length();
+    while (status.length() < previousstatuslength[j]) {
+      status += " ";
+    }
+    previousstatuslength[j] = statuslength;
     TermInt::printStr(window, i++, 1, "#" + global->int2Str((int)j) + " - " + status);
   }
 }

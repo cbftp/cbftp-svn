@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <map>
 
 #include "../../globalcontext.h"
 #include "../../site.h"
@@ -24,6 +25,8 @@ public:
   std::string getInfoLabel();
 private:
   std::string sitename;
+  std::vector<unsigned int> previousstatuslength;
   Site * site;
+  SiteLogic * st;
   UICommunicator * uicommunicator;
 };
