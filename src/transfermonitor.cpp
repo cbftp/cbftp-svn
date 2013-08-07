@@ -28,7 +28,7 @@ void TransferMonitor::engage(std::string file, SiteLogic * sls, FileList * fls, 
   if (sls->getSite()->SSLFXPForced() || sld->getSite()->SSLFXPForced()) {
     ssl = true;
   }
-  if (!sls->getSite()->hasBrokenPASV()) {
+  if (!sld->getSite()->hasBrokenPASV()) {
     activedownload = true;
     sld->preparePassiveUpload(dst, this, fld, file, ssl);
   }
