@@ -1,7 +1,12 @@
 #pragma once
 
+#include <pthread.h>
+
 class EventReceiver {
+private:
+  pthread_mutex_t eventlock;
 public:
+  EventReceiver();
   virtual ~EventReceiver();
   virtual void tick(int);
   virtual void FDConnected();
@@ -10,4 +15,6 @@ public:
   virtual void FDDisconnected();
   virtual void FDSSLSuccess();
   virtual void FDSSLFail();
+  void lock();
+  void unlock();
 };

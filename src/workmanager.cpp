@@ -70,6 +70,8 @@ void WorkManager::runInstance() {
     Event event = dataqueue.front();
     dataqueue.pop_front();
     pthread_mutex_unlock(&dataqueue_mutex);
+    EventReceiver * er = event.getReceiver();
+    er->lock();
     switch (event.getType()) {
       case 0:
         event.getReceiver()->FDData();
@@ -77,25 +79,26 @@ void WorkManager::runInstance() {
         break;
       case 1:
         data = event.getData();
-        event.getReceiver()->FDData(data, event.getDataLen());
+        er->FDData(data, event.getDataLen());
         blockpool.returnBlock(data);
         break;
       case 2:
-        event.getReceiver()->tick(event.getInterval());
+        er->tick(event.getInterval());
         break;
       case 3:
-        event.getReceiver()->FDConnected();
+        er->FDConnected();
         break;
       case 4:
-        event.getReceiver()->FDDisconnected();
+        er->FDDisconnected();
         break;
       case 5:
-        event.getReceiver()->FDSSLSuccess();
+        er->FDSSLSuccess();
         break;
       case 6:
-        event.getReceiver()->FDSSLFail();
+        er->FDSSLFail();
         break;
     }
+    er->unlock();
   }
 }
 
