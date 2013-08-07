@@ -68,6 +68,7 @@ void SiteLogic::tick(int message) {
         conns[i]->doQUIT();
         connstatetracker[i].setDisconnected();
         loggedin--;
+        available--;
         if (wantedloggedin > loggedin) {
           wantedloggedin = loggedin;
         }
@@ -131,6 +132,7 @@ void SiteLogic::commandSuccess(int id) {
   switch (state) {
     case 5: // PASS, logged in
       loggedin++;
+      available++;
       connstatetracker[id].setIdle();
       break;
     case 8: // PROT P
@@ -391,6 +393,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
   if (loggedin > wantedloggedin) {
     connstatetracker[id].setDisconnected();
     conns[id]->doQUIT();
+    available--;
     loggedin--;
     return;
   }
@@ -449,6 +452,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
     }
     if (goodpath) {
       conns[id]->doSTAT(race, race->getFileListForFullPath(currentpath));
+      return;
     }
     else {
       refreshChangePath(id, race, refresh);
@@ -460,7 +464,6 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
       connstatetracker[id].delayedCommand("quit", site->getMaxIdleTime() * 1000);
     }
   }
-  available++;
 }
 
 void SiteLogic::handleRequest(int id) {
@@ -859,6 +862,7 @@ void SiteLogic::disconnectConn(int id) {
     }
     connstatetracker[id].setDisconnected();
     conns[id]->doQUIT();
+    available--;
     loggedin--;
   }
 }
@@ -887,6 +891,7 @@ void SiteLogic::raceGlobalComplete() {
         connstatetracker[i].setDisconnected();
         conns[i]->doQUIT();
         loggedin--;
+        available--;
       }
     }
     wantedloggedin = 0;
@@ -912,6 +917,7 @@ void SiteLogic::raceLocalComplete(SiteRace * sr) {
         connstatetracker[i].setDisconnected();
         conns[i]->doQUIT();
         loggedin--;
+        available--;
         killnum--;
       }
     }
