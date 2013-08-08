@@ -294,6 +294,8 @@ void SiteLogic::commandFail(int id) {
       return;
   }
   // default handling: reconnect
+  loggedin--;
+  available--;
   conns[id]->reconnect();
 }
 
@@ -741,6 +743,9 @@ void SiteLogic::setNumConnections(unsigned int num) {
     for (unsigned int i = 0; i < conns.size(); i++) {
       if (connstatetracker[i].isIdle()) {
         conns[i]->doQUIT();
+        loggedin--;
+        available--;
+        connstatetracker[i].setDisconnected();
         connstatetracker.erase(connstatetracker.begin() + i);
         delete conns[i];
         conns.erase(conns.begin() + i);
