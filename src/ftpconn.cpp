@@ -55,6 +55,7 @@ void FTPConn::FDDisconnected() {
     rawbuf->writeLine("[Disconnected]");
     this->status = "disconnected";
     state = 0;
+    slb->disconnected(id);
   }
 }
 
@@ -245,6 +246,8 @@ void FTPConn::PASSResponse() {
 void FTPConn::reconnect() {
   if (state != 0) {
     iom->closeSocket(sockfd);
+    rawbuf->writeLine("[Disconnected]");
+    this->status = "disconnected";
     state = 0;
   }
   login();
