@@ -9,6 +9,7 @@ ConnStateTracker::ConnStateTracker() {
   transfer = false;
   transferlocked = false;
   lockeddownload = false;
+  aborted = false;
 }
 
 void ConnStateTracker::delayedCommand(std::string command, int delay) {
@@ -119,6 +120,7 @@ void ConnStateTracker::setTransfer(TransferMonitorBase * tmb, FileList * fls, st
 
 void ConnStateTracker::setTransfer(TransferMonitorBase * tmb, FileList * fls, std::string file, bool download, bool passive, std::string addr, bool ssl) {
   this->transfer = true;
+  this->aborted = false;
   this->ssl = ssl;
   this->tmb = tmb;
   this->fls = fls;
@@ -139,9 +141,11 @@ void ConnStateTracker::finishTransfer() {
 }
 
 void ConnStateTracker::abortTransfer() {
-  transfer = false;
-  transferlocked = false;
-  setReady();
+  aborted = true;
+}
+
+bool ConnStateTracker::getTransferAborted() {
+  return aborted;
 }
 
 TransferMonitorBase * ConnStateTracker::getTransferMonitor() {

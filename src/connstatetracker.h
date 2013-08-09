@@ -24,6 +24,7 @@ private:
   bool download;
   bool passive;
   bool ssl;
+  bool aborted;
   bool transferlocked;
   bool lockeddownload;
   std::string addr;
@@ -50,6 +51,7 @@ public:
   bool hasTransfer();
   void finishTransfer();
   void abortTransfer();
+  bool getTransferAborted();
   void lockForTransfer(bool);
   bool isLockedForDownload();
   bool isLockedForUpload();

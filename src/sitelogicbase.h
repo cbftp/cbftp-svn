@@ -20,4 +20,5 @@ public:
   virtual void rawCommandResultRetrieved(int, std::string) = 0;
   virtual void gotPassiveAddress(int, std::string) = 0;
   virtual void timedout(int) = 0;
+  virtual void disconnected(int) = 0;
 };

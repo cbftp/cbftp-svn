@@ -301,14 +301,16 @@ void SiteLogic::commandFail(int id) {
 
 void SiteLogic::handleTransferFail(int id, bool download, int err) {
   if (connstatetracker[id].hasTransfer()) {
-    if (download) {
-      connstatetracker[id].getTransferMonitor()->sourceError(err);
+    if (!connstatetracker[id].getTransferAborted()) {
+      if (download) {
+        connstatetracker[id].getTransferMonitor()->sourceError(err);
+      }
+      else {
+        connstatetracker[id].getTransferMonitor()->targetError(err);
+      }
     }
-    else {
-      connstatetracker[id].getTransferMonitor()->targetError(err);
-    }
-    transferComplete(download);
     connstatetracker[id].finishTransfer();
+    transferComplete(download);
   }
   connstatetracker[id].setIdle();
   if (err == 1) {
@@ -348,6 +350,12 @@ void SiteLogic::gotPassiveAddress(int id, std::string result) {
 
 void SiteLogic::timedout(int id) {
 
+}
+
+void SiteLogic::disconnected(int id) {
+  connstatetracker[id].setDisconnected();
+  loggedin--;
+  available--;
 }
 
 void SiteLogic::requestSelect() {
@@ -967,11 +975,35 @@ void SiteLogic::preparePassiveUpload(int id, TransferMonitorBase * tmb, FileList
 }
 
 void SiteLogic::passiveDownload(int id) {
-  conns[id]->doRETR(connstatetracker[id].getTransferFile());
+  if (connstatetracker[id].hasTransfer()) {
+    if (!connstatetracker[id].getTransferAborted()) {
+      conns[id]->doRETR(connstatetracker[id].getTransferFile());
+    }
+    else {
+      transferComplete(true);
+      connstatetracker[id].finishTransfer();
+      handleConnection(id, false);
+    }
+  }
+  else {
+    handleConnection(id, false);
+  }
 }
 
 void SiteLogic::passiveUpload(int id) {
-  conns[id]->doSTOR(connstatetracker[id].getTransferFile());
+  if (connstatetracker[id].hasTransfer()) {
+    if (!connstatetracker[id].getTransferAborted()) {
+      conns[id]->doSTOR(connstatetracker[id].getTransferFile());
+    }
+    else {
+      transferComplete(false);
+      connstatetracker[id].finishTransfer();
+      handleConnection(id, false);
+    }
+  }
+  else {
+    handleConnection(id, false);
+  }
 }
 
 void SiteLogic::activeDownload(int id, TransferMonitorBase * tmb, FileList * fls, std::string file, std::string addr, bool ssl) {
@@ -989,7 +1021,7 @@ void SiteLogic::activeUpload(int id, TransferMonitorBase * tmb, FileList * fls, 
 }
 
 void SiteLogic::abortTransfer(int id) {
-  if (connstatetracker[id].hasTransfer()) {
+  if (connstatetracker[id].hasTransfer() && !connstatetracker[id].getTransferAborted()) {
     transferComplete(connstatetracker[id].getTransferDownload());
     connstatetracker[id].abortTransfer();
   }

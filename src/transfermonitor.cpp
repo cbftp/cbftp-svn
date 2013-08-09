@@ -50,20 +50,26 @@ void TransferMonitor::passiveReady(std::string addr) {
     sld->activeUpload(dst, this, fld, file, addr, ssl);
     sls->passiveDownload(src);
   }
-  fld->touchFile(file, sld->getSite()->getUser());
+
 }
 
 void TransferMonitor::sourceComplete() {
   sourcecomplete = true;
   if (targetcomplete) {
-    status = 0;
+    if (status != 0) {
+      fld->touchFile(file, sld->getSite()->getUser());
+      status = 0;
+    }
   }
 }
 
 void TransferMonitor::targetComplete() {
   targetcomplete = true;
   if (sourcecomplete) {
-    status = 0;
+    if (status != 0) {
+      fld->touchFile(file, sld->getSite()->getUser());
+      status = 0;
+    }
   }
 }
 
@@ -79,7 +85,6 @@ void TransferMonitor::sourceError(int err) {
       fls->downloadAttemptFail(file);
       break;
   }
-  sld->abortTransfer(dst);
   status = 0;
 }
 
@@ -95,6 +100,5 @@ void TransferMonitor::targetError(int err) {
       fld->uploadAttemptFail(file);
       break;
   }
-  sls->abortTransfer(src);
   status = 0;
 }

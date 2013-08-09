@@ -78,6 +78,7 @@ class SiteLogic : public SiteLogicBase {
     void rawCommandResultRetrieved(int, std::string);
     void gotPassiveAddress(int, std::string);
     void timedout(int);
+    void disconnected(int);
     void requestSelect();
     Site * getSite();
     SiteRace * getRace(std::string);
