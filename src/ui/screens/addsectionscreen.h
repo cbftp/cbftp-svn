@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../globalcontext.h"
 #include "../../site.h"
 #include "../../sitemanager.h"
 
@@ -8,6 +9,8 @@
 #include "../menuselectoption.h"
 #include "../menuselectoptionelement.h"
 #include "../termint.h"
+
+extern GlobalContext * global;
 
 class AddSectionScreen : public UIWindow {
 public:

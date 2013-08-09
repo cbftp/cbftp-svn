@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../../globalcontext.h"
+
 #include "../uiwindow.h"
 #include "../uicommunicator.h"
 #include "../menuselectoption.h"
@@ -7,6 +9,8 @@
 #include "../termint.h"
 
 #define SHORTESTKEY 4
+
+extern GlobalContext * global;
 
 class NewKeyScreen : public UIWindow {
 public:

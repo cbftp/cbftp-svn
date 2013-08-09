@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../globalcontext.h"
 #include "../../site.h"
 #include "../../race.h"
 #include "../../engine.h"
@@ -13,6 +14,8 @@
 #include "../uicommunicator.h"
 #include "../termint.h"
 #include "../focusablearea.h"
+
+extern GlobalContext * global;
 
 class MainScreen : public UIWindow {
 public:
