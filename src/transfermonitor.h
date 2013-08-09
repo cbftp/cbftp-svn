@@ -5,6 +5,10 @@
 #include "ftpconn.h"
 #include "filelist.h"
 #include "transfermonitorbase.h"
+#include "tickpoke.h"
+#include "globalcontext.h"
+
+extern GlobalContext * global;
 
 class TransferMonitor : public TransferMonitorBase {
   private:
@@ -20,6 +24,9 @@ class TransferMonitor : public TransferMonitorBase {
     bool sourcecomplete;
     bool targetcomplete;
     bool ssl;
+    int timestamp;
+    int startstamp;
+    void finish();
   public:
     TransferMonitor();
     void tick(int);

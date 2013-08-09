@@ -3,6 +3,8 @@
 TransferMonitor::TransferMonitor() {
   status = 0;
   activedownload = false;
+  global->getTickPoke()->startPoke(this, 50, 0);
+  timestamp = 0;
 }
 
 bool TransferMonitor::idle() {
@@ -18,6 +20,7 @@ void TransferMonitor::engage(std::string file, SiteLogic * sls, FileList * fls, 
   activedownload = false;
   sourcecomplete = false;
   targetcomplete = false;
+  timestamp = 0;
   ssl = false;
   if (!sls->lockDownloadConn(fls, file, &src)) return;
   if (!sld->lockUploadConn(fld, file, &dst)) {
@@ -38,7 +41,7 @@ void TransferMonitor::engage(std::string file, SiteLogic * sls, FileList * fls, 
 }
 
 void TransferMonitor::tick(int msg) {
-
+  timestamp += 50;
 }
 
 void TransferMonitor::passiveReady(std::string addr) {
@@ -50,25 +53,39 @@ void TransferMonitor::passiveReady(std::string addr) {
     sld->activeUpload(dst, this, fld, file, addr, ssl);
     sls->passiveDownload(src);
   }
-
+  startstamp = timestamp;
 }
 
 void TransferMonitor::sourceComplete() {
   sourcecomplete = true;
   if (targetcomplete) {
-    if (status != 0) {
-      fld->touchFile(file, sld->getSite()->getUser());
-      status = 0;
-    }
+    finish();
   }
 }
 
 void TransferMonitor::targetComplete() {
   targetcomplete = true;
   if (sourcecomplete) {
-    if (status != 0) {
-      fld->touchFile(file, sld->getSite()->getUser());
-      status = 0;
+    finish();
+  }
+}
+
+void TransferMonitor::finish() {
+  if (status != 0) {
+    fld->touchFile(file, sld->getSite()->getUser());
+    int span = timestamp - startstamp;
+    if (span == 0) {
+      span = 10;
+    }
+    status = 0;
+    File * srcfile = fls->getFile(file);
+    if (srcfile) {
+      int size = srcfile->getSize();
+      int speed = size / span;
+      //std::cout << "[ " << sls->getSite()->getName() << " -> " << sld->getSite()->getName() << " ] - " << file << " - " << speed << " kB/s" << std::endl;
+      if (size > 1000000) {
+        fld->setFileUpdateFlag(file, speed, sls->getSite(), sld->getSite()->getName());
+      }
     }
   }
 }
