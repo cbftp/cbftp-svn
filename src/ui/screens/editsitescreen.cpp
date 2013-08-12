@@ -102,7 +102,7 @@ void EditSiteScreen::update() {
       int headcol = ms.getHeaderCol();
       int lastsel = ms.getLastSelectionPointer();
       if (lastsel == 0) {
-        TermInt::printStr(window, headrow, headcol + 12, ms.getElement(0)->getContentText());
+        TermInt::printStr(window, headrow, headcol + 9, ms.getElement(0)->getContentText());
       }
       else {
         MenuSelectOptionContainer * msoc = ms.getSectionContainer((lastsel - 1) / 3);
