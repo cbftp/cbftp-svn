@@ -2,8 +2,6 @@ bug: crash when unable to resolve server dns
 
 bug: crash when unable to cwd to wanted dir during race
 
-bug: crash mid-race, reason unknown
-
 bug: ui refreshing breaks when getting updated too much
 
 feature: race status screen
@@ -13,8 +11,6 @@ feature: local downloads
 feature: view file
 
 feature: about screen
-
-feature/bug: skip unwanted/failing files
 
 feature: remove site from race
 
@@ -31,8 +27,6 @@ feature: change encryption key
 feature: intermediate data file writing
 
 feature: allowed subdir list
-
-feature: skiplist
 
 feature: ui stats everywhere!
 

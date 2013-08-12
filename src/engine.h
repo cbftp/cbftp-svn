@@ -13,6 +13,7 @@
 #include "transfermanager.h"
 #include "race.h"
 #include "enginebase.h"
+#include "skiplist.h"
 
 #define SPREAD 1
 

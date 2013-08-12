@@ -7,7 +7,8 @@ OBJECTS = commandqueueelement.o potentialelement.o scoreboardelement.o \
 	rawbuffer.o crypto.o datafilehandler.o transfermonitor.o \
 	sitelogicrequest.o sitelogicrequestready.o tickpoke.o tickpoketarget.o \
 	connstatetracker.o delayedcommand.o remotecommandhandler.o eventreceiver.o \
-	iomanager.o workmanager.o event.o datablockpool.o datablock.o enginebase.o
+	iomanager.o workmanager.o event.o datablockpool.o datablock.o enginebase.o \
+	skiplist.o
 
 all: ${OBJECTS}
 	@cd ui; ${MAKE}
@@ -49,6 +50,7 @@ datablockpool.o:
 datablock.o:
 enginebase.o:
 transfermonitor.o:
+skiplist.o:
 
 clean:
 	rm -f ${OBJECTS}

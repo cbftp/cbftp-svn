@@ -38,7 +38,8 @@ Main::Main() {
   SiteLogicManager * slm = new SiteLogicManager();
   TransferManager * tm = new TransferManager();
   RemoteCommandHandler * rch = new RemoteCommandHandler();
-  global->linkComponents(dfh, iom, e, ui->getCommunicator(), sm, slm, tm, tp, rch);
+  SkipList * sl = new SkipList();
+  global->linkComponents(dfh, iom, e, ui->getCommunicator(), sm, slm, tm, tp, rch, sl);
   if (!ui->init()) exit(1);
   tp->tickerLoop();
   global->getUICommunicator()->kill();
@@ -47,6 +48,7 @@ Main::Main() {
     global->getSiteManager()->writeState();
     global->getRemoteCommandHandler()->writeState();
     global->getUICommunicator()->writeState();
+    global->getSkipList()->writeState();
     global->getDataFileHandler()->writeFile();
     std::cout << "Done, exiting..." << std::endl << std::flush;
   }

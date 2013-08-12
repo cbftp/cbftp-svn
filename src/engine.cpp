@@ -131,7 +131,8 @@ void Engine::refreshScoreBoard() {
             fls->lockFileList();
             for (itf = fls->begin(); itf != fls->end(); itf++) {
               File * f = itf->second;
-              if (itf->first.find(" ") != std::string::npos) {
+              if (!global->getSkipList()->isAllowed(itf->first) ||
+                  (itfls->first != "" && !global->getSkipList()->isAllowed(itfls->first + "/" + itf->first))) {
                 continue;
               }
               std::string name = f->getName();

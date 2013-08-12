@@ -18,6 +18,7 @@
 #include "remotecommandhandler.h"
 #include "iomanager.h"
 #include "workmanager.h"
+#include "skiplist.h"
 
 #define DATAFILE "data"
 #define DATAPATH ".clusterbomb"

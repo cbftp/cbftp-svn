@@ -15,6 +15,9 @@
 #include "../tickpoke.h"
 #include "../eventreceiver.h"
 #include "../iomanager.h"
+#include "../sitemanager.h"
+#include "../remotecommandhandler.h"
+#include "../skiplist.h"
 
 #include "legendwindow.h"
 #include "infowindow.h"
@@ -34,6 +37,7 @@
 #include "screens/racestatusscreen.h"
 #include "screens/rawcommandscreen.h"
 #include "screens/globaloptionsscreen.h"
+#include "screens/skiplistscreen.h"
 
 #define TICKLENGTH 250000
 

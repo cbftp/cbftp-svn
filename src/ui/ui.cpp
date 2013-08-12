@@ -140,6 +140,7 @@ void UserInterface::runInstance() {
   UIWindow * newracescreen = NULL;
   UIWindow * racestatusscreen = NULL;
   UIWindow * globaloptionsscreen = NULL;
+  UIWindow * skiplistscreen = NULL;
   legendwindow = new LegendWindow(legend, 2, col);
   infowindow = new InfoWindow(info, 2, col);
   if (global->getDataFileHandler()->fileExists()) {
@@ -273,6 +274,10 @@ void UserInterface::runInstance() {
         confirmationscreen = new ConfirmationScreen(main, &uicommunicator, mainrow, maincol);
         switchToWindow(confirmationscreen);
       }
+      else if (command == "skiplist") {
+        skiplistscreen = new SkipListScreen(main, &uicommunicator, mainrow, maincol);
+        switchToWindow(skiplistscreen);
+      }
       else if (command == "rawdatajump") {
         rawdatascreen = new RawDataScreen(main, &uicommunicator, mainrow, maincol);
         mainwindows.push_back(rawdatascreen);
@@ -306,6 +311,7 @@ void UserInterface::runInstance() {
           global->getSiteManager()->readConfiguration();
           global->getRemoteCommandHandler()->readConfiguration();
           uicommunicator.readConfiguration();
+          global->getSkipList()->readConfiguration();
           enableInfo();
           if (uicommunicator.legendEnabled()) {
             enableLegend();
