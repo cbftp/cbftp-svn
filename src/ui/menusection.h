@@ -42,5 +42,6 @@ class MenuSection : public FocusableArea {
     bool addButtonPressed();
     void enterFocusFrom(int);
     void addSection();
+    void addSection(std::string, std::string);
     void clear();
 };

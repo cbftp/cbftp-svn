@@ -12,14 +12,7 @@ void MenuSection::initialize(int row, int col, std::map<std::string, std::string
   std::map<std::string, std::string>::iterator it;
   addbutton = new MenuSelectOptionTextButton("add", 0, 0, "<Add>");
   for(it = sectionsbegin; it != sectionsend; it++) {
-    MenuSelectOptionElement * name = new MenuSelectOptionTextField("name", 0, 0, "Name:", it->first, 11, 32, false);
-    MenuSelectOptionElement * path = new MenuSelectOptionTextField("path", 0, 0, "Path:", it->second, 30, 64, false);
-    MenuSelectOptionElement * del = new MenuSelectOptionTextButton("delete", 0, 0, "<X>");
-    MenuSelectOptionContainer msoc = MenuSelectOptionContainer();
-    msoc.addElement(name);
-    msoc.addElement(path);
-    msoc.addElement(del);
-    sectioncontainers.push_back(msoc);
+    addSection(it->first, it->second);
   }
 }
 
@@ -149,15 +142,18 @@ bool MenuSection::addButtonPressed() {
   return true;
 }
 
-void MenuSection::addSection() {
-  MenuSelectOptionElement * name = new MenuSelectOptionTextField("name", 0, 0, "Name:", "", 9, 32, false);
-  MenuSelectOptionElement * path = new MenuSelectOptionTextField("path", 0, 0, "Path:", "", 9, 64, false);
+void MenuSection::addSection(std::string nametext, std::string pathtext) {
+  MenuSelectOptionElement * name = new MenuSelectOptionTextField("name", 0, 0, "Name:", nametext, 11, 32, false);
+  MenuSelectOptionElement * path = new MenuSelectOptionTextField("path", 0, 0, "Path:", pathtext, 30, 64, false);
   MenuSelectOptionElement * del = new MenuSelectOptionTextButton("delete", 0, 0, "<X>");
   MenuSelectOptionContainer msoc = MenuSelectOptionContainer();
   msoc.addElement(name);
   msoc.addElement(path);
   msoc.addElement(del);
   sectioncontainers.push_back(msoc);
+}
+void MenuSection::addSection() {
+  addSection("", "");
 }
 
 void MenuSection::enterFocusFrom(int dir) {
