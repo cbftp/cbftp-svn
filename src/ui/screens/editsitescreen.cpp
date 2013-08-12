@@ -16,6 +16,7 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
     modsite.setMaxLogins(sm->getDefaultMaxLogins());
     modsite.setMaxUp(sm->getDefaultMaxUp());
     modsite.setMaxDn(sm->getDefaultMaxDown());
+    modsite.setSSL(sm->getDefaultSSL());
     modsite.setSSLFXPForced(sm->getDefaultSSLFXPForced());
     modsite.setMaxIdleTime(sm->getDefaultMaxIdleTime());
   }
@@ -35,8 +36,9 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
   mso.addIntArrow(y++, x, "maxup", "Upload slots:", modsite.getInternMaxUp(), 0, 99);
   mso.addIntArrow(y++, x, "maxdn", "Download slots:", modsite.getInternMaxDown(), 0, 99);
   mso.addStringField(y++, x, "idletime", "Max idle time (s):", global->int2Str(modsite.getMaxIdleTime()), false);
-  mso.addCheckBox(y++, x, "pret", "Needs PRET:", modsite.needsPRET());
+  mso.addCheckBox(y++, x, "ssl", "AUTH SSL:", modsite.SSL());
   mso.addCheckBox(y++, x, "forcesslfxp", "Force SSL FXP:", modsite.SSLFXPForced());
+  mso.addCheckBox(y++, x, "pret", "Needs PRET:", modsite.needsPRET());
   mso.addCheckBox(y++, x, "brokenpasv", "Broken PASV:", modsite.hasBrokenPASV());
   y++;
   ms.initialize(y++, x, modsite.sectionsBegin(), modsite.sectionsEnd());
@@ -278,6 +280,9 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "pret") {
           site->setPRET(((MenuSelectOptionCheckBox *)msoe)->getData());
+        }
+        else if (identifier == "ssl") {
+          site->setSSL(((MenuSelectOptionCheckBox *)msoe)->getData());
         }
         else if (identifier == "forcesslfxp") {
           site->setSSLFXPForced(((MenuSelectOptionCheckBox *)msoe)->getData());

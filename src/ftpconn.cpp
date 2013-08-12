@@ -185,8 +185,13 @@ void FTPConn::sendEcho(std::string data) {
 
 void FTPConn::welcomeReceived() {
   if (databufcode == 220) {
-    state = 3;
-    sendEcho("AUTH TLS");
+    if (site->SSL()) {
+      state = 3;
+      sendEcho("AUTH TLS");
+    }
+    else {
+      doUSER(false);
+    }
   }
   else {
     rawbuf->writeLine("[Unknown response]");

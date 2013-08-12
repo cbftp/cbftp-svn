@@ -6,6 +6,7 @@ SiteManager::SiteManager() {
   defaultmaxlogins = DEFAULTMAXLOGINS;
   defaultmaxup = DEFAULTMAXUP;
   defaultmaxdown = DEFAULTMAXDOWN;
+  defaultsslconn = DEFAULTSSL;
   defaultsslfxpforced = DEFAULTSSLFXPFORCED;
   defaultmaxidletime = DEFAULTMAXIDLETIME;
 }
@@ -45,6 +46,9 @@ void SiteManager::readConfiguration() {
     }
     else if (!setting.compare("pret")) {
       if (!value.compare("true")) site->setPRET(true);
+    }
+    else if (!setting.compare("sslconn")) {
+      if (!value.compare("false")) site->setSSL(false);
     }
     else if (!setting.compare("sslfxpforced")) {
       if (!value.compare("true")) site->setSSLFXPForced(true);
@@ -97,6 +101,11 @@ void SiteManager::readConfiguration() {
     else if (!setting.compare("maxdown")) {
       setDefaultMaxDown(global->str2Int(value));
     }
+    else if (!setting.compare("sslconn")) {
+      if (!value.compare("false")) {
+        setDefaultSSL(false);
+      }
+    }
     else if (!setting.compare("sslfxpforced")) {
       if (!value.compare("true")) {
         setDefaultSSLFXPForced(true);
@@ -125,6 +134,7 @@ void SiteManager::writeState() {
     filehandler->addOutputLine("SiteManager", name + "$idletime=" + global->int2Str(site->getMaxIdleTime()));
     if (site->needsPRET()) filehandler->addOutputLine("SiteManager", name + "$pret=true");
     if (site->SSLFXPForced()) filehandler->addOutputLine("SiteManager", name + "$sslfxpforced=true");
+    if (!site->SSL()) filehandler->addOutputLine("SiteManager", name + "$sslconn=false");
     if (site->hasBrokenPASV()) filehandler->addOutputLine("SiteManager", name + "$brokenpasv=true");
     std::map<std::string, std::string>::iterator sit;
     for (sit = site->sectionsBegin(); sit != site->sectionsEnd(); sit++) {
@@ -142,6 +152,7 @@ void SiteManager::writeState() {
   filehandler->addOutputLine("SiteManagerDefaults", "maxdown=" + global->int2Str(getDefaultMaxDown()));
   filehandler->addOutputLine("SiteManagerDefaults", "maxidletime=" + global->int2Str(getDefaultMaxIdleTime()));
   if (getDefaultSSLFXPForced()) filehandler->addOutputLine("SiteManagerDefaults", "sslfxpforced=true");
+  if (!getDefaultSSL()) filehandler->addOutputLine("SiteManagerDefaults", "sslconn=false");
 }
 
 int SiteManager::getNumSites() {
@@ -236,6 +247,14 @@ unsigned int SiteManager::getDefaultMaxIdleTime() {
 
 void SiteManager::setDefaultMaxIdleTime(unsigned int idletime) {
   defaultmaxidletime = idletime;
+}
+
+bool SiteManager::getDefaultSSL() {
+  return defaultsslconn;
+}
+
+void SiteManager::setDefaultSSL(bool ssl) {
+  defaultsslconn = ssl;
 }
 
 bool SiteManager::getDefaultSSLFXPForced() {

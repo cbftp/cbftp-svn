@@ -14,6 +14,7 @@ class Site {
     std::string user;
     std::string pass;
     bool pret;
+    bool sslconn;
     bool sslfxpforced;
     bool brokenpasv;
     unsigned int logins;
@@ -45,6 +46,7 @@ class Site {
     bool needsPRET();
     void setPRET(bool);
     bool SSLFXPForced();
+    bool SSL();
     void setSSLFXPForced(bool);
     bool hasBrokenPASV();
     void setBrokenPASV(bool);
@@ -64,6 +66,7 @@ class Site {
     void setMaxLogins(unsigned int);
     void setMaxDn(unsigned int);
     void setMaxUp(unsigned int);
+    void setSSL(bool);
     void setMaxIdleTime(unsigned int);
     void clearSections();
     void addSection(std::string, std::string);

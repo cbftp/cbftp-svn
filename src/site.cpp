@@ -16,6 +16,7 @@ Site::Site(std::string name) {
   max_idletime = 60;
   pret = false;
   sslfxpforced = false;
+  sslconn = true;
   brokenpasv = false;
 }
 
@@ -30,6 +31,7 @@ void Site::copy(Site * site) {
   this->max_dn = site->max_dn;
   this->pret = site->pret;
   this->sslfxpforced = site->sslfxpforced;
+  this->sslconn = site->sslconn;
   this->brokenpasv = site->brokenpasv;
   this->sections = site->sections;
   this->avgspeed = site->avgspeed;
@@ -131,12 +133,20 @@ void Site::setPRET(bool val) {
   pret = val;
 }
 
+bool Site::SSL() {
+  return sslconn;
+}
+
 bool Site::SSLFXPForced() {
   return sslfxpforced;
 }
 
 void Site::setSSLFXPForced(bool val) {
   sslfxpforced = val;
+}
+
+void Site::setSSL(bool val) {
+  sslconn = val;
 }
 
 bool Site::hasBrokenPASV() {

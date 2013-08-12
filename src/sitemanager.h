@@ -17,6 +17,7 @@
 #define DEFAULTMAXUP 0
 #define DEFAULTMAXDOWN 2
 #define DEFAULTMAXIDLETIME 60
+#define DEFAULTSSL true
 #define DEFAULTSSLFXPFORCED false
 
 extern GlobalContext * global;
@@ -31,6 +32,7 @@ class SiteManager {
     unsigned int defaultmaxdown;
     unsigned int defaultmaxidletime;
     bool defaultsslfxpforced;
+    bool defaultsslconn;
   public:
     SiteManager();
     void readConfiguration();
@@ -52,6 +54,8 @@ class SiteManager {
     void setDefaultMaxDown(unsigned int);
     unsigned int getDefaultMaxIdleTime();
     void setDefaultMaxIdleTime(unsigned int);
+    bool getDefaultSSL();
+    void setDefaultSSL(bool);
     bool getDefaultSSLFXPForced();
     void setDefaultSSLFXPForced(bool);
     void writeState();
