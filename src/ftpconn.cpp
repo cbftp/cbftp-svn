@@ -271,18 +271,21 @@ void FTPConn::doSTAT(SiteRace * race, FileList * filelist) {
 
 void FTPConn::STATResponse() {
   processing = false;
-  if (databufcode == 213) {
+  if (databufcode == 211 || databufcode == 213) {
     char * loc = databuf, * start;
-    while(*++loc != '\n');
-    while(*++loc != '\n');
     unsigned int files = 0;
     int touch = rand();
-    while (*++loc != '2') {
-      start = loc;
-      while(*++loc != '\n');
-      *loc = '\0';
-      files++;
-      currentfl->updateFile(start, touch);
+    while (loc + 4 < databuf + databufpos && !(*(loc + 1) == '2' && *(loc + 2) == '1' && *(loc + 4) == ' ')) {
+      if (*(loc + 1) == '2' && *(loc + 2) == '1' && *(loc + 4) == '-') loc += 4;
+      start = loc + 1;
+      while (loc < databuf + databufpos && loc - start < 50) {
+        start = loc + 1;
+        while(loc < databuf + databufpos && *++loc != '\n');
+      }
+      if (loc - start >= 50) {
+        files++;
+        currentfl->updateFile(std::string(start, loc - start), touch);
+      }
     }
     if (currentfl->getSize() > files) {
       currentfl->cleanSweep(touch);
