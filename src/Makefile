@@ -1,6 +1,6 @@
 include ../Makefile.inc
 
-OBJECTS = commandqueueelement.o potentialelement.o scoreboardelement.o \
+OBJECTS = potentialelement.o scoreboardelement.o \
 	siterace.o engine.o ftpconn.o potentiallistelement.o scoreboard.o \
 	sitelogicmanager.o filelist.o globalcontext.o potentialtracker.o \
 	sitemanager.o sitelogic.o file.o main.o race.o site.o transfermanager.o \
@@ -14,7 +14,6 @@ all: ${OBJECTS}
 	@cd ui; ${MAKE}
 	
 main.o:
-commandqueueelement.o:
 potentialelement.o: 
 scoreboardelement.o:
 siterace.o:

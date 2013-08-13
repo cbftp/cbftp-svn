@@ -11,7 +11,6 @@
 #include "site.h"
 #include "siterace.h"
 #include "globalcontext.h"
-#include "commandqueueelement.h"
 #include "rawbuffer.h"
 #include "iomanager.h"
 #include "eventreceiver.h"
@@ -38,7 +37,6 @@ class FTPConn : private EventReceiver {
     std::string status;
     Site * site;
     int transferstatus;
-    std::list<CommandQueueElement *> commandqueue;
     int sockfd;
     int state;
     bool aborted;
