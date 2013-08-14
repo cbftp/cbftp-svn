@@ -36,6 +36,8 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
   mso.addIntArrow(y++, x, "maxup", "Upload slots:", modsite.getInternMaxUp(), 0, 99);
   mso.addIntArrow(y++, x, "maxdn", "Download slots:", modsite.getInternMaxDown(), 0, 99);
   mso.addStringField(y++, x, "idletime", "Max idle time (s):", global->int2Str(modsite.getMaxIdleTime()), false);
+  mso.addCheckBox(y++, x, "allowupload", "Allow upload:", modsite.getAllowUpload());
+  mso.addCheckBox(y++, x, "allowdownload", "Allow download:", modsite.getAllowDownload());
   mso.addCheckBox(y++, x, "ssl", "AUTH SSL:", modsite.SSL());
   mso.addCheckBox(y++, x, "forcesslfxp", "Force SSL FXP:", modsite.SSLFXPForced());
   mso.addCheckBox(y++, x, "pret", "Needs PRET:", modsite.needsPRET());
@@ -286,6 +288,12 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "forcesslfxp") {
           site->setSSLFXPForced(((MenuSelectOptionCheckBox *)msoe)->getData());
+        }
+        else if (identifier == "allowupload") {
+          site->setAllowUpload(((MenuSelectOptionCheckBox *)msoe)->getData());
+        }
+        else if (identifier == "allowdownload") {
+          site->setAllowDownload(((MenuSelectOptionCheckBox *)msoe)->getData());
         }
         else if (identifier == "brokenpasv") {
           site->setBrokenPASV(((MenuSelectOptionCheckBox *)msoe)->getData());

@@ -164,12 +164,14 @@ void Engine::issueOptimalTransfers() {
     filename = sbe->fileName();
     if (sbe->getSourceFileList()->hasFailedDownload(filename)) continue;
     if (sbe->getDestinationFileList()->hasFailedUpload(filename)) continue;
+    if (!sls->getSite()->getAllowDownload()) continue;
+    if (!sld->getSite()->getAllowUpload()) continue;
+    if (sls->getSite()->hasBrokenPASV() &&
+        sld->getSite()->hasBrokenPASV()) continue;
     //potentiality handling
     sls->pushPotential(sbe->getScore(), filename, sld);
     if (!sls->downloadSlotAvailable()) continue;
     if (!sld->uploadSlotAvailable()) continue;
-    if (sls->getSite()->hasBrokenPASV() &&
-        sld->getSite()->hasBrokenPASV()) continue;
     if (sls->potentialCheck(sbe->getScore())) {
       global->getTransferManager()->suggestTransfer(sbe);
     }

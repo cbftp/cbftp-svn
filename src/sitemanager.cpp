@@ -53,6 +53,12 @@ void SiteManager::readConfiguration() {
     else if (!setting.compare("sslfxpforced")) {
       if (!value.compare("true")) site->setSSLFXPForced(true);
     }
+    else if (!setting.compare("allowupload")) {
+      if (!value.compare("false")) site->setAllowUpload(false);
+    }
+    else if (!setting.compare("allowdownload")) {
+      if (!value.compare("false")) site->setAllowDownload(false);
+    }
     else if (!setting.compare("brokenpasv")) {
       if (!value.compare("true")) site->setBrokenPASV(true);
     }
@@ -135,6 +141,8 @@ void SiteManager::writeState() {
     if (site->needsPRET()) filehandler->addOutputLine("SiteManager", name + "$pret=true");
     if (site->SSLFXPForced()) filehandler->addOutputLine("SiteManager", name + "$sslfxpforced=true");
     if (!site->SSL()) filehandler->addOutputLine("SiteManager", name + "$sslconn=false");
+    if (!site->getAllowUpload()) filehandler->addOutputLine("SiteManager", name + "$allowupload=false");
+    if (!site->getAllowDownload()) filehandler->addOutputLine("SiteManager", name + "$allowdownload=false");
     if (site->hasBrokenPASV()) filehandler->addOutputLine("SiteManager", name + "$brokenpasv=true");
     std::map<std::string, std::string>::iterator sit;
     for (sit = site->sectionsBegin(); sit != site->sectionsEnd(); sit++) {

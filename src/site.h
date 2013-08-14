@@ -21,6 +21,8 @@ class Site {
     unsigned int max_up;
     unsigned int max_dn;
     unsigned int max_idletime;
+    bool allowupload;
+    bool allowdownload;
     std::map<std::string, std::string> sections;
     std::map<std::string, int> avgspeed;
   public:
@@ -50,6 +52,8 @@ class Site {
     void setSSLFXPForced(bool);
     bool hasBrokenPASV();
     void setBrokenPASV(bool);
+    bool getAllowUpload();
+    bool getAllowDownload();
     unsigned int getMaxIdleTime();
     std::string getName();
     std::string getSectionPath(std::string);
@@ -67,6 +71,8 @@ class Site {
     void setMaxDn(unsigned int);
     void setMaxUp(unsigned int);
     void setSSL(bool);
+    void setAllowUpload(bool);
+    void setAllowDownload(bool);
     void setMaxIdleTime(unsigned int);
     void clearSections();
     void addSection(std::string, std::string);

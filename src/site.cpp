@@ -18,6 +18,8 @@ Site::Site(std::string name) {
   sslfxpforced = false;
   sslconn = true;
   brokenpasv = false;
+  allowdownload = true;
+  allowupload = true;
 }
 
 void Site::copy(Site * site) {
@@ -35,6 +37,8 @@ void Site::copy(Site * site) {
   this->brokenpasv = site->brokenpasv;
   this->sections = site->sections;
   this->avgspeed = site->avgspeed;
+  this->allowupload = site->allowupload;
+  this->allowdownload = site->allowdownload;
 }
 
 std::map<std::string, std::string>::iterator Site::sectionsBegin() {
@@ -147,6 +151,22 @@ void Site::setSSLFXPForced(bool val) {
 
 void Site::setSSL(bool val) {
   sslconn = val;
+}
+
+bool Site::getAllowUpload() {
+  return allowupload;
+}
+
+bool Site::getAllowDownload() {
+  return allowdownload;
+}
+
+void Site::setAllowUpload(bool val) {
+  allowupload = val;
+}
+
+void Site::setAllowDownload(bool val) {
+  allowdownload = val;
 }
 
 bool Site::hasBrokenPASV() {

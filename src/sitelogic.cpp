@@ -58,6 +58,9 @@ void SiteLogic::tick(int message) {
           refreshChangePath(i, race, true);
         }
       }
+      if (event == "handle") {
+        handleConnection(i, false);
+      }
       else if (event == "userpass") {
         conns[i]->doUSER(false);
       }
@@ -249,8 +252,13 @@ void SiteLogic::commandFail(int id) {
   std::list<std::string> * subdirs;
   std::string file;
   switch (state) {
-    case 14: // cwd fail
+    case 14: // cwd
       if (conns[id]->hasMKDCWDTarget()) {
+        if (!site->getAllowUpload()) {
+          connstatetracker[id].setIdle();
+          connstatetracker[id].delayedCommand("handle", SLEEPDELAY * 6);
+          return;
+        }
         conns[id]->doMKD(conns[id]->getTargetPath());
         return;
       }
