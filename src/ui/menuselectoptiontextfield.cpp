@@ -13,17 +13,40 @@ std::string MenuSelectOptionTextField::getContentText() {
   return textfield.getVisualText();
 }
 
+bool MenuSelectOptionTextField::activate() {
+  active = true;
+  textfield.moveCursorEnd();
+  return true;
+}
+
 void MenuSelectOptionTextField::inputChar(int ch) {
   if (ch >= 32 && ch <= 126) {
       textfield.addchar(ch);
   }
   else if (ch == KEY_BACKSPACE || ch == 8) {
-    textfield.eraseLast();
+    textfield.erase();
+  }
+  else if (ch == KEY_LEFT) {
+    textfield.moveCursorLeft();
+  }
+  else if (ch == KEY_RIGHT) {
+    textfield.moveCursorRight();
+  }
+  else if (ch == KEY_HOME) {
+    textfield.moveCursorHome();
+  }
+  else if (ch == KEY_END) {
+    textfield.moveCursorEnd();
+  }
+  else if (ch == KEY_DC) {
+    if (textfield.moveCursorRight()) {
+      textfield.erase();
+    }
   }
 }
 
 int MenuSelectOptionTextField::cursorPosition() {
-  return textfield.getLastCharPosition();
+  return textfield.getVisualCursorPosition();
 }
 
 std::string MenuSelectOptionTextField::getData() {

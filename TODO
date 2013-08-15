@@ -44,8 +44,6 @@ feature: disable uploading/downloading per site
 
 feature: (debug) log
 
-feature: stepping backward-forward in text fields
-
 cosmetic: enter site ip:port in the same field
 
 feature: base path per site

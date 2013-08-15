@@ -10,14 +10,19 @@ public:
   TextInputField(std::string, int, int, bool);
   std::string getText();
   std::string getVisualText();
-  int getLastCharPosition();
+  unsigned int getVisualCursorPosition();
   bool addchar(char);
-  void eraseLast();
+  void erase();
+  bool moveCursorLeft();
+  bool moveCursorRight();
+  void moveCursorHome();
+  void moveCursorEnd();
   void clear();
 private:
   void construct(std::string, int, int, bool);
   std::string text;
+  unsigned int cursor;
   bool secret;
-  int maxlen;
-  int visiblelen;
+  unsigned int maxlen;
+  unsigned int visiblelen;
 };

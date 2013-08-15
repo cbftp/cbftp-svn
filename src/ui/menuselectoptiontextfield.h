@@ -13,6 +13,7 @@ public:
   MenuSelectOptionTextField();
   MenuSelectOptionTextField(std::string, int, int, std::string, std::string, int, int, bool);
   std::string getContentText();
+  bool activate();
   void inputChar(int);
   int cursorPosition();
   std::string getData();

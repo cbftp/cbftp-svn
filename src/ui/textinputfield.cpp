@@ -21,6 +21,7 @@ void TextInputField::construct(std::string starttext, int visiblelen, int maxlen
   this->visiblelen = visiblelen;
   this->maxlen = maxlen;
   this->secret = secret;
+  this->cursor = starttext.length();
 }
 
 std::string TextInputField::getText() {
@@ -29,44 +30,103 @@ std::string TextInputField::getText() {
 
 std::string TextInputField::getVisualText() {
   std::string visualtext = "";
-  int writelen = text.length();
-  int start = 0;
+  unsigned int writelen = text.length();
+  unsigned int start = 0;
   if (writelen > visiblelen) {
-    start = writelen - visiblelen;
+    if (cursor >= writelen - visiblelen / 2) {
+      start = writelen - visiblelen;
+    }
+    else if (cursor >= visiblelen / 2) {
+      start = cursor - visiblelen / 2;
+    }
+    else {
+      start = 0;
+    }
     writelen = visiblelen;
   }
-  for (int i = 0; i < writelen; i++) {
+  for (unsigned int i = 0; i < writelen; i++) {
     visualtext += secret ? '*' : text[start+i];
   }
-  for (int i = writelen; i < visiblelen; i++) {
+  for (unsigned int i = writelen; i < visiblelen; i++) {
     visualtext += ' ';
   }
   return visualtext;
 }
 
-int TextInputField::getLastCharPosition() {
-  int end = text.length();
-  if (end > visiblelen) {
-    return visiblelen;
+unsigned int TextInputField::getVisualCursorPosition() {
+  unsigned int writelen = text.length();
+  if (writelen > visiblelen) {
+    if (cursor >= writelen - visiblelen / 2) {
+      return cursor + visiblelen - writelen;
+    }
+    else if (cursor >= visiblelen / 2) {
+      return visiblelen / 2;
+    }
+    else {
+      return cursor;
+    }
   }
-  return end;
+  return cursor;
 }
 
 bool TextInputField::addchar(char c) {
-  if ((int) text.length() < maxlen) {
-    text += c;
+  if (text.length() < maxlen) {
+    if (cursor == 0) {
+      text = c + text;
+    }
+    else if (cursor < text.length()) {
+      text = text.substr(0, cursor) + c + text.substr(cursor);
+    }
+    else {
+      text+= c;
+    }
+    cursor++;
     return true;
   }
   return false;
 }
 
-void TextInputField::eraseLast() {
+bool TextInputField::moveCursorLeft() {
+  if (cursor > 0) {
+    cursor--;
+    return true;
+  }
+  return false;
+}
+
+bool TextInputField::moveCursorRight() {
+  if (cursor < text.length()) {
+    cursor++;
+    return true;
+  }
+  return false;
+}
+
+void TextInputField::moveCursorHome() {
+  cursor = 0;
+}
+
+void TextInputField::moveCursorEnd() {
+  cursor = text.length();
+}
+
+void TextInputField::erase() {
+  if (cursor == 0) {
+    return;
+  }
   int len = text.length();
   if (len > 0) {
-    text = text.substr(0, len-1);
+    if (cursor == 1) {
+      text = text.substr(1);
+    }
+    else {
+      text = text.substr(0, cursor - 1) + text.substr(cursor);
+    }
+    cursor--;
   }
 }
 
 void TextInputField::clear() {
   text = "";
+  cursor = 0;
 }

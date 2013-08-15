@@ -45,10 +45,11 @@ void LoginScreen::update() {
   std::string passtext = "AES passphrase required:";
   if (attempt) {
     passtext = "Invalid key, try again: ";
+    curs_set(1);
   }
   TermInt::printStr(window, pass_row-1, pass_col, passtext);
   TermInt::printStr(window, pass_row, pass_col, passfield.getVisualText());
-  TermInt::moveCursor(window, pass_row, pass_col + passfield.getLastCharPosition());
+  TermInt::moveCursor(window, pass_row, pass_col + passfield.getVisualCursorPosition());
 }
 
 void LoginScreen::keyPressed(unsigned int ch) {
@@ -59,7 +60,24 @@ void LoginScreen::keyPressed(unsigned int ch) {
     switch(ch) {
       case 8:
       case KEY_BACKSPACE:
-        passfield.eraseLast();
+        passfield.erase();
+        break;
+      case KEY_HOME:
+        passfield.moveCursorHome();
+        break;
+      case KEY_END:
+        passfield.moveCursorEnd();
+        break;
+      case KEY_LEFT:
+        passfield.moveCursorLeft();
+        break;
+      case KEY_RIGHT:
+        passfield.moveCursorRight();
+        break;
+      case KEY_DC:
+        if (passfield.moveCursorRight()) {
+          passfield.erase();
+        }
         break;
       case KEY_ENTER:
       case 10:
