@@ -254,7 +254,7 @@ void SiteLogic::commandFail(int id) {
   switch (state) {
     case 14: // cwd
       if (conns[id]->hasMKDCWDTarget()) {
-        if (!site->getAllowUpload()) {
+        if (!site->getAllowUpload() || site->isAffiliated(conns[id]->currentSiteRace()->getGroup())) {
           connstatetracker[id].setIdle();
           connstatetracker[id].delayedCommand("handle", SLEEPDELAY * 6);
           return;
@@ -527,6 +527,7 @@ void SiteLogic::refreshChangePath(int id, SiteRace * race, bool refresh) {
   std::string currentpath = conns[id]->getCurrentPath();
   std::string subpath = race->getRelevantSubPath();
   std::string appendsubpath = subpath;
+  conns[id]->setCurrentSiteRace(race);
   if (appendsubpath.length() > 0) {
     appendsubpath = "/" + subpath;
   }

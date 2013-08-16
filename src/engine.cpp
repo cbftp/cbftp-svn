@@ -120,6 +120,7 @@ void Engine::refreshScoreBoard() {
       }
       for (std::list<SiteLogic *>::iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
         if (*itd == *its) continue;
+        if ((*itd)->getSite()->isAffiliated((*itr)->getGroup())) continue;
         SiteRace * srd = (*itd)->getRace((*itr)->getName());
         int avgspeed = (*its)->getSite()->getAverageSpeed((*itd)->getSite()->getName());
         for (std::map<std::string, FileList *>::iterator itfls = srs->fileListsBegin(); itfls != srs->fileListsEnd(); itfls++) {

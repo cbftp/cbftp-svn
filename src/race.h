@@ -13,6 +13,7 @@ class SiteRace;
 class Race {
   private:
     std::string name;
+    std::string group;
     std::string section;
     std::list<SiteLogic *> sites;
     std::map<SiteRace *, std::map<std::string, unsigned int> > sizes;
@@ -30,6 +31,7 @@ class Race {
     std::list<SiteLogic *>::iterator begin();
     std::list<SiteLogic *>::iterator end();
     std::string getName();
+    std::string getGroup();
     std::string getSection();
     bool sizeEstimated(std::string);
     unsigned int estimatedSize(std::string);

@@ -49,5 +49,3 @@ cosmetic: enter site ip:port in the same field
 feature: base path per site
 
 feature: multi-bnc support
-
-feature: affils list per site, to avoid uploading on latepres

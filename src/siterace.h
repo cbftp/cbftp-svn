@@ -16,6 +16,7 @@ class SiteRace {
     std::string section;
     std::string release;
     std::string path;
+    std::string group;
     std::string username;
     std::list<std::string> recentlyvisited;
     std::list<std::string> completesubdirs;
@@ -27,6 +28,7 @@ class SiteRace {
   public:
     std::string getSection();
     std::string getRelease();
+    std::string getGroup();
     std::string getPath();
     std::string getRelevantSubPath();
     SiteRace(Race *, std::string, std::string, std::string);

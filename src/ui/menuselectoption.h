@@ -28,6 +28,7 @@ class MenuSelectOption : public FocusableArea {
     bool goLeft();
     void addStringField(int, int, std::string, std::string, std::string, bool);
     void addStringField(int, int, std::string, std::string, std::string, bool, int);
+    void addStringField(int, int, std::string, std::string, std::string, bool, int, int);
     void addIntArrow(int, int, std::string, std::string, int, int, int);
     void addCheckBox(int, int, std::string, std::string, bool);
     void addTextButton(int, int, std::string, std::string);

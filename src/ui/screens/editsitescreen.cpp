@@ -24,9 +24,16 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
     site = global->getSiteManager()->getSite(arg2);
     modsite = Site(*site);
   }
+  std::string affilstr = "";
+  std::map<std::string, bool>::iterator it;
+  for (it = modsite.affilsBegin(); it != modsite.affilsEnd(); it++) {
+    affilstr += it->first + " ";
+  }
+  if (affilstr.length() > 0) {
+    affilstr = affilstr.substr(0, affilstr.length() - 1);
+  }
   unsigned int y = 1;
   unsigned int x = 1;
-
   mso.addStringField(y++, x, "name", "Name:", modsite.getName(), false);
   mso.addStringField(y++, x, "addr", "Address:", modsite.getAddress(), false);
   mso.addStringField(y++, x, "port", "Port:", modsite.getPort(), false);
@@ -42,6 +49,8 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
   mso.addCheckBox(y++, x, "forcesslfxp", "Force SSL FXP:", modsite.SSLFXPForced());
   mso.addCheckBox(y++, x, "pret", "Needs PRET:", modsite.needsPRET());
   mso.addCheckBox(y++, x, "brokenpasv", "Broken PASV:", modsite.hasBrokenPASV());
+  y++;
+  mso.addStringField(y++, x, "affils", "Affils:", affilstr, false, 60, 512);
   y++;
   ms.initialize(y++, x, modsite.sectionsBegin(), modsite.sectionsEnd());
   focusedarea = &mso;
@@ -300,6 +309,38 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "idletime") {
           site->setMaxIdleTime(global->str2Int(((MenuSelectOptionTextField *)msoe)->getData()));
+        }
+        else if (identifier == "affils") {
+          std::string affils = ((MenuSelectOptionTextField *)msoe)->getData();
+          site->clearAffils();
+          size_t pos;
+          while ((pos = affils.find(",")) != std::string::npos) {
+            affils[pos] = ' ';
+          }
+          while ((pos = affils.find(";")) != std::string::npos) {
+            affils[pos] = ' ';
+          }
+          size_t start = 0;
+          pos = 0;
+          bool started = false;
+          while(pos < affils.length()) {
+            if (!started) {
+              if (affils[pos] != ' ') {
+                start = pos;
+                started = true;
+              }
+            }
+            else {
+              if (affils[pos] == ' ') {
+                site->addAffil(affils.substr(start, pos - start));
+                started = false;
+              }
+              else if (pos == affils.length() - 1) {
+                site->addAffil(affils.substr(start, pos + 1 - start));
+              }
+            }
+            pos++;
+          }
         }
       }
       site->clearSections();

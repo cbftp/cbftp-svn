@@ -39,6 +39,7 @@ void Site::copy(Site * site) {
   this->avgspeed = site->avgspeed;
   this->allowupload = site->allowupload;
   this->allowdownload = site->allowdownload;
+  this->affils = site->affils;
 }
 
 std::map<std::string, std::string>::iterator Site::sectionsBegin() {
@@ -257,6 +258,29 @@ void Site::clearSections() {
 
 void Site::addSection(std::string name, std::string path) {
   sections[name] = path;
+}
+
+void Site::clearAffils() {
+  affils.clear();
+}
+
+bool Site::isAffiliated(std::string affil) {
+  if (affils.find(affil) != affils.end()) {
+    return true;
+  }
+  return false;
+}
+
+void Site::addAffil(std::string affil) {
+  affils[affil] = true;
+}
+
+std::map<std::string, bool>::iterator Site::affilsBegin() {
+  return affils.begin();
+}
+
+std::map<std::string, bool>::iterator Site::affilsEnd() {
+  return affils.end();
 }
 
 std::list<std::string> Site::getSectionsForPath(std::string path) {

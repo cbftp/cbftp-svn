@@ -83,6 +83,9 @@ void SiteManager::readConfiguration() {
       int avgspeed = global->str2Int(value.substr(split + 1));
       site->setAverageSpeed(sitename, avgspeed);
     }
+    else if (!setting.compare("affil")) {
+      site->addAffil(value);
+    }
   }
   lines.clear();
   global->getDataFileHandler()->getDataFor("SiteManagerDefaults", &lines);
@@ -151,6 +154,10 @@ void SiteManager::writeState() {
     std::map<std::string, int>::iterator sit2;
     for (sit2 = site->avgspeedBegin(); sit2 != site->avgspeedEnd(); sit2++) {
       filehandler->addOutputLine("SiteManager", name + "$avgspeed=" + sit2->first + "$" + global->int2Str(sit2->second));
+    }
+    std::map<std::string, bool>::iterator sit3;
+    for (sit3 = site->affilsBegin(); sit3 != site->affilsEnd(); sit3++) {
+      filehandler->addOutputLine("SiteManager", name + "$affil=" + sit3->first);
     }
   }
   filehandler->addOutputLine("SiteManagerDefaults", "username=" + getDefaultUserName());

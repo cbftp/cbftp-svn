@@ -25,6 +25,7 @@ class Site {
     bool allowdownload;
     std::map<std::string, std::string> sections;
     std::map<std::string, int> avgspeed;
+    std::map<std::string, bool> affils;
   public:
     Site();
     Site(std::string);
@@ -75,6 +76,11 @@ class Site {
     void setAllowDownload(bool);
     void setMaxIdleTime(unsigned int);
     void clearSections();
+    bool isAffiliated(std::string);
+    void addAffil(std::string);
+    void clearAffils();
+    std::map<std::string, bool>::iterator affilsBegin();
+    std::map<std::string, bool>::iterator affilsEnd();
     void addSection(std::string, std::string);
     std::list<std::string> getSectionsForPath(std::string);
 };

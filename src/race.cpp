@@ -2,6 +2,13 @@
 
 Race::Race(std::string release, std::string section) {
   this->name = release;
+  size_t splitpos = name.rfind("-");
+  if (splitpos != std::string::npos) {
+    this->group = name.substr(splitpos + 1);
+  }
+  else {
+    this->group = "";
+  }
   this->section = section;
   done = false;
   maxfilelistsize = 0;
@@ -22,6 +29,10 @@ std::list<SiteLogic *>::iterator Race::end() {
 
 std::string Race::getName() {
   return name;
+}
+
+std::string Race::getGroup() {
+  return group;
 }
 
 std::string Race::getSection() {

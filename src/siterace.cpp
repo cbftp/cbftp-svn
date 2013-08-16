@@ -5,6 +5,13 @@ SiteRace::SiteRace(Race * race, std::string section, std::string release, std::s
   this->section = section;
   this->release = release;
   this->username = username;
+  size_t splitpos = release.rfind("-");
+  if (splitpos != std::string::npos) {
+    this->group = release.substr(splitpos + 1);
+  }
+  else {
+    this->group = "";
+  }
   recentlyvisited.push_back("");
   path = section.append("/").append(release);
   FileList * rootdir = new FileList(username, path);
@@ -18,6 +25,10 @@ std::string SiteRace::getSection() {
 
 std::string SiteRace::getRelease() {
   return release;
+}
+
+std::string SiteRace::getGroup() {
+  return group;
 }
 
 std::string SiteRace::getPath() {

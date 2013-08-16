@@ -635,6 +635,10 @@ SiteRace * FTPConn::currentSiteRace() {
   return currentrace;
 }
 
+void FTPConn::setCurrentSiteRace(SiteRace * race) {
+  currentrace = race;
+}
+
 bool FTPConn::isProcessing() {
   return processing;
 }
