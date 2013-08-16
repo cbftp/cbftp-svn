@@ -6,6 +6,7 @@
 #include "../../sitelogicmanager.h"
 #include "../../site.h"
 #include "../../globalcontext.h"
+#include "../../skiplist.h"
 
 #include "../uiwindow.h"
 #include "../uicommunicator.h"

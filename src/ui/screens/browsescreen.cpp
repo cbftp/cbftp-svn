@@ -109,9 +109,22 @@ void BrowseScreen::update() {
   for (unsigned int i = 0; i + currentviewspan < uilist->size() && i < row; i++) {
     unsigned int listi = i + currentviewspan;
     bool selected = (*uilist)[listi] == list.cursoredFile();
+    std::string prepchar = " ";
+    bool allowed = global->getSkipList()->isAllowed((*uilist)[listi]->getName());
     if ((*uilist)[listi]->isDirectory()) {
-      TermInt::printStr(window, i, 1, "#");
+      if (allowed) {
+        prepchar = "#";
+      }
+      else {
+        prepchar = "S";
+      }
     }
+    else {
+      if (!allowed) {
+        prepchar = "s";
+      }
+    }
+    TermInt::printStr(window, i, 1, prepchar);
     if (selected) {
       wattron(window, A_REVERSE);
     }
