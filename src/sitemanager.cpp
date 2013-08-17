@@ -41,6 +41,9 @@ void SiteManager::readConfiguration() {
     else if (!setting.compare("pass")) {
       site->setPass(value);
     }
+    else if (!setting.compare("basepath")) {
+      site->setBasePath(value);
+    }
     else if (!setting.compare("idletime")) {
       site->setMaxIdleTime(global->str2Int(value));
     }
@@ -129,45 +132,51 @@ void SiteManager::readConfiguration() {
 
 void SiteManager::writeState() {
   std::vector<Site *>::iterator it;
+  std::string filetag = "SiteManager";
+  std::string defaultstag = "SiteManagerDefaults";
   DataFileHandler * filehandler = global->getDataFileHandler();
   for (it = sites.begin(); it != sites.end(); it++) {
     Site * site = *it;
     std::string name = site->getName();
-    filehandler->addOutputLine("SiteManager", name + "$addr=" + site->getAddress());
-    filehandler->addOutputLine("SiteManager", name + "$port=" + site->getPort());
-    filehandler->addOutputLine("SiteManager", name + "$user=" + site->getUser());
-    filehandler->addOutputLine("SiteManager", name + "$pass=" + site->getPass());
-    filehandler->addOutputLine("SiteManager", name + "$logins=" + global->int2Str(site->getInternMaxLogins()));
-    filehandler->addOutputLine("SiteManager", name + "$maxup=" + global->int2Str(site->getInternMaxUp()));
-    filehandler->addOutputLine("SiteManager", name + "$maxdn=" + global->int2Str(site->getInternMaxDown()));
-    filehandler->addOutputLine("SiteManager", name + "$idletime=" + global->int2Str(site->getMaxIdleTime()));
-    if (site->needsPRET()) filehandler->addOutputLine("SiteManager", name + "$pret=true");
-    if (site->SSLFXPForced()) filehandler->addOutputLine("SiteManager", name + "$sslfxpforced=true");
-    if (!site->SSL()) filehandler->addOutputLine("SiteManager", name + "$sslconn=false");
-    if (!site->getAllowUpload()) filehandler->addOutputLine("SiteManager", name + "$allowupload=false");
-    if (!site->getAllowDownload()) filehandler->addOutputLine("SiteManager", name + "$allowdownload=false");
-    if (site->hasBrokenPASV()) filehandler->addOutputLine("SiteManager", name + "$brokenpasv=true");
+    filehandler->addOutputLine(filetag, name + "$addr=" + site->getAddress());
+    filehandler->addOutputLine(filetag, name + "$port=" + site->getPort());
+    filehandler->addOutputLine(filetag, name + "$user=" + site->getUser());
+    filehandler->addOutputLine(filetag, name + "$pass=" + site->getPass());
+    std::string basepath = site->getBasePath();
+    if (basepath != "" && basepath != "/") {
+      filehandler->addOutputLine(filetag, name + "$basepath=" + basepath);
+    }
+    filehandler->addOutputLine(filetag, name + "$logins=" + global->int2Str(site->getInternMaxLogins()));
+    filehandler->addOutputLine(filetag, name + "$maxup=" + global->int2Str(site->getInternMaxUp()));
+    filehandler->addOutputLine(filetag, name + "$maxdn=" + global->int2Str(site->getInternMaxDown()));
+    filehandler->addOutputLine(filetag, name + "$idletime=" + global->int2Str(site->getMaxIdleTime()));
+    if (site->needsPRET()) filehandler->addOutputLine(filetag, name + "$pret=true");
+    if (site->SSLFXPForced()) filehandler->addOutputLine(filetag, name + "$sslfxpforced=true");
+    if (!site->SSL()) filehandler->addOutputLine(filetag, name + "$sslconn=false");
+    if (!site->getAllowUpload()) filehandler->addOutputLine(filetag, name + "$allowupload=false");
+    if (!site->getAllowDownload()) filehandler->addOutputLine(filetag, name + "$allowdownload=false");
+    if (site->hasBrokenPASV()) filehandler->addOutputLine(filetag, name + "$brokenpasv=true");
     std::map<std::string, std::string>::iterator sit;
     for (sit = site->sectionsBegin(); sit != site->sectionsEnd(); sit++) {
-      filehandler->addOutputLine("SiteManager", name + "$section=" + sit->first + "$" + sit->second);
+      filehandler->addOutputLine(filetag, name + "$section=" + sit->first + "$" + sit->second);
     }
     std::map<std::string, int>::iterator sit2;
     for (sit2 = site->avgspeedBegin(); sit2 != site->avgspeedEnd(); sit2++) {
-      filehandler->addOutputLine("SiteManager", name + "$avgspeed=" + sit2->first + "$" + global->int2Str(sit2->second));
+      filehandler->addOutputLine(filetag, name + "$avgspeed=" + sit2->first + "$" + global->int2Str(sit2->second));
     }
     std::map<std::string, bool>::iterator sit3;
     for (sit3 = site->affilsBegin(); sit3 != site->affilsEnd(); sit3++) {
-      filehandler->addOutputLine("SiteManager", name + "$affil=" + sit3->first);
+      filehandler->addOutputLine(filetag, name + "$affil=" + sit3->first);
     }
   }
-  filehandler->addOutputLine("SiteManagerDefaults", "username=" + getDefaultUserName());
-  filehandler->addOutputLine("SiteManagerDefaults", "password=" + getDefaultPassword());
-  filehandler->addOutputLine("SiteManagerDefaults", "maxlogins=" + global->int2Str(getDefaultMaxLogins()));
-  filehandler->addOutputLine("SiteManagerDefaults", "maxup=" + global->int2Str(getDefaultMaxUp()));
-  filehandler->addOutputLine("SiteManagerDefaults", "maxdown=" + global->int2Str(getDefaultMaxDown()));
-  filehandler->addOutputLine("SiteManagerDefaults", "maxidletime=" + global->int2Str(getDefaultMaxIdleTime()));
-  if (getDefaultSSLFXPForced()) filehandler->addOutputLine("SiteManagerDefaults", "sslfxpforced=true");
-  if (!getDefaultSSL()) filehandler->addOutputLine("SiteManagerDefaults", "sslconn=false");
+  filehandler->addOutputLine(defaultstag, "username=" + getDefaultUserName());
+  filehandler->addOutputLine(defaultstag, "password=" + getDefaultPassword());
+  filehandler->addOutputLine(defaultstag, "maxlogins=" + global->int2Str(getDefaultMaxLogins()));
+  filehandler->addOutputLine(defaultstag, "maxup=" + global->int2Str(getDefaultMaxUp()));
+  filehandler->addOutputLine(defaultstag, "maxdown=" + global->int2Str(getDefaultMaxDown()));
+  filehandler->addOutputLine(defaultstag, "maxidletime=" + global->int2Str(getDefaultMaxIdleTime()));
+  if (getDefaultSSLFXPForced()) filehandler->addOutputLine(defaultstag, "sslfxpforced=true");
+  if (!getDefaultSSL()) filehandler->addOutputLine(defaultstag, "sslconn=false");
 }
 
 int SiteManager::getNumSites() {

@@ -42,6 +42,7 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
   mso.addIntArrow(y++, x, "logins", "Login slots:", modsite.getInternMaxLogins(), 0, 99);
   mso.addIntArrow(y++, x, "maxup", "Upload slots:", modsite.getInternMaxUp(), 0, 99);
   mso.addIntArrow(y++, x, "maxdn", "Download slots:", modsite.getInternMaxDown(), 0, 99);
+  mso.addStringField(y++, x, "basepath", "Base path:", modsite.getBasePath(), false, 32, 512);
   mso.addStringField(y++, x, "idletime", "Max idle time (s):", global->int2Str(modsite.getMaxIdleTime()), false);
   mso.addCheckBox(y++, x, "allowupload", "Allow upload:", modsite.getAllowUpload());
   mso.addCheckBox(y++, x, "allowdownload", "Allow download:", modsite.getAllowDownload());
@@ -279,6 +280,9 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "pass") {
           site->setPass(((MenuSelectOptionTextField *)msoe)->getData());
+        }
+        else if (identifier == "basepath") {
+          site->setBasePath(((MenuSelectOptionTextField *)msoe)->getData());
         }
         else if (identifier == "logins") {
           site->setMaxLogins(((MenuSelectOptionNumArrow *)msoe)->getData());

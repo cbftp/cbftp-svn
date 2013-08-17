@@ -10,6 +10,7 @@ Site::Site(std::string name) {
   port = "21";
   user = "anonymous";
   pass = "anonymous";
+  basepath = "/";
   logins = 0;
   max_up = 0;
   max_dn = 0;
@@ -40,6 +41,7 @@ void Site::copy(Site * site) {
   this->allowupload = site->allowupload;
   this->allowdownload = site->allowdownload;
   this->affils = site->affils;
+  this->basepath = site->basepath;
 }
 
 std::map<std::string, std::string>::iterator Site::sectionsBegin() {
@@ -93,6 +95,10 @@ unsigned int Site::getInternMaxUp() {
 
 unsigned int Site::getInternMaxDown() {
   return max_dn;
+}
+
+std::string Site::getBasePath() {
+  return basepath;
 }
 
 bool Site::unlimitedLogins() {
@@ -228,6 +234,10 @@ void Site::setUser(std::string user) {
 
 void Site::setPass(std::string pass) {
   this->pass = pass;
+}
+
+void Site::setBasePath(std::string basepath) {
+  this->basepath = basepath;
 }
 
 void Site::setMaxLogins(unsigned int num) {

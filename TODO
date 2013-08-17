@@ -46,6 +46,4 @@ feature: (debug) log
 
 cosmetic: enter site ip:port in the same field
 
-feature: base path per site
-
 feature: multi-bnc support

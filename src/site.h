@@ -26,6 +26,7 @@ class Site {
     std::map<std::string, std::string> sections;
     std::map<std::string, int> avgspeed;
     std::map<std::string, bool> affils;
+    std::string basepath;
   public:
     Site();
     Site(std::string);
@@ -40,6 +41,7 @@ class Site {
     unsigned int getInternMaxLogins();
     unsigned int getInternMaxUp();
     unsigned int getInternMaxDown();
+    std::string getBasePath();
     bool unlimitedLogins();
     bool unlimitedUp();
     bool unlimitedDown();
@@ -65,6 +67,7 @@ class Site {
     std::string getPass();
     void setName(std::string);
     void setAddress(std::string);
+    void setBasePath(std::string);
     void setPort(std::string);
     void setUser(std::string);
     void setPass(std::string);

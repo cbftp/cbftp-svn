@@ -5,7 +5,7 @@ BrowseScreen::BrowseScreen(WINDOW * window, UICommunicator * uicommunicator, uns
   sitelogic = global->getSiteLogicManager()->getSiteLogic(uicommunicator->getArg1());
   site = sitelogic->getSite();
   uicommunicator->expectBackendPush();
-  requestid = sitelogic->requestFileList("/");
+  requestid = sitelogic->requestFileList(site->getBasePath());
   virgin = true;
   resort = false;
   currentviewspan = 0;
