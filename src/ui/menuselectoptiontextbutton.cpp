@@ -4,6 +4,15 @@ MenuSelectOptionTextButton::MenuSelectOptionTextButton(std::string identifier, i
   this->text = text;
   init(identifier, row, col, text);
 }
+MenuSelectOptionTextButton::MenuSelectOptionTextButton(std::string identifier, int row, int col, std::string text, bool content) {
+  if (content) {
+    this->text = text;
+  }
+  else {
+    this->text = "";
+  }
+  init(identifier, row, col, text);
+}
 
 std::string MenuSelectOptionTextButton::getContentText() {
   return text;

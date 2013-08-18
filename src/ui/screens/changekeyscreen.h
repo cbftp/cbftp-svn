@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../globalcontext.h"
-
+#include "../../datafilehandler.h"
 #include "../uiwindow.h"
 #include "../uicommunicator.h"
 #include "../menuselectoption.h"
@@ -12,9 +12,9 @@
 
 extern GlobalContext * global;
 
-class NewKeyScreen : public UIWindow {
+class ChangeKeyScreen : public UIWindow {
 public:
-  NewKeyScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  ChangeKeyScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
   void update();
   void redraw();
   void keyPressed(unsigned int);
@@ -25,8 +25,10 @@ private:
   std::string defaultlegendtext;
   bool active;
   bool mismatch;
+  bool oldmismatch;
   bool tooshort;
   MenuSelectOptionElement * activeelement;
   MenuSelectOption mso;
+  std::string operation;
   UICommunicator * uicommunicator;
 };

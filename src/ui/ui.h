@@ -38,6 +38,7 @@
 #include "screens/rawcommandscreen.h"
 #include "screens/globaloptionsscreen.h"
 #include "screens/skiplistscreen.h"
+#include "screens/changekeyscreen.h"
 
 #define TICKLENGTH 250000
 
@@ -72,12 +73,6 @@ class UserInterface : private EventReceiver {
     std::list<int> keyqueue;
     void FDData();
     void refreshAll();
-    void loginScreen();
-    void mainScreen();
-    int editSiteScreen(Site *);
-    void siteStatusScreen(Site *);
-    int confirmationScreen();
-    int rawDataScreen(FTPConn *);
     std::string getStringField(WINDOW *, int, int, std::string, int, int, bool);
     int getNumArrow(WINDOW *, int, int, int);
     bool getCheckBoxBool(WINDOW *, int, int, int);

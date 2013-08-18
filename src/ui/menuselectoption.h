@@ -32,6 +32,7 @@ class MenuSelectOption : public FocusableArea {
     void addIntArrow(int, int, std::string, std::string, int, int, int);
     void addCheckBox(int, int, std::string, std::string, bool);
     void addTextButton(int, int, std::string, std::string);
+    void addTextButtonNoContent(int, int, std::string, std::string);
     MenuSelectOptionElement * getElement(unsigned int);
     unsigned int getLastSelectionPointer();
     unsigned int getSelectionPointer();

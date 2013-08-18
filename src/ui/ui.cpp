@@ -141,6 +141,7 @@ void UserInterface::runInstance() {
   UIWindow * racestatusscreen = NULL;
   UIWindow * globaloptionsscreen = NULL;
   UIWindow * skiplistscreen = NULL;
+  UIWindow * changekeyscreen = NULL;
   legendwindow = new LegendWindow(legend, 2, col);
   infowindow = new InfoWindow(info, 2, col);
   if (global->getDataFileHandler()->fileExists()) {
@@ -154,9 +155,11 @@ void UserInterface::runInstance() {
     }
     startscreen = new NewKeyScreen(main, &uicommunicator, mainrow, maincol);
     legendwindow->setText(startscreen->getLegendText());
+
     mainwindows.push_back(startscreen);
   }
   topwindow = startscreen;
+  infowindow->setLabel(topwindow->getInfoLabel());
   keypad(stdscr, TRUE);
   noecho();
   std::cin.putback('#'); // needed to be able to peek properly
@@ -277,6 +280,10 @@ void UserInterface::runInstance() {
       else if (command == "skiplist") {
         skiplistscreen = new SkipListScreen(main, &uicommunicator, mainrow, maincol);
         switchToWindow(skiplistscreen);
+      }
+      else if (command == "changekey") {
+        changekeyscreen = new ChangeKeyScreen(main, &uicommunicator, mainrow, maincol);
+        switchToWindow(changekeyscreen);
       }
       else if (command == "rawdatajump") {
         rawdatascreen = new RawDataScreen(main, &uicommunicator, mainrow, maincol);

@@ -24,7 +24,8 @@ GlobalOptionsScreen::GlobalOptionsScreen(WINDOW * window, UICommunicator * uicom
   mso.addCheckBox(y++, x, "defforcesslfxp", "Default site forced SSL FXP:", sm->getDefaultSSLFXPForced());
   mso.addStringField(y++, x, "defidletime", "Default site max idle time (s):", global->int2Str(sm->getDefaultMaxIdleTime()), false);
   y++;
-  mso.addTextButton(y++, x, "skiplist", "Configure skiplist...");
+  mso.addTextButtonNoContent(y++, x, "skiplist", "Configure skiplist...");
+  mso.addTextButtonNoContent(y++, x, "changekey", "Change encryption key...");
   init(window, row, col);
 }
 
@@ -40,25 +41,19 @@ void GlobalOptionsScreen::redraw() {
     if (highlight) wattron(window, A_REVERSE);
     TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
     if (highlight) wattroff(window, A_REVERSE);
-    if (msoe->getIdentifier() != "skiplist") {
-      TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
-    }
+    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
 }
 
 void GlobalOptionsScreen::update() {
   MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
   TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-  if (msoe->getIdentifier() != "skiplist") {
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
-  }
+  TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
   wattron(window, A_REVERSE);
   TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
   wattroff(window, A_REVERSE);
-  if (msoe->getIdentifier() != "skiplist") {
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
-  }
+  TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   if (active && msoe->cursorPosition() >= 0) {
     curs_set(1);
     TermInt::moveCursor(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
@@ -96,6 +91,10 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
       msoe = mso.getElement(mso.getSelectionPointer());
       if (msoe->getIdentifier() == "skiplist") {
         uicommunicator->newCommand("skiplist");
+        return;
+      }
+      if (msoe->getIdentifier() == "changekey") {
+        uicommunicator->newCommand("changekey");
         return;
       }
       activation = msoe->activate();

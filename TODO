@@ -1,7 +1,5 @@
 bug: crash when unable to resolve server dns
 
-bug: crash when unable to cwd to wanted dir during race
-
 bug: ui refreshing breaks when getting updated too much
 
 feature: race status screen
@@ -22,8 +20,6 @@ feature: disable specific site1->site2
 
 feature: reverse potential tracking
 
-feature: change encryption key
-
 feature: intermediate data file writing
 
 feature: allowed subdir list
@@ -39,8 +35,6 @@ feature: proxy support with proxy-per-site
 feature: extensive statistics screens
 
 feature: adaptive-length section fields in the editsitescreen
-
-feature: disable uploading/downloading per site
 
 feature: (debug) log
 

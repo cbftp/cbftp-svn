@@ -143,7 +143,11 @@ void MenuSelectOption::addCheckBox(int row, int col, std::string identifier, std
 }
 
 void MenuSelectOption::addTextButton(int row, int col, std::string identifier, std::string label) {
-  options.push_back(new MenuSelectOptionTextButton(identifier, row, col, label));
+  options.push_back(new MenuSelectOptionTextButton(identifier, row, col, label, true));
+}
+
+void MenuSelectOption::addTextButtonNoContent(int row, int col, std::string identifier, std::string label) {
+  options.push_back(new MenuSelectOptionTextButton(identifier, row, col, label, false));
 }
 
 MenuSelectOptionElement * MenuSelectOption::getElement(unsigned int i) {
