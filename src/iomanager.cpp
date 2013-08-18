@@ -18,6 +18,9 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
   fcntl(sockfd, F_SETFL, O_NONBLOCK);
   connect(sockfd, res->ai_addr, res->ai_addrlen);
+  char buf[INET_ADDRSTRLEN];
+  inet_ntop(AF_INET, res->ai_addr, buf, INET_ADDRSTRLEN);
+  addrmap[sockfd] = std::string(buf, INET_ADDRSTRLEN);
   typemap[sockfd] = 1;
   receivermap[sockfd] = er;
   struct epoll_event event;
@@ -136,6 +139,13 @@ void IOManager::closeSocket(int id) {
 std::string IOManager::getCipher(int id) {
   const char * cipher = SSL_CIPHER_get_name(SSL_get_current_cipher(sslmap[id]));
   return std::string(cipher);
+}
+
+std::string IOManager::getSocketAddress(int id) {
+  if (addrmap.find(id) != addrmap.end()) {
+    return addrmap[id];
+  }
+  return "";
 }
 
 void IOManager::runInstance() {

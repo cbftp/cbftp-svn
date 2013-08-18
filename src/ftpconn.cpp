@@ -47,6 +47,7 @@ void FTPConn::login() {
 
 void FTPConn::FDConnected() {
   rawbuf->writeLine("[Connection established]");
+
   state = 2;
 }
 
@@ -579,6 +580,10 @@ RawBuffer * FTPConn::getRawBuffer() {
 
 int FTPConn::getState() {
   return state;
+}
+
+std::string FTPConn::getConnectedAddress() {
+  return iom->getSocketAddress(sockfd);
 }
 
 bool FTPConn::getProtectedMode() {

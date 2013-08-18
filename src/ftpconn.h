@@ -104,6 +104,7 @@ class FTPConn : private EventReceiver {
     void doQUIT();
     void disconnect();
     int getState();
+    std::string getConnectedAddress();
     bool getProtectedMode();
     void setMKDCWDTarget(std::string, std::string);
     bool hasMKDCWDTarget();

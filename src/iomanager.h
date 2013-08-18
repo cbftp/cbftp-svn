@@ -5,6 +5,7 @@
 #include <semaphore.h>
 #include <sys/epoll.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 #include <fcntl.h>
 #include <openssl/ssl.h>
@@ -29,6 +30,7 @@ private:
   std::map<int, EventReceiver *> receivermap;
   std::map<int, SSL *> sslmap;
   std::map<int, std::list<DataBlock> > sendqueuemap;
+  std::map<int, std::string> addrmap;
   static void * run(void *);
   WorkManager * wm;
   int epollfd;
@@ -44,5 +46,6 @@ public:
   void sendData(int, std::string);
   void sendData(int, char *, unsigned int);
   std::string getCipher(int);
+  std::string getSocketAddress(int);
   void closeSocket(int);
 };

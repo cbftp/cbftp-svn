@@ -348,6 +348,17 @@ void SiteLogic::rawCommandResultRetrieved(int id, std::string result) {
 }
 
 void SiteLogic::gotPassiveAddress(int id, std::string result) {
+  int count = 0;
+  for (unsigned int i = 0; i < result.length(); i++) {
+    if (result[i] == ',') count++;
+  }
+  if (count == 2 && result.substr(0, 2) == "1,") {
+    std::string addr = conns[id]->getConnectedAddress();
+    for (unsigned int i = 0; i < addr.length(); i++) {
+      if (addr[i] == '.') addr[i] = ',';
+    }
+    result = addr + result.substr(2);
+  }
   if (connstatetracker[id].hasTransfer()) {
     connstatetracker[id].getTransferMonitor()->passiveReady(result);
   }
