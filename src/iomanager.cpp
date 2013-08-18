@@ -12,7 +12,7 @@ IOManager::IOManager() {
 int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int port) {
   struct addrinfo sock, *res;
   memset(&sock, 0, sizeof(sock));
-  sock.ai_family = AF_UNSPEC;
+  sock.ai_family = AF_INET;
   sock.ai_socktype = SOCK_STREAM;
   getaddrinfo(addr.data(), global->int2Str(port).data(), &sock, &res);
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
