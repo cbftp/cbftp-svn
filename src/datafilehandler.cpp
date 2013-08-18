@@ -96,6 +96,9 @@ bool DataFileHandler::changeKey(std::string key, std::string newkey) {
   if (this->key != key) {
     return false;
   }
+  while (newkey.length() < 32) {
+    newkey.append("0");
+  }
   this->key = newkey;
   return true;
 }
