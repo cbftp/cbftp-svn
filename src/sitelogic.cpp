@@ -357,7 +357,7 @@ void SiteLogic::gotPassiveAddress(int id, std::string result) {
     for (unsigned int i = 0; i < addr.length(); i++) {
       if (addr[i] == '.') addr[i] = ',';
     }
-    result = addr + result.substr(2);
+    result = addr + "," + result.substr(2);
   }
   if (connstatetracker[id].hasTransfer()) {
     connstatetracker[id].getTransferMonitor()->passiveReady(result);

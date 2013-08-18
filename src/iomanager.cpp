@@ -18,9 +18,10 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
   fcntl(sockfd, F_SETFL, O_NONBLOCK);
   connect(sockfd, res->ai_addr, res->ai_addrlen);
-  char buf[INET_ADDRSTRLEN];
-  inet_ntop(AF_INET, res->ai_addr, buf, INET_ADDRSTRLEN);
-  addrmap[sockfd] = std::string(buf, INET_ADDRSTRLEN);
+  char buf[res->ai_addrlen];
+  struct sockaddr_in* saddr = (struct sockaddr_in*)res->ai_addr;
+  inet_ntop(AF_INET, &(saddr->sin_addr), buf, res->ai_addrlen);
+  addrmap[sockfd] = std::string(buf);
   typemap[sockfd] = 1;
   receivermap[sockfd] = er;
   struct epoll_event event;
