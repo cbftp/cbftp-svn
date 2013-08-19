@@ -58,18 +58,20 @@ void Engine::estimateRaceSizes() {
 void Engine::reportCurrentSizeAsFinal(SiteRace * srs, FileList * fls) {
   std::list<std::string> uniques;
   std::map<std::string, File *>::iterator itf;
+  std::string subpath = srs->getSubPathForFileList(fls);
   fls->lockFileList();
   for (itf = fls->begin(); itf != fls->end(); itf++) {
     if (itf->second->isDirectory()) {
-      continue;
-    }
-    else if (itf->first.find(" ") != std::string::npos) {
       continue;
     }
     std::string filename = itf->second->getName();
     size_t lastdotpos = filename.rfind(".");
     if (lastdotpos != std::string::npos && lastdotpos < filename.length() - 4) {
       filename = filename.substr(0, lastdotpos + 4);
+    }
+    if (!global->getSkipList()->isAllowed(filename) ||
+        (filename != "" && !global->getSkipList()->isAllowed(subpath + "/" + filename))) {
+      continue;
     }
     std::list<std::string>::iterator it;
     bool exists = false;
