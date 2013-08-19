@@ -7,6 +7,7 @@
 #include "file.h"
 #include "race.h"
 #include "globalcontext.h"
+#include "skiplist.h"
 
 extern GlobalContext * global;
 

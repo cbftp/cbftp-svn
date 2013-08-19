@@ -126,6 +126,7 @@ void Engine::refreshScoreBoard() {
         SiteRace * srd = (*itd)->getRace((*itr)->getName());
         int avgspeed = (*its)->getSite()->getAverageSpeed((*itd)->getSite()->getName());
         for (std::map<std::string, FileList *>::iterator itfls = srs->fileListsBegin(); itfls != srs->fileListsEnd(); itfls++) {
+          if (!global->getSkipList()->isAllowed(itfls->first)) continue;
           FileList * fls = itfls->second;
           FileList * fld = srd->getFileListForPath(itfls->first);
           if (fld != NULL) {
