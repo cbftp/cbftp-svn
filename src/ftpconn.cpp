@@ -284,8 +284,9 @@ void FTPConn::STATResponse() {
         while(loc < databuf + databufpos && *++loc != '\n');
       }
       if (loc - start >= 50) {
-        files++;
-        currentfl->updateFile(std::string(start, loc - start), touch);
+        if (currentfl->updateFile(std::string(start, loc - start), touch)) {
+          files++;
+        }
       }
     }
     if (currentfl->getSize() > files) {

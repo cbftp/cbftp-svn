@@ -21,6 +21,10 @@ FileList::FileList(std::string username, std::string path) {
 bool FileList::updateFile(std::string start, int touch) {
   File * file = new File(start, touch);
   std::string name = file->getName();
+  if (name == "." || name == "..") {
+    delete file;
+    return false;
+  }
   File * updatefile;
   pthread_mutex_lock(&filelist_mutex);
   if ((updatefile = getFileIntern(name)) != NULL) {
