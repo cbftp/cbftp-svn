@@ -81,23 +81,23 @@ void SiteLogic::tick(int message) {
 }
 
 void SiteLogic::connectFailed(int id) {
-
+  connstatetracker[id].setDisconnected();
 }
 
 void SiteLogic::userDenied(int id) {
-
+  connstatetracker[id].setDisconnected();
 }
 
 void SiteLogic::loginKillFailed(int id) {
-
+  connstatetracker[id].setDisconnected();
 }
 
 void SiteLogic::passDenied(int id) {
-
+  connstatetracker[id].setDisconnected();
 }
 
 void SiteLogic::TLSFailed(int id) {
-
+  connstatetracker[id].setDisconnected();
 }
 
 void SiteLogic::listRefreshed(int id) {

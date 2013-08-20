@@ -28,6 +28,10 @@ void EventReceiver::FDDisconnected() {
 
 }
 
+void EventReceiver::FDFail(std::string error) {
+
+}
+
 void EventReceiver::FDSSLSuccess() {
 
 }

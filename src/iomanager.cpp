@@ -14,7 +14,11 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int
   memset(&sock, 0, sizeof(sock));
   sock.ai_family = AF_INET;
   sock.ai_socktype = SOCK_STREAM;
-  getaddrinfo(addr.data(), global->int2Str(port).data(), &sock, &res);
+  int status = getaddrinfo(addr.data(), global->int2Str(port).data(), &sock, &res);
+  if (status != 0) {
+    er->FDFail("Failed to resolve DNS. Error code: " + global->int2Str(status));
+    return -1;
+  }
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
   fcntl(sockfd, F_SETFL, O_NONBLOCK);
   connect(sockfd, res->ai_addr, res->ai_addrlen);

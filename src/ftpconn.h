@@ -117,6 +117,7 @@ class FTPConn : private EventReceiver {
     void FDData(char *, unsigned int);
     void FDConnected();
     void FDDisconnected();
+    void FDFail(std::string);
     void FDSSLSuccess();
     void FDSSLFail();
     FileList * currentFileList();

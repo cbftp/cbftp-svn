@@ -43,11 +43,13 @@ void FTPConn::login() {
   rawbuf->writeLine("[Connecting to " + site->getAddress() + ":" + site->getPort() + "]");
   state = 1;
   sockfd = iom->registerTCPClientSocket(this, site->getAddress(), global->str2Int(site->getPort()));
+  if (sockfd < 0) {
+    state = 0;
+  }
 }
 
 void FTPConn::FDConnected() {
   rawbuf->writeLine("[Connection established]");
-
   state = 2;
 }
 
@@ -58,6 +60,11 @@ void FTPConn::FDDisconnected() {
     state = 0;
     slb->disconnected(id);
   }
+}
+
+void FTPConn::FDFail(std::string error) {
+  rawbuf->writeLine("[" + error + "]");
+  slb->connectFailed(1);
 }
 
 void FTPConn::FDSSLSuccess() {
