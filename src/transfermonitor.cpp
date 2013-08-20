@@ -31,6 +31,7 @@ void TransferMonitor::engage(std::string file, SiteLogic * sls, FileList * fls, 
   if (sls->getSite()->SSLFXPForced() || sld->getSite()->SSLFXPForced()) {
     ssl = true;
   }
+  fld->touchFile(file, sld->getSite()->getUser());
   if (!sld->getSite()->hasBrokenPASV()) {
     activedownload = true;
     sld->preparePassiveUpload(dst, this, fld, file, ssl);
@@ -72,7 +73,6 @@ void TransferMonitor::targetComplete() {
 
 void TransferMonitor::finish() {
   if (status != 0) {
-    fld->touchFile(file, sld->getSite()->getUser());
     int span = timestamp - startstamp;
     if (span == 0) {
       span = 10;
