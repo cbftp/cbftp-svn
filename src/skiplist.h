@@ -13,6 +13,7 @@ class SkipList {
 private:
   std::list<std::string> entries;
   int wildcmp(const char *, const char *);
+  int wildcmpCase(const char *, const char *);
 public:
   SkipList();
   void addEntry(std::string);
