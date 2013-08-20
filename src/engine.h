@@ -15,7 +15,7 @@
 #include "enginebase.h"
 #include "skiplist.h"
 
-#define SPREAD 1
+#define SPREAD 0
 
 extern GlobalContext * global;
 
