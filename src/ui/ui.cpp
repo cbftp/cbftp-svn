@@ -9,7 +9,9 @@ UserInterface::UserInterface() {
   legendenabled = false;
   infoenabled = false;
   pthread_create(&uithread, global->getPthreadAttr(), run, (void *) this);
+#ifdef _ISOC95_SOURCE
   pthread_setname_np(uithread, "UserInterface");
+#endif
 }
 
 bool UserInterface::init() {

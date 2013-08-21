@@ -5,7 +5,9 @@ WorkManager::WorkManager() {
   sem_init(&readdata, 0, 0);
   pthread_mutex_init(&dataqueue_mutex, NULL);
   pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
+#ifdef _ISOC95_SOURCE
   pthread_setname_np(thread, "Worker");
+#endif
 }
 
 void WorkManager::dispatchFDData(EventReceiver * er) {

@@ -6,7 +6,9 @@ IOManager::IOManager() {
   blockpool = wm->getBlockPool();
   blocksize = blockpool->blockSize();
   pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
+#ifdef _ISOC95_SOURCE
   pthread_setname_np(thread, "Input");
+#endif
 }
 
 int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int port) {
