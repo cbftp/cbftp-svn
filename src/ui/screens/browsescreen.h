@@ -27,6 +27,8 @@ public:
   std::list<StringPair> selectionhistory;
 private:
   unsigned int currentviewspan;
+  unsigned int sliderstart;
+  unsigned int slidersize;
   bool virgin;
   bool resort;
   unsigned int sortmethod;

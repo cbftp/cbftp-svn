@@ -10,6 +10,8 @@ BrowseScreen::BrowseScreen(WINDOW * window, UICommunicator * uicommunicator, uns
   resort = false;
   currentviewspan = 0;
   sortmethod = 0;
+  slidersize = 0;
+  sliderstart = 0;
   list = UIFileList();
   global->updateTime();
   init(window, row, col);
@@ -57,6 +59,22 @@ void BrowseScreen::redraw() {
     currentviewspan = list.size() + 1 - row;
     if (currentviewspan > position) {
       currentviewspan = position;
+    }
+  }
+  if (list.size() <= row) {
+    slidersize = 0;
+  }
+  else {
+    slidersize = (row * row) / list.size();
+    sliderstart = (row * currentviewspan) / list.size();
+    if (slidersize == 0) {
+      slidersize++;
+    }
+    if (slidersize == row) {
+      slidersize--;
+    }
+    if (sliderstart + slidersize > row || currentviewspan + row >= list.size()) {
+      sliderstart = row - slidersize;
     }
   }
   if (virgin) {
@@ -142,6 +160,18 @@ void BrowseScreen::update() {
       }
     }
   }
+  if (slidersize > 0) {
+    for (unsigned int i = 0; i < row; i++) {
+      if (i >= sliderstart && i < sliderstart + slidersize) {
+        wattron(window, A_REVERSE);
+        TermInt::printChar(window, i, col-1, ' ');
+        wattroff(window, A_REVERSE);
+      }
+      else {
+        TermInt::printChar(window, i, col-1, 4194424);
+      }
+    }
+  }
 }
 
 void BrowseScreen::keyPressed(unsigned int ch) {
@@ -176,6 +206,11 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       break;
     case 's':
       sortmethod++;
+      resort = true;
+      uicommunicator->newCommand("redraw");
+      break;
+    case 'S':
+      sortmethod = 0;
       resort = true;
       uicommunicator->newCommand("redraw");
       break;
