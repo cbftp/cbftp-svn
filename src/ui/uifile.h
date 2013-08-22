@@ -26,7 +26,6 @@ private:
   static unsigned int sizegranularity;
   static std::vector<unsigned long long int> powers;
   void parseTimeStamp(std::string);
-  std::string parseSize(unsigned long long int);
 public:
   UIFile(File *);
   bool isDirectory();
@@ -39,6 +38,7 @@ public:
   std::string getName();
   static int getSizeGranularity();
   static std::vector<unsigned long long int> getPowers();
+  static std::string parseSize(unsigned long long int);
   bool isSelected();
   bool isCursored();
   void select();

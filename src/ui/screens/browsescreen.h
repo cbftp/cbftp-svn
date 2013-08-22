@@ -24,6 +24,7 @@ public:
   void keyPressed(unsigned int);
   std::string getLegendText();
   std::string getInfoLabel();
+  std::string getInfoText();
   std::list<StringPair> selectionhistory;
 private:
   unsigned int currentviewspan;
@@ -31,11 +32,15 @@ private:
   unsigned int slidersize;
   bool virgin;
   bool resort;
+  int tickcount;
+  bool changedsort;
   unsigned int sortmethod;
   Site * site;
   UIFileList list;
   SiteLogic * sitelogic;
-  unsigned int requestid;
+  int requestid;
   UICommunicator * uicommunicator;
+  std::string requestedpath;
+  int spinnerpos;
   void sort();
 };

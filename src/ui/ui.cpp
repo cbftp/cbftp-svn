@@ -176,6 +176,7 @@ void UserInterface::runInstance() {
         legendwindow->update();
       }
       if (infoenabled) {
+        infowindow->setText(topwindow->getInfoText());
         infowindow->update();
       }
       refreshAll();
@@ -304,11 +305,26 @@ void UserInterface::runInstance() {
       else if (command == "updatesetlegend") {
         topwindow->update();
         legendwindow->setText(topwindow->getLegendText());
+        infowindow->setText(topwindow->getInfoText());
+        refreshAll();
+        uicommunicator.checkoutCommand();
+      }
+      else if (command == "updatesetinfo") {
+        topwindow->update();
+        infowindow->setText(topwindow->getInfoText());
+        refreshAll();
+        uicommunicator.checkoutCommand();
+      }
+      else if (command == "updatesetinfolegend") {
+        topwindow->update();
+        legendwindow->setText(topwindow->getLegendText());
+        infowindow->setText(topwindow->getInfoText());
         refreshAll();
         uicommunicator.checkoutCommand();
       }
       else if (command == "redraw") {
         topwindow->redraw();
+        infowindow->setText(topwindow->getInfoText());
         refreshAll();
         uicommunicator.checkoutCommand();
       }

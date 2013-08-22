@@ -5,13 +5,16 @@ BrowseScreen::BrowseScreen(WINDOW * window, UICommunicator * uicommunicator, uns
   sitelogic = global->getSiteLogicManager()->getSiteLogic(uicommunicator->getArg1());
   site = sitelogic->getSite();
   uicommunicator->expectBackendPush();
-  requestid = sitelogic->requestFileList(site->getBasePath());
+  requestedpath = site->getBasePath();
+  requestid = sitelogic->requestFileList(requestedpath);
   virgin = true;
   resort = false;
+  changedsort = false;
   currentviewspan = 0;
   sortmethod = 0;
   slidersize = 0;
   sliderstart = 0;
+  spinnerpos = 0;
   list = UIFileList();
   global->updateTime();
   init(window, row, col);
@@ -78,8 +81,10 @@ void BrowseScreen::redraw() {
     }
   }
   if (virgin) {
-    TermInt::printStr(window, 1, 1, "Let's browse this shit!");
-    TermInt::printStr(window, 2, 1, "Fetching list...");
+    TermInt::printStr(window, 1, 1, "Getting file list for " + site->getName() + " ...");
+  }
+  else if (list.size() == 0) {
+    TermInt::printStr(window, 0, 3, "(empty directory)");
   }
   update();
 }
@@ -207,11 +212,15 @@ void BrowseScreen::keyPressed(unsigned int ch) {
     case 's':
       sortmethod++;
       resort = true;
+      changedsort = true;
+      tickcount = 0;
       uicommunicator->newCommand("redraw");
       break;
     case 'S':
       sortmethod = 0;
       resort = true;
+      changedsort = true;
+      tickcount = 0;
       uicommunicator->newCommand("redraw");
       break;
     case KEY_RIGHT:
@@ -221,8 +230,9 @@ void BrowseScreen::keyPressed(unsigned int ch) {
         if (oldpath.length() > 1) {
           oldpath += "/";
         }
-        requestid = sitelogic->requestFileList(oldpath + list.cursoredFile()->getName());
-        uicommunicator->newCommand("update");
+        requestedpath = oldpath + list.cursoredFile()->getName();
+        requestid = sitelogic->requestFileList(requestedpath);
+        uicommunicator->newCommand("updatesetinfo");
       }
       break;
     case KEY_LEFT:
@@ -240,13 +250,15 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       if (position == 0) {
         position = 1;
       }
-      requestid = sitelogic->requestFileList(oldpath.substr(0, position));
-      uicommunicator->newCommand("update");
+      requestedpath = oldpath.substr(0, position);
+      requestid = sitelogic->requestFileList(requestedpath);
+      uicommunicator->newCommand("updatesetinfo");
       //go up one directory level, or return if at top already
       break;
     case KEY_F(5):
-      requestid = sitelogic->requestFileList(list.getPath());
-      uicommunicator->newCommand("update");
+      requestedpath = list.getPath();
+      requestid = sitelogic->requestFileList(requestedpath);
+      uicommunicator->newCommand("updatesetinfo");
       break;
     case KEY_DOWN:
       //go down and highlight next item (if not at bottom already)
@@ -340,6 +352,40 @@ std::string BrowseScreen::getLegendText() {
 
 std::string BrowseScreen::getInfoLabel() {
   return "BROWSING: " + site->getName();
+}
+
+std::string BrowseScreen::getInfoText() {
+  std::string text = list.getPath();
+  if (requestid >= 0) {
+    text = "Getting list for " + requestedpath + "  ";
+    switch(spinnerpos++ % 4) {
+      case 0:
+        text += "|";
+        break;
+      case 1:
+        text += "/";
+        break;
+      case 2:
+        text += "-";
+        break;
+      case 3:
+        text += "\\";
+        break;
+    }
+    return text;
+  }
+  if (changedsort) {
+    if (tickcount++ < 8) {
+      text = "Sort method: " + list.getSortMethod();
+      return text;
+    }
+    else {
+      changedsort = false;
+    }
+  }
+  text += "  " + global->int2Str(list.sizeFiles()) + "f " + global->int2Str(list.sizeDirs()) + "d";
+  text += std::string("  ") + UIFile::parseSize(list.getTotalSize());
+  return text;
 }
 
 void BrowseScreen::sort() {

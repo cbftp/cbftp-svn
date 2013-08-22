@@ -4,6 +4,10 @@ UIFileList::UIFileList() {
   currentposition = 0;
   currentcursored = NULL;
   path = "";
+  numfiles = 0;
+  numdirs = 0;
+  totalsize = 0;
+  sortmethod = "none";
 }
 
 bool combinedSort(UIFile * a, UIFile * b) {
@@ -74,28 +78,53 @@ bool ownerSortDesc(UIFile * a, UIFile * b) {
 void UIFileList::sortCombined() {
   std::sort(sortedfiles.begin(), sortedfiles.end(), combinedSort);
   setNewCurrentPosition();
+  sortmethod = "Combined";
 }
 void UIFileList::sortName(bool ascending) {
-  if (ascending) std::sort(sortedfiles.begin(), sortedfiles.end(), nameSortAsc);
-  else std::sort(sortedfiles.begin(), sortedfiles.end(), nameSortDesc);
+  if (ascending) {
+    std::sort(sortedfiles.begin(), sortedfiles.end(), nameSortAsc);
+    sortmethod = "Name (ascending)";
+  }
+  else {
+    std::sort(sortedfiles.begin(), sortedfiles.end(), nameSortDesc);
+    sortmethod = "Name (descending)";
+  }
   setNewCurrentPosition();
 }
 
 void UIFileList::sortTime(bool ascending) {
-  if (ascending) std::sort(sortedfiles.begin(), sortedfiles.end(), timeSortAsc);
-  else std::sort(sortedfiles.begin(), sortedfiles.end(), timeSortDesc);
+  if (ascending) {
+    std::sort(sortedfiles.begin(), sortedfiles.end(), timeSortAsc);
+    sortmethod = "Time (ascending)";
+  }
+  else {
+    std::sort(sortedfiles.begin(), sortedfiles.end(), timeSortDesc);
+    sortmethod = "Time (descending)";
+  }
   setNewCurrentPosition();
 }
 
 void UIFileList::sortSize(bool ascending) {
-  if (ascending) std::sort(sortedfiles.begin(), sortedfiles.end(), sizeSortAsc);
-  else std::sort(sortedfiles.begin(), sortedfiles.end(), sizeSortDesc);
+  if (ascending) {
+    std::sort(sortedfiles.begin(), sortedfiles.end(), sizeSortAsc);
+    sortmethod = "Size (ascending)";
+  }
+  else {
+    std::sort(sortedfiles.begin(), sortedfiles.end(), sizeSortDesc);
+    sortmethod = "Size (descending)";
+  }
   setNewCurrentPosition();
 }
 
 void UIFileList::sortOwner(bool ascending) {
-  if (ascending) std::sort(sortedfiles.begin(), sortedfiles.end(), ownerSortAsc);
-  else std::sort(sortedfiles.begin(), sortedfiles.end(), ownerSortDesc);
+  if (ascending) {
+    std::sort(sortedfiles.begin(), sortedfiles.end(), ownerSortAsc);
+    sortmethod = "Owner (ascending)";
+  }
+  else {
+    std::sort(sortedfiles.begin(), sortedfiles.end(), ownerSortDesc);
+    sortmethod = "Owner (descending)";
+  }
   setNewCurrentPosition();
 }
 
@@ -127,6 +156,9 @@ void UIFileList::selectFileName(std::string filename) {
 
 void UIFileList::parse(FileList * filelist) {
   files.clear();
+  numfiles = 0;
+  numdirs = 0;
+  totalsize = 0;
   sortedfiles.clear();
   selectedfiles.clear();
   currentposition = 0;
@@ -137,6 +169,13 @@ void UIFileList::parse(FileList * filelist) {
   sortedfiles.reserve(size);
   for (it = filelist->begin(); it != filelist->end(); it++) {
     files.push_back(UIFile(it->second));
+    totalsize += it->second->getSize();
+    if (it->second->isDirectory()) {
+      numdirs++;
+    }
+    else {
+      numfiles++;
+    }
   }
   for (unsigned int i = 0; i < files.size(); i++) {
     sortedfiles.push_back(&(files[i]));
@@ -185,6 +224,18 @@ unsigned int UIFileList::size() {
   return files.size();
 }
 
+unsigned int UIFileList::sizeFiles() {
+  return numfiles;
+}
+
+unsigned int UIFileList::sizeDirs() {
+  return numdirs;
+}
+
+unsigned long long int UIFileList::getTotalSize() {
+  return totalsize;
+}
+
 std::vector<UIFile *> * UIFileList::getSortedList() {
   return &sortedfiles;
 }
@@ -195,4 +246,8 @@ unsigned int UIFileList::currentCursorPosition() {
 
 std::string UIFileList::getPath() {
   return path;
+}
+
+std::string UIFileList::getSortMethod() {
+  return sortmethod;
 }

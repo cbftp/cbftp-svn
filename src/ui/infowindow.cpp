@@ -25,8 +25,9 @@ void InfoWindow::update() {
   for (unsigned int i = 2; i < col - 2; i++) {
     TermInt::printChar(window, 0, i, ' ');
   }
+  unsigned int labellen = label.length();
   TermInt::printStr(window, 0, 4, label);
-  TermInt::printStr(window, 0, col - 40, text);
+  TermInt::printStr(window, 0, 4 + labellen + 2, text, col - 4 - 4 - labellen - 2, true);
 }
 
 void InfoWindow::setLabel(std::string label) {

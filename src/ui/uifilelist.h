@@ -18,6 +18,10 @@ private:
   unsigned int currentposition;
   UIFile * currentcursored;
   std::string path;
+  unsigned int numfiles;
+  unsigned int numdirs;
+  unsigned long long int totalsize;
+  std::string sortmethod;
   void setNewCurrentPosition();
 public:
   UIFileList();
@@ -34,9 +38,13 @@ public:
   void toggleSelectCurrent();
   void unSelect();
   unsigned int size();
+  unsigned int sizeFiles();
+  unsigned int sizeDirs();
+  unsigned long long int getTotalSize();
   std::vector <UIFile *> * getSortedList();
   unsigned int currentCursorPosition();
   std::string getPath();
+  std::string getSortMethod();
 };
 
 bool combinedSort(UIFile *, UIFile *);
