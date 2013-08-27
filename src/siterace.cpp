@@ -126,7 +126,7 @@ void SiteRace::addNewDirectories() {
   FileList * filelist = getFileListForPath("");
   std::map<std::string, File *>::iterator it;
   for(it = filelist->begin(); it != filelist->end(); it++) {
-    if (global->getSkipList()->isAllowed(it->first)) {
+    if (!global->getSkipList()->isAllowed(it->first)) {
       continue;
     }
     File * file = it->second;
