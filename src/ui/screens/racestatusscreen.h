@@ -27,6 +27,7 @@ public:
 private:
   Race * race;
   bool spaceous;
+  bool smalldirs;
   unsigned int currnumsubpaths;
   unsigned int currguessedsize;
   unsigned int longestsubpath;

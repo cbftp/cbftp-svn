@@ -15,7 +15,7 @@ int SizeLocationTrack::numSites() {
 void SizeLocationTrack::add(SiteRace * site, unsigned long long int size) {
   std::map<SiteRace *, unsigned long long int>::iterator it;
   it = sitesizes.find(site);
-  if (it->second != size) {
+  if (it == sitesizes.end() || it->second != size) {
     sitesizes[site] = size;
     recalculate();
   }

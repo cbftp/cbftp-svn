@@ -7,6 +7,7 @@ RaceStatusScreen::RaceStatusScreen(WINDOW * window, UICommunicator * uicommunica
   sitestr = "";
   autoupdate = true;
   spaceous = false;
+  smalldirs = false;
   currnumsubpaths = 0;
   currguessedsize = 0;
   for (std::list<SiteLogic *>::iterator it = race->begin(); it != race->end(); it++) {
@@ -153,6 +154,9 @@ void RaceStatusScreen::update() {
     TermInt::printStr(window, y, x, (*it)->getSite()->getName(), 4);
     for (std::list<std::string>::iterator it2 = subpaths.begin(); it2 != subpaths.end(); it2++) {
       std::string origsubpath = *it2;
+      if (!smalldirs && race->guessedSize(origsubpath) < 5) {
+        continue;
+      }
       std::string printsubpath = origsubpath;
       FileList * fl = sr->getFileListForPath(origsubpath);
       if (printsubpath == "") {
@@ -199,6 +203,15 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
     case 10:
       uicommunicator->newCommand("return");
       break;
+    case 's':
+      if (smalldirs) {
+        smalldirs = false;
+      }
+      else {
+        smalldirs = true;
+      }
+      uicommunicator->newCommand("redraw");
+      break;
   }
 }
 
@@ -241,7 +254,7 @@ char RaceStatusScreen::getFileChar(bool owner, bool upload, bool download) {
 }
 
 std::string RaceStatusScreen::getLegendText() {
-  return "[Enter] Return - [R]emove site from race - [A]dd site to race - A[B]ort race";
+  return "[Enter] Return - [R]emove site from race - [A]dd site to race - A[B]ort race - [s]how small dirs";
 }
 
 std::string RaceStatusScreen::getInfoLabel() {
