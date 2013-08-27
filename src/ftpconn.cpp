@@ -513,6 +513,7 @@ void FTPConn::RETRResponse() {
     slb->commandSuccess(id);
   }
   else {
+    processing = false;
     slb->commandFail(id);
   }
   state = 19;
@@ -538,6 +539,7 @@ void FTPConn::STORResponse() {
     slb->commandSuccess(id);
   }
   else {
+    processing = false;
     slb->commandFail(id);
   }
   state = 21;
