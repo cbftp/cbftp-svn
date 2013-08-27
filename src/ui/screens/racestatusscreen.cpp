@@ -64,9 +64,16 @@ void RaceStatusScreen::redraw() {
     race->prepareGuessedFileList(*it);
     for (std::list<std::string>::iterator it = race->guessedFileListBegin(); it != race->guessedFileListEnd(); it++) {
       std::string filename = *it;
+      while (filename.length() < 3) {
+        filename += " ";
+      }
+      std::string lastchars = filename.substr(filename.length() - 3);
       bool duplicate = false;
       for (std::list<std::string>::iterator it3 = filenames.begin(); it3 != filenames.end(); it3++) {
-        if (filename == *it3) {
+        std::string lastchars2 = *it3;
+        if (lastchars2.length() < 3) lastchars += " ";
+        lastchars2 = lastchars2.substr(lastchars2.length() - 3);
+        if (lastchars == lastchars2) {
           duplicate = true;
           break;
         }
@@ -115,7 +122,9 @@ void RaceStatusScreen::redraw() {
       filename += " ";
     }
     std::string lastchars = filename.substr(filename.length() - 3);
-    filetagpos[filename] = tagx;
+    if (filetagpos.find(lastchars) == filetagpos.end()) {
+      filetagpos[lastchars] = tagx;
+    }
     TermInt::printStr(window, y, tagx, lastchars.substr(0, 1));
     TermInt::printStr(window, y+1, tagx, lastchars.substr(1, 1));
     TermInt::printStr(window, y+2, tagx++, lastchars.substr(2));
@@ -153,8 +162,9 @@ void RaceStatusScreen::update() {
       TermInt::printStr(window, y, x + 5, printsubpath, longestsubpath);
       race->prepareGuessedFileList(origsubpath);
       for (std::list<std::string>::iterator it3 = race->guessedFileListBegin(); it3 != race->guessedFileListEnd(); it3++) {
-
-        int filex = filetagpos[*it3];
+        std::string filename = *it3;
+        if (filename.length() < 3) filename += " ";
+        int filex = filetagpos[filename.substr(filename.length() - 3)];
         File * file;
         char printchar = '_';
         bool highlight = false;
