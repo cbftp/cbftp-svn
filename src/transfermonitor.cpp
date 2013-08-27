@@ -100,6 +100,7 @@ void TransferMonitor::finish() {
 }
 
 void TransferMonitor::sourceError(int err) {
+  fls->getFile(file)->finishDownload();
   switch (err) {
     case 0: // PRET RETR failed
       fls->downloadFail(file);
@@ -111,10 +112,12 @@ void TransferMonitor::sourceError(int err) {
       fls->downloadAttemptFail(file);
       break;
   }
+
   status = 0;
 }
 
 void TransferMonitor::targetError(int err) {
+  fld->getFile(file)->finishUpload();
   switch (err) {
     case 0: // PRET STOR failed
       fld->uploadFail(file);
