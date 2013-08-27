@@ -29,7 +29,7 @@ class FileList {
     bool updateFile(std::string, int);
     void touchFile(std::string, std::string);
     void touchFile(std::string, std::string, bool);
-    void setFileUpdateFlag(std::string, unsigned int, Site *, std::string);
+    void setFileUpdateFlag(std::string, long int, unsigned int, Site *, std::string);
     File * getFile(std::string);
     File * getFile(std::string, bool);
     bool isFilled();

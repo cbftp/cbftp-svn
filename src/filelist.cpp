@@ -86,10 +86,11 @@ void FileList::touchFile(std::string name, std::string user, bool upload) {
   pthread_mutex_unlock(&filelist_mutex);
 }
 
-void FileList::setFileUpdateFlag(std::string name, unsigned int speed, Site * src, std::string dst) {
+void FileList::setFileUpdateFlag(std::string name, long int size, unsigned int speed, Site * src, std::string dst) {
   File * file;
   pthread_mutex_lock(&filelist_mutex);
   if ((file = getFileIntern(name)) != NULL) {
+    file->setSize(size);
     file->setUpdateFlag(src, dst, speed);
   }
   pthread_mutex_unlock(&filelist_mutex);

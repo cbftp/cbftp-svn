@@ -89,11 +89,11 @@ void TransferMonitor::finish() {
     status = 0;
     File * srcfile = fls->getFile(file);
     if (srcfile) {
-      int size = srcfile->getSize();
+      long int size = srcfile->getSize();
       int speed = size / span;
       //std::cout << "[ " << sls->getSite()->getName() << " -> " << sld->getSite()->getName() << " ] - " << file << " - " << speed << " kB/s" << std::endl;
       if (size > 1000000) {
-        fld->setFileUpdateFlag(file, speed, sls->getSite(), sld->getSite()->getName());
+        fld->setFileUpdateFlag(file, size, speed, sls->getSite(), sld->getSite()->getName());
       }
     }
   }
