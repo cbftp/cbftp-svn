@@ -231,7 +231,7 @@ char RaceStatusScreen::getFileChar(bool owner, bool upload, bool download) {
 }
 
 std::string RaceStatusScreen::getLegendText() {
-  return "[Enter] Return";
+  return "[Enter] Return - [R]emove site from race - [A]dd site to race - A[B]ort race";
 }
 
 std::string RaceStatusScreen::getInfoLabel() {

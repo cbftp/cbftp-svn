@@ -192,16 +192,6 @@ void Race::reportSize(SiteRace * sr, FileList * fl, std::string subpath, std::li
   if (sizes.find(sr) == sizes.end()) {
     sizes[sr] = std::map<std::string, unsigned int>();
   }
-  sizes[sr][subpath] = uniques->size();
-  std::map<SiteRace *, std::map<std::string, unsigned int> >::iterator it;
-  std::map<std::string, unsigned int>::iterator it2;
-  std::vector<unsigned int> subpathsizes;
-  for (it = sizes.begin(); it != sizes.end(); it++) {
-    it2 = it->second.find(subpath);
-    if (it2 != it->second.end()) {
-      subpathsizes.push_back(it2->second);
-    }
-  }
   std::map<std::string, SizeLocationTrack>::iterator it3;
   int highestnumsites = 0;
   int thisguessedsize = 0;
@@ -219,6 +209,16 @@ void Race::reportSize(SiteRace * sr, FileList * fl, std::string subpath, std::li
   }
   guessedsize[subpath] = thisguessedsize;
   if (final) {
+    sizes[sr][subpath] = uniques->size();
+    std::map<SiteRace *, std::map<std::string, unsigned int> >::iterator it;
+    std::map<std::string, unsigned int>::iterator it2;
+    std::vector<unsigned int> subpathsizes;
+    for (it = sizes.begin(); it != sizes.end(); it++) {
+      it2 = it->second.find(subpath);
+      if (it2 != it->second.end()) {
+        subpathsizes.push_back(it2->second);
+      }
+    }
     // stupid formula, replace with time check from race start
     if (subpathsizes.size() == sites.size() ||
       (subpathsizes.size() >= sites.size() * 0.8 && sites.size() > 2)) {
