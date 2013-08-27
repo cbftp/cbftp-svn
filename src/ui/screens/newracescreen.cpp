@@ -203,7 +203,7 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
         }
       }
       global->getEngine()->newRace(release, section, sites);
-      uicommunicator->newCommand("return");
+      uicommunicator->newCommand("returnracestatus", release);
       break;
     case 't':
       if (!toggleall) {

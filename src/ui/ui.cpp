@@ -248,6 +248,12 @@ void UserInterface::runInstance() {
         racestatusscreen = new RaceStatusScreen(main, &uicommunicator, mainrow, maincol);
         switchToWindow(racestatusscreen);
       }
+      else if (command == "returnracestatus") {
+        history.clear();
+        topwindow = mainscreen;
+        racestatusscreen = new RaceStatusScreen(main, &uicommunicator, mainrow, maincol);
+        switchToWindow(racestatusscreen);
+      }
       else if (command == "addsection") {
         addsectionscreen = new AddSectionScreen(main, &uicommunicator, mainrow, maincol);
         switchToWindow(addsectionscreen);
