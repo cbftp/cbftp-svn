@@ -40,14 +40,15 @@ void Engine::estimateRaceSizes() {
         if (srs->sizeEstimated(fls)) {
           continue;
         }
+        reportCurrentSize(srs, fls, false);
         if (fls->hasSFV()) {
           if (srs->getSFVObservedTime(fls) > 5000) {
-            reportCurrentSizeAsFinal(srs, fls);
+            reportCurrentSize(srs, fls, true);
           }
         }
         else {
           if (srs->getObservedTime(fls) > 30000) {
-            reportCurrentSizeAsFinal(srs, fls);
+            reportCurrentSize(srs, fls, true);
           }
         }
       }
@@ -55,7 +56,7 @@ void Engine::estimateRaceSizes() {
   }
 }
 
-void Engine::reportCurrentSizeAsFinal(SiteRace * srs, FileList * fls) {
+void Engine::reportCurrentSize(SiteRace * srs, FileList * fls, bool final) {
   std::list<std::string> uniques;
   std::map<std::string, File *>::iterator itf;
   std::string subpath = srs->getSubPathForFileList(fls);
@@ -86,7 +87,7 @@ void Engine::reportCurrentSizeAsFinal(SiteRace * srs, FileList * fls) {
     }
   }
   fls->unlockFileList();
-  srs->reportSize(fls, uniques.size());
+  srs->reportSize(fls, &uniques, final);
 }
 
 void Engine::refreshScoreBoard() {

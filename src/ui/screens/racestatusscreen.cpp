@@ -52,72 +52,57 @@ void RaceStatusScreen::redraw() {
   }
   currguessedsize = sumguessedsize;
   TermInt::printStr(window, 2, 1, "Subpaths: " + subpathpresent);
-  bool listed = false;
   int y = 4;
   int x = 1;
   unsigned int longestsubpath = 0;
-  bool pathlencheck = false;
   std::list<std::string> filenames;
-  for (std::list<SiteLogic *>::iterator it = race->begin(); it != race->end(); it++) {
-    SiteRace * sr = (*it)->getRace(release);
-    for (std::list<std::string>::iterator it2 = subpaths.begin(); it2 != subpaths.end(); it2++) {
-      if (!pathlencheck && it2->length() > longestsubpath) {
-        longestsubpath = it2->length();
-      }
-      if (!listed) {
-        FileList * fl = sr->getFileListForPath(*it2);
-        if (fl != NULL) {
-          for (std::map<std::string, File *>::iterator it = fl->begin(); it != fl->end(); it++) {
-            if (!it->second->isDirectory()) {
-              std::string filename = it->first;
-              size_t dotpos = filename.rfind(".");
-              if (dotpos != std::string::npos && filename.length() > dotpos + 3) {
-                filename = filename.substr(0, dotpos + 4);
-              }
-              bool duplicate = false;
-              for (std::list<std::string>::iterator it3 = filenames.begin(); it3 != filenames.end(); it3++) {
-                if (filename == *it3) {
-                  duplicate = true;
-                  break;
-                }
-              }
-              if (!duplicate) {
-                filenames.push_back(filename);
-              }
-            }
-          }
-          filenames.sort();
-          for (std::list<std::string>::iterator it = filenames.begin(); it != filenames.end(); it++) {
-            if (it->length() > 3 && it->substr(it->length() - 3) == "rar") {
-              filenames.push_front(*it);
-              filenames.erase(it);
-              break;
-            }
-          }
-          for (std::list<std::string>::iterator it = filenames.begin(); it != filenames.end(); it++) {
-            if (it->length() > 3 && it->substr(it->length() - 3) == "sfv") {
-              filenames.push_front(*it);
-              filenames.erase(it);
-              break;
-            }
-          }
-          for (std::list<std::string>::iterator it = filenames.begin(); it != filenames.end(); it++) {
-            if (it->length() > 3 && it->substr(it->length() - 3) == "nfo") {
-              filenames.push_front(*it);
-              filenames.erase(it);
-              break;
-            }
-          }
-          filetagpos.clear();
-          int pos = 0;
-          for (std::list<std::string>::iterator it = filenames.begin(); it != filenames.end(); it++) {
-            filetagpos[*it] = pos++;
-          }
-          listed = true;
+  for (std::list<std::string>::iterator it = subpaths.begin(); it != subpaths.end(); it++) {
+    if (it->length() > longestsubpath) {
+      longestsubpath = it->length();
+    }
+  }
+  for (std::list<std::string>::iterator it = subpaths.begin(); it != subpaths.end(); it++) {
+    race->prepareGuessedFileList(*it);
+    for (std::list<std::string>::iterator it = race->guessedFileListBegin(); it != race->guessedFileListEnd(); it++) {
+      std::string filename = *it;
+      bool duplicate = false;
+      for (std::list<std::string>::iterator it3 = filenames.begin(); it3 != filenames.end(); it3++) {
+        if (filename == *it3) {
+          duplicate = true;
+          break;
         }
       }
+      if (!duplicate) {
+        filenames.push_back(filename);
+      }
     }
-    pathlencheck = true;
+  }
+  filenames.sort();
+  for (std::list<std::string>::iterator it = filenames.begin(); it != filenames.end(); it++) {
+    if (it->length() > 3 && it->substr(it->length() - 3) == "rar") {
+      filenames.push_front(*it);
+      filenames.erase(it);
+      break;
+    }
+  }
+  for (std::list<std::string>::iterator it = filenames.begin(); it != filenames.end(); it++) {
+    if (it->length() > 3 && it->substr(it->length() - 3) == "sfv") {
+      filenames.push_front(*it);
+      filenames.erase(it);
+      break;
+    }
+  }
+  for (std::list<std::string>::iterator it = filenames.begin(); it != filenames.end(); it++) {
+    if (it->length() > 3 && it->substr(it->length() - 3) == "nfo") {
+      filenames.push_front(*it);
+      filenames.erase(it);
+      break;
+    }
+  }
+  filetagpos.clear();
+  int pos = 0;
+  for (std::list<std::string>::iterator it = filenames.begin(); it != filenames.end(); it++) {
+    filetagpos[*it] = pos++;
   }
   if (longestsubpath > 5) {
     longestsubpath = 5;
@@ -160,7 +145,7 @@ void RaceStatusScreen::update() {
   std::list<std::string> currsubpaths = race->getSubPaths();
   unsigned int sumguessedsize = 0;
   for (std::list<std::string>::iterator it = currsubpaths.begin(); it != currsubpaths.end(); it++) {
-    sumguessedsize += race->guessedSize(*it);
+    sumguessedsize += race->guessedSize(*it);;
   }
   if (currsubpaths.size() != currnumsubpaths || sumguessedsize != currguessedsize) {
     redraw();

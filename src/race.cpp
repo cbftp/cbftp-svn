@@ -63,6 +63,45 @@ unsigned int Race::guessedSize(std::string subpath) {
   return 10;
 }
 
+unsigned long long int Race::guessedFileSize(std::string subpath, std::string file) {
+  if (sizelocationtrackers.find(subpath) == sizelocationtrackers.end()) {
+    return 0;
+  }
+  if (sizelocationtrackers[subpath].find(file) == sizelocationtrackers[subpath].end()) {
+    return 0;
+  }
+  return sizelocationtrackers[subpath][file].getEstimatedSize();
+}
+
+void Race::prepareGuessedFileList(std::string subpath) {
+  guessedfilelist.clear();
+  if (sizelocationtrackers.find(subpath) == sizelocationtrackers.end()) {
+    return;
+  }
+  std::map<std::string, SizeLocationTrack>::iterator it;
+  int highestnumsites = 0;
+  for (it = sizelocationtrackers[subpath].begin(); it != sizelocationtrackers[subpath].end(); it++) {
+    int thisnumsites = it->second.numSites();
+    if (thisnumsites > highestnumsites) {
+      highestnumsites = thisnumsites;
+    }
+  }
+  int minnumsites = highestnumsites / 2;
+  for (it = sizelocationtrackers[subpath].begin(); it != sizelocationtrackers[subpath].end(); it++) {
+    if (it->second.numSites() > minnumsites) {
+      guessedfilelist.push_back(it->first);
+    }
+  }
+}
+
+std::list<std::string>::iterator Race::guessedFileListBegin() {
+  return guessedfilelist.begin();
+}
+
+std::list<std::string>::iterator Race::guessedFileListEnd() {
+  return guessedfilelist.end();
+}
+
 bool Race::SFVReported(std::string subpath) {
   std::map<std::string, std::list<SiteRace *> >::iterator it = sfvreports.find(subpath);
   return it != sfvreports.end();
@@ -133,11 +172,27 @@ void Race::reportDone(SiteRace * sr) {
   }
 }
 
-void Race::reportSize(SiteRace * sr, std::string subpath, unsigned int size) {
+void Race::reportSize(SiteRace * sr, FileList * fl, std::string subpath, std::list<std::string > * uniques, bool final) {
+  std::list<std::string>::iterator itu;
+  File * file;
+  if (sizelocationtrackers.find(subpath) == sizelocationtrackers.end()) {
+    sizelocationtrackers[subpath] = std::map<std::string, SizeLocationTrack>();
+  }
+  for (itu = uniques->begin(); itu != uniques->end(); itu++) {
+    if (sizelocationtrackers[subpath].find(*itu) == sizelocationtrackers[subpath].end()) {
+      sizelocationtrackers[subpath][*itu] = SizeLocationTrack();
+    }
+    if ((file = fl->getFile(*itu)) != NULL) {
+      sizelocationtrackers[subpath][*itu].add(sr, file->getSize());
+    }
+    else {
+      sizelocationtrackers[subpath][*itu].add(sr, 0);
+    }
+  }
   if (sizes.find(sr) == sizes.end()) {
     sizes[sr] = std::map<std::string, unsigned int>();
   }
-  sizes[sr][subpath] = size;
+  sizes[sr][subpath] = uniques->size();
   std::map<SiteRace *, std::map<std::string, unsigned int> >::iterator it;
   std::map<std::string, unsigned int>::iterator it2;
   std::vector<unsigned int> subpathsizes;
@@ -147,11 +202,28 @@ void Race::reportSize(SiteRace * sr, std::string subpath, unsigned int size) {
       subpathsizes.push_back(it2->second);
     }
   }
-  // stupid formula, replace with time check from race start
-  if (subpathsizes.size() == sites.size() ||
-    (subpathsizes.size() >= sites.size() * 0.8 && sites.size() > 2)) {
-    std::sort(subpathsizes.begin(), subpathsizes.end());
-    estimatedsize[subpath] = subpathsizes[subpathsizes.size()/2];
+  std::map<std::string, SizeLocationTrack>::iterator it3;
+  int highestnumsites = 0;
+  int thisguessedsize = 0;
+  for (it3 = sizelocationtrackers[subpath].begin(); it3 != sizelocationtrackers[subpath].end(); it3++) {
+    int thisnumsites = it3->second.numSites();
+    if (thisnumsites > highestnumsites) {
+      highestnumsites = thisnumsites;
+    }
   }
-  guessedsize[subpath] = subpathsizes[subpathsizes.size()/2];
+  int minnumsites = highestnumsites / 2;
+  for (it3 = sizelocationtrackers[subpath].begin(); it3 != sizelocationtrackers[subpath].end(); it3++) {
+    if (it3->second.numSites() > minnumsites) {
+      thisguessedsize++;
+    }
+  }
+  guessedsize[subpath] = thisguessedsize;
+  if (final) {
+    // stupid formula, replace with time check from race start
+    if (subpathsizes.size() == sites.size() ||
+      (subpathsizes.size() >= sites.size() * 0.8 && sites.size() > 2)) {
+      std::sort(subpathsizes.begin(), subpathsizes.end());
+      estimatedsize[subpath] = thisguessedsize;
+    }
+  }
 }

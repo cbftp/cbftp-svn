@@ -212,13 +212,15 @@ Race * SiteRace::getRace() {
   return race;
 }
 
-void SiteRace::reportSize(FileList * fl, unsigned int size) {
+void SiteRace::reportSize(FileList * fl, std::list<std::string> * uniques, bool final) {
   if (!sizeEstimated(fl)) {
     std::map<std::string, FileList *>::iterator it;
     for (it = filelists.begin(); it != filelists.end(); it++) {
       if (it->second == fl) {
-        race->reportSize(this, it->first, size);
-        sizeestimated.push_back(fl);
+        race->reportSize(this, fl, it->first, uniques, final);
+        if (final) {
+          sizeestimated.push_back(fl);
+        }
         return;
       }
     }

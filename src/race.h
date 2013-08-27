@@ -7,6 +7,9 @@
 #include <algorithm>
 #include <iostream>
 
+#include "sizelocationtrack.h"
+#include "filelist.h"
+
 class SiteLogic;
 class SiteRace;
 
@@ -24,6 +27,8 @@ class Race {
     std::map<std::string, unsigned int> estimatedsize;
     std::map<std::string, std::list<SiteRace *> > subpathoccurences;
     std::list<std::string> estimatedsubpaths;
+    std::list<std::string> guessedfilelist;
+    std::map<std::string, std::map<std::string, SizeLocationTrack> > sizelocationtrackers;
     bool done;
   public:
     Race(std::string, std::string);
@@ -36,6 +41,10 @@ class Race {
     bool sizeEstimated(std::string);
     unsigned int estimatedSize(std::string);
     unsigned int guessedSize(std::string);
+    void prepareGuessedFileList(std::string subpath);
+    std::list<std::string>::iterator guessedFileListBegin();
+    std::list<std::string>::iterator guessedFileListEnd();
+    unsigned long long int guessedFileSize(std::string, std::string);
     bool SFVReported(std::string);
     std::list<std::string> getSubPaths();
     int numSites();
@@ -45,5 +54,5 @@ class Race {
     void reportNewSubDir(SiteRace *, std::string);
     void reportSFV(SiteRace *, std::string);
     void reportDone(SiteRace *);
-    void reportSize(SiteRace *, std::string, unsigned int);
+    void reportSize(SiteRace *, FileList *, std::string, std::list<std::string> *, bool);
 };

@@ -26,7 +26,7 @@ class Engine : public EngineBase {
     ScoreBoard * scoreboard;
     int maxavgspeed;
     void estimateRaceSizes();
-    void reportCurrentSizeAsFinal(SiteRace *, FileList *);
+    void reportCurrentSize(SiteRace *, FileList *, bool final);
     void refreshScoreBoard();
     void issueOptimalTransfers();
     void setSpeedScale();
