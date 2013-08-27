@@ -21,6 +21,8 @@ class File {
     bool updateflag;
     bool directory;
     int touch;
+    bool uploading;
+    int downloading;
   public:
     File(std::string, std::string);
     File(std::string, int);
@@ -43,5 +45,11 @@ class File {
     void setOwner(std::string);
     void setGroup(std::string);
     void setTouch(int);
+    void download();
+    bool isDownloading();
+    void finishDownload();
+    void upload();
+    bool isUploading();
+    void finishUpload();
     int getTouch();
 };

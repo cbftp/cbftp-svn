@@ -31,7 +31,8 @@ void TransferMonitor::engage(std::string file, SiteLogic * sls, FileList * fls, 
   if (sls->getSite()->SSLFXPForced() || sld->getSite()->SSLFXPForced()) {
     ssl = true;
   }
-  fld->touchFile(file, sld->getSite()->getUser());
+  fld->touchFile(file, sld->getSite()->getUser(), true);
+  fls->getFile(file)->download();
   if (!sld->getSite()->hasBrokenPASV()) {
     activedownload = true;
     sld->preparePassiveUpload(dst, this, fld, file, ssl);
@@ -59,6 +60,10 @@ void TransferMonitor::passiveReady(std::string addr) {
 
 void TransferMonitor::sourceComplete() {
   sourcecomplete = true;
+  File * fileobj = fls->getFile(file);
+  if (fileobj != NULL) {
+    fileobj->finishDownload();
+  }
   if (targetcomplete) {
     finish();
   }
@@ -66,6 +71,10 @@ void TransferMonitor::sourceComplete() {
 
 void TransferMonitor::targetComplete() {
   targetcomplete = true;
+  File * fileobj = fld->getFile(file);
+  if (fileobj != NULL) {
+    fileobj->finishUpload();
+  }
   if (sourcecomplete) {
     finish();
   }

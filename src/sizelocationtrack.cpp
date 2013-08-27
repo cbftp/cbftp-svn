@@ -62,7 +62,7 @@ void SizeLocationTrack::recalculate() {
       largestcount++;
     }
   }
-  if (largestcount >= 2) {
+  if (largestcount >= 2 || largestcount == mostcommoncount) {
     estimatedsize = largest;
   }
   else {

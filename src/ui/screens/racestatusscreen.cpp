@@ -53,8 +53,7 @@ void RaceStatusScreen::redraw() {
   currguessedsize = sumguessedsize;
   TermInt::printStr(window, 2, 1, "Subpaths: " + subpathpresent);
   int y = 4;
-  int x = 1;
-  unsigned int longestsubpath = 0;
+  longestsubpath = 0;
   std::list<std::string> filenames;
   for (std::list<std::string>::iterator it = subpaths.begin(); it != subpaths.end(); it++) {
     if (it->length() > longestsubpath) {
@@ -99,11 +98,6 @@ void RaceStatusScreen::redraw() {
       break;
     }
   }
-  filetagpos.clear();
-  int pos = 0;
-  for (std::list<std::string>::iterator it = filenames.begin(); it != filenames.end(); it++) {
-    filetagpos[*it] = pos++;
-  }
   if (longestsubpath > 5) {
     longestsubpath = 5;
   }
@@ -114,28 +108,19 @@ void RaceStatusScreen::redraw() {
   if (filenames.size() * 2 + 10 < col) {
     spaceous = true;
   }
+  filetagpos.clear();
   for (std::list<std::string>::iterator it = filenames.begin(); it != filenames.end(); it++) {
     std::string filename = *it;
     while (filename.length() < 3) {
       filename += " ";
     }
     std::string lastchars = filename.substr(filename.length() - 3);
+    filetagpos[filename] = tagx;
     TermInt::printStr(window, y, tagx, lastchars.substr(0, 1));
     TermInt::printStr(window, y+1, tagx, lastchars.substr(1, 1));
     TermInt::printStr(window, y+2, tagx++, lastchars.substr(2));
     if (spaceous) {
       tagx++;
-    }
-  }
-  y = y + 4;
-  for (std::list<SiteLogic *>::iterator it = race->begin(); it != race->end(); it++) {
-    TermInt::printStr(window, y, x, (*it)->getSite()->getName(), 4);
-    for (std::list<std::string>::iterator it2 = subpaths.begin(); it2 != subpaths.end(); it2++) {
-      std::string subpath = *it2;
-      if (subpath == "") {
-        subpath = "/";
-      }
-      TermInt::printStr(window, y++, x + 5, subpath, longestsubpath);
     }
   }
   update();
@@ -151,6 +136,51 @@ void RaceStatusScreen::update() {
     redraw();
     return;
   }
+  int x = 1;
+  int y = 8;
+  for (std::list<SiteLogic *>::iterator it = race->begin(); it != race->end(); it++) {
+    SiteRace * sr = (*it)->getRace(release);
+    std::string user = (*it)->getSite()->getUser();
+    TermInt::printStr(window, y, x, (*it)->getSite()->getName(), 4);
+    for (std::list<std::string>::iterator it2 = subpaths.begin(); it2 != subpaths.end(); it2++) {
+      std::string origsubpath = *it2;
+      std::string printsubpath = origsubpath;
+      FileList * fl = sr->getFileListForPath(origsubpath);
+      if (printsubpath == "") {
+        printsubpath = "/";
+      }
+
+      TermInt::printStr(window, y, x + 5, printsubpath, longestsubpath);
+      race->prepareGuessedFileList(origsubpath);
+      for (std::list<std::string>::iterator it3 = race->guessedFileListBegin(); it3 != race->guessedFileListEnd(); it3++) {
+
+        int filex = filetagpos[*it3];
+        File * file;
+        char printchar = '_';
+        bool highlight = false;
+        bool upload = false;
+        bool download = false;
+        bool owner = false;
+        if ((file = fl->getFile(*it3)) != NULL) {
+          highlight = true;
+          if (file->isUploading() || file->getSize() < race->guessedFileSize(origsubpath, *it3)) {
+            upload = true;
+          }
+          if (file->getOwner() == user) {
+            owner = true;
+          }
+          if (file->isDownloading()) {
+            download = true;
+          }
+          printchar = getFileChar(owner, upload, download);
+        }
+        if (highlight) wattron(window, A_REVERSE);
+        TermInt::printChar(window, y, filex, printchar);
+        if (highlight) wattroff(window, A_REVERSE);
+      }
+      y++;
+    }
+  }
 }
 
 void RaceStatusScreen::keyPressed(unsigned int ch) {
@@ -160,6 +190,44 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
       uicommunicator->newCommand("return");
       break;
   }
+}
+
+char RaceStatusScreen::getFileChar(bool owner, bool upload, bool download) {
+  char printchar = '_';
+  if (upload) {
+    if (owner) {
+      if (download) {
+        printchar = 'S';
+      }
+      else {
+        printchar = 'U';
+      }
+    }
+    else {
+      if (download) {
+        printchar = 's';
+      }
+      else {
+        printchar = 'u';
+      }
+    }
+  }
+  else {
+    if (owner) {
+      if (download) {
+        printchar = 'D';
+      }
+      else {
+        printchar = 'o';
+      }
+    }
+    else {
+      if (download) {
+        printchar = 'd';
+      }
+    }
+  }
+  return printchar;
 }
 
 std::string RaceStatusScreen::getLegendText() {

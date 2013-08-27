@@ -21,6 +21,7 @@ public:
   void redraw();
   void update();
   void keyPressed(unsigned int);
+  char getFileChar(bool, bool, bool);
   std::string getLegendText();
   std::string getInfoLabel();
 private:
@@ -28,6 +29,7 @@ private:
   bool spaceous;
   unsigned int currnumsubpaths;
   unsigned int currguessedsize;
+  unsigned int longestsubpath;
   std::string release;
   std::string sitestr;
   std::list<std::string> subpaths;

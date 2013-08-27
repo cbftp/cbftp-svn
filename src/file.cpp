@@ -16,6 +16,8 @@ File::File(std::string name, std::string user) {
   }
   touch = 0;
   updateflag = false;
+  downloading = 0;
+  uploading = false;
 }
 
 File::File(std::string statline, int touch) {
@@ -55,6 +57,8 @@ File::File(std::string statline, int touch) {
   }
   this->touch = touch;
   updateflag = false;
+  downloading = 0;
+  uploading = false;
 }
 
 bool File::isDirectory() {
@@ -134,6 +138,30 @@ void File::setGroup(std::string group) {
 
 void File::setTouch(int touch) {
   this->touch = touch;
+}
+
+void File::download() {
+  downloading++;
+}
+
+bool File::isDownloading() {
+  return downloading > 0;
+}
+
+void File::finishDownload() {
+  downloading--;
+}
+
+void File::upload() {
+  uploading = true;
+}
+
+bool File::isUploading() {
+  return uploading;
+}
+
+void File::finishUpload() {
+  uploading = false;
 }
 
 int File::getTouch() {

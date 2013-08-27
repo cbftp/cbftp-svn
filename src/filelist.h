@@ -28,6 +28,7 @@ class FileList {
     FileList(std::string, std::string);
     bool updateFile(std::string, int);
     void touchFile(std::string, std::string);
+    void touchFile(std::string, std::string, bool);
     void setFileUpdateFlag(std::string, unsigned int, Site *, std::string);
     File * getFile(std::string);
     File * getFile(std::string, bool);

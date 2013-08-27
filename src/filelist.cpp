@@ -67,6 +67,10 @@ bool FileList::updateFile(std::string start, int touch) {
 }
 
 void FileList::touchFile(std::string name, std::string user) {
+  touchFile(name, user, false);
+}
+
+void FileList::touchFile(std::string name, std::string user, bool upload) {
   File * file;
   pthread_mutex_lock(&filelist_mutex);
   if ((file = getFileIntern(name)) != NULL) {
@@ -75,6 +79,9 @@ void FileList::touchFile(std::string name, std::string user) {
   else {
     file = new File(name, user);
     files[name] = file;
+  }
+  if (upload) {
+    file->upload();
   }
   pthread_mutex_unlock(&filelist_mutex);
 }
