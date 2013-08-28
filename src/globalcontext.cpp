@@ -170,3 +170,7 @@ void GlobalContext::signal_ignore() {
   signal(SIGINT, &sighandler_ignore);
   signal(SIGWINCH, &sighandler_ignore);
 }
+
+std::string & GlobalContext::debugString(const char * s) {
+    return *(new std::string(s));
+}

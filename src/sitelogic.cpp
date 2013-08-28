@@ -692,6 +692,11 @@ bool SiteLogic::getReadyConn(FileList * fl, std::string file, int * ret, bool is
   bool foundreadythread = false;
   for (unsigned int i = 0; i < conns.size(); i++) {
     if(connstatetracker[i].isIdle()) {
+      if (istransfer) {
+        if (connstatetracker[i].isLockedForDownload() || connstatetracker[i].isLockedForUpload()) {
+          continue;
+        }
+      }
       foundreadythread = true;
       lastreadyid = i;
       if (conns[i]->getTargetPath().compare(fl->getPath()) == 0) {
@@ -710,6 +715,11 @@ bool SiteLogic::getReadyConn(FileList * fl, std::string file, int * ret, bool is
   if (!foundreadythread) {
     for (unsigned int i = 0; i < conns.size(); i++) {
       if (connstatetracker[i].isReady()) {
+        if (istransfer) {
+          if (connstatetracker[i].isLockedForDownload() || connstatetracker[i].isLockedForUpload()) {
+            continue;
+          }
+        }
         foundreadythread = true;
         lastreadyid = i;
         if (conns[i]->getTargetPath().compare(fl->getPath()) == 0) {

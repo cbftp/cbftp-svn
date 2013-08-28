@@ -81,12 +81,11 @@ void TransferMonitor::targetComplete() {
 }
 
 void TransferMonitor::finish() {
-  if (status != 0) {
+  if (status != 0 && status != 13) {
     int span = timestamp - startstamp;
     if (span == 0) {
       span = 10;
     }
-    status = 0;
     File * srcfile = fls->getFile(file);
     if (srcfile) {
       long int size = srcfile->getSize();
@@ -97,10 +96,14 @@ void TransferMonitor::finish() {
       }
     }
   }
+  status = 0;
 }
 
 void TransferMonitor::sourceError(int err) {
-  fls->getFile(file)->finishDownload();
+  File * fileobj = fls->getFile(file);
+  if (fileobj != NULL) {
+    fileobj->finishDownload();
+  }
   switch (err) {
     case 0: // PRET RETR failed
       fls->downloadFail(file);
@@ -112,12 +115,18 @@ void TransferMonitor::sourceError(int err) {
       fls->downloadAttemptFail(file);
       break;
   }
-
-  status = 0;
+  sourcecomplete = true;
+  status = 13;
+  if (targetcomplete) {
+    status = 0;
+  }
 }
 
 void TransferMonitor::targetError(int err) {
-  fld->getFile(file)->finishUpload();
+  File * fileobj = fld->getFile(file);
+  if (fileobj != NULL) {
+    fileobj->finishUpload();
+  }
   switch (err) {
     case 0: // PRET STOR failed
       fld->uploadFail(file);
@@ -129,5 +138,9 @@ void TransferMonitor::targetError(int err) {
       fld->uploadAttemptFail(file);
       break;
   }
-  status = 0;
+  targetcomplete = true;
+  status = 13;
+  if (sourcecomplete) {
+    status = 0;
+  }
 }
