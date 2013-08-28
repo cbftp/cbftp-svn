@@ -2,6 +2,8 @@
 
 File::File(std::string name, std::string user) {
   directory = false;
+  softlink = false;
+  linktarget = "";
   owner = user;
   group = user;
   size = 0;
@@ -22,8 +24,10 @@ File::File(std::string name, std::string user) {
 
 File::File(std::string statline, int touch) {
   int start, pos = 0;
+  softlink = false;
+  directory = false;
   if (statline[pos] == 'd') directory = true;
-  else directory = false;
+  else if (statline[pos] == 'l') softlink = true;
   while(statline[++pos] != ' ');
   while(statline[++pos] == ' ');
   while(statline[++pos] != ' ');
@@ -48,6 +52,16 @@ File::File(std::string statline, int touch) {
   start = pos;
   while (statline[++pos] != '\r');
   name = statline.substr(start, pos - start);
+  if (softlink) {
+    size_t arrowpos = name.find(" -> ");
+    if (arrowpos != std::string::npos) {
+      linktarget = name.substr(arrowpos + 4);
+      name = name.substr(0, arrowpos);
+    }
+    else {
+      linktarget = "";
+    }
+  }
   size_t suffixdotpos = name.rfind(".");
   if (suffixdotpos != std::string::npos && suffixdotpos > 0) {
     extension = name.substr(suffixdotpos + 1);
@@ -63,6 +77,10 @@ File::File(std::string statline, int touch) {
 
 bool File::isDirectory() {
   return directory;
+}
+
+bool File::isLink() {
+  return softlink;
 }
 
 std::string File::getOwner() {
@@ -83,6 +101,10 @@ std::string File::getLastModified() {
 
 std::string File::getName() {
   return name;
+}
+
+std::string File::getLinkTarget() {
+  return linktarget;
 }
 
 std::string File::getExtension() {

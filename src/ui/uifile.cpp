@@ -3,9 +3,11 @@
 UIFile::UIFile(File * file) {
   name = file->getName();
   directory = file->isDirectory();
+  softlink = file->isLink();
   owner = file->getOwner();
   group = file->getGroup();
   size = file->getSize();
+  linktarget = file->getLinkTarget();
   sizerepr = parseSize(file->getSize());
   parseTimeStamp(file->getLastModified());
   selected = false;
@@ -14,6 +16,10 @@ UIFile::UIFile(File * file) {
 
 std::string UIFile::getName() {
   return name;
+}
+
+std::string UIFile::getLinkTarget() {
+  return linktarget;
 }
 
 std::string UIFile::getOwner() {
@@ -42,6 +48,10 @@ std::string UIFile::getSizeRepr() {
 
 bool UIFile::isDirectory() {
   return directory;
+}
+
+bool UIFile::isLink() {
+  return softlink;
 }
 
 bool UIFile::isSelected() {

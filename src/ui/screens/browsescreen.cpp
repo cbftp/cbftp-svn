@@ -142,10 +142,8 @@ void BrowseScreen::update() {
         prepchar = "S";
       }
     }
-    else {
-      if (!allowed) {
-        prepchar = "s";
-      }
+    else if ((*uilist)[listi]->isLink()){
+      prepchar = "L";
     }
     TermInt::printStr(window, i, 1, prepchar);
     if (selected) {
@@ -185,6 +183,8 @@ void BrowseScreen::keyPressed(unsigned int ch) {
   unsigned int pagerows = (unsigned int) row * 0.6;
   std::string oldpath;
   unsigned int position;
+  bool isdir;
+  bool islink;
   switch (ch) {
     case 'c':
       uicommunicator->newCommand("return");
@@ -225,12 +225,25 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       break;
     case KEY_RIGHT:
     case 10:
-      if (list.cursoredFile() != NULL && list.cursoredFile()->isDirectory()) {
+      isdir = list.cursoredFile()->isDirectory();
+      islink = list.cursoredFile()->isLink();
+      if (list.cursoredFile() != NULL && (isdir || islink)) {
         oldpath = list.getPath();
         if (oldpath.length() > 1) {
           oldpath += "/";
         }
-        requestedpath = oldpath + list.cursoredFile()->getName();
+        if (islink) {
+          std::string target = list.cursoredFile()->getLinkTarget();
+          if (target.length() > 0 && target[0] == '/') {
+            requestedpath = target;
+          }
+          else {
+            requestedpath = oldpath + target;
+          }
+        }
+        else {
+          requestedpath = oldpath + list.cursoredFile()->getName();
+        }
         requestid = sitelogic->requestFileList(requestedpath);
         uicommunicator->newCommand("updatesetinfo");
       }

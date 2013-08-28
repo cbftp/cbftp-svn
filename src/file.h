@@ -10,6 +10,7 @@ class Site;
 class File {
   private:
     std::string name;
+    std::string linktarget;
     std::string extension;
     unsigned long long int size;
     std::string owner;
@@ -20,6 +21,7 @@ class File {
     std::string updatedst;
     bool updateflag;
     bool directory;
+    bool softlink;
     int touch;
     bool uploading;
     int downloading;
@@ -27,11 +29,13 @@ class File {
     File(std::string, std::string);
     File(std::string, int);
     bool isDirectory();
+    bool isLink();
     std::string getOwner();
     std::string getGroup();
     unsigned long long int getSize();
     std::string getLastModified();
     std::string getName();
+    std::string getLinkTarget();
     std::string getExtension();
     Site * getUpdateSrc();
     std::string getUpdateDst();

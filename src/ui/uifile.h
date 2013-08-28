@@ -18,9 +18,11 @@ private:
   std::string sizerepr;
   std::string owner;
   std::string group;
+  std::string linktarget;
   int lastmodified;
   std::string lastmodifiedrepr;
   bool directory;
+  bool softlink;
   bool selected;
   bool cursored;
   static unsigned int sizegranularity;
@@ -29,6 +31,7 @@ private:
 public:
   UIFile(File *);
   bool isDirectory();
+  bool isLink();
   std::string getOwner();
   std::string getGroup();
   unsigned long long int getSize();
@@ -36,6 +39,7 @@ public:
   std::string getLastModified();
   int getModifyTime();
   std::string getName();
+  std::string getLinkTarget();
   static int getSizeGranularity();
   static std::vector<unsigned long long int> getPowers();
   static std::string parseSize(unsigned long long int);
