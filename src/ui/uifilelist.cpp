@@ -15,66 +15,51 @@ bool combinedSort(UIFile * a, UIFile * b) {
   bool bisdir = b->isDirectory();
   bool aislink = a->isLink();
   bool bislink = b->isLink();
-  if (aislink && !bislink) return true;
-  if (!aislink && bislink) return false;
-  if (aislink && bislink) return timeSortDesc(a, b);
-  if (aisdir && !bisdir) return true;
-  if (!aisdir && bisdir) return false;
-  if (aisdir && bisdir) return timeSortDesc(a, b);
+  if ((aislink || aisdir) && !bislink && !bisdir) return true;
+  if (!aislink && !aisdir && (bislink || bisdir)) return false;
+  if ((aisdir || aislink) && (bisdir || bislink)) return timeSortDesc(a, b);
   return sizeSortDesc(a, b);
 }
 
 bool nameSortAsc(UIFile * a, UIFile * b) {
-  if (a->isLink() && !b->isLink()) return true;
-  if (!a->isLink() && b->isLink()) return false;
-  if (a->isDirectory() && !b->isDirectory()) return true;
-  if (!a->isDirectory() && b->isDirectory()) return false;
+  if ((a->isLink() || a->isDirectory()) && !b->isLink() && !b->isDirectory()) return true;
+  if (!a->isLink() && !a->isDirectory() && (b->isLink() || b->isDirectory())) return false;
   return a->getName().compare(b->getName()) < 0;
 }
 
 bool nameSortDesc(UIFile * a, UIFile * b) {
-  if (a->isLink() && !b->isLink()) return true;
-  if (!a->isLink() && b->isLink()) return false;
-  if (a->isDirectory() && !b->isDirectory()) return true;
-  if (!a->isDirectory() && b->isDirectory()) return false;
+  if ((a->isLink() || a->isDirectory()) && !b->isLink() && !b->isDirectory()) return true;
+  if (!a->isLink() && !a->isDirectory() && (b->isLink() || b->isDirectory())) return false;
   return a->getName().compare(b->getName()) > 0;
 }
 
 bool timeSortAsc(UIFile * a, UIFile * b) {
-  if (a->isLink() && !b->isLink()) return true;
-  if (!a->isLink() && b->isLink()) return false;
-  if (a->isDirectory() && !b->isDirectory()) return true;
-  if (!a->isDirectory() && b->isDirectory()) return false;
+  if ((a->isLink() || a->isDirectory()) && !b->isLink() && !b->isDirectory()) return true;
+  if (!a->isLink() && !a->isDirectory() && (b->isLink() || b->isDirectory())) return false;
   int diff = a->getModifyTime() - b->getModifyTime();
   if (diff == 0) return nameSortAsc(a, b);
   return diff < 0;
 }
 
 bool timeSortDesc(UIFile * a, UIFile * b) {
-  if (a->isLink() && !b->isLink()) return true;
-  if (!a->isLink() && b->isLink()) return false;
-  if (a->isDirectory() && !b->isDirectory()) return true;
-  if (!a->isDirectory() && b->isDirectory()) return false;
+  if ((a->isLink() || a->isDirectory()) && !b->isLink() && !b->isDirectory()) return true;
+  if (!a->isLink() && !a->isDirectory() && (b->isLink() || b->isDirectory())) return false;
   int diff = a->getModifyTime() - b->getModifyTime();
   if (diff == 0) return nameSortDesc(a, b);
   return diff > 0;
 }
 
 bool sizeSortAsc(UIFile * a, UIFile * b) {
-  if (a->isLink() && !b->isLink()) return true;
-  if (!a->isLink() && b->isLink()) return false;
-  if (a->isDirectory() && !b->isDirectory()) return true;
-  if (!a->isDirectory() && b->isDirectory()) return false;
+  if ((a->isLink() || a->isDirectory()) && !b->isLink() && !b->isDirectory()) return true;
+  if (!a->isLink() && !a->isDirectory() && (b->isLink() || b->isDirectory())) return false;
   long int diff = a->getSize() - b->getSize();
   if (diff == 0) return nameSortAsc(a, b);
   return diff < 0;
 }
 
 bool sizeSortDesc(UIFile * a, UIFile * b) {
-  if (a->isLink() && !b->isLink()) return true;
-  if (!a->isLink() && b->isLink()) return false;
-  if (a->isDirectory() && !b->isDirectory()) return true;
-  if (!a->isDirectory() && b->isDirectory()) return false;
+  if ((a->isLink() || a->isDirectory()) && !b->isLink() && !b->isDirectory()) return true;
+  if (!a->isLink() && !a->isDirectory() && (b->isLink() || b->isDirectory())) return false;
   long int diff = a->getSize() - b->getSize();
   if (diff == 0) return nameSortAsc(a, b);
   return diff > 0;
