@@ -53,7 +53,7 @@ void UserInterface::refreshAll() {
 
 void UserInterface::FDData() {
   keyqueue.push_back(getch());
-  uicommunicator.emitEvent("keyboard");
+  uicommunicator.emitEvent(UI_EVENT_KEYBOARD);
 }
 
 void UserInterface::enableInfo() {
@@ -119,7 +119,7 @@ void UserInterface::disableLegend() {
 }
 
 void UserInterface::tick(int message) {
-  uicommunicator.emitEvent("poke");
+  uicommunicator.emitEvent(UI_EVENT_POKE);
 }
 
 void UserInterface::runInstance() {
@@ -166,76 +166,75 @@ void UserInterface::runInstance() {
   noecho();
   std::cin.putback('#'); // needed to be able to peek properly
   refreshAll();
+  int ch;
+  struct winsize size;
+  bool trytodraw;
   while(1) {
-    std::string currentevent = uicommunicator.awaitEvent();
-    if (currentevent == "poke") {
-      if (topwindow->autoUpdate()) {
-        topwindow->update();
-      }
-      if (legendenabled) {
-        legendwindow->update();
-      }
-      if (infoenabled) {
-        infowindow->setText(topwindow->getInfoText());
-        infowindow->update();
-      }
-      refreshAll();
-    }
-    else if (currentevent == "keyboard") {
-      int ch = keyqueue.front();
-      keyqueue.pop_front();
-      topwindow->keyPressed(ch);
-    }
-    else if (currentevent == "update") {
-      topwindow->update();
-      refreshAll();
-    }
-    else if (currentevent == "updatelegend") {
-      legendwindow->update();
-      refreshAll();
-    }
-    else if (currentevent == "showlegend") {
-      enableLegend();
-    }
-    else if (currentevent == "hidelegend") {
-      disableLegend();
-    }
-    else if (currentevent == "resize") {
-      struct winsize size;
-      bool trytodraw = false;
-      if (ioctl(fileno(stdout), TIOCGWINSZ, &size) == 0) {
-        if (size.ws_row >= 5 && size.ws_col >= 10) {
-          trytodraw = true;
+    int currentevent = uicommunicator.awaitEvent();
+    switch (currentevent) {
+      case UI_EVENT_POKE:
+        if (topwindow->autoUpdate()) {
+          topwindow->update();
         }
-      }
-      if (trytodraw) {
-        resizeterm(size.ws_row, size.ws_col);
-        endwin();
-        timeout(0);
-        while (getch() != ERR);
-        timeout(-1);
-        refresh();
-        getmaxyx(stdscr, row, col);
-        maincol = col;
-        mainrow = row;
         if (legendenabled) {
-          mainrow = mainrow - 2;
+          legendwindow->update();
         }
         if (infoenabled) {
-          mainrow = mainrow - 2;
+          infowindow->setText(topwindow->getInfoText());
+          infowindow->update();
         }
-        wresize(main, mainrow, maincol);
-        wresize(legend, 2, col);
-        wresize(info, 2, col);
-        mvwin(legend, row - 2, 0);
-        redrawAll();
         refreshAll();
-      }
-    }
-    else if (currentevent == "kill") {
-      endwin();
-      uicommunicator.dead();
-      return;
+        break;
+      case UI_EVENT_KEYBOARD:
+        ch = keyqueue.front();
+        keyqueue.pop_front();
+        topwindow->keyPressed(ch);
+        break;
+      case UI_EVENT_UPDATE:
+        topwindow->update();
+        refreshAll();
+        break;
+      case UI_EVENT_SHOWLEGEND:
+        enableLegend();
+        break;
+      case UI_EVENT_HIDELEGEND:
+        disableLegend();
+        break;
+      case UI_EVENT_RESIZE:
+        trytodraw = false;
+        if (ioctl(fileno(stdout), TIOCGWINSZ, &size) == 0) {
+          if (size.ws_row >= 5 && size.ws_col >= 10) {
+            trytodraw = true;
+          }
+        }
+        if (trytodraw) {
+          resizeterm(size.ws_row, size.ws_col);
+          endwin();
+          timeout(0);
+          while (getch() != ERR);
+          timeout(-1);
+          refresh();
+          getmaxyx(stdscr, row, col);
+          maincol = col;
+          mainrow = row;
+          if (legendenabled) {
+            mainrow = mainrow - 2;
+          }
+          if (infoenabled) {
+            mainrow = mainrow - 2;
+          }
+          wresize(main, mainrow, maincol);
+          wresize(legend, 2, col);
+          wresize(info, 2, col);
+          mvwin(legend, row - 2, 0);
+          redrawAll();
+          refreshAll();
+        }
+        break;
+      case UI_EVENT_KILL:
+        endwin();
+        uicommunicator.dead();
+        return;
     }
     if (uicommunicator.hasNewCommand()) {
       std::string command = uicommunicator.getCommand();

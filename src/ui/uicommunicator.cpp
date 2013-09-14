@@ -1,7 +1,7 @@
 #include "uicommunicator.h"
 
 UICommunicator::UICommunicator() {
-  sem_init(&event, 0, 0);
+  sem_init(&eventsem, 0, 0);
   pthread_mutex_init(&event_mutex, NULL);
   newcommand = false;
   careaboutbackend = false;
@@ -34,7 +34,7 @@ void UICommunicator::expectBackendPush() {
 
 void UICommunicator::backendPush() {
   if (careaboutbackend) {
-    emitEvent("update");
+    emitEvent(UI_EVENT_UPDATE);
   }
 }
 
@@ -67,28 +67,28 @@ std::string UICommunicator::getArg3() {
 }
 
 sem_t * UICommunicator::getEventSem() {
-  return &event;
+  return &eventsem;
 }
 
-void UICommunicator::emitEvent(std::string eventtext) {
+void UICommunicator::emitEvent(int event) {
   pthread_mutex_lock(&event_mutex);
-  eventqueue.push_back(eventtext);
+  eventqueue.push_back(event);
   pthread_mutex_unlock(&event_mutex);
-  sem_post(&event);
+  sem_post(&eventsem);
 }
 
-std::string UICommunicator::awaitEvent() {
-  std::string eventtext;
-  sem_wait(&event);
+int UICommunicator::awaitEvent() {
+  int event;
+  sem_wait(&eventsem);
   pthread_mutex_lock(&event_mutex);
-  eventtext = eventqueue.front();
+  event = eventqueue.front();
   eventqueue.pop_front();
   pthread_mutex_unlock(&event_mutex);
-  return eventtext;
+  return event;
 }
 
 void UICommunicator::kill() {
-  emitEvent("kill");
+  emitEvent(UI_EVENT_KILL);
   for (int i = 0; i < 10; i++) {
     usleep(100000);
     if (died) {
@@ -105,7 +105,7 @@ void UICommunicator::dead() {
 }
 
 void UICommunicator::terminalSizeChanged() {
-  emitEvent("resize");
+  emitEvent(UI_EVENT_RESIZE);
 }
 
 bool UICommunicator::legendEnabled() {
@@ -114,10 +114,10 @@ bool UICommunicator::legendEnabled() {
 
 void UICommunicator::showLegend(bool show) {
   if (show) {
-    emitEvent("showlegend");
+    emitEvent(UI_EVENT_SHOWLEGEND);
   }
   else {
-    emitEvent("hidelegend");
+    emitEvent(UI_EVENT_HIDELEGEND);
   }
   legendenabled = show;
 }
