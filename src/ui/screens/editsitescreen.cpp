@@ -1,5 +1,22 @@
 #include "editsitescreen.h"
 
+#include "../../globalcontext.h"
+#include "../../sitemanager.h"
+#include "../../site.h"
+#include "../../sitelogic.h"
+#include "../../sitelogicmanager.h"
+
+#include "../uicommunicator.h"
+#include "../menuselectoptionelement.h"
+#include "../termint.h"
+#include "../focusablearea.h"
+#include "../menuselectoptioncontainer.h"
+#include "../menuselectoptiontextfield.h"
+#include "../menuselectoptionnumarrow.h"
+#include "../menuselectoptioncheckbox.h"
+
+extern GlobalContext * global;
+
 EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   active = false;

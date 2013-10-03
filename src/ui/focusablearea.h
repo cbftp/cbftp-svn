@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdlib.h>
-
 class MenuSelectOptionElement;
 
 class FocusableArea {

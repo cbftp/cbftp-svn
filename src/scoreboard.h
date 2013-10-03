@@ -1,9 +1,11 @@
 #pragma once
 
 #include <vector>
-#include <algorithm>
+#include <string>
 
-#include "scoreboardelement.h"
+class ScoreBoardElement;
+class SiteLogic;
+class FileList;
 
 bool comparator(ScoreBoardElement *, ScoreBoardElement *);
 

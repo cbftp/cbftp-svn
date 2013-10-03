@@ -1,10 +1,15 @@
 #include "menuselectoption.h"
 
+#include "menuselectoptionelement.h"
+#include "menuselectoptiontextfield.h"
+#include "menuselectoptionnumarrow.h"
+#include "menuselectoptioncheckbox.h"
+#include "menuselectoptiontextbutton.h"
+
 MenuSelectOption::MenuSelectOption() {
   pointer = 0;
   lastpointer = 0;
 }
-
 
 bool MenuSelectOption::goDown() {
   unsigned int ccol = options[pointer]->getCol();

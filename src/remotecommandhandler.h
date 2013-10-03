@@ -1,17 +1,13 @@
 #pragma once
 
 #include <string>
-#include <vector>
-#include <list>
 
-#include "globalcontext.h"
-#include "datafilehandler.h"
-#include "engine.h"
 #include "eventreceiver.h"
-#include "iomanager.h"
 
 #define DEFAULTPORT 55477
 #define DEFAULTPASS "DEFAULT"
+
+class GlobalContext;
 
 extern GlobalContext * global;
 

@@ -3,9 +3,8 @@
 #include <string>
 #include <vector>
 
-#include "potentialelement.h"
-
 class SiteLogic;
+class PotentialElement;
 
 class PotentialListElement {
   private:

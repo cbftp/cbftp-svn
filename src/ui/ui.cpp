@@ -1,5 +1,37 @@
 #include "ui.h"
 
+#include <sys/ioctl.h>
+
+#include "../globalcontext.h"
+#include "../tickpoke.h"
+#include "../iomanager.h"
+#include "../sitemanager.h"
+#include "../remotecommandhandler.h"
+#include "../skiplist.h"
+#include "../datafilehandler.h"
+
+#include "legendwindow.h"
+#include "infowindow.h"
+#include "uiwindow.h"
+
+#include "screens/loginscreen.h"
+#include "screens/newkeyscreen.h"
+#include "screens/mainscreen.h"
+#include "screens/editsitescreen.h"
+#include "screens/confirmationscreen.h"
+#include "screens/sitestatusscreen.h"
+#include "screens/rawdatascreen.h"
+#include "screens/browsescreen.h"
+#include "screens/addsectionscreen.h"
+#include "screens/newracescreen.h"
+#include "screens/racestatusscreen.h"
+#include "screens/rawcommandscreen.h"
+#include "screens/globaloptionsscreen.h"
+#include "screens/skiplistscreen.h"
+#include "screens/changekeyscreen.h"
+
+extern GlobalContext * global;
+
 UserInterface::UserInterface() {
   sem_init(&initstart, 0, 0);
   sem_init(&initdone, 0, 0);

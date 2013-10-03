@@ -1,5 +1,10 @@
 #include "uifile.h"
 
+#include "../globalcontext.h"
+#include "../file.h"
+
+extern GlobalContext * global;
+
 UIFile::UIFile(File * file) {
   name = file->getName();
   directory = file->isDirectory();

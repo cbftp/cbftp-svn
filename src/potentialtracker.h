@@ -2,15 +2,17 @@
 
 #include <string>
 #include <list>
+#include <pthread.h>
+#include <vector>
 
-#include "globalcontext.h"
-#include "potentialelement.h"
-#include "potentiallistelement.h"
-#include "tickpoke.h"
 #include "eventreceiver.h"
 
 #define POTENTIALITY_LIFESPAN 3000
 #define POTENTIALITY_SLICES 10
+
+class GlobalContext;
+class PotentialElement;
+class PotentialListElement;
 
 extern GlobalContext * global;
 

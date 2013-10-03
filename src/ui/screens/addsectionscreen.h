@@ -1,16 +1,11 @@
 #pragma once
 
-#include "../../globalcontext.h"
-#include "../../site.h"
-#include "../../sitemanager.h"
-
 #include "../uiwindow.h"
-#include "../uicommunicator.h"
 #include "../menuselectoption.h"
-#include "../menuselectoptionelement.h"
-#include "../termint.h"
 
-extern GlobalContext * global;
+class MenuSelectOptionElement;
+class UICommunicator;
+class Site;
 
 class AddSectionScreen : public UIWindow {
 public:

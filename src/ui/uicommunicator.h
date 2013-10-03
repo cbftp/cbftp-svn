@@ -1,17 +1,8 @@
 #pragma once
 
-#include <map>
 #include <string>
 #include <semaphore.h>
-#include <ncurses.h>
-#include <vector>
 #include <list>
-#include <unistd.h>
-
-#include "../globalcontext.h"
-#include "../datafilehandler.h"
-
-extern GlobalContext * global;
 
 #define UI_EVENT_KILL 1450
 #define UI_EVENT_RESIZE 1451

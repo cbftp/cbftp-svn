@@ -1,5 +1,8 @@
 #include "sitelogicmanager.h"
 
+#include "sitelogic.h"
+#include "site.h"
+
 SiteLogicManager::SiteLogicManager() {
 }
 

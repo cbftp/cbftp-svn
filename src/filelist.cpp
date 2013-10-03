@@ -1,5 +1,8 @@
 #include "filelist.h"
 
+#include "file.h"
+#include "site.h"
+
 FileList::FileList(std::string username, std::string path) {
   pthread_mutex_init(&filelist_mutex, NULL);
   pthread_mutex_init(&owned_mutex, NULL);

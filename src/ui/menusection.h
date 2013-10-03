@@ -4,15 +4,10 @@
 #include <vector>
 #include <map>
 
-#include "../globalcontext.h"
-
-#include "menuselectoptioncontainer.h"
-#include "menuselectoptionelement.h"
-#include "menuselectoptiontextfield.h"
-#include "menuselectoptiontextbutton.h"
 #include "focusablearea.h"
 
-extern GlobalContext * global;
+class MenuSelectOptionContainer;
+class menuSelectOptionElement;
 
 class MenuSection : public FocusableArea {
   private:

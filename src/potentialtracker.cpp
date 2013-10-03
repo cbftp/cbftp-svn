@@ -1,5 +1,10 @@
 #include "potentialtracker.h"
 
+#include "globalcontext.h"
+#include "potentialelement.h"
+#include "potentiallistelement.h"
+#include "tickpoke.h"
+
 PotentialTracker::PotentialTracker(int slots) {
   for (int i = 0; i < POTENTIALITY_SLICES; i++) {
     potentiallist.push_back(new PotentialListElement(slots));

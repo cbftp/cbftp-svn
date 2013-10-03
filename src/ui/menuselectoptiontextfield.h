@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <ncurses.h>
 
 #include "textinputfield.h"
 #include "menuselectoptionelement.h"

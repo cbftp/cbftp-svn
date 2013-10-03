@@ -1,5 +1,21 @@
 #include "racestatusscreen.h"
 
+#include "../../race.h"
+#include "../../siterace.h"
+#include "../../file.h"
+#include "../../filelist.h"
+#include "../../globalcontext.h"
+#include "../../site.h"
+#include "../../sitelogic.h"
+#include "../../sitelogicmanager.h"
+#include "../../ftpconn.h"
+#include "../../engine.h"
+
+#include "../uicommunicator.h"
+#include "../termint.h"
+
+extern GlobalContext * global;
+
 RaceStatusScreen::RaceStatusScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   release = uicommunicator->getArg1();

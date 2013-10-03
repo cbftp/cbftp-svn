@@ -1,5 +1,11 @@
 #include "uifilelist.h"
 
+#include <algorithm>
+
+#include "../filelist.h"
+#include "../file.h"
+
+#include "uifile.h"
 UIFileList::UIFileList() {
   currentposition = 0;
   currentcursored = NULL;

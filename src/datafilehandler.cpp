@@ -1,5 +1,13 @@
 #include "datafilehandler.h"
 
+#include <cstring>
+#include <iostream>
+#include <fstream>
+#include <unistd.h>
+#include <error.h>
+
+#include "crypto.h"
+
 DataFileHandler::DataFileHandler(std::string path) {
   this->path = path;
   fileexists = false;

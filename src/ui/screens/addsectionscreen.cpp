@@ -1,5 +1,16 @@
 #include "addsectionscreen.h"
 
+#include "../../globalcontext.h"
+#include "../../site.h"
+#include "../../sitemanager.h"
+
+#include "../uicommunicator.h"
+#include "../menuselectoptionelement.h"
+#include "../menuselectoptiontextfield.h"
+#include "../termint.h"
+
+extern GlobalContext * global;
+
 AddSectionScreen::AddSectionScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel";

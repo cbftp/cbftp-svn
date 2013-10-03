@@ -1,20 +1,17 @@
 #pragma once
 
-#include <stdlib.h>
 #include <list>
-#include <cstring>
-#include <cerrno>
-#include <fcntl.h>
-#include <unistd.h>
+#include <string>
 
-#include "filelist.h"
-#include "site.h"
-#include "siterace.h"
-#include "globalcontext.h"
-#include "rawbuffer.h"
-#include "iomanager.h"
 #include "eventreceiver.h"
-#include "sitelogicbase.h"
+
+class GlobalContext;
+class SiteRace;
+class FileList;
+class SiteLogicBase;
+class IOManager;
+class RawBuffer;
+class Site;
 
 extern GlobalContext * global;
 

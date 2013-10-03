@@ -1,14 +1,8 @@
 #pragma once
 
-#include <signal.h>
-#include <iostream>
 #include <openssl/ssl.h>
 #include <pthread.h>
-#include <sys/timeb.h>
-#include <time.h>
 #include <string>
-#include <sstream>
-#include <ctime>
 
 class Engine;
 class UICommunicator;

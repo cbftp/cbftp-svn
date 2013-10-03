@@ -1,5 +1,9 @@
 #include "globalcontext.h"
 
+#include <signal.h>
+#include <sys/timeb.h>
+#include <sstream>
+
 GlobalContext::GlobalContext() {
   init();
 }

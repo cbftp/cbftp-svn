@@ -1,10 +1,9 @@
 #pragma once
 
 #include <string>
-#include <ncurses.h>
 
-#include "numinputarrow.h"
 #include "menuselectoptionelement.h"
+#include "numinputarrow.h"
 
 class MenuSelectOptionNumArrow : public MenuSelectOptionElement {
 private:

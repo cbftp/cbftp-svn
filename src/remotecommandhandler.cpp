@@ -1,5 +1,13 @@
 #include "remotecommandhandler.h"
 
+#include <vector>
+#include <list>
+
+#include "globalcontext.h"
+#include "datafilehandler.h"
+#include "engine.h"
+#include "iomanager.h"
+
 RemoteCommandHandler::RemoteCommandHandler() {
   enabled = false;
   password = DEFAULTPASS;

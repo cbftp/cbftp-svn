@@ -1,5 +1,19 @@
 #include "globaloptionsscreen.h"
 
+#include "../../globalcontext.h"
+#include "../../remotecommandhandler.h"
+#include "../../sitemanager.h"
+
+#include "../uicommunicator.h"
+#include "../menuselectoptionelement.h"
+#include "../focusablearea.h"
+#include "../termint.h"
+#include "../menuselectoptioncheckbox.h"
+#include "../menuselectoptiontextfield.h"
+#include "../menuselectoptionnumarrow.h"
+
+extern GlobalContext * global;
+
 GlobalOptionsScreen::GlobalOptionsScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel";

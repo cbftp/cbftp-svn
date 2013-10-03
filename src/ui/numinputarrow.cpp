@@ -1,5 +1,9 @@
 #include "numinputarrow.h"
 
+#include "../globalcontext.h"
+
+extern GlobalContext * global;
+
 NumInputArrow::NumInputArrow() {
 
 }

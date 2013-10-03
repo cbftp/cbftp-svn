@@ -1,5 +1,16 @@
 #include "skiplistscreen.h"
 
+#include "../../globalcontext.h"
+#include "../../skiplist.h"
+
+#include "../uicommunicator.h"
+#include "../menuselectoptionelement.h"
+#include "../menuselectoptioncontainer.h"
+#include "../termint.h"
+#include "../menuselectoptiontextfield.h"
+
+extern GlobalContext * global;
+
 SkipListScreen::SkipListScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   defaultlegendtext = "[Enter] Modify - [Arrows] select option - [d]one - [c]ancel";

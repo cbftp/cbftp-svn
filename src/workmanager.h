@@ -4,14 +4,13 @@
 #include <semaphore.h>
 #include <list>
 
-#include "eventreceiver.h"
-#include "globalcontext.h"
-#include "event.h"
 #include "datablockpool.h"
 
 #define MAXDATASIZE 2048
 #define BUFSSIZE 32
-extern GlobalContext * global;
+
+class EventReceiver;
+class Event;
 
 class WorkManager {
 private:

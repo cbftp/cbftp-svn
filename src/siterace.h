@@ -2,14 +2,10 @@
 
 #include <string>
 #include <map>
+#include <list>
 
-#include "filelist.h"
-#include "file.h"
-#include "race.h"
-#include "globalcontext.h"
-#include "skiplist.h"
-
-extern GlobalContext * global;
+class Race;
+class FileList;
 
 class SiteRace {
   private:

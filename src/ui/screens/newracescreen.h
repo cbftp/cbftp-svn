@@ -1,21 +1,14 @@
 #pragma once
 
-#include <ncurses.h>
 #include <list>
 
-#include "../../globalcontext.h"
-#include "../../site.h"
-#include "../../sitemanager.h"
-#include "../../engine.h"
-
 #include "../uiwindow.h"
-#include "../uicommunicator.h"
 #include "../menuselectoption.h"
-#include "../menuselectoptionelement.h"
-#include "../focusablearea.h"
-#include "../termint.h"
 
-extern GlobalContext * global;
+class FocusableArea;
+class UICommunicator;
+class MenuSelectOptionElement;
+class Site;
 
 class NewRaceScreen : public UIWindow {
 public:

@@ -1,15 +1,7 @@
 #pragma once
 
-#include <sstream>
-#include <fstream>
+#include <string>
 #include <vector>
-#include <stdlib.h>
-#include <iostream>
-#include <algorithm>
-
-#include "globalcontext.h"
-#include "site.h"
-#include "datafilehandler.h"
 
 #define DEFAULTUSERNAME "anonymous"
 #define DEFAULTPASSWORD "anonymous"
@@ -20,7 +12,7 @@
 #define DEFAULTSSL true
 #define DEFAULTSSLFXPFORCED false
 
-extern GlobalContext * global;
+class Site;
 
 class SiteManager {
   private:

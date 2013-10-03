@@ -3,8 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "globalcontext.h"
-#include "ui/uicommunicator.h"
+class GlobalContext;
 
 extern GlobalContext * global;
 

@@ -1,5 +1,10 @@
 #include "menufilters.h"
 
+#include "menuselectoptioncontainer.h"
+#include "menuselectoptionelement.h"
+#include "menuselectoptiontextfield.h"
+#include "menuselectoptiontextbutton.h"
+
 MenuFilters::MenuFilters() {
   pointer = 0;
   lastpointer = 0;

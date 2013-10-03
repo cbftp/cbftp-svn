@@ -2,16 +2,12 @@
 
 #include <string>
 #include <list>
+#include <vector>
 
-#include "../globalcontext.h"
-
-#include "menuselectoptioncontainer.h"
-#include "menuselectoptionelement.h"
-#include "menuselectoptiontextfield.h"
-#include "menuselectoptiontextbutton.h"
 #include "focusablearea.h"
 
-extern GlobalContext * global;
+class MenuSelectOptionContainer;
+class MenuSelectOptionElement;
 
 class MenuFilters : public FocusableArea {
   private:

@@ -1,13 +1,11 @@
 #pragma once
 
+#include <string>
 #include <vector>
 #include <list>
-#include <algorithm>
 
-#include "../filelist.h"
-#include "../file.h"
-
-#include "uifile.h"
+class UIFile;
+class FileList;
 
 class UIFileList {
 private:

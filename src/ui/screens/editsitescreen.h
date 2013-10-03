@@ -1,20 +1,13 @@
 #pragma once
 
-#include "../../globalcontext.h"
-#include "../../sitemanager.h"
 #include "../../site.h"
-#include "../../sitelogic.h"
-#include "../../sitelogicmanager.h"
 
 #include "../uiwindow.h"
-#include "../uicommunicator.h"
 #include "../menuselectoption.h"
-#include "../menuselectoptionelement.h"
-#include "../termint.h"
 #include "../menusection.h"
-#include "../focusablearea.h"
 
-extern GlobalContext * global;
+class UICommunicator;
+class FocusableArea;
 
 class EditSiteScreen : public UIWindow {
 public:

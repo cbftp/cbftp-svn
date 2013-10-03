@@ -1,5 +1,7 @@
 #include "menuselectoptioncontainer.h"
 
+#include <stdlib.h>
+
 MenuSelectOptionContainer::MenuSelectOptionContainer() {
 
 }

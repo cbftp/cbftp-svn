@@ -1,5 +1,11 @@
 #include "race.h"
 
+#include <vector>
+#include <algorithm>
+
+#include "file.h"
+#include "filelist.h"
+
 Race::Race(std::string release, std::string section) {
   this->name = release;
   size_t splitpos = name.rfind("-");

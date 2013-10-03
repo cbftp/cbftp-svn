@@ -1,5 +1,13 @@
 #include "uicommunicator.h"
 
+#include <ncurses.h>
+#include <vector>
+
+#include "../globalcontext.h"
+#include "../datafilehandler.h"
+
+extern GlobalContext * global;
+
 UICommunicator::UICommunicator() {
   sem_init(&eventsem, 0, 0);
   pthread_mutex_init(&event_mutex, NULL);

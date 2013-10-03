@@ -2,47 +2,19 @@
 
 #include <string>
 #include <list>
+#include <vector>
 #include <ncurses.h>
 #include <pthread.h>
 #include <semaphore.h>
-#include <map>
-#include <iostream>
-#include <istream>
-#include <sys/select.h>
-#include <sys/ioctl.h>
 
-#include "../globalcontext.h"
-#include "../tickpoke.h"
-#include "../eventreceiver.h"
-#include "../iomanager.h"
-#include "../sitemanager.h"
-#include "../remotecommandhandler.h"
-#include "../skiplist.h"
-
-#include "legendwindow.h"
-#include "infowindow.h"
-#include "uiwindow.h"
 #include "uicommunicator.h"
-
-#include "screens/loginscreen.h"
-#include "screens/newkeyscreen.h"
-#include "screens/mainscreen.h"
-#include "screens/editsitescreen.h"
-#include "screens/confirmationscreen.h"
-#include "screens/sitestatusscreen.h"
-#include "screens/rawdatascreen.h"
-#include "screens/browsescreen.h"
-#include "screens/addsectionscreen.h"
-#include "screens/newracescreen.h"
-#include "screens/racestatusscreen.h"
-#include "screens/rawcommandscreen.h"
-#include "screens/globaloptionsscreen.h"
-#include "screens/skiplistscreen.h"
-#include "screens/changekeyscreen.h"
+#include "../eventreceiver.h"
 
 #define TICKLENGTH 250000
 
-extern GlobalContext * global;
+class UIWindow;
+class InfoWindow;
+class LegendWindow;
 
 class UserInterface : private EventReceiver {
   private:

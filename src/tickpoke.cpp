@@ -1,5 +1,13 @@
 #include "tickpoke.h"
 
+#include <unistd.h>
+
+#include "globalcontext.h"
+#include "tickpoketarget.h"
+#include "workmanager.h"
+
+extern GlobalContext * global;
+
 TickPoke::TickPoke() {
   wm = global->getWorkManager();
   forever = true;

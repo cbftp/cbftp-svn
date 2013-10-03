@@ -1,5 +1,8 @@
 #include "confirmationscreen.h"
 
+#include "../uicommunicator.h"
+#include "../termint.h"
+
 ConfirmationScreen::ConfirmationScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   init(window, row, col);

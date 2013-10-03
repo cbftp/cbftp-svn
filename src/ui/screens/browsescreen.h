@@ -2,19 +2,13 @@
 
 #include <list>
 
-#include "../../sitelogic.h"
-#include "../../sitelogicmanager.h"
-#include "../../site.h"
-#include "../../globalcontext.h"
-#include "../../skiplist.h"
-
 #include "../uiwindow.h"
-#include "../uicommunicator.h"
-#include "../termint.h"
 #include "../uifilelist.h"
-#include "../stringpair.h"
 
-extern GlobalContext * global;
+class UICommunicator;
+class StringPair;
+class SiteLogic;
+class Site;
 
 class BrowseScreen : public UIWindow {
 public:

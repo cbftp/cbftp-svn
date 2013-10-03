@@ -2,20 +2,17 @@
 
 #include <string>
 #include <list>
-#include <stdlib.h>
 
-#include "scoreboard.h"
-#include "scoreboardelement.h"
-#include "globalcontext.h"
-#include "sitelogic.h"
-#include "filelist.h"
-#include "sitelogicmanager.h"
-#include "transfermanager.h"
-#include "race.h"
 #include "enginebase.h"
-#include "skiplist.h"
 
 #define SPREAD 0
+
+class GlobalContext;
+class Race;
+class SiteRace;
+class FileList;
+class File;
+class ScoreBoard;
 
 extern GlobalContext * global;
 

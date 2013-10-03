@@ -3,15 +3,12 @@
 #include <string>
 #include <list>
 #include <map>
-#include <vector>
-#include <algorithm>
-#include <iostream>
 
 #include "sizelocationtrack.h"
-#include "filelist.h"
 
 class SiteLogic;
 class SiteRace;
+class FileList;
 
 class Race {
   private:

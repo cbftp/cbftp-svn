@@ -1,5 +1,8 @@
 #include "transfermanager.h"
 
+#include "scoreboardelement.h"
+#include "transfermonitor.h"
+
 TransferManager::TransferManager() {
 
 }

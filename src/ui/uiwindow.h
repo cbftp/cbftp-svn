@@ -1,7 +1,6 @@
 #pragma once
 
 #include <ncurses.h>
-#include <unistd.h>
 #include <string>
 
 class UserInterface;

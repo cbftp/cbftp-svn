@@ -1,5 +1,25 @@
 #include "main.h"
 
+#include <iostream>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <error.h>
+#include <signal.h>
+
+#include "datafilehandler.h"
+#include "sitelogicmanager.h"
+#include "transfermanager.h"
+#include "sitemanager.h"
+#include "globalcontext.h"
+#include "engine.h"
+#include "ui/ui.h"
+#include "ui/uicommunicator.h"
+#include "tickpoke.h"
+#include "remotecommandhandler.h"
+#include "iomanager.h"
+#include "workmanager.h"
+#include "skiplist.h"
+
 Main::Main() {
   std::string datadirpath = std::string(getenv("HOME")) + "/" + DATAPATH;
   std::string datapath = datadirpath + "/" + DATAFILE;

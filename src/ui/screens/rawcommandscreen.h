@@ -1,17 +1,11 @@
 #pragma once
 
-#include "../../ftpconn.h"
-#include "../../rawbuffer.h"
-#include "../../sitelogic.h"
-#include "../../sitelogicmanager.h"
-#include "../../globalcontext.h"
-
 #include "../uiwindow.h"
-#include "../uicommunicator.h"
-#include "../termint.h"
 #include "../menuselectoptiontextfield.h"
 
-extern GlobalContext * global;
+class UICommunicator;
+class RawBuffer;
+class SiteLogic;
 
 class RawCommandScreen : public UIWindow {
 public:

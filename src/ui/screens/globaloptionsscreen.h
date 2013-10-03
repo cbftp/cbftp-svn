@@ -1,20 +1,14 @@
 #pragma once
 
-#include <ncurses.h>
 #include <list>
 
-#include "../../globalcontext.h"
-#include "../../remotecommandhandler.h"
-#include "../../sitemanager.h"
-
-#include "../uiwindow.h"
-#include "../uicommunicator.h"
 #include "../menuselectoption.h"
-#include "../menuselectoptionelement.h"
-#include "../focusablearea.h"
-#include "../termint.h"
+#include "../uiwindow.h"
 
-extern GlobalContext * global;
+class MenuSelectOptionElement;
+class UICommunicator;
+class SiteManager;
+class RemoteCommandHandler;
 
 class GlobalOptionsScreen : public UIWindow {
 public:

@@ -1,5 +1,6 @@
 #include "infowindow.h"
-#include <iostream>
+
+#include "termint.h"
 
 InfoWindow::InfoWindow(WINDOW * window, int row, int col) {
   label = "";

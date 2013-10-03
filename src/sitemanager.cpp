@@ -1,5 +1,17 @@
 #include "sitemanager.h"
 
+#include <sstream>
+#include <fstream>
+#include <stdlib.h>
+#include <algorithm>
+
+#include "globalcontext.h"
+#include "site.h"
+#include "datafilehandler.h"
+#include "connstatetracker.h"
+
+extern GlobalContext * global;
+
 SiteManager::SiteManager() {
   defaultusername = DEFAULTUSERNAME;
   defaultpassword = DEFAULTPASSWORD;

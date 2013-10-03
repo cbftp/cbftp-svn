@@ -1,5 +1,7 @@
 #include "rawbuffer.h"
-#include <iostream>
+
+#include "globalcontext.h"
+#include "ui/uicommunicator.h"
 
 RawBuffer::RawBuffer(unsigned int maxlength, std::string site, std::string id) {
   latestp = 0;

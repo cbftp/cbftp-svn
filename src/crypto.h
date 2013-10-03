@@ -1,11 +1,6 @@
 #pragma once
 
 #include <openssl/evp.h>
-#include <limits.h>
-#include <cstring>
-#include <sys/timeb.h>
-
-#include "globalcontext.h"
 
 class Crypto {
 private:

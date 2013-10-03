@@ -1,19 +1,12 @@
 #pragma once
 
-#include <vector>
-
-#include "../../globalcontext.h"
-#include "../../site.h"
-#include "../../sitelogic.h"
-#include "../../sitelogicmanager.h"
-#include "../../ftpconn.h"
-#include "../../engine.h"
+#include <list>
+#include <map>
 
 #include "../uiwindow.h"
-#include "../uicommunicator.h"
-#include "../termint.h"
 
-extern GlobalContext * global;
+class UICommunicator;
+class Race;
 
 class RaceStatusScreen : public UIWindow {
 public:

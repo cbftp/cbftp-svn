@@ -1,5 +1,13 @@
 #include "skiplist.h"
 
+#include <stdlib.h>
+#include <vector>
+
+#include "globalcontext.h"
+#include "datafilehandler.h"
+
+extern GlobalContext * global;
+
 SkipList::SkipList() {
 
 }

@@ -1,8 +1,9 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
-#include "sitelogic.h"
+class SiteLogic;
 
 class SiteLogicManager {
   private:

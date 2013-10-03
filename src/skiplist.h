@@ -1,13 +1,7 @@
 #pragma once
 
-#include <stdlib.h>
 #include <list>
-#include <vector>
-
-#include "globalcontext.h"
-#include "datafilehandler.h"
-
-extern GlobalContext * global;
+#include <string>
 
 class SkipList {
 private:

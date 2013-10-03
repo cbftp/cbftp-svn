@@ -1,7 +1,8 @@
 #pragma once
 
+#include <string>
+
 #include "uiwindow.h"
-#include "termint.h"
 
 class LegendWindow : public UIWindow {
 public:

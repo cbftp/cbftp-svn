@@ -1,14 +1,11 @@
 #pragma once
 
-#include "sitelogic.h"
-#include "siterace.h"
-#include "ftpconn.h"
-#include "filelist.h"
-#include "transfermonitorbase.h"
-#include "tickpoke.h"
-#include "globalcontext.h"
+#include <string>
 
-extern GlobalContext * global;
+#include "transfermonitorbase.h"
+
+class SiteLogic;
+class FileList;
 
 class TransferMonitor : public TransferMonitorBase {
   private:

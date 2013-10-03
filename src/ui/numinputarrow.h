@@ -2,10 +2,6 @@
 
 #include <string>
 
-#include "../globalcontext.h"
-
-extern GlobalContext * global;
-
 class NumInputArrow {
 public:
   NumInputArrow();

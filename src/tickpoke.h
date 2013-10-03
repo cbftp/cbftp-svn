@@ -1,16 +1,13 @@
 #pragma once
 
 #include <list>
-#include <unistd.h>
 
-#include "globalcontext.h"
 #include "eventreceiver.h"
-#include "tickpoketarget.h"
-#include "workmanager.h"
-
-extern GlobalContext * global;
 
 #define SLEEPINTERVAL 50
+
+class TickPokeTarget;
+class WorkManager;
 
 class TickPoke : private EventReceiver {
 private:

@@ -1,21 +1,11 @@
 #pragma once
 
-#include "../../globalcontext.h"
-#include "../../site.h"
-#include "../../race.h"
-#include "../../engine.h"
-#include "../../sitemanager.h"
-#include "../../site.h"
-
 #include "../uiwindow.h"
 #include "../menuselectsite.h"
 #include "../menuselectoption.h"
-#include "../menuselectoptioncheckbox.h"
-#include "../uicommunicator.h"
-#include "../termint.h"
-#include "../focusablearea.h"
 
-extern GlobalContext * global;
+class FocusableArea;
+class UICommunicator;
 
 class MainScreen : public UIWindow {
 public:

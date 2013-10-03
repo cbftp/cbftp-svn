@@ -1,13 +1,7 @@
 #pragma once
 
 #include <string>
-#include <iostream>
-#include <fstream>
 #include <vector>
-#include <unistd.h>
-#include <error.h>
-
-#include "crypto.h"
 
 #define READBLOCKSIZE 256
 

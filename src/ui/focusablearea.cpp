@@ -1,5 +1,7 @@
 #include "focusablearea.h"
 
+#include <stdlib.h>
+
 FocusableArea::FocusableArea() {
   focus = false;
   leaveup = false;

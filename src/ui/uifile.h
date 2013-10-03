@@ -3,13 +3,10 @@
 #include <string>
 #include <vector>
 
-#include "../globalcontext.h"
-#include "../file.h"
-
 #define SIZEPOWER 1024
 #define SIZEDECIMALS 2
 
-extern GlobalContext * global;
+class File;
 
 class UIFile {
 private:

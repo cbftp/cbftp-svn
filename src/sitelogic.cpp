@@ -1,5 +1,26 @@
 #include "sitelogic.h"
 
+#include "sitemanager.h"
+#include "ftpconn.h"
+#include "filelist.h"
+#include "siterace.h"
+#include "site.h"
+#include "race.h"
+#include "globalcontext.h"
+#include "scoreboardelement.h"
+#include "potentialtracker.h"
+#include "sitelogicrequest.h"
+#include "sitelogicrequestready.h"
+#include "ui/uicommunicator.h"
+#include "tickpoke.h"
+#include "rawbuffer.h"
+#include "eventreceiver.h"
+#include "enginebase.h"
+#include "connstatetracker.h"
+#include "transfermonitorbase.h"
+#include "delayedcommand.h"
+#include "potentiallistelement.h"
+
 SiteLogic::SiteLogic(std::string sitename) {
   requestidcounter = 0;
   site = global->getSiteManager()->getSite(sitename);

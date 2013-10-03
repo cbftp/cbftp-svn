@@ -1,5 +1,6 @@
 #include "legendwindow.h"
-#include <iostream>
+
+#include "termint.h"
 
 LegendWindow::LegendWindow(WINDOW * window, int row, int col) {
   text = "";

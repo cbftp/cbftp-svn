@@ -1,5 +1,7 @@
 #include "file.h"
 
+#include <stdlib.h>
+
 File::File(std::string name, std::string user) {
   directory = false;
   softlink = false;

@@ -2,6 +2,8 @@
 
 #include "eventreceiver.h"
 
+class Site;
+
 class SiteLogicBase : public EventReceiver {
 private:
 public:

@@ -1,19 +1,12 @@
 #pragma once
 
 #include <vector>
-#include <map>
-
-#include "../../globalcontext.h"
-#include "../../site.h"
-#include "../../sitelogic.h"
-#include "../../sitelogicmanager.h"
-#include "../../ftpconn.h"
 
 #include "../uiwindow.h"
-#include "../uicommunicator.h"
-#include "../termint.h"
 
-extern GlobalContext * global;
+class Site;
+class SiteLogic;
+class UICommunicator;
 
 class SiteStatusScreen : public UIWindow {
 public:

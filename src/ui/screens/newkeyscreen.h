@@ -1,16 +1,11 @@
 #pragma once
 
-#include "../../globalcontext.h"
-
-#include "../uiwindow.h"
-#include "../uicommunicator.h"
-#include "../menuselectoption.h"
-#include "../menuselectoptionelement.h"
-#include "../termint.h"
-
 #define SHORTESTKEY 4
 
-extern GlobalContext * global;
+#include "../uiwindow.h"
+#include "../menuselectoption.h"
+
+class UICommunicator;
 
 class NewKeyScreen : public UIWindow {
 public:

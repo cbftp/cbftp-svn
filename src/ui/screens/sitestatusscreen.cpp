@@ -1,5 +1,17 @@
 #include "sitestatusscreen.h"
 
+#include "../../sitemanager.h"
+#include "../../globalcontext.h"
+#include "../../site.h"
+#include "../../sitelogic.h"
+#include "../../sitelogicmanager.h"
+#include "../../ftpconn.h"
+
+#include "../uicommunicator.h"
+#include "../termint.h"
+
+extern GlobalContext * global;
+
 SiteStatusScreen::SiteStatusScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   sitename = uicommunicator->getArg1();

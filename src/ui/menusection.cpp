@@ -1,5 +1,10 @@
 #include "menusection.h"
 
+#include "menuselectoptioncontainer.h"
+#include "menuselectoptionelement.h"
+#include "menuselectoptiontextfield.h"
+#include "menuselectoptiontextbutton.h"
+
 MenuSection::MenuSection() {
   pointer = 0;
   lastpointer = 0;

@@ -1,5 +1,20 @@
 #include "ftpconn.h"
 
+#include <stdlib.h>
+
+#include <cstring>
+#include <cerrno>
+#include <fcntl.h>
+#include <unistd.h>
+
+#include "filelist.h"
+#include "site.h"
+#include "siterace.h"
+#include "globalcontext.h"
+#include "rawbuffer.h"
+#include "iomanager.h"
+#include "sitelogicbase.h"
+
 FTPConn::FTPConn(SiteLogicBase * slb, int id) {
   this->slb = slb;
   this->id = id;

@@ -3,22 +3,12 @@
 #include <string>
 #include <vector>
 
-#include "../globalcontext.h"
-
-#include "menuselectoptionelement.h"
-#include "menuselectoptiontextfield.h"
-#include "menuselectoptionnumarrow.h"
-#include "menuselectoptioncheckbox.h"
-#include "menuselectoptiontextbutton.h"
 #include "focusablearea.h"
-
-extern GlobalContext * global;
 
 class MenuSelectOption : public FocusableArea {
   private:
     unsigned int pointer;
     unsigned int lastpointer;
-    WINDOW * window;
     std::vector<MenuSelectOptionElement *> options;
   public:
     MenuSelectOption();

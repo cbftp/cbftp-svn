@@ -1,12 +1,19 @@
 #include "menuselectsite.h"
 
-MenuSelectSite::MenuSelectSite() {
-}
+#include <ncurses.h>
 
-void MenuSelectSite::setWindow(WINDOW * window) {
-  this->window = window;
-  pointer = 0;
-  maxheight = 0;
+#include "../sitelogicmanager.h"
+#include "../sitelogic.h"
+#include "../site.h"
+#include "../globalcontext.h"
+
+
+#include "menuselectsiteelement.h"
+#include "termint.h"
+
+extern GlobalContext * global;
+
+MenuSelectSite::MenuSelectSite() {
 }
 
 bool MenuSelectSite::goDown() {

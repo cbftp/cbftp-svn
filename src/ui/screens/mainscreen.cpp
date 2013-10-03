@@ -1,5 +1,21 @@
 #include "mainscreen.h"
 
+#include "../../globalcontext.h"
+#include "../../site.h"
+#include "../../race.h"
+#include "../../engine.h"
+#include "../../sitemanager.h"
+#include "../../site.h"
+#include "../../sitelogicmanager.h"
+
+#include "../menuselectoptioncheckbox.h"
+#include "../uicommunicator.h"
+#include "../termint.h"
+#include "../focusablearea.h"
+#include "../menuselectsiteelement.h"
+
+extern GlobalContext * global;
+
 MainScreen::MainScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   msslegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [G]lobal settings";
   msolegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [G]lobal settings";

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../uiwindow.h"
-#include "../uicommunicator.h"
-#include "../termint.h"
+
+class UICommunicator;
 
 class ConfirmationScreen : public UIWindow {
 public:

@@ -1,5 +1,20 @@
 #include "engine.h"
 
+#include <stdlib.h>
+
+#include "scoreboard.h"
+#include "scoreboardelement.h"
+#include "globalcontext.h"
+#include "sitelogic.h"
+#include "site.h"
+#include "filelist.h"
+#include "file.h"
+#include "sitelogicmanager.h"
+#include "transfermanager.h"
+#include "race.h"
+#include "siterace.h"
+#include "skiplist.h"
+
 Engine::Engine() {
   scoreboard = new ScoreBoard();
   maxavgspeed = 1024;

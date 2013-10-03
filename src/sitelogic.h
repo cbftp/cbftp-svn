@@ -4,23 +4,20 @@
 #include <vector>
 #include <list>
 
-#include "sitemanager.h"
-#include "ftpconn.h"
-#include "filelist.h"
-#include "siterace.h"
-#include "globalcontext.h"
-#include "scoreboardelement.h"
-#include "potentialtracker.h"
-#include "sitelogicrequest.h"
-#include "sitelogicrequestready.h"
-#include "ui/uicommunicator.h"
-#include "tickpoke.h"
-#include "connstatetracker.h"
-#include "rawbuffer.h"
-#include "eventreceiver.h"
 #include "sitelogicbase.h"
-#include "enginebase.h"
-#include "transfermonitorbase.h"
+
+class TransferMonitorBase;
+class ConnStateTracker;
+class FTPConn;
+class RawBuffer;
+class SiteRace;
+class FileList;
+class Site;
+class Race;
+class GlobalContext;
+class SiteLogicRequest;
+class SiteLogicRequestReady;
+class PotentialTracker;
 
 //minimum sleep delay (between refreshes / hammer attempts) in ms
 #define SLEEPDELAY 150

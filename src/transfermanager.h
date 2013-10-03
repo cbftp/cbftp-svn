@@ -1,13 +1,10 @@
 #pragma once
 
-#include <string>
+#include <list>
 
-#include "globalcontext.h"
-#include "sitelogic.h"
-#include "scoreboardelement.h"
-#include "transfermonitor.h"
-
-extern GlobalContext * global;
+class ScoreBoardElement;
+class TransferMonitor;
+class SiteLogic;
 
 class TransferManager {
   private:

@@ -1,5 +1,9 @@
 #include "scoreboard.h"
 
+#include <algorithm>
+
+#include "scoreboardelement.h"
+
 bool comparator(ScoreBoardElement * e1, ScoreBoardElement * e2) {
   return (e1->getScore() > e2->getScore());
 }

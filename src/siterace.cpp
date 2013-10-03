@@ -1,5 +1,13 @@
 #include "siterace.h"
 
+#include "filelist.h"
+#include "file.h"
+#include "race.h"
+#include "globalcontext.h"
+#include "skiplist.h"
+
+extern GlobalContext * global;
+
 SiteRace::SiteRace(Race * race, std::string section, std::string release, std::string username) {
   this->race = race;
   this->section = section;
@@ -88,7 +96,7 @@ FileList * SiteRace::getFileListForFullPath(std::string path) {
       return it->second;
     }
   }
-  std::cout << "None found LOL" << std::endl;
+  //std::cout << "None found LOL" << std::endl;
   return NULL;
 }
 

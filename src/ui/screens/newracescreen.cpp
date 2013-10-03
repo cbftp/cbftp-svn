@@ -1,5 +1,18 @@
 #include "newracescreen.h"
 
+#include "../../globalcontext.h"
+#include "../../site.h"
+#include "../../sitemanager.h"
+#include "../../engine.h"
+
+#include "../uicommunicator.h"
+#include "../menuselectoptioncheckbox.h"
+#include "../menuselectoptionelement.h"
+#include "../focusablearea.h"
+#include "../termint.h"
+
+extern GlobalContext * global;
+
 NewRaceScreen::NewRaceScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [t]oggle all - [s]tart race - [c]ancel";

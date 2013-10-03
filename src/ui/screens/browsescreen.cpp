@@ -1,5 +1,18 @@
 #include "browsescreen.h"
 
+#include "../../sitelogic.h"
+#include "../../sitelogicmanager.h"
+#include "../../site.h"
+#include "../../globalcontext.h"
+#include "../../skiplist.h"
+
+#include "../uicommunicator.h"
+#include "../termint.h"
+#include "../stringpair.h"
+#include "../uifile.h"
+
+extern GlobalContext * global;
+
 BrowseScreen::BrowseScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   sitelogic = global->getSiteLogicManager()->getSiteLogic(uicommunicator->getArg1());

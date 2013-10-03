@@ -1,7 +1,6 @@
 #pragma once
 
-#include <semaphore.h>
-#include "eventreceiver.h"
+class EventReceiver;
 
 class TickPokeTarget {
 private:

@@ -1,5 +1,16 @@
 #include "rawcommandscreen.h"
 
+#include "../../ftpconn.h"
+#include "../../rawbuffer.h"
+#include "../../sitelogic.h"
+#include "../../sitelogicmanager.h"
+#include "../../globalcontext.h"
+
+#include "../uicommunicator.h"
+#include "../termint.h"
+
+extern GlobalContext * global;
+
 RawCommandScreen::RawCommandScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   sitename = uicommunicator->getArg1();

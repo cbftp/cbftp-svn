@@ -1,7 +1,8 @@
 #pragma once
 
+#include <string>
+
 #include "uiwindow.h"
-#include "termint.h"
 
 class InfoWindow : public UIWindow {
 public:

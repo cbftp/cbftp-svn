@@ -1,16 +1,11 @@
 #pragma once
 
-#include "../../globalcontext.h"
-#include "../../skiplist.h"
-
 #include "../uiwindow.h"
-#include "../uicommunicator.h"
-#include "../menuselectoptionelement.h"
 #include "../menufilters.h"
-#include "../menuselectoptioncontainer.h"
-#include "../termint.h"
 
-extern GlobalContext * global;
+class UICommunicator;
+class MenuSelectOptionElement;
+class SkipList;
 
 class SkipListScreen : public UIWindow {
 public:

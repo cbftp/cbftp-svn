@@ -1,5 +1,8 @@
 #include "loginscreen.h"
 
+#include "../uicommunicator.h"
+#include "../termint.h"
+
 LoginScreen::LoginScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   passfield = TextInputField(25, 32, true);

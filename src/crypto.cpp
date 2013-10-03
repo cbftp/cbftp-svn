@@ -1,5 +1,11 @@
 #include "crypto.h"
 
+#include <limits.h>
+#include <cstring>
+#include <sys/timeb.h>
+
+#include "globalcontext.h"
+
 const EVP_CIPHER * Crypto::cipher() {
   return EVP_aes_256_cbc();
 }

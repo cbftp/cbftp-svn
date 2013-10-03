@@ -1,5 +1,11 @@
 #include "workmanager.h"
 
+#include "eventreceiver.h"
+#include "globalcontext.h"
+#include "event.h"
+
+extern GlobalContext * global;
+
 WorkManager::WorkManager() {
   sem_init(&dispatch, 0, 0);
   sem_init(&readdata, 0, 0);

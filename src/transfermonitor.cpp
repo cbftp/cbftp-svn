@@ -1,5 +1,16 @@
 #include "transfermonitor.h"
 
+#include "site.h"
+#include "sitelogic.h"
+#include "siterace.h"
+#include "ftpconn.h"
+#include "filelist.h"
+#include "tickpoke.h"
+#include "globalcontext.h"
+#include "file.h"
+
+extern GlobalContext * global;
+
 TransferMonitor::TransferMonitor() {
   status = 0;
   activedownload = false;

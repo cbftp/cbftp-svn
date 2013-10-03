@@ -1,5 +1,5 @@
 #include "termint.h"
-#include <iostream>
+
 void TermInt::printChar(WINDOW * window, unsigned int row, unsigned int col, unsigned int c) {
   mvwaddch(window, row, col, c);
   wmove(cursorwindow, cursorrow, cursorcol);

@@ -1,5 +1,7 @@
 #include "potentiallistelement.h"
 
+#include "potentialelement.h"
+
 PotentialListElement::PotentialListElement(int numslots) {
   for (int i = 0; i < numslots; i++) {
     slots.push_back(new PotentialElement());

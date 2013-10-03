@@ -1,10 +1,10 @@
 #pragma once
 #include <map>
-#include <iostream>
 #include <pthread.h>
+#include <string>
 
-#include "file.h"
-#include "site.h"
+class File;
+class Site;
 
 class FileList {
   private:

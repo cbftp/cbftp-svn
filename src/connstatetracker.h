@@ -3,11 +3,10 @@
 #include <string>
 #include <list>
 
-#include "delayedcommand.h"
-
 class SiteRace;
 class FileList;
 class TransferMonitorBase;
+class DelayedCommand;
 
 class ConnStateTracker {
 private:

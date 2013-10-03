@@ -1,5 +1,7 @@
 #include "datablockpool.h"
 
+#include <cstdlib>
+
 DataBlockPool::DataBlockPool() {
   char * block;
   totalblocks = 0;

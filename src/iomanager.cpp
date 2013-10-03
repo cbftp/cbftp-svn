@@ -1,5 +1,7 @@
 #include "iomanager.h"
 
+#include "eventreceiver.h"
+
 IOManager::IOManager() {
   epollfd = epoll_create(100);
   wm = global->getWorkManager();

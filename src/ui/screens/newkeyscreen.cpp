@@ -1,5 +1,14 @@
 #include "newkeyscreen.h"
 
+#include "../../globalcontext.h"
+
+#include "../uicommunicator.h"
+#include "../menuselectoptionelement.h"
+#include "../termint.h"
+#include "../menuselectoptiontextfield.h"
+
+extern GlobalContext * global;
+
 NewKeyScreen::NewKeyScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one";
