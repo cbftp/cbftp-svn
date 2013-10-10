@@ -155,6 +155,9 @@ void BrowseScreen::update() {
         prepchar = "S";
       }
     }
+    else if (!allowed) {
+      prepchar = "s";
+    }
     else if ((*uilist)[listi]->isLink()){
       prepchar = "L";
     }
