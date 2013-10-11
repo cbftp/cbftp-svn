@@ -1,11 +1,21 @@
 #include "termint.h"
 
 void TermInt::printChar(WINDOW * window, unsigned int row, unsigned int col, unsigned int c) {
-  mvwaddch(window, row, col, c);
+  if (c != '%') {
+    mvwaddch(window, row, col, c);
+  }
+  else {
+    mvwprintw(window, row, col, "%%");
+  }
   wmove(cursorwindow, cursorrow, cursorcol);
 }
 
 void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, std::string str) {
+  size_t pos = 0;
+  while ((pos = str.find("%", pos)) != std::string::npos) {
+    str = str.substr(0, pos) + "%%" + str.substr(pos + 1);
+    pos = pos + 2;
+  }
   mvwprintw(window, row, col, str.c_str());
   wmove(cursorwindow, cursorrow, cursorcol);
 }
