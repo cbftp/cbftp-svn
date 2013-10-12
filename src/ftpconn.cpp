@@ -194,6 +194,12 @@ void FTPConn::FDData(char * data, unsigned int datalen) {
       case 23: // awaiting QUIT response
         QUITResponse();
         break;
+      case 24: // awaiting loginkilling USER response
+        USERResponse();
+        break;
+      case 25: // awaiting loginkilling PASS response
+        PASSResponse();
+        break;
     }
     databufpos = 0;
   }
@@ -239,7 +245,12 @@ void FTPConn::AUTHTLSResponse() {
 }
 
 void FTPConn::doUSER(bool killer) {
-  state = 4;
+  if (!killer) {
+    state = 4;
+  }
+  else {
+    state = 24;
+  }
   sendEcho((std::string("USER ") + (killer ? "!" : "") + site->getUser()).data());
 }
 
@@ -251,12 +262,41 @@ void FTPConn::USERResponse() {
     std::string output = "PASS " + std::string(passc);
     rawbuf->writeLine(output);
     status = output;
-    state = 5;
+    if (state == 4) {
+      state = 5;
+    }
+    else {
+      state = 25;
+    }
     iom->sendData(sockfd, std::string("PASS ") + site->getPass()  + "\n");
   }
   else {
     processing = false;
-    slb->userDenied(id);
+    bool sitefull = false;
+    bool simultaneous = false;
+    std::string reply = std::string(databuf, databufpos);
+    if (databufcode == 530 || databufcode == 550) {
+      if (reply.find("site") != std::string::npos && reply.find("full") != std::string::npos) {
+        sitefull = true;
+      }
+      else if (reply.find("simultaneous") != std::string::npos) {
+        simultaneous = true;
+      }
+    }
+    if (sitefull) {
+      slb->userDeniedSiteFull(id);
+    }
+    else if (state == 4) {
+      if (simultaneous) {
+        slb->userDeniedSimultaneousLogins(id);
+      }
+      else {
+        slb->userDenied(id);
+      }
+    }
+    else {
+      slb->loginKillFailed(id);
+    }
   }
 }
 
@@ -264,10 +304,35 @@ void FTPConn::PASSResponse() {
   processing = false;
   if (databufcode == 230) {
     this->status = "connected";
+    state = 5;
     slb->commandSuccess(id);
   }
   else {
-    slb->commandFail(id);
+    bool sitefull = false;
+    bool simultaneous = false;
+    std::string reply = std::string(databuf, databufpos);
+    if (databufcode == 530 || databufcode == 550) {
+      if (reply.find("site") != std::string::npos && reply.find("full") != std::string::npos) {
+        sitefull = true;
+      }
+      else if (reply.find("simultaneous") != std::string::npos) {
+        simultaneous = true;
+      }
+    }
+    if (sitefull) {
+      slb->userDeniedSiteFull(id);
+    }
+    else if (state == 5) {
+      if (simultaneous) {
+        slb->userDeniedSimultaneousLogins(id);
+      }
+      else {
+        slb->passDenied(id);
+      }
+    }
+    else {
+      slb->loginKillFailed(id);
+    }
   }
 }
 

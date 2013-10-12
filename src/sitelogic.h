@@ -64,6 +64,8 @@ class SiteLogic : public SiteLogicBase {
     void tick(int);
     void connectFailed(int);
     void userDenied(int);
+    void userDeniedSiteFull(int);
+    void userDeniedSimultaneousLogins(int);
     void loginKillFailed(int);
     void passDenied(int);
     void TLSFailed(int);

@@ -66,7 +66,6 @@ void SiteLogic::addRace(Race * enginerace, std::string section, std::string rele
   races.push_back(race);
   activate();
 }
-
 void SiteLogic::tick(int message) {
   for (unsigned int i = 0; i < connstatetracker.size(); i++) {
     connstatetracker[i].timePassed(50);
@@ -89,10 +88,14 @@ void SiteLogic::tick(int message) {
         conns[i]->reconnect();
       }
       else if (event == "quit") {
-        conns[i]->doQUIT();
-        connstatetracker[i].setDisconnected();
-        loggedin--;
-        available--;
+        if (!connstatetracker[i].isDisconnected()) {
+          if (connstatetracker[i].isLoggedIn()) {
+            loggedin--;
+            available--;
+          }
+          conns[i]->doQUIT();
+          connstatetracker[i].setDisconnected();
+        }
         if (wantedloggedin > loggedin) {
           wantedloggedin = loggedin;
         }
@@ -107,18 +110,30 @@ void SiteLogic::connectFailed(int id) {
 
 void SiteLogic::userDenied(int id) {
   connstatetracker[id].setDisconnected();
+  conns[id]->doQUIT();
+}
+
+void SiteLogic::userDeniedSiteFull(int id) {
+  connstatetracker[id].delayedCommand("reconnect", SLEEPDELAY);
+}
+
+void SiteLogic::userDeniedSimultaneousLogins(int id) {
+  conns[id]->doUSER(true);
 }
 
 void SiteLogic::loginKillFailed(int id) {
   connstatetracker[id].setDisconnected();
+  conns[id]->doQUIT();
 }
 
 void SiteLogic::passDenied(int id) {
   connstatetracker[id].setDisconnected();
+  conns[id]->doQUIT();
 }
 
 void SiteLogic::TLSFailed(int id) {
   connstatetracker[id].setDisconnected();
+  conns[id]->doQUIT();
 }
 
 void SiteLogic::listRefreshed(int id) {
@@ -157,6 +172,7 @@ void SiteLogic::commandSuccess(int id) {
     case 5: // PASS, logged in
       loggedin++;
       available++;
+      connstatetracker[id].setLoggedIn();
       connstatetracker[id].setIdle();
       break;
     case 8: // PROT P
@@ -323,8 +339,10 @@ void SiteLogic::commandFail(int id) {
       return;
   }
   // default handling: reconnect
-  loggedin--;
-  available--;
+  if (connstatetracker[id].isLoggedIn()) {
+    loggedin--;
+    available--;
+  }
   conns[id]->reconnect();
 }
 
@@ -393,9 +411,11 @@ void SiteLogic::timedout(int id) {
 }
 
 void SiteLogic::disconnected(int id) {
+  if (connstatetracker[id].isLoggedIn()) {
+    loggedin--;
+    available--;
+  }
   connstatetracker[id].setDisconnected();
-  loggedin--;
-  available--;
 }
 
 void SiteLogic::requestSelect() {
@@ -441,10 +461,12 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
     return;
   }
   if (loggedin > wantedloggedin) {
+    if (connstatetracker[id].isLoggedIn()) {
+      available--;
+      loggedin--;
+    }
     connstatetracker[id].setDisconnected();
     conns[id]->doQUIT();
-    available--;
-    loggedin--;
     return;
   }
   SiteRace * race = NULL;
@@ -801,9 +823,11 @@ void SiteLogic::setNumConnections(unsigned int num) {
     }
     for (unsigned int i = 0; i < conns.size(); i++) {
       if (connstatetracker[i].isIdle()) {
+        if (connstatetracker[i].isLoggedIn()) {
+          loggedin--;
+          available--;
+        }
         conns[i]->doQUIT();
-        loggedin--;
-        available--;
         connstatetracker[i].setDisconnected();
         connstatetracker.erase(connstatetracker.begin() + i);
         delete conns[i];
@@ -924,10 +948,12 @@ void SiteLogic::disconnectConn(int id) {
     if (wantedloggedin > 0) {
       wantedloggedin--;
     }
+    if (connstatetracker[id].isLoggedIn()) {
+      available--;
+      loggedin--;
+    }
     connstatetracker[id].setDisconnected();
     conns[id]->doQUIT();
-    available--;
-    loggedin--;
   }
 }
 
@@ -952,10 +978,12 @@ void SiteLogic::raceGlobalComplete() {
   if (!stillactive) {
     for (unsigned int i = 0; i < conns.size(); i++) {
       if (connstatetracker[i].isIdle()) {
+        if (connstatetracker[i].isLoggedIn()) {
+          loggedin--;
+          available--;
+        }
         connstatetracker[i].setDisconnected();
         conns[i]->doQUIT();
-        loggedin--;
-        available--;
       }
     }
     wantedloggedin = 0;
@@ -978,10 +1006,12 @@ void SiteLogic::raceLocalComplete(SiteRace * sr) {
     }
     for (unsigned int i = 0; i < conns.size() && killnum > 0; i++) {
       if (connstatetracker[i].isIdle()) {
+        if (connstatetracker[i].isLoggedIn()) {
+          loggedin--;
+          available--;
+        }
         connstatetracker[i].setDisconnected();
         conns[i]->doQUIT();
-        loggedin--;
-        available--;
         killnum--;
       }
     }

@@ -12,6 +12,7 @@ class ConnStateTracker {
 private:
   int state;
   int time;
+  int idletime;
   int lastcheckedcount;
   SiteRace * lastchecked;
   std::list<DelayedCommand> releasedcommands;
@@ -26,6 +27,7 @@ private:
   bool aborted;
   bool transferlocked;
   bool lockeddownload;
+  bool loggedin;
   std::string addr;
 public:
   ConnStateTracker();
@@ -54,6 +56,8 @@ public:
   void lockForTransfer(bool);
   bool isLockedForDownload();
   bool isLockedForUpload();
+  bool isLoggedIn();
+  void setLoggedIn();
   TransferMonitorBase * getTransferMonitor();
   FileList * getTransferFileList();
   std::string getTransferFile();

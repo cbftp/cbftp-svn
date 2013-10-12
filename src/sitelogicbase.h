@@ -10,6 +10,8 @@ public:
   virtual void tick(int) = 0;
   virtual void connectFailed(int) = 0;
   virtual void userDenied(int) = 0;
+  virtual void userDeniedSiteFull(int) = 0;
+  virtual void userDeniedSimultaneousLogins(int) = 0;
   virtual void loginKillFailed(int) = 0;
   virtual void passDenied(int) = 0;
   virtual void TLSFailed(int) = 0;

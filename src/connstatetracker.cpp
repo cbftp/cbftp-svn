@@ -5,14 +5,15 @@
 ConnStateTracker::ConnStateTracker() {
   state = 0;
   time = 0;
+  idletime = 0;
   lastchecked = NULL;
   lastcheckedcount = 0;
   transfer = false;
   transferlocked = false;
   lockeddownload = false;
   aborted = false;
+  loggedin = false;
 }
-
 void ConnStateTracker::delayedCommand(std::string command, int delay) {
   delayedcommands.push_back(DelayedCommand(command, delay + time));
 }
@@ -23,6 +24,7 @@ void ConnStateTracker::delayedCommand(std::string command, int delay, void * arg
 
 void ConnStateTracker::timePassed(int time) {
   this->time += time;
+  this->idletime += time;
   std::list<DelayedCommand>::iterator it;
   bool found;
   while (true) {
@@ -42,7 +44,7 @@ void ConnStateTracker::timePassed(int time) {
 }
 
 int ConnStateTracker::getTimePassed() {
-  return time;
+  return idletime;
 }
 
 void ConnStateTracker::check(SiteRace * sr) {
@@ -78,28 +80,28 @@ DelayedCommand ConnStateTracker::getCommand() {
 }
 
 void ConnStateTracker::setDisconnected() {
-  delayedcommands.clear();
-  time = 0;
+  loggedin = false;
+  idletime = 0;
   state = 0;
 }
 
 void ConnStateTracker::setIdle() {
   delayedcommands.clear();
+  idletime = 0;
   transferlocked = false;
-  time = 0;
   state = 1;
 }
 
 void ConnStateTracker::setReady() {
   delayedcommands.clear();
+  idletime = 0;
   transferlocked = false;
-  time = 0;
   state = 2;
 }
 
 void ConnStateTracker::setBusy() {
   delayedcommands.clear();
-  time = 0;
+  idletime = 0;
   state = 3;
 }
 
@@ -129,6 +131,14 @@ void ConnStateTracker::setTransfer(TransferMonitorBase * tmb, FileList * fls, st
   this->download = download;
   this->passive = passive;
   this->addr = addr;
+}
+
+bool ConnStateTracker::isLoggedIn() {
+  return loggedin;
+}
+
+void ConnStateTracker::setLoggedIn() {
+  loggedin = true;
 }
 
 bool ConnStateTracker::hasTransfer() {

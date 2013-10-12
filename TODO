@@ -1,8 +1,6 @@
-bug: crash when unable to resolve server dns
+bug: transfers sometimes not properly denoted in race status screen
 
-bug: ui refreshing breaks when getting updated too much
-
-feature: race status screen
+bug: losing track of transfer slots sometimes, particularly on failing transfers
 
 feature: local downloads
 
