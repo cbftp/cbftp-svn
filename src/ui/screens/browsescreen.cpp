@@ -23,6 +23,7 @@ BrowseScreen::BrowseScreen(WINDOW * window, UICommunicator * uicommunicator, uns
   virgin = true;
   resort = false;
   changedsort = false;
+  cwdfailed = false;
   currentviewspan = 0;
   sortmethod = 0;
   slidersize = 0;
@@ -34,19 +35,25 @@ BrowseScreen::BrowseScreen(WINDOW * window, UICommunicator * uicommunicator, uns
 }
 
 void BrowseScreen::redraw() {
-  werase(window);
-  curs_set(0);
   if (requestid >= 0 && sitelogic->requestReady(requestid)) {
+    FileList * filelist = sitelogic->getFileList(requestid);
+    if (filelist == NULL) {
+      cwdfailed = true;
+      tickcount = 0;
+      sitelogic->finishRequest(requestid);
+      requestid = -1;
+      uicommunicator->newCommand("updatesetinfo");
+      return;
+    }
     if (!virgin) {
       if (list.cursoredFile() != NULL) {
         selectionhistory.push_front(StringPair(list.getPath(), list.cursoredFile()->getName()));
       }
     }
     virgin = false;
-    FileList * filelist = sitelogic->getFileList(requestid);
-    requestid = -1;
     list.parse(filelist);
     sitelogic->finishRequest(requestid);
+    requestid = -1;
     sort();
     currentviewspan = 0;
     std::string path = list.getPath();
@@ -59,6 +66,8 @@ void BrowseScreen::redraw() {
     }
     //delete filelist;
   }
+  werase(window);
+  curs_set(0);
   if (resort == true) sort();
   unsigned int position = list.currentCursorPosition();
   unsigned int pagerows = (unsigned int) row / 2;
@@ -408,7 +417,16 @@ std::string BrowseScreen::getInfoText() {
     }
     return text;
   }
-  if (changedsort) {
+  if (cwdfailed) {
+    if (tickcount++ < 8) {
+      text = "CWD failed: " + requestedpath;
+      return text;
+    }
+    else {
+      cwdfailed = false;
+    }
+  }
+  else if (changedsort) {
     if (tickcount++ < 8) {
       text = "Sort method: " + list.getSortMethod();
       return text;

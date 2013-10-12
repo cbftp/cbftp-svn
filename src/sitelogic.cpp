@@ -288,6 +288,7 @@ void SiteLogic::commandFail(int id) {
   std::string targetcwdpath;
   std::list<std::string> * subdirs;
   std::string file;
+  std::list<SiteLogicRequest>::iterator it;
   switch (state) {
     case 14: // cwd
       if (conns[id]->hasMKDCWDTarget()) {
@@ -298,6 +299,18 @@ void SiteLogic::commandFail(int id) {
         }
         conns[id]->doMKD(conns[id]->getTargetPath());
         return;
+      }
+      for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
+        if (it->connId() == id) {
+          if (it->requestType() == 0) {
+            requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL));
+            requestsinprogress.erase(it);
+            global->getUICommunicator()->backendPush();
+            handleConnection(id, false);
+            return;
+          }
+          break;
+        }
       }
       break;
     case 15: // mkd fail

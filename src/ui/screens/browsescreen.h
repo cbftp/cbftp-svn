@@ -28,6 +28,7 @@ private:
   bool resort;
   int tickcount;
   bool changedsort;
+  bool cwdfailed;
   unsigned int sortmethod;
   Site * site;
   UIFileList list;
