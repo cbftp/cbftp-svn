@@ -22,10 +22,26 @@ Engine::Engine() {
 
 void Engine::newRace(std::string release, std::string section, std::list<std::string> sites) {
   Race * race = new Race(release, section);
+  std::list<SiteLogic *> addsites;
   for (std::list<std::string>::iterator it = sites.begin(); it != sites.end(); it++) {
     SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(*it);
-    sl->addRace(race, section, release);
-    race->addSite(sl);
+    if (sl == NULL) {
+      // error: no such site
+      continue;
+    }
+    if (!sl->getSite()->hasSection(section)) {
+      // error: section not defined on site
+      continue;
+    }
+    addsites.push_back(sl);
+  }
+  if (addsites.size() < 2) {
+    // minimum 2 sites in a race!
+    return;
+  }
+  for (std::list<SiteLogic *>::iterator it = addsites.begin(); it != addsites.end(); it++) {
+    (*it)->addRace(race, section, release);
+    race->addSite((*it));
   }
   currentraces.push_back(race);
   allraces.push_back(race);
