@@ -193,6 +193,9 @@ void MainScreen::keyPressed(unsigned int ch) {
     case 'G':
       uicommunicator->newCommand("globaloptions");
       break;
+    case 'l':
+      uicommunicator->newCommand("eventlog");
+      break;
   }
   if (mss.isFocused()) {
     switch(ch) {
@@ -225,9 +228,6 @@ void MainScreen::keyPressed(unsigned int ch) {
       case 'w':
         if (mss.getSite() == NULL) break;
         uicommunicator->newCommand("rawcommand", mss.getSite()->getName());
-        break;
-      case 'l':
-        uicommunicator->newCommand("eventlog");
         break;
       case KEY_NPAGE:
         for (unsigned int i = 0; i < pagerows; i++) {
