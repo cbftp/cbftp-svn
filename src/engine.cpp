@@ -147,11 +147,13 @@ void Engine::refreshScoreBoard() {
         }
         if (racecomplete) {
           (*its)->raceLocalComplete(srs);
+          global->getEventLog()->log("Engine", "Race " + (*itr)->getName() + " completed on " +
+              (*its)->getSite()->getName());
           if ((*itr)->isDone()) {
             for (std::list<SiteLogic *>::iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
               (*itd)->raceGlobalComplete();
             }
-            global->getEventLog()->log("Engine", "Race completed: " + (*itr)->getName());
+            global->getEventLog()->log("Engine", "Race globally completed: " + (*itr)->getName());
             currentraces.erase(itr);
             refreshScoreBoard();
             return;

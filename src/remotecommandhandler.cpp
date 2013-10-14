@@ -44,7 +44,9 @@ void RemoteCommandHandler::setPort(int newport) {
 }
 
 void RemoteCommandHandler::connect() {
-  sockfd = global->getIOManager()->registerUDPServerSocket(this, getUDPPort());
+  int udpport = getUDPPort();
+  sockfd = global->getIOManager()->registerUDPServerSocket(this, udpport);
+  global->getEventLog()->log("RemoteCommandHandler", "Listening on UDP port " + global->int2Str(udpport));
 }
 
 void RemoteCommandHandler::FDData(char * data, unsigned int datalen) {
@@ -83,6 +85,7 @@ void RemoteCommandHandler::handleMessage(std::string message) {
 
 void RemoteCommandHandler::disconnect() {
   global->getIOManager()->closeSocket(sockfd);
+  global->getEventLog()->log("RemoteCommandHandler", "Closing UDP socket");
 }
 
 void RemoteCommandHandler::setEnabled(bool enabled) {
@@ -128,6 +131,7 @@ void RemoteCommandHandler::readConfiguration() {
 }
 
 void RemoteCommandHandler::writeState() {
+  global->getEventLog()->log("RemoteCommandHandler", "Writing state...");
   DataFileHandler * filehandler = global->getDataFileHandler();
   if (enabled) filehandler->addOutputLine("RemoteCommandHandler", "enabled=true");
   filehandler->addOutputLine("RemoteCommandHandler", "port=" + global->int2Str(port));

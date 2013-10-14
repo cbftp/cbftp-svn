@@ -5,6 +5,7 @@
 
 #include "../globalcontext.h"
 #include "../datafilehandler.h"
+#include "../eventlog.h"
 
 extern GlobalContext * global;
 
@@ -153,6 +154,7 @@ void UICommunicator::readConfiguration() {
 }
 
 void UICommunicator::writeState() {
+  global->getEventLog()->log("UICommunicator", "Writing state...");
   if (legendEnabled()) {
     global->getDataFileHandler()->addOutputLine("UICommunicator", "legend=true");
   }
