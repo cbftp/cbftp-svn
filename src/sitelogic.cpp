@@ -33,7 +33,7 @@ SiteLogic::SiteLogic(std::string sitename) {
   poke = false;
   rawbuf = new RawBuffer(site->getName());
   int logins = site->getMaxLogins();
-  global->getTickPoke()->startPoke(this, 50, 0);
+  global->getTickPoke()->startPoke(this, "SiteLogic", 50, 0);
   for (int i = 0; i < logins; i++) {
     connstatetracker.push_back(ConnStateTracker());
     conns.push_back(new FTPConn(this, i));
@@ -41,7 +41,7 @@ SiteLogic::SiteLogic(std::string sitename) {
 }
 
 SiteLogic::~SiteLogic() {
-  global->getTickPoke()->stopPoke(this, 0);
+  global->getTickPoke()->stopPoke(this, "SiteLogic", 0);
   delete ptrack;
 }
 

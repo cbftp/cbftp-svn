@@ -14,6 +14,7 @@
 #include "race.h"
 #include "siterace.h"
 #include "skiplist.h"
+#include "eventlog.h"
 
 Engine::Engine() {
   scoreboard = new ScoreBoard();
@@ -26,17 +27,19 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
   for (std::list<std::string>::iterator it = sites.begin(); it != sites.end(); it++) {
     SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(*it);
     if (sl == NULL) {
-      // error: no such site
+      global->getEventLog()->log("Engine", "Trying to race a nonexisting site: " + *it);
       continue;
     }
     if (!sl->getSite()->hasSection(section)) {
-      // error: section not defined on site
+      global->getEventLog()->log("Engine", "Trying to use an undefined section: " +
+          section + " on " + *it);
       continue;
     }
     addsites.push_back(sl);
   }
   if (addsites.size() < 2) {
-    // minimum 2 sites in a race!
+    global->getEventLog()->log("Engine", "Ignoring attempt to race " + release + " in "
+        + section + " on less than 2 sites.");
     return;
   }
   for (std::list<SiteLogic *>::iterator it = addsites.begin(); it != addsites.end(); it++) {
@@ -45,6 +48,8 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
   }
   currentraces.push_back(race);
   allraces.push_back(race);
+  global->getEventLog()->log("Engine", "Starting race: " + section + "/" + release +
+      " on " + global->int2Str((int)addsites.size()) + " sites.");
   setSpeedScale();
 }
 
@@ -146,6 +151,7 @@ void Engine::refreshScoreBoard() {
             for (std::list<SiteLogic *>::iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
               (*itd)->raceGlobalComplete();
             }
+            global->getEventLog()->log("Engine", "Race completed: " + (*itr)->getName());
             currentraces.erase(itr);
             refreshScoreBoard();
             return;

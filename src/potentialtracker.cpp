@@ -11,11 +11,11 @@ PotentialTracker::PotentialTracker(int slots) {
   }
   for (int i = 0; i < slots; i++) top.push_back(new PotentialElement());
   pthread_mutex_init(&listmutex, NULL);
-  global->getTickPoke()->startPoke(this, POTENTIALITY_LIFESPAN / POTENTIALITY_SLICES, 0);
+  global->getTickPoke()->startPoke(this, "PotentialTracker", POTENTIALITY_LIFESPAN / POTENTIALITY_SLICES, 0);
 }
 
 PotentialTracker::~PotentialTracker() {
-  global->getTickPoke()->stopPoke(this, 0);
+  global->getTickPoke()->stopPoke(this, "PotentialTracker", 0);
 }
 
 int PotentialTracker::getMaxAvailablePotential() {

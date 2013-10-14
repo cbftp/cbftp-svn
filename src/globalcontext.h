@@ -42,8 +42,9 @@ class GlobalContext {
   public:
     void init();
     GlobalContext();
+    void linkEventLog(EventLog *);
     void linkWorkManager(WorkManager *);
-    void linkComponents(DataFileHandler *, IOManager *, Engine *, UICommunicator *, SiteManager *, SiteLogicManager *, TransferManager *, TickPoke *, RemoteCommandHandler *, SkipList *, EventLog *);
+    void linkComponents(DataFileHandler *, IOManager *, Engine *, UICommunicator *, SiteManager *, SiteLogicManager *, TransferManager *, TickPoke *, RemoteCommandHandler *, SkipList *);
     SSL_CTX * getSSLCTX();
     Engine * getEngine();
     DataFileHandler * getDataFileHandler();

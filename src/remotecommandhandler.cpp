@@ -7,6 +7,7 @@
 #include "datafilehandler.h"
 #include "engine.h"
 #include "iomanager.h"
+#include "eventlog.h"
 
 RemoteCommandHandler::RemoteCommandHandler() {
   enabled = false;
@@ -51,15 +52,16 @@ void RemoteCommandHandler::FDData(char * data, unsigned int datalen) {
 }
 
 void RemoteCommandHandler::handleMessage(std::string message) {
+  global->getEventLog()->log("RemoteCommandHandler", "Received: " + message);
   size_t one = message.find(" ");
   size_t two = message.find(" ", one + 1);
   size_t three = message.find(" ", two + 1);
   if (one == std::string::npos || two == std::string::npos || three == std::string::npos) {
-    return;
+    global->getEventLog()->log("RemoteCommandHandler", "Bad message format.");
   }
   std::string pass = message.substr(0, one);
   if (pass != password) {
-    return;
+    global->getEventLog()->log("RemoteCommandHandler", "Invalid password.");
   }
   std::string section = message.substr(one + 1, two - (one + 1));
   std::string release = message.substr(two + 1, three - (two + 1));

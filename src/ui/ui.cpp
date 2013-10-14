@@ -9,6 +9,7 @@
 #include "../remotecommandhandler.h"
 #include "../skiplist.h"
 #include "../datafilehandler.h"
+#include "../eventlog.h"
 
 #include "legendwindow.h"
 #include "infowindow.h"
@@ -67,7 +68,7 @@ void UserInterface::initIntern() {
   }
   set_escdelay(25);
   global->getIOManager()->registerStdin(this);
-  global->getTickPoke()->startPoke(this, 250, 0);
+  global->getTickPoke()->startPoke(this, "UI", 250, 0);
   sem_post(&initdone);
 }
 
@@ -376,6 +377,7 @@ void UserInterface::runInstance() {
         uicommunicator.checkoutCommand();
         bool result = global->getDataFileHandler()->tryDecrypt(key);
         if (result) {
+          global->getEventLog()->log("UI", "Data decryption successful.");
           global->getSiteManager()->readConfiguration();
           global->getRemoteCommandHandler()->readConfiguration();
           uicommunicator.readConfiguration();
@@ -388,6 +390,7 @@ void UserInterface::runInstance() {
           switchToWindow(mainscreen);
         }
         else {
+          global->getEventLog()->log("UI", "Data decryption failed.");
           topwindow->update();
           refreshAll();
         }

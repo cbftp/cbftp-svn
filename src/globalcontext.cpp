@@ -21,6 +21,10 @@ void GlobalContext::init() {
   updateTime();
 }
 
+void GlobalContext::linkEventLog(EventLog * el) {
+  this->el = el;
+}
+
 void GlobalContext::linkWorkManager(WorkManager * wm) {
   this->wm = wm;
 }
@@ -28,7 +32,7 @@ void GlobalContext::linkWorkManager(WorkManager * wm) {
 void GlobalContext::linkComponents(DataFileHandler * dfh, IOManager * iom,
     Engine * e, UICommunicator * uic, SiteManager * sm, SiteLogicManager * slm,
     TransferManager * tm, TickPoke * tp, RemoteCommandHandler * rch,
-    SkipList * sl, EventLog * el) {
+    SkipList * sl) {
   this->dfh = dfh;
   this->iom = iom;
   this->e = e;
@@ -39,7 +43,6 @@ void GlobalContext::linkComponents(DataFileHandler * dfh, IOManager * iom,
   this->tp = tp;
   this->rch = rch;
   this->sl = sl;
-  this->el = el;
 }
 
 SSL_CTX * GlobalContext::getSSLCTX() {

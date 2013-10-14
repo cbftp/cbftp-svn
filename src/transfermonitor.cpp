@@ -14,7 +14,7 @@ extern GlobalContext * global;
 TransferMonitor::TransferMonitor() {
   status = 0;
   activedownload = false;
-  global->getTickPoke()->startPoke(this, 50, 0);
+  global->getTickPoke()->startPoke(this, "TransferMonitor", 50, 0);
   timestamp = 0;
 }
 

@@ -19,6 +19,6 @@ public:
   void tick(int);
   void tickerLoop();
   void breakLoop();
-  void startPoke(EventReceiver *, int, int);
-  void stopPoke(EventReceiver *, int);
+  void startPoke(EventReceiver *, std::string, int, int);
+  void stopPoke(EventReceiver *, std::string, int);
 };

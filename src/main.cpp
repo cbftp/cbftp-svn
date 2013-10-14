@@ -48,6 +48,8 @@ Main::Main() {
   }
   forever = true;
   global = new GlobalContext();
+  EventLog * el = new EventLog();
+  global->linkEventLog(el);
   WorkManager * wm = new WorkManager();
   global->linkWorkManager(wm);
   DataFileHandler * dfh = new DataFileHandler(datapath);
@@ -60,8 +62,7 @@ Main::Main() {
   TransferManager * tm = new TransferManager();
   RemoteCommandHandler * rch = new RemoteCommandHandler();
   SkipList * sl = new SkipList();
-  EventLog * el = new EventLog();
-  global->linkComponents(dfh, iom, e, ui->getCommunicator(), sm, slm, tm, tp, rch, sl, el);
+  global->linkComponents(dfh, iom, e, ui->getCommunicator(), sm, slm, tm, tp, rch, sl);
   if (!ui->init()) exit(1);
   tp->tickerLoop();
   global->getUICommunicator()->kill();

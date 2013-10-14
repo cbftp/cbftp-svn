@@ -9,6 +9,7 @@
 #include "site.h"
 #include "datafilehandler.h"
 #include "connstatetracker.h"
+#include "eventlog.h"
 
 extern GlobalContext * global;
 
@@ -39,7 +40,7 @@ void SiteManager::readConfiguration() {
     Site * site = getSite(name);
     if (site == NULL) {
       site = new Site(name);
-      addSite(site);
+      sites.push_back(site);
     }
     if (!setting.compare("addr")) {
       site->setAddress(value);
@@ -140,9 +141,11 @@ void SiteManager::readConfiguration() {
     }
   }
   std::sort(sites.begin(), sites.end(), siteNameComparator);
+  global->getEventLog()->log("SiteManager", "Loaded " + global->int2Str((int)sites.size()) + " sites.");
 }
 
 void SiteManager::writeState() {
+  global->getEventLog()->log("SiteManager", "Writing state...");
   std::vector<Site *>::iterator it;
   std::string filetag = "SiteManager";
   std::string defaultstag = "SiteManagerDefaults";
@@ -211,6 +214,7 @@ void SiteManager::deleteSite(std::string site) {
     if ((*it)->getName().compare(site) == 0) {
       delete *it;
       sites.erase(it);
+      global->getEventLog()->log("SiteManager", "Site " + site + " deleted.");
       return;
     }
   }
@@ -218,6 +222,7 @@ void SiteManager::deleteSite(std::string site) {
 
 void SiteManager::addSite(Site * site) {
   sites.push_back(site);
+  global->getEventLog()->log("SiteManager", "Site " + site->getName() + " added.");
   sortSites();
 }
 
