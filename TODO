@@ -34,8 +34,6 @@ feature: extensive statistics screens
 
 feature: adaptive-length section fields in the editsitescreen
 
-feature: (debug) log
-
 cosmetic: enter site ip:port in the same field
 
 feature: multi-bnc support

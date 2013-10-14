@@ -17,8 +17,8 @@
 extern GlobalContext * global;
 
 MainScreen::MainScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  msslegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [G]lobal settings";
-  msolegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [G]lobal settings";
+  msslegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [G]lobal settings - Event [l]og";
+  msolegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [G]lobal settings - Event [l]og";
   this->uicommunicator = uicommunicator;
   mso.makeLeavableDown();
   autoupdate = true;
@@ -225,6 +225,9 @@ void MainScreen::keyPressed(unsigned int ch) {
       case 'w':
         if (mss.getSite() == NULL) break;
         uicommunicator->newCommand("rawcommand", mss.getSite()->getName());
+        break;
+      case 'l':
+        uicommunicator->newCommand("eventlog");
         break;
       case KEY_NPAGE:
         for (unsigned int i = 0; i < pagerows; i++) {

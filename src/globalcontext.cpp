@@ -28,7 +28,7 @@ void GlobalContext::linkWorkManager(WorkManager * wm) {
 void GlobalContext::linkComponents(DataFileHandler * dfh, IOManager * iom,
     Engine * e, UICommunicator * uic, SiteManager * sm, SiteLogicManager * slm,
     TransferManager * tm, TickPoke * tp, RemoteCommandHandler * rch,
-    SkipList * sl) {
+    SkipList * sl, EventLog * el) {
   this->dfh = dfh;
   this->iom = iom;
   this->e = e;
@@ -39,6 +39,7 @@ void GlobalContext::linkComponents(DataFileHandler * dfh, IOManager * iom,
   this->tp = tp;
   this->rch = rch;
   this->sl = sl;
+  this->el = el;
 }
 
 SSL_CTX * GlobalContext::getSSLCTX() {
@@ -87,6 +88,10 @@ RemoteCommandHandler * GlobalContext::getRemoteCommandHandler() {
 
 SkipList * GlobalContext::getSkipList() {
   return sl;
+}
+
+EventLog * GlobalContext::getEventLog() {
+  return el;
 }
 
 pthread_attr_t * GlobalContext::getPthreadAttr() {

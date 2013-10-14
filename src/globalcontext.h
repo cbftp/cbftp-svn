@@ -15,6 +15,7 @@ class RemoteCommandHandler;
 class IOManager;
 class WorkManager;
 class SkipList;
+class EventLog;
 
 class GlobalContext {
   private:
@@ -31,6 +32,7 @@ class GlobalContext {
     TickPoke * tp;
     RemoteCommandHandler * rch;
     SkipList * sl;
+    EventLog * el;
     pthread_mutex_t time_mutex;
     std::string compiletime;
     std::string svnrev;
@@ -41,7 +43,7 @@ class GlobalContext {
     void init();
     GlobalContext();
     void linkWorkManager(WorkManager *);
-    void linkComponents(DataFileHandler *, IOManager *, Engine *, UICommunicator *, SiteManager *, SiteLogicManager *, TransferManager *, TickPoke *, RemoteCommandHandler *, SkipList *);
+    void linkComponents(DataFileHandler *, IOManager *, Engine *, UICommunicator *, SiteManager *, SiteLogicManager *, TransferManager *, TickPoke *, RemoteCommandHandler *, SkipList *, EventLog *);
     SSL_CTX * getSSLCTX();
     Engine * getEngine();
     DataFileHandler * getDataFileHandler();
@@ -54,6 +56,7 @@ class GlobalContext {
     TickPoke * getTickPoke();
     RemoteCommandHandler * getRemoteCommandHandler();
     SkipList * getSkipList();
+    EventLog * getEventLog();
     pthread_attr_t * getPthreadAttr();
     static int ctimeMSec();
     void updateTime();

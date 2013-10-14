@@ -29,6 +29,7 @@
 #include "screens/globaloptionsscreen.h"
 #include "screens/skiplistscreen.h"
 #include "screens/changekeyscreen.h"
+#include "screens/eventlogscreen.h"
 
 extern GlobalContext * global;
 
@@ -176,6 +177,7 @@ void UserInterface::runInstance() {
   UIWindow * globaloptionsscreen = NULL;
   UIWindow * skiplistscreen = NULL;
   UIWindow * changekeyscreen = NULL;
+  UIWindow * eventlogscreen = NULL;
   legendwindow = new LegendWindow(legend, 2, col);
   infowindow = new InfoWindow(info, 2, col);
   if (global->getDataFileHandler()->fileExists()) {
@@ -320,6 +322,10 @@ void UserInterface::runInstance() {
       else if (command == "skiplist") {
         skiplistscreen = new SkipListScreen(main, &uicommunicator, mainrow, maincol);
         switchToWindow(skiplistscreen);
+      }
+      else if (command == "eventlog") {
+        eventlogscreen = new EventLogScreen(main, &uicommunicator, mainrow, maincol);
+        switchToWindow(eventlogscreen);
       }
       else if (command == "changekey") {
         changekeyscreen = new ChangeKeyScreen(main, &uicommunicator, mainrow, maincol);

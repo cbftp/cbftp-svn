@@ -12,6 +12,7 @@ RawBuffer::RawBuffer(unsigned int maxlength, std::string site, std::string id) {
   inprogress = false;
   uiwatching = false;
   threads = true;
+  eventlog = false;
   writeLine("Log window initialized. Site: " + site + " Thread id: " + id);
 }
 
@@ -23,9 +24,20 @@ RawBuffer::RawBuffer(std::string site) {
   inprogress = false;
   uiwatching = false;
   threads = false;
+  eventlog = false;
   writeLine("Raw command window initialized. Site: " + site);
 }
 
+RawBuffer::RawBuffer() {
+  latestp = 0;
+  latestpcopy = 0;
+  this->maxlength = 1024;
+  inprogress = false;
+  uiwatching = false;
+  threads = false;
+  eventlog = true;
+  writeLine("Event log initialized.");
+}
 void RawBuffer::write(std::string s) {
   size_t split = s.find("\n");
   if (!split) {
@@ -41,7 +53,7 @@ void RawBuffer::write(std::string s) {
       log[(latestp > 0 ? latestp : maxlength) - 1].append(s);
     }
     else {
-      s = "[" + global->ctimeLog() + " " + site + (threads ? " " + id : "") + "] " + s;
+      s = "[" + global->ctimeLog() + (eventlog ? "" : " " + site + (threads ? " " + id : "")) + "] " + s;
       if (log.size() < maxlength) log.push_back(s);
       else log[latestp] = s;
       if (++latestp == maxlength) latestp = 0;

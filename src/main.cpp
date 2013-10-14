@@ -19,6 +19,7 @@
 #include "iomanager.h"
 #include "workmanager.h"
 #include "skiplist.h"
+#include "eventlog.h"
 
 Main::Main() {
   std::string datadirpath = std::string(getenv("HOME")) + "/" + DATAPATH;
@@ -59,7 +60,8 @@ Main::Main() {
   TransferManager * tm = new TransferManager();
   RemoteCommandHandler * rch = new RemoteCommandHandler();
   SkipList * sl = new SkipList();
-  global->linkComponents(dfh, iom, e, ui->getCommunicator(), sm, slm, tm, tp, rch, sl);
+  EventLog * el = new EventLog();
+  global->linkComponents(dfh, iom, e, ui->getCommunicator(), sm, slm, tm, tp, rch, sl, el);
   if (!ui->init()) exit(1);
   tp->tickerLoop();
   global->getUICommunicator()->kill();

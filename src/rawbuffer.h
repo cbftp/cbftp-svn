@@ -19,9 +19,11 @@ class RawBuffer {
     bool inprogress;
     bool threads;
     bool uiwatching;
+    bool eventlog;
   public:
     RawBuffer(unsigned int, std::string, std::string);
     RawBuffer(std::string);
+    RawBuffer();
     void setId(int);
     void write(std::string);
     void writeLine(std::string);
