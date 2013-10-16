@@ -20,6 +20,7 @@
 #include "transfermonitorbase.h"
 #include "delayedcommand.h"
 #include "potentiallistelement.h"
+#include "eventlog.h"
 
 SiteLogic::SiteLogic(std::string sitename) {
   requestidcounter = 0;
@@ -260,6 +261,9 @@ void SiteLogic::commandSuccess(int id) {
         transferComplete(true);
         connstatetracker[id].finishTransfer();
       }
+      else {
+        global->getEventLog()->log("SiteLogic", "BUG: returned successfully from RETR without having a transfer. Shouldn't happen!");
+      }
       break;
     case 20: // STOR started
       // no action yet, maybe for stats later on
@@ -273,6 +277,9 @@ void SiteLogic::commandSuccess(int id) {
         connstatetracker[id].getTransferMonitor()->targetComplete();
         transferComplete(false);
         connstatetracker[id].finishTransfer();
+      }
+      else {
+        global->getEventLog()->log("SiteLogic", "BUG: returned successfully from STOR without having a transfer. Shouldn't happen!");
       }
       break;
     case 22: // ABOR
@@ -371,6 +378,16 @@ void SiteLogic::handleTransferFail(int id, bool download, int err) {
     }
     connstatetracker[id].finishTransfer();
     transferComplete(download);
+  }
+  else {
+    if (download) {
+      global->getEventLog()->log("SiteLogic", "BUG: Returned failed download (code " +
+          global->int2Str(err) + ") without having a transfer, shouldn't happen!");
+    }
+    else {
+      global->getEventLog()->log("SiteLogic", "BUG: Returned failed upload (code " +
+          global->int2Str(err) + ") without having a transfer, shouldn't happen!");
+    }
   }
   connstatetracker[id].setIdle();
   if (err == 1) {
