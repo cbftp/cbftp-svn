@@ -1,6 +1,7 @@
 #include "connstatetracker.h"
 
 #include "delayedcommand.h"
+#include "eventlog.h"
 
 ConnStateTracker::ConnStateTracker() {
   state = 0;
