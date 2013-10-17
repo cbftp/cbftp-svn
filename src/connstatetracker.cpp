@@ -1,7 +1,10 @@
 #include "connstatetracker.h"
 
 #include "delayedcommand.h"
+#include "globalcontext.h"
 #include "eventlog.h"
+
+extern GlobalContext * global;
 
 ConnStateTracker::ConnStateTracker() {
   state = 0;
