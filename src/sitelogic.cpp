@@ -247,6 +247,9 @@ void SiteLogic::commandSuccess(int id) {
           return;
         }
       }
+      else {
+        global->getEventLog()->log("SiteLogic", "BUG: Trying to start an active transfer after PRET. Why oh why?");
+      }
       break;
     case 18: // RETR started
       // no action yet, maybe for stats later on

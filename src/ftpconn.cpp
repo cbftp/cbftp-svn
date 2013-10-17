@@ -14,6 +14,7 @@
 #include "rawbuffer.h"
 #include "iomanager.h"
 #include "sitelogicbase.h"
+#include "eventlog.h"
 
 FTPConn::FTPConn(SiteLogicBase * slb, int id) {
   this->slb = slb;
@@ -512,6 +513,8 @@ void FTPConn::PORTResponse() {
 
 void FTPConn::doCWD(std::string path) {
   if (path == currentpath) {
+    global->getEventLog()->log("FTPConn " + site->getName() + global->int2Str(id),
+        "WARNING: Noop CWD requested: " + path);
     return;
   }
   targetpath = path;
