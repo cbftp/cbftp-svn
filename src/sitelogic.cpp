@@ -780,9 +780,6 @@ bool SiteLogic::getReadyConn(FileList * fl, std::string file, int * ret, bool is
           if (!getSlot(isdownload)) return false;
         }
         connstatetracker[i].setBusy();
-        if (!conns[i]->isProcessing()) {
-          conns[i]->doCWD(fl->getPath());
-        }
         *ret = i;
         return true;
       }
@@ -803,9 +800,6 @@ bool SiteLogic::getReadyConn(FileList * fl, std::string file, int * ret, bool is
             if (!getSlot(isdownload)) return false;
           }
           connstatetracker[i].setBusy();
-          if (!conns[i]->isProcessing()) {
-            conns[i]->doCWD(fl->getPath());
-          }
           *ret = i;
           return true;
         }

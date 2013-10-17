@@ -122,6 +122,7 @@ void ConnStateTracker::setTransfer(TransferMonitorBase * tmb, FileList * fls, st
 }
 
 void ConnStateTracker::setTransfer(TransferMonitorBase * tmb, FileList * fls, std::string file, bool download, bool passive, std::string addr, bool ssl) {
+  if (this->transfer) global->getEventLog()->log("ConnStateTracker", "BUG: Setting transfer while already having a transfer!");
   this->transfer = true;
   this->aborted = false;
   this->ssl = ssl;
