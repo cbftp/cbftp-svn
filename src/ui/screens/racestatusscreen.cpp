@@ -215,6 +215,7 @@ void RaceStatusScreen::update() {
 
 void RaceStatusScreen::keyPressed(unsigned int ch) {
   switch(ch) {
+    case 27: // esc
     case ' ':
     case 10:
       uicommunicator->newCommand("return");

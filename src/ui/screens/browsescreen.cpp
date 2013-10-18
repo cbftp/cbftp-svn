@@ -212,6 +212,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
   bool islink;
   UIFile * cursoredfile;
   switch (ch) {
+    case 27: // esc
     case 'c':
       uicommunicator->newCommand("return");
       break;

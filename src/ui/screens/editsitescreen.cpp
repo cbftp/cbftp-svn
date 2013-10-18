@@ -385,6 +385,7 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
       }
       uicommunicator->newCommand("return");
       return;
+    case 27: // esc
     case 'c':
       uicommunicator->newCommand("return");
       break;

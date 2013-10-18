@@ -72,6 +72,7 @@ void SiteStatusScreen::keyPressed(unsigned int ch) {
     case 'E':
       uicommunicator->newCommand("editsite", "edit", site->getName());
       break;
+    case 27: // esc
     case ' ':
     case 10:
       uicommunicator->newCommand("return");

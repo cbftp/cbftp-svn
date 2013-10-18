@@ -74,7 +74,7 @@ void EventLogScreen::keyPressed(unsigned int ch) {
       uicommunicator->newCommand("update");
       break;
     case 10:
-    case 27:
+    case 27: // esc
       rawbuf->uiWatching(false);
       uicommunicator->newCommand("return");
       break;

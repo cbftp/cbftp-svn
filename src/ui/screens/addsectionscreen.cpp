@@ -93,6 +93,7 @@ void AddSectionScreen::keyPressed(unsigned int ch) {
       currentlegendtext = activeelement->getLegendText();
       uicommunicator->newCommand("updatesetlegend");
       break;
+    case 27: // esc
     case 'c':
       uicommunicator->newCommand("return");
       break;
