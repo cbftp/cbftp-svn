@@ -201,6 +201,12 @@ void FTPConn::FDData(char * data, unsigned int datalen) {
       case 25: // awaiting loginkilling PASS response
         PASSResponse();
         break;
+      case 26: // nothing expected, prepended by failed STOR
+        global->getEventLog()->log("FTPConn", "WARNING: got stuff after failed STOR");
+        break;
+      case 27: // nothing expected, prepended by failed RETR
+        global->getEventLog()->log("FTPConn", "WARNING: got stuff after failed RETR");
+        break;
     }
     databufpos = 0;
   }
@@ -594,12 +600,13 @@ void FTPConn::doRETR(std::string file) {
 void FTPConn::RETRResponse() {
   if (databufcode == 150) {
     slb->commandSuccess(id);
+    state = 19;
   }
   else {
     processing = false;
     slb->commandFail(id);
+    state = 27;
   }
-  state = 19;
 }
 
 void FTPConn::RETRComplete() {
@@ -620,12 +627,13 @@ void FTPConn::doSTOR(std::string file) {
 void FTPConn::STORResponse() {
   if (databufcode == 150) {
     slb->commandSuccess(id);
+    state = 21;
   }
   else {
     processing = false;
     slb->commandFail(id);
+    state = 26;
   }
-  state = 21;
 }
 
 void FTPConn::STORComplete() {
