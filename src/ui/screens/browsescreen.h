@@ -29,6 +29,13 @@ private:
   int tickcount;
   bool changedsort;
   bool cwdfailed;
+  bool wipe;
+  bool wiperecursive;
+  bool wipesuccess;
+  bool wipefailed;
+  std::string wipetarget;
+  std::string wipepath;
+  std::string wipefile;
   unsigned int sortmethod;
   Site * site;
   UIFileList list;

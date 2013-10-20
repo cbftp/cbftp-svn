@@ -43,6 +43,7 @@ public:
   unsigned int currentCursorPosition();
   std::string getPath();
   std::string getSortMethod();
+  void removeFile(std::string);
 };
 
 bool combinedSort(UIFile *, UIFile *);

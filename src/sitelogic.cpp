@@ -150,7 +150,7 @@ void SiteLogic::listRefreshed(int id) {
   std::list<SiteLogicRequest>::iterator it;
   for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
     if (it->connId() == id) {
-      requestsready.push_back(SiteLogicRequestReady(it->requestId(), conns[id]->currentFileList()));
+      requestsready.push_back(SiteLogicRequestReady(it->requestId(), conns[id]->currentFileList(), true));
       requestsinprogress.erase(it);
       global->getUICommunicator()->backendPush();
       break;
@@ -288,6 +288,18 @@ void SiteLogic::commandSuccess(int id) {
     case 22: // ABOR
       connstatetracker[id].setIdle();
       break;
+    case 28: // WIPE
+      for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
+        if (it->connId() == id) {
+          if (it->requestType() == 2 || it->requestType() == 3) {
+            requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, true));
+            requestsinprogress.erase(it);
+            global->getUICommunicator()->backendPush();
+            break;
+          }
+        }
+      }
+      break;
   }
   handleConnection(id, false);
 }
@@ -313,7 +325,7 @@ void SiteLogic::commandFail(int id) {
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
           if (it->requestType() == 0) {
-            requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL));
+            requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, false));
             requestsinprogress.erase(it);
             global->getUICommunicator()->backendPush();
             handleConnection(id, false);
@@ -359,6 +371,19 @@ void SiteLogic::commandFail(int id) {
       return;
     case 21: // STOR post fail
       handleTransferFail(id, false, 2);
+      return;
+    case 28: // WIPE
+      for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
+        if (it->connId() == id) {
+          if (it->requestType() == 2 || it->requestType() == 3) {
+            requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, false));
+            requestsinprogress.erase(it);
+            global->getUICommunicator()->backendPush();
+            break;
+          }
+        }
+      }
+      handleConnection(id, false);
       return;
   }
   // default handling: reconnect
@@ -574,18 +599,27 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
 void SiteLogic::handleRequest(int id) {
   connstatetracker[id].setReady();
   requests.front().setConnId(id);
-  if (requests.front().requestType() == 0) {
-    std::string targetpath = requests.front().requestData();
-    if (conns[id]->getCurrentPath() == targetpath) {
-      conns[id]->doSTAT();
-    }
-    else {
-      conns[id]->doCWD(targetpath);
-    }
-  }
-  else {
-    rawbuf->writeLine(requests.front().requestData());
-    conns[id]->doRaw(requests.front().requestData());
+  std::string targetpath;
+  switch (requests.front().requestType()) {
+    case 0:
+      targetpath = requests.front().requestData();
+      if (conns[id]->getCurrentPath() == targetpath) {
+        conns[id]->doSTAT();
+      }
+      else {
+        conns[id]->doCWD(targetpath);
+      }
+    break;
+    case 1:
+      rawbuf->writeLine(requests.front().requestData());
+      conns[id]->doRaw(requests.front().requestData());
+      break;
+    case 2:
+      conns[id]->doWipe(requests.front().requestData(), true);
+      break;
+    case 3:
+      conns[id]->doWipe(requests.front().requestData(), false);
+      break;
   }
   requestsinprogress.push_back(requests.front());
   requests.pop_front();
@@ -685,6 +719,18 @@ int SiteLogic::requestRawCommand(std::string command) {
   return requestid;
 }
 
+int SiteLogic::requestWipe(std::string path, bool recursive) {
+  int requestid = requestidcounter++;
+  if (recursive) {
+    requests.push_back(SiteLogicRequest(requestid, 2, path));
+  }
+  else {
+    requests.push_back(SiteLogicRequest(requestid, 3, path));
+  }
+  requestSelect();
+  return requestid;
+}
+
 bool SiteLogic::requestReady(int requestid) {
   std::list<SiteLogicRequestReady>::iterator it;
   for (it = requestsready.begin(); it != requestsready.end(); it++) {
@@ -717,21 +763,25 @@ std::string SiteLogic::getRawCommandResult(int requestid) {
   return "";
 }
 
-void SiteLogic::finishRequest(int requestid) {
+bool SiteLogic::finishRequest(int requestid) {
   std::list<SiteLogicRequestReady>::iterator it;
   for (it = requestsready.begin(); it != requestsready.end(); it++) {
     if (it->requestId() == requestid) {
+      bool status = it->requestStatus();
       requestsready.erase(it);
-      return;
+      return status;
     }
   }
   std::list<SiteLogicRequest>::iterator it2;
   for (it2 = requestsinprogress.begin(); it2 != requestsinprogress.end(); it2++) {
     if (it->requestId() == requestid) {
+      bool status = it->requestStatus();
       requestsinprogress.erase(it2);
-      return;
+      return status;
     }
   }
+  global->getEventLog()->log("SiteLogic", "BUG: Couldn't find request to finish.");
+  return false;
 }
 
 Site * SiteLogic::getSite() {

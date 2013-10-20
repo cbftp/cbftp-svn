@@ -68,6 +68,7 @@ class FTPConn : private EventReceiver {
     void STORComplete();
     void ABORResponse();
     void QUITResponse();
+    void WIPEResponse();
     void sendEcho(std::string);
   public:
     int getId();
@@ -86,6 +87,7 @@ class FTPConn : private EventReceiver {
     void doPROTP();
     void doPROTC();
     void doRaw(std::string);
+    void doWipe(std::string, bool);
     void doSTAT();
     void doSTAT(SiteRace *, FileList *);
     void doCPSV();

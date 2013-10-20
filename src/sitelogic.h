@@ -105,8 +105,9 @@ class SiteLogic : public SiteLogicBase {
     bool requestReady(int);
     FileList * getFileList(int);
     std::string getRawCommandResult(int);
-    void finishRequest(int);
-    void requestViewFile(std::string);
+    bool finishRequest(int);
+    int requestViewFile(std::string);
+    int requestWipe(std::string, bool);
     void pushPotential(int, std::string, SiteLogic *);
     bool potentialCheck(int);
     void updateName();

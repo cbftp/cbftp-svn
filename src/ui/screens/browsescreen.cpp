@@ -5,6 +5,7 @@
 #include "../../site.h"
 #include "../../globalcontext.h"
 #include "../../skiplist.h"
+#include "../../eventlog.h"
 
 #include "../uicommunicator.h"
 #include "../termint.h"
@@ -24,6 +25,10 @@ BrowseScreen::BrowseScreen(WINDOW * window, UICommunicator * uicommunicator, uns
   resort = false;
   changedsort = false;
   cwdfailed = false;
+  wipe = false;
+  wiperecursive = false;
+  wipesuccess = false;
+  wipefailed = false;
   currentviewspan = 0;
   sortmethod = 0;
   slidersize = 0;
@@ -36,35 +41,51 @@ BrowseScreen::BrowseScreen(WINDOW * window, UICommunicator * uicommunicator, uns
 
 void BrowseScreen::redraw() {
   if (requestid >= 0 && sitelogic->requestReady(requestid)) {
-    FileList * filelist = sitelogic->getFileList(requestid);
-    if (filelist == NULL) {
-      cwdfailed = true;
-      tickcount = 0;
+    if (wipe) {
+      bool wipestatus = sitelogic->finishRequest(requestid);
+      requestid = -1;
+      wipe = false;
+      if (wipestatus) {
+        wipesuccess = true;
+        if (list.getPath() == wipepath) {
+          list.removeFile(wipefile);
+        }
+      }
+      else {
+        wipefailed = true;
+      }
+    }
+    else {
+      FileList * filelist = sitelogic->getFileList(requestid);
+      if (filelist == NULL) {
+        cwdfailed = true;
+        tickcount = 0;
+        sitelogic->finishRequest(requestid);
+        requestid = -1;
+        uicommunicator->newCommand("updatesetinfo");
+        return;
+      }
+      if (!virgin) {
+        if (list.cursoredFile() != NULL) {
+          selectionhistory.push_front(StringPair(list.getPath(), list.cursoredFile()->getName()));
+        }
+      }
+      virgin = false;
+      list.parse(filelist);
       sitelogic->finishRequest(requestid);
       requestid = -1;
-      uicommunicator->newCommand("updatesetinfo");
-      return;
-    }
-    if (!virgin) {
-      if (list.cursoredFile() != NULL) {
-        selectionhistory.push_front(StringPair(list.getPath(), list.cursoredFile()->getName()));
+      sort();
+      currentviewspan = 0;
+      std::string path = list.getPath();
+      for (std::list<StringPair>::iterator it = selectionhistory.begin(); it != selectionhistory.end(); it++) {
+        if (it->getKey() == path) {
+          list.selectFileName(it->getValue());
+          selectionhistory.erase(it);
+          break;
+        }
       }
+      //delete filelist;
     }
-    virgin = false;
-    list.parse(filelist);
-    sitelogic->finishRequest(requestid);
-    requestid = -1;
-    sort();
-    currentviewspan = 0;
-    std::string path = list.getPath();
-    for (std::list<StringPair>::iterator it = selectionhistory.begin(); it != selectionhistory.end(); it++) {
-      if (it->getKey() == path) {
-        list.selectFileName(it->getValue());
-        selectionhistory.erase(it);
-        break;
-      }
-    }
-    //delete filelist;
   }
   werase(window);
   curs_set(0);
@@ -112,6 +133,27 @@ void BrowseScreen::redraw() {
 }
 
 void BrowseScreen::update() {
+  if (uicommunicator->hasNewCommand()) {
+    if (uicommunicator->getCommand() == "yes") {
+      if (wipe) {
+        requestid = sitelogic->requestWipe(wipetarget, wiperecursive);
+      }
+      else {
+        global->getEventLog()->log("BrowseScreen", "WARNING: got a 'yes' answer for an unknown command");
+      }
+      uicommunicator->checkoutCommand();
+      redraw();
+      uicommunicator->newCommand("updatesetinfo");
+      return;
+    }
+    else if (uicommunicator->getCommand() == "no") {
+      wipe = false;
+      uicommunicator->checkoutCommand();
+      redraw();
+      return;
+    }
+    uicommunicator->checkoutCommand();
+  }
   if (requestid >= 0 && sitelogic->requestReady(requestid)) {
     uicommunicator->newCommand("redraw");
     return;
@@ -279,6 +321,26 @@ void BrowseScreen::keyPressed(unsigned int ch) {
         uicommunicator->newCommand("updatesetinfo");
       }
       break;
+    case 'W':
+      cursoredfile = list.cursoredFile();
+      if (cursoredfile == NULL) {
+        break;
+      }
+      tickcount = 0;
+      wipe = true;
+      wiperecursive = false;
+      if (cursoredfile->isDirectory()) {
+        wiperecursive = true;
+      }
+      oldpath = list.getPath();
+      wipepath = oldpath;
+      if (oldpath.length() > 1) {
+        oldpath += "/";
+      }
+      wipefile = cursoredfile->getName();
+      wipetarget = oldpath + wipefile;
+      uicommunicator->newCommand("confirmation");
+      break;
     case KEY_LEFT:
     case 8:
     case KEY_BACKSPACE:
@@ -391,7 +453,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
 }
 
 std::string BrowseScreen::getLegendText() {
-  return "[c]ancel - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [b]ind to section - [s]ort - ra[w] command";
+  return "[c]ancel - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [b]ind to section - [s]ort - ra[w] command - [W]ipe";
 }
 
 std::string BrowseScreen::getInfoLabel() {
@@ -401,7 +463,12 @@ std::string BrowseScreen::getInfoLabel() {
 std::string BrowseScreen::getInfoText() {
   std::string text = list.getPath();
   if (requestid >= 0) {
-    text = "Getting list for " + requestedpath + "  ";
+    if (wipe) {
+      text = "Wiping " + wipetarget + "  ";
+    }
+    else {
+      text = "Getting list for " + requestedpath + "  ";
+    }
     switch(spinnerpos++ % 4) {
       case 0:
         text += "|";
@@ -418,7 +485,25 @@ std::string BrowseScreen::getInfoText() {
     }
     return text;
   }
-  if (cwdfailed) {
+  if (wipesuccess) {
+    if (tickcount++ < 8) {
+      text = "Wipe successful: " + wipetarget;
+      return text;
+    }
+    else {
+      wipesuccess = false;
+    }
+  }
+  else if (wipefailed) {
+    if (tickcount++ < 8) {
+      text = "Wipe failed: " + wipetarget;
+      return text;
+    }
+    else {
+      wipefailed = false;
+    }
+  }
+  else if (cwdfailed) {
     if (tickcount++ < 8) {
       text = "CWD failed: " + requestedpath;
       return text;

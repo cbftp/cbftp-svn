@@ -207,6 +207,9 @@ void FTPConn::FDData(char * data, unsigned int datalen) {
       case 27: // nothing expected, prepended by failed RETR
         global->getEventLog()->log("FTPConn", "WARNING: got stuff after failed RETR");
         break;
+      case 28: // wipe
+        WIPEResponse();
+        break;
     }
     databufpos = 0;
   }
@@ -460,10 +463,27 @@ void FTPConn::doRaw(std::string command) {
   sendEcho(command.c_str());
 }
 
+void FTPConn::doWipe(std::string path, bool recursive) {
+  state = 28;
+  sendEcho(std::string("SITE WIPE ") + (recursive ? "-r " : "") + path);
+}
+
 void FTPConn::RawResponse() {
   processing = false;
   std::string ret = std::string(databuf, databufpos);
   slb->rawCommandResultRetrieved(id, ret);
+}
+
+void FTPConn::WIPEResponse() {
+  processing = false;
+  if (databufcode == 200) {
+    std::string data = std::string(databuf, databufpos);
+    if (data.find("successfully") != std::string::npos) {
+      slb->commandSuccess(id);
+      return;
+    }
+  }
+  slb->commandFail(id);
 }
 
 void FTPConn::doCPSV() {

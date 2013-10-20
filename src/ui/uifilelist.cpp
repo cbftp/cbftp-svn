@@ -259,3 +259,24 @@ std::string UIFileList::getPath() {
 std::string UIFileList::getSortMethod() {
   return sortmethod;
 }
+
+void UIFileList::removeFile(std::string file) {
+  for (unsigned int i = 0; i < sortedfiles.size(); i++) {
+    if (sortedfiles[i]->getName() == file) {
+      if (currentcursored == sortedfiles[i]) {
+        if (sortedfiles.size() > i + 1) {
+          currentcursored = sortedfiles[i + 1];
+        }
+        else if (sortedfiles.size() == 1) {
+          currentcursored = NULL;
+        }
+        else {
+          currentcursored = sortedfiles[i - 1];
+        }
+      }
+      sortedfiles.erase(sortedfiles.begin() + i);
+      setNewCurrentPosition();
+      break;
+    }
+  }
+}
