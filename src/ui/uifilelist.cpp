@@ -229,7 +229,7 @@ void UIFileList::unSelect() {
 }
 
 unsigned int UIFileList::size() {
-  return files.size();
+  return sortedfiles.size();
 }
 
 unsigned int UIFileList::sizeFiles() {
@@ -263,6 +263,13 @@ std::string UIFileList::getSortMethod() {
 void UIFileList::removeFile(std::string file) {
   for (unsigned int i = 0; i < sortedfiles.size(); i++) {
     if (sortedfiles[i]->getName() == file) {
+      totalsize -= sortedfiles[i]->getSize();
+      if (sortedfiles[i]->isDirectory()) {
+        numdirs--;
+      }
+      else {
+        numfiles--;
+      }
       if (currentcursored == sortedfiles[i]) {
         if (sortedfiles.size() > i + 1) {
           currentcursored = sortedfiles[i + 1];
