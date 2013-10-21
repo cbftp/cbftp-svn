@@ -170,7 +170,7 @@ void RaceStatusScreen::update() {
     TermInt::printStr(window, y, x, (*it)->getSite()->getName(), 4);
     for (std::list<std::string>::iterator it2 = subpaths.begin(); it2 != subpaths.end(); it2++) {
       std::string origsubpath = *it2;
-      if (!smalldirs && race->guessedSize(origsubpath) < 5) {
+      if (origsubpath != "" && !smalldirs && race->guessedSize(origsubpath) < 5) {
         continue;
       }
       std::string printsubpath = origsubpath;
