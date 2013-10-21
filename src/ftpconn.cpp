@@ -201,14 +201,11 @@ void FTPConn::FDData(char * data, unsigned int datalen) {
       case 25: // awaiting loginkilling PASS response
         PASSResponse();
         break;
-      case 26: // nothing expected, prepended by failed STOR
-        global->getEventLog()->log("FTPConn", "WARNING: got stuff after failed STOR");
-        break;
-      case 27: // nothing expected, prepended by failed RETR
-        global->getEventLog()->log("FTPConn", "WARNING: got stuff after failed RETR");
-        break;
-      case 28: // wipe
+      case 28: // awaiting WIPE response
         WIPEResponse();
+        break;
+      case 29: // awaiting DELE response
+        DELEResponse();
         break;
     }
     databufpos = 0;
@@ -468,6 +465,11 @@ void FTPConn::doWipe(std::string path, bool recursive) {
   sendEcho(std::string("SITE WIPE ") + (recursive ? "-r " : "") + path);
 }
 
+void FTPConn::doDELE(std::string path) {
+  state = 29;
+  sendEcho("DELE " + path);
+}
+
 void FTPConn::RawResponse() {
   processing = false;
   std::string ret = std::string(databuf, databufpos);
@@ -484,6 +486,16 @@ void FTPConn::WIPEResponse() {
     }
   }
   slb->commandFail(id);
+}
+
+void FTPConn::DELEResponse() {
+  processing = false;
+  if (databufcode == 250) {
+    slb->commandSuccess(id);
+  }
+  else {
+    slb->commandFail(id);
+  }
 }
 
 void FTPConn::doCPSV() {
@@ -625,7 +637,6 @@ void FTPConn::RETRResponse() {
   else {
     processing = false;
     slb->commandFail(id);
-    state = 27;
   }
 }
 
@@ -652,7 +663,6 @@ void FTPConn::STORResponse() {
   else {
     processing = false;
     slb->commandFail(id);
-    state = 26;
   }
 }
 
