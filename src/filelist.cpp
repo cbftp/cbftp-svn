@@ -21,6 +21,12 @@ FileList::FileList(std::string username, std::string path) {
   locked = false;
 }
 
+FileList::~FileList() {
+  for (std::map<std::string, File *>::iterator it = files.begin(); it != files.end(); it++) {
+    delete it->second;
+  }
+}
+
 bool FileList::updateFile(std::string start, int touch) {
   File * file = new File(start, touch);
   std::string name = file->getName();

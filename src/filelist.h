@@ -26,6 +26,7 @@ class FileList {
     void editOwnedFileCount(bool);
   public:
     FileList(std::string, std::string);
+    ~FileList();
     bool updateFile(std::string, int);
     void touchFile(std::string, std::string);
     void touchFile(std::string, std::string, bool);

@@ -29,6 +29,7 @@ class SiteRace {
     std::string getPath();
     std::string getRelevantSubPath();
     SiteRace(Race *, std::string, std::string, std::string);
+    ~SiteRace();
     FileList * getFileListForPath(std::string);
     FileList * getFileListForFullPath(std::string);
     std::string getSubPathForFileList(FileList *);

@@ -79,6 +79,7 @@ class FTPConn : private EventReceiver {
     void reconnect();
     bool isProcessing();
     FTPConn(SiteLogicBase *, int);
+    ~FTPConn();
     int updateFileList(FileList *);
     void updateName();
     std::string getCurrentPath();

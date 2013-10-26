@@ -33,6 +33,11 @@ FTPConn::FTPConn(SiteLogicBase * slb, int id) {
   state = 0;
 }
 
+FTPConn::~FTPConn() {
+  delete rawbuf;
+  delete databuf;
+}
+
 int FTPConn::getId() {
   return id;
 }

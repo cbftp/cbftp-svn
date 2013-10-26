@@ -27,6 +27,12 @@ SiteRace::SiteRace(Race * race, std::string section, std::string release, std::s
   done = false;
 }
 
+SiteRace::~SiteRace() {
+  for (std::map<std::string, FileList *>::iterator it = filelists.begin(); it != filelists.end(); it++) {
+    delete it->second;
+  }
+}
+
 std::string SiteRace::getSection() {
   return section;
 }
