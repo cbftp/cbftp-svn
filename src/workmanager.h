@@ -9,6 +9,14 @@
 #define MAXDATASIZE 2048
 #define BUFSSIZE 32
 
+#define WORK_DATA 2534
+#define WORK_DATABUF 2535
+#define WORK_TICK 2536
+#define WORK_CONNECTED 2537
+#define WORK_DISCONNECTED 2538
+#define WORK_SSL_SUCCESS 2539
+#define WORK_SSL_FAIL 2540
+
 class EventReceiver;
 class Event;
 

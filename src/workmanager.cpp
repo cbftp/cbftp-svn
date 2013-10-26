@@ -18,7 +18,7 @@ WorkManager::WorkManager() {
 
 void WorkManager::dispatchFDData(EventReceiver * er) {
   pthread_mutex_lock(&dataqueue_mutex);
-  dataqueue.push_back(Event(er, 0));
+  dataqueue.push_back(Event(er, WORK_DATA));
   pthread_mutex_unlock(&dataqueue_mutex);
   sem_post(&dispatch);
   sem_wait(&readdata);
@@ -26,42 +26,42 @@ void WorkManager::dispatchFDData(EventReceiver * er) {
 
 void WorkManager::dispatchFDData(EventReceiver * er, char * buf, int len) {
   pthread_mutex_lock(&dataqueue_mutex);
-  dataqueue.push_back(Event(er, 1, buf, len));
+  dataqueue.push_back(Event(er, WORK_DATABUF, buf, len));
   pthread_mutex_unlock(&dataqueue_mutex);
   sem_post(&dispatch);
 }
 
 void WorkManager::dispatchTick(EventReceiver * er, int interval) {
   pthread_mutex_lock(&dataqueue_mutex);
-  dataqueue.push_back(Event(er, 2, interval));
+  dataqueue.push_back(Event(er, WORK_TICK, interval));
   pthread_mutex_unlock(&dataqueue_mutex);
   sem_post(&dispatch);
 }
 
 void WorkManager::dispatchEventConnected(EventReceiver * er) {
   pthread_mutex_lock(&dataqueue_mutex);
-  dataqueue.push_back(Event(er, 3));
+  dataqueue.push_back(Event(er, WORK_CONNECTED));
   pthread_mutex_unlock(&dataqueue_mutex);
   sem_post(&dispatch);
 }
 
 void WorkManager::dispatchEventDisconnected(EventReceiver * er) {
   pthread_mutex_lock(&dataqueue_mutex);
-  dataqueue.push_back(Event(er, 4));
+  dataqueue.push_back(Event(er, WORK_DISCONNECTED));
   pthread_mutex_unlock(&dataqueue_mutex);
   sem_post(&dispatch);
 }
 
 void WorkManager::dispatchEventSSLSuccess(EventReceiver * er) {
   pthread_mutex_lock(&dataqueue_mutex);
-  dataqueue.push_back(Event(er, 5));
+  dataqueue.push_back(Event(er, WORK_SSL_SUCCESS));
   pthread_mutex_unlock(&dataqueue_mutex);
   sem_post(&dispatch);
 }
 
 void WorkManager::dispatchEventSSLFail(EventReceiver * er) {
   pthread_mutex_lock(&dataqueue_mutex);
-  dataqueue.push_back(Event(er, 6));
+  dataqueue.push_back(Event(er, WORK_SSL_FAIL));
   pthread_mutex_unlock(&dataqueue_mutex);
   sem_post(&dispatch);
 }
@@ -81,28 +81,28 @@ void WorkManager::runInstance() {
     EventReceiver * er = event.getReceiver();
     er->lock();
     switch (event.getType()) {
-      case 0:
+      case WORK_DATA:
         event.getReceiver()->FDData();
         sem_post(&readdata);
         break;
-      case 1:
+      case WORK_DATABUF:
         data = event.getData();
         er->FDData(data, event.getDataLen());
         blockpool.returnBlock(data);
         break;
-      case 2:
+      case WORK_TICK:
         er->tick(event.getInterval());
         break;
-      case 3:
+      case WORK_CONNECTED:
         er->FDConnected();
         break;
-      case 4:
+      case WORK_DISCONNECTED:
         er->FDDisconnected();
         break;
-      case 5:
+      case WORK_SSL_SUCCESS:
         er->FDSSLSuccess();
         break;
-      case 6:
+      case WORK_SSL_FAIL:
         er->FDSSLFail();
         break;
     }
