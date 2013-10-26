@@ -6,6 +6,10 @@ EventLog::EventLog() {
   rawbuf = new RawBuffer();
 }
 
+EventLog::~EventLog() {
+  delete rawbuf;
+}
+
 RawBuffer * EventLog::getRawBuffer() {
   return rawbuf;
 }

@@ -9,6 +9,7 @@ private:
   RawBuffer * rawbuf;
 public:
   EventLog();
+  ~EventLog();
   RawBuffer * getRawBuffer();
   void log(std::string, std::string);
 };

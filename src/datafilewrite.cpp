@@ -42,13 +42,13 @@ int main(int argc, char ** argv) {
   }
   if (strstr((const char *)rawdata, std::string("DataFileHandler.readable").data()) == NULL) {
     std::cout << "Error: The input file is not a valid clusterbomb data file, or is missing the DataFileHandler.readable entry." << std::endl;
-    delete rawdata;
+    delete[] rawdata;
     return -1;
   }
   unsigned char ciphertext[rawdatalen + Crypto::blocksize()];
   int ciphertextlen;
   Crypto::encrypt(rawdata, rawdatalen, (unsigned char *)key.data(), ciphertext, &ciphertextlen);
-  delete rawdata;
+  delete[] rawdata;
   std::ofstream outfile;
   outfile.open(outpath, std::ios::trunc);
   outfile.write((const char *)ciphertext, ciphertextlen);

@@ -43,7 +43,7 @@ int main(int argc, char ** argv) {
   int decryptedlen;
   Crypto::decrypt(rawdata, rawdatalen, (unsigned char *)key.data(), decryptedtext, &decryptedlen);
   decryptedtext[decryptedlen] = '\0';
-  delete rawdata;
+  delete[] rawdata;
   if (strstr((const char *)decryptedtext, std::string("DataFileHandler.readable").data()) == NULL) {
     std::cout << "Error: Either the key is wrong, or the indata file is not a valid clusterbomb data file." << std::endl;
     return -1;
