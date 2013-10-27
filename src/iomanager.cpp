@@ -1,5 +1,7 @@
 #include "iomanager.h"
 
+#include <unistd.h>
+
 #include "eventreceiver.h"
 
 IOManager::IOManager() {

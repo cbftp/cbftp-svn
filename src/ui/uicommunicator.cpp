@@ -2,6 +2,7 @@
 
 #include <ncurses.h>
 #include <vector>
+#include <unistd.h>
 
 #include "../globalcontext.h"
 #include "../datafilehandler.h"
