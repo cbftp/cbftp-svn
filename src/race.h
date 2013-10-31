@@ -52,4 +52,5 @@ class Race {
     void reportSFV(SiteRace *, std::string);
     void reportDone(SiteRace *);
     void reportSize(SiteRace *, FileList *, std::string, std::list<std::string> *, bool);
+    void setUndone();
 };

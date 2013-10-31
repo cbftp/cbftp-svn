@@ -175,6 +175,9 @@ void RaceStatusScreen::update() {
       }
       std::string printsubpath = origsubpath;
       FileList * fl = sr->getFileListForPath(origsubpath);
+      if (fl == NULL) {
+        continue;
+      }
       if (printsubpath == "") {
         printsubpath = "/";
       }

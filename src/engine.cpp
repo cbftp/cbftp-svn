@@ -22,7 +22,18 @@ Engine::Engine() {
 }
 
 void Engine::newRace(std::string release, std::string section, std::list<std::string> sites) {
-  Race * race = new Race(release, section);
+  Race * race = NULL;
+  bool append = false;
+  for (std::list<Race *>::iterator it = allraces.begin(); it != allraces.end(); it++) {
+    if ((*it)->getName() == release && (*it)->getSection() == section) {
+      race = *it;
+      append = true;
+      break;
+    }
+  }
+  if (race == NULL) {
+    race = new Race(release, section);
+  }
   std::list<SiteLogic *> addsites;
   for (std::list<std::string>::iterator it = sites.begin(); it != sites.end(); it++) {
     SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(*it);
@@ -35,22 +46,58 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
           section + " on " + *it);
       continue;
     }
-    addsites.push_back(sl);
+    bool add = true;
+    for (std::list<SiteLogic *>::iterator it2 = race->begin(); it2 != race->end(); it2++) {
+      if (sl == *it2) {
+        add = false;
+        break;
+      }
+    }
+    if (add) {
+      addsites.push_back(sl);
+    }
   }
-  if (addsites.size() < 2) {
+  if (addsites.size() < 2 && !append) {
     global->getEventLog()->log("Engine", "Ignoring attempt to race " + release + " in "
         + section + " on less than 2 sites.");
     return;
   }
-  for (std::list<SiteLogic *>::iterator it = addsites.begin(); it != addsites.end(); it++) {
-    (*it)->addRace(race, section, release);
-    race->addSite((*it));
+  bool readdtocurrent = true;
+  if (addsites.size() > 0) {
+    if (append) {
+      for (std::list<Race *>::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
+        if (*it == race) {
+          readdtocurrent = false;
+          break;
+        }
+      }
+      if (readdtocurrent) {
+        global->getEventLog()->log("Engine", "Reactivating race: " + section + "/" + release);
+        race->setUndone();
+        for (std::list<SiteLogic *>::iterator it = race->begin(); it != race->end(); it++) {
+          (*it)->activate();
+        }
+      }
+    }
+    for (std::list<SiteLogic *>::iterator it = addsites.begin(); it != addsites.end(); it++) {
+      (*it)->addRace(race, section, release);
+      race->addSite((*it));
+    }
+    if (!append) {
+      currentraces.push_back(race);
+      allraces.push_back(race);
+      global->getEventLog()->log("Engine", "Starting race: " + section + "/" + release +
+          " on " + global->int2Str((int)addsites.size()) + " sites.");
+    }
+    else {
+      if (readdtocurrent) {
+        currentraces.push_back(race);
+      }
+      global->getEventLog()->log("Engine", "Appending to race: " + section + "/" + release +
+          " with " + global->int2Str((int)addsites.size()) + " sites.");
+    }
+    setSpeedScale();
   }
-  currentraces.push_back(race);
-  allraces.push_back(race);
-  global->getEventLog()->log("Engine", "Starting race: " + section + "/" + release +
-      " on " + global->int2Str((int)addsites.size()) + " sites.");
-  setSpeedScale();
 }
 
 void Engine::someRaceFileListRefreshed() {

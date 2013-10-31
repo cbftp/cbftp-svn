@@ -178,6 +178,10 @@ void Race::reportDone(SiteRace * sr) {
   }
 }
 
+void Race::setUndone() {
+  done = false;
+}
+
 void Race::reportSize(SiteRace * sr, FileList * fl, std::string subpath, std::list<std::string > * uniques, bool final) {
   std::list<std::string>::iterator itu;
   File * file;
