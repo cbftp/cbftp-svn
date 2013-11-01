@@ -1,23 +1,16 @@
 #pragma once
 
-#include <openssl/ssl.h>
 #include <pthread.h>
-#include <semaphore.h>
-#include <sys/epoll.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <fcntl.h>
-#include <openssl/ssl.h>
-#include <iostream>
 #include <map>
-
-#include "workmanager.h"
-#include "globalcontext.h"
-#include "datablock.h"
-#include "datablockpool.h"
+#include <string>
+#include <openssl/ssl.h>
+#include <list>
 
 class EventReceiver;
+class DataBlockPool;
+class WorkManager;
+class GlobalContext;
+class DataBlock;
 
 #define MAXEVENTS 32
 

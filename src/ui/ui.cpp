@@ -1,6 +1,7 @@
 #include "ui.h"
 
 #include <sys/ioctl.h>
+#include <iostream>
 
 #include "../globalcontext.h"
 #include "../tickpoke.h"

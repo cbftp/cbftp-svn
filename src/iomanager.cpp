@@ -1,7 +1,16 @@
 #include "iomanager.h"
 
 #include <unistd.h>
+#include <sys/epoll.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <fcntl.h>
 
+#include "workmanager.h"
+#include "globalcontext.h"
+#include "datablock.h"
+#include "datablockpool.h"
 #include "eventreceiver.h"
 
 IOManager::IOManager() {
