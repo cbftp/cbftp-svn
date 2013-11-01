@@ -46,7 +46,6 @@ class SiteLogic : public SiteLogicBase {
     std::list<SiteLogicRequestReady> requestsready;
     int requestidcounter;
     Site * site;
-    void activate();
     void handleConnection(int, bool);
     void handleRequest(int);
     void addRecentList(SiteRace *);
@@ -92,6 +91,7 @@ class SiteLogic : public SiteLogicBase {
     int getCurrDown();
     int getCurrUp();
     int getCurrLogins();
+    void activate();
     void connectConn(int);
     void disconnectConn(int);
     void issueRawCommand(unsigned int, std::string);
