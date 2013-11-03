@@ -52,6 +52,7 @@ class SiteManager {
     void setDefaultSSLFXPForced(bool);
     void writeState();
     void sortSites();
+    void proxyRemoved(std::string);
 };
 
 bool siteNameComparator(Site *, Site *);

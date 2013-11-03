@@ -6,6 +6,7 @@ void MenuSelectOptionElement::init(std::string identifier, int row, int col, std
   this->col = col;
   this->label = label;
   active = false;
+  shown = true;
 }
 
 MenuSelectOptionElement::~MenuSelectOptionElement() {
@@ -29,6 +30,10 @@ void MenuSelectOptionElement::deactivate() {
   active = false;
 }
 
+bool MenuSelectOptionElement::isActive() {
+  return active;
+}
+
 std::string MenuSelectOptionElement::getLegendText() {
   return "";
 }
@@ -47,4 +52,16 @@ int MenuSelectOptionElement::cursorPosition() {
 
 void MenuSelectOptionElement::inputChar(int ch) {
 
+}
+
+void MenuSelectOptionElement::hide() {
+  shown = false;
+}
+
+void MenuSelectOptionElement::show() {
+  shown = true;
+}
+
+bool MenuSelectOptionElement::visible() {
+  return shown;
 }

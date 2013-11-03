@@ -5,6 +5,7 @@
 #include "menuselectoptionnumarrow.h"
 #include "menuselectoptioncheckbox.h"
 #include "menuselectoptiontextbutton.h"
+#include "menuselectoptiontextarrow.h"
 
 MenuSelectOption::MenuSelectOption() {
   pointer = 0;
@@ -18,6 +19,9 @@ bool MenuSelectOption::goDown() {
   bool movefound = false;
   unsigned int closest = -1;
   for (unsigned int i = 0; i < options.size(); i++) {
+    if (!options[i]->visible()) {
+      continue;
+    }
     unsigned int row = options[i]->getRow();
     if (row > crow && options[i]->getCol() == ccol) {
       if (row < closest || closest == (unsigned int)-1) {
@@ -47,6 +51,9 @@ bool MenuSelectOption::goUp() {
   bool movefound = false;
   unsigned int closest = -1;
   for (unsigned int i = 0; i < options.size(); i++) {
+    if (!options[i]->visible()) {
+      continue;
+    }
     unsigned int row = options[i]->getRow();
     if (row < crow && options[i]->getCol() == ccol) {
       if (row > closest || closest == (unsigned int)-1) {
@@ -76,6 +83,9 @@ bool MenuSelectOption::goRight() {
   bool movefound = false;
   unsigned int closest = -1;
   for (unsigned int i = 0; i < options.size(); i++) {
+    if (!options[i]->visible()) {
+      continue;
+    }
     unsigned int col = options[i]->getCol();
     if (col > ccol && options[i]->getRow() == crow) {
       if (col < closest || closest == (unsigned int)-1) {
@@ -105,6 +115,9 @@ bool MenuSelectOption::goLeft() {
   bool movefound = false;
   unsigned int closest = -1;
   for (unsigned int i = 0; i < options.size(); i++) {
+    if (!options[i]->visible()) {
+      continue;
+    }
     unsigned int col = options[i]->getCol();
     if (col < ccol && options[i]->getRow() == crow) {
       if (col > closest || closest == (unsigned int)-1) {
@@ -139,6 +152,12 @@ void MenuSelectOption::addStringField(int row, int col, std::string identifier, 
   options.push_back(new MenuSelectOptionTextField(identifier, row, col, label, starttext, visiblelen, maxlen, secret));
 }
 
+MenuSelectOptionTextArrow * MenuSelectOption::addTextArrow(int row, int col, std::string identifier, std::string label) {
+  MenuSelectOptionTextArrow * msota = new MenuSelectOptionTextArrow(identifier, row, col, label);
+  options.push_back(msota);
+  return msota;
+}
+
 void MenuSelectOption::addIntArrow(int row, int col, std::string identifier, std::string label, int startval, int min, int max) {
   options.push_back(new MenuSelectOptionNumArrow(identifier, row, col, label, startval, min, max));
 }
@@ -160,6 +179,16 @@ MenuSelectOptionElement * MenuSelectOption::getElement(unsigned int i) {
     return NULL;
   }
   return options[i];
+}
+
+MenuSelectOptionElement * MenuSelectOption::getElement(std::string identifier) {
+  std::vector<MenuSelectOptionElement *>::iterator it;
+  for (it = options.begin(); it != options.end(); it++) {
+    if ((*it)->getIdentifier() == identifier) {
+      return *it;
+    }
+  }
+  return NULL;
 }
 
 unsigned int MenuSelectOption::getLastSelectionPointer() {
@@ -194,4 +223,13 @@ void MenuSelectOption::enterFocusFrom(int dir) {
 
 unsigned int MenuSelectOption::size() {
   return options.size();
+}
+
+void MenuSelectOption::checkPointer() {
+  if (pointer >= size()) {
+    pointer = size() - 1;
+  }
+  if (size() == 0) {
+    pointer = 0;
+  }
 }

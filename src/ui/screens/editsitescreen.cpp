@@ -5,6 +5,8 @@
 #include "../../site.h"
 #include "../../sitelogic.h"
 #include "../../sitelogicmanager.h"
+#include "../../proxymanager.h"
+#include "../../proxy.h"
 
 #include "../uicommunicator.h"
 #include "../menuselectoptionelement.h"
@@ -14,6 +16,7 @@
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptionnumarrow.h"
 #include "../menuselectoptioncheckbox.h"
+#include "../menuselectoptiontextarrow.h"
 
 extern GlobalContext * global;
 
@@ -67,6 +70,23 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
   mso.addCheckBox(y++, x, "forcesslfxp", "Force SSL FXP:", modsite.SSLFXPForced());
   mso.addCheckBox(y++, x, "pret", "Needs PRET:", modsite.needsPRET());
   mso.addCheckBox(y++, x, "brokenpasv", "Broken PASV:", modsite.hasBrokenPASV());
+  MenuSelectOptionTextArrow * useproxy = mso.addTextArrow(y++, x, "useproxy", "Proxy:");
+  ProxyManager * pm = global->getProxyManager();
+  Proxy * proxy = pm->getDefaultProxy();
+  std::string globalproxyname = "None";
+  if (proxy != NULL) {
+    globalproxyname = proxy->getName();
+  }
+  useproxy->addOption("(Global) " + globalproxyname, SITE_PROXY_GLOBAL);
+  useproxy->addOption("None", SITE_PROXY_NONE);
+  for (std::vector<Proxy *>::iterator it = pm->begin(); it != pm->end(); it++) {
+    useproxy->addOption((*it)->getName(), SITE_PROXY_USE);
+  }
+  int proxytype = modsite.getProxyType();
+  useproxy->setOption(proxytype);
+  if (proxytype == SITE_PROXY_USE) {
+    useproxy->setOptionText(modsite.getProxy());
+  }
   y++;
   mso.addStringField(y++, x, "affils", "Affils:", affilstr, false, 60, 512);
   y++;
@@ -330,6 +350,13 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "idletime") {
           site->setMaxIdleTime(global->str2Int(((MenuSelectOptionTextField *)msoe)->getData()));
+        }
+        else if (identifier == "useproxy") {
+          int proxytype = ((MenuSelectOptionTextArrow *)msoe)->getData();
+          site->setProxyType(proxytype);
+          if (proxytype == SITE_PROXY_USE) {
+            site->setProxy(((MenuSelectOptionTextArrow *)msoe)->getDataText());
+          }
         }
         else if (identifier == "affils") {
           std::string affils = ((MenuSelectOptionTextField *)msoe)->getData();

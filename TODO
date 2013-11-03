@@ -28,8 +28,6 @@ feature: extensive info in the header of most screens
 
 feature: help screen with key binding info etc
 
-feature: proxy support with proxy-per-site
-
 feature: extensive statistics screens
 
 feature: adaptive-length section fields in the editsitescreen

@@ -102,6 +102,12 @@ void SiteManager::readConfiguration() {
     else if (!setting.compare("affil")) {
       site->addAffil(value);
     }
+    else if (!setting.compare("proxytype")) {
+      site->setProxyType(global->str2Int(value));
+    }
+    else if (!setting.compare("proxyname")) {
+      site->setProxy(value);
+    }
   }
   lines.clear();
   global->getDataFileHandler()->getDataFor("SiteManagerDefaults", &lines);
@@ -171,6 +177,11 @@ void SiteManager::writeState() {
     if (!site->getAllowUpload()) filehandler->addOutputLine(filetag, name + "$allowupload=false");
     if (!site->getAllowDownload()) filehandler->addOutputLine(filetag, name + "$allowdownload=false");
     if (site->hasBrokenPASV()) filehandler->addOutputLine(filetag, name + "$brokenpasv=true");
+    int proxytype = site->getProxyType();
+    filehandler->addOutputLine(filetag, name + "$proxytype=" + global->int2Str(proxytype));
+    if (proxytype == SITE_PROXY_USE) {
+      filehandler->addOutputLine(filetag, name + "$proxyname=" + site->getProxy());
+    }
     std::map<std::string, std::string>::iterator sit;
     for (sit = site->sectionsBegin(); sit != site->sectionsEnd(); sit++) {
       filehandler->addOutputLine(filetag, name + "$section=" + sit->first + "$" + sit->second);
@@ -304,4 +315,14 @@ bool SiteManager::getDefaultSSLFXPForced() {
 
 void SiteManager::setDefaultSSLFXPForced(bool sslfxpforced) {
   defaultsslfxpforced = sslfxpforced;
+}
+
+void SiteManager::proxyRemoved(std::string removedproxy) {
+  std::vector<Site *>::iterator it;
+  for (it = sites.begin(); it != sites.end(); it++) {
+    if ((*it)->getProxyType() == SITE_PROXY_USE && (*it)->getProxy() == removedproxy) {
+      (*it)->setProxyType(SITE_PROXY_GLOBAL);
+      global->getEventLog()->log("SiteManager", "Used proxy (" + removedproxy + ") was removed, reset proxy type for " + (*it)->getName());
+    }
+  }
 }

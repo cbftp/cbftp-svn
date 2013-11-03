@@ -6,6 +6,10 @@
 
 #define REPORT_LOGINS_IF_UNLIMITED 10
 
+#define SITE_PROXY_GLOBAL 820
+#define SITE_PROXY_NONE 821
+#define SITE_PROXY_USE 822
+
 class Site {
   private:
     std::string name;
@@ -27,6 +31,8 @@ class Site {
     std::map<std::string, int> avgspeed;
     std::map<std::string, bool> affils;
     std::string basepath;
+    int proxytype;
+    std::string proxyname;
   public:
     Site();
     Site(std::string);
@@ -57,6 +63,8 @@ class Site {
     void setBrokenPASV(bool);
     bool getAllowUpload();
     bool getAllowDownload();
+    int getProxyType();
+    std::string getProxy();
     unsigned int getMaxIdleTime();
     std::string getName();
     std::string getSectionPath(std::string);
@@ -78,6 +86,8 @@ class Site {
     void setAllowUpload(bool);
     void setAllowDownload(bool);
     void setMaxIdleTime(unsigned int);
+    void setProxyType(int);
+    void setProxy(std::string);
     void clearSections();
     bool isAffiliated(std::string);
     void addAffil(std::string);

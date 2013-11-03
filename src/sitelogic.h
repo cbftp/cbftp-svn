@@ -7,6 +7,7 @@
 #include "sitelogicbase.h"
 
 class TransferMonitorBase;
+class RecursiveCommandLogic;
 class ConnStateTracker;
 class FTPConn;
 class RawBuffer;
@@ -31,6 +32,7 @@ class SiteLogic : public SiteLogicBase {
     PotentialTracker * ptrack;
     std::vector<FTPConn *> conns;
     std::vector<ConnStateTracker> connstatetracker;
+    std::list<RecursiveCommandLogic> recursivelogics;
     std::vector<SiteRace *> races;
     std::list<SiteRace *> recentlylistedraces;
     RawBuffer * rawbuf;
@@ -102,12 +104,13 @@ class SiteLogic : public SiteLogicBase {
     bool getSlot(bool);
     int requestFileList(std::string);
     int requestRawCommand(std::string);
+    int requestViewFile(std::string);
+    int requestWipe(std::string, bool);
+    int requestDelete(std::string, bool);
     bool requestReady(int);
     FileList * getFileList(int);
     std::string getRawCommandResult(int);
     bool finishRequest(int);
-    int requestViewFile(std::string);
-    int requestWipe(std::string, bool);
     void pushPotential(int, std::string, SiteLogic *);
     bool potentialCheck(int);
     void updateName();

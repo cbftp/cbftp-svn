@@ -12,6 +12,7 @@ class SiteLogicBase;
 class IOManager;
 class RawBuffer;
 class Site;
+class ProxySession;
 
 extern GlobalContext * global;
 
@@ -24,6 +25,7 @@ class FTPConn : private EventReceiver {
   private:
     IOManager * iom;
     RawBuffer * rawbuf;
+    ProxySession * proxysession;
     char * databuf;
     unsigned int databuflen;
     unsigned int databufpos;
@@ -70,6 +72,7 @@ class FTPConn : private EventReceiver {
     void QUITResponse();
     void WIPEResponse();
     void DELEResponse();
+    void proxySessionInit(bool);
     void sendEcho(std::string);
   public:
     int getId();

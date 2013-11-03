@@ -215,6 +215,7 @@ void MainScreen::keyPressed(unsigned int ch) {
         global->getSiteManager()->addSite(site);
         uicommunicator->newCommand("redraw");
         break;
+      case KEY_DC:
       case 'D':
         site = mss.getSite();
         if (site == NULL) break;

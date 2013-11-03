@@ -9,7 +9,7 @@ endif
 
 DATE := "\"${shell date}\""
 
-CPPFLAGS :=-g -Wall -O3
-FINALFLAGS=-g -O3
+CPPFLAGS :=-g -Wall -O0
+FINALFLAGS=-g -O0
 LINKFLAGS=-lncurses -lpthread -lssl -lcrypto
 

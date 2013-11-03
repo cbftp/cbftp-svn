@@ -8,6 +8,7 @@ class MenuSelectOptionElement {
     std::string label;
     int col;
     int row;
+    bool shown;
   protected:
     bool active;
   public:
@@ -18,9 +19,13 @@ class MenuSelectOptionElement {
     virtual std::string getContentText() = 0;
     virtual bool activate();
     virtual void deactivate();
+    virtual bool isActive();
     virtual int cursorPosition();
     virtual void inputChar(int);
     virtual std::string getLegendText();
     unsigned int getCol();
     unsigned int getRow();
+    void hide();
+    void show();
+    bool visible();
 };

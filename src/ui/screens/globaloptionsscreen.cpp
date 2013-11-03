@@ -39,6 +39,7 @@ GlobalOptionsScreen::GlobalOptionsScreen(WINDOW * window, UICommunicator * uicom
   mso.addStringField(y++, x, "defidletime", "Default site max idle time (s):", global->int2Str(sm->getDefaultMaxIdleTime()), false);
   y++;
   mso.addTextButtonNoContent(y++, x, "skiplist", "Configure skiplist...");
+  mso.addTextButtonNoContent(y++, x, "proxy", "Configure proxy settings...");
   mso.addTextButtonNoContent(y++, x, "changekey", "Change encryption key...");
   init(window, row, col);
 }
@@ -109,6 +110,10 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
       }
       if (msoe->getIdentifier() == "changekey") {
         uicommunicator->newCommand("changekey");
+        return;
+      }
+      if (msoe->getIdentifier() == "proxy") {
+        uicommunicator->newCommand("proxy");
         return;
       }
       activation = msoe->activate();

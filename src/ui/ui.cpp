@@ -11,6 +11,7 @@
 #include "../skiplist.h"
 #include "../datafilehandler.h"
 #include "../eventlog.h"
+#include "../proxymanager.h"
 
 #include "legendwindow.h"
 #include "infowindow.h"
@@ -32,6 +33,8 @@
 #include "screens/skiplistscreen.h"
 #include "screens/changekeyscreen.h"
 #include "screens/eventlogscreen.h"
+#include "screens/proxyoptionsscreen.h"
+#include "screens/editproxyscreen.h"
 
 extern GlobalContext * global;
 
@@ -180,6 +183,8 @@ void UserInterface::runInstance() {
   UIWindow * skiplistscreen = NULL;
   UIWindow * changekeyscreen = NULL;
   UIWindow * eventlogscreen = NULL;
+  UIWindow * proxyoptionsscreen = NULL;
+  UIWindow * editproxyscreen = NULL;
   legendwindow = new LegendWindow(legend, 2, col);
   infowindow = new InfoWindow(info, 2, col);
   if (global->getDataFileHandler()->fileExists()) {
@@ -277,7 +282,6 @@ void UserInterface::runInstance() {
       if (command == "editsite") {
         editsitescreen = new EditSiteScreen(main, &uicommunicator, mainrow, maincol);
         switchToWindow(editsitescreen);
-
       }
       else if (command == "racestatus") {
         racestatusscreen = new RaceStatusScreen(main, &uicommunicator, mainrow, maincol);
@@ -324,6 +328,14 @@ void UserInterface::runInstance() {
       else if (command == "skiplist") {
         skiplistscreen = new SkipListScreen(main, &uicommunicator, mainrow, maincol);
         switchToWindow(skiplistscreen);
+      }
+      else if (command == "proxy") {
+        proxyoptionsscreen = new ProxyOptionsScreen(main, &uicommunicator, mainrow, maincol);
+        switchToWindow(proxyoptionsscreen);
+      }
+      else if (command == "editproxy") {
+        editproxyscreen = new EditProxyScreen(main, &uicommunicator, mainrow, maincol);
+        switchToWindow(editproxyscreen);
       }
       else if (command == "eventlog") {
         eventlogscreen = new EventLogScreen(main, &uicommunicator, mainrow, maincol);
@@ -383,6 +395,7 @@ void UserInterface::runInstance() {
           global->getRemoteCommandHandler()->readConfiguration();
           uicommunicator.readConfiguration();
           global->getSkipList()->readConfiguration();
+          global->getProxyManager()->readConfiguration();
           enableInfo();
           if (uicommunicator.legendEnabled()) {
             enableLegend();

@@ -1,34 +1,31 @@
 #pragma once
 
-#include "../../site.h"
+#include "../../proxy.h"
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
-#include "../menusection.h"
 
 class UICommunicator;
-class FocusableArea;
 class MenuSelectOptionElement;
 
-class EditSiteScreen : public UIWindow {
+class EditProxyScreen : public UIWindow {
 public:
-  EditSiteScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  EditProxyScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
   void update();
   void redraw();
   void keyPressed(unsigned int);
   std::string getLegendText();
   std::string getInfoLabel();
 private:
-  FocusableArea * focusedarea;
-  FocusableArea * defocusedarea;
   std::string currentlegendtext;
   std::string defaultlegendtext;
   bool active;
   MenuSelectOptionElement * activeelement;
   MenuSelectOption mso;
-  MenuSection ms;
-  Site * site;
-  Site modsite;
+  Proxy * proxy;
+  Proxy modproxy;
+  MenuSelectOptionTextArrow * authmethod;
+  int latestauthmethod;
   std::string operation;
   UICommunicator * uicommunicator;
 };

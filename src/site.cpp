@@ -21,6 +21,8 @@ Site::Site(std::string name) {
   brokenpasv = false;
   allowdownload = true;
   allowupload = true;
+  proxytype = SITE_PROXY_GLOBAL;
+  proxyname = "";
 }
 
 void Site::copy(Site * site) {
@@ -42,6 +44,8 @@ void Site::copy(Site * site) {
   this->allowdownload = site->allowdownload;
   this->affils = site->affils;
   this->basepath = site->basepath;
+  this->proxytype = proxytype;
+  this->proxyname = proxyname;
 }
 
 std::map<std::string, std::string>::iterator Site::sectionsBegin() {
@@ -168,6 +172,14 @@ bool Site::getAllowDownload() {
   return allowdownload;
 }
 
+int Site::getProxyType() {
+  return proxytype;
+}
+
+std::string Site::getProxy() {
+  return proxyname;
+}
+
 void Site::setAllowUpload(bool val) {
   allowupload = val;
 }
@@ -260,6 +272,14 @@ void Site::setMaxUp(unsigned int num) {
 
 void Site::setMaxIdleTime(unsigned int idletime) {
   max_idletime = idletime;
+}
+
+void Site::setProxyType(int proxytype) {
+  this->proxytype = proxytype;
+}
+
+void Site::setProxy(std::string proxyname) {
+  this->proxyname = proxyname;
 }
 
 void Site::clearSections() {

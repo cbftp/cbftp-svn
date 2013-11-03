@@ -15,6 +15,9 @@
 #include "iomanager.h"
 #include "sitelogicbase.h"
 #include "eventlog.h"
+#include "proxymanager.h"
+#include "proxy.h"
+#include "proxysession.h"
 
 FTPConn::FTPConn(SiteLogicBase * slb, int id) {
   this->slb = slb;
@@ -23,6 +26,7 @@ FTPConn::FTPConn(SiteLogicBase * slb, int id) {
   this->status = "disconnected";
   processing = false;
   rawbuf = new RawBuffer(RAWBUFMAXLEN, site->getName(), global->int2Str(id));
+  proxysession = new ProxySession();
   iom = global->getIOManager();
   databuflen = DATABUF;
   databuf = (char *) malloc(databuflen);
@@ -36,6 +40,7 @@ FTPConn::FTPConn(SiteLogicBase * slb, int id) {
 FTPConn::~FTPConn() {
   delete rawbuf;
   delete databuf;
+  delete proxysession;
 }
 
 int FTPConn::getId() {
@@ -61,17 +66,65 @@ void FTPConn::login() {
   databufpos = 0;
   processing = true;
   currentpath = "";
-  rawbuf->writeLine("[Connecting to " + site->getAddress() + ":" + site->getPort() + "]");
-  state = 1;
-  sockfd = iom->registerTCPClientSocket(this, site->getAddress(), global->str2Int(site->getPort()));
+  Proxy * proxy = NULL;
+  int proxytype = site->getProxyType();
+  if (proxytype == SITE_PROXY_USE) {
+    proxy = global->getProxyManager()->getProxy(site->getProxy());
+  }
+  else if (proxytype == SITE_PROXY_GLOBAL) {
+    proxy = global->getProxyManager()->getDefaultProxy();
+  }
+  if (proxy == NULL) {
+    rawbuf->writeLine("[Connecting to " + site->getAddress() + ":" + site->getPort() + "]");
+    state = 1;
+    sockfd = iom->registerTCPClientSocket(this, site->getAddress(), global->str2Int(site->getPort()));
+  }
+  else {
+    rawbuf->writeLine("[Connecting to proxy " + proxy->getAddr() + ":" + proxy->getPort() + "]");
+    state = 100;
+    proxysession->prepare(proxy, site->getAddress(), site->getPort());
+    sockfd = iom->registerTCPClientSocket(this, proxy->getAddr(), global->str2Int(proxy->getPort()));
+  }
   if (sockfd < 0) {
     state = 0;
   }
 }
 
+void FTPConn::proxySessionInit(bool connect) {
+  if (!connect) {
+    proxysession->received(databuf, databufpos);
+  }
+  switch (proxysession->instruction()) {
+    case PROXYSESSION_SEND_CONNECT:
+      rawbuf->writeLine("[Connecting to " + site->getAddress() + ":" + site->getPort() + " through proxy]");
+      iom->sendData(sockfd, proxysession->getSendData(), proxysession->getSendDataLen());
+      break;
+    case PROXYSESSION_SEND:
+      iom->sendData(sockfd, proxysession->getSendData(), proxysession->getSendDataLen());
+      break;
+    case PROXYSESSION_SUCCESS:
+      rawbuf->writeLine("[Connection established]");
+      state = 2;
+      break;
+    case PROXYSESSION_ERROR:
+      rawbuf->writeLine("[Proxy error: " + proxysession->getErrorMessage() + "]");
+      state = 0;
+      iom->closeSocket(sockfd);
+      rawbuf->writeLine("[Disconnected]");
+      this->status = "disconnected";
+      slb->unexpectedResponse(id);
+      break;
+  }
+}
+
 void FTPConn::FDConnected() {
   rawbuf->writeLine("[Connection established]");
-  state = 2;
+  if (state == 100) {
+    proxySessionInit(true);
+  }
+  else {
+    state = 2;
+  }
 }
 
 void FTPConn::FDDisconnected() {
@@ -98,7 +151,7 @@ void FTPConn::FDSSLFail() {
 }
 
 void FTPConn::FDData(char * data, unsigned int datalen) {
-  if (state != 6) {
+  if (state != 6 && state != 100) {
     rawbuf->write(std::string(data, datalen));
   }
   if (databufpos + datalen > databuflen) {
@@ -112,18 +165,24 @@ void FTPConn::FDData(char * data, unsigned int datalen) {
   databufpos += datalen;
   bool messagecomplete = false;
   char * loc;
-  if(databuf[databufpos - 1] == '\n') {
-    loc = databuf + databufpos - 5;
-        while (loc >= databuf) {
-          if (*loc >= 48 && *loc <= 57 && *(loc+1) >= 48 && *(loc+1) <= 57 && *(loc+2) >= 48 && *(loc+2) <= 57) {
-            if ((*(loc+3) == ' ' || *(loc+3) == '\n') && (loc == databuf || *(loc-1) == '\n')) {
-              messagecomplete = true;
-              databufcode = atoi(std::string(loc, 3).data());
-              break;
-            }
+  if (state == 100) {
+    messagecomplete = true;
+    databufcode = 1337;
+  }
+  else {
+    if(databuf[databufpos - 1] == '\n') {
+      loc = databuf + databufpos - 5;
+      while (loc >= databuf) {
+        if (*loc >= 48 && *loc <= 57 && *(loc+1) >= 48 && *(loc+1) <= 57 && *(loc+2) >= 48 && *(loc+2) <= 57) {
+          if ((*(loc+3) == ' ' || *(loc+3) == '\n') && (loc == databuf || *(loc-1) == '\n')) {
+            messagecomplete = true;
+            databufcode = atoi(std::string(loc, 3).data());
+            break;
           }
-          --loc;
         }
+        --loc;
+      }
+    }
   }
   if (messagecomplete) {
     if (databufcode == 550) {
@@ -212,6 +271,9 @@ void FTPConn::FDData(char * data, unsigned int datalen) {
       case 29: // awaiting DELE response
         DELEResponse();
         break;
+      case 100: // negotiating proxy session
+        proxySessionInit(false);
+        break;
     }
     databufpos = 0;
   }
@@ -239,6 +301,8 @@ void FTPConn::welcomeReceived() {
     state = 0;
     processing = false;
     iom->closeSocket(sockfd);
+    rawbuf->writeLine("[Disconnected]");
+    this->status = "disconnected";
     slb->unexpectedResponse(id);
   }
 }

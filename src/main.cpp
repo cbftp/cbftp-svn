@@ -20,6 +20,7 @@
 #include "workmanager.h"
 #include "skiplist.h"
 #include "eventlog.h"
+#include "proxymanager.h"
 
 Main::Main() {
   std::string datadirpath = std::string(getenv("HOME")) + "/" + DATAPATH;
@@ -62,7 +63,8 @@ Main::Main() {
   TransferManager * tm = new TransferManager();
   RemoteCommandHandler * rch = new RemoteCommandHandler();
   SkipList * sl = new SkipList();
-  global->linkComponents(dfh, iom, e, ui->getCommunicator(), sm, slm, tm, tp, rch, sl);
+  ProxyManager * pm = new ProxyManager();
+  global->linkComponents(dfh, iom, e, ui->getCommunicator(), sm, slm, tm, tp, rch, sl, pm);
   if (!ui->init()) exit(1);
   tp->tickerLoop();
   global->getUICommunicator()->kill();
@@ -72,6 +74,7 @@ Main::Main() {
     global->getRemoteCommandHandler()->writeState();
     global->getUICommunicator()->writeState();
     global->getSkipList()->writeState();
+    global->getProxyManager()->writeState();
     global->getDataFileHandler()->writeFile();
     std::cout << "Done, exiting..." << std::endl << std::flush;
   }

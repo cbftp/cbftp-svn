@@ -21,6 +21,7 @@
 #include "delayedcommand.h"
 #include "potentiallistelement.h"
 #include "eventlog.h"
+#include "recursivecommandlogic.h"
 
 SiteLogic::SiteLogic(std::string sitename) {
   requestidcounter = 0;
@@ -43,7 +44,14 @@ SiteLogic::SiteLogic(std::string sitename) {
 
 SiteLogic::~SiteLogic() {
   global->getTickPoke()->stopPoke(this, "SiteLogic", 0);
+  delete rawbuf;
   delete ptrack;
+  for (unsigned int i = 0; i < conns.size(); i++) {
+    delete conns[i];
+  }
+  for (unsigned int i = 0; i < races.size(); i++) {
+    delete races[i];
+  }
 }
 
 void SiteLogic::activate() {
@@ -52,10 +60,10 @@ void SiteLogic::activate() {
     if (connstatetracker[i].isDisconnected()) {
       conns[i]->login();
     }
-    else if (connstatetracker[i].isReady()) {
+    else if (connstatetracker[i].isReady() && !conns[i]->isProcessing()) {
       handleConnection(i, false);
     }
-    else if (connstatetracker[i].isIdle()) {
+    else if (connstatetracker[i].isIdle() && !conns[i]->isProcessing()) {
       connstatetracker[i].setReady();
       handleConnection(i, false);
     }
@@ -67,6 +75,7 @@ void SiteLogic::addRace(Race * enginerace, std::string section, std::string rele
   races.push_back(race);
   activate();
 }
+
 void SiteLogic::tick(int message) {
   for (unsigned int i = 0; i < connstatetracker.size(); i++) {
     connstatetracker[i].timePassed(50);
@@ -163,7 +172,7 @@ void SiteLogic::listRefreshed(int id) {
 }
 
 void SiteLogic::unexpectedResponse(int id) {
-
+  connstatetracker[id].setDisconnected();
 }
 
 void SiteLogic::commandSuccess(int id) {
@@ -300,6 +309,21 @@ void SiteLogic::commandSuccess(int id) {
         }
       }
       break;
+    case 29: // DELE
+      for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
+        if (it->connId() == id) {
+          if (it->requestType() == 5) {
+            requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, true));
+            requestsinprogress.erase(it);
+            global->getUICommunicator()->backendPush();
+            break;
+          }
+          else if (it->requestType() == 4) {
+
+          }
+        }
+      }
+      break;
   }
   handleConnection(id, false);
 }
@@ -380,6 +404,22 @@ void SiteLogic::commandFail(int id) {
             requestsinprogress.erase(it);
             global->getUICommunicator()->backendPush();
             break;
+          }
+        }
+      }
+      handleConnection(id, false);
+      return;
+    case 29: // DELE
+      for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
+        if (it->connId() == id) {
+          if (it->requestType() == 5) {
+            requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, false));
+            requestsinprogress.erase(it);
+            global->getUICommunicator()->backendPush();
+            break;
+          }
+          else if (it->requestType() == 4) {
+
           }
         }
       }
@@ -601,7 +641,7 @@ void SiteLogic::handleRequest(int id) {
   requests.front().setConnId(id);
   std::string targetpath;
   switch (requests.front().requestType()) {
-    case 0:
+    case 0: // filelist
       targetpath = requests.front().requestData();
       if (conns[id]->getCurrentPath() == targetpath) {
         conns[id]->doSTAT();
@@ -609,16 +649,28 @@ void SiteLogic::handleRequest(int id) {
       else {
         conns[id]->doCWD(targetpath);
       }
-    break;
-    case 1:
+      break;
+    case 1: // raw command
       rawbuf->writeLine(requests.front().requestData());
       conns[id]->doRaw(requests.front().requestData());
       break;
-    case 2:
+    case 2: // recursive wipe
       conns[id]->doWipe(requests.front().requestData(), true);
       break;
-    case 3:
+    case 3: // wipe
       conns[id]->doWipe(requests.front().requestData(), false);
+      break;
+    case 4: // recursive delete
+      targetpath = requests.front().requestData();
+      if (conns[id]->getCurrentPath() == targetpath) {
+        conns[id]->doSTAT();
+      }
+      else {
+        conns[id]->doCWD(targetpath);
+      }
+      break;
+    case 5: // delete
+      conns[id]->doDELE(requests.front().requestData());
       break;
   }
   requestsinprogress.push_back(requests.front());
@@ -726,6 +778,18 @@ int SiteLogic::requestWipe(std::string path, bool recursive) {
   }
   else {
     requests.push_back(SiteLogicRequest(requestid, 3, path));
+  }
+  requestSelect();
+  return requestid;
+}
+
+int SiteLogic::requestDelete(std::string path, bool recursive) {
+  int requestid = requestidcounter++;
+  if (recursive) {
+    requests.push_back(SiteLogicRequest(requestid, 4, path));
+  }
+  else {
+    requests.push_back(SiteLogicRequest(requestid, 5, path));
   }
   requestSelect();
   return requestid;
