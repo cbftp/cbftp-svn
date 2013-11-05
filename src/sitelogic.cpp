@@ -15,9 +15,9 @@
 #include "tickpoke.h"
 #include "rawbuffer.h"
 #include "eventreceiver.h"
-#include "enginebase.h"
+#include "engine.h"
 #include "connstatetracker.h"
-#include "transfermonitorbase.h"
+#include "transfermonitor.h"
 #include "delayedcommand.h"
 #include "potentiallistelement.h"
 #include "eventlog.h"
@@ -166,7 +166,7 @@ void SiteLogic::listRefreshed(int id) {
     }
   }
   if (sr != NULL) {
-    ((EngineBase *)global->getEngine())->someRaceFileListRefreshed();
+    global->getEngine()->someRaceFileListRefreshed();
   }
   handleConnection(id, true);
 }
@@ -1182,14 +1182,14 @@ std::string SiteLogic::getStatus(int id) {
   return conns[id]->getStatus();
 }
 
-void SiteLogic::preparePassiveDownload(int id, TransferMonitorBase * tmb, FileList * fls, std::string file, bool ssl) {
+void SiteLogic::preparePassiveDownload(int id, TransferMonitor * tmb, FileList * fls, std::string file, bool ssl) {
   connstatetracker[id].setTransfer(tmb, fls, file, true, true, ssl);
   if (!conns[id]->isProcessing()) {
     initTransfer(id);
   }
 }
 
-void SiteLogic::preparePassiveUpload(int id, TransferMonitorBase * tmb, FileList * fls, std::string file, bool ssl) {
+void SiteLogic::preparePassiveUpload(int id, TransferMonitor * tmb, FileList * fls, std::string file, bool ssl) {
   connstatetracker[id].setTransfer(tmb, fls, file, false, true, ssl);
   if (!conns[id]->isProcessing()) {
     initTransfer(id);
@@ -1228,14 +1228,14 @@ void SiteLogic::passiveUpload(int id) {
   }
 }
 
-void SiteLogic::activeDownload(int id, TransferMonitorBase * tmb, FileList * fls, std::string file, std::string addr, bool ssl) {
+void SiteLogic::activeDownload(int id, TransferMonitor * tmb, FileList * fls, std::string file, std::string addr, bool ssl) {
   connstatetracker[id].setTransfer(tmb, fls, file, true, false, addr, ssl);
   if (!conns[id]->isProcessing()) {
     initTransfer(id);
   }
 }
 
-void SiteLogic::activeUpload(int id, TransferMonitorBase * tmb, FileList * fls, std::string file, std::string addr, bool ssl) {
+void SiteLogic::activeUpload(int id, TransferMonitor * tmb, FileList * fls, std::string file, std::string addr, bool ssl) {
   connstatetracker[id].setTransfer(tmb, fls, file, false, false, addr, ssl);
   if (!conns[id]->isProcessing()) {
     initTransfer(id);

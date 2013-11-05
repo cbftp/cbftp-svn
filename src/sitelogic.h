@@ -4,9 +4,9 @@
 #include <vector>
 #include <list>
 
-#include "sitelogicbase.h"
+#include "eventreceiver.h"
 
-class TransferMonitorBase;
+class TransferMonitor;
 class RecursiveCommandLogic;
 class ConnStateTracker;
 class FTPConn;
@@ -27,7 +27,7 @@ class PotentialTracker;
 
 extern GlobalContext * global;
 
-class SiteLogic : public SiteLogicBase {
+class SiteLogic : public EventReceiver {
   private:
     PotentialTracker * ptrack;
     std::vector<FTPConn *> conns;
@@ -117,11 +117,11 @@ class SiteLogic : public SiteLogicBase {
     std::vector<FTPConn *> * getConns();
     FTPConn * getConn(int);
     std::string getStatus(int);
-    void preparePassiveDownload(int, TransferMonitorBase *, FileList *, std::string, bool);
-    void preparePassiveUpload(int, TransferMonitorBase *, FileList *, std::string, bool);
+    void preparePassiveDownload(int, TransferMonitor *, FileList *, std::string, bool);
+    void preparePassiveUpload(int, TransferMonitor *, FileList *, std::string, bool);
     void passiveDownload(int);
     void passiveUpload(int);
-    void activeUpload(int, TransferMonitorBase *, FileList *, std::string, std::string, bool);
-    void activeDownload(int, TransferMonitorBase *, FileList *, std::string, std::string, bool);
+    void activeUpload(int, TransferMonitor *, FileList *, std::string, std::string, bool);
+    void activeDownload(int, TransferMonitor *, FileList *, std::string, std::string, bool);
     void abortTransfer(int);
 };

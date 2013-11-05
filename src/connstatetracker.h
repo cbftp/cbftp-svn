@@ -5,7 +5,7 @@
 
 class SiteRace;
 class FileList;
-class TransferMonitorBase;
+class TransferMonitor;
 class DelayedCommand;
 
 class ConnStateTracker {
@@ -18,7 +18,7 @@ private:
   std::list<DelayedCommand> releasedcommands;
   std::list<DelayedCommand> delayedcommands;
   bool transfer;
-  TransferMonitorBase * tmb;
+  TransferMonitor * tm;
   FileList * fls;
   std::string file;
   bool download;
@@ -47,8 +47,8 @@ public:
   bool isDisconnected();
   bool isIdle();
   bool isReady();
-  void setTransfer(TransferMonitorBase *, FileList *, std::string, bool, bool, bool);
-  void setTransfer(TransferMonitorBase *, FileList *, std::string, bool, bool, std::string, bool);
+  void setTransfer(TransferMonitor *, FileList *, std::string, bool, bool, bool);
+  void setTransfer(TransferMonitor *, FileList *, std::string, bool, bool, std::string, bool);
   bool hasTransfer();
   void finishTransfer();
   void abortTransfer();
@@ -58,7 +58,7 @@ public:
   bool isLockedForUpload();
   bool isLoggedIn();
   void setLoggedIn();
-  TransferMonitorBase * getTransferMonitor();
+  TransferMonitor * getTransferMonitor();
   FileList * getTransferFileList();
   std::string getTransferFile();
   bool getTransferDownload();

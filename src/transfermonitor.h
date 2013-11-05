@@ -2,12 +2,12 @@
 
 #include <string>
 
-#include "transfermonitorbase.h"
+#include "eventreceiver.h"
 
 class SiteLogic;
 class FileList;
 
-class TransferMonitor : public TransferMonitorBase {
+class TransferMonitor : public EventReceiver {
   private:
     int status;
     std::string file;

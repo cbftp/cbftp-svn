@@ -3,8 +3,6 @@
 #include <string>
 #include <list>
 
-#include "enginebase.h"
-
 #define SPREAD 0
 
 class GlobalContext;
@@ -16,7 +14,7 @@ class ScoreBoard;
 
 extern GlobalContext * global;
 
-class Engine : public EngineBase {
+class Engine {
   private:
     std::list<Race *> allraces;
     std::list<Race *> currentraces;

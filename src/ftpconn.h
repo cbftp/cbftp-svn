@@ -8,7 +8,7 @@
 class GlobalContext;
 class SiteRace;
 class FileList;
-class SiteLogicBase;
+class SiteLogic;
 class IOManager;
 class RawBuffer;
 class Site;
@@ -32,7 +32,7 @@ class FTPConn : private EventReceiver {
     int databufcode;
     int id;
     bool processing;
-    SiteLogicBase * slb;
+    SiteLogic * sl;
     std::string status;
     Site * site;
     int transferstatus;
@@ -81,7 +81,7 @@ class FTPConn : private EventReceiver {
     void login();
     void reconnect();
     bool isProcessing();
-    FTPConn(SiteLogicBase *, int);
+    FTPConn(SiteLogic *, int);
     ~FTPConn();
     int updateFileList(FileList *);
     void updateName();

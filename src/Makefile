@@ -7,7 +7,7 @@ OBJECTS = potentialelement.o scoreboardelement.o \
 	rawbuffer.o crypto.o datafilehandler.o transfermonitor.o \
 	sitelogicrequest.o sitelogicrequestready.o tickpoke.o tickpoketarget.o \
 	connstatetracker.o delayedcommand.o remotecommandhandler.o eventreceiver.o \
-	iomanager.o workmanager.o event.o datablockpool.o datablock.o enginebase.o \
+	iomanager.o workmanager.o event.o datablockpool.o datablock.o \
 	skiplist.o sizelocationtrack.o eventlog.o proxy.o proxymanager.o \
 	proxysession.o
 
@@ -48,7 +48,6 @@ workmanager.o:
 event.o:
 datablockpool.o:
 datablock.o:
-enginebase.o:
 transfermonitor.o:
 skiplist.o:
 sizelocationtrack.o:

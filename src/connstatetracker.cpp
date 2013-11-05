@@ -121,16 +121,16 @@ bool ConnStateTracker::isReady() {
   return (state == 1 || state == 2);
 }
 
-void ConnStateTracker::setTransfer(TransferMonitorBase * tmb, FileList * fls, std::string file, bool download, bool passive, bool ssl) {
-  setTransfer(tmb, fls, file, download, passive, "", ssl);
+void ConnStateTracker::setTransfer(TransferMonitor * tm, FileList * fls, std::string file, bool download, bool passive, bool ssl) {
+  setTransfer(tm, fls, file, download, passive, "", ssl);
 }
 
-void ConnStateTracker::setTransfer(TransferMonitorBase * tmb, FileList * fls, std::string file, bool download, bool passive, std::string addr, bool ssl) {
+void ConnStateTracker::setTransfer(TransferMonitor * tm, FileList * fls, std::string file, bool download, bool passive, std::string addr, bool ssl) {
   if (this->transfer) global->getEventLog()->log("ConnStateTracker", "BUG: Setting transfer while already having a transfer!");
   this->transfer = true;
   this->aborted = false;
   this->ssl = ssl;
-  this->tmb = tmb;
+  this->tm = tm;
   this->fls = fls;
   this->file = file;
   this->download = download;
@@ -164,8 +164,8 @@ bool ConnStateTracker::getTransferAborted() {
   return aborted;
 }
 
-TransferMonitorBase * ConnStateTracker::getTransferMonitor() {
-  return tmb;
+TransferMonitor * ConnStateTracker::getTransferMonitor() {
+  return tm;
 }
 
 FileList * ConnStateTracker::getTransferFileList() {

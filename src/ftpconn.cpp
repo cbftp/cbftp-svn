@@ -13,16 +13,16 @@
 #include "globalcontext.h"
 #include "rawbuffer.h"
 #include "iomanager.h"
-#include "sitelogicbase.h"
+#include "sitelogic.h"
 #include "eventlog.h"
 #include "proxymanager.h"
 #include "proxy.h"
 #include "proxysession.h"
 
-FTPConn::FTPConn(SiteLogicBase * slb, int id) {
-  this->slb = slb;
+FTPConn::FTPConn(SiteLogic * sl, int id) {
+  this->sl = sl;
   this->id = id;
-  this->site = slb->getSite();
+  this->site = sl->getSite();
   this->status = "disconnected";
   processing = false;
   rawbuf = new RawBuffer(RAWBUFMAXLEN, site->getName(), global->int2Str(id));
@@ -112,7 +112,7 @@ void FTPConn::proxySessionInit(bool connect) {
       iom->closeSocket(sockfd);
       rawbuf->writeLine("[Disconnected]");
       this->status = "disconnected";
-      slb->unexpectedResponse(id);
+      sl->unexpectedResponse(id);
       break;
   }
 }
@@ -132,13 +132,13 @@ void FTPConn::FDDisconnected() {
     rawbuf->writeLine("[Disconnected]");
     this->status = "disconnected";
     state = 0;
-    slb->disconnected(id);
+    sl->disconnected(id);
   }
 }
 
 void FTPConn::FDFail(std::string error) {
   rawbuf->writeLine("[" + error + "]");
-  slb->connectFailed(1);
+  sl->connectFailed(1);
 }
 
 void FTPConn::FDSSLSuccess() {
@@ -303,7 +303,7 @@ void FTPConn::welcomeReceived() {
     iom->closeSocket(sockfd);
     rawbuf->writeLine("[Disconnected]");
     this->status = "disconnected";
-    slb->unexpectedResponse(id);
+    sl->unexpectedResponse(id);
   }
 }
 
@@ -316,7 +316,7 @@ void FTPConn::AUTHTLSResponse() {
     state = 0;
     processing = false;
     iom->closeSocket(sockfd);
-    slb->TLSFailed(id);
+    sl->TLSFailed(id);
   }
 }
 
@@ -360,18 +360,18 @@ void FTPConn::USERResponse() {
       }
     }
     if (sitefull) {
-      slb->userDeniedSiteFull(id);
+      sl->userDeniedSiteFull(id);
     }
     else if (state == 4) {
       if (simultaneous) {
-        slb->userDeniedSimultaneousLogins(id);
+        sl->userDeniedSimultaneousLogins(id);
       }
       else {
-        slb->userDenied(id);
+        sl->userDenied(id);
       }
     }
     else {
-      slb->loginKillFailed(id);
+      sl->loginKillFailed(id);
     }
   }
 }
@@ -381,7 +381,7 @@ void FTPConn::PASSResponse() {
   if (databufcode == 230) {
     this->status = "connected";
     state = 5;
-    slb->commandSuccess(id);
+    sl->commandSuccess(id);
   }
   else {
     bool sitefull = false;
@@ -396,18 +396,18 @@ void FTPConn::PASSResponse() {
       }
     }
     if (sitefull) {
-      slb->userDeniedSiteFull(id);
+      sl->userDeniedSiteFull(id);
     }
     else if (state == 5) {
       if (simultaneous) {
-        slb->userDeniedSimultaneousLogins(id);
+        sl->userDeniedSimultaneousLogins(id);
       }
       else {
-        slb->passDenied(id);
+        sl->passDenied(id);
       }
     }
     else {
-      slb->loginKillFailed(id);
+      sl->loginKillFailed(id);
     }
   }
 }
@@ -458,10 +458,10 @@ void FTPConn::STATResponse() {
     std::string output = "[File list retrieved]";
     rawbuf->writeLine(output);
     if (!currentfl->isFilled()) currentfl->setFilled();
-    slb->listRefreshed(id);
+    sl->listRefreshed(id);
   }
   else {
-    slb->commandFail(id);
+    sl->commandFail(id);
   }
 }
 
@@ -485,10 +485,10 @@ void FTPConn::PWDResponse() {
     while(line[++loc] != '"');
     int start = loc + 1;
     while(line[++loc] != '"');
-    slb->gotPath(id, line.substr(start, loc - start));
+    sl->gotPath(id, line.substr(start, loc - start));
   }
   else {
-    slb->commandFail(id);
+    sl->commandFail(id);
   }
 }
 
@@ -501,10 +501,10 @@ void FTPConn::PROTPResponse() {
   processing = false;
   if (databufcode == 200) {
     protectedmode = true;
-    slb->commandSuccess(id);
+    sl->commandSuccess(id);
   }
   else {
-    slb->commandFail(id);
+    sl->commandFail(id);
   }
 }
 
@@ -517,10 +517,10 @@ void FTPConn::PROTCResponse() {
   processing = false;
   if (databufcode == 200) {
     protectedmode = false;
-    slb->commandSuccess(id);
+    sl->commandSuccess(id);
   }
   else {
-    slb->commandFail(id);
+    sl->commandFail(id);
   }
 }
 
@@ -542,7 +542,7 @@ void FTPConn::doDELE(std::string path) {
 void FTPConn::RawResponse() {
   processing = false;
   std::string ret = std::string(databuf, databufpos);
-  slb->rawCommandResultRetrieved(id, ret);
+  sl->rawCommandResultRetrieved(id, ret);
 }
 
 void FTPConn::WIPEResponse() {
@@ -550,20 +550,20 @@ void FTPConn::WIPEResponse() {
   if (databufcode == 200) {
     std::string data = std::string(databuf, databufpos);
     if (data.find("successfully") != std::string::npos) {
-      slb->commandSuccess(id);
+      sl->commandSuccess(id);
       return;
     }
   }
-  slb->commandFail(id);
+  sl->commandFail(id);
 }
 
 void FTPConn::DELEResponse() {
   processing = false;
   if (databufcode == 250) {
-    slb->commandSuccess(id);
+    sl->commandSuccess(id);
   }
   else {
-    slb->commandFail(id);
+    sl->commandFail(id);
   }
 }
 
@@ -578,10 +578,10 @@ void FTPConn::CPSVResponse() {
     std::string data = std::string(databuf, databufpos);
     size_t start = data.find('(') + 1;
     size_t end = data.find(')');
-    slb->gotPassiveAddress(id, data.substr(start, end-start));
+    sl->gotPassiveAddress(id, data.substr(start, end-start));
   }
   else {
-    slb->commandFail(id);
+    sl->commandFail(id);
   }
 }
 
@@ -596,10 +596,10 @@ void FTPConn::PASVResponse() {
     std::string data = std::string(databuf, databufpos);
     size_t start = data.find('(') + 1;
     size_t end = data.find(')');
-    slb->gotPassiveAddress(id, data.substr(start, end-start));
+    sl->gotPassiveAddress(id, data.substr(start, end-start));
   }
   else {
-    slb->commandFail(id);
+    sl->commandFail(id);
   }
 }
 
@@ -611,10 +611,10 @@ void FTPConn::doPORT(std::string addr) {
 void FTPConn::PORTResponse() {
   processing = false;
   if (databufcode == 200) {
-    slb->commandSuccess(id);
+    sl->commandSuccess(id);
   }
   else {
-    slb->commandFail(id);
+    sl->commandFail(id);
   }
 }
 
@@ -633,10 +633,10 @@ void FTPConn::CWDResponse() {
   processing = false;
   if (databufcode == 250) {
     currentpath = targetpath;
-    slb->commandSuccess(id);
+    sl->commandSuccess(id);
   }
   else {
-    slb->commandFail(id);
+    sl->commandFail(id);
   }
 }
 
@@ -649,16 +649,16 @@ void FTPConn::doMKD(std::string dir) {
 void FTPConn::MKDResponse() {
   processing = false;
   if (databufcode == 257) {
-    slb->commandSuccess(id);
+    sl->commandSuccess(id);
   }
   else {
     if (databufcode == 550 &&
         std::string(databuf, databufpos).find("File exist") !=
             std::string::npos) {
-      slb->commandSuccess(id);
+      sl->commandSuccess(id);
     }
     else {
-      slb->commandFail(id);
+      sl->commandFail(id);
     }
   }
 }
@@ -671,10 +671,10 @@ void FTPConn::doPRETRETR(std::string file) {
 void FTPConn::PRETRETRResponse() {
   processing = false;
   if (databufcode == 200) {
-    slb->commandSuccess(id);
+    sl->commandSuccess(id);
   }
   else {
-    slb->commandFail(id);
+    sl->commandFail(id);
   }
 }
 
@@ -686,10 +686,10 @@ void FTPConn::doPRETSTOR(std::string file) {
 void FTPConn::PRETSTORResponse() {
   processing = false;
   if (databufcode == 200) {
-    slb->commandSuccess(id);
+    sl->commandSuccess(id);
   }
   else {
-    slb->commandFail(id);
+    sl->commandFail(id);
   }
 }
 
@@ -700,22 +700,22 @@ void FTPConn::doRETR(std::string file) {
 
 void FTPConn::RETRResponse() {
   if (databufcode == 150) {
-    slb->commandSuccess(id);
+    sl->commandSuccess(id);
     state = 19;
   }
   else {
     processing = false;
-    slb->commandFail(id);
+    sl->commandFail(id);
   }
 }
 
 void FTPConn::RETRComplete() {
   processing = false;
   if (databufcode == 226) {
-    slb->commandSuccess(id);
+    sl->commandSuccess(id);
   }
   else {
-    slb->commandFail(id);
+    sl->commandFail(id);
   }
 }
 
@@ -726,22 +726,22 @@ void FTPConn::doSTOR(std::string file) {
 
 void FTPConn::STORResponse() {
   if (databufcode == 150) {
-    slb->commandSuccess(id);
+    sl->commandSuccess(id);
     state = 21;
   }
   else {
     processing = false;
-    slb->commandFail(id);
+    sl->commandFail(id);
   }
 }
 
 void FTPConn::STORComplete() {
   processing = false;
   if (databufcode == 226) {
-    slb->commandSuccess(id);
+    sl->commandSuccess(id);
   }
   else {
-    slb->commandFail(id);
+    sl->commandFail(id);
   }
 }
 
@@ -752,7 +752,7 @@ void FTPConn::abortTransfer() {
 
 void FTPConn::ABORResponse() {
   processing = false;
-  slb->commandSuccess(id);
+  sl->commandSuccess(id);
 }
 
 void FTPConn::doQUIT() {
@@ -849,9 +849,9 @@ bool FTPConn::isProcessing() {
 }
 
 void FTPConn::lock() {
-  slb->lock();
+  sl->lock();
 }
 
 void FTPConn::unlock() {
-  slb->unlock();
+  sl->unlock();
 }
