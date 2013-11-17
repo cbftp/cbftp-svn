@@ -336,7 +336,17 @@ void SiteLogic::commandFail(int id) {
   std::string file;
   std::list<SiteLogicRequest>::iterator it;
   switch (state) {
-    case 14: // cwd
+    case 8: // PROT P fail
+    case 9: // PROT C fail
+    case 11: // CPSV fail
+    case 12: // PASV fail
+    case 13: // PORT fail
+      if (connstatetracker[id].hasTransfer()) {
+        handleTransferFail(id, 3);
+        return;
+      }
+      break;
+    case 14: // cwd fail
       if (conns[id]->hasMKDCWDTarget()) {
         if (!site->getAllowUpload() || site->isAffiliated(conns[id]->currentSiteRace()->getGroup())) {
           connstatetracker[id].setIdle();
@@ -344,6 +354,10 @@ void SiteLogic::commandFail(int id) {
           return;
         }
         conns[id]->doMKD(conns[id]->getTargetPath());
+        return;
+      }
+      if (connstatetracker[id].hasTransfer()) {
+        handleTransferFail(id, 3);
         return;
       }
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
@@ -431,7 +445,29 @@ void SiteLogic::commandFail(int id) {
     loggedin--;
     available--;
   }
+  if (connstatetracker[id].hasTransfer()) {
+    bool download = false;
+    if (connstatetracker[id].getTransferDownload()) {
+      connstatetracker[id].getTransferMonitor()->sourceError(3);
+      download = true;
+    }
+    else {
+      connstatetracker[id].getTransferMonitor()->targetError(3);
+    }
+    connstatetracker[id].finishTransfer();
+    transferComplete(download);
+  }
   conns[id]->reconnect();
+}
+
+void SiteLogic::handleTransferFail(int id, int err) {
+  if (connstatetracker[id].hasTransfer()) {
+    handleTransferFail(id, connstatetracker[id].getTransferDownload(), err);
+  }
+  else {
+    global->getEventLog()->log("SiteLogic", "BUG: Returned failed transfer (code " +
+        global->int2Str(err) + ") without having a transfer, shouldn't happen!");
+  }
 }
 
 void SiteLogic::handleTransferFail(int id, bool download, int err) {

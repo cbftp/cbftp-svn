@@ -14,8 +14,8 @@ extern GlobalContext * global;
 TransferMonitor::TransferMonitor() {
   status = 0;
   activedownload = false;
-  global->getTickPoke()->startPoke(this, "TransferMonitor", 50, 0);
   timestamp = 0;
+  global->getTickPoke()->startPoke(this, "TransferMonitor", 50, 0);
 }
 
 bool TransferMonitor::idle() {
@@ -31,6 +31,7 @@ void TransferMonitor::engage(std::string file, SiteLogic * sls, FileList * fls, 
   activedownload = false;
   sourcecomplete = false;
   targetcomplete = false;
+  passiveready = false;
   timestamp = 0;
   ssl = false;
   if (!sls->lockDownloadConn(fls, file, &src)) return;
@@ -58,6 +59,7 @@ void TransferMonitor::tick(int msg) {
 }
 
 void TransferMonitor::passiveReady(std::string addr) {
+  passiveready = true;
   if (activedownload) {
     sls->activeDownload(src, this, fls, file, addr, ssl);
     sld->passiveUpload(dst);
@@ -123,12 +125,21 @@ void TransferMonitor::sourceError(int err) {
       fls->downloadFail(file);
       break;
     case 2: // RETR post failed
+    case 3: // other failure
       fls->downloadAttemptFail(file);
       break;
   }
   sourcecomplete = true;
   status = 13;
-  if (targetcomplete) {
+  if (!passiveready) {
+    sld->returnConn(dst);
+    fileobj = fld->getFile(file);
+    if (fileobj != NULL) {
+      fileobj->finishUpload();
+    }
+    status = 0;
+  }
+  else if (targetcomplete) {
     status = 0;
   }
 }
@@ -146,12 +157,21 @@ void TransferMonitor::targetError(int err) {
       fld->uploadFail(file);
       break;
     case 2: // STOR post failed
+    case 3: // other failure
       fld->uploadAttemptFail(file);
       break;
   }
   targetcomplete = true;
   status = 13;
-  if (sourcecomplete) {
+  if (!passiveready) {
+    sls->returnConn(src);
+    fileobj = fls->getFile(file);
+    if (fileobj != NULL) {
+      fileobj->finishDownload();
+    }
+    status = 0;
+  }
+  else if (sourcecomplete) {
     status = 0;
   }
 }

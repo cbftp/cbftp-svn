@@ -21,6 +21,7 @@ class TransferMonitor : public EventReceiver {
     bool sourcecomplete;
     bool targetcomplete;
     bool ssl;
+    bool passiveready;
     int timestamp;
     int startstamp;
     void finish();

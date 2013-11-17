@@ -54,6 +54,7 @@ class SiteLogic : public EventReceiver {
     bool wasRecentlyListed(SiteRace *);
     void refreshChangePath(int, SiteRace *, bool);
     void initTransfer(int);
+    void handleTransferFail(int, int);
     void handleTransferFail(int, bool, int);
     static void * run(void *);
     bool poke;
