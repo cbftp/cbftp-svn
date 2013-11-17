@@ -97,43 +97,42 @@ void MainScreen::update() {
     uicommunicator->checkoutCommand();
     redraw();
     uicommunicator->newCommand("update");
+    return;
   }
-  else {
-    int newcurrentraces = global->getEngine()->currentRaces();
-    if (newcurrentraces != currentraces) {
-      currentraces = newcurrentraces;
-      redraw();
-      return;
-    }
+  int newcurrentraces = global->getEngine()->currentRaces();
+  if (newcurrentraces != currentraces) {
     currentraces = newcurrentraces;
-    if (currentraces) {
-      TermInt::printStr(window, 1, 1, "Active races: " + global->int2Str(currentraces));
+    redraw();
+    return;
+  }
+  currentraces = newcurrentraces;
+  if (currentraces) {
+    TermInt::printStr(window, 1, 1, "Active races: " + global->int2Str(currentraces));
+  }
+  bool highlight;
+  unsigned int selected = mso.getSelectionPointer();
+  for (unsigned int i = 0; i < mso.size(); i++) {
+    highlight = false;
+    MenuSelectOptionElement * msoe = mso.getElement(i);
+    Race * race = global->getEngine()->getRace(msoe->getIdentifier());
+    if (mso.isFocused() && selected == i) {
+      highlight = true;
     }
-    bool highlight;
-    unsigned int selected = mso.getSelectionPointer();
-    for (unsigned int i = 0; i < mso.size(); i++) {
-      highlight = false;
-      MenuSelectOptionElement * msoe = mso.getElement(i);
-      Race * race = global->getEngine()->getRace(msoe->getIdentifier());
-      if (mso.isFocused() && selected == i) {
-        highlight = true;
-      }
-      TermInt::printStr(window, msoe->getRow(), msoe->getCol(), race->getSection());
-      if (highlight) wattron(window, A_REVERSE);
-      TermInt::printStr(window, msoe->getRow(), msoe->getCol() + 9, msoe->getLabelText());
-      if (highlight) wattroff(window, A_REVERSE);
+    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), race->getSection());
+    if (highlight) wattron(window, A_REVERSE);
+    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + 9, msoe->getLabelText());
+    if (highlight) wattroff(window, A_REVERSE);
+  }
+  selected = mss.getSelectionPointer();
+  for (unsigned int i = 0; i + currentviewspan < mss.size() && i < row - sitestartrow; i++) {
+    unsigned int listi = i + currentviewspan;
+    highlight = false;
+    if (mss.isFocused() && selected == listi) {
+      highlight = true;
     }
-    selected = mss.getSelectionPointer();
-    for (unsigned int i = 0; i + currentviewspan < mss.size() && i < row - sitestartrow; i++) {
-      unsigned int listi = i + currentviewspan;
-      highlight = false;
-      if (mss.isFocused() && selected == listi) {
-        highlight = true;
-      }
-      if (highlight) wattron(window, A_REVERSE);
-      TermInt::printStr(window, i + sitestartrow, 1, mss.getSiteLine(listi));
-      if (highlight) wattroff(window, A_REVERSE);
-    }
+    if (highlight) wattron(window, A_REVERSE);
+    TermInt::printStr(window, i + sitestartrow, 1, mss.getSiteLine(listi));
+    if (highlight) wattroff(window, A_REVERSE);
   }
 }
 

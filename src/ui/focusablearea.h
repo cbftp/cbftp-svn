@@ -16,7 +16,7 @@ public:
   virtual bool goDown();
   virtual bool goLeft();
   virtual bool goRight();
-  void enterFocusFrom(int);
+  virtual void enterFocusFrom(int);
   bool isFocused();
   void makeLeavableUp();
   void makeLeavableDown();

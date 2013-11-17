@@ -355,11 +355,13 @@ void UserInterface::runInstance() {
         uicommunicator.checkoutCommand();
       }
       else if (command == "update") {
+        uicommunicator.checkoutCommand();
         topwindow->update();
         refreshAll();
         uicommunicator.checkoutCommand();
       }
       else if (command == "updatesetlegend") {
+        uicommunicator.checkoutCommand();
         topwindow->update();
         legendwindow->setText(topwindow->getLegendText());
         infowindow->setText(topwindow->getInfoText());
@@ -367,12 +369,14 @@ void UserInterface::runInstance() {
         uicommunicator.checkoutCommand();
       }
       else if (command == "updatesetinfo") {
+        uicommunicator.checkoutCommand();
         topwindow->update();
         infowindow->setText(topwindow->getInfoText());
         refreshAll();
         uicommunicator.checkoutCommand();
       }
       else if (command == "updatesetinfolegend") {
+        uicommunicator.checkoutCommand();
         topwindow->update();
         legendwindow->setText(topwindow->getLegendText());
         infowindow->setText(topwindow->getInfoText());
@@ -380,10 +384,10 @@ void UserInterface::runInstance() {
         uicommunicator.checkoutCommand();
       }
       else if (command == "redraw") {
+        uicommunicator.checkoutCommand();
         topwindow->redraw();
         infowindow->setText(topwindow->getInfoText());
         refreshAll();
-        uicommunicator.checkoutCommand();
       }
       else if (command == "key") {
         std::string key = uicommunicator.getArg1();
@@ -417,13 +421,13 @@ void UserInterface::runInstance() {
         switchToWindow(mainscreen);
       }
       else if (command == "main") {
+        uicommunicator.checkoutCommand();
         mainscreen->redraw();
         topwindow = mainscreen;
         legendwindow->setText(topwindow->getLegendText());
         infowindow->setLabel(topwindow->getInfoLabel());
         infowindow->setText(topwindow->getInfoText());
         refreshAll();
-        uicommunicator.checkoutCommand();
       }
       else if (command == "return") {
         topwindow = history.back();
@@ -449,6 +453,7 @@ void UserInterface::runInstance() {
 }
 
 void UserInterface::switchToWindow(UIWindow * window) {
+  uicommunicator.checkoutCommand();
   history.push_back(topwindow);
   legendwindow->setText(window->getLegendText());
   infowindow->setLabel(window->getInfoLabel());
@@ -456,7 +461,6 @@ void UserInterface::switchToWindow(UIWindow * window) {
   mainwindows.push_back(window);
   topwindow = window;
   refreshAll();
-  uicommunicator.checkoutCommand();
 }
 
 void * UserInterface::run(void * arg) {
