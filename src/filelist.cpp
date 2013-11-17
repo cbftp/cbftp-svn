@@ -225,7 +225,7 @@ void FileList::cleanSweep(int touch) {
   pthread_mutex_lock(&filelist_mutex);
   for (it = files.begin(); it != files.end(); it++) {
     File * f = it->second;
-    if (f->getTouch() != touch) {
+    if (f->getTouch() != touch && !f->isUploading()) {
       if (f->getOwner().compare(username) == 0) {
         editOwnedFileCount(false);
       }
