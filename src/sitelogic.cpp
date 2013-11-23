@@ -560,25 +560,13 @@ void SiteLogic::requestSelect() {
     conns[0]->login();
   }
   else {
-    int conn = -1;
     for (unsigned int i = 0; i < conns.size(); i++) {
-      if (connstatetracker[i].isIdle()) {
-        conn = i;
-        break;
+      if (connstatetracker[i].isIdle() && !conns[i]->isProcessing()) {
+        handleRequest(i);
+        return;
       }
     }
-    if (conn < 0) {
-      for (unsigned int i = 0; i < conns.size(); i++) {
-        if (connstatetracker[i].isReady()) {
-          conn = i;
-          break;
-        }
-      }
-    }
-    if (conn >= 0) {
-      handleRequest(conn);
-    }
-    else if (loggedin < conns.size()) {
+    if (loggedin < conns.size()) {
       wantedloggedin++;
       for (unsigned int i = 0; i < conns.size(); i++) {
         if (connstatetracker[i].isDisconnected()) {
