@@ -49,7 +49,7 @@ class SiteLogic : public EventReceiver {
     int requestidcounter;
     Site * site;
     void handleConnection(int, bool);
-    void handleRequest(int);
+    bool handleRequest(int);
     void addRecentList(SiteRace *);
     bool wasRecentlyListed(SiteRace *);
     void refreshChangePath(int, SiteRace *, bool);
