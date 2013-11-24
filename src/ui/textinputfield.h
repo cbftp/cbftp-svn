@@ -17,6 +17,7 @@ public:
   bool moveCursorRight();
   void moveCursorHome();
   void moveCursorEnd();
+  void setText(std::string);
   void clear();
 private:
   void construct(std::string, int, int, bool);

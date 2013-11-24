@@ -126,6 +126,11 @@ void TextInputField::erase() {
   }
 }
 
+void TextInputField::setText(std::string text) {
+  this->text = text;
+  moveCursorEnd();
+}
+
 void TextInputField::clear() {
   text = "";
   cursor = 0;

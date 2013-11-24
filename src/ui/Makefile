@@ -6,7 +6,7 @@ OBJECTS = menuselectsite.o menuselectoption.o menuselectoptionelement.o \
     menuselectoptioncheckbox.o legendwindow.o termint.o uifilelist.o uifile.o \
     ui.o menuselectoptiontextbutton.o focusablearea.o menuselectsiteelement.o \
     stringpair.o menusection.o menuselectoptioncontainer.o infowindow.o \
-    menufilters.o textarrow.o menuselectoptiontextarrow.o
+    menufilters.o textarrow.o menuselectoptiontextarrow.o commandhistory.o
 	
 all: ${OBJECTS}
 	@cd screens; ${MAKE}

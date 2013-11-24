@@ -9,6 +9,7 @@
 #include "../uicommunicator.h"
 #include "../termint.h"
 
+
 extern GlobalContext * global;
 
 RawDataScreen::RawDataScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
@@ -79,39 +80,57 @@ void RawDataScreen::keyPressed(unsigned int ch) {
   unsigned int rownum = row;
   if (rawcommandmode) {
     rownum = row - 1;
-    if ((ch >= 32 && ch <= 126) || ch == 10 || ch == 27 || ch == KEY_LEFT || ch == KEY_RIGHT || ch == KEY_BACKSPACE || ch == 8) {
-      if ((ch >= 32 && ch <= 126) || ch == KEY_BACKSPACE || ch == 8) {
-        rawcommandfield.inputChar(ch);
+    if ((ch >= 32 && ch <= 126) || ch == KEY_BACKSPACE || ch == 8 ||
+        ch == KEY_RIGHT || ch == KEY_LEFT || ch == KEY_DC || ch == KEY_HOME ||
+        ch == KEY_END) {
+      rawcommandfield.inputChar(ch);
+      uicommunicator->newCommand("update");
+      return;
+    }
+    else if (ch == 10) {
+      std::string command = rawcommandfield.getData();
+      if (command == "") {
+        rawcommandswitch = true;
+        uicommunicator->newCommand("updatesetlegend");
+        return;
       }
-      else if (ch == 10) {
-        std::string command = rawcommandfield.getData();
-        if (command == "") {
-          rawcommandswitch = true;
-          uicommunicator->newCommand("updatesetlegend");
-          return;
-        }
-        else {
-          readfromcopy = false;
-          sitelogic->issueRawCommand(connid, command);
-          rawcommandfield.clear();
-        }
-      }
-      else if (ch == 27) {
-        if (rawcommandfield.getData() != "") {
-          rawcommandfield.clear();
-        }
-        else {
-          rawcommandswitch = true;
-          uicommunicator->newCommand("updatesetlegend");
-          return;
-        }
-      }
-      else if (ch == KEY_LEFT) {
-      }
-      else if (ch == KEY_RIGHT) {
-
+      else {
+        readfromcopy = false;
+        history.push(command);
+        sitelogic->issueRawCommand(connid, command);
+        rawcommandfield.clear();
       }
       uicommunicator->newCommand("update");
+      return;
+    }
+    else if (ch == 27) {
+      if (rawcommandfield.getData() != "") {
+        rawcommandfield.clear();
+      }
+      else {
+        rawcommandswitch = true;
+        uicommunicator->newCommand("updatesetlegend");
+        return;
+      }
+      uicommunicator->newCommand("update");
+      return;
+    }
+    else if (ch == KEY_UP) {
+      if (history.canBack()) {
+        if (history.current()) {
+          history.setCurrent(rawcommandfield.getData());
+        }
+        history.back();
+        rawcommandfield.setText(history.get());
+        uicommunicator->newCommand("update");
+      }
+      return;
+    }
+    else if (ch == KEY_DOWN) {
+      if (history.forward()) {
+        rawcommandfield.setText(history.get());
+        uicommunicator->newCommand("update");
+      }
       return;
     }
   }

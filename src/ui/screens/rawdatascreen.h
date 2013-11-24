@@ -2,6 +2,7 @@
 
 #include "../uiwindow.h"
 #include "../menuselectoptiontextfield.h"
+#include "../commandhistory.h"
 
 class SiteLogic;
 class UICommunicator;
@@ -28,4 +29,5 @@ private:
   SiteLogic * sitelogic;
   UICommunicator * uicommunicator;
   RawBuffer * rawbuf;
+  CommandHistory history;
 };

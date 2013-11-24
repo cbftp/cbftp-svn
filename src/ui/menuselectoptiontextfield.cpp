@@ -59,6 +59,10 @@ void MenuSelectOptionTextField::clear() {
   textfield.clear();
 }
 
+void MenuSelectOptionTextField::setText(std::string text) {
+  textfield.setText(text);
+}
+
 std::string MenuSelectOptionTextField::getLegendText() {
   return "[Enter] Finish editing - [Any] Input to text";
 }

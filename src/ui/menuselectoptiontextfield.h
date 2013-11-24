@@ -17,5 +17,6 @@ public:
   int cursorPosition();
   std::string getData();
   void clear();
+  void setText(std::string);
   std::string getLegendText();
 };
