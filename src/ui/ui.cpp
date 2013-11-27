@@ -404,6 +404,7 @@ void UserInterface::runInstance() {
           uicommunicator.readConfiguration();
           global->getSkipList()->readConfiguration();
           global->getProxyManager()->readConfiguration();
+          global->getIOManager()->readConfiguration();
           enableInfo();
           if (uicommunicator.legendEnabled()) {
             enableLegend();

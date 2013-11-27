@@ -38,6 +38,9 @@ private:
   int epollfd;
   DataBlockPool * blockpool;
   int blocksize;
+  std::string defaultinterface;
+  std::string getInterfaceAddress(std::string);
+  bool hasdefaultinterface;
 public:
   IOManager();
   void runInstance();
@@ -51,4 +54,10 @@ public:
   std::string getCipher(int);
   std::string getSocketAddress(int);
   void closeSocket(int);
+  std::list<std::pair<std::string, std::string> > listInterfaces();
+  void readConfiguration();
+  void writeState();
+  std::string getDefaultInterface();
+  void setDefaultInterface(std::string);
+  bool hasDefaultInterface();
 };

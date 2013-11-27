@@ -6,18 +6,25 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <fcntl.h>
+#include <ifaddrs.h>
+#include <net/if.h>
+#include <sys/ioctl.h>
+#include <vector>
 
 #include "workmanager.h"
 #include "globalcontext.h"
 #include "datablock.h"
 #include "datablockpool.h"
 #include "eventreceiver.h"
+#include "eventlog.h"
+#include "datafilehandler.h"
 
 IOManager::IOManager() {
   epollfd = epoll_create(100);
   wm = global->getWorkManager();
   blockpool = wm->getBlockPool();
   blocksize = blockpool->blockSize();
+  hasdefaultinterface = false;
   pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
 #ifdef _ISOC95_SOURCE
   pthread_setname_np(thread, "Input");
@@ -27,8 +34,6 @@ IOManager::IOManager() {
 int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int port) {
   struct addrinfo sock, *res;
   memset(&sock, 0, sizeof(sock));
-  sock.ai_family = AF_INET;
-  sock.ai_socktype = SOCK_STREAM;
   int status = getaddrinfo(addr.data(), global->int2Str(port).data(), &sock, &res);
   if (status != 0) {
     er->FDFail("Failed to resolve DNS. Error code: " + global->int2Str(status));
@@ -36,6 +41,14 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int
   }
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
   fcntl(sockfd, F_SETFL, O_NONBLOCK);
+  if (hasDefaultInterface()) {
+    struct addrinfo sock2, *res2;
+    memset(&sock, 0, sizeof(sock2));
+    sock2.ai_family = AF_INET;
+    sock2.ai_socktype = SOCK_STREAM;
+    getaddrinfo(getInterfaceAddress(getDefaultInterface()).data(), "0", &sock2, &res2);
+    bind(sockfd, res2->ai_addr, res2->ai_addrlen);
+  }
   connect(sockfd, res->ai_addr, res->ai_addrlen);
   char buf[res->ai_addrlen];
   struct sockaddr_in* saddr = (struct sockaddr_in*)res->ai_addr;
@@ -55,7 +68,11 @@ int IOManager::registerTCPServerSocket(EventReceiver * er, int port) {
   memset(&sock, 0, sizeof(sock));
   sock.ai_family = AF_INET;
   sock.ai_socktype = SOCK_STREAM;
-  getaddrinfo("0.0.0.0", global->int2Str(port).data(), &sock, &res);
+  std::string addr = "0.0.0.0";
+  if (hasDefaultInterface()) {
+    addr = getInterfaceAddress(getDefaultInterface());
+  }
+  getaddrinfo(addr.c_str(), global->int2Str(port).data(), &sock, &res);
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
   bind(sockfd, res->ai_addr, res->ai_addrlen);
   typemap[sockfd] = FD_TCP_SERVER;
@@ -83,7 +100,11 @@ int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
   sock.ai_family = AF_UNSPEC;
   sock.ai_socktype = SOCK_DGRAM;
   sock.ai_protocol = IPPROTO_UDP;
-  getaddrinfo("0.0.0.0", global->int2Str(port).data(), &sock, &res);
+  std::string addr = "0.0.0.0";
+  if (hasDefaultInterface()) {
+    addr = getInterfaceAddress(getDefaultInterface());
+  }
+  getaddrinfo(addr.c_str(), global->int2Str(port).data(), &sock, &res);
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
   bind(sockfd, res->ai_addr, res->ai_addrlen);
   typemap[sockfd] = FD_UDP;
@@ -340,4 +361,88 @@ void IOManager::runInstance() {
 void * IOManager::run(void * arg) {
   ((IOManager *) arg)->runInstance();
   return NULL;
+}
+
+std::list<std::pair<std::string, std::string> > IOManager::listInterfaces() {
+  std::list<std::pair<std::string, std::string> > addrs;
+  struct ifaddrs *ifaddr, *ifa;
+  int family, s;
+  char host[NI_MAXHOST];
+  if (getifaddrs(&ifaddr) == -1) {
+    global->getEventLog()->log("IOManager", "ERROR: Failed to list network interfaces");
+    return addrs;
+  }
+  for (ifa = ifaddr; ifa != NULL && ifa->ifa_addr != NULL; ifa = ifa->ifa_next) {
+    family = ifa->ifa_addr->sa_family;
+    if (family == AF_INET) {
+      s = getnameinfo(ifa->ifa_addr,sizeof(struct sockaddr_in),
+          host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+      if (s != 0) {
+        global->getEventLog()->log("IOManager", "ERROR: getnameinfo() failed");
+        continue;
+      }
+      addrs.push_back(std::pair<std::string, std::string>(ifa->ifa_name, host));
+    }
+  }
+  freeifaddrs(ifaddr);
+  return addrs;
+}
+
+void IOManager::readConfiguration() {
+  std::vector<std::string> lines;
+  global->getDataFileHandler()->getDataFor("IOManager", &lines);
+  std::vector<std::string>::iterator it;
+  std::string line;
+  for (it = lines.begin(); it != lines.end(); it++) {
+    line = *it;
+    if (line.length() == 0 ||line[0] == '#') continue;
+    size_t tok = line.find('=');
+    std::string setting = line.substr(0, tok);
+    std::string value = line.substr(tok + 1);
+    if (!setting.compare("defaultinterface")) {
+      setDefaultInterface(value);
+    }
+  }
+}
+
+void IOManager::writeState() {
+  global->getEventLog()->log("IOManager", "Writing state...");
+  if (hasDefaultInterface()) {
+    global->getDataFileHandler()->addOutputLine("IOManager", "defaultinterface=" + getDefaultInterface());
+  }
+}
+
+std::string IOManager::getDefaultInterface() {
+  return defaultinterface;
+}
+
+void IOManager::setDefaultInterface(std::string interface) {
+  if (getInterfaceAddress(interface) == "") {
+    if (hasdefaultinterface) {
+      hasdefaultinterface = false;
+      global->getEventLog()->log("IOManager", "Default network interface removed");
+    }
+  }
+  else {
+    defaultinterface = interface;
+    hasdefaultinterface = true;
+    global->getEventLog()->log("IOManager", "Default network interface set to: " + interface);
+  }
+}
+
+bool IOManager::hasDefaultInterface() {
+  return hasdefaultinterface;
+}
+
+std::string IOManager::getInterfaceAddress(std::string interface) {
+  int fd;
+  struct ifreq ifr;
+  fd = socket(AF_INET, SOCK_DGRAM, 0);
+  ifr.ifr_addr.sa_family = AF_INET;
+  strncpy(ifr.ifr_name, interface.c_str(), IFNAMSIZ - 1);
+  if (ioctl(fd, SIOCGIFADDR, &ifr) < 0) {
+    return "";
+  }
+  close(fd);
+  return inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
 }

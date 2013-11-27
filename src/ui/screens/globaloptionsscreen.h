@@ -1,11 +1,13 @@
 #pragma once
 
 #include <list>
+#include <map>
 
 #include "../menuselectoption.h"
 #include "../uiwindow.h"
 
 class MenuSelectOptionElement;
+class MenuSelectOptionTextArrow;
 class UICommunicator;
 class SiteManager;
 class RemoteCommandHandler;
@@ -28,4 +30,6 @@ private:
   bool active;
   MenuSelectOptionElement * activeelement;
   UICommunicator * uicommunicator;
+  std::map<int, std::string> interfacemap;
+  MenuSelectOptionTextArrow * defaultinterface;
 };

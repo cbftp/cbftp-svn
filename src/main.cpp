@@ -75,6 +75,7 @@ Main::Main() {
     global->getUICommunicator()->writeState();
     global->getSkipList()->writeState();
     global->getProxyManager()->writeState();
+    global->getIOManager()->writeState();
     global->getDataFileHandler()->writeFile();
     std::cout << "Done, exiting..." << std::endl << std::flush;
   }

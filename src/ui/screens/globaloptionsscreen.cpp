@@ -3,6 +3,7 @@
 #include "../../globalcontext.h"
 #include "../../remotecommandhandler.h"
 #include "../../sitemanager.h"
+#include "../../iomanager.h"
 
 #include "../uicommunicator.h"
 #include "../menuselectoptionelement.h"
@@ -11,6 +12,7 @@
 #include "../menuselectoptioncheckbox.h"
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptionnumarrow.h"
+#include "../menuselectoptiontextarrow.h"
 
 extern GlobalContext * global;
 
@@ -23,6 +25,27 @@ GlobalOptionsScreen::GlobalOptionsScreen(WINDOW * window, UICommunicator * uicom
   unsigned int x = 1;
   rch = global->getRemoteCommandHandler();
   sm = global->getSiteManager();
+  defaultinterface = mso.addTextArrow(y++, x, "defaultinterface", "Default network interface:");
+  defaultinterface->addOption("Unspecified", 0);
+  interfacemap[0] = "";
+  std::list<std::pair<std::string, std::string> > interfaces = global->getIOManager()->listInterfaces();
+  int interfaceid = 1;
+  bool hasdefault = global->getIOManager()->hasDefaultInterface();
+  std::string defaultinterfacename;
+  if (hasdefault) {
+    defaultinterfacename = global->getIOManager()->getDefaultInterface();
+  }
+  for (std::list<std::pair<std::string, std::string> >::iterator it = interfaces.begin(); it != interfaces.end(); it++) {
+    if (it->first == "lo") {
+      continue;
+    }
+    interfacemap[interfaceid] = it->first;
+    defaultinterface->addOption(it->first + ", " + it->second, interfaceid++);
+    if (hasdefault && it->first == defaultinterfacename) {
+      defaultinterface->setOption(interfaceid - 1);
+    }
+  }
+  y++;
   mso.addCheckBox(y++, x, "udpenable", "Enable remote commands:", rch->isEnabled());
   mso.addStringField(y++, x, "udpport", "Remote command UDP Port:", global->int2Str(rch->getUDPPort()), false, 5);
   mso.addStringField(y++, x, "udppass", "Remote command password:", rch->getPassword(), true);
@@ -135,6 +158,10 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
       for(unsigned int i = 0; i < mso.size(); i++) {
         MenuSelectOptionElement * msoe = mso.getElement(i);
         std::string identifier = msoe->getIdentifier();
+        if (identifier == "defaultinterface") {
+          std::string interface = interfacemap[((MenuSelectOptionTextArrow *)msoe)->getData()];
+          global->getIOManager()->setDefaultInterface(interface);
+        }
         if (identifier == "udpenable") {
           udpenable = (((MenuSelectOptionCheckBox *)msoe)->getData());
           if (rch->isEnabled() && !udpenable) {
