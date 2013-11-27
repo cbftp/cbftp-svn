@@ -34,6 +34,8 @@ IOManager::IOManager() {
 int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int port) {
   struct addrinfo sock, *res;
   memset(&sock, 0, sizeof(sock));
+  sock.ai_family = AF_INET;
+  sock.ai_socktype = SOCK_STREAM;
   int status = getaddrinfo(addr.data(), global->int2Str(port).data(), &sock, &res);
   if (status != 0) {
     er->FDFail("Failed to resolve DNS. Error code: " + global->int2Str(status));
@@ -43,7 +45,7 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int
   fcntl(sockfd, F_SETFL, O_NONBLOCK);
   if (hasDefaultInterface()) {
     struct addrinfo sock2, *res2;
-    memset(&sock, 0, sizeof(sock2));
+    memset(&sock2, 0, sizeof(sock2));
     sock2.ai_family = AF_INET;
     sock2.ai_socktype = SOCK_STREAM;
     getaddrinfo(getInterfaceAddress(getDefaultInterface()).data(), "0", &sock2, &res2);
