@@ -399,12 +399,12 @@ void UserInterface::runInstance() {
         bool result = global->getDataFileHandler()->tryDecrypt(key);
         if (result) {
           global->getEventLog()->log("UI", "Data decryption successful.");
+          global->getIOManager()->readConfiguration();
           global->getSiteManager()->readConfiguration();
           global->getRemoteCommandHandler()->readConfiguration();
           uicommunicator.readConfiguration();
           global->getSkipList()->readConfiguration();
           global->getProxyManager()->readConfiguration();
-          global->getIOManager()->readConfiguration();
           enableInfo();
           if (uicommunicator.legendEnabled()) {
             enableLegend();
