@@ -70,7 +70,11 @@ void UserInterface::initIntern() {
     printf("Error: terminal too small. 80x24 required. (Current %dx%d)\n", col, row);
     initret = false;
   }
+#if NCURSES_EXT_FUNCS >= 20081102
   set_escdelay(25);
+#else
+  ESCDELAY = 25;
+#endif
   global->getIOManager()->registerStdin(this);
   global->getTickPoke()->startPoke(this, "UI", 250, 0);
   sem_post(&initdone);
