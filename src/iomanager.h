@@ -47,6 +47,7 @@ public:
   void registerStdin(EventReceiver *);
   int registerTCPClientSocket(EventReceiver *, std::string, int);
   int registerTCPServerSocket(EventReceiver *, int);
+  int registerTCPServerSocket(EventReceiver *, int, bool);
   void negotiateSSL(int);
   int registerUDPServerSocket(EventReceiver *, int);
   void sendData(int, std::string);

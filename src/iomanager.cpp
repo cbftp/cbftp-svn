@@ -66,13 +66,17 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int
 }
 
 int IOManager::registerTCPServerSocket(EventReceiver * er, int port) {
+  return registerTCPServerSocket(er, port, false);
+}
+
+int IOManager::registerTCPServerSocket(EventReceiver * er, int port, bool local) {
   struct addrinfo sock, *res;
   memset(&sock, 0, sizeof(sock));
   sock.ai_family = AF_INET;
   sock.ai_socktype = SOCK_STREAM;
   std::string addr = "0.0.0.0";
-  if (hasDefaultInterface()) {
-    addr = getInterfaceAddress(getDefaultInterface());
+  if (local) {
+    addr = "127.0.0.1";
   }
   getaddrinfo(addr.c_str(), global->int2Str(port).data(), &sock, &res);
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
@@ -103,9 +107,6 @@ int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
   sock.ai_socktype = SOCK_DGRAM;
   sock.ai_protocol = IPPROTO_UDP;
   std::string addr = "0.0.0.0";
-  if (hasDefaultInterface()) {
-    addr = getInterfaceAddress(getDefaultInterface());
-  }
   getaddrinfo(addr.c_str(), global->int2Str(port).data(), &sock, &res);
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
   bind(sockfd, res->ai_addr, res->ai_addrlen);
