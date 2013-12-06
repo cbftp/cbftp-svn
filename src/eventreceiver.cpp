@@ -1,5 +1,7 @@
 #include "eventreceiver.h"
 
+#include <iostream>
+
 EventReceiver::EventReceiver() {
   pthread_mutex_init(&eventlock, NULL);
 }
@@ -9,6 +11,10 @@ EventReceiver::~EventReceiver() {
 }
 
 void EventReceiver::tick(int message) {
+
+}
+
+void EventReceiver::FDNew(int fd) {
 
 }
 

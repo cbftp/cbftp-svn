@@ -16,6 +16,7 @@
 #define WORK_DISCONNECTED 2538
 #define WORK_SSL_SUCCESS 2539
 #define WORK_SSL_FAIL 2540
+#define WORK_NEW 2541
 
 class EventReceiver;
 class Event;
@@ -35,6 +36,7 @@ public:
   void dispatchFDData(EventReceiver *);
   void dispatchFDData(EventReceiver *, char *, int);
   void dispatchTick(EventReceiver *, int);
+  void dispatchEventNew(EventReceiver *, int);
   void dispatchEventConnected(EventReceiver *);
   void dispatchEventDisconnected(EventReceiver *);
   void dispatchEventSSLSuccess(EventReceiver *);

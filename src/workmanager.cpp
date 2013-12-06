@@ -38,6 +38,13 @@ void WorkManager::dispatchTick(EventReceiver * er, int interval) {
   sem_post(&dispatch);
 }
 
+void WorkManager::dispatchEventNew(EventReceiver * er, int sockfd) {
+  pthread_mutex_lock(&dataqueue_mutex);
+  dataqueue.push_back(Event(er, WORK_NEW, sockfd));
+  pthread_mutex_unlock(&dataqueue_mutex);
+  sem_post(&dispatch);
+}
+
 void WorkManager::dispatchEventConnected(EventReceiver * er) {
   pthread_mutex_lock(&dataqueue_mutex);
   dataqueue.push_back(Event(er, WORK_CONNECTED));
@@ -104,6 +111,9 @@ void WorkManager::runInstance() {
         break;
       case WORK_SSL_FAIL:
         er->FDSSLFail();
+        break;
+      case WORK_NEW:
+        er->FDNew(event.getInterval());
         break;
     }
     er->unlock();

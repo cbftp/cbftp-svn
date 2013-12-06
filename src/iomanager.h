@@ -22,6 +22,8 @@ class DataBlock;
 #define FD_TCP_SSL 1035
 #define FD_UDP 1036
 #define FD_TCP_SERVER 1037
+#define FD_TCP_PLAIN_LISTEN 1038
+#define FD_TCP_SSL_NEG_REDO_ACCEPT 1039
 
 extern GlobalContext * global;
 
@@ -48,6 +50,7 @@ public:
   int registerTCPClientSocket(EventReceiver *, std::string, int);
   int registerTCPServerSocket(EventReceiver *, int);
   int registerTCPServerSocket(EventReceiver *, int, bool);
+  void registerTCPServerClientSocket(EventReceiver *, int);
   void negotiateSSL(int);
   int registerUDPServerSocket(EventReceiver *, int);
   void sendData(int, std::string);

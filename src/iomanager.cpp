@@ -10,6 +10,8 @@
 #include <net/if.h>
 #include <sys/ioctl.h>
 #include <vector>
+#include <openssl/err.h>
+#include <errno.h>
 
 #include "workmanager.h"
 #include "globalcontext.h"
@@ -80,7 +82,10 @@ int IOManager::registerTCPServerSocket(EventReceiver * er, int port, bool local)
   }
   getaddrinfo(addr.c_str(), global->int2Str(port).data(), &sock, &res);
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+  int yes = 1;
+  setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
   bind(sockfd, res->ai_addr, res->ai_addrlen);
+  listen(sockfd, 10);
   typemap[sockfd] = FD_TCP_SERVER;
   receivermap[sockfd] = er;
   struct epoll_event event;
@@ -88,6 +93,15 @@ int IOManager::registerTCPServerSocket(EventReceiver * er, int port, bool local)
   event.data.fd = sockfd;
   epoll_ctl(epollfd, EPOLL_CTL_ADD, sockfd, &event);
   return sockfd;
+}
+
+void IOManager::registerTCPServerClientSocket(EventReceiver * er, int sockfd) {
+  typemap[sockfd] = FD_TCP_PLAIN_LISTEN;
+  receivermap[sockfd] = er;
+  struct epoll_event event;
+  event.events = EPOLLIN;
+  event.data.fd = sockfd;
+  epoll_ctl(epollfd, EPOLL_CTL_ADD, sockfd, &event);
 }
 
 void IOManager::registerStdin(EventReceiver * er) {
@@ -120,15 +134,26 @@ int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
 }
 
 void IOManager::negotiateSSL(int id) {
-  if (typemap[id] != FD_TCP_PLAIN) {
+  if (typemap[id] == FD_TCP_PLAIN) {
+    typemap[id] = FD_TCP_SSL_NEG_REDO_CONN;
+  }
+  else if (typemap[id] == FD_TCP_PLAIN_LISTEN) {
+    typemap[id] = FD_TCP_SSL_NEG_REDO_ACCEPT;
+  }
+  else {
     return;
   }
-  typemap[id] = FD_TCP_SSL_NEG_REDO_CONN;
   SSL * ssl = SSL_new(global->getSSLCTX());
   SSL_set_mode(ssl, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
   sslmap[id] = ssl;
   SSL_set_fd(ssl, id);
-  int ret = SSL_connect(ssl);
+  int ret;
+  if (typemap[id] == FD_TCP_SSL_NEG_REDO_CONN) {
+    ret = SSL_connect(ssl);
+  }
+  else {
+    ret = SSL_accept(ssl);
+  }
   if (ret > 0) { // probably wont happen :)
     typemap[id] = FD_TCP_SSL;
   }
@@ -153,10 +178,12 @@ void IOManager::sendData(int id, char * buf, unsigned int buflen) {
   char * datablock;
   switch(typemap[id]) {
     case FD_TCP_PLAIN: // tcp plain
+    case FD_TCP_PLAIN_LISTEN:
       b_sent = send(id, buf, buflen, 0);
       break;
     case FD_TCP_SSL_NEG_REDO_CONN: // tcp ssl negotiation
     case FD_TCP_SSL_NEG_REDO_WRITE: // tcp ssl negotiation
+    case FD_TCP_SSL_NEG_REDO_ACCEPT: // tcp ssl negotiation
       datablock = blockpool->getBlock();
       memcpy(datablock, buf, buflen);
       sendqueuemap[id].push_back(DataBlock(datablock, buflen));
@@ -182,10 +209,12 @@ void IOManager::closeSocket(int id) {
     case FD_KEYBOARD: // keyboard
       break; // one does not simply close the keyboard input
     case FD_TCP_PLAIN: // tcp plain
+    case FD_TCP_PLAIN_LISTEN:
       close(id);
       break;
     case FD_TCP_SSL_NEG_REDO_CONN: // tcp ssl
     case FD_TCP_SSL_NEG_REDO_WRITE:
+    case FD_TCP_SSL_NEG_REDO_ACCEPT:
     case FD_TCP_SSL:
       SSL_shutdown(sslmap[id]);
       close(id);
@@ -217,10 +246,13 @@ void IOManager::runInstance() {
   events = (epoll_event *) calloc(MAXEVENTS, sizeof (struct epoll_event));
   int fds;
   int currfd;
+  int newfd;
   int b_recv;
   int i;
   char * buf;
   SSL * ssl;
+  struct sockaddr addr;
+  socklen_t addrlen;
   EventReceiver * er;
   while(1) {
     fds = epoll_wait(epollfd, events, MAXEVENTS, -1);
@@ -232,6 +264,7 @@ void IOManager::runInstance() {
           wm->dispatchFDData(er);
           break;
         case FD_TCP_PLAIN: // tcp plain
+        case FD_TCP_PLAIN_LISTEN:
           if (events[i].events & EPOLLIN) { // incoming data
             buf = blockpool->getBlock();
             b_recv = recv(currfd, buf, blocksize, 0);
@@ -252,9 +285,15 @@ void IOManager::runInstance() {
           }
           break;
         case FD_TCP_SSL_NEG_REDO_CONN: // tcp ssl redo connect
+        case FD_TCP_SSL_NEG_REDO_ACCEPT: // tcp ssl redo accept
           if (events[i].events & EPOLLIN) { // incoming data
             ssl = sslmap[currfd];
-            b_recv = SSL_connect(ssl);
+            if (typemap[currfd] == FD_TCP_SSL_NEG_REDO_CONN) {
+              b_recv = SSL_connect(ssl);
+            }
+            else {
+              b_recv = SSL_accept(ssl);
+            }
             if (b_recv > 0) {
               typemap[currfd] = FD_TCP_SSL;
               wm->dispatchEventSSLSuccess(er);
@@ -277,11 +316,16 @@ void IOManager::runInstance() {
               break;
             }
             else {
-              switch(SSL_get_error(ssl, b_recv)) {
+              int error = SSL_get_error(ssl, b_recv);
+              switch(error) {
                 case SSL_ERROR_WANT_READ:
                   break;
                 case SSL_ERROR_WANT_WRITE:
                   break;
+                default:
+                  global->getEventLog()->log("IOManager", "SSL error: " +
+                      global->int2Str(error) + " return code: " + global->int2Str(b_recv) +
+                      " errno: " + strerror(errno));
               }
             }
           }
@@ -350,7 +394,9 @@ void IOManager::runInstance() {
           break;
         case FD_TCP_SERVER: // tcp server
           if (events[i].events & EPOLLIN) { // incoming connection
-
+            newfd = accept(currfd, &addr, &addrlen);
+            fcntl(newfd, F_SETFL, O_NONBLOCK);
+            wm->dispatchEventNew(er, newfd);
           }
           break;
       }
@@ -391,30 +437,6 @@ std::list<std::pair<std::string, std::string> > IOManager::listInterfaces() {
   return addrs;
 }
 
-void IOManager::readConfiguration() {
-  std::vector<std::string> lines;
-  global->getDataFileHandler()->getDataFor("IOManager", &lines);
-  std::vector<std::string>::iterator it;
-  std::string line;
-  for (it = lines.begin(); it != lines.end(); it++) {
-    line = *it;
-    if (line.length() == 0 ||line[0] == '#') continue;
-    size_t tok = line.find('=');
-    std::string setting = line.substr(0, tok);
-    std::string value = line.substr(tok + 1);
-    if (!setting.compare("defaultinterface")) {
-      setDefaultInterface(value);
-    }
-  }
-}
-
-void IOManager::writeState() {
-  global->getEventLog()->log("IOManager", "Writing state...");
-  if (hasDefaultInterface()) {
-    global->getDataFileHandler()->addOutputLine("IOManager", "defaultinterface=" + getDefaultInterface());
-  }
-}
-
 std::string IOManager::getDefaultInterface() {
   return defaultinterface;
 }
@@ -448,4 +470,28 @@ std::string IOManager::getInterfaceAddress(std::string interface) {
   }
   close(fd);
   return inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
+}
+
+void IOManager::readConfiguration() {
+  std::vector<std::string> lines;
+  global->getDataFileHandler()->getDataFor("IOManager", &lines);
+  std::vector<std::string>::iterator it;
+  std::string line;
+  for (it = lines.begin(); it != lines.end(); it++) {
+    line = *it;
+    if (line.length() == 0 ||line[0] == '#') continue;
+    size_t tok = line.find('=');
+    std::string setting = line.substr(0, tok);
+    std::string value = line.substr(tok + 1);
+    if (!setting.compare("defaultinterface")) {
+      setDefaultInterface(value);
+    }
+  }
+}
+
+void IOManager::writeState() {
+  global->getEventLog()->log("IOManager", "Writing state...");
+  if (hasDefaultInterface()) {
+    global->getDataFileHandler()->addOutputLine("IOManager", "defaultinterface=" + getDefaultInterface());
+  }
 }
