@@ -29,6 +29,10 @@ BrowseScreen::BrowseScreen(WINDOW * window, UICommunicator * uicommunicator, uns
   wiperecursive = false;
   wipesuccess = false;
   wipefailed = false;
+  deleting = false;
+  deletingrecursive = false;
+  deletesuccess = false;
+  deletefailed = false;
   currentviewspan = 0;
   sortmethod = 0;
   slidersize = 0;
@@ -53,6 +57,20 @@ void BrowseScreen::redraw() {
       }
       else {
         wipefailed = true;
+      }
+    }
+    else if (deleting) {
+      bool deletestatus = sitelogic->finishRequest(requestid);
+      requestid = -1;
+      deleting = false;
+      if (deletestatus) {
+        deletesuccess = true;
+        if (list.getPath() == wipepath) {
+          list.removeFile(wipefile);
+        }
+      }
+      else {
+        deletefailed = true;
       }
     }
     else {
@@ -138,6 +156,9 @@ void BrowseScreen::update() {
       if (wipe) {
         requestid = sitelogic->requestWipe(wipetarget, wiperecursive);
       }
+      else if (deleting) {
+        requestid = sitelogic->requestDelete(wipetarget, deletingrecursive);
+      }
       else {
         global->getEventLog()->log("BrowseScreen", "WARNING: got a 'yes' answer for an unknown command");
       }
@@ -148,6 +169,7 @@ void BrowseScreen::update() {
     }
     else if (uicommunicator->getCommand() == "no") {
       wipe = false;
+      deleting = false;
       uicommunicator->checkoutCommand();
       redraw();
       return;
@@ -341,6 +363,25 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       wipetarget = oldpath + wipefile;
       uicommunicator->newCommand("confirmation");
       break;
+    case KEY_DC:
+      cursoredfile = list.cursoredFile();
+      if (cursoredfile == NULL) {
+        break;
+      }
+      tickcount = 0;
+      deleting = true;
+      if (cursoredfile->isDirectory()) {
+        deletingrecursive = true;
+      }
+      oldpath = list.getPath();
+      wipepath = oldpath;
+      if (oldpath.length() > 1) {
+        oldpath += "/";
+      }
+      wipefile = cursoredfile->getName();
+      wipetarget = oldpath + wipefile;
+      uicommunicator->newCommand("confirmation");
+      break;
     case KEY_LEFT:
     case 8:
     case KEY_BACKSPACE:
@@ -466,6 +507,9 @@ std::string BrowseScreen::getInfoText() {
     if (wipe) {
       text = "Wiping " + wipetarget + "  ";
     }
+    else if (deleting) {
+      text = "Deleting " + wipetarget + "  ";
+    }
     else {
       text = "Getting list for " + requestedpath + "  ";
     }
@@ -510,6 +554,24 @@ std::string BrowseScreen::getInfoText() {
     }
     else {
       cwdfailed = false;
+    }
+  }
+  else if (deletesuccess) {
+    if (tickcount++ < 8) {
+      text = "Delete successful: " + wipetarget;
+      return text;
+    }
+    else {
+      deletesuccess = false;
+    }
+  }
+  else if (deletefailed) {
+    if (tickcount++ < 8) {
+      text = "Delete failed: " + wipetarget;
+      return text;
+    }
+    else {
+      deletefailed = false;
     }
   }
   else if (changedsort) {

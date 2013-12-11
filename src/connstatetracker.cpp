@@ -3,6 +3,7 @@
 #include "delayedcommand.h"
 #include "globalcontext.h"
 #include "eventlog.h"
+#include "recursivecommandlogic.h"
 
 extern GlobalContext * global;
 
@@ -17,6 +18,7 @@ ConnStateTracker::ConnStateTracker() {
   lockeddownload = false;
   aborted = false;
   loggedin = false;
+  recursivelogic = new RecursiveCommandLogic();
 }
 void ConnStateTracker::delayedCommand(std::string command, int delay) {
   delayedcommands.push_back(DelayedCommand(command, delay + time));
@@ -203,4 +205,8 @@ bool ConnStateTracker::isLockedForDownload() {
 
 bool ConnStateTracker::isLockedForUpload() {
   return transferlocked && !lockeddownload;
+}
+
+RecursiveCommandLogic * ConnStateTracker::getRecursiveLogic() {
+  return recursivelogic;
 }

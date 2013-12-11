@@ -152,6 +152,10 @@ void SiteLogic::listRefreshed(int id) {
     sr->updateNumFilesUploaded();
     sr->addNewDirectories();
   }
+  if (connstatetracker[id].getRecursiveLogic()->isActive()) {
+    handleRecursiveLogic(id, conns[id]->currentFileList());
+    return;
+  }
   if (connstatetracker[id].hasTransfer()) {
     initTransfer(id);
     return;
@@ -210,6 +214,10 @@ void SiteLogic::commandSuccess(int id) {
             "/" + conns[id]->getMKDCWDTargetPath()) {
           conns[id]->finishMKDCWDTarget();
         }
+      }
+      if (connstatetracker[id].getRecursiveLogic()->isActive()) {
+        handleRecursiveLogic(id);
+        return;
       }
       if (connstatetracker[id].hasTransfer()) {
         initTransfer(id);
@@ -319,7 +327,16 @@ void SiteLogic::commandSuccess(int id) {
             break;
           }
           else if (it->requestType() == 4) {
-
+            if (connstatetracker[id].getRecursiveLogic()->isActive()) {
+              handleRecursiveLogic(id);
+              return;
+            }
+            else {
+              requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, true));
+              requestsinprogress.erase(it);
+              global->getUICommunicator()->backendPush();
+              break;
+            }
           }
         }
       }
@@ -347,6 +364,10 @@ void SiteLogic::commandFail(int id) {
       }
       break;
     case 14: // cwd fail
+      if (connstatetracker[id].getRecursiveLogic()->isActive()) {
+        handleRecursiveLogic(id);
+        return;
+      }
       if (conns[id]->hasMKDCWDTarget()) {
         if (!site->getAllowUpload() || site->isAffiliated(conns[id]->currentSiteRace()->getGroup())) {
           connstatetracker[id].setIdle();
@@ -424,16 +445,17 @@ void SiteLogic::commandFail(int id) {
       handleConnection(id, false);
       return;
     case 29: // DELE
+      if (connstatetracker[id].getRecursiveLogic()->isActive()) {
+        handleRecursiveLogic(id);
+        return;
+      }
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
-          if (it->requestType() == 5) {
+          if (it->requestType() == 4 || it->requestType() == 5) {
             requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, false));
             requestsinprogress.erase(it);
             global->getUICommunicator()->backendPush();
             break;
-          }
-          else if (it->requestType() == 4) {
-
           }
         }
       }
@@ -681,6 +703,7 @@ bool SiteLogic::handleRequest(int id) {
   }
   connstatetracker[id].setReady();
   std::string targetpath;
+  std::string actiontarget;
   switch (it->requestType()) {
     case 0: // filelist
       targetpath = it->requestData();
@@ -703,12 +726,8 @@ bool SiteLogic::handleRequest(int id) {
       break;
     case 4: // recursive delete
       targetpath = it->requestData();
-      if (conns[id]->getCurrentPath() == targetpath) {
-        conns[id]->doSTAT();
-      }
-      else {
-        conns[id]->doCWD(targetpath);
-      }
+      connstatetracker[id].getRecursiveLogic()->initialize(RCL_DELETE, conns[id]->getCurrentPath(), targetpath);
+      handleRecursiveLogic(id);
       break;
     case 5: // delete
       conns[id]->doDELE(it->requestData());
@@ -717,6 +736,28 @@ bool SiteLogic::handleRequest(int id) {
   requestsinprogress.push_back(*it);
   requests.erase(it);
   return true;
+}
+
+void SiteLogic::handleRecursiveLogic(int id) {
+  handleRecursiveLogic(id, NULL);
+}
+
+void SiteLogic::handleRecursiveLogic(int id, FileList * fl) {
+  std::string actiontarget;
+  if (fl != NULL) {
+    connstatetracker[id].getRecursiveLogic()->addFileList(fl);
+  }
+  switch (connstatetracker[id].getRecursiveLogic()->getAction(conns[id]->getCurrentPath(), actiontarget)) {
+    case RCL_ACTION_LIST:
+      conns[id]->doSTAT();
+      break;
+    case RCL_ACTION_CWD:
+      conns[id]->doCWD(actiontarget);
+      break;
+    case RCL_ACTION_DELETE:
+      conns[id]->doDELE(actiontarget);
+      break;
+  }
 }
 
 void SiteLogic::addRecentList(SiteRace * sr) {

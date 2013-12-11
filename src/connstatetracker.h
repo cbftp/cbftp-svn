@@ -7,6 +7,7 @@ class SiteRace;
 class FileList;
 class TransferMonitor;
 class DelayedCommand;
+class RecursiveCommandLogic;
 
 class ConnStateTracker {
 private:
@@ -29,6 +30,7 @@ private:
   bool lockeddownload;
   bool loggedin;
   std::string addr;
+  RecursiveCommandLogic * recursivelogic;
 public:
   ConnStateTracker();
   void delayedCommand(std::string, int);
@@ -65,4 +67,5 @@ public:
   bool getTransferPassive();
   bool getTransferSSL();
   std::string getTransferAddr();
+  RecursiveCommandLogic * getRecursiveLogic();
 };

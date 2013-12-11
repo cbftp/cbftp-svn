@@ -7,7 +7,6 @@
 #include "eventreceiver.h"
 
 class TransferMonitor;
-class RecursiveCommandLogic;
 class ConnStateTracker;
 class FTPConn;
 class RawBuffer;
@@ -32,7 +31,6 @@ class SiteLogic : public EventReceiver {
     PotentialTracker * ptrack;
     std::vector<FTPConn *> conns;
     std::vector<ConnStateTracker> connstatetracker;
-    std::list<RecursiveCommandLogic> recursivelogics;
     std::vector<SiteRace *> races;
     std::list<SiteRace *> recentlylistedraces;
     RawBuffer * rawbuf;
@@ -50,6 +48,8 @@ class SiteLogic : public EventReceiver {
     Site * site;
     void handleConnection(int, bool);
     bool handleRequest(int);
+    void handleRecursiveLogic(int);
+    void handleRecursiveLogic(int, FileList *);
     void addRecentList(SiteRace *);
     bool wasRecentlyListed(SiteRace *);
     void refreshChangePath(int, SiteRace *, bool);

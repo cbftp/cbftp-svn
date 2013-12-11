@@ -33,6 +33,10 @@ private:
   bool wiperecursive;
   bool wipesuccess;
   bool wipefailed;
+  bool deleting;
+  bool deletingrecursive;
+  bool deletesuccess;
+  bool deletefailed;
   std::string wipetarget;
   std::string wipepath;
   std::string wipefile;
