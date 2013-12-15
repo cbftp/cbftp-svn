@@ -17,6 +17,7 @@ private:
   std::string group;
   std::string linktarget;
   int lastmodified;
+  int lastmodifieddate;
   std::string lastmodifiedrepr;
   bool directory;
   bool softlink;
@@ -35,6 +36,7 @@ public:
   std::string getSizeRepr();
   std::string getLastModified();
   int getModifyTime();
+  int getModifyDate();
   std::string getName();
   std::string getLinkTarget();
   static int getSizeGranularity();

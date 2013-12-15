@@ -20,6 +20,7 @@ private:
   unsigned int numdirs;
   unsigned long long int totalsize;
   std::string sortmethod;
+  bool separators;
   void setNewCurrentPosition();
 public:
   UIFileList();
@@ -44,6 +45,7 @@ public:
   std::string getPath();
   std::string getSortMethod();
   void removeFile(std::string);
+  void toggleSeparators();
 };
 
 bool combinedSort(UIFile *, UIFile *);

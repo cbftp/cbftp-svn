@@ -14,6 +14,7 @@ UIFileList::UIFileList() {
   numdirs = 0;
   totalsize = 0;
   sortmethod = "none";
+  separators = false;
 }
 
 bool combinedSort(UIFile * a, UIFile * b) {
@@ -82,13 +83,48 @@ bool ownerSortDesc(UIFile * a, UIFile * b) {
   if (diff == 0) return nameSortAsc(a, b);
   return diff > 0;
 }
-
 void UIFileList::sortCombined() {
+  bool complete = false;
+  while(!complete) {
+    complete = true;
+    for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
+      if (*it == NULL) {
+        sortedfiles.erase(it);
+        complete = false;
+        break;
+      }
+    }
+  }
   std::sort(sortedfiles.begin(), sortedfiles.end(), combinedSort);
+  if (separators) {
+    int lastdate = 0;
+    complete = false;
+    while (!complete) {
+      complete = true;
+      std::vector<UIFile *>::iterator lastit = sortedfiles.end();
+      for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
+        if (*it != NULL && (*it)->getModifyDate() != lastdate) {
+          lastdate = (*it)->getModifyDate();
+          if (*lastit != NULL && (it != sortedfiles.begin() || !(*it)->isDirectory())) {
+            sortedfiles.insert(it, NULL);
+            complete = false;
+            break;
+          }
+        }
+        lastit = it;
+      }
+    }
+  }
   setNewCurrentPosition();
   sortmethod = "Combined";
 }
+
 void UIFileList::sortName(bool ascending) {
+  for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
+    if (*it == NULL) {
+      sortedfiles.erase(it);
+    }
+  }
   if (ascending) {
     std::sort(sortedfiles.begin(), sortedfiles.end(), nameSortAsc);
     sortmethod = "Name (ascending)";
@@ -97,10 +133,27 @@ void UIFileList::sortName(bool ascending) {
     std::sort(sortedfiles.begin(), sortedfiles.end(), nameSortDesc);
     sortmethod = "Name (descending)";
   }
+  if (separators) {
+    std::string lastletter = "";
+    for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
+      std::string firstchar = (*it)->getName().substr(0, 1);
+      if (firstchar != lastletter) {
+        lastletter = firstchar;
+        if (it != sortedfiles.begin()) {
+          sortedfiles.insert(it, NULL);
+        }
+      }
+    }
+  }
   setNewCurrentPosition();
 }
 
 void UIFileList::sortTime(bool ascending) {
+  for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
+    if (*it == NULL) {
+      sortedfiles.erase(it);
+    }
+  }
   if (ascending) {
     std::sort(sortedfiles.begin(), sortedfiles.end(), timeSortAsc);
     sortmethod = "Time (ascending)";
@@ -109,10 +162,26 @@ void UIFileList::sortTime(bool ascending) {
     std::sort(sortedfiles.begin(), sortedfiles.end(), timeSortDesc);
     sortmethod = "Time (descending)";
   }
+  if (separators) {
+    int lastdate = 0;
+    for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
+      if ((*it)->getModifyDate() != lastdate) {
+        lastdate = (*it)->getModifyDate();
+        if (it != sortedfiles.begin()) {
+          sortedfiles.insert(it, NULL);
+        }
+      }
+    }
+  }
   setNewCurrentPosition();
 }
 
 void UIFileList::sortSize(bool ascending) {
+  for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
+    if (*it == NULL) {
+      sortedfiles.erase(it);
+    }
+  }
   if (ascending) {
     std::sort(sortedfiles.begin(), sortedfiles.end(), sizeSortAsc);
     sortmethod = "Size (ascending)";
@@ -125,6 +194,11 @@ void UIFileList::sortSize(bool ascending) {
 }
 
 void UIFileList::sortOwner(bool ascending) {
+  for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
+    if (*it == NULL) {
+      sortedfiles.erase(it);
+    }
+  }
   if (ascending) {
     std::sort(sortedfiles.begin(), sortedfiles.end(), ownerSortAsc);
     sortmethod = "Owner (ascending)";
@@ -132,6 +206,17 @@ void UIFileList::sortOwner(bool ascending) {
   else {
     std::sort(sortedfiles.begin(), sortedfiles.end(), ownerSortDesc);
     sortmethod = "Owner (descending)";
+  }
+  if (separators) {
+    std::string lastowner;
+    for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
+      if ((*it)->getOwner() != lastowner) {
+        lastowner = (*it)->getOwner();
+        if (it != sortedfiles.begin()) {
+          sortedfiles.insert(it, NULL);
+        }
+      }
+    }
   }
   setNewCurrentPosition();
 }
@@ -154,7 +239,7 @@ void UIFileList::setNewCurrentPosition() {
 
 void UIFileList::selectFileName(std::string filename) {
   for (unsigned int i = 0; i < sortedfiles.size(); i++) {
-    if (sortedfiles[i]->getName() == filename) {
+    if (sortedfiles[i] != NULL && sortedfiles[i]->getName() == filename) {
       currentposition = i;
       currentcursored = sortedfiles[i];
       return;
@@ -197,8 +282,11 @@ UIFile * UIFileList::cursoredFile() {
 
 bool UIFileList::goNext() {
   if (size() > 0 && currentposition < size() - 1) {
-    currentposition++;
-    currentcursored = sortedfiles[currentposition];
+    while ((currentcursored = sortedfiles[++currentposition]) == NULL) {
+      if (currentposition >= size() - 1) {
+        return false;
+      }
+    }
     return true;
   }
   return false;
@@ -206,8 +294,11 @@ bool UIFileList::goNext() {
 
 bool UIFileList::goPrevious() {
   if (size() > 0 && currentposition > 0) {
-    currentposition--;
-    currentcursored = sortedfiles[currentposition];
+    while ((currentcursored = sortedfiles[--currentposition]) == NULL) {
+      if (!currentposition) {
+        return false;
+      }
+    }
     return true;
   }
   return false;
@@ -262,7 +353,7 @@ std::string UIFileList::getSortMethod() {
 
 void UIFileList::removeFile(std::string file) {
   for (unsigned int i = 0; i < sortedfiles.size(); i++) {
-    if (sortedfiles[i]->getName() == file) {
+    if (sortedfiles[i] != NULL && sortedfiles[i]->getName() == file) {
       totalsize -= sortedfiles[i]->getSize();
       if (sortedfiles[i]->isDirectory()) {
         numdirs--;
@@ -272,18 +363,31 @@ void UIFileList::removeFile(std::string file) {
       }
       if (currentcursored == sortedfiles[i]) {
         if (sortedfiles.size() > i + 1) {
-          currentcursored = sortedfiles[i + 1];
+          if (!goNext()) {
+            currentcursored = NULL;
+          }
         }
         else if (sortedfiles.size() == 1) {
           currentcursored = NULL;
         }
         else {
-          currentcursored = sortedfiles[i - 1];
+          if (!goPrevious()) {
+            currentcursored = NULL;
+          }
         }
       }
       sortedfiles.erase(sortedfiles.begin() + i);
       setNewCurrentPosition();
       break;
     }
+  }
+}
+
+void UIFileList::toggleSeparators() {
+  if (!separators) {
+    separators = true;
+  }
+  else {
+    separators = false;
   }
 }

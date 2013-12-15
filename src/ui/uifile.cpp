@@ -43,6 +43,10 @@ int UIFile::getModifyTime() {
   return lastmodified;
 }
 
+int UIFile::getModifyDate() {
+  return lastmodifieddate;
+}
+
 unsigned long long int UIFile::getSize() {
   return size;
 }
@@ -184,9 +188,10 @@ void UIFile::parseTimeStamp(std::string uglytime) {
 
   // somewhat incorrect formula, but since the exact stamp will only be used for sorting,
   // there's no need to bother
-  lastmodified = ((year - 1970) * 372 * 24 * 60) +
-                  (month * 31 * 24 * 60) +
-                   (day * 24 * 60) +
+  lastmodifieddate = ((year - 1970) * 372 * 24 * 60) +
+                      (month * 31 * 24 * 60) +
+                      (day * 24 * 60);
+  lastmodified = lastmodifieddate +
                    (hour * 60) +
                    minute;
   lastmodifiedrepr = yearstr + "-" + monthstr + "-" + daystr + " " + hourstr + ":" + meta;

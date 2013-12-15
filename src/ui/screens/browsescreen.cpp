@@ -110,7 +110,7 @@ void BrowseScreen::redraw() {
   if (resort == true) sort();
   unsigned int position = list.currentCursorPosition();
   unsigned int pagerows = (unsigned int) row / 2;
-
+  unsigned int listsize = list.size();
   if (position < currentviewspan || position >= currentviewspan + row) {
     if (position < pagerows) {
       currentviewspan = 0;
@@ -119,32 +119,33 @@ void BrowseScreen::redraw() {
       currentviewspan = position - pagerows;
     }
   }
-  if (currentviewspan + row >= list.size() && list.size() + 1 >= row) {
-    currentviewspan = list.size() + 1 - row;
+  if (currentviewspan + row >= listsize && listsize + 1 >= row) {
+    currentviewspan = listsize + 1 - row;
     if (currentviewspan > position) {
       currentviewspan = position;
     }
   }
-  if (list.size() <= row) {
+
+  if (listsize <= row) {
     slidersize = 0;
   }
   else {
-    slidersize = (row * row) / list.size();
-    sliderstart = (row * currentviewspan) / list.size();
+    slidersize = (row * row) / listsize;
+    sliderstart = (row * currentviewspan) / listsize;
     if (slidersize == 0) {
       slidersize++;
     }
     if (slidersize == row) {
       slidersize--;
     }
-    if (sliderstart + slidersize > row || currentviewspan + row >= list.size()) {
+    if (sliderstart + slidersize > row || currentviewspan + row >= listsize) {
       sliderstart = row - slidersize;
     }
   }
   if (virgin) {
     TermInt::printStr(window, 1, 1, "Getting file list for " + site->getName() + " ...");
   }
-  else if (list.size() == 0) {
+  else if (listsize == 0) {
     TermInt::printStr(window, 0, 3, "(empty directory)");
   }
   update();
@@ -181,11 +182,13 @@ void BrowseScreen::update() {
     return;
   }
   std::vector<UIFile *> * uilist = list.getSortedList();
-  int maxnamelen;
+  int maxnamelen = 0;
   for (unsigned int i = 0; i < uilist->size(); i++) {
-    int len = (*uilist)[i]->getName().length();
-    if (len > maxnamelen) {
-      maxnamelen = len;
+    if ((*uilist)[i] != NULL) {
+      int len = (*uilist)[i]->getName().length();
+      if (len > maxnamelen) {
+        maxnamelen = len;
+      }
     }
   }
   unsigned int sizelen = 9;
@@ -215,8 +218,16 @@ void BrowseScreen::update() {
   }
   unsigned int sizepos = col - sizelen - (printowner ? ownerlen + 1 : 0) - (printlastmodified ? timelen + 1: 0);
   unsigned int timepos = col - timelen - (printowner ? ownerlen : 0);
+  std::string separatortext;
+  while (separatortext.length() < (unsigned int) maxnamelen) {
+    separatortext += "-";
+  }
   for (unsigned int i = 0; i + currentviewspan < uilist->size() && i < row; i++) {
     unsigned int listi = i + currentviewspan;
+    if ((*uilist)[listi] == NULL) {
+      TermInt::printStr(window, i, 3, separatortext, namelimit);
+      continue;
+    }
     bool selected = (*uilist)[listi] == list.cursoredFile();
     std::string prepchar = " ";
     bool allowed = global->getSkipList()->isAllowed((*uilist)[listi]->getName());
@@ -299,6 +310,9 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       break;
     case 'v':
       //view selected file, do nothing if a directory is selected
+      if (list.cursoredFile() != NULL && !list.cursoredFile()->isDirectory()) {
+        uicommunicator->newCommand("viewfile", site->getName(), list.getPath(), list.cursoredFile()->getName());
+      }
       break;
     case 's':
       sortmethod++;
@@ -312,6 +326,11 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       resort = true;
       changedsort = true;
       tickcount = 0;
+      uicommunicator->newCommand("redraw");
+      break;
+    case 'p':
+      resort = true;
+      list.toggleSeparators();
       uicommunicator->newCommand("redraw");
       break;
     case KEY_RIGHT:
@@ -494,7 +513,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
 }
 
 std::string BrowseScreen::getLegendText() {
-  return "[c]ancel - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete";
+  return "[c]ancel - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - Toggle se[p]arators";
 }
 
 std::string BrowseScreen::getInfoLabel() {
