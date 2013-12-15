@@ -84,21 +84,11 @@ bool ownerSortDesc(UIFile * a, UIFile * b) {
   return diff > 0;
 }
 void UIFileList::sortCombined() {
-  bool complete = false;
-  while(!complete) {
-    complete = true;
-    for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
-      if (*it == NULL) {
-        sortedfiles.erase(it);
-        complete = false;
-        break;
-      }
-    }
-  }
+  removeSeparators();
   std::sort(sortedfiles.begin(), sortedfiles.end(), combinedSort);
   if (separators) {
     int lastdate = 0;
-    complete = false;
+    bool complete = false;
     while (!complete) {
       complete = true;
       std::vector<UIFile *>::iterator lastit = sortedfiles.end();
@@ -120,11 +110,7 @@ void UIFileList::sortCombined() {
 }
 
 void UIFileList::sortName(bool ascending) {
-  for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
-    if (*it == NULL) {
-      sortedfiles.erase(it);
-    }
-  }
+  removeSeparators();
   if (ascending) {
     std::sort(sortedfiles.begin(), sortedfiles.end(), nameSortAsc);
     sortmethod = "Name (ascending)";
@@ -135,13 +121,23 @@ void UIFileList::sortName(bool ascending) {
   }
   if (separators) {
     std::string lastletter = "";
-    for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
-      std::string firstchar = (*it)->getName().substr(0, 1);
-      if (firstchar != lastletter) {
-        lastletter = firstchar;
-        if (it != sortedfiles.begin()) {
-          sortedfiles.insert(it, NULL);
+    bool complete = false;
+    while (!complete) {
+      complete = true;
+      std::vector<UIFile *>::iterator lastit = sortedfiles.end();
+      for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
+        if (*it != NULL) {
+          std::string firstchar = (*it)->getName().substr(0, 1);
+          if (firstchar != lastletter) {
+            lastletter = firstchar;
+            if (*lastit != NULL && it != sortedfiles.begin()) {
+              sortedfiles.insert(it, NULL);
+              complete = false;
+              break;
+            }
+          }
         }
+        lastit = it;
       }
     }
   }
@@ -149,11 +145,7 @@ void UIFileList::sortName(bool ascending) {
 }
 
 void UIFileList::sortTime(bool ascending) {
-  for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
-    if (*it == NULL) {
-      sortedfiles.erase(it);
-    }
-  }
+  removeSeparators();
   if (ascending) {
     std::sort(sortedfiles.begin(), sortedfiles.end(), timeSortAsc);
     sortmethod = "Time (ascending)";
@@ -164,12 +156,20 @@ void UIFileList::sortTime(bool ascending) {
   }
   if (separators) {
     int lastdate = 0;
-    for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
-      if ((*it)->getModifyDate() != lastdate) {
-        lastdate = (*it)->getModifyDate();
-        if (it != sortedfiles.begin()) {
-          sortedfiles.insert(it, NULL);
+    bool complete = false;
+    while (!complete) {
+      complete = true;
+      std::vector<UIFile *>::iterator lastit = sortedfiles.end();
+      for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
+        if (*it != NULL && (*it)->getModifyDate() != lastdate) {
+          lastdate = (*it)->getModifyDate();
+          if (*lastit != NULL && it != sortedfiles.begin()) {
+            sortedfiles.insert(it, NULL);
+            complete = false;
+            break;
+          }
         }
+        lastit = it;
       }
     }
   }
@@ -177,11 +177,7 @@ void UIFileList::sortTime(bool ascending) {
 }
 
 void UIFileList::sortSize(bool ascending) {
-  for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
-    if (*it == NULL) {
-      sortedfiles.erase(it);
-    }
-  }
+  removeSeparators();
   if (ascending) {
     std::sort(sortedfiles.begin(), sortedfiles.end(), sizeSortAsc);
     sortmethod = "Size (ascending)";
@@ -194,11 +190,7 @@ void UIFileList::sortSize(bool ascending) {
 }
 
 void UIFileList::sortOwner(bool ascending) {
-  for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
-    if (*it == NULL) {
-      sortedfiles.erase(it);
-    }
-  }
+  removeSeparators();
   if (ascending) {
     std::sort(sortedfiles.begin(), sortedfiles.end(), ownerSortAsc);
     sortmethod = "Owner (ascending)";
@@ -209,12 +201,20 @@ void UIFileList::sortOwner(bool ascending) {
   }
   if (separators) {
     std::string lastowner;
-    for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
-      if ((*it)->getOwner() != lastowner) {
-        lastowner = (*it)->getOwner();
-        if (it != sortedfiles.begin()) {
-          sortedfiles.insert(it, NULL);
+    bool complete = false;
+    while (!complete) {
+      complete = true;
+      std::vector<UIFile *>::iterator lastit = sortedfiles.end();
+      for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
+        if (*it != NULL && (*it)->getOwner() != lastowner) {
+          lastowner = (*it)->getOwner();
+          if (*lastit != NULL && it != sortedfiles.begin()) {
+            sortedfiles.insert(it, NULL);
+            complete = false;
+            break;
+          }
         }
+        lastit = it;
       }
     }
   }
@@ -389,5 +389,19 @@ void UIFileList::toggleSeparators() {
   }
   else {
     separators = false;
+  }
+}
+
+void UIFileList::removeSeparators() {
+  bool complete = false;
+  while(!complete) {
+    complete = true;
+    for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
+      if (*it == NULL) {
+        sortedfiles.erase(it);
+        complete = false;
+        break;
+      }
+    }
   }
 }

@@ -22,6 +22,7 @@ private:
   std::string sortmethod;
   bool separators;
   void setNewCurrentPosition();
+  void removeSeparators();
 public:
   UIFileList();
   void sortCombined();
