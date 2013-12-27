@@ -308,7 +308,7 @@ void SiteLogic::commandSuccess(int id) {
     case 28: // WIPE
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
-          if (it->requestType() == 2 || it->requestType() == 3) {
+          if (it->requestType() == REQ_WIPE_RECURSIVE || it->requestType() == REQ_WIPE) {
             requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, true));
             requestsinprogress.erase(it);
             global->getUICommunicator()->backendPush();
@@ -320,13 +320,13 @@ void SiteLogic::commandSuccess(int id) {
     case 29: // DELE
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
-          if (it->requestType() == 5) {
+          if (it->requestType() == REQ_DEL) {
             requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, true));
             requestsinprogress.erase(it);
             global->getUICommunicator()->backendPush();
             break;
           }
-          else if (it->requestType() == 4) {
+          else if (it->requestType() == REQ_DEL_RECURSIVE) {
             if (connstatetracker[id].getRecursiveLogic()->isActive()) {
               handleRecursiveLogic(id);
               return;
@@ -434,7 +434,7 @@ void SiteLogic::commandFail(int id) {
     case 28: // WIPE
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
-          if (it->requestType() == 2 || it->requestType() == 3) {
+          if (it->requestType() == REQ_WIPE_RECURSIVE || it->requestType() == REQ_WIPE) {
             requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, false));
             requestsinprogress.erase(it);
             global->getUICommunicator()->backendPush();
@@ -451,7 +451,7 @@ void SiteLogic::commandFail(int id) {
       }
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
-          if (it->requestType() == 4 || it->requestType() == 5) {
+          if (it->requestType() == REQ_DEL_RECURSIVE || it->requestType() == REQ_DEL) {
             requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, false));
             requestsinprogress.erase(it);
             global->getUICommunicator()->backendPush();
