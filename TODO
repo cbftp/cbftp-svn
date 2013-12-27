@@ -4,8 +4,6 @@ bug: losing track of transfer slots sometimes, particularly on failing transfers
 
 feature: local downloads
 
-feature: view file
-
 feature: about screen
 
 feature: remove site from race

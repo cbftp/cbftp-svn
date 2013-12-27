@@ -225,7 +225,7 @@ void SiteLogic::commandSuccess(int id) {
       }
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
-          if (it->requestType() == 0) {
+          if (it->requestType() == REQ_FILELIST) {
             conns[id]->doSTAT();
             return;
           }
@@ -383,7 +383,7 @@ void SiteLogic::commandFail(int id) {
       }
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
-          if (it->requestType() == 0) {
+          if (it->requestType() == REQ_FILELIST) {
             requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, false));
             requestsinprogress.erase(it);
             global->getUICommunicator()->backendPush();
@@ -705,7 +705,7 @@ bool SiteLogic::handleRequest(int id) {
   std::string targetpath;
   std::string actiontarget;
   switch (it->requestType()) {
-    case 0: // filelist
+    case REQ_FILELIST: // filelist
       targetpath = it->requestData();
       if (conns[id]->getCurrentPath() == targetpath) {
         conns[id]->doSTAT();
@@ -714,22 +714,22 @@ bool SiteLogic::handleRequest(int id) {
         conns[id]->doCWD(targetpath);
       }
       break;
-    case 1: // raw command
+    case REQ_RAW: // raw command
       rawbuf->writeLine(it->requestData());
       conns[id]->doRaw(it->requestData());
       break;
-    case 2: // recursive wipe
+    case REQ_WIPE_RECURSIVE: // recursive wipe
       conns[id]->doWipe(it->requestData(), true);
       break;
-    case 3: // wipe
+    case REQ_WIPE: // wipe
       conns[id]->doWipe(it->requestData(), false);
       break;
-    case 4: // recursive delete
+    case REQ_DEL_RECURSIVE: // recursive delete
       targetpath = it->requestData();
       connstatetracker[id].getRecursiveLogic()->initialize(RCL_DELETE, conns[id]->getCurrentPath(), targetpath);
       handleRecursiveLogic(id);
       break;
-    case 5: // delete
+    case REQ_DEL: // delete
       conns[id]->doDELE(it->requestData());
       break;
   }
@@ -803,7 +803,7 @@ void SiteLogic::refreshChangePath(int id, SiteRace * race, bool refresh) {
 }
 
 void SiteLogic::initTransfer(int id) {
-  std::string transferpath = connstatetracker[id].getTransferFileList()->getPath();
+  std::string transferpath = connstatetracker[id].getTransferPath();
   bool transferssl = connstatetracker[id].getTransferSSL();
   if (conns[id]->getCurrentPath() != transferpath) {
     conns[id]->doCWD(transferpath);
@@ -830,11 +830,11 @@ void SiteLogic::initTransfer(int id) {
       }
     }
     else {
-      if (!transferssl) {
-        conns[id]->doPASV();
+      if (connstatetracker[id].getTransferFXP() && transferssl) {
+        conns[id]->doCPSV();
       }
       else {
-        conns[id]->doCPSV();
+        conns[id]->doPASV();
       }
     }
   }
@@ -842,14 +842,14 @@ void SiteLogic::initTransfer(int id) {
 
 int SiteLogic::requestFileList(std::string path) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(requestid, 0, path));
+  requests.push_back(SiteLogicRequest(requestid, REQ_FILELIST, path));
   requestSelect();
   return requestid;
 }
 
 int SiteLogic::requestRawCommand(std::string command) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(requestid, 1, command));
+  requests.push_back(SiteLogicRequest(requestid, REQ_RAW, command));
   requestSelect();
   return requestid;
 }
@@ -857,10 +857,10 @@ int SiteLogic::requestRawCommand(std::string command) {
 int SiteLogic::requestWipe(std::string path, bool recursive) {
   int requestid = requestidcounter++;
   if (recursive) {
-    requests.push_back(SiteLogicRequest(requestid, 2, path));
+    requests.push_back(SiteLogicRequest(requestid, REQ_WIPE_RECURSIVE, path));
   }
   else {
-    requests.push_back(SiteLogicRequest(requestid, 3, path));
+    requests.push_back(SiteLogicRequest(requestid, REQ_WIPE, path));
   }
   requestSelect();
   return requestid;
@@ -869,10 +869,10 @@ int SiteLogic::requestWipe(std::string path, bool recursive) {
 int SiteLogic::requestDelete(std::string path, bool recursive) {
   int requestid = requestidcounter++;
   if (recursive) {
-    requests.push_back(SiteLogicRequest(requestid, 4, path));
+    requests.push_back(SiteLogicRequest(requestid, REQ_DEL_RECURSIVE, path));
   }
   else {
-    requests.push_back(SiteLogicRequest(requestid, 5, path));
+    requests.push_back(SiteLogicRequest(requestid, REQ_DEL, path));
   }
   requestSelect();
   return requestid;
@@ -942,25 +942,25 @@ SiteRace * SiteLogic::getRace(std::string race) {
   return NULL;
 }
 
-bool SiteLogic::lockDownloadConn(FileList * fl, std::string file, int * ret) {
-  bool locked = getReadyConn(fl, file, ret, true, true);
+bool SiteLogic::lockDownloadConn(std::string path, std::string file, int * ret) {
+  bool locked = getReadyConn(path, file, ret, true, true);
   if (!locked) return false;
   connstatetracker[*ret].lockForTransfer(true);
   return true;
 }
 
-bool SiteLogic::lockUploadConn(FileList * fl, std::string file, int * ret) {
-  bool locked = getReadyConn(fl, file, ret, true, false);
+bool SiteLogic::lockUploadConn(std::string path, std::string file, int * ret) {
+  bool locked = getReadyConn(path, file, ret, true, false);
   if (!locked) return false;
   connstatetracker[*ret].lockForTransfer(false);
   return true;
 }
 
-bool SiteLogic::getReadyConn(FileList * fl, int * ret) {
-  return getReadyConn(fl, "", ret, false, false);
+bool SiteLogic::getReadyConn(std::string path, int * ret) {
+  return getReadyConn(path, "", ret, false, false);
 }
 
-bool SiteLogic::getReadyConn(FileList * fl, std::string file, int * ret, bool istransfer, bool isdownload) {
+bool SiteLogic::getReadyConn(std::string path, std::string file, int * ret, bool istransfer, bool isdownload) {
   int lastreadyid = -1;
   bool foundreadythread = false;
   for (unsigned int i = 0; i < conns.size(); i++) {
@@ -972,7 +972,7 @@ bool SiteLogic::getReadyConn(FileList * fl, std::string file, int * ret, bool is
       }
       foundreadythread = true;
       lastreadyid = i;
-      if (conns[i]->getTargetPath().compare(fl->getPath()) == 0) {
+      if (conns[i]->getTargetPath().compare(path) == 0) {
         if (istransfer) {
           if (!getSlot(isdownload)) return false;
         }
@@ -992,7 +992,7 @@ bool SiteLogic::getReadyConn(FileList * fl, std::string file, int * ret, bool is
         }
         foundreadythread = true;
         lastreadyid = i;
-        if (conns[i]->getTargetPath().compare(fl->getPath()) == 0) {
+        if (conns[i]->getTargetPath().compare(path) == 0) {
           if (istransfer) {
             if (!getSlot(isdownload)) return false;
           }
@@ -1009,7 +1009,7 @@ bool SiteLogic::getReadyConn(FileList * fl, std::string file, int * ret, bool is
     }
     connstatetracker[lastreadyid].setBusy();
     if (!conns[lastreadyid]->isProcessing()) {
-      conns[lastreadyid]->doCWD(fl->getPath());
+      conns[lastreadyid]->doCWD(path);
     }
     *ret = lastreadyid;
     return true;
@@ -1273,15 +1273,15 @@ std::string SiteLogic::getStatus(int id) {
   return conns[id]->getStatus();
 }
 
-void SiteLogic::preparePassiveDownload(int id, TransferMonitor * tmb, FileList * fls, std::string file, bool ssl) {
-  connstatetracker[id].setTransfer(tmb, fls, file, true, true, ssl);
+void SiteLogic::preparePassiveDownload(int id, TransferMonitor * tmb, std::string path, std::string file, bool fxp, bool ssl) {
+  connstatetracker[id].setTransfer(tmb, path, file, true, fxp, ssl);
   if (!conns[id]->isProcessing()) {
     initTransfer(id);
   }
 }
 
-void SiteLogic::preparePassiveUpload(int id, TransferMonitor * tmb, FileList * fls, std::string file, bool ssl) {
-  connstatetracker[id].setTransfer(tmb, fls, file, false, true, ssl);
+void SiteLogic::preparePassiveUpload(int id, TransferMonitor * tmb, std::string path, std::string file, bool fxp, bool ssl) {
+  connstatetracker[id].setTransfer(tmb, path, file, false, fxp, ssl);
   if (!conns[id]->isProcessing()) {
     initTransfer(id);
   }
@@ -1319,15 +1319,15 @@ void SiteLogic::passiveUpload(int id) {
   }
 }
 
-void SiteLogic::activeDownload(int id, TransferMonitor * tmb, FileList * fls, std::string file, std::string addr, bool ssl) {
-  connstatetracker[id].setTransfer(tmb, fls, file, true, false, addr, ssl);
+void SiteLogic::activeDownload(int id, TransferMonitor * tmb, std::string path, std::string file, std::string addr, bool ssl) {
+  connstatetracker[id].setTransfer(tmb, path, file, true, addr, ssl);
   if (!conns[id]->isProcessing()) {
     initTransfer(id);
   }
 }
 
-void SiteLogic::activeUpload(int id, TransferMonitor * tmb, FileList * fls, std::string file, std::string addr, bool ssl) {
-  connstatetracker[id].setTransfer(tmb, fls, file, false, false, addr, ssl);
+void SiteLogic::activeUpload(int id, TransferMonitor * tmb, std::string path, std::string file, std::string addr, bool ssl) {
+  connstatetracker[id].setTransfer(tmb, path, file, false, addr, ssl);
   if (!conns[id]->isProcessing()) {
     initTransfer(id);
   }

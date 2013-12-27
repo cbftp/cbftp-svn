@@ -264,7 +264,8 @@ void Engine::issueOptimalTransfers() {
     if (!sls->downloadSlotAvailable()) continue;
     if (!sld->uploadSlotAvailable()) continue;
     if (sls->potentialCheck(sbe->getScore())) {
-      global->getTransferManager()->suggestTransfer(sbe);
+      global->getTransferManager()->suggestTransfer(filename, sls,
+          sbe->getSourceFileList(), sld, sbe->getDestinationFileList());
     }
   }
 }

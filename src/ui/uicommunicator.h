@@ -19,6 +19,7 @@ private:
   std::string arg1;
   std::string arg2;
   std::string arg3;
+  void * parg;
   bool careaboutbackend;
   std::list<int> eventqueue;
   pthread_mutex_t event_mutex;
@@ -30,6 +31,7 @@ public:
   void newCommand(std::string);
   void newCommand(std::string, std::string);
   void newCommand(std::string, std::string, std::string);
+  void newCommand(std::string, std::string, std::string, void *);
   void newCommand(std::string, std::string, std::string, std::string);
   void expectBackendPush();
   void backendPush();
@@ -40,6 +42,7 @@ public:
   std::string getArg1();
   std::string getArg2();
   std::string getArg3();
+  void * getPointerArg();
   sem_t * getEventSem();
   void emitEvent(int);
   int awaitEvent();

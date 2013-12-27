@@ -35,6 +35,7 @@
 #include "screens/eventlogscreen.h"
 #include "screens/proxyoptionsscreen.h"
 #include "screens/editproxyscreen.h"
+#include "screens/viewfilescreen.h"
 
 extern GlobalContext * global;
 
@@ -189,6 +190,7 @@ void UserInterface::runInstance() {
   UIWindow * eventlogscreen = NULL;
   UIWindow * proxyoptionsscreen = NULL;
   UIWindow * editproxyscreen = NULL;
+  UIWindow * viewfilescreen = NULL;
   legendwindow = new LegendWindow(legend, 2, col);
   infowindow = new InfoWindow(info, 2, col);
   if (global->getDataFileHandler()->fileExists()) {
@@ -300,6 +302,10 @@ void UserInterface::runInstance() {
       else if (command == "addsection") {
         addsectionscreen = new AddSectionScreen(main, &uicommunicator, mainrow, maincol);
         switchToWindow(addsectionscreen);
+      }
+      else if (command == "viewfile") {
+        viewfilescreen = new ViewFileScreen(main, &uicommunicator, mainrow, maincol);
+        switchToWindow(viewfilescreen);
       }
       else if (command == "newrace") {
         newracescreen = new NewRaceScreen(main, &uicommunicator, mainrow, maincol);

@@ -77,13 +77,13 @@ void FTPConn::login() {
   if (proxy == NULL) {
     rawbuf->writeLine("[Connecting to " + site->getAddress() + ":" + site->getPort() + "]");
     state = 1;
-    sockfd = iom->registerTCPClientSocket(this, site->getAddress(), global->str2Int(site->getPort()));
+    iom->registerTCPClientSocket(this, site->getAddress(), global->str2Int(site->getPort()), &sockfd);
   }
   else {
     rawbuf->writeLine("[Connecting to proxy " + proxy->getAddr() + ":" + proxy->getPort() + "]");
     state = 100;
     proxysession->prepare(proxy, site->getAddress(), site->getPort());
-    sockfd = iom->registerTCPClientSocket(this, proxy->getAddr(), global->str2Int(proxy->getPort()));
+    iom->registerTCPClientSocket(this, proxy->getAddr(), global->str2Int(proxy->getPort()), &sockfd);
   }
   if (sockfd < 0) {
     state = 0;
@@ -309,7 +309,7 @@ void FTPConn::welcomeReceived() {
 
 void FTPConn::AUTHTLSResponse() {
   if (databufcode == 234) {
-    iom->negotiateSSL(sockfd);
+    iom->negotiateSSLConnect(sockfd);
   }
   else {
     rawbuf->writeLine("[Unknown response]");

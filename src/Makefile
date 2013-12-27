@@ -9,7 +9,7 @@ OBJECTS = potentialelement.o scoreboardelement.o \
 	connstatetracker.o delayedcommand.o remotecommandhandler.o eventreceiver.o \
 	iomanager.o workmanager.o event.o datablockpool.o datablock.o \
 	skiplist.o sizelocationtrack.o eventlog.o proxy.o proxymanager.o \
-	proxysession.o recursivecommandlogic.o
+	proxysession.o recursivecommandlogic.o localstorage.o localtransfer.o
 
 all: ${OBJECTS}
 	@cd ui; ${MAKE}
@@ -51,10 +51,13 @@ datablock.o:
 transfermonitor.o:
 skiplist.o:
 sizelocationtrack.o:
+eventlog.o:
 proxy.o:
 proxymanager.o:
 proxysession.o:
 recursivecommandlogic.o:
+localstorage.o:
+localtransfer.o:
 
 clean:
 	rm -f ${OBJECTS}

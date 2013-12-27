@@ -18,11 +18,19 @@ class GlobalContext;
 class SiteLogicRequest;
 class SiteLogicRequestReady;
 class PotentialTracker;
+class FileStore;
 
 //minimum sleep delay (between refreshes / hammer attempts) in ms
 #define SLEEPDELAY 150
 //maximum number of dir refreshes in a row in the same race
 #define MAXCHECKSROW 5
+
+#define REQ_FILELIST 2620
+#define REQ_RAW 2621
+#define REQ_WIPE_RECURSIVE 2622
+#define REQ_WIPE 2623
+#define REQ_DEL_RECURSIVE 2624
+#define REQ_DEL 2625
 
 extern GlobalContext * global;
 
@@ -83,10 +91,10 @@ class SiteLogic : public EventReceiver {
     void requestSelect();
     Site * getSite();
     SiteRace * getRace(std::string);
-    bool lockDownloadConn(FileList *, std::string, int *);
-    bool lockUploadConn(FileList *, std::string, int *);
-    bool getReadyConn(FileList *, int *);
-    bool getReadyConn(FileList *, std::string, int *, bool, bool);
+    bool lockDownloadConn(std::string, std::string, int *);
+    bool lockUploadConn(std::string, std::string, int *);
+    bool getReadyConn(std::string, int *);
+    bool getReadyConn(std::string, std::string, int *, bool, bool);
     void returnConn(int);
     void setNumConnections(unsigned int);
     bool downloadSlotAvailable();
@@ -105,7 +113,6 @@ class SiteLogic : public EventReceiver {
     bool getSlot(bool);
     int requestFileList(std::string);
     int requestRawCommand(std::string);
-    int requestViewFile(std::string);
     int requestWipe(std::string, bool);
     int requestDelete(std::string, bool);
     bool requestReady(int);
@@ -118,11 +125,11 @@ class SiteLogic : public EventReceiver {
     std::vector<FTPConn *> * getConns();
     FTPConn * getConn(int);
     std::string getStatus(int);
-    void preparePassiveDownload(int, TransferMonitor *, FileList *, std::string, bool);
-    void preparePassiveUpload(int, TransferMonitor *, FileList *, std::string, bool);
+    void preparePassiveDownload(int, TransferMonitor *, std::string, std::string, bool, bool);
+    void preparePassiveUpload(int, TransferMonitor *, std::string, std::string, bool, bool);
     void passiveDownload(int);
     void passiveUpload(int);
-    void activeUpload(int, TransferMonitor *, FileList *, std::string, std::string, bool);
-    void activeDownload(int, TransferMonitor *, FileList *, std::string, std::string, bool);
+    void activeUpload(int, TransferMonitor *, std::string, std::string, std::string, bool);
+    void activeDownload(int, TransferMonitor *, std::string, std::string, std::string, bool);
     void abortTransfer(int);
 };

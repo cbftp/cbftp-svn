@@ -31,6 +31,14 @@ void UICommunicator::newCommand(std::string command, std::string arg1, std::stri
   newCommand(command, arg1, arg2, "");
 }
 
+void UICommunicator::newCommand(std::string command, std::string arg1, std::string arg2, void * arg3) {
+  this->command = command;
+  this->arg1 = arg1;
+  this->arg2 = arg2;
+  this->parg = arg3;
+  newcommand = true;
+}
+
 void UICommunicator::newCommand(std::string command, std::string arg1, std::string arg2, std::string arg3) {
   this->command = command;
   this->arg1 = arg1;
@@ -74,6 +82,10 @@ std::string UICommunicator::getArg2() {
 
 std::string UICommunicator::getArg3() {
   return arg3;
+}
+
+void * UICommunicator::getPointerArg() {
+  return parg;
 }
 
 sem_t * UICommunicator::getEventSem() {

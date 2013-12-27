@@ -18,6 +18,7 @@ ConnStateTracker::ConnStateTracker() {
   lockeddownload = false;
   aborted = false;
   loggedin = false;
+  fxp = false;
   recursivelogic = new RecursiveCommandLogic();
 }
 void ConnStateTracker::delayedCommand(std::string command, int delay) {
@@ -123,20 +124,30 @@ bool ConnStateTracker::isReady() {
   return (state == 1 || state == 2);
 }
 
-void ConnStateTracker::setTransfer(TransferMonitor * tm, FileList * fls, std::string file, bool download, bool passive, bool ssl) {
-  setTransfer(tm, fls, file, download, passive, "", ssl);
+void ConnStateTracker::setTransfer(TransferMonitor * tm, std::string path, std::string file, bool download, bool fxp, bool ssl) {
+  if (this->transfer) global->getEventLog()->log("ConnStateTracker", "BUG: Setting transfer while already having a transfer!");
+  this->transfer = true;
+  this->aborted = false;
+  this->ssl = ssl;
+  this->fxp = fxp;
+  this->tm = tm;
+  this->path = path;
+  this->file = file;
+  this->download = download;
+  this->passive = true;
+  this->addr = addr;
 }
 
-void ConnStateTracker::setTransfer(TransferMonitor * tm, FileList * fls, std::string file, bool download, bool passive, std::string addr, bool ssl) {
+void ConnStateTracker::setTransfer(TransferMonitor * tm, std::string path, std::string file, bool download, std::string addr, bool ssl) {
   if (this->transfer) global->getEventLog()->log("ConnStateTracker", "BUG: Setting transfer while already having a transfer!");
   this->transfer = true;
   this->aborted = false;
   this->ssl = ssl;
   this->tm = tm;
-  this->fls = fls;
+  this->path = path;
   this->file = file;
   this->download = download;
-  this->passive = passive;
+  this->passive = false;
   this->addr = addr;
 }
 
@@ -170,8 +181,8 @@ TransferMonitor * ConnStateTracker::getTransferMonitor() {
   return tm;
 }
 
-FileList * ConnStateTracker::getTransferFileList() {
-  return fls;
+std::string ConnStateTracker::getTransferPath() {
+  return path;
 }
 
 std::string ConnStateTracker::getTransferFile() {
@@ -184,6 +195,10 @@ bool ConnStateTracker::getTransferDownload() {
 
 bool ConnStateTracker::getTransferPassive() {
   return passive;
+}
+
+bool ConnStateTracker::getTransferFXP() {
+  return fxp;
 }
 
 std::string ConnStateTracker::getTransferAddr() {

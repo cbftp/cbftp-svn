@@ -33,7 +33,7 @@ IOManager::IOManager() {
 #endif
 }
 
-int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int port) {
+int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int port, int * sockfdp) {
   struct addrinfo sock, *res;
   memset(&sock, 0, sizeof(sock));
   sock.ai_family = AF_INET;
@@ -44,6 +44,7 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int
     return -1;
   }
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+  *sockfdp = sockfd;
   fcntl(sockfd, F_SETFL, O_NONBLOCK);
   if (hasDefaultInterface()) {
     struct addrinfo sock2, *res2;
@@ -133,21 +134,52 @@ int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
   return sockfd;
 }
 
-void IOManager::negotiateSSL(int id) {
-  if (typemap[id] == FD_TCP_PLAIN) {
+void IOManager::negotiateSSLConnect(int id) {
+  negotiateSSLConnect(id, NULL);
+}
+
+void IOManager::negotiateSSLConnect(int id, EventReceiver * er) {
+  if (typemap[id] == FD_TCP_PLAIN || typemap[id] == FD_TCP_PLAIN_LISTEN) {
     typemap[id] = FD_TCP_SSL_NEG_REDO_CONN;
   }
-  else if (typemap[id] == FD_TCP_PLAIN_LISTEN) {
+  else {
+    return;
+  }
+  negotiateSSL(id, er);
+}
+
+void IOManager::negotiateSSLAccept(int id) {
+  if (typemap[id] == FD_TCP_PLAIN || typemap[id] == FD_TCP_PLAIN_LISTEN) {
     typemap[id] = FD_TCP_SSL_NEG_REDO_ACCEPT;
   }
   else {
     return;
   }
+  negotiateSSL(id, NULL);
+}
+
+void IOManager::negotiateSSL(int id, EventReceiver * er) {
+  struct epoll_event event;
+  event.events = EPOLLIN;
+  event.data.fd = id;
+  epoll_ctl(epollfd, EPOLL_CTL_DEL, id, &event);
   SSL * ssl = SSL_new(global->getSSLCTX());
   SSL_set_mode(ssl, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
   sslmap[id] = ssl;
   SSL_set_fd(ssl, id);
-  int ret;
+  if (er != NULL) {
+    int parentid = -1;
+    for (std::map<int, EventReceiver *>::iterator it = receivermap.begin(); it != receivermap.end(); it++) {
+      if (it->second == er) {
+        parentid = it->first;
+        break;
+      }
+    }
+    if (parentid != -1) {
+      SSL_copy_session_id(ssl, sslmap[parentid]);
+    }
+  }
+  int ret = -1;
   if (typemap[id] == FD_TCP_SSL_NEG_REDO_CONN) {
     ret = SSL_connect(ssl);
   }
@@ -156,15 +188,25 @@ void IOManager::negotiateSSL(int id) {
   }
   if (ret > 0) { // probably wont happen :)
     typemap[id] = FD_TCP_SSL;
+    wm->dispatchEventSSLSuccess(receivermap[id]);
   }
   else {
-    switch(SSL_get_error(ssl, ret)) {
+    int error = SSL_get_error(ssl, ret);
+    switch(error) {
       case SSL_ERROR_WANT_READ:
         break;
       case SSL_ERROR_WANT_WRITE:
         break;
+      default:
+        global->getEventLog()->log("IOManager", "SSL init error: " +
+            global->int2Str(error) + " return code: " + global->int2Str(ret) +
+            " errno: " + strerror(errno));
+        break;
+
     }
   }
+  event.events = EPOLLIN;
+  epoll_ctl(epollfd, EPOLL_CTL_ADD, id, &event);
 }
 
 void IOManager::sendData(int id, std::string data) {
@@ -277,11 +319,11 @@ void IOManager::runInstance() {
             wm->dispatchFDData(er, buf, b_recv);
           }
           else if (events[i].events & EPOLLOUT) { // socket connected
-            wm->dispatchEventConnected(er);
             struct epoll_event event;
             event.events = EPOLLIN;
             event.data.fd = currfd;
             epoll_ctl(epollfd, EPOLL_CTL_MOD, currfd, &event);
+            wm->dispatchEventConnected(er);
           }
           break;
         case FD_TCP_SSL_NEG_REDO_CONN: // tcp ssl redo connect

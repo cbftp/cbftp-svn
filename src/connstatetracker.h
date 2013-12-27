@@ -20,7 +20,7 @@ private:
   std::list<DelayedCommand> delayedcommands;
   bool transfer;
   TransferMonitor * tm;
-  FileList * fls;
+  std::string path;
   std::string file;
   bool download;
   bool passive;
@@ -29,6 +29,7 @@ private:
   bool transferlocked;
   bool lockeddownload;
   bool loggedin;
+  bool fxp;
   std::string addr;
   RecursiveCommandLogic * recursivelogic;
 public:
@@ -49,8 +50,8 @@ public:
   bool isDisconnected();
   bool isIdle();
   bool isReady();
-  void setTransfer(TransferMonitor *, FileList *, std::string, bool, bool, bool);
-  void setTransfer(TransferMonitor *, FileList *, std::string, bool, bool, std::string, bool);
+  void setTransfer(TransferMonitor *, std::string, std::string, bool, bool, bool);
+  void setTransfer(TransferMonitor *, std::string, std::string, bool, std::string, bool);
   bool hasTransfer();
   void finishTransfer();
   void abortTransfer();
@@ -61,11 +62,12 @@ public:
   bool isLoggedIn();
   void setLoggedIn();
   TransferMonitor * getTransferMonitor();
-  FileList * getTransferFileList();
+  std::string getTransferPath();
   std::string getTransferFile();
   bool getTransferDownload();
   bool getTransferPassive();
   bool getTransferSSL();
+  bool getTransferFXP();
   std::string getTransferAddr();
   RecursiveCommandLogic * getRecursiveLogic();
 };

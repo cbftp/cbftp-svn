@@ -74,7 +74,7 @@ void BrowseScreen::redraw() {
       }
     }
     else {
-      FileList * filelist = sitelogic->getFileList(requestid);
+      filelist = sitelogic->getFileList(requestid);
       if (filelist == NULL) {
         cwdfailed = true;
         tickcount = 0;
@@ -311,7 +311,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
     case 'v':
       //view selected file, do nothing if a directory is selected
       if (list.cursoredFile() != NULL && !list.cursoredFile()->isDirectory()) {
-        uicommunicator->newCommand("viewfile", site->getName(), list.getPath(), list.cursoredFile()->getName());
+        uicommunicator->newCommand("viewfile", site->getName(), list.cursoredFile()->getName(), filelist);
       }
       break;
     case 's':

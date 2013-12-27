@@ -8,10 +8,13 @@
 #include "tickpoke.h"
 #include "globalcontext.h"
 #include "file.h"
+#include "localstorage.h"
+#include "transfermanager.h"
 
 extern GlobalContext * global;
 
-TransferMonitor::TransferMonitor() {
+TransferMonitor::TransferMonitor(TransferManager * tm) {
+  this->tm = tm;
   status = 0;
   activedownload = false;
   timestamp = 0;
@@ -26,17 +29,23 @@ void TransferMonitor::engage(std::string file, SiteLogic * sls, FileList * fls, 
   this->sls = sls;
   this->sld = sld;
   this->fls = fls;
+  this->spath = fls->getPath();
   this->fld = fld;
+  this->dpath = fld->getPath();
   this->file = file;
   activedownload = false;
   sourcecomplete = false;
   targetcomplete = false;
   passiveready = false;
+  fxp = true;
   timestamp = 0;
   ssl = false;
-  if (!sls->lockDownloadConn(fls, file, &src)) return;
-  if (!sld->lockUploadConn(fld, file, &dst)) {
+  if (!sls->lockDownloadConn(spath, file, &src)) {
+    tm->transferFailed(this, 4);
+  }
+  if (!sld->lockUploadConn(dpath, file, &dst)) {
     sls->returnConn(src);
+    tm->transferFailed(this, 5);
     return;
   }
   status = 1;
@@ -47,10 +56,37 @@ void TransferMonitor::engage(std::string file, SiteLogic * sls, FileList * fls, 
   fls->getFile(file)->download();
   if (!sld->getSite()->hasBrokenPASV()) {
     activedownload = true;
-    sld->preparePassiveUpload(dst, this, fld, file, ssl);
+    sld->preparePassiveUpload(dst, this, dpath, file, fxp, ssl);
   }
   else {
-    sls->preparePassiveDownload(src, this, fls, file, ssl);
+    sls->preparePassiveDownload(src, this, spath, file, fxp, ssl);
+  }
+}
+
+void TransferMonitor::engage(std::string file, SiteLogic * sls, FileList * fls) {
+  this->sls = sls;
+  this->file = file;
+  this->spath = fls->getPath();
+  this->fls = fls;
+  fld = NULL;
+  activedownload = false;
+  sourcecomplete = false;
+  targetcomplete = false;
+  passiveready = false;
+  fxp = false;
+  timestamp = 0;
+  ssl = false;
+  if (!sls->lockDownloadConn(spath, file, &src)) return;
+  status = 1;
+  if (sls->getSite()->SSLFXPForced()) {
+    ssl = true;
+  }
+  if (!sls->getSite()->hasBrokenPASV()) {
+    sls->preparePassiveDownload(src, this, spath, file, fxp, ssl);
+  }
+  else {
+    activedownload = true;
+    // ?
   }
 }
 
@@ -60,22 +96,35 @@ void TransferMonitor::tick(int msg) {
 
 void TransferMonitor::passiveReady(std::string addr) {
   passiveready = true;
-  if (activedownload) {
-    sls->activeDownload(src, this, fls, file, addr, ssl);
-    sld->passiveUpload(dst);
+  if (fxp) {
+    if (activedownload) {
+      sls->activeDownload(src, this, spath, file, addr, ssl);
+      sld->passiveUpload(dst);
+    }
+    else {
+      sld->activeUpload(dst, this, dpath, file, addr, ssl);
+      sls->passiveDownload(src);
+    }
   }
   else {
-    sld->activeUpload(dst, this, fld, file, addr, ssl);
-    sls->passiveDownload(src);
+    if (activedownload) {
+      // ?
+    }
+    else {
+      sls->passiveDownload(src);
+      global->getLocalStorage()->passiveDownload(this, file, addr, ssl, sls->getConn(src));
+    }
   }
   startstamp = timestamp;
 }
 
 void TransferMonitor::sourceComplete() {
   sourcecomplete = true;
-  File * fileobj = fls->getFile(file);
-  if (fileobj != NULL) {
-    fileobj->finishDownload();
+  if (fls != NULL) {
+    File * fileobj = fls->getFile(file);
+    if (fileobj != NULL) {
+      fileobj->finishDownload();
+    }
   }
   if (targetcomplete) {
     finish();
@@ -84,9 +133,11 @@ void TransferMonitor::sourceComplete() {
 
 void TransferMonitor::targetComplete() {
   targetcomplete = true;
-  File * fileobj = fld->getFile(file);
-  if (fileobj != NULL) {
-    fileobj->finishUpload();
+  if (fld != NULL) {
+    File * fileobj = fld->getFile(file);
+    if (fileobj != NULL) {
+      fileobj->finishUpload();
+    }
   }
   if (sourcecomplete) {
     finish();
@@ -99,16 +150,19 @@ void TransferMonitor::finish() {
     if (span == 0) {
       span = 10;
     }
-    File * srcfile = fls->getFile(file);
-    if (srcfile) {
-      long int size = srcfile->getSize();
-      int speed = size / span;
-      //std::cout << "[ " << sls->getSite()->getName() << " -> " << sld->getSite()->getName() << " ] - " << file << " - " << speed << " kB/s" << std::endl;
-      if (size > 1000000) {
-        fld->setFileUpdateFlag(file, size, speed, sls->getSite(), sld->getSite()->getName());
+    if (fxp) {
+      File * srcfile = fls->getFile(file);
+      if (srcfile) {
+        long int size = srcfile->getSize();
+        int speed = size / span;
+        //std::cout << "[ " << sls->getSite()->getName() << " -> " << sld->getSite()->getName() << " ] - " << file << " - " << speed << " kB/s" << std::endl;
+        if (size > 1000000) {
+          fld->setFileUpdateFlag(file, size, speed, sls->getSite(), sld->getSite()->getName());
+        }
       }
     }
   }
+  tm->transferSuccessful(this);
   status = 0;
 }
 
@@ -137,9 +191,11 @@ void TransferMonitor::sourceError(int err) {
     if (fileobj != NULL) {
       fileobj->finishUpload();
     }
+    tm->transferFailed(this, err);
     status = 0;
   }
   else if (targetcomplete) {
+    tm->transferFailed(this, err);
     status = 0;
   }
 }
@@ -169,9 +225,11 @@ void TransferMonitor::targetError(int err) {
     if (fileobj != NULL) {
       fileobj->finishDownload();
     }
+    tm->transferFailed(this, err);
     status = 0;
   }
   else if (sourcecomplete) {
+    tm->transferFailed(this, err);
     status = 0;
   }
 }

@@ -4,7 +4,6 @@
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
-#include <error.h>
 
 #include "crypto.h"
 

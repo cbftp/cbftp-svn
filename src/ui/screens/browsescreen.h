@@ -9,6 +9,7 @@ class UICommunicator;
 class StringPair;
 class SiteLogic;
 class Site;
+class FileList;
 
 class BrowseScreen : public UIWindow {
 public:
@@ -48,5 +49,6 @@ private:
   UICommunicator * uicommunicator;
   std::string requestedpath;
   int spinnerpos;
+  FileList * filelist;
   void sort();
 };

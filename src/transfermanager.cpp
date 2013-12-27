@@ -2,17 +2,30 @@
 
 #include "scoreboardelement.h"
 #include "transfermonitor.h"
+#include "ui/uicommunicator.h"
+#include "globalcontext.h"
+
+extern GlobalContext * global;
 
 TransferManager::TransferManager() {
-
+  requestids = 0;
 }
 
-void TransferManager::suggestTransfer(ScoreBoardElement * sbe) {
-  std::string name = sbe->fileName();
-  SiteLogic * src = sbe->getSource();
-  SiteLogic * dst = sbe->getDestination();
-  FileList * fls = sbe->getSourceFileList();
-  FileList * fld = sbe->getDestinationFileList();
+int TransferManager::download(std::string name, SiteLogic * sl, FileList * filelist) {
+  int id = requestids++;
+  TransferMonitor * target = getAvailableTransferMonitor();
+  transferstatus[id] = TRANSFER_IN_PROGRESS_UI;
+  transfermap[target] = id;
+  target->engage(name, sl, filelist);
+  return id;
+}
+
+void TransferManager::suggestTransfer(std::string name, SiteLogic * src, FileList * fls, SiteLogic * dst, FileList * fld) {
+  TransferMonitor * target = getAvailableTransferMonitor();
+  target->engage(name, src, fls, dst, fld);
+}
+
+TransferMonitor * TransferManager::getAvailableTransferMonitor() {
   TransferMonitor * target = NULL;
   std::list<TransferMonitor *>::iterator it;
   for (it = transfers.begin(); it != transfers.end(); it++) {
@@ -22,8 +35,34 @@ void TransferManager::suggestTransfer(ScoreBoardElement * sbe) {
     }
   }
   if (target == NULL) {
-    target = new TransferMonitor();
+    target = new TransferMonitor(this);
     transfers.push_back(target);
   }
-  target->engage(name, src, fls, dst, fld);
+  return target;
+}
+
+int TransferManager::transferStatus(int id) {
+  return transferstatus[id];
+}
+
+void TransferManager::transferSuccessful(TransferMonitor * monitor) {
+  bool push = false;
+  if (transferstatus[transfermap[monitor]] == TRANSFER_IN_PROGRESS_UI) {
+    push = true;
+  }
+  transferstatus[transfermap[monitor]] = TRANSFER_SUCCESSFUL;
+  if (push) {
+    global->getUICommunicator()->backendPush();
+  }
+}
+
+void TransferManager::transferFailed(TransferMonitor * monitor, int err) {
+  bool push = false;
+  if (transferstatus[transfermap[monitor]] == TRANSFER_IN_PROGRESS_UI) {
+    push = true;
+  }
+  transferstatus[transfermap[monitor]] = TRANSFER_FAILED;
+  if (push) {
+    global->getUICommunicator()->backendPush();
+  }
 }

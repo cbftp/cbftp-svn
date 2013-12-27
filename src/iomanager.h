@@ -42,16 +42,19 @@ private:
   int blocksize;
   std::string defaultinterface;
   std::string getInterfaceAddress(std::string);
+  void negotiateSSL(int, EventReceiver *);
   bool hasdefaultinterface;
 public:
   IOManager();
   void runInstance();
   void registerStdin(EventReceiver *);
-  int registerTCPClientSocket(EventReceiver *, std::string, int);
+  int registerTCPClientSocket(EventReceiver *, std::string, int, int *);
   int registerTCPServerSocket(EventReceiver *, int);
   int registerTCPServerSocket(EventReceiver *, int, bool);
   void registerTCPServerClientSocket(EventReceiver *, int);
-  void negotiateSSL(int);
+  void negotiateSSLConnect(int);
+  void negotiateSSLConnect(int, EventReceiver *);
+  void negotiateSSLAccept(int);
   int registerUDPServerSocket(EventReceiver *, int);
   void sendData(int, std::string);
   void sendData(int, char *, unsigned int);

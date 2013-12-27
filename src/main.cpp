@@ -3,7 +3,6 @@
 #include <iostream>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <error.h>
 #include <signal.h>
 
 #include "datafilehandler.h"
@@ -21,6 +20,7 @@
 #include "skiplist.h"
 #include "eventlog.h"
 #include "proxymanager.h"
+#include "localstorage.h"
 
 Main::Main() {
   std::string datadirpath = std::string(getenv("HOME")) + "/" + DATAPATH;
@@ -64,7 +64,8 @@ Main::Main() {
   RemoteCommandHandler * rch = new RemoteCommandHandler();
   SkipList * sl = new SkipList();
   ProxyManager * pm = new ProxyManager();
-  global->linkComponents(dfh, iom, e, ui->getCommunicator(), sm, slm, tm, tp, rch, sl, pm);
+  LocalStorage * ls = new LocalStorage();
+  global->linkComponents(dfh, iom, e, ui->getCommunicator(), sm, slm, tm, tp, rch, sl, pm, ls);
   if (!ui->init()) exit(1);
   tp->tickerLoop();
   global->getUICommunicator()->kill();

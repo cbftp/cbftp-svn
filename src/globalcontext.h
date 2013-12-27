@@ -17,6 +17,7 @@ class WorkManager;
 class SkipList;
 class EventLog;
 class ProxyManager;
+class LocalStorage;
 
 class GlobalContext {
   private:
@@ -35,6 +36,7 @@ class GlobalContext {
     SkipList * sl;
     EventLog * el;
     ProxyManager * pm;
+    LocalStorage * ls;
     pthread_mutex_t time_mutex;
     std::string compiletime;
     std::string svnrev;
@@ -46,7 +48,10 @@ class GlobalContext {
     GlobalContext();
     void linkEventLog(EventLog *);
     void linkWorkManager(WorkManager *);
-    void linkComponents(DataFileHandler *, IOManager *, Engine *, UICommunicator *, SiteManager *, SiteLogicManager *, TransferManager *, TickPoke *, RemoteCommandHandler *, SkipList *, ProxyManager *);
+    void linkComponents(DataFileHandler *, IOManager *, Engine *,
+        UICommunicator *, SiteManager *, SiteLogicManager *, TransferManager *,
+        TickPoke *, RemoteCommandHandler *, SkipList *, ProxyManager *,
+        LocalStorage *);
     SSL_CTX * getSSLCTX();
     Engine * getEngine();
     DataFileHandler * getDataFileHandler();
@@ -61,6 +66,7 @@ class GlobalContext {
     SkipList * getSkipList();
     EventLog * getEventLog();
     ProxyManager * getProxyManager();
+    LocalStorage * getLocalStorage();
     pthread_attr_t * getPthreadAttr();
     static int ctimeMSec();
     void updateTime();
