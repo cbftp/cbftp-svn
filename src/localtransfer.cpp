@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "globalcontext.h"
 #include "iomanager.h"
