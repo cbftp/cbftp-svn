@@ -11,7 +11,7 @@ GlobalContext::GlobalContext() {
 void GlobalContext::init() {
   SSL_library_init();
   SSL_load_error_strings();
-  ssl_ctx = SSL_CTX_new(TLSv1_client_method());
+  ssl_ctx = SSL_CTX_new(SSLv23_client_method());
   pthread_attr_init(&attr);
   pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
 #ifdef _ISOC95_SOURCE
