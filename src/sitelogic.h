@@ -31,6 +31,7 @@ class FileStore;
 #define REQ_WIPE 2623
 #define REQ_DEL_RECURSIVE 2624
 #define REQ_DEL 2625
+#define REQ_NUKE 2626
 
 extern GlobalContext * global;
 
@@ -115,6 +116,7 @@ class SiteLogic : public EventReceiver {
     int requestRawCommand(std::string);
     int requestWipe(std::string, bool);
     int requestDelete(std::string, bool);
+    int requestNuke(std::string, int, std::string);
     bool requestReady(int);
     FileList * getFileList(int);
     std::string getRawCommandResult(int);

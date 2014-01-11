@@ -341,6 +341,18 @@ void SiteLogic::commandSuccess(int id) {
         }
       }
       break;
+    case 30: // NUKE
+      for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
+        if (it->connId() == id) {
+          if (it->requestType() == REQ_NUKE) {
+            requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, true));
+            requestsinprogress.erase(it);
+            global->getUICommunicator()->backendPush();
+            break;
+          }
+        }
+      }
+      break;
   }
   handleConnection(id, false);
 }
@@ -452,6 +464,19 @@ void SiteLogic::commandFail(int id) {
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
           if (it->requestType() == REQ_DEL_RECURSIVE || it->requestType() == REQ_DEL) {
+            requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, false));
+            requestsinprogress.erase(it);
+            global->getUICommunicator()->backendPush();
+            break;
+          }
+        }
+      }
+      handleConnection(id, false);
+      return;
+    case 30: // NUKE
+      for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
+        if (it->connId() == id) {
+          if (it->requestType() == REQ_NUKE) {
             requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, false));
             requestsinprogress.erase(it);
             global->getUICommunicator()->backendPush();
@@ -732,6 +757,9 @@ bool SiteLogic::handleRequest(int id) {
     case REQ_DEL: // delete
       conns[id]->doDELE(it->requestData());
       break;
+    case REQ_NUKE: // nuke
+      conns[id]->doNuke(it->requestData(), it->requestData3(), it->requestData2());
+      break;
   }
   requestsinprogress.push_back(*it);
   requests.erase(it);
@@ -874,6 +902,13 @@ int SiteLogic::requestDelete(std::string path, bool recursive) {
   else {
     requests.push_back(SiteLogicRequest(requestid, REQ_DEL, path));
   }
+  requestSelect();
+  return requestid;
+}
+
+int SiteLogic::requestNuke(std::string path, int multiplier, std::string reason) {
+  int requestid = requestidcounter++;
+  requests.push_back(SiteLogicRequest(requestid, REQ_NUKE, path, reason, multiplier));
   requestSelect();
   return requestid;
 }

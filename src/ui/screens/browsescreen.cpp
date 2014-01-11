@@ -33,6 +33,9 @@ BrowseScreen::BrowseScreen(WINDOW * window, UICommunicator * uicommunicator, uns
   deletingrecursive = false;
   deletesuccess = false;
   deletefailed = false;
+  nuking = false;
+  nukesuccess = false;
+  nukefailed = false;
   currentviewspan = 0;
   sortmethod = 0;
   slidersize = 0;
@@ -45,6 +48,7 @@ BrowseScreen::BrowseScreen(WINDOW * window, UICommunicator * uicommunicator, uns
 
 void BrowseScreen::redraw() {
   if (requestid >= 0 && sitelogic->requestReady(requestid)) {
+    tickcount = 0;
     if (wipe) {
       bool wipestatus = sitelogic->finishRequest(requestid);
       requestid = -1;
@@ -52,7 +56,7 @@ void BrowseScreen::redraw() {
       if (wipestatus) {
         wipesuccess = true;
         if (list.getPath() == wipepath) {
-          list.removeFile(wipefile);
+          refreshFilelist();
         }
       }
       else {
@@ -66,18 +70,29 @@ void BrowseScreen::redraw() {
       if (deletestatus) {
         deletesuccess = true;
         if (list.getPath() == wipepath) {
-          list.removeFile(wipefile);
+          refreshFilelist();
         }
       }
       else {
         deletefailed = true;
       }
     }
+    else if (nuking) {
+      bool nukestatus = sitelogic->finishRequest(requestid);
+      requestid = -1;
+      nuking = false;
+      if (nukestatus) {
+        nukesuccess = true;
+      }
+      else {
+        nukefailed = true;
+      }
+      refreshFilelist();
+    }
     else {
       filelist = sitelogic->getFileList(requestid);
       if (filelist == NULL) {
         cwdfailed = true;
-        tickcount = 0;
         sitelogic->finishRequest(requestid);
         requestid = -1;
         uicommunicator->newCommand("updatesetinfo");
@@ -173,6 +188,14 @@ void BrowseScreen::update() {
       deleting = false;
       uicommunicator->checkoutCommand();
       redraw();
+      return;
+    }
+    else if (uicommunicator->getCommand() == "returnnuke") {
+      nuking = true;
+      requestid = global->str2Int(uicommunicator->getArg1());
+      uicommunicator->checkoutCommand();
+      redraw();
+      uicommunicator->newCommand("updatesetinfo");
       return;
     }
     uicommunicator->checkoutCommand();
@@ -333,6 +356,13 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       list.toggleSeparators();
       uicommunicator->newCommand("redraw");
       break;
+    case 'n':
+      if (list.cursoredFile() != NULL && list.cursoredFile()->isDirectory()) {
+        tickcount = 0;
+        uicommunicator->newCommand("nuke", site->getName(), list.cursoredFile()->getName(), filelist);
+        nuketarget = list.cursoredFile()->getName();
+      }
+      break;
     case KEY_RIGHT:
     case 10:
       cursoredfile = list.cursoredFile();
@@ -422,8 +452,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       //go up one directory level, or return if at top already
       break;
     case KEY_F(5):
-      requestedpath = list.getPath();
-      requestid = sitelogic->requestFileList(requestedpath);
+      refreshFilelist();
       uicommunicator->newCommand("updatesetinfo");
       break;
     case KEY_DOWN:
@@ -513,7 +542,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
 }
 
 std::string BrowseScreen::getLegendText() {
-  return "[c]ancel - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - Toggle se[p]arators";
+  return "[c]ancel - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - Toggle se[p]arators";
 }
 
 std::string BrowseScreen::getInfoLabel() {
@@ -528,6 +557,9 @@ std::string BrowseScreen::getInfoText() {
     }
     else if (deleting) {
       text = "Deleting " + wipetarget + "  ";
+    }
+    else if (nuking) {
+      text = "Nuking " + wipetarget + "  ";
     }
     else {
       text = "Getting list for " + requestedpath + "  ";
@@ -593,6 +625,24 @@ std::string BrowseScreen::getInfoText() {
       deletefailed = false;
     }
   }
+  else if (nukesuccess) {
+    if (tickcount++ < 8) {
+      text = "Nuke successful: " + nuketarget;
+      return text;
+    }
+    else {
+      nukesuccess = false;
+    }
+  }
+  else if (nukefailed) {
+    if (tickcount++ < 8) {
+      text = "Nuke failed: " + nuketarget;
+      return text;
+    }
+    else {
+      nukefailed = false;
+    }
+  }
   else if (changedsort) {
     if (tickcount++ < 8) {
       text = "Sort method: " + list.getSortMethod();
@@ -638,4 +688,9 @@ void BrowseScreen::sort() {
       break;
   }
   resort = false;
+}
+
+void BrowseScreen::refreshFilelist() {
+  requestedpath = list.getPath();
+  requestid = sitelogic->requestFileList(requestedpath);
 }

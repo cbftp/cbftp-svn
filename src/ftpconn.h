@@ -72,6 +72,7 @@ class FTPConn : private EventReceiver {
     void QUITResponse();
     void WIPEResponse();
     void DELEResponse();
+    void NUKEResponse();
     void proxySessionInit(bool);
     void sendEcho(std::string);
   public:
@@ -93,6 +94,7 @@ class FTPConn : private EventReceiver {
     void doPROTC();
     void doRaw(std::string);
     void doWipe(std::string, bool);
+    void doNuke(std::string, int, std::string);
     void doDELE(std::string);
     void doSTAT();
     void doSTAT(SiteRace *, FileList *);

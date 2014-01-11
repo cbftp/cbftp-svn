@@ -38,6 +38,10 @@ private:
   bool deletingrecursive;
   bool deletesuccess;
   bool deletefailed;
+  bool nuking;
+  bool nukesuccess;
+  bool nukefailed;
+  std::string nuketarget;
   std::string wipetarget;
   std::string wipepath;
   std::string wipefile;
@@ -51,4 +55,5 @@ private:
   int spinnerpos;
   FileList * filelist;
   void sort();
+  void refreshFilelist();
 };

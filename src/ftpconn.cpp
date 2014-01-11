@@ -271,6 +271,9 @@ void FTPConn::FDData(char * data, unsigned int datalen) {
       case 29: // awaiting DELE response
         DELEResponse();
         break;
+      case 30: // awaiting SITE NUKE response
+        NUKEResponse();
+        break;
       case 100: // negotiating proxy session
         proxySessionInit(false);
         break;
@@ -534,6 +537,10 @@ void FTPConn::doWipe(std::string path, bool recursive) {
   sendEcho(std::string("SITE WIPE ") + (recursive ? "-r " : "") + path);
 }
 
+void FTPConn::doNuke(std::string path, int multiplier, std::string reason) {
+  state = 30;
+  sendEcho("SITE NUKE " + path + " " + global->int2Str(multiplier) + " " + reason);
+}
 void FTPConn::doDELE(std::string path) {
   state = 29;
   sendEcho("DELE " + path);
@@ -561,6 +568,22 @@ void FTPConn::DELEResponse() {
   processing = false;
   if (databufcode == 250) {
     sl->commandSuccess(id);
+  }
+  else {
+    sl->commandFail(id);
+  }
+}
+
+void FTPConn::NUKEResponse() {
+  processing = false;
+  if (databufcode == 200) {
+    std::string data = std::string(databuf, databufpos);
+    if (data.find("uccess") != std::string::npos) {
+      sl->commandSuccess(id);
+    }
+    else {
+      sl->commandFail(id);
+    }
   }
   else {
     sl->commandFail(id);

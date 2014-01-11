@@ -36,6 +36,7 @@
 #include "screens/proxyoptionsscreen.h"
 #include "screens/editproxyscreen.h"
 #include "screens/viewfilescreen.h"
+#include "screens/nukescreen.h"
 
 extern GlobalContext * global;
 
@@ -191,6 +192,7 @@ void UserInterface::runInstance() {
   UIWindow * proxyoptionsscreen = NULL;
   UIWindow * editproxyscreen = NULL;
   UIWindow * viewfilescreen = NULL;
+  UIWindow * nukescreen = NULL;
   legendwindow = new LegendWindow(legend, 2, col);
   infowindow = new InfoWindow(info, 2, col);
   if (global->getDataFileHandler()->fileExists()) {
@@ -306,6 +308,10 @@ void UserInterface::runInstance() {
       else if (command == "viewfile") {
         viewfilescreen = new ViewFileScreen(main, &uicommunicator, mainrow, maincol);
         switchToWindow(viewfilescreen);
+      }
+      else if (command == "nuke") {
+        nukescreen = new NukeScreen(main, &uicommunicator, mainrow, maincol);
+        switchToWindow(nukescreen);
       }
       else if (command == "newrace") {
         newracescreen = new NewRaceScreen(main, &uicommunicator, mainrow, maincol);
@@ -448,6 +454,16 @@ void UserInterface::runInstance() {
         infowindow->setLabel(topwindow->getInfoLabel());
         infowindow->setText(topwindow->getInfoText());
         topwindow->redraw();
+        refreshAll();
+      }
+      else if (command == "returnnuke") {
+        topwindow = history.back();
+        history.pop_back();
+        topwindow->redraw();
+        legendwindow->setText(topwindow->getLegendText());
+        infowindow->setLabel(topwindow->getInfoLabel());
+        infowindow->setText(topwindow->getInfoText());
+        uicommunicator.checkoutCommand();
         refreshAll();
       }
       else if (command == "yes" || command == "no") {
