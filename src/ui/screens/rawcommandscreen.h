@@ -22,6 +22,8 @@ private:
   unsigned int copysize;
   MenuSelectOptionTextField rawcommandfield;
   std::string sitename;
+  std::string selection;
+  bool hasselection;
   SiteLogic * sitelogic;
   UICommunicator * uicommunicator;
   RawBuffer * rawbuf;

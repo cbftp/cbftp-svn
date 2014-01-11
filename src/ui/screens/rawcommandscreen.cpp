@@ -14,6 +14,11 @@ extern GlobalContext * global;
 RawCommandScreen::RawCommandScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   sitename = uicommunicator->getArg1();
+  selection = uicommunicator->getArg2();
+  hasselection = false;
+  if (selection.length()) {
+    hasselection = true;
+  }
   uicommunicator->expectBackendPush();
   sitelogic = global->getSiteLogicManager()->getSiteLogic(sitename);
   this->rawbuf = sitelogic->getRawCommandBuffer();
@@ -130,12 +135,22 @@ void RawCommandScreen::keyPressed(unsigned int ch) {
         }
         uicommunicator->newCommand("update");
         break;
+      case KEY_IC:
+        for (unsigned int i = 0; i < selection.length(); i++) {
+          rawcommandfield.inputChar(selection[i]);
+        }
+        uicommunicator->newCommand("update");
+        break;
     }
   }
 }
 
 std::string RawCommandScreen::getLegendText() {
-  return "[Enter] Send command - [ESC] clear / exit - [Any] Input to text - [Pgup] Scroll up - [Pgdn] Scroll down";
+  std::string legendtext = "[Enter] Send command - [ESC] clear / exit - [Any] Input to text - [Pgup] Scroll up - [Pgdn] Scroll down";
+  if (hasselection) {
+    legendtext += " - [Insert] selection";
+  }
+  return legendtext;
 }
 
 std::string RawCommandScreen::getInfoLabel() {

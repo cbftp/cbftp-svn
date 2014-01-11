@@ -536,7 +536,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       }
       break;
     case 'w':
-      uicommunicator->newCommand("rawcommand", site->getName());
+      uicommunicator->newCommand("rawcommand", site->getName(), list.cursoredFile()->getName());
       break;
   }
 }
