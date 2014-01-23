@@ -923,6 +923,25 @@ bool SiteLogic::requestReady(int requestid) {
   return false;
 }
 
+void SiteLogic::abortRace(std::string race) {
+  SiteRace * delrace = NULL;
+  for (std::vector<SiteRace *>::iterator it = races.begin(); it != races.end(); it++) {
+    if ((*it)->getRelease() == race) {
+      delrace = *it;
+      delrace->abort();
+      break;
+    }
+  }
+  if (delrace != NULL) {
+    for (std::list<SiteRace *>::iterator it = recentlylistedraces.begin(); it != recentlylistedraces.end(); it++) {
+      if ((*it) == delrace) {
+        recentlylistedraces.erase(it);
+        break;
+      }
+    }
+  }
+}
+
 FileList * SiteLogic::getFileList(int requestid) {
   std::list<SiteLogicRequestReady>::iterator it;
   for (it = requestsready.begin(); it != requestsready.end(); it++) {

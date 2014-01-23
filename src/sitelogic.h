@@ -118,6 +118,7 @@ class SiteLogic : public EventReceiver {
     int requestDelete(std::string, bool);
     int requestNuke(std::string, int, std::string);
     bool requestReady(int);
+    void abortRace(std::string);
     FileList * getFileList(int);
     std::string getRawCommandResult(int);
     bool finishRequest(int);

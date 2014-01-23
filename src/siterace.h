@@ -45,6 +45,7 @@ class SiteRace {
     unsigned long long int getMaxFileSize();
     bool isDone();
     void complete();
+    void abort();
     void subPathComplete(FileList *);
     bool isSubPathComplete(std::string);
     bool isSubPathComplete(FileList *);

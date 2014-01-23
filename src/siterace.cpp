@@ -199,6 +199,10 @@ void SiteRace::complete() {
   race->reportDone(this);
 }
 
+void SiteRace::abort() {
+  done = true;
+}
+
 void SiteRace::subPathComplete(FileList * fl) {
   std::string subpath = getSubPathForFileList(fl);
   if (isSubPathComplete(subpath)) {

@@ -5,6 +5,7 @@
 
 #include "file.h"
 #include "filelist.h"
+#include "sitelogic.h"
 
 Race::Race(std::string release, std::string section) {
   this->name = release;
@@ -23,6 +24,23 @@ Race::Race(std::string release, std::string section) {
 
 void Race::addSite(SiteLogic * sitelogic) {
   sites.push_back(sitelogic);
+}
+
+void Race::removeSite(SiteLogic * sitelogic) {
+  for (std::list<SiteLogic *>::iterator it = sites.begin(); it != sites.end(); it++) {
+    if (*it == sitelogic) {
+      sites.erase(it);
+      break;
+    }
+  }
+  SiteRace * siterace = sitelogic->getRace(name);
+  for (std::list<SiteRace *>::iterator it = donesites.begin(); it != donesites.end(); it++) {
+    if (*it == siterace) {
+      donesites.erase(it);
+      break;
+    }
+  }
+  sizes.erase(siterace);
 }
 
 std::list<SiteLogic *>::iterator Race::begin() {
@@ -180,6 +198,10 @@ void Race::reportDone(SiteRace * sr) {
 
 void Race::setUndone() {
   done = false;
+}
+
+void Race::abort() {
+  done = true;
 }
 
 void Race::reportSize(SiteRace * sr, FileList * fl, std::string subpath, std::list<std::string > * uniques, bool final) {

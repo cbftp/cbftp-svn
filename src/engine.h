@@ -29,6 +29,8 @@ class Engine {
   public:
     Engine();
     void newRace(std::string, std::string, std::list<std::string>);
+    void removeSiteFromRace(std::string, std::string);
+    void abortRace(std::string);
     void someRaceFileListRefreshed();
     int currentRaces();
     int allRaces();

@@ -100,6 +100,33 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
   }
 }
 
+void Engine::removeSiteFromRace(std::string release, std::string site) {
+  for (std::list<Race *>::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
+    if ((*it)->getName() == release) {
+      for (std::list<SiteLogic *>::iterator it2 = (*it)->begin(); it2 != (*it)->end(); it2++) {
+        if ((*it2)->getSite()->getName() == site) {
+          (*it2)->abortRace(release);
+          (*it)->removeSite(*it2);
+          break;
+        }
+      }
+    }
+  }
+}
+
+void Engine::abortRace(std::string release) {
+  for (std::list<Race *>::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
+    if ((*it)->getName() == release) {
+      (*it)->abort();
+      for (std::list<SiteLogic *>::iterator it2 = (*it)->begin(); it2 != (*it)->end(); it2++) {
+        (*it2)->abortRace(release);
+      }
+      currentraces.erase(it);
+      break;
+    }
+  }
+}
+
 void Engine::someRaceFileListRefreshed() {
   if (currentraces.size() > 0) {
     estimateRaceSizes();

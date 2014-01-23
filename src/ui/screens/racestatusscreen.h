@@ -4,6 +4,7 @@
 #include <map>
 
 #include "../uiwindow.h"
+#include "../menuselectoption.h"
 
 class UICommunicator;
 class Race;
@@ -21,6 +22,8 @@ private:
   Race * race;
   bool spaceous;
   bool smalldirs;
+  bool awaitingremovesite;
+  bool awaitingabort;
   unsigned int currnumsubpaths;
   unsigned int currguessedsize;
   unsigned int longestsubpath;
@@ -28,5 +31,7 @@ private:
   std::string sitestr;
   std::list<std::string> subpaths;
   UICommunicator * uicommunicator;
+  MenuSelectOption mso;
   std::map<std::string, int> filetagpos;
+  std::string removesite;
 };

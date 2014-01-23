@@ -30,6 +30,7 @@ class Race {
   public:
     Race(std::string, std::string);
     void addSite(SiteLogic *);
+    void removeSite(SiteLogic *);
     std::list<SiteLogic *>::iterator begin();
     std::list<SiteLogic *>::iterator end();
     std::string getName();
@@ -53,4 +54,5 @@ class Race {
     void reportDone(SiteRace *);
     void reportSize(SiteRace *, FileList *, std::string, std::list<std::string> *, bool);
     void setUndone();
+    void abort();
 };

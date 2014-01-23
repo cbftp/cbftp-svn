@@ -13,6 +13,7 @@
 
 #include "../uicommunicator.h"
 #include "../termint.h"
+#include "../menuselectoptiontextbutton.h"
 
 extern GlobalContext * global;
 
@@ -20,23 +21,26 @@ RaceStatusScreen::RaceStatusScreen(WINDOW * window, UICommunicator * uicommunica
   this->uicommunicator = uicommunicator;
   release = uicommunicator->getArg1();
   race = global->getEngine()->getRace(release);
-  sitestr = "";
   autoupdate = true;
   spaceous = false;
   smalldirs = false;
+  awaitingremovesite = false;
+  awaitingabort = false;
   currnumsubpaths = 0;
   currguessedsize = 0;
+  uicommunicator->checkoutCommand();
+  mso.enterFocusFrom(0);
+  init(window, row, col);
+}
+
+void RaceStatusScreen::redraw() {
+  sitestr = "";
   for (std::list<SiteLogic *>::iterator it = race->begin(); it != race->end(); it++) {
     sitestr += (*it)->getSite()->getName() + ",";
   }
   if (sitestr.length() > 0) {
     sitestr = sitestr.substr(0, sitestr.length() - 1);
   }
-  uicommunicator->checkoutCommand();
-  init(window, row, col);
-}
-
-void RaceStatusScreen::redraw() {
   werase(window);
   spaceous = false;
   TermInt::printStr(window, 1, 1, "Section: " + race->getSection());
@@ -153,6 +157,21 @@ void RaceStatusScreen::redraw() {
 }
 
 void RaceStatusScreen::update() {
+  if (uicommunicator->hasNewCommand()) {
+    if (uicommunicator->getCommand() == "yes") {
+      if (awaitingremovesite) {
+        global->getEngine()->removeSiteFromRace(release, removesite);
+        awaitingremovesite = false;
+      }
+      else if (awaitingabort) {
+        global->getEngine()->abortRace(race->getName());
+        awaitingremovesite = false;
+      }
+    }
+    uicommunicator->checkoutCommand();
+    redraw();
+    return;
+  }
   std::list<std::string> currsubpaths = race->getSubPaths();
   unsigned int sumguessedsize = 0;
   for (std::list<std::string>::iterator it = currsubpaths.begin(); it != currsubpaths.end(); it++) {
@@ -164,10 +183,12 @@ void RaceStatusScreen::update() {
   }
   int x = 1;
   int y = 8;
+  mso.clear();
   for (std::list<SiteLogic *>::iterator it = race->begin(); it != race->end(); it++) {
     SiteRace * sr = (*it)->getRace(release);
     std::string user = (*it)->getSite()->getUser();
-    TermInt::printStr(window, y, x, (*it)->getSite()->getName(), 4);
+    std::string sitename = (*it)->getSite()->getName();
+    mso.addTextButton(y, x, sitename, sitename);
     for (std::list<std::string>::iterator it2 = subpaths.begin(); it2 != subpaths.end(); it2++) {
       std::string origsubpath = *it2;
       if (origsubpath != "" && !smalldirs && race->guessedSize(origsubpath) < 5) {
@@ -214,13 +235,25 @@ void RaceStatusScreen::update() {
       y++;
     }
   }
+  mso.checkPointer();
+  unsigned int selected = mso.getSelectionPointer();
+  for (unsigned int i = 0; i < mso.size(); i++) {
+    MenuSelectOptionTextButton * msotb = (MenuSelectOptionTextButton *) mso.getElement(i);
+    bool isselected = selected == i;
+    if (isselected) {
+      wattron(window, A_REVERSE);
+    }
+    TermInt::printStr(window, msotb->getRow(), msotb->getCol(), msotb->getLabelText(), 4);
+    if (isselected) {
+      wattroff(window, A_REVERSE);
+    }
+  }
 }
 
 void RaceStatusScreen::keyPressed(unsigned int ch) {
   switch(ch) {
     case 27: // esc
-    case ' ':
-    case 10:
+    case 'c':
       uicommunicator->newCommand("return");
       break;
     case 's':
@@ -231,6 +264,30 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
         smalldirs = true;
       }
       uicommunicator->newCommand("redraw");
+      break;
+    case KEY_UP:
+      if (mso.goUp()) {
+        uicommunicator->newCommand("update");
+      }
+      break;
+    case KEY_DOWN:
+      if (mso.goDown()) {
+        uicommunicator->newCommand("update");
+      }
+      break;
+    case KEY_DC:
+    {
+      MenuSelectOptionTextButton * msotb = (MenuSelectOptionTextButton *) mso.getElement(mso.getSelectionPointer());
+      if (msotb != NULL) {
+        uicommunicator->newCommand("confirmation");
+        awaitingremovesite = true;
+        removesite = msotb->getLabelText();
+      }
+      break;
+    }
+    case 'B':
+      uicommunicator->newCommand("confirmation");
+      awaitingabort = true;
       break;
   }
 }
@@ -274,7 +331,7 @@ char RaceStatusScreen::getFileChar(bool owner, bool upload, bool download) {
 }
 
 std::string RaceStatusScreen::getLegendText() {
-  return "[Enter] Return - [R]emove site from race - [A]dd site to race - A[B]ort race - [s]how small dirs";
+  return "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - A[B]ort race - [s]how small dirs";
 }
 
 std::string RaceStatusScreen::getInfoLabel() {
