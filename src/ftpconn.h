@@ -98,6 +98,7 @@ class FTPConn : private EventReceiver {
     void doDELE(std::string);
     void doSTAT();
     void doSTAT(SiteRace *, FileList *);
+    void doSTATla();
     void doCPSV();
     void doPASV();
     void doPORT(std::string);

@@ -429,11 +429,20 @@ void FTPConn::doSTAT() {
   doSTAT(NULL, new FileList(site->getUser(), currentpath));
 }
 
+
+
 void FTPConn::doSTAT(SiteRace * race, FileList * filelist) {
   state = 6;
   currentrace = race;
   currentfl = filelist;
   sendEcho("STAT -l");
+}
+
+void FTPConn::doSTATla() {
+  state = 6;
+  currentrace = NULL;
+  currentfl = new FileList(site->getUser(), currentpath);
+  sendEcho("STAT -la");
 }
 
 void FTPConn::STATResponse() {

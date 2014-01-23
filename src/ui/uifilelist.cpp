@@ -405,3 +405,17 @@ void UIFileList::removeSeparators() {
     }
   }
 }
+
+void UIFileList::setCursorPosition(unsigned int position) {
+  if (sortedfiles.size()) {
+    while (position >= sortedfiles.size()) {
+      position--;
+    }
+    currentposition = position;
+    currentcursored = sortedfiles[currentposition];
+  }
+  else {
+    currentposition = 0;
+    currentcursored = NULL;
+  }
+}

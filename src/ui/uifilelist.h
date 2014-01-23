@@ -47,6 +47,7 @@ public:
   std::string getSortMethod();
   void removeFile(std::string);
   void toggleSeparators();
+  void setCursorPosition(unsigned int);
 };
 
 bool combinedSort(UIFile *, UIFile *);

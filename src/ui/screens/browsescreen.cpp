@@ -6,6 +6,7 @@
 #include "../../globalcontext.h"
 #include "../../skiplist.h"
 #include "../../eventlog.h"
+#include "../../filelist.h"
 
 #include "../uicommunicator.h"
 #include "../termint.h"
@@ -104,11 +105,20 @@ void BrowseScreen::redraw() {
         }
       }
       virgin = false;
+      unsigned int position = 0;
+      if (list.getPath() == filelist->getPath()) {
+        position = list.currentCursorPosition();
+      }
+      else {
+        currentviewspan = 0;
+      }
       list.parse(filelist);
       sitelogic->finishRequest(requestid);
       requestid = -1;
       sort();
-      currentviewspan = 0;
+      if (position) {
+        list.setCursorPosition(position);
+      }
       std::string path = list.getPath();
       for (std::list<StringPair>::iterator it = selectionhistory.begin(); it != selectionhistory.end(); it++) {
         if (it->getKey() == path) {
@@ -419,6 +429,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       }
       tickcount = 0;
       deleting = true;
+      deletingrecursive = false;
       if (cursoredfile->isDirectory()) {
         deletingrecursive = true;
       }

@@ -377,6 +377,7 @@ void SiteLogic::commandFail(int id) {
       break;
     case 14: // cwd fail
       if (connstatetracker[id].getRecursiveLogic()->isActive()) {
+        connstatetracker[id].getRecursiveLogic()->failedCwd();
         handleRecursiveLogic(id);
         return;
       }
@@ -777,7 +778,7 @@ void SiteLogic::handleRecursiveLogic(int id, FileList * fl) {
   }
   switch (connstatetracker[id].getRecursiveLogic()->getAction(conns[id]->getCurrentPath(), actiontarget)) {
     case RCL_ACTION_LIST:
-      conns[id]->doSTAT();
+      conns[id]->doSTATla();
       break;
     case RCL_ACTION_CWD:
       conns[id]->doCWD(actiontarget);
