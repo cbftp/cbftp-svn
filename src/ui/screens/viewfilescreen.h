@@ -35,6 +35,7 @@ private:
   bool hasnodisplay;
   bool externallyviewable;
   bool download;
+  bool legendupdated;
   std::vector<std::string> contents;
   std::string path;
   int pid;

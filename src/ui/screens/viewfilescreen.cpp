@@ -30,6 +30,7 @@ ViewFileScreen::ViewFileScreen(WINDOW * window, UICommunicator * uicommunicator,
   hasnodisplay = false;
   externallyviewable = false;
   download = false;
+  legendupdated = false;
   pid = 0;
   autoupdate = true;
   if (!global->getExternalFileViewing()->hasDisplay()) {
@@ -110,6 +111,7 @@ void ViewFileScreen::redraw() {
             }
           }
           viewingcontents = true;
+          autoupdate = false;
           redraw();
         }
         break;
@@ -124,12 +126,23 @@ void ViewFileScreen::redraw() {
 
 void ViewFileScreen::update() {
   if (download) {
-    if (pid && !global->getExternalFileViewing()->stillViewing(pid)) {
-      uicommunicator->newCommand("return");
-      return;
+    if (pid) {
+      if (!global->getExternalFileViewing()->stillViewing(pid)) {
+        uicommunicator->newCommand("return");
+        return;
+      }
+      else if (!legendupdated) {
+        uicommunicator->newCommand("updatesetlegend");
+        legendupdated = true;
+        return;
+      }
     }
     else if (!pid && global->getTransferManager()->transferStatus(requestid) != TRANSFER_IN_PROGRESS_UI) {
-      uicommunicator->newCommand("redraw");
+      redraw();
+      if (!legendupdated) {
+        uicommunicator->newCommand("updatesetlegend");
+        legendupdated = true;
+      }
       return;
     }
   }
@@ -179,7 +192,7 @@ std::string ViewFileScreen::getLegendText() {
   if (pid) {
     return "[Esc/Enter/c] Return - [k]ill external viewer - [K]ill ALL external viewers";
   }
-  if (!download) {
+  if (!download || !viewingcontents) {
     return "[Esc/Enter/c] Return";
   }
   return "[Arrowkeys] Navigate - [Esc/Enter/c] Return";
