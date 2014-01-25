@@ -57,6 +57,7 @@ class UserInterface : private EventReceiver {
     void switchToWindow(UIWindow *);
     static void * run(void *);
     void tick(int);
+    void globalKeyBinds(int);
   public:
     UserInterface();
     void runInstance();

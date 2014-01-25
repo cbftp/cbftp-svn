@@ -1,0 +1,205 @@
+#include "externalfileviewing.h"
+
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <signal.h>
+#include <vector>
+
+#include "globalcontext.h"
+#include "localstorage.h"
+#include "eventlog.h"
+#include "datafilehandler.h"
+
+extern GlobalContext * global;
+
+ExternalFileViewing::ExternalFileViewing() {
+  videoviewer = "mplayer";
+  audioviewer = "mplayer";
+  imageviewer = "eog";
+  pdfviewer = "evince";
+  display = false;
+  char * displayenv = getenv("DISPLAY");
+  if (displayenv != NULL) {
+    display = true;
+  }
+  signal(SIGCHLD, &sighandler_child);
+}
+
+bool ExternalFileViewing::isViewable(std::string path) {
+  return getViewApplication(path) != "";
+}
+
+int ExternalFileViewing::view(std::string path) {
+  return view(path, false);
+}
+
+int ExternalFileViewing::viewThenDelete(std::string path) {
+  return view(path, true);
+}
+
+int ExternalFileViewing::view(std::string path, bool deleteafter) {
+  std::string application = getViewApplication(path);
+  global->getEventLog()->log("ExternalFileViewing", "Opening " + path + " with " + application);
+  int pid = fork();
+  if (!pid) {
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+    execlp(application.c_str(), application.c_str(), path.c_str(), (char *)0);
+  }
+  else {
+    if (deleteafter) {
+      files[pid] = path;
+    }
+    subprocesses.push_back(pid);
+  }
+  return pid;
+}
+
+void ExternalFileViewing::killProcess(int pid) {
+  for (std::list<int>::iterator it = subprocesses.begin(); it != subprocesses.end(); it++) {
+    if (*it == pid) {
+      kill(pid, SIGHUP);
+      checkDeleteFile(*it);
+      subprocesses.erase(it);
+      break;
+    }
+  }
+}
+
+void ExternalFileViewing::killAll() {
+  for (std::list<int>::iterator it = subprocesses.begin(); it != subprocesses.end(); it++) {
+    kill(*it, SIGHUP);
+    checkDeleteFile(*it);
+  }
+  subprocesses.clear();
+}
+
+std::string ExternalFileViewing::getViewApplication(std::string path) {
+  std::string extension = getExtension(path);
+  std::string application;
+  if (extension == "mkv" || extension == "mp4" || extension == "avi" || extension == "wmv") {
+    application = getVideoViewer();
+  }
+  else if (extension == "mp3" || extension == "wav" || extension == "flac" || extension == "ogg") {
+    application = getAudioViewer();
+  }
+  else if (extension == "png" || extension == "gif" || extension == "jpeg" || extension == "jpg") {
+    application = getImageViewer();
+  }
+  else if (extension == "pdf") {
+    application = getPDFViewer();
+  }
+  return application;
+}
+
+std::string ExternalFileViewing::getExtension(std::string file) {
+  size_t suffixdotpos = file.rfind(".");
+  std::string extension;
+  if (suffixdotpos != std::string::npos && suffixdotpos > 0) {
+    extension = file.substr(suffixdotpos + 1);
+  }
+  return extension;
+}
+
+void ExternalFileViewing::hasDied(int pid) {
+  for (std::list<int>::iterator it = subprocesses.begin(); it != subprocesses.end(); it++) {
+    if (*it == pid) {
+      checkDeleteFile(*it);
+      subprocesses.erase(it);
+      break;
+    }
+  }
+}
+
+void ExternalFileViewing::checkDeleteFile(int pid) {
+  if (files.find(pid) != files.end()) {
+    global->getEventLog()->log("ExternalFileViewing", "Deleting temporary file: " + files[pid]);
+    global->getLocalStorage()->deleteFile(files[pid]);
+    files.erase(pid);
+  }
+}
+
+bool ExternalFileViewing::hasDisplay() {
+  return display;
+}
+
+bool ExternalFileViewing::stillViewing(int pid) {
+  for (std::list<int>::iterator it = subprocesses.begin(); it != subprocesses.end(); it++) {
+    if (*it == pid) {
+      return true;
+    }
+  }
+  return false;
+}
+
+std::string ExternalFileViewing::getVideoViewer() {
+  return videoviewer;
+}
+
+std::string ExternalFileViewing::getAudioViewer() {
+  return audioviewer;
+}
+
+std::string ExternalFileViewing::getImageViewer() {
+  return imageviewer;
+}
+
+std::string ExternalFileViewing::getPDFViewer() {
+  return pdfviewer;
+}
+
+void ExternalFileViewing::setVideoViewer(std::string viewer) {
+  videoviewer = viewer;
+}
+
+void ExternalFileViewing::setAudioViewer(std::string viewer) {
+  audioviewer = viewer;
+}
+
+void ExternalFileViewing::setImageViewer(std::string viewer) {
+  imageviewer = viewer;
+}
+
+void ExternalFileViewing::setPDFViewer(std::string viewer) {
+  pdfviewer = viewer;
+}
+
+void ExternalFileViewing::readConfiguration() {
+  std::vector<std::string> lines;
+  global->getDataFileHandler()->getDataFor("ExternalFileViewing", &lines);
+  std::vector<std::string>::iterator it;
+  std::string line;
+  for (it = lines.begin(); it != lines.end(); it++) {
+    line = *it;
+    if (line.length() == 0 ||line[0] == '#') continue;
+    size_t tok = line.find('=');
+    std::string setting = line.substr(0, tok);
+    std::string value = line.substr(tok + 1);
+    if (!setting.compare("video")) {
+      setVideoViewer(value);
+    }
+    else if (!setting.compare("audio")) {
+      setAudioViewer(value);
+    }
+    else if (!setting.compare("image")) {
+      setImageViewer(value);
+    }
+    else if (!setting.compare("pdf")) {
+      setPDFViewer(value);
+    }
+  }
+}
+
+void ExternalFileViewing::writeState() {
+  std::string filetag = "ExternalFileViewing";
+  DataFileHandler * filehandler = global->getDataFileHandler();
+  filehandler->addOutputLine(filetag, "video=" + getVideoViewer());
+  filehandler->addOutputLine(filetag, "audio=" + getAudioViewer());
+  filehandler->addOutputLine(filetag, "image=" + getImageViewer());
+  filehandler->addOutputLine(filetag, "pdf=" + getPDFViewer());
+}
+
+void sighandler_child(int) {
+  int pid = wait(NULL);
+  global->getExternalFileViewing()->hasDied(pid);
+}

@@ -18,6 +18,7 @@ class SkipList;
 class EventLog;
 class ProxyManager;
 class LocalStorage;
+class ExternalFileViewing;
 
 class GlobalContext {
   private:
@@ -37,6 +38,7 @@ class GlobalContext {
     EventLog * el;
     ProxyManager * pm;
     LocalStorage * ls;
+    ExternalFileViewing * efv;
     pthread_mutex_t time_mutex;
     std::string compiletime;
     std::string svnrev;
@@ -51,7 +53,7 @@ class GlobalContext {
     void linkComponents(DataFileHandler *, IOManager *, Engine *,
         UICommunicator *, SiteManager *, SiteLogicManager *, TransferManager *,
         TickPoke *, RemoteCommandHandler *, SkipList *, ProxyManager *,
-        LocalStorage *);
+        LocalStorage *, ExternalFileViewing *);
     SSL_CTX * getSSLCTX();
     Engine * getEngine();
     DataFileHandler * getDataFileHandler();
@@ -67,6 +69,7 @@ class GlobalContext {
     EventLog * getEventLog();
     ProxyManager * getProxyManager();
     LocalStorage * getLocalStorage();
+    ExternalFileViewing * getExternalFileViewing();
     pthread_attr_t * getPthreadAttr();
     static int ctimeMSec();
     void updateTime();

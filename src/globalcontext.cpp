@@ -32,7 +32,8 @@ void GlobalContext::linkWorkManager(WorkManager * wm) {
 void GlobalContext::linkComponents(DataFileHandler * dfh, IOManager * iom,
     Engine * e, UICommunicator * uic, SiteManager * sm, SiteLogicManager * slm,
     TransferManager * tm, TickPoke * tp, RemoteCommandHandler * rch,
-    SkipList * sl, ProxyManager * pm, LocalStorage * ls) {
+    SkipList * sl, ProxyManager * pm, LocalStorage * ls,
+    ExternalFileViewing * efv) {
   this->dfh = dfh;
   this->iom = iom;
   this->e = e;
@@ -45,6 +46,7 @@ void GlobalContext::linkComponents(DataFileHandler * dfh, IOManager * iom,
   this->sl = sl;
   this->pm = pm;
   this->ls = ls;
+  this->efv = efv;
 }
 
 SSL_CTX * GlobalContext::getSSLCTX() {
@@ -105,6 +107,10 @@ ProxyManager * GlobalContext::getProxyManager() {
 
 LocalStorage * GlobalContext::getLocalStorage() {
   return ls;
+}
+
+ExternalFileViewing * GlobalContext::getExternalFileViewing() {
+  return efv;
 }
 
 pthread_attr_t * GlobalContext::getPthreadAttr() {

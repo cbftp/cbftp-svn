@@ -3,6 +3,10 @@
 #include "localtransfer.h"
 #include "globalcontext.h"
 #include "transfermonitor.h"
+#include "datafilehandler.h"
+
+#include <stdio.h>
+#include <vector>
 
 extern GlobalContext * global;
 
@@ -55,4 +59,42 @@ int LocalStorage::getFileContent(std::string filename, char * data) {
   filestream.open((temppath + "/" + filename).c_str(), std::ios::binary | std::ios::in);
   filestream.read(data, MAXREAD);
   return filestream.gcount();
+}
+
+void LocalStorage::deleteFile(std::string filename) {
+  if (filename.length() > 0 && filename[0] != '/') {
+    filename = temppath + "/" + filename;
+  }
+  remove(filename.c_str());
+}
+
+std::string LocalStorage::getTempPath() {
+  return temppath;
+}
+
+void LocalStorage::setTempPath(std::string path) {
+  temppath = path;
+}
+
+void LocalStorage::readConfiguration() {
+  std::vector<std::string> lines;
+  global->getDataFileHandler()->getDataFor("LocalStorage", &lines);
+  std::vector<std::string>::iterator it;
+  std::string line;
+  for (it = lines.begin(); it != lines.end(); it++) {
+    line = *it;
+    if (line.length() == 0 ||line[0] == '#') continue;
+    size_t tok = line.find('=');
+    std::string setting = line.substr(0, tok);
+    std::string value = line.substr(tok + 1);
+    if (!setting.compare("temppath")) {
+      setTempPath(value);
+    }
+  }
+}
+
+void LocalStorage::writeState() {
+  std::string filetag = "LocalStorage";
+  DataFileHandler * filehandler = global->getDataFileHandler();
+  filehandler->addOutputLine(filetag, "temppath=" + getTempPath());
 }

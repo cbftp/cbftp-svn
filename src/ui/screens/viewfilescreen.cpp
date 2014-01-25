@@ -10,6 +10,7 @@
 #include "../../localstorage.h"
 #include "../../filelist.h"
 #include "../../file.h"
+#include "../../externalfileviewing.h"
 
 extern GlobalContext * global;
 
@@ -25,14 +26,48 @@ ViewFileScreen::ViewFileScreen(WINDOW * window, UICommunicator * uicommunicator,
   file = uicommunicator->getArg2();
   filelist = (FileList *) uicommunicator->getPointerArg();
   sitelogic = global->getSiteLogicManager()->getSiteLogic(site);
-  //requestid = sitelogic->requestViewFile(path, file);
-  requestid = global->getTransferManager()->download(file, sitelogic, filelist);
+  size = filelist->getFile(file)->getSize();
+  hasnodisplay = false;
+  externallyviewable = false;
+  download = false;
+  pid = 0;
+  autoupdate = true;
+  if (!global->getExternalFileViewing()->hasDisplay()) {
+    hasnodisplay = true;
+  }
+  if (global->getExternalFileViewing()->isViewable(file)) {
+    externallyviewable = true;
+    if (!hasnodisplay) {
+      download = true;
+    }
+  }
+  else {
+    if (size <= MAXOPENSIZE) {
+      download = true;
+    }
+  }
+  if (download) {
+    requestid = global->getTransferManager()->download(file, sitelogic, filelist);
+  }
+  path = global->getLocalStorage()->getTempPath() + "/" + file;
   uicommunicator->expectBackendPush();
   init(window, row, col);
 }
 
 void ViewFileScreen::redraw() {
   werase(window);
+  if (!download) {
+    autoupdate = false;
+    if (!externallyviewable) {
+      TermInt::printStr(window, 1, 1, file + " is too large to download and open in the internal viewer.");
+      TermInt::printStr(window, 2, 1, "The maximum file size for internal viewing is set to " + global->int2Str(MAXOPENSIZE) + " bytes.");
+    }
+    else if (hasnodisplay) {
+      TermInt::printStr(window, 1, 1, file + " cannot be opened in an external viewer.");
+      TermInt::printStr(window, 2, 1, "The DISPLAY environment variable is not set.");
+    }
+    return;
+  }
   if (!viewingcontents) {
     int transferstatus = global->getTransferManager()->transferStatus(requestid);
     char * tmpdata;
@@ -43,9 +78,18 @@ void ViewFileScreen::redraw() {
         break;
       case TRANSFER_FAILED:
         TermInt::printStr(window, 1, 1, "Download of " + file + " from " + site + " failed.");
+        autoupdate = false;
         break;
       case TRANSFER_SUCCESSFUL:
-        if (filelist->getFile(file)->getSize() <= MAXOPENSIZE) {
+        if (externallyviewable) {
+          if (!pid) {
+            pid = global->getExternalFileViewing()->viewThenDelete(path);
+          }
+          TermInt::printStr(window, 1, 1, "Opening " + file + " with: " + global->getExternalFileViewing()->getViewApplication(file));
+          TermInt::printStr(window, 3, 1, "Press 'k' to kill this external viewer instance.");
+          TermInt::printStr(window, 4, 1, "You can always press 'K' to kill ALL external viewers.");
+        }
+        else {
           tmpdata = (char *) malloc(MAXOPENSIZE);
           tmpdatalen = global->getLocalStorage()->getFileContent(file, tmpdata);
           {
@@ -67,9 +111,6 @@ void ViewFileScreen::redraw() {
           viewingcontents = true;
           redraw();
         }
-        else {
-          TermInt::printStr(window, 1, 1, "Download of " + file + " from " + site + " successful, but the file is too large to open");
-        }
         break;
     }
   }
@@ -81,9 +122,15 @@ void ViewFileScreen::redraw() {
 }
 
 void ViewFileScreen::update() {
-  if (global->getTransferManager()->transferStatus(requestid) != TRANSFER_IN_PROGRESS_UI) {
-    uicommunicator->newCommand("redraw");
-    return;
+  if (download) {
+    if (pid && !global->getExternalFileViewing()->stillViewing(pid)) {
+      uicommunicator->newCommand("return");
+      return;
+    }
+    else if (!pid && global->getTransferManager()->transferStatus(requestid) != TRANSFER_IN_PROGRESS_UI) {
+      uicommunicator->newCommand("redraw");
+      return;
+    }
   }
 }
 
@@ -119,15 +166,26 @@ void ViewFileScreen::keyPressed(unsigned int ch) {
       }
       uicommunicator->newCommand("redraw");
       break;
+    case 'k':
+      if (pid) {
+        global->getExternalFileViewing()->killProcess(pid);
+      }
+      break;
   }
 }
 
 std::string ViewFileScreen::getLegendText() {
+  if (pid) {
+    return "[Esc/Enter/c] Return - [k]ill external viewer - [K]ill ALL external viewers";
+  }
+  if (!download) {
+    return "[Esc/Enter/c] Return";
+  }
   return "[Arrowkeys] Navigate - [Esc/Enter/c] Return";
 }
 
 std::string ViewFileScreen::getInfoLabel() {
-  return "VIEW FILE";
+  return "VIEW FILE: " + file;
 }
 
 bool ViewFileScreen::goDown() {

@@ -31,7 +31,13 @@ private:
   unsigned int xmax;
   unsigned int y;
   unsigned int ymax;
+  unsigned long long int size;
+  bool hasnodisplay;
+  bool externallyviewable;
+  bool download;
   std::vector<std::string> contents;
+  std::string path;
+  int pid;
   bool goDown();
   bool goUp();
 };

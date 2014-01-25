@@ -12,6 +12,8 @@
 #include "../datafilehandler.h"
 #include "../eventlog.h"
 #include "../proxymanager.h"
+#include "../externalfileviewing.h"
+#include "../localstorage.h"
 
 #include "legendwindow.h"
 #include "infowindow.h"
@@ -37,6 +39,7 @@
 #include "screens/editproxyscreen.h"
 #include "screens/viewfilescreen.h"
 #include "screens/nukescreen.h"
+#include "screens/fileviewersettingsscreen.h"
 
 extern GlobalContext * global;
 
@@ -193,6 +196,7 @@ void UserInterface::runInstance() {
   UIWindow * editproxyscreen = NULL;
   UIWindow * viewfilescreen = NULL;
   UIWindow * nukescreen = NULL;
+  UIWindow * fileviewersettingsscreen = NULL;
   legendwindow = new LegendWindow(legend, 2, col);
   infowindow = new InfoWindow(info, 2, col);
   if (global->getDataFileHandler()->fileExists()) {
@@ -237,6 +241,7 @@ void UserInterface::runInstance() {
       case UI_EVENT_KEYBOARD:
         ch = keyqueue.front();
         keyqueue.pop_front();
+        globalKeyBinds(ch);
         topwindow->keyPressed(ch);
         break;
       case UI_EVENT_UPDATE:
@@ -312,6 +317,10 @@ void UserInterface::runInstance() {
       else if (command == "nuke") {
         nukescreen = new NukeScreen(main, &uicommunicator, mainrow, maincol);
         switchToWindow(nukescreen);
+      }
+      else if (command == "fileviewersettings") {
+        fileviewersettingsscreen = new FileViewerSettingsScreen(main, &uicommunicator, mainrow, maincol);
+        switchToWindow(fileviewersettingsscreen);
       }
       else if (command == "newrace") {
         newracescreen = new NewRaceScreen(main, &uicommunicator, mainrow, maincol);
@@ -414,9 +423,11 @@ void UserInterface::runInstance() {
           global->getIOManager()->readConfiguration();
           global->getSiteManager()->readConfiguration();
           global->getRemoteCommandHandler()->readConfiguration();
+          global->getExternalFileViewing()->readConfiguration();
           uicommunicator.readConfiguration();
           global->getSkipList()->readConfiguration();
           global->getProxyManager()->readConfiguration();
+          global->getLocalStorage()->readConfiguration();
           enableInfo();
           if (uicommunicator.legendEnabled()) {
             enableLegend();
@@ -497,4 +508,12 @@ void * UserInterface::run(void * arg) {
 
 UICommunicator * UserInterface::getCommunicator() {
   return &uicommunicator;
+}
+
+void UserInterface::globalKeyBinds(int ch) {
+  switch(ch) {
+    case 'K':
+      global->getExternalFileViewing()->killAll();
+      break;
+  }
 }

@@ -21,6 +21,7 @@
 #include "eventlog.h"
 #include "proxymanager.h"
 #include "localstorage.h"
+#include "externalfileviewing.h"
 
 Main::Main() {
   std::string datadirpath = std::string(getenv("HOME")) + "/" + DATAPATH;
@@ -65,9 +66,11 @@ Main::Main() {
   SkipList * sl = new SkipList();
   ProxyManager * pm = new ProxyManager();
   LocalStorage * ls = new LocalStorage();
-  global->linkComponents(dfh, iom, e, ui->getCommunicator(), sm, slm, tm, tp, rch, sl, pm, ls);
+  ExternalFileViewing * efv = new ExternalFileViewing();
+  global->linkComponents(dfh, iom, e, ui->getCommunicator(), sm, slm, tm, tp, rch, sl, pm, ls, efv);
   if (!ui->init()) exit(1);
   tp->tickerLoop();
+  global->getExternalFileViewing()->killAll();
   global->getUICommunicator()->kill();
   if (global->getDataFileHandler()->isInitialized()) {
     std::cout << "Saving data to file..." << std::endl;
@@ -77,6 +80,8 @@ Main::Main() {
     global->getSkipList()->writeState();
     global->getProxyManager()->writeState();
     global->getIOManager()->writeState();
+    global->getExternalFileViewing()->writeState();
+    global->getLocalStorage()->writeState();
     global->getDataFileHandler()->writeFile();
     std::cout << "Done, exiting..." << std::endl << std::flush;
   }
@@ -94,8 +99,8 @@ void sighandler(int sig) {
 
 void sighandler_winch(int sig) {
   signal(SIGWINCH, &sighandler_ignore);
-	global->getUICommunicator()->terminalSizeChanged();
-	signal(SIGWINCH, &sighandler_winch);
+  global->getUICommunicator()->terminalSizeChanged();
+  signal(SIGWINCH, &sighandler_winch);
 }
 
 void sighandler_ignore(int sig) {

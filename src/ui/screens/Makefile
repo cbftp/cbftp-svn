@@ -5,7 +5,7 @@ OBJECTS = loginscreen.o mainscreen.o sitestatusscreen.o editsitescreen.o \
 	addsectionscreen.o globaloptionsscreen.o newracescreen.o \
 	racestatusscreen.o scoreboardscreen.o rawcommandscreen.o skiplistscreen.o \
 	changekeyscreen.o eventlogscreen.o editproxyscreen.o proxyoptionsscreen.o \
-	viewfilescreen.o nukescreen.o
+	viewfilescreen.o nukescreen.o fileviewersettingsscreen.o
 
 all: ${OBJECTS}
 

@@ -63,6 +63,7 @@ GlobalOptionsScreen::GlobalOptionsScreen(WINDOW * window, UICommunicator * uicom
   y++;
   mso.addTextButtonNoContent(y++, x, "skiplist", "Configure skiplist...");
   mso.addTextButtonNoContent(y++, x, "proxy", "Configure proxy settings...");
+  mso.addTextButtonNoContent(y++, x, "fileviewer", "Configure file viewing...");
   mso.addTextButtonNoContent(y++, x, "changekey", "Change encryption key...");
   init(window, row, col);
 }
@@ -137,6 +138,10 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
       }
       if (msoe->getIdentifier() == "proxy") {
         uicommunicator->newCommand("proxy");
+        return;
+      }
+      if (msoe->getIdentifier() == "fileviewer") {
+        uicommunicator->newCommand("fileviewersettings");
         return;
       }
       activation = msoe->activate();
