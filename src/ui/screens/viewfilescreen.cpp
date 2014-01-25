@@ -92,6 +92,7 @@ void ViewFileScreen::redraw() {
         else {
           tmpdata = (char *) malloc(MAXOPENSIZE);
           tmpdatalen = global->getLocalStorage()->getFileContent(file, tmpdata);
+          global->getLocalStorage()->deleteFile(file);
           {
             int last = 0;
             for (int i = 0; i < tmpdatalen; i++) {
