@@ -71,6 +71,9 @@ File::File(std::string statline, int touch) {
   else {
     extension = "";
   }
+  for (unsigned int i = 0; i < extension.length(); i++) {
+    extension[i] = tolower(extension[i]);
+  }
   this->touch = touch;
   updateflag = false;
   downloading = 0;

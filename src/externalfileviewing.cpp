@@ -4,6 +4,7 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <vector>
+#include <cctype>
 
 #include "globalcontext.h"
 #include "localstorage.h"
@@ -77,13 +78,17 @@ void ExternalFileViewing::killAll() {
 std::string ExternalFileViewing::getViewApplication(std::string path) {
   std::string extension = getExtension(path);
   std::string application;
-  if (extension == "mkv" || extension == "mp4" || extension == "avi" || extension == "wmv") {
+  if (extension == "mkv" || extension == "mp4" || extension == "avi" ||
+      extension == "wmv" || extension == "vob" || extension == "mov" ||
+      extension == "mpg" || extension == "mpeg") {
     application = getVideoViewer();
   }
-  else if (extension == "mp3" || extension == "wav" || extension == "flac" || extension == "ogg") {
+  else if (extension == "mp3" || extension == "wav" || extension == "flac" ||
+      extension == "ogg" || extension == "wma" || extension == "mid") {
     application = getAudioViewer();
   }
-  else if (extension == "png" || extension == "gif" || extension == "jpeg" || extension == "jpg") {
+  else if (extension == "png" || extension == "gif" || extension == "jpeg" ||
+      extension == "jpg" || extension == "bmp") {
     application = getImageViewer();
   }
   else if (extension == "pdf") {
@@ -97,6 +102,9 @@ std::string ExternalFileViewing::getExtension(std::string file) {
   std::string extension;
   if (suffixdotpos != std::string::npos && suffixdotpos > 0) {
     extension = file.substr(suffixdotpos + 1);
+  }
+  for (unsigned int i = 0; i < extension.length(); i++) {
+    extension[i] = tolower(extension[i]);
   }
   return extension;
 }
