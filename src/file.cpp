@@ -1,6 +1,7 @@
 #include "file.h"
 
 #include <stdlib.h>
+#include <cctype>
 
 File::File(std::string name, std::string user) {
   directory = false;
@@ -11,13 +12,7 @@ File::File(std::string name, std::string user) {
   size = 0;
   lastmodified = "0";
   this->name = name;
-  size_t suffixdotpos = name.rfind(".");
-  if (suffixdotpos != std::string::npos && suffixdotpos > 0) {
-    extension = name.substr(suffixdotpos + 1);
-  }
-  else {
-    extension = "";
-  }
+  extension = getExtension(name);
   touch = 0;
   updateflag = false;
   downloading = 0;
@@ -64,16 +59,7 @@ File::File(std::string statline, int touch) {
       linktarget = "";
     }
   }
-  size_t suffixdotpos = name.rfind(".");
-  if (suffixdotpos != std::string::npos && suffixdotpos > 0) {
-    extension = name.substr(suffixdotpos + 1);
-  }
-  else {
-    extension = "";
-  }
-  for (unsigned int i = 0; i < extension.length(); i++) {
-    extension[i] = tolower(extension[i]);
-  }
+  extension = getExtension(name);
   this->touch = touch;
   updateflag = false;
   downloading = 0;
@@ -193,4 +179,16 @@ void File::finishUpload() {
 
 int File::getTouch() {
   return touch;
+}
+
+std::string File::getExtension(std::string file) {
+  std::string extension;
+  size_t suffixdotpos = file.rfind(".");
+  if (suffixdotpos != std::string::npos && suffixdotpos > 0) {
+    extension = file.substr(suffixdotpos + 1);
+  }
+  for (unsigned int i = 0; i < extension.length(); i++) {
+    extension[i] = tolower(extension[i]);
+  }
+  return extension;
 }

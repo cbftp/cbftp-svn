@@ -6,6 +6,7 @@ class Site;
 
 class File {
   private:
+    std::string getExtension(std::string);
     std::string name;
     std::string linktarget;
     std::string extension;
