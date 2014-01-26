@@ -10,7 +10,7 @@
 extern GlobalContext * global;
 
 ProxyManager::ProxyManager() {
-
+  defaultproxy = NULL;
 }
 
 void ProxyManager::addProxy(Proxy * proxy) {
