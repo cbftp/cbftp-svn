@@ -12,5 +12,8 @@ public:
   void setText(std::string);
 private:
   std::string text;
+  int latestid;
+  int latestcount;
+  std::string latesttext;
   unsigned int currentpos;
 };

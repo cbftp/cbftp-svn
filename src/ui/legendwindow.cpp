@@ -1,9 +1,15 @@
 #include "legendwindow.h"
 
 #include "termint.h"
+#include "../eventlog.h"
+#include "../globalcontext.h"
+
+extern GlobalContext * global;
 
 LegendWindow::LegendWindow(WINDOW * window, int row, int col) {
   text = "";
+  latestid = 0;
+  latestcount = 8;
   init(window, row, col);
 }
 
@@ -23,6 +29,20 @@ void LegendWindow::redraw() {
 }
 
 void LegendWindow::update() {
+  if (global->getEventLog()->getLatestId() != latestid) {
+    latestid = global->getEventLog()->getLatestId();
+    latestcount = 0;
+    latesttext = global->getEventLog()->getLatest();
+    for (unsigned int printpos = 4; printpos < col - 4; printpos++) {
+      TermInt::printChar(window, 1, printpos, ' ');
+    }
+    TermInt::printStr(window, 1, 4, "EVENT: " + latesttext, col - 4 - 4);
+    return;
+  }
+  if (latestcount < 8) {
+    latestcount++;
+    return;
+  }
   unsigned int printpos = 4;
   unsigned int textlen = text.length();
   if (textlen > 0) {
