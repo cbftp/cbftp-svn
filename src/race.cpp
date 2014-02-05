@@ -19,6 +19,7 @@ Race::Race(std::string release, std::string section) {
   this->section = section;
   done = false;
   maxfilelistsize = 0;
+  bestunknownfilesizeestimate = 50000000;
   estimatedsubpaths.push_back("");
 }
 
@@ -89,10 +90,10 @@ unsigned int Race::guessedSize(std::string subpath) {
 
 unsigned long long int Race::guessedFileSize(std::string subpath, std::string file) {
   if (sizelocationtrackers.find(subpath) == sizelocationtrackers.end()) {
-    return 0;
+    return bestunknownfilesizeestimate;
   }
   if (sizelocationtrackers[subpath].find(file) == sizelocationtrackers[subpath].end()) {
-    return 0;
+    return bestunknownfilesizeestimate;
   }
   return sizelocationtrackers[subpath][file].getEstimatedSize();
 }
@@ -215,7 +216,10 @@ void Race::reportSize(SiteRace * sr, FileList * fl, std::string subpath, std::li
       sizelocationtrackers[subpath][*itu] = SizeLocationTrack();
     }
     if ((file = fl->getFile(*itu)) != NULL) {
-      sizelocationtrackers[subpath][*itu].add(sr, file->getSize());
+      if (sizelocationtrackers[subpath][*itu].add(sr, file->getSize())) {
+        estimatedfilesizes[*itu] = sizelocationtrackers[subpath][*itu].getEstimatedSize();
+        recalculateBestUnknownFileSizeEstimate();
+      }
     }
     else {
       sizelocationtrackers[subpath][*itu].add(sr, 0);
@@ -257,5 +261,48 @@ void Race::reportSize(SiteRace * sr, FileList * fl, std::string subpath, std::li
       std::sort(subpathsizes.begin(), subpathsizes.end());
       estimatedsize[subpath] = thisguessedsize;
     }
+  }
+}
+
+void Race::recalculateBestUnknownFileSizeEstimate() {
+  std::map<std::string, unsigned long long int>::iterator it;
+  unsigned long long int size;
+  std::map<unsigned long long int, int> commonsizes;
+  std::map<unsigned long long int, int>::iterator it2;
+  for (it = estimatedfilesizes.begin(); it != estimatedfilesizes.end(); it++) {
+    size = it->second;
+    if (!size) {
+      continue;
+    }
+    it2 = commonsizes.find(size);
+    if (it2 != commonsizes.end()) {
+      commonsizes[size] = it2->second + 1;
+    }
+    else {
+      commonsizes[size] = 1;
+    }
+  }
+  unsigned long long int mostcommon = 0;
+  int mostcommoncount = 0;
+  unsigned long long int largest = 0;
+  int largestcount = 1;
+  for (it2 = commonsizes.begin(); it2 != commonsizes.end(); it2++) {
+    if (it2->second > mostcommoncount) {
+      mostcommon = it2->first;
+      mostcommoncount = it2->second;
+    }
+    if (it2->first > largest) {
+      largest = it2->first;
+      largestcount = 1;
+    }
+    else if (it2->first == largest) {
+      largestcount++;
+    }
+  }
+  if (largestcount >= 2 || largestcount == mostcommoncount) {
+    bestunknownfilesizeestimate = largest;
+  }
+  else {
+    bestunknownfilesizeestimate = mostcommon;
   }
 }

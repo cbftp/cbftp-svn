@@ -13,6 +13,6 @@ public:
   SizeLocationTrack();
   unsigned long long int getEstimatedSize();
   int numSites();
-  void add(SiteRace *, unsigned long long int);
+  bool add(SiteRace *, unsigned long long int);
   void remove(SiteRace *);
 };

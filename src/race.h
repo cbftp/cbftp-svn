@@ -12,6 +12,7 @@ class FileList;
 
 class Race {
   private:
+    void recalculateBestUnknownFileSizeEstimate();
     std::string name;
     std::string group;
     std::string section;
@@ -22,6 +23,8 @@ class Race {
     std::map<std::string, std::list<SiteRace *> > sfvreports;
     std::map<std::string, unsigned int> guessedsize;
     std::map<std::string, unsigned int> estimatedsize;
+    std::map<std::string, unsigned long long int> estimatedfilesizes;
+    unsigned long long int bestunknownfilesizeestimate;
     std::map<std::string, std::list<SiteRace *> > subpathoccurences;
     std::list<std::string> estimatedsubpaths;
     std::list<std::string> guessedfilelist;

@@ -12,13 +12,15 @@ int SizeLocationTrack::numSites() {
   return sitesizes.size();
 }
 
-void SizeLocationTrack::add(SiteRace * site, unsigned long long int size) {
+bool SizeLocationTrack::add(SiteRace * site, unsigned long long int size) {
   std::map<SiteRace *, unsigned long long int>::iterator it;
   it = sitesizes.find(site);
   if (it == sitesizes.end() || it->second != size) {
     sitesizes[site] = size;
     recalculate();
+    return true;
   }
+  return false;
 }
 
 void SizeLocationTrack::remove(SiteRace * site) {
@@ -37,6 +39,9 @@ void SizeLocationTrack::recalculate() {
   unsigned long long int size;
   for (it = sitesizes.begin(); it != sitesizes.end(); it++) {
     size = it->second;
+    if (!size) {
+      continue;
+    }
     it2 = commonsizes.find(size);
     if (it2 != commonsizes.end()) {
       commonsizes[size] = it2->second + 1;
