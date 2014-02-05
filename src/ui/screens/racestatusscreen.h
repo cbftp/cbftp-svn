@@ -20,7 +20,6 @@ public:
   std::string getInfoLabel();
 private:
   Race * race;
-  bool spaceous;
   bool smalldirs;
   bool awaitingremovesite;
   bool awaitingabort;
@@ -33,5 +32,6 @@ private:
   UICommunicator * uicommunicator;
   MenuSelectOption mso;
   std::map<std::string, int> filetagpos;
+  std::map<std::string, std::string> filenametags;
   std::string removesite;
 };

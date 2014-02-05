@@ -22,7 +22,6 @@ RaceStatusScreen::RaceStatusScreen(WINDOW * window, UICommunicator * uicommunica
   release = uicommunicator->getArg1();
   race = global->getEngine()->getRace(release);
   autoupdate = true;
-  spaceous = false;
   smalldirs = false;
   awaitingremovesite = false;
   awaitingabort = false;
@@ -42,7 +41,6 @@ void RaceStatusScreen::redraw() {
     sitestr = sitestr.substr(0, sitestr.length() - 1);
   }
   werase(window);
-  spaceous = false;
   TermInt::printStr(window, 1, 1, "Section: " + race->getSection());
   TermInt::printStr(window, 1, 20, "Sites: " + sitestr);
   std::list<std::string> currsubpaths = race->getSubPaths();
@@ -66,7 +64,7 @@ void RaceStatusScreen::redraw() {
       subpathpresent += "/sfv";
     }
     subpathpresent += ")";
-    if (guessedsize >= 5 || sfvreported) {
+    if (pathshow == "/" || guessedsize >= 5 || sfvreported) {
       subpaths.push_back(*it);
     }
     sumguessedsize += guessedsize;
@@ -75,54 +73,92 @@ void RaceStatusScreen::redraw() {
   TermInt::printStr(window, 2, 1, "Subpaths: " + subpathpresent);
   int y = 4;
   longestsubpath = 0;
-  std::list<std::string> filenames;
+  std::list<std::string> filetags;
   for (std::list<std::string>::iterator it = subpaths.begin(); it != subpaths.end(); it++) {
     if (it->length() > longestsubpath) {
       longestsubpath = it->length();
     }
   }
+  std::map<std::string, bool> bannedsuffixes;
+  std::map<std::string, std::string> tags;
+  filenametags.clear();
   for (std::list<std::string>::iterator it = subpaths.begin(); it != subpaths.end(); it++) {
     race->prepareGuessedFileList(*it);
-    for (std::list<std::string>::iterator it = race->guessedFileListBegin(); it != race->guessedFileListEnd(); it++) {
-      std::string filename = *it;
-      while (filename.length() < 3) {
-        filename += " ";
-      }
-      std::string lastchars = filename.substr(filename.length() - 3);
-      bool duplicate = false;
-      for (std::list<std::string>::iterator it3 = filenames.begin(); it3 != filenames.end(); it3++) {
-        std::string lastchars2 = *it3;
-        if (lastchars2.length() < 3) lastchars += " ";
-        lastchars2 = lastchars2.substr(lastchars2.length() - 3);
-        if (lastchars == lastchars2) {
-          duplicate = true;
+    bool finished = false;
+    std::map<std::string, std::string> localtags;
+    while (!finished) {
+      finished = true;
+      for (std::list<std::string>::iterator it = race->guessedFileListBegin(); it != race->guessedFileListEnd(); it++) {
+        std::string filename = *it;
+        while (filename.length() < 3) {
+          filename += " ";
+        }
+        std::string tag = filename.substr(filename.length() - 3); // first tag attempt, last three chars
+        if (bannedsuffixes.find(tag) != bannedsuffixes.end()) {
+          tag = filename.substr(0, 3);                            // second tag attempt, first three chars
+          if (bannedsuffixes.find(tag) != bannedsuffixes.end()) {
+            size_t dotpos = filename.rfind(".");
+            if (dotpos == std::string::npos) {
+              dotpos = filename.length() - 1;
+            }
+            for (unsigned int i = 3; i <= dotpos && bannedsuffixes.find(tag) != bannedsuffixes.end(); i++) {
+              tag = filename.substr(dotpos - i, 3);               // many tag attempts stepping from the end
+            }
+            if (bannedsuffixes.find(tag) != bannedsuffixes.end()) {
+              for (int i = 0; i < 1000; i++) { // last resort
+                tag = global->int2Str(i);
+                while (tag.length() < 3) {
+                  tag = "0" + tag;
+                }
+                if (bannedsuffixes.find(tag) == bannedsuffixes.end()) {
+                  break;
+                }
+                if (i == 999) {
+                  return; // whatever, this should never happen
+                }
+              }
+            }
+          }
+        }
+        if (localtags.find(tag) != localtags.end()) {
+          bannedsuffixes[tag] = true;
+          localtags.clear();
+          finished = false;
           break;
         }
-      }
-      if (!duplicate) {
-        filenames.push_back(filename);
+        localtags[tag] = filename;
       }
     }
+    if (!finished) {
+      continue;
+    }
+    for (std::map<std::string, std::string>::iterator it = localtags.begin(); it != localtags.end(); it++) {
+      tags[it->first] = it->second;
+      filenametags[it->second] = it->first;
+    }
   }
-  filenames.sort();
-  for (std::list<std::string>::iterator it = filenames.begin(); it != filenames.end(); it++) {
-    if (it->length() > 3 && it->substr(it->length() - 3) == "rar") {
-      filenames.push_front(*it);
-      filenames.erase(it);
+  for (std::map<std::string, std::string>::iterator it = tags.begin(); it != tags.end(); it++) {
+    filetags.push_back(it->first);
+  }
+  filetags.sort();
+  for (std::list<std::string>::iterator it = filetags.begin(); it != filetags.end(); it++) {
+    if (*it == "rar") {
+      filetags.push_front(*it);
+      filetags.erase(it);
       break;
     }
   }
-  for (std::list<std::string>::iterator it = filenames.begin(); it != filenames.end(); it++) {
-    if (it->length() > 3 && it->substr(it->length() - 3) == "sfv") {
-      filenames.push_front(*it);
-      filenames.erase(it);
+  for (std::list<std::string>::iterator it = filetags.begin(); it != filetags.end(); it++) {
+    if (*it == "sfv") {
+      filetags.push_front(*it);
+      filetags.erase(it);
       break;
     }
   }
-  for (std::list<std::string>::iterator it = filenames.begin(); it != filenames.end(); it++) {
-    if (it->length() > 3 && it->substr(it->length() - 3) == "nfo") {
-      filenames.push_front(*it);
-      filenames.erase(it);
+  for (std::list<std::string>::iterator it = filetags.begin(); it != filetags.end(); it++) {
+    if (*it == "nfo") {
+      filetags.push_front(*it);
+      filetags.erase(it);
       break;
     }
   }
@@ -133,25 +169,13 @@ void RaceStatusScreen::redraw() {
     longestsubpath++;
   }
   int tagx = 8 + longestsubpath;
-  if (filenames.size() * 2 + 10 < col) {
-    spaceous = true;
-  }
   filetagpos.clear();
-  for (std::list<std::string>::iterator it = filenames.begin(); it != filenames.end(); it++) {
-    std::string filename = *it;
-    while (filename.length() < 3) {
-      filename += " ";
-    }
-    std::string lastchars = filename.substr(filename.length() - 3);
-    if (filetagpos.find(lastchars) == filetagpos.end()) {
-      filetagpos[lastchars] = tagx;
-    }
-    TermInt::printStr(window, y, tagx, lastchars.substr(0, 1));
-    TermInt::printStr(window, y+1, tagx, lastchars.substr(1, 1));
-    TermInt::printStr(window, y+2, tagx++, lastchars.substr(2));
-    if (spaceous) {
-      tagx++;
-    }
+  for (std::list<std::string>::iterator it = filetags.begin(); it != filetags.end(); it++) {
+    std::string tag = *it;
+    filetagpos[tag] = tagx;
+    TermInt::printStr(window, y, tagx, tag.substr(0, 1));
+    TermInt::printStr(window, y+1, tagx, tag.substr(1, 1));
+    TermInt::printStr(window, y+2, tagx++, tag.substr(2));
   }
   update();
 }
@@ -174,8 +198,13 @@ void RaceStatusScreen::update() {
   }
   std::list<std::string> currsubpaths = race->getSubPaths();
   unsigned int sumguessedsize = 0;
+  bool haslargepath = false;
   for (std::list<std::string>::iterator it = currsubpaths.begin(); it != currsubpaths.end(); it++) {
-    sumguessedsize += race->guessedSize(*it);;
+    unsigned int guessedsize = race->guessedSize(*it);
+    sumguessedsize += guessedsize;
+    if (guessedsize >= 5) {
+      haslargepath = true;
+    }
   }
   if (currsubpaths.size() != currnumsubpaths || sumguessedsize != currguessedsize) {
     redraw();
@@ -191,7 +220,7 @@ void RaceStatusScreen::update() {
     mso.addTextButton(y, x, sitename, sitename);
     for (std::list<std::string>::iterator it2 = subpaths.begin(); it2 != subpaths.end(); it2++) {
       std::string origsubpath = *it2;
-      if (origsubpath != "" && !smalldirs && race->guessedSize(origsubpath) < 5) {
+      if (haslargepath && !smalldirs && race->guessedSize(origsubpath) < 5) {
         continue;
       }
       std::string printsubpath = origsubpath;
@@ -208,7 +237,7 @@ void RaceStatusScreen::update() {
       for (std::list<std::string>::iterator it3 = race->guessedFileListBegin(); it3 != race->guessedFileListEnd(); it3++) {
         std::string filename = *it3;
         if (filename.length() < 3) filename += " ";
-        int filex = filetagpos[filename.substr(filename.length() - 3)];
+        int filex = filetagpos[filenametags[filename]];
         File * file;
         char printchar = '_';
         bool highlight = false;
