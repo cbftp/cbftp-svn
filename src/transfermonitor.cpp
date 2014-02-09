@@ -186,10 +186,12 @@ void TransferMonitor::sourceError(int err) {
   sourcecomplete = true;
   status = 13;
   if (!passiveready) {
-    sld->returnConn(dst);
-    fileobj = fld->getFile(file);
-    if (fileobj != NULL) {
-      fileobj->finishUpload();
+    if (fxp) {
+      sld->returnConn(dst);
+      fileobj = fld->getFile(file);
+      if (fileobj != NULL) {
+        fileobj->finishUpload();
+      }
     }
     tm->transferFailed(this, err);
     status = 0;
