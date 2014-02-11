@@ -11,13 +11,7 @@ void TermInt::printChar(WINDOW * window, unsigned int row, unsigned int col, uns
 }
 
 void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, std::string str) {
-  size_t pos = 0;
-  while ((pos = str.find("%", pos)) != std::string::npos) {
-    str = str.substr(0, pos) + "%%" + str.substr(pos + 1);
-    pos = pos + 2;
-  }
-  mvwprintw(window, row, col, str.c_str());
-  wmove(cursorwindow, cursorrow, cursorcol);
+  printStr(window, row, col, str, str.length());
 }
 
 void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, std::string str, unsigned int maxlen) {
@@ -34,7 +28,7 @@ void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, std:
     rightadjust = maxlen - len;
   }
   for (unsigned int i = 0; i < len; i++) {
-    mvwaddch(window, row, col + i + rightadjust, (unsigned int)str[i]);
+    printChar(window, row, col + i + rightadjust, (unsigned char)str[i]);
   }
   wmove(cursorwindow, cursorrow, cursorcol);
 }
