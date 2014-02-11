@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <vector>
 #include <cctype>
+#include <unistd.h>
 
 #include "globalcontext.h"
 #include "localstorage.h"
