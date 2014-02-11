@@ -10,7 +10,6 @@
 
 #include "../uicommunicator.h"
 #include "../termint.h"
-#include "../stringpair.h"
 #include "../uifile.h"
 
 extern GlobalContext * global;
@@ -101,7 +100,7 @@ void BrowseScreen::redraw() {
       }
       if (!virgin) {
         if (list.cursoredFile() != NULL) {
-          selectionhistory.push_front(StringPair(list.getPath(), list.cursoredFile()->getName()));
+          selectionhistory.push_front(std::pair<std::string, std::string>(list.getPath(), list.cursoredFile()->getName()));
         }
       }
       virgin = false;
@@ -120,9 +119,9 @@ void BrowseScreen::redraw() {
         list.setCursorPosition(position);
       }
       std::string path = list.getPath();
-      for (std::list<StringPair>::iterator it = selectionhistory.begin(); it != selectionhistory.end(); it++) {
-        if (it->getKey() == path) {
-          list.selectFileName(it->getValue());
+      for (std::list<std::pair<std::string, std::string> >::iterator it = selectionhistory.begin(); it != selectionhistory.end(); it++) {
+        if (it->first == path) {
+          list.selectFileName(it->second);
           selectionhistory.erase(it);
           break;
         }

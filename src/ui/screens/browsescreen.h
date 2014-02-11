@@ -1,12 +1,13 @@
 #pragma once
 
 #include <list>
+#include <utility>
+#include <string>
 
 #include "../uiwindow.h"
 #include "../uifilelist.h"
 
 class UICommunicator;
-class StringPair;
 class SiteLogic;
 class Site;
 class FileList;
@@ -20,7 +21,7 @@ public:
   std::string getLegendText();
   std::string getInfoLabel();
   std::string getInfoText();
-  std::list<StringPair> selectionhistory;
+  std::list<std::pair<std::string, std::string> > selectionhistory;
 private:
   unsigned int currentviewspan;
   unsigned int sliderstart;
