@@ -47,7 +47,7 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
       continue;
     }
     bool add = true;
-    for (std::list<SiteLogic *>::iterator it2 = race->begin(); it2 != race->end(); it2++) {
+    for (std::list<SiteLogic *>::iterator it2 = addsites.begin(); it2 != addsites.end(); it2++) {
       if (sl == *it2) {
         add = false;
         break;
