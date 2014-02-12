@@ -53,6 +53,14 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
         break;
       }
     }
+    if (add && append) {
+      for (std::list<SiteLogic *>::iterator it2 = race->begin(); it2 != race->end(); it2++) {
+        if (sl == *it2) {
+          add = false;
+          break;
+        }
+      }
+    }
     if (add) {
       addsites.push_back(sl);
     }
