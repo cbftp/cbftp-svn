@@ -60,10 +60,12 @@ void RemoteCommandHandler::handleMessage(std::string message) {
   size_t three = message.find(" ", two + 1);
   if (one == std::string::npos || two == std::string::npos || three == std::string::npos) {
     global->getEventLog()->log("RemoteCommandHandler", "Bad message format.");
+    return;
   }
   std::string pass = message.substr(0, one);
   if (pass != password) {
     global->getEventLog()->log("RemoteCommandHandler", "Invalid password.");
+    return;
   }
   std::string section = message.substr(one + 1, two - (one + 1));
   std::string release = message.substr(two + 1, three - (two + 1));
