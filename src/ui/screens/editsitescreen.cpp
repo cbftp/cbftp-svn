@@ -54,9 +54,13 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
   }
   unsigned int y = 1;
   unsigned int x = 1;
+  std::string addrport = modsite.getAddress();
+  std::string port = modsite.getPort();
+  if (port != "21") {
+    addrport += ":" + port;
+  }
   mso.addStringField(y++, x, "name", "Name:", modsite.getName(), false);
-  mso.addStringField(y++, x, "addr", "Address:", modsite.getAddress(), false);
-  mso.addStringField(y++, x, "port", "Port:", modsite.getPort(), false);
+  mso.addStringField(y++, x, "addr", "Address:", addrport, false);
   mso.addStringField(y++, x, "user", "Username:", modsite.getUser(), false);
   mso.addStringField(y++, x, "pass", "Password:", modsite.getPass(), true);
   mso.addIntArrow(y++, x, "logins", "Login slots:", modsite.getInternMaxLogins(), 0, 99);
@@ -307,10 +311,20 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
           site->setName(newname);
         }
         else if (identifier == "addr") {
-          site->setAddress(((MenuSelectOptionTextField *)msoe)->getData());
-        }
-        else if (identifier == "port") {
-          site->setPort(((MenuSelectOptionTextField *)msoe)->getData());
+          std::string addrport = ((MenuSelectOptionTextField *)msoe)->getData();
+          size_t splitpos = addrport.find(":");
+          if (splitpos != std::string::npos) {
+            site->setAddress(addrport.substr(0, splitpos));
+            std::string port = addrport.substr(splitpos + 1);
+            if (port.length() == 0) {
+              port = "21";
+            }
+            site->setPort(port);
+          }
+          else {
+            site->setAddress(addrport);
+            site->setPort("21");
+          }
         }
         else if (identifier == "user") {
           site->setUser(((MenuSelectOptionTextField *)msoe)->getData());
