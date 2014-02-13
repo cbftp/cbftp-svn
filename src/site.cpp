@@ -16,7 +16,7 @@ Site::Site(std::string name) {
   max_dn = 0;
   max_idletime = 60;
   pret = false;
-  sslfxpforced = false;
+  ssltransfer = SITE_SSL_PREFER_OFF;
   sslconn = true;
   brokenpasv = false;
   allowdownload = true;
@@ -35,7 +35,7 @@ void Site::copy(Site * site) {
   this->max_up = site->max_up;
   this->max_dn = site->max_dn;
   this->pret = site->pret;
-  this->sslfxpforced = site->sslfxpforced;
+  this->ssltransfer = site->ssltransfer;
   this->sslconn = site->sslconn;
   this->brokenpasv = site->brokenpasv;
   this->sections = site->sections;
@@ -152,12 +152,12 @@ bool Site::SSL() {
   return sslconn;
 }
 
-bool Site::SSLFXPForced() {
-  return sslfxpforced;
+int Site::getSSLTransferPolicy() {
+  return ssltransfer;
 }
 
-void Site::setSSLFXPForced(bool val) {
-  sslfxpforced = val;
+void Site::setSSLTransferPolicy(int policy) {
+  ssltransfer = policy;
 }
 
 void Site::setSSL(bool val) {

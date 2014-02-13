@@ -49,7 +49,11 @@ void TransferMonitor::engage(std::string file, SiteLogic * sls, FileList * fls, 
     return;
   }
   status = 1;
-  if (sls->getSite()->SSLFXPForced() || sld->getSite()->SSLFXPForced()) {
+  int spol = sls->getSite()->getSSLTransferPolicy();
+  int dpol = sld->getSite()->getSSLTransferPolicy();
+  if (spol != SITE_SSL_ALWAYS_OFF && dpol != SITE_SSL_ALWAYS_OFF &&
+      (spol == SITE_SSL_ALWAYS_ON || dpol == SITE_SSL_ALWAYS_ON ||
+      (spol == SITE_SSL_PREFER_ON && dpol == SITE_SSL_PREFER_ON))) {
     ssl = true;
   }
   fld->touchFile(file, sld->getSite()->getUser(), true);
@@ -78,7 +82,8 @@ void TransferMonitor::engage(std::string file, SiteLogic * sls, FileList * fls) 
   ssl = false;
   if (!sls->lockDownloadConn(spath, file, &src)) return;
   status = 1;
-  if (sls->getSite()->SSLFXPForced()) {
+  int spol = sls->getSite()->getSSLTransferPolicy();
+  if (spol == SITE_SSL_ALWAYS_ON || spol == SITE_SSL_PREFER_ON) {
     ssl = true;
   }
   if (!sls->getSite()->hasBrokenPASV()) {

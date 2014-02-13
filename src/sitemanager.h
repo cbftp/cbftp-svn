@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include "site.h"
+
 #define DEFAULTUSERNAME "anonymous"
 #define DEFAULTPASSWORD "anonymous"
 #define DEFAULTMAXLOGINS 3
@@ -10,9 +12,7 @@
 #define DEFAULTMAXDOWN 2
 #define DEFAULTMAXIDLETIME 60
 #define DEFAULTSSL true
-#define DEFAULTSSLFXPFORCED false
-
-class Site;
+#define DEFAULTSSLTRANSFER SITE_SSL_PREFER_OFF
 
 class SiteManager {
   private:
@@ -23,7 +23,7 @@ class SiteManager {
     unsigned int defaultmaxup;
     unsigned int defaultmaxdown;
     unsigned int defaultmaxidletime;
-    bool defaultsslfxpforced;
+    int defaultssltransfer;
     bool defaultsslconn;
   public:
     SiteManager();
@@ -48,8 +48,8 @@ class SiteManager {
     void setDefaultMaxIdleTime(unsigned int);
     bool getDefaultSSL();
     void setDefaultSSL(bool);
-    bool getDefaultSSLFXPForced();
-    void setDefaultSSLFXPForced(bool);
+    int getDefaultSSLTransferPolicy();
+    void setDefaultSSLTransferPolicy(int);
     void writeState();
     void sortSites();
     void proxyRemoved(std::string);

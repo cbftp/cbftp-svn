@@ -10,6 +10,11 @@
 #define SITE_PROXY_NONE 821
 #define SITE_PROXY_USE 822
 
+#define SITE_SSL_ALWAYS_OFF 830
+#define SITE_SSL_PREFER_OFF 831
+#define SITE_SSL_PREFER_ON 832
+#define SITE_SSL_ALWAYS_ON 833
+
 class Site {
   private:
     std::string name;
@@ -19,7 +24,7 @@ class Site {
     std::string pass;
     bool pret;
     bool sslconn;
-    bool sslfxpforced;
+    int ssltransfer;
     bool brokenpasv;
     unsigned int logins;
     unsigned int max_up;
@@ -56,9 +61,9 @@ class Site {
     void pushTransferSpeed(std::string, int);
     bool needsPRET();
     void setPRET(bool);
-    bool SSLFXPForced();
+    int getSSLTransferPolicy();
     bool SSL();
-    void setSSLFXPForced(bool);
+    void setSSLTransferPolicy(int);
     bool hasBrokenPASV();
     void setBrokenPASV(bool);
     bool getAllowUpload();

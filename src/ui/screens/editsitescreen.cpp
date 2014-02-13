@@ -37,7 +37,7 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
     modsite.setMaxUp(sm->getDefaultMaxUp());
     modsite.setMaxDn(sm->getDefaultMaxDown());
     modsite.setSSL(sm->getDefaultSSL());
-    modsite.setSSLFXPForced(sm->getDefaultSSLFXPForced());
+    modsite.setSSLTransferPolicy(sm->getDefaultSSLTransferPolicy());
     modsite.setMaxIdleTime(sm->getDefaultMaxIdleTime());
   }
   else if (operation == "edit") {
@@ -71,7 +71,12 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
   mso.addCheckBox(y++, x, "allowupload", "Allow upload:", modsite.getAllowUpload());
   mso.addCheckBox(y++, x, "allowdownload", "Allow download:", modsite.getAllowDownload());
   mso.addCheckBox(y++, x, "ssl", "AUTH SSL:", modsite.SSL());
-  mso.addCheckBox(y++, x, "forcesslfxp", "Force SSL FXP:", modsite.SSLFXPForced());
+  MenuSelectOptionTextArrow * sslfxp = mso.addTextArrow(y++, x, "ssltransfer", "SSL transfers:");
+  sslfxp->addOption("Always off", SITE_SSL_ALWAYS_OFF);
+  sslfxp->addOption("Prefer off", SITE_SSL_PREFER_OFF);
+  sslfxp->addOption("Prefer on", SITE_SSL_PREFER_ON);
+  sslfxp->addOption("Always on", SITE_SSL_ALWAYS_ON);
+  sslfxp->setOption(modsite.getSSLTransferPolicy());
   mso.addCheckBox(y++, x, "pret", "Needs PRET:", modsite.needsPRET());
   mso.addCheckBox(y++, x, "brokenpasv", "Broken PASV:", modsite.hasBrokenPASV());
   MenuSelectOptionTextArrow * useproxy = mso.addTextArrow(y++, x, "useproxy", "Proxy:");
@@ -350,8 +355,8 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         else if (identifier == "ssl") {
           site->setSSL(((MenuSelectOptionCheckBox *)msoe)->getData());
         }
-        else if (identifier == "forcesslfxp") {
-          site->setSSLFXPForced(((MenuSelectOptionCheckBox *)msoe)->getData());
+        else if (identifier == "ssltransfer") {
+          site->setSSLTransferPolicy(((MenuSelectOptionTextArrow *)msoe)->getData());
         }
         else if (identifier == "allowupload") {
           site->setAllowUpload(((MenuSelectOptionCheckBox *)msoe)->getData());

@@ -6,7 +6,6 @@
 #include <algorithm>
 
 #include "globalcontext.h"
-#include "site.h"
 #include "datafilehandler.h"
 #include "connstatetracker.h"
 #include "eventlog.h"
@@ -20,7 +19,7 @@ SiteManager::SiteManager() {
   defaultmaxup = DEFAULTMAXUP;
   defaultmaxdown = DEFAULTMAXDOWN;
   defaultsslconn = DEFAULTSSL;
-  defaultsslfxpforced = DEFAULTSSLFXPFORCED;
+  defaultssltransfer = DEFAULTSSLTRANSFER;
   defaultmaxidletime = DEFAULTMAXIDLETIME;
 }
 
@@ -67,7 +66,10 @@ void SiteManager::readConfiguration() {
       if (!value.compare("false")) site->setSSL(false);
     }
     else if (!setting.compare("sslfxpforced")) {
-      if (!value.compare("true")) site->setSSLFXPForced(true);
+      if (!value.compare("true")) site->setSSLTransferPolicy(SITE_SSL_ALWAYS_ON);
+    }
+    else if (!setting.compare("ssltransfer")) {
+      site->setSSLTransferPolicy(global->str2Int(value));
     }
     else if (!setting.compare("allowupload")) {
       if (!value.compare("false")) site->setAllowUpload(false);
@@ -139,8 +141,11 @@ void SiteManager::readConfiguration() {
     }
     else if (!setting.compare("sslfxpforced")) {
       if (!value.compare("true")) {
-        setDefaultSSLFXPForced(true);
+        setDefaultSSLTransferPolicy(SITE_SSL_ALWAYS_ON);
       }
+    }
+    else if (!setting.compare("ssltransfer")) {
+      setDefaultSSLTransferPolicy(global->str2Int(value));
     }
     else if (!setting.compare("maxidletime")) {
       setDefaultMaxIdleTime(global->str2Int(value));
@@ -171,8 +176,8 @@ void SiteManager::writeState() {
     filehandler->addOutputLine(filetag, name + "$maxup=" + global->int2Str(site->getInternMaxUp()));
     filehandler->addOutputLine(filetag, name + "$maxdn=" + global->int2Str(site->getInternMaxDown()));
     filehandler->addOutputLine(filetag, name + "$idletime=" + global->int2Str(site->getMaxIdleTime()));
+    filehandler->addOutputLine(filetag, name + "$ssltransfer=" + global->int2Str(site->getSSLTransferPolicy()));
     if (site->needsPRET()) filehandler->addOutputLine(filetag, name + "$pret=true");
-    if (site->SSLFXPForced()) filehandler->addOutputLine(filetag, name + "$sslfxpforced=true");
     if (!site->SSL()) filehandler->addOutputLine(filetag, name + "$sslconn=false");
     if (!site->getAllowUpload()) filehandler->addOutputLine(filetag, name + "$allowupload=false");
     if (!site->getAllowDownload()) filehandler->addOutputLine(filetag, name + "$allowdownload=false");
@@ -201,7 +206,7 @@ void SiteManager::writeState() {
   filehandler->addOutputLine(defaultstag, "maxup=" + global->int2Str(getDefaultMaxUp()));
   filehandler->addOutputLine(defaultstag, "maxdown=" + global->int2Str(getDefaultMaxDown()));
   filehandler->addOutputLine(defaultstag, "maxidletime=" + global->int2Str(getDefaultMaxIdleTime()));
-  if (getDefaultSSLFXPForced()) filehandler->addOutputLine(defaultstag, "sslfxpforced=true");
+  filehandler->addOutputLine(defaultstag, "ssltransfer=" + global->int2Str(getDefaultSSLTransferPolicy()));
   if (!getDefaultSSL()) filehandler->addOutputLine(defaultstag, "sslconn=false");
 }
 
@@ -309,12 +314,12 @@ void SiteManager::setDefaultSSL(bool ssl) {
   defaultsslconn = ssl;
 }
 
-bool SiteManager::getDefaultSSLFXPForced() {
-  return defaultsslfxpforced;
+int SiteManager::getDefaultSSLTransferPolicy() {
+  return defaultssltransfer;
 }
 
-void SiteManager::setDefaultSSLFXPForced(bool sslfxpforced) {
-  defaultsslfxpforced = sslfxpforced;
+void SiteManager::setDefaultSSLTransferPolicy(int policy) {
+  defaultssltransfer = policy;
 }
 
 void SiteManager::proxyRemoved(std::string removedproxy) {

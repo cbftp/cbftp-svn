@@ -294,6 +294,13 @@ void Engine::issueOptimalTransfers() {
     if (!sld->getSite()->getAllowUpload()) continue;
     if (sls->getSite()->hasBrokenPASV() &&
         sld->getSite()->hasBrokenPASV()) continue;
+    //ssl check
+    if ((sls->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_OFF &&
+        sld->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_ON) ||
+        (sls->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_ON &&
+            sld->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_OFF)) {
+      continue;
+    }
     //potentiality handling
     sls->pushPotential(sbe->getScore(), filename, sld);
     if (!sls->downloadSlotAvailable()) continue;

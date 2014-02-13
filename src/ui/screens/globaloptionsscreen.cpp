@@ -58,7 +58,12 @@ GlobalOptionsScreen::GlobalOptionsScreen(WINDOW * window, UICommunicator * uicom
   mso.addIntArrow(y++, x, "defmaxup", "Default site upload slots:", sm->getDefaultMaxUp(), 0, 99);
   mso.addIntArrow(y++, x, "defmaxdn", "Default site download slots:", sm->getDefaultMaxDown(), 0, 99);
   mso.addCheckBox(y++, x, "defsslconn", "Default site AUTH SSL:", sm->getDefaultSSL());
-  mso.addCheckBox(y++, x, "defforcesslfxp", "Default site forced SSL FXP:", sm->getDefaultSSLFXPForced());
+  MenuSelectOptionTextArrow * sslfxp = mso.addTextArrow(y++, x, "sslfxp", "Default SSL transfers:");
+  sslfxp->addOption("Always off", SITE_SSL_ALWAYS_OFF);
+  sslfxp->addOption("Prefer off", SITE_SSL_PREFER_OFF);
+  sslfxp->addOption("Prefer on", SITE_SSL_PREFER_ON);
+  sslfxp->addOption("Always on", SITE_SSL_ALWAYS_ON);
+  sslfxp->setOption(sm->getDefaultSSLTransferPolicy());
   mso.addStringField(y++, x, "defidletime", "Default site max idle time (s):", global->int2Str(sm->getDefaultMaxIdleTime()), false);
   y++;
   mso.addTextButtonNoContent(y++, x, "skiplist", "Configure skiplist...");
@@ -198,7 +203,7 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
           sm->setDefaultSSL(((MenuSelectOptionCheckBox *)msoe)->getData());
         }
         else if (identifier == "defforcesslfxp") {
-          sm->setDefaultSSLFXPForced(((MenuSelectOptionCheckBox *)msoe)->getData());
+          sm->setDefaultSSLTransferPolicy(((MenuSelectOptionTextArrow *)msoe)->getData());
         }
         else if (identifier == "defidletime") {
           sm->setDefaultMaxIdleTime(global->str2Int(((MenuSelectOptionTextField *)msoe)->getData()));
