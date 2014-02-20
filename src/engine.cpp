@@ -15,10 +15,12 @@
 #include "siterace.h"
 #include "skiplist.h"
 #include "eventlog.h"
+#include "tickpoke.h"
 
 Engine::Engine() {
   scoreboard = new ScoreBoard();
   maxavgspeed = 1024;
+  pokeregistered = false;
 }
 
 void Engine::newRace(std::string release, std::string section, std::list<std::string> sites) {
@@ -105,6 +107,10 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
           " with " + global->int2Str((int)addsites.size()) + " sites.");
     }
     setSpeedScale();
+  }
+  if (!pokeregistered) {
+    global->getTickPoke()->startPoke(this, "Engine", POKEINTERVAL, 0);
+    pokeregistered = true;
   }
 }
 
@@ -211,14 +217,16 @@ void Engine::reportCurrentSize(SiteRace * srs, FileList * fls, bool final) {
 void Engine::refreshScoreBoard() {
   scoreboard->wipe();
   for (std::list<Race *>::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
-    for (std::list<SiteLogic *>::iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
-      SiteRace * srs = (*its)->getRace((*itr)->getName());
+    Race * race = *itr;
+    for (std::list<SiteLogic *>::iterator its = race->begin(); its != race->end(); its++) {
+      SiteLogic * sls = *its;
+      SiteRace * srs = sls->getRace(race->getName());
       if (!srs->isDone()) {
         bool racecomplete = true;
-        std::list<std::string> subpaths = (*itr)->getSubPaths();
+        std::list<std::string> subpaths = race->getSubPaths();
         for (std::list<std::string>::iterator itsp = subpaths.begin(); itsp != subpaths.end(); itsp++) {
           FileList * spfl = srs->getFileListForPath(*itsp);
-          if ((*itr)->sizeEstimated(*itsp) && spfl->getNumUploadedFiles() >= (*itr)->estimatedSize(*itsp)) {
+          if (race->sizeEstimated(*itsp) && spfl->getNumUploadedFiles() >= race->estimatedSize(*itsp)) {
             if (!srs->isSubPathComplete(spfl)) {
               srs->subPathComplete(spfl);
             }
@@ -228,25 +236,24 @@ void Engine::refreshScoreBoard() {
           }
         }
         if (racecomplete) {
-          (*its)->raceLocalComplete(srs);
-          global->getEventLog()->log("Engine", "Race " + (*itr)->getName() + " completed on " +
-              (*its)->getSite()->getName());
-          if ((*itr)->isDone()) {
-            for (std::list<SiteLogic *>::iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
-              (*itd)->raceGlobalComplete();
-            }
-            global->getEventLog()->log("Engine", "Race globally completed: " + (*itr)->getName());
+          sls->raceLocalComplete(srs);
+          global->getEventLog()->log("Engine", "Race " + race->getName() + " completed on " +
+              sls->getSite()->getName());
+          if (race->isDone()) {
+            issueGlobalComplete(race);
             currentraces.erase(itr);
             refreshScoreBoard();
+            global->getEventLog()->log("Engine", "Race globally completed: " + race->getName());
             return;
           }
         }
       }
-      for (std::list<SiteLogic *>::iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
-        if (*itd == *its) continue;
-        if ((*itd)->getSite()->isAffiliated((*itr)->getGroup())) continue;
-        SiteRace * srd = (*itd)->getRace((*itr)->getName());
-        int avgspeed = (*its)->getSite()->getAverageSpeed((*itd)->getSite()->getName());
+      for (std::list<SiteLogic *>::iterator itd = race->begin(); itd != race->end(); itd++) {
+        SiteLogic * sld = *itd;
+        if (sls == sld) continue;
+        if (sld->getSite()->isAffiliated(race->getGroup())) continue;
+        SiteRace * srd = sld->getRace(race->getName());
+        int avgspeed = sls->getSite()->getAverageSpeed(sld->getSite()->getName());
         for (std::map<std::string, FileList *>::iterator itfls = srs->fileListsBegin(); itfls != srs->fileListsEnd(); itfls++) {
           if (!global->getSkipList()->isAllowed(itfls->first)) continue;
           FileList * fls = itfls->second;
@@ -261,9 +268,23 @@ void Engine::refreshScoreBoard() {
                   (itfls->first != "" && !global->getSkipList()->isAllowed(itfls->first + "/" + itf->first))) {
                 continue;
               }
-              std::string name = f->getName();
-              if (fld->contains(name) || f->isDirectory() || f->getSize() == 0) continue;
-              scoreboard->add(name, calculateScore(f, *itr, fls, srs, fld, srd, avgspeed, (SPREAD ? false : true)), *its, fls, *itd, fld);
+              std::string filename = f->getName();
+              if (fld->contains(filename) || f->isDirectory() || f->getSize() == 0) continue;
+              if (fls->hasFailedDownload(filename)) continue;
+              if (fld->hasFailedUpload(filename)) continue;
+              if (!sls->getSite()->getAllowDownload()) continue;
+              if (!sld->getSite()->getAllowUpload()) continue;
+              if (sls->getSite()->hasBrokenPASV() &&
+                  sld->getSite()->hasBrokenPASV()) continue;
+              //ssl check
+              if ((sls->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_OFF &&
+                  sld->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_ON) ||
+                  (sls->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_ON &&
+                      sld->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_OFF)) {
+                continue;
+              }
+              scoreboard->add(filename, calculateScore(f, race, fls, srs, fld, srd, avgspeed, (SPREAD ? false : true)), sls, fls, sld, fld);
+              race->resetUpdateCheckCounter();
             }
             fls->unlockFileList();
           }
@@ -288,19 +309,6 @@ void Engine::issueOptimalTransfers() {
     sls = sbe->getSource();
     sld = sbe->getDestination();
     filename = sbe->fileName();
-    if (sbe->getSourceFileList()->hasFailedDownload(filename)) continue;
-    if (sbe->getDestinationFileList()->hasFailedUpload(filename)) continue;
-    if (!sls->getSite()->getAllowDownload()) continue;
-    if (!sld->getSite()->getAllowUpload()) continue;
-    if (sls->getSite()->hasBrokenPASV() &&
-        sld->getSite()->hasBrokenPASV()) continue;
-    //ssl check
-    if ((sls->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_OFF &&
-        sld->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_ON) ||
-        (sls->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_ON &&
-            sld->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_OFF)) {
-      continue;
-    }
     //potentiality handling
     sls->pushPotential(sbe->getScore(), filename, sld);
     if (!sls->downloadSlotAvailable()) continue;
@@ -369,4 +377,25 @@ std::list<Race *>::iterator Engine::getRacesIteratorBegin() {
 
 std::list<Race *>::iterator Engine::getRacesIteratorEnd() {
   return allraces.end();
+}
+
+void Engine::tick(int message) {
+  for (std::list<Race *>::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
+    if ((*it)->checksSinceLastUpdate() >= MAXCHECKSTIMEOUT) {
+      global->getEventLog()->log("Engine", "No activity for " + global->int2Str(MAXCHECKSTIMEOUT) +
+          " seconds, aborting race: " + (*it)->getName());
+      for (std::list<SiteLogic *>::iterator its = (*it)->begin(); its != (*it)->end(); its++) {
+        (*its)->raceLocalComplete((*its)->getRace((*it)->getName()));
+      }
+      issueGlobalComplete(*it);
+      currentraces.erase(it);
+      break;
+    }
+  }
+}
+
+void Engine::issueGlobalComplete(Race * race) {
+  for (std::list<SiteLogic *>::iterator itd = race->begin(); itd != race->end(); itd++) {
+    (*itd)->raceGlobalComplete();
+  }
 }

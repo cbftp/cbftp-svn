@@ -52,4 +52,5 @@ class SiteRace {
     void reportSize(FileList *, std::list<std::string> *, bool);
     int getObservedTime(FileList *);
     int getSFVObservedTime(FileList *);
+    bool hasBeenUpdatedSinceLastCheck();
 };

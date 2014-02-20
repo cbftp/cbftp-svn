@@ -42,10 +42,10 @@ class File {
     unsigned int getCurrentSpeed();
     void setUpdateFlag(Site *, std::string, int);
     void unsetUpdateFlag();
-    void setSize(long int);
-    void setLastModified(std::string);
-    void setOwner(std::string);
-    void setGroup(std::string);
+    bool setSize(unsigned long long int);
+    bool setLastModified(std::string);
+    bool setOwner(std::string);
+    bool setGroup(std::string);
     void setTouch(int);
     void download();
     bool isDownloading();

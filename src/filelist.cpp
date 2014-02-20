@@ -19,6 +19,7 @@ FileList::FileList(std::string username, std::string path) {
   maxfilesize = 0;
   uploadedfiles = 0;
   locked = false;
+  listchanged = false;
 }
 
 FileList::~FileList() {
@@ -38,7 +39,9 @@ bool FileList::updateFile(std::string start, int touch) {
   pthread_mutex_lock(&filelist_mutex);
   if ((updatefile = getFileIntern(name)) != NULL) {
     if (updatefile->getSize() == 0 && file->getSize() > 0) uploadedfiles++;
-    updatefile->setSize(file->getSize());
+    if (updatefile->setSize(file->getSize())) {
+      listchanged = true;
+    }
     if (file->getSize() > maxfilesize) maxfilesize = file->getSize();
     if (updatefile->getOwner().compare(file->getOwner()) != 0) {
       if (file->getOwner().compare(username) == 0) {
@@ -48,9 +51,15 @@ bool FileList::updateFile(std::string start, int touch) {
         editOwnedFileCount(false);
       }
     }
-    updatefile->setOwner(file->getOwner());
-    updatefile->setGroup(file->getGroup());
-    updatefile->setLastModified(file->getLastModified());
+    if (updatefile->setOwner(file->getOwner())) {
+      listchanged = true;
+    }
+    if (updatefile->setGroup(file->getGroup())) {
+      listchanged = true;
+    }
+    if (updatefile->setLastModified(file->getLastModified())) {
+      listchanged = true;
+    }
     updatefile->setTouch(file->getTouch());
     if (updatefile->updateFlagSet()) {
       if (updatefile->getOwner().compare(username) == 0) {
@@ -70,6 +79,7 @@ bool FileList::updateFile(std::string start, int touch) {
     if (file->getOwner().compare(username) == 0) {
       editOwnedFileCount(true);
     }
+    listchanged = true;
   }
   pthread_mutex_unlock(&filelist_mutex);
   return true;
@@ -88,6 +98,7 @@ void FileList::touchFile(std::string name, std::string user, bool upload) {
   else {
     file = new File(name, user);
     files[name] = file;
+    listchanged = true;
   }
   if (upload) {
     file->upload();
@@ -99,7 +110,9 @@ void FileList::setFileUpdateFlag(std::string name, long int size, unsigned int s
   File * file;
   pthread_mutex_lock(&filelist_mutex);
   if ((file = getFileIntern(name)) != NULL) {
-    file->setSize(size);
+    if (file->setSize(size)) {
+      listchanged = true;
+    }
     file->setUpdateFlag(src, dst, speed);
   }
   pthread_mutex_unlock(&filelist_mutex);
@@ -239,6 +252,7 @@ void FileList::cleanSweep(int touch) {
         }
       }
       delete f;
+      listchanged = true;
     }
   }
   pthread_mutex_unlock(&filelist_mutex);
@@ -308,4 +322,12 @@ bool FileList::hasFailedUpload(std::string file) {
     return false;
   }
   return true;
+}
+
+bool FileList::listChanged() {
+  return listchanged;
+}
+
+void FileList::resetListChanged() {
+  listchanged = false;
 }

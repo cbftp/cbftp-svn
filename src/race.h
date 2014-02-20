@@ -30,6 +30,7 @@ class Race {
     std::list<std::string> guessedfilelist;
     std::map<std::string, std::map<std::string, SizeLocationTrack> > sizelocationtrackers;
     bool done;
+    int checkcount;
   public:
     Race(std::string, std::string);
     void addSite(SiteLogic *);
@@ -58,4 +59,6 @@ class Race {
     void reportSize(SiteRace *, FileList *, std::string, std::list<std::string> *, bool);
     void setUndone();
     void abort();
+    int checksSinceLastUpdate();
+    void resetUpdateCheckCounter();
 };

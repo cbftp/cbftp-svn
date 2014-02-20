@@ -133,20 +133,28 @@ void File::unsetUpdateFlag() {
   updateflag = false;
 }
 
-void File::setSize(long int size) {
+bool File::setSize(unsigned long long int size) {
+  bool changed = this->size != size;
   this->size = size;
+  return changed;
 }
 
-void File::setLastModified(std::string lastmodified) {
+bool File::setLastModified(std::string lastmodified) {
+  bool changed = this->lastmodified.compare(lastmodified) != 0;
   this->lastmodified = lastmodified;
+  return changed;
 }
 
-void File::setOwner(std::string owner) {
+bool File::setOwner(std::string owner) {
+  bool changed = this->owner.compare(owner) != 0;
   this->owner = owner;
+  return changed;
 }
 
-void File::setGroup(std::string group) {
+bool File::setGroup(std::string group) {
+  bool changed = this->group.compare(group) != 0;
   this->group = group;
+  return changed;
 }
 
 void File::setTouch(int touch) {

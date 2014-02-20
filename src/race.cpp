@@ -6,6 +6,7 @@
 #include "file.h"
 #include "filelist.h"
 #include "sitelogic.h"
+#include "siterace.h"
 
 Race::Race(std::string release, std::string section) {
   this->name = release;
@@ -21,6 +22,7 @@ Race::Race(std::string release, std::string section) {
   maxfilelistsize = 0;
   bestunknownfilesizeestimate = 50000000;
   estimatedsubpaths.push_back("");
+  checkcount = 0;
 }
 
 void Race::addSite(SiteLogic * sitelogic) {
@@ -305,4 +307,17 @@ void Race::recalculateBestUnknownFileSizeEstimate() {
   else {
     bestunknownfilesizeestimate = mostcommon;
   }
+}
+
+int Race::checksSinceLastUpdate() {
+  for (std::list<SiteLogic *>::iterator it = sites.begin(); it != sites.end(); it++) {
+    if ((*it)->getRace(name)->hasBeenUpdatedSinceLastCheck()) {
+      checkcount = 0;
+    }
+  }
+  return checkcount++;
+}
+
+void Race::resetUpdateCheckCounter() {
+  checkcount = 0;
 }

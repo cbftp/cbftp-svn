@@ -266,3 +266,15 @@ int SiteRace::getSFVObservedTime(FileList * fl) {
   sfvobservestarts[fl] = global->ctimeMSec();
   return 0;
 }
+
+bool SiteRace::hasBeenUpdatedSinceLastCheck() {
+  bool changed = false;
+  std::map<std::string, FileList *>::iterator it;
+  for (it = filelists.begin(); it != filelists.end(); it++) {
+    if (it->second->listChanged()) {
+      changed = true;
+    }
+    it->second->resetListChanged();
+  }
+  return changed;
+}

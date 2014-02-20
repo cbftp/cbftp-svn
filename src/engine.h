@@ -3,7 +3,11 @@
 #include <string>
 #include <list>
 
+#include "eventreceiver.h"
+
 #define SPREAD 0
+#define POKEINTERVAL 1000
+#define MAXCHECKSTIMEOUT 120
 
 class GlobalContext;
 class Race;
@@ -14,7 +18,7 @@ class ScoreBoard;
 
 extern GlobalContext * global;
 
-class Engine {
+class Engine : public EventReceiver {
   private:
     std::list<Race *> allraces;
     std::list<Race *> currentraces;
@@ -26,6 +30,7 @@ class Engine {
     void issueOptimalTransfers();
     void setSpeedScale();
     int calculateScore(File *, Race *, FileList *, SiteRace *, FileList *, SiteRace *, int, bool);
+    bool pokeregistered;
   public:
     Engine();
     void newRace(std::string, std::string, std::list<std::string>);
@@ -37,4 +42,6 @@ class Engine {
     Race * getRace(std::string);
     std::list<Race *>::iterator getRacesIteratorBegin();
     std::list<Race *>::iterator getRacesIteratorEnd();
+    void tick(int);
+    void issueGlobalComplete(Race *);
 };

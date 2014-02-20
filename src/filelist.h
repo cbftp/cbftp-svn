@@ -18,6 +18,7 @@ class FileList {
     pthread_mutex_t filled_mutex;
     bool filled;
     bool locked;
+    bool listchanged;
     int owned;
     int ownpercentage;
     unsigned long long int maxfilesize;
@@ -55,4 +56,6 @@ class FileList {
     void downloadAttemptFail(std::string);
     bool hasFailedDownload(std::string);
     bool hasFailedUpload(std::string);
+    bool listChanged();
+    void resetListChanged();
 };
