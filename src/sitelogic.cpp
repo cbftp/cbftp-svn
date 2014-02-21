@@ -213,6 +213,10 @@ void SiteLogic::commandSuccess(int id) {
         if (conns[id]->getCurrentPath() == conns[id]->getMKDCWDTargetSection() +
             "/" + conns[id]->getMKDCWDTargetPath()) {
           conns[id]->finishMKDCWDTarget();
+          SiteRace * currentrace = conns[id]->currentSiteRace();
+          if (currentrace != NULL) {
+            currentrace->addVisitedPath(conns[id]->getCurrentPath());
+          }
         }
       }
       if (connstatetracker[id].getRecursiveLogic()->isActive()) {
@@ -237,15 +241,20 @@ void SiteLogic::commandSuccess(int id) {
       if (conns[id]->hasMKDCWDTarget()) {
         std::string targetcwdsect = conns[id]->getMKDCWDTargetSection();
         std::string targetcwdpath = conns[id]->getMKDCWDTargetPath();
+        std::string targetpath = conns[id]->getTargetPath();
+        SiteRace * currentrace = conns[id]->currentSiteRace();
+        if (currentrace != NULL) {
+          currentrace->addVisitedPath(targetpath);
+        }
         std::list<std::string> * subdirs = conns[id]->getMKDSubdirs();
-        if (conns[id]->getTargetPath() == targetcwdsect + "/" + targetcwdpath) {
-          conns[id]->doCWD(conns[id]->getTargetPath());
+        if (targetpath == targetcwdsect + "/" + targetcwdpath) {
+          conns[id]->doCWD(targetpath);
           return;
         }
         else if (subdirs->size() > 0) {
           std::string sub = subdirs->front();
           subdirs->pop_front();
-          conns[id]->doMKD(conns[id]->getTargetPath() + "/" + sub);
+          conns[id]->doMKD(targetpath + "/" + sub);
           return;
         }
       }
@@ -383,6 +392,7 @@ void SiteLogic::commandFail(int id) {
       }
       if (conns[id]->hasMKDCWDTarget()) {
         if (!site->getAllowUpload() || site->isAffiliated(conns[id]->currentSiteRace()->getGroup())) {
+          conns[id]->finishMKDCWDTarget();
           connstatetracker[id].setIdle();
           connstatetracker[id].delayedCommand("handle", SLEEPDELAY * 6);
           return;
@@ -406,6 +416,14 @@ void SiteLogic::commandFail(int id) {
           break;
         }
       }
+      {
+        SiteRace * currentrace = conns[id]->currentSiteRace();
+        if (currentrace != NULL && currentrace->pathVisited(conns[id]->getTargetPath())) {
+          connstatetracker[id].setIdle();
+          connstatetracker[id].delayedCommand("handle", SLEEPDELAY * 6);
+          return;
+        }
+      }
       break;
     case 15: // mkd fail
       targetcwdsect = conns[id]->getMKDCWDTargetSection();
@@ -415,7 +433,15 @@ void SiteLogic::commandFail(int id) {
         if (subdirs->size() > 0) {
           std::string sub = subdirs->front();
           subdirs->pop_front();
-          conns[id]->doMKD(targetcwdsect + "/" + sub);
+          std::string newattempt = targetcwdsect + "/" + sub;
+          SiteRace * currentrace = conns[id]->currentSiteRace();
+          if (currentrace != NULL) {
+            if (currentrace->pathVisited(newattempt)) {
+              break;
+            }
+            currentrace->addVisitedPath(newattempt);
+          }
+          conns[id]->doMKD(newattempt);
           return;
         }
         else {
@@ -818,7 +844,9 @@ void SiteLogic::refreshChangePath(int id, SiteRace * race, bool refresh) {
   }
   std::string targetpath = race->getPath() + appendsubpath;
   if (targetpath != currentpath) {
-    conns[id]->setMKDCWDTarget(race->getSection(), race->getRelease() + appendsubpath);
+    if (!race->pathVisited(targetpath)) {
+      conns[id]->setMKDCWDTarget(race->getSection(), race->getRelease() + appendsubpath);
+    }
     conns[id]->doCWD(targetpath);
   }
   else {

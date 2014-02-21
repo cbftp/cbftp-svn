@@ -22,6 +22,7 @@ class SiteRace {
     std::list<FileList *> sizeestimated;
     std::map<FileList *, int> observestarts;
     std::map<FileList *, int> sfvobservestarts;
+    std::map<std::string, bool> visitedpaths;
   public:
     std::string getSection();
     std::string getRelease();
@@ -53,4 +54,6 @@ class SiteRace {
     int getObservedTime(FileList *);
     int getSFVObservedTime(FileList *);
     bool hasBeenUpdatedSinceLastCheck();
+    void addVisitedPath(std::string);
+    bool pathVisited(std::string);
 };

@@ -278,3 +278,11 @@ bool SiteRace::hasBeenUpdatedSinceLastCheck() {
   }
   return changed;
 }
+
+void SiteRace::addVisitedPath(std::string path) {
+  visitedpaths[path] = true;
+}
+
+bool SiteRace::pathVisited(std::string path) {
+  return visitedpaths.find(path) != visitedpaths.end();
+}
