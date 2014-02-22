@@ -40,6 +40,7 @@
 #include "screens/viewfilescreen.h"
 #include "screens/nukescreen.h"
 #include "screens/fileviewersettingsscreen.h"
+#include "screens/scoreboardscreen.h"
 
 extern GlobalContext * global;
 
@@ -197,6 +198,7 @@ void UserInterface::runInstance() {
   UIWindow * viewfilescreen = NULL;
   UIWindow * nukescreen = NULL;
   UIWindow * fileviewersettingsscreen = NULL;
+  UIWindow * scoreboardscreen = NULL;
   legendwindow = new LegendWindow(legend, 2, col);
   infowindow = new InfoWindow(info, 2, col);
   if (global->getDataFileHandler()->fileExists()) {
@@ -369,6 +371,10 @@ void UserInterface::runInstance() {
       else if (command == "changekey") {
         changekeyscreen = new ChangeKeyScreen(main, &uicommunicator, mainrow, maincol);
         switchToWindow(changekeyscreen);
+      }
+      else if (command == "scoreboard") {
+        scoreboardscreen = new ScoreBoardScreen(main, &uicommunicator, mainrow, maincol);
+        switchToWindow(scoreboardscreen);
       }
       else if (command == "rawdatajump") {
         rawdatascreen = new RawDataScreen(main, &uicommunicator, mainrow, maincol);

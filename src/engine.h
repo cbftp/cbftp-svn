@@ -44,4 +44,5 @@ class Engine : public EventReceiver {
     std::list<Race *>::iterator getRacesIteratorEnd();
     void tick(int);
     void issueGlobalComplete(Race *);
+    ScoreBoard * getScoreBoard();
 };

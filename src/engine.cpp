@@ -399,3 +399,7 @@ void Engine::issueGlobalComplete(Race * race) {
     (*itd)->raceGlobalComplete();
   }
 }
+
+ScoreBoard * Engine::getScoreBoard() {
+  return scoreboard;
+}

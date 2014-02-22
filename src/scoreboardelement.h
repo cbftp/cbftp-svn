@@ -15,6 +15,7 @@ class ScoreBoardElement {
     int score;
   public:
     ScoreBoardElement(std::string, int, SiteLogic *, FileList *, SiteLogic *, FileList *);
+    void reset(std::string, int, SiteLogic *, FileList *, SiteLogic *, FileList *);
     std::string fileName();
     SiteLogic * getSource();
     SiteLogic * getDestination();

@@ -9,14 +9,21 @@ bool comparator(ScoreBoardElement * e1, ScoreBoardElement * e2) {
 }
 
 ScoreBoard::ScoreBoard() {
+  showsize = 0;
 }
 
 void ScoreBoard::add(std::string name, int score, SiteLogic * src, FileList * fls, SiteLogic * dst, FileList * fld) {
-  elements.push_back(new ScoreBoardElement(name, score, src, fls, dst, fld));
+  if (showsize == elements.size()) {
+    elements.push_back(new ScoreBoardElement(name, score, src, fls, dst, fld));
+  }
+  else {
+    elements[showsize]->reset(name, score, src, fls, dst, fld);
+  }
+  showsize++;
 }
 
 void ScoreBoard::sort() {
-  std::sort(elements.begin(), elements.end(), comparator);
+  std::sort(begin(), end(), comparator);
 }
 
 std::vector<ScoreBoardElement *>::iterator ScoreBoard::begin() {
@@ -24,17 +31,17 @@ std::vector<ScoreBoardElement *>::iterator ScoreBoard::begin() {
 }
 
 std::vector<ScoreBoardElement *>::iterator ScoreBoard::end() {
-  return elements.end();
+  return elements.begin() + showsize;
 }
 
-int ScoreBoard::size() {
-  return elements.size();
+unsigned int ScoreBoard::size() {
+  return showsize;
 }
 
-std::vector<ScoreBoardElement *> ScoreBoard::getElementVector() {
-  return elements;
+std::vector<ScoreBoardElement *> * ScoreBoard::getElementVector() {
+  return &elements;
 }
 
 void ScoreBoard::wipe() {
-  elements.clear();
+  showsize = 0;
 }

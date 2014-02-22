@@ -195,6 +195,9 @@ void MainScreen::keyPressed(unsigned int ch) {
     case 'l':
       uicommunicator->newCommand("eventlog");
       break;
+    case 'o':
+      uicommunicator->newCommand("scoreboard");
+      break;
   }
   if (mss.isFocused()) {
     switch(ch) {
