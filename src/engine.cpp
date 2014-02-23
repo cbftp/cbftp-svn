@@ -254,6 +254,9 @@ void Engine::refreshScoreBoard() {
         if (sld->getSite()->isAffiliated(race->getGroup())) continue;
         SiteRace * srd = sld->getRace(race->getName());
         int avgspeed = sls->getSite()->getAverageSpeed(sld->getSite()->getName());
+        if (avgspeed > maxavgspeed) {
+          avgspeed = maxavgspeed;
+        }
         for (std::map<std::string, FileList *>::iterator itfls = srs->fileListsBegin(); itfls != srs->fileListsEnd(); itfls++) {
           if (!global->getSkipList()->isAllowed(itfls->first)) continue;
           FileList * fls = itfls->second;
