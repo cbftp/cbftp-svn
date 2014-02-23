@@ -74,6 +74,10 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
   }
   bool readdtocurrent = true;
   if (addsites.size() > 0) {
+    if (!pokeregistered) {
+      global->getTickPoke()->startPoke(this, "Engine", POKEINTERVAL, 0);
+      pokeregistered = true;
+    }
     if (append) {
       for (std::list<Race *>::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
         if (*it == race) {
@@ -107,10 +111,6 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
           " with " + global->int2Str((int)addsites.size()) + " sites.");
     }
     setSpeedScale();
-  }
-  if (!pokeregistered) {
-    global->getTickPoke()->startPoke(this, "Engine", POKEINTERVAL, 0);
-    pokeregistered = true;
   }
 }
 
