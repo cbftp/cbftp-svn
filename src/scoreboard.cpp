@@ -12,12 +12,12 @@ ScoreBoard::ScoreBoard() {
   showsize = 0;
 }
 
-void ScoreBoard::add(std::string name, int score, SiteLogic * src, FileList * fls, SiteLogic * dst, FileList * fld) {
+void ScoreBoard::add(std::string name, int score, bool prio, SiteLogic * src, FileList * fls, SiteLogic * dst, FileList * fld) {
   if (showsize == elements.size()) {
-    elements.push_back(new ScoreBoardElement(name, score, src, fls, dst, fld));
+    elements.push_back(new ScoreBoardElement(name, score, prio, src, fls, dst, fld));
   }
   else {
-    elements[showsize]->reset(name, score, src, fls, dst, fld);
+    elements[showsize]->reset(name, score, prio, src, fls, dst, fld);
   }
   showsize++;
 }

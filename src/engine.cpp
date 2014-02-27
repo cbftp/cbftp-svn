@@ -286,7 +286,9 @@ void Engine::refreshScoreBoard() {
                       sld->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_OFF)) {
                 continue;
               }
-              scoreboard->add(filename, calculateScore(f, race, fls, srs, fld, srd, avgspeed, (SPREAD ? false : true)), sls, fls, sld, fld);
+              bool prio = false;
+              int score = calculateScore(f, race, fls, srs, fld, srd, avgspeed, &prio, (SPREAD ? false : true));
+              scoreboard->add(filename, score, prio, sls, fls, sld, fld);
               race->resetUpdateCheckCounter();
             }
             fls->unlockFileList();
@@ -313,7 +315,9 @@ void Engine::issueOptimalTransfers() {
     sld = sbe->getDestination();
     filename = sbe->fileName();
     //potentiality handling
-    sls->pushPotential(sbe->getScore(), filename, sld);
+    if (!sbe->isPrioritized()) { // priority files shouldn't affect the potential tracking
+      sls->pushPotential(sbe->getScore(), filename, sld);
+    }
     if (!sls->downloadSlotAvailable()) continue;
     if (!sld->uploadSlotAvailable()) continue;
     if (sls->potentialCheck(sbe->getScore())) {
@@ -323,7 +327,7 @@ void Engine::issueOptimalTransfers() {
   }
 }
 
-int Engine::calculateScore(File * f, Race * itr, FileList * fls, SiteRace * srs, FileList * fld, SiteRace * srd, int avgspeed, bool racemode) {
+int Engine::calculateScore(File * f, Race * itr, FileList * fls, SiteRace * srs, FileList * fld, SiteRace * srd, int avgspeed, bool * prio, bool racemode) {
   int points = 0;
   points += f->getSize() / ((srs->getMaxFileSize() + 2000) / 2000); // gives max 2000 points
   points = (points * (avgspeed / 100)) / (maxavgspeed / 100);
@@ -339,8 +343,19 @@ int Engine::calculateScore(File * f, Race * itr, FileList * fls, SiteRace * srs,
     }
   }
   // sfv and nfo files have top priority
-  if (f->getExtension().compare("sfv") == 0) return 10000;
-  else if (f->getExtension().compare("nfo") == 0) return 10000;
+  if (f->getExtension().compare("sfv") == 0 ||
+      f->getExtension().compare("nfo") == 0) {
+    *prio = true;
+    return 10000;
+  }
+  if (points > 10000 || points < 0) {
+    global->getEventLog()->log("Engine", "BUG: unexpected score. Avgspeed: " +
+        global->int2Str(avgspeed) + " Maxavgspeed: " + global->int2Str(maxavgspeed) +
+        " Filesize: " + global->int2Str(f->getSize()) + " Maxfilesize: " +
+        global->int2Str(srs->getMaxFileSize()) + " Ownedpercentage: " +
+        global->int2Str(fld->getOwnedPercentage()) + " Maxprogress: " +
+        global->int2Str(itr->getMaxSiteProgress()));
+  }
   return points;
 }
 

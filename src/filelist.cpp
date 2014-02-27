@@ -99,6 +99,9 @@ void FileList::touchFile(std::string name, std::string user, bool upload) {
     file = new File(name, user);
     files[name] = file;
     listchanged = true;
+    if (user.compare(username) == 0) {
+      editOwnedFileCount(true);
+    }
   }
   if (upload) {
     file->upload();

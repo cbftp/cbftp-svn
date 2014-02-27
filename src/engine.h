@@ -29,7 +29,7 @@ class Engine : public EventReceiver {
     void refreshScoreBoard();
     void issueOptimalTransfers();
     void setSpeedScale();
-    int calculateScore(File *, Race *, FileList *, SiteRace *, FileList *, SiteRace *, int, bool);
+    int calculateScore(File *, Race *, FileList *, SiteRace *, FileList *, SiteRace *, int, bool *, bool);
     bool pokeregistered;
   public:
     Engine();

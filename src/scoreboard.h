@@ -15,7 +15,7 @@ class ScoreBoard {
     unsigned int showsize;
   public:
     ScoreBoard();
-    void add(std::string, int, SiteLogic *, FileList *, SiteLogic *, FileList *);
+    void add(std::string, int, bool, SiteLogic *, FileList *, SiteLogic *, FileList *);
     unsigned int size();
     std::vector<ScoreBoardElement *>::iterator begin();
     std::vector<ScoreBoardElement *>::iterator end();
