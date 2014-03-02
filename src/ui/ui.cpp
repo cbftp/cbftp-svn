@@ -41,6 +41,7 @@
 #include "screens/nukescreen.h"
 #include "screens/fileviewersettingsscreen.h"
 #include "screens/scoreboardscreen.h"
+#include "screens/selectsitesscreen.h"
 
 extern GlobalContext * global;
 
@@ -199,6 +200,7 @@ void UserInterface::runInstance() {
   UIWindow * nukescreen = NULL;
   UIWindow * fileviewersettingsscreen = NULL;
   UIWindow * scoreboardscreen = NULL;
+  UIWindow * selectsitesscreen = NULL;
   legendwindow = new LegendWindow(legend, 2, col);
   infowindow = new InfoWindow(info, 2, col);
   if (global->getDataFileHandler()->fileExists()) {
@@ -385,6 +387,17 @@ void UserInterface::runInstance() {
         refreshAll();
         uicommunicator.checkoutCommand();
       }
+      else if (command == "selectsites") {
+        selectsitesscreen = new SelectSitesScreen(main, &uicommunicator, mainrow, maincol);
+        mainwindows.push_back(selectsitesscreen);
+        history.push_back(topwindow);
+        topwindow = selectsitesscreen;
+        legendwindow->setText(topwindow->getLegendText());
+        infowindow->setLabel(topwindow->getInfoLabel());
+        infowindow->setText(topwindow->getInfoText());
+        refreshAll();
+        uicommunicator.checkoutCommand();
+      }
       else if (command == "update") {
         uicommunicator.checkoutCommand();
         topwindow->update();
@@ -474,6 +487,16 @@ void UserInterface::runInstance() {
         refreshAll();
       }
       else if (command == "returnnuke") {
+        topwindow = history.back();
+        history.pop_back();
+        topwindow->redraw();
+        legendwindow->setText(topwindow->getLegendText());
+        infowindow->setLabel(topwindow->getInfoLabel());
+        infowindow->setText(topwindow->getInfoText());
+        uicommunicator.checkoutCommand();
+        refreshAll();
+      }
+      else if (command == "returnselectsites") {
         topwindow = history.back();
         history.pop_back();
         topwindow->redraw();

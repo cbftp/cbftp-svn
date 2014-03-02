@@ -16,6 +16,7 @@
 #include "skiplist.h"
 #include "eventlog.h"
 #include "tickpoke.h"
+#include "sitemanager.h"
 
 Engine::Engine() {
   scoreboard = new ScoreBoard();
@@ -251,6 +252,7 @@ void Engine::refreshScoreBoard() {
       for (std::list<SiteLogic *>::iterator itd = race->begin(); itd != race->end(); itd++) {
         SiteLogic * sld = *itd;
         if (sls == sld) continue;
+        if (global->getSiteManager()->isBlockedPair(sls->getSite(), sld->getSite())) continue;
         if (sld->getSite()->isAffiliated(race->getGroup())) continue;
         SiteRace * srd = sld->getRace(race->getName());
         int avgspeed = sls->getSite()->getAverageSpeed(sld->getSite()->getName());

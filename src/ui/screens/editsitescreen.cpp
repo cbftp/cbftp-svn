@@ -29,6 +29,7 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
   std::string arg2 = uicommunicator->getArg2();
   uicommunicator->checkoutCommand();
   SiteManager * sm = global->getSiteManager();
+  std::list<Site *> blockedlist;
   if (operation == "add") {
     modsite = Site("SUNET");
     modsite.setUser(sm->getDefaultUserName());
@@ -43,6 +44,7 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
   else if (operation == "edit") {
     site = global->getSiteManager()->getSite(arg2);
     modsite = Site(*site);
+    blockedlist = sm->getBlocksForSite(site);
   }
   std::string affilstr = "";
   std::map<std::string, bool>::iterator it;
@@ -52,6 +54,11 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
   if (affilstr.length() > 0) {
     affilstr = affilstr.substr(0, affilstr.length() - 1);
   }
+  std::string blockedsites = "";
+  for (std::list<Site *>::iterator it = blockedlist.begin(); it != blockedlist.end(); it++) {
+    blockedsites += (*it)->getName() + ",";
+  }
+  blockedsites = blockedsites.substr(0, blockedsites.length() - 1);
   unsigned int y = 1;
   unsigned int x = 1;
   std::string addrport = modsite.getAddress();
@@ -97,6 +104,7 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
     useproxy->setOptionText(modsite.getProxy());
   }
   y++;
+  mso.addStringField(y++, x, "blockedsites", "Blocked sites:", blockedsites, false, 60, 512);
   mso.addStringField(y++, x, "affils", "Affils:", affilstr, false, 60, 512);
   y++;
   ms.initialize(y++, x, modsite.sectionsBegin(), modsite.sectionsEnd());
@@ -109,6 +117,12 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
 
 void EditSiteScreen::redraw() {
   werase(window);
+  if (uicommunicator->hasNewCommand()) {
+    if (uicommunicator->getCommand() == "returnselectsites") {
+      ((MenuSelectOptionTextField *)activeelement)->setText(uicommunicator->getArg1());
+    }
+    uicommunicator->checkoutCommand();
+  }
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     MenuSelectOptionElement * msoe = mso.getElement(i);
@@ -253,6 +267,8 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
   }
   bool activation;
   bool changedname = false;
+  std::list<std::string> blocklist;
+  std::string sitename;
   switch(ch) {
     case KEY_UP:
       if (focusedarea->goUp()) {
@@ -298,6 +314,13 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
       }
       active = true;
       activeelement = focusedarea->getElement(focusedarea->getSelectionPointer());
+      if (activeelement->getIdentifier() == "blockedsites") {
+        activeelement->deactivate();
+        active = false;
+        uicommunicator->newCommand("selectsites", ((MenuSelectOptionTextField *)activeelement)->getData(),
+            "Block race transfers with these sites", site);
+        return;
+      }
       currentlegendtext = activeelement->getLegendText();
       uicommunicator->newCommand("updatesetlegend");
       break;
@@ -409,6 +432,20 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
             pos++;
           }
         }
+        else if (identifier == "blockedsites") {
+          std::string blockedstr = ((MenuSelectOptionTextField *)msoe)->getData();
+          while (true) {
+            size_t commapos = blockedstr.find(",");
+            if (commapos != std::string::npos) {
+              blocklist.push_back(blockedstr.substr(0, commapos));
+              blockedstr = blockedstr.substr(commapos + 1);
+            }
+            else {
+              blocklist.push_back(blockedstr);
+              break;
+            }
+          }
+        }
       }
       site->clearSections();
       for (unsigned int i = 0; i < ms.size(); i++) {
@@ -424,6 +461,11 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
       }
       else {
         global->getSiteManager()->sortSites();
+      }
+      sitename = site->getName();
+      global->getSiteManager()->clearBlocksForSite(site);
+      for (std::list<std::string>::iterator it = blocklist.begin(); it != blocklist.end(); it++) {
+        global->getSiteManager()->addBlockedPair(sitename, *it);
       }
       global->getSiteLogicManager()->getSiteLogic(site->getName())->setNumConnections(site->getMaxLogins());
       if (changedname) {

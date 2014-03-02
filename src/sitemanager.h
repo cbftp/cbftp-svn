@@ -17,6 +17,7 @@
 class SiteManager {
   private:
     std::vector<Site *> sites;
+    std::map<Site *, std::map<Site *, bool> > blockedpairs;
     std::string defaultusername;
     std::string defaultpassword;
     unsigned int defaultmaxlogins;
@@ -53,6 +54,10 @@ class SiteManager {
     void writeState();
     void sortSites();
     void proxyRemoved(std::string);
+    void addBlockedPair(std::string, std::string);
+    bool isBlockedPair(Site *, Site *);
+    void clearBlocksForSite(Site *);
+    std::list<Site *> getBlocksForSite(Site *);
 };
 
 bool siteNameComparator(Site *, Site *);

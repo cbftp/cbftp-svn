@@ -15,8 +15,6 @@ feature: about screen
 
 feature: play-and-replay
 
-feature: disable specific site1->site2
-
 feature: reverse potential tracking
 
 feature: intermediate data file writing

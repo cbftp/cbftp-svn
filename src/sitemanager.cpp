@@ -151,6 +151,21 @@ void SiteManager::readConfiguration() {
       setDefaultMaxIdleTime(global->str2Int(value));
     }
   }
+  lines.clear();
+  global->getDataFileHandler()->getDataFor("SiteManagerRules", &lines);
+  for (it = lines.begin(); it != lines.end(); it++) {
+    line = *it;
+    if (line.length() == 0 ||line[0] == '#') continue;
+    size_t tok = line.find('=');
+    std::string setting = line.substr(0, tok);
+    std::string value = line.substr(tok + 1);
+    if (!setting.compare("blockedpair")) {
+      size_t split = value.find('$');
+      std::string site1 = value.substr(0, split);
+      std::string site2 = value.substr(split + 1);
+      addBlockedPair(site1, site2);
+    }
+  }
   std::sort(sites.begin(), sites.end(), siteNameComparator);
   global->getEventLog()->log("SiteManager", "Loaded " + global->int2Str((int)sites.size()) + " sites.");
 }
@@ -160,6 +175,7 @@ void SiteManager::writeState() {
   std::vector<Site *>::iterator it;
   std::string filetag = "SiteManager";
   std::string defaultstag = "SiteManagerDefaults";
+  std::string rulestag = "SiteManagerRules";
   DataFileHandler * filehandler = global->getDataFileHandler();
   for (it = sites.begin(); it != sites.end(); it++) {
     Site * site = *it;
@@ -208,6 +224,13 @@ void SiteManager::writeState() {
   filehandler->addOutputLine(defaultstag, "maxidletime=" + global->int2Str(getDefaultMaxIdleTime()));
   filehandler->addOutputLine(defaultstag, "ssltransfer=" + global->int2Str(getDefaultSSLTransferPolicy()));
   if (!getDefaultSSL()) filehandler->addOutputLine(defaultstag, "sslconn=false");
+  std::map<Site *, std::map<Site *, bool> >::iterator it2;
+  std::map<Site *, bool>::iterator it3;
+  for (it2 = blockedpairs.begin(); it2 != blockedpairs.end(); it2++) {
+    for (it3 = it2->second.begin(); it3 != it2->second.end(); it3++) {
+      filehandler->addOutputLine(rulestag, "blockedpair=" + it2->first->getName() + "$" + it3->first->getName());
+    }
+  }
 }
 
 int SiteManager::getNumSites() {
@@ -228,6 +251,8 @@ void SiteManager::deleteSite(std::string site) {
   std::vector<Site *>::iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {
     if ((*it)->getName().compare(site) == 0) {
+      clearBlocksForSite(*it);
+      blockedpairs.erase(*it);
       delete *it;
       sites.erase(it);
       global->getEventLog()->log("SiteManager", "Site " + site + " deleted.");
@@ -330,4 +355,49 @@ void SiteManager::proxyRemoved(std::string removedproxy) {
       global->getEventLog()->log("SiteManager", "Used proxy (" + removedproxy + ") was removed, reset proxy type for " + (*it)->getName());
     }
   }
+}
+
+void SiteManager::addBlockedPair(std::string sitestr1, std::string sitestr2) {
+  Site * site1 = getSite(sitestr1);
+  Site * site2 = getSite(sitestr2);
+  if (site1 == NULL || site2 == NULL) {
+    return;
+  }
+  if (blockedpairs.find(site1) == blockedpairs.end()) {
+    blockedpairs[site1] = std::map<Site *, bool>();
+  }
+  if (blockedpairs.find(site2) == blockedpairs.end()) {
+    blockedpairs[site2] = std::map<Site *, bool>();
+  }
+  blockedpairs[site1][site2] = true;
+  blockedpairs[site2][site1] = true;
+}
+
+bool SiteManager::isBlockedPair(Site * site1, Site * site2) {
+  if (blockedpairs.find(site1) == blockedpairs.end()) {
+    blockedpairs[site1] = std::map<Site *, bool>();
+  }
+  return blockedpairs[site1].find(site2) != blockedpairs[site1].end();
+}
+
+void SiteManager::clearBlocksForSite(Site * site) {
+  blockedpairs[site] = std::map<Site *, bool>();
+  std::map<Site *, std::map<Site *, bool> >::iterator it;
+  for (it = blockedpairs.begin(); it != blockedpairs.end(); it++) {
+    if (it->second.find(site) != it->second.end()) {
+      it->second.erase(site);
+    }
+  }
+}
+
+std::list<Site *> SiteManager::getBlocksForSite(Site * site) {
+  if (blockedpairs.find(site) == blockedpairs.end()) {
+    blockedpairs[site] = std::map<Site *, bool>();
+  }
+  std::map<Site *, bool>::iterator it;
+  std::list<Site *> blockedlist;
+  for (it = blockedpairs[site].begin(); it != blockedpairs[site].end(); it++) {
+    blockedlist.push_back(it->first);
+  }
+  return blockedlist;
 }
