@@ -216,6 +216,9 @@ void RaceStatusScreen::update() {
   for (std::list<SiteLogic *>::iterator it = race->begin(); it != race->end(); it++) {
     SiteRace * sr = (*it)->getRace(release);
     std::string user = (*it)->getSite()->getUser();
+    if (user.length() > 8) {
+      user = user.substr(0, 8);
+    }
     std::string sitename = (*it)->getSite()->getName();
     mso.addTextButton(y, x, sitename, sitename);
     for (std::list<std::string>::iterator it2 = subpaths.begin(); it2 != subpaths.end(); it2++) {
