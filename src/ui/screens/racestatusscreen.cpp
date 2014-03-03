@@ -216,8 +216,10 @@ void RaceStatusScreen::update() {
   for (std::list<SiteLogic *>::iterator it = race->begin(); it != race->end(); it++) {
     SiteRace * sr = (*it)->getRace(release);
     std::string user = (*it)->getSite()->getUser();
-    if (user.length() > 8) {
-      user = user.substr(0, 8);
+    bool trimcompare = user.length() > 8;
+    std::string trimuser = user;
+    if (trimcompare) {
+      trimuser = user.substr(0, 8);
     }
     std::string sitename = (*it)->getSite()->getName();
     mso.addTextButton(y, x, sitename, sitename);
@@ -252,7 +254,8 @@ void RaceStatusScreen::update() {
           if (file->isUploading() || file->getSize() < race->guessedFileSize(origsubpath, *it3)) {
             upload = true;
           }
-          if (file->getOwner() == user) {
+          std::string ownerstr = file->getOwner();
+          if (ownerstr == user || (trimcompare && ownerstr == trimuser)) {
             owner = true;
           }
           if (file->isDownloading()) {
