@@ -1266,7 +1266,7 @@ void SiteLogic::disconnectConn(int id) {
 
 void SiteLogic::issueRawCommand(unsigned int id, std::string command) {
   int requestid = requestidcounter++;
-  SiteLogicRequest request(requestid, 1, command);
+  SiteLogicRequest request(requestid, REQ_RAW, command);
   request.setConnId(id);
   requests.push_back(request);
   if (connstatetracker[id].isDisconnected()) {
