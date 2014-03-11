@@ -347,7 +347,7 @@ void FTPConn::USERResponse() {
     else {
       state = 25;
     }
-    iom->sendData(sockfd, std::string("PASS ") + site->getPass()  + "\n");
+    iom->sendData(sockfd, std::string("PASS ") + site->getPass()  + "\r\n");
   }
   else {
     processing = false;
