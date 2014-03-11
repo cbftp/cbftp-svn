@@ -161,14 +161,8 @@ void FTPConn::FDData(char * data, unsigned int datalen) {
     delete databuf;
     databuf = newdatabuf;
   }
-  unsigned int iwrite = 0;
-  for (unsigned int iread = 0; iread < datalen; iread++) {
-    if (data[iread] == '\r') {
-      continue;
-    }
-    databuf[databufpos + iwrite++] = data[iread];
-  }
-  databufpos += iwrite;
+  memcpy(databuf + databufpos, data, datalen);
+  databufpos += datalen;
   bool messagecomplete = false;
   char * loc;
   if (state == 100) {
@@ -453,7 +447,7 @@ void FTPConn::doSTATla() {
 
 void FTPConn::STATResponse() {
   processing = false;
-  if (databufcode == 211 || databufcode == 213) {
+  if (databufcode == 211 || databufcode == 212 || databufcode == 213) {
     char * loc = databuf, * start;
     unsigned int files = 0;
     int touch = rand();
