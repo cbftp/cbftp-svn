@@ -161,8 +161,14 @@ void FTPConn::FDData(char * data, unsigned int datalen) {
     delete databuf;
     databuf = newdatabuf;
   }
-  memcpy(databuf + databufpos, data, datalen);
-  databufpos += datalen;
+  unsigned int iwrite = 0;
+  for (unsigned int iread = 0; iread < datalen; iread++) {
+    if (data[iread] == '\r') {
+      continue;
+    }
+    databuf[databufpos + iwrite++] = data[iread];
+  }
+  databufpos += iwrite;
   bool messagecomplete = false;
   char * loc;
   if (state == 100) {
