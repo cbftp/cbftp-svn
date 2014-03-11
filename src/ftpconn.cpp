@@ -286,7 +286,7 @@ void FTPConn::sendEcho(std::string data) {
   rawbuf->writeLine(data);
   processing = true;
   status = data;
-  iom->sendData(sockfd, data + "\n");
+  iom->sendData(sockfd, data + "\r\n");
 }
 
 void FTPConn::welcomeReceived() {
