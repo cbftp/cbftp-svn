@@ -64,7 +64,10 @@ class SiteLogic : public EventReceiver {
     void refreshChangePath(int, SiteRace *, bool);
     void initTransfer(int);
     void handleTransferFail(int, int);
-    void handleTransferFail(int, bool, int);
+    void handleTransferFail(int, int, int);
+    void getFileListConn(int);
+    void getFileListConn(int, bool);
+    void getFileListConn(int, SiteRace *, FileList *);
     static void * run(void *);
     bool poke;
   public:
@@ -106,6 +109,7 @@ class SiteLogic : public EventReceiver {
     void activate();
     void connectConn(int);
     void disconnectConn(int);
+    void listCompleted(int, int);
     void issueRawCommand(unsigned int, std::string);
     RawBuffer * getRawCommandBuffer();
     void raceGlobalComplete();
@@ -130,9 +134,11 @@ class SiteLogic : public EventReceiver {
     std::string getStatus(int);
     void preparePassiveDownload(int, TransferMonitor *, std::string, std::string, bool, bool);
     void preparePassiveUpload(int, TransferMonitor *, std::string, std::string, bool, bool);
-    void passiveDownload(int);
-    void passiveUpload(int);
-    void activeUpload(int, TransferMonitor *, std::string, std::string, std::string, bool);
-    void activeDownload(int, TransferMonitor *, std::string, std::string, std::string, bool);
+    void preparePassiveList(int, TransferMonitor *, bool);
+    void download(int);
+    void upload(int);
+    void list(int);
+    void prepareActiveUpload(int, TransferMonitor *, std::string, std::string, std::string, bool);
+    void prepareActiveDownload(int, TransferMonitor *, std::string, std::string, std::string, bool);
     void abortTransfer(int);
 };

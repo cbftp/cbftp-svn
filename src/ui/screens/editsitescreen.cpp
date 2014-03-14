@@ -74,6 +74,10 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
   mso.addIntArrow(y++, x, "maxup", "Upload slots:", modsite.getInternMaxUp(), 0, 99);
   mso.addIntArrow(y++, x, "maxdn", "Download slots:", modsite.getInternMaxDown(), 0, 99);
   mso.addStringField(y++, x, "basepath", "Base path:", modsite.getBasePath(), false, 32, 512);
+  MenuSelectOptionTextArrow * listcommand = mso.addTextArrow(y++, x, "listcommand", "List command:");
+  listcommand->addOption("STAT -l", SITE_LIST_STAT);
+  listcommand->addOption("LIST", SITE_LIST_LIST);
+  listcommand->setOption(modsite.getListCommand());
   mso.addStringField(y++, x, "idletime", "Max idle time (s):", global->int2Str(modsite.getMaxIdleTime()), false);
   mso.addCheckBox(y++, x, "allowupload", "Allow upload:", modsite.getAllowUpload());
   mso.addCheckBox(y++, x, "allowdownload", "Allow download:", modsite.getAllowDownload());
@@ -380,6 +384,9 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "ssltransfer") {
           site->setSSLTransferPolicy(((MenuSelectOptionTextArrow *)msoe)->getData());
+        }
+        else if (identifier == "listcommand") {
+          site->setListCommand(((MenuSelectOptionTextArrow *)msoe)->getData());
         }
         else if (identifier == "allowupload") {
           site->setAllowUpload(((MenuSelectOptionCheckBox *)msoe)->getData());

@@ -16,6 +16,7 @@ Site::Site(std::string name) {
   max_dn = 0;
   max_idletime = 60;
   pret = false;
+  listcommand = SITE_LIST_STAT;
   ssltransfer = SITE_SSL_PREFER_OFF;
   sslconn = true;
   brokenpasv = false;
@@ -35,6 +36,7 @@ void Site::copy(Site * site) {
   this->max_up = site->max_up;
   this->max_dn = site->max_dn;
   this->pret = site->pret;
+  this->listcommand = site->listcommand;
   this->ssltransfer = site->ssltransfer;
   this->sslconn = site->sslconn;
   this->brokenpasv = site->brokenpasv;
@@ -158,6 +160,14 @@ int Site::getSSLTransferPolicy() {
 
 void Site::setSSLTransferPolicy(int policy) {
   ssltransfer = policy;
+}
+
+int Site::getListCommand() {
+  return listcommand;
+}
+
+void Site::setListCommand(int command) {
+  listcommand = command;
 }
 
 void Site::setSSL(bool val) {

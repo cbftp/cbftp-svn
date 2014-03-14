@@ -274,6 +274,15 @@ void FTPConn::FDData(char * data, unsigned int datalen) {
       case 30: // awaiting SITE NUKE response
         NUKEResponse();
         break;
+      case 31: // awaiting LIST response
+        LISTResponse();
+        break;
+      case 32: // awaiting PRET LIST response
+        PRETLISTResponse();
+        break;
+      case 33: // awaiting LIST complete
+        LISTComplete();
+        break;
       case 100: // negotiating proxy session
         proxySessionInit(false);
         break;
@@ -429,8 +438,6 @@ void FTPConn::doSTAT() {
   doSTAT(NULL, new FileList(site->getUser(), currentpath));
 }
 
-
-
 void FTPConn::doSTAT(SiteRace * race, FileList * filelist) {
   state = 6;
   currentrace = race;
@@ -445,32 +452,49 @@ void FTPConn::doSTATla() {
   sendEcho("STAT -la");
 }
 
+void FTPConn::prepareLIST() {
+  currentrace = NULL;
+  currentfl = new FileList(site->getUser(), currentpath);
+}
+
+void FTPConn::prepareLIST(SiteRace * race, FileList * filelist) {
+  currentrace = race;
+  currentfl = filelist;
+}
+
+void FTPConn::doLIST() {
+  state = 31;
+  sendEcho("LIST");
+}
+
 void FTPConn::STATResponse() {
   processing = false;
   if (databufcode == 211 || databufcode == 212 || databufcode == 213) {
-    char * loc = databuf, * start;
-    unsigned int files = 0;
-    int touch = rand();
-    while (loc + 4 < databuf + databufpos && !(*(loc + 1) == '2' && *(loc + 2) == '1' && *(loc + 4) == ' ')) {
-      if (*(loc + 1) == '2' && *(loc + 2) == '1' && *(loc + 4) == '-') loc += 4;
-      start = loc + 1;
-      while (loc < databuf + databufpos && loc - start < 50) {
-        start = loc + 1;
-        while(loc < databuf + databufpos && *++loc != '\n');
-      }
-      if (loc - start >= 50) {
-        if (currentfl->updateFile(std::string(start, loc - start), touch)) {
-          files++;
-        }
-      }
-    }
-    if (currentfl->getSize() > files) {
-      currentfl->cleanSweep(touch);
-    }
+    parseFileList(databuf, databufpos);
     std::string output = "[File list retrieved]";
     rawbuf->writeLine(output);
-    if (!currentfl->isFilled()) currentfl->setFilled();
     sl->listRefreshed(id);
+  }
+  else {
+    sl->commandFail(id);
+  }
+}
+
+void FTPConn::LISTResponse() {
+  if (databufcode == 150) {
+    sl->commandSuccess(id);
+    state = 33;
+  }
+  else {
+    processing = false;
+    sl->commandFail(id);
+  }
+}
+
+void FTPConn::LISTComplete() {
+  processing = false;
+  if (databufcode == 226) {
+    sl->commandSuccess(id);
   }
   else {
     sl->commandFail(id);
@@ -725,6 +749,21 @@ void FTPConn::PRETSTORResponse() {
   }
 }
 
+void FTPConn::doPRETLIST() {
+  state = 32;
+  sendEcho("PRET LIST");
+}
+
+void FTPConn::PRETLISTResponse() {
+  processing = false;
+  if (databufcode == 200) {
+    sl->commandSuccess(id);
+  }
+  else {
+    sl->commandFail(id);
+  }
+}
+
 void FTPConn::doRETR(std::string file) {
   state = 18;
   sendEcho(("RETR " + file).c_str());
@@ -886,4 +925,27 @@ void FTPConn::lock() {
 
 void FTPConn::unlock() {
   sl->unlock();
+}
+
+void FTPConn::parseFileList(char * buf, unsigned int buflen) {
+  char * loc = buf, * start;
+  unsigned int files = 0;
+  int touch = rand();
+  while (loc + 4 < buf + buflen && !(*(loc + 1) == '2' && *(loc + 2) == '1' && *(loc + 4) == ' ')) {
+    if (*(loc + 1) == '2' && *(loc + 2) == '1' && *(loc + 4) == '-') loc += 4;
+    start = loc + 1;
+    while (loc < buf + buflen && loc - start < 50) {
+      start = loc + 1;
+      while(loc < buf + buflen && *++loc != '\n');
+    }
+    if (loc - start >= 50) {
+      if (currentfl->updateFile(std::string(start, loc - start), touch)) {
+        files++;
+      }
+    }
+  }
+  if (currentfl->getSize() > files) {
+    currentfl->cleanSweep(touch);
+  }
+  if (!currentfl->isFilled()) currentfl->setFilled();
 }

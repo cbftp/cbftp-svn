@@ -12,24 +12,21 @@ extern GlobalContext * global;
 
 LocalStorage::LocalStorage() {
   temppath = "/tmp";
+  storeidcounter = 0;
 }
 
 void LocalStorage::passiveDownload(TransferMonitor * tm, std::string file, std::string addr, bool ssl, FTPConn * ftpconn) {
-  LocalTransfer * lt = NULL;
-  for (std::list<LocalTransfer *>::iterator it = localtransfers.begin();
-      it != localtransfers.end(); it++) {
-    if (!(*it)->active()) {
-      lt = *it;
-      break;
-    }
-  }
-  if (lt == NULL) {
-    lt = new LocalTransfer();
-    localtransfers.push_back(lt);
-  }
   std::string host = getHostFromPASVString(addr);
   int port = getPortFromPASVString(addr);
-  lt->engage(tm, temppath, file, host, port, ssl, ftpconn);
+  getAvailableLocalTransfer()->engage(tm, temppath, file, host, port, ssl, ftpconn);
+}
+
+int LocalStorage::passiveDownload(TransferMonitor * tm, std::string addr, bool ssl, FTPConn * ftpconn) {
+  int storeid = storeidcounter++;
+  std::string host = getHostFromPASVString(addr);
+  int port = getPortFromPASVString(addr);
+  getAvailableLocalTransfer()->engage(tm, storeid, host, port, ssl, ftpconn);
+  return storeid;
 }
 
 std::string LocalStorage::getHostFromPASVString(std::string pasv) {
@@ -54,11 +51,41 @@ int LocalStorage::getPortFromPASVString(std::string pasv) {
   return major * 256 + minor;
 }
 
+LocalTransfer * LocalStorage::getAvailableLocalTransfer() {
+  LocalTransfer * lt = NULL;
+  for (std::list<LocalTransfer *>::iterator it = localtransfers.begin(); it != localtransfers.end(); it++) {
+    if (!(*it)->active()) {
+      lt = *it;
+      break;
+    }
+  }
+  if (lt == NULL) {
+    lt = new LocalTransfer(this);
+    localtransfers.push_back(lt);
+  }
+  return lt;
+}
+
 int LocalStorage::getFileContent(std::string filename, char * data) {
   std::ifstream filestream;
   filestream.open((temppath + "/" + filename).c_str(), std::ios::binary | std::ios::in);
   filestream.read(data, MAXREAD);
   return filestream.gcount();
+}
+
+int LocalStorage::getStoreContent(int storeid, char ** data) {
+  if (content.find(storeid) != content.end()) {
+    *data = content[storeid].first;
+    return content[storeid].second;
+  }
+  return 0;
+}
+
+void LocalStorage::purgeStoreContent(int storeid) {
+  if (content.find(storeid) != content.end()) {
+    delete content[storeid].first;
+    content.erase(storeid);
+  }
 }
 
 void LocalStorage::deleteFile(std::string filename) {
@@ -74,6 +101,12 @@ std::string LocalStorage::getTempPath() {
 
 void LocalStorage::setTempPath(std::string path) {
   temppath = path;
+}
+
+void LocalStorage::storeContent(int storeid, char * buf, int buflen) {
+  char * storebuf = (char *) malloc(buflen);
+  memcpy(storebuf, buf, buflen);
+  content[storeid] = std::pair<char *, int>(storebuf, buflen);
 }
 
 void LocalStorage::readConfiguration() {

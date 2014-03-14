@@ -3,6 +3,10 @@
 #include <string>
 #include <list>
 
+#define CST_DOWNLOAD 981
+#define CST_UPLOAD 982
+#define CST_LIST 983
+
 class SiteRace;
 class FileList;
 class TransferMonitor;
@@ -22,7 +26,7 @@ private:
   TransferMonitor * tm;
   std::string path;
   std::string file;
-  bool download;
+  int type;
   bool passive;
   bool ssl;
   bool aborted;
@@ -30,6 +34,11 @@ private:
   bool lockeddownload;
   bool loggedin;
   bool fxp;
+  bool listtransfer;
+  bool listpassive;
+  bool listssl;
+  std::string listaddr;
+  TransferMonitor * listtm;
   std::string addr;
   RecursiveCommandLogic * recursivelogic;
 public:
@@ -50,8 +59,10 @@ public:
   bool isDisconnected();
   bool isIdle();
   bool isReady();
-  void setTransfer(TransferMonitor *, std::string, std::string, bool, bool, bool);
-  void setTransfer(TransferMonitor *, std::string, std::string, bool, std::string, bool);
+  void setTransfer(TransferMonitor *, std::string, std::string, int, bool, bool);
+  void setTransfer(TransferMonitor *, std::string, std::string, int, std::string, bool);
+  void setList(TransferMonitor *, bool);
+  void setList(TransferMonitor *, std::string, bool);
   bool hasTransfer();
   void finishTransfer();
   void abortTransfer();
@@ -64,7 +75,7 @@ public:
   TransferMonitor * getTransferMonitor();
   std::string getTransferPath();
   std::string getTransferFile();
-  bool getTransferDownload();
+  int getTransferType();
   bool getTransferPassive();
   bool getTransferSSL();
   bool getTransferFXP();

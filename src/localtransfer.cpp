@@ -9,12 +9,14 @@
 #include "eventlog.h"
 #include "transfermonitor.h"
 #include "ftpconn.h"
+#include "localstorage.h"
 
 extern GlobalContext * global;
 
-LocalTransfer::LocalTransfer() {
+LocalTransfer::LocalTransfer(LocalStorage * ls) {
   inuse = false;
   buflen = 0;
+  this->ls = ls;
 }
 
 void LocalTransfer::engage(TransferMonitor * tm, std::string path, std::string filename, std::string addr, int port, bool ssl, FTPConn * ftpconn) {
@@ -29,6 +31,19 @@ void LocalTransfer::engage(TransferMonitor * tm, std::string path, std::string f
   filesize = filestream.tellg();
   bufpos = 0;
   inuse = true;
+  inmemory = false;
+  this->ssl = ssl;
+  global->getIOManager()->registerTCPClientSocket(this, addr, port, &sockfd);
+}
+
+void LocalTransfer::engage(TransferMonitor * tm, int storeid, std::string addr, int port, bool ssl, FTPConn * ftpconn) {
+  this->tm = tm;
+  this->ftpconn = ftpconn;
+  bufpos = 0;
+  filesize = 0;
+  inuse = true;
+  inmemory = true;
+  this->storeid = storeid;
   this->ssl = ssl;
   global->getIOManager()->registerTCPClientSocket(this, addr, port, &sockfd);
 }
@@ -38,18 +53,23 @@ bool LocalTransfer::active() {
 }
 
 void LocalTransfer::FDConnected() {
+  tm->activeReady();
   if (ssl) {
     global->getIOManager()->negotiateSSLConnect(sockfd, (EventReceiver *)ftpconn);
   }
 }
 
 void LocalTransfer::FDDisconnected() {
-  global->getIOManager()->closeSocket(sockfd);
-  if (bufpos > 0) {
-    filestream.write(buf, bufpos);
+  if (!inmemory) {
+    if (bufpos > 0) {
+      filestream.write(buf, bufpos);
+    }
+    filestream.close();
   }
-  filestream.close();
   inuse = false;
+  if (inmemory) {
+    ls->storeContent(storeid, buf, bufpos);
+  }
   tm->targetComplete();
 }
 
@@ -76,9 +96,17 @@ void LocalTransfer::append(char * data, unsigned int datalen) {
     buflen = CHUNK;
   }
   if (bufpos + datalen > buflen) {
-    filestream.write(buf, bufpos);
-    filesize = filestream.tellg();
-    bufpos = 0;
+    if (inmemory) {
+      char * newbuf = (char *) malloc(buflen * 2);
+      memcpy(newbuf, buf, bufpos);
+      delete buf;
+      buf = newbuf;
+    }
+    else {
+      filestream.write(buf, bufpos);
+      filesize = filestream.tellg();
+      bufpos = 0;
+    }
   }
   memcpy(buf + bufpos, data, datalen);
   bufpos += datalen;

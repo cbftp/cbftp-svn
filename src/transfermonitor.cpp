@@ -37,7 +37,7 @@ void TransferMonitor::engage(std::string file, SiteLogic * sls, FileList * fls, 
   sourcecomplete = false;
   targetcomplete = false;
   passiveready = false;
-  fxp = true;
+  type = TM_TYPE_FXP;
   timestamp = 0;
   ssl = false;
   if (!sls->lockDownloadConn(spath, file, &src)) {
@@ -60,10 +60,10 @@ void TransferMonitor::engage(std::string file, SiteLogic * sls, FileList * fls, 
   fls->getFile(file)->download();
   if (!sld->getSite()->hasBrokenPASV()) {
     activedownload = true;
-    sld->preparePassiveUpload(dst, this, dpath, file, fxp, ssl);
+    sld->preparePassiveUpload(dst, this, dpath, file, true, ssl);
   }
   else {
-    sls->preparePassiveDownload(src, this, spath, file, fxp, ssl);
+    sls->preparePassiveDownload(src, this, spath, file, true, ssl);
   }
 }
 
@@ -77,7 +77,7 @@ void TransferMonitor::engage(std::string file, SiteLogic * sls, FileList * fls) 
   sourcecomplete = false;
   targetcomplete = false;
   passiveready = false;
-  fxp = false;
+  type = TM_TYPE_LOCAL;
   timestamp = 0;
   ssl = false;
   if (!sls->lockDownloadConn(spath, file, &src)) return;
@@ -87,7 +87,33 @@ void TransferMonitor::engage(std::string file, SiteLogic * sls, FileList * fls) 
     ssl = true;
   }
   if (!sls->getSite()->hasBrokenPASV()) {
-    sls->preparePassiveDownload(src, this, spath, file, fxp, ssl);
+    sls->preparePassiveDownload(src, this, spath, file, false, ssl);
+  }
+  else {
+    activedownload = true;
+    // ?
+  }
+}
+
+void TransferMonitor::engage(SiteLogic * sls, int connid) {
+  fls = NULL;
+  fld = NULL;
+  src = connid;
+  activedownload = false;
+  sourcecomplete = false;
+  targetcomplete = false;
+  passiveready = false;
+  type = TM_TYPE_LIST;
+  timestamp = 0;
+  this->sls = sls;
+  ssl = false;
+  int spol = sls->getSite()->getSSLTransferPolicy();
+  if (spol == SITE_SSL_ALWAYS_ON || spol == SITE_SSL_PREFER_ON) {
+    ssl = true;
+  }
+  status = 1;
+  if (!sls->getSite()->hasBrokenPASV()) {
+    sls->preparePassiveList(src, this, ssl);
   }
   else {
     activedownload = true;
@@ -101,24 +127,46 @@ void TransferMonitor::tick(int msg) {
 
 void TransferMonitor::passiveReady(std::string addr) {
   passiveready = true;
-  if (fxp) {
-    if (activedownload) {
-      sls->activeDownload(src, this, spath, file, addr, ssl);
-      sld->passiveUpload(dst);
-    }
-    else {
-      sld->activeUpload(dst, this, dpath, file, addr, ssl);
-      sls->passiveDownload(src);
-    }
+  switch (type) {
+    case TM_TYPE_FXP:
+      if (activedownload) {
+        sls->prepareActiveDownload(src, this, spath, file, addr, ssl);
+      }
+      else {
+        sld->prepareActiveUpload(dst, this, dpath, file, addr, ssl);
+      }
+      break;
+    case TM_TYPE_LOCAL:
+      if (activedownload) {
+        // ?
+      }
+      else {
+        global->getLocalStorage()->passiveDownload(this, file, addr, ssl, sls->getConn(src));
+      }
+      break;
+    case TM_TYPE_LIST:
+      if (activedownload) {
+        // ?
+      }
+      else {
+        storeid = global->getLocalStorage()->passiveDownload(this, addr, ssl, sls->getConn(src));
+      }
+      break;
   }
-  else {
-    if (activedownload) {
-      // ?
-    }
-    else {
-      sls->passiveDownload(src);
-      global->getLocalStorage()->passiveDownload(this, file, addr, ssl, sls->getConn(src));
-    }
+}
+
+void TransferMonitor::activeReady() {
+  switch (type) {
+    case TM_TYPE_FXP:
+      sls->download(src);
+      sld->upload(dst);
+      break;
+    case TM_TYPE_LOCAL:
+      sls->download(src);
+      break;
+    case TM_TYPE_LIST:
+      sls->list(src);
+      break;
   }
   startstamp = timestamp;
 }
@@ -155,16 +203,22 @@ void TransferMonitor::finish() {
     if (span == 0) {
       span = 10;
     }
-    if (fxp) {
-      File * srcfile = fls->getFile(file);
-      if (srcfile) {
-        long int size = srcfile->getSize();
-        int speed = size / span;
-        //std::cout << "[ " << sls->getSite()->getName() << " -> " << sld->getSite()->getName() << " ] - " << file << " - " << speed << " kB/s" << std::endl;
-        if (size > 1000000) {
-          fld->setFileUpdateFlag(file, size, speed, sls->getSite(), sld->getSite()->getName());
+    switch (type) {
+      case TM_TYPE_FXP: {
+        File * srcfile = fls->getFile(file);
+        if (srcfile) {
+          long int size = srcfile->getSize();
+          int speed = size / span;
+          //std::cout << "[ " << sls->getSite()->getName() << " -> " << sld->getSite()->getName() << " ] - " << file << " - " << speed << " kB/s" << std::endl;
+          if (size > 1000000) {
+            fld->setFileUpdateFlag(file, size, speed, sls->getSite(), sld->getSite()->getName());
+          }
         }
+        break;
       }
+      case TM_TYPE_LIST:
+        sls->listCompleted(src, storeid);
+        break;
     }
   }
   tm->transferSuccessful(this);
@@ -172,26 +226,29 @@ void TransferMonitor::finish() {
 }
 
 void TransferMonitor::sourceError(int err) {
-  File * fileobj = fls->getFile(file);
-  if (fileobj != NULL) {
-    fileobj->finishDownload();
+  File * fileobj;
+  if (type != TM_TYPE_LIST) {
+    fileobj = fls->getFile(file);
+    if (fileobj != NULL) {
+      fileobj->finishDownload();
+    }
+    switch (err) {
+      case 0: // PRET RETR failed
+        fls->downloadFail(file);
+        break;
+      case 1: // RETR failed
+        fls->downloadFail(file);
+        break;
+      case 2: // RETR post failed
+      case 3: // other failure
+        fls->downloadAttemptFail(file);
+        break;
+    }
+    sourcecomplete = true;
+    status = 13;
   }
-  switch (err) {
-    case 0: // PRET RETR failed
-      fls->downloadFail(file);
-      break;
-    case 1: // RETR failed
-      fls->downloadFail(file);
-      break;
-    case 2: // RETR post failed
-    case 3: // other failure
-      fls->downloadAttemptFail(file);
-      break;
-  }
-  sourcecomplete = true;
-  status = 13;
   if (!passiveready) {
-    if (fxp) {
+    if (type == TM_TYPE_FXP) {
       sld->returnConn(dst);
       fileobj = fld->getFile(file);
       if (fileobj != NULL) {
@@ -201,28 +258,31 @@ void TransferMonitor::sourceError(int err) {
     tm->transferFailed(this, err);
     status = 0;
   }
-  else if (targetcomplete) {
+  else if (sourcecomplete) {
     tm->transferFailed(this, err);
     status = 0;
   }
 }
 
 void TransferMonitor::targetError(int err) {
-  File * fileobj = fld->getFile(file);
-  if (fileobj != NULL) {
-    fileobj->finishUpload();
-  }
-  switch (err) {
-    case 0: // PRET STOR failed
-      fld->uploadFail(file);
-      break;
-    case 1: // STOR failed
-      fld->uploadFail(file);
-      break;
-    case 2: // STOR post failed
-    case 3: // other failure
-      fld->uploadAttemptFail(file);
-      break;
+  File * fileobj;
+  if (type != TM_TYPE_LIST) {
+    fileobj = fld->getFile(file);
+    if (fileobj != NULL) {
+      fileobj->finishUpload();
+    }
+    switch (err) {
+      case 0: // PRET STOR failed
+        fld->uploadFail(file);
+        break;
+      case 1: // STOR failed
+        fld->uploadFail(file);
+        break;
+      case 2: // STOR post failed
+      case 3: // other failure
+        fld->uploadAttemptFail(file);
+        break;
+    }
   }
   targetcomplete = true;
   status = 13;

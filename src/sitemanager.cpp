@@ -71,6 +71,9 @@ void SiteManager::readConfiguration() {
     else if (!setting.compare("ssltransfer")) {
       site->setSSLTransferPolicy(global->str2Int(value));
     }
+    else if (!setting.compare("listcommand")) {
+      site->setListCommand(global->str2Int(value));
+    }
     else if (!setting.compare("allowupload")) {
       if (!value.compare("false")) site->setAllowUpload(false);
     }
@@ -193,6 +196,7 @@ void SiteManager::writeState() {
     filehandler->addOutputLine(filetag, name + "$maxdn=" + global->int2Str(site->getInternMaxDown()));
     filehandler->addOutputLine(filetag, name + "$idletime=" + global->int2Str(site->getMaxIdleTime()));
     filehandler->addOutputLine(filetag, name + "$ssltransfer=" + global->int2Str(site->getSSLTransferPolicy()));
+    filehandler->addOutputLine(filetag, name + "$listcommand=" + global->int2Str(site->getListCommand()));
     if (site->needsPRET()) filehandler->addOutputLine(filetag, name + "$pret=true");
     if (!site->SSL()) filehandler->addOutputLine(filetag, name + "$sslconn=false");
     if (!site->getAllowUpload()) filehandler->addOutputLine(filetag, name + "$allowupload=false");

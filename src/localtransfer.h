@@ -9,11 +9,13 @@
 
 class TransferMonitor;
 class FTPConn;
+class LocalStorage;
 
 class LocalTransfer : public EventReceiver {
 public:
-  LocalTransfer();
+  LocalTransfer(LocalStorage *);
   void engage(TransferMonitor *, std::string, std::string, std::string, int, bool, FTPConn *);
+  void engage(TransferMonitor *, int, std::string, int, bool, FTPConn *);
   bool active();
   void FDConnected();
   void FDDisconnected();
@@ -27,6 +29,8 @@ private:
   bool ssl;
   int sockfd;
   bool inuse;
+  bool inmemory;
+  int storeid;
   FTPConn * ftpconn;
   std::fstream filestream;
   std::string filename;
@@ -34,4 +38,5 @@ private:
   char * buf;
   unsigned int buflen;
   unsigned int bufpos;
+  LocalStorage * ls;
 };

@@ -64,6 +64,7 @@ class FTPConn : private EventReceiver {
     void MKDResponse();
     void PRETRETRResponse();
     void PRETSTORResponse();
+    void PRETLISTResponse();
     void RETRResponse();
     void RETRComplete();
     void STORResponse();
@@ -73,6 +74,8 @@ class FTPConn : private EventReceiver {
     void WIPEResponse();
     void DELEResponse();
     void NUKEResponse();
+    void LISTResponse();
+    void LISTComplete();
     void proxySessionInit(bool);
     void sendEcho(std::string);
   public:
@@ -98,6 +101,9 @@ class FTPConn : private EventReceiver {
     void doDELE(std::string);
     void doSTAT();
     void doSTAT(SiteRace *, FileList *);
+    void doLIST();
+    void prepareLIST();
+    void prepareLIST(SiteRace *, FileList *);
     void doSTATla();
     void doCPSV();
     void doPASV();
@@ -108,6 +114,7 @@ class FTPConn : private EventReceiver {
     void doRETR(std::string);
     void doPRETSTOR(std::string);
     void doSTOR(std::string);
+    void doPRETLIST();
     void abortTransfer();
     void doQUIT();
     void disconnect();
@@ -133,4 +140,5 @@ class FTPConn : private EventReceiver {
     void setCurrentSiteRace(SiteRace *);
     void lock();
     void unlock();
+    void parseFileList(char *, unsigned int);
 };

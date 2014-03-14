@@ -24,6 +24,7 @@ class TransferManager {
   public:
     TransferManager();
     int download(std::string, SiteLogic *, FileList *);
+    int getFileList(SiteLogic *, int);
     void suggestTransfer(std::string, SiteLogic *, FileList *, SiteLogic *, FileList *);
     int transferStatus(int);
     void transferSuccessful(TransferMonitor *);

@@ -15,6 +15,9 @@
 #define SITE_SSL_PREFER_ON 832
 #define SITE_SSL_ALWAYS_ON 833
 
+#define SITE_LIST_STAT 840
+#define SITE_LIST_LIST 841
+
 class Site {
   private:
     std::string name;
@@ -24,6 +27,7 @@ class Site {
     std::string pass;
     bool pret;
     bool sslconn;
+    int listcommand;
     int ssltransfer;
     bool brokenpasv;
     unsigned int logins;
@@ -62,8 +66,10 @@ class Site {
     bool needsPRET();
     void setPRET(bool);
     int getSSLTransferPolicy();
+    int getListCommand();
     bool SSL();
     void setSSLTransferPolicy(int);
+    void setListCommand(int);
     bool hasBrokenPASV();
     void setBrokenPASV(bool);
     bool getAllowUpload();

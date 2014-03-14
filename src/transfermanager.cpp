@@ -20,6 +20,15 @@ int TransferManager::download(std::string name, SiteLogic * sl, FileList * filel
   return id;
 }
 
+int TransferManager::getFileList(SiteLogic * sl, int connid) {
+  int id = requestids++;
+  TransferMonitor * target = getAvailableTransferMonitor();
+  transferstatus[id] = TRANSFER_IN_PROGRESS;
+  transfermap[target] = id;
+  target->engage(sl, connid);
+  return id;
+}
+
 void TransferManager::suggestTransfer(std::string name, SiteLogic * src, FileList * fls, SiteLogic * dst, FileList * fld) {
   TransferMonitor * target = getAvailableTransferMonitor();
   target->engage(name, src, fls, dst, fld);
