@@ -71,6 +71,7 @@ void SelectSitesScreen::update() {
 }
 
 void SelectSitesScreen::keyPressed(unsigned int ch) {
+  unsigned int pagerows = (unsigned int) row * 0.6;
   bool activation;
   switch(ch) {
     case KEY_UP:
@@ -92,6 +93,22 @@ void SelectSitesScreen::keyPressed(unsigned int ch) {
       if (mso.goRight()) {
         uicommunicator->newCommand("update");
       }
+      break;
+    case KEY_NPAGE:
+      for (unsigned int i = 0; i < pagerows; i++) {
+        if (!mso.goDown()) {
+          break;
+        }
+      }
+      uicommunicator->newCommand("redraw");
+      break;
+    case KEY_PPAGE:
+      for (unsigned int i = 0; i < pagerows; i++) {
+        if (!mso.goUp()) {
+          break;
+        }
+      }
+      uicommunicator->newCommand("redraw");
       break;
     case 32:
     case 10:

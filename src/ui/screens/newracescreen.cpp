@@ -18,10 +18,11 @@ NewRaceScreen::NewRaceScreen(WINDOW * window, UICommunicator * uicommunicator, u
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [t]oggle all - [s]tart race - [c]ancel";
   currentlegendtext = defaultlegendtext;
   active = false;
-  toggleall = true;
+  toggleall = false;
   unsigned int y = 2;
   unsigned int x = 1;
   sectionupdate = false;
+  infotext = "";
   std::string sectionstring = uicommunicator->getArg2();
   size_t splitpos;
   bool sectionset = false;
@@ -47,25 +48,28 @@ NewRaceScreen::NewRaceScreen(WINDOW * window, UICommunicator * uicommunicator, u
   }
   y = y + 2;
   release = uicommunicator->getArg3();
-  modsite = global->getSiteManager()->getSite(uicommunicator->getArg1());
+  startsite = global->getSiteManager()->getSite(uicommunicator->getArg1());
   focusedarea = &msos;
   msos.makeLeavableDown();
   mso.makeLeavableUp();
   msos.enterFocusFrom(0);
+  populateSiteList();
   init(window, row, col);
 }
 
-void NewRaceScreen::redraw() {
-  std::vector<Site *>::iterator it;
-  mso.clear();
+void NewRaceScreen::populateSiteList() {
   int y = 6;
   int x = 1;
+  std::vector<Site *>::iterator it;
+  mso.clear();
   for (it = global->getSiteManager()->getSitesIteratorBegin(); it != global->getSiteManager()->getSitesIteratorEnd(); it++) {
     Site * site = *it;
     if (site->hasSection(section)) {
-      mso.addCheckBox(y++, x, site->getName(), site->getName(), toggleall);
+      mso.addCheckBox(y++, x, site->getName(), site->getName(), toggleall || site == startsite);
     }
   }
+}
+void NewRaceScreen::redraw() {
   werase(window);
   TermInt::printStr(window, 1, 1, "Release: " + release);
   TermInt::printStr(window, 2, 1, "Section: ");
@@ -96,6 +100,7 @@ void NewRaceScreen::redraw() {
 void NewRaceScreen::update() {
   if (sectionupdate) {
     sectionupdate = false;
+    populateSiteList();
     redraw();
     return;
   }
@@ -138,6 +143,8 @@ void NewRaceScreen::update() {
 }
 
 void NewRaceScreen::keyPressed(unsigned int ch) {
+  infotext = "";
+  unsigned int pagerows = (unsigned int) (row - 6) * 0.6;
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
@@ -189,6 +196,30 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
         uicommunicator->newCommand("update");
       }
       break;
+    case KEY_NPAGE:
+      for (unsigned int i = 0; i < pagerows; i++) {
+        if (focusedarea->goDown()) {
+          if (!focusedarea->isFocused()) {
+            defocusedarea = focusedarea;
+            focusedarea = &mso;
+            focusedarea->enterFocusFrom(0);
+          }
+        }
+      }
+      uicommunicator->newCommand("redraw");
+      break;
+    case KEY_PPAGE:
+      for (unsigned int i = 0; i < pagerows; i++) {
+        if (focusedarea->goUp()) {
+          if (!focusedarea->isFocused()) {
+            defocusedarea = focusedarea;
+            focusedarea = &msos;
+            focusedarea->enterFocusFrom(2);
+          }
+        }
+      }
+      uicommunicator->newCommand("redraw");
+      break;
     case 10:
 
       activation = focusedarea->getElement(focusedarea->getSelectionPointer())->activate();
@@ -216,6 +247,11 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
           sites.push_back(msocb->getIdentifier());
         }
       }
+      if (sites.size() < 2) {
+        infotext = "Cannot start race with less than 2 sites!";
+        uicommunicator->newCommand("update");
+        return;
+      }
       global->getEngine()->newRace(release, section, sites);
       uicommunicator->newCommand("returnracestatus", release);
       break;
@@ -226,6 +262,7 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
       else {
         toggleall = false;
       }
+      populateSiteList();
       uicommunicator->newCommand("redraw");
       break;
   }
@@ -237,6 +274,10 @@ std::string NewRaceScreen::getLegendText() {
 
 std::string NewRaceScreen::getInfoLabel() {
   return "START NEW RACE";
+}
+
+std::string NewRaceScreen::getInfoText() {
+  return infotext;
 }
 
 std::string NewRaceScreen::getSectionButtonText(MenuSelectOptionElement * msoe) {

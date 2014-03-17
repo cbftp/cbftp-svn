@@ -18,8 +18,10 @@ public:
   void keyPressed(unsigned int);
   std::string getLegendText();
   std::string getInfoLabel();
+  std::string getInfoText();
 private:
-  Site * modsite;
+  void populateSiteList();
+  Site * startsite;
   std::string getSectionButtonText(MenuSelectOptionElement *);
   std::string currentlegendtext;
   std::string defaultlegendtext;
@@ -35,4 +37,5 @@ private:
   UICommunicator * uicommunicator;
   std::list<std::string> sections;
   std::string release;
+  std::string infotext;
 };
