@@ -450,7 +450,9 @@ void SiteLogic::commandFail(int id) {
           SiteRace * currentrace = conns[id]->currentSiteRace();
           if (currentrace != NULL) {
             if (currentrace->pathVisited(newattempt)) {
-              break;
+              connstatetracker[id].setIdle();
+              connstatetracker[id].delayedCommand("handle", SLEEPDELAY * 6);
+              return;
             }
             currentrace->addVisitedPath(newattempt);
           }
@@ -458,7 +460,9 @@ void SiteLogic::commandFail(int id) {
           return;
         }
         else {
-          // failed mkd and no target subdirs. shouldn't happen.
+          connstatetracker[id].setIdle();
+          connstatetracker[id].delayedCommand("handle", SLEEPDELAY * 6);
+          return;
         }
       }
       else {
