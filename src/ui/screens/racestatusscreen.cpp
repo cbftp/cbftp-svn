@@ -245,12 +245,12 @@ void RaceStatusScreen::update() {
         int filex = filetagpos[filenametags[filename]];
         File * file;
         char printchar = '_';
-        bool highlight = false;
+        bool exists = false;
         bool upload = false;
         bool download = false;
         bool owner = false;
         if ((file = fl->getFile(*it3)) != NULL) {
-          highlight = true;
+          exists = true;
           if (file->isUploading() || file->getSize() < race->guessedFileSize(origsubpath, *it3)) {
             upload = true;
           }
@@ -261,11 +261,11 @@ void RaceStatusScreen::update() {
           if (file->isDownloading()) {
             download = true;
           }
-          printchar = getFileChar(owner, upload, download);
+          printchar = getFileChar(exists, owner, upload, download);
         }
-        if (highlight) wattron(window, A_REVERSE);
+        if (exists) wattron(window, A_REVERSE);
         TermInt::printChar(window, y, filex, printchar);
-        if (highlight) wattroff(window, A_REVERSE);
+        if (exists) wattroff(window, A_REVERSE);
       }
       y++;
     }
@@ -327,7 +327,7 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
   }
 }
 
-char RaceStatusScreen::getFileChar(bool owner, bool upload, bool download) {
+char RaceStatusScreen::getFileChar(bool exists, bool owner, bool upload, bool download) {
   char printchar = '_';
   if (upload) {
     if (owner) {
@@ -359,6 +359,9 @@ char RaceStatusScreen::getFileChar(bool owner, bool upload, bool download) {
     else {
       if (download) {
         printchar = 'd';
+      }
+      else if (exists) {
+        printchar = '.';
       }
     }
   }

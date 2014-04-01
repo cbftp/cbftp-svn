@@ -15,7 +15,7 @@ public:
   void redraw();
   void update();
   void keyPressed(unsigned int);
-  char getFileChar(bool, bool, bool);
+  char getFileChar(bool, bool, bool, bool);
   std::string getLegendText();
   std::string getInfoLabel();
 private:
