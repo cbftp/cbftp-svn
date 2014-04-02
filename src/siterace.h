@@ -23,6 +23,7 @@ class SiteRace {
     std::map<FileList *, int> observestarts;
     std::map<FileList *, int> sfvobservestarts;
     std::map<std::string, bool> visitedpaths;
+    unsigned long long int maxfilesize;
   public:
     std::string getSection();
     std::string getRelease();

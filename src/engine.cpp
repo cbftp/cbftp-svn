@@ -331,7 +331,12 @@ void Engine::issueOptimalTransfers() {
 
 int Engine::calculateScore(File * f, Race * itr, FileList * fls, SiteRace * srs, FileList * fld, SiteRace * srd, int avgspeed, bool * prio, bool racemode) {
   int points = 0;
-  points += f->getSize() / ((srs->getMaxFileSize() + 2000) / 2000); // gives max 2000 points
+  unsigned long long int filesize = f->getSize();
+  unsigned long long int maxfilesize = srs->getMaxFileSize();
+  if (filesize > maxfilesize) {
+    maxfilesize = filesize;
+  }
+  points += filesize / ((maxfilesize + 2000) / 2000); // gives max 2000 points
   points = (points * (avgspeed / 100)) / (maxavgspeed / 100);
   if (racemode) {
     // give points for owning a low percentage of the race on the target

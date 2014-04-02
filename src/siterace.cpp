@@ -25,6 +25,7 @@ SiteRace::SiteRace(Race * race, std::string section, std::string release, std::s
   FileList * rootdir = new FileList(username, path);
   filelists[""] = rootdir;
   done = false;
+  maxfilesize = 0;
 }
 
 SiteRace::~SiteRace() {
@@ -127,11 +128,26 @@ std::map<std::string, FileList *>::iterator SiteRace::fileListsEnd() {
 void SiteRace::updateNumFilesUploaded() {
   std::map<std::string, FileList *>::iterator it;
   int sum = 0;
+  unsigned long long int maxsize = 0;
+  unsigned long long int maxsizewithfiles = 0;
   for (it = filelists.begin(); it != filelists.end(); it++) {
     sum += it->second->getSize();
     if (it->second->hasSFV()) {
       race->reportSFV(this, it->first);
     }
+    unsigned long long int max = it->second->getMaxFileSize();
+    if (max > maxsize) {
+      maxsize = max;
+      if (it->second->getSize() >= 5) {
+        maxsizewithfiles = max;
+      }
+    }
+  }
+  if (maxsizewithfiles > 0) {
+    this->maxfilesize = maxsizewithfiles;
+  }
+  else {
+    this->maxfilesize = maxsize;
   }
   race->updateSiteProgress(sum);
 }
@@ -172,22 +188,7 @@ bool SiteRace::sizeEstimated(FileList * fl) {
 }
 
 unsigned long long int SiteRace::getMaxFileSize() {
-  std::map<std::string, FileList *>::iterator it;
-  unsigned long long int maxsize = 0;
-  unsigned long long int maxsizewithfiles = 0;
-  for (it = filelists.begin(); it != filelists.end(); it++) {
-    unsigned long long int max = it->second->getMaxFileSize();
-    if (max > maxsize) {
-      maxsize = max;
-      if (it->second->getSize() >= 5) {
-        maxsizewithfiles = max;
-      }
-    }
-  }
-  if (maxsizewithfiles > 0) {
-    return maxsizewithfiles;
-  }
-  return maxsize;
+  return maxfilesize;
 }
 
 bool SiteRace::isDone() {
