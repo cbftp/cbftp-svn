@@ -16,14 +16,14 @@ LegendWindow::LegendWindow(WINDOW * window, int row, int col) {
 void LegendWindow::redraw() {
   werase(window);
   currentpos = 0;
-  TermInt::printChar(window, 0, 1, 4194412);
-  TermInt::printChar(window, 1, 0, 4194417);
-  TermInt::printChar(window, 1, 1, 4194410);
-  TermInt::printChar(window, 1, col - 1, 4194417);
-  TermInt::printChar(window, 1, col - 2, 4194413);
-  TermInt::printChar(window, 0, col - 2, 4194411);
+  TermInt::printChar(window, 0, 1, BOX_CORNER_TL);
+  TermInt::printChar(window, 1, 0, BOX_HLINE);
+  TermInt::printChar(window, 1, 1, BOX_CORNER_BR);
+  TermInt::printChar(window, 1, col - 1, BOX_HLINE);
+  TermInt::printChar(window, 1, col - 2, BOX_CORNER_BL);
+  TermInt::printChar(window, 0, col - 2, BOX_CORNER_TR);
   for (unsigned int i = 2; i < col - 2; i++) {
-    TermInt::printChar(window, 0, i, 4194417);
+    TermInt::printChar(window, 0, i, BOX_HLINE);
   }
   update();
 }

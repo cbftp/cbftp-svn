@@ -1,17 +1,30 @@
 #include "loginscreen.h"
 
+#include <cstdlib>
+
 #include "../uicommunicator.h"
 #include "../termint.h"
+#include "../chardraw.h"
 
 LoginScreen::LoginScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
   passfield = TextInputField(25, 32, true);
   attempt = false;
+  drawword = "PATH";
+  drawx = 0;
+  drawy = 0;
+  srand(time(NULL));
   init(window, row, col);
 }
 
 void LoginScreen::redraw() {
   werase(window);
+  randomizeDrawLocation();
+  background.clear();
+  for (unsigned int i = 0; i < row; i++) {
+    background.push_back(std::vector<int>());
+    background[i].resize(col);
+  }
   pass_row = row-2;
   pass_col = col-27;
   curs_set(1);
@@ -20,22 +33,25 @@ void LoginScreen::redraw() {
   int boxchar = 0;
   for(unsigned int i = 1; i < row; i++) {
     for(unsigned int j = 0; j < col; j++) {
-      if(i == 1) boxchar = (i+j)%2==0 ? 4194423 : 4194417;
+      if(i == 1) boxchar = (i+j)%2==0 ? BOX_HLINE_BOT : BOX_HLINE;
       else if (i == row-1) {
-        if (j < col-29) boxchar = (i+j)%2==0 ? 4194417 : 4194422;
-        else if (j == col-29) boxchar = 4194410;
+        if (j < col-29) boxchar = (i+j)%2==0 ? BOX_HLINE : BOX_HLINE_TOP;
+        else if (j == col-29) boxchar = BOX_CORNER_BR;
         else continue;
       }
       else if ((i == row-2 || i == row-3) && j >= col-29) {
-        if (j == col-29) boxchar = (i+j)%2==0 ? 4194424 : 4194421;
+        if (j == col-29) boxchar = (i+j)%2==0 ? BOX_VLINE : BOX_VLINE_L;
         else continue;
       }
       else if (i == row-4 && j >= col-29) {
-        if (j == col-29) boxchar = (i+j)%2==0 ? 4194412 : 4194414;
-        else boxchar = (i+j)%2==0 ? 4194417 : 4194422;
+        if (j == col-29) boxchar = (i+j)%2==0 ? BOX_CORNER_TL : BOX_CROSS;
+        else boxchar = (i+j)%2==0 ? BOX_HLINE : BOX_HLINE_TOP;
       }
-      else boxchar = (i+j)%2==0 ? 4194412 : 4194410;
-      if (boxchar) TermInt::printChar(window, i, j, boxchar);
+      else boxchar = (i+j)%2==0 ? BOX_CORNER_TL : BOX_CORNER_BR;
+      if (boxchar) {
+        TermInt::printChar(window, i, j, boxchar);
+        background[i][j] = boxchar;
+      }
     }
   }
   TermInt::printStr(window, 0, 3, svnstring);
@@ -50,9 +66,28 @@ void LoginScreen::update() {
     passtext = "Invalid key, try again: ";
     curs_set(1);
   }
+  int currdrawx = drawx;
   TermInt::printStr(window, pass_row-1, pass_col, passtext);
   TermInt::printStr(window, pass_row, pass_col, passfield.getVisualText());
   TermInt::moveCursor(window, pass_row, pass_col + passfield.getVisualCursorPosition());
+  for (unsigned int drawchar = 0; drawchar < drawword.length(); drawchar++) {
+    bool show = passfield.getText().length() > drawchar &&
+        passfield.getText().length() - drawchar < drawword.length() + 1;
+    for (int i = 0; i < CHARDRAW_SIZE; i++) {
+      std::string draw = CharDraw::getCharLine(drawword[drawchar], i);
+      for (unsigned int j = 0; j < draw.length(); j++) {
+        int bgchar = background[drawy + i][currdrawx + j];
+        int c = show ? getMixedChar(bgchar, draw[j]) : bgchar;
+        if (c) {
+          TermInt::printChar(window, drawy + i, currdrawx + j, c);
+        }
+      }
+    }
+    currdrawx = currdrawx + CHARDRAW_SIZE;
+  }
+  if (passfield.getText().length() == drawword.length() * 2 || !passfield.getText().length()) {
+    randomizeDrawLocation();
+  }
 }
 
 void LoginScreen::keyPressed(unsigned int ch) {
@@ -95,6 +130,103 @@ void LoginScreen::keyPressed(unsigned int ch) {
   uicommunicator->newCommand("update");
 }
 
+int LoginScreen::getMixedChar(int bgchar, int draw) {
+  int c = 0;
+  switch (draw) {
+    case 'A':
+      c = BOX_CORNER_TL;
+      switch (bgchar) {
+        case BOX_CORNER_BR:
+          c = BOX_CROSS;
+          break;
+      }
+      break;
+    case 'a':
+      c = BOX_CORNER_TL;
+      break;
+    case 'B':
+      c = BOX_CORNER_TR;
+      switch (bgchar) {
+        case BOX_CORNER_BR:
+          c = BOX_VLINE_L;
+          break;
+        case BOX_CORNER_TL:
+          c = BOX_HLINE_BOT;
+          break;
+      }
+      break;
+    case 'b':
+      c = BOX_CORNER_TR;
+      break;
+    case 'C':
+      c = BOX_CORNER_BL;
+      switch (bgchar) {
+        case BOX_CORNER_BR:
+          c = BOX_HLINE_TOP;
+          break;
+        case BOX_CORNER_TL:
+          c = BOX_VLINE_R;
+          break;
+      }
+      break;
+    case 'c':
+      c = BOX_CORNER_BL;
+      break;
+    case 'D':
+      c = BOX_CORNER_BR;
+      switch (bgchar) {
+        case BOX_CORNER_TL:
+          c = BOX_CROSS;
+          break;
+      }
+      break;
+    case 'd':
+      c = BOX_CORNER_BR;
+      break;
+    case 'H':
+      c = BOX_HLINE;
+      switch (bgchar) {
+        case BOX_CORNER_BR:
+          c = BOX_HLINE_TOP;
+          break;
+      }
+      break;
+    case 'h':
+      c = BOX_HLINE;
+      switch (bgchar) {
+        case BOX_CORNER_TL:
+          c = BOX_HLINE_BOT;
+          break;
+      }
+      break;
+    case 'V':
+      c = BOX_VLINE;
+      switch (bgchar) {
+        case BOX_CORNER_BR:
+          c = BOX_VLINE_L;
+          break;
+      }
+      break;
+    case 'v':
+      c = BOX_VLINE;
+      switch (bgchar) {
+        case BOX_CORNER_TL:
+          c = BOX_VLINE_R;
+          break;
+      }
+      break;
+    case 'x':
+      c = ' ';
+      break;
+  }
+  return c;
+}
 
-
-
+void LoginScreen::randomizeDrawLocation() {
+  int ymin = 2;
+  int ymax = row - 2 - CHARDRAW_SIZE - ymin;
+  int xmin = 1;
+  int xmax = col - 2 - CHARDRAW_SIZE * drawword.length() - xmin;
+  drawy = rand() % ymax + ymin;
+  drawx = rand() % xmax + xmin;
+}

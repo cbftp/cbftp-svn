@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "../textinputfield.h"
 #include "../uiwindow.h"
 
@@ -12,10 +14,16 @@ public:
   void redraw();
   void keyPressed(unsigned int);
 private:
+  std::string drawword;
+  int getMixedChar(int, int);
+  void randomizeDrawLocation();
   UICommunicator * uicommunicator;
+  std::vector<std::vector<int> > background;
   std::string passphrase;
   TextInputField passfield;
   int pass_row;
   int pass_col;
+  int drawx;
+  int drawy;
   bool attempt;
 };

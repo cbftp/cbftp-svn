@@ -18,6 +18,7 @@
 #include "legendwindow.h"
 #include "infowindow.h"
 #include "uiwindow.h"
+#include "chardraw.h"
 
 #include "screens/loginscreen.h"
 #include "screens/newkeyscreen.h"
@@ -49,6 +50,7 @@ UserInterface::UserInterface() {
   sem_init(&initstart, 0, 0);
   sem_init(&initdone, 0, 0);
   sem_init(&keyeventdone, 0, 0);
+  CharDraw::init();
   main = NULL;
   topwindow = NULL;
   legendenabled = false;
