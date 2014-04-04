@@ -15,7 +15,6 @@ public:
   void keyPressed(unsigned int);
 private:
   std::string drawword;
-  int getMixedChar(int, int);
   void randomizeDrawLocation();
   UICommunicator * uicommunicator;
   std::vector<std::vector<int> > background;

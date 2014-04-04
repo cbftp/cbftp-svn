@@ -23,8 +23,10 @@
 
 class CharDraw {
 private:
+  static void push(char, std::string, std::string, std::string, std::string, std::string, std::string);
   static std::map<char, std::vector< std::string > > charmap;
 public:
   static void init();
   static std::string getCharLine(char, int);
+  static int getMixedChar(int, int);
 };

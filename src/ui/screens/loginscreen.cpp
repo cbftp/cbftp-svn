@@ -10,7 +10,7 @@ LoginScreen::LoginScreen(WINDOW * window, UICommunicator * uicommunicator, unsig
   this->uicommunicator = uicommunicator;
   passfield = TextInputField(25, 32, true);
   attempt = false;
-  drawword = "PATH";
+  drawword = BOXTAG;
   drawx = 0;
   drawy = 0;
   srand(time(NULL));
@@ -77,7 +77,7 @@ void LoginScreen::update() {
       std::string draw = CharDraw::getCharLine(drawword[drawchar], i);
       for (unsigned int j = 0; j < draw.length(); j++) {
         int bgchar = background[drawy + i][currdrawx + j];
-        int c = show ? getMixedChar(bgchar, draw[j]) : bgchar;
+        int c = show ? CharDraw::getMixedChar(bgchar, draw[j]) : bgchar;
         if (c) {
           TermInt::printChar(window, drawy + i, currdrawx + j, c);
         }
@@ -128,98 +128,6 @@ void LoginScreen::keyPressed(unsigned int ch) {
     }
   }
   uicommunicator->newCommand("update");
-}
-
-int LoginScreen::getMixedChar(int bgchar, int draw) {
-  int c = 0;
-  switch (draw) {
-    case 'A':
-      c = BOX_CORNER_TL;
-      switch (bgchar) {
-        case BOX_CORNER_BR:
-          c = BOX_CROSS;
-          break;
-      }
-      break;
-    case 'a':
-      c = BOX_CORNER_TL;
-      break;
-    case 'B':
-      c = BOX_CORNER_TR;
-      switch (bgchar) {
-        case BOX_CORNER_BR:
-          c = BOX_VLINE_L;
-          break;
-        case BOX_CORNER_TL:
-          c = BOX_HLINE_BOT;
-          break;
-      }
-      break;
-    case 'b':
-      c = BOX_CORNER_TR;
-      break;
-    case 'C':
-      c = BOX_CORNER_BL;
-      switch (bgchar) {
-        case BOX_CORNER_BR:
-          c = BOX_HLINE_TOP;
-          break;
-        case BOX_CORNER_TL:
-          c = BOX_VLINE_R;
-          break;
-      }
-      break;
-    case 'c':
-      c = BOX_CORNER_BL;
-      break;
-    case 'D':
-      c = BOX_CORNER_BR;
-      switch (bgchar) {
-        case BOX_CORNER_TL:
-          c = BOX_CROSS;
-          break;
-      }
-      break;
-    case 'd':
-      c = BOX_CORNER_BR;
-      break;
-    case 'H':
-      c = BOX_HLINE;
-      switch (bgchar) {
-        case BOX_CORNER_BR:
-          c = BOX_HLINE_TOP;
-          break;
-      }
-      break;
-    case 'h':
-      c = BOX_HLINE;
-      switch (bgchar) {
-        case BOX_CORNER_TL:
-          c = BOX_HLINE_BOT;
-          break;
-      }
-      break;
-    case 'V':
-      c = BOX_VLINE;
-      switch (bgchar) {
-        case BOX_CORNER_BR:
-          c = BOX_VLINE_L;
-          break;
-      }
-      break;
-    case 'v':
-      c = BOX_VLINE;
-      switch (bgchar) {
-        case BOX_CORNER_TL:
-          c = BOX_VLINE_R;
-          break;
-      }
-      break;
-    case 'x':
-      c = ' ';
-      break;
-  }
-  return c;
 }
 
 void LoginScreen::randomizeDrawLocation() {

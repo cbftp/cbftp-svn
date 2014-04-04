@@ -11,6 +11,6 @@ OBJECTS = loginscreen.o mainscreen.o sitestatusscreen.o editsitescreen.o \
 all: ${OBJECTS}
 
 loginscreen.o: loginscreen.cpp
-	g++  ${CPPFLAGS} -DBUILDTIME=${DATE} -DVERSION=${VERSION} -c -o loginscreen.o loginscreen.cpp
+	g++  ${CPPFLAGS} -DBUILDTIME=${DATE} -DVERSION=${VERSION} -DBOXTAG=${BOXTAG} -c -o loginscreen.o loginscreen.cpp
 clean:
 	rm -rf ${OBJECTS}
