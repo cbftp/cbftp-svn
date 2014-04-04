@@ -163,6 +163,7 @@ int CharDraw::getMixedChar(int bgchar, int draw) {
         case BOX_CORNER_BL:
         case BOX_HLINE:
         case BOX_HLINE_TOP:
+          c = BOX_HLINE_TOP;
           break;
         case BOX_CORNER_TR:
         case BOX_VLINE_L:
