@@ -102,6 +102,9 @@ void ViewFileScreen::redraw() {
                 last = i + 1;
               }
             }
+            if (last != tmpdatalen) {
+              contents.push_back(std::string(tmpdata + last, tmpdatalen - last));
+            }
           }
           delete tmpdata;
           ymax = contents.size();
