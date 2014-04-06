@@ -21,6 +21,7 @@ public:
   std::string getInfoText();
 private:
   void populateSiteList();
+  bool startRace();
   Site * startsite;
   std::string getSectionButtonText(MenuSelectOptionElement *);
   std::string currentlegendtext;

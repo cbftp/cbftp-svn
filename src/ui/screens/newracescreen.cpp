@@ -15,7 +15,7 @@ extern GlobalContext * global;
 
 NewRaceScreen::NewRaceScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
   this->uicommunicator = uicommunicator;
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [t]oggle all - [s]tart race - [c]ancel";
+  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [t]oggle all - [s]tart race - [S]tart race and return to browsing - [c]ancel";
   currentlegendtext = defaultlegendtext;
   active = false;
   toggleall = false;
@@ -158,7 +158,6 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
     return;
   }
   bool activation;
-  std::list<std::string> sites;
   switch(ch) {
     case KEY_UP:
       if (focusedarea->goUp()) {
@@ -241,19 +240,14 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
       uicommunicator->newCommand("return");
       break;
     case 's':
-      for (unsigned int i = 0; i < mso.size(); i++) {
-        MenuSelectOptionCheckBox * msocb = (MenuSelectOptionCheckBox *) mso.getElement(i);
-        if (msocb->getData()) {
-          sites.push_back(msocb->getIdentifier());
-        }
+      if (startRace()) {
+        uicommunicator->newCommand("returnracestatus", release);
       }
-      if (sites.size() < 2) {
-        infotext = "Cannot start race with less than 2 sites!";
-        uicommunicator->newCommand("update");
-        return;
+      break;
+    case 'S':
+      if (startRace()) {
+        uicommunicator->newCommand("return");
       }
-      global->getEngine()->newRace(release, section, sites);
-      uicommunicator->newCommand("returnracestatus", release);
       break;
     case 't':
       if (!toggleall) {
@@ -287,4 +281,21 @@ std::string NewRaceScreen::getSectionButtonText(MenuSelectOptionElement * msoe) 
     buttontext[buttontext.length()-1] = ']';
   }
   return buttontext;
+}
+
+bool NewRaceScreen::startRace() {
+  std::list<std::string> sites;
+  for (unsigned int i = 0; i < mso.size(); i++) {
+    MenuSelectOptionCheckBox * msocb = (MenuSelectOptionCheckBox *) mso.getElement(i);
+    if (msocb->getData()) {
+      sites.push_back(msocb->getIdentifier());
+    }
+  }
+  if (sites.size() < 2) {
+    infotext = "Cannot start race with less than 2 sites!";
+    uicommunicator->newCommand("update");
+    return false;
+  }
+  global->getEngine()->newRace(release, section, sites);
+  return true;
 }
