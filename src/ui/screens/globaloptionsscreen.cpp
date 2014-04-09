@@ -202,7 +202,7 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
         else if (identifier == "defsslconn") {
           sm->setDefaultSSL(((MenuSelectOptionCheckBox *)msoe)->getData());
         }
-        else if (identifier == "defforcesslfxp") {
+        else if (identifier == "sslfxp") {
           sm->setDefaultSSLTransferPolicy(((MenuSelectOptionTextArrow *)msoe)->getData());
         }
         else if (identifier == "defidletime") {
