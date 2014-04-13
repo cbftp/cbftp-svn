@@ -921,6 +921,10 @@ void SiteLogic::initTransfer(int id) {
     return;
   }
   if (!connstatetracker[id].getTransferPassive()) {
+    if (conns[id]->getSSCNMode()) {
+      conns[id]->doSSCN(false);
+      return;
+    }
     conns[id]->doPORT(connstatetracker[id].getTransferAddr());
   }
   else {
