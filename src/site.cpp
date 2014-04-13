@@ -19,6 +19,7 @@ Site::Site(std::string name) {
   listcommand = SITE_LIST_STAT;
   ssltransfer = SITE_SSL_PREFER_OFF;
   sslconn = true;
+  cpsvsupported = true;
   brokenpasv = false;
   allowdownload = true;
   allowupload = true;
@@ -39,6 +40,7 @@ void Site::copy(Site * site) {
   this->listcommand = site->listcommand;
   this->ssltransfer = site->ssltransfer;
   this->sslconn = site->sslconn;
+  this->cpsvsupported = site->cpsvsupported;
   this->brokenpasv = site->brokenpasv;
   this->sections = site->sections;
   this->avgspeed = site->avgspeed;
@@ -160,6 +162,14 @@ int Site::getSSLTransferPolicy() {
 
 void Site::setSSLTransferPolicy(int policy) {
   ssltransfer = policy;
+}
+
+bool Site::supportsCPSV() {
+  return cpsvsupported;
+}
+
+void Site::setSupportsCPSV(bool supported) {
+  cpsvsupported = supported;
 }
 
 int Site::getListCommand() {

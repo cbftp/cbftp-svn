@@ -193,6 +193,8 @@ void SiteLogic::commandSuccess(int id) {
       break;
     case 8: // PROT P
     case 9: // PROT C
+    case 34: // SSCN ON
+    case 35: // SSCN OFF
       if (connstatetracker[id].hasTransfer()) {
         initTransfer(id);
         return;
@@ -259,11 +261,12 @@ void SiteLogic::commandSuccess(int id) {
     case 17: // PRET STOR
       if (connstatetracker[id].hasTransfer()) {
         if (connstatetracker[id].getTransferPassive()) {
-          if (!connstatetracker[id].getTransferSSL()) {
-            conns[id]->doPASV();
+          if (connstatetracker[id].getTransferFXP() &&
+              connstatetracker[id].getTransferSSL() && site->supportsCPSV()) {
+            conns[id]->doCPSV();
           }
           else {
-            conns[id]->doCPSV();
+            conns[id]->doPASV();
           }
           return;
         }
@@ -921,6 +924,17 @@ void SiteLogic::initTransfer(int id) {
     conns[id]->doPORT(connstatetracker[id].getTransferAddr());
   }
   else {
+    if (connstatetracker[id].getTransferFXP() && transferssl &&
+        !site->supportsCPSV()) {
+      if (!conns[id]->getSSCNMode()) {
+        conns[id]->doSSCN(true);
+        return;
+      }
+    }
+    else if (conns[id]->getSSCNMode()) {
+      conns[id]->doSSCN(false);
+      return;
+    }
     if (site->needsPRET()) {
       switch (transfertype) {
         case CST_DOWNLOAD:
@@ -935,7 +949,8 @@ void SiteLogic::initTransfer(int id) {
       }
     }
     else {
-      if (connstatetracker[id].getTransferFXP() && transferssl) {
+      if (connstatetracker[id].getTransferFXP() && transferssl &&
+          site->supportsCPSV()) {
         conns[id]->doCPSV();
       }
       else {

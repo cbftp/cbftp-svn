@@ -43,6 +43,7 @@ class FTPConn : private EventReceiver {
     SiteRace * currentrace;
     std::string currentpath;
     bool protectedmode;
+    bool sscnmode;
     std::string targetpath;
     bool mkdtarget;
     std::string mkdsect;
@@ -76,6 +77,8 @@ class FTPConn : private EventReceiver {
     void NUKEResponse();
     void LISTResponse();
     void LISTComplete();
+    void SSCNONResponse();
+    void SSCNOFFResponse();
     void proxySessionInit(bool);
     void sendEcho(std::string);
   public:
@@ -105,6 +108,7 @@ class FTPConn : private EventReceiver {
     void prepareLIST();
     void prepareLIST(SiteRace *, FileList *);
     void doSTATla();
+    void doSSCN(bool);
     void doCPSV();
     void doPASV();
     void doPORT(std::string);
@@ -121,6 +125,7 @@ class FTPConn : private EventReceiver {
     int getState();
     std::string getConnectedAddress();
     bool getProtectedMode();
+    bool getSSCNMode();
     void setMKDCWDTarget(std::string, std::string);
     bool hasMKDCWDTarget();
     std::string getTargetPath();

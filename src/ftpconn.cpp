@@ -32,6 +32,7 @@ FTPConn::FTPConn(SiteLogic * sl, int id) {
   databuf = (char *) malloc(databuflen);
   databufpos = 0;
   protectedmode = false;
+  sscnmode = false;
   mkdtarget = false;
   currentpath = "";
   state = 0;
@@ -62,6 +63,7 @@ void FTPConn::login() {
     return;
   }
   protectedmode = false;
+  sscnmode = false;
   mkdtarget = false;
   databufpos = 0;
   processing = true;
@@ -282,6 +284,12 @@ void FTPConn::FDData(char * data, unsigned int datalen) {
         break;
       case 33: // awaiting LIST complete
         LISTComplete();
+        break;
+      case 34: // awaiting SSCN ON response
+        SSCNONResponse();
+        break;
+      case 35: // awaiting SSCN OFF response
+        SSCNOFFResponse();
         break;
       case 100: // negotiating proxy session
         proxySessionInit(false);
@@ -553,6 +561,39 @@ void FTPConn::PROTCResponse() {
   processing = false;
   if (databufcode == 200) {
     protectedmode = false;
+    sl->commandSuccess(id);
+  }
+  else {
+    sl->commandFail(id);
+  }
+}
+
+void FTPConn::doSSCN(bool on) {
+  if (on) {
+    state = 34;
+    sendEcho("SSCN ON");
+  }
+  else {
+    state = 35;
+    sendEcho("SSCN OFF");
+  }
+}
+
+void FTPConn::SSCNONResponse() {
+  processing = false;
+  if (databufcode == 200) {
+    sscnmode = true;
+    sl->commandSuccess(id);
+  }
+  else {
+    sl->commandFail(id);
+  }
+}
+
+void FTPConn::SSCNOFFResponse() {
+  processing = false;
+  if (databufcode == 200) {
+    sscnmode = false;
     sl->commandSuccess(id);
   }
   else {
@@ -859,6 +900,10 @@ std::string FTPConn::getConnectedAddress() {
 
 bool FTPConn::getProtectedMode() {
   return protectedmode;
+}
+
+bool FTPConn::getSSCNMode() {
+  return sscnmode;
 }
 
 void FTPConn::setMKDCWDTarget(std::string section, std::string subpath) {

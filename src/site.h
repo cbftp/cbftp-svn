@@ -30,6 +30,7 @@ class Site {
     int listcommand;
     int ssltransfer;
     bool brokenpasv;
+    bool cpsvsupported;
     unsigned int logins;
     unsigned int max_up;
     unsigned int max_dn;
@@ -72,6 +73,8 @@ class Site {
     void setListCommand(int);
     bool hasBrokenPASV();
     void setBrokenPASV(bool);
+    bool supportsCPSV();
+    void setSupportsCPSV(bool);
     bool getAllowUpload();
     bool getAllowDownload();
     int getProxyType();

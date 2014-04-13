@@ -71,6 +71,9 @@ void SiteManager::readConfiguration() {
     else if (!setting.compare("ssltransfer")) {
       site->setSSLTransferPolicy(global->str2Int(value));
     }
+    else if (!setting.compare("cpsv")) {
+      if (!value.compare("false")) site->setSupportsCPSV(false);
+    }
     else if (!setting.compare("listcommand")) {
       site->setListCommand(global->str2Int(value));
     }
@@ -196,6 +199,7 @@ void SiteManager::writeState() {
     filehandler->addOutputLine(filetag, name + "$maxdn=" + global->int2Str(site->getInternMaxDown()));
     filehandler->addOutputLine(filetag, name + "$idletime=" + global->int2Str(site->getMaxIdleTime()));
     filehandler->addOutputLine(filetag, name + "$ssltransfer=" + global->int2Str(site->getSSLTransferPolicy()));
+    if (!site->supportsCPSV()) filehandler->addOutputLine(filetag, name + "$cpsv=false");
     filehandler->addOutputLine(filetag, name + "$listcommand=" + global->int2Str(site->getListCommand()));
     if (site->needsPRET()) filehandler->addOutputLine(filetag, name + "$pret=true");
     if (!site->SSL()) filehandler->addOutputLine(filetag, name + "$sslconn=false");

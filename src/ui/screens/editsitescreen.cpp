@@ -88,6 +88,7 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
   sslfxp->addOption("Prefer on", SITE_SSL_PREFER_ON);
   sslfxp->addOption("Always on", SITE_SSL_ALWAYS_ON);
   sslfxp->setOption(modsite.getSSLTransferPolicy());
+  mso.addCheckBox(y++, x, "cpsv", "CPSV supported:", modsite.supportsCPSV());
   mso.addCheckBox(y++, x, "pret", "Needs PRET:", modsite.needsPRET());
   mso.addCheckBox(y++, x, "brokenpasv", "Broken PASV:", modsite.hasBrokenPASV());
   MenuSelectOptionTextArrow * useproxy = mso.addTextArrow(y++, x, "useproxy", "Proxy:");
@@ -384,6 +385,9 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "ssltransfer") {
           site->setSSLTransferPolicy(((MenuSelectOptionTextArrow *)msoe)->getData());
+        }
+        else if (identifier == "cpsv") {
+          site->setSupportsCPSV(((MenuSelectOptionCheckBox *)msoe)->getData());
         }
         else if (identifier == "listcommand") {
           site->setListCommand(((MenuSelectOptionTextArrow *)msoe)->getData());
