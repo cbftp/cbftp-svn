@@ -50,7 +50,7 @@ void Crypto::decrypt(unsigned char * indata, int inlen, unsigned char * key, uns
   if (writelen + finalwritelen < *outlen || *outlen < 0) {
     *outlen = writelen + finalwritelen;
   }
-  memcpy(outdata, outdata + sizeof(int), *outlen);
+  memmove(outdata, outdata + sizeof(int), *outlen);
   EVP_CIPHER_CTX_cleanup(&ctx);
 }
 
