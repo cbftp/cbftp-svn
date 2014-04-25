@@ -43,7 +43,7 @@ private:
   std::string defaultinterface;
   std::string getInterfaceAddress(std::string);
   void negotiateSSL(int, EventReceiver *);
-  void investigateSSLError(int, int, int);
+  bool investigateSSLError(int, int, int);
   bool hasdefaultinterface;
 public:
   IOManager();

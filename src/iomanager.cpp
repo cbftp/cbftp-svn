@@ -191,25 +191,31 @@ void IOManager::negotiateSSL(int id, EventReceiver * er) {
     wm->dispatchEventSSLSuccess(receivermap[id]);
   }
   else {
-    investigateSSLError(SSL_get_error(ssl, ret), id, ret);
+    if (!investigateSSLError(SSL_get_error(ssl, ret), id, ret)) {
+      wm->dispatchEventDisconnected(receivermap[id]);
+      closeSocket(id);
+    }
   }
   event.events = EPOLLIN;
   epoll_ctl(epollfd, EPOLL_CTL_ADD, id, &event);
 }
 
-void IOManager::investigateSSLError(int error, int currfd, int b_recv) {
+bool IOManager::investigateSSLError(int error, int currfd, int b_recv) {
   switch(error) {
     case SSL_ERROR_WANT_READ:
       break;
     case SSL_ERROR_WANT_WRITE:
       break;
     default:
+      unsigned long e = ERR_get_error();
       global->getEventLog()->log("IOManager", "SSL error on connection to " +
           addrmap[currfd] + ": " +
           global->int2Str(error) + " return code: " + global->int2Str(b_recv) +
-          " errno: " + strerror(errno));
-      break;
+          " errno: " + strerror(errno) +
+          (e ? " String: " + std::string(ERR_error_string(e, NULL)) : ""));
+      return false;
   }
+  return true;
 }
 
 void IOManager::sendData(int id, std::string data) {
@@ -361,7 +367,10 @@ void IOManager::runInstance() {
               break;
             }
             else {
-              investigateSSLError(SSL_get_error(ssl, b_recv), currfd, b_recv);
+              if (!investigateSSLError(SSL_get_error(ssl, b_recv), currfd, b_recv)) {
+                wm->dispatchEventDisconnected(er);
+                closeSocket(currfd);
+              }
             }
           }
           break;
@@ -392,7 +401,10 @@ void IOManager::runInstance() {
               closeSocket(currfd);
             }
             else if (b_recv < 0) {
-              investigateSSLError(SSL_get_error(ssl, b_recv), currfd, b_recv);
+              if (!investigateSSLError(SSL_get_error(ssl, b_recv), currfd, b_recv)) {
+                wm->dispatchEventDisconnected(er);
+                closeSocket(currfd);
+              }
             }
           }
           break;
@@ -403,7 +415,10 @@ void IOManager::runInstance() {
               buf = blockpool->getBlock();
               b_recv = SSL_read(ssl, buf, blocksize);
               if (b_recv < 0) {
-                investigateSSLError(SSL_get_error(ssl, b_recv), currfd, b_recv);
+                if (!investigateSSLError(SSL_get_error(ssl, b_recv), currfd, b_recv)) {
+                  wm->dispatchEventDisconnected(er);
+                  closeSocket(currfd);
+                }
                 blockpool->returnBlock(buf);
                 break;
               }
