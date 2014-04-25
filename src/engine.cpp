@@ -17,6 +17,7 @@
 #include "eventlog.h"
 #include "tickpoke.h"
 #include "sitemanager.h"
+#include "workmanager.h"
 
 Engine::Engine() {
   scoreboard = new ScoreBoard();
@@ -101,6 +102,7 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
     if (!append) {
       currentraces.push_back(race);
       allraces.push_back(race);
+      dropped = 0;
       global->getEventLog()->log("Engine", "Starting race: " + section + "/" + release +
           " on " + global->int2Str((int)addsites.size()) + " sites.");
     }
@@ -144,14 +146,19 @@ void Engine::abortRace(std::string release) {
 
 void Engine::someRaceFileListRefreshed() {
   if (currentraces.size() > 0) {
-    estimateRaceSizes();
-    refreshScoreBoard();
-    /*std::vector<ScoreBoardElement *> possibles = scoreboard->getElementVector();
-    std::cout << "Possible transfers (run " << runs++ << "): " << scoreboard->size() << std::endl;
-    for (unsigned int i = 0; i < possibles.size(); i++) {
-      std::cout << possibles[i]->fileName() << " - " << possibles[i]->getScore() << " - " << possibles[i]->getSource()->getSite()->getName() << " -> " << possibles[i]->getDestination()->getSite()->getName() << std::endl;
-    }*/
-    issueOptimalTransfers();
+    if (!global->getWorkManager()->overload()) {
+      estimateRaceSizes();
+      refreshScoreBoard();
+      /*std::vector<ScoreBoardElement *> possibles = scoreboard->getElementVector();
+      std::cout << "Possible transfers (run " << runs++ << "): " << scoreboard->size() << std::endl;
+      for (unsigned int i = 0; i < possibles.size(); i++) {
+        std::cout << possibles[i]->fileName() << " - " << possibles[i]->getScore() << " - " << possibles[i]->getSource()->getSite()->getName() << " -> " << possibles[i]->getDestination()->getSite()->getName() << std::endl;
+      }*/
+      issueOptimalTransfers();
+    }
+    else {
+      ++dropped;
+    }
   }
 }
 
@@ -246,6 +253,9 @@ void Engine::refreshScoreBoard() {
             currentraces.erase(itr);
             refreshScoreBoard();
             global->getEventLog()->log("Engine", "Race globally completed: " + race->getName());
+            if (dropped) {
+              global->getEventLog()->log("Engine", "Scoreboard refreshes dropped since race start: " + global->int2Str(dropped));
+            }
             return;
           }
         }

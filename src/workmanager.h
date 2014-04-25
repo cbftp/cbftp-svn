@@ -8,6 +8,7 @@
 
 #define MAXDATASIZE 2048
 #define BUFSSIZE 32
+#define OVERLOADSIZE 10
 
 #define WORK_DATA 2534
 #define WORK_DATABUF 2535
@@ -42,5 +43,6 @@ public:
   void dispatchEventSSLSuccess(EventReceiver *);
   void dispatchEventSSLFail(EventReceiver *);
   DataBlockPool * getBlockPool();
+  bool overload();
   void runInstance();
 };

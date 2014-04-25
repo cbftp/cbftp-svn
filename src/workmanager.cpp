@@ -77,6 +77,13 @@ DataBlockPool * WorkManager::getBlockPool() {
   return &blockpool;
 }
 
+bool WorkManager::overload() {
+  pthread_mutex_lock(&dataqueue_mutex);
+  bool overload = dataqueue.size() >= 10;
+  pthread_mutex_unlock(&dataqueue_mutex);
+  return overload;
+}
+
 void WorkManager::runInstance() {
   char * data;
   while(1) {

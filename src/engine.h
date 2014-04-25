@@ -31,6 +31,7 @@ class Engine : public EventReceiver {
     void setSpeedScale();
     int calculateScore(File *, Race *, FileList *, SiteRace *, FileList *, SiteRace *, int, bool *, bool);
     bool pokeregistered;
+    unsigned int dropped;
   public:
     Engine();
     void newRace(std::string, std::string, std::list<std::string>);
