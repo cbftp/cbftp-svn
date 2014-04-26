@@ -549,20 +549,7 @@ void SiteLogic::commandFail(int id) {
     available--;
   }
   if (connstatetracker[id].hasTransfer()) {
-    switch (connstatetracker[id].getTransferType()) {
-      case CST_LIST:
-        connstatetracker[id].getTransferMonitor()->sourceError(3);
-        break;
-      case CST_DOWNLOAD:
-        connstatetracker[id].getTransferMonitor()->sourceError(3);
-        transferComplete(true);
-        break;
-      case CST_UPLOAD:
-        connstatetracker[id].getTransferMonitor()->targetError(3);
-        transferComplete(false);
-        break;
-    }
-    connstatetracker[id].finishTransfer();
+    reportTransferErrorAndFinish(id, connstatetracker[id].getTransferType(), 3);
   }
   conns[id]->reconnect();
 }
@@ -579,22 +566,7 @@ void SiteLogic::handleTransferFail(int id, int err) {
 
 void SiteLogic::handleTransferFail(int id, int type, int err) {
   if (connstatetracker[id].hasTransfer()) {
-    if (!connstatetracker[id].getTransferAborted()) {
-      switch (type) {
-        case CST_DOWNLOAD:
-          connstatetracker[id].getTransferMonitor()->sourceError(err);
-          transferComplete(true);
-          break;
-        case CST_LIST:
-          connstatetracker[id].getTransferMonitor()->sourceError(err);
-          break;
-        case CST_UPLOAD:
-          connstatetracker[id].getTransferMonitor()->targetError(err);
-          transferComplete(false);
-          break;
-      }
-    }
-    connstatetracker[id].finishTransfer();
+    reportTransferErrorAndFinish(id, type, err);
   }
   else {
     if (type != CST_UPLOAD) {
@@ -619,6 +591,24 @@ void SiteLogic::handleTransferFail(int id, int type, int err) {
   }
 }
 
+void SiteLogic::reportTransferErrorAndFinish(int id, int type, int err) {
+  if (!connstatetracker[id].getTransferAborted()) {
+    switch (type) {
+      case CST_DOWNLOAD:
+        connstatetracker[id].getTransferMonitor()->sourceError(err);
+        transferComplete(true);
+        break;
+      case CST_LIST:
+        connstatetracker[id].getTransferMonitor()->sourceError(err);
+        break;
+      case CST_UPLOAD:
+        connstatetracker[id].getTransferMonitor()->targetError(err);
+        transferComplete(false);
+        break;
+    }
+  }
+  connstatetracker[id].finishTransfer();
+}
 void SiteLogic::gotPath(int id, std::string path) {
 
 }
