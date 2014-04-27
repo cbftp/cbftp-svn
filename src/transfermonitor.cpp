@@ -41,6 +41,7 @@ void TransferMonitor::engage(std::string file, SiteLogic * sls, FileList * fls, 
   ssl = false;
   if (!sls->lockDownloadConn(spath, file, &src)) {
     tm->transferFailed(this, 4);
+    return;
   }
   if (!sld->lockUploadConn(dpath, file, &dst)) {
     sls->returnConn(src);
