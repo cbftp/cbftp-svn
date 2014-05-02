@@ -30,8 +30,12 @@ int TransferManager::getFileList(SiteLogic * sl, int connid) {
 }
 
 void TransferManager::suggestTransfer(std::string name, SiteLogic * src, FileList * fls, SiteLogic * dst, FileList * fld) {
+  suggestTransfer(name, src, fls, name, dst, fld);
+}
+
+void TransferManager::suggestTransfer(std::string srcname, SiteLogic * src, FileList * fls, std::string dstname, SiteLogic * dst, FileList * fld) {
   TransferMonitor * target = getAvailableTransferMonitor();
-  target->engage(name, src, fls, dst, fld);
+  target->engage(srcname, src, fls, dstname, dst, fld);
 }
 
 TransferMonitor * TransferManager::getAvailableTransferMonitor() {

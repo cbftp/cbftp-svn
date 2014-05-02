@@ -21,7 +21,8 @@ class TransferManager;
 class TransferMonitor : public EventReceiver {
   private:
     int status;
-    std::string file;
+    std::string sfile;
+    std::string dfile;
     int src;
     int dst;
     int storeid;
@@ -52,7 +53,7 @@ class TransferMonitor : public EventReceiver {
     void activeReady();
     bool idle();
     // for FXP
-    void engage(std::string, SiteLogic *, FileList *, SiteLogic *, FileList *);
+    void engage(std::string, SiteLogic *, FileList *, std::string, SiteLogic *, FileList *);
     // for download
     void engage(std::string, SiteLogic *, FileList *);
     // for LIST

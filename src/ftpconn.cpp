@@ -145,7 +145,9 @@ void FTPConn::FDFail(std::string error) {
 
 void FTPConn::FDSSLSuccess() {
   rawbuf->writeLine("[Cipher: " + iom->getCipher(sockfd) + "]");
-  doUSER(false);
+  if (state == 3) {
+    doUSER(false);
+  }
 }
 
 void FTPConn::FDSSLFail() {
@@ -870,6 +872,11 @@ void FTPConn::ABORResponse() {
 void FTPConn::doQUIT() {
   state = 23;
   sendEcho("QUIT");
+}
+
+void FTPConn::doSSLHandshake() {
+  state = 36;
+  iom->forceSSLhandshake(sockfd);
 }
 
 void FTPConn::QUITResponse() {

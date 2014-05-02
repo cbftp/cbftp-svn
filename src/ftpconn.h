@@ -121,6 +121,7 @@ class FTPConn : private EventReceiver {
     void doPRETLIST();
     void abortTransfer();
     void doQUIT();
+    void doSSLHandshake();
     void disconnect();
     int getState();
     std::string getConnectedAddress();

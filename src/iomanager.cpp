@@ -59,7 +59,7 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int
   struct sockaddr_in* saddr = (struct sockaddr_in*)res->ai_addr;
   inet_ntop(AF_INET, &(saddr->sin_addr), buf, res->ai_addrlen);
   addrmap[sockfd] = std::string(buf);
-  typemap[sockfd] = FD_TCP_PLAIN;
+  typemap[sockfd] = FD_TCP_CONNECTING;
   receivermap[sockfd] = er;
   struct epoll_event event;
   event.events = EPOLLOUT;
@@ -200,22 +200,45 @@ void IOManager::negotiateSSL(int id, EventReceiver * er) {
   epoll_ctl(epollfd, EPOLL_CTL_ADD, id, &event);
 }
 
+void IOManager::forceSSLhandshake(int id) {
+  SSL * ssl = sslmap[id];
+  int ret = SSL_do_handshake(ssl);
+  typemap[id] = FD_TCP_SSL_NEG_REDO_HANDSHAKE;
+  if (ret > 0) { // probably wont happen :)
+    typemap[id] = FD_TCP_SSL;
+    wm->dispatchEventSSLSuccess(receivermap[id]);
+  }
+  else {
+    if (!investigateSSLError(SSL_get_error(ssl, ret), id, ret)) {
+      wm->dispatchEventDisconnected(receivermap[id]);
+      closeSocket(id);
+    }
+  }
+}
+
 bool IOManager::investigateSSLError(int error, int currfd, int b_recv) {
   switch(error) {
     case SSL_ERROR_WANT_READ:
-      break;
+      return true;
     case SSL_ERROR_WANT_WRITE:
+      return true;
+    case SSL_ERROR_SYSCALL:
+      if (errno == EAGAIN) {
+        struct epoll_event event;
+        event.events = EPOLLOUT;
+        event.data.fd = currfd;
+        epoll_ctl(epollfd, EPOLL_CTL_MOD, currfd, &event);
+        return true;
+      }
       break;
-    default:
-      unsigned long e = ERR_get_error();
-      global->getEventLog()->log("IOManager", "SSL error on connection to " +
-          addrmap[currfd] + ": " +
-          global->int2Str(error) + " return code: " + global->int2Str(b_recv) +
-          " errno: " + strerror(errno) +
-          (e ? " String: " + std::string(ERR_error_string(e, NULL)) : ""));
-      return false;
   }
-  return true;
+  unsigned long e = ERR_get_error();
+  global->getEventLog()->log("IOManager", "SSL error on connection to " +
+      addrmap[currfd] + ": " +
+      global->int2Str(error) + " return code: " + global->int2Str(b_recv) +
+      " errno: " + strerror(errno) +
+      (e ? " String: " + std::string(ERR_error_string(e, NULL)) : ""));
+  return false;
 }
 
 void IOManager::sendData(int id, std::string data) {
@@ -232,9 +255,11 @@ void IOManager::sendData(int id, char * buf, unsigned int buflen) {
     case FD_TCP_PLAIN_LISTEN:
       b_sent = send(id, buf, buflen, 0);
       break;
+    case FD_TCP_CONNECTING:
     case FD_TCP_SSL_NEG_REDO_CONN: // tcp ssl negotiation
     case FD_TCP_SSL_NEG_REDO_WRITE: // tcp ssl negotiation
     case FD_TCP_SSL_NEG_REDO_ACCEPT: // tcp ssl negotiation
+    case FD_TCP_SSL_NEG_REDO_HANDSHAKE: // tcp ssl negotiation
       datablock = blockpool->getBlock();
       memcpy(datablock, buf, buflen);
       sendqueuemap[id].push_back(DataBlock(datablock, buflen));
@@ -259,6 +284,7 @@ void IOManager::closeSocket(int id) {
   switch(typemap[id]) {
     case FD_KEYBOARD: // keyboard
       break; // one does not simply close the keyboard input
+    case FD_TCP_CONNECTING:
     case FD_TCP_PLAIN: // tcp plain
     case FD_TCP_PLAIN_LISTEN:
       close(id);
@@ -266,6 +292,7 @@ void IOManager::closeSocket(int id) {
     case FD_TCP_SSL_NEG_REDO_CONN: // tcp ssl
     case FD_TCP_SSL_NEG_REDO_WRITE:
     case FD_TCP_SSL_NEG_REDO_ACCEPT:
+    case FD_TCP_SSL_NEG_REDO_HANDSHAKE:
     case FD_TCP_SSL:
       SSL_shutdown(sslmap[id]);
       close(id);
@@ -310,6 +337,18 @@ void IOManager::runInstance() {
     for (i = 0; i < fds; i++) {
       currfd = events[i].data.fd;
       er = receivermap[currfd];
+      if (events[i].events & EPOLLOUT) {
+        struct epoll_event event;
+        event.events = EPOLLIN;
+        event.data.fd = currfd;
+        epoll_ctl(epollfd, EPOLL_CTL_MOD, currfd, &event);
+        if (typemap[currfd] == FD_TCP_CONNECTING) {
+          typemap[currfd] = FD_TCP_PLAIN;
+          wm->dispatchEventConnected(er);
+          continue;
+        }
+        events[i].events |= EPOLLIN;
+      }
       switch (typemap[currfd]) {
         case FD_KEYBOARD: // keyboard
           wm->dispatchFDData(er);
@@ -327,23 +366,20 @@ void IOManager::runInstance() {
             }
             wm->dispatchFDData(er, buf, b_recv);
           }
-          else if (events[i].events & EPOLLOUT) { // socket connected
-            struct epoll_event event;
-            event.events = EPOLLIN;
-            event.data.fd = currfd;
-            epoll_ctl(epollfd, EPOLL_CTL_MOD, currfd, &event);
-            wm->dispatchEventConnected(er);
-          }
           break;
         case FD_TCP_SSL_NEG_REDO_CONN: // tcp ssl redo connect
         case FD_TCP_SSL_NEG_REDO_ACCEPT: // tcp ssl redo accept
+        case FD_TCP_SSL_NEG_REDO_HANDSHAKE: // tcp ssl redo handshake
           if (events[i].events & EPOLLIN) { // incoming data
             ssl = sslmap[currfd];
             if (typemap[currfd] == FD_TCP_SSL_NEG_REDO_CONN) {
               b_recv = SSL_connect(ssl);
             }
-            else {
+            else if (typemap[currfd] == FD_TCP_SSL_NEG_REDO_ACCEPT) {
               b_recv = SSL_accept(ssl);
+            }
+            else {
+              b_recv = SSL_do_handshake(ssl);
             }
             if (b_recv > 0) {
               typemap[currfd] = FD_TCP_SSL;
