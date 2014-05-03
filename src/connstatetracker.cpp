@@ -142,11 +142,11 @@ void ConnStateTracker::setTransfer(TransferMonitor * tm, std::string path, std::
 }
 
 void ConnStateTracker::setTransfer(TransferMonitor * tm, std::string path, std::string file, int type, bool fxp, bool ssl) {
-  setTransfer(tm, path, file, type, fxp, false, "", ssl);
+  setTransfer(tm, path, file, type, fxp, true, "", ssl);
 }
 
 void ConnStateTracker::setTransfer(TransferMonitor * tm, std::string path, std::string file, int type, std::string addr, bool ssl) {
-  setTransfer(tm, path, file, type, false, true, addr, ssl);
+  setTransfer(tm, path, file, type, false, false, addr, ssl);
 }
 
 void ConnStateTracker::setList(TransferMonitor * tm, bool listpassive, std::string addr, bool ssl) {
