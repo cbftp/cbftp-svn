@@ -41,6 +41,8 @@ private:
   TransferMonitor * listtm;
   std::string addr;
   RecursiveCommandLogic * recursivelogic;
+  void setTransfer(TransferMonitor *, std::string, std::string, int, bool, bool, std::string, bool);
+  void setList(TransferMonitor *, bool, std::string, bool);
 public:
   ConnStateTracker();
   void delayedCommand(std::string, int);

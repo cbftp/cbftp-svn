@@ -125,61 +125,50 @@ bool ConnStateTracker::isReady() {
   return (state == 1 || state == 2);
 }
 
-void ConnStateTracker::setTransfer(TransferMonitor * tm, std::string path, std::string file, int type, bool fxp, bool ssl) {
+void ConnStateTracker::setTransfer(TransferMonitor * tm, std::string path, std::string file, int type, bool fxp, bool passive, std::string addr, bool ssl) {
   if (this->transfer) {
     global->getEventLog()->log("ConnStateTracker", "BUG: Setting transfer while already having a transfer!");
   }
   this->transfer = true;
   this->aborted = false;
-  this->ssl = ssl;
-  this->fxp = fxp;
   this->tm = tm;
   this->path = path;
   this->file = file;
   this->type = type;
-  this->passive = true;
+  this->fxp = fxp;
+  this->passive = passive;
+  this->addr = addr;
+  this->ssl = ssl;
+}
+
+void ConnStateTracker::setTransfer(TransferMonitor * tm, std::string path, std::string file, int type, bool fxp, bool ssl) {
+  setTransfer(tm, path, file, type, fxp, false, "", ssl);
 }
 
 void ConnStateTracker::setTransfer(TransferMonitor * tm, std::string path, std::string file, int type, std::string addr, bool ssl) {
-  if (this->transfer) {
-    global->getEventLog()->log("ConnStateTracker", "BUG: Setting transfer while already having a transfer!");
+  setTransfer(tm, path, file, type, false, true, addr, ssl);
+}
+
+void ConnStateTracker::setList(TransferMonitor * tm, bool listpassive, std::string addr, bool ssl) {
+  if (this->listtransfer) {
+    global->getEventLog()->log("ConnStateTracker", "BUG: Setting list while already having a list!");
   }
-  this->transfer = true;
-  this->aborted = false;
-  this->ssl = ssl;
-  this->tm = tm;
-  this->path = path;
-  this->file = file;
-  this->type = type;
-  this->passive = false;
-  this->addr = addr;
+  if (this->transfer) {
+    global->getEventLog()->log("ConnStateTracker", "BUG: Setting list while already having a transfer!");
+  }
+  this->listtransfer = true;
+  this->listtm = tm;
+  this->listpassive = listpassive;
+  this->listaddr = addr;
+  this->listssl = ssl;
 }
 
 void ConnStateTracker::setList(TransferMonitor * tm, bool ssl) {
-  if (this->listtransfer) {
-    global->getEventLog()->log("ConnStateTracker", "BUG: Setting list while already having a list!");
-  }
-  if (this->transfer) {
-    global->getEventLog()->log("ConnStateTracker", "BUG: Setting list while already having a transfer!");
-  }
-  this->listtransfer = true;
-  this->listssl = ssl;
-  this->listtm = tm;
-  this->listpassive = true;
+  setList(tm, true, "", ssl);
 }
 
 void ConnStateTracker::setList(TransferMonitor * tm, std::string addr, bool ssl) {
-  if (this->listtransfer) {
-    global->getEventLog()->log("ConnStateTracker", "BUG: Setting list while already having a list!");
-  }
-  if (this->transfer) {
-    global->getEventLog()->log("ConnStateTracker", "BUG: Setting list while already having a transfer!");
-  }
-  this->listtransfer = true;
-  this->listssl = ssl;
-  this->listtm = tm;
-  this->listpassive = false;
-  this->listaddr = addr;
+  setList(tm, false, addr, ssl);
 }
 
 bool ConnStateTracker::isLoggedIn() {
