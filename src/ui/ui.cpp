@@ -2,6 +2,7 @@
 
 #include <sys/ioctl.h>
 #include <iostream>
+#include <unistd.h>
 
 #include "../globalcontext.h"
 #include "../tickpoke.h"
