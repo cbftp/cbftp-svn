@@ -137,18 +137,18 @@ void ViewFileScreen::update() {
         return;
       }
       else if (!legendupdated) {
+        legendupdated = true;
         ui->update();
         ui->setLegend();
-        legendupdated = true;
         return;
       }
     }
     else if (!pid && global->getTransferManager()->transferStatus(requestid) != TRANSFER_IN_PROGRESS_UI) {
       redraw();
       if (!legendupdated) {
+        legendupdated = true;
         ui->update();
         ui->setLegend();
-        legendupdated = true;
       }
       return;
     }
