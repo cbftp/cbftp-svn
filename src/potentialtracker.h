@@ -2,7 +2,6 @@
 
 #include <string>
 #include <list>
-#include <pthread.h>
 #include <vector>
 
 #include "eventreceiver.h"
@@ -22,7 +21,6 @@ class PotentialTracker : private EventReceiver {
   private:
     std::list<PotentialListElement *> potentiallist;
     std::list<PotentialElement *> top;
-    pthread_mutex_t listmutex;
     std::list<PotentialListElement *>::iterator itple;
     std::vector<PotentialElement *>::iterator itpe;
     std::list<PotentialElement *>::iterator ittop;

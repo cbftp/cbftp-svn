@@ -971,14 +971,6 @@ bool FTPConn::isProcessing() {
   return processing;
 }
 
-void FTPConn::lock() {
-  sl->lock();
-}
-
-void FTPConn::unlock() {
-  sl->unlock();
-}
-
 void FTPConn::parseFileList(char * buf, unsigned int buflen) {
   char * loc = buf, * start;
   unsigned int files = 0;

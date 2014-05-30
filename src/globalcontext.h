@@ -39,7 +39,6 @@ class GlobalContext {
     ProxyManager * pm;
     LocalStorage * ls;
     ExternalFileViewing * efv;
-    pthread_mutex_t time_mutex;
     std::string compiletime;
     std::string svnrev;
     int currentyear;

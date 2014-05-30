@@ -192,7 +192,6 @@ void Engine::reportCurrentSize(SiteRace * srs, FileList * fls, bool final) {
   std::list<std::string> uniques;
   std::map<std::string, File *>::iterator itf;
   std::string subpath = srs->getSubPathForFileList(fls);
-  fls->lockFileList();
   for (itf = fls->begin(); itf != fls->end(); itf++) {
     if (itf->second->isDirectory()) {
       continue;
@@ -218,7 +217,6 @@ void Engine::reportCurrentSize(SiteRace * srs, FileList * fls, bool final) {
       uniques.push_back(filename);
     }
   }
-  fls->unlockFileList();
   srs->reportSize(fls, &uniques, final);
 }
 
@@ -277,7 +275,6 @@ void Engine::refreshScoreBoard() {
           if (fld != NULL) {
             if (!fld->isFilled()) continue;
             std::map<std::string, File *>::iterator itf;
-            fls->lockFileList();
             for (itf = fls->begin(); itf != fls->end(); itf++) {
               File * f = itf->second;
               if (!global->getSkipList()->isAllowed(itf->first) ||
@@ -304,7 +301,6 @@ void Engine::refreshScoreBoard() {
               scoreboard->add(filename, score, prio, sls, fls, sld, fld);
               race->resetUpdateCheckCounter();
             }
-            fls->unlockFileList();
           }
           else {
             srd->addSubDirectory(itfls->first);

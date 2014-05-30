@@ -10,7 +10,6 @@ PotentialTracker::PotentialTracker(int slots) {
     potentiallist.push_back(new PotentialListElement(slots));
   }
   for (int i = 0; i < slots; i++) top.push_back(new PotentialElement());
-  pthread_mutex_init(&listmutex, NULL);
   global->getTickPoke()->startPoke(this, "PotentialTracker", POTENTIALITY_LIFESPAN / POTENTIALITY_SLICES, 0);
 }
 
@@ -22,7 +21,6 @@ int PotentialTracker::getMaxAvailablePotential() {
   for (ittop = top.begin(); ittop != top.end(); ittop++) {
     (*ittop)->update(NULL, 0, 0, "");
   }
-  pthread_mutex_lock(&listmutex);
   for (itple = potentiallist.begin(); itple != potentiallist.end(); itple++) {
     std::vector<PotentialElement *> & pelist = (*itple)->getSlotsVector();
     for (itpe = pelist.begin(); itpe != pelist.end(); itpe++) {
@@ -63,23 +61,17 @@ int PotentialTracker::getMaxAvailablePotential() {
     }
   }
   int ret = top.front()->getPotential();
-  pthread_mutex_unlock(&listmutex);
   return ret;
 }
 
 PotentialListElement * PotentialTracker::getFront() {
-  pthread_mutex_lock(&listmutex);
-  PotentialListElement * ple = potentiallist.front();
-  pthread_mutex_unlock(&listmutex);
-  return ple;
+  return potentiallist.front();
 }
 
 void PotentialTracker::tick(int message) {
-  pthread_mutex_lock(&listmutex);
   potentiallist.back()->reset();
   potentiallist.push_front(potentiallist.back());
   potentiallist.pop_back();
-  pthread_mutex_unlock(&listmutex);
 }
 
 std::list<PotentialElement *>::iterator PotentialTracker::findFirstOfSite(SiteLogic * st) {

@@ -17,7 +17,6 @@ void GlobalContext::init() {
 #ifdef _ISOC95_SOURCE
   pthread_setname_np(pthread_self(), "clusterbomb");
 #endif
-  pthread_mutex_init(&time_mutex, NULL);
   updateTime();
 }
 
@@ -146,11 +145,9 @@ int GlobalContext::currentDay() {
 }
 
 std::string GlobalContext::ctimeLog() {
-  pthread_mutex_lock(&time_mutex);
   time_t rawtime;
   time(&rawtime);
   std::string readabletime = asctime(localtime(&rawtime));
-  pthread_mutex_unlock(&time_mutex);
   return readabletime.substr(11, 8);
 }
 

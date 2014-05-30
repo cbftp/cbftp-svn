@@ -24,6 +24,12 @@ public:
     pthread_mutex_unlock(&queuemutex);
     return ret;
   }
+  unsigned int size() {
+    pthread_mutex_lock(&queuemutex);
+    unsigned int size = queue.size();
+    pthread_mutex_unlock(&queuemutex);
+    return size;
+  }
 private:
   std::list<T> queue;
   sem_t content;

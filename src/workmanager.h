@@ -5,6 +5,7 @@
 #include <list>
 
 #include "datablockpool.h"
+#include "blockingqueue.h"
 
 #define MAXDATASIZE 2048
 #define BUFSSIZE 32
@@ -25,12 +26,10 @@ class Event;
 class WorkManager {
 private:
   char * bufs[BUFSSIZE];
-  std::list<Event> dataqueue;
+  BlockingQueue<Event> dataqueue;
   pthread_t thread;
   static void * run(void *);
-  sem_t dispatch;
   sem_t readdata;
-  pthread_mutex_t dataqueue_mutex;
   DataBlockPool blockpool;
 public:
   WorkManager();

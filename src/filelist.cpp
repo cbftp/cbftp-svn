@@ -4,9 +4,6 @@
 #include "site.h"
 
 FileList::FileList(std::string username, std::string path) {
-  pthread_mutex_init(&filelist_mutex, NULL);
-  pthread_mutex_init(&owned_mutex, NULL);
-  pthread_mutex_init(&filled_mutex, NULL);
   this->username = username;
   bool endswithslash = path.rfind("/") + 1 == path.length();
   if (endswithslash && path.length() > 1) {
@@ -36,8 +33,7 @@ bool FileList::updateFile(std::string start, int touch) {
     return false;
   }
   File * updatefile;
-  pthread_mutex_lock(&filelist_mutex);
-  if ((updatefile = getFileIntern(name)) != NULL) {
+  if ((updatefile = getFile(name)) != NULL) {
     if (updatefile->getSize() == 0 && file->getSize() > 0) uploadedfiles++;
     if (updatefile->setSize(file->getSize())) {
       listchanged = true;
@@ -68,7 +64,6 @@ bool FileList::updateFile(std::string start, int touch) {
       }
       updatefile->unsetUpdateFlag();
     }
-    pthread_mutex_unlock(&filelist_mutex);
     delete file;
     return true;
   }
@@ -81,7 +76,6 @@ bool FileList::updateFile(std::string start, int touch) {
     }
     listchanged = true;
   }
-  pthread_mutex_unlock(&filelist_mutex);
   return true;
 }
 
@@ -91,8 +85,7 @@ void FileList::touchFile(std::string name, std::string user) {
 
 void FileList::touchFile(std::string name, std::string user, bool upload) {
   File * file;
-  pthread_mutex_lock(&filelist_mutex);
-  if ((file = getFileIntern(name)) != NULL) {
+  if ((file = getFile(name)) != NULL) {
     file->unsetUpdateFlag();
   }
   else {
@@ -106,49 +99,30 @@ void FileList::touchFile(std::string name, std::string user, bool upload) {
   if (upload) {
     file->upload();
   }
-  pthread_mutex_unlock(&filelist_mutex);
 }
 
 void FileList::setFileUpdateFlag(std::string name, long int size, unsigned int speed, Site * src, std::string dst) {
   File * file;
-  pthread_mutex_lock(&filelist_mutex);
-  if ((file = getFileIntern(name)) != NULL) {
+  if ((file = getFile(name)) != NULL) {
     if (file->setSize(size)) {
       listchanged = true;
     }
     file->setUpdateFlag(src, dst, speed);
   }
-  pthread_mutex_unlock(&filelist_mutex);
 }
 
 File * FileList::getFile(std::string name) {
-  return getFile(name, true);
-}
-
-File * FileList::getFileIntern(std::string name) {
-  return getFile(name, false);
-}
-
-File * FileList::getFile(std::string name, bool lock) {
-  if (lock) pthread_mutex_lock(&filelist_mutex);
   std::map<std::string, File *>::iterator it = files.find(name);
-  if (lock) pthread_mutex_unlock(&filelist_mutex);
   if (it == files.end()) return NULL;
   else return (*it).second;
 }
 
 bool FileList::isFilled() {
-  bool ret;
-  pthread_mutex_lock(&filled_mutex);
-  ret = filled;
-  pthread_mutex_unlock(&filled_mutex);
-  return ret;
+  return filled;
 }
 
 void FileList::setFilled() {
-  pthread_mutex_lock(&filled_mutex);
   filled = true;
-  pthread_mutex_unlock(&filled_mutex);
 }
 
 std::map<std::string, File *>::iterator FileList::begin() {
@@ -160,62 +134,43 @@ std::map<std::string, File *>::iterator FileList::end() {
 }
 
 bool FileList::contains(std::string name) {
-  pthread_mutex_lock(&filelist_mutex);
   bool ret = false;
   if (files.find(name) != files.end()) ret = true;
-  pthread_mutex_unlock(&filelist_mutex);
   return ret;
 }
 
 unsigned int FileList::getSize() {
-  unsigned int ret;
-  if (!locked) pthread_mutex_lock(&filelist_mutex);
-  ret = files.size();
-  if (!locked) pthread_mutex_unlock(&filelist_mutex);
-  return ret;
+  return files.size();
 }
 
 unsigned int FileList::getNumUploadedFiles() {
   unsigned int count = 0;
   std::map<std::string, File *>::iterator it;
-  pthread_mutex_lock(&filelist_mutex);
   for (it = files.begin(); it != files.end(); it++) {
     if (!it->second->isDirectory() && it->second->getSize() > 0) {
       ++count;
     }
   }
-  pthread_mutex_unlock(&filelist_mutex);
   return count;
 }
 
 int FileList::getSizeUploaded() {
-  int ret;
-  pthread_mutex_lock(&filelist_mutex);
-  ret = uploadedfiles;
-  pthread_mutex_unlock(&filelist_mutex);
-  return ret;
+  return uploadedfiles;
 }
 
 bool FileList::hasSFV() {
   std::map<std::string, File *>::iterator it;
-  pthread_mutex_lock(&filelist_mutex);
   for (it = files.begin(); it != files.end(); it++) {
     if(it->second->getExtension() == ("sfv") &&
         it->second->getSize() > 0) {
-      pthread_mutex_unlock(&filelist_mutex);
       return true;
     }
   }
-  pthread_mutex_unlock(&filelist_mutex);
   return false;
 }
 
 int FileList::getOwnedPercentage() {
-  int ret;
-  pthread_mutex_lock(&owned_mutex);
-  ret = ownpercentage;
-  pthread_mutex_unlock(&owned_mutex);
-  return ret;
+  return ownpercentage;
 }
 
 unsigned long long int FileList::getMaxFileSize() {
@@ -226,19 +181,8 @@ std::string FileList::getPath() {
   return path;
 }
 
-void FileList::lockFileList() {
-  pthread_mutex_lock(&filelist_mutex);
-  locked = true;
-}
-
-void FileList::unlockFileList() {
-  locked = false;
-  pthread_mutex_unlock(&filelist_mutex);
-}
-
 void FileList::cleanSweep(int touch) {
   std::map<std::string, File *>::iterator it;
-  pthread_mutex_lock(&filelist_mutex);
   for (it = files.begin(); it != files.end(); it++) {
     File * f = it->second;
     if (f->getTouch() != touch && !f->isUploading()) {
@@ -258,31 +202,24 @@ void FileList::cleanSweep(int touch) {
       listchanged = true;
     }
   }
-  pthread_mutex_unlock(&filelist_mutex);
 }
 
 void FileList::flush() {
   std::map<std::string, File *>::iterator it;
-  pthread_mutex_lock(&filelist_mutex);
   for (it = files.begin(); it != files.end(); it++) {
     delete (*it).second;
   }
   files.clear();
   maxfilesize = 0;
   uploadedfiles = 0;  
-  pthread_mutex_lock(&owned_mutex);
   owned = 0;
   ownpercentage = 0;
-  pthread_mutex_unlock(&owned_mutex);
-  pthread_mutex_unlock(&filelist_mutex);
 }
 
 void FileList::editOwnedFileCount(bool add) {
- pthread_mutex_lock(&owned_mutex);
  if (add) ++owned;
  else --owned;
  ownpercentage = (owned * 100) / files.size();
- pthread_mutex_unlock(&owned_mutex);
 }
 
 void FileList::uploadFail(std::string file) {

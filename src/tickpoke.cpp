@@ -30,9 +30,7 @@ void TickPoke::tick(int interval) {
   for(it = targets.begin(); it != targets.end(); it++) {
     if (it->tick(interval)) {
       EventReceiver * er = it->getPokee();
-      er->lock();
       er->tick(it->getMessage());
-      er->unlock();
     }
   }
 }

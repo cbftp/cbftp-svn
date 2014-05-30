@@ -7,9 +7,7 @@
 extern GlobalContext * global;
 
 WorkManager::WorkManager() {
-  sem_init(&dispatch, 0, 0);
   sem_init(&readdata, 0, 0);
-  pthread_mutex_init(&dataqueue_mutex, NULL);
   pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
 #ifdef _ISOC95_SOURCE
   pthread_setname_np(thread, "Worker");
@@ -17,60 +15,36 @@ WorkManager::WorkManager() {
 }
 
 void WorkManager::dispatchFDData(EventReceiver * er) {
-  pthread_mutex_lock(&dataqueue_mutex);
-  dataqueue.push_back(Event(er, WORK_DATA));
-  pthread_mutex_unlock(&dataqueue_mutex);
-  sem_post(&dispatch);
+  dataqueue.push(Event(er, WORK_DATA));
   sem_wait(&readdata);
 }
 
 void WorkManager::dispatchFDData(EventReceiver * er, char * buf, int len) {
-  pthread_mutex_lock(&dataqueue_mutex);
-  dataqueue.push_back(Event(er, WORK_DATABUF, buf, len));
-  pthread_mutex_unlock(&dataqueue_mutex);
-  sem_post(&dispatch);
+  dataqueue.push(Event(er, WORK_DATABUF, buf, len));
 }
 
 void WorkManager::dispatchTick(EventReceiver * er, int interval) {
-  pthread_mutex_lock(&dataqueue_mutex);
-  dataqueue.push_back(Event(er, WORK_TICK, interval));
-  pthread_mutex_unlock(&dataqueue_mutex);
-  sem_post(&dispatch);
+  dataqueue.push(Event(er, WORK_TICK, interval));
 }
 
 void WorkManager::dispatchEventNew(EventReceiver * er, int sockfd) {
-  pthread_mutex_lock(&dataqueue_mutex);
-  dataqueue.push_back(Event(er, WORK_NEW, sockfd));
-  pthread_mutex_unlock(&dataqueue_mutex);
-  sem_post(&dispatch);
+  dataqueue.push(Event(er, WORK_NEW, sockfd));
 }
 
 void WorkManager::dispatchEventConnected(EventReceiver * er) {
-  pthread_mutex_lock(&dataqueue_mutex);
-  dataqueue.push_back(Event(er, WORK_CONNECTED));
-  pthread_mutex_unlock(&dataqueue_mutex);
-  sem_post(&dispatch);
+  dataqueue.push(Event(er, WORK_CONNECTED));
 }
 
 void WorkManager::dispatchEventDisconnected(EventReceiver * er) {
-  pthread_mutex_lock(&dataqueue_mutex);
-  dataqueue.push_back(Event(er, WORK_DISCONNECTED));
-  pthread_mutex_unlock(&dataqueue_mutex);
-  sem_post(&dispatch);
+  dataqueue.push(Event(er, WORK_DISCONNECTED));
 }
 
 void WorkManager::dispatchEventSSLSuccess(EventReceiver * er) {
-  pthread_mutex_lock(&dataqueue_mutex);
-  dataqueue.push_back(Event(er, WORK_SSL_SUCCESS));
-  pthread_mutex_unlock(&dataqueue_mutex);
-  sem_post(&dispatch);
+  dataqueue.push(Event(er, WORK_SSL_SUCCESS));
 }
 
 void WorkManager::dispatchEventSSLFail(EventReceiver * er) {
-  pthread_mutex_lock(&dataqueue_mutex);
-  dataqueue.push_back(Event(er, WORK_SSL_FAIL));
-  pthread_mutex_unlock(&dataqueue_mutex);
-  sem_post(&dispatch);
+  dataqueue.push(Event(er, WORK_SSL_FAIL));
 }
 
 DataBlockPool * WorkManager::getBlockPool() {
@@ -78,22 +52,14 @@ DataBlockPool * WorkManager::getBlockPool() {
 }
 
 bool WorkManager::overload() {
-  pthread_mutex_lock(&dataqueue_mutex);
-  bool overload = dataqueue.size() >= 10;
-  pthread_mutex_unlock(&dataqueue_mutex);
-  return overload;
+  return dataqueue.size() >= 10;
 }
 
 void WorkManager::runInstance() {
   char * data;
   while(1) {
-    sem_wait(&dispatch);
-    pthread_mutex_lock(&dataqueue_mutex);
-    Event event = dataqueue.front();
-    dataqueue.pop_front();
-    pthread_mutex_unlock(&dataqueue_mutex);
+    Event event = dataqueue.pop();
     EventReceiver * er = event.getReceiver();
-    er->lock();
     switch (event.getType()) {
       case WORK_DATA:
         event.getReceiver()->FDData();
@@ -123,7 +89,6 @@ void WorkManager::runInstance() {
         er->FDNew(event.getInterval());
         break;
     }
-    er->unlock();
   }
 }
 

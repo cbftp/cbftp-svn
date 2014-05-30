@@ -1,6 +1,6 @@
 #pragma once
+
 #include <map>
-#include <pthread.h>
 #include <string>
 
 class File;
@@ -13,9 +13,6 @@ class FileList {
     std::map<std::string, int> uploadfails;
     std::string username;
     std::string path;
-    pthread_mutex_t filelist_mutex;
-    pthread_mutex_t owned_mutex;
-    pthread_mutex_t filled_mutex;
     bool filled;
     bool locked;
     bool listchanged;
@@ -23,7 +20,6 @@ class FileList {
     int ownpercentage;
     unsigned long long int maxfilesize;
     int uploadedfiles;
-    File * getFileIntern(std::string);
     void editOwnedFileCount(bool);
   public:
     FileList(std::string, std::string);
@@ -33,7 +29,6 @@ class FileList {
     void touchFile(std::string, std::string, bool);
     void setFileUpdateFlag(std::string, long int, unsigned int, Site *, std::string);
     File * getFile(std::string);
-    File * getFile(std::string, bool);
     bool isFilled();
     void setFilled();
     std::map<std::string, File *>::iterator begin();
@@ -46,8 +41,6 @@ class FileList {
     bool hasSFV();
     int getOwnedPercentage();
     unsigned long long int getMaxFileSize();
-    void lockFileList();
-    void unlockFileList();
     void cleanSweep(int);
     void flush();
     void uploadFail(std::string);

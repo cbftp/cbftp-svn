@@ -50,19 +50,15 @@ void SiteStatusScreen::update() {
   ui->printStr(3, 1, downslots);
   ui->printStr(5, 1, "Login threads:");
   int i = 8;
-  st->lock();
   for(unsigned int j = 0; j < st->getConns()->size(); j++) {
     std::string status = st->getStatus(j);
-    st->unlock();
     int statuslength = status.length();
     while (status.length() < previousstatuslength[j]) {
       status += " ";
     }
     previousstatuslength[j] = statuslength;
     ui->printStr(i++, 1, "#" + global->int2Str((int)j) + " - " + status);
-    st->lock();
   }
-  st->unlock();
 }
 
 void SiteStatusScreen::keyPressed(unsigned int ch) {

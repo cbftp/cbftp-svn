@@ -144,7 +144,5 @@ class FTPConn : private EventReceiver {
     FileList * currentFileList();
     SiteRace * currentSiteRace();
     void setCurrentSiteRace(SiteRace *);
-    void lock();
-    void unlock();
     void parseFileList(char *, unsigned int);
 };

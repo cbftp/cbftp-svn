@@ -2,10 +2,6 @@
 
 #include <iostream>
 
-EventReceiver::EventReceiver() {
-  pthread_mutex_init(&eventlock, NULL);
-}
-
 EventReceiver::~EventReceiver() {
 
 }
@@ -44,12 +40,4 @@ void EventReceiver::FDSSLSuccess() {
 
 void EventReceiver::FDSSLFail() {
 
-}
-
-void EventReceiver::lock() {
-  pthread_mutex_lock(&eventlock);
-}
-
-void EventReceiver::unlock() {
-  pthread_mutex_unlock(&eventlock);
 }
