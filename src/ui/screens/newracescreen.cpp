@@ -5,16 +5,18 @@
 #include "../../sitemanager.h"
 #include "../../engine.h"
 
-#include "../uicommunicator.h"
+#include "../ui.h"
 #include "../menuselectoptioncheckbox.h"
 #include "../menuselectoptionelement.h"
 #include "../focusablearea.h"
-#include "../termint.h"
 
 extern GlobalContext * global;
 
-NewRaceScreen::NewRaceScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  this->uicommunicator = uicommunicator;
+NewRaceScreen::NewRaceScreen(Ui * ui) {
+  this->ui = ui;
+}
+
+void NewRaceScreen::initialize(unsigned int row, unsigned int col, std::string site, std::string section, std::string release) {
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [t]oggle all - [s]tart race - [S]tart race and return to browsing - [c]ancel";
   currentlegendtext = defaultlegendtext;
   active = false;
@@ -23,7 +25,7 @@ NewRaceScreen::NewRaceScreen(WINDOW * window, UICommunicator * uicommunicator, u
   unsigned int x = 1;
   sectionupdate = false;
   infotext = "";
-  std::string sectionstring = uicommunicator->getArg2();
+  std::string sectionstring = section;
   size_t splitpos;
   bool sectionset = false;
   int sectx = x + std::string("Section: ").length();
@@ -47,14 +49,14 @@ NewRaceScreen::NewRaceScreen(WINDOW * window, UICommunicator * uicommunicator, u
     sectx = sectx + buttontext.length();
   }
   y = y + 2;
-  release = uicommunicator->getArg3();
-  startsite = global->getSiteManager()->getSite(uicommunicator->getArg1());
+  this->release = release;
+  startsite = global->getSiteManager()->getSite(site);
   focusedarea = &msos;
   msos.makeLeavableDown();
   mso.makeLeavableUp();
   msos.enterFocusFrom(0);
   populateSiteList();
-  init(window, row, col);
+  init(row, col);
 }
 
 void NewRaceScreen::populateSiteList() {
@@ -70,9 +72,9 @@ void NewRaceScreen::populateSiteList() {
   }
 }
 void NewRaceScreen::redraw() {
-  werase(window);
-  TermInt::printStr(window, 1, 1, "Release: " + release);
-  TermInt::printStr(window, 2, 1, "Section: ");
+  ui->erase();
+  ui->printStr(1, 1, "Release: " + release);
+  ui->printStr(2, 1, "Section: ");
   bool highlight;
   for (unsigned int i = 0; i < msos.size(); i++) {
     MenuSelectOptionElement * msoe = msos.getElement(i);
@@ -80,9 +82,7 @@ void NewRaceScreen::redraw() {
     if (msos.isFocused() && msos.getSelectionPointer() == i) {
       highlight = true;
     }
-    if (highlight) wattron(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe));
-    if (highlight) wattroff(window, A_REVERSE);
+    ui->printStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe), highlight);
   }
   for (unsigned int i = 0; i < mso.size(); i++) {
     MenuSelectOptionElement * msoe = mso.getElement(i);
@@ -90,10 +90,8 @@ void NewRaceScreen::redraw() {
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    if (highlight) wattron(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText());
-    if (highlight) wattroff(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getContentText());
+    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText(), highlight);
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
   }
 }
 
@@ -107,38 +105,34 @@ void NewRaceScreen::update() {
   if (defocusedarea != NULL) {
     if (defocusedarea == &mso) {
       MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
-      TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText());
-      TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getContentText());
+      ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText());
+      ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
     }
     else if (defocusedarea == &msos){
       MenuSelectOptionElement * msoe = msos.getElement(msos.getLastSelectionPointer());
-      TermInt::printStr(window, msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe));
+      ui->printStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe));
     }
   }
   if (focusedarea == &mso) {
     MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText());
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getContentText());
+    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText());
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
     msoe = mso.getElement(mso.getSelectionPointer());
-    wattron(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText());
-    wattroff(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getContentText());
+    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText(), true);
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
     if (active && msoe->cursorPosition() >= 0) {
-      curs_set(1);
-      TermInt::moveCursor(window, msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1 + msoe->cursorPosition());
+      ui->showCursor();
+      ui->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1 + msoe->cursorPosition());
     }
     else {
-      curs_set(0);
+      ui->hideCursor();
     }
   }
   else {
     MenuSelectOptionElement * msoe = msos.getElement(msos.getLastSelectionPointer());
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe));
+    ui->printStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe));
     msoe = msos.getElement(msos.getSelectionPointer());
-    wattron(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe));
-    wattroff(window, A_REVERSE);
+    ui->printStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe), true);
   }
 }
 
@@ -150,11 +144,12 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
       activeelement->deactivate();
       active = false;
       currentlegendtext = defaultlegendtext;
-      uicommunicator->newCommand("updatesetlegend");
+      ui->update();
+      ui->setLegend();
       return;
     }
     activeelement->inputChar(ch);
-    uicommunicator->newCommand("update");
+    ui->update();
     return;
   }
   bool activation;
@@ -166,7 +161,7 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
           focusedarea = &msos;
           focusedarea->enterFocusFrom(2);
         }
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case KEY_DOWN:
@@ -176,7 +171,7 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
           focusedarea = &mso;
           focusedarea->enterFocusFrom(0);
         }
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case KEY_LEFT:
@@ -184,7 +179,7 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
         if (!focusedarea->isFocused()) {
           // shouldn't happen
         }
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case KEY_RIGHT:
@@ -192,7 +187,7 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
         if (!focusedarea->isFocused()) {
           // shouldn't happen
         }
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case KEY_NPAGE:
@@ -205,7 +200,7 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
           }
         }
       }
-      uicommunicator->newCommand("redraw");
+      ui->redraw();
       break;
     case KEY_PPAGE:
       for (unsigned int i = 0; i < pagerows; i++) {
@@ -217,7 +212,7 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
           }
         }
       }
-      uicommunicator->newCommand("redraw");
+      ui->redraw();
       break;
     case 10:
 
@@ -227,26 +222,27 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
           section = msos.getElement(msos.getSelectionPointer())->getIdentifier();
           sectionupdate = true;
         }
-        uicommunicator->newCommand("update");
+        ui->update();
         break;
       }
       active = true;
       activeelement = focusedarea->getElement(focusedarea->getSelectionPointer());
       currentlegendtext = activeelement->getLegendText();
-      uicommunicator->newCommand("updatesetlegend");
+      ui->update();
+      ui->setLegend();
       break;
     case 27: // esc
     case 'c':
-      uicommunicator->newCommand("return");
+      ui->returnToLast();
       break;
     case 's':
       if (startRace()) {
-        uicommunicator->newCommand("returnracestatus", release);
+        ui->returnRaceStatus(release);
       }
       break;
     case 'S':
       if (startRace()) {
-        uicommunicator->newCommand("return");
+        ui->returnToLast();
       }
       break;
     case 't':
@@ -257,7 +253,7 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
         toggleall = false;
       }
       populateSiteList();
-      uicommunicator->newCommand("redraw");
+      ui->redraw();
       break;
   }
 }
@@ -293,7 +289,7 @@ bool NewRaceScreen::startRace() {
   }
   if (sites.size() < 2) {
     infotext = "Cannot start race with less than 2 sites!";
-    uicommunicator->newCommand("update");
+    ui->update();
     return false;
   }
   global->getEngine()->newRace(release, section, sites);

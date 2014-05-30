@@ -6,13 +6,13 @@
 #include "../menuselectoption.h"
 
 class FocusableArea;
-class UICommunicator;
 class MenuSelectOptionElement;
 class Site;
 
 class NewRaceScreen : public UIWindow {
 public:
-  NewRaceScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  NewRaceScreen(Ui *);
+  void initialize(unsigned int, unsigned int, std::string, std::string, std::string);
   void update();
   void redraw();
   void keyPressed(unsigned int);
@@ -35,7 +35,6 @@ private:
   FocusableArea * defocusedarea;
   MenuSelectOption msos;
   MenuSelectOption mso;
-  UICommunicator * uicommunicator;
   std::list<std::string> sections;
   std::string release;
   std::string infotext;

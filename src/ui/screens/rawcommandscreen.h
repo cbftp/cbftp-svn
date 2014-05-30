@@ -4,13 +4,13 @@
 #include "../menuselectoptiontextfield.h"
 #include "../commandhistory.h"
 
-class UICommunicator;
 class RawBuffer;
 class SiteLogic;
 
 class RawCommandScreen : public UIWindow {
 public:
-  RawCommandScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  RawCommandScreen(Ui * ui);
+  void initialize(unsigned int, unsigned int, std::string, std::string);
   void redraw();
   void update();
   void keyPressed(unsigned int);
@@ -25,7 +25,6 @@ private:
   std::string selection;
   bool hasselection;
   SiteLogic * sitelogic;
-  UICommunicator * uicommunicator;
   RawBuffer * rawbuf;
   CommandHistory history;
 };

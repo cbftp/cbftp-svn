@@ -11,7 +11,7 @@
 #include "potentialtracker.h"
 #include "sitelogicrequest.h"
 #include "sitelogicrequestready.h"
-#include "ui/uicommunicator.h"
+#include "uibase.h"
 #include "tickpoke.h"
 #include "rawbuffer.h"
 #include "eventreceiver.h"
@@ -167,7 +167,7 @@ void SiteLogic::listRefreshed(int id) {
     if (it->connId() == id) {
       requestsready.push_back(SiteLogicRequestReady(it->requestId(), conns[id]->currentFileList(), true));
       requestsinprogress.erase(it);
-      global->getUICommunicator()->backendPush();
+      global->getUIBase()->backendPush();
       break;
     }
   }
@@ -318,7 +318,7 @@ void SiteLogic::commandSuccess(int id) {
           if (it->requestType() == REQ_WIPE_RECURSIVE || it->requestType() == REQ_WIPE) {
             requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, true));
             requestsinprogress.erase(it);
-            global->getUICommunicator()->backendPush();
+            global->getUIBase()->backendPush();
             break;
           }
         }
@@ -330,7 +330,7 @@ void SiteLogic::commandSuccess(int id) {
           if (it->requestType() == REQ_DEL) {
             requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, true));
             requestsinprogress.erase(it);
-            global->getUICommunicator()->backendPush();
+            global->getUIBase()->backendPush();
             break;
           }
           else if (it->requestType() == REQ_DEL_RECURSIVE) {
@@ -341,7 +341,7 @@ void SiteLogic::commandSuccess(int id) {
             else {
               requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, true));
               requestsinprogress.erase(it);
-              global->getUICommunicator()->backendPush();
+              global->getUIBase()->backendPush();
               break;
             }
           }
@@ -354,7 +354,7 @@ void SiteLogic::commandSuccess(int id) {
           if (it->requestType() == REQ_NUKE) {
             requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, true));
             requestsinprogress.erase(it);
-            global->getUICommunicator()->backendPush();
+            global->getUIBase()->backendPush();
             break;
           }
         }
@@ -425,7 +425,7 @@ void SiteLogic::commandFail(int id) {
           if (it->requestType() == REQ_FILELIST) {
             requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, false));
             requestsinprogress.erase(it);
-            global->getUICommunicator()->backendPush();
+            global->getUIBase()->backendPush();
             handleConnection(id, false);
             return;
           }
@@ -496,7 +496,7 @@ void SiteLogic::commandFail(int id) {
           if (it->requestType() == REQ_WIPE_RECURSIVE || it->requestType() == REQ_WIPE) {
             requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, false));
             requestsinprogress.erase(it);
-            global->getUICommunicator()->backendPush();
+            global->getUIBase()->backendPush();
             break;
           }
         }
@@ -513,7 +513,7 @@ void SiteLogic::commandFail(int id) {
           if (it->requestType() == REQ_DEL_RECURSIVE || it->requestType() == REQ_DEL) {
             requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, false));
             requestsinprogress.erase(it);
-            global->getUICommunicator()->backendPush();
+            global->getUIBase()->backendPush();
             break;
           }
         }
@@ -526,7 +526,7 @@ void SiteLogic::commandFail(int id) {
           if (it->requestType() == REQ_NUKE) {
             requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, false));
             requestsinprogress.erase(it);
-            global->getUICommunicator()->backendPush();
+            global->getUIBase()->backendPush();
             break;
           }
         }
@@ -619,7 +619,7 @@ void SiteLogic::rawCommandResultRetrieved(int id, std::string result) {
   for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
     if (it->connId() == id) {
       requestsinprogress.erase(it);
-      global->getUICommunicator()->backendPush();
+      global->getUIBase()->backendPush();
       break;
     }
   }

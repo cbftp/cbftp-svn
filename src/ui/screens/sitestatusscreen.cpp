@@ -7,27 +7,28 @@
 #include "../../sitelogicmanager.h"
 #include "../../ftpconn.h"
 
-#include "../uicommunicator.h"
-#include "../termint.h"
+#include "../ui.h"
 
 extern GlobalContext * global;
 
-SiteStatusScreen::SiteStatusScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  this->uicommunicator = uicommunicator;
-  sitename = uicommunicator->getArg1();
-  uicommunicator->checkoutCommand();
+SiteStatusScreen::SiteStatusScreen(Ui * ui) {
+  this->ui = ui;
+}
+
+void SiteStatusScreen::initialize(unsigned int row, unsigned int col, std::string sitename) {
+  this->sitename = sitename;
   site = global->getSiteManager()->getSite(sitename);
   autoupdate = true;
   st = global->getSiteLogicManager()->getSiteLogic(site->getName());
   for(unsigned int j = 0; j < st->getConns()->size(); j++) {
     previousstatuslength.push_back(0);
   }
-  init(window, row, col);
+  init(row, col);
 }
 
 void SiteStatusScreen::redraw() {
-  werase(window);
-  curs_set(0);
+  ui->erase();
+  ui->hideCursor();
   update();
 }
 
@@ -44,10 +45,10 @@ void SiteStatusScreen::update() {
   if (!site->unlimitedDown()) {
     downslots += "/" + global->int2Str(site->getMaxDown());
   }
-  TermInt::printStr(window, 1, 1, loginslots);
-  TermInt::printStr(window, 2, 1, upslots);
-  TermInt::printStr(window, 3, 1, downslots);
-  TermInt::printStr(window, 5, 1, "Login threads:");
+  ui->printStr(1, 1, loginslots);
+  ui->printStr(2, 1, upslots);
+  ui->printStr(3, 1, downslots);
+  ui->printStr(5, 1, "Login threads:");
   int i = 8;
   st->lock();
   for(unsigned int j = 0; j < st->getConns()->size(); j++) {
@@ -58,7 +59,7 @@ void SiteStatusScreen::update() {
       status += " ";
     }
     previousstatuslength[j] = statuslength;
-    TermInt::printStr(window, i++, 1, "#" + global->int2Str((int)j) + " - " + status);
+    ui->printStr(i++, 1, "#" + global->int2Str((int)j) + " - " + status);
     st->lock();
   }
   st->unlock();
@@ -67,21 +68,21 @@ void SiteStatusScreen::update() {
 void SiteStatusScreen::keyPressed(unsigned int ch) {
   switch(ch) {
     case KEY_RIGHT:
-      uicommunicator->newCommand("rawdata", site->getName(), "0");
+      ui->goRawData(site->getName());
       break;
     case 'E':
-      uicommunicator->newCommand("editsite", "edit", site->getName());
+      ui->goEditSite(site->getName());
       break;
     case 27: // esc
     case ' ':
     case 10:
-      uicommunicator->newCommand("return");
+      ui->returnToLast();
       break;
     case 'b':
-      uicommunicator->newCommand("browse", site->getName());
+      ui->goBrowse(site->getName());
       break;
     case 'w':
-      uicommunicator->newCommand("rawcommand", site->getName());
+      ui->goRawCommand(site->getName());
       break;
   }
 }

@@ -6,14 +6,15 @@
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
 
-class UICommunicator;
 class Race;
 
 class RaceStatusScreen : public UIWindow {
 public:
-  RaceStatusScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  RaceStatusScreen(Ui *);
+  void initialize(unsigned int, unsigned int, std::string);
   void redraw();
   void update();
+  void command(std::string);
   void keyPressed(unsigned int);
   char getFileChar(bool, bool, bool, bool);
   std::string getLegendText();
@@ -29,7 +30,6 @@ private:
   std::string release;
   std::string sitestr;
   std::list<std::string> subpaths;
-  UICommunicator * uicommunicator;
   MenuSelectOption mso;
   std::map<std::string, int> filetagpos;
   std::map<std::string, std::string> filenametags;

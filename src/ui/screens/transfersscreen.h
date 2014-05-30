@@ -2,11 +2,9 @@
 
 #include "../uiwindow.h"
 
-class RawBuffer;
-
-class EventLogScreen : public UIWindow {
+class TransfersScreen : public UIWindow {
 public:
-  EventLogScreen(Ui *);
+  TransfersScreen(Ui *);
   void initialize(unsigned int, unsigned int);
   void redraw();
   void update();
@@ -14,8 +12,4 @@ public:
   std::string getLegendText();
   std::string getInfoLabel();
 private:
-  bool readfromcopy;
-  unsigned int copyreadpos;
-  unsigned int copysize;
-  RawBuffer * rawbuf;
 };

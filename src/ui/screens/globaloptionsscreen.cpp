@@ -5,10 +5,9 @@
 #include "../../sitemanager.h"
 #include "../../iomanager.h"
 
-#include "../uicommunicator.h"
+#include "../ui.h"
 #include "../menuselectoptionelement.h"
 #include "../focusablearea.h"
-#include "../termint.h"
 #include "../menuselectoptioncheckbox.h"
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptionnumarrow.h"
@@ -16,8 +15,11 @@
 
 extern GlobalContext * global;
 
-GlobalOptionsScreen::GlobalOptionsScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  this->uicommunicator = uicommunicator;
+GlobalOptionsScreen::GlobalOptionsScreen(Ui * ui) {
+  this->ui = ui;
+}
+
+void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel";
   currentlegendtext = defaultlegendtext;
   active = false;
@@ -46,11 +48,12 @@ GlobalOptionsScreen::GlobalOptionsScreen(WINDOW * window, UICommunicator * uicom
     }
   }
   y++;
+  mso.clear();
   mso.addCheckBox(y++, x, "udpenable", "Enable remote commands:", rch->isEnabled());
   mso.addStringField(y++, x, "udpport", "Remote command UDP Port:", global->int2Str(rch->getUDPPort()), false, 5);
   mso.addStringField(y++, x, "udppass", "Remote command password:", rch->getPassword(), true);
   y++;
-  mso.addCheckBox(y++, x, "legend", "Show legend bar:", global->getUICommunicator()->legendEnabled());
+  mso.addCheckBox(y++, x, "legend", "Show legend bar:", ui->legendEnabled());
   y++;
   mso.addStringField(y++, x, "defuser", "Default site username:", sm->getDefaultUserName(), false);
   mso.addStringField(y++, x, "defpass", "Default site password:", sm->getDefaultPassword(), true);
@@ -70,11 +73,11 @@ GlobalOptionsScreen::GlobalOptionsScreen(WINDOW * window, UICommunicator * uicom
   mso.addTextButtonNoContent(y++, x, "proxy", "Configure proxy settings...");
   mso.addTextButtonNoContent(y++, x, "fileviewer", "Configure file viewing...");
   mso.addTextButtonNoContent(y++, x, "changekey", "Change encryption key...");
-  init(window, row, col);
+  init(row, col);
 }
 
 void GlobalOptionsScreen::redraw() {
-  werase(window);
+  ui->erase();
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     MenuSelectOptionElement * msoe = mso.getElement(i);
@@ -82,28 +85,24 @@ void GlobalOptionsScreen::redraw() {
     if (mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    if (highlight) wattron(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-    if (highlight) wattroff(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
 }
 
 void GlobalOptionsScreen::update() {
   MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
-  wattron(window, A_REVERSE);
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-  wattroff(window, A_REVERSE);
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
+  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   if (active && msoe->cursorPosition() >= 0) {
-    curs_set(1);
-    TermInt::moveCursor(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
+    ui->showCursor();
+    ui->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
   }
   else {
-    curs_set(0);
+    ui->hideCursor();
   }
 }
 
@@ -113,11 +112,12 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
       activeelement->deactivate();
       active = false;
       currentlegendtext = defaultlegendtext;
-      uicommunicator->newCommand("updatesetlegend");
+      ui->update();
+      ui->setLegend();
       return;
     }
     activeelement->inputChar(ch);
-    uicommunicator->newCommand("update");
+    ui->update();
     return;
   }
   bool activation;
@@ -125,43 +125,44 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
   switch(ch) {
     case KEY_UP:
       mso.goUp();
-      uicommunicator->newCommand("update");
+      ui->update();
       break;
     case KEY_DOWN:
       mso.goDown();
-      uicommunicator->newCommand("update");
+      ui->update();
       break;
     case 10:
       msoe = mso.getElement(mso.getSelectionPointer());
       if (msoe->getIdentifier() == "skiplist") {
-        uicommunicator->newCommand("skiplist");
+        ui->goSkiplist();
         return;
       }
       if (msoe->getIdentifier() == "changekey") {
-        uicommunicator->newCommand("changekey");
+        ui->goChangeKey();
         return;
       }
       if (msoe->getIdentifier() == "proxy") {
-        uicommunicator->newCommand("proxy");
+        ui->goProxy();
         return;
       }
       if (msoe->getIdentifier() == "fileviewer") {
-        uicommunicator->newCommand("fileviewersettings");
+        ui->goFileViewerSettings();
         return;
       }
       activation = msoe->activate();
       if (!activation) {
-        uicommunicator->newCommand("update");
+        ui->update();
         break;
       }
       active = true;
       activeelement = msoe;
       currentlegendtext = activeelement->getLegendText();
-      uicommunicator->newCommand("updatesetlegend");
+      ui->setLegend();
+      ui->update();
       break;
     case 27: // esc
     case 'c':
-      uicommunicator->newCommand("return");
+      ui->returnToLast();
       break;
     case 'd':
       bool udpenable = false;
@@ -209,11 +210,11 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
           sm->setDefaultMaxIdleTime(global->str2Int(((MenuSelectOptionTextField *)msoe)->getData()));
         }
         else if (identifier == "legend") {
-          global->getUICommunicator()->showLegend(((MenuSelectOptionCheckBox *)msoe)->getData());
+          ui->showLegend(((MenuSelectOptionCheckBox *)msoe)->getData());
         }
       }
       rch->setEnabled(udpenable);
-      uicommunicator->newCommand("return");
+      ui->returnToLast();
       break;
   }
 }

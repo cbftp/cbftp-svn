@@ -7,16 +7,17 @@
 #include "../uiwindow.h"
 #include "../uifilelist.h"
 
-class UICommunicator;
 class SiteLogic;
 class Site;
 class FileList;
 
 class BrowseScreen : public UIWindow {
 public:
-  BrowseScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  BrowseScreen(Ui *);
+  void initialize(unsigned int, unsigned int, std::string);
   void redraw();
   void update();
+  void command(std::string, std::string);
   void keyPressed(unsigned int);
   std::string getLegendText();
   std::string getInfoLabel();
@@ -51,7 +52,6 @@ private:
   UIFileList list;
   SiteLogic * sitelogic;
   int requestid;
-  UICommunicator * uicommunicator;
   std::string requestedpath;
   int spinnerpos;
   FileList * filelist;

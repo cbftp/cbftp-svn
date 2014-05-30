@@ -11,15 +11,17 @@
 #include "../../ftpconn.h"
 #include "../../engine.h"
 
-#include "../uicommunicator.h"
-#include "../termint.h"
+#include "../ui.h"
 #include "../menuselectoptiontextbutton.h"
 
 extern GlobalContext * global;
 
-RaceStatusScreen::RaceStatusScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  this->uicommunicator = uicommunicator;
-  release = uicommunicator->getArg1();
+RaceStatusScreen::RaceStatusScreen(Ui * ui) {
+  this->ui = ui;
+}
+
+void RaceStatusScreen::initialize(unsigned int row, unsigned int col, std::string release) {
+  this->release = release;
   race = global->getEngine()->getRace(release);
   autoupdate = true;
   smalldirs = false;
@@ -27,9 +29,8 @@ RaceStatusScreen::RaceStatusScreen(WINDOW * window, UICommunicator * uicommunica
   awaitingabort = false;
   currnumsubpaths = 0;
   currguessedsize = 0;
-  uicommunicator->checkoutCommand();
   mso.enterFocusFrom(0);
-  init(window, row, col);
+  init(row, col);
 }
 
 void RaceStatusScreen::redraw() {
@@ -40,9 +41,9 @@ void RaceStatusScreen::redraw() {
   if (sitestr.length() > 0) {
     sitestr = sitestr.substr(0, sitestr.length() - 1);
   }
-  werase(window);
-  TermInt::printStr(window, 1, 1, "Section: " + race->getSection());
-  TermInt::printStr(window, 1, 20, "Sites: " + sitestr);
+  ui->erase();
+  ui->printStr(1, 1, "Section: " + race->getSection());
+  ui->printStr(1, 20, "Sites: " + sitestr);
   std::list<std::string> currsubpaths = race->getSubPaths();
   currnumsubpaths = currsubpaths.size();
   currsubpaths.sort();
@@ -70,7 +71,7 @@ void RaceStatusScreen::redraw() {
     sumguessedsize += guessedsize;
   }
   currguessedsize = sumguessedsize;
-  TermInt::printStr(window, 2, 1, "Subpaths: " + subpathpresent);
+  ui->printStr(2, 1, "Subpaths: " + subpathpresent);
   int y = 4;
   longestsubpath = 0;
   std::list<std::string> filetags;
@@ -173,29 +174,14 @@ void RaceStatusScreen::redraw() {
   for (std::list<std::string>::iterator it = filetags.begin(); it != filetags.end(); it++) {
     std::string tag = *it;
     filetagpos[tag] = tagx;
-    TermInt::printStr(window, y, tagx, tag.substr(0, 1));
-    TermInt::printStr(window, y+1, tagx, tag.substr(1, 1));
-    TermInt::printStr(window, y+2, tagx++, tag.substr(2));
+    ui->printStr(y, tagx, tag.substr(0, 1));
+    ui->printStr(y+1, tagx, tag.substr(1, 1));
+    ui->printStr(y+2, tagx++, tag.substr(2));
   }
   update();
 }
 
 void RaceStatusScreen::update() {
-  if (uicommunicator->hasNewCommand()) {
-    if (uicommunicator->getCommand() == "yes") {
-      if (awaitingremovesite) {
-        global->getEngine()->removeSiteFromRace(release, removesite);
-        awaitingremovesite = false;
-      }
-      else if (awaitingabort) {
-        global->getEngine()->abortRace(race->getName());
-        awaitingremovesite = false;
-      }
-    }
-    uicommunicator->checkoutCommand();
-    redraw();
-    return;
-  }
   std::list<std::string> currsubpaths = race->getSubPaths();
   unsigned int sumguessedsize = 0;
   bool haslargepath = false;
@@ -237,7 +223,7 @@ void RaceStatusScreen::update() {
         printsubpath = "/";
       }
 
-      TermInt::printStr(window, y, x + 5, printsubpath, longestsubpath);
+      ui->printStr(y, x + 5, printsubpath, longestsubpath);
       race->prepareGuessedFileList(origsubpath);
       for (std::list<std::string>::iterator it3 = race->guessedFileListBegin(); it3 != race->guessedFileListEnd(); it3++) {
         std::string filename = *it3;
@@ -263,9 +249,7 @@ void RaceStatusScreen::update() {
           }
           printchar = getFileChar(exists, owner, upload, download);
         }
-        if (exists) wattron(window, A_REVERSE);
-        TermInt::printChar(window, y, filex, printchar);
-        if (exists) wattroff(window, A_REVERSE);
+        ui->printChar(y, filex, printchar, exists);
       }
       y++;
     }
@@ -275,13 +259,21 @@ void RaceStatusScreen::update() {
   for (unsigned int i = 0; i < mso.size(); i++) {
     MenuSelectOptionTextButton * msotb = (MenuSelectOptionTextButton *) mso.getElement(i);
     bool isselected = selected == i;
-    if (isselected) {
-      wattron(window, A_REVERSE);
+    ui->printStr(msotb->getRow(), msotb->getCol(), msotb->getLabelText(), 4, isselected);
+  }
+}
+
+void RaceStatusScreen::command(std::string command) {
+  if (command == "yes") {
+    if (awaitingremovesite) {
+      global->getEngine()->removeSiteFromRace(release, removesite);
+      awaitingremovesite = false;
     }
-    TermInt::printStr(window, msotb->getRow(), msotb->getCol(), msotb->getLabelText(), 4);
-    if (isselected) {
-      wattroff(window, A_REVERSE);
+    else if (awaitingabort) {
+      global->getEngine()->abortRace(race->getName());
+      awaitingremovesite = false;
     }
+    ui->redraw();
   }
 }
 
@@ -289,7 +281,7 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
   switch(ch) {
     case 27: // esc
     case 'c':
-      uicommunicator->newCommand("return");
+      ui->returnToLast();
       break;
     case 's':
       if (smalldirs) {
@@ -298,31 +290,31 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
       else {
         smalldirs = true;
       }
-      uicommunicator->newCommand("redraw");
+      ui->redraw();
       break;
     case KEY_UP:
       if (mso.goUp()) {
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case KEY_DOWN:
       if (mso.goDown()) {
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case KEY_DC:
     {
       MenuSelectOptionTextButton * msotb = (MenuSelectOptionTextButton *) mso.getElement(mso.getSelectionPointer());
       if (msotb != NULL) {
-        uicommunicator->newCommand("confirmation");
-        awaitingremovesite = true;
         removesite = msotb->getLabelText();
+        awaitingremovesite = true;
+        ui->goConfirmation("Do you really want to delete " + removesite);
       }
       break;
     }
     case 'B':
-      uicommunicator->newCommand("confirmation");
       awaitingabort = true;
+      ui->goConfirmation("Do you really want to abort the race " + release);
       break;
   }
 }

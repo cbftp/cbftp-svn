@@ -9,17 +9,19 @@
 #include "../../sitelogicmanager.h"
 
 #include "../menuselectoptioncheckbox.h"
-#include "../uicommunicator.h"
-#include "../termint.h"
+#include "../ui.h"
 #include "../focusablearea.h"
 #include "../menuselectsiteelement.h"
 
 extern GlobalContext * global;
 
-MainScreen::MainScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
+MainScreen::MainScreen(Ui * ui) {
+  this->ui = ui;
+}
+
+void MainScreen::initialize(unsigned int row, unsigned int col) {
   msslegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [G]lobal settings - Event [l]og";
   msolegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [G]lobal settings - Event [l]og";
-  this->uicommunicator = uicommunicator;
   mso.makeLeavableDown();
   autoupdate = true;
   currentviewspan = 0;
@@ -34,19 +36,19 @@ MainScreen::MainScreen(WINDOW * window, UICommunicator * uicommunicator, unsigne
     mss.enterFocusFrom(0);
     focusedarea = &mss;
   }
-  init(window, row, col);
+  init(row, col);
 }
 
 void MainScreen::redraw() {
-  werase(window);
-  curs_set(0);
+  ui->erase();
+  ui->hideCursor();
   bool listraces = global->getEngine()->allRaces();
   unsigned int irow = 1;
   if (listraces) {
     mss.makeLeavableUp();
     mso.clear();
     irow++;
-    TermInt::printStr(window, irow++, 1, "Section  Name");
+    ui->printStr(irow++, 1, "Section  Name");
     std::list<Race *>::iterator it;
     for (it = global->getEngine()->getRacesIteratorBegin(); it != global->getEngine()->getRacesIteratorEnd(); it++) {
       std::string release = (*it)->getName();
@@ -54,12 +56,12 @@ void MainScreen::redraw() {
     }
     irow++;
   }
-  TermInt::printStr(window, irow, 1, "Sites added: " + global->int2Str(global->getSiteManager()->getNumSites()));
+  ui->printStr(irow, 1, "Sites added: " + global->int2Str(global->getSiteManager()->getNumSites()));
   if (global->getSiteManager()->getNumSites()) {
-    TermInt::printStr(window, irow+2, 1, "Site    Logins  Uploads  Downloads");
+    ui->printStr(irow+2, 1, "Site    Logins  Uploads  Downloads");
   }
   else {
-    TermInt::printStr(window, irow+2, 1, "Press 'A' to add a site");
+    ui->printStr(irow+2, 1, "Press 'A' to add a site");
   }
   int x = 1;
   int y = irow+4;
@@ -89,16 +91,6 @@ void MainScreen::redraw() {
 }
 
 void MainScreen::update() {
-  if (uicommunicator->hasNewCommand()) {
-    if (uicommunicator->getCommand() == "yes") {
-      global->getSiteLogicManager()->deleteSiteLogic(deletesite);
-      global->getSiteManager()->deleteSite(deletesite);
-    }
-    uicommunicator->checkoutCommand();
-    redraw();
-    uicommunicator->newCommand("update");
-    return;
-  }
   int newcurrentraces = global->getEngine()->currentRaces();
   if (newcurrentraces != currentraces) {
     currentraces = newcurrentraces;
@@ -107,7 +99,7 @@ void MainScreen::update() {
   }
   currentraces = newcurrentraces;
   if (currentraces) {
-    TermInt::printStr(window, 1, 1, "Active races: " + global->int2Str(currentraces));
+    ui->printStr(1, 1, "Active races: " + global->int2Str(currentraces));
   }
   bool highlight;
   unsigned int selected = mso.getSelectionPointer();
@@ -118,10 +110,8 @@ void MainScreen::update() {
     if (mso.isFocused() && selected == i) {
       highlight = true;
     }
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), race->getSection());
-    if (highlight) wattron(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + 9, msoe->getLabelText());
-    if (highlight) wattroff(window, A_REVERSE);
+    ui->printStr(msoe->getRow(), msoe->getCol(), race->getSection());
+    ui->printStr(msoe->getRow(), msoe->getCol() + 9, msoe->getLabelText(), highlight);
   }
   selected = mss.getSelectionPointer();
   for (unsigned int i = 0; i + currentviewspan < mss.size() && i < row - sitestartrow; i++) {
@@ -130,10 +120,16 @@ void MainScreen::update() {
     if (mss.isFocused() && selected == listi) {
       highlight = true;
     }
-    if (highlight) wattron(window, A_REVERSE);
-    TermInt::printStr(window, i + sitestartrow, 1, mss.getSiteLine(listi));
-    if (highlight) wattroff(window, A_REVERSE);
+    ui->printStr(i + sitestartrow, 1, mss.getSiteLine(listi), highlight);
   }
+}
+
+void MainScreen::command(std::string command) {
+  if (command == "yes") {
+    global->getSiteLogicManager()->deleteSiteLogic(deletesite);
+    global->getSiteManager()->deleteSite(deletesite);
+  }
+  ui->redraw();
 }
 
 void MainScreen::keyPressed(unsigned int ch) {
@@ -148,14 +144,15 @@ void MainScreen::keyPressed(unsigned int ch) {
           defocusedarea = focusedarea;
           focusedarea = &mso;
           focusedarea->enterFocusFrom(2);
-          uicommunicator->newCommand("updatesetlegend");
+          ui->update();
+          ui->setLegend();
         }
         else {
           if (mss.getSelectionPointer() < currentviewspan) {
-            uicommunicator->newCommand("redraw");
+            ui->redraw();
           }
           else {
-            uicommunicator->newCommand("update");
+            ui->update();
           }
         }
       }
@@ -166,14 +163,15 @@ void MainScreen::keyPressed(unsigned int ch) {
           defocusedarea = focusedarea;
           focusedarea = &mss;
           focusedarea->enterFocusFrom(0);
-          uicommunicator->newCommand("updatesetlegend");
+          ui->update();
+          ui->setLegend();
         }
         else {
           if (mss.getSelectionPointer() >= currentviewspan + row - sitestartrow) {
-            uicommunicator->newCommand("redraw");
+            ui->redraw();
           }
           else {
-            uicommunicator->newCommand("update");
+            ui->update();
           }
         }
       }
@@ -182,31 +180,31 @@ void MainScreen::keyPressed(unsigned int ch) {
     case 10:
       if (mss.isFocused()) {
         if (mss.getSite() == NULL) break;
-        uicommunicator->newCommand("sitestatus", mss.getSite()->getName());
+        ui->goSiteStatus(mss.getSite()->getName());
       }
       else if (mso.isFocused() && mso.size() > 0) {
         target = mso.getElement(mso.getSelectionPointer())->getIdentifier();
-        uicommunicator->newCommand("racestatus", target);
+        ui->goRaceStatus(target);
       }
       break;
     case 'G':
-      uicommunicator->newCommand("globaloptions");
+      ui->goGlobalOptions();
       break;
     case 'l':
-      uicommunicator->newCommand("eventlog");
+      ui->goEventLog();
       break;
     case 'o':
-      uicommunicator->newCommand("scoreboard");
+      ui->goScoreBoard();
       break;
   }
   if (mss.isFocused()) {
     switch(ch) {
       case 'E':
         if (mss.getSite() == NULL) break;
-        uicommunicator->newCommand("editsite", "edit", mss.getSite()->getName());
+        ui->goEditSite(mss.getSite()->getName());
         break;
       case 'A':
-        uicommunicator->newCommand("editsite", "add");
+        ui->goAddSite();
         break;
       case 'C':
         if (mss.getSite() == NULL) break;
@@ -215,22 +213,22 @@ void MainScreen::keyPressed(unsigned int ch) {
         for (i = 0; global->getSiteManager()->getSite(site->getName() + "-" + global->int2Str(i)) != NULL; i++);
         site->setName(site->getName() + "-" + global->int2Str(i));
         global->getSiteManager()->addSite(site);
-        uicommunicator->newCommand("redraw");
+        ui->redraw();
         break;
       case KEY_DC:
       case 'D':
         site = mss.getSite();
         if (site == NULL) break;
         deletesite = site->getName();
-        uicommunicator->newCommand("confirmation");
+        ui->goConfirmation("Do you really want to delete site " + deletesite);
         break;
       case 'b':
         if (mss.getSite() == NULL) break;
-        uicommunicator->newCommand("browse", mss.getSite()->getName());
+        ui->goBrowse(mss.getSite()->getName());
         break;
       case 'w':
         if (mss.getSite() == NULL) break;
-        uicommunicator->newCommand("rawcommand", mss.getSite()->getName());
+        ui->goRawCommand(mss.getSite()->getName());
         break;
       case KEY_NPAGE:
         for (unsigned int i = 0; i < pagerows; i++) {
@@ -245,10 +243,10 @@ void MainScreen::keyPressed(unsigned int ch) {
           }
         }
         if (mss.getSelectionPointer() >= currentviewspan + row - sitestartrow) {
-          uicommunicator->newCommand("redraw");
+          ui->redraw();
         }
         else if (update) {
-          uicommunicator->newCommand("update");
+          ui->update();
         }
         break;
       case KEY_PPAGE:
@@ -264,10 +262,10 @@ void MainScreen::keyPressed(unsigned int ch) {
           }
         }
         if (mss.getSelectionPointer() < currentviewspan) {
-          uicommunicator->newCommand("redraw");
+          ui->redraw();
         }
         else if (update) {
-          uicommunicator->newCommand("update");
+          ui->update();
         }
         break;
     }

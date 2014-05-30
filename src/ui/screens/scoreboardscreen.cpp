@@ -1,7 +1,6 @@
 #include "scoreboardscreen.h"
 
-#include "../uicommunicator.h"
-#include "../termint.h"
+#include "../ui.h"
 
 #include "../../globalcontext.h"
 #include "../../scoreboard.h"
@@ -12,24 +11,27 @@
 
 extern GlobalContext * global;
 
-ScoreBoardScreen::ScoreBoardScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  this->uicommunicator = uicommunicator;
+ScoreBoardScreen::ScoreBoardScreen(Ui * ui) {
+  this->ui = ui;
+}
+
+void ScoreBoardScreen::initialize(unsigned int row, unsigned int col) {
   engine = global->getEngine();
   scoreboard = engine->getScoreBoard();
   autoupdate = true;
-  init(window, row, col);
+  init(row, col);
 }
 
 void ScoreBoardScreen::redraw() {
-  werase(window);
+  ui->erase();
   std::vector<ScoreBoardElement *>::iterator it;
   unsigned int i = 2;
-  TermInt::printStr(window, 0, 1, "Filename");
-  TermInt::printStr(window, 1, 1, "--------");
-  TermInt::printStr(window, 0, col - 7, "Score");
-  TermInt::printStr(window, 1, col - 7, "-----");
-  TermInt::printStr(window, 0, col - 21, "Sites");
-  TermInt::printStr(window, 1, col - 21, "-----");
+  ui->printStr(0, 1, "Filename");
+  ui->printStr(1, 1, "--------");
+  ui->printStr(0, col - 7, "Score");
+  ui->printStr(1, col - 7, "-----");
+  ui->printStr(0, col - 21, "Sites");
+  ui->printStr(1, col - 21, "-----");
   for (it = scoreboard->begin(); it != scoreboard->end() && i < row; it++, i++) {
     std::string score = global->int2Str((*it)->getScore());
     std::string src = (*it)->getSource()->getSite()->getName();
@@ -40,9 +42,9 @@ void ScoreBoardScreen::redraw() {
     if (dst.length() > 4) {
       dst = dst.substr(0, 4);
     }
-    TermInt::printStr(window, i, 1, (*it)->fileName());
-    TermInt::printStr(window, i, col - 21, src + " -> " + dst);
-    TermInt::printStr(window, i, col - score.length() - 2, score);
+    ui->printStr(i, 1, (*it)->fileName());
+    ui->printStr(i, col - 21, src + " -> " + dst);
+    ui->printStr(i, col - score.length() - 2, score);
   }
 }
 
@@ -55,7 +57,7 @@ void ScoreBoardScreen::keyPressed(unsigned int ch) {
     case 27: // esc
     case 10: // enter
     case 'c':
-      uicommunicator->newCommand("return");
+      ui->returnToLast();
       break;
   }
 }

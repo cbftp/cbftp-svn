@@ -12,6 +12,10 @@ MenuSection::MenuSection() {
 }
 
 void MenuSection::initialize(int row, int col, std::map<std::string, std::string>::iterator sectionsbegin, std::map<std::string, std::string>::iterator sectionsend) {
+  pointer = 0;
+  lastpointer = 0;
+  needsredraw = false;
+  sectioncontainers.clear();
   this->row = row;
   this->col = col;
   std::map<std::string, std::string>::iterator it;

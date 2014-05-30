@@ -6,17 +6,18 @@
 #include "../../sitelogicmanager.h"
 #include "../../globalcontext.h"
 
-#include "../uicommunicator.h"
-#include "../termint.h"
-
+#include "../ui.h"
 
 extern GlobalContext * global;
 
-RawDataScreen::RawDataScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  this->uicommunicator = uicommunicator;
-  sitename = uicommunicator->getArg1();
-  connid = global->str2Int(uicommunicator->getArg2());
-  uicommunicator->expectBackendPush();
+RawDataScreen::RawDataScreen(Ui * ui) {
+  this->ui = ui;
+}
+
+void RawDataScreen::initialize(unsigned int row, unsigned int col, std::string sitename, int connid) {
+  this->sitename = sitename;
+  this->connid = connid;
+  expectbackendpush = true;
   sitelogic = global->getSiteLogicManager()->getSiteLogic(sitename);
   threads = sitelogic->getConns()->size();
   this->rawbuf = sitelogic->getConn(connid)->getRawBuffer();
@@ -25,11 +26,11 @@ RawDataScreen::RawDataScreen(WINDOW * window, UICommunicator * uicommunicator, u
   rawcommandmode = false;
   rawcommandswitch = false;
   copyreadpos = 0;
-  init(window, row, col);
+  init(row, col);
 }
 
 void RawDataScreen::redraw() {
-  werase(window);
+  ui->erase();
   if (rawcommandmode) {
     std::string oldtext = rawcommandfield.getData();
     rawcommandfield = MenuSelectOptionTextField("rawcommand", row-1, 10, "", oldtext, col-10, 65536, false);
@@ -41,17 +42,17 @@ void RawDataScreen::update() {
   if (rawcommandswitch) {
     if (rawcommandmode) {
       rawcommandmode = false;
-      curs_set(0);
+      ui->hideCursor();
     }
     else {
       rawcommandmode = true;
-      curs_set(1);
+      ui->showCursor();
     }
     rawcommandswitch = false;
     redraw();
     return;
   }
-  werase(window);
+  ui->erase();
   unsigned int rownum = row;
   if (rawcommandmode) {
     rownum = row - 1;
@@ -59,20 +60,20 @@ void RawDataScreen::update() {
   if (!readfromcopy) {
     unsigned int numlinestoprint = rawbuf->getSize() < rownum ? rawbuf->getSize() : rownum;
     for (unsigned int i = 0; i < numlinestoprint; i++) {
-      TermInt::printStr(window, i, 0, rawbuf->getLine(numlinestoprint - i - 1));
+      ui->printStr(i, 0, rawbuf->getLine(numlinestoprint - i - 1));
     }
   }
   else {
     unsigned int numlinestoprint = copysize < rownum ? copysize : rownum;
     for (unsigned int i = 0; i < numlinestoprint; i++) {
-      TermInt::printStr(window, i, 0, rawbuf->getLineCopy(numlinestoprint - i - 1 + copyreadpos));
+      ui->printStr(i, 0, rawbuf->getLineCopy(numlinestoprint - i - 1 + copyreadpos));
     }
   }
   if (rawcommandmode) {
     std::string pretag = "[Raw command]: ";
-    TermInt::printStr(window, rownum, 0, pretag + rawcommandfield.getContentText());
+    ui->printStr(rownum, 0, pretag + rawcommandfield.getContentText());
 
-    TermInt::moveCursor(window, rownum, pretag.length() + rawcommandfield.cursorPosition());
+    ui->moveCursor(rownum, pretag.length() + rawcommandfield.cursorPosition());
   }
 }
 
@@ -84,14 +85,15 @@ void RawDataScreen::keyPressed(unsigned int ch) {
         ch == KEY_RIGHT || ch == KEY_LEFT || ch == KEY_DC || ch == KEY_HOME ||
         ch == KEY_END) {
       rawcommandfield.inputChar(ch);
-      uicommunicator->newCommand("update");
+      ui->update();
       return;
     }
     else if (ch == 10) {
       std::string command = rawcommandfield.getData();
       if (command == "") {
         rawcommandswitch = true;
-        uicommunicator->newCommand("updatesetlegend");
+        ui->update();
+        ui->setLegend();
         return;
       }
       else {
@@ -100,7 +102,7 @@ void RawDataScreen::keyPressed(unsigned int ch) {
         sitelogic->issueRawCommand(connid, command);
         rawcommandfield.clear();
       }
-      uicommunicator->newCommand("update");
+      ui->update();
       return;
     }
     else if (ch == 27) {
@@ -109,10 +111,11 @@ void RawDataScreen::keyPressed(unsigned int ch) {
       }
       else {
         rawcommandswitch = true;
-        uicommunicator->newCommand("updatesetlegend");
+        ui->update();
+        ui->setLegend();
         return;
       }
-      uicommunicator->newCommand("update");
+      ui->update();
       return;
     }
     else if (ch == KEY_UP) {
@@ -122,14 +125,14 @@ void RawDataScreen::keyPressed(unsigned int ch) {
         }
         history.back();
         rawcommandfield.setText(history.get());
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       return;
     }
     else if (ch == KEY_DOWN) {
       if (history.forward()) {
         rawcommandfield.setText(history.get());
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       return;
     }
@@ -138,17 +141,17 @@ void RawDataScreen::keyPressed(unsigned int ch) {
     case KEY_RIGHT:
       if (connid + 1 < threads) {
         rawbuf->uiWatching(false);
-        uicommunicator->newCommand("rawdatajump", sitename, global->int2Str(connid + 1));
+        ui->goRawDataJump(sitename, connid + 1);
       }
       break;
     case KEY_LEFT:
       if (connid == 0) {
         rawbuf->uiWatching(false);
-        uicommunicator->newCommand("return");
+        ui->returnToLast();
       }
       else {
         rawbuf->uiWatching(false);
-        uicommunicator->newCommand("rawdatajump", sitename, global->int2Str(connid - 1));
+        ui->goRawDataJump(sitename, connid - 1);
       }
       break;
     case KEY_PPAGE:
@@ -167,7 +170,7 @@ void RawDataScreen::keyPressed(unsigned int ch) {
           copyreadpos = copysize - rownum;
         }
       }
-      uicommunicator->newCommand("update");
+      ui->update();
       break;
     case KEY_NPAGE:
       if (readfromcopy) {
@@ -181,11 +184,11 @@ void RawDataScreen::keyPressed(unsigned int ch) {
           copyreadpos = copyreadpos - rownum / 2;
         }
       }
-      uicommunicator->newCommand("update");
+      ui->update();
       break;
     case 10:
       rawbuf->uiWatching(false);
-      uicommunicator->newCommand("return");
+      ui->update();
       break;
     case 'c':
       sitelogic->connectConn(connid);
@@ -195,11 +198,12 @@ void RawDataScreen::keyPressed(unsigned int ch) {
       break;
     case 'w':
       rawcommandswitch = true;
-      uicommunicator->newCommand("updatesetlegend");
+      ui->update();
+      ui->setLegend();
       break;
     case 27: // esc
       rawbuf->uiWatching(false);
-      uicommunicator->newCommand("return");
+      ui->returnToLast();
       break;
   }
 }

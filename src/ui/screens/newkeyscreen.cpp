@@ -2,15 +2,17 @@
 
 #include "../../globalcontext.h"
 
-#include "../uicommunicator.h"
+#include "../ui.h"
 #include "../menuselectoptionelement.h"
-#include "../termint.h"
 #include "../menuselectoptiontextfield.h"
 
 extern GlobalContext * global;
 
-NewKeyScreen::NewKeyScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  this->uicommunicator = uicommunicator;
+NewKeyScreen::NewKeyScreen(Ui * ui) {
+  this->ui = ui;
+}
+
+void NewKeyScreen::initialize(unsigned int row, unsigned int col) {
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one";
   currentlegendtext = defaultlegendtext;
   active = false;
@@ -18,22 +20,22 @@ NewKeyScreen::NewKeyScreen(WINDOW * window, UICommunicator * uicommunicator, uns
   tooshort = false;
   unsigned int y = 11;
   unsigned int x = 1;
-
+  mso.clear();
   mso.addStringField(y++, x, "newkey", "Passphrase:", "", true);
   mso.addStringField(y++, x, "newkey2", "Verify:", "", true);
-  init(window, row, col);
+  init(row, col);
 }
 
 void NewKeyScreen::redraw() {
-  werase(window);
+  ui->erase();
   unsigned int y = 1;
-  TermInt::printStr(window, y, 1, "Welcome!");
-  TermInt::printStr(window, y+2, 1, "Your site and configuration data will be encrypted with AES-256-CBC.");
-  TermInt::printStr(window, y+3, 1, "A 256-bit (32 characters) AES key will be generated from the given passphrase.");
-  TermInt::printStr(window, y+4, 1, "This means that the level of security increases with the length of the given");
-  TermInt::printStr(window, y+5, 1, "passphrase.");
-  TermInt::printStr(window, y+6, 1, "The passphrase is not considered secure if it is shorter than 16 characters.");
-  TermInt::printStr(window, y+8, 1, "Good password practice is described well by xkcd: http://xkcd.com/936/");
+  ui->printStr(y, 1, "Welcome!");
+  ui->printStr(y+2, 1, "Your site and configuration data will be encrypted with AES-256-CBC.");
+  ui->printStr(y+3, 1, "A 256-bit (32 characters) AES key will be generated from the given passphrase.");
+  ui->printStr(y+4, 1, "This means that the level of security increases with the length of the given");
+  ui->printStr(y+5, 1, "passphrase.");
+  ui->printStr(y+6, 1, "The passphrase is not considered secure if it is shorter than 16 characters.");
+  ui->printStr(y+8, 1, "Good password practice is described well by xkcd: http://xkcd.com/936/");
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     MenuSelectOptionElement * msoe = mso.getElement(i);
@@ -41,22 +43,18 @@ void NewKeyScreen::redraw() {
     if (mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    if (highlight) wattron(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-    if (highlight) wattroff(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
 }
 
 void NewKeyScreen::update() {
   MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
-  wattron(window, A_REVERSE);
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-  wattroff(window, A_REVERSE);
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
+  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   std::string error = "                                                          ";
   if (tooshort) {
     error = "Failed: The passphrase must be at least " + global->int2Str(SHORTESTKEY) + " characters long.";
@@ -64,14 +62,14 @@ void NewKeyScreen::update() {
   else if (mismatch) {
     error = "Failed: The keys did not match.";
   }
-  TermInt::printStr(window, 16, 1, error);
+  ui->printStr(16, 1, error);
 
   if (active && msoe->cursorPosition() >= 0) {
-    curs_set(1);
-    TermInt::moveCursor(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
+    ui->showCursor();
+    ui->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
   }
   else {
-    curs_set(0);
+    ui->hideCursor();
   }
 }
 
@@ -81,22 +79,23 @@ void NewKeyScreen::keyPressed(unsigned int ch) {
       activeelement->deactivate();
       active = false;
       currentlegendtext = defaultlegendtext;
-      uicommunicator->newCommand("updatesetlegend");
+      ui->update();
+      ui->setLegend();
       return;
     }
     activeelement->inputChar(ch);
-    uicommunicator->newCommand("update");
+    ui->update();
     return;
   }
   bool activation;
   switch(ch) {
     case KEY_UP:
       mso.goUp();
-      uicommunicator->newCommand("update");
+      ui->update();
       break;
     case KEY_DOWN:
       mso.goDown();
-      uicommunicator->newCommand("update");
+      ui->update();
       break;
     case 10:
 
@@ -104,13 +103,14 @@ void NewKeyScreen::keyPressed(unsigned int ch) {
       tooshort = false;
       mismatch = false;
       if (!activation) {
-        uicommunicator->newCommand("update");
+        ui->update();
         break;
       }
       active = true;
       activeelement = mso.getElement(mso.getSelectionPointer());
       currentlegendtext = activeelement->getLegendText();
-      uicommunicator->newCommand("updatesetlegend");
+      ui->update();
+      ui->setLegend();
       break;
     case 'd':
       MenuSelectOptionTextField * field1 = (MenuSelectOptionTextField *)mso.getElement(0);
@@ -121,7 +121,7 @@ void NewKeyScreen::keyPressed(unsigned int ch) {
       field2->clear();
       if (key == key2) {
         if (key.length() >= SHORTESTKEY) {
-          uicommunicator->newCommand("newkey", key);
+          ui->newKey(key);
           break;
         }
         tooshort = true;
@@ -129,7 +129,7 @@ void NewKeyScreen::keyPressed(unsigned int ch) {
       else {
         mismatch = true;
       }
-      uicommunicator->newCommand("update");
+      ui->update();
       break;
   }
 }

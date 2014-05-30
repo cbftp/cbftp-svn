@@ -12,7 +12,6 @@
 #include "globalcontext.h"
 #include "engine.h"
 #include "ui/ui.h"
-#include "ui/uicommunicator.h"
 #include "tickpoke.h"
 #include "remotecommandhandler.h"
 #include "iomanager.h"
@@ -58,7 +57,7 @@ Main::Main() {
   TickPoke * tp = new TickPoke();
   IOManager * iom = new IOManager();
   Engine * e = new Engine();
-  UserInterface * ui = new UserInterface();
+  Ui * ui = new Ui();
   SiteManager * sm = new SiteManager();
   SiteLogicManager * slm = new SiteLogicManager();
   TransferManager * tm = new TransferManager();
@@ -67,16 +66,16 @@ Main::Main() {
   ProxyManager * pm = new ProxyManager();
   LocalStorage * ls = new LocalStorage();
   ExternalFileViewing * efv = new ExternalFileViewing();
-  global->linkComponents(dfh, iom, e, ui->getCommunicator(), sm, slm, tm, tp, rch, sl, pm, ls, efv);
+  global->linkComponents(dfh, iom, e, ui, sm, slm, tm, tp, rch, sl, pm, ls, efv);
   if (!ui->init()) exit(1);
   tp->tickerLoop();
   global->getExternalFileViewing()->killAll();
-  global->getUICommunicator()->kill();
+  ui->kill();
   if (global->getDataFileHandler()->isInitialized()) {
     std::cout << "Saving data to file..." << std::endl;
     global->getSiteManager()->writeState();
     global->getRemoteCommandHandler()->writeState();
-    global->getUICommunicator()->writeState();
+    ui->writeState();
     global->getSkipList()->writeState();
     global->getProxyManager()->writeState();
     global->getIOManager()->writeState();
@@ -99,7 +98,7 @@ void sighandler(int sig) {
 
 void sighandler_winch(int sig) {
   signal(SIGWINCH, &sighandler_ignore);
-  global->getUICommunicator()->terminalSizeChanged();
+  global->getUIBase()->terminalSizeChanged();
   signal(SIGWINCH, &sighandler_winch);
 }
 

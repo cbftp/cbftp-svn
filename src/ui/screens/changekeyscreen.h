@@ -5,12 +5,12 @@
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
 
-class UICommunicator;
 class MenuSelectOptionElement;
 
 class ChangeKeyScreen : public UIWindow {
 public:
-  ChangeKeyScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  ChangeKeyScreen(Ui *);
+  void initialize(unsigned int, unsigned int);
   void update();
   void redraw();
   void keyPressed(unsigned int);
@@ -26,5 +26,4 @@ private:
   MenuSelectOptionElement * activeelement;
   MenuSelectOption mso;
   std::string operation;
-  UICommunicator * uicommunicator;
 };

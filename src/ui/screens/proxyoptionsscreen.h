@@ -3,16 +3,17 @@
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
 
-class UICommunicator;
 class FocusableArea;
 class ProxyManager;
 class MenuSelectOptionTextArrow;
 
 class ProxyOptionsScreen : public UIWindow {
 public:
-  ProxyOptionsScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  ProxyOptionsScreen(Ui *);
+  void initialize(unsigned int, unsigned int);
   void update();
   void redraw();
+  void command(std::string);
   void keyPressed(unsigned int);
   std::string getLegendText();
   std::string getInfoLabel();
@@ -29,7 +30,6 @@ private:
   MenuSelectOptionElement * activeelement;
   MenuSelectOption mso;
   MenuSelectOption msop;
-  UICommunicator * uicommunicator;
   ProxyManager * pm;
   MenuSelectOptionTextArrow * useproxy;
 };

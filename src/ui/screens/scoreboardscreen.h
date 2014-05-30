@@ -2,13 +2,13 @@
 
 #include "../uiwindow.h"
 
-class UICommunicator;
 class Engine;
 class ScoreBoard;
 
 class ScoreBoardScreen : public UIWindow {
 public:
-  ScoreBoardScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  ScoreBoardScreen(Ui *);
+  void initialize(unsigned int, unsigned int);
   void redraw();
   void update();
   void keyPressed(unsigned int);
@@ -16,7 +16,6 @@ public:
   std::string getInfoLabel();
   std::string getInfoText();
 private:
-  UICommunicator * uicommunicator;
   Engine * engine;
   ScoreBoard * scoreboard;
 };

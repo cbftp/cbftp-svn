@@ -1,7 +1,6 @@
 #include "viewfilescreen.h"
 
-#include "../uicommunicator.h"
-#include "../termint.h"
+#include "../ui.h"
 
 #include "../../globalcontext.h"
 #include "../../sitelogicmanager.h"
@@ -14,17 +13,20 @@
 
 extern GlobalContext * global;
 
-ViewFileScreen::ViewFileScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  this->uicommunicator = uicommunicator;
+ViewFileScreen::ViewFileScreen(Ui * ui) {
+  this->ui = ui;
+}
+
+void ViewFileScreen::initialize(unsigned int row, unsigned int col, std::string site, std::string file, FileList * filelist) {
   contents.clear();
   viewingcontents = false;
   x = 0;
   y = 0;
   ymax = 0;
   xmax = 0;
-  site = uicommunicator->getArg1();
-  file = uicommunicator->getArg2();
-  filelist = (FileList *) uicommunicator->getPointerArg();
+  this->site = site;
+  this->file = file;
+  this->filelist = filelist;
   sitelogic = global->getSiteLogicManager()->getSiteLogic(site);
   size = filelist->getFile(file)->getSize();
   hasnodisplay = false;
@@ -51,21 +53,21 @@ ViewFileScreen::ViewFileScreen(WINDOW * window, UICommunicator * uicommunicator,
     requestid = global->getTransferManager()->download(file, sitelogic, filelist);
   }
   path = global->getLocalStorage()->getTempPath() + "/" + file;
-  uicommunicator->expectBackendPush();
-  init(window, row, col);
+  expectbackendpush = true;
+  init(row, col);
 }
 
 void ViewFileScreen::redraw() {
-  werase(window);
+  ui->erase();
   if (!download) {
     autoupdate = false;
     if (!externallyviewable) {
-      TermInt::printStr(window, 1, 1, file + " is too large to download and open in the internal viewer.");
-      TermInt::printStr(window, 2, 1, "The maximum file size for internal viewing is set to " + global->int2Str(MAXOPENSIZE) + " bytes.");
+      ui->printStr(1, 1, file + " is too large to download and open in the internal viewer.");
+      ui->printStr(2, 1, "The maximum file size for internal viewing is set to " + global->int2Str(MAXOPENSIZE) + " bytes.");
     }
     else if (hasnodisplay) {
-      TermInt::printStr(window, 1, 1, file + " cannot be opened in an external viewer.");
-      TermInt::printStr(window, 2, 1, "The DISPLAY environment variable is not set.");
+      ui->printStr(1, 1, file + " cannot be opened in an external viewer.");
+      ui->printStr(2, 1, "The DISPLAY environment variable is not set.");
     }
     return;
   }
@@ -75,10 +77,10 @@ void ViewFileScreen::redraw() {
     int tmpdatalen;
     switch(transferstatus) {
       case TRANSFER_IN_PROGRESS_UI:
-        TermInt::printStr(window, 1, 1, "Downloading " + file + " from " + site + "...");
+        ui->printStr(1, 1, "Downloading " + file + " from " + site + "...");
         break;
       case TRANSFER_FAILED:
-        TermInt::printStr(window, 1, 1, "Download of " + file + " from " + site + " failed.");
+        ui->printStr(1, 1, "Download of " + file + " from " + site + " failed.");
         autoupdate = false;
         break;
       case TRANSFER_SUCCESSFUL:
@@ -86,9 +88,9 @@ void ViewFileScreen::redraw() {
           if (!pid) {
             pid = global->getExternalFileViewing()->viewThenDelete(path);
           }
-          TermInt::printStr(window, 1, 1, "Opening " + file + " with: " + global->getExternalFileViewing()->getViewApplication(file));
-          TermInt::printStr(window, 3, 1, "Press 'k' to kill this external viewer instance.");
-          TermInt::printStr(window, 4, 1, "You can always press 'K' to kill ALL external viewers.");
+          ui->printStr(1, 1, "Opening " + file + " with: " + global->getExternalFileViewing()->getViewApplication(file));
+          ui->printStr(3, 1, "Press 'k' to kill this external viewer instance.");
+          ui->printStr(4, 1, "You can always press 'K' to kill ALL external viewers.");
         }
         else {
           tmpdata = (char *) malloc(MAXOPENSIZE);
@@ -122,7 +124,7 @@ void ViewFileScreen::redraw() {
   }
   else {
     for (unsigned int i = 0; i < row && i < ymax; i++) {
-      TermInt::printStr(window, i, 1, contents[y + i], col - 2);
+      ui->printStr(i, 1, contents[y + i], col - 2);
     }
   }
 }
@@ -131,11 +133,12 @@ void ViewFileScreen::update() {
   if (download) {
     if (pid) {
       if (!global->getExternalFileViewing()->stillViewing(pid)) {
-        uicommunicator->newCommand("return");
+        ui->returnToLast();
         return;
       }
       else if (!legendupdated) {
-        uicommunicator->newCommand("updatesetlegend");
+        ui->update();
+        ui->setLegend();
         legendupdated = true;
         return;
       }
@@ -143,7 +146,8 @@ void ViewFileScreen::update() {
     else if (!pid && global->getTransferManager()->transferStatus(requestid) != TRANSFER_IN_PROGRESS_UI) {
       redraw();
       if (!legendupdated) {
-        uicommunicator->newCommand("updatesetlegend");
+        ui->update();
+        ui->setLegend();
         legendupdated = true;
       }
       return;
@@ -157,31 +161,31 @@ void ViewFileScreen::keyPressed(unsigned int ch) {
     case ' ':
     case 'c':
     case 10:
-      uicommunicator->newCommand("return");
+      ui->returnToLast();
       break;
     case KEY_DOWN:
       if (goDown()) {
         goDown();
-        uicommunicator->newCommand("redraw");
+        ui->redraw();
       }
       break;
     case KEY_UP:
       if (goUp()) {
         goUp();
-        uicommunicator->newCommand("redraw");
+        ui->redraw();
       }
       break;
     case KEY_NPAGE:
       for (unsigned int i = 0; i < row / 2; i++) {
         goDown();
       }
-      uicommunicator->newCommand("redraw");
+      ui->redraw();
       break;
     case KEY_PPAGE:
       for (unsigned int i = 0; i < row / 2; i++) {
         goUp();
       }
-      uicommunicator->newCommand("redraw");
+      ui->redraw();
       break;
     case 'k':
       if (pid) {

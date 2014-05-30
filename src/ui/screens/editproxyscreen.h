@@ -5,12 +5,12 @@
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
 
-class UICommunicator;
 class MenuSelectOptionElement;
 
 class EditProxyScreen : public UIWindow {
 public:
-  EditProxyScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  EditProxyScreen(Ui *);
+  void initialize(unsigned int, unsigned int, std::string, std::string);
   void update();
   void redraw();
   void keyPressed(unsigned int);
@@ -27,5 +27,4 @@ private:
   MenuSelectOptionTextArrow * authmethod;
   int latestauthmethod;
   std::string operation;
-  UICommunicator * uicommunicator;
 };

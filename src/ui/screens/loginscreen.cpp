@@ -2,23 +2,30 @@
 
 #include <cstdlib>
 
-#include "../uicommunicator.h"
 #include "../termint.h"
+#include "../ui.h"
 #include "../chardraw.h"
 
-LoginScreen::LoginScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  this->uicommunicator = uicommunicator;
+#ifndef BOXTAG
+#define BOXTAG ""
+#endif
+
+LoginScreen::LoginScreen(Ui * ui) {
+  this->ui = ui;
+}
+
+void LoginScreen::initialize(unsigned int row, unsigned int col) {
   passfield = TextInputField(25, 32, true);
   attempt = false;
   drawword = BOXTAG;
   drawx = 0;
   drawy = 0;
   srand(time(NULL));
-  init(window, row, col);
+  init(row, col);
 }
 
 void LoginScreen::redraw() {
-  werase(window);
+  ui->erase();
   randomizeDrawLocation();
   background.clear();
   for (unsigned int i = 0; i < row; i++) {
@@ -27,7 +34,7 @@ void LoginScreen::redraw() {
   }
   pass_row = row-2;
   pass_col = col-27;
-  curs_set(1);
+  ui->showCursor();
   std::string svnstring = " This is Project Clusterbomb. Version tag: " + std::string(VERSION) + " ";
   std::string compilestring = " Compiled: " + std::string(BUILDTIME) + " ";
   int boxchar = 0;
@@ -49,13 +56,13 @@ void LoginScreen::redraw() {
       }
       else boxchar = (i+j)%2==0 ? BOX_CORNER_TL : BOX_CORNER_BR;
       if (boxchar) {
-        TermInt::printChar(window, i, j, boxchar);
+        ui->printChar(i, j, boxchar);
         background[i][j] = boxchar;
       }
     }
   }
-  TermInt::printStr(window, 0, 3, svnstring);
-  TermInt::printStr(window, 0, col - compilestring.length() - 3, compilestring);
+  ui->printStr(0, 3, svnstring);
+  ui->printStr(0, col - compilestring.length() - 3, compilestring);
   update();
 
 }
@@ -64,12 +71,12 @@ void LoginScreen::update() {
   std::string passtext = "AES passphrase required:";
   if (attempt) {
     passtext = "Invalid key, try again: ";
-    curs_set(1);
+    ui->showCursor();
   }
   int currdrawx = drawx;
-  TermInt::printStr(window, pass_row-1, pass_col, passtext);
-  TermInt::printStr(window, pass_row, pass_col, passfield.getVisualText());
-  TermInt::moveCursor(window, pass_row, pass_col + passfield.getVisualCursorPosition());
+  ui->printStr(pass_row-1, pass_col, passtext);
+  ui->printStr(pass_row, pass_col, passfield.getVisualText());
+  ui->moveCursor(pass_row, pass_col + passfield.getVisualCursorPosition());
   for (unsigned int drawchar = 0; drawchar < drawword.length(); drawchar++) {
     bool show = passfield.getText().length() > drawchar &&
         passfield.getText().length() - drawchar < drawword.length() + 1;
@@ -79,7 +86,7 @@ void LoginScreen::update() {
         int bgchar = background[drawy + i][currdrawx + j];
         int c = show ? CharDraw::getMixedChar(bgchar, draw[j]) : bgchar;
         if (c) {
-          TermInt::printChar(window, drawy + i, currdrawx + j, c);
+          ui->printChar(drawy + i, currdrawx + j, c);
         }
       }
     }
@@ -120,14 +127,14 @@ void LoginScreen::keyPressed(unsigned int ch) {
       case KEY_ENTER:
       case 10:
       case 13:
-        curs_set(0);
+        ui->hideCursor();
         attempt = true;
-        uicommunicator->newCommand("key", passfield.getText());
+        ui->key(passfield.getText());
         passfield.clear();
         return;
     }
   }
-  uicommunicator->newCommand("update");
+  ui->update();
 }
 
 void LoginScreen::randomizeDrawLocation() {

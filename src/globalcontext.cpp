@@ -30,14 +30,14 @@ void GlobalContext::linkWorkManager(WorkManager * wm) {
 }
 
 void GlobalContext::linkComponents(DataFileHandler * dfh, IOManager * iom,
-    Engine * e, UICommunicator * uic, SiteManager * sm, SiteLogicManager * slm,
+    Engine * e, UIBase * uib, SiteManager * sm, SiteLogicManager * slm,
     TransferManager * tm, TickPoke * tp, RemoteCommandHandler * rch,
     SkipList * sl, ProxyManager * pm, LocalStorage * ls,
     ExternalFileViewing * efv) {
   this->dfh = dfh;
   this->iom = iom;
   this->e = e;
-  this->uic = uic;
+  this->uib = uib;
   this->sm = sm;
   this->slm = slm;
   this->tm = tm;
@@ -69,8 +69,8 @@ WorkManager * GlobalContext::getWorkManager() {
   return wm;
 }
 
-UICommunicator * GlobalContext::getUICommunicator() {
-  return uic;
+UIBase * GlobalContext::getUIBase() {
+  return uib;
 }
 
 SiteManager * GlobalContext::getSiteManager() {

@@ -5,13 +5,15 @@
 #include "../menuselectoption.h"
 
 class FocusableArea;
-class UICommunicator;
+class Ui;
 
 class MainScreen : public UIWindow {
 public:
-  MainScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  MainScreen(Ui *);
+  void initialize(unsigned int, unsigned int);
   void update();
   void redraw();
+  void command(std::string);
   void keyPressed(unsigned int);
   std::string getLegendText();
   std::string getInfoLabel();
@@ -24,7 +26,7 @@ private:
   FocusableArea * focusedarea;
   FocusableArea * defocusedarea;
   std::string deletesite;
-  UICommunicator * uicommunicator;
+  Ui * ui;
   MenuSelectSite mss;
   MenuSelectOption mso;
 };

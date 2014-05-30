@@ -3,15 +3,17 @@
 #include "../../globalcontext.h"
 #include "../../datafilehandler.h"
 
-#include "../uicommunicator.h"
+#include "../ui.h"
 #include "../menuselectoptionelement.h"
 #include "../menuselectoptiontextfield.h"
-#include "../termint.h"
 
 extern GlobalContext * global;
 
-ChangeKeyScreen::ChangeKeyScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  this->uicommunicator = uicommunicator;
+ChangeKeyScreen::ChangeKeyScreen(Ui * ui) {
+  this->ui = ui;
+}
+
+void ChangeKeyScreen::initialize(unsigned int row, unsigned int col) {
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel";
   currentlegendtext = defaultlegendtext;
   active = false;
@@ -20,17 +22,17 @@ ChangeKeyScreen::ChangeKeyScreen(WINDOW * window, UICommunicator * uicommunicato
   tooshort = false;
   unsigned int y = 4;
   unsigned int x = 1;
-
+  mso.clear();
   mso.addStringField(y++, x, "oldkey", "Old passphrase:", "", true);
   mso.addStringField(y++, x, "newkey", "New passphrase:", "", true);
   mso.addStringField(y++, x, "newkey2", "Verify new:", "", true);
-  init(window, row, col);
+  init(row, col);
 }
 
 void ChangeKeyScreen::redraw() {
-  werase(window);
+  ui->erase();
   unsigned int y = 1;
-  TermInt::printStr(window, y, 1, "Please verify with your old encryption key.");
+  ui->printStr(y, 1, "Please verify with your old encryption key.");
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     MenuSelectOptionElement * msoe = mso.getElement(i);
@@ -38,10 +40,8 @@ void ChangeKeyScreen::redraw() {
     if (mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    if (highlight) wattron(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-    if (highlight) wattroff(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
 }
 
@@ -50,13 +50,11 @@ void ChangeKeyScreen::update() {
     redraw();
   }
   MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
-  wattron(window, A_REVERSE);
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-  wattroff(window, A_REVERSE);
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
+  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   std::string error = "                                                          ";
   if (tooshort) {
     error = "Failed: The passphrase must be at least " + global->int2Str(SHORTESTKEY) + " characters long.";
@@ -67,14 +65,14 @@ void ChangeKeyScreen::update() {
   else if (oldmismatch) {
     error = "Failed: the old key was not correct.";
   }
-  TermInt::printStr(window, 8, 1, error);
+  ui->printStr(8, 1, error);
 
   if (active && msoe->cursorPosition() >= 0) {
-    curs_set(1);
-    TermInt::moveCursor(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
+    ui->showCursor();
+    ui->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
   }
   else {
-    curs_set(0);
+    ui->hideCursor();
   }
 }
 
@@ -84,22 +82,23 @@ void ChangeKeyScreen::keyPressed(unsigned int ch) {
       activeelement->deactivate();
       active = false;
       currentlegendtext = defaultlegendtext;
-      uicommunicator->newCommand("updatesetlegend");
+      ui->setLegend();
+      ui->update();
       return;
     }
     activeelement->inputChar(ch);
-    uicommunicator->newCommand("update");
+    ui->update();
     return;
   }
   bool activation;
   switch(ch) {
     case KEY_UP:
       mso.goUp();
-      uicommunicator->newCommand("update");
+      ui->update();
       break;
     case KEY_DOWN:
       mso.goDown();
-      uicommunicator->newCommand("update");
+      ui->update();
       break;
     case 10:
 
@@ -108,17 +107,18 @@ void ChangeKeyScreen::keyPressed(unsigned int ch) {
       mismatch = false;
       oldmismatch = false;
       if (!activation) {
-        uicommunicator->newCommand("update");
+        ui->update();
         break;
       }
       active = true;
       activeelement = mso.getElement(mso.getSelectionPointer());
       currentlegendtext = activeelement->getLegendText();
-      uicommunicator->newCommand("updatesetlegend");
+      ui->setLegend();
+      ui->update();
       break;
     case 27: // esc
     case 'c':
-      uicommunicator->newCommand("return");
+      ui->returnToLast();
       break;
     case 'd':
       MenuSelectOptionTextField * field1 = (MenuSelectOptionTextField *)mso.getElement(0);
@@ -133,7 +133,7 @@ void ChangeKeyScreen::keyPressed(unsigned int ch) {
       if (newkey == newkey2) {
         if (newkey.length() >= SHORTESTKEY) {
           if (global->getDataFileHandler()->changeKey(oldkey, newkey)) {
-            uicommunicator->newCommand("return");
+            ui->returnToLast();
             break;
           }
           else {
@@ -147,7 +147,7 @@ void ChangeKeyScreen::keyPressed(unsigned int ch) {
       else {
         mismatch = true;
       }
-      uicommunicator->newCommand("update");
+      ui->update();
       break;
   }
 }

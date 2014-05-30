@@ -5,22 +5,22 @@
 #include <vector>
 #include <string>
 
-class UICommunicator;
 class SiteLogic;
 class FileList;
+class Ui;
 
 #define MAXOPENSIZE 524288
 
 class ViewFileScreen : public UIWindow {
 public:
-  ViewFileScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  ViewFileScreen(Ui * ui);
+  void initialize(unsigned int, unsigned int, std::string, std::string, FileList *);
   void redraw();
   void update();
   void keyPressed(unsigned int);
   std::string getLegendText();
   std::string getInfoLabel();
 private:
-  UICommunicator * uicommunicator;
   SiteLogic * sitelogic;
   int requestid;
   FileList * filelist;

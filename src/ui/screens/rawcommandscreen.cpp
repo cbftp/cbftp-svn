@@ -6,54 +6,56 @@
 #include "../../sitelogicmanager.h"
 #include "../../globalcontext.h"
 
-#include "../uicommunicator.h"
-#include "../termint.h"
+#include "../ui.h"
 
 extern GlobalContext * global;
 
-RawCommandScreen::RawCommandScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  this->uicommunicator = uicommunicator;
-  sitename = uicommunicator->getArg1();
-  selection = uicommunicator->getArg2();
+RawCommandScreen::RawCommandScreen(Ui * ui) {
+  this->ui = ui;
+}
+
+void RawCommandScreen::initialize(unsigned int row, unsigned int col, std::string sitename, std::string selection) {
+  this->sitename = sitename;
+  this->selection = selection;
   hasselection = false;
   if (selection.length()) {
     hasselection = true;
   }
-  uicommunicator->expectBackendPush();
+  expectbackendpush = true;
   sitelogic = global->getSiteLogicManager()->getSiteLogic(sitename);
   this->rawbuf = sitelogic->getRawCommandBuffer();
   rawbuf->uiWatching(true);
   readfromcopy = false;
   copyreadpos = 0;
-  init(window, row, col);
+  init(row, col);
 }
 
 void RawCommandScreen::redraw() {
-  werase(window);
+  ui->erase();
   std::string oldtext = rawcommandfield.getData();
   rawcommandfield = MenuSelectOptionTextField("rawcommand", row-1, 10, "", oldtext, col-10, 65536, false);
   update();
 }
 
 void RawCommandScreen::update() {
-  werase(window);
-  curs_set(1);
+  ui->erase();
+  ui->showCursor();
   unsigned int rownum = row - 1;
   if (!readfromcopy) {
     unsigned int numlinestoprint = rawbuf->getSize() < rownum ? rawbuf->getSize() : rownum;
     for (unsigned int i = 0; i < numlinestoprint; i++) {
-      TermInt::printStr(window, i, 0, rawbuf->getLine(numlinestoprint - i - 1));
+      ui->printStr(i, 0, rawbuf->getLine(numlinestoprint - i - 1));
     }
   }
   else {
     unsigned int numlinestoprint = copysize < rownum ? copysize : rownum;
     for (unsigned int i = 0; i < numlinestoprint; i++) {
-      TermInt::printStr(window, i, 0, rawbuf->getLineCopy(numlinestoprint - i - 1 + copyreadpos));
+      ui->printStr(i, 0, rawbuf->getLineCopy(numlinestoprint - i - 1 + copyreadpos));
     }
   }
   std::string pretag = "[Raw command]: ";
-  TermInt::printStr(window, rownum, 0, pretag + rawcommandfield.getContentText());
-  TermInt::moveCursor(window, rownum, pretag.length() + rawcommandfield.cursorPosition());
+  ui->printStr(rownum, 0, pretag + rawcommandfield.getContentText());
+  ui->moveCursor(rownum, pretag.length() + rawcommandfield.cursorPosition());
 }
 
 void RawCommandScreen::keyPressed(unsigned int ch) {
@@ -62,7 +64,7 @@ void RawCommandScreen::keyPressed(unsigned int ch) {
       ch == KEY_LEFT || ch == KEY_RIGHT || ch == KEY_HOME || ch == KEY_END ||
       ch == KEY_DC) {
     rawcommandfield.inputChar(ch);
-    uicommunicator->newCommand("update");
+    ui->update();
   }
   else {
     std::string command;
@@ -74,17 +76,17 @@ void RawCommandScreen::keyPressed(unsigned int ch) {
             history.push(command);
             sitelogic->requestRawCommand(command);
             rawcommandfield.clear();
-            uicommunicator->newCommand("update");
+            ui->update();
           }
           break;
       case 27: // esc
         if (rawcommandfield.getData() != "") {
           rawcommandfield.clear();
-          uicommunicator->newCommand("update");
+          ui->update();
         }
         else {
           rawbuf->uiWatching(false);
-          uicommunicator->newCommand("return");
+          ui->returnToLast();
         }
         break;
       case KEY_UP:
@@ -94,13 +96,13 @@ void RawCommandScreen::keyPressed(unsigned int ch) {
           }
           history.back();
           rawcommandfield.setText(history.get());
-          uicommunicator->newCommand("update");
+          ui->update();
         }
         break;
       case KEY_DOWN:
         if (history.forward()) {
           rawcommandfield.setText(history.get());
-          uicommunicator->newCommand("update");
+          ui->update();
         }
         break;
       case KEY_PPAGE:
@@ -119,7 +121,7 @@ void RawCommandScreen::keyPressed(unsigned int ch) {
             copyreadpos = copysize - rownum;
           }
         }
-        uicommunicator->newCommand("update");
+        ui->update();
         break;
       case KEY_NPAGE:
         if (readfromcopy) {
@@ -133,13 +135,13 @@ void RawCommandScreen::keyPressed(unsigned int ch) {
             copyreadpos = copyreadpos - rownum / 2;
           }
         }
-        uicommunicator->newCommand("update");
+        ui->update();
         break;
       case KEY_IC:
         for (unsigned int i = 0; i < selection.length(); i++) {
           rawcommandfield.inputChar(selection[i]);
         }
-        uicommunicator->newCommand("update");
+        ui->update();
         break;
     }
   }

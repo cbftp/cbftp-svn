@@ -5,7 +5,7 @@
 #include <string>
 
 class Engine;
-class UICommunicator;
+class UIBase;
 class SiteLogicManager;
 class SiteManager;
 class TransferManager;
@@ -28,7 +28,7 @@ class GlobalContext {
     DataFileHandler * dfh;
     IOManager * iom;
     WorkManager * wm;
-    UICommunicator * uic;
+    UIBase * uib;
     SiteManager * sm;
     SiteLogicManager * slm;
     TransferManager * tm;
@@ -51,7 +51,7 @@ class GlobalContext {
     void linkEventLog(EventLog *);
     void linkWorkManager(WorkManager *);
     void linkComponents(DataFileHandler *, IOManager *, Engine *,
-        UICommunicator *, SiteManager *, SiteLogicManager *, TransferManager *,
+        UIBase *, SiteManager *, SiteLogicManager *, TransferManager *,
         TickPoke *, RemoteCommandHandler *, SkipList *, ProxyManager *,
         LocalStorage *, ExternalFileViewing *);
     SSL_CTX * getSSLCTX();
@@ -59,7 +59,7 @@ class GlobalContext {
     DataFileHandler * getDataFileHandler();
     WorkManager * getWorkManager();
     IOManager * getIOManager();
-    UICommunicator * getUICommunicator();
+    UIBase * getUIBase();
     SiteManager * getSiteManager();
     SiteLogicManager * getSiteLogicManager();
     TransferManager * getTransferManager();

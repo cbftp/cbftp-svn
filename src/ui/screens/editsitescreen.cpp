@@ -8,9 +8,8 @@
 #include "../../proxymanager.h"
 #include "../../proxy.h"
 
-#include "../uicommunicator.h"
+#include "../ui.h"
 #include "../menuselectoptionelement.h"
-#include "../termint.h"
 #include "../focusablearea.h"
 #include "../menuselectoptioncontainer.h"
 #include "../menuselectoptiontextfield.h"
@@ -20,14 +19,15 @@
 
 extern GlobalContext * global;
 
-EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  this->uicommunicator = uicommunicator;
+EditSiteScreen::EditSiteScreen(Ui * ui) {
+  this->ui = ui;
+}
+
+void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string operation, std::string site) {
   active = false;
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one, save changes - [c]ancel, undo changes";
   currentlegendtext = defaultlegendtext;
-  operation = uicommunicator->getArg1();
-  std::string arg2 = uicommunicator->getArg2();
-  uicommunicator->checkoutCommand();
+  this->operation = operation;
   SiteManager * sm = global->getSiteManager();
   std::list<Site *> blockedlist;
   if (operation == "add") {
@@ -42,9 +42,9 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
     modsite.setMaxIdleTime(sm->getDefaultMaxIdleTime());
   }
   else if (operation == "edit") {
-    site = global->getSiteManager()->getSite(arg2);
-    modsite = Site(*site);
-    blockedlist = sm->getBlocksForSite(site);
+    this->site = global->getSiteManager()->getSite(site);
+    modsite = Site(*this->site);
+    blockedlist = sm->getBlocksForSite(this->site);
   }
   std::string affilstr = "";
   std::map<std::string, bool>::iterator it;
@@ -66,6 +66,7 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
   if (port != "21") {
     addrport += ":" + port;
   }
+  mso.clear();
   mso.addStringField(y++, x, "name", "Name:", modsite.getName(), false);
   mso.addStringField(y++, x, "addr", "Address:", addrport, false);
   mso.addStringField(y++, x, "user", "Username:", modsite.getUser(), false);
@@ -117,17 +118,11 @@ EditSiteScreen::EditSiteScreen(WINDOW * window, UICommunicator * uicommunicator,
   mso.makeLeavableDown();
   ms.makeLeavableUp();
   mso.enterFocusFrom(0);
-  init(window, row, col);
+  init(row, col);
 }
 
 void EditSiteScreen::redraw() {
-  werase(window);
-  if (uicommunicator->hasNewCommand()) {
-    if (uicommunicator->getCommand() == "returnselectsites") {
-      ((MenuSelectOptionTextField *)activeelement)->setText(uicommunicator->getArg1());
-    }
-    uicommunicator->checkoutCommand();
-  }
+  ui->erase();
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     MenuSelectOptionElement * msoe = mso.getElement(i);
@@ -135,22 +130,18 @@ void EditSiteScreen::redraw() {
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    if (highlight) wattron(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-    if (highlight) wattroff(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
   int headrow = ms.getHeaderRow();
   int headcol = ms.getHeaderCol();
-  TermInt::printStr(window, headrow, headcol, "Sections");
+  ui->printStr(headrow, headcol, "Sections");
   unsigned int selected = ms.getSelectionPointer();
   highlight = false;
   if (ms.isFocused() && selected == 0) {
     highlight = true;
   }
-  if (highlight) wattron(window, A_REVERSE);
-  TermInt::printStr(window, headrow, headcol + 9, ms.getElement(0)->getContentText());
-  if (highlight) wattroff(window, A_REVERSE);
+  ui->printStr(headrow, headcol + 9, ms.getElement(0)->getContentText(), highlight);
   for (unsigned int i = 0; i < ms.size(); i++) {
     MenuSelectOptionContainer * msoc = ms.getSectionContainer(i);
     for (unsigned int j = 0; j < 3; j++) {
@@ -162,9 +153,7 @@ void EditSiteScreen::redraw() {
       else if (j == 2) {
         indentation = 43;
       }
-      if (highlight) wattron(window, A_REVERSE);
-      TermInt::printStr(window, headrow + 1 + i, headcol + indentation, msoc->getOption(j)->getContentText());
-      if (highlight) wattroff(window, A_REVERSE);
+      ui->printStr(headrow + 1 + i, headcol + indentation, msoc->getOption(j)->getContentText(), highlight);
     }
   }
 }
@@ -173,15 +162,15 @@ void EditSiteScreen::update() {
   if (defocusedarea != NULL) {
     if (defocusedarea == &mso) {
       MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
-      TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-      TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+      ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+      ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
     }
     else if (defocusedarea == &ms) {
       int headrow = ms.getHeaderRow();
       int headcol = ms.getHeaderCol();
       int lastsel = ms.getLastSelectionPointer();
       if (lastsel == 0) {
-        TermInt::printStr(window, headrow, headcol + 9, ms.getElement(0)->getContentText());
+        ui->printStr(headrow, headcol + 9, ms.getElement(0)->getContentText());
       }
       else {
         MenuSelectOptionContainer * msoc = ms.getSectionContainer((lastsel - 1) / 3);
@@ -189,26 +178,24 @@ void EditSiteScreen::update() {
         int add = 0;
         if (internalid == 1) add = 12;
         else if (internalid == 2) add = 43;
-        TermInt::printStr(window, headrow + 1 + ((lastsel - 1) / 3), headcol + add, msoc->getOption(internalid)->getContentText());
+        ui->printStr(headrow + 1 + ((lastsel - 1) / 3), headcol + add, msoc->getOption(internalid)->getContentText());
       }
     }
     defocusedarea = NULL;
   }
   if (focusedarea == &mso) {
     MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
     msoe = mso.getElement(mso.getSelectionPointer());
-    wattron(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-    wattroff(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
+    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
     if (active && msoe->cursorPosition() >= 0) {
-      curs_set(1);
-      TermInt::moveCursor(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
+      ui->showCursor();
+      ui->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
     }
     else {
-      curs_set(0);
+      ui->hideCursor();
     }
   }
   else if (focusedarea == &ms) {
@@ -221,7 +208,7 @@ void EditSiteScreen::update() {
     int lastsel = ms.getLastSelectionPointer();
     int sel = ms.getSelectionPointer();
     if (lastsel == 0) {
-      TermInt::printStr(window, headrow, headcol + 9, ms.getElement(0)->getContentText());
+      ui->printStr(headrow, headcol + 9, ms.getElement(0)->getContentText());
     }
     else {
       MenuSelectOptionContainer * msoc = ms.getSectionContainer((lastsel - 1) / 3);
@@ -229,12 +216,10 @@ void EditSiteScreen::update() {
       int add = 0;
       if (internalid == 1) add = 12;
       else if (internalid == 2) add = 43;
-      TermInt::printStr(window, headrow + 1 + ((lastsel - 1) / 3), headcol + add, msoc->getOption(internalid)->getContentText());
+      ui->printStr(headrow + 1 + ((lastsel - 1) / 3), headcol + add, msoc->getOption(internalid)->getContentText());
     }
     if (sel == 0) {
-      wattron(window, A_REVERSE);
-      TermInt::printStr(window, headrow, headcol + 9, ms.getElement(0)->getContentText());
-      wattroff(window, A_REVERSE);
+      ui->printStr(headrow, headcol + 9, ms.getElement(0)->getContentText(), true);
     }
     else {
       MenuSelectOptionContainer * msoc = ms.getSectionContainer((sel - 1) / 3);
@@ -242,18 +227,23 @@ void EditSiteScreen::update() {
       int add = 0;
       if (internalid == 1) add = 12;
       else if (internalid == 2) add = 43;
-      wattron(window, A_REVERSE);
-      TermInt::printStr(window, headrow + 1 + ((sel - 1) / 3), headcol + add, msoc->getOption(internalid)->getContentText());
-      wattroff(window, A_REVERSE);
+      ui->printStr(headrow + 1 + ((sel - 1) / 3), headcol + add, msoc->getOption(internalid)->getContentText(), true);
       int cursorpos = msoc->getOption(internalid)->cursorPosition();
       if (active && cursorpos >= 0) {
-        curs_set(1);
-        TermInt::moveCursor(window, headrow + 1 + ((sel - 1) / 3), headcol + add + cursorpos);
+        ui->showCursor();
+        ui->moveCursor(headrow + 1 + ((sel - 1) / 3), headcol + add + cursorpos);
       }
       else {
-        curs_set(0);
+        ui->hideCursor();
       }
     }
+  }
+}
+
+void EditSiteScreen::command(std::string command, std::string arg) {
+  if (command == "returnselectsites") {
+    ((MenuSelectOptionTextField *)activeelement)->setText(arg);
+    redraw();
   }
 }
 
@@ -263,11 +253,12 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
       activeelement->deactivate();
       active = false;
       currentlegendtext = defaultlegendtext;
-      uicommunicator->newCommand("updatesetlegend");
+      ui->update();
+      ui->setLegend();
       return;
     }
     activeelement->inputChar(ch);
-    uicommunicator->newCommand("update");
+    ui->update();
     return;
   }
   bool activation;
@@ -282,7 +273,7 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
           focusedarea = &mso;
           focusedarea->enterFocusFrom(2);
         }
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case KEY_DOWN:
@@ -292,7 +283,7 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
           focusedarea = &ms;
           focusedarea->enterFocusFrom(0);
         }
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case KEY_LEFT:
@@ -300,7 +291,7 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         if (!focusedarea->isFocused()) {
           // shouldn't happen
         }
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case KEY_RIGHT:
@@ -308,13 +299,13 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         if (!focusedarea->isFocused()) {
           // shouldn't happen
         }
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case 10:
       activation = focusedarea->activateSelected();
       if (!activation) {
-        uicommunicator->newCommand("update");
+        ui->update();
         break;
       }
       active = true;
@@ -322,12 +313,13 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
       if (activeelement->getIdentifier() == "blockedsites") {
         activeelement->deactivate();
         active = false;
-        uicommunicator->newCommand("selectsites", ((MenuSelectOptionTextField *)activeelement)->getData(),
+        ui->goSelectSites(((MenuSelectOptionTextField *)activeelement)->getData(),
             "Block race transfers with these sites", site);
         return;
       }
       currentlegendtext = activeelement->getLegendText();
-      uicommunicator->newCommand("updatesetlegend");
+      ui->update();
+      ui->setLegend();
       break;
     case 'd':
       if (operation == "add") {
@@ -482,11 +474,11 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
       if (changedname) {
         global->getSiteLogicManager()->getSiteLogic(site->getName())->updateName();
       }
-      uicommunicator->newCommand("return");
+      ui->returnToLast();
       return;
     case 27: // esc
     case 'c':
-      uicommunicator->newCommand("return");
+      ui->returnToLast();
       break;
   }
 }

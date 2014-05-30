@@ -5,18 +5,16 @@
 #include "../textinputfield.h"
 #include "../uiwindow.h"
 
-class UICommunicator;
-
 class LoginScreen : public UIWindow {
 public:
-  LoginScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  LoginScreen(Ui *);
+  void initialize(unsigned int, unsigned int);
   void update();
   void redraw();
   void keyPressed(unsigned int);
 private:
   std::string drawword;
   void randomizeDrawLocation();
-  UICommunicator * uicommunicator;
   std::vector<std::vector<int> > background;
   std::string passphrase;
   TextInputField passfield;

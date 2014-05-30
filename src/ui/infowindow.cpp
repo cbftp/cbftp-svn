@@ -1,34 +1,36 @@
 #include "infowindow.h"
 
-#include "termint.h"
+#include "ui.h"
 
-InfoWindow::InfoWindow(WINDOW * window, int row, int col) {
+InfoWindow::InfoWindow(Ui * ui, WINDOW * window, int row, int col) {
+  this->ui = ui;
+  this->window = window;
   label = "";
   text = "";
-  init(window, row, col);
+  init(row, col);
 }
 
 void InfoWindow::redraw() {
-  werase(window);
-  TermInt::printChar(window, 0, 1, 4194411);
-  TermInt::printChar(window, 0, 0, 4194417);
-  TermInt::printChar(window, 1, 1, 4194413);
-  TermInt::printChar(window, 0, col - 1, 4194417);
-  TermInt::printChar(window, 1, col - 2, 4194410);
-  TermInt::printChar(window, 0, col - 2, 4194412);
+  ui->erase(window);
+  ui->printChar(window, 0, 1, 4194411);
+  ui->printChar(window, 0, 0, 4194417);
+  ui->printChar(window, 1, 1, 4194413);
+  ui->printChar(window, 0, col - 1, 4194417);
+  ui->printChar(window, 1, col - 2, 4194410);
+  ui->printChar(window, 0, col - 2, 4194412);
   for (unsigned int i = 2; i < col - 2; i++) {
-    TermInt::printChar(window, 1, i, 4194417);
+    ui->printChar(window, 1, i, 4194417);
   }
   update();
 }
 
 void InfoWindow::update() {
   for (unsigned int i = 2; i < col - 2; i++) {
-    TermInt::printChar(window, 0, i, ' ');
+    ui->printChar(window, 0, i, ' ');
   }
   unsigned int labellen = label.length();
-  TermInt::printStr(window, 0, 4, label);
-  TermInt::printStr(window, 0, 4 + labellen + 2, text, col - 4 - 4 - labellen - 2, true);
+  ui->printStr(window, 0, 4, label);
+  ui->printStr(window, 0, 4 + labellen + 2, text, col - 4 - 4 - labellen - 2, false, true);
 }
 
 void InfoWindow::setLabel(std::string label) {

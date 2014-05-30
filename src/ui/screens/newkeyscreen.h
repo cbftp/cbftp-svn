@@ -5,11 +5,10 @@
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
 
-class UICommunicator;
-
 class NewKeyScreen : public UIWindow {
 public:
-  NewKeyScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  NewKeyScreen(Ui *);
+  void initialize(unsigned int, unsigned int);
   void update();
   void redraw();
   void keyPressed(unsigned int);
@@ -23,5 +22,4 @@ private:
   bool tooshort;
   MenuSelectOptionElement * activeelement;
   MenuSelectOption mso;
-  UICommunicator * uicommunicator;
 };

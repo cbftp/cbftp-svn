@@ -3,14 +3,14 @@
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
 
-class UICommunicator;
 class MenuSelectOptionTextArrow;
 class ExternalFileViewing;
 class LocalStorage;
 
 class FileViewerSettingsScreen : public UIWindow {
 public:
-  FileViewerSettingsScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  FileViewerSettingsScreen(Ui *);
+  void initialize(unsigned int, unsigned int);
   void update();
   void redraw();
   void keyPressed(unsigned int);
@@ -23,7 +23,6 @@ private:
   bool active;
   MenuSelectOptionElement * activeelement;
   MenuSelectOption mso;
-  UICommunicator * uicommunicator;
   ExternalFileViewing * efv;
   LocalStorage * ls;
 };

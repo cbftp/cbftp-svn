@@ -1,29 +1,33 @@
 #include "legendwindow.h"
 
 #include "termint.h"
+#include "ui.h"
 #include "../eventlog.h"
 #include "../globalcontext.h"
 
 extern GlobalContext * global;
 
-LegendWindow::LegendWindow(WINDOW * window, int row, int col) {
+LegendWindow::LegendWindow(Ui * ui, WINDOW * window, int row, int col) {
+  this->ui = ui;
+  this->window = window;
   text = "";
   latestid = 0;
   latestcount = 8;
-  init(window, row, col);
+  init(row, col);
 }
 
 void LegendWindow::redraw() {
-  werase(window);
+  ui->erase(window);
+  latestcount = 8;
   currentpos = 0;
-  TermInt::printChar(window, 0, 1, BOX_CORNER_TL);
-  TermInt::printChar(window, 1, 0, BOX_HLINE);
-  TermInt::printChar(window, 1, 1, BOX_CORNER_BR);
-  TermInt::printChar(window, 1, col - 1, BOX_HLINE);
-  TermInt::printChar(window, 1, col - 2, BOX_CORNER_BL);
-  TermInt::printChar(window, 0, col - 2, BOX_CORNER_TR);
+  ui->printChar(window, 0, 1, BOX_CORNER_TL);
+  ui->printChar(window, 1, 0, BOX_HLINE);
+  ui->printChar(window, 1, 1, BOX_CORNER_BR);
+  ui->printChar(window, 1, col - 1, BOX_HLINE);
+  ui->printChar(window, 1, col - 2, BOX_CORNER_BL);
+  ui->printChar(window, 0, col - 2, BOX_CORNER_TR);
   for (unsigned int i = 2; i < col - 2; i++) {
-    TermInt::printChar(window, 0, i, BOX_HLINE);
+    ui->printChar(window, 0, i, BOX_HLINE);
   }
   update();
 }
@@ -34,9 +38,9 @@ void LegendWindow::update() {
     latestcount = 0;
     latesttext = global->getEventLog()->getLatest();
     for (unsigned int printpos = 4; printpos < col - 4; printpos++) {
-      TermInt::printChar(window, 1, printpos, ' ');
+      ui->printChar(window, 1, printpos, ' ');
     }
-    TermInt::printStr(window, 1, 4, "EVENT: " + latesttext, col - 4 - 4);
+    ui->printStr(window, 1, 4, "EVENT: " + latesttext, col - 4 - 4, false);
     return;
   }
   if (latestcount < 8) {
@@ -50,7 +54,7 @@ void LegendWindow::update() {
     if (currentpos >= textlen) currentpos = 0;
     while (printpos < col - 4) {
       while (printpos - internalpos < textlen && printpos < col - 4) {
-        TermInt::printChar(window, 1, printpos, text[printpos - internalpos]);
+        ui->printChar(window, 1, printpos, text[printpos - internalpos]);
         ++printpos;
       }
       internalpos = printpos;

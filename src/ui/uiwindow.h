@@ -1,26 +1,29 @@
 #pragma once
 
-#include <ncurses.h>
 #include <string>
 
-class UserInterface;
+class Ui;
 
 class UIWindow {
 protected:
-  WINDOW * window;
   unsigned int row;
   unsigned int col;
   bool autoupdate;
+  bool expectbackendpush;
+  Ui * ui;
 public:
-  void init(WINDOW *, unsigned int, unsigned int);
+  void init(unsigned int, unsigned int);
   UIWindow();
   virtual ~UIWindow();
   virtual void redraw() = 0;
   void resize(unsigned int, unsigned int);
   virtual void update();
+  virtual void command(std::string);
+  virtual void command(std::string, std::string);
   virtual std::string getInfoLabel();
   virtual std::string getInfoText();
   virtual std::string getLegendText();
   virtual void keyPressed(unsigned int);
   bool autoUpdate();
+  bool expectBackendPush();
 };

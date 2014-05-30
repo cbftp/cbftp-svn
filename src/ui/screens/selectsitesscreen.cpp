@@ -1,7 +1,6 @@
 #include "selectsitesscreen.h"
 
-#include "../uicommunicator.h"
-#include "../termint.h"
+#include "../ui.h"
 #include "../menuselectoptionelement.h"
 #include "../menuselectoptioncheckbox.h"
 
@@ -11,12 +10,14 @@
 
 extern GlobalContext * global;
 
-SelectSitesScreen::SelectSitesScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  this->uicommunicator = uicommunicator;
+SelectSitesScreen::SelectSitesScreen(Ui * ui) {
+  this->ui = ui;
+}
+
+void SelectSitesScreen::initialize(unsigned int row, unsigned int col, std::string preselectstr, std::string purpose, Site * skipsite) {
   sm = global->getSiteManager();
   std::vector<Site *>::iterator it;
-  std::string preselectstr = uicommunicator->getArg1();
-  purpose = uicommunicator->getArg2();
+  this->purpose = purpose;
   std::map<std::string, bool> preselected;
   while (true) {
     size_t commapos = preselectstr.find(",");
@@ -29,8 +30,8 @@ SelectSitesScreen::SelectSitesScreen(WINDOW * window, UICommunicator * uicommuni
       break;
     }
   }
-  Site * skipsite = (Site *) uicommunicator->getPointerArg();
   int y = 1;
+  mso.clear();
   for (it = sm->getSitesIteratorBegin(); it != sm->getSitesIteratorEnd(); it++) {
     if (*it == skipsite) {
       continue;
@@ -40,11 +41,11 @@ SelectSitesScreen::SelectSitesScreen(WINDOW * window, UICommunicator * uicommuni
     mso.addCheckBox(y++, 1, sitename, sitename, selected);
   }
   mso.enterFocusFrom(0);
-  init(window, row, col);
+  init(row, col);
 }
 
 void SelectSitesScreen::redraw() {
-  werase(window);
+  ui->erase();
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     MenuSelectOptionElement * msoe = mso.getElement(i);
@@ -52,22 +53,18 @@ void SelectSitesScreen::redraw() {
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    if (highlight) wattron(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText());
-    if (highlight) wattroff(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getContentText());
+    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText(), highlight);
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
   }
 }
 
 void SelectSitesScreen::update() {
   MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText());
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getContentText());
+  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText());
+  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
-  wattron(window, A_REVERSE);
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText());
-  wattroff(window, A_REVERSE);
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getContentText());
+  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText(), true);
+  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
 }
 
 void SelectSitesScreen::keyPressed(unsigned int ch) {
@@ -76,22 +73,22 @@ void SelectSitesScreen::keyPressed(unsigned int ch) {
   switch(ch) {
     case KEY_UP:
       if (mso.goUp()) {
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case KEY_DOWN:
       if (mso.goDown()) {
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case KEY_LEFT:
       if (mso.goLeft()) {
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case KEY_RIGHT:
       if (mso.goRight()) {
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case KEY_NPAGE:
@@ -100,7 +97,7 @@ void SelectSitesScreen::keyPressed(unsigned int ch) {
           break;
         }
       }
-      uicommunicator->newCommand("redraw");
+      ui->redraw();
       break;
     case KEY_PPAGE:
       for (unsigned int i = 0; i < pagerows; i++) {
@@ -108,16 +105,17 @@ void SelectSitesScreen::keyPressed(unsigned int ch) {
           break;
         }
       }
-      uicommunicator->newCommand("redraw");
+      ui->redraw();
       break;
     case 32:
     case 10:
       activation = mso.getElement(mso.getSelectionPointer())->activate();
       if (!activation) {
-        uicommunicator->newCommand("update");
+        ui->update();
         break;
       }
-      uicommunicator->newCommand("updatesetlegend");
+      ui->update();
+      ui->setLegend();
       break;
       break;
     case 'd': {
@@ -129,12 +127,12 @@ void SelectSitesScreen::keyPressed(unsigned int ch) {
         }
       }
       blockstr = blockstr.substr(0, blockstr.length() - 1);
-      uicommunicator->newCommand("returnselectsites", blockstr);
+      ui->returnSelectSites(blockstr);
       break;
     }
     case 27: // esc
     case 'c':
-      uicommunicator->newCommand("return");
+      ui->returnToLast();
       break;
   }
 }

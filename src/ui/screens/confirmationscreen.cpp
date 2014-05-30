@@ -1,24 +1,27 @@
 #include "confirmationscreen.h"
 
-#include "../uicommunicator.h"
-#include "../termint.h"
+#include "../ui.h"
 
-ConfirmationScreen::ConfirmationScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  this->uicommunicator = uicommunicator;
-  init(window, row, col);
+ConfirmationScreen::ConfirmationScreen(Ui * ui) {
+  this->ui = ui;
+}
+
+void ConfirmationScreen::initialize(unsigned int row, unsigned int col, std::string message) {
+  this->message = message;
+  init(row, col);
 }
 
 void ConfirmationScreen::redraw() {
-  werase(window);
-  TermInt::printStr(window, 1, 1, "Are you sure (y/N)? ");
+  ui->erase();
+  ui->printStr(1, 1, message + " (y/N)? ");
 }
 
 void ConfirmationScreen::keyPressed(unsigned int ch) {
   if (ch == 'y') {
-    uicommunicator->newCommand("yes");
+    ui->confirmYes();
   }
   else {
-    uicommunicator->newCommand("no");
+    ui->confirmNo();
   }
 }
 

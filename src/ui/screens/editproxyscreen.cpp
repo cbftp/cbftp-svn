@@ -1,7 +1,6 @@
 #include "editproxyscreen.h"
 
-#include "../uicommunicator.h"
-#include "../termint.h"
+#include "../ui.h"
 #include "../menuselectoptionelement.h"
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptiontextarrow.h"
@@ -11,23 +10,25 @@
 
 extern GlobalContext * global;
 
-EditProxyScreen::EditProxyScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  this->uicommunicator = uicommunicator;
+EditProxyScreen::EditProxyScreen(Ui * ui) {
+  this->ui = ui;
+}
+
+void EditProxyScreen::initialize(unsigned int row, unsigned int col, std::string operation, std::string proxy) {
   active = false;
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one, save changes - [c]ancel, undo changes";
   currentlegendtext = defaultlegendtext;
-  operation = uicommunicator->getArg1();
-  std::string arg2 = uicommunicator->getArg2();
-  uicommunicator->checkoutCommand();
+  this->operation = operation;
   if (operation == "add") {
     modproxy = Proxy("proxy1");
   }
   else if (operation == "edit") {
-    proxy = global->getProxyManager()->getProxy(arg2);
-    modproxy = Proxy(*proxy);
+    this->proxy = global->getProxyManager()->getProxy(proxy);
+    modproxy = Proxy(*this->proxy);
   }
   unsigned int y = 2;
   unsigned int x = 1;
+  mso.clear();
   mso.addStringField(y++, x, "name", "Name:", modproxy.getName(), false);
   mso.addStringField(y++, x, "addr", "Address:", modproxy.getAddr(), false);
   mso.addStringField(y++, x, "port", "Port:", modproxy.getPort(), false);
@@ -38,11 +39,11 @@ EditProxyScreen::EditProxyScreen(WINDOW * window, UICommunicator * uicommunicato
   mso.addStringField(y++, x, "user", "Username:", modproxy.getUser(), false);
   mso.addStringField(y++, x, "pass", "Password:", modproxy.getPass(), true);
   mso.enterFocusFrom(0);
-  init(window, row, col);
+  init(row, col);
 }
 
 void EditProxyScreen::redraw() {
-  werase(window);
+  ui->erase();
   bool highlight;
   if (authmethod->getData() == PROXY_AUTH_NONE) {
     mso.getElement("user")->hide();
@@ -53,7 +54,7 @@ void EditProxyScreen::redraw() {
     mso.getElement("pass")->show();
   }
   latestauthmethod = authmethod->getData();
-  TermInt::printStr(window, 1, 1, "Type: SOCKS5");
+  ui->printStr(1, 1, "Type: SOCKS5");
   for (unsigned int i = 0; i < mso.size(); i++) {
     MenuSelectOptionElement * msoe = mso.getElement(i);
     if (!msoe->visible()) {
@@ -63,10 +64,8 @@ void EditProxyScreen::redraw() {
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    if (highlight) wattron(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-    if (highlight) wattroff(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
 }
 
@@ -77,20 +76,18 @@ void EditProxyScreen::update() {
   }
   MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
   if (msoe->visible()) {
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
   msoe = mso.getElement(mso.getSelectionPointer());
-  wattron(window, A_REVERSE);
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-  wattroff(window, A_REVERSE);
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
+  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   if (active && msoe->cursorPosition() >= 0) {
-    curs_set(1);
-    TermInt::moveCursor(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
+    ui->showCursor();
+    ui->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
   }
   else {
-    curs_set(0);
+    ui->hideCursor();
   }
 }
 
@@ -100,35 +97,37 @@ void EditProxyScreen::keyPressed(unsigned int ch) {
       activeelement->deactivate();
       active = false;
       currentlegendtext = defaultlegendtext;
-      uicommunicator->newCommand("updatesetlegend");
+      ui->setLegend();
+      ui->update();
       return;
     }
     activeelement->inputChar(ch);
-    uicommunicator->newCommand("update");
+    ui->update();
     return;
   }
   bool activation;
   switch(ch) {
     case KEY_UP:
       if (mso.goUp()) {
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case KEY_DOWN:
       if (mso.goDown()) {
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case 10:
       activation = mso.activateSelected();
       if (!activation) {
-        uicommunicator->newCommand("update");
+        ui->update();
         break;
       }
       active = true;
       activeelement = mso.getElement(mso.getSelectionPointer());
       currentlegendtext = activeelement->getLegendText();
-      uicommunicator->newCommand("updatesetlegend");
+      ui->setLegend();
+      ui->update();
       break;
     case 'd':
       if (operation == "add") {
@@ -163,11 +162,11 @@ void EditProxyScreen::keyPressed(unsigned int ch) {
       else {
         global->getProxyManager()->sortProxys();
       }
-      uicommunicator->newCommand("return");
+      ui->returnToLast();
       return;
     case 27: // esc
     case 'c':
-      uicommunicator->newCommand("return");
+      ui->returnToLast();
       break;
   }
 }

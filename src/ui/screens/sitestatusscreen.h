@@ -6,11 +6,11 @@
 
 class Site;
 class SiteLogic;
-class UICommunicator;
 
 class SiteStatusScreen : public UIWindow {
 public:
-  SiteStatusScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  SiteStatusScreen(Ui *);
+  void initialize(unsigned int, unsigned int, std::string);
   void redraw();
   void update();
   void keyPressed(unsigned int);
@@ -21,5 +21,4 @@ private:
   std::vector<unsigned int> previousstatuslength;
   Site * site;
   SiteLogic * st;
-  UICommunicator * uicommunicator;
 };

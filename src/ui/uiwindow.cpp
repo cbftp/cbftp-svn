@@ -1,12 +1,13 @@
 #include "uiwindow.h"
 
-void UIWindow::init(WINDOW * window, unsigned int row, unsigned int col) {
-  this->window = window;
+void UIWindow::init(unsigned int row, unsigned int col) {
   resize(row, col);
+  redraw();
 }
 
 UIWindow::UIWindow() {
   autoupdate = false;
+  expectbackendpush = false;
 }
 
 UIWindow::~UIWindow() {
@@ -16,10 +17,17 @@ UIWindow::~UIWindow() {
 void UIWindow::resize(unsigned int row, unsigned int col) {
   this->row = row;
   this->col = col;
-  redraw();
 }
 
 void UIWindow::update() {
+
+}
+
+void UIWindow::command(std::string command) {
+  this->command(command, "");
+}
+
+void UIWindow::command(std::string command, std::string arg) {
 
 }
 
@@ -41,4 +49,8 @@ std::string UIWindow::getLegendText() {
 
 bool UIWindow::autoUpdate() {
   return autoupdate;
+}
+
+bool UIWindow::expectBackendPush() {
+  return expectbackendpush;
 }

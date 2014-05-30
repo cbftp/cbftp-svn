@@ -1,7 +1,6 @@
 #include "proxyoptionsscreen.h"
 
-#include "../uicommunicator.h"
-#include "../termint.h"
+#include "../ui.h"
 #include "../menuselectoptiontextarrow.h"
 #include "../menuselectoptionelement.h"
 #include "../menuselectoptiontextbutton.h"
@@ -14,8 +13,11 @@
 
 extern GlobalContext * global;
 
-ProxyOptionsScreen::ProxyOptionsScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  this->uicommunicator = uicommunicator;
+ProxyOptionsScreen::ProxyOptionsScreen(Ui * ui) {
+  this->ui = ui;
+}
+
+void ProxyOptionsScreen::initialize(unsigned int row, unsigned int col) {
   active = false;
   defaultset = false;
   deleteproxy = "";
@@ -25,16 +27,17 @@ ProxyOptionsScreen::ProxyOptionsScreen(WINDOW * window, UICommunicator * uicommu
   pm = global->getProxyManager();
   unsigned int y = 1;
   unsigned int x = 1;
+  mso.clear();
   useproxy = mso.addTextArrow(y++, x, "useproxy", "Default proxy:");
   focusedarea = &mso;
   mso.makeLeavableDown();
   msop.makeLeavableUp();
   mso.enterFocusFrom(0);
-  init(window, row, col);
+  init(row, col);
 }
 
 void ProxyOptionsScreen::redraw() {
-  werase(window);
+  ui->erase();
   if (editproxy != "" && pm->getProxy(editproxy) == NULL) {
     global->getSiteManager()->proxyRemoved(editproxy);
     editproxy = "";
@@ -46,10 +49,10 @@ void ProxyOptionsScreen::redraw() {
   unsigned int x = 1;
   msop.clear();
   msop.addTextButtonNoContent(2, x, "add", "Add proxy");
-  TermInt::printStr(window, 4, x, "Name");
-  TermInt::printStr(window, 4, x + 10, "Address");
-  TermInt::printStr(window, 4, x + 30, "Port");
-  TermInt::printStr(window, 4, x + 37, "Auth");
+  ui->printStr(4, x, "Name");
+  ui->printStr(4, x + 10, "Address");
+  ui->printStr(4, x + 30, "Port");
+  ui->printStr(4, x + 37, "Auth");
   for(std::vector<Proxy *>::iterator it = pm->begin(); it != pm->end(); it++) {
     std::string name = (*it)->getName();
     useproxy->addOption(name, 1);
@@ -72,10 +75,8 @@ void ProxyOptionsScreen::redraw() {
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    if (highlight) wattron(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-    if (highlight) wattroff(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
   for (unsigned int i = 0; i < msop.size(); i++) {
     MenuSelectOptionElement * msoe = msop.getElement(i);
@@ -83,60 +84,53 @@ void ProxyOptionsScreen::redraw() {
     if (msop.isFocused() && msop.getSelectionPointer() == i) {
       highlight = true;
     }
-    if (highlight) wattron(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText(), 9);
-    if (highlight) wattroff(window, A_REVERSE);
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), 9, highlight);
     if (msoe->getLabelText() == msoe->getIdentifier()) {
       Proxy * proxy = pm->getProxy(msoe->getLabelText());
       if (proxy != NULL) {
-        TermInt::printStr(window, msoe->getRow(), msoe->getCol() + 10, proxy->getAddr(), 19);
-        TermInt::printStr(window, msoe->getRow(), msoe->getCol() + 30, proxy->getPort(), 5);
-        TermInt::printStr(window, msoe->getRow(), msoe->getCol() + 37, proxy->getAuthMethodText());
+        ui->printStr(msoe->getRow(), msoe->getCol() + 10, proxy->getAddr(), (unsigned int) 19);
+        ui->printStr(msoe->getRow(), msoe->getCol() + 30, proxy->getPort(), (unsigned int) 5);
+        ui->printStr(msoe->getRow(), msoe->getCol() + 37, proxy->getAuthMethodText());
       }
     }
   }
 }
 
 void ProxyOptionsScreen::update() {
-  if (uicommunicator->hasNewCommand()) {
-    if (uicommunicator->getCommand() == "yes") {
-      uicommunicator->checkoutCommand();
-      if (deleteproxy != "") {
-        pm->removeProxy(deleteproxy);
-        deleteproxy = "";
-        redraw();
-        return;
-      }
-    }
-    uicommunicator->checkoutCommand();
-  }
   if (defocusedarea != NULL) {
     if (defocusedarea == &mso) {
       MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
-      TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+      ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
     }
     else if (defocusedarea == &msop) {
       MenuSelectOptionElement * msoe = msop.getElement(mso.getLastSelectionPointer());
-      TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+      ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
     }
   }
   if (focusedarea == &mso) {
     MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
     msoe = mso.getElement(mso.getSelectionPointer());
-    wattron(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-    wattroff(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
+    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
   else if (focusedarea == &msop) {
     MenuSelectOptionElement * msoe = msop.getElement(msop.getLastSelectionPointer());
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText(), 9);
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), (unsigned int) 9);
     msoe = msop.getElement(msop.getSelectionPointer());
-    wattron(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText(), 9);
-    wattroff(window, A_REVERSE);
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), 9, true);
+  }
+}
+
+void ProxyOptionsScreen::command(std::string command) {
+  if (command == "yes") {
+    if (deleteproxy != "") {
+      pm->removeProxy(deleteproxy);
+      deleteproxy = "";
+      redraw();
+      return;
+    }
   }
 }
 
@@ -146,11 +140,12 @@ void ProxyOptionsScreen::keyPressed(unsigned int ch) {
       activeelement->deactivate();
       active = false;
       currentlegendtext = defaultlegendtext;
-      uicommunicator->newCommand("updatesetlegend");
+      ui->update();
+      ui->setLegend();
       return;
     }
     activeelement->inputChar(ch);
-    uicommunicator->newCommand("update");
+    ui->update();
     return;
   }
   bool activation;
@@ -163,7 +158,7 @@ void ProxyOptionsScreen::keyPressed(unsigned int ch) {
           focusedarea = &mso;
           focusedarea->enterFocusFrom(2);
         }
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case KEY_DOWN:
@@ -173,35 +168,36 @@ void ProxyOptionsScreen::keyPressed(unsigned int ch) {
           focusedarea = &msop;
           focusedarea->enterFocusFrom(0);
         }
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case 10:
       selected = focusedarea->getElement(focusedarea->getSelectionPointer());
       if (selected->getIdentifier() == "add") {
-        uicommunicator->newCommand("editproxy", "add");
+        ui->goAddProxy();
         break;
       }
       activation = focusedarea->activateSelected();
       if (!activation) {
         if (focusedarea == &msop) {
-          uicommunicator->newCommand("editproxy", "edit", selected->getLabelText());
+          ui->goEditProxy(selected->getLabelText());
           break;
         }
-        uicommunicator->newCommand("update");
+        ui->update();
         break;
       }
       active = true;
       activeelement = selected;
       currentlegendtext = activeelement->getLegendText();
-      uicommunicator->newCommand("updatesetlegend");
+      ui->update();
+      ui->setLegend();
       break;
     case 'E':
       selected = focusedarea->getElement(focusedarea->getSelectionPointer());
       if (focusedarea == &msop) {
         if (selected->getIdentifier() == selected->getLabelText()) {
           editproxy = selected->getIdentifier();
-          uicommunicator->newCommand("editproxy", "edit", selected->getLabelText());
+          ui->goEditProxy(selected->getLabelText());
           break;
         }
       }
@@ -214,7 +210,7 @@ void ProxyOptionsScreen::keyPressed(unsigned int ch) {
           pm->setDefaultProxy(((MenuSelectOptionTextArrow *)msoe)->getDataText());
         }
       }
-      uicommunicator->newCommand("return");
+      ui->returnToLast();
       break;
     case KEY_DC:
     case 'D':
@@ -222,12 +218,12 @@ void ProxyOptionsScreen::keyPressed(unsigned int ch) {
       if (focusedarea == &msop && selected->getLabelText() == selected->getIdentifier()) {
         editproxy = selected->getIdentifier();
         deleteproxy = focusedarea->getElement(focusedarea->getSelectionPointer())->getLabelText();
-        uicommunicator->newCommand("confirmation");
+        ui->goConfirmation("Do you really want to delete " + editproxy);
       }
       break;
     case 27: // esc
     case 'c':
-      uicommunicator->newCommand("return");
+      ui->returnToLast();
       break;
   }
 }

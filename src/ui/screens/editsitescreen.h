@@ -6,15 +6,16 @@
 #include "../menuselectoption.h"
 #include "../menusection.h"
 
-class UICommunicator;
 class FocusableArea;
 class MenuSelectOptionElement;
 
 class EditSiteScreen : public UIWindow {
 public:
-  EditSiteScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  EditSiteScreen(Ui * ui);
+  void initialize(unsigned int, unsigned int, std::string, std::string);
   void update();
   void redraw();
+  void command(std::string, std::string);
   void keyPressed(unsigned int);
   std::string getLegendText();
   std::string getInfoLabel();
@@ -30,5 +31,4 @@ private:
   Site * site;
   Site modsite;
   std::string operation;
-  UICommunicator * uicommunicator;
 };

@@ -3,13 +3,14 @@
 #include "../uiwindow.h"
 #include "../menufilters.h"
 
-class UICommunicator;
 class MenuSelectOptionElement;
 class SkipList;
+class Ui;
 
 class SkipListScreen : public UIWindow {
 public:
-  SkipListScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  SkipListScreen(Ui *);
+  void initialize(unsigned int, unsigned int);
   void update();
   void redraw();
   void keyPressed(unsigned int);
@@ -22,5 +23,4 @@ private:
   bool active;
   MenuSelectOptionElement * activeelement;
   MenuFilters mf;
-  UICommunicator * uicommunicator;
 };

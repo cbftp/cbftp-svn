@@ -5,12 +5,12 @@
 #include "../commandhistory.h"
 
 class SiteLogic;
-class UICommunicator;
 class RawBuffer;
 
 class RawDataScreen : public UIWindow {
 public:
-  RawDataScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  RawDataScreen(Ui *);
+  void initialize(unsigned int, unsigned int, std::string, int);
   void redraw();
   void update();
   void keyPressed(unsigned int);
@@ -27,7 +27,6 @@ private:
   std::string sitename;
   int connid;
   SiteLogic * sitelogic;
-  UICommunicator * uicommunicator;
   RawBuffer * rawbuf;
   CommandHistory history;
 };

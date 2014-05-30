@@ -8,17 +8,19 @@
 #include "../../eventlog.h"
 #include "../../filelist.h"
 
-#include "../uicommunicator.h"
-#include "../termint.h"
+#include "../ui.h"
 #include "../uifile.h"
 
 extern GlobalContext * global;
 
-BrowseScreen::BrowseScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  this->uicommunicator = uicommunicator;
-  sitelogic = global->getSiteLogicManager()->getSiteLogic(uicommunicator->getArg1());
+BrowseScreen::BrowseScreen(Ui * ui) {
+  this->ui = ui;
+}
+
+void BrowseScreen::initialize(unsigned int row, unsigned int col, std::string sitestr) {
+  sitelogic = global->getSiteLogicManager()->getSiteLogic(sitestr);
   site = sitelogic->getSite();
-  uicommunicator->expectBackendPush();
+  expectbackendpush = true;
   requestedpath = site->getBasePath();
   requestid = sitelogic->requestFileList(requestedpath);
   virgin = true;
@@ -43,7 +45,7 @@ BrowseScreen::BrowseScreen(WINDOW * window, UICommunicator * uicommunicator, uns
   spinnerpos = 0;
   list = UIFileList();
   global->updateTime();
-  init(window, row, col);
+  init(row, col);
 }
 
 void BrowseScreen::redraw() {
@@ -95,7 +97,8 @@ void BrowseScreen::redraw() {
         cwdfailed = true;
         sitelogic->finishRequest(requestid);
         requestid = -1;
-        uicommunicator->newCommand("updatesetinfo");
+        ui->setInfo();
+        ui->update();
         return;
       }
       if (!virgin) {
@@ -126,11 +129,13 @@ void BrowseScreen::redraw() {
           break;
         }
       }
+      ui->setInfo();
+      ui->update();
       //delete filelist;
     }
   }
-  werase(window);
-  curs_set(0);
+  ui->erase();
+  ui->hideCursor();
   if (resort == true) sort();
   unsigned int position = list.currentCursorPosition();
   unsigned int pagerows = (unsigned int) row / 2;
@@ -167,50 +172,17 @@ void BrowseScreen::redraw() {
     }
   }
   if (virgin) {
-    TermInt::printStr(window, 1, 1, "Getting file list for " + site->getName() + " ...");
+    ui->printStr(1, 1, "Getting file list for " + site->getName() + " ...");
   }
   else if (listsize == 0) {
-    TermInt::printStr(window, 0, 3, "(empty directory)");
+    ui->printStr(0, 3, "(empty directory)");
   }
   update();
 }
 
 void BrowseScreen::update() {
-  if (uicommunicator->hasNewCommand()) {
-    if (uicommunicator->getCommand() == "yes") {
-      if (wipe) {
-        requestid = sitelogic->requestWipe(wipetarget, wiperecursive);
-      }
-      else if (deleting) {
-        requestid = sitelogic->requestDelete(wipetarget, deletingrecursive);
-      }
-      else {
-        global->getEventLog()->log("BrowseScreen", "WARNING: got a 'yes' answer for an unknown command");
-      }
-      uicommunicator->checkoutCommand();
-      redraw();
-      uicommunicator->newCommand("updatesetinfo");
-      return;
-    }
-    else if (uicommunicator->getCommand() == "no") {
-      wipe = false;
-      deleting = false;
-      uicommunicator->checkoutCommand();
-      redraw();
-      return;
-    }
-    else if (uicommunicator->getCommand() == "returnnuke") {
-      nuking = true;
-      requestid = global->str2Int(uicommunicator->getArg1());
-      uicommunicator->checkoutCommand();
-      redraw();
-      uicommunicator->newCommand("updatesetinfo");
-      return;
-    }
-    uicommunicator->checkoutCommand();
-  }
   if (requestid >= 0 && sitelogic->requestReady(requestid)) {
-    uicommunicator->newCommand("redraw");
+    ui->redraw();
     return;
   }
   std::vector<UIFile *> * uilist = list.getSortedList();
@@ -229,7 +201,7 @@ void BrowseScreen::update() {
   bool printsize = false;
   bool printlastmodified = false;
   bool printowner = false;
-  int namelimit = 0;
+  unsigned int namelimit = 0;
   if (col > 60 + sizelen + timelen + ownerlen + 3) {
     namelimit = col - sizelen - timelen - ownerlen - 3 - 1 - 2;
     printsize = true;
@@ -257,7 +229,7 @@ void BrowseScreen::update() {
   for (unsigned int i = 0; i + currentviewspan < uilist->size() && i < row; i++) {
     unsigned int listi = i + currentviewspan;
     if ((*uilist)[listi] == NULL) {
-      TermInt::printStr(window, i, 3, separatortext, namelimit);
+      ui->printStr(i, 3, separatortext, namelimit);
       continue;
     }
     bool selected = (*uilist)[listi] == list.cursoredFile();
@@ -277,20 +249,14 @@ void BrowseScreen::update() {
     else if ((*uilist)[listi]->isLink()){
       prepchar = "L";
     }
-    TermInt::printStr(window, i, 1, prepchar);
-    if (selected) {
-      wattron(window, A_REVERSE);
-    }
-    TermInt::printStr(window, i, 3, (*uilist)[listi]->getName(), namelimit);
-    if (selected) {
-      wattroff(window, A_REVERSE);
-    }
+    ui->printStr(i, 1, prepchar);
+    ui->printStr(i, 3, (*uilist)[listi]->getName(), namelimit, selected);
     if (printsize) {
-      TermInt::printStr(window, i, sizepos, (*uilist)[listi]->getSizeRepr(), sizelen, true);
+      ui->printStr(i, sizepos, (*uilist)[listi]->getSizeRepr(), sizelen, false, true);
       if (printlastmodified) {
-        TermInt::printStr(window, i, timepos, (*uilist)[listi]->getLastModified(), timelen);
+        ui->printStr(i, timepos, (*uilist)[listi]->getLastModified(), timelen);
         if (printowner) {
-          TermInt::printStr(window, i, col-ownerlen, (*uilist)[listi]->getOwner() + "/" + (*uilist)[listi]->getGroup(), ownerlen-1);
+          ui->printStr(i, col-ownerlen, (*uilist)[listi]->getOwner() + "/" + (*uilist)[listi]->getGroup(), ownerlen-1);
         }
       }
     }
@@ -298,14 +264,44 @@ void BrowseScreen::update() {
   if (slidersize > 0) {
     for (unsigned int i = 0; i < row; i++) {
       if (i >= sliderstart && i < sliderstart + slidersize) {
-        wattron(window, A_REVERSE);
-        TermInt::printChar(window, i, col-1, ' ');
-        wattroff(window, A_REVERSE);
+        ui->printChar(i, col-1, ' ', true);
       }
       else {
-        TermInt::printChar(window, i, col-1, 4194424);
+        ui->printChar(i, col-1, 4194424);
       }
     }
+  }
+}
+
+void BrowseScreen::command(std::string command, std::string arg) {
+  if (command == "yes") {
+    if (wipe) {
+      requestid = sitelogic->requestWipe(wipetarget, wiperecursive);
+    }
+    else if (deleting) {
+      requestid = sitelogic->requestDelete(wipetarget, deletingrecursive);
+    }
+    else {
+      global->getEventLog()->log("BrowseScreen", "WARNING: got a 'yes' answer for an unknown command");
+    }
+    redraw();
+    ui->setInfo();
+    ui->update();
+    return;
+  }
+  else if (command == "no") {
+    wipe = false;
+    deleting = false;
+    redraw();
+    return;
+  }
+  else if (command == "returnnuke") {
+    nuking = true;
+    requestid = global->str2Int(arg);
+    redraw();
+    ui->update();
+    ui->setInfo();
+    return;
   }
 }
 
@@ -321,7 +317,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
   switch (ch) {
     case 27: // esc
     case 'c':
-      uicommunicator->newCommand("return");
+      ui->returnToLast();
       break;
     case 'r':
       //start a race of the selected dir, do nothing if a file is selected
@@ -333,17 +329,17 @@ void BrowseScreen::keyPressed(unsigned int ch) {
             sectionstring += *it + ";";
           }
           sectionstring = sectionstring.substr(0, sectionstring.length() - 1);
-          uicommunicator->newCommand("newrace", site->getName(), sectionstring, list.cursoredFile()->getName());
+          ui->goNewRace(site->getName(), sectionstring, list.cursoredFile()->getName());
         }
       }
       break;
     case 'b':
-      uicommunicator->newCommand("addsection", site->getName(), list.getPath());
+      ui->goAddSection(site->getName(), list.getPath());
       break;
     case 'v':
       //view selected file, do nothing if a directory is selected
       if (list.cursoredFile() != NULL && !list.cursoredFile()->isDirectory()) {
-        uicommunicator->newCommand("viewfile", site->getName(), list.cursoredFile()->getName(), filelist);
+        ui->goViewFile(site->getName(), list.cursoredFile()->getName(), filelist);
       }
       break;
     case 's':
@@ -351,24 +347,24 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       resort = true;
       changedsort = true;
       tickcount = 0;
-      uicommunicator->newCommand("redraw");
+      ui->redraw();
       break;
     case 'S':
       sortmethod = 0;
       resort = true;
       changedsort = true;
       tickcount = 0;
-      uicommunicator->newCommand("redraw");
+      ui->redraw();
       break;
     case 'p':
       resort = true;
       list.toggleSeparators();
-      uicommunicator->newCommand("redraw");
+      ui->redraw();
       break;
     case 'n':
       if (list.cursoredFile() != NULL && list.cursoredFile()->isDirectory()) {
         tickcount = 0;
-        uicommunicator->newCommand("nuke", site->getName(), list.cursoredFile()->getName(), filelist);
+        ui->goNuke(site->getName(), list.cursoredFile()->getName(), filelist);
         nuketarget = list.cursoredFile()->getName();
       }
       break;
@@ -398,7 +394,8 @@ void BrowseScreen::keyPressed(unsigned int ch) {
           requestedpath = oldpath + cursoredfile->getName();
         }
         requestid = sitelogic->requestFileList(requestedpath);
-        uicommunicator->newCommand("updatesetinfo");
+        ui->update();
+        ui->setInfo();
       }
       break;
     case 'W':
@@ -419,7 +416,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       }
       wipefile = cursoredfile->getName();
       wipetarget = oldpath + wipefile;
-      uicommunicator->newCommand("confirmation");
+      ui->goConfirmation("Do you really want to wipe " + wipefile);
       break;
     case KEY_DC:
       cursoredfile = list.cursoredFile();
@@ -439,7 +436,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       }
       wipefile = cursoredfile->getName();
       wipetarget = oldpath + wipefile;
-      uicommunicator->newCommand("confirmation");
+      ui->goConfirmation("Do you really want to delete " + wipefile);
       break;
     case KEY_LEFT:
     case 8:
@@ -449,7 +446,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
         break;
       }
       if (oldpath == "/" ) {
-        uicommunicator->newCommand("return");
+        ui->returnToLast();
         break;
       }
       position = oldpath.rfind("/");
@@ -458,31 +455,33 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       }
       requestedpath = oldpath.substr(0, position);
       requestid = sitelogic->requestFileList(requestedpath);
-      uicommunicator->newCommand("updatesetinfo");
+      ui->update();
+      ui->setInfo();
       //go up one directory level, or return if at top already
       break;
     case KEY_F(5):
       refreshFilelist();
-      uicommunicator->newCommand("updatesetinfo");
+      ui->update();
+      ui->setInfo();
       break;
     case KEY_DOWN:
       //go down and highlight next item (if not at bottom already)
       update = list.goNext();
       if (list.currentCursorPosition() >= currentviewspan + row) {
-        uicommunicator->newCommand("redraw");
+        ui->redraw();
       }
       else if (update) {
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case KEY_UP:
       //go up and highlight previous item (if not at top already)
       update = list.goPrevious();
       if (list.currentCursorPosition() < currentviewspan) {
-        uicommunicator->newCommand("redraw");
+        ui->redraw();
       }
       else if (update) {
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case KEY_NPAGE:
@@ -496,10 +495,10 @@ void BrowseScreen::keyPressed(unsigned int ch) {
         }
       }
       if (list.currentCursorPosition() >= currentviewspan + row) {
-        uicommunicator->newCommand("redraw");
+        ui->redraw();
       }
       else if (update) {
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case KEY_PPAGE:
@@ -513,10 +512,10 @@ void BrowseScreen::keyPressed(unsigned int ch) {
         }
       }
       if (list.currentCursorPosition() < currentviewspan) {
-        uicommunicator->newCommand("redraw");
+        ui->redraw();
       }
       else if (update) {
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case KEY_HOME:
@@ -526,10 +525,10 @@ void BrowseScreen::keyPressed(unsigned int ch) {
         }
       }
       if (list.currentCursorPosition() < currentviewspan) {
-        uicommunicator->newCommand("redraw");
+        ui->redraw();
       }
       else if (update) {
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case KEY_END:
@@ -539,18 +538,18 @@ void BrowseScreen::keyPressed(unsigned int ch) {
         }
       }
       if (list.currentCursorPosition() >= currentviewspan + row) {
-        uicommunicator->newCommand("redraw");
+        ui->redraw();
       }
       else if (update) {
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case 'w':
       if (list.cursoredFile() != NULL) {
-        uicommunicator->newCommand("rawcommand", site->getName(), list.cursoredFile()->getName());
+        ui->goRawCommand(site->getName(), list.cursoredFile()->getName());
       }
       else {
-        uicommunicator->newCommand("rawcommand", site->getName());
+        ui->goRawCommand(site->getName());
       }
       break;
   }

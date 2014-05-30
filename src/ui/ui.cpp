@@ -19,6 +19,7 @@
 #include "infowindow.h"
 #include "uiwindow.h"
 #include "chardraw.h"
+#include "termint.h"
 
 #include "screens/loginscreen.h"
 #include "screens/newkeyscreen.h"
@@ -46,36 +47,80 @@
 
 extern GlobalContext * global;
 
-UserInterface::UserInterface() {
-  sem_init(&initstart, 0, 0);
-  sem_init(&initdone, 0, 0);
-  sem_init(&keyeventdone, 0, 0);
+Ui::Ui() {
+  sem_init(&eventcomplete, 0, 0);
   CharDraw::init();
   main = NULL;
   topwindow = NULL;
   legendenabled = false;
   infoenabled = false;
+  dead = false;
+  showlegend = true;
   pthread_create(&uithread, global->getPthreadAttr(), run, (void *) this);
 #ifdef _ISOC95_SOURCE
   pthread_setname_np(uithread, "UserInterface");
 #endif
+  loginscreen = new LoginScreen(this);
+  newkeyscreen = new NewKeyScreen(this);
+  mainscreen = new MainScreen(this);
+  mainwindows.push_back(mainscreen);
+  confirmationscreen = new ConfirmationScreen(this);
+  mainwindows.push_back(confirmationscreen);
+  editsitescreen = new EditSiteScreen(this);
+  mainwindows.push_back(editsitescreen);
+  sitestatusscreen = new SiteStatusScreen(this);
+  mainwindows.push_back(sitestatusscreen);
+  rawdatascreen = new RawDataScreen(this);
+  mainwindows.push_back(rawdatascreen);
+  rawcommandscreen = new RawCommandScreen(this);
+  mainwindows.push_back(rawcommandscreen);
+  browsescreen = new BrowseScreen(this);
+  mainwindows.push_back(browsescreen);
+  addsectionscreen = new AddSectionScreen(this);
+  mainwindows.push_back(addsectionscreen);
+  newracescreen = new NewRaceScreen(this);
+  mainwindows.push_back(newracescreen);
+  racestatusscreen = new RaceStatusScreen(this);
+  mainwindows.push_back(racestatusscreen);
+  globaloptionsscreen = new GlobalOptionsScreen(this);
+  mainwindows.push_back(globaloptionsscreen);
+  skiplistscreen = new SkipListScreen(this);
+  mainwindows.push_back(skiplistscreen);
+  changekeyscreen = new ChangeKeyScreen(this);
+  mainwindows.push_back(changekeyscreen);
+  eventlogscreen = new EventLogScreen(this);
+  mainwindows.push_back(eventlogscreen);
+  proxyoptionsscreen = new ProxyOptionsScreen(this);
+  mainwindows.push_back(proxyoptionsscreen);
+  editproxyscreen = new EditProxyScreen(this);
+  mainwindows.push_back(editproxyscreen);
+  viewfilescreen = new ViewFileScreen(this);
+  mainwindows.push_back(viewfilescreen);
+  nukescreen = new NukeScreen(this);
+  mainwindows.push_back(nukescreen);
+  fileviewersettingsscreen = new FileViewerSettingsScreen(this);
+  mainwindows.push_back(fileviewersettingsscreen);
+  scoreboardscreen = new ScoreBoardScreen(this);
+  mainwindows.push_back(scoreboardscreen);
+  selectsitesscreen = new SelectSitesScreen(this);
+  mainwindows.push_back(selectsitesscreen);
 }
 
-bool UserInterface::init() {
+bool Ui::init() {
   initret = true;
-  sem_post(&initstart);
-  sem_wait(&initdone);
+  uiqueue.push(UICommand(UI_COMMAND_INIT));
+  sem_wait(&eventcomplete);
   return initret;
 }
 
-void UserInterface::initIntern() {
+void Ui::initIntern() {
   initscr();
   cbreak();
   curs_set(0);
   refresh();
   getmaxyx(stdscr, row, col);
   if (row < 24 || col < 80) {
-    uicommunicator.kill();
+    endwin();
     printf("Error: terminal too small. 80x24 required. (Current %dx%d)\n", col, row);
     initret = false;
   }
@@ -84,14 +129,106 @@ void UserInterface::initIntern() {
 #else
   ESCDELAY = 25;
 #endif
+  mainrow = row;
+  maincol = col;
+  main = newwin(row, col, 0, 0);
+  legend = newwin(2, col, row - 2, 0);
+  info = newwin(2, col, 0, 0);
+  legendwindow = new LegendWindow(this, legend, 2, col);
+  infowindow = new InfoWindow(this, info, 2, col);
+  if (global->getDataFileHandler()->fileExists()) {
+    loginscreen->initialize(mainrow, maincol);
+    topwindow = loginscreen;
+  }
+  else {
+    enableInfo();
+    enableLegend();
+    newkeyscreen->initialize(mainrow, maincol);
+    legendwindow->setText(newkeyscreen->getLegendText());
+    topwindow = newkeyscreen;
+  }
+  infowindow->setLabel(topwindow->getInfoLabel());
+  keypad(stdscr, TRUE);
+  noecho();
+  std::cin.putback('#'); // needed to be able to peek properly
+  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
   global->getIOManager()->registerStdin(this);
   global->getTickPoke()->startPoke(this, "UI", 250, 0);
-  sem_post(&initdone);
+  sem_post(&eventcomplete);
 }
 
+void Ui::backendPush() {
+  topwindow->update();
+  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+}
 
+void Ui::terminalSizeChanged() {
+  uiqueue.push(UICommand(UI_COMMAND_RESIZE));
+  sem_wait(&eventcomplete);
+  redrawAll();
+  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+}
 
-void UserInterface::refreshAll() {
+void Ui::readConfiguration() {
+  std::vector<std::string> lines;
+  global->getDataFileHandler()->getDataFor("UI", &lines);
+  std::vector<std::string>::iterator it;
+  std::string line;
+  for (it = lines.begin(); it != lines.end(); it++) {
+    line = *it;
+    if (line.length() == 0 ||line[0] == '#') continue;
+    size_t tok = line.find('=');
+    std::string setting = line.substr(0, tok);
+    std::string value = line.substr(tok + 1);
+    if (!setting.compare("legend")) {
+      if (!value.compare("true")) {
+        showLegend(true);
+      }
+      else {
+        showLegend(false);
+      }
+    }
+  }
+}
+
+void Ui::writeState() {
+  global->getEventLog()->log("UI", "Writing state...");
+  if (legendEnabled()) {
+    global->getDataFileHandler()->addOutputLine("UI", "legend=true");
+  }
+  else {
+    global->getDataFileHandler()->addOutputLine("UI", "legend=false");
+  }
+}
+
+bool Ui::legendEnabled() {
+  return showlegend;
+}
+
+void Ui::showLegend(bool show) {
+  showlegend = show;
+  if (show) {
+    enableLegend();
+  }
+  else {
+    disableLegend();
+  }
+}
+
+void Ui::kill() {
+  uiqueue.push(UICommand(UI_COMMAND_KILL));
+  for (int i = 0; i < 10; i++) {
+    usleep(100000);
+    if (dead) {
+      break;
+    }
+  }
+  if (!dead) {
+    endwin();
+  }
+}
+
+void Ui::refreshAll() {
   if (legendenabled) {
     wnoutrefresh(legend);
   }
@@ -102,449 +239,500 @@ void UserInterface::refreshAll() {
   doupdate();
 }
 
-void UserInterface::FDData() {
-  keyqueue.push_back(getch());
-  uicommunicator.emitEvent(UI_EVENT_KEYBOARD);
+void Ui::FDData() {
+  int ch = getch();
+  globalKeyBinds(ch);
+  topwindow->keyPressed(ch);
 }
 
-void UserInterface::enableInfo() {
+void Ui::enableInfo() {
   if (!infoenabled) {
     infoenabled = true;
     mainrow = mainrow - 2;
-    wresize(main, mainrow, maincol);
-    mvwin(main, 2, 0);
     redrawAll();
-    curs_set(0);
-    refreshAll();
+    uiqueue.push(UICommand(UI_COMMAND_ADJUST_INFO, true));
   }
 }
 
-void UserInterface::enableLegend() {
+void Ui::disableInfo() {
+  if (infoenabled) {
+    infoenabled = false;
+    mainrow = mainrow + 2;
+    redrawAll();
+    uiqueue.push(UICommand(UI_COMMAND_ADJUST_INFO, false));
+  }
+}
+
+void Ui::enableLegend() {
   if (!legendenabled) {
     legendenabled = true;
     mainrow = mainrow - 2;
-    wresize(main, mainrow, maincol);
     redrawAll();
-    curs_set(0);
-    refreshAll();
+    uiqueue.push(UICommand(UI_COMMAND_ADJUST_LEGEND));
   }
 }
 
-void UserInterface::redrawAll() {
+void Ui::disableLegend() {
+  if (legendenabled) {
+    legendenabled = false;
+    mainrow = mainrow + 2;
+    redrawAll();
+    uiqueue.push(UICommand(UI_COMMAND_ADJUST_LEGEND));
+  }
+}
+
+void Ui::redrawAll() {
   std::vector<UIWindow *>::iterator it;
   for (it = mainwindows.begin(); it != mainwindows.end(); it++) {
     (*it)->resize(mainrow, maincol);
   }
   if (legendenabled) {
     legendwindow->resize(2, col);
+    legendwindow->redraw();
   }
   if (infoenabled) {
     infowindow->resize(2, col);
+    infowindow->redraw();
   }
   if (topwindow != NULL) {
     topwindow->redraw();
   }
 }
 
-void UserInterface::disableInfo() {
-  if (infoenabled) {
-    infoenabled = false;
-    mainrow = mainrow + 2;
-    wresize(main, mainrow, maincol);
-    wmove(main, 0, 0);
-    redrawAll();
-    curs_set(0);
-    refreshAll();
+void Ui::tick(int message) {
+  if (topwindow->autoUpdate()) {
+    topwindow->update();
   }
-}
-
-void UserInterface::disableLegend() {
   if (legendenabled) {
-    legendenabled = false;
-    mainrow = mainrow + 2;
-    wresize(main, mainrow, maincol);
-    redrawAll();
-    curs_set(0);
-    refreshAll();
+    legendwindow->update();
   }
+  if (infoenabled) {
+    infowindow->setText(topwindow->getInfoText());
+  }
+  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 
-void UserInterface::tick(int message) {
-  uicommunicator.emitEvent(UI_EVENT_POKE);
-}
-
-void UserInterface::runInstance() {
-  sem_wait(&initstart);
-  initIntern();
-  mainrow = row;
-  maincol = col;
-  main = newwin(row, col, 0, 0);
-  legend = newwin(2, col, row - 2, 0);
-  info = newwin(2, col, 0, 0);
-  UIWindow * startscreen = NULL;
-  UIWindow * confirmationscreen = NULL;
-  UIWindow * mainscreen = NULL;
-  UIWindow * editsitescreen = NULL;
-  UIWindow * sitestatusscreen = NULL;
-  UIWindow * rawdatascreen = NULL;
-  UIWindow * rawcommandscreen = NULL;
-  UIWindow * browsescreen = NULL;
-  UIWindow * addsectionscreen = NULL;
-  UIWindow * newracescreen = NULL;
-  UIWindow * racestatusscreen = NULL;
-  UIWindow * globaloptionsscreen = NULL;
-  UIWindow * skiplistscreen = NULL;
-  UIWindow * changekeyscreen = NULL;
-  UIWindow * eventlogscreen = NULL;
-  UIWindow * proxyoptionsscreen = NULL;
-  UIWindow * editproxyscreen = NULL;
-  UIWindow * viewfilescreen = NULL;
-  UIWindow * nukescreen = NULL;
-  UIWindow * fileviewersettingsscreen = NULL;
-  UIWindow * scoreboardscreen = NULL;
-  UIWindow * selectsitesscreen = NULL;
-  legendwindow = new LegendWindow(legend, 2, col);
-  infowindow = new InfoWindow(info, 2, col);
-  if (global->getDataFileHandler()->fileExists()) {
-    startscreen = new LoginScreen(main, &uicommunicator, mainrow, maincol);
-    mainwindows.push_back(startscreen);
-  }
-  else {
-    enableInfo();
-    if (uicommunicator.legendEnabled()) {
-      enableLegend();
-    }
-    startscreen = new NewKeyScreen(main, &uicommunicator, mainrow, maincol);
-    legendwindow->setText(startscreen->getLegendText());
-
-    mainwindows.push_back(startscreen);
-  }
-  topwindow = startscreen;
-  infowindow->setLabel(topwindow->getInfoLabel());
-  keypad(stdscr, TRUE);
-  noecho();
-  std::cin.putback('#'); // needed to be able to peek properly
-  refreshAll();
-  int ch;
-  struct winsize size;
-  bool trytodraw;
+void Ui::runInstance() {
   while(1) {
-    int currentevent = uicommunicator.awaitEvent();
-    switch (currentevent) {
-      case UI_EVENT_POKE:
-        if (topwindow->autoUpdate()) {
-          topwindow->update();
-        }
-        if (legendenabled) {
-          legendwindow->update();
-        }
-        if (infoenabled) {
-          infowindow->setText(topwindow->getInfoText());
-          infowindow->update();
-        }
+    UICommand command = uiqueue.pop();
+    switch (command.getCommand()) {
+      case UI_COMMAND_INIT:
+        initIntern();
+        break;
+      case UI_COMMAND_REFRESH:
         refreshAll();
         break;
-      case UI_EVENT_KEYBOARD:
-        ch = keyqueue.front();
-        keyqueue.pop_front();
-        globalKeyBinds(ch);
-        topwindow->keyPressed(ch);
+      case UI_COMMAND_HIGHLIGHT_OFF:
+        wattroff(command.getWindow(), A_REVERSE);
         break;
-      case UI_EVENT_UPDATE:
-        topwindow->update();
+      case UI_COMMAND_HIGHLIGHT_ON:
+        wattron(command.getWindow(), A_REVERSE);
+        break;
+      case UI_COMMAND_CURSOR_SHOW:
+        curs_set(1);
+        break;
+      case UI_COMMAND_CURSOR_HIDE:
+        curs_set(0);
+        break;
+      case UI_COMMAND_CURSOR_MOVE:
+        TermInt::moveCursor(command.getWindow(), command.getRow(), command.getCol());
+        break;
+      case UI_COMMAND_ERASE:
+        werase(command.getWindow());
+        break;
+      case UI_COMMAND_PRINT_STR:
+        TermInt::printStr(command.getWindow(), command.getRow(), command.getCol(),
+            command.getText(), command.getMaxlen(), command.getRightAlign());
+        break;
+      case UI_COMMAND_PRINT_CHAR:
+        TermInt::printChar(command.getWindow(), command.getRow(), command.getCol(),
+            command.getChar());
+        break;
+      case UI_COMMAND_RESIZE:
+        resizeTerm();
+        break;
+      case UI_COMMAND_ADJUST_LEGEND:
+        wresize(main, mainrow, maincol);
         refreshAll();
         break;
-      case UI_EVENT_SHOWLEGEND:
-        enableLegend();
-        break;
-      case UI_EVENT_HIDELEGEND:
-        disableLegend();
-        break;
-      case UI_EVENT_RESIZE:
-        trytodraw = false;
-        if (ioctl(fileno(stdout), TIOCGWINSZ, &size) == 0) {
-          if (size.ws_row >= 5 && size.ws_col >= 10) {
-            trytodraw = true;
-          }
-        }
-        if (trytodraw) {
-          resizeterm(size.ws_row, size.ws_col);
-          endwin();
-          timeout(0);
-          while (getch() != ERR);
-          timeout(-1);
-          refresh();
-          getmaxyx(stdscr, row, col);
-          maincol = col;
-          mainrow = row;
-          if (legendenabled) {
-            mainrow = mainrow - 2;
-          }
-          if (infoenabled) {
-            mainrow = mainrow - 2;
-          }
-          wresize(main, mainrow, maincol);
-          wresize(legend, 2, col);
-          wresize(info, 2, col);
-          mvwin(legend, row - 2, 0);
-          redrawAll();
-          refreshAll();
-        }
-        break;
-      case UI_EVENT_KILL:
-        endwin();
-        uicommunicator.dead();
-        return;
-    }
-    if (uicommunicator.hasNewCommand()) {
-      std::string command = uicommunicator.getCommand();
-      if (command == "editsite") {
-        editsitescreen = new EditSiteScreen(main, &uicommunicator, mainrow, maincol);
-        switchToWindow(editsitescreen);
-      }
-      else if (command == "racestatus") {
-        racestatusscreen = new RaceStatusScreen(main, &uicommunicator, mainrow, maincol);
-        switchToWindow(racestatusscreen);
-      }
-      else if (command == "returnracestatus") {
-        history.clear();
-        topwindow = mainscreen;
-        racestatusscreen = new RaceStatusScreen(main, &uicommunicator, mainrow, maincol);
-        switchToWindow(racestatusscreen);
-      }
-      else if (command == "addsection") {
-        addsectionscreen = new AddSectionScreen(main, &uicommunicator, mainrow, maincol);
-        switchToWindow(addsectionscreen);
-      }
-      else if (command == "viewfile") {
-        viewfilescreen = new ViewFileScreen(main, &uicommunicator, mainrow, maincol);
-        switchToWindow(viewfilescreen);
-      }
-      else if (command == "nuke") {
-        nukescreen = new NukeScreen(main, &uicommunicator, mainrow, maincol);
-        switchToWindow(nukescreen);
-      }
-      else if (command == "fileviewersettings") {
-        fileviewersettingsscreen = new FileViewerSettingsScreen(main, &uicommunicator, mainrow, maincol);
-        switchToWindow(fileviewersettingsscreen);
-      }
-      else if (command == "newrace") {
-        newracescreen = new NewRaceScreen(main, &uicommunicator, mainrow, maincol);
-        switchToWindow(newracescreen);
-      }
-      else if (command == "sitestatus") {
-        sitestatusscreen = new SiteStatusScreen(main, &uicommunicator, mainrow, maincol);
-        switchToWindow(sitestatusscreen);
-      }
-      else if (command == "rawdata") {
-        rawdatascreen = new RawDataScreen(main, &uicommunicator, mainrow, maincol);
-        switchToWindow(rawdatascreen);
-      }
-      else if (command  == "rawcommand") {
-        rawcommandscreen = new RawCommandScreen(main, &uicommunicator, mainrow, maincol);
-        switchToWindow(rawcommandscreen);
-      }
-      else if (command == "browse") {
-        browsescreen = new BrowseScreen(main, &uicommunicator, mainrow, maincol);
-        switchToWindow(browsescreen);
-      }
-      else if (command == "globaloptions") {
-        globaloptionsscreen = new GlobalOptionsScreen(main, &uicommunicator, mainrow, maincol);
-        switchToWindow(globaloptionsscreen);
-      }
-      else if (command == "confirmation") {
-        confirmationscreen = new ConfirmationScreen(main, &uicommunicator, mainrow, maincol);
-        switchToWindow(confirmationscreen);
-      }
-      else if (command == "skiplist") {
-        skiplistscreen = new SkipListScreen(main, &uicommunicator, mainrow, maincol);
-        switchToWindow(skiplistscreen);
-      }
-      else if (command == "proxy") {
-        proxyoptionsscreen = new ProxyOptionsScreen(main, &uicommunicator, mainrow, maincol);
-        switchToWindow(proxyoptionsscreen);
-      }
-      else if (command == "editproxy") {
-        editproxyscreen = new EditProxyScreen(main, &uicommunicator, mainrow, maincol);
-        switchToWindow(editproxyscreen);
-      }
-      else if (command == "eventlog") {
-        eventlogscreen = new EventLogScreen(main, &uicommunicator, mainrow, maincol);
-        switchToWindow(eventlogscreen);
-      }
-      else if (command == "changekey") {
-        changekeyscreen = new ChangeKeyScreen(main, &uicommunicator, mainrow, maincol);
-        switchToWindow(changekeyscreen);
-      }
-      else if (command == "scoreboard") {
-        scoreboardscreen = new ScoreBoardScreen(main, &uicommunicator, mainrow, maincol);
-        switchToWindow(scoreboardscreen);
-      }
-      else if (command == "rawdatajump") {
-        rawdatascreen = new RawDataScreen(main, &uicommunicator, mainrow, maincol);
-        mainwindows.push_back(rawdatascreen);
-        topwindow = rawdatascreen;
-        infowindow->setLabel(topwindow->getInfoLabel());
-        infowindow->setText(topwindow->getInfoText());
-        refreshAll();
-        uicommunicator.checkoutCommand();
-      }
-      else if (command == "selectsites") {
-        selectsitesscreen = new SelectSitesScreen(main, &uicommunicator, mainrow, maincol);
-        mainwindows.push_back(selectsitesscreen);
-        history.push_back(topwindow);
-        topwindow = selectsitesscreen;
-        legendwindow->setText(topwindow->getLegendText());
-        infowindow->setLabel(topwindow->getInfoLabel());
-        infowindow->setText(topwindow->getInfoText());
-        refreshAll();
-        uicommunicator.checkoutCommand();
-      }
-      else if (command == "update") {
-        uicommunicator.checkoutCommand();
-        topwindow->update();
-        refreshAll();
-        uicommunicator.checkoutCommand();
-      }
-      else if (command == "updatesetlegend") {
-        uicommunicator.checkoutCommand();
-        topwindow->update();
-        legendwindow->setText(topwindow->getLegendText());
-        infowindow->setText(topwindow->getInfoText());
-        refreshAll();
-        uicommunicator.checkoutCommand();
-      }
-      else if (command == "updatesetinfo") {
-        uicommunicator.checkoutCommand();
-        topwindow->update();
-        infowindow->setText(topwindow->getInfoText());
-        refreshAll();
-        uicommunicator.checkoutCommand();
-      }
-      else if (command == "updatesetinfolegend") {
-        uicommunicator.checkoutCommand();
-        topwindow->update();
-        legendwindow->setText(topwindow->getLegendText());
-        infowindow->setText(topwindow->getInfoText());
-        refreshAll();
-        uicommunicator.checkoutCommand();
-      }
-      else if (command == "redraw") {
-        uicommunicator.checkoutCommand();
-        topwindow->redraw();
-        infowindow->setText(topwindow->getInfoText());
-        refreshAll();
-      }
-      else if (command == "key") {
-        std::string key = uicommunicator.getArg1();
-        uicommunicator.checkoutCommand();
-        bool result = global->getDataFileHandler()->tryDecrypt(key);
-        if (result) {
-          global->getEventLog()->log("UI", "Data decryption successful.");
-          global->getIOManager()->readConfiguration();
-          global->getSiteManager()->readConfiguration();
-          global->getRemoteCommandHandler()->readConfiguration();
-          global->getExternalFileViewing()->readConfiguration();
-          uicommunicator.readConfiguration();
-          global->getSkipList()->readConfiguration();
-          global->getProxyManager()->readConfiguration();
-          global->getLocalStorage()->readConfiguration();
-          enableInfo();
-          if (uicommunicator.legendEnabled()) {
-            enableLegend();
-          }
-          mainscreen = new MainScreen(main, &uicommunicator, mainrow, maincol);
-          switchToWindow(mainscreen);
+      case UI_COMMAND_ADJUST_INFO:
+        wresize(main, mainrow, maincol);
+        if (command.getShow()) {
+          mvwin(main, 2, 0);
         }
         else {
-          global->getEventLog()->log("UI", "Data decryption failed.");
-          topwindow->update();
-          refreshAll();
+          mvwin(main, 0, 0);
         }
-      }
-      else if (command == "newkey") {
-        std::string key = uicommunicator.getArg1();
-        uicommunicator.checkoutCommand();
-        global->getDataFileHandler()->newDataFile(key);
-        mainscreen = new MainScreen(main, &uicommunicator, mainrow, maincol);
-        switchToWindow(mainscreen);
-      }
-      else if (command == "main") {
-        uicommunicator.checkoutCommand();
-        mainscreen->redraw();
-        topwindow = mainscreen;
-        legendwindow->setText(topwindow->getLegendText());
-        infowindow->setLabel(topwindow->getInfoLabel());
-        infowindow->setText(topwindow->getInfoText());
         refreshAll();
-      }
-      else if (command == "return") {
-        topwindow = history.back();
-        history.pop_back();
-        uicommunicator.checkoutCommand();
-        legendwindow->setText(topwindow->getLegendText());
-        infowindow->setLabel(topwindow->getInfoLabel());
-        infowindow->setText(topwindow->getInfoText());
-        topwindow->redraw();
-        refreshAll();
-      }
-      else if (command == "returnnuke") {
-        topwindow = history.back();
-        history.pop_back();
-        topwindow->redraw();
-        legendwindow->setText(topwindow->getLegendText());
-        infowindow->setLabel(topwindow->getInfoLabel());
-        infowindow->setText(topwindow->getInfoText());
-        uicommunicator.checkoutCommand();
-        refreshAll();
-      }
-      else if (command == "returnselectsites") {
-        topwindow = history.back();
-        history.pop_back();
-        topwindow->redraw();
-        legendwindow->setText(topwindow->getLegendText());
-        infowindow->setLabel(topwindow->getInfoLabel());
-        infowindow->setText(topwindow->getInfoText());
-        uicommunicator.checkoutCommand();
-        refreshAll();
-      }
-      else if (command == "yes" || command == "no") {
-        topwindow = history.back();
-        history.pop_back();
-        legendwindow->setText(topwindow->getLegendText());
-        infowindow->setLabel(topwindow->getInfoLabel());
-        infowindow->setText(topwindow->getInfoText());
-        topwindow->update();
-        refreshAll();
-      }
+        break;
+      case UI_COMMAND_KILL:
+        endwin();
+        dead = true;
+        return;
     }
   }
 }
 
-void UserInterface::switchToWindow(UIWindow * window) {
-  uicommunicator.checkoutCommand();
+void Ui::switchToWindow(UIWindow * window) {
   history.push_back(topwindow);
   legendwindow->setText(window->getLegendText());
   infowindow->setLabel(window->getInfoLabel());
   infowindow->setText(window->getInfoText());
-  mainwindows.push_back(window);
   topwindow = window;
-  refreshAll();
+  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 
-void * UserInterface::run(void * arg) {
-  ((UserInterface *) arg)->runInstance();
+void * Ui::run(void * arg) {
+  ((Ui *) arg)->runInstance();
   return NULL;
 }
 
-UICommunicator * UserInterface::getCommunicator() {
-  return &uicommunicator;
-}
-
-void UserInterface::globalKeyBinds(int ch) {
+void Ui::globalKeyBinds(int ch) {
   switch(ch) {
     case 'K':
       global->getExternalFileViewing()->killAll();
       break;
   }
+}
+
+void Ui::resizeTerm() {
+  struct winsize size;
+  bool trytodraw = false;
+  if (ioctl(fileno(stdout), TIOCGWINSZ, &size) == 0) {
+    if (size.ws_row >= 5 && size.ws_col >= 10) {
+      trytodraw = true;
+    }
+  }
+  if (trytodraw) {
+    resizeterm(size.ws_row, size.ws_col);
+    endwin();
+    timeout(0);
+    while (getch() != ERR);
+    timeout(-1);
+    refresh();
+    getmaxyx(stdscr, row, col);
+    unsigned int newmainrow = row;
+    if (legendenabled) {
+      newmainrow = newmainrow - 2;
+    }
+    if (infoenabled) {
+      newmainrow = newmainrow - 2;
+    }
+    maincol = col;
+    mainrow = newmainrow;
+    wresize(main, mainrow, maincol);
+    wresize(legend, 2, col);
+    wresize(info, 2, col);
+    mvwin(legend, row - 2, 0);
+  }
+  sem_post(&eventcomplete);
+}
+
+void Ui::returnToLast() {
+  switchToLast();
+  topwindow->redraw();
+  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+}
+
+void Ui::update() {
+  topwindow->update();
+  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+}
+
+void Ui::setLegend() {
+  legendwindow->setText(topwindow->getLegendText());
+  infowindow->setText(topwindow->getInfoText());
+  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+}
+
+void Ui::setInfo() {
+  infowindow->setText(topwindow->getInfoText());
+  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+}
+
+void Ui::redraw() {
+  topwindow->redraw();
+  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+}
+
+void Ui::hideCursor() {
+  uiqueue.push(UICommand(UI_COMMAND_CURSOR_HIDE));
+}
+
+void Ui::showCursor() {
+  uiqueue.push(UICommand(UI_COMMAND_CURSOR_SHOW));
+}
+
+void Ui::erase() {
+  erase(main);
+}
+
+void Ui::erase(WINDOW * window) {
+  uiqueue.push(UICommand(UI_COMMAND_ERASE, window));
+}
+
+void Ui::moveCursor(unsigned int row, unsigned int col) {
+  uiqueue.push(UICommand(UI_COMMAND_CURSOR_MOVE, main, row, col));
+}
+
+void Ui::highlight(bool highlight) {
+  if (highlight) {
+    uiqueue.push(UICommand(UI_COMMAND_HIGHLIGHT_ON, main));
+  }
+  else {
+    uiqueue.push(UICommand(UI_COMMAND_HIGHLIGHT_OFF, main));
+  }
+}
+
+void Ui::printStr(unsigned int row, unsigned int col, std::string str) {
+  printStr(row, col, str, false);
+}
+
+void Ui::printStr(WINDOW * window, unsigned int row, unsigned int col, std::string str) {
+  printStr(window, row, col, str, str.length(), false);
+}
+
+void Ui::printStr(unsigned int row, unsigned int col, std::string str, bool highlight) {
+  printStr(row, col, str, str.length(), highlight, false);
+}
+
+void Ui::printStr(unsigned int row, unsigned int col, std::string str, unsigned int maxlen) {
+  printStr(row, col, str, maxlen, false, false);
+}
+
+void Ui::printStr(unsigned int row, unsigned int col, std::string str, unsigned int maxlen, bool highlight) {
+  printStr(row, col, str, maxlen, highlight, false);
+}
+
+void Ui::printStr(WINDOW * window, unsigned int row, unsigned int col, std::string str, unsigned int maxlen, bool highlight) {
+  printStr(window, row, col, str, maxlen, highlight, false);
+}
+
+void Ui::printStr(unsigned int row, unsigned int col, std::string str, unsigned int maxlen, bool highlight, bool rightalign) {
+  printStr(main, row, col, str, maxlen, highlight, rightalign);
+}
+
+void Ui::printStr(WINDOW * window, unsigned int row, unsigned int col, std::string str, unsigned int maxlen, bool highlight, bool rightalign) {
+  if (highlight) {
+    this->highlight(true);
+  }
+  uiqueue.push(UICommand(UI_COMMAND_PRINT_STR, window, row, col, str, maxlen, rightalign));
+  if (highlight) {
+    this->highlight(false);
+  }
+}
+
+void Ui::printChar(unsigned int row, unsigned int col, unsigned int c) {
+  printChar(main, row, col, c);
+}
+
+void Ui::printChar(WINDOW * window, unsigned int row, unsigned int col, unsigned int c) {
+  printChar(window, row, col, c, false);
+}
+
+void Ui::printChar(unsigned int row, unsigned int col, unsigned int c, bool highlight) {
+  printChar(main, row, col, c, highlight);
+}
+
+void Ui::printChar(WINDOW * window, unsigned int row, unsigned int col, unsigned int c, bool highlight) {
+  if (highlight) {
+    this->highlight(true);
+  }
+  uiqueue.push(UICommand(UI_COMMAND_PRINT_CHAR, window, row, col, c));
+  if (highlight) {
+    this->highlight(false);
+  }
+}
+
+void Ui::goRawCommand(std::string command) {
+  goRawCommand(command, "");
+}
+
+void Ui::goRawCommand(std::string command, std::string arg) {
+  rawcommandscreen->initialize(mainrow, maincol, command, arg);
+  switchToWindow(rawcommandscreen);
+}
+
+void Ui::goConfirmation(std::string message) {
+  confirmationscreen->initialize(mainrow, maincol, message);
+  switchToWindow(confirmationscreen);
+}
+
+void Ui::goNuke(std::string site, std::string target, FileList * filelist) {
+  nukescreen->initialize(mainrow, maincol, site, target, filelist);
+  switchToWindow(nukescreen);
+}
+
+void Ui::goViewFile(std::string site, std::string file, FileList * filelist) {
+  viewfilescreen->initialize(mainrow, maincol, site, file, filelist);
+  switchToWindow(viewfilescreen);
+}
+
+void Ui::goAddSection(std::string site, std::string path) {
+  addsectionscreen->initialize(mainrow, maincol, site, path);
+  switchToWindow(addsectionscreen);
+}
+
+void Ui::goNewRace(std::string site, std::string section, std::string release) {
+  newracescreen->initialize(mainrow, maincol, site, section, release);
+  switchToWindow(newracescreen);
+}
+
+void Ui::goSelectSites(std::string currentsitelist, std::string message, Site * excludedsite) {
+  selectsitesscreen->initialize(mainrow, maincol, currentsitelist, message, excludedsite);
+  switchToWindow(selectsitesscreen);
+}
+
+void Ui::goSkiplist() {
+  skiplistscreen->initialize(mainrow, maincol);
+  switchToWindow(skiplistscreen);
+}
+
+void Ui::goChangeKey() {
+  changekeyscreen->initialize(mainrow, maincol);
+  switchToWindow(changekeyscreen);
+}
+
+void Ui::goProxy() {
+  proxyoptionsscreen->initialize(mainrow, maincol);
+  switchToWindow(proxyoptionsscreen);
+}
+
+void Ui::goFileViewerSettings() {
+  fileviewersettingsscreen->initialize(mainrow, maincol);
+  switchToWindow(fileviewersettingsscreen);
+}
+
+void Ui::goSiteStatus(std::string site) {
+  sitestatusscreen->initialize(mainrow, maincol, site);
+  switchToWindow(sitestatusscreen);
+}
+
+void Ui::goRaceStatus(std::string race) {
+  racestatusscreen->initialize(mainrow, maincol, race);
+  switchToWindow(racestatusscreen);
+}
+
+void Ui::goGlobalOptions() {
+  globaloptionsscreen->initialize(mainrow, maincol);
+  switchToWindow(globaloptionsscreen);
+}
+
+void Ui::goEventLog() {
+  eventlogscreen->initialize(mainrow, maincol);
+  switchToWindow(eventlogscreen);
+}
+
+void Ui::goScoreBoard() {
+  scoreboardscreen->initialize(mainrow, maincol);
+  switchToWindow(scoreboardscreen);
+}
+
+void Ui::goEditSite(std::string site) {
+  editsitescreen->initialize(mainrow, maincol, "edit", site);
+  switchToWindow(editsitescreen);
+}
+
+void Ui::goAddSite() {
+  editsitescreen->initialize(mainrow, maincol, "add", "");
+  switchToWindow(editsitescreen);
+}
+
+void Ui::goBrowse(std::string site) {
+  browsescreen->initialize(mainrow, maincol, site);
+  switchToWindow(browsescreen);
+}
+
+void Ui::goAddProxy() {
+  editproxyscreen->initialize(mainrow, maincol, "add", "");
+  switchToWindow(editproxyscreen);
+}
+
+void Ui::goEditProxy(std::string proxy) {
+  editproxyscreen->initialize(mainrow, maincol, "edit", proxy);
+  switchToWindow(editproxyscreen);
+}
+
+void Ui::goRawData(std::string site) {
+  rawdatascreen->initialize(mainrow, maincol, site, 0);
+  switchToWindow(rawdatascreen);
+}
+
+void Ui::goRawDataJump(std::string site, int id) {
+  rawdatascreen->initialize(mainrow, maincol, site, id);
+  topwindow = rawdatascreen;
+  infowindow->setLabel(topwindow->getInfoLabel());
+  infowindow->setText(topwindow->getInfoText());
+  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+}
+
+void Ui::returnSelectSites(std::string sites) {
+  switchToLast();
+  topwindow->command("returnselectsites", sites);
+  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+}
+
+void Ui::key(std::string key) {
+  bool result = global->getDataFileHandler()->tryDecrypt(key);
+  if (result) {
+    global->getEventLog()->log("UI", "Data decryption successful.");
+    global->getIOManager()->readConfiguration();
+    global->getSiteManager()->readConfiguration();
+    global->getRemoteCommandHandler()->readConfiguration();
+    global->getExternalFileViewing()->readConfiguration();
+    readConfiguration();
+    global->getSkipList()->readConfiguration();
+    global->getProxyManager()->readConfiguration();
+    global->getLocalStorage()->readConfiguration();
+    enableInfo();
+    if (legendEnabled()) {
+      enableLegend();
+    }
+    mainscreen->initialize(mainrow, maincol);
+    switchToWindow(mainscreen);
+  }
+  else {
+    global->getEventLog()->log("UI", "Data decryption failed.");
+    topwindow->update();
+    uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+  }
+}
+
+void Ui::newKey(std::string newkey) {
+  global->getDataFileHandler()->newDataFile(newkey);
+  mainscreen->initialize(mainrow, maincol);
+  switchToWindow(mainscreen);
+}
+
+void Ui::confirmYes() {
+  switchToLast();
+  topwindow->command("yes");
+  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+}
+
+void Ui::confirmNo() {
+  switchToLast();
+  topwindow->command("no");
+  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+}
+
+void Ui::returnNuke(int reqid) {
+  switchToLast();
+  topwindow->command("returnnuke", global->int2Str(reqid));
+  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+}
+
+void Ui::returnRaceStatus(std::string race) {
+  history.clear();
+  topwindow = mainscreen;
+  racestatusscreen->initialize(mainrow, maincol, race);
+  switchToWindow(racestatusscreen);
+}
+
+void Ui::switchToLast() {
+  topwindow = history.back();
+  history.pop_back();
+  legendwindow->setText(topwindow->getLegendText());
+  infowindow->setLabel(topwindow->getInfoLabel());
+  infowindow->setText(topwindow->getInfoText());
 }

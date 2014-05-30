@@ -1,7 +1,7 @@
 #include "rawbuffer.h"
 
 #include "globalcontext.h"
-#include "ui/uicommunicator.h"
+#include "uibase.h"
 
 RawBuffer::RawBuffer(unsigned int maxlength, std::string site, std::string id) {
   latestp = 0;
@@ -61,7 +61,7 @@ void RawBuffer::write(std::string s) {
     }
   }
   if (uiwatching) {
-    global->getUICommunicator()->backendPush();
+    global->getUIBase()->backendPush();
   }
 }
 

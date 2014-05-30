@@ -4,20 +4,20 @@
 
 #include "../menuselectoption.h"
 
-class UICommunicator;
 class SiteManager;
 class MenuSelectOption;
+class Site;
 
 class SelectSitesScreen : public UIWindow {
 public:
-  SelectSitesScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  SelectSitesScreen(Ui *);
+  void initialize(unsigned int, unsigned int, std::string, std::string, Site *);
   void redraw();
   void update();
   void keyPressed(unsigned int);
   std::string getLegendText();
   std::string getInfoLabel();
 private:
-  UICommunicator * uicommunicator;
   SiteManager * sm;
   MenuSelectOption mso;
   std::string purpose;

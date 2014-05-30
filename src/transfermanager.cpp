@@ -2,7 +2,7 @@
 
 #include "scoreboardelement.h"
 #include "transfermonitor.h"
-#include "ui/uicommunicator.h"
+#include "uibase.h"
 #include "globalcontext.h"
 
 extern GlobalContext * global;
@@ -65,7 +65,7 @@ void TransferManager::transferSuccessful(TransferMonitor * monitor) {
   }
   transferstatus[transfermap[monitor]] = TRANSFER_SUCCESSFUL;
   if (push) {
-    global->getUICommunicator()->backendPush();
+    global->getUIBase()->backendPush();
   }
 }
 
@@ -76,6 +76,6 @@ void TransferManager::transferFailed(TransferMonitor * monitor, int err) {
   }
   transferstatus[transfermap[monitor]] = TRANSFER_FAILED;
   if (push) {
-    global->getUICommunicator()->backendPush();
+    global->getUIBase()->backendPush();
   }
 }

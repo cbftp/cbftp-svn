@@ -1,7 +1,6 @@
 #include "fileviewersettingsscreen.h"
 
-#include "../uicommunicator.h"
-#include "../termint.h"
+#include "../ui.h"
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptionelement.h"
 #include "../menuselectoptiontextbutton.h"
@@ -12,8 +11,11 @@
 
 extern GlobalContext * global;
 
-FileViewerSettingsScreen::FileViewerSettingsScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  this->uicommunicator = uicommunicator;
+FileViewerSettingsScreen::FileViewerSettingsScreen(Ui * ui) {
+  this->ui = ui;
+}
+
+void FileViewerSettingsScreen::initialize(unsigned int row, unsigned int col) {
   active = false;
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel";
   currentlegendtext = defaultlegendtext;
@@ -21,6 +23,7 @@ FileViewerSettingsScreen::FileViewerSettingsScreen(WINDOW * window, UICommunicat
   ls = global->getLocalStorage();
   unsigned int y = 1;
   unsigned int x = 1;
+  mso.clear();
   mso.addStringField(y++, x, "temppath", "Temporary download path:", ls->getTempPath(), false, 128, 128);
   y++;
   mso.addStringField(y++, x, "video", "Video viewer:", efv->getVideoViewer(), false);
@@ -29,11 +32,11 @@ FileViewerSettingsScreen::FileViewerSettingsScreen(WINDOW * window, UICommunicat
   mso.addStringField(y++, x, "pdf", "PDF viewer:", efv->getPDFViewer(), false);
   mso.makeLeavableDown();
   mso.enterFocusFrom(0);
-  init(window, row, col);
+  init(row, col);
 }
 
 void FileViewerSettingsScreen::redraw() {
-  werase(window);
+  ui->erase();
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     MenuSelectOptionElement * msoe = mso.getElement(i);
@@ -41,28 +44,24 @@ void FileViewerSettingsScreen::redraw() {
     if (mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    if (highlight) wattron(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-    if (highlight) wattroff(window, A_REVERSE);
-    TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
 }
 
 void FileViewerSettingsScreen::update() {
   MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
-  wattron(window, A_REVERSE);
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-  wattroff(window, A_REVERSE);
-  TermInt::printStr(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
+  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   if (active && msoe->cursorPosition() >= 0) {
-    curs_set(1);
-    TermInt::moveCursor(window, msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
+    ui->showCursor();
+    ui->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
   }
   else {
-    curs_set(0);
+    ui->hideCursor();
   }
 }
 
@@ -72,35 +71,37 @@ void FileViewerSettingsScreen::keyPressed(unsigned int ch) {
       activeelement->deactivate();
       active = false;
       currentlegendtext = defaultlegendtext;
-      uicommunicator->newCommand("updatesetlegend");
+      ui->update();
+      ui->setLegend();
       return;
     }
     activeelement->inputChar(ch);
-    uicommunicator->newCommand("update");
+    ui->update();
     return;
   }
   bool activation;
   switch(ch) {
     case KEY_UP:
       if (mso.goUp()) {
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case KEY_DOWN:
       if (mso.goDown()) {
-        uicommunicator->newCommand("update");
+        ui->update();
       }
       break;
     case 10:
       activation = mso.getElement(mso.getSelectionPointer())->activate();
       if (!activation) {
-        uicommunicator->newCommand("update");
+        ui->update();
         break;
       }
       active = true;
       activeelement = mso.getElement(mso.getSelectionPointer());
       currentlegendtext = activeelement->getLegendText();
-      uicommunicator->newCommand("updatesetlegend");
+      ui->update();
+      ui->setLegend();
       break;
     case 'd':
       for(unsigned int i = 0; i < mso.size(); i++) {
@@ -122,11 +123,11 @@ void FileViewerSettingsScreen::keyPressed(unsigned int ch) {
           efv->setPDFViewer(((MenuSelectOptionTextField *)msoe)->getData());
         }
       }
-      uicommunicator->newCommand("return");
+      ui->returnToLast();
       break;
     case 27: // esc
     case 'c':
-      uicommunicator->newCommand("return");
+      ui->returnToLast();
       break;
   }
 }

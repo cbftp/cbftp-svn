@@ -4,12 +4,12 @@
 #include "../menuselectoption.h"
 
 class MenuSelectOptionElement;
-class UICommunicator;
 class Site;
 
 class AddSectionScreen : public UIWindow {
 public:
-  AddSectionScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  AddSectionScreen(Ui *);
+  void initialize(unsigned int, unsigned int, std::string, std::string);
   void update();
   void redraw();
   void keyPressed(unsigned int);
@@ -22,5 +22,4 @@ private:
   bool active;
   MenuSelectOptionElement * activeelement;
   MenuSelectOption mso;
-  UICommunicator * uicommunicator;
 };

@@ -4,19 +4,21 @@
 #include "../../rawbuffer.h"
 #include "../../globalcontext.h"
 
-#include "../uicommunicator.h"
-#include "../termint.h"
+#include "../ui.h"
 
 extern GlobalContext * global;
 
-EventLogScreen::EventLogScreen(WINDOW * window, UICommunicator * uicommunicator, unsigned int row, unsigned int col) {
-  this->uicommunicator = uicommunicator;
-  uicommunicator->expectBackendPush();
+EventLogScreen::EventLogScreen(Ui * ui) {
+  this->ui = ui;
+}
+
+void EventLogScreen::initialize(unsigned int row, unsigned int col) {
+  expectbackendpush = true;
   this->rawbuf = global->getEventLog()->getRawBuffer();
   rawbuf->uiWatching(true);
   readfromcopy = false;
   copyreadpos = 0;
-  init(window, row, col);
+  init(row, col);
 }
 
 void EventLogScreen::redraw() {
@@ -24,17 +26,17 @@ void EventLogScreen::redraw() {
 }
 
 void EventLogScreen::update() {
-  werase(window);
+  ui->erase();
   if (!readfromcopy) {
     unsigned int numlinestoprint = rawbuf->getSize() < row ? rawbuf->getSize() : row;
     for (unsigned int i = 0; i < numlinestoprint; i++) {
-      TermInt::printStr(window, i, 0, rawbuf->getLine(numlinestoprint - i - 1));
+      ui->printStr(i, 0, rawbuf->getLine(numlinestoprint - i - 1));
     }
   }
   else {
     unsigned int numlinestoprint = copysize < row ? copysize : row;
     for (unsigned int i = 0; i < numlinestoprint; i++) {
-      TermInt::printStr(window, i, 0, rawbuf->getLineCopy(numlinestoprint - i - 1 + copyreadpos));
+      ui->printStr(i, 0, rawbuf->getLineCopy(numlinestoprint - i - 1 + copyreadpos));
     }
   }
 }
@@ -57,7 +59,7 @@ void EventLogScreen::keyPressed(unsigned int ch) {
           copyreadpos = copysize - row;
         }
       }
-      uicommunicator->newCommand("update");
+      ui->update();
       break;
     case KEY_NPAGE:
       if (readfromcopy) {
@@ -71,12 +73,12 @@ void EventLogScreen::keyPressed(unsigned int ch) {
           copyreadpos = copyreadpos - row / 2;
         }
       }
-      uicommunicator->newCommand("update");
+      ui->update();
       break;
     case 10:
     case 27: // esc
       rawbuf->uiWatching(false);
-      uicommunicator->newCommand("return");
+      ui->returnToLast();
       break;
   }
 }

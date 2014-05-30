@@ -5,14 +5,15 @@
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
 
-class UICommunicator;
 class MenuSelectOptionElement;
 class Site;
 class SiteLogic;
+class FileList;
 
 class NukeScreen : public UIWindow {
 public:
-  NukeScreen(WINDOW *, UICommunicator *, unsigned int, unsigned int);
+  NukeScreen(Ui *);
+  void initialize(unsigned int, unsigned int, std::string, std::string, FileList *);
   void update();
   void redraw();
   void keyPressed(unsigned int);
@@ -29,7 +30,6 @@ private:
   std::string section;
   MenuSelectOptionElement * activeelement;
   MenuSelectOption mso;
-  UICommunicator * uicommunicator;
   std::string release;
   std::string path;
 };
