@@ -29,6 +29,7 @@ void NewRaceScreen::initialize(unsigned int row, unsigned int col, std::string s
   size_t splitpos;
   bool sectionset = false;
   int sectx = x + std::string("Section: ").length();
+  msos.clear();
   while (sectionstring.length() > 0) {
     splitpos = sectionstring.find(";");
     std::string section;

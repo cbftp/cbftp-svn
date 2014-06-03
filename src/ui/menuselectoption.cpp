@@ -219,6 +219,7 @@ void MenuSelectOption::enterFocusFrom(int dir) {
   else {
     pointer = 0;
   }
+  lastpointer = pointer;
 }
 
 unsigned int MenuSelectOption::size() {
