@@ -211,6 +211,13 @@ void MenuSelectOption::clear() {
   options.clear();
 }
 
+void MenuSelectOption::reset() {
+  clear();
+  pointer = 0;
+  lastpointer = 0;
+  focus = false;
+}
+
 void MenuSelectOption::enterFocusFrom(int dir) {
   focus = true;
   if (dir == 2) { // bottom

@@ -35,4 +35,5 @@ class MenuSelectOption : public FocusableArea {
     void enterFocusFrom(int);
     void clear();
     void checkPointer();
+    void reset();
 };

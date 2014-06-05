@@ -29,7 +29,7 @@ void NewRaceScreen::initialize(unsigned int row, unsigned int col, std::string s
   size_t splitpos;
   bool sectionset = false;
   int sectx = x + std::string("Section: ").length();
-  msos.clear();
+  msos.reset();
   while (sectionstring.length() > 0) {
     splitpos = sectionstring.find(";");
     std::string section;
@@ -54,6 +54,7 @@ void NewRaceScreen::initialize(unsigned int row, unsigned int col, std::string s
   startsite = global->getSiteManager()->getSite(site);
   focusedarea = &msos;
   msos.makeLeavableDown();
+  mso.reset();
   mso.makeLeavableUp();
   msos.enterFocusFrom(0);
   populateSiteList();
