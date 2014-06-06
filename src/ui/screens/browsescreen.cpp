@@ -348,6 +348,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       changedsort = true;
       tickcount = 0;
       ui->redraw();
+      ui->setInfo();
       break;
     case 'S':
       sortmethod = 0;
@@ -355,6 +356,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       changedsort = true;
       tickcount = 0;
       ui->redraw();
+      ui->setInfo();
       break;
     case 'p':
       resort = true;
