@@ -241,7 +241,7 @@ void Race::reportSize(SiteRace * sr, FileList * fl, std::string subpath, std::li
   }
   int minnumsites = highestnumsites / 2;
   for (it3 = sizelocationtrackers[subpath].begin(); it3 != sizelocationtrackers[subpath].end(); it3++) {
-    if (it3->second.numSites() > minnumsites) {
+    if (it3->second.numSites() > minnumsites || sites.size() == 2) {
       thisguessedsize++;
     }
   }
