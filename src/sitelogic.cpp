@@ -410,8 +410,7 @@ void SiteLogic::commandFail(int id) {
       if (conns[id]->hasMKDCWDTarget()) {
         if (!site->getAllowUpload() || site->isAffiliated(conns[id]->currentSiteRace()->getGroup())) {
           conns[id]->finishMKDCWDTarget();
-          connstatetracker[id].setIdle();
-          connstatetracker[id].delayedCommand("handle", SLEEPDELAY * 6);
+          handleFail(id);
           return;
         }
         conns[id]->doMKD(conns[id]->getTargetPath());
@@ -436,8 +435,7 @@ void SiteLogic::commandFail(int id) {
       {
         SiteRace * currentrace = conns[id]->currentSiteRace();
         if (currentrace != NULL && currentrace->pathVisited(conns[id]->getTargetPath())) {
-          connstatetracker[id].setIdle();
-          connstatetracker[id].delayedCommand("handle", SLEEPDELAY * 6);
+          handleFail(id);
           return;
         }
       }
@@ -454,8 +452,7 @@ void SiteLogic::commandFail(int id) {
           SiteRace * currentrace = conns[id]->currentSiteRace();
           if (currentrace != NULL) {
             if (currentrace->pathVisited(newattempt)) {
-              connstatetracker[id].setIdle();
-              connstatetracker[id].delayedCommand("handle", SLEEPDELAY * 6);
+              handleFail(id);
               return;
             }
             currentrace->addVisitedPath(newattempt);
@@ -464,8 +461,7 @@ void SiteLogic::commandFail(int id) {
           return;
         }
         else {
-          connstatetracker[id].setIdle();
-          connstatetracker[id].delayedCommand("handle", SLEEPDELAY * 6);
+          handleFail(id);
           return;
         }
       }
@@ -553,6 +549,18 @@ void SiteLogic::commandFail(int id) {
     reportTransferErrorAndFinish(id, connstatetracker[id].getTransferType(), 3);
   }
   conns[id]->reconnect();
+}
+
+void SiteLogic::handleFail(int id) {
+  if (connstatetracker[id].hasTransfer()) {
+    handleTransferFail(id, connstatetracker[id].getTransferType(), 0);
+    return;
+  }
+  if (!connstatetracker[id].isReady()) {
+    return;
+  }
+  connstatetracker[id].setIdle();
+  connstatetracker[id].delayedCommand("handle", SLEEPDELAY * 6);
 }
 
 void SiteLogic::handleTransferFail(int id, int err) {
