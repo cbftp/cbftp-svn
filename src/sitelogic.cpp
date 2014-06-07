@@ -203,6 +203,7 @@ void SiteLogic::commandSuccess(int id) {
     case 13: // PORT
       if (connstatetracker[id].hasTransfer()) {
         connstatetracker[id].getTransferMonitor()->activeReady();
+        return;
       }
       break;
     case 14: // CWD
