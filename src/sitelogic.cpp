@@ -578,13 +578,19 @@ void SiteLogic::handleTransferFail(int id, int type, int err) {
     reportTransferErrorAndFinish(id, type, err);
   }
   else {
-    if (type != CST_UPLOAD) {
-      global->getEventLog()->log("SiteLogic", "BUG: Returned failed download (code " +
-          global->int2Str(err) + ") without having a transfer, shouldn't happen!");
-    }
-    else {
-      global->getEventLog()->log("SiteLogic", "BUG: Returned failed upload (code " +
-          global->int2Str(err) + ") without having a transfer, shouldn't happen!");
+    switch (type) {
+      case CST_DOWNLOAD:
+        global->getEventLog()->log("SiteLogic", "BUG: Returned failed download (code " +
+            global->int2Str(err) + ") without having a transfer, shouldn't happen!");
+        break;
+      case CST_UPLOAD:
+        global->getEventLog()->log("SiteLogic", "BUG: Returned failed upload (code " +
+            global->int2Str(err) + ") without having a transfer, shouldn't happen!");
+        break;
+      case CST_LIST:
+        global->getEventLog()->log("SiteLogic", "BUG: Returned failed LIST (code " +
+            global->int2Str(err) + ") without having a transfer, shouldn't happen!");
+        break;
     }
   }
   connstatetracker[id].setIdle();
@@ -1528,6 +1534,9 @@ void SiteLogic::getFileListConn(int id, bool hiddenfiles) {
 }
 
 void SiteLogic::getFileListConn(int id, SiteRace * siterace, FileList * filelist) {
+  if (filelist == NULL) {
+    *(int*)0=0; // crash on purpose
+  }
   if (site->getListCommand() == SITE_LIST_STAT) {
     conns[id]->doSTAT(siterace, filelist);
   }

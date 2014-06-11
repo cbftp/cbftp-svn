@@ -43,6 +43,7 @@ private:
   RecursiveCommandLogic * recursivelogic;
   void setTransfer(TransferMonitor *, std::string, std::string, int, bool, bool, std::string, bool);
   void setList(TransferMonitor *, bool, std::string, bool);
+  void event();
 public:
   ConnStateTracker();
   void delayedCommand(std::string, int);

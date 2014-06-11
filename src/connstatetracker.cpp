@@ -89,28 +89,32 @@ DelayedCommand ConnStateTracker::getCommand() {
 
 void ConnStateTracker::setDisconnected() {
   loggedin = false;
+  delayedcommands.clear();
   idletime = 0;
   state = 0;
 }
 
 void ConnStateTracker::setIdle() {
-  delayedcommands.clear();
-  idletime = 0;
-  transferlocked = false;
+  event();
   state = 1;
 }
 
 void ConnStateTracker::setReady() {
-  delayedcommands.clear();
-  idletime = 0;
-  transferlocked = false;
+  event();
   state = 2;
 }
 
 void ConnStateTracker::setBusy() {
+  event();
+  state = 3;
+}
+
+void ConnStateTracker::event() {
+  if (transferlocked) {
+    *(int*)0=0; // crash on purpose
+  }
   delayedcommands.clear();
   idletime = 0;
-  state = 3;
 }
 
 bool ConnStateTracker::isDisconnected() {
