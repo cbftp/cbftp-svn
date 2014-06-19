@@ -41,6 +41,7 @@ void TransferMonitor::engage(std::string sfile, SiteLogic * sls, FileList * fls,
   type = TM_TYPE_FXP;
   timestamp = 0;
   ssl = false;
+  ts = NULL;
   if (!sls->lockDownloadConn(spath, sfile, &src)) {
     tm->transferFailed(this, 4);
     return;
@@ -88,6 +89,7 @@ void TransferMonitor::engage(std::string sfile, SiteLogic * sls, FileList * fls)
   type = TM_TYPE_LOCAL;
   timestamp = 0;
   ssl = false;
+  ts = NULL;
   if (!sls->lockDownloadConn(spath, sfile, &src)) return;
   status = TM_STATUS_AWAITING_PASSIVE;
   int spol = sls->getSite()->getSSLTransferPolicy();
@@ -114,6 +116,7 @@ void TransferMonitor::engage(SiteLogic * sls, int connid) {
   timestamp = 0;
   this->sls = sls;
   ssl = false;
+  ts = NULL;
   int spol = sls->getSite()->getSSLTransferPolicy();
   if (spol == SITE_SSL_ALWAYS_ON || spol == SITE_SSL_PREFER_ON) {
     ssl = true;

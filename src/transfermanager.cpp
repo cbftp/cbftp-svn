@@ -68,7 +68,9 @@ void TransferManager::transferSuccessful(TransferMonitor * monitor) {
   if (push) {
     global->getUIBase()->backendPush();
   }
-  moveTransferStatusToFinished(monitor->getTransferStatus());
+  if (monitor->getTransferStatus() != NULL) {
+    moveTransferStatusToFinished(monitor->getTransferStatus());
+  }
 }
 
 void TransferManager::transferFailed(TransferMonitor * monitor, int err) {
@@ -80,7 +82,9 @@ void TransferManager::transferFailed(TransferMonitor * monitor, int err) {
   if (push) {
     global->getUIBase()->backendPush();
   }
-  moveTransferStatusToFinished(monitor->getTransferStatus());
+  if (monitor->getTransferStatus() != NULL) {
+    moveTransferStatusToFinished(monitor->getTransferStatus());
+  }
 }
 
 std::list<TransferStatus *>::iterator TransferManager::ongoingTransfersBegin() {
