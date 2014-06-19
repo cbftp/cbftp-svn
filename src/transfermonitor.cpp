@@ -267,7 +267,9 @@ void TransferMonitor::finish() {
         break;
     }
   }
-  ts->setFinished();
+  if (type == TM_TYPE_FXP) {
+    ts->setFinished();
+  }
   if (status != TM_STATUS_ERROR_AWAITING_PEER) {
     tm->transferSuccessful(this);
   }
