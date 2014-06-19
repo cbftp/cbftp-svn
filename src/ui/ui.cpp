@@ -45,6 +45,7 @@
 #include "screens/fileviewersettingsscreen.h"
 #include "screens/scoreboardscreen.h"
 #include "screens/selectsitesscreen.h"
+#include "screens/transfersscreen.h"
 
 extern GlobalContext * global;
 
@@ -61,6 +62,38 @@ Ui::Ui() {
 #ifdef _ISOC95_SOURCE
   pthread_setname_np(uithread, "UserInterface");
 #endif
+}
+
+bool Ui::init() {
+  initret = true;
+  uiqueue.push(UICommand(UI_COMMAND_INIT));
+  sem_wait(&eventcomplete);
+  return initret;
+}
+
+void Ui::initIntern() {
+  initscr();
+  cbreak();
+  curs_set(0);
+  refresh();
+  getmaxyx(stdscr, row, col);
+  if (row < 24 || col < 80) {
+    endwin();
+    printf("Error: terminal too small. 80x24 required. (Current %dx%d)\n", col, row);
+    initret = false;
+  }
+#if NCURSES_EXT_FUNCS >= 20081102
+  set_escdelay(25);
+#else
+  ESCDELAY = 25;
+#endif
+  mainrow = row;
+  maincol = col;
+  main = newwin(row, col, 0, 0);
+  legend = newwin(2, col, row - 2, 0);
+  info = newwin(2, col, 0, 0);
+  legendwindow = new LegendWindow(this, legend, 2, col);
+  infowindow = new InfoWindow(this, info, 2, col);
   loginscreen = new LoginScreen(this);
   newkeyscreen = new NewKeyScreen(this);
   mainscreen = new MainScreen(this);
@@ -105,38 +138,8 @@ Ui::Ui() {
   mainwindows.push_back(scoreboardscreen);
   selectsitesscreen = new SelectSitesScreen(this);
   mainwindows.push_back(selectsitesscreen);
-}
-
-bool Ui::init() {
-  initret = true;
-  uiqueue.push(UICommand(UI_COMMAND_INIT));
-  sem_wait(&eventcomplete);
-  return initret;
-}
-
-void Ui::initIntern() {
-  initscr();
-  cbreak();
-  curs_set(0);
-  refresh();
-  getmaxyx(stdscr, row, col);
-  if (row < 24 || col < 80) {
-    endwin();
-    printf("Error: terminal too small. 80x24 required. (Current %dx%d)\n", col, row);
-    initret = false;
-  }
-#if NCURSES_EXT_FUNCS >= 20081102
-  set_escdelay(25);
-#else
-  ESCDELAY = 25;
-#endif
-  mainrow = row;
-  maincol = col;
-  main = newwin(row, col, 0, 0);
-  legend = newwin(2, col, row - 2, 0);
-  info = newwin(2, col, 0, 0);
-  legendwindow = new LegendWindow(this, legend, 2, col);
-  infowindow = new InfoWindow(this, info, 2, col);
+  transfersscreen = new TransfersScreen(this);
+  mainwindows.push_back(transfersscreen);
   if (global->getDataFileHandler()->fileExists()) {
     loginscreen->initialize(mainrow, maincol);
     topwindow = loginscreen;
@@ -627,6 +630,11 @@ void Ui::goEventLog() {
 void Ui::goScoreBoard() {
   scoreboardscreen->initialize(mainrow, maincol);
   switchToWindow(scoreboardscreen);
+}
+
+void Ui::goTransfers() {
+  transfersscreen->initialize(mainrow, maincol);
+  switchToWindow(transfersscreen);
 }
 
 void Ui::goEditSite(std::string site) {

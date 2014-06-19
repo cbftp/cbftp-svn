@@ -1,10 +1,6 @@
 #pragma once
 
 #include <string>
-#include <vector>
-
-#define SIZEPOWER 1024
-#define SIZEDECIMALS 2
 
 class File;
 
@@ -23,8 +19,6 @@ private:
   bool softlink;
   bool selected;
   bool cursored;
-  static unsigned int sizegranularity;
-  static std::vector<unsigned long long int> powers;
   void parseTimeStamp(std::string);
 public:
   UIFile(File *);
@@ -39,9 +33,6 @@ public:
   int getModifyDate();
   std::string getName();
   std::string getLinkTarget();
-  static int getSizeGranularity();
-  static std::vector<unsigned long long int> getPowers();
-  static std::string parseSize(unsigned long long int);
   bool isSelected();
   bool isCursored();
   void select();

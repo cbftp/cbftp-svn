@@ -7,10 +7,16 @@ void MenuSelectOptionElement::init(std::string identifier, int row, int col, std
   this->label = label;
   active = false;
   shown = true;
+  selectable = true;
 }
 
 MenuSelectOptionElement::~MenuSelectOptionElement() {
 
+}
+
+void MenuSelectOptionElement::setPosition(int row, int col) {
+  this->row = row;
+  this->col = col;
 }
 
 std::string MenuSelectOptionElement::getLabelText() {
@@ -64,4 +70,8 @@ void MenuSelectOptionElement::show() {
 
 bool MenuSelectOptionElement::visible() {
   return shown;
+}
+
+bool MenuSelectOptionElement::isSelectable() {
+  return selectable;
 }

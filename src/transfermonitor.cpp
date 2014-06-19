@@ -10,6 +10,7 @@
 #include "file.h"
 #include "localstorage.h"
 #include "transfermanager.h"
+#include "transferstatus.h"
 
 extern GlobalContext * global;
 
@@ -18,7 +19,7 @@ TransferMonitor::TransferMonitor(TransferManager * tm) {
   status = TM_STATUS_IDLE;
   activedownload = false;
   timestamp = 0;
-  global->getTickPoke()->startPoke(this, "TransferMonitor", 50, 0);
+  global->getTickPoke()->startPoke(this, "TransferMonitor", TICKINTERVAL, 0);
 }
 
 bool TransferMonitor::idle() {
@@ -50,6 +51,11 @@ void TransferMonitor::engage(std::string sfile, SiteLogic * sls, FileList * fls,
     return;
   }
   status = TM_STATUS_AWAITING_PASSIVE;
+  ts = new TransferStatus(TRANSFERSTATUS_TYPE_FXP, sls->getSite()->getName(),
+      sld->getSite()->getName(), "", dfile, fls->getPath(), fld->getPath(),
+      fls->getFile(sfile)->getSize(),
+      sls->getSite()->getAverageSpeed(sld->getSite()->getName()));
+  tm->addNewTransferStatus(ts);
   int spol = sls->getSite()->getSSLTransferPolicy();
   int dpol = sld->getSite()->getSSLTransferPolicy();
   if (spol != SITE_SSL_ALWAYS_OFF && dpol != SITE_SSL_ALWAYS_OFF &&
@@ -58,6 +64,7 @@ void TransferMonitor::engage(std::string sfile, SiteLogic * sls, FileList * fls,
     ssl = true;
   }
   fld->touchFile(dfile, sld->getSite()->getUser(), true);
+  latesttouch = fld->getFile(dfile)->getTouch();
   fls->getFile(sfile)->download();
   if (!sld->getSite()->hasBrokenPASV()) {
     activedownload = true;
@@ -122,7 +129,42 @@ void TransferMonitor::engage(SiteLogic * sls, int connid) {
 }
 
 void TransferMonitor::tick(int msg) {
-  timestamp += 50;
+  if (status != TM_STATUS_IDLE) {
+    timestamp += TICKINTERVAL;
+    if (type == TM_TYPE_FXP) {
+      File * file = fld->getFile(dfile);
+      if (file) {
+        unsigned int filesize = file->getSize();
+        int span = timestamp - startstamp;
+        int touch = file->getTouch();
+        if (!span) {
+          span = 10;
+        }
+
+        // if the file list has been updated (as seen on the file's touch stamp
+        // the speed shall be recalculated.
+        if (latesttouch != touch) {
+          latesttouch = touch;
+          ts->setTargetSize(filesize);
+          unsigned int currentspeed = ts->targetSize() / span;
+          unsigned int prevspeed = ts->getSpeed();
+          if (currentspeed < prevspeed) {
+            ts->setSpeed(prevspeed * 0.9 + currentspeed * 0.1);
+          }
+          else {
+            ts->setSpeed(prevspeed * 0.7 + currentspeed * 0.3);
+          }
+        }
+        else {
+          // since the actual file size has not changed since last tick,
+          // interpolate an updated file size through the currently known speed
+          unsigned long long int speedtemp = ts->getSpeed() * 1024;
+          ts->interpolateAddSize((speedtemp * TICKINTERVAL) / 1000);
+        }
+        ts->setTimeSpent(span / 1000);
+      }
+    }
+  }
 }
 
 void TransferMonitor::passiveReady(std::string addr) {
@@ -209,7 +251,10 @@ void TransferMonitor::finish() {
         File * srcfile = fls->getFile(sfile);
         if (srcfile) {
           long int size = srcfile->getSize();
-          int speed = size / span;
+          unsigned int speed = size / span;
+          ts->setTargetSize(size);
+          ts->setSpeed(speed);
+          ts->setTimeSpent(span / 1000);
           //std::cout << "[ " << sls->getSite()->getName() << " -> " << sld->getSite()->getName() << " ] - " << file << " - " << speed << " kB/s" << std::endl;
           if (size > 1000000) {
             fld->setFileUpdateFlag(dfile, size, speed, sls->getSite(), sld->getSite()->getName());
@@ -222,6 +267,7 @@ void TransferMonitor::finish() {
         break;
     }
   }
+  ts->setFinished();
   if (status != TM_STATUS_ERROR_AWAITING_PEER) {
     tm->transferSuccessful(this);
   }
@@ -308,4 +354,8 @@ void TransferMonitor::targetError(int err) {
     return;
   }
   status = TM_STATUS_ERROR_AWAITING_PEER;
+}
+
+TransferStatus * TransferMonitor::getTransferStatus() {
+  return ts;
 }

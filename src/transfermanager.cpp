@@ -4,6 +4,7 @@
 #include "transfermonitor.h"
 #include "uibase.h"
 #include "globalcontext.h"
+#include "transferstatus.h"
 
 extern GlobalContext * global;
 
@@ -41,7 +42,7 @@ void TransferManager::suggestTransfer(std::string srcname, SiteLogic * src, File
 TransferMonitor * TransferManager::getAvailableTransferMonitor() {
   TransferMonitor * target = NULL;
   std::list<TransferMonitor *>::iterator it;
-  for (it = transfers.begin(); it != transfers.end(); it++) {
+  for (it = transfersmonitors.begin(); it != transfersmonitors.end(); it++) {
     if ((*it)->idle()) {
       target = *it;
       break;
@@ -49,7 +50,7 @@ TransferMonitor * TransferManager::getAvailableTransferMonitor() {
   }
   if (target == NULL) {
     target = new TransferMonitor(this);
-    transfers.push_back(target);
+    transfersmonitors.push_back(target);
   }
   return target;
 }
@@ -67,6 +68,7 @@ void TransferManager::transferSuccessful(TransferMonitor * monitor) {
   if (push) {
     global->getUIBase()->backendPush();
   }
+  moveTransferStatusToFinished(monitor->getTransferStatus());
 }
 
 void TransferManager::transferFailed(TransferMonitor * monitor, int err) {
@@ -78,4 +80,40 @@ void TransferManager::transferFailed(TransferMonitor * monitor, int err) {
   if (push) {
     global->getUIBase()->backendPush();
   }
+  moveTransferStatusToFinished(monitor->getTransferStatus());
+}
+
+std::list<TransferStatus *>::iterator TransferManager::ongoingTransfersBegin() {
+  return ongoingtransfers.begin();
+}
+
+std::list<TransferStatus *>::iterator TransferManager::ongoingTransfersEnd() {
+  return ongoingtransfers.end();
+}
+
+std::list<TransferStatus *>::iterator TransferManager::finishedTransfersBegin() {
+  return finishedtransfers.begin();
+}
+
+std::list<TransferStatus *>::iterator TransferManager::finishedTransfersEnd() {
+  return finishedtransfers.end();
+}
+
+void TransferManager::addNewTransferStatus(TransferStatus * ts) {
+  ongoingtransfers.push_front(ts);
+}
+
+void TransferManager::moveTransferStatusToFinished(TransferStatus * movets) {
+  for (std::list<TransferStatus *>::iterator it = ongoingtransfers.begin(); it != ongoingtransfers.end(); it++) {
+    if (*it == movets) {
+      ongoingtransfers.erase(it);
+      break;
+    }
+  }
+  if (finishedtransfers.size() > MAX_TRANSFER_HISTORY) {
+    TransferStatus * delts = finishedtransfers.back();
+    finishedtransfers.pop_back();
+    delete delts;
+  }
+  finishedtransfers.push_front(movets);
 }

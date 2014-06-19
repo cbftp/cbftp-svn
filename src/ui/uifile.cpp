@@ -13,7 +13,7 @@ UIFile::UIFile(File * file) {
   group = file->getGroup();
   size = file->getSize();
   linktarget = file->getLinkTarget();
-  sizerepr = parseSize(file->getSize());
+  sizerepr = GlobalContext::parseSize(file->getSize());
   parseTimeStamp(file->getLastModified());
   selected = false;
   cursored = false;
@@ -87,50 +87,6 @@ void UIFile::unCursor() {
   cursored = false;
 }
 
-std::string UIFile::parseSize(unsigned long long int size) {
-  int iprefix;
-  for (iprefix = 0; iprefix < 6 && size / powers[iprefix] >= 1000; iprefix++);
-  unsigned long long int currentpower = powers[iprefix];
-  std::string result;
-  int whole = size / currentpower;
-  if (iprefix == 0) {
-    result = global->int2Str(whole) + " B";
-  }
-  else {
-    unsigned long long int decim = ((size % currentpower) * sizegranularity) / currentpower + 5;
-    if (decim >= sizegranularity) {
-      whole++;
-      decim = 0;
-    }
-    std::string decimstr = global->int2Str(decim);
-    while (decimstr.length() <= SIZEDECIMALS) {
-      decimstr = "0" + decimstr;
-    }
-    result = global->int2Str(whole) + "." + decimstr.substr(0, SIZEDECIMALS) + " ";
-    switch (iprefix) {
-      case 1:
-        result.append("kB");
-        break;
-      case 2:
-        result.append("MB");
-        break;
-      case 3:
-        result.append("GB");
-        break;
-      case 4:
-        result.append("TB");
-        break;
-      case 5:
-        result.append("PB");
-        break;
-      case 6:
-        result.append("EB");
-        break;
-    }
-  }
-  return result;
-}
-
 void UIFile::parseTimeStamp(std::string uglytime) {
   std::string monthstr = uglytime.substr(0, 3);
   std::string daystr = uglytime.substr(4, 2);
@@ -196,25 +152,3 @@ void UIFile::parseTimeStamp(std::string uglytime) {
                    minute;
   lastmodifiedrepr = yearstr + "-" + monthstr + "-" + daystr + " " + hourstr + ":" + meta;
 }
-
-int UIFile::getSizeGranularity() {
-  int gran = 1;
-  for (int i = 0; i <= SIZEDECIMALS; i++) {
-    gran *= 10;
-  }
-  return gran;
-}
-
-std::vector<unsigned long long int> UIFile::getPowers() {
-  std::vector<unsigned long long int> vec;
-  vec.reserve(7);
-  unsigned long long int pow = 1;
-  for (int i = 0; i < 7; i++) {
-    vec.push_back(pow);
-    pow *= 1024;
-  }
-  return vec;
-}
-
-unsigned int UIFile::sizegranularity = UIFile::getSizeGranularity();
-std::vector<unsigned long long int> UIFile::powers = UIFile::getPowers();

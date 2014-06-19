@@ -3,6 +3,10 @@
 #include <openssl/ssl.h>
 #include <pthread.h>
 #include <string>
+#include <vector>
+
+#define SIZEPOWER 1024
+#define SIZEDECIMALS 2
 
 class Engine;
 class UIBase;
@@ -44,6 +48,8 @@ class GlobalContext {
     int currentyear;
     int currentmonth;
     int currentday;
+    static unsigned int sizegranularity;
+    static std::vector<unsigned long long int> powers;
   public:
     void init();
     GlobalContext();
@@ -71,17 +77,20 @@ class GlobalContext {
     ExternalFileViewing * getExternalFileViewing();
     pthread_attr_t * getPthreadAttr();
     static int ctimeMSec();
+    static std::string parseSize(unsigned long long int);
+    static int getSizeGranularity();
+    static std::vector<unsigned long long int> getPowers();
     void updateTime();
     int currentYear();
     int currentMonth();
     int currentDay();
-    std::string ctimeLog();
+    static std::string ctimeLog();
     std::string getSVNRevision();
     std::string getCompileTime();
-    int str2Int(std::string);
-    std::string int2Str(int);
-    std::string int2Str(unsigned int);
-    std::string int2Str(unsigned long long int);
+    static int str2Int(std::string);
+    static std::string int2Str(int);
+    static std::string int2Str(unsigned int);
+    static std::string int2Str(unsigned long long int);
     void signal_catch();
     void signal_ignore();
     std::string & debugString(const char *);

@@ -42,6 +42,7 @@ class NukeScreen;
 class FileViewerSettingsScreen;
 class ScoreBoardScreen;
 class SelectSitesScreen;
+class TransfersScreen;
 
 class Ui : private EventReceiver, public UIBase {
   private:
@@ -76,6 +77,7 @@ class Ui : private EventReceiver, public UIBase {
     FileViewerSettingsScreen * fileviewersettingsscreen;
     ScoreBoardScreen * scoreboardscreen;
     SelectSitesScreen * selectsitesscreen;
+    TransfersScreen * transfersscreen;
     int mainrow;
     int maincol;
     int col;
@@ -160,6 +162,7 @@ class Ui : private EventReceiver, public UIBase {
     void goGlobalOptions();
     void goEventLog();
     void goScoreBoard();
+    void goTransfers();
     void goEditSite(std::string);
     void goAddSite();
     void goBrowse(std::string);

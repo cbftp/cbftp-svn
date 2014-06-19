@@ -151,6 +151,50 @@ std::string GlobalContext::ctimeLog() {
   return readabletime.substr(11, 8);
 }
 
+std::string GlobalContext::parseSize(unsigned long long int size) {
+  int iprefix;
+  for (iprefix = 0; iprefix < 6 && size / powers[iprefix] >= 1000; iprefix++);
+  unsigned long long int currentpower = powers[iprefix];
+  std::string result;
+  int whole = size / currentpower;
+  if (iprefix == 0) {
+    result = int2Str(whole) + " B";
+  }
+  else {
+    unsigned long long int decim = ((size % currentpower) * sizegranularity) / currentpower + 5;
+    if (decim >= sizegranularity) {
+      whole++;
+      decim = 0;
+    }
+    std::string decimstr = int2Str(decim);
+    while (decimstr.length() <= SIZEDECIMALS) {
+      decimstr = "0" + decimstr;
+    }
+    result = int2Str(whole) + "." + decimstr.substr(0, SIZEDECIMALS) + " ";
+    switch (iprefix) {
+      case 1:
+        result.append("kB");
+        break;
+      case 2:
+        result.append("MB");
+        break;
+      case 3:
+        result.append("GB");
+        break;
+      case 4:
+        result.append("TB");
+        break;
+      case 5:
+        result.append("PB");
+        break;
+      case 6:
+        result.append("EB");
+        break;
+    }
+  }
+  return result;
+}
+
 std::string GlobalContext::getSVNRevision() {
   return svnrev;
 }
@@ -199,3 +243,25 @@ void GlobalContext::signal_ignore() {
 std::string & GlobalContext::debugString(const char * s) {
     return *(new std::string(s));
 }
+
+int GlobalContext::getSizeGranularity() {
+  int gran = 1;
+  for (int i = 0; i <= SIZEDECIMALS; i++) {
+    gran *= 10;
+  }
+  return gran;
+}
+
+std::vector<unsigned long long int> GlobalContext::getPowers() {
+  std::vector<unsigned long long int> vec;
+  vec.reserve(7);
+  unsigned long long int pow = 1;
+  for (int i = 0; i < 7; i++) {
+    vec.push_back(pow);
+    pow *= 1024;
+  }
+  return vec;
+}
+
+unsigned int GlobalContext::sizegranularity = GlobalContext::getSizeGranularity();
+std::vector<unsigned long long int> GlobalContext::powers = GlobalContext::getPowers();

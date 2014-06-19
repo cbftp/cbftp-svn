@@ -20,8 +20,8 @@ MainScreen::MainScreen(Ui * ui) {
 }
 
 void MainScreen::initialize(unsigned int row, unsigned int col) {
-  msslegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [G]lobal settings - Event [l]og";
-  msolegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [G]lobal settings - Event [l]og";
+  msslegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [G]lobal settings - Event [l]og - [t]ransfers";
+  msolegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [G]lobal settings - Event [l]og - [t]ransfers";
   mso.makeLeavableDown();
   autoupdate = true;
   currentviewspan = 0;
@@ -195,6 +195,9 @@ void MainScreen::keyPressed(unsigned int ch) {
       break;
     case 'o':
       ui->goScoreBoard();
+      break;
+    case 't':
+      ui->goTransfers();
       break;
   }
   if (mss.isFocused()) {

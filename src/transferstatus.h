@@ -1,0 +1,50 @@
+#pragma once
+
+#include <string>
+
+#define TRANSFERSTATUS_TYPE_FXP 1892
+#define TRANSFERSTATUS_TYPE_DOWNLOAD 1893
+#define TRANSFERSTATUS_TYPE_UPLOAD 1894
+
+class TransferStatus {
+public:
+  TransferStatus(int, std::string, std::string, std::string, std::string, std::string, std::string, unsigned int, unsigned int);
+  std::string getSource();
+  std::string getTarget();
+  std::string getRelease();
+  std::string getFile();
+  std::string getSourcePath();
+  std::string getTargetPath();
+  unsigned int sourceSize();
+  unsigned int targetSize();
+  unsigned int knownTargetSize();
+  unsigned int getSpeed();
+  unsigned int getTimeSpent();
+  unsigned int getTimeRemaining();
+  unsigned int getProgress();
+  std::string getTimestamp();
+  void setFinished();
+  void setTargetSize(unsigned int);
+  void interpolateAddSize(unsigned int);
+  void setSpeed(unsigned int);
+  void setTimeSpent(unsigned int);
+private:
+  void updateProgress();
+  int type;
+  std::string source;
+  std::string target;
+  std::string release;
+  std::string file;
+  std::string timestamp;
+  std::string sourcepath;
+  std::string targetpath;
+  unsigned int sourcesize;
+  unsigned int knowntargetsize;
+  unsigned int interpolatedtargetsize;
+  unsigned int interpolationfilltargetsize;
+  unsigned int speed;
+  bool finished;
+  unsigned int timespent;
+  unsigned int timeremaining;
+  unsigned int progress;
+};

@@ -18,6 +18,36 @@ std::string MenuSelectOptionTextButton::getContentText() {
   return text;
 }
 
+std::string MenuSelectOptionTextButton::getLabelText() {
+  if (label.length() <= maxwidth) {
+    return label;
+  }
+  else {
+    switch (resizemethod) {
+      case RESIZE_CUTEND:
+        return label.substr(0, maxwidth);
+      case RESIZE_WITHDOTS:
+      {
+        std::string dots = "...";
+        if (maxwidth > 3) {
+          return label.substr(0, maxwidth - dots.length()) + dots;
+        }
+        else {
+          return dots.substr(0, maxwidth);
+        }
+      }
+      case RESIZE_WITHLAST3:
+        if (maxwidth > 3) {
+          return label.substr(0, maxwidth - 4) + "~" + label.substr(label.length() - 3);
+        }
+        else {
+          return label.substr(label.length() - maxwidth);
+        }
+    }
+    return label;
+  }
+}
+
 bool MenuSelectOptionTextButton::isActivated() {
   return active;
 }
@@ -25,4 +55,8 @@ bool MenuSelectOptionTextButton::isActivated() {
 bool MenuSelectOptionTextButton::activate() {
   active = true;
   return false;
+}
+
+unsigned int MenuSelectOptionTextButton::wantedWidth() {
+  return label.length();
 }

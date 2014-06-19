@@ -6,6 +6,7 @@
 #include "menuselectoptioncheckbox.h"
 #include "menuselectoptiontextbutton.h"
 #include "menuselectoptiontextarrow.h"
+#include "menuselectadjustableline.h"
 
 MenuSelectOption::MenuSelectOption() {
   pointer = 0;
@@ -166,12 +167,22 @@ void MenuSelectOption::addCheckBox(int row, int col, std::string identifier, std
   options.push_back(new MenuSelectOptionCheckBox(identifier, row, col, label, startval));
 }
 
-void MenuSelectOption::addTextButton(int row, int col, std::string identifier, std::string label) {
-  options.push_back(new MenuSelectOptionTextButton(identifier, row, col, label, true));
+MenuSelectOptionTextButton * MenuSelectOption::addTextButton(int row, int col, std::string identifier, std::string label) {
+  MenuSelectOptionTextButton * msotb = new MenuSelectOptionTextButton(identifier, row, col, label, true);
+  options.push_back(msotb);
+  return msotb;
 }
 
-void MenuSelectOption::addTextButtonNoContent(int row, int col, std::string identifier, std::string label) {
-  options.push_back(new MenuSelectOptionTextButton(identifier, row, col, label, false));
+MenuSelectOptionTextButton * MenuSelectOption::addTextButtonNoContent(int row, int col, std::string identifier, std::string label) {
+  MenuSelectOptionTextButton * msotb = new MenuSelectOptionTextButton(identifier, row, col, label, false);
+  options.push_back(msotb);
+  return msotb;
+}
+
+MenuSelectAdjustableLine * MenuSelectOption::addAdjustableLine() {
+  MenuSelectAdjustableLine * msal = new MenuSelectAdjustableLine;
+  adjustablelines.push_back(msal);
+  return msal;
 }
 
 MenuSelectOptionElement * MenuSelectOption::getElement(unsigned int i) {
@@ -209,6 +220,11 @@ void MenuSelectOption::clear() {
     delete *it;
   }
   options.clear();
+  std::vector<MenuSelectAdjustableLine *>::iterator it2;
+  for (it2 = adjustablelines.begin(); it2 != adjustablelines.end(); it2++) {
+    delete *it2;
+  }
+  adjustablelines.clear();
 }
 
 void MenuSelectOption::reset() {
@@ -231,6 +247,97 @@ void MenuSelectOption::enterFocusFrom(int dir) {
 
 unsigned int MenuSelectOption::size() {
   return options.size();
+}
+
+void MenuSelectOption::adjustLines(unsigned int linesize) {
+  if (!adjustablelines.size()) {
+    return;
+  }
+  unsigned int elementcount = adjustablelines[0]->size();
+  if (!elementcount) {
+    return;
+  }
+  std::vector<int> maxwantedwidths;
+  std::vector<int> maxwidths;
+  maxwantedwidths.resize(elementcount); // int is initialized to 0
+  maxwidths.resize(elementcount);
+  for (std::vector<MenuSelectAdjustableLine *>::iterator it = adjustablelines.begin(); it != adjustablelines.end(); it++) {
+    for (unsigned int i = 0; i < elementcount; i++) {
+      int wantedwidth = (*it)->getElement(i)->wantedWidth();
+      if (wantedwidth > maxwantedwidths[i]) {
+        maxwantedwidths[i] = wantedwidth;
+      }
+    }
+  }
+  unsigned int totalwantedwidth = (maxwantedwidths.size() - 1) * RESIZE_SPACING;
+  for (unsigned int i = 0; i < maxwantedwidths.size(); i++) {
+    totalwantedwidth += maxwantedwidths[i];
+    maxwidths[i] = maxwantedwidths[i];
+  }
+  while (totalwantedwidth != linesize) {
+    if (totalwantedwidth < linesize) {
+      for (unsigned int i = 0; i < elementcount; i++) {
+        ResizableElement * elem = adjustablelines[0]->getElement(i);
+        if (elem->isExpandable()) {
+          unsigned int expansion = linesize - totalwantedwidth;
+          maxwidths[i] += expansion;
+          totalwantedwidth += expansion;
+          break;
+        }
+      }
+    }
+    else if (totalwantedwidth > linesize) {
+      int leastimportant = -1;
+      int leastimportantprio = 0;
+      for (unsigned int i = 0; i < elementcount; i++) {
+        if (!adjustablelines[0]->getElement(i)->isVisible()) {
+          continue;
+        }
+        int prio = adjustablelines[0]->getElement(i)->priority();
+        if (prio < leastimportantprio || leastimportant < 0) {
+          leastimportantprio = prio;
+          leastimportant = i;
+        }
+      }
+      ResizableElement * leastimportantelem = adjustablelines[0]->getElement(leastimportant);
+      unsigned int maxsaving = maxwantedwidths[leastimportant] + RESIZE_SPACING;
+      unsigned int resizemethod = leastimportantelem->resizeMethod();
+      switch (resizemethod) {
+        case RESIZE_REMOVE:
+          leastimportantelem->setVisible(false);
+          totalwantedwidth -= maxsaving;
+          break;
+        case RESIZE_WITHDOTS:
+        case RESIZE_CUTEND:
+        case RESIZE_WITHLAST3:
+          if (totalwantedwidth - maxwantedwidths[leastimportant] < linesize) {
+            int reduction = totalwantedwidth - linesize;
+            maxwidths[leastimportant] = maxwantedwidths[leastimportant] - reduction;
+            totalwantedwidth -= reduction;
+          }
+          else {
+            leastimportantelem->setVisible(false);
+            totalwantedwidth -= maxsaving;
+          }
+          break;
+      }
+    }
+  }
+  int startpos = adjustablelines[0]->getElement(0)->getCol();
+  for (std::vector<MenuSelectAdjustableLine *>::iterator it = adjustablelines.begin(); it != adjustablelines.end(); it++) {
+    int elementpos = startpos;
+    for (unsigned int i = 0; i < elementcount; i++) {
+      ResizableElement * elem = (*it)->getElement(i);
+      if (adjustablelines[0]->getElement(i)->isVisible()) {
+        elem->setMaxWidth(maxwidths[i]);
+        elem->setPosition(elem->getRow(), elementpos);
+        elementpos += maxwidths[i] + RESIZE_SPACING;
+      }
+      else {
+        elem->setVisible(false);
+      }
+    }
+  }
 }
 
 void MenuSelectOption::checkPointer() {

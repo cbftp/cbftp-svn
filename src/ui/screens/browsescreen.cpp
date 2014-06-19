@@ -669,7 +669,7 @@ std::string BrowseScreen::getInfoText() {
     }
   }
   text += "  " + global->int2Str(list.sizeFiles()) + "f " + global->int2Str(list.sizeDirs()) + "d";
-  text += std::string("  ") + UIFile::parseSize(list.getTotalSize());
+  text += std::string("  ") + GlobalContext::parseSize(list.getTotalSize());
   return text;
 }
 

@@ -5,16 +5,18 @@
 class MenuSelectOptionElement {
   private:
     std::string identifier;
-    std::string label;
     int col;
     int row;
     bool shown;
+    bool selectable;
   protected:
+    std::string label;
     bool active;
   public:
     void init(std::string, int, int, std::string);
     virtual ~MenuSelectOptionElement();
-    std::string getLabelText();
+    void setPosition(int, int);
+    virtual std::string getLabelText();
     std::string getIdentifier();
     virtual std::string getContentText() = 0;
     virtual bool activate();
@@ -28,4 +30,5 @@ class MenuSelectOptionElement {
     void hide();
     void show();
     bool visible();
+    bool isSelectable();
 };

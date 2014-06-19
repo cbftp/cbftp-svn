@@ -14,9 +14,12 @@
 #define TM_STATUS_TRANSFERRING 973
 #define TM_STATUS_ERROR_AWAITING_PEER 974
 
+#define TICKINTERVAL 50
+
 class SiteLogic;
 class FileList;
 class TransferManager;
+class TransferStatus;
 
 class TransferMonitor : public EventReceiver {
   private:
@@ -40,6 +43,8 @@ class TransferMonitor : public EventReceiver {
     int timestamp;
     int startstamp;
     TransferManager * tm;
+    TransferStatus * ts;
+    int latesttouch;
     void finish();
   public:
     TransferMonitor(TransferManager *);
@@ -52,6 +57,7 @@ class TransferMonitor : public EventReceiver {
     void passiveReady(std::string);
     void activeReady();
     bool idle();
+    TransferStatus * getTransferStatus();
     // for FXP
     void engage(std::string, SiteLogic *, FileList *, std::string, SiteLogic *, FileList *);
     // for download
