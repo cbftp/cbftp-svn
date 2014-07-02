@@ -68,7 +68,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
   }
   mso.clear();
   mso.addStringField(y++, x, "name", "Name:", modsite.getName(), false);
-  mso.addStringField(y++, x, "addr", "Address:", addrport, false);
+  mso.addStringField(y++, x, "addr", "Address:", addrport, false, 32, 256);
   mso.addStringField(y++, x, "user", "Username:", modsite.getUser(), false);
   mso.addStringField(y++, x, "pass", "Password:", modsite.getPass(), true);
   mso.addIntArrow(y++, x, "logins", "Login slots:", modsite.getInternMaxLogins(), 0, 99);
