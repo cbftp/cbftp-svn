@@ -43,7 +43,6 @@ private:
   RecursiveCommandLogic * recursivelogic;
   void setTransfer(TransferMonitor *, std::string, std::string, int, bool, bool, std::string, bool);
   void setList(TransferMonitor *, bool, std::string, bool);
-  void event();
 public:
   ConnStateTracker();
   void delayedCommand(std::string, int);
@@ -56,12 +55,7 @@ public:
   bool hasReleasedCommand();
   DelayedCommand getCommand();
   void setDisconnected();
-  void setIdle();
-  void setReady();
-  void setBusy();
   bool isDisconnected();
-  bool isIdle();
-  bool isReady();
   void setTransfer(TransferMonitor *, std::string, std::string, int, bool, bool);
   void setTransfer(TransferMonitor *, std::string, std::string, int, std::string, bool);
   void setList(TransferMonitor *, bool);
@@ -71,10 +65,13 @@ public:
   void abortTransfer();
   bool getTransferAborted();
   void lockForTransfer(bool);
+  bool isLocked();
   bool isLockedForDownload();
   bool isLockedForUpload();
   bool isLoggedIn();
   void setLoggedIn();
+  void use();
+  void resetIdleTime();
   TransferMonitor * getTransferMonitor();
   std::string getTransferPath();
   std::string getTransferFile();

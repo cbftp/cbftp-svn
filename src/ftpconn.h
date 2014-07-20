@@ -145,4 +145,5 @@ class FTPConn : private EventReceiver {
     SiteRace * currentSiteRace();
     void setCurrentSiteRace(SiteRace *);
     void parseFileList(char *, unsigned int);
+    bool isConnected();
 };

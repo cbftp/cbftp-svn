@@ -993,3 +993,7 @@ void FTPConn::parseFileList(char * buf, unsigned int buflen) {
   }
   if (!currentfl->isFilled()) currentfl->setFilled();
 }
+
+bool FTPConn::isConnected() {
+  return state != 0;
+}

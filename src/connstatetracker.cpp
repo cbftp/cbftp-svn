@@ -94,22 +94,7 @@ void ConnStateTracker::setDisconnected() {
   state = 0;
 }
 
-void ConnStateTracker::setIdle() {
-  event();
-  state = 1;
-}
-
-void ConnStateTracker::setReady() {
-  event();
-  state = 2;
-}
-
-void ConnStateTracker::setBusy() {
-  event();
-  state = 3;
-}
-
-void ConnStateTracker::event() {
+void ConnStateTracker::use() {
   if (transferlocked) {
     *(int*)0=0; // crash on purpose
   }
@@ -117,16 +102,12 @@ void ConnStateTracker::event() {
   idletime = 0;
 }
 
+void ConnStateTracker::resetIdleTime() {
+  idletime = 0;
+}
+
 bool ConnStateTracker::isDisconnected() {
   return state == 0;
-}
-
-bool ConnStateTracker::isIdle() {
-  return state == 1;
-}
-
-bool ConnStateTracker::isReady() {
-  return (state == 1 || state == 2);
 }
 
 void ConnStateTracker::setTransfer(TransferMonitor * tm, std::string path, std::string file, int type, bool fxp, bool passive, std::string addr, bool ssl) {
@@ -196,7 +177,6 @@ void ConnStateTracker::finishTransfer() {
   }
   transfer = false;
   transferlocked = false;
-  setIdle();
 }
 
 void ConnStateTracker::abortTransfer() {
@@ -260,6 +240,10 @@ bool ConnStateTracker::getTransferSSL() {
 void ConnStateTracker::lockForTransfer(bool download) {
   transferlocked = true;
   lockeddownload = download;
+}
+
+bool ConnStateTracker::isLocked() {
+  return transferlocked;
 }
 
 bool ConnStateTracker::isLockedForDownload() {
