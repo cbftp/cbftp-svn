@@ -8,7 +8,6 @@
 extern GlobalContext * global;
 
 ConnStateTracker::ConnStateTracker() {
-  state = 0;
   time = 0;
   idletime = 0;
   lastchecked = NULL;
@@ -91,7 +90,6 @@ void ConnStateTracker::setDisconnected() {
   loggedin = false;
   delayedcommands.clear();
   idletime = 0;
-  state = 0;
 }
 
 void ConnStateTracker::use() {
@@ -104,10 +102,6 @@ void ConnStateTracker::use() {
 
 void ConnStateTracker::resetIdleTime() {
   idletime = 0;
-}
-
-bool ConnStateTracker::isDisconnected() {
-  return state == 0;
 }
 
 void ConnStateTracker::setTransfer(TransferMonitor * tm, std::string path, std::string file, int type, bool fxp, bool passive, std::string addr, bool ssl) {
@@ -171,9 +165,7 @@ bool ConnStateTracker::hasTransfer() {
 void ConnStateTracker::finishTransfer() {
   if (listtransfer) {
     listtransfer = false;
-    if (transfer) {
-      return;
-    }
+    return;
   }
   transfer = false;
   transferlocked = false;
@@ -220,6 +212,9 @@ bool ConnStateTracker::getTransferPassive() {
 }
 
 bool ConnStateTracker::getTransferFXP() {
+  if (listtransfer) {
+    return false;
+  }
   return fxp;
 }
 

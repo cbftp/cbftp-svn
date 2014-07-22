@@ -15,7 +15,6 @@ class RecursiveCommandLogic;
 
 class ConnStateTracker {
 private:
-  int state;
   int time;
   int idletime;
   int lastcheckedcount;
@@ -55,7 +54,6 @@ public:
   bool hasReleasedCommand();
   DelayedCommand getCommand();
   void setDisconnected();
-  bool isDisconnected();
   void setTransfer(TransferMonitor *, std::string, std::string, int, bool, bool);
   void setTransfer(TransferMonitor *, std::string, std::string, int, std::string, bool);
   void setList(TransferMonitor *, bool);

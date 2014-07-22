@@ -59,13 +59,10 @@ SiteLogic::~SiteLogic() {
 void SiteLogic::activate() {
   wantedloggedin = conns.size();
   for (unsigned int i = 0; i < conns.size(); i++) {
-    if (connstatetracker[i].isDisconnected()) {
+    if (!conns[i]->isConnected()) {
       conns[i]->login();
     }
-    else if (!conns[i]->isProcessing()) {
-      handleConnection(i, false);
-    }
-    else if (!conns[i]->isProcessing()) {
+    else {
       handleConnection(i, false);
     }
   }
@@ -99,7 +96,7 @@ void SiteLogic::tick(int message) {
         conns[i]->reconnect();
       }
       else if (event == "quit") {
-        if (!connstatetracker[i].isDisconnected()) {
+        if (conns[i]->isConnected()) {
           if (connstatetracker[i].isLoggedIn()) {
             loggedin--;
             available--;
@@ -169,9 +166,7 @@ void SiteLogic::listRefreshed(int id) {
   if (sr != NULL) {
     global->getEngine()->someRaceFileListRefreshed();
   }
-  if (!conns[id]->isProcessing()) {
-    handleConnection(id, true);
-  }
+  handleConnection(id, true);
 }
 
 void SiteLogic::unexpectedResponse(int id) {
@@ -671,7 +666,7 @@ void SiteLogic::requestSelect() {
     if (loggedin < conns.size()) {
       wantedloggedin++;
       for (unsigned int i = 0; i < conns.size(); i++) {
-        if (connstatetracker[i].isDisconnected()) {
+        if (!conns[i]->isConnected()) {
           conns[i]->login();
           break;
         }
@@ -681,6 +676,9 @@ void SiteLogic::requestSelect() {
 }
 
 void SiteLogic::handleConnection(int id, bool backfromrefresh) {
+  if (conns[id]->isProcessing()) {
+    return;
+  }
   connstatetracker[id].resetIdleTime();
   if (connstatetracker[id].hasTransfer()) {
     initTransfer(id);
@@ -1097,6 +1095,14 @@ bool SiteLogic::getReadyConn(std::string path, std::string file, int * ret, bool
   int lastreadyid = -1;
   bool foundreadythread = false;
   for (unsigned int i = 0; i < conns.size(); i++) {
+    if (!conns[i]->isConnected()) {
+      if (istransfer) {
+        if (!getSlot(isdownload)) return false;
+      }
+      conns[i]->login();
+      *ret = i;
+      return true;
+    }
     if(!connstatetracker[i].isLocked() && !conns[i]->isProcessing()) {
       foundreadythread = true;
       lastreadyid = i;
@@ -1147,16 +1153,14 @@ void SiteLogic::returnConn(int id) {
   else if (connstatetracker[id].isLockedForUpload()) {
     transferComplete(false);
   }
-  if (!conns[id]->isProcessing()) {
-    handleConnection(id, false);
-  }
+  handleConnection(id, false);
 }
 
 void SiteLogic::setNumConnections(unsigned int num) {
   while (num < conns.size()) {
     bool success = false;
     for (unsigned int i = 0; i < conns.size(); i++) {
-      if (connstatetracker[i].isDisconnected()) {
+      if (!conns[i]->isConnected()) {
         connstatetracker.erase(connstatetracker.begin() + i);
         delete conns[i];
         conns.erase(conns.begin() + i);
@@ -1286,7 +1290,7 @@ int SiteLogic::getCurrUp() {
 }
 
 void SiteLogic::connectConn(int id) {
-  if (connstatetracker[id].isDisconnected()) {
+  if (!conns[id]->isConnected()) {
     if (wantedloggedin < site->getMaxLogins()) {
       wantedloggedin++;
     }
@@ -1295,7 +1299,7 @@ void SiteLogic::connectConn(int id) {
 }
 
 void SiteLogic::disconnectConn(int id) {
-  if (!connstatetracker[id].isDisconnected()) {
+  if (conns[id]->isConnected()) {
     if (wantedloggedin > 0) {
       wantedloggedin--;
     }
@@ -1321,7 +1325,7 @@ void SiteLogic::issueRawCommand(unsigned int id, std::string command) {
   SiteLogicRequest request(requestid, REQ_RAW, command);
   request.setConnId(id);
   requests.push_back(request);
-  if (connstatetracker[id].isDisconnected()) {
+  if (!conns[id]->isConnected()) {
     connectConn(id);
     return;
   }
