@@ -1118,7 +1118,7 @@ bool SiteLogic::getReadyConn(std::string path, std::string file, int * ret, bool
   }
   if (!foundreadythread) {
     for (unsigned int i = 0; i < conns.size(); i++) {
-      if (!connstatetracker[i].isLocked()) {
+      if (!connstatetracker[i].isTransferLocked()) {
         foundreadythread = true;
         lastreadyid = i;
         if (conns[i]->getTargetPath().compare(path) == 0) {
@@ -1136,7 +1136,7 @@ bool SiteLogic::getReadyConn(std::string path, std::string file, int * ret, bool
     if (istransfer) {
       if (!getSlot(isdownload)) return false;
     }
-    if (!conns[lastreadyid]->isProcessing()) {
+    if (!conns[lastreadyid]->isProcessing() && !connstatetracker[lastreadyid].isListLocked()) {
       conns[lastreadyid]->doCWD(path);
     }
     *ret = lastreadyid;
@@ -1153,6 +1153,7 @@ void SiteLogic::returnConn(int id) {
   else if (connstatetracker[id].isLockedForUpload()) {
     transferComplete(false);
   }
+  connstatetracker[id].finishTransfer();
   handleConnection(id, false);
 }
 
@@ -1469,6 +1470,10 @@ void SiteLogic::list(int id) {
   conns[id]->doLIST();
 }
 
+void SiteLogic::listAll(int id) {
+  conns[id]->doLISTa();
+}
+
 void SiteLogic::prepareActiveDownload(int id, TransferMonitor * tmb, std::string path, std::string file, std::string addr, bool ssl) {
   connstatetracker[id].setTransfer(tmb, path, file, CST_DOWNLOAD, addr, ssl);
   if (!conns[id]->isProcessing()) {
@@ -1505,7 +1510,7 @@ void SiteLogic::getFileListConn(int id, bool hiddenfiles) {
   }
   else {
     conns[id]->prepareLIST();
-    global->getTransferManager()->getFileList(this, id);
+    global->getTransferManager()->getFileList(this, id, hiddenfiles);
   }
 }
 
@@ -1518,6 +1523,10 @@ void SiteLogic::getFileListConn(int id, SiteRace * siterace, FileList * filelist
   }
   else {
     conns[id]->prepareLIST(siterace, filelist);
-    global->getTransferManager()->getFileList(this, id);
+    global->getTransferManager()->getFileList(this, id, false);
   }
+}
+
+ConnStateTracker * SiteLogic::getConnStateTracker(int id) {
+  return &connstatetracker[id];
 }

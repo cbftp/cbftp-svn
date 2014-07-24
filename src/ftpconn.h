@@ -105,6 +105,7 @@ class FTPConn : private EventReceiver {
     void doSTAT();
     void doSTAT(SiteRace *, FileList *);
     void doLIST();
+    void doLISTa();
     void prepareLIST();
     void prepareLIST(SiteRace *, FileList *);
     void doSTATla();

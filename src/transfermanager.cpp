@@ -17,16 +17,16 @@ int TransferManager::download(std::string name, SiteLogic * sl, FileList * filel
   TransferMonitor * target = getAvailableTransferMonitor();
   transferstatus[id] = TRANSFER_IN_PROGRESS_UI;
   transfermap[target] = id;
-  target->engage(name, sl, filelist);
+  target->engageDownload(name, sl, filelist);
   return id;
 }
 
-int TransferManager::getFileList(SiteLogic * sl, int connid) {
+int TransferManager::getFileList(SiteLogic * sl, int connid, bool hiddenfiles) {
   int id = requestids++;
   TransferMonitor * target = getAvailableTransferMonitor();
   transferstatus[id] = TRANSFER_IN_PROGRESS;
   transfermap[target] = id;
-  target->engage(sl, connid);
+  target->engageList(sl, connid, hiddenfiles);
   return id;
 }
 
@@ -36,7 +36,7 @@ void TransferManager::suggestTransfer(std::string name, SiteLogic * src, FileLis
 
 void TransferManager::suggestTransfer(std::string srcname, SiteLogic * src, FileList * fls, std::string dstname, SiteLogic * dst, FileList * fld) {
   TransferMonitor * target = getAvailableTransferMonitor();
-  target->engage(srcname, src, fls, dstname, dst, fld);
+  target->engageFXP(srcname, src, fls, dstname, dst, fld);
 }
 
 TransferMonitor * TransferManager::getAvailableTransferMonitor() {

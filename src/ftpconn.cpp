@@ -477,6 +477,11 @@ void FTPConn::doLIST() {
   sendEcho("LIST");
 }
 
+void FTPConn::doLISTa() {
+  state = 31;
+  sendEcho("LIST -a");
+}
+
 void FTPConn::STATResponse() {
   processing = false;
   if (databufcode == 211 || databufcode == 212 || databufcode == 213) {

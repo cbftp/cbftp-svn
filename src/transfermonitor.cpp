@@ -26,7 +26,7 @@ bool TransferMonitor::idle() {
   return status == TM_STATUS_IDLE;
 }
 
-void TransferMonitor::engage(std::string sfile, SiteLogic * sls, FileList * fls, std::string dfile, SiteLogic * sld, FileList * fld) {
+void TransferMonitor::engageFXP(std::string sfile, SiteLogic * sls, FileList * fls, std::string dfile, SiteLogic * sld, FileList * fld) {
   this->sls = sls;
   this->sld = sld;
   this->fls = fls;
@@ -76,7 +76,7 @@ void TransferMonitor::engage(std::string sfile, SiteLogic * sls, FileList * fls,
   }
 }
 
-void TransferMonitor::engage(std::string sfile, SiteLogic * sls, FileList * fls) {
+void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileList * fls) {
   this->sls = sls;
   this->sfile = sfile;
   this->dfile = sfile;
@@ -105,13 +105,14 @@ void TransferMonitor::engage(std::string sfile, SiteLogic * sls, FileList * fls)
   }
 }
 
-void TransferMonitor::engage(SiteLogic * sls, int connid) {
+void TransferMonitor::engageList(SiteLogic * sls, int connid, bool hiddenfiles) {
   fls = NULL;
   fld = NULL;
   src = connid;
   activedownload = false;
   sourcecomplete = false;
   targetcomplete = false;
+  this->hiddenfiles = hiddenfiles;
   type = TM_TYPE_LIST;
   timestamp = 0;
   this->sls = sls;
@@ -211,7 +212,12 @@ void TransferMonitor::activeReady() {
       sls->download(src);
       break;
     case TM_TYPE_LIST:
-      sls->list(src);
+      if (hiddenfiles) {
+        sls->listAll(src);
+      }
+      else {
+        sls->list(src);
+      }
       break;
   }
   startstamp = timestamp;

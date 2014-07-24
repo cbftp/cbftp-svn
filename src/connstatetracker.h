@@ -59,11 +59,14 @@ public:
   void setList(TransferMonitor *, bool);
   void setList(TransferMonitor *, std::string, bool);
   bool hasTransfer();
+  bool hasFileTransfer();
   void finishTransfer();
   void abortTransfer();
   bool getTransferAborted();
   void lockForTransfer(bool);
   bool isLocked();
+  bool isListLocked();
+  bool isTransferLocked();
   bool isLockedForDownload();
   bool isLockedForUpload();
   bool isLoggedIn();

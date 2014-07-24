@@ -97,6 +97,7 @@ class SiteLogic : public EventReceiver {
     void requestSelect();
     Site * getSite();
     SiteRace * getRace(std::string);
+    void lockConnList(int);
     bool lockDownloadConn(std::string, std::string, int *);
     bool lockUploadConn(std::string, std::string, int *);
     bool getReadyConn(std::string, int *);
@@ -140,7 +141,9 @@ class SiteLogic : public EventReceiver {
     void download(int);
     void upload(int);
     void list(int);
+    void listAll(int);
     void prepareActiveUpload(int, TransferMonitor *, std::string, std::string, std::string, bool);
     void prepareActiveDownload(int, TransferMonitor *, std::string, std::string, std::string, bool);
     void abortTransfer(int);
+    ConnStateTracker * getConnStateTracker(int);
 };

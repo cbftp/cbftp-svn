@@ -129,6 +129,9 @@ void ConnStateTracker::setTransfer(TransferMonitor * tm, std::string path, std::
 }
 
 void ConnStateTracker::setList(TransferMonitor * tm, bool listpassive, std::string addr, bool ssl) {
+  if (this->transferlocked) {
+    global->getEventLog()->log("ConnStateTracker", "BUG: Setting list while being transfer locked!");
+  }
   if (this->listtransfer) {
     global->getEventLog()->log("ConnStateTracker", "BUG: Setting list while already having a list!");
   }
@@ -159,7 +162,11 @@ void ConnStateTracker::setLoggedIn() {
 }
 
 bool ConnStateTracker::hasTransfer() {
-  return transfer || listtransfer;
+  return isListLocked() || hasFileTransfer();
+}
+
+bool ConnStateTracker::hasFileTransfer() {
+  return transfer;
 }
 
 void ConnStateTracker::finishTransfer() {
@@ -238,15 +245,23 @@ void ConnStateTracker::lockForTransfer(bool download) {
 }
 
 bool ConnStateTracker::isLocked() {
+  return isTransferLocked() || isListLocked();
+}
+
+bool ConnStateTracker::isListLocked() {
+  return listtransfer;
+}
+
+bool ConnStateTracker::isTransferLocked() {
   return transferlocked;
 }
 
 bool ConnStateTracker::isLockedForDownload() {
-  return transferlocked && lockeddownload;
+  return isTransferLocked() && lockeddownload;
 }
 
 bool ConnStateTracker::isLockedForUpload() {
-  return transferlocked && !lockeddownload;
+  return isTransferLocked() && !lockeddownload;
 }
 
 RecursiveCommandLogic * ConnStateTracker::getRecursiveLogic() {

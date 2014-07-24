@@ -30,7 +30,7 @@ class TransferManager {
   public:
     TransferManager();
     int download(std::string, SiteLogic *, FileList *);
-    int getFileList(SiteLogic *, int);
+    int getFileList(SiteLogic *, int, bool);
     void suggestTransfer(std::string, SiteLogic *, FileList *, SiteLogic *, FileList *);
     void suggestTransfer(std::string, SiteLogic *, FileList *, std::string, SiteLogic *, FileList *);
     int transferStatus(int);

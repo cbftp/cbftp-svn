@@ -45,6 +45,7 @@ class TransferMonitor : public EventReceiver {
     TransferManager * tm;
     TransferStatus * ts;
     int latesttouch;
+    bool hiddenfiles;
     void finish();
   public:
     TransferMonitor(TransferManager *);
@@ -58,10 +59,7 @@ class TransferMonitor : public EventReceiver {
     void activeReady();
     bool idle();
     TransferStatus * getTransferStatus();
-    // for FXP
-    void engage(std::string, SiteLogic *, FileList *, std::string, SiteLogic *, FileList *);
-    // for download
-    void engage(std::string, SiteLogic *, FileList *);
-    // for LIST
-    void engage(SiteLogic *, int);
+    void engageFXP(std::string, SiteLogic *, FileList *, std::string, SiteLogic *, FileList *);
+    void engageDownload(std::string, SiteLogic *, FileList *);
+    void engageList(SiteLogic *, int, bool);
 };
