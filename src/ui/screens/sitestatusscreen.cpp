@@ -6,6 +6,7 @@
 #include "../../sitelogic.h"
 #include "../../sitelogicmanager.h"
 #include "../../ftpconn.h"
+#include "../../connstatetracker.h"
 
 #include "../ui.h"
 
@@ -52,12 +53,19 @@ void SiteStatusScreen::update() {
   int i = 8;
   for(unsigned int j = 0; j < st->getConns()->size(); j++) {
     std::string status = st->getStatus(j);
+    std::string llstate = st->getConnStateTracker(j)->isListLocked()
+        ? "Y" : "N";
+    std::string tlstate = st->getConnStateTracker(j)->isTransferLocked()
+        ? "Y" : "N";
+    std::string tstate = st->getConnStateTracker(j)->hasFileTransfer()
+        ? "Y" : "N";
     int statuslength = status.length();
     while (status.length() < previousstatuslength[j]) {
       status += " ";
     }
     previousstatuslength[j] = statuslength;
-    ui->printStr(i++, 1, "#" + global->int2Str((int)j) + " - " + status);
+    ui->printStr(i++, 1, "#" + global->int2Str((int)j) + " - LL:" + llstate +
+        " - TL:" + tlstate + " - T:" + tstate + " - " + status);
   }
 }
 
