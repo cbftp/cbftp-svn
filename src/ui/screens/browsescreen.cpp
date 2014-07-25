@@ -610,7 +610,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
 
 std::string BrowseScreen::getLegendText() {
   if (gotomode) {
-    return "[Any] Go to matching first letter in site list - [Esc] Cancel";
+    return "[Any] Go to first matching entry name - [Esc] Cancel";
   }
   return "[c]ancel - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - Toggle se[p]arators - [q]uick jump";
 }
