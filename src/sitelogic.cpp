@@ -523,13 +523,7 @@ void SiteLogic::commandFail(int id) {
       return;
   }
   // default handling: reconnect
-  if (connstatetracker[id].isLoggedIn()) {
-    loggedin--;
-    available--;
-  }
-  if (connstatetracker[id].hasTransfer()) {
-    reportTransferErrorAndFinish(id, 3);
-  }
+  disconnected(id);
   conns[id]->reconnect();
 }
 
