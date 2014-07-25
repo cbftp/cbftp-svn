@@ -528,14 +528,14 @@ void SiteLogic::commandFail(int id) {
     available--;
   }
   if (connstatetracker[id].hasTransfer()) {
-    reportTransferErrorAndFinish(id, connstatetracker[id].getTransferType(), 3);
+    reportTransferErrorAndFinish(id, 3);
   }
   conns[id]->reconnect();
 }
 
 void SiteLogic::handleFail(int id) {
   if (connstatetracker[id].hasTransfer()) {
-    handleTransferFail(id, connstatetracker[id].getTransferType(), 0);
+    handleTransferFail(id, 0);
     return;
   }
   connstatetracker[id].delayedCommand("handle", SLEEPDELAY * 6);
@@ -582,6 +582,9 @@ void SiteLogic::handleTransferFail(int id, int type, int err) {
   }
 }
 
+void SiteLogic::reportTransferErrorAndFinish(int id, int err) {
+  reportTransferErrorAndFinish(id, connstatetracker[id].getTransferType(), err);
+}
 void SiteLogic::reportTransferErrorAndFinish(int id, int type, int err) {
   if (!connstatetracker[id].getTransferAborted()) {
     switch (type) {
@@ -642,6 +645,9 @@ void SiteLogic::timedout(int id) {
 }
 
 void SiteLogic::disconnected(int id) {
+  while (connstatetracker[id].hasTransfer()) {
+    reportTransferErrorAndFinish(id, 3);
+  }
   if (connstatetracker[id].isLoggedIn()) {
     loggedin--;
     available--;
@@ -658,7 +664,8 @@ void SiteLogic::requestSelect() {
   }
   else {
     for (unsigned int i = 0; i < conns.size(); i++) {
-      if (!connstatetracker[i].isLocked() && !conns[i]->isProcessing()) {
+      if (connstatetracker[i].isLoggedIn() && !connstatetracker[i].isLocked() &&
+          !conns[i]->isProcessing()) {
         handleRequest(i);
         return;
       }
@@ -1349,7 +1356,7 @@ void SiteLogic::raceGlobalComplete() {
   }
   if (!stillactive) {
     for (unsigned int i = 0; i < conns.size(); i++) {
-      if (!conns[i]->isProcessing()) {
+      if (conns[i]->isConnected() && !conns[i]->isProcessing()) {
         if (connstatetracker[i].isLoggedIn()) {
           loggedin--;
           available--;
@@ -1377,7 +1384,7 @@ void SiteLogic::raceLocalComplete(SiteRace * sr) {
       killnum = 0;
     }
     for (unsigned int i = 0; i < conns.size() && killnum > 0; i++) {
-      if (!conns[i]->isProcessing()) {
+      if (conns[i]->isConnected() && !conns[i]->isProcessing()) {
         if (connstatetracker[i].isLoggedIn()) {
           loggedin--;
           available--;

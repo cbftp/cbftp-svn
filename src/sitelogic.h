@@ -66,6 +66,7 @@ class SiteLogic : public EventReceiver {
     void handleFail(int);
     void handleTransferFail(int, int);
     void handleTransferFail(int, int, int);
+    void reportTransferErrorAndFinish(int, int);
     void reportTransferErrorAndFinish(int, int, int);
     void getFileListConn(int);
     void getFileListConn(int, bool);

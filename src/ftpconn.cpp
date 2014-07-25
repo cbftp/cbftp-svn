@@ -875,8 +875,10 @@ void FTPConn::ABORResponse() {
 }
 
 void FTPConn::doQUIT() {
-  state = 23;
-  sendEcho("QUIT");
+  if (state != 0) {
+    state = 23;
+    sendEcho("QUIT");
+  }
 }
 
 void FTPConn::doSSLHandshake() {
