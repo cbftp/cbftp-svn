@@ -1,5 +1,7 @@
 #include "mainscreen.h"
 
+#include <cctype>
+
 #include "../../globalcontext.h"
 #include "../../site.h"
 #include "../../race.h"
@@ -20,10 +22,12 @@ MainScreen::MainScreen(Ui * ui) {
 }
 
 void MainScreen::initialize(unsigned int row, unsigned int col) {
-  msslegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [G]lobal settings - Event [l]og - [t]ransfers";
-  msolegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [G]lobal settings - Event [l]og - [t]ransfers";
+  msslegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [G]lobal settings - Event [l]og - [t]ransfers - [q]uick jump";
+  msolegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [G]lobal settings - Event [l]og - [t]ransfers - [q]uick jump";
+  gotolegendtext = "[Any] Go to matching first letter in site list - [Esc] Cancel";
   mso.makeLeavableDown();
   autoupdate = true;
+  gotomode = false;
   currentviewspan = 0;
   sitestartrow = 0;
   currentraces = 0;
@@ -137,6 +141,25 @@ void MainScreen::keyPressed(unsigned int ch) {
   std::string target;
   bool update = false;
   unsigned int pagerows = (unsigned int) (row - sitestartrow) * 0.6;
+  if (gotomode) {
+    if (ch >= 32 && ch <= 126) {
+      for (unsigned int i = 0; i < mss.size(); i++) {
+        MenuSelectSiteElement * msse = mss.getSiteElement(i);
+        if (toupper(ch) == toupper(msse->getSite()->getName()[0])) {
+          mss.setPointer(i);
+          if (mss.getSelectionPointer() >= currentviewspan + row - sitestartrow ||
+              mss.getSelectionPointer() < currentviewspan) {
+            ui->redraw();
+          }
+          break;
+        }
+      }
+    }
+    gotomode = false;
+    ui->update();
+    ui->setLegend();
+    return;
+  }
   switch(ch) {
     case KEY_UP:
       if (focusedarea->goUp()) {
@@ -233,6 +256,11 @@ void MainScreen::keyPressed(unsigned int ch) {
         if (mss.getSite() == NULL) break;
         ui->goRawCommand(mss.getSite()->getName());
         break;
+      case 'q':
+        gotomode = true;
+        ui->update();
+        ui->setLegend();
+        break;
       case KEY_NPAGE:
         for (unsigned int i = 0; i < pagerows; i++) {
           if (!mss.goDown()) {
@@ -276,6 +304,9 @@ void MainScreen::keyPressed(unsigned int ch) {
 }
 
 std::string MainScreen::getLegendText() {
+  if (gotomode) {
+    return gotolegendtext;
+  }
   if (focusedarea == &mss) {
     return msslegendtext;
   }

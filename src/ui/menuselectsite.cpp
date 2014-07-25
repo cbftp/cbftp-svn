@@ -119,3 +119,8 @@ void MenuSelectSite::checkPointer() {
     pointer = 0;
   }
 }
+
+void MenuSelectSite::setPointer(unsigned int newpos) {
+  pointer = newpos;
+  checkPointer();
+}

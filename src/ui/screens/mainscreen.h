@@ -23,10 +23,12 @@ private:
   int currentraces;
   std::string msolegendtext;
   std::string msslegendtext;
+  std::string gotolegendtext;
   FocusableArea * focusedarea;
   FocusableArea * defocusedarea;
   std::string deletesite;
   Ui * ui;
   MenuSelectSite mss;
   MenuSelectOption mso;
+  bool gotomode;
 };

@@ -27,4 +27,5 @@ class MenuSelectSite : public FocusableArea {
     void enterFocusFrom(int);
     void prepareRefill();
     void checkPointer();
+    void setPointer(unsigned int);
 };
