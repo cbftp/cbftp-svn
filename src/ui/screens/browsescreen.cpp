@@ -320,11 +320,11 @@ void BrowseScreen::keyPressed(unsigned int ch) {
   bool islink;
   UIFile * cursoredfile;
   if (gotomode) {
-    gotomodeticker = 0;
     if (gotomodefirst) {
       gotomodefirst = false;
     }
     if (ch >= 32 && ch <= 126) {
+      gotomodeticker = 0;
       gotomodestring += toupper(ch);
       unsigned int gotomodelength = gotomodestring.length();
       std::vector<UIFile *> * sortedlist = list.getSortedList();
@@ -348,10 +348,12 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       ui->update();
       return;
     }
-    if (ch == 27) {
+    else {
       gotomode = false;
       ui->update();
       ui->setLegend();
+    }
+    if (ch == 27) {
       return;
     }
   }
