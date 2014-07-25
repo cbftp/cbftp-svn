@@ -20,6 +20,7 @@ class SiteLogic;
 class FileList;
 class TransferManager;
 class TransferStatus;
+class LocalTransfer;
 
 class TransferMonitor : public EventReceiver {
   private:
@@ -46,7 +47,10 @@ class TransferMonitor : public EventReceiver {
     TransferStatus * ts;
     int latesttouch;
     bool hiddenfiles;
+    LocalTransfer * lt;
+    int localtransferspeedticker;
     void finish();
+    void setTargetSizeSpeed(TransferStatus *, unsigned int, int);
   public:
     TransferMonitor(TransferManager *);
     void tick(int);

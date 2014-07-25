@@ -11,6 +11,7 @@
 #include "localstorage.h"
 #include "transfermanager.h"
 #include "transferstatus.h"
+#include "localtransfer.h"
 
 extern GlobalContext * global;
 
@@ -19,6 +20,7 @@ TransferMonitor::TransferMonitor(TransferManager * tm) {
   status = TM_STATUS_IDLE;
   activedownload = false;
   timestamp = 0;
+  localtransferspeedticker = 0;
   global->getTickPoke()->startPoke(this, "TransferMonitor", TICKINTERVAL, 0);
 }
 
@@ -83,6 +85,7 @@ void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileLis
   this->spath = fls->getPath();
   this->fls = fls;
   fld = NULL;
+  lt = NULL;
   activedownload = false;
   sourcecomplete = false;
   targetcomplete = false;
@@ -92,6 +95,11 @@ void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileLis
   ts = NULL;
   if (!sls->lockDownloadConn(spath, sfile, &src)) return;
   status = TM_STATUS_AWAITING_PASSIVE;
+  ts = new TransferStatus(TRANSFERSTATUS_TYPE_DOWNLOAD,
+      sls->getSite()->getName(), "local", "", dfile, fls->getPath(),
+      global->getLocalStorage()->getTempPath(), fls->getFile(sfile)->getSize(),
+      0);
+  tm->addNewTransferStatus(ts);
   int spol = sls->getSite()->getSSLTransferPolicy();
   if (spol == SITE_SSL_ALWAYS_ON || spol == SITE_SSL_PREFER_ON) {
     ssl = true;
@@ -149,15 +157,7 @@ void TransferMonitor::tick(int msg) {
         // the speed shall be recalculated.
         if (latesttouch != touch) {
           latesttouch = touch;
-          ts->setTargetSize(filesize);
-          unsigned int currentspeed = ts->targetSize() / span;
-          unsigned int prevspeed = ts->getSpeed();
-          if (currentspeed < prevspeed) {
-            ts->setSpeed(prevspeed * 0.9 + currentspeed * 0.1);
-          }
-          else {
-            ts->setSpeed(prevspeed * 0.7 + currentspeed * 0.3);
-          }
+          setTargetSizeSpeed(ts, filesize, span);
         }
         else {
           // since the actual file size has not changed since last tick,
@@ -165,6 +165,17 @@ void TransferMonitor::tick(int msg) {
           unsigned long long int speedtemp = ts->getSpeed() * 1024;
           ts->interpolateAddSize((speedtemp * TICKINTERVAL) / 1000);
         }
+        ts->setTimeSpent(span / 1000);
+      }
+    }
+    if (type == TM_TYPE_LOCAL) {
+      if (localtransferspeedticker++ % 4 == 0 && lt) { // run every 200 ms
+        unsigned int filesize = lt->size();
+        int span = timestamp - startstamp;
+        if (!span) {
+          span = 10;
+        }
+        setTargetSizeSpeed(ts, filesize, span);
         ts->setTimeSpent(span / 1000);
       }
     }
@@ -187,7 +198,7 @@ void TransferMonitor::passiveReady(std::string addr) {
         // client active mode is not implemented yet
       }
       else {
-        global->getLocalStorage()->passiveDownload(this, dfile, addr, ssl, sls->getConn(src));
+        lt = global->getLocalStorage()->passiveDownload(this, dfile, addr, ssl, sls->getConn(src));
       }
       break;
     case TM_TYPE_LIST:
@@ -256,7 +267,8 @@ void TransferMonitor::finish() {
       span = 10;
     }
     switch (type) {
-      case TM_TYPE_FXP: {
+      case TM_TYPE_FXP:
+      case TM_TYPE_LOCAL: {
         File * srcfile = fls->getFile(sfile);
         if (srcfile) {
           long int size = srcfile->getSize();
@@ -264,8 +276,7 @@ void TransferMonitor::finish() {
           ts->setTargetSize(size);
           ts->setSpeed(speed);
           ts->setTimeSpent(span / 1000);
-          //std::cout << "[ " << sls->getSite()->getName() << " -> " << sld->getSite()->getName() << " ] - " << file << " - " << speed << " kB/s" << std::endl;
-          if (size > 1000000) {
+          if (size > 1000000 && type == TM_TYPE_FXP) {
             fld->setFileUpdateFlag(dfile, size, speed, sls->getSite(), sld->getSite()->getName());
           }
         }
@@ -369,4 +380,16 @@ void TransferMonitor::targetError(int err) {
 
 TransferStatus * TransferMonitor::getTransferStatus() {
   return ts;
+}
+
+void TransferMonitor::setTargetSizeSpeed(TransferStatus * ts, unsigned int filesize, int span) {
+  ts->setTargetSize(filesize);
+  unsigned int currentspeed = ts->targetSize() / span;
+  unsigned int prevspeed = ts->getSpeed();
+  if (currentspeed < prevspeed) {
+    ts->setSpeed(prevspeed * 0.9 + currentspeed * 0.1);
+  }
+  else {
+    ts->setSpeed(prevspeed * 0.7 + currentspeed * 0.3);
+  }
 }
