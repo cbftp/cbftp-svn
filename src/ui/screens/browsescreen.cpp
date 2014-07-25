@@ -1,5 +1,7 @@
 #include "browsescreen.h"
 
+#include <cctype>
+
 #include "../../sitelogic.h"
 #include "../../sitelogicmanager.h"
 #include "../../site.h"
@@ -7,6 +9,7 @@
 #include "../../skiplist.h"
 #include "../../eventlog.h"
 #include "../../filelist.h"
+#include "../../tickpoke.h"
 
 #include "../ui.h"
 #include "../uifile.h"
@@ -15,6 +18,8 @@ extern GlobalContext * global;
 
 BrowseScreen::BrowseScreen(Ui * ui) {
   this->ui = ui;
+  gotomodeticker = 0;
+  global->getTickPoke()->startPoke(this, "BrowseScreen", 50, 0);
 }
 
 void BrowseScreen::initialize(unsigned int row, unsigned int col, std::string sitestr) {
@@ -314,6 +319,42 @@ void BrowseScreen::keyPressed(unsigned int ch) {
   bool isdir;
   bool islink;
   UIFile * cursoredfile;
+  if (gotomode) {
+    gotomodeticker = 0;
+    if (gotomodefirst) {
+      gotomodefirst = false;
+    }
+    if (ch >= 32 && ch <= 126) {
+      gotomodestring += toupper(ch);
+      unsigned int gotomodelength = gotomodestring.length();
+      std::vector<UIFile *> * sortedlist = list.getSortedList();
+      for (unsigned int i = 0; i < sortedlist->size(); i++) {
+        std::string name = (*sortedlist)[i]->getName();
+        if (name.length() >= gotomodelength) {
+          std::string substr = name.substr(0, gotomodelength);
+          for (unsigned int j = 0; j < gotomodelength; j++) {
+            substr[j] = toupper(substr[j]);
+          }
+          if (substr == gotomodestring) {
+            list.setCursorPosition(i);
+            if (list.currentCursorPosition() >= currentviewspan + row ||
+                list.currentCursorPosition() < currentviewspan) {
+              ui->redraw();
+            }
+            break;
+          }
+        }
+      }
+      ui->update();
+      return;
+    }
+    if (ch == 27) {
+      gotomode = false;
+      ui->update();
+      ui->setLegend();
+      return;
+    }
+  }
   switch (ch) {
     case 27: // esc
     case 'c':
@@ -440,6 +481,14 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       wipetarget = oldpath + wipefile;
       ui->goConfirmation("Do you really want to delete " + wipefile);
       break;
+    case 'q':
+      gotomode = true;
+      gotomodefirst = true;
+      gotomodeticker = 0;
+      gotomodestring = "";
+      ui->update();
+      ui->setLegend();
+      break;
     case KEY_LEFT:
     case 8:
     case KEY_BACKSPACE:
@@ -558,7 +607,10 @@ void BrowseScreen::keyPressed(unsigned int ch) {
 }
 
 std::string BrowseScreen::getLegendText() {
-  return "[c]ancel - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - Toggle se[p]arators";
+  if (gotomode) {
+    return "[Any] Go to matching first letter in site list - [Esc] Cancel";
+  }
+  return "[c]ancel - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - Toggle se[p]arators - [q]uick jump";
 }
 
 std::string BrowseScreen::getInfoLabel() {
@@ -709,4 +761,14 @@ void BrowseScreen::sort() {
 void BrowseScreen::refreshFilelist() {
   requestedpath = list.getPath();
   requestid = sitelogic->requestFileList(requestedpath);
+}
+
+void BrowseScreen::tick (int message) {
+  if (gotomode && !gotomodefirst) {
+    if (gotomodeticker++ >= 20) {
+      gotomode = false;
+      ui->update();
+      ui->setLegend();
+    }
+  }
 }

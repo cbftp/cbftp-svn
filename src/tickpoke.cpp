@@ -37,7 +37,7 @@ void TickPoke::tick(int interval) {
 
 void TickPoke::startPoke(EventReceiver * pokee, std::string desc, int interval, int message) {
   targets.push_back(TickPokeTarget(pokee, interval, message));
-  global->getEventLog()->log("TickPoke", "Registering " + desc + " as poke receiver with interval " + global->int2Str(interval) + "ms");
+  //global->getEventLog()->log("TickPoke", "Registering " + desc + " as poke receiver with interval " + global->int2Str(interval) + "ms");
 }
 
 void TickPoke::stopPoke(EventReceiver * pokee, std::string desc, int message) {
@@ -45,7 +45,7 @@ void TickPoke::stopPoke(EventReceiver * pokee, std::string desc, int message) {
   for(it = targets.begin(); it != targets.end(); it++) {
     if (it->getPokee() == pokee && it->getMessage() == message) {
       targets.erase(it);
-      global->getEventLog()->log("TickPoke", "Deregistering " + desc + " as poke receiver");
+      //global->getEventLog()->log("TickPoke", "Deregistering " + desc + " as poke receiver");
       return;
     }
   }

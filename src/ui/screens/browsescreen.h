@@ -7,11 +7,13 @@
 #include "../uiwindow.h"
 #include "../uifilelist.h"
 
+#include "../../eventreceiver.h"
+
 class SiteLogic;
 class Site;
 class FileList;
 
-class BrowseScreen : public UIWindow {
+class BrowseScreen : public UIWindow, public EventReceiver {
 public:
   BrowseScreen(Ui *);
   void initialize(unsigned int, unsigned int, std::string);
@@ -23,6 +25,7 @@ public:
   std::string getInfoLabel();
   std::string getInfoText();
   std::list<std::pair<std::string, std::string> > selectionhistory;
+  void tick(int);
 private:
   unsigned int currentviewspan;
   unsigned int sliderstart;
@@ -43,6 +46,10 @@ private:
   bool nuking;
   bool nukesuccess;
   bool nukefailed;
+  bool gotomode;
+  bool gotomodefirst;
+  int gotomodeticker;
+  std::string gotomodestring;
   std::string nuketarget;
   std::string wipetarget;
   std::string wipepath;
