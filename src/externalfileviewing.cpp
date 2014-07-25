@@ -6,6 +6,7 @@
 #include <vector>
 #include <cctype>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "globalcontext.h"
 #include "localstorage.h"
@@ -44,8 +45,9 @@ int ExternalFileViewing::view(std::string path, bool deleteafter) {
   global->getEventLog()->log("ExternalFileViewing", "Opening " + path + " with " + application);
   int pid = fork();
   if (!pid) {
-    close(STDOUT_FILENO);
-    close(STDERR_FILENO);
+    int devnull = open("/dev/null", O_WRONLY);
+    dup2(devnull, STDOUT_FILENO);
+    dup2(devnull, STDERR_FILENO);
     execlp(application.c_str(), application.c_str(), path.c_str(), (char *)0);
   }
   else {
