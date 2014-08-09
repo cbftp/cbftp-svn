@@ -13,23 +13,23 @@ Proxy::Proxy(std::string name) {
   pass = "";
 }
 
-std::string Proxy::getName() {
+std::string Proxy::getName() const {
   return name;
 }
 
-std::string Proxy::getAddr() {
+std::string Proxy::getAddr() const {
   return addr;
 }
 
-std::string Proxy::getPort() {
+std::string Proxy::getPort() const {
   return port;
 }
 
-int Proxy::getAuthMethod() {
+int Proxy::getAuthMethod() const {
   return authmethod;
 }
 
-std::string Proxy::getAuthMethodText() {
+std::string Proxy::getAuthMethodText() const {
   switch (authmethod) {
     case PROXY_AUTH_NONE:
       return "None";
@@ -39,11 +39,11 @@ std::string Proxy::getAuthMethodText() {
   return "Unknown";
 }
 
-std::string Proxy::getUser() {
+std::string Proxy::getUser() const {
   return user;
 }
 
-std::string Proxy::getPass() {
+std::string Proxy::getPass() const {
   return pass;
 }
 

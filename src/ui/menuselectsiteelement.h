@@ -11,8 +11,8 @@ class MenuSelectSiteElement {
     int row;
   public:
     MenuSelectSiteElement(Site *, SiteLogic *, int, int);
-    Site * getSite();
-    SiteLogic * getSiteLogic();
-    int getCol();
-    int getRow();
+    Site * getSite() const;
+    SiteLogic * getSiteLogic() const;
+    int getCol() const;
+    int getRow() const;
 };

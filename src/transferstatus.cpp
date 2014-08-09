@@ -19,59 +19,59 @@ TransferStatus::TransferStatus(int type, std::string source, std::string target,
   this->timeremaining = this->sourcesize / this->speed;
 }
 
-std::string TransferStatus::getSource() {
+std::string TransferStatus::getSource() const {
   return source;
 }
 
-std::string TransferStatus::getTarget() {
+std::string TransferStatus::getTarget() const {
   return target;
 }
 
-std::string TransferStatus::getRelease() {
+std::string TransferStatus::getRelease() const {
   return release;
 }
 
-std::string TransferStatus::getFile() {
+std::string TransferStatus::getFile() const {
   return file;
 }
 
-std::string TransferStatus::getSourcePath() {
+std::string TransferStatus::getSourcePath() const {
   return sourcepath;
 }
 
-std::string TransferStatus::getTargetPath() {
+std::string TransferStatus::getTargetPath() const {
   return targetpath;
 }
 
-unsigned int TransferStatus::sourceSize() {
+unsigned int TransferStatus::sourceSize() const {
   return sourcesize;
 }
 
-unsigned int TransferStatus::targetSize() {
+unsigned int TransferStatus::targetSize() const {
   return interpolatedtargetsize;
 }
 
-unsigned int TransferStatus::knownTargetSize() {
+unsigned int TransferStatus::knownTargetSize() const {
   return knowntargetsize;
 }
 
-unsigned int TransferStatus::getSpeed() {
+unsigned int TransferStatus::getSpeed() const {
   return speed;
 }
 
-unsigned int TransferStatus::getTimeSpent() {
+unsigned int TransferStatus::getTimeSpent() const {
   return timespent;
 }
 
-unsigned int TransferStatus::getTimeRemaining() {
+unsigned int TransferStatus::getTimeRemaining() const {
   return timeremaining;
 }
 
-unsigned int TransferStatus::getProgress() {
+unsigned int TransferStatus::getProgress() const {
   return progress;
 }
 
-std::string TransferStatus::getTimestamp() {
+std::string TransferStatus::getTimestamp() const {
   return timestamp;
 }
 

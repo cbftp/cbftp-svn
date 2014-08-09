@@ -22,9 +22,9 @@ private:
   void handleMessage(std::string);
 public:
   RemoteCommandHandler();
-  bool isEnabled();
-  int getUDPPort();
-  std::string getPassword();
+  bool isEnabled() const;
+  int getUDPPort() const;
+  std::string getPassword() const;
   void setPassword(std::string);
   void setPort(int);
   void setEnabled(bool);

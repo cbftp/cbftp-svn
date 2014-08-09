@@ -6,11 +6,11 @@ class NumInputArrow {
 public:
   NumInputArrow();
   NumInputArrow(int, int, int);
-  int getValue();
+  int getValue() const;
   bool setValue(int);
   bool increase();
   bool decrease();
-  std::string getVisual();
+  std::string getVisual() const;
   void activate();
   void deactivate();
 private:

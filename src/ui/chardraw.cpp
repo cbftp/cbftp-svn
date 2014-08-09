@@ -72,8 +72,12 @@ void CharDraw::init() {
   push(' ', "      ", "      ", "      ", "      ", "      ", "      ");
 }
 
-std::string CharDraw::getCharLine(char c, int line) {
-  return charmap[c][line];
+std::string CharDraw::getCharLine(char c, unsigned int line) {
+  std::map<char, std::vector<std::string> >::const_iterator it = charmap.find(c);
+  if (it == charmap.end() || line >= it->second.size()) {
+    return "      ";
+  }
+  return it->second[line];
 }
 
 int CharDraw::getMixedChar(int bgchar, int draw) {

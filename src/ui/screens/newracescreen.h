@@ -16,14 +16,14 @@ public:
   void update();
   void redraw();
   void keyPressed(unsigned int);
-  std::string getLegendText();
-  std::string getInfoLabel();
-  std::string getInfoText();
+  std::string getLegendText() const;
+  std::string getInfoLabel() const;
+  std::string getInfoText() const;
 private:
   void populateSiteList();
   bool startRace();
   Site * startsite;
-  std::string getSectionButtonText(MenuSelectOptionElement *);
+  std::string getSectionButtonText(MenuSelectOptionElement *) const;
   std::string currentlegendtext;
   std::string defaultlegendtext;
   bool active;

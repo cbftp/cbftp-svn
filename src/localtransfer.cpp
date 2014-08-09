@@ -48,7 +48,7 @@ void LocalTransfer::engage(TransferMonitor * tm, int storeid, std::string addr, 
   global->getIOManager()->registerTCPClientSocket(this, addr, port, &sockfd);
 }
 
-bool LocalTransfer::active() {
+bool LocalTransfer::active() const {
   return inuse;
 }
 
@@ -86,7 +86,7 @@ void LocalTransfer::FDData(char * data, unsigned int len) {
   append(data, len);
 }
 
-unsigned long long int LocalTransfer::size() {
+unsigned long long int LocalTransfer::size() const {
   return filesize + bufpos;
 }
 

@@ -21,21 +21,20 @@ class MenuFilters : public FocusableArea {
     void addFilter(std::string);
   public:
     MenuFilters();
-    void initialize(int, int, std::list<std::string>::iterator, std::list<std::string>::iterator);
+    void initialize(int, int, std::list<std::string>::const_iterator, std::list<std::string>::const_iterator);
     bool goDown();
     bool goUp();
     bool goRight();
     bool goLeft();
     MenuSelectOptionContainer * getSectionContainer(unsigned int);
-    unsigned int getLastSelectionPointer();
-    unsigned int getSelectionPointer();
+    unsigned int getLastSelectionPointer() const;
+    unsigned int getSelectionPointer() const;
     bool activateSelected();
-    MenuSelectOptionElement * getElement(unsigned int);
-    unsigned int getHeaderRow();
-    unsigned int getHeaderCol();
-    unsigned int size();
+    MenuSelectOptionElement * getElement(unsigned int) const;
+    unsigned int getHeaderRow() const;
+    unsigned int getHeaderCol() const;
+    unsigned int size() const;
     bool needsRedraw();
-    bool addButtonPressed();
     void enterFocusFrom(int);
     void addFilter();
     void clear();

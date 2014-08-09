@@ -51,7 +51,7 @@ DataBlockPool * WorkManager::getBlockPool() {
   return &blockpool;
 }
 
-bool WorkManager::overload() {
+bool WorkManager::overload() const {
   return dataqueue.size() >= 10;
 }
 

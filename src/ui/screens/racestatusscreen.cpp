@@ -35,7 +35,7 @@ void RaceStatusScreen::initialize(unsigned int row, unsigned int col, std::strin
 
 void RaceStatusScreen::redraw() {
   sitestr = "";
-  for (std::list<SiteLogic *>::iterator it = race->begin(); it != race->end(); it++) {
+  for (std::list<SiteLogic *>::const_iterator it = race->begin(); it != race->end(); it++) {
     sitestr += (*it)->getSite()->getName() + ",";
   }
   if (sitestr.length() > 0) {
@@ -89,7 +89,7 @@ void RaceStatusScreen::redraw() {
     std::map<std::string, std::string> localtags;
     while (!finished) {
       finished = true;
-      for (std::list<std::string>::iterator it = race->guessedFileListBegin(); it != race->guessedFileListEnd(); it++) {
+      for (std::list<std::string>::const_iterator it = race->guessedFileListBegin(); it != race->guessedFileListEnd(); it++) {
         std::string filename = *it;
         while (filename.length() < 3) {
           filename += " ";
@@ -199,7 +199,7 @@ void RaceStatusScreen::update() {
   int x = 1;
   int y = 8;
   mso.clear();
-  for (std::list<SiteLogic *>::iterator it = race->begin(); it != race->end(); it++) {
+  for (std::list<SiteLogic *>::const_iterator it = race->begin(); it != race->end(); it++) {
     SiteRace * sr = (*it)->getRace(release);
     std::string user = (*it)->getSite()->getUser();
     bool trimcompare = user.length() > 8;
@@ -225,7 +225,7 @@ void RaceStatusScreen::update() {
 
       ui->printStr(y, x + 5, printsubpath, longestsubpath);
       race->prepareGuessedFileList(origsubpath);
-      for (std::list<std::string>::iterator it3 = race->guessedFileListBegin(); it3 != race->guessedFileListEnd(); it3++) {
+      for (std::list<std::string>::const_iterator it3 = race->guessedFileListBegin(); it3 != race->guessedFileListEnd(); it3++) {
         std::string filename = *it3;
         if (filename.length() < 3) filename += " ";
         int filex = filetagpos[filenametags[filename]];
@@ -319,7 +319,7 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
   }
 }
 
-char RaceStatusScreen::getFileChar(bool exists, bool owner, bool upload, bool download) {
+char RaceStatusScreen::getFileChar(bool exists, bool owner, bool upload, bool download) const {
   char printchar = '_';
   if (upload) {
     if (owner) {
@@ -360,10 +360,10 @@ char RaceStatusScreen::getFileChar(bool exists, bool owner, bool upload, bool do
   return printchar;
 }
 
-std::string RaceStatusScreen::getLegendText() {
+std::string RaceStatusScreen::getLegendText() const {
   return "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - A[B]ort race - [s]how small dirs";
 }
 
-std::string RaceStatusScreen::getInfoLabel() {
+std::string RaceStatusScreen::getInfoLabel() const {
   return "RACE STATUS: " + release;
 }

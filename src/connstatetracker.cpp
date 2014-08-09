@@ -50,7 +50,7 @@ void ConnStateTracker::timePassed(int time) {
   }
 }
 
-int ConnStateTracker::getTimePassed() {
+int ConnStateTracker::getTimePassed() const {
   return idletime;
 }
 
@@ -64,15 +64,15 @@ void ConnStateTracker::check(SiteRace * sr) {
   }
 }
 
-SiteRace * ConnStateTracker::lastChecked() {
+SiteRace * ConnStateTracker::lastChecked() const {
   return lastchecked;
 }
 
-int ConnStateTracker::checkCount() {
+int ConnStateTracker::checkCount() const {
     return lastcheckedcount;
 }
 
-bool ConnStateTracker::hasReleasedCommand() {
+bool ConnStateTracker::hasReleasedCommand() const {
   return releasedcommands.size() > 0;
 }
 
@@ -153,7 +153,7 @@ void ConnStateTracker::setList(TransferMonitor * tm, std::string addr, bool ssl)
   setList(tm, false, addr, ssl);
 }
 
-bool ConnStateTracker::isLoggedIn() {
+bool ConnStateTracker::isLoggedIn() const {
   return loggedin;
 }
 
@@ -161,11 +161,11 @@ void ConnStateTracker::setLoggedIn() {
   loggedin = true;
 }
 
-bool ConnStateTracker::hasTransfer() {
+bool ConnStateTracker::hasTransfer() const {
   return isListLocked() || hasFileTransfer();
 }
 
-bool ConnStateTracker::hasFileTransfer() {
+bool ConnStateTracker::hasFileTransfer() const {
   return transfer;
 }
 
@@ -182,11 +182,11 @@ void ConnStateTracker::abortTransfer() {
   aborted = true;
 }
 
-bool ConnStateTracker::getTransferAborted() {
+bool ConnStateTracker::getTransferAborted() const {
   return aborted;
 }
 
-TransferMonitor * ConnStateTracker::getTransferMonitor() {
+TransferMonitor * ConnStateTracker::getTransferMonitor() const {
   if (listtransfer) {
     return listtm;
   }
@@ -196,43 +196,43 @@ TransferMonitor * ConnStateTracker::getTransferMonitor() {
   return NULL;
 }
 
-std::string ConnStateTracker::getTransferPath() {
+std::string ConnStateTracker::getTransferPath() const {
   return path;
 }
 
-std::string ConnStateTracker::getTransferFile() {
+std::string ConnStateTracker::getTransferFile() const {
   return file;
 }
 
-int ConnStateTracker::getTransferType() {
+int ConnStateTracker::getTransferType() const {
   if (listtransfer) {
     return CST_LIST;
   }
   return type;
 }
 
-bool ConnStateTracker::getTransferPassive() {
+bool ConnStateTracker::getTransferPassive() const {
   if (listtransfer) {
     return listpassive;
   }
   return passive;
 }
 
-bool ConnStateTracker::getTransferFXP() {
+bool ConnStateTracker::getTransferFXP() const {
   if (listtransfer) {
     return false;
   }
   return fxp;
 }
 
-std::string ConnStateTracker::getTransferAddr() {
+std::string ConnStateTracker::getTransferAddr() const {
   if (listtransfer) {
     return listaddr;
   }
   return addr;
 }
 
-bool ConnStateTracker::getTransferSSL() {
+bool ConnStateTracker::getTransferSSL() const{
   if (listtransfer) {
     return listssl;
   }
@@ -244,26 +244,26 @@ void ConnStateTracker::lockForTransfer(bool download) {
   lockeddownload = download;
 }
 
-bool ConnStateTracker::isLocked() {
+bool ConnStateTracker::isLocked() const {
   return isTransferLocked() || isListLocked();
 }
 
-bool ConnStateTracker::isListLocked() {
+bool ConnStateTracker::isListLocked() const {
   return listtransfer;
 }
 
-bool ConnStateTracker::isTransferLocked() {
+bool ConnStateTracker::isTransferLocked() const {
   return transferlocked;
 }
 
-bool ConnStateTracker::isLockedForDownload() {
+bool ConnStateTracker::isLockedForDownload() const {
   return isTransferLocked() && lockeddownload;
 }
 
-bool ConnStateTracker::isLockedForUpload() {
+bool ConnStateTracker::isLockedForUpload() const {
   return isTransferLocked() && !lockeddownload;
 }
 
-RecursiveCommandLogic * ConnStateTracker::getRecursiveLogic() {
+RecursiveCommandLogic * ConnStateTracker::getRecursiveLogic() const {
   return recursivelogic;
 }

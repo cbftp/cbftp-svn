@@ -29,7 +29,7 @@ class Engine : public EventReceiver {
     void refreshScoreBoard();
     void issueOptimalTransfers();
     void setSpeedScale();
-    int calculateScore(File *, Race *, FileList *, SiteRace *, FileList *, SiteRace *, int, bool *, bool);
+    int calculateScore(File *, Race *, FileList *, SiteRace *, FileList *, SiteRace *, int, bool *, bool) const;
     bool pokeregistered;
     unsigned int dropped;
   public:
@@ -38,12 +38,14 @@ class Engine : public EventReceiver {
     void removeSiteFromRace(std::string, std::string);
     void abortRace(std::string);
     void someRaceFileListRefreshed();
-    int currentRaces();
-    int allRaces();
-    Race * getRace(std::string);
+    int currentRaces() const;
+    int allRaces() const;
+    Race * getRace(std::string) const;
     std::list<Race *>::iterator getRacesIteratorBegin();
     std::list<Race *>::iterator getRacesIteratorEnd();
+    std::list<Race *>::const_iterator getRacesIteratorBegin() const;
+    std::list<Race *>::const_iterator getRacesIteratorEnd() const;
     void tick(int);
     void issueGlobalComplete(Race *);
-    ScoreBoard * getScoreBoard();
+    ScoreBoard * getScoreBoard() const;
 };

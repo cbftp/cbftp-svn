@@ -64,7 +64,7 @@ void NewRaceScreen::initialize(unsigned int row, unsigned int col, std::string s
 void NewRaceScreen::populateSiteList() {
   int y = 6;
   int x = 1;
-  std::vector<Site *>::iterator it;
+  std::vector<Site *>::const_iterator it;
   mso.clear();
   for (it = global->getSiteManager()->getSitesIteratorBegin(); it != global->getSiteManager()->getSitesIteratorEnd(); it++) {
     Site * site = *it;
@@ -260,19 +260,19 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
   }
 }
 
-std::string NewRaceScreen::getLegendText() {
+std::string NewRaceScreen::getLegendText() const {
   return currentlegendtext;
 }
 
-std::string NewRaceScreen::getInfoLabel() {
+std::string NewRaceScreen::getInfoLabel() const {
   return "START NEW RACE";
 }
 
-std::string NewRaceScreen::getInfoText() {
+std::string NewRaceScreen::getInfoText() const {
   return infotext;
 }
 
-std::string NewRaceScreen::getSectionButtonText(MenuSelectOptionElement * msoe) {
+std::string NewRaceScreen::getSectionButtonText(MenuSelectOptionElement * msoe) const {
   std::string buttontext = msoe->getLabelText();
   if (msoe->getIdentifier() == section) {
     buttontext[0] = '[';

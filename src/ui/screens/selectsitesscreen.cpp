@@ -16,7 +16,7 @@ SelectSitesScreen::SelectSitesScreen(Ui * ui) {
 
 void SelectSitesScreen::initialize(unsigned int row, unsigned int col, std::string preselectstr, std::string purpose, Site * skipsite) {
   sm = global->getSiteManager();
-  std::vector<Site *>::iterator it;
+  std::vector<Site *>::const_iterator it;
   this->purpose = purpose;
   std::map<std::string, bool> preselected;
   while (true) {
@@ -137,11 +137,11 @@ void SelectSitesScreen::keyPressed(unsigned int ch) {
   }
 }
 
-std::string SelectSitesScreen::getLegendText() {
+std::string SelectSitesScreen::getLegendText() const {
   return "[d]one - [c]ancel - [Arrowkeys] Navigate";
 }
 
-std::string SelectSitesScreen::getInfoLabel() {
+std::string SelectSitesScreen::getInfoLabel() const {
   if (purpose.length()) {
     return "SELECT SITES - " + purpose;
   }

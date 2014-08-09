@@ -134,10 +134,10 @@ void NewKeyScreen::keyPressed(unsigned int ch) {
   }
 }
 
-std::string NewKeyScreen::getLegendText() {
+std::string NewKeyScreen::getLegendText() const {
   return currentlegendtext;
 }
 
-std::string NewKeyScreen::getInfoLabel() {
+std::string NewKeyScreen::getInfoLabel() const {
   return "CREATE DATA FILE";
 }

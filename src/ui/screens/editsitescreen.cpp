@@ -47,7 +47,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
     blockedlist = sm->getBlocksForSite(this->site);
   }
   std::string affilstr = "";
-  std::map<std::string, bool>::iterator it;
+  std::map<std::string, bool>::const_iterator it;
   for (it = modsite.affilsBegin(); it != modsite.affilsEnd(); it++) {
     affilstr += it->first + " ";
   }
@@ -101,7 +101,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
   }
   useproxy->addOption("(Global) " + globalproxyname, SITE_PROXY_GLOBAL);
   useproxy->addOption("None", SITE_PROXY_NONE);
-  for (std::vector<Proxy *>::iterator it = pm->begin(); it != pm->end(); it++) {
+  for (std::vector<Proxy *>::const_iterator it = pm->begin(); it != pm->end(); it++) {
     useproxy->addOption((*it)->getName(), SITE_PROXY_USE);
   }
   int proxytype = modsite.getProxyType();
@@ -143,7 +143,7 @@ void EditSiteScreen::redraw() {
   }
   ui->printStr(headrow, headcol + 9, ms.getElement(0)->getContentText(), highlight);
   for (unsigned int i = 0; i < ms.size(); i++) {
-    MenuSelectOptionContainer * msoc = ms.getSectionContainer(i);
+    const MenuSelectOptionContainer * msoc = ms.getSectionContainer(i);
     for (unsigned int j = 0; j < 3; j++) {
       highlight = ((i * 3) + 1 + j) == selected;
       int indentation = 0;
@@ -173,7 +173,7 @@ void EditSiteScreen::update() {
         ui->printStr(headrow, headcol + 9, ms.getElement(0)->getContentText());
       }
       else {
-        MenuSelectOptionContainer * msoc = ms.getSectionContainer((lastsel - 1) / 3);
+        const MenuSelectOptionContainer * msoc = ms.getSectionContainer((lastsel - 1) / 3);
         int internalid = (lastsel - 1) % 3;
         int add = 0;
         if (internalid == 1) add = 12;
@@ -211,7 +211,7 @@ void EditSiteScreen::update() {
       ui->printStr(headrow, headcol + 9, ms.getElement(0)->getContentText());
     }
     else {
-      MenuSelectOptionContainer * msoc = ms.getSectionContainer((lastsel - 1) / 3);
+      const MenuSelectOptionContainer * msoc = ms.getSectionContainer((lastsel - 1) / 3);
       int internalid = (lastsel - 1) % 3;
       int add = 0;
       if (internalid == 1) add = 12;
@@ -222,7 +222,7 @@ void EditSiteScreen::update() {
       ui->printStr(headrow, headcol + 9, ms.getElement(0)->getContentText(), true);
     }
     else {
-      MenuSelectOptionContainer * msoc = ms.getSectionContainer((sel - 1) / 3);
+      const MenuSelectOptionContainer * msoc = ms.getSectionContainer((sel - 1) / 3);
       int internalid = (sel - 1) % 3;
       int add = 0;
       if (internalid == 1) add = 12;
@@ -452,7 +452,7 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
       }
       site->clearSections();
       for (unsigned int i = 0; i < ms.size(); i++) {
-        MenuSelectOptionContainer * msoc = ms.getSectionContainer(i);
+        const MenuSelectOptionContainer * msoc = ms.getSectionContainer(i);
         std::string name = ((MenuSelectOptionTextField *)msoc->getOption(0))->getData();
         std::string path = ((MenuSelectOptionTextField *)msoc->getOption(1))->getData();
         if (name.length() > 0 && path.length() > 0) {
@@ -483,10 +483,10 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
   }
 }
 
-std::string EditSiteScreen::getLegendText() {
+std::string EditSiteScreen::getLegendText() const {
   return currentlegendtext;
 }
 
-std::string EditSiteScreen::getInfoLabel() {
+std::string EditSiteScreen::getInfoLabel() const {
   return "SITE OPTIONS";
 }

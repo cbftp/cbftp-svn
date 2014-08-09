@@ -42,6 +42,6 @@ public:
   void dispatchEventSSLSuccess(EventReceiver *);
   void dispatchEventSSLFail(EventReceiver *);
   DataBlockPool * getBlockPool();
-  bool overload();
+  bool overload() const;
   void runInstance();
 };

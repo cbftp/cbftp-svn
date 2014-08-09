@@ -12,7 +12,7 @@ SkipList::SkipList() {
 
 }
 
-int SkipList::wildcmp(const char *wild, const char *string) {
+int SkipList::wildcmp(const char *wild, const char *string) const {
   const char *cp = NULL, *mp = NULL;
   while ((*string) && (*wild != '*')) {
     if (*wild != *string && *wild != '?' &&
@@ -46,7 +46,7 @@ int SkipList::wildcmp(const char *wild, const char *string) {
   return !*wild;
 }
 
-int SkipList::wildcmpCase(const char *wild, const char *string) {
+int SkipList::wildcmpCase(const char *wild, const char *string) const {
   const char *cp = NULL, *mp = NULL;
   while ((*string) && (*wild != '*')) {
     if ((*wild != *string) && (*wild != '?')) {
@@ -84,16 +84,16 @@ void SkipList::clearEntries() {
   entries.clear();
 }
 
-std::list<std::string>::iterator SkipList::entriesBegin() {
+std::list<std::string>::const_iterator SkipList::entriesBegin() const {
   return entries.begin();
 }
 
-std::list<std::string>::iterator SkipList::entriesEnd() {
+std::list<std::string>::const_iterator SkipList::entriesEnd() const {
   return entries.end();
 }
 
-bool SkipList::isAllowed(std::string element) {
-  std::list<std::string>::iterator it;
+bool SkipList::isAllowed(std::string element) const {
+  std::list<std::string>::const_iterator it;
   for (it = entries.begin(); it != entries.end(); it++) {
     if (wildcmp(it->c_str(), element.c_str())) {
       return false;

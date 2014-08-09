@@ -6,6 +6,6 @@ private:
   int datalen;
 public:
   DataBlock(char *, int);
-  char * data();
-  int dataLength();
+  char * data() const;
+  int dataLength() const;
 };

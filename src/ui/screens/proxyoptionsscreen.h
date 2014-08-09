@@ -15,9 +15,9 @@ public:
   void redraw();
   void command(std::string);
   void keyPressed(unsigned int);
-  std::string getLegendText();
-  std::string getInfoLabel();
-  std::string getInfoText();
+  std::string getLegendText() const;
+  std::string getInfoLabel() const;
+  std::string getInfoText() const;
 private:
   FocusableArea * focusedarea;
   FocusableArea * defocusedarea;

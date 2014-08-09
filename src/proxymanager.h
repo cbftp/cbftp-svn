@@ -9,17 +9,17 @@ class ProxyManager {
 public:
   ProxyManager();
   void addProxy(Proxy *);
-  Proxy * getProxy(std::string);
+  Proxy * getProxy(std::string) const;
   void removeProxy(std::string);
-  std::vector<Proxy *>::iterator begin();
-  std::vector<Proxy *>::iterator end();
+  std::vector<Proxy *>::const_iterator begin() const;
+  std::vector<Proxy *>::const_iterator end() const;
   void readConfiguration();
   void writeState();
-  bool hasDefaultProxy();
-  Proxy * getDefaultProxy();
+  bool hasDefaultProxy() const;
+  Proxy * getDefaultProxy() const;
   void setDefaultProxy(std::string);
   void sortProxys();
-  unsigned int size();
+  unsigned int size() const;
 private:
   std::vector<Proxy *> proxies;
   Proxy * defaultproxy;

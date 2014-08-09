@@ -17,11 +17,11 @@ class ScoreBoardElement {
   public:
     ScoreBoardElement(std::string, int, bool, SiteLogic *, FileList *, SiteLogic *, FileList *);
     void reset(std::string, int, bool, SiteLogic *, FileList *, SiteLogic *, FileList *);
-    std::string fileName();
-    SiteLogic * getSource();
-    SiteLogic * getDestination();
-    FileList * getSourceFileList();
-    FileList * getDestinationFileList();
-    int getScore();
-    bool isPrioritized();
+    std::string fileName() const;
+    SiteLogic * getSource() const;
+    SiteLogic * getDestination() const;
+    FileList * getSourceFileList() const;
+    FileList * getDestinationFileList() const;
+    int getScore() const;
+    bool isPrioritized() const;
 };

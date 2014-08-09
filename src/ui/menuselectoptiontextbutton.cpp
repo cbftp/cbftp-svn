@@ -14,11 +14,11 @@ MenuSelectOptionTextButton::MenuSelectOptionTextButton(std::string identifier, i
   init(identifier, row, col, text);
 }
 
-std::string MenuSelectOptionTextButton::getContentText() {
+std::string MenuSelectOptionTextButton::getContentText() const {
   return text;
 }
 
-std::string MenuSelectOptionTextButton::getLabelText() {
+std::string MenuSelectOptionTextButton::getLabelText() const {
   if (label.length() <= maxwidth) {
     return label;
   }
@@ -48,7 +48,7 @@ std::string MenuSelectOptionTextButton::getLabelText() {
   }
 }
 
-bool MenuSelectOptionTextButton::isActivated() {
+bool MenuSelectOptionTextButton::isActivated() const {
   return active;
 }
 
@@ -57,6 +57,6 @@ bool MenuSelectOptionTextButton::activate() {
   return false;
 }
 
-unsigned int MenuSelectOptionTextButton::wantedWidth() {
+unsigned int MenuSelectOptionTextButton::wantedWidth() const {
   return label.length();
 }

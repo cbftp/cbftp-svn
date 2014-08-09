@@ -19,11 +19,11 @@ void MenuSelectOptionElement::setPosition(int row, int col) {
   this->col = col;
 }
 
-std::string MenuSelectOptionElement::getLabelText() {
+std::string MenuSelectOptionElement::getLabelText() const {
   return label;
 }
 
-std::string MenuSelectOptionElement::getIdentifier() {
+std::string MenuSelectOptionElement::getIdentifier() const {
   return identifier;
 }
 
@@ -36,23 +36,23 @@ void MenuSelectOptionElement::deactivate() {
   active = false;
 }
 
-bool MenuSelectOptionElement::isActive() {
+bool MenuSelectOptionElement::isActive() const {
   return active;
 }
 
-std::string MenuSelectOptionElement::getLegendText() {
+std::string MenuSelectOptionElement::getLegendText() const {
   return "";
 }
 
-unsigned int MenuSelectOptionElement::getCol() {
+unsigned int MenuSelectOptionElement::getCol() const {
   return col;
 }
 
-unsigned int MenuSelectOptionElement::getRow() {
+unsigned int MenuSelectOptionElement::getRow() const {
   return row;
 }
 
-int MenuSelectOptionElement::cursorPosition() {
+int MenuSelectOptionElement::cursorPosition() const {
   return -1;
 }
 
@@ -68,10 +68,10 @@ void MenuSelectOptionElement::show() {
   shown = true;
 }
 
-bool MenuSelectOptionElement::visible() {
+bool MenuSelectOptionElement::visible() const {
   return shown;
 }
 
-bool MenuSelectOptionElement::isSelectable() {
+bool MenuSelectOptionElement::isSelectable() const {
   return selectable;
 }

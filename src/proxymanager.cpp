@@ -18,8 +18,8 @@ void ProxyManager::addProxy(Proxy * proxy) {
   sortProxys();
 }
 
-Proxy * ProxyManager::getProxy(std::string name) {
-  for (std::vector<Proxy *>::iterator it = proxies.begin(); it != proxies.end(); it++) {
+Proxy * ProxyManager::getProxy(std::string name) const {
+  for (std::vector<Proxy *>::const_iterator it = proxies.begin(); it != proxies.end(); it++) {
     if ((*it)->getName() == name) {
       return *it;
     }
@@ -37,11 +37,11 @@ void ProxyManager::removeProxy(std::string name) {
   }
 }
 
-std::vector<Proxy *>::iterator ProxyManager::begin() {
+std::vector<Proxy *>::const_iterator ProxyManager::begin() const {
   return proxies.begin();
 }
 
-std::vector<Proxy *>::iterator ProxyManager::end() {
+std::vector<Proxy *>::const_iterator ProxyManager::end() const {
   return proxies.end();
 }
 
@@ -119,11 +119,11 @@ void ProxyManager::writeState() {
   }
 }
 
-bool ProxyManager::hasDefaultProxy() {
+bool ProxyManager::hasDefaultProxy() const {
   return defaultproxy != NULL;
 }
 
-Proxy * ProxyManager::getDefaultProxy() {
+Proxy * ProxyManager::getDefaultProxy() const {
   return defaultproxy;
 }
 
@@ -135,6 +135,6 @@ void ProxyManager::sortProxys() {
   std::sort(proxies.begin(), proxies.end(), proxyNameComparator);
 }
 
-unsigned int ProxyManager::size() {
+unsigned int ProxyManager::size() const {
   return proxies.size();
 }

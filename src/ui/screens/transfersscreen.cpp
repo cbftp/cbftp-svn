@@ -50,10 +50,10 @@ void TransfersScreen::redraw() {
   msal->addElement((ResizableElement *)msotb, 7, RESIZE_REMOVE);
 
   y++;
-  for (std::list<TransferStatus *>::iterator it = tm->ongoingTransfersBegin(); it != tm->ongoingTransfersEnd(); it++) {
+  for (std::list<TransferStatus *>::const_iterator it = tm->ongoingTransfersBegin(); it != tm->ongoingTransfersEnd(); it++) {
     addTransferDetails(y++, *it);
   }
-  for (std::list<TransferStatus *>::iterator it = tm->finishedTransfersBegin(); it != tm->finishedTransfersEnd(); it++) {
+  for (std::list<TransferStatus *>::const_iterator it = tm->finishedTransfersBegin(); it != tm->finishedTransfersEnd(); it++) {
     addTransferDetails(y++, *it);
   }
   table.adjustLines(col - 3);
@@ -97,11 +97,11 @@ void TransfersScreen::keyPressed(unsigned int ch) {
   }
 }
 
-std::string TransfersScreen::getLegendText() {
+std::string TransfersScreen::getLegendText() const {
   return "[Enter] return";
 }
 
-std::string TransfersScreen::getInfoLabel() {
+std::string TransfersScreen::getInfoLabel() const {
   return "TRANSFERS";
 }
 

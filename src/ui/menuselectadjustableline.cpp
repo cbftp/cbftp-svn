@@ -20,13 +20,13 @@ void MenuSelectAdjustableLine::addElement(ResizableElement * re, unsigned int pr
   elements.push_back(re);
 }
 
-ResizableElement * MenuSelectAdjustableLine::getElement(unsigned int pos) {
+ResizableElement * MenuSelectAdjustableLine::getElement(unsigned int pos) const {
   if (!elements.size() || elements.size() - 1 < pos) {
     return NULL;
   }
   return elements[pos];
 }
 
-unsigned int MenuSelectAdjustableLine::size() {
+unsigned int MenuSelectAdjustableLine::size() const {
   return elements.size();
 }

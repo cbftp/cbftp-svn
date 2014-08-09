@@ -12,8 +12,8 @@ private:
 public:
   EventLog();
   ~EventLog();
-  RawBuffer * getRawBuffer();
-  int getLatestId();
-  std::string getLatest();
+  RawBuffer * getRawBuffer() const;
+  int getLatestId() const;
+  std::string getLatest() const;
   void log(std::string, std::string);
 };

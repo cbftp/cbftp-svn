@@ -21,16 +21,12 @@ class PotentialTracker : private EventReceiver {
   private:
     std::list<PotentialListElement *> potentiallist;
     std::list<PotentialElement *> top;
-    std::list<PotentialListElement *>::iterator itple;
-    std::vector<PotentialElement *>::iterator itpe;
-    std::list<PotentialElement *>::iterator ittop;
-    std::list<PotentialElement *>::iterator ittop2;
     void tick(int);
   public:
     PotentialTracker(int);
     ~PotentialTracker();
     int getMaxAvailablePotential();
-    PotentialListElement * getFront();
+    PotentialListElement * getFront() const;
     std::list<PotentialElement *>::iterator findFirstOfSite(SiteLogic *);
-    bool allTopSlotsUsedForSite(PotentialElement *);
+    bool allTopSlotsUsedForSite(PotentialElement *) const;
 };

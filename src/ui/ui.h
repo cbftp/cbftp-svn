@@ -96,9 +96,6 @@ class Ui : private EventReceiver, public UIBase {
     std::list<UIWindow *> history;
     void FDData();
     void refreshAll();
-    std::string getStringField(WINDOW *, int, int, std::string, int, int, bool);
-    int getNumArrow(WINDOW *, int, int, int);
-    bool getCheckBoxBool(WINDOW *, int, int, int);
     void initIntern();
     void enableInfo();
     void disableInfo();
@@ -120,7 +117,7 @@ class Ui : private EventReceiver, public UIBase {
     void resizeTerm();
     void readConfiguration();
     void writeState();
-    bool legendEnabled();
+    bool legendEnabled() const;
     void showLegend(bool);
     void returnToLast();
     void update();

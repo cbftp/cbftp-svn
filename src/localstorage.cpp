@@ -31,7 +31,7 @@ int LocalStorage::passiveDownload(TransferMonitor * tm, std::string addr, bool s
   return storeid;
 }
 
-std::string LocalStorage::getHostFromPASVString(std::string pasv) {
+std::string LocalStorage::getHostFromPASVString(std::string pasv) const {
   size_t sep1 = pasv.find(",");
   size_t sep2 = pasv.find(",", sep1 + 1);
   size_t sep3 = pasv.find(",", sep2 + 1);
@@ -42,7 +42,7 @@ std::string LocalStorage::getHostFromPASVString(std::string pasv) {
   return pasv.substr(0, sep4);
 }
 
-int LocalStorage::getPortFromPASVString(std::string pasv) {
+int LocalStorage::getPortFromPASVString(std::string pasv) const {
   size_t sep1 = pasv.find(",");
   size_t sep2 = pasv.find(",", sep1 + 1);
   size_t sep3 = pasv.find(",", sep2 + 1);
@@ -68,17 +68,18 @@ LocalTransfer * LocalStorage::getAvailableLocalTransfer() {
   return lt;
 }
 
-int LocalStorage::getFileContent(std::string filename, char * data) {
+int LocalStorage::getFileContent(std::string filename, char * data) const {
   std::ifstream filestream;
   filestream.open((temppath + "/" + filename).c_str(), std::ios::binary | std::ios::in);
   filestream.read(data, MAXREAD);
   return filestream.gcount();
 }
 
-int LocalStorage::getStoreContent(int storeid, char ** data) {
-  if (content.find(storeid) != content.end()) {
-    *data = content[storeid].first;
-    return content[storeid].second;
+int LocalStorage::getStoreContent(int storeid, char ** data) const {
+  std::map<int, std::pair<char *, int> >::const_iterator it = content.find(storeid);
+  if (it != content.end()) {
+    *data = it->second.first;
+    return it->second.second;
   }
   return 0;
 }
@@ -97,7 +98,7 @@ void LocalStorage::deleteFile(std::string filename) {
   remove(filename.c_str());
 }
 
-std::string LocalStorage::getTempPath() {
+std::string LocalStorage::getTempPath() const {
   return temppath;
 }
 

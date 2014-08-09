@@ -20,7 +20,7 @@ void RecursiveCommandLogic::initialize(int mode, std::string basepath, std::stri
   wantedlists.push_back(target);
 }
 
-bool RecursiveCommandLogic::isActive() {
+bool RecursiveCommandLogic::isActive() const {
   return active;
 }
 

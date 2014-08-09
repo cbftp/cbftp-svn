@@ -35,22 +35,22 @@ void UIWindow::keyPressed(unsigned int key) {
 
 }
 
-std::string UIWindow::getInfoLabel() {
+std::string UIWindow::getInfoLabel() const {
   return "";
 }
 
-std::string UIWindow::getInfoText() {
+std::string UIWindow::getInfoText() const {
   return "";
 }
 
-std::string UIWindow::getLegendText() {
+std::string UIWindow::getLegendText() const {
   return "";
 }
 
-bool UIWindow::autoUpdate() {
+bool UIWindow::autoUpdate() const {
   return autoupdate;
 }
 
-bool UIWindow::expectBackendPush() {
+bool UIWindow::expectBackendPush() const {
   return expectbackendpush;
 }

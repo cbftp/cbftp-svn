@@ -27,11 +27,11 @@ class ProxySession {
 public:
   ProxySession();
   void prepare(Proxy *, std::string, std::string);
-  int instruction();
-  char * getSendData();
-  int getSendDataLen();
+  int instruction() const;
+  const char * getSendData() const;
+  int getSendDataLen() const;
   void received(char *, int);
-  std::string getErrorMessage();
+  std::string getErrorMessage() const;
 private:
   void setConnectRequestData();
   struct sockaddr_in* saddr;

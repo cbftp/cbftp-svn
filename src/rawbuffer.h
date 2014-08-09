@@ -28,10 +28,10 @@ class RawBuffer {
     void write(std::string);
     void writeLine(std::string);
     void rename(std::string);
-    unsigned int getSize();
-    unsigned int getCopySize();
-    std::string getLine(unsigned int);
-    std::string getLineCopy(unsigned int);
+    unsigned int getSize() const;
+    unsigned int getCopySize() const;
+    std::string getLine(unsigned int) const;
+    std::string getLineCopy(unsigned int) const;
     void freezeCopy();
     void uiWatching(bool);
 };

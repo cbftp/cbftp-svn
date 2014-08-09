@@ -211,15 +211,15 @@ void SiteManager::writeState() {
     if (proxytype == SITE_PROXY_USE) {
       filehandler->addOutputLine(filetag, name + "$proxyname=" + site->getProxy());
     }
-    std::map<std::string, std::string>::iterator sit;
+    std::map<std::string, std::string>::const_iterator sit;
     for (sit = site->sectionsBegin(); sit != site->sectionsEnd(); sit++) {
       filehandler->addOutputLine(filetag, name + "$section=" + sit->first + "$" + sit->second);
     }
-    std::map<std::string, int>::iterator sit2;
+    std::map<std::string, int>::const_iterator sit2;
     for (sit2 = site->avgspeedBegin(); sit2 != site->avgspeedEnd(); sit2++) {
       filehandler->addOutputLine(filetag, name + "$avgspeed=" + sit2->first + "$" + global->int2Str(sit2->second));
     }
-    std::map<std::string, bool>::iterator sit3;
+    std::map<std::string, bool>::const_iterator sit3;
     for (sit3 = site->affilsBegin(); sit3 != site->affilsEnd(); sit3++) {
       filehandler->addOutputLine(filetag, name + "$affil=" + sit3->first);
     }
@@ -241,12 +241,12 @@ void SiteManager::writeState() {
   }
 }
 
-int SiteManager::getNumSites() {
+int SiteManager::getNumSites() const {
   return sites.size();
 }
 
-Site * SiteManager::getSite(std::string site) {
-  std::vector<Site *>::iterator it;
+Site * SiteManager::getSite(std::string site) const {
+  std::vector<Site *>::const_iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {
     if ((*it)->getName().compare(site) == 0) {
       return *it;
@@ -279,11 +279,11 @@ void SiteManager::sortSites() {
   std::sort(sites.begin(), sites.end(), siteNameComparator);
 }
 
-std::vector<Site *>::iterator SiteManager::getSitesIteratorBegin() {
+std::vector<Site *>::const_iterator SiteManager::getSitesIteratorBegin() const {
   return sites.begin();
 }
 
-std::vector<Site *>::iterator SiteManager::getSitesIteratorEnd() {
+std::vector<Site *>::const_iterator SiteManager::getSitesIteratorEnd() const {
   return sites.end();
 }
 
@@ -291,7 +291,7 @@ bool siteNameComparator(Site * a, Site * b) {
   return a->getName().compare(b->getName()) < 0;
 }
 
-std::string SiteManager::getDefaultUserName() {
+std::string SiteManager::getDefaultUserName() const {
   return defaultusername;
 }
 
@@ -299,7 +299,7 @@ void SiteManager::setDefaultUserName(std::string username) {
   defaultusername = username;
 }
 
-std::string SiteManager::getDefaultPassword() {
+std::string SiteManager::getDefaultPassword() const {
   return defaultpassword;
 }
 
@@ -307,7 +307,7 @@ void SiteManager::setDefaultPassword(std::string password) {
   defaultpassword = password;
 }
 
-unsigned int SiteManager::getDefaultMaxLogins() {
+unsigned int SiteManager::getDefaultMaxLogins() const {
   return defaultmaxlogins;
 }
 
@@ -315,7 +315,7 @@ void SiteManager::setDefaultMaxLogins(unsigned int maxlogins) {
   defaultmaxlogins = maxlogins;
 }
 
-unsigned int SiteManager::getDefaultMaxUp() {
+unsigned int SiteManager::getDefaultMaxUp() const {
   return defaultmaxup;
 }
 
@@ -323,7 +323,7 @@ void SiteManager::setDefaultMaxUp(unsigned int maxup) {
   defaultmaxup = maxup;
 }
 
-unsigned int SiteManager::getDefaultMaxDown() {
+unsigned int SiteManager::getDefaultMaxDown() const {
   return defaultmaxdown;
 }
 
@@ -331,7 +331,7 @@ void SiteManager::setDefaultMaxDown(unsigned int maxdown) {
   defaultmaxdown = maxdown;
 }
 
-unsigned int SiteManager::getDefaultMaxIdleTime() {
+unsigned int SiteManager::getDefaultMaxIdleTime() const {
   return defaultmaxidletime;
 }
 
@@ -339,7 +339,7 @@ void SiteManager::setDefaultMaxIdleTime(unsigned int idletime) {
   defaultmaxidletime = idletime;
 }
 
-bool SiteManager::getDefaultSSL() {
+bool SiteManager::getDefaultSSL() const {
   return defaultsslconn;
 }
 
@@ -347,7 +347,7 @@ void SiteManager::setDefaultSSL(bool ssl) {
   defaultsslconn = ssl;
 }
 
-int SiteManager::getDefaultSSLTransferPolicy() {
+int SiteManager::getDefaultSSLTransferPolicy() const {
   return defaultssltransfer;
 }
 
@@ -381,11 +381,12 @@ void SiteManager::addBlockedPair(std::string sitestr1, std::string sitestr2) {
   blockedpairs[site2][site1] = true;
 }
 
-bool SiteManager::isBlockedPair(Site * site1, Site * site2) {
-  if (blockedpairs.find(site1) == blockedpairs.end()) {
-    blockedpairs[site1] = std::map<Site *, bool>();
+bool SiteManager::isBlockedPair(Site * site1, Site * site2) const {
+  std::map<Site *, std::map<Site *, bool> >::const_iterator it = blockedpairs.find(site1);
+  if (it == blockedpairs.end()) {
+    return false;
   }
-  return blockedpairs[site1].find(site2) != blockedpairs[site1].end();
+  return it->second.find(site2) !=  it->second.end();
 }
 
 void SiteManager::clearBlocksForSite(Site * site) {

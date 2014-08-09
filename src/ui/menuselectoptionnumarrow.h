@@ -10,10 +10,10 @@ private:
   NumInputArrow arrow;
 public:
   MenuSelectOptionNumArrow(std::string, int, int, std::string, int, int, int);
-  std::string getContentText();
+  std::string getContentText() const;
   void inputChar(int);
   bool activate();
   void deactivate();
-  int getData();
-  std::string getLegendText();
+  int getData() const;
+  std::string getLegendText() const;
 };

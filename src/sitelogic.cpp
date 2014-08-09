@@ -853,8 +853,8 @@ void SiteLogic::addRecentList(SiteRace * sr) {
   recentlylistedraces.push_back(sr);
 }
 
-bool SiteLogic::wasRecentlyListed(SiteRace * sr) {
-  for (std::list<SiteRace *>::iterator it = recentlylistedraces.begin(); it != recentlylistedraces.end(); it++) {
+bool SiteLogic::wasRecentlyListed(SiteRace * sr) const {
+  for (std::list<SiteRace *>::const_iterator it = recentlylistedraces.begin(); it != recentlylistedraces.end(); it++) {
     if (*it == sr) {
       return true;
     }
@@ -991,8 +991,8 @@ int SiteLogic::requestNuke(std::string path, int multiplier, std::string reason)
   return requestid;
 }
 
-bool SiteLogic::requestReady(int requestid) {
-  std::list<SiteLogicRequestReady>::iterator it;
+bool SiteLogic::requestReady(int requestid) const {
+  std::list<SiteLogicRequestReady>::const_iterator it;
   for (it = requestsready.begin(); it != requestsready.end(); it++) {
     if (it->requestId() == requestid) {
       return true;
@@ -1020,8 +1020,8 @@ void SiteLogic::abortRace(std::string race) {
   }
 }
 
-FileList * SiteLogic::getFileList(int requestid) {
-  std::list<SiteLogicRequestReady>::iterator it;
+FileList * SiteLogic::getFileList(int requestid) const {
+  std::list<SiteLogicRequestReady>::const_iterator it;
   for (it = requestsready.begin(); it != requestsready.end(); it++) {
     if (it->requestId() == requestid) {
       return (FileList *) it->requestData();
@@ -1063,12 +1063,12 @@ bool SiteLogic::finishRequest(int requestid) {
   return false;
 }
 
-Site * SiteLogic::getSite() {
+Site * SiteLogic::getSite() const {
   return site;
 }
 
-SiteRace * SiteLogic::getRace(std::string race) {
-  for (std::vector<SiteRace *>::iterator it = races.begin(); it != races.end(); it++) {
+SiteRace * SiteLogic::getRace(std::string race) const {
+  for (std::vector<SiteRace *>::const_iterator it = races.begin(); it != races.end(); it++) {
     if ((*it)->getRelease().compare(race) == 0) return *it;
   }
   return NULL;
@@ -1228,11 +1228,11 @@ void SiteLogic::setNumConnections(unsigned int num) {
   }
 }
 
-bool SiteLogic::downloadSlotAvailable() {
+bool SiteLogic::downloadSlotAvailable() const {
   return (available > 0 && slots_dn > 0);
 }
 
-bool SiteLogic::uploadSlotAvailable() {
+bool SiteLogic::uploadSlotAvailable() const {
   return (available > 0 && slots_up > 0);
 }
 
@@ -1279,15 +1279,15 @@ void SiteLogic::updateName() {
   }
 }
 
-int SiteLogic::getCurrLogins() {
+int SiteLogic::getCurrLogins() const {
   return loggedin;
 }
 
-int SiteLogic::getCurrDown() {
+int SiteLogic::getCurrDown() const {
   return site->getMaxDown() - slots_dn;
 }
 
-int SiteLogic::getCurrUp() {
+int SiteLogic::getCurrUp() const {
   return site->getMaxUp() - slots_up;
 }
 
@@ -1336,7 +1336,7 @@ void SiteLogic::issueRawCommand(unsigned int id, std::string command) {
   }
 }
 
-RawBuffer * SiteLogic::getRawCommandBuffer() {
+RawBuffer * SiteLogic::getRawCommandBuffer() const {
   return rawbuf;
 }
 
@@ -1392,12 +1392,12 @@ void SiteLogic::raceLocalComplete(SiteRace * sr) {
   }
 }
 
-std::vector<FTPConn *> * SiteLogic::getConns() {
+const std::vector<FTPConn *> * SiteLogic::getConns() const {
   return &conns;
 }
 
-FTPConn * SiteLogic::getConn(int id) {
-  std::vector<FTPConn *>:: iterator it;
+FTPConn * SiteLogic::getConn(int id) const {
+  std::vector<FTPConn *>::const_iterator it;
   for (it = conns.begin(); it != conns.end(); it++) {
     if ((*it)->getId() == id) {
       return *it;
@@ -1406,7 +1406,7 @@ FTPConn * SiteLogic::getConn(int id) {
   return NULL;
 }
 
-std::string SiteLogic::getStatus(int id) {
+std::string SiteLogic::getStatus(int id) const {
   int idletime = connstatetracker[id].getTimePassed()/1000;
   if (!conns[id]->isProcessing() && conns[id]->isConnected() && idletime) {
     return "IDLE " + global->int2Str(idletime) + "s";
@@ -1528,6 +1528,6 @@ void SiteLogic::getFileListConn(int id, SiteRace * siterace, FileList * filelist
   }
 }
 
-ConnStateTracker * SiteLogic::getConnStateTracker(int id) {
+const ConnStateTracker * SiteLogic::getConnStateTracker(int id) const {
   return &connstatetracker[id];
 }

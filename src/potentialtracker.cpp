@@ -18,6 +18,10 @@ PotentialTracker::~PotentialTracker() {
 }
 
 int PotentialTracker::getMaxAvailablePotential() {
+  std::list<PotentialElement *>::iterator ittop;
+  std::list<PotentialElement *>::iterator ittop2;
+  std::list<PotentialListElement *>::iterator itple;
+  std::vector<PotentialElement *>::iterator itpe;
   for (ittop = top.begin(); ittop != top.end(); ittop++) {
     (*ittop)->update(NULL, 0, 0, "");
   }
@@ -64,7 +68,7 @@ int PotentialTracker::getMaxAvailablePotential() {
   return ret;
 }
 
-PotentialListElement * PotentialTracker::getFront() {
+PotentialListElement * PotentialTracker::getFront() const {
   return potentiallist.front();
 }
 
@@ -75,15 +79,17 @@ void PotentialTracker::tick(int message) {
 }
 
 std::list<PotentialElement *>::iterator PotentialTracker::findFirstOfSite(SiteLogic * st) {
+  std::list<PotentialElement *>::iterator ittop;
   for (ittop = top.begin(); ittop != top.end(); ittop++) {
     if ((*ittop)->getSite() == st) return ittop;
   }
   return top.end();
 }
 
-bool PotentialTracker::allTopSlotsUsedForSite(PotentialElement * pe) {
+bool PotentialTracker::allTopSlotsUsedForSite(PotentialElement * pe) const {
   int threads = pe->getSiteDownloadSlots();
   int sitematch = 0;
+  std::list<PotentialElement *>::const_iterator ittop;
   for (ittop = top.begin(); ittop != top.end(); ittop++) {
     if((*ittop)->getSite() == pe->getSite()) {
       sitematch++;

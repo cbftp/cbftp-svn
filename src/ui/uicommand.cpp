@@ -39,38 +39,38 @@ UICommand::UICommand(int command, WINDOW * window, unsigned int row, unsigned in
   this->c = c;
 }
 
-int UICommand::getCommand() {
+int UICommand::getCommand() const {
   return command;
 }
 
-WINDOW * UICommand::getWindow() {
+WINDOW * UICommand::getWindow() const {
   return window;
 }
 
-unsigned int UICommand::getRow() {
+unsigned int UICommand::getRow() const {
   return row;
 }
 
-unsigned int UICommand::getCol() {
+unsigned int UICommand::getCol() const {
   return col;
 }
 
-std::string UICommand::getText() {
+std::string UICommand::getText() const {
   return text;
 }
 
-int UICommand::getMaxlen() {
+int UICommand::getMaxlen() const {
   return maxlen;
 }
 
-bool UICommand::getRightAlign() {
+bool UICommand::getRightAlign() const {
   return rightalign;
 }
 
-unsigned int UICommand::getChar() {
+unsigned int UICommand::getChar() const {
   return c;
 }
 
-bool UICommand::getShow() {
+bool UICommand::getShow() const {
   return show;
 }

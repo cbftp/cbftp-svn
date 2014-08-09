@@ -45,7 +45,7 @@ void MenuSelectSite::add(Site * site, int row, int col) {
   sites.push_back(MenuSelectSiteElement(site, st, row, col));
 }
 
-Site * MenuSelectSite::getSite() {
+Site * MenuSelectSite::getSite() const {
   if (sites.size() == 0) return NULL;
   return sites[pointer].getSite();
 }
@@ -58,11 +58,11 @@ MenuSelectSiteElement * MenuSelectSite::getSiteElement(unsigned int i) {
   return &sites[i];
 }
 
-unsigned int MenuSelectSite::size() {
+unsigned int MenuSelectSite::size() const {
   return sites.size();
 }
 
-unsigned int MenuSelectSite::getSelectionPointer() {
+unsigned int MenuSelectSite::getSelectionPointer() const {
   return pointer;
 }
 
@@ -76,7 +76,7 @@ void MenuSelectSite::enterFocusFrom(int dir) {
   }
 }
 
-std::string MenuSelectSite::getSiteLine(unsigned int index) {
+std::string MenuSelectSite::getSiteLine(unsigned int index) const {
   Site * site = sites[index].getSite();
   SiteLogic * sitelogic = sites[index].getSiteLogic();
   std::string line = " ";

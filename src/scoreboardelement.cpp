@@ -14,30 +14,30 @@ void ScoreBoardElement::reset(std::string filename, int score, bool prio, SiteLo
   this->prio = prio;
 }
 
-std::string ScoreBoardElement::fileName() {
+std::string ScoreBoardElement::fileName() const {
   return filename;
 }
 
-SiteLogic * ScoreBoardElement::getSource() {
+SiteLogic * ScoreBoardElement::getSource() const {
   return src;
 }
 
-SiteLogic * ScoreBoardElement::getDestination() {
+SiteLogic * ScoreBoardElement::getDestination() const {
   return dst;
 }
 
-FileList * ScoreBoardElement::getSourceFileList() {
+FileList * ScoreBoardElement::getSourceFileList() const {
   return fls;
 }
 
-FileList * ScoreBoardElement::getDestinationFileList() {
+FileList * ScoreBoardElement::getDestinationFileList() const {
   return fld;
 }
 
-int ScoreBoardElement::getScore() {
+int ScoreBoardElement::getScore() const {
   return score;
 }
 
-bool ScoreBoardElement::isPrioritized() {
+bool ScoreBoardElement::isPrioritized() const {
   return prio;
 }

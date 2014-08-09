@@ -19,55 +19,55 @@ UIFile::UIFile(File * file) {
   cursored = false;
 }
 
-std::string UIFile::getName() {
+std::string UIFile::getName() const {
   return name;
 }
 
-std::string UIFile::getLinkTarget() {
+std::string UIFile::getLinkTarget() const {
   return linktarget;
 }
 
-std::string UIFile::getOwner() {
+std::string UIFile::getOwner() const {
   return owner;
 }
 
-std::string UIFile::getGroup() {
+std::string UIFile::getGroup() const {
   return group;
 }
 
-std::string UIFile::getLastModified() {
+std::string UIFile::getLastModified() const {
   return lastmodifiedrepr;
 }
 
-int UIFile::getModifyTime() {
+int UIFile::getModifyTime() const {
   return lastmodified;
 }
 
-int UIFile::getModifyDate() {
+int UIFile::getModifyDate() const {
   return lastmodifieddate;
 }
 
-unsigned long long int UIFile::getSize() {
+unsigned long long int UIFile::getSize() const {
   return size;
 }
 
-std::string UIFile::getSizeRepr() {
+std::string UIFile::getSizeRepr() const {
   return sizerepr;
 }
 
-bool UIFile::isDirectory() {
+bool UIFile::isDirectory() const {
   return directory;
 }
 
-bool UIFile::isLink() {
+bool UIFile::isLink() const {
   return softlink;
 }
 
-bool UIFile::isSelected() {
+bool UIFile::isSelected() const {
   return selected;
 }
 
-bool UIFile::isCursored() {
+bool UIFile::isCursored() const {
   return cursored;
 }
 

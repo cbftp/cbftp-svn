@@ -30,12 +30,12 @@ class MenuSelectOption : public FocusableArea {
     MenuSelectOptionTextButton * addTextButton(int, int, std::string, std::string);
     MenuSelectOptionTextButton * addTextButtonNoContent(int, int, std::string, std::string);
     MenuSelectAdjustableLine * addAdjustableLine();
-    MenuSelectOptionElement * getElement(unsigned int);
-    MenuSelectOptionElement * getElement(std::string);
-    unsigned int getLastSelectionPointer();
-    unsigned int getSelectionPointer();
+    MenuSelectOptionElement * getElement(unsigned int) const;
+    MenuSelectOptionElement * getElement(std::string) const;
+    unsigned int getLastSelectionPointer() const;
+    unsigned int getSelectionPointer() const;
     bool activateSelected();
-    unsigned int size();
+    unsigned int size() const;
     void adjustLines(unsigned int);
     void enterFocusFrom(int);
     void clear();

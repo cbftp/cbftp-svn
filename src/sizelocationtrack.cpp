@@ -4,11 +4,11 @@ SizeLocationTrack::SizeLocationTrack() {
   estimatedsize = 0;
 }
 
-unsigned long long int SizeLocationTrack::getEstimatedSize() {
+unsigned long long int SizeLocationTrack::getEstimatedSize() const {
   return estimatedsize;
 }
 
-int SizeLocationTrack::numSites() {
+int SizeLocationTrack::numSites() const {
   return sitesizes.size();
 }
 

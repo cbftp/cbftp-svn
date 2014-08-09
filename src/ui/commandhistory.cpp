@@ -4,7 +4,7 @@ CommandHistory::CommandHistory() : pos(history.end()) {
 
 }
 
-bool CommandHistory::canBack() {
+bool CommandHistory::canBack() const {
   return pos != history.begin();
 }
 
@@ -20,7 +20,7 @@ bool CommandHistory::forward() {
   return false;
 }
 
-bool CommandHistory::current() {
+bool CommandHistory::current() const {
   return pos == history.end();
 }
 
@@ -31,7 +31,7 @@ void CommandHistory::push(std::string text) {
   pos = history.end();
 }
 
-std::string CommandHistory::get() {
+std::string CommandHistory::get() const {
   if (pos == history.end()) {
     return currenttext;
   }

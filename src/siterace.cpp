@@ -34,19 +34,19 @@ SiteRace::~SiteRace() {
   }
 }
 
-std::string SiteRace::getSection() {
+std::string SiteRace::getSection() const {
   return section;
 }
 
-std::string SiteRace::getRelease() {
+std::string SiteRace::getRelease() const {
   return release;
 }
 
-std::string SiteRace::getGroup() {
+std::string SiteRace::getGroup() const {
   return group;
 }
 
-std::string SiteRace::getPath() {
+std::string SiteRace::getPath() const {
   return path;
 }
 
@@ -61,8 +61,8 @@ void SiteRace::addSubDirectory(std::string subpath) {
   race->reportNewSubDir(this, subpath);
 }
 
-std::string SiteRace::getSubPath(FileList * filelist) {
-  std::map<std::string, FileList *>::iterator it;
+std::string SiteRace::getSubPath(FileList * filelist) const {
+  std::map<std::string, FileList *>::const_iterator it;
   for (it = filelists.begin(); it != filelists.end(); it++) {
     if (it->second == filelist) {
       return it->first;
@@ -86,8 +86,8 @@ std::string SiteRace::getRelevantSubPath() {
   return leastrecentlyvisited;
 }
 
-FileList * SiteRace::getFileListForPath(std::string subpath) {
-  std::map<std::string, FileList *>::iterator it;
+FileList * SiteRace::getFileListForPath(std::string subpath) const {
+  std::map<std::string, FileList *>::const_iterator it;
   for (it = filelists.begin(); it != filelists.end(); it++) {
     if (it->first == subpath) {
       return it->second;
@@ -96,8 +96,8 @@ FileList * SiteRace::getFileListForPath(std::string subpath) {
   return NULL;
 }
 
-FileList * SiteRace::getFileListForFullPath(std::string path) {
-  std::map<std::string, FileList *>::iterator it;
+FileList * SiteRace::getFileListForFullPath(std::string path) const {
+  std::map<std::string, FileList *>::const_iterator it;
   for (it = filelists.begin(); it != filelists.end(); it++) {
     if (it->second->getPath() == path) {
       return it->second;
@@ -107,8 +107,8 @@ FileList * SiteRace::getFileListForFullPath(std::string path) {
   return NULL;
 }
 
-std::string SiteRace::getSubPathForFileList(FileList * fl) {
-  std::map<std::string, FileList *>::iterator it;
+std::string SiteRace::getSubPathForFileList(FileList * fl) const {
+  std::map<std::string, FileList *>::const_iterator it;
   for (it = filelists.begin(); it != filelists.end(); it++) {
     if (it->second == fl) {
       return it->first;
@@ -117,11 +117,11 @@ std::string SiteRace::getSubPathForFileList(FileList * fl) {
   return "";
 }
 
-std::map<std::string, FileList *>::iterator SiteRace::fileListsBegin() {
+std::map<std::string, FileList *>::const_iterator SiteRace::fileListsBegin() const {
   return filelists.begin();
 }
 
-std::map<std::string, FileList *>::iterator SiteRace::fileListsEnd() {
+std::map<std::string, FileList *>::const_iterator SiteRace::fileListsEnd() const {
   return filelists.end();
 }
 
@@ -168,8 +168,8 @@ void SiteRace::addNewDirectories() {
   }
 }
 
-int SiteRace::getNumUploadedFiles() {
-  std::map<std::string, FileList *>::iterator it;
+int SiteRace::getNumUploadedFiles() const {
+  std::map<std::string, FileList *>::const_iterator it;
   int sum = 0;
   for (it = filelists.begin(); it != filelists.end(); it++) {
     sum += it->second->getNumUploadedFiles();
@@ -177,8 +177,8 @@ int SiteRace::getNumUploadedFiles() {
   return sum;
 }
 
-bool SiteRace::sizeEstimated(FileList * fl) {
-  std::list<FileList *>::iterator it;
+bool SiteRace::sizeEstimated(FileList * fl) const {
+  std::list<FileList *>::const_iterator it;
   for (it = sizeestimated.begin(); it != sizeestimated.end(); it++) {
     if (*it == fl) {
       return true;
@@ -187,11 +187,11 @@ bool SiteRace::sizeEstimated(FileList * fl) {
   return false;
 }
 
-unsigned long long int SiteRace::getMaxFileSize() {
+unsigned long long int SiteRace::getMaxFileSize() const {
   return maxfilesize;
 }
 
-bool SiteRace::isDone() {
+bool SiteRace::isDone() const {
   return done;
 }
 
@@ -212,8 +212,8 @@ void SiteRace::subPathComplete(FileList * fl) {
   completesubdirs.push_back(subpath);
 }
 
-bool SiteRace::isSubPathComplete(std::string subpath) {
-  std::list<std::string>::iterator it;
+bool SiteRace::isSubPathComplete(std::string subpath) const {
+  std::list<std::string>::const_iterator it;
   for (it = completesubdirs.begin(); it != completesubdirs.end(); it++) {
     if (*it == subpath) {
       return true;
@@ -222,12 +222,12 @@ bool SiteRace::isSubPathComplete(std::string subpath) {
   return false;
 }
 
-bool SiteRace::isSubPathComplete(FileList * fl) {
+bool SiteRace::isSubPathComplete(FileList * fl) const {
   std::string subpath = getSubPathForFileList(fl);
   return isSubPathComplete(subpath);
 }
 
-Race * SiteRace::getRace() {
+Race * SiteRace::getRace() const {
   return race;
 }
 
@@ -284,6 +284,6 @@ void SiteRace::addVisitedPath(std::string path) {
   visitedpaths[path] = true;
 }
 
-bool SiteRace::pathVisited(std::string path) {
+bool SiteRace::pathVisited(std::string path) const {
   return visitedpaths.find(path) != visitedpaths.end();
 }

@@ -25,10 +25,10 @@ void ConfirmationScreen::keyPressed(unsigned int ch) {
   }
 }
 
-std::string ConfirmationScreen::getLegendText() {
+std::string ConfirmationScreen::getLegendText() const {
   return "[y]es - [Any] No";
 }
 
-std::string ConfirmationScreen::getInfoLabel() {
+std::string ConfirmationScreen::getInfoLabel() const {
   return "CONFIRM YOUR CHOICE";
 }

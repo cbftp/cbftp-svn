@@ -7,11 +7,11 @@ TickPokeTarget::TickPokeTarget(EventReceiver * pokee, int interval, int message)
   this->currentval = 0;
 }
 
-int TickPokeTarget::getMessage() {
+int TickPokeTarget::getMessage() const {
   return message;
 }
 
-EventReceiver * TickPokeTarget::getPokee() {
+EventReceiver * TickPokeTarget::getPokee() const {
   return pokee;
 }
 

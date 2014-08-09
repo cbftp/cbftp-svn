@@ -36,7 +36,7 @@ void PotentialListElement::reset() {
   }
 }
 
-bool PotentialListElement::allThreadsUsedForSite(SiteLogic * dst, int threads) {
+bool PotentialListElement::allThreadsUsedForSite(SiteLogic * dst, int threads) const {
   int sitematch = 0;
   for (unsigned int i = 0; i < slots.size(); i++) {
     if(slots[i]->getSite() == dst) {

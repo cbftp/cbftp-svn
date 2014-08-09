@@ -11,8 +11,8 @@ public:
   void addElement(ResizableElement *, unsigned int);
   void addElement(ResizableElement *, unsigned int, unsigned int);
   void addElement(ResizableElement *, unsigned int, unsigned int, bool);
-  ResizableElement * getElement(unsigned int);
-  unsigned int size();
+  ResizableElement * getElement(unsigned int) const;
+  unsigned int size() const;
 private:
   std::vector<ResizableElement *> elements;
 };

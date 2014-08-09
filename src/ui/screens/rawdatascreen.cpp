@@ -208,13 +208,13 @@ void RawDataScreen::keyPressed(unsigned int ch) {
   }
 }
 
-std::string RawDataScreen::getLegendText() {
+std::string RawDataScreen::getLegendText() const {
   if (rawcommandmode) {
     return "[Enter] Send command - [Pgup] Scroll up - [Pgdn] Scroll down - [ESC] clear / exit - [Any] Input to text";
   }
   return "[Left] Previous screen - [Right] Next screen - [Enter] Return - [Pgup] Scroll up - [Pgdn] Scroll down - [c]onnect - [d]isconnect - ra[w] command";
 }
 
-std::string RawDataScreen::getInfoLabel() {
+std::string RawDataScreen::getInfoLabel() const {
   return "RAW DATA: " + sitename + " #" + global->int2Str(connid);
 }

@@ -48,67 +48,67 @@ void GlobalContext::linkComponents(DataFileHandler * dfh, IOManager * iom,
   this->efv = efv;
 }
 
-SSL_CTX * GlobalContext::getSSLCTX() {
+SSL_CTX * GlobalContext::getSSLCTX() const {
   return ssl_ctx;
 }
 
-Engine * GlobalContext::getEngine() {
+Engine * GlobalContext::getEngine() const {
   return e;
 }
 
-DataFileHandler * GlobalContext::getDataFileHandler() {
+DataFileHandler * GlobalContext::getDataFileHandler() const {
   return dfh;
 }
 
-IOManager * GlobalContext::getIOManager() {
+IOManager * GlobalContext::getIOManager() const {
   return iom;
 }
 
-WorkManager * GlobalContext::getWorkManager() {
+WorkManager * GlobalContext::getWorkManager() const {
   return wm;
 }
 
-UIBase * GlobalContext::getUIBase() {
+UIBase * GlobalContext::getUIBase() const {
   return uib;
 }
 
-SiteManager * GlobalContext::getSiteManager() {
+SiteManager * GlobalContext::getSiteManager() const {
   return sm;
 }
 
-SiteLogicManager * GlobalContext::getSiteLogicManager() {
+SiteLogicManager * GlobalContext::getSiteLogicManager() const {
   return slm;
 }
 
-TransferManager * GlobalContext::getTransferManager() {
+TransferManager * GlobalContext::getTransferManager() const {
   return tm;
 }
 
-TickPoke * GlobalContext::getTickPoke() {
+TickPoke * GlobalContext::getTickPoke() const {
   return tp;
 }
 
-RemoteCommandHandler * GlobalContext::getRemoteCommandHandler() {
+RemoteCommandHandler * GlobalContext::getRemoteCommandHandler() const {
   return rch;
 }
 
-SkipList * GlobalContext::getSkipList() {
+SkipList * GlobalContext::getSkipList() const {
   return sl;
 }
 
-EventLog * GlobalContext::getEventLog() {
+EventLog * GlobalContext::getEventLog() const {
   return el;
 }
 
-ProxyManager * GlobalContext::getProxyManager() {
+ProxyManager * GlobalContext::getProxyManager() const {
   return pm;
 }
 
-LocalStorage * GlobalContext::getLocalStorage() {
+LocalStorage * GlobalContext::getLocalStorage() const {
   return ls;
 }
 
-ExternalFileViewing * GlobalContext::getExternalFileViewing() {
+ExternalFileViewing * GlobalContext::getExternalFileViewing() const {
   return efv;
 }
 
@@ -132,15 +132,15 @@ void GlobalContext::updateTime() {
   currentday = timedata->tm_mday;
 }
 
-int GlobalContext::currentYear() {
+int GlobalContext::currentYear() const {
   return currentyear;
 }
 
-int GlobalContext::currentMonth() {
+int GlobalContext::currentMonth() const {
   return currentmonth;
 }
 
-int GlobalContext::currentDay() {
+int GlobalContext::currentDay() const {
   return currentday;
 }
 
@@ -195,11 +195,11 @@ std::string GlobalContext::parseSize(unsigned long long int size) {
   return result;
 }
 
-std::string GlobalContext::getSVNRevision() {
+std::string GlobalContext::getSVNRevision() const {
   return svnrev;
 }
 
-std::string GlobalContext::getCompileTime() {
+std::string GlobalContext::getCompileTime() const {
   return compiletime;
 }
 

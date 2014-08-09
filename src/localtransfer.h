@@ -16,13 +16,13 @@ public:
   LocalTransfer(LocalStorage *);
   void engage(TransferMonitor *, std::string, std::string, std::string, int, bool, FTPConn *);
   void engage(TransferMonitor *, int, std::string, int, bool, FTPConn *);
-  bool active();
+  bool active() const;
   void FDConnected();
   void FDDisconnected();
   void FDData(char *, unsigned int);
   void FDSSLSuccess();
   void FDSSLFail();
-  unsigned long long int size();
+  unsigned long long int size() const;
 private:
   void append(char *, unsigned int);
   TransferMonitor * tm;

@@ -16,10 +16,10 @@ class ScoreBoard {
   public:
     ScoreBoard();
     void add(std::string, int, bool, SiteLogic *, FileList *, SiteLogic *, FileList *);
-    unsigned int size();
-    std::vector<ScoreBoardElement *>::iterator begin();
-    std::vector<ScoreBoardElement *>::iterator end();
+    unsigned int size() const;
+    std::vector<ScoreBoardElement *>::const_iterator begin() const;
+    std::vector<ScoreBoardElement *>::const_iterator end() const;
     void sort();
-    std::vector<ScoreBoardElement *> * getElementVector();
+    const std::vector<ScoreBoardElement *> * getElementVector() const;
     void wipe();
 };

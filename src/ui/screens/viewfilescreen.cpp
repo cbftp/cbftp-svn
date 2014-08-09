@@ -195,7 +195,7 @@ void ViewFileScreen::keyPressed(unsigned int ch) {
   }
 }
 
-std::string ViewFileScreen::getLegendText() {
+std::string ViewFileScreen::getLegendText() const {
   if (pid) {
     return "[Esc/Enter/c] Return - [k]ill external viewer - [K]ill ALL external viewers";
   }
@@ -205,7 +205,7 @@ std::string ViewFileScreen::getLegendText() {
   return "[Arrowkeys] Navigate - [Esc/Enter/c] Return";
 }
 
-std::string ViewFileScreen::getInfoLabel() {
+std::string ViewFileScreen::getInfoLabel() const {
   return "VIEW FILE: " + file;
 }
 

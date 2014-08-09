@@ -10,5 +10,5 @@ private:
 public:
   MenuSelectOptionContainer();
   void addElement(MenuSelectOptionElement *);
-  MenuSelectOptionElement * getOption(unsigned int);
+  MenuSelectOptionElement * getOption(unsigned int) const;
 };

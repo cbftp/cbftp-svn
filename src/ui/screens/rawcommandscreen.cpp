@@ -147,7 +147,7 @@ void RawCommandScreen::keyPressed(unsigned int ch) {
   }
 }
 
-std::string RawCommandScreen::getLegendText() {
+std::string RawCommandScreen::getLegendText() const {
   std::string legendtext = "[Enter] Send command - [ESC] clear / exit - [Any] Input to text - [Pgup] Scroll up - [Pgdn] Scroll down";
   if (hasselection) {
     legendtext += " - [Insert] selection";
@@ -155,6 +155,6 @@ std::string RawCommandScreen::getLegendText() {
   return legendtext;
 }
 
-std::string RawCommandScreen::getInfoLabel() {
+std::string RawCommandScreen::getInfoLabel() const {
   return "RAW COMMAND INPUT: " + sitename;
 }

@@ -185,15 +185,15 @@ MenuSelectAdjustableLine * MenuSelectOption::addAdjustableLine() {
   return msal;
 }
 
-MenuSelectOptionElement * MenuSelectOption::getElement(unsigned int i) {
+MenuSelectOptionElement * MenuSelectOption::getElement(unsigned int i) const {
   if (i < 0 || i >= size()) {
     return NULL;
   }
   return options[i];
 }
 
-MenuSelectOptionElement * MenuSelectOption::getElement(std::string identifier) {
-  std::vector<MenuSelectOptionElement *>::iterator it;
+MenuSelectOptionElement * MenuSelectOption::getElement(std::string identifier) const {
+  std::vector<MenuSelectOptionElement *>::const_iterator it;
   for (it = options.begin(); it != options.end(); it++) {
     if ((*it)->getIdentifier() == identifier) {
       return *it;
@@ -202,11 +202,11 @@ MenuSelectOptionElement * MenuSelectOption::getElement(std::string identifier) {
   return NULL;
 }
 
-unsigned int MenuSelectOption::getLastSelectionPointer() {
+unsigned int MenuSelectOption::getLastSelectionPointer() const {
   return lastpointer;
 }
 
-unsigned int MenuSelectOption::getSelectionPointer() {
+unsigned int MenuSelectOption::getSelectionPointer() const {
   return pointer;
 }
 
@@ -245,7 +245,7 @@ void MenuSelectOption::enterFocusFrom(int dir) {
   lastpointer = pointer;
 }
 
-unsigned int MenuSelectOption::size() {
+unsigned int MenuSelectOption::size() const {
   return options.size();
 }
 

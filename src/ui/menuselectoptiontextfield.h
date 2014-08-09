@@ -11,12 +11,12 @@ private:
 public:
   MenuSelectOptionTextField();
   MenuSelectOptionTextField(std::string, int, int, std::string, std::string, int, int, bool);
-  std::string getContentText();
+  std::string getContentText() const;
   bool activate();
   void inputChar(int);
-  int cursorPosition();
-  std::string getData();
+  int cursorPosition() const;
+  std::string getData() const;
   void clear();
   void setText(std::string);
-  std::string getLegendText();
+  std::string getLegendText() const;
 };

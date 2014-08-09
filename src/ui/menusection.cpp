@@ -11,14 +11,14 @@ MenuSection::MenuSection() {
   needsredraw = false;
 }
 
-void MenuSection::initialize(int row, int col, std::map<std::string, std::string>::iterator sectionsbegin, std::map<std::string, std::string>::iterator sectionsend) {
+void MenuSection::initialize(int row, int col, std::map<std::string, std::string>::const_iterator sectionsbegin, std::map<std::string, std::string>::const_iterator sectionsend) {
   pointer = 0;
   lastpointer = 0;
   needsredraw = false;
   sectioncontainers.clear();
   this->row = row;
   this->col = col;
-  std::map<std::string, std::string>::iterator it;
+  std::map<std::string, std::string>::const_iterator it;
   addbutton = new MenuSelectOptionTextButton("add", 0, 0, "<Add>");
   for(it = sectionsbegin; it != sectionsend; it++) {
     addSection(it->first, it->second);
@@ -83,22 +83,22 @@ bool MenuSection::goLeft() {
   return false;
 }
 
-MenuSelectOptionContainer * MenuSection::getSectionContainer(unsigned int id) {
+const MenuSelectOptionContainer * MenuSection::getSectionContainer(unsigned int id) const{
   if (id <= sectioncontainers.size() - 1) {
     return &sectioncontainers[id];
   }
   return NULL;
 }
 
-unsigned int MenuSection::getLastSelectionPointer() {
+unsigned int MenuSection::getLastSelectionPointer() const {
   return lastpointer;
 }
 
-unsigned int MenuSection::getSelectionPointer() {
+unsigned int MenuSection::getSelectionPointer() const {
   return pointer;
 }
 
-MenuSelectOptionElement * MenuSection::getElement(unsigned int i) {
+MenuSelectOptionElement * MenuSection::getElement(unsigned int i) const {
   if (i == 0) {
     return addbutton;
   }
@@ -135,20 +135,16 @@ bool MenuSection::needsRedraw() {
   return redraw;
 }
 
-unsigned int MenuSection::getHeaderRow() {
+unsigned int MenuSection::getHeaderRow() const {
   return row;
 }
 
-unsigned int MenuSection::getHeaderCol() {
+unsigned int MenuSection::getHeaderCol() const {
   return col;
 }
 
-unsigned int MenuSection::size() {
+unsigned int MenuSection::size() const {
   return sectioncontainers.size();
-}
-
-bool MenuSection::addButtonPressed() {
-  return true;
 }
 
 void MenuSection::addSection(std::string nametext, std::string pathtext) {

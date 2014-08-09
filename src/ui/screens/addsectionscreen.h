@@ -13,8 +13,8 @@ public:
   void update();
   void redraw();
   void keyPressed(unsigned int);
-  std::string getLegendText();
-  std::string getInfoLabel();
+  std::string getLegendText() const;
+  std::string getInfoLabel() const;
 private:
   Site * modsite;
   std::string currentlegendtext;

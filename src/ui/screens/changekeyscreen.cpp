@@ -152,10 +152,10 @@ void ChangeKeyScreen::keyPressed(unsigned int ch) {
   }
 }
 
-std::string ChangeKeyScreen::getLegendText() {
+std::string ChangeKeyScreen::getLegendText() const {
   return currentlegendtext;
 }
 
-std::string ChangeKeyScreen::getInfoLabel() {
+std::string ChangeKeyScreen::getInfoLabel() const {
   return "CHANGE ENCRYPTION KEY";
 }

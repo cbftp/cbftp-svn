@@ -8,9 +8,9 @@ public:
   TextInputField(int, int);
   TextInputField(int, int, bool);
   TextInputField(std::string, int, int, bool);
-  std::string getText();
-  std::string getVisualText();
-  unsigned int getVisualCursorPosition();
+  std::string getText() const;
+  std::string getVisualText() const;
+  unsigned int getVisualCursorPosition() const;
   bool addchar(char);
   void erase();
   bool moveCursorLeft();

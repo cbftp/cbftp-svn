@@ -13,11 +13,11 @@ private:
 public:
   SiteLogicRequest(int, int, std::string);
   SiteLogicRequest(int, int, std::string, std::string, int);
-  int requestId();
-  int requestType();
-  std::string requestData();
-  std::string requestData2();
-  int requestData3();
+  int requestId() const;
+  int requestType() const;
+  std::string requestData() const;
+  std::string requestData2() const;
+  int requestData3() const;
   void setConnId(int);
-  int connId();
+  int connId() const;
 };

@@ -27,6 +27,6 @@ private:
   static std::map<char, std::vector< std::string > > charmap;
 public:
   static void init();
-  static std::string getCharLine(char, int);
+  static std::string getCharLine(char, unsigned int);
   static int getMixedChar(int, int);
 };

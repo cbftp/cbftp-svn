@@ -7,18 +7,18 @@ MenuSelectSiteElement::MenuSelectSiteElement(Site * site, SiteLogic * sitelogic,
   this->col = col;
 }
 
-Site * MenuSelectSiteElement::getSite() {
+Site * MenuSelectSiteElement::getSite() const {
   return site;
 }
 
-SiteLogic * MenuSelectSiteElement::getSiteLogic() {
+SiteLogic * MenuSelectSiteElement::getSiteLogic() const {
   return sitelogic;
 }
 
-int MenuSelectSiteElement::getCol() {
+int MenuSelectSiteElement::getCol() const {
   return col;
 }
 
-int MenuSelectSiteElement::getRow() {
+int MenuSelectSiteElement::getRow() const {
   return row;
 }

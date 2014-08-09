@@ -7,7 +7,7 @@ private:
   bool status;
 public:
   SiteLogicRequestReady(int, void *, bool);
-  int requestId();
-  void * requestData();
-  bool requestStatus();
+  int requestId() const;
+  void * requestData() const;
+  bool requestStatus() const;
 };

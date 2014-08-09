@@ -36,9 +36,9 @@ class TransferManager {
     int transferStatus(int);
     void transferSuccessful(TransferMonitor *);
     void transferFailed(TransferMonitor *, int);
-    std::list<TransferStatus *>::iterator ongoingTransfersBegin();
-    std::list<TransferStatus *>::iterator ongoingTransfersEnd();
-    std::list<TransferStatus *>::iterator finishedTransfersBegin();
-    std::list<TransferStatus *>::iterator finishedTransfersEnd();
+    std::list<TransferStatus *>::const_iterator ongoingTransfersBegin() const;
+    std::list<TransferStatus *>::const_iterator ongoingTransfersEnd() const;
+    std::list<TransferStatus *>::const_iterator finishedTransfersBegin() const;
+    std::list<TransferStatus *>::const_iterator finishedTransfersEnd() const;
     void addNewTransferStatus(TransferStatus *);
 };

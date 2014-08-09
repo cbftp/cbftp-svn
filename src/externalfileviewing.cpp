@@ -28,7 +28,7 @@ ExternalFileViewing::ExternalFileViewing() {
   signal(SIGCHLD, &sighandler_child);
 }
 
-bool ExternalFileViewing::isViewable(std::string path) {
+bool ExternalFileViewing::isViewable(std::string path) const {
   return getViewApplication(path) != "";
 }
 
@@ -78,7 +78,7 @@ void ExternalFileViewing::killAll() {
   subprocesses.clear();
 }
 
-std::string ExternalFileViewing::getViewApplication(std::string path) {
+std::string ExternalFileViewing::getViewApplication(std::string path) const {
   std::string extension = getExtension(path);
   std::string application;
   if (extension == "mkv" || extension == "mp4" || extension == "avi" ||
@@ -100,7 +100,7 @@ std::string ExternalFileViewing::getViewApplication(std::string path) {
   return application;
 }
 
-std::string ExternalFileViewing::getExtension(std::string file) {
+std::string ExternalFileViewing::getExtension(std::string file) const {
   size_t suffixdotpos = file.rfind(".");
   std::string extension;
   if (suffixdotpos != std::string::npos && suffixdotpos > 0) {
@@ -130,12 +130,12 @@ void ExternalFileViewing::checkDeleteFile(int pid) {
   }
 }
 
-bool ExternalFileViewing::hasDisplay() {
+bool ExternalFileViewing::hasDisplay() const {
   return display;
 }
 
-bool ExternalFileViewing::stillViewing(int pid) {
-  for (std::list<int>::iterator it = subprocesses.begin(); it != subprocesses.end(); it++) {
+bool ExternalFileViewing::stillViewing(int pid) const {
+  for (std::list<int>::const_iterator it = subprocesses.begin(); it != subprocesses.end(); it++) {
     if (*it == pid) {
       return true;
     }
@@ -143,19 +143,19 @@ bool ExternalFileViewing::stillViewing(int pid) {
   return false;
 }
 
-std::string ExternalFileViewing::getVideoViewer() {
+std::string ExternalFileViewing::getVideoViewer() const {
   return videoviewer;
 }
 
-std::string ExternalFileViewing::getAudioViewer() {
+std::string ExternalFileViewing::getAudioViewer() const {
   return audioviewer;
 }
 
-std::string ExternalFileViewing::getImageViewer() {
+std::string ExternalFileViewing::getImageViewer() const {
   return imageviewer;
 }
 
-std::string ExternalFileViewing::getPDFViewer() {
+std::string ExternalFileViewing::getPDFViewer() const {
   return pdfviewer;
 }
 

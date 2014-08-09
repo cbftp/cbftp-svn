@@ -109,10 +109,10 @@ void AddSectionScreen::keyPressed(unsigned int ch) {
   }
 }
 
-std::string AddSectionScreen::getLegendText() {
+std::string AddSectionScreen::getLegendText() const {
   return currentlegendtext;
 }
 
-std::string AddSectionScreen::getInfoLabel() {
+std::string AddSectionScreen::getInfoLabel() const {
   return "ADD SECTION";
 }

@@ -28,7 +28,7 @@ private:
 public:
   RecursiveCommandLogic();
   void initialize(int, std::string, std::string);
-  bool isActive();
+  bool isActive() const;
   int getAction(std::string, std::string &);
   void addFileList(FileList *);
   void failedCwd();

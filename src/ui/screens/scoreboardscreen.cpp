@@ -24,7 +24,7 @@ void ScoreBoardScreen::initialize(unsigned int row, unsigned int col) {
 
 void ScoreBoardScreen::redraw() {
   ui->erase();
-  std::vector<ScoreBoardElement *>::iterator it;
+  std::vector<ScoreBoardElement *>::const_iterator it;
   unsigned int i = 2;
   ui->printStr(0, 1, "Filename");
   ui->printStr(1, 1, "--------");
@@ -62,15 +62,15 @@ void ScoreBoardScreen::keyPressed(unsigned int ch) {
   }
 }
 
-std::string ScoreBoardScreen::getLegendText() {
+std::string ScoreBoardScreen::getLegendText() const {
   return "[Esc/c/Enter] Return";
 }
 
-std::string ScoreBoardScreen::getInfoLabel() {
+std::string ScoreBoardScreen::getInfoLabel() const {
   return "SCOREBOARD";
 }
 
-std::string ScoreBoardScreen::getInfoText() {
+std::string ScoreBoardScreen::getInfoText() const {
   std::string size = global->int2Str(scoreboard->size());
   std::string max = global->int2Str((int)scoreboard->getElementVector()->size());
   return "Size: " + size + "  Max: " + max;

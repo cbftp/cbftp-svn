@@ -46,58 +46,61 @@ void Race::removeSite(SiteLogic * sitelogic) {
   sizes.erase(siterace);
 }
 
-std::list<SiteLogic *>::iterator Race::begin() {
+std::list<SiteLogic *>::const_iterator Race::begin() const {
   return sites.begin();
 }
 
-std::list<SiteLogic *>::iterator Race::end() {
+std::list<SiteLogic *>::const_iterator Race::end() const {
   return sites.end();
 }
 
-std::string Race::getName() {
+std::string Race::getName() const {
   return name;
 }
 
-std::string Race::getGroup() {
+std::string Race::getGroup() const {
   return group;
 }
 
-std::string Race::getSection() {
+std::string Race::getSection() const {
   return section;
 }
 
-int Race::numSites() {
+int Race::numSites() const {
   return sites.size();
 }
 
-bool Race::sizeEstimated(std::string subpath) {
+bool Race::sizeEstimated(std::string subpath) const {
   return estimatedsize.find(subpath) != estimatedsize.end();
 }
 
-unsigned int Race::estimatedSize(std::string subpath) {
-  std::map<std::string, unsigned int>::iterator it = estimatedsize.find(subpath);
+unsigned int Race::estimatedSize(std::string subpath) const {
+  std::map<std::string, unsigned int>::const_iterator it = estimatedsize.find(subpath);
   if (it != estimatedsize.end()) {
     return it->second;
   }
   return 0;
 }
 
-unsigned int Race::guessedSize(std::string subpath) {
-  std::map<std::string, unsigned int>::iterator it = guessedsize.find(subpath);
+unsigned int Race::guessedSize(std::string subpath) const {
+  std::map<std::string, unsigned int>::const_iterator it = guessedsize.find(subpath);
   if (it != guessedsize.end()) {
     return it->second;
   }
   return 10;
 }
 
-unsigned long long int Race::guessedFileSize(std::string subpath, std::string file) {
-  if (sizelocationtrackers.find(subpath) == sizelocationtrackers.end()) {
+unsigned long long int Race::guessedFileSize(std::string subpath, std::string file) const {
+  std::map<std::string, std::map<std::string, SizeLocationTrack> >::const_iterator it =
+      sizelocationtrackers.find(subpath);
+  if (it == sizelocationtrackers.end()) {
     return bestunknownfilesizeestimate;
   }
-  if (sizelocationtrackers[subpath].find(file) == sizelocationtrackers[subpath].end()) {
+  std::map<std::string, SizeLocationTrack>::const_iterator it2 = it->second.find(file);
+  if (it2 == it->second.end()) {
     return bestunknownfilesizeestimate;
   }
-  return sizelocationtrackers[subpath][file].getEstimatedSize();
+  return it2->second.getEstimatedSize();
 }
 
 void Race::prepareGuessedFileList(std::string subpath) {
@@ -121,20 +124,20 @@ void Race::prepareGuessedFileList(std::string subpath) {
   }
 }
 
-std::list<std::string>::iterator Race::guessedFileListBegin() {
+std::list<std::string>::const_iterator Race::guessedFileListBegin() const {
   return guessedfilelist.begin();
 }
 
-std::list<std::string>::iterator Race::guessedFileListEnd() {
+std::list<std::string>::const_iterator Race::guessedFileListEnd() const {
   return guessedfilelist.end();
 }
 
-bool Race::SFVReported(std::string subpath) {
-  std::map<std::string, std::list<SiteRace *> >::iterator it = sfvreports.find(subpath);
+bool Race::SFVReported(std::string subpath) const {
+  std::map<std::string, std::list<SiteRace *> >::const_iterator it = sfvreports.find(subpath);
   return it != sfvreports.end();
 }
 
-std::list<std::string> Race::getSubPaths() {
+std::list<std::string> Race::getSubPaths() const {
   return estimatedsubpaths;
 }
 
@@ -142,11 +145,11 @@ void Race::updateSiteProgress(int in) {
   if (maxfilelistsize < in) maxfilelistsize = in;
 }
 
-int Race::getMaxSiteProgress() {
+int Race::getMaxSiteProgress() const {
   return maxfilelistsize;
 }
 
-bool Race::isDone() {
+bool Race::isDone() const {
   return done;
 }
 

@@ -52,77 +52,77 @@ void Site::copy(Site * site) {
   this->proxyname = proxyname;
 }
 
-std::map<std::string, std::string>::iterator Site::sectionsBegin() {
+std::map<std::string, std::string>::const_iterator Site::sectionsBegin() const {
   return sections.begin();
 }
 
-std::map<std::string, std::string>::iterator Site::sectionsEnd() {
+std::map<std::string, std::string>::const_iterator Site::sectionsEnd() const {
   return sections.end();
 }
 
-std::map<std::string, int>::iterator Site::avgspeedBegin() {
+std::map<std::string, int>::const_iterator Site::avgspeedBegin() const {
   return avgspeed.begin();
 }
 
-std::map<std::string, int>::iterator Site::avgspeedEnd() {
+std::map<std::string, int>::const_iterator Site::avgspeedEnd() const {
   return avgspeed.end();
 }
 
-unsigned int Site::getMaxLogins() {
+unsigned int Site::getMaxLogins() const {
   if (logins == 0) {
     return REPORT_LOGINS_IF_UNLIMITED;
   }
   return logins;
 }
 
-unsigned int Site::getMaxUp() {
+unsigned int Site::getMaxUp() const {
   if (max_up == 0) {
     return getMaxLogins();
   }
   return max_up;
 }
 
-unsigned int Site::getMaxDown() {
+unsigned int Site::getMaxDown() const {
   if (max_dn == 0) {
     return getMaxLogins();
   }
   return max_dn;
 }
 
-unsigned int Site::getMaxIdleTime() {
+unsigned int Site::getMaxIdleTime() const {
   return max_idletime;
 }
 
-unsigned int Site::getInternMaxLogins() {
+unsigned int Site::getInternMaxLogins() const {
   return logins;
 }
 
-unsigned int Site::getInternMaxUp() {
+unsigned int Site::getInternMaxUp() const {
   return max_up;
 }
 
-unsigned int Site::getInternMaxDown() {
+unsigned int Site::getInternMaxDown() const {
   return max_dn;
 }
 
-std::string Site::getBasePath() {
+std::string Site::getBasePath() const {
   return basepath;
 }
 
-bool Site::unlimitedLogins() {
+bool Site::unlimitedLogins() const {
   return logins == 0;
 }
 
-bool Site::unlimitedUp() {
+bool Site::unlimitedUp() const {
   return max_up == 0;
 }
 
-bool Site::unlimitedDown() {
+bool Site::unlimitedDown() const {
   return max_dn == 0;
 }
 
-int Site::getAverageSpeed(std::string target) {
-  std::map<std::string, int>::iterator it = avgspeed.find(target);
+int Site::getAverageSpeed(std::string target) const {
+  std::map<std::string, int>::const_iterator it = avgspeed.find(target);
   if (it == avgspeed.end()) return 1024;
   return it->second;
 }
@@ -144,7 +144,7 @@ void Site::pushTransferSpeed(std::string target, int speed) {
   avgspeed[target] = (int) ((speed / 5) + (oldspeed * 0.8));
 }
 
-bool Site::needsPRET() {
+bool Site::needsPRET() const {
   return pret;
 }
 
@@ -152,11 +152,11 @@ void Site::setPRET(bool val) {
   pret = val;
 }
 
-bool Site::SSL() {
+bool Site::SSL() const {
   return sslconn;
 }
 
-int Site::getSSLTransferPolicy() {
+int Site::getSSLTransferPolicy() const {
   return ssltransfer;
 }
 
@@ -164,7 +164,7 @@ void Site::setSSLTransferPolicy(int policy) {
   ssltransfer = policy;
 }
 
-bool Site::supportsCPSV() {
+bool Site::supportsCPSV() const {
   return cpsvsupported;
 }
 
@@ -172,7 +172,7 @@ void Site::setSupportsCPSV(bool supported) {
   cpsvsupported = supported;
 }
 
-int Site::getListCommand() {
+int Site::getListCommand() const {
   return listcommand;
 }
 
@@ -184,19 +184,19 @@ void Site::setSSL(bool val) {
   sslconn = val;
 }
 
-bool Site::getAllowUpload() {
+bool Site::getAllowUpload() const {
   return allowupload;
 }
 
-bool Site::getAllowDownload() {
+bool Site::getAllowDownload() const {
   return allowdownload;
 }
 
-int Site::getProxyType() {
+int Site::getProxyType() const {
   return proxytype;
 }
 
-std::string Site::getProxy() {
+std::string Site::getProxy() const {
   return proxyname;
 }
 
@@ -208,7 +208,7 @@ void Site::setAllowDownload(bool val) {
   allowdownload = val;
 }
 
-bool Site::hasBrokenPASV() {
+bool Site::hasBrokenPASV() const {
   return brokenpasv;
 }
 
@@ -216,35 +216,35 @@ void Site::setBrokenPASV(bool val) {
   brokenpasv = val;
 }
 
-std::string Site::getName() {
+std::string Site::getName() const {
   return name;
 }
 
-std::string Site::getSectionPath(std::string sectionname) {
-  std::map<std::string, std::string>::iterator it = sections.find(sectionname);
+std::string Site::getSectionPath(std::string sectionname) const {
+  std::map<std::string, std::string>::const_iterator it = sections.find(sectionname);
   if (it == sections.end()) return "/";
   return it->second;
 }
 
-bool Site::hasSection(std::string sectionname) {
-  std::map<std::string, std::string>::iterator it = sections.find(sectionname);
+bool Site::hasSection(std::string sectionname) const {
+  std::map<std::string, std::string>::const_iterator it = sections.find(sectionname);
   if (it == sections.end()) return false;
   return true;
 }
 
-std::string Site::getAddress() {
+std::string Site::getAddress() const {
   return address;
 }
 
-std::string Site::getPort() {
+std::string Site::getPort() const {
   return port;
 }
 
-std::string Site::getUser() {
+std::string Site::getUser() const {
   return user;
 }
 
-std::string Site::getPass() {
+std::string Site::getPass() const {
   return pass;
 }
 
@@ -314,7 +314,7 @@ void Site::clearAffils() {
   affils.clear();
 }
 
-bool Site::isAffiliated(std::string affil) {
+bool Site::isAffiliated(std::string affil) const {
   if (affils.find(affil) != affils.end()) {
     return true;
   }
@@ -325,16 +325,16 @@ void Site::addAffil(std::string affil) {
   affils[affil] = true;
 }
 
-std::map<std::string, bool>::iterator Site::affilsBegin() {
+std::map<std::string, bool>::const_iterator Site::affilsBegin() const {
   return affils.begin();
 }
 
-std::map<std::string, bool>::iterator Site::affilsEnd() {
+std::map<std::string, bool>::const_iterator Site::affilsEnd() const {
   return affils.end();
 }
 
-std::list<std::string> Site::getSectionsForPath(std::string path) {
-  std::map<std::string, std::string>::iterator it;
+std::list<std::string> Site::getSectionsForPath(std::string path) const {
+  std::map<std::string, std::string>::const_iterator it;
   std::list<std::string> retsections;
   for (it = sections.begin(); it!= sections.end(); it++) {
     if (it->second == path) {

@@ -246,7 +246,7 @@ void IOManager::sendData(int id, std::string data) {
   sendData(id, buf, data.length());
 }
 
-void IOManager::sendData(int id, char * buf, unsigned int buflen) {
+void IOManager::sendData(int id, const char * buf, unsigned int buflen) {
   int b_sent;
   SSL * ssl;
   char * datablock;
@@ -312,9 +312,10 @@ std::string IOManager::getCipher(int id) {
   return std::string(cipher);
 }
 
-std::string IOManager::getSocketAddress(int id) {
-  if (addrmap.find(id) != addrmap.end()) {
-    return addrmap[id];
+std::string IOManager::getSocketAddress(int id) const {
+  std::map<int, std::string>::const_iterator it = addrmap.find(id);
+  if (it != addrmap.end()) {
+    return it->second;
   }
   return "";
 }
@@ -520,7 +521,7 @@ std::list<std::pair<std::string, std::string> > IOManager::listInterfaces() {
   return addrs;
 }
 
-std::string IOManager::getDefaultInterface() {
+std::string IOManager::getDefaultInterface() const {
   return defaultinterface;
 }
 
@@ -538,7 +539,7 @@ void IOManager::setDefaultInterface(std::string interface) {
   }
 }
 
-bool IOManager::hasDefaultInterface() {
+bool IOManager::hasDefaultInterface() const {
   return hasdefaultinterface;
 }
 

@@ -111,13 +111,13 @@ void FileList::setFileUpdateFlag(std::string name, long int size, unsigned int s
   }
 }
 
-File * FileList::getFile(std::string name) {
-  std::map<std::string, File *>::iterator it = files.find(name);
+File * FileList::getFile(std::string name) const {
+  std::map<std::string, File *>::const_iterator it = files.find(name);
   if (it == files.end()) return NULL;
   else return (*it).second;
 }
 
-bool FileList::isFilled() {
+bool FileList::isFilled() const {
   return filled;
 }
 
@@ -133,19 +133,27 @@ std::map<std::string, File *>::iterator FileList::end() {
   return files.end();
 }
 
-bool FileList::contains(std::string name) {
+std::map<std::string, File *>::const_iterator FileList::begin() const {
+  return files.begin();
+}
+
+std::map<std::string, File *>::const_iterator FileList::end() const {
+  return files.end();
+}
+
+bool FileList::contains(std::string name) const {
   bool ret = false;
   if (files.find(name) != files.end()) ret = true;
   return ret;
 }
 
-unsigned int FileList::getSize() {
+unsigned int FileList::getSize() const {
   return files.size();
 }
 
-unsigned int FileList::getNumUploadedFiles() {
+unsigned int FileList::getNumUploadedFiles() const {
   unsigned int count = 0;
-  std::map<std::string, File *>::iterator it;
+  std::map<std::string, File *>::const_iterator it;
   for (it = files.begin(); it != files.end(); it++) {
     if (!it->second->isDirectory() && it->second->getSize() > 0) {
       ++count;
@@ -154,12 +162,12 @@ unsigned int FileList::getNumUploadedFiles() {
   return count;
 }
 
-int FileList::getSizeUploaded() {
+int FileList::getSizeUploaded() const {
   return uploadedfiles;
 }
 
-bool FileList::hasSFV() {
-  std::map<std::string, File *>::iterator it;
+bool FileList::hasSFV() const {
+  std::map<std::string, File *>::const_iterator it;
   for (it = files.begin(); it != files.end(); it++) {
     if(it->second->getExtension() == ("sfv") &&
         it->second->getSize() > 0) {
@@ -169,15 +177,15 @@ bool FileList::hasSFV() {
   return false;
 }
 
-int FileList::getOwnedPercentage() {
+int FileList::getOwnedPercentage() const {
   return ownpercentage;
 }
 
-unsigned long long int FileList::getMaxFileSize() {
+unsigned long long int FileList::getMaxFileSize() const {
   return maxfilesize;
 }
 
-std::string FileList::getPath() {
+std::string FileList::getPath() const {
   return path;
 }
 
@@ -244,27 +252,29 @@ void FileList::downloadAttemptFail(std::string file) {
   downloadfails[file]++;
 }
 
-bool FileList::hasFailedDownload(std::string file) {
-  if (downloadfails.find(file) == uploadfails.end()) {
+bool FileList::hasFailedDownload(std::string file) const {
+  std::map<std::string, int>::const_iterator it = downloadfails.find(file);
+  if (it == uploadfails.end()) {
     return false;
   }
-  if (downloadfails[file] < 3) {
-    return false;
-  }
-  return true;
-}
-
-bool FileList::hasFailedUpload(std::string file) {
-  if (uploadfails.find(file) == uploadfails.end()) {
-    return false;
-  }
-  if (uploadfails[file] < 3) {
+  if (it->second < 3) {
     return false;
   }
   return true;
 }
 
-bool FileList::listChanged() {
+bool FileList::hasFailedUpload(std::string file) const {
+  std::map<std::string, int>::const_iterator it = uploadfails.find(file);
+  if (it == uploadfails.end()) {
+    return false;
+  }
+  if (it->second < 3) {
+    return false;
+  }
+  return true;
+}
+
+bool FileList::listChanged() const {
   return listchanged;
 }
 

@@ -40,7 +40,7 @@ bool NumInputArrow::setValue(int newval) {
   return false;
 }
 
-int NumInputArrow::getValue() {
+int NumInputArrow::getValue() const {
   return val;
 }
 
@@ -51,7 +51,7 @@ void NumInputArrow::activate() {
 void NumInputArrow::deactivate() {
   active = false;
 }
-std::string NumInputArrow::getVisual() {
+std::string NumInputArrow::getVisual() const {
   int maxlen = global->int2Str(max).length() + 4;
   std::string out = "";
   if (active) {

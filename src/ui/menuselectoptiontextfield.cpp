@@ -11,7 +11,7 @@ MenuSelectOptionTextField::MenuSelectOptionTextField(std::string identifier, int
   init(identifier, row, col, label);
 }
 
-std::string MenuSelectOptionTextField::getContentText() {
+std::string MenuSelectOptionTextField::getContentText() const {
   return textfield.getVisualText();
 }
 
@@ -47,11 +47,11 @@ void MenuSelectOptionTextField::inputChar(int ch) {
   }
 }
 
-int MenuSelectOptionTextField::cursorPosition() {
+int MenuSelectOptionTextField::cursorPosition() const {
   return textfield.getVisualCursorPosition();
 }
 
-std::string MenuSelectOptionTextField::getData() {
+std::string MenuSelectOptionTextField::getData() const {
   return textfield.getText();
 }
 
@@ -63,6 +63,6 @@ void MenuSelectOptionTextField::setText(std::string text) {
   textfield.setText(text);
 }
 
-std::string MenuSelectOptionTextField::getLegendText() {
+std::string MenuSelectOptionTextField::getLegendText() const {
   return "[Enter] Finish editing - [Any] Input to text";
 }

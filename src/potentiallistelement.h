@@ -14,5 +14,5 @@ class PotentialListElement {
     void update(SiteLogic *, int, int, int, std::string);
     void reset();
     std::vector<PotentialElement *> & getSlotsVector();
-    bool allThreadsUsedForSite(SiteLogic *, int);
+    bool allThreadsUsedForSite(SiteLogic *, int) const;
 };

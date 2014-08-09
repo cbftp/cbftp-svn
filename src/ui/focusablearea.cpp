@@ -14,7 +14,7 @@ FocusableArea::~FocusableArea() {
 
 }
 
-bool FocusableArea::isFocused() {
+bool FocusableArea::isFocused() const {
   return focus;
 }
 
@@ -54,7 +54,7 @@ void FocusableArea::makeLeavableRight() {
   leaveright = true;
 }
 
-unsigned int FocusableArea::getLastSelectionPointer() {
+unsigned int FocusableArea::getLastSelectionPointer() const {
   return 0;
 }
 
@@ -62,6 +62,6 @@ bool FocusableArea::activateSelected() {
   return false;
 }
 
-MenuSelectOptionElement * FocusableArea::getElement(unsigned int i) {
+MenuSelectOptionElement * FocusableArea::getElement(unsigned int i) const {
   return NULL;
 }

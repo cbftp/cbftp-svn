@@ -91,10 +91,10 @@ void SiteStatusScreen::keyPressed(unsigned int ch) {
   }
 }
 
-std::string SiteStatusScreen::getLegendText() {
+std::string SiteStatusScreen::getLegendText() const {
   return "[Right] Raw data screens - [Enter] Return - ra[w] command - [E]dit site";
 }
 
-std::string SiteStatusScreen::getInfoLabel() {
+std::string SiteStatusScreen::getInfoLabel() const {
   return "DETAILED STATUS: " + site->getName();
 }

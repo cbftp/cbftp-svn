@@ -11,7 +11,7 @@ EventLog::~EventLog() {
   delete rawbuf;
 }
 
-RawBuffer * EventLog::getRawBuffer() {
+RawBuffer * EventLog::getRawBuffer() const {
   return rawbuf;
 }
 
@@ -22,10 +22,10 @@ void EventLog::log(std::string owner, std::string text) {
   rawbuf->writeLine("<" + owner + "> " + text);
 }
 
-std::string EventLog::getLatest() {
+std::string EventLog::getLatest() const {
   return latest;
 }
 
-int EventLog::getLatestId() {
+int EventLog::getLatestId() const {
   return latestid;
 }

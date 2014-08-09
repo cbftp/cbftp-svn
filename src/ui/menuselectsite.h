@@ -19,11 +19,11 @@ class MenuSelectSite : public FocusableArea {
     bool goUp();
     void add(Site *, int, int);
     void remove(Site *);
-    Site * getSite();
+    Site * getSite() const;
     MenuSelectSiteElement * getSiteElement(unsigned int);
-    unsigned int size();
-    unsigned int getSelectionPointer();
-    std::string getSiteLine(unsigned int);
+    unsigned int size() const;
+    unsigned int getSelectionPointer() const;
+    std::string getSiteLine(unsigned int) const;
     void enterFocusFrom(int);
     void prepareRefill();
     void checkPointer();

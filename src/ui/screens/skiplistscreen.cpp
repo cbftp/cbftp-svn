@@ -40,7 +40,7 @@ void SkipListScreen::redraw() {
   ui->printStr(headrow, headcol, "Patterns");
   ui->printStr(headrow, headcol + 11, mf.getElement(0)->getContentText(), highlight);
   for (unsigned int i = 0; i < mf.size(); i++) {
-    MenuSelectOptionContainer * msoc = mf.getSectionContainer(i);
+    const MenuSelectOptionContainer * msoc = mf.getSectionContainer(i);
     for (unsigned int j = 0; j < 2; j++) {
       highlight = ((i * 2) + 1 + j) == selected;
       int indentation = 9;
@@ -162,10 +162,10 @@ void SkipListScreen::keyPressed(unsigned int ch) {
   }
 }
 
-std::string SkipListScreen::getLegendText() {
+std::string SkipListScreen::getLegendText() const {
   return currentlegendtext;
 }
 
-std::string SkipListScreen::getInfoLabel() {
+std::string SkipListScreen::getInfoLabel() const {
   return "CONFIGURE SKIPLIST";
 }

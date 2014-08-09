@@ -17,13 +17,13 @@ public:
   virtual bool goLeft();
   virtual bool goRight();
   virtual void enterFocusFrom(int);
-  bool isFocused();
+  bool isFocused() const;
   void makeLeavableUp();
   void makeLeavableDown();
   void makeLeavableLeft();
   void makeLeavableRight();
   virtual bool activateSelected();
-  virtual unsigned int getLastSelectionPointer();
-  virtual unsigned int getSelectionPointer() = 0;
-  virtual MenuSelectOptionElement * getElement(unsigned int);
+  virtual unsigned int getLastSelectionPointer() const;
+  virtual unsigned int getSelectionPointer() const = 0;
+  virtual MenuSelectOptionElement * getElement(unsigned int) const;
 };

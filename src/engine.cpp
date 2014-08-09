@@ -58,7 +58,7 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
       }
     }
     if (add && append) {
-      for (std::list<SiteLogic *>::iterator it2 = race->begin(); it2 != race->end(); it2++) {
+      for (std::list<SiteLogic *>::const_iterator it2 = race->begin(); it2 != race->end(); it2++) {
         if (sl == *it2) {
           add = false;
           break;
@@ -90,7 +90,7 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
       if (readdtocurrent) {
         global->getEventLog()->log("Engine", "Reactivating race: " + section + "/" + release);
         race->setUndone();
-        for (std::list<SiteLogic *>::iterator it = race->begin(); it != race->end(); it++) {
+        for (std::list<SiteLogic *>::const_iterator it = race->begin(); it != race->end(); it++) {
           (*it)->activate();
         }
       }
@@ -120,7 +120,7 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
 void Engine::removeSiteFromRace(std::string release, std::string site) {
   for (std::list<Race *>::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
     if ((*it)->getName() == release) {
-      for (std::list<SiteLogic *>::iterator it2 = (*it)->begin(); it2 != (*it)->end(); it2++) {
+      for (std::list<SiteLogic *>::const_iterator it2 = (*it)->begin(); it2 != (*it)->end(); it2++) {
         if ((*it2)->getSite()->getName() == site) {
           (*it2)->abortRace(release);
           (*it)->removeSite(*it2);
@@ -135,7 +135,7 @@ void Engine::abortRace(std::string release) {
   for (std::list<Race *>::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
     if ((*it)->getName() == release) {
       (*it)->abort();
-      for (std::list<SiteLogic *>::iterator it2 = (*it)->begin(); it2 != (*it)->end(); it2++) {
+      for (std::list<SiteLogic *>::const_iterator it2 = (*it)->begin(); it2 != (*it)->end(); it2++) {
         (*it2)->abortRace(release);
       }
       currentraces.erase(it);
@@ -164,9 +164,9 @@ void Engine::someRaceFileListRefreshed() {
 
 void Engine::estimateRaceSizes() {
   for (std::list<Race *>::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
-    for (std::list<SiteLogic *>::iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
+    for (std::list<SiteLogic *>::const_iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
       SiteRace * srs = (*its)->getRace((*itr)->getName());
-      std::map<std::string, FileList *>::iterator itfl;
+      std::map<std::string, FileList *>::const_iterator itfl;
       for (itfl = srs->fileListsBegin(); itfl != srs->fileListsEnd(); itfl++) {
         FileList * fls = itfl->second;
         if (srs->sizeEstimated(fls)) {
@@ -190,7 +190,7 @@ void Engine::estimateRaceSizes() {
 
 void Engine::reportCurrentSize(SiteRace * srs, FileList * fls, bool final) {
   std::list<std::string> uniques;
-  std::map<std::string, File *>::iterator itf;
+  std::map<std::string, File *>::const_iterator itf;
   std::string subpath = srs->getSubPathForFileList(fls);
   for (itf = fls->begin(); itf != fls->end(); itf++) {
     if (itf->second->isDirectory()) {
@@ -224,7 +224,7 @@ void Engine::refreshScoreBoard() {
   scoreboard->wipe();
   for (std::list<Race *>::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
     Race * race = *itr;
-    for (std::list<SiteLogic *>::iterator its = race->begin(); its != race->end(); its++) {
+    for (std::list<SiteLogic *>::const_iterator its = race->begin(); its != race->end(); its++) {
       SiteLogic * sls = *its;
       SiteRace * srs = sls->getRace(race->getName());
       if (!srs->isDone()) {
@@ -258,7 +258,7 @@ void Engine::refreshScoreBoard() {
           }
         }
       }
-      for (std::list<SiteLogic *>::iterator itd = race->begin(); itd != race->end(); itd++) {
+      for (std::list<SiteLogic *>::const_iterator itd = race->begin(); itd != race->end(); itd++) {
         SiteLogic * sld = *itd;
         if (sls == sld) continue;
         if (global->getSiteManager()->isBlockedPair(sls->getSite(), sld->getSite())) continue;
@@ -268,13 +268,13 @@ void Engine::refreshScoreBoard() {
         if (avgspeed > maxavgspeed) {
           avgspeed = maxavgspeed;
         }
-        for (std::map<std::string, FileList *>::iterator itfls = srs->fileListsBegin(); itfls != srs->fileListsEnd(); itfls++) {
+        for (std::map<std::string, FileList *>::const_iterator itfls = srs->fileListsBegin(); itfls != srs->fileListsEnd(); itfls++) {
           if (!global->getSkipList()->isAllowed(itfls->first)) continue;
           FileList * fls = itfls->second;
           FileList * fld = srd->getFileListForPath(itfls->first);
           if (fld != NULL) {
             if (!fld->isFilled()) continue;
-            std::map<std::string, File *>::iterator itf;
+            std::map<std::string, File *>::const_iterator itf;
             for (itf = fls->begin(); itf != fls->end(); itf++) {
               File * f = itf->second;
               if (!global->getSkipList()->isAllowed(itf->first) ||
@@ -313,7 +313,7 @@ void Engine::refreshScoreBoard() {
 }
 
 void Engine::issueOptimalTransfers() {
-  std::vector<ScoreBoardElement *>::iterator it;
+  std::vector<ScoreBoardElement *>::const_iterator it;
   ScoreBoardElement * sbe;
   SiteLogic * sls;
   SiteLogic * sld;
@@ -336,7 +336,7 @@ void Engine::issueOptimalTransfers() {
   }
 }
 
-int Engine::calculateScore(File * f, Race * itr, FileList * fls, SiteRace * srs, FileList * fld, SiteRace * srd, int avgspeed, bool * prio, bool racemode) {
+int Engine::calculateScore(File * f, Race * itr, FileList * fls, SiteRace * srs, FileList * fld, SiteRace * srd, int avgspeed, bool * prio, bool racemode) const {
   int points = 0;
   unsigned long long int filesize = f->getSize();
   unsigned long long int maxfilesize = srs->getMaxFileSize();
@@ -376,8 +376,8 @@ int Engine::calculateScore(File * f, Race * itr, FileList * fls, SiteRace * srs,
 void Engine::setSpeedScale() {
   maxavgspeed = 1024;
   for (std::list<Race *>::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
-    for (std::list<SiteLogic *>::iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
-      for (std::list<SiteLogic *>::iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
+    for (std::list<SiteLogic *>::const_iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
+      for (std::list<SiteLogic *>::const_iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
         int avgspeed = (*its)->getSite()->getAverageSpeed((*itd)->getSite()->getName());
         if (avgspeed > maxavgspeed) maxavgspeed = avgspeed;
       }
@@ -385,16 +385,16 @@ void Engine::setSpeedScale() {
   }
 }
 
-int Engine::currentRaces() {
+int Engine::currentRaces() const {
   return currentraces.size();
 }
 
-int Engine::allRaces() {
+int Engine::allRaces() const {
   return allraces.size();
 }
 
-Race * Engine::getRace(std::string releasename) {
-  std::list<Race *>::iterator it;
+Race * Engine::getRace(std::string releasename) const {
+  std::list<Race *>::const_iterator it;
   for (it = allraces.begin(); it != allraces.end(); it++) {
     if ((*it)->getName() == releasename) {
       return *it;
@@ -411,12 +411,20 @@ std::list<Race *>::iterator Engine::getRacesIteratorEnd() {
   return allraces.end();
 }
 
+std::list<Race *>::const_iterator Engine::getRacesIteratorBegin() const {
+  return allraces.begin();
+}
+
+std::list<Race *>::const_iterator Engine::getRacesIteratorEnd() const {
+  return allraces.end();
+}
+
 void Engine::tick(int message) {
   for (std::list<Race *>::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
     if ((*it)->checksSinceLastUpdate() >= MAXCHECKSTIMEOUT) {
       global->getEventLog()->log("Engine", "No activity for " + global->int2Str(MAXCHECKSTIMEOUT) +
           " seconds, aborting race: " + (*it)->getName());
-      for (std::list<SiteLogic *>::iterator its = (*it)->begin(); its != (*it)->end(); its++) {
+      for (std::list<SiteLogic *>::const_iterator its = (*it)->begin(); its != (*it)->end(); its++) {
         (*its)->raceLocalComplete((*its)->getRace((*it)->getName()));
       }
       issueGlobalComplete(*it);
@@ -427,11 +435,11 @@ void Engine::tick(int message) {
 }
 
 void Engine::issueGlobalComplete(Race * race) {
-  for (std::list<SiteLogic *>::iterator itd = race->begin(); itd != race->end(); itd++) {
+  for (std::list<SiteLogic *>::const_iterator itd = race->begin(); itd != race->end(); itd++) {
     (*itd)->raceGlobalComplete();
   }
 }
 
-ScoreBoard * Engine::getScoreBoard() {
+ScoreBoard * Engine::getScoreBoard() const {
   return scoreboard;
 }

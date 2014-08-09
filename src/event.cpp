@@ -18,22 +18,22 @@ Event::Event(EventReceiver * er, int type, int interval) {
   this->interval = interval;
 }
 
-EventReceiver * Event::getReceiver() {
+EventReceiver * Event::getReceiver() const {
   return receiver;
 }
 
-int Event::getType() {
+int Event::getType() const {
   return type;
 }
 
-char * Event::getData() {
+char * Event::getData() const {
   return data;
 }
 
-int Event::getDataLen() {
+int Event::getDataLen() const {
   return datalen;
 }
 
-int Event::getInterval() {
+int Event::getInterval() const {
   return interval;
 }

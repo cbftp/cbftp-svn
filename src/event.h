@@ -13,9 +13,9 @@ public:
   Event(EventReceiver *, int, char *, int);
   Event(EventReceiver *, int);
   Event(EventReceiver *, int, int);
-  EventReceiver * getReceiver();
-  int getType();
-  char * getData();
-  int getDataLen();
-  int getInterval();
+  EventReceiver * getReceiver() const;
+  int getType() const;
+  char * getData() const;
+  int getDataLen() const;
+  int getInterval() const;
 };

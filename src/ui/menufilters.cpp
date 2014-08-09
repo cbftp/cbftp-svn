@@ -11,10 +11,10 @@ MenuFilters::MenuFilters() {
   needsredraw = false;
 }
 
-void MenuFilters::initialize(int row, int col, std::list<std::string>::iterator sectionsbegin, std::list<std::string>::iterator sectionsend) {
+void MenuFilters::initialize(int row, int col, std::list<std::string>::const_iterator sectionsbegin, std::list<std::string>::const_iterator sectionsend) {
   this->row = row;
   this->col = col;
-  std::list<std::string>::iterator it;
+  std::list<std::string>::const_iterator it;
   addbutton = new MenuSelectOptionTextButton("add", 0, 0, "<Add>");
   for(it = sectionsbegin; it != sectionsend; it++) {
     addFilter(*it);
@@ -86,15 +86,15 @@ MenuSelectOptionContainer * MenuFilters::getSectionContainer(unsigned int id) {
   return NULL;
 }
 
-unsigned int MenuFilters::getLastSelectionPointer() {
+unsigned int MenuFilters::getLastSelectionPointer() const {
   return lastpointer;
 }
 
-unsigned int MenuFilters::getSelectionPointer() {
+unsigned int MenuFilters::getSelectionPointer() const {
   return pointer;
 }
 
-MenuSelectOptionElement * MenuFilters::getElement(unsigned int i) {
+MenuSelectOptionElement * MenuFilters::getElement(unsigned int i) const {
   if (i == 0) {
     return addbutton;
   }
@@ -131,20 +131,16 @@ bool MenuFilters::needsRedraw() {
   return redraw;
 }
 
-unsigned int MenuFilters::getHeaderRow() {
+unsigned int MenuFilters::getHeaderRow() const {
   return row;
 }
 
-unsigned int MenuFilters::getHeaderCol() {
+unsigned int MenuFilters::getHeaderCol() const {
   return col;
 }
 
-unsigned int MenuFilters::size() {
+unsigned int MenuFilters::size() const {
   return filtercontainers.size();
-}
-
-bool MenuFilters::addButtonPressed() {
-  return true;
 }
 
 void MenuFilters::addFilter(std::string filtertext) {

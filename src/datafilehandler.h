@@ -22,8 +22,8 @@ public:
   void newDataFile(std::string);
   void writeFile();
   bool changeKey(std::string, std::string);
-  bool fileExists();
-  bool isInitialized();
+  bool fileExists() const;
+  bool isInitialized() const;
   void clearOutputData();
   void addOutputLine(std::string, std::string);
   void getDataFor(std::string, std::vector<std::string> *);

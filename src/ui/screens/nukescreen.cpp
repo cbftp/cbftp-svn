@@ -155,10 +155,10 @@ int NukeScreen::nuke() {
   }
   return sitelogic->requestNuke(path + "/" + release, multiplier, reason);
 }
-std::string NukeScreen::getLegendText() {
+std::string NukeScreen::getLegendText() const {
   return currentlegendtext;
 }
 
-std::string NukeScreen::getInfoLabel() {
+std::string NukeScreen::getInfoLabel() const {
   return "NUKE";
 }

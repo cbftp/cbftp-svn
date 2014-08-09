@@ -44,7 +44,7 @@ FTPConn::~FTPConn() {
   delete proxysession;
 }
 
-int FTPConn::getId() {
+int FTPConn::getId() const {
   return id;
 }
 
@@ -53,7 +53,7 @@ void FTPConn::setId(int id) {
   rawbuf->setId(id);
 }
 
-std::string FTPConn::getStatus() {
+std::string FTPConn::getStatus() const {
   return status;
 }
 
@@ -520,7 +520,7 @@ void FTPConn::updateName() {
   rawbuf->rename(site->getName());
 }
 
-std::string FTPConn::getCurrentPath() {
+std::string FTPConn::getCurrentPath() const {
   return currentpath;
 }
 void FTPConn::doPWD() {
@@ -900,23 +900,23 @@ void FTPConn::disconnect() {
   }
 }
 
-RawBuffer * FTPConn::getRawBuffer() {
+RawBuffer * FTPConn::getRawBuffer() const {
   return rawbuf;
 }
 
-int FTPConn::getState() {
+int FTPConn::getState() const {
   return state;
 }
 
-std::string FTPConn::getConnectedAddress() {
+std::string FTPConn::getConnectedAddress() const {
   return iom->getSocketAddress(sockfd);
 }
 
-bool FTPConn::getProtectedMode() {
+bool FTPConn::getProtectedMode() const {
   return protectedmode;
 }
 
-bool FTPConn::getSSCNMode() {
+bool FTPConn::getSSCNMode() const {
   return sscnmode;
 }
 
@@ -943,18 +943,18 @@ void FTPConn::finishMKDCWDTarget() {
   mkdtarget = false;
 }
 
-bool FTPConn::hasMKDCWDTarget() {
+bool FTPConn::hasMKDCWDTarget() const {
   return mkdtarget;
 }
 
-std::string FTPConn::getTargetPath() {
+std::string FTPConn::getTargetPath() const {
   return targetpath;
 }
 
-std::string FTPConn::getMKDCWDTargetSection() {
+std::string FTPConn::getMKDCWDTargetSection() const {
   return mkdsect;
 }
-std::string FTPConn::getMKDCWDTargetPath() {
+std::string FTPConn::getMKDCWDTargetPath() const {
   return mkdpath;
 }
 
@@ -962,11 +962,11 @@ std::list<std::string> * FTPConn::getMKDSubdirs() {
   return &mkdsubdirs;
 }
 
-FileList * FTPConn::currentFileList() {
+FileList * FTPConn::currentFileList() const {
   return currentfl;
 }
 
-SiteRace * FTPConn::currentSiteRace() {
+SiteRace * FTPConn::currentSiteRace() const {
   return currentrace;
 }
 
@@ -974,7 +974,7 @@ void FTPConn::setCurrentSiteRace(SiteRace * race) {
   currentrace = race;
 }
 
-bool FTPConn::isProcessing() {
+bool FTPConn::isProcessing() const {
   return processing;
 }
 
@@ -1001,6 +1001,6 @@ void FTPConn::parseFileList(char * buf, unsigned int buflen) {
   if (!currentfl->isFilled()) currentfl->setFilled();
 }
 
-bool FTPConn::isConnected() {
+bool FTPConn::isConnected() const {
   return state != 0;
 }

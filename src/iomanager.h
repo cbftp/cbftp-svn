@@ -61,14 +61,14 @@ public:
   void forceSSLhandshake(int);
   int registerUDPServerSocket(EventReceiver *, int);
   void sendData(int, std::string);
-  void sendData(int, char *, unsigned int);
+  void sendData(int, const char *, unsigned int);
   std::string getCipher(int);
-  std::string getSocketAddress(int);
+  std::string getSocketAddress(int) const;
   void closeSocket(int);
   std::list<std::pair<std::string, std::string> > listInterfaces();
   void readConfiguration();
   void writeState();
-  std::string getDefaultInterface();
+  std::string getDefaultInterface() const;
   void setDefaultInterface(std::string);
-  bool hasDefaultInterface();
+  bool hasDefaultInterface() const;
 };

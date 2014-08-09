@@ -26,15 +26,15 @@ public:
   UICommand(int, WINDOW *);
   UICommand(int, WINDOW *, unsigned int, unsigned int, std::string, int, bool);
   UICommand(int, WINDOW *, unsigned int, unsigned int, unsigned int);
-  int getCommand();
-  WINDOW * getWindow();
-  unsigned int getRow();
-  unsigned int getCol();
-  std::string getText();
-  int getMaxlen();
-  bool getRightAlign();
-  unsigned int getChar();
-  bool getShow();
+  int getCommand() const;
+  WINDOW * getWindow() const;
+  unsigned int getRow() const;
+  unsigned int getCol() const;
+  std::string getText() const;
+  int getMaxlen() const;
+  bool getRightAlign() const;
+  unsigned int getChar() const;
+  bool getShow() const;
 private:
   int command;
   WINDOW * window;

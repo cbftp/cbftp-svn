@@ -43,14 +43,14 @@ bool TextArrow::setOptionText(std::string newtext) {
   return false;
 }
 
-int TextArrow::getOption() {
+int TextArrow::getOption() const {
   if (options.size() == 0) {
     return -1;
   }
   return options[currentpos].first;
 }
 
-std::string TextArrow::getOptionText() {
+std::string TextArrow::getOptionText() const {
   if (options.size() == 0) {
     return "";
   }
@@ -65,11 +65,11 @@ void TextArrow::deactivate() {
   active = false;
 }
 
-bool TextArrow::isActive() {
+bool TextArrow::isActive() const {
   return active;
 }
 
-std::string TextArrow::getVisual() {
+std::string TextArrow::getVisual() const {
   std::string out = getOptionText();
   if (active) {
     out = "< " + out + " >";

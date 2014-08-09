@@ -12,9 +12,9 @@ class PotentialElement {
     std::string filename;
   public:
     PotentialElement();
-    SiteLogic * getSite();
-    int getSiteDownloadSlots();
-    int getPotential();
-    std::string getFileName();
+    SiteLogic * getSite() const;
+    int getSiteDownloadSlots() const;
+    int getPotential() const;
+    std::string getFileName() const;
     void update(SiteLogic *, int, int, std::string);
 };

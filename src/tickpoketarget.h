@@ -10,7 +10,7 @@ private:
   int message;
 public:
   TickPokeTarget(EventReceiver *, int, int);
-  int getMessage();
-  EventReceiver * getPokee();
+  int getMessage() const;
+  EventReceiver * getPokee() const;
   bool tick(int);
 };

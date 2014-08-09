@@ -11,7 +11,7 @@ public:
   DelayedCommand(std::string, int);
   DelayedCommand(std::string, int, void *);
   DelayedCommand(const DelayedCommand &);
-  std::string getCommand();
-  int getDelay();
-  void * getArg();
+  std::string getCommand() const;
+  int getDelay() const;
+  void * getArg() const;
 };

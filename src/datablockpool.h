@@ -17,6 +17,6 @@ private:
 public:
   DataBlockPool();
   char * getBlock();
-  int blockSize();
+  const int blockSize() const;
   void returnBlock(char *);
 };

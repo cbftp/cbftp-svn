@@ -171,10 +171,10 @@ void EditProxyScreen::keyPressed(unsigned int ch) {
   }
 }
 
-std::string EditProxyScreen::getLegendText() {
+std::string EditProxyScreen::getLegendText() const {
   return currentlegendtext;
 }
 
-std::string EditProxyScreen::getInfoLabel() {
+std::string EditProxyScreen::getInfoLabel() const {
   return "EDIT PROXY";
 }

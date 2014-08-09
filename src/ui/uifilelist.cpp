@@ -276,7 +276,7 @@ void UIFileList::parse(FileList * filelist) {
   path = filelist->getPath();
 }
 
-UIFile * UIFileList::cursoredFile() {
+UIFile * UIFileList::cursoredFile() const {
   return currentcursored;
 }
 
@@ -319,35 +319,35 @@ void UIFileList::unSelect() {
   selectedfiles.clear();
 }
 
-unsigned int UIFileList::size() {
+unsigned int UIFileList::size() const {
   return sortedfiles.size();
 }
 
-unsigned int UIFileList::sizeFiles() {
+unsigned int UIFileList::sizeFiles() const {
   return numfiles;
 }
 
-unsigned int UIFileList::sizeDirs() {
+unsigned int UIFileList::sizeDirs() const {
   return numdirs;
 }
 
-unsigned long long int UIFileList::getTotalSize() {
+unsigned long long int UIFileList::getTotalSize() const {
   return totalsize;
 }
 
-std::vector<UIFile *> * UIFileList::getSortedList() {
+const std::vector<UIFile *> * UIFileList::getSortedList() const {
   return &sortedfiles;
 }
 
-unsigned int UIFileList::currentCursorPosition() {
+unsigned int UIFileList::currentCursorPosition() const {
   return currentposition;
 }
 
-std::string UIFileList::getPath() {
+std::string UIFileList::getPath() const {
   return path;
 }
 
-std::string UIFileList::getSortMethod() {
+std::string UIFileList::getSortMethod() const {
   return sortmethod;
 }
 

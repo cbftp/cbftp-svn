@@ -190,7 +190,7 @@ void BrowseScreen::update() {
     ui->redraw();
     return;
   }
-  std::vector<UIFile *> * uilist = list.getSortedList();
+  const std::vector<UIFile *> * uilist = list.getSortedList();
   int maxnamelen = 0;
   for (unsigned int i = 0; i < uilist->size(); i++) {
     if ((*uilist)[i] != NULL) {
@@ -327,7 +327,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       gotomodeticker = 0;
       gotomodestring += toupper(ch);
       unsigned int gotomodelength = gotomodestring.length();
-      std::vector<UIFile *> * sortedlist = list.getSortedList();
+      const std::vector<UIFile *> * sortedlist = list.getSortedList();
       for (unsigned int i = 0; i < sortedlist->size(); i++) {
         std::string name = (*sortedlist)[i]->getName();
         if (name.length() >= gotomodelength) {
@@ -608,18 +608,18 @@ void BrowseScreen::keyPressed(unsigned int ch) {
   }
 }
 
-std::string BrowseScreen::getLegendText() {
+std::string BrowseScreen::getLegendText() const {
   if (gotomode) {
     return "[Any] Go to first matching entry name - [Esc] Cancel";
   }
   return "[c]ancel - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - Toggle se[p]arators - [q]uick jump";
 }
 
-std::string BrowseScreen::getInfoLabel() {
+std::string BrowseScreen::getInfoLabel() const {
   return "BROWSING: " + site->getName();
 }
 
-std::string BrowseScreen::getInfoText() {
+std::string BrowseScreen::getInfoText() const {
   std::string text = list.getPath();
   if (requestid >= 0) {
     if (wipe) {

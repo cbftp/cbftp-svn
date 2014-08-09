@@ -18,14 +18,14 @@ DelayedCommand::DelayedCommand(const DelayedCommand & delayedcommand) {
   this->arg = delayedcommand.arg;
 }
 
-std::string DelayedCommand::getCommand() {
+std::string DelayedCommand::getCommand() const {
   return command;
 }
 
-int DelayedCommand::getDelay() {
+int DelayedCommand::getDelay() const {
   return delay;
 }
 
-void * DelayedCommand::getArg() {
+void * DelayedCommand::getArg() const {
   return arg;
 }

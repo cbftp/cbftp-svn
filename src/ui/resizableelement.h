@@ -11,11 +11,11 @@ class ResizableElement : public MenuSelectOptionElement {
 public:
   virtual ~ResizableElement() {
   }
-  virtual unsigned int wantedWidth() = 0;
-  unsigned int priority() {
+  virtual unsigned int wantedWidth() const = 0;
+  unsigned int priority() const {
     return prio;
   }
-  unsigned int resizeMethod() {
+  unsigned int resizeMethod() const {
     return resizemethod;
   }
   void setMaxWidth(unsigned int maxwidth) {
@@ -27,13 +27,13 @@ public:
   void setResizeMethod(unsigned int resizemethod) {
     this->resizemethod = resizemethod;
   }
-  bool isVisible() {
+  bool isVisible() const {
     return visible;
   }
   void setVisible(bool visible) {
     this->visible = visible;
   }
-  bool isExpandable() {
+  bool isExpandable() const {
     return expandable;
   }
   void setExpandable(bool expandable) {

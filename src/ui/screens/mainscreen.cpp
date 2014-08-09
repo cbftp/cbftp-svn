@@ -70,7 +70,7 @@ void MainScreen::redraw() {
   int x = 1;
   int y = irow+4;
   mss.prepareRefill();
-  for (std::vector<Site *>::iterator it = global->getSiteManager()->getSitesIteratorBegin(); it != global->getSiteManager()->getSitesIteratorEnd(); it++) {
+  for (std::vector<Site *>::const_iterator it = global->getSiteManager()->getSitesIteratorBegin(); it != global->getSiteManager()->getSitesIteratorEnd(); it++) {
     mss.add(*it, y++, x);
   }
   mss.checkPointer();
@@ -303,7 +303,7 @@ void MainScreen::keyPressed(unsigned int ch) {
   }
 }
 
-std::string MainScreen::getLegendText() {
+std::string MainScreen::getLegendText() const {
   if (gotomode) {
     return gotolegendtext;
   }
@@ -313,6 +313,6 @@ std::string MainScreen::getLegendText() {
   return msolegendtext;
 }
 
-std::string MainScreen::getInfoLabel() {
+std::string MainScreen::getInfoLabel() const {
   return "CLUSTERBOMB MAIN";
 }

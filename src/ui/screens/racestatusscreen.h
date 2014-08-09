@@ -16,10 +16,10 @@ public:
   void update();
   void command(std::string);
   void keyPressed(unsigned int);
-  char getFileChar(bool, bool, bool, bool);
-  std::string getLegendText();
-  std::string getInfoLabel();
+  std::string getLegendText() const;
+  std::string getInfoLabel() const;
 private:
+  char getFileChar(bool, bool, bool, bool) const;
   Race * race;
   bool smalldirs;
   bool awaitingremovesite;

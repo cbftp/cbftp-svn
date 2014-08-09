@@ -11,8 +11,8 @@ private:
   void recalculate();
 public:
   SizeLocationTrack();
-  unsigned long long int getEstimatedSize();
-  int numSites();
+  unsigned long long int getEstimatedSize() const;
+  int numSites() const;
   bool add(SiteRace *, unsigned long long int);
   void remove(SiteRace *);
 };

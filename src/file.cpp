@@ -66,59 +66,55 @@ File::File(std::string statline, int touch) {
   uploading = false;
 }
 
-bool File::isDirectory() {
+bool File::isDirectory() const {
   return directory;
 }
 
-bool File::isLink() {
+bool File::isLink() const {
   return softlink;
 }
 
-std::string File::getOwner() {
+std::string File::getOwner() const {
   return owner;
 }
 
-std::string File::getGroup() {
+std::string File::getGroup() const {
   return group;
 }
 
-unsigned long long int File::getSize() {
+unsigned long long int File::getSize() const {
   return size;
 }
 
-std::string File::getLastModified() {
+std::string File::getLastModified() const {
   return lastmodified;
 }
 
-std::string File::getName() {
+std::string File::getName() const {
   return name;
 }
 
-std::string File::getLinkTarget() {
+std::string File::getLinkTarget() const {
   return linktarget;
 }
 
-std::string File::getExtension() {
+std::string File::getExtension() const {
   return extension;
 }
 
-unsigned int File::getCurrentSpeed() {
-  return 1024;
-}
-
-bool File::updateFlagSet() {
+bool File::updateFlagSet() const {
   return updateflag;
 }
 
-unsigned int File::getUpdateSpeed() {
+unsigned int File::getUpdateSpeed() const {
   return updatespeed;
 }
 
-Site * File::getUpdateSrc() {
+Site * File::getUpdateSrc() const {
   return updatesrc;
 }
 
-std::string File::getUpdateDst() {
+std::string File::getUpdateDst() const {
   return updatedst;
 }
 
@@ -165,7 +161,7 @@ void File::download() {
   downloading++;
 }
 
-bool File::isDownloading() {
+bool File::isDownloading() const {
   return downloading > 0;
 }
 
@@ -177,7 +173,7 @@ void File::upload() {
   uploading = true;
 }
 
-bool File::isUploading() {
+bool File::isUploading() const {
   return uploading;
 }
 
@@ -185,11 +181,11 @@ void File::finishUpload() {
   uploading = false;
 }
 
-int File::getTouch() {
+int File::getTouch() const {
   return touch;
 }
 
-std::string File::getExtension(std::string file) {
+std::string File::getExtension(std::string file) const {
   std::string extension;
   size_t suffixdotpos = file.rfind(".");
   if (suffixdotpos != std::string::npos && suffixdotpos > 0) {

@@ -219,10 +219,10 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
   }
 }
 
-std::string GlobalOptionsScreen::getLegendText() {
+std::string GlobalOptionsScreen::getLegendText() const {
   return currentlegendtext;
 }
 
-std::string GlobalOptionsScreen::getInfoLabel() {
+std::string GlobalOptionsScreen::getInfoLabel() const {
   return "GLOBAL SETTINGS";
 }

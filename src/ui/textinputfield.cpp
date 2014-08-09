@@ -24,11 +24,11 @@ void TextInputField::construct(std::string starttext, int visiblelen, int maxlen
   this->cursor = starttext.length();
 }
 
-std::string TextInputField::getText() {
+std::string TextInputField::getText() const {
   return text;
 }
 
-std::string TextInputField::getVisualText() {
+std::string TextInputField::getVisualText() const {
   std::string visualtext = "";
   unsigned int writelen = text.length();
   unsigned int start = 0;
@@ -53,7 +53,7 @@ std::string TextInputField::getVisualText() {
   return visualtext;
 }
 
-unsigned int TextInputField::getVisualCursorPosition() {
+unsigned int TextInputField::getVisualCursorPosition() const {
   unsigned int writelen = text.length();
   if (writelen > visiblelen) {
     if (cursor >= writelen - visiblelen / 2) {

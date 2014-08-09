@@ -83,10 +83,10 @@ void EventLogScreen::keyPressed(unsigned int ch) {
   }
 }
 
-std::string EventLogScreen::getLegendText() {
+std::string EventLogScreen::getLegendText() const {
   return "[Pgup] Scroll up - [Pgdn] Scroll down - [ESC/Enter] Return";
 }
 
-std::string EventLogScreen::getInfoLabel() {
+std::string EventLogScreen::getInfoLabel() const {
   return "EVENT LOG";
 }

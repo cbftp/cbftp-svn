@@ -1,14 +1,14 @@
 #include "datablock.h"
 
-DataBlock::DataBlock(char * datap, int datalen) {
-  this->datap = datap;
-  this->datalen = datalen;
+DataBlock::DataBlock(char * datap, int datalen) :
+  datap(datap),
+  datalen(datalen) {
 }
 
-char * DataBlock::data() {
+char * DataBlock::data() const {
   return datap;
 }
 
-int DataBlock::dataLength() {
+int DataBlock::dataLength() const {
   return datalen;
 }

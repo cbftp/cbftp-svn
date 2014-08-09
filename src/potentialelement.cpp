@@ -6,11 +6,11 @@ PotentialElement::PotentialElement() {
   this->site_dnslots = 0;
 }
 
-SiteLogic * PotentialElement::getSite() {
+SiteLogic * PotentialElement::getSite() const {
   return site;
 }
 
-int PotentialElement::getPotential() {
+int PotentialElement::getPotential() const {
   return potential;
 }
 
@@ -21,10 +21,10 @@ void PotentialElement::update(SiteLogic * site, int site_dnslots, int potential,
   this->filename = filename;
 }
 
-int PotentialElement::getSiteDownloadSlots() {
+int PotentialElement::getSiteDownloadSlots() const {
   return site_dnslots;
 }
 
-std::string PotentialElement::getFileName() {
+std::string PotentialElement::getFileName() const {
   return filename;
 }

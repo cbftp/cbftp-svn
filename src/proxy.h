@@ -9,13 +9,13 @@ class Proxy {
 public:
   Proxy();
   Proxy(std::string);
-  std::string getName();
-  std::string getAddr();
-  std::string getPort();
-  int getAuthMethod();
-  std::string getAuthMethodText();
-  std::string getUser();
-  std::string getPass();
+  std::string getName() const;
+  std::string getAddr() const;
+  std::string getPort() const;
+  int getAuthMethod() const;
+  std::string getAuthMethodText() const;
+  std::string getUser() const;
+  std::string getPass() const;
   void setName(std::string);
   void setAddr(std::string);
   void setPort(std::string);

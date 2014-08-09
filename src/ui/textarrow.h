@@ -6,16 +6,16 @@
 class TextArrow {
 public:
   TextArrow();
-  int getOption();
-  std::string getOptionText();
+  int getOption() const;
+  std::string getOptionText() const;
   bool setOption(int);
   bool setOptionText(std::string);
   bool next();
   bool previous();
-  std::string getVisual();
+  std::string getVisual() const;
   void activate();
   void deactivate();
-  bool isActive();
+  bool isActive() const;
   void addOption(std::string, int);
   void clear();
 private:

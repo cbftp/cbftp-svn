@@ -110,11 +110,11 @@ bool DataFileHandler::changeKey(std::string key, std::string newkey) {
   return true;
 }
 
-bool DataFileHandler::fileExists() {
+bool DataFileHandler::fileExists() const {
   return fileexists;
 }
 
-bool DataFileHandler::isInitialized() {
+bool DataFileHandler::isInitialized() const {
   return initialized;
 }
 

@@ -53,7 +53,7 @@ void ProxyOptionsScreen::redraw() {
   ui->printStr(4, x + 10, "Address");
   ui->printStr(4, x + 30, "Port");
   ui->printStr(4, x + 37, "Auth");
-  for(std::vector<Proxy *>::iterator it = pm->begin(); it != pm->end(); it++) {
+  for(std::vector<Proxy *>::const_iterator it = pm->begin(); it != pm->end(); it++) {
     std::string name = (*it)->getName();
     useproxy->addOption(name, 1);
     msop.addTextButton(y++, x, name, name);
@@ -228,14 +228,14 @@ void ProxyOptionsScreen::keyPressed(unsigned int ch) {
   }
 }
 
-std::string ProxyOptionsScreen::getLegendText() {
+std::string ProxyOptionsScreen::getLegendText() const {
   return currentlegendtext;
 }
 
-std::string ProxyOptionsScreen::getInfoLabel() {
+std::string ProxyOptionsScreen::getInfoLabel() const {
   return "PROXY OPTIONS";
 }
 
-std::string ProxyOptionsScreen::getInfoText() {
+std::string ProxyOptionsScreen::getInfoText() const {
   return "Proxies added: " + global->int2Str(pm->size());
 }

@@ -7,7 +7,7 @@ MenuSelectOptionTextArrow::MenuSelectOptionTextArrow(std::string identifier, int
   init(identifier, row, col, label);
 }
 
-std::string MenuSelectOptionTextArrow::getContentText() {
+std::string MenuSelectOptionTextArrow::getContentText() const {
   return arrow.getVisual();
 }
 
@@ -33,19 +33,19 @@ void MenuSelectOptionTextArrow::deactivate() {
   arrow.deactivate();
 }
 
-bool MenuSelectOptionTextArrow::isActive() {
+bool MenuSelectOptionTextArrow::isActive() const {
   return arrow.isActive();
 }
 
-int MenuSelectOptionTextArrow::getData() {
+int MenuSelectOptionTextArrow::getData() const {
   return arrow.getOption();
 }
 
-std::string MenuSelectOptionTextArrow::getDataText() {
+std::string MenuSelectOptionTextArrow::getDataText() const {
   return arrow.getOptionText();
 }
 
-std::string MenuSelectOptionTextArrow::getLegendText() {
+std::string MenuSelectOptionTextArrow::getLegendText() const {
   return "[Enter] Finish editing - [Left] Previous value - [Right] Next value";
 }
 

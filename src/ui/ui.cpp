@@ -205,7 +205,7 @@ void Ui::writeState() {
   }
 }
 
-bool Ui::legendEnabled() {
+bool Ui::legendEnabled() const {
   return showlegend;
 }
 

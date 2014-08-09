@@ -78,25 +78,25 @@ void RawBuffer::setId(int id) {
   this->id = global->int2Str(id);
 }
 
-std::string RawBuffer::getLineCopy(unsigned int num) {
+std::string RawBuffer::getLineCopy(unsigned int num) const {
   unsigned int size = getCopySize();
   if (num >= size) return "";
   int pos = (num < latestpcopy ? latestpcopy - num - 1 : size + latestpcopy - num - 1);
   return logcopy[pos];
 }
 
-std::string RawBuffer::getLine(unsigned int num) {
+std::string RawBuffer::getLine(unsigned int num) const {
   unsigned int size = getSize();
   if (num >= size) return "";
   int pos = (num < latestp ? latestp - num - 1 : size + latestp - num - 1);
   return log[pos];
 }
 
-unsigned int RawBuffer::getSize() {
+unsigned int RawBuffer::getSize() const {
   return log.size();
 }
 
-unsigned int RawBuffer::getCopySize() {
+unsigned int RawBuffer::getCopySize() const {
   return logcopy.size();
 }
 

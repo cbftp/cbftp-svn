@@ -6,12 +6,12 @@
 class CommandHistory {
 public:
   CommandHistory();
-  bool canBack();
+  bool canBack() const;
   void back();
   bool forward();
-  bool current();
+  bool current() const;
   void push(std::string);
-  std::string get();
+  std::string get() const;
   void setCurrent(std::string);
 private:
   std::list<std::string> history;

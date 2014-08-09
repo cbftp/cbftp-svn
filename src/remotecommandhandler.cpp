@@ -15,15 +15,15 @@ RemoteCommandHandler::RemoteCommandHandler() {
   port = DEFAULTPORT;
 }
 
-bool RemoteCommandHandler::isEnabled() {
+bool RemoteCommandHandler::isEnabled() const {
   return enabled;
 }
 
-int RemoteCommandHandler::getUDPPort() {
+int RemoteCommandHandler::getUDPPort() const {
   return port;
 }
 
-std::string RemoteCommandHandler::getPassword() {
+std::string RemoteCommandHandler::getPassword() const {
   return password;
 }
 

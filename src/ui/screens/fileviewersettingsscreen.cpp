@@ -132,14 +132,10 @@ void FileViewerSettingsScreen::keyPressed(unsigned int ch) {
   }
 }
 
-std::string FileViewerSettingsScreen::getLegendText() {
+std::string FileViewerSettingsScreen::getLegendText() const {
   return currentlegendtext;
 }
 
-std::string FileViewerSettingsScreen::getInfoLabel() {
+std::string FileViewerSettingsScreen::getInfoLabel() const {
   return "EXTERNAL FILE VIEWER SETTINGS";
-}
-
-std::string FileViewerSettingsScreen::getInfoText() {
-  return "";
 }

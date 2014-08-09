@@ -37,7 +37,7 @@ char * DataBlockPool::getBlock() {
   return block;
 }
 
-int DataBlockPool::blockSize() {
+const int DataBlockPool::blockSize() const {
   return BLOCKSIZE;
 }
 

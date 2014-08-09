@@ -87,19 +87,19 @@ void TransferManager::transferFailed(TransferMonitor * monitor, int err) {
   }
 }
 
-std::list<TransferStatus *>::iterator TransferManager::ongoingTransfersBegin() {
+std::list<TransferStatus *>::const_iterator TransferManager::ongoingTransfersBegin() const {
   return ongoingtransfers.begin();
 }
 
-std::list<TransferStatus *>::iterator TransferManager::ongoingTransfersEnd() {
+std::list<TransferStatus *>::const_iterator TransferManager::ongoingTransfersEnd() const {
   return ongoingtransfers.end();
 }
 
-std::list<TransferStatus *>::iterator TransferManager::finishedTransfersBegin() {
+std::list<TransferStatus *>::const_iterator TransferManager::finishedTransfersBegin() const {
   return finishedtransfers.begin();
 }
 
-std::list<TransferStatus *>::iterator TransferManager::finishedTransfersEnd() {
+std::list<TransferStatus *>::const_iterator TransferManager::finishedTransfersEnd() const {
   return finishedtransfers.end();
 }
 

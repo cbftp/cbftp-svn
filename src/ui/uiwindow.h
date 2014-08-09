@@ -20,10 +20,10 @@ public:
   virtual void update();
   virtual void command(std::string);
   virtual void command(std::string, std::string);
-  virtual std::string getInfoLabel();
-  virtual std::string getInfoText();
-  virtual std::string getLegendText();
+  virtual std::string getInfoLabel() const;
+  virtual std::string getInfoText() const;
+  virtual std::string getLegendText() const;
   virtual void keyPressed(unsigned int);
-  bool autoUpdate();
-  bool expectBackendPush();
+  bool autoUpdate() const;
+  bool expectBackendPush() const;
 };

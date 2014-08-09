@@ -11,9 +11,9 @@ private:
 public:
   MenuSelectOptionTextButton(std::string, int, int, std::string);
   MenuSelectOptionTextButton(std::string, int, int, std::string, bool);
-  std::string getContentText();
-  std::string getLabelText();
-  bool isActivated();
+  std::string getContentText() const;
+  std::string getLabelText() const;
+  bool isActivated() const;
   bool activate();
-  unsigned int wantedWidth();
+  unsigned int wantedWidth() const;
 };

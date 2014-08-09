@@ -7,27 +7,27 @@
 class ExternalFileViewing {
 public:
   ExternalFileViewing();
-  bool isViewable(std::string);
+  bool isViewable(std::string) const;
   int view(std::string);
   int viewThenDelete(std::string);
   void killProcess(int);
   void killAll();
   void hasDied(int);
-  bool hasDisplay();
-  bool stillViewing(int);
-  std::string getVideoViewer();
-  std::string getAudioViewer();
-  std::string getImageViewer();
-  std::string getPDFViewer();
+  bool hasDisplay() const;
+  bool stillViewing(int) const;
+  std::string getVideoViewer() const;
+  std::string getAudioViewer() const;
+  std::string getImageViewer() const;
+  std::string getPDFViewer() const;
   void setVideoViewer(std::string);
   void setAudioViewer(std::string);
   void setImageViewer(std::string);
   void setPDFViewer(std::string);
   void readConfiguration();
   void writeState();
-  std::string getViewApplication(std::string);
+  std::string getViewApplication(std::string) const;
 private:
-  std::string getExtension(std::string);
+  std::string getExtension(std::string) const;
   int view(std::string, bool);
   void checkDeleteFile(int);
   std::list<int> subprocesses;

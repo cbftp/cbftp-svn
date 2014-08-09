@@ -16,29 +16,29 @@ SiteLogicRequest::SiteLogicRequest(int requestid, int requesttype, std::string d
   this->connid = -1;
 }
 
-int SiteLogicRequest::requestId() {
+int SiteLogicRequest::requestId() const {
   return requestid;
 }
 
-int SiteLogicRequest::requestType() {
+int SiteLogicRequest::requestType() const {
   return requesttype;
 }
 
-std::string SiteLogicRequest::requestData() {
+std::string SiteLogicRequest::requestData() const {
   return data;
 }
 
-std::string SiteLogicRequest::requestData2() {
+std::string SiteLogicRequest::requestData2() const {
   return data2;
 }
 
-int SiteLogicRequest::requestData3() {
+int SiteLogicRequest::requestData3() const {
   return data3;
 }
 void SiteLogicRequest::setConnId(int id) {
   connid = id;
 }
 
-int SiteLogicRequest::connId() {
+int SiteLogicRequest::connId() const {
   return connid;
 }

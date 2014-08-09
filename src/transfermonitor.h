@@ -61,8 +61,8 @@ class TransferMonitor : public EventReceiver {
     void targetError(int);
     void passiveReady(std::string);
     void activeReady();
-    bool idle();
-    TransferStatus * getTransferStatus();
+    bool idle() const;
+    TransferStatus * getTransferStatus() const;
     void engageFXP(std::string, SiteLogic *, FileList *, std::string, SiteLogic *, FileList *);
     void engageDownload(std::string, SiteLogic *, FileList *);
     void engageList(SiteLogic *, int, bool);

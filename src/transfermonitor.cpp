@@ -24,7 +24,7 @@ TransferMonitor::TransferMonitor(TransferManager * tm) {
   global->getTickPoke()->startPoke(this, "TransferMonitor", TICKINTERVAL, 0);
 }
 
-bool TransferMonitor::idle() {
+bool TransferMonitor::idle() const {
   return status == TM_STATUS_IDLE;
 }
 
@@ -378,7 +378,7 @@ void TransferMonitor::targetError(int err) {
   status = TM_STATUS_ERROR_AWAITING_PEER;
 }
 
-TransferStatus * TransferMonitor::getTransferStatus() {
+TransferStatus * TransferMonitor::getTransferStatus() const {
   return ts;
 }
 

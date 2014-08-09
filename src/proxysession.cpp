@@ -34,7 +34,7 @@ void ProxySession::prepare(Proxy * proxy, std::string addr, std::string port) {
   saddr = (struct sockaddr_in*)res->ai_addr;
 }
 
-int ProxySession::instruction() {
+int ProxySession::instruction() const {
   switch (state) {
     case 0:
     case 1:
@@ -49,11 +49,11 @@ int ProxySession::instruction() {
   return PROXYSESSION_ERROR;
 }
 
-char * ProxySession::getSendData() {
+const char * ProxySession::getSendData() const {
   return senddata;
 }
 
-int ProxySession::getSendDataLen() {
+int ProxySession::getSendDataLen() const {
   return senddatalen;
 }
 
@@ -148,6 +148,6 @@ void ProxySession::setConnectRequestData() {
   senddatalen = 10;
 }
 
-std::string ProxySession::getErrorMessage() {
+std::string ProxySession::getErrorMessage() const {
   return errormessage;
 }

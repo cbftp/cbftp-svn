@@ -6,14 +6,14 @@ SiteLogicRequestReady::SiteLogicRequestReady(int requestid, void * data, bool st
   this->status = status;
 }
 
-int SiteLogicRequestReady::requestId() {
+int SiteLogicRequestReady::requestId() const {
   return requestid;
 }
 
-void * SiteLogicRequestReady::requestData() {
+void * SiteLogicRequestReady::requestData() const {
   return data;
 }
 
-bool SiteLogicRequestReady::requestStatus() {
+bool SiteLogicRequestReady::requestStatus() const {
   return status;
 }
