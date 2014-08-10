@@ -29,7 +29,8 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
   currentlegendtext = defaultlegendtext;
   this->operation = operation;
   SiteManager * sm = global->getSiteManager();
-  std::list<Site *> blockedlist;
+  std::list<Site *> blockedsrclist;
+  std::list<Site *> blockeddstlist;
   if (operation == "add") {
     modsite = Site("SUNET");
     modsite.setUser(sm->getDefaultUserName());
@@ -44,7 +45,8 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
   else if (operation == "edit") {
     this->site = global->getSiteManager()->getSite(site);
     modsite = Site(*this->site);
-    blockedlist = sm->getBlocksForSite(this->site);
+    blockedsrclist = sm->getBlocksToSite(this->site);
+    blockeddstlist = sm->getBlocksFromSite(this->site);
   }
   std::string affilstr = "";
   std::map<std::string, bool>::const_iterator it;
@@ -54,11 +56,16 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
   if (affilstr.length() > 0) {
     affilstr = affilstr.substr(0, affilstr.length() - 1);
   }
-  std::string blockedsites = "";
-  for (std::list<Site *>::iterator it = blockedlist.begin(); it != blockedlist.end(); it++) {
-    blockedsites += (*it)->getName() + ",";
+  std::string blockedsrc = "";
+  for (std::list<Site *>::iterator it = blockedsrclist.begin(); it != blockedsrclist.end(); it++) {
+    blockedsrc += (*it)->getName() + ",";
   }
-  blockedsites = blockedsites.substr(0, blockedsites.length() - 1);
+  blockedsrc = blockedsrc.substr(0, blockedsrc.length() - 1);
+  std::string blockeddst = "";
+  for (std::list<Site *>::iterator it = blockeddstlist.begin(); it != blockeddstlist.end(); it++) {
+    blockeddst += (*it)->getName() + ",";
+  }
+  blockeddst = blockeddst.substr(0, blockeddst.length() - 1);
   unsigned int y = 1;
   unsigned int x = 1;
   std::string addrport = modsite.getAddress();
@@ -110,7 +117,8 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
     useproxy->setOptionText(modsite.getProxy());
   }
   y++;
-  mso.addStringField(y++, x, "blockedsites", "Blocked sites:", blockedsites, false, 60, 512);
+  mso.addStringField(y++, x, "blockedsrc", "Block transfers from:", blockedsrc, false, 60, 512);
+  mso.addStringField(y++, x, "blockeddst", "Block transfers to:", blockeddst, false, 60, 512);
   mso.addStringField(y++, x, "affils", "Affils:", affilstr, false, 60, 512);
   y++;
   ms.initialize(y++, x, modsite.sectionsBegin(), modsite.sectionsEnd());
@@ -263,7 +271,8 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
   }
   bool activation;
   bool changedname = false;
-  std::list<std::string> blocklist;
+  std::list<std::string> blocksrclist;
+  std::list<std::string> blockdstlist;
   std::string sitename;
   switch(ch) {
     case KEY_UP:
@@ -310,11 +319,18 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
       }
       active = true;
       activeelement = focusedarea->getElement(focusedarea->getSelectionPointer());
-      if (activeelement->getIdentifier() == "blockedsites") {
+      if (activeelement->getIdentifier() == "blockedsrc") {
         activeelement->deactivate();
         active = false;
         ui->goSelectSites(((MenuSelectOptionTextField *)activeelement)->getData(),
-            "Block race transfers with these sites", site);
+            "Block race transfers from these sites", site);
+        return;
+      }
+      if (activeelement->getIdentifier() == "blockeddst") {
+        activeelement->deactivate();
+        active = false;
+        ui->goSelectSites(((MenuSelectOptionTextField *)activeelement)->getData(),
+            "Block race transfers to these sites", site);
         return;
       }
       currentlegendtext = activeelement->getLegendText();
@@ -435,16 +451,30 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
             pos++;
           }
         }
-        else if (identifier == "blockedsites") {
+        else if (identifier == "blockedsrc") {
           std::string blockedstr = ((MenuSelectOptionTextField *)msoe)->getData();
           while (true) {
             size_t commapos = blockedstr.find(",");
             if (commapos != std::string::npos) {
-              blocklist.push_back(blockedstr.substr(0, commapos));
+              blocksrclist.push_back(blockedstr.substr(0, commapos));
               blockedstr = blockedstr.substr(commapos + 1);
             }
             else {
-              blocklist.push_back(blockedstr);
+              blocksrclist.push_back(blockedstr);
+              break;
+            }
+          }
+        }
+        else if (identifier == "blockeddst") {
+          std::string blockedstr = ((MenuSelectOptionTextField *)msoe)->getData();
+          while (true) {
+            size_t commapos = blockedstr.find(",");
+            if (commapos != std::string::npos) {
+              blockdstlist.push_back(blockedstr.substr(0, commapos));
+              blockedstr = blockedstr.substr(commapos + 1);
+            }
+            else {
+              blockdstlist.push_back(blockedstr);
               break;
             }
           }
@@ -467,7 +497,10 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
       }
       sitename = site->getName();
       global->getSiteManager()->clearBlocksForSite(site);
-      for (std::list<std::string>::iterator it = blocklist.begin(); it != blocklist.end(); it++) {
+      for (std::list<std::string>::iterator it = blocksrclist.begin(); it != blocksrclist.end(); it++) {
+        global->getSiteManager()->addBlockedPair(*it, sitename);
+      }
+      for (std::list<std::string>::iterator it = blockdstlist.begin(); it != blockdstlist.end(); it++) {
         global->getSiteManager()->addBlockedPair(sitename, *it);
       }
       global->getSiteLogicManager()->getSiteLogic(site->getName())->setNumConnections(site->getMaxLogins());

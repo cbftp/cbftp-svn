@@ -57,7 +57,8 @@ class SiteManager {
     void addBlockedPair(std::string, std::string);
     bool isBlockedPair(Site *, Site *) const;
     void clearBlocksForSite(Site *);
-    std::list<Site *> getBlocksForSite(Site *);
+    std::list<Site *> getBlocksFromSite(Site *) const;
+    std::list<Site *> getBlocksToSite(Site *) const;
 };
 
 bool siteNameComparator(Site *, Site *);

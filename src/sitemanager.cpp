@@ -374,11 +374,7 @@ void SiteManager::addBlockedPair(std::string sitestr1, std::string sitestr2) {
   if (blockedpairs.find(site1) == blockedpairs.end()) {
     blockedpairs[site1] = std::map<Site *, bool>();
   }
-  if (blockedpairs.find(site2) == blockedpairs.end()) {
-    blockedpairs[site2] = std::map<Site *, bool>();
-  }
   blockedpairs[site1][site2] = true;
-  blockedpairs[site2][site1] = true;
 }
 
 bool SiteManager::isBlockedPair(Site * site1, Site * site2) const {
@@ -386,7 +382,7 @@ bool SiteManager::isBlockedPair(Site * site1, Site * site2) const {
   if (it == blockedpairs.end()) {
     return false;
   }
-  return it->second.find(site2) !=  it->second.end();
+  return it->second.find(site2) != it->second.end();
 }
 
 void SiteManager::clearBlocksForSite(Site * site) {
@@ -399,14 +395,26 @@ void SiteManager::clearBlocksForSite(Site * site) {
   }
 }
 
-std::list<Site *> SiteManager::getBlocksForSite(Site * site) {
-  if (blockedpairs.find(site) == blockedpairs.end()) {
-    blockedpairs[site] = std::map<Site *, bool>();
-  }
-  std::map<Site *, bool>::iterator it;
+std::list<Site *> SiteManager::getBlocksFromSite(Site * site) const {
   std::list<Site *> blockedlist;
-  for (it = blockedpairs[site].begin(); it != blockedpairs[site].end(); it++) {
-    blockedlist.push_back(it->first);
+  std::map<Site *, std::map<Site *, bool> >::const_iterator it = blockedpairs.find(site);
+  if (it == blockedpairs.end()) {
+    return blockedlist;
+  }
+  std::map<Site *, bool>::const_iterator it2;
+  for (it2 = it->second.begin(); it2 != it->second.end(); it2++) {
+    blockedlist.push_back(it2->first);
+  }
+  return blockedlist;
+}
+
+std::list<Site *> SiteManager::getBlocksToSite(Site * site) const {
+  std::list<Site *> blockedlist;
+  std::map<Site *, std::map<Site *, bool> >::const_iterator it;
+  for (it = blockedpairs.begin(); it != blockedpairs.end(); it++) {
+    if (it->second.find(site) != it->second.end()) {
+      blockedlist.push_back(it->first);
+    }
   }
   return blockedlist;
 }
