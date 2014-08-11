@@ -703,6 +703,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
       return;
     }
   }
+  connstatetracker[id].use();
   bool refresh = false;
   SiteRace * lastchecked = connstatetracker[id].lastChecked();
   if (lastchecked && !lastchecked->isDone() && connstatetracker[id].checkCount() < MAXCHECKSROW) {
@@ -782,6 +783,7 @@ bool SiteLogic::handleRequest(int id) {
   if (it == requests.end()) {
     return false;
   }
+  connstatetracker[id].use();
   std::string targetpath;
   std::string actiontarget;
   switch (it->requestType()) {
