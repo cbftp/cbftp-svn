@@ -246,7 +246,7 @@ void FileList::uploadAttemptFail(std::string file) {
 }
 
 void FileList::downloadAttemptFail(std::string file) {
-  if (downloadfails.find(file) == uploadfails.end()) {
+  if (downloadfails.find(file) == downloadfails.end()) {
     downloadfails[file] = 0;
   }
   downloadfails[file]++;
@@ -254,7 +254,7 @@ void FileList::downloadAttemptFail(std::string file) {
 
 bool FileList::hasFailedDownload(std::string file) const {
   std::map<std::string, int>::const_iterator it = downloadfails.find(file);
-  if (it == uploadfails.end()) {
+  if (it == downloadfails.end()) {
     return false;
   }
   if (it->second < 3) {

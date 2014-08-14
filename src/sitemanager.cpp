@@ -386,8 +386,10 @@ bool SiteManager::isBlockedPair(Site * site1, Site * site2) const {
 }
 
 void SiteManager::clearBlocksForSite(Site * site) {
-  blockedpairs[site] = std::map<Site *, bool>();
-  std::map<Site *, std::map<Site *, bool> >::iterator it;
+  std::map<Site *, std::map<Site *, bool> >::iterator it = blockedpairs.find(site);
+  if (it != blockedpairs.end()) {
+    it->second = std::map<Site *, bool>();
+  }
   for (it = blockedpairs.begin(); it != blockedpairs.end(); it++) {
     if (it->second.find(site) != it->second.end()) {
       it->second.erase(site);
