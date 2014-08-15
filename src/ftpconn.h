@@ -5,6 +5,42 @@
 
 #include "eventreceiver.h"
 
+#define STATE_DISCONNECTED 0
+#define STATE_WELCOME 2
+#define STATE_AUTH_TLS 3
+#define STATE_USER 4
+#define STATE_PASS 5
+#define STATE_STAT 6
+#define STATE_PWD 7
+#define STATE_PROT_P 8
+#define STATE_PROT_C 9
+#define STATE_RAW 10
+#define STATE_CPSV 11
+#define STATE_PASV 12
+#define STATE_PORT 13
+#define STATE_CWD 14
+#define STATE_MKD 15
+#define STATE_PRET_RETR 16
+#define STATE_PRET_STOR 17
+#define STATE_RETR 18
+#define STATE_RETR_COMPLETE 19
+#define STATE_STOR 20
+#define STATE_STOR_COMPLETE 21
+#define STATE_ABOR 22
+#define STATE_QUIT 23
+#define STATE_USER_LOGINKILL 24
+#define STATE_PASS_LOGINKILL 25
+#define STATE_WIPE 28
+#define STATE_DELE 29
+#define STATE_NUKE 30
+#define STATE_LIST 31
+#define STATE_PRET_LIST 32
+#define STATE_LIST_COMPLETE 33
+#define STATE_SSCN_ON 34
+#define STATE_SSCN_OFF 35
+#define STATE_SSL_HANDSHAKE 36
+#define STATE_PROXY 100
+
 class GlobalContext;
 class SiteRace;
 class FileList;

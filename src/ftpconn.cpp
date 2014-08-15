@@ -35,7 +35,7 @@ FTPConn::FTPConn(SiteLogic * sl, int id) {
   sscnmode = false;
   mkdtarget = false;
   currentpath = "";
-  state = 0;
+  state = STATE_DISCONNECTED;
 }
 
 FTPConn::~FTPConn() {
@@ -59,7 +59,7 @@ std::string FTPConn::getStatus() const {
 
 void FTPConn::login() {
 
-  if (state != 0) {
+  if (state != STATE_DISCONNECTED) {
     return;
   }
   protectedmode = false;
@@ -106,11 +106,11 @@ void FTPConn::proxySessionInit(bool connect) {
       break;
     case PROXYSESSION_SUCCESS:
       rawbuf->writeLine("[Connection established]");
-      state = 2;
+      state = STATE_WELCOME;
       break;
     case PROXYSESSION_ERROR:
       rawbuf->writeLine("[Proxy error: " + proxysession->getErrorMessage() + "]");
-      state = 0;
+      state = STATE_DISCONNECTED;
       iom->closeSocket(sockfd);
       rawbuf->writeLine("[Disconnected]");
       this->status = "disconnected";
@@ -121,19 +121,19 @@ void FTPConn::proxySessionInit(bool connect) {
 
 void FTPConn::FDConnected() {
   rawbuf->writeLine("[Connection established]");
-  if (state == 100) {
+  if (state == STATE_PROXY) {
     proxySessionInit(true);
   }
   else {
-    state = 2;
+    state = STATE_WELCOME;
   }
 }
 
 void FTPConn::FDDisconnected() {
-  if (state != 0) {
+  if (state != STATE_DISCONNECTED) {
     rawbuf->writeLine("[Disconnected]");
     this->status = "disconnected";
-    state = 0;
+    state = STATE_DISCONNECTED;
     sl->disconnected(id);
   }
 }
@@ -145,7 +145,7 @@ void FTPConn::FDFail(std::string error) {
 
 void FTPConn::FDSSLSuccess() {
   rawbuf->writeLine("[Cipher: " + iom->getCipher(sockfd) + "]");
-  if (state == 3) {
+  if (state == STATE_AUTH_TLS) {
     doUSER(false);
   }
 }
@@ -155,7 +155,7 @@ void FTPConn::FDSSLFail() {
 }
 
 void FTPConn::FDData(char * data, unsigned int datalen) {
-  if (state != 6 && state != 100) {
+  if (state != STATE_STAT && state != STATE_PROXY) {
     rawbuf->write(std::string(data, datalen));
   }
   if (databufpos + datalen > databuflen) {
@@ -169,7 +169,7 @@ void FTPConn::FDData(char * data, unsigned int datalen) {
   databufpos += datalen;
   bool messagecomplete = false;
   char * loc;
-  if (state == 100) {
+  if (state == STATE_PROXY) {
     messagecomplete = true;
     databufcode = 1337;
   }
@@ -197,103 +197,103 @@ void FTPConn::FDData(char * data, unsigned int datalen) {
       }
     }
     switch(state) {
-      case 2: // awaiting welcome on connect
+      case STATE_WELCOME: // awaiting welcome on connect
         welcomeReceived();
         break;
-      case 3: // awaiting AUTH TLS response
+      case STATE_AUTH_TLS: // awaiting AUTH TLS response
         AUTHTLSResponse();
         break;
-      case 4: // awaiting USER response
+      case STATE_USER: // awaiting USER response
         USERResponse();
         break;
-      case 5: // awaiting PASS response
+      case STATE_PASS: // awaiting PASS response
         PASSResponse();
         break;
-      case 6: // awaiting STAT response
+      case STATE_STAT: // awaiting STAT response
         STATResponse();
         break;
-      case 7: // awaiting PWD response
+      case STATE_PWD: // awaiting PWD response
         PWDResponse();
         break;
-      case 8: // awaiting PROT P response
+      case STATE_PROT_P: // awaiting PROT P response
         PROTPResponse();
         break;
-      case 9:  // awaiting PROT C response
+      case STATE_PROT_C:  // awaiting PROT C response
         PROTCResponse();
         break;
-      case 10: // awaiting raw response
+      case STATE_RAW: // awaiting raw response
         RawResponse();
         break;
-      case 11: // awaiting CPSV response
+      case STATE_CPSV: // awaiting CPSV response
         CPSVResponse();
         break;
-      case 12: // awaiting PASV response
+      case STATE_PASV: // awaiting PASV response
         PASVResponse();
         break;
-      case 13: // awaiting PORT response
+      case STATE_PORT: // awaiting PORT response
         PORTResponse();
         break;
-      case 14: // awaiting CWD response
+      case STATE_CWD: // awaiting CWD response
         CWDResponse();
         break;
-      case 15: // awaiting MKD response
+      case STATE_MKD: // awaiting MKD response
         MKDResponse();
         break;
-      case 16: // awaiting PRET RETR response
+      case STATE_PRET_RETR: // awaiting PRET RETR response
         PRETRETRResponse();
         break;
-      case 17: // awaiting PRET STOR response
+      case STATE_PRET_STOR: // awaiting PRET STOR response
         PRETSTORResponse();
         break;
-      case 18: // awaiting RETR response
+      case STATE_RETR: // awaiting RETR response
         RETRResponse();
         break;
-      case 19: // awaiting RETR complete
+      case STATE_RETR_COMPLETE: // awaiting RETR complete
         RETRComplete();
         break;
-      case 20: // awaiting STOR response
+      case STATE_STOR: // awaiting STOR response
         STORResponse();
         break;
-      case 21: // awaiting STOR complete
+      case STATE_STOR_COMPLETE: // awaiting STOR complete
         STORComplete();
         break;
-      case 22: // awaiting ABOR response
+      case STATE_ABOR: // awaiting ABOR response
         ABORResponse();
         break;
-      case 23: // awaiting QUIT response
+      case STATE_QUIT: // awaiting QUIT response
         QUITResponse();
         break;
-      case 24: // awaiting loginkilling USER response
+      case STATE_USER_LOGINKILL: // awaiting loginkilling USER response
         USERResponse();
         break;
-      case 25: // awaiting loginkilling PASS response
+      case STATE_PASS_LOGINKILL: // awaiting loginkilling PASS response
         PASSResponse();
         break;
-      case 28: // awaiting WIPE response
+      case STATE_WIPE: // awaiting WIPE response
         WIPEResponse();
         break;
-      case 29: // awaiting DELE response
+      case STATE_DELE: // awaiting DELE response
         DELEResponse();
         break;
-      case 30: // awaiting SITE NUKE response
+      case STATE_NUKE: // awaiting SITE NUKE response
         NUKEResponse();
         break;
-      case 31: // awaiting LIST response
+      case STATE_LIST: // awaiting LIST response
         LISTResponse();
         break;
-      case 32: // awaiting PRET LIST response
+      case STATE_PRET_LIST: // awaiting PRET LIST response
         PRETLISTResponse();
         break;
-      case 33: // awaiting LIST complete
+      case STATE_LIST_COMPLETE: // awaiting LIST complete
         LISTComplete();
         break;
-      case 34: // awaiting SSCN ON response
+      case STATE_SSCN_ON: // awaiting SSCN ON response
         SSCNONResponse();
         break;
-      case 35: // awaiting SSCN OFF response
+      case STATE_SSCN_OFF: // awaiting SSCN OFF response
         SSCNOFFResponse();
         break;
-      case 100: // negotiating proxy session
+      case STATE_PROXY: // negotiating proxy session
         proxySessionInit(false);
         break;
     }
@@ -311,7 +311,7 @@ void FTPConn::sendEcho(std::string data) {
 void FTPConn::welcomeReceived() {
   if (databufcode == 220) {
     if (site->SSL()) {
-      state = 3;
+      state = STATE_AUTH_TLS;
       sendEcho("AUTH TLS");
     }
     else {
@@ -320,7 +320,7 @@ void FTPConn::welcomeReceived() {
   }
   else {
     rawbuf->writeLine("[Unknown response]");
-    state = 0;
+    state = STATE_DISCONNECTED;
     processing = false;
     iom->closeSocket(sockfd);
     rawbuf->writeLine("[Disconnected]");
@@ -335,7 +335,7 @@ void FTPConn::AUTHTLSResponse() {
   }
   else {
     rawbuf->writeLine("[Unknown response]");
-    state = 0;
+    state = STATE_DISCONNECTED;
     processing = false;
     iom->closeSocket(sockfd);
     sl->TLSFailed(id);
@@ -344,10 +344,10 @@ void FTPConn::AUTHTLSResponse() {
 
 void FTPConn::doUSER(bool killer) {
   if (!killer) {
-    state = 4;
+    state = STATE_USER;
   }
   else {
-    state = 24;
+    state = STATE_USER_LOGINKILL;
   }
   sendEcho((std::string("USER ") + (killer ? "!" : "") + site->getUser()).data());
 }
@@ -360,11 +360,11 @@ void FTPConn::USERResponse() {
     std::string output = "PASS " + std::string(passc);
     rawbuf->writeLine(output);
     status = output;
-    if (state == 4) {
-      state = 5;
+    if (state == STATE_USER) {
+      state = STATE_PASS;
     }
     else {
-      state = 25;
+      state = STATE_PASS_LOGINKILL;
     }
     iom->sendData(sockfd, std::string("PASS ") + site->getPass()  + "\r\n");
   }
@@ -384,7 +384,7 @@ void FTPConn::USERResponse() {
     if (sitefull) {
       sl->userDeniedSiteFull(id);
     }
-    else if (state == 4) {
+    else if (state == STATE_USER) {
       if (simultaneous) {
         sl->userDeniedSimultaneousLogins(id);
       }
@@ -402,7 +402,7 @@ void FTPConn::PASSResponse() {
   processing = false;
   if (databufcode == 230) {
     this->status = "connected";
-    state = 5;
+    state = STATE_PASS;
     sl->commandSuccess(id);
   }
   else {
@@ -420,7 +420,7 @@ void FTPConn::PASSResponse() {
     if (sitefull) {
       sl->userDeniedSiteFull(id);
     }
-    else if (state == 5) {
+    else if (state == STATE_PASS) {
       if (simultaneous) {
         sl->userDeniedSimultaneousLogins(id);
       }
@@ -435,11 +435,11 @@ void FTPConn::PASSResponse() {
 }
 
 void FTPConn::reconnect() {
-  if (state != 0) {
+  if (state != STATE_DISCONNECTED) {
     iom->closeSocket(sockfd);
     rawbuf->writeLine("[Disconnected]");
     this->status = "disconnected";
-    state = 0;
+    state = STATE_DISCONNECTED;
   }
   login();
 }
@@ -449,14 +449,14 @@ void FTPConn::doSTAT() {
 }
 
 void FTPConn::doSTAT(SiteRace * race, FileList * filelist) {
-  state = 6;
+  state = STATE_STAT;
   currentrace = race;
   currentfl = filelist;
   sendEcho("STAT -l");
 }
 
 void FTPConn::doSTATla() {
-  state = 6;
+  state = STATE_STAT;
   currentrace = NULL;
   currentfl = new FileList(site->getUser(), currentpath);
   sendEcho("STAT -la");
@@ -473,12 +473,12 @@ void FTPConn::prepareLIST(SiteRace * race, FileList * filelist) {
 }
 
 void FTPConn::doLIST() {
-  state = 31;
+  state = STATE_LIST;
   sendEcho("LIST");
 }
 
 void FTPConn::doLISTa() {
-  state = 31;
+  state = STATE_LIST;
   sendEcho("LIST -a");
 }
 
@@ -498,7 +498,7 @@ void FTPConn::STATResponse() {
 void FTPConn::LISTResponse() {
   if (databufcode == 150) {
     sl->commandSuccess(id);
-    state = 33;
+    state = STATE_LIST_COMPLETE;
   }
   else {
     processing = false;
@@ -524,7 +524,7 @@ std::string FTPConn::getCurrentPath() const {
   return currentpath;
 }
 void FTPConn::doPWD() {
-  state = 7;
+  state = STATE_PWD;
   sendEcho("PWD");
 }
 
@@ -544,7 +544,7 @@ void FTPConn::PWDResponse() {
 }
 
 void FTPConn::doPROTP() {
-  state = 8;
+  state = STATE_PROT_P;
   sendEcho("PROT P");
 }
 
@@ -560,7 +560,7 @@ void FTPConn::PROTPResponse() {
 }
 
 void FTPConn::doPROTC() {
-  state = 9;
+  state = STATE_PROT_C;
   sendEcho("PROT C");
 }
 
@@ -577,11 +577,11 @@ void FTPConn::PROTCResponse() {
 
 void FTPConn::doSSCN(bool on) {
   if (on) {
-    state = 34;
+    state = STATE_SSCN_ON;
     sendEcho("SSCN ON");
   }
   else {
-    state = 35;
+    state = STATE_SSCN_OFF;
     sendEcho("SSCN OFF");
   }
 }
@@ -609,21 +609,21 @@ void FTPConn::SSCNOFFResponse() {
 }
 
 void FTPConn::doRaw(std::string command) {
-  state = 10;
+  state = STATE_RAW;
   sendEcho(command.c_str());
 }
 
 void FTPConn::doWipe(std::string path, bool recursive) {
-  state = 28;
+  state = STATE_WIPE;
   sendEcho(std::string("SITE WIPE ") + (recursive ? "-r " : "") + path);
 }
 
 void FTPConn::doNuke(std::string path, int multiplier, std::string reason) {
-  state = 30;
+  state = STATE_NUKE;
   sendEcho("SITE NUKE " + path + " " + global->int2Str(multiplier) + " " + reason);
 }
 void FTPConn::doDELE(std::string path) {
-  state = 29;
+  state = STATE_DELE;
   sendEcho("DELE " + path);
 }
 
@@ -672,7 +672,7 @@ void FTPConn::NUKEResponse() {
 }
 
 void FTPConn::doCPSV() {
-  state = 11;
+  state = STATE_CPSV;
   sendEcho("CPSV");
 }
 
@@ -690,7 +690,7 @@ void FTPConn::CPSVResponse() {
 }
 
 void FTPConn::doPASV() {
-  state = 12;
+  state = STATE_PASV;
   sendEcho("PASV");
 }
 
@@ -708,7 +708,7 @@ void FTPConn::PASVResponse() {
 }
 
 void FTPConn::doPORT(std::string addr) {
-  state = 13;
+  state = STATE_PORT;
   sendEcho(("PORT " + addr).c_str());
 }
 
@@ -729,7 +729,7 @@ void FTPConn::doCWD(std::string path) {
     return;
   }
   targetpath = path;
-  state = 14;
+  state = STATE_CWD;
   sendEcho(("CWD " + path).c_str());
 }
 
@@ -746,7 +746,7 @@ void FTPConn::CWDResponse() {
 
 void FTPConn::doMKD(std::string dir) {
   targetpath = dir;
-  state = 15;
+  state = STATE_MKD;
   sendEcho(("MKD " + dir).c_str());
 }
 
@@ -768,7 +768,7 @@ void FTPConn::MKDResponse() {
 }
 
 void FTPConn::doPRETRETR(std::string file) {
-  state = 16;
+  state = STATE_PRET_RETR;
   sendEcho(("PRET RETR " + file).c_str());
 }
 
@@ -783,7 +783,7 @@ void FTPConn::PRETRETRResponse() {
 }
 
 void FTPConn::doPRETSTOR(std::string file) {
-  state = 17;
+  state = STATE_PRET_STOR;
   sendEcho(("PRET STOR " + file).c_str());
 }
 
@@ -798,7 +798,7 @@ void FTPConn::PRETSTORResponse() {
 }
 
 void FTPConn::doPRETLIST() {
-  state = 32;
+  state = STATE_PRET_LIST;
   sendEcho("PRET LIST");
 }
 
@@ -813,14 +813,14 @@ void FTPConn::PRETLISTResponse() {
 }
 
 void FTPConn::doRETR(std::string file) {
-  state = 18;
+  state = STATE_RETR;
   sendEcho(("RETR " + file).c_str());
 }
 
 void FTPConn::RETRResponse() {
   if (databufcode == 150) {
     sl->commandSuccess(id);
-    state = 19;
+    state = STATE_RETR_COMPLETE;
   }
   else {
     processing = false;
@@ -839,14 +839,14 @@ void FTPConn::RETRComplete() {
 }
 
 void FTPConn::doSTOR(std::string file) {
-  state = 20;
+  state = STATE_STOR;
   sendEcho(("STOR " + file).c_str());
 }
 
 void FTPConn::STORResponse() {
   if (databufcode == 150) {
     sl->commandSuccess(id);
-    state = 21;
+    state = STATE_STOR_COMPLETE;
   }
   else {
     processing = false;
@@ -865,7 +865,7 @@ void FTPConn::STORComplete() {
 }
 
 void FTPConn::abortTransfer() {
-  state = 22;
+  state = STATE_ABOR;
   sendEcho("ABOR");
 }
 
@@ -875,14 +875,14 @@ void FTPConn::ABORResponse() {
 }
 
 void FTPConn::doQUIT() {
-  if (state != 0) {
-    state = 23;
+  if (state != STATE_DISCONNECTED) {
+    state = STATE_QUIT;
     sendEcho("QUIT");
   }
 }
 
 void FTPConn::doSSLHandshake() {
-  state = 36;
+  state = STATE_SSL_HANDSHAKE;
   iom->forceSSLhandshake(sockfd);
 }
 
@@ -892,8 +892,8 @@ void FTPConn::QUITResponse() {
 }
 
 void FTPConn::disconnect() {
-  if (state != 0) {
-    state = 0;
+  if (state != STATE_DISCONNECTED) {
+    state = STATE_DISCONNECTED;
     iom->closeSocket(sockfd);
     this->status = "disconnected";
     rawbuf->writeLine("[Disconnected]");
@@ -1002,5 +1002,5 @@ void FTPConn::parseFileList(char * buf, unsigned int buflen) {
 }
 
 bool FTPConn::isConnected() const {
-  return state != 0;
+  return state != STATE_DISCONNECTED;
 }

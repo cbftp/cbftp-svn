@@ -177,23 +177,23 @@ void SiteLogic::commandSuccess(int id) {
   int state = conns[id]->getState();
   std::list<SiteLogicRequest>::iterator it;
   switch (state) {
-    case 5: // PASS, logged in
+    case STATE_PASS: // PASS, logged in
       loggedin++;
       available++;
       connstatetracker[id].setLoggedIn();
       break;
-    case 8: // PROT P
-    case 9: // PROT C
-    case 34: // SSCN ON
-    case 35: // SSCN OFF
+    case STATE_PROT_P:
+    case STATE_PROT_C:
+    case STATE_SSCN_ON:
+    case STATE_SSCN_OFF:
       break;
-    case 13: // PORT
+    case STATE_PORT:
       if (connstatetracker[id].hasTransfer()) {
         connstatetracker[id].getTransferMonitor()->activeReady();
         return;
       }
       break;
-    case 14: // CWD
+    case STATE_CWD:
       if (conns[id]->hasMKDCWDTarget()) {
         if (conns[id]->getCurrentPath() == conns[id]->getMKDCWDTargetSection() +
             "/" + conns[id]->getMKDCWDTargetPath()) {
@@ -218,7 +218,7 @@ void SiteLogic::commandSuccess(int id) {
         }
       }
       break;
-    case 15: // MKD
+    case STATE_MKD:
       if (conns[id]->hasMKDCWDTarget()) {
         std::string targetcwdsect = conns[id]->getMKDCWDTargetSection();
         std::string targetcwdpath = conns[id]->getMKDCWDTargetPath();
@@ -241,8 +241,8 @@ void SiteLogic::commandSuccess(int id) {
       }
       break;
 
-    case 16: // PRET RETR
-    case 17: // PRET STOR
+    case STATE_PRET_RETR:
+    case STATE_PRET_STOR:
       if (connstatetracker[id].hasTransfer()) {
         if (connstatetracker[id].getTransferPassive()) {
           if (connstatetracker[id].getTransferFXP() &&
@@ -259,14 +259,14 @@ void SiteLogic::commandSuccess(int id) {
         global->getEventLog()->log("SiteLogic", "BUG: Trying to start an active transfer after PRET. Why oh why?");
       }
       break;
-    case 18: // RETR started
+    case STATE_RETR: // RETR started
       // no action yet, maybe for stats later on
       /*if (connstatetracker[id].isReady()) {
         std::cout << "NOT BUSY!>" << site->getName() << id << " " << connstatetracker[id].getTransferFile()<< connstatetracker[id].isIdle() << std::endl;
         sleep(5);
       }*/
       return;
-    case 19: // RETR complete
+    case STATE_RETR_COMPLETE:
       if (connstatetracker[id].hasTransfer()) {
         connstatetracker[id].getTransferMonitor()->sourceComplete();
         transferComplete(true);
@@ -276,14 +276,14 @@ void SiteLogic::commandSuccess(int id) {
         global->getEventLog()->log("SiteLogic", "BUG: returned successfully from RETR without having a transfer. Shouldn't happen!");
       }
       break;
-    case 20: // STOR started
+    case STATE_STOR: // STOR started
       // no action yet, maybe for stats later on
       /*if (connstatetracker[id].isReady()) {
         std::cout << "NOT BUSY!>" << site->getName() << id << " " << connstatetracker[id].getTransferFile()<< connstatetracker[id].isIdle() << std::endl;
         sleep(5);
       }*/
       return;
-    case 21: // STOR complete
+    case STATE_STOR_COMPLETE:
       if (connstatetracker[id].hasTransfer()) {
         connstatetracker[id].getTransferMonitor()->targetComplete();
         transferComplete(false);
@@ -293,9 +293,9 @@ void SiteLogic::commandSuccess(int id) {
         global->getEventLog()->log("SiteLogic", "BUG: returned successfully from STOR without having a transfer. Shouldn't happen!");
       }
       break;
-    case 22: // ABOR
+    case STATE_ABOR:
       break;
-    case 28: // WIPE
+    case STATE_WIPE:
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
           if (it->requestType() == REQ_WIPE_RECURSIVE || it->requestType() == REQ_WIPE) {
@@ -307,7 +307,7 @@ void SiteLogic::commandSuccess(int id) {
         }
       }
       break;
-    case 29: // DELE
+    case STATE_DELE:
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
           if (it->requestType() == REQ_DEL) {
@@ -331,7 +331,7 @@ void SiteLogic::commandSuccess(int id) {
         }
       }
       break;
-    case 30: // NUKE
+    case STATE_NUKE:
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
           if (it->requestType() == REQ_NUKE) {
@@ -343,9 +343,9 @@ void SiteLogic::commandSuccess(int id) {
         }
       }
       break;
-    case 31: // LIST started, no action here
+    case STATE_LIST: // LIST started, no action here
       return;
-    case 32: // PRET LIST
+    case STATE_PRET_LIST:
       if (connstatetracker[id].hasTransfer()) {
         if (connstatetracker[id].getTransferPassive()) {
           conns[id]->doPASV();
@@ -353,7 +353,7 @@ void SiteLogic::commandSuccess(int id) {
         }
       }
       break;
-    case 33: // LIST complete
+    case STATE_LIST_COMPLETE:
       if (connstatetracker[id].hasTransfer()) {
         TransferMonitor * tm = connstatetracker[id].getTransferMonitor();
         connstatetracker[id].finishTransfer();
@@ -373,17 +373,17 @@ void SiteLogic::commandFail(int id) {
   std::string file;
   std::list<SiteLogicRequest>::iterator it;
   switch (state) {
-    case 8: // PROT P fail
-    case 9: // PROT C fail
-    case 11: // CPSV fail
-    case 12: // PASV fail
-    case 13: // PORT fail
+    case STATE_PROT_P:
+    case STATE_PROT_C:
+    case STATE_CPSV:
+    case STATE_PASV:
+    case STATE_PORT:
       if (connstatetracker[id].hasTransfer()) {
         handleTransferFail(id, 3);
         return;
       }
       break;
-    case 14: // cwd fail
+    case STATE_CWD:
       if (connstatetracker[id].getRecursiveLogic()->isActive()) {
         connstatetracker[id].getRecursiveLogic()->failedCwd();
         handleRecursiveLogic(id);
@@ -422,7 +422,7 @@ void SiteLogic::commandFail(int id) {
         }
       }
       break;
-    case 15: // mkd fail
+    case STATE_MKD:
       targetcwdsect = conns[id]->getMKDCWDTargetSection();
       targetcwdpath = conns[id]->getMKDCWDTargetPath();
       subdirs = conns[id]->getMKDSubdirs();
@@ -451,25 +451,25 @@ void SiteLogic::commandFail(int id) {
         // cwdmkd failed.
       }
       break;
-    case 16: // PRET RETR fail
+    case STATE_PRET_RETR:
       handleTransferFail(id, CST_DOWNLOAD, 0);
       return;
-    case 17: // PRET STOR fail
+    case STATE_PRET_STOR:
       handleTransferFail(id, CST_UPLOAD, 0);
       return;
-    case 18: // RETR fail
+    case STATE_RETR:
       handleTransferFail(id, CST_DOWNLOAD, 1);
       return;
-    case 19: // RETR post fail
+    case STATE_RETR_COMPLETE:
       handleTransferFail(id, CST_DOWNLOAD, 2);
       return;
-    case 20: // STOR fail
+    case STATE_STOR:
       handleTransferFail(id, CST_UPLOAD, 1);
       return;
-    case 21: // STOR post fail
+    case STATE_STOR_COMPLETE:
       handleTransferFail(id, CST_UPLOAD, 2);
       return;
-    case 28: // WIPE
+    case STATE_WIPE:
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
           if (it->requestType() == REQ_WIPE_RECURSIVE || it->requestType() == REQ_WIPE) {
@@ -482,7 +482,7 @@ void SiteLogic::commandFail(int id) {
       }
       handleConnection(id, false);
       return;
-    case 29: // DELE
+    case STATE_DELE:
       if (connstatetracker[id].getRecursiveLogic()->isActive()) {
         handleRecursiveLogic(id);
         return;
@@ -499,7 +499,7 @@ void SiteLogic::commandFail(int id) {
       }
       handleConnection(id, false);
       return;
-    case 30: // NUKE
+    case STATE_NUKE:
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
           if (it->requestType() == REQ_NUKE) {
@@ -512,13 +512,13 @@ void SiteLogic::commandFail(int id) {
       }
       handleConnection(id, false);
       return;
-    case 31: // LIST fail
+    case STATE_LIST:
       handleTransferFail(id, CST_LIST, 1);
       return;
-    case 32: // PRET LIST fail
+    case STATE_PRET_LIST:
       handleTransferFail(id, CST_LIST, 0);
       return;
-    case 33: // LIST post fail
+    case STATE_LIST_COMPLETE:
       handleTransferFail(id, CST_LIST, 2);
       return;
   }
