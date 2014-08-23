@@ -17,9 +17,9 @@
 #include "globalcontext.h"
 #include "datablock.h"
 #include "datablockpool.h"
-#include "eventreceiver.h"
 #include "eventlog.h"
 #include "datafilehandler.h"
+#include "tickpoke.h"
 
 IOManager::IOManager() {
   epollfd = epoll_create(100);
@@ -31,6 +31,33 @@ IOManager::IOManager() {
 #ifdef _ISOC95_SOURCE
   pthread_setname_np(thread, "Input");
 #endif
+  global->getTickPoke()->startPoke(this, "EventReceiver", TICKPERIOD, 0);
+}
+
+void IOManager::tick(int message) {
+  bool closefd = false;
+  std::map<int, int>::iterator it;
+  for (it = connecttimemap.begin(); it != connecttimemap.end(); it++) {
+    it->second += TICKPERIOD;
+    if (it->second >= TIMEOUT_MS) {
+      it->second = -1;
+      closefd = true;
+    }
+  }
+  if (closefd) {
+    bool changes = true;
+    while (changes) {
+      changes = false;
+      for (it = connecttimemap.begin(); it != connecttimemap.end(); it++) {
+        if (it->second == -1) {
+         closeSocket(it->first);
+         changes = true;
+         wm->dispatchEventFail(receivermap[it->first], "Connection timeout");
+         break;
+        }
+      }
+    }
+  }
 }
 
 int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int port, int * sockfdp) {
@@ -61,6 +88,7 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int
   addrmap[sockfd] = std::string(buf);
   typemap[sockfd] = FD_TCP_CONNECTING;
   receivermap[sockfd] = er;
+  connecttimemap[sockfd] = 0;
   struct epoll_event event;
   event.events = EPOLLOUT;
   event.data.fd = sockfd;
@@ -285,6 +313,9 @@ void IOManager::closeSocket(int id) {
     case FD_KEYBOARD: // keyboard
       break; // one does not simply close the keyboard input
     case FD_TCP_CONNECTING:
+      connecttimemap.erase(id);
+      close(id);
+      break;
     case FD_TCP_PLAIN: // tcp plain
     case FD_TCP_PLAIN_LISTEN:
       close(id);
@@ -344,7 +375,16 @@ void IOManager::runInstance() {
         event.data.fd = currfd;
         epoll_ctl(epollfd, EPOLL_CTL_MOD, currfd, &event);
         if (typemap[currfd] == FD_TCP_CONNECTING) {
+          unsigned int error;
+          unsigned int errorlen = sizeof(error);
+          getsockopt(currfd, SOL_SOCKET, SO_ERROR, &error, &errorlen);
+          if (error == ECONNREFUSED) {
+            closeSocket(currfd);
+            wm->dispatchEventFail(er, "Connection refused");
+            continue;
+          }
           typemap[currfd] = FD_TCP_PLAIN;
+          connecttimemap.erase(currfd);
           wm->dispatchEventConnected(er);
           continue;
         }
@@ -361,8 +401,8 @@ void IOManager::runInstance() {
             b_recv = recv(currfd, buf, blocksize, 0);
             if (b_recv <= 0) {
               blockpool->returnBlock(buf);
-              wm->dispatchEventDisconnected(er);
               closeSocket(currfd);
+              wm->dispatchEventDisconnected(er);
               break;
             }
             wm->dispatchFDData(er, buf, b_recv);

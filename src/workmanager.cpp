@@ -47,6 +47,9 @@ void WorkManager::dispatchEventSSLFail(EventReceiver * er) {
   dataqueue.push(Event(er, WORK_SSL_FAIL));
 }
 
+void WorkManager::dispatchEventFail(EventReceiver * er, std::string error) {
+  dataqueue.push(Event(er, WORK_FAIL, error));
+}
 DataBlockPool * WorkManager::getBlockPool() {
   return &blockpool;
 }
@@ -87,6 +90,9 @@ void WorkManager::runInstance() {
         break;
       case WORK_NEW:
         er->FDNew(event.getInterval());
+        break;
+      case WORK_FAIL:
+        er->FDFail(event.getStrData());
         break;
     }
   }

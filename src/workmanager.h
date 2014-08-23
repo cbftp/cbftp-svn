@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <list>
+#include <string>
 
 #include "datablockpool.h"
 #include "blockingqueue.h"
@@ -19,6 +20,7 @@
 #define WORK_SSL_SUCCESS 2539
 #define WORK_SSL_FAIL 2540
 #define WORK_NEW 2541
+#define WORK_FAIL 2542
 
 class EventReceiver;
 class Event;
@@ -41,6 +43,7 @@ public:
   void dispatchEventDisconnected(EventReceiver *);
   void dispatchEventSSLSuccess(EventReceiver *);
   void dispatchEventSSLFail(EventReceiver *);
+  void dispatchEventFail(EventReceiver *, std::string);
   DataBlockPool * getBlockPool();
   bool overload() const;
   void runInstance();

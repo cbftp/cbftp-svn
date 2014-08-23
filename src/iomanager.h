@@ -6,7 +6,8 @@
 #include <openssl/ssl.h>
 #include <list>
 
-class EventReceiver;
+#include "eventreceiver.h"
+
 class DataBlockPool;
 class WorkManager;
 class GlobalContext;
@@ -27,12 +28,16 @@ class DataBlock;
 #define FD_TCP_SSL_NEG_REDO_HANDSHAKE 1040
 #define FD_TCP_CONNECTING 1041
 
+#define TICKPERIOD 100
+#define TIMEOUT_MS 5000
+
 extern GlobalContext * global;
 
-class IOManager {
+class IOManager : private EventReceiver {
 private:
   pthread_t thread;
   std::map<int, int> typemap;
+  std::map<int, int> connecttimemap;
   std::map<int, EventReceiver *> receivermap;
   std::map<int, SSL *> sslmap;
   std::map<int, std::list<DataBlock> > sendqueuemap;
@@ -51,6 +56,7 @@ public:
   IOManager();
   void runInstance();
   void registerStdin(EventReceiver *);
+  void tick(int);
   int registerTCPClientSocket(EventReceiver *, std::string, int, int *);
   int registerTCPServerSocket(EventReceiver *, int);
   int registerTCPServerSocket(EventReceiver *, int, bool);

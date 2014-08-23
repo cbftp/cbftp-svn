@@ -53,8 +53,9 @@ Main::Main() {
   global->linkEventLog(el);
   WorkManager * wm = new WorkManager();
   global->linkWorkManager(wm);
-  DataFileHandler * dfh = new DataFileHandler(datapath);
   TickPoke * tp = new TickPoke();
+  global->linkTickPoke(tp);
+  DataFileHandler * dfh = new DataFileHandler(datapath);
   IOManager * iom = new IOManager();
   Engine * e = new Engine();
   Ui * ui = new Ui();
@@ -66,7 +67,7 @@ Main::Main() {
   ProxyManager * pm = new ProxyManager();
   LocalStorage * ls = new LocalStorage();
   ExternalFileViewing * efv = new ExternalFileViewing();
-  global->linkComponents(dfh, iom, e, ui, sm, slm, tm, tp, rch, sl, pm, ls, efv);
+  global->linkComponents(dfh, iom, e, ui, sm, slm, tm, rch, sl, pm, ls, efv);
   if (!ui->init()) exit(1);
   tp->tickerLoop();
   global->getExternalFileViewing()->killAll();

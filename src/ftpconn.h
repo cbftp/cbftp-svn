@@ -6,6 +6,7 @@
 #include "eventreceiver.h"
 
 #define STATE_DISCONNECTED 0
+#define STATE_CONNECTING 1
 #define STATE_WELCOME 2
 #define STATE_AUTH_TLS 3
 #define STATE_USER 4

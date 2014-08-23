@@ -55,9 +55,10 @@ class GlobalContext {
     GlobalContext();
     void linkEventLog(EventLog *);
     void linkWorkManager(WorkManager *);
+    void linkTickPoke(TickPoke *);
     void linkComponents(DataFileHandler *, IOManager *, Engine *,
         UIBase *, SiteManager *, SiteLogicManager *, TransferManager *,
-        TickPoke *, RemoteCommandHandler *, SkipList *, ProxyManager *,
+        RemoteCommandHandler *, SkipList *, ProxyManager *,
         LocalStorage *, ExternalFileViewing *);
     SSL_CTX * getSSLCTX() const;
     Engine * getEngine() const;

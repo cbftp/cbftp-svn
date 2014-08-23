@@ -78,17 +78,18 @@ void FTPConn::login() {
   }
   if (proxy == NULL) {
     rawbuf->writeLine("[Connecting to " + site->getAddress() + ":" + site->getPort() + "]");
-    state = 1;
+    state = STATE_CONNECTING;
     iom->registerTCPClientSocket(this, site->getAddress(), global->str2Int(site->getPort()), &sockfd);
   }
   else {
     rawbuf->writeLine("[Connecting to proxy " + proxy->getAddr() + ":" + proxy->getPort() + "]");
-    state = 100;
+    state = STATE_PROXY;
+    processing = true;
     proxysession->prepare(proxy, site->getAddress(), site->getPort());
     iom->registerTCPClientSocket(this, proxy->getAddr(), global->str2Int(proxy->getPort()), &sockfd);
   }
   if (sockfd < 0) {
-    state = 0;
+    state = STATE_DISCONNECTED;
   }
 }
 
@@ -140,7 +141,8 @@ void FTPConn::FDDisconnected() {
 
 void FTPConn::FDFail(std::string error) {
   rawbuf->writeLine("[" + error + "]");
-  sl->connectFailed(1);
+  state = STATE_DISCONNECTED;
+  sl->connectFailed(id);
 }
 
 void FTPConn::FDSSLSuccess() {

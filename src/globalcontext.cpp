@@ -28,9 +28,13 @@ void GlobalContext::linkWorkManager(WorkManager * wm) {
   this->wm = wm;
 }
 
+void GlobalContext::linkTickPoke(TickPoke * tp) {
+  this->tp = tp;
+}
+
 void GlobalContext::linkComponents(DataFileHandler * dfh, IOManager * iom,
     Engine * e, UIBase * uib, SiteManager * sm, SiteLogicManager * slm,
-    TransferManager * tm, TickPoke * tp, RemoteCommandHandler * rch,
+    TransferManager * tm, RemoteCommandHandler * rch,
     SkipList * sl, ProxyManager * pm, LocalStorage * ls,
     ExternalFileViewing * efv) {
   this->dfh = dfh;
@@ -40,7 +44,6 @@ void GlobalContext::linkComponents(DataFileHandler * dfh, IOManager * iom,
   this->sm = sm;
   this->slm = slm;
   this->tm = tm;
-  this->tp = tp;
   this->rch = rch;
   this->sl = sl;
   this->pm = pm;

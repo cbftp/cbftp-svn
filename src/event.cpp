@@ -18,6 +18,12 @@ Event::Event(EventReceiver * er, int type, int interval) {
   this->interval = interval;
 }
 
+Event::Event(EventReceiver * er, int type, std::string error) {
+  this->receiver = er;
+  this->type = type;
+  this->strdata = error;
+}
+
 EventReceiver * Event::getReceiver() const {
   return receiver;
 }
@@ -36,4 +42,8 @@ int Event::getDataLen() const {
 
 int Event::getInterval() const {
   return interval;
+}
+
+std::string Event::getStrData() const {
+  return strdata;
 }

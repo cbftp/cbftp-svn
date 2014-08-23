@@ -1310,9 +1310,12 @@ void SiteLogic::disconnectConn(int id) {
     if (connstatetracker[id].isLoggedIn()) {
       available--;
       loggedin--;
+      conns[id]->doQUIT();
+    }
+    else {
+      conns[id]->disconnect();
     }
     connstatetracker[id].setDisconnected();
-    conns[id]->doQUIT();
   }
 }
 
