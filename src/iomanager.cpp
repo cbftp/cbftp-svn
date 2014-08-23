@@ -383,6 +383,11 @@ void IOManager::runInstance() {
             wm->dispatchEventFail(er, "Connection refused");
             continue;
           }
+          else if (error == EHOSTUNREACH) {
+            closeSocket(currfd);
+            wm->dispatchEventFail(er, "No route to host");
+            continue;
+          }
           typemap[currfd] = FD_TCP_PLAIN;
           connecttimemap.erase(currfd);
           wm->dispatchEventConnected(er);
