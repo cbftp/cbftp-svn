@@ -329,6 +329,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       unsigned int gotomodelength = gotomodestring.length();
       const std::vector<UIFile *> * sortedlist = list.getSortedList();
       for (unsigned int i = 0; i < sortedlist->size(); i++) {
+        if ((*sortedlist)[i] == NULL) continue;
         std::string name = (*sortedlist)[i]->getName();
         if (name.length() >= gotomodelength) {
           std::string substr = name.substr(0, gotomodelength);
