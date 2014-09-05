@@ -50,10 +50,11 @@ void IOManager::tick(int message) {
       changes = false;
       for (it = connecttimemap.begin(); it != connecttimemap.end(); it++) {
         if (it->second == -1) {
-         closeSocket(it->first);
-         changes = true;
-         wm->dispatchEventFail(receivermap[it->first], "Connection timeout");
-         break;
+          int sockfd = it->first;
+          closeSocket(sockfd);
+          changes = true;
+          wm->dispatchEventFail(receivermap[sockfd], "Connection timeout");
+          break;
         }
       }
     }
