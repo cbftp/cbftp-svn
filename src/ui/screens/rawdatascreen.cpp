@@ -186,10 +186,6 @@ void RawDataScreen::keyPressed(unsigned int ch) {
       }
       ui->update();
       break;
-    case 10:
-      rawbuf->uiWatching(false);
-      ui->update();
-      break;
     case 'c':
       sitelogic->connectConn(connid);
       break;

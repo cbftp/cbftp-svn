@@ -1,6 +1,7 @@
 #pragma once
 
 #include <list>
+#include <utility>
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
@@ -38,4 +39,5 @@ private:
   std::list<std::string> sections;
   std::string release;
   std::string infotext;
+  std::list<std::pair<std::string, bool> > tempsites;
 };

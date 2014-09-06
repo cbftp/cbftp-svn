@@ -38,22 +38,45 @@ bool FocusableArea::goRight() {
   return false;
 }
 
+bool FocusableArea::goNext() {
+  return goDown();
+}
+
+bool FocusableArea::goPrevious() {
+  return goUp();
+}
+
+void FocusableArea::makeLeavableUp(bool leaveup) {
+  this->leaveup = leaveup;
+}
+
+void FocusableArea::makeLeavableDown(bool leavedown) {
+  this->leavedown = leavedown;
+}
+
+void FocusableArea::makeLeavableLeft(bool leaveleft) {
+  this->leaveleft = leaveleft;
+}
+
+void FocusableArea::makeLeavableRight(bool leaveright) {
+  this->leaveright = leaveright;
+}
+
 void FocusableArea::makeLeavableUp() {
-  leaveup = true;
+  makeLeavableUp(true);
 }
 
 void FocusableArea::makeLeavableDown() {
-  leavedown = true;
+  makeLeavableDown(true);
 }
 
 void FocusableArea::makeLeavableLeft() {
-  leaveleft = true;
+  makeLeavableLeft(true);
 }
 
 void FocusableArea::makeLeavableRight() {
-  leaveright = true;
+  makeLeavableRight(true);
 }
-
 unsigned int FocusableArea::getLastSelectionPointer() const {
   return 0;
 }

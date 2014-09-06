@@ -16,8 +16,14 @@ public:
   virtual bool goDown();
   virtual bool goLeft();
   virtual bool goRight();
+  virtual bool goNext();
+  virtual bool goPrevious();
   virtual void enterFocusFrom(int);
   bool isFocused() const;
+  void makeLeavableUp(bool);
+  void makeLeavableDown(bool);
+  void makeLeavableLeft(bool);
+  void makeLeavableRight(bool);
   void makeLeavableUp();
   void makeLeavableDown();
   void makeLeavableLeft();

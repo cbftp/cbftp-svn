@@ -21,6 +21,8 @@ class MenuSelectOption : public FocusableArea {
     bool goUp();
     bool goRight();
     bool goLeft();
+    bool goNext();
+    bool goPrevious();
     void addStringField(int, int, std::string, std::string, std::string, bool);
     void addStringField(int, int, std::string, std::string, std::string, bool, int);
     void addStringField(int, int, std::string, std::string, std::string, bool, int, int);

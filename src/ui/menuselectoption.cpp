@@ -14,6 +14,7 @@ MenuSelectOption::MenuSelectOption() {
 }
 
 bool MenuSelectOption::goDown() {
+  if (!options.size()) return false;
   unsigned int ccol = options[pointer]->getCol();
   unsigned int crow = options[pointer]->getRow();
   unsigned int closestelem;
@@ -46,6 +47,7 @@ bool MenuSelectOption::goDown() {
 }
 
 bool MenuSelectOption::goUp() {
+  if (!options.size()) return false;
   unsigned int ccol = options[pointer]->getCol();
   unsigned int crow = options[pointer]->getRow();
   unsigned int closestelem;
@@ -78,6 +80,7 @@ bool MenuSelectOption::goUp() {
 }
 
 bool MenuSelectOption::goRight() {
+  if (!options.size()) return false;
   unsigned int ccol = options[pointer]->getCol();
   unsigned int crow = options[pointer]->getRow();
   unsigned int closestelem;
@@ -110,6 +113,7 @@ bool MenuSelectOption::goRight() {
 }
 
 bool MenuSelectOption::goLeft() {
+  if (!options.size()) return false;
   unsigned int ccol = options[pointer]->getCol();
   unsigned int crow = options[pointer]->getRow();
   unsigned int closestelem;
@@ -136,6 +140,26 @@ bool MenuSelectOption::goLeft() {
   if (leaveleft) {
     lastpointer = pointer;
     focus = false;
+    return true;
+  }
+  return false;
+}
+
+bool MenuSelectOption::goNext() {
+  if (!options.size()) return false;
+  if (pointer < options.size() - 1) {
+    lastpointer = pointer;
+    pointer++;
+    return true;
+  }
+  return false;
+}
+
+bool MenuSelectOption::goPrevious() {
+  if (!options.size()) return false;
+  if (pointer > 0) {
+    lastpointer = pointer;
+    pointer--;
     return true;
   }
   return false;

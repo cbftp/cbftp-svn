@@ -62,19 +62,41 @@ void NewRaceScreen::initialize(unsigned int row, unsigned int col, std::string s
 }
 
 void NewRaceScreen::populateSiteList() {
-  int y = 6;
-  int x = 1;
   std::vector<Site *>::const_iterator it;
   mso.clear();
-  for (it = global->getSiteManager()->getSitesIteratorBegin(); it != global->getSiteManager()->getSitesIteratorEnd(); it++) {
-    Site * site = *it;
-    if (site->hasSection(section)) {
-      mso.addCheckBox(y++, x, site->getName(), site->getName(), toggleall || site == startsite);
+  if (!tempsites.size()) {
+    for (it = global->getSiteManager()->getSitesIteratorBegin(); it != global->getSiteManager()->getSitesIteratorEnd(); it++) {
+      Site * site = *it;
+      if (site->hasSection(section)) {
+        tempsites.push_back(std::pair<std::string, bool>(site->getName(), toggleall || site == startsite));
+      }
     }
   }
+  unsigned int y = 6;
+  unsigned int x = 1;
+  unsigned int longestsitenameinline = 0;
+  std::list<std::pair<std::string, bool> >::iterator it2;
+  for (it2 = tempsites.begin(); it2 != tempsites.end(); it2++) {
+    if (it2->first.length() > longestsitenameinline) {
+      longestsitenameinline = it2->first.length();
+    }
+    if (y >= row - 1) {
+      y = 6;
+      x += longestsitenameinline + 7;
+      longestsitenameinline = 0;
+    }
+    mso.addCheckBox(y++, x, it2->first, it2->first, it2->second);
+  }
+  tempsites.clear();
 }
+
 void NewRaceScreen::redraw() {
   ui->erase();
+  for (unsigned int i = 0; i < mso.size(); i++) {
+    MenuSelectOptionCheckBox * msocb = (MenuSelectOptionCheckBox *) mso.getElement(i);
+    tempsites.push_back(std::pair<std::string, bool>(msocb->getIdentifier(), msocb->getData()));
+  }
+  populateSiteList();
   ui->printStr(1, 1, "Release: " + release);
   ui->printStr(2, 1, "Section: ");
   bool highlight;
@@ -100,7 +122,8 @@ void NewRaceScreen::redraw() {
 void NewRaceScreen::update() {
   if (sectionupdate) {
     sectionupdate = false;
-    populateSiteList();
+    tempsites.clear();
+    mso.clear();
     redraw();
     return;
   }
@@ -157,7 +180,7 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
   bool activation;
   switch(ch) {
     case KEY_UP:
-      if (focusedarea->goUp()) {
+      if (focusedarea->goUp() || focusedarea->goPrevious()) {
         if (!focusedarea->isFocused()) {
           defocusedarea = focusedarea;
           focusedarea = &msos;
@@ -167,7 +190,7 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
       }
       break;
     case KEY_DOWN:
-      if (focusedarea->goDown()) {
+      if (focusedarea->goDown() || focusedarea->goNext()) {
         if (!focusedarea->isFocused()) {
           defocusedarea = focusedarea;
           focusedarea = &mso;
