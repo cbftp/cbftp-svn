@@ -7,26 +7,13 @@
 #include <list>
 
 #include "eventreceiver.h"
+#include "socketinfo.h"
 
 class DataBlockPool;
 class WorkManager;
 class GlobalContext;
-class DataBlock;
 
 #define MAXEVENTS 32
-
-#define FD_UNUSED 1030
-#define FD_KEYBOARD 1031
-#define FD_TCP_PLAIN 1032
-#define FD_TCP_SSL_NEG_REDO_CONN 1033
-#define FD_TCP_SSL_NEG_REDO_WRITE 1034
-#define FD_TCP_SSL 1035
-#define FD_UDP 1036
-#define FD_TCP_SERVER 1037
-#define FD_TCP_PLAIN_LISTEN 1038
-#define FD_TCP_SSL_NEG_REDO_ACCEPT 1039
-#define FD_TCP_SSL_NEG_REDO_HANDSHAKE 1040
-#define FD_TCP_CONNECTING 1041
 
 #define TICKPERIOD 100
 #define TIMEOUT_MS 5000
@@ -36,12 +23,8 @@ extern GlobalContext * global;
 class IOManager : private EventReceiver {
 private:
   pthread_t thread;
-  std::map<int, int> typemap;
+  std::map<int, SocketInfo> socketinfo;
   std::map<int, int> connecttimemap;
-  std::map<int, EventReceiver *> receivermap;
-  std::map<int, SSL *> sslmap;
-  std::map<int, std::list<DataBlock> > sendqueuemap;
-  std::map<int, std::string> addrmap;
   static void * run(void *);
   WorkManager * wm;
   int epollfd;
