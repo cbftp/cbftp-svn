@@ -2,6 +2,7 @@
 
 #include <string>
 #include <list>
+#include <openssl/ssl.h>
 
 #include "datablock.h"
 
@@ -17,6 +18,8 @@
 #define FD_TCP_SSL_NEG_REDO_ACCEPT 1039
 #define FD_TCP_SSL_NEG_REDO_HANDSHAKE 1040
 #define FD_TCP_CONNECTING 1041
+
+class EventReceiver;
 
 class SocketInfo {
 public:

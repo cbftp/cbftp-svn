@@ -27,6 +27,7 @@ IOManager::IOManager() {
   blockpool = wm->getBlockPool();
   blocksize = blockpool->blockSize();
   hasdefaultinterface = false;
+  pthread_mutex_init(&socketinfolock, NULL);
   pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
 #ifdef _ISOC95_SOURCE
   pthread_setname_np(thread, "Input");
@@ -36,6 +37,7 @@ IOManager::IOManager() {
 
 void IOManager::tick(int message) {
   bool closefd = false;
+  pthread_mutex_lock(&socketinfolock);
   std::map<int, int>::iterator it;
   for (it = connecttimemap.begin(); it != connecttimemap.end(); it++) {
     it->second += TICKPERIOD;
@@ -51,7 +53,7 @@ void IOManager::tick(int message) {
       for (it = connecttimemap.begin(); it != connecttimemap.end(); it++) {
         if (it->second == -1) {
           EventReceiver * er = socketinfo[it->first].receiver;
-          closeSocket(it->first);
+          closeSocketIntern(it->first);
           changes = true;
           wm->dispatchEventFail(er, "Connection timeout");
           break;
@@ -59,6 +61,7 @@ void IOManager::tick(int message) {
       }
     }
   }
+  pthread_mutex_unlock(&socketinfolock);
 }
 
 int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int port, int * sockfdp) {
@@ -86,11 +89,13 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int
   char buf[res->ai_addrlen];
   struct sockaddr_in* saddr = (struct sockaddr_in*)res->ai_addr;
   inet_ntop(AF_INET, &(saddr->sin_addr), buf, res->ai_addrlen);
+  pthread_mutex_lock(&socketinfolock);
   socketinfo[sockfd].fd = sockfd;
   socketinfo[sockfd].type = FD_TCP_CONNECTING;
   socketinfo[sockfd].addr = std::string(buf);
   socketinfo[sockfd].receiver = er;
   connecttimemap[sockfd] = 0;
+  pthread_mutex_unlock(&socketinfolock);
   struct epoll_event event;
   event.events = EPOLLOUT;
   event.data.fd = sockfd;
@@ -117,9 +122,11 @@ int IOManager::registerTCPServerSocket(EventReceiver * er, int port, bool local)
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
   bind(sockfd, res->ai_addr, res->ai_addrlen);
   listen(sockfd, 10);
+  pthread_mutex_lock(&socketinfolock);
   socketinfo[sockfd].fd = sockfd;
   socketinfo[sockfd].type = FD_TCP_SERVER;
   socketinfo[sockfd].receiver = er;
+  pthread_mutex_unlock(&socketinfolock);
   struct epoll_event event;
   event.events = EPOLLIN;
   event.data.fd = sockfd;
@@ -128,9 +135,11 @@ int IOManager::registerTCPServerSocket(EventReceiver * er, int port, bool local)
 }
 
 void IOManager::registerTCPServerClientSocket(EventReceiver * er, int sockfd) {
+  pthread_mutex_lock(&socketinfolock);
   socketinfo[sockfd].fd = sockfd;
   socketinfo[sockfd].type = FD_TCP_PLAIN_LISTEN;
   socketinfo[sockfd].receiver = er;
+  pthread_mutex_unlock(&socketinfolock);
   struct epoll_event event;
   event.events = EPOLLIN;
   event.data.fd = sockfd;
@@ -138,9 +147,11 @@ void IOManager::registerTCPServerClientSocket(EventReceiver * er, int sockfd) {
 }
 
 void IOManager::registerStdin(EventReceiver * er) {
+  pthread_mutex_lock(&socketinfolock);
   socketinfo[STDIN_FILENO].fd = STDIN_FILENO;
   socketinfo[STDIN_FILENO].type = FD_KEYBOARD;
   socketinfo[STDIN_FILENO].receiver = er;
+  pthread_mutex_unlock(&socketinfolock);
   struct epoll_event event;
   event.events = EPOLLIN;
   event.data.fd = STDIN_FILENO;
@@ -158,9 +169,11 @@ int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
   getaddrinfo(addr.c_str(), global->int2Str(port).data(), &sock, &res);
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
   bind(sockfd, res->ai_addr, res->ai_addrlen);
+  pthread_mutex_lock(&socketinfolock);
   socketinfo[sockfd].fd = sockfd;
   socketinfo[sockfd].type = FD_UDP;
   socketinfo[sockfd].receiver = er;
+  pthread_mutex_unlock(&socketinfolock);
   struct epoll_event event;
   event.events = EPOLLIN;
   event.data.fd = sockfd;
@@ -173,22 +186,28 @@ void IOManager::negotiateSSLConnect(int id) {
 }
 
 void IOManager::negotiateSSLConnect(int id, EventReceiver * er) {
+  pthread_mutex_lock(&socketinfolock);
   if (socketinfo[id].type == FD_TCP_PLAIN || socketinfo[id].type == FD_TCP_PLAIN_LISTEN) {
     socketinfo[id].type = FD_TCP_SSL_NEG_REDO_CONN;
   }
   else {
+    pthread_mutex_unlock(&socketinfolock);
     return;
   }
+  pthread_mutex_unlock(&socketinfolock);
   negotiateSSL(id, er);
 }
 
 void IOManager::negotiateSSLAccept(int id) {
+  pthread_mutex_lock(&socketinfolock);
   if (socketinfo[id].type == FD_TCP_PLAIN || socketinfo[id].type == FD_TCP_PLAIN_LISTEN) {
     socketinfo[id].type = FD_TCP_SSL_NEG_REDO_ACCEPT;
   }
   else {
+    pthread_mutex_unlock(&socketinfolock);
     return;
   }
+  pthread_mutex_unlock(&socketinfolock);
   negotiateSSL(id, NULL);
 }
 
@@ -199,6 +218,7 @@ void IOManager::negotiateSSL(int id, EventReceiver * er) {
   epoll_ctl(epollfd, EPOLL_CTL_DEL, id, &event);
   SSL * ssl = SSL_new(global->getSSLCTX());
   SSL_set_mode(ssl, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
+  pthread_mutex_lock(&socketinfolock);
   socketinfo[id].ssl = ssl;
   SSL_set_fd(ssl, id);
   if (er != NULL) {
@@ -227,14 +247,16 @@ void IOManager::negotiateSSL(int id, EventReceiver * er) {
   else {
     if (!investigateSSLError(SSL_get_error(ssl, ret), id, ret)) {
       wm->dispatchEventDisconnected(socketinfo[id].receiver);
-      closeSocket(id);
+      closeSocketIntern(id);
     }
   }
+  pthread_mutex_unlock(&socketinfolock);
   event.events = EPOLLIN;
   epoll_ctl(epollfd, EPOLL_CTL_ADD, id, &event);
 }
 
 void IOManager::forceSSLhandshake(int id) {
+  pthread_mutex_lock(&socketinfolock);
   SSL * ssl = socketinfo[id].ssl;
   int ret = SSL_do_handshake(ssl);
   socketinfo[id].type = FD_TCP_SSL_NEG_REDO_HANDSHAKE;
@@ -245,9 +267,10 @@ void IOManager::forceSSLhandshake(int id) {
   else {
     if (!investigateSSLError(SSL_get_error(ssl, ret), id, ret)) {
       wm->dispatchEventDisconnected(socketinfo[id].receiver);
-      closeSocket(id);
+      closeSocketIntern(id);
     }
   }
+  pthread_mutex_unlock(&socketinfolock);
 }
 
 bool IOManager::investigateSSLError(int error, int currfd, int b_recv) {
@@ -267,8 +290,11 @@ bool IOManager::investigateSSLError(int error, int currfd, int b_recv) {
       break;
   }
   unsigned long e = ERR_get_error();
+  pthread_mutex_lock(&socketinfolock);
+  std::string addr = socketinfo[currfd].addr;
+  pthread_mutex_unlock(&socketinfolock);
   global->getEventLog()->log("IOManager", "SSL error on connection to " +
-      socketinfo[currfd].addr + ": " +
+      addr + ": " +
       global->int2Str(error) + " return code: " + global->int2Str(b_recv) +
       " errno: " + strerror(errno) +
       (e ? " String: " + std::string(ERR_error_string(e, NULL)) : ""));
@@ -284,6 +310,7 @@ void IOManager::sendData(int id, const char * buf, unsigned int buflen) {
   int b_sent;
   SSL * ssl;
   char * datablock;
+  pthread_mutex_lock(&socketinfolock);
   switch(socketinfo[id].type) {
     case FD_TCP_PLAIN: // tcp plain
     case FD_TCP_PLAIN_LISTEN:
@@ -312,31 +339,45 @@ void IOManager::sendData(int id, const char * buf, unsigned int buflen) {
       }
       break;
   }
+  pthread_mutex_unlock(&socketinfolock);
 }
 
 void IOManager::closeSocket(int id) {
-  if (socketinfo[id].type == FD_KEYBOARD) {
+  pthread_mutex_lock(&socketinfolock);
+  closeSocketIntern(id);
+  pthread_mutex_unlock(&socketinfolock);
+}
+
+void IOManager::closeSocketIntern(int id) {
+  std::map<int, SocketInfo>::iterator it = socketinfo.find(id);
+  if (it == socketinfo.end()) {
+    return;
+  }
+  if (it->second.type == FD_KEYBOARD) {
     return;
   }
   close(id);
-  if (socketinfo[id].ssl) {
-    SSL_free(socketinfo[id].ssl);
+  if (it->second.ssl) {
+    SSL_free(it->second.ssl);
   }
   connecttimemap.erase(id);
-  socketinfo.erase(id);
+  socketinfo.erase(it);
 }
 
 std::string IOManager::getCipher(int id) {
+  pthread_mutex_lock(&socketinfolock);
   const char * cipher = SSL_CIPHER_get_name(SSL_get_current_cipher(socketinfo[id].ssl));
+  pthread_mutex_unlock(&socketinfolock);
   return std::string(cipher);
 }
 
 std::string IOManager::getSocketAddress(int id) const {
+  std::string addr = "";
   std::map<int, SocketInfo>::const_iterator it = socketinfo.find(id);
   if (it != socketinfo.end()) {
-    return it->second.addr;
+    addr = it->second.addr;
   }
-  return "";
+  return addr;
 }
 
 void IOManager::runInstance() {
@@ -352,8 +393,11 @@ void IOManager::runInstance() {
   struct sockaddr addr;
   socklen_t addrlen;
   EventReceiver * er;
+  pthread_mutex_lock(&socketinfolock);
   while(1) {
+    pthread_mutex_unlock(&socketinfolock);
     fds = epoll_wait(epollfd, events, MAXEVENTS, -1);
+    pthread_mutex_lock(&socketinfolock);
     for (i = 0; i < fds; i++) {
       currfd = events[i].data.fd;
       er = socketinfo[currfd].receiver;
@@ -367,12 +411,12 @@ void IOManager::runInstance() {
           unsigned int errorlen = sizeof(error);
           getsockopt(currfd, SOL_SOCKET, SO_ERROR, &error, &errorlen);
           if (error == ECONNREFUSED) {
-            closeSocket(currfd);
+            closeSocketIntern(currfd);
             wm->dispatchEventFail(er, "Connection refused");
             continue;
           }
           else if (error == EHOSTUNREACH) {
-            closeSocket(currfd);
+            closeSocketIntern(currfd);
             wm->dispatchEventFail(er, "No route to host");
             continue;
           }
@@ -385,7 +429,9 @@ void IOManager::runInstance() {
       }
       switch (socketinfo[currfd].type) {
         case FD_KEYBOARD: // keyboard
+          pthread_mutex_unlock(&socketinfolock);
           wm->dispatchFDData(er);
+          pthread_mutex_lock(&socketinfolock);
           break;
         case FD_TCP_PLAIN: // tcp plain
         case FD_TCP_PLAIN_LISTEN:
@@ -394,7 +440,7 @@ void IOManager::runInstance() {
             b_recv = recv(currfd, buf, blocksize, 0);
             if (b_recv <= 0) {
               blockpool->returnBlock(buf);
-              closeSocket(currfd);
+              closeSocketIntern(currfd);
               wm->dispatchEventDisconnected(er);
               break;
             }
@@ -433,13 +479,13 @@ void IOManager::runInstance() {
             }
             else if (b_recv == 0) {
               wm->dispatchEventDisconnected(er);
-              closeSocket(currfd);
+              closeSocketIntern(currfd);
               break;
             }
             else {
               if (!investigateSSLError(SSL_get_error(ssl, b_recv), currfd, b_recv)) {
                 wm->dispatchEventDisconnected(er);
-                closeSocket(currfd);
+                closeSocketIntern(currfd);
               }
             }
           }
@@ -468,12 +514,12 @@ void IOManager::runInstance() {
             }
             else if (b_recv == 0) {
               wm->dispatchEventDisconnected(er);
-              closeSocket(currfd);
+              closeSocketIntern(currfd);
             }
             else if (b_recv < 0) {
               if (!investigateSSLError(SSL_get_error(ssl, b_recv), currfd, b_recv)) {
                 wm->dispatchEventDisconnected(er);
-                closeSocket(currfd);
+                closeSocketIntern(currfd);
               }
             }
           }
@@ -487,7 +533,7 @@ void IOManager::runInstance() {
               if (b_recv < 0) {
                 if (!investigateSSLError(SSL_get_error(ssl, b_recv), currfd, b_recv)) {
                   wm->dispatchEventDisconnected(er);
-                  closeSocket(currfd);
+                  closeSocketIntern(currfd);
                 }
                 blockpool->returnBlock(buf);
                 break;
@@ -495,7 +541,7 @@ void IOManager::runInstance() {
               else if (b_recv == 0) {
                 blockpool->returnBlock(buf);
                 wm->dispatchEventDisconnected(er);
-                closeSocket(currfd);
+                closeSocketIntern(currfd);
                 break;
               }
               wm->dispatchFDData(er, buf, b_recv);

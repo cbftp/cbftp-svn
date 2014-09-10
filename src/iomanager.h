@@ -23,6 +23,7 @@ extern GlobalContext * global;
 class IOManager : private EventReceiver {
 private:
   pthread_t thread;
+  pthread_mutex_t socketinfolock;
   std::map<int, SocketInfo> socketinfo;
   std::map<int, int> connecttimemap;
   static void * run(void *);
@@ -35,6 +36,7 @@ private:
   void negotiateSSL(int, EventReceiver *);
   bool investigateSSLError(int, int, int);
   bool hasdefaultinterface;
+  void closeSocketIntern(int);
 public:
   IOManager();
   void runInstance();
