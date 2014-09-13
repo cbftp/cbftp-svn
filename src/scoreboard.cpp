@@ -23,7 +23,7 @@ void ScoreBoard::add(std::string name, int score, bool prio, SiteLogic * src, Fi
 }
 
 void ScoreBoard::sort() {
-  std::sort(elements.begin(), elements.end(), comparator);
+  std::sort(elements.begin(), elements.begin() + showsize, comparator);
 }
 
 std::vector<ScoreBoardElement *>::const_iterator ScoreBoard::begin() const {
