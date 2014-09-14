@@ -290,9 +290,7 @@ bool IOManager::investigateSSLError(int error, int currfd, int b_recv) {
       break;
   }
   unsigned long e = ERR_get_error();
-  pthread_mutex_lock(&socketinfolock);
   std::string addr = socketinfo[currfd].addr;
-  pthread_mutex_unlock(&socketinfolock);
   global->getEventLog()->log("IOManager", "SSL error on connection to " +
       addr + ": " +
       global->int2Str(error) + " return code: " + global->int2Str(b_recv) +
