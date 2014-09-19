@@ -216,9 +216,9 @@ void IOManager::negotiateSSL(int id, EventReceiver * er) {
   event.events = EPOLLIN;
   event.data.fd = id;
   epoll_ctl(epollfd, EPOLL_CTL_DEL, id, &event);
+  pthread_mutex_lock(&socketinfolock);
   SSL * ssl = SSL_new(global->getSSLCTX());
   SSL_set_mode(ssl, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
-  pthread_mutex_lock(&socketinfolock);
   socketinfo[id].ssl = ssl;
   SSL_set_fd(ssl, id);
   if (er != NULL) {
