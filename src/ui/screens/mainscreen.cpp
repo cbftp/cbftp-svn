@@ -9,6 +9,7 @@
 #include "../../sitemanager.h"
 #include "../../site.h"
 #include "../../sitelogicmanager.h"
+#include "../../transferjob.h"
 
 #include "../menuselectoptioncheckbox.h"
 #include "../ui.h"
@@ -25,20 +26,23 @@ void MainScreen::initialize(unsigned int row, unsigned int col) {
   msslegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [G]lobal settings - Event [l]og - [t]ransfers - [q]uick jump";
   msolegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [G]lobal settings - Event [l]og - [t]ransfers - [q]uick jump";
   gotolegendtext = "[Any] Go to matching first letter in site list - [Esc] Cancel";
-  mso.makeLeavableDown();
   autoupdate = true;
   gotomode = false;
   currentviewspan = 0;
   sitestartrow = 0;
   currentraces = 0;
+  currenttransferjobs = 0;
   if (global->getEngine()->currentRaces()) {
     focusedarea = &mso;
     mso.enterFocusFrom(0);
-    mss.makeLeavableUp();
+  }
+  else if (global->getEngine()->currentTransferJobs()) {
+    focusedarea = &msot;
+    msot.enterFocusFrom(0);
   }
   else {
-    mss.enterFocusFrom(0);
     focusedarea = &mss;
+    mss.enterFocusFrom(0);
   }
   init(row, col);
 }
@@ -47,16 +51,29 @@ void MainScreen::redraw() {
   ui->erase();
   ui->hideCursor();
   bool listraces = global->getEngine()->allRaces();
+  bool listtransferjobs = global->getEngine()->currentTransferJobs();
   unsigned int irow = 1;
   if (listraces) {
     mss.makeLeavableUp();
+    msot.makeLeavableUp();
     mso.clear();
     irow++;
     ui->printStr(irow++, 1, "Section  Name");
-    std::list<Race *>::iterator it;
+    std::list<Race *>::const_iterator it;
     for (it = global->getEngine()->getRacesIteratorBegin(); it != global->getEngine()->getRacesIteratorEnd(); it++) {
       std::string release = (*it)->getName();
       mso.addCheckBox(irow++, 1, release, release, false);
+    }
+    irow++;
+  }
+  if (listtransferjobs) {
+    mss.makeLeavableUp();
+    msot.clear();
+    ui->printStr(irow++, 1, "Type  Name");
+    std::list<TransferJob *>::const_iterator it;
+    for (it = global->getEngine()->getTransferJobsIteratorBegin(); it != global->getEngine()->getTransferJobsIteratorEnd(); it++) {
+          std::string filename = (*it)->getSrcFileName();
+          msot.addCheckBox(irow++, 1, filename, filename, false);
     }
     irow++;
   }
@@ -91,17 +108,42 @@ void MainScreen::redraw() {
       currentviewspan = position;
     }
   }
+  if (listtransferjobs || mss.size()) {
+    mso.makeLeavableDown();
+  }
+  else {
+    mso.makeLeavableDown(false);
+  }
+  if (listraces) {
+    msot.makeLeavableUp();
+  }
+  else {
+    msot.makeLeavableUp(false);
+  }
+  if (mss.size()) {
+    msot.makeLeavableDown();
+  }
+  else {
+    msot.makeLeavableDown(false);
+  }
+  if (listraces || listtransferjobs) {
+    mss.makeLeavableUp();
+  }
+  else {
+    mss.makeLeavableUp(false);
+  }
   update();
 }
 
 void MainScreen::update() {
   int newcurrentraces = global->getEngine()->currentRaces();
-  if (newcurrentraces != currentraces) {
+  int newcurrenttransferjobs = global->getEngine()->currentTransferJobs();
+  if (newcurrentraces != currentraces || newcurrenttransferjobs != currenttransferjobs) {
     currentraces = newcurrentraces;
+    currenttransferjobs = newcurrenttransferjobs;
     redraw();
     return;
   }
-  currentraces = newcurrentraces;
   if (currentraces) {
     ui->printStr(1, 1, "Active races: " + global->int2Str(currentraces));
   }
@@ -116,6 +158,35 @@ void MainScreen::update() {
     }
     ui->printStr(msoe->getRow(), msoe->getCol(), race->getSection());
     ui->printStr(msoe->getRow(), msoe->getCol() + 9, msoe->getLabelText(), highlight);
+  }
+  selected = msot.getSelectionPointer();
+  for (unsigned int i = 0; i < msot.size(); i++) {
+    highlight = false;
+    MenuSelectOptionElement * msoe = msot.getElement(i);
+    TransferJob * transferjob = global->getEngine()->getTransferJob(msoe->getIdentifier());
+    std::string type = "FXP";
+    switch (transferjob->getType()) {
+      case TRANSFERJOB_DOWNLOAD:
+        type = "DL";
+        break;
+      case TRANSFERJOB_UPLOAD:
+        type = "UL";
+        break;
+      case TRANSFERJOB_DOWNLOAD_FILE:
+        type = "DLF";
+        break;
+      case TRANSFERJOB_UPLOAD_FILE:
+        type = "ULF";
+        break;
+      case TRANSFERJOB_FXP_FILE:
+        type = "FXPF";
+        break;
+    }
+    if (msot.isFocused() && selected == i) {
+      highlight = true;
+    }
+    ui->printStr(msoe->getRow(), msoe->getCol(), type);
+    ui->printStr(msoe->getRow(), msoe->getCol() + 6, transferjob->getSrcFileName(), highlight);
   }
   selected = mss.getSelectionPointer();
   for (unsigned int i = 0; i + currentviewspan < mss.size() && i < row - sitestartrow; i++) {
@@ -165,7 +236,12 @@ void MainScreen::keyPressed(unsigned int ch) {
       if (focusedarea->goUp()) {
         if (!focusedarea->isFocused()) {
           defocusedarea = focusedarea;
-          focusedarea = &mso;
+          if (msot.size() && defocusedarea == &mss) {
+            focusedarea = &msot;
+          }
+          else if (mso.size()) {
+            focusedarea = &mso;
+          }
           focusedarea->enterFocusFrom(2);
           ui->update();
           ui->setLegend();
@@ -184,7 +260,12 @@ void MainScreen::keyPressed(unsigned int ch) {
       if (focusedarea->goDown()) {
         if (!focusedarea->isFocused()) {
           defocusedarea = focusedarea;
-          focusedarea = &mss;
+          if (msot.size() && defocusedarea == &mso) {
+              focusedarea = &msot;
+          }
+          else if (mss.size()){
+            focusedarea = &mss;
+          }
           focusedarea->enterFocusFrom(0);
           ui->update();
           ui->setLegend();
@@ -208,6 +289,10 @@ void MainScreen::keyPressed(unsigned int ch) {
       else if (mso.isFocused() && mso.size() > 0) {
         target = mso.getElement(mso.getSelectionPointer())->getIdentifier();
         ui->goRaceStatus(target);
+      }
+      else if (msot.isFocused()) {
+        target = msot.getElement(msot.getSelectionPointer())->getIdentifier();
+        ui->goTransferJobStatus(target);
       }
       break;
     case 'G':

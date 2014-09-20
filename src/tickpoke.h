@@ -20,5 +20,5 @@ public:
   void tickerLoop();
   void breakLoop();
   void startPoke(EventReceiver *, std::string, int, int);
-  void stopPoke(EventReceiver *, std::string, int);
+  void stopPoke(EventReceiver *, int);
 };

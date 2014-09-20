@@ -14,32 +14,26 @@ SelectSitesScreen::SelectSitesScreen(Ui * ui) {
   this->ui = ui;
 }
 
-void SelectSitesScreen::initialize(unsigned int row, unsigned int col, std::string preselectstr, std::string purpose, Site * skipsite) {
+void SelectSitesScreen::initialize(unsigned int row, unsigned int col, std::string purpose, std::list<Site *> preselectedsites, std::list<Site *> excludedsites) {
   sm = global->getSiteManager();
-  this->skipsite = skipsite;
   this->purpose = purpose;
   preselected.clear();
-  while (true) {
-    size_t commapos = preselectstr.find(",");
-    if (commapos != std::string::npos) {
-      preselected[preselectstr.substr(0, commapos)] = true;
-      preselectstr = preselectstr.substr(commapos + 1);
-    }
-    else {
-      preselected[preselectstr] = true;
-      break;
-    }
+  excluded.clear();
+  for (std::list<Site *>::iterator it = preselectedsites.begin(); it != preselectedsites.end(); it++) {
+    preselected[*it] = true;
+  }
+  for (std::list<Site *>::iterator it = excludedsites.begin(); it != excludedsites.end(); it++) {
+    excluded[*it] = true;
   }
   mso.clear();
   mso.enterFocusFrom(0);
   std::vector<Site *>::const_iterator it;
   for (it = sm->getSitesIteratorBegin(); it != sm->getSitesIteratorEnd(); it++) {
-    if (*it == skipsite) {
+    if (excluded.find(*it) != excluded.end()) {
       continue;
     }
-    std::string sitename = (*it)->getName();
-    bool selected = preselected.find(sitename) != preselected.end();
-    tempsites.push_back(std::pair<std::string, bool>(sitename, selected));
+    bool selected = preselected.find(*it) != preselected.end();
+    tempsites.push_back(std::pair<std::string, bool>((*it)->getName(), selected));
   }
   init(row, col);
 }

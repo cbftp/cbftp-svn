@@ -43,6 +43,7 @@ class FileViewerSettingsScreen;
 class ScoreBoardScreen;
 class SelectSitesScreen;
 class TransfersScreen;
+class TransferJobStatusScreen;
 
 class Ui : private EventReceiver, public UIBase {
   private:
@@ -78,6 +79,7 @@ class Ui : private EventReceiver, public UIBase {
     ScoreBoardScreen * scoreboardscreen;
     SelectSitesScreen * selectsitesscreen;
     TransfersScreen * transfersscreen;
+    TransferJobStatusScreen * transferjobstatusscreen;
     int mainrow;
     int maincol;
     int col;
@@ -149,13 +151,14 @@ class Ui : private EventReceiver, public UIBase {
     void goViewFile(std::string, std::string, FileList *);
     void goAddSection(std::string, std::string);
     void goNewRace(std::string, std::string, std::string);
-    void goSelectSites(std::string, std::string, Site *);
+    void goSelectSites(std::string, std::list<Site *>, std::list<Site *>);
     void goSkiplist();
     void goChangeKey();
     void goProxy();
     void goFileViewerSettings();
     void goSiteStatus(std::string);
     void goRaceStatus(std::string);
+    void goTransferJobStatus(std::string);
     void goGlobalOptions();
     void goEventLog();
     void goScoreBoard();

@@ -14,7 +14,7 @@ PotentialTracker::PotentialTracker(int slots) {
 }
 
 PotentialTracker::~PotentialTracker() {
-  global->getTickPoke()->stopPoke(this, "PotentialTracker", 0);
+  global->getTickPoke()->stopPoke(this, 0);
 }
 
 int PotentialTracker::getMaxAvailablePotential() {

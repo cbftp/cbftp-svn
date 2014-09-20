@@ -20,6 +20,7 @@ public:
   std::string getLegendText() const;
   std::string getInfoLabel() const;
 private:
+  void fillPreselectionList(std::string, std::list<Site *> *) const;
   FocusableArea * focusedarea;
   FocusableArea * defocusedarea;
   std::string currentlegendtext;

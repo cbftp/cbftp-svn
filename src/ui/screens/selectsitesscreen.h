@@ -16,7 +16,7 @@ class Site;
 class SelectSitesScreen : public UIWindow {
 public:
   SelectSitesScreen(Ui *);
-  void initialize(unsigned int, unsigned int, std::string, std::string, Site *);
+  void initialize(unsigned int, unsigned int, std::string, std::list<Site *>, std::list<Site *>);
   void redraw();
   void update();
   void keyPressed(unsigned int);
@@ -26,7 +26,7 @@ private:
   SiteManager * sm;
   MenuSelectOption mso;
   std::string purpose;
-  Site * skipsite;
-  std::map<std::string, bool> preselected;
+  std::map<Site *, bool> preselected;
+  std::map<Site *, bool> excluded;
   std::list<std::pair<std::string, bool> > tempsites;
 };

@@ -10,6 +10,8 @@
 #include "../../eventlog.h"
 #include "../../filelist.h"
 #include "../../tickpoke.h"
+#include "../../engine.h"
+#include "../../localstorage.h"
 
 #include "../ui.h"
 #include "../uifile.h"
@@ -19,7 +21,6 @@ extern GlobalContext * global;
 BrowseScreen::BrowseScreen(Ui * ui) {
   this->ui = ui;
   gotomodeticker = 0;
-  global->getTickPoke()->startPoke(this, "BrowseScreen", 50, 0);
 }
 
 void BrowseScreen::initialize(unsigned int row, unsigned int col, std::string sitestr) {
@@ -43,6 +44,7 @@ void BrowseScreen::initialize(unsigned int row, unsigned int col, std::string si
   nuking = false;
   nukesuccess = false;
   nukefailed = false;
+  gotomode = false;
   currentviewspan = 0;
   sortmethod = 0;
   slidersize = 0;
@@ -351,6 +353,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
     }
     else {
       gotomode = false;
+      global->getTickPoke()->stopPoke(this, 0);
       ui->update();
       ui->setLegend();
     }
@@ -385,6 +388,10 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       if (list.cursoredFile() != NULL && !list.cursoredFile()->isDirectory()) {
         ui->goViewFile(site->getName(), list.cursoredFile()->getName(), filelist);
       }
+      break;
+    case 'D':
+      global->getEngine()->newTransferJobDownload(site->getName(), list.cursoredFile()->getName(),
+          filelist, global->getLocalStorage()->getDownloadPath());
       break;
     case 's':
       sortmethod++;
@@ -489,6 +496,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       gotomodefirst = true;
       gotomodeticker = 0;
       gotomodestring = "";
+      global->getTickPoke()->startPoke(this, "BrowseScreen", 50, 0);
       ui->update();
       ui->setLegend();
       break;
@@ -613,7 +621,7 @@ std::string BrowseScreen::getLegendText() const {
   if (gotomode) {
     return "[Any] Go to first matching entry name - [Esc] Cancel";
   }
-  return "[c]ancel - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - Toggle se[p]arators - [q]uick jump";
+  return "[c]ancel - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [D]ownload - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - Toggle se[p]arators - [q]uick jump";
 }
 
 std::string BrowseScreen::getInfoLabel() const {
@@ -770,6 +778,7 @@ void BrowseScreen::tick (int message) {
   if (gotomode && !gotomodefirst) {
     if (gotomodeticker++ >= 20) {
       gotomode = false;
+      global->getTickPoke()->stopPoke(this, 0);
       ui->update();
       ui->setLegend();
     }

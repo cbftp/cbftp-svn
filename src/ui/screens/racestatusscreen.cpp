@@ -10,6 +10,7 @@
 #include "../../sitelogicmanager.h"
 #include "../../ftpconn.h"
 #include "../../engine.h"
+#include "../../sitemanager.h"
 
 #include "../ui.h"
 #include "../menuselectoptiontextbutton.h"
@@ -263,7 +264,7 @@ void RaceStatusScreen::update() {
   }
 }
 
-void RaceStatusScreen::command(std::string command) {
+void RaceStatusScreen::command(std::string command, std::string arg) {
   if (command == "yes") {
     if (awaitingremovesite) {
       global->getEngine()->removeSiteFromRace(release, removesite);
@@ -272,6 +273,32 @@ void RaceStatusScreen::command(std::string command) {
     else if (awaitingabort) {
       global->getEngine()->abortRace(race->getName());
       awaitingremovesite = false;
+    }
+    ui->redraw();
+  }
+  else if (command == "returnselectsites") {
+    std::string preselectstr = arg;
+    std::list<Site *> selectedsites;
+    while (true) {
+      size_t commapos = preselectstr.find(",");
+      if (commapos != std::string::npos) {
+        std::string sitename = preselectstr.substr(0, commapos);
+        Site * site = global->getSiteManager()->getSite(sitename);
+        selectedsites.push_back(site);
+        preselectstr = preselectstr.substr(commapos + 1);
+      }
+      else {
+        if (preselectstr.length() > 0) {
+          Site * site = global->getSiteManager()->getSite(preselectstr);
+          selectedsites.push_back(site);
+        }
+        break;
+      }
+    }
+    for (std::list<Site *>::iterator it = selectedsites.begin(); it != selectedsites.end(); it++) {
+      SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic((*it)->getName());
+      sl->addRace(race, race->getSection(), release);
+      race->addSite(sl);
     }
     ui->redraw();
   }
@@ -316,6 +343,21 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
       awaitingabort = true;
       ui->goConfirmation("Do you really want to abort the race " + release);
       break;
+    case 'A':
+    {
+      std::list<Site *> excludedsites;
+      for (std::list<SiteLogic *>::const_iterator it = race->begin(); it != race->end(); it++) {
+        excludedsites.push_back((*it)->getSite());
+      }
+      std::vector<Site *>::const_iterator it;
+      for (it = global->getSiteManager()->getSitesIteratorBegin(); it != global->getSiteManager()->getSitesIteratorEnd(); it++) {
+        if (!(*it)->hasSection(race->getSection())) {
+          excludedsites.push_back(*it);
+        }
+      }
+      ui->goSelectSites("Add these sites to the race: " + race->getSection() + "/" + release, std::list<Site *>(), excludedsites);
+      break;
+    }
   }
 }
 

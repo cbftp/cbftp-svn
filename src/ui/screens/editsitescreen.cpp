@@ -322,15 +322,23 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
       if (activeelement->getIdentifier() == "blockedsrc") {
         activeelement->deactivate();
         active = false;
-        ui->goSelectSites(((MenuSelectOptionTextField *)activeelement)->getData(),
-            "Block race transfers from these sites", site);
+        std::string preselectstr = ((MenuSelectOptionTextField *)activeelement)->getData();
+        std::list<Site *> preselected;
+        fillPreselectionList(preselectstr, &preselected);
+        std::list<Site *> excluded;
+        excluded.push_back(site);
+        ui->goSelectSites("Block race transfers from these sites", preselected, excluded);
         return;
       }
       if (activeelement->getIdentifier() == "blockeddst") {
         activeelement->deactivate();
         active = false;
-        ui->goSelectSites(((MenuSelectOptionTextField *)activeelement)->getData(),
-            "Block race transfers to these sites", site);
+        std::string preselectstr = ((MenuSelectOptionTextField *)activeelement)->getData();
+        std::list<Site *> preselected;
+        fillPreselectionList(preselectstr, &preselected);
+        std::list<Site *> excluded;
+        excluded.push_back(site);
+        ui->goSelectSites("Block race transfers to these sites", preselected, excluded);
         return;
       }
       currentlegendtext = activeelement->getLegendText();
@@ -522,4 +530,23 @@ std::string EditSiteScreen::getLegendText() const {
 
 std::string EditSiteScreen::getInfoLabel() const {
   return "SITE OPTIONS";
+}
+
+void EditSiteScreen::fillPreselectionList(std::string preselectstr, std::list<Site *> * list) const {
+  while (true) {
+    size_t commapos = preselectstr.find(",");
+    if (commapos != std::string::npos) {
+      std::string sitename = preselectstr.substr(0, commapos);
+      Site * site = global->getSiteManager()->getSite(sitename);
+      list->push_back(site);
+      preselectstr = preselectstr.substr(commapos + 1);
+    }
+    else {
+      if (preselectstr.length() > 0) {
+        Site * site = global->getSiteManager()->getSite(preselectstr);
+        list->push_back(site);
+      }
+      break;
+    }
+  }
 }

@@ -6,12 +6,14 @@
 #include "datafilehandler.h"
 
 #include <stdio.h>
+#include <unistd.h>
 #include <vector>
 
 extern GlobalContext * global;
 
 LocalStorage::LocalStorage() {
   temppath = "/tmp";
+  downloadpath = std::string(getenv("HOME")) + "/Downloads";
   storeidcounter = 0;
 }
 
@@ -106,6 +108,14 @@ void LocalStorage::setTempPath(std::string path) {
   temppath = path;
 }
 
+std::string LocalStorage::getDownloadPath() const {
+  return downloadpath;
+}
+
+void LocalStorage::setDownloadPath(std::string path) {
+  downloadpath = path;
+}
+
 void LocalStorage::storeContent(int storeid, char * buf, int buflen) {
   char * storebuf = (char *) malloc(buflen);
   memcpy(storebuf, buf, buflen);
@@ -126,6 +136,9 @@ void LocalStorage::readConfiguration() {
     if (!setting.compare("temppath")) {
       setTempPath(value);
     }
+    if (!setting.compare("downloadpath")) {
+      setDownloadPath(value);
+    }
   }
 }
 
@@ -133,4 +146,5 @@ void LocalStorage::writeState() {
   std::string filetag = "LocalStorage";
   DataFileHandler * filehandler = global->getDataFileHandler();
   filehandler->addOutputLine(filetag, "temppath=" + getTempPath());
+  filehandler->addOutputLine(filetag, "downloadpath=" + getDownloadPath());
 }

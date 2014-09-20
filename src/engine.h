@@ -11,6 +11,7 @@
 
 class GlobalContext;
 class Race;
+class TransferJob;
 class SiteRace;
 class FileList;
 class File;
@@ -22,6 +23,8 @@ class Engine : public EventReceiver {
   private:
     std::list<Race *> allraces;
     std::list<Race *> currentraces;
+    std::list<TransferJob *> alltransferjobs;
+    std::list<TransferJob *> currenttransferjobs;
     ScoreBoard * scoreboard;
     int maxavgspeed;
     void estimateRaceSizes();
@@ -35,16 +38,26 @@ class Engine : public EventReceiver {
   public:
     Engine();
     void newRace(std::string, std::string, std::list<std::string>);
+    void newTransferJobDownload(std::string, std::string, FileList *, std::string);
+    void newTransferJobDownload(std::string, std::string, FileList *, std::string, std::string);
+    void newTransferJobUpload(std::string, std::string, std::string, FileList *);
+    void newTransferJobUpload(std::string, std::string, std::string, std::string, FileList *);
+    void newTransferJobFXP(std::string, FileList *, std::string, FileList *, std::string);
+    void newTransferJobFXP(std::string, std::string, FileList *, std::string, std::string, FileList *);
     void removeSiteFromRace(std::string, std::string);
     void abortRace(std::string);
     void someRaceFileListRefreshed();
     int currentRaces() const;
     int allRaces() const;
+    int currentTransferJobs() const;
     Race * getRace(std::string) const;
+    TransferJob * getTransferJob(std::string) const;
     std::list<Race *>::iterator getRacesIteratorBegin();
     std::list<Race *>::iterator getRacesIteratorEnd();
     std::list<Race *>::const_iterator getRacesIteratorBegin() const;
     std::list<Race *>::const_iterator getRacesIteratorEnd() const;
+    std::list<TransferJob *>::const_iterator getTransferJobsIteratorBegin() const;
+    std::list<TransferJob *>::const_iterator getTransferJobsIteratorEnd() const;
     void tick(int);
     void issueGlobalComplete(Race *);
     ScoreBoard * getScoreBoard() const;

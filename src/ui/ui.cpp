@@ -46,6 +46,7 @@
 #include "screens/scoreboardscreen.h"
 #include "screens/selectsitesscreen.h"
 #include "screens/transfersscreen.h"
+#include "screens/transferjobstatusscreen.h"
 
 extern GlobalContext * global;
 
@@ -140,6 +141,8 @@ void Ui::initIntern() {
   mainwindows.push_back(selectsitesscreen);
   transfersscreen = new TransfersScreen(this);
   mainwindows.push_back(transfersscreen);
+  transferjobstatusscreen = new TransferJobStatusScreen(this);
+  mainwindows.push_back(transferjobstatusscreen);
   if (global->getDataFileHandler()->fileExists()) {
     loginscreen->initialize(mainrow, maincol);
     topwindow = loginscreen;
@@ -299,6 +302,7 @@ void Ui::redrawAll() {
     infowindow->redraw();
   }
   if (topwindow != NULL) {
+    topwindow->resize(mainrow, maincol);
     topwindow->redraw();
   }
 }
@@ -582,8 +586,8 @@ void Ui::goNewRace(std::string site, std::string section, std::string release) {
   switchToWindow(newracescreen);
 }
 
-void Ui::goSelectSites(std::string currentsitelist, std::string message, Site * excludedsite) {
-  selectsitesscreen->initialize(mainrow, maincol, currentsitelist, message, excludedsite);
+void Ui::goSelectSites(std::string message, std::list<Site *> currentsitelist, std::list<Site *> excludedsitelist) {
+  selectsitesscreen->initialize(mainrow, maincol, message, currentsitelist, excludedsitelist);
   switchToWindow(selectsitesscreen);
 }
 
@@ -615,6 +619,11 @@ void Ui::goSiteStatus(std::string site) {
 void Ui::goRaceStatus(std::string race) {
   racestatusscreen->initialize(mainrow, maincol, race);
   switchToWindow(racestatusscreen);
+}
+
+void Ui::goTransferJobStatus(std::string filename) {
+  transferjobstatusscreen->initialize(mainrow, maincol, filename);
+  switchToWindow(transferjobstatusscreen);
 }
 
 void Ui::goGlobalOptions() {

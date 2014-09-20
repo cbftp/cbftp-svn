@@ -24,6 +24,8 @@ public:
   std::string getTempPath() const;
   void setTempPath(std::string);
   void storeContent(int, char *, int);
+  std::string getDownloadPath() const;
+  void setDownloadPath(std::string);
 private:
   std::map<int, std::pair<char *, int> > content;
   std::string getHostFromPASVString(std::string) const;
@@ -31,5 +33,6 @@ private:
   LocalTransfer * getAvailableLocalTransfer();
   std::list<LocalTransfer *> localtransfers;
   std::string temppath;
+  std::string downloadpath;
   int storeidcounter;
 };

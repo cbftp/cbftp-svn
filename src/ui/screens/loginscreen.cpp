@@ -131,7 +131,7 @@ void LoginScreen::keyPressed(unsigned int ch) {
         attempt = true;
         ui->key(passfield.getText());
         passfield.clear();
-        return;
+        break;
     }
   }
   ui->update();

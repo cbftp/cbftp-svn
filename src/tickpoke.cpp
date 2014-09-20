@@ -27,25 +27,27 @@ void TickPoke::breakLoop() {
 
 void TickPoke::tick(int interval) {
   std::list<TickPokeTarget>::iterator it;
+  std::list<std::pair<EventReceiver *, int> > ticklist;
   for(it = targets.begin(); it != targets.end(); it++) {
     if (it->tick(interval)) {
       EventReceiver * er = it->getPokee();
-      er->tick(it->getMessage());
+      ticklist.push_back(std::pair<EventReceiver *, int>(er, it->getMessage()));
     }
+  }
+  for (std::list<std::pair<EventReceiver *, int> >::iterator it = ticklist.begin(); it != ticklist.end(); it++) {
+    it->first->tick(it->second);
   }
 }
 
 void TickPoke::startPoke(EventReceiver * pokee, std::string desc, int interval, int message) {
-  targets.push_back(TickPokeTarget(pokee, interval, message));
-  //global->getEventLog()->log("TickPoke", "Registering " + desc + " as poke receiver with interval " + global->int2Str(interval) + "ms");
+  targets.push_back(TickPokeTarget(pokee, interval, message, desc));
 }
 
-void TickPoke::stopPoke(EventReceiver * pokee, std::string desc, int message) {
+void TickPoke::stopPoke(EventReceiver * pokee, int message) {
   std::list<TickPokeTarget>::iterator it;
   for(it = targets.begin(); it != targets.end(); it++) {
     if (it->getPokee() == pokee && it->getMessage() == message) {
       targets.erase(it);
-      //global->getEventLog()->log("TickPoke", "Deregistering " + desc + " as poke receiver");
       return;
     }
   }

@@ -21,6 +21,7 @@ private:
   unsigned int currentviewspan;
   unsigned int sitestartrow;
   int currentraces;
+  int currenttransferjobs;
   std::string msolegendtext;
   std::string msslegendtext;
   std::string gotolegendtext;
@@ -30,5 +31,6 @@ private:
   Ui * ui;
   MenuSelectSite mss;
   MenuSelectOption mso;
+  MenuSelectOption msot;
   bool gotomode;
 };

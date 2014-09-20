@@ -4,6 +4,7 @@
 #include "../../remotecommandhandler.h"
 #include "../../sitemanager.h"
 #include "../../iomanager.h"
+#include "../../localstorage.h"
 
 #include "../ui.h"
 #include "../menuselectoptionelement.h"
@@ -27,6 +28,7 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   unsigned int x = 1;
   rch = global->getRemoteCommandHandler();
   sm = global->getSiteManager();
+  ls = global->getLocalStorage();
   defaultinterface = mso.addTextArrow(y++, x, "defaultinterface", "Default network interface:");
   defaultinterface->addOption("Unspecified", 0);
   interfacemap[0] = "";
@@ -48,7 +50,7 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
     }
   }
   y++;
-  mso.clear();
+  mso.reset();
   mso.addCheckBox(y++, x, "udpenable", "Enable remote commands:", rch->isEnabled());
   mso.addStringField(y++, x, "udpport", "Remote command UDP Port:", global->int2Str(rch->getUDPPort()), false, 5);
   mso.addStringField(y++, x, "udppass", "Remote command password:", rch->getPassword(), true);
@@ -68,6 +70,8 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   sslfxp->addOption("Always on", SITE_SSL_ALWAYS_ON);
   sslfxp->setOption(sm->getDefaultSSLTransferPolicy());
   mso.addStringField(y++, x, "defidletime", "Default site max idle time (s):", global->int2Str(sm->getDefaultMaxIdleTime()), false);
+  y++;
+  mso.addStringField(y++, x, "dlpath", "Download path:", ls->getDownloadPath(), false, 128, 128);
   y++;
   mso.addTextButtonNoContent(y++, x, "skiplist", "Configure skiplist...");
   mso.addTextButtonNoContent(y++, x, "proxy", "Configure proxy settings...");
@@ -211,6 +215,9 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "legend") {
           ui->showLegend(((MenuSelectOptionCheckBox *)msoe)->getData());
+        }
+        else if (identifier == "dlpath") {
+          ls->setDownloadPath(((MenuSelectOptionTextField *)msoe)->getData());
         }
       }
       rch->setEnabled(udpenable);

@@ -45,7 +45,7 @@ SiteLogic::SiteLogic(std::string sitename) {
 }
 
 SiteLogic::~SiteLogic() {
-  global->getTickPoke()->stopPoke(this, "SiteLogic", 0);
+  global->getTickPoke()->stopPoke(this, 0);
   delete rawbuf;
   delete ptrack;
   for (unsigned int i = 0; i < conns.size(); i++) {

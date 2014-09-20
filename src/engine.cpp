@@ -18,6 +18,7 @@
 #include "tickpoke.h"
 #include "sitemanager.h"
 #include "workmanager.h"
+#include "transferjob.h"
 
 Engine::Engine() {
   scoreboard = new ScoreBoard();
@@ -115,6 +116,46 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
     }
     setSpeedScale();
   }
+}
+
+void Engine::newTransferJobDownload(std::string site, std::string file, FileList * filelist, std::string path) {
+  newTransferJobDownload(site, file, filelist, path, file);
+}
+
+void Engine::newTransferJobUpload(std::string path, std::string site, std::string file, FileList * filelist) {
+  newTransferJobUpload(path, file, site, file, filelist);
+}
+
+void Engine::newTransferJobFXP(std::string srcsite, FileList * srcfilelist, std::string dstsite, FileList * dstfilelist, std::string file) {
+  newTransferJobFXP(srcsite, file, srcfilelist, dstsite, file, dstfilelist);
+}
+
+void Engine::newTransferJobDownload(std::string site, std::string srcfile, FileList * filelist, std::string path, std::string dstfile) {
+  SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(site);
+  TransferJob * tj = new TransferJob(sl, srcfile, filelist, path, dstfile);
+  alltransferjobs.push_back(tj);
+  currenttransferjobs.push_back(tj);
+  global->getEventLog()->log("Engine", "Starting download job: " + srcfile +
+            " from " + site);
+}
+
+void Engine::newTransferJobUpload(std::string path, std::string srcfile, std::string site, std::string dstfile, FileList * filelist) {
+  SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(site);
+  TransferJob * tj = new TransferJob(path, srcfile, sl, dstfile, filelist);
+  alltransferjobs.push_back(tj);
+  currenttransferjobs.push_back(tj);
+  global->getEventLog()->log("Engine", "Starting upload job: " + srcfile +
+            " to " + site);
+}
+
+void Engine::newTransferJobFXP(std::string srcsite, std::string srcfile, FileList * srcfilelist, std::string dstsite, std::string dstfile, FileList * dstfilelist) {
+  SiteLogic * slsrc = global->getSiteLogicManager()->getSiteLogic(srcsite);
+  SiteLogic * sldst = global->getSiteLogicManager()->getSiteLogic(dstsite);
+  TransferJob * tj = new TransferJob(slsrc, srcfile, srcfilelist, sldst, dstfile, dstfilelist);
+  alltransferjobs.push_back(tj);
+  currenttransferjobs.push_back(tj);
+  global->getEventLog()->log("Engine", "Starting FXP job: " + srcfile +
+            " - " + srcsite + " -> " + dstsite);
 }
 
 void Engine::removeSiteFromRace(std::string release, std::string site) {
@@ -393,10 +434,24 @@ int Engine::allRaces() const {
   return allraces.size();
 }
 
+int Engine::currentTransferJobs() const {
+  return currenttransferjobs.size();
+}
+
 Race * Engine::getRace(std::string releasename) const {
   std::list<Race *>::const_iterator it;
   for (it = allraces.begin(); it != allraces.end(); it++) {
     if ((*it)->getName() == releasename) {
+      return *it;
+    }
+  }
+  return NULL;
+}
+
+TransferJob * Engine::getTransferJob(std::string filename) const {
+  std::list<TransferJob *>::const_iterator it;
+  for (it = alltransferjobs.begin(); it != alltransferjobs.end(); it++) {
+    if ((*it)->getSrcFileName() == filename) {
       return *it;
     }
   }
@@ -419,6 +474,14 @@ std::list<Race *>::const_iterator Engine::getRacesIteratorEnd() const {
   return allraces.end();
 }
 
+std::list<TransferJob *>::const_iterator Engine::getTransferJobsIteratorBegin() const {
+  return alltransferjobs.begin();
+}
+
+std::list<TransferJob *>::const_iterator Engine::getTransferJobsIteratorEnd() const {
+  return alltransferjobs.end();
+}
+
 void Engine::tick(int message) {
   for (std::list<Race *>::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
     if ((*it)->checksSinceLastUpdate() >= MAXCHECKSTIMEOUT) {
@@ -431,6 +494,10 @@ void Engine::tick(int message) {
       currentraces.erase(it);
       break;
     }
+  }
+  if (!currentraces.size() && pokeregistered) {
+    global->getTickPoke()->stopPoke(this, 0);
+    pokeregistered = false;
   }
 }
 

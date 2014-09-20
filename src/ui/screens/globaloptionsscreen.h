@@ -10,6 +10,7 @@ class MenuSelectOptionElement;
 class MenuSelectOptionTextArrow;
 class SiteManager;
 class RemoteCommandHandler;
+class LocalStorage;
 
 class GlobalOptionsScreen : public UIWindow {
 public:
@@ -24,6 +25,7 @@ private:
   MenuSelectOption mso;
   RemoteCommandHandler * rch;
   SiteManager * sm;
+  LocalStorage * ls;
   std::string currentlegendtext;
   std::string defaultlegendtext;
   bool active;
