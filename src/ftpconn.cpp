@@ -295,6 +295,9 @@ void FTPConn::FDData(char * data, unsigned int datalen) {
       case STATE_SSCN_OFF: // awaiting SSCN OFF response
         SSCNOFFResponse();
         break;
+      case STATE_PASV_ABORT: // awaiting aborting PASV
+        PASVAbortResponse();
+        break;
       case STATE_PROXY: // negotiating proxy session
         proxySessionInit(false);
         break;
@@ -871,7 +874,17 @@ void FTPConn::abortTransfer() {
   sendEcho("ABOR");
 }
 
+void FTPConn::abortTransferPASV() {
+  state = STATE_PASV_ABORT;
+  sendEcho("PASV");
+}
+
 void FTPConn::ABORResponse() {
+  processing = false;
+  sl->commandSuccess(id);
+}
+
+void FTPConn::PASVAbortResponse() {
   processing = false;
   sl->commandSuccess(id);
 }

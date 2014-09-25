@@ -295,6 +295,8 @@ void SiteLogic::commandSuccess(int id) {
       break;
     case STATE_ABOR:
       break;
+    case STATE_PASV_ABORT:
+      break;
     case STATE_WIPE:
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
@@ -566,7 +568,7 @@ void SiteLogic::handleTransferFail(int id, int type, int err) {
     }
   }
   if (err == 1) {
-    conns[id]->abortTransfer();
+    conns[id]->abortTransferPASV();
   }
   else if (err == 3) {
     connstatetracker[id].delayedCommand("handle", SLEEPDELAY * 6);
