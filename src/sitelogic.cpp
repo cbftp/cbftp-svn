@@ -188,7 +188,7 @@ void SiteLogic::commandSuccess(int id) {
     case STATE_SSCN_OFF:
       break;
     case STATE_PORT:
-      if (connstatetracker[id].hasTransfer()) {
+      if (connstatetracker[id].transferInitialized()) {
         connstatetracker[id].getTransferMonitor()->activeReady();
         return;
       }
@@ -243,7 +243,7 @@ void SiteLogic::commandSuccess(int id) {
 
     case STATE_PRET_RETR:
     case STATE_PRET_STOR:
-      if (connstatetracker[id].hasTransfer()) {
+      if (connstatetracker[id].transferInitialized()) {
         if (connstatetracker[id].getTransferPassive()) {
           if (connstatetracker[id].getTransferFXP() &&
               connstatetracker[id].getTransferSSL() && site->supportsCPSV()) {
@@ -267,7 +267,7 @@ void SiteLogic::commandSuccess(int id) {
       }*/
       return;
     case STATE_RETR_COMPLETE:
-      if (connstatetracker[id].hasTransfer()) {
+      if (connstatetracker[id].transferInitialized()) {
         connstatetracker[id].getTransferMonitor()->sourceComplete();
         transferComplete(true);
         connstatetracker[id].finishTransfer();
@@ -284,7 +284,7 @@ void SiteLogic::commandSuccess(int id) {
       }*/
       return;
     case STATE_STOR_COMPLETE:
-      if (connstatetracker[id].hasTransfer()) {
+      if (connstatetracker[id].transferInitialized()) {
         connstatetracker[id].getTransferMonitor()->targetComplete();
         transferComplete(false);
         connstatetracker[id].finishTransfer();
@@ -348,7 +348,7 @@ void SiteLogic::commandSuccess(int id) {
     case STATE_LIST: // LIST started, no action here
       return;
     case STATE_PRET_LIST:
-      if (connstatetracker[id].hasTransfer()) {
+      if (connstatetracker[id].transferInitialized()) {
         if (connstatetracker[id].getTransferPassive()) {
           conns[id]->doPASV();
           return;
@@ -356,7 +356,7 @@ void SiteLogic::commandSuccess(int id) {
       }
       break;
     case STATE_LIST_COMPLETE:
-      if (connstatetracker[id].hasTransfer()) {
+      if (connstatetracker[id].transferInitialized()) {
         TransferMonitor * tm = connstatetracker[id].getTransferMonitor();
         connstatetracker[id].finishTransfer();
         tm->sourceComplete();
@@ -380,7 +380,7 @@ void SiteLogic::commandFail(int id) {
     case STATE_CPSV:
     case STATE_PASV:
     case STATE_PORT:
-      if (connstatetracker[id].hasTransfer()) {
+      if (connstatetracker[id].transferInitialized()) {
         handleTransferFail(id, 3);
         return;
       }
@@ -400,7 +400,7 @@ void SiteLogic::commandFail(int id) {
         conns[id]->doMKD(conns[id]->getTargetPath());
         return;
       }
-      if (connstatetracker[id].hasTransfer()) {
+      if (connstatetracker[id].transferInitialized()) {
         handleTransferFail(id, 3);
         return;
       }
@@ -530,7 +530,7 @@ void SiteLogic::commandFail(int id) {
 }
 
 void SiteLogic::handleFail(int id) {
-  if (connstatetracker[id].hasTransfer()) {
+  if (connstatetracker[id].transferInitialized()) {
     handleTransferFail(id, 0);
     return;
   }
@@ -538,7 +538,7 @@ void SiteLogic::handleFail(int id) {
 }
 
 void SiteLogic::handleTransferFail(int id, int err) {
-  if (connstatetracker[id].hasTransfer()) {
+  if (connstatetracker[id].transferInitialized()) {
     handleTransferFail(id, connstatetracker[id].getTransferType(), err);
   }
   else {
@@ -548,7 +548,7 @@ void SiteLogic::handleTransferFail(int id, int err) {
 }
 
 void SiteLogic::handleTransferFail(int id, int type, int err) {
-  if (connstatetracker[id].hasTransfer()) {
+  if (connstatetracker[id].transferInitialized()) {
     reportTransferErrorAndFinish(id, type, err);
   }
   else {
@@ -628,7 +628,7 @@ void SiteLogic::gotPassiveAddress(int id, std::string result) {
     }
     result = addr + "," + result.substr(2);
   }
-  if (connstatetracker[id].hasTransfer()) {
+  if (connstatetracker[id].transferInitialized()) {
     connstatetracker[id].getTransferMonitor()->passiveReady(result);
   }
   else {
@@ -889,6 +889,9 @@ void SiteLogic::refreshChangePath(int id, SiteRace * race, bool refresh) {
 }
 
 void SiteLogic::initTransfer(int id) {
+  if (!connstatetracker[id].transferInitialized()) {
+    connstatetracker[id].initializeTransfer();
+  }
   int transfertype = connstatetracker[id].getTransferType();
   bool transferssl = connstatetracker[id].getTransferSSL();
   if (transfertype != CST_LIST) {
@@ -1142,6 +1145,7 @@ bool SiteLogic::getReadyConn(std::string path, std::string file, int * ret, bool
       if (!getSlot(isdownload)) return false;
     }
     if (!conns[lastreadyid]->isProcessing() && !connstatetracker[lastreadyid].isListLocked()) {
+      connstatetracker[lastreadyid].initializeTransfer();
       conns[lastreadyid]->doCWD(path);
     }
     *ret = lastreadyid;
@@ -1443,7 +1447,7 @@ void SiteLogic::preparePassiveList(int id, TransferMonitor * tmb, bool ssl) {
 }
 
 void SiteLogic::download(int id) {
-  if (connstatetracker[id].hasTransfer()) {
+  if (connstatetracker[id].transferInitialized()) {
     if (!connstatetracker[id].getTransferAborted()) {
       conns[id]->doRETR(connstatetracker[id].getTransferFile());
     }
@@ -1459,7 +1463,7 @@ void SiteLogic::download(int id) {
 }
 
 void SiteLogic::upload(int id) {
-  if (connstatetracker[id].hasTransfer()) {
+  if (connstatetracker[id].transferInitialized()) {
     if (!connstatetracker[id].getTransferAborted()) {
       conns[id]->doSTOR(connstatetracker[id].getTransferFile());
     }
@@ -1497,7 +1501,7 @@ void SiteLogic::prepareActiveUpload(int id, TransferMonitor * tmb, std::string p
 }
 
 void SiteLogic::abortTransfer(int id) {
-  if (connstatetracker[id].hasTransfer() && !connstatetracker[id].getTransferAborted()) {
+  if (connstatetracker[id].transferInitialized() && !connstatetracker[id].getTransferAborted()) {
     transferComplete(connstatetracker[id].getTransferType() == CST_DOWNLOAD);
     connstatetracker[id].abortTransfer();
   }

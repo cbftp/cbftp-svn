@@ -22,6 +22,7 @@ private:
   std::list<DelayedCommand> releasedcommands;
   std::list<DelayedCommand> delayedcommands;
   bool transfer;
+  bool initialized;
   TransferMonitor * tm;
   std::string path;
   std::string file;
@@ -36,6 +37,7 @@ private:
   bool listtransfer;
   bool listpassive;
   bool listssl;
+  bool listinitialized;
   std::string listaddr;
   TransferMonitor * listtm;
   std::string addr;
@@ -82,4 +84,6 @@ public:
   bool getTransferFXP() const;
   std::string getTransferAddr() const;
   RecursiveCommandLogic * getRecursiveLogic() const;
+  bool transferInitialized();
+  void initializeTransfer();
 };

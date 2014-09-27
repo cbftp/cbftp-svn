@@ -7,20 +7,24 @@
 
 extern GlobalContext * global;
 
-ConnStateTracker::ConnStateTracker() {
-  time = 0;
-  idletime = 0;
-  lastchecked = NULL;
-  lastcheckedcount = 0;
-  transfer = false;
-  transferlocked = false;
-  lockeddownload = false;
-  aborted = false;
-  loggedin = false;
-  fxp = false;
-  listtransfer = false;
-  recursivelogic = new RecursiveCommandLogic();
+ConnStateTracker::ConnStateTracker() :
+  time(0),
+  idletime(0),
+  lastcheckedcount(0),
+  lastchecked(NULL),
+  transfer(false),
+  initialized(false),
+  tm(NULL),
+  aborted(false),
+  transferlocked(false),
+  lockeddownload(false),
+  loggedin(false),
+  fxp(false),
+  listtransfer(false),
+  listinitialized(false),
+  recursivelogic(new RecursiveCommandLogic()) {
 }
+
 void ConnStateTracker::delayedCommand(std::string command, int delay) {
   delayedcommands.push_back(DelayedCommand(command, delay + time));
 }
@@ -109,6 +113,7 @@ void ConnStateTracker::setTransfer(TransferMonitor * tm, std::string path, std::
     global->getEventLog()->log("ConnStateTracker", "BUG: Setting transfer while already having a transfer!");
   }
   this->transfer = true;
+  this->initialized = false;
   this->aborted = false;
   this->tm = tm;
   this->path = path;
@@ -139,6 +144,7 @@ void ConnStateTracker::setList(TransferMonitor * tm, bool listpassive, std::stri
     global->getEventLog()->log("ConnStateTracker", "BUG: Setting list while already having a transfer!");
   }
   this->listtransfer = true;
+  this->listinitialized = false;
   this->listtm = tm;
   this->listpassive = listpassive;
   this->listaddr = addr;
@@ -266,4 +272,20 @@ bool ConnStateTracker::isLockedForUpload() const {
 
 RecursiveCommandLogic * ConnStateTracker::getRecursiveLogic() const {
   return recursivelogic;
+}
+
+bool ConnStateTracker::transferInitialized() {
+  if (listtransfer) {
+    return listinitialized;
+  }
+  return transfer && initialized;
+}
+
+void ConnStateTracker::initializeTransfer() {
+  if (listtransfer) {
+    listinitialized = true;
+  }
+  else {
+    initialized = true;
+  }
 }
