@@ -4,6 +4,21 @@
 #include <sys/timeb.h>
 #include <sstream>
 
+static pthread_mutex_t * ssllocks;
+
+static void sslLockingCallback(int mode, int n, const char *, int) {
+  if (mode & CRYPTO_LOCK) {
+    pthread_mutex_lock(&ssllocks[n]);
+  }
+  else {
+    pthread_mutex_unlock(&ssllocks[n]);
+  }
+}
+
+static unsigned long sslThreadIdCallback() {
+  return pthread_self();
+}
+
 GlobalContext::GlobalContext() {
   init();
 }
@@ -12,6 +27,12 @@ void GlobalContext::init() {
   SSL_library_init();
   SSL_load_error_strings();
   ssl_ctx = SSL_CTX_new(SSLv23_client_method());
+  ssllocks = (pthread_mutex_t *) malloc(CRYPTO_num_locks() * sizeof(pthread_mutex_t));
+  for (int i = 0; i < CRYPTO_num_locks(); i++) {
+    pthread_mutex_init(&ssllocks[i], NULL);
+  }
+  CRYPTO_set_locking_callback(sslLockingCallback);
+  CRYPTO_set_id_callback(sslThreadIdCallback);
   pthread_attr_init(&attr);
   pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
 #ifdef _ISOC95_SOURCE
