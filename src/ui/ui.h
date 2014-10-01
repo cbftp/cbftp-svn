@@ -5,8 +5,8 @@
 #include <vector>
 #include <ncurses.h>
 #include <pthread.h>
-#include <semaphore.h>
 
+#include "../semaphore.h"
 #include "../eventreceiver.h"
 #include "uicommand.h"
 #include "../blockingqueue.h"
@@ -94,7 +94,7 @@ class Ui : private EventReceiver, public UIBase {
     std::string eventtext;
     pthread_t uithread;
     pthread_t klthread;
-    sem_t eventcomplete;
+    Semaphore eventcomplete;
     std::list<UIWindow *> history;
     void FDData();
     void refreshAll();

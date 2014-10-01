@@ -7,7 +7,6 @@
 extern GlobalContext * global;
 
 WorkManager::WorkManager() {
-  sem_init(&readdata, 0, 0);
   pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
 #ifdef _ISOC95_SOURCE
   pthread_setname_np(thread, "Worker");
@@ -16,7 +15,7 @@ WorkManager::WorkManager() {
 
 void WorkManager::dispatchFDData(EventReceiver * er) {
   dataqueue.push(Event(er, WORK_DATA));
-  sem_wait(&readdata);
+  readdata.wait();
 }
 
 void WorkManager::dispatchFDData(EventReceiver * er, char * buf, int len) {
@@ -66,7 +65,7 @@ void WorkManager::runInstance() {
     switch (event.getType()) {
       case WORK_DATA:
         event.getReceiver()->FDData();
-        sem_post(&readdata);
+        readdata.post();
         break;
       case WORK_DATABUF:
         data = event.getData();

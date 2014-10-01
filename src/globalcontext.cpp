@@ -3,15 +3,20 @@
 #include <signal.h>
 #include <sys/timeb.h>
 #include <sstream>
+#include <vector>
 
-static pthread_mutex_t * ssllocks;
+#include "lock.h"
+
+static std::vector<Lock> ssllocks;
+static unsigned int sizegranularity = GlobalContext::getSizeGranularity();
+static std::vector<unsigned long long int> powers = GlobalContext::getPowers();
 
 static void sslLockingCallback(int mode, int n, const char *, int) {
   if (mode & CRYPTO_LOCK) {
-    pthread_mutex_lock(&ssllocks[n]);
+    ssllocks[n].lock();
   }
   else {
-    pthread_mutex_unlock(&ssllocks[n]);
+    ssllocks[n].unlock();
   }
 }
 
@@ -27,10 +32,7 @@ void GlobalContext::init() {
   SSL_library_init();
   SSL_load_error_strings();
   ssl_ctx = SSL_CTX_new(SSLv23_client_method());
-  ssllocks = (pthread_mutex_t *) malloc(CRYPTO_num_locks() * sizeof(pthread_mutex_t));
-  for (int i = 0; i < CRYPTO_num_locks(); i++) {
-    pthread_mutex_init(&ssllocks[i], NULL);
-  }
+  ssllocks.resize(CRYPTO_num_locks());
   CRYPTO_set_locking_callback(sslLockingCallback);
   CRYPTO_set_id_callback(sslThreadIdCallback);
   pthread_attr_init(&attr);
@@ -286,6 +288,3 @@ std::vector<unsigned long long int> GlobalContext::getPowers() {
   }
   return vec;
 }
-
-unsigned int GlobalContext::sizegranularity = GlobalContext::getSizeGranularity();
-std::vector<unsigned long long int> GlobalContext::powers = GlobalContext::getPowers();

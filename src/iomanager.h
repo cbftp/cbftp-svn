@@ -8,6 +8,7 @@
 
 #include "eventreceiver.h"
 #include "socketinfo.h"
+#include "lock.h"
 
 class DataBlockPool;
 class WorkManager;
@@ -23,8 +24,8 @@ extern GlobalContext * global;
 class IOManager : private EventReceiver {
 private:
   pthread_t thread;
-  pthread_mutex_t socketinfolock;
-  std::map<int, SocketInfo> socketinfo;
+  mutable Lock socketinfomaplock;
+  std::map<int, SocketInfo> socketinfomap;
   std::map<int, int> connecttimemap;
   static void * run(void *);
   WorkManager * wm;
@@ -37,6 +38,7 @@ private:
   bool investigateSSLError(int, int, int);
   bool hasdefaultinterface;
   void closeSocketIntern(int);
+  static const char * getCipher(SSL *);
 public:
   IOManager();
   void runInstance();
@@ -53,7 +55,7 @@ public:
   int registerUDPServerSocket(EventReceiver *, int);
   void sendData(int, std::string);
   void sendData(int, const char *, unsigned int);
-  std::string getCipher(int);
+  std::string getCipher(int) const;
   std::string getSocketAddress(int) const;
   void closeSocket(int);
   std::list<std::pair<std::string, std::string> > listInterfaces();

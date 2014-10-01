@@ -1,12 +1,12 @@
 #pragma once
 
 #include <pthread.h>
-#include <semaphore.h>
 #include <list>
 #include <string>
 
 #include "datablockpool.h"
 #include "blockingqueue.h"
+#include "semaphore.h"
 
 #define MAXDATASIZE 2048
 #define BUFSSIZE 32
@@ -31,7 +31,7 @@ private:
   BlockingQueue<Event> dataqueue;
   pthread_t thread;
   static void * run(void *);
-  sem_t readdata;
+  Semaphore readdata;
   DataBlockPool blockpool;
 public:
   WorkManager();

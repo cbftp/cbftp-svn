@@ -48,8 +48,6 @@ class GlobalContext {
     int currentyear;
     int currentmonth;
     int currentday;
-    static unsigned int sizegranularity;
-    static std::vector<unsigned long long int> powers;
   public:
     void init();
     GlobalContext();

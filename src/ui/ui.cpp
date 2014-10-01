@@ -51,7 +51,6 @@
 extern GlobalContext * global;
 
 Ui::Ui() {
-  sem_init(&eventcomplete, 0, 0);
   CharDraw::init();
   main = NULL;
   topwindow = NULL;
@@ -68,7 +67,7 @@ Ui::Ui() {
 bool Ui::init() {
   initret = true;
   uiqueue.push(UICommand(UI_COMMAND_INIT));
-  sem_wait(&eventcomplete);
+  eventcomplete.wait();
   return initret;
 }
 
@@ -161,7 +160,7 @@ void Ui::initIntern() {
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
   global->getIOManager()->registerStdin(this);
   global->getTickPoke()->startPoke(this, "UI", 250, 0);
-  sem_post(&eventcomplete);
+  eventcomplete.post();
 }
 
 void Ui::backendPush() {
@@ -171,7 +170,7 @@ void Ui::backendPush() {
 
 void Ui::terminalSizeChanged() {
   uiqueue.push(UICommand(UI_COMMAND_RESIZE));
-  sem_wait(&eventcomplete);
+  eventcomplete.wait();
   redrawAll();
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
@@ -433,7 +432,7 @@ void Ui::resizeTerm() {
     wresize(info, 2, col);
     mvwin(legend, row - 2, 0);
   }
-  sem_post(&eventcomplete);
+  eventcomplete.post();
 }
 
 void Ui::returnToLast() {
