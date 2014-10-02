@@ -5,18 +5,19 @@
 #include "menuselectoptiontextfield.h"
 #include "menuselectoptiontextbutton.h"
 
-MenuFilters::MenuFilters() {
-  pointer = 0;
-  lastpointer = 0;
-  needsredraw = false;
+MenuFilters::MenuFilters() :
+  pointer (0),
+  lastpointer(0),
+  needsredraw(false),
+  addbutton(new MenuSelectOptionTextButton("add", 0, 0, "<Add>")) {
 }
 
-void MenuFilters::initialize(int row, int col, std::list<std::string>::const_iterator sectionsbegin, std::list<std::string>::const_iterator sectionsend) {
+void MenuFilters::initialize(int row, int col, std::list<std::string>::const_iterator begin, std::list<std::string>::const_iterator end) {
   this->row = row;
   this->col = col;
+  filtercontainers.clear();
   std::list<std::string>::const_iterator it;
-  addbutton = new MenuSelectOptionTextButton("add", 0, 0, "<Add>");
-  for(it = sectionsbegin; it != sectionsend; it++) {
+  for(it = begin; it != end; it++) {
     addFilter(*it);
   }
 }

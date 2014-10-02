@@ -102,12 +102,22 @@ bool SkipList::isAllowed(std::string element) const {
   return true;
 }
 
+void SkipList::addDefaultEntries() {
+  entries.push_back("* *");
+  entries.push_back("*%*");
+  entries.push_back("*[*");
+  entries.push_back("*]*");
+  entries.push_back("*-missing");
+  entries.push_back("*-offline");
+}
+
 void SkipList::readConfiguration() {
   std::vector<std::string> lines;
   entries.clear();
   global->getDataFileHandler()->getDataFor("SkipList", &lines);
   std::vector<std::string>::iterator it;
   std::string line;
+  bool initialized = false;
   for (it = lines.begin(); it != lines.end(); it++) {
     line = *it;
     if (line.length() == 0 ||line[0] == '#') continue;
@@ -117,6 +127,12 @@ void SkipList::readConfiguration() {
     if (!setting.compare("entry")) {
       entries.push_back(value);
     }
+    if (!setting.compare("initialized")) {
+      initialized = true;
+    }
+  }
+  if (!initialized && !entries.size()) {
+    addDefaultEntries();
   }
 }
 
@@ -126,4 +142,5 @@ void SkipList::writeState() {
   for (it = entries.begin(); it != entries.end(); it++) {
     filehandler->addOutputLine("SkipList", "entry=" + *it);
   }
+  filehandler->addOutputLine("SkipList", "initialized=true");
 }
