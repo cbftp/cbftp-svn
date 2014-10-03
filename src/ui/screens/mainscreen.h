@@ -17,6 +17,7 @@ public:
   void keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
+  std::string getInfoText() const;
 private:
   unsigned int currentviewspan;
   unsigned int sitestartrow;
@@ -25,6 +26,9 @@ private:
   std::string msolegendtext;
   std::string msslegendtext;
   std::string gotolegendtext;
+  std::string activeracestext;
+  std::string activejobstext;
+  std::string numsitestext;
   FocusableArea * focusedarea;
   FocusableArea * defocusedarea;
   std::string deletesite;

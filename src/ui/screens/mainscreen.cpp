@@ -50,6 +50,7 @@ void MainScreen::initialize(unsigned int row, unsigned int col) {
 void MainScreen::redraw() {
   ui->erase();
   ui->hideCursor();
+  numsitestext = "Sites: " + global->int2Str(global->getSiteManager()->getNumSites());
   bool listraces = global->getEngine()->allRaces();
   bool listtransferjobs = global->getEngine()->currentTransferJobs();
   unsigned int irow = 1;
@@ -57,7 +58,6 @@ void MainScreen::redraw() {
     mss.makeLeavableUp();
     msot.makeLeavableUp();
     mso.clear();
-    irow++;
     ui->printStr(irow++, 1, "Section  Name");
     std::list<Race *>::const_iterator it;
     for (it = global->getEngine()->getRacesIteratorBegin(); it != global->getEngine()->getRacesIteratorEnd(); it++) {
@@ -77,22 +77,21 @@ void MainScreen::redraw() {
     }
     irow++;
   }
-  ui->printStr(irow, 1, "Sites added: " + global->int2Str(global->getSiteManager()->getNumSites()));
   if (global->getSiteManager()->getNumSites()) {
-    ui->printStr(irow+2, 1, "Site    Logins  Uploads  Downloads");
+    ui->printStr(irow, 1, "Site    Logins  Uploads  Downloads");
   }
   else {
-    ui->printStr(irow+2, 1, "Press 'A' to add a site");
+    ui->printStr(irow, 1, "Press 'A' to add a site");
   }
   int x = 1;
-  int y = irow+4;
+  int y = irow + 2;
   mss.prepareRefill();
   for (std::vector<Site *>::const_iterator it = global->getSiteManager()->getSitesIteratorBegin(); it != global->getSiteManager()->getSitesIteratorEnd(); it++) {
     mss.add(*it, y++, x);
   }
   mss.checkPointer();
   unsigned int position = mss.getSelectionPointer();
-  sitestartrow = irow + 4;
+  sitestartrow = irow + 2;
   unsigned int pagerows = (unsigned int) (row - sitestartrow) / 2;
   if (position < currentviewspan || position >= currentviewspan + row - sitestartrow) {
     if (position < pagerows) {
@@ -145,7 +144,16 @@ void MainScreen::update() {
     return;
   }
   if (currentraces) {
-    ui->printStr(1, 1, "Active races: " + global->int2Str(currentraces));
+    activeracestext = "Active races: " + global->int2Str(currentraces) + "  ";
+  }
+  else {
+    activeracestext = "";
+  }
+  if (currenttransferjobs) {
+    activejobstext = "Active jobs: " + global->int2Str(currenttransferjobs) + "  ";
+  }
+  else {
+    activejobstext = "";
   }
   bool highlight;
   unsigned int selected = mso.getSelectionPointer();
@@ -205,6 +213,7 @@ void MainScreen::command(std::string command) {
     global->getSiteManager()->deleteSite(deletesite);
   }
   ui->redraw();
+  ui->setInfo();
 }
 
 void MainScreen::keyPressed(unsigned int ch) {
@@ -325,6 +334,7 @@ void MainScreen::keyPressed(unsigned int ch) {
         site->setName(site->getName() + "-" + global->int2Str(i));
         global->getSiteManager()->addSite(site);
         ui->redraw();
+        ui->setInfo();
         break;
       case KEY_DC:
       case 'D':
@@ -400,4 +410,8 @@ std::string MainScreen::getLegendText() const {
 
 std::string MainScreen::getInfoLabel() const {
   return "CLUSTERBOMB MAIN";
+}
+
+std::string MainScreen::getInfoText() const {
+  return activeracestext + activejobstext + numsitestext;
 }

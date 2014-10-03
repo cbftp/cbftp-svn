@@ -438,6 +438,7 @@ void Ui::resizeTerm() {
 void Ui::returnToLast() {
   switchToLast();
   topwindow->redraw();
+  infowindow->setText(topwindow->getInfoText());
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 

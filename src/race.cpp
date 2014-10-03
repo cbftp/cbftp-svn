@@ -118,7 +118,7 @@ void Race::prepareGuessedFileList(std::string subpath) {
   }
   int minnumsites = highestnumsites / 2;
   for (it = sizelocationtrackers[subpath].begin(); it != sizelocationtrackers[subpath].end(); it++) {
-    if (it->second.numSites() > minnumsites) {
+    if (it->second.numSites() > minnumsites || sites.size () == 2) {
       guessedfilelist.push_back(it->first);
     }
   }
