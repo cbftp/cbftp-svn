@@ -1,8 +1,5 @@
 bug: transfers sometimes not properly denoted in race status screen
 
-bug: race status screen doesn't "finish" because the race is over as soon as all
-     files are created, not when they are actually done
-
 bug: finished file size estimation still doesn't seem to work properly
 
 feature: local downloads
