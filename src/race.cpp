@@ -118,7 +118,7 @@ void Race::prepareGuessedFileList(std::string subpath) {
   }
   int minnumsites = highestnumsites / 2;
   for (it = sizelocationtrackers[subpath].begin(); it != sizelocationtrackers[subpath].end(); it++) {
-    if (it->second.numSites() > minnumsites || sites.size () == 2) {
+    if (it->second.numSites() > minnumsites || sites.size() == 2) {
       guessedfilelist.push_back(it->first);
     }
   }
@@ -233,18 +233,18 @@ void Race::reportSize(SiteRace * sr, FileList * fl, std::string subpath, std::li
   if (sizes.find(sr) == sizes.end()) {
     sizes[sr] = std::map<std::string, unsigned int>();
   }
-  std::map<std::string, SizeLocationTrack>::iterator it3;
+  std::map<std::string, SizeLocationTrack>::iterator it;
   int highestnumsites = 0;
   int thisguessedsize = 0;
-  for (it3 = sizelocationtrackers[subpath].begin(); it3 != sizelocationtrackers[subpath].end(); it3++) {
-    int thisnumsites = it3->second.numSites();
+  for (it = sizelocationtrackers[subpath].begin(); it != sizelocationtrackers[subpath].end(); it++) {
+    int thisnumsites = it->second.numSites();
     if (thisnumsites > highestnumsites) {
       highestnumsites = thisnumsites;
     }
   }
   int minnumsites = highestnumsites / 2;
-  for (it3 = sizelocationtrackers[subpath].begin(); it3 != sizelocationtrackers[subpath].end(); it3++) {
-    if (it3->second.numSites() > minnumsites || sites.size() == 2) {
+  for (it = sizelocationtrackers[subpath].begin(); it != sizelocationtrackers[subpath].end(); it++) {
+    if (it->second.numSites() > minnumsites || sites.size() == 2) {
       thisguessedsize++;
     }
   }

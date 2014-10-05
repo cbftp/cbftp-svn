@@ -59,7 +59,7 @@ void GlobalContext::linkComponents(DataFileHandler * dfh, IOManager * iom,
     Engine * e, UIBase * uib, SiteManager * sm, SiteLogicManager * slm,
     TransferManager * tm, RemoteCommandHandler * rch,
     SkipList * sl, ProxyManager * pm, LocalStorage * ls,
-    ExternalFileViewing * efv) {
+    ExternalFileViewing * efv, TimeReference * tr) {
   this->dfh = dfh;
   this->iom = iom;
   this->e = e;
@@ -72,6 +72,7 @@ void GlobalContext::linkComponents(DataFileHandler * dfh, IOManager * iom,
   this->pm = pm;
   this->ls = ls;
   this->efv = efv;
+  this->tr = tr;
 }
 
 SSL_CTX * GlobalContext::getSSLCTX() const {
@@ -136,6 +137,10 @@ LocalStorage * GlobalContext::getLocalStorage() const {
 
 ExternalFileViewing * GlobalContext::getExternalFileViewing() const {
   return efv;
+}
+
+TimeReference * GlobalContext::getTimeReference() const {
+  return tr;
 }
 
 pthread_attr_t * GlobalContext::getPthreadAttr() {

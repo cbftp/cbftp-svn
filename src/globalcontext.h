@@ -23,6 +23,7 @@ class EventLog;
 class ProxyManager;
 class LocalStorage;
 class ExternalFileViewing;
+class TimeReference;
 
 class GlobalContext {
   private:
@@ -43,6 +44,7 @@ class GlobalContext {
     ProxyManager * pm;
     LocalStorage * ls;
     ExternalFileViewing * efv;
+    TimeReference * tr;
     std::string compiletime;
     std::string svnrev;
     int currentyear;
@@ -57,7 +59,7 @@ class GlobalContext {
     void linkComponents(DataFileHandler *, IOManager *, Engine *,
         UIBase *, SiteManager *, SiteLogicManager *, TransferManager *,
         RemoteCommandHandler *, SkipList *, ProxyManager *,
-        LocalStorage *, ExternalFileViewing *);
+        LocalStorage *, ExternalFileViewing *, TimeReference *);
     SSL_CTX * getSSLCTX() const;
     Engine * getEngine() const;
     DataFileHandler * getDataFileHandler() const;
@@ -74,6 +76,7 @@ class GlobalContext {
     ProxyManager * getProxyManager() const;
     LocalStorage * getLocalStorage() const;
     ExternalFileViewing * getExternalFileViewing() const;
+    TimeReference * getTimeReference() const;
     pthread_attr_t * getPthreadAttr();
     static int ctimeMSec();
     static std::string parseSize(unsigned long long int);

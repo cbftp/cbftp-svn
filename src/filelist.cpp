@@ -2,6 +2,10 @@
 
 #include "file.h"
 #include "site.h"
+#include "globalcontext.h"
+#include "timereference.h"
+
+extern GlobalContext * global;
 
 FileList::FileList(std::string username, std::string path) {
   this->username = username;
@@ -17,6 +21,7 @@ FileList::FileList(std::string username, std::string path) {
   uploadedfiles = 0;
   locked = false;
   listchanged = false;
+  lastchangedstamp = 0;
 }
 
 FileList::~FileList() {
@@ -36,7 +41,7 @@ bool FileList::updateFile(std::string start, int touch) {
   if ((updatefile = getFile(name)) != NULL) {
     if (updatefile->getSize() == 0 && file->getSize() > 0) uploadedfiles++;
     if (updatefile->setSize(file->getSize())) {
-      listchanged = true;
+      setChanged();
     }
     if (file->getSize() > maxfilesize) maxfilesize = file->getSize();
     if (updatefile->getOwner().compare(file->getOwner()) != 0) {
@@ -48,13 +53,13 @@ bool FileList::updateFile(std::string start, int touch) {
       }
     }
     if (updatefile->setOwner(file->getOwner())) {
-      listchanged = true;
+      setChanged();
     }
     if (updatefile->setGroup(file->getGroup())) {
-      listchanged = true;
+      setChanged();
     }
     if (updatefile->setLastModified(file->getLastModified())) {
-      listchanged = true;
+      setChanged();
     }
     updatefile->setTouch(file->getTouch());
     if (updatefile->updateFlagSet()) {
@@ -74,7 +79,7 @@ bool FileList::updateFile(std::string start, int touch) {
     if (file->getOwner().compare(username) == 0) {
       editOwnedFileCount(true);
     }
-    listchanged = true;
+    setChanged();
   }
   return true;
 }
@@ -91,10 +96,10 @@ void FileList::touchFile(std::string name, std::string user, bool upload) {
   else {
     file = new File(name, user);
     files[name] = file;
-    listchanged = true;
     if (user.compare(username) == 0) {
       editOwnedFileCount(true);
     }
+    setChanged();
   }
   if (upload) {
     file->upload();
@@ -105,7 +110,7 @@ void FileList::setFileUpdateFlag(std::string name, long int size, unsigned int s
   File * file;
   if ((file = getFile(name)) != NULL) {
     if (file->setSize(size)) {
-      listchanged = true;
+      setChanged();
     }
     file->setUpdateFlag(src, dst, speed);
   }
@@ -207,7 +212,7 @@ void FileList::cleanSweep(int touch) {
         }
       }
       delete f;
-      listchanged = true;
+      setChanged();
     }
   }
 }
@@ -280,4 +285,13 @@ bool FileList::listChanged() const {
 
 void FileList::resetListChanged() {
   listchanged = false;
+}
+
+void FileList::setChanged() {
+  listchanged = true;
+  lastchangedstamp = global->getTimeReference()->timeReference();
+}
+
+unsigned long long FileList::timeSinceLastChanged() {
+  return global->getTimeReference()->timePassedSince(lastchangedstamp);
 }

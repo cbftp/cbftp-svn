@@ -185,10 +185,11 @@ void Engine::abortRace(std::string release) {
   }
 }
 
-void Engine::someRaceFileListRefreshed() {
+void Engine::raceFileListRefreshed(SiteLogic * sls, Race * race) {
   if (currentraces.size() > 0) {
     if (!global->getWorkManager()->overload()) {
       estimateRaceSizes();
+      checkIfRaceComplete(sls, race);
       refreshScoreBoard();
       /*std::vector<ScoreBoardElement *> possibles = scoreboard->getElementVector();
       std::cout << "Possible transfers (run " << runs++ << "): " << scoreboard->size() << std::endl;
@@ -268,37 +269,6 @@ void Engine::refreshScoreBoard() {
     for (std::list<SiteLogic *>::const_iterator its = race->begin(); its != race->end(); its++) {
       SiteLogic * sls = *its;
       SiteRace * srs = sls->getRace(race->getName());
-      if (!srs->isDone()) {
-        bool racecomplete = true;
-        std::list<std::string> subpaths = race->getSubPaths();
-        for (std::list<std::string>::iterator itsp = subpaths.begin(); itsp != subpaths.end(); itsp++) {
-          FileList * spfl = srs->getFileListForPath(*itsp);
-          if (spfl != NULL && race->sizeEstimated(*itsp) &&
-              spfl->getNumUploadedFiles() >= race->estimatedSize(*itsp)) {
-            if (!srs->isSubPathComplete(spfl)) {
-              srs->subPathComplete(spfl);
-            }
-          }
-          else {
-            racecomplete = false;
-          }
-        }
-        if (racecomplete) {
-          sls->raceLocalComplete(srs);
-          global->getEventLog()->log("Engine", "Race " + race->getName() + " completed on " +
-              sls->getSite()->getName());
-          if (race->isDone()) {
-            issueGlobalComplete(race);
-            currentraces.erase(itr);
-            refreshScoreBoard();
-            global->getEventLog()->log("Engine", "Race globally completed: " + race->getName());
-            if (dropped) {
-              global->getEventLog()->log("Engine", "Scoreboard refreshes dropped since race start: " + global->int2Str(dropped));
-            }
-            return;
-          }
-        }
-      }
       for (std::list<SiteLogic *>::const_iterator itd = race->begin(); itd != race->end(); itd++) {
         SiteLogic * sld = *itd;
         if (sls == sld) continue;
@@ -373,6 +343,48 @@ void Engine::issueOptimalTransfers() {
     if (sls->potentialCheck(sbe->getScore())) {
       global->getTransferManager()->suggestTransfer(filename, sls,
           sbe->getSourceFileList(), sld, sbe->getDestinationFileList());
+    }
+  }
+}
+
+void Engine::checkIfRaceComplete(SiteLogic * sls, Race * race) {
+  SiteRace * srs = sls->getRace(race->getName());
+  if (!srs->isDone()) {
+    bool racecomplete = true;
+    std::list<std::string> subpaths = race->getSubPaths();
+    for (std::list<std::string>::iterator itsp = subpaths.begin(); itsp != subpaths.end(); itsp++) {
+      FileList * spfl = srs->getFileListForPath(*itsp);
+      if (spfl != NULL && race->sizeEstimated(*itsp) &&
+          spfl->getNumUploadedFiles() >= race->estimatedSize(*itsp) &&
+          spfl->timeSinceLastChanged() > STATICTIMEFORCOMPLETION &&
+          sls->getCurrLogins() > sls->getCurrUp() + sls->getCurrDown()) {
+        if (!srs->isSubPathComplete(spfl)) {
+          srs->subPathComplete(spfl);
+        }
+      }
+      else {
+        racecomplete = false;
+      }
+    }
+    if (racecomplete) {
+      sls->raceLocalComplete(srs);
+      global->getEventLog()->log("Engine", "Race " + race->getName() + " completed on " +
+          sls->getSite()->getName());
+      if (race->isDone()) {
+        issueGlobalComplete(race);
+        for (std::list<Race *>::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
+          if ((*it) == race) {
+            currentraces.erase(it);
+            break;
+          }
+        }
+        refreshScoreBoard();
+        global->getEventLog()->log("Engine", "Race globally completed: " + race->getName());
+        if (dropped) {
+          global->getEventLog()->log("Engine", "Scoreboard refreshes dropped since race start: " + global->int2Str(dropped));
+        }
+        return;
+      }
     }
   }
 }

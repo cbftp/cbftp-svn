@@ -164,7 +164,7 @@ void SiteLogic::listRefreshed(int id) {
     }
   }
   if (sr != NULL) {
-    global->getEngine()->someRaceFileListRefreshed();
+    global->getEngine()->raceFileListRefreshed(this, sr->getRace());
   }
   handleConnection(id, true);
 }

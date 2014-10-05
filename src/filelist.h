@@ -16,11 +16,13 @@ class FileList {
     bool filled;
     bool locked;
     bool listchanged;
+    unsigned long long lastchangedstamp;
     int owned;
     int ownpercentage;
     unsigned long long int maxfilesize;
     int uploadedfiles;
     void editOwnedFileCount(bool);
+    void setChanged();
   public:
     FileList(std::string, std::string);
     ~FileList();
@@ -53,4 +55,5 @@ class FileList {
     bool hasFailedUpload(std::string) const;
     bool listChanged() const;
     void resetListChanged();
+    unsigned long long timeSinceLastChanged();
 };

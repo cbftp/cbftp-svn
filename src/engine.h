@@ -8,6 +8,7 @@
 #define SPREAD 0
 #define POKEINTERVAL 1000
 #define MAXCHECKSTIMEOUT 120
+#define STATICTIMEFORCOMPLETION 5000
 
 class GlobalContext;
 class Race;
@@ -16,6 +17,7 @@ class SiteRace;
 class FileList;
 class File;
 class ScoreBoard;
+class SiteLogic;
 
 extern GlobalContext * global;
 
@@ -33,6 +35,7 @@ class Engine : public EventReceiver {
     void issueOptimalTransfers();
     void setSpeedScale();
     int calculateScore(File *, Race *, FileList *, SiteRace *, FileList *, SiteRace *, int, bool *, bool) const;
+    void checkIfRaceComplete(SiteLogic *, Race *);
     bool pokeregistered;
     unsigned int dropped;
   public:
@@ -46,7 +49,7 @@ class Engine : public EventReceiver {
     void newTransferJobFXP(std::string, std::string, FileList *, std::string, std::string, FileList *);
     void removeSiteFromRace(std::string, std::string);
     void abortRace(std::string);
-    void someRaceFileListRefreshed();
+    void raceFileListRefreshed(SiteLogic *, Race *);
     int currentRaces() const;
     int allRaces() const;
     int currentTransferJobs() const;

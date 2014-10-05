@@ -21,6 +21,7 @@
 #include "proxymanager.h"
 #include "localstorage.h"
 #include "externalfileviewing.h"
+#include "timereference.h"
 
 Main::Main() {
   std::string datadirpath = std::string(getenv("HOME")) + "/" + DATAPATH;
@@ -67,7 +68,8 @@ Main::Main() {
   ProxyManager * pm = new ProxyManager();
   LocalStorage * ls = new LocalStorage();
   ExternalFileViewing * efv = new ExternalFileViewing();
-  global->linkComponents(dfh, iom, e, ui, sm, slm, tm, rch, sl, pm, ls, efv);
+  TimeReference * tr = new TimeReference();
+  global->linkComponents(dfh, iom, e, ui, sm, slm, tm, rch, sl, pm, ls, efv, tr);
   if (!ui->init()) exit(1);
   tp->tickerLoop();
   global->getExternalFileViewing()->killAll();
