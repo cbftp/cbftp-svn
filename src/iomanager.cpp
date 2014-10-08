@@ -53,13 +53,13 @@ void IOManager::tick(int message) {
       changes = false;
       for (it = connecttimemap.begin(); it != connecttimemap.end(); it++) {
         if (it->second == -1) {
-          closeSocketIntern(it->first);
           changes = true;
           std::map<int, SocketInfo>::iterator it2 = socketinfomap.find(it->first);
           if (it2 != socketinfomap.end()) {
             EventReceiver * er = it2->second.receiver;
             wm->dispatchEventFail(er, "Connection timeout");
           }
+          closeSocketIntern(it->first);
           break;
         }
       }
