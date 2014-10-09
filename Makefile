@@ -1,6 +1,6 @@
 include Makefile.inc
 
-BINS = clusterbomb datafilecat datafilewrite
+BINS = clusterbomb clusterbomb-debug datafilecat datafilewrite
 
 BINDIR = bin
 
@@ -15,6 +15,9 @@ sources:
 clusterbomb: sources mkdirs
 	g++ -o bin/clusterbomb $(FINALFLAGS) src/*.o src/ui/*.o src/ui/screens/*.o $(LINKFLAGS)
 	
+clusterbomb-debug: sources mkdirs
+	cp misc/start_with_gdb.sh bin/clusterbomb-debug; chmod +x bin/clusterbomb-debug
+
 datafilecat: src/crypto.cpp src/datafilecat.cpp mkdirs
 	g++ -o bin/datafilecat ${FINALFLAGS} -DNO_LOCAL_DEPS src/crypto.cpp src/datafilecat.cpp -lcrypto
 
