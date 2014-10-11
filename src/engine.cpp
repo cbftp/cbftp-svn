@@ -40,6 +40,10 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
     global->getEventLog()->log("Engine", "Race skipped due to skiplist match: " + release);
     return;
   }
+  if (release.find("/") != std::string::npos) {
+    global->getEventLog()->log("Engine", "Race skipped due to invalid target: " + release);
+    return;
+  }
   if (race == NULL) {
     race = new Race(release, section);
   }
@@ -77,6 +81,7 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
   if (addsites.size() < 2 && !append) {
     global->getEventLog()->log("Engine", "Ignoring attempt to race " + release + " in "
         + section + " on less than 2 sites.");
+    delete race;
     return;
   }
   bool readdtocurrent = true;
