@@ -32,7 +32,7 @@ void SkipListScreen::initialize(unsigned int row, unsigned int col) {
   std::list<SkiplistItem>::const_iterator it;
   testskiplist.clearEntries();
   for (it = skiplist->entriesBegin(); it != skiplist->entriesEnd(); it++) {
-    testskiplist.addEntry(it->matchPattern(), it->matchFile(), it->matchDir(), it->isAllowed());
+    testskiplist.addEntry(it->matchPattern(), it->matchFile(), it->matchDir(), it->matchScope(), it->isAllowed());
   }
   focusedarea = &base;
   MenuSelectOptionTextArrow * arrow = base.addTextArrow(4, 1, "defaultaction", "Default action:");
@@ -69,10 +69,13 @@ void SkipListScreen::redraw() {
   re = (ResizableElement *) table.addTextButton(y, 4, "action", "ACTION");
   re->setSelectable(false);
   msal->addElement(re, 4, RESIZE_REMOVE);
+  re = (ResizableElement *) table.addTextButton(y, 5, "scope", "SCOPE");
+  re->setSelectable(false);
+  msal->addElement(re, 5, RESIZE_REMOVE);
   std::list<SkiplistItem>::const_iterator it;
   for (it = testskiplist.entriesBegin(); it != testskiplist.entriesEnd(); it++) {
     y++;
-    addPatternLine(y, it->matchPattern(), it->matchFile(), it->matchDir(), it->isAllowed());
+    addPatternLine(y, it->matchPattern(), it->matchFile(), it->matchDir(), it->matchScope(), it->isAllowed());
   }
   if (testskiplist.size()) {
     base.makeLeavableDown();
@@ -212,7 +215,7 @@ void SkipListScreen::keyPressed(unsigned int ch) {
       activation = focusedarea->activateSelected();
       if (!activation) {
         if (focusedarea->getElement(focusedarea->getSelectionPointer())->getIdentifier() == "add") {
-          addPatternLine(0, "", false, false, true);
+          addPatternLine(0, "", false, false, SCOPE_IN_RACE, true);
           saveToTempSkipList();
           ui->redraw();
           break;
@@ -234,7 +237,7 @@ void SkipListScreen::keyPressed(unsigned int ch) {
     case 'd':
       skiplist->clearEntries();
       for (std::list<SkiplistItem>::const_iterator it = testskiplist.entriesBegin(); it != testskiplist.entriesEnd(); it++) {
-        skiplist->addEntry(it->matchPattern(), it->matchFile(), it->matchDir(), it->isAllowed());
+        skiplist->addEntry(it->matchPattern(), it->matchFile(), it->matchDir(), it->matchScope(), it->isAllowed());
       }
       skiplist->setDefaultAllow(testskiplist.defaultAllow());
       ui->returnToLast();
@@ -315,15 +318,16 @@ void SkipListScreen::saveToTempSkipList() {
     bool file = ((MenuSelectOptionCheckBox *)(*it)->getElement(1))->getData();
     bool dir = ((MenuSelectOptionCheckBox *)(*it)->getElement(2))->getData();
     bool allow = ((MenuSelectOptionTextArrow *)(*it)->getElement(3))->getData() == 0;
-    testskiplist.addEntry(pattern, file, dir, allow);
+    int scope = ((MenuSelectOptionTextArrow *)(*it)->getElement(4))->getData();
+    testskiplist.addEntry(pattern, file, dir, scope, allow);
   }
 }
 
-void SkipListScreen::addPatternLine(int y, std::string pattern, bool file, bool dir, bool allow) {
-  addPatternLine(y, pattern, file, dir, allow, NULL);
+void SkipListScreen::addPatternLine(int y, std::string pattern, bool file, bool dir, int scope, bool allow) {
+  addPatternLine(y, pattern, file, dir, scope, allow, NULL);
 }
 
-void SkipListScreen::addPatternLine(int y, std::string pattern, bool file, bool dir, bool allow, MenuSelectAdjustableLine * before) {
+void SkipListScreen::addPatternLine(int y, std::string pattern, bool file, bool dir, int scope, bool allow, MenuSelectAdjustableLine * before) {
   MenuSelectAdjustableLine * msal;
   if (before == NULL) {
     msal = table.addAdjustableLine();
@@ -337,9 +341,14 @@ void SkipListScreen::addPatternLine(int y, std::string pattern, bool file, bool 
   msal->addElement(re, 2, RESIZE_REMOVE);
   re = (ResizableElement *) table.addCheckBox(y, 3, "dirbox", "", dir);
   msal->addElement(re, 3, RESIZE_REMOVE);
-  MenuSelectOptionTextArrow * msota = table.addTextArrow(y, 3, "actionarrow", "");
+  MenuSelectOptionTextArrow * msota = table.addTextArrow(y, 4, "actionarrow", "");
   msota->addOption("Allow", 0);
   msota->addOption("Deny", 1);
   msota->setOption(allow ? 0 : 1);
   msal->addElement((ResizableElement *)msota, 4, RESIZE_REMOVE);
+  msota = table.addTextArrow(y, 5, "scope", "");
+  msota->addOption("In race", SCOPE_IN_RACE);
+  msota->addOption("Allround", SCOPE_ALL);
+  msota->setOption(scope);
+  msal->addElement((ResizableElement *)msota, 5, RESIZE_REMOVE);
 }

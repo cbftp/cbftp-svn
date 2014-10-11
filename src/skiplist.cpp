@@ -76,8 +76,8 @@ int SkipList::wildcmpCase(const char *wild, const char *string) const {
   return !*wild;
 }
 
-void SkipList::addEntry(std::string pattern, bool file, bool dir, bool allow) {
-  entries.push_back(SkiplistItem(pattern, file, dir, allow));
+void SkipList::addEntry(std::string pattern, bool file, bool dir, int scope, bool allow) {
+  entries.push_back(SkiplistItem(pattern, file, dir, scope, allow));
 }
 
 void SkipList::clearEntries() {
@@ -93,8 +93,15 @@ std::list<SkiplistItem>::const_iterator SkipList::entriesEnd() const {
 }
 
 bool SkipList::isAllowed(std::string element, bool dir) const {
+  return isAllowed(element, dir, true);
+}
+
+bool SkipList::isAllowed(std::string element, bool dir, bool inrace) const {
   std::list<SkiplistItem>::const_iterator it;
   for (it = entries.begin(); it != entries.end(); it++) {
+    if (it->matchScope() == SCOPE_IN_RACE && !inrace) {
+      continue;
+    }
     if ((it->matchDir() && dir) || (it->matchFile() && !dir)) {
       if (wildcmp(it->matchPattern().c_str(), element.c_str())) {
         return it->isAllowed();
@@ -105,12 +112,12 @@ bool SkipList::isAllowed(std::string element, bool dir) const {
 }
 
 void SkipList::addDefaultEntries() {
-  entries.push_back(SkiplistItem("* *", true, true, false));
-  entries.push_back(SkiplistItem("*%*", true, true, false));
-  entries.push_back(SkiplistItem("*[*", true, true, false));
-  entries.push_back(SkiplistItem("*]*", true, true, false));
-  entries.push_back(SkiplistItem("*-missing", true, false, false));
-  entries.push_back(SkiplistItem("*-offline", true, false, false));
+  entries.push_back(SkiplistItem("* *", true, true, SCOPE_IN_RACE, false));
+  entries.push_back(SkiplistItem("*%*", true, true, SCOPE_IN_RACE, false));
+  entries.push_back(SkiplistItem("*[*", true, true, SCOPE_IN_RACE, false));
+  entries.push_back(SkiplistItem("*]*", true, true, SCOPE_IN_RACE, false));
+  entries.push_back(SkiplistItem("*-missing", true, false, SCOPE_IN_RACE, false));
+  entries.push_back(SkiplistItem("*-offline", true, false, SCOPE_IN_RACE, false));
 }
 
 void SkipList::readConfiguration() {
@@ -136,11 +143,22 @@ void SkipList::readConfiguration() {
         value = value.substr(split + 1);
         split = value.find('$');
         bool dir = value.substr(0, split) == "true" ? true : false;
-        bool allowed = value.substr(split + 1) == "true" ? true : false;
-        entries.push_back(SkiplistItem(pattern, file, dir, allowed));
+        value = value.substr(split + 1);
+        split = value.find('$');
+        bool allowed;
+        int scope;
+        if (split != std::string::npos) {
+          scope = global->str2Int(value.substr(0, split));
+          allowed = value.substr(split + 1) == "true" ? true : false;
+        }
+        else {
+          scope = SCOPE_IN_RACE;
+          allowed = value == "true" ? true : false;
+        }
+        entries.push_back(SkiplistItem(pattern, file, dir, scope, allowed));
       }
       else { // backwards compatibility
-        entries.push_back(SkiplistItem(value, true, true, false));
+        entries.push_back(SkiplistItem(value, true, true, SCOPE_IN_RACE, false));
       }
     }
     if (!setting.compare("initialized")) {
@@ -162,6 +180,7 @@ void SkipList::writeState() {
     std::string entryline = it->matchPattern() + "$" +
         (it->matchFile() ? "true" : "false") + "$" +
         (it->matchDir() ? "true" : "false") + "$" +
+        global->int2Str(it->matchScope()) + "$" +
         (it->isAllowed() ? "true" : "false");
     filehandler->addOutputLine("SkipList", "entry=" + entryline);
   }

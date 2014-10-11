@@ -36,6 +36,10 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
       break;
     }
   }
+  if (!global->getSkipList()->isAllowed(release, true, false)) {
+    global->getEventLog()->log("Engine", "Race skipped due to skiplist match: " + release);
+    return;
+  }
   if (race == NULL) {
     race = new Race(release, section);
   }

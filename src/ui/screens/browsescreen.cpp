@@ -258,8 +258,9 @@ void BrowseScreen::update() {
     bool selected = uifile == list.cursoredFile();
     std::string prepchar = " ";
     bool isdir = uifile->isDirectory();
-    bool allowed = !(withinraceskiplistreach &&
-        !global->getSkipList()->isAllowed(uifile->getName(), isdir));
+    bool allowed = withinraceskiplistreach ?
+        global->getSkipList()->isAllowed(uifile->getName(), isdir) :
+        global->getSkipList()->isAllowed(uifile->getName(), isdir, false);
     if (isdir) {
       if (allowed) {
         prepchar = "#";
@@ -387,6 +388,10 @@ void BrowseScreen::keyPressed(unsigned int ch) {
     case 'r':
       //start a race of the selected dir, do nothing if a file is selected
       if (list.cursoredFile() != NULL && list.cursoredFile()->isDirectory()) {
+        std::string dirname = list.cursoredFile()->getName();
+        if (!global->getSkipList()->isAllowed(dirname, true, false)) {
+          break;
+        }
         std::list<std::string> sections = site->getSectionsForPath(list.getPath());
         if (sections.size() > 0) {
           std::string sectionstring;
@@ -394,7 +399,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
             sectionstring += *it + ";";
           }
           sectionstring = sectionstring.substr(0, sectionstring.length() - 1);
-          ui->goNewRace(site->getName(), sectionstring, list.cursoredFile()->getName());
+          ui->goNewRace(site->getName(), sectionstring, dirname);
         }
       }
       break;

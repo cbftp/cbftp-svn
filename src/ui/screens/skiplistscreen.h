@@ -22,8 +22,8 @@ public:
   std::string getInfoLabel() const;
 private:
   void saveToTempSkipList();
-  void addPatternLine(int, std::string, bool, bool, bool);
-  void addPatternLine(int, std::string, bool, bool, bool, MenuSelectAdjustableLine *);
+  void addPatternLine(int, std::string, bool, bool, int, bool);
+  void addPatternLine(int, std::string, bool, bool, int, bool, MenuSelectAdjustableLine *);
   SkipList * skiplist;
   std::string currentlegendtext;
   std::string baselegendtext;

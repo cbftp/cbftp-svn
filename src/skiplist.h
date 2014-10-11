@@ -14,11 +14,12 @@ private:
   void addDefaultEntries();
 public:
   SkipList();
-  void addEntry(std::string, bool, bool, bool);
+  void addEntry(std::string, bool, bool, int, bool);
   void clearEntries();
   std::list<SkiplistItem>::const_iterator entriesBegin() const;
   std::list<SkiplistItem>::const_iterator entriesEnd() const;
   bool isAllowed(std::string, bool) const;
+  bool isAllowed(std::string, bool, bool) const;
   void readConfiguration();
   void writeState();
   bool defaultAllow() const;
