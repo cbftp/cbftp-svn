@@ -261,7 +261,7 @@ void SkipListScreen::keyPressed(unsigned int ch) {
       if (focusedarea == &table) {
         MenuSelectOptionElement * msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
         MenuSelectAdjustableLine * msal = table.getAdjustableLine(msoe);
-        addPatternLine(0, "", false, false, true, msal);
+        addPatternLine(0, "", false, false, SCOPE_IN_RACE, true, msal);
         saveToTempSkipList();
         ui->redraw();
       }
