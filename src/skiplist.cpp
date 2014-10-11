@@ -165,7 +165,7 @@ void SkipList::readConfiguration() {
       initialized = true;
     }
     if (!setting.compare("defaultallow")) {
-      defaultallow = value.compare("true") ? true : false;
+      defaultallow = value.compare("true") == 0 ? true : false;
     }
   }
   if (!initialized && !entries.size()) {
