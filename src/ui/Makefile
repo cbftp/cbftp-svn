@@ -5,7 +5,7 @@ OBJECTS = menuselectsite.o menuselectoption.o menuselectoptionelement.o \
     menuselectoptionnumarrow.o menuselectoptiontextfield.o \
     menuselectoptioncheckbox.o legendwindow.o termint.o uifilelist.o uifile.o \
     ui.o menuselectoptiontextbutton.o focusablearea.o menuselectsiteelement.o \
-    menusection.o menuselectoptioncontainer.o infowindow.o menufilters.o \
+    menusection.o menuselectoptioncontainer.o infowindow.o \
     textarrow.o menuselectoptiontextarrow.o commandhistory.o chardraw.o \
     menuselectadjustableline.o
 	

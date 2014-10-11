@@ -4,8 +4,9 @@
 
 #include "menuselectoptionelement.h"
 #include "textarrow.h"
+#include "resizableelement.h"
 
-class MenuSelectOptionTextArrow : public MenuSelectOptionElement {
+class MenuSelectOptionTextArrow : public ResizableElement {
 private:
   TextArrow arrow;
 public:
@@ -22,4 +23,5 @@ public:
   bool setOption(int);
   bool setOptionText(std::string);
   void clear();
+  unsigned int wantedWidth() const;
 };

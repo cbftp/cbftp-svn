@@ -110,4 +110,5 @@ class Site {
     std::map<std::string, bool>::const_iterator affilsEnd() const;
     void addSection(std::string, std::string);
     std::list<std::string> getSectionsForPath(std::string) const;
+    std::list<std::string> getSectionsForPartialPath(std::string) const;
 };

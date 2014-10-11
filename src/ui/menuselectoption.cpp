@@ -21,7 +21,7 @@ bool MenuSelectOption::goDown() {
   bool movefound = false;
   unsigned int closest = -1;
   for (unsigned int i = 0; i < options.size(); i++) {
-    if (!options[i]->visible()) {
+    if (!options[i]->visible() || !options[i]->isSelectable()) {
       continue;
     }
     unsigned int row = options[i]->getRow();
@@ -54,7 +54,7 @@ bool MenuSelectOption::goUp() {
   bool movefound = false;
   unsigned int closest = -1;
   for (unsigned int i = 0; i < options.size(); i++) {
-    if (!options[i]->visible()) {
+    if (!options[i]->visible() || !options[i]->isSelectable()) {
       continue;
     }
     unsigned int row = options[i]->getRow();
@@ -87,7 +87,7 @@ bool MenuSelectOption::goRight() {
   bool movefound = false;
   unsigned int closest = -1;
   for (unsigned int i = 0; i < options.size(); i++) {
-    if (!options[i]->visible()) {
+    if (!options[i]->visible() || !options[i]->isSelectable()) {
       continue;
     }
     unsigned int col = options[i]->getCol();
@@ -120,7 +120,7 @@ bool MenuSelectOption::goLeft() {
   bool movefound = false;
   unsigned int closest = -1;
   for (unsigned int i = 0; i < options.size(); i++) {
-    if (!options[i]->visible()) {
+    if (!options[i]->visible() || !options[i]->isSelectable()) {
       continue;
     }
     unsigned int col = options[i]->getCol();
@@ -147,34 +147,42 @@ bool MenuSelectOption::goLeft() {
 
 bool MenuSelectOption::goNext() {
   if (!options.size()) return false;
-  if (pointer < options.size() - 1) {
-    lastpointer = pointer;
+  unsigned int temppointer = pointer;
+  while (pointer < options.size() - 1) {
     pointer++;
-    return true;
+    if (options[pointer]->isSelectable()) {
+      lastpointer = temppointer;
+      return true;
+    }
   }
   return false;
 }
 
 bool MenuSelectOption::goPrevious() {
   if (!options.size()) return false;
-  if (pointer > 0) {
-    lastpointer = pointer;
+  unsigned int temppointer = pointer;
+  while (pointer > 0) {
     pointer--;
-    return true;
+    if (options[pointer]->isSelectable()) {
+      lastpointer = temppointer;
+      return true;
+    }
   }
   return false;
 }
 
-void MenuSelectOption::addStringField(int row, int col, std::string identifier, std::string label, std::string starttext, bool secret) {
-  addStringField(row, col, identifier, label, starttext, secret, 32, 32);
+MenuSelectOptionTextField * MenuSelectOption::addStringField(int row, int col, std::string identifier, std::string label, std::string starttext, bool secret) {
+  return addStringField(row, col, identifier, label, starttext, secret, 32, 32);
 }
 
-void MenuSelectOption::addStringField(int row, int col, std::string identifier, std::string label, std::string starttext, bool secret, int maxlen) {
-  addStringField(row, col, identifier, label, starttext, secret, maxlen, maxlen);
+MenuSelectOptionTextField * MenuSelectOption::addStringField(int row, int col, std::string identifier, std::string label, std::string starttext, bool secret, int maxlen) {
+  return addStringField(row, col, identifier, label, starttext, secret, maxlen, maxlen);
 }
 
-void MenuSelectOption::addStringField(int row, int col, std::string identifier, std::string label, std::string starttext, bool secret, int visiblelen, int maxlen) {
-  options.push_back(new MenuSelectOptionTextField(identifier, row, col, label, starttext, visiblelen, maxlen, secret));
+MenuSelectOptionTextField * MenuSelectOption::addStringField(int row, int col, std::string identifier, std::string label, std::string starttext, bool secret, int visiblelen, int maxlen) {
+  MenuSelectOptionTextField * msotf = new MenuSelectOptionTextField(identifier, row, col, label, starttext, visiblelen, maxlen, secret);
+  options.push_back(msotf);
+  return msotf;
 }
 
 MenuSelectOptionTextArrow * MenuSelectOption::addTextArrow(int row, int col, std::string identifier, std::string label) {
@@ -183,12 +191,16 @@ MenuSelectOptionTextArrow * MenuSelectOption::addTextArrow(int row, int col, std
   return msota;
 }
 
-void MenuSelectOption::addIntArrow(int row, int col, std::string identifier, std::string label, int startval, int min, int max) {
-  options.push_back(new MenuSelectOptionNumArrow(identifier, row, col, label, startval, min, max));
+MenuSelectOptionNumArrow * MenuSelectOption::addIntArrow(int row, int col, std::string identifier, std::string label, int startval, int min, int max) {
+  MenuSelectOptionNumArrow * msona = new MenuSelectOptionNumArrow(identifier, row, col, label, startval, min, max);
+  options.push_back(msona);
+  return msona;
 }
 
-void MenuSelectOption::addCheckBox(int row, int col, std::string identifier, std::string label, bool startval) {
-  options.push_back(new MenuSelectOptionCheckBox(identifier, row, col, label, startval));
+MenuSelectOptionCheckBox * MenuSelectOption::addCheckBox(int row, int col, std::string identifier, std::string label, bool startval) {
+  MenuSelectOptionCheckBox * msocb = new MenuSelectOptionCheckBox(identifier, row, col, label, startval);
+  options.push_back(msocb);
+  return msocb;
 }
 
 MenuSelectOptionTextButton * MenuSelectOption::addTextButton(int row, int col, std::string identifier, std::string label) {
@@ -205,6 +217,19 @@ MenuSelectOptionTextButton * MenuSelectOption::addTextButtonNoContent(int row, i
 
 MenuSelectAdjustableLine * MenuSelectOption::addAdjustableLine() {
   MenuSelectAdjustableLine * msal = new MenuSelectAdjustableLine;
+  adjustablelines.push_back(msal);
+  return msal;
+}
+
+MenuSelectAdjustableLine * MenuSelectOption::addAdjustableLineBefore(MenuSelectAdjustableLine * before) {
+  MenuSelectAdjustableLine * msal = new MenuSelectAdjustableLine;
+  std::vector<MenuSelectAdjustableLine *>::iterator it;
+  for (it = adjustablelines.begin(); it != adjustablelines.end(); it++) {
+    if (*it == before) {
+      adjustablelines.insert(it, msal);
+      return msal;
+    }
+  }
   adjustablelines.push_back(msal);
   return msal;
 }
@@ -267,6 +292,7 @@ void MenuSelectOption::enterFocusFrom(int dir) {
     pointer = 0;
   }
   lastpointer = pointer;
+  checkPointer();
 }
 
 unsigned int MenuSelectOption::size() const {
@@ -371,4 +397,98 @@ void MenuSelectOption::checkPointer() {
   if (size() == 0) {
     pointer = 0;
   }
+  else {
+    while ((!options[pointer]->visible() || !options[pointer]->isSelectable()) && pointer > 0) pointer--;
+    while ((!options[pointer]->visible() || !options[pointer]->isSelectable()) && pointer < size() - 1) pointer++;
+  }
+  lastpointer = pointer;
+}
+
+std::vector<MenuSelectAdjustableLine *>::iterator MenuSelectOption::linesBegin() {
+  return adjustablelines.begin();
+}
+
+std::vector<MenuSelectAdjustableLine *>::iterator MenuSelectOption::linesEnd() {
+  return adjustablelines.end();
+}
+
+MenuSelectAdjustableLine * MenuSelectOption::getAdjustableLine(MenuSelectOptionElement * msoe) const {
+  std::vector<MenuSelectAdjustableLine *>::const_iterator it;
+  for (it = adjustablelines.begin(); it != adjustablelines.end(); it++) {
+    for (unsigned int i = 0; i < (*it)->size(); i++) {
+      if ((*it)->getElement(i) == msoe) {
+        return *it;
+      }
+    }
+  }
+  return NULL;
+}
+
+void MenuSelectOption::removeAdjustableLine(MenuSelectAdjustableLine * msal) {
+  std::vector<MenuSelectAdjustableLine *>::iterator it;
+  for (it = adjustablelines.begin(); it != adjustablelines.end(); it++) {
+    if (*it == msal) {
+      adjustablelines.erase(it);
+      for (unsigned int i = 0; i < (*it)->size(); i++) {
+        removeElement(msal->getElement(i));
+      }
+      delete msal;
+      return;
+    }
+  }
+}
+
+void MenuSelectOption::removeElement(MenuSelectOptionElement * msoe) {
+  std::vector<MenuSelectOptionElement *>::iterator it;
+  for (it = options.begin(); it != options.end(); it++) {
+    if (*it == msoe) {
+      options.erase(it);
+      delete msoe;
+      return;
+    }
+  }
+}
+
+bool MenuSelectOption::swapLineWithNext(MenuSelectAdjustableLine * msal) {
+  std::vector<MenuSelectAdjustableLine *>::iterator it;
+  for (it = adjustablelines.begin(); it != adjustablelines.end(); it++) {
+    if (*it == msal) {
+      if (it + 1 != adjustablelines.end()) {
+        MenuSelectAdjustableLine * swap = *(it + 1);
+        *(it + 1) = msal;
+        *it = swap;
+        return true;
+      }
+      return false;
+    }
+  }
+  return false;
+}
+
+bool MenuSelectOption::swapLineWithPrevious(MenuSelectAdjustableLine * msal) {
+  std::vector<MenuSelectAdjustableLine *>::iterator it;
+  for (it = adjustablelines.begin(); it != adjustablelines.end(); it++) {
+    if (*it == msal) {
+      if (it != adjustablelines.begin()) {
+        MenuSelectAdjustableLine * swap = *(it - 1);
+        *(it - 1) = msal;
+        *it = swap;
+        return true;
+      }
+      return false;
+    }
+  }
+  return false;
+}
+
+int MenuSelectOption::getLineIndex(MenuSelectAdjustableLine * msal) {
+  std::vector<MenuSelectAdjustableLine *>::iterator it;
+  int index = 0;
+  for (it = adjustablelines.begin(); it != adjustablelines.end(); it++) {
+    if (*it == msal) {
+      return index;
+    }
+    index++;
+  }
+  return -1;
 }

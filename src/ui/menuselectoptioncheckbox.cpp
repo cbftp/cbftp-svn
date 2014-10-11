@@ -25,3 +25,7 @@ bool MenuSelectOptionCheckBox::activate() {
 bool MenuSelectOptionCheckBox::getData() const {
   return value;
 }
+
+unsigned int MenuSelectOptionCheckBox::wantedWidth() const {
+  return 3;
+}

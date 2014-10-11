@@ -64,3 +64,7 @@ bool MenuSelectOptionTextArrow::setOptionText(std::string text) {
 void MenuSelectOptionTextArrow::clear() {
   arrow.clear();
 }
+
+unsigned int MenuSelectOptionTextArrow::wantedWidth() const {
+  return arrow.getVisual().length();
+}

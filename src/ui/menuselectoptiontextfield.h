@@ -4,8 +4,9 @@
 
 #include "textinputfield.h"
 #include "menuselectoptionelement.h"
+#include "resizableelement.h"
 
-class MenuSelectOptionTextField : public MenuSelectOptionElement {
+class MenuSelectOptionTextField : public ResizableElement {
 private:
   TextInputField textfield;
 public:
@@ -19,4 +20,6 @@ public:
   void clear();
   void setText(std::string);
   std::string getLegendText() const;
+  unsigned int wantedWidth() const;
+  void setMaxWidth(unsigned int);
 };

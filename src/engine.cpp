@@ -235,7 +235,8 @@ void Engine::reportCurrentSize(SiteRace * srs, FileList * fls, bool final) {
   std::map<std::string, File *>::const_iterator itf;
   std::string subpath = srs->getSubPathForFileList(fls);
   for (itf = fls->begin(); itf != fls->end(); itf++) {
-    if (itf->second->isDirectory()) {
+    bool isdir = itf->second->isDirectory();
+    if (isdir) {
       continue;
     }
     std::string filename = itf->second->getName();
@@ -243,8 +244,8 @@ void Engine::reportCurrentSize(SiteRace * srs, FileList * fls, bool final) {
     if (lastdotpos != std::string::npos && lastdotpos < filename.length() - 4) {
       filename = filename.substr(0, lastdotpos + 4);
     }
-    if (!global->getSkipList()->isAllowed(filename) ||
-        (filename != "" && !global->getSkipList()->isAllowed(subpath + "/" + filename))) {
+    if (!global->getSkipList()->isAllowed(filename, isdir) ||
+        (filename != "" && !global->getSkipList()->isAllowed(subpath + "/" + filename, isdir))) {
       continue;
     }
     std::list<std::string>::iterator it;
@@ -280,7 +281,7 @@ void Engine::refreshScoreBoard() {
           avgspeed = maxavgspeed;
         }
         for (std::map<std::string, FileList *>::const_iterator itfls = srs->fileListsBegin(); itfls != srs->fileListsEnd(); itfls++) {
-          if (!global->getSkipList()->isAllowed(itfls->first)) continue;
+          if (itfls->first.length() > 0 && !global->getSkipList()->isAllowed(itfls->first, true)) continue;
           FileList * fls = itfls->second;
           FileList * fld = srd->getFileListForPath(itfls->first);
           if (fld != NULL) {
@@ -288,8 +289,9 @@ void Engine::refreshScoreBoard() {
             std::map<std::string, File *>::const_iterator itf;
             for (itf = fls->begin(); itf != fls->end(); itf++) {
               File * f = itf->second;
-              if (!global->getSkipList()->isAllowed(itf->first) ||
-                  (itfls->first != "" && !global->getSkipList()->isAllowed(itfls->first + "/" + itf->first))) {
+              bool isdir = f->isDirectory();
+              if (!global->getSkipList()->isAllowed(itf->first, isdir) ||
+                  (itfls->first != "" && !global->getSkipList()->isAllowed(itfls->first + "/" + itf->first, isdir))) {
                 continue;
               }
               std::string filename = f->getName();

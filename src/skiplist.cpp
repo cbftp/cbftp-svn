@@ -8,7 +8,7 @@
 
 extern GlobalContext * global;
 
-SkipList::SkipList() {
+SkipList::SkipList() : defaultallow(true) {
 
 }
 
@@ -76,39 +76,41 @@ int SkipList::wildcmpCase(const char *wild, const char *string) const {
   return !*wild;
 }
 
-void SkipList::addEntry(std::string entry) {
-  entries.push_back(entry);
+void SkipList::addEntry(std::string pattern, bool file, bool dir, bool allow) {
+  entries.push_back(SkiplistItem(pattern, file, dir, allow));
 }
 
 void SkipList::clearEntries() {
   entries.clear();
 }
 
-std::list<std::string>::const_iterator SkipList::entriesBegin() const {
+std::list<SkiplistItem>::const_iterator SkipList::entriesBegin() const {
   return entries.begin();
 }
 
-std::list<std::string>::const_iterator SkipList::entriesEnd() const {
+std::list<SkiplistItem>::const_iterator SkipList::entriesEnd() const {
   return entries.end();
 }
 
-bool SkipList::isAllowed(std::string element) const {
-  std::list<std::string>::const_iterator it;
+bool SkipList::isAllowed(std::string element, bool dir) const {
+  std::list<SkiplistItem>::const_iterator it;
   for (it = entries.begin(); it != entries.end(); it++) {
-    if (wildcmp(it->c_str(), element.c_str())) {
-      return false;
+    if ((it->matchDir() && dir) || (it->matchFile() && !dir)) {
+      if (wildcmp(it->matchPattern().c_str(), element.c_str())) {
+        return it->isAllowed();
+      }
     }
   }
-  return true;
+  return defaultallow;
 }
 
 void SkipList::addDefaultEntries() {
-  entries.push_back("* *");
-  entries.push_back("*%*");
-  entries.push_back("*[*");
-  entries.push_back("*]*");
-  entries.push_back("*-missing");
-  entries.push_back("*-offline");
+  entries.push_back(SkiplistItem("* *", true, true, false));
+  entries.push_back(SkiplistItem("*%*", true, true, false));
+  entries.push_back(SkiplistItem("*[*", true, true, false));
+  entries.push_back(SkiplistItem("*]*", true, true, false));
+  entries.push_back(SkiplistItem("*-missing", true, false, false));
+  entries.push_back(SkiplistItem("*-offline", true, false, false));
 }
 
 void SkipList::readConfiguration() {
@@ -125,10 +127,27 @@ void SkipList::readConfiguration() {
     std::string setting = line.substr(0, tok);
     std::string value = line.substr(tok + 1);
     if (!setting.compare("entry")) {
-      entries.push_back(value);
+      size_t split = value.find('$');
+      if (split != std::string::npos) {
+        std::string pattern = value.substr(0, split);
+        value = value.substr(split + 1);
+        split = value.find('$');
+        bool file = value.substr(0, split) == "true" ? true : false;
+        value = value.substr(split + 1);
+        split = value.find('$');
+        bool dir = value.substr(0, split) == "true" ? true : false;
+        bool allowed = value.substr(split + 1) == "true" ? true : false;
+        entries.push_back(SkiplistItem(pattern, file, dir, allowed));
+      }
+      else { // backwards compatibility
+        entries.push_back(SkiplistItem(value, true, true, false));
+      }
     }
     if (!setting.compare("initialized")) {
       initialized = true;
+    }
+    if (!setting.compare("defaultallow")) {
+      defaultallow = value.compare("true") ? true : false;
     }
   }
   if (!initialized && !entries.size()) {
@@ -138,9 +157,27 @@ void SkipList::readConfiguration() {
 
 void SkipList::writeState() {
   DataFileHandler * filehandler = global->getDataFileHandler();
-  std::list<std::string>::iterator it;
+  std::list<SkiplistItem>::const_iterator it;
   for (it = entries.begin(); it != entries.end(); it++) {
-    filehandler->addOutputLine("SkipList", "entry=" + *it);
+    std::string entryline = it->matchPattern() + "$" +
+        (it->matchFile() ? "true" : "false") + "$" +
+        (it->matchDir() ? "true" : "false") + "$" +
+        (it->isAllowed() ? "true" : "false");
+    filehandler->addOutputLine("SkipList", "entry=" + entryline);
   }
   filehandler->addOutputLine("SkipList", "initialized=true");
+  std::string defaultallowstr = defaultallow ? "true" : "false";
+  filehandler->addOutputLine("SkipList", "defaultallow=" + defaultallowstr);
+}
+
+unsigned int SkipList::size() const {
+  return entries.size();
+}
+
+bool SkipList::defaultAllow() const {
+  return defaultallow;
+}
+
+void SkipList::setDefaultAllow(bool defaultallow) {
+  this->defaultallow = defaultallow;
 }

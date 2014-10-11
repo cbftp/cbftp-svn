@@ -3,8 +3,9 @@
 #include <string>
 
 #include "menuselectoptionelement.h"
+#include "resizableelement.h"
 
-class MenuSelectOptionCheckBox : public MenuSelectOptionElement {
+class MenuSelectOptionCheckBox : public ResizableElement {
 private:
   bool value;
 public:
@@ -12,4 +13,5 @@ public:
   std::string getContentText() const;
   bool activate();
   bool getData() const;
+  unsigned int wantedWidth() const;
 };

@@ -12,8 +12,6 @@ feature: reverse potential tracking
 
 feature: intermediate data file writing
 
-feature: allowed subdir list
-
 feature: ui stats everywhere!
 
 feature: extensive info in the header of most screens

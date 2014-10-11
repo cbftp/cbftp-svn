@@ -1,6 +1,7 @@
 #include "browsescreen.h"
 
 #include <cctype>
+#include <algorithm>
 
 #include "../../sitelogic.h"
 #include "../../sitelogicmanager.h"
@@ -45,6 +46,7 @@ void BrowseScreen::initialize(unsigned int row, unsigned int col, std::string si
   nukesuccess = false;
   nukefailed = false;
   gotomode = false;
+  withinraceskiplistreach = false;
   currentviewspan = 0;
   sortmethod = 0;
   slidersize = 0;
@@ -133,6 +135,19 @@ void BrowseScreen::redraw() {
         if (it->first == path) {
           list.selectFileName(it->second);
           selectionhistory.erase(it);
+          break;
+        }
+      }
+      std::list<std::string> sections = site->getSectionsForPartialPath(path);
+      int dirlevels = countDirLevels(path);
+      withinraceskiplistreach = false;
+      for (std::list<std::string>::iterator it = sections.begin(); it != sections.end(); it++) {
+        std::string sectionpath = site->getSectionPath(*it);
+        if (dirlevels - countDirLevels(sectionpath) > 0) {
+          withinraceskiplistreach = true;
+        }
+        else {
+          withinraceskiplistreach = false;
           break;
         }
       }
@@ -235,14 +250,17 @@ void BrowseScreen::update() {
   }
   for (unsigned int i = 0; i + currentviewspan < uilist->size() && i < row; i++) {
     unsigned int listi = i + currentviewspan;
-    if ((*uilist)[listi] == NULL) {
+    UIFile * uifile = (*uilist)[listi];
+    if (uifile == NULL) {
       ui->printStr(i, 3, separatortext, namelimit);
       continue;
     }
-    bool selected = (*uilist)[listi] == list.cursoredFile();
+    bool selected = uifile == list.cursoredFile();
     std::string prepchar = " ";
-    bool allowed = global->getSkipList()->isAllowed((*uilist)[listi]->getName());
-    if ((*uilist)[listi]->isDirectory()) {
+    bool isdir = uifile->isDirectory();
+    bool allowed = !(withinraceskiplistreach &&
+        !global->getSkipList()->isAllowed(uifile->getName(), isdir));
+    if (isdir) {
       if (allowed) {
         prepchar = "#";
       }
@@ -253,17 +271,17 @@ void BrowseScreen::update() {
     else if (!allowed) {
       prepchar = "s";
     }
-    else if ((*uilist)[listi]->isLink()){
+    else if (uifile->isLink()){
       prepchar = "L";
     }
     ui->printStr(i, 1, prepchar);
-    ui->printStr(i, 3, (*uilist)[listi]->getName(), namelimit, selected);
+    ui->printStr(i, 3, uifile->getName(), namelimit, selected);
     if (printsize) {
-      ui->printStr(i, sizepos, (*uilist)[listi]->getSizeRepr(), sizelen, false, true);
+      ui->printStr(i, sizepos, uifile->getSizeRepr(), sizelen, false, true);
       if (printlastmodified) {
-        ui->printStr(i, timepos, (*uilist)[listi]->getLastModified(), timelen);
+        ui->printStr(i, timepos, uifile->getLastModified(), timelen);
         if (printowner) {
-          ui->printStr(i, col-ownerlen, (*uilist)[listi]->getOwner() + "/" + (*uilist)[listi]->getGroup(), ownerlen-1);
+          ui->printStr(i, col-ownerlen, uifile->getOwner() + "/" + uifile->getGroup(), ownerlen-1);
         }
       }
     }
@@ -783,4 +801,15 @@ void BrowseScreen::tick (int message) {
       ui->setLegend();
     }
   }
+}
+
+size_t BrowseScreen::countDirLevels(std::string path) {
+  if (path.length() == 0) {
+    path = "/";
+  }
+  bool endswithslash = path.rfind("/") + 1 == path.length();
+  if (endswithslash && path.length() > 1) {
+    path = path.substr(0, path.length() - 1);
+  }
+  return std::count(path.begin(), path.end(), '/');
 }

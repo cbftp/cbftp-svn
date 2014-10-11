@@ -135,3 +135,7 @@ void TextInputField::clear() {
   text = "";
   cursor = 0;
 }
+
+void TextInputField::setVisibleLength(unsigned int visiblelen) {
+  this->visiblelen = visiblelen;
+}

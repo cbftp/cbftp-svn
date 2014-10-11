@@ -343,3 +343,14 @@ std::list<std::string> Site::getSectionsForPath(std::string path) const {
   }
   return retsections;
 }
+
+std::list<std::string> Site::getSectionsForPartialPath(std::string path) const {
+  std::map<std::string, std::string>::const_iterator it;
+  std::list<std::string> retsections;
+  for (it = sections.begin(); it!= sections.end(); it++) {
+    if (path.find(it->second) != std::string::npos) {
+      retsections.push_back(it->first);
+    }
+  }
+  return retsections;
+}

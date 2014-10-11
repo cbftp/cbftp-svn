@@ -1,11 +1,15 @@
 #pragma once
 
 #include "../uiwindow.h"
-#include "../menufilters.h"
+#include "../menuselectoption.h"
+
+#include "../../skiplist.h"
 
 class MenuSelectOptionElement;
-class SkipList;
 class Ui;
+class FocusableArea;
+class MenuSelectOptionTextField;
+class MenuSelectAdjustableLine;
 
 class SkipListScreen : public UIWindow {
 public:
@@ -17,10 +21,20 @@ public:
   std::string getLegendText() const;
   std::string getInfoLabel() const;
 private:
+  void saveToTempSkipList();
+  void addPatternLine(int, std::string, bool, bool, bool);
+  void addPatternLine(int, std::string, bool, bool, bool, MenuSelectAdjustableLine *);
   SkipList * skiplist;
   std::string currentlegendtext;
-  std::string defaultlegendtext;
+  std::string baselegendtext;
+  std::string tablelegendtext;
   bool active;
   MenuSelectOptionElement * activeelement;
-  MenuFilters mf;
+  MenuSelectOption base;
+  MenuSelectOption table;
+  FocusableArea * focusedarea;
+  FocusableArea * defocusedarea;
+  SkipList testskiplist;
+  MenuSelectOptionTextField * testpattern;
+  MenuSelectOptionTextArrow * testtype;
 };

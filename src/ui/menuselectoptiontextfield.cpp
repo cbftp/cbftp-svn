@@ -66,3 +66,12 @@ void MenuSelectOptionTextField::setText(std::string text) {
 std::string MenuSelectOptionTextField::getLegendText() const {
   return "[Enter] Finish editing - [Any] Input to text";
 }
+
+unsigned int MenuSelectOptionTextField::wantedWidth() const {
+  return textfield.getVisualText().length();
+}
+
+void MenuSelectOptionTextField::setMaxWidth(unsigned int maxwidth) {
+  this->maxwidth = maxwidth;
+  textfield.setVisibleLength(maxwidth);
+}

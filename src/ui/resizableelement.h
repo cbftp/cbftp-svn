@@ -18,7 +18,7 @@ public:
   unsigned int resizeMethod() const {
     return resizemethod;
   }
-  void setMaxWidth(unsigned int maxwidth) {
+  virtual void setMaxWidth(unsigned int maxwidth) {
     this->maxwidth = maxwidth;
   }
   void setPriority(unsigned int prio) {

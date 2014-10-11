@@ -19,6 +19,7 @@ public:
   void moveCursorEnd();
   void setText(std::string);
   void clear();
+  void setVisibleLength(unsigned int);
 private:
   void construct(std::string, int, int, bool);
   std::string text;

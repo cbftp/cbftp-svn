@@ -75,3 +75,7 @@ bool MenuSelectOptionElement::visible() const {
 bool MenuSelectOptionElement::isSelectable() const {
   return selectable;
 }
+
+void MenuSelectOptionElement::setSelectable(bool selectable) {
+  this->selectable = selectable;
+}

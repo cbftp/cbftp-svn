@@ -31,4 +31,5 @@ class MenuSelectOptionElement {
     void show();
     bool visible() const;
     bool isSelectable() const;
+    void setSelectable(bool);
 };

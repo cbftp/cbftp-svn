@@ -51,7 +51,7 @@ std::string SiteRace::getPath() const {
 }
 
 void SiteRace::addSubDirectory(std::string subpath) {
-  if (!global->getSkipList()->isAllowed(subpath)) return;
+  if (!global->getSkipList()->isAllowed(subpath, true)) return;
   if (getFileListForPath(subpath) != NULL) {
     return;
   }
@@ -156,7 +156,7 @@ void SiteRace::addNewDirectories() {
   FileList * filelist = getFileListForPath("");
   std::map<std::string, File *>::iterator it;
   for(it = filelist->begin(); it != filelist->end(); it++) {
-    if (!global->getSkipList()->isAllowed(it->first)) {
+    if (!global->getSkipList()->isAllowed(it->first, true)) {
       continue;
     }
     File * file = it->second;

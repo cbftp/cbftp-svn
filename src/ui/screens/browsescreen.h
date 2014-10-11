@@ -62,6 +62,8 @@ private:
   std::string requestedpath;
   mutable int spinnerpos;
   FileList * filelist;
+  bool withinraceskiplistreach;
   void sort();
   void refreshFilelist();
+  size_t countDirLevels(std::string);
 };
