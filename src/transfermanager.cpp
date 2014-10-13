@@ -68,8 +68,9 @@ void TransferManager::transferSuccessful(TransferMonitor * monitor) {
   if (push) {
     global->getUIBase()->backendPush();
   }
-  if (monitor->getTransferStatus() != NULL) {
-    moveTransferStatusToFinished(monitor->getTransferStatus());
+  TransferStatus * ts = monitor->getTransferStatus();
+  if (ts != NULL) {
+    moveTransferStatusToFinished(ts);
   }
 }
 
@@ -82,8 +83,9 @@ void TransferManager::transferFailed(TransferMonitor * monitor, int err) {
   if (push) {
     global->getUIBase()->backendPush();
   }
-  if (monitor->getTransferStatus() != NULL) {
-    moveTransferStatusToFinished(monitor->getTransferStatus());
+  TransferStatus * ts = monitor->getTransferStatus();
+  if (ts != NULL) {
+    moveTransferStatusToFinished(ts);
   }
 }
 

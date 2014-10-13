@@ -295,6 +295,9 @@ void TransferMonitor::finish() {
   }
   else {
     tm->transferFailed(this, 6);
+    if (type == TM_TYPE_FXP) {
+      sls->getSite()->pushTransferSpeed(sld->getSite()->getName(), 0);
+    }
   }
   status = TM_STATUS_IDLE;
 }
@@ -335,6 +338,9 @@ void TransferMonitor::sourceError(int err) {
     return;
   }
   if (type == TM_TYPE_LOCAL || targetcomplete) {
+    if (type == TM_TYPE_FXP) {
+      sls->getSite()->pushTransferSpeed(sld->getSite()->getName(), 0);
+    }
     tm->transferFailed(this, err);
     status = TM_STATUS_IDLE;
     return;
@@ -371,6 +377,9 @@ void TransferMonitor::targetError(int err) {
     return;
   }
   if (sourcecomplete) {
+    if (type == TM_TYPE_FXP) {
+      sls->getSite()->pushTransferSpeed(sld->getSite()->getName(), 0);
+    }
     tm->transferFailed(this, err);
     status = TM_STATUS_IDLE;
     return;
