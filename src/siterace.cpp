@@ -87,11 +87,9 @@ std::string SiteRace::getRelevantSubPath() {
 }
 
 FileList * SiteRace::getFileListForPath(std::string subpath) const {
-  std::map<std::string, FileList *>::const_iterator it;
-  for (it = filelists.begin(); it != filelists.end(); it++) {
-    if (it->first == subpath) {
-      return it->second;
-    }
+  std::map<std::string, FileList *>::const_iterator it = filelists.find(subpath);
+  if (it != filelists.end()) {
+    return it->second;
   }
   return NULL;
 }

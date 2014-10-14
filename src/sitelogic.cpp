@@ -744,7 +744,10 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
   }
   if (race != NULL) {
     std::string currentpath = conns[id]->getCurrentPath();
-    bool goodpath = currentpath.find(race->getPath()) != std::string::npos;
+    size_t slashpos = currentpath.rfind("/");
+    std::string racepath = race->getPath();
+    bool goodpath = (currentpath.length() == racepath.length() && currentpath.compare(racepath) == 0) || // same path
+        (slashpos == racepath.length() && currentpath.substr(0, slashpos).compare(racepath) == 0); // same path, currently in subdir
     if (goodpath && !refresh) {
       return;
     }
@@ -753,7 +756,13 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
       return;
     }
     if (goodpath) {
-      getFileListConn(id, race, race->getFileListForFullPath(currentpath));
+      std::string subpath = slashpos == racepath.length() ? currentpath.substr(slashpos + 1) : "";
+      FileList * fl = race->getFileListForPath(subpath);
+      if (fl == NULL) {
+        race->addSubDirectory(subpath);
+        fl = race->getFileListForPath(subpath);
+      }
+      getFileListConn(id, race, fl);
       return;
     }
     else {
