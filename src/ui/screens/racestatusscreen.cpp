@@ -274,7 +274,6 @@ void RaceStatusScreen::command(std::string command, std::string arg) {
       global->getEngine()->abortRace(race->getName());
       awaitingremovesite = false;
     }
-    ui->redraw();
   }
   else if (command == "returnselectsites") {
     std::string preselectstr = arg;
@@ -300,8 +299,8 @@ void RaceStatusScreen::command(std::string command, std::string arg) {
       sl->addRace(race, race->getSection(), release);
       race->addSite(sl);
     }
-    ui->redraw();
   }
+  ui->redraw();
 }
 
 void RaceStatusScreen::keyPressed(unsigned int ch) {
