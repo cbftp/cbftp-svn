@@ -26,31 +26,18 @@ ConnStateTracker::ConnStateTracker() :
 }
 
 void ConnStateTracker::delayedCommand(std::string command, int delay) {
-  delayedcommands.push_back(DelayedCommand(command, delay + time));
+  delayedCommand(command, delay, NULL);
 }
 
 void ConnStateTracker::delayedCommand(std::string command, int delay, void * arg) {
-  delayedcommands.push_back(DelayedCommand(command, delay + time, arg));
+  delayedcommand.set(command, time + delay, arg);
 }
 
 void ConnStateTracker::timePassed(int time) {
   this->time += time;
   this->idletime += time;
-  std::list<DelayedCommand>::iterator it;
-  bool found;
-  while (true) {
-    found = false;
-    for (it = delayedcommands.begin(); it != delayedcommands.end(); it++) {
-      if (this->time >= it->getDelay()) {
-        releasedcommands.push_back(*it);
-        delayedcommands.erase(it);
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
-      break;
-    }
+  if (delayedcommand.isActive()) {
+    delayedcommand.currentTime(this->time);
   }
 }
 
@@ -76,23 +63,13 @@ int ConnStateTracker::checkCount() const {
     return lastcheckedcount;
 }
 
-bool ConnStateTracker::hasReleasedCommand() const {
-  return releasedcommands.size() > 0;
-}
-
-DelayedCommand ConnStateTracker::getCommand() {
-  if (releasedcommands.size() > 0) {
-    DelayedCommand command = releasedcommands.front();
-    releasedcommands.pop_front();
-    return command;
-  }
-  //undefined behavior
-  return DelayedCommand("error", 0);
+DelayedCommand & ConnStateTracker::getCommand() {
+  return delayedcommand;
 }
 
 void ConnStateTracker::setDisconnected() {
   loggedin = false;
-  delayedcommands.clear();
+  delayedcommand.reset();
   idletime = 0;
 }
 
@@ -100,11 +77,12 @@ void ConnStateTracker::use() {
   if (transferlocked) {
     *(int*)0=0; // crash on purpose
   }
-  delayedcommands.clear();
+  delayedcommand.reset();
   idletime = 0;
 }
 
 void ConnStateTracker::resetIdleTime() {
+  delayedcommand.reset();
   idletime = 0;
 }
 

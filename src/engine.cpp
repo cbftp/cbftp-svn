@@ -146,6 +146,7 @@ void Engine::newTransferJobDownload(std::string site, std::string srcfile, FileL
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting download job: " + srcfile +
             " from " + site);
+  sl->addTransferJob(tj);
 }
 
 void Engine::newTransferJobUpload(std::string path, std::string srcfile, std::string site, std::string dstfile, FileList * filelist) {
@@ -155,6 +156,7 @@ void Engine::newTransferJobUpload(std::string path, std::string srcfile, std::st
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting upload job: " + srcfile +
             " to " + site);
+  sl->addTransferJob(tj);
 }
 
 void Engine::newTransferJobFXP(std::string srcsite, std::string srcfile, FileList * srcfilelist, std::string dstsite, std::string dstfile, FileList * dstfilelist) {
@@ -165,6 +167,8 @@ void Engine::newTransferJobFXP(std::string srcsite, std::string srcfile, FileLis
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting FXP job: " + srcfile +
             " - " + srcsite + " -> " + dstsite);
+  slsrc->addTransferJob(tj);
+  sldst->addTransferJob(tj);
 }
 
 void Engine::removeSiteFromRace(std::string release, std::string site) {

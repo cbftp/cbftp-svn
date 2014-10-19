@@ -19,6 +19,7 @@ class SiteLogicRequest;
 class SiteLogicRequestReady;
 class PotentialTracker;
 class FileStore;
+class TransferJob;
 
 //minimum sleep delay (between refreshes / hammer attempts) in ms
 #define SLEEPDELAY 150
@@ -42,6 +43,7 @@ class SiteLogic : public EventReceiver {
     std::vector<ConnStateTracker> connstatetracker;
     std::vector<SiteRace *> races;
     std::list<SiteRace *> recentlylistedraces;
+    std::list<TransferJob *> transferjobs;
     RawBuffer * rawbuf;
     unsigned int max_slots_up;
     unsigned int max_slots_dn;
@@ -78,6 +80,7 @@ class SiteLogic : public EventReceiver {
     ~SiteLogic();
     void runInstance();
     void addRace(Race *, std::string, std::string);
+    void addTransferJob(TransferJob *);
     void tick(int);
     void connectFailed(int);
     void userDenied(int);

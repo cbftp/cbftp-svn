@@ -3,6 +3,8 @@
 #include <string>
 #include <list>
 
+#include "delayedcommand.h"
+
 #define CST_DOWNLOAD 981
 #define CST_UPLOAD 982
 #define CST_LIST 983
@@ -15,12 +17,11 @@ class RecursiveCommandLogic;
 
 class ConnStateTracker {
 private:
-  int time;
+  unsigned long long int time;
   int idletime;
   int lastcheckedcount;
   SiteRace * lastchecked;
-  std::list<DelayedCommand> releasedcommands;
-  std::list<DelayedCommand> delayedcommands;
+  DelayedCommand delayedcommand;
   bool transfer;
   bool initialized;
   TransferMonitor * tm;
@@ -53,8 +54,7 @@ public:
   void check(SiteRace *);
   SiteRace * lastChecked() const;
   int checkCount() const;
-  bool hasReleasedCommand() const;
-  DelayedCommand getCommand();
+  DelayedCommand & getCommand();
   void setDisconnected();
   void setTransfer(TransferMonitor *, std::string, std::string, int, bool, bool);
   void setTransfer(TransferMonitor *, std::string, std::string, int, std::string, bool);

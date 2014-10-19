@@ -5,13 +5,18 @@
 class DelayedCommand {
 private:
   std::string command;
-  int delay;
+  unsigned long long int triggertime;
   void * arg;
+  bool active;
+  bool released;
 public:
-  DelayedCommand(std::string, int);
-  DelayedCommand(std::string, int, void *);
-  DelayedCommand(const DelayedCommand &);
+  DelayedCommand();
+  void set(std::string, unsigned long long int);
+  void set(std::string, unsigned long long int, void *);
+  void currentTime(unsigned long long int);
+  void reset();
   std::string getCommand() const;
-  int getDelay() const;
   void * getArg() const;
+  bool isActive() const;
+  bool isReleased() const;
 };

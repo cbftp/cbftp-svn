@@ -24,6 +24,7 @@
 #include "recursivecommandlogic.h"
 #include "transfermanager.h"
 #include "localstorage.h"
+#include "transferjob.h"
 
 SiteLogic::SiteLogic(std::string sitename) {
   requestidcounter = 0;
@@ -74,17 +75,23 @@ void SiteLogic::addRace(Race * enginerace, std::string section, std::string rele
   activate();
 }
 
+void SiteLogic::addTransferJob(TransferJob * tj) {
+  transferjobs.push_back(tj);
+}
+
 void SiteLogic::tick(int message) {
   for (unsigned int i = 0; i < connstatetracker.size(); i++) {
     connstatetracker[i].timePassed(50);
-    if (connstatetracker[i].hasReleasedCommand()) {
+    if (connstatetracker[i].getCommand().isReleased()) {
+      if (connstatetracker[i].isLocked() || conns[i]->isProcessing()) {
+        *(int*)0=0; // crash on purpose
+      }
       DelayedCommand eventcommand = connstatetracker[i].getCommand();
+      connstatetracker[i].getCommand().reset();
       std::string event = eventcommand.getCommand();
       if (event == "refreshchangepath") {
-        if (!conns[i]->isProcessing() && !connstatetracker[i].isLocked()) {
-          SiteRace * race = (SiteRace *) eventcommand.getArg();
-          refreshChangePath(i, race, true);
-        }
+        SiteRace * race = (SiteRace *) eventcommand.getArg();
+        refreshChangePath(i, race, true);
       }
       else if (event == "handle") {
         handleConnection(i, false);
@@ -145,6 +152,7 @@ void SiteLogic::TLSFailed(int id) {
 }
 
 void SiteLogic::listRefreshed(int id) {
+  connstatetracker[id].resetIdleTime();
   SiteRace * sr = conns[id]->currentSiteRace();
   if (sr != NULL) {
     sr->updateNumFilesUploaded();
@@ -174,6 +182,7 @@ void SiteLogic::unexpectedResponse(int id) {
 }
 
 void SiteLogic::commandSuccess(int id) {
+  connstatetracker[id].resetIdleTime();
   int state = conns[id]->getState();
   std::list<SiteLogicRequest>::iterator it;
   switch (state) {
@@ -368,6 +377,7 @@ void SiteLogic::commandSuccess(int id) {
 }
 
 void SiteLogic::commandFail(int id) {
+  connstatetracker[id].resetIdleTime();
   int state = conns[id]->getState();
   std::string targetcwdsect;
   std::string targetcwdpath;
@@ -382,6 +392,10 @@ void SiteLogic::commandFail(int id) {
     case STATE_PORT:
       if (connstatetracker[id].transferInitialized()) {
         handleTransferFail(id, 3);
+        return;
+      }
+      else {
+        handleConnection(id, false);
         return;
       }
       break;
@@ -402,6 +416,10 @@ void SiteLogic::commandFail(int id) {
       }
       if (connstatetracker[id].transferInitialized()) {
         handleTransferFail(id, 3);
+        return;
+      }
+      if (connstatetracker[id].hasTransfer()) {
+        handleFail(id);
         return;
       }
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
@@ -534,6 +552,10 @@ void SiteLogic::handleFail(int id) {
     handleTransferFail(id, 0);
     return;
   }
+  if (connstatetracker[id].hasTransfer()) {
+    handleConnection(id, false);
+    return;
+  }
   connstatetracker[id].delayedCommand("handle", SLEEPDELAY * 6);
 }
 
@@ -600,10 +622,11 @@ void SiteLogic::reportTransferErrorAndFinish(int id, int type, int err) {
   connstatetracker[id].finishTransfer();
 }
 void SiteLogic::gotPath(int id, std::string path) {
-
+  connstatetracker[id].resetIdleTime();
 }
 
 void SiteLogic::rawCommandResultRetrieved(int id, std::string result) {
+  connstatetracker[id].resetIdleTime();
   rawbuf->write(result);
   std::list<SiteLogicRequest>::iterator it;
   for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
@@ -617,6 +640,7 @@ void SiteLogic::rawCommandResultRetrieved(int id, std::string result) {
 }
 
 void SiteLogic::gotPassiveAddress(int id, std::string result) {
+  connstatetracker[id].resetIdleTime();
   int count = 0;
   for (unsigned int i = 0; i < result.length(); i++) {
     if (result[i] == ',') count++;
@@ -682,12 +706,12 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
   if (conns[id]->isProcessing()) {
     return;
   }
-  connstatetracker[id].resetIdleTime();
-  if (connstatetracker[id].hasTransfer()) {
-    initTransfer(id);
-    return;
-  }
   if (connstatetracker[id].isLocked()) {
+    if (connstatetracker[id].hasTransfer()) {
+      connstatetracker[id].resetIdleTime();
+      initTransfer(id);
+      return;
+    }
     return;
   }
   if (loggedin > wantedloggedin) {
@@ -705,7 +729,6 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
       return;
     }
   }
-  connstatetracker[id].use();
   bool refresh = false;
   SiteRace * lastchecked = connstatetracker[id].lastChecked();
   if (lastchecked && !lastchecked->isDone() && connstatetracker[id].checkCount() < MAXCHECKSROW) {
@@ -762,10 +785,12 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
         race->addSubDirectory(subpath);
         fl = race->getFileListForPath(subpath);
       }
+      connstatetracker[id].use();
       getFileListConn(id, race, fl);
       return;
     }
     else {
+      connstatetracker[id].use();
       refreshChangePath(id, race, refresh);
     }
   }
@@ -1154,7 +1179,6 @@ bool SiteLogic::getReadyConn(std::string path, std::string file, int * ret, bool
       if (!getSlot(isdownload)) return false;
     }
     if (!conns[lastreadyid]->isProcessing() && !connstatetracker[lastreadyid].isListLocked()) {
-      connstatetracker[lastreadyid].initializeTransfer();
       conns[lastreadyid]->doCWD(path);
     }
     *ret = lastreadyid;
