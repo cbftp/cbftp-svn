@@ -254,13 +254,7 @@ void SiteLogic::commandSuccess(int id) {
     case STATE_PRET_STOR:
       if (connstatetracker[id].transferInitialized()) {
         if (connstatetracker[id].getTransferPassive()) {
-          if (connstatetracker[id].getTransferFXP() &&
-              connstatetracker[id].getTransferSSL() && site->supportsCPSV()) {
-            conns[id]->doCPSV();
-          }
-          else {
-            conns[id]->doPASV();
-          }
+          passiveModeCommand(id);
           return;
         }
       }
@@ -943,45 +937,45 @@ void SiteLogic::initTransfer(int id) {
     conns[id]->doPROTC();
     return;
   }
-  if (!connstatetracker[id].getTransferPassive()) {
-    if (conns[id]->getSSCNMode()) {
-      conns[id]->doSSCN(false);
-      return;
-    }
-    conns[id]->doPORT(connstatetracker[id].getTransferAddr());
-  }
-  else {
-    if (connstatetracker[id].getTransferFXP() && transferssl &&
-        !site->supportsCPSV()) {
-      if (!conns[id]->getSSCNMode()) {
-        conns[id]->doSSCN(true);
+  if (!connstatetracker[id].getTransferPassive()) { // active
+    if (connstatetracker[id].getTransferMonitor()->getStatus() ==
+        TM_STATUS_AWAITING_ACTIVE) {
+      if (conns[id]->getSSCNMode()) {
+        conns[id]->doSSCN(false);
         return;
       }
+      conns[id]->doPORT(connstatetracker[id].getTransferAddr());
     }
-    else if (conns[id]->getSSCNMode()) {
-      conns[id]->doSSCN(false);
-      return;
-    }
-    if (site->needsPRET()) {
-      switch (transfertype) {
-        case CST_DOWNLOAD:
-          conns[id]->doPRETRETR(connstatetracker[id].getTransferFile());
-          break;
-        case CST_UPLOAD:
-          conns[id]->doPRETSTOR(connstatetracker[id].getTransferFile());
-          break;
-        case CST_LIST:
-          conns[id]->doPRETLIST();
-          break;
-      }
-    }
-    else {
+  }
+  else { // passive
+    if (connstatetracker[id].getTransferMonitor()->getStatus() ==
+        TM_STATUS_AWAITING_PASSIVE) {
       if (connstatetracker[id].getTransferFXP() && transferssl &&
-          site->supportsCPSV()) {
-        conns[id]->doCPSV();
+          !site->supportsCPSV()) {
+        if (!conns[id]->getSSCNMode()) {
+          conns[id]->doSSCN(true);
+          return;
+        }
+      }
+      else if (conns[id]->getSSCNMode()) {
+        conns[id]->doSSCN(false);
+        return;
+      }
+      if (site->needsPRET()) {
+        switch (transfertype) {
+          case CST_DOWNLOAD:
+            conns[id]->doPRETRETR(connstatetracker[id].getTransferFile());
+            break;
+          case CST_UPLOAD:
+            conns[id]->doPRETSTOR(connstatetracker[id].getTransferFile());
+            break;
+          case CST_LIST:
+            conns[id]->doPRETLIST();
+            break;
+        }
       }
       else {
-        conns[id]->doPASV();
+        passiveModeCommand(id);
       }
     }
   }
@@ -1569,6 +1563,17 @@ void SiteLogic::getFileListConn(int id, SiteRace * siterace, FileList * filelist
   else {
     conns[id]->prepareLIST(siterace, filelist);
     global->getTransferManager()->getFileList(this, id, false);
+  }
+}
+
+void SiteLogic::passiveModeCommand(int id) {
+  if (connstatetracker[id].getTransferFXP() &&
+      connstatetracker[id].getTransferSSL() &&
+      site->supportsCPSV()) {
+    conns[id]->doCPSV();
+  }
+  else {
+    conns[id]->doPASV();
   }
 }
 

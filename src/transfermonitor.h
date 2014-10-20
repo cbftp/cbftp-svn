@@ -66,4 +66,5 @@ class TransferMonitor : public EventReceiver {
     void engageFXP(std::string, SiteLogic *, FileList *, std::string, SiteLogic *, FileList *);
     void engageDownload(std::string, SiteLogic *, FileList *);
     void engageList(SiteLogic *, int, bool);
+    int getStatus() const;
 };

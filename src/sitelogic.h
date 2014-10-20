@@ -73,6 +73,7 @@ class SiteLogic : public EventReceiver {
     void getFileListConn(int);
     void getFileListConn(int, bool);
     void getFileListConn(int, SiteRace *, FileList *);
+    void passiveModeCommand(int);
     static void * run(void *);
     bool poke;
   public:

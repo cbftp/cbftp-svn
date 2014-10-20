@@ -422,3 +422,7 @@ void TransferMonitor::setTargetSizeSpeed(TransferStatus * ts, unsigned int files
     ts->setSpeed(prevspeed * 0.7 + currentspeed * 0.3);
   }
 }
+
+int TransferMonitor::getStatus() const {
+  return status;
+}
