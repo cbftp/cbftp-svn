@@ -546,7 +546,7 @@ void SiteLogic::handleFail(int id) {
     handleTransferFail(id, 0);
     return;
   }
-  if (connstatetracker[id].hasTransfer()) {
+  if (connstatetracker[id].isLocked()) {
     handleConnection(id, false);
     return;
   }
@@ -586,7 +586,7 @@ void SiteLogic::handleTransferFail(int id, int type, int err) {
   if (err == 1) {
     conns[id]->abortTransferPASV();
   }
-  else if (err == 3) {
+  else if (err == 3 && !connstatetracker[id].isLocked()) {
     connstatetracker[id].delayedCommand("handle", SLEEPDELAY * 6);
   }
   else {
@@ -597,6 +597,7 @@ void SiteLogic::handleTransferFail(int id, int type, int err) {
 void SiteLogic::reportTransferErrorAndFinish(int id, int err) {
   reportTransferErrorAndFinish(id, connstatetracker[id].getTransferType(), err);
 }
+
 void SiteLogic::reportTransferErrorAndFinish(int id, int type, int err) {
   if (!connstatetracker[id].getTransferAborted()) {
     switch (type) {
@@ -615,6 +616,7 @@ void SiteLogic::reportTransferErrorAndFinish(int id, int type, int err) {
   }
   connstatetracker[id].finishTransfer();
 }
+
 void SiteLogic::gotPath(int id, std::string path) {
   connstatetracker[id].resetIdleTime();
 }
