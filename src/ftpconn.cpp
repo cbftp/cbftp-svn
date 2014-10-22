@@ -39,7 +39,7 @@ FTPConn::FTPConn(SiteLogic * sl, int id) {
 }
 
 FTPConn::~FTPConn() {
-  if (state != STATE_DISCONNECTED) {
+  if (isConnected()) {
     iom->closeSocket(sockfd);
   }
   delete rawbuf;

@@ -1216,7 +1216,7 @@ void SiteLogic::setNumConnections(unsigned int num) {
           loggedin--;
           available--;
         }
-        conns[0]->disconnect();
+        conns[i]->disconnect();
         connstatetracker.erase(connstatetracker.begin() + i);
         delete conns[i];
         conns.erase(conns.begin() + i);
