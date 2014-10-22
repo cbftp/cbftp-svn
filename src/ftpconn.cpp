@@ -39,6 +39,9 @@ FTPConn::FTPConn(SiteLogic * sl, int id) {
 }
 
 FTPConn::~FTPConn() {
+  if (state != STATE_DISCONNECTED) {
+    iom->closeSocket(sockfd);
+  }
   delete rawbuf;
   delete databuf;
   delete proxysession;
