@@ -101,8 +101,8 @@ void BrowseScreen::redraw() {
       refreshFilelist();
     }
     else {
-      filelist = sitelogic->getFileList(requestid);
-      if (filelist == NULL) {
+      FileList * newfilelist = sitelogic->getFileList(requestid);
+      if (newfilelist == NULL) {
         cwdfailed = true;
         sitelogic->finishRequest(requestid);
         requestid = -1;
@@ -110,6 +110,7 @@ void BrowseScreen::redraw() {
         ui->update();
         return;
       }
+      filelist = newfilelist;
       if (!virgin) {
         if (list.cursoredFile() != NULL) {
           selectionhistory.push_front(std::pair<std::string, std::string>(list.getPath(), list.cursoredFile()->getName()));
