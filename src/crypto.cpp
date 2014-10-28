@@ -3,6 +3,7 @@
 #include <limits.h>
 #include <cstring>
 #include <sys/timeb.h>
+#include <openssl/sha.h>
 
 #include "globalcontext.h"
 
@@ -54,4 +55,9 @@ void Crypto::decrypt(unsigned char * indata, int inlen, unsigned char * key, uns
   EVP_CIPHER_CTX_cleanup(&ctx);
 }
 
-
+void Crypto::sha256(std::string indata, unsigned char * outdata) {
+  SHA256_CTX ctx;
+  SHA256_Init(&ctx);
+  SHA256_Update(&ctx, indata.c_str(), indata.length());
+  SHA256_Final(outdata, &ctx);
+}

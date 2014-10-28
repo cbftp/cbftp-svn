@@ -44,15 +44,22 @@ bool DataFileHandler::tryDecrypt(std::string key) {
   if (!fileexists || initialized) {
     return false;
   }
-  while (key.length() < 32) {
-    key.append("0");
-  }
   this->key = key;
+  unsigned char keyhash[32];
+  Crypto::sha256(key, keyhash);
   unsigned char decryptedtext[rawdatalen + Crypto::blocksize()];
   int decryptedlen;
-  Crypto::decrypt(rawdata, rawdatalen, (unsigned char *)key.data(), decryptedtext, &decryptedlen);
+  Crypto::decrypt(rawdata, rawdatalen, keyhash, decryptedtext, &decryptedlen);
   decryptedtext[decryptedlen] = '\0';
   if (strstr((const char *)decryptedtext, std::string("DataFileHandler.readable").data()) == NULL) {
+    // backwards compatibility begin
+    while (key.length() < 32) {
+      key.append("0");
+    }
+    Crypto::decrypt(rawdata, rawdatalen, (unsigned char *)key.data(), decryptedtext, &decryptedlen);
+    decryptedtext[decryptedlen] = '\0';
+    if (strstr((const char *)decryptedtext, std::string("DataFileHandler.readable").data()) == NULL)
+    // backwards compatibility end
     return false;
   }
   delete rawdata;
@@ -69,9 +76,6 @@ bool DataFileHandler::tryDecrypt(std::string key) {
 
 void DataFileHandler::newDataFile(std::string key) {
   if (!initialized) {
-    while (key.length() < 32) {
-      key.append("0");
-    }
     this->key = key;
     initialized = true;
   }
@@ -89,7 +93,9 @@ void DataFileHandler::writeFile() {
   unsigned char ciphertext[plaintextlen + Crypto::blocksize()];
   memcpy(plaintext, fileoutput.data(), plaintextlen);
   int ciphertextlen;
-  Crypto::encrypt(plaintext, plaintextlen, (unsigned char *)key.data(), ciphertext, &ciphertextlen);
+  unsigned char keyhash[32];
+  Crypto::sha256(key, keyhash);
+  Crypto::encrypt(plaintext, plaintextlen, keyhash, ciphertext, &ciphertextlen);
   std::ofstream outfile;
   outfile.open(path.c_str(), std::ios::trunc);
   outfile.write((const char *)ciphertext, ciphertextlen);
@@ -97,14 +103,8 @@ void DataFileHandler::writeFile() {
 }
 
 bool DataFileHandler::changeKey(std::string key, std::string newkey) {
-  while (key.length() < 32) {
-    key.append("0");
-  }
   if (this->key != key) {
     return false;
-  }
-  while (newkey.length() < 32) {
-    newkey.append("0");
   }
   this->key = newkey;
   return true;

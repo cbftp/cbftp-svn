@@ -36,12 +36,11 @@ int main(int argc, char ** argv) {
     memcpy(rawdata + (count++ * READBLOCKSIZE), *it, READBLOCKSIZE);
     delete *it;
   }
-  while (key.length() < 32) {
-    key.append("0");
-  }
   unsigned char decryptedtext[rawdatalen + Crypto::blocksize()];
   int decryptedlen;
-  Crypto::decrypt(rawdata, rawdatalen, (unsigned char *)key.data(), decryptedtext, &decryptedlen);
+  unsigned char keyhash[32];
+  Crypto::sha256(key, keyhash);
+  Crypto::decrypt(rawdata, rawdatalen, keyhash, decryptedtext, &decryptedlen);
   decryptedtext[decryptedlen] = '\0';
   delete[] rawdata;
   if (strstr((const char *)decryptedtext, std::string("DataFileHandler.readable").data()) == NULL) {

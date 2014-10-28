@@ -16,9 +16,6 @@ int main(int argc, char ** argv) {
     std::cout << "Error: Could not read the input file." << std::endl;
     return -1;
   }
-  while (key.length() < 32) {
-    key.append("0");
-  }
   std::fstream infile;
   std::vector<unsigned char *> rawdatablocks;
   infile.open(path);
@@ -47,7 +44,9 @@ int main(int argc, char ** argv) {
   }
   unsigned char ciphertext[rawdatalen + Crypto::blocksize()];
   int ciphertextlen;
-  Crypto::encrypt(rawdata, rawdatalen, (unsigned char *)key.data(), ciphertext, &ciphertextlen);
+  unsigned char keyhash[32];
+  Crypto::sha256(key, keyhash);
+  Crypto::encrypt(rawdata, rawdatalen, keyhash, ciphertext, &ciphertextlen);
   delete[] rawdata;
   std::ofstream outfile;
   outfile.open(outpath, std::ios::trunc);
