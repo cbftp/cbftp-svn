@@ -33,7 +33,7 @@ void LocalTransfer::engage(TransferMonitor * tm, std::string path, std::string f
   inuse = true;
   inmemory = false;
   this->ssl = ssl;
-  global->getIOManager()->registerTCPClientSocket(this, addr, port, &sockfd);
+  global->getIOManager()->registerTCPClientSocket(this, addr, port, &sockid);
 }
 
 void LocalTransfer::engage(TransferMonitor * tm, int storeid, std::string addr, int port, bool ssl, FTPConn * ftpconn) {
@@ -45,7 +45,7 @@ void LocalTransfer::engage(TransferMonitor * tm, int storeid, std::string addr, 
   inmemory = true;
   this->storeid = storeid;
   this->ssl = ssl;
-  global->getIOManager()->registerTCPClientSocket(this, addr, port, &sockfd);
+  global->getIOManager()->registerTCPClientSocket(this, addr, port, &sockid);
 }
 
 bool LocalTransfer::active() const {
@@ -55,7 +55,7 @@ bool LocalTransfer::active() const {
 void LocalTransfer::FDConnected() {
   tm->activeReady();
   if (ssl) {
-    global->getIOManager()->negotiateSSLConnect(sockfd, (EventReceiver *)ftpconn);
+    global->getIOManager()->negotiateSSLConnect(sockid, (EventReceiver *)ftpconn);
   }
 }
 
@@ -78,7 +78,7 @@ void LocalTransfer::FDSSLSuccess() {
 }
 
 void LocalTransfer::FDSSLFail() {
-  global->getIOManager()->closeSocket(sockfd);
+  global->getIOManager()->closeSocket(sockid);
   inuse = false;
 }
 

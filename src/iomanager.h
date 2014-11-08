@@ -27,11 +27,13 @@ private:
   mutable Lock socketinfomaplock;
   std::map<int, SocketInfo> socketinfomap;
   std::map<int, int> connecttimemap;
+  std::map<int, int> sockfdidmap;
   static void * run(void *);
-  WorkManager * wm;
   int epollfd;
+  WorkManager * wm;
   DataBlockPool * blockpool;
   int blocksize;
+  int sockidcounter;
   std::string defaultinterface;
   std::string getInterfaceAddress(std::string);
   void negotiateSSL(int, EventReceiver *);

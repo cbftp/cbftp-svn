@@ -74,7 +74,7 @@ class FTPConn : private EventReceiver {
     std::string status;
     Site * site;
     int transferstatus;
-    int sockfd;
+    int sockid;
     int state;
     bool aborted;
     FileList * currentfl;

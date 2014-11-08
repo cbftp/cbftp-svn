@@ -27,7 +27,7 @@ private:
   void append(char *, unsigned int);
   TransferMonitor * tm;
   bool ssl;
-  int sockfd;
+  int sockid;
   bool inuse;
   bool inmemory;
   int storeid;

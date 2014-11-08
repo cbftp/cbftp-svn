@@ -40,7 +40,7 @@ FTPConn::FTPConn(SiteLogic * sl, int id) {
 
 FTPConn::~FTPConn() {
   if (isConnected()) {
-    iom->closeSocket(sockfd);
+    iom->closeSocket(sockid);
   }
   delete rawbuf;
   delete databuf;
@@ -79,19 +79,20 @@ void FTPConn::login() {
   else if (proxytype == SITE_PROXY_GLOBAL) {
     proxy = global->getProxyManager()->getDefaultProxy();
   }
+  int retcode;
   if (proxy == NULL) {
     rawbuf->writeLine("[Connecting to " + site->getAddress() + ":" + site->getPort() + "]");
     state = STATE_CONNECTING;
-    iom->registerTCPClientSocket(this, site->getAddress(), global->str2Int(site->getPort()), &sockfd);
+    retcode = iom->registerTCPClientSocket(this, site->getAddress(), global->str2Int(site->getPort()), &sockid);
   }
   else {
     rawbuf->writeLine("[Connecting to proxy " + proxy->getAddr() + ":" + proxy->getPort() + "]");
     state = STATE_PROXY;
     processing = true;
     proxysession->prepare(proxy, site->getAddress(), site->getPort());
-    iom->registerTCPClientSocket(this, proxy->getAddr(), global->str2Int(proxy->getPort()), &sockfd);
+    retcode = iom->registerTCPClientSocket(this, proxy->getAddr(), global->str2Int(proxy->getPort()), &sockid);
   }
-  if (sockfd < 0) {
+  if (retcode < 0) {
     state = STATE_DISCONNECTED;
   }
 }
@@ -103,10 +104,10 @@ void FTPConn::proxySessionInit(bool connect) {
   switch (proxysession->instruction()) {
     case PROXYSESSION_SEND_CONNECT:
       rawbuf->writeLine("[Connecting to " + site->getAddress() + ":" + site->getPort() + " through proxy]");
-      iom->sendData(sockfd, proxysession->getSendData(), proxysession->getSendDataLen());
+      iom->sendData(sockid, proxysession->getSendData(), proxysession->getSendDataLen());
       break;
     case PROXYSESSION_SEND:
-      iom->sendData(sockfd, proxysession->getSendData(), proxysession->getSendDataLen());
+      iom->sendData(sockid, proxysession->getSendData(), proxysession->getSendDataLen());
       break;
     case PROXYSESSION_SUCCESS:
       rawbuf->writeLine("[Connection established]");
@@ -115,7 +116,7 @@ void FTPConn::proxySessionInit(bool connect) {
     case PROXYSESSION_ERROR:
       rawbuf->writeLine("[Proxy error: " + proxysession->getErrorMessage() + "]");
       state = STATE_DISCONNECTED;
-      iom->closeSocket(sockfd);
+      iom->closeSocket(sockid);
       rawbuf->writeLine("[Disconnected]");
       this->status = "disconnected";
       sl->unexpectedResponse(id);
@@ -149,7 +150,7 @@ void FTPConn::FDFail(std::string error) {
 }
 
 void FTPConn::FDSSLSuccess() {
-  rawbuf->writeLine("[Cipher: " + iom->getCipher(sockfd) + "]");
+  rawbuf->writeLine("[Cipher: " + iom->getCipher(sockid) + "]");
   if (state == STATE_AUTH_TLS) {
     doUSER(false);
   }
@@ -313,7 +314,7 @@ void FTPConn::sendEcho(std::string data) {
   rawbuf->writeLine(data);
   processing = true;
   status = data;
-  iom->sendData(sockfd, data + "\r\n");
+  iom->sendData(sockid, data + "\r\n");
 }
 
 void FTPConn::welcomeReceived() {
@@ -330,7 +331,7 @@ void FTPConn::welcomeReceived() {
     rawbuf->writeLine("[Unknown response]");
     state = STATE_DISCONNECTED;
     processing = false;
-    iom->closeSocket(sockfd);
+    iom->closeSocket(sockid);
     rawbuf->writeLine("[Disconnected]");
     this->status = "disconnected";
     sl->unexpectedResponse(id);
@@ -339,13 +340,13 @@ void FTPConn::welcomeReceived() {
 
 void FTPConn::AUTHTLSResponse() {
   if (databufcode == 234) {
-    iom->negotiateSSLConnect(sockfd);
+    iom->negotiateSSLConnect(sockid);
   }
   else {
     rawbuf->writeLine("[Unknown response]");
     state = STATE_DISCONNECTED;
     processing = false;
-    iom->closeSocket(sockfd);
+    iom->closeSocket(sockid);
     sl->TLSFailed(id);
   }
 }
@@ -374,7 +375,7 @@ void FTPConn::USERResponse() {
     else {
       state = STATE_PASS_LOGINKILL;
     }
-    iom->sendData(sockfd, std::string("PASS ") + site->getPass()  + "\r\n");
+    iom->sendData(sockid, std::string("PASS ") + site->getPass()  + "\r\n");
   }
   else {
     processing = false;
@@ -444,7 +445,7 @@ void FTPConn::PASSResponse() {
 
 void FTPConn::reconnect() {
   if (state != STATE_DISCONNECTED) {
-    iom->closeSocket(sockfd);
+    iom->closeSocket(sockid);
     rawbuf->writeLine("[Disconnected]");
     this->status = "disconnected";
     state = STATE_DISCONNECTED;
@@ -901,7 +902,7 @@ void FTPConn::doQUIT() {
 
 void FTPConn::doSSLHandshake() {
   state = STATE_SSL_HANDSHAKE;
-  iom->forceSSLhandshake(sockfd);
+  iom->forceSSLhandshake(sockid);
 }
 
 void FTPConn::QUITResponse() {
@@ -912,7 +913,7 @@ void FTPConn::QUITResponse() {
 void FTPConn::disconnect() {
   if (state != STATE_DISCONNECTED) {
     state = STATE_DISCONNECTED;
-    iom->closeSocket(sockfd);
+    iom->closeSocket(sockid);
     this->status = "disconnected";
     rawbuf->writeLine("[Disconnected]");
   }
@@ -927,7 +928,7 @@ int FTPConn::getState() const {
 }
 
 std::string FTPConn::getConnectedAddress() const {
-  return iom->getSocketAddress(sockfd);
+  return iom->getSocketAddress(sockid);
 }
 
 bool FTPConn::getProtectedMode() const {
