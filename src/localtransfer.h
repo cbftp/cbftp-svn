@@ -22,6 +22,7 @@ public:
   void FDData(char *, unsigned int);
   void FDSSLSuccess();
   void FDSSLFail();
+  void FDFail(std::string);
   unsigned long long int size() const;
 private:
   void append(char *, unsigned int);

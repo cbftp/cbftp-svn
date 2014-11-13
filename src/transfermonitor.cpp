@@ -353,7 +353,7 @@ void TransferMonitor::sourceError(int err) {
     status = TM_STATUS_IDLE;
     return;
   }
-  if (type == TM_TYPE_LOCAL || targetcomplete) {
+  if (targetcomplete) {
     if (type == TM_TYPE_FXP) {
       sls->getSite()->pushTransferSpeed(sld->getSite()->getName(), 0);
     }

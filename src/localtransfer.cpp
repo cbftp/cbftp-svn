@@ -82,6 +82,11 @@ void LocalTransfer::FDSSLFail() {
   inuse = false;
 }
 
+void LocalTransfer::FDFail(std::string) {
+  inuse = false;
+  tm->targetError(3);
+}
+
 void LocalTransfer::FDData(char * data, unsigned int len) {
   append(data, len);
 }
