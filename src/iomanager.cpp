@@ -73,10 +73,11 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int
   memset(&sock, 0, sizeof(sock));
   sock.ai_family = AF_INET;
   sock.ai_socktype = SOCK_STREAM;
-  int status = getaddrinfo(addr.data(), global->int2Str(port).data(), &sock, &res);
-  if (status != 0) {
-    er->FDFail("Failed to resolve DNS. Error code: " + global->int2Str(status));
-    return -1;
+  int retcode = getaddrinfo(addr.data(), global->int2Str(port).data(), &sock, &res);
+  if (retcode < 0) {
+    if (!handleError(er)) {
+      return -1;
+    }
   }
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
   fcntl(sockfd, F_SETFL, O_NONBLOCK);
@@ -85,10 +86,25 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int
     memset(&sock2, 0, sizeof(sock2));
     sock2.ai_family = AF_INET;
     sock2.ai_socktype = SOCK_STREAM;
-    getaddrinfo(getInterfaceAddress(getDefaultInterface()).data(), "0", &sock2, &res2);
-    bind(sockfd, res2->ai_addr, res2->ai_addrlen);
+    retcode = getaddrinfo(getInterfaceAddress(getDefaultInterface()).data(), "0", &sock2, &res2);
+    if (retcode < 0) {
+      if (!handleError(er)) {
+        return -1;
+      }
+    }
+    retcode = bind(sockfd, res2->ai_addr, res2->ai_addrlen);
+    if (retcode < 0) {
+      if (!handleError(er)) {
+        return -1;
+      }
+    }
   }
-  connect(sockfd, res->ai_addr, res->ai_addrlen);
+  retcode = connect(sockfd, res->ai_addr, res->ai_addrlen);
+  if (retcode < 0) {
+    if (!handleError(er)) {
+      return -1;
+    }
+  }
   char buf[res->ai_addrlen];
   struct sockaddr_in* saddr = (struct sockaddr_in*)res->ai_addr;
   inet_ntop(AF_INET, &(saddr->sin_addr), buf, res->ai_addrlen);
@@ -121,12 +137,28 @@ int IOManager::registerTCPServerSocket(EventReceiver * er, int port, bool local)
   if (local) {
     addr = "127.0.0.1";
   }
-  getaddrinfo(addr.c_str(), global->int2Str(port).data(), &sock, &res);
+  int retcode = getaddrinfo(addr.c_str(), global->int2Str(port).data(), &sock, &res);
+  if (retcode < 0) {
+    if (!handleError(er)) {
+      return -1;
+    }
+  }
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+  fcntl(sockfd, F_SETFL, O_NONBLOCK);
   int yes = 1;
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
-  bind(sockfd, res->ai_addr, res->ai_addrlen);
-  listen(sockfd, 10);
+  retcode = bind(sockfd, res->ai_addr, res->ai_addrlen);
+  if (retcode < 0) {
+    if (!handleError(er)) {
+      return -1;
+    }
+  }
+  retcode = listen(sockfd, 10);
+  if (retcode < 0) {
+    if (!handleError(er)) {
+      return -1;
+    }
+  }
   ScopeLock lock(socketinfomaplock);
   int sockid = sockidcounter++;
   socketinfomap[sockid].fd = sockfd;
@@ -170,9 +202,22 @@ int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
   sock.ai_socktype = SOCK_DGRAM;
   sock.ai_protocol = IPPROTO_UDP;
   std::string addr = "0.0.0.0";
-  getaddrinfo(addr.c_str(), global->int2Str(port).data(), &sock, &res);
+  int retcode = getaddrinfo(addr.c_str(), global->int2Str(port).data(), &sock, &res);
+  if (retcode < 0) {
+    if (!handleError(er)) {
+      return -1;
+    }
+  }
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-  bind(sockfd, res->ai_addr, res->ai_addrlen);
+  fcntl(sockfd, F_SETFL, O_NONBLOCK);
+  int yes = 1;
+  setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+  retcode = bind(sockfd, res->ai_addr, res->ai_addrlen);
+  if (retcode < 0) {
+    if (!handleError(er)) {
+      return -1;
+    }
+  }
   ScopeLock lock(socketinfomaplock);
   int sockid = sockidcounter++;
   socketinfomap[sockid].fd = sockfd;
@@ -281,6 +326,14 @@ void IOManager::forceSSLhandshake(int id) {
       closeSocketIntern(id);
     }
   }
+}
+
+bool IOManager::handleError(EventReceiver * er) {
+  if (errno == EINPROGRESS) {
+    return true;
+  }
+  er->FDFail(strerror(errno));
+  return false;
 }
 
 bool IOManager::investigateSSLError(int error, int sockid, int b_recv) {

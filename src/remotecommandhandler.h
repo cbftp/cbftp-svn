@@ -6,6 +6,7 @@
 
 #define DEFAULTPORT 55477
 #define DEFAULTPASS "DEFAULT"
+#define RETRYDELAY 30000
 
 class GlobalContext;
 
@@ -17,9 +18,12 @@ private:
   std::string password;
   int port;
   int sockfd;
+  bool retrying;
+  bool connected;
   void connect();
   void disconnect();
   void handleMessage(std::string);
+  void stopRetry();
 public:
   RemoteCommandHandler();
   bool isEnabled() const;
@@ -31,4 +35,6 @@ public:
   void readConfiguration();
   void writeState();
   void FDData(char *, unsigned int);
+  void FDFail(std::string);
+  void tick(int);
 };

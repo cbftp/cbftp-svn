@@ -36,6 +36,7 @@ private:
   int sockidcounter;
   std::string defaultinterface;
   std::string getInterfaceAddress(std::string);
+  bool handleError(EventReceiver *);
   void negotiateSSL(int, EventReceiver *);
   bool investigateSSLError(int, int, int);
   bool hasdefaultinterface;

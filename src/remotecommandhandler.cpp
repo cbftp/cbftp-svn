@@ -8,11 +8,14 @@
 #include "engine.h"
 #include "iomanager.h"
 #include "eventlog.h"
+#include "tickpoke.h"
 
-RemoteCommandHandler::RemoteCommandHandler() {
-  enabled = false;
-  password = DEFAULTPASS;
-  port = DEFAULTPORT;
+RemoteCommandHandler::RemoteCommandHandler() :
+  enabled(false),
+  password(DEFAULTPASS),
+  port(DEFAULTPORT),
+  retrying(false),
+  connected(false) {
 }
 
 bool RemoteCommandHandler::isEnabled() const {
@@ -46,7 +49,16 @@ void RemoteCommandHandler::setPort(int newport) {
 void RemoteCommandHandler::connect() {
   int udpport = getUDPPort();
   sockfd = global->getIOManager()->registerUDPServerSocket(this, udpport);
-  global->getEventLog()->log("RemoteCommandHandler", "Listening on UDP port " + global->int2Str(udpport));
+  if (sockfd >= 0) {
+    connected = true;
+    global->getEventLog()->log("RemoteCommandHandler", "Listening on UDP port " + global->int2Str(udpport));
+  }
+  else {
+    int delay = RETRYDELAY / 1000;
+    global->getEventLog()->log("RemoteCommandHandler", "Retrying in " + global->int2Str(delay) + " seconds.");
+    retrying = true;
+    global->getTickPoke()->startPoke(this, "RemoteCommandHandler", RETRYDELAY, 0);
+  }
 }
 
 void RemoteCommandHandler::FDData(char * data, unsigned int datalen) {
@@ -85,14 +97,25 @@ void RemoteCommandHandler::handleMessage(std::string message) {
   global->getEngine()->newRace(release, section, sites);
 }
 
+void RemoteCommandHandler::FDFail(std::string message) {
+  global->getEventLog()->log("RemoteCommandHandler", "UDP binding on port " +
+      global->int2Str(getUDPPort()) + " failed: " + message);
+}
+
 void RemoteCommandHandler::disconnect() {
-  global->getIOManager()->closeSocket(sockfd);
-  global->getEventLog()->log("RemoteCommandHandler", "Closing UDP socket");
+  if (connected) {
+    global->getIOManager()->closeSocket(sockfd);
+    global->getEventLog()->log("RemoteCommandHandler", "Closing UDP socket");
+    connected = false;
+  }
 }
 
 void RemoteCommandHandler::setEnabled(bool enabled) {
   if ((isEnabled() && enabled) || (!isEnabled() && !enabled)) {
     return;
+  }
+  if (retrying) {
+    stopRetry();
   }
   if (enabled) {
     connect();
@@ -101,6 +124,20 @@ void RemoteCommandHandler::setEnabled(bool enabled) {
     disconnect();
   }
   this->enabled = enabled;
+}
+
+void RemoteCommandHandler::stopRetry() {
+  if (retrying) {
+    global->getTickPoke()->stopPoke(this, 0);
+    retrying = false;
+  }
+}
+
+void RemoteCommandHandler::tick(int) {
+  stopRetry();
+  if (enabled) {
+    connect();
+  }
 }
 
 void RemoteCommandHandler::readConfiguration() {
