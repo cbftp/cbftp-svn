@@ -116,3 +116,7 @@ void LocalTransfer::append(char * data, unsigned int datalen) {
   memcpy(buf + bufpos, data, datalen);
   bufpos += datalen;
 }
+
+int LocalTransfer::getStoreId() const {
+  return storeid;
+}

@@ -25,12 +25,13 @@ LocalTransfer * LocalStorage::passiveDownload(TransferMonitor * tm, std::string 
   return lt;
 }
 
-int LocalStorage::passiveDownload(TransferMonitor * tm, std::string addr, bool ssl, FTPConn * ftpconn) {
+LocalTransfer * LocalStorage::passiveDownload(TransferMonitor * tm, std::string addr, bool ssl, FTPConn * ftpconn) {
   int storeid = storeidcounter++;
   std::string host = getHostFromPASVString(addr);
   int port = getPortFromPASVString(addr);
-  getAvailableLocalTransfer()->engage(tm, storeid, host, port, ssl, ftpconn);
-  return storeid;
+  LocalTransfer * lt = getAvailableLocalTransfer();
+  lt->engage(tm, storeid, host, port, ssl, ftpconn);
+  return lt;
 }
 
 std::string LocalStorage::getHostFromPASVString(std::string pasv) const {

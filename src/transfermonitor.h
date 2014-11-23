@@ -51,6 +51,7 @@ class TransferMonitor : public EventReceiver {
     int localtransferspeedticker;
     void finish();
     void setTargetSizeSpeed(TransferStatus *, unsigned int, int);
+    void reset();
   public:
     TransferMonitor(TransferManager *);
     void tick(int);

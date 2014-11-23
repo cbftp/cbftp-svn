@@ -16,7 +16,7 @@ public:
   void readConfiguration();
   void writeState();
   LocalTransfer * passiveDownload(TransferMonitor *, std::string, std::string, bool, FTPConn *);
-  int passiveDownload(TransferMonitor *, std::string, bool, FTPConn *);
+  LocalTransfer * passiveDownload(TransferMonitor *, std::string, bool, FTPConn *);
   int getFileContent(std::string, char *) const;
   int getStoreContent(int, char **) const;
   void purgeStoreContent(int);
