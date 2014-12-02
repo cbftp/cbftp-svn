@@ -196,9 +196,26 @@ void Race::reportDone(SiteRace * sr) {
       return;
     }
   }
+  reportSemiDone(sr);
   donesites.push_back(sr);
   if (donesites.size() == sites.size()) {
     done = true;
+  }
+}
+
+void Race::reportSemiDone(SiteRace * sr) {
+  std::list<SiteRace *>::iterator it;
+  for (it = semidonesites.begin(); it != semidonesites.end(); it++) {
+    if (*it == sr) {
+      return;
+    }
+  }
+  semidonesites.push_back(sr);
+  if (semidonesites.size() == sites.size()) {
+    done = true;
+    for (it = semidonesites.begin(); it != semidonesites.end(); it++) {
+      (*it)->complete(false);
+    }
   }
 }
 

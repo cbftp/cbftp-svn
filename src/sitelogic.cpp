@@ -1404,7 +1404,7 @@ void SiteLogic::raceGlobalComplete() {
 }
 
 void SiteLogic::raceLocalComplete(SiteRace * sr) {
-  sr->complete();
+  sr->complete(true);
   bool stillactive = false;
   for (unsigned int i = 0; i < races.size(); i++) {
     if (!races[i]->isDone()) {

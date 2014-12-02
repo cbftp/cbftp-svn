@@ -234,7 +234,7 @@ void Engine::estimateRaceSizes() {
           }
         }
         else {
-          if (srs->getObservedTime(fls) > 30000) {
+          if (srs->getObservedTime(fls) > 20000) {
             reportCurrentSize(srs, fls, true);
           }
         }
@@ -365,43 +365,70 @@ void Engine::issueOptimalTransfers() {
 void Engine::checkIfRaceComplete(SiteLogic * sls, Race * race) {
   SiteRace * srs = sls->getRace(race->getName());
   if (!srs->isDone()) {
-    bool racecomplete = true;
+    bool unfinisheddirs = false;
+    bool emptydirs = false;
+    int completedlists = 0;
     std::list<std::string> subpaths = race->getSubPaths();
     for (std::list<std::string>::iterator itsp = subpaths.begin(); itsp != subpaths.end(); itsp++) {
       FileList * spfl = srs->getFileListForPath(*itsp);
-      if (spfl != NULL && race->sizeEstimated(*itsp) &&
-          spfl->getNumUploadedFiles() >= race->estimatedSize(*itsp) &&
+      if (spfl != NULL && spfl->isFilled()) {
+        if (!race->sizeEstimated(*itsp)) {
+          if (spfl->getSize() > 0) {
+            unfinisheddirs = true;
+            continue;
+          }
+          emptydirs = true;
+        }
+        else if (spfl->getNumUploadedFiles() >= race->estimatedSize(*itsp) &&
           spfl->timeSinceLastChanged() > STATICTIMEFORCOMPLETION &&
           sls->getCurrLogins() > sls->getCurrUp() + sls->getCurrDown()) {
-        if (!srs->isSubPathComplete(spfl)) {
-          srs->subPathComplete(spfl);
+          completedlists++;
+          if (!srs->isSubPathComplete(spfl)) {
+            //global->getEventLog()->log("Engine", "Dir marked as complete: " + spfl->getPath() + " on " +
+            //  sls->getSite()->getName());
+            srs->subPathComplete(spfl);
+          }
+        }
+        else {
+          unfinisheddirs = true;
+          continue;
         }
       }
       else {
-        racecomplete = false;
+        unfinisheddirs = true;
+        continue;
       }
     }
-    if (racecomplete) {
-      sls->raceLocalComplete(srs);
-      global->getEventLog()->log("Engine", "Race " + race->getName() + " completed on " +
-          sls->getSite()->getName());
+    if (completedlists > 0 && !unfinisheddirs) {
+      if (emptydirs) {
+        race->reportSemiDone(srs);
+      }
+      else {
+        sls->raceLocalComplete(srs);
+        global->getEventLog()->log("Engine", "Race " + race->getName() + " completed on " +
+            sls->getSite()->getName());
+      }
       if (race->isDone()) {
-        issueGlobalComplete(race);
-        for (std::list<Race *>::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
-          if ((*it) == race) {
-            currentraces.erase(it);
-            break;
-          }
-        }
-        refreshScoreBoard();
-        global->getEventLog()->log("Engine", "Race globally completed: " + race->getName());
-        if (dropped) {
-          global->getEventLog()->log("Engine", "Scoreboard refreshes dropped since race start: " + global->int2Str(dropped));
-        }
-        return;
+        raceComplete(race);
       }
     }
   }
+}
+
+void Engine::raceComplete(Race * race) {
+  issueGlobalComplete(race);
+  for (std::list<Race *>::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
+    if ((*it) == race) {
+      currentraces.erase(it);
+      break;
+    }
+  }
+  refreshScoreBoard();
+  global->getEventLog()->log("Engine", "Race globally completed: " + race->getName());
+  if (dropped) {
+    global->getEventLog()->log("Engine", "Scoreboard refreshes dropped since race start: " + global->int2Str(dropped));
+  }
+  return;
 }
 
 int Engine::calculateScore(File * f, Race * itr, FileList * fls, SiteRace * srs, FileList * fld, SiteRace * srd, int avgspeed, bool * prio, bool racemode) const {

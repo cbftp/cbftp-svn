@@ -193,9 +193,11 @@ bool SiteRace::isDone() const {
   return done;
 }
 
-void SiteRace::complete() {
+void SiteRace::complete(bool report) {
   done = true;
-  race->reportDone(this);
+  if (report) {
+    race->reportDone(this);
+  }
 }
 
 void SiteRace::abort() {
@@ -251,7 +253,9 @@ int SiteRace::getObservedTime(FileList * fl) {
       return global->ctimeMSec() - it->second;
     }
   }
-  observestarts[fl] = global->ctimeMSec();
+  if (fl->getSize() > 0) {
+    observestarts[fl] = global->ctimeMSec();
+  }
   return 0;
 }
 

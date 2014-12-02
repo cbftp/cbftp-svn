@@ -18,6 +18,7 @@ class Race {
     std::string section;
     std::list<SiteLogic *> sites;
     std::map<SiteRace *, std::map<std::string, unsigned int> > sizes;
+    std::list<SiteRace *> semidonesites;
     std::list<SiteRace *> donesites;
     int maxfilelistsize;
     std::map<std::string, std::list<SiteRace *> > sfvreports;
@@ -56,6 +57,7 @@ class Race {
     void reportNewSubDir(SiteRace *, std::string);
     void reportSFV(SiteRace *, std::string);
     void reportDone(SiteRace *);
+    void reportSemiDone(SiteRace *);
     void reportSize(SiteRace *, FileList *, std::string, std::list<std::string> *, bool);
     void setUndone();
     void abort();

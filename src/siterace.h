@@ -46,7 +46,7 @@ class SiteRace {
     int getNumUploadedFiles() const;
     unsigned long long int getMaxFileSize() const;
     bool isDone() const;
-    void complete();
+    void complete(bool);
     void abort();
     void subPathComplete(FileList *);
     bool isSubPathComplete(std::string) const;
