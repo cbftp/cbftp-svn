@@ -15,6 +15,7 @@ void MenuSection::initialize(int row, int col, std::map<std::string, std::string
   pointer = 0;
   lastpointer = 0;
   needsredraw = false;
+  focus = false;
   sectioncontainers.clear();
   this->row = row;
   this->col = col;
