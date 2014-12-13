@@ -249,6 +249,9 @@ void BrowseScreen::update() {
   while (separatortext.length() < (unsigned int) maxnamelen) {
     separatortext += "-";
   }
+  int lastslashpos = list.getPath().rfind('/');
+  std::string prepend = lastslashpos != std::string::npos && lastslashpos != 0
+                        ? list.getPath().substr(lastslashpos + 1) + "/" : "";
   for (unsigned int i = 0; i + currentviewspan < uilist->size() && i < row; i++) {
     unsigned int listi = i + currentviewspan;
     UIFile * uifile = (*uilist)[listi];
@@ -260,8 +263,8 @@ void BrowseScreen::update() {
     std::string prepchar = " ";
     bool isdir = uifile->isDirectory();
     bool allowed = withinraceskiplistreach ?
-        global->getSkipList()->isAllowed(uifile->getName(), isdir) :
-        global->getSkipList()->isAllowed(uifile->getName(), isdir, false);
+        global->getSkipList()->isAllowed(prepend + uifile->getName(), isdir) :
+        global->getSkipList()->isAllowed(prepend + uifile->getName(), isdir, false);
     if (isdir) {
       if (allowed) {
         prepchar = "#";

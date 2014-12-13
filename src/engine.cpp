@@ -257,8 +257,8 @@ void Engine::reportCurrentSize(SiteRace * srs, FileList * fls, bool final) {
     if (lastdotpos != std::string::npos && lastdotpos < filename.length() - 4) {
       filename = filename.substr(0, lastdotpos + 4);
     }
-    if (!global->getSkipList()->isAllowed(filename, isdir) ||
-        (filename != "" && !global->getSkipList()->isAllowed(subpath + "/" + filename, isdir))) {
+    std::string prepend = subpath.length() ? subpath + "/" : "";
+    if (!global->getSkipList()->isAllowed(prepend + filename, isdir)) {
       continue;
     }
     std::list<std::string>::iterator it;
@@ -303,8 +303,8 @@ void Engine::refreshScoreBoard() {
             for (itf = fls->begin(); itf != fls->end(); itf++) {
               File * f = itf->second;
               bool isdir = f->isDirectory();
-              if (!global->getSkipList()->isAllowed(itf->first, isdir) ||
-                  (itfls->first != "" && !global->getSkipList()->isAllowed(itfls->first + "/" + itf->first, isdir))) {
+              std::string prepend = itfls->first.length() ? itfls->first + "/" : "";
+              if (!global->getSkipList()->isAllowed(prepend + itf->first, isdir)) {
                 continue;
               }
               std::string filename = f->getName();

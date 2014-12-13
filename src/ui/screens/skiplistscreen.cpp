@@ -51,7 +51,7 @@ void SkipListScreen::initialize(unsigned int row, unsigned int col) {
 void SkipListScreen::redraw() {
   ui->erase();
   int y = 1;
-  ui->printStr(y++, 1, "Valid expressions are * (match any num of any chars) and ? (match any 1 char)");
+  ui->printStr(y++, 1, "Valid expressions are * (match any num of any chars except slash) and ? (match any 1 char except slash)");
   ui->printStr(y++, 1, "The pattern list is parsed from top to bottom and the first match applies.");
   y = 7;
   table.clear();

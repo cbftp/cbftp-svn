@@ -76,6 +76,37 @@ int SkipList::wildcmpCase(const char *wild, const char *string) const {
   return !*wild;
 }
 
+bool SkipList::fixedSlashCompare(const std::string & wildpattern, const std::string & element, bool casesensitive) const {
+  size_t wildslashpos = wildpattern.find('/');
+  size_t elemslashpos = element.find('/');
+  if (wildslashpos != std::string::npos && elemslashpos != std::string::npos) {
+    std::string wild = wildpattern.substr(0, wildslashpos);
+    std::string elem = element.substr(0, elemslashpos);
+    if (!casesensitive) {
+      if (!wildcmp(wild.c_str(), elem.c_str())) {
+        return false;
+      }
+    }
+    else {
+      if (!wildcmpCase(wild.c_str(), elem.c_str())) {
+        return false;
+      }
+    }
+    return fixedSlashCompare(wildpattern.substr(wildslashpos + 1), element.substr(elemslashpos + 1), casesensitive);
+  }
+  else if (wildslashpos == std::string::npos && elemslashpos == std::string::npos) {
+    if (!casesensitive) {
+      return wildcmp(wildpattern.c_str(), element.c_str());
+    }
+    else {
+      return wildcmpCase(wildpattern.c_str(), element.c_str());
+    }
+  }
+  else {
+    return false;
+  }
+}
+
 void SkipList::addEntry(std::string pattern, bool file, bool dir, int scope, bool allow) {
   entries.push_back(SkiplistItem(pattern, file, dir, scope, allow));
 }
@@ -98,13 +129,25 @@ bool SkipList::isAllowed(std::string element, bool dir) const {
 
 bool SkipList::isAllowed(std::string element, bool dir, bool inrace) const {
   std::list<SkiplistItem>::const_iterator it;
-  for (it = entries.begin(); it != entries.end(); it++) {
-    if (it->matchScope() == SCOPE_IN_RACE && !inrace) {
-      continue;
+  std::list<std::string> elementparts;
+  std::list<std::string>::iterator partsit;
+  elementparts.push_back(element);
+  size_t slashpos;
+  while ((slashpos = element.find('/')) != std::string::npos) {
+    element = element.substr(slashpos + 1);
+    if (element.length()) {
+      elementparts.push_back(element);
     }
-    if ((it->matchDir() && dir) || (it->matchFile() && !dir)) {
-      if (wildcmp(it->matchPattern().c_str(), element.c_str())) {
-        return it->isAllowed();
+  }
+  for (partsit = elementparts.begin(); partsit != elementparts.end(); partsit++) {
+    for (it = entries.begin(); it != entries.end(); it++) {
+      if (it->matchScope() == SCOPE_IN_RACE && !inrace) {
+        continue;
+      }
+      if ((it->matchDir() && dir) || (it->matchFile() && !dir)) {
+        if (fixedSlashCompare(it->matchPattern(), *partsit, false)) {
+          return it->isAllowed();
+        }
       }
     }
   }

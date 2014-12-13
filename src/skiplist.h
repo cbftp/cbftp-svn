@@ -11,6 +11,7 @@ private:
   bool defaultallow;
   int wildcmp(const char *, const char *) const;
   int wildcmpCase(const char *, const char *) const;
+  bool fixedSlashCompare(const std::string &, const std::string &, bool) const;
   void addDefaultEntries();
 public:
   SkipList();
