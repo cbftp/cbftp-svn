@@ -249,7 +249,7 @@ void BrowseScreen::update() {
   while (separatortext.length() < (unsigned int) maxnamelen) {
     separatortext += "-";
   }
-  int lastslashpos = list.getPath().rfind('/');
+  size_t lastslashpos = list.getPath().rfind('/');
   std::string prepend = lastslashpos != std::string::npos && lastslashpos != 0
                         ? list.getPath().substr(lastslashpos + 1) + "/" : "";
   for (unsigned int i = 0; i + currentviewspan < uilist->size() && i < row; i++) {
