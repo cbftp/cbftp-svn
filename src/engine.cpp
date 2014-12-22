@@ -438,7 +438,7 @@ int Engine::calculateScore(File * f, Race * itr, FileList * fls, SiteRace * srs,
   if (filesize > maxfilesize) {
     maxfilesize = filesize;
   }
-  points += filesize / ((maxfilesize + 2000) / 2000); // gives max 2000 points
+  points += 100 + filesize / ((maxfilesize + 1900) / 1900); // gives max 2000 points
   points = (points * (avgspeed / 100)) / (maxavgspeed / 100);
   if (racemode) {
     // give points for owning a low percentage of the race on the target
@@ -457,7 +457,7 @@ int Engine::calculateScore(File * f, Race * itr, FileList * fls, SiteRace * srs,
     *prio = true;
     return 10000;
   }
-  if (points > 10000 || points < 0) {
+  if (points > 10000 || points <= 0) {
     global->getEventLog()->log("Engine", "BUG: unexpected score. Avgspeed: " +
         global->int2Str(avgspeed) + " Maxavgspeed: " + global->int2Str(maxavgspeed) +
         " Filesize: " + global->int2Str(f->getSize()) + " Maxfilesize: " +
