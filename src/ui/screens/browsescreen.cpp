@@ -142,10 +142,16 @@ void BrowseScreen::redraw() {
       std::list<std::string> sections = site->getSectionsForPartialPath(path);
       int dirlevels = countDirLevels(path);
       withinraceskiplistreach = false;
+      int closestsectiondirlevel = -1;
       for (std::list<std::string>::iterator it = sections.begin(); it != sections.end(); it++) {
         std::string sectionpath = site->getSectionPath(*it);
-        if (dirlevels - countDirLevels(sectionpath) > 0) {
+        int dirleveldifference = dirlevels - countDirLevels(sectionpath);
+        if (dirleveldifference > 0) {
           withinraceskiplistreach = true;
+          if (dirleveldifference < closestsectiondirlevel || closestsectiondirlevel < 0) {
+            closestsectiondirlevel = dirleveldifference;
+            closestracesectionpath = sectionpath;
+          }
         }
         else {
           withinraceskiplistreach = false;
@@ -249,9 +255,16 @@ void BrowseScreen::update() {
   while (separatortext.length() < (unsigned int) maxnamelen) {
     separatortext += "-";
   }
-  size_t lastslashpos = list.getPath().rfind('/');
-  std::string prepend = lastslashpos != std::string::npos && lastslashpos != 0
-                        ? list.getPath().substr(lastslashpos + 1) + "/" : "";
+  std::string prepend = list.getPath() + "/";
+  if (withinraceskiplistreach) {
+    std::string subpathinracepath;
+    std::string subpath = list.getPath().substr(closestracesectionpath.length() + 1);
+    size_t subdirpos = subpath.find("/");
+    if (subdirpos != std::string::npos) {
+      subpathinracepath = subpath.substr(subdirpos + 1) + "/";
+    }
+    prepend = subpathinracepath;
+  }
   for (unsigned int i = 0; i + currentviewspan < uilist->size() && i < row; i++) {
     unsigned int listi = i + currentviewspan;
     UIFile * uifile = (*uilist)[listi];

@@ -349,6 +349,9 @@ std::list<std::string> Site::getSectionsForPartialPath(std::string path) const {
   std::list<std::string> retsections;
   for (it = sections.begin(); it!= sections.end(); it++) {
     if (path.find(it->second) != std::string::npos) {
+      if (path.length() > it->second.length() && path[it->second.length()] != '/') {
+        continue;
+      }
       retsections.push_back(it->first);
     }
   }

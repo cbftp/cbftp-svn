@@ -63,6 +63,7 @@ private:
   mutable int spinnerpos;
   FileList * filelist;
   bool withinraceskiplistreach;
+  std::string closestracesectionpath;
   void sort();
   void refreshFilelist();
   size_t countDirLevels(std::string);
