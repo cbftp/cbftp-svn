@@ -107,16 +107,28 @@ void RaceStatusScreen::redraw() {
               tag = filename.substr(dotpos - i, 3);               // many tag attempts stepping from the end
             }
             if (bannedsuffixes.find(tag) != bannedsuffixes.end()) {
-              for (int i = 0; i < 1000; i++) { // last resort
-                tag = global->int2Str(i);
-                while (tag.length() < 3) {
-                  tag = "0" + tag;
+              for (int i = 0; i < 100; i++) {
+                std::string numtag = global->int2Str(i);
+                while (numtag.length() < 2) {
+                  numtag = "0" + numtag;
                 }
-                if (bannedsuffixes.find(tag) == bannedsuffixes.end()) {
+                tag = filename[filename.length() - 3] + numtag;
+                if (bannedsuffixes.find(tag) == bannedsuffixes.end() && localtags.find(tag) == localtags.end()) {
                   break;
                 }
-                if (i == 999) {
-                  return; // whatever, this should never happen
+                if (i == 99) {
+                  for (int i = 0; i < 1000; i++) { // last resort
+                    tag = global->int2Str(i);
+                    while (tag.length() < 3) {
+                      tag = "0" + tag;
+                    }
+                    if (bannedsuffixes.find(tag) == bannedsuffixes.end() && localtags.find(tag) == localtags.end()) {
+                      break;
+                    }
+                    if (i == 999) {
+                      *(int *)0=0; // whatever, this should never happen
+                    }
+                  }
                 }
               }
             }
@@ -130,9 +142,6 @@ void RaceStatusScreen::redraw() {
         }
         localtags[tag] = filename;
       }
-    }
-    if (!finished) {
-      continue;
     }
     for (std::map<std::string, std::string>::iterator it = localtags.begin(); it != localtags.end(); it++) {
       tags[it->first] = it->second;
