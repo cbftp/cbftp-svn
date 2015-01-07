@@ -49,6 +49,7 @@ public:
   ConnStateTracker();
   void delayedCommand(std::string, int);
   void delayedCommand(std::string, int, void *);
+  void delayedCommand(std::string, int, void *, bool);
   void timePassed(int);
   int getTimePassed() const;
   void check(SiteRace *);

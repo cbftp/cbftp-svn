@@ -30,7 +30,11 @@ void ConnStateTracker::delayedCommand(std::string command, int delay) {
 }
 
 void ConnStateTracker::delayedCommand(std::string command, int delay, void * arg) {
-  delayedcommand.set(command, time + delay, arg);
+  delayedCommand(command, delay, arg, false);
+}
+
+void ConnStateTracker::delayedCommand(std::string command, int delay, void * arg, bool persisting) {
+  delayedcommand.set(command, time + delay, arg, persisting);
 }
 
 void ConnStateTracker::timePassed(int time) {

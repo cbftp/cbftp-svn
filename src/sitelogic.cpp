@@ -129,7 +129,7 @@ void SiteLogic::userDenied(int id) {
 }
 
 void SiteLogic::userDeniedSiteFull(int id) {
-  connstatetracker[id].delayedCommand("reconnect", SLEEPDELAY);
+  connstatetracker[id].delayedCommand("reconnect", SLEEPDELAY, NULL, true);
 }
 
 void SiteLogic::userDeniedSimultaneousLogins(int id) {

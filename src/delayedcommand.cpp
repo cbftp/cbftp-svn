@@ -2,17 +2,15 @@
 
 DelayedCommand::DelayedCommand() :
   active(false),
-  released(false) {
+  released(false),
+  persisting(false) {
 }
 
-void DelayedCommand::set(std::string command, unsigned long long int triggertime) {
-  set(command, triggertime, NULL);
-}
-
-void DelayedCommand::set(std::string command, unsigned long long int triggertime, void * arg) {
+void DelayedCommand::set(std::string command, unsigned long long int triggertime, void * arg, bool persisting) {
   this->command = command;
   this->triggertime = triggertime;
   this->arg = arg;
+  this->persisting = persisting;
   this->active = true;
   this->released = false;
 }
@@ -24,8 +22,10 @@ void DelayedCommand::currentTime(unsigned long long int time) {
 }
 
 void DelayedCommand::reset() {
-  active = false;
-  released = false;
+  if (!persisting) {
+    active = false;
+    released = false;
+  }
 }
 
 std::string DelayedCommand::getCommand() const {
