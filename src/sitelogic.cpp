@@ -1338,6 +1338,7 @@ void SiteLogic::connectConn(int id) {
 }
 
 void SiteLogic::disconnectConn(int id) {
+  connstatetracker[id].resetIdleTime();
   if (conns[id]->isConnected()) {
     if (wantedloggedin > 0) {
       wantedloggedin--;
