@@ -73,7 +73,7 @@ DelayedCommand & ConnStateTracker::getCommand() {
 
 void ConnStateTracker::setDisconnected() {
   loggedin = false;
-  delayedcommand.reset();
+  delayedcommand.weakReset();
   idletime = 0;
 }
 

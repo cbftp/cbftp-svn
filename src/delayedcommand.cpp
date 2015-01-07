@@ -22,9 +22,13 @@ void DelayedCommand::currentTime(unsigned long long int time) {
 }
 
 void DelayedCommand::reset() {
+  active = false;
+  released = false;
+}
+
+void DelayedCommand::weakReset() {
   if (!persisting) {
-    active = false;
-    released = false;
+    reset();
   }
 }
 

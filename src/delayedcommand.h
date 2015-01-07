@@ -15,6 +15,7 @@ public:
   void set(std::string, unsigned long long int, void *, bool);
   void currentTime(unsigned long long int);
   void reset();
+  void weakReset();
   std::string getCommand() const;
   void * getArg() const;
   bool isActive() const;
