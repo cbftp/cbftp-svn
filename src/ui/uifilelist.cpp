@@ -256,6 +256,7 @@ void UIFileList::parse(FileList * filelist) {
   selectedfiles.clear();
   currentposition = 0;
   currentcursored = NULL;
+  separators = false;
   std::map<std::string, File *>::iterator it;
   int size = filelist->getSize();
   files.reserve(size);
