@@ -9,7 +9,7 @@
 extern GlobalContext * global;
 
 SkipList::SkipList() : defaultallow(true) {
-
+  addDefaultEntries();
 }
 
 int SkipList::wildcmp(const char *wild, const char *string) const {
@@ -169,7 +169,6 @@ void SkipList::readConfiguration() {
   global->getDataFileHandler()->getDataFor("SkipList", &lines);
   std::vector<std::string>::iterator it;
   std::string line;
-  bool initialized = false;
   for (it = lines.begin(); it != lines.end(); it++) {
     line = *it;
     if (line.length() == 0 ||line[0] == '#') continue;
@@ -204,15 +203,9 @@ void SkipList::readConfiguration() {
         entries.push_back(SkiplistItem(value, true, true, SCOPE_IN_RACE, false));
       }
     }
-    if (!setting.compare("initialized")) {
-      initialized = true;
-    }
     if (!setting.compare("defaultallow")) {
       defaultallow = value.compare("true") == 0 ? true : false;
     }
-  }
-  if (!initialized && !entries.size()) {
-    addDefaultEntries();
   }
 }
 
@@ -227,7 +220,6 @@ void SkipList::writeState() {
         (it->isAllowed() ? "true" : "false");
     filehandler->addOutputLine("SkipList", "entry=" + entryline);
   }
-  filehandler->addOutputLine("SkipList", "initialized=true");
   std::string defaultallowstr = defaultallow ? "true" : "false";
   filehandler->addOutputLine("SkipList", "defaultallow=" + defaultallowstr);
 }
