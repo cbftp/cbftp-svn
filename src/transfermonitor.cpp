@@ -370,9 +370,11 @@ void TransferMonitor::targetError(int err) {
   if (status == TM_STATUS_AWAITING_PASSIVE || status == TM_STATUS_AWAITING_ACTIVE) {
     if (sls != NULL) {
       sls->returnConn(src);
-      File * fileobj = fls->getFile(sfile);
-      if (fileobj != NULL) {
-        fileobj->finishDownload();
+      if (fls != NULL) { // NULL in case of LIST
+        File * fileobj = fls->getFile(sfile);
+        if (fileobj != NULL) {
+          fileobj->finishDownload();
+        }
       }
       tm->transferFailed(this, err);
       status = TM_STATUS_IDLE;
