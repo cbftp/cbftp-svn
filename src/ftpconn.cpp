@@ -569,7 +569,7 @@ void FTPConn::PROTPResponse() {
   else {
     if (databufcode == 503) {
       std::string line(databuf, databufpos);
-      if (line.find("PBSZ")) {
+      if (line.find("PBSZ") != std::string::npos) {
         doPBSZ0();
         return;
       }
