@@ -937,9 +937,11 @@ void SiteLogic::initTransfer(int id) {
     conns[id]->doPROTP();
     return;
   }
-  else if (site->SSL() && !transferssl && conns[id]->getProtectedMode() != PROT_C) {
-    conns[id]->doPROTC();
-    return;
+  else if (!transferssl && conns[id]->getProtectedMode() != PROT_C) {
+    if (site->SSL() || conns[id]->getProtectedMode() == PROT_P) {
+      conns[id]->doPROTC();
+      return;
+    }
   }
   if (!connstatetracker[id].getTransferPassive()) { // active
     if (connstatetracker[id].getTransferMonitor()->getStatus() ==
