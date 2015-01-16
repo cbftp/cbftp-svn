@@ -933,11 +933,11 @@ void SiteLogic::initTransfer(int id) {
       return;
     }
   }
-  if (transferssl && !conns[id]->getProtectedMode()) {
+  if (transferssl && !conns[id]->getProtectedMode() != PROT_P) {
     conns[id]->doPROTP();
     return;
   }
-  else if (!transferssl && conns[id]->getProtectedMode()) {
+  else if (site->SSL() && !transferssl && conns[id]->getProtectedMode() != PROT_C) {
     conns[id]->doPROTC();
     return;
   }

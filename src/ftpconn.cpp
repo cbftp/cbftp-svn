@@ -31,7 +31,7 @@ FTPConn::FTPConn(SiteLogic * sl, int id) {
   databuflen = DATABUF;
   databuf = (char *) malloc(databuflen);
   databufpos = 0;
-  protectedmode = false;
+  protectedmode = PROT_UNSET;
   sscnmode = false;
   mkdtarget = false;
   currentpath = "";
@@ -65,7 +65,7 @@ void FTPConn::login() {
   if (state != STATE_DISCONNECTED) {
     return;
   }
-  protectedmode = false;
+  protectedmode = PROT_UNSET;
   sscnmode = false;
   mkdtarget = false;
   databufpos = 0;
@@ -563,7 +563,7 @@ void FTPConn::doPROTP() {
 void FTPConn::PROTPResponse() {
   processing = false;
   if (databufcode == 200) {
-    protectedmode = true;
+    protectedmode = PROT_P;
     sl->commandSuccess(id);
   }
   else {
@@ -586,10 +586,17 @@ void FTPConn::doPROTC() {
 void FTPConn::PROTCResponse() {
   processing = false;
   if (databufcode == 200) {
-    protectedmode = false;
+    protectedmode = PROT_C;
     sl->commandSuccess(id);
   }
   else {
+    if (databufcode == 503) {
+      std::string line(databuf, databufpos);
+      if (line.find("PBSZ") != std::string::npos) {
+        doPBSZ0();
+        return;
+      }
+    }
     sl->commandFail(id);
   }
 }
@@ -956,7 +963,7 @@ std::string FTPConn::getConnectedAddress() const {
   return iom->getSocketAddress(sockid);
 }
 
-bool FTPConn::getProtectedMode() const {
+int FTPConn::getProtectedMode() const {
   return protectedmode;
 }
 

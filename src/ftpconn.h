@@ -44,6 +44,10 @@
 #define STATE_PBSZ 38
 #define STATE_PROXY 100
 
+#define PROT_UNSET 5483
+#define PROT_C 5484
+#define PROT_P 5485
+
 class GlobalContext;
 class SiteRace;
 class FileList;
@@ -81,7 +85,7 @@ class FTPConn : private EventReceiver {
     FileList * currentfl;
     SiteRace * currentrace;
     std::string currentpath;
-    bool protectedmode;
+    int protectedmode;
     bool sscnmode;
     std::string targetpath;
     bool mkdtarget;
@@ -169,7 +173,7 @@ class FTPConn : private EventReceiver {
     void disconnect();
     int getState() const;
     std::string getConnectedAddress() const;
-    bool getProtectedMode() const;
+    int getProtectedMode() const;
     bool getSSCNMode() const;
     void setMKDCWDTarget(std::string, std::string);
     bool hasMKDCWDTarget() const;
