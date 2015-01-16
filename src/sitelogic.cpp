@@ -191,6 +191,7 @@ void SiteLogic::commandSuccess(int id) {
       available++;
       connstatetracker[id].setLoggedIn();
       break;
+    case STATE_PBSZ:
     case STATE_PROT_P:
     case STATE_PROT_C:
     case STATE_SSCN_ON:
@@ -379,6 +380,7 @@ void SiteLogic::commandFail(int id) {
   std::string file;
   std::list<SiteLogicRequest>::iterator it;
   switch (state) {
+    case STATE_PBSZ:
     case STATE_PROT_P:
     case STATE_PROT_C:
     case STATE_CPSV:

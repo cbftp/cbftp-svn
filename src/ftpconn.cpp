@@ -302,6 +302,9 @@ void FTPConn::FDData(char * data, unsigned int datalen) {
       case STATE_PASV_ABORT: // awaiting aborting PASV
         PASVAbortResponse();
         break;
+      case STATE_PBSZ: // awaiting PBSZ 0 response
+        PBSZ0Response();
+        break;
       case STATE_PROXY: // negotiating proxy session
         proxySessionInit(false);
         break;
@@ -564,6 +567,13 @@ void FTPConn::PROTPResponse() {
     sl->commandSuccess(id);
   }
   else {
+    if (databufcode == 503) {
+      std::string line(databuf, databufpos);
+      if (line.find("PBSZ")) {
+        doPBSZ0();
+        return;
+      }
+    }
     sl->commandFail(id);
   }
 }
@@ -634,6 +644,21 @@ void FTPConn::doNuke(std::string path, int multiplier, std::string reason) {
 void FTPConn::doDELE(std::string path) {
   state = STATE_DELE;
   sendEcho("DELE " + path);
+}
+
+void FTPConn::doPBSZ0() {
+  state = STATE_PBSZ;
+  sendEcho("PBSZ 0");
+}
+
+void FTPConn::PBSZ0Response() {
+  processing = false;
+  if (databufcode == 200) {
+    sl->commandSuccess(id);
+  }
+  else {
+    sl->commandFail(id);
+  }
 }
 
 void FTPConn::RawResponse() {

@@ -41,6 +41,7 @@
 #define STATE_SSCN_OFF 35
 #define STATE_SSL_HANDSHAKE 36
 #define STATE_PASV_ABORT 37
+#define STATE_PBSZ 38
 #define STATE_PROXY 100
 
 class GlobalContext;
@@ -118,6 +119,7 @@ class FTPConn : private EventReceiver {
     void SSCNONResponse();
     void SSCNOFFResponse();
     void PASVAbortResponse();
+    void PBSZ0Response();
     void proxySessionInit(bool);
     void sendEcho(std::string);
   public:
@@ -161,6 +163,7 @@ class FTPConn : private EventReceiver {
     void doPRETLIST();
     void abortTransfer();
     void abortTransferPASV();
+    void doPBSZ0();
     void doQUIT();
     void doSSLHandshake();
     void disconnect();
