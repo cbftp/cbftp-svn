@@ -477,6 +477,7 @@ void IOManager::runInstance() {
   ScopeLock lock(socketinfomaplock);
   while(1) {
     lock.unlock();
+    blockpool->awaitFreeBlocks();
     fds = epoll_wait(epollfd, events, MAXEVENTS, -1);
     lock.lock();
     for (i = 0; i < fds; i++) {

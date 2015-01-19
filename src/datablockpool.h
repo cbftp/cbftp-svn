@@ -14,9 +14,13 @@ private:
   int totalblocks;
   Semaphore blocksem;
   Lock blocklock;
+  bool waitingforblocks;
+  void allocateNewBlocks();
+  unsigned int currentMaxNumBlocks() const;
 public:
   DataBlockPool();
   char * getBlock();
   const int blockSize() const;
   void returnBlock(char *);
+  void awaitFreeBlocks();
 };

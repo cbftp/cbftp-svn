@@ -20,6 +20,7 @@ class SiteLogicRequestReady;
 class PotentialTracker;
 class FileStore;
 class TransferJob;
+class CommandOwner;
 
 //minimum sleep delay (between refreshes / hammer attempts) in ms
 #define SLEEPDELAY 150
@@ -72,7 +73,7 @@ class SiteLogic : public EventReceiver {
     void reportTransferErrorAndFinish(int, int, int);
     void getFileListConn(int);
     void getFileListConn(int, bool);
-    void getFileListConn(int, SiteRace *, FileList *);
+    void getFileListConn(int, CommandOwner *, FileList *);
     void passiveModeCommand(int);
     static void * run(void *);
     bool poke;
@@ -99,7 +100,8 @@ class SiteLogic : public EventReceiver {
     void gotPassiveAddress(int, std::string);
     void timedout(int);
     void disconnected(int);
-    void requestSelect();
+    void activateOne();
+    void activateAll();
     Site * getSite() const;
     SiteRace * getRace(std::string) const;
     void lockConnList(int);
@@ -114,7 +116,6 @@ class SiteLogic : public EventReceiver {
     int getCurrDown() const;
     int getCurrUp() const;
     int getCurrLogins() const;
-    void activate();
     void connectConn(int);
     void disconnectConn(int);
     void listCompleted(int, int);

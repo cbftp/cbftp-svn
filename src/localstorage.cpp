@@ -4,9 +4,13 @@
 #include "globalcontext.h"
 #include "transfermonitor.h"
 #include "datafilehandler.h"
+#include "localfilelist.h"
 
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
 #include <vector>
 
 extern GlobalContext * global;
@@ -18,10 +22,14 @@ LocalStorage::LocalStorage() {
 }
 
 LocalTransfer * LocalStorage::passiveDownload(TransferMonitor * tm, std::string file, std::string addr, bool ssl, FTPConn * ftpconn) {
+  return passiveDownload(tm, temppath, file, addr, ssl, ftpconn);
+}
+
+LocalTransfer * LocalStorage::passiveDownload(TransferMonitor * tm, std::string path, std::string file, std::string addr, bool ssl, FTPConn * ftpconn) {
   std::string host = getHostFromPASVString(addr);
   int port = getPortFromPASVString(addr);
   LocalTransfer * lt = getAvailableLocalTransfer();
-  lt->engage(tm, temppath, file, host, port, ssl, ftpconn);
+  lt->engage(tm, path, file, host, port, ssl, ftpconn);
   return lt;
 }
 
@@ -121,6 +129,81 @@ void LocalStorage::storeContent(int storeid, char * buf, int buflen) {
   char * storebuf = (char *) malloc(buflen);
   memcpy(storebuf, buf, buflen);
   content[storeid] = std::pair<char *, int>(storebuf, buflen);
+}
+
+Pointer<LocalFileList> LocalStorage::getLocalFileList(std::string path) {
+  Pointer<LocalFileList> filelist(new LocalFileList(path));
+  DIR * dir = opendir(path.c_str());
+  struct dirent * dent;
+  while ((dent = readdir(dir)) != NULL) {
+    struct stat status;
+    stat(dent->d_name, &status);
+    std::string name = dent->d_name;
+    if (name != ".." && name != ".") {
+      filelist->addFile(name, status.st_size, status.st_mode & S_IFDIR);
+    }
+  }
+  closedir(dir);
+  return filelist;
+}
+
+
+bool LocalStorage::directoryExistsWritable(std::string path) {
+  return directoryExistsAccessible(path, true);
+}
+
+bool LocalStorage::directoryExistsReadable(std::string path) {
+  return directoryExistsAccessible(path, false);
+}
+
+bool LocalStorage::directoryExistsAccessible(std::string path, bool write) {
+  int how = write ? R_OK | W_OK : R_OK;
+  if (access(path.c_str(), how) == 0) {
+    struct stat status;
+    stat(path.c_str(), &status);
+    if (status.st_mode & S_IFDIR) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool LocalStorage::createDirectory(std::string path) {
+  return createDirectory(path, false);
+}
+
+bool LocalStorage::createDirectory(std::string path, bool privatedir) {
+  mode_t mode = privatedir ? 0700 : 0755;
+  return mkdir(path.c_str(), mode) >= 0;
+}
+
+bool LocalStorage::createDirectoryRecursive(std::string path) {
+  std::list<std::string> pathdirs;
+  if (path.length() == 0) {
+    return false;
+  }
+  if (path[0] == '/') {
+    path = path.substr(1);
+  }
+  size_t slashpos;
+  while ((slashpos = path.find("/")) != std::string::npos) {
+    pathdirs.push_back(path.substr(0, slashpos));
+    path = path.substr(slashpos + 1);
+  }
+  if (path.length()) {
+    pathdirs.push_back(path);
+  }
+  std::string partialpath;
+  while (pathdirs.size() > 0) {
+    partialpath += "/" + pathdirs.front();
+    pathdirs.pop_front();
+    if (!directoryExistsReadable(partialpath)) {
+      if (!createDirectory(partialpath)) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 void LocalStorage::readConfiguration() {

@@ -49,10 +49,12 @@ void ViewFileScreen::initialize(unsigned int row, unsigned int col, std::string 
       download = true;
     }
   }
+  std::string temppath = global->getLocalStorage()->getTempPath();
   if (download) {
-    requestid = global->getTransferManager()->download(file, sitelogic, filelist);
+    requestid = global->getTransferManager()->download(file, sitelogic,
+        filelist, temppath);
   }
-  path = global->getLocalStorage()->getTempPath() + "/" + file;
+  path = temppath + "/" + file;
   expectbackendpush = true;
   init(row, col);
 }

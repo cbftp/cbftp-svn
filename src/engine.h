@@ -2,6 +2,7 @@
 
 #include <string>
 #include <list>
+#include <map>
 
 #include "eventreceiver.h"
 
@@ -18,6 +19,7 @@ class FileList;
 class File;
 class ScoreBoard;
 class SiteLogic;
+class PendingTransfer;
 
 extern GlobalContext * global;
 
@@ -28,6 +30,7 @@ class Engine : public EventReceiver {
     std::list<TransferJob *> alltransferjobs;
     std::list<TransferJob *> currenttransferjobs;
     ScoreBoard * scoreboard;
+    std::map<TransferJob *, std::list<PendingTransfer> > pendingtransfers;
     int maxavgspeed;
     void estimateRaceSizes();
     void reportCurrentSize(SiteRace *, FileList *, bool final);
@@ -38,6 +41,7 @@ class Engine : public EventReceiver {
     void checkIfRaceComplete(SiteLogic *, Race *);
     void raceComplete(Race *);
     void issueGlobalComplete(Race *);
+    void refreshPendingTransferList(TransferJob *);
     bool pokeregistered;
     unsigned int dropped;
   public:
@@ -52,6 +56,7 @@ class Engine : public EventReceiver {
     void removeSiteFromRace(std::string, std::string);
     void abortRace(std::string);
     void raceFileListRefreshed(SiteLogic *, Race *);
+    void transferJobActionRequest(TransferJob *);
     int currentRaces() const;
     int allRaces() const;
     int currentTransferJobs() const;

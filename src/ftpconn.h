@@ -48,7 +48,6 @@
 #define PROT_C 5484
 #define PROT_P 5485
 
-class GlobalContext;
 class SiteRace;
 class FileList;
 class SiteLogic;
@@ -56,13 +55,10 @@ class IOManager;
 class RawBuffer;
 class Site;
 class ProxySession;
-
-extern GlobalContext * global;
+class CommandOwner;
 
 #define RAWBUFMAXLEN 1024
 #define DATABUF 2048
-
-class SiteRace;
 
 class FTPConn : private EventReceiver {
   private:
@@ -83,7 +79,7 @@ class FTPConn : private EventReceiver {
     int state;
     bool aborted;
     FileList * currentfl;
-    SiteRace * currentrace;
+    CommandOwner * currentco;
     std::string currentpath;
     int protectedmode;
     bool sscnmode;
@@ -148,11 +144,11 @@ class FTPConn : private EventReceiver {
     void doNuke(std::string, int, std::string);
     void doDELE(std::string);
     void doSTAT();
-    void doSTAT(SiteRace *, FileList *);
+    void doSTAT(CommandOwner *, FileList *);
     void doLIST();
     void doLISTa();
     void prepareLIST();
-    void prepareLIST(SiteRace *, FileList *);
+    void prepareLIST(CommandOwner *, FileList *);
     void doSTATla();
     void doSSCN(bool);
     void doCPSV();
@@ -190,8 +186,8 @@ class FTPConn : private EventReceiver {
     void FDSSLSuccess();
     void FDSSLFail();
     FileList * currentFileList() const;
-    SiteRace * currentSiteRace() const;
-    void setCurrentSiteRace(SiteRace *);
+    CommandOwner * currentCommandOwner() const;
+    void setCurrentCommandOwner(CommandOwner *);
     void parseFileList(char *, unsigned int);
     bool isConnected() const;
 };

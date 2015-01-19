@@ -34,6 +34,10 @@ SiteRace::~SiteRace() {
   }
 }
 
+int SiteRace::classType() const {
+  return COMMANDOWNER_SITERACE;
+}
+
 std::string SiteRace::getSection() const {
   return section;
 }
@@ -121,6 +125,11 @@ std::map<std::string, FileList *>::const_iterator SiteRace::fileListsBegin() con
 
 std::map<std::string, FileList *>::const_iterator SiteRace::fileListsEnd() const {
   return filelists.end();
+}
+
+void SiteRace::fileListUpdated(FileList *) {
+  updateNumFilesUploaded();
+  addNewDirectories();
 }
 
 void SiteRace::updateNumFilesUploaded() {

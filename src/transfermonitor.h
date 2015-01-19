@@ -3,6 +3,7 @@
 #include <string>
 
 #include "eventreceiver.h"
+#include "pointer.h"
 
 #define TM_TYPE_FXP 960
 #define TM_TYPE_LOCAL 961
@@ -44,13 +45,13 @@ class TransferMonitor : public EventReceiver {
     int timestamp;
     int startstamp;
     TransferManager * tm;
-    TransferStatus * ts;
+    Pointer<TransferStatus> ts;
     int latesttouch;
     bool hiddenfiles;
     LocalTransfer * lt;
     int localtransferspeedticker;
     void finish();
-    void setTargetSizeSpeed(TransferStatus *, unsigned int, int);
+    void setTargetSizeSpeed(unsigned int, int);
     void reset();
   public:
     TransferMonitor(TransferManager *);
@@ -63,9 +64,10 @@ class TransferMonitor : public EventReceiver {
     void passiveReady(std::string);
     void activeReady();
     bool idle() const;
-    TransferStatus * getTransferStatus() const;
+    Pointer<TransferStatus> getTransferStatus() const;
     void engageFXP(std::string, SiteLogic *, FileList *, std::string, SiteLogic *, FileList *);
-    void engageDownload(std::string, SiteLogic *, FileList *);
+    void engageDownload(std::string, SiteLogic *, FileList *, std::string);
+    void engageUpload(std::string, std::string, SiteLogic *, FileList *);
     void engageList(SiteLogic *, int, bool);
     int getStatus() const;
 };

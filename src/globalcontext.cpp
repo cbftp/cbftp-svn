@@ -1,6 +1,5 @@
 #include "globalcontext.h"
 
-#include <signal.h>
 #include <sys/timeb.h>
 #include <sstream>
 #include <vector>
@@ -255,20 +254,6 @@ std::string GlobalContext::int2Str(unsigned long long int i) {
   std::stringstream out;
   out << i;
   return out.str();
-}
-
-void GlobalContext::signal_catch() {
-  signal(SIGABRT, &sighandler);
-  signal(SIGTERM, &sighandler);
-  signal(SIGINT, &sighandler);
-  signal(SIGWINCH, &sighandler_winch);
-}
-
-void GlobalContext::signal_ignore() {
-  signal(SIGABRT, &sighandler_ignore);
-  signal(SIGTERM, &sighandler_ignore);
-  signal(SIGINT, &sighandler_ignore);
-  signal(SIGWINCH, &sighandler_ignore);
 }
 
 std::string & GlobalContext::debugString(const char * s) {

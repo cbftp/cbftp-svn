@@ -4,9 +4,12 @@
 #include <list>
 #include <map>
 
+#include "pointer.h"
+
 class LocalTransfer;
 class TransferMonitor;
 class FTPConn;
+class LocalFileList;
 
 #define MAXREAD 524288
 
@@ -16,6 +19,7 @@ public:
   void readConfiguration();
   void writeState();
   LocalTransfer * passiveDownload(TransferMonitor *, std::string, std::string, bool, FTPConn *);
+  LocalTransfer * passiveDownload(TransferMonitor *, std::string, std::string, std::string, bool, FTPConn *);
   LocalTransfer * passiveDownload(TransferMonitor *, std::string, bool, FTPConn *);
   int getFileContent(std::string, char *) const;
   int getStoreContent(int, char **) const;
@@ -26,7 +30,14 @@ public:
   void storeContent(int, char *, int);
   std::string getDownloadPath() const;
   void setDownloadPath(std::string);
+  Pointer<LocalFileList> getLocalFileList(std::string);
+  bool directoryExistsReadable(std::string);
+  bool directoryExistsWritable(std::string);
+  bool createDirectory(std::string);
+  bool createDirectory(std::string, bool);
+  bool createDirectoryRecursive(std::string);
 private:
+  bool directoryExistsAccessible(std::string, bool);
   std::map<int, std::pair<char *, int> > content;
   std::string getHostFromPASVString(std::string) const;
   int getPortFromPASVString(std::string) const;

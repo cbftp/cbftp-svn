@@ -4,10 +4,12 @@
 #include <map>
 #include <list>
 
+#include "commandowner.h"
+
 class Race;
 class FileList;
 
-class SiteRace {
+class SiteRace : public CommandOwner {
   private:
     Race * race;
     std::string section;
@@ -24,7 +26,10 @@ class SiteRace {
     std::map<FileList *, int> sfvobservestarts;
     std::map<std::string, bool> visitedpaths;
     unsigned long long int maxfilesize;
+    void updateNumFilesUploaded();
+    void addNewDirectories();
   public:
+    int classType() const;
     std::string getSection() const;
     std::string getRelease() const;
     std::string getGroup() const;
@@ -40,8 +45,7 @@ class SiteRace {
     Race * getRace() const;
     void addSubDirectory(std::string);
     std::string getSubPath(FileList *) const;
-    void updateNumFilesUploaded();
-    void addNewDirectories();
+    void fileListUpdated(FileList *);
     bool sizeEstimated(FileList *) const;
     int getNumUploadedFiles() const;
     unsigned long long int getMaxFileSize() const;

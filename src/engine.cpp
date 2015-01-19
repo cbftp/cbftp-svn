@@ -19,6 +19,10 @@
 #include "sitemanager.h"
 #include "workmanager.h"
 #include "transferjob.h"
+#include "pendingtransfer.h"
+#include "localstorage.h"
+#include "localfilelist.h"
+#include "pointer.h"
 
 Engine::Engine() {
   scoreboard = new ScoreBoard();
@@ -101,7 +105,7 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
         global->getEventLog()->log("Engine", "Reactivating race: " + section + "/" + release);
         race->setUndone();
         for (std::list<SiteLogic *>::const_iterator it = race->begin(); it != race->end(); it++) {
-          (*it)->activate();
+          (*it)->activateAll();
         }
       }
     }
@@ -214,6 +218,61 @@ void Engine::raceFileListRefreshed(SiteLogic * sls, Race * race) {
     else {
       ++dropped;
     }
+  }
+}
+
+void Engine::transferJobActionRequest(TransferJob * tj) {
+  std::map<TransferJob *, std::list<PendingTransfer> >::iterator it = pendingtransfers.find(tj);
+  if (it == pendingtransfers.end()) {
+    pendingtransfers[tj] = std::list<PendingTransfer>();
+    it = pendingtransfers.find(tj);
+  }
+  if (it->second.size() == 0) {
+    refreshPendingTransferList(tj);
+    if (it->second.size() == 0) {
+      if (!tj->listsRefreshed() && tj->getType() != TRANSFERJOB_DOWNLOAD_FILE) {
+        tj->refreshLists();
+      }
+      else {
+        tj->setDone();
+        std::string type;
+        switch (tj->getType()) {
+          case TRANSFERJOB_DOWNLOAD:
+          case TRANSFERJOB_DOWNLOAD_FILE:
+            type = "Download";
+            break;
+          case TRANSFERJOB_UPLOAD:
+          case TRANSFERJOB_UPLOAD_FILE:
+            type = "Upload";
+            break;
+          case TRANSFERJOB_FXP:
+          case TRANSFERJOB_FXP_FILE:
+            type = "FXP";
+            break;
+        }
+        global->getEventLog()->log("Engine", type + " job complete: " + tj->getSrcFileName());
+      }
+      return;
+    }
+  }
+  if (tj->listsRefreshed()) {
+    tj->clearRefreshLists();
+  }
+  PendingTransfer pt = it->second.front();
+  it->second.pop_front();
+  switch (pt.type()) {
+    case PENDINGTRANSFER_DOWNLOAD:
+      global->getTransferManager()->suggestDownload(pt.getSrcFileName(), pt.getSrc(),
+                pt.getSrcFileList(), pt.getPath());
+      break;
+    case PENDINGTRANSFER_UPLOAD:
+      global->getTransferManager()->suggestUpload(pt.getSrcFileName(), pt.getPath(),
+          pt.getDst(), pt.getDstFileList());
+      break;
+    case PENDINGTRANSFER_FXP:
+      global->getTransferManager()->suggestTransfer(pt.getSrcFileName(), pt.getSrc(),
+                pt.getSrcFileList(), pt.getDst(), pt.getDstFileList());
+      break;
   }
 }
 
@@ -336,6 +395,54 @@ void Engine::refreshScoreBoard() {
     }
   }
   scoreboard->sort();
+}
+
+void Engine::refreshPendingTransferList(TransferJob * tj) {
+  std::map<TransferJob *, std::list<PendingTransfer> >::iterator it = pendingtransfers.find(tj);
+  if (it == pendingtransfers.end()) {
+    pendingtransfers[tj] = std::list<PendingTransfer>();
+  }
+  it = pendingtransfers.find(tj);
+  it->second.clear();
+  std::map<std::string, FileList *>::const_iterator it2;
+  switch (tj->getType()) {
+    case TRANSFERJOB_DOWNLOAD:
+      for (it2 = tj->srcFileListsBegin(); it2 != tj->srcFileListsEnd(); it2++) {
+        FileList * srclist = it2->second;
+        std::string getpath = tj->getDstPath() + "/" + tj->getDstFileName() + (it2->first.length() > 0 ? "/" + it2->first : "");
+        Pointer<LocalFileList> dstlist;
+        if (global->getLocalStorage()->directoryExistsWritable(getpath)) {
+          dstlist = global->getLocalStorage()->getLocalFileList(getpath);
+        }
+        for (std::map<std::string, File *>::iterator srcit = srclist->begin(); srcit != srclist->end(); srcit++) {
+          if (!srcit->second->isDirectory() && (!dstlist || dstlist->find(srcit->first) == dstlist->end())) {
+            it->second.push_back(PendingTransfer(tj->getSrc(), srclist, srcit->first, getpath, srcit->first));
+          }
+        }
+      }
+
+      break;
+    case TRANSFERJOB_DOWNLOAD_FILE:
+    {
+      Pointer<LocalFileList> dstlist;
+      if (global->getLocalStorage()->directoryExistsWritable(tj->getDstPath())) {
+        dstlist = global->getLocalStorage()->getLocalFileList(tj->getDstPath());
+      }
+      if (!dstlist || dstlist->find(tj->getDstFileName()) == dstlist->end()) {
+        it->second.push_back(PendingTransfer(tj->getSrc(), tj->getSrcFileList(),
+            tj->getSrcFileName(), tj->getDstPath(), tj->getDstFileName()));
+      }
+      break;
+    }
+    case TRANSFERJOB_UPLOAD:
+      break;
+    case TRANSFERJOB_UPLOAD_FILE:
+      break;
+    case TRANSFERJOB_FXP:
+      break;
+    case TRANSFERJOB_FXP_FILE:
+      break;
+  }
 }
 
 void Engine::issueOptimalTransfers() {

@@ -56,4 +56,5 @@ class FileList {
     bool listChanged() const;
     void resetListChanged();
     unsigned long long timeSinceLastChanged();
+    std::string getUser() const;
 };

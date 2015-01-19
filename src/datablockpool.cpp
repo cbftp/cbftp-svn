@@ -4,31 +4,18 @@
 
 #include "scopelock.h"
 
-DataBlockPool::DataBlockPool() {
-  char * block;
-  totalblocks = 0;
+DataBlockPool::DataBlockPool() :
+  totalblocks(0),
+  waitingforblocks(false) {
   ScopeLock lock(blocklock);
-  for (int i = 0; i < 10; i++) {
-    block = (char *) malloc(BLOCKSIZE);
-    blocks.push_back(block);
-    totalblocks++;
-  }
+  allocateNewBlocks();
 }
 
 char * DataBlockPool::getBlock() {
   char * block;
   ScopeLock lock(blocklock);
   if (blocks.size() == 0) {
-    for (int i = 0; i < 10 && totalblocks < MAXBLOCKS; i++) {
-      block = (char *) malloc(BLOCKSIZE);
-      blocks.push_back(block);
-      totalblocks++;
-    }
-  }
-  while (blocks.size() == 0) {
-    lock.unlock();
-    blocksem.wait();
-    lock.lock();
+    allocateNewBlocks();
   }
   block = blocks.back();
   blocks.pop_back();
@@ -42,7 +29,34 @@ const int DataBlockPool::blockSize() const {
 void DataBlockPool::returnBlock(char * block) {
   ScopeLock lock(blocklock);
   blocks.push_back(block);
-  if (blocks.size() == 1) {
-    blocksem.post();
+  if (waitingforblocks) {
+    if (blocks.size() > currentMaxNumBlocks() / 2) {
+      waitingforblocks = false;
+      blocksem.post();
+    }
   }
+}
+
+void DataBlockPool::awaitFreeBlocks() {
+  blocklock.lock();
+  if (blocks.size() < currentMaxNumBlocks() / 2) {
+    waitingforblocks = true;
+    blocklock.unlock();
+    blocksem.wait();
+  }
+  else {
+    blocklock.unlock();
+  }
+}
+
+void DataBlockPool::allocateNewBlocks() {
+  for (int i = 0; i < 10; i++) {
+    char * block = (char *) malloc(BLOCKSIZE);
+    blocks.push_back(block);
+    totalblocks++;
+  }
+}
+
+unsigned int DataBlockPool::currentMaxNumBlocks() const {
+  return totalblocks < MAXBLOCKS ? totalblocks : MAXBLOCKS;
 }

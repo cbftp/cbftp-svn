@@ -93,11 +93,5 @@ class GlobalContext {
     static std::string int2Str(int);
     static std::string int2Str(unsigned int);
     static std::string int2Str(unsigned long long int);
-    void signal_catch();
-    void signal_ignore();
     std::string & debugString(const char *);
 };
-
-extern void sighandler(int);
-extern void sighandler_winch(int);
-extern void sighandler_ignore(int);

@@ -295,3 +295,7 @@ void FileList::setChanged() {
 unsigned long long FileList::timeSinceLastChanged() {
   return global->getTimeReference()->timePassedSince(lastchangedstamp);
 }
+
+std::string FileList::getUser() const {
+  return username;
+}

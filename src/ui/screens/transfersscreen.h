@@ -5,6 +5,8 @@
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
 
+#include "../../pointer.h"
+
 class TransferManager;
 class TransferStatus;
 class MenuSelectOptionElement;
@@ -19,7 +21,7 @@ public:
   std::string getLegendText() const;
   std::string getInfoLabel() const;
 private:
-  void addTransferDetails(unsigned int, TransferStatus *);
+  void addTransferDetails(unsigned int, Pointer<TransferStatus>);
   std::map<MenuSelectOptionElement *, int> progressmap;
   TransferManager * tm;
   MenuSelectOption table;

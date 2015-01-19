@@ -50,10 +50,10 @@ void TransfersScreen::redraw() {
   msal->addElement((ResizableElement *)msotb, 7, RESIZE_REMOVE);
 
   y++;
-  for (std::list<TransferStatus *>::const_iterator it = tm->ongoingTransfersBegin(); it != tm->ongoingTransfersEnd(); it++) {
+  for (std::list<Pointer<TransferStatus> >::const_iterator it = tm->ongoingTransfersBegin(); it != tm->ongoingTransfersEnd(); it++) {
     addTransferDetails(y++, *it);
   }
-  for (std::list<TransferStatus *>::const_iterator it = tm->finishedTransfersBegin(); it != tm->finishedTransfersEnd(); it++) {
+  for (std::list<Pointer<TransferStatus> >::const_iterator it = tm->finishedTransfersBegin(); it != tm->finishedTransfersEnd(); it++) {
     addTransferDetails(y++, *it);
   }
   table.adjustLines(col - 3);
@@ -105,7 +105,7 @@ std::string TransfersScreen::getInfoLabel() const {
   return "TRANSFERS";
 }
 
-void TransfersScreen::addTransferDetails(unsigned int y, TransferStatus * ts) {
+void TransfersScreen::addTransferDetails(unsigned int y, Pointer<TransferStatus> ts) {
   std::string route = ts->getSource() + " -> " + ts->getTarget();
   std::string speed = GlobalContext::parseSize(ts->getSpeed() * SIZEPOWER) + "/s";
   std::string timespent = global->int2Str(ts->getTimeSpent()) + "s";

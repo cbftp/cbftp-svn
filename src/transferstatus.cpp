@@ -11,12 +11,12 @@ TransferStatus::TransferStatus(int type, std::string source, std::string target,
     interpolatedtargetsize(0), interpolationfilltargetsize(0), speed(assumedspeed),
     finished(false), timespent(0), progress(0) {
   if (!this->speed) {
-    this->speed = 1;
+    this->speed = 1024;
   }
   if (!this->sourcesize) {
     this->sourcesize = 1;
   }
-  this->timeremaining = this->sourcesize / this->speed;
+  this->timeremaining = this->sourcesize / (this->speed * 1024);
 }
 
 std::string TransferStatus::getSource() const {

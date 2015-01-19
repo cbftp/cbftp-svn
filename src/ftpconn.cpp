@@ -9,7 +9,6 @@
 
 #include "filelist.h"
 #include "site.h"
-#include "siterace.h"
 #include "globalcontext.h"
 #include "rawbuffer.h"
 #include "iomanager.h"
@@ -18,6 +17,8 @@
 #include "proxymanager.h"
 #include "proxy.h"
 #include "proxysession.h"
+
+extern GlobalContext * global;
 
 FTPConn::FTPConn(SiteLogic * sl, int id) {
   this->sl = sl;
@@ -460,27 +461,27 @@ void FTPConn::doSTAT() {
   doSTAT(NULL, new FileList(site->getUser(), currentpath));
 }
 
-void FTPConn::doSTAT(SiteRace * race, FileList * filelist) {
+void FTPConn::doSTAT(CommandOwner * co, FileList * filelist) {
   state = STATE_STAT;
-  currentrace = race;
+  currentco = co;
   currentfl = filelist;
   sendEcho("STAT -l");
 }
 
 void FTPConn::doSTATla() {
   state = STATE_STAT;
-  currentrace = NULL;
+  currentco = NULL;
   currentfl = new FileList(site->getUser(), currentpath);
   sendEcho("STAT -la");
 }
 
 void FTPConn::prepareLIST() {
-  currentrace = NULL;
+  currentco = NULL;
   currentfl = new FileList(site->getUser(), currentpath);
 }
 
-void FTPConn::prepareLIST(SiteRace * race, FileList * filelist) {
-  currentrace = race;
+void FTPConn::prepareLIST(CommandOwner * co, FileList * filelist) {
+  currentco = co;
   currentfl = filelist;
 }
 
@@ -1017,12 +1018,12 @@ FileList * FTPConn::currentFileList() const {
   return currentfl;
 }
 
-SiteRace * FTPConn::currentSiteRace() const {
-  return currentrace;
+CommandOwner * FTPConn::currentCommandOwner() const {
+  return currentco;
 }
 
-void FTPConn::setCurrentSiteRace(SiteRace * race) {
-  currentrace = race;
+void FTPConn::setCurrentCommandOwner(CommandOwner * co) {
+  currentco = co;
 }
 
 bool FTPConn::isProcessing() const {
