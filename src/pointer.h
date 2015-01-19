@@ -18,7 +18,9 @@ public:
   Pointer(const Pointer & other) :
     object(other.object),
     counter(other.counter) {
-    (*counter)++;
+    if (counter != NULL) {
+      (*counter)++;
+    }
   }
   ~Pointer() {
     decrease();
