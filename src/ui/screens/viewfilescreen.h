@@ -1,10 +1,12 @@
 #pragma once
 
 #include "../uiwindow.h"
+#include "../../pointer.h"
 
 #include <vector>
 #include <string>
 
+class TransferStatus;
 class SiteLogic;
 class FileList;
 class Ui;
@@ -22,7 +24,7 @@ public:
   std::string getInfoLabel() const;
 private:
   SiteLogic * sitelogic;
-  int requestid;
+  Pointer<TransferStatus> ts;
   FileList * filelist;
   std::string site;
   std::string file;

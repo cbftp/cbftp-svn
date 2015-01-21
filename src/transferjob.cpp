@@ -222,3 +222,7 @@ void TransferJob::clearRefreshLists() {
   filelistsrefreshed.clear();
   listsrefreshed = false;
 }
+
+void TransferJob::addPendingTransfer(std::string name, unsigned long long int size) {
+
+}

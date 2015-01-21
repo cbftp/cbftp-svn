@@ -6,6 +6,10 @@
 #define TRANSFERSTATUS_TYPE_DOWNLOAD 1893
 #define TRANSFERSTATUS_TYPE_UPLOAD 1894
 
+#define TRANSFERSTATUS_STATE_IN_PROGRESS 1901
+#define TRANSFERSTATUS_STATE_SUCCESSFUL 1902
+#define TRANSFERSTATUS_STATE_FAILED 1903
+
 class TransferStatus {
 public:
   TransferStatus(int, std::string, std::string, std::string, std::string, std::string, std::string, unsigned int, unsigned int);
@@ -23,7 +27,11 @@ public:
   unsigned int getTimeRemaining() const;
   unsigned int getProgress() const;
   std::string getTimestamp() const;
+  int getState() const;
+  bool isAwaited() const;
   void setFinished();
+  void setFailed();
+  void setAwaited(bool);
   void setTargetSize(unsigned int);
   void interpolateAddSize(unsigned int);
   void setSpeed(unsigned int);
@@ -43,8 +51,9 @@ private:
   unsigned int interpolatedtargetsize;
   unsigned int interpolationfilltargetsize;
   unsigned int speed;
-  bool finished;
+  int state;
   unsigned int timespent;
   unsigned int timeremaining;
   unsigned int progress;
+  bool awaited;
 };

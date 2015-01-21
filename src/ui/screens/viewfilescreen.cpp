@@ -10,6 +10,7 @@
 #include "../../filelist.h"
 #include "../../file.h"
 #include "../../externalfileviewing.h"
+#include "../../transferstatus.h"
 
 extern GlobalContext * global;
 
@@ -51,8 +52,9 @@ void ViewFileScreen::initialize(unsigned int row, unsigned int col, std::string 
   }
   std::string temppath = global->getLocalStorage()->getTempPath();
   if (download) {
-    requestid = global->getTransferManager()->download(file, sitelogic,
+    ts = global->getTransferManager()->suggestDownload(file, sitelogic,
         filelist, temppath);
+    ts->setAwaited(true);
   }
   path = temppath + "/" + file;
   expectbackendpush = true;
@@ -74,18 +76,17 @@ void ViewFileScreen::redraw() {
     return;
   }
   if (!viewingcontents) {
-    int transferstatus = global->getTransferManager()->transferStatus(requestid);
     char * tmpdata;
     int tmpdatalen;
-    switch(transferstatus) {
-      case TRANSFER_IN_PROGRESS_UI:
+    switch(ts->getState()) {
+      case TRANSFERSTATUS_STATE_IN_PROGRESS:
         ui->printStr(1, 1, "Downloading " + file + " from " + site + "...");
         break;
-      case TRANSFER_FAILED:
+      case TRANSFERSTATUS_STATE_FAILED:
         ui->printStr(1, 1, "Download of " + file + " from " + site + " failed.");
         autoupdate = false;
         break;
-      case TRANSFER_SUCCESSFUL:
+      case TRANSFERSTATUS_STATE_SUCCESSFUL:
         if (externallyviewable) {
           if (!pid) {
             pid = global->getExternalFileViewing()->viewThenDelete(path);
@@ -145,7 +146,7 @@ void ViewFileScreen::update() {
         return;
       }
     }
-    else if (!pid && global->getTransferManager()->transferStatus(requestid) != TRANSFER_IN_PROGRESS_UI) {
+    else if (!pid && ts->getState() != TRANSFERSTATUS_STATE_IN_PROGRESS) {
       redraw();
       if (!legendupdated) {
         legendupdated = true;

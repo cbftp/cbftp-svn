@@ -44,6 +44,7 @@ public:
   void refreshLists();
   void setDone();
   void clearRefreshLists();
+  void addPendingTransfer(std::string, unsigned long long int);
 private:
   void addSubDirectoryFileLists(std::map<std::string, FileList *> &, FileList *);
   void init();

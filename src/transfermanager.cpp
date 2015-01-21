@@ -9,25 +9,11 @@
 extern GlobalContext * global;
 
 TransferManager::TransferManager() {
-  requestids = 0;
 }
 
-int TransferManager::download(std::string name, SiteLogic * sl, FileList * filelist, std::string path) {
-  int id = requestids++;
+void TransferManager::getFileList(SiteLogic * sl, int connid, bool hiddenfiles) {
   Pointer<TransferMonitor> target = getAvailableTransferMonitor();
-  transferstatus[id] = TRANSFER_IN_PROGRESS_UI;
-  transfermap[target.get()] = id;
-  target->engageDownload(name, sl, filelist, path);
-  return id;
-}
-
-int TransferManager::getFileList(SiteLogic * sl, int connid, bool hiddenfiles) {
-  int id = requestids++;
-  Pointer<TransferMonitor> target = getAvailableTransferMonitor();
-  transferstatus[id] = TRANSFER_IN_PROGRESS;
-  transfermap[target.get()] = id;
   target->engageList(sl, connid, hiddenfiles);
-  return id;
 }
 
 void TransferManager::suggestTransfer(std::string name, SiteLogic * src, FileList * fls, SiteLogic * dst, FileList * fld) {
@@ -39,9 +25,10 @@ void TransferManager::suggestTransfer(std::string srcname, SiteLogic * src, File
   target->engageFXP(srcname, src, fls, dstname, dst, fld);
 }
 
-void TransferManager::suggestDownload(std::string name, SiteLogic * sl, FileList * filelist, std::string path) {
+Pointer<TransferStatus> TransferManager::suggestDownload(std::string name, SiteLogic * sl, FileList * filelist, std::string path) {
   Pointer<TransferMonitor> target = getAvailableTransferMonitor();
   target->engageDownload(name, sl, filelist, path);
+  return target->getTransferStatus();
 }
 
 void TransferManager::suggestUpload(std::string name, std::string path, SiteLogic * sl, FileList * filelist) {
@@ -65,40 +52,20 @@ Pointer<TransferMonitor> TransferManager::getAvailableTransferMonitor() {
   return target;
 }
 
-int TransferManager::transferStatus(int id) const {
-  std::map<int, int>::const_iterator it = transferstatus.find(id);
-  if (it != transferstatus.end()) {
-    return it->second;
-  }
-  return 0;
-}
-
-void TransferManager::transferSuccessful(TransferMonitor * monitor) {
-  bool push = false;
-  if (transferstatus[transfermap[monitor]] == TRANSFER_IN_PROGRESS_UI) {
-    push = true;
-  }
-  transferstatus[transfermap[monitor]] = TRANSFER_SUCCESSFUL;
-  if (push) {
-    global->getUIBase()->backendPush();
-  }
-  Pointer<TransferStatus> ts = monitor->getTransferStatus();
+void TransferManager::transferSuccessful(Pointer<TransferStatus> ts) {
   if (!!ts) {
+    if (ts->isAwaited()) {
+      global->getUIBase()->backendPush();
+    }
     moveTransferStatusToFinished(ts);
   }
 }
 
-void TransferManager::transferFailed(TransferMonitor * monitor, int err) {
-  bool push = false;
-  if (transferstatus[transfermap[monitor]] == TRANSFER_IN_PROGRESS_UI) {
-    push = true;
-  }
-  transferstatus[transfermap[monitor]] = TRANSFER_FAILED;
-  if (push) {
-    global->getUIBase()->backendPush();
-  }
-  Pointer<TransferStatus> ts = monitor->getTransferStatus();
+void TransferManager::transferFailed(Pointer<TransferStatus> ts, int err) {
   if (!!ts) {
+    if (ts->isAwaited()) {
+      global->getUIBase()->backendPush();
+    }
     moveTransferStatusToFinished(ts);
   }
 }

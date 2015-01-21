@@ -9,7 +9,7 @@ TransferStatus::TransferStatus(int type, std::string source, std::string target,
     timestamp(GlobalContext::ctimeLog()), sourcepath(sourcepath),
     targetpath(targetpath), sourcesize(sourcesize), knowntargetsize(0),
     interpolatedtargetsize(0), interpolationfilltargetsize(0), speed(assumedspeed),
-    finished(false), timespent(0), progress(0) {
+    state(TRANSFERSTATUS_STATE_IN_PROGRESS), timespent(0), progress(0) {
   if (!this->speed) {
     this->speed = 1024;
   }
@@ -75,10 +75,27 @@ std::string TransferStatus::getTimestamp() const {
   return timestamp;
 }
 
+int TransferStatus::getState() const {
+  return state;
+}
+
+bool TransferStatus::isAwaited() const {
+  return awaited;
+}
+
 void TransferStatus::setFinished() {
-  finished = true;
+  state = TRANSFERSTATUS_STATE_SUCCESSFUL;
   progress = 100;
   timeremaining = 0;
+}
+
+void TransferStatus::setFailed() {
+  state = TRANSFERSTATUS_STATE_FAILED;
+  timeremaining = 0;
+}
+
+void TransferStatus::setAwaited(bool awaited) {
+  this->awaited = awaited;
 }
 
 void TransferStatus::setTargetSize(unsigned int targetsize) {

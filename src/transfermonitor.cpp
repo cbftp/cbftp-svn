@@ -40,12 +40,12 @@ void TransferMonitor::engageFXP(std::string sfile, SiteLogic * sls, FileList * f
   this->sfile = sfile;
   this->dfile = dfile;
   if (!sls->lockDownloadConn(spath, sfile, &src)) {
-    tm->transferFailed(this, 4);
+    tm->transferFailed(ts, 4);
     return;
   }
   if (!sld->lockUploadConn(dpath, dfile, &dst)) {
     sls->returnConn(src);
-    tm->transferFailed(this, 5);
+    tm->transferFailed(ts, 5);
     return;
   }
   status = TM_STATUS_AWAITING_PASSIVE;
@@ -312,14 +312,14 @@ void TransferMonitor::finish() {
         break;
     }
   }
-  if (type == TM_TYPE_FXP) {
+  if (!!ts) {
     ts->setFinished();
   }
   if (status != TM_STATUS_ERROR_AWAITING_PEER) {
-    tm->transferSuccessful(this);
+    tm->transferSuccessful(ts);
   }
   else {
-    tm->transferFailed(this, 6);
+    tm->transferFailed(ts, 6);
     if (type == TM_TYPE_FXP) {
       sls->getSite()->pushTransferSpeed(sld->getSite()->getName(), 0);
     }
@@ -358,7 +358,7 @@ void TransferMonitor::sourceError(int err) {
       if (fileobj != NULL) {
         fileobj->finishUpload();
       }
-      tm->transferFailed(this, err);
+      tm->transferFailed(ts, err);
       status = TM_STATUS_IDLE;
       return;
     }
@@ -367,7 +367,7 @@ void TransferMonitor::sourceError(int err) {
     if (type == TM_TYPE_FXP) {
       sls->getSite()->pushTransferSpeed(sld->getSite()->getName(), 0);
     }
-    tm->transferFailed(this, err);
+    tm->transferFailed(ts, err);
     status = TM_STATUS_IDLE;
     return;
   }
@@ -407,7 +407,7 @@ void TransferMonitor::targetError(int err) {
           fileobj->finishDownload();
         }
       }
-      tm->transferFailed(this, err);
+      tm->transferFailed(ts, err);
       status = TM_STATUS_IDLE;
       return;
     }
@@ -416,7 +416,7 @@ void TransferMonitor::targetError(int err) {
     if (type == TM_TYPE_FXP) {
       sls->getSite()->pushTransferSpeed(sld->getSite()->getName(), 0);
     }
-    tm->transferFailed(this, err);
+    tm->transferFailed(ts, err);
     status = TM_STATUS_IDLE;
     return;
   }
