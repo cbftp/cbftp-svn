@@ -23,6 +23,7 @@
 #include "localstorage.h"
 #include "localfilelist.h"
 #include "pointer.h"
+#include "transferstatus.h"
 
 Engine::Engine() {
   scoreboard = new ScoreBoard();
@@ -417,6 +418,7 @@ void Engine::refreshPendingTransferList(TransferJob * tj) {
         for (std::map<std::string, File *>::iterator srcit = srclist->begin(); srcit != srclist->end(); srcit++) {
           if (!srcit->second->isDirectory() && (!dstlist || dstlist->find(srcit->first) == dstlist->end())) {
             it->second.push_back(PendingTransfer(tj->getSrc(), srclist, srcit->first, getpath, srcit->first));
+            tj->addPendingTransfer(srcit->first, srcit->second->getSize());
           }
         }
       }
@@ -431,6 +433,8 @@ void Engine::refreshPendingTransferList(TransferJob * tj) {
       if (!dstlist || dstlist->find(tj->getDstFileName()) == dstlist->end()) {
         it->second.push_back(PendingTransfer(tj->getSrc(), tj->getSrcFileList(),
             tj->getSrcFileName(), tj->getDstPath(), tj->getDstFileName()));
+        tj->addPendingTransfer(tj->getSrcFileName(),
+            tj->getSrcFileList()->getFile(tj->getSrcFileName())->getSize());
       }
       break;
     }
@@ -546,7 +550,7 @@ int Engine::calculateScore(File * f, Race * itr, FileList * fls, SiteRace * srs,
     maxfilesize = filesize;
   }
   points += 100 + filesize / ((maxfilesize + 1900) / 1900); // gives max 2000 points
-  points = (points * (avgspeed / 100)) / (maxavgspeed / 100);
+  points = points / 2 + (points * (avgspeed / 100)) / (maxavgspeed / 100);
   if (racemode) {
     // give points for owning a low percentage of the race on the target
     points += ((100 - fld->getOwnedPercentage()) * 30); // gives max 3000 points
