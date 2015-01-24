@@ -335,6 +335,7 @@ void MenuSelectOption::adjustLines(unsigned int linesize) {
           break;
         }
       }
+      break;
     }
     else if (totalwantedwidth > linesize) {
       int leastimportant = -1;

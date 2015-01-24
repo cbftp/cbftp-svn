@@ -1,6 +1,10 @@
 #include "viewfilescreen.h"
 
 #include "../ui.h"
+#include "../menuselectoption.h"
+#include "../resizableelement.h"
+#include "../menuselectadjustableline.h"
+#include "../menuselectoptiontextbutton.h"
 
 #include "../../globalcontext.h"
 #include "../../sitelogicmanager.h"
@@ -76,11 +80,10 @@ void ViewFileScreen::redraw() {
     return;
   }
   if (!viewingcontents) {
-    char * tmpdata;
-    int tmpdatalen;
     switch(ts->getState()) {
       case TRANSFERSTATUS_STATE_IN_PROGRESS:
-        ui->printStr(1, 1, "Downloading " + file + " from " + site + "...");
+        ui->printStr(1, 1, "Downloading from " + site + "...");
+        printTransferInfo();
         break;
       case TRANSFERSTATUS_STATE_FAILED:
         ui->printStr(1, 1, "Download of " + file + " from " + site + " failed.");
@@ -96,8 +99,8 @@ void ViewFileScreen::redraw() {
           ui->printStr(4, 1, "You can always press 'K' to kill ALL external viewers.");
         }
         else {
-          tmpdata = (char *) malloc(MAXOPENSIZE);
-          tmpdatalen = global->getLocalStorage()->getFileContent(file, tmpdata);
+          char * tmpdata = (char *) malloc(MAXOPENSIZE);
+          int tmpdatalen = global->getLocalStorage()->getFileContent(file, tmpdata);
           global->getLocalStorage()->deleteFile(file);
           {
             int last = 0;
@@ -146,9 +149,9 @@ void ViewFileScreen::update() {
         return;
       }
     }
-    else if (!pid && ts->getState() != TRANSFERSTATUS_STATE_IN_PROGRESS) {
+    else if (!pid) {
       redraw();
-      if (!legendupdated) {
+      if (ts->getState() != TRANSFERSTATUS_STATE_IN_PROGRESS && !legendupdated) {
         legendupdated = true;
         ui->update();
         ui->setLegend();
@@ -226,4 +229,55 @@ bool ViewFileScreen::goUp() {
     return true;
   }
   return false;
+}
+
+void ViewFileScreen::printTransferInfo() {
+  std::string speed = GlobalContext::parseSize(ts->getSpeed() * SIZEPOWER) + "/s";
+  int progresspercent = ts->getProgress();
+  std::string progress = global->int2Str(progresspercent) + "%";
+  std::string timeremaining = global->int2Str(ts->getTimeRemaining()) + "s";
+  std::string transferred = GlobalContext::parseSize(ts->targetSize()) + " / " +
+      GlobalContext::parseSize(ts->sourceSize());
+  unsigned int y = 3;
+  MenuSelectOption table;
+  MenuSelectAdjustableLine * msal = table.addAdjustableLine();
+  MenuSelectOptionTextButton * msotb;
+  msotb = table.addTextButtonNoContent(y, 1, "transferred", "TRANSFERRED");
+  msal->addElement((ResizableElement *)msotb, 4, RESIZE_CUTEND);
+  msotb = table.addTextButtonNoContent(y, 3, "filename", "FILENAME");
+  msal->addElement((ResizableElement *)msotb, 2, RESIZE_CUTEND);
+  msotb = table.addTextButtonNoContent(y, 6, "remaining", "LEFT");
+  msal->addElement((ResizableElement *)msotb, 5, RESIZE_REMOVE);
+  msotb = table.addTextButtonNoContent(y, 7, "speed", "SPEED");
+  msal->addElement((ResizableElement *)msotb, 6, RESIZE_REMOVE);
+  msotb = table.addTextButtonNoContent(y, 8, "progress", "DONE");
+  msal->addElement((ResizableElement *)msotb, 7, RESIZE_REMOVE);
+  y++;
+  msal = table.addAdjustableLine();
+  msotb = table.addTextButtonNoContent(y, 1, "transferred", transferred);
+  msal->addElement((ResizableElement *)msotb, 4, RESIZE_CUTEND);
+  msotb = table.addTextButtonNoContent(y, 10, "filename", ts->getFile());
+  msal->addElement((ResizableElement *)msotb, 2, RESIZE_WITHLAST3);
+  msotb = table.addTextButtonNoContent(y, 60, "remaining", timeremaining);
+  msal->addElement((ResizableElement *)msotb, 5, RESIZE_REMOVE);
+  msotb = table.addTextButtonNoContent(y, 40, "speed", speed);
+  msal->addElement((ResizableElement *)msotb, 6, RESIZE_REMOVE);
+  msotb = table.addTextButtonNoContent(y, 50, "progress", progress);
+  msal->addElement((ResizableElement *)msotb, 7, RESIZE_REMOVE);
+  table.adjustLines(col - 3);
+  for (unsigned int i = 0; i < table.size(); i++) {
+    ResizableElement * re = (ResizableElement *) table.getElement(i);
+    if (re->isVisible()) {
+      if (re->getIdentifier() == "filename") {
+        std::string labeltext = re->getLabelText();
+        bool highlight = table.getLineIndex(table.getAdjustableLine(re)) == 1;
+        int charswithhighlight = highlight ? labeltext.length() * progresspercent / 100 : 0;
+        ui->printStr(re->getRow(), re->getCol(), labeltext.substr(0, charswithhighlight), true);
+        ui->printStr(re->getRow(), re->getCol() + charswithhighlight, labeltext.substr(charswithhighlight));
+      }
+      else {
+        ui->printStr(re->getRow(), re->getCol(), re->getLabelText());
+      }
+    }
+  }
 }

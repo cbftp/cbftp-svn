@@ -43,4 +43,5 @@ private:
   int pid;
   bool goDown();
   bool goUp();
+  void printTransferInfo();
 };
