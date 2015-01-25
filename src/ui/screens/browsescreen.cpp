@@ -118,8 +118,10 @@ void BrowseScreen::redraw() {
       }
       virgin = false;
       unsigned int position = 0;
+      bool separatorsenabled = false;
       if (list.getPath() == filelist->getPath()) {
         position = list.currentCursorPosition();
+        separatorsenabled = list.separatorsEnabled();
       }
       else {
         currentviewspan = 0;
@@ -127,6 +129,9 @@ void BrowseScreen::redraw() {
       list.parse(filelist);
       sitelogic->finishRequest(requestid);
       requestid = -1;
+      if (separatorsenabled) {
+        list.toggleSeparators();
+      }
       sort();
       if (position) {
         list.setCursorPosition(position);

@@ -352,6 +352,10 @@ std::string UIFileList::getSortMethod() const {
   return sortmethod;
 }
 
+bool UIFileList::separatorsEnabled() const {
+  return separators;
+}
+
 void UIFileList::removeFile(std::string file) {
   for (unsigned int i = 0; i < sortedfiles.size(); i++) {
     if (sortedfiles[i] != NULL && sortedfiles[i]->getName() == file) {

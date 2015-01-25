@@ -45,6 +45,7 @@ public:
   unsigned int currentCursorPosition() const;
   std::string getPath() const;
   std::string getSortMethod() const;
+  bool separatorsEnabled() const;
   void removeFile(std::string);
   void toggleSeparators();
   void setCursorPosition(unsigned int);
