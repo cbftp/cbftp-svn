@@ -29,7 +29,9 @@ public:
     decrease();
     object = other.object;
     counter = other.counter;
-    ++(*counter);
+    if (counter != NULL) {
+      ++(*counter);
+    }
     return *this;
   }
   T * operator->() const {

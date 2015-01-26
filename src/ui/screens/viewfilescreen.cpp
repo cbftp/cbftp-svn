@@ -58,7 +58,12 @@ void ViewFileScreen::initialize(unsigned int row, unsigned int col, std::string 
   if (download) {
     ts = global->getTransferManager()->suggestDownload(file, sitelogic,
         filelist, temppath);
-    ts->setAwaited(true);
+    if (!ts) {
+      download = false;
+    }
+    else {
+      ts->setAwaited(true);
+    }
   }
   path = temppath + "/" + file;
   expectbackendpush = true;
@@ -76,6 +81,9 @@ void ViewFileScreen::redraw() {
     else if (hasnodisplay) {
       ui->printStr(1, 1, file + " cannot be opened in an external viewer.");
       ui->printStr(2, 1, "The DISPLAY environment variable is not set.");
+    }
+    else if (!ts) {
+      ui->printStr(1, 1, "No download slots available at " + site + ".");
     }
     return;
   }
