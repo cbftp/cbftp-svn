@@ -110,7 +110,19 @@ void TransfersScreen::addTransferDetails(unsigned int y, Pointer<TransferStatus>
   std::string speed = GlobalContext::parseSize(ts->getSpeed() * SIZEPOWER) + "/s";
   std::string timespent = global->int2Str(ts->getTimeSpent()) + "s";
   int progresspercent = ts->getProgress();
-  std::string progress = global->int2Str(progresspercent) + "%";
+  ts->getState();
+  std::string progress;
+  switch (ts->getState()) {
+    case TRANSFERSTATUS_STATE_IN_PROGRESS:
+      progress = global->int2Str(progresspercent) + "%";
+      break;
+    case TRANSFERSTATUS_STATE_FAILED:
+      progress = "fail";
+      break;
+    case TRANSFERSTATUS_STATE_SUCCESSFUL:
+      progress = "done";
+      break;
+  }
   std::string timeremaining = global->int2Str(ts->getTimeRemaining()) + "s";
   std::string transferred = GlobalContext::parseSize(ts->targetSize()) + " / " +
       GlobalContext::parseSize(ts->sourceSize());
