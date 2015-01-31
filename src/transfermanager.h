@@ -25,7 +25,6 @@ class TransferManager {
   public:
     TransferManager();
     void getFileList(SiteLogic *, int, bool);
-    Pointer<TransferStatus> download(std::string, SiteLogic *, FileList *, std::string);
     void suggestTransfer(std::string, SiteLogic *, FileList *, SiteLogic *, FileList *);
     void suggestTransfer(std::string, SiteLogic *, FileList *, std::string, SiteLogic *, FileList *);
     Pointer<TransferStatus> suggestDownload(std::string, SiteLogic *, FileList *, std::string);
