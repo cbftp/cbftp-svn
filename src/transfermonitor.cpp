@@ -85,7 +85,7 @@ void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileLis
   if (!sls->lockDownloadConn(spath, sfile, &src)) return;
   status = TM_STATUS_AWAITING_PASSIVE;
   ts = Pointer<TransferStatus>(new TransferStatus(TRANSFERSTATUS_TYPE_DOWNLOAD,
-      sls->getSite()->getName(), "local", "", dfile, spath,
+      sls->getSite()->getName(), "/\\", "", dfile, spath,
       dpath, fls->getFile(sfile)->getSize(), 0));
   tm->addNewTransferStatus(ts);
   int spol = sls->getSite()->getSSLTransferPolicy();
@@ -116,7 +116,7 @@ void TransferMonitor::engageUpload(std::string sfile, std::string spath, SiteLog
   if (!sls->lockUploadConn(dpath, dfile, &dst)) return;
   status = TM_STATUS_AWAITING_PASSIVE;
   ts = Pointer<TransferStatus>(new TransferStatus(TRANSFERSTATUS_TYPE_UPLOAD,
-      "local", sld->getSite()->getName(), "", dfile, spath,
+      "/\\", sld->getSite()->getName(), "", dfile, spath,
       dpath, fls->getFile(sfile)->getSize(), 0));
   tm->addNewTransferStatus(ts);
   int spol = sld->getSite()->getSSLTransferPolicy();

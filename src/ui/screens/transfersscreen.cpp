@@ -108,9 +108,8 @@ std::string TransfersScreen::getInfoLabel() const {
 void TransfersScreen::addTransferDetails(unsigned int y, Pointer<TransferStatus> ts) {
   std::string route = ts->getSource() + " -> " + ts->getTarget();
   std::string speed = GlobalContext::parseSize(ts->getSpeed() * SIZEPOWER) + "/s";
-  std::string timespent = global->int2Str(ts->getTimeSpent()) + "s";
+  std::string timespent = GlobalContext::simpleTimeFormat(ts->getTimeSpent());
   int progresspercent = ts->getProgress();
-  ts->getState();
   std::string progress;
   switch (ts->getState()) {
     case TRANSFERSTATUS_STATE_IN_PROGRESS:
@@ -123,7 +122,7 @@ void TransfersScreen::addTransferDetails(unsigned int y, Pointer<TransferStatus>
       progress = "done";
       break;
   }
-  std::string timeremaining = global->int2Str(ts->getTimeRemaining()) + "s";
+  std::string timeremaining = GlobalContext::simpleTimeFormat(ts->getTimeRemaining());
   std::string transferred = GlobalContext::parseSize(ts->targetSize()) + " / " +
       GlobalContext::parseSize(ts->sourceSize());
   std::string path = ts->getSourcePath() + " -> " + ts->getTargetPath();

@@ -25,10 +25,10 @@ class TransferManager {
   public:
     TransferManager();
     void getFileList(SiteLogic *, int, bool);
-    void suggestTransfer(std::string, SiteLogic *, FileList *, SiteLogic *, FileList *);
-    void suggestTransfer(std::string, SiteLogic *, FileList *, std::string, SiteLogic *, FileList *);
+    Pointer<TransferStatus> suggestTransfer(std::string, SiteLogic *, FileList *, SiteLogic *, FileList *);
+    Pointer<TransferStatus> suggestTransfer(std::string, SiteLogic *, FileList *, std::string, SiteLogic *, FileList *);
     Pointer<TransferStatus> suggestDownload(std::string, SiteLogic *, FileList *, std::string);
-    void suggestUpload(std::string, std::string, SiteLogic *, FileList *);
+    Pointer<TransferStatus> suggestUpload(std::string, std::string, SiteLogic *, FileList *);
     void transferSuccessful(Pointer<TransferStatus>);
     void transferFailed(Pointer<TransferStatus>, int);
     std::list<Pointer<TransferStatus> >::const_iterator ongoingTransfersBegin() const;

@@ -1,11 +1,13 @@
 #pragma once
 
+#include "eventreceiver.h"
+
 #define COMMANDOWNER_SITERACE 543
 #define COMMANDOWNER_TRANSFERJOB 544
 
 class FileList;
 
-class CommandOwner {
+class CommandOwner : public EventReceiver {
 public:
   virtual ~CommandOwner() {
   }

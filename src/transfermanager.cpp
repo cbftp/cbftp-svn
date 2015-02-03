@@ -16,13 +16,14 @@ void TransferManager::getFileList(SiteLogic * sl, int connid, bool hiddenfiles) 
   target->engageList(sl, connid, hiddenfiles);
 }
 
-void TransferManager::suggestTransfer(std::string name, SiteLogic * src, FileList * fls, SiteLogic * dst, FileList * fld) {
-  suggestTransfer(name, src, fls, name, dst, fld);
+Pointer<TransferStatus> TransferManager::suggestTransfer(std::string name, SiteLogic * src, FileList * fls, SiteLogic * dst, FileList * fld) {
+  return suggestTransfer(name, src, fls, name, dst, fld);
 }
 
-void TransferManager::suggestTransfer(std::string srcname, SiteLogic * src, FileList * fls, std::string dstname, SiteLogic * dst, FileList * fld) {
+Pointer<TransferStatus> TransferManager::suggestTransfer(std::string srcname, SiteLogic * src, FileList * fls, std::string dstname, SiteLogic * dst, FileList * fld) {
   Pointer<TransferMonitor> target = getAvailableTransferMonitor();
   target->engageFXP(srcname, src, fls, dstname, dst, fld);
+  return target->getTransferStatus();
 }
 
 Pointer<TransferStatus> TransferManager::suggestDownload(std::string name, SiteLogic * sl, FileList * filelist, std::string path) {
@@ -31,9 +32,10 @@ Pointer<TransferStatus> TransferManager::suggestDownload(std::string name, SiteL
   return target->getTransferStatus();
 }
 
-void TransferManager::suggestUpload(std::string name, std::string path, SiteLogic * sl, FileList * filelist) {
+Pointer<TransferStatus> TransferManager::suggestUpload(std::string name, std::string path, SiteLogic * sl, FileList * filelist) {
   Pointer<TransferMonitor> target = getAvailableTransferMonitor();
   target->engageUpload(name, path, sl, filelist);
+  return target->getTransferStatus();
 }
 
 Pointer<TransferMonitor> TransferManager::getAvailableTransferMonitor() {

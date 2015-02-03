@@ -91,10 +91,7 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
   }
   bool readdtocurrent = true;
   if (addsites.size() > 0) {
-    if (!pokeregistered) {
-      global->getTickPoke()->startPoke(this, "Engine", POKEINTERVAL, 0);
-      pokeregistered = true;
-    }
+    checkStartPoke();
     if (append) {
       for (std::list<Race *>::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
         if (*it == race) {
@@ -152,6 +149,7 @@ void Engine::newTransferJobDownload(std::string site, std::string srcfile, FileL
   global->getEventLog()->log("Engine", "Starting download job: " + srcfile +
             " from " + site);
   sl->addTransferJob(tj);
+  checkStartPoke();
 }
 
 void Engine::newTransferJobUpload(std::string path, std::string srcfile, std::string site, std::string dstfile, FileList * filelist) {
@@ -162,6 +160,7 @@ void Engine::newTransferJobUpload(std::string path, std::string srcfile, std::st
   global->getEventLog()->log("Engine", "Starting upload job: " + srcfile +
             " to " + site);
   sl->addTransferJob(tj);
+  checkStartPoke();
 }
 
 void Engine::newTransferJobFXP(std::string srcsite, std::string srcfile, FileList * srcfilelist, std::string dstsite, std::string dstfile, FileList * dstfilelist) {
@@ -174,6 +173,7 @@ void Engine::newTransferJobFXP(std::string srcsite, std::string srcfile, FileLis
             " - " + srcsite + " -> " + dstsite);
   slsrc->addTransferJob(tj);
   sldst->addTransferJob(tj);
+  checkStartPoke();
 }
 
 void Engine::removeSiteFromRace(std::string release, std::string site) {
@@ -235,23 +235,7 @@ void Engine::transferJobActionRequest(TransferJob * tj) {
         tj->refreshLists();
       }
       else {
-        tj->setDone();
-        std::string type;
-        switch (tj->getType()) {
-          case TRANSFERJOB_DOWNLOAD:
-          case TRANSFERJOB_DOWNLOAD_FILE:
-            type = "Download";
-            break;
-          case TRANSFERJOB_UPLOAD:
-          case TRANSFERJOB_UPLOAD_FILE:
-            type = "Upload";
-            break;
-          case TRANSFERJOB_FXP:
-          case TRANSFERJOB_FXP_FILE:
-            type = "FXP";
-            break;
-        }
-        global->getEventLog()->log("Engine", type + " job complete: " + tj->getSrcFileName());
+        tj->setAlmostDone();
       }
       return;
     }
@@ -263,17 +247,26 @@ void Engine::transferJobActionRequest(TransferJob * tj) {
   it->second.pop_front();
   switch (pt.type()) {
     case PENDINGTRANSFER_DOWNLOAD:
-      global->getTransferManager()->suggestDownload(pt.getSrcFileName(), pt.getSrc(),
-                pt.getSrcFileList(), pt.getPath());
+    {
+      Pointer<TransferStatus> ts = global->getTransferManager()->suggestDownload(pt.getSrcFileName(),
+          pt.getSrc(), pt.getSrcFileList(), pt.getPath());
+      tj->addTransfer(ts);
       break;
+    }
     case PENDINGTRANSFER_UPLOAD:
-      global->getTransferManager()->suggestUpload(pt.getSrcFileName(), pt.getPath(),
-          pt.getDst(), pt.getDstFileList());
+    {
+      Pointer<TransferStatus> ts = global->getTransferManager()->suggestUpload(pt.getSrcFileName(),
+          pt.getPath(), pt.getDst(), pt.getDstFileList());
+      tj->addTransfer(ts);
       break;
+    }
     case PENDINGTRANSFER_FXP:
-      global->getTransferManager()->suggestTransfer(pt.getSrcFileName(), pt.getSrc(),
-                pt.getSrcFileList(), pt.getDst(), pt.getDstFileList());
+    {
+      Pointer<TransferStatus> ts = global->getTransferManager()->suggestTransfer(pt.getSrcFileName(),
+          pt.getSrc(), pt.getSrcFileList(), pt.getDst(), pt.getDstFileList());
+      tj->addTransfer(ts);
       break;
+    }
   }
 }
 
@@ -416,9 +409,16 @@ void Engine::refreshPendingTransferList(TransferJob * tj) {
           dstlist = global->getLocalStorage()->getLocalFileList(getpath);
         }
         for (std::map<std::string, File *>::iterator srcit = srclist->begin(); srcit != srclist->end(); srcit++) {
-          if (!srcit->second->isDirectory() && (!dstlist || dstlist->find(srcit->first) == dstlist->end())) {
-            it->second.push_back(PendingTransfer(tj->getSrc(), srclist, srcit->first, getpath, srcit->first));
-            tj->addPendingTransfer(srcit->first, srcit->second->getSize());
+          if (!srcit->second->isDirectory()) {
+            std::map<std::string, LocalFile>::const_iterator dstit;
+            if (!!dstlist) {
+              dstit = dstlist->find(srcit->first);
+            }
+            if (!dstlist || dstit == dstlist->end() || dstit->second.getSize() == 0) {
+              it->second.push_back(PendingTransfer(tj->getSrc(), srclist, srcit->first, getpath, srcit->first));
+              std::string subpath = it2->first.length() > 0 ? it2->first + "/" : "";
+              tj->addPendingTransfer(subpath + srcit->first, srcit->second->getSize());
+            }
           }
         }
       }
@@ -430,7 +430,11 @@ void Engine::refreshPendingTransferList(TransferJob * tj) {
       if (global->getLocalStorage()->directoryExistsWritable(tj->getDstPath())) {
         dstlist = global->getLocalStorage()->getLocalFileList(tj->getDstPath());
       }
-      if (!dstlist || dstlist->find(tj->getDstFileName()) == dstlist->end()) {
+      std::map<std::string, LocalFile>::const_iterator dstit;
+      if (!!dstlist) {
+        dstit = dstlist->find(tj->getDstFileName());
+      }
+      if (!dstlist || dstit == dstlist->end() || dstit->second.getSize() == 0) {
         it->second.push_back(PendingTransfer(tj->getSrc(), tj->getSrcFileList(),
             tj->getSrcFileName(), tj->getDstPath(), tj->getDstFileName()));
         tj->addPendingTransfer(tj->getSrcFileName(),
@@ -542,6 +546,17 @@ void Engine::raceComplete(Race * race) {
   return;
 }
 
+void Engine::transferJobComplete(TransferJob * tj) {
+
+  for (std::list<TransferJob *>::iterator it = currenttransferjobs.begin(); it != currenttransferjobs.end(); it++) {
+    if ((*it) == tj) {
+      currenttransferjobs.erase(it);
+      break;
+    }
+  }
+  global->getEventLog()->log("Engine", tj->typeString() + " job complete: " + tj->getSrcFileName());
+}
+
 int Engine::calculateScore(File * f, Race * itr, FileList * fls, SiteRace * srs, FileList * fld, SiteRace * srd, int avgspeed, bool * prio, bool racemode) const {
   int points = 0;
   unsigned long long int filesize = f->getSize();
@@ -603,6 +618,10 @@ int Engine::currentTransferJobs() const {
   return currenttransferjobs.size();
 }
 
+int Engine::allTransferJobs() const {
+  return alltransferjobs.size();
+}
+
 Race * Engine::getRace(std::string releasename) const {
   std::list<Race *>::const_iterator it;
   for (it = allraces.begin(); it != allraces.end(); it++) {
@@ -660,7 +679,13 @@ void Engine::tick(int message) {
       break;
     }
   }
-  if (!currentraces.size() && pokeregistered) {
+  for (std::list<TransferJob *>::iterator it = currenttransferjobs.begin(); it != currenttransferjobs.end(); it++) {
+    if ((*it)->isDone()) {
+      transferJobComplete(*it);
+      break;
+    }
+  }
+  if (!currentraces.size() && !currenttransferjobs.size() && pokeregistered) {
     global->getTickPoke()->stopPoke(this, 0);
     pokeregistered = false;
   }
@@ -674,4 +699,11 @@ void Engine::issueGlobalComplete(Race * race) {
 
 ScoreBoard * Engine::getScoreBoard() const {
   return scoreboard;
+}
+
+void Engine::checkStartPoke() {
+  if (!pokeregistered) {
+    global->getTickPoke()->startPoke(this, "Engine", POKEINTERVAL, 0);
+    pokeregistered = true;
+  }
 }

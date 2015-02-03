@@ -2,8 +2,10 @@
 
 #include <string>
 #include <map>
+#include <list>
 
 #include "commandowner.h"
+#include "pointer.h"
 
 #define TRANSFERJOB_DOWNLOAD 2161
 #define TRANSFERJOB_DOWNLOAD_FILE 2162
@@ -12,8 +14,11 @@
 #define TRANSFERJOB_FXP 2165
 #define TRANSFERJOB_FXP_FILE 2166
 
+#define TRANSFERJOB_UPDATE_INTERVAL 250
+
 class SiteLogic;
 class FileList;
+class TransferStatus;
 
 class TransferJob : public CommandOwner {
 public:
@@ -32,6 +37,10 @@ public:
   std::map<std::string, FileList *>::const_iterator srcFileListsEnd() const;
   std::map<std::string, FileList *>::const_iterator dstFileListsBegin() const;
   std::map<std::string, FileList *>::const_iterator dstFileListsEnd() const;
+  std::list<Pointer<TransferStatus> >::const_iterator transfersBegin() const;
+  std::list<Pointer<TransferStatus> >::const_iterator transfersEnd() const;
+  std::map<std::string, unsigned long long int>::const_iterator pendingTransfersBegin() const;
+  std::map<std::string, unsigned long long int>::const_iterator pendingTransfersEnd() const;
   bool isDone() const;
   bool wantsList(SiteLogic *);
   FileList * getListTarget(SiteLogic *) const;
@@ -40,14 +49,30 @@ public:
   SiteLogic * getDst() const;
   int maxSlots() const;
   void setSlots(int);
+  int maxPossibleSlots() const;
   bool listsRefreshed() const;
   void refreshLists();
-  void setDone();
+  void setAlmostDone();
   void clearRefreshLists();
   void addPendingTransfer(std::string, unsigned long long int);
+  void addTransfer(Pointer<TransferStatus>);
+  void tick(int);
+  int getProgress() const;
+  int timeSpent() const;
+  int timeRemaining() const;
+  unsigned long long int sizeProgress() const;
+  unsigned long long int totalSize() const;
+  unsigned int getSpeed() const;
+  std::string timeStarted() const;
+  std::string typeString() const;
+  int filesProgress() const;
+  int filesTotal() const;
+  std::string findSubPath(Pointer<TransferStatus>) const;
 private:
   void addSubDirectoryFileLists(std::map<std::string, FileList *> &, FileList *);
+  void updateStatus();
   void init();
+  void countTotalFiles();
   int type;
   SiteLogic * src;
   SiteLogic * dst;
@@ -59,10 +84,23 @@ private:
   FileList * dstlist;
   std::map<std::string, FileList *> srcfilelists;
   std::map<std::string, FileList *> dstfilelists;
+  std::map<std::string, unsigned long long int> pendingtransfers;
+  std::list<Pointer<TransferStatus> > transfers;
   int slots;
+  bool almostdone;
   bool done;
   bool listsrefreshed;
   FileList * srclisttarget;
   FileList * dstlisttarget;
   std::map<FileList *, bool> filelistsrefreshed;
+  unsigned long long int expectedfinalsize;
+  unsigned int speed;
+  unsigned long long int sizeprogress;
+  int progress;
+  int timespentmillis;
+  int timespentsecs;
+  int timeremaining;
+  std::string timestarted;
+  int filesprogress;
+  int filestotal;
 };

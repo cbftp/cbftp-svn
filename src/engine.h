@@ -40,8 +40,10 @@ class Engine : public EventReceiver {
     int calculateScore(File *, Race *, FileList *, SiteRace *, FileList *, SiteRace *, int, bool *, bool) const;
     void checkIfRaceComplete(SiteLogic *, Race *);
     void raceComplete(Race *);
+    void transferJobComplete(TransferJob *);
     void issueGlobalComplete(Race *);
     void refreshPendingTransferList(TransferJob *);
+    void checkStartPoke();
     bool pokeregistered;
     unsigned int dropped;
   public:
@@ -60,6 +62,7 @@ class Engine : public EventReceiver {
     int currentRaces() const;
     int allRaces() const;
     int currentTransferJobs() const;
+    int allTransferJobs() const;
     Race * getRace(std::string) const;
     TransferJob * getTransferJob(std::string) const;
     std::list<Race *>::iterator getRacesIteratorBegin();

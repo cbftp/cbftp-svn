@@ -52,7 +52,7 @@ void MainScreen::redraw() {
   ui->hideCursor();
   numsitestext = "Sites: " + global->int2Str(global->getSiteManager()->getNumSites());
   bool listraces = global->getEngine()->allRaces();
-  bool listtransferjobs = global->getEngine()->currentTransferJobs();
+  bool listtransferjobs = global->getEngine()->allTransferJobs();
   unsigned int irow = 1;
   if (listraces) {
     mss.makeLeavableUp();

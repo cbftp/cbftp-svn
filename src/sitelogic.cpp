@@ -706,6 +706,19 @@ void SiteLogic::activateOne() {
   }
 }
 
+void SiteLogic::haveConnected(unsigned int connected) {
+  if (loggedin < connected) {
+    int lefttoconnect = connected;
+    wantedloggedin = connected;
+    for (unsigned int i = 0; i < conns.size() && lefttoconnect > 0; i++) {
+      if (!conns[i]->isConnected()) {
+        conns[i]->login();
+        lefttoconnect--;
+      }
+    }
+  }
+}
+
 void SiteLogic::handleConnection(int id, bool backfromrefresh) {
   if (conns[id]->isProcessing()) {
     return;

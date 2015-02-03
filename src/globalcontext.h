@@ -82,6 +82,7 @@ class GlobalContext {
     static std::string parseSize(unsigned long long int);
     static int getSizeGranularity();
     static std::vector<unsigned long long int> getPowers();
+    static std::string simpleTimeFormat(int);
     void updateTime();
     int currentYear() const;
     int currentMonth() const;

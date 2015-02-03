@@ -278,3 +278,26 @@ std::vector<unsigned long long int> GlobalContext::getPowers() {
   }
   return vec;
 }
+
+std::string GlobalContext::simpleTimeFormat(int seconds) {
+  std::string time;
+  if (seconds >= 86400) {
+    int days = seconds / 86400;
+    time = int2Str(days) + "d";
+    seconds = seconds % 86400;
+  }
+  if (seconds >= 3600) {
+    int hours = seconds / 3600;
+    time += int2Str(hours) + "h";
+    seconds = seconds % 86400;
+  }
+  if (seconds >= 60) {
+    int minutes = seconds / 60;
+    time += int2Str(minutes) + "m";
+    seconds = seconds % 60;
+  }
+  if (seconds || !time.length()) {
+    time += int2Str(seconds) + "s";
+  }
+  return time;
+}

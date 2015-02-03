@@ -102,6 +102,7 @@ class SiteLogic : public EventReceiver {
     void disconnected(int);
     void activateOne();
     void activateAll();
+    void haveConnected(unsigned int);
     Site * getSite() const;
     SiteRace * getRace(std::string) const;
     void lockConnList(int);

@@ -243,7 +243,7 @@ void ViewFileScreen::printTransferInfo() {
   std::string speed = GlobalContext::parseSize(ts->getSpeed() * SIZEPOWER) + "/s";
   int progresspercent = ts->getProgress();
   std::string progress = global->int2Str(progresspercent) + "%";
-  std::string timeremaining = global->int2Str(ts->getTimeRemaining()) + "s";
+  std::string timeremaining = GlobalContext::simpleTimeFormat(ts->getTimeRemaining());
   std::string transferred = GlobalContext::parseSize(ts->targetSize()) + " / " +
       GlobalContext::parseSize(ts->sourceSize());
   unsigned int y = 3;
