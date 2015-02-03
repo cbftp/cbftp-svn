@@ -435,8 +435,10 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       }
       break;
     case 'D':
-      global->getEngine()->newTransferJobDownload(site->getName(), list.cursoredFile()->getName(),
-          filelist, global->getLocalStorage()->getDownloadPath());
+      if (list.cursoredFile()->isDirectory() || list.cursoredFile()->getSize() > 0) {
+        global->getEngine()->newTransferJobDownload(site->getName(), list.cursoredFile()->getName(),
+            filelist, global->getLocalStorage()->getDownloadPath());
+      }
       break;
     case 's':
       sortmethod++;

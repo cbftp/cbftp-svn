@@ -334,7 +334,7 @@ void TransferJob::updateStatus() {
     timeremaining = (expectedfinalsize - sizeprogress) / (speed * 1024);
   }
   filesprogress = aggregatedfilescomplete;
-  if (almostdone && !ongoingtransfers && filesprogress == filestotal) {
+  if (almostdone && !ongoingtransfers && filesprogress >= filestotal) {
     done = true;
     global->getTickPoke()->stopPoke(this, 0);
   }
@@ -396,11 +396,25 @@ int TransferJob::filesTotal() const {
 }
 
 void TransferJob::countTotalFiles() {
-  int files = 0;
-  for (std::map<std::string, FileList *>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
-    files += it->second->getNumUploadedFiles();
+  switch (type) {
+    case TRANSFERJOB_DOWNLOAD_FILE:
+    case TRANSFERJOB_UPLOAD_FILE:
+    case TRANSFERJOB_FXP_FILE:
+      filestotal = 1;
+      break;
+    case TRANSFERJOB_DOWNLOAD:
+    case TRANSFERJOB_FXP:
+    {
+      int files = 0;
+      for (std::map<std::string, FileList *>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
+        files += it->second->getNumUploadedFiles();
+      }
+      filestotal = files;
+      break;
+    }
+    case TRANSFERJOB_UPLOAD:
+      break;
   }
-  filestotal = files;
 }
 
 std::string TransferJob::findSubPath(Pointer<TransferStatus> ts) const {

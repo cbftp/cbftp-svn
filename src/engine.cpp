@@ -409,7 +409,7 @@ void Engine::refreshPendingTransferList(TransferJob * tj) {
           dstlist = global->getLocalStorage()->getLocalFileList(getpath);
         }
         for (std::map<std::string, File *>::iterator srcit = srclist->begin(); srcit != srclist->end(); srcit++) {
-          if (!srcit->second->isDirectory()) {
+          if (!srcit->second->isDirectory() && srcit->second->getSize() > 0) {
             std::map<std::string, LocalFile>::const_iterator dstit;
             if (!!dstlist) {
               dstit = dstlist->find(srcit->first);
@@ -422,26 +422,25 @@ void Engine::refreshPendingTransferList(TransferJob * tj) {
           }
         }
       }
-
       break;
     case TRANSFERJOB_DOWNLOAD_FILE:
-    {
-      Pointer<LocalFileList> dstlist;
-      if (global->getLocalStorage()->directoryExistsWritable(tj->getDstPath())) {
-        dstlist = global->getLocalStorage()->getLocalFileList(tj->getDstPath());
-      }
-      std::map<std::string, LocalFile>::const_iterator dstit;
-      if (!!dstlist) {
-        dstit = dstlist->find(tj->getDstFileName());
-      }
-      if (!dstlist || dstit == dstlist->end() || dstit->second.getSize() == 0) {
-        it->second.push_back(PendingTransfer(tj->getSrc(), tj->getSrcFileList(),
-            tj->getSrcFileName(), tj->getDstPath(), tj->getDstFileName()));
-        tj->addPendingTransfer(tj->getSrcFileName(),
-            tj->getSrcFileList()->getFile(tj->getSrcFileName())->getSize());
+      if (tj->getSrcFileList()->getFile(tj->getSrcFileName())->getSize() > 0) {
+        Pointer<LocalFileList> dstlist;
+        if (global->getLocalStorage()->directoryExistsWritable(tj->getDstPath())) {
+          dstlist = global->getLocalStorage()->getLocalFileList(tj->getDstPath());
+        }
+        std::map<std::string, LocalFile>::const_iterator dstit;
+        if (!!dstlist) {
+          dstit = dstlist->find(tj->getDstFileName());
+        }
+        if (!dstlist || dstit == dstlist->end() || dstit->second.getSize() == 0) {
+          it->second.push_back(PendingTransfer(tj->getSrc(), tj->getSrcFileList(),
+              tj->getSrcFileName(), tj->getDstPath(), tj->getDstFileName()));
+          tj->addPendingTransfer(tj->getSrcFileName(),
+              tj->getSrcFileList()->getFile(tj->getSrcFileName())->getSize());
+        }
       }
       break;
-    }
     case TRANSFERJOB_UPLOAD:
       break;
     case TRANSFERJOB_UPLOAD_FILE:
