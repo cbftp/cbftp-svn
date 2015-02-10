@@ -245,7 +245,7 @@ int TransferJob::maxPossibleSlots() const {
     {
       int max1 = src->getSite()->getMaxDown();
       int max2 = dst->getSite()->getMaxUp();
-      return max2 > max1 ? max2 : max1;
+      return max2 < max1 ? max2 : max1;
     }
     case TRANSFERJOB_UPLOAD:
       return dst->getSite()->getMaxUp();
