@@ -46,7 +46,6 @@ class Site {
   public:
     Site();
     Site(std::string);
-    void copy(Site *);
     std::map<std::string, std::string>::const_iterator sectionsBegin() const;
     std::map<std::string, std::string>::const_iterator sectionsEnd() const;
     std::map<std::string, int>::const_iterator avgspeedBegin() const;

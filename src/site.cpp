@@ -27,31 +27,6 @@ Site::Site(std::string name) {
   proxyname = "";
 }
 
-void Site::copy(Site * site) {
-  this->name = site->name;
-  this->address = site->address;
-  this->port = site->port;
-  this->user = site->user;
-  this->pass = site->pass;
-  this->logins = site->logins;
-  this->max_up = site->max_up;
-  this->max_dn = site->max_dn;
-  this->pret = site->pret;
-  this->listcommand = site->listcommand;
-  this->ssltransfer = site->ssltransfer;
-  this->sslconn = site->sslconn;
-  this->cpsvsupported = site->cpsvsupported;
-  this->brokenpasv = site->brokenpasv;
-  this->sections = site->sections;
-  this->avgspeed = site->avgspeed;
-  this->allowupload = site->allowupload;
-  this->allowdownload = site->allowdownload;
-  this->affils = site->affils;
-  this->basepath = site->basepath;
-  this->proxytype = site->proxytype;
-  this->proxyname = site->proxyname;
-}
-
 std::map<std::string, std::string>::const_iterator Site::sectionsBegin() const {
   return sections.begin();
 }
