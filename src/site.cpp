@@ -48,8 +48,8 @@ void Site::copy(Site * site) {
   this->allowdownload = site->allowdownload;
   this->affils = site->affils;
   this->basepath = site->basepath;
-  this->proxytype = proxytype;
-  this->proxyname = proxyname;
+  this->proxytype = site->proxytype;
+  this->proxyname = site->proxyname;
 }
 
 std::map<std::string, std::string>::const_iterator Site::sectionsBegin() const {
