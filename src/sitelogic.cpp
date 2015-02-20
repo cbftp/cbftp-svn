@@ -122,15 +122,24 @@ void SiteLogic::tick(int message) {
 }
 
 void SiteLogic::connectFailed(int id) {
+  while (connstatetracker[id].hasTransfer()) {
+    reportTransferErrorAndFinish(id, 3);
+  }
   connstatetracker[id].setDisconnected();
 }
 
 void SiteLogic::userDenied(int id) {
+  while (connstatetracker[id].hasTransfer()) {
+    reportTransferErrorAndFinish(id, 3);
+  }
   connstatetracker[id].setDisconnected();
   conns[id]->doQUIT();
 }
 
 void SiteLogic::userDeniedSiteFull(int id) {
+  while (connstatetracker[id].hasTransfer()) {
+    reportTransferErrorAndFinish(id, 3);
+  }
   connstatetracker[id].delayedCommand("reconnect", SLEEPDELAY, NULL, true);
 }
 
@@ -745,6 +754,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
       return;
     }
   }
+  TransferJob * targetjob = NULL;
   for (std::list<TransferJob *>::iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
     TransferJob * tj = *it;
     if (!tj->isDone()) {
@@ -758,18 +768,27 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
         getFileListConn(id, tj, fl);
         return;
       }
+      if (!tj->isInitialized()) {
+        targetjob = tj;
+        continue;
+      }
       int type = tj->getType();
-      if (((type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_DOWNLOAD_FILE ||
+      if (targetjob == NULL &&
+          (((type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_DOWNLOAD_FILE ||
           ((type == TRANSFERJOB_FXP || type == TRANSFERJOB_FXP_FILE) && tj->getSrc() == this)) &&
           getCurrDown() < tj->maxSlots()) ||
           ((type == TRANSFERJOB_UPLOAD || type == TRANSFERJOB_UPLOAD_FILE ||
           ((type == TRANSFERJOB_FXP || type == TRANSFERJOB_FXP_FILE) && tj->getDst() == this)) &&
-          getCurrUp() < tj->maxSlots())) {
-        connstatetracker[id].delayedCommand("handle", SLEEPDELAY);
-        global->getEngine()->transferJobActionRequest(tj);
-        return;
+          getCurrUp() < tj->maxSlots()))) {
+        targetjob = tj;
+        continue;
       }
     }
+  }
+  if (targetjob != NULL) {
+    connstatetracker[id].delayedCommand("handle", SLEEPDELAY);
+    global->getEngine()->transferJobActionRequest(targetjob);
+    return;
   }
   SiteRace * race = NULL;
   bool refresh = false;
