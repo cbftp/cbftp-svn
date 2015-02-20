@@ -228,6 +228,9 @@ void Engine::transferJobActionRequest(TransferJob * tj) {
     pendingtransfers[tj] = std::list<PendingTransfer>();
     it = pendingtransfers.find(tj);
   }
+  if (!tj->isInitialized()) {
+    tj->setInitialized();
+  }
   if (it->second.size() == 0) {
     refreshPendingTransferList(tj);
     if (it->second.size() == 0) {

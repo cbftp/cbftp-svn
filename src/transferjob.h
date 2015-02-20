@@ -68,6 +68,8 @@ public:
   int filesProgress() const;
   int filesTotal() const;
   std::string findSubPath(Pointer<TransferStatus>) const;
+  bool isInitialized() const;
+  void setInitialized();
 private:
   void addSubDirectoryFileLists(std::map<std::string, FileList *> &, FileList *);
   void updateStatus();
@@ -103,4 +105,5 @@ private:
   std::string timestarted;
   int filesprogress;
   int filestotal;
+  bool initialized;
 };

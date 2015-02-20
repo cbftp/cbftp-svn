@@ -113,6 +113,7 @@ void TransferJob::init() {
   done = false;
   almostdone = false;
   listsrefreshed = false;
+  initialized = false;
   slots = 1;
   srclisttarget = NULL;
   dstlisttarget = NULL;
@@ -435,4 +436,12 @@ std::string TransferJob::findSubPath(Pointer<TransferStatus> ts) const {
       break;
   }
   return "";
+}
+
+bool TransferJob::isInitialized() const {
+  return initialized;
+}
+
+void TransferJob::setInitialized() {
+  initialized = true;
 }
