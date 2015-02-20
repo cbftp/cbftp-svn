@@ -88,9 +88,15 @@ void UIFile::unCursor() {
 }
 
 void UIFile::parseTimeStamp(std::string uglytime) {
-  std::string monthstr = uglytime.substr(0, 3);
-  std::string daystr = uglytime.substr(4, 2);
-  std::string meta = uglytime.substr(7, 5);
+  int pos = 0; // month start at 0
+  while (uglytime[++pos] != ' ');
+  std::string monthstr = uglytime.substr(0, pos);
+  while (uglytime[++pos] == ' '); // day start at pos
+  int start = pos;
+  while (uglytime[++pos] != ' ');
+  std::string daystr = uglytime.substr(start, pos - start);
+  while (uglytime[++pos] == ' '); // meta start at pos
+  std::string meta = uglytime.substr(pos);
   int year;
   int month = 0;
   int day = global->str2Int(daystr);

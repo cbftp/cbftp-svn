@@ -28,24 +28,28 @@ File::File(std::string statline, int touch) {
   while(statline[++pos] != ' ');
   while(statline[++pos] == ' ');
   while(statline[++pos] != ' ');
-  while(statline[++pos] == ' ');
+  while(statline[++pos] == ' '); // user start at pos
   start = pos;
   while (statline[++pos] != ' ');
   owner = statline.substr(start, pos - start);
-  while (statline[++pos] == ' ');
+  while (statline[++pos] == ' '); // group start at pos
   start = pos;
   while (statline[++pos] != ' ');
   group = statline.substr(start, pos - start);
-  while (statline[++pos] == ' ');
+  while (statline[++pos] == ' '); // size start at pos
   start = pos;
   while (statline[++pos] != ' ');
   std::string sizetmp = statline.substr(start, pos - start);
   size = atol(sizetmp.c_str());
-  while (statline[++pos] == ' ');
+  while (statline[++pos] == ' '); // month start at pos
   start = pos;
-  pos += 12;
-  lastmodified = statline.substr(start, 12);
-  while (statline[++pos] == ' ');
+  while (statline[++pos] != ' ');
+  while (statline[++pos] == ' '); // day start at pos
+  while (statline[++pos] != ' ');
+  while (statline[++pos] == ' '); // time/year start at pos
+  while (statline[++pos] != ' ');
+  lastmodified = statline.substr(start, pos - start);
+  while (statline[++pos] == ' '); // name start at pos
   start = pos;
   while (statline[++pos] != '\r');
   name = statline.substr(start, pos - start);
