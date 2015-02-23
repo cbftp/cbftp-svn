@@ -39,11 +39,11 @@ void TransferMonitor::engageFXP(std::string sfile, SiteLogic * sls, FileList * f
   this->dpath = fld->getPath();
   this->sfile = sfile;
   this->dfile = dfile;
-  if (!sls->lockDownloadConn(spath, sfile, &src)) {
+  if (!sls->lockDownloadConn(spath, &src)) {
     tm->transferFailed(ts, 4);
     return;
   }
-  if (!sld->lockUploadConn(dpath, dfile, &dst)) {
+  if (!sld->lockUploadConn(dpath, &dst)) {
     sls->returnConn(src);
     tm->transferFailed(ts, 5);
     return;
@@ -82,7 +82,7 @@ void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileLis
   this->spath = fls->getPath();
   this->dpath = dpath;
   this->fls = fls;
-  if (!sls->lockDownloadConn(spath, sfile, &src)) return;
+  if (!sls->lockDownloadConn(spath, &src)) return;
   status = TM_STATUS_AWAITING_PASSIVE;
   ts = Pointer<TransferStatus>(new TransferStatus(TRANSFERSTATUS_TYPE_DOWNLOAD,
       sls->getSite()->getName(), "/\\", "", dfile, spath,
@@ -113,7 +113,7 @@ void TransferMonitor::engageUpload(std::string sfile, std::string spath, SiteLog
   this->sld = sld;
   this->fld = fld;
   this->dpath = fld->getPath();
-  if (!sls->lockUploadConn(dpath, dfile, &dst)) return;
+  if (!sls->lockUploadConn(dpath, &dst)) return;
   status = TM_STATUS_AWAITING_PASSIVE;
   ts = Pointer<TransferStatus>(new TransferStatus(TRANSFERSTATUS_TYPE_UPLOAD,
       "/\\", sld->getSite()->getName(), "", dfile, spath,

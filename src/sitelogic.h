@@ -77,7 +77,7 @@ class SiteLogic : public EventReceiver {
     void passiveModeCommand(int);
     static void * run(void *);
     void connQuit(int);
-    bool getReadyConn(std::string, std::string, int *, bool, bool);
+    bool lockTransferConn(std::string, int *, bool);
     bool poke;
   public:
     SiteLogic(std::string);
@@ -108,8 +108,8 @@ class SiteLogic : public EventReceiver {
     Site * getSite() const;
     SiteRace * getRace(std::string) const;
     void lockConnList(int);
-    bool lockDownloadConn(std::string, std::string, int *);
-    bool lockUploadConn(std::string, std::string, int *);
+    bool lockDownloadConn(std::string, int *);
+    bool lockUploadConn(std::string, int *);
     void returnConn(int);
     void setNumConnections(unsigned int);
     bool downloadSlotAvailable() const;

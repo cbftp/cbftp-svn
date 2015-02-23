@@ -228,6 +228,7 @@ bool ConnStateTracker::getTransferSSL() const{
 }
 
 void ConnStateTracker::lockForTransfer(bool download) {
+  use();
   transferlocked = true;
   lockeddownload = download;
 }

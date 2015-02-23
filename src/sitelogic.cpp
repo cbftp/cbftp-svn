@@ -1165,21 +1165,15 @@ SiteRace * SiteLogic::getRace(std::string race) const {
   return NULL;
 }
 
-bool SiteLogic::lockDownloadConn(std::string path, std::string file, int * ret) {
-  bool locked = getReadyConn(path, file, ret, true, true);
-  if (!locked) return false;
-  connstatetracker[*ret].lockForTransfer(true);
-  return true;
+bool SiteLogic::lockDownloadConn(std::string path, int * ret) {
+  return lockTransferConn(path, ret, true);
 }
 
-bool SiteLogic::lockUploadConn(std::string path, std::string file, int * ret) {
-  bool locked = getReadyConn(path, file, ret, true, false);
-  if (!locked) return false;
-  connstatetracker[*ret].lockForTransfer(false);
-  return true;
+bool SiteLogic::lockUploadConn(std::string path, int * ret) {
+  return lockTransferConn(path, ret, false);
 }
 
-bool SiteLogic::getReadyConn(std::string path, std::string file, int * ret, bool istransfer, bool isdownload) {
+bool SiteLogic::lockTransferConn(std::string path, int * ret, bool isdownload) {
   int lastreadyid = -1;
   bool foundreadythread = false;
   for (unsigned int i = 0; i < conns.size(); i++) {
@@ -1188,11 +1182,9 @@ bool SiteLogic::getReadyConn(std::string path, std::string file, int * ret, bool
       foundreadythread = true;
       lastreadyid = i;
       if (conns[i]->getTargetPath().compare(path) == 0) {
-        if (istransfer) {
-          if (!getSlot(isdownload)) return false;
-        }
+        if (!getSlot(isdownload)) return false;
         *ret = i;
-        connstatetracker[i].use();
+        connstatetracker[i].lockForTransfer(isdownload);
         return true;
       }
     }
@@ -1203,25 +1195,21 @@ bool SiteLogic::getReadyConn(std::string path, std::string file, int * ret, bool
         foundreadythread = true;
         lastreadyid = i;
         if (conns[i]->getTargetPath().compare(path) == 0) {
-          if (istransfer) {
-            if (!getSlot(isdownload)) return false;
-          }
+          if (!getSlot(isdownload)) return false;
           *ret = i;
-          connstatetracker[i].use();
+          connstatetracker[i].lockForTransfer(isdownload);
           return true;
         }
       }
     }
   }
   if (foundreadythread) {
-    if (istransfer) {
-      if (!getSlot(isdownload)) return false;
-    }
+    if (!getSlot(isdownload)) return false;
     if (!conns[lastreadyid]->isProcessing() && !connstatetracker[lastreadyid].isListLocked()) {
       conns[lastreadyid]->doCWD(path);
     }
     *ret = lastreadyid;
-    connstatetracker[lastreadyid].use();
+    connstatetracker[lastreadyid].lockForTransfer(isdownload);
     return true;
   }
   else return false;
