@@ -30,9 +30,9 @@
 SiteLogic::SiteLogic(std::string sitename) {
   requestidcounter = 0;
   site = global->getSiteManager()->getSite(sitename);
-  max_slots_dn = slots_dn = site->getMaxDown();
-  max_slots_up = slots_up = site->getMaxUp();
-  ptrack = new PotentialTracker(slots_dn);
+  maxslotsdn = slotsdn = site->getMaxDown();
+  maxslotsup = slotsup = site->getMaxUp();
+  ptrack = new PotentialTracker(slotsdn);
   available = 0;
   loggedin = 0;
   wantedloggedin = 0;
@@ -106,12 +106,7 @@ void SiteLogic::tick(int message) {
       }
       else if (event == "quit") {
         if (conns[i]->isConnected()) {
-          if (connstatetracker[i].isLoggedIn()) {
-            loggedin--;
-            available--;
-          }
-          conns[i]->doQUIT();
-          connstatetracker[i].setDisconnected();
+          connQuit(i);
         }
         if (wantedloggedin > loggedin) {
           wantedloggedin = loggedin;
@@ -122,24 +117,14 @@ void SiteLogic::tick(int message) {
 }
 
 void SiteLogic::connectFailed(int id) {
-  while (connstatetracker[id].hasTransfer()) {
-    reportTransferErrorAndFinish(id, 3);
-  }
   connstatetracker[id].setDisconnected();
 }
 
 void SiteLogic::userDenied(int id) {
-  while (connstatetracker[id].hasTransfer()) {
-    reportTransferErrorAndFinish(id, 3);
-  }
-  connstatetracker[id].setDisconnected();
-  conns[id]->doQUIT();
+  connQuit(id);
 }
 
 void SiteLogic::userDeniedSiteFull(int id) {
-  while (connstatetracker[id].hasTransfer()) {
-    reportTransferErrorAndFinish(id, 3);
-  }
   connstatetracker[id].delayedCommand("reconnect", SLEEPDELAY, NULL, true);
 }
 
@@ -148,18 +133,15 @@ void SiteLogic::userDeniedSimultaneousLogins(int id) {
 }
 
 void SiteLogic::loginKillFailed(int id) {
-  connstatetracker[id].setDisconnected();
-  conns[id]->doQUIT();
+  connQuit(id);
 }
 
 void SiteLogic::passDenied(int id) {
-  connstatetracker[id].setDisconnected();
-  conns[id]->doQUIT();
+  connQuit(id);
 }
 
 void SiteLogic::TLSFailed(int id) {
-  connstatetracker[id].setDisconnected();
-  conns[id]->doQUIT();
+  connQuit(id);
 }
 
 void SiteLogic::listRefreshed(int id) {
@@ -688,6 +670,15 @@ void SiteLogic::disconnected(int id) {
   connstatetracker[id].setDisconnected();
 }
 
+void SiteLogic::connQuit(int id) {
+  if (connstatetracker[id].isLoggedIn()) {
+    available--;
+    loggedin--;
+  }
+  connstatetracker[id].setDisconnected();
+  conns[id]->doQUIT();
+}
+
 void SiteLogic::activateOne() {
   if (loggedin == 0) {
     if (wantedloggedin == 0) {
@@ -741,12 +732,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
     return;
   }
   if (loggedin > wantedloggedin) {
-    if (connstatetracker[id].isLoggedIn()) {
-      available--;
-      loggedin--;
-    }
-    connstatetracker[id].setDisconnected();
-    conns[id]->doQUIT();
+    connQuit(id);
     return;
   }
   if (requests.size() > 0) {
@@ -1193,27 +1179,12 @@ bool SiteLogic::lockUploadConn(std::string path, std::string file, int * ret) {
   return true;
 }
 
-bool SiteLogic::getReadyConn(std::string path, int * ret) {
-  return getReadyConn(path, "", ret, false, false);
-}
-
 bool SiteLogic::getReadyConn(std::string path, std::string file, int * ret, bool istransfer, bool isdownload) {
   int lastreadyid = -1;
   bool foundreadythread = false;
   for (unsigned int i = 0; i < conns.size(); i++) {
-    if (!conns[i]->isConnected()) {
-      if (foundreadythread) {
-        continue;
-      }
-      if (istransfer) {
-        if (!getSlot(isdownload)) return false;
-      }
-      wantedloggedin++;
-      conns[i]->login();
-      *ret = i;
-      return true;
-    }
-    if(!connstatetracker[i].isLocked() && !conns[i]->isProcessing()) {
+    if(connstatetracker[i].isLoggedIn() && !connstatetracker[i].isLocked() &&
+        !conns[i]->isProcessing()) {
       foundreadythread = true;
       lastreadyid = i;
       if (conns[i]->getTargetPath().compare(path) == 0) {
@@ -1228,7 +1199,7 @@ bool SiteLogic::getReadyConn(std::string path, std::string file, int * ret, bool
   }
   if (!foundreadythread) {
     for (unsigned int i = 0; i < conns.size(); i++) {
-      if (!connstatetracker[i].isTransferLocked()) {
+      if (connstatetracker[i].isLoggedIn() && !connstatetracker[i].isTransferLocked()) {
         foundreadythread = true;
         lastreadyid = i;
         if (conns[i]->getTargetPath().compare(path) == 0) {
@@ -1319,51 +1290,51 @@ void SiteLogic::setNumConnections(unsigned int num) {
   for (unsigned int i = 0; i < conns.size(); i++) {
     conns[i]->setId(i);
   }
-  if (max_slots_up < site->getMaxUp()) {
-    slots_up += site->getMaxUp() - max_slots_up;
-    max_slots_up = site->getMaxUp();
+  if (maxslotsup < site->getMaxUp()) {
+    slotsup += site->getMaxUp() - maxslotsup;
+    maxslotsup = site->getMaxUp();
   }
-  if (max_slots_dn < site->getMaxDown()) {
-    slots_dn += site->getMaxDown() - max_slots_dn;
-    max_slots_dn = site->getMaxDown();
+  if (maxslotsdn < site->getMaxDown()) {
+    slotsdn += site->getMaxDown() - maxslotsdn;
+    maxslotsdn = site->getMaxDown();
   }
-  if (max_slots_up > site->getMaxUp()) {
-    slots_up -= (max_slots_up - site->getMaxUp());
-    max_slots_up = site->getMaxUp();
+  if (maxslotsup > site->getMaxUp()) {
+    slotsup -= (maxslotsup - site->getMaxUp());
+    maxslotsup = site->getMaxUp();
   }
-  if (max_slots_dn > site->getMaxDown()) {
-    slots_dn -= (max_slots_dn - site->getMaxDown());
-    max_slots_dn = site->getMaxDown();
+  if (maxslotsdn > site->getMaxDown()) {
+    slotsdn -= (maxslotsdn - site->getMaxDown());
+    maxslotsdn = site->getMaxDown();
   }
 }
 
 bool SiteLogic::downloadSlotAvailable() const {
-  return (available > 0 && slots_dn > 0);
+  return (available > 0 && slotsdn > 0);
 }
 
 bool SiteLogic::uploadSlotAvailable() const {
-  return (available > 0 && slots_up > 0);
+  return (available > 0 && slotsup > 0);
 }
 
 void SiteLogic::transferComplete(bool isdownload) {
   if (isdownload) {
-    slots_dn++;
+    slotsdn++;
   }
-  else slots_up++;
+  else slotsup++;
   available++;
 }
 
 bool SiteLogic::getSlot(bool isdownload) {
   if (isdownload) {
-    if (slots_dn <= 0) {
+    if (slotsdn <= 0) {
       return false;
     }
-    slots_dn--;
+    slotsdn--;
   } else {
-    if (slots_up <= 0) {
+    if (slotsup <= 0) {
       return false;
     }
-    slots_up--;
+    slotsup--;
   }
   available--;
   return true;
@@ -1393,11 +1364,11 @@ int SiteLogic::getCurrLogins() const {
 }
 
 int SiteLogic::getCurrDown() const {
-  return site->getMaxDown() - slots_dn;
+  return site->getMaxDown() - slotsdn;
 }
 
 int SiteLogic::getCurrUp() const {
-  return site->getMaxUp() - slots_up;
+  return site->getMaxUp() - slotsup;
 }
 
 void SiteLogic::connectConn(int id) {
@@ -1416,14 +1387,12 @@ void SiteLogic::disconnectConn(int id) {
       wantedloggedin--;
     }
     if (connstatetracker[id].isLoggedIn()) {
-      available--;
-      loggedin--;
-      conns[id]->doQUIT();
+      connQuit(id);
     }
     else {
       conns[id]->disconnect();
+      connstatetracker[id].setDisconnected();
     }
-    connstatetracker[id].setDisconnected();
   }
 }
 
@@ -1464,12 +1433,7 @@ void SiteLogic::raceGlobalComplete() {
   if (!stillactive) {
     for (unsigned int i = 0; i < conns.size(); i++) {
       if (conns[i]->isConnected() && !conns[i]->isProcessing()) {
-        if (connstatetracker[i].isLoggedIn()) {
-          loggedin--;
-          available--;
-        }
-        connstatetracker[i].setDisconnected();
-        conns[i]->doQUIT();
+        connQuit(i);
       }
     }
     wantedloggedin = 0;
@@ -1492,12 +1456,7 @@ void SiteLogic::raceLocalComplete(SiteRace * sr) {
     }
     for (unsigned int i = 0; i < conns.size() && killnum > 0; i++) {
       if (conns[i]->isConnected() && !conns[i]->isProcessing()) {
-        if (connstatetracker[i].isLoggedIn()) {
-          loggedin--;
-          available--;
-        }
-        connstatetracker[i].setDisconnected();
-        conns[i]->doQUIT();
+        connQuit(i);
         killnum--;
       }
     }

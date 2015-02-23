@@ -46,10 +46,10 @@ class SiteLogic : public EventReceiver {
     std::list<SiteRace *> recentlylistedraces;
     std::list<TransferJob *> transferjobs;
     RawBuffer * rawbuf;
-    unsigned int max_slots_up;
-    unsigned int max_slots_dn;
-    unsigned int slots_dn;
-    unsigned int slots_up;
+    unsigned int maxslotsup;
+    unsigned int maxslotsdn;
+    unsigned int slotsdn;
+    unsigned int slotsup;
     unsigned int available;
     unsigned int loggedin;
     unsigned int wantedloggedin;
@@ -76,6 +76,8 @@ class SiteLogic : public EventReceiver {
     void getFileListConn(int, CommandOwner *, FileList *);
     void passiveModeCommand(int);
     static void * run(void *);
+    void connQuit(int);
+    bool getReadyConn(std::string, std::string, int *, bool, bool);
     bool poke;
   public:
     SiteLogic(std::string);
@@ -108,8 +110,6 @@ class SiteLogic : public EventReceiver {
     void lockConnList(int);
     bool lockDownloadConn(std::string, std::string, int *);
     bool lockUploadConn(std::string, std::string, int *);
-    bool getReadyConn(std::string, int *);
-    bool getReadyConn(std::string, std::string, int *, bool, bool);
     void returnConn(int);
     void setNumConnections(unsigned int);
     bool downloadSlotAvailable() const;
