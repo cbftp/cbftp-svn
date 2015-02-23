@@ -1374,13 +1374,20 @@ void SiteLogic::disconnectConn(int id) {
     if (wantedloggedin > 0) {
       wantedloggedin--;
     }
-    if (connstatetracker[id].isLoggedIn()) {
+    if (connstatetracker[id].isLoggedIn() && !conns[id]->isProcessing()) {
       connQuit(id);
     }
     else {
+      if (connstatetracker[id].isLoggedIn()) {
+        loggedin--;
+        available--;
+      }
       conns[id]->disconnect();
       connstatetracker[id].setDisconnected();
     }
+  }
+  while (connstatetracker[id].hasTransfer()) {
+    reportTransferErrorAndFinish(id, 3);
   }
 }
 

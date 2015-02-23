@@ -312,17 +312,15 @@ void TransferMonitor::finish() {
         break;
     }
   }
-  if (!!ts) {
-    ts->setFinished();
-  }
   if (status != TM_STATUS_ERROR_AWAITING_PEER) {
+    if (!!ts) {
+      ts->setFinished();
+    }
     tm->transferSuccessful(ts);
   }
   else {
-    tm->transferFailed(ts, 6);
-    if (type == TM_TYPE_FXP) {
-      sls->getSite()->pushTransferSpeed(sld->getSite()->getName(), 0);
-    }
+    transferFailed(ts, 6);
+    return;
   }
   status = TM_STATUS_IDLE;
 }
@@ -358,17 +356,12 @@ void TransferMonitor::sourceError(int err) {
       if (fileobj != NULL) {
         fileobj->finishUpload();
       }
-      tm->transferFailed(ts, err);
-      status = TM_STATUS_IDLE;
+      transferFailed(ts, err);
       return;
     }
   }
   if (targetcomplete || (type == TM_TYPE_LOCAL && lt == NULL)) {
-    if (type == TM_TYPE_FXP) {
-      sls->getSite()->pushTransferSpeed(sld->getSite()->getName(), 0);
-    }
-    tm->transferFailed(ts, err);
-    status = TM_STATUS_IDLE;
+    transferFailed(ts, err);
     return;
   }
   status = TM_STATUS_ERROR_AWAITING_PEER;
@@ -407,17 +400,12 @@ void TransferMonitor::targetError(int err) {
           fileobj->finishDownload();
         }
       }
-      tm->transferFailed(ts, err);
-      status = TM_STATUS_IDLE;
+      transferFailed(ts, err);
       return;
     }
   }
   if (sourcecomplete || (type == TM_TYPE_LOCAL && lt == NULL)) {
-    if (type == TM_TYPE_FXP) {
-      sls->getSite()->pushTransferSpeed(sld->getSite()->getName(), 0);
-    }
-    tm->transferFailed(ts, err);
-    status = TM_STATUS_IDLE;
+    transferFailed(ts, err);
     return;
   }
   status = TM_STATUS_ERROR_AWAITING_PEER;
@@ -455,4 +443,15 @@ void TransferMonitor::reset() {
   targetcomplete = false;
   ssl = false;
   timestamp = 0;
+}
+
+void TransferMonitor::transferFailed(Pointer<TransferStatus> ts, int err) {
+  if (!!ts) {
+    ts->setFailed();
+  }
+  if (type == TM_TYPE_FXP) {
+    sls->getSite()->pushTransferSpeed(sld->getSite()->getName(), 0);
+  }
+  tm->transferFailed(ts, err);
+  status = TM_STATUS_IDLE;
 }

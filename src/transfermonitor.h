@@ -53,6 +53,7 @@ class TransferMonitor : public EventReceiver {
     void finish();
     void setTargetSizeSpeed(unsigned int, int);
     void reset();
+    void transferFailed(Pointer<TransferStatus>, int);
   public:
     TransferMonitor(TransferManager *);
     void tick(int);
