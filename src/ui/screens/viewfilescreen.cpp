@@ -74,7 +74,10 @@ void ViewFileScreen::redraw() {
   ui->erase();
   if (!download) {
     autoupdate = false;
-    if (!externallyviewable) {
+    if (!ts) {
+      ui->printStr(1, 1, "No download slots available at " + site + ".");
+    }
+    else if (!externallyviewable) {
       ui->printStr(1, 1, file + " is too large to download and open in the internal viewer.");
       ui->printStr(2, 1, "The maximum file size for internal viewing is set to " + global->int2Str(MAXOPENSIZE) + " bytes.");
     }
@@ -82,9 +85,7 @@ void ViewFileScreen::redraw() {
       ui->printStr(1, 1, file + " cannot be opened in an external viewer.");
       ui->printStr(2, 1, "The DISPLAY environment variable is not set.");
     }
-    else if (!ts) {
-      ui->printStr(1, 1, "No download slots available at " + site + ".");
-    }
+
     return;
   }
   if (!viewingcontents) {
