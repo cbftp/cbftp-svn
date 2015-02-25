@@ -3,6 +3,8 @@
 #include <map>
 #include <string>
 
+#define MAXTRANSFERATTEMPTS 5
+
 class File;
 class Site;
 

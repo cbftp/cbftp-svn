@@ -340,8 +340,6 @@ void TransferMonitor::sourceError(int err) {
         fls->downloadFail(sfile);
         break;
       case 1: // RETR failed
-        fls->downloadFail(sfile);
-        break;
       case 2: // RETR post failed
       case 3: // other failure
         fls->downloadAttemptFail(sfile);
@@ -382,8 +380,6 @@ void TransferMonitor::targetError(int err) {
         fld->uploadFail(dfile);
         break;
       case 1: // STOR failed
-        fld->uploadFail(dfile);
-        break;
       case 2: // STOR post failed
       case 3: // other failure
         fld->uploadAttemptFail(dfile);

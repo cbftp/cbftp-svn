@@ -236,11 +236,11 @@ void FileList::editOwnedFileCount(bool add) {
 }
 
 void FileList::uploadFail(std::string file) {
-  uploadfails[file] = 3;
+  uploadfails[file] = MAXTRANSFERATTEMPTS;
 }
 
 void FileList::downloadFail(std::string file) {
-  downloadfails[file] = 3;
+  downloadfails[file] = MAXTRANSFERATTEMPTS;
 }
 
 void FileList::uploadAttemptFail(std::string file) {
@@ -262,7 +262,7 @@ bool FileList::hasFailedDownload(std::string file) const {
   if (it == downloadfails.end()) {
     return false;
   }
-  if (it->second < 3) {
+  if (it->second < MAXTRANSFERATTEMPTS) {
     return false;
   }
   return true;
@@ -273,7 +273,7 @@ bool FileList::hasFailedUpload(std::string file) const {
   if (it == uploadfails.end()) {
     return false;
   }
-  if (it->second < 3) {
+  if (it->second < MAXTRANSFERATTEMPTS) {
     return false;
   }
   return true;
