@@ -29,6 +29,7 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   rch = global->getRemoteCommandHandler();
   sm = global->getSiteManager();
   ls = global->getLocalStorage();
+  mso.reset();
   defaultinterface = mso.addTextArrow(y++, x, "defaultinterface", "Default network interface:");
   defaultinterface->addOption("Unspecified", 0);
   interfacemap[0] = "";
@@ -50,7 +51,6 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
     }
   }
   y++;
-  mso.reset();
   mso.addCheckBox(y++, x, "udpenable", "Enable remote commands:", rch->isEnabled());
   mso.addStringField(y++, x, "udpport", "Remote command UDP Port:", global->int2Str(rch->getUDPPort()), false, 5);
   mso.addStringField(y++, x, "udppass", "Remote command password:", rch->getPassword(), true);
