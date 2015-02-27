@@ -15,6 +15,7 @@
 #include "../proxymanager.h"
 #include "../externalfileviewing.h"
 #include "../localstorage.h"
+#include "../util.h"
 
 #include "legendwindow.h"
 #include "infowindow.h"
@@ -736,7 +737,7 @@ void Ui::confirmNo() {
 
 void Ui::returnNuke(int reqid) {
   switchToLast();
-  topwindow->command("returnnuke", global->int2Str(reqid));
+  topwindow->command("returnnuke", util::int2Str(reqid));
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 

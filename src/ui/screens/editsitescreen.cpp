@@ -7,6 +7,7 @@
 #include "../../sitelogicmanager.h"
 #include "../../proxymanager.h"
 #include "../../proxy.h"
+#include "../../util.h"
 
 #include "../ui.h"
 #include "../menuselectoptionelement.h"
@@ -86,7 +87,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
   listcommand->addOption("STAT -l", SITE_LIST_STAT);
   listcommand->addOption("LIST", SITE_LIST_LIST);
   listcommand->setOption(modsite.getListCommand());
-  mso.addStringField(y++, x, "idletime", "Max idle time (s):", global->int2Str(modsite.getMaxIdleTime()), false);
+  mso.addStringField(y++, x, "idletime", "Max idle time (s):", util::int2Str(modsite.getMaxIdleTime()), false);
   mso.addCheckBox(y++, x, "allowupload", "Allow upload:", modsite.getAllowUpload());
   mso.addCheckBox(y++, x, "allowdownload", "Allow download:", modsite.getAllowDownload());
   mso.addCheckBox(y++, x, "ssl", "AUTH SSL:", modsite.SSL());
@@ -418,7 +419,7 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
           site->setBrokenPASV(((MenuSelectOptionCheckBox *)msoe)->getData());
         }
         else if (identifier == "idletime") {
-          site->setMaxIdleTime(global->str2Int(((MenuSelectOptionTextField *)msoe)->getData()));
+          site->setMaxIdleTime(util::str2Int(((MenuSelectOptionTextField *)msoe)->getData()));
         }
         else if (identifier == "useproxy") {
           int proxytype = ((MenuSelectOptionTextArrow *)msoe)->getData();

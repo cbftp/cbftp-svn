@@ -8,6 +8,7 @@
 #include "transferstatus.h"
 #include "tickpoke.h"
 #include "sitelogic.h"
+#include "util.h"
 
 extern GlobalContext * global;
 
@@ -126,7 +127,7 @@ void TransferJob::init() {
   speed = 0;
   filesprogress = 0;
   filestotal = 0;
-  timestarted = GlobalContext::ctimeLog();
+  timestarted = util::ctimeLog();
   global->getTickPoke()->startPoke(this, "TransferJob", TRANSFERJOB_UPDATE_INTERVAL, 0);
 }
 

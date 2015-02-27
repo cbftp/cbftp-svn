@@ -5,6 +5,7 @@
 #include "../../sitelogic.h"
 #include "../../sitelogicmanager.h"
 #include "../../globalcontext.h"
+#include "../../util.h"
 
 #include "../ui.h"
 
@@ -212,5 +213,5 @@ std::string RawDataScreen::getLegendText() const {
 }
 
 std::string RawDataScreen::getInfoLabel() const {
-  return "RAW DATA: " + sitename + " #" + global->int2Str(connid);
+  return "RAW DATA: " + sitename + " #" + util::int2Str(connid);
 }

@@ -1,8 +1,6 @@
 #include "numinputarrow.h"
 
-#include "../globalcontext.h"
-
-extern GlobalContext * global;
+#include "../util.h"
 
 NumInputArrow::NumInputArrow() {
 
@@ -52,13 +50,13 @@ void NumInputArrow::deactivate() {
   active = false;
 }
 std::string NumInputArrow::getVisual() const {
-  int maxlen = global->int2Str(max).length() + 4;
+  int maxlen = util::int2Str(max).length() + 4;
   std::string out = "";
   if (active) {
-    out = "< " + global->int2Str(val) + " >";
+    out = "< " + util::int2Str(val) + " >";
   }
   else {
-    out = global->int2Str(val);
+    out = util::int2Str(val);
   }
   while ((int) out.length() < maxlen) out += ' ';
   return out;

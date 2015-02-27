@@ -11,6 +11,7 @@
 #include "../../ftpconn.h"
 #include "../../engine.h"
 #include "../../sitemanager.h"
+#include "../../util.h"
 
 #include "../ui.h"
 #include "../menuselectoptiontextbutton.h"
@@ -61,7 +62,7 @@ void RaceStatusScreen::redraw() {
     if (pathshow == "") {
       pathshow = "/";
     }
-    subpathpresent += pathshow + " (" + global->int2Str(guessedsize) + "f";
+    subpathpresent += pathshow + " (" + util::int2Str(guessedsize) + "f";
     if (sfvreported) {
       subpathpresent += "/sfv";
     }
@@ -108,7 +109,7 @@ void RaceStatusScreen::redraw() {
             }
             if (bannedsuffixes.find(tag) != bannedsuffixes.end()) {
               for (int i = 0; i < 100; i++) {
-                std::string numtag = global->int2Str(i);
+                std::string numtag = util::int2Str(i);
                 while (numtag.length() < 2) {
                   numtag = "0" + numtag;
                 }
@@ -118,7 +119,7 @@ void RaceStatusScreen::redraw() {
                 }
                 if (i == 99) {
                   for (int i = 0; i < 1000; i++) { // last resort
-                    tag = global->int2Str(i);
+                    tag = util::int2Str(i);
                     while (tag.length() < 3) {
                       tag = "0" + tag;
                     }

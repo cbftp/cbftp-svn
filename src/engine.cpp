@@ -24,6 +24,7 @@
 #include "localfilelist.h"
 #include "pointer.h"
 #include "transferstatus.h"
+#include "util.h"
 
 Engine::Engine() {
   scoreboard = new ScoreBoard();
@@ -116,14 +117,14 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
       allraces.push_back(race);
       dropped = 0;
       global->getEventLog()->log("Engine", "Starting race: " + section + "/" + release +
-          " on " + global->int2Str((int)addsites.size()) + " sites.");
+          " on " + util::int2Str((int)addsites.size()) + " sites.");
     }
     else {
       if (readdtocurrent) {
         currentraces.push_back(race);
       }
       global->getEventLog()->log("Engine", "Appending to race: " + section + "/" + release +
-          " with " + global->int2Str((int)addsites.size()) + " sites.");
+          " with " + util::int2Str((int)addsites.size()) + " sites.");
     }
     setSpeedScale();
   }
@@ -543,7 +544,7 @@ void Engine::raceComplete(Race * race) {
   refreshScoreBoard();
   global->getEventLog()->log("Engine", "Race globally completed: " + race->getName());
   if (dropped) {
-    global->getEventLog()->log("Engine", "Scoreboard refreshes dropped since race start: " + global->int2Str(dropped));
+    global->getEventLog()->log("Engine", "Scoreboard refreshes dropped since race start: " + util::int2Str(dropped));
   }
   return;
 }
@@ -587,11 +588,11 @@ int Engine::calculateScore(File * f, Race * itr, FileList * fls, SiteRace * srs,
   }
   if (points > 10000 || points <= 0) {
     global->getEventLog()->log("Engine", "BUG: unexpected score. Avgspeed: " +
-        global->int2Str(avgspeed) + " Maxavgspeed: " + global->int2Str(maxavgspeed) +
-        " Filesize: " + global->int2Str(f->getSize()) + " Maxfilesize: " +
-        global->int2Str(srs->getMaxFileSize()) + " Ownedpercentage: " +
-        global->int2Str(fld->getOwnedPercentage()) + " Maxprogress: " +
-        global->int2Str(itr->getMaxSiteProgress()));
+        util::int2Str(avgspeed) + " Maxavgspeed: " + util::int2Str(maxavgspeed) +
+        " Filesize: " + util::int2Str(f->getSize()) + " Maxfilesize: " +
+        util::int2Str(srs->getMaxFileSize()) + " Ownedpercentage: " +
+        util::int2Str(fld->getOwnedPercentage()) + " Maxprogress: " +
+        util::int2Str(itr->getMaxSiteProgress()));
   }
   return points;
 }
@@ -671,7 +672,7 @@ std::list<TransferJob *>::const_iterator Engine::getTransferJobsIteratorEnd() co
 void Engine::tick(int message) {
   for (std::list<Race *>::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
     if ((*it)->checksSinceLastUpdate() >= MAXCHECKSTIMEOUT) {
-      global->getEventLog()->log("Engine", "No activity for " + global->int2Str(MAXCHECKSTIMEOUT) +
+      global->getEventLog()->log("Engine", "No activity for " + util::int2Str(MAXCHECKSTIMEOUT) +
           " seconds, aborting race: " + (*it)->getName());
       for (std::list<SiteLogic *>::const_iterator its = (*it)->begin(); its != (*it)->end(); its++) {
         (*its)->raceLocalComplete((*its)->getRace((*it)->getName()));

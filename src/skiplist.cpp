@@ -5,6 +5,7 @@
 
 #include "globalcontext.h"
 #include "datafilehandler.h"
+#include "util.h"
 
 extern GlobalContext * global;
 
@@ -190,7 +191,7 @@ void SkipList::readConfiguration() {
         bool allowed;
         int scope;
         if (split != std::string::npos) {
-          scope = global->str2Int(value.substr(0, split));
+          scope = util::str2Int(value.substr(0, split));
           allowed = value.substr(split + 1) == "true" ? true : false;
         }
         else {
@@ -216,7 +217,7 @@ void SkipList::writeState() {
     std::string entryline = it->matchPattern() + "$" +
         (it->matchFile() ? "true" : "false") + "$" +
         (it->matchDir() ? "true" : "false") + "$" +
-        global->int2Str(it->matchScope()) + "$" +
+        util::int2Str(it->matchScope()) + "$" +
         (it->isAllowed() ? "true" : "false");
     filehandler->addOutputLine("SkipList", "entry=" + entryline);
   }

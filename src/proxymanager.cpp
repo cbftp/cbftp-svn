@@ -6,6 +6,7 @@
 #include "globalcontext.h"
 #include "datafilehandler.h"
 #include "eventlog.h"
+#include "util.h"
 
 extern GlobalContext * global;
 
@@ -74,7 +75,7 @@ void ProxyManager::readConfiguration() {
       proxy->setPort(value);
     }
     else if (!setting.compare("authmethod")) {
-      proxy->setAuthMethod(global->str2Int(value));
+      proxy->setAuthMethod(util::str2Int(value));
     }
     else if (!setting.compare("user")) {
       proxy->setUser(value);
@@ -96,7 +97,7 @@ void ProxyManager::readConfiguration() {
     }
   }
   std::sort(proxies.begin(), proxies.end(), proxyNameComparator);
-  global->getEventLog()->log("ProxyManager", "Loaded " + global->int2Str((int)proxies.size()) + " proxies.");
+  global->getEventLog()->log("ProxyManager", "Loaded " + util::int2Str((int)proxies.size()) + " proxies.");
 }
 
 void ProxyManager::writeState() {
@@ -112,7 +113,7 @@ void ProxyManager::writeState() {
     filehandler->addOutputLine(filetag, name + "$port=" + proxy->getPort());
     filehandler->addOutputLine(filetag, name + "$user=" + proxy->getUser());
     filehandler->addOutputLine(filetag, name + "$pass=" + proxy->getPass());
-    filehandler->addOutputLine(filetag, name + "$authmethod=" + global->int2Str(proxy->getAuthMethod()));
+    filehandler->addOutputLine(filetag, name + "$authmethod=" + util::int2Str(proxy->getAuthMethod()));
   }
   if (defaultproxy != NULL) {
     filehandler->addOutputLine(defaultstag, "useproxy=" + defaultproxy->getName());

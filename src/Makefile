@@ -11,7 +11,7 @@ OBJECTS = potentialelement.o scoreboardelement.o \
 	skiplist.o sizelocationtrack.o eventlog.o proxy.o proxymanager.o \
 	proxysession.o recursivecommandlogic.o localstorage.o localtransfer.o \
 	externalfileviewing.o transferstatus.o transferjob.o timereference.o \
-	skiplistitem.o pendingtransfer.o localfile.o localfilelist.o
+	skiplistitem.o pendingtransfer.o localfile.o localfilelist.o util.o
 
 all: ${OBJECTS}
 	@cd ui; ${MAKE}
@@ -68,6 +68,7 @@ skiplistitem.o:
 pendingtransfer.o:
 localfile.o:
 localfilelist.o:
+util.o:
 
 clean:
 	rm -f ${OBJECTS}

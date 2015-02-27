@@ -8,6 +8,7 @@
 #include "../../globalcontext.h"
 #include "../../transferstatus.h"
 #include "../../transfermanager.h"
+#include "../../util.h"
 
 extern GlobalContext * global;
 
@@ -107,13 +108,13 @@ std::string TransfersScreen::getInfoLabel() const {
 
 void TransfersScreen::addTransferDetails(unsigned int y, Pointer<TransferStatus> ts) {
   std::string route = ts->getSource() + " -> " + ts->getTarget();
-  std::string speed = GlobalContext::parseSize(ts->getSpeed() * SIZEPOWER) + "/s";
-  std::string timespent = GlobalContext::simpleTimeFormat(ts->getTimeSpent());
+  std::string speed = util::parseSize(ts->getSpeed() * SIZEPOWER) + "/s";
+  std::string timespent = util::simpleTimeFormat(ts->getTimeSpent());
   int progresspercent = ts->getProgress();
   std::string progress;
   switch (ts->getState()) {
     case TRANSFERSTATUS_STATE_IN_PROGRESS:
-      progress = global->int2Str(progresspercent) + "%";
+      progress = util::int2Str(progresspercent) + "%";
       break;
     case TRANSFERSTATUS_STATE_FAILED:
       progress = "fail";
@@ -122,9 +123,9 @@ void TransfersScreen::addTransferDetails(unsigned int y, Pointer<TransferStatus>
       progress = "done";
       break;
   }
-  std::string timeremaining = GlobalContext::simpleTimeFormat(ts->getTimeRemaining());
-  std::string transferred = GlobalContext::parseSize(ts->targetSize()) + " / " +
-      GlobalContext::parseSize(ts->sourceSize());
+  std::string timeremaining = util::simpleTimeFormat(ts->getTimeRemaining());
+  std::string transferred = util::parseSize(ts->targetSize()) + " / " +
+      util::parseSize(ts->sourceSize());
   std::string path = ts->getSourcePath() + " -> " + ts->getTargetPath();
   MenuSelectAdjustableLine * msal = table.addAdjustableLine();
   MenuSelectOptionTextButton * msotb;

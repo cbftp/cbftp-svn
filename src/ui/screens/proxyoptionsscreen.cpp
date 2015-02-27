@@ -10,6 +10,7 @@
 #include "../../proxymanager.h"
 #include "../../sitemanager.h"
 #include "../../eventlog.h"
+#include "../../util.h"
 
 extern GlobalContext * global;
 
@@ -237,5 +238,5 @@ std::string ProxyOptionsScreen::getInfoLabel() const {
 }
 
 std::string ProxyOptionsScreen::getInfoText() const {
-  return "Proxies added: " + global->int2Str(pm->size());
+  return "Proxies added: " + util::int2Str(pm->size());
 }

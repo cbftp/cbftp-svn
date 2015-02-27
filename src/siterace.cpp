@@ -5,6 +5,7 @@
 #include "race.h"
 #include "globalcontext.h"
 #include "skiplist.h"
+#include "util.h"
 
 extern GlobalContext * global;
 
@@ -259,11 +260,11 @@ int SiteRace::getObservedTime(FileList * fl) {
   std::map<FileList *, int>::iterator it;
   for (it = observestarts.begin(); it != observestarts.end(); it++) {
     if (it->first == fl) {
-      return global->ctimeMSec() - it->second;
+      return util::ctimeMSec() - it->second;
     }
   }
   if (fl->getSize() > 0) {
-    observestarts[fl] = global->ctimeMSec();
+    observestarts[fl] = util::ctimeMSec();
   }
   return 0;
 }
@@ -272,10 +273,10 @@ int SiteRace::getSFVObservedTime(FileList * fl) {
   std::map<FileList *, int>::iterator it;
   for (it = sfvobservestarts.begin(); it != sfvobservestarts.end(); it++) {
     if (it->first == fl) {
-      return global->ctimeMSec() - it->second;
+      return util::ctimeMSec() - it->second;
     }
   }
-  sfvobservestarts[fl] = global->ctimeMSec();
+  sfvobservestarts[fl] = util::ctimeMSec();
   return 0;
 }
 

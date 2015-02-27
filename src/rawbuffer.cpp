@@ -1,7 +1,10 @@
 #include "rawbuffer.h"
 
-#include "globalcontext.h"
 #include "uibase.h"
+#include "globalcontext.h"
+#include "util.h"
+
+extern GlobalContext * global;
 
 RawBuffer::RawBuffer(unsigned int maxlength, std::string site, std::string id) {
   latestp = 0;
@@ -53,7 +56,7 @@ void RawBuffer::write(std::string s) {
       log[(latestp > 0 ? latestp : maxlength) - 1].append(s);
     }
     else {
-      s = "[" + global->ctimeLog() + (eventlog ? "" : " " + site + (threads ? " " + id : "")) + "] " + s;
+      s = "[" + util::ctimeLog() + (eventlog ? "" : " " + site + (threads ? " " + id : "")) + "] " + s;
       if (log.size() < maxlength) log.push_back(s);
       else log[latestp] = s;
       if (++latestp == maxlength) latestp = 0;
@@ -75,7 +78,7 @@ void RawBuffer::rename(std::string name) {
 }
 
 void RawBuffer::setId(int id) {
-  this->id = global->int2Str(id);
+  this->id = util::int2Str(id);
 }
 
 std::string RawBuffer::getLineCopy(unsigned int num) const {

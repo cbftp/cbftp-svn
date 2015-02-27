@@ -8,6 +8,7 @@
 #include "../../scoreboardelement.h"
 #include "../../sitelogic.h"
 #include "../../site.h"
+#include "../../util.h"
 
 extern GlobalContext * global;
 
@@ -33,7 +34,7 @@ void ScoreBoardScreen::redraw() {
   ui->printStr(0, col - 21, "Sites");
   ui->printStr(1, col - 21, "-----");
   for (it = scoreboard->begin(); it != scoreboard->end() && i < row; it++, i++) {
-    std::string score = global->int2Str((*it)->getScore());
+    std::string score = util::int2Str((*it)->getScore());
     std::string src = (*it)->getSource()->getSite()->getName();
     if (src.length() > 4) {
       src = src.substr(0, 4);
@@ -71,7 +72,7 @@ std::string ScoreBoardScreen::getInfoLabel() const {
 }
 
 std::string ScoreBoardScreen::getInfoText() const {
-  std::string size = global->int2Str(scoreboard->size());
-  std::string max = global->int2Str((int)scoreboard->getElementVector()->size());
+  std::string size = util::int2Str(scoreboard->size());
+  std::string max = util::int2Str((int)scoreboard->getElementVector()->size());
   return "Size: " + size + "  Max: " + max;
 }

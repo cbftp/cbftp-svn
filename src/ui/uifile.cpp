@@ -1,7 +1,8 @@
 #include "uifile.h"
 
-#include "../globalcontext.h"
 #include "../file.h"
+#include "../globalcontext.h"
+#include "../util.h"
 
 extern GlobalContext * global;
 
@@ -13,7 +14,7 @@ UIFile::UIFile(File * file) {
   group = file->getGroup();
   size = file->getSize();
   linktarget = file->getLinkTarget();
-  sizerepr = GlobalContext::parseSize(file->getSize());
+  sizerepr = util::parseSize(file->getSize());
   parseTimeStamp(file->getLastModified());
   selected = false;
   cursored = false;
@@ -99,7 +100,7 @@ void UIFile::parseTimeStamp(std::string uglytime) {
   std::string meta = uglytime.substr(pos);
   int year;
   int month = 0;
-  int day = global->str2Int(daystr);
+  int day = util::str2Int(daystr);
   int hour;
   int minute;
   if (monthstr == "Jan") month = 1;
@@ -116,7 +117,7 @@ void UIFile::parseTimeStamp(std::string uglytime) {
   else if (monthstr == "Dec") month = 12;
   size_t metabreak = meta.find(":");
   if (metabreak == std::string::npos) {
-    year = global->str2Int(meta);
+    year = util::str2Int(meta);
     hour = 0;
     minute = 0;
   }
@@ -126,24 +127,24 @@ void UIFile::parseTimeStamp(std::string uglytime) {
     if (month > currentmonth) {
       year--;
     }
-    hour = global->str2Int(meta.substr(0, metabreak));
-    minute = global->str2Int(meta.substr(metabreak + 1));
+    hour = util::str2Int(meta.substr(0, metabreak));
+    minute = util::str2Int(meta.substr(metabreak + 1));
   }
 
-  std::string yearstr = global->int2Str(year);
-  monthstr = global->int2Str(month);
+  std::string yearstr = util::int2Str(year);
+  monthstr = util::int2Str(month);
   if (month < 10) {
     monthstr = "0" + monthstr;
   }
-  daystr = global->int2Str(day);
+  daystr = util::int2Str(day);
   if (day < 10) {
     daystr = "0" + daystr;
   }
-  std::string hourstr = global->int2Str(hour);
+  std::string hourstr = util::int2Str(hour);
   if (hour < 10) {
     hourstr = "0" + hourstr;
   }
-  meta = global->int2Str(minute);
+  meta = util::int2Str(minute);
   if (minute < 10) {
     meta = "0" + meta;
   }

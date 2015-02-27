@@ -15,6 +15,7 @@
 #include "../../file.h"
 #include "../../externalfileviewing.h"
 #include "../../transferstatus.h"
+#include "../../util.h"
 
 extern GlobalContext * global;
 
@@ -79,7 +80,7 @@ void ViewFileScreen::redraw() {
     }
     else if (!externallyviewable) {
       ui->printStr(1, 1, file + " is too large to download and open in the internal viewer.");
-      ui->printStr(2, 1, "The maximum file size for internal viewing is set to " + global->int2Str(MAXOPENSIZE) + " bytes.");
+      ui->printStr(2, 1, "The maximum file size for internal viewing is set to " + util::int2Str(MAXOPENSIZE) + " bytes.");
     }
     else if (hasnodisplay) {
       ui->printStr(1, 1, file + " cannot be opened in an external viewer.");
@@ -241,12 +242,12 @@ bool ViewFileScreen::goUp() {
 }
 
 void ViewFileScreen::printTransferInfo() {
-  std::string speed = GlobalContext::parseSize(ts->getSpeed() * SIZEPOWER) + "/s";
+  std::string speed = util::parseSize(ts->getSpeed() * SIZEPOWER) + "/s";
   int progresspercent = ts->getProgress();
-  std::string progress = global->int2Str(progresspercent) + "%";
-  std::string timeremaining = GlobalContext::simpleTimeFormat(ts->getTimeRemaining());
-  std::string transferred = GlobalContext::parseSize(ts->targetSize()) + " / " +
-      GlobalContext::parseSize(ts->sourceSize());
+  std::string progress = util::int2Str(progresspercent) + "%";
+  std::string timeremaining = util::simpleTimeFormat(ts->getTimeRemaining());
+  std::string transferred = util::parseSize(ts->targetSize()) + " / " +
+      util::parseSize(ts->sourceSize());
   unsigned int y = 3;
   MenuSelectOption table;
   MenuSelectAdjustableLine * msal = table.addAdjustableLine();

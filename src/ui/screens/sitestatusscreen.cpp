@@ -7,6 +7,7 @@
 #include "../../sitelogicmanager.h"
 #include "../../ftpconn.h"
 #include "../../connstatetracker.h"
+#include "../../util.h"
 
 #include "../ui.h"
 
@@ -34,17 +35,17 @@ void SiteStatusScreen::redraw() {
 }
 
 void SiteStatusScreen::update() {
-  std::string loginslots = "Login slots:    " + global->int2Str(st->getCurrLogins());
+  std::string loginslots = "Login slots:    " + util::int2Str(st->getCurrLogins());
   if (!site->unlimitedLogins()) {
-    loginslots += "/" + global->int2Str(site->getMaxLogins());
+    loginslots += "/" + util::int2Str(site->getMaxLogins());
   }
-  std::string upslots = "Upload slots:   " + global->int2Str(st->getCurrUp());
+  std::string upslots = "Upload slots:   " + util::int2Str(st->getCurrUp());
   if (!site->unlimitedUp()) {
-    upslots += "/" + global->int2Str(site->getMaxUp());
+    upslots += "/" + util::int2Str(site->getMaxUp());
   }
-  std::string downslots = "Download slots: " + global->int2Str(st->getCurrDown());
+  std::string downslots = "Download slots: " + util::int2Str(st->getCurrDown());
   if (!site->unlimitedDown()) {
-    downslots += "/" + global->int2Str(site->getMaxDown());
+    downslots += "/" + util::int2Str(site->getMaxDown());
   }
   ui->printStr(1, 1, loginslots);
   ui->printStr(2, 1, upslots);
@@ -64,7 +65,7 @@ void SiteStatusScreen::update() {
       status += " ";
     }
     previousstatuslength[j] = statuslength;
-    ui->printStr(i++, 1, "#" + global->int2Str((int)j) + " - LL:" + llstate +
+    ui->printStr(i++, 1, "#" + util::int2Str((int)j) + " - LL:" + llstate +
         " - TL:" + tlstate + " - T:" + tstate + " - " + status);
   }
 }

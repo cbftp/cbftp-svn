@@ -2,6 +2,7 @@
 
 #include "../../globalcontext.h"
 #include "../../datafilehandler.h"
+#include "../../util.h"
 
 #include "../ui.h"
 #include "../menuselectoptionelement.h"
@@ -57,7 +58,7 @@ void ChangeKeyScreen::update() {
   ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   std::string error = "                                                          ";
   if (tooshort) {
-    error = "Failed: The passphrase must be at least " + global->int2Str(SHORTESTKEY) + " characters long.";
+    error = "Failed: The passphrase must be at least " + util::int2Str(SHORTESTKEY) + " characters long.";
   }
   else if (mismatch) {
     error = "Failed: The new keys did not match.";

@@ -5,6 +5,7 @@
 #include "../../sitemanager.h"
 #include "../../iomanager.h"
 #include "../../localstorage.h"
+#include "../../util.h"
 
 #include "../ui.h"
 #include "../menuselectoptionelement.h"
@@ -52,7 +53,7 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   }
   y++;
   mso.addCheckBox(y++, x, "udpenable", "Enable remote commands:", rch->isEnabled());
-  mso.addStringField(y++, x, "udpport", "Remote command UDP Port:", global->int2Str(rch->getUDPPort()), false, 5);
+  mso.addStringField(y++, x, "udpport", "Remote command UDP Port:", util::int2Str(rch->getUDPPort()), false, 5);
   mso.addStringField(y++, x, "udppass", "Remote command password:", rch->getPassword(), true);
   y++;
   mso.addCheckBox(y++, x, "legend", "Show legend bar:", ui->legendEnabled());
@@ -69,7 +70,7 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   sslfxp->addOption("Prefer on", SITE_SSL_PREFER_ON);
   sslfxp->addOption("Always on", SITE_SSL_ALWAYS_ON);
   sslfxp->setOption(sm->getDefaultSSLTransferPolicy());
-  mso.addStringField(y++, x, "defidletime", "Default site max idle time (s):", global->int2Str(sm->getDefaultMaxIdleTime()), false);
+  mso.addStringField(y++, x, "defidletime", "Default site max idle time (s):", util::int2Str(sm->getDefaultMaxIdleTime()), false);
   y++;
   mso.addStringField(y++, x, "dlpath", "Download path:", ls->getDownloadPath(), false, 128, 128);
   y++;
@@ -184,7 +185,7 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
           }
         }
         else if (identifier == "udpport") {
-          rch->setPort(global->str2Int(((MenuSelectOptionTextField *)msoe)->getData()));
+          rch->setPort(util::str2Int(((MenuSelectOptionTextField *)msoe)->getData()));
         }
         else if (identifier == "udppass") {
           rch->setPassword(((MenuSelectOptionTextField *)msoe)->getData());
@@ -211,7 +212,7 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
           sm->setDefaultSSLTransferPolicy(((MenuSelectOptionTextArrow *)msoe)->getData());
         }
         else if (identifier == "defidletime") {
-          sm->setDefaultMaxIdleTime(global->str2Int(((MenuSelectOptionTextField *)msoe)->getData()));
+          sm->setDefaultMaxIdleTime(util::str2Int(((MenuSelectOptionTextField *)msoe)->getData()));
         }
         else if (identifier == "legend") {
           ui->showLegend(((MenuSelectOptionCheckBox *)msoe)->getData());

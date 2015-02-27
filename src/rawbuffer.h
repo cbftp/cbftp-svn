@@ -3,10 +3,6 @@
 #include <string>
 #include <vector>
 
-class GlobalContext;
-
-extern GlobalContext * global;
-
 class RawBuffer {
   private:
     std::vector<std::string> log;

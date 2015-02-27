@@ -6,6 +6,7 @@
 #include "../sitelogic.h"
 #include "../site.h"
 #include "../globalcontext.h"
+#include "../util.h"
 
 
 #include "menuselectsiteelement.h"
@@ -84,25 +85,25 @@ std::string MenuSelectSite::getSiteLine(unsigned int index) const {
   int linelen;
   int addlen;
   line.append(site->getName() + " ");
-  add = global->int2Str(sitelogic->getCurrLogins());
+  add = util::int2Str(sitelogic->getCurrLogins());
   if (!site->unlimitedLogins()) {
-    add += "/" + global->int2Str(site->getMaxLogins());
+    add += "/" + util::int2Str(site->getMaxLogins());
   }
   linelen = line.length();
   addlen = add.length();
   for (int i = 0; i < 14 - linelen - addlen; i++) line.append(" ");
   line.append(add + " ");
-  add = global->int2Str(sitelogic->getCurrUp());
+  add = util::int2Str(sitelogic->getCurrUp());
   if (!site->unlimitedUp()) {
-    add += "/" + global->int2Str(site->getMaxUp());
+    add += "/" + util::int2Str(site->getMaxUp());
   }
   linelen = line.length();
   addlen = add.length();
   for (int i = 0; i < 23 - linelen - addlen; i++) line.append(" ");
   line.append(add + " ");
-  add = global->int2Str(sitelogic->getCurrDown());
+  add = util::int2Str(sitelogic->getCurrDown());
   if (!site->unlimitedDown()) {
-    add += "/" + global->int2Str(site->getMaxDown());
+    add += "/" + util::int2Str(site->getMaxDown());
   }
   linelen = line.length();
   addlen = add.length();

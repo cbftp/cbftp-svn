@@ -9,6 +9,7 @@
 #include "iomanager.h"
 #include "eventlog.h"
 #include "tickpoke.h"
+#include "util.h"
 
 RemoteCommandHandler::RemoteCommandHandler() :
   enabled(false),
@@ -51,11 +52,11 @@ void RemoteCommandHandler::connect() {
   sockfd = global->getIOManager()->registerUDPServerSocket(this, udpport);
   if (sockfd >= 0) {
     connected = true;
-    global->getEventLog()->log("RemoteCommandHandler", "Listening on UDP port " + global->int2Str(udpport));
+    global->getEventLog()->log("RemoteCommandHandler", "Listening on UDP port " + util::int2Str(udpport));
   }
   else {
     int delay = RETRYDELAY / 1000;
-    global->getEventLog()->log("RemoteCommandHandler", "Retrying in " + global->int2Str(delay) + " seconds.");
+    global->getEventLog()->log("RemoteCommandHandler", "Retrying in " + util::int2Str(delay) + " seconds.");
     retrying = true;
     global->getTickPoke()->startPoke(this, "RemoteCommandHandler", RETRYDELAY, 0);
   }
@@ -66,6 +67,7 @@ void RemoteCommandHandler::FDData(char * data, unsigned int datalen) {
 }
 
 void RemoteCommandHandler::handleMessage(std::string message) {
+  message = util::trim(message);
   global->getEventLog()->log("RemoteCommandHandler", "Received: " + message);
   size_t one = message.find(" ");
   size_t two = message.find(" ", one + 1);
@@ -99,7 +101,7 @@ void RemoteCommandHandler::handleMessage(std::string message) {
 
 void RemoteCommandHandler::FDFail(std::string message) {
   global->getEventLog()->log("RemoteCommandHandler", "UDP binding on port " +
-      global->int2Str(getUDPPort()) + " failed: " + message);
+      util::int2Str(getUDPPort()) + " failed: " + message);
 }
 
 void RemoteCommandHandler::disconnect() {
@@ -158,7 +160,7 @@ void RemoteCommandHandler::readConfiguration() {
       }
     }
     else if (!setting.compare("port")) {
-      setPort(global->str2Int(value));
+      setPort(util::str2Int(value));
     }
     else if (!setting.compare("password")) {
       setPassword(value);
@@ -173,6 +175,6 @@ void RemoteCommandHandler::writeState() {
   global->getEventLog()->log("RemoteCommandHandler", "Writing state...");
   DataFileHandler * filehandler = global->getDataFileHandler();
   if (enabled) filehandler->addOutputLine("RemoteCommandHandler", "enabled=true");
-  filehandler->addOutputLine("RemoteCommandHandler", "port=" + global->int2Str(port));
+  filehandler->addOutputLine("RemoteCommandHandler", "port=" + util::int2Str(port));
   filehandler->addOutputLine("RemoteCommandHandler", "password=" + password);
 }

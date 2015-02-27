@@ -9,6 +9,7 @@
 #include "datafilehandler.h"
 #include "connstatetracker.h"
 #include "eventlog.h"
+#include "util.h"
 
 extern GlobalContext * global;
 
@@ -57,7 +58,7 @@ void SiteManager::readConfiguration() {
       site->setBasePath(value);
     }
     else if (!setting.compare("idletime")) {
-      site->setMaxIdleTime(global->str2Int(value));
+      site->setMaxIdleTime(util::str2Int(value));
     }
     else if (!setting.compare("pret")) {
       if (!value.compare("true")) site->setPRET(true);
@@ -69,13 +70,13 @@ void SiteManager::readConfiguration() {
       if (!value.compare("true")) site->setSSLTransferPolicy(SITE_SSL_ALWAYS_ON);
     }
     else if (!setting.compare("ssltransfer")) {
-      site->setSSLTransferPolicy(global->str2Int(value));
+      site->setSSLTransferPolicy(util::str2Int(value));
     }
     else if (!setting.compare("cpsv")) {
       if (!value.compare("false")) site->setSupportsCPSV(false);
     }
     else if (!setting.compare("listcommand")) {
-      site->setListCommand(global->str2Int(value));
+      site->setListCommand(util::str2Int(value));
     }
     else if (!setting.compare("allowupload")) {
       if (!value.compare("false")) site->setAllowUpload(false);
@@ -87,13 +88,13 @@ void SiteManager::readConfiguration() {
       if (!value.compare("true")) site->setBrokenPASV(true);
     }
     else if (!setting.compare("logins")) {
-      site->setMaxLogins(global->str2Int(value));
+      site->setMaxLogins(util::str2Int(value));
     }
     else if (!setting.compare("maxdn")) {
-      site->setMaxDn(global->str2Int(value));
+      site->setMaxDn(util::str2Int(value));
     }
     else if (!setting.compare("maxup")) {
-      site->setMaxUp(global->str2Int(value));
+      site->setMaxUp(util::str2Int(value));
     }
     else if (!setting.compare("section")) {
       size_t split = value.find('$');
@@ -104,14 +105,14 @@ void SiteManager::readConfiguration() {
     else if (!setting.compare("avgspeed")) {
       size_t split = value.find('$');
       std::string sitename = value.substr(0, split);
-      int avgspeed = global->str2Int(value.substr(split + 1));
+      int avgspeed = util::str2Int(value.substr(split + 1));
       site->setAverageSpeed(sitename, avgspeed);
     }
     else if (!setting.compare("affil")) {
       site->addAffil(value);
     }
     else if (!setting.compare("proxytype")) {
-      site->setProxyType(global->str2Int(value));
+      site->setProxyType(util::str2Int(value));
     }
     else if (!setting.compare("proxyname")) {
       site->setProxy(value);
@@ -132,13 +133,13 @@ void SiteManager::readConfiguration() {
       setDefaultPassword(value);
     }
     else if (!setting.compare("maxlogins")) {
-      setDefaultMaxLogins(global->str2Int(value));
+      setDefaultMaxLogins(util::str2Int(value));
     }
     else if (!setting.compare("maxup")) {
-      setDefaultMaxUp(global->str2Int(value));
+      setDefaultMaxUp(util::str2Int(value));
     }
     else if (!setting.compare("maxdown")) {
-      setDefaultMaxDown(global->str2Int(value));
+      setDefaultMaxDown(util::str2Int(value));
     }
     else if (!setting.compare("sslconn")) {
       if (!value.compare("false")) {
@@ -151,10 +152,10 @@ void SiteManager::readConfiguration() {
       }
     }
     else if (!setting.compare("ssltransfer")) {
-      setDefaultSSLTransferPolicy(global->str2Int(value));
+      setDefaultSSLTransferPolicy(util::str2Int(value));
     }
     else if (!setting.compare("maxidletime")) {
-      setDefaultMaxIdleTime(global->str2Int(value));
+      setDefaultMaxIdleTime(util::str2Int(value));
     }
   }
   lines.clear();
@@ -173,7 +174,7 @@ void SiteManager::readConfiguration() {
     }
   }
   std::sort(sites.begin(), sites.end(), siteNameComparator);
-  global->getEventLog()->log("SiteManager", "Loaded " + global->int2Str((int)sites.size()) + " sites.");
+  global->getEventLog()->log("SiteManager", "Loaded " + util::int2Str((int)sites.size()) + " sites.");
 }
 
 void SiteManager::writeState() {
@@ -194,20 +195,20 @@ void SiteManager::writeState() {
     if (basepath != "" && basepath != "/") {
       filehandler->addOutputLine(filetag, name + "$basepath=" + basepath);
     }
-    filehandler->addOutputLine(filetag, name + "$logins=" + global->int2Str(site->getInternMaxLogins()));
-    filehandler->addOutputLine(filetag, name + "$maxup=" + global->int2Str(site->getInternMaxUp()));
-    filehandler->addOutputLine(filetag, name + "$maxdn=" + global->int2Str(site->getInternMaxDown()));
-    filehandler->addOutputLine(filetag, name + "$idletime=" + global->int2Str(site->getMaxIdleTime()));
-    filehandler->addOutputLine(filetag, name + "$ssltransfer=" + global->int2Str(site->getSSLTransferPolicy()));
+    filehandler->addOutputLine(filetag, name + "$logins=" + util::int2Str(site->getInternMaxLogins()));
+    filehandler->addOutputLine(filetag, name + "$maxup=" + util::int2Str(site->getInternMaxUp()));
+    filehandler->addOutputLine(filetag, name + "$maxdn=" + util::int2Str(site->getInternMaxDown()));
+    filehandler->addOutputLine(filetag, name + "$idletime=" + util::int2Str(site->getMaxIdleTime()));
+    filehandler->addOutputLine(filetag, name + "$ssltransfer=" + util::int2Str(site->getSSLTransferPolicy()));
     if (!site->supportsCPSV()) filehandler->addOutputLine(filetag, name + "$cpsv=false");
-    filehandler->addOutputLine(filetag, name + "$listcommand=" + global->int2Str(site->getListCommand()));
+    filehandler->addOutputLine(filetag, name + "$listcommand=" + util::int2Str(site->getListCommand()));
     if (site->needsPRET()) filehandler->addOutputLine(filetag, name + "$pret=true");
     if (!site->SSL()) filehandler->addOutputLine(filetag, name + "$sslconn=false");
     if (!site->getAllowUpload()) filehandler->addOutputLine(filetag, name + "$allowupload=false");
     if (!site->getAllowDownload()) filehandler->addOutputLine(filetag, name + "$allowdownload=false");
     if (site->hasBrokenPASV()) filehandler->addOutputLine(filetag, name + "$brokenpasv=true");
     int proxytype = site->getProxyType();
-    filehandler->addOutputLine(filetag, name + "$proxytype=" + global->int2Str(proxytype));
+    filehandler->addOutputLine(filetag, name + "$proxytype=" + util::int2Str(proxytype));
     if (proxytype == SITE_PROXY_USE) {
       filehandler->addOutputLine(filetag, name + "$proxyname=" + site->getProxy());
     }
@@ -217,7 +218,7 @@ void SiteManager::writeState() {
     }
     std::map<std::string, int>::const_iterator sit2;
     for (sit2 = site->avgspeedBegin(); sit2 != site->avgspeedEnd(); sit2++) {
-      filehandler->addOutputLine(filetag, name + "$avgspeed=" + sit2->first + "$" + global->int2Str(sit2->second));
+      filehandler->addOutputLine(filetag, name + "$avgspeed=" + sit2->first + "$" + util::int2Str(sit2->second));
     }
     std::map<std::string, bool>::const_iterator sit3;
     for (sit3 = site->affilsBegin(); sit3 != site->affilsEnd(); sit3++) {
@@ -226,11 +227,11 @@ void SiteManager::writeState() {
   }
   filehandler->addOutputLine(defaultstag, "username=" + getDefaultUserName());
   filehandler->addOutputLine(defaultstag, "password=" + getDefaultPassword());
-  filehandler->addOutputLine(defaultstag, "maxlogins=" + global->int2Str(getDefaultMaxLogins()));
-  filehandler->addOutputLine(defaultstag, "maxup=" + global->int2Str(getDefaultMaxUp()));
-  filehandler->addOutputLine(defaultstag, "maxdown=" + global->int2Str(getDefaultMaxDown()));
-  filehandler->addOutputLine(defaultstag, "maxidletime=" + global->int2Str(getDefaultMaxIdleTime()));
-  filehandler->addOutputLine(defaultstag, "ssltransfer=" + global->int2Str(getDefaultSSLTransferPolicy()));
+  filehandler->addOutputLine(defaultstag, "maxlogins=" + util::int2Str(getDefaultMaxLogins()));
+  filehandler->addOutputLine(defaultstag, "maxup=" + util::int2Str(getDefaultMaxUp()));
+  filehandler->addOutputLine(defaultstag, "maxdown=" + util::int2Str(getDefaultMaxDown()));
+  filehandler->addOutputLine(defaultstag, "maxidletime=" + util::int2Str(getDefaultMaxIdleTime()));
+  filehandler->addOutputLine(defaultstag, "ssltransfer=" + util::int2Str(getDefaultSSLTransferPolicy()));
   if (!getDefaultSSL()) filehandler->addOutputLine(defaultstag, "sslconn=false");
   std::map<Site *, std::map<Site *, bool> >::iterator it2;
   std::map<Site *, bool>::iterator it3;

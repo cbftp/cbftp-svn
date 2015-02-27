@@ -17,6 +17,7 @@
 #include "proxymanager.h"
 #include "proxy.h"
 #include "proxysession.h"
+#include "util.h"
 
 extern GlobalContext * global;
 
@@ -26,7 +27,7 @@ FTPConn::FTPConn(SiteLogic * sl, int id) {
   this->site = sl->getSite();
   this->status = "disconnected";
   processing = false;
-  rawbuf = new RawBuffer(RAWBUFMAXLEN, site->getName(), global->int2Str(id));
+  rawbuf = new RawBuffer(RAWBUFMAXLEN, site->getName(), util::int2Str(id));
   proxysession = new ProxySession();
   iom = global->getIOManager();
   databuflen = DATABUF;
@@ -84,14 +85,14 @@ void FTPConn::login() {
   if (proxy == NULL) {
     rawbuf->writeLine("[Connecting to " + site->getAddress() + ":" + site->getPort() + "]");
     state = STATE_CONNECTING;
-    retcode = iom->registerTCPClientSocket(this, site->getAddress(), global->str2Int(site->getPort()), &sockid);
+    retcode = iom->registerTCPClientSocket(this, site->getAddress(), util::str2Int(site->getPort()), &sockid);
   }
   else {
     rawbuf->writeLine("[Connecting to proxy " + proxy->getAddr() + ":" + proxy->getPort() + "]");
     state = STATE_PROXY;
     processing = true;
     proxysession->prepare(proxy, site->getAddress(), site->getPort());
-    retcode = iom->registerTCPClientSocket(this, proxy->getAddr(), global->str2Int(proxy->getPort()), &sockid);
+    retcode = iom->registerTCPClientSocket(this, proxy->getAddr(), util::str2Int(proxy->getPort()), &sockid);
   }
   if (retcode < 0) {
     state = STATE_DISCONNECTED;
@@ -647,7 +648,7 @@ void FTPConn::doWipe(std::string path, bool recursive) {
 
 void FTPConn::doNuke(std::string path, int multiplier, std::string reason) {
   state = STATE_NUKE;
-  sendEcho("SITE NUKE " + path + " " + global->int2Str(multiplier) + " " + reason);
+  sendEcho("SITE NUKE " + path + " " + util::int2Str(multiplier) + " " + reason);
 }
 void FTPConn::doDELE(std::string path) {
   state = STATE_DELE;
@@ -766,7 +767,7 @@ void FTPConn::PORTResponse() {
 
 void FTPConn::doCWD(std::string path) {
   if (path == currentpath) {
-    global->getEventLog()->log("FTPConn " + site->getName() + global->int2Str(id),
+    global->getEventLog()->log("FTPConn " + site->getName() + util::int2Str(id),
         "WARNING: Noop CWD requested: " + path);
     return;
   }

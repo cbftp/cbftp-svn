@@ -21,6 +21,7 @@
 #include "datafilehandler.h"
 #include "tickpoke.h"
 #include "scopelock.h"
+#include "util.h"
 
 IOManager::IOManager() :
   epollfd(epoll_create(100)),
@@ -73,7 +74,7 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int
   memset(&sock, 0, sizeof(sock));
   sock.ai_family = AF_INET;
   sock.ai_socktype = SOCK_STREAM;
-  int retcode = getaddrinfo(addr.data(), global->int2Str(port).data(), &sock, &res);
+  int retcode = getaddrinfo(addr.data(), util::int2Str(port).data(), &sock, &res);
   if (retcode < 0) {
     if (!handleError(er)) {
       return -1;
@@ -137,7 +138,7 @@ int IOManager::registerTCPServerSocket(EventReceiver * er, int port, bool local)
   if (local) {
     addr = "127.0.0.1";
   }
-  int retcode = getaddrinfo(addr.c_str(), global->int2Str(port).data(), &sock, &res);
+  int retcode = getaddrinfo(addr.c_str(), util::int2Str(port).data(), &sock, &res);
   if (retcode < 0) {
     if (!handleError(er)) {
       return -1;
@@ -202,7 +203,7 @@ int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
   sock.ai_socktype = SOCK_DGRAM;
   sock.ai_protocol = IPPROTO_UDP;
   std::string addr = "0.0.0.0";
-  int retcode = getaddrinfo(addr.c_str(), global->int2Str(port).data(), &sock, &res);
+  int retcode = getaddrinfo(addr.c_str(), util::int2Str(port).data(), &sock, &res);
   if (retcode < 0) {
     if (!handleError(er)) {
       return -1;
@@ -360,7 +361,7 @@ bool IOManager::investigateSSLError(int error, int sockid, int b_recv) {
   unsigned long e = ERR_get_error();
   global->getEventLog()->log("IOManager", "SSL error on connection to " +
       it->second.addr + ": " +
-      global->int2Str(error) + " return code: " + global->int2Str(b_recv) +
+      util::int2Str(error) + " return code: " + util::int2Str(b_recv) +
       " errno: " + strerror(errno) +
       (e ? " String: " + std::string(ERR_error_string(e, NULL)) : ""));
   return false;

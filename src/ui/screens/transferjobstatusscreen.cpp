@@ -12,8 +12,10 @@
 #include "../../transferjob.h"
 #include "../../sitelogic.h"
 #include "../../site.h"
+#include "../../util.h"
 
 extern GlobalContext * global;
+
 TransferJobStatusScreen::TransferJobStatusScreen(Ui * ui) {
   this->ui = ui;
 }
@@ -56,28 +58,28 @@ void TransferJobStatusScreen::redraw() {
   ui->printStr(y, 38, "Route: " + route);
   ui->printStr(y, 60, std::string("Status: ") + (transferjob->isDone() ? "Completed" : "In progress"));
   y++;
-  ui->printStr(y, 1, "Size: " + GlobalContext::parseSize(transferjob->sizeProgress()) +
-      " / " + GlobalContext::parseSize(transferjob->totalSize()));
-  ui->printStr(y, 35, "Speed: " + GlobalContext::parseSize(transferjob->getSpeed() * SIZEPOWER) + "/s");
-  ui->printStr(y, 60, "Files: " + global->int2Str(transferjob->filesProgress()) + "/" +
-      global->int2Str(transferjob->filesTotal()));
+  ui->printStr(y, 1, "Size: " + util::parseSize(transferjob->sizeProgress()) +
+      " / " + util::parseSize(transferjob->totalSize()));
+  ui->printStr(y, 35, "Speed: " + util::parseSize(transferjob->getSpeed() * SIZEPOWER) + "/s");
+  ui->printStr(y, 60, "Files: " + util::int2Str(transferjob->filesProgress()) + "/" +
+      util::int2Str(transferjob->filesTotal()));
   y++;
-  ui->printStr(y, 1, "Time spent: " + GlobalContext::simpleTimeFormat(transferjob->timeSpent()));
-  ui->printStr(y, 21, "Remaining: " + GlobalContext::simpleTimeFormat(transferjob->timeRemaining()));
+  ui->printStr(y, 1, "Time spent: " + util::simpleTimeFormat(transferjob->timeSpent()));
+  ui->printStr(y, 21, "Remaining: " + util::simpleTimeFormat(transferjob->timeRemaining()));
   int progresspercent = transferjob->getProgress();
   std::string progress = "....................";
   int charswithhighlight = progress.length() * progresspercent / 100;
   ui->printStr(y, 53, "[");
   ui->printStr(y, 54, progress.substr(0, charswithhighlight), true);
   ui->printStr(y, 54 + charswithhighlight, progress.substr(charswithhighlight));
-  ui->printStr(y, 54 + progress.length(), "] " + global->int2Str(transferjob->getProgress()) + "%");
+  ui->printStr(y, 54 + progress.length(), "] " + util::int2Str(transferjob->getProgress()) + "%");
   y = y + 2;
   addTransferDetails(y++, "USE", "TRANSFERRED", "FILENAME", "LEFT", "SPEED", "DONE", 0);
   for (std::list<Pointer<TransferStatus> >::const_iterator it = transferjob->transfersBegin(); it != transferjob->transfersEnd(); it++) {
     addTransferDetails(y++, *it);
   }
   for (std::map<std::string, unsigned long long int>::const_iterator it = transferjob->pendingTransfersBegin(); it != transferjob->pendingTransfersEnd(); it++) {
-    addTransferDetails(y++, "-", GlobalContext::parseSize(0) + " / " + GlobalContext::parseSize(it->second),
+    addTransferDetails(y++, "-", util::parseSize(0) + " / " + util::parseSize(it->second),
         it->first, "-", "-", "wait", 0);
   }
   table.adjustLines(col - 3);
@@ -177,13 +179,13 @@ std::string TransferJobStatusScreen::getInfoLabel() const {
 
 void TransferJobStatusScreen::addTransferDetails(unsigned int y, Pointer<TransferStatus> ts) {
   std::string route = ts->getSource() + " -> " + ts->getTarget();
-  std::string speed = GlobalContext::parseSize(ts->getSpeed() * SIZEPOWER) + "/s";
-  std::string timespent = GlobalContext::simpleTimeFormat(ts->getTimeSpent());
+  std::string speed = util::parseSize(ts->getSpeed() * SIZEPOWER) + "/s";
+  std::string timespent = util::simpleTimeFormat(ts->getTimeSpent());
   int progresspercent = ts->getProgress();
   std::string progress;
   switch (ts->getState()) {
     case TRANSFERSTATUS_STATE_IN_PROGRESS:
-      progress = global->int2Str(progresspercent) + "%";
+      progress = util::int2Str(progresspercent) + "%";
       break;
     case TRANSFERSTATUS_STATE_FAILED:
       progress = "fail";
@@ -192,9 +194,9 @@ void TransferJobStatusScreen::addTransferDetails(unsigned int y, Pointer<Transfe
       progress = "done";
       break;
   }
-  std::string timeremaining = GlobalContext::simpleTimeFormat(ts->getTimeRemaining());
-  std::string transferred = GlobalContext::parseSize(ts->targetSize()) + " / " +
-      GlobalContext::parseSize(ts->sourceSize());
+  std::string timeremaining = util::simpleTimeFormat(ts->getTimeRemaining());
+  std::string transferred = util::parseSize(ts->targetSize()) + " / " +
+      util::parseSize(ts->sourceSize());
   std::string path = ts->getSourcePath() + " -> " + ts->getTargetPath();
   std::string subpathfile = transferjob->findSubPath(ts) + ts->getFile();
   addTransferDetails(y, timespent, transferred, subpathfile, timeremaining,

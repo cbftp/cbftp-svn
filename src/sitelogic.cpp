@@ -26,6 +26,7 @@
 #include "localstorage.h"
 #include "transferjob.h"
 #include "commandowner.h"
+#include "util.h"
 
 SiteLogic::SiteLogic(std::string sitename) {
   requestidcounter = 0;
@@ -558,7 +559,7 @@ void SiteLogic::handleTransferFail(int id, int err) {
   }
   else {
     global->getEventLog()->log("SiteLogic", "BUG: Returned failed transfer (code " +
-        global->int2Str(err) + ") without having a transfer, shouldn't happen!");
+        util::int2Str(err) + ") without having a transfer, shouldn't happen!");
   }
 }
 
@@ -570,15 +571,15 @@ void SiteLogic::handleTransferFail(int id, int type, int err) {
     switch (type) {
       case CST_DOWNLOAD:
         global->getEventLog()->log("SiteLogic", "BUG: Returned failed download (code " +
-            global->int2Str(err) + ") without having a transfer, shouldn't happen!");
+            util::int2Str(err) + ") without having a transfer, shouldn't happen!");
         break;
       case CST_UPLOAD:
         global->getEventLog()->log("SiteLogic", "BUG: Returned failed upload (code " +
-            global->int2Str(err) + ") without having a transfer, shouldn't happen!");
+            util::int2Str(err) + ") without having a transfer, shouldn't happen!");
         break;
       case CST_LIST:
         global->getEventLog()->log("SiteLogic", "BUG: Returned failed LIST (code " +
-            global->int2Str(err) + ") without having a transfer, shouldn't happen!");
+            util::int2Str(err) + ") without having a transfer, shouldn't happen!");
         break;
     }
   }
@@ -1476,7 +1477,7 @@ FTPConn * SiteLogic::getConn(int id) const {
 std::string SiteLogic::getStatus(int id) const {
   int idletime = connstatetracker[id].getTimePassed()/1000;
   if (!conns[id]->isProcessing() && conns[id]->isConnected() && idletime) {
-    return "IDLE " + global->int2Str(idletime) + "s";
+    return "IDLE " + util::int2Str(idletime) + "s";
   }
   return conns[id]->getStatus();
 }

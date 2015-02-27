@@ -5,7 +5,7 @@
 #include <sys/timeb.h>
 #include <openssl/sha.h>
 
-#include "globalcontext.h"
+#include "util.h"
 
 const EVP_CIPHER * Crypto::cipher() {
   return EVP_aes_256_cbc();
@@ -24,7 +24,7 @@ void Crypto::encrypt(unsigned char * indata, int inlen, unsigned char * key, uns
   int resultlen;
   int finallen;
 #ifndef NO_LOCAL_DEPS
-  srand(GlobalContext::ctimeMSec());
+  srand(util::ctimeMSec());
 #endif
   for (int i = 0; i < ivlen; i++) {
     outdata[i] = (unsigned char)(rand() % UCHAR_MAX);

@@ -5,6 +5,7 @@
 #include "transfermonitor.h"
 #include "datafilehandler.h"
 #include "localfilelist.h"
+#include "util.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -59,8 +60,8 @@ int LocalStorage::getPortFromPASVString(std::string pasv) const {
   size_t sep3 = pasv.find(",", sep2 + 1);
   size_t sep4 = pasv.find(",", sep3 + 1);
   size_t sep5 = pasv.find(",", sep4 + 1);
-  int major = global->str2Int(pasv.substr(sep4 + 1, sep5 - sep4 + 1));
-  int minor = global->str2Int(pasv.substr(sep5 + 1));
+  int major = util::str2Int(pasv.substr(sep4 + 1, sep5 - sep4 + 1));
+  int minor = util::str2Int(pasv.substr(sep5 + 1));
   return major * 256 + minor;
 }
 

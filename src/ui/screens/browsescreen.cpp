@@ -13,6 +13,7 @@
 #include "../../tickpoke.h"
 #include "../../engine.h"
 #include "../../localstorage.h"
+#include "../../util.h"
 
 #include "../ui.h"
 #include "../uifile.h"
@@ -345,7 +346,7 @@ void BrowseScreen::command(std::string command, std::string arg) {
   }
   else if (command == "returnnuke") {
     nuking = true;
-    requestid = global->str2Int(arg);
+    requestid = util::str2Int(arg);
     redraw();
     ui->update();
     ui->setInfo();
@@ -778,8 +779,8 @@ std::string BrowseScreen::getInfoText() const {
       changedsort = false;
     }
   }
-  text += "  " + global->int2Str(list.sizeFiles()) + "f " + global->int2Str(list.sizeDirs()) + "d";
-  text += std::string("  ") + GlobalContext::parseSize(list.getTotalSize());
+  text += "  " + util::int2Str(list.sizeFiles()) + "f " + util::int2Str(list.sizeDirs()) + "d";
+  text += std::string("  ") + util::parseSize(list.getTotalSize());
   return text;
 }
 

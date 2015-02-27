@@ -2,11 +2,6 @@
 
 #include <openssl/ssl.h>
 #include <pthread.h>
-#include <string>
-#include <vector>
-
-#define SIZEPOWER 1024
-#define SIZEDECIMALS 2
 
 class Engine;
 class UIBase;
@@ -45,8 +40,6 @@ class GlobalContext {
     LocalStorage * ls;
     ExternalFileViewing * efv;
     TimeReference * tr;
-    std::string compiletime;
-    std::string svnrev;
     int currentyear;
     int currentmonth;
     int currentday;
@@ -78,21 +71,8 @@ class GlobalContext {
     ExternalFileViewing * getExternalFileViewing() const;
     TimeReference * getTimeReference() const;
     pthread_attr_t * getPthreadAttr();
-    static int ctimeMSec();
-    static std::string parseSize(unsigned long long int);
-    static int getSizeGranularity();
-    static std::vector<unsigned long long int> getPowers();
-    static std::string simpleTimeFormat(int);
     void updateTime();
     int currentYear() const;
     int currentMonth() const;
     int currentDay() const;
-    static std::string ctimeLog();
-    std::string getSVNRevision() const;
-    std::string getCompileTime() const;
-    static int str2Int(std::string);
-    static std::string int2Str(int);
-    static std::string int2Str(unsigned int);
-    static std::string int2Str(unsigned long long int);
-    std::string & debugString(const char *);
 };

@@ -1,12 +1,12 @@
 #include "transferstatus.h"
 
-#include "globalcontext.h"
+#include "util.h"
 
 TransferStatus::TransferStatus(int type, std::string source, std::string target,
     std::string release, std::string file, std::string sourcepath,
     std::string targetpath, unsigned int sourcesize, unsigned int assumedspeed) :
     type(type), source(source), target(target), release(release), file(file),
-    timestamp(GlobalContext::ctimeLog()), sourcepath(sourcepath),
+    timestamp(util::ctimeLog()), sourcepath(sourcepath),
     targetpath(targetpath), sourcesize(sourcesize), knowntargetsize(0),
     interpolatedtargetsize(0), interpolationfilltargetsize(0), speed(assumedspeed),
     state(TRANSFERSTATUS_STATE_IN_PROGRESS), timespent(0), progress(0) {

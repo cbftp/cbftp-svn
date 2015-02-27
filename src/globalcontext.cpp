@@ -1,14 +1,11 @@
 #include "globalcontext.h"
 
 #include <sys/timeb.h>
-#include <sstream>
 #include <vector>
 
 #include "lock.h"
 
 static std::vector<Lock> ssllocks;
-static unsigned int sizegranularity = GlobalContext::getSizeGranularity();
-static std::vector<unsigned long long int> powers = GlobalContext::getPowers();
 
 static void sslLockingCallback(int mode, int n, const char *, int) {
   if (mode & CRYPTO_LOCK) {
@@ -146,13 +143,6 @@ pthread_attr_t * GlobalContext::getPthreadAttr() {
   return &attr;
 }
 
-int GlobalContext::ctimeMSec() {
-  timeb tb;
-  ftime(&tb);
-  int count = tb.millitm + tb.time * 1000;
-  return count;
-}
-
 void GlobalContext::updateTime() {
   time_t rawtime;
   time(&rawtime);
@@ -172,132 +162,4 @@ int GlobalContext::currentMonth() const {
 
 int GlobalContext::currentDay() const {
   return currentday;
-}
-
-std::string GlobalContext::ctimeLog() {
-  time_t rawtime;
-  time(&rawtime);
-  std::string readabletime = asctime(localtime(&rawtime));
-  return readabletime.substr(11, 8);
-}
-
-std::string GlobalContext::parseSize(unsigned long long int size) {
-  int iprefix;
-  for (iprefix = 0; iprefix < 6 && size / powers[iprefix] >= 1000; iprefix++);
-  unsigned long long int currentpower = powers[iprefix];
-  std::string result;
-  int whole = size / currentpower;
-  if (iprefix == 0) {
-    result = int2Str(whole) + " B";
-  }
-  else {
-    unsigned long long int decim = ((size % currentpower) * sizegranularity) / currentpower + 5;
-    if (decim >= sizegranularity) {
-      whole++;
-      decim = 0;
-    }
-    std::string decimstr = int2Str(decim);
-    while (decimstr.length() <= SIZEDECIMALS) {
-      decimstr = "0" + decimstr;
-    }
-    result = int2Str(whole) + "." + decimstr.substr(0, SIZEDECIMALS) + " ";
-    switch (iprefix) {
-      case 1:
-        result.append("kB");
-        break;
-      case 2:
-        result.append("MB");
-        break;
-      case 3:
-        result.append("GB");
-        break;
-      case 4:
-        result.append("TB");
-        break;
-      case 5:
-        result.append("PB");
-        break;
-      case 6:
-        result.append("EB");
-        break;
-    }
-  }
-  return result;
-}
-
-std::string GlobalContext::getSVNRevision() const {
-  return svnrev;
-}
-
-std::string GlobalContext::getCompileTime() const {
-  return compiletime;
-}
-
-int GlobalContext::str2Int(std::string str) {
-  int num;
-  std::istringstream ss(str);
-  ss >> num;
-  return num;
-}
-
-std::string GlobalContext::int2Str(unsigned int i) {
-  return int2Str((int)i);
-}
-
-std::string GlobalContext::int2Str(int i) {
-  std::stringstream out;
-  out << i;
-  return out.str();
-}
-
-std::string GlobalContext::int2Str(unsigned long long int i) {
-  std::stringstream out;
-  out << i;
-  return out.str();
-}
-
-std::string & GlobalContext::debugString(const char * s) {
-    return *(new std::string(s));
-}
-
-int GlobalContext::getSizeGranularity() {
-  int gran = 1;
-  for (int i = 0; i <= SIZEDECIMALS; i++) {
-    gran *= 10;
-  }
-  return gran;
-}
-
-std::vector<unsigned long long int> GlobalContext::getPowers() {
-  std::vector<unsigned long long int> vec;
-  vec.reserve(7);
-  unsigned long long int pow = 1;
-  for (int i = 0; i < 7; i++) {
-    vec.push_back(pow);
-    pow *= 1024;
-  }
-  return vec;
-}
-
-std::string GlobalContext::simpleTimeFormat(int seconds) {
-  std::string time;
-  if (seconds >= 86400) {
-    int days = seconds / 86400;
-    time = int2Str(days) + "d";
-    seconds = seconds % 86400;
-  }
-  if (seconds >= 3600) {
-    int hours = seconds / 3600;
-    time += int2Str(hours) + "h";
-    seconds = seconds % 86400;
-  }
-  if (seconds >= 60) {
-    int minutes = seconds / 60;
-    time += int2Str(minutes) + "m";
-    seconds = seconds % 60;
-  }
-  if (seconds || !time.length()) {
-    time += int2Str(seconds) + "s";
-  }
-  return time;
 }

@@ -10,6 +10,7 @@
 #include "../../site.h"
 #include "../../sitelogicmanager.h"
 #include "../../transferjob.h"
+#include "../../util.h"
 
 #include "../menuselectoptioncheckbox.h"
 #include "../ui.h"
@@ -50,7 +51,7 @@ void MainScreen::initialize(unsigned int row, unsigned int col) {
 void MainScreen::redraw() {
   ui->erase();
   ui->hideCursor();
-  numsitestext = "Sites: " + global->int2Str(global->getSiteManager()->getNumSites());
+  numsitestext = "Sites: " + util::int2Str(global->getSiteManager()->getNumSites());
   bool listraces = global->getEngine()->allRaces();
   bool listtransferjobs = global->getEngine()->allTransferJobs();
   unsigned int irow = 1;
@@ -144,13 +145,13 @@ void MainScreen::update() {
     return;
   }
   if (currentraces) {
-    activeracestext = "Active races: " + global->int2Str(currentraces) + "  ";
+    activeracestext = "Active races: " + util::int2Str(currentraces) + "  ";
   }
   else {
     activeracestext = "";
   }
   if (currenttransferjobs) {
-    activejobstext = "Active jobs: " + global->int2Str(currenttransferjobs) + "  ";
+    activejobstext = "Active jobs: " + util::int2Str(currenttransferjobs) + "  ";
   }
   else {
     activejobstext = "";
@@ -330,8 +331,8 @@ void MainScreen::keyPressed(unsigned int ch) {
         if (mss.getSite() == NULL) break;
         site = new Site(*mss.getSite());
         int i;
-        for (i = 0; global->getSiteManager()->getSite(site->getName() + "-" + global->int2Str(i)) != NULL; i++);
-        site->setName(site->getName() + "-" + global->int2Str(i));
+        for (i = 0; global->getSiteManager()->getSite(site->getName() + "-" + util::int2Str(i)) != NULL; i++);
+        site->setName(site->getName() + "-" + util::int2Str(i));
         global->getSiteManager()->addSite(site);
         ui->redraw();
         ui->setInfo();
