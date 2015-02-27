@@ -119,7 +119,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
   y++;
   mso.addStringField(y++, x, "blockedsrc", "Block transfers from:", blockedsrc, false, 60, 512);
   mso.addStringField(y++, x, "blockeddst", "Block transfers to:", blockeddst, false, 60, 512);
-  mso.addStringField(y++, x, "affils", "Affils:", affilstr, false, 60, 512);
+  mso.addStringField(y++, x, "affils", "Affils:", affilstr, false, 60, 1024);
   y++;
   ms.initialize(y++, x, modsite.sectionsBegin(), modsite.sectionsEnd());
   focusedarea = &mso;
