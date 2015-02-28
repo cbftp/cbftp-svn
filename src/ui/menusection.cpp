@@ -120,10 +120,10 @@ bool MenuSection::activateSelected() {
   }
   else if (msoe->getIdentifier() == "delete") {
     sectioncontainers.erase(sectioncontainers.begin() + ((pointer - 1) / 3));
-    lastpointer = pointer;
     if (getElement(pointer) == NULL) {
       goUp();
     }
+    lastpointer = pointer;
     needsredraw = true;
     return false;
   }

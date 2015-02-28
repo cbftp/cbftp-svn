@@ -9,7 +9,8 @@ TransferStatus::TransferStatus(int type, std::string source, std::string target,
     timestamp(util::ctimeLog()), sourcepath(sourcepath),
     targetpath(targetpath), sourcesize(sourcesize), knowntargetsize(0),
     interpolatedtargetsize(0), interpolationfilltargetsize(0), speed(assumedspeed),
-    state(TRANSFERSTATUS_STATE_IN_PROGRESS), timespent(0), progress(0) {
+    state(TRANSFERSTATUS_STATE_IN_PROGRESS), timespent(0), progress(0),
+    awaited(false) {
   if (!this->speed) {
     this->speed = 1024;
   }
