@@ -6,7 +6,8 @@ OBJECTS = loginscreen.o mainscreen.o sitestatusscreen.o editsitescreen.o \
 	racestatusscreen.o scoreboardscreen.o rawcommandscreen.o skiplistscreen.o \
 	changekeyscreen.o eventlogscreen.o editproxyscreen.o proxyoptionsscreen.o \
 	viewfilescreen.o nukescreen.o fileviewersettingsscreen.o \
-	selectsitesscreen.o transfersscreen.o transferjobstatusscreen.o
+	selectsitesscreen.o transfersscreen.o transferjobstatusscreen.o \
+	allracesscreen.o alltransferjobsscreen.o
 
 all: ${OBJECTS}
 
