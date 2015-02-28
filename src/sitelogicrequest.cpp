@@ -1,19 +1,21 @@
 #include "sitelogicrequest.h"
 
-SiteLogicRequest::SiteLogicRequest(int requestid, int requesttype, std::string data) {
-  this->requestid = requestid;
-  this->requesttype = requesttype;
-  this->data = data;
-  this->connid = -1;
+SiteLogicRequest::SiteLogicRequest(int requestid, int requesttype, std::string data, bool care) :
+  requestid(requestid),
+  connid(-1),
+  requesttype(requesttype),
+  data(data),
+  care(care) {
 }
 
-SiteLogicRequest::SiteLogicRequest(int requestid, int requesttype, std::string data, std::string data2, int data3) {
-  this->requestid = requestid;
-  this->requesttype = requesttype;
-  this->data = data;
-  this->data2 = data2;
-  this->data3 = data3;
-  this->connid = -1;
+SiteLogicRequest::SiteLogicRequest(int requestid, int requesttype, std::string data, std::string data2, int data3, bool care) :
+  requestid(requestid),
+  connid(-1),
+  requesttype(requesttype),
+  data(data),
+  data2(data2),
+  data3(data3),
+  care(care) {
 }
 
 int SiteLogicRequest::requestId() const {
@@ -41,4 +43,8 @@ void SiteLogicRequest::setConnId(int id) {
 
 int SiteLogicRequest::connId() const {
   return connid;
+}
+
+bool SiteLogicRequest::doesAnyoneCare() const {
+  return care;
 }

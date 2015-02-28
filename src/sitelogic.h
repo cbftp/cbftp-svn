@@ -27,6 +27,9 @@ class CommandOwner;
 //maximum number of dir refreshes in a row in the same race
 #define MAXCHECKSROW 5
 
+// maximum number of ready requests available to be checked out
+#define MAXREQUESTREADYQUEUE 10
+
 #define REQ_FILELIST 2620
 #define REQ_RAW 2621
 #define REQ_WIPE_RECURSIVE 2622
@@ -78,6 +81,7 @@ class SiteLogic : public EventReceiver {
     static void * run(void *);
     void connQuit(int);
     bool lockTransferConn(std::string, int *, bool);
+    void setRequestReady(std::list<SiteLogicRequest>::iterator, void *, bool);
     bool poke;
   public:
     SiteLogic(std::string);
@@ -129,7 +133,7 @@ class SiteLogic : public EventReceiver {
     int requestFileList(std::string);
     int requestRawCommand(std::string);
     int requestWipe(std::string, bool);
-    int requestDelete(std::string, bool);
+    int requestDelete(std::string, bool, bool);
     int requestNuke(std::string, int, std::string);
     bool requestReady(int) const;
     void abortRace(std::string);

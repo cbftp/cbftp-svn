@@ -10,6 +10,7 @@ extern GlobalContext * global;
 LegendWindow::LegendWindow(Ui * ui, WINDOW * window, int row, int col) {
   this->ui = ui;
   this->window = window;
+  split = false;
   text = "";
   latestid = 0;
   latestcount = 8;
@@ -28,6 +29,9 @@ void LegendWindow::redraw() {
   ui->printChar(window, 0, col - 2, BOX_CORNER_TR);
   for (unsigned int i = 2; i < col - 2; i++) {
     ui->printChar(window, 0, i, BOX_HLINE);
+  }
+  if (split) {
+    ui->printChar(window, 0, col / 2, BOX_HLINE_TOP);
   }
   update();
 }
@@ -66,5 +70,8 @@ void LegendWindow::setText(std::string text) {
   this->text = text + "  ::  ";
   currentpos = 0;
   update();
+}
 
+void LegendWindow::setSplit(bool split) {
+  this->split = split;
 }

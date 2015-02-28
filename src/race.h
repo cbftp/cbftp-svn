@@ -31,6 +31,7 @@ class Race {
     std::list<std::string> guessedfilelist;
     std::map<std::string, std::map<std::string, SizeLocationTrack> > sizelocationtrackers;
     bool done;
+    bool aborted;
     int checkcount;
   public:
     Race(std::string, std::string);
@@ -54,6 +55,7 @@ class Race {
     void updateSiteProgress(int);
     int getMaxSiteProgress() const;
     bool isDone() const;
+    bool isAborted() const;
     void reportNewSubDir(SiteRace *, std::string);
     void reportSFV(SiteRace *, std::string);
     void reportDone(SiteRace *);

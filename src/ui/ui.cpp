@@ -48,6 +48,8 @@
 #include "screens/selectsitesscreen.h"
 #include "screens/transfersscreen.h"
 #include "screens/transferjobstatusscreen.h"
+#include "screens/allracesscreen.h"
+#include "screens/alltransferjobsscreen.h"
 
 extern GlobalContext * global;
 
@@ -59,6 +61,7 @@ Ui::Ui() {
   infoenabled = false;
   dead = false;
   showlegend = true;
+  split = false;
   pthread_create(&uithread, global->getPthreadAttr(), run, (void *) this);
 #ifdef _ISOC95_SOURCE
   pthread_setname_np(uithread, "UserInterface");
@@ -143,6 +146,10 @@ void Ui::initIntern() {
   mainwindows.push_back(transfersscreen);
   transferjobstatusscreen = new TransferJobStatusScreen(this);
   mainwindows.push_back(transferjobstatusscreen);
+  allracesscreen = new AllRacesScreen(this);
+  mainwindows.push_back(allracesscreen);
+  alltransferjobsscreen = new AllTransferJobsScreen(this);
+  mainwindows.push_back(alltransferjobsscreen);
   if (global->getDataFileHandler()->fileExists()) {
     loginscreen->initialize(mainrow, maincol);
     topwindow = loginscreen;
@@ -383,6 +390,9 @@ void Ui::runInstance() {
 
 void Ui::switchToWindow(UIWindow * window) {
   history.push_back(topwindow);
+  if (split) {
+    setSplit(false);
+  }
   legendwindow->setText(window->getLegendText());
   infowindow->setLabel(window->getInfoLabel());
   infowindow->setText(window->getInfoText());
@@ -457,6 +467,16 @@ void Ui::setLegend() {
 void Ui::setInfo() {
   infowindow->setText(topwindow->getInfoText());
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+}
+
+void Ui::setSplit(bool split) {
+  if (this->split != split) {
+    this->split = split;
+    infowindow->setSplit(split);
+    infowindow->redraw();
+    legendwindow->setSplit(split);
+    legendwindow->redraw();
+  }
 }
 
 void Ui::redraw() {
@@ -685,6 +705,16 @@ void Ui::goRawDataJump(std::string site, int id) {
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 
+void Ui::goAllRaces() {
+  allracesscreen->initialize(mainrow, maincol);
+  switchToWindow(allracesscreen);
+}
+
+void Ui::goAllTransferJobs() {
+  alltransferjobsscreen->initialize(mainrow, maincol);
+  switchToWindow(alltransferjobsscreen);
+}
+
 void Ui::returnSelectSites(std::string sites) {
   switchToLast();
   topwindow->command("returnselectsites", sites);
@@ -749,6 +779,9 @@ void Ui::returnRaceStatus(std::string race) {
 }
 
 void Ui::switchToLast() {
+  if (split) {
+    setSplit(false);
+  }
   topwindow = history.back();
   history.pop_back();
   legendwindow->setText(topwindow->getLegendText());

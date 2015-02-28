@@ -19,6 +19,7 @@ Race::Race(std::string release, std::string section) {
   }
   this->section = section;
   done = false;
+  aborted = false;
   maxfilelistsize = 0;
   bestunknownfilesizeestimate = 50000000;
   estimatedsubpaths.push_back("");
@@ -153,6 +154,10 @@ bool Race::isDone() const {
   return done;
 }
 
+bool Race::isAborted() const {
+  return aborted;
+}
+
 void Race::reportNewSubDir(SiteRace * sr, std::string subdir) {
   if (subpathoccurences.find(subdir) == subpathoccurences.end()) {
     subpathoccurences[subdir] = std::list<SiteRace *>();
@@ -225,6 +230,7 @@ void Race::setUndone() {
 
 void Race::abort() {
   done = true;
+  aborted = true;
 }
 
 void Race::reportSize(SiteRace * sr, FileList * fl, std::string subpath, std::list<std::string > * uniques, bool final) {

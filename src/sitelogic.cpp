@@ -158,9 +158,7 @@ void SiteLogic::listRefreshed(int id) {
   std::list<SiteLogicRequest>::iterator it;
   for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
     if (it->connId() == id) {
-      requestsready.push_back(SiteLogicRequestReady(it->requestId(), conns[id]->currentFileList(), true));
-      requestsinprogress.erase(it);
-      global->getUIBase()->backendPush();
+      setRequestReady(it, conns[id]->currentFileList(), true);
       break;
     }
   }
@@ -301,9 +299,7 @@ void SiteLogic::commandSuccess(int id) {
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
           if (it->requestType() == REQ_WIPE_RECURSIVE || it->requestType() == REQ_WIPE) {
-            requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, true));
-            requestsinprogress.erase(it);
-            global->getUIBase()->backendPush();
+            setRequestReady(it, NULL, true);
             break;
           }
         }
@@ -313,9 +309,7 @@ void SiteLogic::commandSuccess(int id) {
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
           if (it->requestType() == REQ_DEL) {
-            requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, true));
-            requestsinprogress.erase(it);
-            global->getUIBase()->backendPush();
+            setRequestReady(it, NULL, true);
             break;
           }
           else if (it->requestType() == REQ_DEL_RECURSIVE) {
@@ -324,9 +318,7 @@ void SiteLogic::commandSuccess(int id) {
               return;
             }
             else {
-              requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, true));
-              requestsinprogress.erase(it);
-              global->getUIBase()->backendPush();
+              setRequestReady(it, NULL, true);
               break;
             }
           }
@@ -337,9 +329,7 @@ void SiteLogic::commandSuccess(int id) {
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
           if (it->requestType() == REQ_NUKE) {
-            requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, true));
-            requestsinprogress.erase(it);
-            global->getUIBase()->backendPush();
+            setRequestReady(it, NULL, true);
             break;
           }
         }
@@ -418,9 +408,7 @@ void SiteLogic::commandFail(int id) {
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
           if (it->requestType() == REQ_FILELIST) {
-            requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, false));
-            requestsinprogress.erase(it);
-            global->getUIBase()->backendPush();
+            setRequestReady(it, NULL, false);
             handleConnection(id, false);
             return;
           }
@@ -487,9 +475,7 @@ void SiteLogic::commandFail(int id) {
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
           if (it->requestType() == REQ_WIPE_RECURSIVE || it->requestType() == REQ_WIPE) {
-            requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, false));
-            requestsinprogress.erase(it);
-            global->getUIBase()->backendPush();
+            setRequestReady(it, NULL, false);
             break;
           }
         }
@@ -504,9 +490,7 @@ void SiteLogic::commandFail(int id) {
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
           if (it->requestType() == REQ_DEL_RECURSIVE || it->requestType() == REQ_DEL) {
-            requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, false));
-            requestsinprogress.erase(it);
-            global->getUIBase()->backendPush();
+            setRequestReady(it, NULL, false);
             break;
           }
         }
@@ -517,9 +501,7 @@ void SiteLogic::commandFail(int id) {
       for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
         if (it->connId() == id) {
           if (it->requestType() == REQ_NUKE) {
-            requestsready.push_back(SiteLogicRequestReady(it->requestId(), NULL, false));
-            requestsinprogress.erase(it);
-            global->getUIBase()->backendPush();
+            setRequestReady(it, NULL, false);
             break;
           }
         }
@@ -1040,14 +1022,14 @@ void SiteLogic::initTransfer(int id) {
 
 int SiteLogic::requestFileList(std::string path) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(requestid, REQ_FILELIST, path));
+  requests.push_back(SiteLogicRequest(requestid, REQ_FILELIST, path, true));
   activateOne();
   return requestid;
 }
 
 int SiteLogic::requestRawCommand(std::string command) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(requestid, REQ_RAW, command));
+  requests.push_back(SiteLogicRequest(requestid, REQ_RAW, command, true));
   activateOne();
   return requestid;
 }
@@ -1055,22 +1037,22 @@ int SiteLogic::requestRawCommand(std::string command) {
 int SiteLogic::requestWipe(std::string path, bool recursive) {
   int requestid = requestidcounter++;
   if (recursive) {
-    requests.push_back(SiteLogicRequest(requestid, REQ_WIPE_RECURSIVE, path));
+    requests.push_back(SiteLogicRequest(requestid, REQ_WIPE_RECURSIVE, path, true));
   }
   else {
-    requests.push_back(SiteLogicRequest(requestid, REQ_WIPE, path));
+    requests.push_back(SiteLogicRequest(requestid, REQ_WIPE, path, true));
   }
   activateOne();
   return requestid;
 }
 
-int SiteLogic::requestDelete(std::string path, bool recursive) {
+int SiteLogic::requestDelete(std::string path, bool recursive, bool interactive) {
   int requestid = requestidcounter++;
   if (recursive) {
-    requests.push_back(SiteLogicRequest(requestid, REQ_DEL_RECURSIVE, path));
+    requests.push_back(SiteLogicRequest(requestid, REQ_DEL_RECURSIVE, path, interactive));
   }
   else {
-    requests.push_back(SiteLogicRequest(requestid, REQ_DEL, path));
+    requests.push_back(SiteLogicRequest(requestid, REQ_DEL, path, interactive));
   }
   activateOne();
   return requestid;
@@ -1078,7 +1060,7 @@ int SiteLogic::requestDelete(std::string path, bool recursive) {
 
 int SiteLogic::requestNuke(std::string path, int multiplier, std::string reason) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(requestid, REQ_NUKE, path, reason, multiplier));
+  requests.push_back(SiteLogicRequest(requestid, REQ_NUKE, path, reason, multiplier, true));
   activateOne();
   return requestid;
 }
@@ -1402,7 +1384,7 @@ void SiteLogic::listCompleted(int id, int storeid) {
 
 void SiteLogic::issueRawCommand(unsigned int id, std::string command) {
   int requestid = requestidcounter++;
-  SiteLogicRequest request(requestid, REQ_RAW, command);
+  SiteLogicRequest request(requestid, REQ_RAW, command, true);
   request.setConnId(id);
   requests.push_back(request);
   if (!conns[id]->isConnected()) {
@@ -1609,4 +1591,15 @@ void SiteLogic::passiveModeCommand(int id) {
 
 const ConnStateTracker * SiteLogic::getConnStateTracker(int id) const {
   return &connstatetracker[id];
+}
+
+void SiteLogic::setRequestReady(std::list<SiteLogicRequest>::iterator it, void * data, bool status) {
+  requestsready.push_back(SiteLogicRequestReady(it->requestId(), data, status));
+  if (requestsready.size() > MAXREQUESTREADYQUEUE) {
+    requestsready.pop_front();
+  }
+  requestsinprogress.erase(it);
+  if (it->doesAnyoneCare()) {
+    global->getUIBase()->backendPush();
+  }
 }

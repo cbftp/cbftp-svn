@@ -17,6 +17,7 @@
 
 #include "../ui.h"
 #include "../uifile.h"
+#include "../termint.h"
 
 extern GlobalContext * global;
 
@@ -48,6 +49,7 @@ void BrowseScreen::initialize(unsigned int row, unsigned int col, std::string si
   nukefailed = false;
   gotomode = false;
   withinraceskiplistreach = false;
+  split = false;
   currentviewspan = 0;
   sortmethod = 0;
   slidersize = 0;
@@ -171,6 +173,7 @@ void BrowseScreen::redraw() {
   }
   ui->erase();
   ui->hideCursor();
+  ui->setSplit(split);
   if (resort == true) sort();
   unsigned int position = list.currentCursorPosition();
   unsigned int pagerows = (unsigned int) row / 2;
@@ -211,6 +214,11 @@ void BrowseScreen::redraw() {
   }
   else if (listsize == 0) {
     ui->printStr(0, 3, "(empty directory)");
+  }
+  if (split) {
+    for (unsigned int i = 0; i < row; i++) {
+      ui->printChar(i, col / 2, BOX_VLINE);
+    }
   }
   update();
 }
@@ -328,7 +336,7 @@ void BrowseScreen::command(std::string command, std::string arg) {
       requestid = sitelogic->requestWipe(wipetarget, wiperecursive);
     }
     else if (deleting) {
-      requestid = sitelogic->requestDelete(wipetarget, deletingrecursive);
+      requestid = sitelogic->requestDelete(wipetarget, deletingrecursive, true);
     }
     else {
       global->getEventLog()->log("BrowseScreen", "WARNING: got a 'yes' answer for an unknown command");
@@ -661,6 +669,16 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       else {
         ui->goRawCommand(site->getName());
       }
+      break;
+    case '\t':
+      if (!split) {
+        split = true;
+        ui->redraw();
+      }
+      else {
+        ui->update();
+      }
+
       break;
   }
 }

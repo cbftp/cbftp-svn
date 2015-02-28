@@ -44,6 +44,8 @@ class ScoreBoardScreen;
 class SelectSitesScreen;
 class TransfersScreen;
 class TransferJobStatusScreen;
+class AllRacesScreen;
+class AllTransferJobsScreen;
 
 class Ui : private EventReceiver, public UIBase {
   private:
@@ -80,6 +82,8 @@ class Ui : private EventReceiver, public UIBase {
     SelectSitesScreen * selectsitesscreen;
     TransfersScreen * transfersscreen;
     TransferJobStatusScreen * transferjobstatusscreen;
+    AllRacesScreen * allracesscreen;
+    AllTransferJobsScreen * alltransferjobsscreen;
     int mainrow;
     int maincol;
     int col;
@@ -91,6 +95,7 @@ class Ui : private EventReceiver, public UIBase {
     bool infoenabled;
     bool dead;
     bool showlegend;
+    bool split;
     std::string eventtext;
     pthread_t uithread;
     pthread_t klthread;
@@ -125,6 +130,7 @@ class Ui : private EventReceiver, public UIBase {
     void update();
     void setLegend();
     void setInfo();
+    void setSplit(bool);
     void redraw();
     void erase();
     void erase(WINDOW *);
@@ -170,6 +176,8 @@ class Ui : private EventReceiver, public UIBase {
     void goEditProxy(std::string);
     void goRawData(std::string);
     void goRawDataJump(std::string, int);
+    void goAllRaces();
+    void goAllTransferJobs();
     void returnSelectSites(std::string);
     void key(std::string);
     void newKey(std::string);

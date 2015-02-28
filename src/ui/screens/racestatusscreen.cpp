@@ -20,15 +20,24 @@ extern GlobalContext * global;
 
 RaceStatusScreen::RaceStatusScreen(Ui * ui) {
   this->ui = ui;
+  defaultlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - A[B]ort race";
+  abortedlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [D]elete on all sites";
 }
 
 void RaceStatusScreen::initialize(unsigned int row, unsigned int col, std::string release) {
   this->release = release;
   race = global->getEngine()->getRace(release);
+  if (!race->isAborted()) {
+    currentlegendtext = defaultlegendtext;
+  }
+  else {
+    currentlegendtext = abortedlegendtext;
+  }
   autoupdate = true;
   smalldirs = false;
   awaitingremovesite = false;
   awaitingabort = false;
+  awaitingdelete = false;
   currnumsubpaths = 0;
   currguessedsize = 0;
   mso.enterFocusFrom(0);
@@ -282,7 +291,13 @@ void RaceStatusScreen::command(std::string command, std::string arg) {
     }
     else if (awaitingabort) {
       global->getEngine()->abortRace(race->getName());
-      awaitingremovesite = false;
+      awaitingabort = false;
+      currentlegendtext = abortedlegendtext;
+      ui->setLegend();
+    }
+    else if (awaitingdelete) {
+      global->getEngine()->deleteOnAllSites(race->getName());
+      awaitingdelete = false;
     }
   }
   else if (command == "returnselectsites") {
@@ -349,8 +364,16 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
       break;
     }
     case 'B':
-      awaitingabort = true;
-      ui->goConfirmation("Do you really want to abort the race " + release);
+      if (!race->isAborted()) {
+        awaitingabort = true;
+        ui->goConfirmation("Do you really want to abort the race " + release);
+      }
+      break;
+    case 'D':
+      if (race->isAborted()) {
+        awaitingdelete = true;
+        ui->goConfirmation("Do you really want to delete " + release + " on all involved sites?");
+      }
       break;
     case 'A':
     {
@@ -412,7 +435,7 @@ char RaceStatusScreen::getFileChar(bool exists, bool owner, bool upload, bool do
 }
 
 std::string RaceStatusScreen::getLegendText() const {
-  return "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - A[B]ort race - [s]how small dirs";
+  return currentlegendtext;
 }
 
 std::string RaceStatusScreen::getInfoLabel() const {

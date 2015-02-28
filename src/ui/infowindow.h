@@ -12,8 +12,10 @@ public:
   void update();
   void setLabel(std::string);
   void setText(std::string);
+  void setSplit(bool);
 private:
   std::string label;
   std::string text;
+  bool split;
   WINDOW * window;
 };

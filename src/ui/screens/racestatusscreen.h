@@ -24,6 +24,7 @@ private:
   bool smalldirs;
   bool awaitingremovesite;
   bool awaitingabort;
+  bool awaitingdelete;
   unsigned int currnumsubpaths;
   unsigned int currguessedsize;
   unsigned int longestsubpath;
@@ -34,4 +35,7 @@ private:
   std::map<std::string, int> filetagpos;
   std::map<std::string, std::string> filenametags;
   std::string removesite;
+  std::string defaultlegendtext;
+  std::string abortedlegendtext;
+  std::string currentlegendtext;
 };

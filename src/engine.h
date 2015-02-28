@@ -57,6 +57,7 @@ class Engine : public EventReceiver {
     void newTransferJobFXP(std::string, std::string, FileList *, std::string, std::string, FileList *);
     void removeSiteFromRace(std::string, std::string);
     void abortRace(std::string);
+    void deleteOnAllSites(std::string);
     void raceFileListRefreshed(SiteLogic *, Race *);
     void transferJobActionRequest(TransferJob *);
     int currentRaces() const;

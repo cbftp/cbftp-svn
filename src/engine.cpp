@@ -199,6 +199,27 @@ void Engine::abortRace(std::string release) {
         (*it2)->abortRace(release);
       }
       currentraces.erase(it);
+      global->getEventLog()->log("Engine", "Race aborted: " + release);
+      break;
+    }
+  }
+}
+
+void Engine::deleteOnAllSites(std::string release) {
+  for (std::list<Race *>::iterator it = allraces.begin(); it != allraces.end(); it++) {
+    if ((*it)->getName() == release) {
+      std::string sites;
+      for (std::list<SiteLogic *>::const_iterator it2 = (*it)->begin(); it2 != (*it)->end(); it2++) {
+        SiteLogic * sl = *it2;
+        SiteRace * sr = sl->getRace(release);
+        std::string path = sr->getPath();
+        sl->requestDelete(path, true, false);
+        sites += sl->getSite()->getName() + ",";
+      }
+      if (sites.length() > 0) {
+        sites = sites.substr(0, sites.length() - 1);
+        global->getEventLog()->log("Engine", "Attempting delete of " + release + " on: " + sites);
+      }
       break;
     }
   }

@@ -64,6 +64,7 @@ private:
   FileList * filelist;
   bool withinraceskiplistreach;
   std::string closestracesectionpath;
+  bool split;
   void sort();
   void refreshFilelist();
   size_t countDirLevels(std::string);

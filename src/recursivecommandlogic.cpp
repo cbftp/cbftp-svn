@@ -47,6 +47,10 @@ int RecursiveCommandLogic::getAction(std::string currentpath, std::string & acti
     listtarget = true;
     listtargetpath = actiontarget = wantedlists.front();
     wantedlists.pop_front();
+    if (currentpath == listtargetpath) {
+      listtarget = false;
+      return RCL_ACTION_LIST;
+    }
     return RCL_ACTION_CWD;
   }
 }

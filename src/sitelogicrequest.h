@@ -10,9 +10,10 @@ private:
   std::string data;
   std::string data2;
   int data3;
+  bool care;
 public:
-  SiteLogicRequest(int, int, std::string);
-  SiteLogicRequest(int, int, std::string, std::string, int);
+  SiteLogicRequest(int, int, std::string, bool);
+  SiteLogicRequest(int, int, std::string, std::string, int, bool);
   int requestId() const;
   int requestType() const;
   std::string requestData() const;
@@ -20,4 +21,5 @@ public:
   int requestData3() const;
   void setConnId(int);
   int connId() const;
+  bool doesAnyoneCare() const;
 };
