@@ -372,7 +372,7 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
     case 'D':
       if (race->isAborted()) {
         awaitingdelete = true;
-        ui->goConfirmation("Do you really want to delete " + release + " on all involved sites?");
+        ui->goConfirmation("Do you really want to delete " + release + " on all involved sites");
       }
       break;
     case 'A':

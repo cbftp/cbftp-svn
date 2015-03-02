@@ -115,6 +115,7 @@ void TransferJob::init() {
   almostdone = false;
   listsrefreshed = false;
   initialized = false;
+  aborted = false;
   slots = 1;
   srclisttarget = NULL;
   dstlisttarget = NULL;
@@ -337,8 +338,7 @@ void TransferJob::updateStatus() {
   }
   filesprogress = aggregatedfilescomplete;
   if (almostdone && !ongoingtransfers && filesprogress >= filestotal) {
-    done = true;
-    global->getTickPoke()->stopPoke(this, 0);
+    setDone();
   }
 }
 
@@ -445,4 +445,18 @@ bool TransferJob::isInitialized() const {
 
 void TransferJob::setInitialized() {
   initialized = true;
+}
+
+void TransferJob::abort() {
+  aborted = true;
+  setDone();
+}
+
+bool TransferJob::isAborted() const {
+  return aborted;
+}
+
+void TransferJob::setDone() {
+  done = true;
+  global->getTickPoke()->stopPoke(this, 0);
 }

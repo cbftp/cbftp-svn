@@ -21,10 +21,11 @@ TransferJobStatusScreen::TransferJobStatusScreen(Ui * ui) {
 }
 
 void TransferJobStatusScreen::initialize(unsigned int row, unsigned int col, std::string filename) {
-  defaultlegendtext = "[c/Esc] Return - [Enter] Modify";
-  currentlegendtext = defaultlegendtext;
-  this->filename = filename;
+  abortedlegendtext = "[c/Esc] Return";
+  defaultlegendtext = abortedlegendtext + " - [Enter] Modify - A[B]ort transfer job";
   transferjob = global->getEngine()->getTransferJob(filename);
+  currentlegendtext = transferjob->isAborted() ? abortedlegendtext : defaultlegendtext;
+  this->filename = filename;
   autoupdate = true;
   mso.clear();
   mso.addIntArrow(3, 40, "slots", "Slots:", transferjob->maxSlots(), 1, transferjob->maxPossibleSlots());
@@ -55,8 +56,9 @@ void TransferJobStatusScreen::redraw() {
       transferjob->getDst()->getSite()->getName();
       break;
   }
+  bool aborted = transferjob->isAborted();
   ui->printStr(y, 38, "Route: " + route);
-  ui->printStr(y, 60, std::string("Status: ") + (transferjob->isDone() ? "Completed" : "In progress"));
+  ui->printStr(y, 60, std::string("Status: ") + (transferjob->isDone() ? (aborted ? "Aborted" : "Completed") : "In progress"));
   y++;
   ui->printStr(y, 1, "Size: " + util::parseSize(transferjob->sizeProgress()) +
       " / " + util::parseSize(transferjob->totalSize()));
@@ -65,7 +67,7 @@ void TransferJobStatusScreen::redraw() {
       util::int2Str(transferjob->filesTotal()));
   y++;
   ui->printStr(y, 1, "Time spent: " + util::simpleTimeFormat(transferjob->timeSpent()));
-  ui->printStr(y, 21, "Remaining: " + util::simpleTimeFormat(transferjob->timeRemaining()));
+  ui->printStr(y, 21, "Remaining: " + (aborted ? "-" : util::simpleTimeFormat(transferjob->timeRemaining())));
   int progresspercent = transferjob->getProgress();
   std::string progress = "....................";
   int charswithhighlight = progress.length() * progresspercent / 100;
@@ -84,14 +86,16 @@ void TransferJobStatusScreen::redraw() {
   }
   table.adjustLines(col - 3);
   bool highlight;
-  for (unsigned int i = 0; i < mso.size(); i++) {
-    MenuSelectOptionElement * msoe = mso.getElement(i);
-    highlight = false;
-    if (mso.isFocused() && mso.getSelectionPointer() == i) {
-      highlight = true;
+  if (!aborted) {
+    for (unsigned int i = 0; i < mso.size(); i++) {
+      MenuSelectOptionElement * msoe = mso.getElement(i);
+      highlight = false;
+      if (mso.isFocused() && mso.getSelectionPointer() == i) {
+        highlight = true;
+      }
+      ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+      ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
     }
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
   for (unsigned int i = 0; i < table.size(); i++) {
     ResizableElement * re = (ResizableElement *) table.getElement(i);
@@ -120,6 +124,14 @@ void TransferJobStatusScreen::redraw() {
 
 void TransferJobStatusScreen::update() {
   redraw();
+}
+
+void TransferJobStatusScreen::command(std::string command, std::string arg) {
+  if (command == "yes") {
+    global->getEngine()->abortTransferJob(transferjob);
+    currentlegendtext = abortedlegendtext;
+    ui->setLegend();
+  }
 }
 
 void TransferJobStatusScreen::keyPressed(unsigned int ch) {
@@ -155,17 +167,22 @@ void TransferJobStatusScreen::keyPressed(unsigned int ch) {
       ui->returnToLast();
       break;
     case 10:
-    {
-      bool activation = mso.activateSelected();
-      if (activation) {
-        active = true;
-        activeelement = mso.getElement(mso.getSelectionPointer());
-        currentlegendtext = activeelement->getLegendText();
-        ui->update();
-        ui->setLegend();
+      if (!transferjob->isAborted()) {
+        bool activation = mso.activateSelected();
+        if (activation) {
+          active = true;
+          activeelement = mso.getElement(mso.getSelectionPointer());
+          currentlegendtext = activeelement->getLegendText();
+          ui->update();
+          ui->setLegend();
+        }
       }
       break;
-    }
+    case 'B':
+      if (!transferjob->isAborted()) {
+        ui->goConfirmation("Do you really want to abort the transfer job " + transferjob->getSrcFileName());
+      }
+      break;
   }
 }
 

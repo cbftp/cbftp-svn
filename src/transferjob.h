@@ -70,11 +70,14 @@ public:
   std::string findSubPath(Pointer<TransferStatus>) const;
   bool isInitialized() const;
   void setInitialized();
+  bool isAborted() const;
+  void abort();
 private:
   void addSubDirectoryFileLists(std::map<std::string, FileList *> &, FileList *);
   void updateStatus();
   void init();
   void countTotalFiles();
+  void setDone();
   int type;
   SiteLogic * src;
   SiteLogic * dst;
@@ -91,6 +94,7 @@ private:
   int slots;
   bool almostdone;
   bool done;
+  bool aborted;
   bool listsrefreshed;
   FileList * srclisttarget;
   FileList * dstlisttarget;

@@ -225,6 +225,17 @@ void Engine::deleteOnAllSites(std::string release) {
   }
 }
 
+void Engine::abortTransferJob(TransferJob * tj) {
+  for (std::list<TransferJob *>::iterator it = currenttransferjobs.begin(); it != currenttransferjobs.end(); it++) {
+    if (*it == tj) {
+      tj->abort();
+      currenttransferjobs.erase(it);
+      global->getEventLog()->log("Engine", "Transfer job aborted: " + tj->getSrcFileName());
+      break;
+    }
+  }
+}
+
 void Engine::raceFileListRefreshed(SiteLogic * sls, Race * race) {
   if (currentraces.size() > 0) {
     if (!global->getWorkManager()->overload()) {
