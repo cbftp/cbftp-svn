@@ -39,8 +39,10 @@ void ViewFileScreen::initialize(unsigned int row, unsigned int col, std::string 
   externallyviewable = false;
   download = false;
   legendupdated = false;
+  downloadattempted = false;
   pid = 0;
   autoupdate = true;
+  ts.reset();
   if (!global->getExternalFileViewing()->hasDisplay()) {
     hasnodisplay = true;
   }
@@ -57,6 +59,7 @@ void ViewFileScreen::initialize(unsigned int row, unsigned int col, std::string 
   }
   std::string temppath = global->getLocalStorage()->getTempPath();
   if (download) {
+    downloadattempted = true;
     ts = global->getTransferManager()->suggestDownload(file, sitelogic,
         filelist, temppath);
     if (!ts) {
@@ -75,7 +78,7 @@ void ViewFileScreen::redraw() {
   ui->erase();
   if (!download) {
     autoupdate = false;
-    if (!ts) {
+    if (downloadattempted) {
       ui->printStr(1, 1, "No download slots available at " + site + ".");
     }
     else if (!externallyviewable) {

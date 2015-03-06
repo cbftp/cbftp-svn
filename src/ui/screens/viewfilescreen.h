@@ -38,6 +38,7 @@ private:
   bool externallyviewable;
   bool download;
   bool legendupdated;
+  bool downloadattempted;
   std::vector<std::string> contents;
   std::string path;
   int pid;
