@@ -26,15 +26,19 @@ public:
   unsigned long long int size() const;
   int getStoreId() const;
 private:
+  void init(TransferMonitor *, FTPConn *, std::string, std::string, bool, int, bool);
   void append(char *, unsigned int);
+  void openFile();
   TransferMonitor * tm;
   bool ssl;
   int sockid;
   bool inuse;
   bool inmemory;
+  bool fileopened;
   int storeid;
   FTPConn * ftpconn;
   std::fstream filestream;
+  std::string path;
   std::string filename;
   unsigned long long int filesize;
   char * buf;
