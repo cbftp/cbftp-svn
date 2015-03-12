@@ -503,14 +503,9 @@ void IOManager::runInstance() {
           unsigned int error;
           unsigned int errorlen = sizeof(error);
           getsockopt(currfd, SOL_SOCKET, SO_ERROR, &error, &errorlen);
-          if (error == ECONNREFUSED) {
-            closeSocketIntern(idit->second);
-            wm->dispatchEventFail(er, "Connection refused");
-            continue;
-          }
-          else if (error == EHOSTUNREACH) {
+          if (error != 0) {
             closeSocketIntern(sockid);
-            wm->dispatchEventFail(er, "No route to host");
+            wm->dispatchEventFail(er, strerror(error));
             continue;
           }
           socketinfo.type = FD_TCP_PLAIN;
@@ -531,10 +526,22 @@ void IOManager::runInstance() {
           if (events[i].events & EPOLLIN) { // incoming data
             buf = blockpool->getBlock();
             b_recv = recv(currfd, buf, blocksize, 0);
-            if (b_recv <= 0) {
+            if (b_recv == 0) {
               blockpool->returnBlock(buf);
               closeSocketIntern(sockid);
               wm->dispatchEventDisconnected(er);
+              break;
+            }
+            else if (b_recv < 0) {
+              blockpool->returnBlock(buf);
+              if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                break;
+              }
+              closeSocketIntern(sockid);
+              wm->dispatchEventDisconnected(er);
+              global->getEventLog()->log("IOManager",
+                  "Socket error on established connection to "
+                  + it->second.addr + ": " + strerror(errno));
               break;
             }
             wm->dispatchFDData(er, buf, b_recv);

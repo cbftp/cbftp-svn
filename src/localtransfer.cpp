@@ -78,11 +78,18 @@ void LocalTransfer::FDSSLSuccess() {
 }
 
 void LocalTransfer::FDSSLFail() {
+  if (!inmemory) {
+    filestream.close();
+  }
   global->getIOManager()->closeSocket(sockid);
   inuse = false;
+  tm->targetError(3);
 }
 
-void LocalTransfer::FDFail(std::string) {
+void LocalTransfer::FDFail(std::string error) {
+  if (!inmemory) {
+    filestream.close();
+  }
   inuse = false;
   tm->targetError(3);
 }
