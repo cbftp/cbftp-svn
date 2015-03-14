@@ -236,30 +236,30 @@ void FileList::editOwnedFileCount(bool add) {
 }
 
 void FileList::uploadFail(std::string file) {
-  uploadfails[file] = MAXTRANSFERATTEMPTS;
+  uploadattempts[file] = MAXTRANSFERATTEMPTS;
 }
 
 void FileList::downloadFail(std::string file) {
-  downloadfails[file] = MAXTRANSFERATTEMPTS;
+  downloadattempts[file] = MAXTRANSFERATTEMPTS;
 }
 
-void FileList::uploadAttemptFail(std::string file) {
-  if (uploadfails.find(file) == uploadfails.end()) {
-    uploadfails[file] = 0;
+void FileList::addUploadAttempt(std::string file) {
+  if (uploadattempts.find(file) == uploadattempts.end()) {
+    uploadattempts[file] = 0;
   }
-  uploadfails[file]++;
+  uploadattempts[file]++;
 }
 
 void FileList::downloadAttemptFail(std::string file) {
-  if (downloadfails.find(file) == downloadfails.end()) {
-    downloadfails[file] = 0;
+  if (downloadattempts.find(file) == downloadattempts.end()) {
+    downloadattempts[file] = 0;
   }
-  downloadfails[file]++;
+  downloadattempts[file]++;
 }
 
 bool FileList::hasFailedDownload(std::string file) const {
-  std::map<std::string, int>::const_iterator it = downloadfails.find(file);
-  if (it == downloadfails.end()) {
+  std::map<std::string, int>::const_iterator it = downloadattempts.find(file);
+  if (it == downloadattempts.end()) {
     return false;
   }
   if (it->second < MAXTRANSFERATTEMPTS) {
@@ -269,8 +269,8 @@ bool FileList::hasFailedDownload(std::string file) const {
 }
 
 bool FileList::hasFailedUpload(std::string file) const {
-  std::map<std::string, int>::const_iterator it = uploadfails.find(file);
-  if (it == uploadfails.end()) {
+  std::map<std::string, int>::const_iterator it = uploadattempts.find(file);
+  if (it == uploadattempts.end()) {
     return false;
   }
   if (it->second < MAXTRANSFERATTEMPTS) {

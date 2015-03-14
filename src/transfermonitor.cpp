@@ -275,6 +275,7 @@ void TransferMonitor::targetComplete() {
   }
   targetcomplete = true;
   if (fld != NULL) {
+    fld->addUploadAttempt(dfile);
     File * fileobj = fld->getFile(dfile);
     if (fileobj != NULL) {
       fileobj->finishUpload();
@@ -382,7 +383,7 @@ void TransferMonitor::targetError(int err) {
       case 1: // STOR failed
       case 2: // STOR post failed
       case 3: // other failure
-        fld->uploadAttemptFail(dfile);
+        fld->addUploadAttempt(dfile);
         break;
     }
   }

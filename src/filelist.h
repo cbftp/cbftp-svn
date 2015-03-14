@@ -11,8 +11,8 @@ class Site;
 class FileList {
   private:
     std::map<std::string, File *> files;
-    std::map<std::string, int> downloadfails;
-    std::map<std::string, int> uploadfails;
+    std::map<std::string, int> downloadattempts;
+    std::map<std::string, int> uploadattempts;
     std::string username;
     std::string path;
     bool filled;
@@ -51,7 +51,7 @@ class FileList {
     void flush();
     void uploadFail(std::string);
     void downloadFail(std::string);
-    void uploadAttemptFail(std::string);
+    void addUploadAttempt(std::string);
     void downloadAttemptFail(std::string);
     bool hasFailedDownload(std::string) const;
     bool hasFailedUpload(std::string) const;
