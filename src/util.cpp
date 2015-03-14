@@ -9,22 +9,18 @@ static unsigned int sizegranularity = getSizeGranularity();
 static std::vector<unsigned long long int> powers = getPowers();
 
 std::string trim(std::string trimtarget) {
-  while(trimtarget.length() > 0) {
-    char firstchar = trimtarget[0];
-    if (firstchar == ' ' || firstchar == '\r' || firstchar == '\n') {
-      trimtarget = trimtarget.substr(1);
-    }
-    else break;
+  int spos = 0;
+  int epos = trimtarget.length() - 1;
+  while (spos < epos && (trimtarget[spos] == ' ' || trimtarget[spos] == '\r' || trimtarget[spos] == '\n')) {
+    ++spos;
   }
-  while (trimtarget.length() > 0) {
-    int lastpos = trimtarget.length() - 1;
-    char lastchar = trimtarget[lastpos];
-    if (lastchar == ' ' || lastchar == '\r' || lastchar == '\n') {
-      trimtarget = trimtarget.substr(0, lastpos);
-    }
-    else break;
+  while (epos >= spos && (trimtarget[epos] == ' ' || trimtarget[epos] == '\r' || trimtarget[epos] == '\n')) {
+    --epos;
   }
-  return trimtarget;
+  if (epos > spos) {
+    return trimtarget.substr(spos, epos - spos + 1);
+  }
+  return "";
 }
 
 int str2Int(std::string str) {
@@ -152,6 +148,16 @@ std::vector<unsigned long long int> getPowers() {
     pow *= 1024;
   }
   return vec;
+}
+
+std::string getGroupNameFromRelease(std::string release) {
+  size_t splitpos = release.rfind("-");
+  if (splitpos != std::string::npos) {
+    return release.substr(splitpos + 1);
+  }
+  else {
+    return "";
+  }
 }
 
 }

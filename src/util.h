@@ -20,5 +20,5 @@ std::string & debugString(const char *);
 std::string parseSize(unsigned long long int);
 int getSizeGranularity();
 std::vector<unsigned long long int> getPowers();
-
+std::string getGroupNameFromRelease(std::string);
 }
