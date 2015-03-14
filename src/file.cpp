@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <cctype>
 
-#include "util.h"
-
 File::File(std::string name, std::string user) {
   directory = false;
   softlink = false;
@@ -22,30 +20,52 @@ File::File(std::string name, std::string user) {
 }
 
 File::File(std::string statline, int touch) {
-
+  int start, pos = 0;
   softlink = false;
   directory = false;
-  if (statline[0] == 'd') directory = true;
-  else if (statline[0] == 'l') softlink = true;
-  owner = util::trim(statline.substr(15, 8)); // field with fixed pos and len
-  group = util::trim(statline.substr(24, 8)); // field with fixed pos and len
-  int pos = 32, start = pos;
+  if (statline[pos] == 'd') directory = true;
+  else if (statline[pos] == 'l') softlink = true;
+  while(statline[++pos] != ' ');
+  while(statline[++pos] == ' ');
+  while(statline[++pos] != ' ');
+  int spacestart = pos;
+  while(statline[++pos] == ' '); // user start at pos? possibly missing field
+  if (pos - spacestart < 9) {
+    start = pos;
+    while (statline[++pos] != ' ');
+    owner = statline.substr(start, pos - start);
+  }
+  else {
+    owner = "";
+    pos = spacestart + 9;
+  }
+  spacestart = pos;
+  while (statline[++pos] == ' '); // group start at pos? possibly missing field
+  if (pos - spacestart < 9) {
+    start = pos;
+    while (statline[++pos] != ' ');
+    group = statline.substr(start, pos - start);
+  }
+  else {
+    group = "";
+    pos = spacestart + 9;
+  }
   while (statline[++pos] == ' '); // size start at pos
   start = pos;
-  while (statline[++pos] != ' '); // size end at pos - 1
+  while (statline[++pos] != ' ');
   std::string sizetmp = statline.substr(start, pos - start);
   size = atol(sizetmp.c_str());
   while (statline[++pos] == ' '); // month start at pos
   start = pos;
-  while (statline[++pos] != ' '); // month end at pos - 1
+  while (statline[++pos] != ' ');
   while (statline[++pos] == ' '); // day start at pos
-  while (statline[++pos] != ' '); // day end at pos - 1
+  while (statline[++pos] != ' ');
   while (statline[++pos] == ' '); // time/year start at pos
-  while (statline[++pos] != ' '); // time/year end at pos - 1
+  while (statline[++pos] != ' ');
   lastmodified = statline.substr(start, pos - start);
   while (statline[++pos] == ' '); // name start at pos
   start = pos;
-  while (statline[++pos] != '\r'); // name end at pos - 1
+  while (statline[++pos] != '\r');
   name = statline.substr(start, pos - start);
   if (softlink) {
     size_t arrowpos = name.find(" -> ");
