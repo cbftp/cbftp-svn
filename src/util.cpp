@@ -17,7 +17,7 @@ std::string trim(std::string trimtarget) {
   while (epos >= spos && (trimtarget[epos] == ' ' || trimtarget[epos] == '\r' || trimtarget[epos] == '\n')) {
     --epos;
   }
-  if (epos > spos) {
+  if (epos >= spos) {
     return trimtarget.substr(spos, epos - spos + 1);
   }
   return "";
