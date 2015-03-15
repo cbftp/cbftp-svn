@@ -11,6 +11,7 @@
 #include "../../sitelogicmanager.h"
 #include "../../transferjob.h"
 #include "../../util.h"
+#include "../../remotecommandhandler.h"
 
 #include "../menuselectoptioncheckbox.h"
 #include "../ui.h"
@@ -24,8 +25,8 @@ MainScreen::MainScreen(Ui * ui) {
 }
 
 void MainScreen::initialize(unsigned int row, unsigned int col) {
-  msslegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [G]lobal settings - Event [l]og - [t]ransfers - [q]uick jump";
-  msolegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [G]lobal settings - Event [l]og - [t]ransfers";
+  msslegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [G]lobal settings - Event [l]og - [t]ransfers - [q]uick jump - toggle [U]dp";
+  msolegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [G]lobal settings - Event [l]og - [t]ransfers - toggle [U]dp";
   gotolegendtext = "[Any] Go to matching first letter in site list - [Esc] Cancel";
   autoupdate = true;
   gotomode = false;
@@ -317,6 +318,12 @@ void MainScreen::keyPressed(unsigned int ch) {
     case 't':
       ui->goTransfers();
       break;
+    case 'U':
+    {
+      bool enabled = global->getRemoteCommandHandler()->isEnabled();
+      global->getRemoteCommandHandler()->setEnabled(!enabled);
+      break;
+    }
   }
   if (mss.isFocused()) {
     switch(ch) {
