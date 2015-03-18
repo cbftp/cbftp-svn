@@ -1,5 +1,7 @@
 #include "filelist.h"
 
+#include <list>
+
 #include "file.h"
 #include "site.h"
 #include "globalcontext.h"
@@ -195,6 +197,7 @@ std::string FileList::getPath() const {
 }
 
 void FileList::cleanSweep(int touch) {
+  std::list<std::string> eraselist;
   std::map<std::string, File *>::iterator it;
   for (it = files.begin(); it != files.end(); it++) {
     File * f = it->second;
@@ -202,18 +205,20 @@ void FileList::cleanSweep(int touch) {
       if (f->getOwner().compare(username) == 0) {
         editOwnedFileCount(false);
       }
-      files.erase(it);
       if (f->getSize() > 0) uploadedfiles--;
-      if (f->getSize() == maxfilesize) {
-        maxfilesize = 0;
-        std::map<std::string, File *>::iterator it2;
-        for (it2 = files.begin(); it2 != files.end(); it2++) {
-          if (it2->second->getSize() > maxfilesize) maxfilesize = it2->second->getSize();
-        }
-      }
+      eraselist.push_back(it->first);
       delete f;
-      setChanged();
     }
+  }
+  if (eraselist.size() > 0) {
+    for (std::list<std::string>::iterator it2 = eraselist.begin(); it2 != eraselist.end(); it++) {
+      files.erase(*it2);
+    }
+    maxfilesize = 0;
+    for (it = files.begin(); it != files.end(); it++) {
+      if (it->second->getSize() > maxfilesize) maxfilesize = it->second->getSize();
+    }
+    setChanged();
   }
 }
 
