@@ -211,7 +211,7 @@ void FileList::cleanSweep(int touch) {
     }
   }
   if (eraselist.size() > 0) {
-    for (std::list<std::string>::iterator it2 = eraselist.begin(); it2 != eraselist.end(); it++) {
+    for (std::list<std::string>::iterator it2 = eraselist.begin(); it2 != eraselist.end(); it2++) {
       files.erase(*it2);
     }
     maxfilesize = 0;
