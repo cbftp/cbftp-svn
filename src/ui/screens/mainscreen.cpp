@@ -62,7 +62,7 @@ void MainScreen::redraw() {
     mso.clear();
     ui->printStr(irow++, 1, "Section  Name");
     std::list<Race *>::const_iterator it;
-    for (it = global->getEngine()->getRacesIteratorBegin(); it != global->getEngine()->getRacesIteratorEnd(); it++) {
+    for (it = global->getEngine()->getRacesBegin(); it != global->getEngine()->getRacesEnd(); it++) {
       std::string release = (*it)->getName();
       mso.addCheckBox(irow++, 1, release, release, false);
     }
@@ -73,7 +73,7 @@ void MainScreen::redraw() {
     msot.clear();
     ui->printStr(irow++, 1, "Type  Name");
     std::list<TransferJob *>::const_iterator it;
-    for (it = global->getEngine()->getTransferJobsIteratorBegin(); it != global->getEngine()->getTransferJobsIteratorEnd(); it++) {
+    for (it = global->getEngine()->getTransferJobsBegin(); it != global->getEngine()->getTransferJobsEnd(); it++) {
           std::string filename = (*it)->getSrcFileName();
           msot.addCheckBox(irow++, 1, filename, filename, false);
     }
