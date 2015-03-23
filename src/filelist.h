@@ -22,7 +22,7 @@ class FileList {
     int owned;
     int ownpercentage;
     unsigned long long int maxfilesize;
-    int uploadedfiles;
+    unsigned int uploadedfiles;
     void editOwnedFileCount(bool);
     void setChanged();
   public:
@@ -43,7 +43,6 @@ class FileList {
     unsigned int getSize() const;
     unsigned int getNumUploadedFiles() const;
     std::string getPath() const;
-    int getSizeUploaded() const;
     bool hasSFV() const;
     int getOwnedPercentage() const;
     unsigned long long int getMaxFileSize() const;

@@ -5,39 +5,60 @@
 
 #include "file.h"
 #include "filelist.h"
-#include "sitelogic.h"
+#include "site.h"
 #include "siterace.h"
+#include "util.h"
+#include "globalcontext.h"
+#include "tickpoke.h"
 
-Race::Race(std::string release, std::string section) {
-  this->name = release;
-  size_t splitpos = name.rfind("-");
-  if (splitpos != std::string::npos) {
-    this->group = name.substr(splitpos + 1);
-  }
-  else {
-    this->group = "";
-  }
-  this->section = section;
-  done = false;
-  aborted = false;
-  maxfilelistsize = 0;
-  bestunknownfilesizeestimate = 50000000;
+extern GlobalContext * global;
+
+Race::Race(std::string release, std::string section) :
+  name(release),
+  group(util::getGroupNameFromRelease(release)),
+  section(section),
+  maxnumfilessiteprogress(0),
+  bestunknownfilesizeestimate(50000000),
+  guessedtotalfilesize(0),
+  checkcount(0),
+  timestamp(util::ctimeLog()),
+  timespent(0),
+  status(RACE_STATUS_RUNNING),
+  worst(0),
+  avg(0),
+  best(0)
+{
   estimatedsubpaths.push_back("");
-  checkcount = 0;
+  guessedfilelists[""] = std::map<std::string, unsigned long long int>();
+  setUndone();
 }
 
-void Race::addSite(SiteLogic * sitelogic) {
-  sites.push_back(sitelogic);
+void Race::addSite(SiteRace * siterace, SiteLogic * sitelogic) {
+  sites.push_back(std::pair<SiteRace *, SiteLogic *>(siterace, sitelogic));
 }
 
 void Race::removeSite(SiteLogic * sitelogic) {
-  for (std::list<SiteLogic *>::iterator it = sites.begin(); it != sites.end(); it++) {
-    if (*it == sitelogic) {
+  for (std::list<std::pair<SiteRace *, SiteLogic *> >::iterator it = sites.begin(); it != sites.end(); it++) {
+    if (it->second == sitelogic) {
+      removeSite(it->first);
+      break;
+    }
+  }
+}
+
+void Race::removeSite(SiteRace * siterace) {
+  for (std::list<std::pair<SiteRace *, SiteLogic *> >::iterator it = sites.begin(); it != sites.end(); it++) {
+    if (it->first == siterace) {
       sites.erase(it);
       break;
     }
   }
-  SiteRace * siterace = sitelogic->getRace(name);
+  for (std::list<SiteRace *>::iterator it = semidonesites.begin(); it != semidonesites.end(); it++) {
+    if (*it == siterace) {
+      donesites.erase(it);
+      break;
+    }
+  }
   for (std::list<SiteRace *>::iterator it = donesites.begin(); it != donesites.end(); it++) {
     if (*it == siterace) {
       donesites.erase(it);
@@ -47,11 +68,11 @@ void Race::removeSite(SiteLogic * sitelogic) {
   sizes.erase(siterace);
 }
 
-std::list<SiteLogic *>::const_iterator Race::begin() const {
+std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator Race::begin() const {
   return sites.begin();
 }
 
-std::list<SiteLogic *>::const_iterator Race::end() const {
+std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator Race::end() const {
   return sites.end();
 }
 
@@ -65,6 +86,10 @@ std::string Race::getGroup() const {
 
 std::string Race::getSection() const {
   return section;
+}
+
+int Race::numSitesDone() const {
+  return donesites.size();
 }
 
 int Race::numSites() const {
@@ -84,11 +109,16 @@ unsigned int Race::estimatedSize(std::string subpath) const {
 }
 
 unsigned int Race::guessedSize(std::string subpath) const {
-  std::map<std::string, unsigned int>::const_iterator it = guessedsize.find(subpath);
-  if (it != guessedsize.end()) {
-    return it->second;
+  std::map<std::string, std::map<std::string, unsigned long long int> >::const_iterator it =
+      guessedfilelists.find(subpath);
+  if (it != guessedfilelists.end()) {
+    return it->second.size();
   }
   return 10;
+}
+
+unsigned long long int Race::estimatedTotalSize() const {
+  return guessedtotalfilesize;
 }
 
 unsigned long long int Race::guessedFileSize(std::string subpath, std::string file) const {
@@ -104,33 +134,20 @@ unsigned long long int Race::guessedFileSize(std::string subpath, std::string fi
   return it2->second.getEstimatedSize();
 }
 
-void Race::prepareGuessedFileList(std::string subpath) {
-  guessedfilelist.clear();
-  if (sizelocationtrackers.find(subpath) == sizelocationtrackers.end()) {
-    return;
+std::map<std::string, unsigned long long int>::const_iterator Race::guessedFileListBegin(std::string subpath) const {
+  std::map<std::string, std::map<std::string, unsigned long long int> >::const_iterator it;
+  if ((it = guessedfilelists.find(subpath)) != guessedfilelists.end()) {
+    return it->second.begin();
   }
-  std::map<std::string, SizeLocationTrack>::iterator it;
-  int highestnumsites = 0;
-  for (it = sizelocationtrackers[subpath].begin(); it != sizelocationtrackers[subpath].end(); it++) {
-    int thisnumsites = it->second.numSites();
-    if (thisnumsites > highestnumsites) {
-      highestnumsites = thisnumsites;
-    }
-  }
-  int minnumsites = highestnumsites / 2;
-  for (it = sizelocationtrackers[subpath].begin(); it != sizelocationtrackers[subpath].end(); it++) {
-    if (it->second.numSites() > minnumsites || sites.size() == 2) {
-      guessedfilelist.push_back(it->first);
-    }
-  }
+  return guessedfilelists.at("").end();
 }
 
-std::list<std::string>::const_iterator Race::guessedFileListBegin() const {
-  return guessedfilelist.begin();
-}
-
-std::list<std::string>::const_iterator Race::guessedFileListEnd() const {
-  return guessedfilelist.end();
+std::map<std::string, unsigned long long int>::const_iterator Race::guessedFileListEnd(std::string subpath) const {
+  std::map<std::string, std::map<std::string, unsigned long long int> >::const_iterator it;
+  if ((it = guessedfilelists.find(subpath)) != guessedfilelists.end()) {
+    return it->second.end();
+  }
+  return guessedfilelists.at("").end();
 }
 
 bool Race::SFVReported(std::string subpath) const {
@@ -142,20 +159,16 @@ std::list<std::string> Race::getSubPaths() const {
   return estimatedsubpaths;
 }
 
-void Race::updateSiteProgress(int in) {
-  if (maxfilelistsize < in) maxfilelistsize = in;
+void Race::updateSiteProgress(unsigned int numuploadedfiles) {
+  if (maxnumfilessiteprogress < numuploadedfiles) maxnumfilessiteprogress = numuploadedfiles;
 }
 
-int Race::getMaxSiteProgress() const {
-  return maxfilelistsize;
+unsigned int Race::getMaxSiteNumFilesProgress() const {
+  return maxnumfilessiteprogress;
 }
 
 bool Race::isDone() const {
-  return done;
-}
-
-bool Race::isAborted() const {
-  return aborted;
+  return status != RACE_STATUS_RUNNING;
 }
 
 void Race::reportNewSubDir(SiteRace * sr, std::string subdir) {
@@ -177,7 +190,7 @@ void Race::reportNewSubDir(SiteRace * sr, std::string subdir) {
       }
     }
     estimatedsubpaths.push_back(subdir);
-    guessedsize[subdir] = 2;
+    guessedfilelists[subdir] = std::map<std::string, unsigned long long int>();
   }
 }
 
@@ -204,7 +217,7 @@ void Race::reportDone(SiteRace * sr) {
   reportSemiDone(sr);
   donesites.push_back(sr);
   if (donesites.size() == sites.size()) {
-    done = true;
+    setDone();
   }
 }
 
@@ -217,7 +230,7 @@ void Race::reportSemiDone(SiteRace * sr) {
   }
   semidonesites.push_back(sr);
   if (semidonesites.size() == sites.size()) {
-    done = true;
+    setDone();
     for (it = semidonesites.begin(); it != semidonesites.end(); it++) {
       (*it)->complete(false);
     }
@@ -225,12 +238,18 @@ void Race::reportSemiDone(SiteRace * sr) {
 }
 
 void Race::setUndone() {
-  done = false;
+  status = RACE_STATUS_RUNNING;
+  global->getTickPoke()->startPoke(this, "Race", RACE_UPDATE_INTERVAL, 0);
 }
 
 void Race::abort() {
-  done = true;
-  aborted = true;
+  setDone();
+  status = RACE_STATUS_ABORTED;
+}
+
+void Race::setTimeout() {
+  setDone();
+  status = RACE_STATUS_TIMEOUT;
 }
 
 void Race::reportSize(SiteRace * sr, FileList * fl, std::string subpath, std::list<std::string > * uniques, bool final) {
@@ -239,55 +258,67 @@ void Race::reportSize(SiteRace * sr, FileList * fl, std::string subpath, std::li
   if (sizelocationtrackers.find(subpath) == sizelocationtrackers.end()) {
     sizelocationtrackers[subpath] = std::map<std::string, SizeLocationTrack>();
   }
+  bool recalc = false;
   for (itu = uniques->begin(); itu != uniques->end(); itu++) {
-    if (sizelocationtrackers[subpath].find(*itu) == sizelocationtrackers[subpath].end()) {
-      sizelocationtrackers[subpath][*itu] = SizeLocationTrack();
+    std::string unique = *itu;
+    if (sizelocationtrackers[subpath].find(unique) == sizelocationtrackers[subpath].end()) {
+      sizelocationtrackers[subpath][unique] = SizeLocationTrack();
     }
-    if ((file = fl->getFile(*itu)) != NULL) {
-      if (sizelocationtrackers[subpath][*itu].add(sr, file->getSize())) {
-        estimatedfilesizes[*itu] = sizelocationtrackers[subpath][*itu].getEstimatedSize();
-        recalculateBestUnknownFileSizeEstimate();
+    if ((file = fl->getFile(unique)) != NULL) {
+      if (sizelocationtrackers[subpath][unique].add(sr, file->getSize())) {
+        estimatedfilesizes[unique] = sizelocationtrackers[subpath][unique].getEstimatedSize();
+        recalc = true;
       }
     }
     else {
-      sizelocationtrackers[subpath][*itu].add(sr, 0);
+      sizelocationtrackers[subpath][unique].add(sr, 0);
     }
+  }
+  if (recalc) {
+    recalculateBestUnknownFileSizeEstimate();
   }
   if (sizes.find(sr) == sizes.end()) {
     sizes[sr] = std::map<std::string, unsigned int>();
   }
-  std::map<std::string, SizeLocationTrack>::iterator it;
-  int highestnumsites = 0;
-  int thisguessedsize = 0;
-  for (it = sizelocationtrackers[subpath].begin(); it != sizelocationtrackers[subpath].end(); it++) {
-    int thisnumsites = it->second.numSites();
-    if (thisnumsites > highestnumsites) {
-      highestnumsites = thisnumsites;
-    }
-  }
-  int minnumsites = highestnumsites / 2;
-  for (it = sizelocationtrackers[subpath].begin(); it != sizelocationtrackers[subpath].end(); it++) {
-    if (it->second.numSites() > minnumsites || sites.size() == 2) {
-      thisguessedsize++;
-    }
-  }
-  guessedsize[subpath] = thisguessedsize;
-  if (final) {
-    sizes[sr][subpath] = uniques->size();
-    std::map<SiteRace *, std::map<std::string, unsigned int> >::iterator it;
-    std::map<std::string, unsigned int>::iterator it2;
-    std::vector<unsigned int> subpathsizes;
-    for (it = sizes.begin(); it != sizes.end(); it++) {
-      it2 = it->second.find(subpath);
-      if (it2 != it->second.end()) {
-        subpathsizes.push_back(it2->second);
+  if (guessedfilelists.find(subpath) != guessedfilelists.end()) {
+    guessedfilelists[subpath].clear();
+    std::map<std::string, SizeLocationTrack>::iterator it;
+    int highestnumsites = 0;
+    for (it = sizelocationtrackers[subpath].begin(); it != sizelocationtrackers[subpath].end(); it++) {
+      int thisnumsites = it->second.numSites();
+      if (thisnumsites > highestnumsites) {
+        highestnumsites = thisnumsites;
       }
     }
-    // stupid formula, replace with time check from race start
-    if (subpathsizes.size() == sites.size() ||
-      (subpathsizes.size() >= sites.size() * 0.8 && sites.size() > 2)) {
-      std::sort(subpathsizes.begin(), subpathsizes.end());
-      estimatedsize[subpath] = thisguessedsize;
+    int minnumsites = highestnumsites / 2;
+    unsigned long long int aggregatedsize = 0;
+    for (it = sizelocationtrackers[subpath].begin(); it != sizelocationtrackers[subpath].end(); it++) {
+      if (it->second.numSites() > minnumsites || sites.size() == 2) {
+        unsigned long long int estimatedsize = it->second.getEstimatedSize();
+        guessedfilelists[subpath][it->first] = estimatedsize;
+        aggregatedsize += estimatedsize;
+      }
+    }
+    if (guessedfileliststotalfilesize[subpath] != aggregatedsize) {
+      guessedfileliststotalfilesize[subpath] = aggregatedsize;
+      calculateTotalFileSize();
+    }
+    if (final) {
+      sizes[sr][subpath] = uniques->size();
+      std::map<SiteRace *, std::map<std::string, unsigned int> >::iterator it;
+      std::map<std::string, unsigned int>::iterator it2;
+      std::vector<unsigned int> subpathsizes;
+      for (it = sizes.begin(); it != sizes.end(); it++) {
+        it2 = it->second.find(subpath);
+        if (it2 != it->second.end()) {
+          subpathsizes.push_back(it2->second);
+        }
+      }
+      // stupid formula, replace with time check from race start
+      if (subpathsizes.size() == sites.size() ||
+        (subpathsizes.size() >= sites.size() * 0.8 && sites.size() > 2)) {
+        estimatedsize[subpath] = guessedfilelists[subpath].size();
+      }
     }
   }
 }
@@ -327,7 +358,8 @@ void Race::recalculateBestUnknownFileSizeEstimate() {
       largestcount++;
     }
   }
-  if (largestcount >= 2 || largestcount == mostcommoncount) {
+  if (largestcount >= 2 || largestcount == mostcommoncount ||
+      (mostcommon == 0 && mostcommoncount + 1 < (int)commonsizes.size())) {
     bestunknownfilesizeestimate = largest;
   }
   else {
@@ -336,8 +368,8 @@ void Race::recalculateBestUnknownFileSizeEstimate() {
 }
 
 int Race::checksSinceLastUpdate() {
-  for (std::list<SiteLogic *>::iterator it = sites.begin(); it != sites.end(); it++) {
-    if ((*it)->getRace(name)->hasBeenUpdatedSinceLastCheck()) {
+  for (std::list<std::pair<SiteRace *, SiteLogic *> >::iterator it = sites.begin(); it != sites.end(); it++) {
+    if (it->first->hasBeenUpdatedSinceLastCheck()) {
       checkcount = 0;
     }
   }
@@ -346,4 +378,88 @@ int Race::checksSinceLastUpdate() {
 
 void Race::resetUpdateCheckCounter() {
   checkcount = 0;
+}
+
+std::string Race::getTimeStamp() const {
+  return timestamp;
+}
+
+void Race::setDone() {
+  status = RACE_STATUS_DONE;
+  global->getTickPoke()->stopPoke(this, 0);
+}
+
+void Race::tick(int) {
+  timespent += RACE_UPDATE_INTERVAL;
+  calculatePercentages();
+}
+
+void Race::calculatePercentages() {
+  unsigned int totalpercentage = 0;
+  unsigned int localworst = 100;
+  unsigned int localbest = 0;
+  for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator it = begin(); it != end(); it++) {
+    unsigned int percentagecomplete = maxnumfilessiteprogress
+        ? (it->first->getNumUploadedFiles() * 100) / maxnumfilessiteprogress
+        : 0;
+    totalpercentage += percentagecomplete;
+    if (percentagecomplete < localworst) {
+      localworst = percentagecomplete;
+    }
+    if (percentagecomplete > localbest) {
+      localbest = percentagecomplete;
+    }
+  }
+  avg = totalpercentage / sites.size();
+  worst = localworst;
+  best = localbest;
+}
+
+void Race::calculateTotalFileSize() {
+  unsigned long long int aggregatedsize = 0;
+  for (std::map<std::string, unsigned long long int>::const_iterator it =
+      guessedfileliststotalfilesize.begin(); it != guessedfileliststotalfilesize.end(); it++) {
+    aggregatedsize += it->second;
+  }
+  guessedtotalfilesize = aggregatedsize;
+}
+
+unsigned int Race::getTimeSpent() const {
+  return timespent / 1000;
+}
+
+std::string Race::getSiteListText() const {
+  std::string sitestr = "";
+  for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator it = begin(); it != end(); it++) {
+    sitestr += it->first->getSiteName() + ",";
+  }
+  if (sitestr.length() > 0) {
+    sitestr = sitestr.substr(0, sitestr.length() - 1);
+  }
+  return sitestr;
+}
+
+int Race::getStatus() const {
+  return status;
+}
+
+SiteRace * Race::getSiteRace(std::string site) const {
+  for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator it = begin(); it != end(); it++) {
+    if (it->first->getSiteName() == site) {
+      return it->first;
+    }
+  }
+  return NULL;
+}
+
+unsigned int Race::getWorstCompletionPercentage() const {
+  return worst;
+}
+
+unsigned int Race::getAverageCompletionPercentage() const {
+  return avg;
+}
+
+unsigned int Race::getBestCompletionPercentage() const {
+  return best;
 }

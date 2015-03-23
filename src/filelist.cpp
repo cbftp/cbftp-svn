@@ -41,7 +41,7 @@ bool FileList::updateFile(std::string start, int touch) {
   }
   File * updatefile;
   if ((updatefile = getFile(name)) != NULL) {
-    if (updatefile->getSize() == 0 && file->getSize() > 0) uploadedfiles++;
+    if (updatefile->getSize() == 0 && file->getSize() > 0 && !file->isDirectory()) uploadedfiles++;
     if (updatefile->setSize(file->getSize())) {
       setChanged();
     }
@@ -76,7 +76,7 @@ bool FileList::updateFile(std::string start, int touch) {
   }
   else {
     files[name] = file;
-    if (file->getSize() > 0) uploadedfiles++;
+    if (file->getSize() > 0 && !file->isDirectory()) uploadedfiles++;
     if (file->getSize() > maxfilesize) maxfilesize = file->getSize();
     if (file->getOwner().compare(username) == 0) {
       editOwnedFileCount(true);
@@ -159,17 +159,6 @@ unsigned int FileList::getSize() const {
 }
 
 unsigned int FileList::getNumUploadedFiles() const {
-  unsigned int count = 0;
-  std::map<std::string, File *>::const_iterator it;
-  for (it = files.begin(); it != files.end(); it++) {
-    if (!it->second->isDirectory() && it->second->getSize() > 0) {
-      ++count;
-    }
-  }
-  return count;
-}
-
-int FileList::getSizeUploaded() const {
   return uploadedfiles;
 }
 
@@ -205,7 +194,7 @@ void FileList::cleanSweep(int touch) {
       if (f->getOwner().compare(username) == 0) {
         editOwnedFileCount(false);
       }
-      if (f->getSize() > 0) uploadedfiles--;
+      if (f->getSize() > 0 && !f->isDirectory()) uploadedfiles--;
       eraselist.push_back(it->first);
       delete f;
     }

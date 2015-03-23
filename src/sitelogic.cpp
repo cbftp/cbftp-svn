@@ -5,7 +5,6 @@
 #include "filelist.h"
 #include "siterace.h"
 #include "site.h"
-#include "race.h"
 #include "globalcontext.h"
 #include "scoreboardelement.h"
 #include "potentialtracker.h"
@@ -71,10 +70,11 @@ void SiteLogic::activateAll() {
   }
 }
 
-void SiteLogic::addRace(Race * enginerace, std::string section, std::string release) {
-  SiteRace * race = new SiteRace(enginerace, site->getSectionPath(section), release, site->getUser());
+SiteRace * SiteLogic::addRace(Race * enginerace, std::string section, std::string release) {
+  SiteRace * race = new SiteRace(enginerace, site->getName(), site->getSectionPath(section), release, site->getUser());
   races.push_back(race);
   activateAll();
+  return race;
 }
 
 void SiteLogic::addTransferJob(TransferJob * tj) {
@@ -790,7 +790,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
   }
   if (race == NULL) {
     for (unsigned int i = 0; i < races.size(); i++) {
-      if (!races[i]->getRace()->isDone()) {
+      if (!races[i]->isGlobalDone()) {
         race = races[i];
         break;
       }
@@ -1403,7 +1403,7 @@ RawBuffer * SiteLogic::getRawCommandBuffer() const {
 void SiteLogic::raceGlobalComplete() {
   bool stillactive = false;
   for (unsigned int i = 0; i < races.size(); i++) {
-    if (!races[i]->getRace()->isDone()) {
+    if (!races[i]->isGlobalDone()) {
       stillactive = true;
       break;
     }

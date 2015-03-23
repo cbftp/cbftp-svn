@@ -29,7 +29,6 @@ private:
   unsigned int currguessedsize;
   unsigned int longestsubpath;
   std::string release;
-  std::string sitestr;
   std::list<std::string> subpaths;
   MenuSelectOption mso;
   std::map<std::string, int> filetagpos;

@@ -9,24 +9,20 @@
 
 extern GlobalContext * global;
 
-SiteRace::SiteRace(Race * race, std::string section, std::string release, std::string username) {
-  this->race = race;
-  this->section = section;
-  this->release = release;
-  this->username = username;
-  size_t splitpos = release.rfind("-");
-  if (splitpos != std::string::npos) {
-    this->group = release.substr(splitpos + 1);
-  }
-  else {
-    this->group = "";
-  }
+SiteRace::SiteRace(Race * race, std::string sitename, std::string section, std::string release, std::string username) :
+  race(race),
+  section(section),
+  release(release),
+  path(section.append("/").append(release)),
+  group(util::getGroupNameFromRelease(release)),
+  username(username),
+  sitename(sitename),
+  done(false),
+  maxfilesize(0),
+  numuploadedfiles(0)
+{
   recentlyvisited.push_back("");
-  path = section.append("/").append(release);
-  FileList * rootdir = new FileList(username, path);
-  filelists[""] = rootdir;
-  done = false;
-  maxfilesize = 0;
+  filelists[""] = new FileList(username, path);
 }
 
 SiteRace::~SiteRace() {
@@ -37,6 +33,10 @@ SiteRace::~SiteRace() {
 
 int SiteRace::classType() const {
   return COMMANDOWNER_SITERACE;
+}
+
+std::string SiteRace::getSiteName() const {
+  return sitename;
 }
 
 std::string SiteRace::getSection() const {
@@ -135,18 +135,19 @@ void SiteRace::fileListUpdated(FileList *) {
 
 void SiteRace::updateNumFilesUploaded() {
   std::map<std::string, FileList *>::iterator it;
-  int sum = 0;
+  unsigned int sum = 0;
   unsigned long long int maxsize = 0;
   unsigned long long int maxsizewithfiles = 0;
   for (it = filelists.begin(); it != filelists.end(); it++) {
-    sum += it->second->getSize();
-    if (it->second->hasSFV()) {
+    FileList * fl = it->second;
+    sum += fl->getNumUploadedFiles();
+    if (fl->hasSFV()) {
       race->reportSFV(this, it->first);
     }
-    unsigned long long int max = it->second->getMaxFileSize();
+    unsigned long long int max = fl->getMaxFileSize();
     if (max > maxsize) {
       maxsize = max;
-      if (it->second->getSize() >= 5) {
+      if (fl->getSize() >= 5) {
         maxsizewithfiles = max;
       }
     }
@@ -157,6 +158,7 @@ void SiteRace::updateNumFilesUploaded() {
   else {
     this->maxfilesize = maxsize;
   }
+  numuploadedfiles = sum;
   race->updateSiteProgress(sum);
 }
 
@@ -176,13 +178,8 @@ void SiteRace::addNewDirectories() {
   }
 }
 
-int SiteRace::getNumUploadedFiles() const {
-  std::map<std::string, FileList *>::const_iterator it;
-  int sum = 0;
-  for (it = filelists.begin(); it != filelists.end(); it++) {
-    sum += it->second->getNumUploadedFiles();
-  }
-  return sum;
+unsigned int SiteRace::getNumUploadedFiles() const {
+  return numuploadedfiles;
 }
 
 bool SiteRace::sizeEstimated(FileList * fl) const {
@@ -201,6 +198,10 @@ unsigned long long int SiteRace::getMaxFileSize() const {
 
 bool SiteRace::isDone() const {
   return done;
+}
+
+bool SiteRace::isGlobalDone() const {
+  return race->isDone();
 }
 
 void SiteRace::complete(bool report) {

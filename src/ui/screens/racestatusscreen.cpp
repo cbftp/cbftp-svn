@@ -27,7 +27,7 @@ RaceStatusScreen::RaceStatusScreen(Ui * ui) {
 void RaceStatusScreen::initialize(unsigned int row, unsigned int col, std::string release) {
   this->release = release;
   race = global->getEngine()->getRace(release);
-  if (!race->isAborted()) {
+  if (race->getStatus() != RACE_STATUS_ABORTED) {
     currentlegendtext = defaultlegendtext;
   }
   else {
@@ -45,16 +45,9 @@ void RaceStatusScreen::initialize(unsigned int row, unsigned int col, std::strin
 }
 
 void RaceStatusScreen::redraw() {
-  sitestr = "";
-  for (std::list<SiteLogic *>::const_iterator it = race->begin(); it != race->end(); it++) {
-    sitestr += (*it)->getSite()->getName() + ",";
-  }
-  if (sitestr.length() > 0) {
-    sitestr = sitestr.substr(0, sitestr.length() - 1);
-  }
   ui->erase();
   ui->printStr(1, 1, "Section: " + race->getSection());
-  ui->printStr(1, 20, "Sites: " + sitestr);
+  ui->printStr(1, 20, "Sites: " + race->getSiteListText());
   std::list<std::string> currsubpaths = race->getSubPaths();
   currnumsubpaths = currsubpaths.size();
   currsubpaths.sort();
@@ -94,14 +87,14 @@ void RaceStatusScreen::redraw() {
   std::map<std::string, bool> bannedsuffixes;
   std::map<std::string, std::string> tags;
   filenametags.clear();
-  for (std::list<std::string>::iterator it = subpaths.begin(); it != subpaths.end(); it++) {
-    race->prepareGuessedFileList(*it);
+  for (std::list<std::string>::iterator subit = subpaths.begin(); subit != subpaths.end(); subit++) {
     bool finished = false;
     std::map<std::string, std::string> localtags;
     while (!finished) {
       finished = true;
-      for (std::list<std::string>::const_iterator it = race->guessedFileListBegin(); it != race->guessedFileListEnd(); it++) {
-        std::string filename = *it;
+      for (std::map<std::string, unsigned long long int>::const_iterator it =
+          race->guessedFileListBegin(*subit); it != race->guessedFileListEnd(*subit); it++) {
+        std::string filename = it->first;
         while (filename.length() < 3) {
           filename += " ";
         }
@@ -219,15 +212,16 @@ void RaceStatusScreen::update() {
   int x = 1;
   int y = 8;
   mso.clear();
-  for (std::list<SiteLogic *>::const_iterator it = race->begin(); it != race->end(); it++) {
-    SiteRace * sr = (*it)->getRace(release);
-    std::string user = (*it)->getSite()->getUser();
+  for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator it = race->begin(); it != race->end(); it++) {
+    SiteRace * sr = it->first;
+    SiteLogic * sl = it->second;
+    std::string user = sl->getSite()->getUser();
     bool trimcompare = user.length() > 8;
     std::string trimuser = user;
     if (trimcompare) {
       trimuser = user.substr(0, 8);
     }
-    std::string sitename = (*it)->getSite()->getName();
+    std::string sitename = sl->getSite()->getName();
     mso.addTextButton(y, x, sitename, sitename);
     for (std::list<std::string>::iterator it2 = subpaths.begin(); it2 != subpaths.end(); it2++) {
       std::string origsubpath = *it2;
@@ -244,9 +238,9 @@ void RaceStatusScreen::update() {
       }
 
       ui->printStr(y, x + 5, printsubpath, longestsubpath);
-      race->prepareGuessedFileList(origsubpath);
-      for (std::list<std::string>::const_iterator it3 = race->guessedFileListBegin(); it3 != race->guessedFileListEnd(); it3++) {
-        std::string filename = *it3;
+      for (std::map<std::string, unsigned long long int>::const_iterator it3 =
+          race->guessedFileListBegin(origsubpath); it3 != race->guessedFileListEnd(origsubpath); it3++) {
+        std::string filename = it3->first;
         if (filename.length() < 3) filename += " ";
         int filex = filetagpos[filenametags[filename]];
         File * file;
@@ -255,9 +249,9 @@ void RaceStatusScreen::update() {
         bool upload = false;
         bool download = false;
         bool owner = false;
-        if ((file = fl->getFile(*it3)) != NULL) {
+        if ((file = fl->getFile(filename)) != NULL) {
           exists = true;
-          if (file->isUploading() || file->getSize() < race->guessedFileSize(origsubpath, *it3)) {
+          if (file->isUploading() || file->getSize() < race->guessedFileSize(origsubpath, filename)) {
             upload = true;
           }
           std::string ownerstr = file->getOwner();
@@ -320,9 +314,7 @@ void RaceStatusScreen::command(std::string command, std::string arg) {
       }
     }
     for (std::list<Site *>::iterator it = selectedsites.begin(); it != selectedsites.end(); it++) {
-      SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic((*it)->getName());
-      sl->addRace(race, race->getSection(), release);
-      race->addSite(sl);
+      global->getEngine()->addSiteToRace(race, (*it)->getName());
     }
   }
   ui->redraw();
@@ -364,13 +356,13 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
       break;
     }
     case 'B':
-      if (!race->isAborted()) {
+      if (race->getStatus() == RACE_STATUS_RUNNING) {
         awaitingabort = true;
         ui->goConfirmation("Do you really want to abort the race " + release);
       }
       break;
     case 'D':
-      if (race->isAborted()) {
+      if (race->getStatus() == RACE_STATUS_ABORTED) {
         awaitingdelete = true;
         ui->goConfirmation("Do you really want to delete " + release + " on all involved sites");
       }
@@ -378,8 +370,8 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
     case 'A':
     {
       std::list<Site *> excludedsites;
-      for (std::list<SiteLogic *>::const_iterator it = race->begin(); it != race->end(); it++) {
-        excludedsites.push_back((*it)->getSite());
+      for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator it = race->begin(); it != race->end(); it++) {
+        excludedsites.push_back(it->second->getSite());
       }
       std::vector<Site *>::const_iterator it;
       for (it = global->getSiteManager()->getSitesIteratorBegin(); it != global->getSiteManager()->getSitesIteratorEnd(); it++) {

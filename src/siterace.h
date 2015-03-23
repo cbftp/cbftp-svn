@@ -17,6 +17,7 @@ class SiteRace : public CommandOwner {
     std::string path;
     std::string group;
     std::string username;
+    std::string sitename;
     std::list<std::string> recentlyvisited;
     std::list<std::string> completesubdirs;
     std::map<std::string, FileList *> filelists;
@@ -26,16 +27,18 @@ class SiteRace : public CommandOwner {
     std::map<FileList *, int> sfvobservestarts;
     std::map<std::string, bool> visitedpaths;
     unsigned long long int maxfilesize;
+    unsigned int numuploadedfiles;
     void updateNumFilesUploaded();
     void addNewDirectories();
   public:
     int classType() const;
+    std::string getSiteName() const;
     std::string getSection() const;
     std::string getRelease() const;
     std::string getGroup() const;
     std::string getPath() const;
     std::string getRelevantSubPath();
-    SiteRace(Race *, std::string, std::string, std::string);
+    SiteRace(Race *, std::string, std::string, std::string, std::string);
     ~SiteRace();
     FileList * getFileListForPath(std::string) const;
     FileList * getFileListForFullPath(std::string) const;
@@ -47,9 +50,10 @@ class SiteRace : public CommandOwner {
     std::string getSubPath(FileList *) const;
     void fileListUpdated(FileList *);
     bool sizeEstimated(FileList *) const;
-    int getNumUploadedFiles() const;
+    unsigned int getNumUploadedFiles() const;
     unsigned long long int getMaxFileSize() const;
     bool isDone() const;
+    bool isGlobalDone() const;
     void complete(bool);
     void abort();
     void subPathComplete(FileList *);

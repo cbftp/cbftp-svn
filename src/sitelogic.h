@@ -87,7 +87,7 @@ class SiteLogic : public EventReceiver {
     SiteLogic(std::string);
     ~SiteLogic();
     void runInstance();
-    void addRace(Race *, std::string, std::string);
+    SiteRace * addRace(Race *, std::string, std::string);
     void addTransferJob(TransferJob *);
     void tick(int);
     void connectFailed(int);

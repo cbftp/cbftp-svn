@@ -53,7 +53,7 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
   if (race == NULL) {
     race = new Race(release, section);
   }
-  std::list<SiteLogic *> addsites;
+  std::list<std::string> addsites;
   for (std::list<std::string>::iterator it = sites.begin(); it != sites.end(); it++) {
     SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(*it);
     if (sl == NULL) {
@@ -66,22 +66,20 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
       continue;
     }
     bool add = true;
-    for (std::list<SiteLogic *>::iterator it2 = addsites.begin(); it2 != addsites.end(); it2++) {
-      if (sl == *it2) {
+    for (std::list<std::string>::iterator it2 = addsites.begin(); it2 != addsites.end(); it2++) {
+      if (*it == *it2) {
         add = false;
         break;
       }
     }
     if (add && append) {
-      for (std::list<SiteLogic *>::const_iterator it2 = race->begin(); it2 != race->end(); it2++) {
-        if (sl == *it2) {
-          add = false;
-          break;
-        }
+      if (race->getSiteRace(*it) != NULL) {
+        add = false;
+        break;
       }
     }
     if (add) {
-      addsites.push_back(sl);
+      addsites.push_back(*it);
     }
   }
   if (addsites.size() < 2 && !append) {
@@ -103,14 +101,13 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
       if (readdtocurrent) {
         global->getEventLog()->log("Engine", "Reactivating race: " + section + "/" + release);
         race->setUndone();
-        for (std::list<SiteLogic *>::const_iterator it = race->begin(); it != race->end(); it++) {
-          (*it)->activateAll();
+        for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator it = race->begin(); it != race->end(); it++) {
+          it->second->activateAll();
         }
       }
     }
-    for (std::list<SiteLogic *>::iterator it = addsites.begin(); it != addsites.end(); it++) {
-      (*it)->addRace(race, section, release);
-      race->addSite((*it));
+    for (std::list<std::string>::iterator it = addsites.begin(); it != addsites.end(); it++) {
+      addSiteToRace(race, *it);
     }
     if (!append) {
       currentraces.push_back(race);
@@ -178,62 +175,49 @@ void Engine::newTransferJobFXP(std::string srcsite, std::string srcfile, FileLis
 }
 
 void Engine::removeSiteFromRace(std::string release, std::string site) {
-  for (std::list<Race *>::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
-    if ((*it)->getName() == release) {
-      for (std::list<SiteLogic *>::const_iterator it2 = (*it)->begin(); it2 != (*it)->end(); it2++) {
-        if ((*it2)->getSite()->getName() == site) {
-          (*it2)->abortRace(release);
-          (*it)->removeSite(*it2);
-          break;
-        }
-      }
+  Race * race = getCurrentRace(release);
+  if (race != NULL) {
+    SiteRace * sr = race->getSiteRace(site);
+    if (sr != NULL) {
+      SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(site);
+      sl->abortRace(release);
+      race->removeSite(sr);
     }
   }
 }
 
 void Engine::abortRace(std::string release) {
-  for (std::list<Race *>::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
-    if ((*it)->getName() == release) {
-      (*it)->abort();
-      for (std::list<SiteLogic *>::const_iterator it2 = (*it)->begin(); it2 != (*it)->end(); it2++) {
-        (*it2)->abortRace(release);
-      }
-      currentraces.erase(it);
-      global->getEventLog()->log("Engine", "Race aborted: " + release);
-      break;
+  Race * race = getCurrentRace(release);
+  if (race != NULL) {
+    race->abort();
+    for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator it = race->begin(); it != race->end(); it++) {
+      it->second->abortRace(release);
     }
+    currentraces.remove(race);
+    global->getEventLog()->log("Engine", "Race aborted: " + release);
   }
 }
 
 void Engine::deleteOnAllSites(std::string release) {
-  for (std::list<Race *>::iterator it = allraces.begin(); it != allraces.end(); it++) {
-    if ((*it)->getName() == release) {
-      std::string sites;
-      for (std::list<SiteLogic *>::const_iterator it2 = (*it)->begin(); it2 != (*it)->end(); it2++) {
-        SiteLogic * sl = *it2;
-        SiteRace * sr = sl->getRace(release);
-        std::string path = sr->getPath();
-        sl->requestDelete(path, true, false);
-        sites += sl->getSite()->getName() + ",";
-      }
-      if (sites.length() > 0) {
-        sites = sites.substr(0, sites.length() - 1);
-        global->getEventLog()->log("Engine", "Attempting delete of " + release + " on: " + sites);
-      }
-      break;
+  Race * race = getRace(release);
+  if (race != NULL) {
+    std::string sites;
+    for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator it = race->begin(); it != race->end(); it++) {
+      std::string path = it->first->getPath();
+      it->second->requestDelete(path, true, false);
+      sites += it->first->getSiteName() + ",";
+    }
+    if (sites.length() > 0) {
+      sites = sites.substr(0, sites.length() - 1);
+      global->getEventLog()->log("Engine", "Attempting delete of " + release + " on: " + sites);
     }
   }
 }
 
 void Engine::abortTransferJob(TransferJob * tj) {
-  for (std::list<TransferJob *>::iterator it = currenttransferjobs.begin(); it != currenttransferjobs.end(); it++) {
-    if (*it == tj) {
-      tj->abort();
-      currenttransferjobs.erase(it);
-      global->getEventLog()->log("Engine", "Transfer job aborted: " + tj->getSrcFileName());
-      break;
-    }
-  }
+  tj->abort();
+  currenttransferjobs.remove(tj);
+  global->getEventLog()->log("Engine", "Transfer job aborted: " + tj->getSrcFileName());
 }
 
 void Engine::raceFileListRefreshed(SiteLogic * sls, Race * race) {
@@ -308,8 +292,8 @@ void Engine::transferJobActionRequest(TransferJob * tj) {
 
 void Engine::estimateRaceSizes() {
   for (std::list<Race *>::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
-    for (std::list<SiteLogic *>::const_iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
-      SiteRace * srs = (*its)->getRace((*itr)->getName());
+    for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
+      SiteRace * srs = its->first;
       std::map<std::string, FileList *>::const_iterator itfl;
       for (itfl = srs->fileListsBegin(); itfl != srs->fileListsEnd(); itfl++) {
         FileList * fls = itfl->second;
@@ -369,15 +353,15 @@ void Engine::refreshScoreBoard() {
   scoreboard->wipe();
   for (std::list<Race *>::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
     Race * race = *itr;
-    for (std::list<SiteLogic *>::const_iterator its = race->begin(); its != race->end(); its++) {
-      SiteLogic * sls = *its;
-      SiteRace * srs = sls->getRace(race->getName());
-      for (std::list<SiteLogic *>::const_iterator itd = race->begin(); itd != race->end(); itd++) {
-        SiteLogic * sld = *itd;
+    for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator its = race->begin(); its != race->end(); its++) {
+      SiteRace * srs = its->first;
+      SiteLogic * sls = its->second;
+      for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator itd = race->begin(); itd != race->end(); itd++) {
+        SiteRace * srd = itd->first;
+        SiteLogic * sld = itd->second;
         if (sls == sld) continue;
         if (global->getSiteManager()->isBlockedPair(sls->getSite(), sld->getSite())) continue;
         if (sld->getSite()->isAffiliated(race->getGroup())) continue;
-        SiteRace * srd = sld->getRace(race->getName());
         int avgspeed = sls->getSite()->getAverageSpeed(sld->getSite()->getName());
         if (avgspeed > maxavgspeed) {
           avgspeed = maxavgspeed;
@@ -607,9 +591,9 @@ int Engine::calculateScore(File * f, Race * itr, FileList * fls, SiteRace * srs,
   }
   else {
     // give points for low progress on the target
-    int maxprogress = itr->getMaxSiteProgress();
+    int maxprogress = itr->getMaxSiteNumFilesProgress();
     if (maxprogress > 0) {
-      points += 3000 - ((fld->getSizeUploaded() * 3000) / maxprogress); // gives max 3000 points
+      points += 3000 - ((fld->getNumUploadedFiles() * 3000) / maxprogress); // gives max 3000 points
     }
   }
   // sfv and nfo files have top priority
@@ -624,7 +608,7 @@ int Engine::calculateScore(File * f, Race * itr, FileList * fls, SiteRace * srs,
         " Filesize: " + util::int2Str(f->getSize()) + " Maxfilesize: " +
         util::int2Str(srs->getMaxFileSize()) + " Ownedpercentage: " +
         util::int2Str(fld->getOwnedPercentage()) + " Maxprogress: " +
-        util::int2Str(itr->getMaxSiteProgress()));
+        util::int2Str(itr->getMaxSiteNumFilesProgress()));
   }
   return points;
 }
@@ -632,9 +616,9 @@ int Engine::calculateScore(File * f, Race * itr, FileList * fls, SiteRace * srs,
 void Engine::setSpeedScale() {
   maxavgspeed = 1024;
   for (std::list<Race *>::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
-    for (std::list<SiteLogic *>::const_iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
-      for (std::list<SiteLogic *>::const_iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
-        int avgspeed = (*its)->getSite()->getAverageSpeed((*itd)->getSite()->getName());
+    for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
+      for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
+        int avgspeed = its->second->getSite()->getAverageSpeed(itd->second->getSite()->getName());
         if (avgspeed > maxavgspeed) maxavgspeed = avgspeed;
       }
     }
@@ -677,27 +661,19 @@ TransferJob * Engine::getTransferJob(std::string filename) const {
   return NULL;
 }
 
-std::list<Race *>::iterator Engine::getRacesIteratorBegin() {
+std::list<Race *>::const_iterator Engine::getRacesBegin() const {
   return allraces.begin();
 }
 
-std::list<Race *>::iterator Engine::getRacesIteratorEnd() {
+std::list<Race *>::const_iterator Engine::getRacesEnd() const {
   return allraces.end();
 }
 
-std::list<Race *>::const_iterator Engine::getRacesIteratorBegin() const {
-  return allraces.begin();
-}
-
-std::list<Race *>::const_iterator Engine::getRacesIteratorEnd() const {
-  return allraces.end();
-}
-
-std::list<TransferJob *>::const_iterator Engine::getTransferJobsIteratorBegin() const {
+std::list<TransferJob *>::const_iterator Engine::getTransferJobsBegin() const {
   return alltransferjobs.begin();
 }
 
-std::list<TransferJob *>::const_iterator Engine::getTransferJobsIteratorEnd() const {
+std::list<TransferJob *>::const_iterator Engine::getTransferJobsEnd() const {
   return alltransferjobs.end();
 }
 
@@ -706,9 +682,10 @@ void Engine::tick(int message) {
     if ((*it)->checksSinceLastUpdate() >= MAXCHECKSTIMEOUT) {
       global->getEventLog()->log("Engine", "No activity for " + util::int2Str(MAXCHECKSTIMEOUT) +
           " seconds, aborting race: " + (*it)->getName());
-      for (std::list<SiteLogic *>::const_iterator its = (*it)->begin(); its != (*it)->end(); its++) {
-        (*its)->raceLocalComplete((*its)->getRace((*it)->getName()));
+      for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator its = (*it)->begin(); its != (*it)->end(); its++) {
+        its->second->raceLocalComplete(its->first);
       }
+      (*it)->setTimeout();
       issueGlobalComplete(*it);
       currentraces.erase(it);
       break;
@@ -727,8 +704,8 @@ void Engine::tick(int message) {
 }
 
 void Engine::issueGlobalComplete(Race * race) {
-  for (std::list<SiteLogic *>::const_iterator itd = race->begin(); itd != race->end(); itd++) {
-    (*itd)->raceGlobalComplete();
+  for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator itd = race->begin(); itd != race->end(); itd++) {
+    itd->second->raceGlobalComplete();
   }
 }
 
@@ -741,4 +718,19 @@ void Engine::checkStartPoke() {
     global->getTickPoke()->startPoke(this, "Engine", POKEINTERVAL, 0);
     pokeregistered = true;
   }
+}
+
+Race * Engine::getCurrentRace(std::string release) const {
+  for (std::list<Race *>::const_iterator it = currentraces.begin(); it != currentraces.end(); it++) {
+    if ((*it)->getName() == release) {
+      return *it;
+    }
+  }
+  return NULL;
+}
+
+void Engine::addSiteToRace(Race * race, std::string site) {
+  SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(site);
+  SiteRace * sr = sl->addRace(race, race->getSection(), race->getName());
+  race->addSite(sr, sl);
 }

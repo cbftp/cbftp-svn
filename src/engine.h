@@ -44,6 +44,7 @@ class Engine : public EventReceiver {
     void issueGlobalComplete(Race *);
     void refreshPendingTransferList(TransferJob *);
     void checkStartPoke();
+    Race * getCurrentRace(std::string) const;
     bool pokeregistered;
     unsigned int dropped;
   public:
@@ -67,13 +68,12 @@ class Engine : public EventReceiver {
     int allTransferJobs() const;
     Race * getRace(std::string) const;
     TransferJob * getTransferJob(std::string) const;
-    std::list<Race *>::iterator getRacesIteratorBegin();
-    std::list<Race *>::iterator getRacesIteratorEnd();
-    std::list<Race *>::const_iterator getRacesIteratorBegin() const;
-    std::list<Race *>::const_iterator getRacesIteratorEnd() const;
-    std::list<TransferJob *>::const_iterator getTransferJobsIteratorBegin() const;
-    std::list<TransferJob *>::const_iterator getTransferJobsIteratorEnd() const;
+    std::list<Race *>::const_iterator getRacesBegin() const;
+    std::list<Race *>::const_iterator getRacesEnd() const;
+    std::list<TransferJob *>::const_iterator getTransferJobsBegin() const;
+    std::list<TransferJob *>::const_iterator getTransferJobsEnd() const;
     void tick(int);
+    void addSiteToRace(Race *, std::string);
 
     ScoreBoard * getScoreBoard() const;
 };
