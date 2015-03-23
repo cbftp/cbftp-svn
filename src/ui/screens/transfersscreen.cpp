@@ -52,10 +52,10 @@ void TransfersScreen::redraw() {
 
   y++;
   for (std::list<Pointer<TransferStatus> >::const_iterator it = tm->ongoingTransfersBegin(); it != tm->ongoingTransfersEnd(); it++) {
-    addTransferDetails(y++, *it);
+    addTransferDetails(y++, table, *it);
   }
   for (std::list<Pointer<TransferStatus> >::const_iterator it = tm->finishedTransfersBegin(); it != tm->finishedTransfersEnd(); it++) {
-    addTransferDetails(y++, *it);
+    addTransferDetails(y++, table, *it);
   }
   table.adjustLines(col - 3);
   bool highlight;
@@ -106,7 +106,7 @@ std::string TransfersScreen::getInfoLabel() const {
   return "TRANSFERS";
 }
 
-void TransfersScreen::addTransferDetails(unsigned int y, Pointer<TransferStatus> ts) {
+void TransfersScreen::addTransferDetails(unsigned int y, MenuSelectOption & mso, Pointer<TransferStatus> ts) {
   std::string route = ts->getSource() + " -> " + ts->getTarget();
   std::string speed = util::parseSize(ts->getSpeed() * SIZEPOWER) + "/s";
   std::string timespent = util::simpleTimeFormat(ts->getTimeSpent());
@@ -127,26 +127,26 @@ void TransfersScreen::addTransferDetails(unsigned int y, Pointer<TransferStatus>
   std::string transferred = util::parseSize(ts->targetSize()) + " / " +
       util::parseSize(ts->sourceSize());
   std::string path = ts->getSourcePath() + " -> " + ts->getTargetPath();
-  MenuSelectAdjustableLine * msal = table.addAdjustableLine();
+  MenuSelectAdjustableLine * msal = mso.addAdjustableLine();
   MenuSelectOptionTextButton * msotb;
-  msotb = table.addTextButtonNoContent(y, 1, "timestamp", ts->getTimestamp());
+  msotb = mso.addTextButtonNoContent(y, 1, "timestamp", ts->getTimestamp());
   msal->addElement((ResizableElement *)msotb, 3, RESIZE_REMOVE);
-  msotb = table.addTextButtonNoContent(y, 1, "timespent", timespent);
+  msotb = mso.addTextButtonNoContent(y, 1, "timespent", timespent);
   msal->addElement((ResizableElement *)msotb, 9, RESIZE_REMOVE);
-  msotb = table.addTextButtonNoContent(y, 30, "route", route);
+  msotb = mso.addTextButtonNoContent(y, 30, "route", route);
   msal->addElement((ResizableElement *)msotb, 8, RESIZE_REMOVE);
-  msotb = table.addTextButtonNoContent(y, 10, "path", path);
+  msotb = mso.addTextButtonNoContent(y, 10, "path", path);
   msal->addElement((ResizableElement *)msotb, 1, RESIZE_WITHDOTS);
-  msotb = table.addTextButtonNoContent(y, 10, "transferred", transferred);
+  msotb = mso.addTextButtonNoContent(y, 10, "transferred", transferred);
   msal->addElement((ResizableElement *)msotb, 4, RESIZE_CUTEND);
-  msotb = table.addTextButtonNoContent(y, 10, "filename", ts->getFile());
+  msotb = mso.addTextButtonNoContent(y, 10, "filename", ts->getFile());
   progressmap[(MenuSelectOptionElement *)msotb] = progresspercent;
   msal->addElement((ResizableElement *)msotb, 2, RESIZE_WITHLAST3, true);
-  msotb = table.addTextButtonNoContent(y, 60, "remaining", timeremaining);
+  msotb = mso.addTextButtonNoContent(y, 60, "remaining", timeremaining);
   msal->addElement((ResizableElement *)msotb, 5, RESIZE_REMOVE);
-  msotb = table.addTextButtonNoContent(y, 40, "speed", speed);
+  msotb = mso.addTextButtonNoContent(y, 40, "speed", speed);
   msal->addElement((ResizableElement *)msotb, 6, RESIZE_REMOVE);
-  msotb = table.addTextButtonNoContent(y, 50, "progress", progress);
+  msotb = mso.addTextButtonNoContent(y, 50, "progress", progress);
   msal->addElement((ResizableElement *)msotb, 7, RESIZE_REMOVE);
 
 }
