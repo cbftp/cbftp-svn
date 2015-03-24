@@ -26,6 +26,7 @@ public:
   TransferJob(SiteLogic *, std::string, FileList *, std::string, std::string);
   TransferJob(std::string, std::string, SiteLogic *, std::string, FileList *);
   TransferJob(SiteLogic *, std::string, FileList *, SiteLogic *, std::string, FileList *);
+  ~TransferJob();
   std::string getSrcFileName() const;
   std::string getDstFileName() const;
   int getType() const;

@@ -52,6 +52,7 @@ class Race : public EventReceiver {
     unsigned int best;
   public:
     Race(std::string, std::string);
+    ~Race();
     void addSite(SiteRace *, SiteLogic *);
     void removeSite(SiteRace *);
     void removeSite(SiteLogic *);

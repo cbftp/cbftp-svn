@@ -33,6 +33,12 @@ Race::Race(std::string release, std::string section) :
   setUndone();
 }
 
+Race::~Race() {
+  if (!isDone()) {
+    setDone();
+  }
+}
+
 void Race::addSite(SiteRace * siterace, SiteLogic * sitelogic) {
   sites.push_back(std::pair<SiteRace *, SiteLogic *>(siterace, sitelogic));
 }

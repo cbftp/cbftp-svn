@@ -58,6 +58,12 @@ TransferJob::TransferJob(SiteLogic * slsrc, std::string srcfile, FileList * srcf
   }
 }
 
+TransferJob::~TransferJob() {
+  if (!isDone()) {
+    setDone();
+  }
+}
+
 int TransferJob::classType() const {
   return COMMANDOWNER_TRANSFERJOB;
 }
