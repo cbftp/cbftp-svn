@@ -137,7 +137,11 @@ unsigned long long int Race::guessedFileSize(std::string subpath, std::string fi
   if (it2 == it->second.end()) {
     return bestunknownfilesizeestimate;
   }
-  return it2->second.getEstimatedSize();
+  unsigned long long int thisestimatedsize = it2->second.getEstimatedSize();
+  if (!thisestimatedsize) {
+    return bestunknownfilesizeestimate;
+  }
+  return thisestimatedsize;
 }
 
 std::map<std::string, unsigned long long int>::const_iterator Race::guessedFileListBegin(std::string subpath) const {
@@ -405,9 +409,12 @@ void Race::calculatePercentages() {
   unsigned int localworst = 100;
   unsigned int localbest = 0;
   for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator it = begin(); it != end(); it++) {
-    unsigned int percentagecomplete = maxnumfilessiteprogress
-        ? (it->first->getNumUploadedFiles() * 100) / maxnumfilessiteprogress
+    unsigned int percentagecomplete = guessedtotalfilesize
+        ? (it->first->getTotalFileSize() * 100) / guessedtotalfilesize
         : 0;
+    if (percentagecomplete > 100) {
+      percentagecomplete = 100;
+    }
     totalpercentage += percentagecomplete;
     if (percentagecomplete < localworst) {
       localworst = percentagecomplete;

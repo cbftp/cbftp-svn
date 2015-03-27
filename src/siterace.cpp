@@ -19,6 +19,7 @@ SiteRace::SiteRace(Race * race, std::string sitename, std::string section, std::
   sitename(sitename),
   done(false),
   maxfilesize(0),
+  totalfilesize(0),
   numuploadedfiles(0)
 {
   recentlyvisited.push_back("");
@@ -138,9 +139,11 @@ void SiteRace::updateNumFilesUploaded() {
   unsigned int sum = 0;
   unsigned long long int maxsize = 0;
   unsigned long long int maxsizewithfiles = 0;
+  unsigned long long int aggregatedfilesize = 0;
   for (it = filelists.begin(); it != filelists.end(); it++) {
     FileList * fl = it->second;
     sum += fl->getNumUploadedFiles();
+    aggregatedfilesize += fl->getTotalFileSize();
     if (fl->hasSFV()) {
       race->reportSFV(this, it->first);
     }
@@ -159,6 +162,7 @@ void SiteRace::updateNumFilesUploaded() {
     this->maxfilesize = maxsize;
   }
   numuploadedfiles = sum;
+  totalfilesize = aggregatedfilesize;
   race->updateSiteProgress(sum);
 }
 
@@ -194,6 +198,10 @@ bool SiteRace::sizeEstimated(FileList * fl) const {
 
 unsigned long long int SiteRace::getMaxFileSize() const {
   return maxfilesize;
+}
+
+unsigned long long int SiteRace::getTotalFileSize() const {
+  return totalfilesize;
 }
 
 bool SiteRace::isDone() const {

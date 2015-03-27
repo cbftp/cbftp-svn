@@ -297,7 +297,7 @@ void TransferMonitor::finish() {
       case TM_TYPE_LOCAL: {
         File * srcfile = fls->getFile(sfile);
         if (srcfile) {
-          long int size = srcfile->getSize();
+          unsigned long long int size = srcfile->getSize();
           unsigned int speed = size / span;
           ts->setTargetSize(size);
           ts->setSpeed(speed);

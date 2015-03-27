@@ -22,6 +22,7 @@ class FileList {
     int owned;
     int ownpercentage;
     unsigned long long int maxfilesize;
+    unsigned long long int totalfilesize;
     unsigned int uploadedfiles;
     void editOwnedFileCount(bool);
     void setChanged();
@@ -31,7 +32,7 @@ class FileList {
     bool updateFile(std::string, int);
     void touchFile(std::string, std::string);
     void touchFile(std::string, std::string, bool);
-    void setFileUpdateFlag(std::string, long int, unsigned int, Site *, std::string);
+    void setFileUpdateFlag(std::string, unsigned long long int, unsigned int, Site *, std::string);
     File * getFile(std::string) const;
     bool isFilled() const;
     void setFilled();
@@ -41,6 +42,7 @@ class FileList {
     std::map<std::string, File *>::const_iterator end() const;
     bool contains(std::string) const;
     unsigned int getSize() const;
+    unsigned long long int getTotalFileSize() const;
     unsigned int getNumUploadedFiles() const;
     std::string getPath() const;
     bool hasSFV() const;

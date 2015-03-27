@@ -24,6 +24,7 @@ FileList::FileList(std::string username, std::string path) {
   locked = false;
   listchanged = false;
   lastchangedstamp = 0;
+  totalfilesize = 0;
 }
 
 FileList::~FileList() {
@@ -42,10 +43,15 @@ bool FileList::updateFile(std::string start, int touch) {
   File * updatefile;
   if ((updatefile = getFile(name)) != NULL) {
     if (updatefile->getSize() == 0 && file->getSize() > 0 && !file->isDirectory()) uploadedfiles++;
-    if (updatefile->setSize(file->getSize())) {
+    unsigned long long int oldsize = updatefile->getSize();
+    unsigned long long int newsize = file->getSize();
+    if (updatefile->setSize(newsize)) {
+      if (!updatefile->isDirectory()) {
+        totalfilesize += newsize - oldsize;
+      }
       setChanged();
     }
-    if (file->getSize() > maxfilesize) maxfilesize = file->getSize();
+    if (newsize > maxfilesize) maxfilesize = newsize;
     if (updatefile->getOwner().compare(file->getOwner()) != 0) {
       if (file->getOwner().compare(username) == 0) {
         editOwnedFileCount(true);
@@ -76,8 +82,12 @@ bool FileList::updateFile(std::string start, int touch) {
   }
   else {
     files[name] = file;
-    if (file->getSize() > 0 && !file->isDirectory()) uploadedfiles++;
-    if (file->getSize() > maxfilesize) maxfilesize = file->getSize();
+    unsigned long long int filesize = file->getSize();
+    if (filesize > 0 && !file->isDirectory()) {
+      uploadedfiles++;
+      totalfilesize += filesize;
+    }
+    if (filesize > maxfilesize) maxfilesize = filesize;
     if (file->getOwner().compare(username) == 0) {
       editOwnedFileCount(true);
     }
@@ -108,10 +118,12 @@ void FileList::touchFile(std::string name, std::string user, bool upload) {
   }
 }
 
-void FileList::setFileUpdateFlag(std::string name, long int size, unsigned int speed, Site * src, std::string dst) {
+void FileList::setFileUpdateFlag(std::string name, unsigned long long int size, unsigned int speed, Site * src, std::string dst) {
   File * file;
   if ((file = getFile(name)) != NULL) {
+    unsigned long long int oldsize = file->getSize();
     if (file->setSize(size)) {
+      totalfilesize += size - oldsize;
       setChanged();
     }
     file->setUpdateFlag(src, dst, speed);
@@ -158,6 +170,10 @@ unsigned int FileList::getSize() const {
   return files.size();
 }
 
+unsigned long long int FileList::getTotalFileSize() const {
+  return totalfilesize;
+}
+
 unsigned int FileList::getNumUploadedFiles() const {
   return uploadedfiles;
 }
@@ -194,7 +210,10 @@ void FileList::cleanSweep(int touch) {
       if (f->getOwner().compare(username) == 0) {
         editOwnedFileCount(false);
       }
-      if (f->getSize() > 0 && !f->isDirectory()) uploadedfiles--;
+      if (f->getSize() > 0 && !f->isDirectory()) {
+        uploadedfiles--;
+        totalfilesize -= f->getSize();
+      }
       eraselist.push_back(it->first);
       delete f;
     }
@@ -218,6 +237,7 @@ void FileList::flush() {
   }
   files.clear();
   maxfilesize = 0;
+  totalfilesize = 0;
   uploadedfiles = 0;  
   owned = 0;
   ownpercentage = 0;

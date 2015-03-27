@@ -27,6 +27,7 @@ class SiteRace : public CommandOwner {
     std::map<FileList *, int> sfvobservestarts;
     std::map<std::string, bool> visitedpaths;
     unsigned long long int maxfilesize;
+    unsigned long long int totalfilesize;
     unsigned int numuploadedfiles;
     void updateNumFilesUploaded();
     void addNewDirectories();
@@ -52,6 +53,7 @@ class SiteRace : public CommandOwner {
     bool sizeEstimated(FileList *) const;
     unsigned int getNumUploadedFiles() const;
     unsigned long long int getMaxFileSize() const;
+    unsigned long long int getTotalFileSize() const;
     bool isDone() const;
     bool isGlobalDone() const;
     void complete(bool);
