@@ -21,17 +21,17 @@ extern GlobalContext * global;
 RaceStatusScreen::RaceStatusScreen(Ui * ui) {
   this->ui = ui;
   defaultlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - A[B]ort race";
-  abortedlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [D]elete on all sites";
+  finishedlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [D]elete on all sites";
 }
 
 void RaceStatusScreen::initialize(unsigned int row, unsigned int col, std::string release) {
   this->release = release;
   race = global->getEngine()->getRace(release);
-  if (race->getStatus() != RACE_STATUS_ABORTED) {
-    currentlegendtext = defaultlegendtext;
+  if (race->getStatus() == RACE_STATUS_RUNNING) {
+    finished = false;
   }
   else {
-    currentlegendtext = abortedlegendtext;
+    finished = true;
   }
   autoupdate = true;
   smalldirs = false;
@@ -195,6 +195,12 @@ void RaceStatusScreen::redraw() {
 }
 
 void RaceStatusScreen::update() {
+  if (!finished) {
+    if (race->getStatus() != RACE_STATUS_RUNNING) {
+      finished = true;
+      ui->setLegend();
+    }
+  }
   std::list<std::string> currsubpaths = race->getSubPaths();
   unsigned int sumguessedsize = 0;
   bool haslargepath = false;
@@ -286,7 +292,7 @@ void RaceStatusScreen::command(std::string command, std::string arg) {
     else if (awaitingabort) {
       global->getEngine()->abortRace(race->getName());
       awaitingabort = false;
-      currentlegendtext = abortedlegendtext;
+      finished = true;
       ui->setLegend();
     }
     else if (awaitingdelete) {
@@ -362,7 +368,7 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
       }
       break;
     case 'D':
-      if (race->getStatus() == RACE_STATUS_ABORTED) {
+      if (race->getStatus() != RACE_STATUS_RUNNING) {
         awaitingdelete = true;
         ui->goConfirmation("Do you really want to delete " + release + " on all involved sites");
       }
@@ -427,7 +433,7 @@ char RaceStatusScreen::getFileChar(bool exists, bool owner, bool upload, bool do
 }
 
 std::string RaceStatusScreen::getLegendText() const {
-  return currentlegendtext;
+  return finished ? finishedlegendtext : defaultlegendtext;
 }
 
 std::string RaceStatusScreen::getInfoLabel() const {

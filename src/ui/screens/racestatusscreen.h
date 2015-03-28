@@ -35,6 +35,6 @@ private:
   std::map<std::string, std::string> filenametags;
   std::string removesite;
   std::string defaultlegendtext;
-  std::string abortedlegendtext;
-  std::string currentlegendtext;
+  std::string finishedlegendtext;
+  bool finished;
 };
