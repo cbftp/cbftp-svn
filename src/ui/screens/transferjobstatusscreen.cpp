@@ -40,22 +40,7 @@ void TransferJobStatusScreen::redraw() {
   int y = 1;
   ui->printStr(y, 1, "Started: " + transferjob->timeStarted());
   ui->printStr(y, 20, "Type: " + transferjob->typeString());
-  std::string route;
-  switch (transferjob->getType()) {
-    case TRANSFERJOB_DOWNLOAD:
-    case TRANSFERJOB_DOWNLOAD_FILE:
-      route = transferjob->getSrc()->getSite()->getName() + " -> /\\";
-      break;
-    case TRANSFERJOB_UPLOAD:
-    case TRANSFERJOB_UPLOAD_FILE:
-      route = "/\\ -> " + transferjob->getDst()->getSite()->getName();
-      break;
-    case TRANSFERJOB_FXP:
-    case TRANSFERJOB_FXP_FILE:
-      route = transferjob->getSrc()->getSite()->getName() + " -> " +
-      transferjob->getDst()->getSite()->getName();
-      break;
-  }
+  std::string route = getRoute(transferjob);
   bool aborted = transferjob->isAborted();
   ui->printStr(y, 38, "Route: " + route);
   ui->printStr(y, 60, std::string("Status: ") + (transferjob->isDone() ? (aborted ? "Aborted" : "Completed") : "In progress"));
@@ -238,4 +223,24 @@ void TransferJobStatusScreen::addTransferDetails(unsigned int y, std::string tim
   msal->addElement((ResizableElement *)msotb, 6, RESIZE_REMOVE);
   msotb = table.addTextButtonNoContent(y, 50, "progress", progress);
   msal->addElement((ResizableElement *)msotb, 7, RESIZE_REMOVE);
+}
+
+std::string TransferJobStatusScreen::getRoute(TransferJob * tj) {
+  std::string route;
+  switch (tj->getType()) {
+    case TRANSFERJOB_DOWNLOAD:
+    case TRANSFERJOB_DOWNLOAD_FILE:
+      route = tj->getSrc()->getSite()->getName() + " -> /\\";
+      break;
+    case TRANSFERJOB_UPLOAD:
+    case TRANSFERJOB_UPLOAD_FILE:
+      route = "/\\ -> " + tj->getDst()->getSite()->getName();
+      break;
+    case TRANSFERJOB_FXP:
+    case TRANSFERJOB_FXP_FILE:
+      route = tj->getSrc()->getSite()->getName() + " -> " +
+      tj->getDst()->getSite()->getName();
+      break;
+  }
+  return route;
 }

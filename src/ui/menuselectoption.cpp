@@ -299,6 +299,10 @@ unsigned int MenuSelectOption::size() const {
   return options.size();
 }
 
+unsigned int MenuSelectOption::linesSize() const {
+  return adjustablelines.size();
+}
+
 void MenuSelectOption::adjustLines(unsigned int linesize) {
   if (!adjustablelines.size()) {
     return;

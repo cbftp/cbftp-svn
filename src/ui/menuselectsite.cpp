@@ -80,7 +80,7 @@ void MenuSelectSite::enterFocusFrom(int dir) {
 std::string MenuSelectSite::getSiteLine(unsigned int index) const {
   Site * site = sites[index].getSite();
   SiteLogic * sitelogic = sites[index].getSiteLogic();
-  std::string line = " ";
+  std::string line = "";
   std::string add = "";
   int linelen;
   int addlen;
@@ -108,7 +108,7 @@ std::string MenuSelectSite::getSiteLine(unsigned int index) const {
   linelen = line.length();
   addlen = add.length();
   for (int i = 0; i < 34 - linelen - addlen; i++) line.append(" ");
-  line.append(add + " ");
+  line.append(add);
   return line;
 }
 

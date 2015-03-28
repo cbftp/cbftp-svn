@@ -23,6 +23,7 @@ public:
   void keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
+  static std::string getRoute(TransferJob *);
 private:
   void addTransferDetails(unsigned int, Pointer<TransferStatus>);
   void addTransferDetails(unsigned int, std::string, std::string, std::string,

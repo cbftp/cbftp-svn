@@ -18,6 +18,9 @@
 #include "../focusablearea.h"
 #include "../menuselectsiteelement.h"
 
+#include "allracesscreen.h"
+#include "alltransferjobsscreen.h"
+
 extern GlobalContext * global;
 
 MainScreen::MainScreen(Ui * ui) {
@@ -25,8 +28,8 @@ MainScreen::MainScreen(Ui * ui) {
 }
 
 void MainScreen::initialize(unsigned int row, unsigned int col) {
-  msslegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [G]lobal settings - Event [l]og - [t]ransfers - [q]uick jump - toggle [U]dp";
-  msolegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [G]lobal settings - Event [l]og - [t]ransfers - toggle [U]dp";
+  siteextralegendtext = " - [b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [q]uick jump";
+  baselegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [G]lobal settings - Event [l]og - [t]ransfers - All [r]aces - All transfer[j]obs - toggle [U]dp";
   gotolegendtext = "[Any] Go to matching first letter in site list - [Esc] Cancel";
   autoupdate = true;
   gotomode = false;
@@ -53,47 +56,51 @@ void MainScreen::redraw() {
   ui->erase();
   ui->hideCursor();
   numsitestext = "Sites: " + util::int2Str(global->getSiteManager()->getNumSites());
-  bool listraces = global->getEngine()->allRaces();
-  bool listtransferjobs = global->getEngine()->allTransferJobs();
-  unsigned int irow = 1;
+  int listraces = global->getEngine()->allRaces();
+  int listtransferjobs = global->getEngine()->allTransferJobs();
+  unsigned int irow = 0;
   if (listraces) {
     mss.makeLeavableUp();
     msot.makeLeavableUp();
     mso.clear();
-    ui->printStr(irow++, 1, "Section  Name");
+    AllRacesScreen::addRaceTableHeader(irow++, mso, std::string("RACE NAME") + (listraces > 3 ? " (Showing latest 3)" : ""));
     std::list<Race *>::const_iterator it;
-    for (it = global->getEngine()->getRacesBegin(); it != global->getEngine()->getRacesEnd(); it++) {
-      std::string release = (*it)->getName();
-      mso.addCheckBox(irow++, 1, release, release, false);
+    int i = 0;
+    for (it = --global->getEngine()->getRacesEnd(); it != --global->getEngine()->getRacesBegin() && i < 3; it--, i++) {
+      AllRacesScreen::addRaceDetails(irow++, mso, *it);
     }
+    mso.checkPointer();
+    mso.adjustLines(col - 3);
     irow++;
   }
   if (listtransferjobs) {
     mss.makeLeavableUp();
     msot.clear();
-    ui->printStr(irow++, 1, "Type  Name");
+    AllTransferJobsScreen::addJobTableHeader(irow++, msot, std::string("TRANSFER JOB NAME") + (listtransferjobs > 3 ? " (Showing latest 3)" : ""));
     std::list<TransferJob *>::const_iterator it;
-    for (it = global->getEngine()->getTransferJobsBegin(); it != global->getEngine()->getTransferJobsEnd(); it++) {
-          std::string filename = (*it)->getSrcFileName();
-          msot.addCheckBox(irow++, 1, filename, filename, false);
+    int i = 0;
+    for (it = --global->getEngine()->getTransferJobsEnd(); it != --global->getEngine()->getTransferJobsBegin() && i < 3; it--, i++) {
+      AllTransferJobsScreen::addJobDetails(irow++, msot, *it);
     }
+    msot.checkPointer();
+    msot.adjustLines(col - 3);
     irow++;
   }
   if (global->getSiteManager()->getNumSites()) {
-    ui->printStr(irow, 1, "Site    Logins  Uploads  Downloads");
+    ui->printStr(irow, 1, "SITE    LOGINS  UPLOADS  DOWNLOADS");
   }
   else {
     ui->printStr(irow, 1, "Press 'A' to add a site");
   }
   int x = 1;
-  int y = irow + 2;
+  int y = ++irow;
   mss.prepareRefill();
   for (std::vector<Site *>::const_iterator it = global->getSiteManager()->getSitesIteratorBegin(); it != global->getSiteManager()->getSitesIteratorEnd(); it++) {
     mss.add(*it, y++, x);
   }
   mss.checkPointer();
   unsigned int position = mss.getSelectionPointer();
-  sitestartrow = irow + 2;
+  sitestartrow = irow;
   unsigned int pagerows = (unsigned int) (row - sitestartrow) / 2;
   if (position < currentviewspan || position >= currentviewspan + row - sitestartrow) {
     if (position < pagerows) {
@@ -133,18 +140,8 @@ void MainScreen::redraw() {
   else {
     mss.makeLeavableUp(false);
   }
-  update();
-}
-
-void MainScreen::update() {
-  int newcurrentraces = global->getEngine()->currentRaces();
-  int newcurrenttransferjobs = global->getEngine()->currentTransferJobs();
-  if (newcurrentraces != currentraces || newcurrenttransferjobs != currenttransferjobs) {
-    currentraces = newcurrentraces;
-    currenttransferjobs = newcurrenttransferjobs;
-    redraw();
-    return;
-  }
+  int currentraces = global->getEngine()->currentRaces();
+  int currenttransferjobs = global->getEngine()->currentTransferJobs();
   if (currentraces) {
     activeracestext = "Active races: " + util::int2Str(currentraces) + "  ";
   }
@@ -158,47 +155,27 @@ void MainScreen::update() {
     activejobstext = "";
   }
   bool highlight;
-  unsigned int selected = mso.getSelectionPointer();
   for (unsigned int i = 0; i < mso.size(); i++) {
+    ResizableElement * re = (ResizableElement *) mso.getElement(i);
     highlight = false;
-    MenuSelectOptionElement * msoe = mso.getElement(i);
-    Race * race = global->getEngine()->getRace(msoe->getIdentifier());
-    if (mso.isFocused() && selected == i) {
+    if (mso.isFocused() && mso.getSelectionPointer() == i && listraces) {
       highlight = true;
     }
-    ui->printStr(msoe->getRow(), msoe->getCol(), race->getSection());
-    ui->printStr(msoe->getRow(), msoe->getCol() + 9, msoe->getLabelText(), highlight);
+    if (re->isVisible()) {
+      ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
+    }
   }
-  selected = msot.getSelectionPointer();
   for (unsigned int i = 0; i < msot.size(); i++) {
+    ResizableElement * re = (ResizableElement *) msot.getElement(i);
     highlight = false;
-    MenuSelectOptionElement * msoe = msot.getElement(i);
-    TransferJob * transferjob = global->getEngine()->getTransferJob(msoe->getIdentifier());
-    std::string type = "FXP";
-    switch (transferjob->getType()) {
-      case TRANSFERJOB_DOWNLOAD:
-        type = "DL";
-        break;
-      case TRANSFERJOB_UPLOAD:
-        type = "UL";
-        break;
-      case TRANSFERJOB_DOWNLOAD_FILE:
-        type = "DLF";
-        break;
-      case TRANSFERJOB_UPLOAD_FILE:
-        type = "ULF";
-        break;
-      case TRANSFERJOB_FXP_FILE:
-        type = "FXPF";
-        break;
-    }
-    if (msot.isFocused() && selected == i) {
+    if (msot.isFocused() && msot.getSelectionPointer() == i && listtransferjobs) {
       highlight = true;
     }
-    ui->printStr(msoe->getRow(), msoe->getCol(), type);
-    ui->printStr(msoe->getRow(), msoe->getCol() + 6, transferjob->getSrcFileName(), highlight);
+    if (re->isVisible()) {
+      ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
+    }
   }
-  selected = mss.getSelectionPointer();
+  unsigned int selected = mss.getSelectionPointer();
   for (unsigned int i = 0; i + currentviewspan < mss.size() && i < row - sitestartrow; i++) {
     unsigned int listi = i + currentviewspan;
     highlight = false;
@@ -207,6 +184,11 @@ void MainScreen::update() {
     }
     ui->printStr(i + sitestartrow, 1, mss.getSiteLine(listi), highlight);
   }
+
+}
+
+void MainScreen::update() {
+  redraw();
 }
 
 void MainScreen::command(std::string command) {
@@ -298,11 +280,11 @@ void MainScreen::keyPressed(unsigned int ch) {
         ui->goSiteStatus(mss.getSite()->getName());
       }
       else if (mso.isFocused() && mso.size() > 0) {
-        target = mso.getElement(mso.getSelectionPointer())->getIdentifier();
+        target = mso.getElement(mso.getSelectionPointer())->getContentText();
         ui->goRaceStatus(target);
       }
       else if (msot.isFocused()) {
-        target = msot.getElement(msot.getSelectionPointer())->getIdentifier();
+        target = msot.getElement(msot.getSelectionPointer())->getContentText();
         ui->goTransferJobStatus(target);
       }
       break;
@@ -317,6 +299,12 @@ void MainScreen::keyPressed(unsigned int ch) {
       break;
     case 't':
       ui->goTransfers();
+      break;
+    case 'r':
+      ui->goAllRaces();
+      break;
+    case 'j':
+      ui->goAllTransferJobs();
       break;
     case 'U':
     {
@@ -411,9 +399,9 @@ std::string MainScreen::getLegendText() const {
     return gotolegendtext;
   }
   if (focusedarea == &mss) {
-    return msslegendtext;
+    return baselegendtext + siteextralegendtext;
   }
-  return msolegendtext;
+  return baselegendtext;
 }
 
 std::string MainScreen::getInfoLabel() const {

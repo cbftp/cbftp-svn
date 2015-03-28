@@ -50,6 +50,7 @@ class MenuSelectOption : public FocusableArea {
     unsigned int getSelectionPointer() const;
     bool activateSelected();
     unsigned int size() const;
+    unsigned int linesSize() const;
     void adjustLines(unsigned int);
     void enterFocusFrom(int);
     void clear();

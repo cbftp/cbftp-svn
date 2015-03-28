@@ -23,8 +23,8 @@ private:
   unsigned int sitestartrow;
   int currentraces;
   int currenttransferjobs;
-  std::string msolegendtext;
-  std::string msslegendtext;
+  std::string baselegendtext;
+  std::string siteextralegendtext;
   std::string gotolegendtext;
   std::string activeracestext;
   std::string activejobstext;
