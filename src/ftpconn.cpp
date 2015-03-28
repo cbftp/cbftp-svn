@@ -36,7 +36,7 @@ FTPConn::FTPConn(SiteLogic * sl, int id) {
   protectedmode = PROT_UNSET;
   sscnmode = false;
   mkdtarget = false;
-  currentpath = "";
+  currentpath = "/";
   state = STATE_DISCONNECTED;
 }
 
@@ -72,7 +72,7 @@ void FTPConn::login() {
   mkdtarget = false;
   databufpos = 0;
   processing = true;
-  currentpath = "";
+  currentpath = "/";
   Proxy * proxy = NULL;
   int proxytype = site->getProxyType();
   if (proxytype == SITE_PROXY_USE) {
