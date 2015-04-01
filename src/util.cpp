@@ -56,7 +56,7 @@ std::string simpleTimeFormat(int seconds) {
   if (seconds >= 3600) {
     int hours = seconds / 3600;
     time += int2Str(hours) + "h";
-    seconds = seconds % 86400;
+    seconds = seconds % 3600;
   }
   if (seconds >= 60) {
     int minutes = seconds / 60;
