@@ -23,8 +23,10 @@
 #include "scopelock.h"
 #include "util.h"
 
+#include "pollingepoll.h"
+
 IOManager::IOManager() :
-  epollfd(epoll_create(100)),
+  polling(new PollingEPoll()),
   wm(global->getWorkManager()),
   blockpool(wm->getBlockPool()),
   blocksize(blockpool->blockSize()),
@@ -118,10 +120,7 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int
   connecttimemap[sockid] = 0;
   sockfdidmap[sockfd] = sockid;
   *sockidp = sockid;
-  struct epoll_event event;
-  event.events = EPOLLOUT;
-  event.data.fd = sockfd;
-  epoll_ctl(epollfd, EPOLL_CTL_ADD, sockfd, &event);
+  polling->addFDOut(sockfd);
   return 0;
 }
 
@@ -166,10 +165,7 @@ int IOManager::registerTCPServerSocket(EventReceiver * er, int port, bool local)
   socketinfomap[sockid].type = FD_TCP_SERVER;
   socketinfomap[sockid].receiver = er;
   sockfdidmap[sockfd] = sockid;
-  struct epoll_event event;
-  event.events = EPOLLIN;
-  event.data.fd = sockfd;
-  epoll_ctl(epollfd, EPOLL_CTL_ADD, sockfd, &event);
+  polling->addFDIn(sockfd);
   return sockid;
 }
 
@@ -177,10 +173,7 @@ void IOManager::registerTCPServerClientSocket(EventReceiver * er, int sockid) {
   ScopeLock lock(socketinfomaplock);
   socketinfomap[sockid].receiver = er;
   int sockfd = socketinfomap[sockid].fd;
-  struct epoll_event event;
-  event.events = EPOLLIN;
-  event.data.fd = sockfd;
-  epoll_ctl(epollfd, EPOLL_CTL_ADD, sockfd, &event);
+  polling->addFDIn(sockfd);
 }
 
 void IOManager::registerStdin(EventReceiver * er) {
@@ -190,10 +183,7 @@ void IOManager::registerStdin(EventReceiver * er) {
   socketinfomap[sockid].type = FD_KEYBOARD;
   socketinfomap[sockid].receiver = er;
   sockfdidmap[STDIN_FILENO] = sockid;
-  struct epoll_event event;
-  event.events = EPOLLIN;
-  event.data.fd = STDIN_FILENO;
-  epoll_ctl(epollfd, EPOLL_CTL_ADD, STDIN_FILENO, &event);
+  polling->addFDIn(STDIN_FILENO);
 }
 
 int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
@@ -225,10 +215,7 @@ int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
   socketinfomap[sockid].type = FD_UDP;
   socketinfomap[sockid].receiver = er;
   sockfdidmap[sockfd] = sockid;
-  struct epoll_event event;
-  event.events = EPOLLIN;
-  event.data.fd = sockfd;
-  epoll_ctl(epollfd, EPOLL_CTL_ADD, sockfd, &event);
+  polling->addFDIn(sockfd);
   return sockid;
 }
 
@@ -265,10 +252,7 @@ void IOManager::negotiateSSL(int id, EventReceiver * er) {
     return;
   }
   SocketInfo & socketinfo = it->second;
-  struct epoll_event event;
-  event.events = EPOLLIN;
-  event.data.fd = socketinfo.fd;
-  epoll_ctl(epollfd, EPOLL_CTL_DEL, socketinfo.fd, &event);
+  polling->removeFDIn(socketinfo.fd);
   SSL * ssl = SSL_new(global->getSSLCTX());
   SSL_set_mode(ssl, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
   socketinfo.ssl = ssl;
@@ -303,8 +287,7 @@ void IOManager::negotiateSSL(int id, EventReceiver * er) {
       closeSocketIntern(id);
     }
   }
-  event.events = EPOLLIN;
-  epoll_ctl(epollfd, EPOLL_CTL_ADD, socketinfo.fd, &event);
+  polling->addFDIn(socketinfo.fd);
 }
 
 void IOManager::forceSSLhandshake(int id) {
@@ -350,10 +333,7 @@ bool IOManager::investigateSSLError(int error, int sockid, int b_recv) {
       return true;
     case SSL_ERROR_SYSCALL:
       if (errno == EAGAIN) {
-        struct epoll_event event;
-        event.events = EPOLLOUT;
-        event.data.fd = socketinfo.fd;
-        epoll_ctl(epollfd, EPOLL_CTL_MOD, socketinfo.fd, &event);
+        polling->setFDOut(socketinfo.fd);
         return true;
       }
       break;
@@ -460,14 +440,10 @@ std::string IOManager::getSocketAddress(int id) const {
 }
 
 void IOManager::runInstance() {
-  struct epoll_event * events;
-  events = (epoll_event *) calloc(MAXEVENTS, sizeof (struct epoll_event));
-  int fds;
   int currfd;
   int newfd;
   int sockid;
   int b_recv;
-  int i;
   char * buf;
   SSL * ssl;
   struct sockaddr addr;
@@ -475,14 +451,18 @@ void IOManager::runInstance() {
   EventReceiver * er;
   std::map<int, SocketInfo>::iterator it;
   std::map<int, int>::iterator idit;
+  std::list<std::pair<int, PollEvent> > fds;
+  std::list<std::pair<int, PollEvent> >::const_iterator pollit;
+  PollEvent pollevent;
   ScopeLock lock(socketinfomaplock);
   while(1) {
     lock.unlock();
     blockpool->awaitFreeBlocks();
-    fds = epoll_wait(epollfd, events, MAXEVENTS, -1);
+    polling->wait(fds);
     lock.lock();
-    for (i = 0; i < fds; i++) {
-      currfd = events[i].data.fd;
+    for (pollit = fds.begin(); pollit != fds.end(); pollit++) {
+      currfd = pollit->first;
+      pollevent = pollit->second;
       idit = sockfdidmap.find(currfd);
       if (idit == sockfdidmap.end()) {
         continue;
@@ -494,11 +474,8 @@ void IOManager::runInstance() {
       }
       SocketInfo & socketinfo = it->second;
       er = socketinfo.receiver;
-      if (events[i].events & EPOLLOUT) {
-        struct epoll_event event;
-        event.events = EPOLLIN;
-        event.data.fd = currfd;
-        epoll_ctl(epollfd, EPOLL_CTL_MOD, currfd, &event);
+      if (pollevent == POLLEVENT_OUT) {
+        polling->setFDIn(currfd);
         if (socketinfo.type == FD_TCP_CONNECTING) {
           unsigned int error;
           unsigned int errorlen = sizeof(error);
@@ -511,9 +488,8 @@ void IOManager::runInstance() {
           socketinfo.type = FD_TCP_PLAIN;
           connecttimemap.erase(sockid);
           wm->dispatchEventConnected(er);
-          continue;
         }
-        events[i].events |= EPOLLIN;
+        continue;
       }
       switch (socketinfo.type) {
         case FD_KEYBOARD: // keyboard
@@ -523,7 +499,7 @@ void IOManager::runInstance() {
           break;
         case FD_TCP_PLAIN: // tcp plain
         case FD_TCP_PLAIN_LISTEN:
-          if (events[i].events & EPOLLIN) { // incoming data
+          if (pollevent == POLLEVENT_IN) { // incoming data
             buf = blockpool->getBlock();
             b_recv = recv(currfd, buf, blocksize, 0);
             if (b_recv == 0) {
@@ -550,7 +526,7 @@ void IOManager::runInstance() {
         case FD_TCP_SSL_NEG_REDO_CONN: // tcp ssl redo connect
         case FD_TCP_SSL_NEG_REDO_ACCEPT: // tcp ssl redo accept
         case FD_TCP_SSL_NEG_REDO_HANDSHAKE: // tcp ssl redo handshake
-          if (events[i].events & EPOLLIN) { // incoming data
+          if (pollevent == POLLEVENT_IN) { // incoming data
             ssl = socketinfo.ssl;
             if (socketinfo.type == FD_TCP_SSL_NEG_REDO_CONN) {
               b_recv = SSL_connect(ssl);
@@ -591,7 +567,7 @@ void IOManager::runInstance() {
           }
           break;
         case FD_TCP_SSL_NEG_REDO_WRITE: // tcp ssl redo write
-          if (events[i].events & EPOLLIN) { // incoming data
+          if (pollevent == POLLEVENT_IN) { // incoming data
             ssl = socketinfo.ssl;
             DataBlock sendblock = socketinfo.sendqueue.front();
             b_recv = SSL_write(ssl, sendblock.data(), sendblock.dataLength());
@@ -625,7 +601,7 @@ void IOManager::runInstance() {
           }
           break;
         case FD_TCP_SSL: // tcp ssl
-          if (events[i].events & EPOLLIN) { // incoming data
+          if (pollevent == POLLEVENT_IN) { // incoming data
             ssl = socketinfo.ssl;
             while (true) {
               buf = blockpool->getBlock();
@@ -649,14 +625,14 @@ void IOManager::runInstance() {
           }
           break;
         case FD_UDP: // udp
-          if (events[i].events & EPOLLIN) { // incoming data
+          if (pollevent == POLLEVENT_IN) { // incoming data
             buf = blockpool->getBlock();
             b_recv = recvfrom(currfd, buf, blocksize, 0, (struct sockaddr *) 0, (socklen_t *) 0);
             wm->dispatchFDData(er, buf, b_recv);
           }
           break;
         case FD_TCP_SERVER: // tcp server
-          if (events[i].events & EPOLLIN) { // incoming connection
+          if (pollevent == POLLEVENT_IN) { // incoming connection
             newfd = accept(currfd, &addr, &addrlen);
             fcntl(newfd, F_SETFL, O_NONBLOCK);
             int newsockid = sockidcounter++;
@@ -667,7 +643,7 @@ void IOManager::runInstance() {
           break;
       }
     }
-    if (!fds) { // timeout occurred
+    if (!fds.size()) { // timeout occurred
 
     }
   }
