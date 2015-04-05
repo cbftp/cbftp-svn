@@ -1,7 +1,6 @@
 #include "iomanager.h"
 
 #include <unistd.h>
-#include <sys/epoll.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -23,10 +22,18 @@
 #include "scopelock.h"
 #include "util.h"
 
+#ifdef __linux
 #include "pollingepoll.h"
+#else
+#include "pollingkqueue.h"
+#endif
 
 IOManager::IOManager() :
+#ifdef __linux
   polling(new PollingEPoll()),
+#else
+  polling(new PollingKQueue()),
+#endif
   wm(global->getWorkManager()),
   blockpool(wm->getBlockPool()),
   blocksize(blockpool->blockSize()),
