@@ -16,8 +16,8 @@ static void sslLockingCallback(int mode, int n, const char *, int) {
   }
 }
 
-static pthread_t sslThreadIdCallback() {
-  return pthread_self();
+static unsigned long sslThreadIdCallback() {
+  return (unsigned long) pthread_self();
 }
 
 GlobalContext::GlobalContext() {
