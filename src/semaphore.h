@@ -1,5 +1,7 @@
 #pragma once
 
+#ifndef _APPLE__
+
 #include <semaphore.h>
 
 class Semaphore {
@@ -19,3 +21,27 @@ public:
 private:
   sem_t semaphore;
 };
+
+#else
+
+#include <dispatch/dispatch.h>
+
+class Semaphore {
+public:
+  Semaphore() :
+    semaphore(dispatch_semaphore_create(0)) {
+  }
+  ~Semaphore() {
+    dispatch_release(semaphore);
+  }
+  void post() {
+    dispatch_semaphore_signal(semaphore);
+  }
+  void wait() {
+    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+  }
+private:
+  dispatch_semaphore_t semaphore;
+};
+
+#endif
