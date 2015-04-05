@@ -11,7 +11,7 @@ class PollingEPoll : public Polling {
 public:
   PollingEPoll() :
     epollfd(epoll_create(100)),
-    events(new epoll_event[MAXEVENTS]) {
+    events(new struct epoll_event[MAXEVENTS]) {
   }
   ~PollingEPoll() {
     close(epollfd);
