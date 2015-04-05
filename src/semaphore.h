@@ -1,6 +1,6 @@
 #pragma once
 
-#ifndef _APPLE__
+#ifndef __APPLE__
 
 #include <semaphore.h>
 
