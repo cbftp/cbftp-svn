@@ -15,7 +15,7 @@ public:
     kqueuefd(kqueue()),
     events(new kevent[MAXEVENTS]) {
   }
-  ~PollingEPoll() {
+  ~PollingKQueue() {
     close(kqueuefd);
     delete[] events;
   }
