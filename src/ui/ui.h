@@ -88,9 +88,7 @@ class Ui : private EventReceiver, public UIBase {
     int maincol;
     int col;
     int row;
-    int updateinterval;
     bool initret;
-    bool tickerenabled;
     bool legendenabled;
     bool infoenabled;
     bool dead;
@@ -98,7 +96,6 @@ class Ui : private EventReceiver, public UIBase {
     bool split;
     std::string eventtext;
     pthread_t uithread;
-    pthread_t klthread;
     Semaphore eventcomplete;
     std::list<UIWindow *> history;
     void FDData();

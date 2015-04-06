@@ -40,11 +40,15 @@ IOManager::IOManager() :
   blocksize(blockpool->blockSize()),
   sockidcounter(0),
   hasdefaultinterface(false) {
-    pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
+
+}
+
+void IOManager::init() {
+  pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
 #ifdef _ISOC95_SOURCE
-    pthread_setname_np(thread, "Input");
+  pthread_setname_np(thread, "Input");
 #endif
-    global->getTickPoke()->startPoke(this, "EventReceiver", TICKPERIOD, 0);
+  global->getTickPoke()->startPoke(this, "EventReceiver", TICKPERIOD, 0);
 }
 
 void IOManager::tick(int message) {

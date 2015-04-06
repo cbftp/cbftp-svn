@@ -73,6 +73,7 @@ public:
     TimeReference * tr = new TimeReference();
     global->linkComponents(dfh, iom, e, ui, sm, slm, tm, rch, sl, pm, ls, efv, tr);
     if (!ui->init()) exit(1);
+    iom->init();
     tp->tickerLoop();
     global->getExternalFileViewing()->killAll();
     ui->kill();

@@ -12,7 +12,6 @@ private:
   std::vector<UIFile> files;
   std::vector<UIFile *> sortedfiles;
   std::list<unsigned int> selectedfiles;
-  UIFile * current;
   unsigned int currentposition;
   UIFile * currentcursored;
   std::string path;

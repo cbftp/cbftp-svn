@@ -28,6 +28,7 @@ public:
   unsigned int getProgress() const;
   std::string getTimestamp() const;
   int getState() const;
+  int getType() const;
   bool isAwaited() const;
   void setFinished();
   void setFailed();

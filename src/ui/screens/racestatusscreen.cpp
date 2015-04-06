@@ -129,7 +129,7 @@ void RaceStatusScreen::redraw() {
                       break;
                     }
                     if (i == 999) {
-                      *(int *)0=0; // whatever, this should never happen
+                      util::assert(false); // whatever, this should never happen
                     }
                   }
                 }

@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <time.h>
+#include <signal.h>
 
 namespace util {
 
@@ -153,6 +154,12 @@ std::string getGroupNameFromRelease(std::string release) {
   }
   else {
     return "";
+  }
+}
+
+void assert(bool condition) {
+  if (!condition) {
+    raise(SIGTRAP);
   }
 }
 

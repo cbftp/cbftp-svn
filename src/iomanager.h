@@ -44,6 +44,7 @@ private:
   static const char * getCipher(SSL *);
 public:
   IOManager();
+  void init();
   void runInstance();
   void registerStdin(EventReceiver *);
   void tick(int);

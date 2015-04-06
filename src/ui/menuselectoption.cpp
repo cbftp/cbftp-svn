@@ -235,7 +235,7 @@ MenuSelectAdjustableLine * MenuSelectOption::addAdjustableLineBefore(MenuSelectA
 }
 
 MenuSelectOptionElement * MenuSelectOption::getElement(unsigned int i) const {
-  if (i < 0 || i >= size()) {
+  if (i >= size()) {
     return NULL;
   }
   return options[i];

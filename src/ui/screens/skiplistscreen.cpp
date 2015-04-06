@@ -120,7 +120,7 @@ void SkipListScreen::update() {
     }
     defocusedarea = NULL;
   }
-  MenuSelectOptionElement * msoe;
+  MenuSelectOptionElement * msoe = NULL;
   if (focusedarea == &base) {
     int lastsel = base.getLastSelectionPointer();
     int sel = base.getSelectionPointer();

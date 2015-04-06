@@ -103,7 +103,7 @@ MenuSelectOptionElement * MenuSection::getElement(unsigned int i) const {
   if (i == 0) {
     return addbutton;
   }
-  if (i < 0 || i > sectioncontainers.size() * 3) {
+  if (i > sectioncontainers.size() * 3) {
     return NULL;
   }
   int id = (i - 1) / 3;

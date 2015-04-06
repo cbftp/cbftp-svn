@@ -27,7 +27,6 @@ class Event;
 
 class WorkManager {
 private:
-  char * bufs[BUFSSIZE];
   BlockingQueue<Event> dataqueue;
   pthread_t thread;
   static void * run(void *);

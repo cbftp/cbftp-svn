@@ -86,9 +86,7 @@ void SiteLogic::tick(int message) {
   for (unsigned int i = 0; i < connstatetracker.size(); i++) {
     connstatetracker[i].timePassed(50);
     if (connstatetracker[i].getCommand().isReleased()) {
-      if (connstatetracker[i].isLocked() || conns[i]->isProcessing()) {
-        *(int*)0=0; // crash on purpose
-      }
+      util::assert(!connstatetracker[i].isLocked() && !conns[i]->isProcessing());
       DelayedCommand eventcommand = connstatetracker[i].getCommand();
       connstatetracker[i].getCommand().reset();
       std::string event = eventcommand.getCommand();
@@ -1566,9 +1564,7 @@ void SiteLogic::getFileListConn(int id, bool hiddenfiles) {
 }
 
 void SiteLogic::getFileListConn(int id, CommandOwner * co, FileList * filelist) {
-  if (filelist == NULL) {
-    *(int*)0=0; // crash on purpose
-  }
+  util::assert(filelist != NULL);
   if (site->getListCommand() == SITE_LIST_STAT) {
     conns[id]->doSTAT(co, filelist);
   }

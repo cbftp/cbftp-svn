@@ -41,7 +41,6 @@ void NukeScreen::initialize(unsigned int row, unsigned int col, std::string site
 
 void NukeScreen::redraw() {
   ui->erase();
-  std::vector<Site *>::iterator it;
   ui->printStr(1, 1, "Site: " + sitestr);
   ui->printStr(2, 1, "Release: " + release);
   ui->printStr(3, 1, "Path: " + path);
@@ -88,7 +87,6 @@ void NukeScreen::keyPressed(unsigned int ch) {
     return;
   }
   bool activation;
-  std::list<std::string> sites;
   switch(ch) {
     case KEY_UP:
       if (mso.goUp()) {

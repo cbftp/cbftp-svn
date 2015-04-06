@@ -72,30 +72,6 @@ bool Ui::init() {
   initret = true;
   uiqueue.push(UICommand(UI_COMMAND_INIT));
   eventcomplete.wait();
-  return initret;
-}
-
-void Ui::initIntern() {
-  initscr();
-  cbreak();
-  curs_set(0);
-  refresh();
-  getmaxyx(stdscr, row, col);
-  if (row < 24 || col < 80) {
-    endwin();
-    printf("Error: terminal too small. 80x24 required. (Current %dx%d)\n", col, row);
-    initret = false;
-  }
-#if NCURSES_EXT_FUNCS >= 20081102
-  set_escdelay(25);
-#else
-  ESCDELAY = 25;
-#endif
-  mainrow = row;
-  maincol = col;
-  main = newwin(row, col, 0, 0);
-  legend = newwin(2, col, row - 2, 0);
-  info = newwin(2, col, 0, 0);
   legendwindow = new LegendWindow(this, legend, 2, col);
   infowindow = new InfoWindow(this, info, 2, col);
   loginscreen = new LoginScreen(this);
@@ -162,12 +138,36 @@ void Ui::initIntern() {
     topwindow = newkeyscreen;
   }
   infowindow->setLabel(topwindow->getInfoLabel());
-  keypad(stdscr, TRUE);
-  noecho();
   std::cin.putback('#'); // needed to be able to peek properly
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
   global->getIOManager()->registerStdin(this);
   global->getTickPoke()->startPoke(this, "UI", 250, 0);
+  return initret;
+}
+
+void Ui::initIntern() {
+  initscr();
+  cbreak();
+  curs_set(0);
+  refresh();
+  getmaxyx(stdscr, row, col);
+  if (row < 24 || col < 80) {
+    endwin();
+    printf("Error: terminal too small. 80x24 required. (Current %dx%d)\n", col, row);
+    initret = false;
+  }
+#if NCURSES_EXT_FUNCS >= 20081102
+  set_escdelay(25);
+#else
+  ESCDELAY = 25;
+#endif
+  mainrow = row;
+  maincol = col;
+  main = newwin(row, col, 0, 0);
+  legend = newwin(2, col, row - 2, 0);
+  info = newwin(2, col, 0, 0);
+  keypad(stdscr, TRUE);
+  noecho();
   eventcomplete.post();
 }
 

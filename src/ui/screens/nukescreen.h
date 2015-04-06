@@ -23,7 +23,6 @@ private:
   int nuke();
   std::string sitestr;
   SiteLogic * sitelogic;
-  Site * site;
   std::string currentlegendtext;
   std::string defaultlegendtext;
   bool active;

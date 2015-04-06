@@ -12,6 +12,7 @@
 #include "transfermanager.h"
 #include "transferstatus.h"
 #include "localtransfer.h"
+#include "util.h"
 
 extern GlobalContext * global;
 
@@ -195,9 +196,7 @@ void TransferMonitor::tick(int msg) {
 }
 
 void TransferMonitor::passiveReady(std::string addr) {
-  if (status != TM_STATUS_AWAITING_PASSIVE) {
-    *(int*)0=0; // crash on purpose
-  }
+  util::assert(status == TM_STATUS_AWAITING_PASSIVE);
   status = TM_STATUS_AWAITING_ACTIVE;
   switch (type) {
     case TM_TYPE_FXP:
@@ -229,9 +228,7 @@ void TransferMonitor::passiveReady(std::string addr) {
 }
 
 void TransferMonitor::activeReady() {
-  if (status != TM_STATUS_AWAITING_ACTIVE) {
-    *(int*)0=0; // crash on purpose
-  }
+  util::assert(status == TM_STATUS_AWAITING_ACTIVE);
   status = TM_STATUS_TRANSFERRING;
   switch (type) {
     case TM_TYPE_FXP:
@@ -254,9 +251,8 @@ void TransferMonitor::activeReady() {
 }
 
 void TransferMonitor::sourceComplete() {
-  if (status != TM_STATUS_ERROR_AWAITING_PEER && status != TM_STATUS_TRANSFERRING) {
-    *(int*)0=0; // crash on purpose
-  }
+  util::assert(status == TM_STATUS_ERROR_AWAITING_PEER ||
+               status == TM_STATUS_TRANSFERRING);
   sourcecomplete = true;
   if (fls != NULL) {
     File * fileobj = fls->getFile(sfile);
@@ -270,9 +266,8 @@ void TransferMonitor::sourceComplete() {
 }
 
 void TransferMonitor::targetComplete() {
-  if (status != TM_STATUS_ERROR_AWAITING_PEER && status != TM_STATUS_TRANSFERRING) {
-    *(int*)0=0; // crash on purpose
-  }
+  util::assert(status == TM_STATUS_ERROR_AWAITING_PEER ||
+               status == TM_STATUS_TRANSFERRING);
   targetcomplete = true;
   if (fld != NULL) {
     fld->addUploadAttempt(dfile);
@@ -327,10 +322,10 @@ void TransferMonitor::finish() {
 }
 
 void TransferMonitor::sourceError(int err) {
-  if (status != TM_STATUS_AWAITING_ACTIVE && status != TM_STATUS_AWAITING_PASSIVE &&
-      status != TM_STATUS_ERROR_AWAITING_PEER && status != TM_STATUS_TRANSFERRING) {
-    *(int*)0=0; // crash on purpose
-  }
+  util::assert(status == TM_STATUS_AWAITING_ACTIVE ||
+               status == TM_STATUS_AWAITING_PASSIVE ||
+               status == TM_STATUS_ERROR_AWAITING_PEER ||
+               status == TM_STATUS_TRANSFERRING);
   if (fls != NULL) {
     File * fileobj = fls->getFile(sfile);
     if (fileobj != NULL) {
@@ -367,10 +362,10 @@ void TransferMonitor::sourceError(int err) {
 }
 
 void TransferMonitor::targetError(int err) {
-  if (status != TM_STATUS_AWAITING_ACTIVE && status != TM_STATUS_AWAITING_PASSIVE &&
-      status != TM_STATUS_ERROR_AWAITING_PEER && status != TM_STATUS_TRANSFERRING) {
-    *(int*)0=0; // crash on purpose
-  }
+  util::assert(status == TM_STATUS_AWAITING_ACTIVE ||
+               status == TM_STATUS_AWAITING_PASSIVE ||
+               status == TM_STATUS_ERROR_AWAITING_PEER ||
+               status == TM_STATUS_TRANSFERRING);
   if (fld != NULL) {
     File * fileobj = fld->getFile(dfile);
     if (fileobj != NULL) {

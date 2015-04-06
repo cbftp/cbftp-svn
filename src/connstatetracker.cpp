@@ -4,6 +4,7 @@
 #include "globalcontext.h"
 #include "eventlog.h"
 #include "recursivecommandlogic.h"
+#include "util.h"
 
 extern GlobalContext * global;
 
@@ -78,9 +79,7 @@ void ConnStateTracker::setDisconnected() {
 }
 
 void ConnStateTracker::use() {
-  if (transferlocked) {
-    *(int*)0=0; // crash on purpose
-  }
+  util::assert(!transferlocked);
   delayedcommand.reset();
   idletime = 0;
 }

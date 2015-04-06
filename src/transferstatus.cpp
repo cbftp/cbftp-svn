@@ -80,6 +80,10 @@ int TransferStatus::getState() const {
   return state;
 }
 
+int TransferStatus::getType() const {
+  return type;
+}
+
 bool TransferStatus::isAwaited() const {
   return awaited;
 }
