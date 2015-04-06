@@ -54,13 +54,13 @@ public:
 private:
   void control(int fd, int filter, int flag) {
     struct kevent ev;
-    EV_SET(&ev, fd, filter, flag | EV_RECEIPT, 0, 0, 0);
+    EV_SET(&ev, fd, filter, flag, 0, 0, 0);
     kevent(kqueuefd, &ev, 1, NULL, 0, NULL);
   }
   void controlSet(int fd, int addfilter, int removefilter) {
     struct kevent ev[2];
-    EV_SET(&ev[0], fd, removefilter, EV_DELETE | EV_RECEIPT, 0, 0, 0);
-    EV_SET(&ev[1], fd, addfilter, EV_ADD | EV_RECEIPT, 0, 0, 0);
+    EV_SET(&ev[0], fd, removefilter, EV_DELETE, 0, 0, 0);
+    EV_SET(&ev[1], fd, addfilter, EV_ADD, 0, 0, 0);
     kevent(kqueuefd, ev, 2, NULL, 0, NULL);
   }
   int kqueuefd;
