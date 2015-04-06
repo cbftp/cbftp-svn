@@ -19,10 +19,10 @@ clusterbomb-debug: sources mkdirs
 	cp misc/start_with_gdb.sh bin/clusterbomb-debug; chmod +x bin/clusterbomb-debug
 
 datafilecat: src/crypto.cpp src/datafilecat.cpp mkdirs
-	g++ -o bin/datafilecat ${FINALFLAGS} -DNO_LOCAL_DEPS src/crypto.cpp src/datafilecat.cpp -lcrypto
+	g++ -o bin/datafilecat ${FINALFLAGS} src/crypto.cpp src/datafilecat.cpp -lcrypto
 
 datafilewrite: src/crypto.cpp src/datafilewrite.cpp mkdirs
-	g++ -o bin/datafilewrite ${FINALFLAGS} -DNO_LOCAL_DEPS src/crypto.cpp src/datafilewrite.cpp -lcrypto
+	g++ -o bin/datafilewrite ${FINALFLAGS} src/crypto.cpp src/datafilewrite.cpp -lcrypto
 
 linecount:
 	find|grep -e '\.h$$' -e '\.cpp$$'|awk '{print $$1}'|xargs wc -l	
