@@ -25,7 +25,7 @@ void MenuSelectOptionTextField::inputChar(int ch) {
   if (ch >= 32 && ch <= 126) {
       textfield.addchar(ch);
   }
-  else if (ch == KEY_BACKSPACE || ch == 8) {
+  else if (ch == KEY_BACKSPACE || ch == 8 || ch == 127) {
     textfield.erase();
   }
   else if (ch == KEY_LEFT) {

@@ -60,7 +60,7 @@ void RawCommandScreen::update() {
 
 void RawCommandScreen::keyPressed(unsigned int ch) {
   unsigned int rownum = row - 1;
-  if ((ch >= 32 && ch <= 126) || ch == KEY_BACKSPACE || ch == 8 ||
+  if ((ch >= 32 && ch <= 126) || ch == KEY_BACKSPACE || ch == 8 || ch == 127 ||
       ch == KEY_LEFT || ch == KEY_RIGHT || ch == KEY_HOME || ch == KEY_END ||
       ch == KEY_DC) {
     rawcommandfield.inputChar(ch);

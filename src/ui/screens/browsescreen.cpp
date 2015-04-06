@@ -558,6 +558,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       break;
     case KEY_LEFT:
     case 8:
+    case 127:
     case KEY_BACKSPACE:
       oldpath = list.getPath();
       if (oldpath == "") {
