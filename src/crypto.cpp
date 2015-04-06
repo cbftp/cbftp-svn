@@ -2,7 +2,6 @@
 
 #include <limits.h>
 #include <cstring>
-#include <sys/timeb.h>
 #include <openssl/sha.h>
 
 #include "util.h"
@@ -24,7 +23,7 @@ void Crypto::encrypt(unsigned char * indata, int inlen, unsigned char * key, uns
   int resultlen;
   int finallen;
 #ifndef NO_LOCAL_DEPS
-  srand(util::ctimeMSec());
+  srand(util::ctimeSec());
 #endif
   for (int i = 0; i < ivlen; i++) {
     outdata[i] = (unsigned char)(rand() % UCHAR_MAX);

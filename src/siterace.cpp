@@ -269,11 +269,11 @@ int SiteRace::getObservedTime(FileList * fl) {
   std::map<FileList *, int>::iterator it;
   for (it = observestarts.begin(); it != observestarts.end(); it++) {
     if (it->first == fl) {
-      return util::ctimeMSec() - it->second;
+      return util::ctimeSec() - it->second;
     }
   }
   if (fl->getSize() > 0) {
-    observestarts[fl] = util::ctimeMSec();
+    observestarts[fl] = util::ctimeSec();
   }
   return 0;
 }
@@ -282,10 +282,10 @@ int SiteRace::getSFVObservedTime(FileList * fl) {
   std::map<FileList *, int>::iterator it;
   for (it = sfvobservestarts.begin(); it != sfvobservestarts.end(); it++) {
     if (it->first == fl) {
-      return util::ctimeMSec() - it->second;
+      return util::ctimeSec() - it->second;
     }
   }
-  sfvobservestarts[fl] = util::ctimeMSec();
+  sfvobservestarts[fl] = util::ctimeSec();
   return 0;
 }
 

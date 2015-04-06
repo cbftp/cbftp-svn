@@ -1,7 +1,7 @@
 #include "util.h"
 
 #include <sstream>
-#include <sys/timeb.h>
+#include <time.h>
 
 namespace util {
 
@@ -70,17 +70,13 @@ std::string simpleTimeFormat(int seconds) {
 }
 
 std::string ctimeLog() {
-  time_t rawtime;
-  time(&rawtime);
+  time_t rawtime = time(NULL);
   std::string readabletime = asctime(localtime(&rawtime));
   return readabletime.substr(11, 8);
 }
 
-int ctimeMSec() {
-  timeb tb;
-  ftime(&tb);
-  int count = tb.millitm + tb.time * 1000;
-  return count;
+int ctimeSec() {
+  return time(NULL);
 }
 
 std::string & debugString(const char * s) {

@@ -302,12 +302,12 @@ void Engine::estimateRaceSizes() {
         }
         reportCurrentSize(srs, fls, false);
         if (fls->hasSFV()) {
-          if (srs->getSFVObservedTime(fls) > 5000) {
+          if (srs->getSFVObservedTime(fls) > 5) {
             reportCurrentSize(srs, fls, true);
           }
         }
         else {
-          if (srs->getObservedTime(fls) > 20000) {
+          if (srs->getObservedTime(fls) > 20) {
             reportCurrentSize(srs, fls, true);
           }
         }

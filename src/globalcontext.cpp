@@ -1,7 +1,7 @@
 #include "globalcontext.h"
 
-#include <sys/timeb.h>
 #include <vector>
+#include <time.h>
 
 #include "lock.h"
 
