@@ -23,8 +23,8 @@ class SiteRace : public CommandOwner {
     std::map<std::string, FileList *> filelists;
     bool done;
     std::list<FileList *> sizeestimated;
-    std::map<FileList *, int> observestarts;
-    std::map<FileList *, int> sfvobservestarts;
+    std::map<FileList *, unsigned long long int> observestarts;
+    std::map<FileList *, unsigned long long int> sfvobservestarts;
     std::map<std::string, bool> visitedpaths;
     unsigned long long int maxfilesize;
     unsigned long long int totalfilesize;

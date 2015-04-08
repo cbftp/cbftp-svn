@@ -15,7 +15,6 @@ std::string int2Str(unsigned int);
 std::string int2Str(unsigned long long int);
 std::string simpleTimeFormat(int);
 std::string ctimeLog();
-int ctimeSec();
 std::string & debugString(const char *);
 std::string parseSize(unsigned long long int);
 int getSizeGranularity();

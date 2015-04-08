@@ -76,10 +76,6 @@ std::string ctimeLog() {
   return readabletime.substr(11, 8);
 }
 
-int ctimeSec() {
-  return time(NULL);
-}
-
 std::string & debugString(const char * s) {
     return *(new std::string(s));
 }
