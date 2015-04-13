@@ -3,7 +3,7 @@
 #include "termint.h"
 
 void CharDraw::init() {
-  std::string init = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  std::string init = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789<>";
   for (unsigned int i = 0; i < init.length(); i++) {
     charmap[init[i]] = std::vector<std::string>();
   }
@@ -70,6 +70,8 @@ void CharDraw::init() {
   push('8', "AHHHHB", "Vxabxv", "CbcdaD", "AdabcB", "Vxcdxv", "ChhhhD");
   push('9', "AHHHHB", "Vxabxv", "Vxcdxv", "Chhbxv", "   Vxv", "   ChD");
   push(' ', "      ", "      ", "      ", "      ", "      ", "      ");
+  push('<', "   AHB", " AHdaD", "AdahD ", "CbcHB ", " ChbcB", "   ChD");
+  push('>', "AHB   ", "CbcHB ", " ChbcB", " AHdaD", "AdahD ", "ChD   ");
 }
 
 std::string CharDraw::getCharLine(char c, unsigned int line) {
