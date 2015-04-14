@@ -9,7 +9,7 @@
 
 #define MAXEVENTS 32
 
-class PollingKQueue : public Polling {
+class PollingKQueue : public PollingBase {
 public:
   PollingKQueue() :
     kqueuefd(kqueue()),

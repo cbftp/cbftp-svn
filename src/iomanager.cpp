@@ -23,18 +23,7 @@
 #include "scopelock.h"
 #include "util.h"
 
-#ifdef __linux
-#include "pollingepoll.h"
-#else
-#include "pollingkqueue.h"
-#endif
-
 IOManager::IOManager() :
-#ifdef __linux
-  polling(new PollingEPoll()),
-#else
-  polling(new PollingKQueue()),
-#endif
   wm(global->getWorkManager()),
   blockpool(wm->getBlockPool()),
   blocksize(blockpool->blockSize()),
@@ -132,7 +121,7 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int
   connecttimemap[sockid] = 0;
   sockfdidmap[sockfd] = sockid;
   *sockidp = sockid;
-  polling->addFDOut(sockfd);
+  polling.addFDOut(sockfd);
   return 0;
 }
 
@@ -177,7 +166,7 @@ int IOManager::registerTCPServerSocket(EventReceiver * er, int port, bool local)
   socketinfomap[sockid].type = FD_TCP_SERVER;
   socketinfomap[sockid].receiver = er;
   sockfdidmap[sockfd] = sockid;
-  polling->addFDIn(sockfd);
+  polling.addFDIn(sockfd);
   return sockid;
 }
 
@@ -185,7 +174,7 @@ void IOManager::registerTCPServerClientSocket(EventReceiver * er, int sockid) {
   ScopeLock lock(socketinfomaplock);
   socketinfomap[sockid].receiver = er;
   int sockfd = socketinfomap[sockid].fd;
-  polling->addFDIn(sockfd);
+  polling.addFDIn(sockfd);
 }
 
 void IOManager::registerStdin(EventReceiver * er) {
@@ -195,7 +184,7 @@ void IOManager::registerStdin(EventReceiver * er) {
   socketinfomap[sockid].type = FD_KEYBOARD;
   socketinfomap[sockid].receiver = er;
   sockfdidmap[STDIN_FILENO] = sockid;
-  polling->addFDIn(STDIN_FILENO);
+  polling.addFDIn(STDIN_FILENO);
 }
 
 int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
@@ -227,7 +216,7 @@ int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
   socketinfomap[sockid].type = FD_UDP;
   socketinfomap[sockid].receiver = er;
   sockfdidmap[sockfd] = sockid;
-  polling->addFDIn(sockfd);
+  polling.addFDIn(sockfd);
   return sockid;
 }
 
@@ -264,7 +253,7 @@ void IOManager::negotiateSSL(int id, EventReceiver * er) {
     return;
   }
   SocketInfo & socketinfo = it->second;
-  polling->removeFDIn(socketinfo.fd);
+  polling.removeFDIn(socketinfo.fd);
   SSL * ssl = SSL_new(global->getSSLCTX());
   SSL_set_mode(ssl, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
   socketinfo.ssl = ssl;
@@ -299,7 +288,7 @@ void IOManager::negotiateSSL(int id, EventReceiver * er) {
       closeSocketIntern(id);
     }
   }
-  polling->addFDIn(socketinfo.fd);
+  polling.addFDIn(socketinfo.fd);
 }
 
 void IOManager::forceSSLhandshake(int id) {
@@ -345,7 +334,7 @@ bool IOManager::investigateSSLError(int error, int sockid, int b_recv) {
       return true;
     case SSL_ERROR_SYSCALL:
       if (errno == EAGAIN) {
-        polling->setFDOut(socketinfo.fd);
+        polling.setFDOut(socketinfo.fd);
         return true;
       }
       break;
@@ -470,7 +459,7 @@ void IOManager::runInstance() {
   while(1) {
     lock.unlock();
     blockpool->awaitFreeBlocks();
-    polling->wait(fds);
+    polling.wait(fds);
     lock.lock();
     for (pollit = fds.begin(); pollit != fds.end(); pollit++) {
       currfd = pollit->first;
@@ -487,7 +476,7 @@ void IOManager::runInstance() {
       SocketInfo & socketinfo = it->second;
       er = socketinfo.receiver;
       if (pollevent == POLLEVENT_OUT) {
-        polling->setFDIn(currfd);
+        polling.setFDIn(currfd);
         if (socketinfo.type == FD_TCP_CONNECTING) {
           unsigned int error;
           unsigned int errorlen = sizeof(error);

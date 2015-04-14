@@ -9,12 +9,11 @@
 #include "eventreceiver.h"
 #include "socketinfo.h"
 #include "lock.h"
-#include "pointer.h"
+#include "polling.h"
 
 class DataBlockPool;
 class WorkManager;
 class GlobalContext;
-class Polling;
 
 #define TICKPERIOD 100
 #define TIMEOUT_MS 5000
@@ -24,7 +23,7 @@ extern GlobalContext * global;
 class IOManager : private EventReceiver {
 private:
   pthread_t thread;
-  Pointer<Polling> polling;
+  Polling polling;
   mutable Lock socketinfomaplock;
   std::map<int, SocketInfo> socketinfomap;
   std::map<int, int> connecttimemap;

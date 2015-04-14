@@ -7,7 +7,7 @@
 
 #define MAXEVENTS 32
 
-class PollingEPoll : public Polling {
+class PollingEPoll : public PollingBase {
 public:
   PollingEPoll() :
     epollfd(epoll_create(100)),

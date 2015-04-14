@@ -9,9 +9,9 @@ enum PollEvent {
   POLLEVENT_UNKNOWN
 };
 
-class Polling {
+class PollingBase {
 public:
-  virtual ~Polling() {
+  virtual ~PollingBase() {
   }
   virtual void wait(std::list<std::pair<int, PollEvent> > &) = 0;
   virtual void addFDIn(int) = 0;
@@ -20,4 +20,41 @@ public:
   virtual void removeFDOut(int) = 0;
   virtual void setFDIn(int) = 0;
   virtual void setFDOut(int) = 0;
+};
+
+#ifdef __linux
+#include "pollingepoll.h"
+#else
+#include "pollingkqueue.h"
+#endif
+
+class Polling {
+public:
+  void wait(std::list<std::pair<int, PollEvent> > & events) {
+    impl.wait(events);
+  }
+  void addFDIn(int addfd) {
+    impl.addFDIn(addfd);
+  }
+  void addFDOut(int addfd) {
+    impl.addFDOut(addfd);
+  }
+  void removeFDIn(int delfd) {
+    impl.removeFDIn(delfd);
+  }
+  void removeFDOut(int delfd) {
+    impl.removeFDOut(delfd);
+  }
+  void setFDIn(int modfd) {
+    impl.setFDIn(modfd);
+  }
+  void setFDOut(int modfd) {
+    impl.setFDOut(modfd);
+  }
+private:
+#ifdef __linux
+  PollingEPoll impl;
+#else
+  PollingKQueue impl;
+#endif
 };
