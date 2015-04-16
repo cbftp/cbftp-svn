@@ -123,6 +123,9 @@ void FileList::setFileUpdateFlag(std::string name, unsigned long long int size, 
   if ((file = getFile(name)) != NULL) {
     unsigned long long int oldsize = file->getSize();
     if (file->setSize(size)) {
+      if (!oldsize) {
+        uploadedfiles++;
+      }
       totalfilesize += size - oldsize;
       setChanged();
     }
