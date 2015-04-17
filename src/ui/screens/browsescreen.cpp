@@ -18,6 +18,9 @@
 #include "../ui.h"
 #include "../uifile.h"
 #include "../termint.h"
+#include "../menuselectoptiontextbutton.h"
+#include "../menuselectadjustableline.h"
+#include "../resizableelement.h"
 
 extern GlobalContext * global;
 
@@ -192,42 +195,6 @@ void BrowseScreen::redraw() {
       currentviewspan = position;
     }
   }
-
-  if (listsize <= row) {
-    slidersize = 0;
-  }
-  else {
-    slidersize = (row * row) / listsize;
-    sliderstart = (row * currentviewspan) / listsize;
-    if (slidersize == 0) {
-      slidersize++;
-    }
-    if (slidersize == row) {
-      slidersize--;
-    }
-    if (sliderstart + slidersize > row || currentviewspan + row >= listsize) {
-      sliderstart = row - slidersize;
-    }
-  }
-  if (virgin) {
-    ui->printStr(1, 1, "Getting file list for " + site->getName() + " ...");
-  }
-  else if (listsize == 0) {
-    ui->printStr(0, 3, "(empty directory)");
-  }
-  if (split) {
-    for (unsigned int i = 0; i < row; i++) {
-      ui->printChar(i, col / 2, BOX_VLINE);
-    }
-  }
-  update();
-}
-
-void BrowseScreen::update() {
-  if (requestid >= 0 && sitelogic->requestReady(requestid)) {
-    ui->redraw();
-    return;
-  }
   const std::vector<UIFile *> * uilist = list.getSortedList();
   int maxnamelen = 0;
   for (unsigned int i = 0; i < uilist->size(); i++) {
@@ -238,37 +205,11 @@ void BrowseScreen::update() {
       }
     }
   }
-  unsigned int sizelen = 9;
-  unsigned int timelen = 18;
-  unsigned int ownerlen = 18;
-  bool printsize = false;
-  bool printlastmodified = false;
-  bool printowner = false;
-  unsigned int namelimit = 0;
-  if (col > 60 + sizelen + timelen + ownerlen + 3) {
-    namelimit = col - sizelen - timelen - ownerlen - 3 - 1 - 2;
-    printsize = true;
-    printlastmodified = true;
-    printowner = true;
-  }
-  else if (col > 60 + sizelen + timelen + 2) {
-    namelimit = col - sizelen - timelen - 2 - 1 - 2;
-    printsize = true;
-    printlastmodified = true;
-  }
-  else if (col > 40 + sizelen + 1) {
-    namelimit = col - sizelen - 1 - 1 - 2;
-    printsize = true;
-  }
-  else {
-    namelimit = col - 1;
-  }
-  unsigned int sizepos = col - sizelen - (printowner ? ownerlen + 1 : 0) - (printlastmodified ? timelen + 1: 0);
-  unsigned int timepos = col - timelen - (printowner ? ownerlen : 0);
-  std::string separatortext;
+  separatortext = "";
   while (separatortext.length() < (unsigned int) maxnamelen) {
     separatortext += "-";
   }
+
   std::string prepend = list.getPath() + "/";
   if (withinraceskiplistreach) {
     std::string subpathinracepath;
@@ -279,11 +220,14 @@ void BrowseScreen::update() {
     }
     prepend = subpathinracepath;
   }
+
+  table.reset();
+
   for (unsigned int i = 0; i + currentviewspan < uilist->size() && i < row; i++) {
     unsigned int listi = i + currentviewspan;
     UIFile * uifile = (*uilist)[listi];
     if (uifile == NULL) {
-      ui->printStr(i, 3, separatortext, namelimit);
+      addFileDetails(i, separatortext);
       continue;
     }
     bool selected = uifile == list.cursoredFile();
@@ -306,27 +250,70 @@ void BrowseScreen::update() {
     else if (uifile->isLink()){
       prepchar = "L";
     }
-    ui->printStr(i, 1, prepchar);
-    ui->printStr(i, 3, uifile->getName(), namelimit, selected);
-    if (printsize) {
-      ui->printStr(i, sizepos, uifile->getSizeRepr(), sizelen, false, true);
-      if (printlastmodified) {
-        ui->printStr(i, timepos, uifile->getLastModified(), timelen);
-        if (printowner) {
-          ui->printStr(i, col-ownerlen, uifile->getOwner() + "/" + uifile->getGroup(), ownerlen-1);
-        }
-      }
+    std::string owner = uifile->getOwner() + "/" + uifile->getGroup();
+    addFileDetails(i, prepchar, uifile->getName(), uifile->getSizeRepr(), uifile->getLastModified(), owner, true, selected);
+  }
+  table.adjustLines(col - 3);
+  table.checkPointer();
+  bool highlight;
+  for (unsigned int i = 0; i < table.size(); i++) {
+    ResizableElement * re = (ResizableElement *) table.getElement(i);
+    highlight = false;
+    if (table.getSelectionPointer() == i) {
+      highlight = true;
+    }
+    if (re->isVisible()) {
+      ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
     }
   }
-  if (slidersize > 0) {
+  if (listsize <= row) {
+    slidersize = 0;
+  }
+  else {
+    slidersize = (row * row) / listsize;
+    sliderstart = (row * currentviewspan) / listsize;
+    if (slidersize == 0) {
+      slidersize++;
+    }
+    if (slidersize == row) {
+      slidersize--;
+    }
+    if (sliderstart + slidersize > row || currentviewspan + row >= listsize) {
+      sliderstart = row - slidersize;
+    }
     for (unsigned int i = 0; i < row; i++) {
       if (i >= sliderstart && i < sliderstart + slidersize) {
         ui->printChar(i, col-1, ' ', true);
       }
       else {
-        ui->printChar(i, col-1, 4194424);
+        ui->printChar(i, col - 1, BOX_VLINE);
       }
     }
+  }
+  if (virgin) {
+    ui->printStr(1, 1, "Getting file list for " + site->getName() + " ...");
+  }
+  else if (listsize == 0) {
+    ui->printStr(0, 3, "(empty directory)");
+  }
+  if (split) {
+    for (unsigned int i = 0; i < row; i++) {
+      ui->printChar(i, col / 2, BOX_VLINE);
+    }
+  }
+  update();
+}
+
+void BrowseScreen::update() {
+  if (requestid >= 0 && sitelogic->requestReady(requestid)) {
+    ui->redraw();
+    return;
+  }
+  if (table.size()) {
+    ResizableElement * re = (ResizableElement *) table.getElement(table.getLastSelectionPointer());
+    ui->printStr(re->getRow(), re->getCol(), re->getLabelText());
+    re = (ResizableElement *) table.getElement(table.getSelectionPointer());
+    ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), true);
   }
 }
 
@@ -390,15 +377,11 @@ void BrowseScreen::keyPressed(unsigned int ch) {
           }
           if (substr == gotomodestring) {
             list.setCursorPosition(i);
-            if (list.currentCursorPosition() >= currentviewspan + row ||
-                list.currentCursorPosition() < currentviewspan) {
-              ui->redraw();
-            }
             break;
           }
         }
       }
-      ui->update();
+      ui->redraw();
       return;
     }
     else {
@@ -586,6 +569,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
     case KEY_DOWN:
       //go down and highlight next item (if not at bottom already)
       update = list.goNext();
+      table.goDown();
       if (list.currentCursorPosition() >= currentviewspan + row) {
         ui->redraw();
       }
@@ -596,6 +580,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
     case KEY_UP:
       //go up and highlight previous item (if not at top already)
       update = list.goPrevious();
+      table.goUp();
       if (list.currentCursorPosition() < currentviewspan) {
         ui->redraw();
       }
@@ -606,6 +591,7 @@ void BrowseScreen::keyPressed(unsigned int ch) {
     case KEY_NPAGE:
       for (unsigned int i = 0; i < pagerows; i++) {
         success = list.goNext();
+        table.goDown();
         if (!success) {
           break;
         }
@@ -613,16 +599,14 @@ void BrowseScreen::keyPressed(unsigned int ch) {
           update = true;
         }
       }
-      if (list.currentCursorPosition() >= currentviewspan + row) {
+      if (update) {
         ui->redraw();
-      }
-      else if (update) {
-        ui->update();
       }
       break;
     case KEY_PPAGE:
       for (unsigned int i = 0; i < pagerows; i++) {
         success = list.goPrevious();
+        table.goUp();
         if (!success) {
           break;
         }
@@ -630,37 +614,30 @@ void BrowseScreen::keyPressed(unsigned int ch) {
           update = true;
         }
       }
-      if (list.currentCursorPosition() < currentviewspan) {
+      if (update) {
         ui->redraw();
-      }
-      else if (update) {
-        ui->update();
       }
       break;
     case KEY_HOME:
       while (list.goPrevious()) {
+        table.goUp();
         if (!update) {
           update = true;
         }
       }
-      if (list.currentCursorPosition() < currentviewspan) {
+      if (update) {
         ui->redraw();
-      }
-      else if (update) {
-        ui->update();
       }
       break;
     case KEY_END:
+      table.goDown();
       while (list.goNext()) {
         if (!update) {
           update = true;
         }
       }
-      if (list.currentCursorPosition() >= currentviewspan + row) {
+      if (update) {
         ui->redraw();
-      }
-      else if (update) {
-        ui->update();
       }
       break;
     case 'w':
@@ -861,4 +838,35 @@ size_t BrowseScreen::countDirLevels(std::string path) {
     path = path.substr(0, path.length() - 1);
   }
   return std::count(path.begin(), path.end(), '/');
+}
+
+void BrowseScreen::addFileDetails(unsigned int y, std::string name) {
+  addFileDetails(y, "", name, "", "", "", false, false);
+}
+
+void BrowseScreen::addFileDetails(unsigned int y, std::string prepchar, std::string name, std::string size, std::string lastmodified, std::string owner, bool selectable, bool selected) {
+  MenuSelectAdjustableLine * msal = table.addAdjustableLine();
+  MenuSelectOptionTextButton * msotb;
+  msotb = table.addTextButtonNoContent(y, 1, "prepchar", prepchar);
+  msotb->setSelectable(false);
+  msotb->setShortSpacing();
+  msal->addElement((ResizableElement *)msotb, 4, RESIZE_REMOVE);
+  msotb = table.addTextButtonNoContent(y, 3, "name", name);
+  if (!selectable) {
+    msotb->setSelectable(false);
+  }
+  if (selected) {
+    table.setPointer(msotb);
+  }
+  msal->addElement((ResizableElement *)msotb, 5, RESIZE_WITHDOTS, true);
+  msotb = table.addTextButtonNoContent(y, 3, "size", size);
+  msotb->setSelectable(false);
+  msotb->setRightAligned();
+  msal->addElement((ResizableElement *)msotb, 3, RESIZE_REMOVE);
+  msotb = table.addTextButtonNoContent(y, 3, "lastmodified", lastmodified);
+  msotb->setSelectable(false);
+  msal->addElement((ResizableElement *)msotb, 2, RESIZE_REMOVE);
+  msotb = table.addTextButtonNoContent(y, 3, "owner", owner);
+  msotb->setSelectable(false);
+  msal->addElement((ResizableElement *)msotb, 1, RESIZE_REMOVE);
 }

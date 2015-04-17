@@ -3,6 +3,7 @@
 #include <vector>
 
 #define RESIZE_SPACING 2
+#define RESIZE_SPACING_SHORT 1
 
 class ResizableElement;
 

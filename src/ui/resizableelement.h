@@ -9,6 +9,12 @@
 
 class ResizableElement : public MenuSelectOptionElement {
 public:
+  ResizableElement() :
+    rightaligned(false),
+    shortspacing(false),
+    visible(false),
+    expandable(false) {
+  }
   virtual ~ResizableElement() {
   }
   virtual unsigned int wantedWidth() const = 0;
@@ -39,10 +45,24 @@ public:
   void setExpandable(bool expandable) {
     this->expandable = expandable;
   }
+  void setShortSpacing() {
+    shortspacing = true;
+  }
+  bool shortSpacing() const {
+    return shortspacing;
+  }
+  void setRightAligned() {
+    rightaligned = true;
+  }
+  bool rightAligned() const {
+    return rightaligned;
+  }
 protected:
   unsigned int maxwidth;
   unsigned int resizemethod;
+  bool rightaligned;
 private:
+  bool shortspacing;
   unsigned int prio;
   bool visible;
   bool expandable;

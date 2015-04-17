@@ -46,6 +46,7 @@ class MenuSelectOption : public FocusableArea {
     int getLineIndex(MenuSelectAdjustableLine *);
     void removeAdjustableLine(MenuSelectAdjustableLine *);
     void removeElement(MenuSelectOptionElement *);
+    void setPointer(MenuSelectOptionElement *);
     unsigned int getLastSelectionPointer() const;
     unsigned int getSelectionPointer() const;
     bool activateSelected();

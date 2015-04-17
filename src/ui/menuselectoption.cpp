@@ -315,15 +315,21 @@ void MenuSelectOption::adjustLines(unsigned int linesize) {
   std::vector<int> maxwidths;
   maxwantedwidths.resize(elementcount); // int is initialized to 0
   maxwidths.resize(elementcount);
+  int shortspaces = 0;
   for (std::vector<MenuSelectAdjustableLine *>::iterator it = adjustablelines.begin(); it != adjustablelines.end(); it++) {
     for (unsigned int i = 0; i < elementcount; i++) {
-      int wantedwidth = (*it)->getElement(i)->wantedWidth();
+      ResizableElement * re = (*it)->getElement(i);
+      int wantedwidth = re->wantedWidth();
       if (wantedwidth > maxwantedwidths[i]) {
         maxwantedwidths[i] = wantedwidth;
       }
+      if (it == adjustablelines.begin() && re->shortSpacing() && i + 1 != elementcount) {
+        shortspaces++;
+      }
     }
   }
-  unsigned int totalwantedwidth = (maxwantedwidths.size() - 1) * RESIZE_SPACING;
+  unsigned int totalwantedwidth = (maxwantedwidths.size() - 1) * RESIZE_SPACING -
+      shortspaces * (RESIZE_SPACING - RESIZE_SPACING_SHORT);
   for (unsigned int i = 0; i < maxwantedwidths.size(); i++) {
     totalwantedwidth += maxwantedwidths[i];
     maxwidths[i] = maxwantedwidths[i];
@@ -355,7 +361,8 @@ void MenuSelectOption::adjustLines(unsigned int linesize) {
         }
       }
       ResizableElement * leastimportantelem = adjustablelines[0]->getElement(leastimportant);
-      unsigned int maxsaving = maxwantedwidths[leastimportant] + RESIZE_SPACING;
+      int spacing = leastimportantelem->shortSpacing() ? RESIZE_SPACING_SHORT : RESIZE_SPACING;
+      unsigned int maxsaving = maxwantedwidths[leastimportant] + spacing;
       unsigned int resizemethod = leastimportantelem->resizeMethod();
       switch (resizemethod) {
         case RESIZE_REMOVE:
@@ -386,7 +393,8 @@ void MenuSelectOption::adjustLines(unsigned int linesize) {
       if (adjustablelines[0]->getElement(i)->isVisible()) {
         elem->setMaxWidth(maxwidths[i]);
         elem->setPosition(elem->getRow(), elementpos);
-        elementpos += maxwidths[i] + RESIZE_SPACING;
+        int spacing = elem->shortSpacing() ? RESIZE_SPACING_SHORT : RESIZE_SPACING;
+        elementpos += maxwidths[i] + spacing;
       }
       else {
         elem->setVisible(false);
@@ -449,6 +457,16 @@ void MenuSelectOption::removeElement(MenuSelectOptionElement * msoe) {
     if (*it == msoe) {
       options.erase(it);
       delete msoe;
+      return;
+    }
+  }
+}
+
+void MenuSelectOption::setPointer(MenuSelectOptionElement * set) {
+  for (unsigned int i = 0; i < options.size(); i++) {
+    MenuSelectOptionElement * msoe = options[i];
+    if (msoe == set) {
+      pointer = i;
       return;
     }
   }

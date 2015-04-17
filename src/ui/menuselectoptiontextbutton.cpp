@@ -20,7 +20,13 @@ std::string MenuSelectOptionTextButton::getContentText() const {
 
 std::string MenuSelectOptionTextButton::getLabelText() const {
   if (label.length() <= maxwidth) {
-    return label;
+    std::string alignextra;
+    if (rightaligned) {
+      while (maxwidth > label.length() + alignextra.length()) {
+        alignextra += " ";
+      }
+    }
+    return alignextra + label;
   }
   else {
     switch (resizemethod) {

@@ -6,6 +6,7 @@
 
 #include "../uiwindow.h"
 #include "../uifilelist.h"
+#include "../menuselectoption.h"
 
 #include "../../eventreceiver.h"
 
@@ -27,6 +28,7 @@ public:
   std::list<std::pair<std::string, std::string> > selectionhistory;
   void tick(int);
 private:
+  MenuSelectOption table;
   unsigned int currentviewspan;
   unsigned int sliderstart;
   unsigned int slidersize;
@@ -65,7 +67,10 @@ private:
   bool withinraceskiplistreach;
   std::string closestracesectionpath;
   bool split;
+  std::string separatortext;
   void sort();
   void refreshFilelist();
   size_t countDirLevels(std::string);
+  void addFileDetails(unsigned int, std::string);
+  void addFileDetails(unsigned int, std::string, std::string, std::string, std::string, std::string, bool, bool);
 };
