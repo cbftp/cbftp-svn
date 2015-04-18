@@ -4,6 +4,7 @@
 
 #include "../ui.h"
 #include "../menuselectoptiontextfield.h"
+#include "../menuselectoptionelement.h"
 
 NewKeyScreen::NewKeyScreen(Ui * ui) {
   this->ui = ui;

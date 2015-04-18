@@ -6,7 +6,8 @@
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
-#include "../menuselectoptionelement.h"
+
+class MenuSelectOptionElement;
 
 class NewKeyScreen : public UIWindow {
 public:

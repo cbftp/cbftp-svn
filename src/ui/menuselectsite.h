@@ -4,11 +4,11 @@
 #include <vector>
 
 #include "focusablearea.h"
-#include "menuselectsiteelement.h"
 
 #include "../pointer.h"
 
 class Site;
+class MenuSelectSiteElement;
 
 class MenuSelectSite : public FocusableArea {
   private:

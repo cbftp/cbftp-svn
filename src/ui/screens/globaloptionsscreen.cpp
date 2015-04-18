@@ -14,6 +14,7 @@
 #include "../menuselectoptionnumarrow.h"
 #include "../menuselectoptiontextarrow.h"
 #include "../menuselectoptiontextbutton.h"
+#include "../menuselectoptionelement.h"
 
 extern GlobalContext * global;
 

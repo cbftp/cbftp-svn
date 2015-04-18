@@ -2,16 +2,17 @@
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
-#include "../menuselectoptionelement.h"
-#include "../menuselectoptiontextfield.h"
-#include "../menuselectoptiontextarrow.h"
 
 #include "../../skiplist.h"
 #include "../../pointer.h"
 
+class SkipList;
 class Ui;
 class FocusableArea;
 class MenuSelectAdjustableLine;
+class MenuSelectOptionTextField;
+class MenuSelectOptionTextArrow;
+class MenuSelectOptionElement;
 
 class SkipListScreen : public UIWindow {
 public:

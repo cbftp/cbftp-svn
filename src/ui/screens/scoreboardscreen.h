@@ -1,11 +1,11 @@
 #pragma once
 
 #include "../../pointer.h"
-#include "../../scoreboard.h"
 
 #include "../uiwindow.h"
 
 class Engine;
+class ScoreBoard;
 
 class ScoreBoardScreen : public UIWindow {
 public:

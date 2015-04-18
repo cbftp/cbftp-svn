@@ -2,7 +2,7 @@
 
 #include "../pointer.h"
 
-#include "menuselectoptionelement.h"
+class MenuSelectOptionElement;
 
 class FocusableArea {
 protected:

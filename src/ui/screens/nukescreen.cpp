@@ -9,8 +9,7 @@
 #include "../../sitelogicmanager.h"
 
 #include "../ui.h"
-#include "../menuselectoptioncheckbox.h"
-#include "../focusablearea.h"
+#include "../menuselectoptionelement.h"
 #include "../menuselectoptionnumarrow.h"
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptiontextbutton.h"

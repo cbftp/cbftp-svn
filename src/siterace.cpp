@@ -1,5 +1,6 @@
 #include "siterace.h"
 
+#include "race.h"
 #include "filelist.h"
 #include "file.h"
 #include "globalcontext.h"

@@ -3,6 +3,7 @@
 #include "../ui.h"
 #include "../menuselectadjustableline.h"
 #include "../menuselectoptiontextbutton.h"
+#include "../menuselectoptionelement.h"
 #include "../resizableelement.h"
 
 #include "../../globalcontext.h"

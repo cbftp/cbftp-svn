@@ -15,7 +15,6 @@ public:
   void init(unsigned int, unsigned int);
   UIWindow();
   virtual ~UIWindow();
-  virtual void initialize(unsigned int, unsigned int);
   virtual void redraw() = 0;
   void resize(unsigned int, unsigned int);
   virtual void update();

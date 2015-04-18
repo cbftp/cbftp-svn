@@ -2,7 +2,6 @@
 
 #include "../../globalcontext.h"
 #include "../../sitemanager.h"
-#include "../../site.h"
 #include "../../sitelogic.h"
 #include "../../sitelogicmanager.h"
 #include "../../proxymanager.h"
@@ -11,6 +10,7 @@
 
 #include "../ui.h"
 #include "../focusablearea.h"
+#include "../menuselectoptionelement.h"
 #include "../menuselectoptioncontainer.h"
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptionnumarrow.h"

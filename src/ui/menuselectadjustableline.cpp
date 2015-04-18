@@ -2,6 +2,7 @@
 
 #include <unistd.h>
 
+#include "resizableelement.h"
 
 void MenuSelectAdjustableLine::addElement(Pointer<ResizableElement> re, unsigned int prio) {
   addElement(re, prio, RESIZE_REMOVE);

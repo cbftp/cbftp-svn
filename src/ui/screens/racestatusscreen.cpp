@@ -12,7 +12,6 @@
 #include "../../engine.h"
 #include "../../sitemanager.h"
 #include "../../util.h"
-#include "../../pointer.h"
 
 #include "../ui.h"
 #include "../menuselectoptiontextbutton.h"

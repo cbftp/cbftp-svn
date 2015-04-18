@@ -22,7 +22,6 @@
 #include "pendingtransfer.h"
 #include "localstorage.h"
 #include "localfilelist.h"
-#include "pointer.h"
 #include "transferstatus.h"
 #include "util.h"
 

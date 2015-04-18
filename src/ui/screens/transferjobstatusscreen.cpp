@@ -5,7 +5,9 @@
 #include "../menuselectadjustableline.h"
 #include "../menuselectoptionnumarrow.h"
 #include "../menuselectoptiontextbutton.h"
+#include "../menuselectoptionelement.h"
 
+#include "../../transferjob.h"
 #include "../../globalcontext.h"
 #include "../../engine.h"
 #include "../../transferstatus.h"

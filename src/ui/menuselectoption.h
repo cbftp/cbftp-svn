@@ -4,12 +4,10 @@
 #include <vector>
 
 #include "focusablearea.h"
-#include "menuselectoptionelement.h"
-#include "menuselectadjustableline.h"
 
 #include "../pointer.h"
 
-
+class MenuSelectOptionElement;
 class MenuSelectOptionTextArrow;
 class MenuSelectAdjustableLine;
 class MenuSelectOptionTextButton;

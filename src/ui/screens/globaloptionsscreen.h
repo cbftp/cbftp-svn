@@ -5,14 +5,14 @@
 
 #include "../../pointer.h"
 
-#include "../menuselectoptionelement.h"
-#include "../menuselectoptiontextarrow.h"
 #include "../menuselectoption.h"
 #include "../uiwindow.h"
 
 class SiteManager;
 class RemoteCommandHandler;
 class LocalStorage;
+class MenuSelectOptionElement;
+class MenuSelectOptionTextArrow;
 
 class GlobalOptionsScreen : public UIWindow {
 public:

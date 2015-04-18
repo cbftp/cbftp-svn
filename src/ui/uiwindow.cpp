@@ -16,10 +16,6 @@ UIWindow::~UIWindow() {
 
 }
 
-void UIWindow::initialize(unsigned int, unsigned int) {
-  util::assert(false);
-}
-
 void UIWindow::resize(unsigned int row, unsigned int col) {
   this->row = row;
   this->col = col;

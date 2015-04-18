@@ -4,7 +4,6 @@
 #include <map>
 
 #include "../../pointer.h"
-#include "../../race.h"
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"

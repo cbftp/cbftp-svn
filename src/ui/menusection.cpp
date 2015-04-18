@@ -2,6 +2,7 @@
 
 #include "menuselectoptiontextfield.h"
 #include "menuselectoptiontextbutton.h"
+#include "menuselectoptionelement.h"
 
 MenuSection::MenuSection() {
   pointer = 0;

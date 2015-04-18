@@ -6,28 +6,44 @@
 
 #include <unistd.h>
 
+namespace {
+
+template <typename D> void delfunc(D * d) {
+  delete d;
+}
+
+}
+
 template <class T> class Pointer {
   template<class F> friend class Pointer;
 public:
   Pointer() :
     object(NULL),
-    counter(NULL) {
+    counter(NULL),
+    deleter(NULL)
+  {
   }
   explicit Pointer(T * t) :
     object(t),
-    counter(new int) {
+    counter(new int),
+    deleter(delfunc<T>)
+  {
     *counter = 1;
   }
   Pointer(const Pointer & other) :
     object(other.object),
-    counter(other.counter) {
+    counter(other.counter),
+    deleter(other.deleter)
+  {
     if (counter != NULL) {
       (*counter)++;
     }
   }
   template<typename X> Pointer(const Pointer<X> & other) :
     object((T *) other.object),
-    counter(other.counter) {
+    counter(other.counter),
+    deleter(delfunc<T>)
+  {
     if (counter != NULL) {
       (*counter)++;
     }
@@ -39,6 +55,7 @@ public:
     decrease();
     object = other.object;
     counter = other.counter;
+    deleter = other.deleter;
     if (counter != NULL) {
       ++(*counter);
     }
@@ -48,6 +65,7 @@ public:
     decrease();
     object = (T *) other.object;
     counter = other.counter;
+    deleter = delfunc<T>;
     if (counter != NULL) {
       ++(*counter);
     }
@@ -81,6 +99,7 @@ public:
     decrease();
     object = NULL;
     counter = NULL;
+    deleter = NULL;
   }
   template<typename X> X * get() const {
     return (X *) object;
@@ -89,11 +108,12 @@ private:
   void decrease() {
     if (counter != NULL && !--(*counter)) {
       delete counter;
-      delete object;
+      deleter(object);
     }
   }
   T * object;
   int * counter;
+  void (*deleter)(T *);
 };
 
 template <typename T>

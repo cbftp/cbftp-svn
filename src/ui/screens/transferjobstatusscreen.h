@@ -5,10 +5,8 @@
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
-#include "../menuselectoptionelement.h"
 
 #include "../../pointer.h"
-#include "../../transferjob.h"
 
 class TransferJob;
 class Ui;

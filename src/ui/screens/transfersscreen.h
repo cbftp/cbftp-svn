@@ -4,12 +4,12 @@
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
-#include "../menuselectoptionelement.h"
 
 #include "../../pointer.h"
 
 class TransferManager;
 class TransferStatus;
+class MenuSelectOptionElement;
 
 class TransfersScreen : public UIWindow {
 public:

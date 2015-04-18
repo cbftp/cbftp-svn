@@ -1,14 +1,17 @@
 #pragma once
 
-#include "../../site.h"
+#include <list>
+
 #include "../../pointer.h"
+#include "../../site.h"
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
 #include "../menusection.h"
-#include "../menuselectoptionelement.h"
 
 class FocusableArea;
+class Site;
+class MenuSelectOptionElement;
 
 class EditSiteScreen : public UIWindow {
 public:

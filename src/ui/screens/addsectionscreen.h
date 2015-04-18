@@ -4,9 +4,9 @@
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
-#include "../menuselectoptionelement.h"
 
 class Site;
+class MenuSelectOptionElement;
 
 class AddSectionScreen : public UIWindow {
 public:

@@ -6,8 +6,8 @@
 
 #include "commandowner.h"
 #include "pointer.h"
-#include "race.h"
 
+class Race;
 class FileList;
 
 class SiteRace : public CommandOwner {

@@ -1,9 +1,8 @@
 #pragma once
 
 #include "../uiwindow.h"
-#include "../../pointer.h"
 
-#include "../../transferstatus.h"
+#include "../../pointer.h"
 
 #include <vector>
 #include <string>

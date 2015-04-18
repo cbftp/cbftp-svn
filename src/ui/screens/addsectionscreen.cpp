@@ -6,6 +6,7 @@
 
 #include "../ui.h"
 #include "../menuselectoptiontextfield.h"
+#include "../menuselectoptionelement.h"
 
 extern GlobalContext * global;
 

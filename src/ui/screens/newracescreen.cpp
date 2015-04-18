@@ -8,6 +8,7 @@
 #include "../ui.h"
 #include "../menuselectoptioncheckbox.h"
 #include "../menuselectoptiontextbutton.h"
+#include "../menuselectoptionelement.h"
 #include "../focusablearea.h"
 
 extern GlobalContext * global;

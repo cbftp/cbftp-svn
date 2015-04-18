@@ -8,7 +8,8 @@
 
 #include "focusablearea.h"
 #include "menuselectoptioncontainer.h"
-#include "menuselectoptionelement.h"
+
+class MenuSelectOptionElement;
 
 class MenuSection : public FocusableArea {
   private:

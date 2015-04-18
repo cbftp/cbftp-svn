@@ -1,7 +1,6 @@
 #include "skiplistscreen.h"
 
 #include "../../globalcontext.h"
-#include "../../skiplist.h"
 
 #include "../ui.h"
 #include "../focusablearea.h"
@@ -9,6 +8,9 @@
 #include "../menuselectadjustableline.h"
 #include "../menuselectoptioncheckbox.h"
 #include "../menuselectoptiontextbutton.h"
+#include "../menuselectoptionelement.h"
+#include "../menuselectoptiontextfield.h"
+#include "../menuselectoptiontextarrow.h"
 #include "../resizableelement.h"
 
 extern GlobalContext * global;

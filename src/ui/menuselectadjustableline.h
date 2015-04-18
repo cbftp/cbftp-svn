@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "../pointer.h"
-#include "resizableelement.h"
 
 #define RESIZE_SPACING 2
 #define RESIZE_SPACING_SHORT 1

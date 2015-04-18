@@ -5,7 +5,6 @@
 
 #include "../../pointer.h"
 
-#include "../menuselectoptionelement.h"
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
 

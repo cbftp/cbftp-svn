@@ -6,6 +6,7 @@
 #include "../menuselectadjustableline.h"
 #include "../menuselectoptiontextbutton.h"
 
+#include "../../transferstatus.h"
 #include "../../globalcontext.h"
 #include "../../sitelogicmanager.h"
 #include "../../sitelogic.h"
