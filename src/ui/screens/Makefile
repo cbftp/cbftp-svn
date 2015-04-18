@@ -11,7 +11,7 @@ OBJECTS = loginscreen.o mainscreen.o sitestatusscreen.o editsitescreen.o \
 
 all: ${OBJECTS}
 
-loginscreen.o: loginscreen.cpp
+loginscreen.o: loginscreen.cpp ../../../Makefile.inc
 	g++  ${CPPFLAGS} -DBUILDTIME=${DATE} -DVERSION=${VERSION} -DBOXTAG=${BOXTAG} -c -o loginscreen.o loginscreen.cpp
 clean:
 	rm -rf ${OBJECTS}
