@@ -48,7 +48,7 @@ Pointer<TransferMonitor> TransferManager::getAvailableTransferMonitor() {
     }
   }
   if (!target) {
-    target = Pointer<TransferMonitor>(new TransferMonitor(this));
+    target = makePointer<TransferMonitor>(this);
     transfermonitors.push_back(target);
   }
   return target;

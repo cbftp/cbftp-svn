@@ -50,10 +50,10 @@ void TransferMonitor::engageFXP(std::string sfile, SiteLogic * sls, FileList * f
     return;
   }
   status = TM_STATUS_AWAITING_PASSIVE;
-  ts = Pointer<TransferStatus>(new TransferStatus(TRANSFERSTATUS_TYPE_FXP, sls->getSite()->getName(),
+  ts = makePointer<TransferStatus>(TRANSFERSTATUS_TYPE_FXP, sls->getSite()->getName(),
       sld->getSite()->getName(), "", dfile, fls->getPath(), fld->getPath(),
       fls->getFile(sfile)->getSize(),
-      sls->getSite()->getAverageSpeed(sld->getSite()->getName())));
+      sls->getSite()->getAverageSpeed(sld->getSite()->getName()));
   tm->addNewTransferStatus(ts);
   int spol = sls->getSite()->getSSLTransferPolicy();
   int dpol = sld->getSite()->getSSLTransferPolicy();
@@ -85,9 +85,9 @@ void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileLis
   this->fls = fls;
   if (!sls->lockDownloadConn(spath, &src)) return;
   status = TM_STATUS_AWAITING_PASSIVE;
-  ts = Pointer<TransferStatus>(new TransferStatus(TRANSFERSTATUS_TYPE_DOWNLOAD,
+  ts = makePointer<TransferStatus>(TRANSFERSTATUS_TYPE_DOWNLOAD,
       sls->getSite()->getName(), "/\\", "", dfile, spath,
-      dpath, fls->getFile(sfile)->getSize(), 0));
+      dpath, fls->getFile(sfile)->getSize(), 0);
   tm->addNewTransferStatus(ts);
   int spol = sls->getSite()->getSSLTransferPolicy();
   if (spol == SITE_SSL_ALWAYS_ON || spol == SITE_SSL_PREFER_ON) {
@@ -116,9 +116,9 @@ void TransferMonitor::engageUpload(std::string sfile, std::string spath, SiteLog
   this->dpath = fld->getPath();
   if (!sls->lockUploadConn(dpath, &dst)) return;
   status = TM_STATUS_AWAITING_PASSIVE;
-  ts = Pointer<TransferStatus>(new TransferStatus(TRANSFERSTATUS_TYPE_UPLOAD,
+  ts = makePointer<TransferStatus>(TRANSFERSTATUS_TYPE_UPLOAD,
       "/\\", sld->getSite()->getName(), "", dfile, spath,
-      dpath, fls->getFile(sfile)->getSize(), 0));
+      dpath, fls->getFile(sfile)->getSize(), 0);
   tm->addNewTransferStatus(ts);
   int spol = sld->getSite()->getSSLTransferPolicy();
   if (spol == SITE_SSL_ALWAYS_ON || spol == SITE_SSL_PREFER_ON) {
