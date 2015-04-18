@@ -42,7 +42,7 @@ extern GlobalContext * global;
 
 class SiteLogic : public EventReceiver {
   private:
-    PotentialTracker * ptrack;
+    Site * site;
     std::vector<FTPConn *> conns;
     std::vector<ConnStateTracker> connstatetracker;
     std::vector<SiteRace *> races;
@@ -51,16 +51,17 @@ class SiteLogic : public EventReceiver {
     RawBuffer * rawbuf;
     unsigned int maxslotsup;
     unsigned int maxslotsdn;
-    unsigned int slotsdn;
-    unsigned int slotsup;
-    unsigned int available;
+    int slotsdn;
+    int slotsup;
+    int available;
+    PotentialTracker * ptrack;
     unsigned int loggedin;
     unsigned int wantedloggedin;
     std::list<SiteLogicRequest> requests;
     std::list<SiteLogicRequest> requestsinprogress;
     std::list<SiteLogicRequestReady> requestsready;
     int requestidcounter;
-    Site * site;
+    bool poke;
     void handleConnection(int, bool);
     bool handleRequest(int);
     void handleRecursiveLogic(int);
@@ -82,7 +83,6 @@ class SiteLogic : public EventReceiver {
     void connQuit(int);
     bool lockTransferConn(std::string, int *, bool);
     void setRequestReady(std::list<SiteLogicRequest>::iterator, void *, bool);
-    bool poke;
   public:
     SiteLogic(std::string);
     ~SiteLogic();

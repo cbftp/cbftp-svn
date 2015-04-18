@@ -27,20 +27,23 @@
 #include "commandowner.h"
 #include "util.h"
 
-SiteLogic::SiteLogic(std::string sitename) {
-  requestidcounter = 0;
-  site = global->getSiteManager()->getSite(sitename);
-  maxslotsdn = slotsdn = site->getMaxDown();
-  maxslotsup = slotsup = site->getMaxUp();
-  ptrack = new PotentialTracker(slotsdn);
-  available = 0;
-  loggedin = 0;
-  wantedloggedin = 0;
-  poke = false;
-  rawbuf = new RawBuffer(site->getName());
-  int logins = site->getMaxLogins();
+SiteLogic::SiteLogic(std::string sitename) :
+  site(global->getSiteManager()->getSite(sitename)),
+  rawbuf(new RawBuffer(site->getName())),
+  maxslotsup(site->getMaxUp()),
+  maxslotsdn(site->getMaxDown()),
+  slotsdn(maxslotsdn),
+  slotsup(maxslotsup),
+  available(0),
+  ptrack(new PotentialTracker(slotsdn)),
+  loggedin(0),
+  wantedloggedin(0),
+  requestidcounter(0),
+  poke(false)
+{
   global->getTickPoke()->startPoke(this, "SiteLogic", 50, 0);
-  for (int i = 0; i < logins; i++) {
+
+  for (unsigned int i = 0; i < site->getMaxLogins(); i++) {
     connstatetracker.push_back(ConnStateTracker());
     conns.push_back(new FTPConn(this, i));
   }
@@ -1224,11 +1227,7 @@ void SiteLogic::setNumConnections(unsigned int num) {
     }
     for (unsigned int i = 0; i < conns.size(); i++) {
       if (conns[i]->isConnected() && !conns[i]->isProcessing()) {
-        if (connstatetracker[i].isLoggedIn()) {
-          loggedin--;
-          available--;
-        }
-        conns[i]->disconnect();
+        disconnectConn(i);
         connstatetracker.erase(connstatetracker.begin() + i);
         delete conns[i];
         conns.erase(conns.begin() + i);
@@ -1240,13 +1239,7 @@ void SiteLogic::setNumConnections(unsigned int num) {
       continue;
     }
     if (conns.size() > 0) {
-      if (conns[0]->isConnected()) {
-        if (connstatetracker[0].isLoggedIn()) {
-          loggedin--;
-          available--;
-        }
-        conns[0]->disconnect();
-      }
+      disconnectConn(0);
       connstatetracker.erase(connstatetracker.begin());
       delete conns[0];
       conns.erase(conns.begin());
