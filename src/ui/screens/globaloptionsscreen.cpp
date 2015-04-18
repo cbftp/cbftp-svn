@@ -8,12 +8,12 @@
 #include "../../util.h"
 
 #include "../ui.h"
-#include "../menuselectoptionelement.h"
 #include "../focusablearea.h"
 #include "../menuselectoptioncheckbox.h"
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptionnumarrow.h"
 #include "../menuselectoptiontextarrow.h"
+#include "../menuselectoptiontextbutton.h"
 
 extern GlobalContext * global;
 
@@ -64,7 +64,7 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   mso.addIntArrow(y++, x, "defmaxup", "Default site upload slots:", sm->getDefaultMaxUp(), 0, 99);
   mso.addIntArrow(y++, x, "defmaxdn", "Default site download slots:", sm->getDefaultMaxDown(), 0, 99);
   mso.addCheckBox(y++, x, "defsslconn", "Default site AUTH SSL:", sm->getDefaultSSL());
-  MenuSelectOptionTextArrow * sslfxp = mso.addTextArrow(y++, x, "sslfxp", "Default SSL transfers:");
+  Pointer<MenuSelectOptionTextArrow> sslfxp = mso.addTextArrow(y++, x, "sslfxp", "Default SSL transfers:");
   sslfxp->addOption("Always off", SITE_SSL_ALWAYS_OFF);
   sslfxp->addOption("Prefer off", SITE_SSL_PREFER_OFF);
   sslfxp->addOption("Prefer on", SITE_SSL_PREFER_ON);
@@ -85,7 +85,7 @@ void GlobalOptionsScreen::redraw() {
   ui->erase();
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    MenuSelectOptionElement * msoe = mso.getElement(i);
+    Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
     highlight = false;
     if (mso.getSelectionPointer() == i) {
       highlight = true;
@@ -96,7 +96,7 @@ void GlobalOptionsScreen::redraw() {
 }
 
 void GlobalOptionsScreen::update() {
-  MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
+  Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
   ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
   ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
@@ -126,7 +126,7 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
     return;
   }
   bool activation;
-  MenuSelectOptionElement * msoe;
+  Pointer<MenuSelectOptionElement> msoe;
   switch(ch) {
     case KEY_UP:
       mso.goUp();
@@ -172,53 +172,53 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
     case 'd':
       bool udpenable = false;
       for(unsigned int i = 0; i < mso.size(); i++) {
-        MenuSelectOptionElement * msoe = mso.getElement(i);
+        Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
         std::string identifier = msoe->getIdentifier();
         if (identifier == "defaultinterface") {
-          std::string interface = interfacemap[((MenuSelectOptionTextArrow *)msoe)->getData()];
+          std::string interface = interfacemap[msoe.get<MenuSelectOptionTextArrow>()->getData()];
           global->getIOManager()->setDefaultInterface(interface);
         }
         if (identifier == "udpenable") {
-          udpenable = (((MenuSelectOptionCheckBox *)msoe)->getData());
+          udpenable = msoe.get<MenuSelectOptionCheckBox>()->getData();
           if (rch->isEnabled() && !udpenable) {
             rch->setEnabled(false);
           }
         }
         else if (identifier == "udpport") {
-          rch->setPort(util::str2Int(((MenuSelectOptionTextField *)msoe)->getData()));
+          rch->setPort(util::str2Int(msoe.get<MenuSelectOptionTextField>()->getData()));
         }
         else if (identifier == "udppass") {
-          rch->setPassword(((MenuSelectOptionTextField *)msoe)->getData());
+          rch->setPassword(msoe.get<MenuSelectOptionTextField>()->getData());
         }
         else if (identifier == "defuser") {
-          sm->setDefaultUserName(((MenuSelectOptionTextField *)msoe)->getData());
+          sm->setDefaultUserName(msoe.get<MenuSelectOptionTextField>()->getData());
         }
         else if (identifier == "defpass") {
-          sm->setDefaultPassword(((MenuSelectOptionTextField *)msoe)->getData());
+          sm->setDefaultPassword(msoe.get<MenuSelectOptionTextField>()->getData());
         }
         else if (identifier == "deflogins") {
-          sm->setDefaultMaxLogins(((MenuSelectOptionNumArrow *)msoe)->getData());
+          sm->setDefaultMaxLogins(msoe.get<MenuSelectOptionNumArrow>()->getData());
         }
         else if (identifier == "defmaxup") {
-          sm->setDefaultMaxUp(((MenuSelectOptionNumArrow *)msoe)->getData());
+          sm->setDefaultMaxUp(msoe.get<MenuSelectOptionNumArrow>()->getData());
         }
         else if (identifier == "defmaxdn") {
-          sm->setDefaultMaxDown(((MenuSelectOptionNumArrow *)msoe)->getData());
+          sm->setDefaultMaxDown(msoe.get<MenuSelectOptionNumArrow>()->getData());
         }
         else if (identifier == "defsslconn") {
-          sm->setDefaultSSL(((MenuSelectOptionCheckBox *)msoe)->getData());
+          sm->setDefaultSSL(msoe.get<MenuSelectOptionCheckBox>()->getData());
         }
         else if (identifier == "sslfxp") {
-          sm->setDefaultSSLTransferPolicy(((MenuSelectOptionTextArrow *)msoe)->getData());
+          sm->setDefaultSSLTransferPolicy(msoe.get<MenuSelectOptionTextArrow>()->getData());
         }
         else if (identifier == "defidletime") {
-          sm->setDefaultMaxIdleTime(util::str2Int(((MenuSelectOptionTextField *)msoe)->getData()));
+          sm->setDefaultMaxIdleTime(util::str2Int(msoe.get<MenuSelectOptionTextField>()->getData()));
         }
         else if (identifier == "legend") {
-          ui->showLegend(((MenuSelectOptionCheckBox *)msoe)->getData());
+          ui->showLegend(msoe.get<MenuSelectOptionCheckBox>()->getData());
         }
         else if (identifier == "dlpath") {
-          ls->setDownloadPath(((MenuSelectOptionTextField *)msoe)->getData());
+          ls->setDownloadPath(msoe.get<MenuSelectOptionTextField>()->getData());
         }
       }
       rch->setEnabled(udpenable);

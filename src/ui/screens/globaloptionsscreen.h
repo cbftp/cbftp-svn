@@ -3,11 +3,13 @@
 #include <list>
 #include <map>
 
+#include "../../pointer.h"
+
+#include "../menuselectoptionelement.h"
+#include "../menuselectoptiontextarrow.h"
 #include "../menuselectoption.h"
 #include "../uiwindow.h"
 
-class MenuSelectOptionElement;
-class MenuSelectOptionTextArrow;
 class SiteManager;
 class RemoteCommandHandler;
 class LocalStorage;
@@ -29,7 +31,7 @@ private:
   std::string currentlegendtext;
   std::string defaultlegendtext;
   bool active;
-  MenuSelectOptionElement * activeelement;
+  Pointer<MenuSelectOptionElement> activeelement;
   std::map<int, std::string> interfacemap;
-  MenuSelectOptionTextArrow * defaultinterface;
+  Pointer<MenuSelectOptionTextArrow> defaultinterface;
 };

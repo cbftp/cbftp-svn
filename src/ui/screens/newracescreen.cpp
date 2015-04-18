@@ -7,7 +7,7 @@
 
 #include "../ui.h"
 #include "../menuselectoptioncheckbox.h"
-#include "../menuselectoptionelement.h"
+#include "../menuselectoptiontextbutton.h"
 #include "../focusablearea.h"
 
 extern GlobalContext * global;
@@ -93,7 +93,7 @@ void NewRaceScreen::populateSiteList() {
 void NewRaceScreen::redraw() {
   ui->erase();
   for (unsigned int i = 0; i < mso.size(); i++) {
-    MenuSelectOptionCheckBox * msocb = (MenuSelectOptionCheckBox *) mso.getElement(i);
+    Pointer<MenuSelectOptionCheckBox> msocb = mso.getElement(i);
     tempsites.push_back(std::pair<std::string, bool>(msocb->getIdentifier(), msocb->getData()));
   }
   populateSiteList();
@@ -101,7 +101,7 @@ void NewRaceScreen::redraw() {
   ui->printStr(2, 1, "Section: ");
   bool highlight;
   for (unsigned int i = 0; i < msos.size(); i++) {
-    MenuSelectOptionElement * msoe = msos.getElement(i);
+    Pointer<MenuSelectOptionElement> msoe = msos.getElement(i);
     highlight = false;
     if (msos.isFocused() && msos.getSelectionPointer() == i) {
       highlight = true;
@@ -109,7 +109,7 @@ void NewRaceScreen::redraw() {
     ui->printStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe), highlight);
   }
   for (unsigned int i = 0; i < mso.size(); i++) {
-    MenuSelectOptionElement * msoe = mso.getElement(i);
+    Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
     highlight = false;
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
@@ -129,17 +129,17 @@ void NewRaceScreen::update() {
   }
   if (defocusedarea != NULL) {
     if (defocusedarea == &mso) {
-      MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
+      Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
       ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText());
       ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
     }
     else if (defocusedarea == &msos){
-      MenuSelectOptionElement * msoe = msos.getElement(msos.getLastSelectionPointer());
+      Pointer<MenuSelectOptionElement> msoe = msos.getElement(msos.getLastSelectionPointer());
       ui->printStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe));
     }
   }
   if (focusedarea == &mso) {
-    MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
+    Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
     ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText());
     ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
     msoe = mso.getElement(mso.getSelectionPointer());
@@ -154,7 +154,7 @@ void NewRaceScreen::update() {
     }
   }
   else {
-    MenuSelectOptionElement * msoe = msos.getElement(msos.getLastSelectionPointer());
+    Pointer<MenuSelectOptionElement> msoe = msos.getElement(msos.getLastSelectionPointer());
     ui->printStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe));
     msoe = msos.getElement(msos.getSelectionPointer());
     ui->printStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe), true);
@@ -295,7 +295,7 @@ std::string NewRaceScreen::getInfoText() const {
   return infotext;
 }
 
-std::string NewRaceScreen::getSectionButtonText(MenuSelectOptionElement * msoe) const {
+std::string NewRaceScreen::getSectionButtonText(Pointer<MenuSelectOptionElement> msoe) const {
   std::string buttontext = msoe->getLabelText();
   if (msoe->getIdentifier() == section) {
     buttontext[0] = '[';
@@ -307,7 +307,7 @@ std::string NewRaceScreen::getSectionButtonText(MenuSelectOptionElement * msoe) 
 bool NewRaceScreen::startRace() {
   std::list<std::string> sites;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    MenuSelectOptionCheckBox * msocb = (MenuSelectOptionCheckBox *) mso.getElement(i);
+    Pointer<MenuSelectOptionCheckBox> msocb = mso.getElement(i);
     if (msocb->getData()) {
       sites.push_back(msocb->getIdentifier());
     }

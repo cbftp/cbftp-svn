@@ -171,59 +171,59 @@ bool MenuSelectOption::goPrevious() {
   return false;
 }
 
-MenuSelectOptionTextField * MenuSelectOption::addStringField(int row, int col, std::string identifier, std::string label, std::string starttext, bool secret) {
+Pointer<MenuSelectOptionTextField> MenuSelectOption::addStringField(int row, int col, std::string identifier, std::string label, std::string starttext, bool secret) {
   return addStringField(row, col, identifier, label, starttext, secret, 32, 32);
 }
 
-MenuSelectOptionTextField * MenuSelectOption::addStringField(int row, int col, std::string identifier, std::string label, std::string starttext, bool secret, int maxlen) {
+Pointer<MenuSelectOptionTextField> MenuSelectOption::addStringField(int row, int col, std::string identifier, std::string label, std::string starttext, bool secret, int maxlen) {
   return addStringField(row, col, identifier, label, starttext, secret, maxlen, maxlen);
 }
 
-MenuSelectOptionTextField * MenuSelectOption::addStringField(int row, int col, std::string identifier, std::string label, std::string starttext, bool secret, int visiblelen, int maxlen) {
-  MenuSelectOptionTextField * msotf = new MenuSelectOptionTextField(identifier, row, col, label, starttext, visiblelen, maxlen, secret);
+Pointer<MenuSelectOptionTextField> MenuSelectOption::addStringField(int row, int col, std::string identifier, std::string label, std::string starttext, bool secret, int visiblelen, int maxlen) {
+  Pointer<MenuSelectOptionTextField> msotf(makePointer<MenuSelectOptionTextField>(identifier, row, col, label, starttext, visiblelen, maxlen, secret));
   options.push_back(msotf);
   return msotf;
 }
 
-MenuSelectOptionTextArrow * MenuSelectOption::addTextArrow(int row, int col, std::string identifier, std::string label) {
-  MenuSelectOptionTextArrow * msota = new MenuSelectOptionTextArrow(identifier, row, col, label);
+Pointer<MenuSelectOptionTextArrow> MenuSelectOption::addTextArrow(int row, int col, std::string identifier, std::string label) {
+  Pointer<MenuSelectOptionTextArrow> msota(makePointer<MenuSelectOptionTextArrow>(identifier, row, col, label));
   options.push_back(msota);
   return msota;
 }
 
-MenuSelectOptionNumArrow * MenuSelectOption::addIntArrow(int row, int col, std::string identifier, std::string label, int startval, int min, int max) {
-  MenuSelectOptionNumArrow * msona = new MenuSelectOptionNumArrow(identifier, row, col, label, startval, min, max);
+Pointer<MenuSelectOptionNumArrow> MenuSelectOption::addIntArrow(int row, int col, std::string identifier, std::string label, int startval, int min, int max) {
+  Pointer<MenuSelectOptionNumArrow> msona(makePointer<MenuSelectOptionNumArrow>(identifier, row, col, label, startval, min, max));
   options.push_back(msona);
   return msona;
 }
 
-MenuSelectOptionCheckBox * MenuSelectOption::addCheckBox(int row, int col, std::string identifier, std::string label, bool startval) {
-  MenuSelectOptionCheckBox * msocb = new MenuSelectOptionCheckBox(identifier, row, col, label, startval);
+Pointer<MenuSelectOptionCheckBox> MenuSelectOption::addCheckBox(int row, int col, std::string identifier, std::string label, bool startval) {
+  Pointer<MenuSelectOptionCheckBox> msocb(makePointer<MenuSelectOptionCheckBox>(identifier, row, col, label, startval));
   options.push_back(msocb);
   return msocb;
 }
 
-MenuSelectOptionTextButton * MenuSelectOption::addTextButton(int row, int col, std::string identifier, std::string label) {
-  MenuSelectOptionTextButton * msotb = new MenuSelectOptionTextButton(identifier, row, col, label, true);
+Pointer<MenuSelectOptionTextButton> MenuSelectOption::addTextButton(int row, int col, std::string identifier, std::string label) {
+  Pointer<MenuSelectOptionTextButton> msotb(makePointer<MenuSelectOptionTextButton>(identifier, row, col, label, true));
   options.push_back(msotb);
   return msotb;
 }
 
-MenuSelectOptionTextButton * MenuSelectOption::addTextButtonNoContent(int row, int col, std::string identifier, std::string label) {
-  MenuSelectOptionTextButton * msotb = new MenuSelectOptionTextButton(identifier, row, col, label, false);
+Pointer<MenuSelectOptionTextButton> MenuSelectOption::addTextButtonNoContent(int row, int col, std::string identifier, std::string label) {
+  Pointer<MenuSelectOptionTextButton> msotb(makePointer<MenuSelectOptionTextButton>(identifier, row, col, label, false));
   options.push_back(msotb);
   return msotb;
 }
 
-MenuSelectAdjustableLine * MenuSelectOption::addAdjustableLine() {
-  MenuSelectAdjustableLine * msal = new MenuSelectAdjustableLine;
+Pointer<MenuSelectAdjustableLine> MenuSelectOption::addAdjustableLine() {
+  Pointer<MenuSelectAdjustableLine> msal(makePointer<MenuSelectAdjustableLine>());
   adjustablelines.push_back(msal);
   return msal;
 }
 
-MenuSelectAdjustableLine * MenuSelectOption::addAdjustableLineBefore(MenuSelectAdjustableLine * before) {
-  MenuSelectAdjustableLine * msal = new MenuSelectAdjustableLine;
-  std::vector<MenuSelectAdjustableLine *>::iterator it;
+Pointer<MenuSelectAdjustableLine> MenuSelectOption::addAdjustableLineBefore(Pointer<MenuSelectAdjustableLine> before) {
+  Pointer<MenuSelectAdjustableLine> msal(makePointer<MenuSelectAdjustableLine>());
+  std::vector<Pointer<MenuSelectAdjustableLine> >::iterator it;
   for (it = adjustablelines.begin(); it != adjustablelines.end(); it++) {
     if (*it == before) {
       adjustablelines.insert(it, msal);
@@ -234,21 +234,21 @@ MenuSelectAdjustableLine * MenuSelectOption::addAdjustableLineBefore(MenuSelectA
   return msal;
 }
 
-MenuSelectOptionElement * MenuSelectOption::getElement(unsigned int i) const {
+Pointer<MenuSelectOptionElement> MenuSelectOption::getElement(unsigned int i) const {
   if (i >= size()) {
-    return NULL;
+    return Pointer<MenuSelectOptionElement>();
   }
   return options[i];
 }
 
-MenuSelectOptionElement * MenuSelectOption::getElement(std::string identifier) const {
-  std::vector<MenuSelectOptionElement *>::const_iterator it;
+Pointer<MenuSelectOptionElement> MenuSelectOption::getElement(std::string identifier) const {
+  std::vector<Pointer<MenuSelectOptionElement> >::const_iterator it;
   for (it = options.begin(); it != options.end(); it++) {
     if ((*it)->getIdentifier() == identifier) {
       return *it;
     }
   }
-  return NULL;
+  return Pointer<MenuSelectOptionElement>();
 }
 
 unsigned int MenuSelectOption::getLastSelectionPointer() const {
@@ -264,15 +264,7 @@ bool MenuSelectOption::activateSelected() {
 }
 
 void MenuSelectOption::clear() {
-  std::vector<MenuSelectOptionElement *>::iterator it;
-  for (it = options.begin(); it != options.end(); it++) {
-    delete *it;
-  }
   options.clear();
-  std::vector<MenuSelectAdjustableLine *>::iterator it2;
-  for (it2 = adjustablelines.begin(); it2 != adjustablelines.end(); it2++) {
-    delete *it2;
-  }
   adjustablelines.clear();
 }
 
@@ -316,9 +308,9 @@ void MenuSelectOption::adjustLines(unsigned int linesize) {
   maxwantedwidths.resize(elementcount); // int is initialized to 0
   maxwidths.resize(elementcount);
   int shortspaces = 0;
-  for (std::vector<MenuSelectAdjustableLine *>::iterator it = adjustablelines.begin(); it != adjustablelines.end(); it++) {
+  for (std::vector<Pointer<MenuSelectAdjustableLine> >::iterator it = adjustablelines.begin(); it != adjustablelines.end(); it++) {
     for (unsigned int i = 0; i < elementcount; i++) {
-      ResizableElement * re = (*it)->getElement(i);
+      Pointer<ResizableElement> re = (*it)->getElement(i);
       int wantedwidth = re->wantedWidth();
       if (wantedwidth > maxwantedwidths[i]) {
         maxwantedwidths[i] = wantedwidth;
@@ -337,7 +329,7 @@ void MenuSelectOption::adjustLines(unsigned int linesize) {
   while (totalwantedwidth != linesize) {
     if (totalwantedwidth < linesize) {
       for (unsigned int i = 0; i < elementcount; i++) {
-        ResizableElement * elem = adjustablelines[0]->getElement(i);
+        Pointer<ResizableElement> elem = adjustablelines[0]->getElement(i);
         if (elem->isExpandable()) {
           unsigned int expansion = linesize - totalwantedwidth;
           maxwidths[i] += expansion;
@@ -360,7 +352,7 @@ void MenuSelectOption::adjustLines(unsigned int linesize) {
           leastimportant = i;
         }
       }
-      ResizableElement * leastimportantelem = adjustablelines[0]->getElement(leastimportant);
+      Pointer<ResizableElement> leastimportantelem = adjustablelines[0]->getElement(leastimportant);
       int spacing = leastimportantelem->shortSpacing() ? RESIZE_SPACING_SHORT : RESIZE_SPACING;
       unsigned int maxsaving = maxwantedwidths[leastimportant] + spacing;
       unsigned int resizemethod = leastimportantelem->resizeMethod();
@@ -386,10 +378,10 @@ void MenuSelectOption::adjustLines(unsigned int linesize) {
     }
   }
   int startpos = adjustablelines[0]->getElement(0)->getCol();
-  for (std::vector<MenuSelectAdjustableLine *>::iterator it = adjustablelines.begin(); it != adjustablelines.end(); it++) {
+  for (std::vector<Pointer<MenuSelectAdjustableLine> >::iterator it = adjustablelines.begin(); it != adjustablelines.end(); it++) {
     int elementpos = startpos;
     for (unsigned int i = 0; i < elementcount; i++) {
-      ResizableElement * elem = (*it)->getElement(i);
+      Pointer<ResizableElement> elem = (*it)->getElement(i);
       if (adjustablelines[0]->getElement(i)->isVisible()) {
         elem->setMaxWidth(maxwidths[i]);
         elem->setPosition(elem->getRow(), elementpos);
@@ -417,16 +409,16 @@ void MenuSelectOption::checkPointer() {
   lastpointer = pointer;
 }
 
-std::vector<MenuSelectAdjustableLine *>::iterator MenuSelectOption::linesBegin() {
+std::vector<Pointer<MenuSelectAdjustableLine> >::iterator MenuSelectOption::linesBegin() {
   return adjustablelines.begin();
 }
 
-std::vector<MenuSelectAdjustableLine *>::iterator MenuSelectOption::linesEnd() {
+std::vector<Pointer<MenuSelectAdjustableLine> >::iterator MenuSelectOption::linesEnd() {
   return adjustablelines.end();
 }
 
-MenuSelectAdjustableLine * MenuSelectOption::getAdjustableLine(MenuSelectOptionElement * msoe) const {
-  std::vector<MenuSelectAdjustableLine *>::const_iterator it;
+Pointer<MenuSelectAdjustableLine> MenuSelectOption::getAdjustableLine(Pointer<MenuSelectOptionElement> msoe) const {
+  std::vector<Pointer<MenuSelectAdjustableLine> >::const_iterator it;
   for (it = adjustablelines.begin(); it != adjustablelines.end(); it++) {
     for (unsigned int i = 0; i < (*it)->size(); i++) {
       if ((*it)->getElement(i) == msoe) {
@@ -434,37 +426,35 @@ MenuSelectAdjustableLine * MenuSelectOption::getAdjustableLine(MenuSelectOptionE
       }
     }
   }
-  return NULL;
+  return Pointer<MenuSelectAdjustableLine>();
 }
 
-void MenuSelectOption::removeAdjustableLine(MenuSelectAdjustableLine * msal) {
-  std::vector<MenuSelectAdjustableLine *>::iterator it;
+void MenuSelectOption::removeAdjustableLine(Pointer<MenuSelectAdjustableLine> msal) {
+  std::vector<Pointer<MenuSelectAdjustableLine> >::iterator it;
   for (it = adjustablelines.begin(); it != adjustablelines.end(); it++) {
     if (*it == msal) {
-      adjustablelines.erase(it);
       for (unsigned int i = 0; i < (*it)->size(); i++) {
         removeElement(msal->getElement(i));
       }
-      delete msal;
+      adjustablelines.erase(it);
       return;
     }
   }
 }
 
-void MenuSelectOption::removeElement(MenuSelectOptionElement * msoe) {
-  std::vector<MenuSelectOptionElement *>::iterator it;
+void MenuSelectOption::removeElement(Pointer<MenuSelectOptionElement> msoe) {
+  std::vector<Pointer<MenuSelectOptionElement> >::iterator it;
   for (it = options.begin(); it != options.end(); it++) {
     if (*it == msoe) {
       options.erase(it);
-      delete msoe;
       return;
     }
   }
 }
 
-void MenuSelectOption::setPointer(MenuSelectOptionElement * set) {
+void MenuSelectOption::setPointer(Pointer<MenuSelectOptionElement> set) {
   for (unsigned int i = 0; i < options.size(); i++) {
-    MenuSelectOptionElement * msoe = options[i];
+    Pointer<MenuSelectOptionElement> msoe = options[i];
     if (msoe == set) {
       pointer = i;
       return;
@@ -472,12 +462,12 @@ void MenuSelectOption::setPointer(MenuSelectOptionElement * set) {
   }
 }
 
-bool MenuSelectOption::swapLineWithNext(MenuSelectAdjustableLine * msal) {
-  std::vector<MenuSelectAdjustableLine *>::iterator it;
+bool MenuSelectOption::swapLineWithNext(Pointer<MenuSelectAdjustableLine> msal) {
+  std::vector<Pointer<MenuSelectAdjustableLine> >::iterator it;
   for (it = adjustablelines.begin(); it != adjustablelines.end(); it++) {
     if (*it == msal) {
       if (it + 1 != adjustablelines.end()) {
-        MenuSelectAdjustableLine * swap = *(it + 1);
+        Pointer<MenuSelectAdjustableLine> swap = *(it + 1);
         *(it + 1) = msal;
         *it = swap;
         return true;
@@ -488,12 +478,12 @@ bool MenuSelectOption::swapLineWithNext(MenuSelectAdjustableLine * msal) {
   return false;
 }
 
-bool MenuSelectOption::swapLineWithPrevious(MenuSelectAdjustableLine * msal) {
-  std::vector<MenuSelectAdjustableLine *>::iterator it;
+bool MenuSelectOption::swapLineWithPrevious(Pointer<MenuSelectAdjustableLine> msal) {
+  std::vector<Pointer<MenuSelectAdjustableLine> >::iterator it;
   for (it = adjustablelines.begin(); it != adjustablelines.end(); it++) {
     if (*it == msal) {
       if (it != adjustablelines.begin()) {
-        MenuSelectAdjustableLine * swap = *(it - 1);
+        Pointer<MenuSelectAdjustableLine> swap = *(it - 1);
         *(it - 1) = msal;
         *it = swap;
         return true;
@@ -504,8 +494,8 @@ bool MenuSelectOption::swapLineWithPrevious(MenuSelectAdjustableLine * msal) {
   return false;
 }
 
-int MenuSelectOption::getLineIndex(MenuSelectAdjustableLine * msal) {
-  std::vector<MenuSelectAdjustableLine *>::iterator it;
+int MenuSelectOption::getLineIndex(Pointer<MenuSelectAdjustableLine> msal) {
+  std::vector<Pointer<MenuSelectAdjustableLine> >::iterator it;
   int index = 0;
   for (it = adjustablelines.begin(); it != adjustablelines.end(); it++) {
     if (*it == msal) {

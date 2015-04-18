@@ -56,7 +56,7 @@ void EditProxyScreen::redraw() {
   latestauthmethod = authmethod->getData();
   ui->printStr(1, 1, "Type: SOCKS5");
   for (unsigned int i = 0; i < mso.size(); i++) {
-    MenuSelectOptionElement * msoe = mso.getElement(i);
+    Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
     if (!msoe->visible()) {
       continue;
     }
@@ -74,7 +74,7 @@ void EditProxyScreen::update() {
     redraw();
     return;
   }
-  MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
+  Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
   if (msoe->visible()) {
     ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
     ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
@@ -134,26 +134,26 @@ void EditProxyScreen::keyPressed(unsigned int ch) {
         proxy = new Proxy();
       }
       for(unsigned int i = 0; i < mso.size(); i++) {
-        MenuSelectOptionElement * msoe = mso.getElement(i);
+        Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
         std::string identifier = msoe->getIdentifier();
         if (identifier == "name") {
-          std::string newname = ((MenuSelectOptionTextField *)msoe)->getData();
+          std::string newname = ((Pointer<MenuSelectOptionTextField>)msoe)->getData();
           proxy->setName(newname);
         }
         else if (identifier == "addr") {
-          proxy->setAddr(((MenuSelectOptionTextField *)msoe)->getData());
+          proxy->setAddr(((Pointer<MenuSelectOptionTextField>)msoe)->getData());
         }
         else if (identifier == "port") {
-          proxy->setPort(((MenuSelectOptionTextField *)msoe)->getData());
+          proxy->setPort(((Pointer<MenuSelectOptionTextField>)msoe)->getData());
         }
         else if (identifier == "user") {
-          proxy->setUser(((MenuSelectOptionTextField *)msoe)->getData());
+          proxy->setUser(((Pointer<MenuSelectOptionTextField>)msoe)->getData());
         }
         else if (identifier == "pass") {
-          proxy->setPass(((MenuSelectOptionTextField *)msoe)->getData());
+          proxy->setPass(((Pointer<MenuSelectOptionTextField>)msoe)->getData());
         }
         else if (identifier == "authmethod") {
-          proxy->setAuthMethod(((MenuSelectOptionTextArrow *)msoe)->getData());
+          proxy->setAuthMethod(((Pointer<MenuSelectOptionTextArrow>)msoe)->getData());
         }
       }
       if (operation == "add") {

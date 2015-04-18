@@ -3,6 +3,8 @@
 #include "../uiwindow.h"
 #include "../../pointer.h"
 
+#include "../../transferstatus.h"
+
 #include <vector>
 #include <string>
 

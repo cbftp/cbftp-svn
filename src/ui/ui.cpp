@@ -56,7 +56,6 @@ extern GlobalContext * global;
 Ui::Ui() {
   CharDraw::init();
   main = NULL;
-  topwindow = NULL;
   legendenabled = false;
   infoenabled = false;
   dead = false;
@@ -72,59 +71,60 @@ bool Ui::init() {
   initret = true;
   uiqueue.push(UICommand(UI_COMMAND_INIT));
   eventcomplete.wait();
-  legendwindow = new LegendWindow(this, legend, 2, col);
-  infowindow = new InfoWindow(this, info, 2, col);
-  loginscreen = new LoginScreen(this);
-  newkeyscreen = new NewKeyScreen(this);
-  mainscreen = new MainScreen(this);
+  legendwindow = makePointer<LegendWindow>(this, legend, 2, col);
+  infowindow = makePointer<InfoWindow>(this, info, 2, col);
+  loginscreen = makePointer<LoginScreen>(this);
+  newkeyscreen = makePointer<NewKeyScreen>(this);
+
+  mainscreen = makePointer<MainScreen>(this);
+  confirmationscreen = makePointer<ConfirmationScreen>(this);
+  editsitescreen = makePointer<EditSiteScreen>(this);
+  sitestatusscreen = makePointer<SiteStatusScreen>(this);
+  rawdatascreen = makePointer<RawDataScreen>(this);
+  rawcommandscreen = makePointer<RawCommandScreen>(this);
+  browsescreen = makePointer<BrowseScreen>(this);
+  addsectionscreen = makePointer<AddSectionScreen>(this);
+  newracescreen = makePointer<NewRaceScreen>(this);
+  racestatusscreen = makePointer<RaceStatusScreen>(this);
+  globaloptionsscreen = makePointer<GlobalOptionsScreen>(this);
+  skiplistscreen = makePointer<SkipListScreen>(this);
+  changekeyscreen = makePointer<ChangeKeyScreen>(this);
+  eventlogscreen = makePointer<EventLogScreen>(this);
+  proxyoptionsscreen = makePointer<ProxyOptionsScreen>(this);
+  editproxyscreen = makePointer<EditProxyScreen>(this);
+  viewfilescreen = makePointer<ViewFileScreen>(this);
+  nukescreen = makePointer<NukeScreen>(this);
+  fileviewersettingsscreen = makePointer<FileViewerSettingsScreen>(this);
+  scoreboardscreen = makePointer<ScoreBoardScreen>(this);
+  selectsitesscreen = makePointer<SelectSitesScreen>(this);
+  transfersscreen = makePointer<TransfersScreen>(this);
+  transferjobstatusscreen = makePointer<TransferJobStatusScreen>(this);
+  allracesscreen = makePointer<AllRacesScreen>(this);
+  alltransferjobsscreen = makePointer<AllTransferJobsScreen>(this);
   mainwindows.push_back(mainscreen);
-  confirmationscreen = new ConfirmationScreen(this);
   mainwindows.push_back(confirmationscreen);
-  editsitescreen = new EditSiteScreen(this);
   mainwindows.push_back(editsitescreen);
-  sitestatusscreen = new SiteStatusScreen(this);
   mainwindows.push_back(sitestatusscreen);
-  rawdatascreen = new RawDataScreen(this);
   mainwindows.push_back(rawdatascreen);
-  rawcommandscreen = new RawCommandScreen(this);
   mainwindows.push_back(rawcommandscreen);
-  browsescreen = new BrowseScreen(this);
   mainwindows.push_back(browsescreen);
-  addsectionscreen = new AddSectionScreen(this);
   mainwindows.push_back(addsectionscreen);
-  newracescreen = new NewRaceScreen(this);
   mainwindows.push_back(newracescreen);
-  racestatusscreen = new RaceStatusScreen(this);
   mainwindows.push_back(racestatusscreen);
-  globaloptionsscreen = new GlobalOptionsScreen(this);
   mainwindows.push_back(globaloptionsscreen);
-  skiplistscreen = new SkipListScreen(this);
   mainwindows.push_back(skiplistscreen);
-  changekeyscreen = new ChangeKeyScreen(this);
   mainwindows.push_back(changekeyscreen);
-  eventlogscreen = new EventLogScreen(this);
   mainwindows.push_back(eventlogscreen);
-  proxyoptionsscreen = new ProxyOptionsScreen(this);
   mainwindows.push_back(proxyoptionsscreen);
-  editproxyscreen = new EditProxyScreen(this);
   mainwindows.push_back(editproxyscreen);
-  viewfilescreen = new ViewFileScreen(this);
   mainwindows.push_back(viewfilescreen);
-  nukescreen = new NukeScreen(this);
   mainwindows.push_back(nukescreen);
-  fileviewersettingsscreen = new FileViewerSettingsScreen(this);
   mainwindows.push_back(fileviewersettingsscreen);
-  scoreboardscreen = new ScoreBoardScreen(this);
   mainwindows.push_back(scoreboardscreen);
-  selectsitesscreen = new SelectSitesScreen(this);
   mainwindows.push_back(selectsitesscreen);
-  transfersscreen = new TransfersScreen(this);
   mainwindows.push_back(transfersscreen);
-  transferjobstatusscreen = new TransferJobStatusScreen(this);
   mainwindows.push_back(transferjobstatusscreen);
-  allracesscreen = new AllRacesScreen(this);
   mainwindows.push_back(allracesscreen);
-  alltransferjobsscreen = new AllTransferJobsScreen(this);
   mainwindows.push_back(alltransferjobsscreen);
   if (global->getDataFileHandler()->fileExists()) {
     loginscreen->initialize(mainrow, maincol);
@@ -296,7 +296,7 @@ void Ui::disableLegend() {
 }
 
 void Ui::redrawAll() {
-  std::vector<UIWindow *>::iterator it;
+  std::vector<Pointer<UIWindow> >::iterator it;
   for (it = mainwindows.begin(); it != mainwindows.end(); it++) {
     (*it)->resize(mainrow, maincol);
   }
@@ -308,7 +308,7 @@ void Ui::redrawAll() {
     infowindow->resize(2, col);
     infowindow->redraw();
   }
-  if (topwindow != NULL) {
+  if (!!topwindow) {
     topwindow->resize(mainrow, maincol);
     topwindow->redraw();
   }
@@ -388,7 +388,7 @@ void Ui::runInstance() {
   }
 }
 
-void Ui::switchToWindow(UIWindow * window) {
+void Ui::switchToWindow(Pointer<UIWindow> window) {
   history.push_back(topwindow);
   if (split) {
     setSplit(false);

@@ -85,6 +85,6 @@ bool FocusableArea::activateSelected() {
   return false;
 }
 
-MenuSelectOptionElement * FocusableArea::getElement(unsigned int i) const {
-  return NULL;
+Pointer<MenuSelectOptionElement> FocusableArea::getElement(unsigned int i) const {
+  return Pointer<MenuSelectOptionElement>();
 }

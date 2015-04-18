@@ -5,6 +5,7 @@
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
+#include "../menuselectoptionelement.h"
 
 #include "../../pointer.h"
 
@@ -32,9 +33,9 @@ private:
   std::string filename;
   MenuSelectOption table;
   MenuSelectOption mso;
-  std::map<MenuSelectOptionElement *, int> progressmap;
+  std::map<Pointer<MenuSelectOptionElement>, int> progressmap;
   bool active;
-  MenuSelectOptionElement * activeelement;
+  Pointer<MenuSelectOptionElement> activeelement;
   std::string defaultlegendtext;
   std::string currentlegendtext;
   std::string abortedlegendtext;

@@ -6,11 +6,13 @@
 #include <ncurses.h>
 #include <pthread.h>
 
+#include "uicommand.h"
+
 #include "../semaphore.h"
 #include "../eventreceiver.h"
-#include "uicommand.h"
 #include "../blockingqueue.h"
 #include "../uibase.h"
+#include "../pointer.h"
 
 #define TICKLENGTH 250000
 
@@ -53,37 +55,37 @@ class Ui : private EventReceiver, public UIBase {
     WINDOW * main;
     WINDOW * info;
     WINDOW * legend;
-    std::vector<UIWindow *> mainwindows;
-    UIWindow * topwindow;
-    InfoWindow * infowindow;
-    LegendWindow * legendwindow;
-    LoginScreen * loginscreen;
-    NewKeyScreen * newkeyscreen;
-    MainScreen * mainscreen;
-    ConfirmationScreen * confirmationscreen;
-    EditSiteScreen * editsitescreen;
-    SiteStatusScreen * sitestatusscreen;
-    RawDataScreen * rawdatascreen;
-    RawCommandScreen * rawcommandscreen;
-    BrowseScreen * browsescreen;
-    AddSectionScreen * addsectionscreen;
-    NewRaceScreen * newracescreen;
-    RaceStatusScreen * racestatusscreen;
-    GlobalOptionsScreen * globaloptionsscreen;
-    SkipListScreen * skiplistscreen;
-    ChangeKeyScreen * changekeyscreen;
-    EventLogScreen * eventlogscreen;
-    ProxyOptionsScreen * proxyoptionsscreen;
-    EditProxyScreen * editproxyscreen;
-    ViewFileScreen * viewfilescreen;
-    NukeScreen * nukescreen;
-    FileViewerSettingsScreen * fileviewersettingsscreen;
-    ScoreBoardScreen * scoreboardscreen;
-    SelectSitesScreen * selectsitesscreen;
-    TransfersScreen * transfersscreen;
-    TransferJobStatusScreen * transferjobstatusscreen;
-    AllRacesScreen * allracesscreen;
-    AllTransferJobsScreen * alltransferjobsscreen;
+    std::vector<Pointer<UIWindow> > mainwindows;
+    Pointer<UIWindow> topwindow;
+    Pointer<InfoWindow> infowindow;
+    Pointer<LegendWindow> legendwindow;
+    Pointer<LoginScreen> loginscreen;
+    Pointer<NewKeyScreen> newkeyscreen;
+    Pointer<MainScreen> mainscreen;
+    Pointer<ConfirmationScreen> confirmationscreen;
+    Pointer<EditSiteScreen> editsitescreen;
+    Pointer<SiteStatusScreen> sitestatusscreen;
+    Pointer<RawDataScreen> rawdatascreen;
+    Pointer<RawCommandScreen> rawcommandscreen;
+    Pointer<BrowseScreen> browsescreen;
+    Pointer<AddSectionScreen> addsectionscreen;
+    Pointer<NewRaceScreen> newracescreen;
+    Pointer<RaceStatusScreen> racestatusscreen;
+    Pointer<GlobalOptionsScreen> globaloptionsscreen;
+    Pointer<SkipListScreen> skiplistscreen;
+    Pointer<ChangeKeyScreen> changekeyscreen;
+    Pointer<EventLogScreen> eventlogscreen;
+    Pointer<ProxyOptionsScreen> proxyoptionsscreen;
+    Pointer<EditProxyScreen> editproxyscreen;
+    Pointer<ViewFileScreen> viewfilescreen;
+    Pointer<NukeScreen> nukescreen;
+    Pointer<FileViewerSettingsScreen> fileviewersettingsscreen;
+    Pointer<ScoreBoardScreen> scoreboardscreen;
+    Pointer<SelectSitesScreen> selectsitesscreen;
+    Pointer<TransfersScreen> transfersscreen;
+    Pointer<TransferJobStatusScreen> transferjobstatusscreen;
+    Pointer<AllRacesScreen> allracesscreen;
+    Pointer<AllTransferJobsScreen> alltransferjobsscreen;
     int mainrow;
     int maincol;
     int col;
@@ -97,7 +99,7 @@ class Ui : private EventReceiver, public UIBase {
     std::string eventtext;
     pthread_t uithread;
     Semaphore eventcomplete;
-    std::list<UIWindow *> history;
+    std::list<Pointer<UIWindow> > history;
     void FDData();
     void refreshAll();
     void initIntern();
@@ -106,7 +108,7 @@ class Ui : private EventReceiver, public UIBase {
     void enableLegend();
     void disableLegend();
     void redrawAll();
-    void switchToWindow(UIWindow *);
+    void switchToWindow(Pointer<UIWindow>);
     static void * run(void *);
     void tick(int);
     void globalKeyBinds(int);

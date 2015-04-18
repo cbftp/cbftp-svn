@@ -5,7 +5,6 @@
 #include "../../sitemanager.h"
 
 #include "../ui.h"
-#include "../menuselectoptionelement.h"
 #include "../menuselectoptiontextfield.h"
 
 extern GlobalContext * global;
@@ -31,7 +30,7 @@ void AddSectionScreen::redraw() {
   ui->erase();
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    MenuSelectOptionElement * msoe = mso.getElement(i);
+    Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
     highlight = false;
     if (mso.getSelectionPointer() == i) {
       highlight = true;
@@ -42,7 +41,7 @@ void AddSectionScreen::redraw() {
 }
 
 void AddSectionScreen::update() {
-  MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
+  Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
   ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
   ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
@@ -99,8 +98,8 @@ void AddSectionScreen::keyPressed(unsigned int ch) {
       ui->returnToLast();
       break;
     case 'd':
-      MenuSelectOptionTextField * field1 = (MenuSelectOptionTextField *)mso.getElement(0);
-      MenuSelectOptionTextField * field2 = (MenuSelectOptionTextField *)mso.getElement(1);
+      Pointer<MenuSelectOptionTextField> field1 = mso.getElement(0);
+      Pointer<MenuSelectOptionTextField> field2 = mso.getElement(1);
       std::string name = field1->getData();
       std::string path = field2->getData();
       modsite->addSection(name, path);

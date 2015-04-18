@@ -2,8 +2,11 @@
 
 #include <list>
 
+#include "../../pointer.h"
+
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
+#include "../menuselectoptionelement.h"
 
 class MenuSelectOptionElement;
 class Site;
@@ -27,7 +30,7 @@ private:
   std::string defaultlegendtext;
   bool active;
   std::string section;
-  MenuSelectOptionElement * activeelement;
+  Pointer<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;
   std::string release;
   std::string path;

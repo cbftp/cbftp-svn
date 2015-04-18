@@ -10,7 +10,6 @@
 #include "../../util.h"
 
 #include "../ui.h"
-#include "../menuselectoptionelement.h"
 #include "../focusablearea.h"
 #include "../menuselectoptioncontainer.h"
 #include "../menuselectoptiontextfield.h"
@@ -83,7 +82,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
   mso.addIntArrow(y++, x, "maxup", "Upload slots:", modsite.getInternMaxUp(), 0, 99);
   mso.addIntArrow(y++, x, "maxdn", "Download slots:", modsite.getInternMaxDown(), 0, 99);
   mso.addStringField(y++, x, "basepath", "Base path:", modsite.getBasePath(), false, 32, 512);
-  MenuSelectOptionTextArrow * listcommand = mso.addTextArrow(y++, x, "listcommand", "List command:");
+  Pointer<MenuSelectOptionTextArrow> listcommand = mso.addTextArrow(y++, x, "listcommand", "List command:");
   listcommand->addOption("STAT -l", SITE_LIST_STAT);
   listcommand->addOption("LIST", SITE_LIST_LIST);
   listcommand->setOption(modsite.getListCommand());
@@ -91,7 +90,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
   mso.addCheckBox(y++, x, "allowupload", "Allow upload:", modsite.getAllowUpload());
   mso.addCheckBox(y++, x, "allowdownload", "Allow download:", modsite.getAllowDownload());
   mso.addCheckBox(y++, x, "ssl", "AUTH SSL:", modsite.SSL());
-  MenuSelectOptionTextArrow * sslfxp = mso.addTextArrow(y++, x, "ssltransfer", "SSL transfers:");
+  Pointer<MenuSelectOptionTextArrow> sslfxp = mso.addTextArrow(y++, x, "ssltransfer", "SSL transfers:");
   sslfxp->addOption("Always off", SITE_SSL_ALWAYS_OFF);
   sslfxp->addOption("Prefer off", SITE_SSL_PREFER_OFF);
   sslfxp->addOption("Prefer on", SITE_SSL_PREFER_ON);
@@ -100,7 +99,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
   mso.addCheckBox(y++, x, "cpsv", "CPSV supported:", modsite.supportsCPSV());
   mso.addCheckBox(y++, x, "pret", "Needs PRET:", modsite.needsPRET());
   mso.addCheckBox(y++, x, "brokenpasv", "Broken PASV:", modsite.hasBrokenPASV());
-  MenuSelectOptionTextArrow * useproxy = mso.addTextArrow(y++, x, "useproxy", "Proxy:");
+  Pointer<MenuSelectOptionTextArrow> useproxy = mso.addTextArrow(y++, x, "useproxy", "Proxy:");
   ProxyManager * pm = global->getProxyManager();
   Proxy * proxy = pm->getDefaultProxy();
   std::string globalproxyname = "None";
@@ -134,7 +133,7 @@ void EditSiteScreen::redraw() {
   ui->erase();
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    MenuSelectOptionElement * msoe = mso.getElement(i);
+    Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
     highlight = false;
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
@@ -170,7 +169,7 @@ void EditSiteScreen::redraw() {
 void EditSiteScreen::update() {
   if (defocusedarea != NULL) {
     if (defocusedarea == &mso) {
-      MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
+      Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
       ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
       ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
     }
@@ -193,7 +192,7 @@ void EditSiteScreen::update() {
     defocusedarea = NULL;
   }
   if (focusedarea == &mso) {
-    MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
+    Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
     ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
     ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
     msoe = mso.getElement(mso.getSelectionPointer());
@@ -251,7 +250,7 @@ void EditSiteScreen::update() {
 
 void EditSiteScreen::command(std::string command, std::string arg) {
   if (command == "returnselectsites") {
-    ((MenuSelectOptionTextField *)activeelement)->setText(arg);
+    activeelement.get<MenuSelectOptionTextField>()->setText(arg);
     redraw();
   }
 }
@@ -323,7 +322,7 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
       if (activeelement->getIdentifier() == "blockedsrc") {
         activeelement->deactivate();
         active = false;
-        std::string preselectstr = ((MenuSelectOptionTextField *)activeelement)->getData();
+        std::string preselectstr = activeelement.get<MenuSelectOptionTextField>()->getData();
         std::list<Site *> preselected;
         fillPreselectionList(preselectstr, &preselected);
         std::list<Site *> excluded;
@@ -334,7 +333,7 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
       if (activeelement->getIdentifier() == "blockeddst") {
         activeelement->deactivate();
         active = false;
-        std::string preselectstr = ((MenuSelectOptionTextField *)activeelement)->getData();
+        std::string preselectstr = activeelement.get<MenuSelectOptionTextField>()->getData();
         std::list<Site *> preselected;
         fillPreselectionList(preselectstr, &preselected);
         std::list<Site *> excluded;
@@ -351,17 +350,17 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         site = new Site();
       }
       for(unsigned int i = 0; i < mso.size(); i++) {
-        MenuSelectOptionElement * msoe = mso.getElement(i);
+        Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
         std::string identifier = msoe->getIdentifier();
         if (identifier == "name") {
-          std::string newname = ((MenuSelectOptionTextField *)msoe)->getData();
+          std::string newname = msoe.get<MenuSelectOptionTextField>()->getData();
           if (newname != site->getName()) {
             changedname = true;
           }
           site->setName(newname);
         }
         else if (identifier == "addr") {
-          std::string addrport = ((MenuSelectOptionTextField *)msoe)->getData();
+          std::string addrport = msoe.get<MenuSelectOptionTextField>()->getData();
           size_t splitpos = addrport.find(":");
           if (splitpos != std::string::npos) {
             site->setAddress(addrport.substr(0, splitpos));
@@ -377,59 +376,59 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
           }
         }
         else if (identifier == "user") {
-          site->setUser(((MenuSelectOptionTextField *)msoe)->getData());
+          site->setUser(msoe.get<MenuSelectOptionTextField>()->getData());
         }
         else if (identifier == "pass") {
-          site->setPass(((MenuSelectOptionTextField *)msoe)->getData());
+          site->setPass(msoe.get<MenuSelectOptionTextField>()->getData());
         }
         else if (identifier == "basepath") {
-          site->setBasePath(((MenuSelectOptionTextField *)msoe)->getData());
+          site->setBasePath(msoe.get<MenuSelectOptionTextField>()->getData());
         }
         else if (identifier == "logins") {
-          site->setMaxLogins(((MenuSelectOptionNumArrow *)msoe)->getData());
+          site->setMaxLogins(msoe.get<MenuSelectOptionNumArrow>()->getData());
         }
         else if (identifier == "maxup") {
-          site->setMaxUp(((MenuSelectOptionNumArrow *)msoe)->getData());
+          site->setMaxUp(msoe.get<MenuSelectOptionNumArrow>()->getData());
         }
         else if (identifier == "maxdn") {
-          site->setMaxDn(((MenuSelectOptionNumArrow *)msoe)->getData());
+          site->setMaxDn(msoe.get<MenuSelectOptionNumArrow>()->getData());
         }
         else if (identifier == "pret") {
-          site->setPRET(((MenuSelectOptionCheckBox *)msoe)->getData());
+          site->setPRET(msoe.get<MenuSelectOptionCheckBox>()->getData());
         }
         else if (identifier == "ssl") {
-          site->setSSL(((MenuSelectOptionCheckBox *)msoe)->getData());
+          site->setSSL(msoe.get<MenuSelectOptionCheckBox>()->getData());
         }
         else if (identifier == "ssltransfer") {
-          site->setSSLTransferPolicy(((MenuSelectOptionTextArrow *)msoe)->getData());
+          site->setSSLTransferPolicy(msoe.get<MenuSelectOptionTextArrow>()->getData());
         }
         else if (identifier == "cpsv") {
-          site->setSupportsCPSV(((MenuSelectOptionCheckBox *)msoe)->getData());
+          site->setSupportsCPSV(msoe.get<MenuSelectOptionCheckBox>()->getData());
         }
         else if (identifier == "listcommand") {
-          site->setListCommand(((MenuSelectOptionTextArrow *)msoe)->getData());
+          site->setListCommand(msoe.get<MenuSelectOptionTextArrow>()->getData());
         }
         else if (identifier == "allowupload") {
-          site->setAllowUpload(((MenuSelectOptionCheckBox *)msoe)->getData());
+          site->setAllowUpload(msoe.get<MenuSelectOptionCheckBox>()->getData());
         }
         else if (identifier == "allowdownload") {
-          site->setAllowDownload(((MenuSelectOptionCheckBox *)msoe)->getData());
+          site->setAllowDownload(msoe.get<MenuSelectOptionCheckBox>()->getData());
         }
         else if (identifier == "brokenpasv") {
-          site->setBrokenPASV(((MenuSelectOptionCheckBox *)msoe)->getData());
+          site->setBrokenPASV(msoe.get<MenuSelectOptionCheckBox>()->getData());
         }
         else if (identifier == "idletime") {
-          site->setMaxIdleTime(util::str2Int(((MenuSelectOptionTextField *)msoe)->getData()));
+          site->setMaxIdleTime(util::str2Int(msoe.get<MenuSelectOptionTextField>()->getData()));
         }
         else if (identifier == "useproxy") {
-          int proxytype = ((MenuSelectOptionTextArrow *)msoe)->getData();
+          int proxytype = msoe.get<MenuSelectOptionTextArrow>()->getData();
           site->setProxyType(proxytype);
           if (proxytype == SITE_PROXY_USE) {
-            site->setProxy(((MenuSelectOptionTextArrow *)msoe)->getDataText());
+            site->setProxy(msoe.get<MenuSelectOptionTextArrow>()->getDataText());
           }
         }
         else if (identifier == "affils") {
-          std::string affils = ((MenuSelectOptionTextField *)msoe)->getData();
+          std::string affils = msoe.get<MenuSelectOptionTextField>()->getData();
           site->clearAffils();
           size_t pos;
           while ((pos = affils.find(",")) != std::string::npos) {
@@ -461,7 +460,7 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
           }
         }
         else if (identifier == "blockedsrc") {
-          std::string blockedstr = ((MenuSelectOptionTextField *)msoe)->getData();
+          std::string blockedstr = msoe.get<MenuSelectOptionTextField>()->getData();
           while (true) {
             size_t commapos = blockedstr.find(",");
             if (commapos != std::string::npos) {
@@ -475,7 +474,7 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
           }
         }
         else if (identifier == "blockeddst") {
-          std::string blockedstr = ((MenuSelectOptionTextField *)msoe)->getData();
+          std::string blockedstr = msoe.get<MenuSelectOptionTextField>()->getData();
           while (true) {
             size_t commapos = blockedstr.find(",");
             if (commapos != std::string::npos) {
@@ -492,8 +491,8 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
       site->clearSections();
       for (unsigned int i = 0; i < ms.size(); i++) {
         const MenuSelectOptionContainer * msoc = ms.getSectionContainer(i);
-        std::string name = ((MenuSelectOptionTextField *)msoc->getOption(0))->getData();
-        std::string path = ((MenuSelectOptionTextField *)msoc->getOption(1))->getData();
+        std::string name = msoc->getOption(0).get<MenuSelectOptionTextField>()->getData();
+        std::string path = msoc->getOption(1).get<MenuSelectOptionTextField>()->getData();
         if (name.length() > 0 && path.length() > 0) {
           site->addSection(name, path);
         }

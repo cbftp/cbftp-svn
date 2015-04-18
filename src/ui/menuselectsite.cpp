@@ -8,8 +8,6 @@
 #include "../globalcontext.h"
 #include "../util.h"
 
-
-#include "menuselectsiteelement.h"
 #include "termint.h"
 
 extern GlobalContext * global;
@@ -43,20 +41,20 @@ bool MenuSelectSite::goUp() {
 
 void MenuSelectSite::add(Site * site, int row, int col) {
   SiteLogic * st = global->getSiteLogicManager()->getSiteLogic(site->getName());
-  sites.push_back(MenuSelectSiteElement(site, st, row, col));
+  sites.push_back(makePointer<MenuSelectSiteElement>(site, st, row, col));
 }
 
 Site * MenuSelectSite::getSite() const {
   if (sites.size() == 0) return NULL;
-  return sites[pointer].getSite();
+  return sites[pointer]->getSite();
 }
 
 void MenuSelectSite::prepareRefill() {
   sites.clear();
 }
 
-MenuSelectSiteElement * MenuSelectSite::getSiteElement(unsigned int i) {
-  return &sites[i];
+Pointer<MenuSelectSiteElement> MenuSelectSite::getSiteElement(unsigned int i) {
+  return sites[i];
 }
 
 unsigned int MenuSelectSite::size() const {
@@ -78,8 +76,8 @@ void MenuSelectSite::enterFocusFrom(int dir) {
 }
 
 std::string MenuSelectSite::getSiteLine(unsigned int index) const {
-  Site * site = sites[index].getSite();
-  SiteLogic * sitelogic = sites[index].getSiteLogic();
+  Site * site = sites[index]->getSite();
+  SiteLogic * sitelogic = sites[index]->getSiteLogic();
   std::string line = "";
   std::string add = "";
   int linelen;

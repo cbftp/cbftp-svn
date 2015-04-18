@@ -1,13 +1,14 @@
 #pragma once
 
 #include "../../site.h"
+#include "../../pointer.h"
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
 #include "../menusection.h"
+#include "../menuselectoptionelement.h"
 
 class FocusableArea;
-class MenuSelectOptionElement;
 
 class EditSiteScreen : public UIWindow {
 public:
@@ -26,7 +27,7 @@ private:
   std::string currentlegendtext;
   std::string defaultlegendtext;
   bool active;
-  MenuSelectOptionElement * activeelement;
+  Pointer<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;
   MenuSection ms;
   Site * site;

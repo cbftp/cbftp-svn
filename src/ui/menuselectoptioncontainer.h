@@ -2,13 +2,15 @@
 
 #include <vector>
 
-class MenuSelectOptionElement;
+#include "../pointer.h"
+
+#include "menuselectoptionelement.h"
 
 class MenuSelectOptionContainer {
 private:
-  std::vector<MenuSelectOptionElement *> elements;
+  std::vector<Pointer<MenuSelectOptionElement> > elements;
 public:
   MenuSelectOptionContainer();
-  void addElement(MenuSelectOptionElement *);
-  MenuSelectOptionElement * getOption(unsigned int) const;
+  void addElement(Pointer<MenuSelectOptionElement>);
+  Pointer<MenuSelectOptionElement> getOption(unsigned int) const;
 };

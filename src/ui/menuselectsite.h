@@ -4,15 +4,17 @@
 #include <vector>
 
 #include "focusablearea.h"
+#include "menuselectsiteelement.h"
 
-class MenuSelectSiteElement;
+#include "../pointer.h"
+
 class Site;
 
 class MenuSelectSite : public FocusableArea {
   private:
     unsigned int pointer;
     unsigned int maxheight;
-    std::vector<MenuSelectSiteElement> sites;
+    std::vector<Pointer<MenuSelectSiteElement> > sites;
   public:
     MenuSelectSite();
     bool goDown();
@@ -20,7 +22,7 @@ class MenuSelectSite : public FocusableArea {
     void add(Site *, int, int);
     void remove(Site *);
     Site * getSite() const;
-    MenuSelectSiteElement * getSiteElement(unsigned int);
+    Pointer<MenuSelectSiteElement> getSiteElement(unsigned int);
     unsigned int size() const;
     unsigned int getSelectionPointer() const;
     std::string getSiteLine(unsigned int) const;

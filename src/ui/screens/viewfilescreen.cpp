@@ -14,7 +14,6 @@
 #include "../../filelist.h"
 #include "../../file.h"
 #include "../../externalfileviewing.h"
-#include "../../transferstatus.h"
 #include "../../util.h"
 
 extern GlobalContext * global;
@@ -253,33 +252,33 @@ void ViewFileScreen::printTransferInfo() {
       util::parseSize(ts->sourceSize());
   unsigned int y = 3;
   MenuSelectOption table;
-  MenuSelectAdjustableLine * msal = table.addAdjustableLine();
-  MenuSelectOptionTextButton * msotb;
+  Pointer<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
+  Pointer<MenuSelectOptionTextButton> msotb;
   msotb = table.addTextButtonNoContent(y, 1, "transferred", "TRANSFERRED");
-  msal->addElement((ResizableElement *)msotb, 4, RESIZE_CUTEND);
+  msal->addElement((Pointer<ResizableElement>)msotb, 4, RESIZE_CUTEND);
   msotb = table.addTextButtonNoContent(y, 3, "filename", "FILENAME");
-  msal->addElement((ResizableElement *)msotb, 2, RESIZE_CUTEND);
+  msal->addElement((Pointer<ResizableElement>)msotb, 2, RESIZE_CUTEND);
   msotb = table.addTextButtonNoContent(y, 6, "remaining", "LEFT");
-  msal->addElement((ResizableElement *)msotb, 5, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 5, RESIZE_REMOVE);
   msotb = table.addTextButtonNoContent(y, 7, "speed", "SPEED");
-  msal->addElement((ResizableElement *)msotb, 6, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 6, RESIZE_REMOVE);
   msotb = table.addTextButtonNoContent(y, 8, "progress", "DONE");
-  msal->addElement((ResizableElement *)msotb, 7, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 7, RESIZE_REMOVE);
   y++;
   msal = table.addAdjustableLine();
   msotb = table.addTextButtonNoContent(y, 1, "transferred", transferred);
-  msal->addElement((ResizableElement *)msotb, 4, RESIZE_CUTEND);
+  msal->addElement((Pointer<ResizableElement>)msotb, 4, RESIZE_CUTEND);
   msotb = table.addTextButtonNoContent(y, 10, "filename", ts->getFile());
-  msal->addElement((ResizableElement *)msotb, 2, RESIZE_WITHLAST3);
+  msal->addElement((Pointer<ResizableElement>)msotb, 2, RESIZE_WITHLAST3);
   msotb = table.addTextButtonNoContent(y, 60, "remaining", timeremaining);
-  msal->addElement((ResizableElement *)msotb, 5, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 5, RESIZE_REMOVE);
   msotb = table.addTextButtonNoContent(y, 40, "speed", speed);
-  msal->addElement((ResizableElement *)msotb, 6, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 6, RESIZE_REMOVE);
   msotb = table.addTextButtonNoContent(y, 50, "progress", progress);
-  msal->addElement((ResizableElement *)msotb, 7, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 7, RESIZE_REMOVE);
   table.adjustLines(col - 3);
   for (unsigned int i = 0; i < table.size(); i++) {
-    ResizableElement * re = (ResizableElement *) table.getElement(i);
+    Pointer<ResizableElement> re = (Pointer<ResizableElement>) table.getElement(i);
     if (re->isVisible()) {
       if (re->getIdentifier() == "filename") {
         std::string labeltext = re->getLabelText();

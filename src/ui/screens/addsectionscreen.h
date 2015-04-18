@@ -1,9 +1,11 @@
 #pragma once
 
+#include "../../pointer.h"
+
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
+#include "../menuselectoptionelement.h"
 
-class MenuSelectOptionElement;
 class Site;
 
 class AddSectionScreen : public UIWindow {
@@ -20,6 +22,6 @@ private:
   std::string currentlegendtext;
   std::string defaultlegendtext;
   bool active;
-  MenuSelectOptionElement * activeelement;
+  Pointer<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;
 };

@@ -3,6 +3,9 @@
 #include <list>
 #include <utility>
 
+#include "../../pointer.h"
+
+#include "../menuselectoptionelement.h"
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
 
@@ -24,14 +27,14 @@ private:
   void populateSiteList();
   bool startRace();
   Site * startsite;
-  std::string getSectionButtonText(MenuSelectOptionElement *) const;
+  std::string getSectionButtonText(Pointer<MenuSelectOptionElement>) const;
   std::string currentlegendtext;
   std::string defaultlegendtext;
   bool active;
   bool toggleall;
   bool sectionupdate;
   std::string section;
-  MenuSelectOptionElement * activeelement;
+  Pointer<MenuSelectOptionElement> activeelement;
   FocusableArea * focusedarea;
   FocusableArea * defocusedarea;
   MenuSelectOption msos;

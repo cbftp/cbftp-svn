@@ -10,10 +10,10 @@
 
 #include "../ui.h"
 #include "../menuselectoptioncheckbox.h"
-#include "../menuselectoptionelement.h"
 #include "../focusablearea.h"
 #include "../menuselectoptionnumarrow.h"
 #include "../menuselectoptiontextfield.h"
+#include "../menuselectoptiontextbutton.h"
 
 extern GlobalContext * global;
 
@@ -46,7 +46,7 @@ void NukeScreen::redraw() {
   ui->printStr(3, 1, "Path: " + path);
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    MenuSelectOptionElement * msoe = mso.getElement(i);
+    Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
     highlight = false;
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
@@ -57,7 +57,7 @@ void NukeScreen::redraw() {
 }
 
 void NukeScreen::update() {
-  MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
+  Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
   ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
   ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
@@ -142,13 +142,13 @@ int NukeScreen::nuke() {
   int multiplier;
   std::string reason;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    MenuSelectOptionElement * msoe = mso.getElement(i);
+    Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
     std::string identifier = msoe->getIdentifier();
     if (identifier == "multiplier") {
-      multiplier = ((MenuSelectOptionNumArrow *)msoe)->getData();
+      multiplier = msoe.get<MenuSelectOptionNumArrow>()->getData();
     }
     else if (identifier == "reason") {
-      reason = ((MenuSelectOptionTextField *)msoe)->getData();
+      reason = msoe.get<MenuSelectOptionTextField>()->getData();
     }
   }
   return sitelogic->requestNuke(path + "/" + release, multiplier, reason);

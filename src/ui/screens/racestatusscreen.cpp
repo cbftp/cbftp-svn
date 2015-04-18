@@ -12,6 +12,7 @@
 #include "../../engine.h"
 #include "../../sitemanager.h"
 #include "../../util.h"
+#include "../../pointer.h"
 
 #include "../ui.h"
 #include "../menuselectoptiontextbutton.h"
@@ -277,7 +278,7 @@ void RaceStatusScreen::update() {
   mso.checkPointer();
   unsigned int selected = mso.getSelectionPointer();
   for (unsigned int i = 0; i < mso.size(); i++) {
-    MenuSelectOptionTextButton * msotb = (MenuSelectOptionTextButton *) mso.getElement(i);
+    Pointer<MenuSelectOptionTextButton> msotb = mso.getElement(i);
     bool isselected = selected == i;
     ui->printStr(msotb->getRow(), msotb->getCol(), msotb->getLabelText(), 4, isselected);
   }
@@ -353,8 +354,8 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
       break;
     case KEY_DC:
     {
-      MenuSelectOptionTextButton * msotb = (MenuSelectOptionTextButton *) mso.getElement(mso.getSelectionPointer());
-      if (msotb != NULL) {
+      Pointer<MenuSelectOptionTextButton> msotb = mso.getElement(mso.getSelectionPointer());
+      if (!!msotb) {
         removesite = msotb->getLabelText();
         awaitingremovesite = true;
         ui->goConfirmation("Do you really want to delete " + removesite);

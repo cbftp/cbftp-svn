@@ -42,7 +42,7 @@ void AllTransferJobsScreen::redraw() {
   table.adjustLines(col - 3);
   bool highlight;
   for (unsigned int i = 0; i < table.size(); i++) {
-    ResizableElement * re = (ResizableElement *) table.getElement(i);
+    Pointer<ResizableElement> re = (Pointer<ResizableElement>) table.getElement(i);
     highlight = false;
     if (table.getSelectionPointer() == i && hascontents) {
       highlight = true;
@@ -75,7 +75,7 @@ void AllTransferJobsScreen::keyPressed(unsigned int ch) {
       break;
     case 10:
       if (hascontents) {
-        MenuSelectOptionTextButton * msotb = (MenuSelectOptionTextButton *)
+        Pointer<MenuSelectOptionTextButton> msotb = (Pointer<MenuSelectOptionTextButton>)
             table.getElement(table.getSelectionPointer());
         ui->goTransferJobStatus(msotb->getContentText());
       }
@@ -99,50 +99,50 @@ void AllTransferJobsScreen::addJobTableRow(unsigned int y, MenuSelectOption & ms
     std::string timestamp, std::string timespent, std::string type, std::string name,
     std::string route, std::string sizeprogress, std::string filesprogress,
     std::string remaining, std::string speed, std::string progress) {
-  MenuSelectAdjustableLine * msal = mso.addAdjustableLine();
-  MenuSelectOptionTextButton * msotb;
+  Pointer<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
+  Pointer<MenuSelectOptionTextButton> msotb;
 
   msotb = mso.addTextButtonNoContent(y, 1, "timestamp", timestamp);
   msotb->setSelectable(false);
-  msal->addElement((ResizableElement *)msotb, 4, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 4, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "timespent", timespent);
   msotb->setSelectable(false);
-  msal->addElement((ResizableElement *)msotb, 5, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 5, RESIZE_REMOVE);
 
   msotb = mso.addTextButton(y, 1, "type", type);
   msotb->setSelectable(false);
-  msal->addElement((ResizableElement *)msotb, 7, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 7, RESIZE_REMOVE);
 
   msotb = mso.addTextButton(y, 1, "name", name);
   if (!selectable) {
     msotb->setSelectable(false);
   }
-  msal->addElement((ResizableElement *)msotb, 10, RESIZE_CUTEND, true);
+  msal->addElement((Pointer<ResizableElement>)msotb, 10, RESIZE_CUTEND, true);
 
   msotb = mso.addTextButton(y, 1, "route", route);
   msotb->setSelectable(false);
-  msal->addElement((ResizableElement *)msotb, 2, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 2, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "sizeprogress", sizeprogress);
   msotb->setSelectable(false);
-  msal->addElement((ResizableElement *)msotb, 8, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 8, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "filesprogress", filesprogress);
   msotb->setSelectable(false);
-  msal->addElement((ResizableElement *)msotb, 1, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 1, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "remaining", remaining);
   msotb->setSelectable(false);
-  msal->addElement((ResizableElement *)msotb, 3, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 3, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "speed", speed);
   msotb->setSelectable(false);
-  msal->addElement((ResizableElement *)msotb, 6, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 6, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "progress", progress);
   msotb->setSelectable(false);
-  msal->addElement((ResizableElement *)msotb, 9, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 9, RESIZE_REMOVE);
 }
 
 void AllTransferJobsScreen::addJobTableHeader(unsigned int y, MenuSelectOption & mso, std::string name) {

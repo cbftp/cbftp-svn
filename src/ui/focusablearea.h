@@ -1,6 +1,8 @@
 #pragma once
 
-class MenuSelectOptionElement;
+#include "../pointer.h"
+
+#include "menuselectoptionelement.h"
 
 class FocusableArea {
 protected:
@@ -31,5 +33,5 @@ public:
   virtual bool activateSelected();
   virtual unsigned int getLastSelectionPointer() const;
   virtual unsigned int getSelectionPointer() const = 0;
-  virtual MenuSelectOptionElement * getElement(unsigned int) const;
+  virtual Pointer<MenuSelectOptionElement> getElement(unsigned int) const;
 };

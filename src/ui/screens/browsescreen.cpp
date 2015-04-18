@@ -14,6 +14,7 @@
 #include "../../engine.h"
 #include "../../localstorage.h"
 #include "../../util.h"
+#include "../../pointer.h"
 
 #include "../ui.h"
 #include "../uifile.h"
@@ -257,7 +258,7 @@ void BrowseScreen::redraw() {
   table.checkPointer();
   bool highlight;
   for (unsigned int i = 0; i < table.size(); i++) {
-    ResizableElement * re = (ResizableElement *) table.getElement(i);
+    Pointer<ResizableElement> re = table.getElement(i);
     highlight = false;
     if (table.getSelectionPointer() == i) {
       highlight = true;
@@ -310,9 +311,9 @@ void BrowseScreen::update() {
     return;
   }
   if (table.size()) {
-    ResizableElement * re = (ResizableElement *) table.getElement(table.getLastSelectionPointer());
+    Pointer<ResizableElement> re = table.getElement(table.getLastSelectionPointer());
     ui->printStr(re->getRow(), re->getCol(), re->getLabelText());
-    re = (ResizableElement *) table.getElement(table.getSelectionPointer());
+    re = table.getElement(table.getSelectionPointer());
     ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), true);
   }
 }
@@ -845,12 +846,12 @@ void BrowseScreen::addFileDetails(unsigned int y, std::string name) {
 }
 
 void BrowseScreen::addFileDetails(unsigned int y, std::string prepchar, std::string name, std::string size, std::string lastmodified, std::string owner, bool selectable, bool selected) {
-  MenuSelectAdjustableLine * msal = table.addAdjustableLine();
-  MenuSelectOptionTextButton * msotb;
+  Pointer<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
+  Pointer<MenuSelectOptionTextButton> msotb;
   msotb = table.addTextButtonNoContent(y, 1, "prepchar", prepchar);
   msotb->setSelectable(false);
   msotb->setShortSpacing();
-  msal->addElement((ResizableElement *)msotb, 4, RESIZE_REMOVE);
+  msal->addElement(msotb, 4, RESIZE_REMOVE);
   msotb = table.addTextButtonNoContent(y, 3, "name", name);
   if (!selectable) {
     msotb->setSelectable(false);
@@ -858,15 +859,15 @@ void BrowseScreen::addFileDetails(unsigned int y, std::string prepchar, std::str
   if (selected) {
     table.setPointer(msotb);
   }
-  msal->addElement((ResizableElement *)msotb, 5, RESIZE_WITHDOTS, true);
+  msal->addElement(msotb, 5, RESIZE_WITHDOTS, true);
   msotb = table.addTextButtonNoContent(y, 3, "size", size);
   msotb->setSelectable(false);
   msotb->setRightAligned();
-  msal->addElement((ResizableElement *)msotb, 3, RESIZE_REMOVE);
+  msal->addElement(msotb, 3, RESIZE_REMOVE);
   msotb = table.addTextButtonNoContent(y, 3, "lastmodified", lastmodified);
   msotb->setSelectable(false);
-  msal->addElement((ResizableElement *)msotb, 2, RESIZE_REMOVE);
+  msal->addElement(msotb, 2, RESIZE_REMOVE);
   msotb = table.addTextButtonNoContent(y, 3, "owner", owner);
   msotb->setSelectable(false);
-  msal->addElement((ResizableElement *)msotb, 1, RESIZE_REMOVE);
+  msal->addElement(msotb, 1, RESIZE_REMOVE);
 }

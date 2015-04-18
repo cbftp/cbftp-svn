@@ -1,7 +1,5 @@
 #include "menusection.h"
 
-#include "menuselectoptioncontainer.h"
-#include "menuselectoptionelement.h"
 #include "menuselectoptiontextfield.h"
 #include "menuselectoptiontextbutton.h"
 
@@ -20,7 +18,7 @@ void MenuSection::initialize(int row, int col, std::map<std::string, std::string
   this->row = row;
   this->col = col;
   std::map<std::string, std::string>::const_iterator it;
-  addbutton = new MenuSelectOptionTextButton("add", 0, 0, "<Add>");
+  addbutton = makePointer<MenuSelectOptionTextButton>("add", 0, 0, "<Add>");
   for(it = sectionsbegin; it != sectionsend; it++) {
     addSection(it->first, it->second);
   }
@@ -99,12 +97,12 @@ unsigned int MenuSection::getSelectionPointer() const {
   return pointer;
 }
 
-MenuSelectOptionElement * MenuSection::getElement(unsigned int i) const {
+Pointer<MenuSelectOptionElement> MenuSection::getElement(unsigned int i) const {
   if (i == 0) {
     return addbutton;
   }
   if (i > sectioncontainers.size() * 3) {
-    return NULL;
+    return Pointer<MenuSelectOptionElement>();
   }
   int id = (i - 1) / 3;
   int internalid = (i - 1) % 3;
@@ -112,7 +110,7 @@ MenuSelectOptionElement * MenuSection::getElement(unsigned int i) const {
 }
 
 bool MenuSection::activateSelected() {
-  MenuSelectOptionElement * msoe = getElement(pointer);
+  Pointer<MenuSelectOptionElement> msoe = getElement(pointer);
   if (msoe->getIdentifier() == "add") {
     addSection();
     needsredraw = true;
@@ -120,7 +118,7 @@ bool MenuSection::activateSelected() {
   }
   else if (msoe->getIdentifier() == "delete") {
     sectioncontainers.erase(sectioncontainers.begin() + ((pointer - 1) / 3));
-    if (getElement(pointer) == NULL) {
+    if (!getElement(pointer)) {
       goUp();
     }
     lastpointer = pointer;
@@ -149,9 +147,9 @@ unsigned int MenuSection::size() const {
 }
 
 void MenuSection::addSection(std::string nametext, std::string pathtext) {
-  MenuSelectOptionElement * name = new MenuSelectOptionTextField("name", 0, 0, "Name:", nametext, 11, 32, false);
-  MenuSelectOptionElement * path = new MenuSelectOptionTextField("path", 0, 0, "Path:", pathtext, 30, 64, false);
-  MenuSelectOptionElement * del = new MenuSelectOptionTextButton("delete", 0, 0, "<X>");
+  Pointer<MenuSelectOptionElement> name(makePointer<MenuSelectOptionTextField>("name", 0, 0, "Name:", nametext, 11, 32, false));
+  Pointer<MenuSelectOptionElement> path(makePointer<MenuSelectOptionTextField>("path", 0, 0, "Path:", pathtext, 30, 64, false));
+  Pointer<MenuSelectOptionElement> del(makePointer<MenuSelectOptionTextButton>("delete", 0, 0, "<X>"));
   MenuSelectOptionContainer msoc = MenuSelectOptionContainer();
   msoc.addElement(name);
   msoc.addElement(path);

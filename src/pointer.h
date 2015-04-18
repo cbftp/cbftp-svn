@@ -4,7 +4,10 @@
 // suggested usage:
 // Pointer<T> p(makePointer<T>(args));
 
+#include <unistd.h>
+
 template <class T> class Pointer {
+  template<class F> friend class Pointer;
 public:
   Pointer() :
     object(NULL),
@@ -22,12 +25,28 @@ public:
       (*counter)++;
     }
   }
+  template<typename X> Pointer(const Pointer<X> & other) :
+    object((T *) other.object),
+    counter(other.counter) {
+    if (counter != NULL) {
+      (*counter)++;
+    }
+  }
   ~Pointer() {
     decrease();
   }
   Pointer & operator=(const Pointer & other) {
     decrease();
     object = other.object;
+    counter = other.counter;
+    if (counter != NULL) {
+      ++(*counter);
+    }
+    return *this;
+  }
+  template<typename X> Pointer & operator=(const Pointer<X> & other) {
+    decrease();
+    object = (T *) other.object;
     counter = other.counter;
     if (counter != NULL) {
       ++(*counter);
@@ -49,13 +68,22 @@ public:
   bool operator==(const Pointer & other) const {
     return object == other.object;
   }
+  template<typename X> bool operator==(const Pointer<X> & other) const {
+    return object == (T *) other.object;
+  }
   bool operator<(const Pointer & other) const {
     return object < other.object;
+  }
+  template<typename X> bool operator<(const Pointer<X> & other) const {
+    return object < (T *) other.object;
   }
   void reset() {
     decrease();
     object = NULL;
     counter = NULL;
+  }
+  template<typename X> X * get() const {
+    return (X *) object;
   }
 private:
   void decrease() {

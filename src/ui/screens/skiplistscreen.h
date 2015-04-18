@@ -2,13 +2,15 @@
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
+#include "../menuselectoptionelement.h"
+#include "../menuselectoptiontextfield.h"
+#include "../menuselectoptiontextarrow.h"
 
 #include "../../skiplist.h"
+#include "../../pointer.h"
 
-class MenuSelectOptionElement;
 class Ui;
 class FocusableArea;
-class MenuSelectOptionTextField;
 class MenuSelectAdjustableLine;
 
 class SkipListScreen : public UIWindow {
@@ -23,18 +25,18 @@ public:
 private:
   void saveToTempSkipList();
   void addPatternLine(int, std::string, bool, bool, int, bool);
-  void addPatternLine(int, std::string, bool, bool, int, bool, MenuSelectAdjustableLine *);
+  void addPatternLine(int, std::string, bool, bool, int, bool, Pointer<MenuSelectAdjustableLine>);
   SkipList * skiplist;
   std::string currentlegendtext;
   std::string baselegendtext;
   std::string tablelegendtext;
   bool active;
-  MenuSelectOptionElement * activeelement;
+  Pointer<MenuSelectOptionElement> activeelement;
   MenuSelectOption base;
   MenuSelectOption table;
   FocusableArea * focusedarea;
   FocusableArea * defocusedarea;
   SkipList testskiplist;
-  MenuSelectOptionTextField * testpattern;
-  MenuSelectOptionTextArrow * testtype;
+  Pointer<MenuSelectOptionTextField> testpattern;
+  Pointer<MenuSelectOptionTextArrow> testtype;
 };

@@ -2,9 +2,9 @@
 
 #include "../ui.h"
 #include "../resizableelement.h"
-#include "../menuselectoptionelement.h"
 #include "../menuselectadjustableline.h"
 #include "../menuselectoptionnumarrow.h"
+#include "../menuselectoptiontextbutton.h"
 
 #include "../../globalcontext.h"
 #include "../../engine.h"
@@ -73,7 +73,7 @@ void TransferJobStatusScreen::redraw() {
   bool highlight;
   if (!aborted) {
     for (unsigned int i = 0; i < mso.size(); i++) {
-      MenuSelectOptionElement * msoe = mso.getElement(i);
+      Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
       highlight = false;
       if (mso.isFocused() && mso.getSelectionPointer() == i) {
         highlight = true;
@@ -83,7 +83,7 @@ void TransferJobStatusScreen::redraw() {
     }
   }
   for (unsigned int i = 0; i < table.size(); i++) {
-    ResizableElement * re = (ResizableElement *) table.getElement(i);
+    Pointer<ResizableElement> re = (Pointer<ResizableElement>) table.getElement(i);
     highlight = false;
     if (table.getSelectionPointer() == i) {
       //highlight = true; // later problem
@@ -91,7 +91,7 @@ void TransferJobStatusScreen::redraw() {
     if (re->isVisible()) {
       if (re->getIdentifier() == "filename") {
         int progresspercent = 0;
-        std::map<MenuSelectOptionElement *, int>::iterator it = progressmap.find(re);
+        std::map<Pointer<MenuSelectOptionElement>, int>::iterator it = progressmap.find(re);
         if (it != progressmap.end()) {
           progresspercent = it->second;
         }
@@ -128,7 +128,7 @@ void TransferJobStatusScreen::keyPressed(unsigned int ch) {
       ui->update();
       ui->setLegend();
       if (activeelement->getIdentifier() == "slots") {
-        int slots = ((MenuSelectOptionNumArrow *)activeelement)->getData();
+        int slots = activeelement.get<MenuSelectOptionNumArrow>()->getData();
         transferjob->setSlots(slots);
         switch (transferjob->getType()) {
           case TRANSFERJOB_DOWNLOAD:
@@ -208,21 +208,21 @@ void TransferJobStatusScreen::addTransferDetails(unsigned int y, Pointer<Transfe
 void TransferJobStatusScreen::addTransferDetails(unsigned int y, std::string timespent,
     std::string transferred, std::string file, std::string timeremaining,
     std::string speed, std::string progress, int progresspercent) {
-  MenuSelectAdjustableLine * msal = table.addAdjustableLine();
-  MenuSelectOptionTextButton * msotb;
+  Pointer<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
+  Pointer<MenuSelectOptionTextButton> msotb;
   msotb = table.addTextButtonNoContent(y, 1, "timespent", timespent);
-  msal->addElement((ResizableElement *)msotb, 9, RESIZE_REMOVE);
+  msal->addElement(msotb, 9, RESIZE_REMOVE);
   msotb = table.addTextButtonNoContent(y, 10, "transferred", transferred);
-  msal->addElement((ResizableElement *)msotb, 4, RESIZE_CUTEND);
+  msal->addElement(msotb, 4, RESIZE_CUTEND);
   msotb = table.addTextButtonNoContent(y, 10, "filename", file);
-  progressmap[(MenuSelectOptionElement *)msotb] = progresspercent;
-  msal->addElement((ResizableElement *)msotb, 2, RESIZE_WITHLAST3, true);
+  progressmap[msotb] = progresspercent;
+  msal->addElement(msotb, 2, RESIZE_WITHLAST3, true);
   msotb = table.addTextButtonNoContent(y, 60, "remaining", timeremaining);
-  msal->addElement((ResizableElement *)msotb, 5, RESIZE_REMOVE);
+  msal->addElement(msotb, 5, RESIZE_REMOVE);
   msotb = table.addTextButtonNoContent(y, 40, "speed", speed);
-  msal->addElement((ResizableElement *)msotb, 6, RESIZE_REMOVE);
+  msal->addElement(msotb, 6, RESIZE_REMOVE);
   msotb = table.addTextButtonNoContent(y, 50, "progress", progress);
-  msal->addElement((ResizableElement *)msotb, 7, RESIZE_REMOVE);
+  msal->addElement(msotb, 7, RESIZE_REMOVE);
 }
 
 std::string TransferJobStatusScreen::getRoute(TransferJob * tj) {

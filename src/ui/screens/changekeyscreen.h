@@ -2,8 +2,11 @@
 
 #define SHORTESTKEY 4
 
+#include "../../pointer.h"
+
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
+#include "../menuselectoptionelement.h"
 
 class MenuSelectOptionElement;
 
@@ -23,7 +26,7 @@ private:
   bool mismatch;
   bool oldmismatch;
   bool tooshort;
-  MenuSelectOptionElement * activeelement;
+  Pointer<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;
   std::string operation;
 };

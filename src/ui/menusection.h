@@ -4,10 +4,11 @@
 #include <vector>
 #include <map>
 
-#include "focusablearea.h"
+#include "../pointer.h"
 
-class MenuSelectOptionContainer;
-class menuSelectOptionElement;
+#include "focusablearea.h"
+#include "menuselectoptioncontainer.h"
+#include "menuselectoptionelement.h"
 
 class MenuSection : public FocusableArea {
   private:
@@ -16,7 +17,7 @@ class MenuSection : public FocusableArea {
     unsigned int pointer;
     unsigned int lastpointer;
     bool needsredraw;
-    MenuSelectOptionElement * addbutton;
+    Pointer<MenuSelectOptionElement> addbutton;
     std::vector<MenuSelectOptionContainer> sectioncontainers;
   public:
     MenuSection();
@@ -29,7 +30,7 @@ class MenuSection : public FocusableArea {
     unsigned int getLastSelectionPointer() const;
     unsigned int getSelectionPointer() const;
     bool activateSelected();
-    MenuSelectOptionElement * getElement(unsigned int) const;
+    Pointer<MenuSelectOptionElement> getElement(unsigned int) const;
     unsigned int getHeaderRow() const;
     unsigned int getHeaderCol() const;
     unsigned int size() const;

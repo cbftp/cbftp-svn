@@ -12,6 +12,7 @@
 #include "../../transferjob.h"
 #include "../../util.h"
 #include "../../remotecommandhandler.h"
+#include "../../pointer.h"
 
 #include "../menuselectoptioncheckbox.h"
 #include "../ui.h"
@@ -156,7 +157,7 @@ void MainScreen::redraw() {
   }
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    ResizableElement * re = (ResizableElement *) mso.getElement(i);
+    Pointer<ResizableElement> re = mso.getElement(i);
     highlight = false;
     if (mso.isFocused() && mso.getSelectionPointer() == i && listraces) {
       highlight = true;
@@ -166,7 +167,7 @@ void MainScreen::redraw() {
     }
   }
   for (unsigned int i = 0; i < msot.size(); i++) {
-    ResizableElement * re = (ResizableElement *) msot.getElement(i);
+    Pointer<ResizableElement> re = msot.getElement(i);
     highlight = false;
     if (msot.isFocused() && msot.getSelectionPointer() == i && listtransferjobs) {
       highlight = true;
@@ -208,7 +209,7 @@ void MainScreen::keyPressed(unsigned int ch) {
   if (gotomode) {
     if (ch >= 32 && ch <= 126) {
       for (unsigned int i = 0; i < mss.size(); i++) {
-        MenuSelectSiteElement * msse = mss.getSiteElement(i);
+        Pointer<MenuSelectSiteElement> msse = mss.getSiteElement(i);
         if (toupper(ch) == toupper(msse->getSite()->getName()[0])) {
           mss.setPointer(i);
           if (mss.getSelectionPointer() >= currentviewspan + row - sitestartrow ||

@@ -27,9 +27,9 @@ private:
   bool defaultset;
   std::string deleteproxy;
   std::string editproxy;
-  MenuSelectOptionElement * activeelement;
+  Pointer<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;
   MenuSelectOption msop;
   ProxyManager * pm;
-  MenuSelectOptionTextArrow * useproxy;
+  Pointer<MenuSelectOptionTextArrow> useproxy;
 };

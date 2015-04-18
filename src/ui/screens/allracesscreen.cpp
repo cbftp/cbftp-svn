@@ -40,7 +40,7 @@ void AllRacesScreen::redraw() {
   table.adjustLines(col - 3);
   bool highlight;
   for (unsigned int i = 0; i < table.size(); i++) {
-    ResizableElement * re = (ResizableElement *) table.getElement(i);
+    Pointer<ResizableElement> re = (Pointer<ResizableElement>) table.getElement(i);
     highlight = false;
     if (table.getSelectionPointer() == i && hascontents) {
       highlight = true;
@@ -73,7 +73,7 @@ void AllRacesScreen::keyPressed(unsigned int ch) {
       break;
     case 10:
       if (hascontents) {
-        MenuSelectOptionTextButton * msotb = (MenuSelectOptionTextButton *)
+        Pointer<MenuSelectOptionTextButton> msotb = (Pointer<MenuSelectOptionTextButton>)
             table.getElement(table.getSelectionPointer());
         ui->goRaceStatus(msotb->getContentText());
       }
@@ -100,54 +100,54 @@ void AllRacesScreen::addRaceTableHeader(unsigned int y, MenuSelectOption & mso, 
 void AllRacesScreen::addRaceTableRow(unsigned int y, MenuSelectOption & mso, bool selectable,
     std::string timestamp, std::string timespent, std::string section, std::string release, std::string size,
     std::string worst, std::string avg, std::string best, std::string status, std::string done, std::string sites) {
-  MenuSelectAdjustableLine * msal = mso.addAdjustableLine();
-  MenuSelectOptionTextButton * msotb;
+  Pointer<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
+  Pointer<MenuSelectOptionTextButton> msotb;
 
   msotb = mso.addTextButtonNoContent(y, 1, "timestamp", timestamp);
   msotb->setSelectable(false);
-  msal->addElement((ResizableElement *)msotb, 7, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 7, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "timespent", timespent);
   msotb->setSelectable(false);
-  msal->addElement((ResizableElement *)msotb, 8, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 8, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "section", section);
   msotb->setSelectable(false);
-  msal->addElement((ResizableElement *)msotb, 3, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 3, RESIZE_REMOVE);
 
   msotb = mso.addTextButton(y, 1, "release", release);
   if (!selectable) {
     msotb->setSelectable(false);
   }
-  msal->addElement((ResizableElement *)msotb, 12, RESIZE_CUTEND, true);
+  msal->addElement((Pointer<ResizableElement>)msotb, 12, RESIZE_CUTEND, true);
 
   msotb = mso.addTextButtonNoContent(y, 1, "size", size);
   msotb->setSelectable(false);
-  msal->addElement((ResizableElement *)msotb, 10, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 10, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "worst", worst);
   msotb->setSelectable(false);
-  msal->addElement((ResizableElement *)msotb, 2, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 2, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "avg", avg);
   msotb->setSelectable(false);
-  msal->addElement((ResizableElement *)msotb, 5, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 5, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "best", best);
   msotb->setSelectable(false);
-  msal->addElement((ResizableElement *)msotb, 4, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 4, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "status", status);
   msotb->setSelectable(false);
-  msal->addElement((ResizableElement *)msotb, 11, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 11, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "done", done);
   msotb->setSelectable(false);
-  msal->addElement((ResizableElement *)msotb, 6, RESIZE_REMOVE);
+  msal->addElement((Pointer<ResizableElement>)msotb, 6, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "sites", sites);
   msotb->setSelectable(false);
-  msal->addElement((ResizableElement *)msotb, 1, RESIZE_WITHDOTS);
+  msal->addElement((Pointer<ResizableElement>)msotb, 1, RESIZE_WITHDOTS);
 }
 
 void AllRacesScreen::addRaceDetails(unsigned int y, MenuSelectOption & mso, Race * race) {

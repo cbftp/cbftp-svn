@@ -2,8 +2,11 @@
 
 #define SHORTESTKEY 4
 
+#include "../../pointer.h"
+
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
+#include "../menuselectoptionelement.h"
 
 class NewKeyScreen : public UIWindow {
 public:
@@ -20,6 +23,6 @@ private:
   bool active;
   bool mismatch;
   bool tooshort;
-  MenuSelectOptionElement * activeelement;
+  Pointer<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;
 };

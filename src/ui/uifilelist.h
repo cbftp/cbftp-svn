@@ -4,7 +4,8 @@
 #include <vector>
 #include <list>
 
-class UIFile;
+#include "uifile.h"
+
 class FileList;
 
 class UIFileList {

@@ -43,7 +43,7 @@ void SelectSitesScreen::redraw() {
   unsigned int y = 1;
   unsigned int x = 1;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    MenuSelectOptionCheckBox * msocb = (MenuSelectOptionCheckBox *) mso.getElement(i);
+    Pointer<MenuSelectOptionCheckBox> msocb = (Pointer<MenuSelectOptionCheckBox>) mso.getElement(i);
     tempsites.push_back(std::pair<std::string, bool>(msocb->getIdentifier(), msocb->getData()));
   }
   mso.clear();
@@ -64,7 +64,7 @@ void SelectSitesScreen::redraw() {
   tempsites.clear();
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    MenuSelectOptionElement * msoe = mso.getElement(i);
+    Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
     highlight = false;
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
@@ -75,7 +75,7 @@ void SelectSitesScreen::redraw() {
 }
 
 void SelectSitesScreen::update() {
-  MenuSelectOptionElement * msoe = mso.getElement(mso.getLastSelectionPointer());
+  Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
   ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText());
   ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
@@ -137,7 +137,7 @@ void SelectSitesScreen::keyPressed(unsigned int ch) {
     case 'd': {
       std::string blockstr = "";
       for (unsigned int i = 0; i < mso.size(); i++) {
-        MenuSelectOptionCheckBox * msocb = (MenuSelectOptionCheckBox *) mso.getElement(i);
+        Pointer<MenuSelectOptionCheckBox> msocb = (Pointer<MenuSelectOptionCheckBox>) mso.getElement(i);
         if (msocb->getData()) {
           blockstr += msocb->getIdentifier() + ",";
         }

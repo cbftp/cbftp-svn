@@ -4,12 +4,12 @@
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
+#include "../menuselectoptionelement.h"
 
 #include "../../pointer.h"
 
 class TransferManager;
 class TransferStatus;
-class MenuSelectOptionElement;
 
 class TransfersScreen : public UIWindow {
 public:
@@ -22,7 +22,7 @@ public:
   std::string getInfoLabel() const;
 private:
   void addTransferDetails(unsigned int, MenuSelectOption &, Pointer<TransferStatus>);
-  std::map<MenuSelectOptionElement *, int> progressmap;
+  std::map<Pointer<MenuSelectOptionElement>, int> progressmap;
   TransferManager * tm;
   MenuSelectOption table;
 };
