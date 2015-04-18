@@ -83,7 +83,7 @@ void TransferJobStatusScreen::redraw() {
     }
   }
   for (unsigned int i = 0; i < table.size(); i++) {
-    Pointer<ResizableElement> re = (Pointer<ResizableElement>) table.getElement(i);
+    Pointer<ResizableElement> re = table.getElement(i);
     highlight = false;
     if (table.getSelectionPointer() == i) {
       //highlight = true; // later problem
@@ -225,7 +225,7 @@ void TransferJobStatusScreen::addTransferDetails(unsigned int y, std::string tim
   msal->addElement(msotb, 7, RESIZE_REMOVE);
 }
 
-std::string TransferJobStatusScreen::getRoute(TransferJob * tj) {
+std::string TransferJobStatusScreen::getRoute(Pointer<TransferJob> tj) {
   std::string route;
   switch (tj->getType()) {
     case TRANSFERJOB_DOWNLOAD:

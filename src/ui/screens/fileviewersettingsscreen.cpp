@@ -108,19 +108,19 @@ void FileViewerSettingsScreen::keyPressed(unsigned int ch) {
         Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
         std::string identifier = msoe->getIdentifier();
         if (identifier == "temppath") {
-          ls->setTempPath(((Pointer<MenuSelectOptionTextField>)msoe)->getData());
+          ls->setTempPath(msoe.get<MenuSelectOptionTextField>()->getData());
         }
         else if (identifier == "video") {
-          efv->setVideoViewer(((Pointer<MenuSelectOptionTextField>)msoe)->getData());
+          efv->setVideoViewer(msoe.get<MenuSelectOptionTextField>()->getData());
         }
         else if (identifier == "audio") {
-          efv->setAudioViewer(((Pointer<MenuSelectOptionTextField>)msoe)->getData());
+          efv->setAudioViewer(msoe.get<MenuSelectOptionTextField>()->getData());
         }
         else if (identifier == "image") {
-          efv->setImageViewer(((Pointer<MenuSelectOptionTextField>)msoe)->getData());
+          efv->setImageViewer(msoe.get<MenuSelectOptionTextField>()->getData());
         }
         else if (identifier == "pdf") {
-          efv->setPDFViewer(((Pointer<MenuSelectOptionTextField>)msoe)->getData());
+          efv->setPDFViewer(msoe.get<MenuSelectOptionTextField>()->getData());
         }
       }
       ui->returnToLast();

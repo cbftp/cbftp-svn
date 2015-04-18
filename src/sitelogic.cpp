@@ -73,14 +73,14 @@ void SiteLogic::activateAll() {
   }
 }
 
-SiteRace * SiteLogic::addRace(Race * enginerace, std::string section, std::string release) {
+SiteRace * SiteLogic::addRace(Pointer<Race> enginerace, std::string section, std::string release) {
   SiteRace * race = new SiteRace(enginerace, site->getName(), site->getSectionPath(section), release, site->getUser());
   races.push_back(race);
   activateAll();
   return race;
 }
 
-void SiteLogic::addTransferJob(TransferJob * tj) {
+void SiteLogic::addTransferJob(Pointer<TransferJob> tj) {
   transferjobs.push_back(tj);
   activateOne();
 }
@@ -724,9 +724,9 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
       return;
     }
   }
-  TransferJob * targetjob = NULL;
-  for (std::list<TransferJob *>::iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
-    TransferJob * tj = *it;
+  Pointer<TransferJob> targetjob;
+  for (std::list<Pointer<TransferJob> >::iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
+    Pointer<TransferJob> tj = *it;
     if (!tj->isDone()) {
       if (tj->wantsList(this)) {
         FileList * fl = tj->getListTarget(this);
@@ -735,7 +735,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
           conns[id]->doCWD(path);
           return;
         }
-        getFileListConn(id, tj, fl);
+        getFileListConn(id, tj.get(), fl);
         return;
       }
       if (!tj->isInitialized()) {
@@ -743,7 +743,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
         continue;
       }
       int type = tj->getType();
-      if (targetjob == NULL &&
+      if (!targetjob &&
           (((type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_DOWNLOAD_FILE ||
           ((type == TRANSFERJOB_FXP || type == TRANSFERJOB_FXP_FILE) && tj->getSrc() == this)) &&
           getCurrDown() < tj->maxSlots()) ||
@@ -755,7 +755,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
       }
     }
   }
-  if (targetjob != NULL) {
+  if (!!targetjob) {
     connstatetracker[id].delayedCommand("handle", SLEEPDELAY);
     global->getEngine()->transferJobActionRequest(targetjob);
     return;

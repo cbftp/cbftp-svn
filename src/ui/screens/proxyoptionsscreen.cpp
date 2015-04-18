@@ -208,7 +208,7 @@ void ProxyOptionsScreen::keyPressed(unsigned int ch) {
         Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
         std::string identifier = msoe->getIdentifier();
         if (identifier == "useproxy") {
-          pm->setDefaultProxy(((Pointer<MenuSelectOptionTextArrow>)msoe)->getDataText());
+          pm->setDefaultProxy(msoe.get<MenuSelectOptionTextArrow>()->getDataText());
         }
       }
       ui->returnToLast();

@@ -60,7 +60,7 @@ void TransfersScreen::redraw() {
   table.adjustLines(col - 3);
   bool highlight;
   for (unsigned int i = 0; i < table.size(); i++) {
-    Pointer<ResizableElement> re = (Pointer<ResizableElement>) table.getElement(i);
+    Pointer<ResizableElement> re = table.getElement(i);
     highlight = false;
     if (table.getSelectionPointer() == i) {
       //highlight = true; // later problem

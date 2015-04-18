@@ -2,7 +2,6 @@
 
 #include "filelist.h"
 #include "file.h"
-#include "race.h"
 #include "globalcontext.h"
 #include "skiplist.h"
 #include "util.h"
@@ -10,7 +9,7 @@
 
 extern GlobalContext * global;
 
-SiteRace::SiteRace(Race * race, std::string sitename, std::string section, std::string release, std::string username) :
+SiteRace::SiteRace(Pointer<Race> race, std::string sitename, std::string section, std::string release, std::string username) :
   race(race),
   section(section),
   release(release),
@@ -247,7 +246,7 @@ bool SiteRace::isSubPathComplete(FileList * fl) const {
   return isSubPathComplete(subpath);
 }
 
-Race * SiteRace::getRace() const {
+Pointer<Race> SiteRace::getRace() const {
   return race;
 }
 

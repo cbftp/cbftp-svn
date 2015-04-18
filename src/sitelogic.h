@@ -5,6 +5,7 @@
 #include <list>
 
 #include "eventreceiver.h"
+#include "pointer.h"
 
 class TransferMonitor;
 class ConnStateTracker;
@@ -47,7 +48,7 @@ class SiteLogic : public EventReceiver {
     std::vector<ConnStateTracker> connstatetracker;
     std::vector<SiteRace *> races;
     std::list<SiteRace *> recentlylistedraces;
-    std::list<TransferJob *> transferjobs;
+    std::list<Pointer<TransferJob> > transferjobs;
     RawBuffer * rawbuf;
     unsigned int maxslotsup;
     unsigned int maxslotsdn;
@@ -87,8 +88,8 @@ class SiteLogic : public EventReceiver {
     SiteLogic(std::string);
     ~SiteLogic();
     void runInstance();
-    SiteRace * addRace(Race *, std::string, std::string);
-    void addTransferJob(TransferJob *);
+    SiteRace * addRace(Pointer<Race>, std::string, std::string);
+    void addTransferJob(Pointer<TransferJob>);
     void tick(int);
     void connectFailed(int);
     void userDenied(int);

@@ -43,7 +43,7 @@ void SelectSitesScreen::redraw() {
   unsigned int y = 1;
   unsigned int x = 1;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    Pointer<MenuSelectOptionCheckBox> msocb = (Pointer<MenuSelectOptionCheckBox>) mso.getElement(i);
+    Pointer<MenuSelectOptionCheckBox> msocb = mso.getElement(i);
     tempsites.push_back(std::pair<std::string, bool>(msocb->getIdentifier(), msocb->getData()));
   }
   mso.clear();
@@ -137,7 +137,7 @@ void SelectSitesScreen::keyPressed(unsigned int ch) {
     case 'd': {
       std::string blockstr = "";
       for (unsigned int i = 0; i < mso.size(); i++) {
-        Pointer<MenuSelectOptionCheckBox> msocb = (Pointer<MenuSelectOptionCheckBox>) mso.getElement(i);
+        Pointer<MenuSelectOptionCheckBox> msocb = mso.getElement(i);
         if (msocb->getData()) {
           blockstr += msocb->getIdentifier() + ",";
         }

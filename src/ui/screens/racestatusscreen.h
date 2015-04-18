@@ -3,6 +3,9 @@
 #include <list>
 #include <map>
 
+#include "../../pointer.h"
+#include "../../race.h"
+
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
 
@@ -20,7 +23,7 @@ public:
   std::string getInfoLabel() const;
 private:
   char getFileChar(bool, bool, bool, bool) const;
-  Race * race;
+  Pointer<Race> race;
   bool smalldirs;
   bool awaitingremovesite;
   bool awaitingabort;

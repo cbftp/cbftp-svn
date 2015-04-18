@@ -5,13 +5,14 @@
 #include <list>
 
 #include "commandowner.h"
+#include "pointer.h"
+#include "race.h"
 
-class Race;
 class FileList;
 
 class SiteRace : public CommandOwner {
   private:
-    Race * race;
+    Pointer<Race> race;
     std::string section;
     std::string release;
     std::string path;
@@ -39,14 +40,14 @@ class SiteRace : public CommandOwner {
     std::string getGroup() const;
     std::string getPath() const;
     std::string getRelevantSubPath();
-    SiteRace(Race *, std::string, std::string, std::string, std::string);
+    SiteRace(Pointer<Race>, std::string, std::string, std::string, std::string);
     ~SiteRace();
     FileList * getFileListForPath(std::string) const;
     FileList * getFileListForFullPath(std::string) const;
     std::string getSubPathForFileList(FileList *) const;
     std::map<std::string, FileList *>::const_iterator fileListsBegin() const;
     std::map<std::string, FileList *>::const_iterator fileListsEnd() const;
-    Race * getRace() const;
+    Pointer<Race> getRace() const;
     void addSubDirectory(std::string);
     std::string getSubPath(FileList *) const;
     void fileListUpdated(FileList *);

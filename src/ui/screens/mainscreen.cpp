@@ -65,7 +65,7 @@ void MainScreen::redraw() {
     msot.makeLeavableUp();
     mso.clear();
     AllRacesScreen::addRaceTableHeader(irow++, mso, std::string("RACE NAME") + (listraces > 3 ? " (Showing latest 3)" : ""));
-    std::list<Race *>::const_iterator it;
+    std::list<Pointer<Race> >::const_iterator it;
     int i = 0;
     for (it = --global->getEngine()->getRacesEnd(); it != --global->getEngine()->getRacesBegin() && i < 3; it--, i++) {
       AllRacesScreen::addRaceDetails(irow++, mso, *it);
@@ -78,7 +78,7 @@ void MainScreen::redraw() {
     mss.makeLeavableUp();
     msot.clear();
     AllTransferJobsScreen::addJobTableHeader(irow++, msot, std::string("TRANSFER JOB NAME") + (listtransferjobs > 3 ? " (Showing latest 3)" : ""));
-    std::list<TransferJob *>::const_iterator it;
+    std::list<Pointer<TransferJob> >::const_iterator it;
     int i = 0;
     for (it = --global->getEngine()->getTransferJobsEnd(); it != --global->getEngine()->getTransferJobsBegin() && i < 3; it--, i++) {
       AllTransferJobsScreen::addJobDetails(irow++, msot, *it);

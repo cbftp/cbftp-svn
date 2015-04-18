@@ -8,6 +8,7 @@
 #include "../menuselectoptionelement.h"
 
 #include "../../pointer.h"
+#include "../../transferjob.h"
 
 class TransferJob;
 class Ui;
@@ -24,12 +25,12 @@ public:
   void keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
-  static std::string getRoute(TransferJob *);
+  static std::string getRoute(Pointer<TransferJob>);
 private:
   void addTransferDetails(unsigned int, Pointer<TransferStatus>);
   void addTransferDetails(unsigned int, std::string, std::string, std::string,
       std::string, std::string, std::string, int);
-  TransferJob * transferjob;
+  Pointer<TransferJob> transferjob;
   std::string filename;
   MenuSelectOption table;
   MenuSelectOption mso;

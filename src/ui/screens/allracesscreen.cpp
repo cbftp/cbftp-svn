@@ -32,7 +32,7 @@ void AllRacesScreen::redraw() {
   table.clear();
   addRaceTableHeader(y, table, "RELEASE");
   y++;
-  for (std::list<Race *>::const_iterator it = --engine->getRacesEnd(); it != --engine->getRacesBegin(); it--) {
+  for (std::list<Pointer<Race> >::const_iterator it = --engine->getRacesEnd(); it != --engine->getRacesBegin(); it--) {
     addRaceDetails(y++, table, *it);
   }
   table.checkPointer();
@@ -40,7 +40,7 @@ void AllRacesScreen::redraw() {
   table.adjustLines(col - 3);
   bool highlight;
   for (unsigned int i = 0; i < table.size(); i++) {
-    Pointer<ResizableElement> re = (Pointer<ResizableElement>) table.getElement(i);
+    Pointer<ResizableElement> re = table.getElement(i);
     highlight = false;
     if (table.getSelectionPointer() == i && hascontents) {
       highlight = true;
@@ -73,7 +73,7 @@ void AllRacesScreen::keyPressed(unsigned int ch) {
       break;
     case 10:
       if (hascontents) {
-        Pointer<MenuSelectOptionTextButton> msotb = (Pointer<MenuSelectOptionTextButton>)
+        Pointer<MenuSelectOptionTextButton> msotb =
             table.getElement(table.getSelectionPointer());
         ui->goRaceStatus(msotb->getContentText());
       }
@@ -105,52 +105,52 @@ void AllRacesScreen::addRaceTableRow(unsigned int y, MenuSelectOption & mso, boo
 
   msotb = mso.addTextButtonNoContent(y, 1, "timestamp", timestamp);
   msotb->setSelectable(false);
-  msal->addElement((Pointer<ResizableElement>)msotb, 7, RESIZE_REMOVE);
+  msal->addElement(msotb, 7, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "timespent", timespent);
   msotb->setSelectable(false);
-  msal->addElement((Pointer<ResizableElement>)msotb, 8, RESIZE_REMOVE);
+  msal->addElement(msotb, 8, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "section", section);
   msotb->setSelectable(false);
-  msal->addElement((Pointer<ResizableElement>)msotb, 3, RESIZE_REMOVE);
+  msal->addElement(msotb, 3, RESIZE_REMOVE);
 
   msotb = mso.addTextButton(y, 1, "release", release);
   if (!selectable) {
     msotb->setSelectable(false);
   }
-  msal->addElement((Pointer<ResizableElement>)msotb, 12, RESIZE_CUTEND, true);
+  msal->addElement(msotb, 12, RESIZE_CUTEND, true);
 
   msotb = mso.addTextButtonNoContent(y, 1, "size", size);
   msotb->setSelectable(false);
-  msal->addElement((Pointer<ResizableElement>)msotb, 10, RESIZE_REMOVE);
+  msal->addElement(msotb, 10, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "worst", worst);
   msotb->setSelectable(false);
-  msal->addElement((Pointer<ResizableElement>)msotb, 2, RESIZE_REMOVE);
+  msal->addElement(msotb, 2, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "avg", avg);
   msotb->setSelectable(false);
-  msal->addElement((Pointer<ResizableElement>)msotb, 5, RESIZE_REMOVE);
+  msal->addElement(msotb, 5, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "best", best);
   msotb->setSelectable(false);
-  msal->addElement((Pointer<ResizableElement>)msotb, 4, RESIZE_REMOVE);
+  msal->addElement(msotb, 4, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "status", status);
   msotb->setSelectable(false);
-  msal->addElement((Pointer<ResizableElement>)msotb, 11, RESIZE_REMOVE);
+  msal->addElement(msotb, 11, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "done", done);
   msotb->setSelectable(false);
-  msal->addElement((Pointer<ResizableElement>)msotb, 6, RESIZE_REMOVE);
+  msal->addElement(msotb, 6, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "sites", sites);
   msotb->setSelectable(false);
-  msal->addElement((Pointer<ResizableElement>)msotb, 1, RESIZE_WITHDOTS);
+  msal->addElement(msotb, 1, RESIZE_WITHDOTS);
 }
 
-void AllRacesScreen::addRaceDetails(unsigned int y, MenuSelectOption & mso, Race * race) {
+void AllRacesScreen::addRaceDetails(unsigned int y, MenuSelectOption & mso, Pointer<Race> race) {
   std::string done = util::int2Str(race->numSitesDone()) + "/" + util::int2Str(race->numSites());
   std::string timespent = util::simpleTimeFormat(race->getTimeSpent());
   std::string status;

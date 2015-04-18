@@ -55,19 +55,19 @@ void SkipListScreen::redraw() {
   table.clear();
   Pointer<ResizableElement> re;
   Pointer<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
-  re = (Pointer<ResizableElement>) table.addTextButton(y, 1, "pattern", "PATTERN");
+  re = table.addTextButton(y, 1, "pattern", "PATTERN");
   re->setSelectable(false);
   msal->addElement(re, 1, RESIZE_CUTEND, true);
-  re = (Pointer<ResizableElement>) table.addTextButton(y, 2, "file", "FILE");
+  re = table.addTextButton(y, 2, "file", "FILE");
   re->setSelectable(false);
   msal->addElement(re, 2, RESIZE_REMOVE);
-  re = (Pointer<ResizableElement>) table.addTextButton(y, 3, "dir", "DIR");
+  re = table.addTextButton(y, 3, "dir", "DIR");
   re->setSelectable(false);
   msal->addElement(re, 3, RESIZE_REMOVE);
-  re = (Pointer<ResizableElement>) table.addTextButton(y, 4, "action", "ACTION");
+  re = table.addTextButton(y, 4, "action", "ACTION");
   re->setSelectable(false);
   msal->addElement(re, 4, RESIZE_REMOVE);
-  re = (Pointer<ResizableElement>) table.addTextButton(y, 5, "scope", "SCOPE");
+  re = table.addTextButton(y, 5, "scope", "SCOPE");
   re->setSelectable(false);
   msal->addElement(re, 5, RESIZE_REMOVE);
   std::list<SkiplistItem>::const_iterator it;
@@ -94,7 +94,7 @@ void SkipListScreen::redraw() {
     ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
   for (unsigned int i = 0; i < table.size(); i++) {
-    Pointer<ResizableElement> re = (Pointer<ResizableElement>) table.getElement(i);
+    Pointer<ResizableElement> re = table.getElement(i);
     highlight = false;
     if (table.getSelectionPointer() == i && &table == focusedarea) {
       highlight = true;

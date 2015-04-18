@@ -3,6 +3,8 @@
 #include <map>
 #include <string>
 
+#include "../../pointer.h"
+
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
 
@@ -20,7 +22,7 @@ public:
   std::string getInfoLabel() const;
   std::string getInfoText() const;
   static void addRaceTableHeader(unsigned int, MenuSelectOption &, std::string);
-  static void addRaceDetails(unsigned int, MenuSelectOption &, Race *);
+  static void addRaceDetails(unsigned int, MenuSelectOption &, Pointer<Race>);
 private:
   static void addRaceTableRow(unsigned int, MenuSelectOption &, bool, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string);
   MenuSelectOption table;

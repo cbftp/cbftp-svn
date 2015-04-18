@@ -5,6 +5,7 @@
 #include <map>
 
 #include "eventreceiver.h"
+#include "pointer.h"
 
 #define SPREAD 0
 #define POKEINTERVAL 1000
@@ -27,26 +28,26 @@ extern GlobalContext * global;
 
 class Engine : public EventReceiver {
   private:
-    std::list<Race *> allraces;
-    std::list<Race *> currentraces;
-    std::list<TransferJob *> alltransferjobs;
-    std::list<TransferJob *> currenttransferjobs;
-    ScoreBoard * scoreboard;
-    std::map<TransferJob *, std::list<PendingTransfer> > pendingtransfers;
+    std::list<Pointer<Race> > allraces;
+    std::list<Pointer<Race> > currentraces;
+    std::list<Pointer<TransferJob>  > alltransferjobs;
+    std::list<Pointer<TransferJob> > currenttransferjobs;
+    Pointer<ScoreBoard> scoreboard;
+    std::map<Pointer<TransferJob>, std::list<PendingTransfer> > pendingtransfers;
     int maxavgspeed;
     void estimateRaceSizes();
     void reportCurrentSize(SiteRace *, FileList *, bool final);
     void refreshScoreBoard();
     void issueOptimalTransfers();
     void setSpeedScale();
-    int calculateScore(File *, Race *, FileList *, SiteRace *, FileList *, SiteRace *, int, bool *, bool) const;
-    void checkIfRaceComplete(SiteLogic *, Race *);
-    void raceComplete(Race *);
-    void transferJobComplete(TransferJob *);
-    void issueGlobalComplete(Race *);
-    void refreshPendingTransferList(TransferJob *);
+    int calculateScore(File *, Pointer<Race>, FileList *, SiteRace *, FileList *, SiteRace *, int, bool *, bool) const;
+    void checkIfRaceComplete(SiteLogic *, Pointer<Race>);
+    void raceComplete(Pointer<Race>);
+    void transferJobComplete(Pointer<TransferJob>);
+    void issueGlobalComplete(Pointer<Race>);
+    void refreshPendingTransferList(Pointer<TransferJob>);
     void checkStartPoke();
-    Race * getCurrentRace(std::string) const;
+    Pointer<Race> getCurrentRace(std::string) const;
     bool pokeregistered;
     unsigned int dropped;
   public:
@@ -61,21 +62,21 @@ class Engine : public EventReceiver {
     void removeSiteFromRace(std::string, std::string);
     void abortRace(std::string);
     void deleteOnAllSites(std::string);
-    void abortTransferJob(TransferJob *);
-    void raceFileListRefreshed(SiteLogic *, Race *);
-    void transferJobActionRequest(TransferJob *);
+    void abortTransferJob(Pointer<TransferJob>);
+    void raceFileListRefreshed(SiteLogic *, Pointer<Race>);
+    void transferJobActionRequest(Pointer<TransferJob>);
     int currentRaces() const;
     int allRaces() const;
     int currentTransferJobs() const;
     int allTransferJobs() const;
-    Race * getRace(std::string) const;
-    TransferJob * getTransferJob(std::string) const;
-    std::list<Race *>::const_iterator getRacesBegin() const;
-    std::list<Race *>::const_iterator getRacesEnd() const;
-    std::list<TransferJob *>::const_iterator getTransferJobsBegin() const;
-    std::list<TransferJob *>::const_iterator getTransferJobsEnd() const;
+    Pointer<Race> getRace(std::string) const;
+    Pointer<TransferJob> getTransferJob(std::string) const;
+    std::list<Pointer<Race> >::const_iterator getRacesBegin() const;
+    std::list<Pointer<Race> >::const_iterator getRacesEnd() const;
+    std::list<Pointer<TransferJob> >::const_iterator getTransferJobsBegin() const;
+    std::list<Pointer<TransferJob> >::const_iterator getTransferJobsEnd() const;
     void tick(int);
-    void addSiteToRace(Race *, std::string);
+    void addSiteToRace(Pointer<Race>, std::string);
 
-    ScoreBoard * getScoreBoard() const;
+    Pointer<ScoreBoard> getScoreBoard() const;
 };
