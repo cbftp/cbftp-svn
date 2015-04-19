@@ -7,11 +7,9 @@
 #include <unistd.h>
 
 namespace {
-
-template <typename D> void delfunc(D * d) {
-  delete d;
-}
-
+  template <typename D> void delfunc(D * d) {
+    delete d;
+  }
 }
 
 template <class T> class Pointer {
@@ -25,28 +23,23 @@ public:
   }
   explicit Pointer(T * t) :
     object(t),
-    counter(new int),
+    counter(new int(1)),
     deleter(delfunc<T>)
   {
-    *counter = 1;
   }
   Pointer(const Pointer & other) :
     object(other.object),
     counter(other.counter),
     deleter(other.deleter)
   {
-    if (counter != NULL) {
-      (*counter)++;
-    }
+    counter && ++*counter;
   }
   template<typename X> Pointer(const Pointer<X> & other) :
     object((T *) other.object),
     counter(other.counter),
     deleter(delfunc<T>)
   {
-    if (counter != NULL) {
-      (*counter)++;
-    }
+    counter && ++*counter;
   }
   ~Pointer() {
     decrease();
@@ -56,9 +49,7 @@ public:
     object = other.object;
     counter = other.counter;
     deleter = other.deleter;
-    if (counter != NULL) {
-      ++(*counter);
-    }
+    counter && ++*counter;
     return *this;
   }
   template<typename X> Pointer & operator=(const Pointer<X> & other) {
@@ -66,9 +57,7 @@ public:
     object = (T *) other.object;
     counter = other.counter;
     deleter = delfunc<T>;
-    if (counter != NULL) {
-      ++(*counter);
-    }
+    counter && ++*counter;
     return *this;
   }
   T * operator->() const {
@@ -106,7 +95,7 @@ public:
   }
 private:
   void decrease() {
-    if (counter != NULL && !--(*counter)) {
+    if (counter && !--*counter) {
       delete counter;
       deleter(object);
     }
