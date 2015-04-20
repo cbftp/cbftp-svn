@@ -35,7 +35,7 @@ public:
     counter && ++*counter;
   }
   template<typename X> Pointer(const Pointer<X> & other) :
-    object((T *) other.object),
+    object(static_cast<T *>(other.object)),
     counter(other.counter),
     deleter(delfunc<T>)
   {
@@ -54,7 +54,7 @@ public:
   }
   template<typename X> Pointer & operator=(const Pointer<X> & other) {
     decrease();
-    object = (T *) other.object;
+    object = static_cast<T *>(other.object);
     counter = other.counter;
     deleter = delfunc<T>;
     counter && ++*counter;
@@ -76,13 +76,13 @@ public:
     return object == other.object;
   }
   template<typename X> bool operator==(const Pointer<X> & other) const {
-    return object == (T *) other.object;
+    return object == static_cast<T *>(other.object);
   }
   bool operator<(const Pointer & other) const {
     return object < other.object;
   }
   template<typename X> bool operator<(const Pointer<X> & other) const {
-    return object < (T *) other.object;
+    return object < static_cast<T *>(other.object);
   }
   void reset() {
     decrease();
@@ -91,7 +91,7 @@ public:
     deleter = NULL;
   }
   template<typename X> X * get() const {
-    return (X *) object;
+    return static_cast<X *>(object);
   }
 private:
   void decrease() {
