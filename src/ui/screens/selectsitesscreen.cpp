@@ -142,7 +142,9 @@ void SelectSitesScreen::keyPressed(unsigned int ch) {
           blockstr += msocb->getIdentifier() + ",";
         }
       }
-      blockstr = blockstr.substr(0, blockstr.length() - 1);
+      if (blockstr.length() > 0) {
+        blockstr = blockstr.substr(0, blockstr.length() - 1);
+      }
       ui->returnSelectSites(blockstr);
       break;
     }
