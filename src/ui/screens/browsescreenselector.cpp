@@ -159,7 +159,7 @@ BrowseScreenAction BrowseScreenSelector::keyPressed(unsigned int ch) {
       ui->redraw();
       break;
     case KEY_NPAGE:
-      if (pointer < entries.size() - 1 - pagerows) {
+      if (pagerows < entries.size() && pointer < entries.size() - 1 - pagerows) {
         pointer += pagerows;
       }
       else {
