@@ -29,7 +29,7 @@ MainScreen::MainScreen(Ui * ui) {
 }
 
 void MainScreen::initialize(unsigned int row, unsigned int col) {
-  siteextralegendtext = " - [b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [q]uick jump";
+  siteextralegendtext = " - [Tab] split browse - [b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [q]uick jump";
   baselegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [G]lobal settings - Event [l]og - [t]ransfers - All [r]aces - All transfer[j]obs - toggle [U]dp";
   gotolegendtext = "[Any] Go to matching first letter in site list - [Esc] Cancel";
   autoupdate = true;
@@ -96,7 +96,7 @@ void MainScreen::redraw() {
   int x = 1;
   int y = ++irow;
   mss.prepareRefill();
-  for (std::vector<Site *>::const_iterator it = global->getSiteManager()->getSitesIteratorBegin(); it != global->getSiteManager()->getSitesIteratorEnd(); it++) {
+  for (std::vector<Site *>::const_iterator it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
     mss.add(*it, y++, x);
   }
   mss.checkPointer();
@@ -343,6 +343,10 @@ void MainScreen::keyPressed(unsigned int ch) {
       case 'b':
         if (mss.getSite() == NULL) break;
         ui->goBrowse(mss.getSite()->getName());
+        break;
+      case '\t':
+        if (mss.getSite() == NULL) break;
+        ui->goBrowseSplit(mss.getSite()->getName());
         break;
       case 'w':
         if (mss.getSite() == NULL) break;

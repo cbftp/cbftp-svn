@@ -237,7 +237,7 @@ void Engine::raceFileListRefreshed(SiteLogic * sls, Pointer<Race> race) {
   }
 }
 
-void Engine::transferJobActionRequest(Pointer<TransferJob> tj) {
+bool Engine::transferJobActionRequest(Pointer<TransferJob> tj) {
   std::map<Pointer<TransferJob>, std::list<PendingTransfer> >::iterator it = pendingtransfers.find(tj);
   if (it == pendingtransfers.end()) {
     pendingtransfers[tj] = std::list<PendingTransfer>();
@@ -249,23 +249,18 @@ void Engine::transferJobActionRequest(Pointer<TransferJob> tj) {
   if (it->second.size() == 0) {
     refreshPendingTransferList(tj);
     if (it->second.size() == 0) {
-      if (!tj->listsRefreshed() && tj->getType() != TRANSFERJOB_DOWNLOAD_FILE) {
-        tj->refreshLists();
-      }
-      else {
-        tj->setAlmostDone();
-      }
-      return;
+      tj->refreshOrAlmostDone();
+      return true;
     }
   }
   if (tj->listsRefreshed()) {
     tj->clearRefreshLists();
   }
   PendingTransfer pt = it->second.front();
-  it->second.pop_front();
   switch (pt.type()) {
     case PENDINGTRANSFER_DOWNLOAD:
     {
+      if (!pt.getSrc()->downloadSlotAvailable()) return false;
       Pointer<TransferStatus> ts = global->getTransferManager()->suggestDownload(pt.getSrcFileName(),
           pt.getSrc(), pt.getSrcFileList(), pt.getPath());
       tj->addTransfer(ts);
@@ -273,6 +268,7 @@ void Engine::transferJobActionRequest(Pointer<TransferJob> tj) {
     }
     case PENDINGTRANSFER_UPLOAD:
     {
+      if (!pt.getDst()->uploadSlotAvailable()) return false;
       Pointer<TransferStatus> ts = global->getTransferManager()->suggestUpload(pt.getSrcFileName(),
           pt.getPath(), pt.getDst(), pt.getDstFileList());
       tj->addTransfer(ts);
@@ -280,12 +276,16 @@ void Engine::transferJobActionRequest(Pointer<TransferJob> tj) {
     }
     case PENDINGTRANSFER_FXP:
     {
+      if (!pt.getSrc()->downloadSlotAvailable()) return false;
+      if (!pt.getDst()->uploadSlotAvailable()) return false;
       Pointer<TransferStatus> ts = global->getTransferManager()->suggestTransfer(pt.getSrcFileName(),
           pt.getSrc(), pt.getSrcFileList(), pt.getDst(), pt.getDstFileList());
       tj->addTransfer(ts);
       break;
     }
   }
+  it->second.pop_front();
+  return true;
 }
 
 void Engine::estimateRaceSizes() {
@@ -464,8 +464,35 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> tj) {
     case TRANSFERJOB_UPLOAD_FILE:
       break;
     case TRANSFERJOB_FXP:
+      for (it2 = tj->srcFileListsBegin(); it2 != tj->srcFileListsEnd(); it2++) {
+        FileList * srclist = it2->second;
+        FileList * dstlist = tj->findDstList(it2->first);
+        for (std::map<std::string, File *>::iterator srcit = srclist->begin(); srcit != srclist->end(); srcit++) {
+          if (!srcit->second->isDirectory() && srcit->second->getSize() > 0) {
+            std::string filename = srcit->first;
+            if (dstlist == NULL) {
+              tj->wantDstDirectory(it2->first);
+              break;
+            }
+            if (dstlist->getFile(filename) == NULL) {
+              it->second.push_back(PendingTransfer(tj->getSrc(), srclist,
+                  filename, tj->getDst(), dstlist, filename));
+              std::string subpath = it2->first.length() > 0 ? it2->first + "/" : "";
+              tj->addPendingTransfer(subpath + filename, srcit->second->getSize());
+            }
+          }
+        }
+      }
       break;
     case TRANSFERJOB_FXP_FILE:
+      if (tj->getSrcFileList()->getFile(tj->getSrcFileName())->getSize() > 0) {
+        if (tj->getDstFileList()->getFile(tj->getDstFileName()) == NULL) {
+          it->second.push_back(PendingTransfer(tj->getSrc(), tj->getSrcFileList(),
+              tj->getSrcFileName(), tj->getDst(), tj->getDstFileList(), tj->getDstFileName()));
+          tj->addPendingTransfer(tj->getSrcFileName(),
+              tj->getSrcFileList()->getFile(tj->getSrcFileName())->getSize());
+        }
+      }
       break;
   }
 }

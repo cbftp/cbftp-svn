@@ -33,8 +33,8 @@ class SiteManager {
     void addSite(Site *);
     Site * getSite(std::string) const;
     void deleteSite(std::string);
-    std::vector<Site *>::const_iterator getSitesIteratorBegin() const;
-    std::vector<Site *>::const_iterator getSitesIteratorEnd() const;
+    std::vector<Site *>::const_iterator begin() const;
+    std::vector<Site *>::const_iterator end() const;
     std::string getDefaultUserName() const;
     void setDefaultUserName(std::string);
     std::string getDefaultPassword() const;

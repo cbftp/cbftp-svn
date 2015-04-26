@@ -64,7 +64,7 @@ class Engine : public EventReceiver {
     void deleteOnAllSites(std::string);
     void abortTransferJob(Pointer<TransferJob>);
     void raceFileListRefreshed(SiteLogic *, Pointer<Race>);
-    void transferJobActionRequest(Pointer<TransferJob>);
+    bool transferJobActionRequest(Pointer<TransferJob>);
     int currentRaces() const;
     int allRaces() const;
     int currentTransferJobs() const;

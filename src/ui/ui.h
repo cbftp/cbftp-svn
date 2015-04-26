@@ -171,6 +171,7 @@ class Ui : private EventReceiver, public UIBase {
     void goEditSite(std::string);
     void goAddSite();
     void goBrowse(std::string);
+    void goBrowseSplit(std::string);
     void goAddProxy();
     void goEditProxy(std::string);
     void goRawData(std::string);

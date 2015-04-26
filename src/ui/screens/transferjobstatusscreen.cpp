@@ -119,6 +119,7 @@ void TransferJobStatusScreen::command(std::string command, std::string arg) {
     currentlegendtext = abortedlegendtext;
     ui->setLegend();
   }
+  ui->redraw();
 }
 
 void TransferJobStatusScreen::keyPressed(unsigned int ch) {
@@ -134,8 +135,11 @@ void TransferJobStatusScreen::keyPressed(unsigned int ch) {
         transferjob->setSlots(slots);
         switch (transferjob->getType()) {
           case TRANSFERJOB_DOWNLOAD:
+            transferjob->getSrc()->haveConnected(slots);
+            break;
           case TRANSFERJOB_FXP:
             transferjob->getSrc()->haveConnected(slots);
+            transferjob->getDst()->haveConnected(slots);
             break;
           case TRANSFERJOB_UPLOAD:
             transferjob->getDst()->haveConnected(slots);

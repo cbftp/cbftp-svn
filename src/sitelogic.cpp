@@ -426,32 +426,41 @@ void SiteLogic::commandFail(int id) {
       }
       break;
     case STATE_MKD:
-      targetcwdsect = conns[id]->getMKDCWDTargetSection();
-      targetcwdpath = conns[id]->getMKDCWDTargetPath();
-      subdirs = conns[id]->getMKDSubdirs();
-      if (conns[id]->getTargetPath() == targetcwdsect + "/" + targetcwdpath) {
-        if (subdirs->size() > 0) {
-          std::string sub = subdirs->front();
-          subdirs->pop_front();
-          std::string newattempt = targetcwdsect + "/" + sub;
-          CommandOwner * currentco = conns[id]->currentCommandOwner();
-          if (currentco != NULL && currentco->classType() == COMMANDOWNER_SITERACE) {
-            if (((SiteRace *)currentco)->pathVisited(newattempt)) {
-              handleFail(id);
-              return;
+      if (conns[id]->hasMKDCWDTarget()) {
+        targetcwdsect = conns[id]->getMKDCWDTargetSection();
+        targetcwdpath = conns[id]->getMKDCWDTargetPath();
+        subdirs = conns[id]->getMKDSubdirs();
+        if (conns[id]->getTargetPath() == targetcwdsect + "/" + targetcwdpath) {
+          if (subdirs->size() > 0) {
+            std::string sub = subdirs->front();
+            subdirs->pop_front();
+            std::string newattempt = targetcwdsect + "/" + sub;
+            CommandOwner * currentco = conns[id]->currentCommandOwner();
+            if (currentco != NULL && currentco->classType() == COMMANDOWNER_SITERACE) {
+              if (((SiteRace *)currentco)->pathVisited(newattempt)) {
+                handleFail(id);
+                return;
+              }
+              ((SiteRace *)currentco)->addVisitedPath(newattempt);
             }
-            ((SiteRace *)currentco)->addVisitedPath(newattempt);
+            conns[id]->doMKD(newattempt);
+            return;
           }
-          conns[id]->doMKD(newattempt);
-          return;
+          else {
+            handleFail(id);
+            return;
+          }
         }
         else {
-          handleFail(id);
-          return;
+          // cwdmkd failed.
         }
       }
       else {
-        // cwdmkd failed.
+        CommandOwner * currentco = conns[id]->currentCommandOwner();
+        if (currentco != NULL && currentco->classType() == COMMANDOWNER_TRANSFERJOB) {
+          handleConnection(id, false);
+          return;
+        }
       }
       break;
     case STATE_PRET_RETR:
@@ -738,6 +747,11 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
         getFileListConn(id, tj.get(), fl);
         return;
       }
+      if (tj->wantsMakeDir(this)) {
+        conns[id]->setCurrentCommandOwner(tj.get());
+        conns[id]->doMKD(tj->getWantedMakeDir());
+        return;
+      }
       if (!tj->isInitialized()) {
         targetjob = tj;
         continue;
@@ -757,8 +771,12 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
   }
   if (!!targetjob) {
     connstatetracker[id].delayedCommand("handle", SLEEPDELAY);
-    global->getEngine()->transferJobActionRequest(targetjob);
-    return;
+    if (global->getEngine()->transferJobActionRequest(targetjob)) {
+      return;
+    }
+    else {
+      connstatetracker[id].use();
+    }
   }
   SiteRace * race = NULL;
   bool refresh = false;
@@ -1395,6 +1413,12 @@ void SiteLogic::raceGlobalComplete() {
   bool stillactive = false;
   for (unsigned int i = 0; i < races.size(); i++) {
     if (!races[i]->isGlobalDone()) {
+      stillactive = true;
+      break;
+    }
+  }
+  for (std::list<Pointer<TransferJob> >::const_iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
+    if (!(*it)->isDone()) {
       stillactive = true;
       break;
     }

@@ -5,19 +5,15 @@
 #include <string>
 
 #include "../uiwindow.h"
-#include "../uifilelist.h"
-#include "../menuselectoption.h"
 
-#include "../../eventreceiver.h"
+#include "../../pointer.h"
 
-class SiteLogic;
-class Site;
-class FileList;
+class BrowseScreenSub;
 
-class BrowseScreen : public UIWindow, public EventReceiver {
+class BrowseScreen : public UIWindow {
 public:
   BrowseScreen(Ui *);
-  void initialize(unsigned int, unsigned int, std::string);
+  void initialize(unsigned int, unsigned int, std::string, bool split);
   void redraw();
   void update();
   void command(std::string, std::string);
@@ -25,52 +21,12 @@ public:
   std::string getLegendText() const;
   std::string getInfoLabel() const;
   std::string getInfoText() const;
-  std::list<std::pair<std::string, std::string> > selectionhistory;
-  void tick(int);
 private:
-  MenuSelectOption table;
-  unsigned int currentviewspan;
-  unsigned int sliderstart;
-  unsigned int slidersize;
-  bool virgin;
-  bool resort;
-  mutable int tickcount;
-  bool wipe;
-  bool wiperecursive;
-  bool deleting;
-  bool deletingrecursive;
-  bool nuking;
-  mutable bool changedsort;
-  mutable bool cwdfailed;
-  mutable bool wipesuccess;
-  mutable bool wipefailed;
-  mutable bool deletesuccess;
-  mutable bool deletefailed;
-  mutable bool nukesuccess;
-  mutable bool nukefailed;
-  bool gotomode;
-  bool gotomodefirst;
-  int gotomodeticker;
-  std::string gotomodestring;
-  std::string nuketarget;
-  std::string wipetarget;
-  std::string wipepath;
-  std::string wipefile;
-  unsigned int sortmethod;
-  Site * site;
-  UIFileList list;
-  SiteLogic * sitelogic;
-  int requestid;
-  std::string requestedpath;
-  mutable int spinnerpos;
-  FileList * filelist;
-  bool withinraceskiplistreach;
-  std::string closestracesectionpath;
+  void switchSide();
+  void closeSide();
+  Pointer<BrowseScreenSub> left;
+  Pointer<BrowseScreenSub> right;
+  Pointer<BrowseScreenSub> active;
   bool split;
-  std::string separatortext;
-  void sort();
-  void refreshFilelist();
-  size_t countDirLevels(std::string);
-  void addFileDetails(unsigned int, std::string);
-  void addFileDetails(unsigned int, std::string, std::string, std::string, std::string, std::string, bool, bool);
+  bool initsplitupdate;
 };

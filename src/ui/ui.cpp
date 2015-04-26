@@ -465,6 +465,7 @@ void Ui::setLegend() {
 }
 
 void Ui::setInfo() {
+  infowindow->setLabel(topwindow->getInfoLabel());
   infowindow->setText(topwindow->getInfoText());
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
@@ -678,7 +679,12 @@ void Ui::goAddSite() {
 }
 
 void Ui::goBrowse(std::string site) {
-  browsescreen->initialize(mainrow, maincol, site);
+  browsescreen->initialize(mainrow, maincol, site, false);
+  switchToWindow(browsescreen);
+}
+
+void Ui::goBrowseSplit(std::string site) {
+  browsescreen->initialize(mainrow, maincol, site, true);
   switchToWindow(browsescreen);
 }
 

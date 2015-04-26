@@ -66,7 +66,7 @@ void NewRaceScreen::populateSiteList() {
   std::vector<Site *>::const_iterator it;
   mso.clear();
   if (!tempsites.size()) {
-    for (it = global->getSiteManager()->getSitesIteratorBegin(); it != global->getSiteManager()->getSitesIteratorEnd(); it++) {
+    for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
       Site * site = *it;
       if (site->hasSection(section)) {
         tempsites.push_back(std::pair<std::string, bool>(site->getName(), toggleall || site == startsite));

@@ -44,16 +44,19 @@ public:
   std::map<std::string, unsigned long long int>::const_iterator pendingTransfersEnd() const;
   bool isDone() const;
   bool wantsList(SiteLogic *);
+  bool wantsMakeDir(SiteLogic *) const;
+  void wantDstDirectory(std::string);
   FileList * getListTarget(SiteLogic *) const;
+  std::string getWantedMakeDir();
   void fileListUpdated(FileList *);
+  FileList * findDstList(std::string) const;
   SiteLogic * getSrc() const;
   SiteLogic * getDst() const;
   int maxSlots() const;
   void setSlots(int);
   int maxPossibleSlots() const;
   bool listsRefreshed() const;
-  void refreshLists();
-  void setAlmostDone();
+  void refreshOrAlmostDone();
   void clearRefreshLists();
   void addPendingTransfer(std::string, unsigned long long int);
   void addTransfer(Pointer<TransferStatus>);
@@ -79,6 +82,7 @@ private:
   void init();
   void countTotalFiles();
   void setDone();
+  void checkRemoveWantedDstMakeDir(std::string);
   int type;
   SiteLogic * src;
   SiteLogic * dst;
@@ -111,4 +115,5 @@ private:
   int filesprogress;
   int filestotal;
   bool initialized;
+  std::map<std::string, bool> wanteddstmakedirs;
 };

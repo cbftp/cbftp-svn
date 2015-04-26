@@ -28,7 +28,7 @@ void SelectSitesScreen::initialize(unsigned int row, unsigned int col, std::stri
   mso.clear();
   mso.enterFocusFrom(0);
   std::vector<Site *>::const_iterator it;
-  for (it = sm->getSitesIteratorBegin(); it != sm->getSitesIteratorEnd(); it++) {
+  for (it = sm->begin(); it != sm->end(); it++) {
     if (excluded.find(*it) != excluded.end()) {
       continue;
     }

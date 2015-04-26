@@ -380,7 +380,7 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
         excludedsites.push_back(it->second->getSite());
       }
       std::vector<Site *>::const_iterator it;
-      for (it = global->getSiteManager()->getSitesIteratorBegin(); it != global->getSiteManager()->getSitesIteratorEnd(); it++) {
+      for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
         if (!(*it)->hasSection(race->getSection())) {
           excludedsites.push_back(*it);
         }

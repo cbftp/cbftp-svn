@@ -280,11 +280,11 @@ void SiteManager::sortSites() {
   std::sort(sites.begin(), sites.end(), siteNameComparator);
 }
 
-std::vector<Site *>::const_iterator SiteManager::getSitesIteratorBegin() const {
+std::vector<Site *>::const_iterator SiteManager::begin() const {
   return sites.begin();
 }
 
-std::vector<Site *>::const_iterator SiteManager::getSitesIteratorEnd() const {
+std::vector<Site *>::const_iterator SiteManager::end() const {
   return sites.end();
 }
 

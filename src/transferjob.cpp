@@ -51,7 +51,6 @@ TransferJob::TransferJob(SiteLogic * slsrc, std::string srcfile, FileList * srcf
   if (srclist->getFile(srcfile)->isDirectory()) {
     type = TRANSFERJOB_FXP;
     srcfilelists[""] = new FileList(srcfilelist->getUser(), srcfilelist->getPath() + "/" + srcfile);
-    dstfilelists[""] = new FileList(dstfilelist->getUser(), dstfilelist->getPath() + "/" + dstfile);
   }
   else {
     type = TRANSFERJOB_FXP_FILE;
@@ -155,7 +154,7 @@ bool TransferJob::isDone() const {
 }
 
 bool TransferJob::wantsList(SiteLogic * sl) {
-  if ((type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) && sl == src) {
+  if (sl == src && (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP)) {
     for (std::map<std::string, FileList *>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
       std::map<FileList *, bool>::iterator it2 = filelistsrefreshed.find(it->second);
       if (!it->second->isFilled() || (it2 != filelistsrefreshed.end() && !it2->second)) {
@@ -164,10 +163,27 @@ bool TransferJob::wantsList(SiteLogic * sl) {
       }
     }
   }
+  else if (sl == dst && (type == TRANSFERJOB_UPLOAD || type == TRANSFERJOB_FXP)) {
+    for (std::map<std::string, FileList *>::iterator it = dstfilelists.begin(); it != dstfilelists.end(); it++) {
+      std::map<FileList *, bool>::iterator it2 = filelistsrefreshed.find(it->second);
+      if (!it->second->isFilled() || (it2 != filelistsrefreshed.end() && !it2->second)) {
+        dstlisttarget = it->second;
+        return true;
+      }
+    }
+  }
   if (!filestotal) {
     countTotalFiles();
   }
   return false;
+}
+
+bool TransferJob::wantsMakeDir(SiteLogic * sl) const {
+  return sl == dst && wanteddstmakedirs.size();
+}
+
+void TransferJob::wantDstDirectory(std::string subdir) {
+  wanteddstmakedirs[subdir] = true;
 }
 
 FileList * TransferJob::getListTarget(SiteLogic * sl) const {
@@ -180,21 +196,40 @@ FileList * TransferJob::getListTarget(SiteLogic * sl) const {
   return NULL;
 }
 
+std::string TransferJob::getWantedMakeDir() {
+  std::map<std::string, bool>::iterator it = wanteddstmakedirs.begin();
+  std::string subdir = it->first;
+  wanteddstmakedirs.erase(it);
+  std::string basepath = dstlist->getPath();
+  if (basepath.length() == 0 || basepath.substr(basepath.length() - 1) != "/") {
+    basepath += "/";
+  }
+  if (subdir.length() > 0) {
+    subdir = "/" + subdir;
+  }
+  if (dstfilelists.find(it->first) == dstfilelists.end()) {
+    dstfilelists[it->first] = new FileList(dstlist->getUser(), basepath + dstfile + subdir);
+  }
+  return basepath + dstfile + subdir;
+}
+
 void TransferJob::fileListUpdated(FileList * fl) {
   std::map<FileList *, bool>::iterator it2 = filelistsrefreshed.find(fl);
-  if (it2 != filelistsrefreshed.end()) {
-    it2->second = true;
-    bool allrefreshed = true;
-    for (it2 = filelistsrefreshed.begin(); it2 != filelistsrefreshed.end(); it2++) {
-      if (!it2->second) {
-        allrefreshed = false;
-        break;
-      }
+  if (it2 == filelistsrefreshed.end()) {
+    filelistsrefreshed[fl] = false;
+    it2 = filelistsrefreshed.find(fl);
+  }
+  it2->second = true;
+  bool allrefreshed = true;
+  for (it2 = filelistsrefreshed.begin(); it2 != filelistsrefreshed.end(); it2++) {
+    if (!it2->second) {
+      allrefreshed = false;
+      break;
     }
-    if (allrefreshed) {
-      listsrefreshed = true;
-      countTotalFiles();
-    }
+  }
+  if (allrefreshed) {
+    listsrefreshed = true;
+    countTotalFiles();
   }
   if (type != TRANSFERJOB_UPLOAD) {
     for (std::map<std::string, FileList *>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
@@ -212,11 +247,22 @@ void TransferJob::fileListUpdated(FileList * fl) {
   }
 }
 
+FileList * TransferJob::findDstList(std::string sub) const {
+  std::map<std::string, FileList *>::const_iterator it = dstfilelists.find(sub);
+  if (it != dstfilelists.end()) {
+    return it->second;
+  }
+  return NULL;
+}
+
 void TransferJob::addSubDirectoryFileLists(std::map<std::string, FileList *> & filelists, FileList * filelist) {
   std::map<std::string, File *>::iterator it;
   for(it = filelist->begin(); it != filelist->end(); it++) {
     File * file = it->second;
     if (file->isDirectory()) {
+      if (filelists == dstfilelists) {
+        checkRemoveWantedDstMakeDir(file->getName());
+      }
       if (!global->getSkipList()->isAllowed(it->first, true, false)) {
         continue;
       }
@@ -268,7 +314,7 @@ bool TransferJob::listsRefreshed() const {
   return listsrefreshed;
 }
 
-void TransferJob::refreshLists() {
+void TransferJob::refreshOrAlmostDone() {
   clearRefreshLists();
   for (std::map<std::string, FileList *>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
     filelistsrefreshed[it->second] = false;
@@ -276,10 +322,9 @@ void TransferJob::refreshLists() {
   for (std::map<std::string, FileList *>::iterator it = dstfilelists.begin(); it != dstfilelists.end(); it++) {
     filelistsrefreshed[it->second] = false;
   }
-}
-
-void TransferJob::setAlmostDone() {
-  almostdone = true;
+  if (type == TRANSFERJOB_FXP_FILE || type == TRANSFERJOB_DOWNLOAD_FILE || TRANSFERJOB_UPLOAD_FILE) {
+    almostdone = true;
+  }
 }
 
 void TransferJob::clearRefreshLists() {
@@ -465,4 +510,11 @@ bool TransferJob::isAborted() const {
 void TransferJob::setDone() {
   done = true;
   global->getTickPoke()->stopPoke(this, 0);
+}
+
+void TransferJob::checkRemoveWantedDstMakeDir(std::string subdir) {
+  std::map<std::string, bool>::iterator it = wanteddstmakedirs.find(subdir);
+  if (it != wanteddstmakedirs.end()) {
+    wanteddstmakedirs.erase(it);
+  }
 }

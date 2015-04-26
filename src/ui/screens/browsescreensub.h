@@ -1,0 +1,24 @@
+#pragma once
+
+#include "../../eventreceiver.h"
+
+class BrowseScreenAction;
+
+enum BrowseScreenType {
+  BROWSESCREEN_SITE,
+  BROWSESCREEN_LOCAL,
+  BROWSESCREEN_SELECTOR
+};
+
+class BrowseScreenSub : public EventReceiver {
+public:
+  virtual void redraw(unsigned int, unsigned int, unsigned int) = 0;
+  virtual void update() = 0;
+  virtual BrowseScreenType type() const = 0;
+  virtual std::string getLegendText() const = 0;
+  virtual std::string getInfoLabel() const = 0;
+  virtual std::string getInfoText() const = 0;
+  virtual void command(std::string, std::string) = 0;
+  virtual BrowseScreenAction keyPressed(unsigned int) = 0;
+  virtual void setFocus(bool) = 0;
+};
