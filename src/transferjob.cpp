@@ -315,16 +315,20 @@ bool TransferJob::listsRefreshed() const {
 }
 
 void TransferJob::refreshOrAlmostDone() {
-  clearRefreshLists();
-  for (std::map<std::string, FileList *>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
-    filelistsrefreshed[it->second] = false;
-  }
-  for (std::map<std::string, FileList *>::iterator it = dstfilelists.begin(); it != dstfilelists.end(); it++) {
-    filelistsrefreshed[it->second] = false;
-  }
-  if (type == TRANSFERJOB_FXP_FILE || type == TRANSFERJOB_DOWNLOAD_FILE || TRANSFERJOB_UPLOAD_FILE) {
+  if (listsrefreshed || type == TRANSFERJOB_FXP_FILE ||
+      type == TRANSFERJOB_DOWNLOAD_FILE || type == TRANSFERJOB_UPLOAD_FILE) {
     almostdone = true;
   }
+  else {
+    clearRefreshLists();
+    for (std::map<std::string, FileList *>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
+      filelistsrefreshed[it->second] = false;
+    }
+    for (std::map<std::string, FileList *>::iterator it = dstfilelists.begin(); it != dstfilelists.end(); it++) {
+      filelistsrefreshed[it->second] = false;
+    }
+  }
+
 }
 
 void TransferJob::clearRefreshLists() {
