@@ -3,33 +3,61 @@
 #include <stdlib.h>
 #include <cctype>
 
-File::File(std::string name, std::string user) {
-  directory = false;
-  softlink = false;
-  linktarget = "";
-  owner = user;
-  group = user;
-  size = 0;
-  lastmodified = "0";
-  this->name = name;
-  extension = getExtension(name);
-  touch = 0;
-  updateflag = false;
-  downloading = 0;
-  uploading = false;
+File::File(std::string name, std::string user) :
+  name(name),
+  extension(getExtension(name)),
+  size(0),
+  owner(user),
+  group(user),
+  lastmodified("0"),
+  updatespeed(0),
+  updatesrc(NULL),
+  updateflag(false),
+  directory(false),
+  softlink(false),
+  touch(0),
+  uploading(false),
+  downloading(0)
+{
 }
 
-File::File(std::string statline, int touch) {
+File::File(const std::string & statline, int touch) :
+  updateflag(false),
+  directory(false),
+  softlink(false),
+  touch(touch),
+  uploading(false),
+  downloading(0)
+{
+  if (isdigit(statline[0]) && isdigit(statline[1])) {
+    parseMSDOSSTATLine(statline);
+  }
+  else {
+    parseUNIXSTATLine(statline);
+  }
+  extension = getExtension(name);
+  if (softlink) {
+    size_t arrowpos = name.find(" -> ");
+    if (arrowpos != std::string::npos) {
+      linktarget = name.substr(arrowpos + 4);
+      name = name.substr(0, arrowpos);
+    }
+    else {
+      linktarget = "";
+    }
+  }
+
+}
+
+void File::parseUNIXSTATLine(const std::string & statline) {
   int start, pos = 0;
-  softlink = false;
-  directory = false;
   if (statline[pos] == 'd') directory = true;
   else if (statline[pos] == 'l') softlink = true;
-  while(statline[++pos] != ' ');
-  while(statline[++pos] == ' ');
-  while(statline[++pos] != ' ');
+  while (statline[++pos] != ' ');
+  while (statline[++pos] == ' ');
+  while (statline[++pos] != ' ');
   int spacestart = pos;
-  while(statline[++pos] == ' '); // user start at pos? possibly missing field
+  while (statline[++pos] == ' '); // user start at pos? possibly missing field
   if (pos - spacestart < 9) {
     start = pos;
     while (statline[++pos] != ' ');
@@ -67,21 +95,29 @@ File::File(std::string statline, int touch) {
   start = pos;
   while (statline[++pos] != '\r');
   name = statline.substr(start, pos - start);
-  if (softlink) {
-    size_t arrowpos = name.find(" -> ");
-    if (arrowpos != std::string::npos) {
-      linktarget = name.substr(arrowpos + 4);
-      name = name.substr(0, arrowpos);
-    }
-    else {
-      linktarget = "";
-    }
+}
+
+void File::parseMSDOSSTATLine(const std::string & statline) {
+  int start = 0, pos = 0; // date start at pos
+  while (statline[++pos] != ' ');
+  while (statline[++pos] == ' '); // time start at pos
+  while (statline[++pos] != ' ');
+  lastmodified = statline.substr(start, pos - start);
+  while (statline[++pos] == ' '); // dirtag or size start at pos
+  start = pos;
+  while (statline[++pos] != ' ');
+  std::string dirorsize = statline.substr(start, pos - start);
+  if (dirorsize == "<DIR>") {
+    directory = true;
+    size = 0;
   }
-  extension = getExtension(name);
-  this->touch = touch;
-  updateflag = false;
-  downloading = 0;
-  uploading = false;
+  else {
+    size = atol(digitsOnly(dirorsize).c_str());
+  }
+  while (statline[++pos] == ' '); // name start at pos
+  start = pos;
+  while (statline[++pos] != '\r');
+  name = statline.substr(start, pos - start);
 }
 
 bool File::isDirectory() const {
@@ -153,19 +189,19 @@ bool File::setSize(unsigned long long int size) {
   return changed;
 }
 
-bool File::setLastModified(std::string lastmodified) {
+bool File::setLastModified(const std::string & lastmodified) {
   bool changed = this->lastmodified.compare(lastmodified) != 0;
   this->lastmodified = lastmodified;
   return changed;
 }
 
-bool File::setOwner(std::string owner) {
+bool File::setOwner(const std::string & owner) {
   bool changed = this->owner.compare(owner) != 0;
   this->owner = owner;
   return changed;
 }
 
-bool File::setGroup(std::string group) {
+bool File::setGroup(const std::string & group) {
   bool changed = this->group.compare(group) != 0;
   this->group = group;
   return changed;
@@ -203,7 +239,7 @@ int File::getTouch() const {
   return touch;
 }
 
-std::string File::getExtension(std::string file) const {
+std::string File::getExtension(const std::string & file) const {
   std::string extension;
   size_t suffixdotpos = file.rfind(".");
   if (suffixdotpos != std::string::npos && suffixdotpos > 0) {
@@ -213,4 +249,14 @@ std::string File::getExtension(std::string file) const {
     extension[i] = tolower(extension[i]);
   }
   return extension;
+}
+
+std::string File::digitsOnly(const std::string & input) const {
+  std::string output;
+  for (unsigned int i = 0; i < input.length(); i++) {
+    if (isdigit(input[i])) {
+      output += input[i];
+    }
+  }
+  return output;
 }

@@ -1,5 +1,7 @@
 #include "uifile.h"
 
+#include <cctype>
+
 #include "../file.h"
 #include "../globalcontext.h"
 #include "../util.h"
@@ -88,33 +90,71 @@ void UIFile::unCursor() {
   cursored = false;
 }
 
-void UIFile::parseTimeStamp(std::string uglytime) {
+void UIFile::parseTimeStamp(const std::string & uglytime) {
+  int year;
+  int month;
+  int day;
+  int hour;
+  int minute;
+  if (isdigit(uglytime[0]) && isdigit(uglytime[1])) {
+    parseWindowsTimeStamp(uglytime, year, month, day, hour, minute);
+  }
+  else {
+    parseUNIXTimeStamp(uglytime, year, month, day, hour, minute);
+  }
+  std::string yearstr = util::int2Str(year);
+  std::string monthstr = util::int2Str(month);
+  if (month < 10) {
+    monthstr = "0" + monthstr;
+  }
+  std::string daystr = util::int2Str(day);
+  if (day < 10) {
+    daystr = "0" + daystr;
+  }
+  std::string hourstr = util::int2Str(hour);
+  if (hour < 10) {
+    hourstr = "0" + hourstr;
+  }
+  std::string minutestr = util::int2Str(minute);
+  if (minute < 10) {
+    minutestr = "0" + minutestr;
+  }
+
+  // somewhat incorrect formula, but since the exact stamp will only be used for sorting,
+  // there's no need to bother
+  lastmodifieddate = ((year - 1970) * 372 * 24 * 60) +
+                      (month * 31 * 24 * 60) +
+                      (day * 24 * 60);
+  lastmodified = lastmodifieddate +
+                   (hour * 60) +
+                   minute;
+  lastmodifiedrepr = yearstr + "-" + monthstr + "-" + daystr + " " + hourstr + ":" + minutestr;
+}
+
+void UIFile::parseUNIXTimeStamp(const std::string & uglytime, int & year, int & month, int & day, int & hour, int & minute) {
   int pos = 0; // month start at 0
   while (uglytime[++pos] != ' ');
-  std::string monthstr = uglytime.substr(0, pos);
+  std::string monthtmp = uglytime.substr(0, pos);
   while (uglytime[++pos] == ' '); // day start at pos
   int start = pos;
   while (uglytime[++pos] != ' ');
-  std::string daystr = uglytime.substr(start, pos - start);
+  std::string daytmp = uglytime.substr(start, pos - start);
   while (uglytime[++pos] == ' '); // meta start at pos
   std::string meta = uglytime.substr(pos);
-  int year;
-  int month = 0;
-  int day = util::str2Int(daystr);
-  int hour;
-  int minute;
-  if (monthstr == "Jan") month = 1;
-  else if (monthstr == "Feb") month = 2;
-  else if (monthstr == "Mar") month = 3;
-  else if (monthstr == "Apr") month = 4;
-  else if (monthstr == "May") month = 5;
-  else if (monthstr == "Jun") month = 6;
-  else if (monthstr == "Jul") month = 7;
-  else if (monthstr == "Aug") month = 8;
-  else if (monthstr == "Sep") month = 9;
-  else if (monthstr == "Oct") month = 10;
-  else if (monthstr == "Nov") month = 11;
-  else if (monthstr == "Dec") month = 12;
+  month = 0;
+  day = util::str2Int(daytmp);
+  if (monthtmp == "Jan") month = 1;
+  else if (monthtmp == "Feb") month = 2;
+  else if (monthtmp == "Mar") month = 3;
+  else if (monthtmp == "Apr") month = 4;
+  else if (monthtmp == "May") month = 5;
+  else if (monthtmp == "Jun") month = 6;
+  else if (monthtmp == "Jul") month = 7;
+  else if (monthtmp == "Aug") month = 8;
+  else if (monthtmp == "Sep") month = 9;
+  else if (monthtmp == "Oct") month = 10;
+  else if (monthtmp == "Nov") month = 11;
+  else if (monthtmp == "Dec") month = 12;
   size_t metabreak = meta.find(":");
   if (metabreak == std::string::npos) {
     year = util::str2Int(meta);
@@ -130,32 +170,33 @@ void UIFile::parseTimeStamp(std::string uglytime) {
     hour = util::str2Int(meta.substr(0, metabreak));
     minute = util::str2Int(meta.substr(metabreak + 1));
   }
+}
 
-  std::string yearstr = util::int2Str(year);
-  monthstr = util::int2Str(month);
-  if (month < 10) {
-    monthstr = "0" + monthstr;
+void UIFile::parseWindowsTimeStamp(const std::string & uglytime, int & year, int & month, int & day, int & hour, int & minute) {
+  int pos = 0, start = 0; // date start at 0
+  while (uglytime[++pos] != ' ');
+  std::string datestamp = uglytime.substr(start, pos - start);
+  while (uglytime[++pos] == ' ');
+  std::string timestamp = uglytime.substr(pos);
+  if (isdigit(datestamp[2])) { // euro format
+    year = util::str2Int(datestamp.substr(0, 4));
+    month = util::str2Int(datestamp.substr(3, 2));
+    day = util::str2Int(datestamp.substr(6, 2));
   }
-  daystr = util::int2Str(day);
-  if (day < 10) {
-    daystr = "0" + daystr;
+  else { // US format
+    month = util::str2Int(datestamp.substr(0, 2));
+    day = util::str2Int(datestamp.substr(3, 2));
+    year = util::str2Int(datestamp.substr(6));
+    if (datestamp.length() == 8) { // US short year
+      year += 2000;
+    }
   }
-  std::string hourstr = util::int2Str(hour);
-  if (hour < 10) {
-    hourstr = "0" + hourstr;
+  hour = util::str2Int(timestamp.substr(0, 2));
+  minute = util::str2Int(timestamp.substr(3, 2));
+  if (timestamp.length() == 7) { // US format
+    hour %= 12;
+    if (timestamp[5] == 'P') {
+      hour += 12;
+    }
   }
-  meta = util::int2Str(minute);
-  if (minute < 10) {
-    meta = "0" + meta;
-  }
-
-  // somewhat incorrect formula, but since the exact stamp will only be used for sorting,
-  // there's no need to bother
-  lastmodifieddate = ((year - 1970) * 372 * 24 * 60) +
-                      (month * 31 * 24 * 60) +
-                      (day * 24 * 60);
-  lastmodified = lastmodifieddate +
-                   (hour * 60) +
-                   minute;
-  lastmodifiedrepr = yearstr + "-" + monthstr + "-" + daystr + " " + hourstr + ":" + meta;
 }

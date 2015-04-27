@@ -512,8 +512,9 @@ bool TransferJob::isAborted() const {
 }
 
 void TransferJob::setDone() {
-  done = true;
   global->getTickPoke()->stopPoke(this, 0);
+  done = true;
+  timeremaining = 0;
 }
 
 void TransferJob::checkRemoveWantedDstMakeDir(std::string subdir) {

@@ -510,7 +510,7 @@ void FTPConn::STATResponse() {
 }
 
 void FTPConn::LISTResponse() {
-  if (databufcode == 150) {
+  if (databufcode == 150 || databufcode == 125) {
     sl->commandSuccess(id);
     state = STATE_LIST_COMPLETE;
   }
@@ -861,7 +861,7 @@ void FTPConn::doRETR(std::string file) {
 }
 
 void FTPConn::RETRResponse() {
-  if (databufcode == 150) {
+  if (databufcode == 150 || databufcode == 125) {
     sl->commandSuccess(id);
     state = STATE_RETR_COMPLETE;
   }
@@ -887,7 +887,7 @@ void FTPConn::doSTOR(std::string file) {
 }
 
 void FTPConn::STORResponse() {
-  if (databufcode == 150) {
+  if (databufcode == 150 || databufcode == 125) {
     sl->commandSuccess(id);
     state = STATE_STOR_COMPLETE;
   }
@@ -1037,12 +1037,12 @@ void FTPConn::parseFileList(char * buf, unsigned int buflen) {
   int touch = rand();
   while (loc + 4 < buf + buflen && !(*(loc + 1) == '2' && *(loc + 2) == '1' && *(loc + 4) == ' ')) {
     if (*(loc + 1) == '2' && *(loc + 2) == '1' && *(loc + 4) == '-') loc += 4;
-    start = loc + 1;
-    while (loc < buf + buflen && loc - start < 50) {
-      start = loc + 1;
-      while(loc < buf + buflen && *++loc != '\n');
+    start = loc;
+    while (loc < buf + buflen && loc - start < 40) {
+      start = loc;
+      while(loc < buf + buflen && *loc++ != '\n');
     }
-    if (loc - start >= 50) {
+    if (loc - start >= 40) {
       if (currentfl->updateFile(std::string(start, loc - start), touch)) {
         files++;
       }

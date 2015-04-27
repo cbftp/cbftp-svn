@@ -19,7 +19,9 @@ private:
   bool softlink;
   bool selected;
   bool cursored;
-  void parseTimeStamp(std::string);
+  void parseTimeStamp(const std::string &);
+  void parseUNIXTimeStamp(const std::string &, int &, int &, int &, int &, int &);
+  void parseWindowsTimeStamp(const std::string &, int &, int &, int &, int &, int &);
 public:
   UIFile(File *);
   bool isDirectory() const;
