@@ -381,7 +381,7 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
       }
       std::vector<Site *>::const_iterator it;
       for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
-        if (!(*it)->hasSection(race->getSection())) {
+        if (!(*it)->hasSection(race->getSection()) || (!(*it)->getAllowDownload() && !(*it)->getAllowUpload())) {
           excludedsites.push_back(*it);
         }
       }
