@@ -8,7 +8,6 @@ class File {
 private:
   void parseUNIXSTATLine(const std::string &);
   void parseMSDOSSTATLine(const std::string &);
-  std::string getExtension(const std::string &) const;
   std::string digitsOnly(const std::string &) const;
   std::string name;
   std::string linktarget;
@@ -27,6 +26,7 @@ private:
   bool uploading;
   int downloading;
 public:
+  static std::string getExtension(const std::string &);
   File(std::string, std::string);
   File(const std::string &, int);
   bool isDirectory() const;

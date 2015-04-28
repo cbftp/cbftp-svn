@@ -47,6 +47,7 @@ class Engine : public EventReceiver {
     void issueGlobalComplete(Pointer<Race>);
     void refreshPendingTransferList(Pointer<TransferJob>);
     void checkStartPoke();
+    void addPendingTransfer(std::list<PendingTransfer> &, PendingTransfer &);
     Pointer<Race> getCurrentRace(std::string) const;
     bool pokeregistered;
     unsigned int dropped;

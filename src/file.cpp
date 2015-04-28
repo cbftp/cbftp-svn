@@ -239,7 +239,7 @@ int File::getTouch() const {
   return touch;
 }
 
-std::string File::getExtension(const std::string & file) const {
+std::string File::getExtension(const std::string & file) {
   std::string extension;
   size_t suffixdotpos = file.rfind(".");
   if (suffixdotpos != std::string::npos && suffixdotpos > 0) {

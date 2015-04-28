@@ -415,7 +415,8 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> tj) {
     pendingtransfers[tj] = std::list<PendingTransfer>();
   }
   it = pendingtransfers.find(tj);
-  it->second.clear();
+  std::list<PendingTransfer> & list = it->second;
+  list.clear();
   std::map<std::string, FileList *>::const_iterator it2;
   switch (tj->getType()) {
     case TRANSFERJOB_DOWNLOAD:
@@ -433,7 +434,8 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> tj) {
               dstit = dstlist->find(srcit->first);
             }
             if (!dstlist || dstit == dstlist->end() || dstit->second.getSize() == 0) {
-              it->second.push_back(PendingTransfer(tj->getSrc(), srclist, srcit->first, getpath, srcit->first));
+              PendingTransfer p(tj->getSrc(), srclist, srcit->first, getpath, srcit->first);
+              addPendingTransfer(list, p);
               std::string subpath = it2->first.length() > 0 ? it2->first + "/" : "";
               tj->addPendingTransfer(subpath + srcit->first, srcit->second->getSize());
             }
@@ -452,8 +454,9 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> tj) {
           dstit = dstlist->find(tj->getDstFileName());
         }
         if (!dstlist || dstit == dstlist->end() || dstit->second.getSize() == 0) {
-          it->second.push_back(PendingTransfer(tj->getSrc(), tj->getSrcFileList(),
-              tj->getSrcFileName(), tj->getDstPath(), tj->getDstFileName()));
+          PendingTransfer p(tj->getSrc(), tj->getSrcFileList(),
+              tj->getSrcFileName(), tj->getDstPath(), tj->getDstFileName());
+          addPendingTransfer(list, p);
           tj->addPendingTransfer(tj->getSrcFileName(),
               tj->getSrcFileList()->getFile(tj->getSrcFileName())->getSize());
         }
@@ -475,8 +478,8 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> tj) {
               break;
             }
             if (dstlist->getFile(filename) == NULL) {
-              it->second.push_back(PendingTransfer(tj->getSrc(), srclist,
-                  filename, tj->getDst(), dstlist, filename));
+              PendingTransfer p(tj->getSrc(), srclist, filename, tj->getDst(), dstlist, filename);
+              addPendingTransfer(list, p);
               std::string subpath = it2->first.length() > 0 ? it2->first + "/" : "";
               tj->addPendingTransfer(subpath + filename, srcit->second->getSize());
             }
@@ -487,13 +490,24 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> tj) {
     case TRANSFERJOB_FXP_FILE:
       if (tj->getSrcFileList()->getFile(tj->getSrcFileName())->getSize() > 0) {
         if (tj->getDstFileList()->getFile(tj->getDstFileName()) == NULL) {
-          it->second.push_back(PendingTransfer(tj->getSrc(), tj->getSrcFileList(),
-              tj->getSrcFileName(), tj->getDst(), tj->getDstFileList(), tj->getDstFileName()));
+          PendingTransfer p(tj->getSrc(), tj->getSrcFileList(),
+                        tj->getSrcFileName(), tj->getDst(), tj->getDstFileList(), tj->getDstFileName());
+          addPendingTransfer(list, p);
           tj->addPendingTransfer(tj->getSrcFileName(),
               tj->getSrcFileList()->getFile(tj->getSrcFileName())->getSize());
         }
       }
       break;
+  }
+}
+
+void Engine::addPendingTransfer(std::list<PendingTransfer> & list, PendingTransfer & p) {
+  std::string extension = File::getExtension(p.getSrcFileName());
+  if (extension == "sfv" || extension == "nfo") {
+    list.push_front(p); // sfv and nfo files have top priority
+  }
+  else {
+    list.push_back(p);
   }
 }
 
