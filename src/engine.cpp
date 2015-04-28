@@ -328,7 +328,7 @@ void Engine::reportCurrentSize(SiteRace * srs, FileList * fls, bool final) {
     size_t lastdotpos = filename.rfind(".");
     if (lastdotpos != std::string::npos && lastdotpos < filename.length() - 4) {
       int offsetdot = 4;
-      if (file->getSize() == 0 && lastdotpos == filename.length() - 8 &&
+      if (file->getSize() == 0 && lastdotpos > 0 && lastdotpos == filename.length() - 8 &&
           filename.substr(lastdotpos) == ".missing") { // special hack for some zipscripts
         offsetdot = -1;
       }
