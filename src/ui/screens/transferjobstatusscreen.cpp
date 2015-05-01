@@ -29,6 +29,7 @@ void TransferJobStatusScreen::initialize(unsigned int row, unsigned int col, std
   currentlegendtext = transferjob->isAborted() ? abortedlegendtext : defaultlegendtext;
   this->filename = filename;
   autoupdate = true;
+  active = false;
   mso.clear();
   mso.addIntArrow(3, 40, "slots", "Slots:", transferjob->maxSlots(), 1, transferjob->maxPossibleSlots());
   mso.enterFocusFrom(0);
