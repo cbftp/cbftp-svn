@@ -55,6 +55,7 @@ BrowseScreenSite::BrowseScreenSite(Ui * ui, std::string sitestr) {
   currentviewspan = 0;
   sortmethod = 0;
   spinnerpos = 0;
+  filelist = NULL;
   list = UIFileList();
   global->updateTime();
 }
