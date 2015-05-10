@@ -26,6 +26,7 @@
 IOManager::IOManager() :
   wm(global->getWorkManager()),
   blockpool(wm->getBlockPool()),
+  sendblockpool(makePointer<DataBlockPool>()),
   blocksize(blockpool->blockSize()),
   sockidcounter(0),
   hasdefaultinterface(false) {
@@ -35,9 +36,9 @@ IOManager::IOManager() :
 void IOManager::init() {
   pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
 #ifdef _ISOC95_SOURCE
-  pthread_setname_np(thread, "Input");
+  pthread_setname_np(thread, "IO");
 #endif
-  global->getTickPoke()->startPoke(this, "EventReceiver", TICKPERIOD, 0);
+  global->getTickPoke()->startPoke(this, "IOManager", TICKPERIOD, 0);
 }
 
 void IOManager::tick(int message) {
@@ -115,6 +116,7 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int
   ScopeLock lock(socketinfomaplock);
   int sockid = sockidcounter++;
   socketinfomap[sockid].fd = sockfd;
+  socketinfomap[sockid].id = sockid;
   socketinfomap[sockid].type = FD_TCP_CONNECTING;
   socketinfomap[sockid].addr = std::string(buf);
   socketinfomap[sockid].receiver = er;
@@ -163,6 +165,7 @@ int IOManager::registerTCPServerSocket(EventReceiver * er, int port, bool local)
   ScopeLock lock(socketinfomaplock);
   int sockid = sockidcounter++;
   socketinfomap[sockid].fd = sockfd;
+  socketinfomap[sockid].id = sockid;
   socketinfomap[sockid].type = FD_TCP_SERVER;
   socketinfomap[sockid].receiver = er;
   sockfdidmap[sockfd] = sockid;
@@ -181,6 +184,7 @@ void IOManager::registerStdin(EventReceiver * er) {
   ScopeLock lock(socketinfomaplock);
   int sockid = sockidcounter++;
   socketinfomap[sockid].fd = STDIN_FILENO;
+  socketinfomap[sockid].id = sockid;
   socketinfomap[sockid].type = FD_KEYBOARD;
   socketinfomap[sockid].receiver = er;
   sockfdidmap[STDIN_FILENO] = sockid;
@@ -213,6 +217,7 @@ int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
   ScopeLock lock(socketinfomaplock);
   int sockid = sockidcounter++;
   socketinfomap[sockid].fd = sockfd;
+  socketinfomap[sockid].id = sockid;
   socketinfomap[sockid].type = FD_UDP;
   socketinfomap[sockid].receiver = er;
   sockfdidmap[sockfd] = sockid;
@@ -267,7 +272,7 @@ void IOManager::negotiateSSL(int id, EventReceiver * er) {
         break;
       }
     }
-    if (parentsocketinfo != NULL) {
+    if (parentsocketinfo != NULL && parentsocketinfo->ssl != NULL) {
       SSL_copy_session_id(ssl, parentsocketinfo->ssl);
     }
   }
@@ -286,6 +291,7 @@ void IOManager::negotiateSSL(int id, EventReceiver * er) {
     if (!investigateSSLError(SSL_get_error(ssl, ret), id, ret)) {
       wm->dispatchEventDisconnected(socketinfo.receiver);
       closeSocketIntern(id);
+      return;
     }
   }
   polling.addFDIn(socketinfo.fd);
@@ -354,8 +360,8 @@ void IOManager::sendData(int id, std::string data) {
 }
 
 void IOManager::sendData(int id, const char * buf, unsigned int buflen) {
-  int b_sent;
-  SSL * ssl;
+  util::assert(buflen <= MAX_SEND_BUFFER);
+  unsigned int sendblocksize = sendblockpool->blockSize();
   char * datablock;
   ScopeLock lock(socketinfomaplock);
   std::map<int, SocketInfo>::iterator it = socketinfomap.find(id);
@@ -363,34 +369,16 @@ void IOManager::sendData(int id, const char * buf, unsigned int buflen) {
     return;
   }
   SocketInfo & socketinfo = it->second;
-  switch(socketinfo.type) {
-    case FD_TCP_PLAIN: // tcp plain
-    case FD_TCP_PLAIN_LISTEN:
-      b_sent = send(socketinfo.fd, buf, buflen, 0);
-      break;
-    case FD_TCP_CONNECTING:
-    case FD_TCP_SSL_NEG_REDO_CONN: // tcp ssl negotiation
-    case FD_TCP_SSL_NEG_REDO_WRITE: // tcp ssl negotiation
-    case FD_TCP_SSL_NEG_REDO_ACCEPT: // tcp ssl negotiation
-    case FD_TCP_SSL_NEG_REDO_HANDSHAKE: // tcp ssl negotiation
-      datablock = blockpool->getBlock();
-      memcpy(datablock, buf, buflen);
-      socketinfo.sendqueue.push_back(DataBlock(datablock, buflen));
-      break;
-    case FD_TCP_SSL: // tcp ssl
-      ssl = socketinfo.ssl;
-      b_sent = SSL_write(ssl, buf, buflen);
-      if (b_sent < 0) {
-        int code = SSL_get_error(ssl, b_sent);
-        if (code == SSL_ERROR_WANT_READ || code == SSL_ERROR_WANT_WRITE) {
-          socketinfo.type = FD_TCP_SSL_NEG_REDO_WRITE;
-          datablock = blockpool->getBlock();
-          memcpy(datablock, buf, buflen);
-          socketinfo.sendqueue.push_back(DataBlock(datablock, buflen));
-        }
-      }
-      break;
+  while (buflen > 0) {
+    datablock = sendblockpool->getBlock();
+    int copysize = buflen < sendblocksize ? buflen : sendblocksize;
+    memcpy(datablock, buf, copysize);
+    socketinfo.sendqueue.push_back(DataBlock(datablock, copysize));
+    buf += copysize;
+    buflen -= copysize;
   }
+  util::assert(socketinfo.sendqueue.size() * sendblockpool->blockSize() <= MAX_SEND_BUFFER);
+  polling.setFDOut(socketinfo.fd);
 }
 
 void IOManager::closeSocket(int id) {
@@ -440,21 +428,182 @@ std::string IOManager::getSocketAddress(int id) const {
   return addr;
 }
 
-void IOManager::runInstance() {
-  int currfd;
-  int newfd;
-  int sockid;
+void IOManager::handleKeyboardIn(SocketInfo & socketinfo, ScopeLock & lock) {
+  lock.unlock();
+  wm->dispatchFDData(socketinfo.receiver);
+  lock.lock();
+}
+
+void IOManager::handleTCPConnectingOut(SocketInfo & socketinfo) {
+  unsigned int error;
+  unsigned int errorlen = sizeof(error);
+  getsockopt(socketinfo.fd, SOL_SOCKET, SO_ERROR, &error, &errorlen);
+  if (error != 0) {
+    wm->dispatchEventFail(socketinfo.receiver, strerror(error));
+    closeSocketIntern(socketinfo.id);
+    return;
+  }
+  socketinfo.type = FD_TCP_PLAIN;
+  connecttimemap.erase(socketinfo.id);
+  wm->dispatchEventConnected(socketinfo.receiver);
+  polling.setFDIn(socketinfo.fd);
+}
+
+void IOManager::handleTCPPlainIn(SocketInfo & socketinfo) {
+  char * buf = blockpool->getBlock();
+  int b_recv = read(socketinfo.fd, buf, blocksize);
+  if (b_recv == 0) {
+    blockpool->returnBlock(buf);
+    wm->dispatchEventDisconnected(socketinfo.receiver);
+    closeSocketIntern(socketinfo.id);
+    return;
+  }
+  else if (b_recv < 0) {
+    blockpool->returnBlock(buf);
+    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+      return;
+    }
+    wm->dispatchEventDisconnected(socketinfo.receiver);
+    global->getEventLog()->log("IOManager",
+        "Socket read error on established connection to "
+        + socketinfo.addr + ": " + strerror(errno));
+    closeSocketIntern(socketinfo.id);
+    return;
+  }
+  wm->dispatchFDData(socketinfo.receiver, buf, b_recv);
+}
+
+void IOManager::handleTCPPlainOut(SocketInfo & socketinfo) {
+  while (socketinfo.sendqueue.size() > 0) {
+    DataBlock & block = socketinfo.sendqueue.front();
+    int b_sent = write(socketinfo.fd, block.data(), block.dataLength());
+    if (b_sent < 0) {
+      if (errno == EAGAIN || errno == EWOULDBLOCK) {
+        return;
+      }
+      wm->dispatchEventDisconnected(socketinfo.receiver);
+      global->getEventLog()->log("IOManager",
+          "Socket write error on established connection to "
+          + socketinfo.addr + ": " + strerror(errno));
+      closeSocketIntern(socketinfo.id);
+      return;
+    }
+    if (b_sent < block.dataLength()) {
+      block.consume(b_sent);
+      return;
+    }
+    else {
+      sendblockpool->returnBlock(block.rawData());
+      socketinfo.sendqueue.pop_front();
+    }
+  }
+  if (!socketinfo.sendqueue.size()) {
+    polling.setFDIn(socketinfo.fd);
+    wm->dispatchEventSendComplete(socketinfo.receiver);
+  }
+}
+
+void IOManager::handleTCPSSLNegotiationIn(SocketInfo & socketinfo) {
+  SSL * ssl = socketinfo.ssl;
   int b_recv;
-  char * buf;
-  SSL * ssl;
+  if (socketinfo.type == FD_TCP_SSL_NEG_REDO_CONN) {
+    b_recv = SSL_connect(ssl);
+  }
+  else if (socketinfo.type == FD_TCP_SSL_NEG_REDO_ACCEPT) {
+    b_recv = SSL_accept(ssl);
+  }
+  else {
+    b_recv = SSL_do_handshake(ssl);
+  }
+  if (b_recv > 0) {
+    socketinfo.type = FD_TCP_SSL;
+    std::string cipher = SSL_CIPHER_get_name(SSL_get_current_cipher(ssl));
+    wm->dispatchEventSSLSuccess(socketinfo.receiver);
+    if (socketinfo.sendqueue.size() > 0) {
+      polling.setFDOut(socketinfo.fd);
+    }
+  }
+  else if (b_recv == 0) {
+    wm->dispatchEventDisconnected(socketinfo.receiver);
+    closeSocketIntern(socketinfo.id);
+  }
+  else {
+    if (!investigateSSLError(SSL_get_error(ssl, b_recv), socketinfo.id, b_recv)) {
+      wm->dispatchEventDisconnected(socketinfo.receiver);
+      closeSocketIntern(socketinfo.id);
+    }
+  }
+}
+
+void IOManager::handleTCPSSLIn(SocketInfo & socketinfo) {
+  SSL * ssl = socketinfo.ssl;
+  while (true) {
+    char * buf = blockpool->getBlock();
+    int b_recv = SSL_read(ssl, buf, blocksize);
+    if (b_recv < 0) {
+      if (!investigateSSLError(SSL_get_error(ssl, b_recv), socketinfo.id, b_recv)) {
+        wm->dispatchEventDisconnected(socketinfo.receiver);
+        closeSocketIntern(socketinfo.id);
+      }
+      blockpool->returnBlock(buf);
+      return;
+    }
+    else if (b_recv == 0) {
+      blockpool->returnBlock(buf);
+      wm->dispatchEventDisconnected(socketinfo.receiver);
+      closeSocketIntern(socketinfo.id);
+      return;
+    }
+    wm->dispatchFDData(socketinfo.receiver, buf, b_recv);
+  }
+}
+
+void IOManager::handleTCPSSLOut(SocketInfo & socketinfo) {
+  while (socketinfo.sendqueue.size() > 0) {
+    DataBlock & block = socketinfo.sendqueue.front();
+    SSL * ssl = socketinfo.ssl;
+    int b_sent = SSL_write(ssl, block.data(), block.dataLength());
+    if (b_sent < 0) {
+      int code = SSL_get_error(ssl, b_sent);
+      if (code == SSL_ERROR_WANT_READ || code == SSL_ERROR_WANT_WRITE) {
+        return;
+      }
+      else {
+        wm->dispatchEventDisconnected(socketinfo.receiver);
+        closeSocketIntern(socketinfo.id);
+      }
+      return;
+    }
+    sendblockpool->returnBlock(block.rawData());
+    socketinfo.sendqueue.pop_front();
+  }
+  if (!socketinfo.sendqueue.size()) {
+    polling.setFDIn(socketinfo.fd);
+    wm->dispatchEventSendComplete(socketinfo.receiver);
+  }
+}
+
+void IOManager::handleUDPIn(SocketInfo & socketinfo) {
+  char * buf = blockpool->getBlock();
+  int b_recv = recvfrom(socketinfo.fd, buf, blocksize, 0, (struct sockaddr *) 0, (socklen_t *) 0);
+  wm->dispatchFDData(socketinfo.receiver, buf, b_recv);
+}
+
+void IOManager::handleTCPServerIn(SocketInfo & socketinfo) {
   struct sockaddr addr;
   socklen_t addrlen;
-  EventReceiver * er;
-  std::map<int, SocketInfo>::iterator it;
-  std::map<int, int>::iterator idit;
+  int newfd = accept(socketinfo.fd, &addr, &addrlen);
+  fcntl(newfd, F_SETFL, O_NONBLOCK);
+  int newsockid = sockidcounter++;
+  socketinfomap[newsockid].fd = newfd;
+  socketinfomap[newsockid].id = newsockid;
+  socketinfomap[newsockid].type = FD_TCP_PLAIN_LISTEN;
+  wm->dispatchEventNew(socketinfo.receiver, newsockid);
+}
+
+void IOManager::runInstance() {
   std::list<std::pair<int, PollEvent> > fds;
   std::list<std::pair<int, PollEvent> >::const_iterator pollit;
-  PollEvent pollevent;
   ScopeLock lock(socketinfomaplock);
   while(1) {
     lock.unlock();
@@ -462,190 +611,65 @@ void IOManager::runInstance() {
     polling.wait(fds);
     lock.lock();
     for (pollit = fds.begin(); pollit != fds.end(); pollit++) {
-      currfd = pollit->first;
-      pollevent = pollit->second;
-      idit = sockfdidmap.find(currfd);
+      int currfd = pollit->first;
+      PollEvent pollevent = pollit->second;
+      std::map<int, int>::iterator idit = sockfdidmap.find(currfd);
       if (idit == sockfdidmap.end()) {
         continue;
       }
-      sockid = idit->second;
-      it = socketinfomap.find(sockid);
+      int sockid = idit->second;
+      std::map<int, SocketInfo>::iterator it = socketinfomap.find(sockid);
       if (it == socketinfomap.end()) {
         continue;
       }
       SocketInfo & socketinfo = it->second;
-      er = socketinfo.receiver;
-      if (pollevent == POLLEVENT_OUT) {
-        polling.setFDIn(currfd);
-        if (socketinfo.type == FD_TCP_CONNECTING) {
-          unsigned int error;
-          unsigned int errorlen = sizeof(error);
-          getsockopt(currfd, SOL_SOCKET, SO_ERROR, &error, &errorlen);
-          if (error != 0) {
-            closeSocketIntern(sockid);
-            wm->dispatchEventFail(er, strerror(error));
-            continue;
-          }
-          socketinfo.type = FD_TCP_PLAIN;
-          connecttimemap.erase(sockid);
-          wm->dispatchEventConnected(er);
-        }
-        continue;
-      }
       switch (socketinfo.type) {
         case FD_KEYBOARD: // keyboard
-          lock.unlock();
-          wm->dispatchFDData(er);
-          lock.lock();
+          handleKeyboardIn(socketinfo, lock);
+          break;
+        case FD_TCP_CONNECTING:
+          if (pollevent == POLLEVENT_OUT) {
+            handleTCPConnectingOut(socketinfo);
+          }
           break;
         case FD_TCP_PLAIN: // tcp plain
         case FD_TCP_PLAIN_LISTEN:
           if (pollevent == POLLEVENT_IN) { // incoming data
-            buf = blockpool->getBlock();
-            b_recv = recv(currfd, buf, blocksize, 0);
-            if (b_recv == 0) {
-              blockpool->returnBlock(buf);
-              closeSocketIntern(sockid);
-              wm->dispatchEventDisconnected(er);
-              break;
-            }
-            else if (b_recv < 0) {
-              blockpool->returnBlock(buf);
-              if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                break;
-              }
-              closeSocketIntern(sockid);
-              wm->dispatchEventDisconnected(er);
-              global->getEventLog()->log("IOManager",
-                  "Socket error on established connection to "
-                  + it->second.addr + ": " + strerror(errno));
-              break;
-            }
-            wm->dispatchFDData(er, buf, b_recv);
+            handleTCPPlainIn(socketinfo);
+          }
+          else if (pollevent == POLLEVENT_OUT) {
+            handleTCPPlainOut(socketinfo);
           }
           break;
         case FD_TCP_SSL_NEG_REDO_CONN: // tcp ssl redo connect
         case FD_TCP_SSL_NEG_REDO_ACCEPT: // tcp ssl redo accept
         case FD_TCP_SSL_NEG_REDO_HANDSHAKE: // tcp ssl redo handshake
           if (pollevent == POLLEVENT_IN) { // incoming data
-            ssl = socketinfo.ssl;
-            if (socketinfo.type == FD_TCP_SSL_NEG_REDO_CONN) {
-              b_recv = SSL_connect(ssl);
-            }
-            else if (socketinfo.type == FD_TCP_SSL_NEG_REDO_ACCEPT) {
-              b_recv = SSL_accept(ssl);
-            }
-            else {
-              b_recv = SSL_do_handshake(ssl);
-            }
-            if (b_recv > 0) {
-              socketinfo.type = FD_TCP_SSL;
-              wm->dispatchEventSSLSuccess(er);
-              while (socketinfo.sendqueue.size() > 0) {
-                DataBlock sendblock = socketinfo.sendqueue.front();
-                b_recv = SSL_write(ssl, sendblock.data(), sendblock.dataLength());
-                if (b_recv > 0) {
-                  blockpool->returnBlock(sendblock.data());
-                  socketinfo.sendqueue.pop_front();
-                }
-                else {
-                  socketinfo.type = FD_TCP_SSL_NEG_REDO_WRITE;
-                  break;
-                }
-              }
-            }
-            else if (b_recv == 0) {
-              wm->dispatchEventDisconnected(er);
-              closeSocketIntern(sockid);
-              break;
-            }
-            else {
-              if (!investigateSSLError(SSL_get_error(ssl, b_recv), sockid, b_recv)) {
-                wm->dispatchEventDisconnected(er);
-                closeSocketIntern(sockid);
-              }
-            }
-          }
-          break;
-        case FD_TCP_SSL_NEG_REDO_WRITE: // tcp ssl redo write
-          if (pollevent == POLLEVENT_IN) { // incoming data
-            ssl = socketinfo.ssl;
-            DataBlock sendblock = socketinfo.sendqueue.front();
-            b_recv = SSL_write(ssl, sendblock.data(), sendblock.dataLength());
-            if (b_recv > 0) {
-              blockpool->returnBlock(sendblock.data());
-              socketinfo.sendqueue.pop_front();
-              socketinfo.type = FD_TCP_SSL;
-              while (socketinfo.sendqueue.size() > 0) {
-                sendblock = socketinfo.sendqueue.front();
-                b_recv = SSL_write(ssl, sendblock.data(), sendblock.dataLength());
-                if (b_recv > 0) {
-                  blockpool->returnBlock(sendblock.data());
-                  socketinfo.sendqueue.pop_front();
-                }
-                else {
-                  socketinfo.type = FD_TCP_SSL_NEG_REDO_WRITE;
-                  break;
-                }
-              }
-            }
-            else if (b_recv == 0) {
-              wm->dispatchEventDisconnected(er);
-              closeSocketIntern(sockid);
-            }
-            else if (b_recv < 0) {
-              if (!investigateSSLError(SSL_get_error(ssl, b_recv), sockid, b_recv)) {
-                wm->dispatchEventDisconnected(er);
-                closeSocketIntern(sockid);
-              }
-            }
+            handleTCPSSLNegotiationIn(socketinfo);
           }
           break;
         case FD_TCP_SSL: // tcp ssl
           if (pollevent == POLLEVENT_IN) { // incoming data
-            ssl = socketinfo.ssl;
-            while (true) {
-              buf = blockpool->getBlock();
-              b_recv = SSL_read(ssl, buf, blocksize);
-              if (b_recv < 0) {
-                if (!investigateSSLError(SSL_get_error(ssl, b_recv), sockid, b_recv)) {
-                  wm->dispatchEventDisconnected(er);
-                  closeSocketIntern(sockid);
-                }
-                blockpool->returnBlock(buf);
-                break;
-              }
-              else if (b_recv == 0) {
-                blockpool->returnBlock(buf);
-                wm->dispatchEventDisconnected(er);
-                closeSocketIntern(sockid);
-                break;
-              }
-              wm->dispatchFDData(er, buf, b_recv);
-            }
+            handleTCPSSLIn(socketinfo);
+          }
+          else if (pollevent == POLLEVENT_OUT) {
+            handleTCPSSLOut(socketinfo);
           }
           break;
         case FD_UDP: // udp
           if (pollevent == POLLEVENT_IN) { // incoming data
-            buf = blockpool->getBlock();
-            b_recv = recvfrom(currfd, buf, blocksize, 0, (struct sockaddr *) 0, (socklen_t *) 0);
-            wm->dispatchFDData(er, buf, b_recv);
+            handleUDPIn(socketinfo);
           }
           break;
         case FD_TCP_SERVER: // tcp server
           if (pollevent == POLLEVENT_IN) { // incoming connection
-            newfd = accept(currfd, &addr, &addrlen);
-            fcntl(newfd, F_SETFL, O_NONBLOCK);
-            int newsockid = sockidcounter++;
-            socketinfomap[newsockid].fd = newfd;
-            socketinfomap[newsockid].type = FD_TCP_PLAIN_LISTEN;
-            wm->dispatchEventNew(er, newsockid);
+            handleTCPServerIn(socketinfo);
           }
           break;
+        case FD_UNUSED:
+          util::assert(false);
+          break;
       }
-    }
-    if (!fds.size()) { // timeout occurred
-
     }
   }
 }

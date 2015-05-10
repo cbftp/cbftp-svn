@@ -7,6 +7,8 @@
 #include "pointer.h"
 
 class LocalTransfer;
+class LocalDownload;
+class LocalUpload;
 class TransferMonitor;
 class FTPConn;
 class LocalFileList;
@@ -21,6 +23,7 @@ public:
   LocalTransfer * passiveDownload(TransferMonitor *, std::string, std::string, bool, FTPConn *);
   LocalTransfer * passiveDownload(TransferMonitor *, std::string, std::string, std::string, bool, FTPConn *);
   LocalTransfer * passiveDownload(TransferMonitor *, std::string, bool, FTPConn *);
+  LocalTransfer * passiveUpload(TransferMonitor *, std::string, std::string, std::string, bool, FTPConn *);
   int getFileContent(std::string, char *) const;
   int getStoreContent(int, char **) const;
   void purgeStoreContent(int);
@@ -41,8 +44,10 @@ private:
   std::map<int, std::pair<char *, int> > content;
   std::string getHostFromPASVString(std::string) const;
   int getPortFromPASVString(std::string) const;
-  LocalTransfer * getAvailableLocalTransfer();
-  std::list<LocalTransfer *> localtransfers;
+  LocalDownload * getAvailableLocalDownload();
+  LocalUpload * getAvailableLocalUpload();
+  std::list<LocalDownload *> localdownloads;
+  std::list<LocalUpload *> localuploads;
   std::string temppath;
   std::string downloadpath;
   int storeidcounter;

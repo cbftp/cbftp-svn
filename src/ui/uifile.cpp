@@ -3,6 +3,7 @@
 #include <cctype>
 
 #include "../file.h"
+#include "../localfile.h"
 #include "../globalcontext.h"
 #include "../util.h"
 
@@ -16,10 +17,23 @@ UIFile::UIFile(File * file) {
   group = file->getGroup();
   size = file->getSize();
   linktarget = file->getLinkTarget();
-  sizerepr = util::parseSize(file->getSize());
+  sizerepr = util::parseSize(size);
   parseTimeStamp(file->getLastModified());
   selected = false;
   cursored = false;
+}
+
+UIFile::UIFile(const LocalFile & file) {
+  name = file.getName();
+  directory = file.isDirectory();
+  softlink = false;
+  size = file.getSize();
+  sizerepr = util::parseSize(size);
+  selected = false;
+  cursored = false;
+  owner = file.getOwner();
+  group = file.getGroup();
+  setLastModified(file.getYear(), file.getMonth(), file.getDay(), file.getHour(), file.getMinute());
 }
 
 std::string UIFile::getName() const {
@@ -102,33 +116,7 @@ void UIFile::parseTimeStamp(const std::string & uglytime) {
   else {
     parseUNIXTimeStamp(uglytime, year, month, day, hour, minute);
   }
-  std::string yearstr = util::int2Str(year);
-  std::string monthstr = util::int2Str(month);
-  if (month < 10) {
-    monthstr = "0" + monthstr;
-  }
-  std::string daystr = util::int2Str(day);
-  if (day < 10) {
-    daystr = "0" + daystr;
-  }
-  std::string hourstr = util::int2Str(hour);
-  if (hour < 10) {
-    hourstr = "0" + hourstr;
-  }
-  std::string minutestr = util::int2Str(minute);
-  if (minute < 10) {
-    minutestr = "0" + minutestr;
-  }
-
-  // somewhat incorrect formula, but since the exact stamp will only be used for sorting,
-  // there's no need to bother
-  lastmodifieddate = ((year - 1970) * 372 * 24 * 60) +
-                      (month * 31 * 24 * 60) +
-                      (day * 24 * 60);
-  lastmodified = lastmodifieddate +
-                   (hour * 60) +
-                   minute;
-  lastmodifiedrepr = yearstr + "-" + monthstr + "-" + daystr + " " + hourstr + ":" + minutestr;
+  setLastModified(year, month, day, hour, minute);
 }
 
 void UIFile::parseUNIXTimeStamp(const std::string & uglytime, int & year, int & month, int & day, int & hour, int & minute) {
@@ -199,4 +187,34 @@ void UIFile::parseWindowsTimeStamp(const std::string & uglytime, int & year, int
       hour += 12;
     }
   }
+}
+
+void UIFile::setLastModified(int year, int month, int day, int hour, int minute) {
+  std::string yearstr = util::int2Str(year);
+  std::string monthstr = util::int2Str(month);
+  if (month < 10) {
+    monthstr = "0" + monthstr;
+  }
+  std::string daystr = util::int2Str(day);
+  if (day < 10) {
+    daystr = "0" + daystr;
+  }
+  std::string hourstr = util::int2Str(hour);
+  if (hour < 10) {
+    hourstr = "0" + hourstr;
+  }
+  std::string minutestr = util::int2Str(minute);
+  if (minute < 10) {
+    minutestr = "0" + minutestr;
+  }
+
+  // somewhat incorrect formula, but since the exact stamp will only be used for sorting,
+  // there's no need to bother
+  lastmodifieddate = ((year - 1970) * 372 * 24 * 60) +
+                      (month * 31 * 24 * 60) +
+                      (day * 24 * 60);
+  lastmodified = lastmodifieddate +
+                   (hour * 60) +
+                   minute;
+  lastmodifiedrepr = yearstr + "-" + monthstr + "-" + daystr + " " + hourstr + ":" + minutestr;
 }

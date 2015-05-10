@@ -26,13 +26,13 @@ Pointer<TransferStatus> TransferManager::suggestTransfer(std::string srcname, Si
   return target->getTransferStatus();
 }
 
-Pointer<TransferStatus> TransferManager::suggestDownload(std::string name, SiteLogic * sl, FileList * filelist, std::string path) {
+Pointer<TransferStatus> TransferManager::suggestDownload(std::string name, SiteLogic * sl, FileList * filelist, Pointer<LocalFileList> path) {
   Pointer<TransferMonitor> target = getAvailableTransferMonitor();
   target->engageDownload(name, sl, filelist, path);
   return target->getTransferStatus();
 }
 
-Pointer<TransferStatus> TransferManager::suggestUpload(std::string name, std::string path, SiteLogic * sl, FileList * filelist) {
+Pointer<TransferStatus> TransferManager::suggestUpload(std::string name, Pointer<LocalFileList> path, SiteLogic * sl, FileList * filelist) {
   Pointer<TransferMonitor> target = getAvailableTransferMonitor();
   target->engageUpload(name, path, sl, filelist);
   return target->getTransferStatus();

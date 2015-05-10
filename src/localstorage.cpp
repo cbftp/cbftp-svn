@@ -1,6 +1,7 @@
 #include "localstorage.h"
 
-#include "localtransfer.h"
+#include "localdownload.h"
+#include "localupload.h"
 #include "globalcontext.h"
 #include "transfermonitor.h"
 #include "datafilehandler.h"
@@ -12,6 +13,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <pwd.h>
+#include <grp.h>
 #include <vector>
 
 extern GlobalContext * global;
@@ -29,18 +32,26 @@ LocalTransfer * LocalStorage::passiveDownload(TransferMonitor * tm, std::string 
 LocalTransfer * LocalStorage::passiveDownload(TransferMonitor * tm, std::string path, std::string file, std::string addr, bool ssl, FTPConn * ftpconn) {
   std::string host = getHostFromPASVString(addr);
   int port = getPortFromPASVString(addr);
-  LocalTransfer * lt = getAvailableLocalTransfer();
-  lt->engage(tm, path, file, host, port, ssl, ftpconn);
-  return lt;
+  LocalDownload * ld = getAvailableLocalDownload();
+  ld->engage(tm, path, file, host, port, ssl, ftpconn);
+  return ld;
 }
 
 LocalTransfer * LocalStorage::passiveDownload(TransferMonitor * tm, std::string addr, bool ssl, FTPConn * ftpconn) {
   int storeid = storeidcounter++;
   std::string host = getHostFromPASVString(addr);
   int port = getPortFromPASVString(addr);
-  LocalTransfer * lt = getAvailableLocalTransfer();
-  lt->engage(tm, storeid, host, port, ssl, ftpconn);
-  return lt;
+  LocalDownload * ld = getAvailableLocalDownload();
+  ld->engage(tm, storeid, host, port, ssl, ftpconn);
+  return ld;
+}
+
+LocalTransfer * LocalStorage::passiveUpload(TransferMonitor * tm, std::string path, std::string file, std::string addr, bool ssl, FTPConn * ftpconn) {
+  std::string host = getHostFromPASVString(addr);
+  int port = getPortFromPASVString(addr);
+  LocalUpload * lu = getAvailableLocalUpload();
+  lu->engage(tm, path, file, host, port, ssl, ftpconn);
+  return lu;
 }
 
 std::string LocalStorage::getHostFromPASVString(std::string pasv) const {
@@ -65,19 +76,34 @@ int LocalStorage::getPortFromPASVString(std::string pasv) const {
   return major * 256 + minor;
 }
 
-LocalTransfer * LocalStorage::getAvailableLocalTransfer() {
-  LocalTransfer * lt = NULL;
-  for (std::list<LocalTransfer *>::iterator it = localtransfers.begin(); it != localtransfers.end(); it++) {
+LocalDownload * LocalStorage::getAvailableLocalDownload() {
+  LocalDownload * ld = NULL;
+  for (std::list<LocalDownload *>::iterator it = localdownloads.begin(); it != localdownloads.end(); it++) {
     if (!(*it)->active()) {
-      lt = *it;
+      ld = *it;
       break;
     }
   }
-  if (lt == NULL) {
-    lt = new LocalTransfer(this);
-    localtransfers.push_back(lt);
+  if (ld == NULL) {
+    ld = new LocalDownload(this);
+    localdownloads.push_back(ld);
   }
-  return lt;
+  return ld;
+}
+
+LocalUpload * LocalStorage::getAvailableLocalUpload() {
+  LocalUpload * lu = NULL;
+  for (std::list<LocalUpload *>::iterator it = localuploads.begin(); it != localuploads.end(); it++) {
+    if (!(*it)->active()) {
+      lu = *it;
+      break;
+    }
+  }
+  if (lu == NULL) {
+    lu = new LocalUpload(this);
+    localuploads.push_back(lu);
+  }
+  return lu;
 }
 
 int LocalStorage::getFileContent(std::string filename, char * data) const {
@@ -133,18 +159,34 @@ void LocalStorage::storeContent(int storeid, char * buf, int buflen) {
 }
 
 Pointer<LocalFileList> LocalStorage::getLocalFileList(std::string path) {
-  Pointer<LocalFileList> filelist(new LocalFileList(path));
+  Pointer<LocalFileList> filelist;
   DIR * dir = opendir(path.c_str());
   struct dirent * dent;
-  while ((dent = readdir(dir)) != NULL) {
-    struct stat status;
-    stat(dent->d_name, &status);
+  while (dir != NULL && (dent = readdir(dir)) != NULL) {
+    if (!filelist) {
+      filelist = makePointer<LocalFileList>(path);
+    }
     std::string name = dent->d_name;
+    struct stat status;
+    lstat(std::string(path + "/" + name).c_str(), &status);
     if (name != ".." && name != ".") {
-      filelist->addFile(name, status.st_size, status.st_mode & S_IFDIR);
+      struct passwd * pwd = getpwuid(status.st_uid);
+      std::string owner = pwd != NULL ? pwd->pw_name : util::int2Str(status.st_uid);
+      struct group * grp = getgrgid(status.st_gid);
+      std::string group = grp != NULL ? grp->gr_name : util::int2Str(status.st_gid);
+      struct tm * tm = localtime(&status.st_mtime);
+      int year = 1900 + tm->tm_year;
+      int month = tm->tm_mon;
+      int day = tm->tm_mday;
+      int hour = tm->tm_hour;
+      int minute = tm->tm_min;
+      filelist->addFile(name, status.st_size, (status.st_mode & S_IFMT) ==
+                        S_IFDIR, owner, group, year, month, day, hour, minute);
     }
   }
-  closedir(dir);
+  if (dir != NULL) {
+    closedir(dir);
+  }
   return filelist;
 }
 

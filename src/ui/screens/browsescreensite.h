@@ -29,7 +29,6 @@ public:
   std::string getInfoLabel() const;
   std::string getInfoText() const;
   void setFocus(bool);
-  std::list<std::pair<std::string, std::string> > selectionhistory;
   void tick(int);
   std::string siteName() const;
   FileList * fileList() const;
@@ -76,6 +75,7 @@ private:
   bool withinraceskiplistreach;
   std::string closestracesectionpath;
   std::string separatortext;
+  std::list<std::pair<std::string, std::string> > selectionhistory;
   bool focus;
   void sort();
   void refreshFilelist();

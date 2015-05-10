@@ -21,6 +21,7 @@
 #define WORK_SSL_FAIL 2540
 #define WORK_NEW 2541
 #define WORK_FAIL 2542
+#define WORK_SEND_COMPLETE 2543
 
 class EventReceiver;
 class Event;
@@ -43,6 +44,7 @@ public:
   void dispatchEventSSLSuccess(EventReceiver *);
   void dispatchEventSSLFail(EventReceiver *);
   void dispatchEventFail(EventReceiver *, std::string);
+  void dispatchEventSendComplete(EventReceiver *);
   DataBlockPool * getBlockPool();
   bool overload() const;
   void runInstance();

@@ -58,10 +58,11 @@ void ViewFileScreen::initialize(unsigned int row, unsigned int col, std::string 
     }
   }
   std::string temppath = global->getLocalStorage()->getTempPath();
+  Pointer<LocalFileList> localfl = global->getLocalStorage()->getLocalFileList(temppath);
   if (download) {
     downloadattempted = true;
     ts = global->getTransferManager()->suggestDownload(file, sitelogic,
-        filelist, temppath);
+        filelist, localfl);
     if (!ts) {
       download = false;
     }

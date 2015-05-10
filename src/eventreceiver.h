@@ -14,4 +14,5 @@ public:
   virtual void FDFail(std::string);
   virtual void FDSSLSuccess();
   virtual void FDSSLFail();
+  virtual void FDSendComplete();
 };

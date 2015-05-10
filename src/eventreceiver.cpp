@@ -41,3 +41,7 @@ void EventReceiver::FDSSLSuccess() {
 void EventReceiver::FDSSLFail() {
 
 }
+
+void EventReceiver::FDSendComplete() {
+
+}

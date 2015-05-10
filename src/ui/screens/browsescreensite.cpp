@@ -56,7 +56,6 @@ BrowseScreenSite::BrowseScreenSite(Ui * ui, std::string sitestr) {
   sortmethod = 0;
   spinnerpos = 0;
   filelist = NULL;
-  list = UIFileList();
   global->updateTime();
 }
 
@@ -267,7 +266,7 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
       highlight = true;
     }
     if (re->isVisible()) {
-      ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
+      ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight && focus);
     }
   }
   unsigned int slidersize = 0;
@@ -378,7 +377,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
         }
       }
       ui->redraw();
-      return BrowseScreenAction();
+      return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
     }
     else {
       disableGotoMode();
@@ -529,7 +528,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       gotomodefirst = true;
       gotomodeticker = 0;
       gotomodestring = "";
-      global->getTickPoke()->startPoke(this, "BrowseScreen", 50, 0);
+      global->getTickPoke()->startPoke(this, "BrowseScreenSite", 50, 0);
       ui->update();
       ui->setLegend();
       break;
@@ -817,7 +816,7 @@ void BrowseScreenSite::refreshFilelist() {
   requestid = sitelogic->requestFileList(requestedpath);
 }
 
-void BrowseScreenSite::tick (int message) {
+void BrowseScreenSite::tick(int) {
   if (gotomode && !gotomodefirst) {
     if (gotomodeticker++ >= 20) {
       disableGotoMode();

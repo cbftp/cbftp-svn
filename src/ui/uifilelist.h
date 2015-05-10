@@ -6,7 +6,10 @@
 
 #include "uifile.h"
 
+#include "../pointer.h"
+
 class FileList;
+class LocalFileList;
 
 class UIFileList {
 private:
@@ -31,6 +34,7 @@ public:
   void sortSize(bool);
   void sortOwner(bool);
   void parse(FileList *);
+  void parse(Pointer<LocalFileList> &);
   UIFile * cursoredFile() const;
   void selectFileName(std::string);
   bool goNext();

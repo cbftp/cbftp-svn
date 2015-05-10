@@ -24,6 +24,7 @@ public:
 private:
   void switchSide();
   void closeSide();
+  void keyPressedNoSubAction(unsigned int);
   Pointer<BrowseScreenSub> left;
   Pointer<BrowseScreenSub> right;
   Pointer<BrowseScreenSub> active;

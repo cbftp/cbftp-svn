@@ -5,15 +5,20 @@
 #include "eventreceiver.h"
 #include "pointer.h"
 
-#define TM_TYPE_FXP 960
-#define TM_TYPE_LOCAL 961
-#define TM_TYPE_LIST 962
+enum TransferMonitorType {
+ TM_TYPE_FXP,
+ TM_TYPE_DOWNLOAD,
+ TM_TYPE_UPLOAD,
+ TM_TYPE_LIST
+};
 
-#define TM_STATUS_IDLE 970
-#define TM_STATUS_AWAITING_PASSIVE 971
-#define TM_STATUS_AWAITING_ACTIVE 972
-#define TM_STATUS_TRANSFERRING 973
-#define TM_STATUS_ERROR_AWAITING_PEER 974
+enum Status {
+  TM_STATUS_IDLE,
+  TM_STATUS_AWAITING_PASSIVE,
+  TM_STATUS_AWAITING_ACTIVE,
+  TM_STATUS_TRANSFERRING,
+  TM_STATUS_ERROR_AWAITING_PEER
+};
 
 #define TICKINTERVAL 50
 
@@ -22,10 +27,11 @@ class FileList;
 class TransferManager;
 class TransferStatus;
 class LocalTransfer;
+class LocalFileList;
 
 class TransferMonitor : public EventReceiver {
   private:
-    int status;
+    Status status;
     std::string sfile;
     std::string dfile;
     int src;
@@ -35,13 +41,14 @@ class TransferMonitor : public EventReceiver {
     SiteLogic * sld;
     FileList * fls;
     FileList * fld;
+    Pointer<LocalFileList> localfl;
     std::string spath;
     std::string dpath;
     bool activedownload;
     bool sourcecomplete;
     bool targetcomplete;
     bool ssl;
-    int type;
+    TransferMonitorType type;
     int timestamp;
     int startstamp;
     TransferManager * tm;
@@ -67,8 +74,8 @@ class TransferMonitor : public EventReceiver {
     bool idle() const;
     Pointer<TransferStatus> getTransferStatus() const;
     void engageFXP(std::string, SiteLogic *, FileList *, std::string, SiteLogic *, FileList *);
-    void engageDownload(std::string, SiteLogic *, FileList *, std::string);
-    void engageUpload(std::string, std::string, SiteLogic *, FileList *);
+    void engageDownload(std::string, SiteLogic *, FileList *, Pointer<LocalFileList>);
+    void engageUpload(std::string, Pointer<LocalFileList>, SiteLogic *, FileList *);
     void engageList(SiteLogic *, int, bool);
-    int getStatus() const;
+    Status getStatus() const;
 };

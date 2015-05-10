@@ -3,6 +3,7 @@
 #include <string>
 
 class File;
+class LocalFile;
 
 class UIFile {
 private:
@@ -22,8 +23,10 @@ private:
   void parseTimeStamp(const std::string &);
   void parseUNIXTimeStamp(const std::string &, int &, int &, int &, int &, int &);
   void parseWindowsTimeStamp(const std::string &, int &, int &, int &, int &, int &);
+  void setLastModified(int, int, int, int, int);
 public:
   UIFile(File *);
+  UIFile(const LocalFile &);
   bool isDirectory() const;
   bool isLink() const;
   std::string getOwner() const;

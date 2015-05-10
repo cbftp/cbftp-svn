@@ -6,6 +6,8 @@
 #include "../../globalcontext.h"
 #include "../../util.h"
 #include "../../engine.h"
+#include "../../localfilelist.h"
+#include "../../pointer.h"
 
 #include "../ui.h"
 #include "../termint.h"
@@ -79,44 +81,6 @@ void BrowseScreen::command(std::string command, std::string arg) {
 }
 
 void BrowseScreen::keyPressed(unsigned int ch) {
-  switch (ch) {
-    case '\t':
-      if (!split) {
-        split = true;
-        right = makePointer<BrowseScreenSelector>(ui);
-        ui->redraw();
-      }
-      {
-        switchSide();
-      }
-      return;
-    case 't':
-      if (split && left->type() != BROWSESCREEN_SELECTOR && right->type() != BROWSESCREEN_SELECTOR) {
-        Pointer<BrowseScreenSub> other = active == left ? right : left;
-        if (active->type() == BROWSESCREEN_SITE) {
-          if (other->type() == BROWSESCREEN_SITE) {
-            FileList * activefl = active.get<BrowseScreenSite>()->fileList();
-            FileList * otherfl = other.get<BrowseScreenSite>()->fileList();
-            UIFile * f = active.get<BrowseScreenSite>()->selectedFile();
-            if (activefl != NULL && otherfl != NULL && f != NULL &&
-                (f->isDirectory() || f->getSize() > 0)) {
-              global->getEngine()->newTransferJobFXP(active.get<BrowseScreenSite>()->siteName(),
-                                                     activefl,
-                                                     other.get<BrowseScreenSite>()->siteName(),
-                                                     otherfl,
-                                                     f->getName());
-            }
-          }
-          else {
-            // downloads to specific path not implemented yet
-          }
-        }
-        else if (other->type() == BROWSESCREEN_SITE) {
-          // uploads are not implemented yet
-        }
-      }
-      return;
-  }
   BrowseScreenAction op = active->keyPressed(ch);
   switch (op.getOp()) {
     case BROWSESCREENACTION_CLOSE:
@@ -163,7 +127,67 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       ui->setLegend();
       break;
     case BROWSESCREENACTION_NOOP:
+      keyPressedNoSubAction(ch);
       break;
+    case BROWSESCREENACTION_CAUGHT:
+      break;
+  }
+}
+
+void BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
+  switch (ch) {
+    case '\t':
+      if (!split) {
+        split = true;
+        right = makePointer<BrowseScreenSelector>(ui);
+        ui->redraw();
+      }
+      {
+        switchSide();
+      }
+      return;
+    case 't':
+      if (split && left->type() != BROWSESCREEN_SELECTOR && right->type() != BROWSESCREEN_SELECTOR) {
+        Pointer<BrowseScreenSub> other = active == left ? right : left;
+        if (active->type() == BROWSESCREEN_SITE) {
+          FileList * activefl = active.get<BrowseScreenSite>()->fileList();
+          UIFile * f = active.get<BrowseScreenSite>()->selectedFile();
+          if (activefl != NULL && f != NULL && (f->isDirectory() || f->getSize() > 0)) {
+            if (other->type() == BROWSESCREEN_SITE) {
+              FileList * otherfl = other.get<BrowseScreenSite>()->fileList();
+              if (otherfl != NULL) {
+                global->getEngine()->newTransferJobFXP(active.get<BrowseScreenSite>()->siteName(),
+                                                       activefl,
+                                                       other.get<BrowseScreenSite>()->siteName(),
+                                                       otherfl,
+                                                       f->getName());
+              }
+            }
+            else {
+              Pointer<LocalFileList> otherfl = other.get<BrowseScreenLocal>()->fileList();
+              if (!!otherfl) {
+                global->getEngine()->newTransferJobDownload(active.get<BrowseScreenSite>()->siteName(),
+                                                            f->getName(),
+                                                            activefl,
+                                                            otherfl->getPath());
+              }
+            }
+          }
+        }
+        else if (other->type() == BROWSESCREEN_SITE) {
+          Pointer<LocalFileList> activefl = active.get<BrowseScreenLocal>()->fileList();
+          FileList * otherfl = other.get<BrowseScreenSite>()->fileList();
+          UIFile * f = active.get<BrowseScreenLocal>()->selectedFile();
+          if (!!activefl && otherfl != NULL && f != NULL &&
+              (f->isDirectory() || f->getSize() > 0)) {
+            global->getEngine()->newTransferJobUpload(activefl->getPath(),
+                                                      other.get<BrowseScreenSite>()->siteName(),
+                                                      f->getName(),
+                                                      otherfl);
+          }
+        }
+      }
+      return;
   }
 }
 

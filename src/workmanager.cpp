@@ -49,6 +49,11 @@ void WorkManager::dispatchEventSSLFail(EventReceiver * er) {
 void WorkManager::dispatchEventFail(EventReceiver * er, std::string error) {
   dataqueue.push(Event(er, WORK_FAIL, error));
 }
+
+void WorkManager::dispatchEventSendComplete(EventReceiver * er) {
+  dataqueue.push(Event(er, WORK_SEND_COMPLETE));
+}
+
 DataBlockPool * WorkManager::getBlockPool() {
   return &blockpool;
 }
@@ -92,6 +97,9 @@ void WorkManager::runInstance() {
         break;
       case WORK_FAIL:
         er->FDFail(event.getStrData());
+        break;
+      case WORK_SEND_COMPLETE:
+        er->FDSendComplete();
         break;
     }
   }

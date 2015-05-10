@@ -10,13 +10,16 @@
 #include "socketinfo.h"
 #include "lock.h"
 #include "polling.h"
+#include "pointer.h"
 
 class DataBlockPool;
 class WorkManager;
 class GlobalContext;
+class ScopeLock;
 
 #define TICKPERIOD 100
 #define TIMEOUT_MS 5000
+#define MAX_SEND_BUFFER 1048576
 
 extern GlobalContext * global;
 
@@ -31,6 +34,7 @@ private:
   static void * run(void *);
   WorkManager * wm;
   DataBlockPool * blockpool;
+  Pointer<DataBlockPool> sendblockpool;
   int blocksize;
   int sockidcounter;
   std::string defaultinterface;
@@ -41,6 +45,15 @@ private:
   bool hasdefaultinterface;
   void closeSocketIntern(int);
   static const char * getCipher(SSL *);
+  void handleKeyboardIn(SocketInfo &, ScopeLock &);
+  void handleTCPConnectingOut(SocketInfo &);
+  void handleTCPPlainIn(SocketInfo &);
+  void handleTCPPlainOut(SocketInfo &);
+  void handleTCPSSLNegotiationIn(SocketInfo &);
+  void handleTCPSSLIn(SocketInfo &);
+  void handleTCPSSLOut(SocketInfo &);
+  void handleUDPIn(SocketInfo &);
+  void handleTCPServerIn(SocketInfo &);
 public:
   IOManager();
   void init();

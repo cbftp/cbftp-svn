@@ -10,21 +10,21 @@ PendingTransfer::PendingTransfer(SiteLogic * slsrc, FileList * flsrc, std::strin
   transfertype(PENDINGTRANSFER_FXP) {
 }
 
-PendingTransfer::PendingTransfer(SiteLogic * sl, FileList * fl, std::string srcfilename, std::string path, std::string dstfilename) :
+PendingTransfer::PendingTransfer(SiteLogic * sl, FileList * fl, std::string srcfilename, Pointer<LocalFileList> fllocal, std::string dstfilename) :
   slsrc(sl),
   flsrc(fl),
+  fllocal(fllocal),
   srcfilename(srcfilename),
   dstfilename(dstfilename),
-  path(path),
   transfertype(PENDINGTRANSFER_DOWNLOAD) {
 }
 
-PendingTransfer::PendingTransfer(std::string path, std::string srcfilename, SiteLogic * sl, FileList * fl, std::string dstfilename) :
+PendingTransfer::PendingTransfer(Pointer<LocalFileList> fllocal, std::string srcfilename, SiteLogic * sl, FileList * fl, std::string dstfilename) :
   sldst(sl),
   fldst(fl),
+  fllocal(fllocal),
   srcfilename(srcfilename),
   dstfilename(dstfilename),
-  path(path),
   transfertype(PENDINGTRANSFER_UPLOAD) {
 }
 
@@ -48,14 +48,14 @@ FileList * PendingTransfer::getDstFileList() const {
   return fldst;
 }
 
+Pointer<LocalFileList> PendingTransfer::getLocalFileList() const {
+  return fllocal;
+}
+
 std::string PendingTransfer::getSrcFileName() const {
   return srcfilename;
 }
 
 std::string PendingTransfer::getDstFileName() const {
   return dstfilename;
-}
-
-std::string PendingTransfer::getPath() const {
-  return path;
 }

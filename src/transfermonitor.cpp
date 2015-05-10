@@ -9,9 +9,12 @@
 #include "globalcontext.h"
 #include "file.h"
 #include "localstorage.h"
+#include "localfilelist.h"
+#include "localfile.h"
 #include "transfermanager.h"
 #include "transferstatus.h"
 #include "localtransfer.h"
+#include "localdownload.h"
 #include "util.h"
 
 extern GlobalContext * global;
@@ -74,15 +77,17 @@ void TransferMonitor::engageFXP(std::string sfile, SiteLogic * sls, FileList * f
   }
 }
 
-void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileList * fls, std::string dpath) {
+void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileList * fls, Pointer<LocalFileList> localfl) {
   reset();
-  type = TM_TYPE_LOCAL;
+  if (!localfl) return;
+  type = TM_TYPE_DOWNLOAD;
   this->sls = sls;
   this->sfile = sfile;
   this->dfile = sfile;
   this->spath = fls->getPath();
-  this->dpath = dpath;
+  this->dpath = localfl->getPath();
   this->fls = fls;
+  this->localfl = localfl;
   if (!sls->lockDownloadConn(spath, &src)) return;
   status = TM_STATUS_AWAITING_PASSIVE;
   ts = makePointer<TransferStatus>(TRANSFERSTATUS_TYPE_DOWNLOAD,
@@ -93,6 +98,7 @@ void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileLis
   if (spol == SITE_SSL_ALWAYS_ON || spol == SITE_SSL_PREFER_ON) {
     ssl = true;
   }
+  localfl->touchFile(dfile);
   if (!global->getLocalStorage()->directoryExistsWritable(dpath)) {
     global->getLocalStorage()->createDirectoryRecursive(dpath);
   }
@@ -105,27 +111,33 @@ void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileLis
   }
 }
 
-void TransferMonitor::engageUpload(std::string sfile, std::string spath, SiteLogic * sld, FileList * fld) {
+void TransferMonitor::engageUpload(std::string sfile, Pointer<LocalFileList> localfl, SiteLogic * sld, FileList * fld) {
   reset();
-  type = TM_TYPE_LOCAL;
+  if (!localfl) return;
+  type = TM_TYPE_UPLOAD;
+  this->sld = sld;
   this->sfile = sfile;
   this->dfile = sfile;
-  this->spath = spath;
-  this->sld = sld;
-  this->fld = fld;
+  this->spath = localfl->getPath();
   this->dpath = fld->getPath();
-  if (!sls->lockUploadConn(dpath, &dst)) return;
+  this->fld = fld;
+  this->localfl = localfl;
+  std::map<std::string, LocalFile>::const_iterator it = localfl->find(sfile);
+  if (it == localfl->end()) return;
+  const LocalFile & lf = it->second;
+  if (!sld->lockUploadConn(dpath, &dst)) return;
   status = TM_STATUS_AWAITING_PASSIVE;
   ts = makePointer<TransferStatus>(TRANSFERSTATUS_TYPE_UPLOAD,
       "/\\", sld->getSite()->getName(), "", dfile, spath,
-      dpath, fls->getFile(sfile)->getSize(), 0);
+      dpath, lf.getSize(), 0);
   tm->addNewTransferStatus(ts);
   int spol = sld->getSite()->getSSLTransferPolicy();
   if (spol == SITE_SSL_ALWAYS_ON || spol == SITE_SSL_PREFER_ON) {
     ssl = true;
   }
-  if (!sls->getSite()->hasBrokenPASV()) {
-    sls->preparePassiveUpload(dst, this, dpath, dfile, false, ssl);
+  fld->touchFile(dfile, sld->getSite()->getUser(), true);
+  if (!sld->getSite()->hasBrokenPASV()) {
+    sld->preparePassiveUpload(dst, this, dpath, dfile, false, ssl);
   }
   else {
     activedownload = true;
@@ -181,7 +193,7 @@ void TransferMonitor::tick(int msg) {
         ts->setTimeSpent(span / 1000);
       }
     }
-    if (type == TM_TYPE_LOCAL) {
+    if (type == TM_TYPE_DOWNLOAD || type == TM_TYPE_UPLOAD) {
       if (localtransferspeedticker++ % 4 == 0 && lt) { // run every 200 ms
         unsigned int filesize = lt->size();
         int span = timestamp - startstamp;
@@ -207,12 +219,20 @@ void TransferMonitor::passiveReady(std::string addr) {
         sld->prepareActiveUpload(dst, this, dpath, dfile, addr, ssl);
       }
       break;
-    case TM_TYPE_LOCAL:
+    case TM_TYPE_DOWNLOAD:
       if (activedownload) {
         // client active mode is not implemented yet
       }
       else {
         lt = global->getLocalStorage()->passiveDownload(this, dpath, dfile, addr, ssl, sls->getConn(src));
+      }
+      break;
+    case TM_TYPE_UPLOAD:
+      if (activedownload) {
+        // client active mode is not implemented yet
+      }
+      else {
+        lt = global->getLocalStorage()->passiveUpload(this, spath, sfile, addr, ssl, sld->getConn(dst));
       }
       break;
     case TM_TYPE_LIST:
@@ -221,7 +241,7 @@ void TransferMonitor::passiveReady(std::string addr) {
       }
       else {
         lt = global->getLocalStorage()->passiveDownload(this, addr, ssl, sls->getConn(src));
-        storeid = lt->getStoreId();
+        storeid = static_cast<LocalDownload *>(lt)->getStoreId();
       }
       break;
   }
@@ -235,8 +255,11 @@ void TransferMonitor::activeReady() {
       sls->download(src);
       sld->upload(dst);
       break;
-    case TM_TYPE_LOCAL:
+    case TM_TYPE_DOWNLOAD:
       sls->download(src);
+      break;
+    case TM_TYPE_UPLOAD:
+      sld->upload(dst);
       break;
     case TM_TYPE_LIST:
       if (hiddenfiles) {
@@ -289,7 +312,7 @@ void TransferMonitor::finish() {
     }
     switch (type) {
       case TM_TYPE_FXP:
-      case TM_TYPE_LOCAL: {
+      case TM_TYPE_DOWNLOAD: {
         File * srcfile = fls->getFile(sfile);
         if (srcfile) {
           unsigned long long int size = srcfile->getSize();
@@ -301,6 +324,14 @@ void TransferMonitor::finish() {
             fld->setFileUpdateFlag(dfile, size, speed, sls->getSite(), sld->getSite()->getName());
           }
         }
+        break;
+      }
+      case TM_TYPE_UPLOAD: {
+        unsigned long long int size = lt->size();
+        unsigned int speed = size / span;
+        ts->setTargetSize(size);
+        ts->setSpeed(speed);
+        ts->setTimeSpent(span / 1000);
         break;
       }
       case TM_TYPE_LIST:
@@ -354,7 +385,7 @@ void TransferMonitor::sourceError(int err) {
       return;
     }
   }
-  if (targetcomplete || (type == TM_TYPE_LOCAL && lt == NULL)) {
+  if (targetcomplete || (type == TM_TYPE_DOWNLOAD && lt == NULL)) {
     transferFailed(ts, err);
     return;
   }
@@ -396,7 +427,7 @@ void TransferMonitor::targetError(int err) {
       return;
     }
   }
-  if (sourcecomplete || (type == TM_TYPE_LOCAL && lt == NULL)) {
+  if (sourcecomplete || (type == TM_TYPE_UPLOAD && lt == NULL)) {
     transferFailed(ts, err);
     return;
   }
@@ -419,7 +450,7 @@ void TransferMonitor::setTargetSizeSpeed(unsigned int filesize, int span) {
   }
 }
 
-int TransferMonitor::getStatus() const {
+Status TransferMonitor::getStatus() const {
   return status;
 }
 

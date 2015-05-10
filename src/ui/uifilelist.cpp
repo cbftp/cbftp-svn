@@ -4,6 +4,8 @@
 
 #include "../filelist.h"
 #include "../file.h"
+#include "../localfilelist.h"
+#include "../localfile.h"
 
 UIFileList::UIFileList() {
   currentposition = 0;
@@ -264,6 +266,37 @@ void UIFileList::parse(FileList * filelist) {
     files.push_back(UIFile(it->second));
     totalsize += it->second->getSize();
     if (it->second->isDirectory()) {
+      numdirs++;
+    }
+    else {
+      numfiles++;
+    }
+  }
+  for (unsigned int i = 0; i < files.size(); i++) {
+    sortedfiles.push_back(&(files[i]));
+  }
+  path = filelist->getPath();
+}
+
+void UIFileList::parse(Pointer<LocalFileList> & filelist) {
+  files.clear();
+  numfiles = 0;
+  numdirs = 0;
+  totalsize = 0;
+  sortedfiles.clear();
+  selectedfiles.clear();
+  currentposition = 0;
+  currentcursored = NULL;
+  separators = false;
+  std::map<std::string, LocalFile>::const_iterator it;
+  int size = filelist->size();
+  files.reserve(size);
+  sortedfiles.reserve(size);
+  for (it = filelist->begin(); it != filelist->end(); it++) {
+    const LocalFile & f = it->second;
+    files.push_back(UIFile(f));
+    totalsize += f.getSize();
+    if (f.isDirectory()) {
       numdirs++;
     }
     else {

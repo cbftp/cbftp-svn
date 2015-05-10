@@ -19,6 +19,7 @@
 class SiteLogic;
 class FileList;
 class TransferStatus;
+class LocalFileList;
 
 class TransferJob : public CommandOwner {
 public:
@@ -30,14 +31,16 @@ public:
   std::string getSrcFileName() const;
   std::string getDstFileName() const;
   int getType() const;
-  std::string getSrcPath() const;
-  std::string getDstPath() const;
+  std::string getLocalPath() const;
   FileList * getSrcFileList() const;
   FileList * getDstFileList() const;
+  Pointer<LocalFileList> getLocalFileList() const;
   std::map<std::string, FileList *>::const_iterator srcFileListsBegin() const;
   std::map<std::string, FileList *>::const_iterator srcFileListsEnd() const;
   std::map<std::string, FileList *>::const_iterator dstFileListsBegin() const;
   std::map<std::string, FileList *>::const_iterator dstFileListsEnd() const;
+  std::map<std::string, Pointer<LocalFileList> >::const_iterator localFileListsBegin() const;
+  std::map<std::string, Pointer<LocalFileList> >::const_iterator localFileListsEnd() const;
   std::list<Pointer<TransferStatus> >::const_iterator transfersBegin() const;
   std::list<Pointer<TransferStatus> >::const_iterator transfersEnd() const;
   std::map<std::string, unsigned long long int>::const_iterator pendingTransfersBegin() const;
@@ -46,10 +49,12 @@ public:
   bool wantsList(SiteLogic *);
   bool wantsMakeDir(SiteLogic *) const;
   void wantDstDirectory(std::string);
+  Pointer<LocalFileList> wantedLocalDstList(const std::string &);
   FileList * getListTarget(SiteLogic *) const;
   std::string getWantedMakeDir();
   void fileListUpdated(FileList *);
-  FileList * findDstList(std::string) const;
+  FileList * findDstList(const std::string &) const;
+  Pointer<LocalFileList> findLocalFileList(const std::string &) const;
   SiteLogic * getSrc() const;
   SiteLogic * getDst() const;
   int maxSlots() const;
@@ -83,17 +88,19 @@ private:
   void countTotalFiles();
   void setDone();
   void checkRemoveWantedDstMakeDir(std::string);
+  void updateLocalFileLists(const std::string &);
   int type;
   SiteLogic * src;
   SiteLogic * dst;
   std::string srcfile;
   std::string dstfile;
-  std::string srcpath;
-  std::string dstpath;
+  std::string localpath;
   FileList * srclist;
   FileList * dstlist;
+  Pointer<LocalFileList> locallist;
   std::map<std::string, FileList *> srcfilelists;
   std::map<std::string, FileList *> dstfilelists;
+  std::map<std::string, Pointer<LocalFileList> > localfilelists;
   std::map<std::string, unsigned long long int> pendingtransfers;
   std::list<Pointer<TransferStatus> > transfers;
   int slots;

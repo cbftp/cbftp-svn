@@ -9,9 +9,10 @@ OBJECTS = potentialelement.o scoreboardelement.o \
 	connstatetracker.o delayedcommand.o remotecommandhandler.o eventreceiver.o \
 	iomanager.o workmanager.o event.o datablockpool.o datablock.o \
 	skiplist.o sizelocationtrack.o eventlog.o proxy.o proxymanager.o \
-	proxysession.o recursivecommandlogic.o localstorage.o localtransfer.o \
+	proxysession.o recursivecommandlogic.o localstorage.o localdownload.o \
 	externalfileviewing.o transferstatus.o transferjob.o timereference.o \
-	skiplistitem.o pendingtransfer.o localfile.o localfilelist.o util.o
+	skiplistitem.o pendingtransfer.o localfile.o localfilelist.o util.o \
+	localupload.o
 
 all: ${OBJECTS}
 	@cd ui; ${MAKE}
@@ -69,6 +70,7 @@ pendingtransfer.o:
 localfile.o:
 localfilelist.o:
 util.o:
+localupload.o:
 
 clean:
 	rm -f ${OBJECTS}

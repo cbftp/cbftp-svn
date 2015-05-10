@@ -262,7 +262,7 @@ bool Engine::transferJobActionRequest(Pointer<TransferJob> tj) {
     {
       if (!pt.getSrc()->downloadSlotAvailable()) return false;
       Pointer<TransferStatus> ts = global->getTransferManager()->suggestDownload(pt.getSrcFileName(),
-          pt.getSrc(), pt.getSrcFileList(), pt.getPath());
+          pt.getSrc(), pt.getSrcFileList(), pt.getLocalFileList());
       tj->addTransfer(ts);
       break;
     }
@@ -270,7 +270,7 @@ bool Engine::transferJobActionRequest(Pointer<TransferJob> tj) {
     {
       if (!pt.getDst()->uploadSlotAvailable()) return false;
       Pointer<TransferStatus> ts = global->getTransferManager()->suggestUpload(pt.getSrcFileName(),
-          pt.getPath(), pt.getDst(), pt.getDstFileList());
+          pt.getLocalFileList(), pt.getDst(), pt.getDstFileList());
       tj->addTransfer(ts);
       break;
     }
@@ -423,24 +423,21 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> tj) {
   it = pendingtransfers.find(tj);
   std::list<PendingTransfer> & list = it->second;
   list.clear();
-  std::map<std::string, FileList *>::const_iterator it2;
   switch (tj->getType()) {
-    case TRANSFERJOB_DOWNLOAD:
+    case TRANSFERJOB_DOWNLOAD: {
+      std::map<std::string, FileList *>::const_iterator it2;
       for (it2 = tj->srcFileListsBegin(); it2 != tj->srcFileListsEnd(); it2++) {
         FileList * srclist = it2->second;
-        std::string getpath = tj->getDstPath() + "/" + tj->getDstFileName() + (it2->first.length() > 0 ? "/" + it2->first : "");
-        Pointer<LocalFileList> dstlist;
-        if (global->getLocalStorage()->directoryExistsWritable(getpath)) {
-          dstlist = global->getLocalStorage()->getLocalFileList(getpath);
-        }
+        Pointer<LocalFileList> dstlist = tj->findLocalFileList(it2->first);
         for (std::map<std::string, File *>::iterator srcit = srclist->begin(); srcit != srclist->end(); srcit++) {
           if (!srcit->second->isDirectory() && srcit->second->getSize() > 0) {
             std::map<std::string, LocalFile>::const_iterator dstit;
-            if (!!dstlist) {
-              dstit = dstlist->find(srcit->first);
+            if (!dstlist) {
+              dstlist = tj->wantedLocalDstList(it2->first);
             }
+            dstit = dstlist->find(srcit->first);
             if (!dstlist || dstit == dstlist->end() || dstit->second.getSize() == 0) {
-              PendingTransfer p(tj->getSrc(), srclist, srcit->first, getpath, srcit->first);
+              PendingTransfer p(tj->getSrc(), srclist, srcit->first, dstlist, srcit->first);
               addPendingTransfer(list, p);
               std::string subpath = it2->first.length() > 0 ? it2->first + "/" : "";
               tj->addPendingTransfer(subpath + srcit->first, srcit->second->getSize());
@@ -449,30 +446,62 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> tj) {
         }
       }
       break;
+    }
     case TRANSFERJOB_DOWNLOAD_FILE:
       if (tj->getSrcFileList()->getFile(tj->getSrcFileName())->getSize() > 0) {
-        Pointer<LocalFileList> dstlist;
-        if (global->getLocalStorage()->directoryExistsWritable(tj->getDstPath())) {
-          dstlist = global->getLocalStorage()->getLocalFileList(tj->getDstPath());
-        }
+        Pointer<LocalFileList> dstlist = tj->getLocalFileList();
         std::map<std::string, LocalFile>::const_iterator dstit;
         if (!!dstlist) {
           dstit = dstlist->find(tj->getDstFileName());
         }
         if (!dstlist || dstit == dstlist->end() || dstit->second.getSize() == 0) {
           PendingTransfer p(tj->getSrc(), tj->getSrcFileList(),
-              tj->getSrcFileName(), tj->getDstPath(), tj->getDstFileName());
+              tj->getSrcFileName(), dstlist, tj->getDstFileName());
           addPendingTransfer(list, p);
           tj->addPendingTransfer(tj->getSrcFileName(),
               tj->getSrcFileList()->getFile(tj->getSrcFileName())->getSize());
         }
       }
       break;
-    case TRANSFERJOB_UPLOAD:
+    case TRANSFERJOB_UPLOAD: {
+      std::map<std::string, Pointer<LocalFileList> >::const_iterator lit;
+      for (lit = tj->localFileListsBegin(); lit != tj->localFileListsEnd(); lit++) {
+        FileList * dstlist = tj->findDstList(lit->first);
+        for (std::map<std::string, LocalFile>::const_iterator lfit = lit->second->begin(); lfit != lit->second->end(); lfit++) {
+          if (!lfit->second.isDirectory() && lfit->second.getSize() > 0) {
+            std::string filename = lfit->first;
+            if (dstlist == NULL) {
+              tj->wantDstDirectory(lit->first);
+              break;
+            }
+            if (dstlist->getFile(filename) == NULL) {
+              PendingTransfer p(lit->second, filename, tj->getDst(), dstlist, filename);
+              addPendingTransfer(list, p);
+              std::string subpath = lit->first.length() > 0 ? lit->first + "/" : "";
+              tj->addPendingTransfer(subpath + filename, lfit->second.getSize());
+            }
+          }
+        }
+      }
       break;
-    case TRANSFERJOB_UPLOAD_FILE:
+    }
+    case TRANSFERJOB_UPLOAD_FILE: {
+      Pointer<LocalFileList> srclist = tj->getLocalFileList();
+      std::map<std::string, LocalFile>::const_iterator srcit;
+      if (!!srclist) {
+        srcit = srclist->find(tj->getSrcFileName());
+      }
+      if (!!srclist && srcit != srclist->end() && srcit->second.getSize() > 0) {
+        if (tj->getDstFileList()->getFile(tj->getDstFileName()) == NULL) {
+          PendingTransfer p(srclist, tj->getSrcFileName(), tj->getDst(), tj->getDstFileList(), tj->getDstFileName());
+          addPendingTransfer(list, p);
+          tj->addPendingTransfer(tj->getSrcFileName(), srcit->second.getSize());
+        }
+      }
       break;
-    case TRANSFERJOB_FXP:
+    }
+    case TRANSFERJOB_FXP: {
+      std::map<std::string, FileList *>::const_iterator it2;
       for (it2 = tj->srcFileListsBegin(); it2 != tj->srcFileListsEnd(); it2++) {
         FileList * srclist = it2->second;
         FileList * dstlist = tj->findDstList(it2->first);
@@ -493,6 +522,7 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> tj) {
         }
       }
       break;
+    }
     case TRANSFERJOB_FXP_FILE:
       if (tj->getSrcFileList()->getFile(tj->getSrcFileName())->getSize() > 0) {
         if (tj->getDstFileList()->getFile(tj->getDstFileName()) == NULL) {
