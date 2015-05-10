@@ -176,7 +176,7 @@ void FTPConn::FDData(char * data, unsigned int datalen) {
   memcpy(databuf + databufpos, data, datalen);
   databufpos += datalen;
   bool messagecomplete = false;
-  char * loc;
+  char * loc = 0;
   if (state == STATE_PROXY) {
     messagecomplete = true;
     databufcode = 1337;
