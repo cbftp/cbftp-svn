@@ -138,7 +138,7 @@ void NukeScreen::keyPressed(unsigned int ch) {
 }
 
 int NukeScreen::nuke() {
-  int multiplier;
+  int multiplier = 1;
   std::string reason;
   for (unsigned int i = 0; i < mso.size(); i++) {
     Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
