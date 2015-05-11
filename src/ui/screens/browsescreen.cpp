@@ -120,11 +120,13 @@ void BrowseScreen::keyPressed(unsigned int ch) {
       active = (active == left ? left : right) = makePointer<BrowseScreenSite>(ui, op.getArg());
       ui->redraw();
       ui->setLegend();
+      ui->setInfo();
       break;
     case BROWSESCREENACTION_HOME:
       active = (active == left ? left : right) = makePointer<BrowseScreenLocal>(ui);
       ui->redraw();
       ui->setLegend();
+      ui->setInfo();
       break;
     case BROWSESCREENACTION_NOOP:
       keyPressedNoSubAction(ch);
