@@ -244,6 +244,7 @@ void BrowseScreen::switchSide() {
 
 void BrowseScreen::closeSide() {
   if (split) {
+    initsplitupdate = false;
     split = false;
     if (active == left) {
       left = right;
