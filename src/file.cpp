@@ -76,7 +76,7 @@ void File::parseUNIXSTATLine(const std::string & statline) {
   size = atol(sizetmp.c_str());
   while (statline[++pos] == ' '); // month start at pos
   start = pos;
-  if (!isalpha(start)) { // if the user or group field is missing, this happens
+  if (!isalpha(statline[start])) { // if the user or group field is missing, this happens
     parseBrokenUNIXSTATLine(statline, possibleuserstart, start);
     pos = start;
   }
