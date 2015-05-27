@@ -7,6 +7,7 @@ class Site;
 class File {
 private:
   void parseUNIXSTATLine(const std::string &);
+  void parseBrokenUNIXSTATLine(const std::string &, int, int &);
   void parseMSDOSSTATLine(const std::string &);
   std::string digitsOnly(const std::string &) const;
   std::string name;

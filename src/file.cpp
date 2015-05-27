@@ -2,6 +2,10 @@
 
 #include <stdlib.h>
 #include <cctype>
+#include <utility>
+#include <vector>
+
+#include "util.h"
 
 File::File(std::string name, std::string user) :
   name(name),
@@ -56,28 +60,15 @@ void File::parseUNIXSTATLine(const std::string & statline) {
   while (statline[++pos] != ' ');
   while (statline[++pos] == ' ');
   while (statline[++pos] != ' ');
-  int spacestart = pos;
   while (statline[++pos] == ' '); // user start at pos? possibly missing field
-  if (pos - spacestart < 9) {
-    start = pos;
-    while (statline[++pos] != ' ');
-    owner = statline.substr(start, pos - start);
-  }
-  else {
-    owner = "";
-    pos = spacestart + 9;
-  }
-  spacestart = pos;
+  start = pos;
+  int possibleuserstart = start;
+  while (statline[++pos] != ' ');
+  owner = statline.substr(start, pos - start);
   while (statline[++pos] == ' '); // group start at pos? possibly missing field
-  if (pos - spacestart < 9) {
-    start = pos;
-    while (statline[++pos] != ' ');
-    group = statline.substr(start, pos - start);
-  }
-  else {
-    group = "";
-    pos = spacestart + 9;
-  }
+  start = pos;
+  while (statline[++pos] != ' ');
+  group = statline.substr(start, pos - start);
   while (statline[++pos] == ' '); // size start at pos
   start = pos;
   while (statline[++pos] != ' ');
@@ -85,6 +76,10 @@ void File::parseUNIXSTATLine(const std::string & statline) {
   size = atol(sizetmp.c_str());
   while (statline[++pos] == ' '); // month start at pos
   start = pos;
+  if (!isalpha(start)) { // if the user or group field is missing, this happens
+    parseBrokenUNIXSTATLine(statline, possibleuserstart, start);
+    pos = start;
+  }
   while (statline[++pos] != ' ');
   while (statline[++pos] == ' '); // day start at pos
   while (statline[++pos] != ' ');
@@ -95,6 +90,50 @@ void File::parseUNIXSTATLine(const std::string & statline) {
   start = pos;
   while (statline[++pos] != '\r');
   name = statline.substr(start, pos - start);
+}
+
+void File::parseBrokenUNIXSTATLine(const std::string & statline,
+  int pos, int & monthstart)
+{
+  int start;
+  int len = statline.length();
+  std::vector<std::pair<int, std::string> > tokens;
+  --pos;
+  while (true) {
+    while (++pos < len && statline[pos] == ' ');
+    if (pos >= len || statline[pos] == '\r') {
+      break;
+    }
+    start = pos;
+    while (++pos < len && statline[pos] != ' ' && statline[pos] != '\r');
+    tokens.push_back(std::pair<int, std::string>(start,
+        statline.substr(start, pos - start)));
+    if (statline[pos] == '\r') {
+      break;
+    }
+  }
+  bool foundmatch = false;
+  for (unsigned int i = 0; i < tokens.size() - 4; i++) {
+    const std::string & potsize = tokens[i].second;
+    const std::string & potmonth = tokens[i + 1].second;
+    const std::string & potday = tokens[i + 2].second;
+    const std::string & pottime = tokens[i + 3].second;
+    if (isdigit(potsize[0]) && isalpha(potmonth[0]) && isdigit(potday[0]) &&
+        isdigit(pottime[0]))
+    {
+      foundmatch = true;
+      if (i > 0) {
+        owner = tokens[0].second;
+      }
+      if (i > 1) {
+        group = tokens[1].second;
+      }
+      size = atol(potsize.c_str());
+      monthstart = tokens[i + 1].first;
+      break;
+    }
+  }
+  util::assert(foundmatch);
 }
 
 void File::parseMSDOSSTATLine(const std::string & statline) {
