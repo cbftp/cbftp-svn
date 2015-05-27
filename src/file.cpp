@@ -122,6 +122,8 @@ void File::parseBrokenUNIXSTATLine(const std::string & statline,
         isdigit(pottime[0]))
     {
       foundmatch = true;
+      owner = "";
+      group = "";
       if (i > 0) {
         owner = tokens[0].second;
       }
