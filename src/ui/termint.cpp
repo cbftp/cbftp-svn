@@ -1,8 +1,18 @@
 #include "termint.h"
 
+#ifndef _XOPEN_SOURCE_EXTENDED
+#define _XOPEN_SOURCE_EXTENDED
+#endif
+#include <ncursesw/curses.h>
+
 void TermInt::printChar(WINDOW * window, unsigned int row, unsigned int col, unsigned int c) {
-  if (c != '%') {
+  cchar_t ch = {0, {c}};
+
+  if (c >= BOX_MIN && c <= BOX_MAX) {
     mvwaddch(window, row, col, c);
+  }
+  else if (c != '%') {
+    mvwadd_wch(window, row, col, &ch);
   }
   else {
     mvwprintw(window, row, col, "%%");

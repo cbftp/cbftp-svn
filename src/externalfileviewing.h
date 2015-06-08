@@ -26,8 +26,8 @@ public:
   void readConfiguration();
   void writeState();
   std::string getViewApplication(std::string) const;
+  static std::string getExtension(std::string);
 private:
-  std::string getExtension(std::string) const;
   int view(std::string, bool);
   void checkDeleteFile(int);
   std::list<int> subprocesses;

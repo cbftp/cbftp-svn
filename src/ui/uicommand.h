@@ -1,7 +1,9 @@
 #pragma once
 
-#include <ncurses.h>
 #include <string>
+
+struct _win_st;
+typedef struct _win_st WINDOW;
 
 #define UI_COMMAND_REFRESH 83230
 #define UI_COMMAND_HIGHLIGHT_OFF 83231

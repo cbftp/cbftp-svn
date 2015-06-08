@@ -100,7 +100,7 @@ std::string ExternalFileViewing::getViewApplication(std::string path) const {
   return application;
 }
 
-std::string ExternalFileViewing::getExtension(std::string file) const {
+std::string ExternalFileViewing::getExtension(std::string file) {
   size_t suffixdotpos = file.rfind(".");
   std::string extension;
   if (suffixdotpos != std::string::npos && suffixdotpos > 0) {

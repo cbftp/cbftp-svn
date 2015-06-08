@@ -3,7 +3,7 @@
 #include <string>
 #include <list>
 #include <vector>
-#include <ncurses.h>
+#include <ncursesw/curses.h>
 #include <pthread.h>
 
 #include "uicommand.h"

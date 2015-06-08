@@ -13,5 +13,5 @@ BOXTAG := "\"clusterbomb\""
 
 CPPFLAGS :=-g -Wall -O0
 FINALFLAGS=-g -O0
-LINKFLAGS=-lncurses -lpthread -lssl -lcrypto
+LINKFLAGS=-lncursesw -lpthread -lssl -lcrypto
 

@@ -146,6 +146,7 @@ bool Ui::init() {
 }
 
 void Ui::initIntern() {
+  setlocale(LC_ALL, "");
   initscr();
   cbreak();
   curs_set(0);

@@ -26,6 +26,7 @@
 #include "transferjob.h"
 #include "commandowner.h"
 #include "util.h"
+#include "types.h"
 
 SiteLogic::SiteLogic(std::string sitename) :
   site(global->getSiteManager()->getSite(sitename)),
@@ -1384,9 +1385,8 @@ void SiteLogic::disconnectConn(int id) {
 }
 
 void SiteLogic::listCompleted(int id, int storeid) {
-  char * data;
-  int datalen = global->getLocalStorage()->getStoreContent(storeid, &data);
-  conns[id]->parseFileList(data, datalen);
+  const binary_data & data = global->getLocalStorage()->getStoreContent(storeid);
+  conns[id]->parseFileList((char *) &data[0], data.size());
   listRefreshed(id);
   global->getLocalStorage()->purgeStoreContent(storeid);
 }

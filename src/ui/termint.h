@@ -1,7 +1,9 @@
 #pragma once
 
-#include <ncurses.h>
 #include <string>
+
+struct _win_st;
+typedef struct _win_st WINDOW;
 
 #define BOX_HLINE 4194417
 #define BOX_HLINE_TOP 4194422
@@ -14,6 +16,8 @@
 #define BOX_CORNER_TL 4194412
 #define BOX_CORNER_TR 4194411
 #define BOX_CROSS 4194414
+#define BOX_MIN BOX_CORNER_BR
+#define BOX_MAX BOX_VLINE
 
 class TermInt {
 private:

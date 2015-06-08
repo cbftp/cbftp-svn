@@ -1,9 +1,11 @@
 #pragma once
 
 #include <string>
-#include <ncurses.h>
 
 #include "uiwindow.h"
+
+struct _win_st;
+typedef struct _win_st WINDOW;
 
 class LegendWindow : public UIWindow {
 public:

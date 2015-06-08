@@ -1,6 +1,6 @@
 #include "menuselectoptionnumarrow.h"
 
-#include <ncurses.h>
+#include <ncursesw/curses.h>
 
 MenuSelectOptionNumArrow::MenuSelectOptionNumArrow(std::string identifier, int row, int col, std::string label, int value, int min, int max) {
   arrow = NumInputArrow(value, min, max);

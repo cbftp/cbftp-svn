@@ -16,8 +16,33 @@
 #include "../../file.h"
 #include "../../externalfileviewing.h"
 #include "../../util.h"
+#include "../../types.h"
 
 extern GlobalContext * global;
+
+unsigned int nfoConvert(unsigned char c) {
+  switch (c) {
+    case 0xB0:
+      return 0x2591; // light shade
+    case 0xB1:
+      return 0x2592; // medium shade
+    case 0xB2:
+      return 0x2592; // dark shade
+    case 0xDB:
+      return 0x2588; // full block
+    case 0xDC:
+      return 0x2584; // lower half block
+    case 0xDD:
+      return 0x258C; // left half block
+    case 0xDE:
+      return 0x2590; // right half block
+    case 0xDF:
+      return 0x2580; // upper half block
+    case 0xFE:
+      return 0x25A0; // black square
+  }
+  return c;
+}
 
 ViewFileScreen::ViewFileScreen(Ui * ui) {
   this->ui = ui;
@@ -113,22 +138,28 @@ void ViewFileScreen::redraw() {
           ui->printStr(4, 1, "You can always press 'K' to kill ALL external viewers.");
         }
         else {
-          char * tmpdata = (char *) malloc(MAXOPENSIZE);
-          int tmpdatalen = global->getLocalStorage()->getFileContent(file, tmpdata);
+          binary_data tmpdata = global->getLocalStorage()->getFileContent(file);
           global->getLocalStorage()->deleteFile(file);
-          {
-            int last = 0;
-            for (int i = 0; i < tmpdatalen; i++) {
+          bool nfo = ExternalFileViewing::getExtension(file) == "nfo";
+          unsigned int tmpdatalen = tmpdata.size();
+          if (tmpdatalen > 0) {
+            std::basic_string<unsigned int> current;
+            for (unsigned int i = 0; i < tmpdatalen; i++) {
               if (tmpdata[i] == '\n') {
-                contents.push_back(std::string(tmpdata + last, i - last));
-                last = i + 1;
+                contents.push_back(current);
+                current.clear();
+              }
+              else {
+                current += nfo ? nfoConvert(tmpdata[i]) : tmpdata[i];
               }
             }
-            if (last != tmpdatalen) {
-              contents.push_back(std::string(tmpdata + last, tmpdatalen - last));
+            if (current.length() > 0) {
+              contents.push_back(current);
+            }
+            for (unsigned int i = 0; i < contents.size(); i++) {
+             // for (unsigned int j = )
             }
           }
-          delete tmpdata;
           ymax = contents.size();
           for (unsigned int i = 0; i < ymax; i++) {
             if (contents[i].length() > xmax) {
@@ -144,7 +175,10 @@ void ViewFileScreen::redraw() {
   }
   else {
     for (unsigned int i = 0; i < row && i < ymax; i++) {
-      ui->printStr(i, 1, contents[y + i], col - 2);
+      std::basic_string<unsigned int> & line = contents[y + i];
+      for (unsigned int j = 0; j < line.length() && j < col - 2; j++) {
+        ui->printChar(i, j + 1, line[j]);
+      }
     }
   }
 }

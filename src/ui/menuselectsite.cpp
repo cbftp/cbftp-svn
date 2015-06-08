@@ -1,7 +1,5 @@
 #include "menuselectsite.h"
 
-#include <ncurses.h>
-
 #include "../sitelogicmanager.h"
 #include "../sitelogic.h"
 #include "../site.h"

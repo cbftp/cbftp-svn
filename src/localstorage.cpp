@@ -106,25 +106,26 @@ LocalUpload * LocalStorage::getAvailableLocalUpload() {
   return lu;
 }
 
-int LocalStorage::getFileContent(std::string filename, char * data) const {
+binary_data LocalStorage::getFileContent(std::string filename) const {
   std::ifstream filestream;
   filestream.open((temppath + "/" + filename).c_str(), std::ios::binary | std::ios::in);
+  char * data = (char *) malloc(MAXREAD);
   filestream.read(data, MAXREAD);
-  return filestream.gcount();
+  binary_data out(data, data + filestream.gcount());
+  delete data;
+  return out;
 }
 
-int LocalStorage::getStoreContent(int storeid, char ** data) const {
-  std::map<int, std::pair<char *, int> >::const_iterator it = content.find(storeid);
+const binary_data & LocalStorage::getStoreContent(int storeid) const {
+  std::map<int, binary_data>::const_iterator it = content.find(storeid);
   if (it != content.end()) {
-    *data = it->second.first;
-    return it->second.second;
+    return it->second;
   }
-  return 0;
+  throw;
 }
 
 void LocalStorage::purgeStoreContent(int storeid) {
   if (content.find(storeid) != content.end()) {
-    delete content[storeid].first;
     content.erase(storeid);
   }
 }
@@ -152,10 +153,8 @@ void LocalStorage::setDownloadPath(std::string path) {
   downloadpath = path;
 }
 
-void LocalStorage::storeContent(int storeid, char * buf, int buflen) {
-  char * storebuf = (char *) malloc(buflen);
-  memcpy(storebuf, buf, buflen);
-  content[storeid] = std::pair<char *, int>(storebuf, buflen);
+void LocalStorage::storeContent(int storeid, const binary_data & data) {
+  content[storeid] = data;
 }
 
 Pointer<LocalFileList> LocalStorage::getLocalFileList(std::string path) {

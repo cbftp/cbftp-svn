@@ -40,7 +40,7 @@ private:
   bool download;
   bool legendupdated;
   bool downloadattempted;
-  std::vector<std::string> contents;
+  std::vector<std::basic_string<unsigned int> > contents;
   std::string path;
   int pid;
   bool goDown();
