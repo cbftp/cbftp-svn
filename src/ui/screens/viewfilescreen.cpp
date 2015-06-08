@@ -39,7 +39,7 @@ unsigned int nfoConvert(unsigned char c) {
     case 0xDF:
       return 0x2580; // upper half block
     case 0xFE:
-      return 0x25A0; // black square
+      return 0x25FC; // black square
   }
   return c;
 }
