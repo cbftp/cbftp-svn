@@ -3,6 +3,7 @@
 #include "../uiwindow.h"
 
 #include "../../pointer.h"
+#include "../../encoding.h"
 
 #include <vector>
 #include <string>
@@ -23,6 +24,7 @@ public:
   void keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
+  std::string getInfoText() const;
 private:
   SiteLogic * sitelogic;
   Pointer<TransferStatus> ts;
@@ -40,10 +42,13 @@ private:
   bool download;
   bool legendupdated;
   bool downloadattempted;
-  std::vector<std::basic_string<unsigned int> > contents;
+  std::vector<std::basic_string<unsigned char> > rawcontents;
+  std::vector<std::basic_string<unsigned int> > translatedcontents;
   std::string path;
   int pid;
+  encoding::Encoding encoding;
   bool goDown();
   bool goUp();
   void printTransferInfo();
+  void translate();
 };

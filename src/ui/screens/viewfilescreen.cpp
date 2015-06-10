@@ -5,6 +5,7 @@
 #include "../resizableelement.h"
 #include "../menuselectadjustableline.h"
 #include "../menuselectoptiontextbutton.h"
+#include "../termint.h"
 
 #include "../../transferstatus.h"
 #include "../../globalcontext.h"
@@ -18,38 +19,15 @@
 #include "../../util.h"
 #include "../../types.h"
 
-extern GlobalContext * global;
 
-unsigned int nfoConvert(unsigned char c) {
-  switch (c) {
-    case 0xB0:
-      return 0x2591; // light shade
-    case 0xB1:
-      return 0x2592; // medium shade
-    case 0xB2:
-      return 0x2592; // dark shade
-    case 0xDB:
-      return 0x2588; // full block
-    case 0xDC:
-      return 0x2584; // lower half block
-    case 0xDD:
-      return 0x258C; // left half block
-    case 0xDE:
-      return 0x2590; // right half block
-    case 0xDF:
-      return 0x2580; // upper half block
-    case 0xFE:
-      return 0x25FC; // black square
-  }
-  return c;
-}
+extern GlobalContext * global;
 
 ViewFileScreen::ViewFileScreen(Ui * ui) {
   this->ui = ui;
 }
 
 void ViewFileScreen::initialize(unsigned int row, unsigned int col, std::string site, std::string file, FileList * filelist) {
-  contents.clear();
+  rawcontents.clear();
   viewingcontents = false;
   x = 0;
   y = 0;
@@ -140,31 +118,24 @@ void ViewFileScreen::redraw() {
         else {
           binary_data tmpdata = global->getLocalStorage()->getFileContent(file);
           global->getLocalStorage()->deleteFile(file);
-          bool nfo = ExternalFileViewing::getExtension(file) == "nfo";
+          std::string extension = ExternalFileViewing::getExtension(file);
+          encoding = encoding::guessEncoding(tmpdata);
           unsigned int tmpdatalen = tmpdata.size();
           if (tmpdatalen > 0) {
-            std::basic_string<unsigned int> current;
+            std::basic_string<unsigned char> current;
             for (unsigned int i = 0; i < tmpdatalen; i++) {
               if (tmpdata[i] == '\n') {
-                contents.push_back(current);
+                rawcontents.push_back(current);
                 current.clear();
               }
               else {
-                current += nfo ? nfoConvert(tmpdata[i]) : tmpdata[i];
+                current += tmpdata[i];
               }
             }
             if (current.length() > 0) {
-              contents.push_back(current);
+              rawcontents.push_back(current);
             }
-            for (unsigned int i = 0; i < contents.size(); i++) {
-             // for (unsigned int j = )
-            }
-          }
-          ymax = contents.size();
-          for (unsigned int i = 0; i < ymax; i++) {
-            if (contents[i].length() > xmax) {
-              xmax = contents[i].length();
-            }
+            translate();
           }
           viewingcontents = true;
           autoupdate = false;
@@ -174,10 +145,40 @@ void ViewFileScreen::redraw() {
     }
   }
   else {
+    ymax = rawcontents.size();
+    for (unsigned int i = 0; i < ymax; i++) {
+      if (translatedcontents[i].length() > xmax) {
+        xmax = translatedcontents[i].length();
+      }
+    }
     for (unsigned int i = 0; i < row && i < ymax; i++) {
-      std::basic_string<unsigned int> & line = contents[y + i];
+      std::basic_string<unsigned int> & line = translatedcontents[y + i];
       for (unsigned int j = 0; j < line.length() && j < col - 2; j++) {
         ui->printChar(i, j + 1, line[j]);
+      }
+    }
+
+    unsigned int slidersize = 0;
+    unsigned int sliderstart = 0;
+    if (ymax > row) {
+      slidersize = (row * row) / ymax;
+      sliderstart = (row * y) / ymax;
+      if (slidersize == 0) {
+        slidersize++;
+      }
+      if (slidersize == row) {
+        slidersize--;
+      }
+      if (sliderstart + slidersize > row || y + row >= ymax) {
+        sliderstart = row - slidersize;
+      }
+      for (unsigned int i = 0; i < row; i++) {
+        if (i >= sliderstart && i < sliderstart + slidersize) {
+          ui->printChar(i, col - 1, ' ', true);
+        }
+        else {
+          ui->printChar(i, col - 1, BOX_VLINE);
+        }
       }
     }
   }
@@ -220,12 +221,14 @@ void ViewFileScreen::keyPressed(unsigned int ch) {
     case KEY_DOWN:
       if (goDown()) {
         goDown();
+        ui->setInfo();
         ui->redraw();
       }
       break;
     case KEY_UP:
       if (goUp()) {
         goUp();
+        ui->setInfo();
         ui->redraw();
       }
       break;
@@ -233,17 +236,32 @@ void ViewFileScreen::keyPressed(unsigned int ch) {
       for (unsigned int i = 0; i < row / 2; i++) {
         goDown();
       }
+      ui->setInfo();
       ui->redraw();
       break;
     case KEY_PPAGE:
       for (unsigned int i = 0; i < row / 2; i++) {
         goUp();
       }
+      ui->setInfo();
       ui->redraw();
       break;
     case 'k':
       if (pid) {
         global->getExternalFileViewing()->killProcess(pid);
+      }
+      break;
+    case 'e':
+      if (viewingcontents) {
+        if (encoding == encoding::ENCODING_CP437) {
+          encoding = encoding::ENCODING_ISO88591;
+        }
+        else {
+          encoding = encoding::ENCODING_CP437;
+        }
+        translate();
+        ui->redraw();
+        ui->setInfo();
       }
       break;
   }
@@ -256,11 +274,44 @@ std::string ViewFileScreen::getLegendText() const {
   if (!download || !viewingcontents) {
     return "[Esc/Enter/c] Return";
   }
-  return "[Arrowkeys] Navigate - [Esc/Enter/c] Return";
+  return "[Arrowkeys] Navigate - [Esc/Enter/c] Return - switch [e]ncoding";
 }
 
 std::string ViewFileScreen::getInfoLabel() const {
   return "VIEW FILE: " + file;
+}
+
+std::string ViewFileScreen::getInfoText() const {
+  if (viewingcontents) {
+    std::string enc;
+    switch (encoding) {
+      case encoding::ENCODING_CP437:
+        enc = "CP437";
+        break;
+      case encoding::ENCODING_ISO88591:
+        enc = "ISO-8859-1";
+        break;
+    }
+    unsigned int end = ymax < y + row ? ymax : y + row;
+    return "Line " + util::int2Str(y) + "-" +
+        util::int2Str(end) + "/" + util::int2Str(ymax) + "  Encoding: " + enc;
+  }
+  else {
+    return "";
+  }
+}
+
+void ViewFileScreen::translate() {
+  translatedcontents.clear();
+  for (unsigned int i = 0; i < rawcontents.size(); i++) {
+    std::basic_string<unsigned int> current;
+    for (unsigned int j = 0; j < rawcontents[i].length(); j++) {
+      current += encoding == encoding::ENCODING_CP437 ?
+          encoding::cp437toUnicode(rawcontents[i][j]) :
+          rawcontents[i][j];
+    }
+    translatedcontents.push_back(current);
+  }
 }
 
 bool ViewFileScreen::goDown() {

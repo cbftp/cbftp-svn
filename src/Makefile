@@ -12,7 +12,7 @@ OBJECTS = potentialelement.o scoreboardelement.o \
 	proxysession.o recursivecommandlogic.o localstorage.o localdownload.o \
 	externalfileviewing.o transferstatus.o transferjob.o timereference.o \
 	skiplistitem.o pendingtransfer.o localfile.o localfilelist.o util.o \
-	localupload.o
+	localupload.o encoding.o
 
 all: ${OBJECTS}
 	@cd ui; ${MAKE}
@@ -71,6 +71,7 @@ localfile.o:
 localfilelist.o:
 util.o:
 localupload.o:
+encoding.o:
 
 clean:
 	rm -f ${OBJECTS}

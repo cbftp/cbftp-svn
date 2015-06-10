@@ -6,6 +6,9 @@
 
 namespace util {
 
+int getSizeGranularity();
+std::vector<unsigned long long int> getPowers();
+
 static unsigned int sizegranularity = getSizeGranularity();
 static std::vector<unsigned long long int> powers = getPowers();
 
