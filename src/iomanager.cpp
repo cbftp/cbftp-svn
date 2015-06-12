@@ -436,7 +436,7 @@ void IOManager::handleKeyboardIn(SocketInfo & socketinfo, ScopeLock & lock) {
 
 void IOManager::handleTCPConnectingOut(SocketInfo & socketinfo) {
   unsigned int error;
-  unsigned int errorlen = sizeof(error);
+  socklen_t errorlen = sizeof(error);
   getsockopt(socketinfo.fd, SOL_SOCKET, SO_ERROR, &error, &errorlen);
   if (error != 0) {
     wm->dispatchEventFail(socketinfo.receiver, strerror(error));
