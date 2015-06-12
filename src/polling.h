@@ -23,7 +23,7 @@ public:
 };
 
 #ifdef __linux
-#include "pollingpoll.h"
+#include "pollingepoll.h"
 #elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) ||\
     defined(__APPLE__)
 #include "pollingkqueue.h"
