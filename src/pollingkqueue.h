@@ -9,13 +9,13 @@
 
 #define MAXEVENTS 32
 
-class PollingKQueue : public PollingBase {
+class PollingImpl : public PollingBase {
 public:
-  PollingKQueue() :
+  PollingImpl() :
     kqueuefd(kqueue()),
     events(new struct kevent[MAXEVENTS]) {
   }
-  ~PollingKQueue() {
+  ~PollingImpl() {
     close(kqueuefd);
     delete[] events;
   }

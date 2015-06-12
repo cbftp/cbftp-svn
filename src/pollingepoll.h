@@ -7,13 +7,13 @@
 
 #define MAXEVENTS 32
 
-class PollingEPoll : public PollingBase {
+class PollingImpl : public PollingBase {
 public:
-  PollingEPoll() :
+  PollingImpl() :
     epollfd(epoll_create(100)),
     events(new struct epoll_event[MAXEVENTS]) {
   }
-  ~PollingEPoll() {
+  ~PollingImpl() {
     close(epollfd);
     delete[] events;
   }

@@ -23,9 +23,12 @@ public:
 };
 
 #ifdef __linux
-#include "pollingepoll.h"
-#else
+#include "pollingpoll.h"
+#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) ||\
+    defined(__APPLE__)
 #include "pollingkqueue.h"
+#else
+#include "pollingpoll.h"
 #endif
 
 class Polling {
@@ -52,9 +55,5 @@ public:
     impl.setFDOut(modfd);
   }
 private:
-#ifdef __linux
-  PollingEPoll impl;
-#else
-  PollingKQueue impl;
-#endif
+  PollingImpl impl;
 };
