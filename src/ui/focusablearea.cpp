@@ -1,5 +1,7 @@
 #include "focusablearea.h"
 
+#include "menuselectoptionelement.h"
+
 #include <stdlib.h>
 
 FocusableArea::FocusableArea() {

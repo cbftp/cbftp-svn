@@ -4,6 +4,7 @@
 #include "ftpconn.h"
 #include "filelist.h"
 #include "siterace.h"
+#include "race.h"
 #include "site.h"
 #include "globalcontext.h"
 #include "scoreboardelement.h"

@@ -11,7 +11,7 @@ class LocalStorage;
 
 class LocalUpload : public LocalTransfer {
 public:
-  LocalUpload(LocalStorage *);
+  LocalUpload();
   void engage(TransferMonitor *, std::string, std::string, std::string, int, bool, FTPConn *);
   bool active() const;
   void FDConnected();
@@ -37,5 +37,4 @@ private:
   char * buf;
   unsigned int buflen;
   unsigned long long int filepos;
-  LocalStorage * ls;
 };

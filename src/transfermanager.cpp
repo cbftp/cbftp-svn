@@ -5,6 +5,7 @@
 #include "uibase.h"
 #include "globalcontext.h"
 #include "transferstatus.h"
+#include "localfilelist.h"
 
 extern GlobalContext * global;
 

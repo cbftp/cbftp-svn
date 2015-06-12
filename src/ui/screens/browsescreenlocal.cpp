@@ -1,6 +1,7 @@
 #include "browsescreenlocal.h"
 
 #include "../../localstorage.h"
+#include "../../localfilelist.h"
 #include "../../globalcontext.h"
 #include "../../skiplist.h"
 #include "../../util.h"

@@ -14,12 +14,11 @@
 
 extern GlobalContext * global;
 
-LocalUpload::LocalUpload(LocalStorage * ls) :
+LocalUpload::LocalUpload() :
   inuse(false),
   buf((char *) malloc(CHUNK)),
   buflen(CHUNK),
-  filepos(0),
-  ls(ls) {
+  filepos(0) {
 
 }
 

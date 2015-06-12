@@ -100,7 +100,7 @@ LocalUpload * LocalStorage::getAvailableLocalUpload() {
     }
   }
   if (lu == NULL) {
-    lu = new LocalUpload(this);
+    lu = new LocalUpload();
     localuploads.push_back(lu);
   }
   return lu;

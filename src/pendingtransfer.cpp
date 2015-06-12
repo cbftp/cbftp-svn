@@ -1,5 +1,7 @@
 #include "pendingtransfer.h"
 
+#include "localfilelist.h"
+
 PendingTransfer::PendingTransfer(SiteLogic * slsrc, FileList * flsrc, std::string srcfilename, SiteLogic * sldst, FileList * fldst, std::string dstfilename) :
   slsrc(slsrc),
   sldst(sldst),
