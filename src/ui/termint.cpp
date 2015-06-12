@@ -6,7 +6,7 @@
 #include <ncursesw/curses.h>
 
 void TermInt::printChar(WINDOW * window, unsigned int row, unsigned int col, unsigned int c) {
-  cchar_t ch = {0, {c}};
+  cchar_t ch = {0, {static_cast<wchar_t>(c)}};
 
   if (c >= BOX_MIN && c <= BOX_MAX) {
     mvwaddch(window, row, col, c);
