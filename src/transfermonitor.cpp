@@ -28,6 +28,10 @@ TransferMonitor::TransferMonitor(TransferManager * tm) {
   global->getTickPoke()->startPoke(this, "TransferMonitor", TICKINTERVAL, 0);
 }
 
+TransferMonitor::~TransferMonitor() {
+
+}
+
 bool TransferMonitor::idle() const {
   return status == TM_STATUS_IDLE;
 }

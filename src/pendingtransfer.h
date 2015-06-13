@@ -17,6 +17,7 @@ public:
   PendingTransfer(SiteLogic *, FileList *, std::string, SiteLogic *, FileList *, std::string);
   PendingTransfer(SiteLogic *, FileList *, std::string, Pointer<LocalFileList>, std::string);
   PendingTransfer(Pointer<LocalFileList>, std::string, SiteLogic *, FileList *, std::string);
+  ~PendingTransfer();
   int type() const;
   SiteLogic * getSrc() const;
   SiteLogic * getDst() const;

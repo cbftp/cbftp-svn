@@ -17,6 +17,7 @@ class MenuSelectSite : public FocusableArea {
     std::vector<Pointer<MenuSelectSiteElement> > sites;
   public:
     MenuSelectSite();
+    ~MenuSelectSite();
     bool goDown();
     bool goUp();
     void add(Site *, int, int);

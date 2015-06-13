@@ -24,6 +24,10 @@ RaceStatusScreen::RaceStatusScreen(Ui * ui) {
   finishedlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [D]elete on all sites";
 }
 
+RaceStatusScreen::~RaceStatusScreen() {
+
+}
+
 void RaceStatusScreen::initialize(unsigned int row, unsigned int col, std::string release) {
   this->release = release;
   race = global->getEngine()->getRace(release);

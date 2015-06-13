@@ -18,6 +18,7 @@ class Ui;
 class ViewFileScreen : public UIWindow {
 public:
   ViewFileScreen(Ui * ui);
+  ~ViewFileScreen();
   void initialize(unsigned int, unsigned int, std::string, std::string, FileList *);
   void redraw();
   void update();

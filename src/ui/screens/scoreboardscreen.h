@@ -10,6 +10,7 @@ class ScoreBoard;
 class ScoreBoardScreen : public UIWindow {
 public:
   ScoreBoardScreen(Ui *);
+  ~ScoreBoardScreen();
   void initialize(unsigned int, unsigned int);
   void redraw();
   void update();

@@ -30,6 +30,10 @@ PendingTransfer::PendingTransfer(Pointer<LocalFileList> fllocal, std::string src
   transfertype(PENDINGTRANSFER_UPLOAD) {
 }
 
+PendingTransfer::~PendingTransfer() {
+
+}
+
 int PendingTransfer::type() const {
   return transfertype;
 }

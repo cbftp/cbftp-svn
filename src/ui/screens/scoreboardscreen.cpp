@@ -16,6 +16,10 @@ ScoreBoardScreen::ScoreBoardScreen(Ui * ui) {
   this->ui = ui;
 }
 
+ScoreBoardScreen::~ScoreBoardScreen() {
+
+}
+
 void ScoreBoardScreen::initialize(unsigned int row, unsigned int col) {
   engine = global->getEngine();
   scoreboard = engine->getScoreBoard();

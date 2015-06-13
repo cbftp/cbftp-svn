@@ -26,6 +26,10 @@ ViewFileScreen::ViewFileScreen(Ui * ui) {
   this->ui = ui;
 }
 
+ViewFileScreen::~ViewFileScreen() {
+
+}
+
 void ViewFileScreen::initialize(unsigned int row, unsigned int col, std::string site, std::string file, FileList * filelist) {
   rawcontents.clear();
   viewingcontents = false;

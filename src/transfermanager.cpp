@@ -12,6 +12,10 @@ extern GlobalContext * global;
 TransferManager::TransferManager() {
 }
 
+TransferManager::~TransferManager() {
+
+}
+
 void TransferManager::getFileList(SiteLogic * sl, int connid, bool hiddenfiles) {
   Pointer<TransferMonitor> target = getAvailableTransferMonitor();
   target->engageList(sl, connid, hiddenfiles);

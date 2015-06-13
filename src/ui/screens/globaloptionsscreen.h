@@ -17,6 +17,7 @@ class MenuSelectOptionTextArrow;
 class GlobalOptionsScreen : public UIWindow {
 public:
   GlobalOptionsScreen(Ui *);
+  ~GlobalOptionsScreen();
   void initialize(unsigned int, unsigned int);
   void update();
   void redraw();

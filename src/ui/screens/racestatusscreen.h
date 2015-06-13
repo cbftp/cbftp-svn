@@ -13,6 +13,7 @@ class Race;
 class RaceStatusScreen : public UIWindow {
 public:
   RaceStatusScreen(Ui *);
+  ~RaceStatusScreen();
   void initialize(unsigned int, unsigned int, std::string);
   void redraw();
   void update();

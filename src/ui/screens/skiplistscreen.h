@@ -17,6 +17,7 @@ class MenuSelectOptionElement;
 class SkipListScreen : public UIWindow {
 public:
   SkipListScreen(Ui *);
+  ~SkipListScreen();
   void initialize(unsigned int, unsigned int);
   void update();
   void redraw();

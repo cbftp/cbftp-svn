@@ -25,6 +25,7 @@ class TransferManager {
     void moveTransferStatusToFinished(Pointer<TransferStatus>);
   public:
     TransferManager();
+    ~TransferManager();
     void getFileList(SiteLogic *, int, bool);
     Pointer<TransferStatus> suggestTransfer(std::string, SiteLogic *, FileList *, SiteLogic *, FileList *);
     Pointer<TransferStatus> suggestTransfer(std::string, SiteLogic *, FileList *, std::string, SiteLogic *, FileList *);

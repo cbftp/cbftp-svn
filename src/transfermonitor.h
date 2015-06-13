@@ -63,6 +63,7 @@ class TransferMonitor : public EventReceiver {
     void transferFailed(Pointer<TransferStatus>, int);
   public:
     TransferMonitor(TransferManager *);
+    ~TransferMonitor();
     void tick(int);
     void sourceComplete();
     void targetComplete();

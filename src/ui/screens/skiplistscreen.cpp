@@ -23,6 +23,10 @@ SkipListScreen::SkipListScreen(Ui * ui) {
   tablelegendtext = baselegendtext + " - [Del] delete row - [Insert] add row before - [m]ove down - m[o]ve up";
 }
 
+SkipListScreen::~SkipListScreen() {
+
+}
+
 void SkipListScreen::initialize(unsigned int row, unsigned int col) {
   currentlegendtext = "";
   active = false;

@@ -14,6 +14,10 @@ extern GlobalContext * global;
 MenuSelectSite::MenuSelectSite() {
 }
 
+MenuSelectSite::~MenuSelectSite() {
+
+}
+
 bool MenuSelectSite::goDown() {
   if ((unsigned int) pointer + 1 < sites.size()) {
     pointer++;

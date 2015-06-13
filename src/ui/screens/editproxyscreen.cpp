@@ -14,6 +14,10 @@ EditProxyScreen::EditProxyScreen(Ui * ui) {
   this->ui = ui;
 }
 
+EditProxyScreen::~EditProxyScreen() {
+
+}
+
 void EditProxyScreen::initialize(unsigned int row, unsigned int col, std::string operation, std::string proxy) {
   active = false;
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one, save changes - [c]ancel, undo changes";
