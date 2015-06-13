@@ -67,6 +67,10 @@ Ui::Ui() {
 #endif
 }
 
+Ui::~Ui() {
+
+}
+
 bool Ui::init() {
   initret = true;
   uiqueue.push(UICommand(UI_COMMAND_INIT));

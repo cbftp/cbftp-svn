@@ -24,6 +24,10 @@ BrowseScreen::BrowseScreen(Ui * ui) {
   this->ui = ui;
 }
 
+BrowseScreen::~BrowseScreen() {
+
+}
+
 void BrowseScreen::initialize(unsigned int row, unsigned int col, std::string sitestr, bool split) {
   expectbackendpush = true;
   this->split = initsplitupdate = split;

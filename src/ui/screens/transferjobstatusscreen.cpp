@@ -22,6 +22,10 @@ TransferJobStatusScreen::TransferJobStatusScreen(Ui * ui) {
   this->ui = ui;
 }
 
+TransferJobStatusScreen::~TransferJobStatusScreen() {
+
+}
+
 void TransferJobStatusScreen::initialize(unsigned int row, unsigned int col, std::string filename) {
   abortedlegendtext = "[c/Esc] Return";
   defaultlegendtext = abortedlegendtext + " - [Enter] Modify - A[B]ort transfer job";

@@ -23,6 +23,7 @@ class MenuSelectOption : public FocusableArea {
     std::vector<Pointer<MenuSelectAdjustableLine> > adjustablelines;
   public:
     MenuSelectOption();
+    ~MenuSelectOption();
     bool goDown();
     bool goUp();
     bool goRight();

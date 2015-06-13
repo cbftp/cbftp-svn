@@ -10,6 +10,7 @@ class MenuSelectOptionTextArrow;
 class ProxyOptionsScreen : public UIWindow {
 public:
   ProxyOptionsScreen(Ui *);
+  ~ProxyOptionsScreen();
   void initialize(unsigned int, unsigned int);
   void update();
   void redraw();

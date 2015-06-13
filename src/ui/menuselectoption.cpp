@@ -13,6 +13,10 @@ MenuSelectOption::MenuSelectOption() {
   lastpointer = 0;
 }
 
+MenuSelectOption::~MenuSelectOption() {
+
+}
+
 bool MenuSelectOption::goDown() {
   if (!options.size()) return false;
   unsigned int ccol = options[pointer]->getCol();

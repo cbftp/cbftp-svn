@@ -13,6 +13,7 @@ class BrowseScreenSub;
 class BrowseScreen : public UIWindow {
 public:
   BrowseScreen(Ui *);
+  ~BrowseScreen();
   void initialize(unsigned int, unsigned int, std::string, bool split);
   void redraw();
   void update();

@@ -18,6 +18,10 @@ ProxyOptionsScreen::ProxyOptionsScreen(Ui * ui) {
   this->ui = ui;
 }
 
+ProxyOptionsScreen::~ProxyOptionsScreen() {
+
+}
+
 void ProxyOptionsScreen::initialize(unsigned int row, unsigned int col) {
   active = false;
   defaultset = false;

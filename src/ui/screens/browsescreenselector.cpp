@@ -9,6 +9,7 @@
 #include "../termint.h"
 #include "../ui.h"
 #include "../menuselectoptiontextbutton.h"
+#include "../resizableelement.h"
 
 #include "browsescreenaction.h"
 

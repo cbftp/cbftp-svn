@@ -115,6 +115,7 @@ class Ui : private EventReceiver, public UIBase {
     void switchToLast();
   public:
     Ui();
+    ~Ui();
     void runInstance();
     bool init();
     void backendPush();

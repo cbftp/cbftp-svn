@@ -16,6 +16,7 @@ class MenuSelectOptionElement;
 class TransferJobStatusScreen : public UIWindow {
 public:
   TransferJobStatusScreen(Ui *);
+  ~TransferJobStatusScreen();
   void initialize(unsigned int, unsigned int, std::string);
   void redraw();
   void update();

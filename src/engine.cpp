@@ -31,6 +31,10 @@ Engine::Engine() :
   pokeregistered(false) {
 }
 
+Engine::~Engine() {
+
+}
+
 void Engine::newRace(std::string release, std::string section, std::list<std::string> sites) {
   Pointer<Race> race;
   bool append = false;

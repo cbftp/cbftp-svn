@@ -53,6 +53,7 @@ class Engine : public EventReceiver {
     unsigned int dropped;
   public:
     Engine();
+    ~Engine();
     void newRace(std::string, std::string, std::list<std::string>);
     void newTransferJobDownload(std::string, std::string, FileList *, std::string);
     void newTransferJobDownload(std::string, std::string, FileList *, std::string, std::string);
