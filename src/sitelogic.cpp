@@ -1612,8 +1612,9 @@ void SiteLogic::setRequestReady(std::list<SiteLogicRequest>::iterator it, void *
   if (requestsready.size() > MAXREQUESTREADYQUEUE) {
     requestsready.pop_front();
   }
+  const bool care = it->doesAnyoneCare();
   requestsinprogress.erase(it);
-  if (it->doesAnyoneCare()) {
+  if (care) {
     global->getUIBase()->backendPush();
   }
 }
