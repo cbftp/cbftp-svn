@@ -13,6 +13,7 @@
 #include "../../sitelogic.h"
 #include "../../transfermanager.h"
 #include "../../localstorage.h"
+#include "../../localfilelist.h"
 #include "../../filelist.h"
 #include "../../file.h"
 #include "../../externalfileviewing.h"

@@ -2,6 +2,8 @@
 
 #include <stdlib.h>
 
+#include "menuselectoptionelement.h"
+
 MenuSelectOptionContainer::MenuSelectOptionContainer() {
 
 }
