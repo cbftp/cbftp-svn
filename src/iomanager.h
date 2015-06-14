@@ -40,7 +40,6 @@ private:
   std::string defaultinterface;
   std::string getInterfaceAddress(std::string);
   bool handleError(EventReceiver *);
-  void negotiateSSL(int, EventReceiver *);
   bool investigateSSLError(int, int, int);
   bool hasdefaultinterface;
   void closeSocketIntern(int);
@@ -50,6 +49,7 @@ private:
   void handleTCPPlainIn(SocketInfo &);
   void handleTCPPlainOut(SocketInfo &);
   void handleTCPSSLNegotiationIn(SocketInfo &);
+  void handleTCPSSLNegotiationOut(SocketInfo &);
   void handleTCPSSLIn(SocketInfo &);
   void handleTCPSSLOut(SocketInfo &);
   void handleUDPIn(SocketInfo &);

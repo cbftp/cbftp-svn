@@ -234,9 +234,9 @@ void IOManager::negotiateSSLConnect(int id, EventReceiver * er) {
   std::map<int, SocketInfo>::iterator it = socketinfomap.find(id);
   if (it != socketinfomap.end() &&
      (it->second.type == FD_TCP_PLAIN || it->second.type == FD_TCP_PLAIN_LISTEN)) {
-    it->second.type = FD_TCP_SSL_NEG_REDO_CONN;
+    it->second.type = FD_TCP_SSL_NEG_CONNECT;
     lock.unlock();
-    negotiateSSL(id, er);
+    polling.setFDOut(it->second.fd);
   }
 }
 
@@ -244,57 +244,11 @@ void IOManager::negotiateSSLAccept(int id) {
   ScopeLock lock(socketinfomaplock);
   std::map<int, SocketInfo>::iterator it = socketinfomap.find(id);
     if (it != socketinfomap.end() &&
-       (it->second.type == FD_TCP_PLAIN || it->second.type == FD_TCP_PLAIN_LISTEN)) {
-      it->second.type = FD_TCP_SSL_NEG_REDO_ACCEPT;
-      lock.unlock();
-      negotiateSSL(id, NULL);
+       (it->second.type == FD_TCP_PLAIN || it->second.type == FD_TCP_PLAIN_LISTEN))
+    {
+      it->second.type = FD_TCP_SSL_NEG_ACCEPT;
+      polling.setFDOut(it->second.fd);
   }
-}
-
-void IOManager::negotiateSSL(int id, EventReceiver * er) {
-  ScopeLock lock(socketinfomaplock);
-  std::map<int, SocketInfo>::iterator it = socketinfomap.find(id);
-  if (it == socketinfomap.end()) {
-    return;
-  }
-  SocketInfo & socketinfo = it->second;
-  polling.removeFDIn(socketinfo.fd);
-  SSL * ssl = SSL_new(global->getSSLCTX());
-  SSL_set_mode(ssl, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
-  socketinfo.ssl = ssl;
-  SSL_set_fd(ssl, socketinfo.fd);
-  if (er != NULL) {
-    std::map<int, SocketInfo>::iterator it2;
-    SocketInfo * parentsocketinfo = NULL;
-    for (it2 = socketinfomap.begin(); it2 != socketinfomap.end(); it2++) {
-      if (it2->second.receiver == er) {
-        parentsocketinfo = &it2->second;
-        break;
-      }
-    }
-    if (parentsocketinfo != NULL && parentsocketinfo->ssl != NULL) {
-      SSL_copy_session_id(ssl, parentsocketinfo->ssl);
-    }
-  }
-  int ret = -1;
-  if (socketinfo.type == FD_TCP_SSL_NEG_REDO_CONN) {
-    ret = SSL_connect(ssl);
-  }
-  else {
-    ret = SSL_accept(ssl);
-  }
-  if (ret > 0) { // probably wont happen :)
-    socketinfo.type = FD_TCP_SSL;
-    wm->dispatchEventSSLSuccess(socketinfo.receiver);
-  }
-  else {
-    if (!investigateSSLError(SSL_get_error(ssl, ret), id, ret)) {
-      wm->dispatchEventDisconnected(socketinfo.receiver);
-      closeSocketIntern(id);
-      return;
-    }
-  }
-  polling.addFDIn(socketinfo.fd);
 }
 
 void IOManager::forceSSLhandshake(int id) {
@@ -304,19 +258,8 @@ void IOManager::forceSSLhandshake(int id) {
     return;
   }
   SocketInfo & socketinfo = it->second;
-  SSL * ssl = socketinfo.ssl;
-  int ret = SSL_do_handshake(ssl);
   socketinfo.type = FD_TCP_SSL_NEG_REDO_HANDSHAKE;
-  if (ret > 0) { // probably wont happen :)
-    socketinfo.type = FD_TCP_SSL;
-    wm->dispatchEventSSLSuccess(socketinfo.receiver);
-  }
-  else {
-    if (!investigateSSLError(SSL_get_error(ssl, ret), id, ret)) {
-      wm->dispatchEventDisconnected(socketinfo.receiver);
-      closeSocketIntern(id);
-    }
-  }
+  polling.setFDOut(socketinfo.fd);
 }
 
 bool IOManager::handleError(EventReceiver * er) {
@@ -506,7 +449,7 @@ void IOManager::handleTCPPlainOut(SocketInfo & socketinfo) {
 void IOManager::handleTCPSSLNegotiationIn(SocketInfo & socketinfo) {
   SSL * ssl = socketinfo.ssl;
   int b_recv;
-  if (socketinfo.type == FD_TCP_SSL_NEG_REDO_CONN) {
+  if (socketinfo.type == FD_TCP_SSL_NEG_REDO_CONNECT) {
     b_recv = SSL_connect(ssl);
   }
   else if (socketinfo.type == FD_TCP_SSL_NEG_REDO_ACCEPT) {
@@ -533,6 +476,56 @@ void IOManager::handleTCPSSLNegotiationIn(SocketInfo & socketinfo) {
       closeSocketIntern(socketinfo.id);
     }
   }
+}
+
+void IOManager::handleTCPSSLNegotiationOut(SocketInfo & socketinfo) {
+  if (socketinfo.type == FD_TCP_SSL_NEG_REDO_HANDSHAKE) {
+    polling.setFDIn(socketinfo.fd);
+    handleTCPSSLNegotiationIn(socketinfo);
+    return;
+  }
+  SSL * ssl = SSL_new(global->getSSLCTX());
+  SSL_set_mode(ssl, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
+  socketinfo.ssl = ssl;
+  SSL_set_fd(ssl, socketinfo.fd);
+  if (socketinfo.receiver != NULL) {
+    std::map<int, SocketInfo>::iterator it2;
+    SocketInfo * parentsocketinfo = NULL;
+    for (it2 = socketinfomap.begin(); it2 != socketinfomap.end(); it2++) {
+      if (it2->second.receiver == socketinfo.receiver) {
+        parentsocketinfo = &it2->second;
+        break;
+      }
+    }
+    if (parentsocketinfo != NULL && parentsocketinfo->ssl != NULL) {
+      SSL_copy_session_id(ssl, parentsocketinfo->ssl);
+    }
+  }
+  int ret = -1;
+  if (socketinfo.type == FD_TCP_SSL_NEG_CONNECT) {
+    ret = SSL_connect(ssl);
+  }
+  else {
+    ret = SSL_accept(ssl);
+  }
+  if (ret > 0) { // probably wont happen :)
+    socketinfo.type = FD_TCP_SSL;
+    wm->dispatchEventSSLSuccess(socketinfo.receiver);
+  }
+  else {
+    if (!investigateSSLError(SSL_get_error(ssl, ret), socketinfo.id, ret)) {
+      wm->dispatchEventDisconnected(socketinfo.receiver);
+      closeSocketIntern(socketinfo.id);
+      return;
+    }
+    if (socketinfo.type == FD_TCP_SSL_NEG_CONNECT) {
+      socketinfo.type = FD_TCP_SSL_NEG_REDO_CONNECT;
+    }
+    else {
+      socketinfo.type = FD_TCP_SSL_NEG_REDO_ACCEPT;
+    }
+  }
+  polling.setFDIn(socketinfo.fd);
 }
 
 void IOManager::handleTCPSSLIn(SocketInfo & socketinfo) {
@@ -641,11 +634,16 @@ void IOManager::runInstance() {
             handleTCPPlainOut(socketinfo);
           }
           break;
-        case FD_TCP_SSL_NEG_REDO_CONN: // tcp ssl redo connect
+        case FD_TCP_SSL_NEG_CONNECT: // tcp ssl connect
+        case FD_TCP_SSL_NEG_REDO_CONNECT: // tcp ssl redo connect
+        case FD_TCP_SSL_NEG_ACCEPT: // tcp ssl accept
         case FD_TCP_SSL_NEG_REDO_ACCEPT: // tcp ssl redo accept
         case FD_TCP_SSL_NEG_REDO_HANDSHAKE: // tcp ssl redo handshake
           if (pollevent == POLLEVENT_IN) { // incoming data
             handleTCPSSLNegotiationIn(socketinfo);
+          }
+          else if (pollevent == POLLEVENT_OUT) {
+            handleTCPSSLNegotiationOut(socketinfo);
           }
           break;
         case FD_TCP_SSL: // tcp ssl
