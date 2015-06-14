@@ -25,12 +25,12 @@ GlobalContext::GlobalContext() {
 }
 
 void GlobalContext::init() {
-  SSL_library_init();
-  SSL_load_error_strings();
-  ssl_ctx = SSL_CTX_new(SSLv23_client_method());
   ssllocks.resize(CRYPTO_num_locks());
   CRYPTO_set_locking_callback(sslLockingCallback);
   CRYPTO_set_id_callback(sslThreadIdCallback);
+  SSL_library_init();
+  SSL_load_error_strings();
+  ssl_ctx = SSL_CTX_new(SSLv23_client_method());
   pthread_attr_init(&attr);
   pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
 #ifdef _ISOC95_SOURCE
