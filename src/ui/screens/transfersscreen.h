@@ -14,7 +14,7 @@ class MenuSelectOptionElement;
 class TransfersScreen : public UIWindow {
 public:
   TransfersScreen(Ui *);
-  ~TransferScreen();
+  ~TransfersScreen();
   void initialize(unsigned int, unsigned int);
   void redraw();
   void update();
