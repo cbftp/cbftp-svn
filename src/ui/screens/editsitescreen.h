@@ -16,6 +16,7 @@ class MenuSelectOptionElement;
 class EditSiteScreen : public UIWindow {
 public:
   EditSiteScreen(Ui * ui);
+  ~EditSiteScreen();
   void initialize(unsigned int, unsigned int, std::string, std::string);
   void update();
   void redraw();

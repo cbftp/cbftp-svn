@@ -14,6 +14,10 @@ ChangeKeyScreen::ChangeKeyScreen(Ui * ui) {
   this->ui = ui;
 }
 
+ChangeKeyScreen::~ChangeKeyScreen() {
+
+}
+
 void ChangeKeyScreen::initialize(unsigned int row, unsigned int col) {
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel";
   currentlegendtext = defaultlegendtext;

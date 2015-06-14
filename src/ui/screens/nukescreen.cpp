@@ -20,6 +20,10 @@ NukeScreen::NukeScreen(Ui * ui) {
   this->ui = ui;
 }
 
+NukeScreen::~NukeScreen() {
+
+}
+
 void NukeScreen::initialize(unsigned int row, unsigned int col, std::string sitestr, std::string release, FileList * filelist) {
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [n]uke - [c]ancel";
   currentlegendtext = defaultlegendtext;

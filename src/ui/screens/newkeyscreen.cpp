@@ -10,6 +10,10 @@ NewKeyScreen::NewKeyScreen(Ui * ui) {
   this->ui = ui;
 }
 
+NewKeyScreen::~NewKeyScreen() {
+
+}
+
 void NewKeyScreen::initialize(unsigned int row, unsigned int col) {
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one";
   currentlegendtext = defaultlegendtext;

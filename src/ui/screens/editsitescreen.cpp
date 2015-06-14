@@ -23,6 +23,10 @@ EditSiteScreen::EditSiteScreen(Ui * ui) {
   this->ui = ui;
 }
 
+EditSiteScreen::~EditSiteScreen() {
+
+}
+
 void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string operation, std::string site) {
   active = false;
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one, save changes - [c]ancel, undo changes";

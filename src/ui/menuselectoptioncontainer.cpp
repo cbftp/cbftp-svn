@@ -6,6 +6,10 @@ MenuSelectOptionContainer::MenuSelectOptionContainer() {
 
 }
 
+MenuSelectOptionContainer::~MenuSelectOptionContainer() {
+
+}
+
 void MenuSelectOptionContainer::addElement(Pointer<MenuSelectOptionElement> msoe) {
   elements.push_back(msoe);
 }

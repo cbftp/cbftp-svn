@@ -10,6 +10,10 @@ MenuSection::MenuSection() {
   needsredraw = false;
 }
 
+MenuSection::~MenuSection() {
+
+}
+
 void MenuSection::initialize(int row, int col, std::map<std::string, std::string>::const_iterator sectionsbegin, std::map<std::string, std::string>::const_iterator sectionsend) {
   pointer = 0;
   lastpointer = 0;

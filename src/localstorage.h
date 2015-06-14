@@ -19,6 +19,7 @@ class LocalFileList;
 class LocalStorage {
 public:
   LocalStorage();
+  ~LocalStorage();
   void readConfiguration();
   void writeState();
   LocalTransfer * passiveDownload(TransferMonitor *, std::string, std::string, bool, FTPConn *);

@@ -15,6 +15,7 @@ class Site;
 class NewRaceScreen : public UIWindow {
 public:
   NewRaceScreen(Ui *);
+  ~NewRaceScreen();
   void initialize(unsigned int, unsigned int, std::string, std::string, std::string);
   void update();
   void redraw();

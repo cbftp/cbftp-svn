@@ -14,6 +14,10 @@ AddSectionScreen::AddSectionScreen(Ui * ui) {
   this->ui = ui;
 }
 
+AddSectionScreen::~AddSectionScreen() {
+
+}
+
 void AddSectionScreen::initialize(unsigned int row, unsigned int col, std::string site, std::string path) {
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel";
   currentlegendtext = defaultlegendtext;

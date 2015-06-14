@@ -15,6 +15,7 @@ class FileList;
 class NukeScreen : public UIWindow {
 public:
   NukeScreen(Ui *);
+  ~NukeScreen();
   void initialize(unsigned int, unsigned int, std::string, std::string, FileList *);
   void update();
   void redraw();

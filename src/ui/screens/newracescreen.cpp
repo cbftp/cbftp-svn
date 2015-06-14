@@ -17,6 +17,10 @@ NewRaceScreen::NewRaceScreen(Ui * ui) {
   this->ui = ui;
 }
 
+NewRaceScreen::~NewRaceScreen() {
+
+}
+
 void NewRaceScreen::initialize(unsigned int row, unsigned int col, std::string site, std::string section, std::string release) {
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [t]oggle all - [s]tart race - [S]tart race and return to browsing - [c]ancel";
   currentlegendtext = defaultlegendtext;

@@ -18,6 +18,10 @@ TransfersScreen::TransfersScreen(Ui * ui) {
   tm = global->getTransferManager();
 }
 
+TransfersScreen::~TransfersScreen() {
+
+}
+
 void TransfersScreen::initialize(unsigned int row, unsigned int col) {
   autoupdate = true;
   table.reset();

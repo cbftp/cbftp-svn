@@ -22,6 +22,7 @@ class MenuSection : public FocusableArea {
     std::vector<MenuSelectOptionContainer> sectioncontainers;
   public:
     MenuSection();
+    ~MenuSection();
     void initialize(int, int, std::map<std::string, std::string>::const_iterator, std::map<std::string, std::string>::const_iterator);
     bool goDown();
     bool goUp();

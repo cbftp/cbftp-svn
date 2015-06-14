@@ -12,6 +12,7 @@ class MenuSelectOptionElement;
 class NewKeyScreen : public UIWindow {
 public:
   NewKeyScreen(Ui *);
+  ~NewKeyScreen();
   void initialize(unsigned int, unsigned int);
   void update();
   void redraw();

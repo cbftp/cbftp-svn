@@ -25,6 +25,10 @@ LocalStorage::LocalStorage() {
   storeidcounter = 0;
 }
 
+LocalStorage::~LocalStorage() {
+
+}
+
 LocalTransfer * LocalStorage::passiveDownload(TransferMonitor * tm, std::string file, std::string addr, bool ssl, FTPConn * ftpconn) {
   return passiveDownload(tm, temppath, file, addr, ssl, ftpconn);
 }

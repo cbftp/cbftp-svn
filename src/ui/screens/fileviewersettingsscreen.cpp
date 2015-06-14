@@ -15,6 +15,10 @@ FileViewerSettingsScreen::FileViewerSettingsScreen(Ui * ui) {
   this->ui = ui;
 }
 
+FileViewerSettingsScreen::~FileViewerSettingsScreen() {
+
+}
+
 void FileViewerSettingsScreen::initialize(unsigned int row, unsigned int col) {
   active = false;
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel";

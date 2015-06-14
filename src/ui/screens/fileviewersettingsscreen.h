@@ -10,6 +10,7 @@ class LocalStorage;
 class FileViewerSettingsScreen : public UIWindow {
 public:
   FileViewerSettingsScreen(Ui *);
+  ~FileViewerSettingsScreen();
   void initialize(unsigned int, unsigned int);
   void update();
   void redraw();
