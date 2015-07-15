@@ -85,6 +85,6 @@ public:
   bool getTransferFXP() const;
   std::string getTransferAddr() const;
   RecursiveCommandLogic * getRecursiveLogic() const;
-  bool transferInitialized();
+  bool transferInitialized() const;
   void initializeTransfer();
 };
