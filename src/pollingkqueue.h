@@ -39,11 +39,8 @@ public:
   void addFDOut(int addfd) {
     control(addfd, EVFILT_WRITE, EV_ADD);
   }
-  void removeFDIn(int delfd) {
-    control(delfd, EVFILT_READ, EV_DELETE);
-  }
-  void removeFDOut(int delfd) {
-    control(delfd, EVFILT_WRITE, EV_DELETE);
+  void removeFD(int delfd) {
+    control(delfd, EVFILT_READ | EVFILT_WRITE, EV_DELETE);
   }
   void setFDIn(int modfd) {
     controlSet(modfd, EVFILT_READ, EVFILT_WRITE);

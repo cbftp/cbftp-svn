@@ -16,8 +16,7 @@ public:
   virtual void wait(std::list<std::pair<int, PollEvent> > &) = 0;
   virtual void addFDIn(int) = 0;
   virtual void addFDOut(int) = 0;
-  virtual void removeFDIn(int) = 0;
-  virtual void removeFDOut(int) = 0;
+  virtual void removeFD(int) = 0;
   virtual void setFDIn(int) = 0;
   virtual void setFDOut(int) = 0;
 };
@@ -42,11 +41,8 @@ public:
   void addFDOut(int addfd) {
     impl.addFDOut(addfd);
   }
-  void removeFDIn(int delfd) {
-    impl.removeFDIn(delfd);
-  }
-  void removeFDOut(int delfd) {
-    impl.removeFDOut(delfd);
+  void removeFD(int delfd) {
+    impl.removeFD(delfd);
   }
   void setFDIn(int modfd) {
     impl.setFDIn(modfd);

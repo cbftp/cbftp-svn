@@ -338,7 +338,8 @@ void IOManager::closeSocketIntern(int id) {
   if (socketinfo.type == FD_KEYBOARD) {
     return;
   }
-  shutdown(socketinfo.fd, 2);
+  polling.removeFD(socketinfo.fd);
+  close(socketinfo.fd);
   if (socketinfo.ssl) {
     SSL_free(socketinfo.ssl);
   }

@@ -37,11 +37,8 @@ public:
   void addFDOut(int addfd) {
     control(EPOLLOUT, EPOLL_CTL_ADD, addfd);
   }
-  void removeFDIn(int delfd) {
-    control(EPOLLIN, EPOLL_CTL_DEL, delfd);
-  }
-  void removeFDOut(int delfd) {
-    control(EPOLLOUT, EPOLL_CTL_DEL, delfd);
+  void removeFD(int delfd) {
+    control(EPOLLIN | EPOLLOUT, EPOLL_CTL_DEL, delfd);
   }
   void setFDIn(int modfd) {
     control(EPOLLIN, EPOLL_CTL_MOD, modfd);
