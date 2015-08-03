@@ -416,8 +416,10 @@ void TransferJob::updateStatus() {
     if (pendingtransfers.find((*it)->getFile()) != pendingtransfers.end()) {
       pendingtransfers.erase((*it)->getFile());
     }
-    aggregatedsize += (*it)->sourceSize();
     int state = (*it)->getState();
+    if (state != TRANSFERSTATUS_STATE_FAILED) {
+      aggregatedsize += (*it)->sourceSize();
+    }
     if (state == TRANSFERSTATUS_STATE_IN_PROGRESS || state == TRANSFERSTATUS_STATE_SUCCESSFUL) {
       aggregatedsizetransferred += (*it)->targetSize();
     }
