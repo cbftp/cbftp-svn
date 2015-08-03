@@ -427,6 +427,7 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> tj) {
   it = pendingtransfers.find(tj);
   std::list<PendingTransfer> & list = it->second;
   list.clear();
+  tj->clearExisting();
   switch (tj->getType()) {
     case TRANSFERJOB_DOWNLOAD: {
       std::map<std::string, FileList *>::const_iterator it2;
@@ -440,11 +441,14 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> tj) {
               dstlist = tj->wantedLocalDstList(it2->first);
             }
             dstit = dstlist->find(srcit->first);
+            std::string subpath = it2->first.length() > 0 ? it2->first + "/" : "";
             if (!dstlist || dstit == dstlist->end() || dstit->second.getSize() == 0) {
               PendingTransfer p(tj->getSrc(), srclist, srcit->first, dstlist, srcit->first);
               addPendingTransfer(list, p);
-              std::string subpath = it2->first.length() > 0 ? it2->first + "/" : "";
               tj->addPendingTransfer(subpath + srcit->first, srcit->second->getSize());
+            }
+            else {
+              tj->targetExists(subpath + srcit->first);
             }
           }
         }
@@ -465,6 +469,9 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> tj) {
           tj->addPendingTransfer(tj->getSrcFileName(),
               tj->getSrcFileList()->getFile(tj->getSrcFileName())->getSize());
         }
+        else {
+          tj->targetExists(tj->getSrcFileName());
+        }
       }
       break;
     case TRANSFERJOB_UPLOAD: {
@@ -473,16 +480,19 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> tj) {
         FileList * dstlist = tj->findDstList(lit->first);
         for (std::map<std::string, LocalFile>::const_iterator lfit = lit->second->begin(); lfit != lit->second->end(); lfit++) {
           if (!lfit->second.isDirectory() && lfit->second.getSize() > 0) {
-            std::string filename = lfit->first;
             if (dstlist == NULL) {
               tj->wantDstDirectory(lit->first);
               break;
             }
+            std::string filename = lfit->first;
+            std::string subpath = lit->first.length() > 0 ? lit->first + "/" : "";
             if (dstlist->getFile(filename) == NULL) {
               PendingTransfer p(lit->second, filename, tj->getDst(), dstlist, filename);
               addPendingTransfer(list, p);
-              std::string subpath = lit->first.length() > 0 ? lit->first + "/" : "";
               tj->addPendingTransfer(subpath + filename, lfit->second.getSize());
+            }
+            else {
+              tj->targetExists(subpath + filename);
             }
           }
         }
@@ -495,12 +505,15 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> tj) {
       if (!!srclist) {
         srcit = srclist->find(tj->getSrcFileName());
       }
-      if (!!srclist && srcit != srclist->end() && srcit->second.getSize() > 0) {
-        if (tj->getDstFileList()->getFile(tj->getDstFileName()) == NULL) {
-          PendingTransfer p(srclist, tj->getSrcFileName(), tj->getDst(), tj->getDstFileList(), tj->getDstFileName());
-          addPendingTransfer(list, p);
-          tj->addPendingTransfer(tj->getSrcFileName(), srcit->second.getSize());
-        }
+      if (!!srclist && srcit != srclist->end() && srcit->second.getSize() > 0 &&
+          tj->getDstFileList()->getFile(tj->getDstFileName()) == NULL)
+      {
+        PendingTransfer p(srclist, tj->getSrcFileName(), tj->getDst(), tj->getDstFileList(), tj->getDstFileName());
+        addPendingTransfer(list, p);
+        tj->addPendingTransfer(tj->getSrcFileName(), srcit->second.getSize());
+      }
+      else {
+        tj->targetExists(tj->getSrcFileName());
       }
       break;
     }
@@ -511,16 +524,21 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> tj) {
         FileList * dstlist = tj->findDstList(it2->first);
         for (std::map<std::string, File *>::iterator srcit = srclist->begin(); srcit != srclist->end(); srcit++) {
           if (!srcit->second->isDirectory() && srcit->second->getSize() > 0) {
-            std::string filename = srcit->first;
+
             if (dstlist == NULL) {
               tj->wantDstDirectory(it2->first);
               break;
             }
+            std::string filename = srcit->first;
+            std::string subpath = it2->first.length() > 0 ? it2->first + "/" : "";
             if (dstlist->getFile(filename) == NULL) {
               PendingTransfer p(tj->getSrc(), srclist, filename, tj->getDst(), dstlist, filename);
               addPendingTransfer(list, p);
-              std::string subpath = it2->first.length() > 0 ? it2->first + "/" : "";
+
               tj->addPendingTransfer(subpath + filename, srcit->second->getSize());
+            }
+            else {
+              tj->targetExists(subpath + filename);
             }
           }
         }
@@ -535,6 +553,9 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> tj) {
           addPendingTransfer(list, p);
           tj->addPendingTransfer(tj->getSrcFileName(),
               tj->getSrcFileList()->getFile(tj->getSrcFileName())->getSize());
+        }
+        else {
+          tj->targetExists(tj->getSrcFileName());
         }
       }
       break;

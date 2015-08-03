@@ -383,11 +383,11 @@ void TransferJob::clearRefreshLists() {
   listsrefreshed = false;
 }
 
-void TransferJob::addPendingTransfer(std::string name, unsigned long long int size) {
+void TransferJob::addPendingTransfer(const std::string & name, unsigned long long int size) {
   pendingtransfers[name] = size;
 }
 
-void TransferJob::addTransfer(Pointer<TransferStatus> ts) {
+void TransferJob::addTransfer(const Pointer<TransferStatus> & ts) {
   if (!!ts && ts->getState() != TRANSFERSTATUS_STATE_FAILED) {
     transfers.push_front(ts);
     std::string subpathfile = findSubPath(ts) + ts->getFile();
@@ -395,6 +395,10 @@ void TransferJob::addTransfer(Pointer<TransferStatus> ts) {
       pendingtransfers.erase(subpathfile);
     }
   }
+}
+
+void TransferJob::targetExists(const std::string & target) {
+  existingtargets[target] = true;
 }
 
 void TransferJob::tick(int message) {
@@ -421,7 +425,10 @@ void TransferJob::updateStatus() {
       ongoingtransfers = true;
     }
     if (state == TRANSFERSTATUS_STATE_SUCCESSFUL) {
-      aggregatedfilescomplete++;
+      std::string subpathfile = findSubPath(*it) + (*it)->getFile();
+      if (existingtargets.find(subpathfile) == existingtargets.end()) {
+        aggregatedfilescomplete++;
+      }
     }
   }
   for (std::map<std::string, unsigned long long int>::const_iterator it = pendingTransfersBegin(); it != pendingTransfersEnd(); it++) {
@@ -438,7 +445,7 @@ void TransferJob::updateStatus() {
   if (speed) {
     timeremaining = (expectedfinalsize - sizeprogress) / (speed * 1024);
   }
-  filesprogress = aggregatedfilescomplete;
+  filesprogress = existingtargets.size() + aggregatedfilescomplete;
   if (almostdone && !ongoingtransfers && filesprogress >= filestotal) {
     setDone();
   }
@@ -529,7 +536,7 @@ void TransferJob::countTotalFiles() {
   }
 }
 
-std::string TransferJob::findSubPath(Pointer<TransferStatus> ts) const {
+std::string TransferJob::findSubPath(const Pointer<TransferStatus> & ts) const {
   std::string path = ts->getSourcePath();
   switch (type) {
     case TRANSFERJOB_DOWNLOAD:
@@ -562,6 +569,10 @@ void TransferJob::setInitialized() {
 void TransferJob::abort() {
   aborted = true;
   setDone();
+}
+
+void TransferJob::clearExisting() {
+  existingtargets.clear();
 }
 
 bool TransferJob::isAborted() const {

@@ -63,8 +63,9 @@ public:
   bool listsRefreshed() const;
   void refreshOrAlmostDone();
   void clearRefreshLists();
-  void addPendingTransfer(std::string, unsigned long long int);
-  void addTransfer(Pointer<TransferStatus>);
+  void addPendingTransfer(const std::string &, unsigned long long int);
+  void addTransfer(const Pointer<TransferStatus> &);
+  void targetExists(const std::string &);
   void tick(int);
   int getProgress() const;
   int timeSpent() const;
@@ -76,11 +77,12 @@ public:
   std::string typeString() const;
   int filesProgress() const;
   int filesTotal() const;
-  std::string findSubPath(Pointer<TransferStatus>) const;
+  std::string findSubPath(const Pointer<TransferStatus> &) const;
   bool isInitialized() const;
   void setInitialized();
   bool isAborted() const;
   void abort();
+  void clearExisting();
 private:
   void addSubDirectoryFileLists(std::map<std::string, FileList *> &, FileList *);
   void updateStatus();
@@ -102,6 +104,7 @@ private:
   std::map<std::string, FileList *> dstfilelists;
   std::map<std::string, Pointer<LocalFileList> > localfilelists;
   std::map<std::string, unsigned long long int> pendingtransfers;
+  std::map<std::string, bool> existingtargets;
   std::list<Pointer<TransferStatus> > transfers;
   int slots;
   bool almostdone;
