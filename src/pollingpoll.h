@@ -73,18 +73,10 @@ public:
     std::map<int, int>::iterator it = fdmap.find(addfd);
     it != fdmap.end() ? it->second |= POLLOUT : fdmap[addfd] = POLLOUT;
   }
-  void removeFDIn(int delfd) {
+  void removeFD(int delfd) {
     awaitCurrentPollFinished();
     std::map<int, int>::iterator it = fdmap.find(delfd);
-    if (it != fdmap.end() && !(it->second &= ~POLLIN)) {
-      fdmap.erase(it);
-    }
-    maplock.unlock();
-  }
-  void removeFDOut(int delfd) {
-    awaitCurrentPollFinished();
-    std::map<int, int>::iterator it = fdmap.find(delfd);
-    if (it != fdmap.end() && !(it->second &= ~POLLOUT)) {
+    if (it != fdmap.end()) {
       fdmap.erase(it);
     }
     maplock.unlock();
