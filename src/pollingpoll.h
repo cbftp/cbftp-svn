@@ -43,7 +43,7 @@ public:
           if (revents & POLLIN) {
             char c;
             if (recv(fd, &c, 1, MSG_PEEK) <= 0 && errno != ENOTSOCK) {
-              removeFD(fd);
+              removeFDIntern(fd);
             }
             pollevent = POLLEVENT_IN;
           }
@@ -51,7 +51,7 @@ public:
             pollevent = POLLEVENT_OUT;
           }
           if (revents & (POLLHUP | POLLERR)) {
-            removeFD(fd);
+            removeFDIntern(fd);
           }
           if (pollevent != POLLEVENT_UNKNOWN) {
             fdlist.push_back(std::pair<int, PollEvent>(fd, pollevent));
@@ -117,7 +117,7 @@ private:
     ScopeLock lock(waitlock);
     inwait = value;
   }
-  void removeFD(int delfd) {
+  void removeFDIntern(int delfd) {
     fdmap.erase(delfd);
   }
   Lock maplock;
