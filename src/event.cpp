@@ -12,10 +12,10 @@ Event::Event(EventReceiver * er, int type) {
   this->type = type;
 }
 
-Event::Event(EventReceiver * er, int type, int interval) {
+Event::Event(EventReceiver * er, int type, int numdata) {
   this->receiver = er;
   this->type = type;
-  this->interval = interval;
+  this->numdata = numdata;
 }
 
 Event::Event(EventReceiver * er, int type, std::string error) {
@@ -40,8 +40,8 @@ int Event::getDataLen() const {
   return datalen;
 }
 
-int Event::getInterval() const {
-  return interval;
+int Event::getNumericalData() const {
+  return numdata;
 }
 
 std::string Event::getStrData() const {

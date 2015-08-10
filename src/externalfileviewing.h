@@ -4,7 +4,9 @@
 #include <list>
 #include <map>
 
-class ExternalFileViewing {
+#include "eventreceiver.h"
+
+class ExternalFileViewing : public EventReceiver {
 public:
   ExternalFileViewing();
   bool isViewable(std::string) const;
@@ -12,7 +14,7 @@ public:
   int viewThenDelete(std::string);
   void killProcess(int);
   void killAll();
-  void hasDied(int);
+  void signal(int);
   bool hasDisplay() const;
   bool stillViewing(int) const;
   std::string getVideoViewer() const;
@@ -38,5 +40,3 @@ private:
   std::string pdfviewer;
   bool display;
 };
-
-void sighandler_child(int);

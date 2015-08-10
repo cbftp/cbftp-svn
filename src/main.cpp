@@ -93,35 +93,18 @@ public:
   }
 };
 
-void sighandler_ignore(int sig) {
-}
-
-void signal_ignore() {
-  signal(SIGABRT, &sighandler_ignore);
-  signal(SIGTERM, &sighandler_ignore);
-  signal(SIGINT, &sighandler_ignore);
-  signal(SIGWINCH, &sighandler_ignore);
-}
-
 void sighandler(int sig) {
-  signal_ignore();
   global->getTickPoke()->breakLoop();
 }
 
-void sighandler_winch(int sig) {
-  signal(SIGWINCH, &sighandler_ignore);
-  global->getUIBase()->terminalSizeChanged();
-  signal(SIGWINCH, &sighandler_winch);
-}
-
-void signal_catch() {
-  signal(SIGABRT, &sighandler);
-  signal(SIGTERM, &sighandler);
-  signal(SIGINT, &sighandler);
-  signal(SIGWINCH, &sighandler_winch);
-}
-
 int main(int argc, char * argv[]) {
-  signal_catch();
+  struct sigaction sa;
+  sa.sa_flags = SA_RESTART;
+  sigfillset(&sa.sa_mask);
+  sa.sa_handler = sighandler;
+  sigaction(SIGABRT, &sa, NULL);
+  sigaction(SIGTERM, &sa, NULL);
+  sigaction(SIGINT, &sa, NULL);
+
   Main();
 }

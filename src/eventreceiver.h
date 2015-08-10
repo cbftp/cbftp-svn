@@ -6,6 +6,7 @@ class EventReceiver {
 public:
   virtual ~EventReceiver();
   virtual void tick(int);
+  virtual void signal(int);
   virtual void FDNew(int);
   virtual void FDConnected();
   virtual void FDData();

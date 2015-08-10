@@ -3,7 +3,9 @@
 #include <sys/ioctl.h>
 #include <iostream>
 #include <unistd.h>
+#include <signal.h>
 
+#include "../workmanager.h"
 #include "../globalcontext.h"
 #include "../tickpoke.h"
 #include "../iomanager.h"
@@ -53,7 +55,19 @@
 
 extern GlobalContext * global;
 
+static Ui * instance = NULL;
+
+namespace {
+
+void sighandler(int signal) {
+  global->getWorkManager()->dispatchSignal(instance, signal);
+}
+
+}
+
 Ui::Ui() {
+  util::assert(instance == NULL);
+  instance = this;
   CharDraw::init();
   main = NULL;
   legendenabled = false;
@@ -65,6 +79,12 @@ Ui::Ui() {
 #ifdef _ISOC95_SOURCE
   pthread_setname_np(uithread, "UserInterface");
 #endif
+  struct sigaction sa;
+  sa.sa_flags = SA_RESTART;
+  sigemptyset(&sa.sa_mask);
+  sigaddset(&sa.sa_mask, SIGWINCH);
+  sa.sa_handler = sighandler;
+  sigaction(SIGWINCH, &sa, NULL);
 }
 
 Ui::~Ui() {
@@ -179,6 +199,15 @@ void Ui::initIntern() {
 void Ui::backendPush() {
   topwindow->update();
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+}
+
+void Ui::signal(int signal) {
+  if (signal == SIGWINCH) {
+    terminalSizeChanged();
+  }
+  else {
+    util::assert(false);
+  }
 }
 
 void Ui::terminalSizeChanged() {

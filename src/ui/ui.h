@@ -49,7 +49,7 @@ class TransferJobStatusScreen;
 class AllRacesScreen;
 class AllTransferJobsScreen;
 
-class Ui : private EventReceiver, public UIBase {
+class Ui : public EventReceiver, public UIBase {
   private:
     BlockingQueue<UICommand> uiqueue;
     WINDOW * main;
@@ -120,6 +120,7 @@ class Ui : private EventReceiver, public UIBase {
     bool init();
     void backendPush();
     void terminalSizeChanged();
+    void signal(int);
     void kill();
     void resizeTerm();
     void readConfiguration();

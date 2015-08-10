@@ -9,13 +9,28 @@
 #include <fcntl.h>
 
 #include "globalcontext.h"
+#include "util.h"
+#include "workmanager.h"
+
 #include "localstorage.h"
 #include "eventlog.h"
 #include "datafilehandler.h"
 
 extern GlobalContext * global;
 
+static ExternalFileViewing * instance = NULL;
+
+namespace {
+
+void sighandler(int signal) {
+  global->getWorkManager()->dispatchSignal(instance, signal);
+}
+
+}
+
 ExternalFileViewing::ExternalFileViewing() {
+  util::assert(instance == NULL);
+  instance = this;
   videoviewer = "mplayer";
   audioviewer = "mplayer";
   imageviewer = "eog";
@@ -25,7 +40,12 @@ ExternalFileViewing::ExternalFileViewing() {
   if (displayenv != NULL) {
     display = true;
   }
-  signal(SIGCHLD, &sighandler_child);
+  struct sigaction sa;
+  sa.sa_flags = SA_RESTART;
+  sigemptyset(&sa.sa_mask);
+  sigaddset(&sa.sa_mask, SIGCHLD);
+  sa.sa_handler = sighandler;
+  sigaction(SIGCHLD, &sa, NULL);
 }
 
 bool ExternalFileViewing::isViewable(std::string path) const {
@@ -112,13 +132,21 @@ std::string ExternalFileViewing::getExtension(std::string file) {
   return extension;
 }
 
-void ExternalFileViewing::hasDied(int pid) {
-  for (std::list<int>::iterator it = subprocesses.begin(); it != subprocesses.end(); it++) {
-    if (*it == pid) {
-      checkDeleteFile(*it);
-      subprocesses.erase(it);
-      break;
+void ExternalFileViewing::signal(int signal) {
+  if (signal == SIGCHLD) {
+    int pid = 0;
+    while ((pid = waitpid(-1, NULL, WNOHANG)) > 0) {
+      for (std::list<int>::iterator it = subprocesses.begin(); it != subprocesses.end(); it++) {
+        if (*it == pid) {
+          checkDeleteFile(*it);
+          subprocesses.erase(it);
+          break;
+        }
+      }
     }
+  }
+  else {
+    util::assert(false);
   }
 }
 
@@ -208,9 +236,4 @@ void ExternalFileViewing::writeState() {
   filehandler->addOutputLine(filetag, "audio=" + getAudioViewer());
   filehandler->addOutputLine(filetag, "image=" + getImageViewer());
   filehandler->addOutputLine(filetag, "pdf=" + getPDFViewer());
-}
-
-void sighandler_child(int) {
-  int pid = wait(NULL);
-  global->getExternalFileViewing()->hasDied(pid);
 }

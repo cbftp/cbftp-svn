@@ -10,7 +10,7 @@ private:
   int type;
   char * data;
   int datalen;
-  int interval;
+  int numdata;
   std::string strdata;
 public:
   Event(EventReceiver *, int, char *, int);
@@ -21,6 +21,6 @@ public:
   int getType() const;
   char * getData() const;
   int getDataLen() const;
-  int getInterval() const;
+  int getNumericalData() const;
   std::string getStrData() const;
 };

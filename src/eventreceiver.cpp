@@ -10,6 +10,10 @@ void EventReceiver::tick(int message) {
 
 }
 
+void EventReceiver::signal(int) {
+
+}
+
 void EventReceiver::FDNew(int fd) {
 
 }
