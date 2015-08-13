@@ -124,11 +124,11 @@ std::list<SkiplistItem>::const_iterator SkipList::entriesEnd() const {
   return entries.end();
 }
 
-bool SkipList::isAllowed(std::string element, bool dir) const {
+bool SkipList::isAllowed(const std::string & element, const bool dir) const {
   return isAllowed(element, dir, true);
 }
 
-bool SkipList::isAllowed(std::string element, bool dir, bool inrace) const {
+bool SkipList::isAllowed(std::string element, const bool dir, const bool inrace) const {
   std::list<SkiplistItem>::const_iterator it;
   std::list<std::string> elementparts;
   std::list<std::string>::iterator partsit;

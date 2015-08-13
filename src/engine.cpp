@@ -364,12 +364,23 @@ void Engine::refreshScoreBoard() {
     for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator its = race->begin(); its != race->end(); its++) {
       SiteRace * srs = its->first;
       SiteLogic * sls = its->second;
+      if (!sls->getSite()->getAllowDownload()) continue;
       for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator itd = race->begin(); itd != race->end(); itd++) {
         SiteRace * srd = itd->first;
         SiteLogic * sld = itd->second;
         if (sls == sld) continue;
+        if (!sld->getSite()->getAllowUpload()) continue;
         if (global->getSiteManager()->isBlockedPair(sls->getSite(), sld->getSite())) continue;
         if (sld->getSite()->isAffiliated(race->getGroup())) continue;
+        if (sls->getSite()->hasBrokenPASV() &&
+            sld->getSite()->hasBrokenPASV()) continue;
+        //ssl check
+        if ((sls->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_OFF &&
+            sld->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_ON) ||
+            (sls->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_ON &&
+                sld->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_OFF)) {
+          continue;
+        }
         int avgspeed = sls->getSite()->getAverageSpeed(sld->getSite()->getName());
         if (avgspeed > maxavgspeed) {
           avgspeed = maxavgspeed;
@@ -383,28 +394,17 @@ void Engine::refreshScoreBoard() {
             std::map<std::string, File *>::const_iterator itf;
             for (itf = fls->begin(); itf != fls->end(); itf++) {
               File * f = itf->second;
-              bool isdir = f->isDirectory();
-              std::string prepend = itfls->first.length() ? itfls->first + "/" : "";
+              const bool isdir = f->isDirectory();
+              const std::string prepend = itfls->first.length() ? itfls->first + "/" : "";
               if (!global->getSkipList()->isAllowed(prepend + itf->first, isdir)) {
                 continue;
               }
-              std::string filename = f->getName();
+              const std::string filename = f->getName();
               if (fld->contains(filename) || f->isDirectory() || f->getSize() == 0) continue;
               if (fls->hasFailedDownload(filename)) continue;
               if (fld->hasFailedUpload(filename)) continue;
-              if (!sls->getSite()->getAllowDownload()) continue;
-              if (!sld->getSite()->getAllowUpload()) continue;
-              if (sls->getSite()->hasBrokenPASV() &&
-                  sld->getSite()->hasBrokenPASV()) continue;
-              //ssl check
-              if ((sls->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_OFF &&
-                  sld->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_ON) ||
-                  (sls->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_ON &&
-                      sld->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_OFF)) {
-                continue;
-              }
               bool prio = false;
-              int score = calculateScore(f, race, fls, srs, fld, srd, avgspeed, &prio, (SPREAD ? false : true));
+              unsigned short score = calculateScore(f, race, fls, srs, fld, srd, avgspeed, &prio, (SPREAD ? false : true));
               scoreboard->add(filename, score, prio, sls, fls, sld, fld);
               race->resetUpdateCheckCounter();
             }
@@ -676,8 +676,8 @@ void Engine::transferJobComplete(Pointer<TransferJob> tj) {
   global->getEventLog()->log("Engine", tj->typeString() + " job complete: " + tj->getSrcFileName());
 }
 
-int Engine::calculateScore(File * f, Pointer<Race> itr, FileList * fls, SiteRace * srs, FileList * fld, SiteRace * srd, int avgspeed, bool * prio, bool racemode) const {
-  int points = 0;
+unsigned short Engine::calculateScore(File * f, Pointer<Race> itr, FileList * fls, SiteRace * srs, FileList * fld, SiteRace * srd, int avgspeed, bool * prio, bool racemode) const {
+  unsigned short points = 0;
   unsigned long long int filesize = f->getSize();
   unsigned long long int maxfilesize = srs->getMaxFileSize();
   if (filesize > maxfilesize) {

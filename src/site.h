@@ -102,8 +102,8 @@ class Site {
     void setProxyType(int);
     void setProxy(std::string);
     void clearSections();
-    bool isAffiliated(std::string) const;
-    void addAffil(std::string);
+    bool isAffiliated(const std::string &) const;
+    void addAffil(const std::string &);
     void clearAffils();
     std::map<std::string, bool>::const_iterator affilsBegin() const;
     std::map<std::string, bool>::const_iterator affilsEnd() const;

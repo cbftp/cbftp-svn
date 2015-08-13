@@ -289,14 +289,14 @@ void Site::clearAffils() {
   affils.clear();
 }
 
-bool Site::isAffiliated(std::string affil) const {
+bool Site::isAffiliated(const std::string & affil) const {
   if (affils.find(affil) != affils.end()) {
     return true;
   }
   return false;
 }
 
-void Site::addAffil(std::string affil) {
+void Site::addAffil(const std::string & affil) {
   affils[affil] = true;
 }
 

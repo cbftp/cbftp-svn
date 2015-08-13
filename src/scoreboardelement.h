@@ -12,16 +12,16 @@ class ScoreBoardElement {
     SiteLogic * dst;
     FileList * fls;
     FileList * fld;
-    int score;
+    unsigned short score;
     bool prio;
   public:
-    ScoreBoardElement(std::string, int, bool, SiteLogic *, FileList *, SiteLogic *, FileList *);
-    void reset(std::string, int, bool, SiteLogic *, FileList *, SiteLogic *, FileList *);
+    ScoreBoardElement(std::string, unsigned short, bool, SiteLogic *, FileList *, SiteLogic *, FileList *);
+    void reset(std::string, unsigned short, bool, SiteLogic *, FileList *, SiteLogic *, FileList *);
     std::string fileName() const;
     SiteLogic * getSource() const;
     SiteLogic * getDestination() const;
     FileList * getSourceFileList() const;
     FileList * getDestinationFileList() const;
-    int getScore() const;
+    unsigned short getScore() const;
     bool isPrioritized() const;
 };

@@ -7,15 +7,22 @@ class ScoreBoardElement;
 class SiteLogic;
 class FileList;
 
-bool comparator(ScoreBoardElement *, ScoreBoardElement *);
+#define RESIZE_CHUNK 1000
+#define SHORT_MAX 0x10000
 
 class ScoreBoard {
   private:
     std::vector<ScoreBoardElement *> elements;
+    std::vector<ScoreBoardElement *> elementstmp;
+    std::vector<ScoreBoardElement *> * currelements;
+    std::vector<ScoreBoardElement *> * currelementstmp;
     unsigned int showsize;
+    unsigned short * count;
+    unsigned int * bucketpositions;
   public:
     ScoreBoard();
-    void add(std::string, int, bool, SiteLogic *, FileList *, SiteLogic *, FileList *);
+    ~ScoreBoard();
+    void add(std::string, unsigned short, bool, SiteLogic *, FileList *, SiteLogic *, FileList *);
     unsigned int size() const;
     std::vector<ScoreBoardElement *>::const_iterator begin() const;
     std::vector<ScoreBoardElement *>::const_iterator end() const;

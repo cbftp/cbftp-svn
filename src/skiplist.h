@@ -19,8 +19,8 @@ public:
   void clearEntries();
   std::list<SkiplistItem>::const_iterator entriesBegin() const;
   std::list<SkiplistItem>::const_iterator entriesEnd() const;
-  bool isAllowed(std::string, bool) const;
-  bool isAllowed(std::string, bool, bool) const;
+  bool isAllowed(const std::string &, const bool) const;
+  bool isAllowed(std::string, const bool, const bool) const;
   void readConfiguration();
   void writeState();
   bool defaultAllow() const;
