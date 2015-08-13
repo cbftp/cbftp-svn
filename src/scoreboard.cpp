@@ -23,7 +23,9 @@ void ScoreBoard::add(std::string name, unsigned short score, bool prio, SiteLogi
     currelements->resize(currelements->size() + RESIZE_CHUNK);
     currelementstmp->resize(currelements->size());
     for (int i = 0; i < RESIZE_CHUNK; i++) {
-      (*currelements)[showsize + i] = new ScoreBoardElement(name, score, prio, src, fls, dst, fld);
+      ScoreBoardElement * sbe = new ScoreBoardElement(name, score, prio, src, fls, dst, fld);
+      (*currelements)[showsize + i] = sbe;
+      (*currelementstmp)[showsize + i] = sbe;
     }
   }
   else {
@@ -33,7 +35,7 @@ void ScoreBoard::add(std::string name, unsigned short score, bool prio, SiteLogi
 }
 
 void ScoreBoard::sort() {
-  // base2^16 single-pass Radix sort
+  // base2^16 single-pass radix sort
   memset(count, 0, SHORT_MAX);
   for (unsigned int i = 0; i < showsize; i++) {
     ++count[(*currelements)[i]->getScore()];
@@ -52,7 +54,7 @@ void ScoreBoard::sort() {
 }
 
 /*void ScoreBoard::sort() {
-  // base2^8 LSD Radix sort
+  // base2^8 LSD radix sort
   for (unsigned char shift = 0; shift < 16; shift += 8) {
     memset(count, 0, 0x100);
     for (unsigned int i = 0; i < showsize; i++) {
