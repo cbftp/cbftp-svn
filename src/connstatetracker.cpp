@@ -233,23 +233,23 @@ void ConnStateTracker::lockForTransfer(bool download) {
 }
 
 bool ConnStateTracker::isLocked() const {
-  return isTransferLocked() || isListLocked() || hasRequest();
+  return isHardLocked() || isListLocked();
 }
 
 bool ConnStateTracker::isListLocked() const {
   return listtransfer;
 }
 
-bool ConnStateTracker::isTransferLocked() const {
-  return transferlocked;
+bool ConnStateTracker::isHardLocked() const {
+  return transferlocked || hasRequest();
 }
 
 bool ConnStateTracker::isLockedForDownload() const {
-  return isTransferLocked() && lockeddownload;
+  return transferlocked && lockeddownload;
 }
 
 bool ConnStateTracker::isLockedForUpload() const {
-  return isTransferLocked() && !lockeddownload;
+  return transferlocked && !lockeddownload;
 }
 
 bool ConnStateTracker::hasRequest() const {

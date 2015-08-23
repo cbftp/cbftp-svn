@@ -1184,7 +1184,7 @@ bool SiteLogic::lockTransferConn(std::string path, int * ret, bool isdownload) {
   }
   if (!foundreadythread) {
     for (unsigned int i = 0; i < conns.size(); i++) {
-      if (connstatetracker[i].isLoggedIn() && !connstatetracker[i].isTransferLocked()) {
+      if (connstatetracker[i].isLoggedIn() && !connstatetracker[i].isHardLocked()) {
         foundreadythread = true;
         lastreadyid = i;
         if (conns[i]->getTargetPath().compare(path) == 0) {

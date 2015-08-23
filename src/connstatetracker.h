@@ -73,7 +73,7 @@ public:
   void lockForTransfer(bool);
   bool isLocked() const;
   bool isListLocked() const;
-  bool isTransferLocked() const;
+  bool isHardLocked() const;
   bool isLockedForDownload() const;
   bool isLockedForUpload() const;
   bool hasRequest() const;
