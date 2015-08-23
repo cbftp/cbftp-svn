@@ -8,7 +8,7 @@ class SiteLogic;
 class FileList;
 
 #define RESIZE_CHUNK 1000
-#define SHORT_MAX 0x10000
+#define USHORT_MAX 0x10000
 
 class ScoreBoard {
   private:
@@ -17,8 +17,9 @@ class ScoreBoard {
     std::vector<ScoreBoardElement *> * currelements;
     std::vector<ScoreBoardElement *> * currelementstmp;
     unsigned int showsize;
-    unsigned short * count;
+    unsigned int * count;
     unsigned int * bucketpositions;
+    unsigned int countarraybytesize;
   public:
     ScoreBoard();
     ~ScoreBoard();

@@ -28,7 +28,7 @@ private:
   int downloading;
 public:
   static std::string getExtension(const std::string &);
-  File(std::string, std::string);
+  File(const std::string &, const std::string &);
   File(const std::string &, int);
   bool isDirectory() const;
   bool isLink() const;

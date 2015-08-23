@@ -9,13 +9,13 @@
 
 extern GlobalContext * global;
 
-FileList::FileList(std::string username, std::string path) {
+FileList::FileList(const std::string & username, const std::string & path) {
   this->username = username;
+  this->path = path;
   bool endswithslash = path.rfind("/") + 1 == path.length();
   if (endswithslash && path.length() > 1) {
-    path = path.substr(0, path.length() - 1);
+    this->path = path.substr(0, path.length() - 1);
   }
-  this->path = path;
   filled = false;
   owned = 0;
   ownpercentage = 0;
@@ -33,7 +33,7 @@ FileList::~FileList() {
   }
 }
 
-bool FileList::updateFile(std::string start, int touch) {
+bool FileList::updateFile(const std::string & start, int touch) {
   File * file = new File(start, touch);
   std::string name = file->getName();
   if (name == "." || name == "..") {
@@ -96,11 +96,11 @@ bool FileList::updateFile(std::string start, int touch) {
   return true;
 }
 
-void FileList::touchFile(std::string name, std::string user) {
+void FileList::touchFile(const std::string & name, const std::string & user) {
   touchFile(name, user, false);
 }
 
-void FileList::touchFile(std::string name, std::string user, bool upload) {
+void FileList::touchFile(const std::string & name, const std::string & user, bool upload) {
   File * file;
   if ((file = getFile(name)) != NULL) {
     file->unsetUpdateFlag();
@@ -118,7 +118,7 @@ void FileList::touchFile(std::string name, std::string user, bool upload) {
   }
 }
 
-void FileList::setFileUpdateFlag(std::string name, unsigned long long int size, unsigned int speed, Site * src, std::string dst) {
+void FileList::setFileUpdateFlag(const std::string & name, unsigned long long int size, unsigned int speed, Site * src, const std::string & dst) {
   File * file;
   if ((file = getFile(name)) != NULL) {
     unsigned long long int oldsize = file->getSize();
@@ -133,7 +133,7 @@ void FileList::setFileUpdateFlag(std::string name, unsigned long long int size, 
   }
 }
 
-File * FileList::getFile(std::string name) const {
+File * FileList::getFile(const std::string & name) const {
   std::map<std::string, File *>::const_iterator it = files.find(name);
   if (it == files.end()) return NULL;
   else return (*it).second;
@@ -163,7 +163,7 @@ std::map<std::string, File *>::const_iterator FileList::end() const {
   return files.end();
 }
 
-bool FileList::contains(std::string name) const {
+bool FileList::contains(const std::string & name) const {
   bool ret = false;
   if (files.find(name) != files.end()) ret = true;
   return ret;
@@ -252,29 +252,29 @@ void FileList::editOwnedFileCount(bool add) {
  ownpercentage = (owned * 100) / files.size();
 }
 
-void FileList::uploadFail(std::string file) {
+void FileList::uploadFail(const std::string & file) {
   uploadattempts[file] = MAXTRANSFERATTEMPTS;
 }
 
-void FileList::downloadFail(std::string file) {
+void FileList::downloadFail(const std::string & file) {
   downloadattempts[file] = MAXTRANSFERATTEMPTS;
 }
 
-void FileList::addUploadAttempt(std::string file) {
+void FileList::addUploadAttempt(const std::string & file) {
   if (uploadattempts.find(file) == uploadattempts.end()) {
     uploadattempts[file] = 0;
   }
   uploadattempts[file]++;
 }
 
-void FileList::downloadAttemptFail(std::string file) {
+void FileList::downloadAttemptFail(const std::string & file) {
   if (downloadattempts.find(file) == downloadattempts.end()) {
     downloadattempts[file] = 0;
   }
   downloadattempts[file]++;
 }
 
-bool FileList::hasFailedDownload(std::string file) const {
+bool FileList::hasFailedDownload(const std::string & file) const {
   std::map<std::string, int>::const_iterator it = downloadattempts.find(file);
   if (it == downloadattempts.end()) {
     return false;
@@ -285,7 +285,7 @@ bool FileList::hasFailedDownload(std::string file) const {
   return true;
 }
 
-bool FileList::hasFailedUpload(std::string file) const {
+bool FileList::hasFailedUpload(const std::string & file) const {
   std::map<std::string, int>::const_iterator it = uploadattempts.find(file);
   if (it == uploadattempts.end()) {
     return false;

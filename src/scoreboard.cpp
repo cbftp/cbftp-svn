@@ -8,8 +8,9 @@ ScoreBoard::ScoreBoard() :
   currelements(&elements),
   currelementstmp(&elementstmp),
   showsize(0),
-  count(new unsigned short[SHORT_MAX]),
-  bucketpositions(new unsigned int[SHORT_MAX])
+  count(new unsigned int[USHORT_MAX]),
+  bucketpositions(new unsigned int[USHORT_MAX]),
+  countarraybytesize(USHORT_MAX * sizeof(unsigned int))
 {
 }
 
@@ -36,12 +37,12 @@ void ScoreBoard::add(std::string name, unsigned short score, bool prio, SiteLogi
 
 void ScoreBoard::sort() {
   // base2^16 single-pass radix sort
-  memset(count, 0, SHORT_MAX);
+  memset(count, 0, countarraybytesize);
   for (unsigned int i = 0; i < showsize; i++) {
     ++count[(*currelements)[i]->getScore()];
   }
   unsigned int currentpos = showsize - 1;
-  for (unsigned int i = 0; i < SHORT_MAX; currentpos -= count[i++]) {
+  for (unsigned int i = 0; i < USHORT_MAX; currentpos -= count[i++]) {
     bucketpositions[i] = currentpos;
   }
   for (unsigned int i = showsize - 1; i < showsize; i--) {
@@ -56,7 +57,7 @@ void ScoreBoard::sort() {
 /*void ScoreBoard::sort() {
   // base2^8 LSD radix sort
   for (unsigned char shift = 0; shift < 16; shift += 8) {
-    memset(count, 0, 0x100);
+    memset(count, 0, 0x100 * sizeof(unsigned int);
     for (unsigned int i = 0; i < showsize; i++) {
       count[((*currelements)[i]->getScore() >> shift) & 0xFF]++;
     }

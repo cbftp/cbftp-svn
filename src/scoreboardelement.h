@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <ostream>
 
 class SiteLogic;
 class FileList;
@@ -25,3 +26,5 @@ class ScoreBoardElement {
     unsigned short getScore() const;
     bool isPrioritized() const;
 };
+
+std::ostream & operator<<(std::ostream &, const ScoreBoardElement &);

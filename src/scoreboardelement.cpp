@@ -41,3 +41,7 @@ unsigned short ScoreBoardElement::getScore() const {
 bool ScoreBoardElement::isPrioritized() const {
   return prio;
 }
+
+std::ostream & operator<<(std::ostream & out, const ScoreBoardElement & sbe) {
+  return out << sbe.fileName() << " - " << sbe.getScore();
+}

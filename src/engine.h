@@ -49,23 +49,23 @@ class Engine : public EventReceiver {
     void refreshPendingTransferList(Pointer<TransferJob>);
     void checkStartPoke();
     void addPendingTransfer(std::list<PendingTransfer> &, PendingTransfer &);
-    Pointer<Race> getCurrentRace(std::string) const;
+    Pointer<Race> getCurrentRace(const std::string &) const;
     bool checkBannedGroup(Site *, const std::string &);
     bool pokeregistered;
     unsigned int dropped;
   public:
     Engine();
     ~Engine();
-    bool newRace(std::string, std::string, std::list<std::string>);
+    bool newRace(const std::string &, const std::string &, const std::list<std::string> &);
     void newTransferJobDownload(std::string, std::string, FileList *, std::string);
     void newTransferJobDownload(std::string, std::string, FileList *, std::string, std::string);
     void newTransferJobUpload(std::string, std::string, std::string, FileList *);
     void newTransferJobUpload(std::string, std::string, std::string, std::string, FileList *);
     void newTransferJobFXP(std::string, FileList *, std::string, FileList *, std::string);
     void newTransferJobFXP(std::string, std::string, FileList *, std::string, std::string, FileList *);
-    void removeSiteFromRace(std::string, std::string);
-    void abortRace(std::string);
-    void deleteOnAllSites(std::string);
+    void removeSiteFromRace(const std::string &, const std::string &);
+    void abortRace(const std::string &);
+    void deleteOnAllSites(const std::string &);
     void abortTransferJob(Pointer<TransferJob>);
     void raceFileListRefreshed(SiteLogic *, Pointer<Race>);
     bool transferJobActionRequest(Pointer<TransferJob>);
@@ -73,14 +73,14 @@ class Engine : public EventReceiver {
     int allRaces() const;
     int currentTransferJobs() const;
     int allTransferJobs() const;
-    Pointer<Race> getRace(std::string) const;
-    Pointer<TransferJob> getTransferJob(std::string) const;
+    Pointer<Race> getRace(const std::string &) const;
+    Pointer<TransferJob> getTransferJob(const std::string &) const;
     std::list<Pointer<Race> >::const_iterator getRacesBegin() const;
     std::list<Pointer<Race> >::const_iterator getRacesEnd() const;
     std::list<Pointer<TransferJob> >::const_iterator getTransferJobsBegin() const;
     std::list<Pointer<TransferJob> >::const_iterator getTransferJobsEnd() const;
     void tick(int);
-    void addSiteToRace(Pointer<Race>, std::string);
+    void addSiteToRace(Pointer<Race>, const std::string &);
 
     Pointer<ScoreBoard> getScoreBoard() const;
 };

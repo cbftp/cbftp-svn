@@ -7,7 +7,7 @@
 
 #include "util.h"
 
-File::File(std::string name, std::string user) :
+File::File(const std::string & name, const std::string & user) :
   name(name),
   extension(getExtension(name)),
   size(0),

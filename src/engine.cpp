@@ -35,7 +35,7 @@ Engine::~Engine() {
 
 }
 
-bool Engine::newRace(std::string release, std::string section, std::list<std::string> sites) {
+bool Engine::newRace(const std::string & release, const std::string & section, const std::list<std::string> & sites) {
   Pointer<Race> race;
   bool append = false;
   for (std::list<Pointer<Race> >::iterator it = allraces.begin(); it != allraces.end(); it++) {
@@ -57,7 +57,7 @@ bool Engine::newRace(std::string release, std::string section, std::list<std::st
     race = makePointer<Race>(release, section);
   }
   std::list<std::string> addsites;
-  for (std::list<std::string>::iterator it = sites.begin(); it != sites.end(); it++) {
+  for (std::list<std::string>::const_iterator it = sites.begin(); it != sites.end(); it++) {
     SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(*it);
     if (sl == NULL) {
       global->getEventLog()->log("Engine", "Trying to race a nonexisting site: " + *it);
@@ -180,7 +180,7 @@ void Engine::newTransferJobFXP(std::string srcsite, std::string srcfile, FileLis
   checkStartPoke();
 }
 
-void Engine::removeSiteFromRace(std::string release, std::string site) {
+void Engine::removeSiteFromRace(const std::string & release, const std::string & site) {
   Pointer<Race> race = getCurrentRace(release);
   if (!!race) {
     SiteRace * sr = race->getSiteRace(site);
@@ -192,7 +192,7 @@ void Engine::removeSiteFromRace(std::string release, std::string site) {
   }
 }
 
-void Engine::abortRace(std::string release) {
+void Engine::abortRace(const std::string & release) {
   Pointer<Race> race = getCurrentRace(release);
   if (!!race) {
     race->abort();
@@ -204,7 +204,7 @@ void Engine::abortRace(std::string release) {
   }
 }
 
-void Engine::deleteOnAllSites(std::string release) {
+void Engine::deleteOnAllSites(const std::string & release) {
   Pointer<Race> race = getRace(release);
   if (!!race) {
     std::string sites;
@@ -745,7 +745,7 @@ int Engine::allTransferJobs() const {
   return alltransferjobs.size();
 }
 
-Pointer<Race> Engine::getRace(std::string releasename) const {
+Pointer<Race> Engine::getRace(const std::string & releasename) const {
   std::list<Pointer<Race> >::const_iterator it;
   for (it = allraces.begin(); it != allraces.end(); it++) {
     if ((*it)->getName() == releasename) {
@@ -755,7 +755,7 @@ Pointer<Race> Engine::getRace(std::string releasename) const {
   return Pointer<Race>();
 }
 
-Pointer<TransferJob> Engine::getTransferJob(std::string filename) const {
+Pointer<TransferJob> Engine::getTransferJob(const std::string & filename) const {
   std::list<Pointer<TransferJob> >::const_iterator it;
   for (it = alltransferjobs.begin(); it != alltransferjobs.end(); it++) {
     if ((*it)->getSrcFileName() == filename) {
@@ -824,7 +824,7 @@ void Engine::checkStartPoke() {
   }
 }
 
-Pointer<Race> Engine::getCurrentRace(std::string release) const {
+Pointer<Race> Engine::getCurrentRace(const std::string & release) const {
   for (std::list<Pointer<Race> >::const_iterator it = currentraces.begin(); it != currentraces.end(); it++) {
     if ((*it)->getName() == release) {
       return *it;
@@ -833,7 +833,7 @@ Pointer<Race> Engine::getCurrentRace(std::string release) const {
   return Pointer<Race>();
 }
 
-void Engine::addSiteToRace(Pointer<Race> race, std::string site) {
+void Engine::addSiteToRace(Pointer<Race> race, const std::string & site) {
   SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(site);
   if (!checkBannedGroup(sl->getSite(), race->getGroup())) {
     SiteRace * sr = sl->addRace(race, race->getSection(), race->getName());
