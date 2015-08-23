@@ -4,6 +4,7 @@
 #include <list>
 
 #include "delayedcommand.h"
+#include "pointer.h"
 
 #define CST_DOWNLOAD 981
 #define CST_UPLOAD 982
@@ -14,6 +15,7 @@ class FileList;
 class TransferMonitor;
 class DelayedCommand;
 class RecursiveCommandLogic;
+class SiteLogicRequest;
 
 class ConnStateTracker {
 private:
@@ -42,11 +44,13 @@ private:
   std::string listaddr;
   TransferMonitor * listtm;
   std::string addr;
-  RecursiveCommandLogic * recursivelogic;
+  Pointer<RecursiveCommandLogic> recursivelogic;
+  Pointer<SiteLogicRequest> request;
   void setTransfer(TransferMonitor *, std::string, std::string, int, bool, bool, std::string, bool);
   void setList(TransferMonitor *, bool, std::string, bool);
 public:
   ConnStateTracker();
+  ~ConnStateTracker();
   void delayedCommand(std::string, int);
   void delayedCommand(std::string, int, void *);
   void delayedCommand(std::string, int, void *, bool);
@@ -72,6 +76,10 @@ public:
   bool isTransferLocked() const;
   bool isLockedForDownload() const;
   bool isLockedForUpload() const;
+  bool hasRequest() const;
+  const Pointer<SiteLogicRequest> & getRequest() const;
+  void setRequest(SiteLogicRequest);
+  void finishRequest();
   bool isLoggedIn() const;
   void setLoggedIn();
   void use();
@@ -84,7 +92,7 @@ public:
   bool getTransferSSL() const;
   bool getTransferFXP() const;
   std::string getTransferAddr() const;
-  RecursiveCommandLogic * getRecursiveLogic() const;
+  Pointer<RecursiveCommandLogic> getRecursiveLogic() const;
   bool transferInitialized() const;
   void initializeTransfer();
 };

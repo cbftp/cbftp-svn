@@ -59,7 +59,6 @@ class SiteLogic : public EventReceiver {
     unsigned int loggedin;
     unsigned int wantedloggedin;
     std::list<SiteLogicRequest> requests;
-    std::list<SiteLogicRequest> requestsinprogress;
     std::list<SiteLogicRequestReady> requestsready;
     int requestidcounter;
     bool poke;
@@ -83,7 +82,7 @@ class SiteLogic : public EventReceiver {
     static void * run(void *);
     void connQuit(int);
     bool lockTransferConn(std::string, int *, bool);
-    void setRequestReady(std::list<SiteLogicRequest>::iterator, void *, bool);
+    void setRequestReady(unsigned int, void *, bool);
   public:
     SiteLogic(std::string);
     ~SiteLogic();

@@ -1,12 +1,10 @@
 #include "connstatetracker.h"
 
 #include "delayedcommand.h"
-#include "globalcontext.h"
 #include "eventlog.h"
 #include "recursivecommandlogic.h"
 #include "util.h"
-
-extern GlobalContext * global;
+#include "sitelogicrequest.h"
 
 ConnStateTracker::ConnStateTracker() :
   time(0),
@@ -23,7 +21,11 @@ ConnStateTracker::ConnStateTracker() :
   fxp(false),
   listtransfer(false),
   listinitialized(false),
-  recursivelogic(new RecursiveCommandLogic()) {
+  recursivelogic(makePointer<RecursiveCommandLogic>()) {
+}
+
+ConnStateTracker::~ConnStateTracker() {
+
 }
 
 void ConnStateTracker::delayedCommand(std::string command, int delay) {
@@ -92,6 +94,7 @@ void ConnStateTracker::resetIdleTime() {
 void ConnStateTracker::setTransfer(TransferMonitor * tm, std::string path, std::string file, int type, bool fxp, bool passive, std::string addr, bool ssl) {
   util::assert(transferlocked);
   util::assert(!transfer);
+  util::assert(!request);
   this->transfer = true;
   this->initialized = false;
   this->aborted = false;
@@ -223,13 +226,14 @@ bool ConnStateTracker::getTransferSSL() const{
 void ConnStateTracker::lockForTransfer(bool download) {
   util::assert(!transferlocked);
   util::assert(!transfer);
+  util::assert(!request);
   use();
   transferlocked = true;
   lockeddownload = download;
 }
 
 bool ConnStateTracker::isLocked() const {
-  return isTransferLocked() || isListLocked();
+  return isTransferLocked() || isListLocked() || hasRequest();
 }
 
 bool ConnStateTracker::isListLocked() const {
@@ -248,7 +252,23 @@ bool ConnStateTracker::isLockedForUpload() const {
   return isTransferLocked() && !lockeddownload;
 }
 
-RecursiveCommandLogic * ConnStateTracker::getRecursiveLogic() const {
+bool ConnStateTracker::hasRequest() const {
+  return !!request;
+}
+
+const Pointer<SiteLogicRequest> & ConnStateTracker::getRequest() const {
+  return request;
+}
+
+void ConnStateTracker::setRequest(SiteLogicRequest request) {
+  this->request = makePointer<SiteLogicRequest>(request);
+}
+
+void ConnStateTracker::finishRequest() {
+  request.reset();
+}
+
+Pointer<RecursiveCommandLogic> ConnStateTracker::getRecursiveLogic() const {
   return recursivelogic;
 }
 

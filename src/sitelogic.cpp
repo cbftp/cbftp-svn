@@ -158,11 +158,13 @@ void SiteLogic::listRefreshed(int id) {
     handleRecursiveLogic(id, conns[id]->currentFileList());
     return;
   }
-  std::list<SiteLogicRequest>::iterator it;
-  for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
-    if (it->connId() == id) {
-      setRequestReady(it, conns[id]->currentFileList(), true);
-      break;
+  if (connstatetracker[id].hasRequest()) {
+    const Pointer<SiteLogicRequest> & request = connstatetracker[id].getRequest();
+    FileList * filelist = conns[id]->currentFileList();
+    if (request->requestType() == REQ_FILELIST &&
+        request->requestData() == filelist->getPath())
+    {
+      setRequestReady(id, filelist, true);
     }
   }
   if (currentco != NULL) {
@@ -211,18 +213,18 @@ void SiteLogic::commandSuccess(int id) {
           }
         }
       }
+      if (connstatetracker[id].hasRequest()) {
+        const Pointer<SiteLogicRequest> & request = connstatetracker[id].getRequest();
+        if (request->requestType() == REQ_FILELIST &&
+            conns[id]->getCurrentPath() == request->requestData())
+        {
+          getFileListConn(id);
+          return;
+        }
+      }
       if (connstatetracker[id].getRecursiveLogic()->isActive()) {
         handleRecursiveLogic(id);
         return;
-      }
-      for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
-        if (it->connId() == id) {
-          if (it->requestType() == REQ_FILELIST) {
-            getFileListConn(id);
-            return;
-          }
-          break;
-        }
       }
       break;
     case STATE_MKD:
@@ -299,42 +301,37 @@ void SiteLogic::commandSuccess(int id) {
     case STATE_PASV_ABORT:
       break;
     case STATE_WIPE:
-      for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
-        if (it->connId() == id) {
-          if (it->requestType() == REQ_WIPE_RECURSIVE || it->requestType() == REQ_WIPE) {
-            setRequestReady(it, NULL, true);
-            break;
-          }
+      if (connstatetracker[id].hasRequest()) {
+        const Pointer<SiteLogicRequest> & request = connstatetracker[id].getRequest();
+        if (request->requestType() == REQ_WIPE_RECURSIVE ||
+            request->requestType() == REQ_WIPE)
+        {
+          setRequestReady(id, NULL, true);
         }
       }
       break;
     case STATE_DELE:
-      for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
-        if (it->connId() == id) {
-          if (it->requestType() == REQ_DEL) {
-            setRequestReady(it, NULL, true);
-            break;
+      if (connstatetracker[id].hasRequest()) {
+        const Pointer<SiteLogicRequest> & request = connstatetracker[id].getRequest();
+        if (request->requestType() == REQ_DEL) {
+          setRequestReady(id, NULL, true);
+        }
+        else if (request->requestType() == REQ_DEL_RECURSIVE) {
+          if (connstatetracker[id].getRecursiveLogic()->isActive()) {
+            handleRecursiveLogic(id);
+            return;
           }
-          else if (it->requestType() == REQ_DEL_RECURSIVE) {
-            if (connstatetracker[id].getRecursiveLogic()->isActive()) {
-              handleRecursiveLogic(id);
-              return;
-            }
-            else {
-              setRequestReady(it, NULL, true);
-              break;
-            }
+          else {
+            setRequestReady(id, NULL, true);
+            break;
           }
         }
       }
       break;
     case STATE_NUKE:
-      for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
-        if (it->connId() == id) {
-          if (it->requestType() == REQ_NUKE) {
-            setRequestReady(it, NULL, true);
-            break;
-          }
+      if (connstatetracker[id].hasRequest()) {
+        if (connstatetracker[id].getRequest()->requestType() == REQ_NUKE) {
+          setRequestReady(id, NULL, true);
         }
       }
       break;
@@ -408,15 +405,13 @@ void SiteLogic::commandFail(int id) {
         handleFail(id);
         return;
       }
-      for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
-        if (it->connId() == id) {
-          if (it->requestType() == REQ_FILELIST) {
-            setRequestReady(it, NULL, false);
-            handleConnection(id, false);
-            return;
-          }
-          break;
+      if (connstatetracker[id].hasRequest()) {
+        if (connstatetracker[id].getRequest()->requestType() == REQ_FILELIST) {
+          setRequestReady(id, NULL, false);
+          handleConnection(id, false);
+          return;
         }
+        break;
       }
       {
         CommandOwner * currentco = conns[id]->currentCommandOwner();
@@ -484,12 +479,12 @@ void SiteLogic::commandFail(int id) {
       handleTransferFail(id, CST_UPLOAD, 2);
       return;
     case STATE_WIPE:
-      for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
-        if (it->connId() == id) {
-          if (it->requestType() == REQ_WIPE_RECURSIVE || it->requestType() == REQ_WIPE) {
-            setRequestReady(it, NULL, false);
-            break;
-          }
+      if (connstatetracker[id].hasRequest()) {
+        const Pointer<SiteLogicRequest> & request = connstatetracker[id].getRequest();
+        if (request->requestType() == REQ_WIPE_RECURSIVE ||
+            request->requestType() == REQ_WIPE)
+        {
+          setRequestReady(id, NULL, false);
         }
       }
       handleConnection(id, false);
@@ -499,23 +494,20 @@ void SiteLogic::commandFail(int id) {
         handleRecursiveLogic(id);
         return;
       }
-      for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
-        if (it->connId() == id) {
-          if (it->requestType() == REQ_DEL_RECURSIVE || it->requestType() == REQ_DEL) {
-            setRequestReady(it, NULL, false);
-            break;
-          }
+      if (connstatetracker[id].hasRequest()) {
+        const Pointer<SiteLogicRequest> & request = connstatetracker[id].getRequest();
+        if (request->requestType() == REQ_DEL_RECURSIVE ||
+            request->requestType() == REQ_DEL)
+        {
+          setRequestReady(id, NULL, false);
         }
       }
       handleConnection(id, false);
       return;
     case STATE_NUKE:
-      for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
-        if (it->connId() == id) {
-          if (it->requestType() == REQ_NUKE) {
-            setRequestReady(it, NULL, false);
-            break;
-          }
+      if (connstatetracker[id].hasRequest()) {
+        if (connstatetracker[id].getRequest()->requestType() == REQ_NUKE) {
+          setRequestReady(id, NULL, false);
         }
       }
       handleConnection(id, false);
@@ -618,12 +610,9 @@ void SiteLogic::gotPath(int id, std::string path) {
 void SiteLogic::rawCommandResultRetrieved(int id, std::string result) {
   connstatetracker[id].resetIdleTime();
   rawbuf->write(result);
-  std::list<SiteLogicRequest>::iterator it;
-  for (it = requestsinprogress.begin(); it != requestsinprogress.end(); it++) {
-    if (it->connId() == id) {
-      requestsinprogress.erase(it);
-      global->getUIBase()->backendPush();
-      break;
+  if (connstatetracker[id].hasRequest()) {
+    if (connstatetracker[id].getRequest()->requestType() == REQ_RAW) {
+      setRequestReady(id, NULL, true);
     }
   }
   handleConnection(id, true);
@@ -906,7 +895,7 @@ bool SiteLogic::handleRequest(int id) {
       conns[id]->doNuke(it->requestData(), it->requestData3(), it->requestData2());
       break;
   }
-  requestsinprogress.push_back(*it);
+  connstatetracker[id].setRequest(*it);
   requests.erase(it);
   return true;
 }
@@ -1146,12 +1135,12 @@ bool SiteLogic::finishRequest(int requestid) {
       return status;
     }
   }
-  std::list<SiteLogicRequest>::iterator it2;
-  for (it2 = requestsinprogress.begin(); it2 != requestsinprogress.end(); it2++) {
-    if (it->requestId() == requestid) {
-      bool status = it->requestStatus();
-      requestsinprogress.erase(it2);
-      return status;
+  for (unsigned int i = 0; i < connstatetracker.size(); i++) {
+    if (connstatetracker[i].hasRequest() &&
+        connstatetracker[i].getRequest()->requestId() == requestid)
+    {
+      connstatetracker[i].finishRequest();
+      return true;
     }
   }
   global->getEventLog()->log("SiteLogic", "BUG: Couldn't find request to finish.");
@@ -1607,13 +1596,14 @@ const ConnStateTracker * SiteLogic::getConnStateTracker(int id) const {
   return &connstatetracker[id];
 }
 
-void SiteLogic::setRequestReady(std::list<SiteLogicRequest>::iterator it, void * data, bool status) {
-  requestsready.push_back(SiteLogicRequestReady(it->requestId(), data, status));
+void SiteLogic::setRequestReady(unsigned int id, void * data, bool status) {
+  const Pointer<SiteLogicRequest> & request = connstatetracker[id].getRequest();
+  requestsready.push_back(SiteLogicRequestReady(request->requestId(), data, status));
   if (requestsready.size() > MAXREQUESTREADYQUEUE) {
     requestsready.pop_front();
   }
-  const bool care = it->doesAnyoneCare();
-  requestsinprogress.erase(it);
+  const bool care = request->doesAnyoneCare();
+  connstatetracker[id].finishRequest();
   if (care) {
     global->getUIBase()->backendPush();
   }
