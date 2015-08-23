@@ -56,7 +56,7 @@ void SiteStatusScreen::update() {
     std::string status = st->getStatus(j);
     std::string llstate = st->getConnStateTracker(j)->isListLocked()
         ? "Y" : "N";
-    std::string tlstate = st->getConnStateTracker(j)->isTransferLocked()
+    std::string tlstate = st->getConnStateTracker(j)->isHardLocked()
         ? "Y" : "N";
     std::string tstate = st->getConnStateTracker(j)->hasFileTransfer()
         ? "Y" : "N";
