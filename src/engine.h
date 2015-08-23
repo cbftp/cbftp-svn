@@ -23,6 +23,7 @@ class File;
 class ScoreBoard;
 class SiteLogic;
 class PendingTransfer;
+class Site;
 
 extern GlobalContext * global;
 
@@ -49,12 +50,13 @@ class Engine : public EventReceiver {
     void checkStartPoke();
     void addPendingTransfer(std::list<PendingTransfer> &, PendingTransfer &);
     Pointer<Race> getCurrentRace(std::string) const;
+    bool checkBannedGroup(Site *, const std::string &);
     bool pokeregistered;
     unsigned int dropped;
   public:
     Engine();
     ~Engine();
-    void newRace(std::string, std::string, std::list<std::string>);
+    bool newRace(std::string, std::string, std::list<std::string>);
     void newTransferJobDownload(std::string, std::string, FileList *, std::string);
     void newTransferJobDownload(std::string, std::string, FileList *, std::string, std::string);
     void newTransferJobUpload(std::string, std::string, std::string, FileList *);

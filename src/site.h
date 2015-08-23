@@ -40,6 +40,7 @@ class Site {
     std::map<std::string, std::string> sections;
     std::map<std::string, int> avgspeed;
     std::map<std::string, bool> affils;
+    std::map<std::string, bool> bannedgroups;
     std::string basepath;
     int proxytype;
     std::string proxyname;
@@ -105,8 +106,13 @@ class Site {
     bool isAffiliated(const std::string &) const;
     void addAffil(const std::string &);
     void clearAffils();
+    bool isBannedGroup(const std::string &) const;
+    void addBannedGroup(const std::string &);
+    void clearBannedGroups();
     std::map<std::string, bool>::const_iterator affilsBegin() const;
     std::map<std::string, bool>::const_iterator affilsEnd() const;
+    std::map<std::string, bool>::const_iterator bannedGroupsBegin() const;
+    std::map<std::string, bool>::const_iterator bannedGroupsEnd() const;
     void addSection(std::string, std::string);
     std::list<std::string> getSectionsForPath(std::string) const;
     std::list<std::string> getSectionsForPartialPath(std::string) const;

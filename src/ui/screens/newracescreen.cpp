@@ -322,6 +322,5 @@ bool NewRaceScreen::startRace() {
     ui->update();
     return false;
   }
-  global->getEngine()->newRace(release, section, sites);
-  return true;
+  return global->getEngine()->newRace(release, section, sites);
 }

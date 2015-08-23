@@ -60,6 +60,13 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
   if (affilstr.length() > 0) {
     affilstr = affilstr.substr(0, affilstr.length() - 1);
   }
+  std::string bannedgroupsstr = "";
+  for (it = modsite.bannedGroupsBegin(); it != modsite.bannedGroupsEnd(); it++) {
+    bannedgroupsstr += it->first + " ";
+  }
+  if (bannedgroupsstr.length() > 0) {
+    bannedgroupsstr = bannedgroupsstr.substr(0, bannedgroupsstr.length() - 1);
+  }
   std::string blockedsrc = "";
   for (std::list<Site *>::iterator it = blockedsrclist.begin(); it != blockedsrclist.end(); it++) {
     blockedsrc += (*it)->getName() + ",";
@@ -124,6 +131,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
   mso.addStringField(y++, x, "blockedsrc", "Block transfers from:", blockedsrc, false, 60, 512);
   mso.addStringField(y++, x, "blockeddst", "Block transfers to:", blockeddst, false, 60, 512);
   mso.addStringField(y++, x, "affils", "Affils:", affilstr, false, 60, 1024);
+  mso.addStringField(y++, x, "bannedgroups", "Banned groups:", bannedgroupsstr, false, 60, 1024);
   y++;
   ms.initialize(y++, x, modsite.sectionsBegin(), modsite.sectionsEnd());
   focusedarea = &mso;
@@ -458,6 +466,38 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
               }
               else if (pos == affils.length() - 1) {
                 site->addAffil(affils.substr(start, pos + 1 - start));
+              }
+            }
+            pos++;
+          }
+        }
+        else if (identifier == "bannedgroups") {
+          std::string bannedgroups = msoe.get<MenuSelectOptionTextField>()->getData();
+          site->clearBannedGroups();
+          size_t pos;
+          while ((pos = bannedgroups.find(",")) != std::string::npos) {
+            bannedgroups[pos] = ' ';
+          }
+          while ((pos = bannedgroups.find(";")) != std::string::npos) {
+            bannedgroups[pos] = ' ';
+          }
+          size_t start = 0;
+          pos = 0;
+          bool started = false;
+          while(pos < bannedgroups.length()) {
+            if (!started) {
+              if (bannedgroups[pos] != ' ') {
+                start = pos;
+                started = true;
+              }
+            }
+            else {
+              if (bannedgroups[pos] == ' ') {
+                site->addBannedGroup(bannedgroups.substr(start, pos - start));
+                started = false;
+              }
+              else if (pos == bannedgroups.length() - 1) {
+                site->addBannedGroup(bannedgroups.substr(start, pos + 1 - start));
               }
             }
             pos++;

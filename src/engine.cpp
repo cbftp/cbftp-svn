@@ -35,7 +35,7 @@ Engine::~Engine() {
 
 }
 
-void Engine::newRace(std::string release, std::string section, std::list<std::string> sites) {
+bool Engine::newRace(std::string release, std::string section, std::list<std::string> sites) {
   Pointer<Race> race;
   bool append = false;
   for (std::list<Pointer<Race> >::iterator it = allraces.begin(); it != allraces.end(); it++) {
@@ -47,11 +47,11 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
   }
   if (!global->getSkipList()->isAllowed(release, true, false)) {
     global->getEventLog()->log("Engine", "Race skipped due to skiplist match: " + release);
-    return;
+    return false;
   }
   if (release.find("/") != std::string::npos) {
     global->getEventLog()->log("Engine", "Race skipped due to invalid target: " + release);
-    return;
+    return false;
   }
   if (!race) {
     race = makePointer<Race>(release, section);
@@ -66,6 +66,9 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
     if (!sl->getSite()->hasSection(section)) {
       global->getEventLog()->log("Engine", "Trying to use an undefined section: " +
           section + " on " + *it);
+      continue;
+    }
+    if (checkBannedGroup(sl->getSite(), race->getGroup())) {
       continue;
     }
     bool add = true;
@@ -88,7 +91,7 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
   if (addsites.size() < 2 && !append) {
     global->getEventLog()->log("Engine", "Ignoring attempt to race " + release + " in "
         + section + " on less than 2 sites.");
-    return;
+    return false;
   }
   bool readdtocurrent = true;
   if (addsites.size() > 0) {
@@ -127,6 +130,7 @@ void Engine::newRace(std::string release, std::string section, std::list<std::st
     }
     setSpeedScale();
   }
+  return true;
 }
 
 void Engine::newTransferJobDownload(std::string site, std::string file, FileList * filelist, std::string path) {
@@ -831,6 +835,17 @@ Pointer<Race> Engine::getCurrentRace(std::string release) const {
 
 void Engine::addSiteToRace(Pointer<Race> race, std::string site) {
   SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(site);
-  SiteRace * sr = sl->addRace(race, race->getSection(), race->getName());
-  race->addSite(sr, sl);
+  if (!checkBannedGroup(sl->getSite(), race->getGroup())) {
+    SiteRace * sr = sl->addRace(race, race->getSection(), race->getName());
+    race->addSite(sr, sl);
+  }
+}
+
+bool Engine::checkBannedGroup(Site * site, const std::string & group) {
+  if (site->isBannedGroup(group)) {
+    global->getEventLog()->log("Engine", "Ignoring site: " + site->getName() +
+        " because the group is banned: " + group);
+    return true;
+  }
+  return false;
 }

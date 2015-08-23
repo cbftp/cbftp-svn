@@ -111,6 +111,9 @@ void SiteManager::readConfiguration() {
     else if (!setting.compare("affil")) {
       site->addAffil(value);
     }
+    else if (!setting.compare("bannedgroup")) {
+      site->addBannedGroup(value);
+    }
     else if (!setting.compare("proxytype")) {
       site->setProxyType(util::str2Int(value));
     }
@@ -223,6 +226,9 @@ void SiteManager::writeState() {
     std::map<std::string, bool>::const_iterator sit3;
     for (sit3 = site->affilsBegin(); sit3 != site->affilsEnd(); sit3++) {
       filehandler->addOutputLine(filetag, name + "$affil=" + sit3->first);
+    }
+    for (sit3 = site->bannedGroupsBegin(); sit3 != site->bannedGroupsEnd(); sit3++) {
+      filehandler->addOutputLine(filetag, name + "$bannedgroup=" + sit3->first);
     }
   }
   filehandler->addOutputLine(defaultstag, "username=" + getDefaultUserName());

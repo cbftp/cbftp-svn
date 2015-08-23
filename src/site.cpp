@@ -285,10 +285,6 @@ void Site::addSection(std::string name, std::string path) {
   sections[name] = path;
 }
 
-void Site::clearAffils() {
-  affils.clear();
-}
-
 bool Site::isAffiliated(const std::string & affil) const {
   if (affils.find(affil) != affils.end()) {
     return true;
@@ -300,12 +296,39 @@ void Site::addAffil(const std::string & affil) {
   affils[affil] = true;
 }
 
+void Site::clearAffils() {
+  affils.clear();
+}
+
+bool Site::isBannedGroup(const std::string & group) const {
+  if (bannedgroups.find(group) != bannedgroups.end()) {
+    return true;
+  }
+  return false;
+}
+
+void Site::addBannedGroup(const std::string & group) {
+  bannedgroups[group] = true;
+}
+
+void Site::clearBannedGroups() {
+  bannedgroups.clear();
+}
+
 std::map<std::string, bool>::const_iterator Site::affilsBegin() const {
   return affils.begin();
 }
 
 std::map<std::string, bool>::const_iterator Site::affilsEnd() const {
   return affils.end();
+}
+
+std::map<std::string, bool>::const_iterator Site::bannedGroupsBegin() const {
+  return bannedgroups.begin();
+}
+
+std::map<std::string, bool>::const_iterator Site::bannedGroupsEnd() const {
+  return bannedgroups.end();
 }
 
 std::list<std::string> Site::getSectionsForPath(std::string path) const {
