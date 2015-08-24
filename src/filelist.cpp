@@ -328,6 +328,7 @@ void FileList::finishUpload(const std::string & file) {
   if (fileobj != NULL && fileobj->isUploading()) {
     fileobj->finishUpload();
     uploading--;
+    setChanged();
   }
 }
 
