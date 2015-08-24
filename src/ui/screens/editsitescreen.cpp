@@ -109,6 +109,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
   sslfxp->setOption(modsite.getSSLTransferPolicy());
   mso.addCheckBox(y++, x, "cpsv", "CPSV supported:", modsite.supportsCPSV());
   mso.addCheckBox(y++, x, "pret", "Needs PRET:", modsite.needsPRET());
+  mso.addCheckBox(y++, x, "binary", "Force binary mode:", modsite.forceBinaryMode());
   mso.addCheckBox(y++, x, "brokenpasv", "Broken PASV:", modsite.hasBrokenPASV());
   Pointer<MenuSelectOptionTextArrow> useproxy = mso.addTextArrow(y++, x, "useproxy", "Proxy:");
   ProxyManager * pm = global->getProxyManager();
@@ -407,6 +408,9 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "pret") {
           site->setPRET(msoe.get<MenuSelectOptionCheckBox>()->getData());
+        }
+        else if (identifier == "binary") {
+          site->setForceBinaryMode(msoe.get<MenuSelectOptionCheckBox>()->getData());
         }
         else if (identifier == "ssl") {
           site->setSSL(msoe.get<MenuSelectOptionCheckBox>()->getData());

@@ -16,6 +16,7 @@ Site::Site(std::string name) {
   max_dn = 0;
   max_idletime = 60;
   pret = false;
+  binary = false;
   listcommand = SITE_LIST_STAT;
   ssltransfer = SITE_SSL_PREFER_OFF;
   sslconn = true;
@@ -125,6 +126,14 @@ bool Site::needsPRET() const {
 
 void Site::setPRET(bool val) {
   pret = val;
+}
+
+bool Site::forceBinaryMode() const {
+  return binary;
+}
+
+void Site::setForceBinaryMode(bool val) {
+  binary = val;
 }
 
 bool Site::SSL() const {

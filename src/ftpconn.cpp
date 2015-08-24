@@ -307,6 +307,9 @@ void FTPConn::FDData(char * data, unsigned int datalen) {
       case STATE_PBSZ: // awaiting PBSZ 0 response
         PBSZ0Response();
         break;
+      case STATE_TYPEI: // awaiting TYPE I response
+        TYPEIResponse();
+        break;
       case STATE_PROXY: // negotiating proxy session
         proxySessionInit(false);
         break;
@@ -414,10 +417,16 @@ void FTPConn::USERResponse() {
 
 void FTPConn::PASSResponse() {
   processing = false;
+  this->status = "connected";
   if (databufcode == 230) {
-    this->status = "connected";
-    state = STATE_PASS;
-    sl->commandSuccess(id);
+    if (site->forceBinaryMode()) {
+      state = STATE_TYPEI;
+      doTYPEI();
+    }
+    else {
+      state = STATE_PASS;
+      sl->commandSuccess(id);
+    }
   }
   else {
     bool sitefull = false;
@@ -445,6 +454,16 @@ void FTPConn::PASSResponse() {
     else {
       sl->loginKillFailed(id);
     }
+  }
+}
+
+void FTPConn::TYPEIResponse() {
+  processing = false;
+  if (databufcode == 200) {
+    sl->commandSuccess(id);
+  }
+  else {
+    sl->commandFail(id);
   }
 }
 
@@ -658,6 +677,11 @@ void FTPConn::doDELE(std::string path) {
 void FTPConn::doPBSZ0() {
   state = STATE_PBSZ;
   sendEcho("PBSZ 0");
+}
+
+void FTPConn::doTYPEI() {
+  state = STATE_TYPEI;
+  sendEcho("TYPE I");
 }
 
 void FTPConn::PBSZ0Response() {

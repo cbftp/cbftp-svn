@@ -42,6 +42,7 @@
 #define STATE_SSL_HANDSHAKE 36
 #define STATE_PASV_ABORT 37
 #define STATE_PBSZ 38
+#define STATE_TYPEI 39
 #define STATE_PROXY 100
 
 #define PROT_UNSET 5483
@@ -120,6 +121,7 @@ class FTPConn : private EventReceiver {
     void SSCNOFFResponse();
     void PASVAbortResponse();
     void PBSZ0Response();
+    void TYPEIResponse();
     void proxySessionInit(bool);
     void sendEcho(std::string);
   public:
@@ -164,6 +166,7 @@ class FTPConn : private EventReceiver {
     void abortTransfer();
     void abortTransferPASV();
     void doPBSZ0();
+    void doTYPEI();
     void doQUIT();
     void doSSLHandshake();
     void disconnect();

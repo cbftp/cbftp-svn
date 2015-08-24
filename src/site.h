@@ -26,6 +26,7 @@ class Site {
     std::string user;
     std::string pass;
     bool pret;
+    bool binary;
     bool sslconn;
     int listcommand;
     int ssltransfer;
@@ -66,6 +67,8 @@ class Site {
     void pushTransferSpeed(std::string, int);
     bool needsPRET() const;
     void setPRET(bool);
+    bool forceBinaryMode() const;
+    void setForceBinaryMode(bool);
     int getSSLTransferPolicy() const;
     int getListCommand() const;
     bool SSL() const;

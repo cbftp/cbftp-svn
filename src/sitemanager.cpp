@@ -63,6 +63,9 @@ void SiteManager::readConfiguration() {
     else if (!setting.compare("pret")) {
       if (!value.compare("true")) site->setPRET(true);
     }
+    else if (!setting.compare("binary")) {
+      if (!value.compare("true")) site->setForceBinaryMode(true);
+    }
     else if (!setting.compare("sslconn")) {
       if (!value.compare("false")) site->setSSL(false);
     }
@@ -206,6 +209,7 @@ void SiteManager::writeState() {
     if (!site->supportsCPSV()) filehandler->addOutputLine(filetag, name + "$cpsv=false");
     filehandler->addOutputLine(filetag, name + "$listcommand=" + util::int2Str(site->getListCommand()));
     if (site->needsPRET()) filehandler->addOutputLine(filetag, name + "$pret=true");
+    if (site->forceBinaryMode()) filehandler->addOutputLine(filetag, name + "$binary=true");
     if (!site->SSL()) filehandler->addOutputLine(filetag, name + "$sslconn=false");
     if (!site->getAllowUpload()) filehandler->addOutputLine(filetag, name + "$allowupload=false");
     if (!site->getAllowDownload()) filehandler->addOutputLine(filetag, name + "$allowdownload=false");
