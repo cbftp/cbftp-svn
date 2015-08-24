@@ -619,7 +619,8 @@ void Engine::checkIfRaceComplete(SiteLogic * sls, Pointer<Race> race) {
         }
         else if (spfl->getNumUploadedFiles() >= race->estimatedSize(*itsp) &&
           spfl->timeSinceLastChanged() > STATICTIMEFORCOMPLETION &&
-          sls->getCurrLogins() > sls->getCurrUp() + sls->getCurrDown()) {
+          sls->getCurrLogins() > sls->getCurrUp() + sls->getCurrDown() &&
+          !spfl->hasFilesUploading()) {
           completedlists++;
           if (!srs->isSubPathComplete(spfl)) {
             //global->getEventLog()->log("Engine", "Dir marked as complete: " + spfl->getPath() + " on " +

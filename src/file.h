@@ -5,6 +5,7 @@
 class Site;
 
 class File {
+  friend class FileList;
 private:
   void parseUNIXSTATLine(const std::string &);
   void parseBrokenUNIXSTATLine(const std::string &, int, int &);
@@ -26,10 +27,22 @@ private:
   int touch;
   bool uploading;
   int downloading;
-public:
-  static std::string getExtension(const std::string &);
+protected:
   File(const std::string &, const std::string &);
   File(const std::string &, int);
+  void setUpdateFlag(Site *, std::string, int);
+  void unsetUpdateFlag();
+  bool setSize(unsigned long long int);
+  bool setLastModified(const std::string &);
+  bool setOwner(const std::string &);
+  bool setGroup(const std::string &);
+  void setTouch(int);
+  void download();
+  void upload();
+  void finishUpload();
+  void finishDownload();
+public:
+  static std::string getExtension(const std::string &);
   bool isDirectory() const;
   bool isLink() const;
   std::string getOwner() const;
@@ -43,18 +56,7 @@ public:
   std::string getUpdateDst() const;
   unsigned int getUpdateSpeed() const;
   bool updateFlagSet() const;
-  void setUpdateFlag(Site *, std::string, int);
-  void unsetUpdateFlag();
-  bool setSize(unsigned long long int);
-  bool setLastModified(const std::string &);
-  bool setOwner(const std::string &);
-  bool setGroup(const std::string &);
-  void setTouch(int);
-  void download();
   bool isDownloading() const;
-  void finishDownload();
-  void upload();
   bool isUploading() const;
-  void finishUpload();
   int getTouch() const;
 };

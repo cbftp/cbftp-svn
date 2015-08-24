@@ -25,6 +25,7 @@ FileList::FileList(const std::string & username, const std::string & path) {
   listchanged = false;
   lastchangedstamp = 0;
   totalfilesize = 0;
+  uploading = 0;
 }
 
 FileList::~FileList() {
@@ -113,8 +114,9 @@ void FileList::touchFile(const std::string & name, const std::string & user, boo
     }
     setChanged();
   }
-  if (upload) {
+  if (upload && !file->isUploading()) {
     file->upload();
+    uploading++;
   }
 }
 
@@ -217,6 +219,9 @@ void FileList::cleanSweep(int touch) {
         uploadedfiles--;
         totalfilesize -= f->getSize();
       }
+      if (f->isUploading()) {
+        uploading--;
+      }
       eraselist.push_back(it->first);
       delete f;
     }
@@ -244,6 +249,7 @@ void FileList::flush() {
   uploadedfiles = 0;  
   owned = 0;
   ownpercentage = 0;
+  uploading = 0;
 }
 
 void FileList::editOwnedFileCount(bool add) {
@@ -315,4 +321,30 @@ unsigned long long FileList::timeSinceLastChanged() {
 
 std::string FileList::getUser() const {
   return username;
+}
+
+void FileList::finishUpload(const std::string & file) {
+  File * fileobj = getFile(file);
+  if (fileobj != NULL && fileobj->isUploading()) {
+    fileobj->finishUpload();
+    uploading--;
+  }
+}
+
+void FileList::finishDownload(const std::string & file) {
+  File * fileobj = getFile(file);
+  if (fileobj != NULL && fileobj->isDownloading()) {
+    fileobj->finishDownload();
+  }
+}
+
+void FileList::download(const std::string & file) {
+  File * fileobj = getFile(file);
+  if (fileobj != NULL && !fileobj->isDownloading()) {
+    fileobj->download();
+  }
+}
+
+bool FileList::hasFilesUploading() const {
+  return uploading > 0;
 }

@@ -71,7 +71,7 @@ void TransferMonitor::engageFXP(std::string sfile, SiteLogic * sls, FileList * f
   }
   fld->touchFile(dfile, sld->getSite()->getUser(), true);
   latesttouch = fld->getFile(dfile)->getTouch();
-  fls->getFile(sfile)->download();
+  fls->download(sfile);
   if (!sld->getSite()->hasBrokenPASV()) {
     activedownload = true;
     sld->preparePassiveUpload(dst, this, dpath, dfile, true, ssl);
@@ -282,10 +282,7 @@ void TransferMonitor::sourceComplete() {
                status == TM_STATUS_TRANSFERRING);
   sourcecomplete = true;
   if (fls != NULL) {
-    File * fileobj = fls->getFile(sfile);
-    if (fileobj != NULL) {
-      fileobj->finishDownload();
-    }
+    fls->finishDownload(sfile);
   }
   if (targetcomplete) {
     finish();
@@ -298,10 +295,7 @@ void TransferMonitor::targetComplete() {
   targetcomplete = true;
   if (fld != NULL) {
     fld->addUploadAttempt(dfile);
-    File * fileobj = fld->getFile(dfile);
-    if (fileobj != NULL) {
-      fileobj->finishUpload();
-    }
+    fld->finishUpload(dfile);
   }
   if (sourcecomplete) {
     finish();
@@ -362,10 +356,7 @@ void TransferMonitor::sourceError(int err) {
                status == TM_STATUS_ERROR_AWAITING_PEER ||
                status == TM_STATUS_TRANSFERRING);
   if (fls != NULL) {
-    File * fileobj = fls->getFile(sfile);
-    if (fileobj != NULL) {
-      fileobj->finishDownload();
-    }
+    fls->finishDownload(sfile);
     switch (err) {
       case 0: // PRET RETR failed
         fls->downloadFail(sfile);
@@ -381,10 +372,7 @@ void TransferMonitor::sourceError(int err) {
   if (status == TM_STATUS_AWAITING_PASSIVE || status == TM_STATUS_AWAITING_ACTIVE) {
     if (sld != NULL) {
       sld->returnConn(dst);
-      File * fileobj = fld->getFile(dfile);
-      if (fileobj != NULL) {
-        fileobj->finishUpload();
-      }
+      fld->finishUpload(dfile);
       transferFailed(ts, err);
       return;
     }
@@ -402,10 +390,7 @@ void TransferMonitor::targetError(int err) {
                status == TM_STATUS_ERROR_AWAITING_PEER ||
                status == TM_STATUS_TRANSFERRING);
   if (fld != NULL) {
-    File * fileobj = fld->getFile(dfile);
-    if (fileobj != NULL) {
-      fileobj->finishUpload();
-    }
+    fld->finishUpload(dfile);
     switch (err) {
       case 0: // PRET STOR failed
         fld->uploadFail(dfile);
@@ -422,10 +407,7 @@ void TransferMonitor::targetError(int err) {
     if (sls != NULL) {
       sls->returnConn(src);
       if (fls != NULL) { // NULL in case of LIST
-        File * fileobj = fls->getFile(sfile);
-        if (fileobj != NULL) {
-          fileobj->finishDownload();
-        }
+        fls->finishDownload(sfile);
       }
       transferFailed(ts, err);
       return;

@@ -21,6 +21,7 @@ class FileList {
     unsigned long long lastchangedstamp;
     int owned;
     int ownpercentage;
+    int uploading;
     unsigned long long int maxfilesize;
     unsigned long long int totalfilesize;
     unsigned int uploadedfiles;
@@ -60,4 +61,8 @@ class FileList {
     void resetListChanged();
     unsigned long long timeSinceLastChanged();
     std::string getUser() const;
+    void finishUpload(const std::string &);
+    void finishDownload(const std::string &);
+    void download(const std::string &);
+    bool hasFilesUploading() const;
 };
