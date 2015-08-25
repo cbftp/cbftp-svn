@@ -1375,6 +1375,22 @@ void SiteLogic::disconnectConn(int id) {
   }
 }
 
+void SiteLogic::finishTransferGracefully(int id) {
+  util::assert(connstatetracker[id].hasTransfer() &&
+               !connstatetracker[id].isListLocked());
+  switch (connstatetracker[id].getTransferType()) {
+    case CST_DOWNLOAD:
+      connstatetracker[id].getTransferMonitor()->sourceComplete();
+      transferComplete(true);
+      break;
+    case CST_UPLOAD:
+      connstatetracker[id].getTransferMonitor()->targetComplete();
+      transferComplete(false);
+      break;
+  }
+  connstatetracker[id].finishTransfer();
+}
+
 void SiteLogic::listCompleted(int id, int storeid) {
   const binary_data & data = global->getLocalStorage()->getStoreContent(storeid);
   conns[id]->parseFileList((char *) &data[0], data.size());

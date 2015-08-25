@@ -459,21 +459,19 @@ void TransferMonitor::checkForDeadFXPTransfers() {
       (status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE &&
        timestamp - partialcompletestamp > MAX_WAIT_SOURCE_COMPLETE))
   {
-    transferFailed(ts, 7);
     sld->disconnectConn(dst);
     sld->connectConn(dst);
   }
   else if (status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE &&
            timestamp - partialcompletestamp > MAX_WAIT_ERROR)
   {
-    transferFailed(ts, 7);
     sls->disconnectConn(src);
     sls->connectConn(src);
   }
   else if (status == TM_STATUS_TRANSFERRING_TARGET_COMPLETE &&
            timestamp - partialcompletestamp > MAX_WAIT_ERROR)
   {
-    finish(true);
+    sls->finishTransferGracefully(src);
     sls->disconnectConn(src);
     sls->connectConn(src);
   }

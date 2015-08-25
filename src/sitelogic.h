@@ -123,6 +123,7 @@ class SiteLogic : public EventReceiver {
     int getCurrLogins() const;
     void connectConn(int);
     void disconnectConn(int);
+    void finishTransferGracefully(int);
     void listCompleted(int, int);
     void issueRawCommand(unsigned int, std::string);
     RawBuffer * getRawCommandBuffer() const;
