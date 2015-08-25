@@ -17,8 +17,14 @@ enum Status {
   TM_STATUS_AWAITING_PASSIVE,
   TM_STATUS_AWAITING_ACTIVE,
   TM_STATUS_TRANSFERRING,
-  TM_STATUS_ERROR_AWAITING_PEER
+  TM_STATUS_TRANSFERRING_SOURCE_COMPLETE,
+  TM_STATUS_TRANSFERRING_TARGET_COMPLETE,
+  TM_STATUS_SOURCE_ERROR_AWAITING_TARGET,
+  TM_STATUS_TARGET_ERROR_AWAITING_SOURCE
 };
+
+#define MAX_WAIT_ERROR 10000
+#define MAX_WAIT_SOURCE_COMPLETE 60000
 
 #define TICKINTERVAL 50
 
@@ -45,22 +51,25 @@ class TransferMonitor : public EventReceiver {
     std::string spath;
     std::string dpath;
     bool activedownload;
-    bool sourcecomplete;
-    bool targetcomplete;
     bool ssl;
     TransferMonitorType type;
     int timestamp;
     int startstamp;
+    int partialcompletestamp;
     TransferManager * tm;
     Pointer<TransferStatus> ts;
     int latesttouch;
     bool hiddenfiles;
     LocalTransfer * lt;
     int localtransferspeedticker;
-    void finish();
+    int checkdeadticker;
+    void finish(bool);
     void setTargetSizeSpeed(unsigned int, int);
     void reset();
     void transferFailed(Pointer<TransferStatus>, int);
+    void updateFXPSizeSpeed();
+    void updateLocalTransferSizeSpeed();
+    void checkForDeadFXPTransfers();
   public:
     TransferMonitor(TransferManager *);
     ~TransferMonitor();

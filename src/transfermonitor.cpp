@@ -19,12 +19,14 @@
 
 extern GlobalContext * global;
 
-TransferMonitor::TransferMonitor(TransferManager * tm) {
-  this->tm = tm;
-  status = TM_STATUS_IDLE;
-  activedownload = false;
-  timestamp = 0;
-  localtransferspeedticker = 0;
+TransferMonitor::TransferMonitor(TransferManager * tm) :
+  status(TM_STATUS_IDLE),
+  activedownload(false),
+  timestamp(0),
+  tm(tm),
+  localtransferspeedticker(0),
+  checkdeadticker(0)
+{
   global->getTickPoke()->startPoke(this, "TransferMonitor", TICKINTERVAL, 0);
 }
 
@@ -173,39 +175,14 @@ void TransferMonitor::tick(int msg) {
   if (status != TM_STATUS_IDLE) {
     timestamp += TICKINTERVAL;
     if (type == TM_TYPE_FXP) {
-      File * file = fld->getFile(dfile);
-      if (file) {
-        unsigned int filesize = file->getSize();
-        int span = timestamp - startstamp;
-        int touch = file->getTouch();
-        if (!span) {
-          span = 10;
-        }
-
-        // if the file list has been updated (as seen on the file's touch stamp
-        // the speed shall be recalculated.
-        if (latesttouch != touch) {
-          latesttouch = touch;
-          setTargetSizeSpeed(filesize, span);
-        }
-        else {
-          // since the actual file size has not changed since last tick,
-          // interpolate an updated file size through the currently known speed
-          unsigned long long int speedtemp = ts->getSpeed() * 1024;
-          ts->interpolateAddSize((speedtemp * TICKINTERVAL) / 1000);
-        }
-        ts->setTimeSpent(span / 1000);
+      updateFXPSizeSpeed();
+      if (checkdeadticker++ % 20 == 0) { // run once per second
+        checkForDeadFXPTransfers();
       }
     }
     if (type == TM_TYPE_DOWNLOAD || type == TM_TYPE_UPLOAD) {
-      if (localtransferspeedticker++ % 4 == 0 && lt) { // run every 200 ms
-        unsigned int filesize = lt->size();
-        int span = timestamp - startstamp;
-        if (!span) {
-          span = 10;
-        }
-        setTargetSizeSpeed(filesize, span);
-        ts->setTimeSpent(span / 1000);
+      if (localtransferspeedticker++ % 4 == 0) { // run every 200 ms
+        updateLocalTransferSizeSpeed();
       }
     }
   }
@@ -278,32 +255,40 @@ void TransferMonitor::activeReady() {
 }
 
 void TransferMonitor::sourceComplete() {
-  util::assert(status == TM_STATUS_ERROR_AWAITING_PEER ||
-               status == TM_STATUS_TRANSFERRING);
-  sourcecomplete = true;
+  util::assert(status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
+               status == TM_STATUS_TRANSFERRING ||
+               status == TM_STATUS_TRANSFERRING_TARGET_COMPLETE);
+  partialcompletestamp = timestamp;
   if (fls != NULL) {
     fls->finishDownload(sfile);
   }
-  if (targetcomplete) {
-    finish();
+  if (status == TM_STATUS_TRANSFERRING) {
+    status = TM_STATUS_TRANSFERRING_SOURCE_COMPLETE;
+  }
+  else {
+    finish(status != TM_STATUS_TARGET_ERROR_AWAITING_SOURCE);
   }
 }
 
 void TransferMonitor::targetComplete() {
-  util::assert(status == TM_STATUS_ERROR_AWAITING_PEER ||
-               status == TM_STATUS_TRANSFERRING);
-  targetcomplete = true;
+  util::assert(status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET ||
+               status == TM_STATUS_TRANSFERRING ||
+               status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE);
+  partialcompletestamp = timestamp;
   if (fld != NULL) {
     fld->addUploadAttempt(dfile);
     fld->finishUpload(dfile);
   }
-  if (sourcecomplete) {
-    finish();
+  if (status == TM_STATUS_TRANSFERRING) {
+    status = TM_STATUS_TRANSFERRING_TARGET_COMPLETE;
+  }
+  else {
+    finish(status != TM_STATUS_SOURCE_ERROR_AWAITING_TARGET);
   }
 }
 
-void TransferMonitor::finish() {
-  if (status != TM_STATUS_IDLE && status != TM_STATUS_ERROR_AWAITING_PEER) {
+void TransferMonitor::finish(bool successful) {
+  if (successful) {
     int span = timestamp - startstamp;
     if (span == 0) {
       span = 10;
@@ -336,8 +321,6 @@ void TransferMonitor::finish() {
         sls->listCompleted(src, storeid);
         break;
     }
-  }
-  if (status != TM_STATUS_ERROR_AWAITING_PEER) {
     if (!!ts) {
       ts->setFinished();
     }
@@ -353,8 +336,9 @@ void TransferMonitor::finish() {
 void TransferMonitor::sourceError(int err) {
   util::assert(status == TM_STATUS_AWAITING_ACTIVE ||
                status == TM_STATUS_AWAITING_PASSIVE ||
-               status == TM_STATUS_ERROR_AWAITING_PEER ||
-               status == TM_STATUS_TRANSFERRING);
+               status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
+               status == TM_STATUS_TRANSFERRING ||
+               status == TM_STATUS_TRANSFERRING_TARGET_COMPLETE);
   if (fls != NULL) {
     fls->finishDownload(sfile);
     switch (err) {
@@ -368,7 +352,7 @@ void TransferMonitor::sourceError(int err) {
         break;
     }
   }
-  sourcecomplete = true;
+  partialcompletestamp = timestamp;
   if (status == TM_STATUS_AWAITING_PASSIVE || status == TM_STATUS_AWAITING_ACTIVE) {
     if (sld != NULL) {
       sld->returnConn(dst);
@@ -377,18 +361,22 @@ void TransferMonitor::sourceError(int err) {
       return;
     }
   }
-  if (targetcomplete || (type == TM_TYPE_DOWNLOAD && lt == NULL)) {
+  if (status == TM_STATUS_TRANSFERRING_TARGET_COMPLETE ||
+      status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
+      (type == TM_TYPE_DOWNLOAD && lt == NULL))
+  {
     transferFailed(ts, err);
     return;
   }
-  status = TM_STATUS_ERROR_AWAITING_PEER;
+  status = TM_STATUS_SOURCE_ERROR_AWAITING_TARGET;
 }
 
 void TransferMonitor::targetError(int err) {
   util::assert(status == TM_STATUS_AWAITING_ACTIVE ||
                status == TM_STATUS_AWAITING_PASSIVE ||
-               status == TM_STATUS_ERROR_AWAITING_PEER ||
-               status == TM_STATUS_TRANSFERRING);
+               status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET ||
+               status == TM_STATUS_TRANSFERRING ||
+               status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE);
   if (fld != NULL) {
     fld->finishUpload(dfile);
     switch (err) {
@@ -402,7 +390,7 @@ void TransferMonitor::targetError(int err) {
         break;
     }
   }
-  targetcomplete = true;
+  partialcompletestamp = timestamp;
   if (status == TM_STATUS_AWAITING_PASSIVE || status == TM_STATUS_AWAITING_ACTIVE) {
     if (sls != NULL) {
       sls->returnConn(src);
@@ -413,15 +401,82 @@ void TransferMonitor::targetError(int err) {
       return;
     }
   }
-  if (sourcecomplete || (type == TM_TYPE_UPLOAD && lt == NULL)) {
+  if (status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE ||
+      status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET ||
+      (type == TM_TYPE_UPLOAD && lt == NULL))
+  {
     transferFailed(ts, err);
     return;
   }
-  status = TM_STATUS_ERROR_AWAITING_PEER;
+  status = TM_STATUS_TARGET_ERROR_AWAITING_SOURCE;
 }
 
 Pointer<TransferStatus> TransferMonitor::getTransferStatus() const {
   return ts;
+}
+
+void TransferMonitor::updateFXPSizeSpeed() {
+  File * file = fld->getFile(dfile);
+  if (file) {
+    unsigned int filesize = file->getSize();
+    int span = timestamp - startstamp;
+    int touch = file->getTouch();
+    if (!span) {
+      span = 10;
+    }
+
+    // if the file list has been updated (as seen on the file's touch stamp
+    // the speed shall be recalculated.
+    if (latesttouch != touch) {
+      latesttouch = touch;
+      setTargetSizeSpeed(filesize, span);
+    }
+    else {
+      // since the actual file size has not changed since last tick,
+      // interpolate an updated file size through the currently known speed
+      unsigned long long int speedtemp = ts->getSpeed() * 1024;
+      ts->interpolateAddSize((speedtemp * TICKINTERVAL) / 1000);
+    }
+    ts->setTimeSpent(span / 1000);
+  }
+}
+
+void TransferMonitor::updateLocalTransferSizeSpeed() {
+  if (lt) {
+    unsigned int filesize = lt->size();
+    int span = timestamp - startstamp;
+    if (!span) {
+      span = 10;
+    }
+    setTargetSizeSpeed(filesize, span);
+    ts->setTimeSpent(span / 1000);
+  }
+}
+
+void TransferMonitor::checkForDeadFXPTransfers() {
+  if ((status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET &&
+       timestamp - partialcompletestamp > MAX_WAIT_ERROR) ||
+      (status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE &&
+       timestamp - partialcompletestamp > MAX_WAIT_SOURCE_COMPLETE))
+  {
+    transferFailed(ts, 7);
+    sld->disconnectConn(dst);
+    sld->connectConn(dst);
+  }
+  else if (status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE &&
+           timestamp - partialcompletestamp > MAX_WAIT_ERROR)
+  {
+    transferFailed(ts, 7);
+    sls->disconnectConn(src);
+    sls->connectConn(src);
+  }
+  else if (status == TM_STATUS_TRANSFERRING_TARGET_COMPLETE &&
+           timestamp - partialcompletestamp > MAX_WAIT_ERROR)
+  {
+    finish(true);
+    sls->disconnectConn(src);
+    sls->connectConn(src);
+  }
 }
 
 void TransferMonitor::setTargetSizeSpeed(unsigned int filesize, int span) {
@@ -448,10 +503,10 @@ void TransferMonitor::reset() {
   lt = NULL;
   ts.reset();
   activedownload = false;
-  sourcecomplete = false;
-  targetcomplete = false;
   ssl = false;
   timestamp = 0;
+  startstamp = 0;
+  partialcompletestamp = 0;
 }
 
 void TransferMonitor::transferFailed(Pointer<TransferStatus> ts, int err) {
