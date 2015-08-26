@@ -109,6 +109,7 @@ class Ui : public EventReceiver, public UIBase {
     void disableLegend();
     void redrawAll();
     void switchToWindow(Pointer<UIWindow>);
+    void switchToWindow(Pointer<UIWindow>, bool);
     static void * run(void *);
     void tick(int);
     void globalKeyBinds(int);
@@ -174,6 +175,8 @@ class Ui : public EventReceiver, public UIBase {
     void goAddSite();
     void goBrowse(std::string);
     void goBrowseSplit(std::string);
+    void goBrowseLocal();
+    void goContinueBrowsing();
     void goAddProxy();
     void goEditProxy(std::string);
     void goRawData(std::string);

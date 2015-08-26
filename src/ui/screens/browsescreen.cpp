@@ -28,11 +28,16 @@ BrowseScreen::~BrowseScreen() {
 
 }
 
-void BrowseScreen::initialize(unsigned int row, unsigned int col, std::string sitestr, bool split) {
+void BrowseScreen::initialize(unsigned int row, unsigned int col, ViewMode viewmode, std::string sitestr) {
   expectbackendpush = true;
-  this->split = initsplitupdate = split;
+  this->split = initsplitupdate = viewmode == VIEW_SPLIT;
   global->updateTime();
-  left = makePointer<BrowseScreenSite>(ui, sitestr);
+  if (viewmode != VIEW_LOCAL) {
+    left = makePointer<BrowseScreenSite>(ui, sitestr);
+  }
+  else {
+    left = makePointer<BrowseScreenLocal>(ui);
+  }
   if (split) {
     left->setFocus(false);
     active = right = makePointer<BrowseScreenSelector>(ui);
@@ -224,6 +229,10 @@ std::string BrowseScreen::getInfoLabel() const {
 
 std::string BrowseScreen::getInfoText() const {
   return active->getInfoText();
+}
+
+bool BrowseScreen::isInitialized() const {
+  return !!active;
 }
 
 void BrowseScreen::switchSide() {

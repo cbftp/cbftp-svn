@@ -29,8 +29,8 @@ MainScreen::MainScreen(Ui * ui) {
 }
 
 void MainScreen::initialize(unsigned int row, unsigned int col) {
-  siteextralegendtext = " - [Tab] split browse - [b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [q]uick jump";
-  baselegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [G]lobal settings - Event [l]og - [t]ransfers - All [r]aces - All transfer[j]obs - toggle [U]dp";
+  siteextralegendtext = " - [Tab] split browse - [right/b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [q]uick jump";
+  baselegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [G]lobal settings - Event [l]og - [t]ransfers - All [r]aces - All transfer[j]obs - toggle [U]dp - Browse lo[c]al - [Esc] back to browsing";
   gotolegendtext = "[Any] Go to matching first letter in site list - [Esc] Cancel";
   autoupdate = true;
   gotomode = false;
@@ -313,6 +313,9 @@ void MainScreen::keyPressed(unsigned int ch) {
       global->getRemoteCommandHandler()->setEnabled(!enabled);
       break;
     }
+    case 'c':
+      ui->goBrowseLocal();
+      break;
   }
   if (mss.isFocused()) {
     switch(ch) {
@@ -341,6 +344,7 @@ void MainScreen::keyPressed(unsigned int ch) {
         ui->goConfirmation("Do you really want to delete site " + deletesite);
         break;
       case 'b':
+      case KEY_RIGHT:
         if (mss.getSite() == NULL) break;
         ui->goBrowse(mss.getSite()->getName());
         break;
@@ -394,6 +398,9 @@ void MainScreen::keyPressed(unsigned int ch) {
         else if (update) {
           ui->update();
         }
+        break;
+      case 27: // esc
+        ui->goContinueBrowsing();
         break;
     }
   }

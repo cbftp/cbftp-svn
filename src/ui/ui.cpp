@@ -423,8 +423,12 @@ void Ui::runInstance() {
 }
 
 void Ui::switchToWindow(Pointer<UIWindow> window) {
+  switchToWindow(window, false);
+}
+
+void Ui::switchToWindow(Pointer<UIWindow> window, bool allowsplit) {
   history.push_back(topwindow);
-  if (split) {
+  if (split && !allowsplit) {
     setSplit(false);
   }
   legendwindow->setText(window->getLegendText());
@@ -713,13 +717,25 @@ void Ui::goAddSite() {
 }
 
 void Ui::goBrowse(std::string site) {
-  browsescreen->initialize(mainrow, maincol, site, false);
+  browsescreen->initialize(mainrow, maincol, VIEW_NORMAL, site);
   switchToWindow(browsescreen);
 }
 
 void Ui::goBrowseSplit(std::string site) {
-  browsescreen->initialize(mainrow, maincol, site, true);
+  browsescreen->initialize(mainrow, maincol, VIEW_SPLIT, site);
+  switchToWindow(browsescreen, true);
+}
+
+void Ui::goBrowseLocal() {
+  browsescreen->initialize(mainrow, maincol, VIEW_LOCAL, "");
   switchToWindow(browsescreen);
+}
+
+void Ui::goContinueBrowsing() {
+  if (browsescreen->isInitialized()) {
+    browsescreen->redraw();
+    switchToWindow(browsescreen, true);
+  }
 }
 
 void Ui::goAddProxy() {
