@@ -316,6 +316,9 @@ void MainScreen::keyPressed(unsigned int ch) {
     case 'c':
       ui->goBrowseLocal();
       break;
+    case 27: // esc
+      ui->goContinueBrowsing();
+      break;
   }
   if (mss.isFocused()) {
     switch(ch) {
@@ -398,9 +401,6 @@ void MainScreen::keyPressed(unsigned int ch) {
         else if (update) {
           ui->update();
         }
-        break;
-      case 27: // esc
-        ui->goContinueBrowsing();
         break;
     }
   }
