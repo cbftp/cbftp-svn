@@ -86,12 +86,12 @@ void LocalDownload::FDSSLFail() {
   }
   global->getIOManager()->closeSocket(sockid);
   inuse = false;
-  tm->targetError(3);
+  tm->targetError(TM_ERR_OTHER);
 }
 
 void LocalDownload::FDFail(std::string error) {
   inuse = false;
-  tm->targetError(3);
+  tm->targetError(TM_ERR_OTHER);
 }
 
 void LocalDownload::FDData(char * data, unsigned int len) {

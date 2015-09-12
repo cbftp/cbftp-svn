@@ -23,6 +23,15 @@ enum Status {
   TM_STATUS_TARGET_ERROR_AWAITING_SOURCE
 };
 
+enum TransferError {
+  TM_ERR_PRET,
+  TM_ERR_RETRSTOR,
+  TM_ERR_RETRSTOR_COMPLETE,
+  TM_ERR_OTHER,
+  TM_ERR_LOCK_DOWN,
+  TM_ERR_LOCK_UP
+};
+
 #define MAX_WAIT_ERROR 10000
 #define MAX_WAIT_SOURCE_COMPLETE 60000
 
@@ -66,7 +75,7 @@ class TransferMonitor : public EventReceiver {
     void finish(bool);
     void setTargetSizeSpeed(unsigned int, int);
     void reset();
-    void transferFailed(Pointer<TransferStatus>, int);
+    void transferFailed(Pointer<TransferStatus>, TransferError);
     void updateFXPSizeSpeed();
     void updateLocalTransferSizeSpeed();
     void checkForDeadFXPTransfers();
@@ -76,9 +85,8 @@ class TransferMonitor : public EventReceiver {
     void tick(int);
     void sourceComplete();
     void targetComplete();
-    void localDownloadError(int);
-    void sourceError(int);
-    void targetError(int);
+    void sourceError(TransferError);
+    void targetError(TransferError);
     void passiveReady(std::string);
     void activeReady();
     bool idle() const;

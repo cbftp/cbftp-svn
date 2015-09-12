@@ -50,12 +50,12 @@ void TransferMonitor::engageFXP(std::string sfile, SiteLogic * sls, FileList * f
   this->sfile = sfile;
   this->dfile = dfile;
   if (!sls->lockDownloadConn(spath, &src)) {
-    tm->transferFailed(ts, 4);
+    tm->transferFailed(ts, TM_ERR_LOCK_DOWN);
     return;
   }
   if (!sld->lockUploadConn(dpath, &dst)) {
     sls->returnConn(src);
-    tm->transferFailed(ts, 5);
+    tm->transferFailed(ts, TM_ERR_LOCK_UP);
     return;
   }
   status = TM_STATUS_AWAITING_PASSIVE;
@@ -327,13 +327,13 @@ void TransferMonitor::finish(bool successful) {
     tm->transferSuccessful(ts);
   }
   else {
-    transferFailed(ts, 6);
+    transferFailed(ts, TM_ERR_OTHER);
     return;
   }
   status = TM_STATUS_IDLE;
 }
 
-void TransferMonitor::sourceError(int err) {
+void TransferMonitor::sourceError(TransferError err) {
   util::assert(status == TM_STATUS_AWAITING_ACTIVE ||
                status == TM_STATUS_AWAITING_PASSIVE ||
                status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
@@ -342,13 +342,15 @@ void TransferMonitor::sourceError(int err) {
   if (fls != NULL) {
     fls->finishDownload(sfile);
     switch (err) {
-      case 0: // PRET RETR failed
+      case TM_ERR_PRET: // PRET RETR failed
         fls->downloadFail(sfile);
         break;
-      case 1: // RETR failed
-      case 2: // RETR post failed
-      case 3: // other failure
+      case TM_ERR_RETRSTOR: // RETR failed
+      case TM_ERR_RETRSTOR_COMPLETE: // RETR post failed
+      case TM_ERR_OTHER: // other failure
         fls->downloadAttemptFail(sfile);
+        break;
+      default:
         break;
     }
   }
@@ -371,7 +373,7 @@ void TransferMonitor::sourceError(int err) {
   status = TM_STATUS_SOURCE_ERROR_AWAITING_TARGET;
 }
 
-void TransferMonitor::targetError(int err) {
+void TransferMonitor::targetError(TransferError err) {
   util::assert(status == TM_STATUS_AWAITING_ACTIVE ||
                status == TM_STATUS_AWAITING_PASSIVE ||
                status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET ||
@@ -380,13 +382,15 @@ void TransferMonitor::targetError(int err) {
   if (fld != NULL) {
     fld->finishUpload(dfile);
     switch (err) {
-      case 0: // PRET STOR failed
+      case TM_ERR_PRET: // PRET STOR failed
         fld->uploadFail(dfile);
         break;
-      case 1: // STOR failed
-      case 2: // STOR post failed
-      case 3: // other failure
+      case TM_ERR_RETRSTOR: // STOR failed
+      case TM_ERR_RETRSTOR_COMPLETE: // STOR post failed
+      case TM_ERR_OTHER: // other failure
         fld->addUploadAttempt(dfile);
+        break;
+      default:
         break;
     }
   }
@@ -507,7 +511,7 @@ void TransferMonitor::reset() {
   partialcompletestamp = 0;
 }
 
-void TransferMonitor::transferFailed(Pointer<TransferStatus> ts, int err) {
+void TransferMonitor::transferFailed(Pointer<TransferStatus> ts, TransferError err) {
   if (!!ts) {
     ts->setFailed();
   }

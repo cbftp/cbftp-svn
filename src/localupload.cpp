@@ -54,7 +54,7 @@ void LocalUpload::FDDisconnected() {
     filestream.close();
   }
   inuse = false;
-  tm->sourceError(3);
+  tm->sourceError(TM_ERR_OTHER);
 }
 
 void LocalUpload::FDSSLSuccess() {
@@ -85,12 +85,12 @@ void LocalUpload::FDSSLFail() {
   }
   global->getIOManager()->closeSocket(sockid);
   inuse = false;
-  tm->sourceError(3);
+  tm->sourceError(TM_ERR_OTHER);
 }
 
 void LocalUpload::FDFail(std::string error) {
   inuse = false;
-  tm->sourceError(3);
+  tm->sourceError(TM_ERR_OTHER);
 }
 
 void LocalUpload::FDData(char * data, unsigned int len) {
@@ -99,7 +99,7 @@ void LocalUpload::FDData(char * data, unsigned int len) {
   }
   inuse = false;
   global->getIOManager()->closeSocket(sockid);
-  tm->sourceError(3);
+  tm->sourceError(TM_ERR_OTHER);
 }
 
 unsigned long long int LocalUpload::size() const {

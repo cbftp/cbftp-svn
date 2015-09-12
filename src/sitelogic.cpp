@@ -374,7 +374,7 @@ void SiteLogic::commandFail(int id) {
     case STATE_PASV:
     case STATE_PORT:
       if (connstatetracker[id].transferInitialized()) {
-        handleTransferFail(id, 3);
+        handleTransferFail(id, TM_ERR_OTHER);
         return;
       }
       else {
@@ -399,7 +399,7 @@ void SiteLogic::commandFail(int id) {
         return;
       }
       if (connstatetracker[id].transferInitialized()) {
-        handleTransferFail(id, 3);
+        handleTransferFail(id, TM_ERR_OTHER);
         return;
       }
       if (connstatetracker[id].hasTransfer()) {
@@ -462,22 +462,22 @@ void SiteLogic::commandFail(int id) {
       }
       break;
     case STATE_PRET_RETR:
-      handleTransferFail(id, CST_DOWNLOAD, 0);
+      handleTransferFail(id, CST_DOWNLOAD, TM_ERR_PRET);
       return;
     case STATE_PRET_STOR:
-      handleTransferFail(id, CST_UPLOAD, 0);
+      handleTransferFail(id, CST_UPLOAD, TM_ERR_PRET);
       return;
     case STATE_RETR:
-      handleTransferFail(id, CST_DOWNLOAD, 1);
+      handleTransferFail(id, CST_DOWNLOAD, TM_ERR_RETRSTOR);
       return;
     case STATE_RETR_COMPLETE:
-      handleTransferFail(id, CST_DOWNLOAD, 2);
+      handleTransferFail(id, CST_DOWNLOAD, TM_ERR_RETRSTOR_COMPLETE);
       return;
     case STATE_STOR:
-      handleTransferFail(id, CST_UPLOAD, 1);
+      handleTransferFail(id, CST_UPLOAD, TM_ERR_RETRSTOR);
       return;
     case STATE_STOR_COMPLETE:
-      handleTransferFail(id, CST_UPLOAD, 2);
+      handleTransferFail(id, CST_UPLOAD, TM_ERR_RETRSTOR_COMPLETE);
       return;
     case STATE_WIPE:
       if (connstatetracker[id].hasRequest()) {
@@ -514,13 +514,13 @@ void SiteLogic::commandFail(int id) {
       handleConnection(id, false);
       return;
     case STATE_LIST:
-      handleTransferFail(id, CST_LIST, 1);
+      handleTransferFail(id, CST_LIST, TM_ERR_RETRSTOR);
       return;
     case STATE_PRET_LIST:
-      handleTransferFail(id, CST_LIST, 0);
+      handleTransferFail(id, CST_LIST, TM_ERR_PRET);
       return;
     case STATE_LIST_COMPLETE:
-      handleTransferFail(id, CST_LIST, 2);
+      handleTransferFail(id, CST_LIST, TM_ERR_RETRSTOR_COMPLETE);
       return;
   }
   // default handling: reconnect
@@ -530,7 +530,7 @@ void SiteLogic::commandFail(int id) {
 
 void SiteLogic::handleFail(int id) {
   if (connstatetracker[id].transferInitialized()) {
-    handleTransferFail(id, 0);
+    handleTransferFail(id, TM_ERR_OTHER);
     return;
   }
   if (connstatetracker[id].isLocked()) {
@@ -589,14 +589,14 @@ void SiteLogic::reportTransferErrorAndFinish(int id, int type, int err) {
   if (!connstatetracker[id].getTransferAborted()) {
     switch (type) {
       case CST_DOWNLOAD:
-        connstatetracker[id].getTransferMonitor()->sourceError(err);
+        connstatetracker[id].getTransferMonitor()->sourceError((TransferError)err);
         transferComplete(true);
         break;
       case CST_LIST:
-        connstatetracker[id].getTransferMonitor()->sourceError(err);
+        connstatetracker[id].getTransferMonitor()->sourceError((TransferError)err);
         break;
       case CST_UPLOAD:
-        connstatetracker[id].getTransferMonitor()->targetError(err);
+        connstatetracker[id].getTransferMonitor()->targetError((TransferError)err);
         transferComplete(false);
         break;
     }
