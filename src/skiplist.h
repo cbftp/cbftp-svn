@@ -2,16 +2,19 @@
 
 #include <list>
 #include <string>
+#include <map>
 
 #include "skiplistitem.h"
 
 class SkipList {
 private:
   std::list<SkiplistItem> entries;
+  mutable std::map<std::string, bool> matchcache;
   bool defaultallow;
   int wildcmp(const char *, const char *) const;
   int wildcmpCase(const char *, const char *) const;
   bool fixedSlashCompare(const std::string &, const std::string &, bool) const;
+  std::string createCacheToken(const std::string &, const bool, const bool) const;
   void addDefaultEntries();
 public:
   SkipList();

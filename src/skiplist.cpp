@@ -108,12 +108,18 @@ bool SkipList::fixedSlashCompare(const std::string & wildpattern, const std::str
   }
 }
 
+std::string SkipList::createCacheToken(const std::string & pattern, const bool dir, const bool inrace) const {
+  return pattern + (dir ? "1" : "0") + (inrace ? "1" : "0");
+}
+
 void SkipList::addEntry(std::string pattern, bool file, bool dir, int scope, bool allow) {
   entries.push_back(SkiplistItem(pattern, file, dir, scope, allow));
+  matchcache.clear();
 }
 
 void SkipList::clearEntries() {
   entries.clear();
+  matchcache.clear();
 }
 
 std::list<SkiplistItem>::const_iterator SkipList::entriesBegin() const {
@@ -129,6 +135,11 @@ bool SkipList::isAllowed(const std::string & element, const bool dir) const {
 }
 
 bool SkipList::isAllowed(std::string element, const bool dir, const bool inrace) const {
+  std::string cachetoken = createCacheToken(element, dir, inrace);
+  std::map<std::string, bool>::const_iterator mit = matchcache.find(cachetoken);
+  if (mit != matchcache.end()) {
+    return mit->second;
+  }
   std::list<SkiplistItem>::const_iterator it;
   std::list<std::string> elementparts;
   std::list<std::string>::iterator partsit;
@@ -147,11 +158,14 @@ bool SkipList::isAllowed(std::string element, const bool dir, const bool inrace)
       }
       if ((it->matchDir() && dir) || (it->matchFile() && !dir)) {
         if (fixedSlashCompare(it->matchPattern(), *partsit, false)) {
-          return it->isAllowed();
+          bool allowed = it->isAllowed();
+          matchcache[cachetoken] = allowed;
+          return allowed;
         }
       }
     }
   }
+  matchcache[cachetoken] = defaultallow;
   return defaultallow;
 }
 
@@ -167,6 +181,7 @@ void SkipList::addDefaultEntries() {
 void SkipList::readConfiguration() {
   std::vector<std::string> lines;
   entries.clear();
+  matchcache.clear();
   global->getDataFileHandler()->getDataFor("SkipList", &lines);
   std::vector<std::string>::iterator it;
   std::string line;
@@ -235,4 +250,5 @@ bool SkipList::defaultAllow() const {
 
 void SkipList::setDefaultAllow(bool defaultallow) {
   this->defaultallow = defaultallow;
+  matchcache.clear();
 }
