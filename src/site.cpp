@@ -26,6 +26,8 @@ Site::Site(std::string name) {
   allowupload = true;
   proxytype = SITE_PROXY_GLOBAL;
   proxyname = "";
+  rank = SITE_RANK_USE_GLOBAL;
+  ranktolerance = SITE_RANK_USE_GLOBAL;
 }
 
 std::map<std::string, std::string>::const_iterator Site::sectionsBegin() const {
@@ -232,6 +234,14 @@ std::string Site::getPass() const {
   return pass;
 }
 
+int Site::getRank() const {
+  return rank;
+}
+
+int Site::getRankTolerance() const {
+  return ranktolerance;
+}
+
 void Site::setName(std::string name) {
   this->name = name;
 }
@@ -250,6 +260,14 @@ void Site::setUser(std::string user) {
 
 void Site::setPass(std::string pass) {
   this->pass = pass;
+}
+
+void Site::setRank(int rank) {
+  this->rank = rank;
+}
+
+void Site::setRankTolerance(int tolerance) {
+  ranktolerance = tolerance;
 }
 
 void Site::setBasePath(std::string basepath) {

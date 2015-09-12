@@ -385,6 +385,7 @@ void Engine::refreshScoreBoard() {
                 sld->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_OFF)) {
           continue;
         }
+        if (!global->getSiteManager()->testRankCompatibility(*sls->getSite(), *sld->getSite())) continue;
         int avgspeed = sls->getSite()->getAverageSpeed(sld->getSite()->getName());
         if (avgspeed > maxavgspeed) {
           avgspeed = maxavgspeed;

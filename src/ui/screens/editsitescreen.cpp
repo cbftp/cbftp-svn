@@ -98,8 +98,6 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
   listcommand->addOption("LIST", SITE_LIST_LIST);
   listcommand->setOption(modsite.getListCommand());
   mso.addStringField(y++, x, "idletime", "Max idle time (s):", util::int2Str(modsite.getMaxIdleTime()), false);
-  mso.addCheckBox(y++, x, "allowupload", "Allow upload:", modsite.getAllowUpload());
-  mso.addCheckBox(y++, x, "allowdownload", "Allow download:", modsite.getAllowDownload());
   mso.addCheckBox(y++, x, "ssl", "AUTH SSL:", modsite.SSL());
   Pointer<MenuSelectOptionTextArrow> sslfxp = mso.addTextArrow(y++, x, "ssltransfer", "SSL transfers:");
   sslfxp->addOption("Always off", SITE_SSL_ALWAYS_OFF);
@@ -129,6 +127,10 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
     useproxy->setOptionText(modsite.getProxy());
   }
   y++;
+  mso.addCheckBox(y++, x, "allowupload", "Allow upload:", modsite.getAllowUpload());
+  mso.addCheckBox(y++, x, "allowdownload", "Allow download:", modsite.getAllowDownload());
+  mso.addIntArrow(y++, x, "rank", "Rank (" + util::int2Str(SITE_RANK_USE_GLOBAL) + " for global):", modsite.getRank(), 0, SITE_RANK_MAX);
+  mso.addIntArrow(y++, x, "ranktolerance", "Rank tolerance (" + util::int2Str(SITE_RANK_USE_GLOBAL) + " for global):", modsite.getRankTolerance(), 0, SITE_RANK_MAX);
   mso.addStringField(y++, x, "blockedsrc", "Block transfers from:", blockedsrc, false, 60, 512);
   mso.addStringField(y++, x, "blockeddst", "Block transfers to:", blockeddst, false, 60, 512);
   mso.addStringField(y++, x, "affils", "Affils:", affilstr, false, 60, 1024);
@@ -435,6 +437,12 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "idletime") {
           site->setMaxIdleTime(util::str2Int(msoe.get<MenuSelectOptionTextField>()->getData()));
+        }
+        else if (identifier == "rank") {
+          site->setRank(msoe.get<MenuSelectOptionNumArrow>()->getData());
+        }
+        else if (identifier == "ranktolerance") {
+          site->setRankTolerance(msoe.get<MenuSelectOptionNumArrow>()->getData());
         }
         else if (identifier == "useproxy") {
           int proxytype = msoe.get<MenuSelectOptionTextArrow>()->getData();

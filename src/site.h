@@ -18,6 +18,9 @@
 #define SITE_LIST_STAT 840
 #define SITE_LIST_LIST 841
 
+#define SITE_RANK_MAX 100
+#define SITE_RANK_USE_GLOBAL 0
+
 class Site {
   private:
     std::string name;
@@ -45,6 +48,8 @@ class Site {
     std::string basepath;
     int proxytype;
     std::string proxyname;
+    int rank;      // Only pair sites dst->rank >= (dst->rank - dst->rank_tol)
+    int ranktolerance; 
   public:
     Site();
     Site(std::string);
@@ -90,12 +95,16 @@ class Site {
     std::string getPort() const;
     std::string getUser() const;
     std::string getPass() const;
+    int getRank() const;
+    int getRankTolerance() const;
     void setName(std::string);
     void setAddress(std::string);
     void setBasePath(std::string);
     void setPort(std::string);
     void setUser(std::string);
     void setPass(std::string);
+    void setRank(int);
+    void setRankTolerance(int);
     void setMaxLogins(unsigned int);
     void setMaxDn(unsigned int);
     void setMaxUp(unsigned int);

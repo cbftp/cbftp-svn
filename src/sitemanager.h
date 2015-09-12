@@ -13,6 +13,8 @@
 #define DEFAULTMAXIDLETIME 60
 #define DEFAULTSSL true
 #define DEFAULTSSLTRANSFER SITE_SSL_PREFER_OFF
+#define DEFAULTGLOBALRANK (SITE_RANK_MAX / 2)
+#define DEFAULTGLOBALRANKTOLERANCE DEFAULTGLOBALRANK  // Allow all pairings by default
 
 class SiteManager {
   private:
@@ -26,6 +28,8 @@ class SiteManager {
     unsigned int defaultmaxidletime;
     int defaultssltransfer;
     bool defaultsslconn;
+    int globalrank;
+    int globalranktolerance;
   public:
     SiteManager();
     void readConfiguration();
@@ -51,6 +55,10 @@ class SiteManager {
     void setDefaultSSL(bool);
     int getDefaultSSLTransferPolicy() const;
     void setDefaultSSLTransferPolicy(int);
+    int getGlobalRank() const;
+    void setGlobalRank(int);
+    int getGlobalRankTolerance() const;
+    void setGlobalRankTolerance(int);
     void writeState();
     void sortSites();
     void proxyRemoved(std::string);
@@ -59,6 +67,7 @@ class SiteManager {
     void clearBlocksForSite(Site *);
     std::list<Site *> getBlocksFromSite(Site *) const;
     std::list<Site *> getBlocksToSite(Site *) const;
+    bool testRankCompatibility(const Site&, const Site&) const;
 };
 
 bool siteNameComparator(Site *, Site *);

@@ -77,6 +77,9 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   sslfxp->setOption(sm->getDefaultSSLTransferPolicy());
   mso.addStringField(y++, x, "defidletime", "Default site max idle time (s):", util::int2Str(sm->getDefaultMaxIdleTime()), false);
   y++;
+  mso.addIntArrow(y++, x, "globalrank", "Global site rank:", sm->getGlobalRank(), 1, SITE_RANK_MAX);
+  mso.addIntArrow(y++, x, "globalranktolerance", "Global site rank tolerance:", sm->getGlobalRankTolerance(), 1, SITE_RANK_MAX);
+  y++;
   mso.addStringField(y++, x, "dlpath", "Download path:", ls->getDownloadPath(), false, 128, 128);
   y++;
   mso.addTextButtonNoContent(y++, x, "skiplist", "Configure skiplist...");
@@ -218,6 +221,12 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "defidletime") {
           sm->setDefaultMaxIdleTime(util::str2Int(msoe.get<MenuSelectOptionTextField>()->getData()));
+        }
+        else if (identifier == "globalrank") {
+          sm->setGlobalRank(msoe.get<MenuSelectOptionNumArrow>()->getData());
+        }
+        else if (identifier == "globalranktolerance") {
+          sm->setGlobalRankTolerance(msoe.get<MenuSelectOptionNumArrow>()->getData());
         }
         else if (identifier == "legend") {
           ui->showLegend(msoe.get<MenuSelectOptionCheckBox>()->getData());

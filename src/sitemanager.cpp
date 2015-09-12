@@ -22,6 +22,8 @@ SiteManager::SiteManager() {
   defaultsslconn = DEFAULTSSL;
   defaultssltransfer = DEFAULTSSLTRANSFER;
   defaultmaxidletime = DEFAULTMAXIDLETIME;
+  globalrank = DEFAULTGLOBALRANK;
+  globalranktolerance = DEFAULTGLOBALRANKTOLERANCE;
 }
 
 void SiteManager::readConfiguration() {
@@ -123,6 +125,12 @@ void SiteManager::readConfiguration() {
     else if (!setting.compare("proxyname")) {
       site->setProxy(value);
     }
+    else if (!setting.compare("rank")) {
+      site->setRank(util::str2Int(value));
+    }
+    else if (!setting.compare("ranktolerance")) {
+      site->setRankTolerance(util::str2Int(value));
+    }
   }
   lines.clear();
   global->getDataFileHandler()->getDataFor("SiteManagerDefaults", &lines);
@@ -162,6 +170,12 @@ void SiteManager::readConfiguration() {
     }
     else if (!setting.compare("maxidletime")) {
       setDefaultMaxIdleTime(util::str2Int(value));
+    }
+    else if (!setting.compare("rank")) {
+      setGlobalRank(util::str2Int(value));
+    }
+    else if (!setting.compare("ranktolerance")) {
+      setGlobalRankTolerance(util::str2Int(value));
     }
   }
   lines.clear();
@@ -214,6 +228,8 @@ void SiteManager::writeState() {
     if (!site->getAllowUpload()) filehandler->addOutputLine(filetag, name + "$allowupload=false");
     if (!site->getAllowDownload()) filehandler->addOutputLine(filetag, name + "$allowdownload=false");
     if (site->hasBrokenPASV()) filehandler->addOutputLine(filetag, name + "$brokenpasv=true");
+    filehandler->addOutputLine(filetag, name + "$rank=" + util::int2Str(site->getRank()));
+    filehandler->addOutputLine(filetag, name + "$ranktolerance=" + util::int2Str(site->getRankTolerance()));
     int proxytype = site->getProxyType();
     filehandler->addOutputLine(filetag, name + "$proxytype=" + util::int2Str(proxytype));
     if (proxytype == SITE_PROXY_USE) {
@@ -242,6 +258,8 @@ void SiteManager::writeState() {
   filehandler->addOutputLine(defaultstag, "maxdown=" + util::int2Str(getDefaultMaxDown()));
   filehandler->addOutputLine(defaultstag, "maxidletime=" + util::int2Str(getDefaultMaxIdleTime()));
   filehandler->addOutputLine(defaultstag, "ssltransfer=" + util::int2Str(getDefaultSSLTransferPolicy()));
+  filehandler->addOutputLine(defaultstag, "rank=" + util::int2Str(getGlobalRank()));
+  filehandler->addOutputLine(defaultstag, "ranktolerance=" + util::int2Str(getGlobalRankTolerance()));
   if (!getDefaultSSL()) filehandler->addOutputLine(defaultstag, "sslconn=false");
   std::map<Site *, std::map<Site *, bool> >::iterator it2;
   std::map<Site *, bool>::iterator it3;
@@ -366,6 +384,22 @@ void SiteManager::setDefaultSSLTransferPolicy(int policy) {
   defaultssltransfer = policy;
 }
 
+int SiteManager::getGlobalRank() const {
+  return globalrank;
+}
+
+void SiteManager::setGlobalRank(int rank) {
+  globalrank = rank;
+}
+
+int SiteManager::getGlobalRankTolerance() const {
+  return globalranktolerance;
+}
+
+void SiteManager::setGlobalRankTolerance(int tolerance) {
+  globalranktolerance = tolerance;
+}
+
 void SiteManager::proxyRemoved(std::string removedproxy) {
   std::vector<Site *>::iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {
@@ -431,3 +465,21 @@ std::list<Site *> SiteManager::getBlocksToSite(Site * site) const {
   }
   return blockedlist;
 }
+
+bool SiteManager::testRankCompatibility(const Site& src, const Site& dst) const {
+  int srcrank = src.getRank();
+  int dstrank = dst.getRank();
+  int srctolerance = src.getRankTolerance();
+  
+  if (srcrank == SITE_RANK_USE_GLOBAL)
+    srcrank = getGlobalRank();
+
+  if (dstrank == SITE_RANK_USE_GLOBAL)
+    dstrank = getGlobalRank();
+
+  if (srctolerance == SITE_RANK_USE_GLOBAL) 
+    srctolerance = getGlobalRankTolerance();
+
+  return (dstrank >= (srcrank - srctolerance));
+}
+
