@@ -74,7 +74,7 @@ void RawCommandScreen::keyPressed(unsigned int ch) {
           if (command != "") {
             readfromcopy = false;
             history.push(command);
-            sitelogic->requestRawCommand(command);
+            sitelogic->requestRawCommand(command, true);
             rawcommandfield.clear();
             ui->update();
           }

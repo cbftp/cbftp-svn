@@ -24,6 +24,8 @@ private:
   void disconnect();
   void handleMessage(std::string);
   void stopRetry();
+  void commandRace(const std::string &);
+  void commandRaw(const std::string &);
 public:
   RemoteCommandHandler();
   bool isEnabled() const;

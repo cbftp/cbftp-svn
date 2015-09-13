@@ -10,6 +10,8 @@
 #include "eventlog.h"
 #include "tickpoke.h"
 #include "util.h"
+#include "sitelogicmanager.h"
+#include "sitelogic.h"
 
 RemoteCommandHandler::RemoteCommandHandler() :
   enabled(false),
@@ -69,21 +71,43 @@ void RemoteCommandHandler::FDData(char * data, unsigned int datalen) {
 void RemoteCommandHandler::handleMessage(std::string message) {
   message = util::trim(message);
   global->getEventLog()->log("RemoteCommandHandler", "Received: " + message);
-  size_t one = message.find(" ");
-  size_t two = message.find(" ", one + 1);
-  size_t three = message.find(" ", two + 1);
-  if (one == std::string::npos || two == std::string::npos || three == std::string::npos) {
-    global->getEventLog()->log("RemoteCommandHandler", "Bad message format.");
+  size_t passend = message.find(" ");
+  if (passend == std::string::npos) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad message format: " + message);
     return;
   }
-  std::string pass = message.substr(0, one);
+  std::string pass = message.substr(0, passend);
   if (pass != password) {
     global->getEventLog()->log("RemoteCommandHandler", "Invalid password.");
     return;
   }
-  std::string section = message.substr(one + 1, two - (one + 1));
-  std::string release = message.substr(two + 1, three - (two + 1));
-  std::string sitestring = message.substr(three + 1);
+  size_t commandend = message.find(" ", passend + 1);
+  if (commandend == std::string::npos) {
+    commandend = message.length();
+  }
+  std::string command = message.substr(passend + 1, commandend - (passend + 1));
+  if (command == "race") {
+    commandRace(message.substr(commandend + 1));
+  }
+  else if (command == "raw") {
+    commandRaw(message.substr(commandend + 1));
+  }
+  else {
+    global->getEventLog()->log("RemoteCommandHandler", "Invalid remote command: " + message);
+    return;
+  }
+}
+
+void RemoteCommandHandler::commandRace(const std::string & message) {
+  size_t sectionend = message.find(" ");
+  size_t releaseend = message.find(" ", sectionend + 1);
+  if (sectionend == std::string::npos || releaseend == std::string::npos || releaseend == message.length()) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad remote race command format: " + message);
+    return;
+  }
+  std::string section = message.substr(0, sectionend);
+  std::string release = message.substr(sectionend + 1, releaseend - (sectionend + 1));
+  std::string sitestring = message.substr(releaseend + 1);
   std::list<std::string> sites;
   while (true) {
     size_t commapos = sitestring.find(",");
@@ -97,6 +121,36 @@ void RemoteCommandHandler::handleMessage(std::string message) {
     }
   }
   global->getEngine()->newRace(release, section, sites);
+}
+
+void RemoteCommandHandler::commandRaw(const std::string & message) {
+  size_t sitesend = message.find(" ");
+  if (sitesend == std::string::npos || sitesend == message.length()) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad remote race command format: " + message);
+    return;
+  }
+  std::string sitestring = message.substr(0, sitesend);
+  std::string rawcommand = message.substr(sitesend + 1);
+  std::list<std::string> sites;
+  while (true) {
+    size_t commapos = sitestring.find(",");
+    if (commapos != std::string::npos) {
+      sites.push_back(sitestring.substr(0, commapos));
+      sitestring = sitestring.substr(commapos + 1);
+    }
+    else {
+      sites.push_back(sitestring);
+      break;
+    }
+  }
+  for (std::list<std::string>::const_iterator it = sites.begin(); it != sites.end(); it++) {
+    SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(*it);
+    if (sl == NULL) {
+      global->getEventLog()->log("RemoteCommandHandler", "Site not found: " + *it);
+      continue;
+    }
+    sl->requestRawCommand(rawcommand, false);
+  }
 }
 
 void RemoteCommandHandler::FDFail(std::string message) {

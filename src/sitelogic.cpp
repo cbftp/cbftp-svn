@@ -1038,9 +1038,9 @@ int SiteLogic::requestFileList(std::string path) {
   return requestid;
 }
 
-int SiteLogic::requestRawCommand(std::string command) {
+int SiteLogic::requestRawCommand(std::string command, bool care) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(requestid, REQ_RAW, command, true));
+  requests.push_back(SiteLogicRequest(requestid, REQ_RAW, command, care));
   activateOne();
   return requestid;
 }
