@@ -1,0 +1,25 @@
+#pragma once
+
+#include <string>
+
+class SiteLogicRequest {
+private:
+  int requestid;
+  int connid;
+  int requesttype;
+  std::string data;
+  std::string data2;
+  int data3;
+  bool care;
+public:
+  SiteLogicRequest(int, int, std::string, bool);
+  SiteLogicRequest(int, int, std::string, std::string, int, bool);
+  int requestId() const;
+  int requestType() const;
+  std::string requestData() const;
+  std::string requestData2() const;
+  int requestData3() const;
+  void setConnId(int);
+  int connId() const;
+  bool doesAnyoneCare() const;
+};

@@ -1,0 +1,234 @@
+#include "remotecommandhandler.h"
+
+#include <vector>
+#include <list>
+
+#include "globalcontext.h"
+#include "datafilehandler.h"
+#include "engine.h"
+#include "iomanager.h"
+#include "eventlog.h"
+#include "tickpoke.h"
+#include "util.h"
+#include "sitelogicmanager.h"
+#include "sitelogic.h"
+
+RemoteCommandHandler::RemoteCommandHandler() :
+  enabled(false),
+  password(DEFAULTPASS),
+  port(DEFAULTPORT),
+  retrying(false),
+  connected(false) {
+}
+
+bool RemoteCommandHandler::isEnabled() const {
+  return enabled;
+}
+
+int RemoteCommandHandler::getUDPPort() const {
+  return port;
+}
+
+std::string RemoteCommandHandler::getPassword() const {
+  return password;
+}
+
+void RemoteCommandHandler::setPassword(std::string newpass) {
+  password = newpass;
+}
+
+void RemoteCommandHandler::setPort(int newport) {
+  bool reopen = true;
+  if (port == newport || !isEnabled()) {
+    reopen = false;
+  }
+  port = newport;
+  if (reopen) {
+    setEnabled(false);
+    setEnabled(true);
+  }
+}
+
+void RemoteCommandHandler::connect() {
+  int udpport = getUDPPort();
+  sockfd = global->getIOManager()->registerUDPServerSocket(this, udpport);
+  if (sockfd >= 0) {
+    connected = true;
+    global->getEventLog()->log("RemoteCommandHandler", "Listening on UDP port " + util::int2Str(udpport));
+  }
+  else {
+    int delay = RETRYDELAY / 1000;
+    global->getEventLog()->log("RemoteCommandHandler", "Retrying in " + util::int2Str(delay) + " seconds.");
+    retrying = true;
+    global->getTickPoke()->startPoke(this, "RemoteCommandHandler", RETRYDELAY, 0);
+  }
+}
+
+void RemoteCommandHandler::FDData(char * data, unsigned int datalen) {
+  handleMessage(std::string(data, datalen));
+}
+
+void RemoteCommandHandler::handleMessage(std::string message) {
+  message = util::trim(message);
+  global->getEventLog()->log("RemoteCommandHandler", "Received: " + message);
+  size_t passend = message.find(" ");
+  if (passend == std::string::npos) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad message format: " + message);
+    return;
+  }
+  std::string pass = message.substr(0, passend);
+  if (pass != password) {
+    global->getEventLog()->log("RemoteCommandHandler", "Invalid password.");
+    return;
+  }
+  size_t commandend = message.find(" ", passend + 1);
+  if (commandend == std::string::npos) {
+    commandend = message.length();
+  }
+  std::string command = message.substr(passend + 1, commandend - (passend + 1));
+  if (command == "race") {
+    commandRace(message.substr(commandend + 1));
+  }
+  else if (command == "raw") {
+    commandRaw(message.substr(commandend + 1));
+  }
+  else {
+    global->getEventLog()->log("RemoteCommandHandler", "Invalid remote command: " + message);
+    return;
+  }
+}
+
+void RemoteCommandHandler::commandRace(const std::string & message) {
+  size_t sectionend = message.find(" ");
+  size_t releaseend = message.find(" ", sectionend + 1);
+  if (sectionend == std::string::npos || releaseend == std::string::npos || releaseend == message.length()) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad remote race command format: " + message);
+    return;
+  }
+  std::string section = message.substr(0, sectionend);
+  std::string release = message.substr(sectionend + 1, releaseend - (sectionend + 1));
+  std::string sitestring = message.substr(releaseend + 1);
+  std::list<std::string> sites;
+  while (true) {
+    size_t commapos = sitestring.find(",");
+    if (commapos != std::string::npos) {
+      sites.push_back(sitestring.substr(0, commapos));
+      sitestring = sitestring.substr(commapos + 1);
+    }
+    else {
+      sites.push_back(sitestring);
+      break;
+    }
+  }
+  global->getEngine()->newRace(release, section, sites);
+}
+
+void RemoteCommandHandler::commandRaw(const std::string & message) {
+  size_t sitesend = message.find(" ");
+  if (sitesend == std::string::npos || sitesend == message.length()) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad remote raw command format: " + message);
+    return;
+  }
+  std::string sitestring = message.substr(0, sitesend);
+  std::string rawcommand = message.substr(sitesend + 1);
+  std::list<std::string> sites;
+  while (true) {
+    size_t commapos = sitestring.find(",");
+    if (commapos != std::string::npos) {
+      sites.push_back(sitestring.substr(0, commapos));
+      sitestring = sitestring.substr(commapos + 1);
+    }
+    else {
+      sites.push_back(sitestring);
+      break;
+    }
+  }
+  for (std::list<std::string>::const_iterator it = sites.begin(); it != sites.end(); it++) {
+    SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(*it);
+    if (sl == NULL) {
+      global->getEventLog()->log("RemoteCommandHandler", "Site not found: " + *it);
+      continue;
+    }
+    sl->requestRawCommand(rawcommand, false);
+  }
+}
+
+void RemoteCommandHandler::FDFail(std::string message) {
+  global->getEventLog()->log("RemoteCommandHandler", "UDP binding on port " +
+      util::int2Str(getUDPPort()) + " failed: " + message);
+}
+
+void RemoteCommandHandler::disconnect() {
+  if (connected) {
+    global->getIOManager()->closeSocket(sockfd);
+    global->getEventLog()->log("RemoteCommandHandler", "Closing UDP socket");
+    connected = false;
+  }
+}
+
+void RemoteCommandHandler::setEnabled(bool enabled) {
+  if ((isEnabled() && enabled) || (!isEnabled() && !enabled)) {
+    return;
+  }
+  if (retrying) {
+    stopRetry();
+  }
+  if (enabled) {
+    connect();
+  }
+  else {
+    disconnect();
+  }
+  this->enabled = enabled;
+}
+
+void RemoteCommandHandler::stopRetry() {
+  if (retrying) {
+    global->getTickPoke()->stopPoke(this, 0);
+    retrying = false;
+  }
+}
+
+void RemoteCommandHandler::tick(int) {
+  stopRetry();
+  if (enabled) {
+    connect();
+  }
+}
+
+void RemoteCommandHandler::readConfiguration() {
+  std::vector<std::string> lines;
+  global->getDataFileHandler()->getDataFor("RemoteCommandHandler", &lines);
+  std::vector<std::string>::iterator it;
+  std::string line;
+  bool enable = false;
+  for (it = lines.begin(); it != lines.end(); it++) {
+    line = *it;
+    if (line.length() == 0 ||line[0] == '#') continue;
+    size_t tok = line.find('=');
+    std::string setting = line.substr(0, tok);
+    std::string value = line.substr(tok + 1);
+    if (!setting.compare("enabled")) {
+      if (!value.compare("true")) {
+        enable = true;
+      }
+    }
+    else if (!setting.compare("port")) {
+      setPort(util::str2Int(value));
+    }
+    else if (!setting.compare("password")) {
+      setPassword(value);
+    }
+  }
+  if (enable) {
+    setEnabled(true);
+  }
+}
+
+void RemoteCommandHandler::writeState() {
+  global->getEventLog()->log("RemoteCommandHandler", "Writing state...");
+  DataFileHandler * filehandler = global->getDataFileHandler();
+  if (enabled) filehandler->addOutputLine("RemoteCommandHandler", "enabled=true");
+  filehandler->addOutputLine("RemoteCommandHandler", "port=" + util::int2Str(port));
+  filehandler->addOutputLine("RemoteCommandHandler", "password=" + password);
+}
