@@ -1,6 +1,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <signal.h>
+#include <stdio.h>
 
 #include "datafilehandler.h"
 #include "sitelogicmanager.h"
@@ -21,20 +22,28 @@
 #include "timereference.h"
 
 #define DATAFILE "data"
-#define DATAPATH ".clusterbomb"
+#define DATAPATH ".cbftp"
+#define OLDDATAPATH ".clusterbomb" // backwards compatibility
 
 GlobalContext * global;
 
 std::string setupDataDir(LocalStorage * ls) {
   std::string datadirpath = std::string(getenv("HOME")) + "/" + DATAPATH;
+  std::string olddatadirpath = std::string(getenv("HOME")) + "/" + OLDDATAPATH; // backwards compatibility
   std::string datapath = datadirpath + "/" + DATAFILE;
-  char * specialdatapath = getenv("CLUSTERBOMB_DATA_PATH");
+  char * specialdatapath = getenv("CBFTP_DATA_PATH");
   if (specialdatapath != NULL) {
     datapath = std::string(specialdatapath);
   }
   else if (ls->directoryExistsReadable(datadirpath)) {
     if (!ls->directoryExistsWritable(datadirpath)) {
       perror(std::string("Error: no write access to " + datadirpath).c_str());
+      exit(1);
+    }
+  }
+  else if (ls->directoryExistsReadable(olddatadirpath)) { // backwards compatibility
+    if (rename(olddatadirpath.c_str(), datadirpath.c_str())) {
+      perror(std::string("Error: failed to rename " + olddatadirpath + " to " + datadirpath).c_str());
       exit(1);
     }
   }

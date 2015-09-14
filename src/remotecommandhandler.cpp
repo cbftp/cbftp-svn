@@ -126,7 +126,7 @@ void RemoteCommandHandler::commandRace(const std::string & message) {
 void RemoteCommandHandler::commandRaw(const std::string & message) {
   size_t sitesend = message.find(" ");
   if (sitesend == std::string::npos || sitesend == message.length()) {
-    global->getEventLog()->log("RemoteCommandHandler", "Bad remote race command format: " + message);
+    global->getEventLog()->log("RemoteCommandHandler", "Bad remote raw command format: " + message);
     return;
   }
   std::string sitestring = message.substr(0, sitesend);

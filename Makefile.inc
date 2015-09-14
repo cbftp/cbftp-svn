@@ -9,7 +9,7 @@ endif
 
 DATE := "\"${shell date}\""
 
-BOXTAG := "\"clusterbomb\""
+BOXTAG := "\"cbftp\""
 
 CPPFLAGS :=-g -Wall -O0
 FINALFLAGS=-g -O0

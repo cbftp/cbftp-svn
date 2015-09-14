@@ -1,6 +1,6 @@
 include Makefile.inc
 
-BINS = clusterbomb clusterbomb-debug datafilecat datafilewrite
+BINS = cbftp cbftp-debug datafilecat datafilewrite
 
 BINDIR = bin
 
@@ -12,11 +12,11 @@ mkdirs:
 sources:
 	@cd src; ${MAKE}
 	
-clusterbomb: sources mkdirs
-	g++ -o bin/clusterbomb $(FINALFLAGS) src/*.o src/ui/*.o src/ui/screens/*.o $(LINKFLAGS)
+cbftp: sources mkdirs
+	g++ -o bin/cbftp $(FINALFLAGS) src/*.o src/ui/*.o src/ui/screens/*.o $(LINKFLAGS)
 	
-clusterbomb-debug: sources mkdirs
-	cp misc/start_with_gdb.sh bin/clusterbomb-debug; chmod +x bin/clusterbomb-debug
+cbftp-debug: sources mkdirs
+	cp misc/start_with_gdb.sh bin/cbftp-debug; chmod +x bin/cbftp-debug
 
 datafilecat: src/crypto.cpp src/datafilecat.cpp mkdirs
 	g++ -o bin/datafilecat ${FINALFLAGS} src/crypto.cpp src/datafilecat.cpp -lcrypto

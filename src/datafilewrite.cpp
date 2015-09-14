@@ -2,7 +2,7 @@
 
 int main(int argc, char ** argv) {
   if (argc < 4) {
-    std::cout << "datafilewrite: encrypts the content of a clusterbomb plain text data file.\n\nUsage: datafilewrite <plaintextdatafile> <crypto key> <outdatafile>" << std::endl;
+    std::cout << "datafilewrite: encrypts the content of a cbftp plain text data file.\n\nUsage: datafilewrite <plaintextdatafile> <crypto key> <outdatafile>" << std::endl;
     return 0;
   }
   char * path = argv[1];
@@ -38,7 +38,7 @@ int main(int argc, char ** argv) {
     delete *it;
   }
   if (strstr((const char *)rawdata, std::string("DataFileHandler.readable").data()) == NULL) {
-    std::cout << "Error: The input file is not a valid clusterbomb data file, or is missing the DataFileHandler.readable entry." << std::endl;
+    std::cout << "Error: The input file is not a valid v data file, or is missing the DataFileHandler.readable entry." << std::endl;
     delete[] rawdata;
     return -1;
   }

@@ -2,7 +2,7 @@
 
 int main(int argc, char ** argv) {
   if (argc < 3) {
-    std::cout << "datafilecat: decrypts and prints the decrypted content of a clusterbomb data file.\n\nUsage: datafilecat <file> <crypto key>" << std::endl;
+    std::cout << "datafilecat: decrypts and prints the decrypted content of a cbftp data file.\n\nUsage: datafilecat <file> <crypto key>" << std::endl;
     return 0;
   }
   char * path = argv[1];
@@ -44,7 +44,7 @@ int main(int argc, char ** argv) {
   decryptedtext[decryptedlen] = '\0';
   delete[] rawdata;
   if (strstr((const char *)decryptedtext, std::string("DataFileHandler.readable").data()) == NULL) {
-    std::cout << "Error: Either the key is wrong, or the indata file is not a valid clusterbomb data file." << std::endl;
+    std::cout << "Error: Either the key is wrong, or the indata file is not a valid cbftp data file." << std::endl;
     return -1;
   }
   std::cout << decryptedtext << std::endl;

@@ -35,7 +35,7 @@ void LoginScreen::redraw() {
   pass_row = row-2;
   pass_col = col-27;
   ui->showCursor();
-  std::string svnstring = " This is Project Clusterbomb. Version tag: " + std::string(VERSION) + " ";
+  std::string svnstring = " cbftp version tag: " + std::string(VERSION) + " ";
   std::string compilestring = " Compiled: " + std::string(BUILDTIME) + " ";
   int boxchar = 0;
   for(unsigned int i = 1; i < row; i++) {

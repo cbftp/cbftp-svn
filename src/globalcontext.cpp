@@ -34,7 +34,7 @@ void GlobalContext::init() {
   pthread_attr_init(&attr);
   pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
 #ifdef _ISOC95_SOURCE
-  pthread_setname_np(pthread_self(), "clusterbomb");
+  pthread_setname_np(pthread_self(), "cbftp");
 #endif
   updateTime();
 }

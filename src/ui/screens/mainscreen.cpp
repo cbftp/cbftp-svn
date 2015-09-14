@@ -417,7 +417,7 @@ std::string MainScreen::getLegendText() const {
 }
 
 std::string MainScreen::getInfoLabel() const {
-  return "CLUSTERBOMB MAIN";
+  return "CBFTP MAIN";
 }
 
 std::string MainScreen::getInfoText() const {
