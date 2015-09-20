@@ -422,7 +422,7 @@ Pointer<TransferStatus> TransferMonitor::getTransferStatus() const {
 void TransferMonitor::updateFXPSizeSpeed() {
   File * file = fld->getFile(dfile);
   if (file) {
-    unsigned int filesize = file->getSize();
+    unsigned long long int filesize = file->getSize();
     int span = timestamp - startstamp;
     int touch = file->getTouch();
     if (!span) {
@@ -481,7 +481,7 @@ void TransferMonitor::checkForDeadFXPTransfers() {
   }
 }
 
-void TransferMonitor::setTargetSizeSpeed(unsigned int filesize, int span) {
+void TransferMonitor::setTargetSizeSpeed(unsigned long long int filesize, int span) {
   ts->setTargetSize(filesize);
   unsigned int currentspeed = ts->targetSize() / span;
   unsigned int prevspeed = ts->getSpeed();
