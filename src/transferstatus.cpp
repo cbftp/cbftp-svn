@@ -103,7 +103,7 @@ void TransferStatus::setAwaited(bool awaited) {
   this->awaited = awaited;
 }
 
-void TransferStatus::setTargetSize(unsigned int targetsize) {
+void TransferStatus::setTargetSize(unsigned long long int targetsize) {
   // the appearing size (interpolatedtargetsize) cannot shrink. knownsize is
   // only used for determining when speed recalculation is necessary
   knowntargetsize = targetsize;
@@ -114,7 +114,7 @@ void TransferStatus::setTargetSize(unsigned int targetsize) {
   interpolationfilltargetsize = knowntargetsize;
 }
 
-void TransferStatus::interpolateAddSize(unsigned int interpolateaddsize) {
+void TransferStatus::interpolateAddSize(unsigned long long int interpolateaddsize) {
   if (interpolationfilltargetsize < interpolatedtargetsize) {
     interpolationfilltargetsize += interpolateaddsize;
     if (interpolationfilltargetsize > interpolatedtargetsize) {

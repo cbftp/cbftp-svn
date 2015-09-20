@@ -73,7 +73,7 @@ class TransferMonitor : public EventReceiver {
     int localtransferspeedticker;
     int checkdeadticker;
     void finish(bool);
-    void setTargetSizeSpeed(unsigned int, int);
+    void setTargetSizeSpeed(unsigned long long int, int);
     void reset();
     void transferFailed(Pointer<TransferStatus>, TransferError);
     void updateFXPSizeSpeed();

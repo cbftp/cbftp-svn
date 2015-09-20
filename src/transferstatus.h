@@ -33,8 +33,8 @@ public:
   void setFinished();
   void setFailed();
   void setAwaited(bool);
-  void setTargetSize(unsigned int);
-  void interpolateAddSize(unsigned int);
+  void setTargetSize(unsigned long long int);
+  void interpolateAddSize(unsigned long long int);
   void setSpeed(unsigned int);
   void setTimeSpent(unsigned int);
 private:
