@@ -12,16 +12,16 @@
 
 class TransferStatus {
 public:
-  TransferStatus(int, std::string, std::string, std::string, std::string, std::string, std::string, unsigned int, unsigned int);
+  TransferStatus(int, std::string, std::string, std::string, std::string, std::string, std::string, unsigned long long int, unsigned int);
   std::string getSource() const;
   std::string getTarget() const;
   std::string getRelease() const;
   std::string getFile() const;
   std::string getSourcePath() const;
   std::string getTargetPath() const;
-  unsigned int sourceSize() const;
-  unsigned int targetSize() const;
-  unsigned int knownTargetSize() const;
+  unsigned long long int sourceSize() const;
+  unsigned long long int targetSize() const;
+  unsigned long long int knownTargetSize() const;
   unsigned int getSpeed() const;
   unsigned int getTimeSpent() const;
   unsigned int getTimeRemaining() const;
@@ -47,10 +47,10 @@ private:
   std::string timestamp;
   std::string sourcepath;
   std::string targetpath;
-  unsigned int sourcesize;
-  unsigned int knowntargetsize;
-  unsigned int interpolatedtargetsize;
-  unsigned int interpolationfilltargetsize;
+  unsigned long long int sourcesize;
+  unsigned long long int knowntargetsize;
+  unsigned long long int interpolatedtargetsize;
+  unsigned long long int interpolationfilltargetsize;
   unsigned int speed;
   int state;
   unsigned int timespent;

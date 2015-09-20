@@ -4,7 +4,7 @@
 
 TransferStatus::TransferStatus(int type, std::string source, std::string target,
     std::string release, std::string file, std::string sourcepath,
-    std::string targetpath, unsigned int sourcesize, unsigned int assumedspeed) :
+    std::string targetpath, unsigned long long int sourcesize, unsigned int assumedspeed) :
     type(type), source(source), target(target), release(release), file(file),
     timestamp(util::ctimeLog()), sourcepath(sourcepath),
     targetpath(targetpath), sourcesize(sourcesize), knowntargetsize(0),
@@ -44,15 +44,15 @@ std::string TransferStatus::getTargetPath() const {
   return targetpath;
 }
 
-unsigned int TransferStatus::sourceSize() const {
+unsigned long long int TransferStatus::sourceSize() const {
   return sourcesize;
 }
 
-unsigned int TransferStatus::targetSize() const {
+unsigned long long int TransferStatus::targetSize() const {
   return interpolatedtargetsize;
 }
 
-unsigned int TransferStatus::knownTargetSize() const {
+unsigned long long int TransferStatus::knownTargetSize() const {
   return knowntargetsize;
 }
 
