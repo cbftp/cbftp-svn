@@ -75,7 +75,7 @@ class TransferMonitor : public EventReceiver {
     void finish(bool);
     void setTargetSizeSpeed(unsigned long long int, int);
     void reset();
-    void transferFailed(Pointer<TransferStatus>, TransferError);
+    void transferFailed(Pointer<TransferStatus> &, TransferError);
     void updateFXPSizeSpeed();
     void updateLocalTransferSizeSpeed();
     void checkForDeadFXPTransfers();
@@ -92,8 +92,8 @@ class TransferMonitor : public EventReceiver {
     bool idle() const;
     Pointer<TransferStatus> getTransferStatus() const;
     void engageFXP(std::string, SiteLogic *, FileList *, std::string, SiteLogic *, FileList *);
-    void engageDownload(std::string, SiteLogic *, FileList *, Pointer<LocalFileList>);
-    void engageUpload(std::string, Pointer<LocalFileList>, SiteLogic *, FileList *);
+    void engageDownload(std::string, SiteLogic *, FileList *, Pointer<LocalFileList> &);
+    void engageUpload(std::string, Pointer<LocalFileList> &, SiteLogic *, FileList *);
     void engageList(SiteLogic *, int, bool);
     Status getStatus() const;
 };

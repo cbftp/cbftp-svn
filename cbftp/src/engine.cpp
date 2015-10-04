@@ -25,6 +25,8 @@
 #include "transferstatus.h"
 #include "util.h"
 
+extern GlobalContext * global;
+
 Engine::Engine() :
   scoreboard(makePointer<ScoreBoard>()),
   maxavgspeed(1024),
@@ -406,11 +408,10 @@ void Engine::refreshScoreBoard() {
               }
               const std::string filename = f->getName();
               if (fld->contains(filename) || f->isDirectory() || f->getSize() == 0) continue;
-              if (fls->hasFailedDownload(filename)) continue;
-              if (fld->hasFailedUpload(filename)) continue;
+              if (race->hasFailedTransfer(f, fld)) continue;
               bool prio = false;
               unsigned short score = calculateScore(f, race, fls, srs, fld, srd, avgspeed, &prio, (SPREAD ? false : true));
-              scoreboard->add(filename, score, prio, sls, fls, sld, fld);
+              scoreboard->add(filename, score, prio, sls, fls, sld, fld, race);
               race->resetUpdateCheckCounter();
             }
           }
@@ -583,10 +584,12 @@ void Engine::issueOptimalTransfers() {
   SiteLogic * sls;
   SiteLogic * sld;
   std::string filename;
+  Pointer<Race> race;
   for (it = scoreboard->begin(); it != scoreboard->end(); it++) {
     sbe = *it;
     sls = sbe->getSource();
     sld = sbe->getDestination();
+    race = sbe->getRace();
     filename = sbe->fileName();
     //potentiality handling
     if (!sbe->isPrioritized()) { // priority files shouldn't affect the potential tracking
@@ -594,10 +597,11 @@ void Engine::issueOptimalTransfers() {
     }
     if (!sls->downloadSlotAvailable()) continue;
     if (!sld->uploadSlotAvailable()) continue;
-    if (sls->potentialCheck(sbe->getScore())) {
+    if (!sls->potentialCheck(sbe->getScore())) continue;
+    Pointer<TransferStatus> ts =
       global->getTransferManager()->suggestTransfer(filename, sls,
-          sbe->getSourceFileList(), sld, sbe->getDestinationFileList());
-    }
+        sbe->getSourceFileList(), sld, sbe->getDestinationFileList());
+    race->addTransfer(ts);
   }
 }
 
@@ -786,15 +790,22 @@ std::list<Pointer<TransferJob> >::const_iterator Engine::getTransferJobsEnd() co
 void Engine::tick(int message) {
   for (std::list<Pointer<Race> >::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
     if ((*it)->checksSinceLastUpdate() >= MAXCHECKSTIMEOUT) {
-      global->getEventLog()->log("Engine", "No activity for " + util::int2Str(MAXCHECKSTIMEOUT) +
-          " seconds, aborting race: " + (*it)->getName());
-      for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator its = (*it)->begin(); its != (*it)->end(); its++) {
-        its->second->raceLocalComplete(its->first);
+      if ((*it)->failedTransfersCleared()) {
+        global->getEventLog()->log("Engine", "No activity for " + util::int2Str(MAXCHECKSTIMEOUT) +
+            " seconds, aborting race: " + (*it)->getName());
+        for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator its = (*it)->begin(); its != (*it)->end(); its++) {
+          its->second->raceLocalComplete(its->first);
+        }
+        (*it)->setTimeout();
+        issueGlobalComplete(*it);
+        currentraces.erase(it);
+        break;
       }
-      (*it)->setTimeout();
-      issueGlobalComplete(*it);
-      currentraces.erase(it);
-      break;
+      else {
+        if ((*it)->clearFailedTransfers()) {
+          (*it)->resetUpdateCheckCounter();
+        }
+      }
     }
   }
   for (std::list<Pointer<TransferJob> >::iterator it = currenttransferjobs.begin(); it != currenttransferjobs.end(); it++) {

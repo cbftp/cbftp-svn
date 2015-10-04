@@ -9,12 +9,11 @@
 
 #define SPREAD 0
 #define POKEINTERVAL 1000
-#define MAXCHECKSTIMEOUT 120
+#define MAXCHECKSTIMEOUT 60
 #define STATICTIMEFORCOMPLETION 5000
 #define DIROBSERVETIME 20000
 #define SFVDIROBSERVETIME 5000
 
-class GlobalContext;
 class Race;
 class TransferJob;
 class SiteRace;
@@ -24,8 +23,6 @@ class ScoreBoard;
 class SiteLogic;
 class PendingTransfer;
 class Site;
-
-extern GlobalContext * global;
 
 class Engine : public EventReceiver {
   private:

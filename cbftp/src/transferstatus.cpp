@@ -3,14 +3,16 @@
 #include "util.h"
 
 TransferStatus::TransferStatus(int type, std::string source, std::string target,
-    std::string release, std::string file, std::string sourcepath,
-    std::string targetpath, unsigned long long int sourcesize, unsigned int assumedspeed) :
+    std::string release, std::string file, FileList * fls, std::string sourcepath,
+    FileList * fld, std::string targetpath, unsigned long long int sourcesize,
+    unsigned int assumedspeed) :
     type(type), source(source), target(target), release(release), file(file),
     timestamp(util::ctimeLog()), sourcepath(sourcepath),
     targetpath(targetpath), sourcesize(sourcesize), knowntargetsize(0),
     interpolatedtargetsize(0), interpolationfilltargetsize(0), speed(assumedspeed),
     state(TRANSFERSTATUS_STATE_IN_PROGRESS), timespent(0), progress(0),
-    awaited(false) {
+    awaited(false), callback(NULL), fls(fls), fld(fld)
+{
   if (!this->speed) {
     this->speed = 1024;
   }
@@ -42,6 +44,14 @@ std::string TransferStatus::getSourcePath() const {
 
 std::string TransferStatus::getTargetPath() const {
   return targetpath;
+}
+
+FileList * TransferStatus::getSourceFileList() const {
+  return fls;
+}
+
+FileList * TransferStatus::getTargetFileList() const {
+  return fld;
 }
 
 unsigned long long int TransferStatus::sourceSize() const {
@@ -76,6 +86,10 @@ std::string TransferStatus::getTimestamp() const {
   return timestamp;
 }
 
+TransferStatusCallback * TransferStatus::getCallback() const {
+  return callback;
+}
+
 int TransferStatus::getState() const {
   return state;
 }
@@ -101,6 +115,10 @@ void TransferStatus::setFailed() {
 
 void TransferStatus::setAwaited(bool awaited) {
   this->awaited = awaited;
+}
+
+void TransferStatus::setCallback(TransferStatusCallback * callback) {
+  this->callback = callback;
 }
 
 void TransferStatus::setTargetSize(unsigned long long int targetsize) {

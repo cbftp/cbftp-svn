@@ -7,6 +7,7 @@ class Site;
 class File {
   friend class FileList;
 private:
+  File(const File &);
   void parseUNIXSTATLine(const std::string &);
   void parseBrokenUNIXSTATLine(const std::string &, int, int &);
   void parseMSDOSSTATLine(const std::string &);

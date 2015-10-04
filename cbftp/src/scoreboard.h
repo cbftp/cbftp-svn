@@ -3,9 +3,12 @@
 #include <vector>
 #include <string>
 
+#include "pointer.h"
+
 class ScoreBoardElement;
 class SiteLogic;
 class FileList;
+class Race;
 
 #define RESIZE_CHUNK 1000
 #define USHORT_MAX 0x10000
@@ -23,7 +26,7 @@ class ScoreBoard {
   public:
     ScoreBoard();
     ~ScoreBoard();
-    void add(std::string, unsigned short, bool, SiteLogic *, FileList *, SiteLogic *, FileList *);
+    void add(std::string, unsigned short, bool, SiteLogic *, FileList *, SiteLogic *, FileList *, Pointer<Race>);
     unsigned int size() const;
     std::vector<ScoreBoardElement *>::const_iterator begin() const;
     std::vector<ScoreBoardElement *>::const_iterator end() const;
