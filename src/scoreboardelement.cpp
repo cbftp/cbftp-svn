@@ -1,15 +1,16 @@
 #include "scoreboardelement.h"
 
-ScoreBoardElement::ScoreBoardElement(std::string filename, unsigned short score, bool prio, SiteLogic * src, FileList * fls, SiteLogic * dst, FileList * fld) {
-  reset(filename, score, prio, src, fls, dst, fld);
+ScoreBoardElement::ScoreBoardElement(std::string filename, unsigned short score, bool prio, SiteLogic * src, FileList * fls, SiteLogic * dst, FileList * fld, Pointer<Race> race) {
+  reset(filename, score, prio, src, fls, dst, fld, race);
 }
 
-void ScoreBoardElement::reset(std::string filename, unsigned short score, bool prio, SiteLogic * src, FileList * fls, SiteLogic * dst, FileList * fld) {
+void ScoreBoardElement::reset(std::string filename, unsigned short score, bool prio, SiteLogic * src, FileList * fls, SiteLogic * dst, FileList * fld, Pointer<Race> race) {
   this->filename = filename;
   this->src = src;
   this->fls = fls;
   this->dst = dst;
   this->fld = fld;
+  this->race = race;
   this->score = score;
   this->prio = prio;
 }
@@ -32,6 +33,10 @@ FileList * ScoreBoardElement::getSourceFileList() const {
 
 FileList * ScoreBoardElement::getDestinationFileList() const {
   return fld;
+}
+
+Pointer<Race> ScoreBoardElement::getRace() const {
+  return race;
 }
 
 unsigned short ScoreBoardElement::getScore() const {

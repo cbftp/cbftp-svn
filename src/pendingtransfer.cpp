@@ -54,7 +54,7 @@ FileList * PendingTransfer::getDstFileList() const {
   return fldst;
 }
 
-Pointer<LocalFileList> PendingTransfer::getLocalFileList() const {
+Pointer<LocalFileList> & PendingTransfer::getLocalFileList() {
   return fllocal;
 }
 

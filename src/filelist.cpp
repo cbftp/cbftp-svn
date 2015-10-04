@@ -258,50 +258,6 @@ void FileList::editOwnedFileCount(bool add) {
  ownpercentage = (owned * 100) / files.size();
 }
 
-void FileList::uploadFail(const std::string & file) {
-  uploadattempts[file] = MAXTRANSFERATTEMPTS;
-}
-
-void FileList::downloadFail(const std::string & file) {
-  downloadattempts[file] = MAXTRANSFERATTEMPTS;
-}
-
-void FileList::addUploadAttempt(const std::string & file) {
-  if (uploadattempts.find(file) == uploadattempts.end()) {
-    uploadattempts[file] = 0;
-  }
-  uploadattempts[file]++;
-}
-
-void FileList::downloadAttemptFail(const std::string & file) {
-  if (downloadattempts.find(file) == downloadattempts.end()) {
-    downloadattempts[file] = 0;
-  }
-  downloadattempts[file]++;
-}
-
-bool FileList::hasFailedDownload(const std::string & file) const {
-  std::map<std::string, int>::const_iterator it = downloadattempts.find(file);
-  if (it == downloadattempts.end()) {
-    return false;
-  }
-  if (it->second < MAXTRANSFERATTEMPTS) {
-    return false;
-  }
-  return true;
-}
-
-bool FileList::hasFailedUpload(const std::string & file) const {
-  std::map<std::string, int>::const_iterator it = uploadattempts.find(file);
-  if (it == uploadattempts.end()) {
-    return false;
-  }
-  if (it->second < MAXTRANSFERATTEMPTS) {
-    return false;
-  }
-  return true;
-}
-
 bool FileList::listChanged() const {
   return listchanged;
 }

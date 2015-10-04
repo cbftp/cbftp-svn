@@ -60,7 +60,7 @@ void TransferMonitor::engageFXP(std::string sfile, SiteLogic * sls, FileList * f
   }
   status = TM_STATUS_AWAITING_PASSIVE;
   ts = makePointer<TransferStatus>(TRANSFERSTATUS_TYPE_FXP, sls->getSite()->getName(),
-      sld->getSite()->getName(), "", dfile, fls->getPath(), fld->getPath(),
+      sld->getSite()->getName(), "", dfile, fls, fls->getPath(), fld, fld->getPath(),
       fls->getFile(sfile)->getSize(),
       sls->getSite()->getAverageSpeed(sld->getSite()->getName()));
   tm->addNewTransferStatus(ts);
@@ -83,7 +83,7 @@ void TransferMonitor::engageFXP(std::string sfile, SiteLogic * sls, FileList * f
   }
 }
 
-void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileList * fls, Pointer<LocalFileList> localfl) {
+void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileList * fls, Pointer<LocalFileList> & localfl) {
   reset();
   if (!localfl) return;
   type = TM_TYPE_DOWNLOAD;
@@ -97,8 +97,8 @@ void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileLis
   if (!sls->lockDownloadConn(spath, &src)) return;
   status = TM_STATUS_AWAITING_PASSIVE;
   ts = makePointer<TransferStatus>(TRANSFERSTATUS_TYPE_DOWNLOAD,
-      sls->getSite()->getName(), "/\\", "", dfile, spath,
-      dpath, fls->getFile(sfile)->getSize(), 0);
+      sls->getSite()->getName(), "/\\", "", dfile, fls, spath,
+      (FileList *)NULL, dpath, fls->getFile(sfile)->getSize(), 0);
   tm->addNewTransferStatus(ts);
   int spol = sls->getSite()->getSSLTransferPolicy();
   if (spol == SITE_SSL_ALWAYS_ON || spol == SITE_SSL_PREFER_ON) {
@@ -117,7 +117,7 @@ void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileLis
   }
 }
 
-void TransferMonitor::engageUpload(std::string sfile, Pointer<LocalFileList> localfl, SiteLogic * sld, FileList * fld) {
+void TransferMonitor::engageUpload(std::string sfile, Pointer<LocalFileList> & localfl, SiteLogic * sld, FileList * fld) {
   reset();
   if (!localfl) return;
   type = TM_TYPE_UPLOAD;
@@ -134,8 +134,8 @@ void TransferMonitor::engageUpload(std::string sfile, Pointer<LocalFileList> loc
   if (!sld->lockUploadConn(dpath, &dst)) return;
   status = TM_STATUS_AWAITING_PASSIVE;
   ts = makePointer<TransferStatus>(TRANSFERSTATUS_TYPE_UPLOAD,
-      "/\\", sld->getSite()->getName(), "", dfile, spath,
-      dpath, lf.getSize(), 0);
+      "/\\", sld->getSite()->getName(), "", dfile, (FileList *)NULL, spath,
+      fld, dpath, lf.getSize(), 0);
   tm->addNewTransferStatus(ts);
   int spol = sld->getSite()->getSSLTransferPolicy();
   if (spol == SITE_SSL_ALWAYS_ON || spol == SITE_SSL_PREFER_ON) {
@@ -276,7 +276,6 @@ void TransferMonitor::targetComplete() {
                status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE);
   partialcompletestamp = timestamp;
   if (fld != NULL) {
-    fld->addUploadAttempt(dfile);
     fld->finishUpload(dfile);
   }
   if (status == TM_STATUS_TRANSFERRING) {
@@ -341,18 +340,6 @@ void TransferMonitor::sourceError(TransferError err) {
                status == TM_STATUS_TRANSFERRING_TARGET_COMPLETE);
   if (fls != NULL) {
     fls->finishDownload(sfile);
-    switch (err) {
-      case TM_ERR_PRET: // PRET RETR failed
-        fls->downloadFail(sfile);
-        break;
-      case TM_ERR_RETRSTOR: // RETR failed
-      case TM_ERR_RETRSTOR_COMPLETE: // RETR post failed
-      case TM_ERR_OTHER: // other failure
-        fls->downloadAttemptFail(sfile);
-        break;
-      default:
-        break;
-    }
   }
   partialcompletestamp = timestamp;
   if (status == TM_STATUS_AWAITING_PASSIVE || status == TM_STATUS_AWAITING_ACTIVE) {
@@ -381,18 +368,6 @@ void TransferMonitor::targetError(TransferError err) {
                status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE);
   if (fld != NULL) {
     fld->finishUpload(dfile);
-    switch (err) {
-      case TM_ERR_PRET: // PRET STOR failed
-        fld->uploadFail(dfile);
-        break;
-      case TM_ERR_RETRSTOR: // STOR failed
-      case TM_ERR_RETRSTOR_COMPLETE: // STOR post failed
-      case TM_ERR_OTHER: // other failure
-        fld->addUploadAttempt(dfile);
-        break;
-      default:
-        break;
-    }
   }
   partialcompletestamp = timestamp;
   if (status == TM_STATUS_AWAITING_PASSIVE || status == TM_STATUS_AWAITING_ACTIVE) {
@@ -511,7 +486,7 @@ void TransferMonitor::reset() {
   partialcompletestamp = 0;
 }
 
-void TransferMonitor::transferFailed(Pointer<TransferStatus> ts, TransferError err) {
+void TransferMonitor::transferFailed(Pointer<TransferStatus> & ts, TransferError err) {
   if (!!ts) {
     ts->setFailed();
   }

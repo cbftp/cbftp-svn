@@ -6,6 +6,7 @@
 #include "globalcontext.h"
 #include "transferstatus.h"
 #include "localfilelist.h"
+#include "transferstatuscallback.h"
 
 extern GlobalContext * global;
 
@@ -31,13 +32,13 @@ Pointer<TransferStatus> TransferManager::suggestTransfer(std::string srcname, Si
   return target->getTransferStatus();
 }
 
-Pointer<TransferStatus> TransferManager::suggestDownload(std::string name, SiteLogic * sl, FileList * filelist, Pointer<LocalFileList> path) {
+Pointer<TransferStatus> TransferManager::suggestDownload(std::string name, SiteLogic * sl, FileList * filelist, Pointer<LocalFileList> & path) {
   Pointer<TransferMonitor> target = getAvailableTransferMonitor();
   target->engageDownload(name, sl, filelist, path);
   return target->getTransferStatus();
 }
 
-Pointer<TransferStatus> TransferManager::suggestUpload(std::string name, Pointer<LocalFileList> path, SiteLogic * sl, FileList * filelist) {
+Pointer<TransferStatus> TransferManager::suggestUpload(std::string name, Pointer<LocalFileList> & path, SiteLogic * sl, FileList * filelist) {
   Pointer<TransferMonitor> target = getAvailableTransferMonitor();
   target->engageUpload(name, path, sl, filelist);
   return target->getTransferStatus();
@@ -59,19 +60,27 @@ Pointer<TransferMonitor> TransferManager::getAvailableTransferMonitor() {
   return target;
 }
 
-void TransferManager::transferSuccessful(Pointer<TransferStatus> ts) {
+void TransferManager::transferSuccessful(Pointer<TransferStatus> & ts) {
   if (!!ts) {
     if (ts->isAwaited()) {
       global->getUIBase()->backendPush();
+    }
+    TransferStatusCallback * callback = ts->getCallback();
+    if (callback != NULL) {
+      callback->transferSuccessful(ts);
     }
     moveTransferStatusToFinished(ts);
   }
 }
 
-void TransferManager::transferFailed(Pointer<TransferStatus> ts, int err) {
+void TransferManager::transferFailed(Pointer<TransferStatus> & ts, int err) {
   if (!!ts) {
     if (ts->isAwaited()) {
       global->getUIBase()->backendPush();
+    }
+    TransferStatusCallback * callback = ts->getCallback();
+    if (callback != NULL) {
+      callback->transferFailed(ts, err);
     }
     moveTransferStatusToFinished(ts);
   }
@@ -93,11 +102,11 @@ std::list<Pointer<TransferStatus> >::const_iterator TransferManager::finishedTra
   return finishedtransfers.end();
 }
 
-void TransferManager::addNewTransferStatus(Pointer<TransferStatus> ts) {
+void TransferManager::addNewTransferStatus(Pointer<TransferStatus> & ts) {
   ongoingtransfers.push_front(ts);
 }
 
-void TransferManager::moveTransferStatusToFinished(Pointer<TransferStatus> movets) {
+void TransferManager::moveTransferStatusToFinished(Pointer<TransferStatus> & movets) {
   for (std::list<Pointer<TransferStatus> >::iterator it = ongoingtransfers.begin(); it != ongoingtransfers.end(); it++) {
     if (*it == movets) {
       ongoingtransfers.erase(it);

@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <algorithm>
+
 #include "scoreboardelement.h"
 
 ScoreBoard::ScoreBoard() :
@@ -19,18 +20,18 @@ ScoreBoard::~ScoreBoard() {
   delete[] bucketpositions;
 }
 
-void ScoreBoard::add(std::string name, unsigned short score, bool prio, SiteLogic * src, FileList * fls, SiteLogic * dst, FileList * fld) {
+void ScoreBoard::add(std::string name, unsigned short score, bool prio, SiteLogic * src, FileList * fls, SiteLogic * dst, FileList * fld, Pointer<Race> race) {
   if (showsize == currelements->size()) {
     currelements->resize(currelements->size() + RESIZE_CHUNK);
     currelementstmp->resize(currelements->size());
     for (int i = 0; i < RESIZE_CHUNK; i++) {
-      ScoreBoardElement * sbe = new ScoreBoardElement(name, score, prio, src, fls, dst, fld);
+      ScoreBoardElement * sbe = new ScoreBoardElement(name, score, prio, src, fls, dst, fld, race);
       (*currelements)[showsize + i] = sbe;
       (*currelementstmp)[showsize + i] = sbe;
     }
   }
   else {
-    (*currelements)[showsize]->reset(name, score, prio, src, fls, dst, fld);
+    (*currelements)[showsize]->reset(name, score, prio, src, fls, dst, fld, race);
   }
   ++showsize;
 }

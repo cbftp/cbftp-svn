@@ -10,9 +10,8 @@ class Site;
 
 class FileList {
   private:
+    FileList(const FileList &);
     std::map<std::string, File *> files;
-    std::map<std::string, int> downloadattempts;
-    std::map<std::string, int> uploadattempts;
     std::string username;
     std::string path;
     bool filled;
@@ -51,12 +50,6 @@ class FileList {
     unsigned long long int getMaxFileSize() const;
     void cleanSweep(int);
     void flush();
-    void uploadFail(const std::string &);
-    void downloadFail(const std::string &);
-    void addUploadAttempt(const std::string &);
-    void downloadAttemptFail(const std::string &);
-    bool hasFailedDownload(const std::string &) const;
-    bool hasFailedUpload(const std::string &) const;
     bool listChanged() const;
     void resetListChanged();
     unsigned long long timeSinceLastChanged();

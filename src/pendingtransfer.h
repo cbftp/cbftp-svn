@@ -23,7 +23,7 @@ public:
   SiteLogic * getDst() const;
   FileList * getSrcFileList() const;
   FileList * getDstFileList() const;
-  Pointer<LocalFileList> getLocalFileList() const;
+  Pointer<LocalFileList> & getLocalFileList();
   std::string getSrcFileName() const;
   std::string getDstFileName() const;
 private:
