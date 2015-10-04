@@ -28,7 +28,7 @@ Race::Race(std::string release, std::string section) :
   worst(0),
   avg(0),
   best(0),
-  failedtransferscleared(false)
+  transferattemptscleared(false)
 {
   estimatedsubpaths.push_back("");
   guessedfilelists[""] = std::map<std::string, unsigned long long int>();
@@ -481,37 +481,41 @@ unsigned int Race::getBestCompletionPercentage() const {
 
 bool Race::hasFailedTransfer(File * f, FileList * fld) const {
   std::map<std::pair<File *, FileList *>, int>::const_iterator it =
-    failedtransferattempts.find(std::pair<File *, FileList *>(f, fld));
-  return it != failedtransferattempts.end() && it->second >= MAX_TRANSFER_FAILS_BEFORE_SKIP;
+      transferattempts.find(std::pair<File *, FileList *>(f, fld));
+  return it != transferattempts.end() && it->second >= MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP;
 }
 
 bool Race::failedTransfersCleared() const {
-  return failedtransferscleared;
+  return transferattemptscleared;
 }
 
 void Race::addTransfer(Pointer<TransferStatus> & ts) {
   ts->setCallback(this);
 }
 
-bool Race::clearFailedTransfers() {
-  bool ret = failedtransferattempts.size();
-  failedtransferattempts.clear();
-  failedtransferscleared = true;
+bool Race::clearTransferAttempts() {
+  bool ret = transferattempts.size();
+  transferattempts.clear();
+  transferattemptscleared = true;
   return ret;
 }
 
 void Race::transferSuccessful(Pointer<TransferStatus> & ts) {
-
+  addTransferAttempt(ts);
 }
 
 void Race::transferFailed(Pointer<TransferStatus> & ts, int) {
+  addTransferAttempt(ts);
+}
+
+void Race::addTransferAttempt(Pointer<TransferStatus> & ts) {
   File * f = ts->getSourceFileList()->getFile(ts->getFile());
   std::pair<File *, FileList *> matchpair =
       std::pair<File *, FileList *>(f, ts->getTargetFileList());
   std::map<std::pair<File *, FileList *>, int>::iterator it =
-    failedtransferattempts.find(matchpair);
-  if (it == failedtransferattempts.end()) {
-    failedtransferattempts[matchpair] = 1;
+      transferattempts.find(matchpair);
+  if (it == transferattempts.end()) {
+    transferattempts[matchpair] = 1;
   }
   else {
     it->second++;

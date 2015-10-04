@@ -802,7 +802,7 @@ void Engine::tick(int message) {
         break;
       }
       else {
-        if ((*it)->clearFailedTransfers()) {
+        if ((*it)->clearTransferAttempts()) {
           (*it)->resetUpdateCheckCounter();
         }
       }
