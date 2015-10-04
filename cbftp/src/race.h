@@ -17,7 +17,7 @@
 #define RACE_STATUS_ABORTED 135
 #define RACE_STATUS_TIMEOUT 136
 
-#define MAX_TRANSFER_FAILS_BEFORE_SKIP 3
+#define MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP 3
 
 class SiteRace;
 class FileList;
@@ -31,6 +31,7 @@ class Race : public EventReceiver, public TransferStatusCallback {
     void setDone();
     void calculatePercentages();
     void calculateTotalFileSize();
+    void addTransferAttempt(Pointer<TransferStatus> &);
     std::string name;
     std::string group;
     std::string section;
@@ -49,7 +50,7 @@ class Race : public EventReceiver, public TransferStatusCallback {
     std::map<std::string, unsigned long long int> guessedfileliststotalfilesize;
     unsigned long long int guessedtotalfilesize;
     std::map<std::string, std::map<std::string, SizeLocationTrack> > sizelocationtrackers;
-    std::map<std::pair<File *, FileList *>, int> failedtransferattempts;
+    std::map<std::pair<File *, FileList *>, int> transferattempts;
     int checkcount;
     std::string timestamp;
     unsigned int timespent;
@@ -57,7 +58,7 @@ class Race : public EventReceiver, public TransferStatusCallback {
     unsigned int worst;
     unsigned int avg;
     unsigned int best;
-    bool failedtransferscleared;
+    bool transferattemptscleared;
   public:
     Race(std::string, std::string);
     ~Race();
@@ -105,7 +106,7 @@ class Race : public EventReceiver, public TransferStatusCallback {
     bool hasFailedTransfer(File *, FileList *) const;
     bool failedTransfersCleared() const;
     void addTransfer(Pointer<TransferStatus> &);
-    bool clearFailedTransfers();
+    bool clearTransferAttempts();
     void transferSuccessful(Pointer<TransferStatus> &);
     void transferFailed(Pointer<TransferStatus> &, int);
 };
