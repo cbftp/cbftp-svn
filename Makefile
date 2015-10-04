@@ -1,33 +1,41 @@
 include Makefile.inc
 
-BINS = cbftp cbftp-debug datafilecat datafilewrite
+.PHONY: src
 
 BINDIR = bin
 
+BINS = cbftp $(BINDIR)/cbftp-debug $(BINDIR)/datafilecat $(BINDIR)/datafilewrite
+
+SRC = $(wildcard src/*.cpp src/ui/*.cpp src/ui/screens/*.cpp)
+
+OBJS = $(wildcard $(SRC:%.cpp=%.o))
+
 all: ${BINS}
 
-mkdirs:
-	mkdir -p ${BINDIR}
+$(BINDIR):
+	mkdir -p $@
 
-sources:
-	@cd src; ${MAKE}
+src:
+	@+${MAKE} -C src
 	
-cbftp: sources mkdirs
-	g++ -o bin/cbftp $(FINALFLAGS) src/*.o src/ui/*.o src/ui/screens/*.o $(LINKFLAGS)
+$(BINDIR)/cbftp: $(OBJS)
+	g++ -o $(BINDIR)/cbftp $(FINALFLAGS) $(SRC:%.cpp=%.o) $(LINKFLAGS)
 	
-cbftp-debug: sources mkdirs
-	cp misc/start_with_gdb.sh bin/cbftp-debug; chmod +x bin/cbftp-debug
+cbftp: src | $(BINDIR)
+	@+${MAKE} --no-print-directory $(BINDIR)/cbftp
+	
+$(BINDIR)/cbftp-debug: misc/start_with_gdb.sh | $(BINDIR)
+	cp misc/start_with_gdb.sh $@; chmod +x bin/cbftp-debug
 
-datafilecat: src/crypto.cpp src/datafilecat.cpp mkdirs
-	g++ -o bin/datafilecat ${FINALFLAGS} src/crypto.cpp src/datafilecat.cpp -lcrypto
+$(BINDIR)/datafilecat: src/crypto.cpp src/tools/datafilecat.cpp | $(BINDIR)
+	g++ -o $@ ${FINALFLAGS} src/crypto.cpp src/tools/datafilecat.cpp -lcrypto
 
-datafilewrite: src/crypto.cpp src/datafilewrite.cpp mkdirs
-	g++ -o bin/datafilewrite ${FINALFLAGS} src/crypto.cpp src/datafilewrite.cpp -lcrypto
+$(BINDIR)/datafilewrite: src/crypto.cpp src/tools/datafilewrite.cpp | $(BINDIR)
+	g++ -o $@ ${FINALFLAGS} src/crypto.cpp src/tools/datafilewrite.cpp -lcrypto
 
 linecount:
 	find|grep -e '\.h$$' -e '\.cpp$$'|awk '{print $$1}'|xargs wc -l	
 
 clean:
-	@cd src; ${MAKE} clean
-	rm -rf ${BINDIR}
-        
+	@+${MAKE} -C src clean
+	@if test -d $(BINDIR); then rm -rf $(BINDIR); echo rm -rf $(BINDIR); fi
