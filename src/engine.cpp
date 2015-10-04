@@ -601,7 +601,9 @@ void Engine::issueOptimalTransfers() {
     Pointer<TransferStatus> ts =
       global->getTransferManager()->suggestTransfer(filename, sls,
         sbe->getSourceFileList(), sld, sbe->getDestinationFileList());
-    race->addTransfer(ts);
+    if (!!ts) {
+      race->addTransfer(ts);
+    }
   }
 }
 
