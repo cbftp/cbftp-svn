@@ -10,6 +10,7 @@
 #include "connstatetracker.h"
 #include "eventlog.h"
 #include "util.h"
+#include "site.h"
 
 extern GlobalContext * global;
 

@@ -1,13 +1,12 @@
 #include "datafilecat.h"
 
 int main(int argc, char ** argv) {
-  if (argc < 4) {
-    std::cout << "datafilewrite: encrypts the content of a cbftp plain text data file.\n\nUsage: datafilewrite <plaintextdatafile> <crypto key> <outdatafile>" << std::endl;
+  if (argc < 3) {
+    std::cout << "datafilecat: decrypts and prints the decrypted content of a cbftp data file.\n\nUsage: datafilecat <file> <crypto key>" << std::endl;
     return 0;
   }
   char * path = argv[1];
   std::string key = std::string(argv[2]);
-  char * outpath = argv[3];
   if (access(path, F_OK) < 0) {
     std::cout << "Error: The input file does not exist." << std::endl;
     return -1;
@@ -19,7 +18,6 @@ int main(int argc, char ** argv) {
   std::fstream infile;
   std::vector<unsigned char *> rawdatablocks;
   infile.open(path);
-  int total = 0;
   int gcount;
   while (!infile.eof() && infile.good()) {
     unsigned char * rawdatablock = new unsigned char[READBLOCKSIZE];
@@ -37,20 +35,17 @@ int main(int argc, char ** argv) {
     memcpy(rawdata + (count++ * READBLOCKSIZE), *it, READBLOCKSIZE);
     delete *it;
   }
-  if (strstr((const char *)rawdata, std::string("DataFileHandler.readable").data()) == NULL) {
-    std::cout << "Error: The input file is not a valid v data file, or is missing the DataFileHandler.readable entry." << std::endl;
-    delete[] rawdata;
-    return -1;
-  }
-  unsigned char ciphertext[rawdatalen + Crypto::blocksize()];
-  int ciphertextlen;
+  unsigned char decryptedtext[rawdatalen + Crypto::blocksize()];
+  int decryptedlen;
   unsigned char keyhash[32];
   Crypto::sha256(key, keyhash);
-  Crypto::encrypt(rawdata, rawdatalen, keyhash, ciphertext, &ciphertextlen);
+  Crypto::decrypt(rawdata, rawdatalen, keyhash, decryptedtext, &decryptedlen);
+  decryptedtext[decryptedlen] = '\0';
   delete[] rawdata;
-  std::ofstream outfile;
-  outfile.open(outpath, std::ios::trunc);
-  outfile.write((const char *)ciphertext, ciphertextlen);
-  outfile.close();
+  if (strstr((const char *)decryptedtext, std::string("DataFileHandler.readable").data()) == NULL) {
+    std::cout << "Error: Either the key is wrong, or the indata file is not a valid cbftp data file." << std::endl;
+    return -1;
+  }
+  std::cout << decryptedtext << std::endl;
   return 0;
 }

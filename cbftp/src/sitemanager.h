@@ -2,8 +2,10 @@
 
 #include <string>
 #include <vector>
+#include <map>
+#include <list>
 
-#include "site.h"
+class Site;
 
 #define DEFAULTUSERNAME "anonymous"
 #define DEFAULTPASSWORD "anonymous"

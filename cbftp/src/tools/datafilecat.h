@@ -4,7 +4,7 @@
 #include <cstring>
 #include <unistd.h>
 
-#include "crypto.h"
+#include "../crypto.h"
 
 #define READBLOCKSIZE 256
 

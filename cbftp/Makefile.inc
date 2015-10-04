@@ -11,7 +11,7 @@ DATE := "\"${shell date}\""
 
 BOXTAG := "\"cbftp\""
 
-CPPFLAGS :=-g -Wall -O0
+CPPFLAGS :=-g -Wall -O0 -MMD -MMP
 FINALFLAGS=-g -O0
 LINKFLAGS=-lncursesw -lpthread -lssl -lcrypto
 

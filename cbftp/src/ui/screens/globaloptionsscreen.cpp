@@ -3,6 +3,7 @@
 #include "../../globalcontext.h"
 #include "../../remotecommandhandler.h"
 #include "../../sitemanager.h"
+#include "../../site.h"
 #include "../../iomanager.h"
 #include "../../localstorage.h"
 #include "../../util.h"
