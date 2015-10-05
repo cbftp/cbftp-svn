@@ -12,4 +12,6 @@ loginscreen.o: loginscreen.cpp ../../../Makefile.inc
 clean:
 	@if test $(firstword $(OBJS)); then rm -rf $(OBJS); echo rm -rf $(OBJS); fi
 
+$(SRC:%.cpp=%.o): ../../../Makefile.inc
+
 -include $(SRC:%.cpp=%.d)

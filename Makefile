@@ -27,11 +27,11 @@ cbftp: src | $(BINDIR)
 $(BINDIR)/cbftp-debug: misc/start_with_gdb.sh | $(BINDIR)
 	cp misc/start_with_gdb.sh $@; chmod +x bin/cbftp-debug
 
-$(BINDIR)/datafilecat: src/crypto.cpp src/tools/datafilecat.cpp | $(BINDIR)
-	g++ -o $@ ${FINALFLAGS} src/crypto.cpp src/tools/datafilecat.cpp -lcrypto
+$(BINDIR)/datafilecat: src/crypto.cpp src/tools/datafilecat.cpp Makefile.inc | $(BINDIR)
+	g++ -o $@ ${FINALFLAGS} $(STATIC_SSL_INCLUDE) src/crypto.cpp src/tools/datafilecat.cpp $(SSL_LINKFLAGS)
 
-$(BINDIR)/datafilewrite: src/crypto.cpp src/tools/datafilewrite.cpp | $(BINDIR)
-	g++ -o $@ ${FINALFLAGS} src/crypto.cpp src/tools/datafilewrite.cpp -lcrypto
+$(BINDIR)/datafilewrite: src/crypto.cpp src/tools/datafilewrite.cpp Makefile.inc | $(BINDIR)
+	g++ -o $@ ${FINALFLAGS} $(STATIC_SSL_INCLUDE) src/crypto.cpp src/tools/datafilewrite.cpp $(SSL_LINKFLAGS)
 
 linecount:
 	find|grep -e '\.h$$' -e '\.cpp$$'|awk '{print $$1}'|xargs wc -l	
