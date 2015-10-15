@@ -79,7 +79,7 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int
   sock.ai_family = AF_INET;
   sock.ai_socktype = SOCK_STREAM;
   int retcode = getaddrinfo(addr.data(), util::int2Str(port).data(), &sock, &res);
-  if (retcode < 0) {
+  if (retcode) {
     if (!handleError(er)) {
       return -1;
     }
@@ -92,20 +92,20 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int
     sock2.ai_family = AF_INET;
     sock2.ai_socktype = SOCK_STREAM;
     retcode = getaddrinfo(getInterfaceAddress(getDefaultInterface()).data(), "0", &sock2, &res2);
-    if (retcode < 0) {
+    if (retcode) {
       if (!handleError(er)) {
         return -1;
       }
     }
     retcode = bind(sockfd, res2->ai_addr, res2->ai_addrlen);
-    if (retcode < 0) {
+    if (retcode) {
       if (!handleError(er)) {
         return -1;
       }
     }
   }
   retcode = connect(sockfd, res->ai_addr, res->ai_addrlen);
-  if (retcode < 0) {
+  if (retcode) {
     if (!handleError(er)) {
       return -1;
     }
@@ -141,7 +141,7 @@ int IOManager::registerTCPServerSocket(EventReceiver * er, int port, bool local)
     addr = "127.0.0.1";
   }
   int retcode = getaddrinfo(addr.c_str(), util::int2Str(port).data(), &sock, &res);
-  if (retcode < 0) {
+  if (retcode) {
     if (!handleError(er)) {
       return -1;
     }
@@ -151,13 +151,13 @@ int IOManager::registerTCPServerSocket(EventReceiver * er, int port, bool local)
   int yes = 1;
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
   retcode = bind(sockfd, res->ai_addr, res->ai_addrlen);
-  if (retcode < 0) {
+  if (retcode) {
     if (!handleError(er)) {
       return -1;
     }
   }
   retcode = listen(sockfd, 10);
-  if (retcode < 0) {
+  if (retcode) {
     if (!handleError(er)) {
       return -1;
     }
@@ -199,7 +199,7 @@ int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
   sock.ai_protocol = IPPROTO_UDP;
   std::string addr = "0.0.0.0";
   int retcode = getaddrinfo(addr.c_str(), util::int2Str(port).data(), &sock, &res);
-  if (retcode < 0) {
+  if (retcode) {
     if (!handleError(er)) {
       return -1;
     }
@@ -209,7 +209,7 @@ int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
   int yes = 1;
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
   retcode = bind(sockfd, res->ai_addr, res->ai_addrlen);
-  if (retcode < 0) {
+  if (retcode) {
     if (!handleError(er)) {
       return -1;
     }
