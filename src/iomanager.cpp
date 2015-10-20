@@ -420,7 +420,7 @@ void IOManager::handleTCPPlainIn(SocketInfo & socketinfo) {
 void IOManager::handleTCPPlainOut(SocketInfo & socketinfo) {
   while (socketinfo.sendqueue.size() > 0) {
     DataBlock & block = socketinfo.sendqueue.front();
-    int b_sent = write(socketinfo.fd, block.data(), block.dataLength());
+    int b_sent = send(socketinfo.fd, block.data(), block.dataLength(), MSG_NOSIGNAL);
     if (b_sent < 0) {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
         return;
