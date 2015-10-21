@@ -12,23 +12,64 @@ unsigned int cp437toUnicode(unsigned char c) {
   return it != cp437unicode.end() ? it->second : c;
 }
 
+unsigned int harddoublecp437toUnicode(unsigned char c) {
+  c = cp437toUnicode(c);
+  // misconversions due to unrepresentable characters in double cp437
+  if (c == 'U') {
+    c = 0xDB;
+  }
+  else if (c == 'Y') {
+    c = 0xDD;
+  }
+  else if (c == '_') {
+    c = 0xDE;
+  }
+  return cp437toUnicode(c);
+}
+
+bool certainlyASCII(unsigned int c) {
+  // some uncertain chars, may be misconverted in double cp437
+  return c != 'U' && c != 'Y' && c != '_' && c != ' ' && c < 0x80;
+}
+
+std::basic_string<unsigned int> cp437toUnicode(std::basic_string<unsigned int> & in) {
+  std::basic_string<unsigned int> out;
+  for (unsigned int i = 0; i < in.length(); i++) {
+    out.push_back(cp437toUnicode(in[i]));
+  }
+  return out;
+}
+
+std::basic_string<unsigned int> doublecp437toUnicode(std::basic_string<unsigned int> & in) {
+  std::basic_string<unsigned int> out;
+  for (unsigned int i = 0; i < in.length(); i++) {
+    if ((i > 0 && certainlyASCII(in[i - 1])) || (i < in.length() - 1 && certainlyASCII(in[i + 1]))) {
+      out.push_back(in[i]);
+    }
+    else {
+      out.push_back(harddoublecp437toUnicode(in[i]));
+    }
+  }
+  return out;
+}
+
 Encoding guessEncoding(const binary_data & data) {
-  int cp437charsinrow = 0;
-  int maxcp437charsinrow = 0;
+  int hitcharsinrow = 0;
   bool hitbefore = false;
+  int maxcp437charsinrow = 0;
   for (unsigned int i = 0; i < data.size(); i++) {
     if (data[i] == 0xDB || data[i] == 0xDC || data[i] == 0xDD ||
         data[i] == 0xDE || data[i] == 0xDF || data[i] == 0xB0 ||
         data[i] == 0xB1 || data[i] == 0xB2) // most common ANSI drawing chars
     {
       if (hitbefore) {
-        ++cp437charsinrow;
+        ++hitcharsinrow;
       }
       else {
-        if (cp437charsinrow > maxcp437charsinrow) {
-          maxcp437charsinrow = cp437charsinrow;
+        if (hitcharsinrow > maxcp437charsinrow) {
+          maxcp437charsinrow = hitcharsinrow;
         }
-        cp437charsinrow = 1;
+        hitcharsinrow = 1;
         hitbefore = true;
       }
     }
@@ -36,8 +77,34 @@ Encoding guessEncoding(const binary_data & data) {
       hitbefore = false;
     }
   }
-  if (maxcp437charsinrow >= 3) {
+  hitcharsinrow = 0;
+  hitbefore = false;
+  int maxdoublecp437charsinrow = 0;
+  for (unsigned int i = 0; i < data.size(); i++) {
+    if (data[i] == 0x9A || data[i] == 0xE1 || data[i] == 0xF8 ||
+        data[i] == 0xF1 || data[i] == 0xFD) // signs of double cp437
+    {
+      if (hitbefore) {
+        ++hitcharsinrow;
+      }
+      else {
+        if (hitcharsinrow > maxdoublecp437charsinrow) {
+          maxdoublecp437charsinrow = hitcharsinrow;
+        }
+        hitcharsinrow = 1;
+        hitbefore = true;
+      }
+    }
+    else {
+      hitbefore = false;
+    }
+  }
+
+  if (maxcp437charsinrow >= 3 && maxcp437charsinrow >= maxdoublecp437charsinrow) {
     return ENCODING_CP437;
+  }
+  else if (maxdoublecp437charsinrow >= 3) {
+    return ENCODING_CP437_DOUBLE;
   }
   else {
     return ENCODING_ISO88591;

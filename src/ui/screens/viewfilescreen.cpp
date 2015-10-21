@@ -127,7 +127,7 @@ void ViewFileScreen::redraw() {
           encoding = encoding::guessEncoding(tmpdata);
           unsigned int tmpdatalen = tmpdata.size();
           if (tmpdatalen > 0) {
-            std::basic_string<unsigned char> current;
+            std::basic_string<unsigned int> current;
             for (unsigned int i = 0; i < tmpdatalen; i++) {
               if (tmpdata[i] == '\n') {
                 rawcontents.push_back(current);
@@ -259,6 +259,9 @@ void ViewFileScreen::keyPressed(unsigned int ch) {
     case 'e':
       if (viewingcontents) {
         if (encoding == encoding::ENCODING_CP437) {
+          encoding = encoding::ENCODING_CP437_DOUBLE;
+        }
+        else if (encoding == encoding::ENCODING_CP437_DOUBLE) {
           encoding = encoding::ENCODING_ISO88591;
         }
         else {
@@ -293,6 +296,9 @@ std::string ViewFileScreen::getInfoText() const {
       case encoding::ENCODING_CP437:
         enc = "CP437";
         break;
+      case encoding::ENCODING_CP437_DOUBLE:
+        enc = "Double CP437";
+        break;
       case encoding::ENCODING_ISO88591:
         enc = "ISO-8859-1";
         break;
@@ -310,10 +316,14 @@ void ViewFileScreen::translate() {
   translatedcontents.clear();
   for (unsigned int i = 0; i < rawcontents.size(); i++) {
     std::basic_string<unsigned int> current;
-    for (unsigned int j = 0; j < rawcontents[i].length(); j++) {
-      current += encoding == encoding::ENCODING_CP437 ?
-          encoding::cp437toUnicode(rawcontents[i][j]) :
-          rawcontents[i][j];
+    if (encoding == encoding::ENCODING_CP437_DOUBLE) {
+      current = encoding::doublecp437toUnicode(rawcontents[i]);
+    }
+    else if (encoding == encoding::ENCODING_CP437) {
+      current = encoding::cp437toUnicode(rawcontents[i]);
+    }
+    else {
+      current = rawcontents[i];
     }
     translatedcontents.push_back(current);
   }
