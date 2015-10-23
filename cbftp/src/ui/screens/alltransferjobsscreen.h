@@ -24,7 +24,7 @@ public:
   static void addJobTableHeader(unsigned int, MenuSelectOption &, std::string);
   static void addJobDetails(unsigned int, MenuSelectOption &, Pointer<TransferJob>);
 private:
-  static void addJobTableRow(unsigned int, MenuSelectOption &, bool, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string);
+  static void addJobTableRow(unsigned int, MenuSelectOption &, unsigned int, bool, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string);
   MenuSelectOption table;
   Engine * engine;
   bool hascontents;

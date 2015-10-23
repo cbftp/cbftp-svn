@@ -39,6 +39,7 @@ class SiteRace : public CommandOwner {
     std::string getRelease() const;
     std::string getGroup() const;
     std::string getPath() const;
+    unsigned int getId() const;
     std::string getRelevantSubPath();
     SiteRace(Pointer<Race>, std::string, std::string, std::string, std::string);
     ~SiteRace();

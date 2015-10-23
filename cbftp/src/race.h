@@ -59,8 +59,9 @@ class Race : public EventReceiver, public TransferStatusCallback {
     unsigned int avg;
     unsigned int best;
     bool transferattemptscleared;
+    unsigned int id;
   public:
-    Race(std::string, std::string);
+    Race(unsigned int, std::string, std::string);
     ~Race();
     void addSite(SiteRace *, SiteLogic *);
     void removeSite(SiteRace *);
@@ -89,6 +90,7 @@ class Race : public EventReceiver, public TransferStatusCallback {
     std::string getSiteListText() const;
     SiteRace * getSiteRace(std::string) const;
     int getStatus() const;
+    unsigned int getId() const;
     void reportNewSubDir(SiteRace *, std::string);
     void reportSFV(SiteRace *, std::string);
     void reportDone(SiteRace *);

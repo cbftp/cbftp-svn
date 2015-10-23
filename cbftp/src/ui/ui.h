@@ -165,8 +165,8 @@ class Ui : public EventReceiver, public UIBase {
     void goProxy();
     void goFileViewerSettings();
     void goSiteStatus(std::string);
-    void goRaceStatus(std::string);
-    void goTransferJobStatus(std::string);
+    void goRaceStatus(unsigned int);
+    void goTransferJobStatus(unsigned int);
     void goGlobalOptions();
     void goEventLog();
     void goScoreBoard();
@@ -189,6 +189,6 @@ class Ui : public EventReceiver, public UIBase {
     void confirmYes();
     void confirmNo();
     void returnNuke(int);
-    void returnRaceStatus(std::string);
+    void returnRaceStatus(unsigned int);
 };
 

@@ -17,7 +17,7 @@ class TransferJobStatusScreen : public UIWindow {
 public:
   TransferJobStatusScreen(Ui *);
   ~TransferJobStatusScreen();
-  void initialize(unsigned int, unsigned int, std::string);
+  void initialize(unsigned int, unsigned int, unsigned int);
   void redraw();
   void update();
   void command(std::string, std::string);
@@ -30,7 +30,6 @@ private:
   void addTransferDetails(unsigned int, std::string, std::string, std::string,
       std::string, std::string, std::string, int);
   Pointer<TransferJob> transferjob;
-  std::string filename;
   MenuSelectOption table;
   MenuSelectOption mso;
   std::map<Pointer<MenuSelectOptionElement>, int> progressmap;

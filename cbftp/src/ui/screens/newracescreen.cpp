@@ -267,7 +267,7 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
       break;
     case 's':
       if (startRace()) {
-        ui->returnRaceStatus(release);
+        ui->returnRaceStatus(global->getEngine()->getLatestId());
       }
       break;
     case 'S':

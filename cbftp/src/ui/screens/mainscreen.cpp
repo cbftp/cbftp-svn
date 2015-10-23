@@ -203,7 +203,6 @@ void MainScreen::command(std::string command) {
 
 void MainScreen::keyPressed(unsigned int ch) {
   Site * site;
-  std::string target;
   bool update = false;
   unsigned int pagerows = (unsigned int) (row - sitestartrow) * 0.6;
   if (gotomode) {
@@ -281,12 +280,12 @@ void MainScreen::keyPressed(unsigned int ch) {
         ui->goSiteStatus(mss.getSite()->getName());
       }
       else if (mso.isFocused() && mso.size() > 0) {
-        target = mso.getElement(mso.getSelectionPointer())->getContentText();
-        ui->goRaceStatus(target);
+        unsigned int id = mso.getElement(mso.getSelectionPointer())->getId();
+        ui->goRaceStatus(id);
       }
       else if (msot.isFocused()) {
-        target = msot.getElement(msot.getSelectionPointer())->getContentText();
-        ui->goTransferJobStatus(target);
+        unsigned int id = msot.getElement(msot.getSelectionPointer())->getId();
+        ui->goTransferJobStatus(id);
       }
       break;
     case 'G':

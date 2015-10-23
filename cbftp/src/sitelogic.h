@@ -87,7 +87,7 @@ class SiteLogic : public EventReceiver {
     SiteLogic(std::string);
     ~SiteLogic();
     void runInstance();
-    SiteRace * addRace(Pointer<Race>, std::string, std::string);
+    SiteRace * addRace(Pointer<Race> &, std::string, std::string);
     void addTransferJob(Pointer<TransferJob>);
     void tick(int);
     void connectFailed(int);
@@ -137,7 +137,7 @@ class SiteLogic : public EventReceiver {
     int requestDelete(std::string, bool, bool);
     int requestNuke(std::string, int, std::string);
     bool requestReady(int) const;
-    void abortRace(std::string);
+    void abortRace(unsigned int);
     FileList * getFileList(int) const;
     std::string getRawCommandResult(int);
     bool finishRequest(int);

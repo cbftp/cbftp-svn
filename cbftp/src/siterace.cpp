@@ -57,6 +57,10 @@ std::string SiteRace::getPath() const {
   return path;
 }
 
+unsigned int SiteRace::getId() const {
+  return race->getId();
+}
+
 void SiteRace::addSubDirectory(std::string subpath) {
   if (!global->getSkipList()->isAllowed(subpath, true)) return;
   if (getFileListForPath(subpath) != NULL) {

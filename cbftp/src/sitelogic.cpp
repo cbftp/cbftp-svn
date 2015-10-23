@@ -4,7 +4,6 @@
 #include "ftpconn.h"
 #include "filelist.h"
 #include "siterace.h"
-#include "race.h"
 #include "site.h"
 #include "globalcontext.h"
 #include "scoreboardelement.h"
@@ -75,7 +74,7 @@ void SiteLogic::activateAll() {
   }
 }
 
-SiteRace * SiteLogic::addRace(Pointer<Race> enginerace, std::string section, std::string release) {
+SiteRace * SiteLogic::addRace(Pointer<Race> & enginerace, std::string section, std::string release) {
   SiteRace * race = new SiteRace(enginerace, site->getName(), site->getSectionPath(section), release, site->getUser());
   races.push_back(race);
   activateAll();
@@ -170,7 +169,7 @@ void SiteLogic::listRefreshed(int id) {
   if (currentco != NULL) {
     if (currentco->classType() == COMMANDOWNER_SITERACE) {
       SiteRace * sr = (SiteRace *)currentco;
-      global->getEngine()->raceFileListRefreshed(this, sr->getRace());
+      global->getEngine()->raceFileListRefreshed(this, sr);
     }
   }
   handleConnection(id, true);
@@ -1086,10 +1085,10 @@ bool SiteLogic::requestReady(int requestid) const {
   return false;
 }
 
-void SiteLogic::abortRace(std::string race) {
+void SiteLogic::abortRace(unsigned int id) {
   SiteRace * delrace = NULL;
   for (std::vector<SiteRace *>::iterator it = races.begin(); it != races.end(); it++) {
-    if ((*it)->getRelease() == race) {
+    if ((*it)->getId() == id) {
       delrace = *it;
       delrace->abort();
       break;

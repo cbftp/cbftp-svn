@@ -14,7 +14,7 @@ class RaceStatusScreen : public UIWindow {
 public:
   RaceStatusScreen(Ui *);
   ~RaceStatusScreen();
-  void initialize(unsigned int, unsigned int, std::string);
+  void initialize(unsigned int, unsigned int, unsigned int);
   void redraw();
   void update();
   void command(std::string, std::string);
@@ -31,7 +31,6 @@ private:
   unsigned int currnumsubpaths;
   unsigned int currguessedsize;
   unsigned int longestsubpath;
-  std::string release;
   std::list<std::string> subpaths;
   MenuSelectOption mso;
   std::map<std::string, int> filetagpos;
