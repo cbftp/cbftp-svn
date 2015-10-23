@@ -28,9 +28,8 @@ RaceStatusScreen::~RaceStatusScreen() {
 
 }
 
-void RaceStatusScreen::initialize(unsigned int row, unsigned int col, std::string release) {
-  this->release = release;
-  race = global->getEngine()->getRace(release);
+void RaceStatusScreen::initialize(unsigned int row, unsigned int col, unsigned int id) {
+  race = global->getEngine()->getRace(id);
   if (race->getStatus() == RACE_STATUS_RUNNING) {
     finished = false;
   }
@@ -290,17 +289,17 @@ void RaceStatusScreen::update() {
 void RaceStatusScreen::command(std::string command, std::string arg) {
   if (command == "yes") {
     if (awaitingremovesite) {
-      global->getEngine()->removeSiteFromRace(release, removesite);
+      global->getEngine()->removeSiteFromRace(race, removesite);
       awaitingremovesite = false;
     }
     else if (awaitingabort) {
-      global->getEngine()->abortRace(race->getName());
+      global->getEngine()->abortRace(race);
       awaitingabort = false;
       finished = true;
       ui->setLegend();
     }
     else if (awaitingdelete) {
-      global->getEngine()->deleteOnAllSites(race->getName());
+      global->getEngine()->deleteOnAllSites(race);
       awaitingdelete = false;
     }
   }
@@ -368,13 +367,13 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
     case 'B':
       if (race->getStatus() == RACE_STATUS_RUNNING) {
         awaitingabort = true;
-        ui->goConfirmation("Do you really want to abort the race " + release);
+        ui->goConfirmation("Do you really want to abort the race " + race->getName());
       }
       break;
     case 'D':
       if (race->getStatus() != RACE_STATUS_RUNNING) {
         awaitingdelete = true;
-        ui->goConfirmation("Do you really want to delete " + release + " on all involved sites");
+        ui->goConfirmation("Do you really want to delete " + race->getName() + " on all involved sites");
       }
       break;
     case 'A':
@@ -389,7 +388,7 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
           excludedsites.push_back(*it);
         }
       }
-      ui->goSelectSites("Add these sites to the race: " + race->getSection() + "/" + release, std::list<Site *>(), excludedsites);
+      ui->goSelectSites("Add these sites to the race: " + race->getSection() + "/" + race->getName(), std::list<Site *>(), excludedsites);
       break;
     }
   }
@@ -441,5 +440,5 @@ std::string RaceStatusScreen::getLegendText() const {
 }
 
 std::string RaceStatusScreen::getInfoLabel() const {
-  return "RACE STATUS: " + release;
+  return "RACE STATUS: " + race->getName();
 }

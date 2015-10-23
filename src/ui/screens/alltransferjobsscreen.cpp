@@ -77,7 +77,7 @@ void AllTransferJobsScreen::keyPressed(unsigned int ch) {
       if (hascontents) {
         Pointer<MenuSelectOptionTextButton> msotb =
             table.getElement(table.getSelectionPointer());
-        ui->goTransferJobStatus(msotb->getContentText());
+        ui->goTransferJobStatus(msotb->getId());
       }
       break;
   }
@@ -95,7 +95,7 @@ std::string AllTransferJobsScreen::getInfoText() const {
   return "Active: " + util::int2Str(engine->currentTransferJobs()) + "  Total: " + util::int2Str(engine->allTransferJobs());
 }
 
-void AllTransferJobsScreen::addJobTableRow(unsigned int y, MenuSelectOption & mso, bool selectable,
+void AllTransferJobsScreen::addJobTableRow(unsigned int y, MenuSelectOption & mso, unsigned int id, bool selectable,
     std::string timestamp, std::string timespent, std::string type, std::string name,
     std::string route, std::string sizeprogress, std::string filesprogress,
     std::string remaining, std::string speed, std::string progress) {
@@ -118,6 +118,7 @@ void AllTransferJobsScreen::addJobTableRow(unsigned int y, MenuSelectOption & ms
   if (!selectable) {
     msotb->setSelectable(false);
   }
+  msotb->setId(id);
   msal->addElement(msotb, 10, RESIZE_CUTEND, true);
 
   msotb = mso.addTextButton(y, 1, "route", route);
@@ -146,7 +147,7 @@ void AllTransferJobsScreen::addJobTableRow(unsigned int y, MenuSelectOption & ms
 }
 
 void AllTransferJobsScreen::addJobTableHeader(unsigned int y, MenuSelectOption & mso, std::string name) {
-  addJobTableRow(y, mso, false, "STARTED", "USE", "TYPE", name, "ROUTE", "SIZE", "FILES", "LEFT", "SPEED", "DONE");
+  addJobTableRow(y, mso, -1, false, "STARTED", "USE", "TYPE", name, "ROUTE", "SIZE", "FILES", "LEFT", "SPEED", "DONE");
 }
 
 void AllTransferJobsScreen::addJobDetails(unsigned int y, MenuSelectOption & mso, Pointer<TransferJob> tj) {
@@ -179,5 +180,5 @@ void AllTransferJobsScreen::addJobDetails(unsigned int y, MenuSelectOption & mso
       type = "FXPF";
       break;
   }
-  addJobTableRow(y, mso, true, tj->timeStarted(), timespent, type, tj->getSrcFileName(), route, sizeprogress, filesprogress, timeremaining, speed, status);
+  addJobTableRow(y, mso, tj->getId(), true, tj->timeStarted(), timespent, type, tj->getSrcFileName(), route, sizeprogress, filesprogress, timeremaining, speed, status);
 }

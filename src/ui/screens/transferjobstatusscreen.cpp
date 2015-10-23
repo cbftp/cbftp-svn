@@ -26,12 +26,11 @@ TransferJobStatusScreen::~TransferJobStatusScreen() {
 
 }
 
-void TransferJobStatusScreen::initialize(unsigned int row, unsigned int col, std::string filename) {
+void TransferJobStatusScreen::initialize(unsigned int row, unsigned int col, unsigned int id) {
   abortedlegendtext = "[c/Esc] Return";
   defaultlegendtext = abortedlegendtext + " - [Enter] Modify - A[B]ort transfer job";
-  transferjob = global->getEngine()->getTransferJob(filename);
+  transferjob = global->getEngine()->getTransferJob(id);
   currentlegendtext = transferjob->isAborted() ? abortedlegendtext : defaultlegendtext;
-  this->filename = filename;
   autoupdate = true;
   active = false;
   mso.clear();
@@ -187,7 +186,7 @@ std::string TransferJobStatusScreen::getLegendText() const {
 }
 
 std::string TransferJobStatusScreen::getInfoLabel() const {
-  return "TRANSFER JOB STATUS: " + filename;
+  return "TRANSFER JOB STATUS: " + transferjob->getSrcFileName();
 }
 
 void TransferJobStatusScreen::addTransferDetails(unsigned int y, Pointer<TransferStatus> ts) {

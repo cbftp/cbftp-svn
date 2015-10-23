@@ -9,6 +9,7 @@ class MenuSelectOptionElement {
     int row;
     bool shown;
     bool selectable;
+    unsigned int id;
   protected:
     std::string label;
     bool active;
@@ -18,6 +19,7 @@ class MenuSelectOptionElement {
     void setPosition(int, int);
     virtual std::string getLabelText() const;
     std::string getIdentifier() const;
+    unsigned int getId() const;
     virtual std::string getContentText() const = 0;
     virtual bool activate();
     virtual void deactivate();
@@ -32,4 +34,5 @@ class MenuSelectOptionElement {
     bool visible() const;
     bool isSelectable() const;
     void setSelectable(bool);
+    void setId(unsigned int);
 };

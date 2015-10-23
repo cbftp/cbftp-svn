@@ -14,7 +14,7 @@
 
 extern GlobalContext * global;
 
-Race::Race(std::string release, std::string section) :
+Race::Race(unsigned int id, std::string release, std::string section) :
   name(release),
   group(util::getGroupNameFromRelease(release)),
   section(section),
@@ -28,7 +28,8 @@ Race::Race(std::string release, std::string section) :
   worst(0),
   avg(0),
   best(0),
-  transferattemptscleared(false)
+  transferattemptscleared(false),
+  id(id)
 {
   estimatedsubpaths.push_back("");
   guessedfilelists[""] = std::map<std::string, unsigned long long int>();
@@ -456,6 +457,10 @@ std::string Race::getSiteListText() const {
 
 int Race::getStatus() const {
   return status;
+}
+
+unsigned int Race::getId() const {
+  return id;
 }
 
 SiteRace * Race::getSiteRace(std::string site) const {

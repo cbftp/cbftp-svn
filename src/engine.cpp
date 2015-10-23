@@ -30,7 +30,8 @@ extern GlobalContext * global;
 Engine::Engine() :
   scoreboard(makePointer<ScoreBoard>()),
   maxavgspeed(1024),
-  pokeregistered(false) {
+  pokeregistered(false),
+  nextid(0) {
 }
 
 Engine::~Engine() {
@@ -56,7 +57,7 @@ bool Engine::newRace(const std::string & release, const std::string & section, c
     return false;
   }
   if (!race) {
-    race = makePointer<Race>(release, section);
+    race = makePointer<Race>(nextid++, release, section);
   }
   std::list<std::string> addsites;
   for (std::list<std::string>::const_iterator it = sites.begin(); it != sites.end(); it++) {
@@ -149,7 +150,7 @@ void Engine::newTransferJobFXP(std::string srcsite, FileList * srcfilelist, std:
 
 void Engine::newTransferJobDownload(std::string site, std::string srcfile, FileList * filelist, std::string path, std::string dstfile) {
   SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(site);
-  Pointer<TransferJob> tj = makePointer<TransferJob>(sl, srcfile, filelist, path, dstfile);
+  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, sl, srcfile, filelist, path, dstfile);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting download job: " + srcfile +
@@ -160,7 +161,7 @@ void Engine::newTransferJobDownload(std::string site, std::string srcfile, FileL
 
 void Engine::newTransferJobUpload(std::string path, std::string srcfile, std::string site, std::string dstfile, FileList * filelist) {
   SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(site);
-  Pointer<TransferJob> tj = makePointer<TransferJob>(path, srcfile, sl, dstfile, filelist);
+  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, path, srcfile, sl, dstfile, filelist);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting upload job: " + srcfile +
@@ -172,7 +173,7 @@ void Engine::newTransferJobUpload(std::string path, std::string srcfile, std::st
 void Engine::newTransferJobFXP(std::string srcsite, std::string srcfile, FileList * srcfilelist, std::string dstsite, std::string dstfile, FileList * dstfilelist) {
   SiteLogic * slsrc = global->getSiteLogicManager()->getSiteLogic(srcsite);
   SiteLogic * sldst = global->getSiteLogicManager()->getSiteLogic(dstsite);
-  Pointer<TransferJob> tj = makePointer<TransferJob>(slsrc, srcfile, srcfilelist, sldst, dstfile, dstfilelist);
+  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, slsrc, srcfile, srcfilelist, sldst, dstfile, dstfilelist);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting FXP job: " + srcfile +
@@ -182,32 +183,29 @@ void Engine::newTransferJobFXP(std::string srcsite, std::string srcfile, FileLis
   checkStartPoke();
 }
 
-void Engine::removeSiteFromRace(const std::string & release, const std::string & site) {
-  Pointer<Race> race = getCurrentRace(release);
+void Engine::removeSiteFromRace(Pointer<Race> & race, const std::string & site) {
   if (!!race) {
     SiteRace * sr = race->getSiteRace(site);
     if (sr != NULL) {
       SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(site);
-      sl->abortRace(release);
+      sl->abortRace(race->getId());
       race->removeSite(sr);
     }
   }
 }
 
-void Engine::abortRace(const std::string & release) {
-  Pointer<Race> race = getCurrentRace(release);
+void Engine::abortRace(Pointer<Race> & race) {
   if (!!race) {
     race->abort();
     for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator it = race->begin(); it != race->end(); it++) {
-      it->second->abortRace(release);
+      it->second->abortRace(race->getId());
     }
     currentraces.remove(race);
-    global->getEventLog()->log("Engine", "Race aborted: " + release);
+    global->getEventLog()->log("Engine", "Race aborted: " + race->getName());
   }
 }
 
-void Engine::deleteOnAllSites(const std::string & release) {
-  Pointer<Race> race = getRace(release);
+void Engine::deleteOnAllSites(Pointer<Race> & race) {
   if (!!race) {
     std::string sites;
     for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator it = race->begin(); it != race->end(); it++) {
@@ -217,18 +215,19 @@ void Engine::deleteOnAllSites(const std::string & release) {
     }
     if (sites.length() > 0) {
       sites = sites.substr(0, sites.length() - 1);
-      global->getEventLog()->log("Engine", "Attempting delete of " + release + " on: " + sites);
+      global->getEventLog()->log("Engine", "Attempting delete of " + race->getName() + " on: " + sites);
     }
   }
 }
 
-void Engine::abortTransferJob(Pointer<TransferJob> tj) {
+void Engine::abortTransferJob(Pointer<TransferJob> & tj) {
   tj->abort();
   currenttransferjobs.remove(tj);
   global->getEventLog()->log("Engine", "Transfer job aborted: " + tj->getSrcFileName());
 }
 
-void Engine::raceFileListRefreshed(SiteLogic * sls, Pointer<Race> race) {
+void Engine::raceFileListRefreshed(SiteLogic * sls, SiteRace * sr) {
+  Pointer<Race> race = sr->getRace();
   if (currentraces.size() > 0) {
     if (!global->getWorkManager()->overload()) {
       estimateRaceSizes();
@@ -247,7 +246,7 @@ void Engine::raceFileListRefreshed(SiteLogic * sls, Pointer<Race> race) {
   }
 }
 
-bool Engine::transferJobActionRequest(Pointer<TransferJob> tj) {
+bool Engine::transferJobActionRequest(Pointer<TransferJob> & tj) {
   std::map<Pointer<TransferJob>, std::list<PendingTransfer> >::iterator it = pendingtransfers.find(tj);
   if (it == pendingtransfers.end()) {
     pendingtransfers[tj] = std::list<PendingTransfer>();
@@ -425,7 +424,7 @@ void Engine::refreshScoreBoard() {
   scoreboard->sort();
 }
 
-void Engine::refreshPendingTransferList(Pointer<TransferJob> tj) {
+void Engine::refreshPendingTransferList(Pointer<TransferJob> & tj) {
   std::map<Pointer<TransferJob>, std::list<PendingTransfer> >::iterator it = pendingtransfers.find(tj);
   if (it == pendingtransfers.end()) {
     pendingtransfers[tj] = std::list<PendingTransfer>();
@@ -607,7 +606,7 @@ void Engine::issueOptimalTransfers() {
   }
 }
 
-void Engine::checkIfRaceComplete(SiteLogic * sls, Pointer<Race> race) {
+void Engine::checkIfRaceComplete(SiteLogic * sls, Pointer<Race> & race) {
   SiteRace * srs = sls->getRace(race->getName());
   if (!srs->isDone()) {
     bool unfinisheddirs = false;
@@ -661,7 +660,7 @@ void Engine::checkIfRaceComplete(SiteLogic * sls, Pointer<Race> race) {
   }
 }
 
-void Engine::raceComplete(Pointer<Race> race) {
+void Engine::raceComplete(Pointer<Race> & race) {
   issueGlobalComplete(race);
   for (std::list<Pointer<Race> >::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
     if ((*it) == race) {
@@ -677,7 +676,7 @@ void Engine::raceComplete(Pointer<Race> race) {
   return;
 }
 
-void Engine::transferJobComplete(Pointer<TransferJob> tj) {
+void Engine::transferJobComplete(Pointer<TransferJob> & tj) {
 
   for (std::list<Pointer<TransferJob> >::iterator it = currenttransferjobs.begin(); it != currenttransferjobs.end(); it++) {
     if ((*it) == tj) {
@@ -688,7 +687,7 @@ void Engine::transferJobComplete(Pointer<TransferJob> tj) {
   global->getEventLog()->log("Engine", tj->typeString() + " job complete: " + tj->getSrcFileName());
 }
 
-unsigned short Engine::calculateScore(File * f, Pointer<Race> itr, FileList * fls, SiteRace * srs, FileList * fld, SiteRace * srd, int avgspeed, bool * prio, bool racemode) const {
+unsigned short Engine::calculateScore(File * f, Pointer<Race> & itr, FileList * fls, SiteRace * srs, FileList * fld, SiteRace * srd, int avgspeed, bool * prio, bool racemode) const {
   unsigned short points = 0;
   unsigned long long int filesize = f->getSize();
   unsigned long long int maxfilesize = srs->getMaxFileSize();
@@ -753,20 +752,20 @@ int Engine::allTransferJobs() const {
   return alltransferjobs.size();
 }
 
-Pointer<Race> Engine::getRace(const std::string & releasename) const {
+Pointer<Race> Engine::getRace(unsigned int id) const {
   std::list<Pointer<Race> >::const_iterator it;
   for (it = allraces.begin(); it != allraces.end(); it++) {
-    if ((*it)->getName() == releasename) {
+    if ((*it)->getId() == id) {
       return *it;
     }
   }
   return Pointer<Race>();
 }
 
-Pointer<TransferJob> Engine::getTransferJob(const std::string & filename) const {
+Pointer<TransferJob> Engine::getTransferJob(unsigned int id) const {
   std::list<Pointer<TransferJob> >::const_iterator it;
   for (it = alltransferjobs.begin(); it != alltransferjobs.end(); it++) {
-    if ((*it)->getSrcFileName() == filename) {
+    if ((*it)->getId() == id) {
       return *it;
     }
   }
@@ -822,7 +821,7 @@ void Engine::tick(int message) {
   }
 }
 
-void Engine::issueGlobalComplete(Pointer<Race> race) {
+void Engine::issueGlobalComplete(Pointer<Race> & race) {
   for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator itd = race->begin(); itd != race->end(); itd++) {
     itd->second->raceGlobalComplete();
   }
@@ -848,7 +847,7 @@ Pointer<Race> Engine::getCurrentRace(const std::string & release) const {
   return Pointer<Race>();
 }
 
-void Engine::addSiteToRace(Pointer<Race> race, const std::string & site) {
+void Engine::addSiteToRace(Pointer<Race> & race, const std::string & site) {
   SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(site);
   if (!checkBannedGroup(sl->getSite(), race->getGroup())) {
     SiteRace * sr = sl->addRace(race, race->getSection(), race->getName());
@@ -863,4 +862,9 @@ bool Engine::checkBannedGroup(Site * site, const std::string & group) {
     return true;
   }
   return false;
+}
+
+unsigned int Engine::getLatestId() const {
+  util::assert(nextid);
+  return nextid - 1;
 }

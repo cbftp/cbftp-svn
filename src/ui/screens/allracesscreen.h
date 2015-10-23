@@ -24,7 +24,7 @@ public:
   static void addRaceTableHeader(unsigned int, MenuSelectOption &, std::string);
   static void addRaceDetails(unsigned int, MenuSelectOption &, Pointer<Race>);
 private:
-  static void addRaceTableRow(unsigned int, MenuSelectOption &, bool, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string);
+  static void addRaceTableRow(unsigned int, MenuSelectOption &, unsigned int, bool, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string);
   MenuSelectOption table;
   Engine * engine;
   bool hascontents;

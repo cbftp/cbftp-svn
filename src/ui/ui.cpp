@@ -676,13 +676,13 @@ void Ui::goSiteStatus(std::string site) {
   switchToWindow(sitestatusscreen);
 }
 
-void Ui::goRaceStatus(std::string race) {
-  racestatusscreen->initialize(mainrow, maincol, race);
+void Ui::goRaceStatus(unsigned int id) {
+  racestatusscreen->initialize(mainrow, maincol, id);
   switchToWindow(racestatusscreen);
 }
 
-void Ui::goTransferJobStatus(std::string filename) {
-  transferjobstatusscreen->initialize(mainrow, maincol, filename);
+void Ui::goTransferJobStatus(unsigned int id) {
+  transferjobstatusscreen->initialize(mainrow, maincol, id);
   switchToWindow(transferjobstatusscreen);
 }
 
@@ -827,10 +827,10 @@ void Ui::returnNuke(int reqid) {
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 
-void Ui::returnRaceStatus(std::string race) {
+void Ui::returnRaceStatus(unsigned int id) {
   history.clear();
   topwindow = mainscreen;
-  racestatusscreen->initialize(mainrow, maincol, race);
+  racestatusscreen->initialize(mainrow, maincol, id);
   switchToWindow(racestatusscreen);
 }
 

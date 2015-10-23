@@ -15,13 +15,14 @@
 
 extern GlobalContext * global;
 
-TransferJob::TransferJob(SiteLogic * sl, std::string srcfile, FileList * filelist, std::string path, std::string dstfile) :
+TransferJob::TransferJob(unsigned int id, SiteLogic * sl, std::string srcfile, FileList * filelist, std::string path, std::string dstfile) :
       src(sl),
       dst(NULL),
       srcfile(srcfile),
       dstfile(dstfile),
       localpath(path),
-      srclist(filelist)
+      srclist(filelist),
+      id(id)
 {
   init();
   if (global->getLocalStorage()->directoryExistsWritable(path)) {
@@ -37,13 +38,14 @@ TransferJob::TransferJob(SiteLogic * sl, std::string srcfile, FileList * filelis
   }
 }
 
-TransferJob::TransferJob(std::string path, std::string srcfile, SiteLogic * sl, std::string dstfile, FileList * filelist) :
+TransferJob::TransferJob(unsigned int id, std::string path, std::string srcfile, SiteLogic * sl, std::string dstfile, FileList * filelist) :
       src(NULL),
       dst(sl),
       srcfile(srcfile),
       dstfile(dstfile),
       localpath(path),
-      dstlist(filelist)
+      dstlist(filelist),
+      id(id)
 {
   init();
   type = TRANSFERJOB_UPLOAD;
@@ -59,13 +61,14 @@ TransferJob::TransferJob(std::string path, std::string srcfile, SiteLogic * sl, 
   }
 }
 
-TransferJob::TransferJob(SiteLogic * slsrc, std::string srcfile, FileList * srcfilelist, SiteLogic * sldst, std::string dstfile, FileList * dstfilelist) :
+TransferJob::TransferJob(unsigned int id, SiteLogic * slsrc, std::string srcfile, FileList * srcfilelist, SiteLogic * sldst, std::string dstfile, FileList * dstfilelist) :
       src(slsrc),
       dst(sldst),
       srcfile(srcfile),
       dstfile(dstfile),
       srclist(srcfilelist),
-      dstlist(dstfilelist)
+      dstlist(dstfilelist),
+      id(id)
 {
   init();
   if (srclist->getFile(srcfile)->isDirectory()) {
@@ -579,6 +582,10 @@ void TransferJob::clearExisting() {
 
 bool TransferJob::isAborted() const {
   return aborted;
+}
+
+unsigned int TransferJob::getId() const {
+  return id;
 }
 
 void TransferJob::setDone() {

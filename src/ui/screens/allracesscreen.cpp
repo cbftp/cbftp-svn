@@ -75,7 +75,7 @@ void AllRacesScreen::keyPressed(unsigned int ch) {
       if (hascontents) {
         Pointer<MenuSelectOptionTextButton> msotb =
             table.getElement(table.getSelectionPointer());
-        ui->goRaceStatus(msotb->getContentText());
+        ui->goRaceStatus(msotb->getId());
       }
       break;
   }
@@ -94,12 +94,14 @@ std::string AllRacesScreen::getInfoText() const {
 }
 
 void AllRacesScreen::addRaceTableHeader(unsigned int y, MenuSelectOption & mso, std::string release) {
-  addRaceTableRow(y, mso, false, "STARTED", "USE", "SECTION", release, "SIZE", "WORST", "AVG", "BEST", "STATUS", "DONE", "SITES");
+  addRaceTableRow(y, mso, -1, false, "STARTED", "USE", "SECTION", release, "SIZE", "WORST", "AVG", "BEST", "STATUS", "DONE", "SITES");
 }
 
-void AllRacesScreen::addRaceTableRow(unsigned int y, MenuSelectOption & mso, bool selectable,
-    std::string timestamp, std::string timespent, std::string section, std::string release, std::string size,
-    std::string worst, std::string avg, std::string best, std::string status, std::string done, std::string sites) {
+void AllRacesScreen::addRaceTableRow(unsigned int y, MenuSelectOption & mso, unsigned int id, bool selectable,
+    std::string timestamp, std::string timespent, std::string section, std::string release,
+    std::string size, std::string worst, std::string avg, std::string best, std::string status, std::string done,
+    std::string sites)
+{
   Pointer<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
   Pointer<MenuSelectOptionTextButton> msotb;
 
@@ -119,6 +121,7 @@ void AllRacesScreen::addRaceTableRow(unsigned int y, MenuSelectOption & mso, boo
   if (!selectable) {
     msotb->setSelectable(false);
   }
+  msotb->setId(id);
   msal->addElement(msotb, 12, RESIZE_CUTEND, true);
 
   msotb = mso.addTextButtonNoContent(y, 1, "size", size);
@@ -172,7 +175,7 @@ void AllRacesScreen::addRaceDetails(unsigned int y, MenuSelectOption & mso, Poin
       status = "timeout";
       break;
   }
-  addRaceTableRow(y, mso, true, race->getTimeStamp(), timespent, race->getSection(),
+  addRaceTableRow(y, mso, race->getId(), true, race->getTimeStamp(), timespent, race->getSection(),
                   race->getName(), size, worst, avg, best, status, done,
                   race->getSiteListText());
 }

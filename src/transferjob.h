@@ -24,9 +24,9 @@ class LocalFileList;
 class TransferJob : public CommandOwner {
 public:
   int classType() const;
-  TransferJob(SiteLogic *, std::string, FileList *, std::string, std::string);
-  TransferJob(std::string, std::string, SiteLogic *, std::string, FileList *);
-  TransferJob(SiteLogic *, std::string, FileList *, SiteLogic *, std::string, FileList *);
+  TransferJob(unsigned int, SiteLogic *, std::string, FileList *, std::string, std::string);
+  TransferJob(unsigned int, std::string, std::string, SiteLogic *, std::string, FileList *);
+  TransferJob(unsigned int, SiteLogic *, std::string, FileList *, SiteLogic *, std::string, FileList *);
   ~TransferJob();
   std::string getSrcFileName() const;
   std::string getDstFileName() const;
@@ -81,6 +81,7 @@ public:
   bool isInitialized() const;
   void setInitialized();
   bool isAborted() const;
+  unsigned int getId() const;
   void abort();
   void clearExisting();
 private:
@@ -126,4 +127,5 @@ private:
   int filestotal;
   bool initialized;
   std::map<std::string, bool> wanteddstmakedirs;
+  unsigned int id;
 };

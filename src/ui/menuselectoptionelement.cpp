@@ -27,6 +27,10 @@ std::string MenuSelectOptionElement::getIdentifier() const {
   return identifier;
 }
 
+unsigned int MenuSelectOptionElement::getId() const {
+  return id;
+}
+
 bool MenuSelectOptionElement::activate() {
   active = true;
   return true;
@@ -78,4 +82,8 @@ bool MenuSelectOptionElement::isSelectable() const {
 
 void MenuSelectOptionElement::setSelectable(bool selectable) {
   this->selectable = selectable;
+}
+
+void MenuSelectOptionElement::setId(unsigned int id) {
+  this->id = id;
 }
