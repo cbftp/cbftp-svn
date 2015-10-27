@@ -22,7 +22,7 @@ DATE := "\"${shell date}\""
 
 BOXTAG := "\"cbftp\""
 
-CXX=g++-4.8
+CXX=g++
 CPPFLAGS=-g -Wall -O0 -MMD -MP $(STATIC_SSL_INCLUDE)
 FINALFLAGS=-g -O0
 LINKFLAGS=$(SSL_LINKFLAGS) -lncursesw -lpthread 
