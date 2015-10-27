@@ -7,7 +7,7 @@ all: $(SRC:%.cpp=%.o)
 	@#
 
 loginscreen.o: loginscreen.cpp ../../../Makefile.inc
-	${CXX} ${CPPFLAGS} -DBUILDTIME=${DATE} -DVERSION=${VERSION} -DBOXTAG=${BOXTAG} -c -o loginscreen.o loginscreen.cpp
+	${CXX}  ${CPPFLAGS}  -c -o loginscreen.o loginscreen.cpp -DBUILDTIME=${DATE} -DVERSION=${VERSION} -DBOXTAG=${BOXTAG}
 	
 clean:
 	@if test $(firstword $(OBJS)); then rm -rf $(OBJS); echo rm -rf $(OBJS); fi
