@@ -71,115 +71,6 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
   this->row = row;
   this->col = col;
   this->coloffset = coloffset;
-  if (requestid >= 0 && sitelogic->requestReady(requestid)) {
-    tickcount = 0;
-    if (wipe) {
-      bool wipestatus = sitelogic->finishRequest(requestid);
-      requestid = -1;
-      wipe = false;
-      if (wipestatus) {
-        wipesuccess = true;
-        if (list.getPath() == wipepath) {
-          refreshFilelist();
-        }
-      }
-      else {
-        wipefailed = true;
-      }
-    }
-    else if (deleting) {
-      bool deletestatus = sitelogic->finishRequest(requestid);
-      requestid = -1;
-      deleting = false;
-      if (deletestatus) {
-        deletesuccess = true;
-        if (list.getPath() == wipepath) {
-          refreshFilelist();
-        }
-      }
-      else {
-        deletefailed = true;
-      }
-    }
-    else if (nuking) {
-      bool nukestatus = sitelogic->finishRequest(requestid);
-      requestid = -1;
-      nuking = false;
-      if (nukestatus) {
-        nukesuccess = true;
-      }
-      else {
-        nukefailed = true;
-      }
-      refreshFilelist();
-    }
-    else {
-      FileList * newfilelist = sitelogic->getFileList(requestid);
-      if (newfilelist == NULL) {
-        cwdfailed = true;
-        sitelogic->finishRequest(requestid);
-        requestid = -1;
-        ui->setInfo();
-        ui->update();
-        return;
-      }
-      filelist = newfilelist;
-      if (!virgin) {
-        if (list.cursoredFile() != NULL) {
-          selectionhistory.push_front(std::pair<std::string, std::string>(list.getPath(), list.cursoredFile()->getName()));
-        }
-      }
-      virgin = false;
-      unsigned int position = 0;
-      bool separatorsenabled = false;
-      if (list.getPath() == filelist->getPath()) {
-        position = list.currentCursorPosition();
-        separatorsenabled = list.separatorsEnabled();
-      }
-      else {
-        currentviewspan = 0;
-      }
-      list.parse(filelist);
-      sitelogic->finishRequest(requestid);
-      requestid = -1;
-      if (separatorsenabled) {
-        list.toggleSeparators();
-      }
-      sort();
-      if (position) {
-        list.setCursorPosition(position);
-      }
-      std::string path = list.getPath();
-      for (std::list<std::pair<std::string, std::string> >::iterator it = selectionhistory.begin(); it != selectionhistory.end(); it++) {
-        if (it->first == path) {
-          list.selectFileName(it->second);
-          selectionhistory.erase(it);
-          break;
-        }
-      }
-      std::list<std::string> sections = site->getSectionsForPartialPath(path);
-      int dirlevels = countDirLevels(path);
-      withinraceskiplistreach = false;
-      int closestsectiondirlevel = -1;
-      for (std::list<std::string>::iterator it = sections.begin(); it != sections.end(); it++) {
-        std::string sectionpath = site->getSectionPath(*it);
-        int dirleveldifference = dirlevels - countDirLevels(sectionpath);
-        if (dirleveldifference > 0) {
-          withinraceskiplistreach = true;
-          if (dirleveldifference < closestsectiondirlevel || closestsectiondirlevel < 0) {
-            closestsectiondirlevel = dirleveldifference;
-            closestracesectionpath = sectionpath;
-          }
-        }
-        else {
-          withinraceskiplistreach = false;
-          break;
-        }
-      }
-      ui->setInfo();
-      //delete filelist;
-    }
-  }
   if (resort == true) sort();
   unsigned int position = list.currentCursorPosition();
   unsigned int pagerows = (unsigned int) row / 2;
@@ -303,7 +194,113 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
 
 void BrowseScreenSite::update() {
   if (requestid >= 0 && sitelogic->requestReady(requestid)) {
-    ui->redraw();
+    tickcount = 0;
+    if (wipe) {
+      bool wipestatus = sitelogic->finishRequest(requestid);
+      requestid = -1;
+      wipe = false;
+      if (wipestatus) {
+        wipesuccess = true;
+        if (list.getPath() == wipepath) {
+          refreshFilelist();
+        }
+      }
+      else {
+        wipefailed = true;
+      }
+    }
+    else if (deleting) {
+      bool deletestatus = sitelogic->finishRequest(requestid);
+      requestid = -1;
+      deleting = false;
+      if (deletestatus) {
+        deletesuccess = true;
+        if (list.getPath() == wipepath) {
+          refreshFilelist();
+        }
+      }
+      else {
+        deletefailed = true;
+      }
+    }
+    else if (nuking) {
+      bool nukestatus = sitelogic->finishRequest(requestid);
+      requestid = -1;
+      nuking = false;
+      if (nukestatus) {
+        nukesuccess = true;
+      }
+      else {
+        nukefailed = true;
+      }
+      refreshFilelist();
+    }
+    else {
+      FileList * newfilelist = sitelogic->getFileList(requestid);
+      if (newfilelist == NULL) {
+        cwdfailed = true;
+        sitelogic->finishRequest(requestid);
+        requestid = -1;
+      }
+      else {
+        filelist = newfilelist;
+        if (!virgin) {
+          if (list.cursoredFile() != NULL) {
+            selectionhistory.push_front(std::pair<std::string, std::string>(list.getPath(), list.cursoredFile()->getName()));
+          }
+        }
+        virgin = false;
+        unsigned int position = 0;
+        bool separatorsenabled = false;
+        if (list.getPath() == filelist->getPath()) {
+          position = list.currentCursorPosition();
+          separatorsenabled = list.separatorsEnabled();
+        }
+        else {
+          currentviewspan = 0;
+        }
+        list.parse(filelist);
+        sitelogic->finishRequest(requestid);
+        requestid = -1;
+        if (separatorsenabled) {
+          list.toggleSeparators();
+        }
+        sort();
+        if (position) {
+          list.setCursorPosition(position);
+        }
+        std::string path = list.getPath();
+        for (std::list<std::pair<std::string, std::string> >::iterator it = selectionhistory.begin(); it != selectionhistory.end(); it++) {
+          if (it->first == path) {
+            list.selectFileName(it->second);
+            selectionhistory.erase(it);
+            break;
+          }
+        }
+        std::list<std::string> sections = site->getSectionsForPartialPath(path);
+        int dirlevels = countDirLevels(path);
+        withinraceskiplistreach = false;
+        int closestsectiondirlevel = -1;
+        for (std::list<std::string>::iterator it = sections.begin(); it != sections.end(); it++) {
+          std::string sectionpath = site->getSectionPath(*it);
+          int dirleveldifference = dirlevels - countDirLevels(sectionpath);
+          if (dirleveldifference > 0) {
+            withinraceskiplistreach = true;
+            if (dirleveldifference < closestsectiondirlevel || closestsectiondirlevel < 0) {
+              closestsectiondirlevel = dirleveldifference;
+              closestracesectionpath = sectionpath;
+            }
+          }
+          else {
+            withinraceskiplistreach = false;
+            break;
+          }
+        }
+        ui->redraw();
+        //delete filelist;
+      }
+    }
+    ui->setInfo();
     return;
   }
   if (table.size()) {
