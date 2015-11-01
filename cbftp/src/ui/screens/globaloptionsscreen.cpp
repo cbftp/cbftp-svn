@@ -7,6 +7,7 @@
 #include "../../iomanager.h"
 #include "../../localstorage.h"
 #include "../../util.h"
+#include "../../settingsloadersaver.h"
 
 #include "../ui.h"
 #include "../focusablearea.h"
@@ -176,6 +177,7 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
       break;
     case 27: // esc
     case 'c':
+      global->getSettingsLoaderSaver()->saveSettings();
       ui->returnToLast();
       break;
     case 'd':
@@ -237,6 +239,7 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
         }
       }
       rch->setEnabled(udpenable);
+      global->getSettingsLoaderSaver()->saveSettings();
       ui->returnToLast();
       break;
   }

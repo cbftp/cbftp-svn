@@ -1,7 +1,7 @@
 #include "changekeyscreen.h"
 
 #include "../../globalcontext.h"
-#include "../../datafilehandler.h"
+#include "../../settingsloadersaver.h"
 #include "../../util.h"
 
 #include "../ui.h"
@@ -137,7 +137,7 @@ void ChangeKeyScreen::keyPressed(unsigned int ch) {
       field3->clear();
       if (newkey == newkey2) {
         if (newkey.length() >= SHORTESTKEY) {
-          if (global->getDataFileHandler()->changeKey(oldkey, newkey)) {
+          if (global->getSettingsLoaderSaver()->changeKey(oldkey, newkey)) {
             ui->returnToLast();
             break;
           }

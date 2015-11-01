@@ -7,6 +7,7 @@
 #include "../../proxymanager.h"
 #include "../../proxy.h"
 #include "../../util.h"
+#include "../../settingsloadersaver.h"
 
 #include "../ui.h"
 #include "../focusablearea.h"
@@ -571,6 +572,7 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
       if (changedname) {
         global->getSiteLogicManager()->getSiteLogic(site->getName())->updateName();
       }
+      global->getSettingsLoaderSaver()->saveSettings();
       ui->returnToLast();
       return;
     case 27: // esc

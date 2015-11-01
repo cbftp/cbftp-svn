@@ -3,6 +3,7 @@
 #include "../../globalcontext.h"
 #include "../../site.h"
 #include "../../sitemanager.h"
+#include "../../settingsloadersaver.h"
 
 #include "../ui.h"
 #include "../menuselectoptiontextfield.h"
@@ -108,6 +109,7 @@ void AddSectionScreen::keyPressed(unsigned int ch) {
       std::string name = field1->getData();
       std::string path = field2->getData();
       modsite->addSection(name, path);
+      global->getSettingsLoaderSaver()->saveSettings();
       ui->returnToLast();
       break;
   }

@@ -6,9 +6,40 @@
 #include <unistd.h>
 
 #include "crypto.h"
+#include "localstorage.h"
 
-DataFileHandler::DataFileHandler(std::string path) {
-  this->path = path;
+#define DATAFILE "data"
+#define DATAPATH ".cbftp"
+#define OLDDATAPATH ".clusterbomb" // backwards compatibility
+
+#define SHA256_SIZE 32
+
+DataFileHandler::DataFileHandler() {
+  std::string datadirpath = std::string(getenv("HOME")) + "/" + DATAPATH;
+  std::string olddatadirpath = std::string(getenv("HOME")) + "/" + OLDDATAPATH; // backwards compatibility
+  path = datadirpath + "/" + DATAFILE;
+  char * specialdatapath = getenv("CBFTP_DATA_PATH");
+  if (specialdatapath != NULL) {
+    path = std::string(specialdatapath);
+  }
+  else if (LocalStorage::directoryExistsReadable(datadirpath)) {
+    if (!LocalStorage::directoryExistsWritable(datadirpath)) {
+      perror(std::string("Error: no write access to " + datadirpath).c_str());
+      exit(1);
+    }
+  }
+  else if (LocalStorage::directoryExistsReadable(olddatadirpath)) { // backwards compatibility
+    if (rename(olddatadirpath.c_str(), datadirpath.c_str())) {
+      perror(std::string("Error: failed to rename " + olddatadirpath + " to " + datadirpath).c_str());
+      exit(1);
+    }
+  }
+  else {
+    if (!LocalStorage::createDirectory(datadirpath, true)) {
+      perror(std::string("Error: could not create " + datadirpath).c_str());
+      exit(1);
+    }
+  }
   fileexists = false;
   initialized = false;
   if (access(path.c_str(), F_OK) < 0) {
@@ -22,6 +53,7 @@ DataFileHandler::DataFileHandler(std::string path) {
   std::fstream infile;
   infile.open(path.c_str());
   int gcount = 0;
+  std::vector<unsigned char *> rawdatablocks;
   while (!infile.eof() && infile.good()) {
     unsigned char * rawdatablock = new unsigned char[READBLOCKSIZE];
     rawdatablocks.push_back(rawdatablock);
@@ -36,16 +68,16 @@ DataFileHandler::DataFileHandler(std::string path) {
   int count = 0;
   for (it = rawdatablocks.begin(); it != rawdatablocks.end(); it++) {
     memcpy(rawdata + (count++ * READBLOCKSIZE), *it, READBLOCKSIZE);
-    delete *it;
+    delete[] *it;
   }
 }
 
-bool DataFileHandler::tryDecrypt(std::string key) {
+bool DataFileHandler::readEncrypted(std::string key) {
   if (!fileexists || initialized) {
     return false;
   }
   this->key = key;
-  unsigned char keyhash[32];
+  unsigned char keyhash[SHA256_SIZE];
   Crypto::sha256(key, keyhash);
   unsigned char decryptedtext[rawdatalen + Crypto::blocksize()];
   int decryptedlen;
@@ -53,7 +85,7 @@ bool DataFileHandler::tryDecrypt(std::string key) {
   decryptedtext[decryptedlen] = '\0';
   if (strstr((const char *)decryptedtext, std::string("DataFileHandler.readable").data()) == NULL) {
     // backwards compatibility begin
-    while (key.length() < 32) {
+    while (key.length() < SHA256_SIZE) {
       key.append("0");
     }
     Crypto::decrypt(rawdata, rawdatalen, (unsigned char *)key.data(), decryptedtext, &decryptedlen);
@@ -70,8 +102,14 @@ bool DataFileHandler::tryDecrypt(std::string key) {
       lastbreakpos = currentpos + 1;
     }
   }
+  Crypto::sha256((const char *)decryptedtext, keyhash);
+  filehash = std::string((const char *)keyhash, SHA256_SIZE);
   initialized = true;
   return true;
+}
+
+bool DataFileHandler::readPlain() {
+  return false;
 }
 
 void DataFileHandler::newDataFile(std::string key) {
@@ -88,12 +126,16 @@ void DataFileHandler::writeFile() {
     fileoutput.append(*it + "\n");
   }
   fileoutput.append("DataFileHandler.readable");
+  unsigned char keyhash[SHA256_SIZE];
+  Crypto::sha256(fileoutput, keyhash);
+  if (std::string((const char *)keyhash, SHA256_SIZE) == filehash) {
+    return;
+  }
   int plaintextlen = fileoutput.length();
   unsigned char plaintext[plaintextlen];
   unsigned char ciphertext[plaintextlen + Crypto::blocksize()];
   memcpy(plaintext, fileoutput.data(), plaintextlen);
   int ciphertextlen;
-  unsigned char keyhash[32];
   Crypto::sha256(key, keyhash);
   Crypto::encrypt(plaintext, plaintextlen, keyhash, ciphertext, &ciphertextlen);
   std::ofstream outfile;
@@ -107,6 +149,8 @@ bool DataFileHandler::changeKey(std::string key, std::string newkey) {
     return false;
   }
   this->key = newkey;
+  filehash = "";
+  writeFile();
   return true;
 }
 
@@ -127,6 +171,7 @@ void DataFileHandler::addOutputLine(std::string owner, std::string line) {
 }
 
 void DataFileHandler::getDataFor(std::string owner, std::vector<std::string> * matches) {
+  matches->clear();
   std::vector<std::string>::iterator it;
   owner.append(".");
   int len = owner.length();

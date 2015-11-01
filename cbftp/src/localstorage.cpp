@@ -2,13 +2,12 @@
 
 #include "localdownload.h"
 #include "localupload.h"
-#include "globalcontext.h"
 #include "transfermonitor.h"
-#include "datafilehandler.h"
 #include "localfilelist.h"
 #include "util.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -16,8 +15,6 @@
 #include <pwd.h>
 #include <grp.h>
 #include <vector>
-
-extern GlobalContext * global;
 
 LocalStorage::LocalStorage() {
   temppath = "/tmp";
@@ -58,7 +55,7 @@ LocalTransfer * LocalStorage::passiveUpload(TransferMonitor * tm, std::string pa
   return lu;
 }
 
-std::string LocalStorage::getHostFromPASVString(std::string pasv) const {
+std::string LocalStorage::getHostFromPASVString(std::string pasv) {
   size_t sep1 = pasv.find(",");
   size_t sep2 = pasv.find(",", sep1 + 1);
   size_t sep3 = pasv.find(",", sep2 + 1);
@@ -69,7 +66,7 @@ std::string LocalStorage::getHostFromPASVString(std::string pasv) const {
   return pasv.substr(0, sep4);
 }
 
-int LocalStorage::getPortFromPASVString(std::string pasv) const {
+int LocalStorage::getPortFromPASVString(std::string pasv) {
   size_t sep1 = pasv.find(",");
   size_t sep2 = pasv.find(",", sep1 + 1);
   size_t sep3 = pasv.find(",", sep2 + 1);
@@ -250,31 +247,4 @@ bool LocalStorage::createDirectoryRecursive(std::string path) {
     }
   }
   return true;
-}
-
-void LocalStorage::readConfiguration() {
-  std::vector<std::string> lines;
-  global->getDataFileHandler()->getDataFor("LocalStorage", &lines);
-  std::vector<std::string>::iterator it;
-  std::string line;
-  for (it = lines.begin(); it != lines.end(); it++) {
-    line = *it;
-    if (line.length() == 0 ||line[0] == '#') continue;
-    size_t tok = line.find('=');
-    std::string setting = line.substr(0, tok);
-    std::string value = line.substr(tok + 1);
-    if (!setting.compare("temppath")) {
-      setTempPath(value);
-    }
-    if (!setting.compare("downloadpath")) {
-      setDownloadPath(value);
-    }
-  }
-}
-
-void LocalStorage::writeState() {
-  std::string filetag = "LocalStorage";
-  DataFileHandler * filehandler = global->getDataFileHandler();
-  filehandler->addOutputLine(filetag, "temppath=" + getTempPath());
-  filehandler->addOutputLine(filetag, "downloadpath=" + getDownloadPath());
 }

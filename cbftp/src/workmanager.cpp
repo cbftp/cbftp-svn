@@ -6,7 +6,7 @@
 
 extern GlobalContext * global;
 
-WorkManager::WorkManager() {
+void WorkManager::init() {
   pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
 #ifdef _ISOC95_SOURCE
   pthread_setname_np(thread, "Worker");

@@ -10,5 +10,5 @@ public:
   static int blocksize();
   static void encrypt(unsigned char *, int, unsigned char *, unsigned char *, int *);
   static void decrypt(unsigned char *, int, unsigned char *, unsigned char *, int *);
-  static void sha256(std::string, unsigned char *);
+  static void sha256(const std::string &, unsigned char *);
 };

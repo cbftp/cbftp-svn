@@ -10,16 +10,16 @@ TimeReference::TimeReference() {
 }
 
 void TimeReference::tick(int) {
-  time += INTERVAL;
+  timeticker += INTERVAL;
 }
 
 unsigned long long TimeReference::timeReference() {
-  return time;
+  return timeticker;
 }
 
 unsigned long long TimeReference::timePassedSince(unsigned long long timestamp) {
-  if (timestamp > time) {
-    return 0 - timestamp + time;
+  if (timestamp > timeticker) {
+    return 0 - timestamp + timeticker;
   }
-  return time - timestamp;
+  return timeticker - timestamp;
 }

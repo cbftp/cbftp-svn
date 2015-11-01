@@ -24,8 +24,6 @@ public:
   std::list<SkiplistItem>::const_iterator entriesEnd() const;
   bool isAllowed(const std::string &, const bool) const;
   bool isAllowed(std::string, const bool, const bool) const;
-  void readConfiguration();
-  void writeState();
   bool defaultAllow() const;
   unsigned int size() const;
   void setDefaultAllow(bool);

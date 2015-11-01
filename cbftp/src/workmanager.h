@@ -8,6 +8,7 @@
 #include "blockingqueue.h"
 #include "signalevents.h"
 #include "semaphore.h"
+#include "event.h"
 
 #define MAXDATASIZE 2048
 #define BUFSSIZE 32
@@ -28,7 +29,6 @@ enum WorkType {
 };
 
 class EventReceiver;
-class Event;
 
 class WorkManager {
 private:
@@ -40,7 +40,7 @@ private:
   Semaphore readdata;
   DataBlockPool blockpool;
 public:
-  WorkManager();
+  void init();
   void dispatchFDData(EventReceiver *);
   void dispatchFDData(EventReceiver *, char *, int);
   void dispatchTick(EventReceiver *, int);

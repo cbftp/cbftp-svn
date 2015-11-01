@@ -11,5 +11,5 @@ public:
   unsigned long long timeReference();
   unsigned long long timePassedSince(unsigned long long);
 private:
-  unsigned long long time;
+  unsigned long long timeticker;
 };

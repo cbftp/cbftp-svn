@@ -25,8 +25,6 @@ public:
   void setAudioViewer(std::string);
   void setImageViewer(std::string);
   void setPDFViewer(std::string);
-  void readConfiguration();
-  void writeState();
   std::string getViewApplication(std::string) const;
   static std::string getExtension(std::string);
 private:

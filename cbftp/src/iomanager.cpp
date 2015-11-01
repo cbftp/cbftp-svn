@@ -18,7 +18,6 @@
 #include "datablock.h"
 #include "datablockpool.h"
 #include "eventlog.h"
-#include "datafilehandler.h"
 #include "tickpoke.h"
 #include "scopelock.h"
 #include "util.h"
@@ -715,9 +714,11 @@ void IOManager::setDefaultInterface(std::string interface) {
     }
   }
   else {
-    defaultinterface = interface;
-    hasdefaultinterface = true;
-    global->getEventLog()->log("IOManager", "Default network interface set to: " + interface);
+    if (hasdefaultinterface == false || defaultinterface != interface) {
+      defaultinterface = interface;
+      hasdefaultinterface = true;
+      global->getEventLog()->log("IOManager", "Default network interface set to: " + interface);
+    }
   }
 }
 
@@ -736,28 +737,4 @@ std::string IOManager::getInterfaceAddress(std::string interface) {
   }
   close(fd);
   return inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
-}
-
-void IOManager::readConfiguration() {
-  std::vector<std::string> lines;
-  global->getDataFileHandler()->getDataFor("IOManager", &lines);
-  std::vector<std::string>::iterator it;
-  std::string line;
-  for (it = lines.begin(); it != lines.end(); it++) {
-    line = *it;
-    if (line.length() == 0 ||line[0] == '#') continue;
-    size_t tok = line.find('=');
-    std::string setting = line.substr(0, tok);
-    std::string value = line.substr(tok + 1);
-    if (!setting.compare("defaultinterface")) {
-      setDefaultInterface(value);
-    }
-  }
-}
-
-void IOManager::writeState() {
-  global->getEventLog()->log("IOManager", "Writing state...");
-  if (hasDefaultInterface()) {
-    global->getDataFileHandler()->addOutputLine("IOManager", "defaultinterface=" + getDefaultInterface());
-  }
 }
