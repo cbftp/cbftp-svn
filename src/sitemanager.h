@@ -34,9 +34,9 @@ class SiteManager {
     int globalranktolerance;
   public:
     SiteManager();
-    void readConfiguration();
     int getNumSites() const;
     void addSite(Site *);
+    void addSiteLoad(Site *);
     Site * getSite(std::string) const;
     void deleteSite(std::string);
     std::vector<Site *>::const_iterator begin() const;
@@ -61,7 +61,6 @@ class SiteManager {
     void setGlobalRank(int);
     int getGlobalRankTolerance() const;
     void setGlobalRankTolerance(int);
-    void writeState();
     void sortSites();
     void proxyRemoved(std::string);
     void addBlockedPair(std::string, std::string);
@@ -69,6 +68,8 @@ class SiteManager {
     void clearBlocksForSite(Site *);
     std::list<Site *> getBlocksFromSite(Site *) const;
     std::list<Site *> getBlocksToSite(Site *) const;
+    std::map<Site *, std::map<Site *, bool> >::const_iterator blockedPairsBegin() const;
+    std::map<Site *, std::map<Site *, bool> >::const_iterator blockedPairsEnd() const;
     bool testRankCompatibility(const Site&, const Site&) const;
 };
 

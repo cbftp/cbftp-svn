@@ -75,8 +75,6 @@ public:
   std::string getSocketAddress(int) const;
   void closeSocket(int);
   std::list<std::pair<std::string, std::string> > listInterfaces();
-  void readConfiguration();
-  void writeState();
   std::string getDefaultInterface() const;
   void setDefaultInterface(std::string);
   bool hasDefaultInterface() const;

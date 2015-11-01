@@ -14,7 +14,6 @@
 
 #include "localstorage.h"
 #include "eventlog.h"
-#include "datafilehandler.h"
 
 extern GlobalContext * global;
 
@@ -201,39 +200,4 @@ void ExternalFileViewing::setImageViewer(std::string viewer) {
 
 void ExternalFileViewing::setPDFViewer(std::string viewer) {
   pdfviewer = viewer;
-}
-
-void ExternalFileViewing::readConfiguration() {
-  std::vector<std::string> lines;
-  global->getDataFileHandler()->getDataFor("ExternalFileViewing", &lines);
-  std::vector<std::string>::iterator it;
-  std::string line;
-  for (it = lines.begin(); it != lines.end(); it++) {
-    line = *it;
-    if (line.length() == 0 ||line[0] == '#') continue;
-    size_t tok = line.find('=');
-    std::string setting = line.substr(0, tok);
-    std::string value = line.substr(tok + 1);
-    if (!setting.compare("video")) {
-      setVideoViewer(value);
-    }
-    else if (!setting.compare("audio")) {
-      setAudioViewer(value);
-    }
-    else if (!setting.compare("image")) {
-      setImageViewer(value);
-    }
-    else if (!setting.compare("pdf")) {
-      setPDFViewer(value);
-    }
-  }
-}
-
-void ExternalFileViewing::writeState() {
-  std::string filetag = "ExternalFileViewing";
-  DataFileHandler * filehandler = global->getDataFileHandler();
-  filehandler->addOutputLine(filetag, "video=" + getVideoViewer());
-  filehandler->addOutputLine(filetag, "audio=" + getAudioViewer());
-  filehandler->addOutputLine(filetag, "image=" + getImageViewer());
-  filehandler->addOutputLine(filetag, "pdf=" + getPDFViewer());
 }

@@ -4,7 +4,6 @@
 #include <list>
 
 #include "globalcontext.h"
-#include "datafilehandler.h"
 #include "engine.h"
 #include "iomanager.h"
 #include "eventlog.h"
@@ -86,11 +85,21 @@ void RemoteCommandHandler::handleMessage(std::string message) {
     commandend = message.length();
   }
   std::string command = message.substr(passend + 1, commandend - (passend + 1));
+  std::string remainder = message.substr(commandend + 1);
   if (command == "race") {
-    commandRace(message.substr(commandend + 1));
+    commandRace(remainder);
   }
   else if (command == "raw") {
-    commandRaw(message.substr(commandend + 1));
+    commandRaw(remainder);
+  }
+  else if (command == "fxp") {
+    commandFXP(remainder);
+  }
+  else if (command == "download") {
+    commandDownload(remainder);
+  }
+  else if (command == "upload") {
+    commandUpload(remainder);
   }
   else {
     global->getEventLog()->log("RemoteCommandHandler", "Invalid remote command: " + message);
@@ -153,6 +162,18 @@ void RemoteCommandHandler::commandRaw(const std::string & message) {
   }
 }
 
+void RemoteCommandHandler::commandFXP(const std::string & message) {
+
+}
+
+void RemoteCommandHandler::commandDownload(const std::string & message) {
+
+}
+
+void RemoteCommandHandler::commandUpload(const std::string & message) {
+
+}
+
 void RemoteCommandHandler::FDFail(std::string message) {
   global->getEventLog()->log("RemoteCommandHandler", "UDP binding on port " +
       util::int2Str(getUDPPort()) + " failed: " + message);
@@ -194,41 +215,4 @@ void RemoteCommandHandler::tick(int) {
   if (enabled) {
     connect();
   }
-}
-
-void RemoteCommandHandler::readConfiguration() {
-  std::vector<std::string> lines;
-  global->getDataFileHandler()->getDataFor("RemoteCommandHandler", &lines);
-  std::vector<std::string>::iterator it;
-  std::string line;
-  bool enable = false;
-  for (it = lines.begin(); it != lines.end(); it++) {
-    line = *it;
-    if (line.length() == 0 ||line[0] == '#') continue;
-    size_t tok = line.find('=');
-    std::string setting = line.substr(0, tok);
-    std::string value = line.substr(tok + 1);
-    if (!setting.compare("enabled")) {
-      if (!value.compare("true")) {
-        enable = true;
-      }
-    }
-    else if (!setting.compare("port")) {
-      setPort(util::str2Int(value));
-    }
-    else if (!setting.compare("password")) {
-      setPassword(value);
-    }
-  }
-  if (enable) {
-    setEnabled(true);
-  }
-}
-
-void RemoteCommandHandler::writeState() {
-  global->getEventLog()->log("RemoteCommandHandler", "Writing state...");
-  DataFileHandler * filehandler = global->getDataFileHandler();
-  if (enabled) filehandler->addOutputLine("RemoteCommandHandler", "enabled=true");
-  filehandler->addOutputLine("RemoteCommandHandler", "port=" + util::int2Str(port));
-  filehandler->addOutputLine("RemoteCommandHandler", "password=" + password);
 }

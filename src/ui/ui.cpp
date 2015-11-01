@@ -8,15 +8,9 @@
 #include "../workmanager.h"
 #include "../globalcontext.h"
 #include "../tickpoke.h"
+#include "../settingsloadersaver.h"
 #include "../iomanager.h"
-#include "../sitemanager.h"
-#include "../remotecommandhandler.h"
-#include "../skiplist.h"
-#include "../datafilehandler.h"
-#include "../eventlog.h"
-#include "../proxymanager.h"
 #include "../externalfileviewing.h"
-#include "../localstorage.h"
 #include "../util.h"
 
 #include "legendwindow.h"
@@ -75,16 +69,6 @@ Ui::Ui() {
   dead = false;
   showlegend = true;
   split = false;
-  pthread_create(&uithread, global->getPthreadAttr(), run, (void *) this);
-#ifdef _ISOC95_SOURCE
-  pthread_setname_np(uithread, "UserInterface");
-#endif
-  struct sigaction sa;
-  sa.sa_flags = SA_RESTART;
-  sigemptyset(&sa.sa_mask);
-  sigaddset(&sa.sa_mask, SIGWINCH);
-  sa.sa_handler = sighandler;
-  sigaction(SIGWINCH, &sa, NULL);
 }
 
 Ui::~Ui() {
@@ -92,9 +76,23 @@ Ui::~Ui() {
 }
 
 bool Ui::init() {
+  struct sigaction sa;
+  sa.sa_flags = SA_RESTART;
+  sigemptyset(&sa.sa_mask);
+  sigaddset(&sa.sa_mask, SIGWINCH);
+  sa.sa_handler = sighandler;
+  sigaction(SIGWINCH, &sa, NULL);
+
+  pthread_create(&uithread, global->getPthreadAttr(), run, (void *) this);
+#ifdef _ISOC95_SOURCE
+  pthread_setname_np(uithread, "UserInterface");
+#endif
   initret = true;
   uiqueue.push(UICommand(UI_COMMAND_INIT));
   eventcomplete.wait();
+  if (!initret) {
+    return false;
+  }
   legendwindow = makePointer<LegendWindow>(this, legend, 2, col);
   infowindow = makePointer<InfoWindow>(this, info, 2, col);
   loginscreen = makePointer<LoginScreen>(this);
@@ -150,7 +148,8 @@ bool Ui::init() {
   mainwindows.push_back(transferjobstatusscreen);
   mainwindows.push_back(allracesscreen);
   mainwindows.push_back(alltransferjobsscreen);
-  if (global->getDataFileHandler()->fileExists()) {
+
+  if (global->getSettingsLoaderSaver()->dataExists()) {
     loginscreen->initialize(mainrow, maincol);
     topwindow = loginscreen;
   }
@@ -166,7 +165,7 @@ bool Ui::init() {
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
   global->getIOManager()->registerStdin(this);
   global->getTickPoke()->startPoke(this, "UI", 250, 0);
-  return initret;
+  return true;
 }
 
 void Ui::initIntern() {
@@ -180,6 +179,8 @@ void Ui::initIntern() {
     endwin();
     printf("Error: terminal too small. 80x24 required. (Current %dx%d)\n", col, row);
     initret = false;
+    eventcomplete.post();
+    return;
   }
 #if NCURSES_EXT_FUNCS >= 20081102
   set_escdelay(25);
@@ -215,38 +216,6 @@ void Ui::terminalSizeChanged() {
   eventcomplete.wait();
   redrawAll();
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
-}
-
-void Ui::readConfiguration() {
-  std::vector<std::string> lines;
-  global->getDataFileHandler()->getDataFor("UI", &lines);
-  std::vector<std::string>::iterator it;
-  std::string line;
-  for (it = lines.begin(); it != lines.end(); it++) {
-    line = *it;
-    if (line.length() == 0 ||line[0] == '#') continue;
-    size_t tok = line.find('=');
-    std::string setting = line.substr(0, tok);
-    std::string value = line.substr(tok + 1);
-    if (!setting.compare("legend")) {
-      if (!value.compare("true")) {
-        showLegend(true);
-      }
-      else {
-        showLegend(false);
-      }
-    }
-  }
-}
-
-void Ui::writeState() {
-  global->getEventLog()->log("UI", "Writing state...");
-  if (legendEnabled()) {
-    global->getDataFileHandler()->addOutputLine("UI", "legend=true");
-  }
-  else {
-    global->getDataFileHandler()->addOutputLine("UI", "legend=false");
-  }
 }
 
 bool Ui::legendEnabled() const {
@@ -778,17 +747,8 @@ void Ui::returnSelectSites(std::string sites) {
 }
 
 void Ui::key(std::string key) {
-  bool result = global->getDataFileHandler()->tryDecrypt(key);
+  bool result = global->getSettingsLoaderSaver()->enterKey(key);
   if (result) {
-    global->getEventLog()->log("UI", "Data decryption successful.");
-    global->getIOManager()->readConfiguration();
-    global->getSiteManager()->readConfiguration();
-    global->getRemoteCommandHandler()->readConfiguration();
-    global->getExternalFileViewing()->readConfiguration();
-    readConfiguration();
-    global->getSkipList()->readConfiguration();
-    global->getProxyManager()->readConfiguration();
-    global->getLocalStorage()->readConfiguration();
     enableInfo();
     if (legendEnabled()) {
       enableLegend();
@@ -797,14 +757,13 @@ void Ui::key(std::string key) {
     switchToWindow(mainscreen);
   }
   else {
-    global->getEventLog()->log("UI", "Data decryption failed.");
     topwindow->update();
     uiqueue.push(UICommand(UI_COMMAND_REFRESH));
   }
 }
 
 void Ui::newKey(std::string newkey) {
-  global->getDataFileHandler()->newDataFile(newkey);
+  util::assert(global->getSettingsLoaderSaver()->enterKey(newkey));
   mainscreen->initialize(mainrow, maincol);
   switchToWindow(mainscreen);
 }

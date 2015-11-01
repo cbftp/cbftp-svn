@@ -13,6 +13,7 @@
 #include "../../util.h"
 #include "../../remotecommandhandler.h"
 #include "../../pointer.h"
+#include "../../settingsloadersaver.h"
 
 #include "../menuselectoptioncheckbox.h"
 #include "../ui.h"
@@ -196,6 +197,7 @@ void MainScreen::command(std::string command) {
   if (command == "yes") {
     global->getSiteLogicManager()->deleteSiteLogic(deletesite);
     global->getSiteManager()->deleteSite(deletesite);
+    global->getSettingsLoaderSaver()->saveSettings();
   }
   ui->redraw();
   ui->setInfo();
@@ -335,6 +337,7 @@ void MainScreen::keyPressed(unsigned int ch) {
         for (i = 0; global->getSiteManager()->getSite(site->getName() + "-" + util::int2Str(i)) != NULL; i++);
         site->setName(site->getName() + "-" + util::int2Str(i));
         global->getSiteManager()->addSite(site);
+        global->getSettingsLoaderSaver()->saveSettings();
         ui->redraw();
         ui->setInfo();
         break;

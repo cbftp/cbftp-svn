@@ -51,12 +51,12 @@ void GlobalContext::linkTickPoke(TickPoke * tp) {
   this->tp = tp;
 }
 
-void GlobalContext::linkComponents(DataFileHandler * dfh, IOManager * iom,
+void GlobalContext::linkComponents(SettingsLoaderSaver * sls, IOManager * iom,
     Engine * e, UIBase * uib, SiteManager * sm, SiteLogicManager * slm,
     TransferManager * tm, RemoteCommandHandler * rch,
     SkipList * sl, ProxyManager * pm, LocalStorage * ls,
     ExternalFileViewing * efv, TimeReference * tr) {
-  this->dfh = dfh;
+  this->sls = sls;
   this->iom = iom;
   this->e = e;
   this->uib = uib;
@@ -79,8 +79,8 @@ Engine * GlobalContext::getEngine() const {
   return e;
 }
 
-DataFileHandler * GlobalContext::getDataFileHandler() const {
-  return dfh;
+SettingsLoaderSaver * GlobalContext::getSettingsLoaderSaver() const {
+  return sls;
 }
 
 IOManager * GlobalContext::getIOManager() const {

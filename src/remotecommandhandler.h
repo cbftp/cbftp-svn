@@ -26,6 +26,9 @@ private:
   void stopRetry();
   void commandRace(const std::string &);
   void commandRaw(const std::string &);
+  void commandFXP(const std::string &);
+  void commandDownload(const std::string &);
+  void commandUpload(const std::string &);
 public:
   RemoteCommandHandler();
   bool isEnabled() const;
@@ -34,8 +37,6 @@ public:
   void setPassword(std::string);
   void setPort(int);
   void setEnabled(bool);
-  void readConfiguration();
-  void writeState();
   void FDData(char *, unsigned int);
   void FDFail(std::string);
   void tick(int);

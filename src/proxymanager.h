@@ -13,8 +13,6 @@ public:
   void removeProxy(std::string);
   std::vector<Proxy *>::const_iterator begin() const;
   std::vector<Proxy *>::const_iterator end() const;
-  void readConfiguration();
-  void writeState();
   bool hasDefaultProxy() const;
   Proxy * getDefaultProxy() const;
   void setDefaultProxy(std::string);

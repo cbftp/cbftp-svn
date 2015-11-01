@@ -8,7 +8,6 @@ class UIBase;
 class SiteLogicManager;
 class SiteManager;
 class TransferManager;
-class DataFileHandler;
 class TickPoke;
 class RemoteCommandHandler;
 class IOManager;
@@ -19,13 +18,14 @@ class ProxyManager;
 class LocalStorage;
 class ExternalFileViewing;
 class TimeReference;
+class SettingsLoaderSaver;
 
 class GlobalContext {
   private:
     SSL_CTX * ssl_ctx;
     pthread_attr_t attr;
     Engine * e;
-    DataFileHandler * dfh;
+    SettingsLoaderSaver * sls;
     IOManager * iom;
     WorkManager * wm;
     UIBase * uib;
@@ -49,13 +49,13 @@ class GlobalContext {
     void linkEventLog(EventLog *);
     void linkWorkManager(WorkManager *);
     void linkTickPoke(TickPoke *);
-    void linkComponents(DataFileHandler *, IOManager *, Engine *,
+    void linkComponents(SettingsLoaderSaver *, IOManager *, Engine *,
         UIBase *, SiteManager *, SiteLogicManager *, TransferManager *,
         RemoteCommandHandler *, SkipList *, ProxyManager *,
         LocalStorage *, ExternalFileViewing *, TimeReference *);
     SSL_CTX * getSSLCTX() const;
     Engine * getEngine() const;
-    DataFileHandler * getDataFileHandler() const;
+    SettingsLoaderSaver * getSettingsLoaderSaver() const;
     WorkManager * getWorkManager() const;
     IOManager * getIOManager() const;
     UIBase * getUIBase() const;
