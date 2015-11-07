@@ -66,6 +66,7 @@ void SiteLogic::activateAll() {
   wantedloggedin = conns.size();
   for (unsigned int i = 0; i < conns.size(); i++) {
     if (!conns[i]->isConnected()) {
+      connstatetracker[i].resetIdleTime();
       conns[i]->login();
     }
     else {
@@ -93,6 +94,7 @@ void SiteLogic::tick(int message) {
       util::assert(!connstatetracker[i].isLocked() && !conns[i]->isProcessing());
       DelayedCommand eventcommand = connstatetracker[i].getCommand();
       connstatetracker[i].getCommand().reset();
+      connstatetracker[i].use();
       std::string event = eventcommand.getCommand();
       if (event == "refreshchangepath") {
         SiteRace * race = (SiteRace *) eventcommand.getArg();
@@ -668,6 +670,7 @@ void SiteLogic::activateOne() {
     if (wantedloggedin == 0) {
       wantedloggedin++;
     }
+    connstatetracker[0].resetIdleTime();
     conns[0]->login();
   }
   else {
@@ -682,6 +685,7 @@ void SiteLogic::activateOne() {
       wantedloggedin++;
       for (unsigned int i = 0; i < conns.size(); i++) {
         if (!conns[i]->isConnected()) {
+          connstatetracker[i].resetIdleTime();
           conns[i]->login();
           break;
         }
@@ -696,6 +700,7 @@ void SiteLogic::haveConnected(unsigned int connected) {
     wantedloggedin = connected;
     for (unsigned int i = 0; i < conns.size() && lefttoconnect > 0; i++) {
       if (!conns[i]->isConnected()) {
+        connstatetracker[i].resetIdleTime();
         conns[i]->login();
         lefttoconnect--;
       }
@@ -1347,6 +1352,7 @@ void SiteLogic::connectConn(int id) {
     if (wantedloggedin < site->getMaxLogins()) {
       wantedloggedin++;
     }
+    connstatetracker[id].resetIdleTime();
     conns[id]->login();
   }
 }
@@ -1406,7 +1412,7 @@ void SiteLogic::issueRawCommand(unsigned int id, std::string command) {
     connectConn(id);
     return;
   }
-  if (!connstatetracker[id].isLocked() && !conns[id]->isProcessing()) {
+  if (connstatetracker[id].isLoggedIn() && !connstatetracker[id].isLocked() && !conns[id]->isProcessing()) {
     handleRequest(id);
   }
 }
