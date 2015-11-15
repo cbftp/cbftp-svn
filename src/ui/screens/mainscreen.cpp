@@ -14,11 +14,14 @@
 #include "../../remotecommandhandler.h"
 #include "../../pointer.h"
 #include "../../settingsloadersaver.h"
+#include "../../preparedrace.h"
 
 #include "../menuselectoptioncheckbox.h"
 #include "../ui.h"
 #include "../focusablearea.h"
 #include "../menuselectsiteelement.h"
+#include "../menuselectadjustableline.h"
+#include "../menuselectoptiontextbutton.h"
 
 #include "allracesscreen.h"
 #include "alltransferjobsscreen.h"
@@ -30,8 +33,10 @@ MainScreen::MainScreen(Ui * ui) {
 }
 
 void MainScreen::initialize(unsigned int row, unsigned int col) {
-  siteextralegendtext = " - [Tab] split browse - [right/b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [q]uick jump";
-  baselegendtext = "[Enter] Details - [Down] Next option - [Up] Previous option - [G]lobal settings - Event [l]og - [t]ransfers - All [r]aces - All transfer[j]obs - toggle [U]dp - Browse lo[c]al - [Esc] back to browsing";
+  std::string baselegendtext = "[Down] Next option - [Up] Previous option - [G]lobal settings - Event [l]og - [t]ransfers - All [r]aces - All transfer[j]obs - toggle [U]dp - Browse lo[c]al - [Esc] back to browsing";
+  sitelegendtext = baselegendtext + " - [Tab] split browse - [right/b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [q]uick jump";
+  preparelegendtext = baselegendtext + " - [Enter/s] start race - [Del] delete race";
+  joblegendtext = baselegendtext + " - [Enter] Details";
   gotolegendtext = "[Any] Go to matching first letter in site list - [Esc] Cancel";
   autoupdate = true;
   gotomode = false;
@@ -39,6 +44,10 @@ void MainScreen::initialize(unsigned int row, unsigned int col) {
   sitestartrow = 0;
   currentraces = 0;
   currenttransferjobs = 0;
+  if (global->getEngine()->preparedRaces()) {
+    focusedarea = &msop;
+    msop.enterFocusFrom(0);
+  }
   if (global->getEngine()->currentRaces()) {
     focusedarea = &mso;
     mso.enterFocusFrom(0);
@@ -58,13 +67,26 @@ void MainScreen::redraw() {
   ui->erase();
   ui->hideCursor();
   numsitestext = "Sites: " + util::int2Str(global->getSiteManager()->getNumSites());
+  int listpreparedraces = global->getEngine()->preparedRaces();
   int listraces = global->getEngine()->allRaces();
   int listtransferjobs = global->getEngine()->allTransferJobs();
   unsigned int irow = 0;
+  msop.clear();
+  mso.clear();
+  msot.clear();
+  if (listpreparedraces) {
+    addPreparedRaceTableHeader(irow++, msop);
+    std::list<Pointer<PreparedRace> >::const_iterator it;
+    int i = 0;
+    for (it = --global->getEngine()->getPreparedRacesEnd(); it != --global->getEngine()->getPreparedRacesBegin() && i < 3; it--, i++) {
+      addPreparedRaceDetails(irow++, msop, *it);
+    }
+    msop.checkPointer();
+    msop.adjustLines(col - 3);
+    irow++;
+  }
   if (listraces) {
-    mss.makeLeavableUp();
-    msot.makeLeavableUp();
-    mso.clear();
+
     AllRacesScreen::addRaceTableHeader(irow++, mso, std::string("RACE NAME") + (listraces > 3 ? " (Showing latest 3)" : ""));
     std::list<Pointer<Race> >::const_iterator it;
     int i = 0;
@@ -76,8 +98,7 @@ void MainScreen::redraw() {
     irow++;
   }
   if (listtransferjobs) {
-    mss.makeLeavableUp();
-    msot.clear();
+
     AllTransferJobsScreen::addJobTableHeader(irow++, msot, std::string("TRANSFER JOB NAME") + (listtransferjobs > 3 ? " (Showing latest 3)" : ""));
     std::list<Pointer<TransferJob> >::const_iterator it;
     int i = 0;
@@ -88,6 +109,13 @@ void MainScreen::redraw() {
     msot.adjustLines(col - 3);
     irow++;
   }
+  msop.makeLeavableDown(listraces || listtransferjobs || mss.size());
+  mso.makeLeavableUp(listpreparedraces);
+  mso.makeLeavableDown(listtransferjobs || mss.size());
+  msot.makeLeavableUp(listpreparedraces || listraces);
+  msot.makeLeavableDown(mss.size());
+  mss.makeLeavableUp(listpreparedraces || listraces || listtransferjobs);
+
   if (global->getSiteManager()->getNumSites()) {
     ui->printStr(irow, 1, "SITE    LOGINS  UPLOADS  DOWNLOADS");
   }
@@ -118,30 +146,7 @@ void MainScreen::redraw() {
       currentviewspan = position;
     }
   }
-  if (listtransferjobs || mss.size()) {
-    mso.makeLeavableDown();
-  }
-  else {
-    mso.makeLeavableDown(false);
-  }
-  if (listraces) {
-    msot.makeLeavableUp();
-  }
-  else {
-    msot.makeLeavableUp(false);
-  }
-  if (mss.size()) {
-    msot.makeLeavableDown();
-  }
-  else {
-    msot.makeLeavableDown(false);
-  }
-  if (listraces || listtransferjobs) {
-    mss.makeLeavableUp();
-  }
-  else {
-    mss.makeLeavableUp(false);
-  }
+
   int currentraces = global->getEngine()->currentRaces();
   int currenttransferjobs = global->getEngine()->currentTransferJobs();
   if (currentraces) {
@@ -156,7 +161,32 @@ void MainScreen::redraw() {
   else {
     activejobstext = "";
   }
+  if (focusedarea == &msop && !msop.size()) {
+    msop.reset();
+    focusedarea = &mso;
+    focusedarea->enterFocusFrom(0);
+  }
+  if (focusedarea == &mso && !mso.size()) {
+    mso.reset();
+    focusedarea = &msot;
+    focusedarea->enterFocusFrom(0);
+  }
+  if (focusedarea == &msot && !msot.size()) {
+    msot.reset();
+    focusedarea = &mss;
+    focusedarea->enterFocusFrom(0);
+  }
   bool highlight;
+  for (unsigned int i = 0; i < msop.size(); i++) {
+    Pointer<ResizableElement> re = msop.getElement(i);
+    highlight = false;
+    if (msop.isFocused() && msop.getSelectionPointer() == i && listpreparedraces) {
+      highlight = true;
+    }
+    if (re->isVisible()) {
+      ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
+    }
+  }
   for (unsigned int i = 0; i < mso.size(); i++) {
     Pointer<ResizableElement> re = mso.getElement(i);
     highlight = false;
@@ -203,7 +233,7 @@ void MainScreen::command(std::string command) {
   ui->setInfo();
 }
 
-void MainScreen::keyPressed(unsigned int ch) {
+bool MainScreen::keyPressed(unsigned int ch) {
   Site * site;
   bool update = false;
   unsigned int pagerows = (unsigned int) (row - sitestartrow) * 0.6;
@@ -224,18 +254,26 @@ void MainScreen::keyPressed(unsigned int ch) {
     gotomode = false;
     ui->update();
     ui->setLegend();
-    return;
+    return true;
   }
   switch(ch) {
     case KEY_UP:
       if (focusedarea->goUp()) {
         if (!focusedarea->isFocused()) {
           defocusedarea = focusedarea;
-          if (msot.size() && defocusedarea == &mss) {
-            focusedarea = &msot;
+          if ((defocusedarea == &mss && !msot.size() && !mso.size()) ||
+              (defocusedarea == &msot && !mso.size()) ||
+              defocusedarea == &mso)
+          {
+            focusedarea = &msop;
           }
-          else if (mso.size()) {
+          else if ((defocusedarea == &mss && !msot.size()) ||
+                   defocusedarea == &msot)
+          {
             focusedarea = &mso;
+          }
+          else {
+            focusedarea = &msot;
           }
           focusedarea->enterFocusFrom(2);
           ui->update();
@@ -250,16 +288,24 @@ void MainScreen::keyPressed(unsigned int ch) {
           }
         }
       }
-      break;
+      return true;
     case KEY_DOWN:
       if (focusedarea->goDown()) {
         if (!focusedarea->isFocused()) {
           defocusedarea = focusedarea;
-          if (msot.size() && defocusedarea == &mso) {
-              focusedarea = &msot;
-          }
-          else if (mss.size()){
+          if ((defocusedarea == &msop && !mso.size() && !msot.size()) ||
+              (defocusedarea == &mso && !msot.size()) ||
+              defocusedarea == &msot)
+          {
             focusedarea = &mss;
+          }
+          else if ((defocusedarea == &msop && !mso.size()) ||
+                   defocusedarea == &mso)
+          {
+            focusedarea = &msot;
+          }
+          else {
+            focusedarea = &mso;
           }
           focusedarea->enterFocusFrom(0);
           ui->update();
@@ -274,7 +320,7 @@ void MainScreen::keyPressed(unsigned int ch) {
           }
         }
       }
-      break;
+      return true;
     case ' ':
     case 10:
       if (mss.isFocused()) {
@@ -289,47 +335,73 @@ void MainScreen::keyPressed(unsigned int ch) {
         unsigned int id = msot.getElement(msot.getSelectionPointer())->getId();
         ui->goTransferJobStatus(id);
       }
-      break;
+      else if (msop.isFocused()) {
+        unsigned int id = msop.getElement(msop.getSelectionPointer())->getId();
+        global->getEngine()->startPreparedRace(id);
+        ui->redraw();
+      }
+      return true;
     case 'G':
       ui->goGlobalOptions();
-      break;
+      return true;
     case 'l':
       ui->goEventLog();
-      break;
+      return true;
     case 'o':
       ui->goScoreBoard();
-      break;
+      return true;
     case 't':
       ui->goTransfers();
-      break;
+      return true;
     case 'r':
       ui->goAllRaces();
-      break;
+      return true;
+    case 's':
+      if ((msop.isFocused())) {
+        unsigned int id = msot.getElement(msot.getSelectionPointer())->getId();
+        global->getEngine()->startPreparedRace(id);
+        ui->redraw();
+      }
+      return true;
     case 'j':
       ui->goAllTransferJobs();
-      break;
+      return true;
     case 'U':
     {
       bool enabled = global->getRemoteCommandHandler()->isEnabled();
       global->getRemoteCommandHandler()->setEnabled(!enabled);
-      break;
+      return true;
     }
     case 'c':
       ui->goBrowseLocal();
-      break;
+      return true;
+    case KEY_DC:
+    case 'D':
+      if (mss.isFocused()) {
+        site = mss.getSite();
+        if (site == NULL) break;
+        deletesite = site->getName();
+        ui->goConfirmation("Do you really want to delete site " + deletesite);
+      }
+      else if (msop.isFocused()) {
+        unsigned int id = msop.getElement(msop.getSelectionPointer())->getId();
+        global->getEngine()->deletePreparedRace(id);
+        ui->redraw();
+      }
+      return true;
     case 27: // esc
       ui->goContinueBrowsing();
-      break;
+      return true;
   }
   if (mss.isFocused()) {
     switch(ch) {
       case 'E':
         if (mss.getSite() == NULL) break;
         ui->goEditSite(mss.getSite()->getName());
-        break;
+        return true;
       case 'A':
         ui->goAddSite();
-        break;
+        return true;
       case 'C':
         if (mss.getSite() == NULL) break;
         site = new Site(*mss.getSite());
@@ -340,32 +412,25 @@ void MainScreen::keyPressed(unsigned int ch) {
         global->getSettingsLoaderSaver()->saveSettings();
         ui->redraw();
         ui->setInfo();
-        break;
-      case KEY_DC:
-      case 'D':
-        site = mss.getSite();
-        if (site == NULL) break;
-        deletesite = site->getName();
-        ui->goConfirmation("Do you really want to delete site " + deletesite);
-        break;
+        return true;
       case 'b':
       case KEY_RIGHT:
         if (mss.getSite() == NULL) break;
         ui->goBrowse(mss.getSite()->getName());
-        break;
+        return true;
       case '\t':
         if (mss.getSite() == NULL) break;
         ui->goBrowseSplit(mss.getSite()->getName());
-        break;
+        return true;
       case 'w':
         if (mss.getSite() == NULL) break;
         ui->goRawCommand(mss.getSite()->getName());
-        break;
+        return true;
       case 'q':
         gotomode = true;
         ui->update();
         ui->setLegend();
-        break;
+        return true;
       case KEY_NPAGE:
         for (unsigned int i = 0; i < pagerows; i++) {
           if (!mss.goDown()) {
@@ -384,7 +449,7 @@ void MainScreen::keyPressed(unsigned int ch) {
         else if (update) {
           ui->update();
         }
-        break;
+        return true;
       case KEY_PPAGE:
         for (unsigned int i = 0; i < pagerows; i++) {
           if (!mss.goUp()) {
@@ -403,9 +468,10 @@ void MainScreen::keyPressed(unsigned int ch) {
         else if (update) {
           ui->update();
         }
-        break;
+        return true;
     }
   }
+  return false;
 }
 
 std::string MainScreen::getLegendText() const {
@@ -413,9 +479,12 @@ std::string MainScreen::getLegendText() const {
     return gotolegendtext;
   }
   if (focusedarea == &mss) {
-    return baselegendtext + siteextralegendtext;
+    return sitelegendtext;
   }
-  return baselegendtext;
+  if (focusedarea == &msop) {
+    return preparelegendtext;
+  }
+  return joblegendtext;
 }
 
 std::string MainScreen::getInfoLabel() const {
@@ -424,4 +493,50 @@ std::string MainScreen::getInfoLabel() const {
 
 std::string MainScreen::getInfoText() const {
   return activeracestext + activejobstext + numsitestext;
+}
+
+void MainScreen::addPreparedRaceTableRow(unsigned int y, MenuSelectOption & mso, unsigned int id,
+    bool selectable, std::string section, std::string release, std::string ttl, std::string sites)
+{
+  Pointer<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
+  Pointer<MenuSelectOptionTextButton> msotb;
+
+  msotb = mso.addTextButtonNoContent(y, 1, "section", section);
+  msotb->setSelectable(false);
+  msal->addElement(msotb, 1, RESIZE_REMOVE);
+
+  msotb = mso.addTextButton(y, 1, "release", release);
+  if (!selectable) {
+    msotb->setSelectable(false);
+  }
+  msotb->setId(id);
+  msal->addElement(msotb, 4, RESIZE_CUTEND, true);
+
+  msotb = mso.addTextButtonNoContent(y, 1, "ttl", ttl);
+  msotb->setSelectable(false);
+  msal->addElement(msotb, 3, RESIZE_REMOVE);
+
+  msotb = mso.addTextButtonNoContent(y, 1, "sites", sites);
+  msotb->setSelectable(false);
+  msal->addElement(msotb, 2, RESIZE_WITHDOTS);
+}
+
+void MainScreen::addPreparedRaceTableHeader(unsigned int y, MenuSelectOption & mso) {
+  addPreparedRaceTableRow(y, mso, -1, false, "SECTION", "PREPARED RACE NAME", "EXPIRES", "SITES");
+}
+
+void MainScreen::addPreparedRaceDetails(unsigned int y, MenuSelectOption & mso, const Pointer<PreparedRace> & preparedrace) {
+  unsigned int id = preparedrace->getId();
+  std::string section = preparedrace->getSection();
+  std::string release = preparedrace->getRelease();
+  std::string ttl = util::simpleTimeFormat(preparedrace->getRemainingTime());
+  std::list<std::string> sites = preparedrace->getSites();
+  std::string sitestr;
+  for (std::list<std::string>::const_iterator it = sites.begin(); it != sites.end(); it++) {
+    sitestr += *it + ",";
+  }
+  if (sitestr.length() > 0) {
+    sitestr = sitestr.substr(0, sitestr.length() - 1);
+  }
+  addPreparedRaceTableRow(y, mso, id, true, section, release, ttl, sitestr);
 }

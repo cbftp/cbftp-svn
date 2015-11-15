@@ -89,7 +89,7 @@ void BrowseScreen::command(std::string command, std::string arg) {
   active->command(command, arg);
 }
 
-void BrowseScreen::keyPressed(unsigned int ch) {
+bool BrowseScreen::keyPressed(unsigned int ch) {
   BrowseScreenAction op = active->keyPressed(ch);
   switch (op.getOp()) {
     case BROWSESCREENACTION_CLOSE:
@@ -97,55 +97,55 @@ void BrowseScreen::keyPressed(unsigned int ch) {
         if (active == left) {
           if (right->type() == BROWSESCREEN_SELECTOR) {
             ui->returnToLast();
-            return;
+            return true;
           }
           else {
             active = left = makePointer<BrowseScreenSelector>(ui);
             ui->redraw();
             ui->setInfo();
             ui->setLegend();
-            return;
+            return true;
           }
         }
         else {
           if (left->type() == BROWSESCREEN_SELECTOR) {
             ui->returnToLast();
-            return;
+            return true;
           }
           else {
             active = right = makePointer<BrowseScreenSelector>(ui);
             ui->redraw();
             ui->setInfo();
             ui->setLegend();
-            return;
+            return true;
           }
         }
       }
       else {
         closeSide();
       }
-      break;
+      return true;
     case BROWSESCREENACTION_SITE:
       active = (active == left ? left : right) = makePointer<BrowseScreenSite>(ui, op.getArg());
       ui->redraw();
       ui->setLegend();
       ui->setInfo();
-      break;
+      return true;
     case BROWSESCREENACTION_HOME:
       active = (active == left ? left : right) = makePointer<BrowseScreenLocal>(ui);
       ui->redraw();
       ui->setLegend();
       ui->setInfo();
-      break;
+      return true;
     case BROWSESCREENACTION_NOOP:
-      keyPressedNoSubAction(ch);
-      break;
+      return keyPressedNoSubAction(ch);
     case BROWSESCREENACTION_CAUGHT:
-      break;
+      return true;
   }
+  return false;
 }
 
-void BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
+bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
   switch (ch) {
     case '\t':
       if (!split) {
@@ -156,7 +156,7 @@ void BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
       {
         switchSide();
       }
-      return;
+      return true;
     case 't':
       if (split && left->type() != BROWSESCREEN_SELECTOR && right->type() != BROWSESCREEN_SELECTOR) {
         Pointer<BrowseScreenSub> other = active == left ? right : left;
@@ -198,8 +198,9 @@ void BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
           }
         }
       }
-      return;
+      return true;
   }
+  return false;
 }
 
 std::string BrowseScreen::getLegendText() const {

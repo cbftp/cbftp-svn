@@ -438,7 +438,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       ui->redraw();
       ui->setInfo();
       break;
-    case 'p':
+    case 'P':
       resort = true;
       list.toggleSeparators();
       ui->redraw();
@@ -643,7 +643,7 @@ std::string BrowseScreenSite::getLegendText() const {
   if (gotomode) {
     return "[Any] Go to first matching entry name - [Esc] Cancel";
   }
-  return "[Esc] Cancel - [c]lose - [Up/Down] Navigate - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [D]ownload - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - Toggle se[p]arators - [q]uick jump";
+  return "[Esc] Cancel - [c]lose - [Up/Down] Navigate - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [D]ownload - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - Toggle se[P]arators - [q]uick jump";
 }
 
 std::string BrowseScreenSite::getInfoLabel() const {

@@ -62,7 +62,7 @@ void AddSectionScreen::update() {
   }
 }
 
-void AddSectionScreen::keyPressed(unsigned int ch) {
+bool AddSectionScreen::keyPressed(unsigned int ch) {
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
@@ -70,39 +70,39 @@ void AddSectionScreen::keyPressed(unsigned int ch) {
       currentlegendtext = defaultlegendtext;
       ui->setLegend();
       ui->update();
-      return;
+      return true;
     }
     activeelement->inputChar(ch);
     ui->update();
-    return;
+    return true;
   }
   bool activation;
   switch(ch) {
     case KEY_UP:
       mso.goUp();
       ui->update();
-      break;
+      return true;
     case KEY_DOWN:
       mso.goDown();
       ui->update();
-      break;
+      return true;
     case 10:
 
       activation = mso.getElement(mso.getSelectionPointer())->activate();
       if (!activation) {
         ui->update();
-        break;
+        return true;
       }
       active = true;
       activeelement = mso.getElement(mso.getSelectionPointer());
       currentlegendtext = activeelement->getLegendText();
       ui->setLegend();
       ui->update();
-      break;
+      return true;
     case 27: // esc
     case 'c':
       ui->returnToLast();
-      break;
+      return true;
     case 'd':
       Pointer<MenuSelectOptionTextField> field1 = mso.getElement(0);
       Pointer<MenuSelectOptionTextField> field2 = mso.getElement(1);
@@ -111,8 +111,9 @@ void AddSectionScreen::keyPressed(unsigned int ch) {
       modsite->addSection(name, path);
       global->getSettingsLoaderSaver()->saveSettings();
       ui->returnToLast();
-      break;
+      return true;
   }
+  return false;
 }
 
 std::string AddSectionScreen::getLegendText() const {

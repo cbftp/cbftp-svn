@@ -24,6 +24,7 @@
 #include "localfilelist.h"
 #include "transferstatus.h"
 #include "util.h"
+#include "preparedrace.h"
 
 extern GlobalContext * global;
 
@@ -38,7 +39,7 @@ Engine::~Engine() {
 
 }
 
-bool Engine::newRace(const std::string & release, const std::string & section, const std::list<std::string> & sites) {
+bool Engine::newSpreadJob(int profile, const std::string & release, const std::string & section, const std::list<std::string> & sites) {
   Pointer<Race> race;
   bool append = false;
   for (std::list<Pointer<Race> >::iterator it = allraces.begin(); it != allraces.end(); it++) {
@@ -57,9 +58,10 @@ bool Engine::newRace(const std::string & release, const std::string & section, c
     return false;
   }
   if (!race) {
-    race = makePointer<Race>(nextid++, release, section);
+    race = makePointer<Race>(nextid++, static_cast<SpreadProfile>(profile), release, section);
   }
   std::list<std::string> addsites;
+  std::list<SiteLogic *> addsiteslogics;
   for (std::list<std::string>::const_iterator it = sites.begin(); it != sites.end(); it++) {
     SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(*it);
     if (sl == NULL) {
@@ -89,6 +91,7 @@ bool Engine::newRace(const std::string & release, const std::string & section, c
     }
     if (add) {
       addsites.push_back(*it);
+      addsiteslogics.push_back(sl);
     }
   }
   if (addsites.size() < 2 && !append) {
@@ -97,8 +100,17 @@ bool Engine::newRace(const std::string & release, const std::string & section, c
     return false;
   }
   bool readdtocurrent = true;
-  if (addsites.size() > 0) {
+  if (addsites.size() > 0 || append) {
     checkStartPoke();
+    if (profile == SPREAD_PREPARE) {
+      global->getEventLog()->log("Engine", "Preparing race: " + section + "/" + release +
+                " on " + util::int2Str((int)addsites.size()) + " sites.");
+      preparedraces.push_back(makePointer<PreparedRace>(race->getId(), release, section, addsites));
+      for (std::list<SiteLogic *>::const_iterator ait = addsiteslogics.begin(); ait != addsiteslogics.end(); ait++) {
+        (*ait)->activateAll();
+      }
+      return true;
+    }
     if (append) {
       for (std::list<Pointer<Race> >::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
         if (*it == race) {
@@ -134,6 +146,45 @@ bool Engine::newRace(const std::string & release, const std::string & section, c
     setSpeedScale();
   }
   return true;
+}
+
+bool Engine::newRace(const std::string & release, const std::string & section, const std::list<std::string> & sites) {
+  return newSpreadJob(SPREAD_RACE, release, section, sites);
+}
+
+bool Engine::newDistribute(const std::string & release, const std::string & section, const std::list<std::string> & sites) {
+  return newSpreadJob(SPREAD_DISTRIBUTE, release, section, sites);
+}
+
+void Engine::prepareRace(const std::string & release, const std::string & section, const std::list<std::string> & sites) {
+  newSpreadJob(SPREAD_PREPARE, release, section, sites);
+}
+
+void Engine::startPreparedRace(unsigned int id) {
+  for (std::list<Pointer<PreparedRace> >::iterator it = preparedraces.begin(); it != preparedraces.end(); it++) {
+    if ((*it)->getId() == id) {
+      newRace((*it)->getRelease(), (*it)->getSection(), (*it)->getSites());
+      preparedraces.erase(it);
+      return;
+    }
+  }
+}
+
+void Engine::deletePreparedRace(unsigned int id) {
+  for (std::list<Pointer<PreparedRace> >::iterator it = preparedraces.begin(); it != preparedraces.end(); it++) {
+    if ((*it)->getId() == id) {
+      preparedraces.erase(it);
+      return;
+    }
+  }
+}
+
+void Engine::startLatestPreparedRace() {
+  if (preparedraces.size()) {
+    Pointer<PreparedRace> preparedrace = preparedraces.back();
+    preparedraces.pop_back();
+    newRace(preparedrace->getRelease(), preparedrace->getSection(), preparedrace->getSites());
+  }
 }
 
 void Engine::newTransferJobDownload(std::string site, std::string file, FileList * filelist, std::string path) {
@@ -366,6 +417,7 @@ void Engine::refreshScoreBoard() {
   scoreboard->wipe();
   for (std::list<Pointer<Race> >::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
     Pointer<Race> race = *itr;
+    bool racemode = race->getProfile() == SPREAD_RACE;
     for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator its = race->begin(); its != race->end(); its++) {
       SiteRace * srs = its->first;
       SiteLogic * sls = its->second;
@@ -409,7 +461,7 @@ void Engine::refreshScoreBoard() {
               if (fld->contains(filename) || f->isDirectory() || f->getSize() == 0) continue;
               if (race->hasFailedTransfer(f, fld)) continue;
               bool prio = false;
-              unsigned short score = calculateScore(f, race, fls, srs, fld, srd, avgspeed, &prio, (SPREAD ? false : true));
+              unsigned short score = calculateScore(f, race, fls, srs, fld, srd, avgspeed, &prio, racemode);
               scoreboard->add(filename, score, prio, sls, fls, sld, fld, race);
               race->resetUpdateCheckCounter();
             }
@@ -736,6 +788,10 @@ void Engine::setSpeedScale() {
   }
 }
 
+int Engine::preparedRaces() const {
+  return preparedraces.size();
+}
+
 int Engine::currentRaces() const {
   return currentraces.size();
 }
@@ -770,6 +826,14 @@ Pointer<TransferJob> Engine::getTransferJob(unsigned int id) const {
     }
   }
   return Pointer<TransferJob>();
+}
+
+std::list<Pointer<PreparedRace> >::const_iterator Engine::getPreparedRacesBegin() const {
+  return preparedraces.begin();
+}
+
+std::list<Pointer<PreparedRace> >::const_iterator Engine::getPreparedRacesEnd() const {
+  return preparedraces.end();
 }
 
 std::list<Pointer<Race> >::const_iterator Engine::getRacesBegin() const {
@@ -815,7 +879,24 @@ void Engine::tick(int message) {
       break;
     }
   }
-  if (!currentraces.size() && !currenttransferjobs.size() && pokeregistered) {
+  std::list<unsigned int> removeids;
+  for (std::list<Pointer<PreparedRace> >::iterator it = preparedraces.begin(); it != preparedraces.end(); it++) {
+    (*it)->tick();
+    if ((*it)->getRemainingTime() < 0) {
+      removeids.push_back((*it)->getId());
+    }
+  }
+  while (removeids.size() > 0) {
+    unsigned int id = removeids.front();
+    removeids.pop_front();
+    for (std::list<Pointer<PreparedRace> >::iterator it = preparedraces.begin(); it != preparedraces.end(); it++) {
+      if ((*it)->getId() == id) {
+        preparedraces.erase(it);
+        break;
+      }
+    }
+  }
+  if (!currentraces.size() && !currenttransferjobs.size() && !preparedraces.size() && pokeregistered) {
     global->getTickPoke()->stopPoke(this, 0);
     pokeregistered = false;
   }

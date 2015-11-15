@@ -70,26 +70,27 @@ void SiteStatusScreen::update() {
   }
 }
 
-void SiteStatusScreen::keyPressed(unsigned int ch) {
+bool SiteStatusScreen::keyPressed(unsigned int ch) {
   switch(ch) {
     case KEY_RIGHT:
       ui->goRawData(site->getName());
-      break;
+      return true;
     case 'E':
       ui->goEditSite(site->getName());
-      break;
+      return true;
     case 27: // esc
     case ' ':
     case 10:
       ui->returnToLast();
-      break;
+      return true;
     case 'b':
       ui->goBrowse(site->getName());
-      break;
+      return true;
     case 'w':
       ui->goRawCommand(site->getName());
-      break;
+      return true;
   }
+  return false;
 }
 
 std::string SiteStatusScreen::getLegendText() const {

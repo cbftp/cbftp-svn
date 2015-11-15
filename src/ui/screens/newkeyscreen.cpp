@@ -75,7 +75,7 @@ void NewKeyScreen::update() {
   }
 }
 
-void NewKeyScreen::keyPressed(unsigned int ch) {
+bool NewKeyScreen::keyPressed(unsigned int ch) {
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
@@ -83,22 +83,22 @@ void NewKeyScreen::keyPressed(unsigned int ch) {
       currentlegendtext = defaultlegendtext;
       ui->update();
       ui->setLegend();
-      return;
+      return true;
     }
     activeelement->inputChar(ch);
     ui->update();
-    return;
+    return true;
   }
   bool activation;
   switch(ch) {
     case KEY_UP:
       mso.goUp();
       ui->update();
-      break;
+      return true;
     case KEY_DOWN:
       mso.goDown();
       ui->update();
-      break;
+      return true;
     case 10:
 
       activation = mso.getElement(mso.getSelectionPointer())->activate();
@@ -106,14 +106,14 @@ void NewKeyScreen::keyPressed(unsigned int ch) {
       mismatch = false;
       if (!activation) {
         ui->update();
-        break;
+        return true;
       }
       active = true;
       activeelement = mso.getElement(mso.getSelectionPointer());
       currentlegendtext = activeelement->getLegendText();
       ui->update();
       ui->setLegend();
-      break;
+      return true;
     case 'd':
       Pointer<MenuSelectOptionTextField> field1 = mso.getElement(0);
       Pointer<MenuSelectOptionTextField> field2 = mso.getElement(1);
@@ -124,7 +124,7 @@ void NewKeyScreen::keyPressed(unsigned int ch) {
       if (key == key2) {
         if (key.length() >= SHORTESTKEY) {
           ui->newKey(key);
-          break;
+          return true;
         }
         tooshort = true;
       }
@@ -132,8 +132,9 @@ void NewKeyScreen::keyPressed(unsigned int ch) {
         mismatch = true;
       }
       ui->update();
-      break;
+      return true;
   }
+  return false;
 }
 
 std::string NewKeyScreen::getLegendText() const {

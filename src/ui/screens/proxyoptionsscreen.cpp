@@ -139,7 +139,7 @@ void ProxyOptionsScreen::command(std::string command) {
   }
 }
 
-void ProxyOptionsScreen::keyPressed(unsigned int ch) {
+bool ProxyOptionsScreen::keyPressed(unsigned int ch) {
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
@@ -147,11 +147,11 @@ void ProxyOptionsScreen::keyPressed(unsigned int ch) {
       currentlegendtext = defaultlegendtext;
       ui->update();
       ui->setLegend();
-      return;
+      return true;
     }
     activeelement->inputChar(ch);
     ui->update();
-    return;
+    return true;
   }
   bool activation;
   Pointer<MenuSelectOptionElement> selected;
@@ -165,7 +165,7 @@ void ProxyOptionsScreen::keyPressed(unsigned int ch) {
         }
         ui->update();
       }
-      break;
+      return true;
     case KEY_DOWN:
       if (focusedarea->goDown()) {
         if (!focusedarea->isFocused()) {
@@ -175,38 +175,38 @@ void ProxyOptionsScreen::keyPressed(unsigned int ch) {
         }
         ui->update();
       }
-      break;
+      return true;
     case 10:
       selected = focusedarea->getElement(focusedarea->getSelectionPointer());
       if (selected->getIdentifier() == "add") {
         ui->goAddProxy();
-        break;
+        return true;
       }
       activation = focusedarea->activateSelected();
       if (!activation) {
         if (focusedarea == &msop) {
           ui->goEditProxy(selected->getLabelText());
-          break;
+          return true;
         }
         ui->update();
-        break;
+        return true;
       }
       active = true;
       activeelement = selected;
       currentlegendtext = activeelement->getLegendText();
       ui->update();
       ui->setLegend();
-      break;
+      return true;
     case 'E':
       selected = focusedarea->getElement(focusedarea->getSelectionPointer());
       if (focusedarea == &msop) {
         if (selected->getIdentifier() == selected->getLabelText()) {
           editproxy = selected->getIdentifier();
           ui->goEditProxy(selected->getLabelText());
-          break;
+          return true;
         }
       }
-      break;
+      return true;
     case 'd':
       for(unsigned int i = 0; i < mso.size(); i++) {
         Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
@@ -216,7 +216,7 @@ void ProxyOptionsScreen::keyPressed(unsigned int ch) {
         }
       }
       ui->returnToLast();
-      break;
+      return true;
     case KEY_DC:
     case 'D':
       selected = focusedarea->getElement(focusedarea->getSelectionPointer());
@@ -225,12 +225,13 @@ void ProxyOptionsScreen::keyPressed(unsigned int ch) {
         deleteproxy = focusedarea->getElement(focusedarea->getSelectionPointer())->getLabelText();
         ui->goConfirmation("Do you really want to delete " + editproxy);
       }
-      break;
+      return true;
     case 27: // esc
     case 'c':
       ui->returnToLast();
-      break;
+      return true;
   }
+  return false;
 }
 
 std::string ProxyOptionsScreen::getLegendText() const {

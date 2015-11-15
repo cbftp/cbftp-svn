@@ -271,7 +271,7 @@ void EditSiteScreen::command(std::string command, std::string arg) {
   }
 }
 
-void EditSiteScreen::keyPressed(unsigned int ch) {
+bool EditSiteScreen::keyPressed(unsigned int ch) {
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
@@ -279,11 +279,11 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
       currentlegendtext = defaultlegendtext;
       ui->update();
       ui->setLegend();
-      return;
+      return true;
     }
     activeelement->inputChar(ch);
     ui->update();
-    return;
+    return true;
   }
   bool activation;
   bool changedname = false;
@@ -300,7 +300,7 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         }
         ui->update();
       }
-      break;
+      return true;
     case KEY_DOWN:
       if (focusedarea->goDown()) {
         if (!focusedarea->isFocused()) {
@@ -310,7 +310,7 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         }
         ui->update();
       }
-      break;
+      return true;
     case KEY_LEFT:
       if (focusedarea->goLeft()) {
         if (!focusedarea->isFocused()) {
@@ -318,7 +318,7 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         }
         ui->update();
       }
-      break;
+      return true;
     case KEY_RIGHT:
       if (focusedarea->goRight()) {
         if (!focusedarea->isFocused()) {
@@ -326,12 +326,12 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         }
         ui->update();
       }
-      break;
+      return true;
     case 10:
       activation = focusedarea->activateSelected();
       if (!activation) {
         ui->update();
-        break;
+        return true;
       }
       active = true;
       activeelement = focusedarea->getElement(focusedarea->getSelectionPointer());
@@ -344,7 +344,7 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         std::list<Site *> excluded;
         excluded.push_back(site);
         ui->goSelectSites("Block race transfers from these sites", preselected, excluded);
-        return;
+        return true;
       }
       if (activeelement->getIdentifier() == "blockeddst") {
         activeelement->deactivate();
@@ -355,12 +355,12 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
         std::list<Site *> excluded;
         excluded.push_back(site);
         ui->goSelectSites("Block race transfers to these sites", preselected, excluded);
-        return;
+        return true;
       }
       currentlegendtext = activeelement->getLegendText();
       ui->update();
       ui->setLegend();
-      break;
+      return true;
     case 'd':
       if (operation == "add") {
         site = new Site();
@@ -574,12 +574,13 @@ void EditSiteScreen::keyPressed(unsigned int ch) {
       }
       global->getSettingsLoaderSaver()->saveSettings();
       ui->returnToLast();
-      return;
+      return true;
     case 27: // esc
     case 'c':
       ui->returnToLast();
-      break;
+      return true;
   }
+  return false;
 }
 
 std::string EditSiteScreen::getLegendText() const {

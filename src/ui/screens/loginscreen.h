@@ -11,7 +11,7 @@ public:
   void initialize(unsigned int, unsigned int);
   void update();
   void redraw();
-  void keyPressed(unsigned int);
+  bool keyPressed(unsigned int);
 private:
   std::string drawword;
   void randomizeDrawLocation();

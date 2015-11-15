@@ -69,7 +69,7 @@ void FileViewerSettingsScreen::update() {
   }
 }
 
-void FileViewerSettingsScreen::keyPressed(unsigned int ch) {
+bool FileViewerSettingsScreen::keyPressed(unsigned int ch) {
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
@@ -77,11 +77,11 @@ void FileViewerSettingsScreen::keyPressed(unsigned int ch) {
       currentlegendtext = defaultlegendtext;
       ui->update();
       ui->setLegend();
-      return;
+      return true;
     }
     activeelement->inputChar(ch);
     ui->update();
-    return;
+    return true;
   }
   bool activation;
   switch(ch) {
@@ -89,24 +89,24 @@ void FileViewerSettingsScreen::keyPressed(unsigned int ch) {
       if (mso.goUp()) {
         ui->update();
       }
-      break;
+      return true;
     case KEY_DOWN:
       if (mso.goDown()) {
         ui->update();
       }
-      break;
+      return true;
     case 10:
       activation = mso.getElement(mso.getSelectionPointer())->activate();
       if (!activation) {
         ui->update();
-        break;
+        return true;
       }
       active = true;
       activeelement = mso.getElement(mso.getSelectionPointer());
       currentlegendtext = activeelement->getLegendText();
       ui->update();
       ui->setLegend();
-      break;
+      return true;
     case 'd':
       for(unsigned int i = 0; i < mso.size(); i++) {
         Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
@@ -128,12 +128,13 @@ void FileViewerSettingsScreen::keyPressed(unsigned int ch) {
         }
       }
       ui->returnToLast();
-      break;
+      return true;
     case 27: // esc
     case 'c':
       ui->returnToLast();
-      break;
+      return true;
   }
+  return false;
 }
 
 std::string FileViewerSettingsScreen::getLegendText() const {

@@ -97,7 +97,7 @@ void LoginScreen::update() {
   }
 }
 
-void LoginScreen::keyPressed(unsigned int ch) {
+bool LoginScreen::keyPressed(unsigned int ch) {
   if (ch >= 32 && ch <= 126) {
     passfield.addchar(ch);
   }
@@ -136,6 +136,7 @@ void LoginScreen::keyPressed(unsigned int ch) {
     }
   }
   ui->update();
+  return true;
 }
 
 void LoginScreen::randomizeDrawLocation() {

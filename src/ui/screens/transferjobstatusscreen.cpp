@@ -126,7 +126,7 @@ void TransferJobStatusScreen::command(std::string command, std::string arg) {
   ui->redraw();
 }
 
-void TransferJobStatusScreen::keyPressed(unsigned int ch) {
+bool TransferJobStatusScreen::keyPressed(unsigned int ch) {
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
@@ -150,17 +150,17 @@ void TransferJobStatusScreen::keyPressed(unsigned int ch) {
             break;
         }
       }
-      return;
+      return true;
     }
     activeelement->inputChar(ch);
     ui->update();
-    return;
+    return true;
   }
   switch (ch) {
     case 'c':
     case 27: // esc
       ui->returnToLast();
-      break;
+      return true;
     case 10:
       if (!transferjob->isAborted()) {
         bool activation = mso.activateSelected();
@@ -172,13 +172,14 @@ void TransferJobStatusScreen::keyPressed(unsigned int ch) {
           ui->setLegend();
         }
       }
-      break;
+      return true;
     case 'B':
       if (!transferjob->isAborted()) {
         ui->goConfirmation("Do you really want to abort the transfer job " + transferjob->getSrcFileName());
       }
-      break;
+      return true;
   }
+  return false;
 }
 
 std::string TransferJobStatusScreen::getLegendText() const {

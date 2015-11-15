@@ -215,47 +215,47 @@ void ViewFileScreen::update() {
   }
 }
 
-void ViewFileScreen::keyPressed(unsigned int ch) {
+bool ViewFileScreen::keyPressed(unsigned int ch) {
   switch(ch) {
     case 27: // esc
     case ' ':
     case 'c':
     case 10:
       ui->returnToLast();
-      break;
+      return true;
     case KEY_DOWN:
       if (goDown()) {
         goDown();
         ui->setInfo();
         ui->redraw();
       }
-      break;
+      return true;
     case KEY_UP:
       if (goUp()) {
         goUp();
         ui->setInfo();
         ui->redraw();
       }
-      break;
+      return true;
     case KEY_NPAGE:
       for (unsigned int i = 0; i < row / 2; i++) {
         goDown();
       }
       ui->setInfo();
       ui->redraw();
-      break;
+      return true;
     case KEY_PPAGE:
       for (unsigned int i = 0; i < row / 2; i++) {
         goUp();
       }
       ui->setInfo();
       ui->redraw();
-      break;
+      return true;
     case 'k':
       if (pid) {
         global->getExternalFileViewing()->killProcess(pid);
       }
-      break;
+      return true;
     case 'e':
       if (viewingcontents) {
         if (encoding == encoding::ENCODING_CP437) {
@@ -271,8 +271,9 @@ void ViewFileScreen::keyPressed(unsigned int ch) {
         ui->redraw();
         ui->setInfo();
       }
-      break;
+      return true;
   }
+  return false;
 }
 
 std::string ViewFileScreen::getLegendText() const {

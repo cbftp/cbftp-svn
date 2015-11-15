@@ -81,7 +81,7 @@ void ChangeKeyScreen::update() {
   }
 }
 
-void ChangeKeyScreen::keyPressed(unsigned int ch) {
+bool ChangeKeyScreen::keyPressed(unsigned int ch) {
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
@@ -89,22 +89,22 @@ void ChangeKeyScreen::keyPressed(unsigned int ch) {
       currentlegendtext = defaultlegendtext;
       ui->setLegend();
       ui->update();
-      return;
+      return true;
     }
     activeelement->inputChar(ch);
     ui->update();
-    return;
+    return true;
   }
   bool activation;
   switch(ch) {
     case KEY_UP:
       mso.goUp();
       ui->update();
-      break;
+      return true;
     case KEY_DOWN:
       mso.goDown();
       ui->update();
-      break;
+      return true;
     case 10:
 
       activation = mso.getElement(mso.getSelectionPointer())->activate();
@@ -113,18 +113,18 @@ void ChangeKeyScreen::keyPressed(unsigned int ch) {
       oldmismatch = false;
       if (!activation) {
         ui->update();
-        break;
+        return true;
       }
       active = true;
       activeelement = mso.getElement(mso.getSelectionPointer());
       currentlegendtext = activeelement->getLegendText();
       ui->setLegend();
       ui->update();
-      break;
+      return true;
     case 27: // esc
     case 'c':
       ui->returnToLast();
-      break;
+      return true;
     case 'd':
       Pointer<MenuSelectOptionTextField> field1 = mso.getElement(0);
       Pointer<MenuSelectOptionTextField> field2 = mso.getElement(1);
@@ -139,7 +139,7 @@ void ChangeKeyScreen::keyPressed(unsigned int ch) {
         if (newkey.length() >= SHORTESTKEY) {
           if (global->getSettingsLoaderSaver()->changeKey(oldkey, newkey)) {
             ui->returnToLast();
-            break;
+            return true;
           }
           else {
             oldmismatch = true;
@@ -153,8 +153,9 @@ void ChangeKeyScreen::keyPressed(unsigned int ch) {
         mismatch = true;
       }
       ui->update();
-      break;
+      return true;
   }
+  return false;
 }
 
 std::string ChangeKeyScreen::getLegendText() const {

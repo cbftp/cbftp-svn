@@ -167,7 +167,7 @@ void SkipListScreen::update() {
   ui->printStr(testtype->getRow(), testtype->getCol() + 20, allowstring);
 }
 
-void SkipListScreen::keyPressed(unsigned int ch) {
+bool SkipListScreen::keyPressed(unsigned int ch) {
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
@@ -178,11 +178,11 @@ void SkipListScreen::keyPressed(unsigned int ch) {
       saveToTempSkipList();
       ui->update();
       ui->setLegend();
-      return;
+      return true;
     }
     activeelement->inputChar(ch);
     ui->update();
-    return;
+    return true;
   }
   bool activation;
   switch(ch) {
@@ -196,7 +196,7 @@ void SkipListScreen::keyPressed(unsigned int ch) {
         ui->setLegend();
       }
       ui->update();
-      break;
+      return true;
     case KEY_DOWN:
       focusedarea->goDown();
       if (!focusedarea->isFocused()) {
@@ -206,15 +206,15 @@ void SkipListScreen::keyPressed(unsigned int ch) {
         ui->setLegend();
       }
       ui->update();
-      break;
+      return true;
     case KEY_LEFT:
       focusedarea->goLeft();
       ui->update();
-      break;
+      return true;
     case KEY_RIGHT:
       focusedarea->goRight();
       ui->update();
-      break;
+      return true;
     case 10:
       activation = focusedarea->activateSelected();
       if (!activation) {
@@ -222,22 +222,22 @@ void SkipListScreen::keyPressed(unsigned int ch) {
           addPatternLine(0, "", false, false, SCOPE_IN_RACE, true);
           saveToTempSkipList();
           ui->redraw();
-          break;
+          return true;
         }
         saveToTempSkipList();
         ui->update();
-        break;
+        return true;
       }
       active = true;
       activeelement = focusedarea->getElement(focusedarea->getSelectionPointer());
       currentlegendtext = activeelement->getLegendText();
       ui->update();
       ui->setLegend();
-      break;
+      return true;
     case 27: // esc
     case 'c':
       ui->returnToLast();
-      break;
+      return true;
     case 'd':
       skiplist->clearEntries();
       for (std::list<SkiplistItem>::const_iterator it = testskiplist.entriesBegin(); it != testskiplist.entriesEnd(); it++) {
@@ -245,7 +245,7 @@ void SkipListScreen::keyPressed(unsigned int ch) {
       }
       skiplist->setDefaultAllow(testskiplist.defaultAllow());
       ui->returnToLast();
-      return;
+      return true;
     case KEY_DC:
       if (focusedarea == &table) {
         Pointer<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
@@ -260,7 +260,7 @@ void SkipListScreen::keyPressed(unsigned int ch) {
         }
         ui->redraw();
       }
-      break;
+      return true;
     case KEY_IC:
       if (focusedarea == &table) {
         Pointer<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
@@ -269,7 +269,7 @@ void SkipListScreen::keyPressed(unsigned int ch) {
         saveToTempSkipList();
         ui->redraw();
       }
-      break;
+      return true;
     case 'o':
       if (focusedarea == &table) {
         Pointer<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
@@ -280,7 +280,7 @@ void SkipListScreen::keyPressed(unsigned int ch) {
           ui->redraw();
         }
       }
-      break;
+      return true;
     case 'm':
       if (focusedarea == &table) {
         Pointer<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
@@ -291,8 +291,9 @@ void SkipListScreen::keyPressed(unsigned int ch) {
           ui->redraw();
         }
       }
-      break;
+      return true;
   }
+  return false;
 }
 
 std::string SkipListScreen::getLegendText() const {

@@ -25,10 +25,12 @@ private:
   void handleMessage(std::string);
   void stopRetry();
   void commandRace(const std::string &);
+  void commandPrepare(const std::string &);
   void commandRaw(const std::string &);
   void commandFXP(const std::string &);
   void commandDownload(const std::string &);
   void commandUpload(const std::string &);
+  void parseRace(const std::string &, bool);
 public:
   RemoteCommandHandler();
   bool isEnabled() const;

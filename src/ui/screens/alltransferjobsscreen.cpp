@@ -57,30 +57,31 @@ void AllTransferJobsScreen::update() {
   redraw();
 }
 
-void AllTransferJobsScreen::keyPressed(unsigned int ch) {
+bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
   switch (ch) {
     case KEY_UP:
       if (hascontents && table.goUp()) {
         ui->update();
       }
-      break;
+      return true;
     case KEY_DOWN:
       if (hascontents && table.goDown()) {
         ui->update();
       }
-      break;
+      return true;
     case 'c':
     case 27: // esc
       ui->returnToLast();
-      break;
+      return true;
     case 10:
       if (hascontents) {
         Pointer<MenuSelectOptionTextButton> msotb =
             table.getElement(table.getSelectionPointer());
         ui->goTransferJobStatus(msotb->getId());
       }
-      break;
+      return true;
   }
+  return false;
 }
 
 std::string AllTransferJobsScreen::getLegendText() const {

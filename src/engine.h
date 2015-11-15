@@ -23,16 +23,19 @@ class ScoreBoard;
 class SiteLogic;
 class PendingTransfer;
 class Site;
+class PreparedRace;
 
 class Engine : public EventReceiver {
   private:
     std::list<Pointer<Race> > allraces;
     std::list<Pointer<Race> > currentraces;
+    std::list<Pointer<PreparedRace> > preparedraces;
     std::list<Pointer<TransferJob>  > alltransferjobs;
     std::list<Pointer<TransferJob> > currenttransferjobs;
     Pointer<ScoreBoard> scoreboard;
     std::map<Pointer<TransferJob>, std::list<PendingTransfer> > pendingtransfers;
     int maxavgspeed;
+    bool newSpreadJob(int, const std::string &, const std::string &, const std::list<std::string> &);
     void estimateRaceSizes();
     void reportCurrentSize(SiteRace *, FileList *, bool final);
     void refreshScoreBoard();
@@ -55,6 +58,11 @@ class Engine : public EventReceiver {
     Engine();
     ~Engine();
     bool newRace(const std::string &, const std::string &, const std::list<std::string> &);
+    void prepareRace(const std::string &, const std::string &, const std::list<std::string> &);
+    bool newDistribute(const std::string &, const std::string &, const std::list<std::string> &);
+    void startPreparedRace(unsigned int);
+    void deletePreparedRace(unsigned int);
+    void startLatestPreparedRace();
     void newTransferJobDownload(std::string, std::string, FileList *, std::string);
     void newTransferJobDownload(std::string, std::string, FileList *, std::string, std::string);
     void newTransferJobUpload(std::string, std::string, std::string, FileList *);
@@ -67,12 +75,15 @@ class Engine : public EventReceiver {
     void abortTransferJob(Pointer<TransferJob> &);
     void raceFileListRefreshed(SiteLogic *, SiteRace *);
     bool transferJobActionRequest(Pointer<TransferJob> &);
+    int preparedRaces() const;
     int currentRaces() const;
     int allRaces() const;
     int currentTransferJobs() const;
     int allTransferJobs() const;
     Pointer<Race> getRace(unsigned int) const;
     Pointer<TransferJob> getTransferJob(unsigned int) const;
+    std::list<Pointer<PreparedRace> >::const_iterator getPreparedRacesBegin() const;
+    std::list<Pointer<PreparedRace> >::const_iterator getPreparedRacesEnd() const;
     std::list<Pointer<Race> >::const_iterator getRacesBegin() const;
     std::list<Pointer<Race> >::const_iterator getRacesEnd() const;
     std::list<Pointer<TransferJob> >::const_iterator getTransferJobsBegin() const;

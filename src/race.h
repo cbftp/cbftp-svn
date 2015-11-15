@@ -19,6 +19,12 @@
 
 #define MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP 3
 
+enum SpreadProfile {
+  SPREAD_RACE,
+  SPREAD_DISTRIBUTE,
+  SPREAD_PREPARE
+};
+
 class SiteRace;
 class FileList;
 class File;
@@ -60,8 +66,9 @@ class Race : public EventReceiver, public TransferStatusCallback {
     unsigned int best;
     bool transferattemptscleared;
     unsigned int id;
+    SpreadProfile profile;
   public:
-    Race(unsigned int, std::string, std::string);
+    Race(unsigned int, SpreadProfile, std::string, std::string);
     ~Race();
     void addSite(SiteRace *, SiteLogic *);
     void removeSite(SiteRace *);
@@ -91,6 +98,7 @@ class Race : public EventReceiver, public TransferStatusCallback {
     SiteRace * getSiteRace(std::string) const;
     int getStatus() const;
     unsigned int getId() const;
+    SpreadProfile getProfile() const;
     void reportNewSubDir(SiteRace *, std::string);
     void reportSFV(SiteRace *, std::string);
     void reportDone(SiteRace *);

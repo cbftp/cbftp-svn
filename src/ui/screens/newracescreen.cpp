@@ -4,10 +4,12 @@
 #include "../../site.h"
 #include "../../sitemanager.h"
 #include "../../engine.h"
+#include "../../race.h"
 
 #include "../ui.h"
 #include "../menuselectoptioncheckbox.h"
 #include "../menuselectoptiontextbutton.h"
+#include "../menuselectoptiontextarrow.h"
 #include "../menuselectoptionelement.h"
 #include "../focusablearea.h"
 
@@ -35,6 +37,10 @@ void NewRaceScreen::initialize(unsigned int row, unsigned int col, std::string s
   bool sectionset = false;
   int sectx = x + std::string("Section: ").length();
   msos.reset();
+  msota = msos.addTextArrow(y++, 1, "profile", "Profile:");
+  msota->addOption("Race", SPREAD_RACE);
+  msota->addOption("Distribute", SPREAD_DISTRIBUTE);
+  msota->setId(1);
   while (sectionstring.length() > 0) {
     splitpos = sectionstring.find(";");
     std::string section;
@@ -51,7 +57,8 @@ void NewRaceScreen::initialize(unsigned int row, unsigned int col, std::string s
       this->section = section;
       sectionset = true;
     }
-    msos.addTextButton(y, sectx, section, buttontext);
+    Pointer<MenuSelectOptionTextButton> msotb = msos.addTextButton(y, sectx, section, buttontext);
+    msotb->setId(0);
     sectx = sectx + buttontext.length();
   }
   y = y + 2;
@@ -103,7 +110,7 @@ void NewRaceScreen::redraw() {
   }
   populateSiteList();
   ui->printStr(1, 1, "Release: " + release);
-  ui->printStr(2, 1, "Section: ");
+  ui->printStr(3, 1, "Section: ");
   bool highlight;
   for (unsigned int i = 0; i < msos.size(); i++) {
     Pointer<MenuSelectOptionElement> msoe = msos.getElement(i);
@@ -111,7 +118,13 @@ void NewRaceScreen::redraw() {
     if (msos.isFocused() && msos.getSelectionPointer() == i) {
       highlight = true;
     }
-    ui->printStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe), highlight);
+    if (msoe->getId() == 0) {
+      ui->printStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe), highlight);
+    }
+    else {
+      ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+      ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    }
   }
   for (unsigned int i = 0; i < mso.size(); i++) {
     Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
@@ -140,7 +153,13 @@ void NewRaceScreen::update() {
     }
     else if (defocusedarea == &msos){
       Pointer<MenuSelectOptionElement> msoe = msos.getElement(msos.getLastSelectionPointer());
-      ui->printStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe));
+      if (msoe->getId() == 0) {
+        ui->printStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe));
+      }
+      else {
+        ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+        ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+      }
     }
   }
   if (focusedarea == &mso) {
@@ -160,13 +179,25 @@ void NewRaceScreen::update() {
   }
   else {
     Pointer<MenuSelectOptionElement> msoe = msos.getElement(msos.getLastSelectionPointer());
-    ui->printStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe));
+    if (msoe->getId() == 0) {
+      ui->printStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe));
+    }
+    else {
+      ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
+      ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    }
     msoe = msos.getElement(msos.getSelectionPointer());
-    ui->printStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe), true);
+    if (msoe->getId() == 0) {
+      ui->printStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe), true);
+    }
+    else {
+      ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
+      ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    }
   }
 }
 
-void NewRaceScreen::keyPressed(unsigned int ch) {
+bool NewRaceScreen::keyPressed(unsigned int ch) {
   infotext = "";
   unsigned int pagerows = (unsigned int) (row - 6) * 0.6;
   if (active) {
@@ -176,11 +207,11 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
       currentlegendtext = defaultlegendtext;
       ui->update();
       ui->setLegend();
-      return;
+      return true;
     }
     activeelement->inputChar(ch);
     ui->update();
-    return;
+    return true;
   }
   bool activation;
   switch(ch) {
@@ -193,7 +224,7 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
         }
         ui->update();
       }
-      break;
+      return true;
     case KEY_DOWN:
       if (focusedarea->goDown() || focusedarea->goNext()) {
         if (!focusedarea->isFocused()) {
@@ -203,7 +234,7 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
         }
         ui->update();
       }
-      break;
+      return true;
     case KEY_LEFT:
       if (focusedarea->goLeft()) {
         if (!focusedarea->isFocused()) {
@@ -211,7 +242,7 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
         }
         ui->update();
       }
-      break;
+      return true;
     case KEY_RIGHT:
       if (focusedarea->goRight()) {
         if (!focusedarea->isFocused()) {
@@ -219,7 +250,7 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
         }
         ui->update();
       }
-      break;
+      return true;
     case KEY_NPAGE:
       for (unsigned int i = 0; i < pagerows; i++) {
         if (focusedarea->goDown()) {
@@ -231,7 +262,7 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
         }
       }
       ui->redraw();
-      break;
+      return true;
     case KEY_PPAGE:
       for (unsigned int i = 0; i < pagerows; i++) {
         if (focusedarea->goUp()) {
@@ -243,38 +274,41 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
         }
       }
       ui->redraw();
-      break;
+      return true;
     case 10:
 
       activation = focusedarea->getElement(focusedarea->getSelectionPointer())->activate();
       if (!activation) {
         if (focusedarea == &msos) {
-          section = msos.getElement(msos.getSelectionPointer())->getIdentifier();
-          sectionupdate = true;
+          Pointer<MenuSelectOptionElement> msoe = msos.getElement(msos.getSelectionPointer());
+          if (msoe->getId() == 0) {
+            section = msoe->getIdentifier();
+            sectionupdate = true;
+          }
         }
         ui->update();
-        break;
+        return true;
       }
       active = true;
       activeelement = focusedarea->getElement(focusedarea->getSelectionPointer());
       currentlegendtext = activeelement->getLegendText();
       ui->update();
       ui->setLegend();
-      break;
+      return true;
     case 27: // esc
     case 'c':
       ui->returnToLast();
-      break;
+      return true;
     case 's':
       if (startRace()) {
         ui->returnRaceStatus(global->getEngine()->getLatestId());
       }
-      break;
+      return true;
     case 'S':
       if (startRace()) {
         ui->returnToLast();
       }
-      break;
+      return true;
     case 't':
       if (!toggleall) {
         toggleall = true;
@@ -284,8 +318,9 @@ void NewRaceScreen::keyPressed(unsigned int ch) {
       }
       populateSiteList();
       ui->redraw();
-      break;
+      return true;
   }
+  return false;
 }
 
 std::string NewRaceScreen::getLegendText() const {
@@ -310,6 +345,7 @@ std::string NewRaceScreen::getSectionButtonText(Pointer<MenuSelectOptionElement>
 }
 
 bool NewRaceScreen::startRace() {
+  msota->getData();
   std::list<std::string> sites;
   for (unsigned int i = 0; i < mso.size(); i++) {
     Pointer<MenuSelectOptionCheckBox> msocb = mso.getElement(i);
@@ -322,5 +358,10 @@ bool NewRaceScreen::startRace() {
     ui->update();
     return false;
   }
-  return global->getEngine()->newRace(release, section, sites);
+  if (msota->getData() == SPREAD_RACE) {
+    return global->getEngine()->newRace(release, section, sites);
+  }
+  else {
+    return global->getEngine()->newDistribute(release, section, sites);
+  }
 }

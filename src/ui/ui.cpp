@@ -12,6 +12,7 @@
 #include "../iomanager.h"
 #include "../externalfileviewing.h"
 #include "../util.h"
+#include "../engine.h"
 
 #include "legendwindow.h"
 #include "infowindow.h"
@@ -258,8 +259,9 @@ void Ui::refreshAll() {
 
 void Ui::FDData() {
   int ch = getch();
-  globalKeyBinds(ch);
-  topwindow->keyPressed(ch);
+  if (!topwindow->keyPressed(ch)) {
+    globalKeyBinds(ch);
+  }
 }
 
 void Ui::enableInfo() {
@@ -417,7 +419,11 @@ void Ui::globalKeyBinds(int ch) {
     case 'K':
       global->getExternalFileViewing()->killAll();
       break;
+    case 'p':
+      global->getEngine()->startLatestPreparedRace();
+      break;
   }
+  update();
 }
 
 void Ui::resizeTerm() {

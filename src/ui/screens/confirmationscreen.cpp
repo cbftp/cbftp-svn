@@ -16,13 +16,14 @@ void ConfirmationScreen::redraw() {
   ui->printStr(1, 1, message + " (y/N)? ");
 }
 
-void ConfirmationScreen::keyPressed(unsigned int ch) {
+bool ConfirmationScreen::keyPressed(unsigned int ch) {
   if (ch == 'y') {
     ui->confirmYes();
   }
   else {
     ui->confirmNo();
   }
+  return true;
 }
 
 std::string ConfirmationScreen::getLegendText() const {

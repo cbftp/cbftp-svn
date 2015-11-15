@@ -23,7 +23,7 @@ public:
   virtual std::string getInfoLabel() const;
   virtual std::string getInfoText() const;
   virtual std::string getLegendText() const;
-  virtual void keyPressed(unsigned int);
+  virtual bool keyPressed(unsigned int);
   bool autoUpdate() const;
   bool expectBackendPush() const;
 };
