@@ -18,7 +18,7 @@ public:
   void redraw();
   void update();
   void command(std::string, std::string);
-  void keyPressed(unsigned int);
+  bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
 private:

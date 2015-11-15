@@ -24,7 +24,7 @@ public:
   void redraw();
   void update();
   void command(std::string, std::string);
-  void keyPressed(unsigned int);
+  bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
   std::string getInfoText() const;
@@ -32,7 +32,7 @@ public:
 private:
   void switchSide();
   void closeSide();
-  void keyPressedNoSubAction(unsigned int);
+  bool keyPressedNoSubAction(unsigned int);
   Pointer<BrowseScreenSub> left;
   Pointer<BrowseScreenSub> right;
   Pointer<BrowseScreenSub> active;

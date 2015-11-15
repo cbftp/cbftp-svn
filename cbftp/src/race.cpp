@@ -14,7 +14,7 @@
 
 extern GlobalContext * global;
 
-Race::Race(unsigned int id, std::string release, std::string section) :
+Race::Race(unsigned int id, SpreadProfile profile, std::string release, std::string section) :
   name(release),
   group(util::getGroupNameFromRelease(release)),
   section(section),
@@ -29,7 +29,8 @@ Race::Race(unsigned int id, std::string release, std::string section) :
   avg(0),
   best(0),
   transferattemptscleared(false),
-  id(id)
+  id(id),
+  profile(profile)
 {
   estimatedsubpaths.push_back("");
   guessedfilelists[""] = std::map<std::string, unsigned long long int>();
@@ -252,6 +253,8 @@ void Race::reportSemiDone(SiteRace * sr) {
 
 void Race::setUndone() {
   status = RACE_STATUS_RUNNING;
+  clearTransferAttempts();
+  resetUpdateCheckCounter();
   global->getTickPoke()->startPoke(this, "Race", RACE_UPDATE_INTERVAL, 0);
 }
 
@@ -461,6 +464,10 @@ int Race::getStatus() const {
 
 unsigned int Race::getId() const {
   return id;
+}
+
+SpreadProfile Race::getProfile() const {
+  return profile;
 }
 
 SiteRace * Race::getSiteRace(std::string site) const {

@@ -10,7 +10,7 @@ public:
   void initialize(unsigned int, unsigned int);
   void redraw();
   void update();
-  void keyPressed(unsigned int);
+  bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
 private:

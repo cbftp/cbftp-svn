@@ -83,7 +83,7 @@ void SelectSitesScreen::update() {
   ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
 }
 
-void SelectSitesScreen::keyPressed(unsigned int ch) {
+bool SelectSitesScreen::keyPressed(unsigned int ch) {
   unsigned int pagerows = (unsigned int) row * 0.6;
   bool activation;
   switch(ch) {
@@ -91,22 +91,22 @@ void SelectSitesScreen::keyPressed(unsigned int ch) {
       if (mso.goUp() || mso.goPrevious()) {
         ui->update();
       }
-      break;
+      return true;
     case KEY_DOWN:
       if (mso.goDown() || mso.goNext()) {
         ui->update();
       }
-      break;
+      return true;
     case KEY_LEFT:
       if (mso.goLeft()) {
         ui->update();
       }
-      break;
+      return true;
     case KEY_RIGHT:
       if (mso.goRight()) {
         ui->update();
       }
-      break;
+      return true;
     case KEY_NPAGE:
       for (unsigned int i = 0; i < pagerows; i++) {
         if (!mso.goDown()) {
@@ -114,7 +114,7 @@ void SelectSitesScreen::keyPressed(unsigned int ch) {
         }
       }
       ui->redraw();
-      break;
+      return true;
     case KEY_PPAGE:
       for (unsigned int i = 0; i < pagerows; i++) {
         if (!mso.goUp()) {
@@ -122,18 +122,17 @@ void SelectSitesScreen::keyPressed(unsigned int ch) {
         }
       }
       ui->redraw();
-      break;
+      return true;
     case 32:
     case 10:
       activation = mso.getElement(mso.getSelectionPointer())->activate();
       if (!activation) {
         ui->update();
-        break;
+        return true;
       }
       ui->update();
       ui->setLegend();
-      break;
-      break;
+      return true;
     case 'd': {
       std::string blockstr = "";
       for (unsigned int i = 0; i < mso.size(); i++) {
@@ -146,13 +145,14 @@ void SelectSitesScreen::keyPressed(unsigned int ch) {
         blockstr = blockstr.substr(0, blockstr.length() - 1);
       }
       ui->returnSelectSites(blockstr);
-      break;
+      return true;
     }
     case 27: // esc
     case 'c':
       ui->returnToLast();
-      break;
+      return true;
   }
+  return false;
 }
 
 std::string SelectSitesScreen::getLegendText() const {

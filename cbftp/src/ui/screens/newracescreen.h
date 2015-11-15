@@ -10,6 +10,7 @@
 
 class FocusableArea;
 class MenuSelectOptionElement;
+class MenuSelectOptionTextArrow;
 class Site;
 
 class NewRaceScreen : public UIWindow {
@@ -19,7 +20,7 @@ public:
   void initialize(unsigned int, unsigned int, std::string, std::string, std::string);
   void update();
   void redraw();
-  void keyPressed(unsigned int);
+  bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
   std::string getInfoText() const;
@@ -43,4 +44,5 @@ private:
   std::string release;
   std::string infotext;
   std::list<std::pair<std::string, bool> > tempsites;
+  Pointer<MenuSelectOptionTextArrow> msota;
 };

@@ -57,14 +57,15 @@ void ScoreBoardScreen::update() {
   redraw();
 }
 
-void ScoreBoardScreen::keyPressed(unsigned int ch) {
+bool ScoreBoardScreen::keyPressed(unsigned int ch) {
   switch(ch) {
     case 27: // esc
     case 10: // enter
     case 'c':
       ui->returnToLast();
-      break;
+      return true;
   }
+  return false;
 }
 
 std::string ScoreBoardScreen::getLegendText() const {

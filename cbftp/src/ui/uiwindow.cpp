@@ -33,8 +33,8 @@ void UIWindow::command(std::string command, std::string arg) {
 
 }
 
-void UIWindow::keyPressed(unsigned int key) {
-
+bool UIWindow::keyPressed(unsigned int key) {
+  return false;
 }
 
 std::string UIWindow::getInfoLabel() const {

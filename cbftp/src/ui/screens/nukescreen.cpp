@@ -75,7 +75,7 @@ void NukeScreen::update() {
   }
 }
 
-void NukeScreen::keyPressed(unsigned int ch) {
+bool NukeScreen::keyPressed(unsigned int ch) {
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
@@ -83,11 +83,11 @@ void NukeScreen::keyPressed(unsigned int ch) {
       currentlegendtext = defaultlegendtext;
       ui->update();
       ui->setLegend();
-      return;
+      return true;
     }
     activeelement->inputChar(ch);
     ui->update();
-    return;
+    return true;
   }
   bool activation;
   switch(ch) {
@@ -95,22 +95,22 @@ void NukeScreen::keyPressed(unsigned int ch) {
       if (mso.goUp()) {
         ui->update();
       }
-      break;
+      return true;
     case KEY_DOWN:
       if (mso.goDown()) {
         ui->update();
       }
-      break;
+      return true;
     case KEY_LEFT:
       if (mso.goLeft()) {
         ui->update();
       }
-      break;
+      return true;
     case KEY_RIGHT:
       if (mso.goRight()) {
         ui->update();
       }
-      break;
+      return true;
     case 10:
       activeelement = mso.getElement(mso.getSelectionPointer());
       activation = activeelement->activate();
@@ -118,27 +118,28 @@ void NukeScreen::keyPressed(unsigned int ch) {
         if (activeelement->getIdentifier() == "nuke") {
           int reqid = nuke();
           ui->returnNuke(reqid);
-          break;
+          return true;
         }
         else if (activeelement->getIdentifier() == "cancel") {
           ui->returnToLast();
-          break;
+          return true;
         }
       }
       active = true;
       currentlegendtext = activeelement->getLegendText();
       ui->update();
       ui->setLegend();
-      break;
+      return true;
     case 27: // esc
     case 'c':
       ui->returnToLast();
-      break;
+      return true;
     case 'n':
       int reqid = nuke();
       ui->returnNuke(reqid);
-      break;
+      return true;
   }
+  return false;
 }
 
 int NukeScreen::nuke() {

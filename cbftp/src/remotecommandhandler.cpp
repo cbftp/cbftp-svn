@@ -89,6 +89,9 @@ void RemoteCommandHandler::handleMessage(std::string message) {
   if (command == "race") {
     commandRace(remainder);
   }
+  else if (command == "prepare") {
+    commandPrepare(remainder);
+  }
   else if (command == "raw") {
     commandRaw(remainder);
   }
@@ -108,28 +111,11 @@ void RemoteCommandHandler::handleMessage(std::string message) {
 }
 
 void RemoteCommandHandler::commandRace(const std::string & message) {
-  size_t sectionend = message.find(" ");
-  size_t releaseend = message.find(" ", sectionend + 1);
-  if (sectionend == std::string::npos || releaseend == std::string::npos || releaseend == message.length()) {
-    global->getEventLog()->log("RemoteCommandHandler", "Bad remote race command format: " + message);
-    return;
-  }
-  std::string section = message.substr(0, sectionend);
-  std::string release = message.substr(sectionend + 1, releaseend - (sectionend + 1));
-  std::string sitestring = message.substr(releaseend + 1);
-  std::list<std::string> sites;
-  while (true) {
-    size_t commapos = sitestring.find(",");
-    if (commapos != std::string::npos) {
-      sites.push_back(sitestring.substr(0, commapos));
-      sitestring = sitestring.substr(commapos + 1);
-    }
-    else {
-      sites.push_back(sitestring);
-      break;
-    }
-  }
-  global->getEngine()->newRace(release, section, sites);
+  parseRace(message, true);
+}
+
+void RemoteCommandHandler::commandPrepare(const std::string & message) {
+  parseRace(message, false);
 }
 
 void RemoteCommandHandler::commandRaw(const std::string & message) {
@@ -172,6 +158,36 @@ void RemoteCommandHandler::commandDownload(const std::string & message) {
 
 void RemoteCommandHandler::commandUpload(const std::string & message) {
 
+}
+
+void RemoteCommandHandler::parseRace(const std::string & message, bool autostart) {
+  size_t sectionend = message.find(" ");
+  size_t releaseend = message.find(" ", sectionend + 1);
+  if (sectionend == std::string::npos || releaseend == std::string::npos || releaseend == message.length()) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad remote race command format: " + message);
+    return;
+  }
+  std::string section = message.substr(0, sectionend);
+  std::string release = message.substr(sectionend + 1, releaseend - (sectionend + 1));
+  std::string sitestring = message.substr(releaseend + 1);
+  std::list<std::string> sites;
+  while (true) {
+    size_t commapos = sitestring.find(",");
+    if (commapos != std::string::npos) {
+      sites.push_back(sitestring.substr(0, commapos));
+      sitestring = sitestring.substr(commapos + 1);
+    }
+    else {
+      sites.push_back(sitestring);
+      break;
+    }
+  }
+  if (autostart) {
+    global->getEngine()->newRace(release, section, sites);
+  }
+  else {
+    global->getEngine()->prepareRace(release, section, sites);
+  }
 }
 
 void RemoteCommandHandler::FDFail(std::string message) {

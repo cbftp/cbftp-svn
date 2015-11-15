@@ -78,7 +78,7 @@ void RawDataScreen::update() {
   }
 }
 
-void RawDataScreen::keyPressed(unsigned int ch) {
+bool RawDataScreen::keyPressed(unsigned int ch) {
   unsigned int rownum = row;
   if (rawcommandmode) {
     rownum = row - 1;
@@ -87,7 +87,7 @@ void RawDataScreen::keyPressed(unsigned int ch) {
         ch == KEY_END) {
       rawcommandfield.inputChar(ch);
       ui->update();
-      return;
+      return true;
     }
     else if (ch == 10) {
       std::string command = rawcommandfield.getData();
@@ -95,7 +95,7 @@ void RawDataScreen::keyPressed(unsigned int ch) {
         rawcommandswitch = true;
         ui->update();
         ui->setLegend();
-        return;
+        return true;
       }
       else {
         readfromcopy = false;
@@ -104,7 +104,7 @@ void RawDataScreen::keyPressed(unsigned int ch) {
         rawcommandfield.clear();
       }
       ui->update();
-      return;
+      return true;
     }
     else if (ch == 27) {
       if (rawcommandfield.getData() != "") {
@@ -114,10 +114,10 @@ void RawDataScreen::keyPressed(unsigned int ch) {
         rawcommandswitch = true;
         ui->update();
         ui->setLegend();
-        return;
+        return true;
       }
       ui->update();
-      return;
+      return true;
     }
     else if (ch == KEY_UP) {
       if (history.canBack()) {
@@ -128,14 +128,14 @@ void RawDataScreen::keyPressed(unsigned int ch) {
         rawcommandfield.setText(history.get());
         ui->update();
       }
-      return;
+      return true;
     }
     else if (ch == KEY_DOWN) {
       if (history.forward()) {
         rawcommandfield.setText(history.get());
         ui->update();
       }
-      return;
+      return true;
     }
   }
   switch(ch) {
@@ -144,7 +144,7 @@ void RawDataScreen::keyPressed(unsigned int ch) {
         rawbuf->uiWatching(false);
         ui->goRawDataJump(sitename, connid + 1);
       }
-      break;
+      return true;
     case KEY_LEFT:
       if (connid == 0) {
         rawbuf->uiWatching(false);
@@ -154,7 +154,7 @@ void RawDataScreen::keyPressed(unsigned int ch) {
         rawbuf->uiWatching(false);
         ui->goRawDataJump(sitename, connid - 1);
       }
-      break;
+      return true;
     case KEY_PPAGE:
       if (!readfromcopy) {
         rawbuf->freezeCopy();
@@ -172,7 +172,7 @@ void RawDataScreen::keyPressed(unsigned int ch) {
         }
       }
       ui->update();
-      break;
+      return true;
     case KEY_NPAGE:
       if (readfromcopy) {
         if (copyreadpos == 0) {
@@ -186,23 +186,24 @@ void RawDataScreen::keyPressed(unsigned int ch) {
         }
       }
       ui->update();
-      break;
+      return true;
     case 'c':
       sitelogic->connectConn(connid);
-      break;
+      return true;
     case 'd':
       sitelogic->disconnectConn(connid);
-      break;
+      return true;
     case 'w':
       rawcommandswitch = true;
       ui->update();
       ui->setLegend();
-      break;
+      return true;
     case 27: // esc
       rawbuf->uiWatching(false);
       ui->returnToLast();
-      break;
+      return true;
   }
+  return false;
 }
 
 std::string RawDataScreen::getLegendText() const {

@@ -15,7 +15,7 @@ public:
   void initialize(unsigned int, unsigned int, std::string, std::string);
   void update();
   void redraw();
-  void keyPressed(unsigned int);
+  bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
 private:

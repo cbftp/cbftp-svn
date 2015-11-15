@@ -41,7 +41,7 @@ void EventLogScreen::update() {
   }
 }
 
-void EventLogScreen::keyPressed(unsigned int ch) {
+bool EventLogScreen::keyPressed(unsigned int ch) {
   switch(ch) {
     case KEY_PPAGE:
       if (!readfromcopy) {
@@ -60,7 +60,7 @@ void EventLogScreen::keyPressed(unsigned int ch) {
         }
       }
       ui->update();
-      break;
+      return true;
     case KEY_NPAGE:
       if (readfromcopy) {
         if (copyreadpos == 0) {
@@ -74,13 +74,14 @@ void EventLogScreen::keyPressed(unsigned int ch) {
         }
       }
       ui->update();
-      break;
+      return true;
     case 10:
     case 27: // esc
       rawbuf->uiWatching(false);
       ui->returnToLast();
-      break;
+      return true;
   }
+  return false;
 }
 
 std::string EventLogScreen::getLegendText() const {

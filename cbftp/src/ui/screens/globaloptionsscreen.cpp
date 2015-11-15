@@ -121,7 +121,7 @@ void GlobalOptionsScreen::update() {
   }
 }
 
-void GlobalOptionsScreen::keyPressed(unsigned int ch) {
+bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
@@ -129,11 +129,11 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
       currentlegendtext = defaultlegendtext;
       ui->update();
       ui->setLegend();
-      return;
+      return true;
     }
     activeelement->inputChar(ch);
     ui->update();
-    return;
+    return true;
   }
   bool activation;
   Pointer<MenuSelectOptionElement> msoe;
@@ -141,45 +141,45 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
     case KEY_UP:
       mso.goUp();
       ui->update();
-      break;
+      return true;
     case KEY_DOWN:
       mso.goDown();
       ui->update();
-      break;
+      return true;
     case 10:
       msoe = mso.getElement(mso.getSelectionPointer());
       if (msoe->getIdentifier() == "skiplist") {
         ui->goSkiplist();
-        return;
+        return true;
       }
       if (msoe->getIdentifier() == "changekey") {
         ui->goChangeKey();
-        return;
+        return true;
       }
       if (msoe->getIdentifier() == "proxy") {
         ui->goProxy();
-        return;
+        return true;
       }
       if (msoe->getIdentifier() == "fileviewer") {
         ui->goFileViewerSettings();
-        return;
+        return true;
       }
       activation = msoe->activate();
       if (!activation) {
         ui->update();
-        break;
+        return true;
       }
       active = true;
       activeelement = msoe;
       currentlegendtext = activeelement->getLegendText();
       ui->setLegend();
       ui->update();
-      break;
+      return true;
     case 27: // esc
     case 'c':
       global->getSettingsLoaderSaver()->saveSettings();
       ui->returnToLast();
-      break;
+      return true;
     case 'd':
       bool udpenable = false;
       for(unsigned int i = 0; i < mso.size(); i++) {
@@ -241,8 +241,9 @@ void GlobalOptionsScreen::keyPressed(unsigned int ch) {
       rch->setEnabled(udpenable);
       global->getSettingsLoaderSaver()->saveSettings();
       ui->returnToLast();
-      break;
+      return true;
   }
+  return false;
 }
 
 std::string GlobalOptionsScreen::getLegendText() const {

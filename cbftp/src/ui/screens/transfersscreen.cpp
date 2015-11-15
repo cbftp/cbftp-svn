@@ -93,14 +93,15 @@ void TransfersScreen::update() {
   redraw();
 }
 
-void TransfersScreen::keyPressed(unsigned int ch) {
+bool TransfersScreen::keyPressed(unsigned int ch) {
   switch (ch) {
     case 'c':
     case 27: // esc
     case 10:
       ui->returnToLast();
-      break;
+      return true;
   }
+  return false;
 }
 
 std::string TransfersScreen::getLegendText() const {

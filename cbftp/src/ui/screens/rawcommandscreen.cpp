@@ -58,13 +58,14 @@ void RawCommandScreen::update() {
   ui->moveCursor(rownum, pretag.length() + rawcommandfield.cursorPosition());
 }
 
-void RawCommandScreen::keyPressed(unsigned int ch) {
+bool RawCommandScreen::keyPressed(unsigned int ch) {
   unsigned int rownum = row - 1;
   if ((ch >= 32 && ch <= 126) || ch == KEY_BACKSPACE || ch == 8 || ch == 127 ||
       ch == KEY_LEFT || ch == KEY_RIGHT || ch == KEY_HOME || ch == KEY_END ||
       ch == KEY_DC) {
     rawcommandfield.inputChar(ch);
     ui->update();
+    return true;
   }
   else {
     std::string command;
@@ -78,7 +79,7 @@ void RawCommandScreen::keyPressed(unsigned int ch) {
             rawcommandfield.clear();
             ui->update();
           }
-          break;
+          return true;
       case 27: // esc
         if (rawcommandfield.getData() != "") {
           rawcommandfield.clear();
@@ -88,7 +89,7 @@ void RawCommandScreen::keyPressed(unsigned int ch) {
           rawbuf->uiWatching(false);
           ui->returnToLast();
         }
-        break;
+        return true;
       case KEY_UP:
         if (history.canBack()) {
           if (history.current()) {
@@ -98,13 +99,13 @@ void RawCommandScreen::keyPressed(unsigned int ch) {
           rawcommandfield.setText(history.get());
           ui->update();
         }
-        break;
+        return true;
       case KEY_DOWN:
         if (history.forward()) {
           rawcommandfield.setText(history.get());
           ui->update();
         }
-        break;
+        return true;
       case KEY_PPAGE:
         if (!readfromcopy) {
           rawbuf->freezeCopy();
@@ -122,7 +123,7 @@ void RawCommandScreen::keyPressed(unsigned int ch) {
           }
         }
         ui->update();
-        break;
+        return true;
       case KEY_NPAGE:
         if (readfromcopy) {
           if (copyreadpos == 0) {
@@ -136,15 +137,16 @@ void RawCommandScreen::keyPressed(unsigned int ch) {
           }
         }
         ui->update();
-        break;
+        return true;
       case KEY_IC:
         for (unsigned int i = 0; i < selection.length(); i++) {
           rawcommandfield.inputChar(selection[i]);
         }
         ui->update();
-        break;
+        return true;
     }
   }
+  return false;
 }
 
 std::string RawCommandScreen::getLegendText() const {

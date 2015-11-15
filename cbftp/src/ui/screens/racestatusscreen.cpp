@@ -329,12 +329,12 @@ void RaceStatusScreen::command(std::string command, std::string arg) {
   ui->redraw();
 }
 
-void RaceStatusScreen::keyPressed(unsigned int ch) {
+bool RaceStatusScreen::keyPressed(unsigned int ch) {
   switch(ch) {
     case 27: // esc
     case 'c':
       ui->returnToLast();
-      break;
+      return true;
     case 's':
       if (smalldirs) {
         smalldirs = false;
@@ -343,17 +343,17 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
         smalldirs = true;
       }
       ui->redraw();
-      break;
+      return true;
     case KEY_UP:
       if (mso.goUp()) {
         ui->update();
       }
-      break;
+      return true;
     case KEY_DOWN:
       if (mso.goDown()) {
         ui->update();
       }
-      break;
+      return true;
     case KEY_DC:
     {
       Pointer<MenuSelectOptionTextButton> msotb = mso.getElement(mso.getSelectionPointer());
@@ -362,20 +362,20 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
         awaitingremovesite = true;
         ui->goConfirmation("Do you really want to delete " + removesite);
       }
-      break;
+      return true;
     }
     case 'B':
       if (race->getStatus() == RACE_STATUS_RUNNING) {
         awaitingabort = true;
         ui->goConfirmation("Do you really want to abort the race " + race->getName());
       }
-      break;
+      return true;
     case 'D':
       if (race->getStatus() != RACE_STATUS_RUNNING) {
         awaitingdelete = true;
         ui->goConfirmation("Do you really want to delete " + race->getName() + " on all involved sites");
       }
-      break;
+      return true;
     case 'A':
     {
       std::list<Site *> excludedsites;
@@ -389,9 +389,10 @@ void RaceStatusScreen::keyPressed(unsigned int ch) {
         }
       }
       ui->goSelectSites("Add these sites to the race: " + race->getSection() + "/" + race->getName(), std::list<Site *>(), excludedsites);
-      break;
+      return true;
     }
   }
+  return false;
 }
 
 char RaceStatusScreen::getFileChar(bool exists, bool owner, bool upload, bool download) const {
