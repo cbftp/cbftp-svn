@@ -6,7 +6,11 @@ OBJS = $(wildcard $(SRC:%.cpp=%.o)) $(wildcard $(SRC:%.cpp=%.d))
 all: $(SRC:%.cpp=%.o)
 	@#
 
-loginscreen.o: loginscreen.cpp ../../../Makefile.inc
+ifeq ($(HAS_SVN), 0)
+SVN_DIR := ../../../.svn
+endif
+
+loginscreen.o: loginscreen.cpp ../../../Makefile.inc ${SVN_DIR}
 	${CXX}  ${CPPFLAGS}  -c -o loginscreen.o loginscreen.cpp -DBUILDTIME=${DATE} -DVERSION=${VERSION} -DBOXTAG=${BOXTAG}
 	
 clean:
