@@ -85,8 +85,7 @@ bool Engine::newSpreadJob(int profile, const std::string & release, const std::s
     }
     if (add && append) {
       if (race->getSiteRace(*it) != NULL) {
-        add = false;
-        break;
+        continue;
       }
     }
     if (add) {
