@@ -118,6 +118,7 @@ class SiteLogic : public EventReceiver {
     void setNumConnections(unsigned int);
     bool downloadSlotAvailable() const;
     bool uploadSlotAvailable() const;
+    int slotsAvailable() const;
     int getCurrDown() const;
     int getCurrUp() const;
     int getCurrLogins() const;
