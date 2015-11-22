@@ -1292,6 +1292,10 @@ bool SiteLogic::uploadSlotAvailable() const {
   return (available > 0 && slotsup > 0);
 }
 
+int SiteLogic::slotsAvailable() const {
+  return available;
+}
+
 void SiteLogic::transferComplete(bool isdownload) {
   if (isdownload) {
     slotsdn++;

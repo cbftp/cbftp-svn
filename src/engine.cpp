@@ -337,6 +337,10 @@ bool Engine::transferJobActionRequest(Pointer<TransferJob> & tj) {
     {
       if (!pt.getSrc()->downloadSlotAvailable()) return false;
       if (!pt.getDst()->uploadSlotAvailable()) return false;
+      if (pt.getDst() == pt.getSrc() && pt.getDst()->slotsAvailable() < 2) {
+        pt.getDst()->haveConnected(2);
+        return false;
+      }
       Pointer<TransferStatus> ts = global->getTransferManager()->suggestTransfer(pt.getSrcFileName(),
           pt.getSrc(), pt.getSrcFileList(), pt.getDst(), pt.getDstFileList());
       tj->addTransfer(ts);
