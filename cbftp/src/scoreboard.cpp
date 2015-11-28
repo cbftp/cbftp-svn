@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include "scoreboardelement.h"
+#include "race.h"
 
 ScoreBoard::ScoreBoard() :
   currelements(&elements),

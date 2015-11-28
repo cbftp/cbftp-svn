@@ -1,5 +1,7 @@
 #include "scoreboardelement.h"
 
+#include "race.h"
+
 ScoreBoardElement::ScoreBoardElement(std::string filename, unsigned short score, bool prio, SiteLogic * src, FileList * fls, SiteLogic * dst, FileList * fld, Pointer<Race> race) {
   reset(filename, score, prio, src, fls, dst, fld, race);
 }
