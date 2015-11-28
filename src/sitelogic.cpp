@@ -27,6 +27,7 @@
 #include "commandowner.h"
 #include "util.h"
 #include "types.h"
+#include "race.h"
 
 SiteLogic::SiteLogic(std::string sitename) :
   site(global->getSiteManager()->getSite(sitename)),
