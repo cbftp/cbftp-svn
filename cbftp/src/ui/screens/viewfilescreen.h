@@ -43,7 +43,7 @@ private:
   bool download;
   bool legendupdated;
   bool downloadattempted;
-  std::vector<std::basic_string<unsigned int> > rawcontents;
+  std::vector<std::string > rawcontents;
   std::vector<std::basic_string<unsigned int> > translatedcontents;
   std::string path;
   int pid;

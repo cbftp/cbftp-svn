@@ -127,7 +127,7 @@ void ViewFileScreen::redraw() {
           encoding = encoding::guessEncoding(tmpdata);
           unsigned int tmpdatalen = tmpdata.size();
           if (tmpdatalen > 0) {
-            std::basic_string<unsigned int> current;
+            std::string current;
             for (unsigned int i = 0; i < tmpdatalen; i++) {
               if (tmpdata[i] == '\n') {
                 rawcontents.push_back(current);
@@ -324,7 +324,7 @@ void ViewFileScreen::translate() {
       current = encoding::cp437toUnicode(rawcontents[i]);
     }
     else {
-      current = rawcontents[i];
+      current = encoding::toUnicode(rawcontents[i]);
     }
     translatedcontents.push_back(current);
   }
