@@ -32,7 +32,7 @@ bool certainlyASCII(unsigned int c) {
   return c != 'U' && c != 'Y' && c != '_' && c != ' ' && c < 0x80;
 }
 
-std::basic_string<unsigned int> cp437toUnicode(std::basic_string<unsigned int> & in) {
+std::basic_string<unsigned int> cp437toUnicode(std::string & in) {
   std::basic_string<unsigned int> out;
   for (unsigned int i = 0; i < in.length(); i++) {
     out.push_back(cp437toUnicode(in[i]));
@@ -40,7 +40,7 @@ std::basic_string<unsigned int> cp437toUnicode(std::basic_string<unsigned int> &
   return out;
 }
 
-std::basic_string<unsigned int> doublecp437toUnicode(std::basic_string<unsigned int> & in) {
+std::basic_string<unsigned int> doublecp437toUnicode(std::string & in) {
   std::basic_string<unsigned int> out;
   for (unsigned int i = 0; i < in.length(); i++) {
     if ((i > 0 && certainlyASCII(in[i - 1])) || (i < in.length() - 1 && certainlyASCII(in[i + 1]))) {
@@ -49,6 +49,14 @@ std::basic_string<unsigned int> doublecp437toUnicode(std::basic_string<unsigned 
     else {
       out.push_back(harddoublecp437toUnicode(in[i]));
     }
+  }
+  return out;
+}
+
+std::basic_string<unsigned int> toUnicode(std::string & in) {
+  std::basic_string<unsigned int> out;
+  for (unsigned int i = 0; i < in.length(); i++) {
+    out.push_back(static_cast<unsigned char>(in[i]));
   }
   return out;
 }

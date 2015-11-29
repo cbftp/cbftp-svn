@@ -5,6 +5,7 @@
 #include "../../sitelogic.h"
 #include "../../sitelogicmanager.h"
 #include "../../globalcontext.h"
+#include "../../encoding.h"
 
 #include "../ui.h"
 
@@ -44,13 +45,19 @@ void RawCommandScreen::update() {
   if (!readfromcopy) {
     unsigned int numlinestoprint = rawbuf->getSize() < rownum ? rawbuf->getSize() : rownum;
     for (unsigned int i = 0; i < numlinestoprint; i++) {
-      ui->printStr(i, 0, rawbuf->getLine(numlinestoprint - i - 1));
+      std::string line = rawbuf->getLine(numlinestoprint - i - 1);
+      for (unsigned int j = 0; j < line.length(); j++) {
+        ui->printChar(i, j, encoding::cp437toUnicode(line[j]));
+      }
     }
   }
   else {
     unsigned int numlinestoprint = copysize < rownum ? copysize : rownum;
     for (unsigned int i = 0; i < numlinestoprint; i++) {
-      ui->printStr(i, 0, rawbuf->getLineCopy(numlinestoprint - i - 1 + copyreadpos));
+      std::string line = rawbuf->getLineCopy(numlinestoprint - i - 1 + copyreadpos);
+      for (unsigned int j = 0; j < line.length(); j++) {
+        ui->printChar(i, j, encoding::cp437toUnicode(line[j]));
+      }
     }
   }
   std::string pretag = "[Raw command]: ";
