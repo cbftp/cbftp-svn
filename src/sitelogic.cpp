@@ -737,6 +737,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
       if (tj->wantsList(this)) {
         FileList * fl = tj->getListTarget(this);
         std::string path = fl->getPath();
+        connstatetracker[id].use();
         if (path != conns[id]->getCurrentPath()) {
           conns[id]->doCWD(path);
           return;
@@ -745,6 +746,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
         return;
       }
       if (tj->wantsMakeDir(this)) {
+        connstatetracker[id].use();
         conns[id]->setCurrentCommandOwner(tj.get());
         conns[id]->doMKD(tj->getWantedMakeDir());
         return;
