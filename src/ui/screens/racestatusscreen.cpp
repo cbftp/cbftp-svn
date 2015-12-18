@@ -20,8 +20,8 @@ extern GlobalContext * global;
 
 RaceStatusScreen::RaceStatusScreen(Ui * ui) {
   this->ui = ui;
-  defaultlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - A[B]ort race";
-  finishedlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [D]elete on all sites";
+  defaultlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [r]eset race - A[B]ort race";
+  finishedlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [r]eset race - [D]elete on all sites";
 }
 
 RaceStatusScreen::~RaceStatusScreen() {
@@ -391,6 +391,9 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       ui->goSelectSites("Add these sites to the race: " + race->getSection() + "/" + race->getName(), std::list<Site *>(), excludedsites);
       return true;
     }
+    case 'r':
+      global->getEngine()->resetRace(race);
+      return true;
   }
   return false;
 }

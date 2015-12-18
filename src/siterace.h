@@ -60,6 +60,7 @@ class SiteRace : public CommandOwner {
     bool isGlobalDone() const;
     void complete(bool);
     void abort();
+    void reset();
     void subPathComplete(FileList *);
     bool isSubPathComplete(std::string) const;
     bool isSubPathComplete(FileList *) const;

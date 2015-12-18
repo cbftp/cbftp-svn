@@ -228,6 +228,22 @@ void SiteRace::abort() {
   done = true;
 }
 
+void SiteRace::reset() {
+  done = false;
+  filelists.clear(); // memory leak, use Pointer<FileList> instead
+  filelists[""] = new FileList(username, path);
+  recentlyvisited.clear();
+  recentlyvisited.push_back("");
+  sfvobservestarts.clear();
+  observestarts.clear();
+  sizeestimated.clear();
+  completesubdirs.clear();
+  visitedpaths.clear();
+  maxfilesize = 0;
+  totalfilesize = 0;
+  numuploadedfiles = 0;
+}
+
 void SiteRace::subPathComplete(FileList * fl) {
   std::string subpath = getSubPathForFileList(fl);
   if (isSubPathComplete(subpath)) {

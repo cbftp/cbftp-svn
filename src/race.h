@@ -105,6 +105,7 @@ class Race : public EventReceiver, public TransferStatusCallback {
     void reportSemiDone(SiteRace *);
     void reportSize(SiteRace *, FileList *, std::string, std::list<std::string> *, bool);
     void setUndone();
+    void reset();
     void abort();
     void setTimeout();
     int checksSinceLastUpdate();

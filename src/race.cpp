@@ -258,6 +258,33 @@ void Race::setUndone() {
   global->getTickPoke()->startPoke(this, "Race", RACE_UPDATE_INTERVAL, 0);
 }
 
+void Race::reset() {
+  clearTransferAttempts();
+  resetUpdateCheckCounter();
+  if (isDone()) {
+    setUndone();
+  }
+  semidonesites.clear();
+  donesites.clear();
+  sizes.clear();
+  estimatedsubpaths.clear();
+  estimatedsubpaths.push_back("");
+  guessedfilelists.clear();
+  guessedfilelists[""] = std::map<std::string, unsigned long long int>();
+  sfvreports.clear();
+  estimatedsize.clear();
+  estimatedfilesizes.clear();
+  subpathoccurences.clear();
+  guessedfileliststotalfilesize.clear();
+  sizelocationtrackers.clear();
+  maxnumfilessiteprogress = 0;
+  worst = 0;
+  avg = 0;
+  best = 0;
+  guessedtotalfilesize = 0;
+  bestunknownfilesizeestimate = 50000000;
+}
+
 void Race::abort() {
   setDone();
   status = RACE_STATUS_ABORTED;
