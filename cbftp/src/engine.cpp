@@ -255,6 +255,27 @@ void Engine::abortRace(Pointer<Race> & race) {
   }
 }
 
+void Engine::resetRace(Pointer<Race> & race) {
+  if (!!race) {
+    race->reset();
+    for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator it = race->begin(); it != race->end(); it++) {
+      it->first->reset();
+      it->second->activateAll();
+    }
+    bool current = false;
+    for (std::list<Pointer<Race> >::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
+      if (*it == race) {
+        current = true;
+        break;
+      }
+    }
+    if (!current) {
+      currentraces.push_back(race);
+    }
+    global->getEventLog()->log("Engine", "Race reset: " + race->getName());
+  }
+}
+
 void Engine::deleteOnAllSites(Pointer<Race> & race) {
   if (!!race) {
     std::string sites;
