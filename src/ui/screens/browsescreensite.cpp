@@ -15,6 +15,7 @@
 #include "../../localstorage.h"
 #include "../../util.h"
 #include "../../pointer.h"
+#include "../../timereference.h"
 
 #include "../ui.h"
 #include "../uifile.h"
@@ -56,7 +57,7 @@ BrowseScreenSite::BrowseScreenSite(Ui * ui, std::string sitestr) {
   sortmethod = 0;
   spinnerpos = 0;
   filelist = NULL;
-  global->updateTime();
+  TimeReference::updateTime();
 }
 
 BrowseScreenSite::~BrowseScreenSite() {

@@ -1,8 +1,5 @@
 #pragma once
 
-#include <openssl/ssl.h>
-#include <pthread.h>
-
 class Engine;
 class UIBase;
 class SiteLogicManager;
@@ -22,8 +19,6 @@ class SettingsLoaderSaver;
 
 class GlobalContext {
   private:
-    SSL_CTX * ssl_ctx;
-    pthread_attr_t attr;
     Engine * e;
     SettingsLoaderSaver * sls;
     IOManager * iom;
@@ -40,12 +35,7 @@ class GlobalContext {
     LocalStorage * ls;
     ExternalFileViewing * efv;
     TimeReference * tr;
-    int currentyear;
-    int currentmonth;
-    int currentday;
   public:
-    void init();
-    GlobalContext();
     void linkEventLog(EventLog *);
     void linkWorkManager(WorkManager *);
     void linkTickPoke(TickPoke *);
@@ -53,7 +43,6 @@ class GlobalContext {
         UIBase *, SiteManager *, SiteLogicManager *, TransferManager *,
         RemoteCommandHandler *, SkipList *, ProxyManager *,
         LocalStorage *, ExternalFileViewing *, TimeReference *);
-    SSL_CTX * getSSLCTX() const;
     Engine * getEngine() const;
     SettingsLoaderSaver * getSettingsLoaderSaver() const;
     WorkManager * getWorkManager() const;
@@ -70,9 +59,4 @@ class GlobalContext {
     LocalStorage * getLocalStorage() const;
     ExternalFileViewing * getExternalFileViewing() const;
     TimeReference * getTimeReference() const;
-    pthread_attr_t * getPthreadAttr();
-    void updateTime();
-    int currentYear() const;
-    int currentMonth() const;
-    int currentDay() const;
 };

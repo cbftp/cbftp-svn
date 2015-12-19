@@ -1,9 +1,9 @@
 #pragma once
 
-#include <pthread.h>
 #include <map>
 #include <string>
 
+#include "threading.h"
 #include "datablockpool.h"
 #include "blockingqueue.h"
 #include "signalevents.h"
@@ -32,11 +32,10 @@ class EventReceiver;
 
 class WorkManager {
 private:
+  Thread<WorkManager> thread;
   BlockingQueue<Event> dataqueue;
   SignalEvents signalevents;
   Semaphore event;
-  pthread_t thread;
-  static void * run(void *);
   Semaphore readdata;
   DataBlockPool blockpool;
 public:
@@ -54,5 +53,5 @@ public:
   void dispatchSignal(EventReceiver *, int);
   DataBlockPool * getBlockPool();
   bool overload() const;
-  void runInstance();
+  void run();
 };

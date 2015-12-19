@@ -1,16 +1,10 @@
 #include "workmanager.h"
 
 #include "eventreceiver.h"
-#include "globalcontext.h"
 #include "event.h"
 
-extern GlobalContext * global;
-
 void WorkManager::init() {
-  pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
-#ifdef _ISOC95_SOURCE
-  pthread_setname_np(thread, "Worker");
-#endif
+  thread.start("Worker", this);
 }
 
 void WorkManager::dispatchFDData(EventReceiver * er) {
@@ -78,7 +72,7 @@ bool WorkManager::overload() const {
   return dataqueue.size() >= 10;
 }
 
-void WorkManager::runInstance() {
+void WorkManager::run() {
   char * data;
   while(1) {
     event.wait();
@@ -126,9 +120,4 @@ void WorkManager::runInstance() {
       }
     }
   }
-}
-
-void * WorkManager::run(void * arg) {
-  ((WorkManager *) arg)->runInstance();
-  return NULL;
 }

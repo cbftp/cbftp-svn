@@ -84,10 +84,8 @@ bool Ui::init() {
   sa.sa_handler = sighandler;
   sigaction(SIGWINCH, &sa, NULL);
 
-  pthread_create(&uithread, global->getPthreadAttr(), run, (void *) this);
-#ifdef _ISOC95_SOURCE
-  pthread_setname_np(uithread, "UserInterface");
-#endif
+  thread.start("UserInterface", this);
+
   initret = true;
   uiqueue.push(UICommand(UI_COMMAND_INIT));
   eventcomplete.wait();
@@ -332,7 +330,7 @@ void Ui::tick(int message) {
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 
-void Ui::runInstance() {
+void Ui::run() {
   while(1) {
     UICommand command = uiqueue.pop();
     switch (command.getCommand()) {
@@ -407,11 +405,6 @@ void Ui::switchToWindow(Pointer<UIWindow> window, bool allowsplit) {
   infowindow->setText(window->getInfoText());
   topwindow = window;
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
-}
-
-void * Ui::run(void * arg) {
-  ((Ui *) arg)->runInstance();
-  return NULL;
 }
 
 void Ui::globalKeyBinds(int ch) {

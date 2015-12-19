@@ -8,6 +8,7 @@
 #include "../../engine.h"
 #include "../../localfilelist.h"
 #include "../../pointer.h"
+#include "../../timereference.h"
 
 #include "../ui.h"
 #include "../termint.h"
@@ -31,7 +32,7 @@ BrowseScreen::~BrowseScreen() {
 void BrowseScreen::initialize(unsigned int row, unsigned int col, ViewMode viewmode, std::string sitestr) {
   expectbackendpush = true;
   this->split = initsplitupdate = viewmode == VIEW_SPLIT;
-  global->updateTime();
+  TimeReference::updateTime();
   if (viewmode != VIEW_LOCAL) {
     left = makePointer<BrowseScreenSite>(ui, sitestr);
   }

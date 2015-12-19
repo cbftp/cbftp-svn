@@ -18,6 +18,7 @@
 #include "localstorage.h"
 #include "externalfileviewing.h"
 #include "timereference.h"
+#include "threading.h"
 
 #include "ui/ui.h"
 
@@ -26,6 +27,8 @@ GlobalContext * global;
 class Main {
 public:
   Main() {
+    TimeReference::updateTime();
+
     global = new GlobalContext();
     EventLog * el = new EventLog();
     global->linkEventLog(el);
@@ -49,6 +52,9 @@ public:
     Ui * ui = new Ui();
 
     global->linkComponents(sls, iom, e, ui, sm, slm, tm, rch, sl, pm, ls, efv, tr);
+
+    Threading::setCurrentThreadName("cbftp");
+
     if (!ui->init()) exit(1);
     wm->init();
     iom->init();

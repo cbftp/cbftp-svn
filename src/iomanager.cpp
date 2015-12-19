@@ -14,6 +14,7 @@
 #include <errno.h>
 
 #include "workmanager.h"
+#include "sslmanager.h"
 #include "globalcontext.h"
 #include "datablock.h"
 #include "datablockpool.h"
@@ -33,10 +34,8 @@ IOManager::IOManager() :
 }
 
 void IOManager::init() {
-  pthread_create(&thread, global->getPthreadAttr(), run, (void *) this);
-#ifdef _ISOC95_SOURCE
-  pthread_setname_np(thread, "IO");
-#endif
+  SSLManager::init();
+  thread.start("IO", this);
   global->getTickPoke()->startPoke(this, "IOManager", TICKPERIOD, 0);
 }
 
@@ -347,9 +346,7 @@ void IOManager::closeSocketIntern(int id) {
   socketinfomap.erase(it);
 }
 
-const char * IOManager::getCipher(SSL * ssl) {
-  return SSL_CIPHER_get_name(SSL_get_current_cipher(ssl));
-}
+
 
 std::string IOManager::getCipher(int id) const {
   ScopeLock lock(socketinfomaplock);
@@ -357,7 +354,7 @@ std::string IOManager::getCipher(int id) const {
   if (it == socketinfomap.end() || it->second.ssl == NULL || it->second.type != FD_TCP_SSL) {
     return "";
   }
-  const char * cipher = getCipher(it->second.ssl);
+  const char * cipher = SSLManager::getCipher(it->second.ssl);
   return std::string(cipher);
 }
 
@@ -484,7 +481,7 @@ void IOManager::handleTCPSSLNegotiationOut(SocketInfo & socketinfo) {
     handleTCPSSLNegotiationIn(socketinfo);
     return;
   }
-  SSL * ssl = SSL_new(global->getSSLCTX());
+  SSL * ssl = SSL_new(SSLManager::getSSLCTX());
   SSL_set_mode(ssl, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
   socketinfo.ssl = ssl;
   SSL_set_fd(ssl, socketinfo.fd);
@@ -594,7 +591,7 @@ void IOManager::handleTCPServerIn(SocketInfo & socketinfo) {
   wm->dispatchEventNew(socketinfo.receiver, newsockid);
 }
 
-void IOManager::runInstance() {
+void IOManager::run() {
   std::list<std::pair<int, PollEvent> > fds;
   std::list<std::pair<int, PollEvent> >::const_iterator pollit;
   ScopeLock lock(socketinfomaplock);
@@ -670,11 +667,6 @@ void IOManager::runInstance() {
       }
     }
   }
-}
-
-void * IOManager::run(void * arg) {
-  ((IOManager *) arg)->runInstance();
-  return NULL;
 }
 
 std::list<std::pair<std::string, std::string> > IOManager::listInterfaces() {
