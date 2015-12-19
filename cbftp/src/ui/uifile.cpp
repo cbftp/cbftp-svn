@@ -4,10 +4,8 @@
 
 #include "../file.h"
 #include "../localfile.h"
-#include "../globalcontext.h"
 #include "../util.h"
-
-extern GlobalContext * global;
+#include "../timereference.h"
 
 UIFile::UIFile(File * file) {
   name = file->getName();
@@ -150,8 +148,8 @@ void UIFile::parseUNIXTimeStamp(const std::string & uglytime, int & year, int & 
     minute = 0;
   }
   else {
-    year = global->currentYear();
-    int currentmonth = global->currentMonth();
+    year = TimeReference::currentYear();
+    int currentmonth = TimeReference::currentMonth();
     if (month > currentmonth) {
       year--;
     }

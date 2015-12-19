@@ -7,6 +7,7 @@
 #include <cctype>
 #include <unistd.h>
 #include <fcntl.h>
+#include <stdlib.h>
 
 #include "globalcontext.h"
 #include "util.h"

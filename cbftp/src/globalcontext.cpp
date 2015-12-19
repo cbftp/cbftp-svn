@@ -1,43 +1,6 @@
 #include "globalcontext.h"
 
-#include <vector>
 #include <time.h>
-
-#include "lock.h"
-
-static std::vector<Lock> ssllocks;
-
-static void sslLockingCallback(int mode, int n, const char *, int) {
-  if (mode & CRYPTO_LOCK) {
-    ssllocks[n].lock();
-  }
-  else {
-    ssllocks[n].unlock();
-  }
-}
-
-static unsigned long sslThreadIdCallback() {
-  return (unsigned long) pthread_self();
-}
-
-GlobalContext::GlobalContext() {
-  init();
-}
-
-void GlobalContext::init() {
-  ssllocks.resize(CRYPTO_num_locks());
-  CRYPTO_set_locking_callback(sslLockingCallback);
-  CRYPTO_set_id_callback(sslThreadIdCallback);
-  SSL_library_init();
-  SSL_load_error_strings();
-  ssl_ctx = SSL_CTX_new(SSLv23_client_method());
-  pthread_attr_init(&attr);
-  pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
-#ifdef _ISOC95_SOURCE
-  pthread_setname_np(pthread_self(), "cbftp");
-#endif
-  updateTime();
-}
 
 void GlobalContext::linkEventLog(EventLog * el) {
   this->el = el;
@@ -69,10 +32,6 @@ void GlobalContext::linkComponents(SettingsLoaderSaver * sls, IOManager * iom,
   this->ls = ls;
   this->efv = efv;
   this->tr = tr;
-}
-
-SSL_CTX * GlobalContext::getSSLCTX() const {
-  return ssl_ctx;
 }
 
 Engine * GlobalContext::getEngine() const {
@@ -137,29 +96,4 @@ ExternalFileViewing * GlobalContext::getExternalFileViewing() const {
 
 TimeReference * GlobalContext::getTimeReference() const {
   return tr;
-}
-
-pthread_attr_t * GlobalContext::getPthreadAttr() {
-  return &attr;
-}
-
-void GlobalContext::updateTime() {
-  time_t rawtime;
-  time(&rawtime);
-  struct tm * timedata = localtime(&rawtime);
-  currentyear = timedata->tm_year + 1900;
-  currentmonth = timedata->tm_mon + 1;
-  currentday = timedata->tm_mday;
-}
-
-int GlobalContext::currentYear() const {
-  return currentyear;
-}
-
-int GlobalContext::currentMonth() const {
-  return currentmonth;
-}
-
-int GlobalContext::currentDay() const {
-  return currentday;
 }

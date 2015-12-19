@@ -1,9 +1,7 @@
 #pragma once
 
-#include <pthread.h>
 #include <map>
 #include <string>
-#include <openssl/ssl.h>
 #include <list>
 
 #include "eventreceiver.h"
@@ -11,6 +9,7 @@
 #include "lock.h"
 #include "polling.h"
 #include "pointer.h"
+#include "threading.h"
 
 class DataBlockPool;
 class WorkManager;
@@ -25,13 +24,12 @@ extern GlobalContext * global;
 
 class IOManager : private EventReceiver {
 private:
-  pthread_t thread;
   Polling polling;
+  Thread<IOManager> thread;
   mutable Lock socketinfomaplock;
   std::map<int, SocketInfo> socketinfomap;
   std::map<int, int> connecttimemap;
   std::map<int, int> sockfdidmap;
-  static void * run(void *);
   WorkManager * wm;
   DataBlockPool * blockpool;
   Pointer<DataBlockPool> sendblockpool;
@@ -43,7 +41,6 @@ private:
   bool investigateSSLError(int, int, int);
   bool hasdefaultinterface;
   void closeSocketIntern(int);
-  static const char * getCipher(SSL *);
   void handleKeyboardIn(SocketInfo &, ScopeLock &);
   void handleTCPConnectingOut(SocketInfo &);
   void handleTCPPlainIn(SocketInfo &);
@@ -57,7 +54,7 @@ private:
 public:
   IOManager();
   void init();
-  void runInstance();
+  void run();
   void registerStdin(EventReceiver *);
   void tick(int);
   int registerTCPClientSocket(EventReceiver *, std::string, int, int *);
