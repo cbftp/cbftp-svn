@@ -1430,7 +1430,7 @@ void SiteLogic::raceGlobalComplete() {
   }
 }
 
-void SiteLogic::raceLocalComplete(SiteRace * sr) {
+void SiteLogic::raceLocalComplete(SiteRace * sr, int uploadslotsleft) {
   sr->complete(true);
   bool stillactive = false;
   for (unsigned int i = 0; i < races.size(); i++) {
@@ -1440,7 +1440,9 @@ void SiteLogic::raceLocalComplete(SiteRace * sr) {
     }
   }
   if (!stillactive) {
-    int killnum = site->getMaxLogins() - site->getMaxDown();
+    int downloadslots = site->getMaxDown();
+    int stillneededslots = downloadslots < uploadslotsleft ? downloadslots : uploadslotsleft;
+    int killnum = site->getMaxLogins() - stillneededslots;
     if (killnum < 0) {
       killnum = 0;
     }

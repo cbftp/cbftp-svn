@@ -117,9 +117,9 @@ class SiteLogic : public EventReceiver {
     bool downloadSlotAvailable() const;
     bool uploadSlotAvailable() const;
     int slotsAvailable() const;
+    int getCurrLogins() const;
     int getCurrDown() const;
     int getCurrUp() const;
-    int getCurrLogins() const;
     void connectConn(int);
     void disconnectConn(int);
     void finishTransferGracefully(int);
@@ -127,7 +127,7 @@ class SiteLogic : public EventReceiver {
     void issueRawCommand(unsigned int, std::string);
     RawBuffer * getRawCommandBuffer() const;
     void raceGlobalComplete();
-    void raceLocalComplete(SiteRace *);
+    void raceLocalComplete(SiteRace *, int);
     void transferComplete(bool isdownload);
     bool getSlot(bool);
     int requestFileList(std::string);

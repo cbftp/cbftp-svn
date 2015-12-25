@@ -725,7 +725,13 @@ void Engine::checkIfRaceComplete(SiteLogic * sls, Pointer<Race> & race) {
         race->reportSemiDone(srs);
       }
       else {
-        sls->raceLocalComplete(srs);
+        int uploadslotcount = 0;
+        for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator it = race->begin(); it != race->end(); it++) {
+          if (it->second != sls && !it->first->isDone()) {
+            uploadslotcount += it->second->getSite()->getMaxUp();
+          }
+        }
+        sls->raceLocalComplete(srs, uploadslotcount);
         global->getEventLog()->log("Engine", "Race " + race->getName() + " completed on " +
             sls->getSite()->getName());
       }
@@ -883,7 +889,7 @@ void Engine::tick(int message) {
         global->getEventLog()->log("Engine", "No activity for " + util::int2Str(MAXCHECKSTIMEOUT) +
             " seconds, aborting race: " + (*it)->getName());
         for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator its = (*it)->begin(); its != (*it)->end(); its++) {
-          its->second->raceLocalComplete(its->first);
+          its->second->raceLocalComplete(its->first, 0);
         }
         (*it)->setTimeout();
         issueGlobalComplete(*it);
