@@ -75,9 +75,12 @@ DelayedCommand & ConnStateTracker::getCommand() {
 }
 
 void ConnStateTracker::setDisconnected() {
+  util::assert(!transferlocked);
+  util::assert(!listtransfer);
+  util::assert(!transfer);
+  util::assert(!request);
   loggedin = false;
   delayedcommand.weakReset();
-  request.reset();
   idletime = 0;
 }
 

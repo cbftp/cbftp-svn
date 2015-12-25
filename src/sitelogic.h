@@ -57,7 +57,6 @@ class SiteLogic : public EventReceiver {
     int available;
     PotentialTracker * ptrack;
     unsigned int loggedin;
-    unsigned int wantedloggedin;
     std::list<SiteLogicRequest> requests;
     std::list<SiteLogicRequestReady> requestsready;
     int requestidcounter;
@@ -80,7 +79,6 @@ class SiteLogic : public EventReceiver {
     void getFileListConn(int, CommandOwner *, FileList *);
     void passiveModeCommand(int);
     static void * run(void *);
-    void connQuit(int);
     bool lockTransferConn(std::string, int *, bool);
     void setRequestReady(unsigned int, void *, bool);
   public:
