@@ -36,6 +36,7 @@ class Engine : public EventReceiver {
     std::map<Pointer<TransferJob>, std::list<PendingTransfer> > pendingtransfers;
     int maxavgspeed;
     bool newSpreadJob(int, const std::string &, const std::string &, const std::list<std::string> &);
+    bool newSpreadJob(int, const std::string &, const std::string &);
     void estimateRaceSizes();
     void reportCurrentSize(SiteRace *, FileList *, bool final);
     void refreshScoreBoard();
@@ -58,7 +59,9 @@ class Engine : public EventReceiver {
     Engine();
     ~Engine();
     bool newRace(const std::string &, const std::string &, const std::list<std::string> &);
+    bool newRace(const std::string &, const std::string &);
     void prepareRace(const std::string &, const std::string &, const std::list<std::string> &);
+    void prepareRace(const std::string &, const std::string &);
     bool newDistribute(const std::string &, const std::string &, const std::list<std::string> &);
     void startPreparedRace(unsigned int);
     void deletePreparedRace(unsigned int);

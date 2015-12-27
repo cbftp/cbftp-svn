@@ -147,8 +147,22 @@ bool Engine::newSpreadJob(int profile, const std::string & release, const std::s
   return true;
 }
 
+bool Engine::newSpreadJob(int profile, const std::string & release, const std::string & section) {
+  std::list<std::string> sites;
+  for (std::vector<Site *>::const_iterator it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
+    if ((*it)->hasSection(section)) {
+      sites.push_back((*it)->getName());
+    }
+  }
+  return newSpreadJob(profile, release, section, sites);
+}
+
 bool Engine::newRace(const std::string & release, const std::string & section, const std::list<std::string> & sites) {
   return newSpreadJob(SPREAD_RACE, release, section, sites);
+}
+
+bool Engine::newRace(const std::string & release, const std::string & section) {
+  return newSpreadJob(SPREAD_RACE, release, section);
 }
 
 bool Engine::newDistribute(const std::string & release, const std::string & section, const std::list<std::string> & sites) {
@@ -157,6 +171,10 @@ bool Engine::newDistribute(const std::string & release, const std::string & sect
 
 void Engine::prepareRace(const std::string & release, const std::string & section, const std::list<std::string> & sites) {
   newSpreadJob(SPREAD_PREPARE, release, section, sites);
+}
+
+void Engine::prepareRace(const std::string & release, const std::string & section) {
+  newSpreadJob(SPREAD_PREPARE, release, section);
 }
 
 void Engine::startPreparedRace(unsigned int id) {

@@ -170,6 +170,15 @@ void RemoteCommandHandler::parseRace(const std::string & message, bool autostart
   std::string section = message.substr(0, sectionend);
   std::string release = message.substr(sectionend + 1, releaseend - (sectionend + 1));
   std::string sitestring = message.substr(releaseend + 1);
+  if (sitestring == "*") {
+    if (autostart) {
+      global->getEngine()->newRace(release, section);
+    }
+    else {
+      global->getEngine()->prepareRace(release, section);
+    }
+    return;
+  }
   std::list<std::string> sites;
   while (true) {
     size_t commapos = sitestring.find(",");
