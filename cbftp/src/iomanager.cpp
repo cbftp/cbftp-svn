@@ -529,22 +529,36 @@ void IOManager::handleTCPSSLIn(SocketInfo & socketinfo) {
   SSL * ssl = socketinfo.ssl;
   while (true) {
     char * buf = blockpool->getBlock();
-    int b_recv = SSL_read(ssl, buf, blocksize);
-    if (b_recv < 0) {
-      if (!investigateSSLError(SSL_get_error(ssl, b_recv), socketinfo.id, b_recv)) {
+    int bufpos = 0;
+    while (bufpos < blocksize) {
+      int b_recv = SSL_read(ssl, buf + bufpos, blocksize - bufpos);
+      if (b_recv < 0) {
+        if (!investigateSSLError(SSL_get_error(ssl, b_recv), socketinfo.id, b_recv)) {
+          wm->dispatchEventDisconnected(socketinfo.receiver);
+          closeSocketIntern(socketinfo.id);
+        }
+        if (bufpos > 0) {
+          wm->dispatchFDData(socketinfo.receiver, buf, bufpos);
+        }
+        else {
+          blockpool->returnBlock(buf);
+        }
+        return;
+      }
+      else if (b_recv == 0) {
         wm->dispatchEventDisconnected(socketinfo.receiver);
         closeSocketIntern(socketinfo.id);
+        if (bufpos > 0) {
+          wm->dispatchFDData(socketinfo.receiver, buf, bufpos);
+        }
+        else {
+          blockpool->returnBlock(buf);
+        }
+        return;
       }
-      blockpool->returnBlock(buf);
-      return;
+      bufpos += b_recv;
     }
-    else if (b_recv == 0) {
-      blockpool->returnBlock(buf);
-      wm->dispatchEventDisconnected(socketinfo.receiver);
-      closeSocketIntern(socketinfo.id);
-      return;
-    }
-    wm->dispatchFDData(socketinfo.receiver, buf, b_recv);
+    wm->dispatchFDData(socketinfo.receiver, buf, bufpos);
   }
 }
 
@@ -562,6 +576,10 @@ void IOManager::handleTCPSSLOut(SocketInfo & socketinfo) {
         wm->dispatchEventDisconnected(socketinfo.receiver);
         closeSocketIntern(socketinfo.id);
       }
+      return;
+    }
+    if (b_sent < block.dataLength()) {
+      block.consume(b_sent);
       return;
     }
     sendblockpool->returnBlock(block.rawData());
