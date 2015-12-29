@@ -77,7 +77,7 @@ void LocalDownload::FDDisconnected() {
 }
 
 void LocalDownload::FDSSLSuccess() {
-
+  ftpconn->printCipher(sockid);
 }
 
 void LocalDownload::FDSSLFail() {

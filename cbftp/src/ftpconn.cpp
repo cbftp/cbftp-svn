@@ -152,7 +152,7 @@ void FTPConn::FDFail(std::string error) {
 }
 
 void FTPConn::FDSSLSuccess() {
-  rawbuf->writeLine("[Cipher: " + iom->getCipher(sockid) + "]");
+  printCipher(sockid);
   if (state == STATE_AUTH_TLS) {
     doUSER(false);
   }
@@ -161,6 +161,11 @@ void FTPConn::FDSSLSuccess() {
 void FTPConn::FDSSLFail() {
 
 }
+
+void FTPConn::printCipher(int sockid) {
+  rawbuf->writeLine("[Cipher: " + iom->getCipher(sockid) + "]");
+}
+
 
 void FTPConn::FDData(char * data, unsigned int datalen) {
   if (state != STATE_STAT && state != STATE_PROXY) {
