@@ -14,7 +14,7 @@ DataBlockPool::DataBlockPool() :
 char * DataBlockPool::getBlock() {
   char * block;
   ScopeLock lock(blocklock);
-  if (blocks.size() == 0) {
+  if (blocks.empty()) {
     allocateNewBlocks();
   }
   block = blocks.back();

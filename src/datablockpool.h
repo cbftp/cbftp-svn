@@ -5,7 +5,7 @@
 #include "semaphore.h"
 #include "lock.h"
 
-#define BLOCKSIZE 2048
+#define BLOCKSIZE 16384
 #define MAXBLOCKS 2048
 
 class DataBlockPool {
