@@ -188,6 +188,7 @@ class FTPConn : private EventReceiver {
     void FDFail(std::string);
     void FDSSLSuccess();
     void FDSSLFail();
+    void printCipher(int);
     FileList * currentFileList() const;
     CommandOwner * currentCommandOwner() const;
     void setCurrentCommandOwner(CommandOwner *);

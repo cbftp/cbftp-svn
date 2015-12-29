@@ -58,6 +58,7 @@ void LocalUpload::FDDisconnected() {
 }
 
 void LocalUpload::FDSSLSuccess() {
+  ftpconn->printCipher(sockid);
   sendChunk();
 }
 
