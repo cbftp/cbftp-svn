@@ -30,6 +30,7 @@ void init() {
   SSL_library_init();
   SSL_load_error_strings();
   ssl_ctx = SSL_CTX_new(SSLv23_client_method());
+  SSL_CTX_set_cipher_list(ssl_ctx, "DEFAULT:!SEED");
 }
 
 SSL_CTX * getSSLCTX() {
