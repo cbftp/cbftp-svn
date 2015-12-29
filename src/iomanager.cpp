@@ -532,27 +532,16 @@ void IOManager::handleTCPSSLIn(SocketInfo & socketinfo) {
     int bufpos = 0;
     while (bufpos < blocksize) {
       int b_recv = SSL_read(ssl, buf + bufpos, blocksize - bufpos);
-      if (b_recv < 0) {
-        if (!investigateSSLError(SSL_get_error(ssl, b_recv), socketinfo.id, b_recv)) {
+      if (b_recv <= 0) {
+        if (bufpos > 0) {
+          wm->dispatchFDData(socketinfo.receiver, buf, bufpos);
+        }
+        else {
+          blockpool->returnBlock(buf);
+        }
+        if (!b_recv || !investigateSSLError(SSL_get_error(ssl, b_recv), socketinfo.id, b_recv)) {
           wm->dispatchEventDisconnected(socketinfo.receiver);
           closeSocketIntern(socketinfo.id);
-        }
-        if (bufpos > 0) {
-          wm->dispatchFDData(socketinfo.receiver, buf, bufpos);
-        }
-        else {
-          blockpool->returnBlock(buf);
-        }
-        return;
-      }
-      else if (b_recv == 0) {
-        wm->dispatchEventDisconnected(socketinfo.receiver);
-        closeSocketIntern(socketinfo.id);
-        if (bufpos > 0) {
-          wm->dispatchFDData(socketinfo.receiver, buf, bufpos);
-        }
-        else {
-          blockpool->returnBlock(buf);
         }
         return;
       }
