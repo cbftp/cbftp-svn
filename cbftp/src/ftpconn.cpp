@@ -166,7 +166,7 @@ void FTPConn::FDData(char * data, unsigned int datalen) {
   if (state != STATE_STAT && state != STATE_PROXY) {
     rawbuf->write(std::string(data, datalen));
   }
-  if (databufpos + datalen > databuflen) {
+  while (databufpos + datalen > databuflen) {
     databuflen = databuflen * 2;
     char * newdatabuf = (char *) malloc(databuflen);
     memcpy(newdatabuf, databuf, databufpos);
