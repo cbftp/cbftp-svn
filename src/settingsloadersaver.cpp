@@ -293,6 +293,9 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("allowdownload")) {
       if (!value.compare("false")) site->setAllowDownload(false);
     }
+    else if (!setting.compare("priority")) {
+      site->setPriority(util::str2Int(value));
+    }
     else if (!setting.compare("brokenpasv")) {
       if (!value.compare("true")) site->setBrokenPASV(true);
     }
@@ -495,6 +498,7 @@ void SettingsLoaderSaver::saveSettings() {
       if (!site->SSL()) dfh->addOutputLine(filetag, name + "$sslconn=false");
       if (!site->getAllowUpload()) dfh->addOutputLine(filetag, name + "$allowupload=false");
       if (!site->getAllowDownload()) dfh->addOutputLine(filetag, name + "$allowdownload=false");
+      dfh->addOutputLine(filetag, name + "$priority=" + util::int2Str(site->getPriority()));
       if (site->hasBrokenPASV()) dfh->addOutputLine(filetag, name + "$brokenpasv=true");
       dfh->addOutputLine(filetag, name + "$rank=" + util::int2Str(site->getRank()));
       dfh->addOutputLine(filetag, name + "$ranktolerance=" + util::int2Str(site->getRankTolerance()));

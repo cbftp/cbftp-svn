@@ -28,6 +28,22 @@
 
 extern GlobalContext * global;
 
+int getPriorityPoints(int priority) {
+  switch (priority) {
+    case SITE_PRIORITY_VERY_LOW:
+      return 0;
+    case SITE_PRIORITY_LOW:
+      return 500;
+    case SITE_PRIORITY_NORMAL:
+      return 1000;
+    case SITE_PRIORITY_HIGH:
+      return 1500;
+    case SITE_PRIORITY_VERY_HIGH:
+      return 2000;
+  }
+  return 1000;
+}
+
 Engine::Engine() :
   scoreboard(makePointer<ScoreBoard>()),
   maxavgspeed(1024),
@@ -485,6 +501,7 @@ void Engine::refreshScoreBoard() {
         if (avgspeed > maxavgspeed) {
           avgspeed = maxavgspeed;
         }
+        int prioritypoints = getPriorityPoints(sld->getSite()->getPriority());
         for (std::map<std::string, FileList *>::const_iterator itfls = srs->fileListsBegin(); itfls != srs->fileListsEnd(); itfls++) {
           if (itfls->first.length() > 0 && !global->getSkipList()->isAllowed(itfls->first, true)) continue;
           FileList * fls = itfls->second;
@@ -503,7 +520,7 @@ void Engine::refreshScoreBoard() {
               if (fld->contains(filename) || f->isDirectory() || f->getSize() == 0) continue;
               if (race->hasFailedTransfer(f, fld)) continue;
               bool prio = false;
-              unsigned short score = calculateScore(f, race, fls, srs, fld, srd, avgspeed, &prio, racemode);
+              unsigned short score = calculateScore(f, race, fls, srs, fld, srd, avgspeed, &prio, prioritypoints, racemode);
               scoreboard->add(filename, score, prio, sls, fls, sld, fld, race);
               race->resetUpdateCheckCounter();
             }
@@ -787,7 +804,7 @@ void Engine::transferJobComplete(Pointer<TransferJob> & tj) {
   global->getEventLog()->log("Engine", tj->typeString() + " job complete: " + tj->getSrcFileName());
 }
 
-unsigned short Engine::calculateScore(File * f, Pointer<Race> & itr, FileList * fls, SiteRace * srs, FileList * fld, SiteRace * srd, int avgspeed, bool * prio, bool racemode) const {
+unsigned short Engine::calculateScore(File * f, Pointer<Race> & itr, FileList * fls, SiteRace * srs, FileList * fld, SiteRace * srd, int avgspeed, bool * prio, int prioritypoints, bool racemode) const {
   unsigned short points = 0;
   unsigned long long int filesize = f->getSize();
   unsigned long long int maxfilesize = srs->getMaxFileSize();
@@ -795,7 +812,7 @@ unsigned short Engine::calculateScore(File * f, Pointer<Race> & itr, FileList * 
     maxfilesize = filesize;
   }
   points += 100 + filesize / ((maxfilesize + 1900) / 1900); // gives max 2000 points
-  points = points / 2 + (points * (avgspeed / 100)) / (maxavgspeed / 100);
+  points = points / 2 + (points * (avgspeed / 100)) / (maxavgspeed / 100); // add or remove max 1000 points
   if (racemode) {
     // give points for owning a low percentage of the race on the target
     points += ((100 - fld->getOwnedPercentage()) * 30); // gives max 3000 points
@@ -807,6 +824,8 @@ unsigned short Engine::calculateScore(File * f, Pointer<Race> & itr, FileList * 
       points += 3000 - ((fld->getNumUploadedFiles() * 3000) / maxprogress); // gives max 3000 points
     }
   }
+  points += prioritypoints; // max 2000 points
+
   // sfv and nfo files have top priority
   if (f->getExtension().compare("sfv") == 0 ||
       f->getExtension().compare("nfo") == 0) {
