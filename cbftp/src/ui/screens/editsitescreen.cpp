@@ -130,6 +130,13 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
   y++;
   mso.addCheckBox(y++, x, "allowupload", "Allow upload:", modsite.getAllowUpload());
   mso.addCheckBox(y++, x, "allowdownload", "Allow download:", modsite.getAllowDownload());
+  Pointer<MenuSelectOptionTextArrow> priority = mso.addTextArrow(y++, x, "priority", "Priority:");
+  priority->addOption("Very low", SITE_PRIORITY_VERY_LOW);
+  priority->addOption("Low", SITE_PRIORITY_LOW);
+  priority->addOption("Normal", SITE_PRIORITY_NORMAL);
+  priority->addOption("High", SITE_PRIORITY_HIGH);
+  priority->addOption("Very high", SITE_PRIORITY_VERY_HIGH);
+  priority->setOption(modsite.getPriority());
   mso.addIntArrow(y++, x, "rank", "Rank (" + util::int2Str(SITE_RANK_USE_GLOBAL) + " for global):", modsite.getRank(), 0, SITE_RANK_MAX);
   mso.addIntArrow(y++, x, "ranktolerance", "Rank tolerance (" + util::int2Str(SITE_RANK_USE_GLOBAL) + " for global):", modsite.getRankTolerance(), 0, SITE_RANK_MAX);
   mso.addStringField(y++, x, "blockedsrc", "Block transfers from:", blockedsrc, false, 60, 512);
@@ -432,6 +439,9 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "allowdownload") {
           site->setAllowDownload(msoe.get<MenuSelectOptionCheckBox>()->getData());
+        }
+        else if (identifier == "priority") {
+          site->setPriority(msoe.get<MenuSelectOptionTextArrow>()->getData());
         }
         else if (identifier == "brokenpasv") {
           site->setBrokenPASV(msoe.get<MenuSelectOptionCheckBox>()->getData());

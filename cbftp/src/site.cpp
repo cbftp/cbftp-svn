@@ -4,30 +4,32 @@ Site::Site() {
 
 }
 
-Site::Site(std::string name) {
-  this->name = name;
-  address = "ftp.sunet.se";
-  port = "21";
-  user = "anonymous";
-  pass = "anonymous";
-  basepath = "/";
-  logins = 0;
-  max_up = 0;
-  max_dn = 0;
-  max_idletime = 60;
-  pret = false;
-  binary = false;
-  listcommand = SITE_LIST_STAT;
-  ssltransfer = SITE_SSL_PREFER_OFF;
-  sslconn = true;
-  cpsvsupported = true;
-  brokenpasv = false;
-  allowdownload = true;
-  allowupload = true;
-  proxytype = SITE_PROXY_GLOBAL;
-  proxyname = "";
-  rank = SITE_RANK_USE_GLOBAL;
-  ranktolerance = SITE_RANK_USE_GLOBAL;
+Site::Site(std::string name) :
+  name(name),
+  address("ftp.sunet.se"),
+  port("21"),
+  user("anonymous"),
+  pass("anonymous"),
+  basepath("/"),
+  logins(0),
+  max_up(0),
+  max_dn(0),
+  max_idletime(60),
+  pret(false),
+  binary(false),
+  listcommand(SITE_LIST_STAT),
+  sslconn(true),
+  ssltransfer(SITE_SSL_PREFER_OFF),
+  cpsvsupported(true),
+  brokenpasv(false),
+  allowupload(true),
+  allowdownload(true),
+  priority(SITE_PRIORITY_NORMAL),
+  proxytype(SITE_PROXY_GLOBAL),
+  rank(SITE_RANK_USE_GLOBAL),
+  ranktolerance(SITE_RANK_USE_GLOBAL)
+{
+
 }
 
 std::map<std::string, std::string>::const_iterator Site::sectionsBegin() const {
@@ -148,6 +150,14 @@ int Site::getSSLTransferPolicy() const {
 
 void Site::setSSLTransferPolicy(int policy) {
   ssltransfer = policy;
+}
+
+int Site::getPriority() const {
+  return priority;
+}
+
+void Site::setPriority(int priority) {
+  this->priority = priority;
 }
 
 bool Site::supportsCPSV() const {

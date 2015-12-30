@@ -42,7 +42,7 @@ class Engine : public EventReceiver {
     void refreshScoreBoard();
     void issueOptimalTransfers();
     void setSpeedScale();
-    unsigned short calculateScore(File *, Pointer<Race> &, FileList *, SiteRace *, FileList *, SiteRace *, int, bool *, bool) const;
+    unsigned short calculateScore(File *, Pointer<Race> &, FileList *, SiteRace *, FileList *, SiteRace *, int, bool *, int prioritypoints, bool) const;
     void checkIfRaceComplete(SiteLogic *, Pointer<Race> &);
     void raceComplete(Pointer<Race> &);
     void transferJobComplete(Pointer<TransferJob> &);
