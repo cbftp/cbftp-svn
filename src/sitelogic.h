@@ -79,8 +79,9 @@ class SiteLogic : public EventReceiver {
     void getFileListConn(int, CommandOwner *, FileList *);
     void passiveModeCommand(int);
     static void * run(void *);
-    bool lockTransferConn(std::string, int *, bool);
+    bool lockTransferConn(std::string, int *, TransferMonitor *, bool);
     void setRequestReady(unsigned int, void *, bool);
+    void cleanupConnection(int);
   public:
     SiteLogic(std::string);
     ~SiteLogic();
@@ -110,8 +111,8 @@ class SiteLogic : public EventReceiver {
     Site * getSite() const;
     SiteRace * getRace(std::string) const;
     void lockConnList(int);
-    bool lockDownloadConn(std::string, int *);
-    bool lockUploadConn(std::string, int *);
+    bool lockDownloadConn(std::string, int *, TransferMonitor *);
+    bool lockUploadConn(std::string, int *, TransferMonitor *);
     void returnConn(int);
     void setNumConnections(unsigned int);
     bool downloadSlotAvailable() const;
@@ -146,15 +147,13 @@ class SiteLogic : public EventReceiver {
     const std::vector<FTPConn *> * getConns() const;
     FTPConn * getConn(int) const;
     std::string getStatus(int) const;
-    void preparePassiveDownload(int, TransferMonitor *, std::string, std::string, bool, bool);
-    void preparePassiveUpload(int, TransferMonitor *, std::string, std::string, bool, bool);
+    void preparePassiveTransfer(int, std::string, std::string, bool, bool);
     void preparePassiveList(int, TransferMonitor *, bool);
     void download(int);
     void upload(int);
     void list(int);
     void listAll(int);
-    void prepareActiveUpload(int, TransferMonitor *, std::string, std::string, std::string, bool);
-    void prepareActiveDownload(int, TransferMonitor *, std::string, std::string, std::string, bool);
+    void prepareActiveTransfer(int, std::string, std::string, std::string, bool);
     void abortTransfer(int);
     const ConnStateTracker * getConnStateTracker(int) const;
 };

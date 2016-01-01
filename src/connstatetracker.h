@@ -34,7 +34,6 @@ private:
   bool ssl;
   bool aborted;
   bool transferlocked;
-  bool lockeddownload;
   bool loggedin;
   bool fxp;
   bool listtransfer;
@@ -46,7 +45,7 @@ private:
   std::string addr;
   Pointer<RecursiveCommandLogic> recursivelogic;
   Pointer<SiteLogicRequest> request;
-  void setTransfer(TransferMonitor *, std::string, std::string, int, bool, bool, std::string, bool);
+  void setTransfer(std::string, std::string, bool, bool, std::string, bool);
   void setList(TransferMonitor *, bool, std::string, bool);
 public:
   ConnStateTracker();
@@ -61,8 +60,8 @@ public:
   int checkCount() const;
   DelayedCommand & getCommand();
   void setDisconnected();
-  void setTransfer(TransferMonitor *, std::string, std::string, int, bool, bool);
-  void setTransfer(TransferMonitor *, std::string, std::string, int, std::string, bool);
+  void setTransfer(std::string, std::string, bool, bool);
+  void setTransfer(std::string, std::string, std::string, bool);
   void setList(TransferMonitor *, bool);
   void setList(TransferMonitor *, std::string, bool);
   bool hasTransfer() const;
@@ -70,13 +69,13 @@ public:
   void finishTransfer();
   void abortTransfer();
   bool getTransferAborted() const;
-  void lockForTransfer(bool);
-  bool isLocked() const;
+  void lockForTransfer(TransferMonitor *, bool);
   bool isListLocked() const;
-  bool isHardLocked() const;
-  bool isLockedForDownload() const;
-  bool isLockedForUpload() const;
+  bool isTransferLocked() const;
   bool hasRequest() const;
+  bool isLocked() const;
+  bool isListOrTransferLocked() const;
+  bool isHardLocked() const;
   const Pointer<SiteLogicRequest> & getRequest() const;
   void setRequest(SiteLogicRequest);
   void finishRequest();

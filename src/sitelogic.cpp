@@ -640,13 +640,7 @@ void SiteLogic::timedout(int id) {
 }
 
 void SiteLogic::disconnected(int id) {
-  while (connstatetracker[id].hasTransfer()) {
-    reportTransferErrorAndFinish(id, 3);
-  }
-  if (connstatetracker[id].hasRequest()) {
-    connstatetracker[id].finishRequest();
-    available++;
-  }
+  cleanupConnection(id);
   if (connstatetracker[id].isLoggedIn()) {
     loggedin--;
     available--;
@@ -1147,15 +1141,15 @@ SiteRace * SiteLogic::getRace(std::string race) const {
   return NULL;
 }
 
-bool SiteLogic::lockDownloadConn(std::string path, int * ret) {
-  return lockTransferConn(path, ret, true);
+bool SiteLogic::lockDownloadConn(std::string path, int * ret, TransferMonitor * tm) {
+  return lockTransferConn(path, ret, tm, true);
 }
 
-bool SiteLogic::lockUploadConn(std::string path, int * ret) {
-  return lockTransferConn(path, ret, false);
+bool SiteLogic::lockUploadConn(std::string path, int * ret, TransferMonitor * tm) {
+  return lockTransferConn(path, ret, tm, false);
 }
 
-bool SiteLogic::lockTransferConn(std::string path, int * ret, bool isdownload) {
+bool SiteLogic::lockTransferConn(std::string path, int * ret, TransferMonitor * tm, bool isdownload) {
   int lastreadyid = -1;
   bool foundreadythread = false;
   for (unsigned int i = 0; i < conns.size(); i++) {
@@ -1166,7 +1160,7 @@ bool SiteLogic::lockTransferConn(std::string path, int * ret, bool isdownload) {
       if (conns[i]->getTargetPath().compare(path) == 0) {
         if (!getSlot(isdownload)) return false;
         *ret = i;
-        connstatetracker[i].lockForTransfer(isdownload);
+        connstatetracker[i].lockForTransfer(tm, isdownload);
         return true;
       }
     }
@@ -1175,12 +1169,14 @@ bool SiteLogic::lockTransferConn(std::string path, int * ret, bool isdownload) {
     for (unsigned int i = 0; i < conns.size(); i++) {
       if (connstatetracker[i].isLoggedIn() && !connstatetracker[i].isHardLocked()) {
         foundreadythread = true;
-        lastreadyid = i;
-        if (conns[i]->getTargetPath().compare(path) == 0) {
-          if (!getSlot(isdownload)) return false;
-          *ret = i;
-          connstatetracker[i].lockForTransfer(isdownload);
-          return true;
+        if (lastreadyid == -1) {
+          lastreadyid = i;
+          if (conns[i]->getTargetPath().compare(path) == 0) {
+            if (!getSlot(isdownload)) return false;
+            *ret = i;
+            connstatetracker[i].lockForTransfer(tm, isdownload);
+            return true;
+          }
         }
       }
     }
@@ -1191,17 +1187,18 @@ bool SiteLogic::lockTransferConn(std::string path, int * ret, bool isdownload) {
       conns[lastreadyid]->doCWD(path);
     }
     *ret = lastreadyid;
-    connstatetracker[lastreadyid].lockForTransfer(isdownload);
+    connstatetracker[lastreadyid].lockForTransfer(tm, isdownload);
     return true;
   }
   else return false;
 }
 
 void SiteLogic::returnConn(int id) {
-  if (connstatetracker[id].isLockedForDownload()) {
+  util::assert(!connstatetracker[id].isListLocked());
+  if (connstatetracker[id].isTransferLocked() && connstatetracker[id].getTransferType() == CST_DOWNLOAD) {
     transferComplete(true);
   }
-  else if (connstatetracker[id].isLockedForUpload()) {
+  else if (connstatetracker[id].isTransferLocked() && connstatetracker[id].getTransferType() == CST_UPLOAD) {
     transferComplete(false);
   }
   connstatetracker[id].finishTransfer();
@@ -1344,13 +1341,7 @@ void SiteLogic::connectConn(int id) {
 
 void SiteLogic::disconnectConn(int id) {
   connstatetracker[id].resetIdleTime();
-  while (connstatetracker[id].hasTransfer()) {
-    reportTransferErrorAndFinish(id, 3);
-  }
-  if (connstatetracker[id].hasRequest()) {
-    connstatetracker[id].finishRequest();
-    available++;
-  }
+  cleanupConnection(id);
   if (conns[id]->isConnected()) {
     if (connstatetracker[id].isLoggedIn() && !conns[id]->isProcessing()) {
       conns[id]->doQUIT();
@@ -1364,6 +1355,16 @@ void SiteLogic::disconnectConn(int id) {
     available--;
   }
   connstatetracker[id].setDisconnected();
+}
+
+void SiteLogic::cleanupConnection(int id) {
+  while (connstatetracker[id].isListOrTransferLocked()) {
+    reportTransferErrorAndFinish(id, 3);
+  }
+  if (connstatetracker[id].hasRequest()) {
+    connstatetracker[id].finishRequest();
+    available++;
+  }
 }
 
 void SiteLogic::finishTransferGracefully(int id) {
@@ -1477,15 +1478,9 @@ std::string SiteLogic::getStatus(int id) const {
   return conns[id]->getStatus();
 }
 
-void SiteLogic::preparePassiveDownload(int id, TransferMonitor * tmb, std::string path, std::string file, bool fxp, bool ssl) {
-  connstatetracker[id].setTransfer(tmb, path, file, CST_DOWNLOAD, fxp, ssl);
-  if (!conns[id]->isProcessing()) {
-    initTransfer(id);
-  }
-}
 
-void SiteLogic::preparePassiveUpload(int id, TransferMonitor * tmb, std::string path, std::string file, bool fxp, bool ssl) {
-  connstatetracker[id].setTransfer(tmb, path, file, CST_UPLOAD, fxp, ssl);
+void SiteLogic::preparePassiveTransfer(int id, std::string path, std::string file, bool fxp, bool ssl) {
+  connstatetracker[id].setTransfer(path, file, fxp, ssl);
   if (!conns[id]->isProcessing()) {
     initTransfer(id);
   }
@@ -1538,15 +1533,8 @@ void SiteLogic::listAll(int id) {
   conns[id]->doLISTa();
 }
 
-void SiteLogic::prepareActiveDownload(int id, TransferMonitor * tmb, std::string path, std::string file, std::string addr, bool ssl) {
-  connstatetracker[id].setTransfer(tmb, path, file, CST_DOWNLOAD, addr, ssl);
-  if (!conns[id]->isProcessing()) {
-    initTransfer(id);
-  }
-}
-
-void SiteLogic::prepareActiveUpload(int id, TransferMonitor * tmb, std::string path, std::string file, std::string addr, bool ssl) {
-  connstatetracker[id].setTransfer(tmb, path, file, CST_UPLOAD, addr, ssl);
+void SiteLogic::prepareActiveTransfer(int id, std::string path, std::string file, std::string addr, bool ssl) {
+  connstatetracker[id].setTransfer(path, file, addr, ssl);
   if (!conns[id]->isProcessing()) {
     initTransfer(id);
   }

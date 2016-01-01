@@ -49,11 +49,11 @@ void TransferMonitor::engageFXP(std::string sfile, SiteLogic * sls, FileList * f
   this->dpath = fld->getPath();
   this->sfile = sfile;
   this->dfile = dfile;
-  if (!sls->lockDownloadConn(spath, &src)) {
+  if (!sls->lockDownloadConn(spath, &src, this)) {
     tm->transferFailed(ts, TM_ERR_LOCK_DOWN);
     return;
   }
-  if (!sld->lockUploadConn(dpath, &dst)) {
+  if (!sld->lockUploadConn(dpath, &dst, this)) {
     sls->returnConn(src);
     tm->transferFailed(ts, TM_ERR_LOCK_UP);
     return;
@@ -76,10 +76,10 @@ void TransferMonitor::engageFXP(std::string sfile, SiteLogic * sls, FileList * f
   fls->download(sfile);
   if (!sld->getSite()->hasBrokenPASV()) {
     activedownload = true;
-    sld->preparePassiveUpload(dst, this, dpath, dfile, true, ssl);
+    sld->preparePassiveTransfer(dst, dpath, dfile, true, ssl);
   }
   else {
-    sls->preparePassiveDownload(src, this, spath, sfile, true, ssl);
+    sls->preparePassiveTransfer(src, spath, sfile, true, ssl);
   }
 }
 
@@ -94,7 +94,7 @@ void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileLis
   this->dpath = localfl->getPath();
   this->fls = fls;
   this->localfl = localfl;
-  if (!sls->lockDownloadConn(spath, &src)) return;
+  if (!sls->lockDownloadConn(spath, &src, this)) return;
   status = TM_STATUS_AWAITING_PASSIVE;
   ts = makePointer<TransferStatus>(TRANSFERSTATUS_TYPE_DOWNLOAD,
       sls->getSite()->getName(), "/\\", "", dfile, fls, spath,
@@ -109,7 +109,7 @@ void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileLis
     global->getLocalStorage()->createDirectoryRecursive(dpath);
   }
   if (!sls->getSite()->hasBrokenPASV()) {
-    sls->preparePassiveDownload(src, this, spath, sfile, false, ssl);
+    sls->preparePassiveTransfer(src, spath, sfile, false, ssl);
   }
   else {
     activedownload = true;
@@ -131,7 +131,7 @@ void TransferMonitor::engageUpload(std::string sfile, Pointer<LocalFileList> & l
   std::map<std::string, LocalFile>::const_iterator it = localfl->find(sfile);
   if (it == localfl->end()) return;
   const LocalFile & lf = it->second;
-  if (!sld->lockUploadConn(dpath, &dst)) return;
+  if (!sld->lockUploadConn(dpath, &dst, this)) return;
   status = TM_STATUS_AWAITING_PASSIVE;
   ts = makePointer<TransferStatus>(TRANSFERSTATUS_TYPE_UPLOAD,
       "/\\", sld->getSite()->getName(), "", dfile, (FileList *)NULL, spath,
@@ -143,7 +143,7 @@ void TransferMonitor::engageUpload(std::string sfile, Pointer<LocalFileList> & l
   }
   fld->touchFile(dfile, sld->getSite()->getUser(), true);
   if (!sld->getSite()->hasBrokenPASV()) {
-    sld->preparePassiveUpload(dst, this, dpath, dfile, false, ssl);
+    sld->preparePassiveTransfer(dst, dpath, dfile, false, ssl);
   }
   else {
     activedownload = true;
@@ -194,10 +194,10 @@ void TransferMonitor::passiveReady(std::string addr) {
   switch (type) {
     case TM_TYPE_FXP:
       if (activedownload) {
-        sls->prepareActiveDownload(src, this, spath, sfile, addr, ssl);
+        sls->prepareActiveTransfer(src, spath, sfile, addr, ssl);
       }
       else {
-        sld->prepareActiveUpload(dst, this, dpath, dfile, addr, ssl);
+        sld->prepareActiveTransfer(dst, dpath, dfile, addr, ssl);
       }
       break;
     case TM_TYPE_DOWNLOAD:
