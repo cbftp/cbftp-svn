@@ -19,7 +19,8 @@ class ViewFileScreen : public UIWindow {
 public:
   ViewFileScreen(Ui * ui);
   ~ViewFileScreen();
-  void initialize(unsigned int, unsigned int, std::string, std::string, FileList *);
+  void initialize(unsigned int, unsigned int, const std::string &, const std::string &, FileList *);
+  void initialize(unsigned int, unsigned int, const std::string &, const std::string &);
   void redraw();
   void update();
   bool keyPressed(unsigned int);
@@ -27,22 +28,20 @@ public:
   std::string getInfoLabel() const;
   std::string getInfoText() const;
 private:
+  int state;
   SiteLogic * sitelogic;
   Pointer<TransferStatus> ts;
   FileList * filelist;
   std::string site;
   std::string file;
-  bool viewingcontents;
   unsigned int x;
   unsigned int xmax;
   unsigned int y;
   unsigned int ymax;
   unsigned long long int size;
-  bool hasnodisplay;
   bool externallyviewable;
-  bool download;
   bool legendupdated;
-  bool downloadattempted;
+  bool deleteafter;
   std::vector<std::string > rawcontents;
   std::vector<std::basic_string<unsigned int> > translatedcontents;
   std::string path;
@@ -52,4 +51,8 @@ private:
   bool goUp();
   void printTransferInfo();
   void translate();
+  void initialize();
+  void loadViewer();
+  void viewInternal();
+  void viewExternal();
 };

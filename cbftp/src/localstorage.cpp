@@ -107,9 +107,13 @@ LocalUpload * LocalStorage::getAvailableLocalUpload() {
   return lu;
 }
 
-binary_data LocalStorage::getFileContent(std::string filename) const {
+binary_data LocalStorage::getTempFileContent(const std::string & filename) const {
+  return getFileContent(temppath + "/" + filename);
+}
+
+binary_data LocalStorage::getFileContent(const std::string & filename) const {
   std::ifstream filestream;
-  filestream.open((temppath + "/" + filename).c_str(), std::ios::binary | std::ios::in);
+  filestream.open(filename.c_str(), std::ios::binary | std::ios::in);
   char * data = (char *) malloc(MAXREAD);
   filestream.read(data, MAXREAD);
   binary_data out(data, data + filestream.gcount());
@@ -190,6 +194,11 @@ Pointer<LocalFileList> LocalStorage::getLocalFileList(std::string path) {
   return filelist;
 }
 
+unsigned long long int LocalStorage::getFileSize(const std::string & file) {
+  struct stat status;
+  lstat(file.c_str(), &status);
+  return status.st_size;
+}
 
 bool LocalStorage::directoryExistsWritable(std::string path) {
   return directoryExistsAccessible(path, true);
