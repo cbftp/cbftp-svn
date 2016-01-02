@@ -177,7 +177,7 @@ TransferMonitor * ConnStateTracker::getTransferMonitor() const {
   if (listtransfer) {
     return listtm;
   }
-  if (transfer) {
+  if (transferlocked) {
     return tm;
   }
   return NULL;

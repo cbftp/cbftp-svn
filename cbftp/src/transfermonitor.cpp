@@ -21,7 +21,7 @@ extern GlobalContext * global;
 
 TransferMonitor::TransferMonitor(TransferManager * tm) :
   status(TM_STATUS_IDLE),
-  activedownload(false),
+  activeupload(false),
   timestamp(0),
   tm(tm),
   localtransferspeedticker(0),
@@ -74,18 +74,19 @@ void TransferMonitor::engageFXP(std::string sfile, SiteLogic * sls, FileList * f
   fld->touchFile(dfile, sld->getSite()->getUser(), true);
   latesttouch = fld->getFile(dfile)->getTouch();
   fls->download(sfile);
-  if (!sld->getSite()->hasBrokenPASV()) {
-    activedownload = true;
-    sld->preparePassiveTransfer(dst, dpath, dfile, true, ssl);
+  if (!sls->getSite()->hasBrokenPASV()) {
+    activeupload = true;
+    sls->preparePassiveTransfer(src, spath, sfile, true, ssl);
   }
   else {
-    sls->preparePassiveTransfer(src, spath, sfile, true, ssl);
+    sld->preparePassiveTransfer(dst, dpath, dfile, true, ssl);
   }
 }
 
 void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileList * fls, Pointer<LocalFileList> & localfl) {
   reset();
   if (!localfl) return;
+  if (sls->getSite()->hasBrokenPASV()) return; // client active mode is not implemented yet
   type = TM_TYPE_DOWNLOAD;
   this->sls = sls;
   this->sfile = sfile;
@@ -109,10 +110,10 @@ void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileLis
     global->getLocalStorage()->createDirectoryRecursive(dpath);
   }
   if (!sls->getSite()->hasBrokenPASV()) {
+    activeupload = true;
     sls->preparePassiveTransfer(src, spath, sfile, false, ssl);
   }
   else {
-    activedownload = true;
     // client active mode is not implemented yet
   }
 }
@@ -120,6 +121,7 @@ void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileLis
 void TransferMonitor::engageUpload(std::string sfile, Pointer<LocalFileList> & localfl, SiteLogic * sld, FileList * fld) {
   reset();
   if (!localfl) return;
+  if (sld->getSite()->hasBrokenPASV()) return; // client active mode is not implemented yet
   type = TM_TYPE_UPLOAD;
   this->sld = sld;
   this->sfile = sfile;
@@ -146,13 +148,14 @@ void TransferMonitor::engageUpload(std::string sfile, Pointer<LocalFileList> & l
     sld->preparePassiveTransfer(dst, dpath, dfile, false, ssl);
   }
   else {
-    activedownload = true;
+    activeupload = true;
     // client active mode is not implemented yet
   }
 }
 
 void TransferMonitor::engageList(SiteLogic * sls, int connid, bool hiddenfiles) {
   reset();
+  if (sls->getSite()->hasBrokenPASV()) return; // client active mode is not implemented yet
   type = TM_TYPE_LIST;
   this->sls = sls;
   src = connid;
@@ -163,10 +166,10 @@ void TransferMonitor::engageList(SiteLogic * sls, int connid, bool hiddenfiles) 
   }
   status = TM_STATUS_AWAITING_PASSIVE;
   if (!sls->getSite()->hasBrokenPASV()) {
+    activeupload = true;
     sls->preparePassiveList(src, this, ssl);
   }
   else {
-    activedownload = true;
     // client active mode is not implemented yet
   }
 }
@@ -193,36 +196,36 @@ void TransferMonitor::passiveReady(std::string addr) {
   status = TM_STATUS_AWAITING_ACTIVE;
   switch (type) {
     case TM_TYPE_FXP:
-      if (activedownload) {
-        sls->prepareActiveTransfer(src, spath, sfile, addr, ssl);
+      if (activeupload) {
+        sld->prepareActiveTransfer(dst, dpath, dfile, addr, ssl);
       }
       else {
-        sld->prepareActiveTransfer(dst, dpath, dfile, addr, ssl);
+        sls->prepareActiveTransfer(src, spath, sfile, addr, ssl);
       }
       break;
     case TM_TYPE_DOWNLOAD:
-      if (activedownload) {
-        // client active mode is not implemented yet
+      if (activeupload) {
+        lt = global->getLocalStorage()->passiveDownload(this, dpath, dfile, addr, ssl, sls->getConn(src));
       }
       else {
-        lt = global->getLocalStorage()->passiveDownload(this, dpath, dfile, addr, ssl, sls->getConn(src));
+        // client active mode is not implemented yet
       }
       break;
     case TM_TYPE_UPLOAD:
-      if (activedownload) {
-        // client active mode is not implemented yet
+      if (!activeupload) {
+        lt = global->getLocalStorage()->passiveUpload(this, spath, sfile, addr, ssl, sld->getConn(dst));
       }
       else {
-        lt = global->getLocalStorage()->passiveUpload(this, spath, sfile, addr, ssl, sld->getConn(dst));
+        // client active mode is not implemented yet
       }
       break;
     case TM_TYPE_LIST:
-      if (activedownload) {
-        // client active mode is not implemented yet
-      }
-      else {
+      if (activeupload) {
         lt = global->getLocalStorage()->passiveDownload(this, addr, ssl, sls->getConn(src));
         storeid = static_cast<LocalDownload *>(lt)->getStoreId();
+      }
+      else {
+        // client active mode is not implemented yet
       }
       break;
   }
@@ -230,17 +233,32 @@ void TransferMonitor::passiveReady(std::string addr) {
 
 void TransferMonitor::activeReady() {
   util::assert(status == TM_STATUS_AWAITING_ACTIVE);
+  util::assert(type == TM_TYPE_FXP);
+  if (activeupload) {
+    sld->upload(dst);
+  }
+  else {
+    sls->download(src);
+  }
+}
+
+void TransferMonitor::activeStarted() {
+  util::assert(status == TM_STATUS_AWAITING_ACTIVE);
   status = TM_STATUS_TRANSFERRING;
   switch (type) {
     case TM_TYPE_FXP:
-      sls->download(src);
+      if (activeupload) {
+        sls->download(src);
+      }
+      else {
+        sld->upload(dst);
+      }
+      break;
+    case TM_TYPE_UPLOAD:
       sld->upload(dst);
       break;
     case TM_TYPE_DOWNLOAD:
       sls->download(src);
-      break;
-    case TM_TYPE_UPLOAD:
-      sld->upload(dst);
       break;
     case TM_TYPE_LIST:
       if (hiddenfiles) {
@@ -479,7 +497,7 @@ void TransferMonitor::reset() {
   fld = NULL;
   lt = NULL;
   ts.reset();
-  activedownload = false;
+  activeupload = false;
   ssl = false;
   timestamp = 0;
   startstamp = 0;

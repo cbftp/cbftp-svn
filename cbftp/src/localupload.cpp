@@ -39,7 +39,7 @@ bool LocalUpload::active() const {
 }
 
 void LocalUpload::FDConnected() {
-  tm->activeReady();
+  tm->activeStarted();
   openFile();
   if (ssl) {
     global->getIOManager()->negotiateSSLConnect(sockid, (EventReceiver *)ftpconn);
