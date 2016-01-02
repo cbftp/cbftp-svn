@@ -1194,7 +1194,6 @@ bool SiteLogic::lockTransferConn(std::string path, int * ret, TransferMonitor * 
 }
 
 void SiteLogic::returnConn(int id) {
-  util::assert(!connstatetracker[id].isListLocked());
   if (connstatetracker[id].isTransferLocked() && connstatetracker[id].getTransferType() == CST_DOWNLOAD) {
     transferComplete(true);
   }
