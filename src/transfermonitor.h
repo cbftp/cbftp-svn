@@ -59,7 +59,7 @@ class TransferMonitor : public EventReceiver {
     Pointer<LocalFileList> localfl;
     std::string spath;
     std::string dpath;
-    bool activedownload;
+    bool activeupload;
     bool ssl;
     TransferMonitorType type;
     int timestamp;
@@ -89,6 +89,7 @@ class TransferMonitor : public EventReceiver {
     void targetError(TransferError);
     void passiveReady(std::string);
     void activeReady();
+    void activeStarted();
     bool idle() const;
     Pointer<TransferStatus> getTransferStatus() const;
     void engageFXP(std::string, SiteLogic *, FileList *, std::string, SiteLogic *, FileList *);

@@ -259,11 +259,11 @@ void SiteLogic::commandSuccess(int id) {
       }
       break;
     case STATE_RETR: // RETR started
-      // no action yet, maybe for stats later on
-      /*if (connstatetracker[id].isReady()) {
-        std::cout << "NOT BUSY!>" << site->getName() << id << " " << connstatetracker[id].getTransferFile()<< connstatetracker[id].isIdle() << std::endl;
-        sleep(5);
-      }*/
+      if (connstatetracker[id].transferInitialized()) {
+        if (!connstatetracker[id].getTransferPassive()) {
+          connstatetracker[id].getTransferMonitor()->activeStarted();
+        }
+      }
       return;
     case STATE_RETR_COMPLETE:
       if (connstatetracker[id].transferInitialized()) {
@@ -276,11 +276,11 @@ void SiteLogic::commandSuccess(int id) {
       }
       break;
     case STATE_STOR: // STOR started
-      // no action yet, maybe for stats later on
-      /*if (connstatetracker[id].isReady()) {
-        std::cout << "NOT BUSY!>" << site->getName() << id << " " << connstatetracker[id].getTransferFile()<< connstatetracker[id].isIdle() << std::endl;
-        sleep(5);
-      }*/
+      if (connstatetracker[id].transferInitialized()) {
+        if (!connstatetracker[id].getTransferPassive()) {
+          connstatetracker[id].getTransferMonitor()->activeStarted();
+        }
+      }
       return;
     case STATE_STOR_COMPLETE:
       if (connstatetracker[id].transferInitialized()) {

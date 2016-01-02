@@ -50,7 +50,7 @@ bool LocalDownload::active() const {
 }
 
 void LocalDownload::FDConnected() {
-  tm->activeReady();
+  tm->activeStarted();
   if (ssl) {
     global->getIOManager()->negotiateSSLConnect(sockid, (EventReceiver *)ftpconn);
   }
