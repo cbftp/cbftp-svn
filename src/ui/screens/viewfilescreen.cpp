@@ -23,6 +23,20 @@
 
 extern GlobalContext * global;
 
+namespace ViewFileState {
+
+enum {
+  NO_SLOTS_AVAILABLE,
+  TOO_LARGE_FOR_INTERNAL,
+  NO_DISPLAY,
+  DOWNLOADING,
+  LOADING_VIEWER,
+  VIEWING_EXTERNAL,
+  VIEWING_INTERNAL
+};
+
+}
+
 ViewFileScreen::ViewFileScreen(Ui * ui) {
   this->ui = ui;
 }
@@ -31,186 +45,137 @@ ViewFileScreen::~ViewFileScreen() {
 
 }
 
-void ViewFileScreen::initialize(unsigned int row, unsigned int col, std::string site, std::string file, FileList * filelist) {
+void ViewFileScreen::initialize() {
   rawcontents.clear();
-  viewingcontents = false;
   x = 0;
   y = 0;
   ymax = 0;
   xmax = 0;
+  externallyviewable = false;
+  legendupdated = false;
+  pid = 0;
+  autoupdate = true;
+  ts.reset();
+}
+
+void ViewFileScreen::initialize(unsigned int row, unsigned int col, const std::string & site, const std::string & file, FileList * filelist) {
+  initialize();
+  deleteafter = true;
   this->site = site;
   this->file = file;
   this->filelist = filelist;
   sitelogic = global->getSiteLogicManager()->getSiteLogic(site);
   size = filelist->getFile(file)->getSize();
-  hasnodisplay = false;
-  externallyviewable = false;
-  download = false;
-  legendupdated = false;
-  downloadattempted = false;
-  pid = 0;
-  autoupdate = true;
-  ts.reset();
-  if (!global->getExternalFileViewing()->hasDisplay()) {
-    hasnodisplay = true;
-  }
+  state = ViewFileState::DOWNLOADING;
   if (global->getExternalFileViewing()->isViewable(file)) {
-    externallyviewable = true;
-    if (!hasnodisplay) {
-      download = true;
+    if (!global->getExternalFileViewing()->hasDisplay()) {
+      state = ViewFileState::NO_DISPLAY;
     }
+    externallyviewable = true;
   }
   else {
-    if (size <= MAXOPENSIZE) {
-      download = true;
+    if (size > MAXOPENSIZE) {
+      state = ViewFileState::TOO_LARGE_FOR_INTERNAL;
     }
   }
-  std::string temppath = global->getLocalStorage()->getTempPath();
-  Pointer<LocalFileList> localfl = global->getLocalStorage()->getLocalFileList(temppath);
-  if (download) {
-    downloadattempted = true;
+  if (state == ViewFileState::DOWNLOADING) {
+    std::string temppath = global->getLocalStorage()->getTempPath();
+    Pointer<LocalFileList> localfl = global->getLocalStorage()->getLocalFileList(temppath);
     ts = global->getTransferManager()->suggestDownload(file, sitelogic,
         filelist, localfl);
     if (!ts) {
-      download = false;
+      state = ViewFileState::NO_SLOTS_AVAILABLE;
     }
     else {
       ts->setAwaited(true);
+      path = temppath + "/" + file;
+      expectbackendpush = true;
     }
   }
-  path = temppath + "/" + file;
-  expectbackendpush = true;
+  init(row, col);
+}
+
+void ViewFileScreen::initialize(unsigned int row, unsigned int col, const std::string & dir, const std::string & file) {
+  initialize();
+  deleteafter = false;
+  path = dir + "/" + file;
+  this->file = file;
+  size = global->getLocalStorage()->getFileSize(path);
+  state = ViewFileState::LOADING_VIEWER;
+  if (global->getExternalFileViewing()->isViewable(file)) {
+    if (!global->getExternalFileViewing()->hasDisplay()) {
+      state = ViewFileState::NO_DISPLAY;
+    }
+    externallyviewable = true;
+  }
+  else {
+    if (size > MAXOPENSIZE) {
+      state = ViewFileState::TOO_LARGE_FOR_INTERNAL;
+    }
+  }
   init(row, col);
 }
 
 void ViewFileScreen::redraw() {
   ui->erase();
-  if (!download) {
-    autoupdate = false;
-    if (downloadattempted) {
+  switch (state) {
+    case ViewFileState::NO_SLOTS_AVAILABLE:
       ui->printStr(1, 1, "No download slots available at " + site + ".");
-    }
-    else if (!externallyviewable) {
+      break;
+    case ViewFileState::TOO_LARGE_FOR_INTERNAL:
       ui->printStr(1, 1, file + " is too large to download and open in the internal viewer.");
       ui->printStr(2, 1, "The maximum file size for internal viewing is set to " + util::int2Str(MAXOPENSIZE) + " bytes.");
-    }
-    else if (hasnodisplay) {
+      break;
+    case ViewFileState::NO_DISPLAY:
       ui->printStr(1, 1, file + " cannot be opened in an external viewer.");
       ui->printStr(2, 1, "The DISPLAY environment variable is not set.");
-    }
-
-    return;
-  }
-  if (!viewingcontents) {
-    switch(ts->getState()) {
-      case TRANSFERSTATUS_STATE_IN_PROGRESS:
-        ui->printStr(1, 1, "Downloading from " + site + "...");
-        printTransferInfo();
-        break;
-      case TRANSFERSTATUS_STATE_FAILED:
-        ui->printStr(1, 1, "Download of " + file + " from " + site + " failed.");
-        autoupdate = false;
-        break;
-      case TRANSFERSTATUS_STATE_SUCCESSFUL:
-        if (externallyviewable) {
-          if (!pid) {
-            pid = global->getExternalFileViewing()->viewThenDelete(path);
-          }
-          ui->printStr(1, 1, "Opening " + file + " with: " + global->getExternalFileViewing()->getViewApplication(file));
-          ui->printStr(3, 1, "Press 'k' to kill this external viewer instance.");
-          ui->printStr(4, 1, "You can always press 'K' to kill ALL external viewers.");
-        }
-        else {
-          binary_data tmpdata = global->getLocalStorage()->getFileContent(file);
-          global->getLocalStorage()->deleteFile(file);
-          std::string extension = ExternalFileViewing::getExtension(file);
-          encoding = encoding::guessEncoding(tmpdata);
-          unsigned int tmpdatalen = tmpdata.size();
-          if (tmpdatalen > 0) {
-            std::string current;
-            for (unsigned int i = 0; i < tmpdatalen; i++) {
-              if (tmpdata[i] == '\n') {
-                rawcontents.push_back(current);
-                current.clear();
-              }
-              else {
-                current += tmpdata[i];
-              }
-            }
-            if (current.length() > 0) {
-              rawcontents.push_back(current);
-            }
-            translate();
-          }
-          viewingcontents = true;
+      break;
+    case ViewFileState::DOWNLOADING:
+      switch(ts->getState()) {
+        case TRANSFERSTATUS_STATE_IN_PROGRESS:
+          ui->printStr(1, 1, "Downloading from " + site + "...");
+          printTransferInfo();
+          break;
+        case TRANSFERSTATUS_STATE_FAILED:
+          ui->printStr(1, 1, "Download of " + file + " from " + site + " failed.");
           autoupdate = false;
-          redraw();
-        }
-        break;
-    }
-  }
-  else {
-    ymax = rawcontents.size();
-    for (unsigned int i = 0; i < ymax; i++) {
-      if (translatedcontents[i].length() > xmax) {
-        xmax = translatedcontents[i].length();
+          break;
+        case TRANSFERSTATUS_STATE_SUCCESSFUL:
+          loadViewer();
+          break;
       }
-    }
-    for (unsigned int i = 0; i < row && i < ymax; i++) {
-      std::basic_string<unsigned int> & line = translatedcontents[y + i];
-      for (unsigned int j = 0; j < line.length() && j < col - 2; j++) {
-        ui->printChar(i, j + 1, line[j]);
-      }
-    }
-
-    unsigned int slidersize = 0;
-    unsigned int sliderstart = 0;
-    if (ymax > row) {
-      slidersize = (row * row) / ymax;
-      sliderstart = (row * y) / ymax;
-      if (slidersize == 0) {
-        slidersize++;
-      }
-      if (slidersize == row) {
-        slidersize--;
-      }
-      if (sliderstart + slidersize > row || y + row >= ymax) {
-        sliderstart = row - slidersize;
-      }
-      for (unsigned int i = 0; i < row; i++) {
-        if (i >= sliderstart && i < sliderstart + slidersize) {
-          ui->printChar(i, col - 1, ' ', true);
-        }
-        else {
-          ui->printChar(i, col - 1, BOX_VLINE);
-        }
-      }
-    }
+      break;
+    case ViewFileState::LOADING_VIEWER:
+      loadViewer();
+      break;
+    case ViewFileState::VIEWING_EXTERNAL:
+      viewExternal();
+      break;
+    case ViewFileState::VIEWING_INTERNAL:
+      viewInternal();
+      break;
   }
 }
 
 void ViewFileScreen::update() {
-  if (download) {
-    if (pid) {
-      if (!global->getExternalFileViewing()->stillViewing(pid)) {
-        ui->returnToLast();
-        return;
-      }
-      else if (!legendupdated) {
-        legendupdated = true;
-        ui->update();
-        ui->setLegend();
-        return;
-      }
+  if (pid) {
+    if (!global->getExternalFileViewing()->stillViewing(pid)) {
+      ui->returnToLast();
     }
-    else if (!pid) {
-      redraw();
-      if (ts->getState() != TRANSFERSTATUS_STATE_IN_PROGRESS && !legendupdated) {
-        legendupdated = true;
-        ui->update();
-        ui->setLegend();
-      }
-      return;
+    else if (!legendupdated) {
+      legendupdated = true;
+      ui->update();
+      ui->setLegend();
+    }
+  }
+  else {
+    redraw();
+    if ((state == ViewFileState::VIEWING_INTERNAL || state == ViewFileState::VIEWING_EXTERNAL)
+        && !legendupdated)
+    {
+      legendupdated = true;
+      ui->update();
+      ui->setLegend();
     }
   }
 }
@@ -257,7 +222,7 @@ bool ViewFileScreen::keyPressed(unsigned int ch) {
       }
       return true;
     case 'e':
-      if (viewingcontents) {
+      if (state == ViewFileState::VIEWING_INTERNAL) {
         if (encoding == encoding::ENCODING_CP437) {
           encoding = encoding::ENCODING_CP437_DOUBLE;
         }
@@ -276,14 +241,102 @@ bool ViewFileScreen::keyPressed(unsigned int ch) {
   return false;
 }
 
+void ViewFileScreen::loadViewer() {
+  if (externallyviewable) {
+    if (!pid) {
+      if (deleteafter) {
+        pid = global->getExternalFileViewing()->viewThenDelete(path);
+      }
+      else {
+        pid = global->getExternalFileViewing()->view(path);
+      }
+    }
+    state = ViewFileState::VIEWING_EXTERNAL;
+    viewExternal();
+  }
+  else {
+    binary_data tmpdata = global->getLocalStorage()->getFileContent(path);
+    if (deleteafter) {
+      global->getLocalStorage()->deleteFile(path);
+    }
+    std::string extension = ExternalFileViewing::getExtension(file);
+    encoding = encoding::guessEncoding(tmpdata);
+    unsigned int tmpdatalen = tmpdata.size();
+    if (tmpdatalen > 0) {
+      std::string current;
+      for (unsigned int i = 0; i < tmpdatalen; i++) {
+        if (tmpdata[i] == '\n') {
+          rawcontents.push_back(current);
+          current.clear();
+        }
+        else {
+          current += tmpdata[i];
+        }
+      }
+      if (current.length() > 0) {
+        rawcontents.push_back(current);
+      }
+      translate();
+    }
+    autoupdate = false;
+    state = ViewFileState::VIEWING_INTERNAL;
+    viewInternal();
+  }
+}
+
+void ViewFileScreen::viewExternal() {
+  ui->printStr(1, 1, "Opening " + file + " with: " + global->getExternalFileViewing()->getViewApplication(file));
+  ui->printStr(3, 1, "Press 'k' to kill this external viewer instance.");
+  ui->printStr(4, 1, "You can always press 'K' to kill ALL external viewers.");
+}
+
+void ViewFileScreen::viewInternal() {
+  ymax = rawcontents.size();
+  for (unsigned int i = 0; i < ymax; i++) {
+    if (translatedcontents[i].length() > xmax) {
+      xmax = translatedcontents[i].length();
+    }
+  }
+  for (unsigned int i = 0; i < row && i < ymax; i++) {
+    std::basic_string<unsigned int> & line = translatedcontents[y + i];
+    for (unsigned int j = 0; j < line.length() && j < col - 2; j++) {
+      ui->printChar(i, j + 1, line[j]);
+    }
+  }
+
+  unsigned int slidersize = 0;
+  unsigned int sliderstart = 0;
+  if (ymax > row) {
+    slidersize = (row * row) / ymax;
+    sliderstart = (row * y) / ymax;
+    if (slidersize == 0) {
+      slidersize++;
+    }
+    if (slidersize == row) {
+      slidersize--;
+    }
+    if (sliderstart + slidersize > row || y + row >= ymax) {
+      sliderstart = row - slidersize;
+    }
+    for (unsigned int i = 0; i < row; i++) {
+      if (i >= sliderstart && i < sliderstart + slidersize) {
+        ui->printChar(i, col - 1, ' ', true);
+      }
+      else {
+        ui->printChar(i, col - 1, BOX_VLINE);
+      }
+    }
+  }
+}
+
 std::string ViewFileScreen::getLegendText() const {
-  if (pid) {
+  if (state == ViewFileState::VIEWING_EXTERNAL) {
     return "[Esc/Enter/c] Return - [k]ill external viewer - [K]ill ALL external viewers";
   }
-  if (!download || !viewingcontents) {
-    return "[Esc/Enter/c] Return";
+  if (state == ViewFileState::VIEWING_INTERNAL) {
+    return "[Arrowkeys] Navigate - [Esc/Enter/c] Return - switch [e]ncoding";
   }
-  return "[Arrowkeys] Navigate - [Esc/Enter/c] Return - switch [e]ncoding";
+  return "[Esc/Enter/c] Return";
 }
 
 std::string ViewFileScreen::getInfoLabel() const {
@@ -291,7 +344,7 @@ std::string ViewFileScreen::getInfoLabel() const {
 }
 
 std::string ViewFileScreen::getInfoText() const {
-  if (viewingcontents) {
+  if (state == ViewFileState::VIEWING_INTERNAL) {
     std::string enc;
     switch (encoding) {
       case encoding::ENCODING_CP437:

@@ -334,6 +334,12 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       ui->redraw();
       ui->setInfo();
       break;
+    case 'v':
+      //view selected file, do nothing if a directory is selected
+      if (list.cursoredFile() != NULL && !list.cursoredFile()->isDirectory()) {
+        ui->goViewFile(filelist->getPath(), list.cursoredFile()->getName());
+      }
+      break;
   }
   return BrowseScreenAction();
 }

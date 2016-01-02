@@ -24,7 +24,8 @@ public:
   LocalTransfer * passiveDownload(TransferMonitor *, std::string, std::string, std::string, bool, FTPConn *);
   LocalTransfer * passiveDownload(TransferMonitor *, std::string, bool, FTPConn *);
   LocalTransfer * passiveUpload(TransferMonitor *, std::string, std::string, std::string, bool, FTPConn *);
-  binary_data getFileContent(std::string) const;
+  binary_data getTempFileContent(const std::string &) const;
+  binary_data getFileContent(const std::string &) const;
   const binary_data & getStoreContent(int) const;
   void purgeStoreContent(int);
   void deleteFile(std::string);
@@ -34,6 +35,7 @@ public:
   std::string getDownloadPath() const;
   void setDownloadPath(std::string);
   static Pointer<LocalFileList> getLocalFileList(std::string);
+  unsigned long long int getFileSize(const std::string &);
   static bool directoryExistsReadable(std::string);
   static bool directoryExistsWritable(std::string);
   static bool createDirectory(std::string);

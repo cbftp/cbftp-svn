@@ -599,8 +599,13 @@ void Ui::goNuke(std::string site, std::string target, FileList * filelist) {
   switchToWindow(nukescreen);
 }
 
-void Ui::goViewFile(std::string site, std::string file, FileList * filelist) {
+void Ui::goViewFile(const std::string & site, const std::string & file, FileList * filelist) {
   viewfilescreen->initialize(mainrow, maincol, site, file, filelist);
+  switchToWindow(viewfilescreen);
+}
+
+void Ui::goViewFile(const std::string & dir, const std::string & file) {
+  viewfilescreen->initialize(mainrow, maincol, dir, file);
   switchToWindow(viewfilescreen);
 }
 

@@ -155,7 +155,8 @@ public:
   void goRawCommand(std::string, std::string);
   void goConfirmation(std::string);
   void goNuke(std::string, std::string, FileList *);
-  void goViewFile(std::string, std::string, FileList *);
+  void goViewFile(const std::string &, const std::string &, FileList *);
+  void goViewFile(const std::string &, const std::string &);
   void goAddSection(std::string, std::string);
   void goNewRace(std::string, std::string, std::string);
   void goSelectSites(std::string, std::list<Site *>, std::list<Site *>);
