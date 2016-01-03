@@ -255,7 +255,7 @@ void Ui::refreshAll() {
   doupdate();
 }
 
-void Ui::FDData() {
+void Ui::FDData(int sockid) {
   int ch = getch();
   if (!topwindow->keyPressed(ch)) {
     globalKeyBinds(ch);

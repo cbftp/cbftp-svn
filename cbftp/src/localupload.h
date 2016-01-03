@@ -14,13 +14,13 @@ public:
   LocalUpload();
   void engage(TransferMonitor *, std::string, std::string, std::string, int, bool, FTPConn *);
   bool active() const;
-  void FDConnected();
-  void FDDisconnected();
-  void FDData(char *, unsigned int);
-  void FDSSLSuccess();
-  void FDSSLFail();
-  void FDFail(std::string);
-  void FDSendComplete();
+  void FDConnected(int);
+  void FDDisconnected(int);
+  void FDData(int, char *, unsigned int);
+  void FDSSLSuccess(int);
+  void FDSSLFail(int);
+  void FDFail(int, std::string);
+  void FDSendComplete(int);
   unsigned long long int size() const;
 private:
   void sendChunk();

@@ -126,7 +126,7 @@ void FTPConn::proxySessionInit(bool connect) {
   }
 }
 
-void FTPConn::FDConnected() {
+void FTPConn::FDConnected(int sockid) {
   rawbuf->writeLine("[Connection established]");
   if (state == STATE_PROXY) {
     proxySessionInit(true);
@@ -136,7 +136,7 @@ void FTPConn::FDConnected() {
   }
 }
 
-void FTPConn::FDDisconnected() {
+void FTPConn::FDDisconnected(int sockid) {
   if (state != STATE_DISCONNECTED) {
     rawbuf->writeLine("[Disconnected]");
     this->status = "disconnected";
@@ -145,20 +145,20 @@ void FTPConn::FDDisconnected() {
   }
 }
 
-void FTPConn::FDFail(std::string error) {
+void FTPConn::FDFail(int sockid, std::string error) {
   rawbuf->writeLine("[" + error + "]");
   state = STATE_DISCONNECTED;
   sl->connectFailed(id);
 }
 
-void FTPConn::FDSSLSuccess() {
+void FTPConn::FDSSLSuccess(int sockid) {
   printCipher(sockid);
   if (state == STATE_AUTH_TLS) {
     doUSER(false);
   }
 }
 
-void FTPConn::FDSSLFail() {
+void FTPConn::FDSSLFail(int sockid) {
 
 }
 
@@ -167,7 +167,7 @@ void FTPConn::printCipher(int sockid) {
 }
 
 
-void FTPConn::FDData(char * data, unsigned int datalen) {
+void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
   if (state != STATE_STAT && state != STATE_PROXY) {
     rawbuf->write(std::string(data, datalen));
   }

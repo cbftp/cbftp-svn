@@ -15,12 +15,12 @@ public:
   void engage(TransferMonitor *, std::string, std::string, std::string, int, bool, FTPConn *);
   void engage(TransferMonitor *, int, std::string, int, bool, FTPConn *);
   bool active() const;
-  void FDConnected();
-  void FDDisconnected();
-  void FDData(char *, unsigned int);
-  void FDSSLSuccess();
-  void FDSSLFail();
-  void FDFail(std::string);
+  void FDConnected(int);
+  void FDDisconnected(int);
+  void FDData(int, char *, unsigned int);
+  void FDSSLSuccess(int);
+  void FDSSLFail(int);
+  void FDFail(int, std::string);
   unsigned long long int size() const;
   int getStoreId() const;
 private:

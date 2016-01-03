@@ -100,7 +100,7 @@ private:
   std::string eventtext;
   Semaphore eventcomplete;
   std::list<Pointer<UIWindow> > history;
-  void FDData();
+  void FDData(int);
   void refreshAll();
   void initIntern();
   void enableInfo();

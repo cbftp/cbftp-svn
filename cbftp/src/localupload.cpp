@@ -38,7 +38,7 @@ bool LocalUpload::active() const {
   return inuse;
 }
 
-void LocalUpload::FDConnected() {
+void LocalUpload::FDConnected(int sockid) {
   tm->activeStarted();
   openFile();
   if (ssl) {
@@ -49,7 +49,7 @@ void LocalUpload::FDConnected() {
   }
 }
 
-void LocalUpload::FDDisconnected() {
+void LocalUpload::FDDisconnected(int sockid) {
   if (fileopened) {
     filestream.close();
   }
@@ -57,7 +57,7 @@ void LocalUpload::FDDisconnected() {
   tm->sourceError(TM_ERR_OTHER);
 }
 
-void LocalUpload::FDSSLSuccess() {
+void LocalUpload::FDSSLSuccess(int sockid) {
   ftpconn->printCipher(sockid);
   sendChunk();
 }
@@ -76,11 +76,11 @@ void LocalUpload::sendChunk() {
   global->getIOManager()->sendData(sockid, buf, gcount);
 }
 
-void LocalUpload::FDSendComplete() {
+void LocalUpload::FDSendComplete(int sockid) {
   sendChunk();
 }
 
-void LocalUpload::FDSSLFail() {
+void LocalUpload::FDSSLFail(int sockid) {
   if (fileopened) { // this can theoretically happen mid-transfer
     filestream.close();
   }
@@ -89,12 +89,12 @@ void LocalUpload::FDSSLFail() {
   tm->sourceError(TM_ERR_OTHER);
 }
 
-void LocalUpload::FDFail(std::string error) {
+void LocalUpload::FDFail(int sockid, std::string error) {
   inuse = false;
   tm->sourceError(TM_ERR_OTHER);
 }
 
-void LocalUpload::FDData(char * data, unsigned int len) {
+void LocalUpload::FDData(int sockid, char * data, unsigned int len) {
   if (fileopened) {
     filestream.close();
   }

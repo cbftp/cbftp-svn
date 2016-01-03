@@ -17,7 +17,7 @@ private:
   bool enabled;
   std::string password;
   int port;
-  int sockfd;
+  int sockid;
   bool retrying;
   bool connected;
   void connect();
@@ -39,7 +39,7 @@ public:
   void setPassword(std::string);
   void setPort(int);
   void setEnabled(bool);
-  void FDData(char *, unsigned int);
-  void FDFail(std::string);
+  void FDData(int, char *, unsigned int);
+  void FDFail(int, std::string);
   void tick(int);
 };

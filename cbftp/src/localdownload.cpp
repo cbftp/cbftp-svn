@@ -49,14 +49,14 @@ bool LocalDownload::active() const {
   return inuse;
 }
 
-void LocalDownload::FDConnected() {
+void LocalDownload::FDConnected(int sockid) {
   tm->activeStarted();
   if (ssl) {
     global->getIOManager()->negotiateSSLConnect(sockid, (EventReceiver *)ftpconn);
   }
 }
 
-void LocalDownload::FDDisconnected() {
+void LocalDownload::FDDisconnected(int sockid) {
   if (!inmemory) {
     if (bufpos > 0) {
       if (!fileopened) {
@@ -76,11 +76,11 @@ void LocalDownload::FDDisconnected() {
   tm->targetComplete();
 }
 
-void LocalDownload::FDSSLSuccess() {
+void LocalDownload::FDSSLSuccess(int sockid) {
   ftpconn->printCipher(sockid);
 }
 
-void LocalDownload::FDSSLFail() {
+void LocalDownload::FDSSLFail(int sockid) {
   if (fileopened) { // this can theoretically happen mid-transfer
     filestream.close();
   }
@@ -89,12 +89,12 @@ void LocalDownload::FDSSLFail() {
   tm->targetError(TM_ERR_OTHER);
 }
 
-void LocalDownload::FDFail(std::string error) {
+void LocalDownload::FDFail(int sockid, std::string error) {
   inuse = false;
   tm->targetError(TM_ERR_OTHER);
 }
 
-void LocalDownload::FDData(char * data, unsigned int len) {
+void LocalDownload::FDData(int sockid, char * data, unsigned int len) {
   append(data, len);
 }
 
