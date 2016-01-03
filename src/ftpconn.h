@@ -182,12 +182,12 @@ class FTPConn : private EventReceiver {
     void finishMKDCWDTarget();
     std::list<std::string> * getMKDSubdirs();
     RawBuffer * getRawBuffer() const;
-    void FDData(char *, unsigned int);
-    void FDConnected();
-    void FDDisconnected();
-    void FDFail(std::string);
-    void FDSSLSuccess();
-    void FDSSLFail();
+    void FDData(int, char *, unsigned int);
+    void FDConnected(int);
+    void FDDisconnected(int);
+    void FDFail(int, std::string);
+    void FDSSLSuccess(int);
+    void FDSSLFail(int);
     void printCipher(int);
     FileList * currentFileList() const;
     CommandOwner * currentCommandOwner() const;

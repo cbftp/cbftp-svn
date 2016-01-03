@@ -1,27 +1,33 @@
 #include "event.h"
 
-Event::Event(EventReceiver * er, int type, char * data, int datalen) {
-  this->receiver = er;
-  this->type = type;
-  this->data = data;
-  this->datalen = datalen;
+Event::Event(EventReceiver * er, int type, int numdata, char * data, int datalen) :
+  receiver(er),
+  type(type),
+  data(data),
+  datalen(datalen),
+  numdata(numdata)
+{
 }
 
-Event::Event(EventReceiver * er, int type) {
-  this->receiver = er;
-  this->type = type;
+Event::Event(EventReceiver * er, int type) :
+  receiver(er),
+  type(type)
+{
 }
 
-Event::Event(EventReceiver * er, int type, int numdata) {
-  this->receiver = er;
-  this->type = type;
-  this->numdata = numdata;
+Event::Event(EventReceiver * er, int type, int numdata) :
+  receiver(er),
+  type(type),
+  numdata(numdata)
+{
 }
 
-Event::Event(EventReceiver * er, int type, std::string error) {
-  this->receiver = er;
-  this->type = type;
-  this->strdata = error;
+Event::Event(EventReceiver * er, int type, int numdata, std::string strdata) :
+  receiver(er),
+  type(type),
+  numdata(numdata),
+  strdata(strdata)
+{
 }
 
 EventReceiver * Event::getReceiver() const {

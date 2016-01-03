@@ -40,16 +40,16 @@ private:
   DataBlockPool blockpool;
 public:
   void init();
-  void dispatchFDData(EventReceiver *);
-  void dispatchFDData(EventReceiver *, char *, int);
+  void dispatchFDData(EventReceiver *, int);
+  void dispatchFDData(EventReceiver *, int, char *, int);
   void dispatchTick(EventReceiver *, int);
   void dispatchEventNew(EventReceiver *, int);
-  void dispatchEventConnected(EventReceiver *);
-  void dispatchEventDisconnected(EventReceiver *);
-  void dispatchEventSSLSuccess(EventReceiver *);
-  void dispatchEventSSLFail(EventReceiver *);
-  void dispatchEventFail(EventReceiver *, std::string);
-  void dispatchEventSendComplete(EventReceiver *);
+  void dispatchEventConnected(EventReceiver *, int);
+  void dispatchEventDisconnected(EventReceiver *, int);
+  void dispatchEventSSLSuccess(EventReceiver *, int);
+  void dispatchEventSSLFail(EventReceiver *, int);
+  void dispatchEventFail(EventReceiver *, int, std::string);
+  void dispatchEventSendComplete(EventReceiver *, int);
   void dispatchSignal(EventReceiver *, int);
   DataBlockPool * getBlockPool();
   bool overload() const;

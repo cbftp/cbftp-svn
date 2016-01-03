@@ -13,10 +13,10 @@ private:
   int numdata;
   std::string strdata;
 public:
-  Event(EventReceiver *, int, char *, int);
+  Event(EventReceiver *, int, int, char *, int);
   Event(EventReceiver *, int);
   Event(EventReceiver *, int, int);
-  Event(EventReceiver *, int, std::string);
+  Event(EventReceiver *, int, int, std::string);
   EventReceiver * getReceiver() const;
   int getType() const;
   char * getData() const;

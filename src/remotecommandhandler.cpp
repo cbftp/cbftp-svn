@@ -50,8 +50,8 @@ void RemoteCommandHandler::setPort(int newport) {
 
 void RemoteCommandHandler::connect() {
   int udpport = getUDPPort();
-  sockfd = global->getIOManager()->registerUDPServerSocket(this, udpport);
-  if (sockfd >= 0) {
+  sockid = global->getIOManager()->registerUDPServerSocket(this, udpport);
+  if (sockid >= 0) {
     connected = true;
     global->getEventLog()->log("RemoteCommandHandler", "Listening on UDP port " + util::int2Str(udpport));
   }
@@ -63,7 +63,7 @@ void RemoteCommandHandler::connect() {
   }
 }
 
-void RemoteCommandHandler::FDData(char * data, unsigned int datalen) {
+void RemoteCommandHandler::FDData(int sockid, char * data, unsigned int datalen) {
   handleMessage(std::string(data, datalen));
 }
 
@@ -199,14 +199,14 @@ void RemoteCommandHandler::parseRace(const std::string & message, bool autostart
   }
 }
 
-void RemoteCommandHandler::FDFail(std::string message) {
+void RemoteCommandHandler::FDFail(int sockid, std::string message) {
   global->getEventLog()->log("RemoteCommandHandler", "UDP binding on port " +
       util::int2Str(getUDPPort()) + " failed: " + message);
 }
 
 void RemoteCommandHandler::disconnect() {
   if (connected) {
-    global->getIOManager()->closeSocket(sockfd);
+    global->getIOManager()->closeSocket(sockid);
     global->getEventLog()->log("RemoteCommandHandler", "Closing UDP socket");
     connected = false;
   }

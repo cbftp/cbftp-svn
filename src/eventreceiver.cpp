@@ -10,42 +10,42 @@ void EventReceiver::tick(int message) {
 
 }
 
-void EventReceiver::signal(int) {
+void EventReceiver::signal(int sig) {
 
 }
 
-void EventReceiver::FDNew(int fd) {
+void EventReceiver::FDNew(int sockid) {
 
 }
 
-void EventReceiver::FDConnected() {
+void EventReceiver::FDConnected(int sockid) {
 
 }
 
-void EventReceiver::FDData() {
+void EventReceiver::FDData(int sockid) {
 
 }
 
-void EventReceiver::FDData(char * data, unsigned int len) {
+void EventReceiver::FDData(int sockid, char * data, unsigned int len) {
 
 }
 
-void EventReceiver::FDDisconnected() {
+void EventReceiver::FDDisconnected(int sockid) {
 
 }
 
-void EventReceiver::FDFail(std::string error) {
+void EventReceiver::FDFail(int sockid, std::string error) {
 
 }
 
-void EventReceiver::FDSSLSuccess() {
+void EventReceiver::FDSSLSuccess(int sockid) {
 
 }
 
-void EventReceiver::FDSSLFail() {
+void EventReceiver::FDSSLFail(int sockid) {
 
 }
 
-void EventReceiver::FDSendComplete() {
+void EventReceiver::FDSendComplete(int sockid) {
 
 }

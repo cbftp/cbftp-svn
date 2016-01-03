@@ -61,7 +61,7 @@ void IOManager::tick(int message) {
           std::map<int, SocketInfo>::iterator it2 = socketinfomap.find(it->first);
           if (it2 != socketinfomap.end()) {
             EventReceiver * er = it2->second.receiver;
-            wm->dispatchEventFail(er, "Connection timeout");
+            wm->dispatchEventFail(er, it2->second.id, "Connection timeout");
           }
           closeSocketIntern(it->first);
           break;
@@ -264,7 +264,7 @@ bool IOManager::handleError(EventReceiver * er) {
   if (errno == EINPROGRESS) {
     return true;
   }
-  er->FDFail(strerror(errno));
+  wm->dispatchEventFail(er, -1, strerror(errno));
   return false;
 }
 
@@ -370,7 +370,7 @@ std::string IOManager::getSocketAddress(int id) const {
 
 void IOManager::handleKeyboardIn(SocketInfo & socketinfo, ScopeLock & lock) {
   lock.unlock();
-  wm->dispatchFDData(socketinfo.receiver);
+  wm->dispatchFDData(socketinfo.receiver, socketinfo.id);
   lock.lock();
 }
 
@@ -379,13 +379,13 @@ void IOManager::handleTCPConnectingOut(SocketInfo & socketinfo) {
   socklen_t errorlen = sizeof(error);
   getsockopt(socketinfo.fd, SOL_SOCKET, SO_ERROR, &error, &errorlen);
   if (error != 0) {
-    wm->dispatchEventFail(socketinfo.receiver, strerror(error));
+    wm->dispatchEventFail(socketinfo.receiver, socketinfo.id, strerror(error));
     closeSocketIntern(socketinfo.id);
     return;
   }
   socketinfo.type = FD_TCP_PLAIN;
   connecttimemap.erase(socketinfo.id);
-  wm->dispatchEventConnected(socketinfo.receiver);
+  wm->dispatchEventConnected(socketinfo.receiver, socketinfo.id);
   polling.setFDIn(socketinfo.fd);
 }
 
@@ -394,7 +394,7 @@ void IOManager::handleTCPPlainIn(SocketInfo & socketinfo) {
   int b_recv = read(socketinfo.fd, buf, blocksize);
   if (b_recv == 0) {
     blockpool->returnBlock(buf);
-    wm->dispatchEventDisconnected(socketinfo.receiver);
+    wm->dispatchEventDisconnected(socketinfo.receiver, socketinfo.id);
     closeSocketIntern(socketinfo.id);
     return;
   }
@@ -403,14 +403,14 @@ void IOManager::handleTCPPlainIn(SocketInfo & socketinfo) {
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
       return;
     }
-    wm->dispatchEventDisconnected(socketinfo.receiver);
+    wm->dispatchEventDisconnected(socketinfo.receiver, socketinfo.id);
     global->getEventLog()->log("IOManager",
         "Socket read error on established connection to "
         + socketinfo.addr + ": " + strerror(errno));
     closeSocketIntern(socketinfo.id);
     return;
   }
-  wm->dispatchFDData(socketinfo.receiver, buf, b_recv);
+  wm->dispatchFDData(socketinfo.receiver, socketinfo.id, buf, b_recv);
 }
 
 void IOManager::handleTCPPlainOut(SocketInfo & socketinfo) {
@@ -421,7 +421,7 @@ void IOManager::handleTCPPlainOut(SocketInfo & socketinfo) {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
         return;
       }
-      wm->dispatchEventDisconnected(socketinfo.receiver);
+      wm->dispatchEventDisconnected(socketinfo.receiver, socketinfo.id);
       global->getEventLog()->log("IOManager",
           "Socket write error on established connection to "
           + socketinfo.addr + ": " + strerror(errno));
@@ -439,7 +439,7 @@ void IOManager::handleTCPPlainOut(SocketInfo & socketinfo) {
   }
   if (!socketinfo.sendqueue.size()) {
     polling.setFDIn(socketinfo.fd);
-    wm->dispatchEventSendComplete(socketinfo.receiver);
+    wm->dispatchEventSendComplete(socketinfo.receiver, socketinfo.id);
   }
 }
 
@@ -458,18 +458,18 @@ void IOManager::handleTCPSSLNegotiationIn(SocketInfo & socketinfo) {
   if (b_recv > 0) {
     socketinfo.type = FD_TCP_SSL;
     std::string cipher = SSL_CIPHER_get_name(SSL_get_current_cipher(ssl));
-    wm->dispatchEventSSLSuccess(socketinfo.receiver);
+    wm->dispatchEventSSLSuccess(socketinfo.receiver, socketinfo.id);
     if (socketinfo.sendqueue.size() > 0) {
       polling.setFDOut(socketinfo.fd);
     }
   }
   else if (b_recv == 0) {
-    wm->dispatchEventDisconnected(socketinfo.receiver);
+    wm->dispatchEventDisconnected(socketinfo.receiver, socketinfo.id);
     closeSocketIntern(socketinfo.id);
   }
   else {
     if (!investigateSSLError(SSL_get_error(ssl, b_recv), socketinfo.id, b_recv)) {
-      wm->dispatchEventDisconnected(socketinfo.receiver);
+      wm->dispatchEventDisconnected(socketinfo.receiver, socketinfo.id);
       closeSocketIntern(socketinfo.id);
     }
   }
@@ -507,11 +507,11 @@ void IOManager::handleTCPSSLNegotiationOut(SocketInfo & socketinfo) {
   }
   if (ret > 0) { // probably wont happen :)
     socketinfo.type = FD_TCP_SSL;
-    wm->dispatchEventSSLSuccess(socketinfo.receiver);
+    wm->dispatchEventSSLSuccess(socketinfo.receiver, socketinfo.id);
   }
   else {
     if (!investigateSSLError(SSL_get_error(ssl, ret), socketinfo.id, ret)) {
-      wm->dispatchEventDisconnected(socketinfo.receiver);
+      wm->dispatchEventDisconnected(socketinfo.receiver, socketinfo.id);
       closeSocketIntern(socketinfo.id);
       return;
     }
@@ -534,20 +534,20 @@ void IOManager::handleTCPSSLIn(SocketInfo & socketinfo) {
       int b_recv = SSL_read(ssl, buf + bufpos, blocksize - bufpos);
       if (b_recv <= 0) {
         if (bufpos > 0) {
-          wm->dispatchFDData(socketinfo.receiver, buf, bufpos);
+          wm->dispatchFDData(socketinfo.receiver, socketinfo.id, buf, bufpos);
         }
         else {
           blockpool->returnBlock(buf);
         }
         if (!b_recv || !investigateSSLError(SSL_get_error(ssl, b_recv), socketinfo.id, b_recv)) {
-          wm->dispatchEventDisconnected(socketinfo.receiver);
+          wm->dispatchEventDisconnected(socketinfo.receiver, socketinfo.id);
           closeSocketIntern(socketinfo.id);
         }
         return;
       }
       bufpos += b_recv;
     }
-    wm->dispatchFDData(socketinfo.receiver, buf, bufpos);
+    wm->dispatchFDData(socketinfo.receiver, socketinfo.id, buf, bufpos);
   }
 }
 
@@ -562,7 +562,7 @@ void IOManager::handleTCPSSLOut(SocketInfo & socketinfo) {
         return;
       }
       else {
-        wm->dispatchEventDisconnected(socketinfo.receiver);
+        wm->dispatchEventDisconnected(socketinfo.receiver, socketinfo.id);
         closeSocketIntern(socketinfo.id);
       }
       return;
@@ -576,14 +576,14 @@ void IOManager::handleTCPSSLOut(SocketInfo & socketinfo) {
   }
   if (!socketinfo.sendqueue.size()) {
     polling.setFDIn(socketinfo.fd);
-    wm->dispatchEventSendComplete(socketinfo.receiver);
+    wm->dispatchEventSendComplete(socketinfo.receiver, socketinfo.id);
   }
 }
 
 void IOManager::handleUDPIn(SocketInfo & socketinfo) {
   char * buf = blockpool->getBlock();
   int b_recv = recvfrom(socketinfo.fd, buf, blocksize, 0, (struct sockaddr *) 0, (socklen_t *) 0);
-  wm->dispatchFDData(socketinfo.receiver, buf, b_recv);
+  wm->dispatchFDData(socketinfo.receiver, socketinfo.id, buf, b_recv);
 }
 
 void IOManager::handleTCPServerIn(SocketInfo & socketinfo) {

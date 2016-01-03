@@ -7,14 +7,14 @@ void WorkManager::init() {
   thread.start("Worker", this);
 }
 
-void WorkManager::dispatchFDData(EventReceiver * er) {
-  dataqueue.push(Event(er, WORK_DATA));
+void WorkManager::dispatchFDData(EventReceiver * er, int sockid) {
+  dataqueue.push(Event(er, WORK_DATA, sockid));
   event.post();
   readdata.wait();
 }
 
-void WorkManager::dispatchFDData(EventReceiver * er, char * buf, int len) {
-  dataqueue.push(Event(er, WORK_DATABUF, buf, len));
+void WorkManager::dispatchFDData(EventReceiver * er, int sockid, char * buf, int len) {
+  dataqueue.push(Event(er, WORK_DATABUF, sockid, buf, len));
   event.post();
 }
 
@@ -23,38 +23,38 @@ void WorkManager::dispatchTick(EventReceiver * er, int interval) {
   event.post();
 }
 
-void WorkManager::dispatchEventNew(EventReceiver * er, int sockfd) {
-  dataqueue.push(Event(er, WORK_NEW, sockfd));
+void WorkManager::dispatchEventNew(EventReceiver * er, int sockid) {
+  dataqueue.push(Event(er, WORK_NEW, sockid));
   event.post();
 }
 
-void WorkManager::dispatchEventConnected(EventReceiver * er) {
-  dataqueue.push(Event(er, WORK_CONNECTED));
+void WorkManager::dispatchEventConnected(EventReceiver * er, int sockid) {
+  dataqueue.push(Event(er, WORK_CONNECTED, sockid));
   event.post();
 }
 
-void WorkManager::dispatchEventDisconnected(EventReceiver * er) {
-  dataqueue.push(Event(er, WORK_DISCONNECTED));
+void WorkManager::dispatchEventDisconnected(EventReceiver * er, int sockid) {
+  dataqueue.push(Event(er, WORK_DISCONNECTED, sockid));
   event.post();
 }
 
-void WorkManager::dispatchEventSSLSuccess(EventReceiver * er) {
-  dataqueue.push(Event(er, WORK_SSL_SUCCESS));
+void WorkManager::dispatchEventSSLSuccess(EventReceiver * er, int sockid) {
+  dataqueue.push(Event(er, WORK_SSL_SUCCESS, sockid));
   event.post();
 }
 
-void WorkManager::dispatchEventSSLFail(EventReceiver * er) {
-  dataqueue.push(Event(er, WORK_SSL_FAIL));
+void WorkManager::dispatchEventSSLFail(EventReceiver * er, int sockid) {
+  dataqueue.push(Event(er, WORK_SSL_FAIL, sockid));
   event.post();
 }
 
-void WorkManager::dispatchEventFail(EventReceiver * er, std::string error) {
-  dataqueue.push(Event(er, WORK_FAIL, error));
+void WorkManager::dispatchEventFail(EventReceiver * er, int sockid, std::string error) {
+  dataqueue.push(Event(er, WORK_FAIL, sockid, error));
   event.post();
 }
 
-void WorkManager::dispatchEventSendComplete(EventReceiver * er) {
-  dataqueue.push(Event(er, WORK_SEND_COMPLETE));
+void WorkManager::dispatchEventSendComplete(EventReceiver * er, int sockid) {
+  dataqueue.push(Event(er, WORK_SEND_COMPLETE, sockid));
   event.post();
 }
 
@@ -83,39 +83,40 @@ void WorkManager::run() {
     else {
       Event event = dataqueue.pop();
       EventReceiver * er = event.getReceiver();
+      int numdata = event.getNumericalData();
       switch (event.getType()) {
         case WORK_DATA:
-          event.getReceiver()->FDData();
+          event.getReceiver()->FDData(numdata);
           readdata.post();
           break;
         case WORK_DATABUF:
           data = event.getData();
-          er->FDData(data, event.getDataLen());
+          er->FDData(numdata, data, event.getDataLen());
           blockpool.returnBlock(data);
           break;
         case WORK_TICK:
-          er->tick(event.getNumericalData());
+          er->tick(numdata);
           break;
         case WORK_CONNECTED:
-          er->FDConnected();
+          er->FDConnected(numdata);
           break;
         case WORK_DISCONNECTED:
-          er->FDDisconnected();
+          er->FDDisconnected(numdata);
           break;
         case WORK_SSL_SUCCESS:
-          er->FDSSLSuccess();
+          er->FDSSLSuccess(numdata);
           break;
         case WORK_SSL_FAIL:
-          er->FDSSLFail();
+          er->FDSSLFail(numdata);
           break;
         case WORK_NEW:
-          er->FDNew(event.getNumericalData());
+          er->FDNew(numdata);
           break;
         case WORK_FAIL:
-          er->FDFail(event.getStrData());
+          er->FDFail(numdata, event.getStrData());
           break;
         case WORK_SEND_COMPLETE:
-          er->FDSendComplete();
+          er->FDSendComplete(numdata);
           break;
       }
     }
