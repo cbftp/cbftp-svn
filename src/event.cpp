@@ -1,5 +1,7 @@
 #include "event.h"
 
+#include "eventreceiver.h"
+
 Event::Event(EventReceiver * er, int type, int numdata, char * data, int datalen) :
   receiver(er),
   type(type),
@@ -28,6 +30,16 @@ Event::Event(EventReceiver * er, int type, int numdata, std::string strdata) :
   numdata(numdata),
   strdata(strdata)
 {
+}
+
+Event::Event(Pointer<EventReceiver> & er, int type) :
+  preceiver(er),
+  type(type)
+{
+}
+
+Event::~Event() {
+
 }
 
 EventReceiver * Event::getReceiver() const {

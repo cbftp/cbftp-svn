@@ -130,6 +130,7 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void sendEcho(std::string);
     void connectAllAddresses();
     Proxy * getProxy() const;
+    void clearConnectors();
   public:
     int getId() const;
     void setId(int);
@@ -188,6 +189,7 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void finishMKDCWDTarget();
     std::list<std::string> * getMKDSubdirs();
     RawBuffer * getRawBuffer() const;
+    static bool parseData(char *, unsigned int, char **, unsigned int &, unsigned int &, int &);
     void FDData(int, char *, unsigned int);
     void FDDisconnected(int);
     void FDSSLSuccess(int);

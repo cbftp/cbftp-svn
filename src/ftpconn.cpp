@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include <cstring>
+#include <cctype>
 #include <cerrno>
 #include <fcntl.h>
 #include <unistd.h>
@@ -17,6 +18,7 @@
 #include "eventlog.h"
 #include "tickpoke.h"
 #include "proxymanager.h"
+#include "workmanager.h"
 #include "util.h"
 
 extern GlobalContext * global;
@@ -103,6 +105,14 @@ Proxy * FTPConn::getProxy() const {
   return proxy;
 }
 
+void FTPConn::clearConnectors() {
+  std::list<Pointer<FTPConnect> >::const_iterator it;
+  for (std::list<Pointer<FTPConnect> >::const_iterator it = connectors.begin(); it != connectors.end(); it++) {
+    global->getWorkManager()->deferDelete(*it);
+  }
+  connectors.clear();
+}
+
 void FTPConn::FDDisconnected(int sockid) {
   if (state != STATE_DISCONNECTED) {
     rawbuf->writeLine("[Disconnected]");
@@ -127,26 +137,23 @@ void FTPConn::printCipher(int sockid) {
   rawbuf->writeLine("[Cipher: " + iom->getCipher(sockid) + "]");
 }
 
-void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
-  if (state != STATE_STAT) {
-    rawbuf->write(std::string(data, datalen));
-  }
+bool FTPConn::parseData(char * data, unsigned int datalen, char ** databuf, unsigned int & databuflen, unsigned int & databufpos, int & databufcode) {
   while (databufpos + datalen > databuflen) {
     databuflen = databuflen * 2;
     char * newdatabuf = (char *) malloc(databuflen);
-    memcpy(newdatabuf, databuf, databufpos);
-    delete databuf;
-    databuf = newdatabuf;
+    memcpy(newdatabuf, *databuf, databufpos);
+    delete *databuf;
+    *databuf = newdatabuf;
   }
-  memcpy(databuf + databufpos, data, datalen);
+  memcpy(*databuf + databufpos, data, datalen);
   databufpos += datalen;
   bool messagecomplete = false;
   char * loc = 0;
-  if(databuf[databufpos - 1] == '\n') {
-    loc = databuf + databufpos - 5;
-    while (loc >= databuf) {
-      if (*loc >= 48 && *loc <= 57 && *(loc+1) >= 48 && *(loc+1) <= 57 && *(loc+2) >= 48 && *(loc+2) <= 57) {
-        if ((*(loc+3) == ' ' || *(loc+3) == '\n') && (loc == databuf || *(loc-1) == '\n')) {
+  if((*databuf)[databufpos - 1] == '\n') {
+    loc = *databuf + databufpos - 5;
+    while (loc >= *databuf) {
+      if (isdigit(*loc) && isdigit(*(loc+1)) && isdigit(*(loc+2))) {
+        if ((*(loc+3) == ' ' || *(loc+3) == '\n') && (loc == *databuf || *(loc-1) == '\n')) {
           messagecomplete = true;
           databufcode = atoi(std::string(loc, 3).data());
           break;
@@ -160,9 +167,24 @@ void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
       // workaround for a glftpd bug causing an extra row '550 Unable to load your own user file!.' on retr/stor
       if (*(loc+4) == 'U' && *(loc+5) == 'n' && *(loc+28) == 'u' && *(loc+33) == 'f') {
         databufpos = 0;
-        return;
+        return false;
       }
     }
+  }
+  else if (datalen - databufpos == 0 && datalen >= 3 && (!isdigit(**databuf) ||
+           !isdigit(*(*databuf+1)) || !isdigit(*(*databuf+2))))
+  {
+    databufcode = 0;
+    return true;
+  }
+  return messagecomplete;
+}
+
+void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
+  if (state != STATE_STAT) {
+    rawbuf->write(std::string(data, datalen));
+  }
+  if (parseData(data, datalen, &databuf, databuflen, databufpos, databufcode)) {
     switch(state) {
       case STATE_AUTH_TLS: // awaiting AUTH TLS response
         AUTHTLSResponse();
@@ -300,7 +322,7 @@ void FTPConn::ftpConnectSuccess(int connectorid) {
   if (connectors.size() > 1) {
     rawbuf->writeLine("[Disconnecting other attempts]");
   }
-  connectors.clear();
+  clearConnectors();
   if (site->SSL()) {
     state = STATE_AUTH_TLS;
     sendEcho("AUTH TLS");
@@ -322,6 +344,7 @@ void FTPConn::ftpConnectFail(int connectorid) {
   }
   util::assert(it != connectors.end());
   bool primary = (*it)->isPrimary();
+  global->getWorkManager()->deferDelete(*it);
   connectors.erase(it);
   if (primary) {
     global->getTickPoke()->stopPoke(this, 0);
@@ -976,7 +999,7 @@ void FTPConn::disconnect() {
   if (state != STATE_DISCONNECTED) {
     state = STATE_DISCONNECTED;
     iom->closeSocket(sockid);
-    connectors.clear();
+    clearConnectors();
     this->status = "disconnected";
     rawbuf->writeLine("[Disconnected]");
   }

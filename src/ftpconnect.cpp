@@ -10,18 +10,19 @@
 #include "proxy.h"
 #include "util.h"
 
-FTPConnect::FTPConnect(int id, FTPConnectOwner * owner, const std::string & addr, const std::string & port, Proxy * proxy, bool primary) {
-  this->id = id;
-  this->owner = owner;
-  this->addr = addr;
-  this->port = port;
-  this->primary = primary;
-  proxynegotiation = false;
-  handover = false;
-  databuflen = DATABUF;
-  databuf = (char *) malloc(databuflen);
-  databufpos = 0;
-  proxysession = new ProxySession();
+FTPConnect::FTPConnect(int id, FTPConnectOwner * owner, const std::string & addr, const std::string & port, Proxy * proxy, bool primary) :
+  id(id),
+  proxynegotiation(false),
+  proxysession(new ProxySession()),
+  owner(owner),
+  databuflen(DATABUF),
+  databuf((char *) malloc(databuflen)),
+  databufpos(0),
+  handover(false),
+  addr(addr),
+  port(port),
+  primary(primary)
+{
   if (proxy == NULL) {
     owner->ftpConnectInfo(id, "[Connecting to " + addr + ":" + port + "]");
     global->getIOManager()->registerTCPClientSocket(this, addr, util::str2Int(port), &sockid);
@@ -55,16 +56,17 @@ void FTPConnect::FDData(int sockid, char * data, unsigned int datalen) {
     proxySessionInit();
   }
   else {
-    std::string strdata = std::string(data, datalen);
-    owner->ftpConnectInfo(id, strdata);
-    if (strdata.substr(0, 4) == "220 ") {
-      owner->ftpConnectSuccess(id);
-    }
-    else {
-      owner->ftpConnectInfo(id, "[Unknown response]");
-      global->getIOManager()->closeSocket(sockid);
-      owner->ftpConnectInfo(id, "[Disconnected]");
-      owner->ftpConnectFail(id);
+    owner->ftpConnectInfo(id, std::string(data, datalen));
+    if (FTPConn::parseData(data, datalen, &databuf, databuflen, databufpos, databufcode)) {
+      if (databufcode == 220) {
+        owner->ftpConnectSuccess(id);
+      }
+      else {
+        owner->ftpConnectInfo(id, "[Unknown response]");
+        global->getIOManager()->closeSocket(sockid);
+        owner->ftpConnectInfo(id, "[Disconnected]");
+        owner->ftpConnectFail(id);
+      }
     }
   }
 }
