@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include <list>
+#include <utility>
 
 #define REPORT_LOGINS_IF_UNLIMITED 10
 
@@ -30,8 +31,7 @@
 class Site {
 private:
   std::string name;
-  std::string address;
-  std::string port;
+  std::list<std::pair<std::string, std::string> > addresses;
   std::string user;
   std::string pass;
   std::string basepath;
@@ -102,14 +102,16 @@ public:
   bool hasSection(std::string) const;
   std::string getAddress() const;
   std::string getPort() const;
+  std::list<std::pair<std::string, std::string> > getAddresses() const;
+  std::string getAddressesAsString() const;
   std::string getUser() const;
   std::string getPass() const;
   int getRank() const;
   int getRankTolerance() const;
   void setName(std::string);
-  void setAddress(std::string);
+  void setAddresses(std::string);
+  void setPrimaryAddress(std::string, std::string);
   void setBasePath(std::string);
-  void setPort(std::string);
   void setUser(std::string);
   void setPass(std::string);
   void setRank(int);

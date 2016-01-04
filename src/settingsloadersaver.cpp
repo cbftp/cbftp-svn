@@ -249,10 +249,10 @@ void SettingsLoaderSaver::loadSettings() {
       global->getSiteManager()->addSiteLoad(site);
     }
     if (!setting.compare("addr")) {
-      site->setAddress(value);
+      site->setAddresses(value);
     }
-    else if (!setting.compare("port")) {
-      site->setPort(value);
+    else if (!setting.compare("port")) { // legacy
+      site->setAddresses(site->getAddress() + ":" + value);
     }
     else if (!setting.compare("user")) {
       site->setUser(value);
@@ -478,8 +478,7 @@ void SettingsLoaderSaver::saveSettings() {
     for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
       Site * site = *it;
       std::string name = site->getName();
-      dfh->addOutputLine(filetag, name + "$addr=" + site->getAddress());
-      dfh->addOutputLine(filetag, name + "$port=" + site->getPort());
+      dfh->addOutputLine(filetag, name + "$addr=" + site->getAddressesAsString());
       dfh->addOutputLine(filetag, name + "$user=" + site->getUser());
       dfh->addOutputLine(filetag, name + "$pass=" + site->getPass());
       std::string basepath = site->getBasePath();

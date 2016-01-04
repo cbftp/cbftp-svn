@@ -80,14 +80,11 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
   blockeddst = blockeddst.substr(0, blockeddst.length() - 1);
   unsigned int y = 1;
   unsigned int x = 1;
-  std::string addrport = modsite.getAddress();
-  std::string port = modsite.getPort();
-  if (port != "21") {
-    addrport += ":" + port;
-  }
+
   mso.clear();
   mso.addStringField(y++, x, "name", "Name:", modsite.getName(), false);
-  mso.addStringField(y++, x, "addr", "Address:", addrport, false, 32, 256);
+  Pointer<MenuSelectOptionTextField> msotf = mso.addStringField(y++, x, "addr", "Address:", modsite.getAddressesAsString(), false, 48, 512);
+  msotf->setExtraLegendText("Multiple sets of address:port separated by space or semicolon");
   mso.addStringField(y++, x, "user", "Username:", modsite.getUser(), false);
   mso.addStringField(y++, x, "pass", "Password:", modsite.getPass(), true);
   mso.addIntArrow(y++, x, "logins", "Login slots:", modsite.getInternMaxLogins(), 0, 99);
@@ -383,20 +380,8 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
           site->setName(newname);
         }
         else if (identifier == "addr") {
-          std::string addrport = msoe.get<MenuSelectOptionTextField>()->getData();
-          size_t splitpos = addrport.find(":");
-          if (splitpos != std::string::npos) {
-            site->setAddress(addrport.substr(0, splitpos));
-            std::string port = addrport.substr(splitpos + 1);
-            if (port.length() == 0) {
-              port = "21";
-            }
-            site->setPort(port);
-          }
-          else {
-            site->setAddress(addrport);
-            site->setPort("21");
-          }
+          std::string addrports = msoe.get<MenuSelectOptionTextField>()->getData();
+          site->setAddresses(addrports);
         }
         else if (identifier == "user") {
           site->setUser(msoe.get<MenuSelectOptionTextField>()->getData());

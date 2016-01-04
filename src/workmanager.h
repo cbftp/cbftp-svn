@@ -51,6 +51,7 @@ public:
   void dispatchEventFail(EventReceiver *, int, std::string);
   void dispatchEventSendComplete(EventReceiver *, int);
   void dispatchSignal(EventReceiver *, int);
+  void flushReceiver(EventReceiver *);
   DataBlockPool * getBlockPool();
   bool overload() const;
   void run();

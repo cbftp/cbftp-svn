@@ -171,10 +171,6 @@ void SiteLogic::listRefreshed(int id) {
   handleConnection(id, true);
 }
 
-void SiteLogic::unexpectedResponse(int id) {
-  connstatetracker[id].setDisconnected();
-}
-
 void SiteLogic::commandSuccess(int id) {
   connstatetracker[id].resetIdleTime();
   int state = conns[id]->getState();

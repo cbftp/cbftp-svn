@@ -9,6 +9,7 @@
 class MenuSelectOptionTextField : public ResizableElement {
 private:
   TextInputField textfield;
+  std::string extralegend;
 public:
   MenuSelectOptionTextField();
   MenuSelectOptionTextField(std::string, int, int, std::string, std::string, int, int, bool);
@@ -18,8 +19,9 @@ public:
   int cursorPosition() const;
   std::string getData() const;
   void clear();
-  void setText(std::string);
+  void setText(const std::string &);
   std::string getLegendText() const;
+  void setExtraLegendText(const std::string &);
   unsigned int wantedWidth() const;
   void setMaxWidth(unsigned int);
 };
