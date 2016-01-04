@@ -8,25 +8,8 @@
 #include "blockingqueue.h"
 #include "signalevents.h"
 #include "semaphore.h"
+#include "pointer.h"
 #include "event.h"
-
-#define MAXDATASIZE 2048
-#define BUFSSIZE 32
-#define OVERLOADSIZE 10
-
-enum WorkType {
-  WORK_DATA,
-  WORK_DATABUF,
-  WORK_TICK,
-  WORK_CONNECTED,
-  WORK_DISCONNECTED,
-  WORK_SSL_SUCCESS,
-  WORK_SSL_FAIL,
-  WORK_NEW,
-  WORK_FAIL,
-  WORK_SEND_COMPLETE,
-  WORK_CHILD
-};
 
 class EventReceiver;
 
@@ -51,7 +34,7 @@ public:
   void dispatchEventFail(EventReceiver *, int, std::string);
   void dispatchEventSendComplete(EventReceiver *, int);
   void dispatchSignal(EventReceiver *, int);
-  void flushReceiver(EventReceiver *);
+  void deferDelete(Pointer<EventReceiver>);
   DataBlockPool * getBlockPool();
   bool overload() const;
   void run();

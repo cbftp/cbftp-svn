@@ -28,8 +28,8 @@ private:
   bool proxynegotiation;
   ProxySession * proxysession;
   FTPConnectOwner * owner;
-  char * databuf;
   unsigned int databuflen;
+  char * databuf;
   unsigned int databufpos;
   int databufcode;
   bool handover;

@@ -1,8 +1,23 @@
 #include "workmanager.h"
 
 #include "eventreceiver.h"
-#include "event.h"
 #include "scopelock.h"
+
+#define OVERLOADSIZE 10
+
+enum WorkType {
+  WORK_DATA,
+  WORK_DATABUF,
+  WORK_TICK,
+  WORK_CONNECTED,
+  WORK_DISCONNECTED,
+  WORK_SSL_SUCCESS,
+  WORK_SSL_FAIL,
+  WORK_NEW,
+  WORK_FAIL,
+  WORK_SEND_COMPLETE,
+  WORK_DELETE
+};
 
 void WorkManager::init() {
   thread.start("Worker", this);
@@ -65,20 +80,9 @@ void WorkManager::dispatchSignal(EventReceiver * er, int signal) {
   }
 }
 
-void WorkManager::flushReceiver(EventReceiver * er) {
-  ScopeLock lock(dataqueue.lock());
-  bool erased = true;
-  while (erased) {
-    erased = false;
-    for (std::list<Event>::iterator it = dataqueue.begin(); it != dataqueue.end(); it++) {
-      if (it->getReceiver() == er) {
-        dataqueue.erase(it);
-        event.wait();
-        erased = true;
-        break;
-      }
-    }
-  }
+void WorkManager::deferDelete(Pointer<EventReceiver> er) {
+  dataqueue.push(Event(er, WORK_DELETE));
+  event.post();
 }
 
 DataBlockPool * WorkManager::getBlockPool() {
@@ -86,7 +90,7 @@ DataBlockPool * WorkManager::getBlockPool() {
 }
 
 bool WorkManager::overload() const {
-  return dataqueue.size() >= 10;
+  return dataqueue.size() >= OVERLOADSIZE;
 }
 
 void WorkManager::run() {
@@ -134,6 +138,8 @@ void WorkManager::run() {
           break;
         case WORK_SEND_COMPLETE:
           er->FDSendComplete(numdata);
+          break;
+        case WORK_DELETE: // will be deleted when going out of scope
           break;
       }
     }
