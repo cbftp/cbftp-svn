@@ -223,6 +223,11 @@ int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
   return sockid;
 }
 
+void IOManager::adopt(EventReceiver * er, int id) {
+  ScopeLock lock(socketinfomaplock);
+  socketinfomap[id].receiver = er;
+}
+
 void IOManager::negotiateSSLConnect(int id) {
   negotiateSSLConnect(id, NULL);
 }

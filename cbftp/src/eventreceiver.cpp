@@ -1,9 +1,12 @@
 #include "eventreceiver.h"
 
-#include <iostream>
+#include "workmanager.h"
+#include "globalcontext.h"
+
+extern GlobalContext * global;
 
 EventReceiver::~EventReceiver() {
-
+  global->getWorkManager()->flushReceiver(this);
 }
 
 void EventReceiver::tick(int message) {

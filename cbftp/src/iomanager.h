@@ -61,6 +61,7 @@ public:
   int registerTCPServerSocket(EventReceiver *, int);
   int registerTCPServerSocket(EventReceiver *, int, bool);
   void registerTCPServerClientSocket(EventReceiver *, int);
+  void adopt(EventReceiver *, int);
   void negotiateSSLConnect(int);
   void negotiateSSLConnect(int, EventReceiver *);
   void negotiateSSLAccept(int);

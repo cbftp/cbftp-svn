@@ -2,6 +2,7 @@
 
 #include "eventreceiver.h"
 #include "event.h"
+#include "scopelock.h"
 
 void WorkManager::init() {
   thread.start("Worker", this);
@@ -61,6 +62,22 @@ void WorkManager::dispatchEventSendComplete(EventReceiver * er, int sockid) {
 void WorkManager::dispatchSignal(EventReceiver * er, int signal) {
   if (signalevents.set(er, signal)) {
     event.post();
+  }
+}
+
+void WorkManager::flushReceiver(EventReceiver * er) {
+  ScopeLock lock(dataqueue.lock());
+  bool erased = true;
+  while (erased) {
+    erased = false;
+    for (std::list<Event>::iterator it = dataqueue.begin(); it != dataqueue.end(); it++) {
+      if (it->getReceiver() == er) {
+        dataqueue.erase(it);
+        event.wait();
+        erased = true;
+        break;
+      }
+    }
   }
 }
 

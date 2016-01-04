@@ -97,7 +97,6 @@ class SiteLogic : public EventReceiver {
     void passDenied(int);
     void TLSFailed(int);
     void listRefreshed(int);
-    void unexpectedResponse(int);
     void commandSuccess(int);
     void commandFail(int);
     void gotPath(int, std::string);

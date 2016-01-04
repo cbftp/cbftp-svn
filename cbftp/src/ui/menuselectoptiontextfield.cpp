@@ -59,12 +59,16 @@ void MenuSelectOptionTextField::clear() {
   textfield.clear();
 }
 
-void MenuSelectOptionTextField::setText(std::string text) {
+void MenuSelectOptionTextField::setText(const std::string & text) {
   textfield.setText(text);
 }
 
 std::string MenuSelectOptionTextField::getLegendText() const {
-  return "[Enter] Finish editing - [Any] Input to text";
+  return "[Enter] Finish editing - [Any] Input to text" + extralegend;
+}
+
+void MenuSelectOptionTextField::setExtraLegendText(const std::string & extra) {
+  extralegend = " - " + extra;
 }
 
 unsigned int MenuSelectOptionTextField::wantedWidth() const {

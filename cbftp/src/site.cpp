@@ -6,8 +6,6 @@ Site::Site() {
 
 Site::Site(std::string name) :
   name(name),
-  address("ftp.sunet.se"),
-  port("21"),
   user("anonymous"),
   pass("anonymous"),
   basepath("/"),
@@ -29,7 +27,7 @@ Site::Site(std::string name) :
   rank(SITE_RANK_USE_GLOBAL),
   ranktolerance(SITE_RANK_USE_GLOBAL)
 {
-
+  addresses.push_back(std::pair<std::string, std::string>("ftp.sunet.se", "21"));
 }
 
 std::map<std::string, std::string>::const_iterator Site::sectionsBegin() const {
@@ -229,11 +227,30 @@ bool Site::hasSection(std::string sectionname) const {
 }
 
 std::string Site::getAddress() const {
-  return address;
+  return addresses.front().first;
 }
 
 std::string Site::getPort() const {
-  return port;
+  return addresses.front().second;
+}
+
+std::list<std::pair<std::string, std::string> > Site::getAddresses() const {
+  return addresses;
+}
+
+std::string Site::getAddressesAsString() const {
+  std::string addressesconcat;
+  for (std::list<std::pair<std::string, std::string> >::const_iterator it = addresses.begin(); it != addresses.end(); it++) {
+    std::string addrport = it->first;
+    if (it->second != "21") {
+      addrport += ":" + it->second;
+    }
+    if (addressesconcat.length()) {
+      addressesconcat += " ";
+    }
+    addressesconcat += addrport;
+  }
+  return addressesconcat;
 }
 
 std::string Site::getUser() const {
@@ -256,12 +273,39 @@ void Site::setName(std::string name) {
   this->name = name;
 }
 
-void Site::setAddress(std::string addr) {
-  address = addr;
+void Site::setAddresses(std::string addrports) {
+  addresses.clear();
+  addrports += " ";
+  size_t pos;
+  while ((pos = addrports.find(";")) != std::string::npos) addrports[pos] = ' ';
+  while ((pos = addrports.find(",")) != std::string::npos) addrports[pos] = ' ';
+  while ((pos = addrports.find(" ")) != std::string::npos) {
+    if (addrports[0] == ' ') {
+      addrports = addrports.substr(1);
+      continue;
+    }
+    std::string addrport = addrports.substr(0, pos);
+    addrports = addrports.substr(pos + 1);
+    size_t splitpos = addrport.find(":");
+    std::string addr = addrport;
+    std::string port = "21";
+    if (splitpos != std::string::npos) {
+      addr = addrport.substr(0, splitpos);
+      port = addrport.substr(splitpos + 1);
+    }
+    addresses.push_back(std::pair<std::string, std::string>(addr, port));
+  }
 }
 
-void Site::setPort(std::string port) {
-  this->port = port;
+void Site::setPrimaryAddress(std::string addr, std::string port) {
+  std::list<std::pair<std::string, std::string> >::iterator it;
+  for (it = addresses.begin(); it != addresses.end(); it++) {
+    if (it->first == addr && it->second == port) {
+      addresses.erase(it);
+      break;
+    }
+  }
+  addresses.push_front(std::pair<std::string, std::string>(addr, port));
 }
 
 void Site::setUser(std::string user) {

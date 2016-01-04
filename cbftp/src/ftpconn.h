@@ -4,10 +4,11 @@
 #include <string>
 
 #include "eventreceiver.h"
+#include "pointer.h"
+#include "ftpconnectowner.h"
 
 #define STATE_DISCONNECTED 0
 #define STATE_CONNECTING 1
-#define STATE_WELCOME 2
 #define STATE_AUTH_TLS 3
 #define STATE_USER 4
 #define STATE_PASS 5
@@ -43,12 +44,12 @@
 #define STATE_PASV_ABORT 37
 #define STATE_PBSZ 38
 #define STATE_TYPEI 39
-#define STATE_PROXY 100
 
 #define PROT_UNSET 5483
 #define PROT_C 5484
 #define PROT_P 5485
 
+class FTPConnect;
 class SiteRace;
 class FileList;
 class SiteLogic;
@@ -57,12 +58,15 @@ class RawBuffer;
 class Site;
 class ProxySession;
 class CommandOwner;
+class Proxy;
 
 #define RAWBUFMAXLEN 1024
 #define DATABUF 2048
 
-class FTPConn : private EventReceiver {
+class FTPConn : private EventReceiver, public FTPConnectOwner {
   private:
+    std::list<Pointer<FTPConnect> > connectors;
+    int nextconnectorid;
     IOManager * iom;
     RawBuffer * rawbuf;
     ProxySession * proxysession;
@@ -89,7 +93,7 @@ class FTPConn : private EventReceiver {
     std::string mkdsect;
     std::string mkdpath;
     std::list<std::string> mkdsubdirs;
-    void welcomeReceived();
+    int ticker;
     void AUTHTLSResponse();
     void USERResponse();
     void PASSResponse();
@@ -124,6 +128,8 @@ class FTPConn : private EventReceiver {
     void TYPEIResponse();
     void proxySessionInit(bool);
     void sendEcho(std::string);
+    void connectAllAddresses();
+    Proxy * getProxy() const;
   public:
     int getId() const;
     void setId(int);
@@ -183,12 +189,14 @@ class FTPConn : private EventReceiver {
     std::list<std::string> * getMKDSubdirs();
     RawBuffer * getRawBuffer() const;
     void FDData(int, char *, unsigned int);
-    void FDConnected(int);
     void FDDisconnected(int);
-    void FDFail(int, std::string);
     void FDSSLSuccess(int);
     void FDSSLFail(int);
     void printCipher(int);
+    void ftpConnectInfo(int, const std::string &);
+    void ftpConnectSuccess(int);
+    void ftpConnectFail(int);
+    void tick(int);
     FileList * currentFileList() const;
     CommandOwner * currentCommandOwner() const;
     void setCurrentCommandOwner(CommandOwner *);

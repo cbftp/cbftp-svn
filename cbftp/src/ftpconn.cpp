@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "ftpconnect.h"
 #include "filelist.h"
 #include "site.h"
 #include "globalcontext.h"
@@ -14,21 +15,22 @@
 #include "iomanager.h"
 #include "sitelogic.h"
 #include "eventlog.h"
+#include "tickpoke.h"
 #include "proxymanager.h"
-#include "proxy.h"
-#include "proxysession.h"
 #include "util.h"
 
 extern GlobalContext * global;
+
+#define FTPCONN_TICK_INTERVAL 1000
 
 FTPConn::FTPConn(SiteLogic * sl, int id) {
   this->sl = sl;
   this->id = id;
   this->site = sl->getSite();
   this->status = "disconnected";
+  nextconnectorid = 0;
   processing = false;
   rawbuf = new RawBuffer(RAWBUFMAXLEN, site->getName(), util::int2Str(id));
-  proxysession = new ProxySession();
   iom = global->getIOManager();
   databuflen = DATABUF;
   databuf = (char *) malloc(databuflen);
@@ -41,12 +43,12 @@ FTPConn::FTPConn(SiteLogic * sl, int id) {
 }
 
 FTPConn::~FTPConn() {
+  global->getTickPoke()->stopPoke(this, 0);
   if (isConnected()) {
     iom->closeSocket(sockid);
   }
   delete rawbuf;
   delete databuf;
-  delete proxysession;
 }
 
 int FTPConn::getId() const {
@@ -63,7 +65,6 @@ std::string FTPConn::getStatus() const {
 }
 
 void FTPConn::login() {
-
   if (state != STATE_DISCONNECTED) {
     return;
   }
@@ -73,6 +74,24 @@ void FTPConn::login() {
   databufpos = 0;
   processing = true;
   currentpath = "/";
+  state = STATE_CONNECTING;
+  connectors.push_back(makePointer<FTPConnect>(nextconnectorid++, this, site->getAddress(), site->getPort(), getProxy(), true));
+  if (site->getAddresses().size() > 1) {
+    ticker = 0;
+    global->getTickPoke()->startPoke(this, "FTPConn", FTPCONN_TICK_INTERVAL, 0);
+  }
+}
+
+void FTPConn::connectAllAddresses() {
+  std::list<std::pair<std::string, std::string> > addresses = site->getAddresses();
+  Proxy * proxy = getProxy();
+  for (std::list<std::pair<std::string, std::string> >::const_iterator it = addresses.begin(); it != addresses.end(); it++) {
+    if (it == addresses.begin()) continue; // first one is already connected
+    connectors.push_back(makePointer<FTPConnect>(nextconnectorid++, this, it->first, it->second, proxy, false));
+  }
+}
+
+Proxy * FTPConn::getProxy() const {
   Proxy * proxy = NULL;
   int proxytype = site->getProxyType();
   if (proxytype == SITE_PROXY_USE) {
@@ -81,59 +100,7 @@ void FTPConn::login() {
   else if (proxytype == SITE_PROXY_GLOBAL) {
     proxy = global->getProxyManager()->getDefaultProxy();
   }
-  int retcode;
-  if (proxy == NULL) {
-    rawbuf->writeLine("[Connecting to " + site->getAddress() + ":" + site->getPort() + "]");
-    state = STATE_CONNECTING;
-    retcode = iom->registerTCPClientSocket(this, site->getAddress(), util::str2Int(site->getPort()), &sockid);
-  }
-  else {
-    rawbuf->writeLine("[Connecting to proxy " + proxy->getAddr() + ":" + proxy->getPort() + "]");
-    state = STATE_PROXY;
-    processing = true;
-    proxysession->prepare(proxy, site->getAddress(), site->getPort());
-    retcode = iom->registerTCPClientSocket(this, proxy->getAddr(), util::str2Int(proxy->getPort()), &sockid);
-  }
-  if (retcode < 0) {
-    state = STATE_DISCONNECTED;
-  }
-}
-
-void FTPConn::proxySessionInit(bool connect) {
-  if (!connect) {
-    proxysession->received(databuf, databufpos);
-  }
-  switch (proxysession->instruction()) {
-    case PROXYSESSION_SEND_CONNECT:
-      rawbuf->writeLine("[Connecting to " + site->getAddress() + ":" + site->getPort() + " through proxy]");
-      iom->sendData(sockid, proxysession->getSendData(), proxysession->getSendDataLen());
-      break;
-    case PROXYSESSION_SEND:
-      iom->sendData(sockid, proxysession->getSendData(), proxysession->getSendDataLen());
-      break;
-    case PROXYSESSION_SUCCESS:
-      rawbuf->writeLine("[Connection established]");
-      state = STATE_WELCOME;
-      break;
-    case PROXYSESSION_ERROR:
-      rawbuf->writeLine("[Proxy error: " + proxysession->getErrorMessage() + "]");
-      state = STATE_DISCONNECTED;
-      iom->closeSocket(sockid);
-      rawbuf->writeLine("[Disconnected]");
-      this->status = "disconnected";
-      sl->unexpectedResponse(id);
-      break;
-  }
-}
-
-void FTPConn::FDConnected(int sockid) {
-  rawbuf->writeLine("[Connection established]");
-  if (state == STATE_PROXY) {
-    proxySessionInit(true);
-  }
-  else {
-    state = STATE_WELCOME;
-  }
+  return proxy;
 }
 
 void FTPConn::FDDisconnected(int sockid) {
@@ -143,12 +110,6 @@ void FTPConn::FDDisconnected(int sockid) {
     state = STATE_DISCONNECTED;
     sl->disconnected(id);
   }
-}
-
-void FTPConn::FDFail(int sockid, std::string error) {
-  rawbuf->writeLine("[" + error + "]");
-  state = STATE_DISCONNECTED;
-  sl->connectFailed(id);
 }
 
 void FTPConn::FDSSLSuccess(int sockid) {
@@ -166,9 +127,8 @@ void FTPConn::printCipher(int sockid) {
   rawbuf->writeLine("[Cipher: " + iom->getCipher(sockid) + "]");
 }
 
-
 void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
-  if (state != STATE_STAT && state != STATE_PROXY) {
+  if (state != STATE_STAT) {
     rawbuf->write(std::string(data, datalen));
   }
   while (databufpos + datalen > databuflen) {
@@ -182,23 +142,17 @@ void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
   databufpos += datalen;
   bool messagecomplete = false;
   char * loc = 0;
-  if (state == STATE_PROXY) {
-    messagecomplete = true;
-    databufcode = 1337;
-  }
-  else {
-    if(databuf[databufpos - 1] == '\n') {
-      loc = databuf + databufpos - 5;
-      while (loc >= databuf) {
-        if (*loc >= 48 && *loc <= 57 && *(loc+1) >= 48 && *(loc+1) <= 57 && *(loc+2) >= 48 && *(loc+2) <= 57) {
-          if ((*(loc+3) == ' ' || *(loc+3) == '\n') && (loc == databuf || *(loc-1) == '\n')) {
-            messagecomplete = true;
-            databufcode = atoi(std::string(loc, 3).data());
-            break;
-          }
+  if(databuf[databufpos - 1] == '\n') {
+    loc = databuf + databufpos - 5;
+    while (loc >= databuf) {
+      if (*loc >= 48 && *loc <= 57 && *(loc+1) >= 48 && *(loc+1) <= 57 && *(loc+2) >= 48 && *(loc+2) <= 57) {
+        if ((*(loc+3) == ' ' || *(loc+3) == '\n') && (loc == databuf || *(loc-1) == '\n')) {
+          messagecomplete = true;
+          databufcode = atoi(std::string(loc, 3).data());
+          break;
         }
-        --loc;
       }
+      --loc;
     }
   }
   if (messagecomplete) {
@@ -210,9 +164,6 @@ void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
       }
     }
     switch(state) {
-      case STATE_WELCOME: // awaiting welcome on connect
-        welcomeReceived();
-        break;
       case STATE_AUTH_TLS: // awaiting AUTH TLS response
         AUTHTLSResponse();
         break;
@@ -315,11 +266,82 @@ void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
       case STATE_TYPEI: // awaiting TYPE I response
         TYPEIResponse();
         break;
-      case STATE_PROXY: // negotiating proxy session
-        proxySessionInit(false);
-        break;
     }
     databufpos = 0;
+  }
+}
+
+void FTPConn::ftpConnectInfo(int connectorid, const std::string & info) {
+  rawbuf->writeLine(info);
+}
+
+void FTPConn::ftpConnectSuccess(int connectorid) {
+  if (state != STATE_CONNECTING) {
+    return;
+  }
+  std::list<Pointer<FTPConnect> >::const_iterator it;
+  for (it = connectors.begin(); it != connectors.end(); it++) {
+    if ((*it)->getId() == connectorid) {
+      break;
+    }
+  }
+  util::assert(it != connectors.end());
+  sockid = (*it)->handOver();
+  iom->adopt(this, sockid);
+  if ((*it)->isPrimary()) {
+    global->getTickPoke()->stopPoke(this, 0);
+  }
+  else {
+    std::string addr = (*it)->getAddress();
+    std::string port = (*it)->getPort();
+    site->setPrimaryAddress((*it)->getAddress(), (*it)->getPort());
+    rawbuf->writeLine("[Setting " + addr + ":" + port + " as primary]");
+  }
+  if (connectors.size() > 1) {
+    rawbuf->writeLine("[Disconnecting other attempts]");
+  }
+  connectors.clear();
+  if (site->SSL()) {
+    state = STATE_AUTH_TLS;
+    sendEcho("AUTH TLS");
+  }
+  else {
+    doUSER(false);
+  }
+}
+
+void FTPConn::ftpConnectFail(int connectorid) {
+  if (state != STATE_CONNECTING) {
+    return;
+  }
+  std::list<Pointer<FTPConnect> >::iterator it;
+  for (it = connectors.begin(); it != connectors.end(); it++) {
+    if ((*it)->getId() == connectorid) {
+      break;
+    }
+  }
+  util::assert(it != connectors.end());
+  bool primary = (*it)->isPrimary();
+  connectors.erase(it);
+  if (primary) {
+    global->getTickPoke()->stopPoke(this, 0);
+    if (site->getAddresses().size() > 1) {
+      connectAllAddresses();
+    }
+  }
+  if (!connectors.size()) {
+    state = STATE_DISCONNECTED;
+    sl->connectFailed(id);
+  }
+}
+
+void FTPConn::tick(int) {
+  ticker += FTPCONN_TICK_INTERVAL;
+  if (ticker >= 1000) {
+    if (state == STATE_CONNECTING) {
+      connectAllAddresses();
+    }
+    global->getTickPoke()->stopPoke(this, 0);
   }
 }
 
@@ -328,27 +350,6 @@ void FTPConn::sendEcho(std::string data) {
   processing = true;
   status = data;
   iom->sendData(sockid, data + "\r\n");
-}
-
-void FTPConn::welcomeReceived() {
-  if (databufcode == 220) {
-    if (site->SSL()) {
-      state = STATE_AUTH_TLS;
-      sendEcho("AUTH TLS");
-    }
-    else {
-      doUSER(false);
-    }
-  }
-  else {
-    rawbuf->writeLine("[Unknown response]");
-    state = STATE_DISCONNECTED;
-    processing = false;
-    iom->closeSocket(sockid);
-    rawbuf->writeLine("[Disconnected]");
-    this->status = "disconnected";
-    sl->unexpectedResponse(id);
-  }
 }
 
 void FTPConn::AUTHTLSResponse() {
@@ -473,12 +474,7 @@ void FTPConn::TYPEIResponse() {
 }
 
 void FTPConn::reconnect() {
-  if (state != STATE_DISCONNECTED) {
-    iom->closeSocket(sockid);
-    rawbuf->writeLine("[Disconnected]");
-    this->status = "disconnected";
-    state = STATE_DISCONNECTED;
-  }
+  disconnect();
   login();
 }
 
@@ -974,9 +970,13 @@ void FTPConn::QUITResponse() {
 }
 
 void FTPConn::disconnect() {
+  if (state == STATE_CONNECTING) {
+    global->getTickPoke()->stopPoke(this, 0);
+  }
   if (state != STATE_DISCONNECTED) {
     state = STATE_DISCONNECTED;
     iom->closeSocket(sockid);
+    connectors.clear();
     this->status = "disconnected";
     rawbuf->writeLine("[Disconnected]");
   }
