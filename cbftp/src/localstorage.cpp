@@ -180,7 +180,7 @@ Pointer<LocalFileList> LocalStorage::getLocalFileList(std::string path) {
       std::string group = grp != NULL ? grp->gr_name : util::int2Str(status.st_gid);
       struct tm * tm = localtime(&status.st_mtime);
       int year = 1900 + tm->tm_year;
-      int month = tm->tm_mon;
+      int month = tm->tm_mon + 1;
       int day = tm->tm_mday;
       int hour = tm->tm_hour;
       int minute = tm->tm_min;
