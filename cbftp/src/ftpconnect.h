@@ -17,10 +17,11 @@ public:
   void FDData(int, char *, unsigned int);
   void FDFail(int, std::string);
   int getId() const;
-  int handOver();
+  int handedOver();
   std::string getAddress() const;
   std::string getPort() const;
   bool isPrimary() const;
+  void disengage();
 private:
   void proxySessionInit();
   int id;
@@ -32,8 +33,8 @@ private:
   char * databuf;
   unsigned int databufpos;
   int databufcode;
-  bool handover;
   std::string addr;
   std::string port;
   bool primary;
+  bool engaged;
 };

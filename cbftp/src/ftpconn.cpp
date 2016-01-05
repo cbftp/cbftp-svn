@@ -108,6 +108,7 @@ Proxy * FTPConn::getProxy() const {
 void FTPConn::clearConnectors() {
   std::list<Pointer<FTPConnect> >::const_iterator it;
   for (std::list<Pointer<FTPConnect> >::const_iterator it = connectors.begin(); it != connectors.end(); it++) {
+    (*it)->disengage();
     global->getWorkManager()->deferDelete(*it);
   }
   connectors.clear();
@@ -308,7 +309,7 @@ void FTPConn::ftpConnectSuccess(int connectorid) {
     }
   }
   util::assert(it != connectors.end());
-  sockid = (*it)->handOver();
+  sockid = (*it)->handedOver();
   iom->adopt(this, sockid);
   if ((*it)->isPrimary()) {
     global->getTickPoke()->stopPoke(this, 0);

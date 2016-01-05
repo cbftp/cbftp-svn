@@ -12,16 +12,17 @@
 
 FTPConnect::FTPConnect(int id, FTPConnectOwner * owner, const std::string & addr, const std::string & port, Proxy * proxy, bool primary) :
   id(id),
+  sockid(-1),
   proxynegotiation(false),
   proxysession(new ProxySession()),
   owner(owner),
   databuflen(DATABUF),
   databuf((char *) malloc(databuflen)),
   databufpos(0),
-  handover(false),
   addr(addr),
   port(port),
-  primary(primary)
+  primary(primary),
+  engaged(true)
 {
   if (proxy == NULL) {
     owner->ftpConnectInfo(id, "[Connecting to " + addr + ":" + port + "]");
@@ -36,11 +37,9 @@ FTPConnect::FTPConnect(int id, FTPConnectOwner * owner, const std::string & addr
 }
 
 FTPConnect::~FTPConnect() {
+  util::assert(!engaged); // must disengage before deleting; events may still be in the work queue
   delete proxysession;
   free(databuf);
-  if (!handover) {
-    global->getIOManager()->closeSocket(sockid);
-  }
 }
 
 void FTPConnect::FDConnected(int sockid) {
@@ -72,6 +71,7 @@ void FTPConnect::FDData(int sockid, char * data, unsigned int datalen) {
 }
 
 void FTPConnect::FDFail(int sockid, std::string error) {
+  engaged = false;
   owner->ftpConnectInfo(id, "[" + error + "]");
   owner->ftpConnectFail(id);
 }
@@ -80,8 +80,8 @@ int FTPConnect::getId() const {
   return id;
 }
 
-int FTPConnect::handOver() {
-  handover = true;
+int FTPConnect::handedOver() {
+  engaged = false;
   return sockid;
 }
 
@@ -100,7 +100,7 @@ void FTPConnect::proxySessionInit() {
       break;
     case PROXYSESSION_ERROR:
       owner->ftpConnectInfo(id, "[Proxy error: " + proxysession->getErrorMessage() + "]");
-      global->getIOManager()->closeSocket(sockid);
+      disengage();
       owner->ftpConnectInfo(id, "[Disconnected]");
       owner->ftpConnectFail(id);
       break;
@@ -117,4 +117,11 @@ std::string FTPConnect::getPort() const {
 
 bool FTPConnect::isPrimary() const {
   return primary;
+}
+
+void FTPConnect::disengage() {
+  if (engaged) {
+    global->getIOManager()->closeSocket(sockid);
+    engaged = false;
+  }
 }
