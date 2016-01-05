@@ -62,7 +62,7 @@ void FTPConnect::FDData(int sockid, char * data, unsigned int datalen) {
       }
       else {
         owner->ftpConnectInfo(id, "[Unknown response]");
-        global->getIOManager()->closeSocket(sockid);
+        disengage();
         owner->ftpConnectInfo(id, "[Disconnected]");
         owner->ftpConnectFail(id);
       }

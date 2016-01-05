@@ -51,6 +51,7 @@ FTPConn::~FTPConn() {
   }
   delete rawbuf;
   delete databuf;
+  clearConnectors();
 }
 
 int FTPConn::getId() const {
