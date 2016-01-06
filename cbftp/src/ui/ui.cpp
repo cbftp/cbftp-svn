@@ -8,11 +8,11 @@
 #include "../workmanager.h"
 #include "../globalcontext.h"
 #include "../tickpoke.h"
-#include "../settingsloadersaver.h"
 #include "../iomanager.h"
 #include "../externalfileviewing.h"
 #include "../util.h"
 #include "../engine.h"
+#include "../datafilehandler.h"
 
 #include "legendwindow.h"
 #include "infowindow.h"
@@ -50,25 +50,19 @@
 
 extern GlobalContext * global;
 
-static Ui * instance = NULL;
+static Ui * instance = new Ui();
 
-namespace {
-
-void sighandler(int signal) {
+static void sighandler(int signal) {
   global->getWorkManager()->dispatchSignal(instance, signal);
 }
 
-}
-
 Ui::Ui() {
-  util::assert(instance == NULL);
-  instance = this;
   CharDraw::init();
   main = NULL;
-  legendenabled = false;
   infoenabled = false;
+  legendenabled = false;
   dead = false;
-  showlegend = true;
+  legendmode = LEGEND_SCROLLING;
   split = false;
 }
 
@@ -83,6 +77,8 @@ bool Ui::init() {
   sigaddset(&sa.sa_mask, SIGWINCH);
   sa.sa_handler = sighandler;
   sigaction(SIGWINCH, &sa, NULL);
+
+  global->getSettingsLoaderSaver()->addSettingsAdder(this);
 
   thread.start("UserInterface", this);
 
@@ -217,17 +213,23 @@ void Ui::terminalSizeChanged() {
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 
-bool Ui::legendEnabled() const {
-  return showlegend;
+LegendMode Ui::legendMode() const {
+  return legendmode;
 }
 
-void Ui::showLegend(bool show) {
-  showlegend = show;
-  if (show) {
-    enableLegend();
-  }
-  else {
-    disableLegend();
+void Ui::setLegendMode(LegendMode newmode) {
+  LegendMode oldmode = legendmode;
+  legendmode = newmode;
+  if (newmode != oldmode) {
+    if (oldmode == LEGEND_DISABLED) {
+      enableLegend();
+    }
+    else if (newmode == LEGEND_DISABLED) {
+      disableLegend();
+    }
+    else {
+      redrawAll();
+    }
   }
 }
 
@@ -281,7 +283,7 @@ void Ui::disableInfo() {
 }
 
 void Ui::enableLegend() {
-  if (!legendenabled) {
+  if (!legendenabled && legendMode() != LEGEND_DISABLED) {
     legendenabled = true;
     mainrow = mainrow - 2;
     redrawAll();
@@ -303,7 +305,7 @@ void Ui::redrawAll() {
   for (it = mainwindows.begin(); it != mainwindows.end(); it++) {
     (*it)->resize(mainrow, maincol);
   }
-  if (legendenabled) {
+  if (legendMode() != LEGEND_DISABLED) {
     legendwindow->resize(2, col);
     legendwindow->redraw();
   }
@@ -754,9 +756,7 @@ void Ui::key(std::string key) {
   bool result = global->getSettingsLoaderSaver()->enterKey(key);
   if (result) {
     enableInfo();
-    if (legendEnabled()) {
-      enableLegend();
-    }
+    enableLegend();
     mainscreen->initialize(mainrow, maincol);
     switchToWindow(mainscreen);
   }
@@ -806,4 +806,33 @@ void Ui::switchToLast() {
   legendwindow->setText(topwindow->getLegendText());
   infowindow->setLabel(topwindow->getInfoLabel());
   infowindow->setText(topwindow->getInfoText());
+}
+
+void Ui::loadSettings(Pointer<DataFileHandler> dfh) {
+  std::vector<std::string> lines;
+  dfh->getDataFor("UI", &lines);
+  std::vector<std::string>::iterator it;
+  std::string line;
+  for (it = lines.begin(); it != lines.end(); it++) {
+    line = *it;
+    if (line.length() == 0 ||line[0] == '#') continue;
+    size_t tok = line.find('=');
+    std::string setting = line.substr(0, tok);
+    std::string value = line.substr(tok + 1);
+    if (!setting.compare("legend")) {
+      if (!value.compare("true")) {
+        setLegendMode(LEGEND_SCROLLING);
+      }
+      else {
+        setLegendMode(LEGEND_DISABLED);
+      }
+    }
+    else if (!setting.compare("legendmode")) {
+      setLegendMode((LegendMode) util::str2Int(value));
+    }
+  }
+}
+
+void Ui::saveSettings(Pointer<DataFileHandler> dfh) {
+  dfh->addOutputLine("UI", "legendmode=" + util::int2Str(legendMode()));
 }

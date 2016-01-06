@@ -1,6 +1,9 @@
 # uncomment and edit this line to link with a static openssl
 #STATIC_SSL_PATH := /path/to/openssl
 
+# relative path to the ui to use
+UI_PATH := src/ui
+
 ifneq ($(STATIC_SSL_PATH),)
 STATIC_SSL_INCLUDE := -I$(STATIC_SSL_PATH)/include
 STATIC_SSL_LINK := $(STATIC_SSL_PATH)/libssl.a $(STATIC_SSL_PATH)/libcrypto.a
@@ -23,6 +26,6 @@ DATE := "\"${shell date}\""
 BOXTAG := "\"cbftp\""
 
 CXX=g++
-CPPFLAGS=-g -Wall -O0 -MMD -MP $(STATIC_SSL_INCLUDE)
-FINALFLAGS=-g -O0
+OPTFLAGS=-g -O0
+CPPFLAGS=$(OPTFLAGS) -Wall -MMD -MP $(STATIC_SSL_INCLUDE)
 LINKFLAGS=$(SSL_LINKFLAGS) -lncursesw -lpthread 

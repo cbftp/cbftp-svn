@@ -18,8 +18,9 @@ private:
   std::string text;
   int latestid;
   int latestcount;
+  int staticcount;
   std::string latesttext;
-  unsigned int currentpos;
+  unsigned int offset;
   bool split;
   WINDOW * window;
 };

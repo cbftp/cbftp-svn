@@ -12,6 +12,7 @@
 #include "../eventreceiver.h"
 #include "../blockingqueue.h"
 #include "../uibase.h"
+#include "../settingsloadersaver.h"
 #include "../pointer.h"
 
 #define TICKLENGTH 250000
@@ -21,6 +22,7 @@ class InfoWindow;
 class LegendWindow;
 class FileList;
 class Site;
+class DataFileHandler;
 class LoginScreen;
 class NewKeyScreen;
 class MainScreen;
@@ -49,7 +51,13 @@ class TransferJobStatusScreen;
 class AllRacesScreen;
 class AllTransferJobsScreen;
 
-class Ui : public EventReceiver, public UIBase {
+enum LegendMode {
+  LEGEND_DISABLED = 123,
+  LEGEND_SCROLLING = 124,
+  LEGEND_STATIC = 125
+};
+
+class Ui : public EventReceiver, public UIBase, public SettingsAdder {
 private:
   Thread<Ui> thread;
   BlockingQueue<UICommand> uiqueue;
@@ -95,7 +103,7 @@ private:
   bool legendenabled;
   bool infoenabled;
   bool dead;
-  bool showlegend;
+  LegendMode legendmode;
   bool split;
   std::string eventtext;
   Semaphore eventcomplete;
@@ -125,8 +133,8 @@ public:
   void resizeTerm();
   void readConfiguration();
   void writeState();
-  bool legendEnabled() const;
-  void showLegend(bool);
+  LegendMode legendMode() const;
+  void setLegendMode(LegendMode);
   void returnToLast();
   void update();
   void setLegend();
@@ -190,5 +198,7 @@ public:
   void confirmNo();
   void returnNuke(int);
   void returnRaceStatus(unsigned int);
+  void loadSettings(Pointer<DataFileHandler>);
+  void saveSettings(Pointer<DataFileHandler>);
 };
 

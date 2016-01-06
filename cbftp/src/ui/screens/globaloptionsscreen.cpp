@@ -63,7 +63,11 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   mso.addStringField(y++, x, "udpport", "Remote command UDP Port:", util::int2Str(rch->getUDPPort()), false, 5);
   mso.addStringField(y++, x, "udppass", "Remote command password:", rch->getPassword(), true);
   y++;
-  mso.addCheckBox(y++, x, "legend", "Show legend bar:", ui->legendEnabled());
+  Pointer<MenuSelectOptionTextArrow> legendmode = mso.addTextArrow(y++, x, "legendmode", "Legend bar:");
+  legendmode->addOption("Disabled", LEGEND_DISABLED);
+  legendmode->addOption("Scrolling", LEGEND_SCROLLING);
+  legendmode->addOption("Static", LEGEND_STATIC);
+  legendmode->setOption(ui->legendMode());
   y++;
   mso.addStringField(y++, x, "defuser", "Default site username:", sm->getDefaultUserName(), false);
   mso.addStringField(y++, x, "defpass", "Default site password:", sm->getDefaultPassword(), true);
@@ -231,8 +235,11 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
         else if (identifier == "globalranktolerance") {
           sm->setGlobalRankTolerance(msoe.get<MenuSelectOptionNumArrow>()->getData());
         }
-        else if (identifier == "legend") {
-          ui->showLegend(msoe.get<MenuSelectOptionCheckBox>()->getData());
+        else if (identifier == "legend") { // legacy
+          ui->setLegendMode(msoe.get<MenuSelectOptionCheckBox>()->getData() ? LEGEND_SCROLLING : LEGEND_DISABLED);
+        }
+        else if (identifier == "legendmode") {
+          ui->setLegendMode((LegendMode)msoe.get<MenuSelectOptionTextArrow>()->getData());
         }
         else if (identifier == "dlpath") {
           ls->setDownloadPath(msoe.get<MenuSelectOptionTextField>()->getData());

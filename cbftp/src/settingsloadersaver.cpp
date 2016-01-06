@@ -217,23 +217,6 @@ void SettingsLoaderSaver::loadSettings() {
     }
   }
 
-  dfh->getDataFor("UI", &lines);
-  for (it = lines.begin(); it != lines.end(); it++) {
-    line = *it;
-    if (line.length() == 0 ||line[0] == '#') continue;
-    size_t tok = line.find('=');
-    std::string setting = line.substr(0, tok);
-    std::string value = line.substr(tok + 1);
-    if (!setting.compare("legend")) {
-      if (!value.compare("true")) {
-        global->getUIBase()->showLegend(true);
-      }
-      else {
-        global->getUIBase()->showLegend(false);
-      }
-    }
-  }
-
   dfh->getDataFor("SiteManager", &lines);
   for (it = lines.begin(); it != lines.end(); it++) {
     line = *it;
@@ -400,6 +383,10 @@ void SettingsLoaderSaver::loadSettings() {
     }
   }
   global->getSiteManager()->sortSites();
+
+  for (std::list<SettingsAdder *>::iterator it = settingsadders.begin(); it != settingsadders.end(); it++) {
+    (*it)->loadSettings(dfh);
+  }
 }
 
 void SettingsLoaderSaver::saveSettings() {
@@ -461,13 +448,6 @@ void SettingsLoaderSaver::saveSettings() {
     std::string filetag = "LocalStorage";
     dfh->addOutputLine(filetag, "temppath=" + global->getLocalStorage()->getTempPath());
     dfh->addOutputLine(filetag, "downloadpath=" + global->getLocalStorage()->getDownloadPath());
-  }
-
-  if (global->getUIBase()->legendEnabled()) {
-    dfh->addOutputLine("UI", "legend=true");
-  }
-  else {
-    dfh->addOutputLine("UI", "legend=false");
   }
 
   {
@@ -540,11 +520,41 @@ void SettingsLoaderSaver::saveSettings() {
       }
     }
   }
+
+  for (std::list<SettingsAdder *>::iterator it = settingsadders.begin(); it != settingsadders.end(); it++) {
+    (*it)->saveSettings(dfh);
+  }
+
   dfh->writeFile();
 }
 
 void SettingsLoaderSaver::tick(int) {
   saveSettings();
+}
+
+void SettingsLoaderSaver::addSettingsAdder(SettingsAdder * sa) {
+  bool found = false;
+  for (std::list<SettingsAdder *>::iterator it = settingsadders.begin(); it != settingsadders.end(); it++) {
+    if (*it == sa) {
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    settingsadders.push_back(sa);
+    if (dfh->isInitialized()) {
+      sa->loadSettings(dfh);
+    }
+  }
+}
+
+void SettingsLoaderSaver::removeSettingsAdder(SettingsAdder * sa) {
+  for (std::list<SettingsAdder *>::iterator it = settingsadders.begin(); it != settingsadders.end(); it++) {
+    if (*it == sa) {
+      settingsadders.erase(it);
+      break;
+    }
+  }
 }
 
 void SettingsLoaderSaver::startAutoSaver() {

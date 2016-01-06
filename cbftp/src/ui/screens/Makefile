@@ -1,7 +1,7 @@
 include ../../../Makefile.inc
 
 SRC = $(wildcard *.cpp)
-OBJS = $(wildcard $(SRC:%.cpp=%.o)) $(wildcard $(SRC:%.cpp=%.d))
+CLEANFILES = $(wildcard $(SRC:%.cpp=%.o) $(SRC:%.cpp=%.d))
 
 all: $(SRC:%.cpp=%.o)
 	@#
@@ -14,7 +14,7 @@ loginscreen.o: loginscreen.cpp ../../../Makefile.inc ${SVN_DIR}
 	${CXX}  ${CPPFLAGS}  -c -o loginscreen.o loginscreen.cpp -DBUILDTIME=${DATE} -DVERSION=${VERSION} -DBOXTAG=${BOXTAG}
 	
 clean:
-	@if test $(firstword $(OBJS)); then rm -rf $(OBJS); echo rm -rf $(OBJS); fi
+	@if test $(firstword $(CLEANFILES)); then rm -rf $(CLEANFILES); echo rm -rf $(CLEANFILES); fi
 
 $(SRC:%.cpp=%.o): ../../../Makefile.inc
 

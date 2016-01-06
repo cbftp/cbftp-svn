@@ -14,13 +14,15 @@ LegendWindow::LegendWindow(Ui * ui, WINDOW * window, int row, int col) {
   text = "";
   latestid = 0;
   latestcount = 8;
+  staticcount = 0;
   init(row, col);
 }
 
 void LegendWindow::redraw() {
   ui->erase(window);
   latestcount = 8;
-  currentpos = 0;
+  staticcount = 0;
+  offset = 0;
   ui->printChar(window, 0, 1, BOX_CORNER_TL);
   ui->printChar(window, 1, 0, BOX_HLINE);
   ui->printChar(window, 1, 1, BOX_CORNER_BR);
@@ -47,28 +49,60 @@ void LegendWindow::update() {
     ui->printStr(window, 1, 4, "EVENT: " + latesttext, col - 4 - 4, false);
     return;
   }
-  if (latestcount < 8) {
+  if (latestcount < 8) { // 2 seconds
     latestcount++;
     return;
   }
   unsigned int printpos = 4;
-  unsigned int textlen = text.length();
-  if (textlen > 0) {
-    unsigned int internalpos = printpos - currentpos++;
-    if (currentpos >= textlen) currentpos = 0;
-    while (printpos < col - 4) {
-      while (printpos - internalpos < textlen && printpos < col - 4) {
-        ui->printChar(window, 1, printpos, text[printpos - internalpos]);
-        ++printpos;
+  if (text.length() > 0) {
+    if (ui->legendMode() == LEGEND_SCROLLING) {
+      std::string scrollingtext = text + "  ::  ";
+      unsigned int textlen = scrollingtext.length();
+      unsigned int internalpos = printpos - offset++;
+      if (offset >= textlen) offset = 0;
+      while (printpos < col - 4) {
+        while (printpos - internalpos < textlen && printpos < col - 4) {
+          ui->printChar(window, 1, printpos, scrollingtext[printpos - internalpos]);
+          ++printpos;
+        }
+        internalpos = printpos;
       }
-      internalpos = printpos;
+    }
+    else if (ui->legendMode() == LEGEND_STATIC) {
+      if (staticcount++ > 20) { // 5 seconds
+        staticcount = 0;
+        if (text.length() - offset > col - 8) {
+          size_t nextoffset = text.rfind(" - ", offset + col - 8);
+          if (nextoffset != std::string::npos) {
+            offset = nextoffset + 3;
+          }
+          else {
+            offset += col - 8;
+          }
+        }
+        else if (offset) {
+          offset = 0;
+        }
+      }
+      unsigned int textpos = offset;
+      while (printpos < col - 4) {
+        if (textpos >= text.length()) {
+          ui->printChar(window, 1, printpos, ' ');
+        }
+        else {
+          ui->printChar(window, 1, printpos, text[textpos]);
+        }
+        ++printpos;
+        ++textpos;
+      }
     }
   }
 }
 
 void LegendWindow::setText(std::string text) {
-  this->text = text + "  ::  ";
-  currentpos = 0;
+  this->text = text;
+  offset = 0;
+  staticcount = 0;
   update();
 }
 

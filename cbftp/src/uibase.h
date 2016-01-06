@@ -2,12 +2,10 @@
 
 class UIBase {
 public:
+  UIBase();
+  virtual ~UIBase();
+  static UIBase * instance();
+  virtual bool init() = 0;
   virtual void backendPush() = 0;
-  virtual bool legendEnabled() const {
-    return false;
-  }
-  virtual void showLegend(bool) {
-  }
-  virtual ~UIBase() {
-  }
+  virtual void kill() = 0;
 };
