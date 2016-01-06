@@ -19,8 +19,7 @@
 #include "externalfileviewing.h"
 #include "timereference.h"
 #include "threading.h"
-
-#include "ui/ui.h"
+#include "uibase.h"
 
 GlobalContext * global;
 
@@ -49,18 +48,18 @@ public:
     ExternalFileViewing * efv = new ExternalFileViewing();
     TimeReference * tr = new TimeReference();
 
-    Ui * ui = new Ui();
+    UIBase * uibase = UIBase::instance();
 
-    global->linkComponents(sls, iom, e, ui, sm, slm, tm, rch, sl, pm, ls, efv, tr);
+    global->linkComponents(sls, iom, e, uibase, sm, slm, tm, rch, sl, pm, ls, efv, tr);
 
     Threading::setCurrentThreadName("cbftp");
 
-    if (!ui->init()) exit(1);
+    if (!uibase->init()) exit(1);
     wm->init();
     iom->init();
     tp->tickerLoop();
     global->getExternalFileViewing()->killAll();
-    ui->kill();
+    uibase->kill();
     sls->saveSettings();
   }
 };
