@@ -57,7 +57,6 @@ static void sighandler(int signal) {
 }
 
 Ui::Ui() {
-  CharDraw::init();
   main = NULL;
   infoenabled = false;
   legendenabled = false;
@@ -78,6 +77,8 @@ bool Ui::init() {
   sigaddset(&sa.sa_mask, SIGWINCH);
   sa.sa_handler = sighandler;
   sigaction(SIGWINCH, &sa, NULL);
+
+  CharDraw::init();
 
   global->getSettingsLoaderSaver()->addSettingsAdder(this);
 
