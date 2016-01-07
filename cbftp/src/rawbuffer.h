@@ -2,11 +2,12 @@
 
 #include <string>
 #include <vector>
+#include <utility>
 
 class RawBuffer {
   private:
-    std::vector<std::string> log;
-    std::vector<std::string> logcopy;
+    std::vector<std::pair<std::string, std::string> > log;
+    std::vector<std::pair<std::string, std::string> > logcopy;
     unsigned int latestp;
     unsigned int latestpcopy;
     unsigned int maxlength;
@@ -26,8 +27,8 @@ class RawBuffer {
     void rename(std::string);
     unsigned int getSize() const;
     unsigned int getCopySize() const;
-    std::string getLine(unsigned int) const;
-    std::string getLineCopy(unsigned int) const;
+    std::pair<std::string, std::string> getLine(unsigned int) const;
+    std::pair<std::string, std::string> getLineCopy(unsigned int) const;
     void freezeCopy();
     void uiWatching(bool);
 };

@@ -9,6 +9,8 @@
 
 #include "../ui.h"
 
+#include "rawdatascreen.h"
+
 extern GlobalContext * global;
 
 RawCommandScreen::RawCommandScreen(Ui * ui) {
@@ -42,24 +44,7 @@ void RawCommandScreen::update() {
   ui->erase();
   ui->showCursor();
   unsigned int rownum = row - 1;
-  if (!readfromcopy) {
-    unsigned int numlinestoprint = rawbuf->getSize() < rownum ? rawbuf->getSize() : rownum;
-    for (unsigned int i = 0; i < numlinestoprint; i++) {
-      std::string line = rawbuf->getLine(numlinestoprint - i - 1);
-      for (unsigned int j = 0; j < line.length(); j++) {
-        ui->printChar(i, j, encoding::cp437toUnicode(line[j]));
-      }
-    }
-  }
-  else {
-    unsigned int numlinestoprint = copysize < rownum ? copysize : rownum;
-    for (unsigned int i = 0; i < numlinestoprint; i++) {
-      std::string line = rawbuf->getLineCopy(numlinestoprint - i - 1 + copyreadpos);
-      for (unsigned int j = 0; j < line.length(); j++) {
-        ui->printChar(i, j, encoding::cp437toUnicode(line[j]));
-      }
-    }
-  }
+  RawDataScreen::printRawBufferLines(ui, rawbuf, rownum, col, readfromcopy, copysize, copyreadpos);
   std::string pretag = "[Raw command]: ";
   ui->printStr(rownum, 0, pretag + rawcommandfield.getContentText());
   ui->moveCursor(rownum, pretag.length() + rawcommandfield.cursorPosition());

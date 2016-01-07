@@ -16,7 +16,10 @@ public:
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
+  static void printRawBufferLines(Ui *, RawBuffer *, unsigned int, unsigned int, bool, unsigned int, unsigned int);
 private:
+  static std::string makeLine(unsigned int, std::pair<std::string, std::string>);
+  static bool skipCodePrint(const std::string &);
   bool rawcommandmode;
   bool rawcommandswitch;
   int threads;

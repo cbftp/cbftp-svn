@@ -30,13 +30,17 @@ void EventLogScreen::update() {
   if (!readfromcopy) {
     unsigned int numlinestoprint = rawbuf->getSize() < row ? rawbuf->getSize() : row;
     for (unsigned int i = 0; i < numlinestoprint; i++) {
-      ui->printStr(i, 0, rawbuf->getLine(numlinestoprint - i - 1));
+      std::pair<std::string, std::string> entry = rawbuf->getLine(numlinestoprint - i - 1);
+      std::string line = entry.first + " " + entry.second;
+      ui->printStr(i, 0, line);
     }
   }
   else {
     unsigned int numlinestoprint = copysize < row ? copysize : row;
     for (unsigned int i = 0; i < numlinestoprint; i++) {
-      ui->printStr(i, 0, rawbuf->getLineCopy(numlinestoprint - i - 1 + copyreadpos));
+      std::pair<std::string, std::string> entry = rawbuf->getLineCopy(numlinestoprint - i - 1 + copyreadpos);
+      std::string line = entry.first + " " + entry.second;
+      ui->printStr(i, 0, line);
     }
   }
 }

@@ -59,30 +59,55 @@ void RawDataScreen::update() {
   if (rawcommandmode) {
     rownum = row - 1;
   }
+  printRawBufferLines(ui, rawbuf, rownum, col, readfromcopy, copysize, copyreadpos);
+  if (rawcommandmode) {
+    std::string pretag = "[Raw command]: ";
+    ui->printStr(rownum, 0, pretag + rawcommandfield.getContentText());
+    ui->moveCursor(rownum, pretag.length() + rawcommandfield.cursorPosition());
+  }
+}
+
+void RawDataScreen::printRawBufferLines(Ui * ui, RawBuffer * rawbuf, unsigned int rownum, unsigned int col, bool readfromcopy, unsigned int copysize, unsigned int copyreadpos) {
+  std::list<std::string> lines;
+  bool cutfirst5 = false;
   if (!readfromcopy) {
     unsigned int numlinestoprint = rawbuf->getSize() < rownum ? rawbuf->getSize() : rownum;
     for (unsigned int i = 0; i < numlinestoprint; i++) {
-      std::string line = rawbuf->getLine(numlinestoprint - i - 1);
-      for (unsigned int j = 0; j < line.length(); j++) {
-        ui->printChar(i, j, encoding::cp437toUnicode(line[j]));
+      std::string line = makeLine(col, rawbuf->getLine(numlinestoprint - i - 1));
+      if (!cutfirst5 && line.length() > col && skipCodePrint(line)) {
+        cutfirst5 = true;
       }
+      lines.push_back(line);
     }
   }
   else {
     unsigned int numlinestoprint = copysize < rownum ? copysize : rownum;
     for (unsigned int i = 0; i < numlinestoprint; i++) {
-      std::string line = rawbuf->getLineCopy(numlinestoprint - i - 1 + copyreadpos);
-      for (unsigned int j = 0; j < line.length(); j++) {
-        ui->printChar(i, j, encoding::cp437toUnicode(line[j]));
+      std::string line = makeLine(col, rawbuf->getLineCopy(numlinestoprint - i - 1 + copyreadpos));
+      if (!cutfirst5 && line.length() > col && skipCodePrint(line)) {
+        cutfirst5 = true;
       }
+      lines.push_back(line);
     }
   }
-  if (rawcommandmode) {
-    std::string pretag = "[Raw command]: ";
-    ui->printStr(rownum, 0, pretag + rawcommandfield.getContentText());
-
-    ui->moveCursor(rownum, pretag.length() + rawcommandfield.cursorPosition());
+  unsigned int i = 0;
+  for (std::list<std::string>::const_iterator it = lines.begin(); it != lines.end(); it++, i++) {
+    unsigned int start = 0;
+    if (cutfirst5 && skipCodePrint(*it)) {
+      start = 5;
+    }
+    for (unsigned int j = start; j < it->length(); j++) {
+      ui->printChar(i, j - start, encoding::cp437toUnicode((*it)[j]));
+    }
   }
+}
+
+std::string RawDataScreen::makeLine(unsigned int col, std::pair<std::string, std::string> entry) {
+  return (col > 80 + entry.first.length() ? entry.first + " " : "") + entry.second;
+}
+
+bool RawDataScreen::skipCodePrint(const std::string & line) {
+  return line.length() >= 5 && (line.substr(0, 5) == "230- " || line.substr(0, 5) == "200- ");
 }
 
 bool RawDataScreen::keyPressed(unsigned int ch) {

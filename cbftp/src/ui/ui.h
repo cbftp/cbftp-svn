@@ -105,6 +105,7 @@ private:
   bool dead;
   LegendMode legendmode;
   bool split;
+  bool fullscreentoggle;
   std::string eventtext;
   Semaphore eventcomplete;
   std::list<Pointer<UIWindow> > history;

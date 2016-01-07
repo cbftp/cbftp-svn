@@ -42,25 +42,42 @@ RawBuffer::RawBuffer() {
   writeLine("Event log initialized.");
 }
 void RawBuffer::write(std::string s) {
-  size_t split = s.find("\n");
+  size_t split = s.find("\r\n");
   if (!split) {
-    if (s.length() > 1) write(s.substr(1));
+    if (s.length() > 2) write(s.substr(2));
   }
   else if (split != std::string::npos) {
     write(s.substr(0, split));
     inprogress = false;
-    if (s.length() > split + 1) write(s.substr(split + 1));
+    if (s.length() > split + 2) write(s.substr(split + 2));
   }
   else {
-    if (inprogress) {
-      log[(latestp > 0 ? latestp : maxlength) - 1].append(s);
+    split = s.find("\n");
+    if (!split) {
+      if (s.length() > 1) write(s.substr(1));
+    }
+    else if (split != std::string::npos) {
+      write(s.substr(0, split));
+      inprogress = false;
+      if (s.length() > split + 1) write(s.substr(split + 1));
     }
     else {
-      s = "[" + util::ctimeLog() + (eventlog ? "" : " " + site + (threads ? " " + id : "")) + "] " + s;
-      if (log.size() < maxlength) log.push_back(s);
-      else log[latestp] = s;
-      if (++latestp == maxlength) latestp = 0;
-      inprogress = true;
+      if (inprogress) {
+        log[(latestp > 0 ? latestp : maxlength) - 1].second.append(s);
+      }
+      else {
+        std::string tag = "[" + util::ctimeLog() + (eventlog ? "" : " " + site + (threads ? " " + id : "")) + "]";
+        if (log.size() < maxlength) {
+          log.push_back(std::pair<std::string, std::string>(tag, s));
+        }
+        else {
+          log[latestp] = std::pair<std::string, std::string>(tag, s);
+        }
+        if (++latestp == maxlength) {
+          latestp = 0;
+        }
+        inprogress = true;
+      }
     }
   }
   if (uiwatching) {
@@ -81,16 +98,20 @@ void RawBuffer::setId(int id) {
   this->id = util::int2Str(id);
 }
 
-std::string RawBuffer::getLineCopy(unsigned int num) const {
+std::pair<std::string, std::string> RawBuffer::getLineCopy(unsigned int num) const {
   unsigned int size = getCopySize();
-  if (num >= size) return "";
+  if (num >= size) {
+    return std::pair<std::string, std::string>("", "");
+  }
   int pos = (num < latestpcopy ? latestpcopy - num - 1 : size + latestpcopy - num - 1);
   return logcopy[pos];
 }
 
-std::string RawBuffer::getLine(unsigned int num) const {
+std::pair<std::string, std::string> RawBuffer::getLine(unsigned int num) const {
   unsigned int size = getSize();
-  if (num >= size) return "";
+  if (num >= size) {
+    return std::pair<std::string, std::string>("", "");
+  }
   int pos = (num < latestp ? latestp - num - 1 : size + latestp - num - 1);
   return log[pos];
 }
