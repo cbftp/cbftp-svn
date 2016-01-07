@@ -62,6 +62,7 @@ Ui::Ui() {
   infoenabled = false;
   legendenabled = false;
   dead = false;
+  fullscreentoggle = false;
   legendmode = LEGEND_SCROLLING;
   split = false;
 }
@@ -416,6 +417,18 @@ void Ui::globalKeyBinds(int ch) {
       break;
     case 'p':
       global->getEngine()->startLatestPreparedRace();
+      break;
+    case '\\':
+      if (fullscreentoggle) {
+        enableInfo();
+        enableLegend();
+        fullscreentoggle = false;
+      }
+      else {
+        disableInfo();
+        disableLegend();
+        fullscreentoggle = true;
+      }
       break;
   }
   update();
