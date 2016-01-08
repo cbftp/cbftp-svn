@@ -20,15 +20,23 @@ void TermInt::printChar(WINDOW * window, unsigned int row, unsigned int col, uns
   wmove(cursorwindow, cursorrow, cursorcol);
 }
 
-void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, std::string str) {
+void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, const std::string & str) {
   printStr(window, row, col, str, str.length());
 }
 
-void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, std::string str, unsigned int maxlen) {
+void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str) {
+  printStr(window, row, col, str, str.length());
+}
+
+void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, const std::string & str, unsigned int maxlen) {
   printStr(window, row, col, str, maxlen, false);
 }
 
-void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, std::string str, unsigned int maxlen, bool rightalign) {
+void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str, unsigned int maxlen) {
+  printStr(window, row, col, str, maxlen, false);
+}
+
+void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, const std::string & str, unsigned int maxlen, bool rightalign) {
   unsigned int len = str.length();
   if (len > maxlen) {
     len = maxlen;
@@ -39,6 +47,21 @@ void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, std:
   }
   for (unsigned int i = 0; i < len; i++) {
     printChar(window, row, col + i + rightadjust, (unsigned char)str[i]);
+  }
+  wmove(cursorwindow, cursorrow, cursorcol);
+}
+
+void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str, unsigned int maxlen, bool rightalign) {
+  unsigned int len = str.length();
+  if (len > maxlen) {
+    len = maxlen;
+  }
+  int rightadjust = 0;
+  if (rightalign) {
+    rightadjust = maxlen - len;
+  }
+  for (unsigned int i = 0; i < len; i++) {
+    printChar(window, row, col + i + rightadjust, str[i]);
   }
   wmove(cursorwindow, cursorrow, cursorcol);
 }

@@ -27,8 +27,8 @@ class RawBuffer {
     void rename(std::string);
     unsigned int getSize() const;
     unsigned int getCopySize() const;
-    std::pair<std::string, std::string> getLine(unsigned int) const;
-    std::pair<std::string, std::string> getLineCopy(unsigned int) const;
+    const std::pair<std::string, std::string> & getLine(unsigned int) const;
+    const std::pair<std::string, std::string> & getLineCopy(unsigned int) const;
     void freezeCopy();
     void uiWatching(bool);
 };
