@@ -98,20 +98,16 @@ void RawBuffer::setId(int id) {
   this->id = util::int2Str(id);
 }
 
-std::pair<std::string, std::string> RawBuffer::getLineCopy(unsigned int num) const {
+const std::pair<std::string, std::string> & RawBuffer::getLineCopy(unsigned int num) const {
   unsigned int size = getCopySize();
-  if (num >= size) {
-    return std::pair<std::string, std::string>("", "");
-  }
+  util::assert(num < size);
   int pos = (num < latestpcopy ? latestpcopy - num - 1 : size + latestpcopy - num - 1);
   return logcopy[pos];
 }
 
-std::pair<std::string, std::string> RawBuffer::getLine(unsigned int num) const {
+const std::pair<std::string, std::string> & RawBuffer::getLine(unsigned int num) const {
   unsigned int size = getSize();
-  if (num >= size) {
-    return std::pair<std::string, std::string>("", "");
-  }
+  util::assert(num < size);
   int pos = (num < latestp ? latestp - num - 1 : size + latestp - num - 1);
   return log[pos];
 }

@@ -13,9 +13,9 @@ enum Encoding {
 };
 
 unsigned int cp437toUnicode(unsigned char);
-std::basic_string<unsigned int> cp437toUnicode(std::string &);
-std::basic_string<unsigned int> doublecp437toUnicode(std::string &);
-std::basic_string<unsigned int> toUnicode(std::string &);
+std::basic_string<unsigned int> cp437toUnicode(const std::string &);
+std::basic_string<unsigned int> doublecp437toUnicode(const std::string &);
+std::basic_string<unsigned int> toUnicode(const std::string &);
 Encoding guessEncoding(const binary_data &);
 
 }

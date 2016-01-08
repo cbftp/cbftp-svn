@@ -56,14 +56,18 @@ static void sighandler(int signal) {
   global->getWorkManager()->dispatchSignal(instance, signal);
 }
 
-Ui::Ui() {
-  main = NULL;
-  infoenabled = false;
-  legendenabled = false;
-  dead = false;
-  fullscreentoggle = false;
-  legendmode = LEGEND_SCROLLING;
-  split = false;
+Ui::Ui() :
+  main(NULL),
+  ticker(0),
+  haspushed(false),
+  pushused(false),
+  legendenabled(false),
+  infoenabled(false),
+  dead(false),
+  legendmode(LEGEND_SCROLLING),
+  split(false),
+  fullscreentoggle(false)
+{
 }
 
 Ui::~Ui() {
@@ -161,7 +165,7 @@ bool Ui::init() {
   std::cin.putback('#'); // needed to be able to peek properly
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
   global->getIOManager()->registerStdin(this);
-  global->getTickPoke()->startPoke(this, "UI", 250, 0);
+  global->getTickPoke()->startPoke(this, "UI", 50, 0);
   return true;
 }
 
@@ -195,8 +199,12 @@ void Ui::initIntern() {
 }
 
 void Ui::backendPush() {
-  topwindow->update();
-  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+  haspushed = true;
+  if (!pushused) {
+    topwindow->update();
+    uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+    pushused = true;
+  }
 }
 
 void Ui::signal(int signal) {
@@ -322,16 +330,29 @@ void Ui::redrawAll() {
 }
 
 void Ui::tick(int message) {
-  if (topwindow->autoUpdate()) {
-    topwindow->update();
+  if (!(ticker++ % 5)) {
+    bool refresh = false;
+    if (topwindow->autoUpdate()) {
+      topwindow->update();
+      refresh = true;
+    }
+    if (legendenabled) {
+      refresh = true;
+      legendwindow->update();
+    }
+    if (infoenabled) {
+      refresh = true;
+      infowindow->setText(topwindow->getInfoText());
+    }
+    if (refresh) {
+      uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+    }
   }
-  if (legendenabled) {
-    legendwindow->update();
+  pushused = false;
+  if (haspushed) {
+    backendPush();
+    haspushed = false;
   }
-  if (infoenabled) {
-    infowindow->setText(topwindow->getInfoText());
-  }
-  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 
 void Ui::run() {
@@ -365,6 +386,10 @@ void Ui::run() {
       case UI_COMMAND_PRINT_STR:
         TermInt::printStr(command.getWindow(), command.getRow(), command.getCol(),
             command.getText(), command.getMaxlen(), command.getRightAlign());
+        break;
+      case UI_COMMAND_PRINT_WIDE_STR:
+        TermInt::printStr(command.getWindow(), command.getRow(), command.getCol(),
+            command.getWideText(), command.getMaxlen(), command.getRightAlign());
         break;
       case UI_COMMAND_PRINT_CHAR:
         TermInt::printChar(command.getWindow(), command.getRow(), command.getCol(),
@@ -536,39 +561,77 @@ void Ui::highlight(bool highlight) {
   }
 }
 
-void Ui::printStr(unsigned int row, unsigned int col, std::string str) {
+void Ui::printStr(unsigned int row, unsigned int col, const std::string & str) {
   printStr(row, col, str, false);
 }
 
-void Ui::printStr(WINDOW * window, unsigned int row, unsigned int col, std::string str) {
+void Ui::printStr(unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str) {
+  printStr(row, col, str, false);
+}
+
+void Ui::printStr(WINDOW * window, unsigned int row, unsigned int col, const std::string & str) {
   printStr(window, row, col, str, str.length(), false);
 }
 
-void Ui::printStr(unsigned int row, unsigned int col, std::string str, bool highlight) {
+void Ui::printStr(WINDOW * window, unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str) {
+  printStr(window, row, col, str, str.length(), false);
+}
+
+void Ui::printStr(unsigned int row, unsigned int col, const std::string & str, bool highlight) {
   printStr(row, col, str, str.length(), highlight, false);
 }
 
-void Ui::printStr(unsigned int row, unsigned int col, std::string str, unsigned int maxlen) {
+void Ui::printStr(unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str, bool highlight) {
+  printStr(row, col, str, str.length(), highlight, false);
+}
+
+void Ui::printStr(unsigned int row, unsigned int col, const std::string & str, unsigned int maxlen) {
   printStr(row, col, str, maxlen, false, false);
 }
 
-void Ui::printStr(unsigned int row, unsigned int col, std::string str, unsigned int maxlen, bool highlight) {
+void Ui::printStr(unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str, unsigned int maxlen) {
+  printStr(row, col, str, maxlen, false, false);
+}
+
+void Ui::printStr(unsigned int row, unsigned int col, const std::string & str, unsigned int maxlen, bool highlight) {
   printStr(row, col, str, maxlen, highlight, false);
 }
 
-void Ui::printStr(WINDOW * window, unsigned int row, unsigned int col, std::string str, unsigned int maxlen, bool highlight) {
+void Ui::printStr(unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str, unsigned int maxlen, bool highlight) {
+  printStr(row, col, str, maxlen, highlight, false);
+}
+
+void Ui::printStr(WINDOW * window, unsigned int row, unsigned int col, const std::string & str, unsigned int maxlen, bool highlight) {
   printStr(window, row, col, str, maxlen, highlight, false);
 }
 
-void Ui::printStr(unsigned int row, unsigned int col, std::string str, unsigned int maxlen, bool highlight, bool rightalign) {
+void Ui::printStr(WINDOW * window, unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str, unsigned int maxlen, bool highlight) {
+  printStr(window, row, col, str, maxlen, highlight, false);
+}
+
+void Ui::printStr(unsigned int row, unsigned int col, const std::string & str, unsigned int maxlen, bool highlight, bool rightalign) {
   printStr(main, row, col, str, maxlen, highlight, rightalign);
 }
 
-void Ui::printStr(WINDOW * window, unsigned int row, unsigned int col, std::string str, unsigned int maxlen, bool highlight, bool rightalign) {
+void Ui::printStr(unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str, unsigned int maxlen, bool highlight, bool rightalign) {
+  printStr(main, row, col, str, maxlen, highlight, rightalign);
+}
+
+void Ui::printStr(WINDOW * window, unsigned int row, unsigned int col, const std::string & str, unsigned int maxlen, bool highlight, bool rightalign) {
   if (highlight) {
     this->highlight(true);
   }
   uiqueue.push(UICommand(UI_COMMAND_PRINT_STR, window, row, col, str, maxlen, rightalign));
+  if (highlight) {
+    this->highlight(false);
+  }
+}
+
+void Ui::printStr(WINDOW * window, unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str, unsigned int maxlen, bool highlight, bool rightalign) {
+  if (highlight) {
+    this->highlight(true);
+  }
+  uiqueue.push(UICommand(UI_COMMAND_PRINT_WIDE_STR, window, row, col, str, maxlen, rightalign));
   if (highlight) {
     this->highlight(false);
   }
