@@ -300,15 +300,21 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
       ui->returnToLast();
       return true;
     case 's':
-      if (startRace()) {
-        ui->returnRaceStatus(global->getEngine()->getLatestId());
+    {
+      Pointer<Race> race = startRace();
+      if (!!race) {
+        ui->returnRaceStatus(race->getId());
       }
       return true;
+    }
     case 'S':
-      if (startRace()) {
+    {
+      Pointer<Race> race = startRace();
+      if (!!race) {
         ui->returnToLast();
       }
       return true;
+    }
     case 't':
       if (!toggleall) {
         toggleall = true;
@@ -344,7 +350,7 @@ std::string NewRaceScreen::getSectionButtonText(Pointer<MenuSelectOptionElement>
   return buttontext;
 }
 
-bool NewRaceScreen::startRace() {
+Pointer<Race> NewRaceScreen::startRace() {
   msota->getData();
   std::list<std::string> sites;
   for (unsigned int i = 0; i < mso.size(); i++) {
@@ -356,7 +362,7 @@ bool NewRaceScreen::startRace() {
   if (sites.size() < 2) {
     infotext = "Cannot start race with less than 2 sites!";
     ui->update();
-    return false;
+    return Pointer<Race>();
   }
   if (msota->getData() == SPREAD_RACE) {
     return global->getEngine()->newRace(release, section, sites);
