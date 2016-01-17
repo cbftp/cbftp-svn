@@ -15,8 +15,6 @@
 #include "../settingsloadersaver.h"
 #include "../pointer.h"
 
-#define TICKLENGTH 250000
-
 class UIWindow;
 class InfoWindow;
 class LegendWindow;

@@ -55,7 +55,7 @@ Engine::~Engine() {
 
 }
 
-bool Engine::newSpreadJob(int profile, const std::string & release, const std::string & section, const std::list<std::string> & sites) {
+Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, const std::string & section, const std::list<std::string> & sites) {
   Pointer<Race> race;
   bool append = false;
   for (std::list<Pointer<Race> >::iterator it = allraces.begin(); it != allraces.end(); it++) {
@@ -67,11 +67,11 @@ bool Engine::newSpreadJob(int profile, const std::string & release, const std::s
   }
   if (!global->getSkipList()->isAllowed(release, true, false)) {
     global->getEventLog()->log("Engine", "Race skipped due to skiplist match: " + release);
-    return false;
+    return Pointer<Race>();
   }
   if (release.find("/") != std::string::npos) {
     global->getEventLog()->log("Engine", "Race skipped due to invalid target: " + release);
-    return false;
+    return Pointer<Race>();
   }
   if (!race) {
     race = makePointer<Race>(nextid++, static_cast<SpreadProfile>(profile), release, section);
@@ -112,7 +112,7 @@ bool Engine::newSpreadJob(int profile, const std::string & release, const std::s
   if (addsites.size() < 2 && !append) {
     global->getEventLog()->log("Engine", "Ignoring attempt to race " + release + " in "
         + section + " on less than 2 sites.");
-    return false;
+    return Pointer<Race>();
   }
   bool readdtocurrent = true;
   if (addsites.size() > 0 || append) {
@@ -124,7 +124,7 @@ bool Engine::newSpreadJob(int profile, const std::string & release, const std::s
       for (std::list<SiteLogic *>::const_iterator ait = addsiteslogics.begin(); ait != addsiteslogics.end(); ait++) {
         (*ait)->activateAll();
       }
-      return true;
+      return Pointer<Race>();
     }
     if (append) {
       for (std::list<Pointer<Race> >::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
@@ -151,19 +151,19 @@ bool Engine::newSpreadJob(int profile, const std::string & release, const std::s
       global->getEventLog()->log("Engine", "Starting race: " + section + "/" + release +
           " on " + util::int2Str((int)addsites.size()) + " sites.");
     }
-    else {
+    else if (addsites.size()) {
       if (readdtocurrent) {
         currentraces.push_back(race);
       }
       global->getEventLog()->log("Engine", "Appending to race: " + section + "/" + release +
-          " with " + util::int2Str((int)addsites.size()) + " sites.");
+          " with " + util::int2Str((int)addsites.size()) + " site" + (addsites.size() > 1 ? "s" : "") + ".");
     }
     setSpeedScale();
   }
-  return true;
+  return race;
 }
 
-bool Engine::newSpreadJob(int profile, const std::string & release, const std::string & section) {
+Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, const std::string & section) {
   std::list<std::string> sites;
   for (std::vector<Site *>::const_iterator it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
     if ((*it)->hasSection(section)) {
@@ -173,15 +173,15 @@ bool Engine::newSpreadJob(int profile, const std::string & release, const std::s
   return newSpreadJob(profile, release, section, sites);
 }
 
-bool Engine::newRace(const std::string & release, const std::string & section, const std::list<std::string> & sites) {
+Pointer<Race> Engine::newRace(const std::string & release, const std::string & section, const std::list<std::string> & sites) {
   return newSpreadJob(SPREAD_RACE, release, section, sites);
 }
 
-bool Engine::newRace(const std::string & release, const std::string & section) {
+Pointer<Race> Engine::newRace(const std::string & release, const std::string & section) {
   return newSpreadJob(SPREAD_RACE, release, section);
 }
 
-bool Engine::newDistribute(const std::string & release, const std::string & section, const std::list<std::string> & sites) {
+Pointer<Race> Engine::newDistribute(const std::string & release, const std::string & section, const std::list<std::string> & sites) {
   return newSpreadJob(SPREAD_DISTRIBUTE, release, section, sites);
 }
 
@@ -1010,9 +1010,4 @@ bool Engine::checkBannedGroup(Site * site, const std::string & group) {
     return true;
   }
   return false;
-}
-
-unsigned int Engine::getLatestId() const {
-  util::assert(nextid);
-  return nextid - 1;
 }

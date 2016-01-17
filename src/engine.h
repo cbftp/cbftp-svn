@@ -35,8 +35,8 @@ class Engine : public EventReceiver {
     Pointer<ScoreBoard> scoreboard;
     std::map<Pointer<TransferJob>, std::list<PendingTransfer> > pendingtransfers;
     int maxavgspeed;
-    bool newSpreadJob(int, const std::string &, const std::string &, const std::list<std::string> &);
-    bool newSpreadJob(int, const std::string &, const std::string &);
+    Pointer<Race> newSpreadJob(int, const std::string &, const std::string &, const std::list<std::string> &);
+    Pointer<Race> newSpreadJob(int, const std::string &, const std::string &);
     void estimateRaceSizes();
     void reportCurrentSize(SiteRace *, FileList *, bool final);
     void refreshScoreBoard();
@@ -58,11 +58,11 @@ class Engine : public EventReceiver {
   public:
     Engine();
     ~Engine();
-    bool newRace(const std::string &, const std::string &, const std::list<std::string> &);
-    bool newRace(const std::string &, const std::string &);
+    Pointer<Race> newRace(const std::string &, const std::string &, const std::list<std::string> &);
+    Pointer<Race> newRace(const std::string &, const std::string &);
     void prepareRace(const std::string &, const std::string &, const std::list<std::string> &);
     void prepareRace(const std::string &, const std::string &);
-    bool newDistribute(const std::string &, const std::string &, const std::list<std::string> &);
+    Pointer<Race> newDistribute(const std::string &, const std::string &, const std::list<std::string> &);
     void startPreparedRace(unsigned int);
     void deletePreparedRace(unsigned int);
     void startLatestPreparedRace();
@@ -94,7 +94,5 @@ class Engine : public EventReceiver {
     std::list<Pointer<TransferJob> >::const_iterator getTransferJobsEnd() const;
     void tick(int);
     void addSiteToRace(Pointer<Race> &, const std::string &);
-    unsigned int getLatestId() const;
-
     Pointer<ScoreBoard> getScoreBoard() const;
 };

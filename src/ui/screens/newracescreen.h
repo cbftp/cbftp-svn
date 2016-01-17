@@ -12,6 +12,7 @@ class FocusableArea;
 class MenuSelectOptionElement;
 class MenuSelectOptionTextArrow;
 class Site;
+class Race;
 
 class NewRaceScreen : public UIWindow {
 public:
@@ -26,7 +27,7 @@ public:
   std::string getInfoText() const;
 private:
   void populateSiteList();
-  bool startRace();
+  Pointer<Race> startRace();
   Site * startsite;
   std::string getSectionButtonText(Pointer<MenuSelectOptionElement>) const;
   std::string currentlegendtext;
