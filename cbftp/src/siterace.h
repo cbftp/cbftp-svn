@@ -49,7 +49,7 @@ class SiteRace : public CommandOwner {
     std::map<std::string, FileList *>::const_iterator fileListsBegin() const;
     std::map<std::string, FileList *>::const_iterator fileListsEnd() const;
     Pointer<Race> getRace() const;
-    void addSubDirectory(std::string);
+    bool addSubDirectory(std::string);
     std::string getSubPath(FileList *) const;
     void fileListUpdated(FileList *);
     bool sizeEstimated(FileList *) const;
