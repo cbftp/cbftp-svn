@@ -796,19 +796,22 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
       connstatetracker[id].delayedCommand("refreshchangepath", SLEEPDELAY, (void *) race);
       return;
     }
+    connstatetracker[id].use();
+
     if (goodpath) {
       std::string subpath = slashpos == racepath.length() ? currentpath.substr(slashpos + 1) : "";
       FileList * fl = race->getFileListForPath(subpath);
       if (fl == NULL) {
-        race->addSubDirectory(subpath);
+        if (!race->addSubDirectory(subpath)) {
+          refreshChangePath(id, race, refresh);
+          return;
+        }
         fl = race->getFileListForPath(subpath);
       }
-      connstatetracker[id].use();
       getFileListConn(id, race, fl);
       return;
     }
     else {
-      connstatetracker[id].use();
       refreshChangePath(id, race, refresh);
     }
   }

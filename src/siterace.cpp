@@ -61,15 +61,18 @@ unsigned int SiteRace::getId() const {
   return race->getId();
 }
 
-void SiteRace::addSubDirectory(std::string subpath) {
-  if (!global->getSkipList()->isAllowed(subpath, true)) return;
+bool SiteRace::addSubDirectory(std::string subpath) {
+  if (!global->getSkipList()->isAllowed(subpath, true)) {
+    return false;
+  }
   if (getFileListForPath(subpath) != NULL) {
-    return;
+    return true;
   }
   FileList * subdir = new FileList(username, path + "/" + subpath);
   filelists[subpath] = subdir;
   recentlyvisited.push_front(subpath);
   race->reportNewSubDir(this, subpath);
+  return true;
 }
 
 std::string SiteRace::getSubPath(FileList * filelist) const {
