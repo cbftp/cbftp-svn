@@ -358,7 +358,7 @@ bool MainScreen::keyPressed(unsigned int ch) {
       return true;
     case 's':
       if ((msop.isFocused())) {
-        unsigned int id = msot.getElement(msot.getSelectionPointer())->getId();
+        unsigned int id = msop.getElement(msop.getSelectionPointer())->getId();
         global->getEngine()->startPreparedRace(id);
         ui->redraw();
       }
