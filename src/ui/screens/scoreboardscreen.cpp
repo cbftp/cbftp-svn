@@ -78,6 +78,6 @@ std::string ScoreBoardScreen::getInfoLabel() const {
 
 std::string ScoreBoardScreen::getInfoText() const {
   std::string size = util::int2Str(scoreboard->size());
-  std::string max = util::int2Str((int)scoreboard->getElementVector()->size());
+  std::string max = util::int2Str((int)scoreboard->getElementVector().size());
   return "Size: " + size + "  Max: " + max;
 }

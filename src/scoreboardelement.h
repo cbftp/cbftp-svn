@@ -20,14 +20,14 @@ class ScoreBoardElement {
     unsigned short score;
     bool prio;
   public:
-    ScoreBoardElement(std::string, unsigned short, bool, SiteLogic *, FileList *, SiteLogic *, FileList *, Pointer<Race>);
-    void reset(std::string, unsigned short, bool, SiteLogic *, FileList *, SiteLogic *, FileList *, Pointer<Race>);
-    std::string fileName() const;
+    ScoreBoardElement(const std::string &, unsigned short, bool, SiteLogic *, FileList *, SiteLogic *, FileList *, Pointer<Race> &);
+    void reset(const std::string &, unsigned short, bool, SiteLogic *, FileList *, SiteLogic *, FileList *, Pointer<Race> &);
+    const std::string & fileName() const;
     SiteLogic * getSource() const;
     SiteLogic * getDestination() const;
     FileList * getSourceFileList() const;
     FileList * getDestinationFileList() const;
-    Pointer<Race> getRace() const;
+    const Pointer<Race> & getRace() const;
     unsigned short getScore() const;
     bool isPrioritized() const;
 };
