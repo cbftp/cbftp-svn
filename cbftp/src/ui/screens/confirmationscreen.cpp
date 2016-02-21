@@ -17,7 +17,7 @@ void ConfirmationScreen::redraw() {
 }
 
 bool ConfirmationScreen::keyPressed(unsigned int ch) {
-  if (ch == 'y') {
+  if (ch == 'y' || ch == 'Y') {
     ui->confirmYes();
   }
   else {
