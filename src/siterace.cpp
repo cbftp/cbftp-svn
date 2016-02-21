@@ -87,17 +87,15 @@ std::string SiteRace::getSubPath(FileList * filelist) const {
 }
 
 std::string SiteRace::getRelevantSubPath() {
-  std::string leastrecentlyvisited = recentlyvisited.front();
-  while (isSubPathComplete(leastrecentlyvisited) && recentlyvisited.size() > 0) {
+  while (recentlyvisited.size()) {
+    std::string leastrecentlyvisited = recentlyvisited.front();
     recentlyvisited.pop_front();
-    leastrecentlyvisited = recentlyvisited.front();
+    if (!isSubPathComplete(leastrecentlyvisited)) {
+      recentlyvisited.push_back(leastrecentlyvisited);
+      return leastrecentlyvisited;
+    }
   }
-  if (recentlyvisited.size() == 0) {
-    return "";
-  }
-  recentlyvisited.push_back(leastrecentlyvisited);
-  recentlyvisited.pop_front();
-  return leastrecentlyvisited;
+  return "";
 }
 
 FileList * SiteRace::getFileListForPath(std::string subpath) const {
@@ -255,7 +253,7 @@ void SiteRace::subPathComplete(FileList * fl) {
   completesubdirs.push_back(subpath);
 }
 
-bool SiteRace::isSubPathComplete(std::string subpath) const {
+bool SiteRace::isSubPathComplete(const std::string & subpath) const {
   std::list<std::string>::const_iterator it;
   for (it = completesubdirs.begin(); it != completesubdirs.end(); it++) {
     if (*it == subpath) {
