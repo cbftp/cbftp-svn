@@ -62,7 +62,7 @@ class SiteRace : public CommandOwner {
     void abort();
     void reset();
     void subPathComplete(FileList *);
-    bool isSubPathComplete(std::string) const;
+    bool isSubPathComplete(const std::string &) const;
     bool isSubPathComplete(FileList *) const;
     void reportSize(FileList *, std::list<std::string> *, bool);
     int getObservedTime(FileList *);
