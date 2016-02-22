@@ -118,6 +118,9 @@ void ViewFileScreen::initialize(unsigned int row, unsigned int col, const std::s
 
 void ViewFileScreen::redraw() {
   ui->erase();
+  while (ymax > row && y + row > ymax) {
+    --y;
+  }
   switch (state) {
     case ViewFileState::NO_SLOTS_AVAILABLE:
       ui->printStr(1, 1, "No download slots available at " + site + ".");
