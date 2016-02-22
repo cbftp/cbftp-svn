@@ -118,9 +118,6 @@ void ViewFileScreen::initialize(unsigned int row, unsigned int col, const std::s
 
 void ViewFileScreen::redraw() {
   ui->erase();
-  while (ymax > row && y + row > ymax) {
-    --y;
-  }
   switch (state) {
     case ViewFileState::NO_SLOTS_AVAILABLE:
       ui->printStr(1, 1, "No download slots available at " + site + ".");
@@ -294,6 +291,12 @@ void ViewFileScreen::viewExternal() {
 }
 
 void ViewFileScreen::viewInternal() {
+  if (ymax <= row) {
+    y = 0;
+  }
+  while (ymax > row && y + row > ymax) {
+    --y;
+  }
   ymax = rawcontents.size();
   for (unsigned int i = 0; i < ymax; i++) {
     if (translatedcontents[i].length() > xmax) {
