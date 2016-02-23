@@ -44,8 +44,8 @@ class Engine : public EventReceiver {
     void setSpeedScale();
     unsigned short calculateScore(File *, Pointer<Race> &, FileList *, SiteRace *, FileList *, SiteRace *, int, bool *, int prioritypoints, bool) const;
     void checkIfRaceComplete(SiteLogic *, Pointer<Race> &);
-    void raceComplete(Pointer<Race> &);
-    void transferJobComplete(Pointer<TransferJob> &);
+    void raceComplete(Pointer<Race>);
+    void transferJobComplete(Pointer<TransferJob>);
     void issueGlobalComplete(Pointer<Race> &);
     void refreshPendingTransferList(Pointer<TransferJob> &);
     void checkStartPoke();
