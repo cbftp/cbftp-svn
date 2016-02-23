@@ -777,7 +777,7 @@ void Engine::checkIfRaceComplete(SiteLogic * sls, Pointer<Race> & race) {
   }
 }
 
-void Engine::raceComplete(Pointer<Race> & race) {
+void Engine::raceComplete(Pointer<Race> race) {
   issueGlobalComplete(race);
   for (std::list<Pointer<Race> >::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
     if ((*it) == race) {
@@ -793,7 +793,7 @@ void Engine::raceComplete(Pointer<Race> & race) {
   return;
 }
 
-void Engine::transferJobComplete(Pointer<TransferJob> & tj) {
+void Engine::transferJobComplete(Pointer<TransferJob> tj) {
 
   for (std::list<Pointer<TransferJob> >::iterator it = currenttransferjobs.begin(); it != currenttransferjobs.end(); it++) {
     if ((*it) == tj) {
