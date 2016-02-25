@@ -210,5 +210,6 @@ public:
   void returnRaceStatus(unsigned int);
   void loadSettings(Pointer<DataFileHandler>);
   void saveSettings(Pointer<DataFileHandler>);
+  void notify();
 };
 

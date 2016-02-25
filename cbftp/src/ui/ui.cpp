@@ -416,6 +416,9 @@ void Ui::run() {
         endwin();
         dead = true;
         return;
+      case UI_COMMAND_BELL:
+        beep();
+        break;
     }
   }
 }
@@ -912,4 +915,8 @@ void Ui::loadSettings(Pointer<DataFileHandler> dfh) {
 
 void Ui::saveSettings(Pointer<DataFileHandler> dfh) {
   dfh->addOutputLine("UI", "legendmode=" + util::int2Str(legendMode()));
+}
+
+void Ui::notify() {
+  uiqueue.push(UICommand(UI_COMMAND_BELL));
 }

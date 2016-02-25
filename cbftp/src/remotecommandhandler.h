@@ -4,14 +4,6 @@
 
 #include "eventreceiver.h"
 
-#define DEFAULTPORT 55477
-#define DEFAULTPASS "DEFAULT"
-#define RETRYDELAY 30000
-
-class GlobalContext;
-
-extern GlobalContext * global;
-
 class RemoteCommandHandler : private EventReceiver {
 private:
   bool enabled;
@@ -20,6 +12,7 @@ private:
   int sockid;
   bool retrying;
   bool connected;
+  bool notify;
   void connect();
   void disconnect();
   void handleMessage(std::string);
@@ -38,6 +31,8 @@ public:
   std::string getPassword() const;
   void setPassword(std::string);
   void setPort(int);
+  bool getNotify() const;
+  void setNotify(bool);
   void setEnabled(bool);
   void FDData(int, char *, unsigned int);
   void FDFail(int, std::string);

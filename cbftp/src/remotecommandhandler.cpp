@@ -11,13 +11,21 @@
 #include "util.h"
 #include "sitelogicmanager.h"
 #include "sitelogic.h"
+#include "uibase.h"
+
+#define DEFAULTPORT 55477
+#define DEFAULTPASS "DEFAULT"
+#define RETRYDELAY 30000
+
+extern GlobalContext * global;
 
 RemoteCommandHandler::RemoteCommandHandler() :
   enabled(false),
   password(DEFAULTPASS),
   port(DEFAULTPORT),
   retrying(false),
-  connected(false) {
+  connected(false),
+  notify(false) {
 }
 
 bool RemoteCommandHandler::isEnabled() const {
@@ -46,6 +54,14 @@ void RemoteCommandHandler::setPort(int newport) {
     setEnabled(false);
     setEnabled(true);
   }
+}
+
+bool RemoteCommandHandler::getNotify() const {
+  return notify;
+}
+
+void RemoteCommandHandler::setNotify(bool notify) {
+  this->notify = notify;
 }
 
 void RemoteCommandHandler::connect() {
@@ -85,7 +101,7 @@ void RemoteCommandHandler::handleMessage(std::string message) {
     commandend = message.length();
   }
   std::string command = message.substr(passend + 1, commandend - (passend + 1));
-  std::string remainder = message.substr(commandend + 1);
+  std::string remainder = message.substr(commandend + commandend < message.length() ? 1 : 0);
   if (command == "race") {
     commandRace(remainder);
   }
@@ -107,6 +123,9 @@ void RemoteCommandHandler::handleMessage(std::string message) {
   else {
     global->getEventLog()->log("RemoteCommandHandler", "Invalid remote command: " + message);
     return;
+  }
+  if (notify) {
+    global->getUIBase()->notify();
   }
 }
 

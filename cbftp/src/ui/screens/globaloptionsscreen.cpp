@@ -62,6 +62,7 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   mso.addCheckBox(y++, x, "udpenable", "Enable remote commands:", rch->isEnabled());
   mso.addStringField(y++, x, "udpport", "Remote command UDP Port:", util::int2Str(rch->getUDPPort()), false, 5);
   mso.addStringField(y++, x, "udppass", "Remote command password:", rch->getPassword(), true);
+  mso.addCheckBox(y++, x, "udpbell", "Remote command bell:", rch->getNotify());
   y++;
   Pointer<MenuSelectOptionTextArrow> legendmode = mso.addTextArrow(y++, x, "legendmode", "Legend bar:");
   legendmode->addOption("Disabled", LEGEND_DISABLED);
@@ -204,6 +205,9 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "udppass") {
           rch->setPassword(msoe.get<MenuSelectOptionTextField>()->getData());
+        }
+        else if (identifier == "udpbell") {
+          rch->setNotify(msoe.get<MenuSelectOptionCheckBox>()->getData());
         }
         else if (identifier == "defuser") {
           sm->setDefaultUserName(msoe.get<MenuSelectOptionTextField>()->getData());
