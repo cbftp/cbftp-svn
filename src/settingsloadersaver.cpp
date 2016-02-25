@@ -91,6 +91,9 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("password")) {
       global->getRemoteCommandHandler()->setPassword(value);
     }
+    else if (!setting.compare("notify")) {
+      global->getRemoteCommandHandler()->setNotify(!value.compare("true"));
+    }
   }
   if (enable) {
     global->getRemoteCommandHandler()->setEnabled(true);
@@ -403,6 +406,7 @@ void SettingsLoaderSaver::saveSettings() {
   if (global->getRemoteCommandHandler()->isEnabled()) dfh->addOutputLine("RemoteCommandHandler", "enabled=true");
   dfh->addOutputLine("RemoteCommandHandler", "port=" + util::int2Str(global->getRemoteCommandHandler()->getUDPPort()));
   dfh->addOutputLine("RemoteCommandHandler", "password=" + global->getRemoteCommandHandler()->getPassword());
+  if (global->getRemoteCommandHandler()->getNotify()) dfh->addOutputLine("RemoteCommandHandler", "notify=true");
 
   {
     std::string filetag = "ExternalFileViewing";

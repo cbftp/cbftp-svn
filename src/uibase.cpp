@@ -31,6 +31,9 @@ public:
   void kill() {
     std::cout << "UIBase::kill() called." << std::endl;
   }
+  void notify() {
+    std::cout << (char)7 << std::endl;
+  }
 };
 
 UIBase * UIBase::instance() {

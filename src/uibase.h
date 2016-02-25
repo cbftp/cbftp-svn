@@ -8,4 +8,5 @@ public:
   virtual bool init() = 0;
   virtual void backendPush() = 0;
   virtual void kill() = 0;
+  virtual void notify() = 0;
 };
