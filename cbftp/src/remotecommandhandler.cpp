@@ -101,7 +101,7 @@ void RemoteCommandHandler::handleMessage(std::string message) {
     commandend = message.length();
   }
   std::string command = message.substr(passend + 1, commandend - (passend + 1));
-  std::string remainder = message.substr(commandend + commandend < message.length() ? 1 : 0);
+  std::string remainder = message.substr(commandend + (commandend < message.length() ? 1 : 0));
   if (command == "race") {
     commandRace(remainder);
   }
