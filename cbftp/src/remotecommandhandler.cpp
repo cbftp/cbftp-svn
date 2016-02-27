@@ -12,6 +12,8 @@
 #include "sitelogicmanager.h"
 #include "sitelogic.h"
 #include "uibase.h"
+#include "sitemanager.h"
+#include "site.h"
 
 #define DEFAULTPORT 55477
 #define DEFAULTPASS "DEFAULT"
@@ -146,15 +148,23 @@ void RemoteCommandHandler::commandRaw(const std::string & message) {
   std::string sitestring = message.substr(0, sitesend);
   std::string rawcommand = message.substr(sitesend + 1);
   std::list<std::string> sites;
-  while (true) {
-    size_t commapos = sitestring.find(",");
-    if (commapos != std::string::npos) {
-      sites.push_back(sitestring.substr(0, commapos));
-      sitestring = sitestring.substr(commapos + 1);
+  if (sitestring == "*") {
+    std::vector<Site *>::const_iterator it;
+    for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
+      sites.push_back((*it)->getName());
     }
-    else {
-      sites.push_back(sitestring);
-      break;
+  }
+  else {
+    while (true) {
+      size_t commapos = sitestring.find(",");
+      if (commapos != std::string::npos) {
+        sites.push_back(sitestring.substr(0, commapos));
+        sitestring = sitestring.substr(commapos + 1);
+      }
+      else {
+        sites.push_back(sitestring);
+        break;
+      }
     }
   }
   for (std::list<std::string>::const_iterator it = sites.begin(); it != sites.end(); it++) {
