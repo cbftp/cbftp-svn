@@ -118,7 +118,7 @@ void IOManager::tick(int message) {
   }
 }
 
-#ifdef __linux
+
 void IOManager::signal(int signal, int value) {
   util::assert(signal == SIGUSR1);
   ScopeLock lock(socketinfomaplock);
@@ -126,9 +126,11 @@ void IOManager::signal(int signal, int value) {
   if (it == socketinfomap.end()) {
     return;
   }
+#ifdef __linux
   handleTCPNameResolution(it->second, it->second.anlargs->ar_result);
-}
 #endif
+}
+
 
 int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int port) {
   bool resolving;
