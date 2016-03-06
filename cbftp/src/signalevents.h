@@ -5,16 +5,17 @@
 class EventReceiver;
 
 struct SignalData {
-  SignalData() : set(false), signal(0), er(NULL) { }
+  SignalData() : set(false), signal(0), value(0), er(NULL) { }
   bool set;
   int signal;
+  int value;
   EventReceiver * er;
 };
 
 class SignalEvents {
 public:
   SignalEvents();
-  bool set(EventReceiver * er, int signal);
+  bool set(EventReceiver *, int, int);
   bool hasEvent() const;
   SignalData getClearFirst();
 private:

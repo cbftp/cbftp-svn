@@ -23,12 +23,12 @@ LocalDownload::LocalDownload(LocalStorage * ls) :
 
 void LocalDownload::engage(TransferMonitor * tm, std::string path, std::string filename, std::string addr, int port, bool ssl, FTPConn * ftpconn) {
   init(tm, ftpconn, path, filename, false, -1, ssl);
-  global->getIOManager()->registerTCPClientSocket(this, addr, port, &sockid);
+  sockid = global->getIOManager()->registerTCPClientSocket(this, addr, port);
 }
 
 void LocalDownload::engage(TransferMonitor * tm, int storeid, std::string addr, int port, bool ssl, FTPConn * ftpconn) {
   init(tm, ftpconn, "", "", true, storeid, ssl);
-  global->getIOManager()->registerTCPClientSocket(this, addr, port, &sockid);
+  sockid = global->getIOManager()->registerTCPClientSocket(this, addr, port);
 }
 
 void LocalDownload::init(TransferMonitor * tm, FTPConn * ftpconn, std::string path, std::string filename, bool inmemory, int storeid, bool ssl) {

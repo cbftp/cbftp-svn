@@ -21,18 +21,30 @@ FTPConnect::FTPConnect(int id, FTPConnectOwner * owner, const std::string & addr
   databufpos(0),
   addr(addr),
   port(port),
+  proxy(proxy),
   primary(primary),
   engaged(true)
 {
+  bool resolving;
   if (proxy == NULL) {
-    owner->ftpConnectInfo(id, "[Connecting to " + addr + ":" + port + "]");
-    global->getIOManager()->registerTCPClientSocket(this, addr, util::str2Int(port), &sockid);
+    sockid = global->getIOManager()->registerTCPClientSocket(this, addr, util::str2Int(port), resolving);
+    if (resolving) {
+      owner->ftpConnectInfo(id, "[Resolving " + addr + "]");
+    }
+    else {
+      FDConnecting(sockid, addr);
+    }
   }
   else {
-    owner->ftpConnectInfo(id, "[Connecting to proxy " + proxy->getAddr() + ":" + proxy->getPort() + "]");
     proxynegotiation = true;
     proxysession->prepare(proxy, addr, port);
-    global->getIOManager()->registerTCPClientSocket(this, proxy->getAddr(), util::str2Int(proxy->getPort()), &sockid);
+    sockid = global->getIOManager()->registerTCPClientSocket(this, proxy->getAddr(), util::str2Int(proxy->getPort()), resolving);
+    if (resolving) {
+      owner->ftpConnectInfo(id, "[Resolving proxy " + proxy->getAddr() + "]");
+    }
+    else {
+      FDConnecting(sockid, proxy->getAddr());
+    }
   }
 }
 
@@ -40,6 +52,15 @@ FTPConnect::~FTPConnect() {
   util::assert(!engaged); // must disengage before deleting; events may still be in the work queue
   delete proxysession;
   free(databuf);
+}
+
+void FTPConnect::FDConnecting(int sockid, std::string addr) {
+  if (proxynegotiation) {
+    owner->ftpConnectInfo(id, "[Connecting to proxy " + addr + ":" + proxy->getPort() + "]");
+  }
+  else {
+    owner->ftpConnectInfo(id, "[Connecting to " + addr + ":" + port + "]");
+  }
 }
 
 void FTPConnect::FDConnected(int sockid) {

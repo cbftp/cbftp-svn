@@ -53,7 +53,7 @@ extern GlobalContext * global;
 static Ui * instance = new Ui();
 
 static void sighandler(int signal) {
-  global->getWorkManager()->dispatchSignal(instance, signal);
+  global->getWorkManager()->dispatchSignal(instance, signal, 0);
 }
 
 Ui::Ui() :
@@ -207,7 +207,7 @@ void Ui::backendPush() {
   }
 }
 
-void Ui::signal(int signal) {
+void Ui::signal(int signal, int) {
   if (signal == SIGWINCH) {
     terminalSizeChanged();
   }

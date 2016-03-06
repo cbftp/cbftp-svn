@@ -1,5 +1,7 @@
 #include "timereference.h"
 
+#include <time.h>
+
 #include "globalcontext.h"
 #include "tickpoke.h"
 

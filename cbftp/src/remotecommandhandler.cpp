@@ -14,6 +14,7 @@
 #include "uibase.h"
 #include "sitemanager.h"
 #include "site.h"
+#include "race.h"
 
 #define DEFAULTPORT 55477
 #define DEFAULTPASS "DEFAULT"

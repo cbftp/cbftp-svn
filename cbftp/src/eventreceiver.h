@@ -6,8 +6,9 @@ class EventReceiver {
 public:
   virtual ~EventReceiver();
   virtual void tick(int);
-  virtual void signal(int);
+  virtual void signal(int, int);
   virtual void FDNew(int);
+  virtual void FDConnecting(int, std::string);
   virtual void FDConnected(int);
   virtual void FDData(int);
   virtual void FDData(int, char *, unsigned int);

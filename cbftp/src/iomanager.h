@@ -22,7 +22,7 @@ class ScopeLock;
 
 extern GlobalContext * global;
 
-class IOManager : private EventReceiver {
+class IOManager : public EventReceiver {
 private:
   Polling polling;
   Thread<IOManager> thread;
@@ -51,13 +51,16 @@ private:
   void handleTCPSSLOut(SocketInfo &);
   void handleUDPIn(SocketInfo &);
   void handleTCPServerIn(SocketInfo &);
+  void handleTCPNameResolution(SocketInfo &, struct addrinfo *);
 public:
   IOManager();
   void init();
   void run();
   void registerStdin(EventReceiver *);
   void tick(int);
-  int registerTCPClientSocket(EventReceiver *, std::string, int, int *);
+  void signal(int, int);
+  int registerTCPClientSocket(EventReceiver *, std::string, int);
+  int registerTCPClientSocket(EventReceiver *, std::string, int, bool &);
   int registerTCPServerSocket(EventReceiver *, int);
   int registerTCPServerSocket(EventReceiver *, int, bool);
   void registerTCPServerClientSocket(EventReceiver *, int);

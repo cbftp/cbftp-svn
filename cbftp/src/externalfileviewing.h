@@ -14,7 +14,7 @@ public:
   int viewThenDelete(std::string);
   void killProcess(int);
   void killAll();
-  void signal(int);
+  void signal(int, int);
   bool hasDisplay() const;
   bool stillViewing(int) const;
   std::string getVideoViewer() const;
