@@ -25,5 +25,10 @@ private:
   SignalData slot3;
   SignalData slot4;
   SignalData slot5;
+  SignalData slot6;
+  SignalData slot7;
+  SignalData slot8;
+  SignalData slot9;
+  SignalData slot10;
   mutable Lock signallock;
 };
