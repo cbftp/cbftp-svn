@@ -18,12 +18,12 @@
 
 extern GlobalContext * global;
 
-static ExternalFileViewing * instance = NULL;
-
 namespace {
 
+static ExternalFileViewing * instance = NULL;
+
 void sighandler(int signal) {
-  global->getWorkManager()->dispatchSignal(instance, signal);
+  global->getWorkManager()->dispatchSignal(instance, signal, 0);
 }
 
 }
@@ -132,7 +132,7 @@ std::string ExternalFileViewing::getExtension(std::string file) {
   return extension;
 }
 
-void ExternalFileViewing::signal(int signal) {
+void ExternalFileViewing::signal(int signal, int) {
   if (signal == SIGCHLD) {
     int pid = 0;
     while ((pid = waitpid(-1, NULL, WNOHANG)) > 0) {

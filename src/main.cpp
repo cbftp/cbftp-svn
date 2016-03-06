@@ -23,6 +23,8 @@
 
 GlobalContext * global;
 
+namespace {
+
 class Main {
 public:
   Main() {
@@ -68,6 +70,8 @@ void sighandler(int sig) {
   global->getTickPoke()->breakLoop();
 }
 
+}
+
 int main(int argc, char * argv[]) {
   struct sigaction sa;
   sa.sa_flags = SA_RESTART;
@@ -79,3 +83,5 @@ int main(int argc, char * argv[]) {
 
   Main();
 }
+
+

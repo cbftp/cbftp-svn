@@ -13,6 +13,7 @@ class FTPConnect : public EventReceiver {
 public:
   FTPConnect(int, FTPConnectOwner *, const std::string &, const std::string &, Proxy *, bool);
   ~FTPConnect();
+  void FDConnecting(int, std::string);
   void FDConnected(int);
   void FDData(int, char *, unsigned int);
   void FDFail(int, std::string);
@@ -35,6 +36,7 @@ private:
   int databufcode;
   std::string addr;
   std::string port;
+  Proxy * proxy;
   bool primary;
   bool engaged;
 };

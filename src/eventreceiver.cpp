@@ -8,11 +8,15 @@ void EventReceiver::tick(int message) {
 
 }
 
-void EventReceiver::signal(int sig) {
+void EventReceiver::signal(int sig, int value) {
 
 }
 
 void EventReceiver::FDNew(int sockid) {
+
+}
+
+void EventReceiver::FDConnecting(int sockid, std::string addr) {
 
 }
 

@@ -130,7 +130,7 @@ public:
   bool init();
   void backendPush();
   void terminalSizeChanged();
-  void signal(int);
+  void signal(int, int);
   void kill();
   void resizeTerm();
   void readConfiguration();

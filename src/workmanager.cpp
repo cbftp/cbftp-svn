@@ -9,6 +9,7 @@ enum WorkType {
   WORK_DATA,
   WORK_DATABUF,
   WORK_TICK,
+  WORK_CONNECTING,
   WORK_CONNECTED,
   WORK_DISCONNECTED,
   WORK_SSL_SUCCESS,
@@ -44,6 +45,11 @@ void WorkManager::dispatchEventNew(EventReceiver * er, int sockid) {
   event.post();
 }
 
+void WorkManager::dispatchEventConnecting(EventReceiver * er, int sockid, std::string addr) {
+  dataqueue.push(Event(er, WORK_CONNECTING, sockid, addr));
+  event.post();
+}
+
 void WorkManager::dispatchEventConnected(EventReceiver * er, int sockid) {
   dataqueue.push(Event(er, WORK_CONNECTED, sockid));
   event.post();
@@ -74,8 +80,8 @@ void WorkManager::dispatchEventSendComplete(EventReceiver * er, int sockid) {
   event.post();
 }
 
-void WorkManager::dispatchSignal(EventReceiver * er, int signal) {
-  if (signalevents.set(er, signal)) {
+void WorkManager::dispatchSignal(EventReceiver * er, int signal, int value) {
+  if (signalevents.set(er, signal, value)) {
     event.post();
   }
 }
@@ -99,7 +105,7 @@ void WorkManager::run() {
     event.wait();
     if (signalevents.hasEvent()) {
       SignalData signal = signalevents.getClearFirst();
-      signal.er->signal(signal.signal);
+      signal.er->signal(signal.signal, signal.value);
     }
     else {
       Event event = dataqueue.pop();
@@ -117,6 +123,9 @@ void WorkManager::run() {
           break;
         case WORK_TICK:
           er->tick(numdata);
+          break;
+        case WORK_CONNECTING:
+          er->FDConnecting(numdata, event.getStrData());
           break;
         case WORK_CONNECTED:
           er->FDConnected(numdata);

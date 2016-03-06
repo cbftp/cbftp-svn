@@ -31,7 +31,7 @@ void LocalUpload::engage(TransferMonitor * tm, std::string path, std::string fil
   filepos = 0;
   inuse = true;
   fileopened = false;
-  global->getIOManager()->registerTCPClientSocket(this, addr, port, &sockid);
+  sockid = global->getIOManager()->registerTCPClientSocket(this, addr, port);
 }
 
 bool LocalUpload::active() const {

@@ -23,9 +23,13 @@ endif
 
 DATE := "\"${shell date}\""
 
-BOXTAG := "\"cbftp\""
+BOXTAG := "\"Marcus\""
 
 CXX=g++
 OPTFLAGS=-g -O0
 CPPFLAGS=$(OPTFLAGS) -Wall -MMD -MP $(STATIC_SSL_INCLUDE)
-LINKFLAGS=$(SSL_LINKFLAGS) -lncursesw -lpthread 
+LINKFLAGS=$(SSL_LINKFLAGS) -lncursesw -lpthread
+
+ifeq ($(shell uname -s),Linux)
+LINKFLAGS+= -lanl
+endif

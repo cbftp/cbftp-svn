@@ -27,13 +27,14 @@ public:
   void dispatchFDData(EventReceiver *, int, char *, int);
   void dispatchTick(EventReceiver *, int);
   void dispatchEventNew(EventReceiver *, int);
+  void dispatchEventConnecting(EventReceiver *, int, std::string);
   void dispatchEventConnected(EventReceiver *, int);
   void dispatchEventDisconnected(EventReceiver *, int);
   void dispatchEventSSLSuccess(EventReceiver *, int);
   void dispatchEventSSLFail(EventReceiver *, int);
   void dispatchEventFail(EventReceiver *, int, std::string);
   void dispatchEventSendComplete(EventReceiver *, int);
-  void dispatchSignal(EventReceiver *, int);
+  void dispatchSignal(EventReceiver *, int, int);
   void deferDelete(Pointer<EventReceiver>);
   DataBlockPool * getBlockPool();
   bool overload() const;

@@ -19,20 +19,28 @@ enum SocketType {
   FD_TCP_SSL_NEG_ACCEPT,
   FD_TCP_SSL_NEG_REDO_ACCEPT,
   FD_TCP_SSL_NEG_REDO_HANDSHAKE,
-  FD_TCP_CONNECTING
+  FD_TCP_CONNECTING,
+  FD_TCP_RESOLVING
 };
 
 class EventReceiver;
 
 class SocketInfo {
 public:
-  SocketInfo() : type(FD_UNUSED), fd(0), id(0), receiver(NULL), ssl(NULL) {
+  SocketInfo() : type(FD_UNUSED), fd(0), id(0), receiver(NULL), ssl(NULL)
+#ifdef __linux
+  , anlargs(NULL)
+#endif
+  {
   }
   SocketType type;
   int fd;
   int id;
   std::string addr;
   EventReceiver * receiver;
-  std::list<DataBlock> sendqueue;
+  mutable std::list<DataBlock> sendqueue;
   SSL * ssl;
+#ifdef __linux
+  struct gaicb * anlargs;
+#endif
 };
