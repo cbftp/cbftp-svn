@@ -56,6 +56,51 @@ bool SignalEvents::set(EventReceiver * er, int signal, int value) {
   else if (slot5.er == er && slot5.signal == signal && slot5.value == value) {
     return false;
   }
+  else if (!slot6.set) {
+    slot6.set = true;
+    slot6.er = er;
+    slot6.signal = signal;
+    slot6.value = value;
+  }
+  else if (slot6.er == er && slot6.signal == signal && slot6.value == value) {
+    return false;
+  }
+  else if (!slot7.set) {
+    slot7.set = true;
+    slot7.er = er;
+    slot7.signal = signal;
+    slot7.value = value;
+  }
+  else if (slot7.er == er && slot7.signal == signal && slot7.value == value) {
+    return false;
+  }
+  else if (!slot8.set) {
+    slot8.set = true;
+    slot8.er = er;
+    slot8.signal = signal;
+    slot8.value = value;
+  }
+  else if (slot8.er == er && slot8.signal == signal && slot8.value == value) {
+    return false;
+  }
+  else if (!slot9.set) {
+    slot9.set = true;
+    slot9.er = er;
+    slot9.signal = signal;
+    slot9.value = value;
+  }
+  else if (slot9.er == er && slot9.signal == signal && slot9.value == value) {
+    return false;
+  }
+  else if (!slot10.set) {
+    slot10.set = true;
+    slot10.er = er;
+    slot10.signal = signal;
+    slot10.value = value;
+  }
+  else if (slot10.er == er && slot10.signal == signal && slot10.value == value) {
+    return false;
+  }
   else {
     util::assert(false);
   }
@@ -90,6 +135,26 @@ SignalData SignalEvents::getClearFirst() {
   else if (slot5.set) {
     ret = slot5;
     slot5.set = false;
+  }
+  else if (slot6.set) {
+    ret = slot6;
+    slot6.set = false;
+  }
+  else if (slot7.set) {
+    ret = slot7;
+    slot7.set = false;
+  }
+  else if (slot8.set) {
+    ret = slot8;
+    slot8.set = false;
+  }
+  else if (slot9.set) {
+    ret = slot9;
+    slot9.set = false;
+  }
+  else if (slot10.set) {
+    ret = slot10;
+    slot10.set = false;
   }
   else {
     util::assert(false);
