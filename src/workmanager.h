@@ -2,6 +2,7 @@
 
 #include <map>
 #include <string>
+#include <list>
 
 #include "threading.h"
 #include "datablockpool.h"
@@ -10,13 +11,17 @@
 #include "semaphore.h"
 #include "pointer.h"
 #include "event.h"
+#include "asyncworker.h"
+#include "asynctask.h"
 
 class EventReceiver;
 
 class WorkManager {
 private:
   Thread<WorkManager> thread;
+  std::list<AsyncWorker> asyncworkers;
   BlockingQueue<Event> dataqueue;
+  BlockingQueue<AsyncTask> asyncqueue;
   SignalEvents signalevents;
   Semaphore event;
   Semaphore readdata;
@@ -35,7 +40,10 @@ public:
   void dispatchEventFail(EventReceiver *, int, std::string);
   void dispatchEventSendComplete(EventReceiver *, int);
   void dispatchSignal(EventReceiver *, int, int);
+  void dispatchAsyncTaskComplete(AsyncTask &);
   void deferDelete(Pointer<EventReceiver>);
+  void asyncTask(EventReceiver *, int, void (*)(int), int);
+  void asyncTask(EventReceiver *, int, void (*)(void *), void *);
   DataBlockPool * getBlockPool();
   bool overload() const;
   void run();

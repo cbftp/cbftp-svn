@@ -111,67 +111,75 @@ Pointer<T> makePointer() {
 }
 
 template <typename T, typename A1>
-Pointer<T> makePointer(A1 a1) {
+Pointer<T> makePointer(const A1 & a1) {
   return Pointer<T>(new T(a1));
 }
 
 template <typename T, typename A1, typename A2>
-Pointer<T> makePointer(A1 a1, A2 a2) {
+Pointer<T> makePointer(const A1 & a1, const A2 & a2) {
   return Pointer<T>(new T(a1, a2));
 }
 
 template <typename T, typename A1, typename A2, typename A3>
-Pointer<T> makePointer(A1 a1, A2 a2, A3 a3) {
+Pointer<T> makePointer(const A1 & a1, const A2 & a2, const A3 & a3) {
   return Pointer<T>(new T(a1, a2, a3));
 }
 
 template <typename T, typename A1, typename A2, typename A3, typename A4>
-Pointer<T> makePointer(A1 a1, A2 a2, A3 a3, A4 a4) {
+Pointer<T> makePointer(const A1 & a1, const A2 & a2, const A3 & a3,
+    const A4 & a4) {
   return Pointer<T>(new T(a1, a2, a3, a4));
 }
 
 template <typename T, typename A1, typename A2, typename A3, typename A4,
 typename A5>
-Pointer<T> makePointer(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5) {
+Pointer<T> makePointer(const A1 & a1, const A2 & a2, const A3 & a3,
+    const A4 & a4, const A5 & a5) {
   return Pointer<T>(new T(a1, a2, a3, a4, a5));
 }
 
 template <typename T, typename A1, typename A2, typename A3, typename A4,
 typename A5, typename A6>
-Pointer<T> makePointer(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6) {
+Pointer<T> makePointer(const A1 & a1, const A2 & a2, const A3 & a3,
+    const A4 & a4, const A5 & a5, const A6 & a6) {
   return Pointer<T>(new T(a1, a2, a3, a4, a5, a6));
 }
 
 template <typename T, typename A1, typename A2, typename A3, typename A4,
 typename A5, typename A6, typename A7>
-Pointer<T> makePointer(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7) {
+Pointer<T> makePointer(const A1 & a1, const A2 & a2, const A3 & a3,
+    const A4 & a4, const A5 & a5, const A6 & a6, const A7 & a7) {
   return Pointer<T>(new T(a1, a2, a3, a4, a5, a6, a7));
 }
 
 template <typename T, typename A1, typename A2, typename A3, typename A4,
 typename A5, typename A6, typename A7, typename A8>
-Pointer<T> makePointer(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8) {
+Pointer<T> makePointer(const A1 & a1, const A2 & a2, const A3 & a3,
+    const A4 & a4, const A5 & a5, const A6 & a6, const A7 & a7, const A8 & a8) {
   return Pointer<T>(new T(a1, a2, a3, a4, a5, a6, a7, a8));
 }
 
 template <typename T, typename A1, typename A2, typename A3, typename A4,
 typename A5, typename A6, typename A7, typename A8, typename A9>
-Pointer<T> makePointer(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8,
-    A9 a9) {
+Pointer<T> makePointer(const A1 & a1, const A2 & a2, const A3 & a3,
+    const A4 & a4, const A5 & a5, const A6 & a6, const A7 & a7, const A8 & a8,
+    const A9 & a9) {
   return Pointer<T>(new T(a1, a2, a3, a4, a5, a6, a7, a8, a9));
 }
 
 template <typename T, typename A1, typename A2, typename A3, typename A4,
 typename A5, typename A6, typename A7, typename A8, typename A9, typename A10>
-Pointer<T> makePointer(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8,
-    A9 a9, A10 a10) {
+Pointer<T> makePointer(const A1 & a1, const A2 & a2, const A3 & a3,
+    const A4 & a4, const A5 & a5, const A6 & a6, const A7 & a7, const A8 & a8,
+    const A9 & a9, const A10 & a10) {
   return Pointer<T>(new T(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10));
 }
 
 template <typename T, typename A1, typename A2, typename A3, typename A4,
 typename A5, typename A6, typename A7, typename A8, typename A9, typename A10,
 typename A11>
-Pointer<T> makePointer(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8,
-    A9 a9, A10 a10, A11 a11) {
+Pointer<T> makePointer(const A1 & a1, const A2 & a2, const A3 & a3,
+    const A4 & a4, const A5 & a5, const A6 & a6, const A7 & a7, const A8 & a8,
+    const A9 & a9, const A10 & a10, const A11 & a11) {
   return Pointer<T>(new T(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11));
 }

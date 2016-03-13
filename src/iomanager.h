@@ -51,14 +51,13 @@ private:
   void handleTCPSSLOut(SocketInfo &);
   void handleUDPIn(SocketInfo &);
   void handleTCPServerIn(SocketInfo &);
-  void handleTCPNameResolution(SocketInfo &, struct addrinfo *);
+  void handleTCPNameResolution(SocketInfo &);
 public:
   IOManager();
   void init();
   void run();
   void registerStdin(EventReceiver *);
   void tick(int);
-  void signal(int, int);
   int registerTCPClientSocket(EventReceiver *, std::string, int);
   int registerTCPClientSocket(EventReceiver *, std::string, int, bool &);
   int registerTCPServerSocket(EventReceiver *, int);
@@ -75,6 +74,8 @@ public:
   std::string getCipher(int) const;
   std::string getSocketAddress(int) const;
   void closeSocket(int);
+  void resolveDNS(int);
+  void asyncTaskComplete(int, int);
   std::list<std::pair<std::string, std::string> > listInterfaces();
   std::string getDefaultInterface() const;
   void setDefaultInterface(std::string);

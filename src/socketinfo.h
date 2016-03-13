@@ -27,20 +27,20 @@ class EventReceiver;
 
 class SocketInfo {
 public:
-  SocketInfo() : type(FD_UNUSED), fd(0), id(0), receiver(NULL), ssl(NULL)
-#ifdef __linux
-  , anlargs(NULL)
-#endif
+  SocketInfo() : type(FD_UNUSED), fd(0), id(0), port(0), gairet(0),
+                 gaires(NULL), gaiasync(false), receiver(NULL), ssl(NULL)
   {
   }
   SocketType type;
   int fd;
   int id;
   std::string addr;
+  int port;
+  int gairet;
+  struct addrinfo * gaires;
+  std::string gaierr;
+  bool gaiasync;
   EventReceiver * receiver;
   mutable std::list<DataBlock> sendqueue;
   SSL * ssl;
-#ifdef __linux
-  struct gaicb * anlargs;
-#endif
 };

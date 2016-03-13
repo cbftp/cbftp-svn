@@ -26,13 +26,12 @@
 
 namespace {
 
-static IOManager * instance = NULL;
+enum AsyncTaskTypes {
+  ASYNC_DNS_RESOLUTION
+};
 
-#ifdef __linux
-void sighandler(int signal, siginfo_t * siginfo, void *) {
-  util::assert(siginfo->si_signo == SIGUSR1);
-  util::assert(siginfo->si_code == SI_ASYNCNL);
-  global->getWorkManager()->dispatchSignal(instance, signal, siginfo->si_value.sival_int);
+void resolveDNSAsync(int sockid) {
+  global->getIOManager()->resolveDNS(sockid);
 }
 
 bool needsDNSResolution(const std::string& addr) {
@@ -47,17 +46,6 @@ bool needsDNSResolution(const std::string& addr) {
   return false;
 }
 
-void freeANLArgs(struct gaicb * anlargs) {
-  if (anlargs->ar_result) {
-    freeaddrinfo(anlargs->ar_result);
-  }
-  free((void *)anlargs->ar_request);
-  free((void *)anlargs->ar_name);
-  free((void *)anlargs->ar_service);
-  free(anlargs);
-}
-#endif
-
 }
 
 IOManager::IOManager() :
@@ -68,16 +56,6 @@ IOManager::IOManager() :
   sockidcounter(0),
   hasdefaultinterface(false)
 {
-  util::assert(instance == NULL);
-  instance = this;
-#ifdef __linux
-  struct sigaction sa;
-  sa.sa_flags = SA_RESTART | SA_SIGINFO;
-  sigemptyset(&sa.sa_mask);
-  sigaddset(&sa.sa_mask, SIGUSR1);
-  sa.sa_sigaction = sighandler;
-  sigaction(SIGUSR1, &sa, NULL);
-#endif
 }
 
 void IOManager::init() {
@@ -118,123 +96,49 @@ void IOManager::tick(int message) {
   }
 }
 
-
-void IOManager::signal(int signal, int value) {
-  util::assert(signal == SIGUSR1);
-  ScopeLock lock(socketinfomaplock);
-  std::map<int, SocketInfo>::iterator it = socketinfomap.find(value);
-  if (it == socketinfomap.end()) {
-    return;
-  }
-#ifdef __linux
-  handleTCPNameResolution(it->second, it->second.anlargs->ar_result);
-#endif
-}
-
-
 int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int port) {
   bool resolving;
   return registerTCPClientSocket(er, addr, port, resolving);
 }
 
 int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int port, bool & resolving) {
-  struct addrinfo * request = (struct addrinfo *) calloc(1, sizeof(struct addrinfo));
-  request->ai_family = AF_INET;
-  request->ai_socktype = SOCK_STREAM;
-
-  ScopeLock lock(socketinfomaplock);
   int sockid = sockidcounter++;
+  socketinfomaplock.lock();
   socketinfomap[sockid].id = sockid;
   socketinfomap[sockid].fd = -1;
-  socketinfomap[sockid].addr = "";
+  socketinfomap[sockid].addr = addr;
+  socketinfomap[sockid].port = port;
   socketinfomap[sockid].type = FD_TCP_RESOLVING;
   socketinfomap[sockid].receiver = er;
+  socketinfomap[sockid].gaiasync = resolving = true;
   connecttimemap[sockid] = 0;
+  socketinfomaplock.unlock();
 
-#ifdef __linux
   if (needsDNSResolution(addr)) {
-    resolving = true;
-    struct gaicb * anlargs = (struct gaicb *) calloc(1, sizeof(struct gaicb));
-    anlargs->ar_name = strdup(addr.c_str());
-    anlargs->ar_service = strdup(util::int2Str(port).c_str());
-    anlargs->ar_request = request;
-    socketinfomap[sockid].anlargs = anlargs;
-    struct sigevent sigev;
-    sigev.sigev_notify = SIGEV_SIGNAL;
-    sigev.sigev_signo = SIGUSR1;
-    sigev.sigev_value.sival_int = sockid;
-    int retcode = getaddrinfo_a(GAI_NOWAIT, &anlargs, 1, &sigev);
-    if (retcode) {
-      if (!handleError(er)) {
-        closeSocketIntern(sockid);
-        return -1;
-      }
-    }
+    wm->asyncTask(this, ASYNC_DNS_RESOLUTION, &resolveDNSAsync, sockid);
   }
   else
-#endif
   {
-    resolving = false;
-    struct addrinfo *res;
-    int retcode = getaddrinfo(addr.c_str(), util::int2Str(port).c_str(), request, &res);
-    free(request);
-    if (retcode) {
-      if (!handleError(er)) {
-        closeSocketIntern(sockid);
-        return -1;
-      }
-    }
-    handleTCPNameResolution(socketinfomap[sockid], res);
+    resolveDNS(sockid);
+    ScopeLock lock(socketinfomaplock);
+    resolving = socketinfomap[sockid].gaiasync = false;
+    handleTCPNameResolution(socketinfomap[sockid]);
   }
   return sockid;
 }
 
-void IOManager::handleTCPNameResolution(SocketInfo & socketinfo, struct addrinfo * result) {
-#ifdef __linux
-  if (socketinfo.anlargs) {
-    int error = gai_error(socketinfo.anlargs);
-    if (error) {
-      wm->dispatchEventFail(socketinfo.receiver,
-                            socketinfo.id,
-                            gai_strerror(error));
-      closeSocketIntern(socketinfo.id);
-      return;
-    }
+void IOManager::handleTCPNameResolution(SocketInfo & socketinfo) {
+  if (socketinfo.gairet) {
+    wm->dispatchEventFail(socketinfo.receiver, -1, socketinfo.gaierr);
+    closeSocketIntern(socketinfo.id);
+    return;
   }
-#endif
+  struct addrinfo * result = socketinfo.gaires;
   int sockfd = socket(result->ai_family,
                       result->ai_socktype,
                       result->ai_protocol);
   fcntl(sockfd, F_SETFL, O_NONBLOCK);
-  if (hasDefaultInterface()) {
-    struct addrinfo sock2, *res2;
-    memset(&sock2, 0, sizeof(sock2));
-    sock2.ai_family = AF_INET;
-    sock2.ai_socktype = SOCK_STREAM;
-    int retcode = getaddrinfo(getInterfaceAddress(getDefaultInterface()).c_str(),
-                              "0", &sock2, &res2);
-    if (retcode) {
-      if (!handleError(socketinfo.receiver)) {
-        closeSocketIntern(sockfd);
-        return;
-      }
-    }
-    retcode = bind(sockfd, res2->ai_addr, res2->ai_addrlen);
-    if (retcode) {
-      if (!handleError(socketinfo.receiver)) {
-        closeSocketIntern(sockfd);
-        return;
-      }
-    }
-  }
-  int retcode = connect(sockfd, result->ai_addr, result->ai_addrlen);
-  if (retcode) {
-    if (!handleError(socketinfo.receiver)) {
-      closeSocketIntern(sockfd);
-      return;
-    }
-  }
-  char buf[result->ai_addrlen];
+  char * buf = (char *) malloc(result->ai_addrlen);
   struct sockaddr_in * saddr = (struct sockaddr_in*) result->ai_addr;
   inet_ntop(AF_INET, &(saddr->sin_addr), buf, result->ai_addrlen);
   socketinfomap[socketinfo.id].fd = sockfd;
@@ -242,19 +146,40 @@ void IOManager::handleTCPNameResolution(SocketInfo & socketinfo, struct addrinfo
   socketinfomap[socketinfo.id].addr = std::string(buf);
   connecttimemap[socketinfo.id] = 0;
   sockfdidmap[sockfd] = socketinfo.id;
+  free(buf);
+  if (hasDefaultInterface()) {
+    struct addrinfo request, *res;
+    memset(&request, 0, sizeof(request));
+    request.ai_family = AF_INET;
+    request.ai_socktype = SOCK_STREAM;
+    int retcode = getaddrinfo(getInterfaceAddress(getDefaultInterface()).c_str(),
+                              "0", &request, &res);
+    if (retcode) {
+      if (!handleError(socketinfo.receiver)) {
+        closeSocketIntern(socketinfo.id);
+        return;
+      }
+    }
+    retcode = bind(sockfd, res->ai_addr, res->ai_addrlen);
+    if (retcode) {
+      if (!handleError(socketinfo.receiver)) {
+        closeSocketIntern(socketinfo.id);
+        return;
+      }
+    }
+  }
+  int retcode = connect(sockfd, result->ai_addr, result->ai_addrlen);
+  if (retcode) {
+    if (!handleError(socketinfo.receiver)) {
+      closeSocketIntern(socketinfo.id);
+      return;
+    }
+  }
 
-#ifdef __linux
-  if (socketinfo.anlargs) {
-    freeANLArgs(socketinfo.anlargs);
-    socketinfo.anlargs = NULL;
+  if (socketinfo.gaiasync) {
     wm->dispatchEventConnecting(socketinfo.receiver, socketinfo.id, socketinfo.addr);
   }
-  else
-#endif
-  {
-    freeaddrinfo(result);
-  }
-
+  freeaddrinfo(result);
   polling.addFDOut(sockfd);
   return;
 }
@@ -482,19 +407,42 @@ void IOManager::closeSocketIntern(int id) {
   if (socketinfo.ssl) {
     SSL_free(socketinfo.ssl);
   }
-#ifdef __linux
-  if (socketinfo.anlargs) {
-    gai_cancel(socketinfo.anlargs);
-    freeANLArgs(socketinfo.anlargs);
-  }
-#endif
 
   sockfdidmap.erase(socketinfo.fd);
   connecttimemap.erase(id);
   socketinfomap.erase(it);
 }
 
+void IOManager::resolveDNS(int sockid) {
+  struct addrinfo request;
+  memset(&request, 0, sizeof(request));
+  request.ai_family = AF_INET;
+  request.ai_socktype = SOCK_STREAM;
+  socketinfomaplock.lock();
+  std::string addr = socketinfomap[sockid].addr;
+  int port = socketinfomap[sockid].port;
+  socketinfomaplock.unlock();
+  struct addrinfo * result;
+  int retcode = getaddrinfo(addr.c_str(), util::int2Str(port).c_str(), &request, &result);
+  socketinfomaplock.lock();
+  socketinfomap[sockid].gaires = result;
+  socketinfomap[sockid].gairet = retcode;
+  if (retcode) {
+    socketinfomap[sockid].gaierr = strerror(errno);
+  }
+  socketinfomaplock.unlock();
+}
 
+void IOManager::asyncTaskComplete(int type, int id) {
+  util::assert(type == ASYNC_DNS_RESOLUTION);
+  ScopeLock lock(socketinfomaplock);
+  std::map<int, SocketInfo>::iterator it = socketinfomap.find(id);
+  if (it == socketinfomap.end()) {
+    return;
+  }
+  util::assert(it->second.type == FD_TCP_RESOLVING);
+  handleTCPNameResolution(it->second);
+}
 
 std::string IOManager::getCipher(int id) const {
   ScopeLock lock(socketinfomaplock);

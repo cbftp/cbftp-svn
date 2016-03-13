@@ -2,11 +2,19 @@
 
 #include "eventreceiver.h"
 
-Event::Event(EventReceiver * er, int type, int numdata, char * data, int datalen) :
+Event::Event(EventReceiver * er, int type, int numdata, void * data, int datalen) :
   receiver(er),
   type(type),
   data(data),
   datalen(datalen),
+  numdata(numdata)
+{
+}
+
+Event::Event(EventReceiver * er, int type, int numdata, void * data) :
+  receiver(er),
+  type(type),
+  data(data),
   numdata(numdata)
 {
 }
@@ -21,6 +29,14 @@ Event::Event(EventReceiver * er, int type, int numdata) :
   receiver(er),
   type(type),
   numdata(numdata)
+{
+}
+
+Event::Event(EventReceiver * er, int type, int numdata, int numdata2) :
+  receiver(er),
+  type(type),
+  numdata(numdata),
+  numdata2(numdata2)
 {
 }
 
@@ -50,7 +66,7 @@ int Event::getType() const {
   return type;
 }
 
-char * Event::getData() const {
+void * Event::getData() const {
   return data;
 }
 
@@ -60,6 +76,10 @@ int Event::getDataLen() const {
 
 int Event::getNumericalData() const {
   return numdata;
+}
+
+int Event::getNumericalData2() const {
+  return numdata2;
 }
 
 std::string Event::getStrData() const {

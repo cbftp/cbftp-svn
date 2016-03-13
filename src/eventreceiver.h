@@ -17,4 +17,6 @@ public:
   virtual void FDSSLSuccess(int);
   virtual void FDSSLFail(int);
   virtual void FDSendComplete(int);
+  virtual void asyncTaskComplete(int, void *);
+  virtual void asyncTaskComplete(int, int);
 };
