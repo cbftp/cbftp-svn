@@ -103,16 +103,17 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int
 
 int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int port, bool & resolving) {
   int sockid = sockidcounter++;
-  socketinfomaplock.lock();
-  socketinfomap[sockid].id = sockid;
-  socketinfomap[sockid].fd = -1;
-  socketinfomap[sockid].addr = addr;
-  socketinfomap[sockid].port = port;
-  socketinfomap[sockid].type = FD_TCP_RESOLVING;
-  socketinfomap[sockid].receiver = er;
-  socketinfomap[sockid].gaiasync = resolving = needsDNSResolution(addr);
-  connecttimemap[sockid] = 0;
-  socketinfomaplock.unlock();
+  {
+    ScopeLock lock(socketinfomaplock);
+    socketinfomap[sockid].id = sockid;
+    socketinfomap[sockid].fd = -1;
+    socketinfomap[sockid].addr = addr;
+    socketinfomap[sockid].port = port;
+    socketinfomap[sockid].type = FD_TCP_RESOLVING;
+    socketinfomap[sockid].receiver = er;
+    socketinfomap[sockid].gaiasync = resolving = needsDNSResolution(addr);
+    connecttimemap[sockid] = 0;
+  }
 
   if (resolving) {
     wm->asyncTask(this, ASYNC_DNS_RESOLUTION, &resolveDNSAsync, sockid);
@@ -294,9 +295,9 @@ void IOManager::negotiateSSLConnect(int id, EventReceiver * er) {
   ScopeLock lock(socketinfomaplock);
   std::map<int, SocketInfo>::iterator it = socketinfomap.find(id);
   if (it != socketinfomap.end() &&
-     (it->second.type == FD_TCP_PLAIN || it->second.type == FD_TCP_PLAIN_LISTEN)) {
+     (it->second.type == FD_TCP_PLAIN || it->second.type == FD_TCP_PLAIN_LISTEN))
+  {
     it->second.type = FD_TCP_SSL_NEG_CONNECT;
-    lock.unlock();
     polling.setFDOut(it->second.fd);
   }
 }
@@ -318,9 +319,8 @@ void IOManager::forceSSLhandshake(int id) {
   if (it == socketinfomap.end()) {
     return;
   }
-  SocketInfo & socketinfo = it->second;
-  socketinfo.type = FD_TCP_SSL_NEG_REDO_HANDSHAKE;
-  polling.setFDOut(socketinfo.fd);
+  it->second.type = FD_TCP_SSL_NEG_REDO_HANDSHAKE;
+  polling.setFDOut(it->second.fd);
 }
 
 bool IOManager::handleError(EventReceiver * er) {
@@ -416,6 +416,7 @@ void IOManager::resolveDNS(int id) {
   socketinfomaplock.lock();
   std::map<int, SocketInfo>::iterator it = socketinfomap.find(id);
   if (it == socketinfomap.end()) {
+    socketinfomaplock.unlock();
     return;
   }
   std::string addr = it->second.addr;
@@ -427,7 +428,7 @@ void IOManager::resolveDNS(int id) {
   request.ai_socktype = SOCK_STREAM;
   struct addrinfo * result;
   int retcode = getaddrinfo(addr.c_str(), util::int2Str(port).c_str(), &request, &result);
-  socketinfomaplock.lock();
+  ScopeLock lock(socketinfomaplock);
   it = socketinfomap.find(id);
   if (it == socketinfomap.end()) {
     return;
@@ -437,7 +438,6 @@ void IOManager::resolveDNS(int id) {
   if (retcode) {
     it->second.gaierr = strerror(errno);
   }
-  socketinfomaplock.unlock();
 }
 
 void IOManager::asyncTaskComplete(int type, int id) {
