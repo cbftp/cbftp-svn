@@ -4,6 +4,7 @@
 #include "scopelock.h"
 
 #define OVERLOADSIZE 10
+#define ASYNC_WORKERS 2
 
 enum WorkType {
   WORK_DATA,
@@ -17,11 +18,17 @@ enum WorkType {
   WORK_NEW,
   WORK_FAIL,
   WORK_SEND_COMPLETE,
-  WORK_DELETE
+  WORK_DELETE,
+  WORK_ASYNC_COMPLETE,
+  WORK_ASYNC_COMPLETE_P
 };
 
 void WorkManager::init() {
   thread.start("Worker", this);
+  for (int i = 0; i < ASYNC_WORKERS; ++i) {
+    asyncworkers.push_back(AsyncWorker(this, asyncqueue));
+    asyncworkers.back().init();
+  }
 }
 
 void WorkManager::dispatchFDData(EventReceiver * er, int sockid) {
@@ -86,9 +93,27 @@ void WorkManager::dispatchSignal(EventReceiver * er, int signal, int value) {
   }
 }
 
+void WorkManager::dispatchAsyncTaskComplete(AsyncTask & task) {
+  if (task.dataIsPointer()) {
+    dataqueue.push(Event(task.getReceiver(), WORK_ASYNC_COMPLETE_P, task.getType(), task.getData()));
+  }
+  else {
+    dataqueue.push(Event(task.getReceiver(), WORK_ASYNC_COMPLETE, task.getType(), task.getNumData()));
+  }
+  event.post();
+}
+
 void WorkManager::deferDelete(Pointer<EventReceiver> er) {
   dataqueue.push(Event(er, WORK_DELETE));
   event.post();
+}
+
+void WorkManager::asyncTask(EventReceiver * er, int type, void (*taskfunction)(int), int data) {
+  asyncqueue.push(AsyncTask(er, type, taskfunction, data));
+}
+
+void WorkManager::asyncTask(EventReceiver * er, int type, void (*taskfunction)(void *), void * data) {
+  asyncqueue.push(AsyncTask(er, type, taskfunction, data));
 }
 
 DataBlockPool * WorkManager::getBlockPool() {
@@ -100,7 +125,6 @@ bool WorkManager::overload() const {
 }
 
 void WorkManager::run() {
-  char * data;
   while(1) {
     event.wait();
     if (signalevents.hasEvent()) {
@@ -116,11 +140,12 @@ void WorkManager::run() {
           event.getReceiver()->FDData(numdata);
           readdata.post();
           break;
-        case WORK_DATABUF:
-          data = event.getData();
+        case WORK_DATABUF: {
+          char * data = static_cast<char *>(event.getData());
           er->FDData(numdata, data, event.getDataLen());
           blockpool.returnBlock(data);
           break;
+        }
         case WORK_TICK:
           er->tick(numdata);
           break;
@@ -149,6 +174,12 @@ void WorkManager::run() {
           er->FDSendComplete(numdata);
           break;
         case WORK_DELETE: // will be deleted when going out of scope
+          break;
+        case WORK_ASYNC_COMPLETE:
+          er->asyncTaskComplete(numdata, event.getNumericalData2());
+          break;
+        case WORK_ASYNC_COMPLETE_P:
+          er->asyncTaskComplete(numdata, event.getData());
           break;
       }
     }

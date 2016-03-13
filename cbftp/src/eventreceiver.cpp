@@ -51,3 +51,11 @@ void EventReceiver::FDSSLFail(int sockid) {
 void EventReceiver::FDSendComplete(int sockid) {
 
 }
+
+void EventReceiver::asyncTaskComplete(int type, void * data) {
+
+}
+
+void EventReceiver::asyncTaskComplete(int type, int) {
+
+}
