@@ -6,14 +6,14 @@ class AsyncTask {
 private:
   EventReceiver * receiver;
   int type;
-  void (*taskfunction)(int);
-  void (*taskfunctionp)(void *);
+  void (*taskfunction)(EventReceiver *, int);
+  void (*taskfunctionp)(EventReceiver *, void *);
   bool dataispointer;
   int data;
   void * datap;
 public:
-  AsyncTask(EventReceiver *, int, void (*)(int), int);
-  AsyncTask(EventReceiver *, int, void (*)(void *), void *);
+  AsyncTask(EventReceiver *, int, void (*)(EventReceiver *, int), int);
+  AsyncTask(EventReceiver *, int, void (*)(EventReceiver *, void *), void *);
   void execute();
   EventReceiver * getReceiver() const;
   int getType() const;

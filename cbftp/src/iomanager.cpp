@@ -30,8 +30,8 @@ enum AsyncTaskTypes {
   ASYNC_DNS_RESOLUTION
 };
 
-void resolveDNSAsync(int sockid) {
-  global->getIOManager()->resolveDNS(sockid);
+void resolveDNSAsync(EventReceiver * er, int sockid) {
+  static_cast<IOManager *>(er)->resolveDNS(sockid);
 }
 
 bool needsDNSResolution(const std::string& addr) {
@@ -110,18 +110,17 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int
   socketinfomap[sockid].port = port;
   socketinfomap[sockid].type = FD_TCP_RESOLVING;
   socketinfomap[sockid].receiver = er;
-  socketinfomap[sockid].gaiasync = resolving = true;
+  socketinfomap[sockid].gaiasync = resolving = needsDNSResolution(addr);
   connecttimemap[sockid] = 0;
   socketinfomaplock.unlock();
 
-  if (needsDNSResolution(addr)) {
+  if (resolving) {
     wm->asyncTask(this, ASYNC_DNS_RESOLUTION, &resolveDNSAsync, sockid);
   }
   else
   {
     resolveDNS(sockid);
     ScopeLock lock(socketinfomaplock);
-    resolving = socketinfomap[sockid].gaiasync = false;
     handleTCPNameResolution(socketinfomap[sockid]);
   }
   return sockid;
@@ -413,22 +412,30 @@ void IOManager::closeSocketIntern(int id) {
   socketinfomap.erase(it);
 }
 
-void IOManager::resolveDNS(int sockid) {
+void IOManager::resolveDNS(int id) {
+  socketinfomaplock.lock();
+  std::map<int, SocketInfo>::iterator it = socketinfomap.find(id);
+  if (it == socketinfomap.end()) {
+    return;
+  }
+  std::string addr = it->second.addr;
+  int port = it->second.port;
+  socketinfomaplock.unlock();
   struct addrinfo request;
   memset(&request, 0, sizeof(request));
   request.ai_family = AF_INET;
   request.ai_socktype = SOCK_STREAM;
-  socketinfomaplock.lock();
-  std::string addr = socketinfomap[sockid].addr;
-  int port = socketinfomap[sockid].port;
-  socketinfomaplock.unlock();
   struct addrinfo * result;
   int retcode = getaddrinfo(addr.c_str(), util::int2Str(port).c_str(), &request, &result);
   socketinfomaplock.lock();
-  socketinfomap[sockid].gaires = result;
-  socketinfomap[sockid].gairet = retcode;
+  it = socketinfomap.find(id);
+  if (it == socketinfomap.end()) {
+    return;
+  }
+  it->second.gaires = result;
+  it->second.gairet = retcode;
   if (retcode) {
-    socketinfomap[sockid].gaierr = strerror(errno);
+    it->second.gaierr = strerror(errno);
   }
   socketinfomaplock.unlock();
 }
