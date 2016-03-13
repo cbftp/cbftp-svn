@@ -183,7 +183,7 @@ void NewRaceScreen::update() {
       ui->printStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe));
     }
     else {
-      ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
+      ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
       ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
     }
     msoe = msos.getElement(msos.getSelectionPointer());

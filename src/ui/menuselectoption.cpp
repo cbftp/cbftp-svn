@@ -8,6 +8,8 @@
 #include "menuselectoptiontextarrow.h"
 #include "menuselectadjustableline.h"
 
+#define MAX_DIFF_LR 30
+
 MenuSelectOption::MenuSelectOption() {
   pointer = 0;
   lastpointer = 0;
@@ -29,7 +31,9 @@ bool MenuSelectOption::goDown() {
       continue;
     }
     unsigned int row = options[i]->getRow();
-    if (row > crow && options[i]->getCol() == ccol) {
+    unsigned int col = options[i]->getCol();
+    if (row > crow && col <= ccol + MAX_DIFF_LR &&
+        (ccol < MAX_DIFF_LR || col >= ccol - MAX_DIFF_LR)) {
       if (row < closest || closest == (unsigned int)-1) {
         closest = row;
         closestelem = i;
@@ -62,7 +66,9 @@ bool MenuSelectOption::goUp() {
       continue;
     }
     unsigned int row = options[i]->getRow();
-    if (row < crow && options[i]->getCol() == ccol) {
+    unsigned int col = options[i]->getCol();
+    if (row < crow && col <= ccol + MAX_DIFF_LR &&
+        (ccol < MAX_DIFF_LR || col >= ccol - MAX_DIFF_LR)) {
       if (row > closest || closest == (unsigned int)-1) {
         closest = row;
         closestelem = i;
@@ -281,13 +287,12 @@ void MenuSelectOption::reset() {
 
 void MenuSelectOption::enterFocusFrom(int dir) {
   focus = true;
-  if (dir == 2) { // bottom
-    pointer = size() - 1;
+  if (lastpointer) {
+    pointer = lastpointer;
   }
-  else {
-    pointer = 0;
+  else if (dir == 2) {
+    pointer = lastpointer = size() - 1;
   }
-  lastpointer = pointer;
   checkPointer();
 }
 
