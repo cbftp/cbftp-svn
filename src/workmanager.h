@@ -42,8 +42,8 @@ public:
   void dispatchSignal(EventReceiver *, int, int);
   void dispatchAsyncTaskComplete(AsyncTask &);
   void deferDelete(Pointer<EventReceiver>);
-  void asyncTask(EventReceiver *, int, void (*)(int), int);
-  void asyncTask(EventReceiver *, int, void (*)(void *), void *);
+  void asyncTask(EventReceiver *, int, void (*)(EventReceiver *, int), int);
+  void asyncTask(EventReceiver *, int, void (*)(EventReceiver *, void *), void *);
   DataBlockPool * getBlockPool();
   bool overload() const;
   void run();

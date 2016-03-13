@@ -108,11 +108,11 @@ void WorkManager::deferDelete(Pointer<EventReceiver> er) {
   event.post();
 }
 
-void WorkManager::asyncTask(EventReceiver * er, int type, void (*taskfunction)(int), int data) {
+void WorkManager::asyncTask(EventReceiver * er, int type, void (*taskfunction)(EventReceiver *, int), int data) {
   asyncqueue.push(AsyncTask(er, type, taskfunction, data));
 }
 
-void WorkManager::asyncTask(EventReceiver * er, int type, void (*taskfunction)(void *), void * data) {
+void WorkManager::asyncTask(EventReceiver * er, int type, void (*taskfunction)(EventReceiver *, void *), void * data) {
   asyncqueue.push(AsyncTask(er, type, taskfunction, data));
 }
 

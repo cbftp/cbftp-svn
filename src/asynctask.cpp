@@ -1,21 +1,21 @@
 #include "asynctask.h"
 
-AsyncTask::AsyncTask(EventReceiver * er, int type, void (*taskfunction)(int), int data) :
+AsyncTask::AsyncTask(EventReceiver * er, int type, void (*taskfunction)(EventReceiver *, int), int data) :
   receiver(er), type(type), taskfunction(taskfunction), dataispointer(false), data(data)
 {
 }
 
-AsyncTask::AsyncTask(EventReceiver * er, int type, void (*taskfunction)(void *), void * data) :
+AsyncTask::AsyncTask(EventReceiver * er, int type, void (*taskfunction)(EventReceiver *, void *), void * data) :
   receiver(er), type(type), taskfunctionp(taskfunction), dataispointer(true), datap(data)
 {
 }
 
 void AsyncTask::execute() {
   if (dataispointer) {
-    taskfunctionp(datap);
+    taskfunctionp(receiver, datap);
   }
   else {
-    taskfunction(data);
+    taskfunction(receiver, data);
   }
 }
 
