@@ -557,35 +557,35 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
     case KEY_DOWN:
       //go down and highlight next item (if not at bottom already)
       update = list.goNext();
-      table.goDown();
       if (list.currentCursorPosition() >= currentviewspan + row) {
         ui->redraw();
       }
       else if (update) {
+        table.goDown();
         ui->update();
       }
       break;
     case KEY_UP:
       //go up and highlight previous item (if not at top already)
       update = list.goPrevious();
-      table.goUp();
       if (list.currentCursorPosition() < currentviewspan) {
         ui->redraw();
       }
       else if (update) {
+        table.goUp();
         ui->update();
       }
       break;
     case KEY_NPAGE:
       for (unsigned int i = 0; i < pagerows; i++) {
         success = list.goNext();
-        table.goDown();
         if (!success) {
           break;
         }
         else if (!update) {
           update = true;
         }
+        table.goDown();
       }
       if (update) {
         ui->redraw();
@@ -594,13 +594,13 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
     case KEY_PPAGE:
       for (unsigned int i = 0; i < pagerows; i++) {
         success = list.goPrevious();
-        table.goUp();
         if (!success) {
           break;
         }
         else if (!update) {
           update = true;
         }
+        table.goUp();
       }
       if (update) {
         ui->redraw();
