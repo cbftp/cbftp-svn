@@ -80,10 +80,12 @@ void BrowseScreen::redraw() {
 }
 
 void BrowseScreen::update() {
-  if (initsplitupdate) {
-    (active == left ? right : left)->update();
+  if (!!left) {
+    left->update();
   }
-  active->update();
+  if (!!right) {
+    right->update();
+  }
 }
 
 void BrowseScreen::command(std::string command, std::string arg) {
