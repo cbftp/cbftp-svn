@@ -23,7 +23,7 @@ endif
 
 DATE := "\"${shell date}\""
 
-BOXTAG := "\"Marcus\""
+BOXTAG := "\"cbftp\""
 
 CXX=g++
 OPTFLAGS=-g -O0
