@@ -427,7 +427,11 @@ void IOManager::resolveDNS(int id) {
   request.ai_family = AF_INET;
   request.ai_socktype = SOCK_STREAM;
   struct addrinfo * result;
+  std::string err;
   int retcode = getaddrinfo(addr.c_str(), util::int2Str(port).c_str(), &request, &result);
+  if (retcode) {
+    err = strerror(errno);
+  }
   ScopeLock lock(socketinfomaplock);
   it = socketinfomap.find(id);
   if (it == socketinfomap.end()) {
@@ -436,7 +440,7 @@ void IOManager::resolveDNS(int id) {
   it->second.gaires = result;
   it->second.gairet = retcode;
   if (retcode) {
-    it->second.gaierr = strerror(errno);
+    it->second.gaierr = err;
   }
 }
 
