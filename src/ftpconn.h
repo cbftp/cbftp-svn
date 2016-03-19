@@ -69,6 +69,7 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     int nextconnectorid;
     IOManager * iom;
     RawBuffer * rawbuf;
+    RawBuffer * aggregatedrawbuf;
     ProxySession * proxysession;
     char * databuf;
     unsigned int databuflen;
@@ -127,10 +128,12 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void PBSZ0Response();
     void TYPEIResponse();
     void proxySessionInit(bool);
-    void sendEcho(std::string);
+    void sendEcho(const std::string &);
     void connectAllAddresses();
     Proxy * getProxy() const;
     void clearConnectors();
+    void rawBufWrite(const std::string &);
+    void rawBufWriteLine(const std::string &);
   public:
     int getId() const;
     void setId(int);

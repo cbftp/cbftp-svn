@@ -33,6 +33,7 @@ FTPConn::FTPConn(SiteLogic * sl, int id) {
   nextconnectorid = 0;
   processing = false;
   rawbuf = new RawBuffer(RAWBUFMAXLEN, site->getName(), util::int2Str(id));
+  aggregatedrawbuf = sl->getAggregatedRawBuffer();
   iom = global->getIOManager();
   databuflen = DATABUF;
   databuf = (char *) malloc(databuflen);
@@ -117,7 +118,7 @@ void FTPConn::clearConnectors() {
 
 void FTPConn::FDDisconnected(int sockid) {
   if (state != STATE_DISCONNECTED) {
-    rawbuf->writeLine("[Disconnected]");
+    rawBufWriteLine("[Disconnected]");
     this->status = "disconnected";
     state = STATE_DISCONNECTED;
     sl->disconnected(id);
@@ -136,7 +137,7 @@ void FTPConn::FDSSLFail(int sockid) {
 }
 
 void FTPConn::printCipher(int sockid) {
-  rawbuf->writeLine("[Cipher: " + iom->getCipher(sockid) + "]");
+  rawBufWriteLine("[Cipher: " + iom->getCipher(sockid) + "]");
 }
 
 bool FTPConn::parseData(char * data, unsigned int datalen, char ** databuf, unsigned int & databuflen, unsigned int & databufpos, int & databufcode) {
@@ -184,7 +185,7 @@ bool FTPConn::parseData(char * data, unsigned int datalen, char ** databuf, unsi
 
 void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
   if (state != STATE_STAT) {
-    rawbuf->write(std::string(data, datalen));
+    rawBufWrite(std::string(data, datalen));
   }
   if (parseData(data, datalen, &databuf, databuflen, databufpos, databufcode)) {
     switch(state) {
@@ -296,7 +297,7 @@ void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
 }
 
 void FTPConn::ftpConnectInfo(int connectorid, const std::string & info) {
-  rawbuf->writeLine(info);
+  rawBufWriteLine(info);
 }
 
 void FTPConn::ftpConnectSuccess(int connectorid) {
@@ -319,10 +320,10 @@ void FTPConn::ftpConnectSuccess(int connectorid) {
     std::string addr = (*it)->getAddress();
     std::string port = (*it)->getPort();
     site->setPrimaryAddress((*it)->getAddress(), (*it)->getPort());
-    rawbuf->writeLine("[Setting " + addr + ":" + port + " as primary]");
+    rawBufWriteLine("[Setting " + addr + ":" + port + " as primary]");
   }
   if (connectors.size() > 1) {
-    rawbuf->writeLine("[Disconnecting other attempts]");
+    rawBufWriteLine("[Disconnecting other attempts]");
   }
   clearConnectors();
   if (site->SSL()) {
@@ -370,8 +371,8 @@ void FTPConn::tick(int) {
   }
 }
 
-void FTPConn::sendEcho(std::string data) {
-  rawbuf->writeLine(data);
+void FTPConn::sendEcho(const std::string & data) {
+  rawBufWriteLine(data);
   processing = true;
   status = data;
   iom->sendData(sockid, data + "\r\n");
@@ -382,7 +383,7 @@ void FTPConn::AUTHTLSResponse() {
     iom->negotiateSSLConnect(sockid);
   }
   else {
-    rawbuf->writeLine("[Unknown response]");
+    rawBufWriteLine("[Unknown response]");
     state = STATE_DISCONNECTED;
     processing = false;
     iom->closeSocket(sockid);
@@ -406,7 +407,7 @@ void FTPConn::USERResponse() {
     std::string passc = "";
     for (unsigned int i = 0; i < pass.length(); i++) passc.append("*");
     std::string output = "PASS " + std::string(passc);
-    rawbuf->writeLine(output);
+    rawBufWriteLine(output);
     status = output;
     if (state == STATE_USER) {
       state = STATE_PASS;
@@ -546,7 +547,7 @@ void FTPConn::STATResponse() {
   if (databufcode == 211 || databufcode == 212 || databufcode == 213) {
     parseFileList(databuf, databufpos);
     std::string output = "[File list retrieved]";
-    rawbuf->writeLine(output);
+    rawBufWriteLine(output);
     sl->listRefreshed(id);
   }
   else {
@@ -1003,7 +1004,7 @@ void FTPConn::disconnect() {
     iom->closeSocket(sockid);
     clearConnectors();
     this->status = "disconnected";
-    rawbuf->writeLine("[Disconnected]");
+    rawBufWriteLine("[Disconnected]");
   }
 }
 
@@ -1110,4 +1111,14 @@ void FTPConn::parseFileList(char * buf, unsigned int buflen) {
 
 bool FTPConn::isConnected() const {
   return state != STATE_DISCONNECTED;
+}
+
+void FTPConn::rawBufWrite(const std::string& data) {
+  rawbuf->write(data);
+  aggregatedrawbuf->write(rawbuf->getTag(), data);
+}
+
+void FTPConn::rawBufWriteLine(const std::string& data) {
+  rawbuf->writeLine(data);
+  aggregatedrawbuf->writeLine(rawbuf->getTag(), data);
 }

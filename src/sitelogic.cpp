@@ -31,7 +31,8 @@
 
 SiteLogic::SiteLogic(std::string sitename) :
   site(global->getSiteManager()->getSite(sitename)),
-  rawbuf(new RawBuffer(site->getName())),
+  rawcommandrawbuf(new RawBuffer(site->getName())),
+  aggregatedrawbuf(new RawBuffer(site->getName())),
   maxslotsup(site->getMaxUp()),
   maxslotsdn(site->getMaxDown()),
   slotsdn(maxslotsdn),
@@ -52,7 +53,6 @@ SiteLogic::SiteLogic(std::string sitename) :
 
 SiteLogic::~SiteLogic() {
   global->getTickPoke()->stopPoke(this, 0);
-  delete rawbuf;
   delete ptrack;
   for (unsigned int i = 0; i < conns.size(); i++) {
     delete conns[i];
@@ -60,6 +60,8 @@ SiteLogic::~SiteLogic() {
   for (unsigned int i = 0; i < races.size(); i++) {
     delete races[i];
   }
+  delete rawcommandrawbuf;
+  delete aggregatedrawbuf;
 }
 
 void SiteLogic::activateAll() {
@@ -601,7 +603,7 @@ void SiteLogic::gotPath(int id, std::string path) {
 
 void SiteLogic::rawCommandResultRetrieved(int id, std::string result) {
   connstatetracker[id].resetIdleTime();
-  rawbuf->write(result);
+  rawcommandrawbuf->write(result);
   if (connstatetracker[id].hasRequest()) {
     if (connstatetracker[id].getRequest()->requestType() == REQ_RAW) {
       setRequestReady(id, NULL, true);
@@ -854,7 +856,7 @@ bool SiteLogic::handleRequest(int id) {
       }
       break;
     case REQ_RAW: // raw command
-      rawbuf->writeLine(it->requestData());
+      rawcommandrawbuf->writeLine(it->requestData());
       conns[id]->doRaw(it->requestData());
       break;
     case REQ_WIPE_RECURSIVE: // recursive wipe
@@ -1403,7 +1405,11 @@ void SiteLogic::issueRawCommand(unsigned int id, std::string command) {
 }
 
 RawBuffer * SiteLogic::getRawCommandBuffer() const {
-  return rawbuf;
+  return rawcommandrawbuf;
+}
+
+RawBuffer * SiteLogic::getAggregatedRawBuffer() const {
+  return aggregatedrawbuf;
 }
 
 void SiteLogic::raceGlobalComplete() {

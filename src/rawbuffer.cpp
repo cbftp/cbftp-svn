@@ -6,67 +6,85 @@
 
 extern GlobalContext * global;
 
-RawBuffer::RawBuffer(unsigned int maxlength, std::string site, std::string id) {
-  latestp = 0;
-  latestpcopy = 0;
-  this->maxlength = maxlength;
-  this->site = site;
-  this->id = id;
-  inprogress = false;
-  uiwatching = false;
-  threads = true;
-  eventlog = false;
+RawBuffer::RawBuffer(unsigned int maxlength, std::string site, std::string id) :
+  latestp(0),
+  latestpcopy(0),
+  maxlength(maxlength),
+  bookmarklines(0),
+  site(site),
+  id(id),
+  inprogress(false),
+  uiwatching(false),
+  threads(true),
+  eventlog(false)
+{
   writeLine("Log window initialized. Site: " + site + " Thread id: " + id);
 }
 
-RawBuffer::RawBuffer(std::string site) {
-  latestp = 0;
-  latestpcopy = 0;
-  this->maxlength = 1024;
-  this->site = site;
-  inprogress = false;
-  uiwatching = false;
-  threads = false;
-  eventlog = false;
+RawBuffer::RawBuffer(std::string site) :
+  latestp(0),
+  latestpcopy(0),
+  maxlength(1024),
+  bookmarklines(0),
+  site(site),
+  inprogress(false),
+  uiwatching(false),
+  threads(false),
+  eventlog(false)
+{
   writeLine("Raw command window initialized. Site: " + site);
 }
 
-RawBuffer::RawBuffer() {
-  latestp = 0;
-  latestpcopy = 0;
-  this->maxlength = 1024;
-  inprogress = false;
-  uiwatching = false;
-  threads = false;
-  eventlog = true;
+RawBuffer::RawBuffer() :
+  latestp(0),
+  latestpcopy(0),
+  maxlength(1024),
+  bookmarklines(0),
+  inprogress(false),
+  uiwatching(false),
+  threads(false),
+  eventlog(true)
+{
   writeLine("Event log initialized.");
 }
-void RawBuffer::write(std::string s) {
+
+void RawBuffer::bookmark() {
+  bookmarklines = 0;
+}
+
+unsigned int RawBuffer::linesSinceBookmark() const {
+  return bookmarklines;
+}
+
+void RawBuffer::write(const std::string & s) {
+  write(getTag(), s);
+}
+
+void RawBuffer::write(const std::string & tag, const std::string & s) {
   size_t split = s.find("\r\n");
   if (!split) {
-    if (s.length() > 2) write(s.substr(2));
+    if (s.length() > 2) write(tag, s.substr(2));
   }
   else if (split != std::string::npos) {
-    write(s.substr(0, split));
+    write(tag, s.substr(0, split));
     inprogress = false;
-    if (s.length() > split + 2) write(s.substr(split + 2));
+    if (s.length() > split + 2) write(tag, s.substr(split + 2));
   }
   else {
     split = s.find("\n");
     if (!split) {
-      if (s.length() > 1) write(s.substr(1));
+      if (s.length() > 1) write(tag, s.substr(1));
     }
     else if (split != std::string::npos) {
-      write(s.substr(0, split));
+      write(tag, s.substr(0, split));
       inprogress = false;
-      if (s.length() > split + 1) write(s.substr(split + 1));
+      if (s.length() > split + 1) write(tag, s.substr(split + 1));
     }
     else {
       if (inprogress) {
         log[(latestp > 0 ? latestp : maxlength) - 1].second.append(s);
       }
       else {
-        std::string tag = "[" + util::ctimeLog() + (eventlog ? "" : " " + site + (threads ? " " + id : "")) + "]";
         if (log.size() < maxlength) {
           log.push_back(std::pair<std::string, std::string>(tag, s));
         }
@@ -76,6 +94,7 @@ void RawBuffer::write(std::string s) {
         if (++latestp == maxlength) {
           latestp = 0;
         }
+        ++bookmarklines;
         inprogress = true;
       }
     }
@@ -85,13 +104,21 @@ void RawBuffer::write(std::string s) {
   }
 }
 
-void RawBuffer::writeLine(std::string s) {
-  write(s + "\n");
+void RawBuffer::writeLine(const std::string & s) {
+  writeLine(getTag(), s);
+}
+
+void RawBuffer::writeLine(const std::string & tag, const std::string & s) {
+  write(tag, s + "\n");
 }
 
 void RawBuffer::rename(std::string name) {
   writeLine("Changing site name to: " + name);
   site = name;
+}
+
+std::string RawBuffer::getTag() const {
+  return "[" + util::ctimeLog() + (eventlog ? "" : " " + site + (threads ? " " + id : "")) + "]";
 }
 
 void RawBuffer::setId(int id) {

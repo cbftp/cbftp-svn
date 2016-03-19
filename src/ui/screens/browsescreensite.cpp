@@ -16,6 +16,7 @@
 #include "../../util.h"
 #include "../../pointer.h"
 #include "../../timereference.h"
+#include "../../rawbuffer.h"
 
 #include "../ui.h"
 #include "../uifile.h"
@@ -25,6 +26,7 @@
 #include "../resizableelement.h"
 
 #include "browsescreenaction.h"
+#include "rawdatascreen.h"
 
 extern GlobalContext * global;
 
@@ -34,6 +36,7 @@ BrowseScreenSite::BrowseScreenSite(Ui * ui, std::string sitestr) {
   sitelogic = global->getSiteLogicManager()->getSiteLogic(sitestr);
   site = sitelogic->getSite();
   requestedpath = site->getBasePath();
+  sitelogic->getAggregatedRawBuffer()->bookmark();
   requestid = sitelogic->requestFileList(requestedpath);
   virgin = true;
   resort = false;
@@ -62,6 +65,9 @@ BrowseScreenSite::BrowseScreenSite(Ui * ui, std::string sitestr) {
 
 BrowseScreenSite::~BrowseScreenSite() {
   disableGotoMode();
+  if (virgin) {
+    sitelogic->getAggregatedRawBuffer()->uiWatching(false);
+  }
 }
 
 BrowseScreenType BrowseScreenSite::type() const {
@@ -72,6 +78,18 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
   this->row = row;
   this->col = col;
   this->coloffset = coloffset;
+  if (virgin) {
+    sitelogic->getAggregatedRawBuffer()->uiWatching(true);
+    unsigned int linessincebookmark = sitelogic->getAggregatedRawBuffer()->linesSinceBookmark();
+    if (!linessincebookmark) {
+      ui->printStr(0, coloffset + 1, "Awaiting slot...");
+    }
+    else {
+      unsigned int linestoprint = linessincebookmark > row ? row : linessincebookmark;
+      RawDataScreen::printRawBufferLines(ui, sitelogic->getAggregatedRawBuffer(), linestoprint, col);
+    }
+    return;
+  }
   if (resort == true) sort();
   unsigned int position = list.currentCursorPosition();
   unsigned int pagerows = (unsigned int) row / 2;
@@ -184,10 +202,7 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
       }
     }
   }
-  if (virgin) {
-    ui->printStr(1, coloffset + 1, "Getting file list for " + site->getName() + " ...");
-  }
-  else if (listsize == 0) {
+  if (listsize == 0) {
     ui->printStr(0, coloffset + 3, "(empty directory)");
   }
   update();
@@ -250,7 +265,10 @@ void BrowseScreenSite::update() {
             selectionhistory.push_front(std::pair<std::string, std::string>(list.getPath(), list.cursoredFile()->getName()));
           }
         }
-        virgin = false;
+        else {
+          sitelogic->getAggregatedRawBuffer()->uiWatching(false);
+          virgin = false;
+        }
         unsigned int position = 0;
         bool separatorsenabled = false;
         if (list.getPath() == filelist->getPath()) {
@@ -303,6 +321,9 @@ void BrowseScreenSite::update() {
     }
     ui->setInfo();
     return;
+  }
+  if (virgin) {
+    ui->redraw();
   }
   if (table.size()) {
     Pointer<ResizableElement> re = table.getElement(table.getLastSelectionPointer());
