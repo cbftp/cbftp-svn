@@ -59,7 +59,7 @@ void RawDataScreen::update() {
   if (rawcommandmode) {
     rownum = row - 1;
   }
-  printRawBufferLines(ui, rawbuf, rownum, col, readfromcopy, copysize, copyreadpos);
+  printRawBufferLines(ui, rawbuf, rownum, col, 0, readfromcopy, copysize, copyreadpos);
   if (rawcommandmode) {
     std::string pretag = "[Raw command]: ";
     ui->printStr(rownum, 0, pretag + rawcommandfield.getContentText());
@@ -67,11 +67,11 @@ void RawDataScreen::update() {
   }
 }
 
-void RawDataScreen::printRawBufferLines(Ui * ui, RawBuffer * rawbuf, unsigned int rownum, unsigned int col) {
-  printRawBufferLines(ui, rawbuf, rownum, col, false, 0, 0);
+void RawDataScreen::printRawBufferLines(Ui * ui, RawBuffer * rawbuf, unsigned int rownum, unsigned int col, unsigned int coloffset) {
+  printRawBufferLines(ui, rawbuf, rownum, col, coloffset, false, 0, 0);
 }
 
-void RawDataScreen::printRawBufferLines(Ui * ui, RawBuffer * rawbuf, unsigned int rownum, unsigned int col, bool readfromcopy, unsigned int copysize, unsigned int copyreadpos) {
+void RawDataScreen::printRawBufferLines(Ui * ui, RawBuffer * rawbuf, unsigned int rownum, unsigned int col, unsigned int coloffset, bool readfromcopy, unsigned int copysize, unsigned int copyreadpos) {
   bool cutfirst5 = false;
   bool skiptag = false;
   bool skiptagchecked = false;
@@ -102,14 +102,14 @@ void RawDataScreen::printRawBufferLines(Ui * ui, RawBuffer * rawbuf, unsigned in
     unsigned int startprintsecond = 0;
     if (!skiptag) {
       unsigned int length = line.first.length();
-      ui->printStr(i, 0, line.first);
+      ui->printStr(i, coloffset, line.first);
       startprintsecond = length + 1;
     }
     unsigned int start = 0;
     if (cutfirst5 && skipCodePrint(line.second)) {
       start = 5;
     }
-    ui->printStr(i, startprintsecond, encoding::cp437toUnicode(line.second.substr(start)));
+    ui->printStr(i, startprintsecond + coloffset, encoding::cp437toUnicode(line.second.substr(start)));
   }
 }
 
