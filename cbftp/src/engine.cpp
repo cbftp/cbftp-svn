@@ -306,6 +306,7 @@ void Engine::resetRace(Pointer<Race> & race) {
     if (!current) {
       currentraces.push_back(race);
     }
+    checkStartPoke();
     global->getEventLog()->log("Engine", "Race reset: " + race->getName());
   }
 }
