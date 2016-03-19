@@ -44,7 +44,7 @@ void RawCommandScreen::update() {
   ui->erase();
   ui->showCursor();
   unsigned int rownum = row - 1;
-  RawDataScreen::printRawBufferLines(ui, rawbuf, rownum, col, readfromcopy, copysize, copyreadpos);
+  RawDataScreen::printRawBufferLines(ui, rawbuf, rownum, col, 0, readfromcopy, copysize, copyreadpos);
   std::string pretag = "[Raw command]: ";
   ui->printStr(rownum, 0, pretag + rawcommandfield.getContentText());
   ui->moveCursor(rownum, pretag.length() + rawcommandfield.cursorPosition());

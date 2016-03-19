@@ -86,7 +86,7 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
     }
     else {
       unsigned int linestoprint = linessincebookmark > row ? row : linessincebookmark;
-      RawDataScreen::printRawBufferLines(ui, sitelogic->getAggregatedRawBuffer(), linestoprint, col);
+      RawDataScreen::printRawBufferLines(ui, sitelogic->getAggregatedRawBuffer(), linestoprint, col, coloffset);
     }
     return;
   }
