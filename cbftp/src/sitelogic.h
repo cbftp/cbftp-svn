@@ -49,7 +49,8 @@ class SiteLogic : public EventReceiver {
     std::vector<SiteRace *> races;
     std::list<SiteRace *> recentlylistedraces;
     std::list<Pointer<TransferJob> > transferjobs;
-    RawBuffer * rawbuf;
+    RawBuffer * rawcommandrawbuf;
+    RawBuffer * aggregatedrawbuf;
     unsigned int maxslotsup;
     unsigned int maxslotsdn;
     int slotsdn;
@@ -126,6 +127,7 @@ class SiteLogic : public EventReceiver {
     void listCompleted(int, int);
     void issueRawCommand(unsigned int, std::string);
     RawBuffer * getRawCommandBuffer() const;
+    RawBuffer * getAggregatedRawBuffer() const;
     void raceGlobalComplete();
     void raceLocalComplete(SiteRace *, int);
     void transferComplete(bool isdownload);

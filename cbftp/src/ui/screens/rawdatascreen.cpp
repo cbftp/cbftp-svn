@@ -67,6 +67,10 @@ void RawDataScreen::update() {
   }
 }
 
+void RawDataScreen::printRawBufferLines(Ui * ui, RawBuffer * rawbuf, unsigned int rownum, unsigned int col) {
+  printRawBufferLines(ui, rawbuf, rownum, col, false, 0, 0);
+}
+
 void RawDataScreen::printRawBufferLines(Ui * ui, RawBuffer * rawbuf, unsigned int rownum, unsigned int col, bool readfromcopy, unsigned int copysize, unsigned int copyreadpos) {
   bool cutfirst5 = false;
   bool skiptag = false;
@@ -98,9 +102,6 @@ void RawDataScreen::printRawBufferLines(Ui * ui, RawBuffer * rawbuf, unsigned in
     unsigned int startprintsecond = 0;
     if (!skiptag) {
       unsigned int length = line.first.length();
-      /*for (unsigned int j = 0; j < length; j++) {
-        ui->printChar(i, j, line.first[j]);
-      }*/
       ui->printStr(i, 0, line.first);
       startprintsecond = length + 1;
     }
@@ -108,9 +109,6 @@ void RawDataScreen::printRawBufferLines(Ui * ui, RawBuffer * rawbuf, unsigned in
     if (cutfirst5 && skipCodePrint(line.second)) {
       start = 5;
     }
-    /*for (unsigned int j = start; j < line.second.length(); j++) {
-      ui->printChar(i, j + startprintsecond - start, encoding::cp437toUnicode(line.second[j]));
-    }*/
     ui->printStr(i, startprintsecond, encoding::cp437toUnicode(line.second.substr(start)));
   }
 }
