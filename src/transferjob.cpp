@@ -1,12 +1,12 @@
 #include "transferjob.h"
 
+#include "core/tickpoke.h"
 #include "filelist.h"
 #include "file.h"
 #include "site.h"
 #include "globalcontext.h"
 #include "skiplist.h"
 #include "transferstatus.h"
-#include "tickpoke.h"
 #include "sitelogic.h"
 #include "util.h"
 #include "localstorage.h"

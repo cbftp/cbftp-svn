@@ -3,7 +3,7 @@
 #include <list>
 #include <map>
 
-#include "../../pointer.h"
+#include "../../core/pointer.h"
 
 #include "../menuselectoption.h"
 #include "../uiwindow.h"

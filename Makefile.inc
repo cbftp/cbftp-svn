@@ -29,7 +29,3 @@ CXX=g++
 OPTFLAGS=-g -O0
 CPPFLAGS=$(OPTFLAGS) -Wall -MMD -MP $(STATIC_SSL_INCLUDE)
 LINKFLAGS=$(SSL_LINKFLAGS) -lncursesw -lpthread
-
-ifeq ($(shell uname -s),Linux)
-LINKFLAGS+= -lanl
-endif

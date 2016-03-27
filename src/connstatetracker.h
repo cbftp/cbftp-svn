@@ -4,7 +4,7 @@
 #include <list>
 
 #include "delayedcommand.h"
-#include "pointer.h"
+#include "core/pointer.h"
 
 #define CST_DOWNLOAD 981
 #define CST_UPLOAD 982

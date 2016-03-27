@@ -3,8 +3,8 @@
 #include <string>
 #include <list>
 
-#include "pointer.h"
-#include "eventreceiver.h"
+#include "core/pointer.h"
+#include "core/eventreceiver.h"
 
 class DataFileHandler;
 

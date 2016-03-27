@@ -1,8 +1,6 @@
 #pragma once
 
-#include "eventreceiver.h"
-
-#define INTERVAL 50
+#include "core/eventreceiver.h"
 
 class TimeReference : public EventReceiver {
 public:

@@ -2,7 +2,7 @@
 
 #include "../uiwindow.h"
 
-#include "../../pointer.h"
+#include "../../core/pointer.h"
 #include "../../encoding.h"
 
 #include <vector>

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/pointer.h"
+
 class Engine;
 class UIBase;
 class SiteLogicManager;
@@ -30,16 +32,14 @@ class GlobalContext {
     TickPoke * tp;
     RemoteCommandHandler * rch;
     SkipList * sl;
-    EventLog * el;
+    Pointer<EventLog> el;
     ProxyManager * pm;
     LocalStorage * ls;
     ExternalFileViewing * efv;
     TimeReference * tr;
   public:
-    void linkEventLog(EventLog *);
-    void linkWorkManager(WorkManager *);
-    void linkTickPoke(TickPoke *);
-    void linkComponents(SettingsLoaderSaver *, IOManager *, Engine *,
+    void linkCore(WorkManager *, TickPoke *, IOManager *, Pointer<EventLog> &);
+    void linkComponents(SettingsLoaderSaver *, Engine *,
         UIBase *, SiteManager *, SiteLogicManager *, TransferManager *,
         RemoteCommandHandler *, SkipList *, ProxyManager *,
         LocalStorage *, ExternalFileViewing *, TimeReference *);
@@ -54,7 +54,7 @@ class GlobalContext {
     TickPoke * getTickPoke() const;
     RemoteCommandHandler * getRemoteCommandHandler() const;
     SkipList * getSkipList() const;
-    EventLog * getEventLog() const;
+    Pointer<EventLog> & getEventLog();
     ProxyManager * getProxyManager() const;
     LocalStorage * getLocalStorage() const;
     ExternalFileViewing * getExternalFileViewing() const;

@@ -1,10 +1,10 @@
 #include "browsescreenselector.h"
 
+#include "../../core/pointer.h"
 #include "../../sitemanager.h"
 #include "../../site.h"
 #include "../../globalcontext.h"
 #include "../../localstorage.h"
-#include "../../pointer.h"
 
 #include "../termint.h"
 #include "../ui.h"

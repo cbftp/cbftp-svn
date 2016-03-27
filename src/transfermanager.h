@@ -4,9 +4,7 @@
 #include <string>
 #include <map>
 
-#include "pointer.h"
-
-#define MAX_TRANSFER_HISTORY 100
+#include "core/pointer.h"
 
 class ScoreBoardElement;
 class TransferMonitor;

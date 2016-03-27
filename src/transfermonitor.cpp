@@ -1,11 +1,11 @@
 #include "transfermonitor.h"
 
+#include "core/tickpoke.h"
 #include "site.h"
 #include "sitelogic.h"
 #include "siterace.h"
 #include "ftpconn.h"
 #include "filelist.h"
-#include "tickpoke.h"
 #include "globalcontext.h"
 #include "file.h"
 #include "localstorage.h"

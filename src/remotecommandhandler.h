@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "eventreceiver.h"
+#include "core/eventreceiver.h"
 
 class RemoteCommandHandler : private EventReceiver {
 private:

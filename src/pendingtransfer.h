@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "pointer.h"
+#include "core/pointer.h"
 
 #define PENDINGTRANSFER_DOWNLOAD 5432
 #define PENDINGTRANSFER_UPLOAD 5433

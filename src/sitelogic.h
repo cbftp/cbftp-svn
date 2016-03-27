@@ -4,8 +4,8 @@
 #include <vector>
 #include <list>
 
-#include "eventreceiver.h"
-#include "pointer.h"
+#include "core/eventreceiver.h"
+#include "core/pointer.h"
 
 class TransferMonitor;
 class ConnStateTracker;

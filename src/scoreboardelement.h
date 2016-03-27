@@ -3,7 +3,7 @@
 #include <string>
 #include <ostream>
 
-#include "pointer.h"
+#include "core/pointer.h"
 
 class SiteLogic;
 class FileList;

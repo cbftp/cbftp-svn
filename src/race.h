@@ -5,10 +5,11 @@
 #include <map>
 #include <utility>
 
+#include "core/eventreceiver.h"
+#include "core/pointer.h"
 #include "sizelocationtrack.h"
-#include "eventreceiver.h"
 #include "transferstatuscallback.h"
-#include "pointer.h"
+
 
 #define RACE_UPDATE_INTERVAL 250
 

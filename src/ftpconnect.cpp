@@ -1,14 +1,15 @@
 #include "ftpconnect.h"
 
+#include "core/iomanager.h"
 #include "site.h"
 #include "ftpconnectowner.h"
 #include "ftpconn.h"
-
-#include "iomanager.h"
 #include "globalcontext.h"
 #include "proxysession.h"
 #include "proxy.h"
 #include "util.h"
+
+extern GlobalContext * global;
 
 FTPConnect::FTPConnect(int id, FTPConnectOwner * owner, const std::string & addr, const std::string & port, Proxy * proxy, bool primary) :
   id(id),

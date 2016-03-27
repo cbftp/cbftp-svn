@@ -4,7 +4,7 @@
 #include <list>
 #include <map>
 
-#include "eventreceiver.h"
+#include "core/eventreceiver.h"
 
 class ExternalFileViewing : public EventReceiver {
 public:

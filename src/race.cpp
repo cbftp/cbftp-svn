@@ -3,13 +3,13 @@
 #include <vector>
 #include <algorithm>
 
+#include "core/tickpoke.h"
 #include "file.h"
 #include "filelist.h"
 #include "site.h"
 #include "siterace.h"
 #include "util.h"
 #include "globalcontext.h"
-#include "tickpoke.h"
 #include "transferstatus.h"
 
 extern GlobalContext * global;

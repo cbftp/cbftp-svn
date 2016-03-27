@@ -4,7 +4,7 @@
 #include <list>
 #include <map>
 
-#include "pointer.h"
+#include "core/pointer.h"
 #include "types.h"
 
 class LocalTransfer;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "eventreceiver.h"
+#include "core/eventreceiver.h"
 
 #define CHUNK 524288
 

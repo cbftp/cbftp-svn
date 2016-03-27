@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-#include "pointer.h"
+#include "core/pointer.h"
 
 class ScoreBoardElement;
 class SiteLogic;

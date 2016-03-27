@@ -3,6 +3,8 @@
 #include <cctype>
 #include <algorithm>
 
+#include "../../core/tickpoke.h"
+#include "../../core/pointer.h"
 #include "../../sitelogic.h"
 #include "../../sitelogicmanager.h"
 #include "../../site.h"
@@ -10,11 +12,9 @@
 #include "../../skiplist.h"
 #include "../../eventlog.h"
 #include "../../filelist.h"
-#include "../../tickpoke.h"
 #include "../../engine.h"
 #include "../../localstorage.h"
 #include "../../util.h"
-#include "../../pointer.h"
 #include "../../timereference.h"
 #include "../../rawbuffer.h"
 

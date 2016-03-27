@@ -8,17 +8,17 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "core/workmanager.h"
+#include "core/iomanager.h"
+#include "core/tickpoke.h"
 #include "ftpconnect.h"
 #include "filelist.h"
 #include "site.h"
 #include "globalcontext.h"
 #include "rawbuffer.h"
-#include "iomanager.h"
 #include "sitelogic.h"
 #include "eventlog.h"
-#include "tickpoke.h"
 #include "proxymanager.h"
-#include "workmanager.h"
 #include "util.h"
 
 extern GlobalContext * global;

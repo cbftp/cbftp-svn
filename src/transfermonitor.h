@@ -2,8 +2,8 @@
 
 #include <string>
 
-#include "eventreceiver.h"
-#include "pointer.h"
+#include "core/eventreceiver.h"
+#include "core/pointer.h"
 
 enum TransferMonitorType {
  TM_TYPE_FXP,

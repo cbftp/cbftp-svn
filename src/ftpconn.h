@@ -3,8 +3,8 @@
 #include <list>
 #include <string>
 
-#include "eventreceiver.h"
-#include "pointer.h"
+#include "core/eventreceiver.h"
+#include "core/pointer.h"
 #include "ftpconnectowner.h"
 
 #define STATE_DISCONNECTED 0

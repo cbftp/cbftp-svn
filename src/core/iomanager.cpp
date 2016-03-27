@@ -16,13 +16,16 @@
 
 #include "workmanager.h"
 #include "sslmanager.h"
-#include "globalcontext.h"
 #include "datablock.h"
 #include "datablockpool.h"
-#include "eventlog.h"
+#include "logger.h"
 #include "tickpoke.h"
 #include "scopelock.h"
 #include "util.h"
+
+#define TICKPERIOD 100
+#define TIMEOUT_MS 5000
+#define MAX_SEND_BUFFER 1048576
 
 namespace {
 
@@ -48,8 +51,9 @@ bool needsDNSResolution(const std::string& addr) {
 
 }
 
-IOManager::IOManager() :
-  wm(global->getWorkManager()),
+IOManager::IOManager(WorkManager * wm, TickPoke * tp) :
+  wm(wm),
+  tp(tp),
   blockpool(wm->getBlockPool()),
   sendblockpool(makePointer<DataBlockPool>()),
   blocksize(blockpool->blockSize()),
@@ -61,7 +65,7 @@ IOManager::IOManager() :
 void IOManager::init() {
   SSLManager::init();
   thread.start("IO", this);
-  global->getTickPoke()->startPoke(this, "IOManager", TICKPERIOD, 0);
+  tp->startPoke(this, "IOManager", TICKPERIOD, 0);
 }
 
 void IOManager::tick(int message) {
@@ -197,7 +201,7 @@ int IOManager::registerTCPServerSocket(EventReceiver * er, int port, bool local)
   if (local) {
     addr = "127.0.0.1";
   }
-  int retcode = getaddrinfo(addr.c_str(), util::int2Str(port).c_str(), &sock, &res);
+  int retcode = getaddrinfo(addr.c_str(), coreutil::int2Str(port).c_str(), &sock, &res);
   if (retcode) {
     if (!handleError(er)) {
       return -1;
@@ -255,7 +259,7 @@ int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
   sock.ai_socktype = SOCK_DGRAM;
   sock.ai_protocol = IPPROTO_UDP;
   std::string addr = "0.0.0.0";
-  int retcode = getaddrinfo(addr.c_str(), util::int2Str(port).c_str(), &sock, &res);
+  int retcode = getaddrinfo(addr.c_str(), coreutil::int2Str(port).c_str(), &sock, &res);
   if (retcode) {
     if (!handleError(er)) {
       return -1;
@@ -350,9 +354,9 @@ bool IOManager::investigateSSLError(int error, int sockid, int b_recv) {
       break;
   }
   unsigned long e = ERR_get_error();
-  global->getEventLog()->log("IOManager", "SSL error on connection to " +
+  log("SSL error on connection to " +
       it->second.addr + ": " +
-      util::int2Str(error) + " return code: " + util::int2Str(b_recv) +
+      coreutil::int2Str(error) + " return code: " + coreutil::int2Str(b_recv) +
       " errno: " + strerror(errno) +
       (e ? " String: " + std::string(ERR_error_string(e, NULL)) : ""));
   return false;
@@ -364,7 +368,7 @@ void IOManager::sendData(int id, std::string data) {
 }
 
 void IOManager::sendData(int id, const char * buf, unsigned int buflen) {
-  util::assert(buflen <= MAX_SEND_BUFFER);
+  coreutil::assert(buflen <= MAX_SEND_BUFFER);
   unsigned int sendblocksize = sendblockpool->blockSize();
   char * datablock;
   ScopeLock lock(socketinfomaplock);
@@ -381,7 +385,7 @@ void IOManager::sendData(int id, const char * buf, unsigned int buflen) {
     buf += copysize;
     buflen -= copysize;
   }
-  util::assert(socketinfo.sendqueue.size() * sendblockpool->blockSize() <= MAX_SEND_BUFFER);
+  coreutil::assert(socketinfo.sendqueue.size() * sendblockpool->blockSize() <= MAX_SEND_BUFFER);
   polling.setFDOut(socketinfo.fd);
 }
 
@@ -427,7 +431,7 @@ void IOManager::resolveDNS(int id) {
   request.ai_family = AF_INET;
   request.ai_socktype = SOCK_STREAM;
   struct addrinfo * result;
-  int retcode = getaddrinfo(addr.c_str(), util::int2Str(port).c_str(), &request, &result);
+  int retcode = getaddrinfo(addr.c_str(), coreutil::int2Str(port).c_str(), &request, &result);
   ScopeLock lock(socketinfomaplock);
   it = socketinfomap.find(id);
   if (it == socketinfomap.end()) {
@@ -441,13 +445,13 @@ void IOManager::resolveDNS(int id) {
 }
 
 void IOManager::asyncTaskComplete(int type, int id) {
-  util::assert(type == ASYNC_DNS_RESOLUTION);
+  coreutil::assert(type == ASYNC_DNS_RESOLUTION);
   ScopeLock lock(socketinfomaplock);
   std::map<int, SocketInfo>::iterator it = socketinfomap.find(id);
   if (it == socketinfomap.end()) {
     return;
   }
-  util::assert(it->second.type == FD_TCP_RESOLVING);
+  coreutil::assert(it->second.type == FD_TCP_RESOLVING);
   handleTCPNameResolution(it->second);
 }
 
@@ -507,8 +511,7 @@ void IOManager::handleTCPPlainIn(SocketInfo & socketinfo) {
       return;
     }
     wm->dispatchEventDisconnected(socketinfo.receiver, socketinfo.id);
-    global->getEventLog()->log("IOManager",
-        "Socket read error on established connection to "
+    log("Socket read error on established connection to "
         + socketinfo.addr + ": " + strerror(errno));
     closeSocketIntern(socketinfo.id);
     return;
@@ -525,8 +528,7 @@ void IOManager::handleTCPPlainOut(SocketInfo & socketinfo) {
         return;
       }
       wm->dispatchEventDisconnected(socketinfo.receiver, socketinfo.id);
-      global->getEventLog()->log("IOManager",
-          "Socket write error on established connection to "
+      log("Socket write error on established connection to "
           + socketinfo.addr + ": " + strerror(errno));
       closeSocketIntern(socketinfo.id);
       return;
@@ -773,7 +775,7 @@ void IOManager::run() {
           break;
         case FD_TCP_RESOLVING:
         case FD_UNUSED:
-          util::assert(false);
+          coreutil::assert(false);
           break;
       }
     }
@@ -786,7 +788,7 @@ std::list<std::pair<std::string, std::string> > IOManager::listInterfaces() {
   int family, s;
   char host[NI_MAXHOST];
   if (getifaddrs(&ifaddr) == -1) {
-    global->getEventLog()->log("IOManager", "ERROR: Failed to list network interfaces");
+    log("ERROR: Failed to list network interfaces");
     return addrs;
   }
   for (ifa = ifaddr; ifa != NULL && ifa->ifa_addr != NULL; ifa = ifa->ifa_next) {
@@ -795,7 +797,7 @@ std::list<std::pair<std::string, std::string> > IOManager::listInterfaces() {
       s = getnameinfo(ifa->ifa_addr,sizeof(struct sockaddr_in),
           host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
       if (s != 0) {
-        global->getEventLog()->log("IOManager", "ERROR: getnameinfo() failed");
+        log("ERROR: getnameinfo() failed");
         continue;
       }
       addrs.push_back(std::pair<std::string, std::string>(ifa->ifa_name, host));
@@ -813,14 +815,14 @@ void IOManager::setDefaultInterface(std::string interface) {
   if (getInterfaceAddress(interface) == "") {
     if (hasdefaultinterface) {
       hasdefaultinterface = false;
-      global->getEventLog()->log("IOManager", "Default network interface removed");
+      log("Default network interface removed");
     }
   }
   else {
     if (hasdefaultinterface == false || defaultinterface != interface) {
       defaultinterface = interface;
       hasdefaultinterface = true;
-      global->getEventLog()->log("IOManager", "Default network interface set to: " + interface);
+      log("Default network interface set to: " + interface);
     }
   }
 }
@@ -840,4 +842,14 @@ std::string IOManager::getInterfaceAddress(std::string interface) {
   }
   close(fd);
   return inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
+}
+
+void IOManager::setLogger(Pointer<Logger> logger) {
+  this->logger = logger;
+}
+
+void IOManager::log(const std::string & text) {
+  if (!!logger) {
+    logger->log("IOManager", text);
+  }
 }

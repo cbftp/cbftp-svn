@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "../pointer.h"
+#include "../core/pointer.h"
 
 class MenuSelectOptionElement;
 

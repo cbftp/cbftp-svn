@@ -1,5 +1,7 @@
 #include "sitelogic.h"
 
+#include "core/tickpoke.h"
+#include "core/eventreceiver.h"
 #include "sitemanager.h"
 #include "ftpconn.h"
 #include "filelist.h"
@@ -11,9 +13,7 @@
 #include "sitelogicrequest.h"
 #include "sitelogicrequestready.h"
 #include "uibase.h"
-#include "tickpoke.h"
 #include "rawbuffer.h"
-#include "eventreceiver.h"
 #include "engine.h"
 #include "connstatetracker.h"
 #include "transfermonitor.h"

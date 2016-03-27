@@ -2,25 +2,19 @@
 
 #include <time.h>
 
-void GlobalContext::linkEventLog(EventLog * el) {
+void GlobalContext::linkCore(WorkManager * wm, TickPoke * tp, IOManager * iom, Pointer<EventLog> & el) {
+  this->wm = wm;
+  this->tp = tp;
+  this->iom = iom;
   this->el = el;
 }
 
-void GlobalContext::linkWorkManager(WorkManager * wm) {
-  this->wm = wm;
-}
-
-void GlobalContext::linkTickPoke(TickPoke * tp) {
-  this->tp = tp;
-}
-
-void GlobalContext::linkComponents(SettingsLoaderSaver * sls, IOManager * iom,
-    Engine * e, UIBase * uib, SiteManager * sm, SiteLogicManager * slm,
+void GlobalContext::linkComponents(SettingsLoaderSaver * sls, Engine * e,
+    UIBase * uib, SiteManager * sm, SiteLogicManager * slm,
     TransferManager * tm, RemoteCommandHandler * rch,
     SkipList * sl, ProxyManager * pm, LocalStorage * ls,
     ExternalFileViewing * efv, TimeReference * tr) {
   this->sls = sls;
-  this->iom = iom;
   this->e = e;
   this->uib = uib;
   this->sm = sm;
@@ -78,7 +72,7 @@ SkipList * GlobalContext::getSkipList() const {
   return sl;
 }
 
-EventLog * GlobalContext::getEventLog() const {
+Pointer<EventLog> & GlobalContext::getEventLog() {
   return el;
 }
 

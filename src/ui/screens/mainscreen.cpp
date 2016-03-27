@@ -2,6 +2,7 @@
 
 #include <cctype>
 
+#include "../../core/pointer.h"
 #include "../../globalcontext.h"
 #include "../../site.h"
 #include "../../race.h"
@@ -12,7 +13,6 @@
 #include "../../transferjob.h"
 #include "../../util.h"
 #include "../../remotecommandhandler.h"
-#include "../../pointer.h"
 #include "../../settingsloadersaver.h"
 #include "../../preparedrace.h"
 

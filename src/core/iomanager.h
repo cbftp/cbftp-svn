@@ -13,14 +13,9 @@
 
 class DataBlockPool;
 class WorkManager;
-class GlobalContext;
+class TickPoke;
 class ScopeLock;
-
-#define TICKPERIOD 100
-#define TIMEOUT_MS 5000
-#define MAX_SEND_BUFFER 1048576
-
-extern GlobalContext * global;
+class Logger;
 
 class IOManager : public EventReceiver {
 private:
@@ -31,10 +26,12 @@ private:
   std::map<int, int> connecttimemap;
   std::map<int, int> sockfdidmap;
   WorkManager * wm;
+  TickPoke * tp;
   DataBlockPool * blockpool;
   Pointer<DataBlockPool> sendblockpool;
   int blocksize;
   int sockidcounter;
+  Pointer<Logger> logger;
   std::string defaultinterface;
   std::string getInterfaceAddress(std::string);
   bool handleError(EventReceiver *);
@@ -52,8 +49,9 @@ private:
   void handleUDPIn(SocketInfo &);
   void handleTCPServerIn(SocketInfo &);
   void handleTCPNameResolution(SocketInfo &);
+  void log(const std::string &);
 public:
-  IOManager();
+  IOManager(WorkManager *, TickPoke *);
   void init();
   void run();
   void registerStdin(EventReceiver *);
@@ -80,4 +78,5 @@ public:
   std::string getDefaultInterface() const;
   void setDefaultInterface(std::string);
   bool hasDefaultInterface() const;
+  void setLogger(Pointer<Logger>);
 };

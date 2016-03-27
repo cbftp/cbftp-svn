@@ -3,7 +3,7 @@
 #include <list>
 #include <utility>
 
-#include "../../pointer.h"
+#include "../../core/pointer.h"
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"

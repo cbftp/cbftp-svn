@@ -2,10 +2,12 @@
 
 #include <time.h>
 
+#include "core/tickpoke.h"
 #include "globalcontext.h"
-#include "tickpoke.h"
 
 extern GlobalContext * global;
+
+#define INTERVAL 50
 
 static int currentyear = 0;
 static int currentmonth = 0;
