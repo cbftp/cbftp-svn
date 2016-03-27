@@ -2,6 +2,8 @@
 
 #include <stdlib.h>
 
+#include "core/workmanager.h"
+#include "core/tickpoke.h"
 #include "scoreboard.h"
 #include "scoreboardelement.h"
 #include "globalcontext.h"
@@ -15,9 +17,7 @@
 #include "siterace.h"
 #include "skiplist.h"
 #include "eventlog.h"
-#include "tickpoke.h"
 #include "sitemanager.h"
-#include "workmanager.h"
 #include "transferjob.h"
 #include "pendingtransfer.h"
 #include "localstorage.h"

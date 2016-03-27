@@ -4,8 +4,8 @@
 #include <map>
 #include <list>
 
+#include "core/pointer.h"
 #include "commandowner.h"
-#include "pointer.h"
 
 #define TRANSFERJOB_DOWNLOAD 2161
 #define TRANSFERJOB_DOWNLOAD_FILE 2162

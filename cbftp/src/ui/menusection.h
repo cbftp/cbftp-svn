@@ -4,7 +4,7 @@
 #include <vector>
 #include <map>
 
-#include "../pointer.h"
+#include "../core/pointer.h"
 
 #include "focusablearea.h"
 #include "menuselectoptioncontainer.h"

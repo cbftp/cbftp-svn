@@ -4,8 +4,8 @@
 #include <map>
 #include <list>
 
+#include "core/pointer.h"
 #include "commandowner.h"
-#include "pointer.h"
 
 class Race;
 class FileList;

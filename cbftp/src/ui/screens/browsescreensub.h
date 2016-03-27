@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../eventreceiver.h"
+#include "../../core/eventreceiver.h"
 
 class BrowseScreenAction;
 

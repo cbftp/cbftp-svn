@@ -2,7 +2,7 @@
 
 #include <list>
 
-#include "../../pointer.h"
+#include "../../core/pointer.h"
 #include "../../site.h"
 
 #include "../uiwindow.h"

@@ -3,11 +3,11 @@
 #include <vector>
 #include <list>
 
+#include "core/tickpoke.h"
+#include "core/iomanager.h"
 #include "globalcontext.h"
 #include "engine.h"
-#include "iomanager.h"
 #include "eventlog.h"
-#include "tickpoke.h"
 #include "util.h"
 #include "sitelogicmanager.h"
 #include "sitelogic.h"

@@ -9,10 +9,9 @@
 #include <fcntl.h>
 #include <stdlib.h>
 
+#include "core/workmanager.h"
 #include "globalcontext.h"
 #include "util.h"
-#include "workmanager.h"
-
 #include "localstorage.h"
 #include "eventlog.h"
 

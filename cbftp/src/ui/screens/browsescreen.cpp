@@ -3,11 +3,11 @@
 #include <cctype>
 #include <algorithm>
 
+#include "../../core/pointer.h"
 #include "../../globalcontext.h"
 #include "../../util.h"
 #include "../../engine.h"
 #include "../../localfilelist.h"
-#include "../../pointer.h"
 #include "../../timereference.h"
 
 #include "../ui.h"

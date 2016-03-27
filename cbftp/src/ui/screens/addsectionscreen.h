@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../pointer.h"
+#include "../../core/pointer.h"
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"

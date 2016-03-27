@@ -4,8 +4,8 @@
 #include <list>
 #include <map>
 
-#include "eventreceiver.h"
-#include "pointer.h"
+#include "core/eventreceiver.h"
+#include "core/pointer.h"
 
 #define SPREAD 0
 #define POKEINTERVAL 1000

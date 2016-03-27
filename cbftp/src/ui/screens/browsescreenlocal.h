@@ -9,7 +9,7 @@
 #include "../menuselectoption.h"
 #include "../uifilelist.h"
 
-#include "../../pointer.h"
+#include "../../core/pointer.h"
 
 class Ui;
 class LocalFileList;

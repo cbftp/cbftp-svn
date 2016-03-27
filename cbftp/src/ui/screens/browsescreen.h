@@ -6,7 +6,7 @@
 
 #include "../uiwindow.h"
 
-#include "../../pointer.h"
+#include "../../core/pointer.h"
 
 class BrowseScreenSub;
 

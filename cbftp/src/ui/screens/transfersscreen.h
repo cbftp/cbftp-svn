@@ -5,7 +5,7 @@
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
 
-#include "../../pointer.h"
+#include "../../core/pointer.h"
 
 class TransferManager;
 class TransferStatus;

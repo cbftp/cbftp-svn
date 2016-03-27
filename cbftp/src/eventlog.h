@@ -2,9 +2,11 @@
 
 #include <string>
 
+#include "core/logger.h"
+
 class RawBuffer;
 
-class EventLog {
+class EventLog : public Logger {
 private:
   RawBuffer * rawbuf;
   std::string latest;
@@ -15,5 +17,5 @@ public:
   RawBuffer * getRawBuffer() const;
   int getLatestId() const;
   std::string getLatest() const;
-  void log(std::string, std::string);
+  void log(const std::string &, const std::string &);
 };

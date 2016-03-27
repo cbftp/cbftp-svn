@@ -7,13 +7,13 @@
 
 #include "uicommand.h"
 
-#include "../threading.h"
-#include "../semaphore.h"
-#include "../eventreceiver.h"
-#include "../blockingqueue.h"
+#include "../core/threading.h"
+#include "../core/semaphore.h"
+#include "../core/eventreceiver.h"
+#include "../core/blockingqueue.h"
+#include "../core/pointer.h"
 #include "../uibase.h"
 #include "../settingsloadersaver.h"
-#include "../pointer.h"
 
 class UIWindow;
 class InfoWindow;

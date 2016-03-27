@@ -102,7 +102,7 @@ bool SignalEvents::set(EventReceiver * er, int signal, int value) {
     return false;
   }
   else {
-    util::assert(false);
+    coreutil::assert(false);
   }
   hasevent++;
   return true;
@@ -157,7 +157,7 @@ SignalData SignalEvents::getClearFirst() {
     slot10.set = false;
   }
   else {
-    util::assert(false);
+    coreutil::assert(false);
   }
   hasevent--;
   return ret;

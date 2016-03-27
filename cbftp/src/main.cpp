@@ -2,23 +2,23 @@
 #include <signal.h>
 #include <stdio.h>
 
+#include "core/workmanager.h"
+#include "core/iomanager.h"
+#include "core/tickpoke.h"
+#include "core/threading.h"
 #include "settingsloadersaver.h"
 #include "sitelogicmanager.h"
 #include "transfermanager.h"
 #include "sitemanager.h"
 #include "globalcontext.h"
 #include "engine.h"
-#include "tickpoke.h"
 #include "remotecommandhandler.h"
-#include "iomanager.h"
-#include "workmanager.h"
 #include "skiplist.h"
 #include "eventlog.h"
 #include "proxymanager.h"
 #include "localstorage.h"
 #include "externalfileviewing.h"
 #include "timereference.h"
-#include "threading.h"
 #include "uibase.h"
 
 GlobalContext * global;
@@ -30,16 +30,18 @@ public:
   Main() {
     TimeReference::updateTime();
 
-    global = new GlobalContext();
-    EventLog * el = new EventLog();
-    global->linkEventLog(el);
     WorkManager * wm = new WorkManager();
-    global->linkWorkManager(wm);
-    TickPoke * tp = new TickPoke();
-    global->linkTickPoke(tp);
+    TickPoke * tp = new TickPoke(wm);
+    IOManager * iom = new IOManager(wm, tp);
+
+    Pointer<EventLog> el = makePointer<EventLog>();
+    iom->setLogger(el);
+
+    global = new GlobalContext();
+    global->linkCore(wm, tp, iom, el);
+
     SettingsLoaderSaver * sls = new SettingsLoaderSaver();
     LocalStorage * ls = new LocalStorage();
-    IOManager * iom = new IOManager();
     Engine * e = new Engine();
     SiteManager * sm = new SiteManager();
     SiteLogicManager * slm = new SiteLogicManager();
@@ -52,7 +54,7 @@ public:
 
     UIBase * uibase = UIBase::instance();
 
-    global->linkComponents(sls, iom, e, uibase, sm, slm, tm, rch, sl, pm, ls, efv, tr);
+    global->linkComponents(sls, e, uibase, sm, slm, tm, rch, sl, pm, ls, efv, tr);
 
     Threading::setCurrentThreadName("cbftp");
 

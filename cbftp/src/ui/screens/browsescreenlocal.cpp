@@ -1,11 +1,11 @@
 #include "browsescreenlocal.h"
 
+#include "../../core/tickpoke.h"
 #include "../../localstorage.h"
 #include "../../localfilelist.h"
 #include "../../globalcontext.h"
 #include "../../skiplist.h"
 #include "../../util.h"
-#include "../../tickpoke.h"
 
 #include "../ui.h"
 #include "../menuselectoptiontextbutton.h"

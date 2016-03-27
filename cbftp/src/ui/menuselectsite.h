@@ -5,7 +5,7 @@
 
 #include "focusablearea.h"
 
-#include "../pointer.h"
+#include "../core/pointer.h"
 
 class Site;
 class MenuSelectSiteElement;

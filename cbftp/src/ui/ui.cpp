@@ -5,10 +5,10 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include "../workmanager.h"
+#include "../core/workmanager.h"
+#include "../core/tickpoke.h"
+#include "../core/iomanager.h"
 #include "../globalcontext.h"
-#include "../tickpoke.h"
-#include "../iomanager.h"
 #include "../externalfileviewing.h"
 #include "../util.h"
 #include "../engine.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "eventreceiver.h"
+#include "core/eventreceiver.h"
 
 #define COMMANDOWNER_SITERACE 543
 #define COMMANDOWNER_TRANSFERJOB 544

@@ -1,14 +1,13 @@
 #include "globaloptionsscreen.h"
 
+#include "../../core/iomanager.h"
 #include "../../globalcontext.h"
 #include "../../remotecommandhandler.h"
 #include "../../sitemanager.h"
 #include "../../site.h"
-#include "../../iomanager.h"
 #include "../../localstorage.h"
 #include "../../util.h"
 #include "../../settingsloadersaver.h"
-
 #include "../ui.h"
 #include "../focusablearea.h"
 #include "../menuselectoptioncheckbox.h"

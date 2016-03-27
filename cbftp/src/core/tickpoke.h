@@ -15,7 +15,7 @@ private:
   std::list<TickPokeTarget> targets;
   bool forever;
 public:
-  TickPoke();
+  TickPoke(WorkManager *);
   void tick(int);
   void tickerLoop();
   void breakLoop();

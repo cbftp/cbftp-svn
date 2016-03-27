@@ -2,7 +2,7 @@
 
 #define SHORTESTKEY 4
 
-#include "../../pointer.h"
+#include "../../core/pointer.h"
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"

@@ -4,7 +4,7 @@
 #include <list>
 #include <vector>
 
-#include "eventreceiver.h"
+#include "core/eventreceiver.h"
 
 #define POTENTIALITY_LIFESPAN 3000
 #define POTENTIALITY_SLICES 10

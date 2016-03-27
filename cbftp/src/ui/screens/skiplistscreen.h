@@ -3,8 +3,8 @@
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
 
+#include "../../core/pointer.h"
 #include "../../skiplist.h"
-#include "../../pointer.h"
 
 class SkipList;
 class Ui;

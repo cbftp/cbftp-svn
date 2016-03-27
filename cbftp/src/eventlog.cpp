@@ -15,7 +15,7 @@ RawBuffer * EventLog::getRawBuffer() const {
   return rawbuf;
 }
 
-void EventLog::log(std::string owner, std::string text) {
+void EventLog::log(const std::string & owner, const std::string & text) {
   std::string line = "<" + owner + "> " + text;
   latest = line;
   latestid++;

@@ -6,7 +6,7 @@
 
 #include "uifile.h"
 
-#include "../pointer.h"
+#include "../core/pointer.h"
 
 class FileList;
 class LocalFileList;

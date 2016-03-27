@@ -1,9 +1,10 @@
 #include "settingsloadersaver.h"
 
+#include "core/tickpoke.h"
+#include "core/iomanager.h"
 #include "globalcontext.h"
 #include "datafilehandler.h"
 #include "eventlog.h"
-#include "iomanager.h"
 #include "remotecommandhandler.h"
 #include "externalfileviewing.h"
 #include "skiplist.h"
@@ -15,7 +16,6 @@
 #include "sitemanager.h"
 #include "site.h"
 #include "util.h"
-#include "tickpoke.h"
 
 #define AUTO_SAVE_INTERVAL 600000 // 10 minutes
 
