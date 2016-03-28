@@ -472,9 +472,9 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
                 site->addAffil(affils.substr(start, pos - start));
                 started = false;
               }
-              else if (pos == affils.length() - 1) {
+            }
+            if (started && pos == affils.length() - 1) {
                 site->addAffil(affils.substr(start, pos + 1 - start));
-              }
             }
             pos++;
           }
@@ -504,9 +504,9 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
                 site->addBannedGroup(bannedgroups.substr(start, pos - start));
                 started = false;
               }
-              else if (pos == bannedgroups.length() - 1) {
-                site->addBannedGroup(bannedgroups.substr(start, pos + 1 - start));
-              }
+            }
+            if (pos == bannedgroups.length() - 1) {
+              site->addBannedGroup(bannedgroups.substr(start, pos + 1 - start));
             }
             pos++;
           }
