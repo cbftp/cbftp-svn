@@ -178,12 +178,13 @@ Pointer<LocalFileList> LocalStorage::getLocalFileList(std::string path) {
       std::string owner = pwd != NULL ? pwd->pw_name : util::int2Str(status.st_uid);
       struct group * grp = getgrgid(status.st_gid);
       std::string group = grp != NULL ? grp->gr_name : util::int2Str(status.st_gid);
-      struct tm * tm = localtime(&status.st_mtime);
-      int year = 1900 + tm->tm_year;
-      int month = tm->tm_mon + 1;
-      int day = tm->tm_mday;
-      int hour = tm->tm_hour;
-      int minute = tm->tm_min;
+      struct tm tm;
+      localtime_r(&status.st_mtime, &tm);
+      int year = 1900 + tm.tm_year;
+      int month = tm.tm_mon + 1;
+      int day = tm.tm_mday;
+      int hour = tm.tm_hour;
+      int minute = tm.tm_min;
       filelist->addFile(name, status.st_size, (status.st_mode & S_IFMT) ==
                         S_IFDIR, owner, group, year, month, day, hour, minute);
     }
