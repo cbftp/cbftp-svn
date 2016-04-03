@@ -75,8 +75,9 @@ std::string simpleTimeFormat(int seconds) {
 
 std::string ctimeLog() {
   time_t rawtime = time(NULL);
-  std::string readabletime = asctime(localtime(&rawtime));
-  return readabletime.substr(11, 8);
+  char timebuf[26];
+  ctime_r(&rawtime, timebuf);
+  return std::string(timebuf + 11, 8);
 }
 
 std::string & debugString(const char * s) {
