@@ -1,7 +1,5 @@
 #include "globalcontext.h"
 
-#include <time.h>
-
 void GlobalContext::linkCore(WorkManager * wm, TickPoke * tp, IOManager * iom, Pointer<EventLog> & el) {
   this->wm = wm;
   this->tp = tp;

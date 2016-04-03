@@ -35,10 +35,11 @@ unsigned long long TimeReference::timePassedSince(unsigned long long timestamp) 
 void TimeReference::updateTime() {
   time_t rawtime;
   time(&rawtime);
-  struct tm * timedata = localtime(&rawtime);
-  currentyear = timedata->tm_year + 1900;
-  currentmonth = timedata->tm_mon + 1;
-  currentday = timedata->tm_mday;
+  struct tm timedata;
+  localtime_r(&rawtime, &timedata);
+  currentyear = timedata.tm_year + 1900;
+  currentmonth = timedata.tm_mon + 1;
+  currentday = timedata.tm_mday;
 }
 
 int TimeReference::currentYear() {
