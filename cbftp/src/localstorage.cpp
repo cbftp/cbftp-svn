@@ -107,22 +107,22 @@ LocalUpload * LocalStorage::getAvailableLocalUpload() {
   return lu;
 }
 
-binary_data LocalStorage::getTempFileContent(const std::string & filename) const {
+BinaryData LocalStorage::getTempFileContent(const std::string & filename) const {
   return getFileContent(temppath + "/" + filename);
 }
 
-binary_data LocalStorage::getFileContent(const std::string & filename) const {
+BinaryData LocalStorage::getFileContent(const std::string & filename) const {
   std::ifstream filestream;
   filestream.open(filename.c_str(), std::ios::binary | std::ios::in);
   char * data = (char *) malloc(MAXREAD);
   filestream.read(data, MAXREAD);
-  binary_data out(data, data + filestream.gcount());
+  BinaryData out(data, data + filestream.gcount());
   delete data;
   return out;
 }
 
-const binary_data & LocalStorage::getStoreContent(int storeid) const {
-  std::map<int, binary_data>::const_iterator it = content.find(storeid);
+const BinaryData & LocalStorage::getStoreContent(int storeid) const {
+  std::map<int, BinaryData>::const_iterator it = content.find(storeid);
   if (it != content.end()) {
     return it->second;
   }
@@ -158,7 +158,7 @@ void LocalStorage::setDownloadPath(std::string path) {
   downloadpath = path;
 }
 
-void LocalStorage::storeContent(int storeid, const binary_data & data) {
+void LocalStorage::storeContent(int storeid, const BinaryData & data) {
   content[storeid] = data;
 }
 

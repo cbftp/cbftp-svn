@@ -10,6 +10,14 @@
 #define BOXTAG ""
 #endif
 
+#ifndef VERSION
+#define VERSION "unknown"
+#endif
+
+#ifndef BUILDTIME
+#define BUILDTIME "unknown"
+#endif
+
 LoginScreen::LoginScreen(Ui * ui) {
   this->ui = ui;
 }

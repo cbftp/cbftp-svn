@@ -2,6 +2,7 @@
 
 #include "core/tickpoke.h"
 #include "core/eventreceiver.h"
+#include "core/types.h"
 #include "sitemanager.h"
 #include "ftpconn.h"
 #include "filelist.h"
@@ -26,7 +27,6 @@
 #include "transferjob.h"
 #include "commandowner.h"
 #include "util.h"
-#include "types.h"
 #include "race.h"
 
 SiteLogic::SiteLogic(std::string sitename) :
@@ -1384,7 +1384,7 @@ void SiteLogic::finishTransferGracefully(int id) {
 }
 
 void SiteLogic::listCompleted(int id, int storeid) {
-  const binary_data & data = global->getLocalStorage()->getStoreContent(storeid);
+  const BinaryData & data = global->getLocalStorage()->getStoreContent(storeid);
   conns[id]->parseFileList((char *) &data[0], data.size());
   listRefreshed(id);
   global->getLocalStorage()->purgeStoreContent(storeid);
