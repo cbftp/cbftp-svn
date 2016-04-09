@@ -5,7 +5,7 @@
 #include <map>
 
 #include "core/pointer.h"
-#include "types.h"
+#include "core/types.h"
 
 class LocalTransfer;
 class LocalDownload;
@@ -24,14 +24,14 @@ public:
   LocalTransfer * passiveDownload(TransferMonitor *, std::string, std::string, std::string, bool, FTPConn *);
   LocalTransfer * passiveDownload(TransferMonitor *, std::string, bool, FTPConn *);
   LocalTransfer * passiveUpload(TransferMonitor *, std::string, std::string, std::string, bool, FTPConn *);
-  binary_data getTempFileContent(const std::string &) const;
-  binary_data getFileContent(const std::string &) const;
-  const binary_data & getStoreContent(int) const;
+  BinaryData getTempFileContent(const std::string &) const;
+  BinaryData getFileContent(const std::string &) const;
+  const BinaryData & getStoreContent(int) const;
   void purgeStoreContent(int);
   void deleteFile(std::string);
   std::string getTempPath() const;
   void setTempPath(std::string);
-  void storeContent(int, const binary_data &);
+  void storeContent(int, const BinaryData &);
   std::string getDownloadPath() const;
   void setDownloadPath(std::string);
   static Pointer<LocalFileList> getLocalFileList(std::string);
@@ -43,7 +43,7 @@ public:
   static bool createDirectoryRecursive(std::string);
 private:
   static bool directoryExistsAccessible(std::string, bool);
-  std::map<int, binary_data> content;
+  std::map<int, BinaryData> content;
   static std::string getHostFromPASVString(std::string);
   static int getPortFromPASVString(std::string);
   LocalDownload * getAvailableLocalDownload();

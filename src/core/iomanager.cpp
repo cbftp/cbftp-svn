@@ -386,7 +386,11 @@ void IOManager::sendData(int id, const char * buf, unsigned int buflen) {
     buflen -= copysize;
   }
   coreutil::assert(socketinfo.sendqueue.size() * sendblockpool->blockSize() <= MAX_SEND_BUFFER);
-  polling.setFDOut(socketinfo.fd);
+  if (socketinfo.type == FD_TCP_PLAIN || socketinfo.type == FD_TCP_PLAIN_LISTEN ||
+      socketinfo.type == FD_TCP_SSL)
+  {
+    polling.setFDOut(socketinfo.fd);
+  }
 }
 
 void IOManager::closeSocket(int id) {
@@ -562,7 +566,6 @@ void IOManager::handleTCPSSLNegotiationIn(SocketInfo & socketinfo) {
   }
   if (b_recv > 0) {
     socketinfo.type = FD_TCP_SSL;
-    std::string cipher = SSL_CIPHER_get_name(SSL_get_current_cipher(ssl));
     wm->dispatchEventSSLSuccess(socketinfo.receiver, socketinfo.id);
     if (socketinfo.sendqueue.size() > 0) {
       polling.setFDOut(socketinfo.fd);
@@ -586,6 +589,9 @@ void IOManager::handleTCPSSLNegotiationOut(SocketInfo & socketinfo) {
     handleTCPSSLNegotiationIn(socketinfo);
     return;
   }
+  if (socketinfo.type == FD_TCP_SSL_NEG_ACCEPT) {
+    SSLManager::checkCertificateReady();
+  }
   SSL * ssl = SSL_new(SSLManager::getSSLCTX());
   SSL_set_mode(ssl, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
   socketinfo.ssl = ssl;
@@ -607,7 +613,7 @@ void IOManager::handleTCPSSLNegotiationOut(SocketInfo & socketinfo) {
   if (socketinfo.type == FD_TCP_SSL_NEG_CONNECT) {
     ret = SSL_connect(ssl);
   }
-  else {
+  else if (socketinfo.type == FD_TCP_SSL_NEG_ACCEPT){
     ret = SSL_accept(ssl);
   }
   if (ret > 0) { // probably wont happen :)
@@ -700,6 +706,7 @@ void IOManager::handleTCPServerIn(SocketInfo & socketinfo) {
   socketinfomap[newsockid].fd = newfd;
   socketinfomap[newsockid].id = newsockid;
   socketinfomap[newsockid].type = FD_TCP_PLAIN_LISTEN;
+  sockfdidmap[newfd] = newsockid;
   wm->dispatchEventNew(socketinfo.receiver, newsockid);
 }
 

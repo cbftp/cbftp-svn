@@ -5,12 +5,12 @@
 #include <unistd.h>
 
 #include "core/iomanager.h"
+#include "core/types.h"
 #include "globalcontext.h"
 #include "eventlog.h"
 #include "transfermonitor.h"
 #include "ftpconn.h"
 #include "localstorage.h"
-#include "types.h"
 
 extern GlobalContext * global;
 
@@ -70,7 +70,7 @@ void LocalDownload::FDDisconnected(int sockid) {
   }
   inuse = false;
   if (inmemory) {
-    binary_data out(buf, buf + bufpos);
+    BinaryData out(buf, buf + bufpos);
     ls->storeContent(storeid, out);
   }
   tm->targetComplete();

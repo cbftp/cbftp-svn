@@ -61,7 +61,7 @@ std::basic_string<unsigned int> toUnicode(const std::string & in) {
   return out;
 }
 
-Encoding guessEncoding(const binary_data & data) {
+Encoding guessEncoding(const BinaryData & data) {
   int hitcharsinrow = 0;
   bool hitbefore = false;
   int maxcp437charsinrow = 0;

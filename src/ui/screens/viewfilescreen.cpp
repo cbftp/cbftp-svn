@@ -18,7 +18,7 @@
 #include "../../file.h"
 #include "../../externalfileviewing.h"
 #include "../../util.h"
-#include "../../types.h"
+#include "../../core/types.h"
 
 
 extern GlobalContext * global;
@@ -255,7 +255,7 @@ void ViewFileScreen::loadViewer() {
     viewExternal();
   }
   else {
-    binary_data tmpdata = global->getLocalStorage()->getFileContent(path);
+    BinaryData tmpdata = global->getLocalStorage()->getFileContent(path);
     if (deleteafter) {
       global->getLocalStorage()->deleteFile(path);
     }
