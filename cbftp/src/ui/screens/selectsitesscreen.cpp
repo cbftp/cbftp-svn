@@ -35,6 +35,7 @@ void SelectSitesScreen::initialize(unsigned int row, unsigned int col, std::stri
     bool selected = preselected.find(*it) != preselected.end();
     tempsites.push_back(std::pair<std::string, bool>((*it)->getName(), selected));
   }
+  togglestate = false;
   init(row, col);
 }
 
@@ -147,6 +148,21 @@ bool SelectSitesScreen::keyPressed(unsigned int ch) {
       ui->returnSelectSites(blockstr);
       return true;
     }
+    case 't': {
+      bool triggered = false;
+      while (!triggered && mso.size()) {
+        for (unsigned int i = 0; i < mso.size(); i++) {
+          Pointer<MenuSelectOptionCheckBox> msocb = mso.getElement(i);
+          if (togglestate == msocb->getData()) {
+            msocb->activate();
+            triggered = true;
+          }
+        }
+        togglestate = !togglestate;
+      }
+      ui->redraw();
+      break;
+    }
     case 27: // esc
     case 'c':
       ui->returnToLast();
@@ -156,7 +172,7 @@ bool SelectSitesScreen::keyPressed(unsigned int ch) {
 }
 
 std::string SelectSitesScreen::getLegendText() const {
-  return "[d]one - [c]ancel - [Arrowkeys] Navigate";
+  return "[d]one - [c]ancel - [Arrowkeys] Navigate - [t]oggle all";
 }
 
 std::string SelectSitesScreen::getInfoLabel() const {

@@ -316,12 +316,7 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
       return true;
     }
     case 't':
-      if (!toggleall) {
-        toggleall = true;
-      }
-      else {
-        toggleall = false;
-      }
+      toggleall = !toggleall;
       populateSiteList();
       ui->redraw();
       return true;
