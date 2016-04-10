@@ -29,4 +29,5 @@ private:
   std::map<Site *, bool> preselected;
   std::map<Site *, bool> excluded;
   std::list<std::pair<std::string, bool> > tempsites;
+  bool togglestate;
 };
