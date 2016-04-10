@@ -12,11 +12,15 @@ else
 SSL_LINKFLAGS := -lssl -lcrypto
 endif
 
-HAS_SVN := ${shell svn info > /dev/null 2>&1; echo $$?}
+ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
-#svntest:
+HAS_SVN := ${shell svn info $(ROOT_DIR) > /dev/null 2>&1; echo $$?}
+REDIST_VERSION := ${shell cat $(ROOT_DIR)/.version 2>/dev/null}
+
 ifeq ($(HAS_SVN), 0)
-VERSION := "\"svn:r${shell svn info|grep Revision|awk '{ print $$2 }'}\""
+VERSION := "\"svn:r${shell svn info $(ROOT_DIR)|grep Revision|awk '{ print $$2 }'}\""
+else ifneq ($(REDIST_VERSION),)
+VERSION := "\"redist:r$(REDIST_VERSION)\""
 else
 VERSION := "\"unknown\""
 endif
