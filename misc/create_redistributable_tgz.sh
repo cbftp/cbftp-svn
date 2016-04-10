@@ -1,8 +1,8 @@
 #!/bin/bash
 SCRIPTPATH=`pwd`"/"`dirname $0`
 cd $SCRIPTPATH/..
-DIFF=`svn diff`
-if [ DIFF ]; then
+DIFF=`svn diff|wc -l`
+if [ $DIFF -gt 0 ]; then
   echo "Error: this is not a clean svn copy."
   exit 1
 fi
