@@ -99,27 +99,46 @@ bool Site::unlimitedDown() const {
   return max_dn == 0;
 }
 
-int Site::getAverageSpeed(std::string target) const {
+int Site::getAverageSpeed(const std::string & target) const {
   std::map<std::string, int>::const_iterator it = avgspeed.find(target);
   if (it == avgspeed.end()) return 1024;
   return it->second;
 }
 
-void Site::setAverageSpeed(std::string target, int speed) {
+void Site::setAverageSpeed(const std::string & target, int speed) {
   std::map<std::string, int>::iterator it = avgspeed.find(target);
   if (it != avgspeed.end()) avgspeed.erase(it);
   avgspeed[target] = speed;
 }
 
-void Site::pushTransferSpeed(std::string target, int speed) {
+void Site::pushTransferSpeed(const std::string & target, int speed) {
   std::map<std::string, int>::iterator it = avgspeed.find(target);
   int oldspeed;
-  if (it == avgspeed.end()) oldspeed = 1024;
+  if (it == avgspeed.end()) {
+    oldspeed = 1024;
+    avgspeedsamples[target] = 0;
+  }
   else {
     oldspeed = it->second;
     avgspeed.erase(it);
   }
   avgspeed[target] = (int) ((speed / 5) + (oldspeed * 0.8));
+  ++avgspeedsamples[target];
+}
+
+int Site::getAverageSpeedSamples(const std::string & target) const {
+  std::map<std::string, int>::const_iterator it = avgspeedsamples.find(target);
+  if (it != avgspeedsamples.end()) {
+    return it->second;
+  }
+  return 0;
+}
+
+void Site::resetAverageSpeedSamples(const std::string & target) {
+  std::map<std::string, int>::iterator it = avgspeedsamples.find(target);
+  if (it != avgspeedsamples.end()) {
+    it->second = 0;
+  }
 }
 
 bool Site::needsPRET() const {
@@ -214,13 +233,13 @@ std::string Site::getName() const {
   return name;
 }
 
-std::string Site::getSectionPath(std::string sectionname) const {
+std::string Site::getSectionPath(const std::string & sectionname) const {
   std::map<std::string, std::string>::const_iterator it = sections.find(sectionname);
   if (it == sections.end()) return "/";
   return it->second;
 }
 
-bool Site::hasSection(std::string sectionname) const {
+bool Site::hasSection(const std::string & sectionname) const {
   std::map<std::string, std::string>::const_iterator it = sections.find(sectionname);
   if (it == sections.end()) return false;
   return true;
@@ -269,7 +288,7 @@ int Site::getRankTolerance() const {
   return ranktolerance;
 }
 
-void Site::setName(std::string name) {
+void Site::setName(const std::string & name) {
   this->name = name;
 }
 
@@ -297,7 +316,7 @@ void Site::setAddresses(std::string addrports) {
   }
 }
 
-void Site::setPrimaryAddress(std::string addr, std::string port) {
+void Site::setPrimaryAddress(const std::string & addr, const std::string & port) {
   std::list<std::pair<std::string, std::string> >::iterator it;
   for (it = addresses.begin(); it != addresses.end(); it++) {
     if (it->first == addr && it->second == port) {
@@ -308,11 +327,11 @@ void Site::setPrimaryAddress(std::string addr, std::string port) {
   addresses.push_front(std::pair<std::string, std::string>(addr, port));
 }
 
-void Site::setUser(std::string user) {
+void Site::setUser(const std::string & user) {
   this->user = user;
 }
 
-void Site::setPass(std::string pass) {
+void Site::setPass(const std::string & pass) {
   this->pass = pass;
 }
 
@@ -324,7 +343,7 @@ void Site::setRankTolerance(int tolerance) {
   ranktolerance = tolerance;
 }
 
-void Site::setBasePath(std::string basepath) {
+void Site::setBasePath(const std::string & basepath) {
   this->basepath = basepath;
 }
 
@@ -354,7 +373,7 @@ void Site::setProxyType(int proxytype) {
   this->proxytype = proxytype;
 }
 
-void Site::setProxy(std::string proxyname) {
+void Site::setProxy(const std::string & proxyname) {
   this->proxyname = proxyname;
 }
 
@@ -362,7 +381,7 @@ void Site::clearSections() {
   sections.clear();
 }
 
-void Site::addSection(std::string name, std::string path) {
+void Site::addSection(const std::string & name, const std::string & path) {
   sections[name] = path;
 }
 
@@ -412,7 +431,7 @@ std::map<std::string, bool>::const_iterator Site::bannedGroupsEnd() const {
   return bannedgroups.end();
 }
 
-std::list<std::string> Site::getSectionsForPath(std::string path) const {
+std::list<std::string> Site::getSectionsForPath(const std::string & path) const {
   std::map<std::string, std::string>::const_iterator it;
   std::list<std::string> retsections;
   for (it = sections.begin(); it!= sections.end(); it++) {
@@ -423,7 +442,7 @@ std::list<std::string> Site::getSectionsForPath(std::string path) const {
   return retsections;
 }
 
-std::list<std::string> Site::getSectionsForPartialPath(std::string path) const {
+std::list<std::string> Site::getSectionsForPartialPath(const std::string & path) const {
   std::map<std::string, std::string>::const_iterator it;
   std::list<std::string> retsections;
   for (it = sections.begin(); it!= sections.end(); it++) {
