@@ -509,7 +509,7 @@ void TransferMonitor::transferFailed(Pointer<TransferStatus> & ts, TransferError
     ts->setFailed();
   }
   if (type == TM_TYPE_FXP) {
-    sls->getSite()->pushTransferSpeed(sld->getSite()->getName(), 0);
+    sls->getSite()->pushTransferSpeed(sld->getSite()->getName(), 0, 0);
   }
   tm->transferFailed(ts, err);
   status = TM_STATUS_IDLE;

@@ -51,7 +51,7 @@ private:
   int priority;
   std::map<std::string, std::string> sections;
   std::map<std::string, int> avgspeed;
-  std::map<std::string, int> avgspeedsamples;
+  std::map<std::string, std::pair<int, unsigned long long int> > avgspeedsamples;
   std::map<std::string, bool> affils;
   std::map<std::string, bool> bannedgroups;
   int proxytype;
@@ -77,8 +77,8 @@ public:
   bool unlimitedDown() const;
   int getAverageSpeed(const std::string &) const;
   void setAverageSpeed(const std::string &, int);
-  void pushTransferSpeed(const std::string &, int);
-  int getAverageSpeedSamples(const std::string &) const;
+  void pushTransferSpeed(const std::string &, int, unsigned long long int);
+  std::pair<int, unsigned long long int> getAverageSpeedSamples(const std::string &) const;
   void resetAverageSpeedSamples(const std::string &);
   bool needsPRET() const;
   void setPRET(bool);
