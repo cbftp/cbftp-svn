@@ -25,7 +25,7 @@ NukeScreen::~NukeScreen() {
 }
 
 void NukeScreen::initialize(unsigned int row, unsigned int col, std::string sitestr, std::string release, FileList * filelist) {
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [n]uke - [c]ancel";
+  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [n]uke - [c]ancel - [p]roper - [r]epack - [d]upe";
   currentlegendtext = defaultlegendtext;
   active = false;
   this->sitestr = sitestr;
@@ -33,9 +33,9 @@ void NukeScreen::initialize(unsigned int row, unsigned int col, std::string site
   sitelogic = global->getSiteLogicManager()->getSiteLogic(sitestr);
   path = filelist->getPath();
   std::list<std::string> sections = global->getSiteManager()->getSite(sitestr)->getSectionsForPath(path);
-  mso.clear();
-  mso.addIntArrow(5, 1, "multiplier", "Multiplier:", 1, 1, 100);
-  mso.addStringField(6, 1, "reason", "Reason:", "", false, col - 3, 512);
+  mso.reset();
+  mso.addStringField(5, 1, "reason", "Reason:", "", false, col - 3, 512);
+  mso.addIntArrow(6, 1, "multiplier", "Multiplier:", 1, 1, 100);
   mso.addTextButtonNoContent(8, 1, "nuke", "Nuke");
   mso.addTextButtonNoContent(8, 10, "cancel", "Cancel");
   mso.enterFocusFrom(0);
@@ -134,10 +134,26 @@ bool NukeScreen::keyPressed(unsigned int ch) {
     case 'c':
       ui->returnToLast();
       return true;
-    case 'n':
+    case 'n': {
       int reqid = nuke();
       ui->returnNuke(reqid);
       return true;
+    }
+    case 'p': {
+      int reqid = sitelogic->requestNuke(path + "/" + release, 1, "proper");
+      ui->returnNuke(reqid);
+      return true;
+    }
+    case 'r': {
+      int reqid = sitelogic->requestNuke(path + "/" + release, 1, "repack");
+      ui->returnNuke(reqid);
+      return true;
+    }
+    case 'd': {
+      int reqid = sitelogic->requestNuke(path + "/" + release, 1, "dupe");
+      ui->returnNuke(reqid);
+      return true;
+    }
   }
   return false;
 }
