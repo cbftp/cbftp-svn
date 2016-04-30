@@ -125,6 +125,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
     useproxy->setOptionText(modsite.getProxy());
   }
   y++;
+  mso.addCheckBox(y++, x, "disabled", "Disabled:", modsite.getDisabled());
   mso.addCheckBox(y++, x, "allowupload", "Allow upload:", modsite.getAllowUpload());
   mso.addCheckBox(y++, x, "allowdownload", "Allow download:", modsite.getAllowDownload());
   Pointer<MenuSelectOptionTextArrow> priority = mso.addTextArrow(y++, x, "priority", "Priority:");
@@ -418,6 +419,9 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "listcommand") {
           site->setListCommand(msoe.get<MenuSelectOptionTextArrow>()->getData());
+        }
+        else if (identifier == "disabled") {
+          site->setDisabled(msoe.get<MenuSelectOptionCheckBox>()->getData());
         }
         else if (identifier == "allowupload") {
           site->setAllowUpload(msoe.get<MenuSelectOptionCheckBox>()->getData());

@@ -79,7 +79,7 @@ void NewRaceScreen::populateSiteList() {
   if (!tempsites.size()) {
     for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
       Site * site = *it;
-      if (site->hasSection(section) && (site->getAllowDownload() || site->getAllowUpload())) {
+      if (site->hasSection(section) && !site->getDisabled()) {
         tempsites.push_back(std::pair<std::string, bool>(site->getName(), toggleall || site == startsite));
       }
     }

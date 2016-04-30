@@ -46,6 +46,7 @@ private:
   int ssltransfer;
   bool cpsvsupported;
   bool brokenpasv;
+  bool disabled;
   bool allowupload;
   bool allowdownload;
   int priority;
@@ -95,6 +96,7 @@ public:
   void setBrokenPASV(bool);
   bool supportsCPSV() const;
   void setSupportsCPSV(bool);
+  bool getDisabled() const;
   bool getAllowUpload() const;
   bool getAllowDownload() const;
   int getProxyType() const;
@@ -123,6 +125,7 @@ public:
   void setMaxDn(unsigned int);
   void setMaxUp(unsigned int);
   void setSSL(bool);
+  void setDisabled(bool);
   void setAllowUpload(bool);
   void setAllowDownload(bool);
   void setMaxIdleTime(unsigned int);
