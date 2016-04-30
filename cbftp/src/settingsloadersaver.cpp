@@ -294,6 +294,9 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("listcommand")) {
       site->setListCommand(util::str2Int(value));
     }
+    else if (!setting.compare("disabled")) {
+      if (!value.compare("true")) site->setDisabled(true);
+    }
     else if (!setting.compare("allowupload")) {
       if (!value.compare("false")) site->setAllowUpload(false);
     }
@@ -509,6 +512,7 @@ void SettingsLoaderSaver::saveSettings() {
       if (site->needsPRET()) dfh->addOutputLine(filetag, name + "$pret=true");
       if (site->forceBinaryMode()) dfh->addOutputLine(filetag, name + "$binary=true");
       if (!site->SSL()) dfh->addOutputLine(filetag, name + "$sslconn=false");
+      if (site->getDisabled()) dfh->addOutputLine(filetag, name + "$disabled=true");
       if (!site->getAllowUpload()) dfh->addOutputLine(filetag, name + "$allowupload=false");
       if (!site->getAllowDownload()) dfh->addOutputLine(filetag, name + "$allowdownload=false");
       dfh->addOutputLine(filetag, name + "$priority=" + util::int2Str(site->getPriority()));

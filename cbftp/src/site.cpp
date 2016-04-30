@@ -20,6 +20,7 @@ Site::Site(std::string name) :
   ssltransfer(SITE_SSL_PREFER_OFF),
   cpsvsupported(true),
   brokenpasv(false),
+  disabled(false),
   allowupload(true),
   allowdownload(true),
   priority(SITE_PRIORITY_NORMAL),
@@ -199,6 +200,10 @@ void Site::setSSL(bool val) {
   sslconn = val;
 }
 
+bool Site::getDisabled() const {
+  return disabled;
+}
+
 bool Site::getAllowUpload() const {
   return allowupload;
 }
@@ -213,6 +218,10 @@ int Site::getProxyType() const {
 
 std::string Site::getProxy() const {
   return proxyname;
+}
+
+void Site::setDisabled(bool val) {
+  disabled = val;
 }
 
 void Site::setAllowUpload(bool val) {
