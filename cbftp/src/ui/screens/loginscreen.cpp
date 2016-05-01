@@ -140,7 +140,7 @@ bool LoginScreen::keyPressed(unsigned int ch) {
         attempt = true;
         ui->key(passfield.getText());
         passfield.clear();
-        break;
+        return true;
     }
   }
   ui->update();

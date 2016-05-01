@@ -835,10 +835,10 @@ void Ui::returnSelectSites(std::string sites) {
 void Ui::key(std::string key) {
   bool result = global->getSettingsLoaderSaver()->enterKey(key);
   if (result) {
-    enableInfo();
-    enableLegend();
     mainscreen->initialize(mainrow, maincol);
     switchToWindow(mainscreen);
+    enableInfo();
+    enableLegend();
   }
   else {
     topwindow->update();
