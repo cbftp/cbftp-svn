@@ -59,7 +59,8 @@ class TransferMonitor : public EventReceiver {
     Pointer<LocalFileList> localfl;
     std::string spath;
     std::string dpath;
-    bool activeupload;
+    bool clientactive;
+    bool fxpdstactive;
     bool ssl;
     TransferMonitorType type;
     int timestamp;
@@ -79,6 +80,7 @@ class TransferMonitor : public EventReceiver {
     void updateFXPSizeSpeed();
     void updateLocalTransferSizeSpeed();
     void checkForDeadFXPTransfers();
+    void startClientTransfer();
   public:
     TransferMonitor(TransferManager *);
     ~TransferMonitor();

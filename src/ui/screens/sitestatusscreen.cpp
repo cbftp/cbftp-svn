@@ -56,7 +56,7 @@ void SiteStatusScreen::update() {
     std::string status = st->getStatus(j);
     std::string llstate = st->getConnStateTracker(j)->isListLocked()
         ? "Y" : "N";
-    std::string tlstate = st->getConnStateTracker(j)->isHardLocked()
+    std::string hlstate = st->getConnStateTracker(j)->isHardLocked()
         ? "Y" : "N";
     std::string tstate = st->getConnStateTracker(j)->hasFileTransfer()
         ? "Y" : "N";
@@ -66,7 +66,7 @@ void SiteStatusScreen::update() {
     }
     previousstatuslength[j] = statuslength;
     ui->printStr(i++, 1, "#" + util::int2Str((int)j) + " - LL:" + llstate +
-        " - TL:" + tlstate + " - T:" + tstate + " - " + status);
+        " - HL:" + hlstate + " - T:" + tstate + " - " + status);
   }
 }
 

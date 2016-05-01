@@ -1020,6 +1020,10 @@ std::string FTPConn::getConnectedAddress() const {
   return iom->getSocketAddress(sockid);
 }
 
+std::string FTPConn::getInterfaceAddress() const {
+  return iom->getInterfaceAddress(sockid);
+}
+
 int FTPConn::getProtectedMode() const {
   return protectedmode;
 }

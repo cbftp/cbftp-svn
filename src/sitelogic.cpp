@@ -329,7 +329,10 @@ void SiteLogic::commandSuccess(int id) {
         }
       }
       break;
-    case STATE_LIST: // LIST started, no action here
+    case STATE_LIST:
+      if (!connstatetracker[id].getTransferPassive()) {
+        connstatetracker[id].getTransferMonitor()->activeStarted();
+      }
       return;
     case STATE_PRET_LIST:
       if (connstatetracker[id].transferInitialized()) {
@@ -507,18 +510,29 @@ void SiteLogic::commandFail(int id) {
       handleConnection(id, false);
       return;
     case STATE_LIST:
+      checkFailListRequest(id);
       handleTransferFail(id, CST_LIST, TM_ERR_RETRSTOR);
       return;
     case STATE_PRET_LIST:
+      checkFailListRequest(id);
       handleTransferFail(id, CST_LIST, TM_ERR_PRET);
       return;
     case STATE_LIST_COMPLETE:
+      checkFailListRequest(id);
       handleTransferFail(id, CST_LIST, TM_ERR_RETRSTOR_COMPLETE);
       return;
   }
   // default handling: reconnect
   disconnected(id);
   conns[id]->reconnect();
+}
+
+void SiteLogic::checkFailListRequest(int id) {
+  if (connstatetracker[id].hasRequest()) {
+    if (connstatetracker[id].getRequest()->requestType() == REQ_FILELIST) {
+      setRequestReady(id, NULL, false);
+    }
+  }
 }
 
 void SiteLogic::handleFail(int id) {
@@ -1483,8 +1497,15 @@ std::string SiteLogic::getStatus(int id) const {
 }
 
 
-void SiteLogic::preparePassiveTransfer(int id, std::string path, std::string file, bool fxp, bool ssl) {
+void SiteLogic::preparePassiveTransfer(int id, const std::string & path, const std::string & file, bool fxp, bool ssl) {
   connstatetracker[id].setTransfer(path, file, fxp, ssl);
+  if (!conns[id]->isProcessing()) {
+    initTransfer(id);
+  }
+}
+
+void SiteLogic::prepareActiveTransfer(int id, const std::string & path, const std::string & file, const std::string & addr, bool ssl) {
+  connstatetracker[id].setTransfer(path, file, addr, ssl);
   if (!conns[id]->isProcessing()) {
     initTransfer(id);
   }
@@ -1492,6 +1513,13 @@ void SiteLogic::preparePassiveTransfer(int id, std::string path, std::string fil
 
 void SiteLogic::preparePassiveList(int id, TransferMonitor * tmb, bool ssl) {
   connstatetracker[id].setList(tmb, ssl);
+  if (!conns[id]->isProcessing()) {
+    initTransfer(id);
+  }
+}
+
+void SiteLogic::prepareActiveList(int id, TransferMonitor * tmb, const std::string & addr, bool ssl) {
+  connstatetracker[id].setList(tmb, addr, ssl);
   if (!conns[id]->isProcessing()) {
     initTransfer(id);
   }
@@ -1535,13 +1563,6 @@ void SiteLogic::list(int id) {
 
 void SiteLogic::listAll(int id) {
   conns[id]->doLISTa();
-}
-
-void SiteLogic::prepareActiveTransfer(int id, std::string path, std::string file, std::string addr, bool ssl) {
-  connstatetracker[id].setTransfer(path, file, addr, ssl);
-  if (!conns[id]->isProcessing()) {
-    initTransfer(id);
-  }
 }
 
 void SiteLogic::abortTransfer(int id) {
