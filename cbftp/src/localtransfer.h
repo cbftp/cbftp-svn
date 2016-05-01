@@ -1,10 +1,39 @@
 #pragma once
 
+#include <string>
+#include <fstream>
+
 #include "core/eventreceiver.h"
 
 #define CHUNK 524288
 
+class TransferMonitor;
+class FTPConn;
+
 class LocalTransfer : public EventReceiver {
 public:
+  LocalTransfer();
+  bool active() const;
+  void FDNew(int);
+  void tick(int);
+  void openFile(int);
+  int getPort() const;
   virtual unsigned long long int size() const = 0;
+  FTPConn * getConn() const;
+protected:
+  bool ssl;
+  int sockid;
+  bool inuse;
+  bool inmemory;
+  bool passivemode;
+  int port;
+  TransferMonitor * tm;
+  bool fileopened;
+  FTPConn * ftpconn;
+  std::fstream filestream;
+  std::string path;
+  std::string filename;
+  char * buf;
+  unsigned int buflen;
+  unsigned int bufpos;
 };

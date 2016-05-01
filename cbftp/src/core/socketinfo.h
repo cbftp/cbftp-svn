@@ -27,7 +27,7 @@ class EventReceiver;
 
 class SocketInfo {
 public:
-  SocketInfo() : type(FD_UNUSED), fd(0), id(0), port(0), gairet(0),
+  SocketInfo() : type(FD_UNUSED), fd(0), id(0), port(0), localport(0), gairet(0),
                  gaires(NULL), gaiasync(false), receiver(NULL), ssl(NULL)
   {
   }
@@ -36,6 +36,8 @@ public:
   int id;
   std::string addr;
   int port;
+  std::string localaddr;
+  int localport;
   int gairet;
   struct addrinfo * gaires;
   std::string gaierr;

@@ -37,7 +37,7 @@ void resolveDNSAsync(EventReceiver * er, int sockid) {
   static_cast<IOManager *>(er)->resolveDNS(sockid);
 }
 
-bool needsDNSResolution(const std::string& addr) {
+bool needsDNSResolution(const std::string & addr) {
   size_t addrlen = addr.length();
   if (addrlen >= 4) {
     if (isalpha(addr[addrlen - 1]) && isalpha(addr[addrlen - 2])) {
@@ -100,12 +100,12 @@ void IOManager::tick(int message) {
   }
 }
 
-int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int port) {
+int IOManager::registerTCPClientSocket(EventReceiver * er, const std::string & addr, int port) {
   bool resolving;
   return registerTCPClientSocket(er, addr, port, resolving);
 }
 
-int IOManager::registerTCPClientSocket(EventReceiver * er, std::string addr, int port, bool & resolving) {
+int IOManager::registerTCPClientSocket(EventReceiver * er, const std::string & addr, int port, bool & resolving) {
   int sockid = sockidcounter++;
   {
     ScopeLock lock(socketinfomaplock);
@@ -145,12 +145,13 @@ void IOManager::handleTCPNameResolution(SocketInfo & socketinfo) {
   char * buf = (char *) malloc(result->ai_addrlen);
   struct sockaddr_in * saddr = (struct sockaddr_in*) result->ai_addr;
   inet_ntop(AF_INET, &(saddr->sin_addr), buf, result->ai_addrlen);
+  std::string addrstr = buf;
+  free(buf);
   socketinfomap[socketinfo.id].fd = sockfd;
   socketinfomap[socketinfo.id].type = FD_TCP_CONNECTING;
-  socketinfomap[socketinfo.id].addr = std::string(buf);
+  socketinfomap[socketinfo.id].addr = addrstr;
   connecttimemap[socketinfo.id] = 0;
   sockfdidmap[sockfd] = socketinfo.id;
-  free(buf);
   if (hasDefaultInterface()) {
     struct addrinfo request, *res;
     memset(&request, 0, sizeof(request));
@@ -362,7 +363,7 @@ bool IOManager::investigateSSLError(int error, int sockid, int b_recv) {
   return false;
 }
 
-void IOManager::sendData(int id, std::string data) {
+void IOManager::sendData(int id, const std::string & data) {
   char * buf = (char *) data.c_str();
   sendData(id, buf, data.length());
 }
@@ -479,6 +480,16 @@ std::string IOManager::getSocketAddress(int id) const {
   return addr;
 }
 
+std::string IOManager::getInterfaceAddress(int id) const {
+  std::string addr = "";
+  ScopeLock lock(socketinfomaplock);
+  std::map<int, SocketInfo>::const_iterator it = socketinfomap.find(id);
+  if (it != socketinfomap.end()) {
+    addr = it->second.localaddr;
+  }
+  return addr;
+}
+
 void IOManager::handleKeyboardIn(SocketInfo & socketinfo, ScopeLock & lock) {
   lock.unlock();
   wm->dispatchFDData(socketinfo.receiver, socketinfo.id);
@@ -494,7 +505,16 @@ void IOManager::handleTCPConnectingOut(SocketInfo & socketinfo) {
     closeSocketIntern(socketinfo.id);
     return;
   }
+  struct sockaddr_in localaddr;
+  socklen_t localaddrlen = sizeof(localaddr);
+  char * buf = (char *) malloc(localaddrlen);
+  getsockname(socketinfo.fd, (struct sockaddr *)&localaddr, &localaddrlen);
+  inet_ntop(AF_INET, &localaddr.sin_addr, buf, localaddrlen);
+  std::string localaddrstr = buf;
+  free(buf);
   socketinfo.type = FD_TCP_PLAIN;
+  socketinfo.localaddr = localaddrstr;
+  socketinfo.localport = ntohs(localaddr.sin_port);
   connecttimemap.erase(socketinfo.id);
   wm->dispatchEventConnected(socketinfo.receiver, socketinfo.id);
   polling.setFDIn(socketinfo.fd);
@@ -698,14 +718,26 @@ void IOManager::handleUDPIn(SocketInfo & socketinfo) {
 }
 
 void IOManager::handleTCPServerIn(SocketInfo & socketinfo) {
-  struct sockaddr addr;
-  socklen_t addrlen;
-  int newfd = accept(socketinfo.fd, &addr, &addrlen);
+  struct sockaddr_in addr, localaddr;
+  socklen_t addrlen = sizeof(addr);
+  socklen_t localaddrlen = sizeof(localaddr);
+  int newfd = accept(socketinfo.fd, (struct sockaddr *)&addr, &addrlen);
+  char * buf = (char *) malloc(addrlen);
+  inet_ntop(AF_INET, &addr.sin_addr, buf, addrlen);
+  std::string addrstr = buf;
+  getsockname(newfd, (struct sockaddr *)&localaddr, &localaddrlen);
+  inet_ntop(AF_INET, &localaddr.sin_addr, buf, localaddrlen);
+  std::string localaddrstr = buf;
+  free(buf);
   fcntl(newfd, F_SETFL, O_NONBLOCK);
   int newsockid = sockidcounter++;
   socketinfomap[newsockid].fd = newfd;
   socketinfomap[newsockid].id = newsockid;
   socketinfomap[newsockid].type = FD_TCP_PLAIN_LISTEN;
+  socketinfomap[newsockid].addr = addrstr;
+  socketinfomap[newsockid].port = ntohs(addr.sin_port);
+  socketinfomap[newsockid].localaddr = localaddrstr;
+  socketinfomap[newsockid].localport = ntohs(localaddr.sin_port);
   sockfdidmap[newfd] = newsockid;
   wm->dispatchEventNew(socketinfo.receiver, newsockid);
 }
@@ -818,7 +850,7 @@ std::string IOManager::getDefaultInterface() const {
   return defaultinterface;
 }
 
-void IOManager::setDefaultInterface(std::string interface) {
+void IOManager::setDefaultInterface(const std::string & interface) {
   if (getInterfaceAddress(interface) == "") {
     if (hasdefaultinterface) {
       hasdefaultinterface = false;
@@ -838,7 +870,7 @@ bool IOManager::hasDefaultInterface() const {
   return hasdefaultinterface;
 }
 
-std::string IOManager::getInterfaceAddress(std::string interface) {
+std::string IOManager::getInterfaceAddress(const std::string & interface) {
   int fd;
   struct ifreq ifr;
   fd = socket(AF_INET, SOCK_DGRAM, 0);

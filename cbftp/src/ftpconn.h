@@ -182,6 +182,7 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void disconnect();
     int getState() const;
     std::string getConnectedAddress() const;
+    std::string getInterfaceAddress() const;
     int getProtectedMode() const;
     bool getSSCNMode() const;
     void setMKDCWDTarget(std::string, std::string);

@@ -83,6 +83,7 @@ class SiteLogic : public EventReceiver {
     bool lockTransferConn(std::string, int *, TransferMonitor *, bool);
     void setRequestReady(unsigned int, void *, bool);
     void cleanupConnection(int);
+    void checkFailListRequest(int);
   public:
     SiteLogic(std::string);
     ~SiteLogic();
@@ -148,13 +149,14 @@ class SiteLogic : public EventReceiver {
     const std::vector<FTPConn *> * getConns() const;
     FTPConn * getConn(int) const;
     std::string getStatus(int) const;
-    void preparePassiveTransfer(int, std::string, std::string, bool, bool);
+    void preparePassiveTransfer(int, const std::string &, const std::string &, bool, bool);
+    void prepareActiveTransfer(int, const std::string &, const std::string &, const std::string &, bool);
     void preparePassiveList(int, TransferMonitor *, bool);
+    void prepareActiveList(int, TransferMonitor *, const std::string &, bool);
     void download(int);
     void upload(int);
     void list(int);
     void listAll(int);
-    void prepareActiveTransfer(int, std::string, std::string, std::string, bool);
     void abortTransfer(int);
     const ConnStateTracker * getConnStateTracker(int) const;
 };

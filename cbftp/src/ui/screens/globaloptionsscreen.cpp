@@ -57,6 +57,12 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
       defaultinterface->setOption(interfaceid - 1);
     }
   }
+  int firstport = ls->getActivePortFirst();
+  int lastport = ls->getActivePortLast();
+  std::string portrange = util::int2Str(firstport) + ":" + util::int2Str(lastport);
+  mso.addStringField(y++, x, "activeportrange", "Active mode port range:", portrange, false, 11);
+  mso.addCheckBox(y++, x, "useactiveaddress", "Use active mode address:", ls->getUseActiveModeAddress());
+  mso.addStringField(y++, x, "activeaddress", "Active mode address:", ls->getActiveModeAddress(), false, 64);
   y++;
   mso.addCheckBox(y++, x, "udpenable", "Enable remote commands:", rch->isEnabled());
   mso.addStringField(y++, x, "udpport", "Remote command UDP Port:", util::int2Str(rch->getUDPPort()), false, 5);
@@ -193,7 +199,23 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
           std::string interface = interfacemap[msoe.get<MenuSelectOptionTextArrow>()->getData()];
           global->getIOManager()->setDefaultInterface(interface);
         }
-        if (identifier == "udpenable") {
+        else if (identifier == "activeportrange") {
+          std::string portrange = msoe.get<MenuSelectOptionTextField>()->getData();
+          size_t splitpos = portrange.find(":");
+          if (splitpos != std::string::npos) {
+            int portfirst = util::str2Int(portrange.substr(0, splitpos));
+            int portlast = util::str2Int(portrange.substr(splitpos + 1));
+            ls->setActivePortFirst(portfirst);
+            ls->setActivePortLast(portlast);
+          }
+        }
+        else if (identifier == "useactiveaddress") {
+          ls->setUseActiveModeAddress(msoe.get<MenuSelectOptionCheckBox>()->getData());
+        }
+        else if (identifier == "activeaddress") {
+          ls->setActiveModeAddress(msoe.get<MenuSelectOptionTextField>()->getData());
+        }
+        else if (identifier == "udpenable") {
           udpenable = msoe.get<MenuSelectOptionCheckBox>()->getData();
           if (rch->isEnabled() && !udpenable) {
             rch->setEnabled(false);

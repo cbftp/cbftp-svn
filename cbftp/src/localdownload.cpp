@@ -6,6 +6,7 @@
 
 #include "core/iomanager.h"
 #include "core/types.h"
+#include "core/tickpoke.h"
 #include "globalcontext.h"
 #include "eventlog.h"
 #include "transfermonitor.h"
@@ -15,23 +16,33 @@
 extern GlobalContext * global;
 
 LocalDownload::LocalDownload(LocalStorage * ls) :
-  inuse(false),
-  buflen(0),
-  ls(ls) {
-
+  ls(ls)
+{
 }
 
-void LocalDownload::engage(TransferMonitor * tm, std::string path, std::string filename, std::string addr, int port, bool ssl, FTPConn * ftpconn) {
-  init(tm, ftpconn, path, filename, false, -1, ssl);
+void LocalDownload::engage(TransferMonitor * tm, const std::string & path, const std::string & filename, const std::string & addr, int port, bool ssl, FTPConn * ftpconn) {
+  init(tm, ftpconn, path, filename, false, -1, ssl, port, true);
   sockid = global->getIOManager()->registerTCPClientSocket(this, addr, port);
 }
 
-void LocalDownload::engage(TransferMonitor * tm, int storeid, std::string addr, int port, bool ssl, FTPConn * ftpconn) {
-  init(tm, ftpconn, "", "", true, storeid, ssl);
+bool LocalDownload::engage(TransferMonitor * tm, const std::string & path, const std::string & filename, int port, bool ssl, FTPConn * ftpconn) {
+  init(tm, ftpconn, path, filename, false, -1, ssl, port, false);
+  sockid = global->getIOManager()->registerTCPServerSocket(this, port);
+  return sockid != -1;
+}
+
+void LocalDownload::engage(TransferMonitor * tm, int storeid, const std::string & addr, int port, bool ssl, FTPConn * ftpconn) {
+  init(tm, ftpconn, "", "", true, storeid, ssl, port, true);
   sockid = global->getIOManager()->registerTCPClientSocket(this, addr, port);
 }
 
-void LocalDownload::init(TransferMonitor * tm, FTPConn * ftpconn, std::string path, std::string filename, bool inmemory, int storeid, bool ssl) {
+bool LocalDownload::engage(TransferMonitor * tm, int storeid, int port, bool ssl, FTPConn * ftpconn) {
+  init(tm, ftpconn, "", "", true, storeid, ssl, port, false);
+  sockid = global->getIOManager()->registerTCPServerSocket(this, port);
+  return sockid != -1;
+}
+
+void LocalDownload::init(TransferMonitor * tm, FTPConn * ftpconn, const std::string & path, const std::string & filename, bool inmemory, int storeid, bool ssl, int port, bool passivemode) {
   this->tm = tm;
   this->ftpconn = ftpconn;
   this->path = path;
@@ -39,18 +50,21 @@ void LocalDownload::init(TransferMonitor * tm, FTPConn * ftpconn, std::string pa
   this->inmemory = inmemory;
   this->storeid = storeid;
   this->ssl = ssl;
+  this->port = port;
+  this->passivemode = passivemode;
   bufpos = 0;
   filesize = 0;
   inuse = true;
   fileopened = false;
-}
-
-bool LocalDownload::active() const {
-  return inuse;
+  if (!passivemode) {
+    global->getTickPoke()->startPoke(this, "LocalDownload", 5000, 0);
+  }
 }
 
 void LocalDownload::FDConnected(int sockid) {
-  tm->activeStarted();
+  if (passivemode) {
+    tm->activeStarted();
+  }
   if (ssl) {
     global->getIOManager()->negotiateSSLConnect(sockid, (EventReceiver *)ftpconn);
   }
@@ -60,7 +74,7 @@ void LocalDownload::FDDisconnected(int sockid) {
   if (!inmemory) {
     if (bufpos > 0) {
       if (!fileopened) {
-        openFile();
+        openFile(R_OK | W_OK);
       }
       filestream.write(buf, bufpos);
     }
@@ -89,13 +103,15 @@ void LocalDownload::FDSSLFail(int sockid) {
   tm->targetError(TM_ERR_OTHER);
 }
 
-void LocalDownload::FDFail(int sockid, std::string error) {
-  inuse = false;
-  tm->targetError(TM_ERR_OTHER);
-}
-
 void LocalDownload::FDData(int sockid, char * data, unsigned int len) {
   append(data, len);
+}
+
+void LocalDownload::FDFail(int sockid, std::string error) {
+  inuse = false;
+  if (sockid != -1) {
+    tm->targetError(TM_ERR_OTHER);
+  }
 }
 
 unsigned long long int LocalDownload::size() const {
@@ -116,7 +132,7 @@ void LocalDownload::append(char * data, unsigned int datalen) {
     }
     else {
       if (!fileopened) {
-        openFile();
+        openFile(R_OK | W_OK);
       }
       filestream.write(buf, bufpos);
       filesize = filestream.tellg();
@@ -129,14 +145,4 @@ void LocalDownload::append(char * data, unsigned int datalen) {
 
 int LocalDownload::getStoreId() const {
   return storeid;
-}
-
-void LocalDownload::openFile() {
-  if (access(path.c_str(), R_OK | W_OK) < 0) {
-    perror(std::string("There was an error accessing " + path).c_str());
-    exit(1);
-  }
-  filestream.clear();
-  filestream.open((path + "/" + filename).c_str(), std::ios::binary | std::ios::ate | std::ios::out);
-  fileopened = true;
 }

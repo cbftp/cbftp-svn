@@ -236,8 +236,20 @@ void SettingsLoaderSaver::loadSettings() {
     if (!setting.compare("temppath")) {
       global->getLocalStorage()->setTempPath(value);
     }
-    if (!setting.compare("downloadpath")) {
+    else if (!setting.compare("downloadpath")) {
       global->getLocalStorage()->setDownloadPath(value);
+    }
+    else if (!setting.compare("useactivemodeaddr")) {
+      if (!value.compare("true")) global->getLocalStorage()->setUseActiveModeAddress(true);
+    }
+    else if (!setting.compare("activemodeaddr")) {
+      global->getLocalStorage()->setActiveModeAddress(value);
+    }
+    else if (!setting.compare("activeportfirst")) {
+      global->getLocalStorage()->setActivePortFirst(util::str2Int(value));
+    }
+    else if (!setting.compare("activeportlast")) {
+      global->getLocalStorage()->setActivePortLast(util::str2Int(value));
     }
   }
 
@@ -485,6 +497,10 @@ void SettingsLoaderSaver::saveSettings() {
     std::string filetag = "LocalStorage";
     dfh->addOutputLine(filetag, "temppath=" + global->getLocalStorage()->getTempPath());
     dfh->addOutputLine(filetag, "downloadpath=" + global->getLocalStorage()->getDownloadPath());
+    if (global->getLocalStorage()->getUseActiveModeAddress()) dfh->addOutputLine(filetag, "useactivemodeaddr=true");
+    dfh->addOutputLine(filetag, "activemodeaddr=" + global->getLocalStorage()->getActiveModeAddress());
+    dfh->addOutputLine(filetag, "activeportfirst=" + util::int2Str(global->getLocalStorage()->getActivePortFirst()));
+    dfh->addOutputLine(filetag, "activeportlast=" + util::int2Str(global->getLocalStorage()->getActivePortLast()));
   }
 
   {
