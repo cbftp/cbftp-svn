@@ -84,6 +84,10 @@ Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, con
       global->getEventLog()->log("Engine", "Trying to race a nonexisting site: " + *it);
       continue;
     }
+    if (sl->getSite()->getDisabled()) {
+      global->getEventLog()->log("Engine", "Skipping disabled site: " + *it);
+      continue;
+    }
     if (!sl->getSite()->hasSection(section)) {
       global->getEventLog()->log("Engine", "Trying to use an undefined section: " +
           section + " on " + *it);
@@ -166,7 +170,7 @@ Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, con
 Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, const std::string & section) {
   std::list<std::string> sites;
   for (std::vector<Site *>::const_iterator it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
-    if ((*it)->hasSection(section)) {
+    if ((*it)->hasSection(section) && !(*it)->getDisabled()) {
       sites.push_back((*it)->getName());
     }
   }
