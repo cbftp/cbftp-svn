@@ -194,7 +194,19 @@ void TransferMonitor::tick(int msg) {
 }
 
 void TransferMonitor::passiveReady(std::string addr) {
-  util::assert(status == TM_STATUS_AWAITING_PASSIVE);
+  util::assert(status == TM_STATUS_AWAITING_PASSIVE ||
+               status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
+               status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET);
+  if (status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE) {
+    sourceError(TM_ERR_OTHER);
+    sls->returnConn(src);
+    return;
+  }
+  if (status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET) {
+    targetError(TM_ERR_OTHER);
+    sld->returnConn(dst);
+    return;
+  }
   status = TM_STATUS_AWAITING_ACTIVE;
   switch (type) {
     case TM_TYPE_FXP:
