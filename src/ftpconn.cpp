@@ -300,7 +300,7 @@ void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
         util::assert(false);
         break;
     }
-    if (!processing) {
+    if (isConnected() && !isProcessing()) {
       state = STATE_IDLE;
     }
     databufpos = 0;

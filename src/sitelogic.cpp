@@ -620,7 +620,8 @@ void SiteLogic::rawCommandResultRetrieved(int id, std::string result) {
   rawcommandrawbuf->write(result);
   if (connstatetracker[id].hasRequest()) {
     if (connstatetracker[id].getRequest()->requestType() == REQ_RAW) {
-      setRequestReady(id, NULL, true);
+      std::string * data = new std::string(result);
+      setRequestReady(id, data, true);
     }
   }
   handleConnection(id, true);
@@ -1116,7 +1117,6 @@ std::string SiteLogic::getRawCommandResult(int requestid) {
   for (it = requestsready.begin(); it != requestsready.end(); it++) {
     if (it->requestId() == requestid) {
       std::string ret = *(std::string *) it->requestData();
-      delete (std::string *) it->requestData();
       return ret;
     }
   }
@@ -1128,6 +1128,7 @@ bool SiteLogic::finishRequest(int requestid) {
   for (it = requestsready.begin(); it != requestsready.end(); it++) {
     if (it->requestId() == requestid) {
       bool status = it->requestStatus();
+      clearReadyRequest(*it);
       requestsready.erase(it);
       return status;
     }
@@ -1619,8 +1620,9 @@ const ConnStateTracker * SiteLogic::getConnStateTracker(int id) const {
 
 void SiteLogic::setRequestReady(unsigned int id, void * data, bool status) {
   const Pointer<SiteLogicRequest> & request = connstatetracker[id].getRequest();
-  requestsready.push_back(SiteLogicRequestReady(request->requestId(), data, status));
+  requestsready.push_back(SiteLogicRequestReady(request->requestType(), request->requestId(), data, status));
   if (requestsready.size() > MAXREQUESTREADYQUEUE) {
+    clearReadyRequest(requestsready.front());
     requestsready.pop_front();
   }
   const bool care = request->doesAnyoneCare();
@@ -1628,5 +1630,17 @@ void SiteLogic::setRequestReady(unsigned int id, void * data, bool status) {
   available++;
   if (care) {
     global->getUIBase()->backendPush();
+  }
+}
+
+void SiteLogic::clearReadyRequest(SiteLogicRequestReady & request) {
+  void * data = request.requestData();
+  if (request.requestStatus()) {
+    if (request.getType() == REQ_FILELIST) {
+      delete (FileList *) data;
+    }
+    else if (request.getType() == REQ_RAW) {
+      delete (std::string *) data;
+    }
   }
 }
