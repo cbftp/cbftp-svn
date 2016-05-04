@@ -294,10 +294,7 @@ void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
       case STATE_TYPEI: // awaiting TYPE I response
         TYPEIResponse();
         break;
-      case STATE_IDLE: // not expecting any response
-        break;
-      default: // something is wrong
-        util::assert(false);
+      default: // nothing expected at this time, discard
         break;
     }
     if (isConnected() && !isProcessing()) {
