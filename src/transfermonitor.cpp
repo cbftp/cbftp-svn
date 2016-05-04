@@ -246,7 +246,19 @@ void TransferMonitor::passiveReady(std::string addr) {
 }
 
 void TransferMonitor::activeReady() {
-  util::assert(status == TM_STATUS_AWAITING_ACTIVE);
+  util::assert(status == TM_STATUS_AWAITING_ACTIVE ||
+               status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
+               status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET);
+  if (status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE) {
+    sourceError(TM_ERR_OTHER);
+    sls->returnConn(src);
+    return;
+  }
+  if (status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET) {
+    targetError(TM_ERR_OTHER);
+    sld->returnConn(dst);
+    return;
+  }
   if (type == TM_TYPE_FXP) {
     if (fxpdstactive) {
       sld->upload(dst);
@@ -261,20 +273,24 @@ void TransferMonitor::activeReady() {
 }
 
 void TransferMonitor::activeStarted() {
-  util::assert(status == TM_STATUS_AWAITING_ACTIVE);
-  status = TM_STATUS_TRANSFERRING;
-  if (type == TM_TYPE_FXP) {
-    if (fxpdstactive) {
-      sls->download(src);
+  util::assert(status == TM_STATUS_AWAITING_ACTIVE ||
+               status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
+               status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET);
+  if (status == TM_STATUS_AWAITING_ACTIVE) {
+    status = TM_STATUS_TRANSFERRING;
+    if (type == TM_TYPE_FXP) {
+      if (fxpdstactive) {
+        sls->download(src);
+      }
+      else {
+        sld->upload(dst);
+      }
     }
-    else {
-      sld->upload(dst);
+    else if (clientactive) {
+      startClientTransfer();
     }
+    startstamp = timestamp;
   }
-  else if (clientactive) {
-    startClientTransfer();
-  }
-  startstamp = timestamp;
 }
 
 void TransferMonitor::startClientTransfer() {

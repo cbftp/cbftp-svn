@@ -7,47 +7,52 @@
 #include "core/pointer.h"
 #include "ftpconnectowner.h"
 
-#define STATE_DISCONNECTED 0
-#define STATE_CONNECTING 1
-#define STATE_AUTH_TLS 3
-#define STATE_USER 4
-#define STATE_PASS 5
-#define STATE_STAT 6
-#define STATE_PWD 7
-#define STATE_PROT_P 8
-#define STATE_PROT_C 9
-#define STATE_RAW 10
-#define STATE_CPSV 11
-#define STATE_PASV 12
-#define STATE_PORT 13
-#define STATE_CWD 14
-#define STATE_MKD 15
-#define STATE_PRET_RETR 16
-#define STATE_PRET_STOR 17
-#define STATE_RETR 18
-#define STATE_RETR_COMPLETE 19
-#define STATE_STOR 20
-#define STATE_STOR_COMPLETE 21
-#define STATE_ABOR 22
-#define STATE_QUIT 23
-#define STATE_USER_LOGINKILL 24
-#define STATE_PASS_LOGINKILL 25
-#define STATE_WIPE 28
-#define STATE_DELE 29
-#define STATE_NUKE 30
-#define STATE_LIST 31
-#define STATE_PRET_LIST 32
-#define STATE_LIST_COMPLETE 33
-#define STATE_SSCN_ON 34
-#define STATE_SSCN_OFF 35
-#define STATE_SSL_HANDSHAKE 36
-#define STATE_PASV_ABORT 37
-#define STATE_PBSZ 38
-#define STATE_TYPEI 39
+enum FTPConnState {
+  STATE_DISCONNECTED,
+  STATE_CONNECTING,
+  STATE_AUTH_TLS,
+  STATE_USER,
+  STATE_PASS,
+  STATE_STAT,
+  STATE_PWD,
+  STATE_PROT_P,
+  STATE_PROT_C,
+  STATE_RAW,
+  STATE_CPSV,
+  STATE_PASV,
+  STATE_PORT,
+  STATE_CWD,
+  STATE_MKD,
+  STATE_PRET_RETR,
+  STATE_PRET_STOR,
+  STATE_RETR,
+  STATE_RETR_COMPLETE,
+  STATE_STOR,
+  STATE_STOR_COMPLETE,
+  STATE_ABOR,
+  STATE_QUIT,
+  STATE_USER_LOGINKILL,
+  STATE_PASS_LOGINKILL,
+  STATE_WIPE,
+  STATE_DELE,
+  STATE_NUKE,
+  STATE_LIST,
+  STATE_PRET_LIST,
+  STATE_LIST_COMPLETE,
+  STATE_SSCN_ON,
+  STATE_SSCN_OFF,
+  STATE_SSL_HANDSHAKE,
+  STATE_PASV_ABORT,
+  STATE_PBSZ,
+  STATE_TYPEI,
+  STATE_IDLE
+};
 
-#define PROT_UNSET 5483
-#define PROT_C 5484
-#define PROT_P 5485
+enum ProtMode {
+  PROT_UNSET,
+  PROT_C,
+  PROT_P
+};
 
 class FTPConnect;
 class SiteRace;
@@ -82,12 +87,12 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     Site * site;
     int transferstatus;
     int sockid;
-    int state;
+    FTPConnState state;
     bool aborted;
     FileList * currentfl;
     CommandOwner * currentco;
     std::string currentpath;
-    int protectedmode;
+    ProtMode protectedmode;
     bool sscnmode;
     std::string targetpath;
     bool mkdtarget;
@@ -180,10 +185,10 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void doQUIT();
     void doSSLHandshake();
     void disconnect();
-    int getState() const;
+    FTPConnState getState() const;
     std::string getConnectedAddress() const;
     std::string getInterfaceAddress() const;
-    int getProtectedMode() const;
+    ProtMode getProtectedMode() const;
     bool getSSCNMode() const;
     void setMKDCWDTarget(std::string, std::string);
     bool hasMKDCWDTarget() const;
