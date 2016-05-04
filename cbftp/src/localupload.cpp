@@ -54,10 +54,10 @@ bool LocalUpload::active() const {
 }
 
 void LocalUpload::FDConnected(int sockid) {
-  if (!passivemode) {
+  if (passivemode) {
     tm->activeStarted();
   }
-  openFile(R_OK);
+  openFile(true);
   if (ssl) {
     global->getIOManager()->negotiateSSLConnect(sockid, (EventReceiver *)ftpconn);
   }

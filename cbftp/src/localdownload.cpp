@@ -74,7 +74,7 @@ void LocalDownload::FDDisconnected(int sockid) {
   if (!inmemory) {
     if (bufpos > 0) {
       if (!fileopened) {
-        openFile(R_OK | W_OK);
+        openFile(false);
       }
       filestream.write(buf, bufpos);
     }
@@ -132,7 +132,7 @@ void LocalDownload::append(char * data, unsigned int datalen) {
     }
     else {
       if (!fileopened) {
-        openFile(R_OK | W_OK);
+        openFile(false);
       }
       filestream.write(buf, bufpos);
       filesize = filestream.tellg();

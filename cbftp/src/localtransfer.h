@@ -16,7 +16,7 @@ public:
   bool active() const;
   void FDNew(int);
   void tick(int);
-  void openFile(int);
+  void openFile(bool);
   int getPort() const;
   virtual unsigned long long int size() const = 0;
   FTPConn * getConn() const;
