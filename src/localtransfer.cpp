@@ -38,13 +38,13 @@ void LocalTransfer::tick(int) {
   FDFail(sockid, "Connection timed out");
 }
 
-void LocalTransfer::openFile(int mode) {
-  if (access(path.c_str(), mode) < 0) {
+void LocalTransfer::openFile(bool read) {
+  if (access(path.c_str(), read ? R_OK : (R_OK | W_OK)) < 0) {
     perror(std::string("There was an error accessing " + path).c_str());
     exit(1);
   }
   filestream.clear();
-  filestream.open((path + "/" + filename).c_str(), std::ios::binary | std::ios::ate | std::ios::out);
+  filestream.open((path + "/" + filename).c_str(), std::ios::binary | (read ? std::ios::in : (std::ios::ate | std::ios::out)));
   fileopened = true;
 }
 
