@@ -130,6 +130,9 @@ void FTPConn::FDSSLSuccess(int sockid) {
   if (state == STATE_AUTH_TLS) {
     doUSER(false);
   }
+  else {
+    state = STATE_IDLE;
+  }
 }
 
 void FTPConn::FDSSLFail(int sockid) {
@@ -174,7 +177,7 @@ bool FTPConn::parseData(char * data, unsigned int datalen, char ** databuf, unsi
       }
     }
   }
-  else if (datalen - databufpos == 0 && datalen >= 3 && (!isdigit(**databuf) ||
+  else if (datalen == databufpos && datalen >= 3 && (!isdigit(**databuf) ||
            !isdigit(*(*databuf+1)) || !isdigit(*(*databuf+2))))
   {
     databufcode = 0;
@@ -291,6 +294,14 @@ void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
       case STATE_TYPEI: // awaiting TYPE I response
         TYPEIResponse();
         break;
+      case STATE_IDLE: // not expecting any response
+        break;
+      default: // something is wrong
+        util::assert(false);
+        break;
+    }
+    if (!processing) {
+      state = STATE_IDLE;
     }
     databufpos = 0;
   }
@@ -1012,7 +1023,7 @@ RawBuffer * FTPConn::getRawBuffer() const {
   return rawbuf;
 }
 
-int FTPConn::getState() const {
+FTPConnState FTPConn::getState() const {
   return state;
 }
 
@@ -1024,7 +1035,7 @@ std::string FTPConn::getInterfaceAddress() const {
   return iom->getInterfaceAddress(sockid);
 }
 
-int FTPConn::getProtectedMode() const {
+ProtMode FTPConn::getProtectedMode() const {
   return protectedmode;
 }
 
