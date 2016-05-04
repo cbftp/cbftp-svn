@@ -149,7 +149,7 @@ void TransferMonitor::engageUpload(std::string sfile, Pointer<LocalFileList> & l
   }
   else {
     clientactive = false;
-    lt = global->getLocalStorage()->activeModeUpload(this, spath, sfile, ssl, sls->getConn(src));
+    lt = global->getLocalStorage()->activeModeUpload(this, spath, sfile, ssl, sld->getConn(dst));
     passiveReady(global->getLocalStorage()->localTransferPassiveString(lt));
   }
 }
