@@ -1637,7 +1637,7 @@ void SiteLogic::clearReadyRequest(SiteLogicRequestReady & request) {
   void * data = request.requestData();
   if (request.requestStatus()) {
     if (request.getType() == REQ_FILELIST) {
-      delete (FileList *) data;
+      //delete (FileList *) data;
     }
     else if (request.getType() == REQ_RAW) {
       delete (std::string *) data;
