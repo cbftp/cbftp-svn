@@ -84,6 +84,7 @@ class SiteLogic : public EventReceiver {
     void setRequestReady(unsigned int, void *, bool);
     void cleanupConnection(int);
     void checkFailListRequest(int);
+    void clearReadyRequest(SiteLogicRequestReady &);
   public:
     SiteLogic(std::string);
     ~SiteLogic();

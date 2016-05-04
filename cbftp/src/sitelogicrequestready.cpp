@@ -1,9 +1,14 @@
 #include "sitelogicrequestready.h"
 
-SiteLogicRequestReady::SiteLogicRequestReady(int requestid, void * data, bool status) {
-  this->requestid = requestid;
-  this->data = data;
-  this->status = status;
+SiteLogicRequestReady::SiteLogicRequestReady(int type, int requestid, void * data, bool status) :
+  type(type),
+  requestid(requestid),
+  data(data),
+  status(status) {
+}
+
+int SiteLogicRequestReady::getType() const {
+  return type;
 }
 
 int SiteLogicRequestReady::requestId() const {
