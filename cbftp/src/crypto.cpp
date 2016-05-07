@@ -1,5 +1,6 @@
 #include "crypto.h"
 
+#include <limits.h>
 #include <openssl/sha.h>
 #include <openssl/evp.h>
 #include <time.h>
