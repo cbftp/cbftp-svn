@@ -22,7 +22,7 @@ void Crypto::encrypt(const BinaryData & indata, const BinaryData & key, BinaryDa
   EVP_CIPHER_CTX_init(&ctx);
   const EVP_CIPHER * cipherp = cipher();
   int ivlen = EVP_CIPHER_iv_length(cipherp);
-  outdata.resize(indata.size() + blockSize() + blockSize());
+  outdata.resize(indata.size() + blockSize());
   int resultlen;
   int finallen;
   srand(time(NULL));
