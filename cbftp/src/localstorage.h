@@ -39,11 +39,6 @@ public:
   void setDownloadPath(const std::string &);
   static Pointer<LocalFileList> getLocalFileList(const std::string &);
   unsigned long long int getFileSize(const std::string &);
-  static bool directoryExistsReadable(const std::string &);
-  static bool directoryExistsWritable(const std::string &);
-  static bool createDirectory(const std::string &);
-  static bool createDirectory(const std::string &, bool);
-  static bool createDirectoryRecursive(std::string);
   bool getUseActiveModeAddress() const;
   std::string getActiveModeAddress() const;
   int getActivePortFirst() const;
@@ -55,7 +50,6 @@ public:
   int getNextActivePort();
   std::string localTransferPassiveString(LocalTransfer *) const;
 private:
-  static bool directoryExistsAccessible(const std::string &, bool);
   std::map<int, BinaryData> content;
   static std::string getHostFromPASVString(std::string);
   static int getPortFromPASVString(const std::string &);

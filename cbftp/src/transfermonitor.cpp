@@ -15,6 +15,7 @@
 #include "transferstatus.h"
 #include "localtransfer.h"
 #include "localdownload.h"
+#include "filesystem.h"
 #include "util.h"
 
 extern GlobalContext * global;
@@ -106,8 +107,8 @@ void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileLis
     ssl = true;
   }
   localfl->touchFile(dfile);
-  if (!global->getLocalStorage()->directoryExistsWritable(dpath)) {
-    global->getLocalStorage()->createDirectoryRecursive(dpath);
+  if (!FileSystem::directoryExistsWritable(dpath)) {
+    FileSystem::createDirectoryRecursive(dpath);
   }
   if (!sls->getSite()->hasBrokenPASV()) {
     sls->preparePassiveTransfer(src, spath, sfile, false, ssl);

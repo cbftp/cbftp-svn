@@ -7,6 +7,7 @@
 #include "core/tickpoke.h"
 #include "globalcontext.h"
 #include "transfermonitor.h"
+#include "filesystem.h"
 
 extern GlobalContext * global;
 
@@ -39,7 +40,7 @@ void LocalTransfer::tick(int) {
 }
 
 void LocalTransfer::openFile(bool read) {
-  if (access(path.c_str(), read ? R_OK : (R_OK | W_OK)) < 0) {
+  if (read ? !FileSystem::fileExistsReadable(path) : !FileSystem::fileExistsWritable(path)) {
     perror(std::string("There was an error accessing " + path).c_str());
     exit(1);
   }

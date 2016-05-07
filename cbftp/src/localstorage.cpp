@@ -261,64 +261,6 @@ unsigned long long int LocalStorage::getFileSize(const std::string & file) {
   return status.st_size;
 }
 
-bool LocalStorage::directoryExistsWritable(const std::string & path) {
-  return directoryExistsAccessible(path, true);
-}
-
-bool LocalStorage::directoryExistsReadable(const std::string & path) {
-  return directoryExistsAccessible(path, false);
-}
-
-bool LocalStorage::directoryExistsAccessible(const std::string & path, bool write) {
-  int how = write ? R_OK | W_OK : R_OK;
-  if (access(path.c_str(), how) == 0) {
-    struct stat status;
-    stat(path.c_str(), &status);
-    if (status.st_mode & S_IFDIR) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool LocalStorage::createDirectory(const std::string & path) {
-  return createDirectory(path, false);
-}
-
-bool LocalStorage::createDirectory(const std::string & path, bool privatedir) {
-  mode_t mode = privatedir ? 0700 : 0755;
-  return mkdir(path.c_str(), mode) >= 0;
-}
-
-bool LocalStorage::createDirectoryRecursive(std::string path) {
-  std::list<std::string> pathdirs;
-  if (path.length() == 0) {
-    return false;
-  }
-  if (path[0] == '/') {
-    path = path.substr(1);
-  }
-  size_t slashpos;
-  while ((slashpos = path.find("/")) != std::string::npos) {
-    pathdirs.push_back(path.substr(0, slashpos));
-    path = path.substr(slashpos + 1);
-  }
-  if (path.length()) {
-    pathdirs.push_back(path);
-  }
-  std::string partialpath;
-  while (pathdirs.size() > 0) {
-    partialpath += "/" + pathdirs.front();
-    pathdirs.pop_front();
-    if (!directoryExistsReadable(partialpath)) {
-      if (!createDirectory(partialpath)) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
 bool LocalStorage::getUseActiveModeAddress() const {
   return useactivemodeaddress;
 }
