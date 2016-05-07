@@ -3,29 +3,28 @@
 #include <string>
 #include <vector>
 
-#define READBLOCKSIZE 256
+#include "core/types.h"
 
 class DataFileHandler {
 private:
-  unsigned char * rawdata;
-  int rawdatalen;
+  BinaryData rawdata;
   std::vector<std::string> decryptedlines;
   std::vector<std::string> outputlines;
   std::string path;
   std::string key;
-  std::string filehash;
+  BinaryData filehash;
   bool fileexists;
   bool initialized;
 public:
   DataFileHandler();
-  bool readEncrypted(std::string);
+  bool readEncrypted(const std::string &);
   bool readPlain();
-  void newDataFile(std::string);
+  void newDataFile(const std::string &);
   void writeFile();
-  bool changeKey(std::string, std::string);
+  bool changeKey(const std::string &, const std::string &);
   bool fileExists() const;
   bool isInitialized() const;
   void clearOutputData();
-  void addOutputLine(std::string, std::string);
-  void getDataFor(std::string, std::vector<std::string> *);
+  void addOutputLine(const std::string &, const std::string &);
+  void getDataFor(const std::string &, std::vector<std::string> *);
 };

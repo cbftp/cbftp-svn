@@ -12,6 +12,7 @@
 #include "localstorage.h"
 #include "localfilelist.h"
 #include "localfile.h"
+#include "filesystem.h"
 
 extern GlobalContext * global;
 
@@ -25,7 +26,7 @@ TransferJob::TransferJob(unsigned int id, SiteLogic * sl, std::string srcfile, F
       id(id)
 {
   init();
-  if (global->getLocalStorage()->directoryExistsWritable(path)) {
+  if (FileSystem::directoryExistsWritable(path)) {
     locallist = global->getLocalStorage()->getLocalFileList(path);
   }
   if (srclist->getFile(srcfile)->isDirectory()) {
@@ -49,7 +50,7 @@ TransferJob::TransferJob(unsigned int id, std::string path, std::string srcfile,
 {
   init();
   type = TRANSFERJOB_UPLOAD;
-  if (global->getLocalStorage()->directoryExistsReadable(path)) {
+  if (FileSystem::directoryExistsReadable(path)) {
     locallist = global->getLocalStorage()->getLocalFileList(path);
     std::map<std::string, LocalFile>::const_iterator it = locallist->find(srcfile);
     if (it != locallist->end() && it->second.isDirectory()) {
