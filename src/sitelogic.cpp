@@ -1278,6 +1278,7 @@ void SiteLogic::setNumConnections(unsigned int num) {
     slotsdn -= (maxslotsdn - site->getMaxDown());
     maxslotsdn = site->getMaxDown();
   }
+  ptrack->updateSlots(site->getMaxDown());
 }
 
 bool SiteLogic::downloadSlotAvailable() const {
@@ -1316,17 +1317,20 @@ bool SiteLogic::getSlot(bool isdownload) {
   return true;
 }
 
-void SiteLogic::pushPotential(int score, std::string file, SiteLogic * dst) {
-  int threads = getSite()->getMaxDown();
-  ptrack->getFront()->update(dst, threads, dst->getSite()->getMaxDown(), score, file);
+void SiteLogic::pushPotential(int score, const std::string & file, SiteLogic * dst) {
+  ptrack->pushPotential(score, file, dst, dst->getSite()->getMaxUp());
 }
 
 bool SiteLogic::potentialCheck(int score) {
   int max = ptrack->getMaxAvailablePotential();
-  if (score > max/2) {
+  if (score > max * 0.65) {
     return true;
   }
   return false;
+}
+
+int SiteLogic::getPotential() {
+  return ptrack->getMaxAvailablePotential();
 }
 
 void SiteLogic::updateName() {

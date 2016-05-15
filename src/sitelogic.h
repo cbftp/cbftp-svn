@@ -144,8 +144,9 @@ class SiteLogic : public EventReceiver {
     FileList * getFileList(int) const;
     std::string getRawCommandResult(int);
     bool finishRequest(int);
-    void pushPotential(int, std::string, SiteLogic *);
+    void pushPotential(int, const std::string &, SiteLogic *);
     bool potentialCheck(int);
+    int getPotential();
     void updateName();
     const std::vector<FTPConn *> * getConns() const;
     FTPConn * getConn(int) const;

@@ -8,7 +8,7 @@ class PotentialElement {
   private:
     SiteLogic * site;
     int potential;
-    int site_dnslots;
+    int dnslots;
     std::string filename;
   public:
     PotentialElement();
@@ -16,5 +16,6 @@ class PotentialElement {
     int getSiteDownloadSlots() const;
     int getPotential() const;
     std::string getFileName() const;
-    void update(SiteLogic *, int, int, std::string);
+    void reset();
+    void update(SiteLogic *, int, int, const std::string &);
 };

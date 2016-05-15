@@ -1,9 +1,6 @@
 #include "potentialelement.h"
 
-PotentialElement::PotentialElement() {
-  this->site = NULL;
-  this->potential = 0;
-  this->site_dnslots = 0;
+PotentialElement::PotentialElement() : site(NULL), potential(0), dnslots(0) {
 }
 
 SiteLogic * PotentialElement::getSite() const {
@@ -14,15 +11,22 @@ int PotentialElement::getPotential() const {
   return potential;
 }
 
-void PotentialElement::update(SiteLogic * site, int site_dnslots, int potential, std::string filename) {
+void PotentialElement::update(SiteLogic * site, int dnslots, int potential, const std::string & filename) {
   this->site = site;
-  this->site_dnslots = site_dnslots;
+  this->dnslots = dnslots;
   this->potential = potential;
   this->filename = filename;
 }
 
+void PotentialElement::reset() {
+  site = NULL;
+  potential = 0;
+  dnslots = 0;
+  filename = "";
+}
+
 int PotentialElement::getSiteDownloadSlots() const {
-  return site_dnslots;
+  return dnslots;
 }
 
 std::string PotentialElement::getFileName() const {

@@ -1,6 +1,10 @@
 #include "scoreboardscreen.h"
 
 #include "../ui.h"
+#include "../menuselectadjustableline.h"
+#include "../menuselectoptionelement.h"
+#include "../menuselectoptiontextbutton.h"
+#include "../resizableelement.h"
 
 #include "../../globalcontext.h"
 #include "../../scoreboard.h"
@@ -29,27 +33,44 @@ void ScoreBoardScreen::initialize(unsigned int row, unsigned int col) {
 
 void ScoreBoardScreen::redraw() {
   ui->erase();
+  unsigned int y = 0;
+  table.clear();
+  Pointer<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
+  Pointer<MenuSelectOptionTextButton> msotb;
+  msotb = table.addTextButtonNoContent(y, 1, "filename", "FILE NAME");
+  msal->addElement(msotb, 1, RESIZE_CUTEND, true);
+  msotb = table.addTextButtonNoContent(y, 2, "sites", "SITES");
+  msal->addElement(msotb, 2, RESIZE_REMOVE);
+  msotb = table.addTextButtonNoContent(y, 3, "potential", "POTENTIAL");
+  msal->addElement(msotb, 3, RESIZE_REMOVE);
+  msotb = table.addTextButtonNoContent(y, 4, "score", "SCORE");
+  msal->addElement(msotb, 4, RESIZE_REMOVE);
+
+  y++;
   std::vector<ScoreBoardElement *>::const_iterator it;
-  unsigned int i = 2;
-  ui->printStr(0, 1, "Filename");
-  ui->printStr(1, 1, "--------");
-  ui->printStr(0, col - 7, "Score");
-  ui->printStr(1, col - 7, "-----");
-  ui->printStr(0, col - 21, "Sites");
-  ui->printStr(1, col - 21, "-----");
-  for (it = scoreboard->begin(); it != scoreboard->end() && i < row; it++, i++) {
-    std::string score = util::int2Str((*it)->getScore());
-    std::string src = (*it)->getSource()->getSite()->getName();
-    if (src.length() > 4) {
-      src = src.substr(0, 4);
+  for (it = scoreboard->begin(); it != scoreboard->end() && y < row; it++, y++) {
+    std::string sites = (*it)->getSource()->getSite()->getName() + " -> " + (*it)->getDestination()->getSite()->getName();
+    msal = table.addAdjustableLine();
+    msotb = table.addTextButtonNoContent(y, 1, "filename", (*it)->fileName());
+    msal->addElement(msotb, 1, RESIZE_CUTEND, true);
+    msotb = table.addTextButtonNoContent(y, 2, "sites", sites);
+    msal->addElement(msotb, 2, RESIZE_REMOVE);
+    msotb = table.addTextButtonNoContent(y, 3, "potential", util::int2Str((*it)->getSource()->getPotential()));
+    msal->addElement(msotb, 3, RESIZE_REMOVE);
+    msotb = table.addTextButtonNoContent(y, 4, "score", util::int2Str((*it)->getScore()));
+    msal->addElement(msotb, 4, RESIZE_REMOVE);
+  }
+  table.adjustLines(col - 3);
+  bool highlight;
+  for (unsigned int i = 0; i < table.size(); i++) {
+    Pointer<ResizableElement> re = table.getElement(i);
+    highlight = false;
+    if (table.getSelectionPointer() == i) {
+      //highlight = true; // later problem
     }
-    std::string dst = (*it)->getDestination()->getSite()->getName();
-    if (dst.length() > 4) {
-      dst = dst.substr(0, 4);
+    if (re->isVisible()) {
+      ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
     }
-    ui->printStr(i, 1, (*it)->fileName());
-    ui->printStr(i, col - 21, src + " -> " + dst);
-    ui->printStr(i, col - score.length() - 2, score);
   }
 }
 
