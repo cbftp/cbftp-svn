@@ -11,8 +11,10 @@ class PotentialListElement {
     std::vector<PotentialElement *> slots;
   public:
     PotentialListElement(int);
-    void update(SiteLogic *, int, int, int, std::string);
+    ~PotentialListElement();
+    void update(SiteLogic *, int, int, const std::string &);
     void reset();
     std::vector<PotentialElement *> & getSlotsVector();
-    bool allThreadsUsedForSite(SiteLogic *, int) const;
+    void updateSlots(int);
+    bool allSlotsUsedForSite(SiteLogic *, int) const;
 };

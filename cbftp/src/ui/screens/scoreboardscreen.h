@@ -3,6 +3,7 @@
 #include "../../core/pointer.h"
 
 #include "../uiwindow.h"
+#include "../menuselectoption.h"
 
 class Engine;
 class ScoreBoard;
@@ -21,4 +22,5 @@ public:
 private:
   Engine * engine;
   Pointer<ScoreBoard> scoreboard;
+  MenuSelectOption table;
 };

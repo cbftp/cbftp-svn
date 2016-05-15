@@ -26,7 +26,8 @@ class PotentialTracker : private EventReceiver {
     PotentialTracker(int);
     ~PotentialTracker();
     int getMaxAvailablePotential();
-    PotentialListElement * getFront() const;
+    void pushPotential(int, const std::string &, SiteLogic *, int);
     std::list<PotentialElement *>::iterator findFirstOfSite(SiteLogic *);
+    void updateSlots(int);
     bool allTopSlotsUsedForSite(PotentialElement *) const;
 };

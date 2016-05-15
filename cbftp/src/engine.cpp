@@ -28,27 +28,17 @@
 
 extern GlobalContext * global;
 
-int getPriorityPoints(int priority) {
-  switch (priority) {
-    case SITE_PRIORITY_VERY_LOW:
-      return 0;
-    case SITE_PRIORITY_LOW:
-      return 500;
-    case SITE_PRIORITY_NORMAL:
-      return 1000;
-    case SITE_PRIORITY_HIGH:
-      return 1500;
-    case SITE_PRIORITY_VERY_HIGH:
-      return 2000;
-  }
-  return 1000;
-}
-
 Engine::Engine() :
   scoreboard(makePointer<ScoreBoard>()),
   maxavgspeed(1024),
   pokeregistered(false),
-  nextid(0) {
+  nextid(0),
+  maxpointsfilesize(2000),
+  maxpointsavgspeed(3000),
+  maxpointspriority(2500),
+  maxpointspercentageowned(2000),
+  maxpointslowprogress(2000)
+{
 }
 
 Engine::~Engine() {
@@ -118,7 +108,6 @@ Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, con
         + section + " on less than 2 sites.");
     return Pointer<Race>();
   }
-  bool readdtocurrent = true;
   if (addsites.size() > 0 || append) {
     checkStartPoke();
     if (profile == SPREAD_PREPARE) {
@@ -130,6 +119,7 @@ Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, con
       }
       return Pointer<Race>();
     }
+    bool readdtocurrent = true;
     if (append) {
       for (std::list<Pointer<Race> >::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
         if (*it == race) {
@@ -163,6 +153,7 @@ Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, con
           " with " + util::int2Str((int)addsites.size()) + " site" + (addsites.size() > 1 ? "s" : "") + ".");
     }
     setSpeedScale();
+    preSeedPotentialData(race);
   }
   return race;
 }
@@ -488,20 +479,7 @@ void Engine::refreshScoreBoard() {
       for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator itd = race->begin(); itd != race->end(); itd++) {
         SiteRace * srd = itd->first;
         SiteLogic * sld = itd->second;
-        if (sls == sld) continue;
-        if (!sld->getSite()->getAllowUpload()) continue;
-        if (global->getSiteManager()->isBlockedPair(sls->getSite(), sld->getSite())) continue;
-        if (sld->getSite()->isAffiliated(race->getGroup())) continue;
-        if (sls->getSite()->hasBrokenPASV() &&
-            sld->getSite()->hasBrokenPASV()) continue;
-        //ssl check
-        if ((sls->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_OFF &&
-            sld->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_ON) ||
-            (sls->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_ON &&
-                sld->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_OFF)) {
-          continue;
-        }
-        if (!global->getSiteManager()->testRankCompatibility(*sls->getSite(), *sld->getSite())) continue;
+        if (!raceTransferPossible(sls, sld, race)) continue;
         int avgspeed = sls->getSite()->getAverageSpeed(sld->getSite()->getName());
         if (avgspeed > maxavgspeed) {
           avgspeed = maxavgspeed;
@@ -810,41 +788,52 @@ void Engine::transferJobComplete(Pointer<TransferJob> tj) {
 }
 
 unsigned short Engine::calculateScore(File * f, Pointer<Race> & itr, FileList * fls, SiteRace * srs, FileList * fld, SiteRace * srd, int avgspeed, bool * prio, int prioritypoints, bool racemode) const {
-  unsigned short points = 0;
-  unsigned long long int filesize = f->getSize();
-  unsigned long long int maxfilesize = srs->getMaxFileSize();
-  if (filesize > maxfilesize) {
-    maxfilesize = filesize;
-  }
-  points += 100 + filesize / ((maxfilesize + 1900) / 1900); // gives max 2000 points
-  points = points / 2 + (points * (avgspeed / 100)) / (maxavgspeed / 100); // add or remove max 1000 points
-  if (racemode) {
-    // give points for owning a low percentage of the race on the target
-    points += ((100 - fld->getOwnedPercentage()) * 30); // gives max 3000 points
-  }
-  else {
-    // give points for low progress on the target
-    int maxprogress = itr->getMaxSiteNumFilesProgress();
-    if (maxprogress > 0) {
-      points += 3000 - ((fld->getNumUploadedFiles() * 3000) / maxprogress); // gives max 3000 points
-    }
-  }
-  points += prioritypoints; // max 2000 points
-
   // sfv and nfo files have top priority
   if (f->getExtension().compare("sfv") == 0 ||
       f->getExtension().compare("nfo") == 0) {
     *prio = true;
     return 10000;
   }
-  if (points > 10000 || points <= 0) {
-    global->getEventLog()->log("Engine", "BUG: unexpected score. Avgspeed: " +
-        util::int2Str(avgspeed) + " Maxavgspeed: " + util::int2Str(maxavgspeed) +
-        " Filesize: " + util::int2Str(f->getSize()) + " Maxfilesize: " +
-        util::int2Str(srs->getMaxFileSize()) + " Ownedpercentage: " +
-        util::int2Str(fld->getOwnedPercentage()) + " Maxprogress: " +
-        util::int2Str(itr->getMaxSiteNumFilesProgress()));
+
+  unsigned short points = 0;
+  unsigned long long int filesize = f->getSize();
+  unsigned long long int maxfilesize = srs->getMaxFileSize();
+  if (avgspeed > maxavgspeed) {
+    avgspeed = maxavgspeed;
   }
+  if (filesize > maxfilesize) {
+    maxfilesize = filesize;
+  }
+
+  if (maxfilesize) {
+    unsigned long long int pointsfilesize = maxpointsfilesize;
+    pointsfilesize *= filesize;
+    pointsfilesize /= maxfilesize;
+    points += pointsfilesize;
+  }
+
+  points += getSpeedPoints(avgspeed);
+
+  if (racemode) {
+    unsigned long long int pointspercentageowned = maxpointspercentageowned;
+    int unownedpercentage = 100 - fld->getOwnedPercentage();
+    pointspercentageowned *= unownedpercentage;
+    pointspercentageowned /= 100;
+    points += pointspercentageowned;
+  }
+  else {
+    unsigned long long int pointslowprogress = maxpointslowprogress;
+    int maxprogress = itr->getMaxSiteNumFilesProgress();
+    if (maxprogress) {
+      pointslowprogress *= fld->getNumUploadedFiles();
+      pointslowprogress /= maxprogress;
+      points += pointslowprogress;
+    }
+  }
+
+  points += prioritypoints;
+
+  util::assert(points >= 0 && points < 10000);
   return points;
 }
 
@@ -858,6 +847,56 @@ void Engine::setSpeedScale() {
       }
     }
   }
+}
+
+void Engine::preSeedPotentialData(Pointer<Race> & race) {
+  race->begin();
+  std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator srcit;
+  std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator dstit;
+  int highestprioritypoints = 0;
+  int maxpointsexceptavgspeed = getMaxPointsFileSize() + getMaxPointsPriority() + getMaxPointsPercentageOwned();
+  for (srcit = race->begin(); srcit != race->end(); srcit++) {
+    int priopoints = getPriorityPoints(srcit->second->getSite()->getPriority());
+    if (priopoints > highestprioritypoints) {
+      highestprioritypoints = priopoints;
+    }
+  }
+  for (srcit = race->begin(); srcit != race->end(); srcit++) {
+    SiteLogic * sls = srcit->second;
+    if (!sls->getSite()->getAllowDownload()) continue;
+    int maxavgspeed = 0;
+    for (dstit = race->begin(); dstit != race->end(); dstit++) {
+      SiteLogic * sld = dstit->second;
+      if (!raceTransferPossible(sls, sld, race)) continue;
+      int avgspeed = sls->getSite()->getAverageSpeed(sld->getSite()->getName());
+      if (avgspeed > maxavgspeed) {
+        maxavgspeed = avgspeed;
+      }
+    }
+    for (dstit = race->begin(); dstit != race->end(); dstit++) {
+      SiteLogic * sld = dstit->second;
+      if (!raceTransferPossible(sls, sld, race)) continue;
+      sls->pushPotential(maxpointsexceptavgspeed + getSpeedPoints(maxavgspeed), "preseed", sld);
+    }
+  }
+}
+
+bool Engine::raceTransferPossible(SiteLogic * sls, SiteLogic * sld, Pointer<Race> & race) const {
+  if (sls == sld) return false;
+  if (!sld->getSite()->getAllowUpload()) return false;
+  if (global->getSiteManager()->isBlockedPair(sls->getSite(), sld->getSite())) return false;
+  if (sld->getSite()->isAffiliated(race->getGroup())) return false;
+  if (sls->getSite()->hasBrokenPASV() &&
+      sld->getSite()->hasBrokenPASV()) return false;
+  //ssl check
+  if ((sls->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_OFF &&
+      sld->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_ON) ||
+      (sls->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_ON &&
+          sld->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_OFF)) {
+    return false;
+  }
+  if (!global->getSiteManager()->testRankCompatibility(*sls->getSite(), *sld->getSite())) return false;
+  return true;
 }
 
 int Engine::preparedRaces() const {
@@ -1015,4 +1054,54 @@ bool Engine::checkBannedGroup(Site * site, const std::string & group) {
     return true;
   }
   return false;
+}
+
+int Engine::getMaxPointsRaceTotal() const {
+  return getMaxPointsFileSize() + getMaxPointsAvgSpeed() + getMaxPointsPriority() + getMaxPointsPercentageOwned();
+}
+
+int Engine::getMaxPointsFileSize() const {
+  return maxpointsfilesize;
+}
+
+int Engine::getMaxPointsAvgSpeed() const {
+  return maxpointsavgspeed;
+}
+
+int Engine::getMaxPointsPriority() const {
+  return maxpointspriority;
+}
+
+int Engine::getMaxPointsPercentageOwned() const {
+  return maxpointspercentageowned;
+}
+
+int Engine::getMaxPointsLowProgress() const {
+  return maxpointslowprogress;
+}
+
+int Engine::getPriorityPoints(int priority) const {
+  switch (priority) {
+    case SITE_PRIORITY_VERY_LOW:
+      return 0;
+    case SITE_PRIORITY_LOW:
+      return maxpointspriority * 0.2;
+    case SITE_PRIORITY_NORMAL:
+      return maxpointspriority * 0.4;
+    case SITE_PRIORITY_HIGH:
+      return maxpointspriority * 0.6;
+    case SITE_PRIORITY_VERY_HIGH:
+      return maxpointspriority;
+  }
+  return 0;
+}
+
+int Engine::getSpeedPoints(int avgspeed) const {
+  if (maxavgspeed) {
+    unsigned long long int pointsavgspeed = maxpointsavgspeed;
+    pointsavgspeed *= avgspeed;
+    pointsavgspeed /= maxavgspeed;
+    return pointsavgspeed;
+  }
+  return 0;
 }
