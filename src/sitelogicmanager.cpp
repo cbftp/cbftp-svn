@@ -5,8 +5,6 @@
 #include "globalcontext.h"
 #include "sitemanager.h"
 
-extern GlobalContext * global;
-
 SiteLogicManager::SiteLogicManager() {
 }
 

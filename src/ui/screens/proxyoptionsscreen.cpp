@@ -12,8 +12,6 @@
 #include "../../eventlog.h"
 #include "../../util.h"
 
-extern GlobalContext * global;
-
 ProxyOptionsScreen::ProxyOptionsScreen(Ui * ui) {
   this->ui = ui;
 }

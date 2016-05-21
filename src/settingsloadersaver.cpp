@@ -21,8 +21,6 @@
 
 #define AUTO_SAVE_INTERVAL 600000 // 10 minutes
 
-extern GlobalContext * global;
-
 SettingsLoaderSaver::SettingsLoaderSaver() :
   dfh(makePointer<DataFileHandler>()){
 

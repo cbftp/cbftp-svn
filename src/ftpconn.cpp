@@ -21,8 +21,6 @@
 #include "proxymanager.h"
 #include "util.h"
 
-extern GlobalContext * global;
-
 #define FTPCONN_TICK_INTERVAL 1000
 
 FTPConn::FTPConn(SiteLogic * sl, int id) {

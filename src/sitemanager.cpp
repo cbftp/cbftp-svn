@@ -11,8 +11,6 @@
 #include "util.h"
 #include "site.h"
 
-extern GlobalContext * global;
-
 SiteManager::SiteManager() {
   defaultusername = DEFAULTUSERNAME;
   defaultpassword = DEFAULTPASSWORD;

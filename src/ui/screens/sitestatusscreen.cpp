@@ -11,8 +11,6 @@
 
 #include "../ui.h"
 
-extern GlobalContext * global;
-
 SiteStatusScreen::SiteStatusScreen(Ui * ui) {
   this->ui = ui;
 }

@@ -13,8 +13,6 @@
 
 #include "browsescreenaction.h"
 
-extern GlobalContext * global;
-
 BrowseScreenSelector::BrowseScreenSelector(Ui * ui) :
   ui(ui),
   focus(true),

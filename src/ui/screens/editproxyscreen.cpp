@@ -8,8 +8,6 @@
 #include "../../globalcontext.h"
 #include "../../proxymanager.h"
 
-extern GlobalContext * global;
-
 EditProxyScreen::EditProxyScreen(Ui * ui) {
   this->ui = ui;
 }

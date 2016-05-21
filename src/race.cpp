@@ -12,8 +12,6 @@
 #include "globalcontext.h"
 #include "transferstatus.h"
 
-extern GlobalContext * global;
-
 Race::Race(unsigned int id, SpreadProfile profile, std::string release, std::string section) :
   name(release),
   group(util::getGroupNameFromRelease(release)),

@@ -14,8 +14,6 @@
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptiontextbutton.h"
 
-extern GlobalContext * global;
-
 NukeScreen::NukeScreen(Ui * ui) {
   this->ui = ui;
 }

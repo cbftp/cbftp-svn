@@ -9,8 +9,6 @@
 #include "../../externalfileviewing.h"
 #include "../../localstorage.h"
 
-extern GlobalContext * global;
-
 FileViewerSettingsScreen::FileViewerSettingsScreen(Ui * ui) {
   this->ui = ui;
 }

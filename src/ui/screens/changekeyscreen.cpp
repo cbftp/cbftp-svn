@@ -8,8 +8,6 @@
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptionelement.h"
 
-extern GlobalContext * global;
-
 ChangeKeyScreen::ChangeKeyScreen(Ui * ui) {
   this->ui = ui;
 }

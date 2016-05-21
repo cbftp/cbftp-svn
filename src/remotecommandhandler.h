@@ -23,6 +23,7 @@ private:
   void commandFXP(const std::string &);
   void commandDownload(const std::string &);
   void commandUpload(const std::string &);
+  void commandIdle(const std::string &);
   void parseRace(const std::string &, bool);
 public:
   RemoteCommandHandler();

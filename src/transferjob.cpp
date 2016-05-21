@@ -14,8 +14,6 @@
 #include "localfile.h"
 #include "filesystem.h"
 
-extern GlobalContext * global;
-
 TransferJob::TransferJob(unsigned int id, SiteLogic * sl, std::string srcfile, FileList * filelist, std::string path, std::string dstfile) :
       src(sl),
       dst(NULL),

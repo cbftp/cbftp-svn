@@ -13,8 +13,6 @@
 #include "../menuselectoptiontextarrow.h"
 #include "../resizableelement.h"
 
-extern GlobalContext * global;
-
 SkipListScreen::SkipListScreen(Ui * ui) {
   this->ui = ui;
   table.makeLeavableUp();

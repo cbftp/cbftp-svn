@@ -17,8 +17,6 @@
 #include "../menuselectoptiontextbutton.h"
 #include "../menuselectoptionelement.h"
 
-extern GlobalContext * global;
-
 GlobalOptionsScreen::GlobalOptionsScreen(Ui * ui) {
   this->ui = ui;
 }

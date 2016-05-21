@@ -11,8 +11,6 @@
 #include "../../transfermanager.h"
 #include "../../util.h"
 
-extern GlobalContext * global;
-
 TransfersScreen::TransfersScreen(Ui * ui) {
   this->ui = ui;
   tm = global->getTransferManager();

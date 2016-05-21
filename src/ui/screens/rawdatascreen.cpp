@@ -10,8 +10,6 @@
 
 #include "../ui.h"
 
-extern GlobalContext * global;
-
 RawDataScreen::RawDataScreen(Ui * ui) {
   this->ui = ui;
 }

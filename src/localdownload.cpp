@@ -13,8 +13,6 @@
 #include "ftpconn.h"
 #include "localstorage.h"
 
-extern GlobalContext * global;
-
 LocalDownload::LocalDownload(LocalStorage * ls) :
   ls(ls)
 {

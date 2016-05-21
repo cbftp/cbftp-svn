@@ -13,8 +13,6 @@
 #include "../menuselectoptionelement.h"
 #include "../focusablearea.h"
 
-extern GlobalContext * global;
-
 NewRaceScreen::NewRaceScreen(Ui * ui) {
   this->ui = ui;
 }

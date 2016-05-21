@@ -5,8 +5,6 @@
 #include "../eventlog.h"
 #include "../globalcontext.h"
 
-extern GlobalContext * global;
-
 LegendWindow::LegendWindow(Ui * ui, WINDOW * window, int row, int col) {
   this->ui = ui;
   this->window = window;

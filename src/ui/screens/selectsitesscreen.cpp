@@ -8,8 +8,6 @@
 #include "../../site.h"
 #include "../../globalcontext.h"
 
-extern GlobalContext * global;
-
 SelectSitesScreen::SelectSitesScreen(Ui * ui) {
   this->ui = ui;
 }

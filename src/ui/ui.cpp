@@ -48,8 +48,6 @@
 #include "screens/allracesscreen.h"
 #include "screens/alltransferjobsscreen.h"
 
-extern GlobalContext * global;
-
 static Ui * instance = new Ui();
 
 static void sighandler(int signal) {

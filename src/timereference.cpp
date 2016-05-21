@@ -5,8 +5,6 @@
 #include "core/tickpoke.h"
 #include "globalcontext.h"
 
-extern GlobalContext * global;
-
 #define INTERVAL 50
 
 static int currentyear = 0;

@@ -15,8 +15,6 @@
 
 #include "browsescreenaction.h"
 
-extern GlobalContext * global;
-
 BrowseScreenLocal::BrowseScreenLocal(Ui * ui) : ui(ui), currentviewspan(0),
     focus(true), changedsort(false), cwdfailed(false), tickcount(0),
     resort(false), sortmethod(0), gotomode(false), gotomodefirst(false),

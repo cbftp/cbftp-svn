@@ -10,8 +10,6 @@
 
 #define MAX_TRANSFER_HISTORY 100
 
-extern GlobalContext * global;
-
 TransferManager::TransferManager() {
 }
 

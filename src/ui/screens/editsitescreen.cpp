@@ -18,8 +18,6 @@
 #include "../menuselectoptioncheckbox.h"
 #include "../menuselectoptiontextarrow.h"
 
-extern GlobalContext * global;
-
 EditSiteScreen::EditSiteScreen(Ui * ui) {
   this->ui = ui;
 }

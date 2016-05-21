@@ -14,8 +14,6 @@
 #include "../../site.h"
 #include "../../util.h"
 
-extern GlobalContext * global;
-
 ScoreBoardScreen::ScoreBoardScreen(Ui * ui) {
   this->ui = ui;
 }

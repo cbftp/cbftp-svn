@@ -9,8 +9,6 @@
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptionelement.h"
 
-extern GlobalContext * global;
-
 AddSectionScreen::AddSectionScreen(Ui * ui) {
   this->ui = ui;
 }

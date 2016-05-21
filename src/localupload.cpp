@@ -13,8 +13,6 @@
 #include "localstorage.h"
 #include "util.h"
 
-extern GlobalContext * global;
-
 LocalUpload::LocalUpload() :
   filepos(0)
 {
