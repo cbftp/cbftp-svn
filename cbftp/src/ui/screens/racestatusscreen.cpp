@@ -16,8 +16,6 @@
 #include "../ui.h"
 #include "../menuselectoptiontextbutton.h"
 
-extern GlobalContext * global;
-
 RaceStatusScreen::RaceStatusScreen(Ui * ui) {
   this->ui = ui;
   defaultlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [r]eset race - A[B]ort race";

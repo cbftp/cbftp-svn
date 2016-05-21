@@ -9,8 +9,6 @@
 #include "transfermonitor.h"
 #include "filesystem.h"
 
-extern GlobalContext * global;
-
 LocalTransfer::LocalTransfer() :
   inuse(false),
   buflen(0)

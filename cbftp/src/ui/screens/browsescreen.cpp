@@ -19,8 +19,6 @@
 #include "browsescreenaction.h"
 #include "browsescreenlocal.h"
 
-extern GlobalContext * global;
-
 BrowseScreen::BrowseScreen(Ui * ui) {
   this->ui = ui;
 }

@@ -13,8 +13,6 @@
 #include "../../engine.h"
 #include "../../transferjob.h"
 
-extern GlobalContext * global;
-
 AllTransferJobsScreen::AllTransferJobsScreen(Ui * ui) {
   this->ui = ui;
 }

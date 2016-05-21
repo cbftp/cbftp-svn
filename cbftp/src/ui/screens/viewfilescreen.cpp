@@ -20,9 +20,6 @@
 #include "../../util.h"
 #include "../../core/types.h"
 
-
-extern GlobalContext * global;
-
 namespace ViewFileState {
 
 enum {

@@ -26,8 +26,6 @@
 #include "allracesscreen.h"
 #include "alltransferjobsscreen.h"
 
-extern GlobalContext * global;
-
 MainScreen::MainScreen(Ui * ui) {
   this->ui = ui;
 }

@@ -8,8 +8,6 @@
 #include "util.h"
 #include "timereference.h"
 
-extern GlobalContext * global;
-
 SiteRace::SiteRace(Pointer<Race> race, std::string sitename, std::string section, std::string release, std::string username) :
   race(race),
   section(section),

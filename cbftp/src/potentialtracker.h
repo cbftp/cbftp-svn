@@ -9,12 +9,8 @@
 #define POTENTIALITY_LIFESPAN 3000
 #define POTENTIALITY_SLICES 10
 
-class GlobalContext;
 class PotentialElement;
 class PotentialListElement;
-
-extern GlobalContext * global;
-
 class SiteLogic;
 
 class PotentialTracker : private EventReceiver {

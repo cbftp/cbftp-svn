@@ -28,8 +28,6 @@
 #include "browsescreenaction.h"
 #include "rawdatascreen.h"
 
-extern GlobalContext * global;
-
 BrowseScreenSite::BrowseScreenSite(Ui * ui, std::string sitestr) {
   this->ui = ui;
   gotomodeticker = 0;

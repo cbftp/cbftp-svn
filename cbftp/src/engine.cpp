@@ -26,8 +26,6 @@
 #include "util.h"
 #include "preparedrace.h"
 
-extern GlobalContext * global;
-
 Engine::Engine() :
   scoreboard(makePointer<ScoreBoard>()),
   maxavgspeed(1024),

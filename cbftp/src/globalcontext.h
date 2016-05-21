@@ -60,3 +60,5 @@ class GlobalContext {
     ExternalFileViewing * getExternalFileViewing() const;
     TimeReference * getTimeReference() const;
 };
+
+extern GlobalContext * global;

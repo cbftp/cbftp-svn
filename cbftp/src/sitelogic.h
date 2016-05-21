@@ -15,7 +15,6 @@ class SiteRace;
 class FileList;
 class Site;
 class Race;
-class GlobalContext;
 class SiteLogicRequest;
 class SiteLogicRequestReady;
 class PotentialTracker;
@@ -38,8 +37,6 @@ class CommandOwner;
 #define REQ_DEL_RECURSIVE 2624
 #define REQ_DEL 2625
 #define REQ_NUKE 2626
-
-extern GlobalContext * global;
 
 class SiteLogic : public EventReceiver {
   private:

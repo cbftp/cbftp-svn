@@ -11,8 +11,6 @@
 #include "../../globalcontext.h"
 #include "../../util.h"
 
-extern GlobalContext * global;
-
 AllRacesScreen::AllRacesScreen(Ui * ui) {
   this->ui = ui;
 }

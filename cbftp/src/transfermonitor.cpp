@@ -18,8 +18,6 @@
 #include "filesystem.h"
 #include "util.h"
 
-extern GlobalContext * global;
-
 TransferMonitor::TransferMonitor(TransferManager * tm) :
   status(TM_STATUS_IDLE),
   clientactive(true),

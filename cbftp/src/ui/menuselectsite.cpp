@@ -9,8 +9,6 @@
 #include "termint.h"
 #include "menuselectsiteelement.h"
 
-extern GlobalContext * global;
-
 MenuSelectSite::MenuSelectSite() {
 }
 

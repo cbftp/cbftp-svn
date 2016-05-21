@@ -7,8 +7,6 @@
 #include "globalcontext.h"
 #include "timereference.h"
 
-extern GlobalContext * global;
-
 FileList::FileList(const std::string & username, const std::string & path) {
   this->username = username;
   this->path = path;

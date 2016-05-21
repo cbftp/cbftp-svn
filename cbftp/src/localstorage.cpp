@@ -19,8 +19,6 @@
 #include <grp.h>
 #include <vector>
 
-extern GlobalContext * global;
-
 LocalStorage::LocalStorage() :
   temppath("/tmp"),
   downloadpath(std::string(getenv("HOME")) + "/Downloads"),

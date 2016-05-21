@@ -21,8 +21,6 @@
 #include "timereference.h"
 #include "uibase.h"
 
-GlobalContext * global;
-
 namespace {
 
 class Main {
@@ -37,7 +35,6 @@ public:
     Pointer<EventLog> el = makePointer<EventLog>();
     iom->setLogger(el);
 
-    global = new GlobalContext();
     global->linkCore(wm, tp, iom, el);
 
     SettingsLoaderSaver * sls = new SettingsLoaderSaver();

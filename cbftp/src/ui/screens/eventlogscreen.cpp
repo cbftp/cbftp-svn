@@ -6,8 +6,6 @@
 
 #include "../ui.h"
 
-extern GlobalContext * global;
-
 EventLogScreen::EventLogScreen(Ui * ui) {
   this->ui = ui;
 }

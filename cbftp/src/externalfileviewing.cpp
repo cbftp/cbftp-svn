@@ -15,8 +15,6 @@
 #include "localstorage.h"
 #include "eventlog.h"
 
-extern GlobalContext * global;
-
 namespace {
 
 static ExternalFileViewing * instance = NULL;

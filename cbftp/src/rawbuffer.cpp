@@ -4,8 +4,6 @@
 #include "globalcontext.h"
 #include "util.h"
 
-extern GlobalContext * global;
-
 RawBuffer::RawBuffer(unsigned int maxlength, std::string site, std::string id) :
   latestp(0),
   latestpcopy(0),

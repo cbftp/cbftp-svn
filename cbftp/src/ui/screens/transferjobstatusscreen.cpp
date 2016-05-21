@@ -16,8 +16,6 @@
 #include "../../site.h"
 #include "../../util.h"
 
-extern GlobalContext * global;
-
 TransferJobStatusScreen::TransferJobStatusScreen(Ui * ui) {
   this->ui = ui;
 }

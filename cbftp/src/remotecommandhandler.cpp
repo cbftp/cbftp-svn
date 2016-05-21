@@ -20,8 +20,6 @@
 #define DEFAULTPASS "DEFAULT"
 #define RETRYDELAY 30000
 
-extern GlobalContext * global;
-
 RemoteCommandHandler::RemoteCommandHandler() :
   enabled(false),
   password(DEFAULTPASS),
@@ -123,6 +121,9 @@ void RemoteCommandHandler::handleMessage(std::string message) {
   else if (command == "upload") {
     commandUpload(remainder);
   }
+  else if (command == "idle") {
+    commandIdle(remainder);
+  }
   else {
     global->getEventLog()->log("RemoteCommandHandler", "Invalid remote command: " + message);
     return;
@@ -187,6 +188,10 @@ void RemoteCommandHandler::commandDownload(const std::string & message) {
 }
 
 void RemoteCommandHandler::commandUpload(const std::string & message) {
+
+}
+
+void RemoteCommandHandler::commandIdle(const std::string & message) {
 
 }
 

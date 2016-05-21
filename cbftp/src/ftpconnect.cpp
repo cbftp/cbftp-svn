@@ -9,8 +9,6 @@
 #include "proxy.h"
 #include "util.h"
 
-extern GlobalContext * global;
-
 FTPConnect::FTPConnect(int id, FTPConnectOwner * owner, const std::string & addr, const std::string & port, Proxy * proxy, bool primary) :
   id(id),
   sockid(-1),

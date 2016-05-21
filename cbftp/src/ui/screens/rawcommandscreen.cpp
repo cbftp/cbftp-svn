@@ -11,8 +11,6 @@
 
 #include "rawdatascreen.h"
 
-extern GlobalContext * global;
-
 RawCommandScreen::RawCommandScreen(Ui * ui) {
   this->ui = ui;
 }
