@@ -23,24 +23,26 @@
 
 #define FTPCONN_TICK_INTERVAL 1000
 
-FTPConn::FTPConn(SiteLogic * sl, int id) {
-  this->sl = sl;
-  this->id = id;
-  this->site = sl->getSite();
-  this->status = "disconnected";
-  nextconnectorid = 0;
-  processing = false;
-  rawbuf = new RawBuffer(RAWBUFMAXLEN, site->getName(), util::int2Str(id));
-  aggregatedrawbuf = sl->getAggregatedRawBuffer();
-  iom = global->getIOManager();
-  databuflen = DATABUF;
-  databuf = (char *) malloc(databuflen);
-  databufpos = 0;
-  protectedmode = PROT_UNSET;
-  sscnmode = false;
-  mkdtarget = false;
-  currentpath = "/";
-  state = STATE_DISCONNECTED;
+FTPConn::FTPConn(SiteLogic * sl, int id) :
+  nextconnectorid(0),
+  iom(global->getIOManager()),
+  databuflen(DATABUF),
+  databuf((char *) malloc(databuflen)),
+  databufpos(0),
+  id(id),
+  processing(false),
+  allconnectattempted(false),
+  sl(sl),
+  status("disconnected"),
+  site(sl->getSite()),
+  state(STATE_DISCONNECTED),
+  currentpath("/"),
+  protectedmode(PROT_UNSET),
+  sscnmode(false),
+  mkdtarget(false),
+  rawbuf(new RawBuffer(RAWBUFMAXLEN, site->getName(), util::int2Str(id))),
+  aggregatedrawbuf(sl->getAggregatedRawBuffer()) {
+
 }
 
 FTPConn::~FTPConn() {
@@ -75,16 +77,16 @@ void FTPConn::login() {
   mkdtarget = false;
   databufpos = 0;
   processing = true;
+  allconnectattempted = false;
   currentpath = "/";
   state = STATE_CONNECTING;
   connectors.push_back(makePointer<FTPConnect>(nextconnectorid++, this, site->getAddress(), site->getPort(), getProxy(), true));
-  if (site->getAddresses().size() > 1) {
-    ticker = 0;
-    global->getTickPoke()->startPoke(this, "FTPConn", FTPCONN_TICK_INTERVAL, 0);
-  }
+  ticker = 0;
+  global->getTickPoke()->startPoke(this, "FTPConn", FTPCONN_TICK_INTERVAL, 0);
 }
 
 void FTPConn::connectAllAddresses() {
+  allconnectattempted = true;
   std::list<std::pair<std::string, std::string> > addresses = site->getAddresses();
   Proxy * proxy = getProxy();
   for (std::list<std::pair<std::string, std::string> >::const_iterator it = addresses.begin(); it != addresses.end(); it++) {
@@ -319,10 +321,8 @@ void FTPConn::ftpConnectSuccess(int connectorid) {
   util::assert(it != connectors.end());
   sockid = (*it)->handedOver();
   iom->adopt(this, sockid);
-  if ((*it)->isPrimary()) {
-    global->getTickPoke()->stopPoke(this, 0);
-  }
-  else {
+  global->getTickPoke()->stopPoke(this, 0);
+  if (!(*it)->isPrimary()) {
     std::string addr = (*it)->getAddress();
     std::string port = (*it)->getPort();
     site->setPrimaryAddress((*it)->getAddress(), (*it)->getPort());
@@ -356,12 +356,12 @@ void FTPConn::ftpConnectFail(int connectorid) {
   global->getWorkManager()->deferDelete(*it);
   connectors.erase(it);
   if (primary) {
-    global->getTickPoke()->stopPoke(this, 0);
-    if (site->getAddresses().size() > 1) {
+    if (site->getAddresses().size() > 1 && !allconnectattempted) {
       connectAllAddresses();
     }
   }
   if (!connectors.size()) {
+    global->getTickPoke()->stopPoke(this, 0);
     state = STATE_DISCONNECTED;
     sl->connectFailed(id);
   }
@@ -369,10 +369,16 @@ void FTPConn::ftpConnectFail(int connectorid) {
 
 void FTPConn::tick(int) {
   ticker += FTPCONN_TICK_INTERVAL;
+  std::list<Pointer<FTPConnect> > ticklist = connectors;
+  for (std::list<Pointer<FTPConnect> >::const_iterator it = ticklist.begin(); it != ticklist.end(); it++) {
+    (*it)->tick();
+  }
   if (ticker >= 1000) {
-    if (state == STATE_CONNECTING) {
+    if (state == STATE_CONNECTING && !allconnectattempted) {
       connectAllAddresses();
     }
+  }
+  if (!connectors.size()) {
     global->getTickPoke()->stopPoke(this, 0);
   }
 }
