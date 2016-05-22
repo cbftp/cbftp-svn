@@ -9,6 +9,8 @@
 #include "proxy.h"
 #include "util.h"
 
+#define WELCOME_TIMEOUT_MSEC 5000
+
 FTPConnect::FTPConnect(int id, FTPConnectOwner * owner, const std::string & addr, const std::string & port, Proxy * proxy, bool primary) :
   id(id),
   sockid(-1),
@@ -22,7 +24,10 @@ FTPConnect::FTPConnect(int id, FTPConnectOwner * owner, const std::string & addr
   port(port),
   proxy(proxy),
   primary(primary),
-  engaged(true)
+  engaged(true),
+  connected(false),
+  welcomereceived(false),
+  millisecs(0)
 {
   bool resolving;
   if (proxy == NULL) {
@@ -63,6 +68,7 @@ void FTPConnect::FDConnecting(int sockid, std::string addr) {
 }
 
 void FTPConnect::FDConnected(int sockid) {
+  connected = true;
   owner->ftpConnectInfo(id, "[Connection established]");
   if (proxynegotiation) {
     proxySessionInit();
@@ -78,6 +84,7 @@ void FTPConnect::FDData(int sockid, char * data, unsigned int datalen) {
     owner->ftpConnectInfo(id, std::string(data, datalen));
     if (FTPConn::parseData(data, datalen, &databuf, databuflen, databufpos, databufcode)) {
       if (databufcode == 220) {
+        welcomereceived = true;
         owner->ftpConnectSuccess(id);
       }
       else {
@@ -143,5 +150,16 @@ void FTPConnect::disengage() {
   if (engaged) {
     global->getIOManager()->closeSocket(sockid);
     engaged = false;
+  }
+}
+
+void FTPConnect::tick() {
+  millisecs += 1000;
+  if (millisecs >= WELCOME_TIMEOUT_MSEC) {
+    if (engaged && connected && !welcomereceived) {
+      owner->ftpConnectInfo(id, "[Timeout while waiting for welcome message]");
+      disengage();
+      owner->ftpConnectFail(id);
+    }
   }
 }

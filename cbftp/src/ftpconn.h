@@ -73,15 +73,14 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     std::list<Pointer<FTPConnect> > connectors;
     int nextconnectorid;
     IOManager * iom;
-    RawBuffer * rawbuf;
-    RawBuffer * aggregatedrawbuf;
     ProxySession * proxysession;
-    char * databuf;
     unsigned int databuflen;
+    char * databuf;
     unsigned int databufpos;
     int databufcode;
     int id;
     bool processing;
+    bool allconnectattempted;
     SiteLogic * sl;
     std::string status;
     Site * site;
@@ -99,6 +98,8 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     std::string mkdsect;
     std::string mkdpath;
     std::list<std::string> mkdsubdirs;
+    RawBuffer * rawbuf;
+    RawBuffer * aggregatedrawbuf;
     int ticker;
     void AUTHTLSResponse();
     void USERResponse();

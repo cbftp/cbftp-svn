@@ -23,6 +23,7 @@ public:
   std::string getPort() const;
   bool isPrimary() const;
   void disengage();
+  void tick();
 private:
   void proxySessionInit();
   int id;
@@ -39,4 +40,7 @@ private:
   Proxy * proxy;
   bool primary;
   bool engaged;
+  bool connected;
+  bool welcomereceived;
+  int millisecs;
 };
