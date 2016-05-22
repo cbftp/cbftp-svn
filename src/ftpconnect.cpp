@@ -69,6 +69,7 @@ void FTPConnect::FDConnecting(int sockid, std::string addr) {
 
 void FTPConnect::FDConnected(int sockid) {
   connected = true;
+  millisecs = 0;
   owner->ftpConnectInfo(id, "[Connection established]");
   if (proxynegotiation) {
     proxySessionInit();
