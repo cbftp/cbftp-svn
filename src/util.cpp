@@ -3,6 +3,7 @@
 #include <sstream>
 #include <time.h>
 #include <signal.h>
+#include <cctype>
 
 namespace util {
 
@@ -161,6 +162,14 @@ void assert(bool condition) {
   if (!condition) {
     raise(SIGTRAP);
   }
+}
+
+std::string toLower(const std::string & in) {
+  std::string ret = in;
+  for (unsigned int i = 0; i < in.length(); i++) {
+    ret[i] = tolower(ret[i]);
+  }
+  return ret;
 }
 
 }

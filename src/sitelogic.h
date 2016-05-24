@@ -22,22 +22,6 @@ class FileStore;
 class TransferJob;
 class CommandOwner;
 
-//minimum sleep delay (between refreshes / hammer attempts) in ms
-#define SLEEPDELAY 150
-//maximum number of dir refreshes in a row in the same race
-#define MAXCHECKSROW 5
-
-// maximum number of ready requests available to be checked out
-#define MAXREQUESTREADYQUEUE 10
-
-#define REQ_FILELIST 2620
-#define REQ_RAW 2621
-#define REQ_WIPE_RECURSIVE 2622
-#define REQ_WIPE 2623
-#define REQ_DEL_RECURSIVE 2624
-#define REQ_DEL 2625
-#define REQ_NUKE 2626
-
 class SiteLogic : public EventReceiver {
   private:
     Site * site;

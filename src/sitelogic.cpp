@@ -29,6 +29,24 @@
 #include "util.h"
 #include "race.h"
 
+//minimum sleep delay (between refreshes / hammer attempts) in ms
+#define SLEEPDELAY 150
+//maximum number of dir refreshes in a row in the same race
+#define MAXCHECKSROW 5
+
+// maximum number of ready requests available to be checked out
+#define MAXREQUESTREADYQUEUE 10
+
+enum RequestType {
+  REQ_FILELIST,
+  REQ_RAW,
+  REQ_WIPE_RECURSIVE,
+  REQ_WIPE,
+  REQ_DEL_RECURSIVE,
+  REQ_DEL,
+  REQ_NUKE
+};
+
 SiteLogic::SiteLogic(std::string sitename) :
   site(global->getSiteManager()->getSite(sitename)),
   rawcommandrawbuf(new RawBuffer(site->getName())),
