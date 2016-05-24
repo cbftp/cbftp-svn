@@ -54,7 +54,9 @@ private:
   std::map<std::string, int> avgspeed;
   std::map<std::string, std::pair<int, unsigned long long int> > avgspeedsamples;
   std::map<std::string, bool> affils;
+  std::map<std::string, std::string> affilslower;
   std::map<std::string, bool> bannedgroups;
+  std::map<std::string, std::string> bannedgroupslower;
   int proxytype;
   std::string proxyname;
   int rank;      // Only pair sites dst->rank >= (dst->rank - dst->rank_tol)

@@ -1,5 +1,7 @@
 #include "site.h"
 
+#include "util.h"
+
 Site::Site() {
 
 }
@@ -397,7 +399,7 @@ void Site::addSection(const std::string & name, const std::string & path) {
 }
 
 bool Site::isAffiliated(const std::string & affil) const {
-  if (affils.find(affil) != affils.end()) {
+  if (affilslower.find(util::toLower(affil)) != affilslower.end()) {
     return true;
   }
   return false;
@@ -405,14 +407,16 @@ bool Site::isAffiliated(const std::string & affil) const {
 
 void Site::addAffil(const std::string & affil) {
   affils[affil] = true;
+  affilslower[util::toLower(affil)] = true;
 }
 
 void Site::clearAffils() {
   affils.clear();
+  affilslower.clear();
 }
 
 bool Site::isBannedGroup(const std::string & group) const {
-  if (bannedgroups.find(group) != bannedgroups.end()) {
+  if (bannedgroupslower.find(util::toLower(group)) != bannedgroupslower.end()) {
     return true;
   }
   return false;
@@ -420,10 +424,12 @@ bool Site::isBannedGroup(const std::string & group) const {
 
 void Site::addBannedGroup(const std::string & group) {
   bannedgroups[group] = true;
+  bannedgroupslower[util::toLower(group)] = true;
 }
 
 void Site::clearBannedGroups() {
   bannedgroups.clear();
+  bannedgroupslower.clear();
 }
 
 std::map<std::string, bool>::const_iterator Site::affilsBegin() const {
