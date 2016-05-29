@@ -437,7 +437,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       }
       break;
     case 'D':
-      if (list.cursoredFile()->isDirectory() || list.cursoredFile()->getSize() > 0) {
+      if (list.cursoredFile() != NULL && (list.cursoredFile()->isDirectory() || list.cursoredFile()->getSize() > 0)) {
         global->getEngine()->newTransferJobDownload(site->getName(), list.cursoredFile()->getName(),
             filelist, global->getLocalStorage()->getDownloadPath());
       }
