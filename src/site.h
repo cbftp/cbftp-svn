@@ -19,14 +19,14 @@
 #define SITE_LIST_STAT 840
 #define SITE_LIST_LIST 841
 
-#define SITE_RANK_MAX 100
-#define SITE_RANK_USE_GLOBAL 0
-
 #define SITE_PRIORITY_VERY_LOW 711
 #define SITE_PRIORITY_LOW 712
 #define SITE_PRIORITY_NORMAL 713
 #define SITE_PRIORITY_HIGH 714
 #define SITE_PRIORITY_VERY_HIGH 715
+
+#define SITE_TRANSFER_POLICY_ALLOW 817
+#define SITE_TRANSFER_POLICY_BLOCK 818
 
 class Site {
 private:
@@ -57,10 +57,12 @@ private:
   std::map<std::string, std::string> affilslower;
   std::map<std::string, bool> bannedgroups;
   std::map<std::string, std::string> bannedgroupslower;
+  std::map<Site *, bool> exceptsourcesites;
+  std::map<Site *, bool> excepttargetsites;
   int proxytype;
   std::string proxyname;
-  int rank;      // Only pair sites dst->rank >= (dst->rank - dst->rank_tol)
-  int ranktolerance;
+  int transfersourcepolicy;
+  int transfertargetpolicy;
 public:
   Site();
   Site(std::string);
@@ -113,16 +115,14 @@ public:
   std::string getAddressesAsString() const;
   std::string getUser() const;
   std::string getPass() const;
-  int getRank() const;
-  int getRankTolerance() const;
+  int getTransferSourcePolicy() const;
+  int getTransferTargetPolicy() const;
   void setName(const std::string &);
   void setAddresses(std::string);
   void setPrimaryAddress(const std::string &, const std::string &);
   void setBasePath(const std::string &);
   void setUser(const std::string &);
   void setPass(const std::string &);
-  void setRank(int);
-  void setRankTolerance(int);
   void setMaxLogins(unsigned int);
   void setMaxDn(unsigned int);
   void setMaxUp(unsigned int);
@@ -140,10 +140,25 @@ public:
   bool isBannedGroup(const std::string &) const;
   void addBannedGroup(const std::string &);
   void clearBannedGroups();
+  void setTransferSourcePolicy(int);
+  void setTransferTargetPolicy(int);
+  void addAllowedSourceSite(Site *);
+  void addBlockedSourceSite(Site *);
+  void addExceptSourceSite(Site *);
+  void addAllowedTargetSite(Site *);
+  void addBlockedTargetSite(Site *);
+  void addExceptTargetSite(Site *);
+  void removeExceptSite(Site *);
+  void clearExceptSites();
+  bool isAllowedTargetSite(Site *) const;
   std::map<std::string, bool>::const_iterator affilsBegin() const;
   std::map<std::string, bool>::const_iterator affilsEnd() const;
   std::map<std::string, bool>::const_iterator bannedGroupsBegin() const;
   std::map<std::string, bool>::const_iterator bannedGroupsEnd() const;
+  std::map<Site *, bool>::const_iterator exceptSourceSitesBegin() const;
+  std::map<Site *, bool>::const_iterator exceptSourceSitesEnd() const;
+  std::map<Site *, bool>::const_iterator exceptTargetSitesBegin() const;
+  std::map<Site *, bool>::const_iterator exceptTargetSitesEnd() const;
   void addSection(const std::string &, const std::string &);
   std::list<std::string> getSectionsForPath(const std::string &) const;
   std::list<std::string> getSectionsForPartialPath(const std::string &) const;

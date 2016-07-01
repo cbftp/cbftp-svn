@@ -882,7 +882,7 @@ void Engine::preSeedPotentialData(Pointer<Race> & race) {
 bool Engine::raceTransferPossible(SiteLogic * sls, SiteLogic * sld, Pointer<Race> & race) const {
   if (sls == sld) return false;
   if (!sld->getSite()->getAllowUpload()) return false;
-  if (global->getSiteManager()->isBlockedPair(sls->getSite(), sld->getSite())) return false;
+  if (!sls->getSite()->isAllowedTargetSite(sld->getSite())) return false;
   if (sld->getSite()->isAffiliated(race->getGroup())) return false;
   if (sls->getSite()->hasBrokenPASV() &&
       sld->getSite()->hasBrokenPASV()) return false;
@@ -893,7 +893,6 @@ bool Engine::raceTransferPossible(SiteLogic * sls, SiteLogic * sld, Pointer<Race
           sld->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_OFF)) {
     return false;
   }
-  if (!global->getSiteManager()->testRankCompatibility(*sls->getSite(), *sld->getSite())) return false;
   return true;
 }
 

@@ -11,17 +11,29 @@
 #include "util.h"
 #include "site.h"
 
-SiteManager::SiteManager() {
-  defaultusername = DEFAULTUSERNAME;
-  defaultpassword = DEFAULTPASSWORD;
-  defaultmaxlogins = DEFAULTMAXLOGINS;
-  defaultmaxup = DEFAULTMAXUP;
-  defaultmaxdown = DEFAULTMAXDOWN;
-  defaultsslconn = DEFAULTSSL;
-  defaultssltransfer = DEFAULTSSLTRANSFER;
-  defaultmaxidletime = DEFAULTMAXIDLETIME;
-  globalrank = DEFAULTGLOBALRANK;
-  globalranktolerance = DEFAULTGLOBALRANKTOLERANCE;
+#define DEFAULTUSERNAME "anonymous"
+#define DEFAULTPASSWORD "anonymous"
+#define DEFAULTMAXLOGINS 3
+#define DEFAULTMAXUP 0
+#define DEFAULTMAXDOWN 2
+#define DEFAULTMAXIDLETIME 60
+#define DEFAULTSSL true
+#define DEFAULTSSLTRANSFER SITE_SSL_PREFER_OFF
+
+bool siteNameComparator(Site * a, Site * b) {
+  return a->getName().compare(b->getName()) < 0;
+}
+
+SiteManager::SiteManager() :
+  defaultusername(DEFAULTUSERNAME),
+  defaultpassword(DEFAULTPASSWORD),
+  defaultmaxlogins(DEFAULTMAXLOGINS),
+  defaultmaxup(DEFAULTMAXUP),
+  defaultmaxdown(DEFAULTMAXDOWN),
+  defaultmaxidletime(DEFAULTMAXIDLETIME),
+  defaultssltransfer(DEFAULTSSLTRANSFER),
+  defaultsslconn(DEFAULTSSL)
+  {
 }
 
 int SiteManager::getNumSites() const {
@@ -42,8 +54,7 @@ void SiteManager::deleteSite(std::string site) {
   std::vector<Site *>::iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {
     if ((*it)->getName().compare(site) == 0) {
-      clearBlocksForSite(*it);
-      blockedpairs.erase(*it);
+      removeSitePairsForSite((*it)->getName());
       delete *it;
       sites.erase(it);
       global->getEventLog()->log("SiteManager", "Site " + site + " deleted.");
@@ -72,10 +83,6 @@ std::vector<Site *>::const_iterator SiteManager::begin() const {
 
 std::vector<Site *>::const_iterator SiteManager::end() const {
   return sites.end();
-}
-
-bool siteNameComparator(Site * a, Site * b) {
-  return a->getName().compare(b->getName()) < 0;
 }
 
 std::string SiteManager::getDefaultUserName() const {
@@ -142,22 +149,6 @@ void SiteManager::setDefaultSSLTransferPolicy(int policy) {
   defaultssltransfer = policy;
 }
 
-int SiteManager::getGlobalRank() const {
-  return globalrank;
-}
-
-void SiteManager::setGlobalRank(int rank) {
-  globalrank = rank;
-}
-
-int SiteManager::getGlobalRankTolerance() const {
-  return globalranktolerance;
-}
-
-void SiteManager::setGlobalRankTolerance(int tolerance) {
-  globalranktolerance = tolerance;
-}
-
 void SiteManager::proxyRemoved(std::string removedproxy) {
   std::vector<Site *>::iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {
@@ -168,84 +159,72 @@ void SiteManager::proxyRemoved(std::string removedproxy) {
   }
 }
 
-void SiteManager::addBlockedPair(std::string sitestr1, std::string sitestr2) {
-  Site * site1 = getSite(sitestr1);
-  Site * site2 = getSite(sitestr2);
-  if (site1 == NULL || site2 == NULL) {
+void SiteManager::removeSitePairsForSite(const std::string & site) {
+  Site * sitep = getSite(site);
+  if (sitep == NULL) {
     return;
   }
-  if (blockedpairs.find(site1) == blockedpairs.end()) {
-    blockedpairs[site1] = std::map<Site *, bool>();
+  sitep->clearExceptSites();
+  std::vector<Site *>::iterator it;
+  for (it = sites.begin(); it != sites.end(); it++) {
+    (*it)->removeExceptSite(sitep);
   }
-  blockedpairs[site1][site2] = true;
 }
 
-bool SiteManager::isBlockedPair(Site * site1, Site * site2) const {
-  std::map<Site *, std::map<Site *, bool> >::const_iterator it = blockedpairs.find(site1);
-  if (it == blockedpairs.end()) {
-    return false;
+void SiteManager::resetSitePairsForSite(const std::string & site) {
+  Site * sitep = getSite(site);
+  if (sitep == NULL) {
+    return;
   }
-  return it->second.find(site2) != it->second.end();
-}
-
-void SiteManager::clearBlocksForSite(Site * site) {
-  std::map<Site *, std::map<Site *, bool> >::iterator it = blockedpairs.find(site);
-  if (it != blockedpairs.end()) {
-    it->second = std::map<Site *, bool>();
-  }
-  for (it = blockedpairs.begin(); it != blockedpairs.end(); it++) {
-    if (it->second.find(site) != it->second.end()) {
-      it->second.erase(site);
+  sitep->clearExceptSites();
+  std::vector<Site *>::iterator it;
+  for (it = sites.begin(); it != sites.end(); it++) {
+    if (*it == sitep) {
+      continue;
+    }
+    if (sitep->getTransferSourcePolicy() == SITE_TRANSFER_POLICY_ALLOW) {
+      (*it)->addAllowedTargetSite(sitep);
+    }
+    else {
+      (*it)->addBlockedTargetSite(sitep);
+    }
+    if (sitep->getTransferTargetPolicy() == SITE_TRANSFER_POLICY_ALLOW) {
+      (*it)->addAllowedSourceSite(sitep);
+    }
+    else {
+      (*it)->addBlockedSourceSite(sitep);
     }
   }
 }
 
-std::list<Site *> SiteManager::getBlocksFromSite(Site * site) const {
-  std::list<Site *> blockedlist;
-  std::map<Site *, std::map<Site *, bool> >::const_iterator it = blockedpairs.find(site);
-  if (it == blockedpairs.end()) {
-    return blockedlist;
+void SiteManager::addExceptSourceForSite(const std::string & site, const std::string & exceptsite) {
+  Site * sitep = getSite(site);
+  Site * exceptsitep = getSite(exceptsite);
+  if (sitep == NULL || exceptsitep == NULL || sitep == exceptsitep) {
+    return;
   }
-  std::map<Site *, bool>::const_iterator it2;
-  for (it2 = it->second.begin(); it2 != it->second.end(); it2++) {
-    blockedlist.push_back(it2->first);
+  if (sitep->getTransferSourcePolicy() == SITE_TRANSFER_POLICY_ALLOW) {
+    sitep->addBlockedSourceSite(exceptsitep);
+    exceptsitep->addBlockedTargetSite(sitep);
   }
-  return blockedlist;
-}
-
-std::list<Site *> SiteManager::getBlocksToSite(Site * site) const {
-  std::list<Site *> blockedlist;
-  std::map<Site *, std::map<Site *, bool> >::const_iterator it;
-  for (it = blockedpairs.begin(); it != blockedpairs.end(); it++) {
-    if (it->second.find(site) != it->second.end()) {
-      blockedlist.push_back(it->first);
-    }
+  else {
+    sitep->addAllowedSourceSite(exceptsitep);
+    exceptsitep->addAllowedTargetSite(sitep);
   }
-  return blockedlist;
 }
 
-std::map<Site *, std::map<Site *, bool> >::const_iterator SiteManager::blockedPairsBegin() const {
-  return blockedpairs.begin();
+void SiteManager::addExceptTargetForSite(const std::string & site, const std::string & exceptsite) {
+  Site * sitep = getSite(site);
+  Site * exceptsitep = getSite(exceptsite);
+  if (sitep == NULL || exceptsitep == NULL || sitep == exceptsitep) {
+    return;
+  }
+  if (sitep->getTransferTargetPolicy() == SITE_TRANSFER_POLICY_ALLOW) {
+    sitep->addBlockedTargetSite(exceptsitep);
+    exceptsitep->addBlockedSourceSite(sitep);
+  }
+  else {
+    sitep->addAllowedTargetSite(exceptsitep);
+    exceptsitep->addAllowedSourceSite(sitep);
+  }
 }
-
-std::map<Site *, std::map<Site *, bool> >::const_iterator SiteManager::blockedPairsEnd() const {
-  return blockedpairs.end();
-}
-
-bool SiteManager::testRankCompatibility(const Site& src, const Site& dst) const {
-  int srcrank = src.getRank();
-  int dstrank = dst.getRank();
-  int srctolerance = src.getRankTolerance();
-  
-  if (srcrank == SITE_RANK_USE_GLOBAL)
-    srcrank = getGlobalRank();
-
-  if (dstrank == SITE_RANK_USE_GLOBAL)
-    dstrank = getGlobalRank();
-
-  if (srctolerance == SITE_RANK_USE_GLOBAL) 
-    srctolerance = getGlobalRankTolerance();
-
-  return (dstrank >= (srcrank - srctolerance));
-}
-

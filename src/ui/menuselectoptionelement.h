@@ -35,4 +35,5 @@ class MenuSelectOptionElement {
     bool isSelectable() const;
     void setSelectable(bool);
     void setId(unsigned int);
+    void setLabel(const std::string &);
 };
