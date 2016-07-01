@@ -87,3 +87,8 @@ void MenuSelectOptionElement::setSelectable(bool selectable) {
 void MenuSelectOptionElement::setId(unsigned int id) {
   this->id = id;
 }
+
+
+void MenuSelectOptionElement::setLabel(const std::string & label) {
+  this->label = label;
+}

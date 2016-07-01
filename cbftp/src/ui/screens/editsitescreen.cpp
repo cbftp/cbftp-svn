@@ -32,8 +32,10 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
   currentlegendtext = defaultlegendtext;
   this->operation = operation;
   SiteManager * sm = global->getSiteManager();
-  std::list<Site *> blockedsrclist;
-  std::list<Site *> blockeddstlist;
+  std::list<Site *> exceptsrclist;
+  std::list<Site *> exceptdstlist;
+  std::string exceptsrc = "";
+  std::string exceptdst = "";
   if (operation == "add") {
     modsite = Site("SUNET");
     modsite.setUser(sm->getDefaultUserName());
@@ -48,8 +50,15 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
   else if (operation == "edit") {
     this->site = global->getSiteManager()->getSite(site);
     modsite = Site(*this->site);
-    blockedsrclist = sm->getBlocksToSite(this->site);
-    blockeddstlist = sm->getBlocksFromSite(this->site);
+    std::map<Site *, bool>::const_iterator it;
+    for (it = this->site->exceptSourceSitesBegin(); it != this->site->exceptSourceSitesEnd(); it++) {
+      exceptsrc += it->first->getName() + ",";
+    }
+    exceptsrc = exceptsrc.substr(0, exceptsrc.length() - 1);
+    for (it = this->site->exceptTargetSitesBegin(); it != this->site->exceptTargetSitesEnd(); it++) {
+      exceptdst += it->first->getName() + ",";
+    }
+    exceptdst = exceptdst.substr(0, exceptdst.length() - 1);
   }
   std::string affilstr = "";
   std::map<std::string, bool>::const_iterator it;
@@ -66,20 +75,11 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
   if (bannedgroupsstr.length() > 0) {
     bannedgroupsstr = bannedgroupsstr.substr(0, bannedgroupsstr.length() - 1);
   }
-  std::string blockedsrc = "";
-  for (std::list<Site *>::iterator it = blockedsrclist.begin(); it != blockedsrclist.end(); it++) {
-    blockedsrc += (*it)->getName() + ",";
-  }
-  blockedsrc = blockedsrc.substr(0, blockedsrc.length() - 1);
-  std::string blockeddst = "";
-  for (std::list<Site *>::iterator it = blockeddstlist.begin(); it != blockeddstlist.end(); it++) {
-    blockeddst += (*it)->getName() + ",";
-  }
-  blockeddst = blockeddst.substr(0, blockeddst.length() - 1);
+
   unsigned int y = 1;
   unsigned int x = 1;
 
-  mso.clear();
+  mso.reset();
   mso.addStringField(y++, x, "name", "Name:", modsite.getName(), false);
   Pointer<MenuSelectOptionTextField> msotf = mso.addStringField(y++, x, "addr", "Address:", modsite.getAddressesAsString(), false, 48, 512);
   msotf->setExtraLegendText("Multiple sets of address:port separated by space or semicolon");
@@ -133,10 +133,16 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
   priority->addOption("High", SITE_PRIORITY_HIGH);
   priority->addOption("Very high", SITE_PRIORITY_VERY_HIGH);
   priority->setOption(modsite.getPriority());
-  mso.addIntArrow(y++, x, "rank", "Rank (" + util::int2Str(SITE_RANK_USE_GLOBAL) + " for global):", modsite.getRank(), 0, SITE_RANK_MAX);
-  mso.addIntArrow(y++, x, "ranktolerance", "Rank tolerance (" + util::int2Str(SITE_RANK_USE_GLOBAL) + " for global):", modsite.getRankTolerance(), 0, SITE_RANK_MAX);
-  mso.addStringField(y++, x, "blockedsrc", "Block transfers from:", blockedsrc, false, 60, 512);
-  mso.addStringField(y++, x, "blockeddst", "Block transfers to:", blockeddst, false, 60, 512);
+  Pointer<MenuSelectOptionTextArrow> sourcepolicy = mso.addTextArrow(y++, x, "sourcepolicy", "Transfer source policy:");
+  sourcepolicy->addOption("Allow", SITE_TRANSFER_POLICY_ALLOW);
+  sourcepolicy->addOption("Block", SITE_TRANSFER_POLICY_BLOCK);
+  sourcepolicy->setOption(modsite.getTransferSourcePolicy());
+  mso.addStringField(y++, x, "exceptsrc", "", exceptsrc, false, 60, 512);
+  Pointer<MenuSelectOptionTextArrow> targetpolicy = mso.addTextArrow(y++, x, "targetpolicy", "Transfer target policy:");
+  targetpolicy->addOption("Allow", SITE_TRANSFER_POLICY_ALLOW);
+  targetpolicy->addOption("Block", SITE_TRANSFER_POLICY_BLOCK);
+  targetpolicy->setOption(modsite.getTransferTargetPolicy());
+  mso.addStringField(y++, x, "exceptdst", "", exceptdst, false, 60, 512);
   mso.addStringField(y++, x, "affils", "Affils:", affilstr, false, 60, 1024);
   mso.addStringField(y++, x, "bannedgroups", "Banned groups:", bannedgroupsstr, false, 60, 1024);
   y++;
@@ -150,6 +156,18 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
 
 void EditSiteScreen::redraw() {
   ui->erase();
+  if (mso.getElement("sourcepolicy").get<MenuSelectOptionTextArrow>()->getData() == SITE_TRANSFER_POLICY_ALLOW) {
+    mso.getElement("exceptsrc")->setLabel("Block transfers from:");
+  }
+  else {
+    mso.getElement("exceptsrc")->setLabel("Allow transfers from:");
+  }
+  if (mso.getElement("targetpolicy").get<MenuSelectOptionTextArrow>()->getData() == SITE_TRANSFER_POLICY_ALLOW) {
+    mso.getElement("exceptdst")->setLabel("Block transfers to:");
+  }
+  else {
+    mso.getElement("exceptdst")->setLabel("Allow transfers to:");
+  }
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
@@ -277,10 +295,16 @@ void EditSiteScreen::command(std::string command, std::string arg) {
 bool EditSiteScreen::keyPressed(unsigned int ch) {
   if (active) {
     if (ch == 10) {
+      std::string identifier = activeelement->getIdentifier();
       activeelement->deactivate();
       active = false;
       currentlegendtext = defaultlegendtext;
-      ui->update();
+      if (identifier == "sourcepolicy" || identifier == "targetpolicy") {
+        ui->redraw();
+      }
+      else {
+        ui->update();
+      }
       ui->setLegend();
       return true;
     }
@@ -290,8 +314,8 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
   }
   bool activation;
   bool changedname = false;
-  std::list<std::string> blocksrclist;
-  std::list<std::string> blockdstlist;
+  std::list<std::string> exceptsrclist;
+  std::list<std::string> exceptdstlist;
   std::string sitename;
   switch(ch) {
     case KEY_UP:
@@ -338,7 +362,7 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
       }
       active = true;
       activeelement = focusedarea->getElement(focusedarea->getSelectionPointer());
-      if (activeelement->getIdentifier() == "blockedsrc") {
+      if (activeelement->getIdentifier() == "exceptsrc") {
         activeelement->deactivate();
         active = false;
         std::string preselectstr = activeelement.get<MenuSelectOptionTextField>()->getData();
@@ -346,10 +370,14 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         fillPreselectionList(preselectstr, &preselected);
         std::list<Site *> excluded;
         excluded.push_back(site);
-        ui->goSelectSites("Block race transfers from these sites", preselected, excluded);
+        std::string action = "Block";
+        if (mso.getElement("sourcepolicy").get<MenuSelectOptionTextArrow>()->getData() == SITE_TRANSFER_POLICY_BLOCK) {
+          action = "Allow";
+        }
+        ui->goSelectSites(action + " race transfers from these sites", preselected, excluded);
         return true;
       }
-      if (activeelement->getIdentifier() == "blockeddst") {
+      if (activeelement->getIdentifier() == "exceptdst") {
         activeelement->deactivate();
         active = false;
         std::string preselectstr = activeelement.get<MenuSelectOptionTextField>()->getData();
@@ -357,7 +385,11 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         fillPreselectionList(preselectstr, &preselected);
         std::list<Site *> excluded;
         excluded.push_back(site);
-        ui->goSelectSites("Block race transfers to these sites", preselected, excluded);
+        std::string action = "Block";
+        if (mso.getElement("targetpolicy").get<MenuSelectOptionTextArrow>()->getData() == SITE_TRANSFER_POLICY_BLOCK) {
+          action = "Allow";
+        }
+        ui->goSelectSites(action + " race transfers to these sites", preselected, excluded);
         return true;
       }
       currentlegendtext = activeelement->getLegendText();
@@ -436,12 +468,6 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         else if (identifier == "idletime") {
           site->setMaxIdleTime(util::str2Int(msoe.get<MenuSelectOptionTextField>()->getData()));
         }
-        else if (identifier == "rank") {
-          site->setRank(msoe.get<MenuSelectOptionNumArrow>()->getData());
-        }
-        else if (identifier == "ranktolerance") {
-          site->setRankTolerance(msoe.get<MenuSelectOptionNumArrow>()->getData());
-        }
         else if (identifier == "useproxy") {
           int proxytype = msoe.get<MenuSelectOptionTextArrow>()->getData();
           site->setProxyType(proxytype);
@@ -513,30 +539,37 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
             pos++;
           }
         }
-        else if (identifier == "blockedsrc") {
-          std::string blockedstr = msoe.get<MenuSelectOptionTextField>()->getData();
+        else if (identifier == "sourcepolicy") {
+          site->setTransferSourcePolicy(msoe.get<MenuSelectOptionTextArrow>()->getData());
+        }
+        else if (identifier == "targetpolicy") {
+          site->setTransferTargetPolicy(msoe.get<MenuSelectOptionTextArrow>()->getData());
+        }
+        else if (identifier == "exceptsrc") {
+          std::string sitestr = msoe.get<MenuSelectOptionTextField>()->getData();
           while (true) {
-            size_t commapos = blockedstr.find(",");
+            size_t commapos = sitestr.find(",");
             if (commapos != std::string::npos) {
-              blocksrclist.push_back(blockedstr.substr(0, commapos));
-              blockedstr = blockedstr.substr(commapos + 1);
+              exceptsrclist.push_back(sitestr.substr(0, commapos));
+              sitestr = sitestr.substr(commapos + 1);
             }
             else {
-              blocksrclist.push_back(blockedstr);
+              exceptsrclist.push_back(sitestr);
               break;
             }
           }
+
         }
-        else if (identifier == "blockeddst") {
-          std::string blockedstr = msoe.get<MenuSelectOptionTextField>()->getData();
+        else if (identifier == "exceptdst") {
+          std::string sitestr = msoe.get<MenuSelectOptionTextField>()->getData();
           while (true) {
-            size_t commapos = blockedstr.find(",");
+            size_t commapos = sitestr.find(",");
             if (commapos != std::string::npos) {
-              blockdstlist.push_back(blockedstr.substr(0, commapos));
-              blockedstr = blockedstr.substr(commapos + 1);
+              exceptdstlist.push_back(sitestr.substr(0, commapos));
+              sitestr = sitestr.substr(commapos + 1);
             }
             else {
-              blockdstlist.push_back(blockedstr);
+              exceptdstlist.push_back(sitestr);
               break;
             }
           }
@@ -558,12 +591,12 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         global->getSiteManager()->sortSites();
       }
       sitename = site->getName();
-      global->getSiteManager()->clearBlocksForSite(site);
-      for (std::list<std::string>::iterator it = blocksrclist.begin(); it != blocksrclist.end(); it++) {
-        global->getSiteManager()->addBlockedPair(*it, sitename);
+      global->getSiteManager()->resetSitePairsForSite(sitename);
+      for (std::list<std::string>::iterator it = exceptsrclist.begin(); it != exceptsrclist.end(); it++) {
+        global->getSiteManager()->addExceptSourceForSite(sitename, *it);
       }
-      for (std::list<std::string>::iterator it = blockdstlist.begin(); it != blockdstlist.end(); it++) {
-        global->getSiteManager()->addBlockedPair(sitename, *it);
+      for (std::list<std::string>::iterator it = exceptdstlist.begin(); it != exceptdstlist.end(); it++) {
+        global->getSiteManager()->addExceptTargetForSite(sitename, *it);
       }
       global->getSiteLogicManager()->getSiteLogic(site->getName())->setNumConnections(site->getMaxLogins());
       if (changedname) {

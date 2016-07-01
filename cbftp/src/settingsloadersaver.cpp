@@ -1,5 +1,7 @@
 #include "settingsloadersaver.h"
 
+#include <vector>
+
 #include "core/tickpoke.h"
 #include "core/iomanager.h"
 #include "core/sslmanager.h"
@@ -251,6 +253,8 @@ void SettingsLoaderSaver::loadSettings() {
     }
   }
 
+  std::list<std::pair<std::string, std::string> > exceptsources;
+  std::list<std::pair<std::string, std::string> > excepttargets;
   dfh->getDataFor("SiteManager", &lines);
   for (it = lines.begin(); it != lines.end(); it++) {
     line = *it;
@@ -352,13 +356,34 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("proxyname")) {
       site->setProxy(value);
     }
-    else if (!setting.compare("rank")) {
-      site->setRank(util::str2Int(value));
+    else if (!setting.compare("transfersourcepolicy")) {
+      site->setTransferSourcePolicy(util::str2Int(value));
     }
-    else if (!setting.compare("ranktolerance")) {
-      site->setRankTolerance(util::str2Int(value));
+    else if (!setting.compare("transfertargetpolicy")) {
+      site->setTransferTargetPolicy(util::str2Int(value));
+    }
+    else if (!setting.compare("exceptsourcesite")) {
+      exceptsources.push_back(std::pair<std::string, std::string>(name, value));
+    }
+    else if (!setting.compare("excepttargetsite")) {
+      excepttargets.push_back(std::pair<std::string, std::string>(name, value));
     }
   }
+  for (std::list<std::pair<std::string, std::string> >::const_iterator it2 = exceptsources.begin(); it2 != exceptsources.end(); it2++) {
+    Site * site = global->getSiteManager()->getSite(it2->first);
+    Site * except = global->getSiteManager()->getSite(it2->second);
+    if (site != NULL && except != NULL) {
+      site->addExceptSourceSite(except);
+    }
+  }
+  for (std::list<std::pair<std::string, std::string> >::const_iterator it2 = excepttargets.begin(); it2 != excepttargets.end(); it2++) {
+    Site * site = global->getSiteManager()->getSite(it2->first);
+    Site * except = global->getSiteManager()->getSite(it2->second);
+    if (site != NULL && except != NULL) {
+      site->addExceptTargetSite(except);
+    }
+  }
+
   dfh->getDataFor("SiteManagerDefaults", &lines);
   for (it = lines.begin(); it != lines.end(); it++) {
     line = *it;
@@ -397,14 +422,9 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("maxidletime")) {
       global->getSiteManager()->setDefaultMaxIdleTime(util::str2Int(value));
     }
-    else if (!setting.compare("rank")) {
-      global->getSiteManager()->setGlobalRank(util::str2Int(value));
-    }
-    else if (!setting.compare("ranktolerance")) {
-      global->getSiteManager()->setGlobalRankTolerance(util::str2Int(value));
-    }
   }
-  lines.clear();
+
+  // backward compatibility begins (r687)
   dfh->getDataFor("SiteManagerRules", &lines);
   for (it = lines.begin(); it != lines.end(); it++) {
     line = *it;
@@ -416,9 +436,11 @@ void SettingsLoaderSaver::loadSettings() {
       size_t split = value.find('$');
       std::string site1 = value.substr(0, split);
       std::string site2 = value.substr(split + 1);
-      global->getSiteManager()->addBlockedPair(site1, site2);
+      global->getSiteManager()->addExceptTargetForSite(site1, site2);
     }
   }
+  // backward compatibility ends (r687)
+
   global->getSiteManager()->sortSites();
 
   for (std::list<SettingsAdder *>::iterator it = settingsadders.begin(); it != settingsadders.end(); it++) {
@@ -505,7 +527,6 @@ void SettingsLoaderSaver::saveSettings() {
     std::vector<Site *>::const_iterator it;
     std::string filetag = "SiteManager";
     std::string defaultstag = "SiteManagerDefaults";
-    std::string rulestag = "SiteManagerRules";
     for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
       Site * site = *it;
       std::string name = site->getName();
@@ -531,8 +552,6 @@ void SettingsLoaderSaver::saveSettings() {
       if (!site->getAllowDownload()) dfh->addOutputLine(filetag, name + "$allowdownload=false");
       dfh->addOutputLine(filetag, name + "$priority=" + util::int2Str(site->getPriority()));
       if (site->hasBrokenPASV()) dfh->addOutputLine(filetag, name + "$brokenpasv=true");
-      dfh->addOutputLine(filetag, name + "$rank=" + util::int2Str(site->getRank()));
-      dfh->addOutputLine(filetag, name + "$ranktolerance=" + util::int2Str(site->getRankTolerance()));
       int proxytype = site->getProxyType();
       dfh->addOutputLine(filetag, name + "$proxytype=" + util::int2Str(proxytype));
       if (proxytype == SITE_PROXY_USE) {
@@ -553,6 +572,15 @@ void SettingsLoaderSaver::saveSettings() {
       for (sit3 = site->bannedGroupsBegin(); sit3 != site->bannedGroupsEnd(); sit3++) {
         dfh->addOutputLine(filetag, name + "$bannedgroup=" + sit3->first);
       }
+      dfh->addOutputLine(filetag, name + "$transfersourcepolicy=" + util::int2Str(site->getTransferSourcePolicy()));
+      dfh->addOutputLine(filetag, name + "$transfertargetpolicy=" + util::int2Str(site->getTransferTargetPolicy()));
+      std::map<Site *, bool>::const_iterator sit4;
+      for (sit4 = site->exceptSourceSitesBegin(); sit4 != site->exceptSourceSitesEnd(); sit4++) {
+        dfh->addOutputLine(filetag, name + "$exceptsourcesite=" + sit4->first->getName());
+      }
+      for (sit4 = site->exceptTargetSitesBegin(); sit4 != site->exceptTargetSitesEnd(); sit4++) {
+        dfh->addOutputLine(filetag, name + "$excepttargetsite=" + sit4->first->getName());
+      }
     }
     dfh->addOutputLine(defaultstag, "username=" + global->getSiteManager()->getDefaultUserName());
     dfh->addOutputLine(defaultstag, "password=" + global->getSiteManager()->getDefaultPassword());
@@ -561,16 +589,7 @@ void SettingsLoaderSaver::saveSettings() {
     dfh->addOutputLine(defaultstag, "maxdown=" + util::int2Str(global->getSiteManager()->getDefaultMaxDown()));
     dfh->addOutputLine(defaultstag, "maxidletime=" + util::int2Str(global->getSiteManager()->getDefaultMaxIdleTime()));
     dfh->addOutputLine(defaultstag, "ssltransfer=" + util::int2Str(global->getSiteManager()->getDefaultSSLTransferPolicy()));
-    dfh->addOutputLine(defaultstag, "rank=" + util::int2Str(global->getSiteManager()->getGlobalRank()));
-    dfh->addOutputLine(defaultstag, "ranktolerance=" + util::int2Str(global->getSiteManager()->getGlobalRankTolerance()));
     if (!global->getSiteManager()->getDefaultSSL()) dfh->addOutputLine(defaultstag, "sslconn=false");
-    std::map<Site *, std::map<Site *, bool> >::const_iterator it2;
-    std::map<Site *, bool>::const_iterator it3;
-    for (it2 = global->getSiteManager()->blockedPairsBegin(); it2 != global->getSiteManager()->blockedPairsEnd(); it2++) {
-      for (it3 = it2->second.begin(); it3 != it2->second.end(); it3++) {
-        dfh->addOutputLine(rulestag, "blockedpair=" + it2->first->getName() + "$" + it3->first->getName());
-      }
-    }
   }
 
   for (std::list<SettingsAdder *>::iterator it = settingsadders.begin(); it != settingsadders.end(); it++) {

@@ -7,21 +7,10 @@
 
 class Site;
 
-#define DEFAULTUSERNAME "anonymous"
-#define DEFAULTPASSWORD "anonymous"
-#define DEFAULTMAXLOGINS 3
-#define DEFAULTMAXUP 0
-#define DEFAULTMAXDOWN 2
-#define DEFAULTMAXIDLETIME 60
-#define DEFAULTSSL true
-#define DEFAULTSSLTRANSFER SITE_SSL_PREFER_OFF
-#define DEFAULTGLOBALRANK (SITE_RANK_MAX / 2)
-#define DEFAULTGLOBALRANKTOLERANCE DEFAULTGLOBALRANK  // Allow all pairings by default
-
 class SiteManager {
   private:
+    void removeSitePairsForSite(const std::string &);
     std::vector<Site *> sites;
-    std::map<Site *, std::map<Site *, bool> > blockedpairs;
     std::string defaultusername;
     std::string defaultpassword;
     unsigned int defaultmaxlogins;
@@ -30,8 +19,6 @@ class SiteManager {
     unsigned int defaultmaxidletime;
     int defaultssltransfer;
     bool defaultsslconn;
-    int globalrank;
-    int globalranktolerance;
   public:
     SiteManager();
     int getNumSites() const;
@@ -57,20 +44,9 @@ class SiteManager {
     void setDefaultSSL(bool);
     int getDefaultSSLTransferPolicy() const;
     void setDefaultSSLTransferPolicy(int);
-    int getGlobalRank() const;
-    void setGlobalRank(int);
-    int getGlobalRankTolerance() const;
-    void setGlobalRankTolerance(int);
     void sortSites();
     void proxyRemoved(std::string);
-    void addBlockedPair(std::string, std::string);
-    bool isBlockedPair(Site *, Site *) const;
-    void clearBlocksForSite(Site *);
-    std::list<Site *> getBlocksFromSite(Site *) const;
-    std::list<Site *> getBlocksToSite(Site *) const;
-    std::map<Site *, std::map<Site *, bool> >::const_iterator blockedPairsBegin() const;
-    std::map<Site *, std::map<Site *, bool> >::const_iterator blockedPairsEnd() const;
-    bool testRankCompatibility(const Site&, const Site&) const;
+    void resetSitePairsForSite(const std::string &);
+    void addExceptSourceForSite(const std::string &, const std::string &);
+    void addExceptTargetForSite(const std::string &, const std::string &);
 };
-
-bool siteNameComparator(Site *, Site *);
