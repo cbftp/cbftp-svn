@@ -9,7 +9,7 @@ class Site;
 
 class SiteManager {
   private:
-    void removeSitePairsForSite(const std::string &);
+    void removeSitePairsForSite(Site *);
     std::vector<Site *> sites;
     std::string defaultusername;
     std::string defaultpassword;

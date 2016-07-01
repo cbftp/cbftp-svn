@@ -54,7 +54,7 @@ void SiteManager::deleteSite(std::string site) {
   std::vector<Site *>::iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {
     if ((*it)->getName().compare(site) == 0) {
-      removeSitePairsForSite((*it)->getName());
+      removeSitePairsForSite(*it);
       delete *it;
       sites.erase(it);
       global->getEventLog()->log("SiteManager", "Site " + site + " deleted.");
@@ -65,6 +65,13 @@ void SiteManager::deleteSite(std::string site) {
 
 void SiteManager::addSite(Site * site) {
   sites.push_back(site);
+  std::map<Site *, bool>::const_iterator it;
+  for (it = site->exceptSourceSitesBegin(); it != site->exceptSourceSitesEnd(); it++) {
+    addExceptSourceForSite(site->getName(), it->first->getName());
+  }
+  for (it = site->exceptTargetSitesBegin(); it != site->exceptTargetSitesEnd(); it++) {
+    addExceptTargetForSite(site->getName(), it->first->getName());
+  }
   global->getEventLog()->log("SiteManager", "Site " + site->getName() + " added.");
   sortSites();
 }
@@ -159,15 +166,10 @@ void SiteManager::proxyRemoved(std::string removedproxy) {
   }
 }
 
-void SiteManager::removeSitePairsForSite(const std::string & site) {
-  Site * sitep = getSite(site);
-  if (sitep == NULL) {
-    return;
-  }
-  sitep->clearExceptSites();
+void SiteManager::removeSitePairsForSite(Site * site) {
   std::vector<Site *>::iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {
-    (*it)->removeExceptSite(sitep);
+    (*it)->removeExceptSite(site);
   }
 }
 

@@ -46,6 +46,15 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
     modsite.setSSL(sm->getDefaultSSL());
     modsite.setSSLTransferPolicy(sm->getDefaultSSLTransferPolicy());
     modsite.setMaxIdleTime(sm->getDefaultMaxIdleTime());
+    std::vector<Site *>::const_iterator it;
+    for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
+      if ((*it)->getTransferTargetPolicy() == SITE_TRANSFER_POLICY_BLOCK) {
+        exceptsrc += (*it)->getName() + ",";
+      }
+      if ((*it)->getTransferSourcePolicy() == SITE_TRANSFER_POLICY_BLOCK) {
+        exceptdst += (*it)->getName() + ",";
+      }
+    }
   }
   else if (operation == "edit") {
     this->site = global->getSiteManager()->getSite(site);
@@ -54,10 +63,14 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
     for (it = this->site->exceptSourceSitesBegin(); it != this->site->exceptSourceSitesEnd(); it++) {
       exceptsrc += it->first->getName() + ",";
     }
-    exceptsrc = exceptsrc.substr(0, exceptsrc.length() - 1);
     for (it = this->site->exceptTargetSitesBegin(); it != this->site->exceptTargetSitesEnd(); it++) {
       exceptdst += it->first->getName() + ",";
     }
+  }
+  if (exceptsrc.length()) {
+    exceptsrc = exceptsrc.substr(0, exceptsrc.length() - 1);
+  }
+  if (exceptdst.length()) {
     exceptdst = exceptdst.substr(0, exceptdst.length() - 1);
   }
   std::string affilstr = "";
@@ -584,12 +597,14 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
           site->addSection(name, path);
         }
       }
+
       if (operation == "add") {
         global->getSiteManager()->addSite(site);
       }
       else {
         global->getSiteManager()->sortSites();
       }
+
       sitename = site->getName();
       global->getSiteManager()->resetSitePairsForSite(sitename);
       for (std::list<std::string>::iterator it = exceptsrclist.begin(); it != exceptsrclist.end(); it++) {
@@ -598,10 +613,12 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
       for (std::list<std::string>::iterator it = exceptdstlist.begin(); it != exceptdstlist.end(); it++) {
         global->getSiteManager()->addExceptTargetForSite(sitename, *it);
       }
+
       global->getSiteLogicManager()->getSiteLogic(site->getName())->setNumConnections(site->getMaxLogins());
       if (changedname) {
         global->getSiteLogicManager()->getSiteLogic(site->getName())->updateName();
       }
+
       global->getSettingsLoaderSaver()->saveSettings();
       ui->returnToLast();
       return true;
