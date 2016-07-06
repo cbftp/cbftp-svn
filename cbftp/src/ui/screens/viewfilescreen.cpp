@@ -26,6 +26,7 @@ enum {
   NO_SLOTS_AVAILABLE,
   TOO_LARGE_FOR_INTERNAL,
   NO_DISPLAY,
+  CONNECTING,
   DOWNLOADING,
   LOADING_VIEWER,
   VIEWING_EXTERNAL,
@@ -63,7 +64,7 @@ void ViewFileScreen::initialize(unsigned int row, unsigned int col, const std::s
   this->filelist = filelist;
   sitelogic = global->getSiteLogicManager()->getSiteLogic(site);
   size = filelist->getFile(file)->getSize();
-  state = ViewFileState::DOWNLOADING;
+  state = ViewFileState::CONNECTING;
   if (global->getExternalFileViewing()->isViewable(file)) {
     if (!global->getExternalFileViewing()->hasDisplay()) {
       state = ViewFileState::NO_DISPLAY;
@@ -75,18 +76,16 @@ void ViewFileScreen::initialize(unsigned int row, unsigned int col, const std::s
       state = ViewFileState::TOO_LARGE_FOR_INTERNAL;
     }
   }
+  if (state == ViewFileState::CONNECTING) {
+    requestid = sitelogic->requestOneIdle();
+  }
   if (state == ViewFileState::DOWNLOADING) {
-    std::string temppath = global->getLocalStorage()->getTempPath();
-    Pointer<LocalFileList> localfl = global->getLocalStorage()->getLocalFileList(temppath);
-    ts = global->getTransferManager()->suggestDownload(file, sitelogic,
-        filelist, localfl);
+
     if (!ts) {
       state = ViewFileState::NO_SLOTS_AVAILABLE;
     }
     else {
-      ts->setAwaited(true);
-      path = temppath + "/" + file;
-      expectbackendpush = true;
+
     }
   }
   init(row, col);
@@ -126,6 +125,27 @@ void ViewFileScreen::redraw() {
     case ViewFileState::NO_DISPLAY:
       ui->printStr(1, 1, file + " cannot be opened in an external viewer.");
       ui->printStr(2, 1, "The DISPLAY environment variable is not set.");
+      break;
+    case ViewFileState::CONNECTING:
+      if (sitelogic->requestReady(requestid)) {
+        sitelogic->finishRequest(requestid);
+        std::string temppath = global->getLocalStorage()->getTempPath();
+        Pointer<LocalFileList> localfl = global->getLocalStorage()->getLocalFileList(temppath);
+        ts = global->getTransferManager()->suggestDownload(file, sitelogic, filelist, localfl);
+        if (!!ts) {
+          state = ViewFileState::DOWNLOADING;
+          ts->setAwaited(true);
+          path = temppath + "/" + file;
+          expectbackendpush = true;
+        }
+        else {
+          state = ViewFileState::NO_SLOTS_AVAILABLE;
+          redraw();
+        }
+      }
+      else {
+        ui->printStr(1, 1, "Awaiting slot...");
+      }
       break;
     case ViewFileState::DOWNLOADING:
       switch(ts->getState()) {

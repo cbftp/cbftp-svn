@@ -12,6 +12,7 @@ private:
   int data3;
   bool care;
 public:
+  SiteLogicRequest(int, int, int, bool);
   SiteLogicRequest(int, int, std::string, bool);
   SiteLogicRequest(int, int, std::string, std::string, int, bool);
   int requestId() const;

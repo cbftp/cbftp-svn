@@ -1,5 +1,13 @@
 #include "sitelogicrequest.h"
 
+SiteLogicRequest::SiteLogicRequest(int requestid, int requesttype, int data3, bool care) :
+  requestid(requestid),
+  connid(-1),
+  requesttype(requesttype),
+  data3(data3),
+  care(care) {
+}
+
 SiteLogicRequest::SiteLogicRequest(int requestid, int requesttype, std::string data, bool care) :
   requestid(requestid),
   connid(-1),

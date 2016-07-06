@@ -29,6 +29,7 @@ public:
   std::string getInfoText() const;
 private:
   int state;
+  int requestid;
   SiteLogic * sitelogic;
   Pointer<TransferStatus> ts;
   FileList * filelist;
