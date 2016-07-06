@@ -20,6 +20,41 @@
 #define DEFAULTPASS "DEFAULT"
 #define RETRYDELAY 30000
 
+std::list<SiteLogic *> getSiteLogicList(std::string sitestring) {
+  std::list<SiteLogic *> sitelogics;
+  std::list<std::string> sites;
+  if (sitestring == "*") {
+    std::vector<Site *>::const_iterator it;
+    for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
+      if (!(*it)->getDisabled()) {
+        sites.push_back((*it)->getName());
+      }
+    }
+  }
+  else {
+    while (true) {
+      size_t commapos = sitestring.find(",");
+      if (commapos != std::string::npos) {
+        sites.push_back(sitestring.substr(0, commapos));
+        sitestring = sitestring.substr(commapos + 1);
+      }
+      else {
+        sites.push_back(sitestring);
+        break;
+      }
+    }
+  }
+  for (std::list<std::string>::const_iterator it = sites.begin(); it != sites.end(); it++) {
+    SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(*it);
+    if (sl == NULL) {
+      global->getEventLog()->log("RemoteCommandHandler", "Site not found: " + *it);
+      continue;
+    }
+    sitelogics.push_back(sl);
+  }
+  return sitelogics;
+}
+
 RemoteCommandHandler::RemoteCommandHandler() :
   enabled(false),
   password(DEFAULTPASS),
@@ -149,33 +184,11 @@ void RemoteCommandHandler::commandRaw(const std::string & message) {
   }
   std::string sitestring = message.substr(0, sitesend);
   std::string rawcommand = message.substr(sitesend + 1);
-  std::list<std::string> sites;
-  if (sitestring == "*") {
-    std::vector<Site *>::const_iterator it;
-    for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
-      sites.push_back((*it)->getName());
-    }
-  }
-  else {
-    while (true) {
-      size_t commapos = sitestring.find(",");
-      if (commapos != std::string::npos) {
-        sites.push_back(sitestring.substr(0, commapos));
-        sitestring = sitestring.substr(commapos + 1);
-      }
-      else {
-        sites.push_back(sitestring);
-        break;
-      }
-    }
-  }
-  for (std::list<std::string>::const_iterator it = sites.begin(); it != sites.end(); it++) {
-    SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(*it);
-    if (sl == NULL) {
-      global->getEventLog()->log("RemoteCommandHandler", "Site not found: " + *it);
-      continue;
-    }
-    sl->requestRawCommand(rawcommand, false);
+
+  std::list<SiteLogic *> sites = getSiteLogicList(sitestring);
+
+  for (std::list<SiteLogic *>::const_iterator it = sites.begin(); it != sites.end(); it++) {
+    (*it)->requestRawCommand(rawcommand, false);
   }
 }
 
@@ -192,7 +205,23 @@ void RemoteCommandHandler::commandUpload(const std::string & message) {
 }
 
 void RemoteCommandHandler::commandIdle(const std::string & message) {
+  size_t sitesend = message.find(" ");
+  int idletime;
+  std::string sitestring;
+  if (sitesend == std::string::npos || sitesend == message.length()) {
+    sitestring = message;
+    idletime = 0;
+  }
+  else {
+    idletime = util::str2Int(message.substr(sitesend + 1));
+    sitestring = message.substr(0, sitesend);
+  }
 
+  std::list<SiteLogic *> sites = getSiteLogicList(sitestring);
+
+  for (std::list<SiteLogic *>::const_iterator it = sites.begin(); it != sites.end(); it++) {
+    (*it)->requestAllIdle(idletime);
+  }
 }
 
 void RemoteCommandHandler::parseRace(const std::string & message, bool autostart) {

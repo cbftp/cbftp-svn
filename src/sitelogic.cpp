@@ -44,7 +44,8 @@ enum RequestType {
   REQ_WIPE,
   REQ_DEL_RECURSIVE,
   REQ_DEL,
-  REQ_NUKE
+  REQ_NUKE,
+  REQ_IDLE
 };
 
 SiteLogic::SiteLogic(std::string sitename) :
@@ -851,7 +852,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
     }
   }
   else {
-    if (site->getMaxIdleTime()) {
+    if (site->getMaxIdleTime() && !connstatetracker[id].getCommand().isActive()) {
       connstatetracker[id].delayedCommand("quit", site->getMaxIdleTime() * 1000);
     }
   }
@@ -876,11 +877,14 @@ bool SiteLogic::handleRequest(int id) {
     return false;
   }
   connstatetracker[id].use();
-  std::string targetpath;
-  std::string actiontarget;
-  switch (it->requestType()) {
-    case REQ_FILELIST: // filelist
-      targetpath = it->requestData();
+  SiteLogicRequest request = *it;
+  requests.erase(it);
+  connstatetracker[id].setRequest(*it);
+  available--;
+
+  switch (request.requestType()) {
+    case REQ_FILELIST: { // filelist
+      std::string targetpath = it->requestData();
       if (conns[id]->getCurrentPath() == targetpath) {
         getFileListConn(id);
       }
@@ -888,31 +892,37 @@ bool SiteLogic::handleRequest(int id) {
         conns[id]->doCWD(targetpath);
       }
       break;
+    }
     case REQ_RAW: // raw command
-      rawcommandrawbuf->writeLine(it->requestData());
-      conns[id]->doRaw(it->requestData());
+      rawcommandrawbuf->writeLine(request.requestData());
+      conns[id]->doRaw(request.requestData());
       break;
     case REQ_WIPE_RECURSIVE: // recursive wipe
-      conns[id]->doWipe(it->requestData(), true);
+      conns[id]->doWipe(request.requestData(), true);
       break;
     case REQ_WIPE: // wipe
-      conns[id]->doWipe(it->requestData(), false);
+      conns[id]->doWipe(request.requestData(), false);
       break;
-    case REQ_DEL_RECURSIVE: // recursive delete
-      targetpath = it->requestData();
+    case REQ_DEL_RECURSIVE: { // recursive delete
+      std::string targetpath = request.requestData();
       connstatetracker[id].getRecursiveLogic()->initialize(RCL_DELETE, conns[id]->getCurrentPath(), targetpath);
       handleRecursiveLogic(id);
       break;
+    }
     case REQ_DEL: // delete
-      conns[id]->doDELE(it->requestData());
+      conns[id]->doDELE(request.requestData());
       break;
     case REQ_NUKE: // nuke
-      conns[id]->doNuke(it->requestData(), it->requestData3(), it->requestData2());
+      conns[id]->doNuke(request.requestData(), request.requestData3(), request.requestData2());
+      break;
+    case REQ_IDLE: // idle
+      setRequestReady(id, NULL, true);
+      handleConnection(id, false);
+      if (!conns[id]->isProcessing()) {
+        connstatetracker[id].delayedCommand("quit", it->requestData3() * 1000);
+      }
       break;
   }
-  connstatetracker[id].setRequest(*it);
-  available--;
-  requests.erase(it);
   return true;
 }
 
@@ -1088,6 +1098,28 @@ int SiteLogic::requestNuke(std::string path, int multiplier, std::string reason)
   int requestid = requestidcounter++;
   requests.push_back(SiteLogicRequest(requestid, REQ_NUKE, path, reason, multiplier, true));
   activateOne();
+  return requestid;
+}
+
+int SiteLogic::requestOneIdle() {
+  int requestid = requestidcounter++;
+  requests.push_back(SiteLogicRequest(requestid, REQ_IDLE, site->getMaxIdleTime(), true));
+  activateOne();
+  return requestid;
+}
+
+int SiteLogic::requestAllIdle(int idletime) {
+  if (!idletime) {
+    idletime = site->getMaxIdleTime();
+  }
+  int requestid;
+  for (unsigned int i = 0; i < connstatetracker.size(); i++) {
+    requestid = requestidcounter++;
+    SiteLogicRequest request(requestid, REQ_IDLE, idletime, false);
+    request.setConnId(i);
+    requests.push_back(request);
+  }
+  activateAll();
   return requestid;
 }
 

@@ -396,9 +396,7 @@ void FTPConn::AUTHTLSResponse() {
   }
   else {
     rawBufWriteLine("[Unknown response]");
-    state = STATE_DISCONNECTED;
     processing = false;
-    iom->closeSocket(sockid);
     sl->TLSFailed(id);
   }
 }
@@ -1013,6 +1011,7 @@ void FTPConn::disconnect() {
   }
   if (state != STATE_DISCONNECTED) {
     state = STATE_DISCONNECTED;
+    processing = false;
     iom->closeSocket(sockid);
     clearConnectors();
     this->status = "disconnected";
