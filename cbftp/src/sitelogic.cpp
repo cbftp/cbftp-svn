@@ -879,12 +879,12 @@ bool SiteLogic::handleRequest(int id) {
   connstatetracker[id].use();
   SiteLogicRequest request = *it;
   requests.erase(it);
-  connstatetracker[id].setRequest(*it);
+  connstatetracker[id].setRequest(request);
   available--;
 
   switch (request.requestType()) {
     case REQ_FILELIST: { // filelist
-      std::string targetpath = it->requestData();
+      std::string targetpath = request.requestData();
       if (conns[id]->getCurrentPath() == targetpath) {
         getFileListConn(id);
       }
@@ -919,7 +919,7 @@ bool SiteLogic::handleRequest(int id) {
       setRequestReady(id, NULL, true);
       handleConnection(id, false);
       if (!conns[id]->isProcessing()) {
-        connstatetracker[id].delayedCommand("quit", it->requestData3() * 1000);
+        connstatetracker[id].delayedCommand("quit", request.requestData3() * 1000);
       }
       break;
   }
