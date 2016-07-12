@@ -246,6 +246,9 @@ bool ViewFileScreen::keyPressed(unsigned int ch) {
         else if (encoding == encoding::ENCODING_CP437_DOUBLE) {
           encoding = encoding::ENCODING_ISO88591;
         }
+        else if (encoding == encoding::ENCODING_ISO88591) {
+          encoding = encoding::ENCODING_UTF8;
+        }
         else {
           encoding = encoding::ENCODING_CP437;
         }
@@ -379,6 +382,9 @@ std::string ViewFileScreen::getInfoText() const {
       case encoding::ENCODING_ISO88591:
         enc = "ISO-8859-1";
         break;
+      case encoding::ENCODING_UTF8:
+        enc = "UTF-8";
+        break;
     }
     unsigned int end = ymax < y + row ? ymax : y + row;
     return "Line " + util::int2Str(y) + "-" +
@@ -399,8 +405,11 @@ void ViewFileScreen::translate() {
     else if (encoding == encoding::ENCODING_CP437) {
       current = encoding::cp437toUnicode(rawcontents[i]);
     }
-    else {
+    else if (encoding == encoding::ENCODING_ISO88591) {
       current = encoding::toUnicode(rawcontents[i]);
+    }
+    else {
+      current = encoding::utf8toUnicode(rawcontents[i]);
     }
     translatedcontents.push_back(current);
   }
