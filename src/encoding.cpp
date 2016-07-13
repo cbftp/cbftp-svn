@@ -62,14 +62,19 @@ std::basic_string<unsigned int> toUnicode(const std::string & in) {
 }
 
 template <typename T>
-bool isCurrentPosValidMultibyteUTF8(const T & in, unsigned int pos,
-                                    unsigned int & unicodepoint,
-                                    unsigned int & bytes)
+bool isCurrentPosValidUTF8(const T & in, unsigned int pos,
+                           unsigned int & unicodepoint,
+                           unsigned int & bytes)
 {
-  if (pos >= in.size() || static_cast<unsigned char>(in[pos]) < 128) {
+  if (pos >= in.size()) {
     return false;
   }
-  if ((in[pos] & 0xE0) == 0xC0 && // 2-byte char
+  else if ((in[pos] & 0x80) == 0) {
+    unicodepoint = in[pos];
+    bytes = 1;
+    return true;
+  }
+  else if ((in[pos] & 0xE0) == 0xC0 && // 2-byte char
       pos + 1 < in.size() &&
       (in[pos + 1] & 0xC0) == 0x80)
   {
@@ -109,10 +114,7 @@ std::basic_string<unsigned int> utf8toUnicode(const std::string & in) {
   for (unsigned int i = 0; i < in.length(); i++) {
     unsigned int unicodepoint;
     unsigned int bytes;
-    if (static_cast<unsigned char>(in[i]) < 128) { // ascii
-      out.push_back(in[i]);
-    }
-    else if (isCurrentPosValidMultibyteUTF8(in, i, unicodepoint, bytes)) {
+    if (isCurrentPosValidUTF8(in, i, unicodepoint, bytes)) {
       out.push_back(unicodepoint);
       i += bytes - 1;
     }
@@ -171,7 +173,7 @@ Encoding guessEncoding(const BinaryData & data) {
     if (data[i] >= 128) {
       unsigned int unicodepoint;
       unsigned int bytes;
-      if (isCurrentPosValidMultibyteUTF8(data, i, unicodepoint, bytes)) {
+      if (isCurrentPosValidUTF8(data, i, unicodepoint, bytes)) {
         ++validmultibyteutf8;
         i += bytes - 1;
       }
