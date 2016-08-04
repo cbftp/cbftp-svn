@@ -744,6 +744,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
         std::string path = fl->getPath();
         connstatetracker[id].use();
         if (path != conns[id]->getCurrentPath()) {
+          conns[id]->setCurrentCommandOwner(tj.get());
           conns[id]->doCWD(path);
           return;
         }
@@ -877,6 +878,7 @@ bool SiteLogic::handleRequest(int id) {
     return false;
   }
   connstatetracker[id].use();
+  conns[id]->setCurrentCommandOwner(NULL);
   SiteLogicRequest request = *it;
   requests.erase(it);
   connstatetracker[id].setRequest(request);
