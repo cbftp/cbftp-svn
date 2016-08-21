@@ -22,6 +22,7 @@
 #include "../menuselectsiteelement.h"
 #include "../menuselectadjustableline.h"
 #include "../menuselectoptiontextbutton.h"
+#include "../misc.h"
 
 #include "allracesscreen.h"
 #include "alltransferjobsscreen.h"
@@ -129,21 +130,7 @@ void MainScreen::redraw() {
   mss.checkPointer();
   unsigned int position = mss.getSelectionPointer();
   sitestartrow = irow;
-  unsigned int pagerows = (unsigned int) (row - sitestartrow) / 2;
-  if (position < currentviewspan || position >= currentviewspan + row - sitestartrow) {
-    if (position < pagerows) {
-      currentviewspan = 0;
-    }
-    else {
-      currentviewspan = position - pagerows;
-    }
-  }
-  if (currentviewspan + row >= mss.size() && mss.size() + 1 >= row - sitestartrow) {
-    currentviewspan = mss.size() + 1 - row + sitestartrow;
-    if (currentviewspan > position) {
-      currentviewspan = position;
-    }
-  }
+  adaptViewSpan(currentviewspan, row - sitestartrow, position, mss.size());
 
   int currentraces = global->getEngine()->currentRaces();
   int currenttransferjobs = global->getEngine()->currentTransferJobs();
@@ -215,6 +202,7 @@ void MainScreen::redraw() {
     ui->printStr(i + sitestartrow, 1, mss.getSiteLine(listi), highlight);
   }
 
+  printSlider(ui, row, sitestartrow, col - 1, mss.size(), currentviewspan);
 }
 
 void MainScreen::update() {

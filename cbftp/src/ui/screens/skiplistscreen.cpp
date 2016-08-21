@@ -12,6 +12,7 @@
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptiontextarrow.h"
 #include "../resizableelement.h"
+#include "../misc.h"
 
 SkipListScreen::SkipListScreen(Ui * ui) {
   this->ui = ui;
@@ -47,6 +48,7 @@ void SkipListScreen::initialize(unsigned int row, unsigned int col) {
   testtype->addOption("File", 0);
   testtype->addOption("Dir", 1);
   testtype->setOption(0);
+  currentviewspan = 0;
   init(row, col);
 }
 
@@ -56,6 +58,7 @@ void SkipListScreen::redraw() {
   ui->printStr(y++, 1, "Valid expressions are * (match any num of any chars except slash) and ? (match any 1 char except slash)");
   ui->printStr(y++, 1, "The pattern list is parsed from top to bottom and the first match applies.");
   y = 7;
+  unsigned int listspan = row - 8;
   table.clear();
   Pointer<ResizableElement> re;
   Pointer<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
@@ -87,6 +90,8 @@ void SkipListScreen::redraw() {
   }
   table.adjustLines(col - 3);
   table.checkPointer();
+  unsigned int ypos = table.getLineIndex(table.getAdjustableLine(table.getElement(table.getSelectionPointer()))) - 1;
+  adaptViewSpan(currentviewspan, listspan, ypos, table.linesSize() - 1);
   bool highlight;
   for (unsigned int i = 0; i < base.size(); i++) {
     Pointer<MenuSelectOptionElement> msoe = base.getElement(i);
@@ -99,14 +104,20 @@ void SkipListScreen::redraw() {
   }
   for (unsigned int i = 0; i < table.size(); i++) {
     Pointer<ResizableElement> re = table.getElement(i);
+    unsigned int lineindex = table.getLineIndex(table.getAdjustableLine(re));
+    ypos = lineindex - 1;
+    if (lineindex > 0 && (ypos < currentviewspan || ypos >= currentviewspan + listspan)) {
+      continue;
+    }
     highlight = false;
     if (table.getSelectionPointer() == i && &table == focusedarea) {
       highlight = true;
     }
     if (re->isVisible()) {
-      ui->printStr(re->getRow(), re->getCol(), re->getContentText(), highlight);
+      ui->printStr(re->getRow() - (lineindex ? currentviewspan : 0), re->getCol(), re->getContentText(), highlight);
     }
   }
+  printSlider(ui, row, 8, col - 1, testskiplist.size(), currentviewspan);
   update();
 }
 
@@ -133,13 +144,18 @@ void SkipListScreen::update() {
     ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
   else if (focusedarea == &table) {
+    unsigned int ypos = table.getLineIndex(table.getAdjustableLine(table.getElement(table.getSelectionPointer()))) - 1;
+    if (ypos < currentviewspan || ypos >= currentviewspan + row - 8) {
+      ui->redraw();
+      return;
+    }
     int lastsel = table.getLastSelectionPointer();
     int sel = table.getSelectionPointer();
 
     msoe = table.getElement(lastsel);
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText(), false);
+    ui->printStr(msoe->getRow() - currentviewspan, msoe->getCol(), msoe->getContentText(), false);
     msoe = table.getElement(sel);
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText(), true);
+    ui->printStr(msoe->getRow() - currentviewspan, msoe->getCol(), msoe->getContentText(), true);
   }
   if (!!msoe) {
     int cursorpos = msoe->cursorPosition();

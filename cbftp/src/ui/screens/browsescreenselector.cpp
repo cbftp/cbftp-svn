@@ -10,6 +10,7 @@
 #include "../ui.h"
 #include "../menuselectoptiontextbutton.h"
 #include "../resizableelement.h"
+#include "../misc.h"
 
 #include "browsescreenaction.h"
 
@@ -41,21 +42,8 @@ void BrowseScreenSelector::redraw(unsigned int row, unsigned int col, unsigned i
   this->col = col;
   this->coloffset = coloffset;
   table.clear();
-  unsigned int pagerows = (unsigned int) row / 2;
-  if (pointer < currentviewspan || pointer >= currentviewspan + row) {
-    if (pointer < pagerows) {
-      currentviewspan = 0;
-    }
-    else {
-      currentviewspan = pointer - pagerows;
-    }
-  }
-  if (currentviewspan + row >= entries.size() && entries.size() + 1 >= row) {
-    currentviewspan = entries.size() + 1 - row;
-    if (currentviewspan > pointer) {
-      currentviewspan = pointer;
-    }
-  }
+  adaptViewSpan(currentviewspan, row, pointer, entries.size());
+
   int y = 0;
   for (unsigned int i = currentviewspan; i < currentviewspan + row && i < entries.size(); i++) {
     Pointer<MenuSelectOptionTextButton> msotb =
@@ -76,30 +64,7 @@ void BrowseScreenSelector::redraw(unsigned int row, unsigned int col, unsigned i
     }
     ui->printStr(msotb->getRow(), msotb->getCol(), msotb->getLabelText(), highlight && focus);
   }
-  unsigned int slidersize = 0;
-  unsigned int sliderstart = 0;
-  unsigned int listsize = entries.size();
-  if (listsize > row) {
-    slidersize = (row * row) / listsize;
-    sliderstart = (row * currentviewspan) / listsize;
-    if (slidersize == 0) {
-      slidersize++;
-    }
-    if (slidersize == row) {
-      slidersize--;
-    }
-    if (sliderstart + slidersize > row || currentviewspan + row >= listsize) {
-      sliderstart = row - slidersize;
-    }
-    for (unsigned int i = 0; i < row; i++) {
-      if (i >= sliderstart && i < sliderstart + slidersize) {
-        ui->printChar(i, coloffset + col - 1, ' ', true);
-      }
-      else {
-        ui->printChar(i, coloffset + col - 1, BOX_VLINE);
-      }
-    }
-  }
+  printSlider(ui, row, coloffset + col - 1, entries.size(), currentviewspan);
 }
 
 void BrowseScreenSelector::update() {

@@ -6,6 +6,7 @@
 #include "../menuselectadjustableline.h"
 #include "../menuselectoptiontextbutton.h"
 #include "../termint.h"
+#include "../misc.h"
 
 #include "../../transferstatus.h"
 #include "../../globalcontext.h"
@@ -330,29 +331,7 @@ void ViewFileScreen::viewInternal() {
     }
   }
 
-  unsigned int slidersize = 0;
-  unsigned int sliderstart = 0;
-  if (ymax > row) {
-    slidersize = (row * row) / ymax;
-    sliderstart = (row * y) / ymax;
-    if (slidersize == 0) {
-      slidersize++;
-    }
-    if (slidersize == row) {
-      slidersize--;
-    }
-    if (sliderstart + slidersize > row || y + row >= ymax) {
-      sliderstart = row - slidersize;
-    }
-    for (unsigned int i = 0; i < row; i++) {
-      if (i >= sliderstart && i < sliderstart + slidersize) {
-        ui->printChar(i, col - 1, ' ', true);
-      }
-      else {
-        ui->printChar(i, col - 1, BOX_VLINE);
-      }
-    }
-  }
+  printSlider(ui, row, col - 1, ymax, y);
 }
 
 std::string ViewFileScreen::getLegendText() const {

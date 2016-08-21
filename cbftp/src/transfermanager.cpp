@@ -8,7 +8,7 @@
 #include "localfilelist.h"
 #include "transferstatuscallback.h"
 
-#define MAX_TRANSFER_HISTORY 100
+#define MAX_TRANSFER_HISTORY 1000
 
 TransferManager::TransferManager() {
 }
@@ -100,6 +100,14 @@ std::list<Pointer<TransferStatus> >::const_iterator TransferManager::finishedTra
 
 std::list<Pointer<TransferStatus> >::const_iterator TransferManager::finishedTransfersEnd() const {
   return finishedtransfers.end();
+}
+
+unsigned int TransferManager::ongoingTransfersSize() const {
+  return ongoingtransfers.size();
+}
+
+unsigned int TransferManager::finishedTransfersSize() const {
+  return finishedtransfers.size();
 }
 
 void TransferManager::addNewTransferStatus(Pointer<TransferStatus> & ts) {

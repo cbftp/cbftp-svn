@@ -41,4 +41,5 @@ private:
   SkipList testskiplist;
   Pointer<MenuSelectOptionTextField> testpattern;
   Pointer<MenuSelectOptionTextArrow> testtype;
+  unsigned int currentviewspan;
 };

@@ -12,6 +12,7 @@
 #include "../resizableelement.h"
 #include "../termint.h"
 #include "../menuselectadjustableline.h"
+#include "../misc.h"
 
 #include "browsescreenaction.h"
 
@@ -38,22 +39,9 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
 
   if (resort == true) sort();
   unsigned int position = list.currentCursorPosition();
-  unsigned int pagerows = (unsigned int) row / 2;
   unsigned int listsize = list.size();
-  if (position < currentviewspan || position >= currentviewspan + row) {
-    if (position < pagerows) {
-      currentviewspan = 0;
-    }
-    else {
-      currentviewspan = position - pagerows;
-    }
-  }
-  if (currentviewspan + row >= listsize && listsize + 1 >= row) {
-    currentviewspan = listsize + 1 - row;
-    if (currentviewspan > position) {
-      currentviewspan = position;
-    }
-  }
+  adaptViewSpan(currentviewspan, row, position, listsize);
+
   table.reset();
   const std::vector<UIFile *> * uilist = list.getSortedList();
   for (unsigned int i = 0; i + currentviewspan < uilist->size() && i < row; i++) {
@@ -92,29 +80,7 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
       ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight && focus);
     }
   }
-  unsigned int slidersize = 0;
-  unsigned int sliderstart = 0;
-  if (listsize > row) {
-    slidersize = (row * row) / listsize;
-    sliderstart = (row * currentviewspan) / listsize;
-    if (slidersize == 0) {
-      slidersize++;
-    }
-    if (slidersize == row) {
-      slidersize--;
-    }
-    if (sliderstart + slidersize > row || currentviewspan + row >= listsize) {
-      sliderstart = row - slidersize;
-    }
-    for (unsigned int i = 0; i < row; i++) {
-      if (i >= sliderstart && i < sliderstart + slidersize) {
-        ui->printChar(i, coloffset + col - 1, ' ', true);
-      }
-      else {
-        ui->printChar(i, coloffset + col - 1, BOX_VLINE);
-      }
-    }
-  }
+  printSlider(ui, row, coloffset + col - 1, listsize, currentviewspan);
 }
 
 void BrowseScreenLocal::update() {

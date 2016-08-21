@@ -21,11 +21,15 @@ public:
   std::string getLegendText() const;
   std::string getInfoLabel() const;
   std::string getInfoText() const;
-  static void addRaceTableHeader(unsigned int, MenuSelectOption &, std::string);
+  static void addRaceTableHeader(unsigned int, MenuSelectOption &, const std::string &);
   static void addRaceDetails(unsigned int, MenuSelectOption &, Pointer<Race>);
 private:
-  static void addRaceTableRow(unsigned int, MenuSelectOption &, unsigned int, bool, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string);
+  static void addRaceTableRow(unsigned int, MenuSelectOption &, unsigned int, bool, const std::string &,
+      const std::string &, const std::string &, const std::string &, const std::string &, const std::string &,
+      const std::string &, const std::string &, const std::string &, const std::string &, const std::string &);
   MenuSelectOption table;
   Engine * engine;
   bool hascontents;
+  unsigned int currentviewspan;
+  unsigned int ypos;
 };

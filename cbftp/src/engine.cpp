@@ -896,23 +896,23 @@ bool Engine::raceTransferPossible(SiteLogic * sls, SiteLogic * sld, Pointer<Race
   return true;
 }
 
-int Engine::preparedRaces() const {
+unsigned int Engine::preparedRaces() const {
   return preparedraces.size();
 }
 
-int Engine::currentRaces() const {
+unsigned int Engine::currentRaces() const {
   return currentraces.size();
 }
 
-int Engine::allRaces() const {
+unsigned int Engine::allRaces() const {
   return allraces.size();
 }
 
-int Engine::currentTransferJobs() const {
+unsigned int Engine::currentTransferJobs() const {
   return currenttransferjobs.size();
 }
 
-int Engine::allTransferJobs() const {
+unsigned int Engine::allTransferJobs() const {
   return alltransferjobs.size();
 }
 

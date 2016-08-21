@@ -50,11 +50,11 @@ public:
   void abortTransferJob(Pointer<TransferJob> &);
   void raceFileListRefreshed(SiteLogic *, SiteRace *);
   bool transferJobActionRequest(Pointer<TransferJob> &);
-  int preparedRaces() const;
-  int currentRaces() const;
-  int allRaces() const;
-  int currentTransferJobs() const;
-  int allTransferJobs() const;
+  unsigned int preparedRaces() const;
+  unsigned int currentRaces() const;
+  unsigned int allRaces() const;
+  unsigned int currentTransferJobs() const;
+  unsigned int allTransferJobs() const;
   Pointer<Race> getRace(unsigned int) const;
   Pointer<TransferJob> getTransferJob(unsigned int) const;
   std::list<Pointer<PreparedRace> >::const_iterator getPreparedRacesBegin() const;

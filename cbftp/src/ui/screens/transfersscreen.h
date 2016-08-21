@@ -21,9 +21,17 @@ public:
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
+  static void addTransferTableHeader(unsigned int, MenuSelectOption &);
 private:
-  void addTransferDetails(unsigned int, MenuSelectOption &, Pointer<TransferStatus>);
+  static Pointer<MenuSelectOptionElement> addTransferTableRow(unsigned int, MenuSelectOption &, bool,
+      const std::string &, const std::string &, const std::string &,
+      const std::string &, const std::string &, const std::string &,
+      const std::string &, const std::string &, const std::string &);
+  static Pointer<MenuSelectOptionElement> addTransferDetails(unsigned int, MenuSelectOption &, Pointer<TransferStatus>);
   std::map<Pointer<MenuSelectOptionElement>, int> progressmap;
   TransferManager * tm;
   MenuSelectOption table;
+  unsigned int currentviewspan;
+  unsigned int ypos;
+  bool hascontents;
 };

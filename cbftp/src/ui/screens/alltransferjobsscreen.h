@@ -21,11 +21,15 @@ public:
   std::string getLegendText() const;
   std::string getInfoLabel() const;
   std::string getInfoText() const;
-  static void addJobTableHeader(unsigned int, MenuSelectOption &, std::string);
+  static void addJobTableHeader(unsigned int, MenuSelectOption &, const std::string &);
   static void addJobDetails(unsigned int, MenuSelectOption &, Pointer<TransferJob>);
 private:
-  static void addJobTableRow(unsigned int, MenuSelectOption &, unsigned int, bool, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string);
+  static void addJobTableRow(unsigned int, MenuSelectOption &, unsigned int, bool, const std::string &,
+      const std::string &, const std::string &, const std::string &, const std::string &, const std::string &,
+      const std::string &, const std::string &, const std::string &, const std::string &);
   MenuSelectOption table;
   Engine * engine;
   bool hascontents;
+  unsigned int currentviewspan;
+  unsigned int ypos;
 };

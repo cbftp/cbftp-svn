@@ -5,6 +5,7 @@
 #include "../menuselectoptionelement.h"
 #include "../resizableelement.h"
 #include "../menuselectoptiontextbutton.h"
+#include "../misc.h"
 
 #include "../../race.h"
 #include "../../engine.h"
@@ -18,6 +19,8 @@ AllRacesScreen::AllRacesScreen(Ui * ui) {
 void AllRacesScreen::initialize(unsigned int row, unsigned int col) {
   autoupdate = true;
   hascontents = false;
+  currentviewspan = 0;
+  ypos = 0;
   engine = global->getEngine();
   table.reset();
   table.enterFocusFrom(0);
@@ -26,12 +29,23 @@ void AllRacesScreen::initialize(unsigned int row, unsigned int col) {
 
 void AllRacesScreen::redraw() {
   ui->erase();
-  int y = 0;
-  table.clear();
+  unsigned int y = 0;
+  unsigned int listspan = row - 1;
+  unsigned int totallistsize = engine->allRaces();
+  table.reset();
+  adaptViewSpan(currentviewspan, listspan, ypos, totallistsize);
+
   addRaceTableHeader(y, table, "RELEASE");
   y++;
-  for (std::list<Pointer<Race> >::const_iterator it = --engine->getRacesEnd(); it != --engine->getRacesBegin(); it--) {
-    addRaceDetails(y++, table, *it);
+  unsigned int pos = 0;
+  for (std::list<Pointer<Race> >::const_iterator it = --engine->getRacesEnd(); it != --engine->getRacesBegin() && y < row; it--) {
+    if (pos >= currentviewspan) {
+      addRaceDetails(y++, table, *it);
+      if (pos == ypos) {
+        table.enterFocusFrom(2);
+      }
+    }
+    ++pos;
   }
   table.checkPointer();
   hascontents = table.linesSize() > 1;
@@ -47,6 +61,7 @@ void AllRacesScreen::redraw() {
       ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
     }
   }
+  printSlider(ui, row, 1, col - 1, totallistsize, currentviewspan);
 }
 
 void AllRacesScreen::update() {
@@ -56,14 +71,44 @@ void AllRacesScreen::update() {
 bool AllRacesScreen::keyPressed(unsigned int ch) {
   switch (ch) {
     case KEY_UP:
-      if (hascontents && table.goUp()) {
+      if (hascontents && ypos > 0) {
+        --ypos;
+        table.goUp();
         ui->update();
       }
       return true;
     case KEY_DOWN:
-      if (hascontents && table.goDown()) {
+      if (hascontents && ypos < engine->allRaces() - 1) {
+        ++ypos;
+        table.goDown();
         ui->update();
       }
+      return true;
+    case KEY_NPAGE: {
+      unsigned int pagerows = (unsigned int) row * 0.6;
+      for (unsigned int i = 0; i < pagerows && ypos < engine->allRaces() - 1; i++) {
+        ypos++;
+        table.goDown();
+      }
+      ui->update();
+      return true;
+    }
+    case KEY_PPAGE: {
+      unsigned int pagerows = (unsigned int) row * 0.6;
+      for (unsigned int i = 0; i < pagerows && ypos > 0; i++) {
+        ypos--;
+        table.goUp();
+      }
+      ui->update();
+      return true;
+    }
+    case KEY_HOME:
+      ypos = 0;
+      ui->update();
+      return true;
+    case KEY_END:
+      ypos = engine->allRaces() - 1;
+      ui->update();
       return true;
     case 'c':
     case 27: // esc
@@ -81,7 +126,7 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
 }
 
 std::string AllRacesScreen::getLegendText() const {
-  return "[Esc/c] Return - [Enter] Details - [Up/Down] Navigate";
+  return "[Esc/c] Return - [Enter] Details - [Up/Down/Pgup/Pgdn/Home/End] Navigate";
 }
 
 std::string AllRacesScreen::getInfoLabel() const {
@@ -92,14 +137,14 @@ std::string AllRacesScreen::getInfoText() const {
   return "Active: " + util::int2Str(engine->currentRaces()) + "  Total: " + util::int2Str(engine->allRaces());
 }
 
-void AllRacesScreen::addRaceTableHeader(unsigned int y, MenuSelectOption & mso, std::string release) {
+void AllRacesScreen::addRaceTableHeader(unsigned int y, MenuSelectOption & mso, const std::string & release) {
   addRaceTableRow(y, mso, -1, false, "STARTED", "USE", "SECTION", release, "SIZE", "WORST", "AVG", "BEST", "STATUS", "DONE", "SITES");
 }
 
 void AllRacesScreen::addRaceTableRow(unsigned int y, MenuSelectOption & mso, unsigned int id, bool selectable,
-    std::string timestamp, std::string timespent, std::string section, std::string release,
-    std::string size, std::string worst, std::string avg, std::string best, std::string status, std::string done,
-    std::string sites)
+    const std::string & timestamp, const std::string & timespent, const std::string & section, const std::string & release,
+    const std::string & size, const std::string & worst, const std::string & avg, const std::string & best, const std::string & status, const std::string & done,
+    const std::string & sites)
 {
   Pointer<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
   Pointer<MenuSelectOptionTextButton> msotb;
@@ -117,9 +162,7 @@ void AllRacesScreen::addRaceTableRow(unsigned int y, MenuSelectOption & mso, uns
   msal->addElement(msotb, 3, RESIZE_REMOVE);
 
   msotb = mso.addTextButton(y, 1, "release", release);
-  if (!selectable) {
-    msotb->setSelectable(false);
-  }
+  msotb->setSelectable(selectable);
   msotb->setId(id);
   msal->addElement(msotb, 12, RESIZE_CUTEND, true);
 
