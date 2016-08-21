@@ -7,6 +7,7 @@
 #include "../menuselectoptionelement.h"
 #include "../resizableelement.h"
 #include "../menuselectoptiontextbutton.h"
+#include "../misc.h"
 
 #include "../../globalcontext.h"
 #include "../../util.h"
@@ -20,6 +21,8 @@ AllTransferJobsScreen::AllTransferJobsScreen(Ui * ui) {
 void AllTransferJobsScreen::initialize(unsigned int row, unsigned int col) {
   autoupdate = true;
   hascontents = false;
+  currentviewspan = 0;
+  ypos = 1;
   engine = global->getEngine();
   table.reset();
   table.enterFocusFrom(0);
@@ -28,12 +31,24 @@ void AllTransferJobsScreen::initialize(unsigned int row, unsigned int col) {
 
 void AllTransferJobsScreen::redraw() {
   ui->erase();
-  int y = 0;
-  table.clear();
-  addJobTableHeader(y, table, "NAME");
-  y++;
-  for (std::list<Pointer<TransferJob> >::const_iterator it = --engine->getTransferJobsEnd(); it != --engine->getTransferJobsBegin(); it--) {
-    addJobDetails(y++, table, *it);
+  unsigned int y = 0;
+  unsigned int totallistsize = engine->allTransferJobs() + 1;
+  table.reset();
+  adaptViewSpan(currentviewspan, row, ypos, totallistsize);
+
+  if (!currentviewspan) {
+    addJobTableHeader(y, table, "NAME");
+    y++;
+  }
+  unsigned int pos = 1;
+  for (std::list<Pointer<TransferJob> >::const_iterator it = --engine->getTransferJobsEnd(); it != --engine->getTransferJobsBegin() && y < row; it--) {
+    if (pos >= currentviewspan) {
+      addJobDetails(y++, table, *it);
+      if (pos == ypos) {
+        table.enterFocusFrom(2);
+      }
+    }
+    ++pos;
   }
   table.checkPointer();
   hascontents = table.linesSize() > 1;
@@ -49,6 +64,7 @@ void AllTransferJobsScreen::redraw() {
       ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
     }
   }
+  printSlider(ui, row, col - 1, totallistsize, currentviewspan);
 }
 
 void AllTransferJobsScreen::update() {
@@ -58,14 +74,56 @@ void AllTransferJobsScreen::update() {
 bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
   switch (ch) {
     case KEY_UP:
-      if (hascontents && table.goUp()) {
+      if (hascontents && ypos > 1) {
+        --ypos;
+        table.goUp();
+        ui->update();
+      }
+      else if (ypos == 1) {
+        currentviewspan = 0;
         ui->update();
       }
       return true;
     case KEY_DOWN:
-      if (hascontents && table.goDown()) {
+      if (hascontents && ypos < engine->allTransferJobs()) {
+        ++ypos;
+        table.goDown();
         ui->update();
       }
+      return true;
+    case KEY_NPAGE: {
+      unsigned int pagerows = (unsigned int) row * 0.6;
+      for (unsigned int i = 0; i < pagerows; i++) {
+        if (ypos >= engine->allTransferJobs()) {
+          break;
+        }
+        ypos++;
+        table.goDown();
+      }
+      ui->update();
+      return true;
+    }
+    case KEY_PPAGE: {
+      unsigned int pagerows = (unsigned int) row * 0.6;
+      for (unsigned int i = 0; i < pagerows; i++) {
+        if (ypos == 1) {
+          currentviewspan = 0;
+          break;
+        }
+        ypos--;
+        table.goUp();
+      }
+      ui->update();
+      return true;
+    }
+    case KEY_HOME:
+      ypos = 1;
+      currentviewspan = 0;
+      ui->update();
+      return true;
+    case KEY_END:
+      ypos = engine->allTransferJobs();
+      ui->update();
       return true;
     case 'c':
     case 27: // esc
@@ -95,9 +153,9 @@ std::string AllTransferJobsScreen::getInfoText() const {
 }
 
 void AllTransferJobsScreen::addJobTableRow(unsigned int y, MenuSelectOption & mso, unsigned int id, bool selectable,
-    std::string timestamp, std::string timespent, std::string type, std::string name,
-    std::string route, std::string sizeprogress, std::string filesprogress,
-    std::string remaining, std::string speed, std::string progress) {
+    const std::string & timestamp, const std::string & timespent, const std::string & type, const std::string & name,
+    const std::string & route, const std::string & sizeprogress, const std::string & filesprogress,
+    const std::string & remaining, const std::string & speed, const std::string & progress) {
   Pointer<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
   Pointer<MenuSelectOptionTextButton> msotb;
 
@@ -114,9 +172,7 @@ void AllTransferJobsScreen::addJobTableRow(unsigned int y, MenuSelectOption & ms
   msal->addElement(msotb, 7, RESIZE_REMOVE);
 
   msotb = mso.addTextButton(y, 1, "name", name);
-  if (!selectable) {
-    msotb->setSelectable(false);
-  }
+  msotb->setSelectable(selectable);
   msotb->setId(id);
   msal->addElement(msotb, 10, RESIZE_CUTEND, true);
 
@@ -145,7 +201,7 @@ void AllTransferJobsScreen::addJobTableRow(unsigned int y, MenuSelectOption & ms
   msal->addElement(msotb, 9, RESIZE_REMOVE);
 }
 
-void AllTransferJobsScreen::addJobTableHeader(unsigned int y, MenuSelectOption & mso, std::string name) {
+void AllTransferJobsScreen::addJobTableHeader(unsigned int y, MenuSelectOption & mso, const std::string & name) {
   addJobTableRow(y, mso, -1, false, "STARTED", "USE", "TYPE", name, "ROUTE", "SIZE", "FILES", "LEFT", "SPEED", "DONE");
 }
 

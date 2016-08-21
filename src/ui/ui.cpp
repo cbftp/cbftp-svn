@@ -438,6 +438,7 @@ void Ui::switchToWindow(Pointer<UIWindow> window, bool allowsplit) {
 }
 
 void Ui::globalKeyBinds(int ch) {
+  bool match = true;
   switch(ch) {
     case 'K':
       global->getExternalFileViewing()->killAll();
@@ -457,8 +458,13 @@ void Ui::globalKeyBinds(int ch) {
         fullscreentoggle = true;
       }
       break;
+    default:
+      match = false;
+      break;
   }
-  update();
+  if (match) {
+    update();
+  }
 }
 
 void Ui::resizeTerm() {

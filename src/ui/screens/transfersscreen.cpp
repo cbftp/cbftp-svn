@@ -5,6 +5,7 @@
 #include "../menuselectoptiontextbutton.h"
 #include "../menuselectoptionelement.h"
 #include "../resizableelement.h"
+#include "../misc.h"
 
 #include "../../globalcontext.h"
 #include "../../transferstatus.h"
@@ -22,6 +23,9 @@ TransfersScreen::~TransfersScreen() {
 
 void TransfersScreen::initialize(unsigned int row, unsigned int col) {
   autoupdate = true;
+  hascontents = false;
+  currentviewspan = 0;
+  ypos = 0;
   table.reset();
   table.enterFocusFrom(0);
   init(row, col);
@@ -29,47 +33,46 @@ void TransfersScreen::initialize(unsigned int row, unsigned int col) {
 
 void TransfersScreen::redraw() {
   ui->erase();
-  int y = 0;
-  table.clear();
+  unsigned int y = 0;
+  unsigned int listspan = row - 1;
+  unsigned int totallistsize = tm->ongoingTransfersSize() + tm->finishedTransfersSize();
+  table.reset();
   progressmap.clear();
-  Pointer<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
-  Pointer<MenuSelectOptionTextButton> msotb;
-  msotb = table.addTextButtonNoContent(y, 1, "timestamp", "STARTED");
-  msal->addElement(msotb, 3, RESIZE_REMOVE);
-  msotb = table.addTextButtonNoContent(y, 4, "timespent", "USE");
-  msal->addElement(msotb, 9, RESIZE_CUTEND);
-  msotb = table.addTextButtonNoContent(y, 2, "route", "ROUTE");
-  msal->addElement(msotb, 8, RESIZE_REMOVE);
-  msotb = table.addTextButtonNoContent(y, 10, "path", "PATH");
-  msal->addElement(msotb, 1, RESIZE_CUTEND);
-  msotb = table.addTextButtonNoContent(y, 5, "transferred", "TRANSFERRED");
-  msal->addElement(msotb, 4, RESIZE_CUTEND);
-  msotb = table.addTextButtonNoContent(y, 3, "filename", "FILENAME");
-  msal->addElement(msotb, 2, RESIZE_CUTEND, true);
-  msotb = table.addTextButtonNoContent(y, 6, "remaining", "LEFT");
-  msal->addElement(msotb, 5, RESIZE_REMOVE);
-  msotb = table.addTextButtonNoContent(y, 7, "speed", "SPEED");
-  msal->addElement(msotb, 6, RESIZE_REMOVE);
-  msotb = table.addTextButtonNoContent(y, 8, "progress", "DONE");
-  msal->addElement(msotb, 7, RESIZE_REMOVE);
+  adaptViewSpan(currentviewspan, listspan, ypos, totallistsize);
 
-  y++;
-  for (std::list<Pointer<TransferStatus> >::const_iterator it = tm->ongoingTransfersBegin(); it != tm->ongoingTransfersEnd(); it++) {
-    addTransferDetails(y++, table, *it);
+  addTransferTableHeader(y++, table);
+
+  unsigned int pos = 0;
+  for (std::list<Pointer<TransferStatus> >::const_iterator it = tm->ongoingTransfersBegin(); it != tm->ongoingTransfersEnd() && y < row; it++) {
+    if (pos >= currentviewspan) {
+      progressmap[addTransferDetails(y++, table, *it)] = (*it)->getProgress();
+      if (pos == ypos) {
+        table.enterFocusFrom(2);
+      }
+    }
+    ++pos;
   }
-  for (std::list<Pointer<TransferStatus> >::const_iterator it = tm->finishedTransfersBegin(); it != tm->finishedTransfersEnd(); it++) {
-    addTransferDetails(y++, table, *it);
+  for (std::list<Pointer<TransferStatus> >::const_iterator it = tm->finishedTransfersBegin(); it != tm->finishedTransfersEnd() && y < row; it++) {
+    if (pos >= currentviewspan) {
+      progressmap[addTransferDetails(y++, table, *it)] = (*it)->getProgress();
+      if (pos == ypos) {
+        table.enterFocusFrom(2);
+      }
+    }
+    ++pos;
   }
+  table.checkPointer();
+  hascontents = table.linesSize() > 1;
   table.adjustLines(col - 3);
   bool highlight;
   for (unsigned int i = 0; i < table.size(); i++) {
     Pointer<ResizableElement> re = table.getElement(i);
     highlight = false;
-    if (table.getSelectionPointer() == i) {
-      //highlight = true; // later problem
+    if (table.getSelectionPointer() == i && hascontents) {
+      highlight = true;
     }
     if (re->isVisible()) {
-      if (re->getIdentifier() == "filename") {
+      if (re->getIdentifier() == "transferred") {
         int progresspercent = 0;
         std::map<Pointer<MenuSelectOptionElement>, int>::iterator it = progressmap.find(re);
         if (it != progressmap.end()) {
@@ -85,6 +88,7 @@ void TransfersScreen::redraw() {
       }
     }
   }
+  printSlider(ui, row, 1, col - 1, totallistsize, currentviewspan);
 }
 
 void TransfersScreen::update() {
@@ -93,9 +97,48 @@ void TransfersScreen::update() {
 
 bool TransfersScreen::keyPressed(unsigned int ch) {
   switch (ch) {
+    case KEY_UP:
+      if (hascontents && ypos > 0) {
+        --ypos;
+        table.goUp();
+        ui->update();
+      }
+      return true;
+    case KEY_DOWN:
+      if (hascontents && ypos < tm->ongoingTransfersSize() + tm->finishedTransfersSize() - 1) {
+        ++ypos;
+        table.goDown();
+        ui->update();
+      }
+      return true;
+    case KEY_NPAGE: {
+      unsigned int pagerows = (unsigned int) row * 0.6;
+      for (unsigned int i = 0; i < pagerows && ypos < tm->ongoingTransfersSize() + tm->finishedTransfersSize() - 1; i++) {
+        ypos++;
+        table.goDown();
+      }
+      ui->update();
+      return true;
+    }
+    case KEY_PPAGE: {
+      unsigned int pagerows = (unsigned int) row * 0.6;
+      for (unsigned int i = 0; i < pagerows && ypos > 0; i++) {
+        ypos--;
+        table.goUp();
+      }
+      ui->update();
+      return true;
+    }
+    case KEY_HOME:
+      ypos = 0;
+      ui->update();
+      return true;
+    case KEY_END:
+      ypos = tm->ongoingTransfersSize() + tm->finishedTransfersSize() - 1;
+      ui->update();
+      return true;
     case 'c':
     case 27: // esc
-    case 10:
       ui->returnToLast();
       return true;
   }
@@ -110,7 +153,11 @@ std::string TransfersScreen::getInfoLabel() const {
   return "TRANSFERS";
 }
 
-void TransfersScreen::addTransferDetails(unsigned int y, MenuSelectOption & mso, Pointer<TransferStatus> ts) {
+void TransfersScreen::addTransferTableHeader(unsigned int y, MenuSelectOption & mso) {
+  addTransferTableRow(y, mso, false, "STARTED", "USE", "ROUTE", "PATH", "TRANSFERRED", "FILENAME", "LEFT", "SPEED", "DONE");
+}
+
+Pointer<MenuSelectOptionElement> TransfersScreen::addTransferDetails(unsigned int y, MenuSelectOption & mso, Pointer<TransferStatus> ts) {
   std::string route = ts->getSource() + " -> " + ts->getTarget();
   std::string speed = util::parseSize(ts->getSpeed() * SIZEPOWER) + "/s";
   std::string timespent = util::simpleTimeFormat(ts->getTimeSpent());
@@ -131,26 +178,54 @@ void TransfersScreen::addTransferDetails(unsigned int y, MenuSelectOption & mso,
   std::string transferred = util::parseSize(ts->targetSize()) + " / " +
       util::parseSize(ts->sourceSize());
   std::string path = ts->getSourcePath() + " -> " + ts->getTargetPath();
+
+  return addTransferTableRow(y, mso, true, ts->getTimestamp(), timespent, route, path, transferred,
+      ts->getFile(), timeremaining, speed, progress);
+}
+
+Pointer<MenuSelectOptionElement> TransfersScreen::addTransferTableRow(unsigned int y, MenuSelectOption & mso, bool selectable,
+    const std::string & timestamp, const std::string & timespent, const std::string & route,
+    const std::string & path, const std::string & transferred, const std::string & filename,
+    const std::string & timeremaining, const std::string & speed, const std::string & progress)
+{
   Pointer<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
   Pointer<MenuSelectOptionTextButton> msotb;
-  msotb = mso.addTextButtonNoContent(y, 1, "timestamp", ts->getTimestamp());
-  msal->addElement(msotb, 3, RESIZE_REMOVE);
-  msotb = mso.addTextButtonNoContent(y, 1, "timespent", timespent);
-  msal->addElement(msotb, 9, RESIZE_REMOVE);
-  msotb = mso.addTextButtonNoContent(y, 30, "route", route);
-  msal->addElement(msotb, 8, RESIZE_REMOVE);
-  msotb = mso.addTextButtonNoContent(y, 10, "path", path);
-  msal->addElement(msotb, 1, RESIZE_WITHDOTS);
-  msotb = mso.addTextButtonNoContent(y, 10, "transferred", transferred);
-  msal->addElement(msotb, 4, RESIZE_CUTEND);
-  msotb = mso.addTextButtonNoContent(y, 10, "filename", ts->getFile());
-  progressmap[msotb] = progresspercent;
-  msal->addElement(msotb, 2, RESIZE_WITHLAST3, true);
-  msotb = mso.addTextButtonNoContent(y, 60, "remaining", timeremaining);
-  msal->addElement(msotb, 5, RESIZE_REMOVE);
-  msotb = mso.addTextButtonNoContent(y, 40, "speed", speed);
-  msal->addElement(msotb, 6, RESIZE_REMOVE);
-  msotb = mso.addTextButtonNoContent(y, 50, "progress", progress);
-  msal->addElement(msotb, 7, RESIZE_REMOVE);
 
+  msotb = mso.addTextButtonNoContent(y, 1, "timestamp", timestamp);
+  msotb->setSelectable(false);
+  msal->addElement(msotb, 3, RESIZE_REMOVE);
+
+  msotb = mso.addTextButtonNoContent(y, 1, "timespent", timespent);
+  msotb->setSelectable(false);
+  msal->addElement(msotb, 9, RESIZE_REMOVE);
+
+  msotb = mso.addTextButtonNoContent(y, 30, "route", route);
+  msotb->setSelectable(false);
+  msal->addElement(msotb, 8, RESIZE_REMOVE);
+
+  msotb = mso.addTextButtonNoContent(y, 10, "path", path);
+  msotb->setSelectable(false);
+  msal->addElement(msotb, 1, RESIZE_WITHDOTS);
+
+  msotb = mso.addTextButtonNoContent(y, 10, "transferred", transferred);
+  msotb->setSelectable(false);
+  msal->addElement(msotb, 4, RESIZE_CUTEND);
+  Pointer<MenuSelectOptionElement> progresselem = msotb;
+
+  msotb = mso.addTextButtonNoContent(y, 10, "filename", filename);
+  msotb->setSelectable(selectable);
+  msal->addElement(msotb, 2, RESIZE_WITHLAST3, true);
+
+  msotb = mso.addTextButtonNoContent(y, 60, "remaining", timeremaining);
+  msotb->setSelectable(false);
+  msal->addElement(msotb, 5, RESIZE_REMOVE);
+
+  msotb = mso.addTextButtonNoContent(y, 40, "speed", speed);
+  msotb->setSelectable(false);
+  msal->addElement(msotb, 6, RESIZE_REMOVE);
+
+  msotb = mso.addTextButtonNoContent(y, 50, "progress", progress);
+  msotb->setSelectable(false);
+  msal->addElement(msotb, 7, RESIZE_REMOVE);
+  return progresselem;
 }

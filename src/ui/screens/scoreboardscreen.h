@@ -23,4 +23,5 @@ private:
   Engine * engine;
   Pointer<ScoreBoard> scoreboard;
   MenuSelectOption table;
+  unsigned int currentviewspan;
 };

@@ -35,5 +35,7 @@ class TransferManager {
     std::list<Pointer<TransferStatus> >::const_iterator ongoingTransfersEnd() const;
     std::list<Pointer<TransferStatus> >::const_iterator finishedTransfersBegin() const;
     std::list<Pointer<TransferStatus> >::const_iterator finishedTransfersEnd() const;
+    unsigned int ongoingTransfersSize() const;
+    unsigned int finishedTransfersSize() const;
     void addNewTransferStatus(Pointer<TransferStatus> &);
 };
