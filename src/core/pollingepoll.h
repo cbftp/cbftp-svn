@@ -28,7 +28,7 @@ public:
       else if (events[i].events & EPOLLOUT) {
         pollevent = POLLEVENT_OUT;
       }
-      fdlist.push_back(std::pair<int, PollEvent>(events[i].data.fd, pollevent));
+      fdlist.push_back(std::pair<int, PollEvent>(static_cast<int>(events[i].data.fd), pollevent));
     }
   }
   void addFDIn(int addfd) {
