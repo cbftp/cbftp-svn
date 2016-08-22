@@ -30,7 +30,7 @@ public:
       else if (events[i].filter == EVFILT_WRITE) {
         pollevent = POLLEVENT_OUT;
       }
-      fdlist.push_back(std::pair<int, PollEvent>(events[i].ident, pollevent));
+      fdlist.push_back(std::pair<int, PollEvent>(static_cast<int>(events[i].ident), pollevent));
     }
   }
   void addFDIn(int addfd) {
