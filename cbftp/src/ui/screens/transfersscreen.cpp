@@ -161,7 +161,7 @@ bool TransfersScreen::keyPressed(unsigned int ch) {
 }
 
 std::string TransfersScreen::getLegendText() const {
-  return "[Enter] return";
+  return "[Esc/c] Return - [Up/Down] Navigate - [Enter] Details";
 }
 
 std::string TransfersScreen::getInfoLabel() const {
