@@ -40,13 +40,15 @@ private:
   bool listpassive;
   bool listssl;
   bool listinitialized;
-  std::string listaddr;
+  std::string listhost;
+  int listport;
   TransferMonitor * listtm;
-  std::string addr;
+  std::string host;
+  int port;
   Pointer<RecursiveCommandLogic> recursivelogic;
   Pointer<SiteLogicRequest> request;
-  void setTransfer(std::string, std::string, bool, bool, std::string, bool);
-  void setList(TransferMonitor *, bool, std::string, bool);
+  void setTransfer(const std::string &, const std::string &, bool, bool, const std::string &, int, bool);
+  void setList(TransferMonitor *, bool, const std::string &, int, bool);
 public:
   ConnStateTracker();
   ~ConnStateTracker();
@@ -60,10 +62,10 @@ public:
   int checkCount() const;
   DelayedCommand & getCommand();
   void setDisconnected();
-  void setTransfer(std::string, std::string, bool, bool);
-  void setTransfer(std::string, std::string, std::string, bool);
+  void setTransfer(const std::string &, const std::string &, bool, bool);
+  void setTransfer(const std::string &, const std::string &, const std::string &, int, bool);
   void setList(TransferMonitor *, bool);
-  void setList(TransferMonitor *, std::string, bool);
+  void setList(TransferMonitor *, const std::string &, int, bool);
   bool hasTransfer() const;
   bool hasFileTransfer() const;
   void finishTransfer();
@@ -90,7 +92,8 @@ public:
   bool getTransferPassive() const;
   bool getTransferSSL() const;
   bool getTransferFXP() const;
-  std::string getTransferAddr() const;
+  std::string getTransferHost() const;
+  int getTransferPort() const;
   Pointer<RecursiveCommandLogic> getRecursiveLogic() const;
   bool transferInitialized() const;
   void initializeTransfer();

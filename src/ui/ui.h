@@ -21,6 +21,7 @@ class LegendWindow;
 class FileList;
 class Site;
 class DataFileHandler;
+class TransferStatus;
 class LoginScreen;
 class NewKeyScreen;
 class MainScreen;
@@ -48,6 +49,7 @@ class TransfersScreen;
 class TransferJobStatusScreen;
 class AllRacesScreen;
 class AllTransferJobsScreen;
+class TransferStatusScreen;
 
 enum LegendMode {
   LEGEND_DISABLED = 123,
@@ -93,6 +95,7 @@ private:
   Pointer<TransferJobStatusScreen> transferjobstatusscreen;
   Pointer<AllRacesScreen> allracesscreen;
   Pointer<AllTransferJobsScreen> alltransferjobsscreen;
+  Pointer<TransferStatusScreen> transferstatusscreen;
   int mainrow;
   int maincol;
   int col;
@@ -185,6 +188,7 @@ public:
   void goSiteStatus(std::string);
   void goRaceStatus(unsigned int);
   void goTransferJobStatus(unsigned int);
+  void goTransferStatus(Pointer<TransferStatus>);
   void goGlobalOptions();
   void goEventLog();
   void goScoreBoard();

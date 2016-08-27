@@ -85,7 +85,7 @@ class SiteLogic : public EventReceiver {
     void commandFail(int);
     void gotPath(int, std::string);
     void rawCommandResultRetrieved(int, std::string);
-    void gotPassiveAddress(int, std::string);
+    void gotPassiveAddress(int, const std::string &, int);
     void timedout(int);
     void disconnected(int);
     void activateOne();
@@ -113,7 +113,7 @@ class SiteLogic : public EventReceiver {
     RawBuffer * getAggregatedRawBuffer() const;
     void raceGlobalComplete();
     void raceLocalComplete(SiteRace *, int);
-    void transferComplete(bool isdownload);
+    void transferComplete(int, bool isdownload);
     bool getSlot(bool);
     int requestFileList(std::string);
     int requestRawCommand(std::string, bool);
@@ -135,9 +135,9 @@ class SiteLogic : public EventReceiver {
     FTPConn * getConn(int) const;
     std::string getStatus(int) const;
     void preparePassiveTransfer(int, const std::string &, const std::string &, bool, bool);
-    void prepareActiveTransfer(int, const std::string &, const std::string &, const std::string &, bool);
+    void prepareActiveTransfer(int, const std::string &, const std::string &, const std::string &, int, bool);
     void preparePassiveList(int, TransferMonitor *, bool);
-    void prepareActiveList(int, TransferMonitor *, const std::string &, bool);
+    void prepareActiveList(int, TransferMonitor *, const std::string &, int, bool);
     void download(int);
     void upload(int);
     void list(int);

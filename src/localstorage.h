@@ -20,10 +20,10 @@ class LocalStorage {
 public:
   LocalStorage();
   ~LocalStorage();
-  LocalTransfer * passiveModeDownload(TransferMonitor *, const std::string &, const std::string &, bool, FTPConn *);
-  LocalTransfer * passiveModeDownload(TransferMonitor *, const std::string &, const std::string &, const std::string &, bool, FTPConn *);
-  LocalTransfer * passiveModeDownload(TransferMonitor *, const std::string &, bool, FTPConn *);
-  LocalTransfer * passiveModeUpload(TransferMonitor *, const std::string &, const std::string &, const std::string &, bool, FTPConn *);
+  LocalTransfer * passiveModeDownload(TransferMonitor *, const std::string &, const std::string &, int, bool, FTPConn *);
+  LocalTransfer * passiveModeDownload(TransferMonitor *, const std::string &, const std::string &, const std::string &, int, bool, FTPConn *);
+  LocalTransfer * passiveModeDownload(TransferMonitor *, const std::string &, int, bool, FTPConn *);
+  LocalTransfer * passiveModeUpload(TransferMonitor *, const std::string &, const std::string &, const std::string &, int, bool, FTPConn *);
   LocalTransfer * activeModeDownload(TransferMonitor *, const std::string &, const std::string &, bool, FTPConn *);
   LocalTransfer * activeModeDownload(TransferMonitor *, bool, FTPConn *);
   LocalTransfer * activeModeUpload(TransferMonitor *, const std::string &, const std::string &, bool, FTPConn *);
@@ -48,11 +48,9 @@ public:
   void setActivePortFirst(int);
   void setActivePortLast(int);
   int getNextActivePort();
-  std::string localTransferPassiveString(LocalTransfer *) const;
+  std::string getAddress(LocalTransfer *) const;
 private:
   std::map<int, BinaryData> content;
-  static std::string getHostFromPASVString(std::string);
-  static int getPortFromPASVString(const std::string &);
   LocalDownload * getAvailableLocalDownload();
   LocalUpload * getAvailableLocalUpload();
   std::list<LocalDownload *> localdownloads;

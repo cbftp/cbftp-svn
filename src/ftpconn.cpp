@@ -23,6 +23,32 @@
 
 #define FTPCONN_TICK_INTERVAL 1000
 
+void fromPASVString(std::string pasv, std::string & host, int & port) {
+  size_t sep1 = pasv.find(",");
+  size_t sep2 = pasv.find(",", sep1 + 1);
+  size_t sep3 = pasv.find(",", sep2 + 1);
+  size_t sep4 = pasv.find(",", sep3 + 1);
+  size_t sep5 = pasv.find(",", sep4 + 1);
+  pasv[sep1] = '.';
+  pasv[sep2] = '.';
+  pasv[sep3] = '.';
+  host = pasv.substr(0, sep4);
+  int major = util::str2Int(pasv.substr(sep4 + 1, sep5 - sep4 + 1));
+  int minor = util::str2Int(pasv.substr(sep5 + 1));
+  port = major * 256 + minor;
+}
+
+std::string toPASVString(const std::string & addr, int port) {
+  std::string pasv = addr;
+  size_t pos;
+  while ((pos = pasv.find(".")) != std::string::npos) {
+    pasv[pos] = ',';
+  }
+  int portfirst = port / 256;
+  int portsecond = port % 256;
+  return pasv + "," + util::int2Str(portfirst) + "," + util::int2Str(portsecond);
+}
+
 FTPConn::FTPConn(SiteLogic * sl, int id) :
   nextconnectorid(0),
   iom(global->getIOManager()),
@@ -784,16 +810,7 @@ void FTPConn::doCPSV() {
 }
 
 void FTPConn::CPSVResponse() {
-  processing = false;
-  if (databufcode == 227) {
-    std::string data = std::string(databuf, databufpos);
-    size_t start = data.find('(') + 1;
-    size_t end = data.find(')');
-    sl->gotPassiveAddress(id, data.substr(start, end-start));
-  }
-  else {
-    sl->commandFail(id);
-  }
+  PASVResponse();
 }
 
 void FTPConn::doPASV() {
@@ -807,15 +824,31 @@ void FTPConn::PASVResponse() {
     std::string data = std::string(databuf, databufpos);
     size_t start = data.find('(') + 1;
     size_t end = data.find(')');
-    sl->gotPassiveAddress(id, data.substr(start, end-start));
+    std::string addr = data.substr(start, end - start);
+    int count = 0;
+    for (unsigned int i = 0; i < addr.length(); i++) {
+      if (addr[i] == ',') count++;
+    }
+    if (count == 2 && addr.substr(0, 2) == "1,") {
+      std::string connaddr = getConnectedAddress();
+      for (unsigned int i = 0; i < connaddr.length(); i++) {
+        if (connaddr[i] == '.') connaddr[i] = ',';
+      }
+      addr = connaddr + "," + addr.substr(2);
+    }
+    std::string host;
+    int port;
+    fromPASVString(addr, host, port);
+    sl->gotPassiveAddress(id, host, port);
   }
   else {
     sl->commandFail(id);
   }
 }
 
-void FTPConn::doPORT(std::string addr) {
+void FTPConn::doPORT(const std::string & host, int port) {
   state = STATE_PORT;
+  std::string addr = toPASVString(host, port);
   sendEcho(("PORT " + addr).c_str());
 }
 
@@ -1139,4 +1172,12 @@ void FTPConn::rawBufWrite(const std::string& data) {
 void FTPConn::rawBufWriteLine(const std::string& data) {
   rawbuf->writeLine(data);
   aggregatedrawbuf->writeLine(rawbuf->getTag(), data);
+}
+
+void FTPConn::setRawBufferCallback(RawBufferCallback * callback) {
+  rawbuf->setCallback(callback);
+}
+
+void FTPConn::unsetRawBufferCallback() {
+  rawbuf->unsetCallback();
 }

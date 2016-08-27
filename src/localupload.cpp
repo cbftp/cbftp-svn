@@ -74,6 +74,7 @@ void LocalUpload::FDDisconnected(int sockid) {
 
 void LocalUpload::FDSSLSuccess(int sockid) {
   ftpconn->printCipher(sockid);
+  tm->cipher(global->getIOManager()->getCipher(sockid));
   sendChunk();
 }
 

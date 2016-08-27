@@ -3,6 +3,7 @@
 #include "uibase.h"
 #include "globalcontext.h"
 #include "util.h"
+#include "rawbuffercallback.h"
 
 RawBuffer::RawBuffer(unsigned int maxlength, std::string site, std::string id) :
   latestp(0),
@@ -14,7 +15,8 @@ RawBuffer::RawBuffer(unsigned int maxlength, std::string site, std::string id) :
   inprogress(false),
   uiwatching(false),
   threads(true),
-  eventlog(false)
+  eventlog(false),
+  callback(NULL)
 {
   writeLine("Log window initialized. Site: " + site + " Thread id: " + id);
 }
@@ -28,7 +30,8 @@ RawBuffer::RawBuffer(std::string site) :
   inprogress(false),
   uiwatching(false),
   threads(false),
-  eventlog(false)
+  eventlog(false),
+  callback(NULL)
 {
   writeLine("Raw command window initialized. Site: " + site);
 }
@@ -41,9 +44,18 @@ RawBuffer::RawBuffer() :
   inprogress(false),
   uiwatching(false),
   threads(false),
-  eventlog(true)
+  eventlog(true),
+  callback(NULL)
 {
   writeLine("Event log initialized.");
+}
+
+void RawBuffer::setCallback(RawBufferCallback * callback) {
+  this->callback = callback;
+}
+
+void RawBuffer::unsetCallback() {
+  callback = NULL;
 }
 
 void RawBuffer::bookmark() {
@@ -54,6 +66,12 @@ unsigned int RawBuffer::linesSinceBookmark() const {
   return bookmarklines;
 }
 
+void RawBuffer::lineFinished() {
+  inprogress = false;
+  if (callback != NULL) {
+    callback->newRawBufferLine(getLine(0));
+  }
+}
 void RawBuffer::write(const std::string & s) {
   write(getTag(), s);
 }
@@ -65,7 +83,7 @@ void RawBuffer::write(const std::string & tag, const std::string & s) {
   }
   else if (split != std::string::npos) {
     write(tag, s.substr(0, split));
-    inprogress = false;
+    lineFinished();
     if (s.length() > split + 2) write(tag, s.substr(split + 2));
   }
   else {
@@ -75,7 +93,7 @@ void RawBuffer::write(const std::string & tag, const std::string & s) {
     }
     else if (split != std::string::npos) {
       write(tag, s.substr(0, split));
-      inprogress = false;
+      lineFinished();
       if (s.length() > split + 1) write(tag, s.substr(split + 1));
     }
     else {

@@ -47,6 +47,7 @@
 #include "screens/transferjobstatusscreen.h"
 #include "screens/allracesscreen.h"
 #include "screens/alltransferjobsscreen.h"
+#include "screens/transferstatusscreen.h"
 
 static Ui * instance = new Ui();
 
@@ -122,6 +123,7 @@ bool Ui::init() {
   transferjobstatusscreen = makePointer<TransferJobStatusScreen>(this);
   allracesscreen = makePointer<AllRacesScreen>(this);
   alltransferjobsscreen = makePointer<AllTransferJobsScreen>(this);
+  transferstatusscreen = makePointer<TransferStatusScreen>(this);
   mainwindows.push_back(mainscreen);
   mainwindows.push_back(confirmationscreen);
   mainwindows.push_back(editsitescreen);
@@ -147,6 +149,7 @@ bool Ui::init() {
   mainwindows.push_back(transferjobstatusscreen);
   mainwindows.push_back(allracesscreen);
   mainwindows.push_back(alltransferjobsscreen);
+  mainwindows.push_back(transferstatusscreen);
 
   if (global->getSettingsLoaderSaver()->dataExists()) {
     loginscreen->initialize(mainrow, maincol);
@@ -743,6 +746,11 @@ void Ui::goRaceStatus(unsigned int id) {
 void Ui::goTransferJobStatus(unsigned int id) {
   transferjobstatusscreen->initialize(mainrow, maincol, id);
   switchToWindow(transferjobstatusscreen);
+}
+
+void Ui::goTransferStatus(Pointer<TransferStatus> ts) {
+  transferstatusscreen->initialize(mainrow, maincol, ts);
+  switchToWindow(transferstatusscreen);
 }
 
 void Ui::goGlobalOptions() {

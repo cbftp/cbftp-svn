@@ -183,3 +183,14 @@ Pointer<T> makePointer(const A1 & a1, const A2 & a2, const A3 & a3,
     const A9 & a9, const A10 & a10, const A11 & a11) {
   return Pointer<T>(new T(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11));
 }
+
+template <typename T, typename A1, typename A2, typename A3, typename A4,
+typename A5, typename A6, typename A7, typename A8, typename A9, typename A10,
+typename A11, typename A12, typename A13, typename A14, typename A15>
+Pointer<T> makePointer(const A1 & a1, const A2 & a2, const A3 & a3,
+    const A4 & a4, const A5 & a5, const A6 & a6, const A7 & a7, const A8 & a8,
+    const A9 & a9, const A10 & a10, const A11 & a11, const A12 & a12,
+    const A13 & a13, const A14 & a14, const A15 & a15) {
+  return Pointer<T>(new T(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12,
+      a13, a14, a15));
+}

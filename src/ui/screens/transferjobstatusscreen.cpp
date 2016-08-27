@@ -63,7 +63,7 @@ void TransferJobStatusScreen::redraw() {
   ui->printStr(y, 53, "[");
   ui->printStr(y, 54, progress.substr(0, charswithhighlight), true);
   ui->printStr(y, 54 + charswithhighlight, progress.substr(charswithhighlight));
-  ui->printStr(y, 54 + progress.length(), "] " + util::int2Str(transferjob->getProgress()) + "%");
+  ui->printStr(y, 54 + progress.length(), "] " + util::int2Str(progresspercent) + "%");
   y = y + 2;
   addTransferDetails(y++, "USE", "TRANSFERRED", "FILENAME", "LEFT", "SPEED", "DONE", 0);
   for (std::list<Pointer<TransferStatus> >::const_iterator it = transferjob->transfersBegin(); it != transferjob->transfersEnd(); it++) {
@@ -93,7 +93,7 @@ void TransferJobStatusScreen::redraw() {
       //highlight = true; // later problem
     }
     if (re->isVisible()) {
-      if (re->getIdentifier() == "filename") {
+      if (re->getIdentifier() == "transferred") {
         int progresspercent = 0;
         std::map<Pointer<MenuSelectOptionElement>, int>::iterator it = progressmap.find(re);
         if (it != progressmap.end()) {
@@ -219,17 +219,23 @@ void TransferJobStatusScreen::addTransferDetails(unsigned int y, std::string tim
     std::string speed, std::string progress, int progresspercent) {
   Pointer<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
   Pointer<MenuSelectOptionTextButton> msotb;
+
   msotb = table.addTextButtonNoContent(y, 1, "timespent", timespent);
   msal->addElement(msotb, 9, RESIZE_REMOVE);
+
   msotb = table.addTextButtonNoContent(y, 10, "transferred", transferred);
-  msal->addElement(msotb, 4, RESIZE_CUTEND);
-  msotb = table.addTextButtonNoContent(y, 10, "filename", file);
   progressmap[msotb] = progresspercent;
+  msal->addElement(msotb, 4, RESIZE_CUTEND);
+
+  msotb = table.addTextButtonNoContent(y, 10, "filename", file);
   msal->addElement(msotb, 2, RESIZE_WITHLAST3, true);
+
   msotb = table.addTextButtonNoContent(y, 60, "remaining", timeremaining);
   msal->addElement(msotb, 5, RESIZE_REMOVE);
+
   msotb = table.addTextButtonNoContent(y, 40, "speed", speed);
   msal->addElement(msotb, 6, RESIZE_REMOVE);
+
   msotb = table.addTextButtonNoContent(y, 50, "progress", progress);
   msal->addElement(msotb, 7, RESIZE_REMOVE);
 }

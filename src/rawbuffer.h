@@ -4,8 +4,11 @@
 #include <vector>
 #include <utility>
 
+class RawBufferCallback;
+
 class RawBuffer {
   private:
+    void lineFinished();
     std::vector<std::pair<std::string, std::string> > log;
     std::vector<std::pair<std::string, std::string> > logcopy;
     unsigned int latestp;
@@ -18,10 +21,13 @@ class RawBuffer {
     bool uiwatching;
     bool threads;
     bool eventlog;
+    RawBufferCallback * callback;
   public:
     RawBuffer(unsigned int, std::string, std::string);
     RawBuffer(std::string);
     RawBuffer();
+    void setCallback(RawBufferCallback *);
+    void unsetCallback();
     void bookmark();
     unsigned int linesSinceBookmark() const;
     void setId(int);
