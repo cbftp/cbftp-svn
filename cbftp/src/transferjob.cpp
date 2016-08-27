@@ -218,7 +218,8 @@ void TransferJob::wantDstDirectory(std::string subdir) {
 
 Pointer<LocalFileList> TransferJob::wantedLocalDstList(const std::string & subdir) {
   if (localfilelists.find(subdir) == localfilelists.end()) {
-    localfilelists[subdir] = makePointer<LocalFileList>(localpath + "/" + dstfile + "/" + subdir);
+    localfilelists[subdir] = makePointer<LocalFileList>(localpath + "/" + dstfile +
+        (subdir.length() ? "/" + subdir : "") );
   }
   return localfilelists.at(subdir);
 }

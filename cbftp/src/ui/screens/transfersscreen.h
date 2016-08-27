@@ -23,15 +23,17 @@ public:
   std::string getInfoLabel() const;
   static void addTransferTableHeader(unsigned int, MenuSelectOption &);
 private:
-  static Pointer<MenuSelectOptionElement> addTransferTableRow(unsigned int, MenuSelectOption &, bool,
+  static void addTransferTableRow(unsigned int, MenuSelectOption &, bool,
       const std::string &, const std::string &, const std::string &,
       const std::string &, const std::string &, const std::string &,
-      const std::string &, const std::string &, const std::string &);
-  static Pointer<MenuSelectOptionElement> addTransferDetails(unsigned int, MenuSelectOption &, Pointer<TransferStatus>);
-  std::map<Pointer<MenuSelectOptionElement>, int> progressmap;
+      const std::string &, const std::string &, const std::string &,
+      int);
+  static void addTransferDetails(unsigned int, MenuSelectOption &, Pointer<TransferStatus>, int);
+  std::map<int, Pointer<TransferStatus> > statusmap;
   TransferManager * tm;
   MenuSelectOption table;
   unsigned int currentviewspan;
   unsigned int ypos;
   bool hascontents;
+  int nextid;
 };

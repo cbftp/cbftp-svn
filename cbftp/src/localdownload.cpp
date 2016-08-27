@@ -90,6 +90,7 @@ void LocalDownload::FDDisconnected(int sockid) {
 
 void LocalDownload::FDSSLSuccess(int sockid) {
   ftpconn->printCipher(sockid);
+  tm->cipher(global->getIOManager()->getCipher(sockid));
 }
 
 void LocalDownload::FDSSLFail(int sockid) {

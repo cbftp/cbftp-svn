@@ -5,13 +5,14 @@
 TransferStatus::TransferStatus(int type, std::string source, std::string target,
     std::string release, std::string file, FileList * fls, std::string sourcepath,
     FileList * fld, std::string targetpath, unsigned long long int sourcesize,
-    unsigned int assumedspeed) :
+    unsigned int assumedspeed, int srcslot, int dstslot, bool ssl, bool defaultactive) :
     type(type), source(source), target(target), release(release), file(file),
     timestamp(util::ctimeLog()), sourcepath(sourcepath),
     targetpath(targetpath), sourcesize(sourcesize), knowntargetsize(0),
     interpolatedtargetsize(0), interpolationfilltargetsize(0), speed(assumedspeed),
     state(TRANSFERSTATUS_STATE_IN_PROGRESS), timespent(0), progress(0),
-    awaited(false), callback(NULL), fls(fls), fld(fld)
+    awaited(false), callback(NULL), fls(fls), fld(fld), srcslot(srcslot), dstslot(dstslot),
+    ssl(ssl), defaultactive(defaultactive), passiveaddr("-"), cipher("-")
 {
   if (!this->speed) {
     this->speed = 1024;
@@ -102,6 +103,34 @@ bool TransferStatus::isAwaited() const {
   return awaited;
 }
 
+int TransferStatus::getSourceSlot() const {
+  return srcslot;
+}
+
+int TransferStatus::getTargetSlot() const {
+  return dstslot;
+}
+
+bool TransferStatus::getSSL() const {
+  return ssl;
+}
+
+bool TransferStatus::getDefaultActive() const {
+  return defaultactive;
+}
+
+std::string TransferStatus::getPassiveAddress() const {
+  return passiveaddr;
+}
+
+std::string TransferStatus::getCipher() const {
+  return cipher;
+}
+
+const std::list<std::string> & TransferStatus::getLogLines() const {
+  return loglines;
+}
+
 void TransferStatus::setFinished() {
   state = TRANSFERSTATUS_STATE_SUCCESSFUL;
   progress = 100;
@@ -164,4 +193,17 @@ void TransferStatus::setSpeed(unsigned int speed) {
 void TransferStatus::setTimeSpent(unsigned int timespent) {
   this->timespent = timespent;
   timeremaining = (sourcesize - interpolatedtargetsize) / (speed * 1024);
+}
+
+void TransferStatus::setPassiveAddress(const std::string & passiveaddr) {
+  this->passiveaddr = passiveaddr;
+}
+
+void TransferStatus::setCipher(const std::string & cipher) {
+  this->cipher = cipher;
+}
+
+void TransferStatus::addLogLine(const std::string & line) {
+  util::assert(state == TRANSFERSTATUS_STATE_IN_PROGRESS);
+  loglines.push_back(line);
 }

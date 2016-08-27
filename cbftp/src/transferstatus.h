@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <list>
 
 #define TRANSFERSTATUS_TYPE_FXP 1892
 #define TRANSFERSTATUS_TYPE_DOWNLOAD 1893
@@ -15,7 +16,7 @@ class FileList;
 
 class TransferStatus {
 public:
-  TransferStatus(int, std::string, std::string, std::string, std::string, FileList *, std::string, FileList *, std::string, unsigned long long int, unsigned int);
+  TransferStatus(int, std::string, std::string, std::string, std::string, FileList *, std::string, FileList *, std::string, unsigned long long int, unsigned int, int, int, bool, bool);
   std::string getSource() const;
   std::string getTarget() const;
   std::string getRelease() const;
@@ -36,6 +37,13 @@ public:
   int getState() const;
   int getType() const;
   bool isAwaited() const;
+  int getSourceSlot() const;
+  int getTargetSlot() const;
+  bool getSSL() const;
+  bool getDefaultActive() const;
+  std::string getPassiveAddress() const;
+  std::string getCipher() const;
+  const std::list<std::string> & getLogLines() const;
   void setFinished();
   void setFailed();
   void setAwaited(bool);
@@ -44,6 +52,9 @@ public:
   void interpolateAddSize(unsigned long long int);
   void setSpeed(unsigned int);
   void setTimeSpent(unsigned int);
+  void setPassiveAddress(const std::string &);
+  void setCipher(const std::string &);
+  void addLogLine(const std::string &);
 private:
   void updateProgress();
   int type;
@@ -67,4 +78,11 @@ private:
   TransferStatusCallback * callback;
   FileList * fls;
   FileList * fld;
+  int srcslot;
+  int dstslot;
+  bool ssl;
+  bool defaultactive;
+  std::string passiveaddr;
+  std::string cipher;
+  std::list<std::string> loglines;
 };

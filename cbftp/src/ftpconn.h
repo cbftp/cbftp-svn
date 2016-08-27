@@ -64,6 +64,7 @@ class Site;
 class ProxySession;
 class CommandOwner;
 class Proxy;
+class RawBufferCallback;
 
 #define RAWBUFMAXLEN 1024
 #define DATABUF 2048
@@ -171,7 +172,7 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void doSSCN(bool);
     void doCPSV();
     void doPASV();
-    void doPORT(std::string);
+    void doPORT(const std::string &, int);
     void doCWD(std::string);
     void doMKD(std::string);
     void doPRETRETR(std::string);
@@ -214,4 +215,6 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void setCurrentCommandOwner(CommandOwner *);
     void parseFileList(char *, unsigned int);
     bool isConnected() const;
+    void setRawBufferCallback(RawBufferCallback *);
+    void unsetRawBufferCallback();
 };

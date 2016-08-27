@@ -1,9 +1,11 @@
 #pragma once
 
 #include <string>
+#include <utility>
 
 #include "core/eventreceiver.h"
 #include "core/pointer.h"
+#include "rawbuffercallback.h"
 
 enum TransferMonitorType {
  TM_TYPE_FXP,
@@ -44,7 +46,7 @@ class TransferStatus;
 class LocalTransfer;
 class LocalFileList;
 
-class TransferMonitor : public EventReceiver {
+class TransferMonitor : public EventReceiver, public RawBufferCallback {
   private:
     Status status;
     std::string sfile;
@@ -89,9 +91,10 @@ class TransferMonitor : public EventReceiver {
     void targetComplete();
     void sourceError(TransferError);
     void targetError(TransferError);
-    void passiveReady(std::string);
+    void passiveReady(const std::string &, int);
     void activeReady();
     void activeStarted();
+    void cipher(const std::string &);
     bool idle() const;
     Pointer<TransferStatus> getTransferStatus() const;
     void engageFXP(std::string, SiteLogic *, FileList *, std::string, SiteLogic *, FileList *);
@@ -99,4 +102,5 @@ class TransferMonitor : public EventReceiver {
     void engageUpload(std::string, Pointer<LocalFileList> &, SiteLogic *, FileList *);
     void engageList(SiteLogic *, int, bool);
     Status getStatus() const;
+    void newRawBufferLine(const std::pair<std::string, std::string> &);
 };
