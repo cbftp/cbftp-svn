@@ -496,7 +496,7 @@ void MainScreen::addPreparedRaceTableRow(unsigned int y, MenuSelectOption & mso,
     msotb->setSelectable(false);
   }
   msotb->setId(id);
-  msal->addElement(msotb, 4, RESIZE_CUTEND, true);
+  msal->addElement(msotb, 4, 0, RESIZE_CUTEND, true);
 
   msotb = mso.addTextButtonNoContent(y, 1, "ttl", ttl);
   msotb->setSelectable(false);

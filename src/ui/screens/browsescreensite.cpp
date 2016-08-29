@@ -837,7 +837,7 @@ void BrowseScreenSite::addFileDetails(unsigned int y, std::string prepchar, std:
   if (selected) {
     table.setPointer(msotb);
   }
-  msal->addElement(msotb, 5, RESIZE_WITHDOTS, true);
+  msal->addElement(msotb, 5, 0, RESIZE_WITHDOTS, true);
   msotb = table.addTextButtonNoContent(y, coloffset + 3, "size", size);
   msotb->setSelectable(false);
   msotb->setRightAligned();

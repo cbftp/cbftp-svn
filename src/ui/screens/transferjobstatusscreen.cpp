@@ -225,19 +225,19 @@ void TransferJobStatusScreen::addTransferDetails(unsigned int y, std::string tim
 
   msotb = table.addTextButtonNoContent(y, 10, "transferred", transferred);
   progressmap[msotb] = progresspercent;
-  msal->addElement(msotb, 4, RESIZE_CUTEND);
+  msal->addElement(msotb, 6, RESIZE_CUTEND);
 
   msotb = table.addTextButtonNoContent(y, 10, "filename", file);
-  msal->addElement(msotb, 2, RESIZE_WITHLAST3, true);
+  msal->addElement(msotb, 4, 0, RESIZE_WITHLAST3, true);
 
   msotb = table.addTextButtonNoContent(y, 60, "remaining", timeremaining);
-  msal->addElement(msotb, 5, RESIZE_REMOVE);
+  msal->addElement(msotb, 2, RESIZE_REMOVE);
 
   msotb = table.addTextButtonNoContent(y, 40, "speed", speed);
-  msal->addElement(msotb, 6, RESIZE_REMOVE);
+  msal->addElement(msotb, 5, RESIZE_REMOVE);
 
   msotb = table.addTextButtonNoContent(y, 50, "progress", progress);
-  msal->addElement(msotb, 7, RESIZE_REMOVE);
+  msal->addElement(msotb, 3, RESIZE_REMOVE);
 }
 
 std::string TransferJobStatusScreen::getRoute(Pointer<TransferJob> tj) {
