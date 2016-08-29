@@ -1,6 +1,6 @@
 #include "file.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <cctype>
 #include <utility>
 #include <vector>

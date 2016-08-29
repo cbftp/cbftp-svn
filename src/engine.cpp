@@ -1,6 +1,6 @@
 #include "engine.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "core/workmanager.h"
 #include "core/tickpoke.h"

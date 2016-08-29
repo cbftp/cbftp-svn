@@ -1,6 +1,6 @@
 #include "menuselectoptioncontainer.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "menuselectoptionelement.h"
 

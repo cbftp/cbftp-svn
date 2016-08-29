@@ -1,9 +1,9 @@
 #include "ui.h"
 
 #include <sys/ioctl.h>
-#include <iostream>
 #include <unistd.h>
-#include <signal.h>
+#include <iostream>
+#include <csignal>
 
 #include "../core/workmanager.h"
 #include "../core/tickpoke.h"

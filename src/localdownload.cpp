@@ -1,7 +1,7 @@
 #include "localdownload.h"
 
 #include <cstring>
-#include <stdlib.h>
+#include <cstdlib>
 #include <unistd.h>
 
 #include "core/iomanager.h"

@@ -1,6 +1,6 @@
 #include "timereference.h"
 
-#include <time.h>
+#include <ctime>
 
 #include "core/tickpoke.h"
 #include "globalcontext.h"

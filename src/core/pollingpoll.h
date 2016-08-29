@@ -4,7 +4,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <map>
-#include <errno.h>
+#include <cerrno>
 
 #include "polling.h"
 #include "lock.h"

@@ -2,12 +2,12 @@
 
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <signal.h>
-#include <vector>
-#include <cctype>
 #include <unistd.h>
 #include <fcntl.h>
-#include <stdlib.h>
+#include <csignal>
+#include <vector>
+#include <cctype>
+#include <cstdlib>
 
 #include "core/workmanager.h"
 #include "globalcontext.h"

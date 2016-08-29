@@ -9,10 +9,10 @@
 #include <ifaddrs.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
-#include <vector>
 #include <openssl/err.h>
-#include <errno.h>
-#include <signal.h>
+#include <vector>
+#include <cerrno>
+#include <csignal>
 
 #include "workmanager.h"
 #include "sslmanager.h"

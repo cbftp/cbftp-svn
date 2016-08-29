@@ -1,6 +1,6 @@
 #include "util.h"
 
-#include <signal.h>
+#include <csignal>
 #include <sstream>
 
 namespace coreutil {
