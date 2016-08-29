@@ -312,18 +312,21 @@ void MenuSelectOption::adjustLines(unsigned int linesize) {
   if (!elementcount) {
     return;
   }
-  std::vector<int> maxwantedwidths;
-  std::vector<int> maxwidths;
+  std::vector<unsigned int> maxwantedwidths;
+  std::vector<unsigned int> maxwidths;
+  std::vector<unsigned int> averagewantedwidths;
   maxwantedwidths.resize(elementcount); // int is initialized to 0
   maxwidths.resize(elementcount);
+  averagewantedwidths.resize(elementcount);
   int shortspaces = 0;
   for (std::vector<Pointer<MenuSelectAdjustableLine> >::iterator it = adjustablelines.begin(); it != adjustablelines.end(); it++) {
     for (unsigned int i = 0; i < elementcount; i++) {
       Pointer<ResizableElement> re = (*it)->getElement(i);
-      int wantedwidth = re->wantedWidth();
+      unsigned int wantedwidth = re->wantedWidth();
       if (wantedwidth > maxwantedwidths[i]) {
         maxwantedwidths[i] = wantedwidth;
       }
+      averagewantedwidths[i] += wantedwidth;
       if (it == adjustablelines.begin() && re->shortSpacing() && i + 1 != elementcount) {
         shortspaces++;
       }
@@ -334,6 +337,10 @@ void MenuSelectOption::adjustLines(unsigned int linesize) {
   for (unsigned int i = 0; i < maxwantedwidths.size(); i++) {
     totalwantedwidth += maxwantedwidths[i];
     maxwidths[i] = maxwantedwidths[i];
+    averagewantedwidths[i] /= adjustablelines.size();
+    if (averagewantedwidths[i] >= 6) {
+      averagewantedwidths[i] -= 6;
+    }
   }
   while (totalwantedwidth != linesize) {
     if (totalwantedwidth < linesize) {
@@ -346,19 +353,34 @@ void MenuSelectOption::adjustLines(unsigned int linesize) {
           break;
         }
       }
-      break;
     }
     else if (totalwantedwidth > linesize) {
       int leastimportant = -1;
       int leastimportantprio = 0;
+      bool leastimportantpartialremove;
+      bool leastimportanthighprio;
       for (unsigned int i = 0; i < elementcount; i++) {
         if (!adjustablelines[0]->getElement(i)->isVisible()) {
           continue;
         }
-        int prio = adjustablelines[0]->getElement(i)->priority();
+        Pointer<ResizableElement> re = adjustablelines[0]->getElement(i);
+        int prio = re->lowPriority();
+        int highprio = re->highPriority();
+        bool partialremove = false;
+        bool athighprio = false;
+        if (prio != highprio) {
+          partialremove = true;
+          if (maxwidths[i] <= averagewantedwidths[i]) {
+            athighprio = true;
+            prio = highprio;
+            partialremove = false;
+          }
+        }
         if (prio < leastimportantprio || leastimportant < 0) {
           leastimportantprio = prio;
           leastimportant = i;
+          leastimportantpartialremove = partialremove;
+          leastimportanthighprio = athighprio;
         }
       }
       Pointer<ResizableElement> leastimportantelem = adjustablelines[0]->getElement(leastimportant);
@@ -372,10 +394,13 @@ void MenuSelectOption::adjustLines(unsigned int linesize) {
           break;
         case RESIZE_WITHDOTS:
         case RESIZE_CUTEND:
-        case RESIZE_WITHLAST3:
-          if (totalwantedwidth - maxwantedwidths[leastimportant] < linesize) {
-            int reduction = totalwantedwidth - linesize;
-            maxwidths[leastimportant] = maxwantedwidths[leastimportant] - reduction;
+        case RESIZE_WITHLAST3: {
+          int maxwantedwidth = (leastimportanthighprio ? averagewantedwidths : maxwantedwidths)[leastimportant];
+          if (leastimportantpartialremove || totalwantedwidth - maxwantedwidth < linesize) {
+            int reduction = leastimportantpartialremove ?
+                maxwantedwidth - averagewantedwidths[leastimportant] :
+                totalwantedwidth - linesize;
+            maxwidths[leastimportant] = maxwantedwidth - reduction;
             totalwantedwidth -= reduction;
           }
           else {
@@ -383,6 +408,7 @@ void MenuSelectOption::adjustLines(unsigned int linesize) {
             totalwantedwidth -= maxsaving;
           }
           break;
+        }
       }
     }
   }

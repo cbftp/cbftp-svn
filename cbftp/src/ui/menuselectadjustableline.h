@@ -14,6 +14,7 @@ public:
   void addElement(Pointer<ResizableElement>, unsigned int);
   void addElement(Pointer<ResizableElement>, unsigned int, unsigned int);
   void addElement(Pointer<ResizableElement>, unsigned int, unsigned int, bool);
+  void addElement(Pointer<ResizableElement>, unsigned int, unsigned int, unsigned int, bool);
   Pointer<ResizableElement> getElement(unsigned int) const;
   unsigned int size() const;
 private:

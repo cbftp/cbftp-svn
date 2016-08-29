@@ -208,7 +208,7 @@ void TransfersScreen::addTransferTableRow(unsigned int y, MenuSelectOption & mso
 
   msotb = mso.addTextButtonNoContent(y, 1, "timestamp", timestamp);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 3, RESIZE_REMOVE);
+  msal->addElement(msotb, 2, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "timespent", timespent);
   msotb->setSelectable(false);
@@ -220,21 +220,21 @@ void TransfersScreen::addTransferTableRow(unsigned int y, MenuSelectOption & mso
 
   msotb = mso.addTextButtonNoContent(y, 10, "path", path);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 1, RESIZE_WITHDOTS);
+  msal->addElement(msotb, 0, RESIZE_WITHDOTS);
 
   msotb = mso.addTextButtonNoContent(y, 10, "transferred", transferred);
   msotb->setSelectable(false);
   msotb->setId(id);
-  msal->addElement(msotb, 4, RESIZE_CUTEND);
+  msal->addElement(msotb, 5, RESIZE_CUTEND);
 
   msotb = mso.addTextButtonNoContent(y, 10, "filename", filename);
   msotb->setSelectable(selectable);
   msotb->setId(id);
-  msal->addElement(msotb, 2, RESIZE_WITHLAST3, true);
+  msal->addElement(msotb, 4, 1, RESIZE_WITHLAST3, true);
 
   msotb = mso.addTextButtonNoContent(y, 60, "remaining", timeremaining);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 5, RESIZE_REMOVE);
+  msal->addElement(msotb, 3, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 40, "speed", speed);
   msotb->setSelectable(false);

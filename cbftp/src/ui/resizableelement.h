@@ -18,8 +18,11 @@ public:
   virtual ~ResizableElement() {
   }
   virtual unsigned int wantedWidth() const = 0;
-  unsigned int priority() const {
-    return prio;
+  unsigned int highPriority() const {
+    return highprio;
+  }
+  unsigned int lowPriority() const {
+    return lowprio;
   }
   unsigned int resizeMethod() const {
     return resizemethod;
@@ -27,8 +30,11 @@ public:
   virtual void setMaxWidth(unsigned int maxwidth) {
     this->maxwidth = maxwidth;
   }
-  void setPriority(unsigned int prio) {
-    this->prio = prio;
+  void setHighPriority(unsigned int prio) {
+    this->highprio = prio;
+  }
+  void setLowPriority(unsigned int prio) {
+    this->lowprio = prio;
   }
   void setResizeMethod(unsigned int resizemethod) {
     this->resizemethod = resizemethod;
@@ -63,7 +69,8 @@ protected:
   bool rightaligned;
 private:
   bool shortspacing;
-  unsigned int prio;
+  unsigned int highprio;
+  unsigned int lowprio;
   bool visible;
   bool expandable;
 };

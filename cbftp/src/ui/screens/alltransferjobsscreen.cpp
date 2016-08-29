@@ -174,7 +174,7 @@ void AllTransferJobsScreen::addJobTableRow(unsigned int y, MenuSelectOption & ms
   msotb = mso.addTextButton(y, 1, "name", name);
   msotb->setSelectable(selectable);
   msotb->setId(id);
-  msal->addElement(msotb, 10, RESIZE_CUTEND, true);
+  msal->addElement(msotb, 10, 0, RESIZE_CUTEND, true);
 
   msotb = mso.addTextButton(y, 1, "route", route);
   msotb->setSelectable(false);

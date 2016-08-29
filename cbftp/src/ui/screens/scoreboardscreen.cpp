@@ -39,13 +39,13 @@ void ScoreBoardScreen::redraw() {
   Pointer<MenuSelectOptionTextButton> msotb;
   msal = table.addAdjustableLine();
   msotb = table.addTextButtonNoContent(y, 1, "filename", "FILE NAME");
-  msal->addElement(msotb, 1, RESIZE_CUTEND, true);
+  msal->addElement(msotb, 2, 0, RESIZE_CUTEND, true);
   msotb = table.addTextButtonNoContent(y, 2, "sites", "SITES");
-  msal->addElement(msotb, 2, RESIZE_REMOVE);
-  msotb = table.addTextButtonNoContent(y, 3, "potential", "POTENTIAL");
-  msal->addElement(msotb, 3, RESIZE_REMOVE);
-  msotb = table.addTextButtonNoContent(y, 4, "score", "SCORE");
   msal->addElement(msotb, 4, RESIZE_REMOVE);
+  msotb = table.addTextButtonNoContent(y, 3, "potential", "POTENTIAL");
+  msal->addElement(msotb, 1, RESIZE_REMOVE);
+  msotb = table.addTextButtonNoContent(y, 4, "score", "SCORE");
+  msal->addElement(msotb, 3, RESIZE_REMOVE);
   y++;
 
   std::vector<ScoreBoardElement *>::const_iterator it;
@@ -54,13 +54,13 @@ void ScoreBoardScreen::redraw() {
       std::string sites = (*it)->getSource()->getSite()->getName() + " -> " + (*it)->getDestination()->getSite()->getName();
       msal = table.addAdjustableLine();
       msotb = table.addTextButtonNoContent(y, 1, "filename", (*it)->fileName());
-      msal->addElement(msotb, 1, RESIZE_CUTEND, true);
+      msal->addElement(msotb, 2, 0, RESIZE_CUTEND, true);
       msotb = table.addTextButtonNoContent(y, 2, "sites", sites);
-      msal->addElement(msotb, 2, RESIZE_REMOVE);
-      msotb = table.addTextButtonNoContent(y, 3, "potential", util::int2Str((*it)->getSource()->getPotential()));
-      msal->addElement(msotb, 3, RESIZE_REMOVE);
-      msotb = table.addTextButtonNoContent(y, 4, "score", util::int2Str((*it)->getScore()));
       msal->addElement(msotb, 4, RESIZE_REMOVE);
+      msotb = table.addTextButtonNoContent(y, 3, "potential", util::int2Str((*it)->getSource()->getPotential()));
+      msal->addElement(msotb, 1, RESIZE_REMOVE);
+      msotb = table.addTextButtonNoContent(y, 4, "score", util::int2Str((*it)->getScore()));
+      msal->addElement(msotb, 3, RESIZE_REMOVE);
     }
   }
   table.adjustLines(col - 3);
