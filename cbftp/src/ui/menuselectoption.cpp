@@ -344,14 +344,19 @@ void MenuSelectOption::adjustLines(unsigned int linesize) {
   }
   while (totalwantedwidth != linesize) {
     if (totalwantedwidth < linesize) {
+      bool expanded = false;
       for (unsigned int i = 0; i < elementcount; i++) {
         Pointer<ResizableElement> elem = adjustablelines[0]->getElement(i);
         if (elem->isExpandable()) {
           unsigned int expansion = linesize - totalwantedwidth;
           maxwidths[i] += expansion;
           totalwantedwidth += expansion;
+          expanded = true;
           break;
         }
+      }
+      if (!expanded) {
+        break;
       }
     }
     else if (totalwantedwidth > linesize) {
