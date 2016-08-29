@@ -2,6 +2,7 @@
 
 #include <string>
 #include <map>
+#include <set>
 #include <list>
 #include <utility>
 
@@ -53,12 +54,12 @@ private:
   std::map<std::string, std::string> sections;
   std::map<std::string, int> avgspeed;
   std::map<std::string, std::pair<int, unsigned long long int> > avgspeedsamples;
-  std::map<std::string, bool> affils;
+  std::set<std::string> affils;
   std::map<std::string, std::string> affilslower;
-  std::map<std::string, bool> bannedgroups;
+  std::set<std::string> bannedgroups;
   std::map<std::string, std::string> bannedgroupslower;
-  std::map<Site *, bool> exceptsourcesites;
-  std::map<Site *, bool> excepttargetsites;
+  std::set<Site *> exceptsourcesites;
+  std::set<Site *> excepttargetsites;
   int proxytype;
   std::string proxyname;
   int transfersourcepolicy;
@@ -151,14 +152,14 @@ public:
   void removeExceptSite(Site *);
   void clearExceptSites();
   bool isAllowedTargetSite(Site *) const;
-  std::map<std::string, bool>::const_iterator affilsBegin() const;
-  std::map<std::string, bool>::const_iterator affilsEnd() const;
-  std::map<std::string, bool>::const_iterator bannedGroupsBegin() const;
-  std::map<std::string, bool>::const_iterator bannedGroupsEnd() const;
-  std::map<Site *, bool>::const_iterator exceptSourceSitesBegin() const;
-  std::map<Site *, bool>::const_iterator exceptSourceSitesEnd() const;
-  std::map<Site *, bool>::const_iterator exceptTargetSitesBegin() const;
-  std::map<Site *, bool>::const_iterator exceptTargetSitesEnd() const;
+  std::set<std::string>::const_iterator affilsBegin() const;
+  std::set<std::string>::const_iterator affilsEnd() const;
+  std::set<std::string>::const_iterator bannedGroupsBegin() const;
+  std::set<std::string>::const_iterator bannedGroupsEnd() const;
+  std::set<Site *>::const_iterator exceptSourceSitesBegin() const;
+  std::set<Site *>::const_iterator exceptSourceSitesEnd() const;
+  std::set<Site *>::const_iterator exceptTargetSitesBegin() const;
+  std::set<Site *>::const_iterator exceptTargetSitesEnd() const;
   void addSection(const std::string &, const std::string &);
   std::list<std::string> getSectionsForPath(const std::string &) const;
   std::list<std::string> getSectionsForPartialPath(const std::string &) const;

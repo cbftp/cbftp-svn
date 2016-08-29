@@ -398,7 +398,7 @@ bool Site::isAffiliated(const std::string & affil) const {
 }
 
 void Site::addAffil(const std::string & affil) {
-  affils[affil] = true;
+  affils.insert(affil);
   affilslower[util::toLower(affil)] = true;
 }
 
@@ -415,7 +415,7 @@ bool Site::isBannedGroup(const std::string & group) const {
 }
 
 void Site::addBannedGroup(const std::string & group) {
-  bannedgroups[group] = true;
+  bannedgroups.insert(group);
   bannedgroupslower[util::toLower(group)] = true;
 }
 
@@ -434,7 +434,7 @@ void Site::setTransferTargetPolicy(int policy) {
 
 void Site::addAllowedSourceSite(Site * site) {
   if (transfersourcepolicy == SITE_TRANSFER_POLICY_BLOCK) {
-    exceptsourcesites[site] = true;
+    exceptsourcesites.insert(site);
   }
   else {
     exceptsourcesites.erase(site);
@@ -443,7 +443,7 @@ void Site::addAllowedSourceSite(Site * site) {
 
 void Site::addBlockedSourceSite(Site * site) {
   if (transfersourcepolicy == SITE_TRANSFER_POLICY_ALLOW) {
-    exceptsourcesites[site] = true;
+    exceptsourcesites.insert(site);
   }
   else {
     exceptsourcesites.erase(site);
@@ -452,7 +452,7 @@ void Site::addBlockedSourceSite(Site * site) {
 
 void Site::addAllowedTargetSite(Site * site) {
   if (transfertargetpolicy == SITE_TRANSFER_POLICY_BLOCK) {
-    excepttargetsites[site] = true;
+    excepttargetsites.insert(site);
   }
   else {
     excepttargetsites.erase(site);
@@ -461,7 +461,7 @@ void Site::addAllowedTargetSite(Site * site) {
 
 void Site::addBlockedTargetSite(Site * site) {
   if (transfertargetpolicy == SITE_TRANSFER_POLICY_ALLOW) {
-    excepttargetsites[site] = true;
+    excepttargetsites.insert(site);
   }
   else {
     excepttargetsites.erase(site);
@@ -469,11 +469,11 @@ void Site::addBlockedTargetSite(Site * site) {
 }
 
 void Site::addExceptSourceSite(Site * site) {
-  exceptsourcesites[site] = true;
+  exceptsourcesites.insert(site);
 }
 
 void Site::addExceptTargetSite(Site * site) {
-  excepttargetsites[site] = true;
+  excepttargetsites.insert(site);
 }
 
 void Site::removeExceptSite(Site * site) {
@@ -487,42 +487,42 @@ void Site::clearExceptSites() {
 }
 
 bool Site::isAllowedTargetSite(Site * site) const {
-  std::map<Site *, bool>::const_iterator it = excepttargetsites.find(site);
+  std::set<Site *>::const_iterator it = excepttargetsites.find(site);
   if (it != excepttargetsites.end()) {
     return transfertargetpolicy == SITE_TRANSFER_POLICY_BLOCK;
   }
   return transfertargetpolicy == SITE_TRANSFER_POLICY_ALLOW;
 }
 
-std::map<std::string, bool>::const_iterator Site::affilsBegin() const {
+std::set<std::string>::const_iterator Site::affilsBegin() const {
   return affils.begin();
 }
 
-std::map<std::string, bool>::const_iterator Site::affilsEnd() const {
+std::set<std::string>::const_iterator Site::affilsEnd() const {
   return affils.end();
 }
 
-std::map<std::string, bool>::const_iterator Site::bannedGroupsBegin() const {
+std::set<std::string>::const_iterator Site::bannedGroupsBegin() const {
   return bannedgroups.begin();
 }
 
-std::map<std::string, bool>::const_iterator Site::bannedGroupsEnd() const {
+std::set<std::string>::const_iterator Site::bannedGroupsEnd() const {
   return bannedgroups.end();
 }
 
-std::map<Site *, bool>::const_iterator Site::exceptSourceSitesBegin() const {
+std::set<Site *>::const_iterator Site::exceptSourceSitesBegin() const {
   return exceptsourcesites.begin();
 }
 
-std::map<Site *, bool>::const_iterator Site::exceptSourceSitesEnd() const {
+std::set<Site *>::const_iterator Site::exceptSourceSitesEnd() const {
   return exceptsourcesites.end();
 }
 
-std::map<Site *, bool>::const_iterator Site::exceptTargetSitesBegin() const {
+std::set<Site *>::const_iterator Site::exceptTargetSitesBegin() const {
   return excepttargetsites.begin();
 }
 
-std::map<Site *, bool>::const_iterator Site::exceptTargetSitesEnd() const {
+std::set<Site *>::const_iterator Site::exceptTargetSitesEnd() const {
   return excepttargetsites.end();
 }
 

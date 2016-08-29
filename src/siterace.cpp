@@ -322,7 +322,7 @@ bool SiteRace::hasBeenUpdatedSinceLastCheck() {
 }
 
 void SiteRace::addVisitedPath(std::string path) {
-  visitedpaths[path] = true;
+  visitedpaths.insert(path);
 }
 
 bool SiteRace::pathVisited(std::string path) const {

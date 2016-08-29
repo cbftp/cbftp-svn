@@ -18,10 +18,10 @@ void SelectSitesScreen::initialize(unsigned int row, unsigned int col, std::stri
   preselected.clear();
   excluded.clear();
   for (std::list<Site *>::iterator it = preselectedsites.begin(); it != preselectedsites.end(); it++) {
-    preselected[*it] = true;
+    preselected.insert(*it);
   }
   for (std::list<Site *>::iterator it = excludedsites.begin(); it != excludedsites.end(); it++) {
-    excluded[*it] = true;
+    excluded.insert(*it);
   }
   mso.clear();
   mso.enterFocusFrom(0);
