@@ -298,7 +298,9 @@ void TransferMonitor::activeStarted() {
 }
 
 void TransferMonitor::cipher(const std::string & cipher) {
-  ts->setCipher(cipher);
+  if (!!ts) {
+    ts->setCipher(cipher);
+  }
 }
 
 void TransferMonitor::startClientTransfer() {
