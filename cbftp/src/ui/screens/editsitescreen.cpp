@@ -1,5 +1,7 @@
 #include "editsitescreen.h"
 
+#include <set>
+
 #include "../../globalcontext.h"
 #include "../../sitemanager.h"
 #include "../../sitelogic.h"
@@ -59,12 +61,12 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
   else if (operation == "edit") {
     this->site = global->getSiteManager()->getSite(site);
     modsite = Site(*this->site);
-    std::map<Site *, bool>::const_iterator it;
+    std::set<Site *>::const_iterator it;
     for (it = this->site->exceptSourceSitesBegin(); it != this->site->exceptSourceSitesEnd(); it++) {
-      exceptsrc += it->first->getName() + ",";
+      exceptsrc += (*it)->getName() + ",";
     }
     for (it = this->site->exceptTargetSitesBegin(); it != this->site->exceptTargetSitesEnd(); it++) {
-      exceptdst += it->first->getName() + ",";
+      exceptdst += (*it)->getName() + ",";
     }
   }
   if (exceptsrc.length()) {
@@ -74,16 +76,16 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string 
     exceptdst = exceptdst.substr(0, exceptdst.length() - 1);
   }
   std::string affilstr = "";
-  std::map<std::string, bool>::const_iterator it;
+  std::set<std::string>::const_iterator it;
   for (it = modsite.affilsBegin(); it != modsite.affilsEnd(); it++) {
-    affilstr += it->first + " ";
+    affilstr += *it + " ";
   }
   if (affilstr.length() > 0) {
     affilstr = affilstr.substr(0, affilstr.length() - 1);
   }
   std::string bannedgroupsstr = "";
   for (it = modsite.bannedGroupsBegin(); it != modsite.bannedGroupsEnd(); it++) {
-    bannedgroupsstr += it->first + " ";
+    bannedgroupsstr += *it + " ";
   }
   if (bannedgroupsstr.length() > 0) {
     bannedgroupsstr = bannedgroupsstr.substr(0, bannedgroupsstr.length() - 1);

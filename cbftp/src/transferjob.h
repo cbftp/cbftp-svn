@@ -2,6 +2,7 @@
 
 #include <string>
 #include <map>
+#include <set>
 #include <list>
 
 #include "core/pointer.h"
@@ -105,7 +106,7 @@ private:
   std::map<std::string, FileList *> dstfilelists;
   std::map<std::string, Pointer<LocalFileList> > localfilelists;
   std::map<std::string, unsigned long long int> pendingtransfers;
-  std::map<std::string, bool> existingtargets;
+  std::set<std::string> existingtargets;
   std::list<Pointer<TransferStatus> > transfers;
   int slots;
   bool almostdone;
@@ -126,6 +127,6 @@ private:
   int filesprogress;
   int filestotal;
   bool initialized;
-  std::map<std::string, bool> wanteddstmakedirs;
+  std::set<std::string> wanteddstmakedirs;
   unsigned int id;
 };

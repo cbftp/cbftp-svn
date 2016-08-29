@@ -1,5 +1,7 @@
 #include "racestatusscreen.h"
 
+#include <set>
+
 #include "../../race.h"
 #include "../../siterace.h"
 #include "../../file.h"
@@ -85,7 +87,7 @@ void RaceStatusScreen::redraw() {
       longestsubpath = it->length();
     }
   }
-  std::map<std::string, bool> bannedsuffixes;
+  std::set<std::string> bannedsuffixes;
   std::map<std::string, std::string> tags;
   filenametags.clear();
   for (std::list<std::string>::iterator subit = subpaths.begin(); subit != subpaths.end(); subit++) {
@@ -139,7 +141,7 @@ void RaceStatusScreen::redraw() {
           }
         }
         if (localtags.find(tag) != localtags.end()) {
-          bannedsuffixes[tag] = true;
+          bannedsuffixes.insert(tag);
           localtags.clear();
           finished = false;
           break;

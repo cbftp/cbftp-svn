@@ -1,6 +1,7 @@
 #include "settingsloadersaver.h"
 
 #include <vector>
+#include <set>
 
 #include "core/tickpoke.h"
 #include "core/iomanager.h"
@@ -565,21 +566,21 @@ void SettingsLoaderSaver::saveSettings() {
       for (sit2 = site->avgspeedBegin(); sit2 != site->avgspeedEnd(); sit2++) {
         dfh->addOutputLine(filetag, name + "$avgspeed=" + sit2->first + "$" + util::int2Str(sit2->second));
       }
-      std::map<std::string, bool>::const_iterator sit3;
+      std::set<std::string>::const_iterator sit3;
       for (sit3 = site->affilsBegin(); sit3 != site->affilsEnd(); sit3++) {
-        dfh->addOutputLine(filetag, name + "$affil=" + sit3->first);
+        dfh->addOutputLine(filetag, name + "$affil=" + *sit3);
       }
       for (sit3 = site->bannedGroupsBegin(); sit3 != site->bannedGroupsEnd(); sit3++) {
-        dfh->addOutputLine(filetag, name + "$bannedgroup=" + sit3->first);
+        dfh->addOutputLine(filetag, name + "$bannedgroup=" + *sit3);
       }
       dfh->addOutputLine(filetag, name + "$transfersourcepolicy=" + util::int2Str(site->getTransferSourcePolicy()));
       dfh->addOutputLine(filetag, name + "$transfertargetpolicy=" + util::int2Str(site->getTransferTargetPolicy()));
-      std::map<Site *, bool>::const_iterator sit4;
+      std::set<Site *>::const_iterator sit4;
       for (sit4 = site->exceptSourceSitesBegin(); sit4 != site->exceptSourceSitesEnd(); sit4++) {
-        dfh->addOutputLine(filetag, name + "$exceptsourcesite=" + sit4->first->getName());
+        dfh->addOutputLine(filetag, name + "$exceptsourcesite=" + (*sit4)->getName());
       }
       for (sit4 = site->exceptTargetSitesBegin(); sit4 != site->exceptTargetSitesEnd(); sit4++) {
-        dfh->addOutputLine(filetag, name + "$excepttargetsite=" + sit4->first->getName());
+        dfh->addOutputLine(filetag, name + "$excepttargetsite=" + (*sit4)->getName());
       }
     }
     dfh->addOutputLine(defaultstag, "username=" + global->getSiteManager()->getDefaultUserName());

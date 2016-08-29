@@ -213,7 +213,7 @@ bool TransferJob::wantsMakeDir(SiteLogic * sl) const {
 }
 
 void TransferJob::wantDstDirectory(std::string subdir) {
-  wanteddstmakedirs[subdir] = true;
+  wanteddstmakedirs.insert(subdir);
 }
 
 Pointer<LocalFileList> TransferJob::wantedLocalDstList(const std::string & subdir) {
@@ -235,8 +235,8 @@ FileList * TransferJob::getListTarget(SiteLogic * sl) const {
 }
 
 std::string TransferJob::getWantedMakeDir() {
-  std::map<std::string, bool>::iterator it = wanteddstmakedirs.begin();
-  std::string subdir = it->first;
+  std::set<std::string>::iterator it = wanteddstmakedirs.begin();
+  std::string subdir = *it;
   std::string origsubdir = subdir;
   wanteddstmakedirs.erase(it);
   std::string basepath = dstlist->getPath();
@@ -401,7 +401,7 @@ void TransferJob::addTransfer(const Pointer<TransferStatus> & ts) {
 }
 
 void TransferJob::targetExists(const std::string & target) {
-  existingtargets[target] = true;
+  existingtargets.insert(target);
 }
 
 void TransferJob::tick(int message) {
@@ -595,7 +595,7 @@ void TransferJob::setDone() {
 }
 
 void TransferJob::checkRemoveWantedDstMakeDir(std::string subdir) {
-  std::map<std::string, bool>::iterator it = wanteddstmakedirs.find(subdir);
+  std::set<std::string>::iterator it = wanteddstmakedirs.find(subdir);
   if (it != wanteddstmakedirs.end()) {
     wanteddstmakedirs.erase(it);
   }

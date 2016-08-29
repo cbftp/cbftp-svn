@@ -4,6 +4,7 @@
 #include <fstream>
 #include <stdlib.h>
 #include <algorithm>
+#include <set>
 
 #include "globalcontext.h"
 #include "connstatetracker.h"
@@ -65,12 +66,12 @@ void SiteManager::deleteSite(std::string site) {
 
 void SiteManager::addSite(Site * site) {
   sites.push_back(site);
-  std::map<Site *, bool>::const_iterator it;
+  std::set<Site *>::const_iterator it;
   for (it = site->exceptSourceSitesBegin(); it != site->exceptSourceSitesEnd(); it++) {
-    addExceptSourceForSite(site->getName(), it->first->getName());
+    addExceptSourceForSite(site->getName(), (*it)->getName());
   }
   for (it = site->exceptTargetSitesBegin(); it != site->exceptTargetSitesEnd(); it++) {
-    addExceptTargetForSite(site->getName(), it->first->getName());
+    addExceptTargetForSite(site->getName(), (*it)->getName());
   }
   global->getEventLog()->log("SiteManager", "Site " + site->getName() + " added.");
   sortSites();

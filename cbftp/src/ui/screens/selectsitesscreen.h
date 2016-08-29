@@ -4,6 +4,7 @@
 #include <string>
 #include <utility>
 #include <list>
+#include <set>
 
 #include "../uiwindow.h"
 
@@ -26,8 +27,8 @@ private:
   SiteManager * sm;
   MenuSelectOption mso;
   std::string purpose;
-  std::map<Site *, bool> preselected;
-  std::map<Site *, bool> excluded;
+  std::set<Site *> preselected;
+  std::set<Site *> excluded;
   std::list<std::pair<std::string, bool> > tempsites;
   bool togglestate;
 };

@@ -2,6 +2,7 @@
 
 #include <string>
 #include <map>
+#include <set>
 #include <list>
 
 #include "core/pointer.h"
@@ -26,7 +27,7 @@ class SiteRace : public CommandOwner {
     std::list<FileList *> sizeestimated;
     std::map<FileList *, unsigned long long int> observestarts;
     std::map<FileList *, unsigned long long int> sfvobservestarts;
-    std::map<std::string, bool> visitedpaths;
+    std::set<std::string> visitedpaths;
     unsigned long long int maxfilesize;
     unsigned long long int totalfilesize;
     unsigned int numuploadedfiles;
