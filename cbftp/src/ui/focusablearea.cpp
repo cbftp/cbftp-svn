@@ -2,7 +2,7 @@
 
 #include "menuselectoptionelement.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 
 FocusableArea::FocusableArea() {
   focus = false;

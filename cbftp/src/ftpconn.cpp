@@ -1,7 +1,6 @@
 #include "ftpconn.h"
 
-#include <stdlib.h>
-
+#include <cstdlib>
 #include <cstring>
 #include <cctype>
 #include <cerrno>

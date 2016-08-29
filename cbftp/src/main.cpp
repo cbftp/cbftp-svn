@@ -1,6 +1,6 @@
 #include <unistd.h>
-#include <signal.h>
-#include <stdio.h>
+#include <csignal>
+#include <cstdio>
 
 #include "core/workmanager.h"
 #include "core/iomanager.h"

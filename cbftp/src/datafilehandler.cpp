@@ -1,8 +1,8 @@
 #include "datafilehandler.h"
 
 #include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 
 #include "filesystem.h"
 #include "datafilehandlermethod.h"

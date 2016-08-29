@@ -1,9 +1,9 @@
 #include "crypto.h"
 
-#include <limits.h>
+#include <climits>
+#include <ctime>
 #include <openssl/sha.h>
 #include <openssl/evp.h>
-#include <time.h>
 
 namespace {
 

@@ -1,6 +1,7 @@
 #include "loginscreen.h"
 
 #include <cstdlib>
+#include <ctime>
 
 #include "../termint.h"
 #include "../ui.h"
@@ -138,8 +139,9 @@ bool LoginScreen::keyPressed(unsigned int ch) {
       case 13:
         ui->hideCursor();
         attempt = true;
-        ui->key(passfield.getText());
+        std::string pass = passfield.getText();
         passfield.clear();
+        ui->key(pass);
         return true;
     }
   }

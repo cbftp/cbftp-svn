@@ -1,7 +1,7 @@
 #include "localtransfer.h"
 
-#include <stdio.h>
-#include <errno.h>
+#include <cstdio>
+#include <cerrno>
 
 #include "core/iomanager.h"
 #include "core/tickpoke.h"

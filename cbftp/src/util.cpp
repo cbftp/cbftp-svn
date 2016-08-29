@@ -1,8 +1,8 @@
 #include "util.h"
 
 #include <sstream>
-#include <time.h>
-#include <signal.h>
+#include <ctime>
+#include <csignal>
 #include <cctype>
 
 namespace util {

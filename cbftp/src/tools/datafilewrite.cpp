@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cstring>
 #include <string>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "datafiletoolfuncs.h"
 #include "../datafilehandlermethod.h"

@@ -1,6 +1,6 @@
 #include "skiplist.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <vector>
 
 #include "util.h"
