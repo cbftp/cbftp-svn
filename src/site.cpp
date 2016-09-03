@@ -349,7 +349,7 @@ void Site::setPass(const std::string & pass) {
 }
 
 void Site::setBasePath(const std::string & basepath) {
-  this->basepath = basepath;
+  this->basepath = util::cleanPath(basepath);
 }
 
 void Site::setMaxLogins(unsigned int num) {

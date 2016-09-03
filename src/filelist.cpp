@@ -6,14 +6,11 @@
 #include "site.h"
 #include "globalcontext.h"
 #include "timereference.h"
+#include "util.h"
 
 FileList::FileList(const std::string & username, const std::string & path) {
   this->username = username;
-  this->path = path;
-  bool endswithslash = path.rfind("/") + 1 == path.length();
-  if (endswithslash && path.length() > 1) {
-    this->path = path.substr(0, path.length() - 1);
-  }
+  this->path = util::cleanPath(path);
   filled = false;
   owned = 0;
   ownpercentage = 0;

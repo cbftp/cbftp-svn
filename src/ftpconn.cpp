@@ -720,23 +720,23 @@ void FTPConn::SSCNOFFResponse() {
   }
 }
 
-void FTPConn::doRaw(std::string command) {
+void FTPConn::doRaw(const std::string & command) {
   state = STATE_RAW;
   sendEcho(command.c_str());
 }
 
-void FTPConn::doWipe(std::string path, bool recursive) {
+void FTPConn::doWipe(const std::string & path, bool recursive) {
   state = STATE_WIPE;
-  sendEcho(std::string("SITE WIPE ") + (recursive ? "-r " : "") + path);
+  sendEcho(std::string("SITE WIPE ") + (recursive ? "-r " : "") + util::cleanPath(path));
 }
 
-void FTPConn::doNuke(std::string path, int multiplier, std::string reason) {
+void FTPConn::doNuke(const std::string & path, int multiplier, const std::string & reason) {
   state = STATE_NUKE;
-  sendEcho("SITE NUKE " + path + " " + util::int2Str(multiplier) + " " + reason);
+  sendEcho("SITE NUKE " + util::cleanPath(path) + " " + util::int2Str(multiplier) + " " + reason);
 }
-void FTPConn::doDELE(std::string path) {
+void FTPConn::doDELE(const std::string & path) {
   state = STATE_DELE;
-  sendEcho("DELE " + path);
+  sendEcho("DELE " + util::cleanPath(path));
 }
 
 void FTPConn::doPBSZ0() {
@@ -861,13 +861,13 @@ void FTPConn::PORTResponse() {
   }
 }
 
-void FTPConn::doCWD(std::string path) {
-  if (path == currentpath) {
+void FTPConn::doCWD(const std::string & path) {
+  targetpath = util::cleanPath(path);
+  if (targetpath == currentpath) {
     global->getEventLog()->log("FTPConn " + site->getName() + util::int2Str(id),
         "WARNING: Noop CWD requested: " + path);
     return;
   }
-  targetpath = path;
   state = STATE_CWD;
   sendEcho(("CWD " + path).c_str());
 }
@@ -883,10 +883,10 @@ void FTPConn::CWDResponse() {
   }
 }
 
-void FTPConn::doMKD(std::string dir) {
-  targetpath = dir;
+void FTPConn::doMKD(const std::string & dir) {
+  targetpath = util::cleanPath(dir);
   state = STATE_MKD;
-  sendEcho(("MKD " + dir).c_str());
+  sendEcho(("MKD " + targetpath).c_str());
 }
 
 void FTPConn::MKDResponse() {
@@ -906,7 +906,7 @@ void FTPConn::MKDResponse() {
   }
 }
 
-void FTPConn::doPRETRETR(std::string file) {
+void FTPConn::doPRETRETR(const std::string & file) {
   state = STATE_PRET_RETR;
   sendEcho(("PRET RETR " + file).c_str());
 }
@@ -921,7 +921,7 @@ void FTPConn::PRETRETRResponse() {
   }
 }
 
-void FTPConn::doPRETSTOR(std::string file) {
+void FTPConn::doPRETSTOR(const std::string & file) {
   state = STATE_PRET_STOR;
   sendEcho(("PRET STOR " + file).c_str());
 }
@@ -951,7 +951,7 @@ void FTPConn::PRETLISTResponse() {
   }
 }
 
-void FTPConn::doRETR(std::string file) {
+void FTPConn::doRETR(const std::string & file) {
   state = STATE_RETR;
   sendEcho(("RETR " + file).c_str());
 }
@@ -977,7 +977,7 @@ void FTPConn::RETRComplete() {
   }
 }
 
-void FTPConn::doSTOR(std::string file) {
+void FTPConn::doSTOR(const std::string & file) {
   state = STATE_STOR;
   sendEcho(("STOR " + file).c_str());
 }
@@ -1078,7 +1078,7 @@ bool FTPConn::getSSCNMode() const {
   return sscnmode;
 }
 
-void FTPConn::setMKDCWDTarget(std::string section, std::string subpath) {
+void FTPConn::setMKDCWDTarget(const std::string & section, const std::string & subpath) {
   mkdtarget = true;
   mkdsect = section;
   mkdpath = subpath;
@@ -1163,12 +1163,12 @@ bool FTPConn::isConnected() const {
   return state != STATE_DISCONNECTED;
 }
 
-void FTPConn::rawBufWrite(const std::string& data) {
+void FTPConn::rawBufWrite(const std::string & data) {
   rawbuf->write(data);
   aggregatedrawbuf->write(rawbuf->getTag(), data);
 }
 
-void FTPConn::rawBufWriteLine(const std::string& data) {
+void FTPConn::rawBufWriteLine(const std::string & data) {
   rawbuf->writeLine(data);
   aggregatedrawbuf->writeLine(rawbuf->getTag(), data);
 }
