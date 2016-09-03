@@ -337,10 +337,7 @@ void MenuSelectOption::adjustLines(unsigned int linesize) {
   for (unsigned int i = 0; i < maxwantedwidths.size(); i++) {
     totalwantedwidth += maxwantedwidths[i];
     maxwidths[i] = maxwantedwidths[i];
-    averagewantedwidths[i] /= adjustablelines.size();
-    if (averagewantedwidths[i] >= 6) {
-      averagewantedwidths[i] -= 6;
-    }
+    averagewantedwidths[i] = (averagewantedwidths[i] * 0.9) / adjustablelines.size();
   }
   while (totalwantedwidth != linesize) {
     if (totalwantedwidth < linesize) {

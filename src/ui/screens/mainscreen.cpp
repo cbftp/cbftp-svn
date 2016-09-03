@@ -489,14 +489,14 @@ void MainScreen::addPreparedRaceTableRow(unsigned int y, MenuSelectOption & mso,
 
   msotb = mso.addTextButtonNoContent(y, 1, "section", section);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 1, RESIZE_REMOVE);
+  msal->addElement(msotb, 2, RESIZE_REMOVE);
 
   msotb = mso.addTextButton(y, 1, "release", release);
   if (!selectable) {
     msotb->setSelectable(false);
   }
   msotb->setId(id);
-  msal->addElement(msotb, 4, 0, RESIZE_CUTEND, true);
+  msal->addElement(msotb, 4, 1, RESIZE_CUTEND, true);
 
   msotb = mso.addTextButtonNoContent(y, 1, "ttl", ttl);
   msotb->setSelectable(false);
@@ -504,7 +504,7 @@ void MainScreen::addPreparedRaceTableRow(unsigned int y, MenuSelectOption & mso,
 
   msotb = mso.addTextButtonNoContent(y, 1, "sites", sites);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 2, RESIZE_WITHDOTS);
+  msal->addElement(msotb, 0, RESIZE_WITHDOTS);
 }
 
 void MainScreen::addPreparedRaceTableHeader(unsigned int y, MenuSelectOption & mso) {
