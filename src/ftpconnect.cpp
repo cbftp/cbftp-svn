@@ -76,6 +76,10 @@ void FTPConnect::FDConnected(int sockid) {
   }
 }
 
+void FTPConnect::FDDisconnected(int sockid) {
+  FDFail(sockid, "Disconnected");
+}
+
 void FTPConnect::FDData(int sockid, char * data, unsigned int datalen) {
   if (proxynegotiation) {
     proxysession->received(data, datalen);

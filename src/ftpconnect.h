@@ -15,6 +15,7 @@ public:
   ~FTPConnect();
   void FDConnecting(int, std::string);
   void FDConnected(int);
+  void FDDisconnected(int);
   void FDData(int, char *, unsigned int);
   void FDFail(int, std::string);
   int getId() const;
