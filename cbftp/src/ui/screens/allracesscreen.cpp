@@ -164,7 +164,7 @@ void AllRacesScreen::addRaceTableRow(unsigned int y, MenuSelectOption & mso, uns
   msotb = mso.addTextButton(y, 1, "release", release);
   msotb->setSelectable(selectable);
   msotb->setId(id);
-  msal->addElement(msotb, 12, 0, RESIZE_CUTEND, true);
+  msal->addElement(msotb, 12, 1, RESIZE_CUTEND, true);
 
   msotb = mso.addTextButtonNoContent(y, 1, "size", size);
   msotb->setSelectable(false);
@@ -192,7 +192,7 @@ void AllRacesScreen::addRaceTableRow(unsigned int y, MenuSelectOption & mso, uns
 
   msotb = mso.addTextButtonNoContent(y, 1, "sites", sites);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 1, RESIZE_WITHDOTS);
+  msal->addElement(msotb, 0, RESIZE_WITHDOTS);
 }
 
 void AllRacesScreen::addRaceDetails(unsigned int y, MenuSelectOption & mso, Pointer<Race> race) {
