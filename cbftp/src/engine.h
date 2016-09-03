@@ -37,12 +37,12 @@ public:
   void startPreparedRace(unsigned int);
   void deletePreparedRace(unsigned int);
   void startLatestPreparedRace();
-  void newTransferJobDownload(std::string, std::string, FileList *, std::string);
-  void newTransferJobDownload(std::string, std::string, FileList *, std::string, std::string);
-  void newTransferJobUpload(std::string, std::string, std::string, FileList *);
-  void newTransferJobUpload(std::string, std::string, std::string, std::string, FileList *);
-  void newTransferJobFXP(std::string, FileList *, std::string, FileList *, std::string);
-  void newTransferJobFXP(std::string, std::string, FileList *, std::string, std::string, FileList *);
+  void newTransferJobDownload(const std::string &, const std::string &, FileList *, const std::string &);
+  void newTransferJobDownload(const std::string &, const std::string &, FileList *, const std::string &, const std::string &);
+  void newTransferJobUpload(const std::string &, const std::string &, const std::string &, FileList *);
+  void newTransferJobUpload(const std::string &, const std::string &, const std::string &, const std::string &, FileList *);
+  void newTransferJobFXP(const std::string &, FileList *, const std::string &, FileList *, const std::string &);
+  void newTransferJobFXP(const std::string &, const std::string &, FileList *, const std::string &, const std::string &, FileList *);
   void removeSiteFromRace(Pointer<Race> &, const std::string &);
   void abortRace(Pointer<Race> &);
   void resetRace(Pointer<Race> &);

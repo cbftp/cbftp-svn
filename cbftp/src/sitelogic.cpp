@@ -48,7 +48,7 @@ enum RequestType {
   REQ_IDLE
 };
 
-SiteLogic::SiteLogic(std::string sitename) :
+SiteLogic::SiteLogic(const std::string & sitename) :
   site(global->getSiteManager()->getSite(sitename)),
   rawcommandrawbuf(new RawBuffer(site->getName())),
   aggregatedrawbuf(new RawBuffer(site->getName())),
@@ -95,7 +95,7 @@ void SiteLogic::activateAll() {
   }
 }
 
-SiteRace * SiteLogic::addRace(Pointer<Race> & enginerace, std::string section, std::string release) {
+SiteRace * SiteLogic::addRace(Pointer<Race> & enginerace, const std::string & section, const std::string & release) {
   SiteRace * race = new SiteRace(enginerace, site->getName(), site->getSectionPath(section), release, site->getUser());
   races.push_back(race);
   activateAll();
@@ -630,11 +630,11 @@ void SiteLogic::reportTransferErrorAndFinish(int id, int type, int err) {
   connstatetracker[id].finishTransfer();
 }
 
-void SiteLogic::gotPath(int id, std::string path) {
+void SiteLogic::gotPath(int id, const std::string & path) {
   connstatetracker[id].resetIdleTime();
 }
 
-void SiteLogic::rawCommandResultRetrieved(int id, std::string result) {
+void SiteLogic::rawCommandResultRetrieved(int id, const std::string & result) {
   connstatetracker[id].resetIdleTime();
   rawcommandrawbuf->write(result);
   if (connstatetracker[id].hasRequest()) {
@@ -1051,47 +1051,49 @@ void SiteLogic::initTransfer(int id) {
   }
 }
 
-int SiteLogic::requestFileList(std::string path) {
+int SiteLogic::requestFileList(const std::string & path) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(requestid, REQ_FILELIST, path, true));
+  requests.push_back(SiteLogicRequest(requestid, REQ_FILELIST, util::cleanPath(path), true));
   activateOne();
   return requestid;
 }
 
-int SiteLogic::requestRawCommand(std::string command, bool care) {
+int SiteLogic::requestRawCommand(const std::string & command, bool care) {
   int requestid = requestidcounter++;
   requests.push_back(SiteLogicRequest(requestid, REQ_RAW, command, care));
   activateOne();
   return requestid;
 }
 
-int SiteLogic::requestWipe(std::string path, bool recursive) {
+int SiteLogic::requestWipe(const std::string & path, bool recursive) {
   int requestid = requestidcounter++;
+  std::string cleanpath = util::cleanPath(path);
   if (recursive) {
-    requests.push_back(SiteLogicRequest(requestid, REQ_WIPE_RECURSIVE, path, true));
+    requests.push_back(SiteLogicRequest(requestid, REQ_WIPE_RECURSIVE, cleanpath, true));
   }
   else {
-    requests.push_back(SiteLogicRequest(requestid, REQ_WIPE, path, true));
+    requests.push_back(SiteLogicRequest(requestid, REQ_WIPE, cleanpath, true));
   }
   activateOne();
   return requestid;
 }
 
-int SiteLogic::requestDelete(std::string path, bool recursive, bool interactive) {
+int SiteLogic::requestDelete(const std::string & path, bool recursive, bool interactive) {
   int requestid = requestidcounter++;
+  std::string cleanpath = util::cleanPath(path);
   if (recursive) {
-    requests.push_back(SiteLogicRequest(requestid, REQ_DEL_RECURSIVE, path, interactive));
+    requests.push_back(SiteLogicRequest(requestid, REQ_DEL_RECURSIVE, cleanpath, interactive));
   }
   else {
-    requests.push_back(SiteLogicRequest(requestid, REQ_DEL, path, interactive));
+    requests.push_back(SiteLogicRequest(requestid, REQ_DEL, cleanpath, interactive));
   }
   activateOne();
   return requestid;
 }
 
-int SiteLogic::requestNuke(std::string path, int multiplier, std::string reason) {
+int SiteLogic::requestNuke(const std::string & path, int multiplier, const std::string & reason) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(requestid, REQ_NUKE, path, reason, multiplier, true));
+  requests.push_back(SiteLogicRequest(requestid, REQ_NUKE, util::cleanPath(path), reason, multiplier, true));
   activateOne();
   return requestid;
 }
@@ -1195,22 +1197,22 @@ Site * SiteLogic::getSite() const {
   return site;
 }
 
-SiteRace * SiteLogic::getRace(std::string race) const {
+SiteRace * SiteLogic::getRace(const std::string & race) const {
   for (std::vector<SiteRace *>::const_iterator it = races.begin(); it != races.end(); it++) {
     if ((*it)->getRelease().compare(race) == 0) return *it;
   }
   return NULL;
 }
 
-bool SiteLogic::lockDownloadConn(std::string path, int * ret, TransferMonitor * tm) {
-  return lockTransferConn(path, ret, tm, true);
+bool SiteLogic::lockDownloadConn(const std::string & path, int * ret, TransferMonitor * tm) {
+  return lockTransferConn(util::cleanPath(path), ret, tm, true);
 }
 
-bool SiteLogic::lockUploadConn(std::string path, int * ret, TransferMonitor * tm) {
-  return lockTransferConn(path, ret, tm, false);
+bool SiteLogic::lockUploadConn(const std::string & path, int * ret, TransferMonitor * tm) {
+  return lockTransferConn(util::cleanPath(path), ret, tm, false);
 }
 
-bool SiteLogic::lockTransferConn(std::string path, int * ret, TransferMonitor * tm, bool isdownload) {
+bool SiteLogic::lockTransferConn(const std::string & path, int * ret, TransferMonitor * tm, bool isdownload) {
   int lastreadyid = -1;
   bool foundreadythread = false;
   for (unsigned int i = 0; i < conns.size(); i++) {
@@ -1455,7 +1457,7 @@ void SiteLogic::listCompleted(int id, int storeid) {
   global->getLocalStorage()->purgeStoreContent(storeid);
 }
 
-void SiteLogic::issueRawCommand(unsigned int id, std::string command) {
+void SiteLogic::issueRawCommand(unsigned int id, const std::string & command) {
   int requestid = requestidcounter++;
   SiteLogicRequest request(requestid, REQ_RAW, command, true);
   request.setConnId(id);
