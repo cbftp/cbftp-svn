@@ -59,6 +59,9 @@ FTPConnect::~FTPConnect() {
 }
 
 void FTPConnect::FDConnecting(int sockid, std::string addr) {
+  if (!engaged) {
+    return;
+  }
   if (proxynegotiation) {
     owner->ftpConnectInfo(id, "[Connecting to proxy " + addr + ":" + proxy->getPort() + "]");
   }
@@ -68,6 +71,9 @@ void FTPConnect::FDConnecting(int sockid, std::string addr) {
 }
 
 void FTPConnect::FDConnected(int sockid) {
+  if (!engaged) {
+    return;
+  }
   connected = true;
   millisecs = 0;
   owner->ftpConnectInfo(id, "[Connection established]");
@@ -81,6 +87,9 @@ void FTPConnect::FDDisconnected(int sockid) {
 }
 
 void FTPConnect::FDData(int sockid, char * data, unsigned int datalen) {
+  if (!engaged) {
+    return;
+  }
   if (proxynegotiation) {
     proxysession->received(data, datalen);
     proxySessionInit();
@@ -103,9 +112,11 @@ void FTPConnect::FDData(int sockid, char * data, unsigned int datalen) {
 }
 
 void FTPConnect::FDFail(int sockid, std::string error) {
-  engaged = false;
-  owner->ftpConnectInfo(id, "[" + error + "]");
-  owner->ftpConnectFail(id);
+  if (engaged) {
+    engaged = false;
+    owner->ftpConnectInfo(id, "[" + error + "]");
+    owner->ftpConnectFail(id);
+  }
 }
 
 int FTPConnect::getId() const {
