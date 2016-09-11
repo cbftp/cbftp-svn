@@ -134,8 +134,13 @@ void FileList::setFileUpdateFlag(const std::string & name, unsigned long long in
 
 File * FileList::getFile(const std::string & name) const {
   std::map<std::string, File *>::const_iterator it = files.find(name);
-  if (it == files.end()) return NULL;
-  else return (*it).second;
+  if (it == files.end()) {
+    it = files.find(util::toLower(name));
+    if (it == files.end()) {
+      return NULL;
+    }
+  }
+  return it->second;
 }
 
 bool FileList::isFilled() const {
@@ -163,9 +168,13 @@ std::map<std::string, File *>::const_iterator FileList::end() const {
 }
 
 bool FileList::contains(const std::string & name) const {
-  bool ret = false;
-  if (files.find(name) != files.end()) ret = true;
-  return ret;
+  if (files.find(name) != files.end()) {
+    return true;
+  }
+  if (files.find(util::toLower(name)) != files.end()) {
+    return true;
+  }
+  return false;
 }
 
 unsigned int FileList::getSize() const {
