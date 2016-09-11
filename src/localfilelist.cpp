@@ -2,11 +2,13 @@
 
 #include <utility>
 
-LocalFileList::LocalFileList(std::string path) :
+#include "util.h"
+
+LocalFileList::LocalFileList(const std::string & path) :
   path(path), sizefiles(0) {
 }
 
-void LocalFileList::addFile(std::string name, unsigned long long int size, bool isdir, std::string user, std::string group, int year, int month, int day, int hour, int minute) {
+void LocalFileList::addFile(const std::string & name, unsigned long long int size, bool isdir, const std::string & user, const std::string & group, int year, int month, int day, int hour, int minute) {
   LocalFile file(name, size, isdir, user, group, year, month, day, hour, minute);
   files.insert(std::pair<std::string, LocalFile>(name, file));
   if (!isdir) {
@@ -26,8 +28,12 @@ std::map<std::string, LocalFile>::const_iterator LocalFileList::end() const {
   return files.end();
 }
 
-std::map<std::string, LocalFile>::const_iterator LocalFileList::find(std::string file) const {
-  return files.find(file);
+std::map<std::string, LocalFile>::const_iterator LocalFileList::find(const std::string & file) const {
+  std::map<std::string, LocalFile>::const_iterator it = files.find(file);
+  if (it == files.end()) {
+    it = files.find(util::toLower(file));
+  }
+  return it;
 }
 
 std::string LocalFileList::getPath() const {
