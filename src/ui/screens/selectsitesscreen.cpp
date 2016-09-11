@@ -71,6 +71,9 @@ void SelectSitesScreen::redraw() {
     ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText(), highlight);
     ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
   }
+  if (!mso.size()) {
+    ui->printStr(1, 1, "(no sites available)");
+  }
 }
 
 void SelectSitesScreen::update() {
@@ -123,15 +126,19 @@ bool SelectSitesScreen::keyPressed(unsigned int ch) {
       ui->redraw();
       return true;
     case 32:
-    case 10:
-      activation = mso.getElement(mso.getSelectionPointer())->activate();
-      if (!activation) {
+    case 10: {
+      Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getSelectionPointer());
+      if (!!msoe) {
+        activation = msoe->activate();
+        if (!activation) {
+          ui->update();
+          return true;
+        }
         ui->update();
-        return true;
+        ui->setLegend();
       }
-      ui->update();
-      ui->setLegend();
       return true;
+    }
     case 'd': {
       std::string blockstr = "";
       for (unsigned int i = 0; i < mso.size(); i++) {
