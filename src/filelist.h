@@ -12,6 +12,7 @@ class FileList {
   private:
     FileList(const FileList &);
     std::map<std::string, File *> files;
+    std::map<std::string, std::string> lowercasefilemap;
     std::string username;
     std::string path;
     bool filled;

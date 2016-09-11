@@ -18,6 +18,7 @@ public:
   unsigned int sizeFiles() const;
 private:
   std::map<std::string, LocalFile> files;
+  std::map<std::string, std::string> lowercasefilemap;
   std::string path;
   int sizefiles;
 };

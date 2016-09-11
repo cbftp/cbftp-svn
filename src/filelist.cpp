@@ -80,6 +80,7 @@ bool FileList::updateFile(const std::string & start, int touch) {
   }
   else {
     files[name] = file;
+    lowercasefilemap[util::toLower(name)] = name;
     unsigned long long int filesize = file->getSize();
     if (filesize > 0 && !file->isDirectory()) {
       uploadedfiles++;
@@ -106,6 +107,7 @@ void FileList::touchFile(const std::string & name, const std::string & user, boo
   else {
     file = new File(name, user);
     files[name] = file;
+    lowercasefilemap[util::toLower(name)] = name;
     if (user.compare(username) == 0) {
       editOwnedFileCount(true);
     }
@@ -135,7 +137,10 @@ void FileList::setFileUpdateFlag(const std::string & name, unsigned long long in
 File * FileList::getFile(const std::string & name) const {
   std::map<std::string, File *>::const_iterator it = files.find(name);
   if (it == files.end()) {
-    it = files.find(util::toLower(name));
+    std::map<std::string, std::string>::const_iterator it2 = lowercasefilemap.find(util::toLower(name));
+    if (it2 != lowercasefilemap.end()) {
+      it = files.find(it2->second);
+    }
     if (it == files.end()) {
       return NULL;
     }
@@ -171,7 +176,8 @@ bool FileList::contains(const std::string & name) const {
   if (files.find(name) != files.end()) {
     return true;
   }
-  if (files.find(util::toLower(name)) != files.end()) {
+  std::map<std::string, std::string>::const_iterator it = lowercasefilemap.find(util::toLower(name));
+  if (it != lowercasefilemap.end() && files.find(it->second) != files.end()) {
     return true;
   }
   return false;
@@ -235,6 +241,7 @@ void FileList::cleanSweep(int touch) {
   if (eraselist.size() > 0) {
     for (std::list<std::string>::iterator it2 = eraselist.begin(); it2 != eraselist.end(); it2++) {
       files.erase(*it2);
+      lowercasefilemap.erase(util::toLower(*it2));
     }
     maxfilesize = 0;
     for (it = files.begin(); it != files.end(); it++) {
@@ -250,6 +257,7 @@ void FileList::flush() {
     delete (*it).second;
   }
   files.clear();
+  lowercasefilemap.clear();
   maxfilesize = 0;
   totalfilesize = 0;
   uploadedfiles = 0;  
