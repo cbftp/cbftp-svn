@@ -21,4 +21,6 @@ std::string getGroupNameFromRelease(std::string);
 void assert(bool);
 std::string toLower(const std::string &);
 std::string cleanPath(const std::string &);
+int wildcmp(const char *, const char *);
+int wildcmpCase(const char *, const char *);
 }

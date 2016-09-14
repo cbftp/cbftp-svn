@@ -6,16 +6,21 @@
 #include "../file.h"
 #include "../localfilelist.h"
 #include "../localfile.h"
+#include "../util.h"
 
-UIFileList::UIFileList() {
-  currentposition = 0;
-  currentcursored = NULL;
-  path = "";
-  numfiles = 0;
-  numdirs = 0;
-  totalsize = 0;
-  sortmethod = "none";
-  separators = false;
+UIFileList::UIFileList() :
+  currentposition(0),
+  currentcursored(NULL),
+  numfiles(0),
+  numdirs(0),
+  totalsize(0),
+  filterednumfiles(0),
+  filterednumdirs(0),
+  filteredtotalsize(0),
+  sortmethod("none"),
+  separators(false),
+  hasfilter(false)
+{
 }
 
 bool combinedSort(UIFile * a, UIFile * b) {
@@ -231,10 +236,10 @@ void UIFileList::setNewCurrentPosition() {
       }
     }
   }
-  else {
-    if (sortedfiles.size() > 0) {
-      currentcursored = sortedfiles[0];
-    }
+  currentposition = 0;
+  currentcursored = NULL;
+  if (sortedfiles.size() > 0) {
+    currentcursored = sortedfiles[currentposition];
   }
 }
 
@@ -248,16 +253,39 @@ void UIFileList::selectFileName(std::string filename) {
   }
 }
 
+void UIFileList::fillSortedFiles() {
+  sortedfiles.clear();
+  filterednumfiles = 0;
+  filterednumdirs = 0;
+  filteredtotalsize = 0;
+  for (unsigned int i = 0; i < files.size(); i++) {
+    UIFile & file = files[i];
+    if (hasfilter) {
+      if (!util::wildcmp(filtertext.c_str(), file.getName().c_str())) {
+        continue;
+      }
+    }
+    sortedfiles.push_back(&file);
+    if (file.isDirectory()) {
+      filterednumdirs++;
+    }
+    else {
+      filterednumfiles++;
+    }
+    filteredtotalsize += file.getSize();
+  }
+}
+
 void UIFileList::parse(FileList * filelist) {
   files.clear();
   numfiles = 0;
   numdirs = 0;
   totalsize = 0;
-  sortedfiles.clear();
   selectedfiles.clear();
   currentposition = 0;
   currentcursored = NULL;
   separators = false;
+  hasfilter = false;
   std::map<std::string, File *>::iterator it;
   int size = filelist->getSize();
   files.reserve(size);
@@ -272,9 +300,7 @@ void UIFileList::parse(FileList * filelist) {
       numfiles++;
     }
   }
-  for (unsigned int i = 0; i < files.size(); i++) {
-    sortedfiles.push_back(&(files[i]));
-  }
+  fillSortedFiles();
   path = filelist->getPath();
 }
 
@@ -283,11 +309,11 @@ void UIFileList::parse(Pointer<LocalFileList> & filelist) {
   numfiles = 0;
   numdirs = 0;
   totalsize = 0;
-  sortedfiles.clear();
   selectedfiles.clear();
   currentposition = 0;
   currentcursored = NULL;
   separators = false;
+  hasfilter = false;
   std::map<std::string, LocalFile>::const_iterator it;
   int size = filelist->size();
   files.reserve(size);
@@ -303,9 +329,7 @@ void UIFileList::parse(Pointer<LocalFileList> & filelist) {
       numfiles++;
     }
   }
-  for (unsigned int i = 0; i < files.size(); i++) {
-    sortedfiles.push_back(&(files[i]));
-  }
+  fillSortedFiles();
   path = filelist->getPath();
 }
 
@@ -366,6 +390,18 @@ unsigned int UIFileList::sizeDirs() const {
 
 unsigned long long int UIFileList::getTotalSize() const {
   return totalsize;
+}
+
+unsigned int UIFileList::filteredSizeFiles() const {
+  return filterednumfiles;
+}
+
+unsigned int UIFileList::filteredSizeDirs() const {
+  return filterednumdirs;
+}
+
+unsigned long long int UIFileList::getFilteredTotalSize() const {
+  return filteredtotalsize;
 }
 
 const std::vector<UIFile *> * UIFileList::getSortedList() const {
@@ -441,6 +477,25 @@ void UIFileList::removeSeparators() {
       }
     }
   }
+}
+
+bool UIFileList::hasFilter() const {
+  return hasfilter;
+}
+
+std::string UIFileList::getFilter() const {
+  return filtertext;
+}
+
+void UIFileList::setFilter(const std::string & filter) {
+  hasfilter = true;
+  filtertext = filter;
+  fillSortedFiles();
+}
+
+void UIFileList::unsetFilter() {
+  hasfilter = false;
+  fillSortedFiles();
 }
 
 void UIFileList::setCursorPosition(unsigned int position) {

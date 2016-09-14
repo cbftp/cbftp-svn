@@ -178,4 +178,68 @@ std::string cleanPath(const std::string & path) {
   }
   return path;
 }
+
+int wildcmp(const char *wild, const char *string) {
+  const char *cp = NULL, *mp = NULL;
+  while ((*string) && (*wild != '*')) {
+    if (*wild != *string && *wild != '?' &&
+        !(*wild >= 65 && *wild <= 90 && *wild + 32 == *string) &&
+        !(*wild >= 97 && *wild <= 122 && *wild - 32 == *string)) {
+      return 0;
+    }
+    wild++;
+    string++;
+  }
+  while (*string) {
+    if (*wild == '*') {
+      if (!*++wild) {
+        return 1;
+      }
+      mp = wild;
+      cp = string+1;
+    } else if (*wild == *string || *wild == '?' ||
+    (*wild >= 65 && *wild <= 90 && *wild + 32 == *string) ||
+    (*wild >= 97 && *wild <= 122 && *wild - 32 == *string)) {
+      wild++;
+      string++;
+    } else {
+      wild = mp;
+      string = cp++;
+    }
+  }
+  while (*wild == '*') {
+    wild++;
+  }
+  return !*wild;
+}
+
+int wildcmpCase(const char *wild, const char *string) {
+  const char *cp = NULL, *mp = NULL;
+  while ((*string) && (*wild != '*')) {
+    if ((*wild != *string) && (*wild != '?')) {
+      return 0;
+    }
+    wild++;
+    string++;
+  }
+  while (*string) {
+    if (*wild == '*') {
+      if (!*++wild) {
+        return 1;
+      }
+      mp = wild;
+      cp = string+1;
+    } else if ((*wild == *string) || (*wild == '?')) {
+      wild++;
+      string++;
+    } else {
+      wild = mp;
+      string = cp++;
+    }
+  }
+  while (*wild == '*') {
+    wild++;
+  }
+  return !*wild;
+}
 }

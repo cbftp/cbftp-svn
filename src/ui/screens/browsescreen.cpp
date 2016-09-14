@@ -152,7 +152,6 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
       if (!split) {
         split = true;
         right = makePointer<BrowseScreenSelector>(ui);
-        ui->redraw();
       }
       {
         switchSide();
@@ -254,7 +253,7 @@ void BrowseScreen::switchSide() {
   if (left->type() != right->type()) {
     ui->setLegend();
   }
-  ui->update();
+  ui->redraw();
 }
 
 void BrowseScreen::closeSide() {

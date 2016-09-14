@@ -8,6 +8,7 @@
 
 #include "../menuselectoption.h"
 #include "../uifilelist.h"
+#include "../menuselectoptiontextfield.h"
 
 #include "../../core/pointer.h"
 
@@ -52,8 +53,10 @@ private:
   bool gotomode;
   bool gotomodefirst;
   int gotomodeticker;
+  bool filtermodeinput;
   std::string gotomodestring;
   std::list<std::pair<std::string, std::string> > selectionhistory;
   Pointer<LocalFileList> filelist;
   std::string targetpath;
+  MenuSelectOptionTextField filterfield;
 };

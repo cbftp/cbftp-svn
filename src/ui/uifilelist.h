@@ -22,10 +22,16 @@ private:
   unsigned int numfiles;
   unsigned int numdirs;
   unsigned long long int totalsize;
+  unsigned int filterednumfiles;
+  unsigned int filterednumdirs;
+  unsigned long long int filteredtotalsize;
   std::string sortmethod;
   bool separators;
+  bool hasfilter;
+  std::string filtertext;
   void setNewCurrentPosition();
   void removeSeparators();
+  void fillSortedFiles();
 public:
   UIFileList();
   void sortCombined();
@@ -45,6 +51,9 @@ public:
   unsigned int sizeFiles() const;
   unsigned int sizeDirs() const;
   unsigned long long int getTotalSize() const;
+  unsigned int filteredSizeFiles() const;
+  unsigned int filteredSizeDirs() const;
+  unsigned long long int getFilteredTotalSize() const;
   const std::vector <UIFile *> * getSortedList() const;
   unsigned int currentCursorPosition() const;
   std::string getPath() const;
@@ -53,6 +62,10 @@ public:
   void removeFile(std::string);
   void toggleSeparators();
   void setCursorPosition(unsigned int);
+  bool hasFilter() const;
+  std::string getFilter() const;
+  void setFilter(const std::string &);
+  void unsetFilter();
 };
 
 bool combinedSort(UIFile *, UIFile *);
