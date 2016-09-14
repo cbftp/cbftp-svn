@@ -19,12 +19,12 @@ class BrowseScreenAction;
 
 class BrowseScreenSite : public BrowseScreenSub {
 public:
-  BrowseScreenSite(Ui *, std::string);
+  BrowseScreenSite(Ui *, const std::string &);
   ~BrowseScreenSite();
   BrowseScreenType type() const;
   void redraw(unsigned int, unsigned int, unsigned int);
   void update();
-  void command(std::string, std::string);
+  void command(const std::string &, const std::string &);
   BrowseScreenAction keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
@@ -34,6 +34,9 @@ public:
   std::string siteName() const;
   FileList * fileList() const;
   UIFile * selectedFile() const;
+  static void addFileDetails(MenuSelectOption &, unsigned int, unsigned int, const std::string &);
+  static void addFileDetails(MenuSelectOption &, unsigned int, unsigned int, const std::string &, const std::string &,
+      const std::string &, const std::string &, const std::string &, bool, bool);
 private:
   Ui * ui;
   unsigned int row;
@@ -83,7 +86,5 @@ private:
   void sort();
   void refreshFilelist();
   size_t countDirLevels(std::string);
-  void addFileDetails(unsigned int, std::string);
-  void addFileDetails(unsigned int, std::string, std::string, std::string, std::string, std::string, bool, bool);
   void disableGotoMode();
 };

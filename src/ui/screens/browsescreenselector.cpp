@@ -80,10 +80,6 @@ void BrowseScreenSelector::update() {
   }
 }
 
-void BrowseScreenSelector::command(std::string, std::string) {
-
-}
-
 BrowseScreenAction BrowseScreenSelector::keyPressed(unsigned int ch) {
   unsigned int pagerows = (unsigned int) row * 0.6;
   switch (ch) {

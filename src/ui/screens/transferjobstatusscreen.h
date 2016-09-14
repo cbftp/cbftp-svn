@@ -20,15 +20,15 @@ public:
   void initialize(unsigned int, unsigned int, unsigned int);
   void redraw();
   void update();
-  void command(std::string, std::string);
+  void command(const std::string &, const std::string &);
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
   static std::string getRoute(Pointer<TransferJob>);
 private:
   void addTransferDetails(unsigned int, Pointer<TransferStatus>);
-  void addTransferDetails(unsigned int, std::string, std::string, std::string,
-      std::string, std::string, std::string, int);
+  void addTransferDetails(unsigned int, const std::string &, const std::string &, const std::string &,
+      const std::string &, const std::string &, const std::string &, int);
   Pointer<TransferJob> transferjob;
   MenuSelectOption table;
   MenuSelectOption mso;

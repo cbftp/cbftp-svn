@@ -22,7 +22,7 @@ public:
   BrowseScreenType type() const;
   void redraw(unsigned int, unsigned int, unsigned int);
   void update();
-  void command(std::string, std::string);
+  void command(const std::string &, const std::string &);
   BrowseScreenAction keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
@@ -32,8 +32,6 @@ public:
   Pointer<LocalFileList> fileList() const;
   UIFile * selectedFile() const;
 private:
-  void addFileDetails(unsigned int, std::string);
-  void addFileDetails(unsigned int, std::string, std::string, std::string, std::string, std::string, bool, bool);
   void disableGotoMode();
   void sort();
   void gotoPath(const std::string &);

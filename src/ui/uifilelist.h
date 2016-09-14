@@ -27,8 +27,7 @@ private:
   unsigned long long int filteredtotalsize;
   std::string sortmethod;
   bool separators;
-  bool hasfilter;
-  std::string filtertext;
+  std::list<std::string> filters;
   void setNewCurrentPosition();
   void removeSeparators();
   void fillSortedFiles();
@@ -62,10 +61,10 @@ public:
   void removeFile(std::string);
   void toggleSeparators();
   void setCursorPosition(unsigned int);
-  bool hasFilter() const;
-  std::string getFilter() const;
-  void setFilter(const std::string &);
-  void unsetFilter();
+  bool hasFilters() const;
+  std::list<std::string> getFilters() const;
+  void setFilters(const std::list<std::string> &);
+  void unsetFilters();
 };
 
 bool combinedSort(UIFile *, UIFile *);

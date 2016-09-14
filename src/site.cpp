@@ -307,23 +307,17 @@ void Site::setName(const std::string & name) {
 
 void Site::setAddresses(std::string addrports) {
   addresses.clear();
-  addrports += " ";
   size_t pos;
   while ((pos = addrports.find(";")) != std::string::npos) addrports[pos] = ' ';
   while ((pos = addrports.find(",")) != std::string::npos) addrports[pos] = ' ';
-  while ((pos = addrports.find(" ")) != std::string::npos) {
-    if (addrports[0] == ' ') {
-      addrports = addrports.substr(1);
-      continue;
-    }
-    std::string addrport = addrports.substr(0, pos);
-    addrports = addrports.substr(pos + 1);
-    size_t splitpos = addrport.find(":");
-    std::string addr = addrport;
+  std::list<std::string> addrpairs = util::split(addrports);
+  for (std::list<std::string>::const_iterator it = addrpairs.begin(); it != addrpairs.end(); it++) {
+    size_t splitpos = it->find(":");
+    std::string addr = *it;
     std::string port = "21";
     if (splitpos != std::string::npos) {
-      addr = addrport.substr(0, splitpos);
-      port = addrport.substr(splitpos + 1);
+      addr = it->substr(0, splitpos);
+      port = it->substr(splitpos + 1);
     }
     addresses.push_back(std::pair<std::string, std::string>(addr, port));
   }
