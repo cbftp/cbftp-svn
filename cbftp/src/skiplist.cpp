@@ -9,70 +9,6 @@ SkipList::SkipList() : defaultallow(true) {
   addDefaultEntries();
 }
 
-int SkipList::wildcmp(const char *wild, const char *string) const {
-  const char *cp = NULL, *mp = NULL;
-  while ((*string) && (*wild != '*')) {
-    if (*wild != *string && *wild != '?' &&
-        !(*wild >= 65 && *wild <= 90 && *wild + 32 == *string) &&
-        !(*wild >= 97 && *wild <= 122 && *wild - 32 == *string)) {
-      return 0;
-    }
-    wild++;
-    string++;
-  }
-  while (*string) {
-    if (*wild == '*') {
-      if (!*++wild) {
-        return 1;
-      }
-      mp = wild;
-      cp = string+1;
-    } else if (*wild == *string || *wild == '?' ||
-    (*wild >= 65 && *wild <= 90 && *wild + 32 == *string) ||
-    (*wild >= 97 && *wild <= 122 && *wild - 32 == *string)) {
-      wild++;
-      string++;
-    } else {
-      wild = mp;
-      string = cp++;
-    }
-  }
-  while (*wild == '*') {
-    wild++;
-  }
-  return !*wild;
-}
-
-int SkipList::wildcmpCase(const char *wild, const char *string) const {
-  const char *cp = NULL, *mp = NULL;
-  while ((*string) && (*wild != '*')) {
-    if ((*wild != *string) && (*wild != '?')) {
-      return 0;
-    }
-    wild++;
-    string++;
-  }
-  while (*string) {
-    if (*wild == '*') {
-      if (!*++wild) {
-        return 1;
-      }
-      mp = wild;
-      cp = string+1;
-    } else if ((*wild == *string) || (*wild == '?')) {
-      wild++;
-      string++;
-    } else {
-      wild = mp;
-      string = cp++;
-    }
-  }
-  while (*wild == '*') {
-    wild++;
-  }
-  return !*wild;
-}
-
 bool SkipList::fixedSlashCompare(const std::string & wildpattern, const std::string & element, bool casesensitive) const {
   size_t wildslashpos = wildpattern.find('/');
   size_t elemslashpos = element.find('/');
@@ -80,12 +16,12 @@ bool SkipList::fixedSlashCompare(const std::string & wildpattern, const std::str
     std::string wild = wildpattern.substr(0, wildslashpos);
     std::string elem = element.substr(0, elemslashpos);
     if (!casesensitive) {
-      if (!wildcmp(wild.c_str(), elem.c_str())) {
+      if (!util::wildcmp(wild.c_str(), elem.c_str())) {
         return false;
       }
     }
     else {
-      if (!wildcmpCase(wild.c_str(), elem.c_str())) {
+      if (!util::wildcmpCase(wild.c_str(), elem.c_str())) {
         return false;
       }
     }
@@ -93,10 +29,10 @@ bool SkipList::fixedSlashCompare(const std::string & wildpattern, const std::str
   }
   else if (wildslashpos == std::string::npos && elemslashpos == std::string::npos) {
     if (!casesensitive) {
-      return wildcmp(wildpattern.c_str(), element.c_str());
+      return util::wildcmp(wildpattern.c_str(), element.c_str());
     }
     else {
-      return wildcmpCase(wildpattern.c_str(), element.c_str());
+      return util::wildcmpCase(wildpattern.c_str(), element.c_str());
     }
   }
   else {

@@ -19,7 +19,7 @@
 BrowseScreenLocal::BrowseScreenLocal(Ui * ui) : ui(ui), currentviewspan(0),
     focus(true), changedsort(false), cwdfailed(false), tickcount(0),
     resort(false), sortmethod(0), gotomode(false), gotomodefirst(false),
-    gotomodeticker(0)
+    gotomodeticker(0), filtermodeinput(false)
 {
   gotoPath(global->getLocalStorage()->getDownloadPath());
 }
@@ -33,11 +33,14 @@ BrowseScreenType BrowseScreenLocal::type() const {
 }
 
 void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int coloffset) {
+  row = row - (filtermodeinput ? 2 : 0);
   this->row = row;
   this->col = col;
   this->coloffset = coloffset;
 
-  if (resort == true) sort();
+  if (resort == true) {
+    sort();
+  }
   unsigned int position = list.currentCursorPosition();
   unsigned int listsize = list.size();
   adaptViewSpan(currentviewspan, row, position, listsize);
@@ -81,6 +84,16 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
     }
   }
   printSlider(ui, row, coloffset + col - 1, listsize, currentviewspan);
+
+  if (listsize == 0) {
+    ui->printStr(0, coloffset + 3, "(empty directory)");
+  }
+  if (filtermodeinput) {
+    std::string oldtext = filterfield.getData();
+    filterfield = MenuSelectOptionTextField("filter", row + 1, 1, "", oldtext, col - 15, col - 15, false);
+    ui->showCursor();
+  }
+  update();
 }
 
 void BrowseScreenLocal::update() {
@@ -89,6 +102,11 @@ void BrowseScreenLocal::update() {
     ui->printStr(re->getRow(), re->getCol(), re->getLabelText());
     re = table.getElement(table.getSelectionPointer());
     ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), focus);
+  }
+  if (filtermodeinput) {
+    std::string pretag = "[Filter]: ";
+    ui->printStr(filterfield.getRow(), coloffset + filterfield.getCol(), pretag + filterfield.getContentText());
+    ui->moveCursor(filterfield.getRow(), coloffset + filterfield.getCol() + pretag.length() + filterfield.cursorPosition());
   }
 }
 
@@ -100,6 +118,40 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
   bool update = false;
   bool success = false;
   unsigned int pagerows = (unsigned int) row * 0.6;
+  if (filtermodeinput) {
+    if ((ch >= 32 && ch <= 126) || ch == KEY_BACKSPACE || ch == 8 || ch == 127 ||
+        ch == KEY_RIGHT || ch == KEY_LEFT || ch == KEY_DC || ch == KEY_HOME ||
+        ch == KEY_END) {
+      filterfield.inputChar(ch);
+      ui->update();
+      return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
+    }
+    else if (ch == 10) {
+      std::string filter = filterfield.getData();
+      if (filter.length()) {
+        list.setFilter(filter);
+        resort = true;
+      }
+      filtermodeinput = false;
+      ui->hideCursor();
+      ui->redraw();
+      ui->setLegend();
+      return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
+    }
+    else if (ch == 27) {
+      if (filterfield.getData() != "") {
+        filterfield.clear();
+        ui->update();
+      }
+      else {
+        filtermodeinput = false;
+        ui->hideCursor();
+        ui->redraw();
+        ui->setLegend();
+      }
+      return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
+    }
+  }
   if (gotomode) {
     if (gotomodefirst) {
       gotomodefirst = false;
@@ -146,6 +198,17 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       gotomodestring = "";
       global->getTickPoke()->startPoke(this, "BrowseScreenLocal", 50, 0);
       ui->update();
+      ui->setLegend();
+      break;
+    case 'f':
+      if (list.hasFilter()) {
+        resort = true;
+        list.unsetFilter();
+      }
+      else {
+        filtermodeinput = true;
+      }
+      ui->redraw();
       ui->setLegend();
       break;
     case KEY_LEFT:
@@ -309,7 +372,13 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
 }
 
 std::string BrowseScreenLocal::getLegendText() const {
-  return "[Up/Down] Navigate - [Enter/Right] open dir - [s]ort - [Backspace/Left] return - [Esc] Cancel - [c]lose";
+  if (gotomode) {
+    return "[Any] Go to first matching entry name - [Esc] Cancel";
+  }
+  if (filtermodeinput) {
+    return "[Any] Enter filter text - [Esc] Cancel";
+  }
+  return "[Up/Down] Navigate - [Enter/Right] open dir - [s]ort - [Backspace/Left] return - [Esc] Cancel - [c]lose - [q]uick jump - Toggle [f]ilter";
 }
 
 std::string BrowseScreenLocal::getInfoLabel() const {
@@ -336,13 +405,26 @@ std::string BrowseScreenLocal::getInfoText() const {
       cwdfailed = false;
     }
   }
-  text += "  " + util::int2Str(list.sizeFiles()) + "f " + util::int2Str(list.sizeDirs()) + "d";
-  text += std::string("  ") + util::parseSize(list.getTotalSize());
+  if (list.hasFilter()) {
+    text += std::string("  FILTER: ") + filterfield.getData();
+    text += "  " + util::int2Str(list.filteredSizeFiles()) + "/" + util::int2Str(list.sizeFiles()) + "f " +
+        util::int2Str(list.filteredSizeDirs()) + "/" + util::int2Str(list.sizeDirs()) + "d";
+    text += std::string("  ") + util::parseSize(list.getFilteredTotalSize()) + "/" +
+        util::parseSize(list.getTotalSize());
+  }
+  else {
+    text += "  " + util::int2Str(list.sizeFiles()) + "f " + util::int2Str(list.sizeDirs()) + "d";
+    text += std::string("  ") + util::parseSize(list.getTotalSize());
+  }
   return text;
 }
 
 void BrowseScreenLocal::setFocus(bool focus) {
   this->focus = focus;
+  if (!focus) {
+    disableGotoMode();
+    filtermodeinput = false;
+  }
 }
 
 void BrowseScreenLocal::tick(int) {
@@ -444,7 +526,16 @@ void BrowseScreenLocal::gotoPath(const std::string & path) {
   else {
     currentviewspan = 0;
   }
+  bool setfilter = false;
+  std::string filter;
+  if (list.getPath() == filelist->getPath()) {
+    setfilter = list.hasFilter();
+    filter = list.getFilter();
+  }
   list.parse(filelist);
+  if (setfilter) {
+    list.setFilter(filter);
+  }
   sort();
   for (std::list<std::pair<std::string, std::string> >::iterator it = selectionhistory.begin(); it != selectionhistory.end(); it++) {
     if (it->first == path) {

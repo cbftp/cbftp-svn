@@ -53,6 +53,7 @@ BrowseScreenSite::BrowseScreenSite(Ui * ui, std::string sitestr) {
   nukesuccess = false;
   nukefailed = false;
   gotomode = false;
+  filtermodeinput = false;
   withinraceskiplistreach = false;
   focus = true;
   currentviewspan = 0;
@@ -74,6 +75,7 @@ BrowseScreenType BrowseScreenSite::type() const {
 }
 
 void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int coloffset) {
+  row = row - (filtermodeinput ? 2 : 0);
   this->row = row;
   this->col = col;
   this->coloffset = coloffset;
@@ -89,16 +91,19 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
     }
     return;
   }
-  if (resort == true) sort();
+  if (resort == true) {
+    sort();
+  }
   unsigned int position = list.currentCursorPosition();
   unsigned int listsize = list.size();
   adaptViewSpan(currentviewspan, row, position, listsize);
 
   const std::vector<UIFile *> * uilist = list.getSortedList();
   int maxnamelen = 0;
-  for (unsigned int i = 0; i < uilist->size(); i++) {
-    if ((*uilist)[i] != NULL) {
-      int len = (*uilist)[i]->getName().length();
+  for (unsigned int i = 0; i + currentviewspan < uilist->size() && i < row; i++) {
+    unsigned int listi = i + currentviewspan;
+    if ((*uilist)[listi] != NULL) {
+      int len = (*uilist)[listi]->getName().length();
       if (len > maxnamelen) {
         maxnamelen = len;
       }
@@ -154,10 +159,9 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
   }
   table.adjustLines(col - 3);
   table.checkPointer();
-  bool highlight;
   for (unsigned int i = 0; i < table.size(); i++) {
     Pointer<ResizableElement> re = table.getElement(i);
-    highlight = false;
+    bool highlight = false;
     if (table.getSelectionPointer() == i) {
       highlight = true;
     }
@@ -169,6 +173,11 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
 
   if (listsize == 0) {
     ui->printStr(0, coloffset + 3, "(empty directory)");
+  }
+  if (filtermodeinput) {
+    std::string oldtext = filterfield.getData();
+    filterfield = MenuSelectOptionTextField("filter", row + 1, 1, "", oldtext, col - 15, col - 15, false);
+    ui->showCursor();
   }
   update();
 }
@@ -236,9 +245,13 @@ void BrowseScreenSite::update() {
         }
         unsigned int position = 0;
         bool separatorsenabled = false;
+        bool setfilter = false;
+        std::string filter;
         if (list.getPath() == filelist->getPath()) {
           position = list.currentCursorPosition();
           separatorsenabled = list.separatorsEnabled();
+          setfilter = list.hasFilter();
+          filter = list.getFilter();
         }
         else {
           currentviewspan = 0;
@@ -248,6 +261,9 @@ void BrowseScreenSite::update() {
         requestid = -1;
         if (separatorsenabled) {
           list.toggleSeparators();
+        }
+        if (setfilter) {
+          list.setFilter(filter);
         }
         sort();
         if (position) {
@@ -296,6 +312,11 @@ void BrowseScreenSite::update() {
     re = table.getElement(table.getSelectionPointer());
     ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), focus);
   }
+  if (filtermodeinput) {
+    std::string pretag = "[Filter]: ";
+    ui->printStr(filterfield.getRow(), coloffset + filterfield.getCol(), pretag + filterfield.getContentText());
+    ui->moveCursor(filterfield.getRow(), coloffset + filterfield.getCol() + pretag.length() + filterfield.cursorPosition());
+  }
 }
 
 void BrowseScreenSite::command(std::string command, std::string arg) {
@@ -337,6 +358,40 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
   bool isdir;
   bool islink;
   UIFile * cursoredfile;
+  if (filtermodeinput) {
+    if ((ch >= 32 && ch <= 126) || ch == KEY_BACKSPACE || ch == 8 || ch == 127 ||
+        ch == KEY_RIGHT || ch == KEY_LEFT || ch == KEY_DC || ch == KEY_HOME ||
+        ch == KEY_END) {
+      filterfield.inputChar(ch);
+      ui->update();
+      return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
+    }
+    else if (ch == 10) {
+      std::string filter = filterfield.getData();
+      if (filter.length()) {
+        list.setFilter(filter);
+        resort = true;
+      }
+      filtermodeinput = false;
+      ui->hideCursor();
+      ui->redraw();
+      ui->setLegend();
+      return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
+    }
+    else if (ch == 27) {
+      if (filterfield.getData() != "") {
+        filterfield.clear();
+        ui->update();
+      }
+      else {
+        filtermodeinput = false;
+        ui->hideCursor();
+        ui->redraw();
+        ui->setLegend();
+      }
+      return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
+    }
+  }
   if (gotomode) {
     if (gotomodefirst) {
       gotomodefirst = false;
@@ -516,6 +571,17 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       ui->update();
       ui->setLegend();
       break;
+    case 'f':
+      if (list.hasFilter()) {
+        resort = true;
+        list.unsetFilter();
+      }
+      else {
+        filtermodeinput = true;
+      }
+      ui->redraw();
+      ui->setLegend();
+      break;
     case KEY_LEFT:
     case 8:
     case 127:
@@ -630,7 +696,10 @@ std::string BrowseScreenSite::getLegendText() const {
   if (gotomode) {
     return "[Any] Go to first matching entry name - [Esc] Cancel";
   }
-  return "[Esc] Cancel - [c]lose - [Up/Down] Navigate - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [D]ownload - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - Toggle se[P]arators - [q]uick jump";
+  if (filtermodeinput) {
+    return "[Any] Enter filter text - [Esc] Cancel";
+  }
+  return "[Esc] Cancel - [c]lose - [Up/Down] Navigate - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [D]ownload - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - Toggle se[P]arators - [q]uick jump - Toggle [f]ilter";
 }
 
 std::string BrowseScreenSite::getInfoLabel() const {
@@ -740,14 +809,26 @@ std::string BrowseScreenSite::getInfoText() const {
       changedsort = false;
     }
   }
-  text += "  " + util::int2Str(list.sizeFiles()) + "f " + util::int2Str(list.sizeDirs()) + "d";
-  text += std::string("  ") + util::parseSize(list.getTotalSize());
+  if (list.hasFilter()) {
+    text += std::string("  FILTER: ") + filterfield.getData();
+    text += "  " + util::int2Str(list.filteredSizeFiles()) + "/" + util::int2Str(list.sizeFiles()) + "f " +
+        util::int2Str(list.filteredSizeDirs()) + "/" + util::int2Str(list.sizeDirs()) + "d";
+    text += std::string("  ") + util::parseSize(list.getFilteredTotalSize()) + "/" +
+        util::parseSize(list.getTotalSize());
+  }
+  else {
+    text += "  " + util::int2Str(list.sizeFiles()) + "f " + util::int2Str(list.sizeDirs()) + "d";
+    text += std::string("  ") + util::parseSize(list.getTotalSize());
+  }
   return text;
 }
 
 void BrowseScreenSite::setFocus(bool focus) {
   this->focus = focus;
-  disableGotoMode();
+  if (!focus) {
+    disableGotoMode();
+    filtermodeinput = false;
+  }
 }
 
 std::string BrowseScreenSite::siteName() const {

@@ -9,6 +9,7 @@
 #include "../uiwindow.h"
 #include "../uifilelist.h"
 #include "../menuselectoption.h"
+#include "../menuselectoptiontextfield.h"
 
 class SiteLogic;
 class Site;
@@ -59,6 +60,7 @@ private:
   bool gotomode;
   bool gotomodefirst;
   int gotomodeticker;
+  bool filtermodeinput;
   std::string gotomodestring;
   std::string nuketarget;
   std::string wipetarget;
@@ -77,6 +79,7 @@ private:
   std::string separatortext;
   std::list<std::pair<std::string, std::string> > selectionhistory;
   bool focus;
+  MenuSelectOptionTextField filterfield;
   void sort();
   void refreshFilelist();
   size_t countDirLevels(std::string);
