@@ -14,14 +14,14 @@ public:
   void initialize(unsigned int, unsigned int);
   void update();
   void redraw();
-  void command(std::string);
+  void command(const std::string &);
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
   std::string getInfoText() const;
 private:
   void addPreparedRaceTableRow(unsigned int, MenuSelectOption &, unsigned int,
-      bool, std::string, std::string, std::string, std::string);
+      bool, const std::string &, const std::string &, const std::string &, const std::string &);
   void addPreparedRaceTableHeader(unsigned int, MenuSelectOption &);
   void addPreparedRaceDetails(unsigned int, MenuSelectOption &, const Pointer<PreparedRace> &);
   unsigned int currentviewspan;

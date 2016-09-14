@@ -18,8 +18,8 @@ public:
   virtual void redraw() = 0;
   void resize(unsigned int, unsigned int);
   virtual void update();
-  virtual void command(std::string);
-  virtual void command(std::string, std::string);
+  virtual void command(const std::string &);
+  virtual void command(const std::string &, const std::string &);
   virtual std::string getInfoLabel() const;
   virtual std::string getInfoText() const;
   virtual std::string getLegendText() const;

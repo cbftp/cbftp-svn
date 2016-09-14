@@ -286,7 +286,7 @@ void RaceStatusScreen::update() {
   }
 }
 
-void RaceStatusScreen::command(std::string command, std::string arg) {
+void RaceStatusScreen::command(const std::string & command, const std::string & arg) {
   if (command == "yes") {
     if (awaitingremovesite) {
       global->getEngine()->removeSiteFromRace(race, removesite);

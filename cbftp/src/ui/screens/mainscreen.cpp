@@ -209,7 +209,7 @@ void MainScreen::update() {
   redraw();
 }
 
-void MainScreen::command(std::string command) {
+void MainScreen::command(const std::string & command) {
   if (command == "yes") {
     global->getSiteLogicManager()->deleteSiteLogic(deletesite);
     global->getSiteManager()->deleteSite(deletesite);
@@ -482,7 +482,8 @@ std::string MainScreen::getInfoText() const {
 }
 
 void MainScreen::addPreparedRaceTableRow(unsigned int y, MenuSelectOption & mso, unsigned int id,
-    bool selectable, std::string section, std::string release, std::string ttl, std::string sites)
+    bool selectable, const std::string & section, const std::string & release, const std::string & ttl,
+    const std::string & sites)
 {
   Pointer<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
   Pointer<MenuSelectOptionTextButton> msotb;

@@ -29,7 +29,7 @@
 #include "browsescreenaction.h"
 #include "rawdatascreen.h"
 
-BrowseScreenSite::BrowseScreenSite(Ui * ui, std::string sitestr) {
+BrowseScreenSite::BrowseScreenSite(Ui * ui, const std::string & sitestr) {
   this->ui = ui;
   gotomodeticker = 0;
   sitelogic = global->getSiteLogicManager()->getSiteLogic(sitestr);
@@ -131,7 +131,7 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
     unsigned int listi = i + currentviewspan;
     UIFile * uifile = (*uilist)[listi];
     if (uifile == NULL) {
-      addFileDetails(i, separatortext);
+      addFileDetails(table, coloffset, i, separatortext);
       continue;
     }
     bool selected = uifile == list.cursoredFile();
@@ -155,7 +155,8 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
       prepchar = "L";
     }
     std::string owner = uifile->getOwner() + "/" + uifile->getGroup();
-    addFileDetails(i, prepchar, uifile->getName(), uifile->getSizeRepr(), uifile->getLastModified(), owner, true, selected);
+    addFileDetails(table, coloffset, i, prepchar, uifile->getName(), uifile->getSizeRepr(),
+        uifile->getLastModified(), owner, true, selected);
   }
   table.adjustLines(col - 3);
   table.checkPointer();
@@ -176,7 +177,8 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
   }
   if (filtermodeinput) {
     std::string oldtext = filterfield.getData();
-    filterfield = MenuSelectOptionTextField("filter", row + 1, 1, "", oldtext, col - 15, col - 15, false);
+    filterfield = MenuSelectOptionTextField("filter", row + 1, 1, "", oldtext,
+        col - 20, 512, false);
     ui->showCursor();
   }
   update();
@@ -246,12 +248,12 @@ void BrowseScreenSite::update() {
         unsigned int position = 0;
         bool separatorsenabled = false;
         bool setfilter = false;
-        std::string filter;
+        std::list<std::string> filters;
         if (list.getPath() == filelist->getPath()) {
           position = list.currentCursorPosition();
           separatorsenabled = list.separatorsEnabled();
-          setfilter = list.hasFilter();
-          filter = list.getFilter();
+          setfilter = list.hasFilters();
+          filters = list.getFilters();
         }
         else {
           currentviewspan = 0;
@@ -263,7 +265,7 @@ void BrowseScreenSite::update() {
           list.toggleSeparators();
         }
         if (setfilter) {
-          list.setFilter(filter);
+          list.setFilters(filters);
         }
         sort();
         if (position) {
@@ -313,13 +315,13 @@ void BrowseScreenSite::update() {
     ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), focus);
   }
   if (filtermodeinput) {
-    std::string pretag = "[Filter]: ";
+    std::string pretag = "[Filter(s)]: ";
     ui->printStr(filterfield.getRow(), coloffset + filterfield.getCol(), pretag + filterfield.getContentText());
     ui->moveCursor(filterfield.getRow(), coloffset + filterfield.getCol() + pretag.length() + filterfield.cursorPosition());
   }
 }
 
-void BrowseScreenSite::command(std::string command, std::string arg) {
+void BrowseScreenSite::command(const std::string & command, const std::string & arg) {
   if (command == "yes") {
     if (wipe) {
       requestid = sitelogic->requestWipe(wipetarget, wiperecursive);
@@ -369,7 +371,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
     else if (ch == 10) {
       std::string filter = filterfield.getData();
       if (filter.length()) {
-        list.setFilter(filter);
+        list.setFilters(util::split(filter));
         resort = true;
       }
       filtermodeinput = false;
@@ -572,9 +574,9 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       ui->setLegend();
       break;
     case 'f':
-      if (list.hasFilter()) {
+      if (list.hasFilters()) {
         resort = true;
-        list.unsetFilter();
+        list.unsetFilters();
       }
       else {
         filtermodeinput = true;
@@ -697,7 +699,7 @@ std::string BrowseScreenSite::getLegendText() const {
     return "[Any] Go to first matching entry name - [Esc] Cancel";
   }
   if (filtermodeinput) {
-    return "[Any] Enter filter text - [Esc] Cancel";
+    return "[Any] Enter space separated filters. Valid operators are !, *, ?. Must match all negative filters and at least one positive if given. Case insensitive. - [Esc] Cancel";
   }
   return "[Esc] Cancel - [c]lose - [Up/Down] Navigate - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [D]ownload - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - Toggle se[P]arators - [q]uick jump - Toggle [f]ilter";
 }
@@ -809,7 +811,7 @@ std::string BrowseScreenSite::getInfoText() const {
       changedsort = false;
     }
   }
-  if (list.hasFilter()) {
+  if (list.hasFilters()) {
     text += std::string("  FILTER: ") + filterfield.getData();
     text += "  " + util::int2Str(list.filteredSizeFiles()) + "/" + util::int2Str(list.sizeFiles()) + "f " +
         util::int2Str(list.filteredSizeDirs()) + "/" + util::int2Str(list.sizeDirs()) + "d";
@@ -900,11 +902,11 @@ size_t BrowseScreenSite::countDirLevels(std::string path) {
   return std::count(path.begin(), path.end(), '/');
 }
 
-void BrowseScreenSite::addFileDetails(unsigned int y, std::string name) {
-  addFileDetails(y, "", name, "", "", "", false, false);
+void BrowseScreenSite::addFileDetails(MenuSelectOption & table, unsigned int coloffset, unsigned int y, const std::string & name) {
+  addFileDetails(table, coloffset, y, "", name, "", "", "", false, false);
 }
 
-void BrowseScreenSite::addFileDetails(unsigned int y, std::string prepchar, std::string name, std::string size, std::string lastmodified, std::string owner, bool selectable, bool selected) {
+void BrowseScreenSite::addFileDetails(MenuSelectOption & table, unsigned int coloffset, unsigned int y, const std::string & prepchar, const std::string & name, const std::string & size, const std::string & lastmodified, const std::string & owner, bool selectable, bool selected) {
   Pointer<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
   Pointer<MenuSelectOptionTextButton> msotb;
   msotb = table.addTextButtonNoContent(y, coloffset + 1, "prepchar", prepchar);

@@ -28,7 +28,7 @@ EditSiteScreen::~EditSiteScreen() {
 
 }
 
-void EditSiteScreen::initialize(unsigned int row, unsigned int col, std::string operation, std::string site) {
+void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::string & operation, const std::string & site) {
   active = false;
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one, save changes - [c]ancel, undo changes";
   currentlegendtext = defaultlegendtext;
@@ -300,7 +300,7 @@ void EditSiteScreen::update() {
   }
 }
 
-void EditSiteScreen::command(std::string command, std::string arg) {
+void EditSiteScreen::command(const std::string & command, const std::string & arg) {
   if (command == "returnselectsites") {
     activeelement.get<MenuSelectOptionTextField>()->setText(arg);
     redraw();
@@ -500,26 +500,9 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
           while ((pos = affils.find(";")) != std::string::npos) {
             affils[pos] = ' ';
           }
-          size_t start = 0;
-          pos = 0;
-          bool started = false;
-          while(pos < affils.length()) {
-            if (!started) {
-              if (affils[pos] != ' ') {
-                start = pos;
-                started = true;
-              }
-            }
-            else {
-              if (affils[pos] == ' ') {
-                site->addAffil(affils.substr(start, pos - start));
-                started = false;
-              }
-            }
-            if (started && pos == affils.length() - 1) {
-                site->addAffil(affils.substr(start, pos + 1 - start));
-            }
-            pos++;
+          std::list<std::string> affilslist = util::split(affils);
+          for (std::list<std::string>::const_iterator it = affilslist.begin(); it != affilslist.end(); it++) {
+            site->addAffil(*it);
           }
         }
         else if (identifier == "bannedgroups") {
@@ -532,26 +515,9 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
           while ((pos = bannedgroups.find(";")) != std::string::npos) {
             bannedgroups[pos] = ' ';
           }
-          size_t start = 0;
-          pos = 0;
-          bool started = false;
-          while(pos < bannedgroups.length()) {
-            if (!started) {
-              if (bannedgroups[pos] != ' ') {
-                start = pos;
-                started = true;
-              }
-            }
-            else {
-              if (bannedgroups[pos] == ' ') {
-                site->addBannedGroup(bannedgroups.substr(start, pos - start));
-                started = false;
-              }
-            }
-            if (pos == bannedgroups.length() - 1) {
-              site->addBannedGroup(bannedgroups.substr(start, pos + 1 - start));
-            }
-            pos++;
+          std::list<std::string> banlist = util::split(bannedgroups);
+          for (std::list<std::string>::const_iterator it = banlist.begin(); it != banlist.end(); it++) {
+            site->addBannedGroup(*it);
           }
         }
         else if (identifier == "sourcepolicy") {
@@ -562,32 +528,11 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "exceptsrc") {
           std::string sitestr = msoe.get<MenuSelectOptionTextField>()->getData();
-          while (true) {
-            size_t commapos = sitestr.find(",");
-            if (commapos != std::string::npos) {
-              exceptsrclist.push_back(sitestr.substr(0, commapos));
-              sitestr = sitestr.substr(commapos + 1);
-            }
-            else {
-              exceptsrclist.push_back(sitestr);
-              break;
-            }
-          }
-
+          exceptsrclist = util::split(sitestr, ",");
         }
         else if (identifier == "exceptdst") {
           std::string sitestr = msoe.get<MenuSelectOptionTextField>()->getData();
-          while (true) {
-            size_t commapos = sitestr.find(",");
-            if (commapos != std::string::npos) {
-              exceptdstlist.push_back(sitestr.substr(0, commapos));
-              sitestr = sitestr.substr(commapos + 1);
-            }
-            else {
-              exceptdstlist.push_back(sitestr);
-              break;
-            }
-          }
+          exceptdstlist = util::split(sitestr, ",");
         }
       }
       site->clearSections();
@@ -609,10 +554,10 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
 
       sitename = site->getName();
       global->getSiteManager()->resetSitePairsForSite(sitename);
-      for (std::list<std::string>::iterator it = exceptsrclist.begin(); it != exceptsrclist.end(); it++) {
+      for (std::list<std::string>::const_iterator it = exceptsrclist.begin(); it != exceptsrclist.end(); it++) {
         global->getSiteManager()->addExceptSourceForSite(sitename, *it);
       }
-      for (std::list<std::string>::iterator it = exceptdstlist.begin(); it != exceptdstlist.end(); it++) {
+      for (std::list<std::string>::const_iterator it = exceptdstlist.begin(); it != exceptdstlist.end(); it++) {
         global->getSiteManager()->addExceptTargetForSite(sitename, *it);
       }
 
@@ -640,21 +585,10 @@ std::string EditSiteScreen::getInfoLabel() const {
   return "SITE OPTIONS";
 }
 
-void EditSiteScreen::fillPreselectionList(std::string preselectstr, std::list<Site *> * list) const {
-  while (true) {
-    size_t commapos = preselectstr.find(",");
-    if (commapos != std::string::npos) {
-      std::string sitename = preselectstr.substr(0, commapos);
-      Site * site = global->getSiteManager()->getSite(sitename);
-      list->push_back(site);
-      preselectstr = preselectstr.substr(commapos + 1);
-    }
-    else {
-      if (preselectstr.length() > 0) {
-        Site * site = global->getSiteManager()->getSite(preselectstr);
-        list->push_back(site);
-      }
-      break;
-    }
+void EditSiteScreen::fillPreselectionList(const std::string & preselectstr, std::list<Site *> * list) const {
+  std::list<std::string> preselectlist = util::split(preselectstr, ",");
+  for (std::list<std::string>::const_iterator it = preselectlist.begin(); it != preselectlist.end(); it++) {
+    Site * site = global->getSiteManager()->getSite(*it);
+    list->push_back(site);
   }
 }

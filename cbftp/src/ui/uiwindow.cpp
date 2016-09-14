@@ -25,11 +25,11 @@ void UIWindow::update() {
 
 }
 
-void UIWindow::command(std::string command) {
+void UIWindow::command(const std::string & command) {
   this->command(command, "");
 }
 
-void UIWindow::command(std::string command, std::string arg) {
+void UIWindow::command(const std::string & command, const std::string & arg) {
 
 }
 

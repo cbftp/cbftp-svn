@@ -20,7 +20,6 @@ public:
   BrowseScreenType type() const;
   void redraw(unsigned int, unsigned int, unsigned int);
   void update();
-  void command(std::string, std::string);
   BrowseScreenAction keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;

@@ -17,15 +17,15 @@ class EditSiteScreen : public UIWindow {
 public:
   EditSiteScreen(Ui * ui);
   ~EditSiteScreen();
-  void initialize(unsigned int, unsigned int, std::string, std::string);
+  void initialize(unsigned int, unsigned int, const std::string &, const std::string &);
   void update();
   void redraw();
-  void command(std::string, std::string);
+  void command(const std::string &, const std::string &);
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
 private:
-  void fillPreselectionList(std::string, std::list<Site *> *) const;
+  void fillPreselectionList(const std::string &, std::list<Site *> *) const;
   FocusableArea * focusedarea;
   FocusableArea * defocusedarea;
   std::string currentlegendtext;

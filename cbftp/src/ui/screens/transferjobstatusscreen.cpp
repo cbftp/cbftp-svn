@@ -115,7 +115,7 @@ void TransferJobStatusScreen::update() {
   redraw();
 }
 
-void TransferJobStatusScreen::command(std::string command, std::string arg) {
+void TransferJobStatusScreen::command(const std::string & command, const std::string & arg) {
   if (command == "yes") {
     global->getEngine()->abortTransferJob(transferjob);
     currentlegendtext = abortedlegendtext;
@@ -214,9 +214,9 @@ void TransferJobStatusScreen::addTransferDetails(unsigned int y, Pointer<Transfe
                      speed, progress, progresspercent);
 }
 
-void TransferJobStatusScreen::addTransferDetails(unsigned int y, std::string timespent,
-    std::string transferred, std::string file, std::string timeremaining,
-    std::string speed, std::string progress, int progresspercent) {
+void TransferJobStatusScreen::addTransferDetails(unsigned int y, const std::string & timespent,
+    const std::string & transferred, const std::string & file, const std::string & timeremaining,
+    const std::string & speed, const std::string & progress, int progresspercent) {
   Pointer<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
   Pointer<MenuSelectOptionTextButton> msotb;
 

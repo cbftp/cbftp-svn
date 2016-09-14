@@ -20,10 +20,10 @@ class BrowseScreen : public UIWindow {
 public:
   BrowseScreen(Ui *);
   ~BrowseScreen();
-  void initialize(unsigned int, unsigned int, ViewMode, std::string);
+  void initialize(unsigned int, unsigned int, ViewMode, const std::string &);
   void redraw();
   void update();
-  void command(std::string, std::string);
+  void command(const std::string &, const std::string &);
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;

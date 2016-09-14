@@ -126,7 +126,7 @@ void ProxyOptionsScreen::update() {
   }
 }
 
-void ProxyOptionsScreen::command(std::string command) {
+void ProxyOptionsScreen::command(const std::string & command) {
   if (command == "yes") {
     if (deleteproxy != "") {
       pm->removeProxy(deleteproxy);

@@ -20,7 +20,7 @@
 #define DEFAULTPASS "DEFAULT"
 #define RETRYDELAY 30000
 
-std::list<SiteLogic *> getSiteLogicList(std::string sitestring) {
+std::list<SiteLogic *> getSiteLogicList(const std::string & sitestring) {
   std::list<SiteLogic *> sitelogics;
   std::list<std::string> sites;
   if (sitestring == "*") {
@@ -32,17 +32,7 @@ std::list<SiteLogic *> getSiteLogicList(std::string sitestring) {
     }
   }
   else {
-    while (true) {
-      size_t commapos = sitestring.find(",");
-      if (commapos != std::string::npos) {
-        sites.push_back(sitestring.substr(0, commapos));
-        sitestring = sitestring.substr(commapos + 1);
-      }
-      else {
-        sites.push_back(sitestring);
-        break;
-      }
-    }
+    sites = util::split(sitestring, ",");
   }
   for (std::list<std::string>::const_iterator it = sites.begin(); it != sites.end(); it++) {
     SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(*it);
@@ -243,18 +233,7 @@ void RemoteCommandHandler::parseRace(const std::string & message, bool autostart
     }
     return;
   }
-  std::list<std::string> sites;
-  while (true) {
-    size_t commapos = sitestring.find(",");
-    if (commapos != std::string::npos) {
-      sites.push_back(sitestring.substr(0, commapos));
-      sitestring = sitestring.substr(commapos + 1);
-    }
-    else {
-      sites.push_back(sitestring);
-      break;
-    }
-  }
+  std::list<std::string> sites = util::split(sitestring, ",");
   if (autostart) {
     global->getEngine()->newRace(release, section, sites);
   }

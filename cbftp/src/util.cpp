@@ -242,4 +242,38 @@ int wildcmpCase(const char *wild, const char *string) {
   }
   return !*wild;
 }
+
+std::list<std::string> split(const std::string & in, const std::string & sep) {
+  std::list<std::string> out;
+  size_t start = 0;
+  size_t end;
+  size_t seplength = sep.length();
+  while ((end = in.find(sep, start)) != std::string::npos) {
+    if (start != end) {
+      out.push_back(in.substr(start, end - start));
+    }
+    start = end + seplength;
+  }
+  if (start < in.length()) {
+    out.push_back(in.substr(start));
+  }
+  return out;
+}
+
+std::list<std::string> split(const std::string & in) {
+  return split(in, " ");
+}
+
+std::string join(const std::list<std::string> & in, const std::string & sep) {
+  std::string out;
+  for (std::list<std::string>::const_iterator it = in.begin(); it != in.end(); it++) {
+    out += *it + sep;
+  }
+  return out.substr(0, out.length() - sep.length());
+}
+
+std::string join(const std::list<std::string> & in) {
+  return join(in, " ");
+}
+
 }

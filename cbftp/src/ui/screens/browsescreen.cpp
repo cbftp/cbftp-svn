@@ -27,7 +27,7 @@ BrowseScreen::~BrowseScreen() {
 
 }
 
-void BrowseScreen::initialize(unsigned int row, unsigned int col, ViewMode viewmode, std::string sitestr) {
+void BrowseScreen::initialize(unsigned int row, unsigned int col, ViewMode viewmode, const std::string & sitestr) {
   expectbackendpush = true;
   this->split = initsplitupdate = viewmode == VIEW_SPLIT;
   TimeReference::updateTime();
@@ -86,7 +86,7 @@ void BrowseScreen::update() {
   }
 }
 
-void BrowseScreen::command(std::string command, std::string arg) {
+void BrowseScreen::command(const std::string & command, const std::string & arg) {
   active->command(command, arg);
 }
 

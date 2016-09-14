@@ -18,8 +18,7 @@ UIFileList::UIFileList() :
   filterednumdirs(0),
   filteredtotalsize(0),
   sortmethod("none"),
-  separators(false),
-  hasfilter(false)
+  separators(false)
 {
 }
 
@@ -260,10 +259,26 @@ void UIFileList::fillSortedFiles() {
   filteredtotalsize = 0;
   for (unsigned int i = 0; i < files.size(); i++) {
     UIFile & file = files[i];
-    if (hasfilter) {
-      if (!util::wildcmp(filtertext.c_str(), file.getName().c_str())) {
-        continue;
+    bool negativepass = true;
+    bool foundpositive = false;
+    bool positivematch = false;
+    for (std::list<std::string>::const_iterator it = filters.begin(); it != filters.end(); it++) {
+      const std::string & filter = *it;
+      if (filter[0] == '!') {
+        if (util::wildcmp(filter.substr(1).c_str(), file.getName().c_str())) {
+          negativepass = false;
+          break;
+        }
       }
+      else {
+        foundpositive = true;
+        if (util::wildcmp(filter.c_str(), file.getName().c_str())) {
+          positivematch = true;
+        }
+      }
+    }
+    if (!negativepass || (foundpositive && !positivematch)) {
+      continue;
     }
     sortedfiles.push_back(&file);
     if (file.isDirectory()) {
@@ -285,7 +300,7 @@ void UIFileList::parse(FileList * filelist) {
   currentposition = 0;
   currentcursored = NULL;
   separators = false;
-  hasfilter = false;
+  filters.clear();
   std::map<std::string, File *>::iterator it;
   int size = filelist->getSize();
   files.reserve(size);
@@ -313,7 +328,7 @@ void UIFileList::parse(Pointer<LocalFileList> & filelist) {
   currentposition = 0;
   currentcursored = NULL;
   separators = false;
-  hasfilter = false;
+  filters.clear();
   std::map<std::string, LocalFile>::const_iterator it;
   int size = filelist->size();
   files.reserve(size);
@@ -479,22 +494,21 @@ void UIFileList::removeSeparators() {
   }
 }
 
-bool UIFileList::hasFilter() const {
-  return hasfilter;
+bool UIFileList::hasFilters() const {
+  return filters.size();
 }
 
-std::string UIFileList::getFilter() const {
-  return filtertext;
+std::list<std::string> UIFileList::getFilters() const {
+  return filters;
 }
 
-void UIFileList::setFilter(const std::string & filter) {
-  hasfilter = true;
-  filtertext = filter;
+void UIFileList::setFilters(const std::list<std::string> & filters) {
+  this->filters = filters;
   fillSortedFiles();
 }
 
-void UIFileList::unsetFilter() {
-  hasfilter = false;
+void UIFileList::unsetFilters() {
+  filters.clear();
   fillSortedFiles();
 }
 

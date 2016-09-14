@@ -14,6 +14,7 @@
 #include "../menuselectadjustableline.h"
 #include "../misc.h"
 
+#include "browsescreensite.h"
 #include "browsescreenaction.h"
 
 BrowseScreenLocal::BrowseScreenLocal(Ui * ui) : ui(ui), currentviewspan(0),
@@ -69,7 +70,7 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
       prepchar = "L";
     }
     std::string owner = uifile->getOwner() + "/" + uifile->getGroup();
-    addFileDetails(i, prepchar, uifile->getName(), uifile->getSizeRepr(), uifile->getLastModified(), owner, true, selected);
+    BrowseScreenSite::addFileDetails(table, coloffset, i, prepchar, uifile->getName(), uifile->getSizeRepr(), uifile->getLastModified(), owner, true, selected);
   }
   table.adjustLines(col - 3);
   table.checkPointer();
@@ -90,7 +91,8 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
   }
   if (filtermodeinput) {
     std::string oldtext = filterfield.getData();
-    filterfield = MenuSelectOptionTextField("filter", row + 1, 1, "", oldtext, col - 15, col - 15, false);
+    filterfield = MenuSelectOptionTextField("filter", row + 1, 1, "", oldtext,
+        col - 20, 512, false);
     ui->showCursor();
   }
   update();
@@ -110,7 +112,7 @@ void BrowseScreenLocal::update() {
   }
 }
 
-void BrowseScreenLocal::command(std::string, std::string) {
+void BrowseScreenLocal::command(const std::string &, const std::string &) {
 
 }
 
@@ -129,7 +131,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
     else if (ch == 10) {
       std::string filter = filterfield.getData();
       if (filter.length()) {
-        list.setFilter(filter);
+        list.setFilters(util::split(filter));
         resort = true;
       }
       filtermodeinput = false;
@@ -201,9 +203,9 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       ui->setLegend();
       break;
     case 'f':
-      if (list.hasFilter()) {
+      if (list.hasFilters()) {
         resort = true;
-        list.unsetFilter();
+        list.unsetFilters();
       }
       else {
         filtermodeinput = true;
@@ -376,7 +378,7 @@ std::string BrowseScreenLocal::getLegendText() const {
     return "[Any] Go to first matching entry name - [Esc] Cancel";
   }
   if (filtermodeinput) {
-    return "[Any] Enter filter text - [Esc] Cancel";
+    return "[Any] Enter space separated filters. Valid operators are !, *, ?. Must match all negative filters and at least one positive if given. Case insensitive. - [Esc] Cancel";
   }
   return "[Up/Down] Navigate - [Enter/Right] open dir - [s]ort - [Backspace/Left] return - [Esc] Cancel - [c]lose - [q]uick jump - Toggle [f]ilter";
 }
@@ -405,7 +407,7 @@ std::string BrowseScreenLocal::getInfoText() const {
       cwdfailed = false;
     }
   }
-  if (list.hasFilter()) {
+  if (list.hasFilters()) {
     text += std::string("  FILTER: ") + filterfield.getData();
     text += "  " + util::int2Str(list.filteredSizeFiles()) + "/" + util::int2Str(list.sizeFiles()) + "f " +
         util::int2Str(list.filteredSizeDirs()) + "/" + util::int2Str(list.sizeDirs()) + "d";
@@ -433,37 +435,6 @@ void BrowseScreenLocal::tick(int) {
       disableGotoMode();
     }
   }
-}
-
-void BrowseScreenLocal::addFileDetails(unsigned int y, std::string name) {
-  addFileDetails(y, "", name, "", "", "", false, false);
-}
-
-void BrowseScreenLocal::addFileDetails(unsigned int y, std::string prepchar, std::string name, std::string size, std::string lastmodified, std::string owner, bool selectable, bool selected) {
-  Pointer<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
-  Pointer<MenuSelectOptionTextButton> msotb;
-  msotb = table.addTextButtonNoContent(y, coloffset + 1, "prepchar", prepchar);
-  msotb->setSelectable(false);
-  msotb->setShortSpacing();
-  msal->addElement(msotb, 4, RESIZE_REMOVE);
-  msotb = table.addTextButtonNoContent(y, coloffset + 3, "name", name);
-  if (!selectable) {
-    msotb->setSelectable(false);
-  }
-  if (selected) {
-    table.setPointer(msotb);
-  }
-  msal->addElement(msotb, 5, 0, RESIZE_WITHDOTS, true);
-  msotb = table.addTextButtonNoContent(y, coloffset + 3, "size", size);
-  msotb->setSelectable(false);
-  msotb->setRightAligned();
-  msal->addElement(msotb, 3, RESIZE_REMOVE);
-  msotb = table.addTextButtonNoContent(y, coloffset + 3, "lastmodified", lastmodified);
-  msotb->setSelectable(false);
-  msal->addElement(msotb, 2, RESIZE_REMOVE);
-  msotb = table.addTextButtonNoContent(y, coloffset + 3, "owner", owner);
-  msotb->setSelectable(false);
-  msal->addElement(msotb, 1, RESIZE_REMOVE);
 }
 
 UIFile * BrowseScreenLocal::selectedFile() const {
@@ -527,14 +498,14 @@ void BrowseScreenLocal::gotoPath(const std::string & path) {
     currentviewspan = 0;
   }
   bool setfilter = false;
-  std::string filter;
+  std::list<std::string> filters;
   if (list.getPath() == filelist->getPath()) {
-    setfilter = list.hasFilter();
-    filter = list.getFilter();
+    setfilter = list.hasFilters();
+    filters = list.getFilters();
   }
   list.parse(filelist);
   if (setfilter) {
-    list.setFilter(filter);
+    list.setFilters(filters);
   }
   sort();
   for (std::list<std::pair<std::string, std::string> >::iterator it = selectionhistory.begin(); it != selectionhistory.end(); it++) {
