@@ -20,6 +20,7 @@
 #include "uibase.h"
 #include "sitemanager.h"
 #include "site.h"
+#include "engine.h"
 #include "util.h"
 
 #define AUTO_SAVE_INTERVAL 600000 // 10 minutes
@@ -425,6 +426,18 @@ void SettingsLoaderSaver::loadSettings() {
     }
   }
 
+  dfh->getDataFor("Engine", &lines);
+  for (it = lines.begin(); it != lines.end(); it++) {
+    line = *it;
+    if (line.length() == 0 ||line[0] == '#') continue;
+    size_t tok = line.find('=');
+    std::string setting = line.substr(0, tok);
+    std::string value = line.substr(tok + 1);
+    if (!setting.compare("preparedraceexpirytime")) {
+      global->getEngine()->setPreparedRaceExpiryTime(util::str2Int(value));
+    }
+  }
+
   // backward compatibility begins (r687)
   dfh->getDataFor("SiteManagerRules", &lines);
   for (it = lines.begin(); it != lines.end(); it++) {
@@ -591,6 +604,10 @@ void SettingsLoaderSaver::saveSettings() {
     dfh->addOutputLine(defaultstag, "maxidletime=" + util::int2Str(global->getSiteManager()->getDefaultMaxIdleTime()));
     dfh->addOutputLine(defaultstag, "ssltransfer=" + util::int2Str(global->getSiteManager()->getDefaultSSLTransferPolicy()));
     if (!global->getSiteManager()->getDefaultSSL()) dfh->addOutputLine(defaultstag, "sslconn=false");
+  }
+
+  {
+    dfh->addOutputLine("Engine", "preparedraceexpirytime=" + util::int2Str(global->getEngine()->getPreparedRaceExpiryTime()));
   }
 
   for (std::list<SettingsAdder *>::iterator it = settingsadders.begin(); it != settingsadders.end(); it++) {

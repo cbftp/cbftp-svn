@@ -7,13 +7,6 @@
 #include "core/eventreceiver.h"
 #include "core/pointer.h"
 
-#define SPREAD 0
-#define POKEINTERVAL 1000
-#define MAXCHECKSTIMEOUT 60
-#define STATICTIMEFORCOMPLETION 5000
-#define DIROBSERVETIME 20000
-#define SFVDIROBSERVETIME 5000
-
 class Race;
 class TransferJob;
 class SiteRace;
@@ -50,6 +43,7 @@ public:
   void abortTransferJob(Pointer<TransferJob> &);
   void raceFileListRefreshed(SiteLogic *, SiteRace *);
   bool transferJobActionRequest(Pointer<TransferJob> &);
+  void setPreparedRaceExpiryTime(int);
   unsigned int preparedRaces() const;
   unsigned int currentRaces() const;
   unsigned int allRaces() const;
@@ -74,6 +68,7 @@ public:
   int getMaxPointsLowProgress() const;
   int getPriorityPoints(int) const;
   int getSpeedPoints(int) const;
+  int getPreparedRaceExpiryTime() const;
  private:
   Pointer<Race> newSpreadJob(int, const std::string &, const std::string &, const std::list<std::string> &);
   Pointer<Race> newSpreadJob(int, const std::string &, const std::string &);
@@ -110,4 +105,5 @@ public:
   int maxpointspriority;
   int maxpointspercentageowned;
   int maxpointslowprogress;
+  int preparedraceexpirytime;
 };

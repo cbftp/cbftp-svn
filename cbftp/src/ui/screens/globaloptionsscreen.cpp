@@ -8,6 +8,7 @@
 #include "../../localstorage.h"
 #include "../../util.h"
 #include "../../settingsloadersaver.h"
+#include "../../engine.h"
 #include "../ui.h"
 #include "../focusablearea.h"
 #include "../menuselectoptioncheckbox.h"
@@ -66,6 +67,7 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   mso.addStringField(y++, x, "udpport", "Remote command UDP Port:", util::int2Str(rch->getUDPPort()), false, 5);
   mso.addStringField(y++, x, "udppass", "Remote command password:", rch->getPassword(), true);
   mso.addCheckBox(y++, x, "udpbell", "Remote command bell:", rch->getNotify());
+  mso.addStringField(y++, x, "preparedraceexpirytime", "Prepared race expiration time:", util::int2Str(global->getEngine()->getPreparedRaceExpiryTime()), false, 5);
   y++;
   Pointer<MenuSelectOptionTextArrow> legendmode = mso.addTextArrow(y++, x, "legendmode", "Legend bar:");
   legendmode->addOption("Disabled", LEGEND_DISABLED);
@@ -257,6 +259,9 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "dlpath") {
           ls->setDownloadPath(msoe.get<MenuSelectOptionTextField>()->getData());
+        }
+        else if (identifier == "preparedraceexpirytime") {
+          global->getEngine()->setPreparedRaceExpiryTime(util::str2Int(msoe.get<MenuSelectOptionTextField>()->getData()));
         }
       }
       rch->setEnabled(udpenable);

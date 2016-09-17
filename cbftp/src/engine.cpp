@@ -26,6 +26,13 @@
 #include "util.h"
 #include "preparedrace.h"
 
+#define SPREAD 0
+#define POKEINTERVAL 1000
+#define MAXCHECKSTIMEOUT 60
+#define STATICTIMEFORCOMPLETION 5000
+#define DIROBSERVETIME 20000
+#define SFVDIROBSERVETIME 5000
+
 Engine::Engine() :
   scoreboard(makePointer<ScoreBoard>()),
   maxavgspeed(1024),
@@ -35,7 +42,8 @@ Engine::Engine() :
   maxpointsavgspeed(3000),
   maxpointspriority(2500),
   maxpointspercentageowned(2000),
-  maxpointslowprogress(2000)
+  maxpointslowprogress(2000),
+  preparedraceexpirytime(120)
 {
 }
 
@@ -111,7 +119,7 @@ Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, con
     if (profile == SPREAD_PREPARE) {
       global->getEventLog()->log("Engine", "Preparing race: " + section + "/" + release +
                 " on " + util::int2Str((int)addsites.size()) + " sites.");
-      preparedraces.push_back(makePointer<PreparedRace>(race->getId(), release, section, addsites));
+      preparedraces.push_back(makePointer<PreparedRace>(race->getId(), release, section, addsites, preparedraceexpirytime));
       for (std::list<SiteLogic *>::const_iterator ait = addsiteslogics.begin(); ait != addsiteslogics.end(); ait++) {
         (*ait)->activateAll();
       }
@@ -981,14 +989,14 @@ void Engine::tick(int message) {
       }
     }
   }
-  for (std::list<Pointer<TransferJob> >::iterator it = currenttransferjobs.begin(); it != currenttransferjobs.end(); it++) {
+  for (std::list<Pointer<TransferJob> >::const_iterator it = currenttransferjobs.begin(); it != currenttransferjobs.end(); it++) {
     if ((*it)->isDone()) {
       transferJobComplete(*it);
       break;
     }
   }
   std::list<unsigned int> removeids;
-  for (std::list<Pointer<PreparedRace> >::iterator it = preparedraces.begin(); it != preparedraces.end(); it++) {
+  for (std::list<Pointer<PreparedRace> >::const_iterator it = preparedraces.begin(); it != preparedraces.end(); it++) {
     (*it)->tick();
     if ((*it)->getRemainingTime() < 0) {
       removeids.push_back((*it)->getId());
@@ -1101,4 +1109,12 @@ int Engine::getSpeedPoints(int avgspeed) const {
     return pointsavgspeed;
   }
   return 0;
+}
+
+int Engine::getPreparedRaceExpiryTime() const {
+  return preparedraceexpirytime;
+}
+
+void Engine::setPreparedRaceExpiryTime(int expirytime) {
+  preparedraceexpirytime = expirytime;
 }

@@ -5,7 +5,7 @@
 
 class PreparedRace {
 public:
-  PreparedRace(unsigned int, const std::string &, const std::string &, const std::list<std::string> &);
+  PreparedRace(unsigned int, const std::string &, const std::string &, const std::list<std::string> &, int);
   unsigned int getId() const;
   const std::string & getRelease() const;
   const std::string & getSection() const;
