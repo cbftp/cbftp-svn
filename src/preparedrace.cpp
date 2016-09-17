@@ -1,13 +1,11 @@
 #include "preparedrace.h"
 
-#define PREPARED_RACE_EXPIRATION_TIME 120
-
-PreparedRace::PreparedRace(unsigned int id, const std::string & release, const std::string & section, const std::list<std::string> & sites) :
+PreparedRace::PreparedRace(unsigned int id, const std::string & release, const std::string & section, const std::list<std::string> & sites, int ttl) :
   id(id),
   release(release),
   section(section),
   sites(sites),
-  ttl(PREPARED_RACE_EXPIRATION_TIME) {
+  ttl(ttl) {
 
 }
 
