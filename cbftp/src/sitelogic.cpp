@@ -374,6 +374,10 @@ void SiteLogic::commandSuccess(int id) {
 }
 
 void SiteLogic::commandFail(int id) {
+  commandFail(id, FAIL_UNDEFINED);
+}
+
+void SiteLogic::commandFail(int id, int failuretype) {
   connstatetracker[id].resetIdleTime();
   int state = conns[id]->getState();
   std::string targetcwdsect;
@@ -480,7 +484,12 @@ void SiteLogic::commandFail(int id) {
       handleTransferFail(id, CST_DOWNLOAD, TM_ERR_PRET);
       return;
     case STATE_PRET_STOR:
-      handleTransferFail(id, CST_UPLOAD, TM_ERR_PRET);
+      if (failuretype == FAIL_DUPE) {
+        handleTransferFail(id, CST_UPLOAD, TM_ERR_DUPE);
+      }
+      else {
+        handleTransferFail(id, CST_UPLOAD, TM_ERR_PRET);
+      }
       return;
     case STATE_RETR:
       handleTransferFail(id, CST_DOWNLOAD, TM_ERR_RETRSTOR);
@@ -489,7 +498,12 @@ void SiteLogic::commandFail(int id) {
       handleTransferFail(id, CST_DOWNLOAD, TM_ERR_RETRSTOR_COMPLETE);
       return;
     case STATE_STOR:
-      handleTransferFail(id, CST_UPLOAD, TM_ERR_RETRSTOR);
+      if (failuretype == FAIL_DUPE) {
+        handleTransferFail(id, CST_UPLOAD, TM_ERR_DUPE);
+      }
+      else {
+        handleTransferFail(id, CST_UPLOAD, TM_ERR_RETRSTOR);
+      }
       return;
     case STATE_STOR_COMPLETE:
       handleTransferFail(id, CST_UPLOAD, TM_ERR_RETRSTOR_COMPLETE);
@@ -596,10 +610,10 @@ void SiteLogic::handleTransferFail(int id, int type, int err) {
         break;
     }
   }
-  if (err == 1) {
+  if (err == TM_ERR_RETRSTOR) {
     conns[id]->abortTransferPASV();
   }
-  else if (err == 3 && !connstatetracker[id].isLocked()) {
+  else if (err == TM_ERR_OTHER && !connstatetracker[id].isLocked()) {
     connstatetracker[id].delayedCommand("handle", SLEEPDELAY * 6);
   }
   else {

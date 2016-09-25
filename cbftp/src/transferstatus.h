@@ -10,6 +10,7 @@
 #define TRANSFERSTATUS_STATE_IN_PROGRESS 1901
 #define TRANSFERSTATUS_STATE_SUCCESSFUL 1902
 #define TRANSFERSTATUS_STATE_FAILED 1903
+#define TRANSFERSTATUS_STATE_DUPE 1904
 
 class TransferStatusCallback;
 class FileList;
@@ -46,6 +47,7 @@ public:
   const std::list<std::string> & getLogLines() const;
   void setFinished();
   void setFailed();
+  void setDupe();
   void setAwaited(bool);
   void setCallback(TransferStatusCallback *);
   void setTargetSize(unsigned long long int);

@@ -204,6 +204,9 @@ void TransferJobStatusScreen::addTransferDetails(unsigned int y, Pointer<Transfe
     case TRANSFERSTATUS_STATE_SUCCESSFUL:
       progress = "done";
       break;
+    case TRANSFERSTATUS_STATE_DUPE:
+      progress = "dupe";
+      break;
   }
   std::string timeremaining = util::simpleTimeFormat(ts->getTimeRemaining());
   std::string transferred = util::parseSize(ts->targetSize()) + " / " +

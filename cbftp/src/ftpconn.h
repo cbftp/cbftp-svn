@@ -54,6 +54,11 @@ enum ProtMode {
   PROT_P
 };
 
+enum FailureType {
+  FAIL_UNDEFINED,
+  FAIL_DUPE
+};
+
 class FTPConnect;
 class SiteRace;
 class FileList;
