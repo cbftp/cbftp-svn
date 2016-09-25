@@ -591,6 +591,7 @@ void SiteLogic::handleTransferFail(int id, int err) {
 }
 
 void SiteLogic::handleTransferFail(int id, int type, int err) {
+  bool passive = connstatetracker[id].getTransferPassive();
   if (connstatetracker[id].transferInitialized()) {
     reportTransferErrorAndFinish(id, type, err);
   }
@@ -610,9 +611,7 @@ void SiteLogic::handleTransferFail(int id, int type, int err) {
         break;
     }
   }
-  if ((err == TM_ERR_RETRSTOR || err == TM_ERR_DUPE) &&
-      connstatetracker[id].getTransferPassive())
-  {
+  if (passive && (err == TM_ERR_RETRSTOR || err == TM_ERR_DUPE)) {
     conns[id]->abortTransferPASV();
   }
   else if (err == TM_ERR_OTHER && !connstatetracker[id].isLocked()) {
