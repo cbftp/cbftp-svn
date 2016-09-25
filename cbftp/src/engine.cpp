@@ -89,7 +89,7 @@ Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, con
           section + " on " + *it);
       continue;
     }
-    if (checkBannedGroup(sl->getSite(), race->getGroup())) {
+    if (checkBannedGroup(section, sl->getSite(), race->getGroup())) {
       continue;
     }
     bool add = true;
@@ -1046,14 +1046,14 @@ Pointer<Race> Engine::getCurrentRace(const std::string & release) const {
 
 void Engine::addSiteToRace(Pointer<Race> & race, const std::string & site) {
   SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(site);
-  if (!checkBannedGroup(sl->getSite(), race->getGroup())) {
+  if (!checkBannedGroup(race->getSection(), sl->getSite(), race->getGroup())) {
     SiteRace * sr = sl->addRace(race, race->getSection(), race->getName());
     race->addSite(sr, sl);
   }
 }
 
-bool Engine::checkBannedGroup(Site * site, const std::string & group) {
-  if (site->isBannedGroup(group)) {
+bool Engine::checkBannedGroup(const std::string & section, Site * site, const std::string & group) {
+  if (site->isBannedGroup(section, group)) {
     global->getEventLog()->log("Engine", "Ignoring site: " + site->getName() +
         " because the group is banned: " + group);
     return true;
