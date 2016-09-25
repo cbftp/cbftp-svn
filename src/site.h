@@ -58,6 +58,7 @@ private:
   std::map<std::string, std::string> affilslower;
   std::set<std::string> bannedgroups;
   std::map<std::string, std::string> bannedgroupslower;
+  std::map<std::string, std::set<std::string> > bannedgroupssectionexcept;
   std::set<Site *> exceptsourcesites;
   std::set<Site *> excepttargetsites;
   int proxytype;
@@ -138,7 +139,7 @@ public:
   bool isAffiliated(const std::string &) const;
   void addAffil(const std::string &);
   void clearAffils();
-  bool isBannedGroup(const std::string &) const;
+  bool isBannedGroup(const std::string &, const std::string &) const;
   void addBannedGroup(const std::string &);
   void clearBannedGroups();
   void setTransferSourcePolicy(int);

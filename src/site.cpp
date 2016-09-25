@@ -401,21 +401,46 @@ void Site::clearAffils() {
   affilslower.clear();
 }
 
-bool Site::isBannedGroup(const std::string & group) const {
-  if (bannedgroupslower.find(util::toLower(group)) != bannedgroupslower.end()) {
-    return true;
+bool Site::isBannedGroup(const std::string & section, const std::string & group) const {
+  std::string sectionlow = util::toLower(section);
+  std::string grouplow = util::toLower(group);
+  std::map<std::string, std::set<std::string> >::const_iterator it;
+  if ((it = bannedgroupssectionexcept.find(sectionlow)) != bannedgroupssectionexcept.end()) {
+    return !it->second.count(grouplow);
   }
-  return false;
+  if ((it = bannedgroupssectionexcept.find("")) != bannedgroupssectionexcept.end()) {
+    return !it->second.count(grouplow);
+  }
+  return bannedgroupslower.count(grouplow) || bannedgroupslower.count(sectionlow + "/" + grouplow);
 }
 
 void Site::addBannedGroup(const std::string & group) {
+  if (!group.length()) {
+    return;
+  }
   bannedgroups.insert(group);
-  bannedgroupslower[util::toLower(group)] = true;
+  std::string groupstr = util::toLower(group);
+  if (groupstr[0] != '!') {
+    bannedgroupslower[groupstr] = true;
+    return;
+  }
+  groupstr = groupstr.substr(1);
+  size_t slashpos = groupstr.find("/");
+  std::string section;
+  if (slashpos != std::string::npos) {
+    section = groupstr.substr(0, slashpos);
+    groupstr = groupstr.substr(slashpos + 1);
+  }
+  if (!bannedgroupssectionexcept.count(section)) {
+    bannedgroupssectionexcept[section] = std::set<std::string>();
+  }
+  bannedgroupssectionexcept[section].insert(groupstr);
 }
 
 void Site::clearBannedGroups() {
   bannedgroups.clear();
   bannedgroupslower.clear();
+  bannedgroupssectionexcept.clear();
 }
 
 void Site::setTransferSourcePolicy(int policy) {

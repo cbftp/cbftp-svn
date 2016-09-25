@@ -86,7 +86,7 @@ public:
   void checkStartPoke();
   void addPendingTransfer(std::list<PendingTransfer> &, PendingTransfer &);
   Pointer<Race> getCurrentRace(const std::string &) const;
-  bool checkBannedGroup(Site *, const std::string &);
+  bool checkBannedGroup(const std::string &, Site *, const std::string &);
   void preSeedPotentialData(Pointer<Race> &);
   bool raceTransferPossible(SiteLogic *, SiteLogic *, Pointer<Race> &) const;
   std::list<Pointer<Race> > allraces;
