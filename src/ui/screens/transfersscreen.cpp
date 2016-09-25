@@ -188,6 +188,9 @@ void TransfersScreen::addTransferDetails(unsigned int y, MenuSelectOption & mso,
     case TRANSFERSTATUS_STATE_SUCCESSFUL:
       progress = "done";
       break;
+    case TRANSFERSTATUS_STATE_DUPE:
+      progress = "dupe";
+      break;
   }
   std::string timeremaining = util::simpleTimeFormat(ts->getTimeRemaining());
   std::string transferred = util::parseSize(ts->targetSize()) + " / " +

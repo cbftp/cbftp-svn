@@ -931,6 +931,9 @@ void FTPConn::PRETSTORResponse() {
   if (databufcode == 200) {
     sl->commandSuccess(id);
   }
+  else if (databufcode == 553) {
+    sl->commandFail(id, FAIL_DUPE);
+  }
   else {
     sl->commandFail(id);
   }
@@ -989,7 +992,12 @@ void FTPConn::STORResponse() {
   }
   else {
     processing = false;
-    sl->commandFail(id);
+    if (databufcode == 553) {
+      sl->commandFail(id, FAIL_DUPE);
+    }
+    else {
+      sl->commandFail(id);
+    }
   }
 }
 

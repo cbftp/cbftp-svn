@@ -80,6 +80,9 @@ void TransferStatusScreen::redraw() {
     case TRANSFERSTATUS_STATE_SUCCESSFUL:
       progress = "Completed";
       break;
+    case TRANSFERSTATUS_STATE_DUPE:
+      progress = "Failed (Dupe)";
+      break;
   }
   ui->printStr(y, 57, "Status: " + progress);
   ++y;

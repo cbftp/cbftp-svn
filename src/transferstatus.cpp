@@ -142,6 +142,11 @@ void TransferStatus::setFailed() {
   timeremaining = 0;
 }
 
+void TransferStatus::setDupe() {
+  state = TRANSFERSTATUS_STATE_DUPE;
+  timeremaining = 0;
+}
+
 void TransferStatus::setAwaited(bool awaited) {
   this->awaited = awaited;
 }

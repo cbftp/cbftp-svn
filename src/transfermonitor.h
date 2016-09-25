@@ -31,7 +31,8 @@ enum TransferError {
   TM_ERR_RETRSTOR_COMPLETE,
   TM_ERR_OTHER,
   TM_ERR_LOCK_DOWN,
-  TM_ERR_LOCK_UP
+  TM_ERR_LOCK_UP,
+  TM_ERR_DUPE
 };
 
 #define MAX_WAIT_ERROR 10000
@@ -75,7 +76,8 @@ class TransferMonitor : public EventReceiver, public RawBufferCallback {
     LocalTransfer * lt;
     int localtransferspeedticker;
     int checkdeadticker;
-    void finish(bool);
+    TransferError error;
+    void finish();
     void setTargetSizeSpeed(unsigned long long int, int);
     void reset();
     void transferFailed(Pointer<TransferStatus> &, TransferError);

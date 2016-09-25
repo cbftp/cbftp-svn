@@ -83,6 +83,7 @@ class SiteLogic : public EventReceiver {
     void listRefreshed(int);
     void commandSuccess(int);
     void commandFail(int);
+    void commandFail(int, int);
     void gotPath(int, const std::string &);
     void rawCommandResultRetrieved(int, const std::string &);
     void gotPassiveAddress(int, const std::string &, int);

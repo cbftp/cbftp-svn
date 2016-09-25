@@ -336,8 +336,11 @@ void TransferMonitor::sourceComplete() {
   if (status == TM_STATUS_TRANSFERRING) {
     status = TM_STATUS_TRANSFERRING_SOURCE_COMPLETE;
   }
+  else if (status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE) {
+    transferFailed(ts, error);
+  }
   else {
-    finish(status != TM_STATUS_TARGET_ERROR_AWAITING_SOURCE);
+    finish();
   }
 }
 
@@ -352,54 +355,51 @@ void TransferMonitor::targetComplete() {
   if (status == TM_STATUS_TRANSFERRING) {
     status = TM_STATUS_TRANSFERRING_TARGET_COMPLETE;
   }
+  else if (status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET) {
+    transferFailed(ts, error);
+  }
   else {
-    finish(status != TM_STATUS_SOURCE_ERROR_AWAITING_TARGET);
+    finish();
   }
 }
 
-void TransferMonitor::finish(bool successful) {
-  if (successful) {
-    int span = timestamp - startstamp;
-    if (span == 0) {
-      span = 10;
-    }
-    switch (type) {
-      case TM_TYPE_FXP:
-      case TM_TYPE_DOWNLOAD: {
-        File * srcfile = fls->getFile(sfile);
-        if (srcfile) {
-          unsigned long long int size = srcfile->getSize();
-          unsigned int speed = size / span;
-          ts->setTargetSize(size);
-          ts->setSpeed(speed);
-          ts->setTimeSpent(span / 1000);
-          if (size > 1000000 && type == TM_TYPE_FXP) {
-            fld->setFileUpdateFlag(dfile, size, speed, sls->getSite(), sld->getSite()->getName());
-          }
-        }
-        break;
-      }
-      case TM_TYPE_UPLOAD: {
-        unsigned long long int size = lt->size();
+void TransferMonitor::finish() {
+  int span = timestamp - startstamp;
+  if (span == 0) {
+    span = 10;
+  }
+  switch (type) {
+    case TM_TYPE_FXP:
+    case TM_TYPE_DOWNLOAD: {
+      File * srcfile = fls->getFile(sfile);
+      if (srcfile) {
+        unsigned long long int size = srcfile->getSize();
         unsigned int speed = size / span;
         ts->setTargetSize(size);
         ts->setSpeed(speed);
         ts->setTimeSpent(span / 1000);
-        break;
+        if (size > 1000000 && type == TM_TYPE_FXP) {
+          fld->setFileUpdateFlag(dfile, size, speed, sls->getSite(), sld->getSite()->getName());
+        }
       }
-      case TM_TYPE_LIST:
-        sls->listCompleted(src, storeid);
-        break;
+      break;
     }
-    if (!!ts) {
-      ts->setFinished();
+    case TM_TYPE_UPLOAD: {
+      unsigned long long int size = lt->size();
+      unsigned int speed = size / span;
+      ts->setTargetSize(size);
+      ts->setSpeed(speed);
+      ts->setTimeSpent(span / 1000);
+      break;
     }
-    tm->transferSuccessful(ts);
+    case TM_TYPE_LIST:
+      sls->listCompleted(src, storeid);
+      break;
   }
-  else {
-    transferFailed(ts, TM_ERR_OTHER);
-    return;
+  if (!!ts) {
+    ts->setFinished();
   }
+  tm->transferSuccessful(ts);
   status = TM_STATUS_IDLE;
 }
 
@@ -428,6 +428,7 @@ void TransferMonitor::sourceError(TransferError err) {
     transferFailed(ts, err);
     return;
   }
+  error = err;
   status = TM_STATUS_SOURCE_ERROR_AWAITING_TARGET;
 }
 
@@ -458,6 +459,7 @@ void TransferMonitor::targetError(TransferError err) {
     transferFailed(ts, err);
     return;
   }
+  error = err;
   status = TM_STATUS_TARGET_ERROR_AWAITING_SOURCE;
 }
 
@@ -559,10 +561,22 @@ void TransferMonitor::reset() {
 }
 
 void TransferMonitor::transferFailed(Pointer<TransferStatus> & ts, TransferError err) {
-  if (!!ts) {
-    ts->setFailed();
+  if (status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET ||
+      status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE)
+  {
+    if (error == TM_ERR_DUPE) {
+      err = TM_ERR_DUPE;
+    }
   }
-  if (type == TM_TYPE_FXP) {
+  if (!!ts) {
+    if (err == TM_ERR_DUPE) {
+      ts->setDupe();
+    }
+    else {
+      ts->setFailed();
+    }
+  }
+  if (type == TM_TYPE_FXP && err != TM_ERR_DUPE) {
     sls->getSite()->pushTransferSpeed(sld->getSite()->getName(), 0, 0);
   }
   tm->transferFailed(ts, err);
