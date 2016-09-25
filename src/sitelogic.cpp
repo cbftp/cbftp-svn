@@ -610,7 +610,9 @@ void SiteLogic::handleTransferFail(int id, int type, int err) {
         break;
     }
   }
-  if (err == TM_ERR_RETRSTOR) {
+  if ((err == TM_ERR_RETRSTOR || err == TM_ERR_DUPE) &&
+      connstatetracker[id].getTransferPassive())
+  {
     conns[id]->abortTransferPASV();
   }
   else if (err == TM_ERR_OTHER && !connstatetracker[id].isLocked()) {
