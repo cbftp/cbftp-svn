@@ -111,14 +111,20 @@ void RemoteCommandHandler::FDData(int sockid, char * data, unsigned int datalen)
 
 void RemoteCommandHandler::handleMessage(std::string message) {
   message = util::trim(message);
-  global->getEventLog()->log("RemoteCommandHandler", "Received: " + message);
   size_t passend = message.find(" ");
   if (passend == std::string::npos) {
     global->getEventLog()->log("RemoteCommandHandler", "Bad message format: " + message);
     return;
   }
   std::string pass = message.substr(0, passend);
-  if (pass != password) {
+  bool passok = pass == password;
+  if (passok) {
+    for (unsigned int i = 0; i < passend; i++) {
+      message[i] = '*';
+    }
+  }
+  global->getEventLog()->log("RemoteCommandHandler", "Received: " + message);
+  if (!passok) {
     global->getEventLog()->log("RemoteCommandHandler", "Invalid password.");
     return;
   }
