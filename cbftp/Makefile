@@ -1,6 +1,6 @@
 include Makefile.inc
 
-.PHONY: src
+.PHONY: core ext src
 
 BINDIR = bin
 
@@ -21,6 +21,7 @@ ext:
 ifneq ($(UI_PATH),)
 UI_DEP = $(wildcard $(UI_PATH)/*.a)
 UI_LINK = -Wl,--whole-archive $(UI_DEP) -Wl,--no-whole-archive
+.PHONY: ui
 ui:
 	@+$(MAKE) -C $(UI_PATH)
 endif
