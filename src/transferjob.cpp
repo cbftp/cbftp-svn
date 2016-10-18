@@ -343,14 +343,9 @@ int TransferJob::maxPossibleSlots() const {
     case TRANSFERJOB_FXP_FILE:
     case TRANSFERJOB_UPLOAD_FILE:
       return 1;
-    case TRANSFERJOB_FXP:
-    {
-      int max1 = src->getSite()->getMaxDown();
-      int max2 = dst->getSite()->getMaxUp();
-      return max2 < max1 ? max2 : max1;
-    }
     case TRANSFERJOB_UPLOAD:
       return dst->getSite()->getMaxUp();
+    case TRANSFERJOB_FXP:
     case TRANSFERJOB_DOWNLOAD:
       return src->getSite()->getMaxDown();
   }
