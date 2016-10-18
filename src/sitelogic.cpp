@@ -770,8 +770,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
           (((type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_DOWNLOAD_FILE ||
           ((type == TRANSFERJOB_FXP || type == TRANSFERJOB_FXP_FILE) && tj->getSrc() == this)) &&
           getCurrDown() < tj->maxSlots()) ||
-          ((type == TRANSFERJOB_UPLOAD || type == TRANSFERJOB_UPLOAD_FILE ||
-          ((type == TRANSFERJOB_FXP || type == TRANSFERJOB_FXP_FILE) && tj->getDst() == this)) &&
+          ((type == TRANSFERJOB_UPLOAD || type == TRANSFERJOB_UPLOAD_FILE) &&
           getCurrUp() < tj->maxSlots()))) {
         targetjob = tj;
         continue;
