@@ -739,8 +739,8 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
       return;
     }
   }
-  Pointer<TransferJob> targetjob;
-  for (std::list<Pointer<TransferJob> >::iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
+  std::list<Pointer<TransferJob> > targetjobs;
+  for (std::list<Pointer<TransferJob> >::const_iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
     Pointer<TransferJob> tj = *it;
     if (!tj->isDone()) {
       if (tj->wantsList(this)) {
@@ -762,29 +762,30 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
         return;
       }
       if (!tj->isInitialized()) {
-        targetjob = tj;
+        targetjobs.push_front(tj);
         continue;
       }
       int type = tj->getType();
-      if (!targetjob &&
-          (((type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_DOWNLOAD_FILE ||
-          ((type == TRANSFERJOB_FXP || type == TRANSFERJOB_FXP_FILE) && tj->getSrc() == this)) &&
-          getCurrDown() < tj->maxSlots()) ||
-          ((type == TRANSFERJOB_UPLOAD || type == TRANSFERJOB_UPLOAD_FILE) &&
-          getCurrUp() < tj->maxSlots()))) {
-        targetjob = tj;
+      if (((type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_DOWNLOAD_FILE ||
+            type == TRANSFERJOB_FXP || type == TRANSFERJOB_FXP_FILE) &&
+            tj->getSrc()->getCurrDown() < tj->maxSlots()) ||
+          ((type == TRANSFERJOB_UPLOAD || type == TRANSFERJOB_UPLOAD_FILE) && getCurrUp() < tj->maxSlots()))
+      {
+        targetjobs.push_back(tj);
         continue;
       }
     }
   }
-  if (!!targetjob) {
+  if (targetjobs.size()) {
     connstatetracker[id].delayedCommand("handle", SLEEPDELAY);
-    if (global->getEngine()->transferJobActionRequest(targetjob)) {
+  }
+  for (std::list<Pointer<TransferJob> >::iterator it = targetjobs.begin(); it != targetjobs.end(); it++) {
+    if (global->getEngine()->transferJobActionRequest(*it)) {
       return;
     }
-    else {
-      connstatetracker[id].use();
-    }
+  }
+  if (targetjobs.size()) {
+    connstatetracker[id].use();
   }
   SiteRace * race = NULL;
   bool refresh = false;
