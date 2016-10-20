@@ -5,7 +5,7 @@ LIB = libext.a
 CLEANFILES = $(wildcard $(SRC:%.cpp=%.o) $(SRC:%.cpp=%.d) $(LIB))
 
 all: $(SRC:%.cpp=%.o)
-	@+${MAKE} --no-print-directory $(LIB)
+	@+$(MAKE) --no-print-directory $(LIB)
 
 quiet:
 	@#

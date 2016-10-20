@@ -7,11 +7,11 @@ all: $(SRC:%.cpp=%.o)
 	@#
 
 ifeq ($(HAS_SVN), 0)
-SVN_DIR := ../../../.svn
+SVN_DIR := $(ROOT_DIR)/.svn
 endif
 
-loginscreen.o: loginscreen.cpp ../../../Makefile.inc ${SVN_DIR}
-	${CXX}  ${CPPFLAGS}  -c -o loginscreen.o loginscreen.cpp -DBUILDTIME=${DATE} -DVERSION=${VERSION} -DBOXTAG=${BOXTAG}
+loginscreen.o: loginscreen.cpp ../../../Makefile.inc $(SVN_DIR)
+	$(CXX)  $(CPPFLAGS)  -c -o loginscreen.o loginscreen.cpp -DBUILDTIME=$(DATE) -DVERSION=$(VERSION) -DBOXTAG=$(BOXTAG)
 	
 clean:
 	@if test $(firstword $(CLEANFILES)); then rm -rf $(CLEANFILES); echo rm -rf $(CLEANFILES); fi

@@ -5,7 +5,7 @@ LIB = libcore.a
 CLEANFILES = $(wildcard $(SRC:%.cpp=%.o) $(SRC:%.cpp=%.d) $(LIB))
 
 all: $(SRC:%.cpp=%.o)
-	@+${MAKE} --no-print-directory $(LIB)
+	@+$(MAKE) --no-print-directory $(LIB)
 
 quiet:
 	@#
@@ -20,7 +20,7 @@ ifneq ($(wildcard ../../Makefile.inc),)
 $(SRC:%.cpp=%.o): ../../Makefile.inc
 
 sslmanager.o: sslmanager.cpp ../../Makefile.inc
-	${CXX}  ${CPPFLAGS}  -c -o sslmanager.o sslmanager.cpp -DCORP=${BOXTAG}
+	$(CXX)  $(CPPFLAGS)  -c -o sslmanager.o sslmanager.cpp -DCORP=$(BOXTAG)
 endif
 
 -include $(SRC:%.cpp=%.d)
