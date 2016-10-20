@@ -1,69 +1,52 @@
 include Makefile.inc
 
-.PHONY: core ext src
-
-BINDIR = bin
-
 BINS = cbftp $(BINDIR)/cbftp-debug $(BINDIR)/datafilecat $(BINDIR)/datafilewrite
-
+BINDIR = bin
+SRC_TARGETS := src src/core src/ext
 SRC = $(wildcard src/*.cpp)
-
-all: ${BINS}
-
-CORE_LIB = src/core/libcore.a
-core:
-	@+$(MAKE) -C src/core
-
-EXT_LIB = src/ext/libext.a
-ext:
-	@+$(MAKE) -C src/ext
+LIBS := $(wildcard $(addsuffix /*.a,$(SRC_TARGETS)))
+OBJS = $(wildcard $(SRC:%.cpp=%.o))
 
 ifneq ($(UI_PATH),)
 UI_DEP = $(wildcard $(UI_PATH)/*.a)
 UI_LINK = -Wl,--whole-archive $(UI_DEP) -Wl,--no-whole-archive
-.PHONY: ui
-ui:
-	@+$(MAKE) -C $(UI_PATH)
+SRC_TARGETS := $(SRC_TARGETS) $(UI_PATH)
 endif
 
-OBJS = $(wildcard $(SRC:%.cpp=%.o))
+CLEAN_TARGETS = $(addprefix clean-,$(SRC_TARGETS))
 
+.PHONY: $(SRC_TARGETS) $(CLEAN_TARGETS)
+
+all: $(BINS)
+
+$(SRC_TARGETS):
+	@+$(MAKE) -C $@
 
 $(BINDIR):
 	mkdir -p $@
 
-src:
-	@+${MAKE} -C src
+cbftp: $(SRC_TARGETS) | $(BINDIR)
+	@+$(MAKE) --no-print-directory $(BINDIR)/cbftp
 
-ifneq ($(UI_PATH),)
-cbftp: src ext core ui | $(BINDIR)
-else
-cbftp: src ext core | $(BINDIR)
-endif
-	@+${MAKE} --no-print-directory $(BINDIR)/cbftp
-
-$(BINDIR)/cbftp: $(OBJS) $(UI_DEP) $(EXT_LIB) $(CORE_LIB)
-	${CXX} -o $(BINDIR)/cbftp $(OPTFLAGS) $(SRC:%.cpp=%.o) $(UI_LINK) $(EXT_LIB) $(CORE_LIB) $(LINKFLAGS)
+$(BINDIR)/cbftp: $(OBJS) $(UI_DEP) $(LIBS)
+	$(CXX) -o $(BINDIR)/cbftp $(OPTFLAGS) $(SRC:%.cpp=%.o) $(UI_LINK) $(LIBS) $(LINKFLAGS)
 	
 $(BINDIR)/cbftp-debug: misc/start_with_gdb.sh | $(BINDIR)
 	cp misc/start_with_gdb.sh $@; chmod +x bin/cbftp-debug
 
 $(BINDIR)/datafilecat: src/crypto.cpp src/tools/datafilecat.cpp Makefile.inc | $(BINDIR)
-	${CXX} -o $@ ${OPTFLAGS} $(STATIC_SSL_INCLUDE) src/crypto.cpp \
+	$(CXX) -o $@ $(OPTFLAGS) $(STATIC_SSL_INCLUDE) src/crypto.cpp \
 	src/filesystem.cpp src/tools/datafilecat.cpp $(SSL_LINKFLAGS)
 
 $(BINDIR)/datafilewrite: src/crypto.cpp src/tools/datafilewrite.cpp Makefile.inc | $(BINDIR)
-	${CXX} -o $@ ${OPTFLAGS} $(STATIC_SSL_INCLUDE) src/crypto.cpp \
+	$(CXX) -o $@ $(OPTFLAGS) $(STATIC_SSL_INCLUDE) src/crypto.cpp \
 	src/filesystem.cpp src/tools/datafilewrite.cpp $(SSL_LINKFLAGS)
 
 linecount:
 	find|grep -e '\.h$$' -e '\.cpp$$'|awk '{print $$1}'|xargs wc -l	
 
-clean:
-ifneq ($(UI_PATH),)
-	@+${MAKE} -C $(UI_PATH) clean
-endif
-	@+${MAKE} -C src clean
-	@+$(MAKE) -C src/ext clean
-	@+${MAKE} -C src/core clean
+clean: $(CLEAN_TARGETS)
 	@if test -d $(BINDIR); then rm -rf $(BINDIR); echo rm -rf $(BINDIR); fi
+
+$(CLEAN_TARGETS):
+	@+$(MAKE) -C $(@:clean-%=%) clean
