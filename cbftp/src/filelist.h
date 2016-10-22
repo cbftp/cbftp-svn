@@ -5,6 +5,13 @@
 
 #define MAXTRANSFERATTEMPTS 5
 
+enum FileListState {
+ FILELIST_UNKNOWN,
+ FILELIST_NONEXISTENT,
+ FILELIST_EXISTS,
+ FILELIST_LISTED
+};
+
 class File;
 class Site;
 
@@ -15,7 +22,7 @@ class FileList {
     std::map<std::string, std::string> lowercasefilemap;
     std::string username;
     std::string path;
-    bool filled;
+    FileListState state;
     bool locked;
     bool listchanged;
     unsigned long long lastchangedstamp;
@@ -27,15 +34,20 @@ class FileList {
     unsigned int uploadedfiles;
     void editOwnedFileCount(bool);
     void setChanged();
+    void init(const std::string &, const std::string &, FileListState);
   public:
     FileList(const std::string &, const std::string &);
+    FileList(const std::string &, const std::string &, FileListState);
     ~FileList();
     bool updateFile(const std::string &, int);
     void touchFile(const std::string &, const std::string &);
     void touchFile(const std::string &, const std::string &, bool);
+    void removeFile(const std::string &);
     void setFileUpdateFlag(const std::string &, unsigned long long int, unsigned int, Site *, const std::string &);
     File * getFile(const std::string &) const;
-    bool isFilled() const;
+    FileListState getState() const;
+    void setNonExistent();
+    void setExists();
     void setFilled();
     std::map<std::string, File *>::iterator begin();
     std::map<std::string, File *>::iterator end();

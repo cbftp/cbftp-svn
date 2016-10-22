@@ -9,9 +9,23 @@
 #include "util.h"
 
 FileList::FileList(const std::string & username, const std::string & path) {
+  init(username, path, FILELIST_UNKNOWN);
+}
+
+FileList::FileList(const std::string & username, const std::string & path, FileListState state) {
+  init(username, path, state);
+}
+
+FileList::~FileList() {
+  for (std::map<std::string, File *>::iterator it = files.begin(); it != files.end(); it++) {
+    delete it->second;
+  }
+}
+
+void FileList::init(const std::string & username, const std::string & path, FileListState state) {
   this->username = username;
   this->path = util::cleanPath(path);
-  filled = false;
+  this->state = state;
   owned = 0;
   ownpercentage = 0;
   maxfilesize = 0;
@@ -21,12 +35,6 @@ FileList::FileList(const std::string & username, const std::string & path) {
   lastchangedstamp = 0;
   totalfilesize = 0;
   uploading = 0;
-}
-
-FileList::~FileList() {
-  for (std::map<std::string, File *>::iterator it = files.begin(); it != files.end(); it++) {
-    delete it->second;
-  }
 }
 
 bool FileList::updateFile(const std::string & start, int touch) {
@@ -119,6 +127,25 @@ void FileList::touchFile(const std::string & name, const std::string & user, boo
   }
 }
 
+void FileList::removeFile(const std::string & name) {
+  File * f;
+  if ((f = getFile(name)) != NULL) {
+    if (f->getOwner().compare(username) == 0) {
+      editOwnedFileCount(false);
+    }
+    if (f->getSize() > 0 && !f->isDirectory()) {
+      uploadedfiles--;
+      totalfilesize -= f->getSize();
+    }
+    if (f->isUploading()) {
+      uploading--;
+    }
+    delete f;
+    files.erase(name);
+    setChanged();
+  }
+}
+
 void FileList::setFileUpdateFlag(const std::string & name, unsigned long long int size, unsigned int speed, Site * src, const std::string & dst) {
   File * file;
   if ((file = getFile(name)) != NULL) {
@@ -148,12 +175,20 @@ File * FileList::getFile(const std::string & name) const {
   return it->second;
 }
 
-bool FileList::isFilled() const {
-  return filled;
+FileListState FileList::getState() const {
+  return state;
+}
+
+void FileList::setNonExistent() {
+  state = FILELIST_NONEXISTENT;
+}
+
+void FileList::setExists() {
+  state = FILELIST_EXISTS;
 }
 
 void FileList::setFilled() {
-  filled = true;
+  state = FILELIST_LISTED;
 }
 
 std::map<std::string, File *>::iterator FileList::begin() {
@@ -224,22 +259,12 @@ void FileList::cleanSweep(int touch) {
   for (it = files.begin(); it != files.end(); it++) {
     File * f = it->second;
     if (f->getTouch() != touch && !f->isUploading()) {
-      if (f->getOwner().compare(username) == 0) {
-        editOwnedFileCount(false);
-      }
-      if (f->getSize() > 0 && !f->isDirectory()) {
-        uploadedfiles--;
-        totalfilesize -= f->getSize();
-      }
-      if (f->isUploading()) {
-        uploading--;
-      }
       eraselist.push_back(it->first);
-      delete f;
     }
   }
   if (eraselist.size() > 0) {
     for (std::list<std::string>::iterator it2 = eraselist.begin(); it2 != eraselist.end(); it2++) {
+      removeFile(*it2);
       files.erase(*it2);
       lowercasefilemap.erase(util::toLower(*it2));
     }

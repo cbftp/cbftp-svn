@@ -65,6 +65,7 @@ private:
   std::string proxyname;
   int transfersourcepolicy;
   int transfertargetpolicy;
+  bool aggressivemkdir;
 public:
   Site();
   Site(std::string);
@@ -119,6 +120,7 @@ public:
   std::string getPass() const;
   int getTransferSourcePolicy() const;
   int getTransferTargetPolicy() const;
+  bool getAggressiveMkdir() const;
   void setName(const std::string &);
   void setAddresses(std::string);
   void setPrimaryAddress(const std::string &, const std::string &);
@@ -153,6 +155,7 @@ public:
   void removeExceptSite(Site *);
   void clearExceptSites();
   bool isAllowedTargetSite(Site *) const;
+  void setAggressiveMkdir(bool);
   std::set<std::string>::const_iterator affilsBegin() const;
   std::set<std::string>::const_iterator affilsEnd() const;
   std::set<std::string>::const_iterator bannedGroupsBegin() const;
@@ -164,4 +167,5 @@ public:
   void addSection(const std::string &, const std::string &);
   std::list<std::string> getSectionsForPath(const std::string &) const;
   std::list<std::string> getSectionsForPartialPath(const std::string &) const;
+  std::pair<std::string, std::string> splitPathInSectionAndSubpath(const std::string &);
 };

@@ -439,7 +439,7 @@ void TransferMonitor::targetError(TransferError err) {
                status == TM_STATUS_TRANSFERRING ||
                status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE);
   if (fld != NULL) {
-    fld->finishUpload(dfile);
+    fld->removeFile(dfile);
   }
   partialcompletestamp = timestamp;
   if (status == TM_STATUS_AWAITING_PASSIVE || status == TM_STATUS_AWAITING_ACTIVE) {

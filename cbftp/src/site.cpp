@@ -28,7 +28,8 @@ Site::Site(std::string name) :
   priority(SITE_PRIORITY_NORMAL),
   proxytype(SITE_PROXY_GLOBAL),
   transfersourcepolicy(SITE_TRANSFER_POLICY_ALLOW),
-  transfertargetpolicy(SITE_TRANSFER_POLICY_ALLOW)
+  transfertargetpolicy(SITE_TRANSFER_POLICY_ALLOW),
+  aggressivemkdir(false)
 {
   addresses.push_back(std::pair<std::string, std::string>("ftp.sunet.se", "21"));
 }
@@ -244,6 +245,14 @@ void Site::setBrokenPASV(bool val) {
 
 std::string Site::getName() const {
   return name;
+}
+
+bool Site::getAggressiveMkdir() const {
+  return aggressivemkdir;
+}
+
+void Site::setAggressiveMkdir(bool aggressive) {
+  aggressivemkdir = aggressive;
 }
 
 std::string Site::getSectionPath(const std::string & sectionname) const {
@@ -568,4 +577,23 @@ std::list<std::string> Site::getSectionsForPartialPath(const std::string & path)
     }
   }
   return retsections;
+}
+
+std::pair<std::string, std::string> Site::splitPathInSectionAndSubpath(const std::string & path) {
+  std::string sectionpath;
+  std::list<std::string> sections = getSectionsForPartialPath(path);
+  if (sections.size()) {
+    sectionpath = getSectionPath(sections.front());
+  }
+  std::string subpath;
+  if (sectionpath.length()) {
+    subpath = path.substr(sectionpath.length());
+    if (subpath.length() > 0 && subpath[0] == '/') {
+      subpath = subpath.substr(1);
+    }
+  }
+  else {
+    subpath = path;
+  }
+  return std::pair<std::string, std::string>(sectionpath, subpath);
 }
