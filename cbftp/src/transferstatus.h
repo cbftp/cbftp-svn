@@ -31,7 +31,7 @@ public:
   unsigned long long int knownTargetSize() const;
   unsigned int getSpeed() const;
   unsigned int getTimeSpent() const;
-  unsigned int getTimeRemaining() const;
+  int getTimeRemaining() const;
   unsigned int getProgress() const;
   std::string getTimestamp() const;
   TransferStatusCallback * getCallback() const;
@@ -74,7 +74,7 @@ private:
   unsigned int speed;
   int state;
   unsigned int timespent;
-  unsigned int timeremaining;
+  int timeremaining;
   unsigned int progress;
   bool awaited;
   TransferStatusCallback * callback;

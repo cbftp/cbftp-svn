@@ -1,5 +1,7 @@
 #include "transferstatusscreen.h"
 
+#include "transfersscreen.h"
+
 #include "../ui.h"
 #include "../menuselectoptionnumarrow.h"
 #include "../menuselectoptiontextbutton.h"
@@ -52,6 +54,7 @@ void TransferStatusScreen::redraw() {
   ++y;
   ui->printStr(y, 1, "Target path: " + ts->getTargetPath());
   ++y;
+  TransferDetails td = TransfersScreen::formatTransferDetails(ts);
   std::string passive;
   bool defaultactive = ts->getDefaultActive();
   if (type == TRANSFERSTATUS_TYPE_FXP) {
@@ -67,8 +70,8 @@ void TransferStatusScreen::redraw() {
   }
   ui->printStr(y, 1, "Passive: " + passive + "     Passive address: " + ts->getPassiveAddress());
   ++y;
-  ui->printStr(y, 1, "Size: " + util::parseSize(ts->targetSize()) + " / " + util::parseSize(ts->sourceSize()));
-  ui->printStr(y, 35, "Speed: " + util::parseSize(ts->getSpeed() * SIZEPOWER) + "/s");
+  ui->printStr(y, 1, "Size: " + td.transferred);
+  ui->printStr(y, 35, "Speed: " + td.speed);
   std::string progress;
   switch (ts->getState()) {
     case TRANSFERSTATUS_STATE_IN_PROGRESS:
@@ -86,8 +89,8 @@ void TransferStatusScreen::redraw() {
   }
   ui->printStr(y, 57, "Status: " + progress);
   ++y;
-  ui->printStr(y, 1, "Time spent: " + util::simpleTimeFormat(ts->getTimeSpent()));
-  ui->printStr(y, 21, "Remaining: " + util::simpleTimeFormat(ts->getTimeRemaining()));
+  ui->printStr(y, 1, "Time spent: " + td.timespent);
+  ui->printStr(y, 21, "Remaining: " + td.timeremaining);
 
   int progresspercent = ts->getProgress();
   progress = "....................";

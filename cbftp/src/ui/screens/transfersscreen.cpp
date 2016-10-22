@@ -173,32 +173,48 @@ void TransfersScreen::addTransferTableHeader(unsigned int y, MenuSelectOption & 
 }
 
 void TransfersScreen::addTransferDetails(unsigned int y, MenuSelectOption & mso, Pointer<TransferStatus> ts, int id) {
-  std::string route = ts->getSource() + " -> " + ts->getTarget();
-  std::string speed = util::parseSize(ts->getSpeed() * SIZEPOWER) + "/s";
-  std::string timespent = util::simpleTimeFormat(ts->getTimeSpent());
-  int progresspercent = ts->getProgress();
-  std::string progress;
+  TransferDetails td = formatTransferDetails(ts);
+  addTransferTableRow(y, mso, true, ts->getTimestamp(), td.timespent, td.route, td.path, td.transferred,
+      ts->getFile(), td.timeremaining, td.speed, td.progress, id);
+}
+
+TransferDetails TransfersScreen::formatTransferDetails(Pointer<TransferStatus> & ts) {
+  TransferDetails td;
+  td.route = ts->getSource() + " -> " + ts->getTarget();
+  td.path = ts->getSourcePath() + " -> " + ts->getTargetPath();
+  td.speed = util::parseSize(ts->getSpeed() * SIZEPOWER) + "/s";
+  td.timespent = util::simpleTimeFormat(ts->getTimeSpent());
+  td.timeremaining = "-";
+  td.transferred = util::parseSize(ts->targetSize());
   switch (ts->getState()) {
-    case TRANSFERSTATUS_STATE_IN_PROGRESS:
-      progress = util::int2Str(progresspercent) + "%";
+    case TRANSFERSTATUS_STATE_IN_PROGRESS: {
+      int progresspercent = ts->getProgress();
+      td.progress = util::int2Str(progresspercent) + "%";
+      int timeremainingnum = ts->getTimeRemaining();
+      if (timeremainingnum < 0) {
+        td.timeremaining = "?";
+      }
+      else {
+        td.timeremaining = util::simpleTimeFormat(timeremainingnum);
+      }
       break;
+    }
     case TRANSFERSTATUS_STATE_FAILED:
-      progress = "fail";
+      td.speed = "-";
+      td.transferred = "-";
+      td.progress = "fail";
       break;
     case TRANSFERSTATUS_STATE_SUCCESSFUL:
-      progress = "done";
+      td.progress = "done";
       break;
     case TRANSFERSTATUS_STATE_DUPE:
-      progress = "dupe";
+      td.speed = "-";
+      td.transferred = "-";
+      td.progress = "dupe";
       break;
   }
-  std::string timeremaining = util::simpleTimeFormat(ts->getTimeRemaining());
-  std::string transferred = util::parseSize(ts->targetSize()) + " / " +
-      util::parseSize(ts->sourceSize());
-  std::string path = ts->getSourcePath() + " -> " + ts->getTargetPath();
-
-  addTransferTableRow(y, mso, true, ts->getTimestamp(), timespent, route, path, transferred,
-      ts->getFile(), timeremaining, speed, progress, id);
+  td.transferred += " / " + util::parseSize(ts->sourceSize());
+  return td;
 }
 
 void TransfersScreen::addTransferTableRow(unsigned int y, MenuSelectOption & mso, bool selectable,

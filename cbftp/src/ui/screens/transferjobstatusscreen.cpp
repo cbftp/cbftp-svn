@@ -1,5 +1,7 @@
 #include "transferjobstatusscreen.h"
 
+#include "transfersscreen.h"
+
 #include "../ui.h"
 #include "../resizableelement.h"
 #include "../menuselectadjustableline.h"
@@ -189,32 +191,10 @@ std::string TransferJobStatusScreen::getInfoLabel() const {
 }
 
 void TransferJobStatusScreen::addTransferDetails(unsigned int y, Pointer<TransferStatus> ts) {
-  std::string route = ts->getSource() + " -> " + ts->getTarget();
-  std::string speed = util::parseSize(ts->getSpeed() * SIZEPOWER) + "/s";
-  std::string timespent = util::simpleTimeFormat(ts->getTimeSpent());
-  int progresspercent = ts->getProgress();
-  std::string progress;
-  switch (ts->getState()) {
-    case TRANSFERSTATUS_STATE_IN_PROGRESS:
-      progress = util::int2Str(progresspercent) + "%";
-      break;
-    case TRANSFERSTATUS_STATE_FAILED:
-      progress = "fail";
-      break;
-    case TRANSFERSTATUS_STATE_SUCCESSFUL:
-      progress = "done";
-      break;
-    case TRANSFERSTATUS_STATE_DUPE:
-      progress = "dupe";
-      break;
-  }
-  std::string timeremaining = util::simpleTimeFormat(ts->getTimeRemaining());
-  std::string transferred = util::parseSize(ts->targetSize()) + " / " +
-      util::parseSize(ts->sourceSize());
-  std::string path = ts->getSourcePath() + " -> " + ts->getTargetPath();
+  TransferDetails td = TransfersScreen::formatTransferDetails(ts);
   std::string subpathfile = transferjob->findSubPath(ts) + ts->getFile();
-  addTransferDetails(y, timespent, transferred, subpathfile, timeremaining,
-                     speed, progress, progresspercent);
+  addTransferDetails(y, td.timespent, td.transferred, subpathfile, td.timeremaining,
+                     td.speed, td.progress, ts->getProgress());
 }
 
 void TransferJobStatusScreen::addTransferDetails(unsigned int y, const std::string & timespent,
