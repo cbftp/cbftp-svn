@@ -339,12 +339,18 @@ void Engine::raceFileListRefreshed(SiteLogic * sls, SiteRace * sr) {
     if (!global->getWorkManager()->overload()) {
       estimateRaceSizes();
       checkIfRaceComplete(sls, race);
+      filelistUpdated();
+    }
+    else {
+      ++dropped;
+    }
+  }
+}
+
+void Engine::filelistUpdated() {
+  if (currentraces.size() > 0) {
+    if (!global->getWorkManager()->overload()) {
       refreshScoreBoard();
-      /*std::vector<ScoreBoardElement *> possibles = scoreboard->getElementVector();
-      std::cout << "Possible transfers (run " << runs++ << "): " << scoreboard->size() << std::endl;
-      for (unsigned int i = 0; i < possibles.size(); i++) {
-        std::cout << possibles[i]->fileName() << " - " << possibles[i]->getScore() << " - " << possibles[i]->getSource()->getSite()->getName() << " -> " << possibles[i]->getDestination()->getSite()->getName() << std::endl;
-      }*/
       issueOptimalTransfers();
     }
     else {
@@ -496,7 +502,7 @@ void Engine::refreshScoreBoard() {
           FileList * fls = itfls->second;
           FileList * fld = srd->getFileListForPath(itfls->first);
           if (fld != NULL) {
-            if (!fld->isFilled()) continue;
+            if (fld->getState() == FILELIST_UNKNOWN || fld->getState() == FILELIST_EXISTS) continue;
             std::map<std::string, File *>::const_iterator itf;
             for (itf = fls->begin(); itf != fls->end(); itf++) {
               File * f = itf->second;
@@ -715,7 +721,7 @@ void Engine::checkIfRaceComplete(SiteLogic * sls, Pointer<Race> & race) {
     std::list<std::string> subpaths = race->getSubPaths();
     for (std::list<std::string>::iterator itsp = subpaths.begin(); itsp != subpaths.end(); itsp++) {
       FileList * spfl = srs->getFileListForPath(*itsp);
-      if (spfl != NULL && spfl->isFilled()) {
+      if (spfl != NULL && spfl->getState() == FILELIST_LISTED) {
         if (!race->sizeEstimated(*itsp)) {
           if (spfl->getSize() > 0) {
             unfinisheddirs = true;

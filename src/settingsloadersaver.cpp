@@ -370,6 +370,9 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("excepttargetsite")) {
       excepttargets.push_back(std::pair<std::string, std::string>(name, value));
     }
+    else if (!setting.compare("aggressivemkdir")) {
+      if (!value.compare("true")) site->setAggressiveMkdir(true);
+    }
   }
   for (std::list<std::pair<std::string, std::string> >::const_iterator it2 = exceptsources.begin(); it2 != exceptsources.end(); it2++) {
     Site * site = global->getSiteManager()->getSite(it2->first);
@@ -594,6 +597,9 @@ void SettingsLoaderSaver::saveSettings() {
       }
       for (sit4 = site->exceptTargetSitesBegin(); sit4 != site->exceptTargetSitesEnd(); sit4++) {
         dfh->addOutputLine(filetag, name + "$excepttargetsite=" + (*sit4)->getName());
+      }
+      if (site->getAggressiveMkdir()) {
+        dfh->addOutputLine(filetag, name + "$aggressivemkdir=true");
       }
     }
     dfh->addOutputLine(defaultstag, "username=" + global->getSiteManager()->getDefaultUserName());

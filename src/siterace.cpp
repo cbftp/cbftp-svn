@@ -8,11 +8,11 @@
 #include "util.h"
 #include "timereference.h"
 
-SiteRace::SiteRace(Pointer<Race> race, std::string sitename, std::string section, std::string release, std::string username) :
+SiteRace::SiteRace(Pointer<Race> race, const std::string & sitename, const std::string & section, const std::string & release, const std::string & username) :
   race(race),
   section(section),
   release(release),
-  path(section.append("/").append(release)),
+  path(section + "/" + release),
   group(util::getGroupNameFromRelease(release)),
   username(username),
   sitename(sitename),
@@ -59,17 +59,29 @@ unsigned int SiteRace::getId() const {
   return race->getId();
 }
 
-bool SiteRace::addSubDirectory(std::string subpath) {
+bool SiteRace::addSubDirectory(const std::string & subpath) {
+  return addSubDirectory(subpath, false);
+}
+
+bool SiteRace::addSubDirectory(const std::string & subpath, bool knownexists) {
   if (!global->getSkipList()->isAllowed(subpath, true)) {
     return false;
   }
   if (getFileListForPath(subpath) != NULL) {
     return true;
   }
-  FileList * subdir = new FileList(username, path + "/" + subpath);
+  FileList * subdir;
+  if (knownexists) {
+    subdir = new FileList(username, path + "/" + subpath, FILELIST_EXISTS);
+  }
+  else {
+    subdir = new FileList(username, path + "/" + subpath);
+  }
   filelists[subpath] = subdir;
   recentlyvisited.push_front(subpath);
-  race->reportNewSubDir(this, subpath);
+  if (knownexists) {
+    race->reportNewSubDir(this, subpath);
+  }
   return true;
 }
 
@@ -96,7 +108,7 @@ std::string SiteRace::getRelevantSubPath() {
   return "";
 }
 
-FileList * SiteRace::getFileListForPath(std::string subpath) const {
+FileList * SiteRace::getFileListForPath(const std::string & subpath) const {
   std::map<std::string, FileList *>::const_iterator it = filelists.find(subpath);
   if (it != filelists.end()) {
     return it->second;
@@ -104,7 +116,7 @@ FileList * SiteRace::getFileListForPath(std::string subpath) const {
   return NULL;
 }
 
-FileList * SiteRace::getFileListForFullPath(std::string path) const {
+FileList * SiteRace::getFileListForFullPath(const std::string & path) const {
   std::map<std::string, FileList *>::const_iterator it;
   for (it = filelists.begin(); it != filelists.end(); it++) {
     if (it->second->getPath() == path) {
@@ -179,8 +191,13 @@ void SiteRace::addNewDirectories() {
       if (!global->getSkipList()->isAllowed(it->first, true)) {
         continue;
       }
-      if (getFileListForPath(file->getName()) == NULL) {
-        addSubDirectory(file->getName());
+      FileList * fl;
+      if ((fl = getFileListForPath(file->getName())) == NULL) {
+        addSubDirectory(file->getName(), true);
+      }
+      else if (fl->getState() == FILELIST_UNKNOWN || fl->getState() == FILELIST_NONEXISTENT) {
+        fl->setExists();
+        race->reportNewSubDir(this, it->first);
       }
     }
   }
@@ -321,10 +338,10 @@ bool SiteRace::hasBeenUpdatedSinceLastCheck() {
   return changed;
 }
 
-void SiteRace::addVisitedPath(std::string path) {
+void SiteRace::addVisitedPath(const std::string & path) {
   visitedpaths.insert(path);
 }
 
-bool SiteRace::pathVisited(std::string path) const {
+bool SiteRace::pathVisited(const std::string & path) const {
   return visitedpaths.find(path) != visitedpaths.end();
 }

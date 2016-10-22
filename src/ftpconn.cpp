@@ -1164,7 +1164,7 @@ void FTPConn::parseFileList(char * buf, unsigned int buflen) {
   if (currentfl->getSize() > files) {
     currentfl->cleanSweep(touch);
   }
-  if (!currentfl->isFilled()) currentfl->setFilled();
+  if (!currentfl->getState() != FILELIST_LISTED) currentfl->setFilled();
 }
 
 bool FTPConn::isConnected() const {

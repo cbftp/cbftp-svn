@@ -148,6 +148,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   priority->addOption("High", SITE_PRIORITY_HIGH);
   priority->addOption("Very high", SITE_PRIORITY_VERY_HIGH);
   priority->setOption(modsite.getPriority());
+  mso.addCheckBox(y++, x, "aggressivemkdir", "Aggressive mkdir:", modsite.getAggressiveMkdir());
   Pointer<MenuSelectOptionTextArrow> sourcepolicy = mso.addTextArrow(y++, x, "sourcepolicy", "Transfer source policy:");
   sourcepolicy->addOption("Allow", SITE_TRANSFER_POLICY_ALLOW);
   sourcepolicy->addOption("Block", SITE_TRANSFER_POLICY_BLOCK);
@@ -533,6 +534,9 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         else if (identifier == "exceptdst") {
           std::string sitestr = msoe.get<MenuSelectOptionTextField>()->getData();
           exceptdstlist = util::split(sitestr, ",");
+        }
+        else if (identifier == "aggressivemkdir") {
+          site->setAggressiveMkdir(msoe.get<MenuSelectOptionCheckBox>()->getData());
         }
       }
       site->clearSections();

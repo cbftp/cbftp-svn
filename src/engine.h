@@ -42,6 +42,7 @@ public:
   void deleteOnAllSites(Pointer<Race> &);
   void abortTransferJob(Pointer<TransferJob> &);
   void raceFileListRefreshed(SiteLogic *, SiteRace *);
+  void filelistUpdated();
   bool transferJobActionRequest(Pointer<TransferJob> &);
   void setPreparedRaceExpiryTime(int);
   unsigned int preparedRaces() const;

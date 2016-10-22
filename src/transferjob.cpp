@@ -187,7 +187,7 @@ bool TransferJob::wantsList(SiteLogic * sl) {
   if (sl == src && (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP)) {
     for (std::map<std::string, FileList *>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
       std::map<FileList *, bool>::iterator it2 = filelistsrefreshed.find(it->second);
-      if (!it->second->isFilled() || (it2 != filelistsrefreshed.end() && !it2->second)) {
+      if (!it->second->getState() == FILELIST_LISTED || (it2 != filelistsrefreshed.end() && !it2->second)) {
         srclisttarget = it->second;
         return true;
       }
@@ -196,7 +196,7 @@ bool TransferJob::wantsList(SiteLogic * sl) {
   else if (sl == dst && (type == TRANSFERJOB_UPLOAD || type == TRANSFERJOB_FXP)) {
     for (std::map<std::string, FileList *>::iterator it = dstfilelists.begin(); it != dstfilelists.end(); it++) {
       std::map<FileList *, bool>::iterator it2 = filelistsrefreshed.find(it->second);
-      if (!it->second->isFilled() || (it2 != filelistsrefreshed.end() && !it2->second)) {
+      if (!it->second->getState() == FILELIST_LISTED || (it2 != filelistsrefreshed.end() && !it2->second)) {
         dstlisttarget = it->second;
         return true;
       }
