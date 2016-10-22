@@ -1,5 +1,7 @@
 #include "viewfilescreen.h"
 
+#include "transfersscreen.h"
+
 #include "../ui.h"
 #include "../menuselectoption.h"
 #include "../resizableelement.h"
@@ -411,12 +413,7 @@ bool ViewFileScreen::goUp() {
 }
 
 void ViewFileScreen::printTransferInfo() {
-  std::string speed = util::parseSize(ts->getSpeed() * SIZEPOWER) + "/s";
-  int progresspercent = ts->getProgress();
-  std::string progress = util::int2Str(progresspercent) + "%";
-  std::string timeremaining = util::simpleTimeFormat(ts->getTimeRemaining());
-  std::string transferred = util::parseSize(ts->targetSize()) + " / " +
-      util::parseSize(ts->sourceSize());
+  TransferDetails td = TransfersScreen::formatTransferDetails(ts);
   unsigned int y = 3;
   MenuSelectOption table;
   Pointer<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
@@ -433,24 +430,24 @@ void ViewFileScreen::printTransferInfo() {
   msal->addElement(msotb, 7, RESIZE_REMOVE);
   y++;
   msal = table.addAdjustableLine();
-  msotb = table.addTextButtonNoContent(y, 1, "transferred", transferred);
+  msotb = table.addTextButtonNoContent(y, 1, "transferred", td.transferred);
   msal->addElement(msotb, 4, RESIZE_CUTEND);
   msotb = table.addTextButtonNoContent(y, 10, "filename", ts->getFile());
   msal->addElement(msotb, 2, RESIZE_WITHLAST3);
-  msotb = table.addTextButtonNoContent(y, 60, "remaining", timeremaining);
+  msotb = table.addTextButtonNoContent(y, 60, "remaining", td.timeremaining);
   msal->addElement(msotb, 5, RESIZE_REMOVE);
-  msotb = table.addTextButtonNoContent(y, 40, "speed", speed);
+  msotb = table.addTextButtonNoContent(y, 40, "speed", td.speed);
   msal->addElement(msotb, 6, RESIZE_REMOVE);
-  msotb = table.addTextButtonNoContent(y, 50, "progress", progress);
+  msotb = table.addTextButtonNoContent(y, 50, "progress", td.progress);
   msal->addElement(msotb, 7, RESIZE_REMOVE);
   table.adjustLines(col - 3);
   for (unsigned int i = 0; i < table.size(); i++) {
     Pointer<ResizableElement> re = table.getElement(i);
     if (re->isVisible()) {
-      if (re->getIdentifier() == "filename") {
+      if (re->getIdentifier() == "transferred") {
         std::string labeltext = re->getLabelText();
         bool highlight = table.getLineIndex(table.getAdjustableLine(re)) == 1;
-        int charswithhighlight = highlight ? labeltext.length() * progresspercent / 100 : 0;
+        int charswithhighlight = highlight ? labeltext.length() * ts->getProgress() / 100 : 0;
         ui->printStr(re->getRow(), re->getCol(), labeltext.substr(0, charswithhighlight), true);
         ui->printStr(re->getRow(), re->getCol() + charswithhighlight, labeltext.substr(charswithhighlight));
       }

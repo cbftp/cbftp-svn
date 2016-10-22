@@ -75,7 +75,7 @@ unsigned int TransferStatus::getTimeSpent() const {
   return timespent;
 }
 
-unsigned int TransferStatus::getTimeRemaining() const {
+int TransferStatus::getTimeRemaining() const {
   return timeremaining;
 }
 
@@ -139,11 +139,19 @@ void TransferStatus::setFinished() {
 
 void TransferStatus::setFailed() {
   state = TRANSFERSTATUS_STATE_FAILED;
+  knowntargetsize = 0;
+  interpolatedtargetsize = 0;
+  progress = 0;
+  speed = 0;
   timeremaining = 0;
 }
 
 void TransferStatus::setDupe() {
   state = TRANSFERSTATUS_STATE_DUPE;
+  knowntargetsize = 0;
+  interpolatedtargetsize = 0;
+  progress = 0;
+  speed = 0;
   timeremaining = 0;
 }
 
@@ -159,6 +167,9 @@ void TransferStatus::setTargetSize(unsigned long long int targetsize) {
   // the appearing size (interpolatedtargetsize) cannot shrink. knownsize is
   // only used for determining when speed recalculation is necessary
   knowntargetsize = targetsize;
+  if (knowntargetsize > sourcesize) {
+    sourcesize = knowntargetsize;
+  }
   if (interpolatedtargetsize < knowntargetsize) {
     interpolatedtargetsize = knowntargetsize;
     updateProgress();
@@ -197,7 +208,12 @@ void TransferStatus::setSpeed(unsigned int speed) {
 
 void TransferStatus::setTimeSpent(unsigned int timespent) {
   this->timespent = timespent;
-  timeremaining = (sourcesize - interpolatedtargetsize) / (speed * 1024);
+  if (sourcesize > interpolatedtargetsize) {
+    timeremaining = (sourcesize - interpolatedtargetsize) / (speed * 1024);
+  }
+  else {
+    timeremaining = -1;
+  }
 }
 
 void TransferStatus::setPassiveAddress(const std::string & passiveaddr) {

@@ -11,6 +11,17 @@ class TransferManager;
 class TransferStatus;
 class MenuSelectOptionElement;
 
+struct TransferDetails {
+  std::string route;
+  std::string timespent;
+  std::string progress;
+  std::string timeremaining;
+  std::string speed;
+  std::string transferred;
+  std::string timestamp;
+  std::string path;
+};
+
 class TransfersScreen : public UIWindow {
 public:
   TransfersScreen(Ui *);
@@ -22,6 +33,7 @@ public:
   std::string getLegendText() const;
   std::string getInfoLabel() const;
   static void addTransferTableHeader(unsigned int, MenuSelectOption &);
+  static TransferDetails formatTransferDetails(Pointer<TransferStatus> &);
 private:
   static void addTransferTableRow(unsigned int, MenuSelectOption &, bool,
       const std::string &, const std::string &, const std::string &,
