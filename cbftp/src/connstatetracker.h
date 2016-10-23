@@ -27,7 +27,7 @@ private:
   bool transfer;
   bool initialized;
   TransferMonitor * tm;
-  std::string path;
+  FileList * fl;
   std::string file;
   int type;
   bool passive;
@@ -47,7 +47,7 @@ private:
   int port;
   Pointer<RecursiveCommandLogic> recursivelogic;
   Pointer<SiteLogicRequest> request;
-  void setTransfer(const std::string &, const std::string &, bool, bool, const std::string &, int, bool);
+  void setTransfer(const std::string &, bool, bool, const std::string &, int, bool);
   void setList(TransferMonitor *, bool, const std::string &, int, bool);
 public:
   ConnStateTracker();
@@ -62,8 +62,8 @@ public:
   int checkCount() const;
   DelayedCommand & getCommand();
   void setDisconnected();
-  void setTransfer(const std::string &, const std::string &, bool, bool);
-  void setTransfer(const std::string &, const std::string &, const std::string &, int, bool);
+  void setTransfer(const std::string &, bool, bool);
+  void setTransfer(const std::string &, const std::string &, int, bool);
   void setList(TransferMonitor *, bool);
   void setList(TransferMonitor *, const std::string &, int, bool);
   bool hasTransfer() const;
@@ -71,7 +71,7 @@ public:
   void finishTransfer();
   void abortTransfer();
   bool getTransferAborted() const;
-  void lockForTransfer(TransferMonitor *, bool);
+  void lockForTransfer(TransferMonitor *, FileList *, bool);
   bool isListLocked() const;
   bool isTransferLocked() const;
   bool hasRequest() const;
@@ -86,7 +86,7 @@ public:
   void use();
   void resetIdleTime();
   TransferMonitor * getTransferMonitor() const;
-  std::string getTransferPath() const;
+  FileList * getTransferFileList() const;
   std::string getTransferFile() const;
   int getTransferType() const;
   bool getTransferPassive() const;

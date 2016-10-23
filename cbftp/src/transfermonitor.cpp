@@ -49,11 +49,11 @@ void TransferMonitor::engageFXP(std::string sfile, SiteLogic * sls, FileList * f
   this->dpath = fld->getPath();
   this->sfile = sfile;
   this->dfile = dfile;
-  if (!sls->lockDownloadConn(spath, &src, this)) {
+  if (!sls->lockDownloadConn(fls, &src, this)) {
     tm->transferFailed(ts, TM_ERR_LOCK_DOWN);
     return;
   }
-  if (!sld->lockUploadConn(dpath, &dst, this)) {
+  if (!sld->lockUploadConn(fld, &dst, this)) {
     sls->returnConn(src);
     tm->transferFailed(ts, TM_ERR_LOCK_UP);
     return;
@@ -76,10 +76,10 @@ void TransferMonitor::engageFXP(std::string sfile, SiteLogic * sls, FileList * f
       sls->getSite()->getAverageSpeed(sld->getSite()->getName()), src, dst, ssl, fxpdstactive);
   tm->addNewTransferStatus(ts);
   if (fxpdstactive) {
-    sls->preparePassiveTransfer(src, spath, sfile, true, ssl);
+    sls->preparePassiveTransfer(src, sfile, true, ssl);
   }
   else {
-    sld->preparePassiveTransfer(dst, dpath, dfile, true, ssl);
+    sld->preparePassiveTransfer(dst, dfile, true, ssl);
   }
 
 
@@ -96,7 +96,7 @@ void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileLis
   this->dpath = localfl->getPath();
   this->fls = fls;
   this->localfl = localfl;
-  if (!sls->lockDownloadConn(spath, &src, this)) return;
+  if (!sls->lockDownloadConn(fls, &src, this)) return;
   status = TM_STATUS_AWAITING_PASSIVE;
   int spol = sls->getSite()->getSSLTransferPolicy();
   if (spol == SITE_SSL_ALWAYS_ON || spol == SITE_SSL_PREFER_ON) {
@@ -112,7 +112,7 @@ void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileLis
       (FileList *)NULL, dpath, fls->getFile(sfile)->getSize(), 0, src, -1, ssl, clientactive);
   tm->addNewTransferStatus(ts);
   if (clientactive) {
-    sls->preparePassiveTransfer(src, spath, sfile, false, ssl);
+    sls->preparePassiveTransfer(src, sfile, false, ssl);
   }
   else {
     lt = global->getLocalStorage()->activeModeDownload(this, dpath, dfile, ssl, sls->getConn(src));
@@ -134,7 +134,7 @@ void TransferMonitor::engageUpload(std::string sfile, Pointer<LocalFileList> & l
   std::map<std::string, LocalFile>::const_iterator it = localfl->find(sfile);
   if (it == localfl->end()) return;
   const LocalFile & lf = it->second;
-  if (!sld->lockUploadConn(dpath, &dst, this)) return;
+  if (!sld->lockUploadConn(fld, &dst, this)) return;
   status = TM_STATUS_AWAITING_PASSIVE;
   int spol = sld->getSite()->getSSLTransferPolicy();
   if (spol == SITE_SSL_ALWAYS_ON || spol == SITE_SSL_PREFER_ON) {
@@ -147,7 +147,7 @@ void TransferMonitor::engageUpload(std::string sfile, Pointer<LocalFileList> & l
       fld, dpath, lf.getSize(), 0, 0, dst, ssl, clientactive);
   tm->addNewTransferStatus(ts);
   if (clientactive) {
-    sld->preparePassiveTransfer(dst, dpath, dfile, false, ssl);
+    sld->preparePassiveTransfer(dst, dfile, false, ssl);
   }
   else {
     lt = global->getLocalStorage()->activeModeUpload(this, spath, sfile, ssl, sld->getConn(dst));
@@ -215,10 +215,10 @@ void TransferMonitor::passiveReady(const std::string & host, int port) {
   switch (type) {
     case TM_TYPE_FXP:
       if (fxpdstactive) {
-        sld->prepareActiveTransfer(dst, dpath, dfile, host, port, ssl);
+        sld->prepareActiveTransfer(dst, dfile, host, port, ssl);
       }
       else {
-        sls->prepareActiveTransfer(src, spath, sfile, host, port, ssl);
+        sls->prepareActiveTransfer(src, sfile, host, port, ssl);
       }
       break;
     case TM_TYPE_DOWNLOAD:
@@ -226,7 +226,7 @@ void TransferMonitor::passiveReady(const std::string & host, int port) {
         lt = global->getLocalStorage()->passiveModeDownload(this, dpath, dfile, host, port, ssl, sls->getConn(src));
       }
       else {
-        sls->prepareActiveTransfer(src, spath, sfile, host, port, ssl);
+        sls->prepareActiveTransfer(src, sfile, host, port, ssl);
       }
       break;
     case TM_TYPE_UPLOAD:
@@ -234,7 +234,7 @@ void TransferMonitor::passiveReady(const std::string & host, int port) {
         lt = global->getLocalStorage()->passiveModeUpload(this, spath, sfile, host, port, ssl, sld->getConn(dst));
       }
       else {
-        sld->prepareActiveTransfer(dst, dpath, dfile, host, port, ssl);
+        sld->prepareActiveTransfer(dst, dfile, host, port, ssl);
       }
       break;
     case TM_TYPE_LIST:

@@ -94,7 +94,7 @@ void ConnStateTracker::resetIdleTime() {
   idletime = 0;
 }
 
-void ConnStateTracker::setTransfer(const std::string & path, const std::string & file, bool fxp, bool passive, const std::string & host, int port, bool ssl) {
+void ConnStateTracker::setTransfer(const std::string & file, bool fxp, bool passive, const std::string & host, int port, bool ssl) {
   util::assert(transferlocked);
   util::assert(!transfer);
   util::assert(!request);
@@ -102,7 +102,6 @@ void ConnStateTracker::setTransfer(const std::string & path, const std::string &
   this->transfer = true;
   this->initialized = false;
   this->aborted = false;
-  this->path = path;
   this->file = file;
   this->fxp = fxp;
   this->passive = passive;
@@ -111,12 +110,12 @@ void ConnStateTracker::setTransfer(const std::string & path, const std::string &
   this->ssl = ssl;
 }
 
-void ConnStateTracker::setTransfer(const std::string & path, const std::string & file, bool fxp, bool ssl) {
-  setTransfer(path, file, fxp, true, "", 0, ssl);
+void ConnStateTracker::setTransfer(const std::string & file, bool fxp, bool ssl) {
+  setTransfer(file, fxp, true, "", 0, ssl);
 }
 
-void ConnStateTracker::setTransfer(const std::string & path, const std::string & file, const std::string & host, int port, bool ssl) {
-  setTransfer(path, file, false, false, host, port, ssl);
+void ConnStateTracker::setTransfer(const std::string & file, const std::string & host, int port, bool ssl) {
+  setTransfer(file, false, false, host, port, ssl);
 }
 
 void ConnStateTracker::setList(TransferMonitor * tm, bool listpassive, const std::string & host, int port, bool ssl) {
@@ -185,8 +184,8 @@ TransferMonitor * ConnStateTracker::getTransferMonitor() const {
   return NULL;
 }
 
-std::string ConnStateTracker::getTransferPath() const {
-  return path;
+FileList * ConnStateTracker::getTransferFileList() const {
+  return fl;
 }
 
 std::string ConnStateTracker::getTransferFile() const {
@@ -235,12 +234,13 @@ bool ConnStateTracker::getTransferSSL() const{
   return ssl;
 }
 
-void ConnStateTracker::lockForTransfer(TransferMonitor * tm, bool download) {
+void ConnStateTracker::lockForTransfer(TransferMonitor * tm, FileList * fl, bool download) {
   util::assert(!transferlocked);
   util::assert(!transfer);
   util::assert(!request);
   use();
   this->tm = tm;
+  this->fl = fl;
   transferlocked = true;
   type = download ? CST_DOWNLOAD : CST_UPLOAD;
 }
