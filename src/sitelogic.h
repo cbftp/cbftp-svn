@@ -43,6 +43,7 @@ class SiteLogic : public EventReceiver {
     std::list<SiteLogicRequestReady> requestsready;
     int requestidcounter;
     bool poke;
+    void handleConnection(int);
     void handleConnection(int, bool);
     bool handleRequest(int);
     void handleRecursiveLogic(int);
@@ -61,12 +62,13 @@ class SiteLogic : public EventReceiver {
     void getFileListConn(int, CommandOwner *, FileList *);
     void passiveModeCommand(int);
     static void * run(void *);
-    bool lockTransferConn(const std::string &, int *, TransferMonitor *, bool);
+    bool lockTransferConn(FileList *, int *, TransferMonitor *, bool);
     void setRequestReady(unsigned int, void *, bool);
     void cleanupConnection(int);
     void checkFailListRequest(int);
     void clearReadyRequest(SiteLogicRequestReady &);
     bool setPathExists(int, const std::string &, bool);
+    bool handlePreTransfer(int);
   public:
     SiteLogic(const std::string &);
     ~SiteLogic();
@@ -96,8 +98,8 @@ class SiteLogic : public EventReceiver {
     Site * getSite() const;
     SiteRace * getRace(const std::string &) const;
     void lockConnList(int);
-    bool lockDownloadConn(const std::string &, int *, TransferMonitor *);
-    bool lockUploadConn(const std::string &, int *, TransferMonitor *);
+    bool lockDownloadConn(FileList *, int *, TransferMonitor *);
+    bool lockUploadConn(FileList *, int *, TransferMonitor *);
     void returnConn(int);
     void setNumConnections(unsigned int);
     bool downloadSlotAvailable() const;
@@ -136,8 +138,8 @@ class SiteLogic : public EventReceiver {
     const std::vector<FTPConn *> * getConns() const;
     FTPConn * getConn(int) const;
     std::string getStatus(int) const;
-    void preparePassiveTransfer(int, const std::string &, const std::string &, bool, bool);
-    void prepareActiveTransfer(int, const std::string &, const std::string &, const std::string &, int, bool);
+    void preparePassiveTransfer(int, const std::string &, bool, bool);
+    void prepareActiveTransfer(int, const std::string &, const std::string &, int, bool);
     void preparePassiveList(int, TransferMonitor *, bool);
     void prepareActiveList(int, TransferMonitor *, const std::string &, int, bool);
     void download(int);
