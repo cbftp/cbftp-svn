@@ -14,6 +14,7 @@ class FileList;
 #define RCL_ACTION_LIST 1354
 #define RCL_ACTION_CWD 1355
 #define RCL_ACTION_DELETE 1356
+#define RCL_ACTION_NOOP 1357
 
 class RecursiveCommandLogic {
 private:
