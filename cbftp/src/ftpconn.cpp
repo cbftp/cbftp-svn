@@ -325,8 +325,11 @@ void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
       default: // nothing expected at this time, discard
         break;
     }
-    if (isConnected() && !isProcessing()) {
-      state = STATE_IDLE;
+    if (!isProcessing()) {
+      currentco = NULL;
+      if (isConnected()) {
+        state = STATE_IDLE;
+      }
     }
     databufpos = 0;
   }

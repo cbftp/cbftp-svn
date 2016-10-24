@@ -212,6 +212,25 @@ bool SiteLogic::setPathExists(int id, const std::string & path, bool exists) {
   return false;
 }
 
+bool SiteLogic::handleCommandDele(int id, bool success) {
+  if (connstatetracker[id].hasRequest()) {
+    int type = connstatetracker[id].getRequest()->requestType();
+    if (type == REQ_DEL) {
+      setRequestReady(id, NULL, success);
+    }
+    else if (type == REQ_DEL_RECURSIVE) {
+      if (connstatetracker[id].getRecursiveLogic()->isActive()) {
+        handleRecursiveLogic(id);
+        return true;
+      }
+      else {
+        setRequestReady(id, NULL, success);
+      }
+    }
+  }
+  return false;
+}
+
 void SiteLogic::commandSuccess(int id) {
   connstatetracker[id].resetIdleTime();
   int state = conns[id]->getState();
@@ -338,21 +357,8 @@ void SiteLogic::commandSuccess(int id) {
       }
       break;
     case STATE_DELE:
-      if (connstatetracker[id].hasRequest()) {
-        const Pointer<SiteLogicRequest> & request = connstatetracker[id].getRequest();
-        if (request->requestType() == REQ_DEL) {
-          setRequestReady(id, NULL, true);
-        }
-        else if (request->requestType() == REQ_DEL_RECURSIVE) {
-          if (connstatetracker[id].getRecursiveLogic()->isActive()) {
-            handleRecursiveLogic(id);
-            return;
-          }
-          else {
-            setRequestReady(id, NULL, true);
-            break;
-          }
-        }
+      if (handleCommandDele(id, true)) {
+        return;
       }
       break;
     case STATE_NUKE:
@@ -410,37 +416,43 @@ void SiteLogic::commandFail(int id, int failuretype) {
         return;
       }
       break;
-    case STATE_CWD:
+    case STATE_CWD: {
+      bool filelistupdated = false;
       if (setPathExists(id, conns[id]->getTargetPath(), false)) {
-        global->getEngine()->filelistUpdated();
-        handleConnection(id);
-        return;
+        filelistupdated = true;
       }
       if (connstatetracker[id].getRecursiveLogic()->isActive()) {
         connstatetracker[id].getRecursiveLogic()->failedCwd();
         handleRecursiveLogic(id);
         return;
       }
-      if (conns[id]->hasMKDCWDTarget()) {
+      else if (conns[id]->hasMKDCWDTarget()) {
+        CommandOwner * currentco = conns[id]->currentCommandOwner();
         if (!site->getAllowUpload() ||
-            site->isAffiliated(((SiteRace *)conns[id]->currentCommandOwner())->getGroup())) {
+            (currentco != NULL && currentco->classType() == COMMANDOWNER_SITERACE &&
+             site->isAffiliated(((SiteRace *)currentco)->getGroup()))) {
           conns[id]->finishMKDCWDTarget();
-          handleFail(id);
+        }
+        else {
+          conns[id]->doMKD(conns[id]->getTargetPath());
           return;
         }
-        conns[id]->doMKD(conns[id]->getTargetPath());
-        return;
       }
-      if (connstatetracker[id].hasRequest()) {
+      else if (connstatetracker[id].hasRequest()) {
         if (connstatetracker[id].getRequest()->requestType() == REQ_FILELIST) {
           setRequestReady(id, NULL, false);
           handleConnection(id);
           return;
         }
-        break;
+      }
+      if (filelistupdated) {
+        global->getEngine()->filelistUpdated();
+        handleConnection(id);
+        return;
       }
       handleFail(id);
       return;
+    }
     case STATE_MKD:
       if (conns[id]->hasMKDCWDTarget()) {
         std::string targetcwdsect = conns[id]->getMKDCWDTargetSection();
@@ -521,19 +533,9 @@ void SiteLogic::commandFail(int id, int failuretype) {
       handleConnection(id);
       return;
     case STATE_DELE:
-      if (connstatetracker[id].getRecursiveLogic()->isActive()) {
-        handleRecursiveLogic(id);
-        return;
+      if (!handleCommandDele(id, false)) {
+        handleConnection(id);
       }
-      if (connstatetracker[id].hasRequest()) {
-        const Pointer<SiteLogicRequest> & request = connstatetracker[id].getRequest();
-        if (request->requestType() == REQ_DEL_RECURSIVE ||
-            request->requestType() == REQ_DEL)
-        {
-          setRequestReady(id, NULL, false);
-        }
-      }
-      handleConnection(id);
       return;
     case STATE_NUKE:
       if (connstatetracker[id].hasRequest()) {
@@ -908,7 +910,6 @@ bool SiteLogic::handleRequest(int id) {
     return false;
   }
   connstatetracker[id].use();
-  conns[id]->setCurrentCommandOwner(NULL);
   SiteLogicRequest request = *it;
   requests.erase(it);
   connstatetracker[id].setRequest(request);
@@ -976,6 +977,15 @@ void SiteLogic::handleRecursiveLogic(int id, FileList * fl) {
       break;
     case RCL_ACTION_DELETE:
       conns[id]->doDELE(actiontarget);
+      break;
+    case RCL_ACTION_NOOP:
+      if (connstatetracker[id].hasRequest()) {
+        int type = connstatetracker[id].getRequest()->requestType();
+        if (type == REQ_DEL || type == REQ_DEL_RECURSIVE) {
+          setRequestReady(id, NULL, true);
+        }
+      }
+      handleConnection(id);
       break;
   }
 }

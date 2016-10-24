@@ -69,6 +69,7 @@ class SiteLogic : public EventReceiver {
     void clearReadyRequest(SiteLogicRequestReady &);
     bool setPathExists(int, const std::string &, bool);
     bool handlePreTransfer(int);
+    bool handleCommandDele(int, bool);
   public:
     SiteLogic(const std::string &);
     ~SiteLogic();

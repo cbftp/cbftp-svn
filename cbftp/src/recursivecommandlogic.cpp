@@ -32,6 +32,10 @@ int RecursiveCommandLogic::getAction(std::string currentpath, std::string & acti
     }
   }
   if (!wantedlists.size()) {
+    if (!deletefiles.size()) {
+      active = false;
+      return RCL_ACTION_NOOP;
+    }
     if (currentpath != basepath) {
       actiontarget = basepath;
       return RCL_ACTION_CWD;
