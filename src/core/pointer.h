@@ -75,8 +75,14 @@ public:
   bool operator==(const Pointer & other) const {
     return object == other.object;
   }
+  bool operator!=(const Pointer & other) const {
+    return object != other.object;
+  }
   template<typename X> bool operator==(const Pointer<X> & other) const {
     return object == static_cast<T *>(other.object);
+  }
+  template<typename X> bool operator!=(const Pointer<X> & other) const {
+    return object != static_cast<T *>(other.object);
   }
   bool operator<(const Pointer & other) const {
     return object < other.object;
