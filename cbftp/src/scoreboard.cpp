@@ -19,7 +19,7 @@ ScoreBoard::~ScoreBoard() {
   delete[] bucketpositions;
 }
 
-void ScoreBoard::add(const std::string & name, unsigned short score, bool prio, SiteLogic * src, FileList * fls, SiteLogic * dst, FileList * fld, Pointer<Race> & race) {
+void ScoreBoard::add(const std::string & name, unsigned short score, bool prio, const Pointer<SiteLogic> & src, FileList * fls, const Pointer<SiteLogic> & dst, FileList * fld, Pointer<Race> & race) {
   if (showsize == elements.size()) {
     elements.resize(elements.size() + RESIZE_CHUNK);
     elementstmp.resize(elements.size());

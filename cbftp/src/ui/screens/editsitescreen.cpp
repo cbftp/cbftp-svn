@@ -34,8 +34,8 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   currentlegendtext = defaultlegendtext;
   this->operation = operation;
   SiteManager * sm = global->getSiteManager();
-  std::list<Site *> exceptsrclist;
-  std::list<Site *> exceptdstlist;
+  std::list<Pointer<Site> > exceptsrclist;
+  std::list<Pointer<Site> > exceptdstlist;
   std::string exceptsrc = "";
   std::string exceptdst = "";
   if (operation == "add") {
@@ -48,7 +48,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
     modsite.setSSL(sm->getDefaultSSL());
     modsite.setSSLTransferPolicy(sm->getDefaultSSLTransferPolicy());
     modsite.setMaxIdleTime(sm->getDefaultMaxIdleTime());
-    std::vector<Site *>::const_iterator it;
+    std::vector<Pointer<Site> >::const_iterator it;
     for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
       if ((*it)->getTransferTargetPolicy() == SITE_TRANSFER_POLICY_BLOCK) {
         exceptsrc += (*it)->getName() + ",";
@@ -61,7 +61,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   else if (operation == "edit") {
     this->site = global->getSiteManager()->getSite(site);
     modsite = Site(*this->site);
-    std::set<Site *>::const_iterator it;
+    std::set<Pointer<Site> >::const_iterator it;
     for (it = this->site->exceptSourceSitesBegin(); it != this->site->exceptSourceSitesEnd(); it++) {
       exceptsrc += (*it)->getName() + ",";
     }
@@ -382,9 +382,9 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         activeelement->deactivate();
         active = false;
         std::string preselectstr = activeelement.get<MenuSelectOptionTextField>()->getData();
-        std::list<Site *> preselected;
+        std::list<Pointer<Site> > preselected;
         fillPreselectionList(preselectstr, &preselected);
-        std::list<Site *> excluded;
+        std::list<Pointer<Site> > excluded;
         excluded.push_back(site);
         std::string action = "Block";
         if (mso.getElement("sourcepolicy").get<MenuSelectOptionTextArrow>()->getData() == SITE_TRANSFER_POLICY_BLOCK) {
@@ -397,9 +397,9 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         activeelement->deactivate();
         active = false;
         std::string preselectstr = activeelement.get<MenuSelectOptionTextField>()->getData();
-        std::list<Site *> preselected;
+        std::list<Pointer<Site> > preselected;
         fillPreselectionList(preselectstr, &preselected);
-        std::list<Site *> excluded;
+        std::list<Pointer<Site> > excluded;
         excluded.push_back(site);
         std::string action = "Block";
         if (mso.getElement("targetpolicy").get<MenuSelectOptionTextArrow>()->getData() == SITE_TRANSFER_POLICY_BLOCK) {
@@ -414,7 +414,7 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
       return true;
     case 'd':
       if (operation == "add") {
-        site = new Site();
+        site = makePointer<Site>();
       }
       for(unsigned int i = 0; i < mso.size(); i++) {
         Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
@@ -589,10 +589,10 @@ std::string EditSiteScreen::getInfoLabel() const {
   return "SITE OPTIONS";
 }
 
-void EditSiteScreen::fillPreselectionList(const std::string & preselectstr, std::list<Site *> * list) const {
+void EditSiteScreen::fillPreselectionList(const std::string & preselectstr, std::list<Pointer<Site> > * list) const {
   std::list<std::string> preselectlist = util::split(preselectstr, ",");
   for (std::list<std::string>::const_iterator it = preselectlist.begin(); it != preselectlist.end(); it++) {
-    Site * site = global->getSiteManager()->getSite(*it);
+    Pointer<Site> site = global->getSiteManager()->getSite(*it);
     list->push_back(site);
   }
 }

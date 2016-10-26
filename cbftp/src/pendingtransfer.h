@@ -14,21 +14,21 @@ class LocalFileList;
 
 class PendingTransfer {
 public:
-  PendingTransfer(SiteLogic *, FileList *, std::string, SiteLogic *, FileList *, std::string);
-  PendingTransfer(SiteLogic *, FileList *, std::string, Pointer<LocalFileList>, std::string);
-  PendingTransfer(Pointer<LocalFileList>, std::string, SiteLogic *, FileList *, std::string);
+  PendingTransfer(const Pointer<SiteLogic> &, FileList *, std::string, const Pointer<SiteLogic> &, FileList *, std::string);
+  PendingTransfer(const Pointer<SiteLogic> &, FileList *, std::string, Pointer<LocalFileList>, std::string);
+  PendingTransfer(Pointer<LocalFileList>, std::string, const Pointer<SiteLogic> &, FileList *, std::string);
   ~PendingTransfer();
   int type() const;
-  SiteLogic * getSrc() const;
-  SiteLogic * getDst() const;
+  const Pointer<SiteLogic> & getSrc() const;
+  const Pointer<SiteLogic> & getDst() const;
   FileList * getSrcFileList() const;
   FileList * getDstFileList() const;
   Pointer<LocalFileList> & getLocalFileList();
   std::string getSrcFileName() const;
   std::string getDstFileName() const;
 private:
-  SiteLogic * slsrc;
-  SiteLogic * sldst;
+  Pointer<SiteLogic> slsrc;
+  Pointer<SiteLogic> sldst;
   FileList * flsrc;
   FileList * fldst;
   Pointer<LocalFileList> fllocal;

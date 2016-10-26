@@ -55,8 +55,8 @@ class TransferMonitor : public EventReceiver, public RawBufferCallback {
     int src;
     int dst;
     int storeid;
-    SiteLogic * sls;
-    SiteLogic * sld;
+    Pointer<SiteLogic> sls;
+    Pointer<SiteLogic> sld;
     FileList * fls;
     FileList * fld;
     Pointer<LocalFileList> localfl;
@@ -80,7 +80,7 @@ class TransferMonitor : public EventReceiver, public RawBufferCallback {
     void finish();
     void setTargetSizeSpeed(unsigned long long int, int);
     void reset();
-    void transferFailed(Pointer<TransferStatus> &, TransferError);
+    void transferFailed(const Pointer<TransferStatus> &, TransferError);
     void updateFXPSizeSpeed();
     void updateLocalTransferSizeSpeed();
     void checkForDeadFXPTransfers();
@@ -99,10 +99,10 @@ class TransferMonitor : public EventReceiver, public RawBufferCallback {
     void cipher(const std::string &);
     bool idle() const;
     Pointer<TransferStatus> getTransferStatus() const;
-    void engageFXP(std::string, SiteLogic *, FileList *, std::string, SiteLogic *, FileList *);
-    void engageDownload(std::string, SiteLogic *, FileList *, Pointer<LocalFileList> &);
-    void engageUpload(std::string, Pointer<LocalFileList> &, SiteLogic *, FileList *);
-    void engageList(SiteLogic *, int, bool);
+    void engageFXP(const std::string &, const Pointer<SiteLogic> &, FileList *, const std::string &, const Pointer<SiteLogic> &, FileList *);
+    void engageDownload(const std::string &, const Pointer<SiteLogic> &, FileList *, const Pointer<LocalFileList> &);
+    void engageUpload(const std::string &, const Pointer<LocalFileList> &, const Pointer<SiteLogic> &, FileList *);
+    void engageList(const Pointer<SiteLogic> &, int, bool);
     Status getStatus() const;
     void newRawBufferLine(const std::pair<std::string, std::string> &);
 };

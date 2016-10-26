@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include "core/pointer.h"
+
 class Site;
 
 class File {
@@ -20,7 +22,7 @@ private:
   std::string group;
   std::string lastmodified;
   unsigned int updatespeed;
-  Site * updatesrc;
+  Pointer<Site> updatesrc;
   std::string updatedst;
   bool updateflag;
   bool directory;
@@ -31,7 +33,7 @@ private:
 protected:
   File(const std::string &, const std::string &);
   File(const std::string &, int);
-  void setUpdateFlag(Site *, std::string, int);
+  void setUpdateFlag(const Pointer<Site> &, const std::string &, int);
   void unsetUpdateFlag();
   bool setSize(unsigned long long int);
   bool setLastModified(const std::string &);
@@ -53,7 +55,7 @@ public:
   std::string getName() const;
   std::string getLinkTarget() const;
   std::string getExtension() const;
-  Site * getUpdateSrc() const;
+  const Pointer<Site> & getUpdateSrc() const;
   std::string getUpdateDst() const;
   unsigned int getUpdateSpeed() const;
   bool updateFlagSet() const;

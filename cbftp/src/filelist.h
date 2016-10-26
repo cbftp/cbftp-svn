@@ -3,6 +3,8 @@
 #include <map>
 #include <string>
 
+#include "core/pointer.h"
+
 #define MAXTRANSFERATTEMPTS 5
 
 enum FileListState {
@@ -43,7 +45,7 @@ class FileList {
     void touchFile(const std::string &, const std::string &);
     void touchFile(const std::string &, const std::string &, bool);
     void removeFile(const std::string &);
-    void setFileUpdateFlag(const std::string &, unsigned long long int, unsigned int, Site *, const std::string &);
+    void setFileUpdateFlag(const std::string &, unsigned long long int, unsigned int, const Pointer<Site> &, const std::string &);
     File * getFile(const std::string &) const;
     FileListState getState() const;
     void setNonExistent();

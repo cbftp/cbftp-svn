@@ -1,17 +1,17 @@
 #include "menuselectsiteelement.h"
 
-MenuSelectSiteElement::MenuSelectSiteElement(Site * site, SiteLogic * sitelogic, int row, int col) {
+MenuSelectSiteElement::MenuSelectSiteElement(const Pointer<Site> & site, const Pointer<SiteLogic> & sitelogic, int row, int col) {
   this->site = site;
   this->sitelogic = sitelogic;
   this->row = row;
   this->col = col;
 }
 
-Site * MenuSelectSiteElement::getSite() const {
+const Pointer<Site> & MenuSelectSiteElement::getSite() const {
   return site;
 }
 
-SiteLogic * MenuSelectSiteElement::getSiteLogic() const {
+const Pointer<SiteLogic> & MenuSelectSiteElement::getSiteLogic() const {
   return sitelogic;
 }
 

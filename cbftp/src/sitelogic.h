@@ -24,7 +24,7 @@ class CommandOwner;
 
 class SiteLogic : public EventReceiver {
   private:
-    Site * site;
+    Pointer<Site> site;
     std::vector<FTPConn *> conns;
     std::vector<ConnStateTracker> connstatetracker;
     std::vector<SiteRace *> races;
@@ -96,7 +96,7 @@ class SiteLogic : public EventReceiver {
     void activateOne();
     void activateAll();
     void haveConnected(unsigned int);
-    Site * getSite() const;
+    const Pointer<Site> & getSite() const;
     SiteRace * getRace(const std::string &) const;
     void lockConnList(int);
     bool lockDownloadConn(FileList *, int *, TransferMonitor *);
@@ -132,7 +132,7 @@ class SiteLogic : public EventReceiver {
     FileList * getFileList(int) const;
     std::string getRawCommandResult(int);
     bool finishRequest(int);
-    void pushPotential(int, const std::string &, SiteLogic *);
+    void pushPotential(int, const std::string &, const Pointer<SiteLogic> &);
     bool potentialCheck(int);
     int getPotential();
     void updateName();

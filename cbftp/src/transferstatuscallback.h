@@ -7,6 +7,6 @@ class TransferStatus;
 class TransferStatusCallback {
 public:
   virtual ~TransferStatusCallback() {}
-  virtual void transferFailed(Pointer<TransferStatus> &, int) = 0;
-  virtual void transferSuccessful(Pointer<TransferStatus> &) = 0;
+  virtual void transferFailed(const Pointer<TransferStatus> &, int) = 0;
+  virtual void transferSuccessful(const Pointer<TransferStatus> &) = 0;
 };

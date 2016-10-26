@@ -3,16 +3,18 @@
 class Site;
 class SiteLogic;
 
+#include "../core/pointer.h"
+
 class MenuSelectSiteElement {
   private:
-    Site * site;
-    SiteLogic * sitelogic;
+    Pointer<Site> site;
+    Pointer<SiteLogic> sitelogic;
     int col;
     int row;
   public:
-    MenuSelectSiteElement(Site *, SiteLogic *, int, int);
-    Site * getSite() const;
-    SiteLogic * getSiteLogic() const;
+    MenuSelectSiteElement(const Pointer<Site> &, const Pointer<SiteLogic> &, int, int);
+    const Pointer<Site> & getSite() const;
+    const Pointer<SiteLogic> & getSiteLogic() const;
     int getCol() const;
     int getRow() const;
 };

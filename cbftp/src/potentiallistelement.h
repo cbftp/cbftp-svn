@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include "core/pointer.h"
+
 class SiteLogic;
 class PotentialElement;
 
@@ -12,9 +14,9 @@ class PotentialListElement {
   public:
     PotentialListElement(int);
     ~PotentialListElement();
-    void update(SiteLogic *, int, int, const std::string &);
+    void update(const Pointer<SiteLogic> &, int, int, const std::string &);
     void reset();
     std::vector<PotentialElement *> & getSlotsVector();
     void updateSlots(int);
-    bool allSlotsUsedForSite(SiteLogic *, int) const;
+    bool allSlotsUsedForSite(const Pointer<SiteLogic> &, int) const;
 };

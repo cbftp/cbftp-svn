@@ -22,7 +22,7 @@ NukeScreen::~NukeScreen() {
 
 }
 
-void NukeScreen::initialize(unsigned int row, unsigned int col, std::string sitestr, std::string release, FileList * filelist) {
+void NukeScreen::initialize(unsigned int row, unsigned int col, const std::string & sitestr, const std::string & release, FileList * filelist) {
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [n]uke - [c]ancel - [p]roper - [r]epack - [d]upe";
   currentlegendtext = defaultlegendtext;
   active = false;

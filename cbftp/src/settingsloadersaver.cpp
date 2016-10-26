@@ -266,9 +266,9 @@ void SettingsLoaderSaver::loadSettings() {
     std::string name = line.substr(0, tok1);
     std::string setting = line.substr(tok1 + 1, (tok2 - tok1 - 1));
     std::string value = line.substr(tok2 + 1);
-    Site * site = global->getSiteManager()->getSite(name);
-    if (site == NULL) {
-      site = new Site(name);
+    Pointer<Site> site = global->getSiteManager()->getSite(name);
+    if (!site) {
+      site = makePointer<Site>(name);
       global->getSiteManager()->addSiteLoad(site);
     }
     if (!setting.compare("addr")) {
@@ -375,16 +375,16 @@ void SettingsLoaderSaver::loadSettings() {
     }
   }
   for (std::list<std::pair<std::string, std::string> >::const_iterator it2 = exceptsources.begin(); it2 != exceptsources.end(); it2++) {
-    Site * site = global->getSiteManager()->getSite(it2->first);
-    Site * except = global->getSiteManager()->getSite(it2->second);
-    if (site != NULL && except != NULL) {
+    Pointer<Site> site = global->getSiteManager()->getSite(it2->first);
+    Pointer<Site> except = global->getSiteManager()->getSite(it2->second);
+    if (!!site && !!except) {
       site->addExceptSourceSite(except);
     }
   }
   for (std::list<std::pair<std::string, std::string> >::const_iterator it2 = excepttargets.begin(); it2 != excepttargets.end(); it2++) {
-    Site * site = global->getSiteManager()->getSite(it2->first);
-    Site * except = global->getSiteManager()->getSite(it2->second);
-    if (site != NULL && except != NULL) {
+    Pointer<Site> site = global->getSiteManager()->getSite(it2->first);
+    Pointer<Site> except = global->getSiteManager()->getSite(it2->second);
+    if (!!site && !!except) {
       site->addExceptTargetSite(except);
     }
   }
@@ -541,11 +541,11 @@ void SettingsLoaderSaver::saveSettings() {
   }
 
   {
-    std::vector<Site *>::const_iterator it;
+    std::vector<Pointer<Site> >::const_iterator it;
     std::string filetag = "SiteManager";
     std::string defaultstag = "SiteManagerDefaults";
     for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
-      Site * site = *it;
+      const Pointer<Site> & site = *it;
       std::string name = site->getName();
       dfh->addOutputLine(filetag, name + "$addr=" + site->getAddressesAsString());
       dfh->addOutputLine(filetag, name + "$user=" + site->getUser());
@@ -591,7 +591,7 @@ void SettingsLoaderSaver::saveSettings() {
       }
       dfh->addOutputLine(filetag, name + "$transfersourcepolicy=" + util::int2Str(site->getTransferSourcePolicy()));
       dfh->addOutputLine(filetag, name + "$transfertargetpolicy=" + util::int2Str(site->getTransferTargetPolicy()));
-      std::set<Site *>::const_iterator sit4;
+      std::set<Pointer<Site> >::const_iterator sit4;
       for (sit4 = site->exceptSourceSitesBegin(); sit4 != site->exceptSourceSitesEnd(); sit4++) {
         dfh->addOutputLine(filetag, name + "$exceptsourcesite=" + (*sit4)->getName());
       }

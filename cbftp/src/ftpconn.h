@@ -89,7 +89,7 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     bool allconnectattempted;
     SiteLogic * sl;
     std::string status;
-    Site * site;
+    Pointer<Site> site;
     int transferstatus;
     int sockid;
     FTPConnState state;

@@ -2,20 +2,22 @@
 
 #include <string>
 
+#include "core/pointer.h"
+
 class SiteLogic;
 
 class PotentialElement {
   private:
-    SiteLogic * site;
+    Pointer<SiteLogic> site;
     int potential;
     int dnslots;
     std::string filename;
   public:
     PotentialElement();
-    SiteLogic * getSite() const;
+    const Pointer<SiteLogic> & getSite() const;
     int getSiteDownloadSlots() const;
     int getPotential() const;
     std::string getFileName() const;
     void reset();
-    void update(SiteLogic *, int, int, const std::string &);
+    void update(const Pointer<SiteLogic> &, int, int, const std::string &);
 };

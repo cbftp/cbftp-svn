@@ -146,7 +146,7 @@ void FileList::removeFile(const std::string & name) {
   }
 }
 
-void FileList::setFileUpdateFlag(const std::string & name, unsigned long long int size, unsigned int speed, Site * src, const std::string & dst) {
+void FileList::setFileUpdateFlag(const std::string & name, unsigned long long int size, unsigned int speed, const Pointer<Site> & src, const std::string & dst) {
   File * file;
   if ((file = getFile(name)) != NULL) {
     unsigned long long int oldsize = file->getSize();

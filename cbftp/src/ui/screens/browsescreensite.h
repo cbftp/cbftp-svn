@@ -70,9 +70,9 @@ private:
   std::string wipepath;
   std::string wipefile;
   unsigned int sortmethod;
-  Site * site;
+  Pointer<Site> site;
   UIFileList list;
-  SiteLogic * sitelogic;
+  Pointer<SiteLogic> sitelogic;
   int requestid;
   std::string requestedpath;
   mutable int spinnerpos;

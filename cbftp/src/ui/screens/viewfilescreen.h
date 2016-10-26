@@ -30,7 +30,7 @@ public:
 private:
   int state;
   int requestid;
-  SiteLogic * sitelogic;
+  Pointer<SiteLogic> sitelogic;
   Pointer<TransferStatus> ts;
   FileList * filelist;
   std::string site;
