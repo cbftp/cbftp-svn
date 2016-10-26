@@ -5,6 +5,7 @@
 #include <utility>
 #include <vector>
 
+#include "site.h"
 #include "util.h"
 
 File::File(const std::string & name, const std::string & user) :
@@ -205,7 +206,7 @@ unsigned int File::getUpdateSpeed() const {
   return updatespeed;
 }
 
-Site * File::getUpdateSrc() const {
+const Pointer<Site> & File::getUpdateSrc() const {
   return updatesrc;
 }
 
@@ -213,7 +214,7 @@ std::string File::getUpdateDst() const {
   return updatedst;
 }
 
-void File::setUpdateFlag(Site * src, std::string dst, int speed) {
+void File::setUpdateFlag(const Pointer<Site> & src, const std::string & dst, int speed) {
   updatesrc = src;
   updatedst = dst;
   updatespeed = speed;

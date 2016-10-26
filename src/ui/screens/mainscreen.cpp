@@ -124,7 +124,7 @@ void MainScreen::redraw() {
   int x = 1;
   int y = ++irow;
   mss.prepareRefill();
-  for (std::vector<Site *>::const_iterator it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
+  for (std::vector<Pointer<Site> >::const_iterator it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
     mss.add(*it, y++, x);
   }
   mss.checkPointer();
@@ -220,7 +220,6 @@ void MainScreen::command(const std::string & command) {
 }
 
 bool MainScreen::keyPressed(unsigned int ch) {
-  Site * site;
   bool update = false;
   unsigned int pagerows = (unsigned int) (row - sitestartrow) * 0.6;
   if (gotomode) {
@@ -310,7 +309,7 @@ bool MainScreen::keyPressed(unsigned int ch) {
     case ' ':
     case 10:
       if (mss.isFocused()) {
-        if (mss.getSite() == NULL) break;
+        if (!mss.getSite()) break;
         ui->goSiteStatus(mss.getSite()->getName());
       }
       else if (mso.isFocused() && mso.size() > 0) {
@@ -364,8 +363,8 @@ bool MainScreen::keyPressed(unsigned int ch) {
     case KEY_DC:
     case 'D':
       if (mss.isFocused()) {
-        site = mss.getSite();
-        if (site == NULL) break;
+        Pointer<Site> site = mss.getSite();
+        if (!site) break;
         deletesite = site->getName();
         ui->goConfirmation("Do you really want to delete site " + deletesite);
       }
@@ -382,34 +381,35 @@ bool MainScreen::keyPressed(unsigned int ch) {
   if (mss.isFocused()) {
     switch(ch) {
       case 'E':
-        if (mss.getSite() == NULL) break;
+        if (!mss.getSite()) break;
         ui->goEditSite(mss.getSite()->getName());
         return true;
       case 'A':
         ui->goAddSite();
         return true;
-      case 'C':
-        if (mss.getSite() == NULL) break;
-        site = new Site(*mss.getSite());
+      case 'C': {
+        if (!mss.getSite()) break;
+        Pointer<Site> site = makePointer<Site>(*mss.getSite());
         int i;
-        for (i = 0; global->getSiteManager()->getSite(site->getName() + "-" + util::int2Str(i)) != NULL; i++);
+        for (i = 0; !!global->getSiteManager()->getSite(site->getName() + "-" + util::int2Str(i)); i++);
         site->setName(site->getName() + "-" + util::int2Str(i));
         global->getSiteManager()->addSite(site);
         global->getSettingsLoaderSaver()->saveSettings();
         ui->redraw();
         ui->setInfo();
         return true;
+      }
       case 'b':
       case KEY_RIGHT:
-        if (mss.getSite() == NULL) break;
+        if (!mss.getSite()) break;
         ui->goBrowse(mss.getSite()->getName());
         return true;
       case '\t':
-        if (mss.getSite() == NULL) break;
+        if (!mss.getSite()) break;
         ui->goBrowseSplit(mss.getSite()->getName());
         return true;
       case 'w':
-        if (mss.getSite() == NULL) break;
+        if (!mss.getSite()) break;
         ui->goRawCommand(mss.getSite()->getName());
         return true;
       case 'q':

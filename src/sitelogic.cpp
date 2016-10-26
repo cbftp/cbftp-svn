@@ -8,6 +8,7 @@
 #include "filelist.h"
 #include "siterace.h"
 #include "site.h"
+#include "sitelogicmanager.h"
 #include "globalcontext.h"
 #include "scoreboardelement.h"
 #include "potentialtracker.h"
@@ -771,8 +772,8 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
   for (std::list<Pointer<TransferJob> >::const_iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
     Pointer<TransferJob> tj = *it;
     if (!tj->isDone()) {
-      if (tj->wantsList(this)) {
-        FileList * fl = tj->getListTarget(this);
+      if (tj->wantsList(global->getSiteLogicManager()->getSiteLogic(this))) {
+        FileList * fl = tj->getListTarget(global->getSiteLogicManager()->getSiteLogic(this));
         std::string path = fl->getPath();
         connstatetracker[id].use();
         if (path != conns[id]->getCurrentPath()) {
@@ -783,7 +784,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
         getFileListConn(id, tj.get(), fl);
         return;
       }
-      if (tj->wantsMakeDir(this)) {
+      if (tj->wantsMakeDir(global->getSiteLogicManager()->getSiteLogic(this))) {
         connstatetracker[id].use();
         conns[id]->setCurrentCommandOwner(tj.get());
         conns[id]->doMKD(tj->getWantedMakeDir());
@@ -1245,7 +1246,7 @@ bool SiteLogic::finishRequest(int requestid) {
   return false;
 }
 
-Site * SiteLogic::getSite() const {
+const Pointer<Site> & SiteLogic::getSite() const {
   return site;
 }
 
@@ -1417,7 +1418,7 @@ bool SiteLogic::getSlot(bool isdownload) {
   return true;
 }
 
-void SiteLogic::pushPotential(int score, const std::string & file, SiteLogic * dst) {
+void SiteLogic::pushPotential(int score, const std::string & file, const Pointer<SiteLogic> & dst) {
   ptrack->pushPotential(score, file, dst, dst->getSite()->getMaxUp());
 }
 
@@ -1684,7 +1685,7 @@ void SiteLogic::getFileListConn(int id, bool hiddenfiles) {
   }
   else {
     conns[id]->prepareLIST();
-    global->getTransferManager()->getFileList(this, id, hiddenfiles);
+    global->getTransferManager()->getFileList(global->getSiteLogicManager()->getSiteLogic(this), id, hiddenfiles);
   }
 }
 
@@ -1695,7 +1696,7 @@ void SiteLogic::getFileListConn(int id, CommandOwner * co, FileList * filelist) 
   }
   else {
     conns[id]->prepareLIST(co, filelist);
-    global->getTransferManager()->getFileList(this, id, false);
+    global->getTransferManager()->getFileList(global->getSiteLogicManager()->getSiteLogic(this), id, false);
   }
 }
 

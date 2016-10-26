@@ -38,7 +38,7 @@ bool TransferMonitor::idle() const {
   return status == TM_STATUS_IDLE;
 }
 
-void TransferMonitor::engageFXP(std::string sfile, SiteLogic * sls, FileList * fls, std::string dfile, SiteLogic * sld, FileList * fld) {
+void TransferMonitor::engageFXP(const std::string & sfile, const Pointer<SiteLogic> & sls, FileList * fls, const std::string & dfile, const Pointer<SiteLogic> & sld, FileList * fld) {
   reset();
   type = TM_TYPE_FXP;
   this->sls = sls;
@@ -85,7 +85,7 @@ void TransferMonitor::engageFXP(std::string sfile, SiteLogic * sls, FileList * f
 
 }
 
-void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileList * fls, Pointer<LocalFileList> & localfl) {
+void TransferMonitor::engageDownload(const std::string & sfile, const Pointer<SiteLogic> & sls, FileList * fls, const Pointer<LocalFileList> & localfl) {
   reset();
   if (!localfl) return;
   type = TM_TYPE_DOWNLOAD;
@@ -120,7 +120,7 @@ void TransferMonitor::engageDownload(std::string sfile, SiteLogic * sls, FileLis
   }
 }
 
-void TransferMonitor::engageUpload(std::string sfile, Pointer<LocalFileList> & localfl, SiteLogic * sld, FileList * fld) {
+void TransferMonitor::engageUpload(const std::string & sfile, const Pointer<LocalFileList> & localfl, const Pointer<SiteLogic> & sld, FileList * fld) {
   reset();
   if (!localfl) return;
   type = TM_TYPE_UPLOAD;
@@ -155,7 +155,7 @@ void TransferMonitor::engageUpload(std::string sfile, Pointer<LocalFileList> & l
   }
 }
 
-void TransferMonitor::engageList(SiteLogic * sls, int connid, bool hiddenfiles) {
+void TransferMonitor::engageList(const Pointer<SiteLogic> & sls, int connid, bool hiddenfiles) {
   reset();
   type = TM_TYPE_LIST;
   this->sls = sls;
@@ -414,7 +414,7 @@ void TransferMonitor::sourceError(TransferError err) {
   }
   partialcompletestamp = timestamp;
   if (status == TM_STATUS_AWAITING_PASSIVE || status == TM_STATUS_AWAITING_ACTIVE) {
-    if (sld != NULL && !sld->getConn(dst)->isProcessing()) {
+    if (!!sld && !sld->getConn(dst)->isProcessing()) {
       sld->returnConn(dst);
       fld->finishUpload(dfile);
       transferFailed(ts, err);
@@ -443,7 +443,7 @@ void TransferMonitor::targetError(TransferError err) {
   }
   partialcompletestamp = timestamp;
   if (status == TM_STATUS_AWAITING_PASSIVE || status == TM_STATUS_AWAITING_ACTIVE) {
-    if (sls != NULL && !sls->getConn(src)->isProcessing()) {
+    if (!!sls && !sls->getConn(src)->isProcessing()) {
       sls->returnConn(src);
       if (fls != NULL) { // NULL in case of LIST
         fls->finishDownload(sfile);
@@ -546,8 +546,8 @@ Status TransferMonitor::getStatus() const {
 }
 
 void TransferMonitor::reset() {
-  sls = NULL;
-  sld = NULL;
+  sls.reset();
+  sld.reset();
   fls = NULL;
   fld = NULL;
   lt = NULL;
@@ -560,7 +560,7 @@ void TransferMonitor::reset() {
   partialcompletestamp = 0;
 }
 
-void TransferMonitor::transferFailed(Pointer<TransferStatus> & ts, TransferError err) {
+void TransferMonitor::transferFailed(const Pointer<TransferStatus> & ts, TransferError err) {
   if (status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET ||
       status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE)
   {

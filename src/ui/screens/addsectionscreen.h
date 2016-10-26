@@ -19,7 +19,7 @@ public:
   std::string getLegendText() const;
   std::string getInfoLabel() const;
 private:
-  Site * modsite;
+  Pointer<Site> modsite;
   std::string currentlegendtext;
   std::string defaultlegendtext;
   bool active;

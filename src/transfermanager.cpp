@@ -17,28 +17,28 @@ TransferManager::~TransferManager() {
 
 }
 
-void TransferManager::getFileList(SiteLogic * sl, int connid, bool hiddenfiles) {
+void TransferManager::getFileList(const Pointer<SiteLogic> & sl, int connid, bool hiddenfiles) {
   Pointer<TransferMonitor> target = getAvailableTransferMonitor();
   target->engageList(sl, connid, hiddenfiles);
 }
 
-Pointer<TransferStatus> TransferManager::suggestTransfer(std::string name, SiteLogic * src, FileList * fls, SiteLogic * dst, FileList * fld) {
+Pointer<TransferStatus> TransferManager::suggestTransfer(const std::string & name, const Pointer<SiteLogic> & src, FileList * fls, const Pointer<SiteLogic> & dst, FileList * fld) {
   return suggestTransfer(name, src, fls, name, dst, fld);
 }
 
-Pointer<TransferStatus> TransferManager::suggestTransfer(std::string srcname, SiteLogic * src, FileList * fls, std::string dstname, SiteLogic * dst, FileList * fld) {
+Pointer<TransferStatus> TransferManager::suggestTransfer(const std::string & srcname, const Pointer<SiteLogic> & src, FileList * fls, const std::string & dstname, const Pointer<SiteLogic> & dst, FileList * fld) {
   Pointer<TransferMonitor> target = getAvailableTransferMonitor();
   target->engageFXP(srcname, src, fls, dstname, dst, fld);
   return target->getTransferStatus();
 }
 
-Pointer<TransferStatus> TransferManager::suggestDownload(std::string name, SiteLogic * sl, FileList * filelist, Pointer<LocalFileList> & path) {
+Pointer<TransferStatus> TransferManager::suggestDownload(const std::string & name, const Pointer<SiteLogic> & sl, FileList * filelist, const Pointer<LocalFileList> & path) {
   Pointer<TransferMonitor> target = getAvailableTransferMonitor();
   target->engageDownload(name, sl, filelist, path);
   return target->getTransferStatus();
 }
 
-Pointer<TransferStatus> TransferManager::suggestUpload(std::string name, Pointer<LocalFileList> & path, SiteLogic * sl, FileList * filelist) {
+Pointer<TransferStatus> TransferManager::suggestUpload(const std::string & name, const Pointer<LocalFileList> & path, const Pointer<SiteLogic> & sl, FileList * filelist) {
   Pointer<TransferMonitor> target = getAvailableTransferMonitor();
   target->engageUpload(name, path, sl, filelist);
   return target->getTransferStatus();
@@ -60,7 +60,7 @@ Pointer<TransferMonitor> TransferManager::getAvailableTransferMonitor() {
   return target;
 }
 
-void TransferManager::transferSuccessful(Pointer<TransferStatus> & ts) {
+void TransferManager::transferSuccessful(const Pointer<TransferStatus> & ts) {
   if (!!ts) {
     if (ts->isAwaited()) {
       global->getUIBase()->backendPush();
@@ -73,7 +73,7 @@ void TransferManager::transferSuccessful(Pointer<TransferStatus> & ts) {
   }
 }
 
-void TransferManager::transferFailed(Pointer<TransferStatus> & ts, int err) {
+void TransferManager::transferFailed(const Pointer<TransferStatus> & ts, int err) {
   if (!!ts) {
     if (ts->isAwaited()) {
       global->getUIBase()->backendPush();
@@ -110,11 +110,11 @@ unsigned int TransferManager::finishedTransfersSize() const {
   return finishedtransfers.size();
 }
 
-void TransferManager::addNewTransferStatus(Pointer<TransferStatus> & ts) {
+void TransferManager::addNewTransferStatus(const Pointer<TransferStatus> & ts) {
   ongoingtransfers.push_front(ts);
 }
 
-void TransferManager::moveTransferStatusToFinished(Pointer<TransferStatus> & movets) {
+void TransferManager::moveTransferStatusToFinished(const Pointer<TransferStatus> & movets) {
   for (std::list<Pointer<TransferStatus> >::iterator it = ongoingtransfers.begin(); it != ongoingtransfers.end(); it++) {
     if (*it == movets) {
       ongoingtransfers.erase(it);

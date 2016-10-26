@@ -21,7 +21,7 @@ NewRaceScreen::~NewRaceScreen() {
 
 }
 
-void NewRaceScreen::initialize(unsigned int row, unsigned int col, std::string site, std::string section, std::string release) {
+void NewRaceScreen::initialize(unsigned int row, unsigned int col, const std::string & site, const std::string & section, const std::string & release) {
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [t]oggle all - [s]tart race - [S]tart race and return to browsing - [c]ancel";
   currentlegendtext = defaultlegendtext;
   active = false;
@@ -72,11 +72,11 @@ void NewRaceScreen::initialize(unsigned int row, unsigned int col, std::string s
 }
 
 void NewRaceScreen::populateSiteList() {
-  std::vector<Site *>::const_iterator it;
+  std::vector<Pointer<Site> >::const_iterator it;
   mso.clear();
   if (!tempsites.size()) {
     for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
-      Site * site = *it;
+      const Pointer<Site> & site = *it;
       if (site->hasSection(section) && !site->getDisabled()) {
         tempsites.push_back(std::pair<std::string, bool>(site->getName(), toggleall || site == startsite));
       }

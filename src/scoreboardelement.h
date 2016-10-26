@@ -12,19 +12,19 @@ class Race;
 class ScoreBoardElement {
   private:
     std::string filename;
-    SiteLogic * src;
-    SiteLogic * dst;
+    Pointer<SiteLogic> src;
+    Pointer<SiteLogic> dst;
     FileList * fls;
     FileList * fld;
     Pointer<Race> race;
     unsigned short score;
     bool prio;
   public:
-    ScoreBoardElement(const std::string &, unsigned short, bool, SiteLogic *, FileList *, SiteLogic *, FileList *, Pointer<Race> &);
-    void reset(const std::string &, unsigned short, bool, SiteLogic *, FileList *, SiteLogic *, FileList *, Pointer<Race> &);
+    ScoreBoardElement(const std::string &, unsigned short, bool, const Pointer<SiteLogic> &, FileList *, const Pointer<SiteLogic> &, FileList *, Pointer<Race> &);
+    void reset(const std::string &, unsigned short, bool, const Pointer<SiteLogic> &, FileList *, const Pointer<SiteLogic> &, FileList *, Pointer<Race> &);
     const std::string & fileName() const;
-    SiteLogic * getSource() const;
-    SiteLogic * getDestination() const;
+    const Pointer<SiteLogic> & getSource() const;
+    const Pointer<SiteLogic> & getDestination() const;
     FileList * getSourceFileList() const;
     FileList * getDestinationFileList() const;
     const Pointer<Race> & getRace() const;

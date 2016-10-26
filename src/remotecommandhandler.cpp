@@ -20,11 +20,11 @@
 #define DEFAULTPASS "DEFAULT"
 #define RETRYDELAY 30000
 
-std::list<SiteLogic *> getSiteLogicList(const std::string & sitestring) {
-  std::list<SiteLogic *> sitelogics;
+std::list<Pointer<SiteLogic> > getSiteLogicList(const std::string & sitestring) {
+  std::list<Pointer<SiteLogic> > sitelogics;
   std::list<std::string> sites;
   if (sitestring == "*") {
-    std::vector<Site *>::const_iterator it;
+    std::vector<Pointer<Site> >::const_iterator it;
     for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
       if (!(*it)->getDisabled()) {
         sites.push_back((*it)->getName());
@@ -35,8 +35,8 @@ std::list<SiteLogic *> getSiteLogicList(const std::string & sitestring) {
     sites = util::split(sitestring, ",");
   }
   for (std::list<std::string>::const_iterator it = sites.begin(); it != sites.end(); it++) {
-    SiteLogic * sl = global->getSiteLogicManager()->getSiteLogic(*it);
-    if (sl == NULL) {
+    const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(*it);
+    if (!sl) {
       global->getEventLog()->log("RemoteCommandHandler", "Site not found: " + *it);
       continue;
     }
@@ -181,9 +181,9 @@ void RemoteCommandHandler::commandRaw(const std::string & message) {
   std::string sitestring = message.substr(0, sitesend);
   std::string rawcommand = message.substr(sitesend + 1);
 
-  std::list<SiteLogic *> sites = getSiteLogicList(sitestring);
+  std::list<Pointer<SiteLogic> > sites = getSiteLogicList(sitestring);
 
-  for (std::list<SiteLogic *>::const_iterator it = sites.begin(); it != sites.end(); it++) {
+  for (std::list<Pointer<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
     (*it)->requestRawCommand(rawcommand, false);
   }
 }
@@ -213,9 +213,9 @@ void RemoteCommandHandler::commandIdle(const std::string & message) {
     sitestring = message.substr(0, sitesend);
   }
 
-  std::list<SiteLogic *> sites = getSiteLogicList(sitestring);
+  std::list<Pointer<SiteLogic> > sites = getSiteLogicList(sitestring);
 
-  for (std::list<SiteLogic *>::const_iterator it = sites.begin(); it != sites.end(); it++) {
+  for (std::list<Pointer<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
     (*it)->requestAllIdle(idletime);
   }
 }

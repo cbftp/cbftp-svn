@@ -708,7 +708,7 @@ void Ui::goNewRace(std::string site, std::string section, std::string release) {
   switchToWindow(newracescreen);
 }
 
-void Ui::goSelectSites(std::string message, std::list<Site *> currentsitelist, std::list<Site *> excludedsitelist) {
+void Ui::goSelectSites(std::string message, std::list<Pointer<Site> > currentsitelist, std::list<Pointer<Site> > excludedsitelist) {
   selectsitesscreen->initialize(mainrow, maincol, message, currentsitelist, excludedsitelist);
   switchToWindow(selectsitesscreen);
 }

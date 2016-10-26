@@ -6,7 +6,7 @@ Site::Site() {
 
 }
 
-Site::Site(std::string name) :
+Site::Site(const std::string & name) :
   name(name),
   user("anonymous"),
   pass("anonymous"),
@@ -460,7 +460,7 @@ void Site::setTransferTargetPolicy(int policy) {
   transfertargetpolicy = policy;
 }
 
-void Site::addAllowedSourceSite(Site * site) {
+void Site::addAllowedSourceSite(const Pointer<Site> & site) {
   if (transfersourcepolicy == SITE_TRANSFER_POLICY_BLOCK) {
     exceptsourcesites.insert(site);
   }
@@ -469,7 +469,7 @@ void Site::addAllowedSourceSite(Site * site) {
   }
 }
 
-void Site::addBlockedSourceSite(Site * site) {
+void Site::addBlockedSourceSite(const Pointer<Site> & site) {
   if (transfersourcepolicy == SITE_TRANSFER_POLICY_ALLOW) {
     exceptsourcesites.insert(site);
   }
@@ -478,7 +478,7 @@ void Site::addBlockedSourceSite(Site * site) {
   }
 }
 
-void Site::addAllowedTargetSite(Site * site) {
+void Site::addAllowedTargetSite(const Pointer<Site> & site) {
   if (transfertargetpolicy == SITE_TRANSFER_POLICY_BLOCK) {
     excepttargetsites.insert(site);
   }
@@ -487,7 +487,7 @@ void Site::addAllowedTargetSite(Site * site) {
   }
 }
 
-void Site::addBlockedTargetSite(Site * site) {
+void Site::addBlockedTargetSite(const Pointer<Site> & site) {
   if (transfertargetpolicy == SITE_TRANSFER_POLICY_ALLOW) {
     excepttargetsites.insert(site);
   }
@@ -496,15 +496,15 @@ void Site::addBlockedTargetSite(Site * site) {
   }
 }
 
-void Site::addExceptSourceSite(Site * site) {
+void Site::addExceptSourceSite(const Pointer<Site> & site) {
   exceptsourcesites.insert(site);
 }
 
-void Site::addExceptTargetSite(Site * site) {
+void Site::addExceptTargetSite(const Pointer<Site> & site) {
   excepttargetsites.insert(site);
 }
 
-void Site::removeExceptSite(Site * site) {
+void Site::removeExceptSite(const Pointer<Site> & site) {
   exceptsourcesites.erase(site);
   excepttargetsites.erase(site);
 }
@@ -514,8 +514,8 @@ void Site::clearExceptSites() {
   excepttargetsites.clear();
 }
 
-bool Site::isAllowedTargetSite(Site * site) const {
-  std::set<Site *>::const_iterator it = excepttargetsites.find(site);
+bool Site::isAllowedTargetSite(const Pointer<Site> & site) const {
+  std::set<Pointer<Site> >::const_iterator it = excepttargetsites.find(site);
   if (it != excepttargetsites.end()) {
     return transfertargetpolicy == SITE_TRANSFER_POLICY_BLOCK;
   }
@@ -538,19 +538,19 @@ std::set<std::string>::const_iterator Site::bannedGroupsEnd() const {
   return bannedgroups.end();
 }
 
-std::set<Site *>::const_iterator Site::exceptSourceSitesBegin() const {
+std::set<Pointer<Site> >::const_iterator Site::exceptSourceSitesBegin() const {
   return exceptsourcesites.begin();
 }
 
-std::set<Site *>::const_iterator Site::exceptSourceSitesEnd() const {
+std::set<Pointer<Site> >::const_iterator Site::exceptSourceSitesEnd() const {
   return exceptsourcesites.end();
 }
 
-std::set<Site *>::const_iterator Site::exceptTargetSitesBegin() const {
+std::set<Pointer<Site> >::const_iterator Site::exceptTargetSitesBegin() const {
   return excepttargetsites.begin();
 }
 
-std::set<Site *>::const_iterator Site::exceptTargetSitesEnd() const {
+std::set<Pointer<Site> >::const_iterator Site::exceptTargetSitesEnd() const {
   return excepttargetsites.end();
 }
 

@@ -20,10 +20,10 @@ class MenuSelectSite : public FocusableArea {
     ~MenuSelectSite();
     bool goDown();
     bool goUp();
-    void add(Site *, int, int);
-    void remove(Site *);
-    Site * getSite() const;
-    Pointer<MenuSelectSiteElement> getSiteElement(unsigned int);
+    void add(const Pointer<Site> &, int, int);
+    void remove(const Pointer<Site> &);
+    const Pointer<Site> getSite() const;
+    const Pointer<MenuSelectSiteElement> & getSiteElement(unsigned int);
     unsigned int size() const;
     unsigned int getSelectionPointer() const;
     std::string getSiteLine(unsigned int) const;

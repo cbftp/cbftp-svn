@@ -18,7 +18,7 @@ class NewRaceScreen : public UIWindow {
 public:
   NewRaceScreen(Ui *);
   ~NewRaceScreen();
-  void initialize(unsigned int, unsigned int, std::string, std::string, std::string);
+  void initialize(unsigned int, unsigned int, const std::string &, const std::string &, const std::string &);
   void update();
   void redraw();
   bool keyPressed(unsigned int);
@@ -28,7 +28,7 @@ public:
 private:
   void populateSiteList();
   Pointer<Race> startRace();
-  Site * startsite;
+  Pointer<Site> startsite;
   std::string getSectionButtonText(Pointer<MenuSelectOptionElement>) const;
   std::string currentlegendtext;
   std::string defaultlegendtext;

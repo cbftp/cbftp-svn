@@ -12,20 +12,20 @@ SelectSitesScreen::SelectSitesScreen(Ui * ui) {
   this->ui = ui;
 }
 
-void SelectSitesScreen::initialize(unsigned int row, unsigned int col, std::string purpose, std::list<Site *> preselectedsites, std::list<Site *> excludedsites) {
+void SelectSitesScreen::initialize(unsigned int row, unsigned int col, std::string purpose, std::list<Pointer<Site> > preselectedsites, std::list<Pointer<Site> > excludedsites) {
   sm = global->getSiteManager();
   this->purpose = purpose;
   preselected.clear();
   excluded.clear();
-  for (std::list<Site *>::iterator it = preselectedsites.begin(); it != preselectedsites.end(); it++) {
+  for (std::list<Pointer<Site> >::iterator it = preselectedsites.begin(); it != preselectedsites.end(); it++) {
     preselected.insert(*it);
   }
-  for (std::list<Site *>::iterator it = excludedsites.begin(); it != excludedsites.end(); it++) {
+  for (std::list<Pointer<Site> >::iterator it = excludedsites.begin(); it != excludedsites.end(); it++) {
     excluded.insert(*it);
   }
   mso.clear();
   mso.enterFocusFrom(0);
-  std::vector<Site *>::const_iterator it;
+  std::vector<Pointer<Site> >::const_iterator it;
   for (it = sm->begin(); it != sm->end(); it++) {
     if (excluded.find(*it) != excluded.end()) {
       continue;

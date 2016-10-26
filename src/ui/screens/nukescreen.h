@@ -16,7 +16,7 @@ class NukeScreen : public UIWindow {
 public:
   NukeScreen(Ui *);
   ~NukeScreen();
-  void initialize(unsigned int, unsigned int, std::string, std::string, FileList *);
+  void initialize(unsigned int, unsigned int, const std::string &, const std::string &, FileList *);
   void update();
   void redraw();
   bool keyPressed(unsigned int);
@@ -25,7 +25,7 @@ public:
 private:
   int nuke();
   std::string sitestr;
-  SiteLogic * sitelogic;
+  Pointer<SiteLogic> sitelogic;
   std::string currentlegendtext;
   std::string defaultlegendtext;
   bool active;

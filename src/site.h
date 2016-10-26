@@ -6,6 +6,8 @@
 #include <list>
 #include <utility>
 
+#include "core/pointer.h"
+
 #define REPORT_LOGINS_IF_UNLIMITED 10
 
 #define SITE_PROXY_GLOBAL 820
@@ -59,8 +61,8 @@ private:
   std::set<std::string> bannedgroups;
   std::map<std::string, std::string> bannedgroupslower;
   std::map<std::string, std::set<std::string> > bannedgroupssectionexcept;
-  std::set<Site *> exceptsourcesites;
-  std::set<Site *> excepttargetsites;
+  std::set<Pointer<Site> > exceptsourcesites;
+  std::set<Pointer<Site> > excepttargetsites;
   int proxytype;
   std::string proxyname;
   int transfersourcepolicy;
@@ -68,7 +70,7 @@ private:
   bool aggressivemkdir;
 public:
   Site();
-  Site(std::string);
+  Site(const std::string &);
   std::map<std::string, std::string>::const_iterator sectionsBegin() const;
   std::map<std::string, std::string>::const_iterator sectionsEnd() const;
   std::map<std::string, int>::const_iterator avgspeedBegin() const;
@@ -146,24 +148,24 @@ public:
   void clearBannedGroups();
   void setTransferSourcePolicy(int);
   void setTransferTargetPolicy(int);
-  void addAllowedSourceSite(Site *);
-  void addBlockedSourceSite(Site *);
-  void addExceptSourceSite(Site *);
-  void addAllowedTargetSite(Site *);
-  void addBlockedTargetSite(Site *);
-  void addExceptTargetSite(Site *);
-  void removeExceptSite(Site *);
+  void addAllowedSourceSite(const Pointer<Site> &);
+  void addBlockedSourceSite(const Pointer<Site> &);
+  void addExceptSourceSite(const Pointer<Site> &);
+  void addAllowedTargetSite(const Pointer<Site> &);
+  void addBlockedTargetSite(const Pointer<Site> &);
+  void addExceptTargetSite(const Pointer<Site> &);
+  void removeExceptSite(const Pointer<Site> &);
   void clearExceptSites();
-  bool isAllowedTargetSite(Site *) const;
+  bool isAllowedTargetSite(const Pointer<Site> &) const;
   void setAggressiveMkdir(bool);
   std::set<std::string>::const_iterator affilsBegin() const;
   std::set<std::string>::const_iterator affilsEnd() const;
   std::set<std::string>::const_iterator bannedGroupsBegin() const;
   std::set<std::string>::const_iterator bannedGroupsEnd() const;
-  std::set<Site *>::const_iterator exceptSourceSitesBegin() const;
-  std::set<Site *>::const_iterator exceptSourceSitesEnd() const;
-  std::set<Site *>::const_iterator exceptTargetSitesBegin() const;
-  std::set<Site *>::const_iterator exceptTargetSitesEnd() const;
+  std::set<Pointer<Site> >::const_iterator exceptSourceSitesBegin() const;
+  std::set<Pointer<Site> >::const_iterator exceptSourceSitesEnd() const;
+  std::set<Pointer<Site> >::const_iterator exceptTargetSitesBegin() const;
+  std::set<Pointer<Site> >::const_iterator exceptTargetSitesEnd() const;
   void addSection(const std::string &, const std::string &);
   std::list<std::string> getSectionsForPath(const std::string &) const;
   std::list<std::string> getSectionsForPartialPath(const std::string &) const;

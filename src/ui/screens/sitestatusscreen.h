@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include "../../core/pointer.h"
+
 #include "../uiwindow.h"
 
 class Site;
@@ -19,6 +21,6 @@ public:
 private:
   std::string sitename;
   std::vector<unsigned int> previousstatuslength;
-  Site * site;
-  SiteLogic * st;
+  Pointer<Site> site;
+  Pointer<SiteLogic> st;
 };

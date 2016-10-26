@@ -25,7 +25,7 @@ public:
   std::string getLegendText() const;
   std::string getInfoLabel() const;
 private:
-  void fillPreselectionList(const std::string &, std::list<Site *> *) const;
+  void fillPreselectionList(const std::string &, std::list<Pointer<Site> > *) const;
   FocusableArea * focusedarea;
   FocusableArea * defocusedarea;
   std::string currentlegendtext;
@@ -34,7 +34,7 @@ private:
   Pointer<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;
   MenuSection ms;
-  Site * site;
+  Pointer<Site> site;
   Site modsite;
   std::string operation;
 };

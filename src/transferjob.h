@@ -25,9 +25,9 @@ class LocalFileList;
 class TransferJob : public CommandOwner {
 public:
   int classType() const;
-  TransferJob(unsigned int, SiteLogic *, std::string, FileList *, std::string, std::string);
-  TransferJob(unsigned int, std::string, std::string, SiteLogic *, std::string, FileList *);
-  TransferJob(unsigned int, SiteLogic *, std::string, FileList *, SiteLogic *, std::string, FileList *);
+  TransferJob(unsigned int, const Pointer<SiteLogic> &, std::string, FileList *, std::string, std::string);
+  TransferJob(unsigned int, std::string, std::string, const Pointer<SiteLogic> &, std::string, FileList *);
+  TransferJob(unsigned int, const Pointer<SiteLogic> &, std::string, FileList *, const Pointer<SiteLogic> &, std::string, FileList *);
   ~TransferJob();
   std::string getSrcFileName() const;
   std::string getDstFileName() const;
@@ -47,17 +47,17 @@ public:
   std::map<std::string, unsigned long long int>::const_iterator pendingTransfersBegin() const;
   std::map<std::string, unsigned long long int>::const_iterator pendingTransfersEnd() const;
   bool isDone() const;
-  bool wantsList(SiteLogic *);
-  bool wantsMakeDir(SiteLogic *) const;
+  bool wantsList(const Pointer<SiteLogic> &);
+  bool wantsMakeDir(const Pointer<SiteLogic> &) const;
   void wantDstDirectory(std::string);
   Pointer<LocalFileList> wantedLocalDstList(const std::string &);
-  FileList * getListTarget(SiteLogic *) const;
+  FileList * getListTarget(const Pointer<SiteLogic> &) const;
   std::string getWantedMakeDir();
   void fileListUpdated(FileList *);
   FileList * findDstList(const std::string &) const;
   Pointer<LocalFileList> findLocalFileList(const std::string &) const;
-  SiteLogic * getSrc() const;
-  SiteLogic * getDst() const;
+  const Pointer<SiteLogic> & getSrc() const;
+  const Pointer<SiteLogic> & getDst() const;
   int maxSlots() const;
   void setSlots(int);
   int maxPossibleSlots() const;
@@ -94,8 +94,8 @@ private:
   void checkRemoveWantedDstMakeDir(std::string);
   void updateLocalFileLists(const std::string &);
   int type;
-  SiteLogic * src;
-  SiteLogic * dst;
+  Pointer<SiteLogic> src;
+  Pointer<SiteLogic> dst;
   std::string srcfile;
   std::string dstfile;
   std::string localpath;

@@ -40,13 +40,13 @@ bool MenuSelectSite::goUp() {
   return false;
 }
 
-void MenuSelectSite::add(Site * site, int row, int col) {
-  SiteLogic * st = global->getSiteLogicManager()->getSiteLogic(site->getName());
+void MenuSelectSite::add(const Pointer<Site> & site, int row, int col) {
+  const Pointer<SiteLogic> st = global->getSiteLogicManager()->getSiteLogic(site->getName());
   sites.push_back(makePointer<MenuSelectSiteElement>(site, st, row, col));
 }
 
-Site * MenuSelectSite::getSite() const {
-  if (sites.size() == 0) return NULL;
+const Pointer<Site> MenuSelectSite::getSite() const {
+  if (sites.size() == 0) return Pointer<Site>();
   return sites[pointer]->getSite();
 }
 
@@ -54,7 +54,7 @@ void MenuSelectSite::prepareRefill() {
   sites.clear();
 }
 
-Pointer<MenuSelectSiteElement> MenuSelectSite::getSiteElement(unsigned int i) {
+const Pointer<MenuSelectSiteElement> & MenuSelectSite::getSiteElement(unsigned int i) {
   return sites[i];
 }
 
@@ -77,8 +77,8 @@ void MenuSelectSite::enterFocusFrom(int dir) {
 }
 
 std::string MenuSelectSite::getSiteLine(unsigned int index) const {
-  Site * site = sites[index]->getSite();
-  SiteLogic * sitelogic = sites[index]->getSiteLogic();
+  const Pointer<Site> & site = sites[index]->getSite();
+  Pointer<SiteLogic> sitelogic = sites[index]->getSiteLogic();
   std::string line = "";
   std::string add = "";
   int linelen;

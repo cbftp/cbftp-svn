@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../../core/pointer.h"
+
 #include "../uiwindow.h"
 #include "../menuselectoptiontextfield.h"
 #include "../commandhistory.h"
@@ -24,7 +26,7 @@ private:
   std::string sitename;
   std::string selection;
   bool hasselection;
-  SiteLogic * sitelogic;
+  Pointer<SiteLogic> sitelogic;
   RawBuffer * rawbuf;
   CommandHistory history;
 };

@@ -5,12 +5,14 @@
 #include <map>
 #include <list>
 
+#include "core/pointer.h"
+
 class Site;
 
 class SiteManager {
   private:
-    void removeSitePairsForSite(Site *);
-    std::vector<Site *> sites;
+    void removeSitePairsForSite(const Pointer<Site> &);
+    std::vector<Pointer<Site> > sites;
     std::string defaultusername;
     std::string defaultpassword;
     unsigned int defaultmaxlogins;
@@ -22,16 +24,16 @@ class SiteManager {
   public:
     SiteManager();
     int getNumSites() const;
-    void addSite(Site *);
-    void addSiteLoad(Site *);
-    Site * getSite(std::string) const;
-    void deleteSite(std::string);
-    std::vector<Site *>::const_iterator begin() const;
-    std::vector<Site *>::const_iterator end() const;
+    void addSite(const Pointer<Site> &);
+    void addSiteLoad(const Pointer<Site> &);
+    Pointer<Site> getSite(const std::string &) const;
+    void deleteSite(const std::string &);
+    std::vector<Pointer<Site> >::const_iterator begin() const;
+    std::vector<Pointer<Site> >::const_iterator end() const;
     std::string getDefaultUserName() const;
-    void setDefaultUserName(std::string);
+    void setDefaultUserName(const std::string &);
     std::string getDefaultPassword() const;
-    void setDefaultPassword(std::string);
+    void setDefaultPassword(const std::string &);
     unsigned int getDefaultMaxLogins() const;
     void setDefaultMaxLogins(unsigned int);
     unsigned int getDefaultMaxUp() const;
@@ -45,7 +47,7 @@ class SiteManager {
     int getDefaultSSLTransferPolicy() const;
     void setDefaultSSLTransferPolicy(int);
     void sortSites();
-    void proxyRemoved(std::string);
+    void proxyRemoved(const std::string &);
     void resetSitePairsForSite(const std::string &);
     void addExceptSourceForSite(const std::string &, const std::string &);
     void addExceptTargetForSite(const std::string &, const std::string &);

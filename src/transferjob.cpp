@@ -14,7 +14,7 @@
 #include "localfile.h"
 #include "filesystem.h"
 
-TransferJob::TransferJob(unsigned int id, SiteLogic * sl, std::string srcfile, FileList * filelist, std::string path, std::string dstfile) :
+TransferJob::TransferJob(unsigned int id, const Pointer<SiteLogic> & sl, std::string srcfile, FileList * filelist, std::string path, std::string dstfile) :
       src(sl),
       dst(NULL),
       srcfile(srcfile),
@@ -37,7 +37,7 @@ TransferJob::TransferJob(unsigned int id, SiteLogic * sl, std::string srcfile, F
   }
 }
 
-TransferJob::TransferJob(unsigned int id, std::string path, std::string srcfile, SiteLogic * sl, std::string dstfile, FileList * filelist) :
+TransferJob::TransferJob(unsigned int id, std::string path, std::string srcfile, const Pointer<SiteLogic> & sl, std::string dstfile, FileList * filelist) :
       src(NULL),
       dst(sl),
       srcfile(srcfile),
@@ -60,7 +60,7 @@ TransferJob::TransferJob(unsigned int id, std::string path, std::string srcfile,
   }
 }
 
-TransferJob::TransferJob(unsigned int id, SiteLogic * slsrc, std::string srcfile, FileList * srcfilelist, SiteLogic * sldst, std::string dstfile, FileList * dstfilelist) :
+TransferJob::TransferJob(unsigned int id, const Pointer<SiteLogic> & slsrc, std::string srcfile, FileList * srcfilelist, const Pointer<SiteLogic> & sldst, std::string dstfile, FileList * dstfilelist) :
       src(slsrc),
       dst(sldst),
       srcfile(srcfile),
@@ -183,7 +183,7 @@ bool TransferJob::isDone() const {
   return done;
 }
 
-bool TransferJob::wantsList(SiteLogic * sl) {
+bool TransferJob::wantsList(const Pointer<SiteLogic> & sl) {
   if (sl == src && (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP)) {
     for (std::map<std::string, FileList *>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
       std::map<FileList *, bool>::iterator it2 = filelistsrefreshed.find(it->second);
@@ -208,7 +208,7 @@ bool TransferJob::wantsList(SiteLogic * sl) {
   return false;
 }
 
-bool TransferJob::wantsMakeDir(SiteLogic * sl) const {
+bool TransferJob::wantsMakeDir(const Pointer<SiteLogic> & sl) const {
   return sl == dst && wanteddstmakedirs.size();
 }
 
@@ -224,7 +224,7 @@ Pointer<LocalFileList> TransferJob::wantedLocalDstList(const std::string & subdi
   return localfilelists.at(subdir);
 }
 
-FileList * TransferJob::getListTarget(SiteLogic * sl) const {
+FileList * TransferJob::getListTarget(const Pointer<SiteLogic> & sl) const {
   if (sl == src) {
     return srclisttarget;
   }
@@ -321,11 +321,11 @@ void TransferJob::addSubDirectoryFileLists(std::map<std::string, FileList *> & f
   }
 }
 
-SiteLogic * TransferJob::getSrc() const {
+const Pointer<SiteLogic> & TransferJob::getSrc() const {
   return src;
 }
 
-SiteLogic * TransferJob::getDst() const {
+const Pointer<SiteLogic> & TransferJob::getDst() const {
   return dst;
 }
 

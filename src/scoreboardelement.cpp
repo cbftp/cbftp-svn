@@ -2,11 +2,11 @@
 
 #include "race.h"
 
-ScoreBoardElement::ScoreBoardElement(const std::string & filename, unsigned short score, bool prio, SiteLogic * src, FileList * fls, SiteLogic * dst, FileList * fld, Pointer<Race> & race) {
+ScoreBoardElement::ScoreBoardElement(const std::string & filename, unsigned short score, bool prio, const Pointer<SiteLogic> & src, FileList * fls, const Pointer<SiteLogic> & dst, FileList * fld, Pointer<Race> & race) {
   reset(filename, score, prio, src, fls, dst, fld, race);
 }
 
-void ScoreBoardElement::reset(const std::string & filename, unsigned short score, bool prio, SiteLogic * src, FileList * fls, SiteLogic * dst, FileList * fld, Pointer<Race> & race) {
+void ScoreBoardElement::reset(const std::string & filename, unsigned short score, bool prio, const Pointer<SiteLogic> & src, FileList * fls, const Pointer<SiteLogic> & dst, FileList * fld, Pointer<Race> & race) {
   this->filename = filename;
   this->src = src;
   this->fls = fls;
@@ -21,11 +21,11 @@ const std::string & ScoreBoardElement::fileName() const {
   return filename;
 }
 
-SiteLogic * ScoreBoardElement::getSource() const {
+const Pointer<SiteLogic> & ScoreBoardElement::getSource() const {
   return src;
 }
 
-SiteLogic * ScoreBoardElement::getDestination() const {
+const Pointer<SiteLogic> & ScoreBoardElement::getDestination() const {
   return dst;
 }
 

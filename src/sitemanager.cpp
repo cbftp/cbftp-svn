@@ -21,7 +21,7 @@
 #define DEFAULTSSL true
 #define DEFAULTSSLTRANSFER SITE_SSL_PREFER_OFF
 
-bool siteNameComparator(Site * a, Site * b) {
+bool siteNameComparator(const Pointer<Site> & a, const Pointer<Site> & b) {
   return a->getName().compare(b->getName()) < 0;
 }
 
@@ -41,22 +41,21 @@ int SiteManager::getNumSites() const {
   return sites.size();
 }
 
-Site * SiteManager::getSite(std::string site) const {
-  std::vector<Site *>::const_iterator it;
+Pointer<Site> SiteManager::getSite(const std::string & site) const {
+  std::vector<Pointer<Site> >::const_iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {
     if ((*it)->getName().compare(site) == 0) {
       return *it;
     }
   }
-  return NULL;
+  return Pointer<Site>();
 }
 
-void SiteManager::deleteSite(std::string site) {
-  std::vector<Site *>::iterator it;
+void SiteManager::deleteSite(const std::string & site) {
+  std::vector<Pointer<Site> >::iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {
     if ((*it)->getName().compare(site) == 0) {
       removeSitePairsForSite(*it);
-      delete *it;
       sites.erase(it);
       global->getEventLog()->log("SiteManager", "Site " + site + " deleted.");
       return;
@@ -64,9 +63,9 @@ void SiteManager::deleteSite(std::string site) {
   }
 }
 
-void SiteManager::addSite(Site * site) {
+void SiteManager::addSite(const Pointer<Site> & site) {
   sites.push_back(site);
-  std::set<Site *>::const_iterator it;
+  std::set<Pointer<Site> >::const_iterator it;
   for (it = site->exceptSourceSitesBegin(); it != site->exceptSourceSitesEnd(); it++) {
     addExceptSourceForSite(site->getName(), (*it)->getName());
   }
@@ -77,7 +76,7 @@ void SiteManager::addSite(Site * site) {
   sortSites();
 }
 
-void SiteManager::addSiteLoad(Site * site) {
+void SiteManager::addSiteLoad(const Pointer<Site> & site) {
   sites.push_back(site);
 }
 
@@ -85,11 +84,11 @@ void SiteManager::sortSites() {
   std::sort(sites.begin(), sites.end(), siteNameComparator);
 }
 
-std::vector<Site *>::const_iterator SiteManager::begin() const {
+std::vector<Pointer<Site> >::const_iterator SiteManager::begin() const {
   return sites.begin();
 }
 
-std::vector<Site *>::const_iterator SiteManager::end() const {
+std::vector<Pointer<Site> >::const_iterator SiteManager::end() const {
   return sites.end();
 }
 
@@ -97,7 +96,7 @@ std::string SiteManager::getDefaultUserName() const {
   return defaultusername;
 }
 
-void SiteManager::setDefaultUserName(std::string username) {
+void SiteManager::setDefaultUserName(const std::string & username) {
   defaultusername = username;
 }
 
@@ -105,7 +104,7 @@ std::string SiteManager::getDefaultPassword() const {
   return defaultpassword;
 }
 
-void SiteManager::setDefaultPassword(std::string password) {
+void SiteManager::setDefaultPassword(const std::string & password) {
   defaultpassword = password;
 }
 
@@ -157,8 +156,8 @@ void SiteManager::setDefaultSSLTransferPolicy(int policy) {
   defaultssltransfer = policy;
 }
 
-void SiteManager::proxyRemoved(std::string removedproxy) {
-  std::vector<Site *>::iterator it;
+void SiteManager::proxyRemoved(const std::string & removedproxy) {
+  std::vector<Pointer<Site> >::iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {
     if ((*it)->getProxyType() == SITE_PROXY_USE && (*it)->getProxy() == removedproxy) {
       (*it)->setProxyType(SITE_PROXY_GLOBAL);
@@ -167,20 +166,20 @@ void SiteManager::proxyRemoved(std::string removedproxy) {
   }
 }
 
-void SiteManager::removeSitePairsForSite(Site * site) {
-  std::vector<Site *>::iterator it;
+void SiteManager::removeSitePairsForSite(const Pointer<Site> & site) {
+  std::vector<Pointer<Site> >::iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {
     (*it)->removeExceptSite(site);
   }
 }
 
 void SiteManager::resetSitePairsForSite(const std::string & site) {
-  Site * sitep = getSite(site);
-  if (sitep == NULL) {
+  Pointer<Site> sitep = getSite(site);
+  if (!sitep) {
     return;
   }
   sitep->clearExceptSites();
-  std::vector<Site *>::iterator it;
+  std::vector<Pointer<Site> >::iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {
     if (*it == sitep) {
       continue;
@@ -201,9 +200,9 @@ void SiteManager::resetSitePairsForSite(const std::string & site) {
 }
 
 void SiteManager::addExceptSourceForSite(const std::string & site, const std::string & exceptsite) {
-  Site * sitep = getSite(site);
-  Site * exceptsitep = getSite(exceptsite);
-  if (sitep == NULL || exceptsitep == NULL || sitep == exceptsitep) {
+  Pointer<Site> sitep = getSite(site);
+  Pointer<Site> exceptsitep = getSite(exceptsite);
+  if (!sitep || !exceptsitep || sitep == exceptsitep) {
     return;
   }
   if (sitep->getTransferSourcePolicy() == SITE_TRANSFER_POLICY_ALLOW) {
@@ -217,9 +216,9 @@ void SiteManager::addExceptSourceForSite(const std::string & site, const std::st
 }
 
 void SiteManager::addExceptTargetForSite(const std::string & site, const std::string & exceptsite) {
-  Site * sitep = getSite(site);
-  Site * exceptsitep = getSite(exceptsite);
-  if (sitep == NULL || exceptsitep == NULL || sitep == exceptsitep) {
+  Pointer<Site> sitep = getSite(site);
+  Pointer<Site> exceptsitep = getSite(exceptsite);
+  if (!sitep || !exceptsitep || sitep == exceptsitep) {
     return;
   }
   if (sitep->getTransferTargetPolicy() == SITE_TRANSFER_POLICY_ALLOW) {

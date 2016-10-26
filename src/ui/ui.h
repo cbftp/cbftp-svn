@@ -180,7 +180,7 @@ public:
   void goViewFile(const std::string &, const std::string &);
   void goAddSection(std::string, std::string);
   void goNewRace(std::string, std::string, std::string);
-  void goSelectSites(std::string, std::list<Site *>, std::list<Site *>);
+  void goSelectSites(std::string, std::list<Pointer<Site> >, std::list<Pointer<Site> >);
   void goSkiplist();
   void goChangeKey();
   void goProxy();

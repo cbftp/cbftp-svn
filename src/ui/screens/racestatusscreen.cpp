@@ -221,9 +221,9 @@ void RaceStatusScreen::update() {
   int x = 1;
   int y = 8;
   mso.clear();
-  for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator it = race->begin(); it != race->end(); it++) {
+  for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
     SiteRace * sr = it->first;
-    SiteLogic * sl = it->second;
+    const Pointer<SiteLogic> & sl = it->second;
     std::string user = sl->getSite()->getUser();
     bool trimcompare = user.length() > 8;
     std::string trimuser = user;
@@ -305,24 +305,24 @@ void RaceStatusScreen::command(const std::string & command, const std::string & 
   }
   else if (command == "returnselectsites") {
     std::string preselectstr = arg;
-    std::list<Site *> selectedsites;
+    std::list<Pointer<Site> > selectedsites;
     while (true) {
       size_t commapos = preselectstr.find(",");
       if (commapos != std::string::npos) {
         std::string sitename = preselectstr.substr(0, commapos);
-        Site * site = global->getSiteManager()->getSite(sitename);
+        Pointer<Site> site = global->getSiteManager()->getSite(sitename);
         selectedsites.push_back(site);
         preselectstr = preselectstr.substr(commapos + 1);
       }
       else {
         if (preselectstr.length() > 0) {
-          Site * site = global->getSiteManager()->getSite(preselectstr);
+          Pointer<Site> site = global->getSiteManager()->getSite(preselectstr);
           selectedsites.push_back(site);
         }
         break;
       }
     }
-    for (std::list<Site *>::iterator it = selectedsites.begin(); it != selectedsites.end(); it++) {
+    for (std::list<Pointer<Site> >::iterator it = selectedsites.begin(); it != selectedsites.end(); it++) {
       global->getEngine()->addSiteToRace(race, (*it)->getName());
     }
   }
@@ -378,11 +378,11 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       return true;
     case 'A':
     {
-      std::list<Site *> excludedsites;
-      for (std::list<std::pair<SiteRace *, SiteLogic *> >::const_iterator it = race->begin(); it != race->end(); it++) {
+      std::list<Pointer<Site> > excludedsites;
+      for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
         excludedsites.push_back(it->second->getSite());
       }
-      std::vector<Site *>::const_iterator it;
+      std::vector<Pointer<Site> >::const_iterator it;
       for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
         if (!(*it)->hasSection(race->getSection()) ||
             (!(*it)->getAllowDownload() && !(*it)->getAllowUpload()) ||
@@ -391,7 +391,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
           excludedsites.push_back(*it);
         }
       }
-      ui->goSelectSites("Add these sites to the race: " + race->getSection() + "/" + race->getName(), std::list<Site *>(), excludedsites);
+      ui->goSelectSites("Add these sites to the race: " + race->getSection() + "/" + race->getName(), std::list<Pointer<Site> >(), excludedsites);
       return true;
     }
     case 'r':
