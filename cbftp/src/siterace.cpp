@@ -254,7 +254,6 @@ void SiteRace::reset() {
   observestarts.clear();
   sizeestimated.clear();
   completesubdirs.clear();
-  visitedpaths.clear();
   maxfilesize = 0;
   totalfilesize = 0;
   numuploadedfiles = 0;
@@ -336,12 +335,4 @@ bool SiteRace::hasBeenUpdatedSinceLastCheck() {
     it->second->resetListChanged();
   }
   return changed;
-}
-
-void SiteRace::addVisitedPath(const std::string & path) {
-  visitedpaths.insert(path);
-}
-
-bool SiteRace::pathVisited(const std::string & path) const {
-  return visitedpaths.find(path) != visitedpaths.end();
 }
