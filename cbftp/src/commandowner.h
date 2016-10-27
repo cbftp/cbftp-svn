@@ -6,6 +6,7 @@
 #define COMMANDOWNER_TRANSFERJOB 544
 
 class FileList;
+class SiteLogic;
 
 class CommandOwner : public EventReceiver {
 public:
@@ -13,4 +14,5 @@ public:
   }
   virtual int classType() const = 0;
   virtual void fileListUpdated(FileList *) = 0;
+  virtual FileList * getFileListForFullPath(SiteLogic *, const std::string &) const = 0;
 };

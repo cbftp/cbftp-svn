@@ -369,6 +369,11 @@ bool Engine::transferJobActionRequest(Pointer<TransferJob> & tj) {
     tj->setInitialized();
   }
   if (it->second.size() == 0) {
+    const Pointer<SiteLogic> & dst = tj->getDst();
+    if (!!dst && tj->wantsList(dst.get())) {
+      dst->activateOne();
+      return false;
+    }
     refreshPendingTransferList(tj);
     if (it->second.size() == 0) {
       tj->refreshOrAlmostDone();
@@ -589,12 +594,11 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> & tj) {
       std::map<std::string, Pointer<LocalFileList> >::const_iterator lit;
       for (lit = tj->localFileListsBegin(); lit != tj->localFileListsEnd(); lit++) {
         FileList * dstlist = tj->findDstList(lit->first);
+        if (dstlist == NULL || dstlist->getState() == FILELIST_UNKNOWN || dstlist->getState() == FILELIST_EXISTS) {
+          continue;
+        }
         for (std::map<std::string, LocalFile>::const_iterator lfit = lit->second->begin(); lfit != lit->second->end(); lfit++) {
           if (!lfit->second.isDirectory() && lfit->second.getSize() > 0) {
-            if (dstlist == NULL) {
-              tj->wantDstDirectory(lit->first);
-              break;
-            }
             std::string filename = lfit->first;
             std::string subpath = lit->first.length() > 0 ? lit->first + "/" : "";
             if (dstlist->getFile(filename) == NULL) {
@@ -633,13 +637,11 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> & tj) {
       for (it2 = tj->srcFileListsBegin(); it2 != tj->srcFileListsEnd(); it2++) {
         FileList * srclist = it2->second;
         FileList * dstlist = tj->findDstList(it2->first);
+        if (dstlist == NULL || dstlist->getState() == FILELIST_UNKNOWN || dstlist->getState() == FILELIST_EXISTS) {
+          continue;
+        }
         for (std::map<std::string, File *>::iterator srcit = srclist->begin(); srcit != srclist->end(); srcit++) {
           if (!srcit->second->isDirectory() && srcit->second->getSize() > 0) {
-
-            if (dstlist == NULL) {
-              tj->wantDstDirectory(it2->first);
-              break;
-            }
             std::string filename = srcit->first;
             std::string subpath = it2->first.length() > 0 ? it2->first + "/" : "";
             if (dstlist->getFile(filename) == NULL) {

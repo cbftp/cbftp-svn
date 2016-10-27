@@ -116,14 +116,13 @@ FileList * SiteRace::getFileListForPath(const std::string & subpath) const {
   return NULL;
 }
 
-FileList * SiteRace::getFileListForFullPath(const std::string & path) const {
+FileList * SiteRace::getFileListForFullPath(SiteLogic *, const std::string & path) const {
   std::map<std::string, FileList *>::const_iterator it;
   for (it = filelists.begin(); it != filelists.end(); it++) {
     if (it->second->getPath() == path) {
       return it->second;
     }
   }
-  //std::cout << "None found LOL" << std::endl;
   return NULL;
 }
 
