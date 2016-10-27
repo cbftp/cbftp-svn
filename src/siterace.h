@@ -10,6 +10,7 @@
 
 class Race;
 class FileList;
+class SiteLogic;
 
 class SiteRace : public CommandOwner {
   private:
@@ -44,7 +45,7 @@ class SiteRace : public CommandOwner {
     SiteRace(Pointer<Race>, const std::string &, const std::string &, const std::string &, const std::string &);
     ~SiteRace();
     FileList * getFileListForPath(const std::string &) const;
-    FileList * getFileListForFullPath(const std::string &) const;
+    FileList * getFileListForFullPath(SiteLogic * co, const std::string &) const;
     std::string getSubPathForFileList(FileList *) const;
     std::map<std::string, FileList *>::const_iterator fileListsBegin() const;
     std::map<std::string, FileList *>::const_iterator fileListsEnd() const;

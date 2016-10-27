@@ -195,16 +195,17 @@ void SiteLogic::listRefreshed(int id) {
 
 bool SiteLogic::setPathExists(int id, const std::string & path, bool exists) {
   CommandOwner * currentco = conns[id]->currentCommandOwner();
-  if (currentco != NULL && currentco->classType() == COMMANDOWNER_SITERACE) {
-    SiteRace * sr = static_cast<SiteRace *>(currentco);
+  if (currentco != NULL) {
     FileList * fl;
-    if ((fl = sr->getFileListForFullPath(path)) != NULL) {
+    if ((fl = currentco->getFileListForFullPath(this, path)) != NULL) {
       if (exists && (fl->getState() == FILELIST_UNKNOWN || fl->getState() == FILELIST_NONEXISTENT)) {
         fl->setExists();
+        currentco->fileListUpdated(fl);
         return true;
       }
       else if (!exists && fl->getState() == FILELIST_UNKNOWN) {
         fl->setNonExistent();
+        currentco->fileListUpdated(fl);
         return true;
       }
     }
@@ -467,9 +468,9 @@ void SiteLogic::commandFail(int id, int failuretype) {
             std::string newattempt = targetcwdsect + "/" + sub;
             CommandOwner * currentco = conns[id]->currentCommandOwner();
             if (currentco != NULL && currentco->classType() == COMMANDOWNER_SITERACE) {
-              FileList * fl = static_cast<SiteRace *>(currentco)->getFileListForFullPath(newattempt);
-              FileListState state = fl->getState();
-              if (state == FILELIST_EXISTS || state == FILELIST_LISTED) {
+              FileList * fl = currentco->getFileListForFullPath(this, newattempt);
+              if (fl == NULL || fl->getState() == FILELIST_EXISTS || fl->getState() == FILELIST_LISTED) {
+                conns[id]->finishMKDCWDTarget();
                 handleFail(id);
                 return;
               }
@@ -478,6 +479,7 @@ void SiteLogic::commandFail(int id, int failuretype) {
             return;
           }
           else {
+            conns[id]->finishMKDCWDTarget();
             handleFail(id);
             return;
           }
@@ -772,8 +774,8 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
   for (std::list<Pointer<TransferJob> >::const_iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
     Pointer<TransferJob> tj = *it;
     if (!tj->isDone()) {
-      if (tj->wantsList(global->getSiteLogicManager()->getSiteLogic(this))) {
-        FileList * fl = tj->getListTarget(global->getSiteLogicManager()->getSiteLogic(this));
+      if (tj->wantsList(this)) {
+        FileList * fl = tj->getListTarget(this);
         std::string path = fl->getPath();
         connstatetracker[id].use();
         if (path != conns[id]->getCurrentPath()) {
@@ -782,12 +784,6 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
           return;
         }
         getFileListConn(id, tj.get(), fl);
-        return;
-      }
-      if (tj->wantsMakeDir(global->getSiteLogicManager()->getSiteLogic(this))) {
-        connstatetracker[id].use();
-        conns[id]->setCurrentCommandOwner(tj.get());
-        conns[id]->doMKD(tj->getWantedMakeDir());
         return;
       }
       if (!tj->isInitialized()) {
@@ -1019,7 +1015,7 @@ void SiteLogic::refreshChangePath(int id, SiteRace * race, bool refresh) {
     appendsubpath = "/" + subpath;
   }
   std::string targetpath = race->getPath() + appendsubpath;
-  FileList * fl = race->getFileListForFullPath(targetpath);
+  FileList * fl = race->getFileListForFullPath(this, targetpath);
   FileListState state = fl->getState();
   if (targetpath != currentpath) {
     if (site->getAggressiveMkdir()) {
@@ -1033,7 +1029,7 @@ void SiteLogic::refreshChangePath(int id, SiteRace * race, bool refresh) {
   }
   else {
     if (refresh) {
-      getFileListConn(id, race, race->getFileListForFullPath(currentpath));
+      getFileListConn(id, race, race->getFileListForFullPath(this, currentpath));
     }
   }
 }

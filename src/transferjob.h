@@ -47,14 +47,12 @@ public:
   std::map<std::string, unsigned long long int>::const_iterator pendingTransfersBegin() const;
   std::map<std::string, unsigned long long int>::const_iterator pendingTransfersEnd() const;
   bool isDone() const;
-  bool wantsList(const Pointer<SiteLogic> &);
-  bool wantsMakeDir(const Pointer<SiteLogic> &) const;
-  void wantDstDirectory(std::string);
+  bool wantsList(SiteLogic *);
   Pointer<LocalFileList> wantedLocalDstList(const std::string &);
-  FileList * getListTarget(const Pointer<SiteLogic> &) const;
-  std::string getWantedMakeDir();
+  FileList * getListTarget(SiteLogic *) const;
   void fileListUpdated(FileList *);
   FileList * findDstList(const std::string &) const;
+  FileList * getFileListForFullPath(SiteLogic *, const std::string &) const;
   Pointer<LocalFileList> findLocalFileList(const std::string &) const;
   const Pointer<SiteLogic> & getSrc() const;
   const Pointer<SiteLogic> & getDst() const;
@@ -91,7 +89,6 @@ private:
   void init();
   void countTotalFiles();
   void setDone();
-  void checkRemoveWantedDstMakeDir(std::string);
   void updateLocalFileLists(const std::string &);
   int type;
   Pointer<SiteLogic> src;
@@ -127,6 +124,5 @@ private:
   int filesprogress;
   int filestotal;
   bool initialized;
-  std::set<std::string> wanteddstmakedirs;
   unsigned int id;
 };
