@@ -207,7 +207,6 @@ bool SiteLogic::setPathExists(int id, const std::string & path, bool exists) {
         fl->setNonExistent();
         return true;
       }
-      sr->addVisitedPath(conns[id]->getCurrentPath());
     }
   }
   return false;
@@ -468,11 +467,12 @@ void SiteLogic::commandFail(int id, int failuretype) {
             std::string newattempt = targetcwdsect + "/" + sub;
             CommandOwner * currentco = conns[id]->currentCommandOwner();
             if (currentco != NULL && currentco->classType() == COMMANDOWNER_SITERACE) {
-              if (((SiteRace *)currentco)->pathVisited(newattempt)) {
+              FileList * fl = static_cast<SiteRace *>(currentco)->getFileListForFullPath(newattempt);
+              FileListState state = fl->getState();
+              if (state == FILELIST_EXISTS || state == FILELIST_LISTED) {
                 handleFail(id);
                 return;
               }
-              ((SiteRace *)currentco)->addVisitedPath(newattempt);
             }
             conns[id]->doMKD(newattempt);
             return;
@@ -730,13 +730,13 @@ bool SiteLogic::handlePreTransfer(int id) {
   FileList * fl = connstatetracker[id].getTransferFileList();
   std::string transferpath = fl->getPath();
   if (conns[id]->getCurrentPath() != transferpath) {
-    if (connstatetracker[id].getTransferType() == CST_UPLOAD) {
+    if (connstatetracker[id].getTransferType() == CST_UPLOAD &&
+        fl->getState() == FILELIST_NONEXISTENT)
+    {
       std::pair<std::string, std::string> pathparts = site->splitPathInSectionAndSubpath(transferpath);
       conns[id]->setMKDCWDTarget(pathparts.first, pathparts.second);
-      if (fl->getState() == FILELIST_NONEXISTENT) {
-        conns[id]->doMKD(transferpath);
-        return true;
-      }
+      conns[id]->doMKD(transferpath);
+      return true;
     }
     conns[id]->doCWD(transferpath);
     return true;
@@ -1019,9 +1019,15 @@ void SiteLogic::refreshChangePath(int id, SiteRace * race, bool refresh) {
     appendsubpath = "/" + subpath;
   }
   std::string targetpath = race->getPath() + appendsubpath;
+  FileList * fl = race->getFileListForFullPath(targetpath);
+  FileListState state = fl->getState();
   if (targetpath != currentpath) {
-    if (!race->pathVisited(targetpath) && site->getAggressiveMkdir()) {
+    if (site->getAggressiveMkdir()) {
       conns[id]->setMKDCWDTarget(race->getSection(), race->getRelease() + appendsubpath);
+      if (state == FILELIST_NONEXISTENT) {
+        conns[id]->doMKD(targetpath);
+        return;
+      }
     }
     conns[id]->doCWD(targetpath);
   }

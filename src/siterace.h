@@ -27,7 +27,6 @@ class SiteRace : public CommandOwner {
     std::list<FileList *> sizeestimated;
     std::map<FileList *, unsigned long long int> observestarts;
     std::map<FileList *, unsigned long long int> sfvobservestarts;
-    std::set<std::string> visitedpaths;
     unsigned long long int maxfilesize;
     unsigned long long int totalfilesize;
     unsigned int numuploadedfiles;
@@ -70,6 +69,4 @@ class SiteRace : public CommandOwner {
     int getObservedTime(FileList *);
     int getSFVObservedTime(FileList *);
     bool hasBeenUpdatedSinceLastCheck();
-    void addVisitedPath(const std::string &);
-    bool pathVisited(const std::string &) const;
 };
