@@ -51,7 +51,7 @@ public:
   bool wantsList(SiteLogic *);
   Pointer<LocalFileList> wantedLocalDstList(const std::string &);
   FileList * getListTarget(SiteLogic *) const;
-  void fileListUpdated(FileList *);
+  void fileListUpdated(SiteLogic *, FileList *);
   FileList * findDstList(const std::string &) const;
   FileList * getFileListForFullPath(SiteLogic *, const Path &) const;
   Pointer<LocalFileList> findLocalFileList(const std::string &) const;
@@ -85,7 +85,7 @@ public:
   void abort();
   void clearExisting();
 private:
-  void addSubDirectoryFileLists(std::map<std::string, FileList *> &, FileList *);
+  void addSubDirectoryFileLists(std::map<std::string, FileList *> &, FileList *, const Path &);
   void updateStatus();
   void init();
   void countTotalFiles();

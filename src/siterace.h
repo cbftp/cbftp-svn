@@ -55,7 +55,7 @@ class SiteRace : public CommandOwner {
     bool addSubDirectory(const std::string &);
     bool addSubDirectory(const std::string &, bool);
     std::string getSubPath(FileList *) const;
-    void fileListUpdated(FileList *);
+    void fileListUpdated(SiteLogic *, FileList *);
     bool sizeEstimated(FileList *) const;
     unsigned int getNumUploadedFiles() const;
     unsigned long long int getMaxFileSize() const;

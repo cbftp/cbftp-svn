@@ -145,7 +145,7 @@ std::map<std::string, FileList *>::const_iterator SiteRace::fileListsEnd() const
   return filelists.end();
 }
 
-void SiteRace::fileListUpdated(FileList *) {
+void SiteRace::fileListUpdated(SiteLogic *, FileList *) {
   updateNumFilesUploaded();
   addNewDirectories();
 }
