@@ -23,12 +23,14 @@
 
 namespace {
 
-static std::vector<Lock> ssllocks;
+
 static SSL_CTX * ssl_ctx;
 static bool initialized = false;
 static X509 * x509 = NULL;
 static EVP_PKEY * pkey = NULL;
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000
+static std::vector<Lock> ssllocks;
 static void sslLockingCallback(int mode, int n, const char *, int) {
   if (mode & CRYPTO_LOCK) {
     ssllocks[n].lock();
@@ -41,17 +43,20 @@ static void sslLockingCallback(int mode, int n, const char *, int) {
 static unsigned long sslThreadIdCallback() {
   return (unsigned long) pthread_self();
 }
+#endif
 
 }
 
 void SSLManager::init() {
   coreutil::assert(!initialized);
   initialized = true;
+#if OPENSSL_VERSION_NUMBER < 0x10100000
   ssllocks.resize(CRYPTO_num_locks());
   CRYPTO_set_locking_callback(sslLockingCallback);
   CRYPTO_set_id_callback(sslThreadIdCallback);
   SSL_library_init();
   SSL_load_error_strings();
+#endif
   ssl_ctx = SSL_CTX_new(SSLv23_method());
   SSL_CTX_set_cipher_list(ssl_ctx, "DEFAULT:!SEED");
 }
