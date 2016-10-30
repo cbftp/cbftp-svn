@@ -56,8 +56,10 @@ void SSLManager::init() {
   CRYPTO_set_id_callback(sslThreadIdCallback);
   SSL_library_init();
   SSL_load_error_strings();
-#endif
   ssl_ctx = SSL_CTX_new(SSLv23_method());
+#else
+  ssl_ctx = SSL_CTX_new(TLS_method());
+#endif
   SSL_CTX_set_cipher_list(ssl_ctx, "DEFAULT:!SEED");
 }
 
