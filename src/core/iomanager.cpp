@@ -13,6 +13,7 @@
 #include <vector>
 #include <cerrno>
 #include <csignal>
+#include <cstring>
 
 #include "workmanager.h"
 #include "sslmanager.h"
