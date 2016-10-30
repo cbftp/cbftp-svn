@@ -6,12 +6,14 @@
 
 #include "core/eventreceiver.h"
 
+class Path;
+
 class ExternalFileViewing : public EventReceiver {
 public:
   ExternalFileViewing();
-  bool isViewable(std::string) const;
-  int view(std::string);
-  int viewThenDelete(std::string);
+  bool isViewable(const Path &) const;
+  int view(const Path &);
+  int viewThenDelete(const Path &);
   void killProcess(int);
   void killAll();
   void signal(int, int);
@@ -21,17 +23,17 @@ public:
   std::string getAudioViewer() const;
   std::string getImageViewer() const;
   std::string getPDFViewer() const;
-  void setVideoViewer(std::string);
-  void setAudioViewer(std::string);
-  void setImageViewer(std::string);
-  void setPDFViewer(std::string);
-  std::string getViewApplication(std::string) const;
-  static std::string getExtension(std::string);
+  void setVideoViewer(const std::string &);
+  void setAudioViewer(const std::string &);
+  void setImageViewer(const std::string &);
+  void setPDFViewer(const std::string &);
+  std::string getViewApplication(const Path &) const;
+  static std::string getExtension(const std::string &);
 private:
-  int view(std::string, bool);
+  int view(const Path &, bool);
   void checkDeleteFile(int);
   std::list<int> subprocesses;
-  std::map<int, std::string> files;
+  std::map<int, Path> files;
   std::string videoviewer;
   std::string audioviewer;
   std::string imageviewer;

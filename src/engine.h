@@ -17,6 +17,7 @@ class SiteLogic;
 class PendingTransfer;
 class Site;
 class PreparedRace;
+class Path;
 
 class Engine : public EventReceiver {
 public:
@@ -30,10 +31,10 @@ public:
   void startPreparedRace(unsigned int);
   void deletePreparedRace(unsigned int);
   void startLatestPreparedRace();
-  void newTransferJobDownload(const std::string &, const std::string &, FileList *, const std::string &);
-  void newTransferJobDownload(const std::string &, const std::string &, FileList *, const std::string &, const std::string &);
-  void newTransferJobUpload(const std::string &, const std::string &, const std::string &, FileList *);
-  void newTransferJobUpload(const std::string &, const std::string &, const std::string &, const std::string &, FileList *);
+  void newTransferJobDownload(const std::string &, const std::string &, FileList *, const Path &);
+  void newTransferJobDownload(const std::string &, const std::string &, FileList *, const Path &, const std::string &);
+  void newTransferJobUpload(const Path &, const std::string &, const std::string &, FileList *);
+  void newTransferJobUpload(const Path &, const std::string &, const std::string &, const std::string &, FileList *);
   void newTransferJobFXP(const std::string &, FileList *, const std::string &, FileList *, const std::string &);
   void newTransferJobFXP(const std::string &, const std::string &, FileList *, const std::string &, const std::string &, FileList *);
   void removeSiteFromRace(Pointer<Race> &, const std::string &);

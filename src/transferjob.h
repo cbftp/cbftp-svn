@@ -7,6 +7,7 @@
 
 #include "core/pointer.h"
 #include "commandowner.h"
+#include "path.h"
 
 #define TRANSFERJOB_DOWNLOAD 2161
 #define TRANSFERJOB_DOWNLOAD_FILE 2162
@@ -25,14 +26,14 @@ class LocalFileList;
 class TransferJob : public CommandOwner {
 public:
   int classType() const;
-  TransferJob(unsigned int, const Pointer<SiteLogic> &, std::string, FileList *, std::string, std::string);
-  TransferJob(unsigned int, std::string, std::string, const Pointer<SiteLogic> &, std::string, FileList *);
+  TransferJob(unsigned int, const Pointer<SiteLogic> &, std::string, FileList *, const Path &, std::string);
+  TransferJob(unsigned int, const Path &, std::string, const Pointer<SiteLogic> &, std::string, FileList *);
   TransferJob(unsigned int, const Pointer<SiteLogic> &, std::string, FileList *, const Pointer<SiteLogic> &, std::string, FileList *);
   ~TransferJob();
   std::string getSrcFileName() const;
   std::string getDstFileName() const;
   int getType() const;
-  std::string getLocalPath() const;
+  const Path & getLocalPath() const;
   FileList * getSrcFileList() const;
   FileList * getDstFileList() const;
   Pointer<LocalFileList> getLocalFileList() const;
@@ -52,7 +53,7 @@ public:
   FileList * getListTarget(SiteLogic *) const;
   void fileListUpdated(FileList *);
   FileList * findDstList(const std::string &) const;
-  FileList * getFileListForFullPath(SiteLogic *, const std::string &) const;
+  FileList * getFileListForFullPath(SiteLogic *, const Path &) const;
   Pointer<LocalFileList> findLocalFileList(const std::string &) const;
   const Pointer<SiteLogic> & getSrc() const;
   const Pointer<SiteLogic> & getDst() const;
@@ -62,9 +63,9 @@ public:
   bool listsRefreshed() const;
   void refreshOrAlmostDone();
   void clearRefreshLists();
-  void addPendingTransfer(const std::string &, unsigned long long int);
+  void addPendingTransfer(const Path &, unsigned long long int);
   void addTransfer(const Pointer<TransferStatus> &);
-  void targetExists(const std::string &);
+  void targetExists(const Path &);
   void tick(int);
   int getProgress() const;
   int timeSpent() const;
@@ -76,7 +77,7 @@ public:
   std::string typeString() const;
   int filesProgress() const;
   int filesTotal() const;
-  std::string findSubPath(const Pointer<TransferStatus> &) const;
+  Path findSubPath(const Pointer<TransferStatus> &) const;
   bool isInitialized() const;
   void setInitialized();
   bool isAborted() const;
@@ -89,13 +90,13 @@ private:
   void init();
   void countTotalFiles();
   void setDone();
-  void updateLocalFileLists(const std::string &);
+  void updateLocalFileLists(const Path &);
   int type;
   Pointer<SiteLogic> src;
   Pointer<SiteLogic> dst;
   std::string srcfile;
   std::string dstfile;
-  std::string localpath;
+  Path localpath;
   FileList * srclist;
   FileList * dstlist;
   Pointer<LocalFileList> locallist;

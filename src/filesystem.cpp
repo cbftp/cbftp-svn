@@ -6,15 +6,17 @@
 #include <sys/stat.h>
 #include <list>
 
+#include "path.h"
+
 #define READBLOCKSIZE 256
 
 namespace FileSystem {
 
-bool directoryExistsAccessible(const std::string & path, bool write) {
+bool directoryExistsAccessible(const Path & path, bool write) {
   int how = write ? R_OK | W_OK : R_OK;
-  if (access(path.c_str(), how) == 0) {
+  if (access(path.toString().c_str(), how) == 0) {
     struct stat status;
-    stat(path.c_str(), &status);
+    stat(path.toString().c_str(), &status);
     if (status.st_mode & S_IFDIR) {
       return true;
     }
@@ -22,54 +24,40 @@ bool directoryExistsAccessible(const std::string & path, bool write) {
   return false;
 }
 
-bool directoryExistsWritable(const std::string & path) {
+bool directoryExistsWritable(const Path & path) {
   return directoryExistsAccessible(path, true);
 }
 
-bool directoryExistsReadable(const std::string & path) {
+bool directoryExistsReadable(const Path & path) {
   return directoryExistsAccessible(path, false);
 }
 
-bool fileExists(const std::string & path) {
-  return !access(path.c_str(), F_OK);
+bool fileExists(const Path & path) {
+  return !access(path.toString().c_str(), F_OK);
 }
 
-bool fileExistsReadable(const std::string & path) {
-  return !access(path.c_str(), R_OK);
+bool fileExistsReadable(const Path & path) {
+  return !access(path.toString().c_str(), R_OK);
 }
 
-bool fileExistsWritable(const std::string & path) {
-  return !access(path.c_str(), R_OK | W_OK);
+bool fileExistsWritable(const Path & path) {
+  return !access(path.toString().c_str(), R_OK | W_OK);
 }
 
-bool createDirectory(const std::string & path) {
+bool createDirectory(const Path & path) {
   return createDirectory(path, false);
 }
 
-bool createDirectory(const std::string & path, bool privatedir) {
+bool createDirectory(const Path & path, bool privatedir) {
   mode_t mode = privatedir ? 0700 : 0755;
-  return mkdir(path.c_str(), mode) >= 0;
+  return mkdir(path.toString().c_str(), mode) >= 0;
 }
 
-bool createDirectoryRecursive(std::string path) {
-  std::list<std::string> pathdirs;
-  if (path.length() == 0) {
-    return false;
-  }
-  if (path[0] == '/') {
-    path = path.substr(1);
-  }
-  size_t slashpos;
-  while ((slashpos = path.find("/")) != std::string::npos) {
-    pathdirs.push_back(path.substr(0, slashpos));
-    path = path.substr(slashpos + 1);
-  }
-  if (path.length()) {
-    pathdirs.push_back(path);
-  }
-  std::string partialpath;
+bool createDirectoryRecursive(const Path & path) {
+  std::list<std::string> pathdirs = path.split();
+  Path partialpath;
   while (pathdirs.size() > 0) {
-    partialpath += "/" + pathdirs.front();
+    partialpath = partialpath / pathdirs.front();
     pathdirs.pop_front();
     if (!directoryExistsReadable(partialpath)) {
       if (!createDirectory(partialpath)) {
@@ -80,9 +68,9 @@ bool createDirectoryRecursive(std::string path) {
   return true;
 }
 
-void readFile(const std::string & path, BinaryData & rawdata) {
+void readFile(const Path & path, BinaryData & rawdata) {
   std::fstream infile;
-  infile.open(path.c_str(), std::ios::in | std::ios::binary);
+  infile.open(path.toString().c_str(), std::ios::in | std::ios::binary);
   int gcount = 0;
   std::vector<unsigned char *> rawdatablocks;
   while (!infile.eof() && infile.good()) {
@@ -104,9 +92,9 @@ void readFile(const std::string & path, BinaryData & rawdata) {
   rawdata.resize(rawdatalen);
 }
 
-void writeFile(const std::string & path, const BinaryData & data) {
+void writeFile(const Path & path, const BinaryData & data) {
   std::ofstream outfile;
-  outfile.open(path.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+  outfile.open(path.toString().c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
   outfile.write((const char *)&data[0], data.size());
   outfile.close();
 }

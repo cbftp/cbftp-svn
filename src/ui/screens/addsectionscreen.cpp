@@ -4,6 +4,7 @@
 #include "../../site.h"
 #include "../../sitemanager.h"
 #include "../../settingsloadersaver.h"
+#include "../../path.h"
 
 #include "../ui.h"
 #include "../menuselectoptiontextfield.h"
@@ -17,7 +18,7 @@ AddSectionScreen::~AddSectionScreen() {
 
 }
 
-void AddSectionScreen::initialize(unsigned int row, unsigned int col, std::string site, std::string path) {
+void AddSectionScreen::initialize(unsigned int row, unsigned int col, std::string site, const Path & path) {
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel";
   currentlegendtext = defaultlegendtext;
   active = false;
@@ -26,7 +27,7 @@ void AddSectionScreen::initialize(unsigned int row, unsigned int col, std::strin
   modsite = global->getSiteManager()->getSite(site);
   mso.clear();
   mso.addStringField(y++, x, "name", "Name:", "", false);
-  mso.addStringField(y++, x, "path", "Path:", path, false, 64);
+  mso.addStringField(y++, x, "path", "Path:", path.toString(), false, 64);
   init(row, col);
 }
 

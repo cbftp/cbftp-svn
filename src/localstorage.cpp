@@ -39,7 +39,7 @@ LocalTransfer * LocalStorage::passiveModeDownload(TransferMonitor * tm, const st
   return passiveModeDownload(tm, temppath, file, host, port, ssl, ftpconn);
 }
 
-LocalTransfer * LocalStorage::passiveModeDownload(TransferMonitor * tm, const std::string & path, const std::string & file, const std::string & host, int port, bool ssl, FTPConn * ftpconn) {
+LocalTransfer * LocalStorage::passiveModeDownload(TransferMonitor * tm, const Path & path, const std::string & file, const std::string & host, int port, bool ssl, FTPConn * ftpconn) {
   LocalDownload * ld = getAvailableLocalDownload();
   ld->engage(tm, path, file, host, port, ssl, ftpconn);
   return ld;
@@ -52,13 +52,13 @@ LocalTransfer * LocalStorage::passiveModeDownload(TransferMonitor * tm, const st
   return ld;
 }
 
-LocalTransfer * LocalStorage::passiveModeUpload(TransferMonitor * tm, const std::string & path, const std::string & file, const std::string & host, int port, bool ssl, FTPConn * ftpconn) {
+LocalTransfer * LocalStorage::passiveModeUpload(TransferMonitor * tm, const Path & path, const std::string & file, const std::string & host, int port, bool ssl, FTPConn * ftpconn) {
   LocalUpload * lu = getAvailableLocalUpload();
   lu->engage(tm, path, file, host, port, ssl, ftpconn);
   return lu;
 }
 
-LocalTransfer * LocalStorage::activeModeDownload(TransferMonitor * tm, const std::string & path, const std::string & file, bool ssl, FTPConn * ftpconn) {
+LocalTransfer * LocalStorage::activeModeDownload(TransferMonitor * tm, const Path & path, const std::string & file, bool ssl, FTPConn * ftpconn) {
   int startport = getNextActivePort();
   int port = startport;
   bool entered = false;
@@ -91,7 +91,7 @@ LocalTransfer * LocalStorage::activeModeDownload(TransferMonitor * tm, bool ssl,
   return NULL;
 }
 
-LocalTransfer * LocalStorage::activeModeUpload(TransferMonitor * tm, const std::string & path, const std::string & file, bool ssl, FTPConn * ftpconn) {
+LocalTransfer * LocalStorage::activeModeUpload(TransferMonitor * tm, const Path & path, const std::string & file, bool ssl, FTPConn * ftpconn) {
   int startport = getNextActivePort();
   int port = startport;
   bool entered = false;
@@ -139,12 +139,12 @@ LocalUpload * LocalStorage::getAvailableLocalUpload() {
 }
 
 BinaryData LocalStorage::getTempFileContent(const std::string & filename) const {
-  return getFileContent(temppath + "/" + filename);
+  return getFileContent(temppath / filename);
 }
 
-BinaryData LocalStorage::getFileContent(const std::string & filename) const {
+BinaryData LocalStorage::getFileContent(const Path & filename) const {
   std::ifstream filestream;
-  filestream.open(filename.c_str(), std::ios::binary | std::ios::in);
+  filestream.open(filename.toString().c_str(), std::ios::binary | std::ios::in);
   char * data = (char *) malloc(MAXREAD);
   filestream.read(data, MAXREAD);
   BinaryData out(data, data + filestream.gcount());
@@ -166,14 +166,15 @@ void LocalStorage::purgeStoreContent(int storeid) {
   }
 }
 
-void LocalStorage::deleteFile(std::string filename) {
-  if (filename.length() > 0 && filename[0] != '/') {
-    filename = temppath + "/" + filename;
+void LocalStorage::deleteFile(const Path & filename) {
+  Path target = filename;
+  if (filename.isRelative()) {
+    target = temppath / filename;
   }
-  remove(filename.c_str());
+  remove(target.toString().c_str());
 }
 
-std::string LocalStorage::getTempPath() const {
+const Path & LocalStorage::getTempPath() const {
   return temppath;
 }
 
@@ -181,11 +182,11 @@ void LocalStorage::setTempPath(const std::string & path) {
   temppath = path;
 }
 
-std::string LocalStorage::getDownloadPath() const {
+const Path & LocalStorage::getDownloadPath() const {
   return downloadpath;
 }
 
-void LocalStorage::setDownloadPath(const std::string & path) {
+void LocalStorage::setDownloadPath(const Path & path) {
   downloadpath = path;
 }
 
@@ -193,9 +194,9 @@ void LocalStorage::storeContent(int storeid, const BinaryData & data) {
   content[storeid] = data;
 }
 
-Pointer<LocalFileList> LocalStorage::getLocalFileList(const std::string & path) {
+Pointer<LocalFileList> LocalStorage::getLocalFileList(const Path & path) {
   Pointer<LocalFileList> filelist;
-  DIR * dir = opendir(path.c_str());
+  DIR * dir = opendir(path.toString().c_str());
   struct dirent * dent;
   while (dir != NULL && (dent = readdir(dir)) != NULL) {
     if (!filelist) {
@@ -203,7 +204,7 @@ Pointer<LocalFileList> LocalStorage::getLocalFileList(const std::string & path) 
     }
     std::string name = dent->d_name;
     struct stat status;
-    lstat(std::string(path + "/" + name).c_str(), &status);
+    lstat((path / name).toString().c_str(), &status);
     if (name != ".." && name != ".") {
       struct passwd * pwd = getpwuid(status.st_uid);
       std::string owner = pwd != NULL ? pwd->pw_name : util::int2Str(status.st_uid);
@@ -226,9 +227,9 @@ Pointer<LocalFileList> LocalStorage::getLocalFileList(const std::string & path) 
   return filelist;
 }
 
-unsigned long long int LocalStorage::getFileSize(const std::string & file) {
+unsigned long long int LocalStorage::getFileSize(const Path & file) {
   struct stat status;
-  lstat(file.c_str(), &status);
+  lstat(file.toString().c_str(), &status);
   return status.st_size;
 }
 
@@ -236,7 +237,7 @@ bool LocalStorage::getUseActiveModeAddress() const {
   return useactivemodeaddress;
 }
 
-std::string LocalStorage::getActiveModeAddress() const {
+const std::string & LocalStorage::getActiveModeAddress() const {
   return activemodeaddress;
 }
 

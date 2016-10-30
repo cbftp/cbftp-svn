@@ -4,6 +4,8 @@
 #include "menuselectoptiontextbutton.h"
 #include "menuselectoptionelement.h"
 
+#include "../path.h"
+
 MenuSection::MenuSection() {
   pointer = 0;
   lastpointer = 0;
@@ -14,7 +16,7 @@ MenuSection::~MenuSection() {
 
 }
 
-void MenuSection::initialize(int row, int col, std::map<std::string, std::string>::const_iterator sectionsbegin, std::map<std::string, std::string>::const_iterator sectionsend) {
+void MenuSection::initialize(int row, int col, std::map<std::string, Path>::const_iterator sectionsbegin, std::map<std::string, Path>::const_iterator sectionsend) {
   pointer = 0;
   lastpointer = 0;
   needsredraw = false;
@@ -22,7 +24,7 @@ void MenuSection::initialize(int row, int col, std::map<std::string, std::string
   sectioncontainers.clear();
   this->row = row;
   this->col = col;
-  std::map<std::string, std::string>::const_iterator it;
+  std::map<std::string, Path>::const_iterator it;
   addbutton = makePointer<MenuSelectOptionTextButton>("add", 0, 0, "<Add>");
   for(it = sectionsbegin; it != sectionsend; it++) {
     addSection(it->first, it->second);
@@ -151,13 +153,13 @@ unsigned int MenuSection::size() const {
   return sectioncontainers.size();
 }
 
-void MenuSection::addSection(std::string nametext, std::string pathtext) {
+void MenuSection::addSection(std::string nametext, const Path & path) {
   Pointer<MenuSelectOptionElement> name(makePointer<MenuSelectOptionTextField>("name", 0, 0, "Name:", nametext, 11, 32, false));
-  Pointer<MenuSelectOptionElement> path(makePointer<MenuSelectOptionTextField>("path", 0, 0, "Path:", pathtext, 30, 64, false));
+  Pointer<MenuSelectOptionElement> pathe(makePointer<MenuSelectOptionTextField>("path", 0, 0, "Path:", path.toString(), 30, 64, false));
   Pointer<MenuSelectOptionElement> del(makePointer<MenuSelectOptionTextButton>("delete", 0, 0, "<X>"));
   MenuSelectOptionContainer msoc = MenuSelectOptionContainer();
   msoc.addElement(name);
-  msoc.addElement(path);
+  msoc.addElement(pathe);
   msoc.addElement(del);
   sectioncontainers.push_back(msoc);
 }

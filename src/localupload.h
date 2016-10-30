@@ -2,11 +2,13 @@
 
 #include "localtransfer.h"
 
+class Path;
+
 class LocalUpload : public LocalTransfer {
 public:
   LocalUpload();
-  void engage(TransferMonitor *, const std::string &, const std::string &, const std::string &, int, bool, FTPConn *);
-  bool engage(TransferMonitor *, const std::string &, const std::string &, int, bool, FTPConn *);
+  void engage(TransferMonitor *, const Path &, const std::string &, const std::string &, int, bool, FTPConn *);
+  bool engage(TransferMonitor *, const Path &, const std::string &, int, bool, FTPConn *);
   bool active() const;
   void FDConnected(int);
   void FDDisconnected(int);
@@ -17,7 +19,7 @@ public:
   void FDFail(int, std::string);
   unsigned long long int size() const;
 private:
-  void init(TransferMonitor *, FTPConn *, const std::string &, const std::string &, bool, int, bool);
+  void init(TransferMonitor *, FTPConn *, const Path &, const std::string &, bool, int, bool);
   void sendChunk();
   unsigned long long int filepos;
 };

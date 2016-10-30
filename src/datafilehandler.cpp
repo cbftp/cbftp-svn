@@ -6,23 +6,24 @@
 
 #include "filesystem.h"
 #include "datafilehandlermethod.h"
+#include "path.h"
 
 DataFileHandler::DataFileHandler() {
-  std::string datadirpath = std::string(getenv("HOME")) + "/" + DATAPATH;
-  path = datadirpath + "/" + DATAFILE;
+  Path datadirpath = Path(getenv("HOME")) / DATAPATH;
+  path = datadirpath / DATAFILE;
   char * specialdatapath = getenv("CBFTP_DATA_PATH");
   if (specialdatapath != NULL) {
-    path = std::string(specialdatapath);
+    path = specialdatapath;
   }
   else if (FileSystem::directoryExistsReadable(datadirpath)) {
     if (!FileSystem::directoryExistsWritable(datadirpath)) {
-      perror(std::string("Error: no write access to " + datadirpath).c_str());
+      perror(std::string("Error: no write access to " + datadirpath.toString()).c_str());
       exit(1);
     }
   }
   else {
     if (!FileSystem::createDirectory(datadirpath, true)) {
-      perror(std::string("Error: could not create " + datadirpath).c_str());
+      perror(std::string("Error: could not create " + datadirpath.toString()).c_str());
       exit(1);
     }
   }
@@ -32,7 +33,7 @@ DataFileHandler::DataFileHandler() {
     return;
   }
   if (!FileSystem::fileExistsWritable(path)) {
-    perror(std::string("There was an error accessing " + path).c_str());
+    perror(std::string("There was an error accessing " + path.toString()).c_str());
     exit(1);
   }
   fileexists = true;

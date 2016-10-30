@@ -103,7 +103,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   mso.addIntArrow(y++, x, "logins", "Login slots:", modsite.getInternMaxLogins(), 0, 99);
   mso.addIntArrow(y++, x, "maxup", "Upload slots:", modsite.getInternMaxUp(), 0, 99);
   mso.addIntArrow(y++, x, "maxdn", "Download slots:", modsite.getInternMaxDown(), 0, 99);
-  mso.addStringField(y++, x, "basepath", "Base path:", modsite.getBasePath(), false, 32, 512);
+  mso.addStringField(y++, x, "basepath", "Base path:", modsite.getBasePath().toString(), false, 32, 512);
   Pointer<MenuSelectOptionTextArrow> listcommand = mso.addTextArrow(y++, x, "listcommand", "List command:");
   listcommand->addOption("STAT -l", SITE_LIST_STAT);
   listcommand->addOption("LIST", SITE_LIST_LIST);

@@ -181,7 +181,7 @@ void TransfersScreen::addTransferDetails(unsigned int y, MenuSelectOption & mso,
 TransferDetails TransfersScreen::formatTransferDetails(Pointer<TransferStatus> & ts) {
   TransferDetails td;
   td.route = ts->getSource() + " -> " + ts->getTarget();
-  td.path = ts->getSourcePath() + " -> " + ts->getTargetPath();
+  td.path = ts->getSourcePath().toString() + " -> " + ts->getTargetPath().toString();
   td.speed = util::parseSize(ts->getSpeed() * SIZEPOWER) + "/s";
   td.timespent = util::simpleTimeFormat(ts->getTimeSpent());
   td.timeremaining = "-";

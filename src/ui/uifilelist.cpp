@@ -427,7 +427,7 @@ unsigned int UIFileList::currentCursorPosition() const {
   return currentposition;
 }
 
-std::string UIFileList::getPath() const {
+const Path & UIFileList::getPath() const {
   return path;
 }
 

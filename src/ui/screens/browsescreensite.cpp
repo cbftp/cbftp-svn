@@ -114,15 +114,10 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
     separatortext += "-";
   }
 
-  std::string prepend = list.getPath() + "/";
+  Path prepend = list.getPath();
   if (withinraceskiplistreach) {
-    std::string subpathinracepath;
-    std::string subpath = list.getPath().substr(closestracesectionpath.length() + 1);
-    size_t subdirpos = subpath.find("/");
-    if (subdirpos != std::string::npos) {
-      subpathinracepath = subpath.substr(subdirpos + 1) + "/";
-    }
-    prepend = subpathinracepath;
+    Path subpath = list.getPath() - closestracesectionpath;
+    prepend = subpath.cutLevels(-1);
   }
 
   table.reset();
@@ -137,9 +132,10 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
     bool selected = uifile == list.cursoredFile();
     std::string prepchar = " ";
     bool isdir = uifile->isDirectory();
+    Path testpath = prepend / uifile->getName();
     bool allowed = withinraceskiplistreach ?
-        global->getSkipList()->isAllowed(prepend + uifile->getName(), isdir) :
-        global->getSkipList()->isAllowed(prepend + uifile->getName(), isdir, false);
+        global->getSkipList()->isAllowed((prepend / uifile->getName()).toString(), isdir) :
+        global->getSkipList()->isAllowed((prepend / uifile->getName()).toString(), isdir, false);
     if (isdir) {
       if (allowed) {
         prepchar = "#";
@@ -238,7 +234,7 @@ void BrowseScreenSite::update() {
         filelist = newfilelist;
         if (!virgin) {
           if (list.cursoredFile() != NULL) {
-            selectionhistory.push_front(std::pair<std::string, std::string>(list.getPath(), list.cursoredFile()->getName()));
+            selectionhistory.push_front(std::pair<Path, std::string>(list.getPath(), list.cursoredFile()->getName()));
           }
         }
         else {
@@ -271,8 +267,8 @@ void BrowseScreenSite::update() {
         if (position) {
           list.setCursorPosition(position);
         }
-        std::string path = list.getPath();
-        for (std::list<std::pair<std::string, std::string> >::iterator it = selectionhistory.begin(); it != selectionhistory.end(); it++) {
+        const Path & path = list.getPath();
+        for (std::list<std::pair<Path, std::string> >::iterator it = selectionhistory.begin(); it != selectionhistory.end(); it++) {
           if (it->first == path) {
             list.selectFileName(it->second);
             selectionhistory.erase(it);
@@ -280,12 +276,12 @@ void BrowseScreenSite::update() {
           }
         }
         std::list<std::string> sections = site->getSectionsForPartialPath(path);
-        int dirlevels = countDirLevels(path);
+        int dirlevels = path.split().size();
         withinraceskiplistreach = false;
         int closestsectiondirlevel = -1;
         for (std::list<std::string>::iterator it = sections.begin(); it != sections.end(); it++) {
-          std::string sectionpath = site->getSectionPath(*it);
-          int dirleveldifference = dirlevels - countDirLevels(sectionpath);
+          Path sectionpath = site->getSectionPath(*it);
+          int dirleveldifference = dirlevels - sectionpath.split().size();
           if (dirleveldifference > 0) {
             withinraceskiplistreach = true;
             if (dirleveldifference < closestsectiondirlevel || closestsectiondirlevel < 0) {
@@ -355,8 +351,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
   bool update = false;
   bool success = false;
   unsigned int pagerows = (unsigned int) row * 0.6;
-  std::string oldpath;
-  unsigned int position;
+  Path oldpath;
   bool isdir;
   bool islink;
   UIFile * cursoredfile;
@@ -504,20 +499,17 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       islink = cursoredfile->isLink();
       if (isdir || islink) {
         oldpath = list.getPath();
-        if (oldpath.length() > 1) {
-          oldpath += "/";
-        }
         if (islink) {
-          std::string target = cursoredfile->getLinkTarget();
-          if (target.length() > 0 && target[0] == '/') {
+          Path target = cursoredfile->getLinkTarget();
+          if (target.isAbsolute()) {
             requestedpath = target;
           }
           else {
-            requestedpath = oldpath + target;
+            requestedpath = oldpath / target;
           }
         }
         else {
-          requestedpath = oldpath + cursoredfile->getName();
+          requestedpath = oldpath / cursoredfile->getName();
         }
         requestid = sitelogic->requestFileList(requestedpath);
         ui->update();
@@ -537,11 +529,8 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       }
       oldpath = list.getPath();
       wipepath = oldpath;
-      if (oldpath.length() > 1) {
-        oldpath += "/";
-      }
       wipefile = cursoredfile->getName();
-      wipetarget = oldpath + wipefile;
+      wipetarget = oldpath / wipefile;
       ui->goConfirmation("Do you really want to wipe " + wipefile);
       break;
     case KEY_DC:
@@ -557,11 +546,8 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       }
       oldpath = list.getPath();
       wipepath = oldpath;
-      if (oldpath.length() > 1) {
-        oldpath += "/";
-      }
       wipefile = cursoredfile->getName();
-      wipetarget = oldpath + wipefile;
+      wipetarget = oldpath / wipefile;
       ui->goConfirmation("Do you really want to delete " + wipefile);
       break;
     case 'q':
@@ -589,18 +575,10 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
     case 127:
     case KEY_BACKSPACE:
       oldpath = list.getPath();
-      if (oldpath == "") {
-        break;
-      }
-      if (oldpath == "/" ) {
+      if (oldpath == "/") {
         return BrowseScreenAction(BROWSESCREENACTION_CLOSE);
       }
-      position = oldpath.rfind("/");
-      if (position == 0) {
-        position = 1;
-      }
-      requestedpath = oldpath.substr(0, position);
-      requestid = sitelogic->requestFileList(requestedpath);
+      requestid = sitelogic->requestFileList(oldpath.dirName());
       ui->setInfo();
       //go up one directory level, or return if at top already
       break;
@@ -709,19 +687,19 @@ std::string BrowseScreenSite::getInfoLabel() const {
 }
 
 std::string BrowseScreenSite::getInfoText() const {
-  std::string text = list.getPath();
+  std::string text = list.getPath().toString();
   if (requestid >= 0) {
     if (wipe) {
-      text = "Wiping " + wipetarget + "  ";
+      text = "Wiping " + wipetarget.toString() + "  ";
     }
     else if (deleting) {
-      text = "Deleting " + wipetarget + "  ";
+      text = "Deleting " + wipetarget.toString() + "  ";
     }
     else if (nuking) {
-      text = "Nuking " + wipetarget + "  ";
+      text = "Nuking " + wipetarget.toString() + "  ";
     }
     else {
-      text = "Getting list for " + requestedpath + "  ";
+      text = "Getting list for " + requestedpath.toString() + "  ";
     }
     switch(spinnerpos++ % 4) {
       case 0:
@@ -741,7 +719,7 @@ std::string BrowseScreenSite::getInfoText() const {
   }
   if (wipesuccess) {
     if (tickcount++ < 8) {
-      text = "Wipe successful: " + wipetarget;
+      text = "Wipe successful: " + wipetarget.toString();
       return text;
     }
     else {
@@ -750,7 +728,7 @@ std::string BrowseScreenSite::getInfoText() const {
   }
   else if (wipefailed) {
     if (tickcount++ < 8) {
-      text = "Wipe failed: " + wipetarget;
+      text = "Wipe failed: " + wipetarget.toString();
       return text;
     }
     else {
@@ -759,7 +737,7 @@ std::string BrowseScreenSite::getInfoText() const {
   }
   else if (cwdfailed) {
     if (tickcount++ < 8) {
-      text = "CWD failed: " + requestedpath;
+      text = "CWD failed: " + requestedpath.toString();
       return text;
     }
     else {
@@ -768,7 +746,7 @@ std::string BrowseScreenSite::getInfoText() const {
   }
   else if (deletesuccess) {
     if (tickcount++ < 8) {
-      text = "Delete successful: " + wipetarget;
+      text = "Delete successful: " + wipetarget.toString();
       return text;
     }
     else {
@@ -777,7 +755,7 @@ std::string BrowseScreenSite::getInfoText() const {
   }
   else if (deletefailed) {
     if (tickcount++ < 8) {
-      text = "Delete failed: " + wipetarget;
+      text = "Delete failed: " + wipetarget.toString();
       return text;
     }
     else {
@@ -786,7 +764,7 @@ std::string BrowseScreenSite::getInfoText() const {
   }
   else if (nukesuccess) {
     if (tickcount++ < 8) {
-      text = "Nuke successful: " + nuketarget;
+      text = "Nuke successful: " + nuketarget.toString();
       return text;
     }
     else {
@@ -795,7 +773,7 @@ std::string BrowseScreenSite::getInfoText() const {
   }
   else if (nukefailed) {
     if (tickcount++ < 8) {
-      text = "Nuke failed: " + nuketarget;
+      text = "Nuke failed: " + nuketarget.toString();
       return text;
     }
     else {
@@ -889,17 +867,6 @@ void BrowseScreenSite::tick(int) {
       disableGotoMode();
     }
   }
-}
-
-size_t BrowseScreenSite::countDirLevels(std::string path) {
-  if (path.length() == 0) {
-    path = "/";
-  }
-  bool endswithslash = path.rfind("/") + 1 == path.length();
-  if (endswithslash && path.length() > 1) {
-    path = path.substr(0, path.length() - 1);
-  }
-  return std::count(path.begin(), path.end(), '/');
 }
 
 void BrowseScreenSite::addFileDetails(MenuSelectOption & table, unsigned int coloffset, unsigned int y, const std::string & name) {

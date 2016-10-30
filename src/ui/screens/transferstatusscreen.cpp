@@ -50,9 +50,9 @@ void TransferStatusScreen::redraw() {
     ui->printStr(y, x, "Cipher: " + ts->getCipher());
   }
   ++y;
-  ui->printStr(y, 1, "Source path: " + ts->getSourcePath());
+  ui->printStr(y, 1, "Source path: " + ts->getSourcePath().toString());
   ++y;
-  ui->printStr(y, 1, "Target path: " + ts->getTargetPath());
+  ui->printStr(y, 1, "Target path: " + ts->getTargetPath().toString());
   ++y;
   TransferDetails td = TransfersScreen::formatTransferDetails(ts);
   std::string passive;

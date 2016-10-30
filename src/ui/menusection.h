@@ -10,6 +10,7 @@
 #include "menuselectoptioncontainer.h"
 
 class MenuSelectOptionElement;
+class Path;
 
 class MenuSection : public FocusableArea {
   private:
@@ -23,7 +24,7 @@ class MenuSection : public FocusableArea {
   public:
     MenuSection();
     ~MenuSection();
-    void initialize(int, int, std::map<std::string, std::string>::const_iterator, std::map<std::string, std::string>::const_iterator);
+    void initialize(int, int, std::map<std::string, Path>::const_iterator, std::map<std::string, Path>::const_iterator);
     bool goDown();
     bool goUp();
     bool goRight();
@@ -39,6 +40,6 @@ class MenuSection : public FocusableArea {
     bool needsRedraw();
     void enterFocusFrom(int);
     void addSection();
-    void addSection(std::string, std::string);
+    void addSection(std::string, const Path &);
     void clear();
 };

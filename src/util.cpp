@@ -172,13 +172,6 @@ std::string toLower(const std::string & in) {
   return ret;
 }
 
-std::string cleanPath(const std::string & path) {
-  if (path.size() > 1 && path[path.length() - 1] == '/') {
-    return path.substr(0, path.length() - 1);
-  }
-  return path;
-}
-
 int wildcmp(const char *wild, const char *string) {
   const char *cp = NULL, *mp = NULL;
   while ((*string) && (*wild != '*')) {

@@ -13,6 +13,7 @@
 #include "../util.h"
 #include "../engine.h"
 #include "../datafilehandler.h"
+#include "../path.h"
 
 #include "legendwindow.h"
 #include "infowindow.h"
@@ -693,12 +694,12 @@ void Ui::goViewFile(const std::string & site, const std::string & file, FileList
   switchToWindow(viewfilescreen);
 }
 
-void Ui::goViewFile(const std::string & dir, const std::string & file) {
+void Ui::goViewFile(const Path & dir, const std::string & file) {
   viewfilescreen->initialize(mainrow, maincol, dir, file);
   switchToWindow(viewfilescreen);
 }
 
-void Ui::goAddSection(std::string site, std::string path) {
+void Ui::goAddSection(std::string site, const Path & path) {
   addsectionscreen->initialize(mainrow, maincol, site, path);
   switchToWindow(addsectionscreen);
 }

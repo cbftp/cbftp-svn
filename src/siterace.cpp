@@ -8,18 +8,19 @@
 #include "util.h"
 #include "timereference.h"
 
-SiteRace::SiteRace(Pointer<Race> race, const std::string & sitename, const std::string & section, const std::string & release, const std::string & username) :
+SiteRace::SiteRace(Pointer<Race> race, const std::string & sitename, const Path & section, const std::string & release, const std::string & username) :
   race(race),
   section(section),
   release(release),
-  path(section + "/" + release),
+  path(section / release),
   group(util::getGroupNameFromRelease(release)),
   username(username),
   sitename(sitename),
   done(false),
   maxfilesize(0),
   totalfilesize(0),
-  numuploadedfiles(0)
+  numuploadedfiles(0),
+  profile(race->getProfile())
 {
   recentlyvisited.push_back("");
   filelists[""] = new FileList(username, path);
@@ -39,7 +40,7 @@ std::string SiteRace::getSiteName() const {
   return sitename;
 }
 
-std::string SiteRace::getSection() const {
+const Path & SiteRace::getSection() const {
   return section;
 }
 
@@ -51,7 +52,7 @@ std::string SiteRace::getGroup() const {
   return group;
 }
 
-std::string SiteRace::getPath() const {
+const Path & SiteRace::getPath() const {
   return path;
 }
 
@@ -72,10 +73,10 @@ bool SiteRace::addSubDirectory(const std::string & subpath, bool knownexists) {
   }
   FileList * subdir;
   if (knownexists) {
-    subdir = new FileList(username, path + "/" + subpath, FILELIST_EXISTS);
+    subdir = new FileList(username, path / subpath, FILELIST_EXISTS);
   }
   else {
-    subdir = new FileList(username, path + "/" + subpath);
+    subdir = new FileList(username, path / subpath);
   }
   filelists[subpath] = subdir;
   recentlyvisited.push_front(subpath);
@@ -116,7 +117,7 @@ FileList * SiteRace::getFileListForPath(const std::string & subpath) const {
   return NULL;
 }
 
-FileList * SiteRace::getFileListForFullPath(SiteLogic *, const std::string & path) const {
+FileList * SiteRace::getFileListForFullPath(SiteLogic *, const Path & path) const {
   std::map<std::string, FileList *>::const_iterator it;
   for (it = filelists.begin(); it != filelists.end(); it++) {
     if (it->second->getPath() == path) {
@@ -283,6 +284,10 @@ bool SiteRace::isSubPathComplete(FileList * fl) const {
 
 Pointer<Race> SiteRace::getRace() const {
   return race;
+}
+
+int SiteRace::getProfile() const {
+  return profile;
 }
 
 void SiteRace::reportSize(FileList * fl, std::list<std::string> * uniques, bool final) {

@@ -20,8 +20,7 @@ int main(int argc, char ** argv) {
     return usage();
   }
   const std::string path = argv[1];
-  std::string outpath = std::string(getenv("HOME")) +
-                                    "/" + DATAPATH + "/" + DATAFILE;
+  Path outpath = Path(getenv("HOME")) / DATAPATH / DATAFILE;
   bool outfileset = false;
   std::string outfile;
   for (int i = 2; i < argc; i++) {

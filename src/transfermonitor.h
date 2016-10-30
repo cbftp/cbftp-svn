@@ -6,6 +6,7 @@
 #include "core/eventreceiver.h"
 #include "core/pointer.h"
 #include "rawbuffercallback.h"
+#include "path.h"
 
 enum TransferMonitorType {
  TM_TYPE_FXP,
@@ -60,8 +61,8 @@ class TransferMonitor : public EventReceiver, public RawBufferCallback {
     FileList * fls;
     FileList * fld;
     Pointer<LocalFileList> localfl;
-    std::string spath;
-    std::string dpath;
+    Path spath;
+    Path dpath;
     bool clientactive;
     bool fxpdstactive;
     bool ssl;

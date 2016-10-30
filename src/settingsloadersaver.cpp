@@ -20,6 +20,7 @@
 #include "uibase.h"
 #include "sitemanager.h"
 #include "site.h"
+#include "path.h"
 #include "engine.h"
 #include "util.h"
 
@@ -532,8 +533,8 @@ void SettingsLoaderSaver::saveSettings() {
 
   {
     std::string filetag = "LocalStorage";
-    dfh->addOutputLine(filetag, "temppath=" + global->getLocalStorage()->getTempPath());
-    dfh->addOutputLine(filetag, "downloadpath=" + global->getLocalStorage()->getDownloadPath());
+    dfh->addOutputLine(filetag, "temppath=" + global->getLocalStorage()->getTempPath().toString());
+    dfh->addOutputLine(filetag, "downloadpath=" + global->getLocalStorage()->getDownloadPath().toString());
     if (global->getLocalStorage()->getUseActiveModeAddress()) dfh->addOutputLine(filetag, "useactivemodeaddr=true");
     dfh->addOutputLine(filetag, "activemodeaddr=" + global->getLocalStorage()->getActiveModeAddress());
     dfh->addOutputLine(filetag, "activeportfirst=" + util::int2Str(global->getLocalStorage()->getActivePortFirst()));
@@ -550,10 +551,7 @@ void SettingsLoaderSaver::saveSettings() {
       dfh->addOutputLine(filetag, name + "$addr=" + site->getAddressesAsString());
       dfh->addOutputLine(filetag, name + "$user=" + site->getUser());
       dfh->addOutputLine(filetag, name + "$pass=" + site->getPass());
-      std::string basepath = site->getBasePath();
-      if (basepath != "" && basepath != "/") {
-        dfh->addOutputLine(filetag, name + "$basepath=" + basepath);
-      }
+      dfh->addOutputLine(filetag, name + "$basepath=" + site->getBasePath().toString());
       dfh->addOutputLine(filetag, name + "$logins=" + util::int2Str(site->getInternMaxLogins()));
       dfh->addOutputLine(filetag, name + "$maxup=" + util::int2Str(site->getInternMaxUp()));
       dfh->addOutputLine(filetag, name + "$maxdn=" + util::int2Str(site->getInternMaxDown()));
@@ -574,9 +572,9 @@ void SettingsLoaderSaver::saveSettings() {
       if (proxytype == SITE_PROXY_USE) {
         dfh->addOutputLine(filetag, name + "$proxyname=" + site->getProxy());
       }
-      std::map<std::string, std::string>::const_iterator sit;
+      std::map<std::string, Path>::const_iterator sit;
       for (sit = site->sectionsBegin(); sit != site->sectionsEnd(); sit++) {
-        dfh->addOutputLine(filetag, name + "$section=" + sit->first + "$" + sit->second);
+        dfh->addOutputLine(filetag, name + "$section=" + sit->first + "$" + sit->second.toString());
       }
       std::map<std::string, int>::const_iterator sit2;
       for (sit2 = site->avgspeedBegin(); sit2 != site->avgspeedEnd(); sit2++) {

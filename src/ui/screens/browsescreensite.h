@@ -10,6 +10,7 @@
 #include "../uifilelist.h"
 #include "../menuselectoption.h"
 #include "../menuselectoptiontextfield.h"
+#include "../../path.h"
 
 class SiteLogic;
 class Site;
@@ -65,26 +66,25 @@ private:
   int gotomodeticker;
   bool filtermodeinput;
   std::string gotomodestring;
-  std::string nuketarget;
-  std::string wipetarget;
-  std::string wipepath;
+  Path nuketarget;
+  Path wipetarget;
+  Path wipepath;
   std::string wipefile;
   unsigned int sortmethod;
   Pointer<Site> site;
   UIFileList list;
   Pointer<SiteLogic> sitelogic;
   int requestid;
-  std::string requestedpath;
+  Path requestedpath;
   mutable int spinnerpos;
   FileList * filelist;
   bool withinraceskiplistreach;
-  std::string closestracesectionpath;
+  Path closestracesectionpath;
   std::string separatortext;
-  std::list<std::pair<std::string, std::string> > selectionhistory;
+  std::list<std::pair<Path, std::string> > selectionhistory;
   bool focus;
   MenuSelectOptionTextField filterfield;
   void sort();
   void refreshFilelist();
-  size_t countDirLevels(std::string);
   void disableGotoMode();
 };

@@ -11,6 +11,7 @@
 #include "../menuselectoptiontextfield.h"
 
 #include "../../core/pointer.h"
+#include "../../path.h"
 
 class Ui;
 class LocalFileList;
@@ -34,7 +35,7 @@ public:
 private:
   void disableGotoMode();
   void sort();
-  void gotoPath(const std::string &);
+  void gotoPath(const Path &);
   Ui * ui;
   unsigned int row;
   unsigned int col;
@@ -53,8 +54,8 @@ private:
   int gotomodeticker;
   bool filtermodeinput;
   std::string gotomodestring;
-  std::list<std::pair<std::string, std::string> > selectionhistory;
+  std::list<std::pair<Path, std::string> > selectionhistory;
   Pointer<LocalFileList> filelist;
-  std::string targetpath;
+  Path targetpath;
   MenuSelectOptionTextField filterfield;
 };

@@ -89,7 +89,7 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   sslfxp->setOption(sm->getDefaultSSLTransferPolicy());
   mso.addStringField(y++, x, "defidletime", "Default site max idle time (s):", util::int2Str(sm->getDefaultMaxIdleTime()), false);
   y++;
-  mso.addStringField(y++, x, "dlpath", "Download path:", ls->getDownloadPath(), false, 128, 128);
+  mso.addStringField(y++, x, "dlpath", "Download path:", ls->getDownloadPath().toString(), false, 128, 128);
   y++;
   mso.addTextButtonNoContent(y++, x, "skiplist", "Configure skiplist...");
   mso.addTextButtonNoContent(y++, x, "proxy", "Configure proxy settings...");
