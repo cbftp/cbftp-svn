@@ -22,6 +22,7 @@ class FileList;
 class Site;
 class DataFileHandler;
 class TransferStatus;
+class Path;
 class LoginScreen;
 class NewKeyScreen;
 class MainScreen;
@@ -177,8 +178,8 @@ public:
   void goConfirmation(std::string);
   void goNuke(std::string, std::string, FileList *);
   void goViewFile(const std::string &, const std::string &, FileList *);
-  void goViewFile(const std::string &, const std::string &);
-  void goAddSection(std::string, std::string);
+  void goViewFile(const Path &, const std::string &);
+  void goAddSection(std::string, const Path &);
   void goNewRace(std::string, std::string, std::string);
   void goSelectSites(std::string, std::list<Pointer<Site> >, std::list<Pointer<Site> >);
   void goSkiplist();

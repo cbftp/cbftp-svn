@@ -36,11 +36,11 @@ $(BINDIR)/cbftp-debug: misc/start_with_gdb.sh | $(BINDIR)
 
 $(BINDIR)/datafilecat: src/crypto.cpp src/tools/datafilecat.cpp Makefile.inc | $(BINDIR)
 	$(CXX) -o $@ $(OPTFLAGS) $(STATIC_SSL_INCLUDE) src/crypto.cpp \
-	src/filesystem.cpp src/tools/datafilecat.cpp $(SSL_LINKFLAGS)
+	src/filesystem.cpp src/path.cpp src/tools/datafilecat.cpp $(SSL_LINKFLAGS)
 
 $(BINDIR)/datafilewrite: src/crypto.cpp src/tools/datafilewrite.cpp Makefile.inc | $(BINDIR)
 	$(CXX) -o $@ $(OPTFLAGS) $(STATIC_SSL_INCLUDE) src/crypto.cpp \
-	src/filesystem.cpp src/tools/datafilewrite.cpp $(SSL_LINKFLAGS)
+	src/filesystem.cpp src/path.cpp src/tools/datafilewrite.cpp $(SSL_LINKFLAGS)
 
 linecount:
 	find|grep -e '\.h$$' -e '\.cpp$$'|awk '{print $$1}'|xargs wc -l	

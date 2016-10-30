@@ -39,11 +39,11 @@ void LocalTransfer::tick(int) {
 
 void LocalTransfer::openFile(bool read) {
   if (read ? !FileSystem::fileExistsReadable(path) : !FileSystem::fileExistsWritable(path)) {
-    perror(std::string("There was an error accessing " + path).c_str());
+    perror(std::string("There was an error accessing " + path.toString()).c_str());
     exit(1);
   }
   filestream.clear();
-  filestream.open((path + "/" + filename).c_str(), std::ios::binary | (read ? std::ios::in : (std::ios::ate | std::ios::out)));
+  filestream.open((path / filename).toString().c_str(), std::ios::binary | (read ? std::ios::in : (std::ios::ate | std::ios::out)));
   fileopened = true;
 }
 

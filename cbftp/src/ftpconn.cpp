@@ -621,9 +621,10 @@ void FTPConn::updateName() {
   rawbuf->rename(site->getName());
 }
 
-std::string FTPConn::getCurrentPath() const {
+const Path & FTPConn::getCurrentPath() const {
   return currentpath;
 }
+
 void FTPConn::doPWD() {
   state = STATE_PWD;
   sendEcho("PWD");
@@ -728,18 +729,18 @@ void FTPConn::doRaw(const std::string & command) {
   sendEcho(command.c_str());
 }
 
-void FTPConn::doWipe(const std::string & path, bool recursive) {
+void FTPConn::doWipe(const Path & path, bool recursive) {
   state = STATE_WIPE;
-  sendEcho(std::string("SITE WIPE ") + (recursive ? "-r " : "") + util::cleanPath(path));
+  sendEcho(std::string("SITE WIPE ") + (recursive ? "-r " : "") + path.toString());
 }
 
-void FTPConn::doNuke(const std::string & path, int multiplier, const std::string & reason) {
+void FTPConn::doNuke(const Path & path, int multiplier, const std::string & reason) {
   state = STATE_NUKE;
-  sendEcho("SITE NUKE " + util::cleanPath(path) + " " + util::int2Str(multiplier) + " " + reason);
+  sendEcho("SITE NUKE " + path.toString() + " " + util::int2Str(multiplier) + " " + reason);
 }
-void FTPConn::doDELE(const std::string & path) {
+void FTPConn::doDELE(const Path & path) {
   state = STATE_DELE;
-  sendEcho("DELE " + util::cleanPath(path));
+  sendEcho("DELE " + path.toString());
 }
 
 void FTPConn::doPBSZ0() {
@@ -864,15 +865,15 @@ void FTPConn::PORTResponse() {
   }
 }
 
-void FTPConn::doCWD(const std::string & path) {
-  targetpath = util::cleanPath(path);
+void FTPConn::doCWD(const Path & path) {
+  targetpath = path;
   if (targetpath == currentpath) {
     global->getEventLog()->log("FTPConn " + site->getName() + util::int2Str(id),
-        "WARNING: Noop CWD requested: " + path);
+        "WARNING: Noop CWD requested: " + path.toString());
     return;
   }
   state = STATE_CWD;
-  sendEcho(("CWD " + path).c_str());
+  sendEcho(("CWD " + path.toString()).c_str());
 }
 
 void FTPConn::CWDResponse() {
@@ -886,10 +887,10 @@ void FTPConn::CWDResponse() {
   }
 }
 
-void FTPConn::doMKD(const std::string & dir) {
-  targetpath = util::cleanPath(dir);
+void FTPConn::doMKD(const Path & dir) {
+  targetpath = dir;
   state = STATE_MKD;
-  sendEcho(("MKD " + targetpath).c_str());
+  sendEcho(("MKD " + targetpath.toString()).c_str());
 }
 
 void FTPConn::MKDResponse() {
@@ -1089,23 +1090,11 @@ bool FTPConn::getSSCNMode() const {
   return sscnmode;
 }
 
-void FTPConn::setMKDCWDTarget(const std::string & section, const std::string & subpath) {
+void FTPConn::setMKDCWDTarget(const Path & section, const Path & subpath) {
   mkdtarget = true;
   mkdsect = section;
   mkdpath = subpath;
-  size_t lastpos = 0;
-  mkdsubdirs.clear();
-  while (true) {
-    size_t splitpos = mkdpath.find("/", lastpos);
-    if (splitpos != std::string::npos) {
-      mkdsubdirs.push_back(mkdpath.substr(lastpos, splitpos - lastpos));
-    }
-    else {
-      mkdsubdirs.push_back(mkdpath.substr(lastpos));
-      break;
-    }
-    lastpos = splitpos + 1;
-  }
+  mkdsubdirs = mkdpath.split();
 }
 
 void FTPConn::finishMKDCWDTarget() {
@@ -1116,14 +1105,15 @@ bool FTPConn::hasMKDCWDTarget() const {
   return mkdtarget;
 }
 
-std::string FTPConn::getTargetPath() const {
+const Path & FTPConn::getTargetPath() const {
   return targetpath;
 }
 
-std::string FTPConn::getMKDCWDTargetSection() const {
+const Path & FTPConn::getMKDCWDTargetSection() const {
   return mkdsect;
 }
-std::string FTPConn::getMKDCWDTargetPath() const {
+
+const Path & FTPConn::getMKDCWDTargetPath() const {
   return mkdpath;
 }
 

@@ -3,6 +3,8 @@
 #include <string>
 #include <list>
 
+#include "path.h"
+
 #define TRANSFERSTATUS_TYPE_FXP 1892
 #define TRANSFERSTATUS_TYPE_DOWNLOAD 1893
 #define TRANSFERSTATUS_TYPE_UPLOAD 1894
@@ -17,13 +19,13 @@ class FileList;
 
 class TransferStatus {
 public:
-  TransferStatus(int, std::string, std::string, std::string, std::string, FileList *, std::string, FileList *, std::string, unsigned long long int, unsigned int, int, int, bool, bool);
+  TransferStatus(int, std::string, std::string, std::string, std::string, FileList *, const Path &, FileList *, const Path &, unsigned long long int, unsigned int, int, int, bool, bool);
   std::string getSource() const;
   std::string getTarget() const;
   std::string getRelease() const;
   std::string getFile() const;
-  std::string getSourcePath() const;
-  std::string getTargetPath() const;
+  const Path & getSourcePath() const;
+  const Path & getTargetPath() const;
   FileList * getSourceFileList() const;
   FileList * getTargetFileList() const;
   unsigned long long int sourceSize() const;
@@ -65,8 +67,8 @@ private:
   std::string release;
   std::string file;
   std::string timestamp;
-  std::string sourcepath;
-  std::string targetpath;
+  Path sourcepath;
+  Path targetpath;
   unsigned long long int sourcesize;
   unsigned long long int knowntargetsize;
   unsigned long long int interpolatedtargetsize;

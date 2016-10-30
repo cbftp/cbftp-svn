@@ -11,6 +11,7 @@
 #include "site.h"
 #include "filelist.h"
 #include "file.h"
+#include "path.h"
 #include "sitelogicmanager.h"
 #include "transfermanager.h"
 #include "race.h"
@@ -221,11 +222,11 @@ void Engine::startLatestPreparedRace() {
   }
 }
 
-void Engine::newTransferJobDownload(const std::string & site, const std::string & file, FileList * filelist, const std::string & path) {
+void Engine::newTransferJobDownload(const std::string & site, const std::string & file, FileList * filelist, const Path & path) {
   newTransferJobDownload(site, file, filelist, path, file);
 }
 
-void Engine::newTransferJobUpload(const std::string & path, const std::string & site, const std::string & file, FileList * filelist) {
+void Engine::newTransferJobUpload(const Path & path, const std::string & site, const std::string & file, FileList * filelist) {
   newTransferJobUpload(path, file, site, file, filelist);
 }
 
@@ -233,9 +234,9 @@ void Engine::newTransferJobFXP(const std::string & srcsite, FileList * srcfileli
   newTransferJobFXP(srcsite, file, srcfilelist, dstsite, file, dstfilelist);
 }
 
-void Engine::newTransferJobDownload(const std::string & site, const std::string & srcfile, FileList * filelist, const std::string & path, const std::string & dstfile) {
+void Engine::newTransferJobDownload(const std::string & site, const std::string & srcfile, FileList * filelist, const Path & path, const std::string & dstfile) {
   const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
-  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, sl, srcfile, filelist, util::cleanPath(path), dstfile);
+  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, sl, srcfile, filelist, path, dstfile);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting download job: " + srcfile +
@@ -244,9 +245,9 @@ void Engine::newTransferJobDownload(const std::string & site, const std::string 
   checkStartPoke();
 }
 
-void Engine::newTransferJobUpload(const std::string & path, const std::string & srcfile, const std::string & site, const std::string & dstfile, FileList * filelist) {
+void Engine::newTransferJobUpload(const Path & path, const std::string & srcfile, const std::string & site, const std::string & dstfile, FileList * filelist) {
   const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
-  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, util::cleanPath(path), srcfile, sl, dstfile, filelist);
+  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, path, srcfile, sl, dstfile, filelist);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting upload job: " + srcfile +
@@ -316,7 +317,7 @@ void Engine::deleteOnAllSites(Pointer<Race> & race) {
   if (!!race) {
     std::string sites;
     for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
-      std::string path = it->first->getPath();
+      const Path & path = it->first->getPath();
       it->second->requestDelete(path, true, false);
       sites += it->first->getSiteName() + ",";
     }
@@ -465,8 +466,8 @@ void Engine::reportCurrentSize(SiteRace * srs, FileList * fls, bool final) {
       }
       filename = filename.substr(0, lastdotpos + offsetdot);
     }
-    std::string prepend = subpath.length() ? subpath + "/" : "";
-    if (!global->getSkipList()->isAllowed(prepend + filename, isdir)) {
+    Path prepend = subpath;
+    if (!global->getSkipList()->isAllowed((prepend / filename).toString(), isdir)) {
       continue;
     }
     std::list<std::string>::iterator it;
@@ -512,8 +513,8 @@ void Engine::refreshScoreBoard() {
             for (itf = fls->begin(); itf != fls->end(); itf++) {
               File * f = itf->second;
               const bool isdir = f->isDirectory();
-              const std::string prepend = itfls->first.length() ? itfls->first + "/" : "";
-              if (!global->getSkipList()->isAllowed(prepend + itf->first, isdir)) {
+              const Path prepend = itfls->first;
+              if (!global->getSkipList()->isAllowed((prepend / itf->first).toString(), isdir)) {
                 continue;
               }
               const std::string filename = f->getName();
@@ -557,14 +558,14 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> & tj) {
               dstlist = tj->wantedLocalDstList(it2->first);
             }
             dstit = dstlist->find(srcit->first);
-            std::string subpath = it2->first.length() > 0 ? it2->first + "/" : "";
+            const Path subpath = it2->first;
             if (!dstlist || dstit == dstlist->end() || dstit->second.getSize() == 0) {
               PendingTransfer p(tj->getSrc(), srclist, srcit->first, dstlist, srcit->first);
               addPendingTransfer(list, p);
-              tj->addPendingTransfer(subpath + srcit->first, srcit->second->getSize());
+              tj->addPendingTransfer(subpath / srcit->first, srcit->second->getSize());
             }
             else {
-              tj->targetExists(subpath + srcit->first);
+              tj->targetExists(subpath / srcit->first);
             }
           }
         }
@@ -600,14 +601,14 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> & tj) {
         for (std::map<std::string, LocalFile>::const_iterator lfit = lit->second->begin(); lfit != lit->second->end(); lfit++) {
           if (!lfit->second.isDirectory() && lfit->second.getSize() > 0) {
             std::string filename = lfit->first;
-            std::string subpath = lit->first.length() > 0 ? lit->first + "/" : "";
+            const Path subpath = lit->first;
             if (dstlist->getFile(filename) == NULL) {
               PendingTransfer p(lit->second, filename, tj->getDst(), dstlist, filename);
               addPendingTransfer(list, p);
-              tj->addPendingTransfer(subpath + filename, lfit->second.getSize());
+              tj->addPendingTransfer(subpath / filename, lfit->second.getSize());
             }
             else {
-              tj->targetExists(subpath + filename);
+              tj->targetExists(subpath / filename);
             }
           }
         }
@@ -643,15 +644,15 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> & tj) {
         for (std::map<std::string, File *>::iterator srcit = srclist->begin(); srcit != srclist->end(); srcit++) {
           if (!srcit->second->isDirectory() && srcit->second->getSize() > 0) {
             std::string filename = srcit->first;
-            std::string subpath = it2->first.length() > 0 ? it2->first + "/" : "";
+            const Path subpath = it2->first;
             if (dstlist->getFile(filename) == NULL) {
               PendingTransfer p(tj->getSrc(), srclist, filename, tj->getDst(), dstlist, filename);
               addPendingTransfer(list, p);
 
-              tj->addPendingTransfer(subpath + filename, srcit->second->getSize());
+              tj->addPendingTransfer(subpath / filename, srcit->second->getSize());
             }
             else {
-              tj->targetExists(subpath + filename);
+              tj->targetExists(subpath / filename);
             }
           }
         }
@@ -899,7 +900,7 @@ bool Engine::raceTransferPossible(const Pointer<SiteLogic> & sls, const Pointer<
   if (sls == sld) return false;
   if (!sld->getSite()->getAllowUpload()) return false;
   if (!sls->getSite()->isAllowedTargetSite(sld->getSite())) return false;
-  if (sld->getSite()->isAffiliated(race->getGroup())) return false;
+  if (sld->getSite()->isAffiliated(race->getGroup()) && race->getProfile() != SPREAD_DISTRIBUTE) return false;
   if (sls->getSite()->hasBrokenPASV() &&
       sld->getSite()->hasBrokenPASV()) return false;
   //ssl check

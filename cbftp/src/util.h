@@ -21,7 +21,6 @@ std::string parseSize(unsigned long long int);
 std::string getGroupNameFromRelease(std::string);
 void assert(bool);
 std::string toLower(const std::string &);
-std::string cleanPath(const std::string &);
 int wildcmp(const char *, const char *);
 int wildcmpCase(const char *, const char *);
 std::list<std::string> split(const std::string &, const std::string &);

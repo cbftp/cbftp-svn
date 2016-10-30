@@ -8,11 +8,11 @@
 #include "timereference.h"
 #include "util.h"
 
-FileList::FileList(const std::string & username, const std::string & path) {
+FileList::FileList(const std::string & username, const Path & path) {
   init(username, path, FILELIST_UNKNOWN);
 }
 
-FileList::FileList(const std::string & username, const std::string & path, FileListState state) {
+FileList::FileList(const std::string & username, const Path & path, FileListState state) {
   init(username, path, state);
 }
 
@@ -22,9 +22,9 @@ FileList::~FileList() {
   }
 }
 
-void FileList::init(const std::string & username, const std::string & path, FileListState state) {
+void FileList::init(const std::string & username, const Path & path, FileListState state) {
   this->username = username;
-  this->path = util::cleanPath(path);
+  this->path = path;
   this->state = state;
   owned = 0;
   ownpercentage = 0;
@@ -249,7 +249,7 @@ unsigned long long int FileList::getMaxFileSize() const {
   return maxfilesize;
 }
 
-std::string FileList::getPath() const {
+const Path & FileList::getPath() const {
   return path;
 }
 

@@ -26,7 +26,7 @@ void FileViewerSettingsScreen::initialize(unsigned int row, unsigned int col) {
   unsigned int y = 1;
   unsigned int x = 1;
   mso.clear();
-  mso.addStringField(y++, x, "temppath", "Temporary download path:", ls->getTempPath(), false, 128, 128);
+  mso.addStringField(y++, x, "temppath", "Temporary download path:", ls->getTempPath().toString(), false, 128, 128);
   y++;
   mso.addStringField(y++, x, "video", "Video viewer:", efv->getVideoViewer(), false);
   mso.addStringField(y++, x, "audio", "Audio viewer:", efv->getAudioViewer(), false);

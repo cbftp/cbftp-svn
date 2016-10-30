@@ -14,6 +14,7 @@
 #include "util.h"
 #include "localstorage.h"
 #include "eventlog.h"
+#include "path.h"
 
 namespace {
 
@@ -45,27 +46,27 @@ ExternalFileViewing::ExternalFileViewing() {
   sigaction(SIGCHLD, &sa, NULL);
 }
 
-bool ExternalFileViewing::isViewable(std::string path) const {
+bool ExternalFileViewing::isViewable(const Path & path) const {
   return getViewApplication(path) != "";
 }
 
-int ExternalFileViewing::view(std::string path) {
+int ExternalFileViewing::view(const Path & path) {
   return view(path, false);
 }
 
-int ExternalFileViewing::viewThenDelete(std::string path) {
+int ExternalFileViewing::viewThenDelete(const Path & path) {
   return view(path, true);
 }
 
-int ExternalFileViewing::view(std::string path, bool deleteafter) {
+int ExternalFileViewing::view(const Path & path, bool deleteafter) {
   std::string application = getViewApplication(path);
-  global->getEventLog()->log("ExternalFileViewing", "Opening " + path + " with " + application);
+  global->getEventLog()->log("ExternalFileViewing", "Opening " + path.toString() + " with " + application);
   int pid = fork();
   if (!pid) {
     int devnull = open("/dev/null", O_WRONLY);
     dup2(devnull, STDOUT_FILENO);
     dup2(devnull, STDERR_FILENO);
-    execlp(application.c_str(), application.c_str(), path.c_str(), (char *)0);
+    execlp(application.c_str(), application.c_str(), path.toString().c_str(), (char *)0);
   }
   else {
     if (deleteafter) {
@@ -95,8 +96,8 @@ void ExternalFileViewing::killAll() {
   subprocesses.clear();
 }
 
-std::string ExternalFileViewing::getViewApplication(std::string path) const {
-  std::string extension = getExtension(path);
+std::string ExternalFileViewing::getViewApplication(const Path & path) const {
+  std::string extension = getExtension(path.baseName());
   std::string application;
   if (extension == "mkv" || extension == "mp4" || extension == "avi" ||
       extension == "wmv" || extension == "vob" || extension == "mov" ||
@@ -117,7 +118,7 @@ std::string ExternalFileViewing::getViewApplication(std::string path) const {
   return application;
 }
 
-std::string ExternalFileViewing::getExtension(std::string file) {
+std::string ExternalFileViewing::getExtension(const std::string & file) {
   size_t suffixdotpos = file.rfind(".");
   std::string extension;
   if (suffixdotpos != std::string::npos && suffixdotpos > 0) {
@@ -149,7 +150,7 @@ void ExternalFileViewing::signal(int signal, int) {
 
 void ExternalFileViewing::checkDeleteFile(int pid) {
   if (files.find(pid) != files.end()) {
-    global->getEventLog()->log("ExternalFileViewing", "Deleting temporary file: " + files[pid]);
+    global->getEventLog()->log("ExternalFileViewing", "Deleting temporary file: " + files[pid].toString());
     global->getLocalStorage()->deleteFile(files[pid]);
     files.erase(pid);
   }
@@ -184,18 +185,18 @@ std::string ExternalFileViewing::getPDFViewer() const {
   return pdfviewer;
 }
 
-void ExternalFileViewing::setVideoViewer(std::string viewer) {
+void ExternalFileViewing::setVideoViewer(const std::string & viewer) {
   videoviewer = viewer;
 }
 
-void ExternalFileViewing::setAudioViewer(std::string viewer) {
+void ExternalFileViewing::setAudioViewer(const std::string & viewer) {
   audioviewer = viewer;
 }
 
-void ExternalFileViewing::setImageViewer(std::string viewer) {
+void ExternalFileViewing::setImageViewer(const std::string & viewer) {
   imageviewer = viewer;
 }
 
-void ExternalFileViewing::setPDFViewer(std::string viewer) {
+void ExternalFileViewing::setPDFViewer(const std::string & viewer) {
   pdfviewer = viewer;
 }

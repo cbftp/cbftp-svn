@@ -179,7 +179,7 @@ void SiteLogic::listRefreshed(int id) {
     const Pointer<SiteLogicRequest> & request = connstatetracker[id].getRequest();
     FileList * filelist = conns[id]->currentFileList();
     if (request->requestType() == REQ_FILELIST &&
-        request->requestData() == filelist->getPath())
+        request->requestData() == filelist->getPath().toString())
     {
       setRequestReady(id, filelist, true);
     }
@@ -193,7 +193,7 @@ void SiteLogic::listRefreshed(int id) {
   handleConnection(id, true);
 }
 
-bool SiteLogic::setPathExists(int id, const std::string & path, bool exists) {
+bool SiteLogic::setPathExists(int id, const Path & path, bool exists) {
   CommandOwner * currentco = conns[id]->currentCommandOwner();
   if (currentco != NULL) {
     FileList * fl;
@@ -258,8 +258,7 @@ void SiteLogic::commandSuccess(int id) {
     case STATE_CWD: {
       setPathExists(id, conns[id]->getCurrentPath(), true);
       if (conns[id]->hasMKDCWDTarget()) {
-        if (conns[id]->getCurrentPath() == conns[id]->getMKDCWDTargetSection() +
-            "/" + conns[id]->getMKDCWDTargetPath()) {
+        if (conns[id]->getCurrentPath() == conns[id]->getMKDCWDTargetSection() / conns[id]->getMKDCWDTargetPath()) {
           conns[id]->finishMKDCWDTarget();
         }
       }
@@ -280,19 +279,19 @@ void SiteLogic::commandSuccess(int id) {
     }
     case STATE_MKD:
       if (conns[id]->hasMKDCWDTarget()) {
-        std::string targetcwdsect = conns[id]->getMKDCWDTargetSection();
-        std::string targetcwdpath = conns[id]->getMKDCWDTargetPath();
-        std::string targetpath = conns[id]->getTargetPath();
+        const Path & targetcwdsect = conns[id]->getMKDCWDTargetSection();
+        const Path & targetcwdpath = conns[id]->getMKDCWDTargetPath();
+        const Path & targetpath = conns[id]->getTargetPath();
         setPathExists(id, targetpath, true);
         std::list<std::string> * subdirs = conns[id]->getMKDSubdirs();
-        if (targetpath == targetcwdsect + "/" + targetcwdpath) {
+        if (targetpath == targetcwdsect / targetcwdpath) {
           conns[id]->doCWD(targetpath);
           return;
         }
         else if (subdirs->size() > 0) {
           std::string sub = subdirs->front();
           subdirs->pop_front();
-          conns[id]->doMKD(targetpath + "/" + sub);
+          conns[id]->doMKD(targetpath / sub);
           return;
         }
       }
@@ -456,16 +455,16 @@ void SiteLogic::commandFail(int id, int failuretype) {
     }
     case STATE_MKD:
       if (conns[id]->hasMKDCWDTarget()) {
-        std::string targetcwdsect = conns[id]->getMKDCWDTargetSection();
-        std::string targetcwdpath = conns[id]->getMKDCWDTargetPath();
-        std::string targetpath = conns[id]->getTargetPath();
+        const Path & targetcwdsect = conns[id]->getMKDCWDTargetSection();
+        const Path & targetcwdpath = conns[id]->getMKDCWDTargetPath();
+        const Path & targetpath = conns[id]->getTargetPath();
         std::list<std::string> * subdirs = conns[id]->getMKDSubdirs();
         setPathExists(id, targetpath, false);
-        if (targetpath == targetcwdsect + "/" + targetcwdpath) {
+        if (targetpath == targetcwdsect / targetcwdpath) {
           if (subdirs->size() > 0) {
             std::string sub = subdirs->front();
             subdirs->pop_front();
-            std::string newattempt = targetcwdsect + "/" + sub;
+            Path newattempt = targetcwdsect / sub;
             CommandOwner * currentco = conns[id]->currentCommandOwner();
             if (currentco != NULL && currentco->classType() == COMMANDOWNER_SITERACE) {
               FileList * fl = currentco->getFileListForFullPath(this, newattempt);
@@ -730,12 +729,12 @@ void SiteLogic::haveConnected(unsigned int connected) {
 
 bool SiteLogic::handlePreTransfer(int id) {
   FileList * fl = connstatetracker[id].getTransferFileList();
-  std::string transferpath = fl->getPath();
+  const Path & transferpath = fl->getPath();
   if (conns[id]->getCurrentPath() != transferpath) {
     if (connstatetracker[id].getTransferType() == CST_UPLOAD &&
         fl->getState() == FILELIST_NONEXISTENT)
     {
-      std::pair<std::string, std::string> pathparts = site->splitPathInSectionAndSubpath(transferpath);
+      std::pair<Path, Path> pathparts = site->splitPathInSectionAndSubpath(transferpath);
       conns[id]->setMKDCWDTarget(pathparts.first, pathparts.second);
       conns[id]->doMKD(transferpath);
       return true;
@@ -776,7 +775,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
     if (!tj->isDone()) {
       if (tj->wantsList(this)) {
         FileList * fl = tj->getListTarget(this);
-        std::string path = fl->getPath();
+        const Path & path = fl->getPath();
         connstatetracker[id].use();
         if (path != conns[id]->getCurrentPath()) {
           conns[id]->setCurrentCommandOwner(tj.get());
@@ -850,11 +849,10 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
     }
   }
   if (race != NULL) {
-    std::string currentpath = conns[id]->getCurrentPath();
-    size_t slashpos = currentpath.rfind("/");
-    std::string racepath = race->getPath();
-    bool goodpath = (currentpath.length() == racepath.length() && currentpath.compare(racepath) == 0) || // same path
-        (slashpos == racepath.length() && currentpath.substr(0, slashpos).compare(racepath) == 0); // same path, currently in subdir
+    const Path & currentpath = conns[id]->getCurrentPath();
+    const Path & racepath = race->getPath();
+    bool goodpath = currentpath == racepath || // same path
+                    currentpath.contains(racepath); // same path, currently in subdir
     if (goodpath && !refresh) {
       return;
     }
@@ -865,14 +863,14 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
     connstatetracker[id].use();
 
     if (goodpath) {
-      std::string subpath = slashpos == racepath.length() ? currentpath.substr(slashpos + 1) : "";
-      FileList * fl = race->getFileListForPath(subpath);
+      Path subpath = currentpath - racepath;
+      FileList * fl = race->getFileListForPath(subpath.toString());
       if (fl == NULL) {
-        if (!race->addSubDirectory(subpath, true)) {
+        if (!race->addSubDirectory(subpath.toString(), true)) {
           refreshChangePath(id, race, refresh);
           return;
         }
-        fl = race->getFileListForPath(subpath);
+        fl = race->getFileListForPath(subpath.toString());
       }
       getFileListConn(id, race, fl);
       return;
@@ -914,7 +912,7 @@ bool SiteLogic::handleRequest(int id) {
 
   switch (request.requestType()) {
     case REQ_FILELIST: { // filelist
-      std::string targetpath = request.requestData();
+      Path targetpath = request.requestData();
       if (conns[id]->getCurrentPath() == targetpath) {
         getFileListConn(id);
       }
@@ -961,7 +959,7 @@ void SiteLogic::handleRecursiveLogic(int id) {
 }
 
 void SiteLogic::handleRecursiveLogic(int id, FileList * fl) {
-  std::string actiontarget;
+  Path actiontarget;
   if (fl != NULL) {
     connstatetracker[id].getRecursiveLogic()->addFileList(fl);
   }
@@ -1007,19 +1005,17 @@ bool SiteLogic::wasRecentlyListed(SiteRace * sr) const {
 }
 
 void SiteLogic::refreshChangePath(int id, SiteRace * race, bool refresh) {
-  std::string currentpath = conns[id]->getCurrentPath();
+  const Path & currentpath = conns[id]->getCurrentPath();
   std::string subpath = race->getRelevantSubPath();
-  std::string appendsubpath = subpath;
   conns[id]->setCurrentCommandOwner(race);
-  if (appendsubpath.length() > 0) {
-    appendsubpath = "/" + subpath;
-  }
-  std::string targetpath = race->getPath() + appendsubpath;
+  Path targetpath = race->getPath() / subpath;
   FileList * fl = race->getFileListForFullPath(this, targetpath);
   FileListState state = fl->getState();
   if (targetpath != currentpath) {
-    if (site->getAggressiveMkdir()) {
-      conns[id]->setMKDCWDTarget(race->getSection(), race->getRelease() + appendsubpath);
+    if (site->getAggressiveMkdir() &&
+        (!site->isAffiliated(race->getGroup()) || race->getProfile() == SPREAD_DISTRIBUTE))
+    {
+      conns[id]->setMKDCWDTarget(race->getSection(), Path(race->getRelease()) / subpath);
       if (state == FILELIST_NONEXISTENT) {
         conns[id]->doMKD(targetpath);
         return;
@@ -1106,9 +1102,9 @@ void SiteLogic::initTransfer(int id) {
   }
 }
 
-int SiteLogic::requestFileList(const std::string & path) {
+int SiteLogic::requestFileList(const Path & path) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(requestid, REQ_FILELIST, util::cleanPath(path), true));
+  requests.push_back(SiteLogicRequest(requestid, REQ_FILELIST, path.toString(), true));
   activateOne();
   return requestid;
 }
@@ -1120,35 +1116,33 @@ int SiteLogic::requestRawCommand(const std::string & command, bool care) {
   return requestid;
 }
 
-int SiteLogic::requestWipe(const std::string & path, bool recursive) {
+int SiteLogic::requestWipe(const Path & path, bool recursive) {
   int requestid = requestidcounter++;
-  std::string cleanpath = util::cleanPath(path);
   if (recursive) {
-    requests.push_back(SiteLogicRequest(requestid, REQ_WIPE_RECURSIVE, cleanpath, true));
+    requests.push_back(SiteLogicRequest(requestid, REQ_WIPE_RECURSIVE, path.toString(), true));
   }
   else {
-    requests.push_back(SiteLogicRequest(requestid, REQ_WIPE, cleanpath, true));
+    requests.push_back(SiteLogicRequest(requestid, REQ_WIPE, path.toString(), true));
   }
   activateOne();
   return requestid;
 }
 
-int SiteLogic::requestDelete(const std::string & path, bool recursive, bool interactive) {
+int SiteLogic::requestDelete(const Path & path, bool recursive, bool interactive) {
   int requestid = requestidcounter++;
-  std::string cleanpath = util::cleanPath(path);
   if (recursive) {
-    requests.push_back(SiteLogicRequest(requestid, REQ_DEL_RECURSIVE, cleanpath, interactive));
+    requests.push_back(SiteLogicRequest(requestid, REQ_DEL_RECURSIVE, path.toString(), interactive));
   }
   else {
-    requests.push_back(SiteLogicRequest(requestid, REQ_DEL, cleanpath, interactive));
+    requests.push_back(SiteLogicRequest(requestid, REQ_DEL, path.toString(), interactive));
   }
   activateOne();
   return requestid;
 }
 
-int SiteLogic::requestNuke(const std::string & path, int multiplier, const std::string & reason) {
+int SiteLogic::requestNuke(const Path & path, int multiplier, const std::string & reason) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(requestid, REQ_NUKE, util::cleanPath(path), reason, multiplier, true));
+  requests.push_back(SiteLogicRequest(requestid, REQ_NUKE, path.toString(), reason, multiplier, true));
   activateOne();
   return requestid;
 }
@@ -1270,13 +1264,13 @@ bool SiteLogic::lockUploadConn(FileList * fl, int * ret, TransferMonitor * tm) {
 bool SiteLogic::lockTransferConn(FileList * fl, int * ret, TransferMonitor * tm, bool isdownload) {
   int lastreadyid = -1;
   bool foundreadythread = false;
-  std::string path = util::cleanPath(fl->getPath());
+  const Path & path = fl->getPath();
   for (unsigned int i = 0; i < conns.size(); i++) {
     if(connstatetracker[i].isLoggedIn() && !connstatetracker[i].isLocked() &&
         !conns[i]->isProcessing()) {
       foundreadythread = true;
       lastreadyid = i;
-      if (conns[i]->getCurrentPath().compare(path) == 0) {
+      if (conns[i]->getCurrentPath() == path) {
         if (!getSlot(isdownload)) return false;
         *ret = i;
         connstatetracker[i].lockForTransfer(tm, fl, isdownload);
@@ -1290,7 +1284,7 @@ bool SiteLogic::lockTransferConn(FileList * fl, int * ret, TransferMonitor * tm,
         foundreadythread = true;
         if (lastreadyid == -1) {
           lastreadyid = i;
-          if (conns[i]->getTargetPath().compare(path) == 0) {
+          if (conns[i]->getTargetPath() == path) {
             if (!getSlot(isdownload)) return false;
             *ret = i;
             connstatetracker[i].lockForTransfer(tm, fl, isdownload);

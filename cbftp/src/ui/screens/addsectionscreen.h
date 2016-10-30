@@ -7,12 +7,13 @@
 
 class Site;
 class MenuSelectOptionElement;
+class Path;
 
 class AddSectionScreen : public UIWindow {
 public:
   AddSectionScreen(Ui *);
   ~AddSectionScreen();
-  void initialize(unsigned int, unsigned int, std::string, std::string);
+  void initialize(unsigned int, unsigned int, std::string, const Path &);
   void update();
   void redraw();
   bool keyPressed(unsigned int);

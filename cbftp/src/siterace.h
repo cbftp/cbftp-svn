@@ -7,6 +7,7 @@
 
 #include "core/pointer.h"
 #include "commandowner.h"
+#include "path.h"
 
 class Race;
 class FileList;
@@ -15,9 +16,9 @@ class SiteLogic;
 class SiteRace : public CommandOwner {
   private:
     Pointer<Race> race;
-    std::string section;
+    Path section;
     std::string release;
-    std::string path;
+    Path path;
     std::string group;
     std::string username;
     std::string sitename;
@@ -31,21 +32,22 @@ class SiteRace : public CommandOwner {
     unsigned long long int maxfilesize;
     unsigned long long int totalfilesize;
     unsigned int numuploadedfiles;
+    int profile;
     void updateNumFilesUploaded();
     void addNewDirectories();
   public:
     int classType() const;
     std::string getSiteName() const;
-    std::string getSection() const;
+    const Path & getSection() const;
     std::string getRelease() const;
     std::string getGroup() const;
-    std::string getPath() const;
+    const Path & getPath() const;
     unsigned int getId() const;
     std::string getRelevantSubPath();
-    SiteRace(Pointer<Race>, const std::string &, const std::string &, const std::string &, const std::string &);
+    SiteRace(Pointer<Race>, const std::string &, const Path &, const std::string &, const std::string &);
     ~SiteRace();
     FileList * getFileListForPath(const std::string &) const;
-    FileList * getFileListForFullPath(SiteLogic * co, const std::string &) const;
+    FileList * getFileListForFullPath(SiteLogic * co, const Path &) const;
     std::string getSubPathForFileList(FileList *) const;
     std::map<std::string, FileList *>::const_iterator fileListsBegin() const;
     std::map<std::string, FileList *>::const_iterator fileListsEnd() const;
@@ -60,6 +62,7 @@ class SiteRace : public CommandOwner {
     unsigned long long int getTotalFileSize() const;
     bool isDone() const;
     bool isGlobalDone() const;
+    int getProfile() const;
     void complete(bool);
     void abort();
     void reset();

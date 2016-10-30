@@ -6,6 +6,7 @@
 #include "datafiletoolfuncs.h"
 #include "../datafilehandlermethod.h"
 #include "../filesystem.h"
+#include "../path.h"
 
 int usage() {
   std::cout << "datafilecat: decrypts the content of a cbftp data file.\n\n"
@@ -15,8 +16,7 @@ int usage() {
 }
 
 int main(int argc, char ** argv) {
-  std::string path = std::string(getenv("HOME")) +
-                                 "/" + DATAPATH + "/" + DATAFILE;
+  Path path = Path(getenv("HOME")) / DATAPATH / DATAFILE;
   bool useoutfile = false;
   std::string outfile;
   for (int i = 1; i < argc; i++) {

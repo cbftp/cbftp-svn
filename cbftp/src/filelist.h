@@ -4,6 +4,7 @@
 #include <string>
 
 #include "core/pointer.h"
+#include "path.h"
 
 #define MAXTRANSFERATTEMPTS 5
 
@@ -23,7 +24,7 @@ class FileList {
     std::map<std::string, File *> files;
     std::map<std::string, std::string> lowercasefilemap;
     std::string username;
-    std::string path;
+    Path path;
     FileListState state;
     bool locked;
     bool listchanged;
@@ -36,10 +37,10 @@ class FileList {
     unsigned int uploadedfiles;
     void editOwnedFileCount(bool);
     void setChanged();
-    void init(const std::string &, const std::string &, FileListState);
+    void init(const std::string &, const Path &, FileListState);
   public:
-    FileList(const std::string &, const std::string &);
-    FileList(const std::string &, const std::string &, FileListState);
+    FileList(const std::string &, const Path &);
+    FileList(const std::string &, const Path &, FileListState);
     ~FileList();
     bool updateFile(const std::string &, int);
     void touchFile(const std::string &, const std::string &);
@@ -59,7 +60,7 @@ class FileList {
     unsigned int getSize() const;
     unsigned long long int getTotalFileSize() const;
     unsigned int getNumUploadedFiles() const;
-    std::string getPath() const;
+    const Path & getPath() const;
     bool hasSFV() const;
     int getOwnedPercentage() const;
     unsigned long long int getMaxFileSize() const;

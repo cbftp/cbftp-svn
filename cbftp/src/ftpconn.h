@@ -6,6 +6,7 @@
 #include "core/eventreceiver.h"
 #include "core/pointer.h"
 #include "ftpconnectowner.h"
+#include "path.h"
 
 enum FTPConnState {
   STATE_DISCONNECTED,
@@ -96,13 +97,13 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     bool aborted;
     FileList * currentfl;
     CommandOwner * currentco;
-    std::string currentpath;
+    Path currentpath;
     ProtMode protectedmode;
     bool sscnmode;
-    std::string targetpath;
+    Path targetpath;
     bool mkdtarget;
-    std::string mkdsect;
-    std::string mkdpath;
+    Path mkdsect;
+    Path mkdpath;
     std::list<std::string> mkdsubdirs;
     RawBuffer * rawbuf;
     RawBuffer * aggregatedrawbuf;
@@ -157,16 +158,16 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     ~FTPConn();
     int updateFileList(FileList *);
     void updateName();
-    std::string getCurrentPath() const;
+    const Path & getCurrentPath() const;
     void doUSER(bool);
     void doAUTHTLS();
     void doPWD();
     void doPROTP();
     void doPROTC();
     void doRaw(const std::string &);
-    void doWipe(const std::string &, bool);
-    void doNuke(const std::string &, int, const std::string &);
-    void doDELE(const std::string &);
+    void doWipe(const Path &, bool);
+    void doNuke(const Path &, int, const std::string &);
+    void doDELE(const Path &);
     void doSTAT();
     void doSTAT(CommandOwner *, FileList *);
     void doLIST();
@@ -178,8 +179,8 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void doCPSV();
     void doPASV();
     void doPORT(const std::string &, int);
-    void doCWD(const std::string &);
-    void doMKD(const std::string &);
+    void doCWD(const Path &);
+    void doMKD(const Path &);
     void doPRETRETR(const std::string &);
     void doRETR(const std::string &);
     void doPRETSTOR(const std::string &);
@@ -197,11 +198,11 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     std::string getInterfaceAddress() const;
     ProtMode getProtectedMode() const;
     bool getSSCNMode() const;
-    void setMKDCWDTarget(const std::string &, const std::string &);
+    void setMKDCWDTarget(const Path &, const Path &);
     bool hasMKDCWDTarget() const;
-    std::string getTargetPath() const;
-    std::string getMKDCWDTargetSection() const;
-    std::string getMKDCWDTargetPath() const;
+    const Path & getTargetPath() const;
+    const Path & getMKDCWDTargetSection() const;
+    const Path & getMKDCWDTargetPath() const;
     void finishMKDCWDTarget();
     std::list<std::string> * getMKDSubdirs();
     RawBuffer * getRawBuffer() const;

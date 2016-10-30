@@ -21,6 +21,7 @@ class PotentialTracker;
 class FileStore;
 class TransferJob;
 class CommandOwner;
+class Path;
 
 class SiteLogic : public EventReceiver {
   private:
@@ -67,7 +68,7 @@ class SiteLogic : public EventReceiver {
     void cleanupConnection(int);
     void checkFailListRequest(int);
     void clearReadyRequest(SiteLogicRequestReady &);
-    bool setPathExists(int, const std::string &, bool);
+    bool setPathExists(int, const Path &, bool);
     bool handlePreTransfer(int);
     bool handleCommandDele(int, bool);
   public:
@@ -120,11 +121,11 @@ class SiteLogic : public EventReceiver {
     void raceLocalComplete(SiteRace *, int);
     void transferComplete(int, bool isdownload);
     bool getSlot(bool);
-    int requestFileList(const std::string &);
+    int requestFileList(const Path &);
     int requestRawCommand(const std::string &, bool);
-    int requestWipe(const std::string &, bool);
-    int requestDelete(const std::string &, bool, bool);
-    int requestNuke(const std::string &, int, const std::string &);
+    int requestWipe(const Path &, bool);
+    int requestDelete(const Path &, bool, bool);
+    int requestNuke(const Path &, int, const std::string &);
     int requestOneIdle();
     int requestAllIdle(int);
     bool requestReady(int) const;

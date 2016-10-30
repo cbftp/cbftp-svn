@@ -192,8 +192,8 @@ std::string TransferJobStatusScreen::getInfoLabel() const {
 
 void TransferJobStatusScreen::addTransferDetails(unsigned int y, Pointer<TransferStatus> ts) {
   TransferDetails td = TransfersScreen::formatTransferDetails(ts);
-  std::string subpathfile = transferjob->findSubPath(ts) + ts->getFile();
-  addTransferDetails(y, td.timespent, td.transferred, subpathfile, td.timeremaining,
+  Path subpathfile = transferjob->findSubPath(ts) / ts->getFile();
+  addTransferDetails(y, td.timespent, td.transferred, subpathfile.toString(), td.timeremaining,
                      td.speed, td.progress, ts->getProgress());
 }
 

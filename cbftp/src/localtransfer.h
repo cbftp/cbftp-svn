@@ -4,6 +4,7 @@
 #include <fstream>
 
 #include "core/eventreceiver.h"
+#include "path.h"
 
 #define CHUNK 524288
 
@@ -31,7 +32,7 @@ protected:
   bool fileopened;
   FTPConn * ftpconn;
   std::fstream filestream;
-  std::string path;
+  Path path;
   std::string filename;
   char * buf;
   unsigned int buflen;

@@ -22,7 +22,7 @@ BrowseScreenSelector::BrowseScreenSelector(Ui * ui) :
   SiteManager * sm = global->getSiteManager();
   std::vector<Pointer<Site> >::const_iterator it;
   entries.push_back(std::pair<std::string, std::string>(BROWSESCREENSELECTOR_HOME,
-                                                        global->getLocalStorage()->getDownloadPath()));
+                                                        global->getLocalStorage()->getDownloadPath().toString()));
   entries.push_back(std::pair<std::string, std::string>("", ""));
   for (it = sm->begin(); it != sm->end(); it++) {
     entries.push_back(std::pair<std::string, std::string>((*it)->getName(), (*it)->getName()));

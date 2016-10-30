@@ -4,6 +4,7 @@
 
 #include "../../core/pointer.h"
 #include "../../encoding.h"
+#include "../../path.h"
 
 #include <vector>
 #include <string>
@@ -20,7 +21,7 @@ public:
   ViewFileScreen(Ui * ui);
   ~ViewFileScreen();
   void initialize(unsigned int, unsigned int, const std::string &, const std::string &, FileList *);
-  void initialize(unsigned int, unsigned int, const std::string &, const std::string &);
+  void initialize(unsigned int, unsigned int, const Path &, const std::string &);
   void redraw();
   void update();
   bool keyPressed(unsigned int);
@@ -45,7 +46,7 @@ private:
   bool deleteafter;
   std::vector<std::string > rawcontents;
   std::vector<std::basic_string<unsigned int> > translatedcontents;
-  std::string path;
+  Path path;
   int pid;
   encoding::Encoding encoding;
   bool goDown();

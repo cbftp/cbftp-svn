@@ -1,5 +1,6 @@
 #include "site.h"
 
+#include "path.h"
 #include "util.h"
 
 Site::Site() {
@@ -34,11 +35,11 @@ Site::Site(const std::string & name) :
   addresses.push_back(std::pair<std::string, std::string>("ftp.sunet.se", "21"));
 }
 
-std::map<std::string, std::string>::const_iterator Site::sectionsBegin() const {
+std::map<std::string, Path>::const_iterator Site::sectionsBegin() const {
   return sections.begin();
 }
 
-std::map<std::string, std::string>::const_iterator Site::sectionsEnd() const {
+std::map<std::string, Path>::const_iterator Site::sectionsEnd() const {
   return sections.end();
 }
 
@@ -87,7 +88,7 @@ unsigned int Site::getInternMaxDown() const {
   return max_dn;
 }
 
-std::string Site::getBasePath() const {
+const Path & Site::getBasePath() const {
   return basepath;
 }
 
@@ -255,14 +256,14 @@ void Site::setAggressiveMkdir(bool aggressive) {
   aggressivemkdir = aggressive;
 }
 
-std::string Site::getSectionPath(const std::string & sectionname) const {
-  std::map<std::string, std::string>::const_iterator it = sections.find(sectionname);
+const Path Site::getSectionPath(const std::string & sectionname) const {
+  std::map<std::string, Path>::const_iterator it = sections.find(sectionname);
   if (it == sections.end()) return "/";
   return it->second;
 }
 
 bool Site::hasSection(const std::string & sectionname) const {
-  std::map<std::string, std::string>::const_iterator it = sections.find(sectionname);
+  std::map<std::string, Path>::const_iterator it = sections.find(sectionname);
   if (it == sections.end()) return false;
   return true;
 }
@@ -352,7 +353,7 @@ void Site::setPass(const std::string & pass) {
 }
 
 void Site::setBasePath(const std::string & basepath) {
-  this->basepath = util::cleanPath(basepath);
+  this->basepath = basepath;
 }
 
 void Site::setMaxLogins(unsigned int num) {
@@ -554,8 +555,8 @@ std::set<Pointer<Site> >::const_iterator Site::exceptTargetSitesEnd() const {
   return excepttargetsites.end();
 }
 
-std::list<std::string> Site::getSectionsForPath(const std::string & path) const {
-  std::map<std::string, std::string>::const_iterator it;
+std::list<std::string> Site::getSectionsForPath(const Path & path) const {
+  std::map<std::string, Path>::const_iterator it;
   std::list<std::string> retsections;
   for (it = sections.begin(); it!= sections.end(); it++) {
     if (it->second == path) {
@@ -565,35 +566,23 @@ std::list<std::string> Site::getSectionsForPath(const std::string & path) const 
   return retsections;
 }
 
-std::list<std::string> Site::getSectionsForPartialPath(const std::string & path) const {
-  std::map<std::string, std::string>::const_iterator it;
+std::list<std::string> Site::getSectionsForPartialPath(const Path & path) const {
+  std::map<std::string, Path>::const_iterator it;
   std::list<std::string> retsections;
   for (it = sections.begin(); it!= sections.end(); it++) {
-    if (path.find(it->second) != std::string::npos) {
-      if (path.length() > it->second.length() && path[it->second.length()] != '/') {
-        continue;
-      }
+    if (path.contains(it->second)) {
       retsections.push_back(it->first);
     }
   }
   return retsections;
 }
 
-std::pair<std::string, std::string> Site::splitPathInSectionAndSubpath(const std::string & path) {
-  std::string sectionpath;
+std::pair<Path, Path> Site::splitPathInSectionAndSubpath(const Path & path) const {
+  Path sectionpath;
   std::list<std::string> sections = getSectionsForPartialPath(path);
   if (sections.size()) {
     sectionpath = getSectionPath(sections.front());
   }
-  std::string subpath;
-  if (sectionpath.length()) {
-    subpath = path.substr(sectionpath.length());
-    if (subpath.length() > 0 && subpath[0] == '/') {
-      subpath = subpath.substr(1);
-    }
-  }
-  else {
-    subpath = path;
-  }
-  return std::pair<std::string, std::string>(sectionpath, subpath);
+  Path subpath = path - sectionpath;
+  return std::pair<Path, Path>(sectionpath, subpath);
 }

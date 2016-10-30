@@ -4,13 +4,14 @@
 #include <vector>
 
 #include "core/types.h"
+#include "path.h"
 
 class DataFileHandler {
 private:
   BinaryData rawdata;
   std::vector<std::string> decryptedlines;
   std::vector<std::string> outputlines;
-  std::string path;
+  Path path;
   std::string key;
   BinaryData filehash;
   bool fileexists;

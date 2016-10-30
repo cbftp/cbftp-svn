@@ -53,7 +53,7 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
     UIFile * uifile = (*uilist)[listi];
     bool selected = uifile == list.cursoredFile();
     bool isdir = uifile->isDirectory();
-    bool allowed = global->getSkipList()->isAllowed(list.getPath() + "/" + uifile->getName(), isdir, false);
+    bool allowed = global->getSkipList()->isAllowed((list.getPath() / uifile->getName()).toString(), isdir, false);
     std::string prepchar = " ";
     if (isdir) {
       if (allowed) {
@@ -219,16 +219,11 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
     case KEY_BACKSPACE:
     {
       //go up one directory level, or return if at top already
-      std::string oldpath = list.getPath();
-      if (oldpath == "/" ) {
+      const Path & oldpath = list.getPath();
+      if (oldpath == "/") {
         return BrowseScreenAction(BROWSESCREENACTION_CLOSE);
       }
-      size_t position = oldpath.rfind("/");
-      if (position == 0) {
-        position = 1;
-      }
-      std::string targetpath = oldpath.substr(0, position);
-      gotoPath(targetpath);
+      gotoPath(oldpath.dirName());
       ui->setInfo();
       ui->redraw();
       break;
@@ -302,22 +297,19 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       bool isdir = cursoredfile->isDirectory();
       bool islink = cursoredfile->isLink();
       if (isdir || islink) {
-        std::string oldpath = list.getPath();
-        if (oldpath.length() > 1) {
-          oldpath += "/";
-        }
-        std::string targetpath;
+        const Path & oldpath = list.getPath();
+        Path targetpath;
         if (islink) {
-          std::string target = cursoredfile->getLinkTarget();
-          if (target.length() > 0 && target[0] == '/') {
+          Path target = cursoredfile->getLinkTarget();
+          if (target.isAbsolute()) {
             targetpath = target;
           }
           else {
-            targetpath = oldpath + target;
+            targetpath = oldpath / target;
           }
         }
         else {
-          targetpath = oldpath + cursoredfile->getName();
+          targetpath = oldpath / cursoredfile->getName();
         }
         gotoPath(targetpath);
         ui->setInfo();
@@ -388,7 +380,7 @@ std::string BrowseScreenLocal::getInfoLabel() const {
 }
 
 std::string BrowseScreenLocal::getInfoText() const {
-  std::string text = list.getPath();
+  std::string text = list.getPath().toString();
   if (changedsort) {
     if (tickcount++ < 8) {
       text = "Sort method: " + list.getSortMethod();
@@ -400,7 +392,7 @@ std::string BrowseScreenLocal::getInfoText() const {
   }
   else if (cwdfailed) {
     if (tickcount++ < 8) {
-      text = "CWD failed: " + targetpath;
+      text = "CWD failed: " + targetpath.toString();
       return text;
     }
     else {
@@ -482,7 +474,7 @@ void BrowseScreenLocal::disableGotoMode() {
   }
 }
 
-void BrowseScreenLocal::gotoPath(const std::string & path) {
+void BrowseScreenLocal::gotoPath(const Path & path) {
   targetpath = path;
   Pointer<LocalFileList> filelist = global->getLocalStorage()->getLocalFileList(path);
   if (!filelist) {
@@ -492,7 +484,7 @@ void BrowseScreenLocal::gotoPath(const std::string & path) {
   }
   this->filelist = filelist;
   if (list.cursoredFile() != NULL) {
-    selectionhistory.push_front(std::pair<std::string, std::string>(list.getPath(), list.cursoredFile()->getName()));
+    selectionhistory.push_front(std::pair<Path, std::string>(list.getPath(), list.cursoredFile()->getName()));
   }
   else {
     currentviewspan = 0;
@@ -508,7 +500,7 @@ void BrowseScreenLocal::gotoPath(const std::string & path) {
     list.setFilters(filters);
   }
   sort();
-  for (std::list<std::pair<std::string, std::string> >::iterator it = selectionhistory.begin(); it != selectionhistory.end(); it++) {
+  for (std::list<std::pair<Path, std::string> >::iterator it = selectionhistory.begin(); it != selectionhistory.end(); it++) {
     if (it->first == path) {
       list.selectFileName(it->second);
       selectionhistory.erase(it);

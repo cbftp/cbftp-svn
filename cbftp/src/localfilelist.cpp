@@ -4,7 +4,7 @@
 
 #include "util.h"
 
-LocalFileList::LocalFileList(const std::string & path) :
+LocalFileList::LocalFileList(const Path & path) :
   path(path), sizefiles(0) {
 }
 
@@ -40,7 +40,7 @@ std::map<std::string, LocalFile>::const_iterator LocalFileList::find(const std::
   return it;
 }
 
-std::string LocalFileList::getPath() const {
+const Path & LocalFileList::getPath() const {
   return path;
 }
 

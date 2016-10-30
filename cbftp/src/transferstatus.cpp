@@ -3,8 +3,8 @@
 #include "util.h"
 
 TransferStatus::TransferStatus(int type, std::string source, std::string target,
-    std::string release, std::string file, FileList * fls, std::string sourcepath,
-    FileList * fld, std::string targetpath, unsigned long long int sourcesize,
+    std::string release, std::string file, FileList * fls, const Path & sourcepath,
+    FileList * fld, const Path & targetpath, unsigned long long int sourcesize,
     unsigned int assumedspeed, int srcslot, int dstslot, bool ssl, bool defaultactive) :
     type(type), source(source), target(target), release(release), file(file),
     timestamp(util::ctimeLog()), sourcepath(sourcepath),
@@ -39,11 +39,11 @@ std::string TransferStatus::getFile() const {
   return file;
 }
 
-std::string TransferStatus::getSourcePath() const {
+const Path & TransferStatus::getSourcePath() const {
   return sourcepath;
 }
 
-std::string TransferStatus::getTargetPath() const {
+const Path & TransferStatus::getTargetPath() const {
   return targetpath;
 }
 

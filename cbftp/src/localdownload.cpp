@@ -12,18 +12,19 @@
 #include "transfermonitor.h"
 #include "ftpconn.h"
 #include "localstorage.h"
+#include "path.h"
 
 LocalDownload::LocalDownload(LocalStorage * ls) :
   ls(ls)
 {
 }
 
-void LocalDownload::engage(TransferMonitor * tm, const std::string & path, const std::string & filename, const std::string & addr, int port, bool ssl, FTPConn * ftpconn) {
+void LocalDownload::engage(TransferMonitor * tm, const Path & path, const std::string & filename, const std::string & addr, int port, bool ssl, FTPConn * ftpconn) {
   init(tm, ftpconn, path, filename, false, -1, ssl, port, true);
   sockid = global->getIOManager()->registerTCPClientSocket(this, addr, port);
 }
 
-bool LocalDownload::engage(TransferMonitor * tm, const std::string & path, const std::string & filename, int port, bool ssl, FTPConn * ftpconn) {
+bool LocalDownload::engage(TransferMonitor * tm, const Path & path, const std::string & filename, int port, bool ssl, FTPConn * ftpconn) {
   init(tm, ftpconn, path, filename, false, -1, ssl, port, false);
   sockid = global->getIOManager()->registerTCPServerSocket(this, port);
   return sockid != -1;
@@ -40,7 +41,7 @@ bool LocalDownload::engage(TransferMonitor * tm, int storeid, int port, bool ssl
   return sockid != -1;
 }
 
-void LocalDownload::init(TransferMonitor * tm, FTPConn * ftpconn, const std::string & path, const std::string & filename, bool inmemory, int storeid, bool ssl, int port, bool passivemode) {
+void LocalDownload::init(TransferMonitor * tm, FTPConn * ftpconn, const Path & path, const std::string & filename, bool inmemory, int storeid, bool ssl, int port, bool passivemode) {
   this->tm = tm;
   this->ftpconn = ftpconn;
   this->path = path;

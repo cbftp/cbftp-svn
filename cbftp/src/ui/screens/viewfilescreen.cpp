@@ -94,10 +94,10 @@ void ViewFileScreen::initialize(unsigned int row, unsigned int col, const std::s
   init(row, col);
 }
 
-void ViewFileScreen::initialize(unsigned int row, unsigned int col, const std::string & dir, const std::string & file) {
+void ViewFileScreen::initialize(unsigned int row, unsigned int col, const Path & dir, const std::string & file) {
   initialize();
   deleteafter = false;
-  path = dir + "/" + file;
+  path = dir / file;
   this->file = file;
   size = global->getLocalStorage()->getFileSize(path);
   state = ViewFileState::LOADING_VIEWER;
@@ -132,13 +132,13 @@ void ViewFileScreen::redraw() {
     case ViewFileState::CONNECTING:
       if (sitelogic->requestReady(requestid)) {
         sitelogic->finishRequest(requestid);
-        std::string temppath = global->getLocalStorage()->getTempPath();
+        const Path & temppath = global->getLocalStorage()->getTempPath();
         Pointer<LocalFileList> localfl = global->getLocalStorage()->getLocalFileList(temppath);
         ts = global->getTransferManager()->suggestDownload(file, sitelogic, filelist, localfl);
         if (!!ts) {
           state = ViewFileState::DOWNLOADING;
           ts->setAwaited(true);
-          path = temppath + "/" + file;
+          path = temppath / file;
           expectbackendpush = true;
         }
         else {

@@ -30,7 +30,7 @@ BinaryData getPassphrase() {
   return BinaryData(passphrase.begin(), passphrase.end());
 }
 
-bool checkInputFile(const std::string & path) {
+bool checkInputFile(const Path & path) {
   if (!FileSystem::fileExists(path)) {
     std::cerr << "Error: The input file does not exist." << std::endl;
     return false;

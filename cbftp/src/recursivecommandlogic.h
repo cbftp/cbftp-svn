@@ -5,6 +5,8 @@
 #include <list>
 #include <vector>
 
+#include "path.h"
+
 class FileList;
 
 #define RCL_DELETE 0
@@ -20,19 +22,17 @@ class RecursiveCommandLogic {
 private:
   int mode;
   bool active;
-  std::string basepath;
+  Path basepath;
   std::string target;
-  std::list<std::string> wantedlists;
-  std::vector<std::string> deletefiles;
+  std::list<Path> wantedlists;
+  std::vector<Path> deletefiles;
   bool listtarget;
-  std::string listtargetpath;
+  Path listtargetpath;
 public:
   RecursiveCommandLogic();
-  void initialize(int, std::string, std::string);
+  void initialize(int, const Path &, const std::string &);
   bool isActive() const;
-  int getAction(std::string, std::string &);
+  int getAction(const Path &, Path &);
   void addFileList(FileList *);
   void failedCwd();
 };
-
-bool lengthSort(std::string, std::string);

@@ -7,6 +7,7 @@
 #include <utility>
 
 #include "core/pointer.h"
+#include "path.h"
 
 #define REPORT_LOGINS_IF_UNLIMITED 10
 
@@ -37,7 +38,7 @@ private:
   std::list<std::pair<std::string, std::string> > addresses;
   std::string user;
   std::string pass;
-  std::string basepath;
+  Path basepath;
   unsigned int logins;
   unsigned int max_up;
   unsigned int max_dn;
@@ -53,7 +54,7 @@ private:
   bool allowupload;
   bool allowdownload;
   int priority;
-  std::map<std::string, std::string> sections;
+  std::map<std::string, Path> sections;
   std::map<std::string, int> avgspeed;
   std::map<std::string, std::pair<int, unsigned long long int> > avgspeedsamples;
   std::set<std::string> affils;
@@ -71,8 +72,8 @@ private:
 public:
   Site();
   Site(const std::string &);
-  std::map<std::string, std::string>::const_iterator sectionsBegin() const;
-  std::map<std::string, std::string>::const_iterator sectionsEnd() const;
+  std::map<std::string, Path>::const_iterator sectionsBegin() const;
+  std::map<std::string, Path>::const_iterator sectionsEnd() const;
   std::map<std::string, int>::const_iterator avgspeedBegin() const;
   std::map<std::string, int>::const_iterator avgspeedEnd() const;
   unsigned int getMaxLogins() const;
@@ -81,7 +82,7 @@ public:
   unsigned int getInternMaxLogins() const;
   unsigned int getInternMaxUp() const;
   unsigned int getInternMaxDown() const;
-  std::string getBasePath() const;
+  const Path & getBasePath() const;
   bool unlimitedLogins() const;
   bool unlimitedUp() const;
   bool unlimitedDown() const;
@@ -112,7 +113,7 @@ public:
   std::string getProxy() const;
   unsigned int getMaxIdleTime() const;
   std::string getName() const;
-  std::string getSectionPath(const std::string &) const;
+  const Path getSectionPath(const std::string &) const;
   bool hasSection(const std::string &) const;
   std::string getAddress() const;
   std::string getPort() const;
@@ -167,7 +168,7 @@ public:
   std::set<Pointer<Site> >::const_iterator exceptTargetSitesBegin() const;
   std::set<Pointer<Site> >::const_iterator exceptTargetSitesEnd() const;
   void addSection(const std::string &, const std::string &);
-  std::list<std::string> getSectionsForPath(const std::string &) const;
-  std::list<std::string> getSectionsForPartialPath(const std::string &) const;
-  std::pair<std::string, std::string> splitPathInSectionAndSubpath(const std::string &);
+  std::list<std::string> getSectionsForPath(const Path &) const;
+  std::list<std::string> getSectionsForPartialPath(const Path &) const;
+  std::pair<Path, Path> splitPathInSectionAndSubpath(const Path &) const;
 };

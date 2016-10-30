@@ -12,6 +12,7 @@
 #include "ftpconn.h"
 #include "localstorage.h"
 #include "util.h"
+#include "path.h"
 
 LocalUpload::LocalUpload() :
   filepos(0)
@@ -20,18 +21,18 @@ LocalUpload::LocalUpload() :
   buflen = CHUNK;
 }
 
-void LocalUpload::engage(TransferMonitor * tm, const std::string & path, const std::string & filename, const std::string & addr, int port, bool ssl, FTPConn * ftpconn) {
+void LocalUpload::engage(TransferMonitor * tm, const Path & path, const std::string & filename, const std::string & addr, int port, bool ssl, FTPConn * ftpconn) {
   init(tm, ftpconn, path, filename, ssl, port, true);
   sockid = global->getIOManager()->registerTCPClientSocket(this, addr, port);
 }
 
-bool LocalUpload::engage(TransferMonitor * tm, const std::string & path, const std::string & filename, int port, bool ssl, FTPConn * ftpconn) {
+bool LocalUpload::engage(TransferMonitor * tm, const Path & path, const std::string & filename, int port, bool ssl, FTPConn * ftpconn) {
   init(tm, ftpconn, path, filename, ssl, port, false);
   sockid = global->getIOManager()->registerTCPServerSocket(this, port);
   return sockid != -1;
 }
 
-void LocalUpload::init(TransferMonitor * tm, FTPConn * ftpconn, const std::string & path, const std::string & filename, bool ssl, int port, bool passivemode) {
+void LocalUpload::init(TransferMonitor * tm, FTPConn * ftpconn, const Path & path, const std::string & filename, bool ssl, int port, bool passivemode) {
   this->tm = tm;
   this->ftpconn = ftpconn;
   this->path = path;

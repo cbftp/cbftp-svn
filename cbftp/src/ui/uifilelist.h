@@ -7,6 +7,7 @@
 #include "uifile.h"
 
 #include "../core/pointer.h"
+#include "../path.h"
 
 class FileList;
 class LocalFileList;
@@ -18,7 +19,7 @@ private:
   std::list<unsigned int> selectedfiles;
   unsigned int currentposition;
   UIFile * currentcursored;
-  std::string path;
+  Path path;
   unsigned int numfiles;
   unsigned int numdirs;
   unsigned long long int totalsize;
@@ -55,7 +56,7 @@ public:
   unsigned long long int getFilteredTotalSize() const;
   const std::vector <UIFile *> * getSortedList() const;
   unsigned int currentCursorPosition() const;
-  std::string getPath() const;
+  const Path & getPath() const;
   std::string getSortMethod() const;
   bool separatorsEnabled() const;
   void removeFile(std::string);

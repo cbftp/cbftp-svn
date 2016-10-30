@@ -5,11 +5,18 @@
 #include "filelist.h"
 #include "file.h"
 
+bool lengthSort(const Path & a, const Path & b) {
+  if (a.toString().length() < b.toString().length()) {
+    return true;
+  }
+  return false;
+}
+
 RecursiveCommandLogic::RecursiveCommandLogic() {
   active = false;
 }
 
-void RecursiveCommandLogic::initialize(int mode, std::string basepath, std::string target) {
+void RecursiveCommandLogic::initialize(int mode, const Path & basepath, const std::string & target) {
   this->mode = mode;
   active = true;
   listtarget = false;
@@ -24,7 +31,7 @@ bool RecursiveCommandLogic::isActive() const {
   return active;
 }
 
-int RecursiveCommandLogic::getAction(std::string currentpath, std::string & actiontarget) {
+int RecursiveCommandLogic::getAction(const Path & currentpath, Path & actiontarget) {
   if (listtarget) {
     if (currentpath == listtargetpath) {
       listtarget = false;
@@ -60,14 +67,14 @@ int RecursiveCommandLogic::getAction(std::string currentpath, std::string & acti
 }
 
 void RecursiveCommandLogic::addFileList(FileList * fl) {
-  std::string path = fl->getPath();
+  const Path & path = fl->getPath();
   deletefiles.push_back(path);
   for (std::map<std::string, File *>::iterator it = fl->begin(); it != fl->end(); it++) {
     if (it->second->isDirectory()) {
-      wantedlists.push_back(path + + "/" + it->first);
+      wantedlists.push_back(path / it->first);
     }
     else {
-      deletefiles.push_back(path + + "/" + it->first);
+      deletefiles.push_back(path / it->first);
     }
   }
   if (!wantedlists.size()) {
@@ -80,11 +87,4 @@ void RecursiveCommandLogic::failedCwd() {
   if (!wantedlists.size()) {
     std::sort(deletefiles.begin(), deletefiles.end(), lengthSort);
   }
-}
-
-bool lengthSort(std::string a, std::string b) {
-  if (a.length() < b.length()) {
-    return true;
-  }
-  return false;
 }

@@ -44,7 +44,7 @@ void NukeScreen::redraw() {
   ui->erase();
   ui->printStr(1, 1, "Site: " + sitestr);
   ui->printStr(2, 1, "Release: " + release);
-  ui->printStr(3, 1, "Path: " + path);
+  ui->printStr(3, 1, "Path: " + path.toString());
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
@@ -138,17 +138,17 @@ bool NukeScreen::keyPressed(unsigned int ch) {
       return true;
     }
     case 'p': {
-      int reqid = sitelogic->requestNuke(path + "/" + release, 1, "proper");
+      int reqid = sitelogic->requestNuke(path / release, 1, "proper");
       ui->returnNuke(reqid);
       return true;
     }
     case 'r': {
-      int reqid = sitelogic->requestNuke(path + "/" + release, 1, "repack");
+      int reqid = sitelogic->requestNuke(path / release, 1, "repack");
       ui->returnNuke(reqid);
       return true;
     }
     case 'd': {
-      int reqid = sitelogic->requestNuke(path + "/" + release, 1, "dupe");
+      int reqid = sitelogic->requestNuke(path / release, 1, "dupe");
       ui->returnNuke(reqid);
       return true;
     }
@@ -169,7 +169,7 @@ int NukeScreen::nuke() {
       reason = msoe.get<MenuSelectOptionTextField>()->getData();
     }
   }
-  return sitelogic->requestNuke(path + "/" + release, multiplier, reason);
+  return sitelogic->requestNuke(path / release, multiplier, reason);
 }
 std::string NukeScreen::getLegendText() const {
   return currentlegendtext;
