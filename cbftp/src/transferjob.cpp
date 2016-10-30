@@ -29,7 +29,9 @@ TransferJob::TransferJob(unsigned int id, const Pointer<SiteLogic> & sl, std::st
   }
   if (srclist->getFile(srcfile)->isDirectory()) {
     type = TRANSFERJOB_DOWNLOAD;
-    srcfilelists[""] = new FileList(filelist->getUser(), filelist->getPath() / dstfile);
+    FileList * fl = new FileList(filelist->getUser(), filelist->getPath() / dstfile);
+    srcfilelists[""] = fl;
+    filelistsrefreshed[fl] = false;
     updateLocalFileLists(path / dstfile);
   }
   else {
@@ -52,7 +54,9 @@ TransferJob::TransferJob(unsigned int id, const Path & path, std::string srcfile
     locallist = global->getLocalStorage()->getLocalFileList(path);
     std::map<std::string, LocalFile>::const_iterator it = locallist->find(srcfile);
     if (it != locallist->end() && it->second.isDirectory()) {
-      dstfilelists[""] = new FileList(filelist->getUser(), filelist->getPath() / dstfile);
+      FileList * fl = new FileList(filelist->getUser(), filelist->getPath() / dstfile);
+      dstfilelists[""] = fl;
+      filelistsrefreshed[fl] = false;
       updateLocalFileLists(path / srcfile);
     }
     else {
@@ -73,8 +77,12 @@ TransferJob::TransferJob(unsigned int id, const Pointer<SiteLogic> & slsrc, std:
   init();
   if (srclist->getFile(srcfile)->isDirectory()) {
     type = TRANSFERJOB_FXP;
-    srcfilelists[""] = new FileList(srcfilelist->getUser(), srcfilelist->getPath() / srcfile);
-    dstfilelists[""] = new FileList(dstfilelist->getUser(), dstfilelist->getPath() / dstfile);
+    FileList * fl = new FileList(srcfilelist->getUser(), srcfilelist->getPath() / srcfile);
+    srcfilelists[""] = fl;
+    filelistsrefreshed[fl] = false;
+    fl = new FileList(dstfilelist->getUser(), dstfilelist->getPath() / dstfile);
+    dstfilelists[""] = fl;
+    filelistsrefreshed[fl] = false;
   }
   else {
     type = TRANSFERJOB_FXP_FILE;
@@ -235,10 +243,14 @@ void TransferJob::fileListUpdated(SiteLogic * sl, FileList * fl) {
     filelistsrefreshed[fl] = false;
     it2 = filelistsrefreshed.find(fl);
   }
-  it2->second = true;
+  if (fl->getState() == FILELIST_NONEXISTENT || fl->getState() == FILELIST_LISTED) {
+    it2->second = true;
+  }
   bool allrefreshed = true;
   for (it2 = filelistsrefreshed.begin(); it2 != filelistsrefreshed.end(); it2++) {
-    if (!it2->second) {
+    if (!it2->second ||
+        (it2->first->getState() != FILELIST_LISTED && it2->first->getState() != FILELIST_NONEXISTENT))
+    {
       allrefreshed = false;
       break;
     }
@@ -348,8 +360,7 @@ void TransferJob::refreshOrAlmostDone() {
       type == TRANSFERJOB_DOWNLOAD_FILE || type == TRANSFERJOB_UPLOAD_FILE) {
     almostdone = true;
   }
-  else {
-    clearRefreshLists();
+  else if (!filelistsrefreshed.size()) {
     for (std::map<std::string, FileList *>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
       filelistsrefreshed[it->second] = false;
     }
@@ -537,7 +548,7 @@ Path TransferJob::findSubPath(const Pointer<TransferStatus> & ts) const {
     case TRANSFERJOB_UPLOAD: {
       Path relpath = localpath / srcfile;
       if (path != relpath && path.contains(relpath)) {
-        return relpath - path;
+        return path - relpath;
       }
       break;
     }
@@ -586,10 +597,14 @@ void TransferJob::updateLocalFileLists(const Path & basepath) {
       if (it->second.isDirectory()) {
         localfilelists[it->first] = global->getLocalStorage()->getLocalFileList(base->getPath() / it->first);
         if (type == TRANSFERJOB_DOWNLOAD && srcfilelists.find(it->first) == srcfilelists.end()) {
-          srcfilelists[it->first] = new FileList(srclist->getUser(), srclist->getPath() / srcfile / it->first);
+          FileList * fl = new FileList(srclist->getUser(), srclist->getPath() / srcfile / it->first);
+          srcfilelists[it->first] = fl;
+          filelistsrefreshed[fl] = false;
         }
         else if (type == TRANSFERJOB_UPLOAD && dstfilelists.find(it->first) == dstfilelists.end()) {
-          dstfilelists[it->first] = new FileList(dstlist->getUser(), dstlist->getPath() / dstfile / it->first);
+          FileList * fl = new FileList(dstlist->getUser(), dstlist->getPath() / dstfile / it->first);
+          dstfilelists[it->first] = fl;
+          filelistsrefreshed[fl] = false;
         }
       }
     }

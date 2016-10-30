@@ -369,17 +369,10 @@ bool Engine::transferJobActionRequest(Pointer<TransferJob> & tj) {
   if (!tj->isInitialized()) {
     tj->setInitialized();
   }
+  refreshPendingTransferList(tj);
   if (it->second.size() == 0) {
-    const Pointer<SiteLogic> & dst = tj->getDst();
-    if (!!dst && tj->wantsList(dst.get())) {
-      dst->activateOne();
-      return false;
-    }
-    refreshPendingTransferList(tj);
-    if (it->second.size() == 0) {
-      tj->refreshOrAlmostDone();
-      return true;
-    }
+    tj->refreshOrAlmostDone();
+    return true;
   }
   if (tj->listsRefreshed()) {
     tj->clearRefreshLists();

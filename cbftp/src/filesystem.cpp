@@ -55,7 +55,7 @@ bool createDirectory(const Path & path, bool privatedir) {
 
 bool createDirectoryRecursive(const Path & path) {
   std::list<std::string> pathdirs = path.split();
-  Path partialpath;
+  Path partialpath = path.isAbsolute() ? "/" : "";
   while (pathdirs.size() > 0) {
     partialpath = partialpath / pathdirs.front();
     pathdirs.pop_front();
