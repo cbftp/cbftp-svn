@@ -169,7 +169,7 @@ void SiteLogic::listRefreshed(int id) {
   connstatetracker[id].resetIdleTime();
   CommandOwner * currentco = conns[id]->currentCommandOwner();
   if (currentco != NULL) {
-    currentco->fileListUpdated(conns[id]->currentFileList());
+    currentco->fileListUpdated(this, conns[id]->currentFileList());
   }
   if (connstatetracker[id].getRecursiveLogic()->isActive()) {
     handleRecursiveLogic(id, conns[id]->currentFileList());
@@ -200,12 +200,12 @@ bool SiteLogic::setPathExists(int id, const Path & path, bool exists) {
     if ((fl = currentco->getFileListForFullPath(this, path)) != NULL) {
       if (exists && (fl->getState() == FILELIST_UNKNOWN || fl->getState() == FILELIST_NONEXISTENT)) {
         fl->setExists();
-        currentco->fileListUpdated(fl);
+        currentco->fileListUpdated(this, fl);
         return true;
       }
       else if (!exists && fl->getState() == FILELIST_UNKNOWN) {
         fl->setNonExistent();
-        currentco->fileListUpdated(fl);
+        currentco->fileListUpdated(this, fl);
         return true;
       }
     }
