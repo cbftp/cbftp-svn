@@ -536,7 +536,7 @@ Path TransferJob::findSubPath(const Pointer<TransferStatus> & ts) const {
       break;
     case TRANSFERJOB_UPLOAD: {
       Path relpath = localpath / srcfile;
-      if (path != relpath && path.contains(relpath) != std::string::npos) {
+      if (path != relpath && path.contains(relpath)) {
         return relpath - path;
       }
       break;
