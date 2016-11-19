@@ -338,7 +338,7 @@ void Engine::raceFileListRefreshed(SiteLogic * sls, SiteRace * sr) {
   Pointer<Race> race = sr->getRace();
   if (currentraces.size() > 0) {
     if (!global->getWorkManager()->overload()) {
-      estimateRaceSizes();
+      estimateRaceSize(race);
       checkIfRaceComplete(sls, race);
       filelistUpdated();
     }
@@ -415,24 +415,34 @@ bool Engine::transferJobActionRequest(Pointer<TransferJob> & tj) {
 
 void Engine::estimateRaceSizes() {
   for (std::list<Pointer<Race> >::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
-    for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
-      SiteRace * srs = its->first;
-      std::map<std::string, FileList *>::const_iterator itfl;
-      for (itfl = srs->fileListsBegin(); itfl != srs->fileListsEnd(); itfl++) {
-        FileList * fls = itfl->second;
+    estimateRaceSize(*itr, true);
+  }
+}
+
+void Engine::estimateRaceSize(const Pointer<Race> & race) {
+  estimateRaceSize(race, false);
+}
+
+void Engine::estimateRaceSize(const Pointer<Race> & race, bool forceupdate) {
+  for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator its = race->begin(); its != race->end(); its++) {
+    SiteRace * srs = its->first;
+    std::map<std::string, FileList *>::const_iterator itfl;
+    for (itfl = srs->fileListsBegin(); itfl != srs->fileListsEnd(); itfl++) {
+      FileList * fls = itfl->second;
+      if (!forceupdate) {
         if (srs->sizeEstimated(fls)) {
           continue;
         }
         reportCurrentSize(srs, fls, false);
-        if (fls->hasSFV()) {
-          if (srs->getSFVObservedTime(fls) > SFVDIROBSERVETIME) {
-            reportCurrentSize(srs, fls, true);
-          }
+      }
+      if (fls->hasSFV()) {
+        if (srs->getSFVObservedTime(fls) > SFVDIROBSERVETIME) {
+          reportCurrentSize(srs, fls, true);
         }
-        else {
-          if (srs->getObservedTime(fls) > DIROBSERVETIME) {
-            reportCurrentSize(srs, fls, true);
-          }
+      }
+      else {
+        if (srs->getObservedTime(fls) > DIROBSERVETIME) {
+          reportCurrentSize(srs, fls, true);
         }
       }
     }
@@ -440,7 +450,7 @@ void Engine::estimateRaceSizes() {
 }
 
 void Engine::reportCurrentSize(SiteRace * srs, FileList * fls, bool final) {
-  std::list<std::string> uniques;
+  std::set<std::string> uniques;
   std::map<std::string, File *>::const_iterator itf;
   std::string subpath = srs->getSubPathForFileList(fls);
   for (itf = fls->begin(); itf != fls->end(); itf++) {
@@ -463,19 +473,9 @@ void Engine::reportCurrentSize(SiteRace * srs, FileList * fls, bool final) {
     if (!global->getSkipList()->isAllowed((prepend / filename).toString(), isdir)) {
       continue;
     }
-    std::list<std::string>::iterator it;
-    bool exists = false;
-    for (it = uniques.begin(); it != uniques.end(); it++) {
-      if ((*it) == filename) {
-        exists = true;
-        break;
-      }
-    }
-    if (!exists) {
-      uniques.push_back(filename);
-    }
+    uniques.insert(filename);
   }
-  srs->reportSize(fls, &uniques, final);
+  srs->reportSize(fls, uniques, final);
 }
 
 void Engine::refreshScoreBoard() {
@@ -1016,6 +1016,7 @@ void Engine::tick(int message) {
     global->getTickPoke()->stopPoke(this, 0);
     pokeregistered = false;
   }
+  estimateRaceSizes();
 }
 
 void Engine::issueGlobalComplete(Pointer<Race> & race) {

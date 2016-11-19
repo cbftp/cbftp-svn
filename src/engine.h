@@ -75,6 +75,8 @@ public:
   Pointer<Race> newSpreadJob(int, const std::string &, const std::string &, const std::list<std::string> &);
   Pointer<Race> newSpreadJob(int, const std::string &, const std::string &);
   void estimateRaceSizes();
+  void estimateRaceSize(const Pointer<Race> &);
+  void estimateRaceSize(const Pointer<Race> &, bool);
   void reportCurrentSize(SiteRace *, FileList *, bool final);
   void refreshScoreBoard();
   void issueOptimalTransfers();

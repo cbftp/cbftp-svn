@@ -9,7 +9,7 @@
 #include "proxy.h"
 #include "util.h"
 
-#define WELCOME_TIMEOUT_MSEC 5000
+#define WELCOME_TIMEOUT_MSEC 7000
 
 FTPConnect::FTPConnect(int id, FTPConnectOwner * owner, const std::string & addr, const std::string & port, Proxy * proxy, bool primary) :
   id(id),
