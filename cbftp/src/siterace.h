@@ -4,6 +4,7 @@
 #include <map>
 #include <set>
 #include <list>
+#include <set>
 
 #include "core/pointer.h"
 #include "commandowner.h"
@@ -69,7 +70,7 @@ class SiteRace : public CommandOwner {
     void subPathComplete(FileList *);
     bool isSubPathComplete(const std::string &) const;
     bool isSubPathComplete(FileList *) const;
-    void reportSize(FileList *, std::list<std::string> *, bool);
+    void reportSize(FileList *, const std::set<std::string> &, bool);
     int getObservedTime(FileList *);
     int getSFVObservedTime(FileList *);
     bool hasBeenUpdatedSinceLastCheck();

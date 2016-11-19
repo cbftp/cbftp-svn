@@ -293,15 +293,15 @@ void Race::setTimeout() {
   status = RACE_STATUS_TIMEOUT;
 }
 
-void Race::reportSize(SiteRace * sr, FileList * fl, const std::string & subpath, std::list<std::string > * uniques, bool final) {
-  std::list<std::string>::iterator itu;
+void Race::reportSize(SiteRace * sr, FileList * fl, const std::string & subpath, const std::set<std::string > & uniques, bool final) {
+  std::set<std::string>::const_iterator itu;
   File * file;
   if (sizelocationtrackers.find(subpath) == sizelocationtrackers.end()) {
     sizelocationtrackers[subpath] = std::map<std::string, SizeLocationTrack>();
   }
   bool recalc = false;
-  for (itu = uniques->begin(); itu != uniques->end(); itu++) {
-    std::string unique = *itu;
+  for (itu = uniques.begin(); itu != uniques.end(); itu++) {
+    const std::string & unique = *itu;
     if (sizelocationtrackers[subpath].find(unique) == sizelocationtrackers[subpath].end()) {
       sizelocationtrackers[subpath][unique] = SizeLocationTrack();
     }
@@ -336,6 +336,9 @@ void Race::reportSize(SiteRace * sr, FileList * fl, const std::string & subpath,
     for (it = sizelocationtrackers[subpath].begin(); it != sizelocationtrackers[subpath].end(); it++) {
       if (it->second.numSites() > minnumsites || sites.size() == 2) {
         unsigned long long int estimatedsize = it->second.getEstimatedSize();
+        if (!estimatedsize) {
+          estimatedsize = bestunknownfilesizeestimate;
+        }
         guessedfilelists[subpath][it->first] = estimatedsize;
         aggregatedsize += estimatedsize;
       }
@@ -345,7 +348,7 @@ void Race::reportSize(SiteRace * sr, FileList * fl, const std::string & subpath,
       calculateTotalFileSize();
     }
     if (final) {
-      sizes[sr][subpath] = uniques->size();
+      sizes[sr][subpath] = uniques.size();
       std::map<SiteRace *, std::map<std::string, unsigned int> >::iterator it;
       std::map<std::string, unsigned int>::iterator it2;
       std::vector<unsigned int> subpathsizes;
@@ -355,9 +358,10 @@ void Race::reportSize(SiteRace * sr, FileList * fl, const std::string & subpath,
           subpathsizes.push_back(it2->second);
         }
       }
-      // stupid formula, replace with time check from race start
       if (subpathsizes.size() == sites.size() ||
-        (subpathsizes.size() >= sites.size() * 0.8 && sites.size() > 2)) {
+        (subpathsizes.size() >= sites.size() * 0.8 && sites.size() > 2) ||
+        getTimeSpent() >= 20)
+      {
         estimatedsize[subpath] = guessedfilelists[subpath].size();
       }
     }

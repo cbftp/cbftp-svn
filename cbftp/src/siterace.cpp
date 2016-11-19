@@ -290,7 +290,7 @@ int SiteRace::getProfile() const {
   return profile;
 }
 
-void SiteRace::reportSize(FileList * fl, std::list<std::string> * uniques, bool final) {
+void SiteRace::reportSize(FileList * fl, const std::set<std::string> & uniques, bool final) {
   if (!sizeEstimated(fl)) {
     std::map<std::string, FileList *>::iterator it;
     for (it = filelists.begin(); it != filelists.end(); it++) {

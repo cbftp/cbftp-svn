@@ -2,6 +2,7 @@
 
 #include <string>
 #include <list>
+#include <set>
 #include <map>
 #include <utility>
 
@@ -104,7 +105,7 @@ class Race : public EventReceiver, public TransferStatusCallback {
     void reportSFV(SiteRace *, const std::string &);
     void reportDone(SiteRace *);
     void reportSemiDone(SiteRace *);
-    void reportSize(SiteRace *, FileList *, const std::string &, std::list<std::string> *, bool);
+    void reportSize(SiteRace *, FileList *, const std::string &, const std::set<std::string> &, bool);
     void setUndone();
     void reset();
     void abort();

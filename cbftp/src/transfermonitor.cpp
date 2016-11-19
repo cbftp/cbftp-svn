@@ -197,7 +197,9 @@ void TransferMonitor::tick(int msg) {
       }
     }
     if (fld != NULL) {
-      fld->setChanged();
+      if (ticker % 20 == 0) { // run once per second
+        fld->setChanged();
+      }
     }
   }
 }
