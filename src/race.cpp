@@ -527,7 +527,9 @@ bool Race::failedTransfersCleared() const {
 }
 
 void Race::addTransfer(const Pointer<TransferStatus> & ts) {
-  ts->setCallback(this);
+  if (!!ts) {
+    ts->setCallback(this);
+  }
 }
 
 bool Race::clearTransferAttempts() {

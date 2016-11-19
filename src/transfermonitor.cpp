@@ -18,14 +18,18 @@
 #include "filesystem.h"
 #include "util.h"
 
+#define MAX_WAIT_ERROR 10000
+#define MAX_WAIT_SOURCE_COMPLETE 60000
+
+#define TICKINTERVAL 50
+
 TransferMonitor::TransferMonitor(TransferManager * tm) :
   status(TM_STATUS_IDLE),
   clientactive(true),
   fxpdstactive(true),
   timestamp(0),
   tm(tm),
-  localtransferspeedticker(0),
-  checkdeadticker(0)
+  ticker(0)
 {
   global->getTickPoke()->startPoke(this, "TransferMonitor", TICKINTERVAL, 0);
 }
@@ -180,16 +184,20 @@ void TransferMonitor::engageList(const Pointer<SiteLogic> & sls, int connid, boo
 void TransferMonitor::tick(int msg) {
   if (status != TM_STATUS_IDLE) {
     timestamp += TICKINTERVAL;
+    ++ticker;
     if (type == TM_TYPE_FXP) {
       updateFXPSizeSpeed();
-      if (checkdeadticker++ % 20 == 0) { // run once per second
+      if (ticker % 20 == 0) { // run once per second
         checkForDeadFXPTransfers();
       }
     }
     if (type == TM_TYPE_DOWNLOAD || type == TM_TYPE_UPLOAD) {
-      if (localtransferspeedticker++ % 4 == 0) { // run every 200 ms
+      if (ticker % 4 == 0) { // run every 200 ms
         updateLocalTransferSizeSpeed();
       }
+    }
+    if (fld != NULL) {
+      fld->setChanged();
     }
   }
 }
