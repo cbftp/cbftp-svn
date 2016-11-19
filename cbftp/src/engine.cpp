@@ -429,12 +429,10 @@ void Engine::estimateRaceSize(const Pointer<Race> & race, bool forceupdate) {
     std::map<std::string, FileList *>::const_iterator itfl;
     for (itfl = srs->fileListsBegin(); itfl != srs->fileListsEnd(); itfl++) {
       FileList * fls = itfl->second;
-      if (!forceupdate) {
-        if (srs->sizeEstimated(fls)) {
-          continue;
-        }
-        reportCurrentSize(srs, fls, false);
+      if (!forceupdate && srs->sizeEstimated(fls)) {
+        continue;
       }
+      reportCurrentSize(srs, fls, false);
       if (fls->hasSFV()) {
         if (srs->getSFVObservedTime(fls) > SFVDIROBSERVETIME) {
           reportCurrentSize(srs, fls, true);
