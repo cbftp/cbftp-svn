@@ -27,7 +27,7 @@ class SiteRace : public CommandOwner {
     std::list<std::string> completesubdirs;
     std::map<std::string, FileList *> filelists;
     bool done;
-    std::list<FileList *> sizeestimated;
+    std::set<FileList *> sizeestimated;
     std::map<FileList *, unsigned long long int> observestarts;
     std::map<FileList *, unsigned long long int> sfvobservestarts;
     unsigned long long int maxfilesize;

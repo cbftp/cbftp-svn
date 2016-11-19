@@ -208,13 +208,7 @@ unsigned int SiteRace::getNumUploadedFiles() const {
 }
 
 bool SiteRace::sizeEstimated(FileList * fl) const {
-  std::list<FileList *>::const_iterator it;
-  for (it = sizeestimated.begin(); it != sizeestimated.end(); it++) {
-    if (*it == fl) {
-      return true;
-    }
-  }
-  return false;
+  return sizeestimated.find(fl) != sizeestimated.end();
 }
 
 unsigned long long int SiteRace::getMaxFileSize() const {
@@ -291,16 +285,14 @@ int SiteRace::getProfile() const {
 }
 
 void SiteRace::reportSize(FileList * fl, const std::set<std::string> & uniques, bool final) {
-  if (!sizeEstimated(fl)) {
-    std::map<std::string, FileList *>::iterator it;
-    for (it = filelists.begin(); it != filelists.end(); it++) {
-      if (it->second == fl) {
-        race->reportSize(this, fl, it->first, uniques, final);
-        if (final) {
-          sizeestimated.push_back(fl);
-        }
-        return;
+  std::map<std::string, FileList *>::iterator it;
+  for (it = filelists.begin(); it != filelists.end(); it++) {
+    if (it->second == fl) {
+      race->reportSize(this, fl, it->first, uniques, final);
+      if (final) {
+        sizeestimated.insert(fl);
       }
+      return;
     }
   }
 }
