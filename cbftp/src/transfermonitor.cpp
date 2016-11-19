@@ -196,11 +196,6 @@ void TransferMonitor::tick(int msg) {
         updateLocalTransferSizeSpeed();
       }
     }
-    if (fld != NULL) {
-      if (ticker % 20 == 0) { // run once per second
-        fld->setChanged();
-      }
-    }
   }
 }
 

@@ -325,7 +325,7 @@ bool SiteRace::hasBeenUpdatedSinceLastCheck() {
   bool changed = false;
   std::map<std::string, FileList *>::iterator it;
   for (it = filelists.begin(); it != filelists.end(); it++) {
-    if (it->second->listChanged()) {
+    if (it->second->listChanged() || it->second->hasFilesUploading()) {
       changed = true;
     }
     it->second->resetListChanged();
