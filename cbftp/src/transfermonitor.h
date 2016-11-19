@@ -36,11 +36,6 @@ enum TransferError {
   TM_ERR_DUPE
 };
 
-#define MAX_WAIT_ERROR 10000
-#define MAX_WAIT_SOURCE_COMPLETE 60000
-
-#define TICKINTERVAL 50
-
 class SiteLogic;
 class FileList;
 class TransferManager;
@@ -75,8 +70,7 @@ class TransferMonitor : public EventReceiver, public RawBufferCallback {
     int latesttouch;
     bool hiddenfiles;
     LocalTransfer * lt;
-    int localtransferspeedticker;
-    int checkdeadticker;
+    int ticker;
     TransferError error;
     void finish();
     void setTargetSizeSpeed(unsigned long long int, int);
