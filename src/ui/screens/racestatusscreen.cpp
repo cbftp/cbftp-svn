@@ -260,7 +260,8 @@ void RaceStatusScreen::update() {
         bool owner = false;
         if ((file = fl->getFile(filename)) != NULL) {
           exists = true;
-          if (file->isUploading() || file->getSize() < race->guessedFileSize(origsubpath, filename)) {
+          if (file->isUploading() || (file->getSize() < race->guessedFileSize(origsubpath, filename) &&
+                                      !sr->isSubPathComplete(fl))) {
             upload = true;
           }
           std::string ownerstr = file->getOwner();
