@@ -514,7 +514,6 @@ void Engine::refreshScoreBoard() {
               bool prio = false;
               unsigned short score = calculateScore(f, race, fls, srs, fld, srd, avgspeed, &prio, prioritypoints, racemode);
               scoreboard->add(filename, score, prio, sls, fls, sld, fld, race);
-              race->resetUpdateCheckCounter();
             }
           }
           else {
