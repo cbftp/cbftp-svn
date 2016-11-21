@@ -484,11 +484,12 @@ void Engine::refreshScoreBoard() {
     for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator its = race->begin(); its != race->end(); its++) {
       SiteRace * srs = its->first;
       const Pointer<SiteLogic> & sls = its->second;
-      if (!sls->getSite()->getAllowDownload()) continue;
+      if (!sls->getCurrLogins() || !sls->getSite()->getAllowDownload()) continue;
       for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator itd = race->begin(); itd != race->end(); itd++) {
         SiteRace * srd = itd->first;
         const Pointer<SiteLogic> & sld = itd->second;
         if (!raceTransferPossible(sls, sld, race)) continue;
+        if (!sld->getCurrLogins()) continue;
         int avgspeed = sls->getSite()->getAverageSpeed(sld->getSite()->getName());
         if (avgspeed > maxavgspeed) {
           avgspeed = maxavgspeed;
@@ -514,6 +515,7 @@ void Engine::refreshScoreBoard() {
               bool prio = false;
               unsigned short score = calculateScore(f, race, fls, srs, fld, srd, avgspeed, &prio, prioritypoints, racemode);
               scoreboard->add(filename, score, prio, sls, fls, sld, fld, race);
+              race->resetUpdateCheckCounter();
             }
           }
           else {
