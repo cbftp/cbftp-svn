@@ -374,9 +374,7 @@ bool Engine::transferJobActionRequest(Pointer<TransferJob> & tj) {
     tj->refreshOrAlmostDone();
     return true;
   }
-  if (tj->listsRefreshed()) {
-    tj->clearRefreshLists();
-  }
+  tj->clearRefreshLists();
   PendingTransfer pt = it->second.front();
   switch (pt.type()) {
     case PENDINGTRANSFER_DOWNLOAD:
@@ -550,6 +548,9 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> & tj) {
               dstlist = tj->wantedLocalDstList(it2->first);
             }
             dstit = dstlist->find(srcit->first);
+            if (tj->hasFailedTransfer((Path(dstlist->getPath()) / srcit->first).toString())) {
+              continue;
+            }
             const Path subpath = it2->first;
             if (!dstlist || dstit == dstlist->end() || dstit->second.getSize() == 0) {
               PendingTransfer p(tj->getSrc(), srclist, srcit->first, dstlist, srcit->first);
@@ -566,6 +567,9 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> & tj) {
     }
     case TRANSFERJOB_DOWNLOAD_FILE:
       if (tj->getSrcFileList()->getFile(tj->getSrcFileName())->getSize() > 0) {
+        if (tj->hasFailedTransfer((tj->getLocalPath() / tj->getDstFileName()).toString())) {
+          break;
+        }
         Pointer<LocalFileList> dstlist = tj->getLocalFileList();
         std::map<std::string, LocalFile>::const_iterator dstit;
         if (!!dstlist) {
@@ -595,6 +599,9 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> & tj) {
             std::string filename = lfit->first;
             const Path subpath = lit->first;
             if (dstlist->getFile(filename) == NULL) {
+              if (tj->hasFailedTransfer((Path(dstlist->getPath()) / filename).toString())) {
+                continue;
+              }
               PendingTransfer p(lit->second, filename, tj->getDst(), dstlist, filename);
               addPendingTransfer(list, p);
               tj->addPendingTransfer(subpath / filename, lfit->second.getSize());
@@ -608,6 +615,9 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> & tj) {
       break;
     }
     case TRANSFERJOB_UPLOAD_FILE: {
+      if (tj->hasFailedTransfer((Path(tj->getDstFileList()->getPath()) / tj->getDstFileName()).toString())) {
+        break;
+      }
       Pointer<LocalFileList> srclist = tj->getLocalFileList();
       std::map<std::string, LocalFile>::const_iterator srcit;
       if (!!srclist) {
@@ -638,6 +648,9 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> & tj) {
             std::string filename = srcit->first;
             const Path subpath = it2->first;
             if (dstlist->getFile(filename) == NULL) {
+              if (tj->hasFailedTransfer((Path(dstlist->getPath()) / filename).toString())) {
+                continue;
+              }
               PendingTransfer p(tj->getSrc(), srclist, filename, tj->getDst(), dstlist, filename);
               addPendingTransfer(list, p);
 
@@ -652,6 +665,9 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> & tj) {
       break;
     }
     case TRANSFERJOB_FXP_FILE:
+      if (tj->hasFailedTransfer((Path(tj->getDstFileList()->getPath()) / tj->getDstFileName()).toString())) {
+        break;
+      }
       if (tj->getSrcFileList()->getFile(tj->getSrcFileName())->getSize() > 0) {
         if (tj->getDstFileList()->getFile(tj->getDstFileName()) == NULL) {
           PendingTransfer p(tj->getSrc(), tj->getSrcFileList(),

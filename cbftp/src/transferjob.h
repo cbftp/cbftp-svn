@@ -7,6 +7,7 @@
 
 #include "core/pointer.h"
 #include "commandowner.h"
+#include "transferstatuscallback.h"
 #include "path.h"
 
 #define TRANSFERJOB_DOWNLOAD 2161
@@ -23,7 +24,7 @@ class FileList;
 class TransferStatus;
 class LocalFileList;
 
-class TransferJob : public CommandOwner {
+class TransferJob : public CommandOwner, public TransferStatusCallback {
 public:
   int classType() const;
   TransferJob(unsigned int, const Pointer<SiteLogic> &, std::string, FileList *, const Path &, std::string);
@@ -84,7 +85,11 @@ public:
   unsigned int getId() const;
   void abort();
   void clearExisting();
+  bool hasFailedTransfer(const std::string &) const;
+  void transferSuccessful(const Pointer<TransferStatus> &);
+  void transferFailed(const Pointer<TransferStatus> &, int);
 private:
+  void addTransferAttempt(const Pointer<TransferStatus> &);
   void addSubDirectoryFileLists(std::map<std::string, FileList *> &, FileList *, const Path &);
   void updateStatus();
   void init();
@@ -126,4 +131,5 @@ private:
   int filestotal;
   bool initialized;
   unsigned int id;
+  std::map<std::string, int> transferattempts;
 };
