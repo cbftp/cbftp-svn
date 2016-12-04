@@ -6,8 +6,6 @@
 #include "core/pointer.h"
 #include "path.h"
 
-#define MAXTRANSFERATTEMPTS 5
-
 enum FileListState {
  FILELIST_UNKNOWN,
  FILELIST_NONEXISTENT,

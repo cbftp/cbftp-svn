@@ -12,6 +12,8 @@
 #include "globalcontext.h"
 #include "transferstatus.h"
 
+#define MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP 3
+
 Race::Race(unsigned int id, SpreadProfile profile, const std::string & release, const std::string & section) :
   name(release),
   group(util::getGroupNameFromRelease(release)),

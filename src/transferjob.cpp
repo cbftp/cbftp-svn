@@ -14,6 +14,8 @@
 #include "localfile.h"
 #include "filesystem.h"
 
+#define MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP 3
+
 TransferJob::TransferJob(unsigned int id, const Pointer<SiteLogic> & sl, std::string srcfile, FileList * filelist, const Path & path, std::string dstfile) :
       src(sl),
       dst(NULL),
@@ -386,6 +388,7 @@ void TransferJob::addPendingTransfer(const Path & name, unsigned long long int s
 void TransferJob::addTransfer(const Pointer<TransferStatus> & ts) {
   if (!!ts && ts->getState() != TRANSFERSTATUS_STATE_FAILED) {
     transfers.push_front(ts);
+    ts->setCallback(this);
     Path subpathfile = findSubPath(ts) / ts->getFile();
     if (pendingtransfers.find(subpathfile.toString()) != pendingtransfers.end()) {
       pendingtransfers.erase(subpathfile.toString());
@@ -413,10 +416,8 @@ void TransferJob::updateStatus() {
       pendingtransfers.erase((*it)->getFile());
     }
     int state = (*it)->getState();
-    if (state != TRANSFERSTATUS_STATE_FAILED) {
-      aggregatedsize += (*it)->sourceSize();
-    }
     if (state == TRANSFERSTATUS_STATE_IN_PROGRESS || state == TRANSFERSTATUS_STATE_SUCCESSFUL) {
+      aggregatedsize += (*it)->sourceSize();
       aggregatedsizetransferred += (*it)->targetSize();
     }
     if (state == TRANSFERSTATUS_STATE_IN_PROGRESS) {
@@ -608,5 +609,35 @@ void TransferJob::updateLocalFileLists(const Path & basepath) {
         }
       }
     }
+  }
+}
+
+bool TransferJob::hasFailedTransfer(const std::string & dstpath) const {
+  std::map<std::string, int>::const_iterator it = transferattempts.find(dstpath);
+  return it != transferattempts.end() && it->second >= MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP;
+}
+
+void TransferJob::transferSuccessful(const Pointer<TransferStatus> & ts) {
+  addTransferAttempt(ts);
+}
+
+void TransferJob::transferFailed(const Pointer<TransferStatus> & ts, int) {
+  if (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) {
+    filelistsrefreshed[ts->getSourceFileList()] = false;
+  }
+  if (type == TRANSFERJOB_UPLOAD || type == TRANSFERJOB_FXP) {
+    filelistsrefreshed[ts->getTargetFileList()] = false;
+  }
+  addTransferAttempt(ts);
+}
+
+void TransferJob::addTransferAttempt(const Pointer<TransferStatus> & ts) {
+  std::string dstpath = (Path(ts->getTargetPath()) / ts->getFile()).toString();
+  std::map<std::string, int>::iterator it = transferattempts.find(dstpath);
+  if (it == transferattempts.end()) {
+    transferattempts[dstpath] = 1;
+  }
+  else {
+    it->second++;
   }
 }

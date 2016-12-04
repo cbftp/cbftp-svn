@@ -203,7 +203,7 @@ bool SiteLogic::setPathExists(int id, const Path & path, bool exists) {
         currentco->fileListUpdated(this, fl);
         return true;
       }
-      else if (!exists && fl->getState() == FILELIST_UNKNOWN) {
+      else if (!exists) {
         fl->setNonExistent();
         currentco->fileListUpdated(this, fl);
         return true;
