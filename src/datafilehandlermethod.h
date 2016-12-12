@@ -20,20 +20,22 @@ bool isMostlyASCII(const BinaryData & data) {
   return asciicount > data.size() * 0.9;
 }
 
-bool encrypt(const BinaryData & indata, const BinaryData & key, BinaryData & outdata) {
+bool encrypt(const BinaryData & indata, const BinaryData & pass, BinaryData & outdata) {
   if (!isMostlyASCII(indata)) {
     return false;
   }
-  BinaryData keyhash;
-  Crypto::sha256(key, keyhash);
-  Crypto::encrypt(indata, keyhash, outdata);
+  Crypto::encrypt(indata, pass, outdata);
   return true;
 }
 
-bool decrypt(const BinaryData & indata, const BinaryData & key, BinaryData & outdata) {
+bool decrypt(const BinaryData & indata, const BinaryData & pass, BinaryData & outdata) {
+  Crypto::decrypt(indata, pass, outdata);
+  if (isMostlyASCII(outdata)) {
+    return true;
+  }
   BinaryData keyhash;
-  Crypto::sha256(key, keyhash);
-  Crypto::decrypt(indata, keyhash, outdata);
+  Crypto::sha256(pass, keyhash);
+  Crypto::decryptOld(indata, keyhash, outdata);
   return isMostlyASCII(outdata);
 }
 
