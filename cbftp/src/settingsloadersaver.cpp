@@ -6,7 +6,7 @@
 #include "core/tickpoke.h"
 #include "core/iomanager.h"
 #include "core/sslmanager.h"
-#include "ext/base64.h"
+#include "crypto.h"
 #include "globalcontext.h"
 #include "datafilehandler.h"
 #include "eventlog.h"
@@ -85,13 +85,13 @@ void SettingsLoaderSaver::loadSettings() {
     std::string setting = line.substr(0, tok);
     std::string value = line.substr(tok + 1);
     if (!setting.compare("certificate")) {
-      std::string decoded = base64_decode(value);
-      BinaryData data(decoded.begin(), decoded.end());
+      BinaryData data;
+      Crypto::base64Decode(BinaryData(value.begin(), value.end()), data);
       SSLManager::setCertificate(data);
     }
     if (!setting.compare("privatekey")) {
-      std::string decoded = base64_decode(value);
-      BinaryData data(decoded.begin(), decoded.end());
+      BinaryData data;
+      Crypto::base64Decode(BinaryData(value.begin(), value.end()), data);
       SSLManager::setPrivateKey(data);
     }
   }
@@ -478,12 +478,14 @@ void SettingsLoaderSaver::saveSettings() {
   }
 
   if (SSLManager::hasPrivateKey()) {
-    BinaryData data = SSLManager::privateKey();
-    dfh->addOutputLine("SSLManager", "privatekey=" + base64_encode(&data[0], data.size()));
+    BinaryData data;
+    Crypto::base64Encode(SSLManager::privateKey(), data);
+    dfh->addOutputLine("SSLManager", "privatekey=" + std::string(data.begin(), data.end()));
   }
   if (SSLManager::hasCertificate()) {
-    BinaryData data = SSLManager::certificate();
-    dfh->addOutputLine("SSLManager", "certificate=" + base64_encode(&data[0], data.size()));
+    BinaryData data;
+    Crypto::base64Encode(SSLManager::certificate(), data);
+    dfh->addOutputLine("SSLManager", "certificate=" + std::string(data.begin(), data.end()));
   }
 
   if (global->getRemoteCommandHandler()->isEnabled()) dfh->addOutputLine("RemoteCommandHandler", "enabled=true");
