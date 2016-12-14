@@ -2,7 +2,7 @@ include Makefile.inc
 
 BINS = cbftp $(BINDIR)/cbftp-debug $(BINDIR)/datafilecat $(BINDIR)/datafilewrite
 BINDIR = bin
-SRC_TARGETS := src src/core src/ext
+SRC_TARGETS := src src/core
 SRC = $(wildcard src/*.cpp)
 LIBS := $(wildcard $(addsuffix /*.a,$(SRC_TARGETS)))
 OBJS = $(wildcard $(SRC:%.cpp=%.o))
