@@ -94,3 +94,21 @@ void Crypto::sha256(const BinaryData & indata, BinaryData & outdata) {
   SHA256_Update(&ctx, &indata[0], indata.size());
   SHA256_Final(&outdata[0], &ctx);
 }
+
+void Crypto::base64Encode(const BinaryData & indata, BinaryData & outdata) {
+  outdata.resize((indata.size() / 3 + ((indata.size() % 3) ? 1 : 0)) * 4 + 1);
+  int bytes = EVP_EncodeBlock(&outdata[0], &indata[0], indata.size());
+  outdata.resize(bytes);
+}
+
+void Crypto::base64Decode(const BinaryData & indata, BinaryData & outdata) {
+  int pos = indata.size();
+  int padding = 0;
+  while (--pos >= 0 && indata[pos] == '=') {
+    ++padding;
+  }
+  unsigned int outsize = indata.size() / 4 * 3;
+  outdata.resize(outsize);
+  EVP_DecodeBlock(&outdata[0], &indata[0], indata.size());
+  outdata.resize(outsize - padding);
+}
