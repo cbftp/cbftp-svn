@@ -28,7 +28,7 @@ class EventReceiver;
 class SocketInfo {
 public:
   SocketInfo() : type(FD_UNUSED), fd(0), id(0), port(0), localport(0), gairet(0),
-                 gaires(NULL), gaiasync(false), receiver(NULL), ssl(NULL)
+                 gaires(NULL), gaiasync(false), receiver(NULL), ssl(NULL), lowprio(false)
   {
   }
   SocketType type;
@@ -45,4 +45,5 @@ public:
   EventReceiver * receiver;
   mutable std::list<DataBlock> sendqueue;
   SSL * ssl;
+  bool lowprio;
 };

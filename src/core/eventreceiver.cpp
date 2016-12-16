@@ -59,3 +59,7 @@ void EventReceiver::asyncTaskComplete(int type, void * data) {
 void EventReceiver::asyncTaskComplete(int type, int) {
 
 }
+
+void EventReceiver::workerReady() {
+
+}

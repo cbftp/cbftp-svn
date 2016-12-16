@@ -2,6 +2,9 @@
 
 #include "eventreceiver.h"
 
+Event::Event() {
+}
+
 Event::Event(EventReceiver * er, int type, int numdata, void * data, int datalen) :
   receiver(er),
   type(type),

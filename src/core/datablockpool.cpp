@@ -4,9 +4,9 @@
 
 #include "scopelock.h"
 
-DataBlockPool::DataBlockPool() :
-  totalblocks(0),
-  waitingforblocks(false) {
+#define BLOCKSIZE 16384
+
+DataBlockPool::DataBlockPool() : totalblocks(0) {
   ScopeLock lock(blocklock);
   allocateNewBlocks();
 }
@@ -29,24 +29,6 @@ const int DataBlockPool::blockSize() const {
 void DataBlockPool::returnBlock(char * block) {
   ScopeLock lock(blocklock);
   blocks.push_back(block);
-  if (waitingforblocks) {
-    if (blocks.size() > currentMaxNumBlocks() / 2) {
-      waitingforblocks = false;
-      blocksem.post();
-    }
-  }
-}
-
-void DataBlockPool::awaitFreeBlocks() {
-  blocklock.lock();
-  if (blocks.size() < currentMaxNumBlocks() / 2) {
-    waitingforblocks = true;
-    blocklock.unlock();
-    blocksem.wait();
-  }
-  else {
-    blocklock.unlock();
-  }
 }
 
 void DataBlockPool::allocateNewBlocks() {
@@ -55,8 +37,4 @@ void DataBlockPool::allocateNewBlocks() {
     blocks.push_back(block);
     totalblocks++;
   }
-}
-
-unsigned int DataBlockPool::currentMaxNumBlocks() const {
-  return totalblocks < MAXBLOCKS ? totalblocks : MAXBLOCKS;
 }

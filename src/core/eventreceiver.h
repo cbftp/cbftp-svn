@@ -19,4 +19,5 @@ public:
   virtual void FDSendComplete(int);
   virtual void asyncTaskComplete(int, void *);
   virtual void asyncTaskComplete(int, int);
+  virtual void workerReady();
 };
