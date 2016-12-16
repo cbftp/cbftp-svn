@@ -17,6 +17,7 @@ private:
   int numdata2;
   std::string strdata;
 public:
+  Event();
   Event(EventReceiver *, int, int, void *, int);
   Event(EventReceiver *, int, int, void *);
   Event(EventReceiver *, int);

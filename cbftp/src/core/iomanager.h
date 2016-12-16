@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <list>
+#include <set>
 
 #include "eventreceiver.h"
 #include "socketinfo.h"
@@ -25,6 +26,8 @@ private:
   std::map<int, SocketInfo> socketinfomap;
   std::map<int, int> connecttimemap;
   std::map<int, int> sockfdidmap;
+  std::set<int> paused;
+  std::set<int> manuallypaused;
   WorkManager * wm;
   TickPoke * tp;
   DataBlockPool * blockpool;
@@ -66,10 +69,11 @@ public:
   void negotiateSSLAccept(int);
   void forceSSLhandshake(int);
   int registerUDPServerSocket(EventReceiver *, int);
-  void sendData(int, const std::string &);
-  void sendData(int, const char *, unsigned int);
+  bool sendData(int, const std::string &);
+  bool sendData(int, const char *, unsigned int);
   std::string getCipher(int) const;
   std::string getSocketAddress(int) const;
+  int getSocketPort(int) const;
   std::string getInterfaceAddress(int) const;
   void closeSocket(int);
   void resolveDNS(int);
@@ -80,4 +84,7 @@ public:
   bool hasDefaultInterface() const;
   std::string getInterfaceAddress(const std::string &);
   void setLogger(Pointer<Logger>);
+  void workerReady();
+  void pause(int);
+  void resume(int);
 };

@@ -61,6 +61,7 @@ IOManager::IOManager(WorkManager * wm, TickPoke * tp) :
   sockidcounter(0),
   hasdefaultinterface(false)
 {
+  wm->addReadyNotify(this);
 }
 
 void IOManager::init() {
@@ -364,19 +365,19 @@ bool IOManager::investigateSSLError(int error, int sockid, int b_recv) {
   return false;
 }
 
-void IOManager::sendData(int id, const std::string & data) {
+bool IOManager::sendData(int id, const std::string & data) {
   char * buf = (char *) data.c_str();
-  sendData(id, buf, data.length());
+  return sendData(id, buf, data.length());
 }
 
-void IOManager::sendData(int id, const char * buf, unsigned int buflen) {
+bool IOManager::sendData(int id, const char * buf, unsigned int buflen) {
   coreutil::assert(buflen <= MAX_SEND_BUFFER);
   unsigned int sendblocksize = sendblockpool->blockSize();
   char * datablock;
   ScopeLock lock(socketinfomaplock);
   std::map<int, SocketInfo>::iterator it = socketinfomap.find(id);
   if (it == socketinfomap.end()) {
-    return;
+    return true;
   }
   SocketInfo & socketinfo = it->second;
   while (buflen > 0) {
@@ -387,12 +388,12 @@ void IOManager::sendData(int id, const char * buf, unsigned int buflen) {
     buf += copysize;
     buflen -= copysize;
   }
-  coreutil::assert(socketinfo.sendqueue.size() * sendblockpool->blockSize() <= MAX_SEND_BUFFER);
   if (socketinfo.type == FD_TCP_PLAIN || socketinfo.type == FD_TCP_PLAIN_LISTEN ||
       socketinfo.type == FD_TCP_SSL)
   {
     polling.setFDOut(socketinfo.fd);
   }
+  return socketinfo.sendqueue.size() * sendblockpool->blockSize() <= MAX_SEND_BUFFER;
 }
 
 void IOManager::closeSocket(int id) {
@@ -419,6 +420,8 @@ void IOManager::closeSocketIntern(int id) {
 
   sockfdidmap.erase(socketinfo.fd);
   connecttimemap.erase(id);
+  paused.erase(id);
+  manuallypaused.erase(id);
   socketinfomap.erase(it);
 }
 
@@ -472,13 +475,22 @@ std::string IOManager::getCipher(int id) const {
 }
 
 std::string IOManager::getSocketAddress(int id) const {
+  ScopeLock lock(socketinfomaplock);
+  std::map<int, SocketInfo>::const_iterator it = socketinfomap.find(id);
+  if (it != socketinfomap.end()) {
+    return it->second.addr;
+  }
+  return "";
+}
+
+int IOManager::getSocketPort(int id) const {
   std::string addr = "";
   ScopeLock lock(socketinfomaplock);
   std::map<int, SocketInfo>::const_iterator it = socketinfomap.find(id);
   if (it != socketinfomap.end()) {
-    addr = it->second.addr;
+    return it->second.port;
   }
-  return addr;
+  return -1;
 }
 
 std::string IOManager::getInterfaceAddress(int id) const {
@@ -541,7 +553,10 @@ void IOManager::handleTCPPlainIn(SocketInfo & socketinfo) {
     closeSocketIntern(socketinfo.id);
     return;
   }
-  wm->dispatchFDData(socketinfo.receiver, socketinfo.id, buf, b_recv);
+  if (!wm->dispatchFDData(socketinfo.receiver, socketinfo.id, buf, b_recv)) {
+    paused.insert(socketinfo.id);
+    polling.removeFD(socketinfo.fd);
+  }
 }
 
 void IOManager::handleTCPPlainOut(SocketInfo & socketinfo) {
@@ -659,6 +674,8 @@ void IOManager::handleTCPSSLNegotiationOut(SocketInfo & socketinfo) {
 
 void IOManager::handleTCPSSLIn(SocketInfo & socketinfo) {
   SSL * ssl = socketinfo.ssl;
+  int blocknum = 0;
+  bool pause = false;
   while (true) {
     char * buf = blockpool->getBlock();
     int bufpos = 0;
@@ -666,7 +683,12 @@ void IOManager::handleTCPSSLIn(SocketInfo & socketinfo) {
       int b_recv = SSL_read(ssl, buf + bufpos, blocksize - bufpos);
       if (b_recv <= 0) {
         if (bufpos > 0) {
-          wm->dispatchFDData(socketinfo.receiver, socketinfo.id, buf, bufpos);
+          if ((socketinfo.lowprio && !wm->dispatchLowPrioFDData(socketinfo.receiver, socketinfo.id, buf, bufpos)) ||
+              (!socketinfo.lowprio && !wm->dispatchFDData(socketinfo.receiver, socketinfo.id, buf, bufpos)))
+          {
+            paused.insert(socketinfo.id);
+            polling.removeFD(socketinfo.fd);
+          }
         }
         else {
           blockpool->returnBlock(buf);
@@ -679,7 +701,18 @@ void IOManager::handleTCPSSLIn(SocketInfo & socketinfo) {
       }
       bufpos += b_recv;
     }
-    wm->dispatchFDData(socketinfo.receiver, socketinfo.id, buf, bufpos);
+    if (blocknum++ > 16) {
+      socketinfo.lowprio = true;
+    }
+    if ((socketinfo.lowprio && !wm->dispatchLowPrioFDData(socketinfo.receiver, socketinfo.id, buf, bufpos)) ||
+        (!socketinfo.lowprio && !wm->dispatchFDData(socketinfo.receiver, socketinfo.id, buf, bufpos)))
+    {
+      pause = true;
+    }
+  }
+  if (pause) {
+    paused.insert(socketinfo.id);
+    polling.removeFD(socketinfo.fd);
   }
 }
 
@@ -747,9 +780,8 @@ void IOManager::run() {
   std::list<std::pair<int, PollEvent> > fds;
   std::list<std::pair<int, PollEvent> >::const_iterator pollit;
   ScopeLock lock(socketinfomaplock);
-  while(1) {
+  while (true) {
     lock.unlock();
-    blockpool->awaitFreeBlocks();
     polling.wait(fds);
     lock.lock();
     for (pollit = fds.begin(); pollit != fds.end(); pollit++) {
@@ -891,5 +923,39 @@ void IOManager::setLogger(Pointer<Logger> logger) {
 void IOManager::log(const std::string & text) {
   if (!!logger) {
     logger->log("IOManager", text);
+  }
+}
+
+void IOManager::workerReady() {
+  ScopeLock lock(socketinfomaplock);
+  for (std::set<int>::iterator it = paused.begin(); it != paused.end(); it++) {
+    std::map<int, SocketInfo>::iterator siit = socketinfomap.find(*it);
+    if (siit == socketinfomap.end()) {
+      continue;
+    }
+    polling.addFDIn(siit->second.fd);
+  }
+  paused.clear();
+}
+
+void IOManager::pause(int id) {
+  ScopeLock lock(socketinfomaplock);
+  std::map<int, SocketInfo>::iterator it = socketinfomap.find(id);
+  if (it == socketinfomap.end()) {
+    return;
+  }
+  manuallypaused.insert(id);
+  polling.removeFD(it->second.fd);
+}
+
+void IOManager::resume(int id) {
+  ScopeLock lock(socketinfomaplock);
+  std::map<int, SocketInfo>::iterator it = socketinfomap.find(id);
+  if (it == socketinfomap.end()) {
+    return;
+  }
+  manuallypaused.erase(id);
+  if (paused.find(id) == paused.end()) {
+    polling.addFDIn(it->second.fd);
   }
 }

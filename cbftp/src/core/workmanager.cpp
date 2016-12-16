@@ -3,7 +3,8 @@
 #include "eventreceiver.h"
 #include "scopelock.h"
 
-#define OVERLOADSIZE 10
+#define READYSIZE 8
+#define OVERLOADSIZE 32
 #define ASYNC_WORKERS 2
 
 enum WorkType {
@@ -23,27 +24,44 @@ enum WorkType {
   WORK_ASYNC_COMPLETE_P
 };
 
-void WorkManager::init() {
-  thread.start("Worker", this);
+WorkManager::WorkManager() : overloaded(false), lowpriooverloaded(false) {
   for (int i = 0; i < ASYNC_WORKERS; ++i) {
     asyncworkers.push_back(AsyncWorker(this, asyncqueue));
-    asyncworkers.back().init();
+  }
+}
+
+void WorkManager::init() {
+  thread.start("Worker", this);
+  std::list<AsyncWorker>::iterator it;
+  for (it = asyncworkers.begin(); it != asyncworkers.end(); it++) {
+    it->init();
   }
 }
 
 void WorkManager::dispatchFDData(EventReceiver * er, int sockid) {
-  dataqueue.push(Event(er, WORK_DATA, sockid));
+  highprioqueue.push(Event(er, WORK_DATA, sockid));
   event.post();
   readdata.wait();
 }
 
-void WorkManager::dispatchFDData(EventReceiver * er, int sockid, char * buf, int len) {
+bool WorkManager::dispatchFDData(EventReceiver * er, int sockid, char * buf, int len) {
   dataqueue.push(Event(er, WORK_DATABUF, sockid, buf, len));
   event.post();
+  return !overload();
+}
+
+bool WorkManager::dispatchLowPrioFDData(EventReceiver * er, int sockid, char * buf, int len) {
+  lowprioqueue.push(Event(er, WORK_DATABUF, sockid, buf, len));
+  event.post();
+
+  if (highprioqueue.size() + dataqueue.size() + lowprioqueue.size() >= OVERLOADSIZE) {
+    lowpriooverloaded = true;
+  }
+  return !lowpriooverloaded;
 }
 
 void WorkManager::dispatchTick(EventReceiver * er, int interval) {
-  dataqueue.push(Event(er, WORK_TICK, interval));
+  highprioqueue.push(Event(er, WORK_TICK, interval));
   event.post();
 }
 
@@ -120,24 +138,43 @@ DataBlockPool * WorkManager::getBlockPool() {
   return &blockpool;
 }
 
-bool WorkManager::overload() const {
-  return dataqueue.size() >= OVERLOADSIZE;
+bool WorkManager::overload() {
+  bool currentlyoverloaded = highprioqueue.size() + dataqueue.size() >= OVERLOADSIZE;
+  if (currentlyoverloaded) {
+    overloaded = true;
+    lowpriooverloaded = true;
+  }
+  return overloaded;
+}
+
+void WorkManager::addReadyNotify(EventReceiver * er) {
+  ScopeLock lock(readylock);
+  readynotify.push_back(er);
 }
 
 void WorkManager::run() {
-  while(1) {
+  while (true) {
     event.wait();
     if (signalevents.hasEvent()) {
       SignalData signal = signalevents.getClearFirst();
       signal.er->signal(signal.signal, signal.value);
     }
     else {
-      Event event = dataqueue.pop();
+      Event event;
+      if (highprioqueue.size()) {
+        event = highprioqueue.pop();
+      }
+      else if (dataqueue.size()) {
+        event = dataqueue.pop();
+      }
+      else {
+        event = lowprioqueue.pop();
+      }
       EventReceiver * er = event.getReceiver();
       int numdata = event.getNumericalData();
       switch (event.getType()) {
         case WORK_DATA:
-          event.getReceiver()->FDData(numdata);
+          er->FDData(numdata);
           readdata.post();
           break;
         case WORK_DATABUF: {
@@ -181,6 +218,17 @@ void WorkManager::run() {
         case WORK_ASYNC_COMPLETE_P:
           er->asyncTaskComplete(numdata, event.getData());
           break;
+      }
+      if ((overloaded || lowpriooverloaded) &&
+          dataqueue.size() + highprioqueue.size() + lowprioqueue.size() <= READYSIZE)
+      {
+        overloaded = false;
+        lowpriooverloaded = false;
+        ScopeLock lock(readylock);
+        std::list<EventReceiver *>::iterator it;
+        for (it = readynotify.begin(); it != readynotify.end(); it++) {
+          (*it)->workerReady();
+        }
       }
     }
   }
