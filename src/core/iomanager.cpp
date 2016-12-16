@@ -944,8 +944,10 @@ void IOManager::pause(int id) {
   if (it == socketinfomap.end()) {
     return;
   }
-  manuallypaused.insert(id);
-  polling.removeFD(it->second.fd);
+  if (manuallypaused.find(id) == manuallypaused.end()) {
+    manuallypaused.insert(id);
+    polling.removeFD(it->second.fd);
+  }
 }
 
 void IOManager::resume(int id) {
@@ -954,8 +956,10 @@ void IOManager::resume(int id) {
   if (it == socketinfomap.end()) {
     return;
   }
-  manuallypaused.erase(id);
-  if (paused.find(id) == paused.end()) {
-    polling.addFDIn(it->second.fd);
+  if (manuallypaused.find(id) != manuallypaused.end()) {
+    manuallypaused.erase(id);
+    if (paused.find(id) == paused.end()) {
+      polling.addFDIn(it->second.fd);
+    }
   }
 }
