@@ -26,7 +26,7 @@ private:
   std::map<int, SocketInfo> socketinfomap;
   std::map<int, int> connecttimemap;
   std::map<int, int> sockfdidmap;
-  std::set<int> paused;
+  std::set<int> autopaused;
   std::set<int> manuallypaused;
   WorkManager * wm;
   TickPoke * tp;
@@ -52,6 +52,11 @@ private:
   void handleTCPServerIn(SocketInfo &);
   void handleTCPNameResolution(SocketInfo &);
   void log(const std::string &);
+  void pollRead(SocketInfo &);
+  void pollWrite(SocketInfo &);
+  void setPollRead(SocketInfo &);
+  void setPollWrite(SocketInfo &);
+  void autoPause(SocketInfo &);
 public:
   IOManager(WorkManager *, TickPoke *);
   void init();

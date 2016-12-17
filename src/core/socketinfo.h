@@ -23,12 +23,18 @@ enum SocketType {
   FD_TCP_RESOLVING
 };
 
+enum Direction {
+  DIR_IN,
+  DIR_OUT
+};
+
 class EventReceiver;
 
 class SocketInfo {
 public:
   SocketInfo() : type(FD_UNUSED), fd(0), id(0), port(0), localport(0), gairet(0),
-                 gaires(NULL), gaiasync(false), receiver(NULL), ssl(NULL), lowprio(false)
+                 gaires(NULL), gaiasync(false), receiver(NULL), ssl(NULL),
+                 lowprio(false), paused(false), direction(DIR_IN)
   {
   }
   SocketType type;
@@ -46,4 +52,6 @@ public:
   mutable std::list<DataBlock> sendqueue;
   SSL * ssl;
   bool lowprio;
+  bool paused;
+  int direction;
 };

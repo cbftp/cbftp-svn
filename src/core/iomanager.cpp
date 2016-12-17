@@ -102,25 +102,52 @@ void IOManager::tick(int message) {
   }
 }
 
+void IOManager::pollRead(SocketInfo & socketinfo) {
+  socketinfo.direction = DIR_IN;
+  if (!socketinfo.paused) {
+    polling.addFDIn(socketinfo.fd);
+  }
+}
+
+void IOManager::pollWrite(SocketInfo & socketinfo) {
+  socketinfo.direction = DIR_OUT;
+  if (!socketinfo.paused) {
+    polling.addFDOut(socketinfo.fd);
+  }
+}
+
+void IOManager::setPollRead(SocketInfo & socketinfo) {
+  socketinfo.direction = DIR_IN;
+  if (!socketinfo.paused) {
+    polling.setFDIn(socketinfo.fd);
+  }
+}
+
+void IOManager::setPollWrite(SocketInfo & socketinfo) {
+  socketinfo.direction = DIR_OUT;
+  if (!socketinfo.paused) {
+    polling.setFDOut(socketinfo.fd);
+  }
+}
+
 int IOManager::registerTCPClientSocket(EventReceiver * er, const std::string & addr, int port) {
   bool resolving;
   return registerTCPClientSocket(er, addr, port, resolving);
 }
 
 int IOManager::registerTCPClientSocket(EventReceiver * er, const std::string & addr, int port, bool & resolving) {
+  socketinfomaplock.lock();
   int sockid = sockidcounter++;
-  {
-    ScopeLock lock(socketinfomaplock);
-    socketinfomap[sockid].id = sockid;
-    socketinfomap[sockid].fd = -1;
-    socketinfomap[sockid].addr = addr;
-    socketinfomap[sockid].port = port;
-    socketinfomap[sockid].type = FD_TCP_RESOLVING;
-    socketinfomap[sockid].receiver = er;
-    socketinfomap[sockid].gaiasync = resolving = needsDNSResolution(addr);
-    connecttimemap[sockid] = 0;
-  }
-
+  SocketInfo & socketinfo = socketinfomap[sockid];
+  socketinfo.id = sockid;
+  socketinfo.fd = -1;
+  socketinfo.addr = addr;
+  socketinfo.port = port;
+  socketinfo.type = FD_TCP_RESOLVING;
+  socketinfo.receiver = er;
+  socketinfo.gaiasync = resolving = needsDNSResolution(addr);
+  connecttimemap[sockid] = 0;
+  socketinfomaplock.unlock();
   if (resolving) {
     wm->asyncTask(this, ASYNC_DNS_RESOLUTION, &resolveDNSAsync, sockid);
   }
@@ -128,7 +155,7 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, const std::string & a
   {
     resolveDNS(sockid);
     ScopeLock lock(socketinfomaplock);
-    handleTCPNameResolution(socketinfomap[sockid]);
+    handleTCPNameResolution(socketinfo);
   }
   return sockid;
 }
@@ -149,9 +176,9 @@ void IOManager::handleTCPNameResolution(SocketInfo & socketinfo) {
   inet_ntop(AF_INET, &(saddr->sin_addr), buf, result->ai_addrlen);
   std::string addrstr = buf;
   free(buf);
-  socketinfomap[socketinfo.id].fd = sockfd;
-  socketinfomap[socketinfo.id].type = FD_TCP_CONNECTING;
-  socketinfomap[socketinfo.id].addr = addrstr;
+  socketinfo.fd = sockfd;
+  socketinfo.type = FD_TCP_CONNECTING;
+  socketinfo.addr = addrstr;
   connecttimemap[socketinfo.id] = 0;
   sockfdidmap[sockfd] = socketinfo.id;
   if (hasDefaultInterface()) {
@@ -187,7 +214,7 @@ void IOManager::handleTCPNameResolution(SocketInfo & socketinfo) {
     wm->dispatchEventConnecting(socketinfo.receiver, socketinfo.id, socketinfo.addr);
   }
   freeaddrinfo(result);
-  polling.addFDOut(sockfd);
+  pollWrite(socketinfo);
   return;
 }
 
@@ -228,31 +255,32 @@ int IOManager::registerTCPServerSocket(EventReceiver * er, int port, bool local)
   }
   ScopeLock lock(socketinfomaplock);
   int sockid = sockidcounter++;
-  socketinfomap[sockid].fd = sockfd;
-  socketinfomap[sockid].id = sockid;
-  socketinfomap[sockid].type = FD_TCP_SERVER;
-  socketinfomap[sockid].receiver = er;
+  SocketInfo & socketinfo = socketinfomap[sockid];
+  socketinfo.fd = sockfd;
+  socketinfo.id = sockid;
+  socketinfo.type = FD_TCP_SERVER;
+  socketinfo.receiver = er;
   sockfdidmap[sockfd] = sockid;
-  polling.addFDIn(sockfd);
+  pollRead(socketinfo);
   return sockid;
 }
 
 void IOManager::registerTCPServerClientSocket(EventReceiver * er, int sockid) {
   ScopeLock lock(socketinfomaplock);
   socketinfomap[sockid].receiver = er;
-  int sockfd = socketinfomap[sockid].fd;
-  polling.addFDIn(sockfd);
+  pollRead(socketinfomap[sockid]);
 }
 
 void IOManager::registerStdin(EventReceiver * er) {
   ScopeLock lock(socketinfomaplock);
   int sockid = sockidcounter++;
-  socketinfomap[sockid].fd = STDIN_FILENO;
-  socketinfomap[sockid].id = sockid;
-  socketinfomap[sockid].type = FD_KEYBOARD;
-  socketinfomap[sockid].receiver = er;
+  SocketInfo & socketinfo = socketinfomap[sockid];
+  socketinfo.fd = STDIN_FILENO;
+  socketinfo.id = sockid;
+  socketinfo.type = FD_KEYBOARD;
+  socketinfo.receiver = er;
   sockfdidmap[STDIN_FILENO] = sockid;
-  polling.addFDIn(STDIN_FILENO);
+  pollRead(socketinfo);
 }
 
 int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
@@ -280,12 +308,13 @@ int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
   }
   ScopeLock lock(socketinfomaplock);
   int sockid = sockidcounter++;
-  socketinfomap[sockid].fd = sockfd;
-  socketinfomap[sockid].id = sockid;
-  socketinfomap[sockid].type = FD_UDP;
-  socketinfomap[sockid].receiver = er;
+  SocketInfo & socketinfo = socketinfomap[sockid];
+  socketinfo.fd = sockfd;
+  socketinfo.id = sockid;
+  socketinfo.type = FD_UDP;
+  socketinfo.receiver = er;
   sockfdidmap[sockfd] = sockid;
-  polling.addFDIn(sockfd);
+  pollRead(socketinfo);
   return sockid;
 }
 
@@ -305,7 +334,7 @@ void IOManager::negotiateSSLConnect(int id, EventReceiver * er) {
      (it->second.type == FD_TCP_PLAIN || it->second.type == FD_TCP_PLAIN_LISTEN))
   {
     it->second.type = FD_TCP_SSL_NEG_CONNECT;
-    polling.setFDOut(it->second.fd);
+    setPollWrite(it->second);
   }
 }
 
@@ -316,7 +345,7 @@ void IOManager::negotiateSSLAccept(int id) {
        (it->second.type == FD_TCP_PLAIN || it->second.type == FD_TCP_PLAIN_LISTEN))
     {
       it->second.type = FD_TCP_SSL_NEG_ACCEPT;
-      polling.setFDOut(it->second.fd);
+      setPollWrite(it->second);
   }
 }
 
@@ -327,7 +356,7 @@ void IOManager::forceSSLhandshake(int id) {
     return;
   }
   it->second.type = FD_TCP_SSL_NEG_REDO_HANDSHAKE;
-  polling.setFDOut(it->second.fd);
+  setPollWrite(it->second);
 }
 
 bool IOManager::handleError(EventReceiver * er) {
@@ -351,7 +380,7 @@ bool IOManager::investigateSSLError(int error, int sockid, int b_recv) {
       return true;
     case SSL_ERROR_SYSCALL:
       if (errno == EAGAIN) {
-        polling.setFDOut(socketinfo.fd);
+        setPollWrite(socketinfo);
         return true;
       }
       break;
@@ -391,7 +420,7 @@ bool IOManager::sendData(int id, const char * buf, unsigned int buflen) {
   if (socketinfo.type == FD_TCP_PLAIN || socketinfo.type == FD_TCP_PLAIN_LISTEN ||
       socketinfo.type == FD_TCP_SSL)
   {
-    polling.setFDOut(socketinfo.fd);
+    setPollWrite(socketinfo);
   }
   return socketinfo.sendqueue.size() * sendblockpool->blockSize() <= MAX_SEND_BUFFER;
 }
@@ -420,7 +449,7 @@ void IOManager::closeSocketIntern(int id) {
 
   sockfdidmap.erase(socketinfo.fd);
   connecttimemap.erase(id);
-  paused.erase(id);
+  autopaused.erase(id);
   manuallypaused.erase(id);
   socketinfomap.erase(it);
 }
@@ -530,7 +559,7 @@ void IOManager::handleTCPConnectingOut(SocketInfo & socketinfo) {
   socketinfo.localport = ntohs(localaddr.sin_port);
   connecttimemap.erase(socketinfo.id);
   wm->dispatchEventConnected(socketinfo.receiver, socketinfo.id);
-  polling.setFDIn(socketinfo.fd);
+  setPollRead(socketinfo);
 }
 
 void IOManager::handleTCPPlainIn(SocketInfo & socketinfo) {
@@ -554,8 +583,7 @@ void IOManager::handleTCPPlainIn(SocketInfo & socketinfo) {
     return;
   }
   if (!wm->dispatchFDData(socketinfo.receiver, socketinfo.id, buf, b_recv)) {
-    paused.insert(socketinfo.id);
-    polling.removeFD(socketinfo.fd);
+    autoPause(socketinfo);
   }
 }
 
@@ -583,7 +611,7 @@ void IOManager::handleTCPPlainOut(SocketInfo & socketinfo) {
     }
   }
   if (!socketinfo.sendqueue.size()) {
-    polling.setFDIn(socketinfo.fd);
+    setPollRead(socketinfo);
     wm->dispatchEventSendComplete(socketinfo.receiver, socketinfo.id);
   }
 }
@@ -604,7 +632,7 @@ void IOManager::handleTCPSSLNegotiationIn(SocketInfo & socketinfo) {
     socketinfo.type = FD_TCP_SSL;
     wm->dispatchEventSSLSuccess(socketinfo.receiver, socketinfo.id);
     if (socketinfo.sendqueue.size() > 0) {
-      polling.setFDOut(socketinfo.fd);
+      setPollWrite(socketinfo);
     }
   }
   else if (b_recv == 0) {
@@ -621,7 +649,7 @@ void IOManager::handleTCPSSLNegotiationIn(SocketInfo & socketinfo) {
 
 void IOManager::handleTCPSSLNegotiationOut(SocketInfo & socketinfo) {
   if (socketinfo.type == FD_TCP_SSL_NEG_REDO_HANDSHAKE) {
-    polling.setFDIn(socketinfo.fd);
+    setPollRead(socketinfo);
     handleTCPSSLNegotiationIn(socketinfo);
     return;
   }
@@ -669,7 +697,7 @@ void IOManager::handleTCPSSLNegotiationOut(SocketInfo & socketinfo) {
       socketinfo.type = FD_TCP_SSL_NEG_REDO_ACCEPT;
     }
   }
-  polling.setFDIn(socketinfo.fd);
+  setPollRead(socketinfo);
 }
 
 void IOManager::handleTCPSSLIn(SocketInfo & socketinfo) {
@@ -686,8 +714,7 @@ void IOManager::handleTCPSSLIn(SocketInfo & socketinfo) {
           if ((socketinfo.lowprio && !wm->dispatchLowPrioFDData(socketinfo.receiver, socketinfo.id, buf, bufpos)) ||
               (!socketinfo.lowprio && !wm->dispatchFDData(socketinfo.receiver, socketinfo.id, buf, bufpos)))
           {
-            paused.insert(socketinfo.id);
-            polling.removeFD(socketinfo.fd);
+            autoPause(socketinfo);
           }
         }
         else {
@@ -711,8 +738,7 @@ void IOManager::handleTCPSSLIn(SocketInfo & socketinfo) {
     }
   }
   if (pause) {
-    paused.insert(socketinfo.id);
-    polling.removeFD(socketinfo.fd);
+    autoPause(socketinfo);
   }
 }
 
@@ -740,7 +766,7 @@ void IOManager::handleTCPSSLOut(SocketInfo & socketinfo) {
     socketinfo.sendqueue.pop_front();
   }
   if (!socketinfo.sendqueue.size()) {
-    polling.setFDIn(socketinfo.fd);
+    setPollRead(socketinfo);
     wm->dispatchEventSendComplete(socketinfo.receiver, socketinfo.id);
   }
 }
@@ -928,14 +954,28 @@ void IOManager::log(const std::string & text) {
 
 void IOManager::workerReady() {
   ScopeLock lock(socketinfomaplock);
-  for (std::set<int>::iterator it = paused.begin(); it != paused.end(); it++) {
+  for (std::set<int>::iterator it = autopaused.begin(); it != autopaused.end(); it++) {
     std::map<int, SocketInfo>::iterator siit = socketinfomap.find(*it);
     if (siit == socketinfomap.end()) {
       continue;
     }
-    polling.addFDIn(siit->second.fd);
+    if (manuallypaused.find(*it) == manuallypaused.end()) {
+      siit->second.paused = false;
+      if (siit->second.direction == DIR_IN) {
+        polling.addFDIn(siit->second.fd);
+      }
+      else {
+        polling.addFDOut(siit->second.fd);
+      }
+    }
   }
-  paused.clear();
+  autopaused.clear();
+}
+
+void IOManager::autoPause(SocketInfo & socketinfo) {
+  autopaused.insert(socketinfo.id);
+  socketinfo.paused = true;
+  polling.removeFD(socketinfo.fd);
 }
 
 void IOManager::pause(int id) {
@@ -946,6 +986,7 @@ void IOManager::pause(int id) {
   }
   if (manuallypaused.find(id) == manuallypaused.end()) {
     manuallypaused.insert(id);
+    it->second.paused = true;
     polling.removeFD(it->second.fd);
   }
 }
@@ -958,8 +999,14 @@ void IOManager::resume(int id) {
   }
   if (manuallypaused.find(id) != manuallypaused.end()) {
     manuallypaused.erase(id);
-    if (paused.find(id) == paused.end()) {
-      polling.addFDIn(it->second.fd);
+    if (autopaused.find(id) == autopaused.end()) {
+      it->second.paused = false;
+      if (it->second.direction == DIR_IN) {
+        polling.addFDIn(it->second.fd);
+      }
+      else {
+        polling.addFDOut(it->second.fd);
+      }
     }
   }
 }
