@@ -5,6 +5,7 @@
 #include <openssl/ssl.h>
 
 #include "datablock.h"
+#include "prio.h"
 
 enum SocketType {
   FD_UNUSED,
@@ -34,7 +35,7 @@ class SocketInfo {
 public:
   SocketInfo() : type(FD_UNUSED), fd(0), id(0), port(0), localport(0), gairet(0),
                  gaires(NULL), gaiasync(false), receiver(NULL), ssl(NULL),
-                 lowprio(false), paused(false), direction(DIR_IN)
+                 prio(PRIO_NORMAL), paused(false), direction(DIR_IN)
   {
   }
   SocketType type;
@@ -51,7 +52,7 @@ public:
   EventReceiver * receiver;
   mutable std::list<DataBlock> sendqueue;
   SSL * ssl;
-  bool lowprio;
+  Prio prio;
   bool paused;
   int direction;
 };

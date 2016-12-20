@@ -28,6 +28,9 @@ WorkManager::WorkManager() : overloaded(false), lowpriooverloaded(false) {
   for (int i = 0; i < ASYNC_WORKERS; ++i) {
     asyncworkers.push_back(AsyncWorker(this, asyncqueue));
   }
+  eventqueues.push_back(&lowprioqueue);
+  eventqueues.push_back(&dataqueue);
+  eventqueues.push_back(&highprioqueue);
 }
 
 void WorkManager::init() {
@@ -45,19 +48,16 @@ void WorkManager::dispatchFDData(EventReceiver * er, int sockid) {
 }
 
 bool WorkManager::dispatchFDData(EventReceiver * er, int sockid, char * buf, int len) {
-  dataqueue.push(Event(er, WORK_DATABUF, sockid, buf, len));
-  event.post();
-  return !overload();
+  return dispatchFDData(er, sockid, buf, len, PRIO_NORMAL);
 }
 
-bool WorkManager::dispatchLowPrioFDData(EventReceiver * er, int sockid, char * buf, int len) {
-  lowprioqueue.push(Event(er, WORK_DATABUF, sockid, buf, len));
+bool WorkManager::dispatchFDData(EventReceiver * er, int sockid, char * buf, int len, Prio prio) {
+  eventqueues[prio]->push(Event(er, WORK_DATABUF, sockid, buf, len));
   event.post();
-
-  if (highprioqueue.size() + dataqueue.size() + lowprioqueue.size() >= OVERLOADSIZE) {
-    lowpriooverloaded = true;
+  if (prio == PRIO_LOW) {
+    return !lowPrioOverload();
   }
-  return !lowpriooverloaded;
+  return !overload();
 }
 
 void WorkManager::dispatchTick(EventReceiver * er, int interval) {
@@ -66,42 +66,74 @@ void WorkManager::dispatchTick(EventReceiver * er, int interval) {
 }
 
 void WorkManager::dispatchEventNew(EventReceiver * er, int sockid) {
-  dataqueue.push(Event(er, WORK_NEW, sockid));
+  dispatchEventNew(er, sockid, PRIO_NORMAL);
+}
+
+void WorkManager::dispatchEventNew(EventReceiver * er, int sockid, Prio prio) {
+  eventqueues[prio]->push(Event(er, WORK_NEW, sockid));
   event.post();
 }
 
 void WorkManager::dispatchEventConnecting(EventReceiver * er, int sockid, std::string addr) {
-  dataqueue.push(Event(er, WORK_CONNECTING, sockid, addr));
+  dispatchEventConnecting(er, sockid, addr, PRIO_NORMAL);
+}
+
+void WorkManager::dispatchEventConnecting(EventReceiver * er, int sockid, std::string addr, Prio prio) {
+  eventqueues[prio]->push(Event(er, WORK_CONNECTING, sockid, addr));
   event.post();
 }
 
 void WorkManager::dispatchEventConnected(EventReceiver * er, int sockid) {
-  dataqueue.push(Event(er, WORK_CONNECTED, sockid));
+  dispatchEventConnected(er, sockid, PRIO_NORMAL);
+}
+
+void WorkManager::dispatchEventConnected(EventReceiver * er, int sockid, Prio prio) {
+  eventqueues[prio]->push(Event(er, WORK_CONNECTED, sockid));
   event.post();
 }
 
 void WorkManager::dispatchEventDisconnected(EventReceiver * er, int sockid) {
-  dataqueue.push(Event(er, WORK_DISCONNECTED, sockid));
+  dispatchEventDisconnected(er, sockid, PRIO_NORMAL);
+}
+
+void WorkManager::dispatchEventDisconnected(EventReceiver * er, int sockid, Prio prio) {
+  eventqueues[prio]->push(Event(er, WORK_DISCONNECTED, sockid));
   event.post();
 }
 
 void WorkManager::dispatchEventSSLSuccess(EventReceiver * er, int sockid) {
-  dataqueue.push(Event(er, WORK_SSL_SUCCESS, sockid));
+  dispatchEventSSLSuccess(er, sockid, PRIO_NORMAL);
+}
+
+void WorkManager::dispatchEventSSLSuccess(EventReceiver * er, int sockid, Prio prio) {
+  eventqueues[prio]->push(Event(er, WORK_SSL_SUCCESS, sockid));
   event.post();
 }
 
 void WorkManager::dispatchEventSSLFail(EventReceiver * er, int sockid) {
-  dataqueue.push(Event(er, WORK_SSL_FAIL, sockid));
+  dispatchEventSSLFail(er, sockid, PRIO_NORMAL);
+}
+
+void WorkManager::dispatchEventSSLFail(EventReceiver * er, int sockid, Prio prio) {
+  eventqueues[prio]->push(Event(er, WORK_SSL_FAIL, sockid));
   event.post();
 }
 
 void WorkManager::dispatchEventFail(EventReceiver * er, int sockid, std::string error) {
-  dataqueue.push(Event(er, WORK_FAIL, sockid, error));
+  dispatchEventFail(er, sockid, error, PRIO_NORMAL);
+}
+
+void WorkManager::dispatchEventFail(EventReceiver * er, int sockid, std::string error, Prio prio) {
+  eventqueues[prio]->push(Event(er, WORK_FAIL, sockid, error));
   event.post();
 }
 
 void WorkManager::dispatchEventSendComplete(EventReceiver * er, int sockid) {
-  dataqueue.push(Event(er, WORK_SEND_COMPLETE, sockid));
+  dispatchEventSendComplete(er, sockid, PRIO_NORMAL);
+}
+
+void WorkManager::dispatchEventSendComplete(EventReceiver * er, int sockid, Prio prio) {
+  eventqueues[prio]->push(Event(er, WORK_SEND_COMPLETE, sockid));
   event.post();
 }
 
@@ -122,7 +154,7 @@ void WorkManager::dispatchAsyncTaskComplete(AsyncTask & task) {
 }
 
 void WorkManager::deferDelete(Pointer<EventReceiver> er) {
-  dataqueue.push(Event(er, WORK_DELETE));
+  lowprioqueue.push(Event(er, WORK_DELETE));
   event.post();
 }
 
@@ -145,6 +177,14 @@ bool WorkManager::overload() {
     lowpriooverloaded = true;
   }
   return overloaded;
+}
+
+bool WorkManager::lowPrioOverload() {
+  bool currentlyoverloaded = highprioqueue.size() + dataqueue.size() + lowprioqueue.size() >= OVERLOADSIZE;
+  if (currentlyoverloaded) {
+    lowpriooverloaded = true;
+  }
+  return lowpriooverloaded;
 }
 
 void WorkManager::addReadyNotify(EventReceiver * er) {

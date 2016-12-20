@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <list>
+#include <vector>
 
 #include "threading.h"
 #include "datablockpool.h"
@@ -14,6 +15,7 @@
 #include "event.h"
 #include "asyncworker.h"
 #include "asynctask.h"
+#include "prio.h"
 
 class EventReceiver;
 
@@ -33,21 +35,30 @@ private:
   DataBlockPool blockpool;
   bool overloaded;
   bool lowpriooverloaded;
+  std::vector<BlockingQueue<Event> *> eventqueues;
 public:
   WorkManager();
   void init();
   void dispatchFDData(EventReceiver *, int);
   bool dispatchFDData(EventReceiver *, int, char *, int);
-  bool dispatchLowPrioFDData(EventReceiver *, int, char *, int);
+  bool dispatchFDData(EventReceiver *, int, char *, int, Prio);
   void dispatchTick(EventReceiver *, int);
   void dispatchEventNew(EventReceiver *, int);
+  void dispatchEventNew(EventReceiver *, int, Prio);
   void dispatchEventConnecting(EventReceiver *, int, std::string);
+  void dispatchEventConnecting(EventReceiver *, int, std::string, Prio);
   void dispatchEventConnected(EventReceiver *, int);
+  void dispatchEventConnected(EventReceiver *, int, Prio);
   void dispatchEventDisconnected(EventReceiver *, int);
+  void dispatchEventDisconnected(EventReceiver *, int, Prio);
   void dispatchEventSSLSuccess(EventReceiver *, int);
+  void dispatchEventSSLSuccess(EventReceiver *, int, Prio);
   void dispatchEventSSLFail(EventReceiver *, int);
+  void dispatchEventSSLFail(EventReceiver *, int, Prio);
   void dispatchEventFail(EventReceiver *, int, std::string);
+  void dispatchEventFail(EventReceiver *, int, std::string, Prio);
   void dispatchEventSendComplete(EventReceiver *, int);
+  void dispatchEventSendComplete(EventReceiver *, int, Prio);
   void dispatchSignal(EventReceiver *, int, int);
   void dispatchAsyncTaskComplete(AsyncTask &);
   void deferDelete(Pointer<EventReceiver>);
@@ -55,6 +66,7 @@ public:
   void asyncTask(EventReceiver *, int, void (*)(EventReceiver *, void *), void *);
   DataBlockPool * getBlockPool();
   bool overload();
+  bool lowPrioOverload();
   void run();
   void addReadyNotify(EventReceiver *);
 };
