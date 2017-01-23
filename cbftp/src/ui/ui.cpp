@@ -670,21 +670,25 @@ void Ui::printChar(WINDOW * window, unsigned int row, unsigned int col, unsigned
   }
 }
 
-void Ui::goRawCommand(std::string command) {
-  goRawCommand(command, "");
+void Ui::goRawCommand(const std::string & command) {
+  goRawCommand(command, "/");
 }
 
-void Ui::goRawCommand(std::string command, std::string arg) {
-  rawcommandscreen->initialize(mainrow, maincol, command, arg);
+void Ui::goRawCommand(const std::string & command, const Path & path) {
+  goRawCommand(command, path, "");
+}
+
+void Ui::goRawCommand(const std::string & command, const Path & path, const std::string & arg) {
+  rawcommandscreen->initialize(mainrow, maincol, command, path, arg);
   switchToWindow(rawcommandscreen);
 }
 
-void Ui::goConfirmation(std::string message) {
+void Ui::goConfirmation(const std::string & message) {
   confirmationscreen->initialize(mainrow, maincol, message);
   switchToWindow(confirmationscreen);
 }
 
-void Ui::goNuke(std::string site, std::string target, FileList * filelist) {
+void Ui::goNuke(const std::string & site, const std::string & target, FileList * filelist) {
   nukescreen->initialize(mainrow, maincol, site, target, filelist);
   switchToWindow(nukescreen);
 }
@@ -699,17 +703,17 @@ void Ui::goViewFile(const Path & dir, const std::string & file) {
   switchToWindow(viewfilescreen);
 }
 
-void Ui::goAddSection(std::string site, const Path & path) {
+void Ui::goAddSection(const std::string & site, const Path & path) {
   addsectionscreen->initialize(mainrow, maincol, site, path);
   switchToWindow(addsectionscreen);
 }
 
-void Ui::goNewRace(std::string site, std::string section, std::string release) {
+void Ui::goNewRace(const std::string & site, const std::string & section, const std::string & release) {
   newracescreen->initialize(mainrow, maincol, site, section, release);
   switchToWindow(newracescreen);
 }
 
-void Ui::goSelectSites(std::string message, std::list<Pointer<Site> > currentsitelist, std::list<Pointer<Site> > excludedsitelist) {
+void Ui::goSelectSites(const std::string & message, std::list<Pointer<Site> > currentsitelist, std::list<Pointer<Site> > excludedsitelist) {
   selectsitesscreen->initialize(mainrow, maincol, message, currentsitelist, excludedsitelist);
   switchToWindow(selectsitesscreen);
 }
@@ -734,7 +738,7 @@ void Ui::goFileViewerSettings() {
   switchToWindow(fileviewersettingsscreen);
 }
 
-void Ui::goSiteStatus(std::string site) {
+void Ui::goSiteStatus(const std::string & site) {
   sitestatusscreen->initialize(mainrow, maincol, site);
   switchToWindow(sitestatusscreen);
 }
@@ -774,7 +778,7 @@ void Ui::goTransfers() {
   switchToWindow(transfersscreen);
 }
 
-void Ui::goEditSite(std::string site) {
+void Ui::goEditSite(const std::string & site) {
   editsitescreen->initialize(mainrow, maincol, "edit", site);
   switchToWindow(editsitescreen);
 }
@@ -784,12 +788,12 @@ void Ui::goAddSite() {
   switchToWindow(editsitescreen);
 }
 
-void Ui::goBrowse(std::string site) {
+void Ui::goBrowse(const std::string & site) {
   browsescreen->initialize(mainrow, maincol, VIEW_NORMAL, site);
   switchToWindow(browsescreen);
 }
 
-void Ui::goBrowseSplit(std::string site) {
+void Ui::goBrowseSplit(const std::string & site) {
   browsescreen->initialize(mainrow, maincol, VIEW_SPLIT, site);
   switchToWindow(browsescreen, true);
 }
@@ -811,17 +815,17 @@ void Ui::goAddProxy() {
   switchToWindow(editproxyscreen);
 }
 
-void Ui::goEditProxy(std::string proxy) {
+void Ui::goEditProxy(const std::string & proxy) {
   editproxyscreen->initialize(mainrow, maincol, "edit", proxy);
   switchToWindow(editproxyscreen);
 }
 
-void Ui::goRawData(std::string site) {
+void Ui::goRawData(const std::string & site) {
   rawdatascreen->initialize(mainrow, maincol, site, 0);
   switchToWindow(rawdatascreen);
 }
 
-void Ui::goRawDataJump(std::string site, int id) {
+void Ui::goRawDataJump(const std::string & site, int id) {
   rawdatascreen->initialize(mainrow, maincol, site, id);
   topwindow = rawdatascreen;
   infowindow->setLabel(topwindow->getInfoLabel());
@@ -839,13 +843,13 @@ void Ui::goAllTransferJobs() {
   switchToWindow(alltransferjobsscreen);
 }
 
-void Ui::returnSelectSites(std::string sites) {
+void Ui::returnSelectSites(const std::string & sites) {
   switchToLast();
   topwindow->command("returnselectsites", sites);
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 
-void Ui::key(std::string key) {
+void Ui::key(const std::string & key) {
   bool result = global->getSettingsLoaderSaver()->enterKey(key);
   if (result) {
     mainscreen->initialize(mainrow, maincol);
@@ -859,7 +863,7 @@ void Ui::key(std::string key) {
   }
 }
 
-void Ui::newKey(std::string newkey) {
+void Ui::newKey(const std::string & newkey) {
   util::assert(global->getSettingsLoaderSaver()->enterKey(newkey));
   mainscreen->initialize(mainrow, maincol);
   switchToWindow(mainscreen);

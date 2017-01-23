@@ -122,7 +122,8 @@ class SiteLogic : public EventReceiver {
     void transferComplete(int, bool isdownload);
     bool getSlot(bool);
     int requestFileList(const Path &);
-    int requestRawCommand(const std::string &, bool);
+    int requestRawCommand(const std::string &);
+    int requestRawCommand(const Path &, const std::string &, bool);
     int requestWipe(const Path &, bool);
     int requestDelete(const Path &, bool, bool);
     int requestNuke(const Path &, int, const std::string &);

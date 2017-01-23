@@ -15,9 +15,10 @@ RawCommandScreen::RawCommandScreen(Ui * ui) {
   this->ui = ui;
 }
 
-void RawCommandScreen::initialize(unsigned int row, unsigned int col, std::string sitename, std::string selection) {
+void RawCommandScreen::initialize(unsigned int row, unsigned int col, const std::string & sitename, const Path & path, const std::string & selection) {
   this->sitename = sitename;
   this->selection = selection;
+  this->path = path;
   hasselection = false;
   if (selection.length()) {
     hasselection = true;
@@ -65,7 +66,7 @@ bool RawCommandScreen::keyPressed(unsigned int ch) {
           if (command != "") {
             readfromcopy = false;
             history.push(command);
-            sitelogic->requestRawCommand(command, true);
+            sitelogic->requestRawCommand(path, command, true);
             rawcommandfield.clear();
             ui->update();
           }
@@ -149,4 +150,8 @@ std::string RawCommandScreen::getLegendText() const {
 
 std::string RawCommandScreen::getInfoLabel() const {
   return "RAW COMMAND INPUT: " + sitename;
+}
+
+std::string RawCommandScreen::getInfoText() const {
+  return path.toString();
 }

@@ -662,10 +662,10 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       break;
     case 'w':
       if (list.cursoredFile() != NULL) {
-        ui->goRawCommand(site->getName(), list.cursoredFile()->getName());
+        ui->goRawCommand(site->getName(), list.getPath(), list.cursoredFile()->getName());
       }
       else {
-        ui->goRawCommand(site->getName());
+        ui->goRawCommand(site->getName(), list.getPath());
       }
       break;
   }

@@ -264,10 +264,12 @@ void SiteLogic::commandSuccess(int id) {
       }
       if (connstatetracker[id].hasRequest()) {
         const Pointer<SiteLogicRequest> & request = connstatetracker[id].getRequest();
-        if (request->requestType() == REQ_FILELIST &&
-            conns[id]->getCurrentPath() == request->requestData())
-        {
+        if (request->requestType() == REQ_FILELIST) {
           getFileListConn(id);
+          return;
+        }
+        else if (request->requestType() == REQ_RAW) {
+          conns[id]->doRaw(request->requestData2());
           return;
         }
       }
@@ -439,7 +441,9 @@ void SiteLogic::commandFail(int id, int failuretype) {
         }
       }
       else if (connstatetracker[id].hasRequest()) {
-        if (connstatetracker[id].getRequest()->requestType() == REQ_FILELIST) {
+        if (connstatetracker[id].getRequest()->requestType() == REQ_FILELIST ||
+            connstatetracker[id].getRequest()->requestType() == REQ_RAW)
+        {
           setRequestReady(id, NULL, false);
           handleConnection(id);
           return;
@@ -921,10 +925,17 @@ bool SiteLogic::handleRequest(int id) {
       }
       break;
     }
-    case REQ_RAW: // raw command
-      rawcommandrawbuf->writeLine(request.requestData());
-      conns[id]->doRaw(request.requestData());
+    case REQ_RAW: { // raw command
+      Path targetpath = request.requestData();
+      if (conns[id]->getCurrentPath() != targetpath) {
+        conns[id]->doCWD(targetpath);
+      }
+      else {
+        rawcommandrawbuf->writeLine(request.requestData2());
+        conns[id]->doRaw(request.requestData2());
+      }
       break;
+    }
     case REQ_WIPE_RECURSIVE: // recursive wipe
       conns[id]->doWipe(request.requestData(), true);
       break;
@@ -1109,9 +1120,13 @@ int SiteLogic::requestFileList(const Path & path) {
   return requestid;
 }
 
-int SiteLogic::requestRawCommand(const std::string & command, bool care) {
+int SiteLogic::requestRawCommand(const std::string & command) {
+  return requestRawCommand("/", command, false);
+}
+
+int SiteLogic::requestRawCommand(const Path & path, const std::string & command, bool care) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(requestid, REQ_RAW, command, care));
+  requests.push_back(SiteLogicRequest(requestid, REQ_RAW, path.toString(), command, care));
   activateOne();
   return requestid;
 }
@@ -1508,7 +1523,7 @@ void SiteLogic::listCompleted(int id, int storeid) {
 
 void SiteLogic::issueRawCommand(unsigned int id, const std::string & command) {
   int requestid = requestidcounter++;
-  SiteLogicRequest request(requestid, REQ_RAW, command, true);
+  SiteLogicRequest request(requestid, REQ_RAW, conns[id]->getCurrentPath().toString(), command, true);
   request.setConnId(id);
   requests.push_back(request);
   if (!conns[id]->isConnected()) {
