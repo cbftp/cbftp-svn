@@ -8,7 +8,7 @@ SiteLogicRequest::SiteLogicRequest(int requestid, int requesttype, int data3, bo
   care(care) {
 }
 
-SiteLogicRequest::SiteLogicRequest(int requestid, int requesttype, std::string data, bool care) :
+SiteLogicRequest::SiteLogicRequest(int requestid, int requesttype, const std::string & data, bool care) :
   requestid(requestid),
   connid(-1),
   requesttype(requesttype),
@@ -16,7 +16,17 @@ SiteLogicRequest::SiteLogicRequest(int requestid, int requesttype, std::string d
   care(care) {
 }
 
-SiteLogicRequest::SiteLogicRequest(int requestid, int requesttype, std::string data, std::string data2, int data3, bool care) :
+SiteLogicRequest::SiteLogicRequest(int requestid, int requesttype, const std::string & data, const std::string & data2, bool care) :
+  requestid(requestid),
+  connid(-1),
+  requesttype(requesttype),
+  data(data),
+  data2(data2),
+  data3(data3),
+  care(care) {
+}
+
+SiteLogicRequest::SiteLogicRequest(int requestid, int requesttype, const std::string & data, const std::string & data2, int data3, bool care) :
   requestid(requestid),
   connid(-1),
   requesttype(requesttype),

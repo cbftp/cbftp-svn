@@ -13,8 +13,9 @@ private:
   bool care;
 public:
   SiteLogicRequest(int, int, int, bool);
-  SiteLogicRequest(int, int, std::string, bool);
-  SiteLogicRequest(int, int, std::string, std::string, int, bool);
+  SiteLogicRequest(int, int, const std::string &, bool);
+  SiteLogicRequest(int, int, const std::string &, const std::string &, bool);
+  SiteLogicRequest(int, int, const std::string &, const std::string &, int, bool);
   int requestId() const;
   int requestType() const;
   std::string requestData() const;

@@ -184,7 +184,7 @@ void RemoteCommandHandler::commandRaw(const std::string & message) {
   std::list<Pointer<SiteLogic> > sites = getSiteLogicList(sitestring);
 
   for (std::list<Pointer<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
-    (*it)->requestRawCommand(rawcommand, false);
+    (*it)->requestRawCommand(rawcommand);
   }
 }
 
