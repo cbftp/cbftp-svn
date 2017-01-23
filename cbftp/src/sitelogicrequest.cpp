@@ -22,7 +22,6 @@ SiteLogicRequest::SiteLogicRequest(int requestid, int requesttype, const std::st
   requesttype(requesttype),
   data(data),
   data2(data2),
-  data3(data3),
   care(care) {
 }
 
