@@ -52,6 +52,7 @@ public:
   unsigned int currentTransferJobs() const;
   unsigned int allTransferJobs() const;
   Pointer<Race> getRace(unsigned int) const;
+  Pointer<Race> getRace(const std::string &) const;
   Pointer<TransferJob> getTransferJob(unsigned int) const;
   std::list<Pointer<PreparedRace> >::const_iterator getPreparedRacesBegin() const;
   std::list<Pointer<PreparedRace> >::const_iterator getPreparedRacesEnd() const;

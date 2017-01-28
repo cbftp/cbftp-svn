@@ -315,6 +315,9 @@ void Engine::resetRace(Pointer<Race> & race) {
 
 void Engine::deleteOnAllSites(Pointer<Race> & race) {
   if (!!race) {
+    if (race->getStatus() == RACE_STATUS_RUNNING) {
+      abortRace(race);
+    }
     std::string sites;
     for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
       const Path & path = it->first->getPath();
@@ -942,6 +945,16 @@ Pointer<Race> Engine::getRace(unsigned int id) const {
   std::list<Pointer<Race> >::const_iterator it;
   for (it = allraces.begin(); it != allraces.end(); it++) {
     if ((*it)->getId() == id) {
+      return *it;
+    }
+  }
+  return Pointer<Race>();
+}
+
+Pointer<Race> Engine::getRace(const std::string & race) const {
+  std::list<Pointer<Race> >::const_iterator it;
+  for (it = allraces.begin(); it != allraces.end(); it++) {
+    if ((*it)->getName() == race) {
       return *it;
     }
   }

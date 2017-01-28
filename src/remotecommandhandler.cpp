@@ -155,6 +155,12 @@ void RemoteCommandHandler::handleMessage(std::string message) {
   else if (command == "idle") {
     commandIdle(remainder);
   }
+  else if (command == "abort") {
+    commandAbort(remainder);
+  }
+  else if (command == "delete") {
+    commandDelete(remainder);
+  }
   else {
     global->getEventLog()->log("RemoteCommandHandler", "Invalid remote command: " + message);
     return;
@@ -218,6 +224,24 @@ void RemoteCommandHandler::commandIdle(const std::string & message) {
   for (std::list<Pointer<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
     (*it)->requestAllIdle(idletime);
   }
+}
+
+void RemoteCommandHandler::commandAbort(const std::string & message) {
+  Pointer<Race> race = global->getEngine()->getRace(message);
+  if (!race) {
+    global->getEventLog()->log("RemoteCommandHandler", "No matching race: " + message);
+    return;
+  }
+  global->getEngine()->abortRace(race);
+}
+
+void RemoteCommandHandler::commandDelete(const std::string & message) {
+  Pointer<Race> race = global->getEngine()->getRace(message);
+  if (!race) {
+    global->getEventLog()->log("RemoteCommandHandler", "No matching race: " + message);
+    return;
+  }
+  global->getEngine()->deleteOnAllSites(race);
 }
 
 void RemoteCommandHandler::parseRace(const std::string & message, bool autostart) {
