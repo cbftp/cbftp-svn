@@ -100,16 +100,16 @@ bool ScoreBoardScreen::keyPressed(unsigned int ch) {
       ui->update();
       return true;
     case KEY_DOWN:
-      if (row < scoreboard->size() && currentviewspan < scoreboard->size() - row) {
-        currentviewspan += 2;
+      if (row < scoreboard->size() + 1) {
+        if (currentviewspan < scoreboard->size() + 1 - row) {
+          currentviewspan += 2;
+        }
+        if (currentviewspan > scoreboard->size() + 1 - row) {
+          currentviewspan = scoreboard->size() + 1 - row;
+        }
       }
-      else {
-        if (row > scoreboard->size()) {
-          currentviewspan = 0;
-        }
-        else {
-          currentviewspan = scoreboard->size() - row + 1;
-        }
+      if (row >= scoreboard->size() + 1) {
+        currentviewspan = 0;
       }
       ui->update();
       return true;
@@ -123,11 +123,11 @@ bool ScoreBoardScreen::keyPressed(unsigned int ch) {
       ui->update();
       return true;
     case KEY_NPAGE:
-      if (row * 1.5 < scoreboard->size() && currentviewspan < scoreboard->size() - row * 1.5) {
+      if (row * 1.5 < scoreboard->size() + 1 && currentviewspan < scoreboard->size() + 1 - row * 1.5) {
         currentviewspan += row * 0.5;
       }
-      else {
-        currentviewspan = scoreboard->size() - row + 1;
+      else if (scoreboard->size() + 1 > row) {
+        currentviewspan = scoreboard->size() + 1 - row;
       }
       ui->update();
       return true;
@@ -136,7 +136,9 @@ bool ScoreBoardScreen::keyPressed(unsigned int ch) {
       ui->update();
       return true;
     case KEY_END:
-      currentviewspan = scoreboard->size() - row + 1;
+      if (scoreboard->size() + 1 > row) {
+        currentviewspan = scoreboard->size() + 1 - row;
+      }
       ui->update();
       return true;
   }
