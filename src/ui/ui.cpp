@@ -714,7 +714,12 @@ void Ui::goNewRace(const std::string & site, const std::string & section, const 
 }
 
 void Ui::goSelectSites(const std::string & message, std::list<Pointer<Site> > currentsitelist, std::list<Pointer<Site> > excludedsitelist) {
-  selectsitesscreen->initialize(mainrow, maincol, message, currentsitelist, excludedsitelist);
+  selectsitesscreen->initializeExclude(mainrow, maincol, message, currentsitelist, excludedsitelist);
+  switchToWindow(selectsitesscreen);
+}
+
+void Ui::goSelectSitesFrom(const std::string & message, std::list<Pointer<Site> > currentsitelist, std::list<Pointer<Site> > sitelist) {
+  selectsitesscreen->initializeSelect(mainrow, maincol, message, currentsitelist, sitelist);
   switchToWindow(selectsitesscreen);
 }
 

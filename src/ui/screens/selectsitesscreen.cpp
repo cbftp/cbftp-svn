@@ -12,11 +12,11 @@ SelectSitesScreen::SelectSitesScreen(Ui * ui) {
   this->ui = ui;
 }
 
-void SelectSitesScreen::initialize(unsigned int row, unsigned int col, std::string purpose, std::list<Pointer<Site> > preselectedsites, std::list<Pointer<Site> > excludedsites) {
+void SelectSitesScreen::initializeExclude(unsigned int row, unsigned int col, const std::string & purpose, std::list<Pointer<Site> > preselectedsites, std::list<Pointer<Site> > excludedsites) {
   sm = global->getSiteManager();
   this->purpose = purpose;
-  preselected.clear();
-  excluded.clear();
+  std::set<Pointer<Site> > preselected;
+  std::set<Pointer<Site> > excluded;
   for (std::list<Pointer<Site> >::iterator it = preselectedsites.begin(); it != preselectedsites.end(); it++) {
     preselected.insert(*it);
   }
@@ -33,6 +33,23 @@ void SelectSitesScreen::initialize(unsigned int row, unsigned int col, std::stri
     bool selected = preselected.find(*it) != preselected.end();
     tempsites.push_back(std::pair<std::string, bool>((*it)->getName(), selected));
   }
+  togglestate = false;
+  init(row, col);
+}
+
+void SelectSitesScreen::initializeSelect(unsigned int row, unsigned int col, const std::string & purpose, std::list<Pointer<Site> > preselectedsites, std::list<Pointer<Site> > sites) {
+  sm = global->getSiteManager();
+  this->purpose = purpose;
+  std::set<Pointer<Site> > preselected;
+  for (std::list<Pointer<Site> >::iterator it = preselectedsites.begin(); it != preselectedsites.end(); it++) {
+    preselected.insert(*it);
+  }
+  for (std::list<Pointer<Site> >::iterator it = sites.begin(); it != sites.end(); it++) {
+    bool selected = preselected.find(*it) != preselected.end();
+    tempsites.push_back(std::pair<std::string, bool>((*it)->getName(), selected));
+  }
+  mso.clear();
+  mso.enterFocusFrom(0);
   togglestate = false;
   init(row, col);
 }
@@ -140,17 +157,17 @@ bool SelectSitesScreen::keyPressed(unsigned int ch) {
       return true;
     }
     case 'd': {
-      std::string blockstr = "";
+      std::string sites = "";
       for (unsigned int i = 0; i < mso.size(); i++) {
         Pointer<MenuSelectOptionCheckBox> msocb = mso.getElement(i);
         if (msocb->getData()) {
-          blockstr += msocb->getIdentifier() + ",";
+          sites += msocb->getIdentifier() + ",";
         }
       }
-      if (blockstr.length() > 0) {
-        blockstr = blockstr.substr(0, blockstr.length() - 1);
+      if (sites.length() > 0) {
+        sites = sites.substr(0, sites.length() - 1);
       }
-      ui->returnSelectSites(blockstr);
+      ui->returnSelectSites(sites);
       return true;
     }
     case 't': {

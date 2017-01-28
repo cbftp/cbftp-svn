@@ -18,10 +18,15 @@
 #include "../ui.h"
 #include "../menuselectoptiontextbutton.h"
 
+enum SelectSitesMode {
+  SELECT_ADD,
+  SELECT_DELETE
+};
+
 RaceStatusScreen::RaceStatusScreen(Ui * ui) {
   this->ui = ui;
   defaultlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [r]eset race - A[B]ort race";
-  finishedlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [r]eset race - [D]elete on all sites";
+  finishedlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [r]eset race - [D]elete on sites";
 }
 
 RaceStatusScreen::~RaceStatusScreen() {
@@ -40,7 +45,6 @@ void RaceStatusScreen::initialize(unsigned int row, unsigned int col, unsigned i
   smalldirs = false;
   awaitingremovesite = false;
   awaitingabort = false;
-  awaitingdelete = false;
   currnumsubpaths = 0;
   currguessedsize = 0;
   mso.enterFocusFrom(0);
@@ -299,10 +303,6 @@ void RaceStatusScreen::command(const std::string & command, const std::string & 
       finished = true;
       ui->setLegend();
     }
-    else if (awaitingdelete) {
-      global->getEngine()->deleteOnAllSites(race);
-      awaitingdelete = false;
-    }
   }
   else if (command == "returnselectsites") {
     std::string preselectstr = arg;
@@ -323,8 +323,13 @@ void RaceStatusScreen::command(const std::string & command, const std::string & 
         break;
       }
     }
-    for (std::list<Pointer<Site> >::iterator it = selectedsites.begin(); it != selectedsites.end(); it++) {
-      global->getEngine()->addSiteToRace(race, (*it)->getName());
+    if (selectsitesmode == SELECT_ADD) {
+      for (std::list<Pointer<Site> >::iterator it = selectedsites.begin(); it != selectedsites.end(); it++) {
+        global->getEngine()->addSiteToRace(race, (*it)->getName());
+      }
+    }
+    else if (selectsitesmode == SELECT_DELETE) {
+      global->getEngine()->deleteOnSites(race, selectedsites);
     }
   }
   ui->redraw();
@@ -373,8 +378,18 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       return true;
     case 'D':
       if (race->getStatus() != RACE_STATUS_RUNNING) {
-        awaitingdelete = true;
-        ui->goConfirmation("Do you really want to delete " + race->getName() + " on all involved sites");
+        std::list<Pointer<Site> > sites;
+        std::list<Pointer<Site> > preselectsites;
+        std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it;
+        for (it = race->begin(); it != race->end(); it++) {
+          sites.push_back(it->second->getSite());
+          if (!it->first->isDone() || (it->first->isAborted() && !it->first->doneBeforeAbort())) {
+            preselectsites.push_back(it->second->getSite());
+
+          }
+        }
+        selectsitesmode = SELECT_DELETE;
+        ui->goSelectSitesFrom("Delete " + race->getName() + " from these sites", preselectsites, sites);
       }
       return true;
     case 'A':
@@ -392,6 +407,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
           excludedsites.push_back(*it);
         }
       }
+      selectsitesmode = SELECT_ADD;
       ui->goSelectSites("Add these sites to the race: " + race->getSection() + "/" + race->getName(), std::list<Pointer<Site> >(), excludedsites);
       return true;
     }

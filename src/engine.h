@@ -3,6 +3,7 @@
 #include <string>
 #include <list>
 #include <map>
+#include <set>
 
 #include "core/eventreceiver.h"
 #include "core/pointer.h"
@@ -41,6 +42,7 @@ public:
   void abortRace(Pointer<Race> &);
   void resetRace(Pointer<Race> &);
   void deleteOnAllSites(Pointer<Race> &);
+  void deleteOnSites(Pointer<Race> &, std::list<Pointer<Site> >);
   void abortTransferJob(Pointer<TransferJob> &);
   void raceFileListRefreshed(SiteLogic *, SiteRace *);
   void filelistUpdated();

@@ -183,6 +183,7 @@ public:
   void goAddSection(const std::string &, const Path &);
   void goNewRace(const std::string &, const std::string &, const std::string &);
   void goSelectSites(const std::string &, std::list<Pointer<Site> >, std::list<Pointer<Site> >);
+  void goSelectSitesFrom(const std::string &, std::list<Pointer<Site> >, std::list<Pointer<Site> >);
   void goSkiplist();
   void goChangeKey();
   void goProxy();

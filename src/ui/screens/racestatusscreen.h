@@ -27,7 +27,6 @@ private:
   bool smalldirs;
   bool awaitingremovesite;
   bool awaitingabort;
-  bool awaitingdelete;
   unsigned int currnumsubpaths;
   unsigned int currguessedsize;
   unsigned int longestsubpath;
@@ -39,4 +38,5 @@ private:
   std::string defaultlegendtext;
   std::string finishedlegendtext;
   bool finished;
+  int selectsitesmode;
 };

@@ -17,7 +17,8 @@ class Site;
 class SelectSitesScreen : public UIWindow {
 public:
   SelectSitesScreen(Ui *);
-  void initialize(unsigned int, unsigned int, std::string, std::list<Pointer<Site> >, std::list<Pointer<Site> >);
+  void initializeSelect(unsigned int, unsigned int, const std::string &, std::list<Pointer<Site> >, std::list<Pointer<Site> >);
+  void initializeExclude(unsigned int, unsigned int, const std::string &, std::list<Pointer<Site> >, std::list<Pointer<Site> >);
   void redraw();
   void update();
   bool keyPressed(unsigned int);
@@ -27,8 +28,6 @@ private:
   SiteManager * sm;
   MenuSelectOption mso;
   std::string purpose;
-  std::set<Pointer<Site> > preselected;
-  std::set<Pointer<Site> > excluded;
   std::list<std::pair<std::string, bool> > tempsites;
   bool togglestate;
 };
