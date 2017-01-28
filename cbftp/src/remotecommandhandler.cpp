@@ -215,8 +215,8 @@ void RemoteCommandHandler::commandIdle(const std::string & message) {
     idletime = 0;
   }
   else {
-    idletime = util::str2Int(message.substr(sitesend + 1));
     sitestring = message.substr(0, sitesend);
+    idletime = util::str2Int(message.substr(sitesend + 1));
   }
 
   std::list<Pointer<SiteLogic> > sites = getSiteLogicList(sitestring);
@@ -236,12 +236,31 @@ void RemoteCommandHandler::commandAbort(const std::string & message) {
 }
 
 void RemoteCommandHandler::commandDelete(const std::string & message) {
-  Pointer<Race> race = global->getEngine()->getRace(message);
+  std::string release;
+  std::string sitestring;
+  size_t releaseend = message.find(" ");
+  if (releaseend == std::string::npos || releaseend == message.length()) {
+    release = message;
+  }
+  else {
+    release = message.substr(0, releaseend);
+    sitestring = message.substr(releaseend + 1);
+  }
+  Pointer<Race> race = global->getEngine()->getRace(release);
   if (!race) {
-    global->getEventLog()->log("RemoteCommandHandler", "No matching race: " + message);
+    global->getEventLog()->log("RemoteCommandHandler", "No matching race: " + release);
     return;
   }
-  global->getEngine()->deleteOnAllSites(race);
+  if (!sitestring.length()) {
+    global->getEngine()->deleteOnAllSites(race);
+    return;
+  }
+  std::list<Pointer<SiteLogic> > sitelogics = getSiteLogicList(sitestring);
+  std::list<Pointer<Site> > sites;
+  for (std::list<Pointer<SiteLogic> >::const_iterator it = sitelogics.begin(); it != sitelogics.end(); it++) {
+    sites.push_back((*it)->getSite());
+  }
+  global->getEngine()->deleteOnSites(race, sites);
 }
 
 void RemoteCommandHandler::parseRace(const std::string & message, bool autostart) {

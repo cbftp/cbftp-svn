@@ -17,6 +17,8 @@ SiteRace::SiteRace(Pointer<Race> race, const std::string & sitename, const Path 
   username(username),
   sitename(sitename),
   done(false),
+  aborted(false),
+  donebeforeabort(false),
   maxfilesize(0),
   totalfilesize(0),
   numuploadedfiles(0),
@@ -223,6 +225,14 @@ bool SiteRace::isDone() const {
   return done;
 }
 
+bool SiteRace::isAborted() const {
+  return aborted;
+}
+
+bool SiteRace::doneBeforeAbort() const {
+  return donebeforeabort;
+}
+
 bool SiteRace::isGlobalDone() const {
   return race->isDone();
 }
@@ -235,11 +245,16 @@ void SiteRace::complete(bool report) {
 }
 
 void SiteRace::abort() {
-  done = true;
+  if (!aborted) {
+    donebeforeabort = done;
+    done = true;
+    aborted = true;
+  }
 }
 
 void SiteRace::reset() {
   done = false;
+  aborted = false;
   filelists.clear(); // memory leak, use Pointer<FileList> instead
   filelists[""] = new FileList(username, path);
   recentlyvisited.clear();

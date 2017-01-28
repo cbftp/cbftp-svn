@@ -314,15 +314,35 @@ void Engine::resetRace(Pointer<Race> & race) {
 }
 
 void Engine::deleteOnAllSites(Pointer<Race> & race) {
+  std::list<Pointer<Site> > sites;
+  for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
+    sites.push_back(it->second->getSite());
+  }
+  deleteOnSites(race, sites);
+}
+
+void Engine::deleteOnSites(Pointer<Race> & race, std::list<Pointer<Site> > delsites) {
   if (!!race) {
     if (race->getStatus() == RACE_STATUS_RUNNING) {
       abortRace(race);
     }
     std::string sites;
-    for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
-      const Path & path = it->first->getPath();
-      it->second->requestDelete(path, true, false);
-      sites += it->first->getSiteName() + ",";
+    for (std::list<Pointer<Site> >::const_iterator it = delsites.begin(); it != delsites.end(); it++) {
+      if (!*it) {
+        continue;
+      }
+      Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic((*it)->getName());
+      if (!sl) {
+        continue;
+      }
+      SiteRace * sr = sl->getRace(race->getName());
+      if (!sr) {
+        global->getEventLog()->log("Engine", "Site " + (*it)->getName() + " is not in race: " + race->getName());
+        continue;
+      }
+      const Path & path = sr->getPath();
+      sl->requestDelete(path, true, false);
+      sites += (*it)->getName() + ",";
     }
     if (sites.length() > 0) {
       sites = sites.substr(0, sites.length() - 1);

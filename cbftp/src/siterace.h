@@ -27,6 +27,8 @@ class SiteRace : public CommandOwner {
     std::list<std::string> completesubdirs;
     std::map<std::string, FileList *> filelists;
     bool done;
+    bool aborted;
+    bool donebeforeabort;
     std::set<FileList *> sizeestimated;
     std::map<FileList *, unsigned long long int> observestarts;
     std::map<FileList *, unsigned long long int> sfvobservestarts;
@@ -62,6 +64,8 @@ class SiteRace : public CommandOwner {
     unsigned long long int getMaxFileSize() const;
     unsigned long long int getTotalFileSize() const;
     bool isDone() const;
+    bool isAborted() const;
+    bool doneBeforeAbort() const;
     bool isGlobalDone() const;
     int getProfile() const;
     void complete(bool);
