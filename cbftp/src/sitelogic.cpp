@@ -944,7 +944,7 @@ bool SiteLogic::handleRequest(int id) {
       break;
     case REQ_DEL_RECURSIVE: { // recursive delete
       std::string targetpath = request.requestData();
-      connstatetracker[id].getRecursiveLogic()->initialize(RCL_DELETE, conns[id]->getCurrentPath(), targetpath);
+      connstatetracker[id].getRecursiveLogic()->initialize(RCL_DELETE, targetpath);
       handleRecursiveLogic(id);
       break;
     }

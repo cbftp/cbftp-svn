@@ -23,14 +23,14 @@ private:
   int mode;
   bool active;
   Path basepath;
-  std::string target;
+  Path target;
   std::list<Path> wantedlists;
   std::vector<Path> deletefiles;
   bool listtarget;
   Path listtargetpath;
 public:
   RecursiveCommandLogic();
-  void initialize(int, const Path &, const std::string &);
+  void initialize(int, const Path &);
   bool isActive() const;
   int getAction(const Path &, Path &);
   void addFileList(FileList *);

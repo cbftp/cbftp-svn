@@ -16,11 +16,11 @@ RecursiveCommandLogic::RecursiveCommandLogic() {
   active = false;
 }
 
-void RecursiveCommandLogic::initialize(int mode, const Path & basepath, const std::string & target) {
+void RecursiveCommandLogic::initialize(int mode, const Path & target) {
   this->mode = mode;
   active = true;
   listtarget = false;
-  this->basepath = basepath;
+  this->basepath = target.cutLevels(1);
   this->target = target;
   wantedlists.clear();
   deletefiles.clear();
@@ -44,7 +44,7 @@ int RecursiveCommandLogic::getAction(const Path & currentpath, Path & actiontarg
       return RCL_ACTION_NOOP;
     }
     if (currentpath != basepath) {
-      actiontarget = basepath;
+      listtargetpath = actiontarget = basepath;
       return RCL_ACTION_CWD;
     }
     actiontarget = deletefiles.back();
@@ -83,6 +83,9 @@ void RecursiveCommandLogic::addFileList(FileList * fl) {
 }
 
 void RecursiveCommandLogic::failedCwd() {
+  if (listtargetpath == basepath) {
+    active = false;
+  }
   deletefiles.push_back(listtargetpath);
   if (!wantedlists.size()) {
     std::sort(deletefiles.begin(), deletefiles.end(), lengthSort);
