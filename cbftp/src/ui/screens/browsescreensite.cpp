@@ -578,7 +578,8 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       if (oldpath == "/") {
         return BrowseScreenAction(BROWSESCREENACTION_CLOSE);
       }
-      requestid = sitelogic->requestFileList(oldpath.dirName());
+      requestedpath = oldpath.cutLevels(1);
+      requestid = sitelogic->requestFileList(requestedpath);
       ui->setInfo();
       //go up one directory level, or return if at top already
       break;
