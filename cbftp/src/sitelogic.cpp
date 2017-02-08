@@ -197,17 +197,17 @@ bool SiteLogic::setPathExists(int id, const Path & path, bool exists) {
   CommandOwner * currentco = conns[id]->currentCommandOwner();
   if (currentco != NULL) {
     FileList * fl;
-    if ((fl = currentco->getFileListForFullPath(this, path)) != NULL) {
-      if (exists && (fl->getState() == FILELIST_UNKNOWN || fl->getState() == FILELIST_NONEXISTENT)) {
+    if ((fl = currentco->getFileListForFullPath(this, path)) != NULL &&
+        (fl->getState() == FILELIST_UNKNOWN || fl->getState() == FILELIST_NONEXISTENT))
+    {
+      if (exists) {
         fl->setExists();
-        currentco->fileListUpdated(this, fl);
-        return true;
       }
-      else if (!exists && fl->getState() == FILELIST_UNKNOWN) {
+      else {
         fl->setNonExistent();
-        currentco->fileListUpdated(this, fl);
-        return true;
       }
+      currentco->fileListUpdated(this, fl);
+      return true;
     }
   }
   return false;
