@@ -37,6 +37,10 @@ int RecursiveCommandLogic::getAction(const Path & currentpath, Path & actiontarg
       listtarget = false;
       return RCL_ACTION_LIST;
     }
+    else {
+      actiontarget = listtargetpath;
+      return RCL_ACTION_CWD;
+    }
   }
   if (!wantedlists.size()) {
     if (!deletefiles.size()) {
@@ -68,6 +72,9 @@ int RecursiveCommandLogic::getAction(const Path & currentpath, Path & actiontarg
 
 void RecursiveCommandLogic::addFileList(FileList * fl) {
   const Path & path = fl->getPath();
+  if (!path.contains(target)) {
+    return;
+  }
   deletefiles.push_back(path);
   for (std::map<std::string, File *>::iterator it = fl->begin(); it != fl->end(); it++) {
     if (it->second->isDirectory()) {
@@ -83,10 +90,13 @@ void RecursiveCommandLogic::addFileList(FileList * fl) {
 }
 
 void RecursiveCommandLogic::failedCwd() {
+  listtarget = false;
   if (listtargetpath == basepath) {
     active = false;
   }
-  deletefiles.push_back(listtargetpath);
+  else {
+    deletefiles.push_back(listtargetpath);
+  }
   if (!wantedlists.size()) {
     std::sort(deletefiles.begin(), deletefiles.end(), lengthSort);
   }

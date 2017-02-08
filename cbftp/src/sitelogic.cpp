@@ -425,7 +425,12 @@ void SiteLogic::commandFail(int id, int failuretype) {
       }
       if (connstatetracker[id].getRecursiveLogic()->isActive()) {
         connstatetracker[id].getRecursiveLogic()->failedCwd();
-        handleRecursiveLogic(id);
+        if (connstatetracker[id].getRecursiveLogic()->isActive()) {
+          handleRecursiveLogic(id);
+        }
+        else {
+          handleConnection(id);
+        }
         return;
       }
       else if (conns[id]->hasMKDCWDTarget()) {
