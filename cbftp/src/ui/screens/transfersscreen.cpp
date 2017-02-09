@@ -23,6 +23,19 @@ TransfersScreen::~TransfersScreen() {
 }
 
 void TransfersScreen::initialize(unsigned int row, unsigned int col) {
+  filtering = false;
+  autoupdate = true;
+  hascontents = false;
+  currentviewspan = 0;
+  ypos = 0;
+  table.reset();
+  table.enterFocusFrom(0);
+  init(row, col);
+}
+
+void TransfersScreen::initialize(unsigned int row, unsigned int col, const TransferFilteringParameters & tfp) {
+  filtering = true;
+  this->tfp = tfp;
   autoupdate = true;
   hascontents = false;
   currentviewspan = 0;
@@ -152,6 +165,15 @@ bool TransfersScreen::keyPressed(unsigned int ch) {
        }
      }
      return true;
+    case 'f':
+      if (!filtering) {
+        ui->goTransfersFiltering();
+      }
+      else {
+        filtering = false;
+        ui->redraw();
+      }
+      return true;
     case 'c':
     case 27: // esc
       ui->returnToLast();

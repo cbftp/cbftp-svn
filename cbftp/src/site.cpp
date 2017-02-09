@@ -2,6 +2,7 @@
 
 #include "path.h"
 #include "util.h"
+#include "globalcontext.h"
 
 Site::Site() {
 
@@ -30,7 +31,8 @@ Site::Site(const std::string & name) :
   proxytype(SITE_PROXY_GLOBAL),
   transfersourcepolicy(SITE_TRANSFER_POLICY_ALLOW),
   transfertargetpolicy(SITE_TRANSFER_POLICY_ALLOW),
-  aggressivemkdir(false)
+  aggressivemkdir(false),
+  skiplist(global->getSkipList())
 {
   addresses.push_back(std::pair<std::string, std::string>("ftp.sunet.se", "21"));
 }
@@ -311,6 +313,10 @@ int Site::getTransferTargetPolicy() const {
   return transfertargetpolicy;
 }
 
+SkipList & Site::getSkipList() {
+  return skiplist;
+}
+
 void Site::setName(const std::string & name) {
   this->name = name;
 }
@@ -411,48 +417,6 @@ void Site::clearAffils() {
   affilslower.clear();
 }
 
-bool Site::isBannedGroup(const std::string & section, const std::string & group) const {
-  std::string sectionlow = util::toLower(section);
-  std::string grouplow = util::toLower(group);
-  std::map<std::string, std::set<std::string> >::const_iterator it;
-  if ((it = bannedgroupssectionexcept.find(sectionlow)) != bannedgroupssectionexcept.end()) {
-    return !it->second.count(grouplow);
-  }
-  if ((it = bannedgroupssectionexcept.find("")) != bannedgroupssectionexcept.end()) {
-    return !it->second.count(grouplow);
-  }
-  return bannedgroupslower.count(grouplow) || bannedgroupslower.count(sectionlow + "/" + grouplow);
-}
-
-void Site::addBannedGroup(const std::string & group) {
-  if (!group.length()) {
-    return;
-  }
-  bannedgroups.insert(group);
-  std::string groupstr = util::toLower(group);
-  if (groupstr[0] != '!') {
-    bannedgroupslower[groupstr] = true;
-    return;
-  }
-  groupstr = groupstr.substr(1);
-  size_t slashpos = groupstr.find("/");
-  std::string section;
-  if (slashpos != std::string::npos) {
-    section = groupstr.substr(0, slashpos);
-    groupstr = groupstr.substr(slashpos + 1);
-  }
-  if (!bannedgroupssectionexcept.count(section)) {
-    bannedgroupssectionexcept[section] = std::set<std::string>();
-  }
-  bannedgroupssectionexcept[section].insert(groupstr);
-}
-
-void Site::clearBannedGroups() {
-  bannedgroups.clear();
-  bannedgroupslower.clear();
-  bannedgroupssectionexcept.clear();
-}
-
 void Site::setTransferSourcePolicy(int policy) {
   transfersourcepolicy = policy;
 }
@@ -529,14 +493,6 @@ std::set<std::string>::const_iterator Site::affilsBegin() const {
 
 std::set<std::string>::const_iterator Site::affilsEnd() const {
   return affils.end();
-}
-
-std::set<std::string>::const_iterator Site::bannedGroupsBegin() const {
-  return bannedgroups.begin();
-}
-
-std::set<std::string>::const_iterator Site::bannedGroupsEnd() const {
-  return bannedgroups.end();
 }
 
 std::set<Pointer<Site> >::const_iterator Site::exceptSourceSitesBegin() const {

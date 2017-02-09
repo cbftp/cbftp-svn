@@ -13,6 +13,7 @@
 class Race;
 class FileList;
 class SiteLogic;
+class SkipList;
 
 class SiteRace : public CommandOwner {
   private:
@@ -36,6 +37,7 @@ class SiteRace : public CommandOwner {
     unsigned long long int totalfilesize;
     unsigned int numuploadedfiles;
     int profile;
+    const SkipList & skiplist;
     void updateNumFilesUploaded();
     void addNewDirectories();
   public:
@@ -47,7 +49,7 @@ class SiteRace : public CommandOwner {
     const Path & getPath() const;
     unsigned int getId() const;
     std::string getRelevantSubPath();
-    SiteRace(Pointer<Race>, const std::string &, const Path &, const std::string &, const std::string &);
+    SiteRace(Pointer<Race>, const std::string &, const Path &, const std::string &, const std::string &, const SkipList &);
     ~SiteRace();
     FileList * getFileListForPath(const std::string &) const;
     FileList * getFileListForFullPath(SiteLogic * co, const Path &) const;

@@ -23,6 +23,7 @@ class Site;
 class DataFileHandler;
 class TransferStatus;
 class Path;
+class SkipList;
 class LoginScreen;
 class NewKeyScreen;
 class MainScreen;
@@ -51,6 +52,8 @@ class TransferJobStatusScreen;
 class AllRacesScreen;
 class AllTransferJobsScreen;
 class TransferStatusScreen;
+class TransfersFilterScreen;
+struct TransferFilteringParameters;
 
 enum LegendMode {
   LEGEND_DISABLED = 123,
@@ -97,6 +100,7 @@ private:
   Pointer<AllRacesScreen> allracesscreen;
   Pointer<AllTransferJobsScreen> alltransferjobsscreen;
   Pointer<TransferStatusScreen> transferstatusscreen;
+  Pointer<TransfersFilterScreen> transfersfilterscreen;
   int mainrow;
   int maincol;
   int col;
@@ -185,6 +189,7 @@ public:
   void goSelectSites(const std::string &, std::list<Pointer<Site> >, std::list<Pointer<Site> >);
   void goSelectSitesFrom(const std::string &, std::list<Pointer<Site> >, std::list<Pointer<Site> >);
   void goSkiplist();
+  void goSkiplist(SkipList *);
   void goChangeKey();
   void goProxy();
   void goFileViewerSettings();
@@ -196,6 +201,9 @@ public:
   void goEventLog();
   void goScoreBoard();
   void goTransfers();
+  void goTransfers(const TransferFilteringParameters &);
+  void returnTransferFilters(const TransferFilteringParameters &);
+  void goTransfersFiltering();
   void goEditSite(const std::string &);
   void goAddSite();
   void goBrowse(const std::string &);

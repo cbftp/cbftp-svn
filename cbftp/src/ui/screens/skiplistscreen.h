@@ -19,12 +19,14 @@ public:
   SkipListScreen(Ui *);
   ~SkipListScreen();
   void initialize(unsigned int, unsigned int);
+  void initialize(unsigned int, unsigned int, SkipList *);
   void update();
   void redraw();
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
 private:
+  void initialize();
   void saveToTempSkipList();
   void addPatternLine(int, std::string, bool, bool, int, bool);
   void addPatternLine(int, std::string, bool, bool, int, bool, Pointer<MenuSelectAdjustableLine>);
@@ -42,4 +44,5 @@ private:
   Pointer<MenuSelectOptionTextField> testpattern;
   Pointer<MenuSelectOptionTextArrow> testtype;
   unsigned int currentviewspan;
+  bool globalskip;
 };

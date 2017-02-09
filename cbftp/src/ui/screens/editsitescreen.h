@@ -3,7 +3,6 @@
 #include <list>
 
 #include "../../core/pointer.h"
-#include "../../site.h"
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
@@ -35,6 +34,5 @@ private:
   MenuSelectOption mso;
   MenuSection ms;
   Pointer<Site> site;
-  Site modsite;
   std::string operation;
 };

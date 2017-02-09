@@ -153,37 +153,13 @@ void SettingsLoaderSaver::loadSettings() {
     std::string setting = line.substr(0, tok);
     std::string value = line.substr(tok + 1);
     if (!setting.compare("entry")) {
-      size_t split = value.find('$');
-      if (split != std::string::npos) {
-        std::string pattern = value.substr(0, split);
-        value = value.substr(split + 1);
-        split = value.find('$');
-        bool file = value.substr(0, split) == "true" ? true : false;
-        value = value.substr(split + 1);
-        split = value.find('$');
-        bool dir = value.substr(0, split) == "true" ? true : false;
-        value = value.substr(split + 1);
-        split = value.find('$');
-        bool allowed;
-        int scope;
-        if (split != std::string::npos) {
-          scope = util::str2Int(value.substr(0, split));
-          allowed = value.substr(split + 1) == "true" ? true : false;
-        }
-        else {
-          scope = SCOPE_IN_RACE;
-          allowed = value == "true" ? true : false;
-        }
-        global->getSkipList()->addEntry(pattern, file, dir, scope, allowed);
-      }
-      else { // backwards compatibility
-        global->getSkipList()->addEntry(value, true, true, SCOPE_IN_RACE, false);
-      }
+      loadSkipListEntry(global->getSkipList(), value);
     }
     if (!setting.compare("defaultallow")) {
       global->getSkipList()->setDefaultAllow(value.compare("true") == 0 ? true : false);
     }
   }
+
 
   dfh->getDataFor("ProxyManager", &lines);
   for (it = lines.begin(); it != lines.end(); it++) {
@@ -350,9 +326,6 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("affil")) {
       site->addAffil(value);
     }
-    else if (!setting.compare("bannedgroup")) {
-      site->addBannedGroup(value);
-    }
     else if (!setting.compare("proxytype")) {
       site->setProxyType(util::str2Int(value));
     }
@@ -373,6 +346,9 @@ void SettingsLoaderSaver::loadSettings() {
     }
     else if (!setting.compare("aggressivemkdir")) {
       if (!value.compare("true")) site->setAggressiveMkdir(true);
+    }
+    else if (!setting.compare("skiplistentry")) {
+      loadSkipListEntry((SkipList *)&site->getSkipList(), value);
     }
   }
   for (std::list<std::pair<std::string, std::string> >::const_iterator it2 = exceptsources.begin(); it2 != exceptsources.end(); it2++) {
@@ -502,15 +478,7 @@ void SettingsLoaderSaver::saveSettings() {
   }
 
   {
-    std::list<SkiplistItem>::const_iterator it;
-    for (it = global->getSkipList()->entriesBegin(); it != global->getSkipList()->entriesEnd(); it++) {
-      std::string entryline = it->matchPattern() + "$" +
-          (it->matchFile() ? "true" : "false") + "$" +
-          (it->matchDir() ? "true" : "false") + "$" +
-          util::int2Str(it->matchScope()) + "$" +
-          (it->isAllowed() ? "true" : "false");
-      dfh->addOutputLine("SkipList", "entry=" + entryline);
-    }
+    addSkipList(global->getSkipList(), "SkipList", "entry=");
     std::string defaultallowstr = global->getSkipList()->defaultAllow() ? "true" : "false";
     dfh->addOutputLine("SkipList", "defaultallow=" + defaultallowstr);
   }
@@ -586,9 +554,6 @@ void SettingsLoaderSaver::saveSettings() {
       for (sit3 = site->affilsBegin(); sit3 != site->affilsEnd(); sit3++) {
         dfh->addOutputLine(filetag, name + "$affil=" + *sit3);
       }
-      for (sit3 = site->bannedGroupsBegin(); sit3 != site->bannedGroupsEnd(); sit3++) {
-        dfh->addOutputLine(filetag, name + "$bannedgroup=" + *sit3);
-      }
       dfh->addOutputLine(filetag, name + "$transfersourcepolicy=" + util::int2Str(site->getTransferSourcePolicy()));
       dfh->addOutputLine(filetag, name + "$transfertargetpolicy=" + util::int2Str(site->getTransferTargetPolicy()));
       std::set<Pointer<Site> >::const_iterator sit4;
@@ -601,6 +566,7 @@ void SettingsLoaderSaver::saveSettings() {
       if (site->getAggressiveMkdir()) {
         dfh->addOutputLine(filetag, name + "$aggressivemkdir=true");
       }
+      addSkipList((SkipList *)&site->getSkipList(), filetag, name + "$skiplistentry=");
     }
     dfh->addOutputLine(defaultstag, "username=" + global->getSiteManager()->getDefaultUserName());
     dfh->addOutputLine(defaultstag, "password=" + global->getSiteManager()->getDefaultPassword());
@@ -654,4 +620,42 @@ void SettingsLoaderSaver::removeSettingsAdder(SettingsAdder * sa) {
 
 void SettingsLoaderSaver::startAutoSaver() {
   global->getTickPoke()->startPoke(this, "SettingsLoaderSaver", AUTO_SAVE_INTERVAL, 0);
+}
+
+void SettingsLoaderSaver::addSkipList(SkipList * skiplist, const std::string & owner, const std::string & entry) {
+  std::list<SkiplistItem>::const_iterator it;
+  for (it = skiplist->entriesBegin(); it != skiplist->entriesEnd(); it++) {
+    std::string entryline = it->matchPattern() + "$" +
+        (it->matchFile() ? "true" : "false") + "$" +
+        (it->matchDir() ? "true" : "false") + "$" +
+        util::int2Str(it->matchScope()) + "$" +
+        (it->isAllowed() ? "true" : "false");
+    dfh->addOutputLine(owner, entry + entryline);
+  }
+}
+
+void SettingsLoaderSaver::loadSkipListEntry(SkipList * skiplist, std::string value) {
+  size_t split = value.find('$');
+  if (split != std::string::npos) {
+    std::string pattern = value.substr(0, split);
+    value = value.substr(split + 1);
+    split = value.find('$');
+    bool file = value.substr(0, split) == "true" ? true : false;
+    value = value.substr(split + 1);
+    split = value.find('$');
+    bool dir = value.substr(0, split) == "true" ? true : false;
+    value = value.substr(split + 1);
+    split = value.find('$');
+    bool allowed;
+    int scope;
+    if (split != std::string::npos) {
+      scope = util::str2Int(value.substr(0, split));
+      allowed = value.substr(split + 1) == "true" ? true : false;
+    }
+    else {
+      scope = SCOPE_IN_RACE;
+      allowed = value == "true" ? true : false;
+    }
+    skiplist->addEntry(pattern, file, dir, scope, allowed);
+  }
 }

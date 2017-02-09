@@ -4,6 +4,7 @@
 
 #include "../../globalcontext.h"
 #include "../../sitemanager.h"
+#include "../../site.h"
 #include "../../sitelogic.h"
 #include "../../sitelogicmanager.h"
 #include "../../proxymanager.h"
@@ -39,15 +40,15 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   std::string exceptsrc = "";
   std::string exceptdst = "";
   if (operation == "add") {
-    modsite = Site("SUNET");
-    modsite.setUser(sm->getDefaultUserName());
-    modsite.setPass(sm->getDefaultPassword());
-    modsite.setMaxLogins(sm->getDefaultMaxLogins());
-    modsite.setMaxUp(sm->getDefaultMaxUp());
-    modsite.setMaxDn(sm->getDefaultMaxDown());
-    modsite.setSSL(sm->getDefaultSSL());
-    modsite.setSSLTransferPolicy(sm->getDefaultSSLTransferPolicy());
-    modsite.setMaxIdleTime(sm->getDefaultMaxIdleTime());
+    this->site = makePointer<Site>("SUNET");
+    this->site->setUser(sm->getDefaultUserName());
+    this->site->setPass(sm->getDefaultPassword());
+    this->site->setMaxLogins(sm->getDefaultMaxLogins());
+    this->site->setMaxUp(sm->getDefaultMaxUp());
+    this->site->setMaxDn(sm->getDefaultMaxDown());
+    this->site->setSSL(sm->getDefaultSSL());
+    this->site->setSSLTransferPolicy(sm->getDefaultSSLTransferPolicy());
+    this->site->setMaxIdleTime(sm->getDefaultMaxIdleTime());
     std::vector<Pointer<Site> >::const_iterator it;
     for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
       if ((*it)->getTransferTargetPolicy() == SITE_TRANSFER_POLICY_BLOCK) {
@@ -60,7 +61,6 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   }
   else if (operation == "edit") {
     this->site = global->getSiteManager()->getSite(site);
-    modsite = Site(*this->site);
     std::set<Pointer<Site> >::const_iterator it;
     for (it = this->site->exceptSourceSitesBegin(); it != this->site->exceptSourceSitesEnd(); it++) {
       exceptsrc += (*it)->getName() + ",";
@@ -77,49 +77,42 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   }
   std::string affilstr = "";
   std::set<std::string>::const_iterator it;
-  for (it = modsite.affilsBegin(); it != modsite.affilsEnd(); it++) {
+  for (it = this->site->affilsBegin(); it != this->site->affilsEnd(); it++) {
     affilstr += *it + " ";
   }
   if (affilstr.length() > 0) {
     affilstr = affilstr.substr(0, affilstr.length() - 1);
-  }
-  std::string bannedgroupsstr = "";
-  for (it = modsite.bannedGroupsBegin(); it != modsite.bannedGroupsEnd(); it++) {
-    bannedgroupsstr += *it + " ";
-  }
-  if (bannedgroupsstr.length() > 0) {
-    bannedgroupsstr = bannedgroupsstr.substr(0, bannedgroupsstr.length() - 1);
   }
 
   unsigned int y = 1;
   unsigned int x = 1;
 
   mso.reset();
-  mso.addStringField(y++, x, "name", "Name:", modsite.getName(), false);
-  Pointer<MenuSelectOptionTextField> msotf = mso.addStringField(y++, x, "addr", "Address:", modsite.getAddressesAsString(), false, 48, 512);
+  mso.addStringField(y++, x, "name", "Name:", this->site->getName(), false);
+  Pointer<MenuSelectOptionTextField> msotf = mso.addStringField(y++, x, "addr", "Address:", this->site->getAddressesAsString(), false, 48, 512);
   msotf->setExtraLegendText("Multiple sets of address:port separated by space or semicolon");
-  mso.addStringField(y++, x, "user", "Username:", modsite.getUser(), false);
-  mso.addStringField(y++, x, "pass", "Password:", modsite.getPass(), true);
-  mso.addIntArrow(y++, x, "logins", "Login slots:", modsite.getInternMaxLogins(), 0, 99);
-  mso.addIntArrow(y++, x, "maxup", "Upload slots:", modsite.getInternMaxUp(), 0, 99);
-  mso.addIntArrow(y++, x, "maxdn", "Download slots:", modsite.getInternMaxDown(), 0, 99);
-  mso.addStringField(y++, x, "basepath", "Base path:", modsite.getBasePath().toString(), false, 32, 512);
+  mso.addStringField(y++, x, "user", "Username:", this->site->getUser(), false);
+  mso.addStringField(y++, x, "pass", "Password:", this->site->getPass(), true);
+  mso.addIntArrow(y++, x, "logins", "Login slots:", this->site->getInternMaxLogins(), 0, 99);
+  mso.addIntArrow(y++, x, "maxup", "Upload slots:", this->site->getInternMaxUp(), 0, 99);
+  mso.addIntArrow(y++, x, "maxdn", "Download slots:", this->site->getInternMaxDown(), 0, 99);
+  mso.addStringField(y++, x, "basepath", "Base path:", this->site->getBasePath().toString(), false, 32, 512);
   Pointer<MenuSelectOptionTextArrow> listcommand = mso.addTextArrow(y++, x, "listcommand", "List command:");
   listcommand->addOption("STAT -l", SITE_LIST_STAT);
   listcommand->addOption("LIST", SITE_LIST_LIST);
-  listcommand->setOption(modsite.getListCommand());
-  mso.addStringField(y++, x, "idletime", "Max idle time (s):", util::int2Str(modsite.getMaxIdleTime()), false);
-  mso.addCheckBox(y++, x, "ssl", "AUTH SSL:", modsite.SSL());
+  listcommand->setOption(this->site->getListCommand());
+  mso.addStringField(y++, x, "idletime", "Max idle time (s):", util::int2Str(this->site->getMaxIdleTime()), false);
+  mso.addCheckBox(y++, x, "ssl", "AUTH SSL:", this->site->SSL());
   Pointer<MenuSelectOptionTextArrow> sslfxp = mso.addTextArrow(y++, x, "ssltransfer", "SSL transfers:");
   sslfxp->addOption("Always off", SITE_SSL_ALWAYS_OFF);
   sslfxp->addOption("Prefer off", SITE_SSL_PREFER_OFF);
   sslfxp->addOption("Prefer on", SITE_SSL_PREFER_ON);
   sslfxp->addOption("Always on", SITE_SSL_ALWAYS_ON);
-  sslfxp->setOption(modsite.getSSLTransferPolicy());
-  mso.addCheckBox(y++, x, "cpsv", "CPSV supported:", modsite.supportsCPSV());
-  mso.addCheckBox(y++, x, "pret", "Needs PRET:", modsite.needsPRET());
-  mso.addCheckBox(y++, x, "binary", "Force binary mode:", modsite.forceBinaryMode());
-  mso.addCheckBox(y++, x, "brokenpasv", "Broken PASV:", modsite.hasBrokenPASV());
+  sslfxp->setOption(this->site->getSSLTransferPolicy());
+  mso.addCheckBox(y++, x, "cpsv", "CPSV supported:", this->site->supportsCPSV());
+  mso.addCheckBox(y++, x, "pret", "Needs PRET:", this->site->needsPRET());
+  mso.addCheckBox(y++, x, "binary", "Force binary mode:", this->site->forceBinaryMode());
+  mso.addCheckBox(y++, x, "brokenpasv", "Broken PASV:", this->site->hasBrokenPASV());
   Pointer<MenuSelectOptionTextArrow> useproxy = mso.addTextArrow(y++, x, "useproxy", "Proxy:");
   ProxyManager * pm = global->getProxyManager();
   Proxy * proxy = pm->getDefaultProxy();
@@ -132,37 +125,37 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   for (std::vector<Proxy *>::const_iterator it = pm->begin(); it != pm->end(); it++) {
     useproxy->addOption((*it)->getName(), SITE_PROXY_USE);
   }
-  int proxytype = modsite.getProxyType();
+  int proxytype = this->site->getProxyType();
   useproxy->setOption(proxytype);
   if (proxytype == SITE_PROXY_USE) {
-    useproxy->setOptionText(modsite.getProxy());
+    useproxy->setOptionText(this->site->getProxy());
   }
+  mso.addTextButtonNoContent(y++, x, "skiplist", "Configure skiplist...");
   y++;
-  mso.addCheckBox(y++, x, "disabled", "Disabled:", modsite.getDisabled());
-  mso.addCheckBox(y++, x, "allowupload", "Allow upload:", modsite.getAllowUpload());
-  mso.addCheckBox(y++, x, "allowdownload", "Allow download:", modsite.getAllowDownload());
+  mso.addCheckBox(y++, x, "disabled", "Disabled:", this->site->getDisabled());
+  mso.addCheckBox(y++, x, "allowupload", "Allow upload:", this->site->getAllowUpload());
+  mso.addCheckBox(y++, x, "allowdownload", "Allow download:", this->site->getAllowDownload());
   Pointer<MenuSelectOptionTextArrow> priority = mso.addTextArrow(y++, x, "priority", "Priority:");
   priority->addOption("Very low", SITE_PRIORITY_VERY_LOW);
   priority->addOption("Low", SITE_PRIORITY_LOW);
   priority->addOption("Normal", SITE_PRIORITY_NORMAL);
   priority->addOption("High", SITE_PRIORITY_HIGH);
   priority->addOption("Very high", SITE_PRIORITY_VERY_HIGH);
-  priority->setOption(modsite.getPriority());
-  mso.addCheckBox(y++, x, "aggressivemkdir", "Aggressive mkdir:", modsite.getAggressiveMkdir());
+  priority->setOption(this->site->getPriority());
+  mso.addCheckBox(y++, x, "aggressivemkdir", "Aggressive mkdir:", this->site->getAggressiveMkdir());
   Pointer<MenuSelectOptionTextArrow> sourcepolicy = mso.addTextArrow(y++, x, "sourcepolicy", "Transfer source policy:");
   sourcepolicy->addOption("Allow", SITE_TRANSFER_POLICY_ALLOW);
   sourcepolicy->addOption("Block", SITE_TRANSFER_POLICY_BLOCK);
-  sourcepolicy->setOption(modsite.getTransferSourcePolicy());
+  sourcepolicy->setOption(this->site->getTransferSourcePolicy());
   mso.addStringField(y++, x, "exceptsrc", "", exceptsrc, false, 60, 512);
   Pointer<MenuSelectOptionTextArrow> targetpolicy = mso.addTextArrow(y++, x, "targetpolicy", "Transfer target policy:");
   targetpolicy->addOption("Allow", SITE_TRANSFER_POLICY_ALLOW);
   targetpolicy->addOption("Block", SITE_TRANSFER_POLICY_BLOCK);
-  targetpolicy->setOption(modsite.getTransferTargetPolicy());
+  targetpolicy->setOption(this->site->getTransferTargetPolicy());
   mso.addStringField(y++, x, "exceptdst", "", exceptdst, false, 60, 512);
   mso.addStringField(y++, x, "affils", "Affils:", affilstr, false, 60, 1024);
-  mso.addStringField(y++, x, "bannedgroups", "Banned groups:", bannedgroupsstr, false, 60, 1024);
   y++;
-  ms.initialize(y++, x, modsite.sectionsBegin(), modsite.sectionsEnd());
+  ms.initialize(y++, x, this->site->sectionsBegin(), this->site->sectionsEnd());
   focusedarea = &mso;
   mso.makeLeavableDown();
   ms.makeLeavableUp();
@@ -370,7 +363,12 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         ui->update();
       }
       return true;
-    case 10:
+    case 10: {
+      Pointer<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
+      if (msoe->getIdentifier() == "skiplist") {
+        ui->goSkiplist((SkipList *)&site->getSkipList());
+        return true;
+      }
       activation = focusedarea->activateSelected();
       if (!activation) {
         ui->update();
@@ -412,6 +410,7 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
       ui->update();
       ui->setLegend();
       return true;
+    }
     case 'd':
       if (operation == "add") {
         site = makePointer<Site>();
@@ -504,21 +503,6 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
           std::list<std::string> affilslist = util::split(affils);
           for (std::list<std::string>::const_iterator it = affilslist.begin(); it != affilslist.end(); it++) {
             site->addAffil(*it);
-          }
-        }
-        else if (identifier == "bannedgroups") {
-          std::string bannedgroups = msoe.get<MenuSelectOptionTextField>()->getData();
-          site->clearBannedGroups();
-          size_t pos;
-          while ((pos = bannedgroups.find(",")) != std::string::npos) {
-            bannedgroups[pos] = ' ';
-          }
-          while ((pos = bannedgroups.find(";")) != std::string::npos) {
-            bannedgroups[pos] = ' ';
-          }
-          std::list<std::string> banlist = util::split(bannedgroups);
-          for (std::list<std::string>::const_iterator it = banlist.begin(); it != banlist.end(); it++) {
-            site->addBannedGroup(*it);
           }
         }
         else if (identifier == "sourcepolicy") {

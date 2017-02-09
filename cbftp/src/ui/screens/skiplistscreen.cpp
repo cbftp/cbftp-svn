@@ -17,7 +17,6 @@
 SkipListScreen::SkipListScreen(Ui * ui) {
   this->ui = ui;
   table.makeLeavableUp();
-  skiplist = global->getSkipList();
   baselegendtext = "[Enter] Modify - [Arrows] select option - [d]one - [c]ancel";
   tablelegendtext = baselegendtext + " - [Del] delete row - [Insert] add row before - [m]ove down - m[o]ve up";
 }
@@ -27,6 +26,20 @@ SkipListScreen::~SkipListScreen() {
 }
 
 void SkipListScreen::initialize(unsigned int row, unsigned int col) {
+  globalskip = true;
+  this->skiplist = global->getSkipList();
+  initialize();
+  init(row, col);
+}
+
+void SkipListScreen::initialize(unsigned int row, unsigned int col, SkipList * skiplist) {
+  globalskip = false;
+  this->skiplist = skiplist;
+  initialize();
+  init(row, col);
+}
+
+void SkipListScreen::initialize() {
   currentlegendtext = "";
   active = false;
   table.reset();
@@ -34,17 +47,31 @@ void SkipListScreen::initialize(unsigned int row, unsigned int col) {
   base.enterFocusFrom(0);
   std::list<SkiplistItem>::const_iterator it;
   testskiplist.clearEntries();
+  if (globalskip) {
+    testskiplist.setGlobalSkip(NULL);
+  }
+  else {
+    testskiplist.setGlobalSkip(skiplist);
+  }
   for (it = skiplist->entriesBegin(); it != skiplist->entriesEnd(); it++) {
     testskiplist.addEntry(it->matchPattern(), it->matchFile(), it->matchDir(), it->matchScope(), it->isAllowed());
   }
   focusedarea = &base;
-  Pointer<MenuSelectOptionTextArrow> arrow = base.addTextArrow(4, 1, "defaultaction", "Default action:");
-  arrow->addOption("Allow", 0);
-  arrow->addOption("Deny", 1);
-  arrow->setOption(skiplist->defaultAllow() ? 0 : 1);
-  base.addTextButtonNoContent(4, 30, "add", "<Add pattern>");
-  testpattern = base.addStringField(5, 1, "testpattern", "Test pattern:", "", false, 16, 64);
-  testtype = base.addTextArrow(5, 34, "testtype", "Test type:");
+  int y = 4;
+  int addx = 30;
+  if (globalskip) {
+    Pointer<MenuSelectOptionTextArrow> arrow = base.addTextArrow(y, 1, "defaultaction", "Default action:");
+    arrow->addOption("Allow", 0);
+    arrow->addOption("Deny", 1);
+    arrow->setOption(skiplist->defaultAllow() ? 0 : 1);
+  }
+  else {
+    y++;
+    addx = 1;
+  }
+  base.addTextButtonNoContent(y++, addx, "add", "<Add pattern>");
+  testpattern = base.addStringField(y, 1, "testpattern", "Test pattern:", "", false, 16, 64);
+  testtype = base.addTextArrow(y, 34, "testtype", "Test type:");
   testtype->addOption("File", 0);
   testtype->addOption("Dir", 1);
   testtype->setOption(0);
@@ -55,9 +82,12 @@ void SkipListScreen::initialize(unsigned int row, unsigned int col) {
 void SkipListScreen::redraw() {
   ui->erase();
   int y = 1;
+  if (!globalskip) {
+    ui->printStr(y++, 1, "This skiplist is local and will fall through to the global skiplist if no match is found.");
+  }
   ui->printStr(y++, 1, "Valid expressions are * (match any num of any chars except slash) and ? (match any 1 char except slash)");
-  ui->printStr(y++, 1, "The pattern list is parsed from top to bottom and the first match applies.");
-  y = 7;
+  ui->printStr(y++, 1, "The pattern list is parsed from top to bottom and the first match applies. Case insensitive.");
+  y += 4;
   unsigned int listspan = row - 8;
   table.clear();
   Pointer<ResizableElement> re;
@@ -323,7 +353,12 @@ std::string SkipListScreen::getLegendText() const {
 }
 
 std::string SkipListScreen::getInfoLabel() const {
-  return "CONFIGURE SKIPLIST";
+  if (globalskip) {
+    return "CONFIGURE GLOBAL SKIPLIST";
+  }
+  else {
+    return "CONFIGURE LOCAL SKIPLIST";
+  }
 }
 
 void SkipListScreen::saveToTempSkipList() {

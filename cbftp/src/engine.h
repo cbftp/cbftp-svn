@@ -19,6 +19,7 @@ class PendingTransfer;
 class Site;
 class PreparedRace;
 class Path;
+class SkipList;
 
 class Engine : public EventReceiver {
 public:
@@ -48,6 +49,7 @@ public:
   void filelistUpdated();
   bool transferJobActionRequest(Pointer<TransferJob> &);
   void setPreparedRaceExpiryTime(int);
+  void clearSkipListCaches();
   unsigned int preparedRaces() const;
   unsigned int currentRaces() const;
   unsigned int allRaces() const;
@@ -80,7 +82,7 @@ public:
   void estimateRaceSizes();
   void estimateRaceSize(const Pointer<Race> &);
   void estimateRaceSize(const Pointer<Race> &, bool);
-  void reportCurrentSize(SiteRace *, FileList *, bool final);
+  void reportCurrentSize(const SkipList &, SiteRace *, FileList *, bool final);
   void refreshScoreBoard();
   void issueOptimalTransfers();
   void setSpeedScale();
@@ -93,7 +95,6 @@ public:
   void checkStartPoke();
   void addPendingTransfer(std::list<PendingTransfer> &, PendingTransfer &);
   Pointer<Race> getCurrentRace(const std::string &) const;
-  bool checkBannedGroup(const std::string &, const Pointer<Site> &, const std::string &);
   void preSeedPotentialData(Pointer<Race> &);
   bool raceTransferPossible(const Pointer<SiteLogic> &, const Pointer<SiteLogic> &, Pointer<Race> &) const;
   std::list<Pointer<Race> > allraces;

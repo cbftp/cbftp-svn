@@ -4,12 +4,12 @@
 #include <vector>
 
 #include "util.h"
+#include "globalcontext.h"
+#include "engine.h"
 
-SkipList::SkipList() : defaultallow(true) {
-  addDefaultEntries();
-}
+namespace {
 
-bool SkipList::fixedSlashCompare(const std::string & wildpattern, const std::string & element, bool casesensitive) const {
+bool fixedSlashCompare(const std::string & wildpattern, const std::string & element, bool casesensitive) {
   size_t wildslashpos = wildpattern.find('/');
   size_t elemslashpos = element.find('/');
   if (wildslashpos != std::string::npos && elemslashpos != std::string::npos) {
@@ -40,18 +40,28 @@ bool SkipList::fixedSlashCompare(const std::string & wildpattern, const std::str
   }
 }
 
-std::string SkipList::createCacheToken(const std::string & pattern, const bool dir, const bool inrace) const {
+std::string createCacheToken(const std::string & pattern, const bool dir, const bool inrace) {
   return pattern + (dir ? "1" : "0") + (inrace ? "1" : "0");
+}
+
+}
+
+SkipList::SkipList() : defaultallow(true), globalskip(NULL) {
+  addDefaultEntries();
+}
+
+SkipList::SkipList(const SkipList * globalskip) : defaultallow(true), globalskip(globalskip) {
+  util::assert(globalskip != NULL);
 }
 
 void SkipList::addEntry(std::string pattern, bool file, bool dir, int scope, bool allow) {
   entries.push_back(SkiplistItem(pattern, file, dir, scope, allow));
-  matchcache.clear();
+  wipeCache();
 }
 
 void SkipList::clearEntries() {
   entries.clear();
-  matchcache.clear();
+  wipeCache();
 }
 
 std::list<SkiplistItem>::const_iterator SkipList::entriesBegin() const {
@@ -66,7 +76,11 @@ bool SkipList::isAllowed(const std::string & element, const bool dir) const {
   return isAllowed(element, dir, true);
 }
 
-bool SkipList::isAllowed(std::string element, const bool dir, const bool inrace) const {
+bool SkipList::isAllowed(const std::string & element, const bool dir, const bool inrace) const {
+  return isAllowed(element, dir, inrace, NULL);
+}
+
+bool SkipList::isAllowed(const std::string & element, const bool dir, const bool inrace, const SkipList * fallthrough) const {
   std::string cachetoken = createCacheToken(element, dir, inrace);
   std::map<std::string, bool>::const_iterator mit = matchcache.find(cachetoken);
   if (mit != matchcache.end()) {
@@ -77,10 +91,11 @@ bool SkipList::isAllowed(std::string element, const bool dir, const bool inrace)
   std::list<std::string>::iterator partsit;
   elementparts.push_back(element);
   size_t slashpos;
-  while ((slashpos = element.find('/')) != std::string::npos) {
-    element = element.substr(slashpos + 1);
-    if (element.length()) {
-      elementparts.push_back(element);
+  std::string elementmp = element;
+  while ((slashpos = elementmp.find('/')) != std::string::npos) {
+    elementmp = elementmp.substr(slashpos + 1);
+    if (elementmp.length()) {
+      elementparts.push_back(elementmp);
     }
   }
   for (partsit = elementparts.begin(); partsit != elementparts.end(); partsit++) {
@@ -97,12 +112,15 @@ bool SkipList::isAllowed(std::string element, const bool dir, const bool inrace)
       }
     }
   }
-  matchcache[cachetoken] = defaultallow;
-  return defaultallow;
+  bool res = fallthrough ?
+             fallthrough->isAllowed(element, dir, inrace) :
+             (globalskip ? globalskip->isAllowed(element, dir, inrace) : defaultallow);
+  matchcache[cachetoken] = res;
+  return res;
 }
 
 void SkipList::addDefaultEntries() {
-  entries.push_back(SkiplistItem("* *", true, true, SCOPE_IN_RACE, false));
+  entries.push_back(SkiplistItem("* *", true, true, SCOPE_ALL, false));
   entries.push_back(SkiplistItem("*%*", true, true, SCOPE_IN_RACE, false));
   entries.push_back(SkiplistItem("*[*", true, true, SCOPE_IN_RACE, false));
   entries.push_back(SkiplistItem("*]*", true, true, SCOPE_IN_RACE, false));
@@ -120,5 +138,16 @@ bool SkipList::defaultAllow() const {
 
 void SkipList::setDefaultAllow(bool defaultallow) {
   this->defaultallow = defaultallow;
+  wipeCache();
+}
+
+void SkipList::wipeCache() {
   matchcache.clear();
+  if (!globalskip) {
+    global->getEngine()->clearSkipListCaches();
+  }
+}
+
+void SkipList::setGlobalSkip(SkipList * skiplist) {
+  globalskip = skiplist;
 }

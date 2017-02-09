@@ -311,7 +311,8 @@ void TransferJob::addSubDirectoryFileLists(std::map<std::string, FileList *> & f
   for(it = filelist->begin(); it != filelist->end(); it++) {
     File * file = it->second;
     if (file->isDirectory()) {
-      if (!global->getSkipList()->isAllowed(it->first, true, false)) {
+      if ((!!dst && !dst->getSite()->getSkipList().isAllowed(it->first, true, false)) ||
+          !global->getSkipList()->isAllowed(it->first, true, false)) {
         continue;
       }
       std::string filename = file->getName();

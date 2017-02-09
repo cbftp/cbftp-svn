@@ -134,8 +134,8 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
     bool isdir = uifile->isDirectory();
     Path testpath = prepend / uifile->getName();
     bool allowed = withinraceskiplistreach ?
-        global->getSkipList()->isAllowed((prepend / uifile->getName()).toString(), isdir) :
-        global->getSkipList()->isAllowed((prepend / uifile->getName()).toString(), isdir, false);
+        site->getSkipList().isAllowed((prepend / uifile->getName()).toString(), isdir) :
+        site->getSkipList().isAllowed((prepend / uifile->getName()).toString(), isdir, false);
     if (isdir) {
       if (allowed) {
         prepchar = "#";
@@ -432,7 +432,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       //start a race of the selected dir, do nothing if a file is selected
       if (list.cursoredFile() != NULL && list.cursoredFile()->isDirectory()) {
         std::string dirname = list.cursoredFile()->getName();
-        if (!global->getSkipList()->isAllowed(dirname, true, false)) {
+        if (!site->getSkipList().isAllowed(dirname, true, false)) {
           break;
         }
         std::list<std::string> sections = site->getSectionsForPath(list.getPath());
