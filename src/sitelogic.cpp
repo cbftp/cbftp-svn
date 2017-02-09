@@ -97,7 +97,7 @@ void SiteLogic::activateAll() {
 }
 
 SiteRace * SiteLogic::addRace(Pointer<Race> & enginerace, const std::string & section, const std::string & release) {
-  SiteRace * race = new SiteRace(enginerace, site->getName(), site->getSectionPath(section), release, site->getUser());
+  SiteRace * race = new SiteRace(enginerace, site->getName(), site->getSectionPath(section), release, site->getUser(), site->getSkipList());
   races.push_back(race);
   activateAll();
   return race;

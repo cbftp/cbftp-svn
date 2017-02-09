@@ -90,7 +90,9 @@ Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, con
           section + " on " + *it);
       continue;
     }
-    if (checkBannedGroup(section, sl->getSite(), race->getGroup())) {
+    if (!sl->getSite()->getSkipList().isAllowed((sl->getSite()->getSectionPath(section) / race->getName()).toString(), true, false)) {
+      global->getEventLog()->log("Engine", "Skipping site " + sl->getSite()->getName() +
+          " due to skiplist match: " + race->getName());
       continue;
     }
     bool add = true;
@@ -447,28 +449,29 @@ void Engine::estimateRaceSize(const Pointer<Race> & race) {
 void Engine::estimateRaceSize(const Pointer<Race> & race, bool forceupdate) {
   for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator its = race->begin(); its != race->end(); its++) {
     SiteRace * srs = its->first;
+    const SkipList & skiplist = its->second->getSite()->getSkipList();
     std::map<std::string, FileList *>::const_iterator itfl;
     for (itfl = srs->fileListsBegin(); itfl != srs->fileListsEnd(); itfl++) {
       FileList * fls = itfl->second;
       if (!forceupdate && srs->sizeEstimated(fls)) {
         continue;
       }
-      reportCurrentSize(srs, fls, false);
+      reportCurrentSize(skiplist, srs, fls, false);
       if (fls->hasSFV()) {
         if (srs->getSFVObservedTime(fls) > SFVDIROBSERVETIME) {
-          reportCurrentSize(srs, fls, true);
+          reportCurrentSize(skiplist, srs, fls, true);
         }
       }
       else {
         if (srs->getObservedTime(fls) > DIROBSERVETIME) {
-          reportCurrentSize(srs, fls, true);
+          reportCurrentSize(skiplist, srs, fls, true);
         }
       }
     }
   }
 }
 
-void Engine::reportCurrentSize(SiteRace * srs, FileList * fls, bool final) {
+void Engine::reportCurrentSize(const SkipList & skiplist, SiteRace * srs, FileList * fls, bool final) {
   std::set<std::string> uniques;
   std::map<std::string, File *>::const_iterator itf;
   std::string subpath = srs->getSubPathForFileList(fls);
@@ -489,7 +492,7 @@ void Engine::reportCurrentSize(SiteRace * srs, FileList * fls, bool final) {
       filename = filename.substr(0, lastdotpos + offsetdot);
     }
     Path prepend = subpath;
-    if (!global->getSkipList()->isAllowed((prepend / filename).toString(), isdir)) {
+    if (!skiplist.isAllowed((prepend / filename).toString(), isdir)) {
       continue;
     }
     uniques.insert(filename);
@@ -509,6 +512,7 @@ void Engine::refreshScoreBoard() {
       for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator itd = race->begin(); itd != race->end(); itd++) {
         SiteRace * srd = itd->first;
         const Pointer<SiteLogic> & sld = itd->second;
+        SkipList & dstskip = sld->getSite()->getSkipList();
         if (!raceTransferPossible(sls, sld, race)) continue;
         if (!sld->getCurrLogins()) continue;
         int avgspeed = sls->getSite()->getAverageSpeed(sld->getSite()->getName());
@@ -517,7 +521,7 @@ void Engine::refreshScoreBoard() {
         }
         int prioritypoints = getPriorityPoints(sld->getSite()->getPriority());
         for (std::map<std::string, FileList *>::const_iterator itfls = srs->fileListsBegin(); itfls != srs->fileListsEnd(); itfls++) {
-          if (itfls->first.length() > 0 && !global->getSkipList()->isAllowed(itfls->first, true)) continue;
+          if (itfls->first.length() > 0 && !dstskip.isAllowed(itfls->first, true)) continue;
           FileList * fls = itfls->second;
           FileList * fld = srd->getFileListForPath(itfls->first);
           if (fld != NULL) {
@@ -527,7 +531,7 @@ void Engine::refreshScoreBoard() {
               File * f = itf->second;
               const bool isdir = f->isDirectory();
               const Path prepend = itfls->first;
-              if (!global->getSkipList()->isAllowed((prepend / itf->first).toString(), isdir)) {
+              if (!dstskip.isAllowed((prepend / itf->first).toString(), isdir)) {
                 continue;
               }
               const std::string filename = f->getName();
@@ -1094,19 +1098,10 @@ Pointer<Race> Engine::getCurrentRace(const std::string & release) const {
 
 void Engine::addSiteToRace(Pointer<Race> & race, const std::string & site) {
   const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
-  if (!checkBannedGroup(race->getSection(), sl->getSite(), race->getGroup())) {
+  if (sl->getSite()->getSkipList().isAllowed((sl->getSite()->getSectionPath(race->getSection()) / race->getName()).toString(), true, false)) {
     SiteRace * sr = sl->addRace(race, race->getSection(), race->getName());
     race->addSite(sr, sl);
   }
-}
-
-bool Engine::checkBannedGroup(const std::string & section, const Pointer<Site> & site, const std::string & group) {
-  if (site->isBannedGroup(section, group)) {
-    global->getEventLog()->log("Engine", "Ignoring site: " + site->getName() +
-        " because the group is banned: " + group);
-    return true;
-  }
-  return false;
 }
 
 int Engine::getMaxPointsRaceTotal() const {
@@ -1165,4 +1160,10 @@ int Engine::getPreparedRaceExpiryTime() const {
 
 void Engine::setPreparedRaceExpiryTime(int expirytime) {
   preparedraceexpirytime = expirytime;
+}
+
+void Engine::clearSkipListCaches() {
+  for (std::vector<Pointer<Site> >::const_iterator it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
+    (*it)->getSkipList().wipeCache();
+  }
 }

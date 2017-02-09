@@ -77,7 +77,7 @@ void NewRaceScreen::populateSiteList() {
   if (!tempsites.size()) {
     for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
       const Pointer<Site> & site = *it;
-      if (site->hasSection(section) && !site->getDisabled()) {
+      if (site->hasSection(section) && !site->getDisabled() && site->getSkipList().isAllowed((site->getSectionPath(section) / release).toString(), true, false)) {
         tempsites.push_back(std::pair<std::string, bool>(site->getName(), toggleall || site == startsite));
       }
     }

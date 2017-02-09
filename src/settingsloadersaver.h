@@ -7,7 +7,7 @@
 #include "core/eventreceiver.h"
 
 class DataFileHandler;
-
+class SkipList;
 class SettingsAdder {
 public:
   virtual ~SettingsAdder() {
@@ -29,6 +29,8 @@ public:
 private:
   void loadSettings();
   void startAutoSaver();
+  void addSkipList(SkipList *, const std::string &, const std::string &);
+  void loadSkipListEntry(SkipList *, std::string);
   Pointer<DataFileHandler> dfh;
   std::list<SettingsAdder *> settingsadders;
 };

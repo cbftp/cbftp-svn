@@ -8,7 +8,7 @@
 #include "util.h"
 #include "timereference.h"
 
-SiteRace::SiteRace(Pointer<Race> race, const std::string & sitename, const Path & section, const std::string & release, const std::string & username) :
+SiteRace::SiteRace(Pointer<Race> race, const std::string & sitename, const Path & section, const std::string & release, const std::string & username, const SkipList & skiplist) :
   race(race),
   section(section),
   release(release),
@@ -22,7 +22,8 @@ SiteRace::SiteRace(Pointer<Race> race, const std::string & sitename, const Path 
   maxfilesize(0),
   totalfilesize(0),
   numuploadedfiles(0),
-  profile(race->getProfile())
+  profile(race->getProfile()),
+  skiplist(skiplist)
 {
   recentlyvisited.push_back("");
   filelists[""] = new FileList(username, path);
@@ -67,7 +68,7 @@ bool SiteRace::addSubDirectory(const std::string & subpath) {
 }
 
 bool SiteRace::addSubDirectory(const std::string & subpath, bool knownexists) {
-  if (!global->getSkipList()->isAllowed(subpath, true)) {
+  if (!skiplist.isAllowed(subpath, true)) {
     return false;
   }
   if (getFileListForPath(subpath) != NULL) {
@@ -190,7 +191,7 @@ void SiteRace::addNewDirectories() {
   for(it = filelist->begin(); it != filelist->end(); it++) {
     File * file = it->second;
     if (file->isDirectory()) {
-      if (!global->getSkipList()->isAllowed(it->first, true)) {
+      if (!skiplist.isAllowed(it->first, true)) {
         continue;
       }
       FileList * fl;

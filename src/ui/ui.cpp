@@ -49,6 +49,7 @@
 #include "screens/allracesscreen.h"
 #include "screens/alltransferjobsscreen.h"
 #include "screens/transferstatusscreen.h"
+#include "screens/transfersfilterscreen.h"
 
 static Ui * instance = new Ui();
 
@@ -125,6 +126,7 @@ bool Ui::init() {
   allracesscreen = makePointer<AllRacesScreen>(this);
   alltransferjobsscreen = makePointer<AllTransferJobsScreen>(this);
   transferstatusscreen = makePointer<TransferStatusScreen>(this);
+  transfersfilterscreen = makePointer<TransfersFilterScreen>(this);
   mainwindows.push_back(mainscreen);
   mainwindows.push_back(confirmationscreen);
   mainwindows.push_back(editsitescreen);
@@ -151,6 +153,7 @@ bool Ui::init() {
   mainwindows.push_back(allracesscreen);
   mainwindows.push_back(alltransferjobsscreen);
   mainwindows.push_back(transferstatusscreen);
+  mainwindows.push_back(transfersfilterscreen);
 
   if (global->getSettingsLoaderSaver()->dataExists()) {
     loginscreen->initialize(mainrow, maincol);
@@ -728,6 +731,11 @@ void Ui::goSkiplist() {
   switchToWindow(skiplistscreen);
 }
 
+void Ui::goSkiplist(SkipList * skiplist) {
+  skiplistscreen->initialize(mainrow, maincol, skiplist);
+  switchToWindow(skiplistscreen);
+}
+
 void Ui::goChangeKey() {
   changekeyscreen->initialize(mainrow, maincol);
   switchToWindow(changekeyscreen);
@@ -781,6 +789,22 @@ void Ui::goScoreBoard() {
 void Ui::goTransfers() {
   transfersscreen->initialize(mainrow, maincol);
   switchToWindow(transfersscreen);
+}
+
+void Ui::goTransfers(const TransferFilteringParameters & tfp) {
+  transfersscreen->initialize(mainrow, maincol, tfp);
+  switchToWindow(transfersscreen);
+}
+
+void Ui::returnTransferFilters(const TransferFilteringParameters & tfp) {
+  transfersscreen->initialize(mainrow, maincol, tfp);
+  switchToLast();
+  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+}
+
+void Ui::goTransfersFiltering() {
+  transfersfilterscreen->initialize(mainrow, maincol);
+  switchToWindow(transfersfilterscreen);
 }
 
 void Ui::goEditSite(const std::string & site) {

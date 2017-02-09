@@ -8,6 +8,7 @@
 
 #include "core/pointer.h"
 #include "path.h"
+#include "skiplist.h"
 
 #define REPORT_LOGINS_IF_UNLIMITED 10
 
@@ -59,9 +60,6 @@ private:
   std::map<std::string, std::pair<int, unsigned long long int> > avgspeedsamples;
   std::set<std::string> affils;
   std::map<std::string, std::string> affilslower;
-  std::set<std::string> bannedgroups;
-  std::map<std::string, std::string> bannedgroupslower;
-  std::map<std::string, std::set<std::string> > bannedgroupssectionexcept;
   std::set<Pointer<Site> > exceptsourcesites;
   std::set<Pointer<Site> > excepttargetsites;
   int proxytype;
@@ -69,6 +67,7 @@ private:
   int transfersourcepolicy;
   int transfertargetpolicy;
   bool aggressivemkdir;
+  SkipList skiplist;
 public:
   Site();
   Site(const std::string &);
@@ -124,6 +123,7 @@ public:
   int getTransferSourcePolicy() const;
   int getTransferTargetPolicy() const;
   bool getAggressiveMkdir() const;
+  SkipList & getSkipList();
   void setName(const std::string &);
   void setAddresses(std::string);
   void setPrimaryAddress(const std::string &, const std::string &);
@@ -144,9 +144,6 @@ public:
   bool isAffiliated(const std::string &) const;
   void addAffil(const std::string &);
   void clearAffils();
-  bool isBannedGroup(const std::string &, const std::string &) const;
-  void addBannedGroup(const std::string &);
-  void clearBannedGroups();
   void setTransferSourcePolicy(int);
   void setTransferTargetPolicy(int);
   void addAllowedSourceSite(const Pointer<Site> &);
@@ -161,8 +158,6 @@ public:
   void setAggressiveMkdir(bool);
   std::set<std::string>::const_iterator affilsBegin() const;
   std::set<std::string>::const_iterator affilsEnd() const;
-  std::set<std::string>::const_iterator bannedGroupsBegin() const;
-  std::set<std::string>::const_iterator bannedGroupsEnd() const;
   std::set<Pointer<Site> >::const_iterator exceptSourceSitesBegin() const;
   std::set<Pointer<Site> >::const_iterator exceptSourceSitesEnd() const;
   std::set<Pointer<Site> >::const_iterator exceptTargetSitesBegin() const;
