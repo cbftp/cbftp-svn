@@ -60,7 +60,9 @@ bool MenuSelectOption::navigate(int dir) {
     pointer = closestelem;
     return true;
   }
-  if (leavedown) {
+  if ((dir == DOWN && leavedown) || (dir == UP && leaveup) ||
+      (dir == LEFT && leaveleft) || (dir == RIGHT && leaveright))
+    {
     lastpointer = pointer;
     focus = false;
     return true;
