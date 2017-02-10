@@ -17,6 +17,7 @@ class MenuSelectOptionCheckBox;
 
 class MenuSelectOption : public FocusableArea {
   private:
+    bool navigate(int);
     unsigned int pointer;
     unsigned int lastpointer;
     std::vector<Pointer<MenuSelectOptionElement> > options;

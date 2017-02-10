@@ -107,12 +107,12 @@ bool SelectSitesScreen::keyPressed(unsigned int ch) {
   bool activation;
   switch(ch) {
     case KEY_UP:
-      if (mso.goUp() || mso.goPrevious()) {
+      if (mso.goUp()) {
         ui->update();
       }
       return true;
     case KEY_DOWN:
-      if (mso.goDown() || mso.goNext()) {
+      if (mso.goDown()) {
         ui->update();
       }
       return true;
