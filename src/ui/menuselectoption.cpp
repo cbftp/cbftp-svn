@@ -1,5 +1,7 @@
 #include "menuselectoption.h"
 
+#include <cstdlib>
+
 #include "menuselectoptionelement.h"
 #include "menuselectoptiontextfield.h"
 #include "menuselectoptionnumarrow.h"
@@ -9,6 +11,14 @@
 #include "menuselectadjustableline.h"
 
 #define MAX_DIFF_LR 30
+#define MAX_DIFF_UD 2
+
+enum Direction {
+  UP,
+  DOWN,
+  LEFT,
+  RIGHT
+};
 
 MenuSelectOption::MenuSelectOption() {
   pointer = 0;
@@ -19,23 +29,27 @@ MenuSelectOption::~MenuSelectOption() {
 
 }
 
-bool MenuSelectOption::goDown() {
+bool MenuSelectOption::navigate(int dir) {
   if (!options.size()) return false;
-  unsigned int ccol = options[pointer]->getCol();
-  unsigned int crow = options[pointer]->getRow();
+  int ccol = options[pointer]->getCol();
+  int crow = options[pointer]->getRow();
   unsigned int closestelem;
   bool movefound = false;
-  unsigned int closest = -1;
+  int closest = -1;
   for (unsigned int i = 0; i < options.size(); i++) {
     if (!options[i]->visible() || !options[i]->isSelectable()) {
       continue;
     }
-    unsigned int row = options[i]->getRow();
-    unsigned int col = options[i]->getCol();
-    if (row > crow && col <= ccol + MAX_DIFF_LR &&
-        (ccol < MAX_DIFF_LR || col >= ccol - MAX_DIFF_LR)) {
-      if (row < closest || closest == (unsigned int)-1) {
-        closest = row;
+    int row = options[i]->getRow();
+    int col = options[i]->getCol();
+    int distance = abs(row - crow) + abs(col - ccol) * 2;
+    if ((((dir == DOWN && row > crow) || (dir == UP && row < crow)) &&
+         abs(col - ccol) <= MAX_DIFF_LR) ||
+        (((dir == LEFT && col < ccol) || (dir == RIGHT && col > ccol)) &&
+         abs(row - crow) <= MAX_DIFF_UD))
+      {
+      if (distance < closest || closest == -1) {
+        closest = distance;
         closestelem = i;
         movefound = true;
       }
@@ -54,105 +68,21 @@ bool MenuSelectOption::goDown() {
   return false;
 }
 
+bool MenuSelectOption::goDown() {
+  return navigate(DOWN);
+
+}
+
 bool MenuSelectOption::goUp() {
-  if (!options.size()) return false;
-  unsigned int ccol = options[pointer]->getCol();
-  unsigned int crow = options[pointer]->getRow();
-  unsigned int closestelem;
-  bool movefound = false;
-  unsigned int closest = -1;
-  for (unsigned int i = 0; i < options.size(); i++) {
-    if (!options[i]->visible() || !options[i]->isSelectable()) {
-      continue;
-    }
-    unsigned int row = options[i]->getRow();
-    unsigned int col = options[i]->getCol();
-    if (row < crow && col <= ccol + MAX_DIFF_LR &&
-        (ccol < MAX_DIFF_LR || col >= ccol - MAX_DIFF_LR)) {
-      if (row > closest || closest == (unsigned int)-1) {
-        closest = row;
-        closestelem = i;
-        movefound = true;
-      }
-    }
-  }
-  if (movefound) {
-    lastpointer = pointer;
-    pointer = closestelem;
-    return true;
-  }
-  if (leaveup) {
-    lastpointer = pointer;
-    focus = false;
-    return true;
-  }
-  return false;
+  return navigate(UP);
 }
 
 bool MenuSelectOption::goRight() {
-  if (!options.size()) return false;
-  unsigned int ccol = options[pointer]->getCol();
-  unsigned int crow = options[pointer]->getRow();
-  unsigned int closestelem;
-  bool movefound = false;
-  unsigned int closest = -1;
-  for (unsigned int i = 0; i < options.size(); i++) {
-    if (!options[i]->visible() || !options[i]->isSelectable()) {
-      continue;
-    }
-    unsigned int col = options[i]->getCol();
-    if (col > ccol && options[i]->getRow() == crow) {
-      if (col < closest || closest == (unsigned int)-1) {
-        closest = col;
-        closestelem = i;
-        movefound = true;
-      }
-    }
-  }
-  if (movefound) {
-    lastpointer = pointer;
-    pointer = closestelem;
-    return true;
-  }
-  if (leaveright) {
-    lastpointer = pointer;
-    focus = false;
-    return true;
-  }
-  return false;
+  return navigate(RIGHT);
 }
 
 bool MenuSelectOption::goLeft() {
-  if (!options.size()) return false;
-  unsigned int ccol = options[pointer]->getCol();
-  unsigned int crow = options[pointer]->getRow();
-  unsigned int closestelem;
-  bool movefound = false;
-  unsigned int closest = -1;
-  for (unsigned int i = 0; i < options.size(); i++) {
-    if (!options[i]->visible() || !options[i]->isSelectable()) {
-      continue;
-    }
-    unsigned int col = options[i]->getCol();
-    if (col < ccol && options[i]->getRow() == crow) {
-      if (col > closest || closest == (unsigned int)-1) {
-        closest = col;
-        closestelem = i;
-        movefound = true;
-      }
-    }
-  }
-  if (movefound) {
-    lastpointer = pointer;
-    pointer = closestelem;
-    return true;
-  }
-  if (leaveleft) {
-    lastpointer = pointer;
-    focus = false;
-    return true;
-  }
-  return false;
+  return navigate(LEFT);
 }
 
 bool MenuSelectOption::goNext() {
