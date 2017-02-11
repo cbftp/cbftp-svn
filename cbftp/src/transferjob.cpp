@@ -18,7 +18,6 @@
 
 TransferJob::TransferJob(unsigned int id, const Pointer<SiteLogic> & sl, std::string srcfile, FileList * filelist, const Path & path, std::string dstfile) :
       src(sl),
-      dst(NULL),
       srcfile(srcfile),
       dstfile(dstfile),
       localpath(path),
@@ -42,7 +41,6 @@ TransferJob::TransferJob(unsigned int id, const Pointer<SiteLogic> & sl, std::st
 }
 
 TransferJob::TransferJob(unsigned int id, const Path & path, std::string srcfile, const Pointer<SiteLogic> & sl, std::string dstfile, FileList * filelist) :
-      src(NULL),
       dst(sl),
       srcfile(srcfile),
       dstfile(dstfile),
