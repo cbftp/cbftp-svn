@@ -40,6 +40,7 @@ class SiteRace : public CommandOwner {
     const SkipList & skiplist;
     void updateNumFilesUploaded();
     void addNewDirectories();
+    void markNonExistent(FileList *);
   public:
     int classType() const;
     std::string getSiteName() const;
@@ -49,6 +50,7 @@ class SiteRace : public CommandOwner {
     const Path & getPath() const;
     unsigned int getId() const;
     std::string getRelevantSubPath();
+    bool anyFileListNotNonExistent() const;
     SiteRace(Pointer<Race>, const std::string &, const Path &, const std::string &, const std::string &, const SkipList &);
     ~SiteRace();
     FileList * getFileListForPath(const std::string &) const;

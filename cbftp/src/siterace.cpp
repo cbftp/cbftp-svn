@@ -101,15 +101,27 @@ std::string SiteRace::getSubPath(FileList * filelist) const {
 }
 
 std::string SiteRace::getRelevantSubPath() {
-  while (recentlyvisited.size()) {
+  for (unsigned int i = 0; i < recentlyvisited.size() && recentlyvisited.size(); i++) {
     std::string leastrecentlyvisited = recentlyvisited.front();
     recentlyvisited.pop_front();
     if (!isSubPathComplete(leastrecentlyvisited)) {
       recentlyvisited.push_back(leastrecentlyvisited);
-      return leastrecentlyvisited;
+      if (filelists[leastrecentlyvisited]->getState() != FILELIST_NONEXISTENT) {
+        return leastrecentlyvisited;
+      }
     }
   }
   return "";
+}
+
+bool SiteRace::anyFileListNotNonExistent() const {
+  std::map<std::string, FileList *>::const_iterator it;
+  for (it = filelists.begin(); it != filelists.end(); it++) {
+    if (it->second->getState() != FILELIST_NONEXISTENT) {
+      return true;
+    }
+  }
+  return false;
 }
 
 FileList * SiteRace::getFileListForPath(const std::string & subpath) const {
@@ -148,9 +160,10 @@ std::map<std::string, FileList *>::const_iterator SiteRace::fileListsEnd() const
   return filelists.end();
 }
 
-void SiteRace::fileListUpdated(SiteLogic *, FileList *) {
+void SiteRace::fileListUpdated(SiteLogic *, FileList * fl) {
   updateNumFilesUploaded();
   addNewDirectories();
+  markNonExistent(fl);
 }
 
 void SiteRace::updateNumFilesUploaded() {
@@ -201,6 +214,28 @@ void SiteRace::addNewDirectories() {
       else if (fl->getState() == FILELIST_UNKNOWN || fl->getState() == FILELIST_NONEXISTENT) {
         fl->setExists();
         race->reportNewSubDir(this, it->first);
+      }
+    }
+  }
+}
+
+void SiteRace::markNonExistent(FileList * fl) {
+  std::map<std::string, FileList *>::iterator it;
+  bool found = false;
+  for (it = filelists.begin() ;it != filelists.end(); it++) {
+    if (fl == it->second) {
+      found = true;
+    }
+  }
+  util::assert(found);
+  for (it = filelists.begin() ;it != filelists.end(); it++) {
+    if (it->second->getState() == FILELIST_UNKNOWN &&
+        it->second->getPath().contains(fl->getPath()))
+    {
+      if (fl->getState() == FILELIST_NONEXISTENT ||
+          !fl->contains((it->second->getPath() - fl->getPath()).level(1).toString()))
+      {
+        it->second->setNonExistent();
       }
     }
   }

@@ -27,7 +27,7 @@ void FileList::init(const std::string & username, const Path & path, FileListSta
   this->path = path;
   this->state = state;
   owned = 0;
-  ownpercentage = 0;
+  ownpercentage = 100;
   maxfilesize = 0;
   uploadedfiles = 0;
   locked = false;
@@ -287,14 +287,19 @@ void FileList::flush() {
   totalfilesize = 0;
   uploadedfiles = 0;  
   owned = 0;
-  ownpercentage = 0;
+  ownpercentage = 100;
   uploading = 0;
 }
 
 void FileList::editOwnedFileCount(bool add) {
  if (add) ++owned;
  else --owned;
- ownpercentage = (owned * 100) / files.size();
+ if (files.size()) {
+   ownpercentage = (owned * 100) / files.size();
+ }
+ else {
+   ownpercentage = 100;
+ }
 }
 
 bool FileList::listChanged() const {

@@ -834,7 +834,10 @@ void Engine::transferJobComplete(Pointer<TransferJob> tj) {
   global->getEventLog()->log("Engine", tj->typeString() + " job complete: " + tj->getSrcFileName());
 }
 
-unsigned short Engine::calculateScore(File * f, Pointer<Race> & itr, FileList * fls, SiteRace * srs, FileList * fld, SiteRace * srd, int avgspeed, bool * prio, int prioritypoints, bool racemode) const {
+unsigned short Engine::calculateScore(File * f, Pointer<Race> & itr, FileList * fls, SiteRace * srs,
+                                      FileList * fld, SiteRace * srd, int avgspeed, bool * prio,
+                                      int prioritypoints, bool racemode) const
+{
   // sfv and nfo files have top priority
   if (f->getExtension().compare("sfv") == 0 ||
       f->getExtension().compare("nfo") == 0) {
@@ -879,7 +882,6 @@ unsigned short Engine::calculateScore(File * f, Pointer<Race> & itr, FileList * 
   }
 
   points += prioritypoints;
-
   util::assert(points >= 0 && points < 10000);
   return points;
 }

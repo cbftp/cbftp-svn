@@ -198,7 +198,7 @@ bool SiteLogic::setPathExists(int id, const Path & path, bool exists) {
   if (currentco != NULL) {
     FileList * fl;
     if ((fl = currentco->getFileListForFullPath(this, path)) != NULL &&
-        (fl->getState() == FILELIST_UNKNOWN || fl->getState() == FILELIST_NONEXISTENT))
+        (fl->getState() == FILELIST_UNKNOWN))
     {
       if (exists) {
         fl->setExists();
@@ -823,21 +823,23 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
   SiteRace * race = NULL;
   bool refresh = false;
   SiteRace * lastchecked = connstatetracker[id].lastChecked();
-  if (lastchecked && !lastchecked->isDone() && connstatetracker[id].checkCount() < MAXCHECKSROW) {
+  if (lastchecked && !lastchecked->isDone() && lastchecked->anyFileListNotNonExistent() &&
+      connstatetracker[id].checkCount() < MAXCHECKSROW)
+  {
     race = lastchecked;
     refresh = true;
     connstatetracker[id].check(race);
   }
   else {
     for (unsigned int i = 0; i < races.size(); i++) {
-      if (!races[i]->isDone() && !wasRecentlyListed(races[i])) {
+      if (!races[i]->isDone() && !wasRecentlyListed(races[i]) && races[i]->anyFileListNotNonExistent()) {
         race = races[i];
         break;
       }
     }
     if (race == NULL) {
       for (std::list<SiteRace *>::iterator it = recentlylistedraces.begin(); it != recentlylistedraces.end(); it++) {
-        if (!(*it)->isDone()) {
+        if (!(*it)->isDone() && (*it)->anyFileListNotNonExistent()) {
           race = *it;
           break;
         }
@@ -851,7 +853,15 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
   }
   if (race == NULL) {
     for (unsigned int i = 0; i < races.size(); i++) {
-      if (!races[i]->isGlobalDone()) {
+      if (!races[i]->isGlobalDone() && !races[i]->isAborted() && races[i]->anyFileListNotNonExistent()) {
+        race = races[i];
+        break;
+      }
+    }
+  }
+  if (race == NULL) {
+    for (unsigned int i = 0; i < races.size(); i++) {
+      if (!races[i]->isGlobalDone() && !races[i]->isAborted()) {
         race = races[i];
         break;
       }
