@@ -180,7 +180,9 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void doPASV();
     void doPORT(const std::string &, int);
     void doCWD(const Path &);
+    void doCWD(const Path &, CommandOwner *);
     void doMKD(const Path &);
+    void doMKD(const Path &, CommandOwner *);
     void doPRETRETR(const std::string &);
     void doRETR(const std::string &);
     void doPRETSTOR(const std::string &);
@@ -218,7 +220,6 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void tick(int);
     FileList * currentFileList() const;
     CommandOwner * currentCommandOwner() const;
-    void setCurrentCommandOwner(CommandOwner *);
     void parseFileList(char *, unsigned int);
     bool isConnected() const;
     void setRawBufferCallback(RawBufferCallback *);

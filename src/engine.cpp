@@ -437,6 +437,10 @@ bool Engine::transferJobActionRequest(Pointer<TransferJob> & tj) {
   return true;
 }
 
+void Engine::raceActionRequest() {
+  issueOptimalTransfers();
+}
+
 void Engine::estimateRaceSizes() {
   for (std::list<Pointer<Race> >::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
     estimateRaceSize(*itr, true);
@@ -739,13 +743,23 @@ void Engine::issueOptimalTransfers() {
     if (!sbe->isPrioritized()) { // priority files shouldn't affect the potential tracking
       sls->pushPotential(sbe->getScore(), filename, sld);
     }
-    if (!sls->downloadSlotAvailable()) continue;
-    if (!sld->uploadSlotAvailable()) continue;
-    if (!sls->potentialCheck(sbe->getScore())) continue;
+    if (!sls->downloadSlotAvailable()) {
+      continue;
+    }
+    if (!sld->uploadSlotAvailable()) {
+      continue;
+    }
+    if (!sls->potentialCheck(sbe->getScore())) {
+      continue;
+    }
+    if (sbe->wasAttempted()) {
+      continue;
+    }
     Pointer<TransferStatus> ts =
       global->getTransferManager()->suggestTransfer(filename, sls,
         sbe->getSourceFileList(), sld, sbe->getDestinationFileList());
     race->addTransfer(ts);
+    sbe->setAttempted();
   }
 }
 

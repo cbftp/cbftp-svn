@@ -15,6 +15,7 @@ void ScoreBoardElement::reset(const std::string & filename, unsigned short score
   this->race = race;
   this->score = score;
   this->prio = prio;
+  attempted = false;
 }
 
 const std::string & ScoreBoardElement::fileName() const {
@@ -47,6 +48,14 @@ unsigned short ScoreBoardElement::getScore() const {
 
 bool ScoreBoardElement::isPrioritized() const {
   return prio;
+}
+
+bool ScoreBoardElement::wasAttempted() const {
+  return attempted;
+}
+
+void ScoreBoardElement::setAttempted() {
+  attempted = true;
 }
 
 std::ostream & operator<<(std::ostream & out, const ScoreBoardElement & sbe) {

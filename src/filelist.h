@@ -33,6 +33,7 @@ class FileList {
     unsigned long long int maxfilesize;
     unsigned long long int totalfilesize;
     unsigned int uploadedfiles;
+    int refreshedtime;
     void editOwnedFileCount(bool);
     void init(const std::string &, const Path &, FileListState);
   public:
@@ -72,4 +73,6 @@ class FileList {
     void download(const std::string &);
     bool hasFilesUploading() const;
     void setChanged();
+    void setRefreshedTime(int);
+    int getRefreshedTime();
 };

@@ -44,6 +44,7 @@ class SiteLogic : public EventReceiver {
     std::list<SiteLogicRequestReady> requestsready;
     int requestidcounter;
     bool poke;
+    int currtime;
     void handleConnection(int);
     void handleConnection(int, bool);
     bool handleRequest(int);
@@ -68,7 +69,7 @@ class SiteLogic : public EventReceiver {
     void cleanupConnection(int);
     void checkFailListRequest(int);
     void clearReadyRequest(SiteLogicRequestReady &);
-    bool setPathExists(int, const Path &, bool);
+    bool setPathExists(int, const Path &, bool, bool);
     bool handlePreTransfer(int);
     bool handleCommandDele(int, bool);
   public:
