@@ -33,6 +33,7 @@
 #define STATICTIMEFORCOMPLETION 5000
 #define DIROBSERVETIME 20000
 #define SFVDIROBSERVETIME 5000
+#define NFO_PRIO_AFTER_SEC 15
 
 Engine::Engine() :
   scoreboard(makePointer<ScoreBoard>()),
@@ -840,7 +841,8 @@ unsigned short Engine::calculateScore(File * f, Pointer<Race> & itr, FileList * 
 {
   // sfv and nfo files have top priority
   if (f->getExtension().compare("sfv") == 0 ||
-      f->getExtension().compare("nfo") == 0) {
+      (f->getExtension().compare("nfo") == 0 && itr->getTimeSpent() > NFO_PRIO_AFTER_SEC))
+  {
     *prio = true;
     return 10000;
   }
