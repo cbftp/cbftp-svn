@@ -866,6 +866,11 @@ void FTPConn::PORTResponse() {
 }
 
 void FTPConn::doCWD(const Path & path) {
+  doCWD(path, NULL);
+}
+
+void FTPConn::doCWD(const Path & path, CommandOwner * co) {
+  currentco = co;
   targetpath = path;
   if (targetpath == currentpath) {
     global->getEventLog()->log("FTPConn " + site->getName() + util::int2Str(id),
@@ -888,6 +893,11 @@ void FTPConn::CWDResponse() {
 }
 
 void FTPConn::doMKD(const Path & dir) {
+  doMKD(dir, NULL);
+}
+
+void FTPConn::doMKD(const Path & dir, CommandOwner * co) {
+  currentco = co;
   targetpath = dir;
   state = STATE_MKD;
   sendEcho(("MKD " + targetpath.toString()).c_str());
@@ -1127,10 +1137,6 @@ FileList * FTPConn::currentFileList() const {
 
 CommandOwner * FTPConn::currentCommandOwner() const {
   return currentco;
-}
-
-void FTPConn::setCurrentCommandOwner(CommandOwner * co) {
-  currentco = co;
 }
 
 bool FTPConn::isProcessing() const {

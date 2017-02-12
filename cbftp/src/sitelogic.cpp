@@ -38,6 +38,9 @@
 // maximum number of ready requests available to be checked out
 #define MAXREQUESTREADYQUEUE 10
 
+#define TICKINTERVAL 50
+#define FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH 2000
+
 enum RequestType {
   REQ_FILELIST,
   REQ_RAW,
@@ -61,9 +64,10 @@ SiteLogic::SiteLogic(const std::string & sitename) :
   ptrack(new PotentialTracker(slotsdn)),
   loggedin(0),
   requestidcounter(0),
-  poke(false)
+  poke(false),
+  currtime(0)
 {
-  global->getTickPoke()->startPoke(this, "SiteLogic", 50, 0);
+  global->getTickPoke()->startPoke(this, "SiteLogic", TICKINTERVAL, 0);
 
   for (unsigned int i = 0; i < site->getMaxLogins(); i++) {
     connstatetracker.push_back(ConnStateTracker());
@@ -109,8 +113,9 @@ void SiteLogic::addTransferJob(Pointer<TransferJob> tj) {
 }
 
 void SiteLogic::tick(int message) {
+  currtime += TICKINTERVAL;
   for (unsigned int i = 0; i < connstatetracker.size(); i++) {
-    connstatetracker[i].timePassed(50);
+    connstatetracker[i].timePassed(TICKINTERVAL);
     if (connstatetracker[i].getCommand().isReleased()) {
       util::assert(!connstatetracker[i].isLocked() && !conns[i]->isProcessing());
       DelayedCommand eventcommand = connstatetracker[i].getCommand();
@@ -167,6 +172,8 @@ void SiteLogic::TLSFailed(int id) {
 
 void SiteLogic::listRefreshed(int id) {
   connstatetracker[id].resetIdleTime();
+  FileList * fl = conns[id]->currentFileList();
+  fl->setRefreshedTime(currtime);
   CommandOwner * currentco = conns[id]->currentCommandOwner();
   if (currentco != NULL) {
     currentco->fileListUpdated(this, conns[id]->currentFileList());
@@ -193,22 +200,35 @@ void SiteLogic::listRefreshed(int id) {
   handleConnection(id, true);
 }
 
-bool SiteLogic::setPathExists(int id, const Path & path, bool exists) {
+bool SiteLogic::setPathExists(int id, const Path & path, bool exists, bool refreshtime) {
   CommandOwner * currentco = conns[id]->currentCommandOwner();
+  FileList * fl = NULL;
+  bool found = false;
   if (currentco != NULL) {
-    FileList * fl;
-    if ((fl = currentco->getFileListForFullPath(this, path)) != NULL &&
-        (fl->getState() == FILELIST_UNKNOWN))
-    {
-      if (exists) {
-        fl->setExists();
-      }
-      else {
-        fl->setNonExistent();
-      }
-      currentco->fileListUpdated(this, fl);
-      return true;
+    fl = currentco->getFileListForFullPath(this, path);
+    found = true;
+  }
+  else if (connstatetracker[id].isTransferLocked()) {
+    FileList * transferfl = connstatetracker[id].getTransferFileList();
+    if (transferfl->getPath() == path) {
+      fl = transferfl;
     }
+  }
+  if (fl && (fl->getState() == FILELIST_UNKNOWN || (fl->getState() == FILELIST_NONEXISTENT && exists)))
+  {
+    if (exists) {
+      fl->setExists();
+    }
+    else {
+      fl->setNonExistent();
+    }
+    if (refreshtime) {
+      fl->setRefreshedTime(currtime);
+    }
+    if (currentco && found) {
+      currentco->fileListUpdated(this, fl);
+    }
+    return true;
   }
   return false;
 }
@@ -256,7 +276,7 @@ void SiteLogic::commandSuccess(int id) {
       }
       break;
     case STATE_CWD: {
-      setPathExists(id, conns[id]->getCurrentPath(), true);
+      setPathExists(id, conns[id]->getCurrentPath(), true, false);
       if (conns[id]->hasMKDCWDTarget()) {
         if (conns[id]->getCurrentPath() == conns[id]->getMKDCWDTargetSection() / conns[id]->getMKDCWDTargetPath()) {
           conns[id]->finishMKDCWDTarget();
@@ -284,16 +304,16 @@ void SiteLogic::commandSuccess(int id) {
         const Path & targetcwdsect = conns[id]->getMKDCWDTargetSection();
         const Path & targetcwdpath = conns[id]->getMKDCWDTargetPath();
         const Path & targetpath = conns[id]->getTargetPath();
-        setPathExists(id, targetpath, true);
+        setPathExists(id, targetpath, true, true);
         std::list<std::string> * subdirs = conns[id]->getMKDSubdirs();
         if (targetpath == targetcwdsect / targetcwdpath) {
-          conns[id]->doCWD(targetpath);
+          conns[id]->doCWD(targetpath, conns[id]->currentCommandOwner());
           return;
         }
         else if (subdirs->size() > 0) {
           std::string sub = subdirs->front();
           subdirs->pop_front();
-          conns[id]->doMKD(targetpath / sub);
+          conns[id]->doMKD(targetpath / sub, conns[id]->currentCommandOwner());
           return;
         }
       }
@@ -322,6 +342,10 @@ void SiteLogic::commandSuccess(int id) {
         connstatetracker[id].getTransferMonitor()->sourceComplete();
         transferComplete(id, true);
         connstatetracker[id].finishTransfer();
+        global->getEngine()->raceActionRequest();
+        if (conns[id]->isProcessing() || connstatetracker[id].isTransferLocked()) {
+          return;
+        }
       }
       else {
         global->getEventLog()->log("SiteLogic", "BUG: returned successfully from RETR without having a transfer. Shouldn't happen!");
@@ -338,7 +362,14 @@ void SiteLogic::commandSuccess(int id) {
       if (connstatetracker[id].transferInitialized()) {
         connstatetracker[id].getTransferMonitor()->targetComplete();
         transferComplete(id, false);
+        FileList * fl = connstatetracker[id].getTransferFileList();
         connstatetracker[id].finishTransfer();
+        if (currtime - fl->getRefreshedTime() < FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH) {
+          global->getEngine()->raceActionRequest();
+          if (conns[id]->isProcessing() || connstatetracker[id].isTransferLocked()) {
+            return;
+          }
+        }
       }
       else {
         global->getEventLog()->log("SiteLogic", "BUG: returned successfully from STOR without having a transfer. Shouldn't happen!");
@@ -420,7 +451,7 @@ void SiteLogic::commandFail(int id, int failuretype) {
       break;
     case STATE_CWD: {
       bool filelistupdated = false;
-      if (setPathExists(id, conns[id]->getTargetPath(), false)) {
+      if (setPathExists(id, conns[id]->getTargetPath(), false, true)) {
         filelistupdated = true;
       }
       if (connstatetracker[id].getRecursiveLogic()->isActive()) {
@@ -441,7 +472,7 @@ void SiteLogic::commandFail(int id, int failuretype) {
           conns[id]->finishMKDCWDTarget();
         }
         else {
-          conns[id]->doMKD(conns[id]->getTargetPath());
+          conns[id]->doMKD(conns[id]->getTargetPath(), currentco);
           return;
         }
       }
@@ -468,7 +499,7 @@ void SiteLogic::commandFail(int id, int failuretype) {
         const Path & targetcwdpath = conns[id]->getMKDCWDTargetPath();
         const Path & targetpath = conns[id]->getTargetPath();
         std::list<std::string> * subdirs = conns[id]->getMKDSubdirs();
-        setPathExists(id, targetpath, false);
+        setPathExists(id, targetpath, false, true);
         if (targetpath == targetcwdsect / targetcwdpath) {
           if (subdirs->size() > 0) {
             std::string sub = subdirs->front();
@@ -483,7 +514,7 @@ void SiteLogic::commandFail(int id, int failuretype) {
                 return;
               }
             }
-            conns[id]->doMKD(newattempt);
+            conns[id]->doMKD(newattempt, currentco);
             return;
           }
           else {
@@ -787,8 +818,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
         const Path & path = fl->getPath();
         connstatetracker[id].use();
         if (path != conns[id]->getCurrentPath()) {
-          conns[id]->setCurrentCommandOwner(tj.get());
-          conns[id]->doCWD(path);
+          conns[id]->doCWD(path, tj.get());
           return;
         }
         getFileListConn(id, tj.get(), fl);
@@ -1033,7 +1063,6 @@ bool SiteLogic::wasRecentlyListed(SiteRace * sr) const {
 void SiteLogic::refreshChangePath(int id, SiteRace * race, bool refresh) {
   const Path & currentpath = conns[id]->getCurrentPath();
   std::string subpath = race->getRelevantSubPath();
-  conns[id]->setCurrentCommandOwner(race);
   Path targetpath = race->getPath() / subpath;
   FileList * fl = race->getFileListForFullPath(this, targetpath);
   FileListState state = fl->getState();
@@ -1043,11 +1072,11 @@ void SiteLogic::refreshChangePath(int id, SiteRace * race, bool refresh) {
     {
       conns[id]->setMKDCWDTarget(race->getSection(), Path(race->getRelease()) / subpath);
       if (state == FILELIST_NONEXISTENT) {
-        conns[id]->doMKD(targetpath);
+        conns[id]->doMKD(targetpath, race);
         return;
       }
     }
-    conns[id]->doCWD(targetpath);
+    conns[id]->doCWD(targetpath, race);
   }
   else {
     if (refresh) {

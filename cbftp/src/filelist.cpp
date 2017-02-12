@@ -35,6 +35,7 @@ void FileList::init(const std::string & username, const Path & path, FileListSta
   lastchangedstamp = 0;
   totalfilesize = 0;
   uploading = 0;
+  refreshedtime = 0;
 }
 
 bool FileList::updateFile(const std::string & start, int touch) {
@@ -155,6 +156,9 @@ void FileList::setFileUpdateFlag(const std::string & name, unsigned long long in
         uploadedfiles++;
       }
       totalfilesize += size - oldsize;
+      if (size > maxfilesize) {
+        maxfilesize = size;
+      }
       setChanged();
     }
     file->setUpdateFlag(src, dst, speed);
@@ -180,6 +184,7 @@ FileListState FileList::getState() const {
 }
 
 void FileList::setNonExistent() {
+  util::assert(state == FILELIST_UNKNOWN);
   state = FILELIST_NONEXISTENT;
 }
 
@@ -348,4 +353,12 @@ void FileList::download(const std::string & file) {
 
 bool FileList::hasFilesUploading() const {
   return uploading > 0;
+}
+
+void FileList::setRefreshedTime(int newtime) {
+  refreshedtime = newtime;
+}
+
+int FileList::getRefreshedTime() {
+  return refreshedtime;
 }

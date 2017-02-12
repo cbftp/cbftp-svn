@@ -82,7 +82,7 @@ bool SiteRace::addSubDirectory(const std::string & subpath, bool knownexists) {
     subdir = new FileList(username, path / subpath);
   }
   filelists[subpath] = subdir;
-  recentlyvisited.push_front(subpath);
+  recentlyvisited.push_back(subpath);
   if (knownexists) {
     race->reportNewSubDir(this, subpath);
   }
@@ -227,9 +227,11 @@ void SiteRace::markNonExistent(FileList * fl) {
       found = true;
     }
   }
-  util::assert(found);
-  for (it = filelists.begin() ;it != filelists.end(); it++) {
-    if (it->second->getState() == FILELIST_UNKNOWN &&
+  if (!found) {
+    return;
+  }
+  for (it = filelists.begin(); it != filelists.end(); it++) {
+    if (it->second != fl && it->second->getState() == FILELIST_UNKNOWN &&
         it->second->getPath().contains(fl->getPath()))
     {
       if (fl->getState() == FILELIST_NONEXISTENT ||

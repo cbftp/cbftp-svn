@@ -48,6 +48,7 @@ public:
   void raceFileListRefreshed(SiteLogic *, SiteRace *);
   void filelistUpdated();
   bool transferJobActionRequest(Pointer<TransferJob> &);
+  void raceActionRequest();
   void setPreparedRaceExpiryTime(int);
   void clearSkipListCaches();
   unsigned int preparedRaces() const;

@@ -19,6 +19,7 @@ class ScoreBoardElement {
     Pointer<Race> race;
     unsigned short score;
     bool prio;
+    bool attempted;
   public:
     ScoreBoardElement(const std::string &, unsigned short, bool, const Pointer<SiteLogic> &, FileList *, const Pointer<SiteLogic> &, FileList *, Pointer<Race> &);
     void reset(const std::string &, unsigned short, bool, const Pointer<SiteLogic> &, FileList *, const Pointer<SiteLogic> &, FileList *, Pointer<Race> &);
@@ -30,6 +31,8 @@ class ScoreBoardElement {
     const Pointer<Race> & getRace() const;
     unsigned short getScore() const;
     bool isPrioritized() const;
+    bool wasAttempted() const;
+    void setAttempted();
 };
 
 std::ostream & operator<<(std::ostream &, const ScoreBoardElement &);
