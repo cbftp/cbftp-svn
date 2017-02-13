@@ -909,14 +909,16 @@ void FTPConn::MKDResponse() {
     sl->commandSuccess(id);
   }
   else {
-    if (databufcode == 550 &&
-        std::string(databuf, databufpos).find("File exist") !=
-            std::string::npos) {
-      sl->commandSuccess(id);
+    if (databufcode == 550) {
+      std::string message(databuf, databufpos);
+      if (message.find("File exist") != std::string::npos ||
+          message.find("already exists") != std::string::npos)
+      {
+        sl->commandSuccess(id);
+        return;
+      }
     }
-    else {
-      sl->commandFail(id);
-    }
+    sl->commandFail(id);
   }
 }
 
