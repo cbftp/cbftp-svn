@@ -755,6 +755,9 @@ void Engine::issueOptimalTransfers() {
     if (sbe->wasAttempted()) {
       continue;
     }
+    if (!sbe->getSourceFileList()->getFile(filename)) {
+      continue;
+    }
     Pointer<TransferStatus> ts =
       global->getTransferManager()->suggestTransfer(filename, sls,
         sbe->getSourceFileList(), sld, sbe->getDestinationFileList());
