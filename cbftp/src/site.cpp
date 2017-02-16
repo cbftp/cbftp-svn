@@ -4,7 +4,7 @@
 #include "util.h"
 #include "globalcontext.h"
 
-Site::Site() {
+Site::Site() : skiplist(global->getSkipList()) {
 
 }
 
