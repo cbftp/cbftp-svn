@@ -216,7 +216,16 @@ void AllTransferJobsScreen::addJobDetails(unsigned int y, MenuSelectOption & mso
                               util::int2Str(tj->filesTotal());
   std::string speed = util::parseSize(tj->getSpeed() * SIZEPOWER) + "/s";
   std::string progress = util::int2Str(tj->getProgress()) + "%";
-  std::string status = tj->isDone() ? (aborted ? "abor" : "done") : progress;
+  std::string status = progress;
+  if (tj->isDone()) {
+    status = "done";
+  }
+  if (tj->isAborted()) {
+    status = "abor";
+  }
+  if (tj->isTimedOut()) {
+    status = "time";
+  }
   std::string type = "FXP";
   switch (tj->getType()) {
     case TRANSFERJOB_DOWNLOAD:

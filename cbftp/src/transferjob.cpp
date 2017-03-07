@@ -15,6 +15,7 @@
 #include "filesystem.h"
 
 #define MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP 3
+#define TRANSFERJOB_TIMEOUT_MS 30000
 
 TransferJob::TransferJob(unsigned int id, const Pointer<SiteLogic> & sl, std::string srcfile, FileList * filelist, const Path & path, std::string dstfile) :
       src(sl),
@@ -161,6 +162,7 @@ void TransferJob::init() {
   listsrefreshed = false;
   initialized = false;
   aborted = false;
+  timedout = false;
   slots = 1;
   srclisttarget = NULL;
   dstlisttarget = NULL;
@@ -173,6 +175,7 @@ void TransferJob::init() {
   speed = 0;
   filesprogress = 0;
   filestotal = 0;
+  idletime = 0;
   timestarted = util::ctimeLog();
   global->getTickPoke()->startPoke(this, "TransferJob", TRANSFERJOB_UPDATE_INTERVAL, 0);
 }
@@ -363,10 +366,14 @@ void TransferJob::refreshOrAlmostDone() {
   }
   else if (!filelistsrefreshed.size()) {
     for (std::map<std::string, FileList *>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
-      filelistsrefreshed[it->second] = false;
+      if (it->second->getState() != FILELIST_NONEXISTENT) {
+        filelistsrefreshed[it->second] = false;
+      }
     }
     for (std::map<std::string, FileList *>::iterator it = dstfilelists.begin(); it != dstfilelists.end(); it++) {
-      filelistsrefreshed[it->second] = false;
+      if (it->second->getState() != FILELIST_NONEXISTENT) {
+        filelistsrefreshed[it->second] = false;
+      }
     }
     if (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_UPLOAD) {
       updateLocalFileLists(localpath / srcfile);
@@ -386,6 +393,7 @@ void TransferJob::addPendingTransfer(const Path & name, unsigned long long int s
 
 void TransferJob::addTransfer(const Pointer<TransferStatus> & ts) {
   if (!!ts && ts->getState() != TRANSFERSTATUS_STATE_FAILED) {
+    idletime = 0;
     transfers.push_front(ts);
     ts->setCallback(this);
     Path subpathfile = findSubPath(ts) / ts->getFile();
@@ -401,6 +409,7 @@ void TransferJob::targetExists(const Path & target) {
 
 void TransferJob::tick(int message) {
   updateStatus();
+  idletime += TRANSFERJOB_UPDATE_INTERVAL;
   timespentmillis += TRANSFERJOB_UPDATE_INTERVAL;
   timespentsecs = timespentmillis / 1000;
 }
@@ -445,6 +454,10 @@ void TransferJob::updateStatus() {
   }
   filesprogress = existingtargets.size() + aggregatedfilescomplete;
   if (almostdone && !ongoingtransfers && filesprogress >= filestotal) {
+    setDone();
+  }
+  if (!done && !ongoingtransfers && !pendingtransfers.size() && idletime >= TRANSFERJOB_TIMEOUT_MS) {
+    timedout = true;
     setDone();
   }
 }
@@ -577,6 +590,10 @@ bool TransferJob::isAborted() const {
   return aborted;
 }
 
+bool TransferJob::isTimedOut() const {
+  return timedout;
+}
+
 unsigned int TransferJob::getId() const {
   return id;
 }
@@ -617,10 +634,12 @@ bool TransferJob::hasFailedTransfer(const std::string & dstpath) const {
 }
 
 void TransferJob::transferSuccessful(const Pointer<TransferStatus> & ts) {
+  idletime = 0;
   addTransferAttempt(ts);
 }
 
 void TransferJob::transferFailed(const Pointer<TransferStatus> & ts, int) {
+  idletime = 0;
   if (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) {
     filelistsrefreshed[ts->getSourceFileList()] = false;
   }

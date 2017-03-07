@@ -82,6 +82,7 @@ public:
   bool isInitialized() const;
   void setInitialized();
   bool isAborted() const;
+  bool isTimedOut() const;
   unsigned int getId() const;
   void abort();
   void clearExisting();
@@ -115,6 +116,7 @@ private:
   bool almostdone;
   bool done;
   bool aborted;
+  bool timedout;
   bool listsrefreshed;
   FileList * srclisttarget;
   FileList * dstlisttarget;
@@ -132,4 +134,5 @@ private:
   bool initialized;
   unsigned int id;
   std::map<std::string, int> transferattempts;
+  int idletime;
 };
