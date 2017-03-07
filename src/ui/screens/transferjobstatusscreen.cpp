@@ -47,9 +47,18 @@ void TransferJobStatusScreen::redraw() {
   ui->printStr(y, 1, "Started: " + transferjob->timeStarted());
   ui->printStr(y, 20, "Type: " + transferjob->typeString());
   std::string route = getRoute(transferjob);
-  bool aborted = transferjob->isAborted();
   ui->printStr(y, 38, "Route: " + route);
-  ui->printStr(y, 60, std::string("Status: ") + (transferjob->isDone() ? (aborted ? "Aborted" : "Completed") : "In progress"));
+  std::string status = "In progress";
+  if (transferjob->isDone()) {
+    status = "Completed";
+  }
+  if (transferjob->isAborted()) {
+    status = "Aborted";
+  }
+  if (transferjob->isTimedOut()) {
+    status = "Timeout";
+  }
+  ui->printStr(y, 60, std::string("Status: ") + status);
   y++;
   ui->printStr(y, 1, "Size: " + util::parseSize(transferjob->sizeProgress()) +
       " / " + util::parseSize(transferjob->totalSize()));
@@ -58,7 +67,7 @@ void TransferJobStatusScreen::redraw() {
       util::int2Str(transferjob->filesTotal()));
   y++;
   ui->printStr(y, 1, "Time spent: " + util::simpleTimeFormat(transferjob->timeSpent()));
-  ui->printStr(y, 21, "Remaining: " + (aborted ? "-" : util::simpleTimeFormat(transferjob->timeRemaining())));
+  ui->printStr(y, 21, "Remaining: " + (transferjob->isDone() ? "-" : util::simpleTimeFormat(transferjob->timeRemaining())));
   int progresspercent = transferjob->getProgress();
   std::string progress = "....................";
   int charswithhighlight = progress.length() * progresspercent / 100;
@@ -77,7 +86,7 @@ void TransferJobStatusScreen::redraw() {
   }
   table.adjustLines(col - 3);
   bool highlight;
-  if (!aborted) {
+  if (!transferjob->isDone()) {
     for (unsigned int i = 0; i < mso.size(); i++) {
       Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
       highlight = false;
