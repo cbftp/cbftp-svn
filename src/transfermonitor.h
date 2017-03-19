@@ -72,6 +72,7 @@ class TransferMonitor : public EventReceiver, public RawBufferCallback {
     LocalTransfer * lt;
     int ticker;
     TransferError error;
+    std::list<std::pair<std::string, std::string> > rawbufqueue;
     void finish();
     void setTargetSizeSpeed(unsigned long long int, int);
     void reset();
@@ -99,5 +100,6 @@ class TransferMonitor : public EventReceiver, public RawBufferCallback {
     void engageUpload(const std::string &, const Pointer<LocalFileList> &, const Pointer<SiteLogic> &, FileList *);
     void engageList(const Pointer<SiteLogic> &, int, bool);
     Status getStatus() const;
+    bool willFail() const;
     void newRawBufferLine(const std::pair<std::string, std::string> &);
 };

@@ -69,7 +69,7 @@ class SiteLogic : public EventReceiver {
     void cleanupConnection(int);
     void checkFailListRequest(int);
     void clearReadyRequest(SiteLogicRequestReady &);
-    bool setPathExists(int, const Path &, bool, bool);
+    bool setPathExists(int, int, bool);
     bool handlePreTransfer(int);
     bool handleCommandDele(int, bool);
   public:

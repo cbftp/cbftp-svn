@@ -196,6 +196,10 @@ void FileList::setFilled() {
   state = FILELIST_LISTED;
 }
 
+void FileList::setFailed() {
+  state = FILELIST_FAILED;
+}
+
 std::map<std::string, File *>::iterator FileList::begin() {
   return files.begin();
 }

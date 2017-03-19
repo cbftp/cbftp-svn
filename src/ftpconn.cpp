@@ -327,6 +327,7 @@ void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
     }
     if (!isProcessing()) {
       currentco = NULL;
+      currentfl = NULL;
       if (isConnected()) {
         state = STATE_IDLE;
       }
@@ -866,10 +867,19 @@ void FTPConn::PORTResponse() {
 }
 
 void FTPConn::doCWD(const Path & path) {
-  doCWD(path, NULL);
+  doCWD(path, NULL, NULL);
 }
 
-void FTPConn::doCWD(const Path & path, CommandOwner * co) {
+void FTPConn::doCWD(FileList * fl) {
+  doCWD(fl->getPath(), fl, NULL);
+}
+
+void FTPConn::doCWD(FileList * fl, CommandOwner * co) {
+  doCWD(fl->getPath(), fl, co);
+}
+
+void FTPConn::doCWD(const Path & path, FileList * fl, CommandOwner * co) {
+  currentfl = fl;
   currentco = co;
   targetpath = path;
   if (targetpath == currentpath) {
@@ -893,12 +903,24 @@ void FTPConn::CWDResponse() {
 }
 
 void FTPConn::doMKD(const Path & dir) {
-  doMKD(dir, NULL);
+  doMKD(dir, NULL, NULL);
 }
 
-void FTPConn::doMKD(const Path & dir, CommandOwner * co) {
+void FTPConn::doMKD(FileList * fl) {
+  doMKD(fl->getPath(), fl, NULL);
+}
+
+void FTPConn::doMKD(FileList * fl, CommandOwner * co) {
+  doMKD(fl->getPath(), fl, co);
+}
+
+void FTPConn::doMKD(const Path & dir, FileList * fl, CommandOwner * co) {
+  currentfl = fl;
   currentco = co;
   targetpath = dir;
+  if (currentco == NULL) {
+    int x = 3;
+  }
   state = STATE_MKD;
   sendEcho(("MKD " + targetpath.toString()).c_str());
 }
@@ -1129,8 +1151,8 @@ const Path & FTPConn::getMKDCWDTargetPath() const {
   return mkdpath;
 }
 
-std::list<std::string> * FTPConn::getMKDSubdirs() {
-  return &mkdsubdirs;
+const std::list<std::string> & FTPConn::getMKDSubdirs() {
+  return mkdsubdirs;
 }
 
 FileList * FTPConn::currentFileList() const {
