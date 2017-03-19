@@ -283,6 +283,18 @@ void Engine::removeSiteFromRace(Pointer<Race> & race, const std::string & site) 
   }
 }
 
+void Engine::removeSiteFromRaceDeleteFiles(Pointer<Race> & race, const std::string & site, bool allfiles) {
+  if (!!race) {
+    SiteRace * sr = race->getSiteRace(site);
+    if (sr != NULL) {
+      const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
+      sl->abortRace(race->getId());
+      race->removeSite(sr);
+      sl->requestDelete(sr->getPath(), true, false, allfiles);
+    }
+  }
+}
+
 void Engine::abortRace(Pointer<Race> & race) {
   if (!!race) {
     race->abort();
@@ -325,6 +337,10 @@ void Engine::deleteOnAllSites(Pointer<Race> & race) {
 }
 
 void Engine::deleteOnSites(Pointer<Race> & race, std::list<Pointer<Site> > delsites) {
+  deleteOnSites(race, delsites, true);
+}
+
+void Engine::deleteOnSites(Pointer<Race> & race, std::list<Pointer<Site> > delsites, bool allfiles) {
   if (!!race) {
     if (race->getStatus() == RACE_STATUS_RUNNING) {
       abortRace(race);
@@ -344,12 +360,12 @@ void Engine::deleteOnSites(Pointer<Race> & race, std::list<Pointer<Site> > delsi
         continue;
       }
       const Path & path = sr->getPath();
-      sl->requestDelete(path, true, false);
+      sl->requestDelete(path, true, false, allfiles);
       sites += (*it)->getName() + ",";
     }
     if (sites.length() > 0) {
       sites = sites.substr(0, sites.length() - 1);
-      global->getEventLog()->log("Engine", "Attempting delete of " + race->getName() + " on: " + sites);
+      global->getEventLog()->log("Engine", std::string("Attempting delete of ") + (allfiles ? "all" : "own") + " files in " + race->getName() + " on: " + sites);
     }
   }
 }

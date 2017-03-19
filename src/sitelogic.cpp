@@ -47,6 +47,7 @@ enum RequestType {
   REQ_WIPE_RECURSIVE,
   REQ_WIPE,
   REQ_DEL_RECURSIVE,
+  REQ_DEL_OWN,
   REQ_DEL,
   REQ_NUKE,
   REQ_IDLE
@@ -240,7 +241,7 @@ bool SiteLogic::handleCommandDelete(int id, bool success) {
     if (type == REQ_DEL) {
       setRequestReady(id, NULL, success);
     }
-    else if (type == REQ_DEL_RECURSIVE) {
+    else if (type == REQ_DEL_RECURSIVE || type == REQ_DEL_OWN) {
       if (connstatetracker[id].getRecursiveLogic()->isActive()) {
         handleRecursiveLogic(id);
         return true;
@@ -1007,7 +1008,13 @@ bool SiteLogic::handleRequest(int id) {
       break;
     case REQ_DEL_RECURSIVE: { // recursive delete
       std::string targetpath = request.requestData();
-      connstatetracker[id].getRecursiveLogic()->initialize(RCL_DELETE, targetpath);
+      connstatetracker[id].getRecursiveLogic()->initialize(RCL_DELETE, targetpath, site->getUser());
+      handleRecursiveLogic(id);
+      break;
+    }
+    case REQ_DEL_OWN: { // recursive delete of own files
+      std::string targetpath = request.requestData();
+      connstatetracker[id].getRecursiveLogic()->initialize(RCL_DELETEOWN, targetpath, site->getUser());
       handleRecursiveLogic(id);
       break;
     }
@@ -1053,7 +1060,7 @@ void SiteLogic::handleRecursiveLogic(int id, FileList * fl) {
     case RCL_ACTION_NOOP:
       if (connstatetracker[id].hasRequest()) {
         int type = connstatetracker[id].getRequest()->requestType();
-        if (type == REQ_DEL || type == REQ_DEL_RECURSIVE) {
+        if (type == REQ_DEL || type == REQ_DEL_RECURSIVE || type == REQ_DEL_OWN) {
           setRequestReady(id, NULL, true);
         }
       }
@@ -1209,10 +1216,11 @@ int SiteLogic::requestWipe(const Path & path, bool recursive) {
   return requestid;
 }
 
-int SiteLogic::requestDelete(const Path & path, bool recursive, bool interactive) {
+int SiteLogic::requestDelete(const Path & path, bool recursive, bool interactive, bool allfiles) {
   int requestid = requestidcounter++;
   if (recursive) {
-    requests.push_back(SiteLogicRequest(requestid, REQ_DEL_RECURSIVE, path.toString(), interactive));
+    int req = allfiles ? REQ_DEL_RECURSIVE : REQ_DEL_OWN;
+    requests.push_back(SiteLogicRequest(requestid, req, path.toString(), interactive));
   }
   else {
     requests.push_back(SiteLogicRequest(requestid, REQ_DEL, path.toString(), interactive));

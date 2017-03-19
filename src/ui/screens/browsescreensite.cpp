@@ -323,7 +323,7 @@ void BrowseScreenSite::command(const std::string & command, const std::string & 
       requestid = sitelogic->requestWipe(wipetarget, wiperecursive);
     }
     else if (deleting) {
-      requestid = sitelogic->requestDelete(wipetarget, deletingrecursive, true);
+      requestid = sitelogic->requestDelete(wipetarget, deletingrecursive, true, true);
     }
     else {
       global->getEventLog()->log("BrowseScreen", "WARNING: got a 'yes' answer for an unknown command");
@@ -515,7 +515,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
         ui->update();
         ui->setInfo();
       }
-      break;
+      return BrowseScreenAction(BROWSESCREENACTION_CHDIR);
     case 'W':
       cursoredfile = list.cursoredFile();
       if (cursoredfile == NULL) {
@@ -582,7 +582,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       requestid = sitelogic->requestFileList(requestedpath);
       ui->setInfo();
       //go up one directory level, or return if at top already
-      break;
+      return BrowseScreenAction(BROWSESCREENACTION_CHDIR);
     case KEY_F(5):
       refreshFilelist();
       ui->setInfo();
@@ -907,4 +907,8 @@ void BrowseScreenSite::disableGotoMode() {
     global->getTickPoke()->stopPoke(this, 0);
     ui->setLegend();
   }
+}
+
+const UIFileList * BrowseScreenSite::getUIFileList() const {
+  return &list;
 }

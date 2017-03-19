@@ -23,9 +23,12 @@ public:
   std::string getInfoLabel() const;
 private:
   char getFileChar(bool, bool, bool, bool) const;
+  void deleteFiles(bool);
   Pointer<Race> race;
   bool smalldirs;
   bool awaitingremovesite;
+  bool awaitingremovesitedelownfiles;
+  bool awaitingremovesitedelallfiles;
   bool awaitingabort;
   unsigned int currnumsubpaths;
   unsigned int currguessedsize;

@@ -512,3 +512,7 @@ void BrowseScreenLocal::gotoPath(const Path & path) {
 Pointer<LocalFileList> BrowseScreenLocal::fileList() const {
   return filelist;
 }
+
+const UIFileList * BrowseScreenLocal::getUIFileList() const {
+  return &list;
+}

@@ -20,13 +20,14 @@
 
 enum SelectSitesMode {
   SELECT_ADD,
-  SELECT_DELETE
+  SELECT_DELETE,
+  SELECT_DELETE_OWN
 };
 
 RaceStatusScreen::RaceStatusScreen(Ui * ui) {
   this->ui = ui;
-  defaultlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [r]eset race - A[B]ort race";
-  finishedlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [r]eset race - [D]elete on sites";
+  defaultlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [r]eset race - A[B]ort race - [d]elete site and own files from race - [D]elete site and all files from race";
+  finishedlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [r]eset race - [d]elete own files - [D]elete all files";
 }
 
 RaceStatusScreen::~RaceStatusScreen() {
@@ -44,6 +45,8 @@ void RaceStatusScreen::initialize(unsigned int row, unsigned int col, unsigned i
   autoupdate = true;
   smalldirs = false;
   awaitingremovesite = false;
+  awaitingremovesitedelownfiles = false;
+  awaitingremovesitedelallfiles = false;
   awaitingabort = false;
   currnumsubpaths = 0;
   currguessedsize = 0;
@@ -297,6 +300,14 @@ void RaceStatusScreen::command(const std::string & command, const std::string & 
       global->getEngine()->removeSiteFromRace(race, removesite);
       awaitingremovesite = false;
     }
+    else if (awaitingremovesitedelownfiles) {
+      global->getEngine()->removeSiteFromRaceDeleteFiles(race, removesite, false);
+      awaitingremovesitedelownfiles = false;
+    }
+    else if (awaitingremovesitedelallfiles) {
+      global->getEngine()->removeSiteFromRaceDeleteFiles(race, removesite, true);
+      awaitingremovesitedelallfiles = false;
+    }
     else if (awaitingabort) {
       global->getEngine()->abortRace(race);
       awaitingabort = false;
@@ -330,6 +341,9 @@ void RaceStatusScreen::command(const std::string & command, const std::string & 
     }
     else if (selectsitesmode == SELECT_DELETE) {
       global->getEngine()->deleteOnSites(race, selectedsites);
+    }
+    else if (selectsitesmode == SELECT_DELETE_OWN) {
+      global->getEngine()->deleteOnSites(race, selectedsites, false);
     }
   }
   ui->redraw();
@@ -366,7 +380,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       if (!!msotb) {
         removesite = msotb->getLabelText();
         awaitingremovesite = true;
-        ui->goConfirmation("Do you really want to delete " + removesite);
+        ui->goConfirmation("Do you really want to remove " + removesite + " from the race?");
       }
       return true;
     }
@@ -376,21 +390,32 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
         ui->goConfirmation("Do you really want to abort the race " + race->getName());
       }
       return true;
+    case 'd':
+      if (race->getStatus() != RACE_STATUS_RUNNING) {
+        deleteFiles(false);
+      }
+      else {
+        Pointer<MenuSelectOptionTextButton> msotb = mso.getElement(mso.getSelectionPointer());
+        if (!!msotb) {
+          removesite = msotb->getLabelText();
+          awaitingremovesitedelownfiles = true;
+          ui->goConfirmation("Do you really want to remove " + removesite + " from the race and delete own files?");
+        }
+      }
+      return true;
     case 'D':
       if (race->getStatus() != RACE_STATUS_RUNNING) {
-        std::list<Pointer<Site> > sites;
-        std::list<Pointer<Site> > preselectsites;
-        std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it;
-        for (it = race->begin(); it != race->end(); it++) {
-          sites.push_back(it->second->getSite());
-          if (!it->first->isDone() || (it->first->isAborted() && !it->first->doneBeforeAbort())) {
-            preselectsites.push_back(it->second->getSite());
 
-          }
-        }
-        selectsitesmode = SELECT_DELETE;
-        ui->goSelectSitesFrom("Delete " + race->getName() + " from these sites", preselectsites, sites);
       }
+      else {
+        Pointer<MenuSelectOptionTextButton> msotb = mso.getElement(mso.getSelectionPointer());
+        if (!!msotb) {
+          removesite = msotb->getLabelText();
+          awaitingremovesitedelallfiles = true;
+          ui->goConfirmation("Do you really want to remove " + removesite + " from the race and delete all files?");
+        }
+      }
+      deleteFiles(true);
       return true;
     case 'A':
     {
@@ -416,6 +441,23 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       return true;
   }
   return false;
+}
+
+void RaceStatusScreen::deleteFiles(bool allfiles) {
+  if (race->getStatus() != RACE_STATUS_RUNNING) {
+    std::list<Pointer<Site> > sites;
+    std::list<Pointer<Site> > preselectsites;
+    std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it;
+    for (it = race->begin(); it != race->end(); it++) {
+      sites.push_back(it->second->getSite());
+      if (!it->first->isDone() || (it->first->isAborted() && !it->first->doneBeforeAbort())) {
+        preselectsites.push_back(it->second->getSite());
+
+      }
+    }
+    selectsitesmode = allfiles ? SELECT_DELETE : SELECT_DELETE_OWN;
+    ui->goSelectSitesFrom(std::string("Delete ") + (allfiles ? "all" : "own") + " files in " + race->getName() + " from these sites", preselectsites, sites);
+  }
 }
 
 char RaceStatusScreen::getFileChar(bool exists, bool owner, bool upload, bool download) const {

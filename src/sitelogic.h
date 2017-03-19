@@ -126,7 +126,7 @@ class SiteLogic : public EventReceiver {
     int requestRawCommand(const std::string &);
     int requestRawCommand(const Path &, const std::string &, bool);
     int requestWipe(const Path &, bool);
-    int requestDelete(const Path &, bool, bool);
+    int requestDelete(const Path &, bool, bool, bool);
     int requestNuke(const Path &, int, const std::string &);
     int requestOneIdle();
     int requestAllIdle(int);

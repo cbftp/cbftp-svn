@@ -142,6 +142,8 @@ bool BrowseScreen::keyPressed(unsigned int ch) {
       return keyPressedNoSubAction(ch);
     case BROWSESCREENACTION_CAUGHT:
       return true;
+    case BROWSESCREENACTION_CHDIR:
+      return true;
   }
   return false;
 }
@@ -197,6 +199,11 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
                                                       otherfl);
           }
         }
+      }
+      return true;
+    case 'u':
+      if (split && left->type() != BROWSESCREEN_SELECTOR && right->type() != BROWSESCREEN_SELECTOR) {
+
       }
       return true;
   }
