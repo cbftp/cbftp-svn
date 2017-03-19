@@ -295,6 +295,9 @@ void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
       case STATE_DELE: // awaiting DELE response
         DELEResponse();
         break;
+      case STATE_RMD: // awaiting RMD response
+        RMDResponse();
+        break;
       case STATE_NUKE: // awaiting SITE NUKE response
         NUKEResponse();
         break;
@@ -739,9 +742,15 @@ void FTPConn::doNuke(const Path & path, int multiplier, const std::string & reas
   state = STATE_NUKE;
   sendEcho("SITE NUKE " + path.toString() + " " + util::int2Str(multiplier) + " " + reason);
 }
+
 void FTPConn::doDELE(const Path & path) {
   state = STATE_DELE;
   sendEcho("DELE " + path.toString());
+}
+
+void FTPConn::doRMD(const Path & path) {
+  state = STATE_RMD;
+  sendEcho("RMD " + path.toString());
 }
 
 void FTPConn::doPBSZ0() {
@@ -783,6 +792,16 @@ void FTPConn::WIPEResponse() {
 }
 
 void FTPConn::DELEResponse() {
+  processing = false;
+  if (databufcode == 250) {
+    sl->commandSuccess(id);
+  }
+  else {
+    sl->commandFail(id);
+  }
+}
+
+void FTPConn::RMDResponse() {
   processing = false;
   if (databufcode == 250) {
     sl->commandSuccess(id);
