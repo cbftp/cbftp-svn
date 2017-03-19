@@ -208,7 +208,8 @@ void SiteLogic::listRefreshed(int id) {
 
 bool SiteLogic::setPathExists(int id, int exists, bool refreshtime) {
   FileList * fl = conns[id]->currentFileList();
-  if (fl && (fl->getState() == FILELIST_UNKNOWN || (fl->getState() == FILELIST_NONEXISTENT && exists != EXISTS_NO)))
+  if (fl && (fl->getState() == FILELIST_UNKNOWN || (fl->getState() == FILELIST_NONEXISTENT && exists != EXISTS_NO) ||
+      (fl->getState() == FILELIST_FAILED && exists == EXISTS_YES)))
   {
     switch (exists) {
       case EXISTS_YES:
@@ -533,7 +534,7 @@ void SiteLogic::commandFail(int id, int failuretype) {
         }
         conns[id]->finishMKDCWDTarget();
         setPathExists(id, EXISTS_FAILED, true);
-        handleFail(id);
+        conns[id]->doCWD(conns[id]->currentFileList(), currentco);
         return;
       }
       else {
