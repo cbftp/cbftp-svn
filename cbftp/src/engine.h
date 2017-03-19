@@ -40,10 +40,12 @@ public:
   void newTransferJobFXP(const std::string &, FileList *, const std::string &, FileList *, const std::string &);
   void newTransferJobFXP(const std::string &, const std::string &, FileList *, const std::string &, const std::string &, FileList *);
   void removeSiteFromRace(Pointer<Race> &, const std::string &);
+  void removeSiteFromRaceDeleteFiles(Pointer<Race> &, const std::string &, bool);
   void abortRace(Pointer<Race> &);
   void resetRace(Pointer<Race> &);
   void deleteOnAllSites(Pointer<Race> &);
   void deleteOnSites(Pointer<Race> &, std::list<Pointer<Site> >);
+  void deleteOnSites(Pointer<Race> &, std::list<Pointer<Site> >, bool);
   void abortTransferJob(Pointer<TransferJob> &);
   void raceFileListRefreshed(SiteLogic *, SiteRace *);
   void filelistUpdated();

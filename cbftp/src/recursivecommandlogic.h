@@ -33,10 +33,11 @@ private:
   std::list<Path> wantedlists;
   std::vector<std::pair<Path, bool> > deletefiles;
   bool listtarget;
-  Path listtargetpath;
+  Path targetpath;
+  std::string user;
 public:
   RecursiveCommandLogic();
-  void initialize(RecursiveCommandType, const Path &);
+  void initialize(RecursiveCommandType, const Path &, const std::string &);
   bool isActive() const;
   int getAction(const Path &, Path &);
   void addFileList(FileList *);

@@ -32,6 +32,7 @@ public:
   void tick(int);
   Pointer<LocalFileList> fileList() const;
   UIFile * selectedFile() const;
+  const UIFileList * getUIFileList() const;
 private:
   void disableGotoMode();
   void sort();

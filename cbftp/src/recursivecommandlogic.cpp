@@ -16,12 +16,13 @@ RecursiveCommandLogic::RecursiveCommandLogic() {
   active = false;
 }
 
-void RecursiveCommandLogic::initialize(RecursiveCommandType mode, const Path & target) {
+void RecursiveCommandLogic::initialize(RecursiveCommandType mode, const Path & target, const std::string & user) {
   this->mode = mode;
   active = true;
   listtarget = false;
   this->basepath = target.dirName();
   this->target = target;
+  this->user = user;
   wantedlists.clear();
   deletefiles.clear();
   wantedlists.push_back(target);
@@ -33,12 +34,12 @@ bool RecursiveCommandLogic::isActive() const {
 
 int RecursiveCommandLogic::getAction(const Path & currentpath, Path & actiontarget) {
   if (listtarget) {
-    if (currentpath == listtargetpath) {
+    if (currentpath == targetpath) {
       listtarget = false;
       return RCL_ACTION_LIST;
     }
     else {
-      actiontarget = listtargetpath;
+      actiontarget = targetpath;
       return RCL_ACTION_CWD;
     }
   }
@@ -49,7 +50,7 @@ int RecursiveCommandLogic::getAction(const Path & currentpath, Path & actiontarg
     }
     std::pair<Path, bool> delfile = deletefiles.back();
     if (currentpath != delfile.first.dirName()) {
-      actiontarget = delfile.first.dirName();
+      targetpath = actiontarget = delfile.first.dirName();
       return RCL_ACTION_CWD;
     }
     actiontarget = delfile.first.baseName();
@@ -64,9 +65,9 @@ int RecursiveCommandLogic::getAction(const Path & currentpath, Path & actiontarg
   }
   else {
     listtarget = true;
-    listtargetpath = actiontarget = wantedlists.front();
+    targetpath = actiontarget = wantedlists.front();
     wantedlists.pop_front();
-    if (currentpath == listtargetpath) {
+    if (currentpath == targetpath) {
       listtarget = false;
       return RCL_ACTION_LIST;
     }
@@ -85,7 +86,9 @@ void RecursiveCommandLogic::addFileList(FileList * fl) {
       wantedlists.push_back(path / it->first);
     }
     else {
-      deletefiles.push_back(std::pair<Path, bool>(path / it->first, false));
+      if (mode == RCL_DELETEOWN && it->second->getOwner() == user) {
+        deletefiles.push_back(std::pair<Path, bool>(path / it->first, false));
+      }
     }
   }
   if (!wantedlists.size()) {
@@ -95,11 +98,11 @@ void RecursiveCommandLogic::addFileList(FileList * fl) {
 
 void RecursiveCommandLogic::failedCwd() {
   listtarget = false;
-  if (listtargetpath == basepath) {
+  if (targetpath == basepath) {
     active = false;
   }
   else {
-    deletefiles.push_back(std::pair<Path, bool>(listtargetpath, true));
+    deletefiles.push_back(std::pair<Path, bool>(targetpath, true));
   }
   if (!wantedlists.size()) {
     std::sort(deletefiles.begin(), deletefiles.end(), lengthSort);

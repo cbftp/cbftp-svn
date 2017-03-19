@@ -3,6 +3,7 @@
 #include "../../core/eventreceiver.h"
 
 class BrowseScreenAction;
+class UIFileList;
 
 enum BrowseScreenType {
   BROWSESCREEN_SITE,
@@ -18,7 +19,8 @@ public:
   virtual std::string getLegendText() const = 0;
   virtual std::string getInfoLabel() const = 0;
   virtual std::string getInfoText() const = 0;
-  virtual void command(const std::string &, const std::string &) { };
+  virtual void command(const std::string &, const std::string &) { }
   virtual BrowseScreenAction keyPressed(unsigned int) = 0;
   virtual void setFocus(bool) = 0;
+  virtual const UIFileList * getUIFileList() const { return NULL; }
 };
