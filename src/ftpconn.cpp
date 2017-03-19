@@ -918,9 +918,6 @@ void FTPConn::doMKD(const Path & dir, FileList * fl, CommandOwner * co) {
   currentfl = fl;
   currentco = co;
   targetpath = dir;
-  if (currentco == NULL) {
-    int x = 3;
-  }
   state = STATE_MKD;
   sendEcho(("MKD " + targetpath.toString()).c_str());
 }
