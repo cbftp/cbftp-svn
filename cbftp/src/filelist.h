@@ -10,7 +10,8 @@ enum FileListState {
  FILELIST_UNKNOWN,
  FILELIST_NONEXISTENT,
  FILELIST_EXISTS,
- FILELIST_LISTED
+ FILELIST_LISTED,
+ FILELIST_FAILED
 };
 
 class File;
@@ -50,6 +51,7 @@ class FileList {
     void setNonExistent();
     void setExists();
     void setFilled();
+    void setFailed();
     std::map<std::string, File *>::iterator begin();
     std::map<std::string, File *>::iterator end();
     std::map<std::string, File *>::const_iterator begin() const;

@@ -530,7 +530,7 @@ void Engine::refreshScoreBoard() {
           FileList * fls = itfls->second;
           FileList * fld = srd->getFileListForPath(itfls->first);
           if (fld != NULL) {
-            if (fld->getState() == FILELIST_UNKNOWN || fld->getState() == FILELIST_EXISTS) continue;
+            if (fld->getState() != FILELIST_LISTED && fld->getState() != FILELIST_NONEXISTENT) continue;
             std::map<std::string, File *>::const_iterator itf;
             for (itf = fls->begin(); itf != fls->end(); itf++) {
               File * f = itf->second;

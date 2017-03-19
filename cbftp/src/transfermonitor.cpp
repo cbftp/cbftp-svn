@@ -563,6 +563,12 @@ void TransferMonitor::reset() {
   timestamp = 0;
   startstamp = 0;
   partialcompletestamp = 0;
+  rawbufqueue.clear();
+}
+
+bool TransferMonitor::willFail() const {
+  return status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET ||
+         status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE;
 }
 
 void TransferMonitor::transferFailed(const Pointer<TransferStatus> & ts, TransferError err) {
@@ -590,6 +596,15 @@ void TransferMonitor::transferFailed(const Pointer<TransferStatus> & ts, Transfe
 
 void TransferMonitor::newRawBufferLine(const std::pair<std::string, std::string> & line) {
   if (!!ts) {
+    if (rawbufqueue.size()) {
+      for (std::list<std::pair<std::string, std::string> >::const_iterator it = rawbufqueue.begin(); it != rawbufqueue.end(); it++) {
+        ts->addLogLine(it->first + " " + it->second);
+      }
+      rawbufqueue.clear();
+    }
     ts->addLogLine(line.first + " " + line.second);
+  }
+  else {
+    rawbufqueue.push_back(line);
   }
 }

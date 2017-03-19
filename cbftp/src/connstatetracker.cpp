@@ -101,7 +101,6 @@ void ConnStateTracker::setTransfer(const std::string & file, bool fxp, bool pass
   util::assert(tm);
   this->transfer = true;
   this->initialized = false;
-  this->aborted = false;
   this->file = file;
   this->fxp = fxp;
   this->passive = passive;
@@ -241,6 +240,7 @@ void ConnStateTracker::lockForTransfer(TransferMonitor * tm, FileList * fl, bool
   use();
   this->tm = tm;
   this->fl = fl;
+  aborted = false;
   transferlocked = true;
   type = download ? CST_DOWNLOAD : CST_UPLOAD;
 }

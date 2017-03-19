@@ -147,6 +147,8 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void clearConnectors();
     void rawBufWrite(const std::string &);
     void rawBufWriteLine(const std::string &);
+    void doCWD(const Path &, FileList *, CommandOwner *);
+    void doMKD(const Path &, FileList *, CommandOwner *);
   public:
     int getId() const;
     void setId(int);
@@ -180,9 +182,11 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void doPASV();
     void doPORT(const std::string &, int);
     void doCWD(const Path &);
-    void doCWD(const Path &, CommandOwner *);
+    void doCWD(FileList *);
+    void doCWD(FileList *, CommandOwner *);
     void doMKD(const Path &);
-    void doMKD(const Path &, CommandOwner *);
+    void doMKD(FileList *);
+    void doMKD(FileList *, CommandOwner *);
     void doPRETRETR(const std::string &);
     void doRETR(const std::string &);
     void doPRETSTOR(const std::string &);
@@ -206,7 +210,7 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     const Path & getMKDCWDTargetSection() const;
     const Path & getMKDCWDTargetPath() const;
     void finishMKDCWDTarget();
-    std::list<std::string> * getMKDSubdirs();
+    const std::list<std::string> & getMKDSubdirs();
     RawBuffer * getRawBuffer() const;
     static bool parseData(char *, unsigned int, char **, unsigned int &, unsigned int &, int &);
     void FDData(int, char *, unsigned int);
