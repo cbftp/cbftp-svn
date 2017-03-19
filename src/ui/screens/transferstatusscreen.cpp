@@ -6,6 +6,7 @@
 #include "../menuselectoptionnumarrow.h"
 #include "../menuselectoptiontextbutton.h"
 #include "../menuselectoptionelement.h"
+#include "../misc.h"
 
 #include "../../transferstatus.h"
 #include "../../util.h"
@@ -21,6 +22,8 @@ TransferStatusScreen::~TransferStatusScreen() {
 void TransferStatusScreen::initialize(unsigned int row, unsigned int col, Pointer<TransferStatus> ts) {
   this->ts = ts;
   autoupdate = true;
+  firstdraw = true;
+  currentviewspan = 0;
   init(row, col);
 }
 
@@ -101,9 +104,24 @@ void TransferStatusScreen::redraw() {
   ui->printStr(y, 48 + progress.length(), "] " + util::int2Str(progresspercent) + "%");
   ++y;
   ++y;
-  for (std::list<std::string>::const_iterator it = ts->getLogLines().begin(); it != ts->getLogLines().end() && y < row; it++) {
-    ui->printStr(y++, 1, *it);
+  logstart = y;
+  unsigned int totalspan = ts->getLogLines().size();
+  unsigned int i = 0;
+  if (row > logstart && row - logstart < totalspan) {
+    if (firstdraw || currentviewspan > totalspan - (row - logstart)) {
+      currentviewspan = totalspan - (row - logstart);
+    }
   }
+  if (firstdraw) {
+    firstdraw = false;
+  }
+  for (std::list<std::string>::const_iterator it = ts->getLogLines().begin(); it != ts->getLogLines().end() && y < row; it++, i++) {
+    if (i >= currentviewspan) {
+      ui->printStr(y++, 1, *it);
+    }
+  }
+
+  printSlider(ui, row, logstart, col - 1, totalspan, currentviewspan);
 }
 
 void TransferStatusScreen::update() {
@@ -111,18 +129,71 @@ void TransferStatusScreen::update() {
 }
 
 bool TransferStatusScreen::keyPressed(unsigned int ch) {
+  unsigned int totalspan = ts->getLogLines().size();
+  unsigned int rowspan = row - logstart;
   switch (ch) {
     case 'c':
     case 10:
     case 27: // esc
       ui->returnToLast();
       return true;
+    case KEY_UP:
+      if (currentviewspan < 2) {
+        currentviewspan = 0;
+      }
+      else {
+        currentviewspan -= 2;
+      }
+      ui->update();
+      return true;
+    case KEY_DOWN:
+      if (rowspan < totalspan) {
+        if (currentviewspan < totalspan - rowspan) {
+          currentviewspan += 2;
+        }
+        if (currentviewspan > totalspan - rowspan) {
+          currentviewspan = totalspan - rowspan;
+        }
+      }
+      if (rowspan >= totalspan) {
+        currentviewspan = 0;
+      }
+      ui->update();
+      return true;
+    case KEY_PPAGE:
+      if (currentviewspan < rowspan * 0.5) {
+        currentviewspan = 0;
+      }
+      else {
+        currentviewspan -= rowspan * 0.5;
+      }
+      ui->update();
+      return true;
+    case KEY_NPAGE:
+      if (rowspan * 1.5 < totalspan && currentviewspan < totalspan - rowspan * 1.5) {
+        currentviewspan += rowspan * 0.5;
+      }
+      else if (totalspan > rowspan) {
+        currentviewspan = totalspan - rowspan;
+      }
+      ui->update();
+      return true;
+    case KEY_HOME:
+      currentviewspan = 0;
+      ui->update();
+      return true;
+    case KEY_END:
+      if (totalspan > rowspan) {
+        currentviewspan = totalspan - rowspan;
+      }
+      ui->update();
+      return true;
   }
   return false;
 }
 
 std::string TransferStatusScreen::getLegendText() const {
-  return "[c/Enter/Esc] Return";
+  return "[c/Enter/Esc] Return - [Up/Down/Pgup/Pgdn/Home/End] Navigate log";
 }
 
 std::string TransferStatusScreen::getInfoLabel() const {

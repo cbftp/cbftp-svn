@@ -32,4 +32,7 @@ private:
   std::string defaultlegendtext;
   std::string currentlegendtext;
   std::string abortedlegendtext;
+  unsigned int currentviewspan;
+  unsigned int logstart;
+  bool firstdraw;
 };
