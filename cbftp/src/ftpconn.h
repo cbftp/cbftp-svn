@@ -36,6 +36,7 @@ enum FTPConnState {
   STATE_PASS_LOGINKILL,
   STATE_WIPE,
   STATE_DELE,
+  STATE_RMD,
   STATE_NUKE,
   STATE_LIST,
   STATE_PRET_LIST,
@@ -132,6 +133,7 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void QUITResponse();
     void WIPEResponse();
     void DELEResponse();
+    void RMDResponse();
     void NUKEResponse();
     void LISTResponse();
     void LISTComplete();
@@ -170,6 +172,7 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void doWipe(const Path &, bool);
     void doNuke(const Path &, int, const std::string &);
     void doDELE(const Path &);
+    void doRMD(const Path &);
     void doSTAT();
     void doSTAT(CommandOwner *, FileList *);
     void doLIST();

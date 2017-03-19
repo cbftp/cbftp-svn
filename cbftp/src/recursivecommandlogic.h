@@ -4,33 +4,39 @@
 #include <map>
 #include <list>
 #include <vector>
+#include <utility>
 
 #include "path.h"
 
 class FileList;
 
-#define RCL_DELETE 0
-#define RCL_DELETEOWN 1
-#define RCL_TRANSFER 2
+enum RecursiveCommandType {
+  RCL_DELETE,
+  RCL_DELETEOWN,
+  RCL_TRANSFER
+};
 
-#define RCL_ACTION_LIST 1354
-#define RCL_ACTION_CWD 1355
-#define RCL_ACTION_DELETE 1356
-#define RCL_ACTION_NOOP 1357
+enum RecursiveCommandLogicAction {
+  RCL_ACTION_LIST,
+  RCL_ACTION_CWD,
+  RCL_ACTION_DELETE,
+  RCL_ACTION_DELDIR,
+  RCL_ACTION_NOOP,
+};
 
 class RecursiveCommandLogic {
 private:
-  int mode;
+  RecursiveCommandType mode;
   bool active;
   Path basepath;
   Path target;
   std::list<Path> wantedlists;
-  std::vector<Path> deletefiles;
+  std::vector<std::pair<Path, bool> > deletefiles;
   bool listtarget;
   Path listtargetpath;
 public:
   RecursiveCommandLogic();
-  void initialize(int, const Path &);
+  void initialize(RecursiveCommandType, const Path &);
   bool isActive() const;
   int getAction(const Path &, Path &);
   void addFileList(FileList *);

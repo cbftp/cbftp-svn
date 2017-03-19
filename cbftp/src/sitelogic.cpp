@@ -234,7 +234,7 @@ bool SiteLogic::setPathExists(int id, int exists, bool refreshtime) {
   return false;
 }
 
-bool SiteLogic::handleCommandDele(int id, bool success) {
+bool SiteLogic::handleCommandDelete(int id, bool success) {
   if (connstatetracker[id].hasRequest()) {
     int type = connstatetracker[id].getRequest()->requestType();
     if (type == REQ_DEL) {
@@ -403,7 +403,8 @@ void SiteLogic::commandSuccess(int id) {
       }
       break;
     case STATE_DELE:
-      if (handleCommandDele(id, true)) {
+    case STATE_RMD:
+      if (handleCommandDelete(id, true)) {
         return;
       }
       break;
@@ -585,7 +586,8 @@ void SiteLogic::commandFail(int id, int failuretype) {
       handleConnection(id);
       return;
     case STATE_DELE:
-      if (!handleCommandDele(id, false)) {
+    case STATE_RMD:
+      if (!handleCommandDelete(id, false)) {
         handleConnection(id);
       }
       return;
@@ -1044,6 +1046,9 @@ void SiteLogic::handleRecursiveLogic(int id, FileList * fl) {
       break;
     case RCL_ACTION_DELETE:
       conns[id]->doDELE(actiontarget);
+      break;
+    case RCL_ACTION_DELDIR:
+      conns[id]->doRMD(actiontarget);
       break;
     case RCL_ACTION_NOOP:
       if (connstatetracker[id].hasRequest()) {
