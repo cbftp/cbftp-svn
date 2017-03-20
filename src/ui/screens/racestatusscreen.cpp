@@ -405,7 +405,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       return true;
     case 'D':
       if (race->getStatus() != RACE_STATUS_RUNNING) {
-
+        deleteFiles(true);
       }
       else {
         Pointer<MenuSelectOptionTextButton> msotb = mso.getElement(mso.getSelectionPointer());
@@ -415,7 +415,6 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
           ui->goConfirmation("Do you really want to remove " + removesite + " from the race and delete all files?");
         }
       }
-      deleteFiles(true);
       return true;
     case 'A':
     {
