@@ -86,9 +86,10 @@ void RecursiveCommandLogic::addFileList(FileList * fl) {
       wantedlists.push_back(path / it->first);
     }
     else {
-      if (mode == RCL_DELETEOWN && it->second->getOwner() == user) {
-        deletefiles.push_back(std::pair<Path, bool>(path / it->first, false));
+      if (mode == RCL_DELETEOWN && it->second->getOwner() != user) {
+        continue;
       }
+      deletefiles.push_back(std::pair<Path, bool>(path / it->first, false));
     }
   }
   if (!wantedlists.size()) {
