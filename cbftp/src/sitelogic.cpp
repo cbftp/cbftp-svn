@@ -1093,22 +1093,12 @@ void SiteLogic::refreshChangePath(int id, SiteRace * race, bool refresh) {
   std::string subpath = race->getRelevantSubPath();
   Path targetpath = race->getPath() / subpath;
   FileList * fl = race->getFileListForFullPath(this, targetpath);
-  FileListState state = fl->getState();
   if (targetpath != currentpath) {
-    if (site->getAggressiveMkdir() &&
-        (!site->isAffiliated(race->getGroup()) || race->getProfile() == SPREAD_DISTRIBUTE))
-    {
-      conns[id]->setMKDCWDTarget(race->getSection(), Path(race->getRelease()) / subpath);
-      if (state == FILELIST_NONEXISTENT) {
-        conns[id]->doMKD(fl, race);
-        return;
-      }
-    }
     conns[id]->doCWD(fl, race);
   }
   else {
     if (refresh) {
-      getFileListConn(id, race, race->getFileListForFullPath(this, currentpath));
+      getFileListConn(id, race, fl);
     }
   }
 }

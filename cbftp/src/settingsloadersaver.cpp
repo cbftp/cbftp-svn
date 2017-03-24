@@ -344,9 +344,6 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("excepttargetsite")) {
       excepttargets.push_back(std::pair<std::string, std::string>(name, value));
     }
-    else if (!setting.compare("aggressivemkdir")) {
-      if (!value.compare("true")) site->setAggressiveMkdir(true);
-    }
     else if (!setting.compare("skiplistentry")) {
       loadSkipListEntry((SkipList *)&site->getSkipList(), value);
     }
@@ -562,9 +559,6 @@ void SettingsLoaderSaver::saveSettings() {
       }
       for (sit4 = site->exceptTargetSitesBegin(); sit4 != site->exceptTargetSitesEnd(); sit4++) {
         dfh->addOutputLine(filetag, name + "$excepttargetsite=" + (*sit4)->getName());
-      }
-      if (site->getAggressiveMkdir()) {
-        dfh->addOutputLine(filetag, name + "$aggressivemkdir=true");
       }
       addSkipList((SkipList *)&site->getSkipList(), filetag, name + "$skiplistentry=");
     }
