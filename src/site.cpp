@@ -31,7 +31,6 @@ Site::Site(const std::string & name) :
   proxytype(SITE_PROXY_GLOBAL),
   transfersourcepolicy(SITE_TRANSFER_POLICY_ALLOW),
   transfertargetpolicy(SITE_TRANSFER_POLICY_ALLOW),
-  aggressivemkdir(false),
   skiplist(global->getSkipList())
 {
   addresses.push_back(std::pair<std::string, std::string>("ftp.sunet.se", "21"));
@@ -248,14 +247,6 @@ void Site::setBrokenPASV(bool val) {
 
 std::string Site::getName() const {
   return name;
-}
-
-bool Site::getAggressiveMkdir() const {
-  return aggressivemkdir;
-}
-
-void Site::setAggressiveMkdir(bool aggressive) {
-  aggressivemkdir = aggressive;
 }
 
 const Path Site::getSectionPath(const std::string & sectionname) const {

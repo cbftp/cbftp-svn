@@ -66,7 +66,6 @@ private:
   std::string proxyname;
   int transfersourcepolicy;
   int transfertargetpolicy;
-  bool aggressivemkdir;
   SkipList skiplist;
 public:
   Site();
@@ -122,7 +121,6 @@ public:
   std::string getPass() const;
   int getTransferSourcePolicy() const;
   int getTransferTargetPolicy() const;
-  bool getAggressiveMkdir() const;
   SkipList & getSkipList();
   void setName(const std::string &);
   void setAddresses(std::string);
@@ -155,7 +153,6 @@ public:
   void removeExceptSite(const Pointer<Site> &);
   void clearExceptSites();
   bool isAllowedTargetSite(const Pointer<Site> &) const;
-  void setAggressiveMkdir(bool);
   std::set<std::string>::const_iterator affilsBegin() const;
   std::set<std::string>::const_iterator affilsEnd() const;
   std::set<Pointer<Site> >::const_iterator exceptSourceSitesBegin() const;
