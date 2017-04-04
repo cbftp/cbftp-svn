@@ -70,7 +70,7 @@ void SkipListScreen::initialize() {
     addx = 1;
   }
   base.addTextButtonNoContent(y++, addx, "add", "<Add pattern>");
-  testpattern = base.addStringField(y, 1, "testpattern", "Test pattern:", "", false, 16, 64);
+  testpattern = base.addStringField(y, 1, "testpattern", "Test pattern:", "", false, 16, 256);
   testtype = base.addTextArrow(y, 34, "testtype", "Test type:");
   testtype->addOption("File", 0);
   testtype->addOption("Dir", 1);
