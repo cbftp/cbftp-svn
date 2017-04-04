@@ -171,7 +171,7 @@ bool TransferJobStatusScreen::keyPressed(unsigned int ch) {
       ui->returnToLast();
       return true;
     case 10:
-      if (!transferjob->isAborted()) {
+      if (!transferjob->isDone()) {
         bool activation = mso.activateSelected();
         if (activation) {
           active = true;
@@ -183,7 +183,7 @@ bool TransferJobStatusScreen::keyPressed(unsigned int ch) {
       }
       return true;
     case 'B':
-      if (!transferjob->isAborted()) {
+      if (!transferjob->isDone()) {
         ui->goConfirmation("Do you really want to abort the transfer job " + transferjob->getSrcFileName());
       }
       return true;
