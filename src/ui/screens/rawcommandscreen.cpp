@@ -6,6 +6,7 @@
 #include "../../sitelogicmanager.h"
 #include "../../globalcontext.h"
 #include "../../encoding.h"
+#include "../../site.h"
 
 #include "../ui.h"
 
@@ -16,6 +17,7 @@ RawCommandScreen::RawCommandScreen(Ui * ui) {
 }
 
 void RawCommandScreen::initialize(unsigned int row, unsigned int col, const std::string & sitename, const Path & path, const std::string & selection) {
+  sitelogic = global->getSiteLogicManager()->getSiteLogic(sitename);
   this->sitename = sitename;
   this->selection = selection;
   this->path = path;
@@ -24,12 +26,17 @@ void RawCommandScreen::initialize(unsigned int row, unsigned int col, const std:
     hasselection = true;
   }
   expectbackendpush = true;
-  sitelogic = global->getSiteLogicManager()->getSiteLogic(sitename);
+
   this->rawbuf = sitelogic->getRawCommandBuffer();
   rawbuf->uiWatching(true);
   readfromcopy = false;
   copyreadpos = 0;
   init(row, col);
+}
+
+void RawCommandScreen::initialize(unsigned int row, unsigned int col, const std::string & sitename) {
+  Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(sitename);
+  initialize(row, col, sitename, sl->getSite()->getBasePath(), "");
 }
 
 void RawCommandScreen::redraw() {

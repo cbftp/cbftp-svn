@@ -673,16 +673,17 @@ void Ui::printChar(WINDOW * window, unsigned int row, unsigned int col, unsigned
   }
 }
 
-void Ui::goRawCommand(const std::string & command) {
-  goRawCommand(command, "/");
+void Ui::goRawCommand(const std::string & site) {
+  rawcommandscreen->initialize(mainrow, maincol, site);
+  switchToWindow(rawcommandscreen);
 }
 
-void Ui::goRawCommand(const std::string & command, const Path & path) {
-  goRawCommand(command, path, "");
+void Ui::goRawCommand(const std::string & site, const Path & path) {
+  goRawCommand(site, path, "");
 }
 
-void Ui::goRawCommand(const std::string & command, const Path & path, const std::string & arg) {
-  rawcommandscreen->initialize(mainrow, maincol, command, path, arg);
+void Ui::goRawCommand(const std::string & site, const Path & path, const std::string & arg) {
+  rawcommandscreen->initialize(mainrow, maincol, site, path, arg);
   switchToWindow(rawcommandscreen);
 }
 

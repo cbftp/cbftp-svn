@@ -1184,7 +1184,7 @@ int SiteLogic::requestFileList(const Path & path) {
 }
 
 int SiteLogic::requestRawCommand(const std::string & command) {
-  return requestRawCommand("/", command, false);
+  return requestRawCommand(site->getBasePath(), command, false);
 }
 
 int SiteLogic::requestRawCommand(const Path & path, const std::string & command, bool care) {
