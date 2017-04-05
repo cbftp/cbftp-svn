@@ -15,6 +15,7 @@ class RawCommandScreen : public UIWindow {
 public:
   RawCommandScreen(Ui * ui);
   void initialize(unsigned int, unsigned int, const std::string &, const Path &, const std::string &);
+  void initialize(unsigned int, unsigned int, const std::string &);
   void redraw();
   void update();
   bool keyPressed(unsigned int);
