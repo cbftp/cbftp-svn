@@ -865,8 +865,7 @@ void Engine::transferJobComplete(Pointer<TransferJob> tj) {
       break;
     }
   }
-  std::string status = tj->isTimedOut() ? "timed out" : "complete";
-  global->getEventLog()->log("Engine", tj->typeString() + " job " + status + ": " + tj->getSrcFileName());
+  global->getEventLog()->log("Engine", tj->typeString() + " job complete: " + tj->getSrcFileName());
 }
 
 unsigned short Engine::calculateScore(File * f, Pointer<Race> & itr, FileList * fls, SiteRace * srs,
