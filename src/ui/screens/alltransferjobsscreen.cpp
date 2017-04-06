@@ -223,9 +223,6 @@ void AllTransferJobsScreen::addJobDetails(unsigned int y, MenuSelectOption & mso
   if (tj->isAborted()) {
     status = "abor";
   }
-  if (tj->isTimedOut()) {
-    status = "time";
-  }
   std::string type = "FXP";
   switch (tj->getType()) {
     case TRANSFERJOB_DOWNLOAD:

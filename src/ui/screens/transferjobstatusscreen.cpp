@@ -55,9 +55,6 @@ void TransferJobStatusScreen::redraw() {
   if (transferjob->isAborted()) {
     status = "Aborted";
   }
-  if (transferjob->isTimedOut()) {
-    status = "Timeout";
-  }
   ui->printStr(y, 60, std::string("Status: ") + status);
   y++;
   ui->printStr(y, 1, "Size: " + util::parseSize(transferjob->sizeProgress()) +

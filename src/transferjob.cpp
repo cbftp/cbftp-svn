@@ -15,7 +15,6 @@
 #include "filesystem.h"
 
 #define MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP 3
-#define TRANSFERJOB_TIMEOUT_MS 30000
 
 TransferJob::TransferJob(unsigned int id, const Pointer<SiteLogic> & sl, std::string srcfile, FileList * filelist, const Path & path, std::string dstfile) :
       src(sl),
@@ -162,7 +161,6 @@ void TransferJob::init() {
   listsrefreshed = false;
   initialized = false;
   aborted = false;
-  timedout = false;
   slots = 1;
   srclisttarget = NULL;
   dstlisttarget = NULL;
@@ -456,10 +454,6 @@ void TransferJob::updateStatus() {
   if (almostdone && !ongoingtransfers && filesprogress >= filestotal) {
     setDone();
   }
-  if (!done && !ongoingtransfers && !pendingtransfers.size() && idletime >= TRANSFERJOB_TIMEOUT_MS) {
-    timedout = true;
-    setDone();
-  }
 }
 
 int TransferJob::getProgress() const {
@@ -588,10 +582,6 @@ void TransferJob::clearExisting() {
 
 bool TransferJob::isAborted() const {
   return aborted;
-}
-
-bool TransferJob::isTimedOut() const {
-  return timedout;
 }
 
 unsigned int TransferJob::getId() const {
