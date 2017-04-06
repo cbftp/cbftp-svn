@@ -262,10 +262,16 @@ bool Site::hasSection(const std::string & sectionname) const {
 }
 
 std::string Site::getAddress() const {
+  if (!addresses.size()) {
+    return "";
+  }
   return addresses.front().first;
 }
 
 std::string Site::getPort() const {
+  if (!addresses.size()) {
+    return "0";
+  }
   return addresses.front().second;
 }
 
