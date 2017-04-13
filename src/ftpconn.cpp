@@ -69,7 +69,9 @@ FTPConn::FTPConn(SiteLogic * sl, int id) :
   sscnmode(false),
   mkdtarget(false),
   rawbuf(new RawBuffer(RAWBUFMAXLEN, site->getName(), util::int2Str(id))),
-  aggregatedrawbuf(sl->getAggregatedRawBuffer()) {
+  aggregatedrawbuf(sl->getAggregatedRawBuffer()),
+  xduperun(false),
+  typeirun(false) {
 
 }
 
@@ -106,6 +108,8 @@ void FTPConn::login() {
   databufpos = 0;
   processing = true;
   allconnectattempted = false;
+  xduperun = false;
+  typeirun = false;
   currentpath = "/";
   state = STATE_CONNECTING;
   connectors.push_back(makePointer<FTPConnect>(nextconnectorid++, this, site->getAddress(), site->getPort(), getProxy(), true));
@@ -215,7 +219,7 @@ bool FTPConn::parseData(char * data, unsigned int datalen, char ** databuf, unsi
 }
 
 void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
-  if (state != STATE_STAT) {
+  if (state != STATE_STAT && state != STATE_STOR && state != STATE_PRET_STOR) {
     rawBufWrite(std::string(data, datalen));
   }
   if (parseData(data, datalen, &databuf, databuflen, databufpos, databufcode)) {
@@ -324,6 +328,9 @@ void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
         break;
       case STATE_TYPEI: // awaiting TYPE I response
         TYPEIResponse();
+        break;
+      case STATE_XDUPE: // awaiting XDUPE response
+        XDUPEResponse();
         break;
       default: // nothing expected at this time, discard
         break;
@@ -496,14 +503,7 @@ void FTPConn::PASSResponse() {
   processing = false;
   this->status = "connected";
   if (databufcode == 230) {
-    if (site->forceBinaryMode()) {
-      state = STATE_TYPEI;
-      doTYPEI();
-    }
-    else {
-      state = STATE_PASS;
-      sl->commandSuccess(id);
-    }
+    finishLogin();
   }
   else {
     bool sitefull = false;
@@ -534,14 +534,34 @@ void FTPConn::PASSResponse() {
   }
 }
 
+void FTPConn::finishLogin() {
+  if (site->forceBinaryMode() && !typeirun) {
+    doTYPEI();
+  }
+  else if (site->useXDUPE() && !xduperun) {
+    doXDUPE();
+  }
+  else {
+    state = STATE_LOGIN;
+    sl->commandSuccess(id);
+  }
+}
+
 void FTPConn::TYPEIResponse() {
   processing = false;
   if (databufcode == 200) {
-    sl->commandSuccess(id);
+    typeirun = true;
+    finishLogin();
   }
   else {
     sl->commandFail(id);
   }
+}
+
+void FTPConn::XDUPEResponse() {
+  processing = false;
+  xduperun = true;
+  finishLogin();
 }
 
 void FTPConn::reconnect() {
@@ -761,6 +781,11 @@ void FTPConn::doPBSZ0() {
 void FTPConn::doTYPEI() {
   state = STATE_TYPEI;
   sendEcho("TYPE I");
+}
+
+void FTPConn::doXDUPE() {
+  state = STATE_XDUPE;
+  sendEcho("SITE XDUPE 3");
 }
 
 void FTPConn::PBSZ0Response() {
@@ -983,9 +1008,12 @@ void FTPConn::doPRETSTOR(const std::string & file) {
 void FTPConn::PRETSTORResponse() {
   processing = false;
   if (databufcode == 200) {
+    rawBufWrite(std::string(databuf, databufpos));
     sl->commandSuccess(id);
   }
   else if (databufcode == 553) {
+    parseXDUPEData();
+    rawBufWrite(std::string(databuf, databufpos));
     sl->commandFail(id, FAIL_DUPE);
   }
   else {
@@ -1041,15 +1069,19 @@ void FTPConn::doSTOR(const std::string & file) {
 
 void FTPConn::STORResponse() {
   if (databufcode == 150 || databufcode == 125) {
+    rawBufWrite(std::string(databuf, databufpos));
     sl->commandSuccess(id);
     state = STATE_STOR_COMPLETE;
   }
   else {
     processing = false;
     if (databufcode == 553) {
+      parseXDUPEData();
+      rawBufWrite(std::string(databuf, databufpos));
       sl->commandFail(id, FAIL_DUPE);
     }
     else {
+      rawBufWrite(std::string(databuf, databufpos));
       sl->commandFail(id);
     }
   }
@@ -1206,6 +1238,40 @@ void FTPConn::parseFileList(char * buf, unsigned int buflen) {
   if (currentfl->getState() != FILELIST_LISTED) currentfl->setFilled();
 }
 
+void FTPConn::parseXDUPEData() {
+  xdupelist.clear();
+  char * loc = databuf;
+  int lineendpos;
+  int xdupestart = -1;
+  int xdupeend = -1;
+  while ((lineendpos = util::chrfind(loc, databuf + databufpos - loc, '\n')) != -1) {
+    int lastpos = lineendpos;
+    if (lineendpos > 0 && loc[lineendpos - 1] == '\r') {
+      --lastpos;
+    }
+    int xdupepos = util::chrstrfind(loc, lastpos, "X-DUPE: ", 8);
+    if (xdupepos != -1) {
+      if (xdupestart == -1) {
+        xdupestart = loc - databuf;
+      }
+      xdupelist.push_back(std::string(loc + xdupepos + 8, lastpos - (xdupepos + 8)));
+    }
+    else if (xdupestart != -1 && xdupeend == -1) {
+      xdupeend = loc - databuf;
+    }
+    loc += lineendpos + 1;
+  }
+  if (xdupestart != -1) {
+    if (xdupeend == -1) {
+      xdupeend = databufpos - 2;
+    }
+    memmove(databuf + xdupestart + 24, databuf + xdupeend, databufpos - xdupeend);
+    memcpy(databuf + xdupestart, "[XDUPE data retrieved]\r\n", 24);
+    databufpos -= xdupeend - xdupestart - 24;
+  }
+
+}
+
 bool FTPConn::isConnected() const {
   return state != STATE_DISCONNECTED;
 }
@@ -1226,4 +1292,8 @@ void FTPConn::setRawBufferCallback(RawBufferCallback * callback) {
 
 void FTPConn::unsetRawBufferCallback() {
   rawbuf->unsetCallback();
+}
+
+const std::list<std::string> & FTPConn::getXDUPEList() const {
+  return xdupelist;
 }

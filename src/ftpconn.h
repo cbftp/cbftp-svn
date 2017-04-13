@@ -14,6 +14,7 @@ enum FTPConnState {
   STATE_AUTH_TLS,
   STATE_USER,
   STATE_PASS,
+  STATE_LOGIN,
   STATE_STAT,
   STATE_PWD,
   STATE_PROT_P,
@@ -47,6 +48,7 @@ enum FTPConnState {
   STATE_PASV_ABORT,
   STATE_PBSZ,
   STATE_TYPEI,
+  STATE_XDUPE,
   STATE_IDLE
 };
 
@@ -109,6 +111,9 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     RawBuffer * rawbuf;
     RawBuffer * aggregatedrawbuf;
     int ticker;
+    std::list<std::string> xdupelist;
+    bool xduperun;
+    bool typeirun;
     void AUTHTLSResponse();
     void USERResponse();
     void PASSResponse();
@@ -142,6 +147,7 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void PASVAbortResponse();
     void PBSZ0Response();
     void TYPEIResponse();
+    void XDUPEResponse();
     void proxySessionInit(bool);
     void sendEcho(const std::string &);
     void connectAllAddresses();
@@ -151,6 +157,8 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void rawBufWriteLine(const std::string &);
     void doCWD(const Path &, FileList *, CommandOwner *);
     void doMKD(const Path &, FileList *, CommandOwner *);
+    void parseXDUPEData();
+    void finishLogin();
   public:
     int getId() const;
     void setId(int);
@@ -199,6 +207,7 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void abortTransferPASV();
     void doPBSZ0();
     void doTYPEI();
+    void doXDUPE();
     void doQUIT();
     void doSSLHandshake();
     void disconnect();
@@ -231,4 +240,5 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     bool isConnected() const;
     void setRawBufferCallback(RawBufferCallback *);
     void unsetRawBufferCallback();
+    const std::list<std::string> & getXDUPEList() const;
 };

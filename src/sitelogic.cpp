@@ -259,8 +259,7 @@ void SiteLogic::commandSuccess(int id) {
   int state = conns[id]->getState();
   std::list<SiteLogicRequest>::iterator it;
   switch (state) {
-    case STATE_PASS: // PASS, logged in
-    case STATE_TYPEI: // performed in chain after PASS if needed
+    case STATE_LOGIN:
       loggedin++;
       available++;
       connstatetracker[id].setLoggedIn();

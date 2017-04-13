@@ -27,4 +27,6 @@ std::list<std::string> split(const std::string &, const std::string &);
 std::list<std::string> split(const std::string &);
 std::string join(const std::list<std::string> &, const std::string &);
 std::string join(const std::list<std::string> &);
+int chrstrfind(const char *, unsigned int, const char *, unsigned int);
+int chrfind(const char *, unsigned int, char);
 }
