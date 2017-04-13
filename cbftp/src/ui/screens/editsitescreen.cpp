@@ -130,6 +130,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   if (proxytype == SITE_PROXY_USE) {
     useproxy->setOptionText(this->site->getProxy());
   }
+  mso.addCheckBox(y++, x, "xdupe", "Use XDUPE:", this->site->useXDUPE());
   mso.addTextButtonNoContent(y++, x, "skiplist", "Configure skiplist...");
   y++;
   mso.addCheckBox(y, x, "disabled", "Disabled:", this->site->getDisabled());
@@ -464,6 +465,9 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "listcommand") {
           site->setListCommand(msoe.get<MenuSelectOptionTextArrow>()->getData());
+        }
+        else if (identifier == "xdupe") {
+          site->setUseXDUPE(msoe.get<MenuSelectOptionCheckBox>()->getData());
         }
         else if (identifier == "disabled") {
           site->setDisabled(msoe.get<MenuSelectOptionCheckBox>()->getData());

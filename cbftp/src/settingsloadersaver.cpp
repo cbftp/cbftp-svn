@@ -272,6 +272,9 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("binary")) {
       if (!value.compare("true")) site->setForceBinaryMode(true);
     }
+    else if (!setting.compare("xdupe")) {
+      if (!value.compare("false")) site->setUseXDUPE(false);
+    }
     else if (!setting.compare("sslconn")) {
       if (!value.compare("false")) site->setSSL(false);
     }
@@ -528,6 +531,7 @@ void SettingsLoaderSaver::saveSettings() {
       dfh->addOutputLine(filetag, name + "$listcommand=" + util::int2Str(site->getListCommand()));
       if (site->needsPRET()) dfh->addOutputLine(filetag, name + "$pret=true");
       if (site->forceBinaryMode()) dfh->addOutputLine(filetag, name + "$binary=true");
+      if (!site->useXDUPE()) dfh->addOutputLine(filetag, name + "$xdupe=false");
       if (!site->SSL()) dfh->addOutputLine(filetag, name + "$sslconn=false");
       if (site->getDisabled()) dfh->addOutputLine(filetag, name + "$disabled=true");
       if (!site->getAllowUpload()) dfh->addOutputLine(filetag, name + "$allowupload=false");

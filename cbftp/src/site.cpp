@@ -28,6 +28,7 @@ Site::Site(const std::string & name) :
   allowupload(true),
   allowdownload(true),
   priority(SITE_PRIORITY_NORMAL),
+  xdupe(true),
   proxytype(SITE_PROXY_GLOBAL),
   transfersourcepolicy(SITE_TRANSFER_POLICY_ALLOW),
   transfertargetpolicy(SITE_TRANSFER_POLICY_ALLOW),
@@ -310,6 +311,10 @@ int Site::getTransferTargetPolicy() const {
   return transfertargetpolicy;
 }
 
+bool Site::useXDUPE() const {
+  return xdupe;
+}
+
 SkipList & Site::getSkipList() {
   return skiplist;
 }
@@ -420,6 +425,10 @@ void Site::setTransferSourcePolicy(int policy) {
 
 void Site::setTransferTargetPolicy(int policy) {
   transfertargetpolicy = policy;
+}
+
+void Site::setUseXDUPE(bool xdupe) {
+  this->xdupe = xdupe;
 }
 
 void Site::addAllowedSourceSite(const Pointer<Site> & site) {

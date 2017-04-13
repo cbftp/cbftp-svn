@@ -55,6 +55,7 @@ private:
   bool allowupload;
   bool allowdownload;
   int priority;
+  bool xdupe;
   std::map<std::string, Path> sections;
   std::map<std::string, int> avgspeed;
   std::map<std::string, std::pair<int, unsigned long long int> > avgspeedsamples;
@@ -121,6 +122,7 @@ public:
   std::string getPass() const;
   int getTransferSourcePolicy() const;
   int getTransferTargetPolicy() const;
+  bool useXDUPE() const;
   SkipList & getSkipList();
   void setName(const std::string &);
   void setAddresses(std::string);
@@ -144,6 +146,7 @@ public:
   void clearAffils();
   void setTransferSourcePolicy(int);
   void setTransferTargetPolicy(int);
+  void setUseXDUPE(bool);
   void addAllowedSourceSite(const Pointer<Site> &);
   void addBlockedSourceSite(const Pointer<Site> &);
   void addExceptSourceSite(const Pointer<Site> &);

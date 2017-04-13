@@ -269,4 +269,32 @@ std::string join(const std::list<std::string> & in) {
   return join(in, " ");
 }
 
+int chrstrfind(const char * buf, unsigned int buflen, const char * pattern, unsigned int patternlen) {
+  unsigned int matchedchars = 0;
+  for (unsigned int i = 0; i < buflen;) {
+    if (buf[i + matchedchars] == pattern[matchedchars]) {
+      ++matchedchars;
+      if (matchedchars == patternlen) {
+        return i;
+      }
+    }
+    else {
+      if (matchedchars) {
+        matchedchars = 0;
+      }
+      ++i;
+    }
+  }
+  return -1;
+}
+
+int chrfind(const char * buf, unsigned int buflen, char target) {
+  for (unsigned int i = 0; i < buflen; i++) {
+    if (buf[i] == target) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 }

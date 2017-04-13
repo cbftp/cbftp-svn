@@ -444,7 +444,15 @@ void TransferMonitor::targetError(TransferError err) {
                status == TM_STATUS_TRANSFERRING ||
                status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE);
   if (fld != NULL) {
-    fld->removeFile(dfile);
+    if  (err != TM_ERR_DUPE) {
+      fld->removeFile(dfile);
+    }
+    else {
+      const std::list<std::string> & xdupelist = sld->getConn(dst)->getXDUPEList();
+      for (std::list<std::string>::const_iterator it = xdupelist.begin(); it != xdupelist.end(); it++) {
+        fld->touchFile(*it, "XDUPE");
+      }
+    }
   }
   partialcompletestamp = timestamp;
   if (status == TM_STATUS_AWAITING_PASSIVE || status == TM_STATUS_AWAITING_ACTIVE) {

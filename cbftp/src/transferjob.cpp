@@ -578,6 +578,7 @@ void TransferJob::abort() {
 
 void TransferJob::clearExisting() {
   existingtargets.clear();
+  pendingtransfers.clear();
 }
 
 bool TransferJob::isAborted() const {
@@ -634,7 +635,9 @@ void TransferJob::transferFailed(const Pointer<TransferStatus> & ts, int) {
     filelistsrefreshed[ts->getSourceFileList()] = false;
   }
   if (type == TRANSFERJOB_UPLOAD || type == TRANSFERJOB_FXP) {
-    filelistsrefreshed[ts->getTargetFileList()] = false;
+    if (!dst->getSite()->useXDUPE()) {
+      filelistsrefreshed[ts->getTargetFileList()] = false;
+    }
   }
   addTransferAttempt(ts);
 }
