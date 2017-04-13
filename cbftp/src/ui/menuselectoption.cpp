@@ -42,12 +42,12 @@ bool MenuSelectOption::navigate(int dir) {
     }
     int row = options[i]->getRow();
     int col = options[i]->getCol();
-    int distance = abs(row - crow) + abs(col - ccol) * 2;
+    int distance = abs(row - crow) * 30 + abs(col - ccol);
     if ((((dir == DOWN && row > crow) || (dir == UP && row < crow)) &&
          abs(col - ccol) <= MAX_DIFF_LR) ||
         (((dir == LEFT && col < ccol) || (dir == RIGHT && col > ccol)) &&
          abs(row - crow) <= MAX_DIFF_UD))
-      {
+    {
       if (distance < closest || closest == -1) {
         closest = distance;
         closestelem = i;
