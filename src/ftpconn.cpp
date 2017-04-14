@@ -157,8 +157,8 @@ void FTPConn::FDDisconnected(int sockid) {
   }
 }
 
-void FTPConn::FDSSLSuccess(int sockid) {
-  printCipher(sockid);
+void FTPConn::FDSSLSuccess(int sockid, const std::string & cipher) {
+  printCipher(cipher);
   if (state == STATE_AUTH_TLS) {
     doUSER(false);
   }
@@ -171,8 +171,8 @@ void FTPConn::FDSSLFail(int sockid) {
 
 }
 
-void FTPConn::printCipher(int sockid) {
-  rawBufWriteLine("[Cipher: " + iom->getCipher(sockid) + "]");
+void FTPConn::printCipher(const std::string & cipher) {
+  rawBufWriteLine("[Cipher: " + cipher + "]");
 }
 
 bool FTPConn::parseData(char * data, unsigned int datalen, char ** databuf, unsigned int & databuflen, unsigned int & databufpos, int & databufcode) {

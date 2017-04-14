@@ -58,7 +58,7 @@ FTPConnect::~FTPConnect() {
   free(databuf);
 }
 
-void FTPConnect::FDConnecting(int sockid, std::string addr) {
+void FTPConnect::FDConnecting(int sockid, const std::string & addr) {
   if (!engaged) {
     return;
   }
@@ -111,7 +111,7 @@ void FTPConnect::FDData(int sockid, char * data, unsigned int datalen) {
   }
 }
 
-void FTPConnect::FDFail(int sockid, std::string error) {
+void FTPConnect::FDFail(int sockid, const std::string & error) {
   if (engaged) {
     engaged = false;
     owner->ftpConnectInfo(id, "[" + error + "]");

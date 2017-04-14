@@ -227,9 +227,9 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     static bool parseData(char *, unsigned int, char **, unsigned int &, unsigned int &, int &);
     void FDData(int, char *, unsigned int);
     void FDDisconnected(int);
-    void FDSSLSuccess(int);
+    void FDSSLSuccess(int, const std::string &);
     void FDSSLFail(int);
-    void printCipher(int);
+    void printCipher(const std::string &);
     void ftpConnectInfo(int, const std::string &);
     void ftpConnectSuccess(int);
     void ftpConnectFail(int);

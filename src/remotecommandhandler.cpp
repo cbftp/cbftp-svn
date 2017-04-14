@@ -66,7 +66,7 @@ std::string RemoteCommandHandler::getPassword() const {
   return password;
 }
 
-void RemoteCommandHandler::setPassword(std::string newpass) {
+void RemoteCommandHandler::setPassword(const std::string & newpass) {
   password = newpass;
 }
 
@@ -291,7 +291,7 @@ void RemoteCommandHandler::parseRace(const std::string & message, bool autostart
   }
 }
 
-void RemoteCommandHandler::FDFail(int sockid, std::string message) {
+void RemoteCommandHandler::FDFail(int sockid, const std::string & message) {
   global->getEventLog()->log("RemoteCommandHandler", "UDP binding on port " +
       util::int2Str(getUDPPort()) + " failed: " + message);
 }

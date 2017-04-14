@@ -43,7 +43,7 @@ Event::Event(EventReceiver * er, int type, int numdata, int numdata2) :
 {
 }
 
-Event::Event(EventReceiver * er, int type, int numdata, std::string strdata) :
+Event::Event(EventReceiver * er, int type, int numdata, const std::string & strdata) :
   receiver(er),
   type(type),
   numdata(numdata),

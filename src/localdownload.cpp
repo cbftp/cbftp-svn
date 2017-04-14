@@ -89,9 +89,9 @@ void LocalDownload::FDDisconnected(int sockid) {
   tm->targetComplete();
 }
 
-void LocalDownload::FDSSLSuccess(int sockid) {
-  ftpconn->printCipher(sockid);
-  tm->cipher(global->getIOManager()->getCipher(sockid));
+void LocalDownload::FDSSLSuccess(int sockid, const std::string & cipher) {
+  ftpconn->printCipher(cipher);
+  tm->cipher(cipher);
 }
 
 void LocalDownload::FDSSLFail(int sockid) {
@@ -107,7 +107,7 @@ void LocalDownload::FDData(int sockid, char * data, unsigned int len) {
   append(data, len);
 }
 
-void LocalDownload::FDFail(int sockid, std::string error) {
+void LocalDownload::FDFail(int sockid, const std::string & error) {
   inuse = false;
   if (sockid != -1) {
     tm->targetError(TM_ERR_OTHER);

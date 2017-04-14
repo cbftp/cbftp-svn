@@ -13,10 +13,10 @@ public:
   void FDConnected(int);
   void FDDisconnected(int);
   void FDData(int, char *, unsigned int);
-  void FDSSLSuccess(int);
+  void FDSSLSuccess(int, const std::string &);
   void FDSSLFail(int);
   void FDSendComplete(int);
-  void FDFail(int, std::string);
+  void FDFail(int, const std::string &);
   unsigned long long int size() const;
 private:
   void init(TransferMonitor *, FTPConn *, const Path &, const std::string &, bool, int, bool);

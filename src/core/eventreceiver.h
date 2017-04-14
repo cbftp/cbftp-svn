@@ -8,13 +8,13 @@ public:
   virtual void tick(int);
   virtual void signal(int, int);
   virtual void FDNew(int);
-  virtual void FDConnecting(int, std::string);
+  virtual void FDConnecting(int, const std::string &);
   virtual void FDConnected(int);
   virtual void FDData(int);
   virtual void FDData(int, char *, unsigned int);
   virtual void FDDisconnected(int);
-  virtual void FDFail(int, std::string);
-  virtual void FDSSLSuccess(int);
+  virtual void FDFail(int, const std::string &);
+  virtual void FDSSLSuccess(int, const std::string &);
   virtual void FDSSLFail(int);
   virtual void FDSendComplete(int);
   virtual void asyncTaskComplete(int, void *);

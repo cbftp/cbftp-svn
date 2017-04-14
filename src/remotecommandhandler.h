@@ -32,12 +32,12 @@ public:
   bool isEnabled() const;
   int getUDPPort() const;
   std::string getPassword() const;
-  void setPassword(std::string);
+  void setPassword(const std::string &);
   void setPort(int);
   bool getNotify() const;
   void setNotify(bool);
   void setEnabled(bool);
   void FDData(int, char *, unsigned int);
-  void FDFail(int, std::string);
+  void FDFail(int, const std::string &);
   void tick(int);
 };
