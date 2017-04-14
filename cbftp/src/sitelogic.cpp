@@ -40,6 +40,7 @@
 
 #define TICKINTERVAL 50
 #define FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH 2000
+#define FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH_XDUPE 5000
 
 enum RequestType {
   REQ_FILELIST,
@@ -377,7 +378,10 @@ void SiteLogic::commandSuccess(int id) {
         transferComplete(id, false);
         FileList * fl = connstatetracker[id].getTransferFileList();
         connstatetracker[id].finishTransfer();
-        if (currtime - fl->getRefreshedTime() < FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH) {
+        int filelistreusetime = currtime - fl->getRefreshedTime();
+        if (filelistreusetime < FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH ||
+            (site->useXDUPE() && filelistreusetime < FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH_XDUPE))
+        {
           global->getEngine()->raceActionRequest();
           if (conns[id]->isProcessing() || connstatetracker[id].isTransferLocked()) {
             return;
