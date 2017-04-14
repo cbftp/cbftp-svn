@@ -103,7 +103,7 @@ class SiteLogic : public EventReceiver {
     void lockConnList(int);
     bool lockDownloadConn(FileList *, int *, TransferMonitor *);
     bool lockUploadConn(FileList *, int *, TransferMonitor *);
-    void returnConn(int);
+    void returnConn(int, bool);
     void setNumConnections(unsigned int);
     bool downloadSlotAvailable() const;
     bool uploadSlotAvailable() const;
