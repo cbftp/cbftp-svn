@@ -10,6 +10,7 @@
 #define CST_UPLOAD 982
 #define CST_LIST 983
 
+class CommandOwner;
 class SiteRace;
 class FileList;
 class TransferMonitor;
@@ -28,6 +29,7 @@ private:
   bool initialized;
   TransferMonitor * tm;
   FileList * fl;
+  FileList * listfl;
   std::string file;
   int type;
   bool passive;
@@ -47,8 +49,9 @@ private:
   int port;
   Pointer<RecursiveCommandLogic> recursivelogic;
   Pointer<SiteLogicRequest> request;
+  CommandOwner * listcommandowner;
   void setTransfer(const std::string &, bool, bool, const std::string &, int, bool);
-  void setList(TransferMonitor *, bool, const std::string &, int, bool);
+  void setList(TransferMonitor *, bool, const std::string &, int, bool, CommandOwner *, FileList *);
 public:
   ConnStateTracker();
   ~ConnStateTracker();
@@ -64,8 +67,8 @@ public:
   void setDisconnected();
   void setTransfer(const std::string &, bool, bool);
   void setTransfer(const std::string &, const std::string &, int, bool);
-  void setList(TransferMonitor *, bool);
-  void setList(TransferMonitor *, const std::string &, int, bool);
+  void setList(TransferMonitor *, bool, CommandOwner *, FileList *);
+  void setList(TransferMonitor *, const std::string &, int, bool, CommandOwner *, FileList *);
   bool hasTransfer() const;
   bool hasFileTransfer() const;
   void finishTransfer();
@@ -97,4 +100,6 @@ public:
   Pointer<RecursiveCommandLogic> getRecursiveLogic() const;
   bool transferInitialized() const;
   void initializeTransfer();
+  CommandOwner * getListCommandOwner() const;
+  FileList * getListFileList() const;
 };

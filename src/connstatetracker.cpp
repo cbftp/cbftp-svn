@@ -117,7 +117,7 @@ void ConnStateTracker::setTransfer(const std::string & file, const std::string &
   setTransfer(file, false, false, host, port, ssl);
 }
 
-void ConnStateTracker::setList(TransferMonitor * tm, bool listpassive, const std::string & host, int port, bool ssl) {
+void ConnStateTracker::setList(TransferMonitor * tm, bool listpassive, const std::string & host, int port, bool ssl, CommandOwner * co, FileList * fl) {
   util::assert(!transferlocked);
   util::assert(!listtransfer);
   util::assert(!transfer);
@@ -129,14 +129,16 @@ void ConnStateTracker::setList(TransferMonitor * tm, bool listpassive, const std
   this->listhost = host;
   this->listport = port;
   this->listssl = ssl;
+  this->listcommandowner = co;
+  this->listfl = fl;
 }
 
-void ConnStateTracker::setList(TransferMonitor * tm, bool ssl) {
-  setList(tm, true, "", 0, ssl);
+void ConnStateTracker::setList(TransferMonitor * tm, bool ssl, CommandOwner * co, FileList * fl) {
+  setList(tm, true, "", 0, ssl, co, fl);
 }
 
-void ConnStateTracker::setList(TransferMonitor * tm, const std::string & host, int port, bool ssl) {
-  setList(tm, false, host, port, ssl);
+void ConnStateTracker::setList(TransferMonitor * tm, const std::string & host, int port, bool ssl, CommandOwner * co, FileList * fl) {
+  setList(tm, false, host, port, ssl, co, fl);
 }
 
 bool ConnStateTracker::isLoggedIn() const {
@@ -299,4 +301,12 @@ void ConnStateTracker::initializeTransfer() {
   else {
     initialized = true;
   }
+}
+
+CommandOwner * ConnStateTracker::getListCommandOwner() const {
+  return listcommandowner;
+}
+
+FileList * ConnStateTracker::getListFileList() const {
+  return listfl;
 }

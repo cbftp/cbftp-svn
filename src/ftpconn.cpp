@@ -597,13 +597,17 @@ void FTPConn::prepareLIST(CommandOwner * co, FileList * filelist) {
   currentfl = filelist;
 }
 
-void FTPConn::doLIST() {
+void FTPConn::doLIST(CommandOwner * co, FileList * filelist) {
   state = STATE_LIST;
+  currentco = co;
+  currentfl = filelist;
   sendEcho("LIST");
 }
 
-void FTPConn::doLISTa() {
+void FTPConn::doLISTa(CommandOwner * co, FileList * filelist) {
   state = STATE_LIST;
+  currentco = co;
+  currentfl = filelist;
   sendEcho("LIST -a");
 }
 

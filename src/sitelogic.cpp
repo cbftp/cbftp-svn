@@ -1692,12 +1692,12 @@ void SiteLogic::prepareActiveTransfer(int id, const std::string & file, const st
 }
 
 void SiteLogic::preparePassiveList(int id, TransferMonitor * tmb, bool ssl) {
-  connstatetracker[id].setList(tmb, ssl);
+  connstatetracker[id].setList(tmb, ssl, conns[id]->currentCommandOwner(), conns[id]->currentFileList());
   initTransfer(id);
 }
 
 void SiteLogic::prepareActiveList(int id, TransferMonitor * tmb, const std::string & host, int port, bool ssl) {
-  connstatetracker[id].setList(tmb, host, port, ssl);
+  connstatetracker[id].setList(tmb, host, port, ssl, conns[id]->currentCommandOwner(), conns[id]->currentFileList());
   initTransfer(id);
 }
 
@@ -1734,11 +1734,11 @@ void SiteLogic::upload(int id) {
 }
 
 void SiteLogic::list(int id) {
-  conns[id]->doLIST();
+  conns[id]->doLIST(connstatetracker[id].getListCommandOwner(), connstatetracker[id].getListFileList());
 }
 
 void SiteLogic::listAll(int id) {
-  conns[id]->doLISTa();
+  conns[id]->doLISTa(connstatetracker[id].getListCommandOwner(), connstatetracker[id].getListFileList());
 }
 
 void SiteLogic::abortTransfer(int id) {
