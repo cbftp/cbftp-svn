@@ -630,7 +630,8 @@ void IOManager::handleTCPSSLNegotiationIn(SocketInfo & socketinfo) {
   }
   if (b_recv > 0) {
     socketinfo.type = FD_TCP_SSL;
-    wm->dispatchEventSSLSuccess(socketinfo.receiver, socketinfo.id, socketinfo.prio);
+    const char * cipher = SSLManager::getCipher(ssl);
+    wm->dispatchEventSSLSuccess(socketinfo.receiver, socketinfo.id, cipher, socketinfo.prio);
     if (socketinfo.sendqueue.size() > 0) {
       setPollWrite(socketinfo);
     }
@@ -682,7 +683,8 @@ void IOManager::handleTCPSSLNegotiationOut(SocketInfo & socketinfo) {
   }
   if (ret > 0) { // probably wont happen :)
     socketinfo.type = FD_TCP_SSL;
-    wm->dispatchEventSSLSuccess(socketinfo.receiver, socketinfo.id, socketinfo.prio);
+    const char * cipher = SSLManager::getCipher(ssl);
+    wm->dispatchEventSSLSuccess(socketinfo.receiver, socketinfo.id, cipher, socketinfo.prio);
   }
   else {
     if (!investigateSSLError(SSL_get_error(ssl, ret), socketinfo.id, ret)) {

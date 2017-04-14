@@ -74,11 +74,11 @@ void WorkManager::dispatchEventNew(EventReceiver * er, int sockid, Prio prio) {
   event.post();
 }
 
-void WorkManager::dispatchEventConnecting(EventReceiver * er, int sockid, std::string addr) {
+void WorkManager::dispatchEventConnecting(EventReceiver * er, int sockid, const std::string & addr) {
   dispatchEventConnecting(er, sockid, addr, PRIO_NORMAL);
 }
 
-void WorkManager::dispatchEventConnecting(EventReceiver * er, int sockid, std::string addr, Prio prio) {
+void WorkManager::dispatchEventConnecting(EventReceiver * er, int sockid, const std::string & addr, Prio prio) {
   eventqueues[prio]->push(Event(er, WORK_CONNECTING, sockid, addr));
   event.post();
 }
@@ -101,12 +101,12 @@ void WorkManager::dispatchEventDisconnected(EventReceiver * er, int sockid, Prio
   event.post();
 }
 
-void WorkManager::dispatchEventSSLSuccess(EventReceiver * er, int sockid) {
-  dispatchEventSSLSuccess(er, sockid, PRIO_NORMAL);
+void WorkManager::dispatchEventSSLSuccess(EventReceiver * er, int sockid, const std::string & cipher) {
+  dispatchEventSSLSuccess(er, sockid, cipher, PRIO_NORMAL);
 }
 
-void WorkManager::dispatchEventSSLSuccess(EventReceiver * er, int sockid, Prio prio) {
-  eventqueues[prio]->push(Event(er, WORK_SSL_SUCCESS, sockid));
+void WorkManager::dispatchEventSSLSuccess(EventReceiver * er, int sockid, const std::string & cipher, Prio prio) {
+  eventqueues[prio]->push(Event(er, WORK_SSL_SUCCESS, sockid, cipher));
   event.post();
 }
 
@@ -119,11 +119,11 @@ void WorkManager::dispatchEventSSLFail(EventReceiver * er, int sockid, Prio prio
   event.post();
 }
 
-void WorkManager::dispatchEventFail(EventReceiver * er, int sockid, std::string error) {
+void WorkManager::dispatchEventFail(EventReceiver * er, int sockid, const std::string & error) {
   dispatchEventFail(er, sockid, error, PRIO_NORMAL);
 }
 
-void WorkManager::dispatchEventFail(EventReceiver * er, int sockid, std::string error, Prio prio) {
+void WorkManager::dispatchEventFail(EventReceiver * er, int sockid, const std::string & error, Prio prio) {
   eventqueues[prio]->push(Event(er, WORK_FAIL, sockid, error));
   event.post();
 }
@@ -236,7 +236,7 @@ void WorkManager::run() {
           er->FDDisconnected(numdata);
           break;
         case WORK_SSL_SUCCESS:
-          er->FDSSLSuccess(numdata);
+          er->FDSSLSuccess(numdata, event.getStrData());
           break;
         case WORK_SSL_FAIL:
           er->FDSSLFail(numdata);

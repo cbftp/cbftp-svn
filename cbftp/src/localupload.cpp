@@ -73,9 +73,9 @@ void LocalUpload::FDDisconnected(int sockid) {
   tm->sourceError(TM_ERR_OTHER);
 }
 
-void LocalUpload::FDSSLSuccess(int sockid) {
-  ftpconn->printCipher(sockid);
-  tm->cipher(global->getIOManager()->getCipher(sockid));
+void LocalUpload::FDSSLSuccess(int sockid, const std::string & cipher) {
+  ftpconn->printCipher(cipher);
+  tm->cipher(cipher);
   sendChunk();
 }
 
@@ -106,7 +106,7 @@ void LocalUpload::FDSSLFail(int sockid) {
   tm->sourceError(TM_ERR_OTHER);
 }
 
-void LocalUpload::FDFail(int sockid, std::string error) {
+void LocalUpload::FDFail(int sockid, const std::string & error) {
   inuse = false;
   if (sockid != -1) {
     tm->sourceError(TM_ERR_OTHER);

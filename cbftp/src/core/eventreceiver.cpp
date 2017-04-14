@@ -16,7 +16,7 @@ void EventReceiver::FDNew(int sockid) {
 
 }
 
-void EventReceiver::FDConnecting(int sockid, std::string addr) {
+void EventReceiver::FDConnecting(int sockid, const std::string & addr) {
 
 }
 
@@ -36,11 +36,11 @@ void EventReceiver::FDDisconnected(int sockid) {
 
 }
 
-void EventReceiver::FDFail(int sockid, std::string error) {
+void EventReceiver::FDFail(int sockid, const std::string & error) {
 
 }
 
-void EventReceiver::FDSSLSuccess(int sockid) {
+void EventReceiver::FDSSLSuccess(int sockid, const std::string & cipher) {
 
 }
 

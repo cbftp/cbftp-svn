@@ -23,7 +23,7 @@ public:
   Event(EventReceiver *, int);
   Event(EventReceiver *, int, int);
   Event(EventReceiver *, int, int, int);
-  Event(EventReceiver *, int, int, std::string);
+  Event(EventReceiver *, int, int, const std::string &);
   Event(Pointer<EventReceiver> &, int);
   ~Event();
   EventReceiver * getReceiver() const;
