@@ -58,7 +58,7 @@ void TransferMonitor::engageFXP(const std::string & sfile, const Pointer<SiteLog
     return;
   }
   if (!sld->lockUploadConn(fld, &dst, this)) {
-    sls->returnConn(src);
+    sls->returnConn(src, true);
     tm->transferFailed(ts, TM_ERR_LOCK_UP);
     return;
   }
@@ -205,12 +205,12 @@ void TransferMonitor::passiveReady(const std::string & host, int port) {
                status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET);
   if (status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE) {
     sourceError(TM_ERR_OTHER);
-    sls->returnConn(src);
+    sls->returnConn(src, type != TM_TYPE_LIST);
     return;
   }
   if (status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET) {
     targetError(TM_ERR_OTHER);
-    sld->returnConn(dst);
+    sld->returnConn(dst, type != TM_TYPE_LIST);
     return;
   }
   status = TM_STATUS_AWAITING_ACTIVE;
@@ -260,12 +260,12 @@ void TransferMonitor::activeReady() {
                status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET);
   if (status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE) {
     sourceError(TM_ERR_OTHER);
-    sls->returnConn(src);
+    sls->returnConn(src, type != TM_TYPE_LIST);
     return;
   }
   if (status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET) {
     targetError(TM_ERR_OTHER);
-    sld->returnConn(dst);
+    sld->returnConn(dst, type != TM_TYPE_LIST);
     return;
   }
   if (type == TM_TYPE_FXP) {
@@ -420,7 +420,7 @@ void TransferMonitor::sourceError(TransferError err) {
   partialcompletestamp = timestamp;
   if (status == TM_STATUS_AWAITING_PASSIVE || status == TM_STATUS_AWAITING_ACTIVE) {
     if (!!sld && !sld->getConn(dst)->isProcessing()) {
-      sld->returnConn(dst);
+      sld->returnConn(dst, type != TM_TYPE_LIST);
       fld->finishUpload(dfile);
       transferFailed(ts, err);
       return;
@@ -458,7 +458,7 @@ void TransferMonitor::targetError(TransferError err) {
   partialcompletestamp = timestamp;
   if (status == TM_STATUS_AWAITING_PASSIVE || status == TM_STATUS_AWAITING_ACTIVE) {
     if (!!sls && !sls->getConn(src)->isProcessing()) {
-      sls->returnConn(src);
+      sls->returnConn(src, type != TM_TYPE_LIST);
       if (fls != NULL) { // NULL in case of LIST
         fls->finishDownload(sfile);
       }

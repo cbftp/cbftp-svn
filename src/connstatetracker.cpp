@@ -160,8 +160,13 @@ bool ConnStateTracker::hasFileTransfer() const {
 void ConnStateTracker::finishTransfer() {
   if (listtransfer) {
     listtransfer = false;
+    listtm = NULL;
     return;
   }
+  finishFileTransfer();
+}
+
+void ConnStateTracker::finishFileTransfer() {
   transfer = false;
   transferlocked = false;
   tm = NULL;

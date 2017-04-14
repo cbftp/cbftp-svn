@@ -1387,14 +1387,19 @@ bool SiteLogic::lockTransferConn(FileList * fl, int * ret, TransferMonitor * tm,
   else return false;
 }
 
-void SiteLogic::returnConn(int id) {
+void SiteLogic::returnConn(int id, bool istransfer) {
   if (connstatetracker[id].isTransferLocked() && connstatetracker[id].getTransferType() == CST_DOWNLOAD) {
     transferComplete(id, true);
   }
   else if (connstatetracker[id].isTransferLocked() && connstatetracker[id].getTransferType() == CST_UPLOAD) {
     transferComplete(id, false);
   }
-  connstatetracker[id].finishTransfer();
+  if (istransfer) {
+    connstatetracker[id].finishFileTransfer();
+  }
+  else {
+    connstatetracker[id].finishTransfer();
+  }
   handleConnection(id);
 }
 

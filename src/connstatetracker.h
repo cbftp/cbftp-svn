@@ -72,6 +72,7 @@ public:
   bool hasTransfer() const;
   bool hasFileTransfer() const;
   void finishTransfer();
+  void finishFileTransfer();
   void abortTransfer();
   bool getTransferAborted() const;
   void lockForTransfer(TransferMonitor *, FileList *, bool);
