@@ -114,7 +114,7 @@ class SiteLogic : public EventReceiver {
     void connectConn(int);
     void disconnectConn(int);
     void finishTransferGracefully(int);
-    void listCompleted(int, int);
+    void listCompleted(int, int, CommandOwner *, FileList *);
     void issueRawCommand(unsigned int, const std::string &);
     RawBuffer * getRawCommandBuffer() const;
     RawBuffer * getAggregatedRawBuffer() const;

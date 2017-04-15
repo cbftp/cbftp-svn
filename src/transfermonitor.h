@@ -36,6 +36,7 @@ enum TransferError {
   TM_ERR_DUPE
 };
 
+class CommandOwner;
 class SiteLogic;
 class FileList;
 class TransferManager;
@@ -73,6 +74,7 @@ class TransferMonitor : public EventReceiver, public RawBufferCallback {
     int ticker;
     TransferError error;
     std::list<std::pair<std::string, std::string> > rawbufqueue;
+    CommandOwner * co;
     void finish();
     void setTargetSizeSpeed(unsigned long long int, int);
     void reset();
@@ -98,7 +100,7 @@ class TransferMonitor : public EventReceiver, public RawBufferCallback {
     void engageFXP(const std::string &, const Pointer<SiteLogic> &, FileList *, const std::string &, const Pointer<SiteLogic> &, FileList *);
     void engageDownload(const std::string &, const Pointer<SiteLogic> &, FileList *, const Pointer<LocalFileList> &);
     void engageUpload(const std::string &, const Pointer<LocalFileList> &, const Pointer<SiteLogic> &, FileList *);
-    void engageList(const Pointer<SiteLogic> &, int, bool);
+    void engageList(const Pointer<SiteLogic> &, int, bool, CommandOwner *, FileList *);
     Status getStatus() const;
     bool willFail() const;
     void newRawBufferLine(const std::pair<std::string, std::string> &);

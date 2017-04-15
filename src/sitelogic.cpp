@@ -1590,8 +1590,9 @@ void SiteLogic::finishTransferGracefully(int id) {
   connstatetracker[id].finishTransfer();
 }
 
-void SiteLogic::listCompleted(int id, int storeid) {
+void SiteLogic::listCompleted(int id, int storeid, CommandOwner * co, FileList * fl) {
   const BinaryData & data = global->getLocalStorage()->getStoreContent(storeid);
+  conns[id]->setListData(co, fl);
   conns[id]->parseFileList((char *) &data[0], data.size());
   listRefreshed(id);
   global->getLocalStorage()->purgeStoreContent(storeid);
@@ -1701,12 +1702,12 @@ void SiteLogic::prepareActiveTransfer(int id, const std::string & file, const st
 }
 
 void SiteLogic::preparePassiveList(int id, TransferMonitor * tmb, bool ssl) {
-  connstatetracker[id].setList(tmb, ssl, conns[id]->currentCommandOwner(), conns[id]->currentFileList());
+  connstatetracker[id].setList(tmb, ssl);
   initTransfer(id);
 }
 
 void SiteLogic::prepareActiveList(int id, TransferMonitor * tmb, const std::string & host, int port, bool ssl) {
-  connstatetracker[id].setList(tmb, host, port, ssl, conns[id]->currentCommandOwner(), conns[id]->currentFileList());
+  connstatetracker[id].setList(tmb, host, port, ssl);
   initTransfer(id);
 }
 
@@ -1743,11 +1744,11 @@ void SiteLogic::upload(int id) {
 }
 
 void SiteLogic::list(int id) {
-  conns[id]->doLIST(connstatetracker[id].getListCommandOwner(), connstatetracker[id].getListFileList());
+  conns[id]->doLIST();
 }
 
 void SiteLogic::listAll(int id) {
-  conns[id]->doLISTa(connstatetracker[id].getListCommandOwner(), connstatetracker[id].getListFileList());
+  conns[id]->doLISTa();
 }
 
 void SiteLogic::abortTransfer(int id) {
@@ -1771,8 +1772,8 @@ void SiteLogic::getFileListConn(int id, bool hiddenfiles) {
     }
   }
   else {
-    conns[id]->prepareLIST();
-    global->getTransferManager()->getFileList(global->getSiteLogicManager()->getSiteLogic(this), id, hiddenfiles);
+    FileList * fl = conns[id]->newFileList();
+    global->getTransferManager()->getFileList(global->getSiteLogicManager()->getSiteLogic(this), id, hiddenfiles, NULL, fl);
   }
 }
 
@@ -1782,8 +1783,7 @@ void SiteLogic::getFileListConn(int id, CommandOwner * co, FileList * filelist) 
     conns[id]->doSTAT(co, filelist);
   }
   else {
-    conns[id]->prepareLIST(co, filelist);
-    global->getTransferManager()->getFileList(global->getSiteLogicManager()->getSiteLogic(this), id, false);
+    global->getTransferManager()->getFileList(global->getSiteLogicManager()->getSiteLogic(this), id, false, co, filelist);
   }
 }
 
