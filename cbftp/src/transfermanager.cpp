@@ -17,9 +17,9 @@ TransferManager::~TransferManager() {
 
 }
 
-void TransferManager::getFileList(const Pointer<SiteLogic> & sl, int connid, bool hiddenfiles) {
+void TransferManager::getFileList(const Pointer<SiteLogic> & sl, int connid, bool hiddenfiles, CommandOwner * co, FileList * fl) {
   Pointer<TransferMonitor> target = getAvailableTransferMonitor();
-  target->engageList(sl, connid, hiddenfiles);
+  target->engageList(sl, connid, hiddenfiles, co, fl);
 }
 
 Pointer<TransferStatus> TransferManager::suggestTransfer(const std::string & name, const Pointer<SiteLogic> & src, FileList * fls, const Pointer<SiteLogic> & dst, FileList * fld) {

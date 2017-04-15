@@ -6,6 +6,7 @@
 
 #include "core/pointer.h"
 
+class CommandOwner;
 class ScoreBoardElement;
 class TransferMonitor;
 class TransferStatus;
@@ -24,7 +25,7 @@ class TransferManager {
   public:
     TransferManager();
     ~TransferManager();
-    void getFileList(const Pointer<SiteLogic> &, int, bool);
+    void getFileList(const Pointer<SiteLogic> &, int, bool, CommandOwner *, FileList *);
     Pointer<TransferStatus> suggestTransfer(const std::string &, const Pointer<SiteLogic> &, FileList *, const Pointer<SiteLogic> &, FileList *);
     Pointer<TransferStatus> suggestTransfer(const std::string &, const Pointer<SiteLogic> &, FileList *, const std::string &, const Pointer<SiteLogic> &, FileList *);
     Pointer<TransferStatus> suggestDownload(const std::string &, const Pointer<SiteLogic> &, FileList *, const Pointer<LocalFileList> &);

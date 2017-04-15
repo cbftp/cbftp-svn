@@ -159,10 +159,12 @@ void TransferMonitor::engageUpload(const std::string & sfile, const Pointer<Loca
   }
 }
 
-void TransferMonitor::engageList(const Pointer<SiteLogic> & sls, int connid, bool hiddenfiles) {
+void TransferMonitor::engageList(const Pointer<SiteLogic> & sls, int connid, bool hiddenfiles, CommandOwner * co, FileList * fl) {
   reset();
   type = TM_TYPE_LIST;
   this->sls = sls;
+  this->fls = fl;
+  this->co = co;
   src = connid;
   this->hiddenfiles = hiddenfiles;
   int spol = sls->getSite()->getSSLTransferPolicy();
@@ -398,7 +400,7 @@ void TransferMonitor::finish() {
       break;
     }
     case TM_TYPE_LIST:
-      sls->listCompleted(src, storeid);
+      sls->listCompleted(src, storeid, co, fls);
       break;
   }
   if (!!ts) {

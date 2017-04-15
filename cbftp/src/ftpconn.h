@@ -183,10 +183,10 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void doRMD(const Path &);
     void doSTAT();
     void doSTAT(CommandOwner *, FileList *);
-    void doLIST(CommandOwner *, FileList *);
-    void doLISTa(CommandOwner *, FileList *);
-    void prepareLIST();
-    void prepareLIST(CommandOwner *, FileList *);
+    void doLIST();
+    void doLISTa();
+    FileList * newFileList();
+    void setListData(CommandOwner *, FileList *);
     void doSTATla();
     void doSSCN(bool);
     void doCPSV();

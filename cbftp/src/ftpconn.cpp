@@ -587,27 +587,22 @@ void FTPConn::doSTATla() {
   sendEcho("STAT -la");
 }
 
-void FTPConn::prepareLIST() {
-  currentco = NULL;
-  currentfl = new FileList(site->getUser(), currentpath);
+FileList * FTPConn::newFileList() {
+  return new FileList(site->getUser(), currentpath);
 }
 
-void FTPConn::prepareLIST(CommandOwner * co, FileList * filelist) {
+void FTPConn::setListData(CommandOwner * co, FileList * filelist) {
   currentco = co;
   currentfl = filelist;
 }
 
-void FTPConn::doLIST(CommandOwner * co, FileList * filelist) {
+void FTPConn::doLIST() {
   state = STATE_LIST;
-  currentco = co;
-  currentfl = filelist;
   sendEcho("LIST");
 }
 
-void FTPConn::doLISTa(CommandOwner * co, FileList * filelist) {
+void FTPConn::doLISTa() {
   state = STATE_LIST;
-  currentco = co;
-  currentfl = filelist;
   sendEcho("LIST -a");
 }
 
