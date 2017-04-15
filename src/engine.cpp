@@ -91,7 +91,9 @@ Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, con
           section + " on " + *it);
       continue;
     }
-    if (!sl->getSite()->getSkipList().isAllowed((sl->getSite()->getSectionPath(section) / race->getName()).toString(), true, false)) {
+    if (!sl->getSite()->getSkipList().isAllowed((sl->getSite()->getSectionPath(section) / race->getName()).toString(), true, false) &&
+        !sl->getSite()->isAffiliated(race->getGroup()))
+    {
       global->getEventLog()->log("Engine", "Skipping site " + sl->getSite()->getName() +
           " due to skiplist match: " + race->getName());
       continue;
