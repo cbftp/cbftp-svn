@@ -33,7 +33,7 @@ public:
   void startPreparedRace(unsigned int);
   void deletePreparedRace(unsigned int);
   void startLatestPreparedRace();
-  void startNextPreparedRace();
+  void toggleStartNextPreparedRace();
   void newTransferJobDownload(const std::string &, const std::string &, FileList *, const Path &);
   void newTransferJobDownload(const std::string &, const std::string &, FileList *, const Path &, const std::string &);
   void newTransferJobUpload(const Path &, const std::string &, const std::string &, FileList *);
