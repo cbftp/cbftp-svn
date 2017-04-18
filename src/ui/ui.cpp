@@ -453,6 +453,9 @@ void Ui::globalKeyBinds(int ch) {
     case 'p':
       global->getEngine()->startLatestPreparedRace();
       break;
+    case 'N':
+      global->getEngine()->startNextPreparedRace();
+      break;
     case '\\':
       if (fullscreentoggle) {
         enableInfo();
