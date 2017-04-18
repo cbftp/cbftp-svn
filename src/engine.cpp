@@ -64,7 +64,6 @@ Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, con
   Pointer<Race> race;
   if (profile == SPREAD_PREPARE && startnextprepared) {
     stopNextPreparedRaceTimer();
-    startnextprepared = false;
     profile = SPREAD_RACE;
   }
   bool append = false;
@@ -239,11 +238,16 @@ void Engine::startLatestPreparedRace() {
   }
 }
 
-void Engine::startNextPreparedRace() {
-  stopNextPreparedRaceTimer();
-  startnextprepared = true;
-  global->getTickPoke()->startPoke(this, "Engine", TICK_NEXTPREPARED_TIMEOUT, TICK_MSG_NEXTPREPARED);
-  global->getEventLog()->log("Engine", "Starting next prepared race");
+void Engine::toggleStartNextPreparedRace() {
+  if (!startnextprepared) {
+    startnextprepared = true;
+    global->getTickPoke()->startPoke(this, "Engine", TICK_NEXTPREPARED_TIMEOUT, TICK_MSG_NEXTPREPARED);
+    global->getEventLog()->log("Engine", "Enabling next prepared race starter");
+  }
+  else {
+    stopNextPreparedRaceTimer();
+    global->getEventLog()->log("Engine", "Disabling next prepared race starter");
+  }
 }
 
 void Engine::newTransferJobDownload(const std::string & site, const std::string & file, FileList * filelist, const Path & path) {
@@ -1005,6 +1009,7 @@ bool Engine::raceTransferPossible(const Pointer<SiteLogic> & sls, const Pointer<
 
 void Engine::stopNextPreparedRaceTimer() {
   global->getTickPoke()->stopPoke(this, TICK_MSG_NEXTPREPARED);
+  startnextprepared = false;
 }
 
 unsigned int Engine::preparedRaces() const {
@@ -1083,7 +1088,7 @@ std::list<Pointer<TransferJob> >::const_iterator Engine::getTransferJobsEnd() co
 
 void Engine::tick(int message) {
   if (message == TICK_MSG_NEXTPREPARED) {
-    startnextprepared = false;
+    stopNextPreparedRaceTimer();
     global->getEventLog()->log("Engine", "Next prepared race starter timed out.");
     return;
   }
