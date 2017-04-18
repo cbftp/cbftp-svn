@@ -34,6 +34,12 @@
 #define DIROBSERVETIME 20000
 #define SFVDIROBSERVETIME 5000
 #define NFO_PRIO_AFTER_SEC 15
+#define TICK_NEXTPREPARED_TIMEOUT 600000
+
+enum EngineTickMessages {
+  TICK_MSG_TICKER,
+  TICK_MSG_NEXTPREPARED
+};
 
 Engine::Engine() :
   scoreboard(makePointer<ScoreBoard>()),
@@ -45,7 +51,8 @@ Engine::Engine() :
   maxpointspriority(2500),
   maxpointspercentageowned(2000),
   maxpointslowprogress(2000),
-  preparedraceexpirytime(120)
+  preparedraceexpirytime(120),
+  startnextprepared(false)
 {
 }
 
@@ -55,6 +62,11 @@ Engine::~Engine() {
 
 Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, const std::string & section, const std::list<std::string> & sites) {
   Pointer<Race> race;
+  if (profile == SPREAD_PREPARE && startnextprepared) {
+    stopNextPreparedRaceTimer();
+    startnextprepared = false;
+    profile = SPREAD_RACE;
+  }
   bool append = false;
   for (std::list<Pointer<Race> >::iterator it = allraces.begin(); it != allraces.end(); it++) {
     if ((*it)->getName() == release && (*it)->getSection() == section) {
@@ -225,6 +237,13 @@ void Engine::startLatestPreparedRace() {
     preparedraces.pop_back();
     newRace(preparedrace->getRelease(), preparedrace->getSection(), preparedrace->getSites());
   }
+}
+
+void Engine::startNextPreparedRace() {
+  stopNextPreparedRaceTimer();
+  startnextprepared = true;
+  global->getTickPoke()->startPoke(this, "Engine", TICK_NEXTPREPARED_TIMEOUT, TICK_MSG_NEXTPREPARED);
+  global->getEventLog()->log("Engine", "Starting next prepared race");
 }
 
 void Engine::newTransferJobDownload(const std::string & site, const std::string & file, FileList * filelist, const Path & path) {
@@ -984,6 +1003,10 @@ bool Engine::raceTransferPossible(const Pointer<SiteLogic> & sls, const Pointer<
   return true;
 }
 
+void Engine::stopNextPreparedRaceTimer() {
+  global->getTickPoke()->stopPoke(this, TICK_MSG_NEXTPREPARED);
+}
+
 unsigned int Engine::preparedRaces() const {
   return preparedraces.size();
 }
@@ -1059,6 +1082,11 @@ std::list<Pointer<TransferJob> >::const_iterator Engine::getTransferJobsEnd() co
 }
 
 void Engine::tick(int message) {
+  if (message == TICK_MSG_NEXTPREPARED) {
+    startnextprepared = false;
+    global->getEventLog()->log("Engine", "Next prepared race starter timed out.");
+    return;
+  }
   for (std::list<Pointer<Race> >::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
     if ((*it)->checksSinceLastUpdate() >= MAXCHECKSTIMEOUT) {
       if ((*it)->failedTransfersCleared()) {
@@ -1121,7 +1149,7 @@ Pointer<ScoreBoard> Engine::getScoreBoard() const {
 
 void Engine::checkStartPoke() {
   if (!pokeregistered) {
-    global->getTickPoke()->startPoke(this, "Engine", POKEINTERVAL, 0);
+    global->getTickPoke()->startPoke(this, "Engine", POKEINTERVAL, TICK_MSG_TICKER);
     pokeregistered = true;
   }
 }

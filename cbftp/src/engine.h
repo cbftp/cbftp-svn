@@ -33,6 +33,7 @@ public:
   void startPreparedRace(unsigned int);
   void deletePreparedRace(unsigned int);
   void startLatestPreparedRace();
+  void startNextPreparedRace();
   void newTransferJobDownload(const std::string &, const std::string &, FileList *, const Path &);
   void newTransferJobDownload(const std::string &, const std::string &, FileList *, const Path &, const std::string &);
   void newTransferJobUpload(const Path &, const std::string &, const std::string &, FileList *);
@@ -100,6 +101,7 @@ public:
   Pointer<Race> getCurrentRace(const std::string &) const;
   void preSeedPotentialData(Pointer<Race> &);
   bool raceTransferPossible(const Pointer<SiteLogic> &, const Pointer<SiteLogic> &, Pointer<Race> &) const;
+  void stopNextPreparedRaceTimer();
   std::list<Pointer<Race> > allraces;
   std::list<Pointer<Race> > currentraces;
   std::list<Pointer<PreparedRace> > preparedraces;
@@ -117,4 +119,5 @@ public:
   int maxpointspercentageowned;
   int maxpointslowprogress;
   int preparedraceexpirytime;
+  bool startnextprepared;
 };
