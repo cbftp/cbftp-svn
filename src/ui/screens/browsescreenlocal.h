@@ -32,10 +32,10 @@ public:
   void tick(int);
   Pointer<LocalFileList> fileList() const;
   UIFile * selectedFile() const;
-  const UIFileList * getUIFileList() const;
+  UIFileList * getUIFileList();
+  void sort();
 private:
   void disableGotoMode();
-  void sort();
   void gotoPath(const Path &);
   Ui * ui;
   unsigned int row;

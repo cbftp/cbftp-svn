@@ -35,7 +35,8 @@ public:
   std::string siteName() const;
   FileList * fileList() const;
   UIFile * selectedFile() const;
-  const UIFileList * getUIFileList() const;
+  UIFileList * getUIFileList();
+  void sort();
   static void addFileDetails(MenuSelectOption &, unsigned int, unsigned int, const std::string &);
   static void addFileDetails(MenuSelectOption &, unsigned int, unsigned int, const std::string &, const std::string &,
       const std::string &, const std::string &, const std::string &, bool, bool);
@@ -85,7 +86,6 @@ private:
   std::list<std::pair<Path, std::string> > selectionhistory;
   bool focus;
   MenuSelectOptionTextField filterfield;
-  void sort();
   void refreshFilelist();
   void disableGotoMode();
 };
