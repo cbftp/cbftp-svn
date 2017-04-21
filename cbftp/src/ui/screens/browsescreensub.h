@@ -22,5 +22,7 @@ public:
   virtual void command(const std::string &, const std::string &) { }
   virtual BrowseScreenAction keyPressed(unsigned int) = 0;
   virtual void setFocus(bool) = 0;
-  virtual const UIFileList * getUIFileList() const { return NULL; }
+  virtual UIFileList * getUIFileList() { return NULL; }
+  virtual void filterUnique(const UIFileList *) { }
+  virtual void sort() { }
 };

@@ -203,20 +203,45 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
       return true;
     case 'u':
       if (split && left->type() != BROWSESCREEN_SELECTOR && right->type() != BROWSESCREEN_SELECTOR) {
-
+        UIFileList * leftlist = left->getUIFileList();
+        UIFileList * rightlist = right->getUIFileList();
+        if (leftlist->hasUnique() || rightlist->hasUnique()) {
+          leftlist->clearUnique();
+          rightlist->clearUnique();
+        }
+        else {
+          std::set<std::string> leftuniques;  // need to make copies of the lists here since setting
+          std::set<std::string> rightuniques; // it on one side will affect the other side
+          const std::vector <UIFile *> * sorteduniquelist = leftlist->getSortedList();
+          for (std::vector<UIFile *>::const_iterator it = sorteduniquelist->begin(); it != sorteduniquelist->end(); it++) {
+            leftuniques.insert((*it)->getName());
+          }
+          sorteduniquelist = rightlist->getSortedList();
+          for (std::vector<UIFile *>::const_iterator it = sorteduniquelist->begin(); it != sorteduniquelist->end(); it++) {
+            rightuniques.insert((*it)->getName());
+          }
+          leftlist->setUnique(rightuniques);
+          rightlist->setUnique(leftuniques);
+        }
+        left->sort();
+        right->sort();
       }
+      ui->redraw();
+      ui->setInfo();
       return true;
   }
   return false;
 }
 
 std::string BrowseScreen::getLegendText() const {
-  std::string transfer = "";
-  if (split && left->type() != BROWSESCREEN_SELECTOR && right->type() != BROWSESCREEN_SELECTOR &&
-      (left->type() == BROWSESCREEN_SITE || right->type() == BROWSESCREEN_SITE)) {
-    transfer = "[t]ransfer - ";
+  std::string extra = "";
+  if (split && left->type() != BROWSESCREEN_SELECTOR && right->type() != BROWSESCREEN_SELECTOR) {
+    extra += "Show [u]niques - ";
+    if (left->type() == BROWSESCREEN_SITE || right->type() == BROWSESCREEN_SITE) {
+      extra += "[t]ransfer - ";
+    }
   }
-  return "[Tab] switch side - " + transfer  + active->getLegendText();
+  return "[Tab] switch side - " + extra  + active->getLegendText();
 }
 
 std::string BrowseScreen::getInfoLabel() const {

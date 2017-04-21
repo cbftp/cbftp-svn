@@ -399,8 +399,13 @@ std::string BrowseScreenLocal::getInfoText() const {
       cwdfailed = false;
     }
   }
-  if (list.hasFilters()) {
-    text += std::string("  FILTER: ") + filterfield.getData();
+  if (list.hasFilters() || list.hasUnique()) {
+    if (list.hasFilters()) {
+      text += std::string("  FILTER: ") + filterfield.getData();
+    }
+    if (list.hasUnique()) {
+      text += "  UNIQUES";
+    }
     text += "  " + util::int2Str(list.filteredSizeFiles()) + "/" + util::int2Str(list.sizeFiles()) + "f " +
         util::int2Str(list.filteredSizeDirs()) + "/" + util::int2Str(list.sizeDirs()) + "d";
     text += std::string("  ") + util::parseSize(list.getFilteredTotalSize()) + "/" +
@@ -513,6 +518,6 @@ Pointer<LocalFileList> BrowseScreenLocal::fileList() const {
   return filelist;
 }
 
-const UIFileList * BrowseScreenLocal::getUIFileList() const {
+UIFileList * BrowseScreenLocal::getUIFileList() {
   return &list;
 }

@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <list>
+#include <set>
 
 #include "uifile.h"
 
@@ -29,6 +30,7 @@ private:
   std::string sortmethod;
   bool separators;
   std::list<std::string> filters;
+  std::set<std::string> uniques;
   void setNewCurrentPosition();
   void removeSeparators();
   void fillSortedFiles();
@@ -54,7 +56,7 @@ public:
   unsigned int filteredSizeFiles() const;
   unsigned int filteredSizeDirs() const;
   unsigned long long int getFilteredTotalSize() const;
-  const std::vector <UIFile *> * getSortedList() const;
+  const std::vector<UIFile *> * getSortedList() const;
   unsigned int currentCursorPosition() const;
   const Path & getPath() const;
   std::string getSortMethod() const;
@@ -66,6 +68,10 @@ public:
   std::list<std::string> getFilters() const;
   void setFilters(const std::list<std::string> &);
   void unsetFilters();
+  void setUnique(const std::set<std::string> &);
+  bool hasUnique() const;
+  std::set<std::string> getUniques() const;
+  void clearUnique();
 };
 
 bool combinedSort(UIFile *, UIFile *);

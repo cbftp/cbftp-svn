@@ -280,6 +280,9 @@ void UIFileList::fillSortedFiles() {
     if (!negativepass || (foundpositive && !positivematch)) {
       continue;
     }
+    if (uniques.find(file.getName()) != uniques.end()) {
+      continue;
+    }
     sortedfiles.push_back(&file);
     if (file.isDirectory()) {
       filterednumdirs++;
@@ -509,6 +512,24 @@ void UIFileList::setFilters(const std::list<std::string> & filters) {
 
 void UIFileList::unsetFilters() {
   filters.clear();
+  fillSortedFiles();
+}
+
+void UIFileList::setUnique(const std::set<std::string> & uniques) {
+  this->uniques = uniques;
+  fillSortedFiles();
+}
+
+bool UIFileList::hasUnique() const {
+  return uniques.size();
+}
+
+std::set<std::string> UIFileList::getUniques() const {
+  return uniques;
+}
+
+void UIFileList::clearUnique() {
+  uniques.clear();
   fillSortedFiles();
 }
 

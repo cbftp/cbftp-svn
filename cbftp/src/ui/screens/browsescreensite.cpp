@@ -243,13 +243,13 @@ void BrowseScreenSite::update() {
         }
         unsigned int position = 0;
         bool separatorsenabled = false;
-        bool setfilter = false;
         std::list<std::string> filters;
+        std::set<std::string> uniques;
         if (list.getPath() == filelist->getPath()) {
           position = list.currentCursorPosition();
           separatorsenabled = list.separatorsEnabled();
-          setfilter = list.hasFilters();
           filters = list.getFilters();
+          uniques = list.getUniques();
         }
         else {
           currentviewspan = 0;
@@ -260,8 +260,11 @@ void BrowseScreenSite::update() {
         if (separatorsenabled) {
           list.toggleSeparators();
         }
-        if (setfilter) {
+        if (filters.size()) {
           list.setFilters(filters);
+        }
+        if (uniques.size()) {
+          list.setUnique(uniques);
         }
         sort();
         if (position) {
@@ -790,8 +793,13 @@ std::string BrowseScreenSite::getInfoText() const {
       changedsort = false;
     }
   }
-  if (list.hasFilters()) {
-    text += std::string("  FILTER: ") + filterfield.getData();
+  if (list.hasFilters() || list.hasUnique()) {
+    if (list.hasFilters()) {
+      text += std::string("  FILTER: ") + filterfield.getData();
+    }
+    if (list.hasUnique()) {
+      text += "  UNIQUES";
+    }
     text += "  " + util::int2Str(list.filteredSizeFiles()) + "/" + util::int2Str(list.sizeFiles()) + "f " +
         util::int2Str(list.filteredSizeDirs()) + "/" + util::int2Str(list.sizeDirs()) + "d";
     text += std::string("  ") + util::parseSize(list.getFilteredTotalSize()) + "/" +
@@ -909,6 +917,6 @@ void BrowseScreenSite::disableGotoMode() {
   }
 }
 
-const UIFileList * BrowseScreenSite::getUIFileList() const {
+UIFileList * BrowseScreenSite::getUIFileList() {
   return &list;
 }
