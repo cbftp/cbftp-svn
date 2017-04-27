@@ -238,7 +238,23 @@ FileList * TransferJob::getListTarget(SiteLogic * sl) const {
   return NULL;
 }
 
+void TransferJob::checkFileListExists(FileList * fl) const {
+  std::map<std::string, FileList *>::const_iterator it;
+  for (it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
+    if (it->second == fl) {
+      return;
+    }
+  }
+  for (it = dstfilelists.begin(); it != dstfilelists.end(); it++) {
+    if (it->second == fl) {
+      return;
+    }
+  }
+  util::assert(false);
+}
+
 void TransferJob::fileListUpdated(SiteLogic * sl, FileList * fl) {
+  checkFileListExists(fl);
   std::map<FileList *, bool>::iterator it2 = filelistsrefreshed.find(fl);
   if (it2 == filelistsrefreshed.end()) {
     filelistsrefreshed[fl] = false;
@@ -357,9 +373,13 @@ bool TransferJob::listsRefreshed() const {
   return listsrefreshed;
 }
 
-void TransferJob::refreshOrAlmostDone() {
-  if (listsrefreshed || type == TRANSFERJOB_FXP_FILE ||
-      type == TRANSFERJOB_DOWNLOAD_FILE || type == TRANSFERJOB_UPLOAD_FILE) {
+bool TransferJob::refreshOrAlmostDone() {
+  if (almostdone) {
+    return false;
+  }
+  else if (listsrefreshed || type == TRANSFERJOB_FXP_FILE ||
+      type == TRANSFERJOB_DOWNLOAD_FILE || type == TRANSFERJOB_UPLOAD_FILE)
+  {
     almostdone = true;
   }
   else if (!filelistsrefreshed.size()) {
@@ -377,7 +397,10 @@ void TransferJob::refreshOrAlmostDone() {
       updateLocalFileLists(localpath / srcfile);
     }
   }
-
+  else {
+    return false;
+  }
+  return true;
 }
 
 void TransferJob::clearRefreshLists() {
@@ -630,6 +653,8 @@ void TransferJob::transferSuccessful(const Pointer<TransferStatus> & ts) {
 }
 
 void TransferJob::transferFailed(const Pointer<TransferStatus> & ts, int) {
+  checkFileListExists(ts->getSourceFileList());
+  checkFileListExists(ts->getTargetFileList());
   idletime = 0;
   if (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) {
     filelistsrefreshed[ts->getSourceFileList()] = false;

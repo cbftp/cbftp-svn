@@ -19,11 +19,11 @@ void TimeReference::tick(int) {
   timeticker += INTERVAL;
 }
 
-unsigned long long TimeReference::timeReference() {
+unsigned long long TimeReference::timeReference() const {
   return timeticker;
 }
 
-unsigned long long TimeReference::timePassedSince(unsigned long long timestamp) {
+unsigned long long TimeReference::timePassedSince(unsigned long long timestamp) const {
   if (timestamp > timeticker) {
     return 0 - timestamp + timeticker;
   }

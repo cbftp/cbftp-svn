@@ -438,8 +438,7 @@ bool Engine::transferJobActionRequest(Pointer<TransferJob> & tj) {
   }
   refreshPendingTransferList(tj);
   if (it->second.size() == 0) {
-    tj->refreshOrAlmostDone();
-    return true;
+    return tj->refreshOrAlmostDone();
   }
   tj->clearRefreshLists();
   PendingTransfer pt = it->second.front();
@@ -1111,11 +1110,28 @@ void Engine::tick(int message) {
         }
       }
     }
+    for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it2 = (*it)->begin(); it2 != (*it)->end(); it2++) {
+      int wantedlogins = it2->second->getSite()->getMaxDown();
+      if (!it2->first->isDone()) {
+        wantedlogins = it2->second->getSite()->getMaxLogins();
+      }
+      if (it2->second->getCurrLogins() < wantedlogins && it2->first->getMaxFileSize()) {
+        it2->second->activateAll();
+      }
+    }
   }
   for (std::list<Pointer<TransferJob> >::const_iterator it = currenttransferjobs.begin(); it != currenttransferjobs.end(); it++) {
     if ((*it)->isDone()) {
       transferJobComplete(*it);
       break;
+    }
+    else {
+      if (!!(*it)->getSrc() && !(*it)->getSrc()->getCurrLogins()) {
+        (*it)->getSrc()->haveConnected((*it)->maxSlots());
+      }
+      if (!!(*it)->getDst() && !(*it)->getDst()->getCurrLogins()) {
+        (*it)->getDst()->haveConnected((*it)->maxSlots());
+      }
     }
   }
   std::list<unsigned int> removeids;
