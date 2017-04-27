@@ -68,7 +68,7 @@ class FileList {
     void flush();
     bool listChanged() const;
     void resetListChanged();
-    unsigned long long timeSinceLastChanged();
+    unsigned long long timeSinceLastChanged() const;
     std::string getUser() const;
     void finishUpload(const std::string &);
     void finishDownload(const std::string &);
@@ -76,5 +76,5 @@ class FileList {
     bool hasFilesUploading() const;
     void setChanged();
     void setRefreshedTime(int);
-    int getRefreshedTime();
+    int getRefreshedTime() const;
 };

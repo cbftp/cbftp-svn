@@ -143,6 +143,7 @@ void FileList::removeFile(const std::string & name) {
     }
     delete f;
     files.erase(name);
+    lowercasefilemap.erase(util::toLower(name));
     setChanged();
   }
 }
@@ -324,7 +325,7 @@ void FileList::setChanged() {
   lastchangedstamp = global->getTimeReference()->timeReference();
 }
 
-unsigned long long FileList::timeSinceLastChanged() {
+unsigned long long FileList::timeSinceLastChanged() const {
   return global->getTimeReference()->timePassedSince(lastchangedstamp);
 }
 
@@ -363,6 +364,6 @@ void FileList::setRefreshedTime(int newtime) {
   refreshedtime = newtime;
 }
 
-int FileList::getRefreshedTime() {
+int FileList::getRefreshedTime() const {
   return refreshedtime;
 }

@@ -62,7 +62,7 @@ public:
   void setSlots(int);
   int maxPossibleSlots() const;
   bool listsRefreshed() const;
-  void refreshOrAlmostDone();
+  bool refreshOrAlmostDone();
   void clearRefreshLists();
   void addPendingTransfer(const Path &, unsigned long long int);
   void addTransfer(const Pointer<TransferStatus> &);
@@ -96,6 +96,7 @@ private:
   void countTotalFiles();
   void setDone();
   void updateLocalFileLists(const Path &);
+  void checkFileListExists(FileList *) const;
   int type;
   Pointer<SiteLogic> src;
   Pointer<SiteLogic> dst;
