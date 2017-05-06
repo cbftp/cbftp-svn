@@ -180,8 +180,8 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
               Pointer<LocalFileList> otherfl = other.get<BrowseScreenLocal>()->fileList();
               if (!!otherfl) {
                 global->getEngine()->newTransferJobDownload(active.get<BrowseScreenSite>()->siteName(),
-                                                            f->getName(),
                                                             activefl,
+                                                            f->getName(),
                                                             otherfl->getPath());
               }
             }
@@ -194,8 +194,8 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
           if (!!activefl && otherfl != NULL && f != NULL &&
               (f->isDirectory() || f->getSize() > 0)) {
             global->getEngine()->newTransferJobUpload(activefl->getPath(),
-                                                      other.get<BrowseScreenSite>()->siteName(),
                                                       f->getName(),
+                                                      other.get<BrowseScreenSite>()->siteName(),
                                                       otherfl);
           }
         }

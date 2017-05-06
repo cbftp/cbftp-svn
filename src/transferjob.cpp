@@ -16,76 +16,73 @@
 
 #define MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP 3
 
-TransferJob::TransferJob(unsigned int id, const Pointer<SiteLogic> & sl, std::string srcfile, FileList * filelist, const Path & path, std::string dstfile) :
-      src(sl),
-      srcfile(srcfile),
-      dstfile(dstfile),
-      localpath(path),
-      srclist(filelist),
-      id(id)
-{
-  init();
-  if (FileSystem::directoryExistsWritable(path)) {
-    locallist = global->getLocalStorage()->getLocalFileList(path);
-  }
-  if (srclist->getFile(srcfile)->isDirectory()) {
-    type = TRANSFERJOB_DOWNLOAD;
-    FileList * fl = new FileList(filelist->getUser(), filelist->getPath() / dstfile);
-    srcfilelists[""] = fl;
-    filelistsrefreshed[fl] = false;
-    updateLocalFileLists(path / dstfile);
+TransferJob::TransferJob(unsigned int id, const Pointer<SiteLogic> & srcsl, FileList * srcfilelist, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
+  downloadJob(id, srcsl, srcfilelist, srcfile, dstpath, dstfile);
+}
+
+TransferJob::TransferJob(unsigned int id, const Pointer<SiteLogic> & srcsl, const Path & srcpath, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
+  FileList * srcfilelist = new FileList(srcsl->getSite()->getUser(), srcpath);
+  downloadJob(id, srcsl, srcfilelist, srcfile, dstpath, dstfile);
+}
+
+void TransferJob::downloadJob(unsigned int id, const Pointer<SiteLogic> & srcsl, FileList * srcfilelist, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
+  init(id, TRANSFERJOB_DOWNLOAD, srcsl, Pointer<SiteLogic>(), srcfilelist->getPath(), dstpath, srcfile, dstfile);
+  srcfilelists[""] = srcfilelist;
+  updateLocalFileLists();
+  if (srcfilelist->getState() == FILELIST_LISTED) {
+    fileListUpdated(src.get(), srcfilelist);
   }
   else {
-    type = TRANSFERJOB_DOWNLOAD_FILE;
+    filelistsrefreshed[srcfilelist] = false;
   }
 }
 
-TransferJob::TransferJob(unsigned int id, const Path & path, std::string srcfile, const Pointer<SiteLogic> & sl, std::string dstfile, FileList * filelist) :
-      dst(sl),
-      srcfile(srcfile),
-      dstfile(dstfile),
-      localpath(path),
-      dstlist(filelist),
-      id(id)
-{
-  init();
-  type = TRANSFERJOB_UPLOAD;
-  if (FileSystem::directoryExistsReadable(path)) {
-    locallist = global->getLocalStorage()->getLocalFileList(path);
-    std::map<std::string, LocalFile>::const_iterator it = locallist->find(srcfile);
-    if (it != locallist->end() && it->second.isDirectory()) {
-      FileList * fl = new FileList(filelist->getUser(), filelist->getPath() / dstfile);
-      dstfilelists[""] = fl;
-      filelistsrefreshed[fl] = false;
-      updateLocalFileLists(path / srcfile);
-    }
-    else {
-      type = TRANSFERJOB_UPLOAD_FILE;
-    }
+TransferJob::TransferJob(unsigned int id, const Path & srcpath, const std::string & srcfile, const Pointer<SiteLogic> & dstsl, FileList * dstfilelist, const std::string & dstfile) {
+  uploadJob(id, srcpath, srcfile, dstsl, dstfilelist, dstfile);
+}
+
+TransferJob::TransferJob(unsigned int id, const Path & srcpath, const std::string & srcfile, const Pointer<SiteLogic> & dstsl, const Path & dstpath, const std::string & dstfile) {
+  FileList * dstfilelist = new FileList(dstsl->getSite()->getUser(), dstpath);
+  uploadJob(id, srcpath, srcfile, dstsl, dstfilelist, dstfile);
+}
+
+void TransferJob::uploadJob(unsigned int id, const Path & srcpath, const std::string & srcfile, const Pointer<SiteLogic> & dstsl, FileList * dstfilelist, const std::string & dstfile) {
+  init(id, TRANSFERJOB_UPLOAD, Pointer<SiteLogic>(), dstsl, srcpath, dstfilelist->getPath(), srcfile, dstfile);
+  dstfilelists[""] = dstfilelist;
+  updateLocalFileLists();
+  if (dstfilelist->getState() == FILELIST_LISTED) {
+    fileListUpdated(dst.get(), dstfilelist);
+  }
+  else {
+    filelistsrefreshed[dstfilelist] = false;
   }
 }
 
-TransferJob::TransferJob(unsigned int id, const Pointer<SiteLogic> & slsrc, std::string srcfile, FileList * srcfilelist, const Pointer<SiteLogic> & sldst, std::string dstfile, FileList * dstfilelist) :
-      src(slsrc),
-      dst(sldst),
-      srcfile(srcfile),
-      dstfile(dstfile),
-      srclist(srcfilelist),
-      dstlist(dstfilelist),
-      id(id)
-{
-  init();
-  if (srclist->getFile(srcfile)->isDirectory()) {
-    type = TRANSFERJOB_FXP;
-    FileList * fl = new FileList(srcfilelist->getUser(), srcfilelist->getPath() / srcfile);
-    srcfilelists[""] = fl;
-    filelistsrefreshed[fl] = false;
-    fl = new FileList(dstfilelist->getUser(), dstfilelist->getPath() / dstfile);
-    dstfilelists[""] = fl;
-    filelistsrefreshed[fl] = false;
+TransferJob::TransferJob(unsigned int id, const Pointer<SiteLogic> & srcsl, FileList * srcfilelist, const std::string & srcfile, const Pointer<SiteLogic> & dstsl, FileList * dstfilelist, const std::string & dstfile) {
+  fxpJob(id, srcsl, srcfilelist, srcfile, dstsl, dstfilelist, dstfile);
+}
+
+TransferJob::TransferJob(unsigned int id, const Pointer<SiteLogic> & srcsl, const Path & srcpath, const std::string & srcfile, const Pointer<SiteLogic> & dstsl, const Path & dstpath, const std::string & dstfile) {
+  FileList * srcfilelist = new FileList(srcsl->getSite()->getUser(), srcpath);
+  FileList * dstfilelist = new FileList(dstsl->getSite()->getUser(), dstpath);
+  fxpJob(id, srcsl, srcfilelist, srcfile, dstsl, dstfilelist, dstfile);
+}
+
+void TransferJob::fxpJob(unsigned int id, const Pointer<SiteLogic> & srcsl, FileList * srcfilelist, const std::string & srcfile, const Pointer<SiteLogic> & dstsl, FileList * dstfilelist, const std::string & dstfile) {
+  init(id, TRANSFERJOB_FXP, srcsl, dstsl, srcfilelist->getPath(), dstfilelist->getPath(), srcfile, dstfile);
+  srcfilelists[""] = srcfilelist;
+  dstfilelists[""] = dstfilelist;
+  if (srcfilelist->getState() == FILELIST_LISTED) {
+    fileListUpdated(src.get(), srcfilelist);
   }
   else {
-    type = TRANSFERJOB_FXP_FILE;
+    filelistsrefreshed[srcfilelist] = false;
+  }
+  if (dstfilelist->getState() == FILELIST_LISTED) {
+    fileListUpdated(dst.get(), dstfilelist);
+  }
+  else {
+    filelistsrefreshed[dstfilelist] = false;
   }
 }
 
@@ -99,20 +96,12 @@ int TransferJob::classType() const {
   return COMMANDOWNER_TRANSFERJOB;
 }
 
-const Path & TransferJob::getLocalPath() const {
-  return localpath;
+const Path & TransferJob::getSrcPath() const {
+  return srcpath;
 }
 
-FileList * TransferJob::getSrcFileList() const {
-  return srclist;
-}
-
-FileList * TransferJob::getDstFileList() const {
-  return dstlist;
-}
-
-Pointer<LocalFileList> TransferJob::getLocalFileList() const {
-  return locallist;
+const Path & TransferJob::getDstPath() const {
+  return dstpath;
 }
 
 std::map<std::string, FileList *>::const_iterator TransferJob::srcFileListsBegin() const {
@@ -155,7 +144,15 @@ std::list<Pointer<TransferStatus> >::const_iterator TransferJob::transfersEnd() 
   return transfers.end();
 }
 
-void TransferJob::init() {
+void TransferJob::init(unsigned int id, TransferJobType type, const Pointer<SiteLogic> & srcsl, const Pointer<SiteLogic> & dstsl, const Path & srcpath, const Path & dstpath, const std::string & srcfile, const std::string & dstfile) {
+  this->id = id;
+  this->type = type;
+  this->src = srcsl;
+  this->dst = dstsl;
+  this->srcpath = srcpath;
+  this->dstpath = dstpath;
+  this->srcfile = srcfile;
+  this->dstfile = dstfile;
   done = false;
   almostdone = false;
   listsrefreshed = false;
@@ -223,7 +220,7 @@ bool TransferJob::wantsList(SiteLogic * sl) {
 
 Pointer<LocalFileList> TransferJob::wantedLocalDstList(const std::string & subdir) {
   if (localfilelists.find(subdir) == localfilelists.end()) {
-    localfilelists[subdir] = makePointer<LocalFileList>(localpath / dstfile / subdir);
+    localfilelists[subdir] = makePointer<LocalFileList>(dstpath / subdir);
   }
   return localfilelists.at(subdir);
 }
@@ -276,12 +273,28 @@ void TransferJob::fileListUpdated(SiteLogic * sl, FileList * fl) {
     listsrefreshed = true;
     countTotalFiles();
   }
-  Path subpath = fl->getPath() - (sl == src.get() ? srcfilelists[""]->getPath() : dstfilelists[""]->getPath());
+  Path subpath = fl->getPath() - (sl == src.get() ? srcpath : dstpath);
   if (type == TRANSFERJOB_FXP || type == TRANSFERJOB_DOWNLOAD) {
-    addSubDirectoryFileLists(srcfilelists, fl, subpath);
+    if (subpath == "") {
+      File * file = fl->getFile(srcfile);
+      if (file != NULL) {
+        addSubDirectoryFileLists(srcfilelists, fl, subpath, file);
+      }
+    }
+    else {
+      addSubDirectoryFileLists(srcfilelists, fl, subpath);
+    }
   }
   if (type == TRANSFERJOB_FXP || type == TRANSFERJOB_UPLOAD) {
-    addSubDirectoryFileLists(dstfilelists, fl, subpath);
+    if (subpath == "") {
+      File * file = fl->getFile(dstfile);
+      if (file != NULL) {
+        addSubDirectoryFileLists(dstfilelists, fl, subpath, file);
+      }
+    }
+    else {
+      addSubDirectoryFileLists(dstfilelists, fl, subpath);
+    }
   }
 
 }
@@ -324,16 +337,20 @@ Pointer<LocalFileList> TransferJob::findLocalFileList(const std::string & subpat
 void TransferJob::addSubDirectoryFileLists(std::map<std::string, FileList *> & filelists, FileList * filelist, const Path & subpath) {
   std::map<std::string, File *>::iterator it;
   for(it = filelist->begin(); it != filelist->end(); it++) {
-    File * file = it->second;
-    if (file->isDirectory()) {
-      if ((!!dst && !dst->getSite()->getSkipList().isAllowed(it->first, true, false)) ||
-          !global->getSkipList()->isAllowed(it->first, true, false)) {
-        continue;
-      }
-      std::string filename = file->getName();
-      if (filelists.find(filename) == filelists.end()) {
-        filelists[filename] = new FileList(filelist->getUser(), filelists[""]->getPath() / subpath / filename);
-      }
+    addSubDirectoryFileLists(filelists, filelist, subpath, it->second);
+  }
+}
+
+void TransferJob::addSubDirectoryFileLists(std::map<std::string, FileList *> & filelists, FileList * filelist, const Path & subpath, File * file) {
+  if (file->isDirectory()) {
+    if ((!!dst && !dst->getSite()->getSkipList().isAllowed(file->getName(), true, false)) ||
+        !global->getSkipList()->isAllowed(file->getName(), true, false))
+    {
+      return;
+    }
+    std::string subpathfile = (subpath / file->getName()).toString();
+    if (filelists.find(subpathfile) == filelists.end()) {
+      filelists[subpathfile] = new FileList(filelists[""]->getUser(), filelists[""]->getPath() / subpathfile);
     }
   }
 }
@@ -356,10 +373,6 @@ void TransferJob::setSlots(int slots) {
 
 int TransferJob::maxPossibleSlots() const {
   switch (type) {
-    case TRANSFERJOB_DOWNLOAD_FILE:
-    case TRANSFERJOB_FXP_FILE:
-    case TRANSFERJOB_UPLOAD_FILE:
-      return 1;
     case TRANSFERJOB_UPLOAD:
       return dst->getSite()->getMaxUp();
     case TRANSFERJOB_FXP:
@@ -377,9 +390,7 @@ bool TransferJob::refreshOrAlmostDone() {
   if (almostdone) {
     return false;
   }
-  else if (listsrefreshed || type == TRANSFERJOB_FXP_FILE ||
-      type == TRANSFERJOB_DOWNLOAD_FILE || type == TRANSFERJOB_UPLOAD_FILE)
-  {
+  else if (listsrefreshed) {
     almostdone = true;
   }
   else if (!filelistsrefreshed.size()) {
@@ -394,7 +405,7 @@ bool TransferJob::refreshOrAlmostDone() {
       }
     }
     if (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_UPLOAD) {
-      updateLocalFileLists(localpath / srcfile);
+      updateLocalFileLists();
     }
   }
   else {
@@ -417,7 +428,7 @@ void TransferJob::addTransfer(const Pointer<TransferStatus> & ts) {
     idletime = 0;
     transfers.push_front(ts);
     ts->setCallback(this);
-    Path subpathfile = findSubPath(ts) / ts->getFile();
+    Path subpathfile = (ts->getSourcePath() - srcpath) / ts->getFile();
     if (pendingtransfers.find(subpathfile.toString()) != pendingtransfers.end()) {
       pendingtransfers.erase(subpathfile.toString());
     }
@@ -453,7 +464,7 @@ void TransferJob::updateStatus() {
       ongoingtransfers = true;
     }
     if (state == TRANSFERSTATUS_STATE_SUCCESSFUL) {
-      Path subpathfile = findSubPath(*it) / (*it)->getFile();
+      Path subpathfile = ((*it)->getSourcePath() - srcpath) / (*it)->getFile();
       if (existingtargets.find(subpathfile.toString()) == existingtargets.end()) {
         aggregatedfilescomplete++;
       }
@@ -511,15 +522,12 @@ std::string TransferJob::typeString() const {
   std::string type;
   switch (this->type) {
     case TRANSFERJOB_DOWNLOAD:
-    case TRANSFERJOB_DOWNLOAD_FILE:
       type = "Download";
       break;
     case TRANSFERJOB_UPLOAD:
-    case TRANSFERJOB_UPLOAD_FILE:
       type = "Upload";
       break;
     case TRANSFERJOB_FXP:
-    case TRANSFERJOB_FXP_FILE:
       type = "FXP";
       break;
   }
@@ -536,16 +544,18 @@ int TransferJob::filesTotal() const {
 
 void TransferJob::countTotalFiles() {
   switch (type) {
-    case TRANSFERJOB_DOWNLOAD_FILE:
-    case TRANSFERJOB_UPLOAD_FILE:
-    case TRANSFERJOB_FXP_FILE:
-      filestotal = 1;
-      break;
     case TRANSFERJOB_DOWNLOAD:
     case TRANSFERJOB_FXP:
     {
       int files = 0;
       for (std::map<std::string, FileList *>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
+        if (it->first == "") {
+          File * f = it->second->getFile(srcfile);
+          if (f != NULL && !f->isDirectory()) {
+            ++files;
+          }
+          continue;
+        }
         files += it->second->getNumUploadedFiles();
       }
       filestotal = files;
@@ -556,34 +566,19 @@ void TransferJob::countTotalFiles() {
       int files = 0;
       std::map<std::string, Pointer<LocalFileList> >::const_iterator it;
       for (it = localfilelists.begin(); it != localfilelists.end(); it++) {
+        if (it->first == "") {
+          std::map<std::string, LocalFile>::const_iterator it2 = it->second->find(srcfile);
+          if (it2 != it->second->end() && !it2->second.isDirectory()) {
+            ++files;
+          }
+          continue;
+        }
         files += it->second->sizeFiles();
       }
       filestotal = files;
       break;
     }
   }
-}
-
-Path TransferJob::findSubPath(const Pointer<TransferStatus> & ts) const {
-  Path path = ts->getSourcePath();
-  switch (type) {
-    case TRANSFERJOB_DOWNLOAD:
-    case TRANSFERJOB_FXP:
-      for (std::map<std::string, FileList *>::const_iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
-        if (it->second->getPath() == path) {
-          return it->first;
-        }
-      }
-      break;
-    case TRANSFERJOB_UPLOAD: {
-      Path relpath = localpath / srcfile;
-      if (path != relpath && path.contains(relpath)) {
-        return path - relpath;
-      }
-      break;
-    }
-  }
-  return "";
 }
 
 bool TransferJob::isInitialized() const {
@@ -618,25 +613,38 @@ void TransferJob::setDone() {
   timeremaining = 0;
 }
 
-void TransferJob::updateLocalFileLists(const Path & basepath) {
+void TransferJob::updateLocalFileLists() {
   localfilelists.clear();
+  Path basepath = type == TRANSFERJOB_DOWNLOAD ? dstpath : srcpath;
   Pointer<LocalFileList> base = global->getLocalStorage()->getLocalFileList(basepath);
   if (!!base) {
     localfilelists[""] = base;
+    std::map<std::string, LocalFile>::const_iterator it = base->find(srcfile);
+    if (it != base->end() && it->second.isDirectory()) {
+      updateLocalFileLists(basepath, basepath / srcfile);
+    }
+  }
+}
+
+void TransferJob::updateLocalFileLists(const Path & basepath, const Path & path) {
+  Pointer<LocalFileList> filelist = global->getLocalStorage()->getLocalFileList(path);
+  if (!!filelist) {
+    std::string subpath = (path - basepath).toString();
+    localfilelists[subpath] = filelist;
+    if (type == TRANSFERJOB_DOWNLOAD && srcfilelists.find(subpath) == srcfilelists.end()) {
+      FileList * fl = new FileList(srcfilelists[""]->getUser(), srcpath / subpath);
+      srcfilelists[subpath] = fl;
+      filelistsrefreshed[fl] = false;
+    }
+    else if (type == TRANSFERJOB_UPLOAD && dstfilelists.find(subpath) == dstfilelists.end()) {
+      FileList * fl = new FileList(dstfilelists[""]->getUser(), dstpath / subpath);
+      dstfilelists[subpath] = fl;
+      filelistsrefreshed[fl] = false;
+    }
     std::map<std::string, LocalFile>::const_iterator it;
-    for (it = base->begin(); it != base->end(); it++) {
+    for (it = filelist->begin(); it != filelist->end(); it++) {
       if (it->second.isDirectory()) {
-        localfilelists[it->first] = global->getLocalStorage()->getLocalFileList(base->getPath() / it->first);
-        if (type == TRANSFERJOB_DOWNLOAD && srcfilelists.find(it->first) == srcfilelists.end()) {
-          FileList * fl = new FileList(srclist->getUser(), srclist->getPath() / srcfile / it->first);
-          srcfilelists[it->first] = fl;
-          filelistsrefreshed[fl] = false;
-        }
-        else if (type == TRANSFERJOB_UPLOAD && dstfilelists.find(it->first) == dstfilelists.end()) {
-          FileList * fl = new FileList(dstlist->getUser(), dstlist->getPath() / dstfile / it->first);
-          dstfilelists[it->first] = fl;
-          filelistsrefreshed[fl] = false;
-        }
+        updateLocalFileLists(basepath, path / it->first);
       }
     }
   }

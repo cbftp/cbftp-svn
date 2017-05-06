@@ -198,7 +198,7 @@ std::string TransferJobStatusScreen::getInfoLabel() const {
 
 void TransferJobStatusScreen::addTransferDetails(unsigned int y, Pointer<TransferStatus> ts) {
   TransferDetails td = TransfersScreen::formatTransferDetails(ts);
-  Path subpathfile = transferjob->findSubPath(ts) / ts->getFile();
+  Path subpathfile = (ts->getSourcePath() - transferjob->getSrcPath()) / ts->getFile();
   addTransferDetails(y, td.timespent, td.transferred, subpathfile.toString(), td.timeremaining,
                      td.speed, td.progress, ts->getProgress());
 }
@@ -233,15 +233,12 @@ std::string TransferJobStatusScreen::getRoute(Pointer<TransferJob> tj) {
   std::string route;
   switch (tj->getType()) {
     case TRANSFERJOB_DOWNLOAD:
-    case TRANSFERJOB_DOWNLOAD_FILE:
       route = tj->getSrc()->getSite()->getName() + " -> /\\";
       break;
     case TRANSFERJOB_UPLOAD:
-    case TRANSFERJOB_UPLOAD_FILE:
       route = "/\\ -> " + tj->getDst()->getSite()->getName();
       break;
     case TRANSFERJOB_FXP:
-    case TRANSFERJOB_FXP_FILE:
       route = tj->getSrc()->getSite()->getName() + " -> " +
       tj->getDst()->getSite()->getName();
       break;

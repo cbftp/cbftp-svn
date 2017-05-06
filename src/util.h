@@ -25,6 +25,7 @@ int wildcmp(const char *, const char *);
 int wildcmpCase(const char *, const char *);
 std::list<std::string> split(const std::string &, const std::string &);
 std::list<std::string> split(const std::string &);
+std::vector<std::string> splitVec(const std::string &, const std::string &);
 std::string join(const std::list<std::string> &, const std::string &);
 std::string join(const std::list<std::string> &);
 int chrstrfind(const char *, unsigned int, const char *, unsigned int);

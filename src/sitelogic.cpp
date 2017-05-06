@@ -851,10 +851,9 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
         continue;
       }
       int type = tj->getType();
-      if (((type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_DOWNLOAD_FILE ||
-            type == TRANSFERJOB_FXP || type == TRANSFERJOB_FXP_FILE) &&
+      if (((type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) &&
             tj->getSrc()->getCurrDown() < tj->maxSlots()) ||
-          ((type == TRANSFERJOB_UPLOAD || type == TRANSFERJOB_UPLOAD_FILE) && getCurrUp() < tj->maxSlots()))
+          (type == TRANSFERJOB_UPLOAD && getCurrUp() < tj->maxSlots()))
       {
         targetjobs.push_back(tj);
         continue;
