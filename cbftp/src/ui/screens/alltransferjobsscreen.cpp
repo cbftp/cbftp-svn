@@ -231,15 +231,6 @@ void AllTransferJobsScreen::addJobDetails(unsigned int y, MenuSelectOption & mso
     case TRANSFERJOB_UPLOAD:
       type = "UL";
       break;
-    case TRANSFERJOB_DOWNLOAD_FILE:
-      type = "DLF";
-      break;
-    case TRANSFERJOB_UPLOAD_FILE:
-      type = "ULF";
-      break;
-    case TRANSFERJOB_FXP_FILE:
-      type = "FXPF";
-      break;
   }
   addJobTableRow(y, mso, tj->getId(), true, tj->timeStarted(), timespent, type, tj->getSrcFileName(), route, sizeprogress, filesprogress, timeremaining, speed, status);
 }

@@ -15,6 +15,7 @@
 #include "sitemanager.h"
 #include "site.h"
 #include "race.h"
+#include "localstorage.h"
 
 #define DEFAULTPORT 55477
 #define DEFAULTPASS "DEFAULT"
@@ -195,15 +196,115 @@ void RemoteCommandHandler::commandRaw(const std::string & message) {
 }
 
 void RemoteCommandHandler::commandFXP(const std::string & message) {
-
+  std::vector<std::string> tokens = util::splitVec(message, " ");
+  if (tokens.size() < 5) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad remote fxp command format: " + message);
+    return;
+  }
+  Pointer<SiteLogic> srcsl = global->getSiteLogicManager()->getSiteLogic(tokens[0]);
+  Pointer<SiteLogic> dstsl = global->getSiteLogicManager()->getSiteLogic(tokens[3]);
+  if (!srcsl) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad site name: " + tokens[0]);
+    return;
+  }
+  if (!dstsl) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad site name: " + tokens[3]);
+    return;
+  }
+  std::string dstfile = tokens.size() > 5 ? tokens[5] : tokens[2];
+  std::string srcpath = tokens[1];
+  if (Path(srcpath).isRelative()) {
+    if (srcsl->getSite()->hasSection(srcpath)) {
+      srcpath = srcsl->getSite()->getSectionPath(srcpath).toString();
+    }
+    else {
+      global->getEventLog()->log("RemoteCommandHandler", "Path must be absolute or a section name: " + srcpath);
+      return;
+    }
+  }
+  std::string dstpath = tokens[4];
+  if (Path(dstpath).isRelative()) {
+    if (dstsl->getSite()->hasSection(dstpath)) {
+      dstpath = dstsl->getSite()->getSectionPath(dstpath).toString();
+    }
+    else {
+      global->getEventLog()->log("RemoteCommandHandler", "Path must be absolute or a section name: " + dstpath);
+      return;
+    }
+  }
+  global->getEngine()->newTransferJobFXP(tokens[0], srcpath, tokens[2], tokens[3], dstpath, dstfile);
 }
 
 void RemoteCommandHandler::commandDownload(const std::string & message) {
-
+  std::vector<std::string> tokens = util::splitVec(message, " ");
+  if (tokens.size() < 2) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad download command format: " + message);
+    return;
+  }
+  Pointer<SiteLogic> srcsl = global->getSiteLogicManager()->getSiteLogic(tokens[0]);
+  if (!srcsl) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad site name: " + tokens[0]);
+    return;
+  }
+  Path srcpath = tokens[1];
+  std::string file = srcpath.baseName();
+  if (tokens.size() == 2) {
+    if (srcpath.isRelative()) {
+      global->getEventLog()->log("RemoteCommandHandler", "Path must be absolute or a section name followed by file: " + tokens[1]);
+      return;
+    }
+    srcpath = srcpath.dirName();
+  }
+  else {
+    if (srcpath.isRelative()) {
+      if (srcsl->getSite()->hasSection(tokens[1])) {
+        srcpath = srcsl->getSite()->getSectionPath(tokens[1]);
+      }
+      else {
+        global->getEventLog()->log("RemoteCommandHandler", "Path must be absolute or a section name: " + tokens[1]);
+        return;
+      }
+    }
+    file = tokens[2];
+  }
+  global->getEngine()->newTransferJobDownload(tokens[0], srcpath, file, global->getLocalStorage()->getDownloadPath(), file);
 }
 
 void RemoteCommandHandler::commandUpload(const std::string & message) {
-
+  std::vector<std::string> tokens = util::splitVec(message, " ");
+  if (tokens.size() < 3) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad upload command format: " + message);
+    return;
+  }
+  Path srcpath = tokens[0];
+  std::string file = srcpath.baseName();
+  std::string dstsite;
+  Path dstpath;
+  if (tokens.size() == 3) {
+    srcpath = srcpath.dirName();
+    dstsite = tokens[1];
+    dstpath = tokens[2];
+  }
+  else {
+    file = tokens[1];
+    dstsite = tokens[2];
+    dstpath = tokens[3];
+  }
+  Pointer<SiteLogic> dstsl = global->getSiteLogicManager()->getSiteLogic(dstsite);
+  if (!dstsl) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad site name: " + dstsite);
+    return;
+  }
+  if (dstpath.isRelative()) {
+    if (dstsl->getSite()->hasSection(dstpath.toString())) {
+      dstpath = dstsl->getSite()->getSectionPath(dstpath.toString());
+    }
+    else {
+      global->getEventLog()->log("RemoteCommandHandler", "Path must be absolute or a section name: " + dstpath.toString());
+      return;
+    }
+  }
+  global->getEngine()->newTransferJobUpload(srcpath, file, dstsite, dstpath, file);
 }
 
 void RemoteCommandHandler::commandIdle(const std::string & message) {

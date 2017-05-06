@@ -250,21 +250,32 @@ void Engine::toggleStartNextPreparedRace() {
   }
 }
 
-void Engine::newTransferJobDownload(const std::string & site, const std::string & file, FileList * filelist, const Path & path) {
-  newTransferJobDownload(site, file, filelist, path, file);
+void Engine::newTransferJobDownload(const std::string & srcsite, FileList * srcfilelist, const std::string & file, const Path & dstpath) {
+  newTransferJobDownload(srcsite, srcfilelist, file, dstpath, file);
 }
 
-void Engine::newTransferJobUpload(const Path & path, const std::string & site, const std::string & file, FileList * filelist) {
-  newTransferJobUpload(path, file, site, file, filelist);
+void Engine::newTransferJobUpload(const Path & srcpath, const std::string & file, const std::string & dstsite, FileList * dstfilelist) {
+  newTransferJobUpload(srcpath, file, dstsite, dstfilelist, file);
 }
 
 void Engine::newTransferJobFXP(const std::string & srcsite, FileList * srcfilelist, const std::string & dstsite, FileList * dstfilelist, const std::string & file) {
-  newTransferJobFXP(srcsite, file, srcfilelist, dstsite, file, dstfilelist);
+  newTransferJobFXP(srcsite, srcfilelist, file, dstsite, dstfilelist, file);
 }
 
-void Engine::newTransferJobDownload(const std::string & site, const std::string & srcfile, FileList * filelist, const Path & path, const std::string & dstfile) {
+void Engine::newTransferJobDownload(const std::string & srcsite, FileList * srcfilelist, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
+  const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(srcsite);
+  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, sl, srcfilelist, srcfile, dstpath, dstfile);
+  alltransferjobs.push_back(tj);
+  currenttransferjobs.push_back(tj);
+  global->getEventLog()->log("Engine", "Starting download job: " + srcfile +
+            " from " + srcsite);
+  sl->addTransferJob(tj);
+  checkStartPoke();
+}
+
+void Engine::newTransferJobDownload(const std::string & site, const Path & srcpath, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
   const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
-  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, sl, srcfile, filelist, path, dstfile);
+  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, sl, srcpath, srcfile, dstpath, dstfile);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting download job: " + srcfile +
@@ -273,21 +284,45 @@ void Engine::newTransferJobDownload(const std::string & site, const std::string 
   checkStartPoke();
 }
 
-void Engine::newTransferJobUpload(const Path & path, const std::string & srcfile, const std::string & site, const std::string & dstfile, FileList * filelist) {
-  const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
-  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, path, srcfile, sl, dstfile, filelist);
+void Engine::newTransferJobUpload(const Path & srcpath, const std::string & srcfile, const std::string & dstsite, FileList * dstfilelist, const std::string & dstfile) {
+  const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(dstsite);
+  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, srcpath, srcfile, sl, dstfilelist, dstfile);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting upload job: " + srcfile +
-            " to " + site);
+            " to " + dstsite);
   sl->addTransferJob(tj);
   checkStartPoke();
 }
 
-void Engine::newTransferJobFXP(const std::string & srcsite, const std::string & srcfile, FileList * srcfilelist, const std::string & dstsite, const std::string & dstfile, FileList * dstfilelist) {
+void Engine::newTransferJobUpload(const Path & srcpath, const std::string & srcfile, const std::string & dstsite, const Path & dstpath, const std::string & dstfile) {
+  const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(dstsite);
+  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, srcpath, srcfile, sl, dstpath, dstfile);
+  alltransferjobs.push_back(tj);
+  currenttransferjobs.push_back(tj);
+  global->getEventLog()->log("Engine", "Starting upload job: " + srcfile +
+            " to " + dstsite);
+  sl->addTransferJob(tj);
+  checkStartPoke();
+}
+
+void Engine::newTransferJobFXP(const std::string & srcsite, FileList * srcfilelist, const std::string & srcfile, const std::string & dstsite, FileList * dstfilelist, const std::string & dstfile) {
   const Pointer<SiteLogic> slsrc = global->getSiteLogicManager()->getSiteLogic(srcsite);
   const Pointer<SiteLogic> sldst = global->getSiteLogicManager()->getSiteLogic(dstsite);
-  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, slsrc, srcfile, srcfilelist, sldst, dstfile, dstfilelist);
+  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, slsrc, srcfilelist, srcfile, sldst, dstfilelist, dstfile);
+  alltransferjobs.push_back(tj);
+  currenttransferjobs.push_back(tj);
+  global->getEventLog()->log("Engine", "Starting FXP job: " + srcfile +
+            " - " + srcsite + " -> " + dstsite);
+  slsrc->addTransferJob(tj);
+  sldst->addTransferJob(tj);
+  checkStartPoke();
+}
+
+void Engine::newTransferJobFXP(const std::string & srcsite, const Path & srcpath, const std::string & srcfile, const std::string & dstsite, const Path & dstpath, const std::string & dstfile) {
+  const Pointer<SiteLogic> slsrc = global->getSiteLogicManager()->getSiteLogic(srcsite);
+  const Pointer<SiteLogic> sldst = global->getSiteLogicManager()->getSiteLogic(dstsite);
+  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, slsrc, srcpath, srcfile, sldst, dstpath, dstfile);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting FXP job: " + srcfile +
@@ -614,7 +649,9 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> & tj) {
         FileList * srclist = it2->second;
         Pointer<LocalFileList> dstlist = tj->findLocalFileList(it2->first);
         for (std::map<std::string, File *>::iterator srcit = srclist->begin(); srcit != srclist->end(); srcit++) {
-          if (!srcit->second->isDirectory() && srcit->second->getSize() > 0) {
+          if ((it2->first != "" || srcit->first == tj->getSrcFileName()) &&
+              !srcit->second->isDirectory() && srcit->second->getSize() > 0)
+          {
             std::map<std::string, LocalFile>::const_iterator dstit;
             if (!dstlist) {
               dstlist = tj->wantedLocalDstList(it2->first);
@@ -637,28 +674,6 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> & tj) {
       }
       break;
     }
-    case TRANSFERJOB_DOWNLOAD_FILE:
-      if (tj->getSrcFileList()->getFile(tj->getSrcFileName())->getSize() > 0) {
-        if (tj->hasFailedTransfer((tj->getLocalPath() / tj->getDstFileName()).toString())) {
-          break;
-        }
-        Pointer<LocalFileList> dstlist = tj->getLocalFileList();
-        std::map<std::string, LocalFile>::const_iterator dstit;
-        if (!!dstlist) {
-          dstit = dstlist->find(tj->getDstFileName());
-        }
-        if (!dstlist || dstit == dstlist->end() || dstit->second.getSize() == 0) {
-          PendingTransfer p(tj->getSrc(), tj->getSrcFileList(),
-              tj->getSrcFileName(), dstlist, tj->getDstFileName());
-          addPendingTransfer(list, p);
-          tj->addPendingTransfer(tj->getSrcFileName(),
-              tj->getSrcFileList()->getFile(tj->getSrcFileName())->getSize());
-        }
-        else {
-          tj->targetExists(tj->getSrcFileName());
-        }
-      }
-      break;
     case TRANSFERJOB_UPLOAD: {
       std::map<std::string, Pointer<LocalFileList> >::const_iterator lit;
       for (lit = tj->localFileListsBegin(); lit != tj->localFileListsEnd(); lit++) {
@@ -667,7 +682,9 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> & tj) {
           continue;
         }
         for (std::map<std::string, LocalFile>::const_iterator lfit = lit->second->begin(); lfit != lit->second->end(); lfit++) {
-          if (!lfit->second.isDirectory() && lfit->second.getSize() > 0) {
+          if ((lit->first != "" || lfit->first == tj->getSrcFileName()) &&
+              !lfit->second.isDirectory() && lfit->second.getSize() > 0)
+          {
             std::string filename = lfit->first;
             const Path subpath = lit->first;
             if (dstlist->getFile(filename) == NULL) {
@@ -686,27 +703,6 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> & tj) {
       }
       break;
     }
-    case TRANSFERJOB_UPLOAD_FILE: {
-      if (tj->hasFailedTransfer((Path(tj->getDstFileList()->getPath()) / tj->getDstFileName()).toString())) {
-        break;
-      }
-      Pointer<LocalFileList> srclist = tj->getLocalFileList();
-      std::map<std::string, LocalFile>::const_iterator srcit;
-      if (!!srclist) {
-        srcit = srclist->find(tj->getSrcFileName());
-      }
-      if (!!srclist && srcit != srclist->end() && srcit->second.getSize() > 0 &&
-          tj->getDstFileList()->getFile(tj->getDstFileName()) == NULL)
-      {
-        PendingTransfer p(srclist, tj->getSrcFileName(), tj->getDst(), tj->getDstFileList(), tj->getDstFileName());
-        addPendingTransfer(list, p);
-        tj->addPendingTransfer(tj->getSrcFileName(), srcit->second.getSize());
-      }
-      else {
-        tj->targetExists(tj->getSrcFileName());
-      }
-      break;
-    }
     case TRANSFERJOB_FXP: {
       std::map<std::string, FileList *>::const_iterator it2;
       for (it2 = tj->srcFileListsBegin(); it2 != tj->srcFileListsEnd(); it2++) {
@@ -716,7 +712,9 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> & tj) {
           continue;
         }
         for (std::map<std::string, File *>::iterator srcit = srclist->begin(); srcit != srclist->end(); srcit++) {
-          if (!srcit->second->isDirectory() && srcit->second->getSize() > 0) {
+          if ((it2->first != "" || srcit->first == tj->getSrcFileName()) &&
+              !srcit->second->isDirectory() && srcit->second->getSize() > 0)
+          {
             std::string filename = srcit->first;
             const Path subpath = it2->first;
             if (dstlist->getFile(filename) == NULL) {
@@ -736,23 +734,6 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> & tj) {
       }
       break;
     }
-    case TRANSFERJOB_FXP_FILE:
-      if (tj->hasFailedTransfer((Path(tj->getDstFileList()->getPath()) / tj->getDstFileName()).toString())) {
-        break;
-      }
-      if (tj->getSrcFileList()->getFile(tj->getSrcFileName())->getSize() > 0) {
-        if (tj->getDstFileList()->getFile(tj->getDstFileName()) == NULL) {
-          PendingTransfer p(tj->getSrc(), tj->getSrcFileList(),
-                        tj->getSrcFileName(), tj->getDst(), tj->getDstFileList(), tj->getDstFileName());
-          addPendingTransfer(list, p);
-          tj->addPendingTransfer(tj->getSrcFileName(),
-              tj->getSrcFileList()->getFile(tj->getSrcFileName())->getSize());
-        }
-        else {
-          tj->targetExists(tj->getSrcFileName());
-        }
-      }
-      break;
   }
 }
 

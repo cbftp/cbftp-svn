@@ -10,12 +10,11 @@
 #include "transferstatuscallback.h"
 #include "path.h"
 
-#define TRANSFERJOB_DOWNLOAD 2161
-#define TRANSFERJOB_DOWNLOAD_FILE 2162
-#define TRANSFERJOB_UPLOAD 2163
-#define TRANSFERJOB_UPLOAD_FILE 2164
-#define TRANSFERJOB_FXP 2165
-#define TRANSFERJOB_FXP_FILE 2166
+enum TransferJobType {
+  TRANSFERJOB_DOWNLOAD,
+  TRANSFERJOB_UPLOAD,
+  TRANSFERJOB_FXP
+};
 
 #define TRANSFERJOB_UPDATE_INTERVAL 250
 
@@ -23,21 +22,23 @@ class SiteLogic;
 class FileList;
 class TransferStatus;
 class LocalFileList;
+class File;
 
 class TransferJob : public CommandOwner, public TransferStatusCallback {
 public:
   int classType() const;
-  TransferJob(unsigned int, const Pointer<SiteLogic> &, std::string, FileList *, const Path &, std::string);
-  TransferJob(unsigned int, const Path &, std::string, const Pointer<SiteLogic> &, std::string, FileList *);
-  TransferJob(unsigned int, const Pointer<SiteLogic> &, std::string, FileList *, const Pointer<SiteLogic> &, std::string, FileList *);
+  TransferJob(unsigned int, const Pointer<SiteLogic> &, FileList *, const std::string &, const Path &, const std::string &);
+  TransferJob(unsigned int, const Pointer<SiteLogic> &, const Path &, const std::string &, const Path &, const std::string &);
+  TransferJob(unsigned int, const Path &, const std::string &, const Pointer<SiteLogic> &, FileList *, const std::string &);
+  TransferJob(unsigned int, const Path &, const std::string &, const Pointer<SiteLogic> &, const Path &, const std::string &);
+  TransferJob(unsigned int, const Pointer<SiteLogic> &, FileList *, const std::string &, const Pointer<SiteLogic> &, FileList *, const std::string &);
+  TransferJob(unsigned int, const Pointer<SiteLogic> &, const Path &, const std::string &, const Pointer<SiteLogic> &, const Path &, const std::string &);
   ~TransferJob();
+  int getType() const;
+  const Path & getSrcPath() const;
+  const Path & getDstPath() const;
   std::string getSrcFileName() const;
   std::string getDstFileName() const;
-  int getType() const;
-  const Path & getLocalPath() const;
-  FileList * getSrcFileList() const;
-  FileList * getDstFileList() const;
-  Pointer<LocalFileList> getLocalFileList() const;
   std::map<std::string, FileList *>::const_iterator srcFileListsBegin() const;
   std::map<std::string, FileList *>::const_iterator srcFileListsEnd() const;
   std::map<std::string, FileList *>::const_iterator dstFileListsBegin() const;
@@ -78,7 +79,6 @@ public:
   std::string typeString() const;
   int filesProgress() const;
   int filesTotal() const;
-  Path findSubPath(const Pointer<TransferStatus> &) const;
   bool isInitialized() const;
   void setInitialized();
   bool isAborted() const;
@@ -89,23 +89,26 @@ public:
   void transferSuccessful(const Pointer<TransferStatus> &);
   void transferFailed(const Pointer<TransferStatus> &, int);
 private:
+  void downloadJob(unsigned int, const Pointer<SiteLogic> &, FileList *, const std::string &, const Path &, const std::string &);
+  void uploadJob(unsigned int, const Path &, const std::string &, const Pointer<SiteLogic> &, FileList *, const std::string &);
+  void fxpJob(unsigned int, const Pointer<SiteLogic> &, FileList *, const std::string &, const Pointer<SiteLogic> &, FileList *, const std::string &);
   void addTransferAttempt(const Pointer<TransferStatus> &);
   void addSubDirectoryFileLists(std::map<std::string, FileList *> &, FileList *, const Path &);
+  void addSubDirectoryFileLists(std::map<std::string, FileList *> &, FileList *, const Path &, File *);
   void updateStatus();
-  void init();
+  void init(unsigned int, TransferJobType, const Pointer<SiteLogic> &, const Pointer<SiteLogic> &, const Path &, const Path &, const std::string &, const std::string &);
   void countTotalFiles();
   void setDone();
-  void updateLocalFileLists(const Path &);
+  void updateLocalFileLists();
+  void updateLocalFileLists(const Path &, const Path &);
   void checkFileListExists(FileList *) const;
   int type;
   Pointer<SiteLogic> src;
   Pointer<SiteLogic> dst;
+  Path srcpath;
+  Path dstpath;
   std::string srcfile;
   std::string dstfile;
-  Path localpath;
-  FileList * srclist;
-  FileList * dstlist;
-  Pointer<LocalFileList> locallist;
   std::map<std::string, FileList *> srcfilelists;
   std::map<std::string, FileList *> dstfilelists;
   std::map<std::string, Pointer<LocalFileList> > localfilelists;
