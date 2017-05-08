@@ -350,7 +350,10 @@ void TransferJob::addSubDirectoryFileLists(std::map<std::string, FileList *> & f
     }
     std::string subpathfile = (subpath / file->getName()).toString();
     if (filelists.find(subpathfile) == filelists.end()) {
-      filelists[subpathfile] = new FileList(filelists[""]->getUser(), filelists[""]->getPath() / subpathfile);
+      FileList * newfl = new FileList(filelists[""]->getUser(), filelists[""]->getPath() / subpathfile);
+      filelists[subpathfile] = newfl;
+      filelistsrefreshed[newfl] = false;
+      listsrefreshed = false;
     }
   }
 }
