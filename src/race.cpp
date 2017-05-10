@@ -14,6 +14,8 @@
 
 #define MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP 3
 
+typedef std::pair<FileList *, FileList *> FailedTransferSecond;
+
 Race::Race(unsigned int id, SpreadProfile profile, const std::string & release, const std::string & section) :
   name(release),
   group(util::getGroupNameFromRelease(release)),
@@ -522,10 +524,17 @@ unsigned int Race::getBestCompletionPercentage() const {
   return best;
 }
 
-bool Race::hasFailedTransfer(File * f, FileList * fld) const {
-  std::map<std::pair<File *, FileList *>, int>::const_iterator it =
-      transferattempts.find(std::pair<File *, FileList *>(f, fld));
-  return it != transferattempts.end() && it->second >= MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP;
+bool Race::hasFailedTransfer(File * f, FileList * fls, FileList * fld) const {
+  FailedTransfer matchall = FailedTransfer(f->getName(), FailedTransferSecond(NULL, fld));
+  std::map<FailedTransfer, int>::const_iterator it = transferattempts.find(matchall);
+  if (it != transferattempts.end() && it->second >= MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP) {
+    return true;
+  }
+  FailedTransfer match = FailedTransfer(f->getName(), FailedTransferSecond(fls, fld));
+  it = transferattempts.find(match);
+  size_t numsites = sites.size();
+  return it != transferattempts.end() && ((numsites == 3 && it->second >= 2) ||
+                                          (numsites > 3 && it->second >= 1));
 }
 
 bool Race::failedTransfersCleared() const {
@@ -554,13 +563,21 @@ void Race::transferFailed(const Pointer<TransferStatus> & ts, int) {
 }
 
 void Race::addTransferAttempt(const Pointer<TransferStatus> & ts) {
-  File * f = ts->getSourceFileList()->getFile(ts->getFile());
-  std::pair<File *, FileList *> matchpair =
-      std::pair<File *, FileList *>(f, ts->getTargetFileList());
-  std::map<std::pair<File *, FileList *>, int>::iterator it =
-      transferattempts.find(matchpair);
+  FileList * srcfl = ts->getSourceFileList();
+  FileList * dstfl = ts->getTargetFileList();
+  std::string file = ts->getFile();
+  FailedTransfer match = FailedTransfer(file, FailedTransferSecond(srcfl, dstfl));
+  FailedTransfer matchall = FailedTransfer(file, FailedTransferSecond(NULL, dstfl));
+  std::map<FailedTransfer, int>::iterator it = transferattempts.find(matchall);
   if (it == transferattempts.end()) {
-    transferattempts[matchpair] = 1;
+    transferattempts[matchall] = 1;
+  }
+  else {
+    it->second++;
+  }
+  it = transferattempts.find(match);
+  if (it == transferattempts.end()) {
+    transferattempts[match] = 1;
   }
   else {
     it->second++;

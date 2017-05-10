@@ -31,6 +31,8 @@ class File;
 class SiteLogic;
 class TransferStatus;
 
+typedef std::pair<std::string, std::pair<FileList *, FileList *> > FailedTransfer;
+
 class Race : public EventReceiver, public TransferStatusCallback {
   private:
     void recalculateBestUnknownFileSizeEstimate();
@@ -56,7 +58,7 @@ class Race : public EventReceiver, public TransferStatusCallback {
     std::map<std::string, unsigned long long int> guessedfileliststotalfilesize;
     unsigned long long int guessedtotalfilesize;
     std::map<std::string, std::map<std::string, SizeLocationTrack> > sizelocationtrackers;
-    std::map<std::pair<File *, FileList *>, int> transferattempts;
+    std::map<FailedTransfer, int> transferattempts;
     int checkcount;
     std::string timestamp;
     unsigned int timespent;
@@ -114,7 +116,7 @@ class Race : public EventReceiver, public TransferStatusCallback {
     unsigned int getWorstCompletionPercentage() const;
     unsigned int getAverageCompletionPercentage() const;
     unsigned int getBestCompletionPercentage() const;
-    bool hasFailedTransfer(File *, FileList *) const;
+    bool hasFailedTransfer(File *, FileList *, FileList *) const;
     bool failedTransfersCleared() const;
     void addTransfer(const Pointer<TransferStatus> &);
     bool clearTransferAttempts();

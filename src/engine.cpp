@@ -616,7 +616,7 @@ void Engine::refreshScoreBoard() {
               }
               const std::string filename = f->getName();
               if (fld->contains(filename) || f->isDirectory() || f->getSize() == 0) continue;
-              if (race->hasFailedTransfer(f, fld)) continue;
+              if (race->hasFailedTransfer(f, fls, fld)) continue;
               bool prio = false;
               unsigned short score = calculateScore(f, race, fls, srs, fld, srd, avgspeed, &prio, prioritypoints, racemode);
               scoreboard->add(filename, score, prio, sls, fls, sld, fld, race);
