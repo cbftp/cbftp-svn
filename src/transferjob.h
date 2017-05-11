@@ -92,7 +92,7 @@ private:
   void downloadJob(unsigned int, const Pointer<SiteLogic> &, FileList *, const std::string &, const Path &, const std::string &);
   void uploadJob(unsigned int, const Path &, const std::string &, const Pointer<SiteLogic> &, FileList *, const std::string &);
   void fxpJob(unsigned int, const Pointer<SiteLogic> &, FileList *, const std::string &, const Pointer<SiteLogic> &, FileList *, const std::string &);
-  void addTransferAttempt(const Pointer<TransferStatus> &);
+  void addTransferAttempt(const Pointer<TransferStatus> &, bool);
   void addSubDirectoryFileLists(std::map<std::string, FileList *> &, FileList *, const Path &);
   void addSubDirectoryFileLists(std::map<std::string, FileList *> &, FileList *, const Path &, File *);
   void updateStatus();
