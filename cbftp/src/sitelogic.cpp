@@ -1300,6 +1300,16 @@ std::string SiteLogic::getRawCommandResult(int requestid) {
   return "";
 }
 
+bool SiteLogic::requestStatus(int requestid) const {
+  std::list<SiteLogicRequestReady>::const_iterator it;
+  for (it = requestsready.begin(); it != requestsready.end(); it++) {
+    if (it->requestId() == requestid) {
+      return it->requestStatus();
+    }
+  }
+  return false;
+}
+
 bool SiteLogic::finishRequest(int requestid) {
   std::list<SiteLogicRequestReady>::iterator it;
   for (it = requestsready.begin(); it != requestsready.end(); it++) {

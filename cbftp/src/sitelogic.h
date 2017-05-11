@@ -131,6 +131,7 @@ class SiteLogic : public EventReceiver {
     int requestOneIdle();
     int requestAllIdle(int);
     bool requestReady(int) const;
+    bool requestStatus(int) const;
     void abortRace(unsigned int);
     FileList * getFileList(int) const;
     std::string getRawCommandResult(int);

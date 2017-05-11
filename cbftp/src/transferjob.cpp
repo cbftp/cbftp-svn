@@ -454,17 +454,23 @@ void TransferJob::updateStatus() {
   unsigned long long int aggregatedsizetransferred = 0;
   int aggregatedfilescomplete = 0;
   bool ongoingtransfers = false;
+  std::set<std::string> dstpaths;
   for (std::list<Pointer<TransferStatus> >::const_iterator it = transfersBegin(); it != transfersEnd(); it++) {
     if (pendingtransfers.find((*it)->getFile()) != pendingtransfers.end()) {
       pendingtransfers.erase((*it)->getFile());
     }
     int state = (*it)->getState();
+    if (state == TRANSFERSTATUS_STATE_IN_PROGRESS) {
+      ongoingtransfers = true;
+    }
+    std::string dstpath = ((*it)->getTargetPath() / (*it)->getFile()).toString();
+    if (dstpaths.find(dstpath) != dstpaths.end()) {
+      continue;
+    }
+    dstpaths.insert(dstpath);
     if (state == TRANSFERSTATUS_STATE_IN_PROGRESS || state == TRANSFERSTATUS_STATE_SUCCESSFUL) {
       aggregatedsize += (*it)->sourceSize();
       aggregatedsizetransferred += (*it)->targetSize();
-    }
-    if (state == TRANSFERSTATUS_STATE_IN_PROGRESS) {
-      ongoingtransfers = true;
     }
     if (state == TRANSFERSTATUS_STATE_SUCCESSFUL) {
       Path subpathfile = ((*it)->getSourcePath() - srcpath) / (*it)->getFile();
@@ -660,7 +666,7 @@ bool TransferJob::hasFailedTransfer(const std::string & dstpath) const {
 
 void TransferJob::transferSuccessful(const Pointer<TransferStatus> & ts) {
   idletime = 0;
-  addTransferAttempt(ts);
+  addTransferAttempt(ts, true);
 }
 
 void TransferJob::transferFailed(const Pointer<TransferStatus> & ts, int) {
@@ -675,10 +681,10 @@ void TransferJob::transferFailed(const Pointer<TransferStatus> & ts, int) {
       filelistsrefreshed[ts->getTargetFileList()] = false;
     }
   }
-  addTransferAttempt(ts);
+  addTransferAttempt(ts, false);
 }
 
-void TransferJob::addTransferAttempt(const Pointer<TransferStatus> & ts) {
+void TransferJob::addTransferAttempt(const Pointer<TransferStatus> & ts, bool success) {
   std::string dstpath = (Path(ts->getTargetPath()) / ts->getFile()).toString();
   std::map<std::string, int>::iterator it = transferattempts.find(dstpath);
   if (it == transferattempts.end()) {
@@ -686,5 +692,8 @@ void TransferJob::addTransferAttempt(const Pointer<TransferStatus> & ts) {
   }
   else {
     it->second++;
+  }
+  if (success && this->dstpath == ts->getTargetPath() && this->dstfile == ts->getFile()) {
+    transferattempts[dstpath] = MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP;
   }
 }
