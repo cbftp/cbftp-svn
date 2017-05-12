@@ -9,6 +9,7 @@
 #include "../../engine.h"
 #include "../../localfilelist.h"
 #include "../../timereference.h"
+#include "../../filelist.h"
 
 #include "../ui.h"
 #include "../termint.h"
@@ -169,20 +170,47 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
             if (other->type() == BROWSESCREEN_SITE) {
               FileList * otherfl = other.get<BrowseScreenSite>()->fileList();
               if (otherfl != NULL) {
-                global->getEngine()->newTransferJobFXP(active.get<BrowseScreenSite>()->siteName(),
-                                                       activefl,
-                                                       other.get<BrowseScreenSite>()->siteName(),
-                                                       otherfl,
-                                                       f->getName());
+                if (!f->isLink()) {
+                  global->getEngine()->newTransferJobFXP(active.get<BrowseScreenSite>()->siteName(),
+                                                         activefl,
+                                                         other.get<BrowseScreenSite>()->siteName(),
+                                                         otherfl,
+                                                         f->getName());
+                }
+                else {
+                  Path linktarget = f->getLinkTarget();
+                  if (linktarget.isRelative()) {
+                    linktarget = activefl->getPath() / linktarget;
+                  }
+                  global->getEngine()->newTransferJobFXP(active.get<BrowseScreenSite>()->siteName(),
+                                                         linktarget.dirName(),
+                                                         linktarget.baseName(),
+                                                         other.get<BrowseScreenSite>()->siteName(),
+                                                         otherfl->getPath(),
+                                                         linktarget.baseName());
+                }
               }
             }
             else {
               Pointer<LocalFileList> otherfl = other.get<BrowseScreenLocal>()->fileList();
               if (!!otherfl) {
-                global->getEngine()->newTransferJobDownload(active.get<BrowseScreenSite>()->siteName(),
-                                                            activefl,
-                                                            f->getName(),
-                                                            otherfl->getPath());
+                if (!f->isLink()) {
+                  global->getEngine()->newTransferJobDownload(active.get<BrowseScreenSite>()->siteName(),
+                                                              activefl,
+                                                              f->getName(),
+                                                              otherfl->getPath());
+                }
+                else {
+                  Path linktarget = f->getLinkTarget();
+                  if (linktarget.isRelative()) {
+                    linktarget = activefl->getPath() / linktarget;
+                  }
+                  global->getEngine()->newTransferJobDownload(active.get<BrowseScreenSite>()->siteName(),
+                                                              linktarget.dirName(),
+                                                              linktarget.baseName(),
+                                                              otherfl->getPath(),
+                                                              linktarget.baseName());
+                }
               }
             }
           }
@@ -192,11 +220,25 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
           FileList * otherfl = other.get<BrowseScreenSite>()->fileList();
           UIFile * f = active.get<BrowseScreenLocal>()->selectedFile();
           if (!!activefl && otherfl != NULL && f != NULL &&
-              (f->isDirectory() || f->getSize() > 0)) {
-            global->getEngine()->newTransferJobUpload(activefl->getPath(),
-                                                      f->getName(),
-                                                      other.get<BrowseScreenSite>()->siteName(),
-                                                      otherfl);
+              (f->isDirectory() || f->getSize() > 0))
+          {
+            if (!f->isLink()) {
+              global->getEngine()->newTransferJobUpload(activefl->getPath(),
+                                                        f->getName(),
+                                                        other.get<BrowseScreenSite>()->siteName(),
+                                                        otherfl);
+            }
+            else {
+              Path linktarget = f->getLinkTarget();
+              if (linktarget.isRelative()) {
+                linktarget = activefl->getPath() / linktarget;
+              }
+              global->getEngine()->newTransferJobUpload(linktarget.dirName(),
+                                                        linktarget.baseName(),
+                                                        other.get<BrowseScreenSite>()->siteName(),
+                                                        otherfl,
+                                                        linktarget.baseName());
+            }
           }
         }
       }
