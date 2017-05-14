@@ -17,30 +17,45 @@ TransferManager::~TransferManager() {
 
 }
 
-void TransferManager::getFileList(const Pointer<SiteLogic> & sl, int connid, bool hiddenfiles, CommandOwner * co, FileList * fl) {
+void TransferManager::getFileList(
+  const Pointer<SiteLogic> & sl, int connid, bool hiddenfiles, FileList * fl, CommandOwner * co)
+{
   Pointer<TransferMonitor> target = getAvailableTransferMonitor();
-  target->engageList(sl, connid, hiddenfiles, co, fl);
+  target->engageList(sl, connid, hiddenfiles, fl, co);
 }
 
-Pointer<TransferStatus> TransferManager::suggestTransfer(const std::string & name, const Pointer<SiteLogic> & src, FileList * fls, const Pointer<SiteLogic> & dst, FileList * fld) {
-  return suggestTransfer(name, src, fls, name, dst, fld);
+Pointer<TransferStatus> TransferManager::suggestTransfer(
+  const std::string & name, const Pointer<SiteLogic> & src, FileList * fls,
+  const Pointer<SiteLogic> & dst, FileList * fld, CommandOwner * srcco, CommandOwner * dstco)
+{
+  return suggestTransfer(name, src, fls, name, dst, fld, srcco, dstco);
 }
 
-Pointer<TransferStatus> TransferManager::suggestTransfer(const std::string & srcname, const Pointer<SiteLogic> & src, FileList * fls, const std::string & dstname, const Pointer<SiteLogic> & dst, FileList * fld) {
+Pointer<TransferStatus> TransferManager::suggestTransfer(
+  const std::string & srcname, const Pointer<SiteLogic> & src, FileList * fls,
+  const std::string & dstname, const Pointer<SiteLogic> & dst, FileList * fld,
+  CommandOwner * srcco, CommandOwner * dstco)
+{
   Pointer<TransferMonitor> target = getAvailableTransferMonitor();
-  target->engageFXP(srcname, src, fls, dstname, dst, fld);
+  target->engageFXP(srcname, src, fls, dstname, dst, fld, srcco, dstco);
   return target->getTransferStatus();
 }
 
-Pointer<TransferStatus> TransferManager::suggestDownload(const std::string & name, const Pointer<SiteLogic> & sl, FileList * filelist, const Pointer<LocalFileList> & path) {
+Pointer<TransferStatus> TransferManager::suggestDownload(
+  const std::string & name, const Pointer<SiteLogic> & sl, FileList * filelist,
+  const Pointer<LocalFileList> & path, CommandOwner * co)
+{
   Pointer<TransferMonitor> target = getAvailableTransferMonitor();
-  target->engageDownload(name, sl, filelist, path);
+  target->engageDownload(name, sl, filelist, path, co);
   return target->getTransferStatus();
 }
 
-Pointer<TransferStatus> TransferManager::suggestUpload(const std::string & name, const Pointer<LocalFileList> & path, const Pointer<SiteLogic> & sl, FileList * filelist) {
+Pointer<TransferStatus> TransferManager::suggestUpload(
+  const std::string & name, const Pointer<LocalFileList> & path,
+  const Pointer<SiteLogic> & sl, FileList * filelist, CommandOwner * co)
+{
   Pointer<TransferMonitor> target = getAvailableTransferMonitor();
-  target->engageUpload(name, path, sl, filelist);
+  target->engageUpload(name, path, sl, filelist, co);
   return target->getTransferStatus();
 }
 

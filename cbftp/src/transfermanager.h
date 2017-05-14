@@ -25,11 +25,20 @@ class TransferManager {
   public:
     TransferManager();
     ~TransferManager();
-    void getFileList(const Pointer<SiteLogic> &, int, bool, CommandOwner *, FileList *);
-    Pointer<TransferStatus> suggestTransfer(const std::string &, const Pointer<SiteLogic> &, FileList *, const Pointer<SiteLogic> &, FileList *);
-    Pointer<TransferStatus> suggestTransfer(const std::string &, const Pointer<SiteLogic> &, FileList *, const std::string &, const Pointer<SiteLogic> &, FileList *);
-    Pointer<TransferStatus> suggestDownload(const std::string &, const Pointer<SiteLogic> &, FileList *, const Pointer<LocalFileList> &);
-    Pointer<TransferStatus> suggestUpload(const std::string &, const Pointer<LocalFileList> &, const Pointer<SiteLogic> &, FileList *);
+    void getFileList(const Pointer<SiteLogic> &, int, bool, FileList *, CommandOwner *);
+    Pointer<TransferStatus> suggestTransfer(
+      const std::string &, const Pointer<SiteLogic> &, FileList *,
+      const Pointer<SiteLogic> &, FileList *, CommandOwner *, CommandOwner *);
+    Pointer<TransferStatus> suggestTransfer(
+      const std::string &, const Pointer<SiteLogic> &, FileList *,
+      const std::string &, const Pointer<SiteLogic> &, FileList *,
+      CommandOwner *, CommandOwner *);
+    Pointer<TransferStatus> suggestDownload(
+      const std::string &, const Pointer<SiteLogic> &, FileList *,
+      const Pointer<LocalFileList> &, CommandOwner *);
+    Pointer<TransferStatus> suggestUpload(
+      const std::string &, const Pointer<LocalFileList> &,
+      const Pointer<SiteLogic> &, FileList *, CommandOwner *);
     void transferSuccessful(const Pointer<TransferStatus> &);
     void transferFailed(const Pointer<TransferStatus> &, int);
     std::list<Pointer<TransferStatus> >::const_iterator ongoingTransfersBegin() const;

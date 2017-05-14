@@ -53,7 +53,7 @@ public:
   void abortTransferJob(Pointer<TransferJob> &);
   void raceFileListRefreshed(SiteLogic *, SiteRace *);
   void filelistUpdated();
-  bool transferJobActionRequest(Pointer<TransferJob> &);
+  bool transferJobActionRequest(SiteLogic *, Pointer<TransferJob> &);
   void raceActionRequest();
   void setPreparedRaceExpiryTime(int);
   void clearSkipListCaches();

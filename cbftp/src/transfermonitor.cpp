@@ -42,7 +42,11 @@ bool TransferMonitor::idle() const {
   return status == TM_STATUS_IDLE;
 }
 
-void TransferMonitor::engageFXP(const std::string & sfile, const Pointer<SiteLogic> & sls, FileList * fls, const std::string & dfile, const Pointer<SiteLogic> & sld, FileList * fld) {
+void TransferMonitor::engageFXP(
+  const std::string & sfile, const Pointer<SiteLogic> & sls, FileList * fls,
+  const std::string & dfile, const Pointer<SiteLogic> & sld, FileList * fld,
+  CommandOwner * srcco, CommandOwner * dstco)
+{
   reset();
   type = TM_TYPE_FXP;
   this->sls = sls;
@@ -53,11 +57,13 @@ void TransferMonitor::engageFXP(const std::string & sfile, const Pointer<SiteLog
   this->dpath = fld->getPath();
   this->sfile = sfile;
   this->dfile = dfile;
-  if (!sls->lockDownloadConn(fls, &src, this)) {
+  this->srcco = srcco;
+  this->dstco = dstco;
+  if (!sls->lockDownloadConn(fls, &src, srcco, this)) {
     tm->transferFailed(ts, TM_ERR_LOCK_DOWN);
     return;
   }
-  if (!sld->lockUploadConn(fld, &dst, this)) {
+  if (!sld->lockUploadConn(fld, &dst, dstco, this)) {
     sls->returnConn(src, true);
     tm->transferFailed(ts, TM_ERR_LOCK_UP);
     return;
@@ -89,7 +95,10 @@ void TransferMonitor::engageFXP(const std::string & sfile, const Pointer<SiteLog
 
 }
 
-void TransferMonitor::engageDownload(const std::string & sfile, const Pointer<SiteLogic> & sls, FileList * fls, const Pointer<LocalFileList> & localfl) {
+void TransferMonitor::engageDownload(
+  const std::string & sfile, const Pointer<SiteLogic> & sls, FileList * fls,
+  const Pointer<LocalFileList> & localfl, CommandOwner * co)
+{
   reset();
   if (!localfl) return;
   type = TM_TYPE_DOWNLOAD;
@@ -100,7 +109,8 @@ void TransferMonitor::engageDownload(const std::string & sfile, const Pointer<Si
   this->dpath = localfl->getPath();
   this->fls = fls;
   this->localfl = localfl;
-  if (!sls->lockDownloadConn(fls, &src, this)) return;
+  this->srcco = co;
+  if (!sls->lockDownloadConn(fls, &src, srcco, this)) return;
   status = TM_STATUS_AWAITING_PASSIVE;
   int spol = sls->getSite()->getSSLTransferPolicy();
   if (spol == SITE_SSL_ALWAYS_ON || spol == SITE_SSL_PREFER_ON) {
@@ -124,7 +134,10 @@ void TransferMonitor::engageDownload(const std::string & sfile, const Pointer<Si
   }
 }
 
-void TransferMonitor::engageUpload(const std::string & sfile, const Pointer<LocalFileList> & localfl, const Pointer<SiteLogic> & sld, FileList * fld) {
+void TransferMonitor::engageUpload(
+  const std::string & sfile, const Pointer<LocalFileList> & localfl,
+  const Pointer<SiteLogic> & sld, FileList * fld, CommandOwner * co)
+{
   reset();
   if (!localfl) return;
   type = TM_TYPE_UPLOAD;
@@ -135,10 +148,11 @@ void TransferMonitor::engageUpload(const std::string & sfile, const Pointer<Loca
   this->dpath = fld->getPath();
   this->fld = fld;
   this->localfl = localfl;
+  this->dstco = co;
   std::map<std::string, LocalFile>::const_iterator it = localfl->find(sfile);
   if (it == localfl->end()) return;
   const LocalFile & lf = it->second;
-  if (!sld->lockUploadConn(fld, &dst, this)) return;
+  if (!sld->lockUploadConn(fld, &dst, dstco, this)) return;
   status = TM_STATUS_AWAITING_PASSIVE;
   int spol = sld->getSite()->getSSLTransferPolicy();
   if (spol == SITE_SSL_ALWAYS_ON || spol == SITE_SSL_PREFER_ON) {
@@ -159,12 +173,14 @@ void TransferMonitor::engageUpload(const std::string & sfile, const Pointer<Loca
   }
 }
 
-void TransferMonitor::engageList(const Pointer<SiteLogic> & sls, int connid, bool hiddenfiles, CommandOwner * co, FileList * fl) {
+void TransferMonitor::engageList(const Pointer<SiteLogic> & sls, int connid,
+  bool hiddenfiles, FileList * fl, CommandOwner * co)
+{
   reset();
   type = TM_TYPE_LIST;
   this->sls = sls;
   this->fls = fl;
-  this->co = co;
+  this->srcco = co;
   src = connid;
   this->hiddenfiles = hiddenfiles;
   int spol = sls->getSite()->getSSLTransferPolicy();
@@ -400,7 +416,7 @@ void TransferMonitor::finish() {
       break;
     }
     case TM_TYPE_LIST:
-      sls->listCompleted(src, storeid, co, fls);
+      sls->listCompleted(src, storeid, fls, srcco);
       break;
   }
   if (!!ts) {
@@ -568,6 +584,8 @@ void TransferMonitor::reset() {
   fld = NULL;
   lt = NULL;
   ts.reset();
+  srcco = NULL;
+  dstco = NULL;
   clientactive = true;
   fxpdstactive = true;
   ssl = false;

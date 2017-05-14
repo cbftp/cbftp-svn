@@ -255,6 +255,27 @@ bool SiteLogic::handleCommandDelete(int id, bool success) {
   return false;
 }
 
+bool SiteLogic::makeTargetDirectory(int id, bool includinglast, CommandOwner * co) {
+  Path trypath = conns[id]->getMKDCWDTargetSection();
+  std::list<std::string> subdirs = conns[id]->getMKDSubdirs();
+  while (co && subdirs.size() > (includinglast ? 0 : 1)) {
+    trypath = trypath / subdirs.front();
+    subdirs.pop_front();
+    FileList * fl = co->getFileListForFullPath(this, trypath);
+    if (fl) {
+      if ((fl->getState() == FILELIST_UNKNOWN || fl->getState() == FILELIST_NONEXISTENT)) {
+        conns[id]->doMKD(fl, co);
+        return true;
+      }
+    }
+    else {
+      conns[id]->doMKD(trypath, co);
+      return true;
+    }
+  }
+  return false;
+}
+
 void SiteLogic::commandSuccess(int id) {
   connstatetracker[id].resetIdleTime();
   int state = conns[id]->getState();
@@ -308,27 +329,13 @@ void SiteLogic::commandSuccess(int id) {
         const Path & targetcwdpath = conns[id]->getMKDCWDTargetPath();
         const Path & targetpath = conns[id]->getTargetPath();
         setPathExists(id, EXISTS_YES, true);
-        std::list<std::string> subdirs = conns[id]->getMKDSubdirs();
         if (targetpath == targetcwdsect / targetcwdpath) {
           conns[id]->finishMKDCWDTarget();
           conns[id]->doCWD(conns[id]->currentFileList(), currentco);
           return;
         }
-        Path trypath = targetcwdsect;
-        while (currentco && subdirs.size() > 0) {
-          trypath = trypath / subdirs.front();
-          subdirs.pop_front();
-          FileList * fl = currentco->getFileListForFullPath(this, trypath);
-          if (fl) {
-            if ((fl->getState() == FILELIST_UNKNOWN || fl->getState() == FILELIST_NONEXISTENT)) {
-              conns[id]->doMKD(fl, currentco);
-              return;
-            }
-          }
-          else {
-            conns[id]->doMKD(trypath);
-            return;
-          }
+        if (makeTargetDirectory(id, true, currentco)) {
+          return;
         }
       }
       break;
@@ -517,25 +524,8 @@ void SiteLogic::commandFail(int id, int failuretype) {
         const Path & targetcwdsect = conns[id]->getMKDCWDTargetSection();
         const Path & targetcwdpath = conns[id]->getMKDCWDTargetPath();
         const Path & targetpath = conns[id]->getTargetPath();
-        std::list<std::string> subdirs = conns[id]->getMKDSubdirs();
-        if (currentco && subdirs.size() > 1 && targetpath == targetcwdsect / targetcwdpath) {
-          Path trypath = targetcwdsect;
-          while (subdirs.size() > 1) {
-            trypath = trypath / subdirs.front();
-            subdirs.pop_front();
-            FileList * fl = currentco->getFileListForFullPath(this, trypath);
-            if (fl) {
-              if (fl->getState() == FILELIST_UNKNOWN || fl->getState() == FILELIST_NONEXISTENT)
-              {
-                conns[id]->doMKD(fl, currentco);
-                return;
-              }
-            }
-            else {
-              conns[id]->doMKD(trypath);
-              return;
-            }
-          }
+        if (targetpath == targetcwdsect / targetcwdpath && makeTargetDirectory(id, false, currentco)) {
+          return;
         }
         conns[id]->finishMKDCWDTarget();
         setPathExists(id, EXISTS_FAILED, true);
@@ -755,7 +745,8 @@ void SiteLogic::activateOne() {
   else {
     for (unsigned int i = 0; i < conns.size(); i++) {
       if (connstatetracker[i].isLoggedIn() && !connstatetracker[i].isLocked() &&
-          !conns[i]->isProcessing()) {
+          !conns[i]->isProcessing())
+      {
         handleConnection(i, false);
         return;
       }
@@ -772,7 +763,7 @@ void SiteLogic::activateOne() {
   }
 }
 
-void SiteLogic::haveConnected(unsigned int connected) {
+void SiteLogic::haveConnectedActivate(unsigned int connected) {
   if (loggedin < connected) {
     int lefttoconnect = connected;
     for (unsigned int i = 0; i < conns.size() && lefttoconnect > 0; i++) {
@@ -780,6 +771,16 @@ void SiteLogic::haveConnected(unsigned int connected) {
         connstatetracker[i].resetIdleTime();
         conns[i]->login();
         lefttoconnect--;
+      }
+    }
+  }
+  else {
+    for (unsigned int i = 0; i < conns.size(); i++) {
+      if (connstatetracker[i].isLoggedIn() && !connstatetracker[i].isLocked() &&
+          !conns[i]->isProcessing())
+      {
+        handleConnection(i, false);
+        break;
       }
     }
   }
@@ -792,16 +793,16 @@ bool SiteLogic::handlePreTransfer(int id) {
   }
   FileList * fl = connstatetracker[id].getTransferFileList();
   const Path & transferpath = fl->getPath();
+  CommandOwner * co = connstatetracker[id].getCommandOwner();
   if (conns[id]->getCurrentPath() != transferpath) {
     if (connstatetracker[id].getTransferType() == CST_UPLOAD &&
         fl->getState() == FILELIST_NONEXISTENT)
     {
       std::pair<Path, Path> pathparts = site->splitPathInSectionAndSubpath(transferpath);
       conns[id]->setMKDCWDTarget(pathparts.first, pathparts.second);
-      conns[id]->doMKD(fl);
-      return true;
+      return makeTargetDirectory(id, true, co);
     }
-    conns[id]->doCWD(fl);
+    conns[id]->doCWD(fl, co);
     return true;
   }
   return false;
@@ -864,7 +865,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
     connstatetracker[id].delayedCommand("handle", SLEEPDELAY);
   }
   for (std::list<Pointer<TransferJob> >::iterator it = targetjobs.begin(); it != targetjobs.end(); it++) {
-    if (global->getEngine()->transferJobActionRequest(*it)) {
+    if (global->getEngine()->transferJobActionRequest(this, *it)) {
       return;
     }
   }
@@ -1344,15 +1345,15 @@ SiteRace * SiteLogic::getRace(const std::string & race) const {
   return NULL;
 }
 
-bool SiteLogic::lockDownloadConn(FileList * fl, int * ret, TransferMonitor * tm) {
-  return lockTransferConn(fl, ret, tm, true);
+bool SiteLogic::lockDownloadConn(FileList * fl, int * ret, CommandOwner * co, TransferMonitor * tm) {
+  return lockTransferConn(fl, ret, tm, co, true);
 }
 
-bool SiteLogic::lockUploadConn(FileList * fl, int * ret, TransferMonitor * tm) {
-  return lockTransferConn(fl, ret, tm, false);
+bool SiteLogic::lockUploadConn(FileList * fl, int * ret, CommandOwner * co, TransferMonitor * tm) {
+  return lockTransferConn(fl, ret, tm, co, false);
 }
 
-bool SiteLogic::lockTransferConn(FileList * fl, int * ret, TransferMonitor * tm, bool isdownload) {
+bool SiteLogic::lockTransferConn(FileList * fl, int * ret, TransferMonitor * tm, CommandOwner * co, bool isdownload) {
   int lastreadyid = -1;
   bool foundreadythread = false;
   const Path & path = fl->getPath();
@@ -1365,7 +1366,7 @@ bool SiteLogic::lockTransferConn(FileList * fl, int * ret, TransferMonitor * tm,
       if (conns[i]->getCurrentPath() == path) {
         if (!getSlot(isdownload)) return false;
         *ret = i;
-        connstatetracker[i].lockForTransfer(tm, fl, isdownload);
+        connstatetracker[i].lockForTransfer(tm, fl, co, isdownload);
         conns[i]->setRawBufferCallback(tm);
         return true;
       }
@@ -1380,7 +1381,7 @@ bool SiteLogic::lockTransferConn(FileList * fl, int * ret, TransferMonitor * tm,
           if (conns[i]->getTargetPath() == path) {
             if (!getSlot(isdownload)) return false;
             *ret = i;
-            connstatetracker[i].lockForTransfer(tm, fl, isdownload);
+            connstatetracker[i].lockForTransfer(tm, fl, co, isdownload);
             conns[i]->setRawBufferCallback(tm);
             handleConnection(i);
             return true;
@@ -1392,7 +1393,7 @@ bool SiteLogic::lockTransferConn(FileList * fl, int * ret, TransferMonitor * tm,
   if (foundreadythread) {
     if (!getSlot(isdownload)) return false;
     *ret = lastreadyid;
-    connstatetracker[lastreadyid].lockForTransfer(tm, fl, isdownload);
+    connstatetracker[lastreadyid].lockForTransfer(tm, fl, co, isdownload);
     conns[lastreadyid]->setRawBufferCallback(tm);
     handleConnection(lastreadyid);
     return true;
@@ -1599,7 +1600,7 @@ void SiteLogic::finishTransferGracefully(int id) {
   connstatetracker[id].finishTransfer();
 }
 
-void SiteLogic::listCompleted(int id, int storeid, CommandOwner * co, FileList * fl) {
+void SiteLogic::listCompleted(int id, int storeid, FileList * fl, CommandOwner * co) {
   const BinaryData & data = global->getLocalStorage()->getStoreContent(storeid);
   conns[id]->setListData(co, fl);
   conns[id]->parseFileList((char *) &data[0], data.size());
@@ -1782,7 +1783,7 @@ void SiteLogic::getFileListConn(int id, bool hiddenfiles) {
   }
   else {
     FileList * fl = conns[id]->newFileList();
-    global->getTransferManager()->getFileList(global->getSiteLogicManager()->getSiteLogic(this), id, hiddenfiles, NULL, fl);
+    global->getTransferManager()->getFileList(global->getSiteLogicManager()->getSiteLogic(this), id, hiddenfiles, fl, NULL);
   }
 }
 
@@ -1792,7 +1793,7 @@ void SiteLogic::getFileListConn(int id, CommandOwner * co, FileList * filelist) 
     conns[id]->doSTAT(co, filelist);
   }
   else {
-    global->getTransferManager()->getFileList(global->getSiteLogicManager()->getSiteLogic(this), id, false, co, filelist);
+    global->getTransferManager()->getFileList(global->getSiteLogicManager()->getSiteLogic(this), id, false, filelist, co);
   }
 }
 

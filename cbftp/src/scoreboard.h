@@ -9,6 +9,7 @@ class ScoreBoardElement;
 class SiteLogic;
 class FileList;
 class Race;
+class SiteRace;
 
 #define RESIZE_CHUNK 1000
 #define USHORT_MAX 0x10000
@@ -24,7 +25,8 @@ class ScoreBoard {
   public:
     ScoreBoard();
     ~ScoreBoard();
-    void add(const std::string &, unsigned short, bool, const Pointer<SiteLogic> &, FileList *, const Pointer<SiteLogic> &, FileList *, Pointer<Race> &);
+    void add(const std::string &, unsigned short, bool, const Pointer<SiteLogic> &,
+        FileList *, SiteRace *, const Pointer<SiteLogic> &, FileList *, SiteRace *, Pointer<Race> &);
     unsigned int size() const;
     std::vector<ScoreBoardElement *>::const_iterator begin() const;
     std::vector<ScoreBoardElement *>::const_iterator end() const;
