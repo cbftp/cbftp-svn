@@ -19,17 +19,22 @@ ScoreBoard::~ScoreBoard() {
   delete[] bucketpositions;
 }
 
-void ScoreBoard::add(const std::string & name, unsigned short score, bool prio, const Pointer<SiteLogic> & src, FileList * fls, const Pointer<SiteLogic> & dst, FileList * fld, Pointer<Race> & race) {
+void ScoreBoard::add(
+    const std::string & name, unsigned short score, bool prio,
+    const Pointer<SiteLogic> & src, FileList * fls, SiteRace * srs,
+    const Pointer<SiteLogic> & dst, FileList * fld, SiteRace * srd,
+    Pointer<Race> & race)
+{
   if (showsize == elements.size()) {
     elements.resize(elements.size() + RESIZE_CHUNK);
     elementstmp.resize(elements.size());
     for (int i = 0; i < RESIZE_CHUNK; i++) {
-      ScoreBoardElement * sbe = new ScoreBoardElement(name, score, prio, src, fls, dst, fld, race);
+      ScoreBoardElement * sbe = new ScoreBoardElement(name, score, prio, src, fls, srs, dst, fld, srd, race);
       elements[showsize + i] = sbe;
     }
   }
   else {
-    elements[showsize]->reset(name, score, prio, src, fls, dst, fld, race);
+    elements[showsize]->reset(name, score, prio, src, fls, srs, dst, fld, srd, race);
   }
   ++showsize;
 }

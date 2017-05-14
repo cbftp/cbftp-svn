@@ -196,6 +196,7 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void doCWD(FileList *);
     void doCWD(FileList *, CommandOwner *);
     void doMKD(const Path &);
+    void doMKD(const Path &, CommandOwner *);
     void doMKD(FileList *);
     void doMKD(FileList *, CommandOwner *);
     void doPRETRETR(const std::string &);

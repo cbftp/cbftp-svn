@@ -44,6 +44,7 @@ private:
   std::string listhost;
   int listport;
   TransferMonitor * listtm;
+  CommandOwner * co;
   std::string host;
   int port;
   Pointer<RecursiveCommandLogic> recursivelogic;
@@ -73,7 +74,7 @@ public:
   void finishFileTransfer();
   void abortTransfer();
   bool getTransferAborted() const;
-  void lockForTransfer(TransferMonitor *, FileList *, bool);
+  void lockForTransfer(TransferMonitor *, FileList *, CommandOwner *, bool);
   bool isListLocked() const;
   bool isTransferLocked() const;
   bool hasRequest() const;
@@ -98,5 +99,6 @@ public:
   int getTransferPort() const;
   Pointer<RecursiveCommandLogic> getRecursiveLogic() const;
   bool transferInitialized() const;
+  CommandOwner * getCommandOwner() const;
   void initializeTransfer();
 };

@@ -23,6 +23,8 @@
 #include "../../util.h"
 #include "../../core/types.h"
 
+class CommandOwner;
+
 namespace ViewFileState {
 
 enum {
@@ -134,7 +136,7 @@ void ViewFileScreen::redraw() {
         sitelogic->finishRequest(requestid);
         const Path & temppath = global->getLocalStorage()->getTempPath();
         Pointer<LocalFileList> localfl = global->getLocalStorage()->getLocalFileList(temppath);
-        ts = global->getTransferManager()->suggestDownload(file, sitelogic, filelist, localfl);
+        ts = global->getTransferManager()->suggestDownload(file, sitelogic, filelist, localfl, NULL);
         if (!!ts) {
           state = ViewFileState::DOWNLOADING;
           ts->setAwaited(true);

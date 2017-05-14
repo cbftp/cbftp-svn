@@ -231,20 +231,25 @@ int ConnStateTracker::getTransferPort() const {
   return port;
 }
 
-bool ConnStateTracker::getTransferSSL() const{
+bool ConnStateTracker::getTransferSSL() const {
   if (listtransfer) {
     return listssl;
   }
   return ssl;
 }
 
-void ConnStateTracker::lockForTransfer(TransferMonitor * tm, FileList * fl, bool download) {
+CommandOwner * ConnStateTracker::getCommandOwner() const {
+  return co;
+}
+
+void ConnStateTracker::lockForTransfer(TransferMonitor * tm, FileList * fl, CommandOwner * co, bool download) {
   util::assert(!transferlocked);
   util::assert(!transfer);
   util::assert(!request);
   use();
   this->tm = tm;
   this->fl = fl;
+  this->co = co;
   aborted = false;
   transferlocked = true;
   type = download ? CST_DOWNLOAD : CST_UPLOAD;

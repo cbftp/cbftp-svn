@@ -16,6 +16,13 @@
 
 #define MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP 3
 
+enum RefreshState {
+  REFRESH_NOW,
+  REFRESH_OK,
+  REFRESH_FINAL_NOW,
+  REFRESH_FINAL_OK
+};
+
 TransferJob::TransferJob(unsigned int id, const Pointer<SiteLogic> & srcsl, FileList * srcfilelist, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
   downloadJob(id, srcsl, srcfilelist, srcfile, dstpath, dstfile);
 }
@@ -33,7 +40,7 @@ void TransferJob::downloadJob(unsigned int id, const Pointer<SiteLogic> & srcsl,
     fileListUpdated(src.get(), srcfilelist);
   }
   else {
-    filelistsrefreshed[srcfilelist] = false;
+    filelistsrefreshed[srcfilelist] = REFRESH_NOW;
   }
 }
 
@@ -54,7 +61,7 @@ void TransferJob::uploadJob(unsigned int id, const Path & srcpath, const std::st
     fileListUpdated(dst.get(), dstfilelist);
   }
   else {
-    filelistsrefreshed[dstfilelist] = false;
+    filelistsrefreshed[dstfilelist] = REFRESH_NOW;
   }
 }
 
@@ -76,13 +83,13 @@ void TransferJob::fxpJob(unsigned int id, const Pointer<SiteLogic> & srcsl, File
     fileListUpdated(src.get(), srcfilelist);
   }
   else {
-    filelistsrefreshed[srcfilelist] = false;
+    filelistsrefreshed[srcfilelist] = REFRESH_NOW;
   }
   if (dstfilelist->getState() == FILELIST_LISTED) {
     fileListUpdated(dst.get(), dstfilelist);
   }
   else {
-    filelistsrefreshed[dstfilelist] = false;
+    filelistsrefreshed[dstfilelist] = REFRESH_NOW;
   }
 }
 
@@ -155,7 +162,6 @@ void TransferJob::init(unsigned int id, TransferJobType type, const Pointer<Site
   this->dstfile = dstfile;
   done = false;
   almostdone = false;
-  listsrefreshed = false;
   initialized = false;
   aborted = false;
   slots = 1;
@@ -194,9 +200,11 @@ bool TransferJob::isDone() const {
 bool TransferJob::wantsList(SiteLogic * sl) {
   if (sl == src.get() && (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP)) {
     for (std::map<std::string, FileList *>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
-      std::map<FileList *, bool>::iterator it2 = filelistsrefreshed.find(it->second);
+      std::map<FileList *, int>::iterator it2 = filelistsrefreshed.find(it->second);
       FileListState state = it->second->getState();
-      if ((state != FILELIST_LISTED && state != FILELIST_NONEXISTENT) || (it2 != filelistsrefreshed.end() && !it2->second)) {
+      if ((state != FILELIST_LISTED && state != FILELIST_NONEXISTENT) || (it2 != filelistsrefreshed.end() &&
+          (it2->second == REFRESH_NOW || it2->second == REFRESH_FINAL_NOW)))
+      {
         srclisttarget = it->second;
         return true;
       }
@@ -204,9 +212,11 @@ bool TransferJob::wantsList(SiteLogic * sl) {
   }
   else if (sl == dst.get() && (type == TRANSFERJOB_UPLOAD || type == TRANSFERJOB_FXP)) {
     for (std::map<std::string, FileList *>::iterator it = dstfilelists.begin(); it != dstfilelists.end(); it++) {
-      std::map<FileList *, bool>::iterator it2 = filelistsrefreshed.find(it->second);
+      std::map<FileList *, int>::iterator it2 = filelistsrefreshed.find(it->second);
       FileListState state = it->second->getState();
-      if ((state != FILELIST_LISTED && state != FILELIST_NONEXISTENT) || (it2 != filelistsrefreshed.end() && !it2->second)) {
+      if ((state != FILELIST_LISTED && state != FILELIST_NONEXISTENT) || (it2 != filelistsrefreshed.end() &&
+          (it2->second == REFRESH_NOW || it2->second == REFRESH_FINAL_NOW)))
+      {
         dstlisttarget = it->second;
         return true;
       }
@@ -252,25 +262,20 @@ void TransferJob::checkFileListExists(FileList * fl) const {
 
 void TransferJob::fileListUpdated(SiteLogic * sl, FileList * fl) {
   checkFileListExists(fl);
-  std::map<FileList *, bool>::iterator it2 = filelistsrefreshed.find(fl);
-  if (it2 == filelistsrefreshed.end()) {
-    filelistsrefreshed[fl] = false;
-    it2 = filelistsrefreshed.find(fl);
+  std::map<FileList *, int>::iterator it = filelistsrefreshed.find(fl);
+  if (it == filelistsrefreshed.end()) {
+    filelistsrefreshed[fl] = REFRESH_NOW;
+    it = filelistsrefreshed.find(fl);
   }
   if (fl->getState() == FILELIST_NONEXISTENT || fl->getState() == FILELIST_LISTED) {
-    it2->second = true;
-  }
-  bool allrefreshed = true;
-  for (it2 = filelistsrefreshed.begin(); it2 != filelistsrefreshed.end(); it2++) {
-    if (!it2->second ||
-        (it2->first->getState() != FILELIST_LISTED && it2->first->getState() != FILELIST_NONEXISTENT))
-    {
-      allrefreshed = false;
-      break;
+    if (it->second == REFRESH_FINAL_NOW) {
+      it->second = REFRESH_FINAL_OK;
+    }
+    else if (it->second == REFRESH_NOW) {
+      it->second = REFRESH_OK;
     }
   }
-  if (allrefreshed) {
-    listsrefreshed = true;
+  if (!anyListNeedsRefreshing()) {
     countTotalFiles();
   }
   Path subpath = fl->getPath() - (sl == src.get() ? srcpath : dstpath);
@@ -352,8 +357,7 @@ void TransferJob::addSubDirectoryFileLists(std::map<std::string, FileList *> & f
     if (filelists.find(subpathfile) == filelists.end()) {
       FileList * newfl = new FileList(filelists[""]->getUser(), filelists[""]->getPath() / subpathfile);
       filelists[subpathfile] = newfl;
-      filelistsrefreshed[newfl] = false;
-      listsrefreshed = false;
+      filelistsrefreshed[newfl] = REFRESH_NOW;
     }
   }
 }
@@ -385,41 +389,63 @@ int TransferJob::maxPossibleSlots() const {
   return 0;
 }
 
-bool TransferJob::listsRefreshed() const {
-  return listsrefreshed;
-}
-
 bool TransferJob::refreshOrAlmostDone() {
   if (almostdone) {
     return false;
   }
-  else if (listsrefreshed) {
-    almostdone = true;
+  bool allfinaldone = true;
+  bool finalset = false;
+  for (std::map<FileList *, int>::iterator it = filelistsrefreshed.begin(); it != filelistsrefreshed.end(); it++) {
+    if (it->second == REFRESH_FINAL_OK) {
+      finalset = true;
+    }
+    else if (it->second == REFRESH_FINAL_NOW) {
+      allfinaldone = false;
+      finalset = true;
+    }
+    else {
+      allfinaldone = false;
+    }
   }
-  else if (!filelistsrefreshed.size()) {
+  if (finalset && allfinaldone) {
+    almostdone = true;
+    return false;
+  }
+  else {
     for (std::map<std::string, FileList *>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
       if (it->second->getState() != FILELIST_NONEXISTENT) {
-        filelistsrefreshed[it->second] = false;
+        std::map<FileList *, int>::iterator it2 = filelistsrefreshed.find(it->second);
+        if (it2 == filelistsrefreshed.end() || it2->second != REFRESH_FINAL_OK) {
+          filelistsrefreshed[it->second] = REFRESH_FINAL_NOW;
+        }
       }
     }
     for (std::map<std::string, FileList *>::iterator it = dstfilelists.begin(); it != dstfilelists.end(); it++) {
       if (it->second->getState() != FILELIST_NONEXISTENT) {
-        filelistsrefreshed[it->second] = false;
+        std::map<FileList *, int>::iterator it2 = filelistsrefreshed.find(it->second);
+        if (it2 == filelistsrefreshed.end() || it2->second != REFRESH_FINAL_OK) {
+          filelistsrefreshed[it->second] = REFRESH_FINAL_NOW;
+        }
       }
     }
     if (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_UPLOAD) {
       updateLocalFileLists();
     }
   }
-  else {
-    return false;
-  }
   return true;
+}
+
+bool TransferJob::anyListNeedsRefreshing() const {
+  for (std::map<FileList *, int>::const_iterator it = filelistsrefreshed.begin(); it != filelistsrefreshed.end(); it++) {
+    if (it->second == REFRESH_NOW || it->second == REFRESH_FINAL_NOW) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void TransferJob::clearRefreshLists() {
   filelistsrefreshed.clear();
-  listsrefreshed = false;
 }
 
 void TransferJob::addPendingTransfer(const Path & name, unsigned long long int size) {
@@ -643,12 +669,12 @@ void TransferJob::updateLocalFileLists(const Path & basepath, const Path & path)
     if (type == TRANSFERJOB_DOWNLOAD && srcfilelists.find(subpath) == srcfilelists.end()) {
       FileList * fl = new FileList(srcfilelists[""]->getUser(), srcpath / subpath);
       srcfilelists[subpath] = fl;
-      filelistsrefreshed[fl] = false;
+      filelistsrefreshed[fl] = REFRESH_NOW;
     }
     else if (type == TRANSFERJOB_UPLOAD && dstfilelists.find(subpath) == dstfilelists.end()) {
       FileList * fl = new FileList(dstfilelists[""]->getUser(), dstpath / subpath);
       dstfilelists[subpath] = fl;
-      filelistsrefreshed[fl] = false;
+      filelistsrefreshed[fl] = REFRESH_NOW;
     }
     std::map<std::string, LocalFile>::const_iterator it;
     for (it = filelist->begin(); it != filelist->end(); it++) {
@@ -674,11 +700,11 @@ void TransferJob::transferFailed(const Pointer<TransferStatus> & ts, int) {
   checkFileListExists(ts->getTargetFileList());
   idletime = 0;
   if (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) {
-    filelistsrefreshed[ts->getSourceFileList()] = false;
+    filelistsrefreshed[ts->getSourceFileList()] = REFRESH_NOW;
   }
   if (type == TRANSFERJOB_UPLOAD || type == TRANSFERJOB_FXP) {
     if (!dst->getSite()->useXDUPE()) {
-      filelistsrefreshed[ts->getTargetFileList()] = false;
+      filelistsrefreshed[ts->getTargetFileList()] = REFRESH_NOW;
     }
   }
   addTransferAttempt(ts, false);

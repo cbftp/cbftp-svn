@@ -143,17 +143,12 @@ bool TransferJobStatusScreen::keyPressed(unsigned int ch) {
       if (activeelement->getIdentifier() == "slots") {
         int slots = activeelement.get<MenuSelectOptionNumArrow>()->getData();
         transferjob->setSlots(slots);
-        switch (transferjob->getType()) {
-          case TRANSFERJOB_DOWNLOAD:
-            transferjob->getSrc()->haveConnected(slots);
-            break;
-          case TRANSFERJOB_FXP:
-            transferjob->getSrc()->haveConnected(slots);
-            transferjob->getDst()->haveConnected(slots);
-            break;
-          case TRANSFERJOB_UPLOAD:
-            transferjob->getDst()->haveConnected(slots);
-            break;
+        int type = transferjob->getType();
+        if (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) {
+          transferjob->getSrc()->haveConnectedActivate(slots);
+        }
+        if (type == TRANSFERJOB_UPLOAD || type == TRANSFERJOB_FXP) {
+          transferjob->getDst()->haveConnectedActivate(slots);
         }
       }
       return true;

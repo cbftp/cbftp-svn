@@ -74,7 +74,8 @@ class TransferMonitor : public EventReceiver, public RawBufferCallback {
     int ticker;
     TransferError error;
     std::list<std::pair<std::string, std::string> > rawbufqueue;
-    CommandOwner * co;
+    CommandOwner * srcco;
+    CommandOwner * dstco;
     void finish();
     void setTargetSizeSpeed(unsigned long long int, int);
     void reset();
@@ -97,10 +98,15 @@ class TransferMonitor : public EventReceiver, public RawBufferCallback {
     void cipher(const std::string &);
     bool idle() const;
     Pointer<TransferStatus> getTransferStatus() const;
-    void engageFXP(const std::string &, const Pointer<SiteLogic> &, FileList *, const std::string &, const Pointer<SiteLogic> &, FileList *);
-    void engageDownload(const std::string &, const Pointer<SiteLogic> &, FileList *, const Pointer<LocalFileList> &);
-    void engageUpload(const std::string &, const Pointer<LocalFileList> &, const Pointer<SiteLogic> &, FileList *);
-    void engageList(const Pointer<SiteLogic> &, int, bool, CommandOwner *, FileList *);
+    void engageFXP(const std::string &, const Pointer<SiteLogic> &, FileList *,
+      const std::string &, const Pointer<SiteLogic> &, FileList *,
+      CommandOwner *, CommandOwner *);
+    void engageDownload(const std::string &, const Pointer<SiteLogic> &,
+      FileList *, const Pointer<LocalFileList> &, CommandOwner *);
+    void engageUpload(const std::string &, const Pointer<LocalFileList> &,
+      const Pointer<SiteLogic> &, FileList *, CommandOwner *);
+    void engageList(const Pointer<SiteLogic> &, int, bool, FileList *,
+      CommandOwner *);
     Status getStatus() const;
     bool willFail() const;
     void newRawBufferLine(const std::pair<std::string, std::string> &);

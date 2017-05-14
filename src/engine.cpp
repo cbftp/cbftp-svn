@@ -462,7 +462,12 @@ void Engine::filelistUpdated() {
   }
 }
 
-bool Engine::transferJobActionRequest(Pointer<TransferJob> & tj) {
+bool Engine::transferJobActionRequest(SiteLogic * sl, Pointer<TransferJob> & tj) {
+  SiteLogic * other = tj->getSrc().get() == sl ? tj->getDst().get() : tj->getSrc().get();
+  if (tj->getType() == TRANSFERJOB_FXP && tj->wantsList(other)) {
+    other->haveConnectedActivate(1);
+    return false;
+  }
   std::map<Pointer<TransferJob>, std::list<PendingTransfer> >::iterator it = pendingtransfers.find(tj);
   if (it == pendingtransfers.end()) {
     pendingtransfers[tj] = std::list<PendingTransfer>();
@@ -473,7 +478,12 @@ bool Engine::transferJobActionRequest(Pointer<TransferJob> & tj) {
   }
   refreshPendingTransferList(tj);
   if (it->second.size() == 0) {
-    return tj->refreshOrAlmostDone();
+    bool action = tj->refreshOrAlmostDone();
+    if (tj->getType() == TRANSFERJOB_FXP && tj->wantsList(other)) {
+      other->haveConnectedActivate(1);
+      return false;
+    }
+    return action;
   }
   tj->clearRefreshLists();
   PendingTransfer pt = it->second.front();
@@ -482,7 +492,7 @@ bool Engine::transferJobActionRequest(Pointer<TransferJob> & tj) {
     {
       if (!pt.getSrc()->downloadSlotAvailable()) return false;
       Pointer<TransferStatus> ts = global->getTransferManager()->suggestDownload(pt.getSrcFileName(),
-          pt.getSrc(), pt.getSrcFileList(), pt.getLocalFileList());
+          pt.getSrc(), pt.getSrcFileList(), pt.getLocalFileList(), tj.get());
       tj->addTransfer(ts);
       break;
     }
@@ -490,7 +500,7 @@ bool Engine::transferJobActionRequest(Pointer<TransferJob> & tj) {
     {
       if (!pt.getDst()->uploadSlotAvailable()) return false;
       Pointer<TransferStatus> ts = global->getTransferManager()->suggestUpload(pt.getSrcFileName(),
-          pt.getLocalFileList(), pt.getDst(), pt.getDstFileList());
+          pt.getLocalFileList(), pt.getDst(), pt.getDstFileList(), tj.get());
       tj->addTransfer(ts);
       break;
     }
@@ -499,11 +509,11 @@ bool Engine::transferJobActionRequest(Pointer<TransferJob> & tj) {
       if (!pt.getSrc()->downloadSlotAvailable()) return false;
       if (!pt.getDst()->uploadSlotAvailable()) return false;
       if (pt.getDst() == pt.getSrc() && pt.getDst()->slotsAvailable() < 2) {
-        pt.getDst()->haveConnected(2);
+        pt.getDst()->haveConnectedActivate(2);
         return false;
       }
       Pointer<TransferStatus> ts = global->getTransferManager()->suggestTransfer(pt.getSrcFileName(),
-          pt.getSrc(), pt.getSrcFileList(), pt.getDst(), pt.getDstFileList());
+          pt.getSrc(), pt.getSrcFileList(), pt.getDst(), pt.getDstFileList(), tj.get(), tj.get());
       tj->addTransfer(ts);
       break;
     }
@@ -619,7 +629,7 @@ void Engine::refreshScoreBoard() {
               if (race->hasFailedTransfer(f, fls, fld)) continue;
               bool prio = false;
               unsigned short score = calculateScore(f, race, fls, srs, fld, srd, avgspeed, &prio, prioritypoints, racemode);
-              scoreboard->add(filename, score, prio, sls, fls, sld, fld, race);
+              scoreboard->add(filename, score, prio, sls, fls, srs, sld, fld, srd, race);
               race->resetUpdateCheckCounter();
             }
           }
@@ -781,7 +791,8 @@ void Engine::issueOptimalTransfers() {
     }
     Pointer<TransferStatus> ts =
       global->getTransferManager()->suggestTransfer(filename, sls,
-        sbe->getSourceFileList(), sld, sbe->getDestinationFileList());
+        sbe->getSourceFileList(), sld, sbe->getDestinationFileList(),
+        sbe->getSourceSiteRace(), sbe->getDestinationSiteRace());
     race->addTransfer(ts);
     sbe->setAttempted();
   }
@@ -1108,10 +1119,10 @@ void Engine::tick(int message) {
     }
     else {
       if (!!(*it)->getSrc() && !(*it)->getSrc()->getCurrLogins()) {
-        (*it)->getSrc()->haveConnected((*it)->maxSlots());
+        (*it)->getSrc()->haveConnectedActivate((*it)->maxSlots());
       }
       if (!!(*it)->getDst() && !(*it)->getDst()->getCurrLogins()) {
-        (*it)->getDst()->haveConnected((*it)->maxSlots());
+        (*it)->getDst()->haveConnectedActivate((*it)->maxSlots());
       }
     }
   }

@@ -949,6 +949,10 @@ void FTPConn::doMKD(const Path & dir) {
   doMKD(dir, NULL, NULL);
 }
 
+void FTPConn::doMKD(const Path & dir, CommandOwner * co) {
+  doMKD(dir, NULL, co);
+}
+
 void FTPConn::doMKD(FileList * fl) {
   doMKD(fl->getPath(), fl, NULL);
 }

@@ -2,16 +2,22 @@
 
 #include "race.h"
 
-ScoreBoardElement::ScoreBoardElement(const std::string & filename, unsigned short score, bool prio, const Pointer<SiteLogic> & src, FileList * fls, const Pointer<SiteLogic> & dst, FileList * fld, Pointer<Race> & race) {
-  reset(filename, score, prio, src, fls, dst, fld, race);
+ScoreBoardElement::ScoreBoardElement(const std::string & filename, unsigned short score,
+    bool prio, const Pointer<SiteLogic> & src, FileList * fls, SiteRace * srcsr,
+    const Pointer<SiteLogic> & dst, FileList * fld, SiteRace * dstsr, Pointer<Race> & race) {
+  reset(filename, score, prio, src, fls, srcsr, dst, fld, dstsr, race);
 }
 
-void ScoreBoardElement::reset(const std::string & filename, unsigned short score, bool prio, const Pointer<SiteLogic> & src, FileList * fls, const Pointer<SiteLogic> & dst, FileList * fld, Pointer<Race> & race) {
+void ScoreBoardElement::reset(const std::string & filename, unsigned short score,
+    bool prio, const Pointer<SiteLogic> & src, FileList * fls, SiteRace * srcsr,
+    const Pointer<SiteLogic> & dst, FileList * fld, SiteRace * dstsr, Pointer<Race> & race) {
   this->filename = filename;
   this->src = src;
   this->fls = fls;
+  this->srcsr = srcsr;
   this->dst = dst;
   this->fld = fld;
+  this->dstsr = dstsr;
   this->race = race;
   this->score = score;
   this->prio = prio;
@@ -36,6 +42,14 @@ FileList * ScoreBoardElement::getSourceFileList() const {
 
 FileList * ScoreBoardElement::getDestinationFileList() const {
   return fld;
+}
+
+SiteRace * ScoreBoardElement::getSourceSiteRace() const {
+  return srcsr;
+}
+
+SiteRace * ScoreBoardElement::getDestinationSiteRace() const {
+  return dstsr;
 }
 
 const Pointer<Race> & ScoreBoardElement::getRace() const {

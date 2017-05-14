@@ -88,6 +88,7 @@ public:
   bool hasFailedTransfer(const std::string &) const;
   void transferSuccessful(const Pointer<TransferStatus> &);
   void transferFailed(const Pointer<TransferStatus> &, int);
+  bool anyListNeedsRefreshing() const;
 private:
   void downloadJob(unsigned int, const Pointer<SiteLogic> &, FileList *, const std::string &, const Path &, const std::string &);
   void uploadJob(unsigned int, const Path &, const std::string &, const Pointer<SiteLogic> &, FileList *, const std::string &);
@@ -119,10 +120,9 @@ private:
   bool almostdone;
   bool done;
   bool aborted;
-  bool listsrefreshed;
   FileList * srclisttarget;
   FileList * dstlisttarget;
-  std::map<FileList *, bool> filelistsrefreshed;
+  std::map<FileList *, int> filelistsrefreshed;
   unsigned long long int expectedfinalsize;
   unsigned int speed;
   unsigned long long int sizeprogress;

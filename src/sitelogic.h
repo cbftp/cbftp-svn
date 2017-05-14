@@ -64,7 +64,7 @@ class SiteLogic : public EventReceiver {
     void getFileListConn(int, CommandOwner *, FileList *);
     void passiveModeCommand(int);
     static void * run(void *);
-    bool lockTransferConn(FileList *, int *, TransferMonitor *, bool);
+    bool lockTransferConn(FileList *, int *, TransferMonitor *, CommandOwner *, bool);
     void setRequestReady(unsigned int, void *, bool);
     void cleanupConnection(int);
     void checkFailListRequest(int);
@@ -72,6 +72,7 @@ class SiteLogic : public EventReceiver {
     bool setPathExists(int, int, bool);
     bool handlePreTransfer(int);
     bool handleCommandDelete(int, bool);
+    bool makeTargetDirectory(int, bool, CommandOwner *);
   public:
     SiteLogic(const std::string &);
     ~SiteLogic();
@@ -97,12 +98,12 @@ class SiteLogic : public EventReceiver {
     void disconnected(int);
     void activateOne();
     void activateAll();
-    void haveConnected(unsigned int);
+    void haveConnectedActivate(unsigned int);
     const Pointer<Site> & getSite() const;
     SiteRace * getRace(const std::string &) const;
     void lockConnList(int);
-    bool lockDownloadConn(FileList *, int *, TransferMonitor *);
-    bool lockUploadConn(FileList *, int *, TransferMonitor *);
+    bool lockDownloadConn(FileList *, int *, CommandOwner *, TransferMonitor *);
+    bool lockUploadConn(FileList *, int *, CommandOwner *, TransferMonitor *);
     void returnConn(int, bool);
     void setNumConnections(unsigned int);
     bool downloadSlotAvailable() const;
@@ -114,7 +115,7 @@ class SiteLogic : public EventReceiver {
     void connectConn(int);
     void disconnectConn(int);
     void finishTransferGracefully(int);
-    void listCompleted(int, int, CommandOwner *, FileList *);
+    void listCompleted(int, int, FileList *, CommandOwner *);
     void issueRawCommand(unsigned int, const std::string &);
     RawBuffer * getRawCommandBuffer() const;
     RawBuffer * getAggregatedRawBuffer() const;
