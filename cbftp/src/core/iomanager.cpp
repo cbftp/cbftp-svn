@@ -345,7 +345,6 @@ void IOManager::negotiateSSLConnect(int id, EventReceiver * er) {
   if (it != socketinfomap.end() &&
      (it->second.type == FD_TCP_PLAIN || it->second.type == FD_TCP_PLAIN_LISTEN))
   {
-    SocketType oldtype = it->second.type;
     it->second.type = FD_TCP_SSL_NEG_CONNECT;
     if (it->second.listenimmediately) {
       setPollWrite(it->second);
@@ -362,7 +361,6 @@ void IOManager::negotiateSSLAccept(int id) {
     if (it != socketinfomap.end() &&
        (it->second.type == FD_TCP_PLAIN || it->second.type == FD_TCP_PLAIN_LISTEN))
     {
-      SocketType oldtype = it->second.type;
       it->second.type = FD_TCP_SSL_NEG_ACCEPT;
       if (it->second.listenimmediately) {
         setPollWrite(it->second);
