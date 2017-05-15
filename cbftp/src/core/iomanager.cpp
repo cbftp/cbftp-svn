@@ -571,8 +571,10 @@ void IOManager::handleTCPConnectingOut(SocketInfo & socketinfo) {
   socketinfo.localport = ntohs(localaddr.sin_port);
   connecttimemap.erase(socketinfo.id);
   wm->dispatchEventConnected(socketinfo.receiver, socketinfo.id);
-  if (socketinfo.listenimmediately && !socketinfo.sendqueue.size()) {
-    setPollRead(socketinfo);
+  if (socketinfo.listenimmediately) {
+    if (!socketinfo.sendqueue.size()) {
+      setPollRead(socketinfo);
+    }
   }
   else {
     unsetPoll(socketinfo);
