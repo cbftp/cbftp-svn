@@ -64,10 +64,11 @@ public:
   void registerStdin(EventReceiver *);
   void tick(int);
   int registerTCPClientSocket(EventReceiver *, const std::string &, int);
-  int registerTCPClientSocket(EventReceiver *, const std::string &, int, bool &);
+  int registerTCPClientSocket(EventReceiver *, const std::string &, int, bool &, bool);
   int registerTCPServerSocket(EventReceiver *, int);
   int registerTCPServerSocket(EventReceiver *, int, bool);
   void registerTCPServerClientSocket(EventReceiver *, int);
+  void registerTCPServerClientSocket(EventReceiver *, int, bool);
   void adopt(EventReceiver *, int);
   void negotiateSSLConnect(int);
   void negotiateSSLConnect(int, EventReceiver *);

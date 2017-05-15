@@ -132,10 +132,10 @@ void IOManager::setPollWrite(SocketInfo & socketinfo) {
 
 int IOManager::registerTCPClientSocket(EventReceiver * er, const std::string & addr, int port) {
   bool resolving;
-  return registerTCPClientSocket(er, addr, port, resolving);
+  return registerTCPClientSocket(er, addr, port, resolving, true);
 }
 
-int IOManager::registerTCPClientSocket(EventReceiver * er, const std::string & addr, int port, bool & resolving) {
+int IOManager::registerTCPClientSocket(EventReceiver * er, const std::string & addr, int port, bool & resolving, bool listen) {
   socketinfomaplock.lock();
   int sockid = sockidcounter++;
   SocketInfo & socketinfo = socketinfomap[sockid];
@@ -146,6 +146,7 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, const std::string & a
   socketinfo.type = FD_TCP_RESOLVING;
   socketinfo.receiver = er;
   socketinfo.gaiasync = resolving = needsDNSResolution(addr);
+  socketinfo.listenimmediately = listen;
   connecttimemap[sockid] = 0;
   socketinfomaplock.unlock();
   if (resolving) {
@@ -266,9 +267,15 @@ int IOManager::registerTCPServerSocket(EventReceiver * er, int port, bool local)
 }
 
 void IOManager::registerTCPServerClientSocket(EventReceiver * er, int sockid) {
+  registerTCPServerClientSocket(er, sockid, true);
+}
+
+void IOManager::registerTCPServerClientSocket(EventReceiver * er, int sockid, bool listen) {
   ScopeLock lock(socketinfomaplock);
   socketinfomap[sockid].receiver = er;
-  pollRead(socketinfomap[sockid]);
+  if (listen) {
+    pollRead(socketinfomap[sockid]);
+  }
 }
 
 void IOManager::registerStdin(EventReceiver * er) {
@@ -562,7 +569,7 @@ void IOManager::handleTCPConnectingOut(SocketInfo & socketinfo) {
   if (socketinfo.sendqueue.size() > 0) {
     setPollWrite(socketinfo);
   }
-  else {
+  else if (socketinfo.listenimmediately) {
     setPollRead(socketinfo);
   }
 }
