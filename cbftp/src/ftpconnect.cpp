@@ -31,7 +31,7 @@ FTPConnect::FTPConnect(int id, FTPConnectOwner * owner, const std::string & addr
 {
   bool resolving;
   if (proxy == NULL) {
-    sockid = global->getIOManager()->registerTCPClientSocket(this, addr, util::str2Int(port), resolving);
+    sockid = global->getIOManager()->registerTCPClientSocket(this, addr, util::str2Int(port), resolving, true);
     if (resolving) {
       owner->ftpConnectInfo(id, "[Resolving " + addr + "]");
     }
@@ -42,7 +42,7 @@ FTPConnect::FTPConnect(int id, FTPConnectOwner * owner, const std::string & addr
   else {
     proxynegotiation = true;
     proxysession->prepare(proxy, addr, port);
-    sockid = global->getIOManager()->registerTCPClientSocket(this, proxy->getAddr(), util::str2Int(proxy->getPort()), resolving);
+    sockid = global->getIOManager()->registerTCPClientSocket(this, proxy->getAddr(), util::str2Int(proxy->getPort()), resolving, true);
     if (resolving) {
       owner->ftpConnectInfo(id, "[Resolving proxy " + proxy->getAddr() + "]");
     }

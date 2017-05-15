@@ -35,7 +35,8 @@ class SocketInfo {
 public:
   SocketInfo() : type(FD_UNUSED), fd(0), id(0), port(0), localport(0), gairet(0),
                  gaires(NULL), gaiasync(false), receiver(NULL), ssl(NULL),
-                 prio(PRIO_NORMAL), paused(false), direction(DIR_IN)
+                 prio(PRIO_NORMAL), paused(false), direction(DIR_IN),
+                 listenimmediately(true)
   {
   }
   SocketType type;
@@ -55,4 +56,5 @@ public:
   Prio prio;
   bool paused;
   int direction;
+  bool listenimmediately;
 };
