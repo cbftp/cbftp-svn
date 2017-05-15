@@ -1127,11 +1127,6 @@ void FTPConn::doQUIT() {
   }
 }
 
-void FTPConn::doSSLHandshake() {
-  state = STATE_SSL_HANDSHAKE;
-  iom->forceSSLhandshake(sockid);
-}
-
 void FTPConn::QUITResponse() {
   processing = false;
   disconnect();

@@ -210,7 +210,6 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void doTYPEI();
     void doXDUPE();
     void doQUIT();
-    void doSSLHandshake();
     void disconnect();
     FTPConnState getState() const;
     std::string getConnectedAddress() const;

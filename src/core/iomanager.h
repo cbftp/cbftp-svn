@@ -56,6 +56,7 @@ private:
   void pollWrite(SocketInfo &);
   void setPollRead(SocketInfo &);
   void setPollWrite(SocketInfo &);
+  void unsetPoll(SocketInfo &);
   void autoPause(SocketInfo &);
 public:
   IOManager(WorkManager *, TickPoke *);
@@ -73,7 +74,6 @@ public:
   void negotiateSSLConnect(int);
   void negotiateSSLConnect(int, EventReceiver *);
   void negotiateSSLAccept(int);
-  void forceSSLhandshake(int);
   int registerUDPServerSocket(EventReceiver *, int);
   bool sendData(int, const std::string &);
   bool sendData(int, const char *, unsigned int);

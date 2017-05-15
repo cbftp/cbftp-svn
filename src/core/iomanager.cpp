@@ -130,12 +130,16 @@ void IOManager::setPollWrite(SocketInfo & socketinfo) {
   }
 }
 
+void IOManager::unsetPoll(SocketInfo & socketinfo) {
+  polling.removeFD(socketinfo.fd);
+}
+
 int IOManager::registerTCPClientSocket(EventReceiver * er, const std::string & addr, int port) {
   bool resolving;
   return registerTCPClientSocket(er, addr, port, resolving, true);
 }
 
-int IOManager::registerTCPClientSocket(EventReceiver * er, const std::string & addr, int port, bool & resolving, bool listen) {
+int IOManager::registerTCPClientSocket(EventReceiver * er, const std::string & addr, int port, bool & resolving, bool listenimmediately) {
   socketinfomaplock.lock();
   int sockid = sockidcounter++;
   SocketInfo & socketinfo = socketinfomap[sockid];
@@ -146,7 +150,7 @@ int IOManager::registerTCPClientSocket(EventReceiver * er, const std::string & a
   socketinfo.type = FD_TCP_RESOLVING;
   socketinfo.receiver = er;
   socketinfo.gaiasync = resolving = needsDNSResolution(addr);
-  socketinfo.listenimmediately = listen;
+  socketinfo.listenimmediately = listenimmediately;
   connecttimemap[sockid] = 0;
   socketinfomaplock.unlock();
   if (resolving) {
@@ -270,10 +274,11 @@ void IOManager::registerTCPServerClientSocket(EventReceiver * er, int sockid) {
   registerTCPServerClientSocket(er, sockid, true);
 }
 
-void IOManager::registerTCPServerClientSocket(EventReceiver * er, int sockid, bool listen) {
+void IOManager::registerTCPServerClientSocket(EventReceiver * er, int sockid, bool listenimmediately) {
   ScopeLock lock(socketinfomaplock);
   socketinfomap[sockid].receiver = er;
-  if (listen) {
+  socketinfomap[sockid].listenimmediately = listenimmediately;
+  if (listenimmediately) {
     pollRead(socketinfomap[sockid]);
   }
 }
@@ -340,8 +345,14 @@ void IOManager::negotiateSSLConnect(int id, EventReceiver * er) {
   if (it != socketinfomap.end() &&
      (it->second.type == FD_TCP_PLAIN || it->second.type == FD_TCP_PLAIN_LISTEN))
   {
+    SocketType oldtype = it->second.type;
     it->second.type = FD_TCP_SSL_NEG_CONNECT;
-    setPollWrite(it->second);
+    if (oldtype == FD_TCP_PLAIN || it->second.listenimmediately) {
+      setPollWrite(it->second);
+    }
+    else {
+      pollWrite(it->second);
+    }
   }
 }
 
@@ -351,19 +362,15 @@ void IOManager::negotiateSSLAccept(int id) {
     if (it != socketinfomap.end() &&
        (it->second.type == FD_TCP_PLAIN || it->second.type == FD_TCP_PLAIN_LISTEN))
     {
+      SocketType oldtype = it->second.type;
       it->second.type = FD_TCP_SSL_NEG_ACCEPT;
-      setPollWrite(it->second);
+      if (oldtype == FD_TCP_PLAIN || it->second.listenimmediately) {
+        setPollWrite(it->second);
+      }
+      else {
+        pollWrite(it->second);
+      }
   }
-}
-
-void IOManager::forceSSLhandshake(int id) {
-  ScopeLock lock(socketinfomaplock);
-  std::map<int, SocketInfo>::iterator it = socketinfomap.find(id);
-  if (it == socketinfomap.end()) {
-    return;
-  }
-  it->second.type = FD_TCP_SSL_NEG_REDO_HANDSHAKE;
-  setPollWrite(it->second);
 }
 
 bool IOManager::handleError(EventReceiver * er) {
@@ -566,11 +573,11 @@ void IOManager::handleTCPConnectingOut(SocketInfo & socketinfo) {
   socketinfo.localport = ntohs(localaddr.sin_port);
   connecttimemap.erase(socketinfo.id);
   wm->dispatchEventConnected(socketinfo.receiver, socketinfo.id);
-  if (socketinfo.sendqueue.size() > 0) {
-    setPollWrite(socketinfo);
-  }
-  else if (socketinfo.listenimmediately) {
+  if (socketinfo.listenimmediately) {
     setPollRead(socketinfo);
+  }
+  else {
+    unsetPoll(socketinfo);
   }
 }
 
