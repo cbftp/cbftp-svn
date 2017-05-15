@@ -559,7 +559,12 @@ void IOManager::handleTCPConnectingOut(SocketInfo & socketinfo) {
   socketinfo.localport = ntohs(localaddr.sin_port);
   connecttimemap.erase(socketinfo.id);
   wm->dispatchEventConnected(socketinfo.receiver, socketinfo.id);
-  setPollRead(socketinfo);
+  if (socketinfo.sendqueue.size() > 0) {
+    setPollWrite(socketinfo);
+  }
+  else {
+    setPollRead(socketinfo);
+  }
 }
 
 void IOManager::handleTCPPlainIn(SocketInfo & socketinfo) {
