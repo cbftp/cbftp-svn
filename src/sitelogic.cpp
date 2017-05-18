@@ -331,7 +331,13 @@ void SiteLogic::commandSuccess(int id) {
         setPathExists(id, EXISTS_YES, true);
         if (targetpath == targetcwdsect / targetcwdpath) {
           conns[id]->finishMKDCWDTarget();
-          conns[id]->doCWD(conns[id]->currentFileList(), currentco);
+          FileList * fl = conns[id]->currentFileList();
+          if (fl) {
+            conns[id]->doCWD(fl, currentco);
+          }
+          else {
+            conns[id]->doCWD(targetpath, currentco);
+          }
           return;
         }
         if (makeTargetDirectory(id, true, currentco)) {
@@ -493,11 +499,18 @@ void SiteLogic::commandFail(int id, int failuretype) {
         CommandOwner * currentco = conns[id]->currentCommandOwner();
         if (!site->getAllowUpload() ||
             (currentco != NULL && currentco->classType() == COMMANDOWNER_SITERACE &&
-             site->isAffiliated(((SiteRace *)currentco)->getGroup()))) {
+             site->isAffiliated(((SiteRace *)currentco)->getGroup())))
+        {
           conns[id]->finishMKDCWDTarget();
         }
         else {
-          conns[id]->doMKD(conns[id]->currentFileList(), currentco);
+          FileList * fl = conns[id]->currentFileList();
+          if (fl) {
+            conns[id]->doMKD(fl, currentco);
+          }
+          else {
+            conns[id]->doMKD(conns[id]->getTargetPath(), currentco);
+          }
           return;
         }
       }
@@ -529,7 +542,13 @@ void SiteLogic::commandFail(int id, int failuretype) {
         }
         conns[id]->finishMKDCWDTarget();
         setPathExists(id, EXISTS_FAILED, true);
-        conns[id]->doCWD(conns[id]->currentFileList(), currentco);
+        FileList * fl = conns[id]->currentFileList();
+        if (fl) {
+          conns[id]->doCWD(fl, currentco);
+        }
+        else {
+          conns[id]->doCWD(targetpath, currentco);
+        }
         return;
       }
       else {

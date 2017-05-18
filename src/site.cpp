@@ -540,7 +540,7 @@ std::list<std::string> Site::getSectionsForPartialPath(const Path & path) const 
 }
 
 std::pair<Path, Path> Site::splitPathInSectionAndSubpath(const Path & path) const {
-  Path sectionpath;
+  Path sectionpath("/");
   std::list<std::string> sections = getSectionsForPartialPath(path);
   if (sections.size()) {
     sectionpath = getSectionPath(sections.front());
