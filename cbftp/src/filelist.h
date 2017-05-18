@@ -20,6 +20,7 @@ class Site;
 class FileList {
   private:
     FileList(const FileList &);
+    File * getFileCaseSensitive(const std::string &) const;
     std::map<std::string, File *> files;
     std::map<std::string, std::string> lowercasefilemap;
     std::string username;

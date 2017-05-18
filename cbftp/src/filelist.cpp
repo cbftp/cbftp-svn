@@ -46,7 +46,7 @@ bool FileList::updateFile(const std::string & start, int touch) {
     return false;
   }
   File * updatefile;
-  if ((updatefile = getFile(name)) != NULL) {
+  if ((updatefile = getFileCaseSensitive(name)) != NULL) {
     if (updatefile->getSize() == 0 && file->getSize() > 0 && !file->isDirectory()) uploadedfiles++;
     unsigned long long int oldsize = updatefile->getSize();
     unsigned long long int newsize = file->getSize();
@@ -110,7 +110,7 @@ void FileList::touchFile(const std::string & name, const std::string & user) {
 
 void FileList::touchFile(const std::string & name, const std::string & user, bool upload) {
   File * file;
-  if ((file = getFile(name)) != NULL) {
+  if ((file = getFileCaseSensitive(name)) != NULL) {
     file->unsetUpdateFlag();
   }
   else {
@@ -130,7 +130,7 @@ void FileList::touchFile(const std::string & name, const std::string & user, boo
 
 void FileList::removeFile(const std::string & name) {
   File * f;
-  if ((f = getFile(name)) != NULL) {
+  if ((f = getFileCaseSensitive(name)) != NULL) {
     if (f->getOwner().compare(username) == 0) {
       editOwnedFileCount(false);
     }
@@ -150,7 +150,7 @@ void FileList::removeFile(const std::string & name) {
 
 void FileList::setFileUpdateFlag(const std::string & name, unsigned long long int size, unsigned int speed, const Pointer<Site> & src, const std::string & dst) {
   File * file;
-  if ((file = getFile(name)) != NULL) {
+  if ((file = getFileCaseSensitive(name)) != NULL) {
     unsigned long long int oldsize = file->getSize();
     if (file->setSize(size)) {
       if (!oldsize) {
@@ -176,6 +176,14 @@ File * FileList::getFile(const std::string & name) const {
     if (it == files.end()) {
       return NULL;
     }
+  }
+  return it->second;
+}
+
+File * FileList::getFileCaseSensitive(const std::string & name) const {
+  std::map<std::string, File *>::const_iterator it = files.find(name);
+  if (it == files.end()) {
+    return NULL;
   }
   return it->second;
 }
@@ -334,7 +342,7 @@ std::string FileList::getUser() const {
 }
 
 void FileList::finishUpload(const std::string & file) {
-  File * fileobj = getFile(file);
+  File * fileobj = getFileCaseSensitive(file);
   if (fileobj != NULL && fileobj->isUploading()) {
     fileobj->finishUpload();
     uploading--;
@@ -343,14 +351,14 @@ void FileList::finishUpload(const std::string & file) {
 }
 
 void FileList::finishDownload(const std::string & file) {
-  File * fileobj = getFile(file);
+  File * fileobj = getFileCaseSensitive(file);
   if (fileobj != NULL && fileobj->isDownloading()) {
     fileobj->finishDownload();
   }
 }
 
 void FileList::download(const std::string & file) {
-  File * fileobj = getFile(file);
+  File * fileobj = getFileCaseSensitive(file);
   if (fileobj != NULL && !fileobj->isDownloading()) {
     fileobj->download();
   }
