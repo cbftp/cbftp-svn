@@ -913,6 +913,10 @@ void FTPConn::doCWD(const Path & path) {
   doCWD(path, NULL, NULL);
 }
 
+void FTPConn::doCWD(const Path & path, CommandOwner * co) {
+  doCWD(path, NULL, co);
+}
+
 void FTPConn::doCWD(FileList * fl) {
   doCWD(fl->getPath(), fl, NULL);
 }
