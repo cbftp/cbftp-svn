@@ -922,6 +922,7 @@ void FTPConn::doCWD(FileList * fl, CommandOwner * co) {
 }
 
 void FTPConn::doCWD(const Path & path, FileList * fl, CommandOwner * co) {
+  util::assert(path != "");
   currentfl = fl;
   currentco = co;
   targetpath = path;
@@ -962,6 +963,7 @@ void FTPConn::doMKD(FileList * fl, CommandOwner * co) {
 }
 
 void FTPConn::doMKD(const Path & dir, FileList * fl, CommandOwner * co) {
+  util::assert(dir != "");
   currentfl = fl;
   currentco = co;
   targetpath = dir;
