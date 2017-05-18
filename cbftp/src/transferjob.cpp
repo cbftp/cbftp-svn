@@ -696,8 +696,12 @@ void TransferJob::transferSuccessful(const Pointer<TransferStatus> & ts) {
 }
 
 void TransferJob::transferFailed(const Pointer<TransferStatus> & ts, int) {
-  checkFileListExists(ts->getSourceFileList());
-  checkFileListExists(ts->getTargetFileList());
+  if (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) {
+    checkFileListExists(ts->getSourceFileList());
+  }
+  if (type == TRANSFERJOB_UPLOAD || type == TRANSFERJOB_FXP) {
+    checkFileListExists(ts->getTargetFileList());
+  }
   idletime = 0;
   if (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) {
     filelistsrefreshed[ts->getSourceFileList()] = REFRESH_NOW;
