@@ -187,10 +187,13 @@ bool Path::contains(const Path & rhs) const {
 
 Path Path::operator-(const Path & rhs) const {
   if (absolute && rhs.absolute) {
-    if (unixpath.length() > rhs.unixpath.length() &&
-        unixpath.compare(0, rhs.unixpath.length() + 1, rhs.unixpath + '/') == 0)
-    {
-      return Path(unixpath.substr(rhs.unixpath.length() + 1), separatorchar, separatorcertain);
+    if (unixpath.length() > rhs.unixpath.length()) {
+      if (unixpath.compare(0, rhs.unixpath.length() + 1, rhs.unixpath + '/') == 0) {
+        return Path(unixpath.substr(rhs.unixpath.length() + 1), separatorchar, separatorcertain);
+      }
+      else if (rhs.unixpath.length() == 1 && unixpath.compare(0, rhs.unixpath.length(), rhs.unixpath) == 0) {
+        return Path(unixpath.substr(rhs.unixpath.length()), separatorchar, separatorcertain);
+      }
     }
   }
   else if (!rhs.absolute) {
