@@ -817,7 +817,14 @@ bool SiteLogic::handlePreTransfer(int id) {
     if (connstatetracker[id].getTransferType() == CST_UPLOAD &&
         fl->getState() == FILELIST_NONEXISTENT)
     {
-      std::pair<Path, Path> pathparts = site->splitPathInSectionAndSubpath(transferpath);
+      std::pair<Path, Path> pathparts;
+      if (co && co->classType() == COMMANDOWNER_TRANSFERJOB) {
+        Path sectionpath = ((TransferJob *)co)->getPath(this);
+        pathparts = std::pair<Path, Path>(sectionpath, transferpath - sectionpath);
+      }
+      else {
+        pathparts = site->splitPathInSectionAndSubpath(transferpath);
+      }
       conns[id]->setMKDCWDTarget(pathparts.first, pathparts.second);
       return makeTargetDirectory(id, true, co);
     }
