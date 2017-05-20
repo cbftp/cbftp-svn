@@ -111,6 +111,15 @@ const Path & TransferJob::getDstPath() const {
   return dstpath;
 }
 
+const Path & TransferJob::getPath(SiteLogic * sl) const {
+  if (sl == src.get()) {
+    return srcpath;
+  }
+  else {
+    return dstpath;
+  }
+}
+
 std::map<std::string, FileList *>::const_iterator TransferJob::srcFileListsBegin() const {
   return srcfilelists.begin();
 }

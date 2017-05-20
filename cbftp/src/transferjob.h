@@ -37,6 +37,7 @@ public:
   int getType() const;
   const Path & getSrcPath() const;
   const Path & getDstPath() const;
+  const Path & getPath(SiteLogic *) const;
   std::string getSrcFileName() const;
   std::string getDstFileName() const;
   std::map<std::string, FileList *>::const_iterator srcFileListsBegin() const;
