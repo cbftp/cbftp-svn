@@ -1178,7 +1178,9 @@ Pointer<Race> Engine::getCurrentRace(const std::string & release) const {
 
 void Engine::addSiteToRace(Pointer<Race> & race, const std::string & site) {
   const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
-  if (sl->getSite()->getSkipList().isAllowed((sl->getSite()->getSectionPath(race->getSection()) / race->getName()).toString(), true, false)) {
+  if (sl->getSite()->getSkipList().isAllowed((sl->getSite()->getSectionPath(race->getSection()) / race->getName()).toString(), true, false) ||
+      sl->getSite()->isAffiliated(race->getGroup()))
+  {
     SiteRace * sr = sl->addRace(race, race->getSection(), race->getName());
     race->addSite(sr, sl);
   }

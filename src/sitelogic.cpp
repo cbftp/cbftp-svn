@@ -348,13 +348,9 @@ void SiteLogic::commandSuccess(int id) {
     case STATE_PRET_RETR:
     case STATE_PRET_STOR:
       if (connstatetracker[id].transferInitialized()) {
-        if (connstatetracker[id].getTransferPassive()) {
-          passiveModeCommand(id);
-          return;
-        }
-      }
-      else {
-        global->getEventLog()->log("SiteLogic", "BUG: Trying to start an active transfer after PRET. Why oh why?");
+        util::assert(connstatetracker[id].getTransferPassive());
+        passiveModeCommand(id);
+        return;
       }
       break;
     case STATE_RETR: // RETR started
@@ -365,17 +361,13 @@ void SiteLogic::commandSuccess(int id) {
       }
       return;
     case STATE_RETR_COMPLETE:
-      if (connstatetracker[id].transferInitialized()) {
-        connstatetracker[id].getTransferMonitor()->sourceComplete();
-        transferComplete(id, true);
-        connstatetracker[id].finishTransfer();
-        global->getEngine()->raceActionRequest();
-        if (conns[id]->isProcessing() || connstatetracker[id].isTransferLocked()) {
-          return;
-        }
-      }
-      else {
-        global->getEventLog()->log("SiteLogic", "BUG: returned successfully from RETR without having a transfer. Shouldn't happen!");
+      util::assert(connstatetracker[id].transferInitialized());
+      connstatetracker[id].getTransferMonitor()->sourceComplete();
+      transferComplete(id, true);
+      connstatetracker[id].finishTransfer();
+      global->getEngine()->raceActionRequest();
+      if (conns[id]->isProcessing() || connstatetracker[id].isTransferLocked()) {
+        return;
       }
       break;
     case STATE_STOR: // STOR started
@@ -385,26 +377,23 @@ void SiteLogic::commandSuccess(int id) {
         }
       }
       return;
-    case STATE_STOR_COMPLETE:
-      if (connstatetracker[id].transferInitialized()) {
-        connstatetracker[id].getTransferMonitor()->targetComplete();
-        transferComplete(id, false);
-        FileList * fl = connstatetracker[id].getTransferFileList();
-        connstatetracker[id].finishTransfer();
-        int filelistreusetime = currtime - fl->getRefreshedTime();
-        if (filelistreusetime < FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH ||
-            (site->useXDUPE() && filelistreusetime < FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH_XDUPE))
-        {
-          global->getEngine()->raceActionRequest();
-          if (conns[id]->isProcessing() || connstatetracker[id].isTransferLocked()) {
-            return;
-          }
+    case STATE_STOR_COMPLETE: {
+      util::assert(connstatetracker[id].transferInitialized());
+      connstatetracker[id].getTransferMonitor()->targetComplete();
+      transferComplete(id, false);
+      FileList * fl = connstatetracker[id].getTransferFileList();
+      connstatetracker[id].finishTransfer();
+      int filelistreusetime = currtime - fl->getRefreshedTime();
+      if (filelistreusetime < FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH ||
+          (site->useXDUPE() && filelistreusetime < FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH_XDUPE))
+      {
+        global->getEngine()->raceActionRequest();
+        if (conns[id]->isProcessing() || connstatetracker[id].isTransferLocked()) {
+          return;
         }
       }
-      else {
-        global->getEventLog()->log("SiteLogic", "BUG: returned successfully from STOR without having a transfer. Shouldn't happen!");
-      }
       break;
+    }
     case STATE_ABOR:
       break;
     case STATE_PASV_ABORT:
@@ -651,36 +640,14 @@ void SiteLogic::handleFail(int id) {
 }
 
 void SiteLogic::handleTransferFail(int id, int err) {
-  if (connstatetracker[id].isListOrTransferLocked()) {
-    handleTransferFail(id, connstatetracker[id].getTransferType(), err);
-  }
-  else {
-    global->getEventLog()->log("SiteLogic", "BUG: Returned failed transfer (code " +
-        util::int2Str(err) + ") without having a transfer, shouldn't happen!");
-  }
+  util::assert(connstatetracker[id].isListOrTransferLocked());
+  handleTransferFail(id, connstatetracker[id].getTransferType(), err);
 }
 
 void SiteLogic::handleTransferFail(int id, int type, int err) {
+  util::assert(connstatetracker[id].isListOrTransferLocked());
+  reportTransferErrorAndFinish(id, type, err);
   bool passive = connstatetracker[id].getTransferPassive();
-  if (connstatetracker[id].isListOrTransferLocked()) {
-    reportTransferErrorAndFinish(id, type, err);
-  }
-  else {
-    switch (type) {
-      case CST_DOWNLOAD:
-        global->getEventLog()->log("SiteLogic", "BUG: Returned failed download (code " +
-            util::int2Str(err) + ") without having a transfer, shouldn't happen!");
-        break;
-      case CST_UPLOAD:
-        global->getEventLog()->log("SiteLogic", "BUG: Returned failed upload (code " +
-            util::int2Str(err) + ") without having a transfer, shouldn't happen!");
-        break;
-      case CST_LIST:
-        global->getEventLog()->log("SiteLogic", "BUG: Returned failed LIST (code " +
-            util::int2Str(err) + ") without having a transfer, shouldn't happen!");
-        break;
-    }
-  }
   if (connstatetracker[id].transferInitialized() && passive &&
       (err == TM_ERR_RETRSTOR || err == TM_ERR_DUPE))
   {
@@ -1356,7 +1323,7 @@ bool SiteLogic::finishRequest(int requestid) {
       return true;
     }
   }
-  global->getEventLog()->log("SiteLogic", "BUG: Couldn't find request to finish.");
+  util::assert(false);
   return false;
 }
 
