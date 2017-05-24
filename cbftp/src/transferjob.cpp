@@ -273,6 +273,7 @@ void TransferJob::fileListUpdated(SiteLogic * sl, FileList * fl) {
   checkFileListExists(fl);
   std::map<FileList *, int>::iterator it = filelistsrefreshed.find(fl);
   if (it == filelistsrefreshed.end()) {
+
     filelistsrefreshed[fl] = REFRESH_NOW;
     it = filelistsrefreshed.find(fl);
   }
@@ -288,29 +289,38 @@ void TransferJob::fileListUpdated(SiteLogic * sl, FileList * fl) {
     countTotalFiles();
   }
   Path subpath = fl->getPath() - (sl == src.get() ? srcpath : dstpath);
-  if (type == TRANSFERJOB_FXP || type == TRANSFERJOB_DOWNLOAD) {
-    if (subpath == "") {
-      File * file = fl->getFile(srcfile);
-      if (file != NULL) {
+  if (subpath == "") {
+    File * file = fl->getFile(sl == src.get() ? srcfile : dstfile);
+    if (file != NULL) {
+      if (sl == src.get() && file->isLink()) {
+        Path linktarget(file->getLinkTarget());
+        if (linktarget.isRelative()) {
+          linktarget = fl->getPath() / linktarget;
+        }
+        srcpath = linktarget.dirName();
+        srcfile = linktarget.baseName();
+        FileList * srcfilelist = new FileList(src->getSite()->getUser(), srcpath);
+        srcfilelists[""] = srcfilelist;
+        filelistsrefreshed.clear();
+        filelistsrefreshed[srcfilelist] = REFRESH_NOW;
+        return;
+      }
+      if (type == TRANSFERJOB_FXP || type == TRANSFERJOB_DOWNLOAD) {
         addSubDirectoryFileLists(srcfilelists, fl, subpath, file);
       }
-    }
-    else {
-      addSubDirectoryFileLists(srcfilelists, fl, subpath);
-    }
-  }
-  if (type == TRANSFERJOB_FXP || type == TRANSFERJOB_UPLOAD) {
-    if (subpath == "") {
-      File * file = fl->getFile(dstfile);
-      if (file != NULL) {
+      if (type == TRANSFERJOB_FXP || type == TRANSFERJOB_UPLOAD) {
         addSubDirectoryFileLists(dstfilelists, fl, subpath, file);
       }
     }
-    else {
+  }
+  else {
+    if (type == TRANSFERJOB_FXP || type == TRANSFERJOB_DOWNLOAD) {
+      addSubDirectoryFileLists(srcfilelists, fl, subpath);
+    }
+    if (type == TRANSFERJOB_FXP || type == TRANSFERJOB_UPLOAD) {
       addSubDirectoryFileLists(dstfilelists, fl, subpath);
     }
   }
-
 }
 
 FileList * TransferJob::findDstList(const std::string & sub) const {
