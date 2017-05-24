@@ -460,21 +460,8 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       break;
     case 'D':
       if (list.cursoredFile() != NULL && (list.cursoredFile()->isDirectory() || list.cursoredFile()->getSize() > 0)) {
-        if (!list.cursoredFile()->isLink()) {
-          global->getEngine()->newTransferJobDownload(site->getName(), filelist, list.cursoredFile()->getName(),
-                                                      global->getLocalStorage()->getDownloadPath());
-        }
-        else {
-          Path linktarget = list.cursoredFile()->getLinkTarget();
-          if (linktarget.isRelative()) {
-            linktarget = filelist->getPath() / linktarget;
-          }
-          global->getEngine()->newTransferJobDownload(site->getName(),
-                                                      linktarget.dirName(),
-                                                      linktarget.baseName(),
-                                                      global->getLocalStorage()->getDownloadPath(),
-                                                      linktarget.baseName());
-        }
+        global->getEngine()->newTransferJobDownload(site->getName(), filelist, list.cursoredFile()->getName(),
+                                                    global->getLocalStorage()->getDownloadPath());
       }
       break;
     case 's':
