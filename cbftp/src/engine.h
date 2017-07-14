@@ -30,6 +30,7 @@ public:
   void prepareRace(const std::string &, const std::string &, const std::list<std::string> &);
   void prepareRace(const std::string &, const std::string &);
   Pointer<Race> newDistribute(const std::string &, const std::string &, const std::list<std::string> &);
+  Pointer<Race> newDistribute(const std::string &, const std::string &);
   void startPreparedRace(unsigned int);
   void deletePreparedRace(unsigned int);
   void startLatestPreparedRace();

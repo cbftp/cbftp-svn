@@ -203,6 +203,10 @@ Pointer<Race> Engine::newDistribute(const std::string & release, const std::stri
   return newSpreadJob(SPREAD_DISTRIBUTE, release, section, sites);
 }
 
+Pointer<Race> Engine::newDistribute(const std::string & release, const std::string & section) {
+  return newSpreadJob(SPREAD_DISTRIBUTE, release, section);
+}
+
 void Engine::prepareRace(const std::string & release, const std::string & section, const std::list<std::string> & sites) {
   newSpreadJob(SPREAD_PREPARE, release, section, sites);
 }
