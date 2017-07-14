@@ -21,6 +21,12 @@
 #define DEFAULTPASS "DEFAULT"
 #define RETRYDELAY 30000
 
+enum RaceType {
+  RACE,
+  DISTRIBUTE,
+  PREPARE
+};
+
 std::list<Pointer<SiteLogic> > getSiteLogicList(const std::string & sitestring) {
   std::list<Pointer<SiteLogic> > sitelogics;
   std::list<std::string> sites;
@@ -138,6 +144,9 @@ void RemoteCommandHandler::handleMessage(std::string message) {
   if (command == "race") {
     commandRace(remainder);
   }
+  else if (command == "distribute") {
+    commandDistribute(remainder);
+  }
   else if (command == "prepare") {
     commandPrepare(remainder);
   }
@@ -172,11 +181,15 @@ void RemoteCommandHandler::handleMessage(std::string message) {
 }
 
 void RemoteCommandHandler::commandRace(const std::string & message) {
-  parseRace(message, true);
+  parseRace(message, RACE);
+}
+
+void RemoteCommandHandler::commandDistribute(const std::string & message) {
+  parseRace(message, DISTRIBUTE);
 }
 
 void RemoteCommandHandler::commandPrepare(const std::string & message) {
-  parseRace(message, false);
+  parseRace(message, PREPARE);
 }
 
 void RemoteCommandHandler::commandRaw(const std::string & message) {
@@ -364,7 +377,7 @@ void RemoteCommandHandler::commandDelete(const std::string & message) {
   global->getEngine()->deleteOnSites(race, sites);
 }
 
-void RemoteCommandHandler::parseRace(const std::string & message, bool autostart) {
+void RemoteCommandHandler::parseRace(const std::string & message, int type) {
   size_t sectionend = message.find(" ");
   size_t releaseend = message.find(" ", sectionend + 1);
   if (sectionend == std::string::npos || releaseend == std::string::npos || releaseend == message.length()) {
@@ -375,8 +388,11 @@ void RemoteCommandHandler::parseRace(const std::string & message, bool autostart
   std::string release = message.substr(sectionend + 1, releaseend - (sectionend + 1));
   std::string sitestring = message.substr(releaseend + 1);
   if (sitestring == "*") {
-    if (autostart) {
+    if (type == RACE) {
       global->getEngine()->newRace(release, section);
+    }
+    else if (type == DISTRIBUTE){
+      global->getEngine()->newDistribute(release, section);
     }
     else {
       global->getEngine()->prepareRace(release, section);
@@ -384,8 +400,11 @@ void RemoteCommandHandler::parseRace(const std::string & message, bool autostart
     return;
   }
   std::list<std::string> sites = util::split(sitestring, ",");
-  if (autostart) {
+  if (type == RACE) {
     global->getEngine()->newRace(release, section, sites);
+  }
+  else if (type == DISTRIBUTE){
+    global->getEngine()->newDistribute(release, section, sites);
   }
   else {
     global->getEngine()->prepareRace(release, section, sites);

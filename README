@@ -270,6 +270,10 @@ item on the specified sites. The site list is a list of site names,
 comma-separated without spaces. (Example: site1,site2,site3). Wildcard (*)
 also works, which means all sites added in cbftp will be selected.
 
+<password> distribute <section> <file> <sitelist>
+This command starts a spread job with the 'distribute' profile for the
+specified item on the specified sites.
+
 <password> prepare <section> <file> <sitelist>
 This command prepares a spread job with the 'race' profile, which means
 cbftp will log onto the specified sites and await user input. Prepared
