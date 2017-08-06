@@ -10,9 +10,9 @@ class File {
   friend class FileList;
 private:
   File(const File &);
-  void parseUNIXSTATLine(const std::string &);
-  void parseBrokenUNIXSTATLine(const std::string &, int, int &);
-  void parseMSDOSSTATLine(const std::string &);
+  bool parseUNIXSTATLine(const std::string &);
+  bool parseBrokenUNIXSTATLine(const std::string &, size_t, size_t &);
+  bool parseMSDOSSTATLine(const std::string &);
   std::string digitsOnly(const std::string &) const;
   std::string name;
   std::string linktarget;
@@ -30,6 +30,7 @@ private:
   int touch;
   bool uploading;
   int downloading;
+  bool valid;
 protected:
   File(const std::string &, const std::string &);
   File(const std::string &, int);
@@ -62,4 +63,5 @@ public:
   bool isDownloading() const;
   bool isUploading() const;
   int getTouch() const;
+  bool isValid() const;
 };
