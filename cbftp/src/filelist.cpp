@@ -40,6 +40,10 @@ void FileList::init(const std::string & username, const Path & path, FileListSta
 
 bool FileList::updateFile(const std::string & start, int touch) {
   File * file = new File(start, touch);
+  if (!file->isValid()) {
+    delete file;
+    return false;
+  }
   std::string name = file->getName();
   if (name == "." || name == "..") {
     delete file;

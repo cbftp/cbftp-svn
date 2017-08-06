@@ -22,7 +22,8 @@ File::File(const std::string & name, const std::string & user) :
   softlink(false),
   touch(0),
   uploading(false),
-  downloading(0)
+  downloading(0),
+  valid(true)
 {
 }
 
@@ -35,10 +36,10 @@ File::File(const std::string & statline, int touch) :
   downloading(0)
 {
   if (isdigit(statline[0]) && isdigit(statline[1])) {
-    parseMSDOSSTATLine(statline);
+    valid = parseMSDOSSTATLine(statline);
   }
   else {
-    parseUNIXSTATLine(statline);
+    valid = parseUNIXSTATLine(statline);
   }
   extension = getExtension(name);
   if (softlink) {
@@ -54,50 +55,83 @@ File::File(const std::string & statline, int touch) :
 
 }
 
-void File::parseUNIXSTATLine(const std::string & statline) {
-  int start, pos = 0;
+bool File::parseUNIXSTATLine(const std::string & statline) {
+  size_t start, pos = 0;
+  size_t maxpos = statline.length();
+  if (!maxpos) {
+    return false;
+  }
+  --maxpos;
   if (statline[pos] == 'd') directory = true;
   else if (statline[pos] == 'l') softlink = true;
-  while (statline[++pos] != ' ');
-  while (statline[++pos] == ' ');
-  while (statline[++pos] != ' ');
-  while (statline[++pos] == ' '); // user start at pos? possibly missing field
+  while (pos < maxpos && statline[++pos] != ' ');
+  while (pos < maxpos && statline[++pos] == ' ');
+  while (pos < maxpos && statline[++pos] != ' ');
+  while (pos < maxpos && statline[++pos] == ' '); // user start at pos? possibly missing field
+  if (pos == maxpos) {
+    return false;
+  }
   start = pos;
-  int possibleuserstart = start;
-  while (statline[++pos] != ' ');
+  size_t possibleuserstart = start;
+  while (pos < maxpos && statline[++pos] != ' ');
+  if (pos == maxpos) {
+    return false;
+  }
   owner = statline.substr(start, pos - start);
-  while (statline[++pos] == ' '); // group start at pos? possibly missing field
+  while (pos < maxpos && statline[++pos] == ' '); // group start at pos? possibly missing field
+  if (pos == maxpos) {
+    return false;
+  }
   start = pos;
-  while (statline[++pos] != ' ');
+  while (pos < maxpos && statline[++pos] != ' ');
+  if (pos == maxpos) {
+    return false;
+  }
   group = statline.substr(start, pos - start);
-  while (statline[++pos] == ' '); // size start at pos
+  while (pos < maxpos && statline[++pos] == ' '); // size start at pos
+  if (pos == maxpos) {
+    return false;
+  }
   start = pos;
-  while (statline[++pos] != ' ');
+  while (pos < maxpos && statline[++pos] != ' ');
+  if (pos == maxpos) {
+    return false;
+  }
   std::string sizetmp = statline.substr(start, pos - start);
   size = atol(sizetmp.c_str());
-  while (statline[++pos] == ' '); // month start at pos
+  while (pos < maxpos && statline[++pos] == ' '); // month start at pos
+  if (pos == maxpos) {
+    return false;
+  }
   start = pos;
   if (!isalpha(statline[start])) { // if the user or group field is missing, this happens
     parseBrokenUNIXSTATLine(statline, possibleuserstart, start);
     pos = start;
   }
-  while (statline[++pos] != ' ');
-  while (statline[++pos] == ' '); // day start at pos
-  while (statline[++pos] != ' ');
-  while (statline[++pos] == ' '); // time/year start at pos
-  while (statline[++pos] != ' ');
+  while (pos < maxpos && statline[++pos] != ' ');
+  while (pos < maxpos && statline[++pos] == ' '); // day start at pos
+  while (pos < maxpos && statline[++pos] != ' ');
+  while (pos < maxpos && statline[++pos] == ' '); // time/year start at pos
+  while (pos < maxpos && statline[++pos] != ' ');
+  if (pos == maxpos) {
+    return false;
+  }
   lastmodified = statline.substr(start, pos - start);
-  while (statline[++pos] == ' '); // name start at pos
+  while (pos < maxpos && statline[++pos] == ' '); // name start at pos
+  if (pos == maxpos) {
+    return false;
+  }
   start = pos;
-  while (statline[++pos] != '\r');
+  while (pos < maxpos && statline[++pos] != '\r');
   name = statline.substr(start, pos - start);
+  return true;
 }
 
-void File::parseBrokenUNIXSTATLine(const std::string & statline,
-  int pos, int & monthstart)
+bool File::parseBrokenUNIXSTATLine(const std::string & statline,
+  size_t pos, size_t & monthstart)
 {
-  int start;
-  int len = statline.length();
+  size_t start;
+  size_t len = statline.length();
   std::vector<std::pair<int, std::string> > tokens;
   --pos;
   while (true) {
@@ -112,6 +146,9 @@ void File::parseBrokenUNIXSTATLine(const std::string & statline,
     if (statline[pos] == '\r') {
       break;
     }
+  }
+  if (tokens.size() < 4) {
+    return false;
   }
   bool foundmatch = false;
   for (unsigned int i = 0; i < tokens.size() - 4; i++) {
@@ -136,18 +173,32 @@ void File::parseBrokenUNIXSTATLine(const std::string & statline,
       break;
     }
   }
-  util::assert(foundmatch);
+  return foundmatch;
 }
 
-void File::parseMSDOSSTATLine(const std::string & statline) {
-  int start = 0, pos = 0; // date start at pos
-  while (statline[++pos] != ' ');
-  while (statline[++pos] == ' '); // time start at pos
-  while (statline[++pos] != ' ');
+bool File::parseMSDOSSTATLine(const std::string & statline) {
+  size_t maxpos = statline.length();
+  if (!maxpos) {
+    return false;
+  }
+  --maxpos;
+  size_t start = 0, pos = 0; // date start at pos
+  while (pos < maxpos && statline[++pos] != ' ');
+  while (pos < maxpos && statline[++pos] == ' '); // time start at pos
+  while (pos < maxpos && statline[++pos] != ' ');
+  if (pos == maxpos) {
+    return false;
+  }
   lastmodified = statline.substr(start, pos - start);
-  while (statline[++pos] == ' '); // dirtag or size start at pos
+  while (pos < maxpos && statline[++pos] == ' '); // dirtag or size start at pos
+  if (pos == maxpos) {
+    return false;
+  }
   start = pos;
-  while (statline[++pos] != ' ');
+  while (pos < maxpos && statline[++pos] != ' ');
+  if (pos == maxpos) {
+    return false;
+  }
   std::string dirorsize = statline.substr(start, pos - start);
   if (dirorsize == "<DIR>") {
     directory = true;
@@ -156,10 +207,14 @@ void File::parseMSDOSSTATLine(const std::string & statline) {
   else {
     size = atol(digitsOnly(dirorsize).c_str());
   }
-  while (statline[++pos] == ' '); // name start at pos
+  while (pos < maxpos && statline[++pos] == ' '); // name start at pos
+  if (pos == maxpos) {
+    return false;
+  }
   start = pos;
-  while (statline[++pos] != '\r');
+  while (pos < maxpos && statline[++pos] != '\r');
   name = statline.substr(start, pos - start);
+  return true;
 }
 
 bool File::isDirectory() const {
@@ -301,4 +356,8 @@ std::string File::digitsOnly(const std::string & input) const {
     }
   }
   return output;
+}
+
+bool File::isValid() const {
+  return valid;
 }
