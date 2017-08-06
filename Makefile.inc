@@ -30,6 +30,6 @@ DATE := "\"$(shell date)\""
 BOXTAG := "\"cbftp\""
 
 CXX=g++
-OPTFLAGS=-g -O0 -pg
+OPTFLAGS=-g -O0
 CPPFLAGS=$(OPTFLAGS) -Wall -MMD -MP $(STATIC_SSL_INCLUDE)
 LINKFLAGS=-lncursesw -lpthread $(SSL_LINKFLAGS)
