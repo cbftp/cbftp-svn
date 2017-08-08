@@ -22,9 +22,10 @@ public:
   virtual unsigned long long int size() const = 0;
   FTPConn * getConn() const;
 protected:
+  void activate();
+  void deactivate();
   bool ssl;
   int sockid;
-  bool inuse;
   bool inmemory;
   bool passivemode;
   int port;
@@ -37,4 +38,7 @@ protected:
   char * buf;
   unsigned int buflen;
   unsigned int bufpos;
+  bool timeoutticker;
+private:
+  bool inuse;
 };
