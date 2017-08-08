@@ -171,6 +171,9 @@ void RemoteCommandHandler::handleMessage(std::string message) {
   else if (command == "delete") {
     commandDelete(remainder);
   }
+  else if(command == "reset") {
+    commandReset(remainder);
+  }
   else {
     global->getEventLog()->log("RemoteCommandHandler", "Invalid remote command: " + message);
     return;
@@ -375,6 +378,15 @@ void RemoteCommandHandler::commandDelete(const std::string & message) {
     sites.push_back((*it)->getSite());
   }
   global->getEngine()->deleteOnSites(race, sites);
+}
+
+void RemoteCommandHandler::commandReset(const std::string & message) {
+  Pointer<Race> race = global->getEngine()->getRace(message);
+  if (!race) {
+    global->getEventLog()->log("RemoteCommandHandler", "No matching race: " + message);
+    return;
+  }
+  global->getEngine()->resetRace(race);
 }
 
 void RemoteCommandHandler::parseRace(const std::string & message, int type) {
