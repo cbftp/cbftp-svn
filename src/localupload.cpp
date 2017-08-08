@@ -5,7 +5,6 @@
 #include <unistd.h>
 
 #include "core/iomanager.h"
-#include "core/tickpoke.h"
 #include "globalcontext.h"
 #include "eventlog.h"
 #include "transfermonitor.h"

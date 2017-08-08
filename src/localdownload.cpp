@@ -6,7 +6,6 @@
 
 #include "core/iomanager.h"
 #include "core/types.h"
-#include "core/tickpoke.h"
 #include "globalcontext.h"
 #include "eventlog.h"
 #include "transfermonitor.h"
@@ -51,7 +50,6 @@ void LocalDownload::init(TransferMonitor * tm, FTPConn * ftpconn, const Path & p
   this->ssl = ssl;
   this->port = port;
   this->passivemode = passivemode;
-  timeoutticker = false;
   bufpos = 0;
   filesize = 0;
   fileopened = false;
