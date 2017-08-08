@@ -296,6 +296,9 @@ This command makes cbftp abort the specified spread job.
 This command makes cbftp abort the specified spread job, and then delete
 all related files on all involved sites.
 
+<password> reset <job>
+This command makes cbftp reset the specified spread job.
+
 So let's say you've configured your remote command port to 55477, your
 remote command password to "bestpassword" and enabled the raw
 command listener. You now feel a sudden urge to delete yourself on SITE1.
