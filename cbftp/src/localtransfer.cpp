@@ -10,8 +10,9 @@
 #include "filesystem.h"
 
 LocalTransfer::LocalTransfer() :
-  inuse(false),
-  buflen(0)
+  buflen(0),
+  timeoutticker(false),
+  inuse(false)
 {
 }
 
@@ -21,8 +22,9 @@ bool LocalTransfer::active() const {
 
 void LocalTransfer::FDNew(int sockid) {
   global->getIOManager()->closeSocket(this->sockid);
-  if (!passivemode) {
+  if (timeoutticker) {
     global->getTickPoke()->stopPoke(this, 0);
+    timeoutticker = false;
   }
   this->sockid = sockid;
   global->getIOManager()->registerTCPServerClientSocket(this, sockid);
@@ -31,9 +33,7 @@ void LocalTransfer::FDNew(int sockid) {
 
 void LocalTransfer::tick(int) {
   global->getIOManager()->closeSocket(sockid);
-  if (!passivemode) {
-    global->getTickPoke()->stopPoke(this, 0);
-  }
+  global->getTickPoke()->stopPoke(this, 0);
   FDFail(sockid, "Connection timed out");
 }
 
@@ -53,4 +53,20 @@ int LocalTransfer::getPort() const {
 
 FTPConn * LocalTransfer::getConn() const {
   return ftpconn;
+}
+
+void LocalTransfer::activate() {
+  inuse = true;
+  if (!passivemode) {
+    global->getTickPoke()->startPoke(this, "LocalTransfer", 5000, 0);
+    timeoutticker = true;
+  }
+}
+
+void LocalTransfer::deactivate() {
+  inuse = false;
+  if (timeoutticker) {
+    global->getTickPoke()->stopPoke(this, 0);
+    timeoutticker = false;
+  }
 }

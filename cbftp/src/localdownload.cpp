@@ -51,13 +51,11 @@ void LocalDownload::init(TransferMonitor * tm, FTPConn * ftpconn, const Path & p
   this->ssl = ssl;
   this->port = port;
   this->passivemode = passivemode;
+  timeoutticker = false;
   bufpos = 0;
   filesize = 0;
-  inuse = true;
   fileopened = false;
-  if (!passivemode) {
-    global->getTickPoke()->startPoke(this, "LocalDownload", 5000, 0);
-  }
+  activate();
 }
 
 void LocalDownload::FDConnected(int sockid) {
@@ -81,7 +79,7 @@ void LocalDownload::FDDisconnected(int sockid) {
       filestream.close();
     }
   }
-  inuse = false;
+  deactivate();
   if (inmemory) {
     BinaryData out(buf, buf + bufpos);
     ls->storeContent(storeid, out);
@@ -99,7 +97,7 @@ void LocalDownload::FDSSLFail(int sockid) {
     filestream.close();
   }
   global->getIOManager()->closeSocket(sockid);
-  inuse = false;
+  deactivate();
   tm->targetError(TM_ERR_OTHER);
 }
 
@@ -108,7 +106,7 @@ void LocalDownload::FDData(int sockid, char * data, unsigned int len) {
 }
 
 void LocalDownload::FDFail(int sockid, const std::string & error) {
-  inuse = false;
+  deactivate();
   if (sockid != -1) {
     tm->targetError(TM_ERR_OTHER);
   }

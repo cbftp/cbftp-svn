@@ -9,7 +9,6 @@ public:
   LocalUpload();
   void engage(TransferMonitor *, const Path &, const std::string &, const std::string &, int, bool, FTPConn *);
   bool engage(TransferMonitor *, const Path &, const std::string &, int, bool, FTPConn *);
-  bool active() const;
   void FDConnected(int);
   void FDDisconnected(int);
   void FDData(int, char *, unsigned int);

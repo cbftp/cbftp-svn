@@ -41,15 +41,8 @@ void LocalUpload::init(TransferMonitor * tm, FTPConn * ftpconn, const Path & pat
   this->port = port;
   this->passivemode = passivemode;
   filepos = 0;
-  inuse = true;
   fileopened = false;
-  if (!passivemode) {
-    global->getTickPoke()->startPoke(this, "LocalUpload", 5000, 0);
-  }
-}
-
-bool LocalUpload::active() const {
-  return inuse;
+  activate();
 }
 
 void LocalUpload::FDConnected(int sockid) {
@@ -69,7 +62,7 @@ void LocalUpload::FDDisconnected(int sockid) {
   if (fileopened) {
     filestream.close();
   }
-  inuse = false;
+  deactivate();
   tm->sourceError(TM_ERR_OTHER);
 }
 
@@ -87,7 +80,7 @@ void LocalUpload::sendChunk() {
     filestream.close();
     global->getIOManager()->closeSocket(sockid);
     tm->sourceComplete();
-    inuse = false;
+    deactivate();
   }
   filepos += gcount;
   global->getIOManager()->sendData(sockid, buf, gcount);
@@ -102,12 +95,12 @@ void LocalUpload::FDSSLFail(int sockid) {
     filestream.close();
   }
   global->getIOManager()->closeSocket(sockid);
-  inuse = false;
+  deactivate();
   tm->sourceError(TM_ERR_OTHER);
 }
 
 void LocalUpload::FDFail(int sockid, const std::string & error) {
-  inuse = false;
+  deactivate();
   if (sockid != -1) {
     tm->sourceError(TM_ERR_OTHER);
   }
@@ -117,7 +110,7 @@ void LocalUpload::FDData(int sockid, char * data, unsigned int len) {
   if (fileopened) {
     filestream.close();
   }
-  inuse = false;
+  deactivate();
   global->getIOManager()->closeSocket(sockid);
   tm->sourceError(TM_ERR_OTHER);
 }
