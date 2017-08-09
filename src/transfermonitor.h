@@ -62,6 +62,7 @@ class TransferMonitor : public EventReceiver, public RawBufferCallback {
     bool clientactive;
     bool fxpdstactive;
     bool ssl;
+    bool sourcesslclient;
     TransferMonitorType type;
     int timestamp;
     int startstamp;

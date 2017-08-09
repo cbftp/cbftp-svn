@@ -94,7 +94,7 @@ void ConnStateTracker::resetIdleTime() {
   idletime = 0;
 }
 
-void ConnStateTracker::setTransfer(const std::string & file, bool fxp, bool passive, const std::string & host, int port, bool ssl) {
+void ConnStateTracker::setTransfer(const std::string & file, bool fxp, bool passive, const std::string & host, int port, bool ssl, bool sslclient) {
   util::assert(transferlocked);
   util::assert(!transfer);
   util::assert(!request);
@@ -107,14 +107,15 @@ void ConnStateTracker::setTransfer(const std::string & file, bool fxp, bool pass
   this->host = host;
   this->port = port;
   this->ssl = ssl;
+  this->sslclient = sslclient;
 }
 
-void ConnStateTracker::setTransfer(const std::string & file, bool fxp, bool ssl) {
-  setTransfer(file, fxp, true, "", 0, ssl);
+void ConnStateTracker::setTransfer(const std::string & file, bool fxp, bool ssl, bool sslclient) {
+  setTransfer(file, fxp, true, "", 0, ssl, sslclient);
 }
 
-void ConnStateTracker::setTransfer(const std::string & file, const std::string & host, int port, bool ssl) {
-  setTransfer(file, false, false, host, port, ssl);
+void ConnStateTracker::setTransfer(const std::string & file, bool fxp, const std::string & host, int port, bool ssl, bool sslclient) {
+  setTransfer(file, fxp, false, host, port, ssl, sslclient);
 }
 
 void ConnStateTracker::setList(TransferMonitor * tm, bool listpassive, const std::string & host, int port, bool ssl) {
@@ -236,6 +237,10 @@ bool ConnStateTracker::getTransferSSL() const {
     return listssl;
   }
   return ssl;
+}
+
+bool ConnStateTracker::getTransferSSLClient() const {
+  return sslclient;
 }
 
 CommandOwner * ConnStateTracker::getCommandOwner() const {

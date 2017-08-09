@@ -49,6 +49,7 @@ private:
   int listcommand;
   bool sslconn;
   int ssltransfer;
+  bool sscnsupported;
   bool cpsvsupported;
   bool brokenpasv;
   bool disabled;
@@ -103,7 +104,9 @@ public:
   void setPriority(int);
   bool hasBrokenPASV() const;
   void setBrokenPASV(bool);
+  bool supportsSSCN() const;
   bool supportsCPSV() const;
+  void setSupportsSSCN(bool);
   void setSupportsCPSV(bool);
   bool getDisabled() const;
   bool getAllowUpload() const;
