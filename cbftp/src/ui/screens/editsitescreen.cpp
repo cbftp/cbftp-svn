@@ -109,8 +109,8 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   listcommand->setOption(this->site->getListCommand());
   mso.addStringField(y++, x + 26, "basepath", "Base path:", this->site->getBasePath().toString(), false, 40, 512);
   mso.addStringField(y, x, "idletime", "Max idle time (s):", util::int2Str(this->site->getMaxIdleTime()), false, 4);
-  mso.addCheckBox(y, x + 24, "cpsv", "CPSV supported:", this->site->supportsCPSV());
-  mso.addCheckBox(y++, x + 45, "pret", "Needs PRET:", this->site->needsPRET());
+  mso.addCheckBox(y, x + 24, "sscn", "SSCN supported:", this->site->supportsSSCN());
+  mso.addCheckBox(y++, x + 45, "cpsv", "CPSV supported:", this->site->supportsCPSV());
   mso.addCheckBox(y, x, "binary", "Force binary mode:", this->site->forceBinaryMode());
   mso.addCheckBox(y, x + 23, "brokenpasv", "Broken PASV:", this->site->hasBrokenPASV());
   Pointer<MenuSelectOptionTextArrow> useproxy = mso.addTextArrow(y++, x + 41, "useproxy", "Proxy:");
@@ -130,7 +130,8 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   if (proxytype == SITE_PROXY_USE) {
     useproxy->setOptionText(this->site->getProxy());
   }
-  mso.addCheckBox(y++, x, "xdupe", "Use XDUPE:", this->site->useXDUPE());
+  mso.addCheckBox(y, x, "xdupe", "Use XDUPE:", this->site->useXDUPE());
+  mso.addCheckBox(y++, x + 23, "pret", "Needs PRET:", this->site->needsPRET());
   mso.addTextButtonNoContent(y++, x, "skiplist", "Configure skiplist...");
   y++;
   mso.addCheckBox(y, x, "disabled", "Disabled:", this->site->getDisabled());
@@ -459,6 +460,9 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "ssltransfer") {
           site->setSSLTransferPolicy(msoe.get<MenuSelectOptionTextArrow>()->getData());
+        }
+        else if (identifier == "sscn") {
+          site->setSupportsSSCN(msoe.get<MenuSelectOptionCheckBox>()->getData());
         }
         else if (identifier == "cpsv") {
           site->setSupportsCPSV(msoe.get<MenuSelectOptionCheckBox>()->getData());

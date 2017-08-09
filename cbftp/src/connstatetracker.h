@@ -33,6 +33,7 @@ private:
   int type;
   bool passive;
   bool ssl;
+  bool sslclient;
   bool aborted;
   bool transferlocked;
   bool loggedin;
@@ -49,7 +50,7 @@ private:
   int port;
   Pointer<RecursiveCommandLogic> recursivelogic;
   Pointer<SiteLogicRequest> request;
-  void setTransfer(const std::string &, bool, bool, const std::string &, int, bool);
+  void setTransfer(const std::string &, bool, bool, const std::string &, int, bool, bool);
   void setList(TransferMonitor *, bool, const std::string &, int, bool);
 public:
   ConnStateTracker();
@@ -64,8 +65,8 @@ public:
   int checkCount() const;
   DelayedCommand & getCommand();
   void setDisconnected();
-  void setTransfer(const std::string &, bool, bool);
-  void setTransfer(const std::string &, const std::string &, int, bool);
+  void setTransfer(const std::string &, bool, bool, bool);
+  void setTransfer(const std::string &, bool, const std::string &, int, bool, bool);
   void setList(TransferMonitor *, bool);
   void setList(TransferMonitor *, const std::string &, int, bool);
   bool hasTransfer() const;
@@ -94,6 +95,7 @@ public:
   int getTransferType() const;
   bool getTransferPassive() const;
   bool getTransferSSL() const;
+  bool getTransferSSLClient() const;
   bool getTransferFXP() const;
   std::string getTransferHost() const;
   int getTransferPort() const;

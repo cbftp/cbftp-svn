@@ -284,6 +284,9 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("ssltransfer")) {
       site->setSSLTransferPolicy(util::str2Int(value));
     }
+    else if (!setting.compare("sscn")) {
+      if (!value.compare("false")) site->setSupportsSSCN(false);
+    }
     else if (!setting.compare("cpsv")) {
       if (!value.compare("false")) site->setSupportsCPSV(false);
     }
@@ -527,6 +530,7 @@ void SettingsLoaderSaver::saveSettings() {
       dfh->addOutputLine(filetag, name + "$maxdn=" + util::int2Str(site->getInternMaxDown()));
       dfh->addOutputLine(filetag, name + "$idletime=" + util::int2Str(site->getMaxIdleTime()));
       dfh->addOutputLine(filetag, name + "$ssltransfer=" + util::int2Str(site->getSSLTransferPolicy()));
+      if (!site->supportsSSCN()) dfh->addOutputLine(filetag, name + "$sscn=false");
       if (!site->supportsCPSV()) dfh->addOutputLine(filetag, name + "$cpsv=false");
       dfh->addOutputLine(filetag, name + "$listcommand=" + util::int2Str(site->getListCommand()));
       if (site->needsPRET()) dfh->addOutputLine(filetag, name + "$pret=true");

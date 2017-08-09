@@ -359,6 +359,8 @@ Field summary:
   site, or changed into by default when performing raw commands.
 - Max idle time: The number of seconds that the site will stay connected
   before logging out if there's nothing to do.
+- SSCN supported: SSCN is a special command used for SSL FXP transfers.
+  Not all servers support this, but it should be enabled if it is supported.
 - CPSV supported: CPSV is a special command used for SSL FXP transfers.
   Not all servers support this, but it should be enabled if it is supported.
 - Needs PRET: PRET is a special command needed for transfers on distributed

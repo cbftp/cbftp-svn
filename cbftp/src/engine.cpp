@@ -993,10 +993,18 @@ bool Engine::raceTransferPossible(const Pointer<SiteLogic> & sls, const Pointer<
   if (sls->getSite()->hasBrokenPASV() &&
       sld->getSite()->hasBrokenPASV()) return false;
   //ssl check
-  if ((sls->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_OFF &&
-      sld->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_ON) ||
-      (sls->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_ON &&
-          sld->getSite()->getSSLTransferPolicy() == SITE_SSL_ALWAYS_OFF)) {
+  bool srcpolicy = sls->getSite()->getSSLTransferPolicy();
+  bool dstpolicy = sld->getSite()->getSSLTransferPolicy();
+  if ((srcpolicy == SITE_SSL_ALWAYS_OFF &&
+       dstpolicy == SITE_SSL_ALWAYS_ON) ||
+      (srcpolicy == SITE_SSL_ALWAYS_ON &&
+       dstpolicy == SITE_SSL_ALWAYS_OFF))
+  {
+    return false;
+  }
+  if (srcpolicy == SITE_SSL_ALWAYS_ON && dstpolicy == SITE_SSL_ALWAYS_ON &&
+      !sls->getSite()->supportsSSCN() && !sld->getSite()->supportsSSCN())
+  {
     return false;
   }
   return true;

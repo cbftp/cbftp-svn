@@ -22,6 +22,7 @@ Site::Site(const std::string & name) :
   listcommand(SITE_LIST_STAT),
   sslconn(true),
   ssltransfer(SITE_SSL_PREFER_OFF),
+  sscnsupported(true),
   cpsvsupported(true),
   brokenpasv(false),
   disabled(false),
@@ -186,8 +187,16 @@ void Site::setPriority(int priority) {
   this->priority = priority;
 }
 
+bool Site::supportsSSCN() const {
+  return sscnsupported;
+}
+
 bool Site::supportsCPSV() const {
   return cpsvsupported;
+}
+
+void Site::setSupportsSSCN(bool supported) {
+  sscnsupported = supported;
 }
 
 void Site::setSupportsCPSV(bool supported) {

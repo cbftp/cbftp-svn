@@ -145,7 +145,9 @@ class SiteLogic : public EventReceiver {
     FTPConn * getConn(int) const;
     std::string getStatus(int) const;
     void preparePassiveTransfer(int, const std::string &, bool, bool);
-    void prepareActiveTransfer(int, const std::string &, const std::string &, int, bool);
+    void preparePassiveTransfer(int, const std::string &, bool, bool, bool);
+    void prepareActiveTransfer(int, const std::string &, bool, const std::string &, int, bool);
+    void prepareActiveTransfer(int, const std::string &, bool, const std::string &, int, bool, bool);
     void preparePassiveList(int, TransferMonitor *, bool);
     void prepareActiveList(int, TransferMonitor *, const std::string &, int, bool);
     void download(int);

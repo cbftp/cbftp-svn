@@ -1112,6 +1112,10 @@ void SiteLogic::initTransfer(int id) {
     connstatetracker[id].initializeTransfer();
   }
   bool transferssl = connstatetracker[id].getTransferSSL();
+  bool transfersslclient = connstatetracker[id].getTransferSSLClient();
+  bool sscnmode = conns[id]->getSSCNMode();
+  bool passive = connstatetracker[id].getTransferPassive();
+  Status status = connstatetracker[id].getTransferMonitor()->getStatus();
   if (transfertype != CST_LIST) {
     if (handlePreTransfer(id)) {
       return;
@@ -1127,47 +1131,45 @@ void SiteLogic::initTransfer(int id) {
       return;
     }
   }
-  if (!connstatetracker[id].getTransferPassive()) { // active
-    if (connstatetracker[id].getTransferMonitor()->getStatus() ==
-        TM_STATUS_AWAITING_ACTIVE) {
-      if (conns[id]->getSSCNMode()) {
+  if (status != (passive ? TM_STATUS_AWAITING_PASSIVE : TM_STATUS_AWAITING_ACTIVE)) {
+    return;
+  }
+  if (connstatetracker[id].getTransferFXP()) {
+    if (transferssl && (!passive || !site->supportsCPSV())) {
+      if (transfersslclient && !sscnmode) {
+        conns[id]->doSSCN(true);
+        return;
+      }
+      if (!transfersslclient && sscnmode) {
         conns[id]->doSSCN(false);
         return;
       }
-      conns[id]->doPORT(connstatetracker[id].getTransferHost(),
-                        connstatetracker[id].getTransferPort());
     }
   }
-  else { // passive
-    if (connstatetracker[id].getTransferMonitor()->getStatus() ==
-        TM_STATUS_AWAITING_PASSIVE) {
-      if (connstatetracker[id].getTransferFXP() && transferssl &&
-          !site->supportsCPSV()) {
-        if (!conns[id]->getSSCNMode()) {
-          conns[id]->doSSCN(true);
-          return;
-        }
+  else if (transferssl && sscnmode) {
+    conns[id]->doSSCN(false);
+    return;
+  }
+  if (!passive) {
+    conns[id]->doPORT(connstatetracker[id].getTransferHost(),
+                      connstatetracker[id].getTransferPort());
+  }
+  else {
+    if (site->needsPRET()) {
+      switch (transfertype) {
+        case CST_DOWNLOAD:
+          conns[id]->doPRETRETR(connstatetracker[id].getTransferFile());
+          break;
+        case CST_UPLOAD:
+          conns[id]->doPRETSTOR(connstatetracker[id].getTransferFile());
+          break;
+        case CST_LIST:
+          conns[id]->doPRETLIST();
+          break;
       }
-      else if (conns[id]->getSSCNMode()) {
-        conns[id]->doSSCN(false);
-        return;
-      }
-      if (site->needsPRET()) {
-        switch (transfertype) {
-          case CST_DOWNLOAD:
-            conns[id]->doPRETRETR(connstatetracker[id].getTransferFile());
-            break;
-          case CST_UPLOAD:
-            conns[id]->doPRETSTOR(connstatetracker[id].getTransferFile());
-            break;
-          case CST_LIST:
-            conns[id]->doPRETLIST();
-            break;
-        }
-      }
-      else {
-        passiveModeCommand(id);
-      }
+    }
+    else {
+      passiveModeCommand(id);
     }
   }
 }
@@ -1693,14 +1695,21 @@ std::string SiteLogic::getStatus(int id) const {
   return conns[id]->getStatus();
 }
 
-
 void SiteLogic::preparePassiveTransfer(int id, const std::string & file, bool fxp, bool ssl) {
-  connstatetracker[id].setTransfer(file, fxp, ssl);
+  preparePassiveTransfer(id, file, fxp, ssl, false);
+}
+
+void SiteLogic::preparePassiveTransfer(int id, const std::string & file, bool fxp, bool ssl, bool sslclient) {
+  connstatetracker[id].setTransfer(file, fxp, ssl, sslclient);
   initTransfer(id);
 }
 
-void SiteLogic::prepareActiveTransfer(int id, const std::string & file, const std::string & host, int port, bool ssl) {
-  connstatetracker[id].setTransfer(file, host, port, ssl);
+void SiteLogic::prepareActiveTransfer(int id, const std::string & file, bool fxp, const std::string & host, int port, bool ssl) {
+  prepareActiveTransfer(id, file, fxp, host, port, ssl, false);
+}
+
+void SiteLogic::prepareActiveTransfer(int id, const std::string & file, bool fxp, const std::string & host, int port, bool ssl, bool sslclient) {
+  connstatetracker[id].setTransfer(file, fxp, host, port, ssl, sslclient);
   initTransfer(id);
 }
 
@@ -1793,7 +1802,9 @@ void SiteLogic::getFileListConn(int id, CommandOwner * co, FileList * filelist) 
 void SiteLogic::passiveModeCommand(int id) {
   if (connstatetracker[id].getTransferFXP() &&
       connstatetracker[id].getTransferSSL() &&
-      site->supportsCPSV()) {
+      connstatetracker[id].getTransferSSLClient() &&
+      site->supportsCPSV())
+  {
     conns[id]->doCPSV();
   }
   else {
