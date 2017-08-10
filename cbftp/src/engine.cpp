@@ -993,8 +993,8 @@ bool Engine::raceTransferPossible(const Pointer<SiteLogic> & sls, const Pointer<
   if (sls->getSite()->hasBrokenPASV() &&
       sld->getSite()->hasBrokenPASV()) return false;
   //ssl check
-  bool srcpolicy = sls->getSite()->getSSLTransferPolicy();
-  bool dstpolicy = sld->getSite()->getSSLTransferPolicy();
+  int srcpolicy = sls->getSite()->getSSLTransferPolicy();
+  int dstpolicy = sld->getSite()->getSSLTransferPolicy();
   if ((srcpolicy == SITE_SSL_ALWAYS_OFF &&
        dstpolicy == SITE_SSL_ALWAYS_ON) ||
       (srcpolicy == SITE_SSL_ALWAYS_ON &&
