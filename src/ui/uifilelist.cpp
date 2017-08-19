@@ -11,6 +11,7 @@
 UIFileList::UIFileList() :
   currentposition(0),
   currentcursored(NULL),
+  path("/"),
   numfiles(0),
   numdirs(0),
   totalsize(0),
