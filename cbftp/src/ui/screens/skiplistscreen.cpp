@@ -191,9 +191,15 @@ void SkipListScreen::update() {
     int cursorpos = msoe->cursorPosition();
     if (active && cursorpos >= 0) {
       ui->showCursor();
-      unsigned int cursoradjust = msoe->getCol() + cursorpos +
-          (focusedarea == &base ? msoe->getLabelText().length() + 1 : 0);
-      ui->moveCursor(msoe->getRow(), cursoradjust);
+      unsigned int cursorcol = msoe->getCol() + cursorpos;
+      unsigned int cursorrow = msoe->getRow();
+      if (focusedarea == &base) {
+        cursorcol += msoe->getLabelText().length() + 1;
+      }
+      else {
+        cursorrow -= currentviewspan;
+      }
+      ui->moveCursor(cursorrow, cursorcol);
     }
     else {
       ui->hideCursor();
