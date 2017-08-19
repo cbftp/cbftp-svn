@@ -21,6 +21,9 @@ void RawCommandScreen::initialize(unsigned int row, unsigned int col, const std:
   this->sitename = sitename;
   this->selection = selection;
   this->path = path;
+  if (this->path == "") {
+    this->path = "/";
+  }
   hasselection = false;
   if (selection.length()) {
     hasselection = true;
