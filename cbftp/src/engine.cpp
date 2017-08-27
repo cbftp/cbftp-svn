@@ -168,12 +168,14 @@ Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, con
       global->getEventLog()->log("Engine", "Starting race: " + section + "/" + release +
           " on " + util::int2Str((int)addsites.size()) + " sites.");
     }
-    else if (addsites.size()) {
+    else {
+      if (addsites.size()) {
+        global->getEventLog()->log("Engine", "Appending to race: " + section + "/" + release +
+            " with " + util::int2Str((int)addsites.size()) + " site" + (addsites.size() > 1 ? "s" : "") + ".");
+      }
       if (readdtocurrent) {
         currentraces.push_back(race);
       }
-      global->getEventLog()->log("Engine", "Appending to race: " + section + "/" + release +
-          " with " + util::int2Str((int)addsites.size()) + " site" + (addsites.size() > 1 ? "s" : "") + ".");
     }
     setSpeedScale();
     preSeedPotentialData(race);
