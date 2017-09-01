@@ -438,6 +438,12 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
     case 'r':
       global->getEngine()->resetRace(race);
       return true;
+    case 10:
+      Pointer<MenuSelectOptionTextButton> msotb = mso.getElement(mso.getSelectionPointer());
+      if (!!msotb) {
+        ui->goSiteStatus(msotb->getLabelText());
+      }
+      break;
   }
   return false;
 }
