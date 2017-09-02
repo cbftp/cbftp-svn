@@ -21,6 +21,7 @@ private:
   void commandDistribute(const std::string &);
   void commandPrepare(const std::string &);
   void commandRaw(const std::string &);
+  void commandRawWithPath(const std::string &);
   void commandFXP(const std::string &);
   void commandDownload(const std::string &);
   void commandUpload(const std::string &);
