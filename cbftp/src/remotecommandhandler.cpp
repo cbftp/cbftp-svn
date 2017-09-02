@@ -153,6 +153,9 @@ void RemoteCommandHandler::handleMessage(std::string message) {
   else if (command == "raw") {
     commandRaw(remainder);
   }
+  else if (command == "rawwithpath") {
+    commandRawWithPath(remainder);
+  }
   else if (command == "fxp") {
     commandFXP(remainder);
   }
@@ -208,6 +211,39 @@ void RemoteCommandHandler::commandRaw(const std::string & message) {
 
   for (std::list<Pointer<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
     (*it)->requestRawCommand(rawcommand);
+  }
+}
+
+void RemoteCommandHandler::commandRawWithPath(const std::string & message) {
+  size_t sitesend = message.find(" ");
+  if (sitesend == std::string::npos || sitesend == message.length()) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad remote rawwithpath command format: " + message);
+    return;
+  }
+  size_t pathend = message.find(" ", sitesend + 1);
+  if (pathend == std::string::npos || pathend == message.length()) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad remote rawwithpath command format: " + message);
+    return;
+  }
+  std::string sitestring = message.substr(0, sitesend);
+  std::string pathstr = message.substr(sitesend + 1, pathend - sitesend - 1);
+  std::string rawcommand = message.substr(pathend + 1);
+
+  std::list<Pointer<SiteLogic> > sites = getSiteLogicList(sitestring);
+
+  for (std::list<Pointer<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
+    Path path(pathstr);
+    if (path.isRelative()) {
+      if ((*it)->getSite()->hasSection(path.toString())) {
+        path = (*it)->getSite()->getSectionPath(path.toString());
+      }
+      else {
+        global->getEventLog()->log("RemoteCommandHandler", "Path must be absolute or a section name on " +
+            (*it)->getSite()->getName() + ": " + path.toString());
+        return;
+      }
+    }
+    (*it)->requestRawCommand(path, rawcommand, false);
   }
 }
 

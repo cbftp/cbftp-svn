@@ -284,6 +284,11 @@ in the cbftp UI to start the latest prepared job.
 <password> raw <sitelist> <command>
 This command makes cbftp issue the given raw command on the listed sites.
 
+<password> rawwithpath <sitelist> <path> <command>
+This command makes cbftp change directory to the given path and then issue
+the given raw command on the listed sites. The path field can also be a
+section name.
+
 <password> idle <sitelist> [time]
 This command makes cbftp login and idle on the specified sites. Specifying
 how long the sites should stay logged in is optional, and defaults to the
