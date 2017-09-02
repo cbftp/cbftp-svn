@@ -23,6 +23,7 @@ Race::Race(unsigned int id, SpreadProfile profile, const std::string & release, 
   maxnumfilessiteprogress(0),
   bestunknownfilesizeestimate(50000000),
   guessedtotalfilesize(0),
+  guessedtotalnumfiles(0),
   checkcount(0),
   timestamp(util::ctimeLog()),
   timespent(0),
@@ -349,7 +350,7 @@ void Race::reportSize(SiteRace * sr, FileList * fl, const std::string & subpath,
     }
     if (guessedfileliststotalfilesize[subpath] != aggregatedsize) {
       guessedfileliststotalfilesize[subpath] = aggregatedsize;
-      calculateTotalFileSize();
+      calculateTotal();
     }
     if (final) {
       sizes[sr][subpath] = uniques.size();
@@ -436,6 +437,7 @@ std::string Race::getTimeStamp() const {
 void Race::setDone() {
   status = RACE_STATUS_DONE;
   global->getTickPoke()->stopPoke(this, 0);
+  calculatePercentages();
 }
 
 void Race::tick(int) {
@@ -443,14 +445,24 @@ void Race::tick(int) {
   calculatePercentages();
 }
 
+#include "core/pointer.h"
+
 void Race::calculatePercentages() {
   unsigned int totalpercentage = 0;
   unsigned int localworst = 100;
   unsigned int localbest = 0;
   for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = begin(); it != end(); it++) {
-    unsigned int percentagecomplete = guessedtotalfilesize
-        ? (it->first->getTotalFileSize() * 100) / guessedtotalfilesize
-        : 0;
+    unsigned int percentagecomplete = 0;
+    if (status == RACE_STATUS_RUNNING) {
+      if (guessedtotalfilesize) {
+        percentagecomplete = (it->first->getTotalFileSize() * 100) / guessedtotalfilesize;
+      }
+    }
+    else {
+      if (guessedtotalnumfiles) {
+        percentagecomplete = (it->first->getNumUploadedFiles() * 100) / guessedtotalnumfiles;
+      }
+    }
     if (percentagecomplete > 100) {
       percentagecomplete = 100;
     }
@@ -467,13 +479,18 @@ void Race::calculatePercentages() {
   best = localbest;
 }
 
-void Race::calculateTotalFileSize() {
+void Race::calculateTotal() {
   unsigned long long int aggregatedsize = 0;
   for (std::map<std::string, unsigned long long int>::const_iterator it =
       guessedfileliststotalfilesize.begin(); it != guessedfileliststotalfilesize.end(); it++) {
     aggregatedsize += it->second;
   }
   guessedtotalfilesize = aggregatedsize;
+  std::map<std::string, std::map<std::string, unsigned long long int> >::iterator it;
+  guessedtotalnumfiles = 0;
+  for (it = guessedfilelists.begin(); it != guessedfilelists.end(); it++) {
+    guessedtotalnumfiles += it->second.size();
+  }
 }
 
 unsigned int Race::getTimeSpent() const {
@@ -491,7 +508,7 @@ std::string Race::getSiteListText() const {
   return sitestr;
 }
 
-int Race::getStatus() const {
+RaceStatus Race::getStatus() const {
   return status;
 }
 

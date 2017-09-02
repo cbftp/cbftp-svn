@@ -14,10 +14,12 @@
 
 #define RACE_UPDATE_INTERVAL 250
 
-#define RACE_STATUS_RUNNING 133
-#define RACE_STATUS_DONE 134
-#define RACE_STATUS_ABORTED 135
-#define RACE_STATUS_TIMEOUT 136
+enum RaceStatus {
+  RACE_STATUS_RUNNING,
+  RACE_STATUS_DONE,
+  RACE_STATUS_ABORTED,
+  RACE_STATUS_TIMEOUT
+};
 
 enum SpreadProfile {
   SPREAD_RACE,
@@ -38,7 +40,7 @@ class Race : public EventReceiver, public TransferStatusCallback {
     void recalculateBestUnknownFileSizeEstimate();
     void setDone();
     void calculatePercentages();
-    void calculateTotalFileSize();
+    void calculateTotal();
     void addTransferAttempt(const Pointer<TransferStatus> &);
     std::string name;
     std::string group;
@@ -57,12 +59,13 @@ class Race : public EventReceiver, public TransferStatusCallback {
     std::map<std::string, std::map<std::string, unsigned long long int> > guessedfilelists;
     std::map<std::string, unsigned long long int> guessedfileliststotalfilesize;
     unsigned long long int guessedtotalfilesize;
+    unsigned int guessedtotalnumfiles;
     std::map<std::string, std::map<std::string, SizeLocationTrack> > sizelocationtrackers;
     std::map<FailedTransfer, int> transferattempts;
     int checkcount;
     std::string timestamp;
     unsigned int timespent;
-    int status;
+    RaceStatus status;
     unsigned int worst;
     unsigned int avg;
     unsigned int best;
@@ -98,7 +101,7 @@ class Race : public EventReceiver, public TransferStatusCallback {
     unsigned int getTimeSpent() const;
     std::string getSiteListText() const;
     SiteRace * getSiteRace(const std::string &) const;
-    int getStatus() const;
+    RaceStatus getStatus() const;
     unsigned int getId() const;
     SpreadProfile getProfile() const;
     void reportNewSubDir(SiteRace *, const std::string &);
