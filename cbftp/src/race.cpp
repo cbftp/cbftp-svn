@@ -474,7 +474,9 @@ void Race::calculatePercentages() {
       localbest = percentagecomplete;
     }
   }
-  avg = totalpercentage / sites.size();
+  if (sites.size()) {
+    avg = totalpercentage / sites.size();
+  }
   worst = localworst;
   best = localbest;
 }
