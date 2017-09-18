@@ -1,6 +1,6 @@
 #include "menuselectoptiontextfield.h"
 
-#include <ncursesw/curses.h>
+#include "ncurseswrap.h"
 
 MenuSelectOptionTextField::MenuSelectOptionTextField() {
   textfield = TextInputField("", 0, 0, false);

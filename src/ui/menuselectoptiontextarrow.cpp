@@ -1,6 +1,6 @@
 #include "menuselectoptiontextarrow.h"
 
-#include <ncursesw/curses.h>
+#include "ncurseswrap.h"
 
 MenuSelectOptionTextArrow::MenuSelectOptionTextArrow(std::string identifier, int row, int col, std::string label) {
   arrow = TextArrow();
