@@ -2,6 +2,7 @@
 
 #include <string>
 #include <list>
+#include <ostream>
 
 class Path {
 public:

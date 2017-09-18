@@ -6,6 +6,7 @@
 #include "datafiletoolfuncs.h"
 #include "../datafilehandlermethod.h"
 #include "../filesystem.h"
+#include "../path.h"
 
 int usage() {
   std::cout << "datafilewrite: encrypts the content of a cbftp plain text "
