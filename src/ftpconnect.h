@@ -24,7 +24,7 @@ public:
   std::string getPort() const;
   bool isPrimary() const;
   void disengage();
-  void tick();
+  void tickIntern();
 private:
   void proxySessionInit();
   int id;

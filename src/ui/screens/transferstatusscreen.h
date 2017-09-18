@@ -27,7 +27,6 @@ private:
   Pointer<TransferStatus> ts;
   MenuSelectOption table;
   MenuSelectOption mso;
-  bool active;
   Pointer<MenuSelectOptionElement> activeelement;
   std::string defaultlegendtext;
   std::string currentlegendtext;
