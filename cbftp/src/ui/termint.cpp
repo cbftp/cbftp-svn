@@ -1,9 +1,6 @@
 #include "termint.h"
 
-#ifndef _XOPEN_SOURCE_EXTENDED
-#define _XOPEN_SOURCE_EXTENDED
-#endif
-#include <ncursesw/curses.h>
+#include "ncurseswrap.h"
 
 void TermInt::printChar(WINDOW * window, unsigned int row, unsigned int col, unsigned int c) {
   cchar_t ch = {0, {static_cast<wchar_t>(c)}};

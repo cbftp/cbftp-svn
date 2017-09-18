@@ -9,7 +9,11 @@ OBJS = $(wildcard $(SRC:%.cpp=%.o))
 
 ifneq ($(UI_PATH),)
 UI_DEP = $(wildcard $(UI_PATH)/*.a)
+ifeq ($(UNAME_S),Darwin)
+UI_LINK = -Wl,-force_load $(UI_DEP)
+else
 UI_LINK = -Wl,--whole-archive $(UI_DEP) -Wl,--no-whole-archive
+endif
 SRC_TARGETS := $(SRC_TARGETS) $(UI_PATH)
 endif
 

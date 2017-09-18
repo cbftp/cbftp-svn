@@ -4,6 +4,7 @@
 # relative path to the ui to use
 UI_PATH := src/ui
 
+UNAME_S := $(shell uname -s)
 ifneq ($(STATIC_SSL_PATH),)
 STATIC_SSL_INCLUDE := -I$(STATIC_SSL_PATH)/include
 STATIC_SSL_LINK := $(STATIC_SSL_PATH)/libssl.a $(STATIC_SSL_PATH)/libcrypto.a
@@ -32,4 +33,9 @@ BOXTAG := "\"cbftp\""
 CXX=g++
 OPTFLAGS=-g -O0
 CPPFLAGS=$(OPTFLAGS) -Wall -MMD -MP $(STATIC_SSL_INCLUDE)
-LINKFLAGS=-lncursesw -lpthread $(SSL_LINKFLAGS)
+LINKFLAGS=-lpthread $(SSL_LINKFLAGS)
+ifeq ($(UNAME_S),Darwin)
+LINKFLAGS+=-lncurses
+else
+LINKFLAGS+=-lncursesw
+endif

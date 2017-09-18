@@ -3,8 +3,8 @@
 #include <string>
 #include <list>
 #include <vector>
-#include <ncursesw/curses.h>
 
+#include "ncurseswrap.h"
 #include "uicommand.h"
 
 #include "../core/threading.h"
