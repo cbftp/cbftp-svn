@@ -169,7 +169,7 @@ void FTPConnect::disengage() {
   }
 }
 
-void FTPConnect::tick() {
+void FTPConnect::tickIntern() {
   millisecs += 1000;
   if (millisecs >= WELCOME_TIMEOUT_MSEC) {
     if (engaged && connected && !welcomereceived) {

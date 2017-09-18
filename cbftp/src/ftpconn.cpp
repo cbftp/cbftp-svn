@@ -413,7 +413,7 @@ void FTPConn::tick(int) {
   ticker += FTPCONN_TICK_INTERVAL;
   std::list<Pointer<FTPConnect> > ticklist = connectors;
   for (std::list<Pointer<FTPConnect> >::const_iterator it = ticklist.begin(); it != ticklist.end(); it++) {
-    (*it)->tick();
+    (*it)->tickIntern();
   }
   if (ticker >= 1000) {
     if (state == STATE_CONNECTING && !allconnectattempted) {
