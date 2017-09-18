@@ -28,6 +28,15 @@
 #define TIMEOUT_MS 5000
 #define MAX_SEND_BUFFER 1048576
 
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#ifdef SO_NOSIGPIPE
+#define USE_SO_NOSIGPIPE
+#else
+#error "Cannot block SIGPIPE!"
+#endif
+#endif
+
 namespace {
 
 enum AsyncTaskTypes {
@@ -176,6 +185,10 @@ void IOManager::handleTCPNameResolution(SocketInfo & socketinfo) {
                       result->ai_socktype,
                       result->ai_protocol);
   fcntl(sockfd, F_SETFL, O_NONBLOCK);
+#ifdef USE_SO_NOSIGPIPE
+  int yes = 1;
+  setsockopt(sockfd, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof(yes));
+#endif
   char * buf = (char *) malloc(result->ai_addrlen);
   struct sockaddr_in * saddr = (struct sockaddr_in*) result->ai_addr;
   inet_ntop(AF_INET, &(saddr->sin_addr), buf, result->ai_addrlen);
@@ -245,7 +258,10 @@ int IOManager::registerTCPServerSocket(EventReceiver * er, int port, bool local)
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
   fcntl(sockfd, F_SETFL, O_NONBLOCK);
   int yes = 1;
-  setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+  setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+#ifdef USE_SO_NOSIGPIPE
+  setsockopt(sockfd, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof(yes));
+#endif
   retcode = bind(sockfd, res->ai_addr, res->ai_addrlen);
   if (retcode) {
     if (!handleError(er)) {
@@ -312,6 +328,9 @@ int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
   fcntl(sockfd, F_SETFL, O_NONBLOCK);
   int yes = 1;
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+#ifdef USE_SO_NOSIGPIPE
+  setsockopt(sockfd, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof(yes));
+#endif
   retcode = bind(sockfd, res->ai_addr, res->ai_addrlen);
   if (retcode) {
     if (!handleError(er)) {
@@ -807,6 +826,10 @@ void IOManager::handleTCPServerIn(SocketInfo & socketinfo) {
   std::string localaddrstr = buf;
   free(buf);
   fcntl(newfd, F_SETFL, O_NONBLOCK);
+#ifdef USE_SO_NOSIGPIPE
+  int yes = 1;
+  setsockopt(newfd, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof(yes));
+#endif
   int newsockid = sockidcounter++;
   socketinfomap[newsockid].fd = newfd;
   socketinfomap[newsockid].id = newsockid;
