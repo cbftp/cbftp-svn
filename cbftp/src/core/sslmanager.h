@@ -17,6 +17,7 @@ public:
   static BinaryData certificate();
   static void setPrivateKey(const BinaryData &);
   static void setCertificate(const BinaryData &);
+  static void registerKeyAndCertificate(EVP_PKEY *, X509 *);
 private:
   static void registerKeyAndCertificate();
   static EVP_PKEY * createKey();

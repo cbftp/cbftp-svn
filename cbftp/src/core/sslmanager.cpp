@@ -176,6 +176,13 @@ void SSLManager::setCertificate(const BinaryData & certificate) {
   registerKeyAndCertificate();
 }
 
+void SSLManager::registerKeyAndCertificate(EVP_PKEY * pkey, X509 * x509) {
+  coreutil::assert(initialized);
+  ::x509 = x509;
+  ::pkey = pkey;
+  registerKeyAndCertificate();
+}
+
 void SSLManager::registerKeyAndCertificate() {
   coreutil::assert(initialized);
   if (x509 != NULL && pkey != NULL) {
