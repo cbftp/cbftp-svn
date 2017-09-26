@@ -26,6 +26,10 @@ int blockSize() {
 }
 
 void Crypto::encrypt(const BinaryData & indata, const BinaryData & pass, BinaryData & outdata) {
+  if (indata.empty()) {
+    outdata.resize(0);
+    return;
+  }
   EVP_CIPHER_CTX * ctx = EVP_CIPHER_CTX_new();
   const EVP_CIPHER * cipherp = cipher();
   int ivlen = EVP_CIPHER_iv_length(cipherp);
@@ -52,6 +56,10 @@ void Crypto::encrypt(const BinaryData & indata, const BinaryData & pass, BinaryD
 }
 
 void Crypto::decrypt(const BinaryData & indata, const BinaryData & pass, BinaryData & outdata) {
+  if (indata.empty()) {
+    outdata.resize(0);
+    return;
+  }
   EVP_CIPHER_CTX * ctx = EVP_CIPHER_CTX_new();
   const EVP_CIPHER * cipherp = cipher();
   int ivlen = EVP_CIPHER_iv_length(cipherp);
@@ -74,6 +82,10 @@ void Crypto::decrypt(const BinaryData & indata, const BinaryData & pass, BinaryD
 }
 
 void Crypto::decryptOld(const BinaryData & indata, const BinaryData & key, BinaryData & outdata) {
+  if (indata.empty()) {
+    outdata.resize(0);
+    return;
+  }
   EVP_CIPHER_CTX * ctx = EVP_CIPHER_CTX_new();
   const EVP_CIPHER * cipherp = cipher();
   int ivlen = EVP_CIPHER_iv_length(cipherp);
@@ -88,6 +100,10 @@ void Crypto::decryptOld(const BinaryData & indata, const BinaryData & key, Binar
 }
 
 void Crypto::sha256(const BinaryData & indata, BinaryData & outdata) {
+  if (indata.empty()) {
+    outdata.resize(0);
+    return;
+  }
   outdata.resize(SHA256_DIGEST_LENGTH);
   SHA256_CTX ctx;
   SHA256_Init(&ctx);
@@ -96,12 +112,20 @@ void Crypto::sha256(const BinaryData & indata, BinaryData & outdata) {
 }
 
 void Crypto::base64Encode(const BinaryData & indata, BinaryData & outdata) {
+  if (indata.empty()) {
+    outdata.resize(0);
+    return;
+  }
   outdata.resize((indata.size() / 3 + ((indata.size() % 3) ? 1 : 0)) * 4 + 1);
   int bytes = EVP_EncodeBlock(&outdata[0], &indata[0], indata.size());
   outdata.resize(bytes);
 }
 
 void Crypto::base64Decode(const BinaryData & indata, BinaryData & outdata) {
+  if (indata.empty()) {
+    outdata.resize(0);
+    return;
+  }
   int pos = indata.size();
   int padding = 0;
   while (--pos >= 0 && indata[pos] == '=') {
