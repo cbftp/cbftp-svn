@@ -123,13 +123,10 @@ BinaryData SSLManager::privateKey() {
   if (pkey == NULL) {
     return BinaryData();
   }
-  EC_KEY * eckey = EVP_PKEY_get1_EC_KEY(pkey);
-  BinaryData data;
-  int bufsize = i2d_ECPrivateKey(eckey, NULL);
-  data.resize(bufsize);
-  unsigned char * buf = &data[0];
-  i2d_ECPrivateKey(eckey, &buf);
-  EC_KEY_free(eckey);
+  int bufsize = i2d_PrivateKey(pkey, NULL);
+  BinaryData data(bufsize);
+  unsigned char* buf = &data[0];
+  i2d_PrivateKey(pkey, &buf);
   return data;
 }
 

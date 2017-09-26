@@ -84,12 +84,12 @@ void SettingsLoaderSaver::loadSettings() {
     size_t tok = line.find('=');
     std::string setting = line.substr(0, tok);
     std::string value = line.substr(tok + 1);
-    if (!setting.compare("certificate")) {
+    if (!setting.compare("certificate") && value.size()) {
       BinaryData data;
       Crypto::base64Decode(BinaryData(value.begin(), value.end()), data);
       SSLManager::setCertificate(data);
     }
-    if (!setting.compare("privatekey")) {
+    if (!setting.compare("privatekey") && value.size()) {
       BinaryData data;
       Crypto::base64Decode(BinaryData(value.begin(), value.end()), data);
       SSLManager::setPrivateKey(data);
