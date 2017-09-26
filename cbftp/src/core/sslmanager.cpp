@@ -61,6 +61,13 @@ void SSLManager::init() {
   ssl_ctx = SSL_CTX_new(TLS_method());
 #endif
   SSL_CTX_set_cipher_list(ssl_ctx, "DEFAULT:!SEED");
+#if OPENSSL_VERSION_NUMBER < 0x10200000
+    EC_KEY* eckey = EC_KEY_new_by_curve_name(ELLIPTIC_CURVE);
+    SSL_CTX_set_tmp_ecdh(ssl_ctx, eckey);
+    EC_KEY_free(eckey);
+#else
+    SSL_CTX_set_ecdh_auto(ctx, 1);
+#endif
 }
 
 void SSLManager::checkCertificateReady() {
@@ -68,14 +75,13 @@ void SSLManager::checkCertificateReady() {
   if (x509 == NULL || pkey == NULL) {
     pkey = createKey();
     x509 = createCertificate(pkey);
-    registerKeyAndCertificate(pkey, x509);
+    registerKeyAndCertificate();
   }
 }
 
 EVP_PKEY * SSLManager::createKey() {
   coreutil::assert(initialized);
   EC_KEY * eckey = EC_KEY_new_by_curve_name(ELLIPTIC_CURVE);
-  SSL_CTX_set_tmp_ecdh(ssl_ctx, eckey);
   EC_KEY_set_asn1_flag(eckey, OPENSSL_EC_NAMED_CURVE);
   EC_KEY_generate_key(eckey);
   EVP_PKEY * pkey = EVP_PKEY_new();
@@ -143,24 +149,34 @@ BinaryData SSLManager::certificate() {
 void SSLManager::setPrivateKey(const BinaryData & key) {
   coreutil::assert(initialized);
   const unsigned char * bufstart = &key[0];
-  EC_KEY * eckey = NULL;
-  d2i_ECPrivateKey(&eckey, &bufstart, key.size());
-  SSL_CTX_set_tmp_ecdh(ssl_ctx, eckey);
-  EVP_PKEY * pkey = EVP_PKEY_new();
-  EVP_PKEY_assign_EC_KEY(pkey, eckey);
+  EVP_PKEY* pkey = d2i_AutoPrivateKey(NULL, &bufstart, key.size());
+  if (!pkey) {
+      BIO* bio = BIO_new(BIO_s_mem());
+      BIO_write(bio, &key[0], key.size());
+      pkey = PEM_read_bio_PrivateKey(bio, NULL, NULL, NULL);
+      BIO_free(bio);
+  }
   if (::pkey != NULL) {
     EVP_PKEY_free(::pkey);
   }
   ::pkey = pkey;
+  registerKeyAndCertificate();
 }
 
 void SSLManager::setCertificate(const BinaryData & certificate) {
   coreutil::assert(initialized);
   const unsigned char * bufstart = &certificate[0];
   d2i_X509(&x509, &bufstart, certificate.size());
+  if (!x509) {
+      BIO* bio = BIO_new(BIO_s_mem());
+      BIO_write(bio, &certificate[0], certificate.size());
+      x509 = PEM_read_bio_X509(bio, NULL, NULL, NULL);
+      BIO_free(bio);
+  }
+  registerKeyAndCertificate();
 }
 
-void SSLManager::registerKeyAndCertificate(EVP_PKEY * pkey, X509 * x509) {
+void SSLManager::registerKeyAndCertificate() {
   coreutil::assert(initialized);
   if (x509 != NULL && pkey != NULL) {
     SSL_CTX_use_certificate(ssl_ctx, x509);
