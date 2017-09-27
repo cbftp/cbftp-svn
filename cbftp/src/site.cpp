@@ -555,6 +555,7 @@ std::pair<Path, Path> Site::splitPathInSectionAndSubpath(const Path & path) cons
     Path currentsectionpath = getSectionPath(*it);
     if (currentsectionpath.levels() > sectionpath.levels()) {
       sectionpath = currentsectionpath;
+    }
   }
   Path subpath = path - sectionpath;
   return std::pair<Path, Path>(sectionpath, subpath);
