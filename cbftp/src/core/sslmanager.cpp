@@ -45,6 +45,15 @@ static unsigned long sslThreadIdCallback() {
 }
 #endif
 
+int sslClientCertCallback(SSL* ssl, X509 ** x509, EVP_PKEY ** pkey) {
+  if (pkey != NULL && x509 != NULL) {
+    *x509 = ::x509;
+    *pkey = ::pkey;
+    return 1;
+  }
+  return 0;
+}
+
 }
 
 void SSLManager::init() {
@@ -66,8 +75,9 @@ void SSLManager::init() {
     SSL_CTX_set_tmp_ecdh(ssl_ctx, eckey);
     EC_KEY_free(eckey);
 #else
-    SSL_CTX_set_ecdh_auto(ctx, 1);
+    SSL_CTX_set_ecdh_auto(ssl_ctx, 1);
 #endif
+    SSL_CTX_set_client_cert_cb(ssl_ctx, sslClientCertCallback);
 }
 
 void SSLManager::checkCertificateReady() {
