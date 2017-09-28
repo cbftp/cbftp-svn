@@ -553,7 +553,7 @@ std::pair<Path, Path> Site::splitPathInSectionAndSubpath(const Path & path) cons
   std::list<std::string> sections = getSectionsForPartialPath(path);
   for (std::list<std::string>::const_iterator it = sections.begin(); it != sections.end(); ++it) {
     Path currentsectionpath = getSectionPath(*it);
-    if (currentsectionpath.levels() > sectionpath.levels()) {
+    if (currentsectionpath.toString().length() > sectionpath.toString().length()) {
       sectionpath = currentsectionpath;
     }
   }
