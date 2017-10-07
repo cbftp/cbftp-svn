@@ -126,6 +126,21 @@ Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, con
       addsiteslogics.push_back(sl);
     }
   }
+  bool noupload = true;
+  bool nodownload = true;
+  for (std::list<Pointer<SiteLogic> >::const_iterator it = addsiteslogics.begin(); it != addsiteslogics.end(); ++it) {
+    if (!(*it)->getSite()->isAffiliated(race->getGroup()) && (*it)->getSite()->getAllowUpload()) {
+      noupload = false;
+    }
+    if ((*it)->getSite()->getAllowDownload()) {
+      nodownload = false;
+    }
+  }
+  if (!append && (noupload || nodownload)) {
+    global->getEventLog()->log("Engine", "Ignoring attempt to race " + release + " in "
+        + section + " since no transfers would be performed.");
+    return Pointer<Race>();
+  }
   if (addsites.size() < 2 && !append) {
     global->getEventLog()->log("Engine", "Ignoring attempt to race " + release + " in "
         + section + " on less than 2 sites.");
