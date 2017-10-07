@@ -106,7 +106,9 @@ std::string SiteRace::getRelevantSubPath() {
     recentlyvisited.pop_front();
     if (!isSubPathComplete(leastrecentlyvisited)) {
       recentlyvisited.push_back(leastrecentlyvisited);
-      if (filelists[leastrecentlyvisited]->getState() != FILELIST_NONEXISTENT) {
+      if (filelists[leastrecentlyvisited]->getState() != FILELIST_NONEXISTENT &&
+          filelists[leastrecentlyvisited]->getState() != FILELIST_FAILED)
+      {
         return leastrecentlyvisited;
       }
     }
@@ -211,7 +213,9 @@ void SiteRace::addNewDirectories() {
       if ((fl = getFileListForPath(file->getName())) == NULL) {
         addSubDirectory(file->getName(), true);
       }
-      else if (fl->getState() == FILELIST_UNKNOWN || fl->getState() == FILELIST_NONEXISTENT) {
+      else if (fl->getState() == FILELIST_UNKNOWN || fl->getState() == FILELIST_NONEXISTENT ||
+               fl->getState() == FILELIST_FAILED)
+      {
         fl->setExists();
         race->reportNewSubDir(this, it->first);
       }
@@ -290,13 +294,30 @@ void SiteRace::abort() {
   }
 }
 
-void SiteRace::reset() {
-  done = false;
-  aborted = false;
+void SiteRace::softReset() {
+  recentlyvisited.clear();
+  for (std::map<std::string, FileList *>::const_iterator it = filelists.begin(); it != filelists.end(); ++it) {
+    recentlyvisited.push_back(it->first);
+  }
+  filelists.clear();
+  for (std::list<std::string>::const_iterator it = recentlyvisited.begin(); it != recentlyvisited.end(); ++it) {
+    filelists[*it] = new FileList(username, path / *it, FILELIST_FAILED);
+  }
+  reset();
+
+}
+
+void SiteRace::hardReset() {
   filelists.clear(); // memory leak, use Pointer<FileList> instead
   filelists[""] = new FileList(username, path);
   recentlyvisited.clear();
   recentlyvisited.push_back("");
+  reset();
+}
+
+void SiteRace::reset() {
+  done = false;
+  aborted = false;
   sfvobservestarts.clear();
   observestarts.clear();
   sizeestimated.clear();

@@ -387,11 +387,16 @@ void Engine::abortRace(Pointer<Race> & race) {
   }
 }
 
-void Engine::resetRace(Pointer<Race> & race) {
+void Engine::resetRace(Pointer<Race> & race, bool hard) {
   if (!!race) {
     race->reset();
     for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
-      it->first->reset();
+      if (hard) {
+        it->first->hardReset();
+      }
+      else {
+        it->first->softReset();
+      }
       it->second->activateAll();
     }
     bool current = false;
