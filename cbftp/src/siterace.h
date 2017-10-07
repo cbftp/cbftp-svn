@@ -41,6 +41,7 @@ class SiteRace : public CommandOwner {
     void updateNumFilesUploaded();
     void addNewDirectories();
     void markNonExistent(FileList *);
+    void reset();
   public:
     int classType() const;
     std::string getSiteName() const;
@@ -74,7 +75,8 @@ class SiteRace : public CommandOwner {
     int getProfile() const;
     void complete(bool);
     void abort();
-    void reset();
+    void softReset();
+    void hardReset();
     void subPathComplete(FileList *);
     bool isSubPathComplete(const std::string &) const;
     bool isSubPathComplete(FileList *) const;

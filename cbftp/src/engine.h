@@ -47,7 +47,7 @@ public:
   void removeSiteFromRace(Pointer<Race> &, const std::string &);
   void removeSiteFromRaceDeleteFiles(Pointer<Race> &, const std::string &, bool);
   void abortRace(Pointer<Race> &);
-  void resetRace(Pointer<Race> &);
+  void resetRace(Pointer<Race> &, bool);
   void deleteOnAllSites(Pointer<Race> &);
   void deleteOnSites(Pointer<Race> &, std::list<Pointer<Site> >);
   void deleteOnSites(Pointer<Race> &, std::list<Pointer<Site> >, bool);

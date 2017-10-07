@@ -422,7 +422,7 @@ void RemoteCommandHandler::commandReset(const std::string & message) {
     global->getEventLog()->log("RemoteCommandHandler", "No matching race: " + message);
     return;
   }
-  global->getEngine()->resetRace(race);
+  global->getEngine()->resetRace(race, false);
 }
 
 void RemoteCommandHandler::parseRace(const std::string & message, int type) {
