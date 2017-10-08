@@ -18,6 +18,7 @@ class LocalStorage;
 class ExternalFileViewing;
 class TimeReference;
 class SettingsLoaderSaver;
+class Statistics;
 
 class GlobalContext {
   private:
@@ -37,12 +38,13 @@ class GlobalContext {
     LocalStorage * ls;
     ExternalFileViewing * efv;
     TimeReference * tr;
+    Statistics * s;
   public:
     void linkCore(WorkManager *, TickPoke *, IOManager *, Pointer<EventLog> &);
     void linkComponents(SettingsLoaderSaver *, Engine *,
         UIBase *, SiteManager *, SiteLogicManager *, TransferManager *,
         RemoteCommandHandler *, SkipList *, ProxyManager *,
-        LocalStorage *, ExternalFileViewing *, TimeReference *);
+        LocalStorage *, ExternalFileViewing *, TimeReference *, Statistics *);
     Engine * getEngine() const;
     SettingsLoaderSaver * getSettingsLoaderSaver() const;
     WorkManager * getWorkManager() const;
@@ -59,6 +61,7 @@ class GlobalContext {
     LocalStorage * getLocalStorage() const;
     ExternalFileViewing * getExternalFileViewing() const;
     TimeReference * getTimeReference() const;
+    Statistics * getStatistics() const;
 };
 
 extern GlobalContext * global;

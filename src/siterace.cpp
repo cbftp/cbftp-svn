@@ -23,7 +23,13 @@ SiteRace::SiteRace(Pointer<Race> race, const std::string & sitename, const Path 
   totalfilesize(0),
   numuploadedfiles(0),
   profile(race->getProfile()),
-  skiplist(skiplist)
+  skiplist(skiplist),
+  sizedown(0),
+  filesdown(0),
+  speeddown(1),
+  sizeup(0),
+  filesup(0),
+  speedup(1)
 {
   recentlyvisited.push_back("");
   filelists[""] = new FileList(username, path);
@@ -405,4 +411,122 @@ bool SiteRace::hasBeenUpdatedSinceLastCheck() {
     it->second->resetListChanged();
   }
   return changed;
+}
+
+void SiteRace::addTransferStatsFile(StatsDirection direction, const std::string & other, unsigned long long int size, unsigned int speed) {
+  if (direction == STATS_DOWN) {
+    race->addTransferStatsFile(size);
+    if (sitessizedown.find(other) == sitessizedown.end()) {
+      sitessizedown[other] = 0;
+      sitesfilesdown[other] = 0;
+      sitesspeeddown[other] = 1;
+    }
+    if (speed && size && size > speed) {
+      sitesspeeddown[other] = (sitessizedown[other] + size) / (sitessizedown[other] / sitesspeeddown[other] + size / speed);
+      if (!sitesspeeddown[other]) {
+        ++sitesspeeddown[other];
+      }
+      speeddown = (sizedown + size) / (sizedown / speeddown + size / speed);
+      if (!speeddown) {
+        ++speeddown;
+      }
+    }
+    sitessizedown[other] += size;
+    sitesfilesdown[other] += 1;
+    sizedown += size;
+    ++filesdown;
+  }
+  else {
+    if (sitessizeup.find(other) == sitessizeup.end()) {
+      sitessizeup[other] = 0;
+      sitesfilesup[other] = 0;
+      sitesspeedup[other] = 1;
+    }
+    if (speed && size) {
+      sitesspeedup[other] = (sitessizeup[other] + size) / (sitessizeup[other] / sitesspeedup[other] + size / speed);
+      if (!sitesspeedup[other]) {
+        ++sitesspeedup[other];
+      }
+      speedup = (sizeup + size) / (sizeup / speedup + size / speed);
+      if (!speedup) {
+        ++speedup;
+      }
+    }
+    sitessizeup[other] += size;
+    sitesfilesup[other] += 1;
+    sizeup += size;
+    ++filesup;
+  }
+}
+
+unsigned long long int SiteRace::getSizeDown() const {
+  return sizedown;
+}
+
+unsigned int SiteRace::getFilesDown() const {
+  return filesdown;
+}
+
+unsigned int SiteRace::getSpeedDown() const {
+  return speeddown;
+}
+
+unsigned long long int SiteRace::getSizeUp() const {
+  return sizeup;
+}
+
+unsigned int SiteRace::getFilesUp() const {
+  return filesup;
+}
+
+unsigned int SiteRace::getSpeedUp() const {
+  return speedup;
+}
+
+std::map<std::string, unsigned long long int>::const_iterator SiteRace::sizeUpBegin() const {
+  return sitessizeup.begin();
+}
+
+std::map<std::string, unsigned int>::const_iterator SiteRace::filesUpBegin() const {
+  return sitesfilesup.begin();
+}
+
+std::map<std::string, unsigned int>::const_iterator SiteRace::speedUpBegin() const {
+  return sitesspeedup.begin();
+}
+
+std::map<std::string, unsigned long long int>::const_iterator SiteRace::sizeDownBegin() const {
+  return sitessizedown.begin();
+}
+
+std::map<std::string, unsigned int>::const_iterator SiteRace::filesDownBegin() const {
+  return sitesfilesdown.begin();
+}
+
+std::map<std::string, unsigned int>::const_iterator SiteRace::speedDownBegin() const {
+  return sitesspeeddown.begin();
+}
+
+std::map<std::string, unsigned long long int>::const_iterator SiteRace::sizeUpEnd() const {
+  return sitessizeup.end();
+}
+
+std::map<std::string, unsigned int>::const_iterator SiteRace::filesUpEnd() const {
+  return sitesfilesup.end();
+}
+
+std::map<std::string, unsigned int>::const_iterator SiteRace::speedUpEnd() const {
+  return sitesspeedup.end();
+}
+
+std::map<std::string, unsigned long long int>::const_iterator SiteRace::sizeDownEnd() const {
+  return sitessizedown.end();
+}
+
+std::map<std::string, unsigned int>::const_iterator SiteRace::filesDownEnd() const {
+  return sitesfilesdown.end();
+}
+
+std::map<std::string, unsigned int>::const_iterator SiteRace::speedDownEnd() const {
+  return sitesspeeddown.end();
 }

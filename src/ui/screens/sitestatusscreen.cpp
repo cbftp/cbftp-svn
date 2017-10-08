@@ -20,19 +20,12 @@ void SiteStatusScreen::initialize(unsigned int row, unsigned int col, std::strin
   site = global->getSiteManager()->getSite(sitename);
   autoupdate = true;
   st = global->getSiteLogicManager()->getSiteLogic(site->getName());
-  for(unsigned int j = 0; j < st->getConns()->size(); j++) {
-    previousstatuslength.push_back(0);
-  }
   init(row, col);
 }
 
 void SiteStatusScreen::redraw() {
   ui->erase();
   ui->hideCursor();
-  update();
-}
-
-void SiteStatusScreen::update() {
   std::string loginslots = "Login slots:    " + util::int2Str(st->getCurrLogins());
   if (!site->unlimitedLogins()) {
     loginslots += "/" + util::int2Str(site->getMaxLogins());
@@ -58,14 +51,29 @@ void SiteStatusScreen::update() {
         ? "Y" : "N";
     std::string tstate = st->getConnStateTracker(j)->hasFileTransfer()
         ? "Y" : "N";
-    int statuslength = status.length();
-    while (status.length() < previousstatuslength[j]) {
-      status += " ";
-    }
-    previousstatuslength[j] = statuslength;
     ui->printStr(i++, 1, "#" + util::int2Str((int)j) + " - LL:" + llstate +
         " - HL:" + hlstate + " - T:" + tstate + " - " + status);
   }
+  ++i;
+  unsigned long long int sizeupday = site->getSizeUpLast24Hours();
+  unsigned int filesupday = site->getFilesUpLast24Hours();
+  unsigned long long int sizeupall = site->getSizeUpAll();
+  unsigned int filesupall = site->getFilesUpAll();
+  unsigned long long int sizedownday = site->getSizeDownLast24Hours();
+  unsigned int filesdownday = site->getFilesDownLast24Hours();
+  unsigned long long int sizedownall = site->getSizeDownAll();
+  unsigned int filesdownall = site->getFilesDownAll();
+  ui->printStr(i++, 1, "Traffic measurements");
+  ui->printStr(i++, 1, "Upload   last 24 hours: " + util::parseSize(sizeupday) + ", " +
+                 util::int2Str(filesupday) + " files - All time: " + util::parseSize(sizeupall) + ", " +
+                 util::int2Str(filesupall) + " files");
+  ui->printStr(i++, 1, "Download last 24 hours: " + util::parseSize(sizedownday) + ", " +
+                 util::int2Str(filesdownday) + " files - All time: " + util::parseSize(sizedownall) + ", " +
+                 util::int2Str(filesdownall) + " files");
+}
+
+void SiteStatusScreen::update() {
+  redraw();
 }
 
 bool SiteStatusScreen::keyPressed(unsigned int ch) {

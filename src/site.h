@@ -9,6 +9,8 @@
 #include "core/pointer.h"
 #include "path.h"
 #include "skiplist.h"
+#include "statistics.h"
+#include "hourlyalltracking.h"
 
 #define REPORT_LOGINS_IF_UNLIMITED 10
 
@@ -69,6 +71,14 @@ private:
   int transfersourcepolicy;
   int transfertargetpolicy;
   SkipList skiplist;
+  std::map<std::string, HourlyAllTracking> sitessizeup;
+  std::map<std::string, HourlyAllTracking> sitesfilesup;
+  std::map<std::string, HourlyAllTracking> sitessizedown;
+  std::map<std::string, HourlyAllTracking> sitesfilesdown;
+  HourlyAllTracking sizeup;
+  HourlyAllTracking filesup;
+  HourlyAllTracking sizedown;
+  HourlyAllTracking filesdown;
 public:
   Site();
   Site(const std::string &);
@@ -169,4 +179,31 @@ public:
   std::list<std::string> getSectionsForPath(const Path &) const;
   std::list<std::string> getSectionsForPartialPath(const Path &) const;
   std::pair<Path, Path> splitPathInSectionAndSubpath(const Path &) const;
+  void addTransferStatsFile(StatsDirection, const std::string &, unsigned long long int);
+  void addTransferStatsFile(StatsDirection, unsigned long long int);
+  void tickHour();
+  unsigned long long int getSizeUpLast24Hours() const;
+  unsigned long long int getSizeUpAll() const;
+  unsigned long long int getSizeDownLast24Hours() const;
+  unsigned long long int getSizeDownAll() const;
+  unsigned int getFilesUpLast24Hours() const;
+  unsigned int getFilesUpAll() const;
+  unsigned int getFilesDownLast24Hours() const;
+  unsigned int getFilesDownAll() const;
+  std::map<std::string, HourlyAllTracking>::const_iterator sizeUpBegin() const;
+  std::map<std::string, HourlyAllTracking>::const_iterator filesUpBegin() const;
+  std::map<std::string, HourlyAllTracking>::const_iterator sizeDownBegin() const;
+  std::map<std::string, HourlyAllTracking>::const_iterator filesDownBegin() const;
+  std::map<std::string, HourlyAllTracking>::const_iterator sizeUpEnd() const;
+  std::map<std::string, HourlyAllTracking>::const_iterator filesUpEnd() const;
+  std::map<std::string, HourlyAllTracking>::const_iterator sizeDownEnd() const;
+  std::map<std::string, HourlyAllTracking>::const_iterator filesDownEnd() const;
+  void setSizeUp(unsigned long long int);
+  void setFilesUp(unsigned int);
+  void setSizeDown(unsigned long long int);
+  void setFilesDown(unsigned int);
+  void setSizeUp(const std::string &, unsigned long long int);
+  void setFilesUp(const std::string &, unsigned int);
+  void setSizeDown(const std::string &, unsigned long long int);
+  void setFilesDown(const std::string &, unsigned int);
 };

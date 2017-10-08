@@ -560,3 +560,149 @@ std::pair<Path, Path> Site::splitPathInSectionAndSubpath(const Path & path) cons
   Path subpath = path - sectionpath;
   return std::pair<Path, Path>(sectionpath, subpath);
 }
+
+void Site::addTransferStatsFile(StatsDirection direction, const std::string & other, unsigned long long int size) {
+  if (direction == STATS_DOWN) {
+    if (sitessizedown.find(other) == sitessizedown.end()) {
+      sitessizedown[other] = HourlyAllTracking();
+      sitesfilesdown[other] = HourlyAllTracking();
+    }
+    sitessizedown[other].add(size);
+    sitesfilesdown[other].add(1);
+  }
+  else {
+    if (sitessizeup.find(other) == sitessizeup.end()) {
+      sitessizeup[other] = HourlyAllTracking();
+      sitesfilesup[other] = HourlyAllTracking();
+    }
+    sitessizeup[other].add(size);
+    sitesfilesup[other].add(1);
+  }
+  addTransferStatsFile(direction, size);
+}
+
+void Site::addTransferStatsFile(StatsDirection direction, unsigned long long int size) {
+  if (direction == STATS_DOWN) {
+    sizedown.add(size);
+    filesdown.add(1);
+  }
+  else {
+    sizeup.add(size);
+    filesup.add(1);
+  }
+}
+
+void Site::tickHour() {
+  sizeup.tickHour();
+  filesup.tickHour();
+  sizedown.tickHour();
+  filesdown.tickHour();
+  for (std::map<std::string, HourlyAllTracking>::iterator it = sitessizeup.begin(); it != sitessizeup.end(); it++) {
+    it->second.tickHour();
+  }
+  for (std::map<std::string, HourlyAllTracking>::iterator it = sitesfilesup.begin(); it != sitesfilesup.end(); it++) {
+    it->second.tickHour();
+  }
+  for (std::map<std::string, HourlyAllTracking>::iterator it = sitessizedown.begin(); it != sitessizedown.end(); it++) {
+    it->second.tickHour();
+  }
+  for (std::map<std::string, HourlyAllTracking>::iterator it = sitesfilesdown.begin(); it != sitesfilesdown.end(); it++) {
+    it->second.tickHour();
+  }
+}
+
+unsigned long long int Site::getSizeUpLast24Hours() const {
+  return sizeup.getLast24Hours();
+}
+
+unsigned long long int Site::getSizeUpAll() const {
+  return sizeup.getAll();
+}
+
+unsigned long long int Site::getSizeDownLast24Hours() const {
+  return sizedown.getLast24Hours();
+}
+
+unsigned long long int Site::getSizeDownAll() const {
+  return sizedown.getAll();
+}
+
+unsigned int Site::getFilesUpLast24Hours() const {
+  return filesup.getLast24Hours();
+}
+
+unsigned int Site::getFilesUpAll() const {
+  return filesup.getAll();
+}
+
+unsigned int Site::getFilesDownLast24Hours() const {
+  return filesdown.getLast24Hours();
+}
+
+unsigned int Site::getFilesDownAll() const {
+  return filesdown.getAll();
+}
+
+std::map<std::string, HourlyAllTracking>::const_iterator Site::sizeUpBegin() const {
+  return sitessizeup.begin();
+}
+
+std::map<std::string, HourlyAllTracking>::const_iterator Site::filesUpBegin() const {
+  return sitesfilesup.begin();
+}
+
+std::map<std::string, HourlyAllTracking>::const_iterator Site::sizeDownBegin() const {
+  return sitessizedown.begin();
+}
+
+std::map<std::string, HourlyAllTracking>::const_iterator Site::filesDownBegin() const {
+  return sitesfilesdown.begin();
+}
+
+std::map<std::string, HourlyAllTracking>::const_iterator Site::sizeUpEnd() const {
+  return sitessizeup.end();
+}
+
+std::map<std::string, HourlyAllTracking>::const_iterator Site::filesUpEnd() const {
+  return sitesfilesup.end();
+}
+
+std::map<std::string, HourlyAllTracking>::const_iterator Site::sizeDownEnd() const {
+  return sitessizedown.end();
+}
+
+std::map<std::string, HourlyAllTracking>::const_iterator Site::filesDownEnd() const {
+  return sitesfilesdown.end();
+}
+
+void Site::setSizeUp(unsigned long long int size) {
+  sizeup.set(size);
+}
+
+void Site::setFilesUp(unsigned int files) {
+  filesup.set(files);
+}
+
+void Site::setSizeDown(unsigned long long int size) {
+  sizedown.set(size);
+}
+
+void Site::setFilesDown(unsigned int files) {
+  filesdown.set(files);
+}
+
+void Site::setSizeUp(const std::string & site, unsigned long long int size) {
+  sitessizeup[site].set(size);
+}
+
+void Site::setFilesUp(const std::string & site, unsigned int files) {
+  sitesfilesup[site].set(files);
+}
+
+void Site::setSizeDown(const std::string & site, unsigned long long int size) {
+  sitessizedown[site].set(size);
+}
+
+void Site::setFilesDown(const std::string & site, unsigned int files) {
+  sitesfilesdown[site].set(files);
+}

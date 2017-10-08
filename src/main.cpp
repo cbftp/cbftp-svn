@@ -20,6 +20,7 @@
 #include "externalfileviewing.h"
 #include "timereference.h"
 #include "uibase.h"
+#include "statistics.h"
 
 namespace {
 
@@ -48,10 +49,11 @@ public:
     ProxyManager * pm = new ProxyManager();
     ExternalFileViewing * efv = new ExternalFileViewing();
     TimeReference * tr = new TimeReference();
+    Statistics * s = new Statistics();
 
     UIBase * uibase = UIBase::instance();
 
-    global->linkComponents(sls, e, uibase, sm, slm, tm, rch, sl, pm, ls, efv, tr);
+    global->linkComponents(sls, e, uibase, sm, slm, tm, rch, sl, pm, ls, efv, tr, s);
 
     Threading::setCurrentThreadName("cbftp");
 

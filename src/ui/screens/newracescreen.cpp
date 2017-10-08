@@ -22,7 +22,7 @@ NewRaceScreen::~NewRaceScreen() {
 }
 
 void NewRaceScreen::initialize(unsigned int row, unsigned int col, const std::string & site, const std::string & section, const std::string & release) {
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [t]oggle all - [s]tart race - [S]tart race and return to browsing - [c]ancel";
+  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [t]oggle all - [s]tart spread job - [S]tart spread job and return to browsing - [c]ancel";
   currentlegendtext = defaultlegendtext;
   active = false;
   toggleall = false;
@@ -107,7 +107,7 @@ void NewRaceScreen::redraw() {
     tempsites.push_back(std::pair<std::string, bool>(msocb->getIdentifier(), msocb->getData()));
   }
   populateSiteList();
-  ui->printStr(1, 1, "Release: " + release);
+  ui->printStr(1, 1, "Directory: " + release);
   ui->printStr(3, 1, "Section: ");
   bool highlight;
   for (unsigned int i = 0; i < msos.size(); i++) {
@@ -327,7 +327,7 @@ std::string NewRaceScreen::getLegendText() const {
 }
 
 std::string NewRaceScreen::getInfoLabel() const {
-  return "START NEW RACE";
+  return "START NEW SPREAD JOB";
 }
 
 std::string NewRaceScreen::getInfoText() const {
@@ -353,7 +353,7 @@ Pointer<Race> NewRaceScreen::startRace() {
     }
   }
   if (sites.size() < 2) {
-    infotext = "Cannot start race with less than 2 sites!";
+    infotext = "Cannot start spread job with less than 2 sites!";
     ui->update();
     return Pointer<Race>();
   }

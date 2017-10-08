@@ -32,7 +32,7 @@ MainScreen::MainScreen(Ui * ui) {
 }
 
 void MainScreen::initialize(unsigned int row, unsigned int col) {
-  std::string baselegendtext = "[Down] Next option - [Up] Previous option - [G]lobal settings - Event [l]og - [t]ransfers - All [r]aces - All transfer[j]obs - toggle [U]dp - Browse lo[c]al - [Esc] back to browsing";
+  std::string baselegendtext = "[Down] Next option - [Up] Previous option - [G]lobal settings - Event [l]og - [t]ransfers - All [r]aces - All transfer[j]obs - toggle [U]dp - Browse lo[c]al - General [i]nfo - [Esc] back to browsing";
   sitelegendtext = baselegendtext + " - [Tab] split browse - [right/b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [q]uick jump";
   preparelegendtext = baselegendtext + " - [Enter/s] start race - [Del] delete race";
   joblegendtext = baselegendtext + " - [Enter] Details";
@@ -328,6 +328,9 @@ bool MainScreen::keyPressed(unsigned int ch) {
       return true;
     case 'G':
       ui->goGlobalOptions();
+      return true;
+    case 'i':
+      ui->goInfo();
       return true;
     case 'l':
       ui->goEventLog();
