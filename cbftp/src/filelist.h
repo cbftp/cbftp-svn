@@ -16,6 +16,7 @@ enum FileListState {
 
 class File;
 class Site;
+class CommandOwner;
 
 class FileList {
   private:
@@ -46,7 +47,7 @@ class FileList {
     void touchFile(const std::string &, const std::string &);
     void touchFile(const std::string &, const std::string &, bool);
     void removeFile(const std::string &);
-    void setFileUpdateFlag(const std::string &, unsigned long long int, unsigned int, const Pointer<Site> &, const std::string &);
+    void setFileUpdateFlag(const std::string &, unsigned long long int, unsigned int, const Pointer<Site> &, const Pointer<Site> &, CommandOwner *, CommandOwner *);
     File * getFile(const std::string &) const;
     FileListState getState() const;
     void setNonExistent();

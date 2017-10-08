@@ -23,6 +23,7 @@
 #include "path.h"
 #include "engine.h"
 #include "util.h"
+#include "hourlyalltracking.h"
 
 #define AUTO_SAVE_INTERVAL 600000 // 10 minutes
 
@@ -353,6 +354,42 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("skiplistentry")) {
       loadSkipListEntry((SkipList *)&site->getSkipList(), value);
     }
+    else if (!setting.compare("sizeup")) {
+      site->setSizeUp(util::str2Int(value));
+    }
+    else if (!setting.compare("filesup")) {
+      site->setFilesUp(util::str2Int(value));
+    }
+    else if (!setting.compare("sizedown")) {
+      site->setSizeDown(util::str2Int(value));
+    }
+    else if (!setting.compare("filesdown")) {
+      site->setFilesDown(util::str2Int(value));
+    }
+    else if (!setting.compare("sitessizeup")) {
+      size_t split = value.find('$');
+      std::string sitename = value.substr(0, split);
+      unsigned long long int size = util::str2Int(value.substr(split + 1));
+      site->setSizeUp(sitename, size);
+    }
+    else if (!setting.compare("sitesfilesup")) {
+      size_t split = value.find('$');
+      std::string sitename = value.substr(0, split);
+      unsigned int files = util::str2Int(value.substr(split + 1));
+      site->setFilesUp(sitename, files);
+    }
+    else if (!setting.compare("sitessizedown")) {
+      size_t split = value.find('$');
+      std::string sitename = value.substr(0, split);
+      unsigned long long int size = util::str2Int(value.substr(split + 1));
+      site->setSizeDown(sitename, size);
+    }
+    else if (!setting.compare("sitesfilesdown")) {
+      size_t split = value.find('$');
+      std::string sitename = value.substr(0, split);
+      unsigned int files = util::str2Int(value.substr(split + 1));
+      site->setFilesDown(sitename, files);
+    }
   }
   for (std::list<std::pair<std::string, std::string> >::const_iterator it2 = exceptsources.begin(); it2 != exceptsources.end(); it2++) {
     Pointer<Site> site = global->getSiteManager()->getSite(it2->first);
@@ -421,22 +458,38 @@ void SettingsLoaderSaver::loadSettings() {
     }
   }
 
-  // backward compatibility begins (r687)
-  dfh->getDataFor("SiteManagerRules", &lines);
+  dfh->getDataFor("Statistics", &lines);
   for (it = lines.begin(); it != lines.end(); it++) {
     line = *it;
     if (line.length() == 0 ||line[0] == '#') continue;
     size_t tok = line.find('=');
     std::string setting = line.substr(0, tok);
     std::string value = line.substr(tok + 1);
-    if (!setting.compare("blockedpair")) {
-      size_t split = value.find('$');
-      std::string site1 = value.substr(0, split);
-      std::string site2 = value.substr(split + 1);
-      global->getSiteManager()->addExceptTargetForSite(site1, site2);
+    if (!setting.compare("sizeup")) {
+      global->getStatistics()->setSizeUp(util::str2Int(value));
+    }
+    else if (!setting.compare("filesup")) {
+      global->getStatistics()->setFilesUp(util::str2Int(value));
+    }
+    else if (!setting.compare("sizedown")) {
+      global->getStatistics()->setSizeDown(util::str2Int(value));
+    }
+    else if (!setting.compare("filesdown")) {
+      global->getStatistics()->setFilesDown(util::str2Int(value));
+    }
+    else if (!setting.compare("sizefxp")) {
+      global->getStatistics()->setSizeFXP(util::str2Int(value));
+    }
+    else if (!setting.compare("filesfxp")) {
+      global->getStatistics()->setFilesFXP(util::str2Int(value));
+    }
+    else if (!setting.compare("spreadjobs")) {
+      global->getStatistics()->setSpreadJobs(util::str2Int(value));
+    }
+    else if (!setting.compare("transferjobs")) {
+      global->getStatistics()->setTransferJobs(util::str2Int(value));
     }
   }
-  // backward compatibility ends (r687)
 
   global->getSiteManager()->sortSites();
 
@@ -555,6 +608,23 @@ void SettingsLoaderSaver::saveSettings() {
       for (sit2 = site->avgspeedBegin(); sit2 != site->avgspeedEnd(); sit2++) {
         dfh->addOutputLine(filetag, name + "$avgspeed=" + sit2->first + "$" + util::int2Str(sit2->second));
       }
+      dfh->addOutputLine(filetag, name + "$sizeup=" + util::int2Str(site->getSizeUpAll()));
+      dfh->addOutputLine(filetag, name + "$filesup=" + util::int2Str(site->getFilesUpAll()));
+      dfh->addOutputLine(filetag, name + "$sizedown=" + util::int2Str(site->getSizeDownAll()));
+      dfh->addOutputLine(filetag, name + "$filesdown=" + util::int2Str(site->getFilesDownAll()));
+      std::map<std::string, HourlyAllTracking>::const_iterator sit5;
+      for (sit5 = site->sizeUpBegin(); sit5 != site->sizeUpEnd(); sit5++) {
+        dfh->addOutputLine(filetag, name + "$sitessizeup=" + sit5->first + "$" + util::int2Str(sit5->second.getAll()));
+      }
+      for (sit5 = site->filesUpBegin(); sit5 != site->filesUpEnd(); sit5++) {
+        dfh->addOutputLine(filetag, name + "$sitesfilesup=" + sit5->first + "$" + util::int2Str(sit5->second.getAll()));
+      }
+      for (sit5 = site->sizeDownBegin(); sit5 != site->sizeDownEnd(); sit5++) {
+        dfh->addOutputLine(filetag, name + "$sitessizedown=" + sit5->first + "$" + util::int2Str(sit5->second.getAll()));
+      }
+      for (sit5 = site->filesDownBegin(); sit5 != site->filesDownEnd(); sit5++) {
+        dfh->addOutputLine(filetag, name + "$sitesfilesdown=" + sit5->first + "$" + util::int2Str(sit5->second.getAll()));
+      }
       std::set<std::string>::const_iterator sit3;
       for (sit3 = site->affilsBegin(); sit3 != site->affilsEnd(); sit3++) {
         dfh->addOutputLine(filetag, name + "$affil=" + *sit3);
@@ -582,6 +652,17 @@ void SettingsLoaderSaver::saveSettings() {
 
   {
     dfh->addOutputLine("Engine", "preparedraceexpirytime=" + util::int2Str(global->getEngine()->getPreparedRaceExpiryTime()));
+  }
+  {
+    std::string filetag = "Statistics";
+    dfh->addOutputLine(filetag, "sizeup=" + util::int2Str(global->getStatistics()->getSizeUpAll()));
+    dfh->addOutputLine(filetag, "filesup=" + util::int2Str(global->getStatistics()->getFilesUpAll()));
+    dfh->addOutputLine(filetag, "sizedown=" + util::int2Str(global->getStatistics()->getSizeDownAll()));
+    dfh->addOutputLine(filetag, "filesdown=" + util::int2Str(global->getStatistics()->getFilesDownAll()));
+    dfh->addOutputLine(filetag, "sizefxp=" + util::int2Str(global->getStatistics()->getSizeFXPAll()));
+    dfh->addOutputLine(filetag, "filesfxp=" + util::int2Str(global->getStatistics()->getFilesFXPAll()));
+    dfh->addOutputLine(filetag, "spreadjobs=" + util::int2Str(global->getStatistics()->getSpreadJobs()));
+    dfh->addOutputLine(filetag, "transferjobs=" + util::int2Str(global->getStatistics()->getTransferJobs()));
   }
 
   for (std::list<SettingsAdder *>::iterator it = settingsadders.begin(); it != settingsadders.end(); it++) {

@@ -53,6 +53,7 @@ class AllRacesScreen;
 class AllTransferJobsScreen;
 class TransferStatusScreen;
 class TransfersFilterScreen;
+class InfoScreen;
 struct TransferFilteringParameters;
 
 enum LegendMode {
@@ -101,6 +102,7 @@ private:
   Pointer<AllTransferJobsScreen> alltransferjobsscreen;
   Pointer<TransferStatusScreen> transferstatusscreen;
   Pointer<TransfersFilterScreen> transfersfilterscreen;
+  Pointer<InfoScreen> infoscreen;
   int mainrow;
   int maincol;
   int col;
@@ -216,6 +218,7 @@ public:
   void goRawDataJump(const std::string &, int);
   void goAllRaces();
   void goAllTransferJobs();
+  void goInfo();
   void returnSelectSites(const std::string &);
   void key(const std::string &);
   void newKey(const std::string &);

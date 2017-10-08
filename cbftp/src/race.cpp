@@ -33,7 +33,9 @@ Race::Race(unsigned int id, SpreadProfile profile, const std::string & release, 
   best(0),
   transferattemptscleared(false),
   id(id),
-  profile(profile)
+  profile(profile),
+  transferredsize(0),
+  transferredfiles(0)
 {
   estimatedsubpaths.push_back("");
   guessedfilelists[""] = std::map<std::string, unsigned long long int>();
@@ -601,4 +603,17 @@ void Race::addTransferAttempt(const Pointer<TransferStatus> & ts) {
   else {
     it->second++;
   }
+}
+
+void Race::addTransferStatsFile(unsigned long long int size) {
+  transferredsize += size;
+  ++transferredfiles;
+}
+
+unsigned long long int Race::getTransferredSize() const {
+  return transferredsize;
+}
+
+unsigned int Race::getTransferredFiles() const {
+  return transferredfiles;
 }

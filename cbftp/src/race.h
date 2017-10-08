@@ -72,6 +72,8 @@ class Race : public EventReceiver, public TransferStatusCallback {
     bool transferattemptscleared;
     unsigned int id;
     SpreadProfile profile;
+    unsigned long long int transferredsize;
+    unsigned int transferredfiles;
   public:
     Race(unsigned int, SpreadProfile, const std::string &, const std::string &);
     ~Race();
@@ -104,6 +106,8 @@ class Race : public EventReceiver, public TransferStatusCallback {
     RaceStatus getStatus() const;
     unsigned int getId() const;
     SpreadProfile getProfile() const;
+    unsigned long long int getTransferredSize() const;
+    unsigned int getTransferredFiles() const;
     void reportNewSubDir(SiteRace *, const std::string &);
     void reportSFV(SiteRace *, const std::string &);
     void reportDone(SiteRace *);
@@ -125,4 +129,5 @@ class Race : public EventReceiver, public TransferStatusCallback {
     bool clearTransferAttempts();
     void transferSuccessful(const Pointer<TransferStatus> &);
     void transferFailed(const Pointer<TransferStatus> &, int);
+    void addTransferStatsFile(unsigned long long int);
 };

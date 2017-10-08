@@ -75,11 +75,11 @@ Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, con
     }
   }
   if (!global->getSkipList()->isAllowed(release, true, false)) {
-    global->getEventLog()->log("Engine", "Race skipped due to skiplist match: " + release);
+    global->getEventLog()->log("Engine", "Spread job skipped due to skiplist match: " + release);
     return Pointer<Race>();
   }
   if (release.find("/") != std::string::npos) {
-    global->getEventLog()->log("Engine", "Race skipped due to invalid target: " + release);
+    global->getEventLog()->log("Engine", "Spread job skipped due to invalid target: " + release);
     return Pointer<Race>();
   }
   if (!race) {
@@ -90,7 +90,7 @@ Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, con
   for (std::list<std::string>::const_iterator it = sites.begin(); it != sites.end(); it++) {
     const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(*it);
     if (!sl) {
-      global->getEventLog()->log("Engine", "Trying to race a nonexisting site: " + *it);
+      global->getEventLog()->log("Engine", "Trying to use a nonexisting site: " + *it);
       continue;
     }
     if (sl->getSite()->getDisabled()) {
@@ -137,19 +137,19 @@ Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, con
     }
   }
   if (!append && (noupload || nodownload)) {
-    global->getEventLog()->log("Engine", "Ignoring attempt to race " + release + " in "
+    global->getEventLog()->log("Engine", "Ignoring attempt to spread " + release + " in "
         + section + " since no transfers would be performed.");
     return Pointer<Race>();
   }
   if (addsites.size() < 2 && !append) {
-    global->getEventLog()->log("Engine", "Ignoring attempt to race " + release + " in "
+    global->getEventLog()->log("Engine", "Ignoring attempt to spread " + release + " in "
         + section + " on less than 2 sites.");
     return Pointer<Race>();
   }
   if (addsites.size() > 0 || append) {
     checkStartPoke();
     if (profile == SPREAD_PREPARE) {
-      global->getEventLog()->log("Engine", "Preparing race: " + section + "/" + release +
+      global->getEventLog()->log("Engine", "Preparing spread job: " + section + "/" + release +
                 " on " + util::int2Str((int)addsites.size()) + " sites.");
       preparedraces.push_back(makePointer<PreparedRace>(race->getId(), release, section, addsites, preparedraceexpirytime));
       for (std::list<Pointer<SiteLogic> >::const_iterator ait = addsiteslogics.begin(); ait != addsiteslogics.end(); ait++) {
@@ -166,7 +166,7 @@ Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, con
         }
       }
       if (readdtocurrent) {
-        global->getEventLog()->log("Engine", "Reactivating race: " + section + "/" + release);
+        global->getEventLog()->log("Engine", "Reactivating spread job: " + section + "/" + release);
         race->setUndone();
         for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
           it->second->activateAll();
@@ -180,12 +180,13 @@ Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, con
       currentraces.push_back(race);
       allraces.push_back(race);
       dropped = 0;
-      global->getEventLog()->log("Engine", "Starting race: " + section + "/" + release +
+      global->getEventLog()->log("Engine", "Starting spread job: " + section + "/" + release +
           " on " + util::int2Str((int)addsites.size()) + " sites.");
+      global->getStatistics()->addSpreadJob();
     }
     else {
       if (addsites.size()) {
-        global->getEventLog()->log("Engine", "Appending to race: " + section + "/" + release +
+        global->getEventLog()->log("Engine", "Appending to spread job: " + section + "/" + release +
             " with " + util::int2Str((int)addsites.size()) + " site" + (addsites.size() > 1 ? "s" : "") + ".");
       }
       if (readdtocurrent) {
@@ -263,11 +264,11 @@ void Engine::toggleStartNextPreparedRace() {
   if (!startnextprepared) {
     startnextprepared = true;
     global->getTickPoke()->startPoke(this, "Engine", TICK_NEXTPREPARED_TIMEOUT, TICK_MSG_NEXTPREPARED);
-    global->getEventLog()->log("Engine", "Enabling next prepared race starter");
+    global->getEventLog()->log("Engine", "Enabling next prepared spread job starter");
   }
   else {
     stopNextPreparedRaceTimer();
-    global->getEventLog()->log("Engine", "Disabling next prepared race starter");
+    global->getEventLog()->log("Engine", "Disabling next prepared spread job starter");
   }
 }
 
@@ -292,6 +293,7 @@ void Engine::newTransferJobDownload(const std::string & srcsite, FileList * srcf
             " from " + srcsite);
   sl->addTransferJob(tj);
   checkStartPoke();
+  global->getStatistics()->addTransferJob();
 }
 
 void Engine::newTransferJobDownload(const std::string & site, const Path & srcpath, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
@@ -303,6 +305,7 @@ void Engine::newTransferJobDownload(const std::string & site, const Path & srcpa
             " from " + site);
   sl->addTransferJob(tj);
   checkStartPoke();
+  global->getStatistics()->addTransferJob();
 }
 
 void Engine::newTransferJobUpload(const Path & srcpath, const std::string & srcfile, const std::string & dstsite, FileList * dstfilelist, const std::string & dstfile) {
@@ -314,6 +317,7 @@ void Engine::newTransferJobUpload(const Path & srcpath, const std::string & srcf
             " to " + dstsite);
   sl->addTransferJob(tj);
   checkStartPoke();
+  global->getStatistics()->addTransferJob();
 }
 
 void Engine::newTransferJobUpload(const Path & srcpath, const std::string & srcfile, const std::string & dstsite, const Path & dstpath, const std::string & dstfile) {
@@ -325,6 +329,7 @@ void Engine::newTransferJobUpload(const Path & srcpath, const std::string & srcf
             " to " + dstsite);
   sl->addTransferJob(tj);
   checkStartPoke();
+  global->getStatistics()->addTransferJob();
 }
 
 void Engine::newTransferJobFXP(const std::string & srcsite, FileList * srcfilelist, const std::string & srcfile, const std::string & dstsite, FileList * dstfilelist, const std::string & dstfile) {
@@ -338,6 +343,7 @@ void Engine::newTransferJobFXP(const std::string & srcsite, FileList * srcfileli
   slsrc->addTransferJob(tj);
   sldst->addTransferJob(tj);
   checkStartPoke();
+  global->getStatistics()->addTransferJob();
 }
 
 void Engine::newTransferJobFXP(const std::string & srcsite, const Path & srcpath, const std::string & srcfile, const std::string & dstsite, const Path & dstpath, const std::string & dstfile) {
@@ -351,6 +357,7 @@ void Engine::newTransferJobFXP(const std::string & srcsite, const Path & srcpath
   slsrc->addTransferJob(tj);
   sldst->addTransferJob(tj);
   checkStartPoke();
+  global->getStatistics()->addTransferJob();
 }
 
 void Engine::removeSiteFromRace(Pointer<Race> & race, const std::string & site) {
@@ -383,7 +390,7 @@ void Engine::abortRace(Pointer<Race> & race) {
       it->second->abortRace(race->getId());
     }
     currentraces.remove(race);
-    global->getEventLog()->log("Engine", "Race aborted: " + race->getName());
+    global->getEventLog()->log("Engine", "Spread job aborted: " + race->getName());
   }
 }
 
@@ -410,7 +417,7 @@ void Engine::resetRace(Pointer<Race> & race, bool hard) {
       currentraces.push_back(race);
     }
     checkStartPoke();
-    global->getEventLog()->log("Engine", "Race reset: " + race->getName());
+    global->getEventLog()->log("Engine", "Spread job reset: " + race->getName());
   }
 }
 
@@ -442,7 +449,7 @@ void Engine::deleteOnSites(Pointer<Race> & race, std::list<Pointer<Site> > delsi
       }
       SiteRace * sr = sl->getRace(race->getName());
       if (!sr) {
-        global->getEventLog()->log("Engine", "Site " + (*it)->getName() + " is not in race: " + race->getName());
+        global->getEventLog()->log("Engine", "Site " + (*it)->getName() + " is not in spread job: " + race->getName());
         continue;
       }
       const Path & path = sr->getPath();
@@ -873,7 +880,7 @@ void Engine::checkIfRaceComplete(SiteLogic * sls, Pointer<Race> & race) {
           }
         }
         sls->raceLocalComplete(srs, uploadslotcount);
-        global->getEventLog()->log("Engine", "Race " + race->getName() + " completed on " +
+        global->getEventLog()->log("Engine", "Spread job " + race->getName() + " completed on " +
             sls->getSite()->getName());
       }
       if (race->isDone()) {
@@ -892,9 +899,9 @@ void Engine::raceComplete(Pointer<Race> race) {
     }
   }
   refreshScoreBoard();
-  global->getEventLog()->log("Engine", "Race globally completed: " + race->getName());
+  global->getEventLog()->log("Engine", "Spread job globally completed: " + race->getName());
   if (dropped) {
-    global->getEventLog()->log("Engine", "Scoreboard refreshes dropped since race start: " + util::int2Str(dropped));
+    global->getEventLog()->log("Engine", "Scoreboard refreshes dropped since spread job start: " + util::int2Str(dropped));
   }
   return;
 }
@@ -1114,14 +1121,14 @@ std::list<Pointer<TransferJob> >::const_iterator Engine::getTransferJobsEnd() co
 void Engine::tick(int message) {
   if (message == TICK_MSG_NEXTPREPARED) {
     stopNextPreparedRaceTimer();
-    global->getEventLog()->log("Engine", "Next prepared race starter timed out.");
+    global->getEventLog()->log("Engine", "Next prepared spread job starter timed out.");
     return;
   }
   for (std::list<Pointer<Race> >::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
     if ((*it)->checksSinceLastUpdate() >= MAXCHECKSTIMEOUT) {
       if ((*it)->failedTransfersCleared()) {
         global->getEventLog()->log("Engine", "No activity for " + util::int2Str(MAXCHECKSTIMEOUT) +
-            " seconds, aborting race: " + (*it)->getName());
+            " seconds, aborting spread job: " + (*it)->getName());
         for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator its = (*it)->begin(); its != (*it)->end(); its++) {
           its->second->raceLocalComplete(its->first, 0);
         }

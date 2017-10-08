@@ -265,19 +265,31 @@ const Pointer<Site> & File::getUpdateSrc() const {
   return updatesrc;
 }
 
-std::string File::getUpdateDst() const {
+const Pointer<Site> & File::getUpdateDst() const {
   return updatedst;
 }
 
-void File::setUpdateFlag(const Pointer<Site> & src, const std::string & dst, int speed) {
+CommandOwner * File::getUpdateSrcCommandOwner() const {
+  return updatecosrc;
+}
+
+CommandOwner * File::getUpdateDstCommandOwner() const {
+  return updatecodst;
+}
+
+void File::setUpdateFlag(const Pointer<Site> & src, const Pointer<Site> &dst, CommandOwner * cosrc, CommandOwner * codst, unsigned int speed) {
   updatesrc = src;
   updatedst = dst;
+  updatecosrc = cosrc;
+  updatecodst = codst;
   updatespeed = speed;
   updateflag = true;
 }
 
 void File::unsetUpdateFlag() {
   updateflag = false;
+  updatesrc.reset();
+  updatedst.reset();
 }
 
 bool File::setSize(unsigned long long int size) {

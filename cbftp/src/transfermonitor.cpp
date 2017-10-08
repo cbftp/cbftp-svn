@@ -17,6 +17,7 @@
 #include "localdownload.h"
 #include "filesystem.h"
 #include "util.h"
+#include "statistics.h"
 
 #define MAX_WAIT_ERROR 10000
 #define MAX_WAIT_SOURCE_COMPLETE 60000
@@ -410,8 +411,12 @@ void TransferMonitor::finish() {
         ts->setTargetSize(size);
         ts->setSpeed(speed);
         ts->setTimeSpent(span / 1000);
-        if (size > 1000000 && type == TM_TYPE_FXP) {
-          fld->setFileUpdateFlag(dfile, size, speed, sls->getSite(), sld->getSite()->getName());
+        if (type == TM_TYPE_FXP) {
+          fld->setFileUpdateFlag(dfile, size, speed, sls->getSite(), sld->getSite(), srcco, dstco);
+        }
+        else {
+          global->getStatistics()->addTransferStatsFile(STATS_DOWN, lt->size());
+          sls->getSite()->addTransferStatsFile(STATS_DOWN, lt->size());
         }
       }
       break;
@@ -422,6 +427,8 @@ void TransferMonitor::finish() {
       ts->setTargetSize(size);
       ts->setSpeed(speed);
       ts->setTimeSpent(span / 1000);
+      sld->getSite()->addTransferStatsFile(STATS_UP, size);
+      global->getStatistics()->addTransferStatsFile(STATS_UP, size);
       break;
     }
     case TM_TYPE_LIST:

@@ -7,6 +7,7 @@
 #include "globalcontext.h"
 #include "timereference.h"
 #include "util.h"
+#include "commandowner.h"
 
 FileList::FileList(const std::string & username, const Path & path) {
   init(username, path, FILELIST_UNKNOWN);
@@ -80,12 +81,19 @@ bool FileList::updateFile(const std::string & start, int touch) {
     }
     updatefile->setTouch(file->getTouch());
     if (updatefile->updateFlagSet()) {
+      unsigned long long int size = oldsize;
+      unsigned int speed = updatefile->getUpdateSpeed();
+      const Pointer<Site> & src = updatefile->getUpdateSrc();
+      const Pointer<Site> & dst = updatefile->getUpdateDst();
       if (updatefile->getOwner().compare(username) == 0) {
-        updatefile->getUpdateSrc()->pushTransferSpeed(updatefile->getUpdateDst(),
-                                                      updatefile->getUpdateSpeed(),
-                                                      updatefile->getSize());
-        //std::cout << "pushed new transfer speed..." << std::endl;
+        size = newsize;
+        updatefile->getUpdateSrc()->pushTransferSpeed(dst->getName(), speed, size);
       }
+      src->addTransferStatsFile(STATS_DOWN, dst->getName(), size);
+      dst->addTransferStatsFile(STATS_UP, src->getName(), size);
+      updatefile->getUpdateSrcCommandOwner()->addTransferStatsFile(STATS_DOWN, dst->getName(), size, speed);
+      updatefile->getUpdateDstCommandOwner()->addTransferStatsFile(STATS_UP, src->getName(), size, speed);
+      global->getStatistics()->addTransferStatsFile(STATS_FXP, size);
       updatefile->unsetUpdateFlag();
     }
     delete file;
@@ -152,7 +160,10 @@ void FileList::removeFile(const std::string & name) {
   }
 }
 
-void FileList::setFileUpdateFlag(const std::string & name, unsigned long long int size, unsigned int speed, const Pointer<Site> & src, const std::string & dst) {
+void FileList::setFileUpdateFlag(const std::string & name,
+    unsigned long long int size, unsigned int speed, const Pointer<Site> & src,
+    const Pointer<Site> & dst, CommandOwner * srcco, CommandOwner * dstco)
+{
   File * file;
   if ((file = getFileCaseSensitive(name)) != NULL) {
     unsigned long long int oldsize = file->getSize();
@@ -166,7 +177,7 @@ void FileList::setFileUpdateFlag(const std::string & name, unsigned long long in
       }
       setChanged();
     }
-    file->setUpdateFlag(src, dst, speed);
+    file->setUpdateFlag(src, dst, srcco, dstco, speed);
   }
 }
 

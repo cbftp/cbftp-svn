@@ -148,6 +148,9 @@ void SiteLogic::tick(int message) {
       }
     }
   }
+  if (currtime % 3600000 == 0) {
+    site->tickHour();
+  }
 }
 
 void SiteLogic::connectFailed(int id) {

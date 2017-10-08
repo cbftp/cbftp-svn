@@ -432,7 +432,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
     case 'c':
       return BrowseScreenAction(BROWSESCREENACTION_CLOSE);
     case 'r':
-      //start a race of the selected dir, do nothing if a file is selected
+      //start a spread job of the selected dir, do nothing if a file is selected
       if (list.cursoredFile() != NULL && list.cursoredFile()->isDirectory()) {
         std::string dirname = list.cursoredFile()->getName();
         if (!site->getSkipList().isAllowed(dirname, true, false)) {
@@ -683,7 +683,7 @@ std::string BrowseScreenSite::getLegendText() const {
   if (filtermodeinput) {
     return "[Any] Enter space separated filters. Valid operators are !, *, ?. Must match all negative filters and at least one positive if given. Case insensitive. - [Esc] Cancel";
   }
-  return "[Esc] Cancel - [c]lose - [Up/Down] Navigate - [Enter/Right] open dir - [Backspace/Left] return - [r]ace - [v]iew file - [D]ownload - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - Toggle se[P]arators - [q]uick jump - Toggle [f]ilter";
+  return "[Esc] Cancel - [c]lose - [Up/Down] Navigate - [Enter/Right] open dir - [Backspace/Left] return - sp[r]ead - [v]iew file - [D]ownload - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - Toggle se[P]arators - [q]uick jump - Toggle [f]ilter";
 }
 
 std::string BrowseScreenSite::getInfoLabel() const {

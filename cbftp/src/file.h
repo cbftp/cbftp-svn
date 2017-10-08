@@ -5,6 +5,7 @@
 #include "core/pointer.h"
 
 class Site;
+class CommandOwner;
 
 class File {
   friend class FileList;
@@ -23,7 +24,9 @@ private:
   std::string lastmodified;
   unsigned int updatespeed;
   Pointer<Site> updatesrc;
-  std::string updatedst;
+  Pointer<Site> updatedst;
+  CommandOwner * updatecosrc;
+  CommandOwner * updatecodst;
   bool updateflag;
   bool directory;
   bool softlink;
@@ -34,7 +37,7 @@ private:
 protected:
   File(const std::string &, const std::string &);
   File(const std::string &, int);
-  void setUpdateFlag(const Pointer<Site> &, const std::string &, int);
+  void setUpdateFlag(const Pointer<Site> &, const Pointer<Site> &, CommandOwner *, CommandOwner *, unsigned int);
   void unsetUpdateFlag();
   bool setSize(unsigned long long int);
   bool setLastModified(const std::string &);
@@ -57,7 +60,9 @@ public:
   std::string getLinkTarget() const;
   std::string getExtension() const;
   const Pointer<Site> & getUpdateSrc() const;
-  std::string getUpdateDst() const;
+  const Pointer<Site> & getUpdateDst() const;
+  CommandOwner * getUpdateSrcCommandOwner() const;
+  CommandOwner * getUpdateDstCommandOwner() const;
   unsigned int getUpdateSpeed() const;
   bool updateFlagSet() const;
   bool isDownloading() const;

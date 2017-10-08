@@ -20,7 +20,6 @@ public:
   std::string getInfoLabel() const;
 private:
   std::string sitename;
-  std::vector<unsigned int> previousstatuslength;
   Pointer<Site> site;
   Pointer<SiteLogic> st;
 };
