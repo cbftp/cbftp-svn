@@ -13,7 +13,7 @@ std::vector<unsigned long long int> getPowers();
 static unsigned int sizegranularity = getSizeGranularity();
 static std::vector<unsigned long long int> powers = getPowers();
 
-std::string trim(std::string trimtarget) {
+std::string trim(const std::string & trimtarget) {
   int spos = 0;
   int epos = trimtarget.length() - 1;
   while (spos < epos && (trimtarget[spos] == ' ' || trimtarget[spos] == '\r' || trimtarget[spos] == '\n')) {
@@ -28,8 +28,8 @@ std::string trim(std::string trimtarget) {
   return "";
 }
 
-int str2Int(std::string str) {
-  int num;
+unsigned long long int str2Int(const std::string & str) {
+  unsigned long long int num;
   std::istringstream ss(str);
   ss >> num;
   return num;
@@ -148,7 +148,7 @@ std::vector<unsigned long long int> getPowers() {
   return vec;
 }
 
-std::string getGroupNameFromRelease(std::string release) {
+std::string getGroupNameFromRelease(const std::string & release) {
   size_t splitpos = release.rfind("-");
   if (splitpos != std::string::npos) {
     return release.substr(splitpos + 1);
