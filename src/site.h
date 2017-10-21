@@ -82,6 +82,7 @@ private:
 public:
   Site();
   Site(const std::string &);
+  Site(const Site &);
   std::map<std::string, Path>::const_iterator sectionsBegin() const;
   std::map<std::string, Path>::const_iterator sectionsEnd() const;
   std::map<std::string, int>::const_iterator avgspeedBegin() const;

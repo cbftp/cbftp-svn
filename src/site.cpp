@@ -38,6 +38,38 @@ Site::Site(const std::string & name) :
   addresses.push_back(std::pair<std::string, std::string>("ftp.sunet.se", "21"));
 }
 
+Site::Site(const Site & other) {
+  name = other.name;
+  addresses = other.addresses;
+  user = other.user;
+  pass = other.pass;
+  basepath = other.basepath;
+  logins = other.logins;
+  max_up = other.max_up;
+  max_dn = other.max_dn;
+  max_idletime = other.max_idletime;
+  pret = other.pret;
+  binary = other.binary;
+  listcommand = other.listcommand;
+  sslconn = other.sslconn;
+  ssltransfer = other.ssltransfer;
+  sscnsupported = other.sscnsupported;
+  cpsvsupported = other.cpsvsupported;
+  brokenpasv = other.brokenpasv;
+  disabled = other.disabled;
+  allowupload = other.allowupload;
+  allowdownload = other.allowdownload;
+  priority = other.priority;
+  xdupe = other.xdupe;
+  sections = other.sections;
+  affils = other.affils;
+  affilslower = other.affilslower;
+  proxytype = other.proxytype;
+  transfersourcepolicy = other.transfersourcepolicy;
+  transfertargetpolicy = other.transfertargetpolicy;
+  skiplist = other.skiplist;
+}
+
 std::map<std::string, Path>::const_iterator Site::sectionsBegin() const {
   return sections.begin();
 }
