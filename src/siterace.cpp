@@ -442,7 +442,7 @@ void SiteRace::addTransferStatsFile(StatsDirection direction, const std::string 
       sitesfilesup[other] = 0;
       sitesspeedup[other] = 1;
     }
-    if (speed && size) {
+    if (speed && size && size > speed) {
       sitesspeedup[other] = (sitessizeup[other] + size) / (sitessizeup[other] / sitesspeedup[other] + size / speed);
       if (!sitesspeedup[other]) {
         ++sitesspeedup[other];
