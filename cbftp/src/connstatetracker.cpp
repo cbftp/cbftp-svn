@@ -289,6 +289,7 @@ const Pointer<SiteLogicRequest> & ConnStateTracker::getRequest() const {
 }
 
 void ConnStateTracker::setRequest(SiteLogicRequest request) {
+  util::assert(!this->request);
   this->request = makePointer<SiteLogicRequest>(request);
 }
 
