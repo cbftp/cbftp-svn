@@ -727,26 +727,20 @@ void SiteLogic::disconnected(int id) {
 }
 
 void SiteLogic::activateOne() {
-  if (loggedin == 0) {
-    connstatetracker[0].resetIdleTime();
-    conns[0]->login();
-  }
-  else {
-    for (unsigned int i = 0; i < conns.size(); i++) {
-      if (connstatetracker[i].isLoggedIn() && !connstatetracker[i].isLocked() &&
-          !conns[i]->isProcessing())
-      {
-        handleConnection(i, false);
-        return;
-      }
+  for (unsigned int i = 0; i < conns.size(); i++) {
+    if (connstatetracker[i].isLoggedIn() && !connstatetracker[i].isLocked() &&
+        !conns[i]->isProcessing())
+    {
+      handleConnection(i, false);
+      return;
     }
-    if (loggedin < conns.size()) {
-      for (unsigned int i = 0; i < conns.size(); i++) {
-        if (!conns[i]->isConnected()) {
-          connstatetracker[i].resetIdleTime();
-          conns[i]->login();
-          break;
-        }
+  }
+  if (loggedin < conns.size()) {
+    for (unsigned int i = 0; i < conns.size(); i++) {
+      if (!conns[i]->isConnected()) {
+        connstatetracker[i].resetIdleTime();
+        conns[i]->login();
+        break;
       }
     }
   }
