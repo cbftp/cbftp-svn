@@ -1142,6 +1142,11 @@ void FTPConn::doQUIT() {
 void FTPConn::QUITResponse() {
   processing = false;
   disconnect();
+  state = STATE_QUIT;
+  sl->commandSuccess(id);
+  if (state == STATE_QUIT) {
+    state = STATE_DISCONNECTED;
+  }
 }
 
 void FTPConn::disconnect() {
