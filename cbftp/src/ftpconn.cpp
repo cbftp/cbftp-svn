@@ -149,6 +149,9 @@ void FTPConn::clearConnectors() {
 }
 
 void FTPConn::FDDisconnected(int sockid) {
+  if (this->sockid != sockid) {
+    return;
+  }
   if (state != STATE_DISCONNECTED) {
     rawBufWriteLine("[Disconnected]");
     this->status = "disconnected";
@@ -219,6 +222,9 @@ bool FTPConn::parseData(char * data, unsigned int datalen, char ** databuf, unsi
 }
 
 void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
+  if (this->sockid != sockid) {
+    return;
+  }
   if (state != STATE_STAT && state != STATE_STOR && state != STATE_PRET_STOR) {
     rawBufWrite(std::string(data, datalen));
   }
