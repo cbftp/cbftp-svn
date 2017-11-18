@@ -445,6 +445,13 @@ void SiteLogic::commandSuccess(int id) {
       }
       handleConnection(id, true);
       return;
+    case STATE_QUIT:
+      if (connstatetracker[id].isLoggedIn()) {
+        loggedin--;
+        available--;
+      }
+      connstatetracker[id].setDisconnected();
+      return;
   }
   handleConnection(id);
 }
@@ -1557,13 +1564,13 @@ void SiteLogic::disconnectConn(int id) {
     }
     else {
       conns[id]->disconnect();
+      if (connstatetracker[id].isLoggedIn()) {
+        loggedin--;
+        available--;
+      }
+      connstatetracker[id].setDisconnected();
     }
   }
-  if (connstatetracker[id].isLoggedIn()) {
-    loggedin--;
-    available--;
-  }
-  connstatetracker[id].setDisconnected();
 }
 
 void SiteLogic::cleanupConnection(int id) {
