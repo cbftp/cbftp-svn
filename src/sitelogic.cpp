@@ -279,9 +279,8 @@ bool SiteLogic::makeTargetDirectory(int id, bool includinglast, CommandOwner * c
   return false;
 }
 
-void SiteLogic::commandSuccess(int id) {
+void SiteLogic::commandSuccess(int id, int state) {
   connstatetracker[id].resetIdleTime();
-  int state = conns[id]->getState();
   std::list<SiteLogicRequest>::iterator it;
   switch (state) {
     case STATE_LOGIN:
