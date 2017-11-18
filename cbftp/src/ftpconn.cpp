@@ -60,6 +60,7 @@ FTPConn::FTPConn(SiteLogic * sl, int id) :
   sl(sl),
   status("disconnected"),
   site(sl->getSite()),
+  sockid(-1),
   state(STATE_DISCONNECTED),
   aborted(false),
   currentfl(NULL),
@@ -108,6 +109,7 @@ void FTPConn::login() {
   databufpos = 0;
   processing = true;
   allconnectattempted = false;
+  sockid = -1;
   xduperun = false;
   typeirun = false;
   currentpath = "/";
