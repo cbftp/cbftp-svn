@@ -154,7 +154,7 @@ void SiteLogic::tick(int message) {
 }
 
 void SiteLogic::connectFailed(int id) {
-  connstatetracker[id].setDisconnected();
+  disconnectConn(id);
 }
 
 void SiteLogic::userDenied(int id) {
@@ -1433,7 +1433,7 @@ void SiteLogic::setNumConnections(unsigned int num) {
     }
     for (unsigned int i = 0; i < conns.size(); i++) {
       if (conns[i]->isConnected() && !conns[i]->isProcessing()) {
-        disconnectConn(i);
+        disconnectConn(i, true);
         connstatetracker.erase(connstatetracker.begin() + i);
         delete conns[i];
         conns.erase(conns.begin() + i);
@@ -1445,7 +1445,7 @@ void SiteLogic::setNumConnections(unsigned int num) {
       continue;
     }
     if (conns.size() > 0) {
-      disconnectConn(0);
+      disconnectConn(0, true);
       connstatetracker.erase(connstatetracker.begin());
       delete conns[0];
       conns.erase(conns.begin());
@@ -1556,10 +1556,14 @@ void SiteLogic::connectConn(int id) {
 }
 
 void SiteLogic::disconnectConn(int id) {
+  disconnectConn(id, false);
+}
+
+void SiteLogic::disconnectConn(int id, bool hard) {
   connstatetracker[id].resetIdleTime();
   cleanupConnection(id);
   if (conns[id]->isConnected()) {
-    if (connstatetracker[id].isLoggedIn() && !conns[id]->isProcessing()) {
+    if (!hard && connstatetracker[id].isLoggedIn() && !conns[id]->isProcessing()) {
       conns[id]->doQUIT();
     }
     else {
@@ -1578,9 +1582,27 @@ void SiteLogic::cleanupConnection(int id) {
     reportTransferErrorAndFinish(id, 3);
   }
   if (connstatetracker[id].hasRequest()) {
-    connstatetracker[id].finishRequest();
-    available++;
+    setRequestReady(id, NULL, false);
   }
+  for (int i = 0; i < (int)conns.size(); ++i) {
+    if (i != id && conns[i]->isConnected()) {
+      return;
+    }
+  }
+  bool erased = true;
+  while (erased)
+    erased = false;
+    for (std::list<SiteLogicRequest>::iterator it = requests.begin(); it != requests.end(); it++)
+    {
+      if (it->connId() != -1 && it->connId() != id) {
+        continue;
+      }
+      connstatetracker[id].setRequest(*it);
+      requests.erase(it);
+      setRequestReady(id, NULL, false);
+      erased = true;
+      break;
+    }
 }
 
 void SiteLogic::finishTransferGracefully(int id) {
