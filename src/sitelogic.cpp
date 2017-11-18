@@ -1589,7 +1589,7 @@ void SiteLogic::cleanupConnection(int id) {
     }
   }
   bool erased = true;
-  while (erased)
+  while (erased) {
     erased = false;
     for (std::list<SiteLogicRequest>::iterator it = requests.begin(); it != requests.end(); it++)
     {
@@ -1602,6 +1602,7 @@ void SiteLogic::cleanupConnection(int id) {
       erased = true;
       break;
     }
+  }
 }
 
 void SiteLogic::finishTransferGracefully(int id) {
