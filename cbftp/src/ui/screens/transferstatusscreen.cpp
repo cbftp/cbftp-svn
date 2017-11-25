@@ -47,7 +47,7 @@ void TransferStatusScreen::redraw() {
     x += 18;
   }
   bool ssl = ts->getSSL();
-  ui->printStr(y, x, std::string("SSL: ") + (ssl ? "Yes" : "No"));
+  ui->printStr(y, x, std::string("TLS: ") + (ssl ? "Yes" : "No"));
   x += 12;
   if (type != TRANSFERSTATUS_TYPE_FXP && ssl) {
     ui->printStr(y, x, "Cipher: " + ts->getCipher());
