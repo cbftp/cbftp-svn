@@ -80,8 +80,8 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   mso.addIntArrow(y++, x, "deflogins", "Default site login slots:", sm->getDefaultMaxLogins(), 0, 99);
   mso.addIntArrow(y++, x, "defmaxup", "Default site upload slots:", sm->getDefaultMaxUp(), 0, 99);
   mso.addIntArrow(y++, x, "defmaxdn", "Default site download slots:", sm->getDefaultMaxDown(), 0, 99);
-  mso.addCheckBox(y++, x, "defsslconn", "Default site AUTH SSL:", sm->getDefaultSSL());
-  Pointer<MenuSelectOptionTextArrow> sslfxp = mso.addTextArrow(y++, x, "sslfxp", "Default SSL transfers:");
+  mso.addCheckBox(y++, x, "deftlsconn", "Default site AUTH TLS:", sm->getDefaultSSL());
+  Pointer<MenuSelectOptionTextArrow> sslfxp = mso.addTextArrow(y++, x, "tlsfxp", "Default TLS transfers:");
   sslfxp->addOption("Always off", SITE_SSL_ALWAYS_OFF);
   sslfxp->addOption("Prefer off", SITE_SSL_PREFER_OFF);
   sslfxp->addOption("Prefer on", SITE_SSL_PREFER_ON);
@@ -242,10 +242,10 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
         else if (identifier == "defmaxdn") {
           sm->setDefaultMaxDown(msoe.get<MenuSelectOptionNumArrow>()->getData());
         }
-        else if (identifier == "defsslconn") {
+        else if (identifier == "deftlsconn") {
           sm->setDefaultSSL(msoe.get<MenuSelectOptionCheckBox>()->getData());
         }
-        else if (identifier == "sslfxp") {
+        else if (identifier == "tlsfxp") {
           sm->setDefaultSSLTransferPolicy(msoe.get<MenuSelectOptionTextArrow>()->getData());
         }
         else if (identifier == "defidletime") {

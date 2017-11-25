@@ -193,10 +193,7 @@ void TransferMonitor::engageList(const Pointer<SiteLogic> & sls, int connid,
   this->srcco = co;
   src = connid;
   this->hiddenfiles = hiddenfiles;
-  int spol = sls->getSite()->getSSLTransferPolicy();
-  if (spol == SITE_SSL_ALWAYS_ON || spol == SITE_SSL_PREFER_ON) {
-    ssl = true;
-  }
+  ssl = sls->getSite()->SSL();
   status = TM_STATUS_AWAITING_PASSIVE;
   if (!sls->getSite()->hasBrokenPASV()) {
     sls->preparePassiveList(src, this, ssl);

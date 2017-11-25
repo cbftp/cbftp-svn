@@ -96,8 +96,8 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   mso.addIntArrow(y, x, "logins", "Login slots:", this->site->getInternMaxLogins(), 0, 99);
   mso.addIntArrow(y, x + 20, "maxup", "Upload slots:", this->site->getInternMaxUp(), 0, 99);
   mso.addIntArrow(y++, x + 40, "maxdn", "Download slots:", this->site->getInternMaxDown(), 0, 99);
-  mso.addCheckBox(y, x, "ssl", "AUTH SSL:", this->site->SSL());
-  Pointer<MenuSelectOptionTextArrow> sslfxp = mso.addTextArrow(y++, x + 20, "ssltransfer", "SSL transfers:");
+  mso.addCheckBox(y, x, "tls", "AUTH TLS:", this->site->SSL());
+  Pointer<MenuSelectOptionTextArrow> sslfxp = mso.addTextArrow(y++, x + 20, "tlstransfer", "TLS transfers:");
   sslfxp->addOption("Always off", SITE_SSL_ALWAYS_OFF);
   sslfxp->addOption("Prefer off", SITE_SSL_PREFER_OFF);
   sslfxp->addOption("Prefer on", SITE_SSL_PREFER_ON);
@@ -455,10 +455,10 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         else if (identifier == "binary") {
           site->setForceBinaryMode(msoe.get<MenuSelectOptionCheckBox>()->getData());
         }
-        else if (identifier == "ssl") {
+        else if (identifier == "tls") {
           site->setSSL(msoe.get<MenuSelectOptionCheckBox>()->getData());
         }
-        else if (identifier == "ssltransfer") {
+        else if (identifier == "tlstransfer") {
           site->setSSLTransferPolicy(msoe.get<MenuSelectOptionTextArrow>()->getData());
         }
         else if (identifier == "sscn") {
