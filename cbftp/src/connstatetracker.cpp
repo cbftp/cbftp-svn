@@ -20,6 +20,7 @@ ConnStateTracker::ConnStateTracker() :
   fxp(false),
   listtransfer(false),
   listinitialized(false),
+  quitting(false),
   recursivelogic(makePointer<RecursiveCommandLogic>()) {
 }
 
@@ -79,6 +80,7 @@ void ConnStateTracker::setDisconnected() {
   util::assert(!transfer);
   util::assert(!request);
   loggedin = false;
+  quitting = false;
   delayedcommand.weakReset();
   idletime = 0;
 }
@@ -273,7 +275,7 @@ bool ConnStateTracker::hasRequest() const {
 }
 
 bool ConnStateTracker::isLocked() const {
-  return isListOrTransferLocked() || hasRequest();
+  return isListOrTransferLocked() || hasRequest() || isQuitting();
 }
 
 bool ConnStateTracker::isListOrTransferLocked() const {
@@ -281,7 +283,7 @@ bool ConnStateTracker::isListOrTransferLocked() const {
 }
 
 bool ConnStateTracker::isHardLocked() const {
-  return isTransferLocked() || hasRequest();
+  return isTransferLocked() || hasRequest() || isQuitting();
 }
 
 const Pointer<SiteLogicRequest> & ConnStateTracker::getRequest() const {
@@ -315,4 +317,12 @@ void ConnStateTracker::initializeTransfer() {
   else {
     initialized = true;
   }
+}
+
+bool ConnStateTracker::isQuitting() const {
+  return quitting;
+}
+
+void ConnStateTracker::setQuitting() {
+  quitting = true;
 }

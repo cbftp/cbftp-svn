@@ -1564,6 +1564,7 @@ void SiteLogic::disconnectConn(int id, bool hard) {
   if (conns[id]->isConnected()) {
     if (!hard && connstatetracker[id].isLoggedIn() && !conns[id]->isProcessing()) {
       conns[id]->doQUIT();
+      connstatetracker[id].setQuitting();
     }
     else {
       conns[id]->disconnect();
