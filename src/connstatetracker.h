@@ -42,6 +42,7 @@ private:
   bool listpassive;
   bool listssl;
   bool listinitialized;
+  bool quitting;
   std::string listhost;
   int listport;
   TransferMonitor * listtm;
@@ -103,4 +104,6 @@ public:
   bool transferInitialized() const;
   CommandOwner * getCommandOwner() const;
   void initializeTransfer();
+  bool isQuitting() const;
+  void setQuitting();
 };
