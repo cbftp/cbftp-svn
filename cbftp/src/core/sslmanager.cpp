@@ -50,7 +50,7 @@ static unsigned long sslThreadIdCallback() {
 void SSLManager::init() {
   coreutil::assert(!initialized);
   initialized = true;
-#if OPENSSL_VERSION_NUMBER < 0x10100000
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
   ssllocks.resize(CRYPTO_num_locks());
   CRYPTO_set_locking_callback(sslLockingCallback);
   CRYPTO_set_id_callback(sslThreadIdCallback);
@@ -61,11 +61,11 @@ void SSLManager::init() {
   ssl_ctx = SSL_CTX_new(TLS_method());
 #endif
   SSL_CTX_set_cipher_list(ssl_ctx, "DEFAULT:!SEED");
-#if OPENSSL_VERSION_NUMBER < 0x10002000
+#if OPENSSL_VERSION_NUMBER < 0x10002000L
     EC_KEY* eckey = EC_KEY_new_by_curve_name(ELLIPTIC_CURVE);
     SSL_CTX_set_tmp_ecdh(ssl_ctx, eckey);
     EC_KEY_free(eckey);
-#else
+#elif OPENSSL_VERSION_NUMBER < 0x10100000L
     SSL_CTX_set_ecdh_auto(ssl_ctx, 1);
 #endif
 }
