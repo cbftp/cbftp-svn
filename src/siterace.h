@@ -55,6 +55,7 @@ class SiteRace : public CommandOwner {
     void markNonExistent(FileList *);
     void reset();
   public:
+    std::string getName() const;
     int classType() const;
     std::string getSiteName() const;
     const Path & getSection() const;

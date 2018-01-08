@@ -54,6 +54,7 @@ class AllTransferJobsScreen;
 class TransferStatusScreen;
 class TransfersFilterScreen;
 class InfoScreen;
+class SelectJobsScreen;
 struct TransferFilteringParameters;
 
 enum LegendMode {
@@ -103,6 +104,7 @@ private:
   Pointer<TransferStatusScreen> transferstatusscreen;
   Pointer<TransfersFilterScreen> transfersfilterscreen;
   Pointer<InfoScreen> infoscreen;
+  Pointer<SelectJobsScreen> selectjobsscreen;
   int mainrow;
   int maincol;
   int col;
@@ -190,6 +192,8 @@ public:
   void goNewRace(const std::string &, const std::string &, const std::string &);
   void goSelectSites(const std::string &, std::list<Pointer<Site> >, std::list<Pointer<Site> >);
   void goSelectSitesFrom(const std::string &, std::list<Pointer<Site> >, std::list<Pointer<Site> >);
+  void goSelectSpreadJobs();
+  void goSelectTransferJobs();
   void goSkiplist();
   void goSkiplist(SkipList *);
   void goChangeKey();
@@ -203,9 +207,11 @@ public:
   void goEventLog();
   void goScoreBoard();
   void goTransfers();
-  void goTransfers(const TransferFilteringParameters &);
+  void goTransfersFilterSite(const std::string &);
+  void goTransfersFilterSpreadJob(const std::string &);
+  void goTransfersFilterTransferJob(const std::string &);
   void returnTransferFilters(const TransferFilteringParameters &);
-  void goTransfersFiltering();
+  void goTransfersFiltering(const TransferFilteringParameters &);
   void goEditSite(const std::string &);
   void goAddSite();
   void goBrowse(const std::string &);
@@ -219,7 +225,7 @@ public:
   void goAllRaces();
   void goAllTransferJobs();
   void goInfo();
-  void returnSelectSites(const std::string &);
+  void returnSelectItems(const std::string &);
   void key(const std::string &);
   void newKey(const std::string &);
   void confirmYes();

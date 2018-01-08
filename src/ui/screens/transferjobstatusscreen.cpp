@@ -28,7 +28,7 @@ TransferJobStatusScreen::~TransferJobStatusScreen() {
 
 void TransferJobStatusScreen::initialize(unsigned int row, unsigned int col, unsigned int id) {
   abortedlegendtext = "[c/Esc] Return";
-  defaultlegendtext = abortedlegendtext + " - [Enter] Modify - A[B]ort transfer job";
+  defaultlegendtext = abortedlegendtext + " - [Enter] Modify - A[B]ort transfer job - [t]ransfers";
   transferjob = global->getEngine()->getTransferJob(id);
   currentlegendtext = transferjob->isAborted() ? abortedlegendtext : defaultlegendtext;
   autoupdate = true;
@@ -178,6 +178,9 @@ bool TransferJobStatusScreen::keyPressed(unsigned int ch) {
       if (!transferjob->isDone()) {
         ui->goConfirmation("Do you really want to abort the transfer job " + transferjob->getSrcFileName());
       }
+      return true;
+    case 't':
+      ui->goTransfersFilterTransferJob(transferjob->getName());
       return true;
   }
   return false;

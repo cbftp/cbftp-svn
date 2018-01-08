@@ -26,6 +26,7 @@ class File;
 
 class TransferJob : public CommandOwner, public TransferStatusCallback {
 public:
+  std::string getName() const;
   int classType() const;
   TransferJob(unsigned int, const Pointer<SiteLogic> &, FileList *, const std::string &, const Path &, const std::string &);
   TransferJob(unsigned int, const Pointer<SiteLogic> &, const Path &, const std::string &, const Path &, const std::string &);

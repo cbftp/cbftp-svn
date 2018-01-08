@@ -51,6 +51,7 @@
 #include "screens/transferstatusscreen.h"
 #include "screens/transfersfilterscreen.h"
 #include "screens/infoscreen.h"
+#include "screens/selectjobsscreen.h"
 
 static Ui * instance = new Ui();
 
@@ -129,6 +130,7 @@ bool Ui::init() {
   transferstatusscreen = makePointer<TransferStatusScreen>(this);
   transfersfilterscreen = makePointer<TransfersFilterScreen>(this);
   infoscreen = makePointer<InfoScreen>(this);
+  selectjobsscreen = makePointer<SelectJobsScreen>(this);
   mainwindows.push_back(mainscreen);
   mainwindows.push_back(confirmationscreen);
   mainwindows.push_back(editsitescreen);
@@ -157,6 +159,7 @@ bool Ui::init() {
   mainwindows.push_back(transferstatusscreen);
   mainwindows.push_back(transfersfilterscreen);
   mainwindows.push_back(infoscreen);
+  mainwindows.push_back(selectjobsscreen);
 
   if (global->getSettingsLoaderSaver()->dataExists()) {
     loginscreen->initialize(mainrow, maincol);
@@ -733,6 +736,16 @@ void Ui::goSelectSitesFrom(const std::string & message, std::list<Pointer<Site> 
   switchToWindow(selectsitesscreen);
 }
 
+void Ui::goSelectSpreadJobs() {
+  selectjobsscreen->initialize(mainrow, maincol, JOBTYPE_SPREADJOB);
+  switchToWindow(selectjobsscreen);
+}
+
+void Ui::goSelectTransferJobs() {
+  selectjobsscreen->initialize(mainrow, maincol, JOBTYPE_TRANSFERJOB);
+  switchToWindow(selectjobsscreen);
+}
+
 void Ui::goSkiplist() {
   skiplistscreen->initialize(mainrow, maincol);
   switchToWindow(skiplistscreen);
@@ -798,8 +811,18 @@ void Ui::goTransfers() {
   switchToWindow(transfersscreen);
 }
 
-void Ui::goTransfers(const TransferFilteringParameters & tfp) {
-  transfersscreen->initialize(mainrow, maincol, tfp);
+void Ui::goTransfersFilterSite(const std::string & site) {
+  transfersscreen->initializeFilterSite(mainrow, maincol, site);
+  switchToWindow(transfersscreen);
+}
+
+void Ui::goTransfersFilterSpreadJob(const std::string & job) {
+  transfersscreen->initializeFilterSpreadJob(mainrow, maincol, job);
+  switchToWindow(transfersscreen);
+}
+
+void Ui::goTransfersFilterTransferJob(const std::string & job) {
+  transfersscreen->initializeFilterTransferJob(mainrow, maincol, job);
   switchToWindow(transfersscreen);
 }
 
@@ -809,8 +832,8 @@ void Ui::returnTransferFilters(const TransferFilteringParameters & tfp) {
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 
-void Ui::goTransfersFiltering() {
-  transfersfilterscreen->initialize(mainrow, maincol);
+void Ui::goTransfersFiltering(const TransferFilteringParameters & tfp) {
+  transfersfilterscreen->initialize(mainrow, maincol, tfp);
   switchToWindow(transfersfilterscreen);
 }
 
@@ -884,9 +907,9 @@ void Ui::goInfo() {
   switchToWindow(infoscreen);
 }
 
-void Ui::returnSelectSites(const std::string & sites) {
+void Ui::returnSelectItems(const std::string & items) {
   switchToLast();
-  topwindow->command("returnselectsites", sites);
+  topwindow->command("returnselectitems", items);
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 

@@ -297,7 +297,7 @@ void EditSiteScreen::update() {
 }
 
 void EditSiteScreen::command(const std::string & command, const std::string & arg) {
-  if (command == "returnselectsites") {
+  if (command == "returnselectitems") {
     activeelement.get<MenuSelectOptionTextField>()->setText(arg);
     redraw();
   }

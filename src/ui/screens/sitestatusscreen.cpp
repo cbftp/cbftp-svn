@@ -92,6 +92,9 @@ bool SiteStatusScreen::keyPressed(unsigned int ch) {
     case 'b':
       ui->goBrowse(site->getName());
       return true;
+    case 't':
+      ui->goTransfersFilterSite(site->getName());
+      return true;
     case 'w':
       ui->goRawCommand(site->getName());
       return true;
@@ -100,7 +103,7 @@ bool SiteStatusScreen::keyPressed(unsigned int ch) {
 }
 
 std::string SiteStatusScreen::getLegendText() const {
-  return "[Right] Raw data screens - [Enter] Return - ra[w] command - [E]dit site";
+  return "[Right] Raw data screens - [Enter] Return - ra[w] command - [E]dit site - [t]ransfers";
 }
 
 std::string SiteStatusScreen::getInfoLabel() const {

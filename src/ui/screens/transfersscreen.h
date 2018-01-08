@@ -25,20 +25,24 @@ struct TransferDetails {
 
 struct TransferFilteringParameters {
   TransferFilteringParameters() :
-    showstatusinprogress(true),
-    showstatusdone(true), showstatusfail(true),
-    usepathfilter(false), usesourcesitefilter(false),
-    usetargetsitefilter(false) { }
+    usejobfilter(false), usesitefilter(false), usefilenamefilter(false),
+    usestatusfilter(false), showstatusinprogress(false),
+    showstatusdone(false), showstatusfail(false), showstatusdupe(false) { }
+  bool usejobfilter;
+  std::list<std::string> spreadjobsfilter;
+  std::list<std::string> transferjobsfilter;
+  bool usesitefilter;
+  std::list<std::string> sourcesitefilters;
+  std::list<std::string> targetsitefilters;
+  std::list<std::string> anydirectionsitefilters;
+  bool usefilenamefilter;
+  std::string filenamefilter;
+  bool usestatusfilter;
   bool showstatusinprogress;
   bool showstatusdone;
   bool showstatusfail;
   bool showstatusdupe;
-  bool usepathfilter;
-  std::list<std::string> pathfilters;
-  bool usesourcesitefilter;
-  std::list<std::string> sourcesitefilters;
-  bool usetargetsitefilter;
-  std::list<std::string> targetsitefilters;
+
 };
 
 class TransfersScreen : public UIWindow {
@@ -46,12 +50,16 @@ public:
   TransfersScreen(Ui *);
   ~TransfersScreen();
   void initialize(unsigned int, unsigned int);
+  void initializeFilterSite(unsigned int, unsigned int, const std::string &);
+  void initializeFilterSpreadJob(unsigned int, unsigned int, const std::string &);
+  void initializeFilterTransferJob(unsigned int, unsigned int, const std::string &);
   void initialize(unsigned int, unsigned int, const TransferFilteringParameters &);
   void redraw();
   void update();
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
+  std::string getInfoText() const;
   static void addTransferTableHeader(unsigned int, MenuSelectOption &);
   static TransferDetails formatTransferDetails(Pointer<TransferStatus> &);
 private:
@@ -61,6 +69,8 @@ private:
       const std::string &, const std::string &, const std::string &,
       int);
   static void addTransferDetails(unsigned int, MenuSelectOption &, Pointer<TransferStatus>, int);
+  void addFilterFinishedTransfers();
+  bool showsWhileFiltered(const Pointer<TransferStatus> &) const;
   std::map<int, Pointer<TransferStatus> > statusmap;
   TransferManager * tm;
   MenuSelectOption table;
@@ -70,4 +80,6 @@ private:
   int nextid;
   bool filtering;
   TransferFilteringParameters tfp;
+  int numfinishedfiltered;
+  std::list<Pointer<TransferStatus> > finishedfilteredtransfers;
 };

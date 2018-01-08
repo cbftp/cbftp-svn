@@ -99,6 +99,10 @@ TransferJob::~TransferJob() {
   }
 }
 
+std::string TransferJob::getName() const {
+  return dstfile;
+}
+
 int TransferJob::classType() const {
   return COMMANDOWNER_TRANSFERJOB;
 }

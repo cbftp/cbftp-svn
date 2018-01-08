@@ -15,6 +15,8 @@ public:
   virtual ~CommandOwner() {
   }
   virtual int classType() const = 0;
+  virtual std::string getName() const = 0;
+  virtual unsigned int getId() const = 0;
   virtual void fileListUpdated(SiteLogic *, FileList *) = 0;
   virtual FileList * getFileListForFullPath(SiteLogic *, const Path &) const = 0;
   virtual void addTransferStatsFile(StatsDirection, const std::string &, unsigned long long int, unsigned int) { }
