@@ -41,6 +41,10 @@ SiteRace::~SiteRace() {
   }
 }
 
+std::string SiteRace::getName() const {
+  return release;
+}
+
 int SiteRace::classType() const {
   return COMMANDOWNER_SITERACE;
 }

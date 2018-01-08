@@ -29,7 +29,7 @@ static bool initialized = false;
 static X509 * x509 = NULL;
 static EVP_PKEY * pkey = NULL;
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 static std::vector<Lock> ssllocks;
 static void sslLockingCallback(int mode, int n, const char *, int) {
   if (mode & CRYPTO_LOCK) {

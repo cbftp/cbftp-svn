@@ -26,8 +26,8 @@ enum SelectSitesMode {
 
 RaceStatusScreen::RaceStatusScreen(Ui * ui) {
   this->ui = ui;
-  defaultlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [r]eset race - Hard [R]eset race - A[B]ort race - [d]elete site and own files from race - [D]elete site and all files from race";
-  finishedlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [r]eset race - Hard [R]eset race - [d]elete own files - [D]elete all files";
+  defaultlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [r]eset race - Hard [R]eset race - A[B]ort race - [d]elete site and own files from race - [D]elete site and all files from race - [t]transfers";
+  finishedlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [r]eset race - Hard [R]eset race - [d]elete own files - [D]elete all files - [t]ransfers";
 }
 
 RaceStatusScreen::~RaceStatusScreen() {
@@ -315,7 +315,7 @@ void RaceStatusScreen::command(const std::string & command, const std::string & 
       ui->setLegend();
     }
   }
-  else if (command == "returnselectsites") {
+  else if (command == "returnselectitems") {
     std::string preselectstr = arg;
     std::list<Pointer<Site> > selectedsites;
     while (true) {
@@ -440,6 +440,9 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       return true;
     case 'R':
       global->getEngine()->resetRace(race, true);
+      return true;
+    case 't':
+      ui->goTransfersFilterSpreadJob(race->getName());
       return true;
     case 10:
       Pointer<MenuSelectOptionTextButton> msotb = mso.getElement(mso.getSelectionPointer());

@@ -167,7 +167,7 @@ bool SelectSitesScreen::keyPressed(unsigned int ch) {
       if (sites.length() > 0) {
         sites = sites.substr(0, sites.length() - 1);
       }
-      ui->returnSelectSites(sites);
+      ui->returnSelectItems(sites);
       return true;
     }
     case 't': {
