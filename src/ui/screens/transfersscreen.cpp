@@ -311,20 +311,24 @@ void TransfersScreen::addFilterFinishedTransfers() {
   numfinishedfiltered = finishedsize;
 }
 
+unsigned int TransfersScreen::totalListSize() const {
+  int ongoingfiltercount = 0;
+  if (filtering) {
+    for (std::list<Pointer<TransferStatus> >::const_iterator it = tm->ongoingTransfersBegin(); it != tm->ongoingTransfersEnd(); it++) {
+      if (showsWhileFiltered(*it)) {
+        ongoingfiltercount++;
+      }
+    }
+  }
+  return filtering ? ongoingfiltercount + finishedfilteredtransfers.size() : tm->ongoingTransfersSize() + tm->finishedTransfersSize();
+}
+
 void TransfersScreen::redraw() {
   ui->erase();
   addFilterFinishedTransfers();
   unsigned int y = 0;
   unsigned int listspan = row - 1;
-  int ongoingfiltercount = 0;
-  if (filtering) {
-    for (std::list<Pointer<TransferStatus> >::const_iterator it = tm->ongoingTransfersBegin(); it != tm->ongoingTransfersEnd() && y < row; it++) {
-      if (!showsWhileFiltered(*it)) {
-        ongoingfiltercount++;
-      }
-    }
-  }
-  unsigned int totallistsize = (filtering ? ongoingfiltercount + finishedfilteredtransfers.size() : tm->ongoingTransfersSize() + tm->finishedTransfersSize());
+  unsigned int totallistsize = totalListSize();
   table.reset();
   statusmap.clear();
   adaptViewSpan(currentviewspan, listspan, ypos, totallistsize);
@@ -416,7 +420,7 @@ bool TransfersScreen::keyPressed(unsigned int ch) {
       }
       return true;
     case KEY_DOWN:
-      if (hascontents && ypos < tm->ongoingTransfersSize() + tm->finishedTransfersSize() - 1) {
+      if (hascontents && ypos < totalListSize() - 1) {
         ++ypos;
         table.goDown();
         ui->update();
@@ -424,7 +428,8 @@ bool TransfersScreen::keyPressed(unsigned int ch) {
       return true;
     case KEY_NPAGE: {
       unsigned int pagerows = (unsigned int) row * 0.6;
-      for (unsigned int i = 0; i < pagerows && ypos < tm->ongoingTransfersSize() + tm->finishedTransfersSize() - 1; i++) {
+      unsigned int totallistsize = totalListSize();
+      for (unsigned int i = 0; i < pagerows && ypos < totallistsize - 1; i++) {
         ypos++;
         table.goDown();
       }
@@ -445,7 +450,7 @@ bool TransfersScreen::keyPressed(unsigned int ch) {
       ui->update();
       return true;
     case KEY_END:
-      ypos = tm->ongoingTransfersSize() + tm->finishedTransfersSize() - 1;
+      ypos = totalListSize() - 1;
       ui->update();
       return true;
     case 10:

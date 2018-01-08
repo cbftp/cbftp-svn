@@ -71,6 +71,7 @@ private:
   static void addTransferDetails(unsigned int, MenuSelectOption &, Pointer<TransferStatus>, int);
   void addFilterFinishedTransfers();
   bool showsWhileFiltered(const Pointer<TransferStatus> &) const;
+  unsigned int totalListSize() const;
   std::map<int, Pointer<TransferStatus> > statusmap;
   TransferManager * tm;
   MenuSelectOption table;
