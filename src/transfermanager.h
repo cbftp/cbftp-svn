@@ -15,11 +15,14 @@ class FileList;
 class TransferStatus;
 class LocalFileList;
 
+#define MAX_TRANSFER_HISTORY 10000
+
 class TransferManager {
   private:
     std::list<Pointer<TransferMonitor> > transfermonitors;
     std::list<Pointer<TransferStatus> > ongoingtransfers;
     std::list<Pointer<TransferStatus> > finishedtransfers;
+    unsigned int totalfinishedtransfers;
     Pointer<TransferMonitor> getAvailableTransferMonitor();
     void moveTransferStatusToFinished(const Pointer<TransferStatus> &);
   public:
@@ -47,5 +50,6 @@ class TransferManager {
     std::list<Pointer<TransferStatus> >::const_iterator finishedTransfersEnd() const;
     unsigned int ongoingTransfersSize() const;
     unsigned int finishedTransfersSize() const;
+    unsigned int totalFinishedTransfers() const;
     void addNewTransferStatus(const Pointer<TransferStatus> &);
 };

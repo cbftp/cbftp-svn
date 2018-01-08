@@ -296,7 +296,7 @@ void TransfersScreen::addFilterFinishedTransfers() {
     return;
   }
   int i = 0;
-  size_t finishedsize = tm->finishedTransfersSize();
+  size_t finishedsize = tm->totalFinishedTransfers();
   int count = finishedsize - numfinishedfiltered;
   std::list<Pointer<TransferStatus> > newfiltered;
   for (std::list<Pointer<TransferStatus> >::const_iterator it = tm->finishedTransfersBegin(); it != tm->finishedTransfersEnd() && i < count; it++, i++) {
@@ -304,9 +304,9 @@ void TransfersScreen::addFilterFinishedTransfers() {
       newfiltered.push_back(*it);
     }
   }
-  while (!newfiltered.empty()) {
-    finishedfilteredtransfers.push_front(newfiltered.back());
-    newfiltered.pop_back();
+  finishedfilteredtransfers.splice(finishedfilteredtransfers.begin(), newfiltered);
+  if (finishedfilteredtransfers.size() > MAX_TRANSFER_HISTORY) {
+    finishedfilteredtransfers.resize(MAX_TRANSFER_HISTORY);
   }
   numfinishedfiltered = finishedsize;
 }

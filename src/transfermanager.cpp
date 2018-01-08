@@ -8,9 +8,7 @@
 #include "localfilelist.h"
 #include "transferstatuscallback.h"
 
-#define MAX_TRANSFER_HISTORY 1000
-
-TransferManager::TransferManager() {
+TransferManager::TransferManager() : totalfinishedtransfers(0) {
 }
 
 TransferManager::~TransferManager() {
@@ -140,4 +138,9 @@ void TransferManager::moveTransferStatusToFinished(const Pointer<TransferStatus>
     finishedtransfers.pop_back();
   }
   finishedtransfers.push_front(movets);
+  ++totalfinishedtransfers;
+}
+
+unsigned int TransferManager::totalFinishedTransfers() const {
+  return totalfinishedtransfers;
 }
