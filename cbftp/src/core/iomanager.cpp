@@ -213,6 +213,7 @@ void IOManager::handleTCPNameResolution(SocketInfo & socketinfo) {
       }
     }
     retcode = bind(sockfd, res->ai_addr, res->ai_addrlen);
+    freeaddrinfo(res);
     if (retcode) {
       if (!handleError(socketinfo.receiver)) {
         closeSocketIntern(socketinfo.id);
@@ -232,6 +233,7 @@ void IOManager::handleTCPNameResolution(SocketInfo & socketinfo) {
     wm->dispatchEventConnecting(socketinfo.receiver, socketinfo.id, socketinfo.addr);
   }
   freeaddrinfo(result);
+  socketinfo.gaires = NULL;
   pollWrite(socketinfo);
   return;
 }
@@ -263,6 +265,7 @@ int IOManager::registerTCPServerSocket(EventReceiver * er, int port, bool local)
   setsockopt(sockfd, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof(yes));
 #endif
   retcode = bind(sockfd, res->ai_addr, res->ai_addrlen);
+  freeaddrinfo(res);
   if (retcode) {
     if (!handleError(er)) {
       return -1;
@@ -332,6 +335,7 @@ int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
   setsockopt(sockfd, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof(yes));
 #endif
   retcode = bind(sockfd, res->ai_addr, res->ai_addrlen);
+  freeaddrinfo(res);
   if (retcode) {
     if (!handleError(er)) {
       return -1;
@@ -477,7 +481,13 @@ void IOManager::closeSocketIntern(int id) {
   if (socketinfo.ssl) {
     SSL_free(socketinfo.ssl);
   }
-
+  if (socketinfo.gaires) {
+    freeaddrinfo(static_cast<struct addrinfo*>(socketinfo.gaires));
+  }
+  for (std::list<DataBlock>::iterator it = socketinfo.sendqueue.begin(); it != socketinfo.sendqueue.end(); it++) {
+    sendblockpool->returnBlock(it->rawData());
+  }
+  socketinfo.sendqueue.clear();
   sockfdidmap.erase(socketinfo.fd);
   connecttimemap.erase(id);
   autopaused.erase(id);
@@ -504,12 +514,17 @@ void IOManager::resolveDNS(int id) {
   ScopeLock lock(socketinfomaplock);
   it = socketinfomap.find(id);
   if (it == socketinfomap.end()) {
+    if (!retcode) {
+      freeaddrinfo(result);
+    }
     return;
   }
-  it->second.gaires = result;
   it->second.gairet = retcode;
   if (retcode) {
     it->second.gaierr = gai_strerror(retcode);
+  }
+  else {
+    it->second.gaires = result;
   }
 }
 
