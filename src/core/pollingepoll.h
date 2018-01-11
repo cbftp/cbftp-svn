@@ -2,6 +2,7 @@
 
 #include <sys/epoll.h>
 #include <unistd.h>
+#include <cstring>
 
 #include "polling.h"
 
@@ -49,6 +50,7 @@ public:
 private:
   void control(int ev, int op, int fd) {
     struct epoll_event event;
+    memset(&event, 0, sizeof(event));
     event.events = ev;
     event.data.fd = fd;
     epoll_ctl(epollfd, op, fd, &event);
