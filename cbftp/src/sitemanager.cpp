@@ -51,6 +51,11 @@ Pointer<Site> SiteManager::getSite(const std::string & site) const {
   return Pointer<Site>();
 }
 
+Pointer<Site> SiteManager::getSite(unsigned int index) const {
+  util::assert(index < sites.size());
+  return sites[index];
+}
+
 void SiteManager::deleteSite(const std::string & site) {
   std::vector<Pointer<Site> >::iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {

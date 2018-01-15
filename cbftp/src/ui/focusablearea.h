@@ -21,6 +21,7 @@ public:
   virtual bool goNext();
   virtual bool goPrevious();
   virtual void enterFocusFrom(int);
+  virtual void defocus();
   bool isFocused() const;
   void makeLeavableUp(bool);
   void makeLeavableDown(bool);

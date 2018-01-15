@@ -24,6 +24,10 @@ void FocusableArea::enterFocusFrom(int direction) {
   focus = true;
 }
 
+void FocusableArea::defocus() {
+  focus = false;
+}
+
 bool FocusableArea::goUp() {
   return false;
 }
