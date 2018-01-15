@@ -25,36 +25,24 @@ void SelectJobsScreen::initialize(unsigned int row, unsigned int col, JobType ty
   ypos = 0;
   numselected = 0;
   this->type = type;
-  totallistsize = global->getEngine()->allRaces();
+
   table.reset();
   unsigned int y = 0;
-  addJobTableHeader(y, table, "JOB NAME");
-  y++;
-  unsigned int pos = 0;
+  addJobTableHeader(y++, table, "JOB NAME");
   if (type == JOBTYPE_SPREADJOB) {
+    totallistsize = global->getEngine()->allRaces();
     for (std::list<Pointer<Race> >::const_iterator it = --global->getEngine()->getRacesEnd();
-        it != --global->getEngine()->getRacesBegin() && y < row; it--)
+        it != --global->getEngine()->getRacesBegin(); --it, ++y)
     {
-      if (pos >= currentviewspan) {
-        addJobDetails(y++, table, *it);
-        if (pos == ypos) {
-          table.enterFocusFrom(2);
-        }
-      }
-      ++pos;
+      addJobDetails(y, table, *it);
     }
   }
   else {
+    totallistsize = global->getEngine()->allTransferJobs();
     for (std::list<Pointer<TransferJob> >::const_iterator it = --global->getEngine()->getTransferJobsEnd();
-        it != --global->getEngine()->getTransferJobsBegin() && y < row; it--)
+        it != --global->getEngine()->getTransferJobsBegin(); --it, ++y)
     {
-      if (pos >= currentviewspan) {
-        addJobDetails(y++, table, *it);
-        if (pos == ypos) {
-          table.enterFocusFrom(2);
-        }
-      }
-      ++pos;
+      addJobDetails(y, table, *it);
     }
   }
   table.checkPointer();
@@ -69,15 +57,23 @@ void SelectJobsScreen::redraw() {
   hascontents = table.linesSize() > 1;
   table.adjustLines(col - 3);
   bool highlight;
-  for (unsigned int i = 0; i < table.size(); i++) {
-    Pointer<ResizableElement> re = table.getElement(i);
-    highlight = false;
-    if (table.getSelectionPointer() == i && hascontents) {
-      highlight = true;
+  int y = 0;
+  for (unsigned int i = 0; i < table.linesSize(); i++) {
+    if (i != 0 && (i < currentviewspan + 1 || i > currentviewspan + listspan)) {
+      continue;
     }
-    if (re->isVisible()) {
-      ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
+    Pointer<MenuSelectAdjustableLine> msal = table.getAdjustableLine(i);
+    for (unsigned int j = 0; j < msal->size(); ++j) {
+      Pointer<ResizableElement> re = msal->getElement(j);
+      highlight = false;
+      if (j == 1 && ypos + 1 == currentviewspan + y && hascontents) {
+        highlight = true;
+      }
+      if (re->isVisible()) {
+        ui->printStr(y, re->getCol(), re->getLabelText(), highlight);
+      }
     }
+    y++;
   }
   printSlider(ui, row, 1, col - 1, totallistsize, currentviewspan);
 }
