@@ -10,6 +10,8 @@
 #include "menuselectoptiontextarrow.h"
 #include "menuselectadjustableline.h"
 
+#include "../util.h"
+
 #define MAX_DIFF_LR 30
 #define MAX_DIFF_UD 2
 
@@ -396,6 +398,11 @@ Pointer<MenuSelectAdjustableLine> MenuSelectOption::getAdjustableLine(Pointer<Me
     }
   }
   return Pointer<MenuSelectAdjustableLine>();
+}
+
+Pointer<MenuSelectAdjustableLine> MenuSelectOption::getAdjustableLine(unsigned int lineindex) const {
+  util::assert(lineindex < adjustablelines.size());
+  return adjustablelines[lineindex];
 }
 
 void MenuSelectOption::removeAdjustableLine(Pointer<MenuSelectAdjustableLine> msal) {

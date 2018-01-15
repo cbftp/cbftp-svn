@@ -1,12 +1,13 @@
 #pragma once
 
 #include "../uiwindow.h"
-#include "../menuselectsite.h"
 #include "../menuselectoption.h"
 
 class FocusableArea;
 class Ui;
 class PreparedRace;
+class SiteLogic;
+class Site;
 
 class MainScreen : public UIWindow {
 public:
@@ -24,8 +25,19 @@ private:
       bool, const std::string &, const std::string &, const std::string &, const std::string &);
   void addPreparedRaceTableHeader(unsigned int, MenuSelectOption &);
   void addPreparedRaceDetails(unsigned int, MenuSelectOption &, const Pointer<PreparedRace> &);
+  void addSiteHeader(unsigned int y, MenuSelectOption & mso);
+  void addSiteRow(unsigned int y, MenuSelectOption & mso, bool selectable,
+      const std::string & site, const std::string & logins, const std::string & uploads,
+      const std::string & downloads, const std::string & allowup,
+      const std::string & allowdown, const std::string & disabled, const std::string & dayup,
+      const std::string & daydn, const std::string & alup, const std::string & aldn);
+  void addSiteDetails(unsigned int y, MenuSelectOption & mso, const Pointer<SiteLogic> & sl);
+  void keyUp();
+  void keyDown();
   unsigned int currentviewspan;
   unsigned int sitestartrow;
+  unsigned int sitepos;
+  unsigned int totalsitessize;
   int currentraces;
   int currenttransferjobs;
   std::string joblegendtext;
@@ -39,9 +51,9 @@ private:
   FocusableArea * defocusedarea;
   std::string deletesite;
   Ui * ui;
-  MenuSelectSite mss;
   MenuSelectOption msop;
-  MenuSelectOption mso;
-  MenuSelectOption msot;
+  MenuSelectOption msosj;
+  MenuSelectOption msotj;
+  MenuSelectOption msos;
   bool gotomode;
 };

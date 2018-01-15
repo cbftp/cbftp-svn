@@ -27,6 +27,7 @@ class SiteManager {
     void addSite(const Pointer<Site> &);
     void addSiteLoad(const Pointer<Site> &);
     Pointer<Site> getSite(const std::string &) const;
+    Pointer<Site> getSite(unsigned int) const;
     void deleteSite(const std::string &);
     std::vector<Pointer<Site> >::const_iterator begin() const;
     std::vector<Pointer<Site> >::const_iterator end() const;
