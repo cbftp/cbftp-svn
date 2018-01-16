@@ -614,7 +614,7 @@ void MainScreen::addSiteDetails(unsigned int y, MenuSelectOption & mso, const Po
   std::string down = site->getAllowDownload()? "[X]" : "[ ]";
   std::string disabled = site->getDisabled()? "[X]" : "[ ]";
   std::string up24 = util::parseSize(site->getSizeUpLast24Hours());
-  std::string down24 = util::parseSize(site->getSizeUpLast24Hours());
+  std::string down24 = util::parseSize(site->getSizeDownLast24Hours());
   std::string allup = util::parseSize(site->getSizeUpAll());
   std::string alldown = util::parseSize(site->getSizeDownAll());
   addSiteRow(y, mso, true, sitename, logins, uploads, downloads, up, down, disabled, up24, down24, allup, alldown);
