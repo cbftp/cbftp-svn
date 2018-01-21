@@ -213,6 +213,7 @@ void MainScreen::redraw() {
 
 void MainScreen::update() {
   redraw();
+  ui->setInfo();
 }
 
 void MainScreen::command(const std::string & command) {
@@ -476,7 +477,14 @@ std::string MainScreen::getInfoLabel() const {
 }
 
 std::string MainScreen::getInfoText() const {
-  return activeracestext + activejobstext + numsitestext;
+  std::string text;
+  if (global->getRemoteCommandHandler()->isEnabled()) {
+    text += "Remote commands enabled  ";
+  }
+  if (global->getEngine()->getNextPreparedRaceStarterEnabled()) {
+    text += "Race starter: " + util::simpleTimeFormat(global->getEngine()->getNextPreparedRaceStarterTimeRemaining()) + "  ";
+  }
+  return text + activeracestext + activejobstext + numsitestext;
 }
 
 void MainScreen::addPreparedRaceTableRow(unsigned int y, MenuSelectOption & mso, unsigned int id,
