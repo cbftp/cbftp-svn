@@ -84,6 +84,8 @@ public:
   int getPriorityPoints(int) const;
   int getSpeedPoints(int) const;
   int getPreparedRaceExpiryTime() const;
+  bool getNextPreparedRaceStarterEnabled() const;
+  int getNextPreparedRaceStarterTimeRemaining() const;
  private:
   Pointer<Race> newSpreadJob(int, const std::string &, const std::string &, const std::list<std::string> &);
   Pointer<Race> newSpreadJob(int, const std::string &, const std::string &);
@@ -105,7 +107,6 @@ public:
   Pointer<Race> getCurrentRace(const std::string &) const;
   void preSeedPotentialData(Pointer<Race> &);
   bool raceTransferPossible(const Pointer<SiteLogic> &, const Pointer<SiteLogic> &, Pointer<Race> &) const;
-  void stopNextPreparedRaceTimer();
   std::list<Pointer<Race> > allraces;
   std::list<Pointer<Race> > currentraces;
   std::list<Pointer<PreparedRace> > preparedraces;
@@ -124,4 +125,5 @@ public:
   int maxpointslowprogress;
   int preparedraceexpirytime;
   bool startnextprepared;
+  int nextpreparedtimeremaining;
 };

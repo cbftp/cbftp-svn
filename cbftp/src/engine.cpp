@@ -38,7 +38,6 @@
 
 enum EngineTickMessages {
   TICK_MSG_TICKER,
-  TICK_MSG_NEXTPREPARED
 };
 
 Engine::Engine() :
@@ -52,7 +51,8 @@ Engine::Engine() :
   maxpointspercentageowned(2000),
   maxpointslowprogress(2000),
   preparedraceexpirytime(120),
-  startnextprepared(false)
+  startnextprepared(false),
+  nextpreparedtimeremaining(0)
 {
 }
 
@@ -63,7 +63,7 @@ Engine::~Engine() {
 Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, const std::string & section, const std::list<std::string> & sites) {
   Pointer<Race> race;
   if (profile == SPREAD_PREPARE && startnextprepared) {
-    stopNextPreparedRaceTimer();
+    startnextprepared = false;
     profile = SPREAD_RACE;
   }
   bool append = false;
@@ -263,13 +263,22 @@ void Engine::startLatestPreparedRace() {
 void Engine::toggleStartNextPreparedRace() {
   if (!startnextprepared) {
     startnextprepared = true;
-    global->getTickPoke()->startPoke(this, "Engine", TICK_NEXTPREPARED_TIMEOUT, TICK_MSG_NEXTPREPARED);
+    nextpreparedtimeremaining = TICK_NEXTPREPARED_TIMEOUT;
+    checkStartPoke();
     global->getEventLog()->log("Engine", "Enabling next prepared spread job starter");
   }
   else {
-    stopNextPreparedRaceTimer();
+    startnextprepared = false;
     global->getEventLog()->log("Engine", "Disabling next prepared spread job starter");
   }
+}
+
+bool Engine::getNextPreparedRaceStarterEnabled() const {
+  return startnextprepared;
+}
+
+int Engine::getNextPreparedRaceStarterTimeRemaining() const {
+  return nextpreparedtimeremaining / 1000;
 }
 
 void Engine::newTransferJobDownload(const std::string & srcsite, FileList * srcfilelist, const std::string & file, const Path & dstpath) {
@@ -1039,11 +1048,6 @@ bool Engine::raceTransferPossible(const Pointer<SiteLogic> & sls, const Pointer<
   return true;
 }
 
-void Engine::stopNextPreparedRaceTimer() {
-  global->getTickPoke()->stopPoke(this, TICK_MSG_NEXTPREPARED);
-  startnextprepared = false;
-}
-
 unsigned int Engine::preparedRaces() const {
   return preparedraces.size();
 }
@@ -1119,10 +1123,12 @@ std::list<Pointer<TransferJob> >::const_iterator Engine::getTransferJobsEnd() co
 }
 
 void Engine::tick(int message) {
-  if (message == TICK_MSG_NEXTPREPARED) {
-    stopNextPreparedRaceTimer();
-    global->getEventLog()->log("Engine", "Next prepared spread job starter timed out.");
-    return;
+  if (startnextprepared) {
+    nextpreparedtimeremaining -= POKEINTERVAL;
+    if (nextpreparedtimeremaining <= 0) {
+      startnextprepared = false;
+      global->getEventLog()->log("Engine", "Next prepared spread job starter timed out.");
+    }
   }
   for (std::list<Pointer<Race> >::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
     if ((*it)->checksSinceLastUpdate() >= MAXCHECKSTIMEOUT) {
@@ -1184,7 +1190,7 @@ void Engine::tick(int message) {
       }
     }
   }
-  if (!currentraces.size() && !currenttransferjobs.size() && !preparedraces.size() && pokeregistered) {
+  if (!currentraces.size() && !currenttransferjobs.size() && !preparedraces.size() && !startnextprepared && pokeregistered) {
     global->getTickPoke()->stopPoke(this, 0);
     pokeregistered = false;
   }
