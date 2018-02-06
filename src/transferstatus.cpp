@@ -127,6 +127,10 @@ std::string TransferStatus::getCipher() const {
   return cipher;
 }
 
+bool TransferStatus::getSSLSessionReused() const {
+  return sslsessionreused;
+}
+
 const std::list<std::string> & TransferStatus::getLogLines() const {
   return loglines;
 }
@@ -222,6 +226,10 @@ void TransferStatus::setPassiveAddress(const std::string & passiveaddr) {
 
 void TransferStatus::setCipher(const std::string & cipher) {
   this->cipher = cipher;
+}
+
+void TransferStatus::setSSLSessionReused(bool reused) {
+  this->sslsessionreused = reused;
 }
 
 void TransferStatus::addLogLine(const std::string & line) {

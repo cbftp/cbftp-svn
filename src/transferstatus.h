@@ -46,6 +46,7 @@ public:
   bool getDefaultActive() const;
   std::string getPassiveAddress() const;
   std::string getCipher() const;
+  bool getSSLSessionReused() const;
   const std::list<std::string> & getLogLines() const;
   void setFinished();
   void setFailed();
@@ -58,6 +59,7 @@ public:
   void setTimeSpent(unsigned int);
   void setPassiveAddress(const std::string &);
   void setCipher(const std::string &);
+  void setSSLSessionReused(bool);
   void addLogLine(const std::string &);
 private:
   void updateProgress();
@@ -88,5 +90,6 @@ private:
   bool defaultactive;
   std::string passiveaddr;
   std::string cipher;
+  bool sslsessionreused;
   std::list<std::string> loglines;
 };

@@ -61,7 +61,7 @@ void LocalDownload::FDConnected(int sockid) {
     tm->activeStarted();
   }
   if (ssl) {
-    global->getIOManager()->negotiateSSLConnect(sockid, (EventReceiver *)ftpconn);
+    global->getIOManager()->negotiateSSLConnect(sockid, ftpconn->getSockId());
   }
 }
 
@@ -87,7 +87,8 @@ void LocalDownload::FDDisconnected(int sockid) {
 
 void LocalDownload::FDSSLSuccess(int sockid, const std::string & cipher) {
   ftpconn->printCipher(cipher);
-  tm->cipher(cipher);
+  bool sessionreused = global->getIOManager()->getSSLSessionReused(sockid);
+  tm->sslDetails(cipher, sessionreused);
 }
 
 void LocalDownload::FDSSLFail(int sockid) {

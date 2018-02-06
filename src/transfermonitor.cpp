@@ -327,9 +327,10 @@ void TransferMonitor::activeStarted() {
   }
 }
 
-void TransferMonitor::cipher(const std::string & cipher) {
+void TransferMonitor::sslDetails(const std::string & cipher, bool sessionreused) {
   if (!!ts) {
     ts->setCipher(cipher);
+    ts->setSSLSessionReused(sessionreused);
   }
 }
 

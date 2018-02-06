@@ -1166,6 +1166,10 @@ RawBuffer * FTPConn::getRawBuffer() const {
   return rawbuf;
 }
 
+int FTPConn::getSockId() const {
+  return sockid;
+}
+
 FTPConnState FTPConn::getState() const {
   return state;
 }

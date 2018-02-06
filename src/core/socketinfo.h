@@ -33,7 +33,7 @@ class EventReceiver;
 
 class SocketInfo {
 public:
-  SocketInfo() : type(FD_UNUSED), fd(0), id(0), port(0), localport(0), gairet(0),
+  SocketInfo() : type(FD_UNUSED), fd(-1), id(-1), parentid(-1), port(0), localport(0), gairet(0),
                  gaires(NULL), gaiasync(false), receiver(NULL), ssl(NULL),
                  prio(PRIO_NORMAL), paused(false), direction(DIR_IN),
                  listenimmediately(true)
@@ -42,6 +42,7 @@ public:
   SocketType type;
   int fd;
   int id;
+  int parentid;
   std::string addr;
   int port;
   std::string localaddr;
