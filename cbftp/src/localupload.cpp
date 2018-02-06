@@ -50,7 +50,7 @@ void LocalUpload::FDConnected(int sockid) {
   }
   openFile(true);
   if (ssl) {
-    global->getIOManager()->negotiateSSLConnect(sockid, (EventReceiver *)ftpconn);
+    global->getIOManager()->negotiateSSLConnect(sockid, ftpconn->getSockId());
   }
   else {
     sendChunk();
@@ -67,7 +67,8 @@ void LocalUpload::FDDisconnected(int sockid) {
 
 void LocalUpload::FDSSLSuccess(int sockid, const std::string & cipher) {
   ftpconn->printCipher(cipher);
-  tm->cipher(cipher);
+  bool sessionreused = global->getIOManager()->getSSLSessionReused(sockid);
+  tm->sslDetails(cipher, sessionreused);
   sendChunk();
 }
 

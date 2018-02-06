@@ -4,6 +4,7 @@
 #include <string>
 #include <list>
 #include <set>
+#include <openssl/ssl.h>
 
 #include "eventreceiver.h"
 #include "socketinfo.h"
@@ -28,6 +29,7 @@ private:
   std::map<int, int> sockfdidmap;
   std::set<int> autopaused;
   std::set<int> manuallypaused;
+  std::map<std::string, SSL_SESSION *> sslsessionmap;
   WorkManager * wm;
   TickPoke * tp;
   DataBlockPool * blockpool;
@@ -72,12 +74,13 @@ public:
   void registerTCPServerClientSocket(EventReceiver *, int, bool);
   void adopt(EventReceiver *, int);
   void negotiateSSLConnect(int);
-  void negotiateSSLConnect(int, EventReceiver *);
+  void negotiateSSLConnect(int, int);
   void negotiateSSLAccept(int);
   int registerUDPServerSocket(EventReceiver *, int);
   bool sendData(int, const std::string &);
   bool sendData(int, const char *, unsigned int);
   std::string getCipher(int) const;
+  bool getSSLSessionReused(int) const;
   std::string getSocketAddress(int) const;
   int getSocketPort(int) const;
   std::string getInterfaceAddress(int) const;

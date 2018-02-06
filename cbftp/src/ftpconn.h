@@ -225,6 +225,7 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void finishMKDCWDTarget();
     const std::list<std::string> & getMKDSubdirs();
     RawBuffer * getRawBuffer() const;
+    int getSockId() const;
     static bool parseData(char *, unsigned int, char **, unsigned int &, unsigned int &, int &);
     void FDData(int, char *, unsigned int);
     void FDDisconnected(int);

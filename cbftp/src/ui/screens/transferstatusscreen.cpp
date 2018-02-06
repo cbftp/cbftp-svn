@@ -48,9 +48,11 @@ void TransferStatusScreen::redraw() {
   }
   bool ssl = ts->getSSL();
   ui->printStr(y, x, std::string("TLS: ") + (ssl ? "Yes" : "No"));
-  x += 12;
   if (type != TRANSFERSTATUS_TYPE_FXP && ssl) {
-    ui->printStr(y, x, "Cipher: " + ts->getCipher());
+    ++y;
+    ui->printStr(y, 1, std::string("TLS session reused: ") + (ts->getSSLSessionReused() ? "Yes" : "No"));
+    ui->printStr(y, 30, "Cipher: " + ts->getCipher());
+
   }
   ++y;
   ui->printStr(y, 1, "Source path: " + ts->getSourcePath().toString());

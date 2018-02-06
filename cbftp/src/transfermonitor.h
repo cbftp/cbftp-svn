@@ -96,7 +96,7 @@ class TransferMonitor : public EventReceiver, public RawBufferCallback {
     void passiveReady(const std::string &, int);
     void activeReady();
     void activeStarted();
-    void cipher(const std::string &);
+    void sslDetails(const std::string &, bool);
     bool idle() const;
     Pointer<TransferStatus> getTransferStatus() const;
     void engageFXP(const std::string &, const Pointer<SiteLogic> &, FileList *,

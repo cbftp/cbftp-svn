@@ -359,21 +359,22 @@ void IOManager::adopt(EventReceiver * er, int id) {
 }
 
 void IOManager::negotiateSSLConnect(int id) {
-  negotiateSSLConnect(id, NULL);
+  negotiateSSLConnect(id, -1);
 }
 
-void IOManager::negotiateSSLConnect(int id, EventReceiver * er) {
+void IOManager::negotiateSSLConnect(int id, int parentid) {
   ScopeLock lock(socketinfomaplock);
   std::map<int, SocketInfo>::iterator it = socketinfomap.find(id);
-  if (it != socketinfomap.end() &&
-     (it->second.type == FD_TCP_PLAIN || it->second.type == FD_TCP_PLAIN_LISTEN))
-  {
-    it->second.type = FD_TCP_SSL_NEG_CONNECT;
-    if (it->second.listenimmediately) {
-      setPollWrite(it->second);
-    }
-    else {
-      pollWrite(it->second);
+  if (it != socketinfomap.end()) {
+    it->second.parentid = parentid;
+    if (it->second.type == FD_TCP_PLAIN || it->second.type == FD_TCP_PLAIN_LISTEN) {
+      it->second.type = FD_TCP_SSL_NEG_CONNECT;
+      if (it->second.listenimmediately) {
+        setPollWrite(it->second);
+      }
+      else {
+        pollWrite(it->second);
+      }
     }
   }
 }
@@ -552,6 +553,15 @@ std::string IOManager::getCipher(int id) const {
   return std::string(cipher);
 }
 
+bool IOManager::getSSLSessionReused(int id) const {
+  ScopeLock lock(socketinfomaplock);
+  std::map<int, SocketInfo>::const_iterator it = socketinfomap.find(id);
+  if (it == socketinfomap.end() || it->second.ssl == NULL || it->second.type != FD_TCP_SSL) {
+    return false;
+  }
+  return SSL_session_reused(it->second.ssl);
+}
+
 std::string IOManager::getSocketAddress(int id) const {
   ScopeLock lock(socketinfomaplock);
   std::map<int, SocketInfo>::const_iterator it = socketinfomap.find(id);
@@ -717,17 +727,10 @@ void IOManager::handleTCPSSLNegotiationOut(SocketInfo & socketinfo) {
   SSL_set_mode(ssl, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
   socketinfo.ssl = ssl;
   SSL_set_fd(ssl, socketinfo.fd);
-  if (socketinfo.receiver != NULL) {
-    std::map<int, SocketInfo>::iterator it2;
-    SocketInfo * parentsocketinfo = NULL;
-    for (it2 = socketinfomap.begin(); it2 != socketinfomap.end(); it2++) {
-      if (it2->second.receiver == socketinfo.receiver) {
-        parentsocketinfo = &it2->second;
-        break;
-      }
-    }
-    if (parentsocketinfo != NULL && parentsocketinfo->ssl != NULL) {
-      SSL_copy_session_id(ssl, parentsocketinfo->ssl);
+  if (socketinfo.parentid != -1) {
+    std::map<int, SocketInfo>::iterator it2 = socketinfomap.find(socketinfo.parentid);
+    if (it2 != socketinfomap.end() && it2->second.ssl != NULL) {
+      SSL_copy_session_id(ssl, it2->second.ssl);
     }
   }
   int ret = -1;
