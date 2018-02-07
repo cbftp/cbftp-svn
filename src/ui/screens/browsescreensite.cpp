@@ -297,9 +297,10 @@ void BrowseScreenSite::update() {
             break;
           }
         }
-        ui->redraw();
+
         //delete filelist;
       }
+      ui->redraw();
     }
     ui->setInfo();
     return;
@@ -741,7 +742,7 @@ std::string BrowseScreenSite::getInfoText() const {
   }
   else if (cwdfailed) {
     if (tickcount++ < 8) {
-      text = "CWD failed: " + requestedpath.toString();
+      text = "Getting file list failed: " + requestedpath.toString();
       return text;
     }
     else {
