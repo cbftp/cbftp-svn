@@ -28,15 +28,6 @@
 #define TIMEOUT_MS 5000
 #define MAX_SEND_BUFFER 1048576
 
-#ifndef MSG_NOSIGNAL
-#define MSG_NOSIGNAL 0
-#ifdef SO_NOSIGPIPE
-#define USE_SO_NOSIGPIPE
-#else
-#error "Cannot block SIGPIPE!"
-#endif
-#endif
-
 namespace {
 
 enum AsyncTaskTypes {
@@ -75,6 +66,7 @@ IOManager::IOManager(WorkManager * wm, TickPoke * tp) :
 
 void IOManager::init() {
   SSLManager::init();
+  ::signal(SIGPIPE, SIG_IGN);
   thread.start("IO", this);
   tp->startPoke(this, "IOManager", TICKPERIOD, 0);
 }
@@ -185,10 +177,6 @@ void IOManager::handleTCPNameResolution(SocketInfo & socketinfo) {
                       result->ai_socktype,
                       result->ai_protocol);
   fcntl(sockfd, F_SETFL, O_NONBLOCK);
-#ifdef USE_SO_NOSIGPIPE
-  int yes = 1;
-  setsockopt(sockfd, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof(yes));
-#endif
   char * buf = (char *) malloc(result->ai_addrlen);
   struct sockaddr_in * saddr = (struct sockaddr_in*) result->ai_addr;
   inet_ntop(AF_INET, &(saddr->sin_addr), buf, result->ai_addrlen);
@@ -261,9 +249,6 @@ int IOManager::registerTCPServerSocket(EventReceiver * er, int port, bool local)
   fcntl(sockfd, F_SETFL, O_NONBLOCK);
   int yes = 1;
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
-#ifdef USE_SO_NOSIGPIPE
-  setsockopt(sockfd, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof(yes));
-#endif
   retcode = bind(sockfd, res->ai_addr, res->ai_addrlen);
   freeaddrinfo(res);
   if (retcode) {
@@ -331,9 +316,6 @@ int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
   fcntl(sockfd, F_SETFL, O_NONBLOCK);
   int yes = 1;
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
-#ifdef USE_SO_NOSIGPIPE
-  setsockopt(sockfd, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof(yes));
-#endif
   retcode = bind(sockfd, res->ai_addr, res->ai_addrlen);
   freeaddrinfo(res);
   if (retcode) {
@@ -477,15 +459,7 @@ void IOManager::closeSocketIntern(int id) {
   }
   polling.removeFD(socketinfo.fd);
   if (socketinfo.ssl) {
-    int shutdownstate = SSL_get_shutdown(socketinfo.ssl);
-    if (!(shutdownstate & SSL_SENT_SHUTDOWN)) {
-      if (!(shutdownstate & SSL_RECEIVED_SHUTDOWN)) {
-        SSL_shutdown(socketinfo.ssl);
-      }
-      else {
-        SSL_set_shutdown(socketinfo.ssl, SSL_SENT_SHUTDOWN | shutdownstate);
-      }
-    }
+    SSL_shutdown(socketinfo.ssl);
   }
   if (socketinfo.fd > 0) {
     close(socketinfo.fd);
@@ -664,7 +638,7 @@ void IOManager::handleTCPPlainIn(SocketInfo & socketinfo) {
 void IOManager::handleTCPPlainOut(SocketInfo & socketinfo) {
   while (socketinfo.sendqueue.size() > 0) {
     DataBlock & block = socketinfo.sendqueue.front();
-    int b_sent = send(socketinfo.fd, block.data(), block.dataLength(), MSG_NOSIGNAL);
+    int b_sent = write(socketinfo.fd, block.data(), block.dataLength());
     if (b_sent < 0) {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
         return;
@@ -855,10 +829,6 @@ void IOManager::handleTCPServerIn(SocketInfo & socketinfo) {
   std::string localaddrstr = buf;
   free(buf);
   fcntl(newfd, F_SETFL, O_NONBLOCK);
-#ifdef USE_SO_NOSIGPIPE
-  int yes = 1;
-  setsockopt(newfd, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof(yes));
-#endif
   int newsockid = sockidcounter++;
   socketinfomap[newsockid].fd = newfd;
   socketinfomap[newsockid].id = newsockid;
