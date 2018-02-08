@@ -475,10 +475,18 @@ void IOManager::closeSocketIntern(int id) {
   if (socketinfo.type == FD_KEYBOARD) {
     return;
   }
-  if (socketinfo.type == FD_TCP_SSL) {
-    SSL_shutdown(socketinfo.ssl);
-  }
   polling.removeFD(socketinfo.fd);
+  if (socketinfo.ssl) {
+    int shutdownstate = SSL_get_shutdown(socketinfo.ssl);
+    if (!(shutdownstate & SSL_SENT_SHUTDOWN)) {
+      if (!(shutdownstate & SSL_RECEIVED_SHUTDOWN)) {
+        SSL_shutdown(socketinfo.ssl);
+      }
+      else {
+        SSL_set_shutdown(socketinfo.ssl, SSL_SENT_SHUTDOWN | shutdownstate);
+      }
+    }
+  }
   if (socketinfo.fd > 0) {
     close(socketinfo.fd);
   }
