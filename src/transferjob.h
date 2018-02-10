@@ -5,8 +5,8 @@
 #include <set>
 #include <list>
 
+#include "core/eventreceiver.h"
 #include "core/pointer.h"
-#include "commandowner.h"
 #include "transferstatuscallback.h"
 #include "path.h"
 
@@ -18,16 +18,16 @@ enum TransferJobType {
 
 #define TRANSFERJOB_UPDATE_INTERVAL 250
 
+class SiteTransferJob;
 class SiteLogic;
 class FileList;
 class TransferStatus;
 class LocalFileList;
 class File;
 
-class TransferJob : public CommandOwner, public TransferStatusCallback {
+class TransferJob : public EventReceiver, public TransferStatusCallback {
 public:
   std::string getName() const;
-  int classType() const;
   TransferJob(unsigned int, const Pointer<SiteLogic> &, FileList *, const std::string &, const Path &, const std::string &);
   TransferJob(unsigned int, const Pointer<SiteLogic> &, const Path &, const std::string &, const Path &, const std::string &);
   TransferJob(unsigned int, const Path &, const std::string &, const Pointer<SiteLogic> &, FileList *, const std::string &);
@@ -38,7 +38,7 @@ public:
   int getType() const;
   const Path & getSrcPath() const;
   const Path & getDstPath() const;
-  const Path & getPath(SiteLogic *) const;
+  const Path & getPath(bool source) const;
   std::string getSrcFileName() const;
   std::string getDstFileName() const;
   std::map<std::string, FileList *>::const_iterator srcFileListsBegin() const;
@@ -52,12 +52,12 @@ public:
   std::map<std::string, unsigned long long int>::const_iterator pendingTransfersBegin() const;
   std::map<std::string, unsigned long long int>::const_iterator pendingTransfersEnd() const;
   bool isDone() const;
-  bool wantsList(SiteLogic *);
+  bool wantsList(bool source);
   Pointer<LocalFileList> wantedLocalDstList(const std::string &);
-  FileList * getListTarget(SiteLogic *) const;
-  void fileListUpdated(SiteLogic *, FileList *);
+  FileList * getListTarget(bool source) const;
+  void fileListUpdated(bool source, FileList *);
   FileList * findDstList(const std::string &) const;
-  FileList * getFileListForFullPath(SiteLogic *, const Path &) const;
+  FileList * getFileListForFullPath(bool source, const Path &) const;
   Pointer<LocalFileList> findLocalFileList(const std::string &) const;
   const Pointer<SiteLogic> & getSrc() const;
   const Pointer<SiteLogic> & getDst() const;
@@ -91,6 +91,8 @@ public:
   void transferSuccessful(const Pointer<TransferStatus> &);
   void transferFailed(const Pointer<TransferStatus> &, int);
   bool anyListNeedsRefreshing() const;
+  Pointer<SiteTransferJob> & getSrcTransferJob();
+  Pointer<SiteTransferJob> & getDstTransferJob();
 private:
   void downloadJob(unsigned int, const Pointer<SiteLogic> &, FileList *, const std::string &, const Path &, const std::string &);
   void uploadJob(unsigned int, const Path &, const std::string &, const Pointer<SiteLogic> &, FileList *, const std::string &);
@@ -139,4 +141,6 @@ private:
   unsigned int id;
   std::map<std::string, int> transferattempts;
   int idletime;
+  Pointer<SiteTransferJob> srcsitetransferjob;
+  Pointer<SiteTransferJob> dstsitetransferjob;
 };

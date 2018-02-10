@@ -22,6 +22,7 @@ class FileStore;
 class TransferJob;
 class CommandOwner;
 class Path;
+class SiteTransferJob;
 
 class SiteLogic : public EventReceiver {
   private:
@@ -30,7 +31,7 @@ class SiteLogic : public EventReceiver {
     std::vector<ConnStateTracker> connstatetracker;
     std::vector<SiteRace *> races;
     std::list<SiteRace *> recentlylistedraces;
-    std::list<Pointer<TransferJob> > transferjobs;
+    std::list<Pointer<SiteTransferJob> > transferjobs;
     RawBuffer * rawcommandrawbuf;
     RawBuffer * aggregatedrawbuf;
     unsigned int maxslotsup;
@@ -78,7 +79,7 @@ class SiteLogic : public EventReceiver {
     ~SiteLogic();
     void runInstance();
     SiteRace * addRace(Pointer<Race> &, const std::string &, const std::string &);
-    void addTransferJob(Pointer<TransferJob>);
+    void addTransferJob(Pointer<SiteTransferJob> & tj);
     void tick(int);
     void connectFailed(int);
     void userDenied(int);

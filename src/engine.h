@@ -10,6 +10,7 @@
 
 class Race;
 class TransferJob;
+class SiteTransferJob;
 class SiteRace;
 class FileList;
 class File;
@@ -54,7 +55,7 @@ public:
   void abortTransferJob(Pointer<TransferJob> &);
   void raceFileListRefreshed(SiteLogic *, SiteRace *);
   void filelistUpdated();
-  bool transferJobActionRequest(SiteLogic *, Pointer<TransferJob> &);
+  bool transferJobActionRequest(Pointer<SiteTransferJob> &);
   void raceActionRequest();
   void setPreparedRaceExpiryTime(int);
   void clearSkipListCaches();
