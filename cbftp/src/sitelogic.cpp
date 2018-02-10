@@ -29,6 +29,7 @@
 #include "commandowner.h"
 #include "util.h"
 #include "race.h"
+#include "sitetransferjob.h"
 
 //minimum sleep delay (between refreshes / hammer attempts) in ms
 #define SLEEPDELAY 150
@@ -115,7 +116,7 @@ SiteRace * SiteLogic::addRace(Pointer<Race> & enginerace, const std::string & se
   return race;
 }
 
-void SiteLogic::addTransferJob(Pointer<TransferJob> tj) {
+void SiteLogic::addTransferJob(Pointer<SiteTransferJob> & tj) {
   transferjobs.push_back(tj);
   activateOne();
 }
@@ -828,12 +829,12 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
       return;
     }
   }
-  std::list<Pointer<TransferJob> > targetjobs;
-  for (std::list<Pointer<TransferJob> >::const_iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
-    Pointer<TransferJob> tj = *it;
-    if (!tj->isDone()) {
-      if (tj->wantsList(this)) {
-        FileList * fl = tj->getListTarget(this);
+  std::list<Pointer<SiteTransferJob> > targetjobs;
+  for (std::list<Pointer<SiteTransferJob> >::iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
+    Pointer<SiteTransferJob> & tj = *it;
+    if (!tj->getTransferJob()->isDone()) {
+      if (tj->wantsList()) {
+        FileList * fl = tj->getListTarget();
         const Path & path = fl->getPath();
         connstatetracker[id].use();
         if (path != conns[id]->getCurrentPath()) {
@@ -843,14 +844,14 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
         getFileListConn(id, tj.get(), fl);
         return;
       }
-      if (!tj->isInitialized()) {
+      if (!tj->getTransferJob()->isInitialized()) {
         targetjobs.push_front(tj);
         continue;
       }
-      int type = tj->getType();
+      int type = tj->getTransferJob()->getType();
       if (((type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) &&
-            tj->getSrc()->getCurrDown() < tj->maxSlots()) ||
-          (type == TRANSFERJOB_UPLOAD && getCurrUp() < tj->maxSlots()))
+            tj->getTransferJob()->getSrc()->getCurrDown() < tj->getTransferJob()->maxSlots()) ||
+          (type == TRANSFERJOB_UPLOAD && getCurrUp() < tj->getTransferJob()->maxSlots()))
       {
         targetjobs.push_back(tj);
         continue;
@@ -860,8 +861,8 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
   if (targetjobs.size()) {
     connstatetracker[id].delayedCommand("handle", SLEEPDELAY);
   }
-  for (std::list<Pointer<TransferJob> >::iterator it = targetjobs.begin(); it != targetjobs.end(); it++) {
-    if (global->getEngine()->transferJobActionRequest(this, *it)) {
+  for (std::list<Pointer<SiteTransferJob> >::iterator it = targetjobs.begin(); it != targetjobs.end(); it++) {
+    if (global->getEngine()->transferJobActionRequest(*it)) {
       return;
     }
   }
@@ -1660,8 +1661,8 @@ void SiteLogic::raceGlobalComplete() {
       break;
     }
   }
-  for (std::list<Pointer<TransferJob> >::const_iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
-    if (!(*it)->isDone()) {
+  for (std::list<Pointer<SiteTransferJob> >::const_iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
+    if (!(*it)->getTransferJob()->isDone()) {
       stillactive = true;
       break;
     }

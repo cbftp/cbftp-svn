@@ -19,6 +19,7 @@
 #include "skiplist.h"
 #include "eventlog.h"
 #include "sitemanager.h"
+#include "sitetransferjob.h"
 #include "transferjob.h"
 #include "pendingtransfer.h"
 #include "localstorage.h"
@@ -300,7 +301,7 @@ void Engine::newTransferJobDownload(const std::string & srcsite, FileList * srcf
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting download job: " + srcfile +
             " from " + srcsite);
-  sl->addTransferJob(tj);
+  sl->addTransferJob(tj->getSrcTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
 }
@@ -312,7 +313,7 @@ void Engine::newTransferJobDownload(const std::string & site, const Path & srcpa
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting download job: " + srcfile +
             " from " + site);
-  sl->addTransferJob(tj);
+  sl->addTransferJob(tj->getSrcTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
 }
@@ -324,7 +325,7 @@ void Engine::newTransferJobUpload(const Path & srcpath, const std::string & srcf
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting upload job: " + srcfile +
             " to " + dstsite);
-  sl->addTransferJob(tj);
+  sl->addTransferJob(tj->getDstTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
 }
@@ -336,7 +337,7 @@ void Engine::newTransferJobUpload(const Path & srcpath, const std::string & srcf
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting upload job: " + srcfile +
             " to " + dstsite);
-  sl->addTransferJob(tj);
+  sl->addTransferJob(tj->getDstTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
 }
@@ -349,8 +350,8 @@ void Engine::newTransferJobFXP(const std::string & srcsite, FileList * srcfileli
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting FXP job: " + srcfile +
             " - " + srcsite + " -> " + dstsite);
-  slsrc->addTransferJob(tj);
-  sldst->addTransferJob(tj);
+  slsrc->addTransferJob(tj->getSrcTransferJob());
+  sldst->addTransferJob(tj->getDstTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
 }
@@ -363,8 +364,8 @@ void Engine::newTransferJobFXP(const std::string & srcsite, const Path & srcpath
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting FXP job: " + srcfile +
             " - " + srcsite + " -> " + dstsite);
-  slsrc->addTransferJob(tj);
-  sldst->addTransferJob(tj);
+  slsrc->addTransferJob(tj->getSrcTransferJob());
+  sldst->addTransferJob(tj->getDstTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
 }
@@ -504,10 +505,10 @@ void Engine::filelistUpdated() {
   }
 }
 
-bool Engine::transferJobActionRequest(SiteLogic * sl, Pointer<TransferJob> & tj) {
-  SiteLogic * other = tj->getSrc().get() == sl ? tj->getDst().get() : tj->getSrc().get();
-  if (tj->getType() == TRANSFERJOB_FXP && tj->wantsList(other)) {
-    other->haveConnectedActivate(1);
+bool Engine::transferJobActionRequest(Pointer<SiteTransferJob> & stj) {
+  Pointer<TransferJob> tj = getTransferJob(stj->getTransferJob()->getId());
+  if (tj->getType() == TRANSFERJOB_FXP && stj->otherWantsList()) {
+    stj->getOtherSiteLogic()->haveConnectedActivate(1);
     return false;
   }
   std::map<Pointer<TransferJob>, std::list<PendingTransfer> >::iterator it = pendingtransfers.find(tj);
@@ -521,8 +522,8 @@ bool Engine::transferJobActionRequest(SiteLogic * sl, Pointer<TransferJob> & tj)
   refreshPendingTransferList(tj);
   if (it->second.size() == 0) {
     bool action = tj->refreshOrAlmostDone();
-    if (tj->getType() == TRANSFERJOB_FXP && tj->wantsList(other)) {
-      other->haveConnectedActivate(1);
+    if (tj->getType() == TRANSFERJOB_FXP && stj->otherWantsList()) {
+      stj->getOtherSiteLogic()->haveConnectedActivate(1);
       return false;
     }
     return action;
@@ -534,7 +535,7 @@ bool Engine::transferJobActionRequest(SiteLogic * sl, Pointer<TransferJob> & tj)
     {
       if (!pt.getSrc()->downloadSlotAvailable()) return false;
       Pointer<TransferStatus> ts = global->getTransferManager()->suggestDownload(pt.getSrcFileName(),
-          pt.getSrc(), pt.getSrcFileList(), pt.getLocalFileList(), tj.get());
+          pt.getSrc(), pt.getSrcFileList(), pt.getLocalFileList(), tj->getSrcTransferJob().get());
       tj->addTransfer(ts);
       break;
     }
@@ -542,7 +543,7 @@ bool Engine::transferJobActionRequest(SiteLogic * sl, Pointer<TransferJob> & tj)
     {
       if (!pt.getDst()->uploadSlotAvailable()) return false;
       Pointer<TransferStatus> ts = global->getTransferManager()->suggestUpload(pt.getSrcFileName(),
-          pt.getLocalFileList(), pt.getDst(), pt.getDstFileList(), tj.get());
+          pt.getLocalFileList(), pt.getDst(), pt.getDstFileList(), tj->getDstTransferJob().get());
       tj->addTransfer(ts);
       break;
     }
@@ -555,7 +556,7 @@ bool Engine::transferJobActionRequest(SiteLogic * sl, Pointer<TransferJob> & tj)
         return false;
       }
       Pointer<TransferStatus> ts = global->getTransferManager()->suggestTransfer(pt.getSrcFileName(),
-          pt.getSrc(), pt.getSrcFileList(), pt.getDst(), pt.getDstFileList(), tj.get(), tj.get());
+          pt.getSrc(), pt.getSrcFileList(), pt.getDst(), pt.getDstFileList(), tj->getSrcTransferJob().get(), tj->getDstTransferJob().get());
       tj->addTransfer(ts);
       break;
     }
