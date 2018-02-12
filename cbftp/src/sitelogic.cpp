@@ -790,7 +790,7 @@ bool SiteLogic::handlePreTransfer(int id) {
     {
       std::pair<Path, Path> pathparts;
       if (co && co->classType() == COMMANDOWNER_TRANSFERJOB) {
-        Path sectionpath = ((TransferJob *)co)->getPath(this);
+        Path sectionpath = ((SiteTransferJob *)co)->getPath();
         pathparts = std::pair<Path, Path>(sectionpath, transferpath - sectionpath);
       }
       else {
