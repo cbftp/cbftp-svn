@@ -436,9 +436,6 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       //start a spread job of the selected dir, do nothing if a file is selected
       if (list.cursoredFile() != NULL && list.cursoredFile()->isDirectory()) {
         std::string dirname = list.cursoredFile()->getName();
-        if (!site->getSkipList().isAllowed(dirname, true, false)) {
-          break;
-        }
         std::list<std::string> sections = site->getSectionsForPath(list.getPath());
         if (sections.size() > 0) {
           std::string sectionstring;
