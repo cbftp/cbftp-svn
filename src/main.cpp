@@ -75,9 +75,9 @@ void sighandler(int sig) {
 
 int main(int argc, char * argv[]) {
   struct sigaction sa;
+  sa.sa_handler = sighandler;
   sa.sa_flags = SA_RESTART;
   sigfillset(&sa.sa_mask);
-  sa.sa_handler = sighandler;
   sigaction(SIGABRT, &sa, NULL);
   sigaction(SIGTERM, &sa, NULL);
   sigaction(SIGINT, &sa, NULL);

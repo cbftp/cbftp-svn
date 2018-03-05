@@ -66,7 +66,11 @@ IOManager::IOManager(WorkManager * wm, TickPoke * tp) :
 
 void IOManager::init() {
   SSLManager::init();
-  ::signal(SIGPIPE, SIG_IGN);
+  struct sigaction sa;
+  sa.sa_handler = SIG_IGN;
+  sa.sa_flags = 0;
+  sigemptyset(&sa.sa_mask);
+  sigaction(SIGPIPE, &sa, NULL);
   thread.start("IO", this);
   tp->startPoke(this, "IOManager", TICKPERIOD, 0);
 }
