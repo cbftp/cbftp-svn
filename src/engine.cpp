@@ -130,10 +130,12 @@ Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, con
   bool noupload = true;
   bool nodownload = true;
   for (std::list<Pointer<SiteLogic> >::const_iterator it = addsiteslogics.begin(); it != addsiteslogics.end(); ++it) {
-    if (!(*it)->getSite()->isAffiliated(race->getGroup()) && (*it)->getSite()->getAllowUpload()) {
+    if ((*it)->getSite()->getAllowUpload() == SITE_ALLOW_TRANSFER_YES && !(*it)->getSite()->isAffiliated(race->getGroup())) {
       noupload = false;
     }
-    if ((*it)->getSite()->getAllowDownload()) {
+    if ((*it)->getSite()->getAllowDownload() == SITE_ALLOW_TRANSFER_YES ||
+        ((*it)->getSite()->getAllowDownload() == SITE_ALLOW_DOWNLOAD_MATCH_ONLY && (*it)->getSite()->isAffiliated(race->getGroup())))
+    {
       nodownload = false;
     }
   }
@@ -641,18 +643,25 @@ void Engine::refreshScoreBoard() {
     for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator its = race->begin(); its != race->end(); its++) {
       SiteRace * srs = its->first;
       const Pointer<SiteLogic> & sls = its->second;
-      if (!sls->getCurrLogins() || !sls->getSite()->getAllowDownload()) continue;
+      const Pointer<Site> & srcsite = sls->getSite();
+      if (!sls->getCurrLogins() ||
+          srcsite->getAllowDownload() == SITE_ALLOW_TRANSFER_NO ||
+          (srcsite->getAllowDownload() == SITE_ALLOW_DOWNLOAD_MATCH_ONLY && !srcsite->isAffiliated(race->getGroup())))
+      {
+        continue;
+      }
       for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator itd = race->begin(); itd != race->end(); itd++) {
         SiteRace * srd = itd->first;
         const Pointer<SiteLogic> & sld = itd->second;
-        SkipList & dstskip = sld->getSite()->getSkipList();
+        const Pointer<Site> & dstsite = sld->getSite();
+        SkipList & dstskip = dstsite->getSkipList();
         if (!raceTransferPossible(sls, sld, race)) continue;
         if (!sld->getCurrLogins()) continue;
-        int avgspeed = sls->getSite()->getAverageSpeed(sld->getSite()->getName());
+        int avgspeed = srcsite->getAverageSpeed(dstsite->getName());
         if (avgspeed > maxavgspeed) {
           avgspeed = maxavgspeed;
         }
-        int prioritypoints = getPriorityPoints(sld->getSite()->getPriority());
+        int prioritypoints = getPriorityPoints(dstsite->getPriority());
         for (std::map<std::string, FileList *>::const_iterator itfls = srs->fileListsBegin(); itfls != srs->fileListsEnd(); itfls++) {
           if (itfls->first.length() > 0 && !dstskip.isAllowed(itfls->first, true)) continue;
           FileList * fls = itfls->second;
@@ -1006,7 +1015,11 @@ void Engine::preSeedPotentialData(Pointer<Race> & race) {
   }
   for (srcit = race->begin(); srcit != race->end(); srcit++) {
     const Pointer<SiteLogic> & sls = srcit->second;
-    if (!sls->getSite()->getAllowDownload()) continue;
+    if (sls->getSite()->getAllowDownload() == SITE_ALLOW_TRANSFER_NO ||
+        (sls->getSite()->getAllowDownload() == SITE_ALLOW_DOWNLOAD_MATCH_ONLY && !sls->getSite()->isAffiliated(race->getGroup())))
+    {
+      continue;
+    }
     int maxavgspeed = 0;
     for (dstit = race->begin(); dstit != race->end(); dstit++) {
       const Pointer<SiteLogic> & sld = dstit->second;
@@ -1026,14 +1039,16 @@ void Engine::preSeedPotentialData(Pointer<Race> & race) {
 
 bool Engine::raceTransferPossible(const Pointer<SiteLogic> & sls, const Pointer<SiteLogic> & sld, Pointer<Race> & race) const {
   if (sls == sld) return false;
-  if (!sld->getSite()->getAllowUpload()) return false;
-  if (!sls->getSite()->isAllowedTargetSite(sld->getSite())) return false;
-  if (sld->getSite()->isAffiliated(race->getGroup()) && race->getProfile() != SPREAD_DISTRIBUTE) return false;
-  if (sls->getSite()->hasBrokenPASV() &&
-      sld->getSite()->hasBrokenPASV()) return false;
+  const Pointer<Site> & srcsite = sls->getSite();
+  const Pointer<Site> & dstsite = sld->getSite();
+  if (dstsite->getAllowUpload() == SITE_ALLOW_TRANSFER_NO) return false;
+  if (!srcsite->isAllowedTargetSite(dstsite)) return false;
+  if (dstsite->isAffiliated(race->getGroup()) && race->getProfile() != SPREAD_DISTRIBUTE) return false;
+  if (srcsite->hasBrokenPASV() &&
+      dstsite->hasBrokenPASV()) return false;
   //ssl check
-  int srcpolicy = sls->getSite()->getSSLTransferPolicy();
-  int dstpolicy = sld->getSite()->getSSLTransferPolicy();
+  int srcpolicy = srcsite->getSSLTransferPolicy();
+  int dstpolicy = dstsite->getSSLTransferPolicy();
   if ((srcpolicy == SITE_SSL_ALWAYS_OFF &&
        dstpolicy == SITE_SSL_ALWAYS_ON) ||
       (srcpolicy == SITE_SSL_ALWAYS_ON &&
@@ -1042,7 +1057,7 @@ bool Engine::raceTransferPossible(const Pointer<SiteLogic> & sls, const Pointer<
     return false;
   }
   if (srcpolicy == SITE_SSL_ALWAYS_ON && dstpolicy == SITE_SSL_ALWAYS_ON &&
-      !sls->getSite()->supportsSSCN() && !sld->getSite()->supportsSSCN())
+      !srcsite->supportsSSCN() && !dstsite->supportsSSCN())
   {
     return false;
   }

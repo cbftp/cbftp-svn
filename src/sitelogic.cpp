@@ -496,7 +496,7 @@ void SiteLogic::commandFail(int id, int failuretype) {
       }
       else if (conns[id]->hasMKDCWDTarget()) {
         CommandOwner * currentco = conns[id]->currentCommandOwner();
-        if (!site->getAllowUpload() ||
+        if (site->getAllowUpload() == SITE_ALLOW_TRANSFER_NO ||
             (currentco != NULL && currentco->classType() == COMMANDOWNER_SITERACE &&
              site->isAffiliated(((SiteRace *)currentco)->getGroup())))
         {

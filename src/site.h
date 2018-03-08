@@ -35,6 +35,12 @@
 #define SITE_TRANSFER_POLICY_ALLOW 817
 #define SITE_TRANSFER_POLICY_BLOCK 818
 
+enum SiteAllowTransfer {
+  SITE_ALLOW_TRANSFER_NO = 821,
+  SITE_ALLOW_TRANSFER_YES = 822,
+  SITE_ALLOW_DOWNLOAD_MATCH_ONLY = 823
+};
+
 class Site {
 private:
   std::string name;
@@ -55,8 +61,8 @@ private:
   bool cpsvsupported;
   bool brokenpasv;
   bool disabled;
-  bool allowupload;
-  bool allowdownload;
+  SiteAllowTransfer allowupload;
+  SiteAllowTransfer allowdownload;
   int priority;
   bool xdupe;
   std::map<std::string, Path> sections;
@@ -120,8 +126,8 @@ public:
   void setSupportsSSCN(bool);
   void setSupportsCPSV(bool);
   bool getDisabled() const;
-  bool getAllowUpload() const;
-  bool getAllowDownload() const;
+  SiteAllowTransfer getAllowUpload() const;
+  SiteAllowTransfer getAllowDownload() const;
   int getProxyType() const;
   std::string getProxy() const;
   unsigned int getMaxIdleTime() const;
@@ -149,8 +155,8 @@ public:
   void setMaxUp(unsigned int);
   void setSSL(bool);
   void setDisabled(bool);
-  void setAllowUpload(bool);
-  void setAllowDownload(bool);
+  void setAllowUpload(SiteAllowTransfer);
+  void setAllowDownload(SiteAllowTransfer);
   void setMaxIdleTime(unsigned int);
   void setProxyType(int);
   void setProxy(const std::string &);

@@ -26,8 +26,8 @@ Site::Site(const std::string & name) :
   cpsvsupported(true),
   brokenpasv(false),
   disabled(false),
-  allowupload(true),
-  allowdownload(true),
+  allowupload(SITE_ALLOW_TRANSFER_YES),
+  allowdownload(SITE_ALLOW_TRANSFER_YES),
   priority(SITE_PRIORITY_NORMAL),
   xdupe(true),
   proxytype(SITE_PROXY_GLOBAL),
@@ -251,11 +251,11 @@ bool Site::getDisabled() const {
   return disabled;
 }
 
-bool Site::getAllowUpload() const {
+SiteAllowTransfer Site::getAllowUpload() const {
   return allowupload;
 }
 
-bool Site::getAllowDownload() const {
+SiteAllowTransfer Site::getAllowDownload() const {
   return allowdownload;
 }
 
@@ -271,11 +271,11 @@ void Site::setDisabled(bool val) {
   disabled = val;
 }
 
-void Site::setAllowUpload(bool val) {
+void Site::setAllowUpload(SiteAllowTransfer val) {
   allowupload = val;
 }
 
-void Site::setAllowDownload(bool val) {
+void Site::setAllowDownload(SiteAllowTransfer val) {
   allowdownload = val;
 }
 
