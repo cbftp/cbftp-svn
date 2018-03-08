@@ -135,8 +135,15 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   mso.addTextButtonNoContent(y++, x, "skiplist", "Configure skiplist...");
   y++;
   mso.addCheckBox(y, x, "disabled", "Disabled:", this->site->getDisabled());
-  mso.addCheckBox(y, x + 15, "allowupload", "Allow upload:", this->site->getAllowUpload());
-  mso.addCheckBox(y++, x + 34, "allowdownload", "Allow download:", this->site->getAllowDownload());
+  Pointer<MenuSelectOptionTextArrow> allowupload = mso.addTextArrow(y, x + 15, "allowupload", "Allow upload:");
+  allowupload->addOption("No", SITE_ALLOW_TRANSFER_NO);
+  allowupload->addOption("Yes", SITE_ALLOW_TRANSFER_YES);
+  allowupload->setOption(this->site->getAllowUpload());
+  Pointer<MenuSelectOptionTextArrow> allowdownload = mso.addTextArrow(y++, x + 37, "allowdownload", "Allow download:");
+  allowdownload->addOption("No", SITE_ALLOW_TRANSFER_NO);
+  allowdownload->addOption("Yes", SITE_ALLOW_TRANSFER_YES);
+  allowdownload->addOption("Affils only", SITE_ALLOW_DOWNLOAD_MATCH_ONLY);
+  allowdownload->setOption(this->site->getAllowDownload());
   Pointer<MenuSelectOptionTextArrow> priority = mso.addTextArrow(y++, x, "priority", "Priority:");
   priority->addOption("Very low", SITE_PRIORITY_VERY_LOW);
   priority->addOption("Low", SITE_PRIORITY_LOW);
@@ -477,10 +484,10 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
           site->setDisabled(msoe.get<MenuSelectOptionCheckBox>()->getData());
         }
         else if (identifier == "allowupload") {
-          site->setAllowUpload(msoe.get<MenuSelectOptionCheckBox>()->getData());
+          site->setAllowUpload(static_cast<SiteAllowTransfer>(msoe.get<MenuSelectOptionTextArrow>()->getData()));
         }
         else if (identifier == "allowdownload") {
-          site->setAllowDownload(msoe.get<MenuSelectOptionCheckBox>()->getData());
+          site->setAllowDownload(static_cast<SiteAllowTransfer>(msoe.get<MenuSelectOptionTextArrow>()->getData()));
         }
         else if (identifier == "priority") {
           site->setPriority(msoe.get<MenuSelectOptionTextArrow>()->getData());

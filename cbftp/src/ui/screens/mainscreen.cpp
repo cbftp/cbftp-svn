@@ -624,7 +624,18 @@ void MainScreen::addSiteDetails(unsigned int y, MenuSelectOption & mso, const Po
     downloads += "/" + util::int2Str(site->getMaxDown());
   }
   std::string up = site->getAllowUpload()? "[X]" : "[ ]";
-  std::string down = site->getAllowDownload()? "[X]" : "[ ]";
+  std::string down;
+  switch (site->getAllowDownload()) {
+    case SITE_ALLOW_TRANSFER_NO:
+      down = "[ ]";
+      break;
+    case SITE_ALLOW_TRANSFER_YES:
+      down = "[X]";
+      break;
+    case SITE_ALLOW_DOWNLOAD_MATCH_ONLY:
+      down = "[A]";
+      break;
+  }
   std::string disabled = site->getDisabled()? "[X]" : "[ ]";
   std::string up24 = util::parseSize(site->getSizeUpLast24Hours());
   std::string down24 = util::parseSize(site->getSizeDownLast24Hours());

@@ -425,7 +425,9 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       std::vector<Pointer<Site> >::const_iterator it;
       for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
         if (!(*it)->hasSection(race->getSection()) ||
-            (!(*it)->getAllowDownload() && !(*it)->getAllowUpload()) ||
+            ((((*it)->getAllowDownload() == SITE_ALLOW_DOWNLOAD_MATCH_ONLY && !(*it)->isAffiliated(race->getGroup())) ||
+              (*it)->getAllowDownload() == SITE_ALLOW_TRANSFER_NO) &&
+             (*it)->getAllowUpload() == SITE_ALLOW_TRANSFER_NO) ||
             (*it)->getDisabled())
         {
           excludedsites.push_back(*it);

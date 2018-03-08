@@ -384,7 +384,8 @@ Field summary:
 - Disabled: Disables a site from participating in spread jobs.
 - Allow upload: Whether to allow uploading to the site during spread jobs.
 - Allow download: Whether to allow downloading from the site during spread
-  jobs.
+  jobs. Can also be set to "Affils only" to only allow downloading of affil
+  releases.
 - Priority: How important the site is considered to be during spread jobs.
   The priority is factored into the transfer scoring - you can read more about
   this in the "the transfer engine" section.
