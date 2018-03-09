@@ -14,6 +14,7 @@ private:
 public:
   SiteLogicRequest(int, int, int, bool);
   SiteLogicRequest(int, int, const std::string &, bool);
+  SiteLogicRequest(int, int, const std::string &, int, bool);
   SiteLogicRequest(int, int, const std::string &, const std::string &, bool);
   SiteLogicRequest(int, int, const std::string &, const std::string &, int, bool);
   int requestId() const;
