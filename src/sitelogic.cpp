@@ -309,13 +309,21 @@ void SiteLogic::commandSuccess(int id, int state) {
         }
       }
       if (connstatetracker[id].hasRequest()) {
-        const Pointer<SiteLogicRequest> & request = connstatetracker[id].getRequest();
+        const Pointer<SiteLogicRequest> request = connstatetracker[id].getRequest();
         if (request->requestType() == REQ_FILELIST) {
           getFileListConn(id);
           return;
         }
         else if (request->requestType() == REQ_RAW) {
           conns[id]->doRaw(request->requestData2());
+          return;
+        }
+        else if (request->requestType() == REQ_IDLE) {
+          setRequestReady(id, NULL, true);
+          handleConnection(id);
+          if (!conns[id]->isProcessing()) {
+            connstatetracker[id].delayedCommand("quit", request->requestData3() * 1000);
+          }
           return;
         }
       }
@@ -514,11 +522,16 @@ void SiteLogic::commandFail(int id, int failuretype) {
         }
       }
       else if (connstatetracker[id].hasRequest()) {
-        if (connstatetracker[id].getRequest()->requestType() == REQ_FILELIST ||
-            connstatetracker[id].getRequest()->requestType() == REQ_RAW)
+        const Pointer<SiteLogicRequest> request = connstatetracker[id].getRequest();
+        if (request->requestType() == REQ_FILELIST ||
+            request->requestType() == REQ_RAW ||
+            request->requestType() == REQ_IDLE)
         {
           setRequestReady(id, NULL, false);
           handleConnection(id);
+          if (request->requestType() == REQ_IDLE && !conns[id]->isProcessing()) {
+            connstatetracker[id].delayedCommand("quit", request->requestData3() * 1000);
+          }
           return;
         }
       }
@@ -1025,10 +1038,16 @@ bool SiteLogic::handleRequest(int id) {
       conns[id]->doNuke(request.requestData(), request.requestData3(), request.requestData2());
       break;
     case REQ_IDLE: // idle
-      setRequestReady(id, NULL, true);
-      handleConnection(id);
-      if (!conns[id]->isProcessing()) {
-        connstatetracker[id].delayedCommand("quit", request.requestData3() * 1000);
+      Path targetpath = request.requestData();
+      if (conns[id]->getCurrentPath() != targetpath) {
+        conns[id]->doCWD(targetpath);
+      }
+      else {
+        setRequestReady(id, NULL, true);
+        handleConnection(id);
+        if (!conns[id]->isProcessing()) {
+          connstatetracker[id].delayedCommand("quit", request.requestData3() * 1000);
+        }
       }
       break;
   }
@@ -1230,24 +1249,28 @@ int SiteLogic::requestNuke(const Path & path, int multiplier, const std::string 
 
 int SiteLogic::requestOneIdle() {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(requestid, REQ_IDLE, site->getMaxIdleTime(), true));
+  requests.push_back(SiteLogicRequest(requestid, REQ_IDLE, site->getBasePath().toString(), site->getMaxIdleTime(), true));
   activateOne();
   return requestid;
 }
 
-int SiteLogic::requestAllIdle(int idletime) {
+int SiteLogic::requestAllIdle(const Path & path, int idletime) {
   if (!idletime) {
     idletime = site->getMaxIdleTime();
   }
   int requestid;
   for (unsigned int i = 0; i < connstatetracker.size(); i++) {
     requestid = requestidcounter++;
-    SiteLogicRequest request(requestid, REQ_IDLE, idletime, false);
+    SiteLogicRequest request(requestid, REQ_IDLE, path.toString(), idletime, false);
     request.setConnId(i);
     requests.push_back(request);
   }
   activateAll();
   return requestid;
+}
+
+int SiteLogic::requestAllIdle(int idletime) {
+  return requestAllIdle(site->getBasePath(), idletime);
 }
 
 bool SiteLogic::requestReady(int requestid) const {

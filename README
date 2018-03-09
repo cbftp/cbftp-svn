@@ -293,6 +293,7 @@ section name.
 This command makes cbftp login and idle on the specified sites. Specifying
 how long the sites should stay logged in is optional, and defaults to the
 "max idle time" specified per site.
+The sitelist can also be a section name.
 
 <password> abort <job>
 This command makes cbftp abort the specified spread job.

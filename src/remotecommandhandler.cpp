@@ -27,7 +27,7 @@ enum RaceType {
   PREPARE
 };
 
-std::list<Pointer<SiteLogic> > getSiteLogicList(const std::string & sitestring) {
+std::list<Pointer<SiteLogic> > getSiteLogicList(const std::string & sitestring, bool log = true) {
   std::list<Pointer<SiteLogic> > sitelogics;
   std::list<std::string> sites;
   if (sitestring == "*") {
@@ -41,13 +41,19 @@ std::list<Pointer<SiteLogic> > getSiteLogicList(const std::string & sitestring) 
   else {
     sites = util::split(sitestring, ",");
   }
+  std::list<std::string> notfoundsites;
   for (std::list<std::string>::const_iterator it = sites.begin(); it != sites.end(); it++) {
     const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(*it);
     if (!sl) {
-      global->getEventLog()->log("RemoteCommandHandler", "Site not found: " + *it);
+      notfoundsites.push_back(*it);
       continue;
     }
     sitelogics.push_back(sl);
+  }
+  if (!sitelogics.empty() || log) {
+    for (std::list<std::string>::const_iterator it = notfoundsites.begin(); it != notfoundsites.end(); ++it) {
+      global->getEventLog()->log("RemoteCommandHandler", "Site not found: " + *it);
+    }
   }
   return sitelogics;
 }
@@ -372,10 +378,25 @@ void RemoteCommandHandler::commandIdle(const std::string & message) {
     idletime = util::str2Int(message.substr(sitesend + 1));
   }
 
-  std::list<Pointer<SiteLogic> > sites = getSiteLogicList(sitestring);
+  std::list<Pointer<SiteLogic> > sites = getSiteLogicList(sitestring, false);
 
-  for (std::list<Pointer<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
-    (*it)->requestAllIdle(idletime);
+  if (sites.empty()) {
+    bool found = false;
+    for (std::vector<Pointer<Site> >::const_iterator it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); ++it) {
+      if ((*it)->hasSection(sitestring)) {
+        Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic((*it)->getName());
+        sl->requestAllIdle((*it)->getSectionPath(sitestring), idletime);
+        found = true;
+      }
+    }
+    if (!found) {
+      global->getEventLog()->log("RemoteCommandHandler", "Sites or section not found: " + sitestring);
+    }
+  }
+  else {
+    for (std::list<Pointer<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
+      (*it)->requestAllIdle(idletime);
+    }
   }
 }
 
