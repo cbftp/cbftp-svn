@@ -315,6 +315,7 @@ void SiteLogic::commandSuccess(int id, int state) {
           return;
         }
         else if (request->requestType() == REQ_RAW) {
+          rawcommandrawbuf->writeLine(request->requestData2());
           conns[id]->doRaw(request->requestData2());
           return;
         }
