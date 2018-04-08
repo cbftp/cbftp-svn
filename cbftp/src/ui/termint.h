@@ -19,6 +19,14 @@ typedef struct _win_st WINDOW;
 #define BOX_MIN BOX_CORNER_BR
 #define BOX_MAX BOX_VLINE
 
+enum CursesSpecialKeys {
+  TERMINT_CTRL_A = 1,
+  TERMINT_CTRL_DOWN = 524,
+  TERMINT_CTRL_LEFT = 544,
+  TERMINT_CTRL_RIGHT = 559,
+  TERMINT_CTRL_UP = 565,
+};
+
 class TermInt {
 private:
   static unsigned int cursorrow;
