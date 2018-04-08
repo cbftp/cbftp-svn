@@ -367,9 +367,10 @@ void TransferJob::addSubDirectoryFileLists(std::map<std::string, FileList *> & f
 
 void TransferJob::addSubDirectoryFileLists(std::map<std::string, FileList *> & filelists, FileList * filelist, const Path & subpath, File * file) {
   if (file->isDirectory()) {
-    if ((!!dst && !dst->getSite()->getSkipList().isAllowed(file->getName(), true, false)) ||
-        !global->getSkipList()->isAllowed(file->getName(), true, false))
-    {
+    SkipListMatch match = !!dst ? dst->getSite()->getSkipList().check(file->getName(), true, false)
+                                : global->getSkipList()->check(file->getName(), true, false);
+    if (match.action == SKIPLIST_DENY || (match.action == SKIPLIST_UNIQUE &&
+                                          filelist->containsPatternBefore(match.matchpattern, true, file->getName()))) {
       return;
     }
     std::string subpathfile = (subpath / file->getName()).toString();

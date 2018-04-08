@@ -75,7 +75,7 @@ Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, con
       break;
     }
   }
-  if (!global->getSkipList()->isAllowed(release, true, false)) {
+  if (global->getSkipList()->check(release, true, false).action == SKIPLIST_DENY) {
     global->getEventLog()->log("Engine", "Spread job skipped due to skiplist match: " + release);
     return Pointer<Race>();
   }
@@ -103,7 +103,7 @@ Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, con
           section + " on " + *it);
       continue;
     }
-    if (!sl->getSite()->getSkipList().isAllowed((sl->getSite()->getSectionPath(section) / race->getName()).toString(), true, false) &&
+    if (sl->getSite()->getSkipList().check((sl->getSite()->getSectionPath(section) / race->getName()).toString(), true, false).action == SKIPLIST_DENY &&
         !sl->getSite()->isAffiliated(race->getGroup()))
     {
       global->getEventLog()->log("Engine", "Skipping site " + sl->getSite()->getName() +
@@ -606,14 +606,22 @@ void Engine::estimateRaceSize(const Pointer<Race> & race, bool forceupdate) {
   }
 }
 
+bool setContainsPattern(const std::set<std::string> & uniques, const std::string & matchpattern) {
+  for (std::set<std::string>::const_iterator it = uniques.begin(); it != uniques.end(); it++) {
+    if (util::wildcmp(matchpattern.c_str(), it->c_str())) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void Engine::reportCurrentSize(const SkipList & skiplist, SiteRace * srs, FileList * fls, bool final) {
   std::set<std::string> uniques;
   std::map<std::string, File *>::const_iterator itf;
   std::string subpath = srs->getSubPathForFileList(fls);
   for (itf = fls->begin(); itf != fls->end(); itf++) {
     File * file = itf->second;
-    bool isdir = file->isDirectory();
-    if (isdir) {
+    if (file->isDirectory()) {
       continue;
     }
     std::string filename = file->getName();
@@ -627,7 +635,8 @@ void Engine::reportCurrentSize(const SkipList & skiplist, SiteRace * srs, FileLi
       filename = filename.substr(0, lastdotpos + offsetdot);
     }
     Path prepend = subpath;
-    if (!skiplist.isAllowed((prepend / filename).toString(), isdir)) {
+    SkipListMatch match = skiplist.check((prepend / filename).toString(), false);
+    if (match.action == SKIPLIST_DENY || (match.action == SKIPLIST_UNIQUE && setContainsPattern(uniques, match.matchpattern))) {
       continue;
     }
     uniques.insert(filename);
@@ -652,6 +661,7 @@ void Engine::refreshScoreBoard() {
       }
       for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator itd = race->begin(); itd != race->end(); itd++) {
         SiteRace * srd = itd->first;
+        FileList * fldroot = srd->getFileListForPath("");
         const Pointer<SiteLogic> & sld = itd->second;
         const Pointer<Site> & dstsite = sld->getSite();
         SkipList & dstskip = dstsite->getSkipList();
@@ -663,7 +673,15 @@ void Engine::refreshScoreBoard() {
         }
         int prioritypoints = getPriorityPoints(dstsite->getPriority());
         for (std::map<std::string, FileList *>::const_iterator itfls = srs->fileListsBegin(); itfls != srs->fileListsEnd(); itfls++) {
-          if (itfls->first.length() > 0 && !dstskip.isAllowed(itfls->first, true)) continue;
+          if (!itfls->first.empty()) {
+            SkipListMatch dirmatch = dstskip.check(itfls->first, true);
+            if (dirmatch.action == SKIPLIST_DENY ||
+                (dirmatch.action == SKIPLIST_UNIQUE &&
+                 fldroot->containsPatternBefore(dirmatch.matchpattern, true, itfls->first)))
+            {
+              continue;
+            }
+          }
           FileList * fls = itfls->second;
           FileList * fld = srd->getFileListForPath(itfls->first);
           if (fld != NULL) {
@@ -671,13 +689,14 @@ void Engine::refreshScoreBoard() {
             std::map<std::string, File *>::const_iterator itf;
             for (itf = fls->begin(); itf != fls->end(); itf++) {
               File * f = itf->second;
-              const bool isdir = f->isDirectory();
-              const Path prepend = itfls->first;
-              if (!dstskip.isAllowed((prepend / itf->first).toString(), isdir)) {
-                continue;
-              }
               const std::string filename = f->getName();
               if (fld->contains(filename) || f->isDirectory() || f->getSize() == 0) continue;
+              const Path & prepend = itfls->first;
+              SkipListMatch filematch = dstskip.check((prepend / itf->first).toString(), false);
+              if (filematch.action == SKIPLIST_DENY || (filematch.action == SKIPLIST_UNIQUE &&
+                                                        fld->containsPatternBefore(filematch.matchpattern, false, filename))) {
+                continue;
+              }
               if (race->hasFailedTransfer(f, fls, fld)) continue;
               bool prio = false;
               unsigned short score = calculateScore(f, race, fls, srs, fld, srd, avgspeed, &prio, prioritypoints, racemode);
@@ -822,6 +841,9 @@ void Engine::issueOptimalTransfers() {
     sld = sbe->getDestination();
     race = sbe->getRace();
     filename = sbe->fileName();
+    if (sbe->getDestinationFileList()->contains(filename)) {
+      continue;
+    }
     //potentiality handling
     if (!sbe->isPrioritized()) { // priority files shouldn't affect the potential tracking
       sls->pushPotential(sbe->getScore(), filename, sld);
@@ -839,6 +861,12 @@ void Engine::issueOptimalTransfers() {
       continue;
     }
     if (!sbe->getSourceFileList()->getFile(filename)) {
+      continue;
+    }
+    SkipListMatch match = sbe->getDestination()->getSite()->getSkipList().check(filename, false);
+    if (match.action == SKIPLIST_UNIQUE &&
+        sbe->getDestinationFileList()->containsPatternBefore(match.matchpattern, false, filename))
+    {
       continue;
     }
     Pointer<TransferStatus> ts =
@@ -1241,7 +1269,7 @@ Pointer<Race> Engine::getCurrentRace(const std::string & release) const {
 
 void Engine::addSiteToRace(Pointer<Race> & race, const std::string & site) {
   const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
-  if (sl->getSite()->getSkipList().isAllowed((sl->getSite()->getSectionPath(race->getSection()) / race->getName()).toString(), true, false) ||
+  if (sl->getSite()->getSkipList().check((sl->getSite()->getSectionPath(race->getSection()) / race->getName()).toString(), true, false).action != SKIPLIST_DENY ||
       sl->getSite()->isAffiliated(race->getGroup()))
   {
     SiteRace * sr = sl->addRace(race, race->getSection(), race->getName());

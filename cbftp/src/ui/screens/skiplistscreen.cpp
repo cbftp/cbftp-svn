@@ -54,16 +54,16 @@ void SkipListScreen::initialize() {
     testskiplist.setGlobalSkip(skiplist);
   }
   for (it = skiplist->entriesBegin(); it != skiplist->entriesEnd(); it++) {
-    testskiplist.addEntry(it->matchPattern(), it->matchFile(), it->matchDir(), it->matchScope(), it->isAllowed());
+    testskiplist.addEntry(it->matchPattern(), it->matchFile(), it->matchDir(), it->matchScope(), it->getAction());
   }
   focusedarea = &base;
   int y = 4;
   int addx = 30;
   if (globalskip) {
     Pointer<MenuSelectOptionTextArrow> arrow = base.addTextArrow(y, 1, "defaultaction", "Default action:");
-    arrow->addOption("Allow", 0);
-    arrow->addOption("Deny", 1);
-    arrow->setOption(skiplist->defaultAllow() ? 0 : 1);
+    arrow->addOption("Allow", SKIPLIST_ALLOW);
+    arrow->addOption("Deny", SKIPLIST_DENY);
+    arrow->setOption(skiplist->defaultAllow() ? SKIPLIST_ALLOW : SKIPLIST_DENY);
   }
   else {
     y++;
@@ -110,7 +110,7 @@ void SkipListScreen::redraw() {
   std::list<SkiplistItem>::const_iterator it;
   for (it = testskiplist.entriesBegin(); it != testskiplist.entriesEnd(); it++) {
     y++;
-    addPatternLine(y, it->matchPattern(), it->matchFile(), it->matchDir(), it->matchScope(), it->isAllowed());
+    addPatternLine(y, it->matchPattern(), it->matchFile(), it->matchDir(), it->matchScope(), it->getAction());
   }
   if (testskiplist.size()) {
     base.makeLeavableDown();
@@ -205,16 +205,27 @@ void SkipListScreen::update() {
       ui->hideCursor();
     }
   }
-  std::string allowstring = "       ";
+
+  if (col > testtype->getCol() + 20) {
+    std::string empty(col - (testtype->getCol() + 20), ' ');
+    ui->printStr(testtype->getRow(), testtype->getCol() + 20, empty);
+  }
   if (testpattern->getData().length() > 0) {
-    if (testskiplist.isAllowed(testpattern->getData(), testtype->getData())) {
+    std::string allowstring;
+    SkipListMatch match = testskiplist.check(testpattern->getData(), testtype->getData());
+    if (match.action == SKIPLIST_ALLOW) {
       allowstring = "ALLOWED";
     }
-    else {
-      allowstring = "DENIED ";
+    else if (match.action == SKIPLIST_DENY) {
+      allowstring = "DENIED";
     }
+    else if (match.action == SKIPLIST_UNIQUE) {
+      allowstring = "UNIQUE";
+    }
+    ui->printStr(testtype->getRow(), testtype->getCol() + 20, allowstring);
+    std::string matchstring = "Match: " + (match.matched ? match.matchpattern : "default");
+    ui->printStr(testtype->getRow(), testtype->getCol() + 30, matchstring);
   }
-  ui->printStr(testtype->getRow(), testtype->getCol() + 20, allowstring);
 }
 
 bool SkipListScreen::keyPressed(unsigned int ch) {
@@ -222,7 +233,7 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
     if (ch == 10) {
       activeelement->deactivate();
       if (activeelement->getIdentifier() == "defaultaction") {
-        testskiplist.setDefaultAllow(activeelement.get<MenuSelectOptionTextArrow>()->getData() == 0);
+        testskiplist.setDefaultAllow(activeelement.get<MenuSelectOptionTextArrow>()->getData() == SKIPLIST_ALLOW);
       }
       active = false;
       saveToTempSkipList();
@@ -269,7 +280,7 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
       activation = focusedarea->activateSelected();
       if (!activation) {
         if (focusedarea->getElement(focusedarea->getSelectionPointer())->getIdentifier() == "add") {
-          addPatternLine(0, "", false, false, SCOPE_IN_RACE, true);
+          addPatternLine(0, "", false, false, SCOPE_IN_RACE, SKIPLIST_ALLOW);
           saveToTempSkipList();
           ui->redraw();
           return true;
@@ -291,7 +302,7 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
     case 'd':
       skiplist->clearEntries();
       for (std::list<SkiplistItem>::const_iterator it = testskiplist.entriesBegin(); it != testskiplist.entriesEnd(); it++) {
-        skiplist->addEntry(it->matchPattern(), it->matchFile(), it->matchDir(), it->matchScope(), it->isAllowed());
+        skiplist->addEntry(it->matchPattern(), it->matchFile(), it->matchDir(), it->matchScope(), it->getAction());
       }
       skiplist->setDefaultAllow(testskiplist.defaultAllow());
       ui->returnToLast();
@@ -315,7 +326,7 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
       if (focusedarea == &table) {
         Pointer<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
         Pointer<MenuSelectAdjustableLine> msal = table.getAdjustableLine(msoe);
-        addPatternLine(0, "", false, false, SCOPE_IN_RACE, true, msal);
+        addPatternLine(0, "", false, false, SCOPE_IN_RACE, SKIPLIST_ALLOW, msal);
         saveToTempSkipList();
         ui->redraw();
       }
@@ -377,17 +388,17 @@ void SkipListScreen::saveToTempSkipList() {
     std::string pattern = (*it)->getElement(0).get<MenuSelectOptionTextField>()->getData();
     bool file = (*it)->getElement(1).get<MenuSelectOptionCheckBox>()->getData();
     bool dir = (*it)->getElement(2).get<MenuSelectOptionCheckBox>()->getData();
-    bool allow = (*it)->getElement(3).get<MenuSelectOptionTextArrow>()->getData() == 0;
+    SkipListAction action = static_cast<SkipListAction>((*it)->getElement(3).get<MenuSelectOptionTextArrow>()->getData());
     int scope = (*it)->getElement(4).get<MenuSelectOptionTextArrow>()->getData();
-    testskiplist.addEntry(pattern, file, dir, scope, allow);
+    testskiplist.addEntry(pattern, file, dir, scope, action);
   }
 }
 
-void SkipListScreen::addPatternLine(int y, std::string pattern, bool file, bool dir, int scope, bool allow) {
-  addPatternLine(y, pattern, file, dir, scope, allow, Pointer<MenuSelectAdjustableLine>());
+void SkipListScreen::addPatternLine(int y, std::string pattern, bool file, bool dir, int scope, SkipListAction action) {
+  addPatternLine(y, pattern, file, dir, scope, action, Pointer<MenuSelectAdjustableLine>());
 }
 
-void SkipListScreen::addPatternLine(int y, std::string pattern, bool file, bool dir, int scope, bool allow, Pointer<MenuSelectAdjustableLine> before) {
+void SkipListScreen::addPatternLine(int y, std::string pattern, bool file, bool dir, int scope, SkipListAction action, Pointer<MenuSelectAdjustableLine> before) {
   Pointer<MenuSelectAdjustableLine> msal;
   if (!before) {
     msal = table.addAdjustableLine();
@@ -402,9 +413,10 @@ void SkipListScreen::addPatternLine(int y, std::string pattern, bool file, bool 
   re = table.addCheckBox(y, 3, "dirbox", "", dir);
   msal->addElement(re, 3, RESIZE_REMOVE);
   Pointer<MenuSelectOptionTextArrow> msota = table.addTextArrow(y, 4, "actionarrow", "");
-  msota->addOption("Allow", 0);
-  msota->addOption("Deny", 1);
-  msota->setOption(allow ? 0 : 1);
+  msota->addOption("Allow", SKIPLIST_ALLOW);
+  msota->addOption("Deny", SKIPLIST_DENY);
+  msota->addOption("Unique", SKIPLIST_UNIQUE);
+  msota->setOption(static_cast<int>(action));
   msal->addElement(msota, 4, RESIZE_REMOVE);
   msota = table.addTextArrow(y, 5, "scope", "");
   msota->addOption("In race", SCOPE_IN_RACE);

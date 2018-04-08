@@ -59,6 +59,8 @@ class FileList {
     std::map<std::string, File *>::const_iterator begin() const;
     std::map<std::string, File *>::const_iterator end() const;
     bool contains(const std::string &) const;
+    bool containsPattern(const std::string &, bool) const;
+    bool containsPatternBefore(const std::string &, bool, const std::string &) const;
     unsigned int getSize() const;
     unsigned long long int getTotalFileSize() const;
     unsigned int getNumUploadedFiles() const;

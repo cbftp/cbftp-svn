@@ -133,9 +133,12 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
     std::string prepchar = " ";
     bool isdir = uifile->isDirectory();
     Path testpath = prepend / uifile->getName();
-    bool allowed = withinraceskiplistreach ?
-        site->getSkipList().isAllowed((prepend / uifile->getName()).toString(), isdir) :
-        site->getSkipList().isAllowed((prepend / uifile->getName()).toString(), isdir, false);
+    SkipListMatch match = withinraceskiplistreach ?
+                          site->getSkipList().check((prepend / uifile->getName()).toString(), isdir) :
+                          site->getSkipList().check((prepend / uifile->getName()).toString(), isdir, false);
+    bool allowed = !(match.action == SKIPLIST_DENY ||
+                    (match.action == SKIPLIST_UNIQUE &&
+                     filelist->containsPatternBefore(match.matchpattern, isdir, uifile->getName())));
     if (isdir) {
       if (allowed) {
         prepchar = "#";
@@ -661,6 +664,13 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       if (update) {
         ui->redraw();
       }
+      break;
+    case 'A':
+    case TERMINT_CTRL_A:
+      break;
+    case KEY_SR: // shift up
+      break;
+    case KEY_SF: // shift down
       break;
     case 'w':
       if (list.cursoredFile() != NULL) {

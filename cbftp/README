@@ -188,8 +188,12 @@ The skiplist works by matching items against the list from the top to the
 bottom. If a rule that matches the item is found, the action of that rule
 is applied to the item, and the remainder of the skiplist is ignored.
 
+Possible actions are Allow, Deny and Unique. Unique means that only the first
+file found in a directory that matches the rule will be allowed - others
+will be skipped/denied.
+
 An item is normally a file name or a directory name. There are buttons
-avilable on each entry in the skiplist if it should match files and/or
+available on each entry in the skiplist if it should match files and/or
 directories.
 
 The scope setting specifies where the skiplist should apply.
@@ -228,12 +232,17 @@ proof   [ ]  [X]  Allow  In race
 Skip all spread jobs with .INTERNAL. in the name:
 *.INTERNAL.*  [ ]  [X]  Deny  Allround
 
+Only allow one nfo and sfv file within each directory:
+*.sfv  [X]  [ ]  Unique  In race
+*.nfo  [X]  [ ]  Unique  In race
+
 Skip files with spaces in the name everywhere:
 * *  [X]  [X]  Deny  Allround
 
 And again, note that _the first match applies_! If the skiplist does not
 behave as you expect it to do, then you will need to think through if there
-might be other rules that are matching your item too early.
+might be other rules that are matching your item too early. Use the pattern
+test feature.
 
 REMOTE COMMANDS
 
