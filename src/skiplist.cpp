@@ -46,6 +46,10 @@ std::string createCacheToken(const std::string & pattern, const bool dir, const 
 
 }
 
+SkipListMatch::SkipListMatch(SkipListAction action, bool matched, const std::string & matchpattern) : action(action), matched(matched), matchpattern(matchpattern) {
+
+}
+
 SkipList::SkipList() : defaultallow(true), globalskip(NULL) {
   addDefaultEntries();
 }
@@ -54,8 +58,8 @@ SkipList::SkipList(const SkipList * globalskip) : defaultallow(true), globalskip
   util::assert(globalskip != NULL);
 }
 
-void SkipList::addEntry(std::string pattern, bool file, bool dir, int scope, bool allow) {
-  entries.push_back(SkiplistItem(pattern, file, dir, scope, allow));
+void SkipList::addEntry(std::string pattern, bool file, bool dir, int scope, SkipListAction action) {
+  entries.push_back(SkiplistItem(pattern, file, dir, scope, action));
   wipeCache();
 }
 
@@ -72,17 +76,17 @@ std::list<SkiplistItem>::const_iterator SkipList::entriesEnd() const {
   return entries.end();
 }
 
-bool SkipList::isAllowed(const std::string & element, const bool dir) const {
-  return isAllowed(element, dir, true);
+SkipListMatch SkipList::check(const std::string & element, const bool dir) const {
+  return check(element, dir, true);
 }
 
-bool SkipList::isAllowed(const std::string & element, const bool dir, const bool inrace) const {
-  return isAllowed(element, dir, inrace, NULL);
+SkipListMatch SkipList::check(const std::string & element, const bool dir, const bool inrace) const {
+  return check(element, dir, inrace, NULL);
 }
 
-bool SkipList::isAllowed(const std::string & element, const bool dir, const bool inrace, const SkipList * fallthrough) const {
+SkipListMatch SkipList::check(const std::string & element, const bool dir, const bool inrace, const SkipList * fallthrough) const {
   std::string cachetoken = createCacheToken(element, dir, inrace);
-  std::map<std::string, bool>::const_iterator mit = matchcache.find(cachetoken);
+  std::map<std::string, SkipListMatch>::const_iterator mit = matchcache.find(cachetoken);
   if (mit != matchcache.end()) {
     return mit->second;
   }
@@ -105,27 +109,29 @@ bool SkipList::isAllowed(const std::string & element, const bool dir, const bool
       }
       if ((it->matchDir() && dir) || (it->matchFile() && !dir)) {
         if (fixedSlashCompare(it->matchPattern(), *partsit, false)) {
-          bool allowed = it->isAllowed();
-          matchcache[cachetoken] = allowed;
-          return allowed;
+          SkipListMatch match(it->getAction(), true, it->matchPattern());
+          matchcache.insert(std::pair<std::string, SkipListMatch>(cachetoken, match));
+          return match;
         }
       }
     }
   }
-  bool res = fallthrough ?
-             fallthrough->isAllowed(element, dir, inrace) :
-             (globalskip ? globalskip->isAllowed(element, dir, inrace) : defaultallow);
-  matchcache[cachetoken] = res;
-  return res;
+  SkipListMatch match(defaultallow ? SKIPLIST_ALLOW : SKIPLIST_DENY, false, "");
+  if (fallthrough) {
+    match = fallthrough->check(element, dir, inrace);
+  }
+  else if (globalskip) {
+      match = globalskip->check(element, dir, inrace);
+  }
+  matchcache.insert(std::pair<std::string, SkipListMatch>(cachetoken, match));
+  return match;
 }
 
 void SkipList::addDefaultEntries() {
-  entries.push_back(SkiplistItem("* *", true, true, SCOPE_ALL, false));
-  entries.push_back(SkiplistItem("*%*", true, true, SCOPE_IN_RACE, false));
-  entries.push_back(SkiplistItem("*[*", true, true, SCOPE_IN_RACE, false));
-  entries.push_back(SkiplistItem("*]*", true, true, SCOPE_IN_RACE, false));
-  entries.push_back(SkiplistItem("*-missing", true, false, SCOPE_IN_RACE, false));
-  entries.push_back(SkiplistItem("*-offline", true, false, SCOPE_IN_RACE, false));
+  entries.push_back(SkiplistItem("* *", true, true, SCOPE_ALL, SKIPLIST_DENY));
+  entries.push_back(SkiplistItem("*%*", true, true, SCOPE_IN_RACE, SKIPLIST_DENY));
+  entries.push_back(SkiplistItem("*[*", true, true, SCOPE_IN_RACE, SKIPLIST_DENY));
+  entries.push_back(SkiplistItem("*]*", true, true, SCOPE_IN_RACE, SKIPLIST_DENY));
 }
 
 unsigned int SkipList::size() const {

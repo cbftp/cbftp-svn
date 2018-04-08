@@ -2,21 +2,29 @@
 
 #include <string>
 
-#define SCOPE_IN_RACE 0
-#define SCOPE_ALL 1
+enum Scope {
+  SCOPE_IN_RACE = 0,
+  SCOPE_ALL = 1
+};
+
+enum SkipListAction {
+  SKIPLIST_ALLOW,
+  SKIPLIST_DENY,
+  SKIPLIST_UNIQUE
+};
 
 class SkiplistItem {
 public:
-  SkiplistItem(std::string, bool, bool, int, bool);
+  SkiplistItem(std::string, bool, bool, int, SkipListAction);
   const std::string & matchPattern() const;
   bool matchFile() const;
   bool matchDir() const;
-  bool isAllowed() const;
+  SkipListAction getAction() const;
   int matchScope() const;
 private:
   std::string pattern;
   bool file;
   bool dir;
   int scope;
-  bool allow;
+  SkipListAction action;
 };

@@ -53,7 +53,7 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
     UIFile * uifile = (*uilist)[listi];
     bool selected = uifile == list.cursoredFile();
     bool isdir = uifile->isDirectory();
-    bool allowed = global->getSkipList()->isAllowed((list.getPath() / uifile->getName()).toString(), isdir, false);
+    bool allowed = global->getSkipList()->check((list.getPath() / uifile->getName()).toString(), isdir, false).action != SKIPLIST_DENY;
     std::string prepchar = " ";
     if (isdir) {
       if (allowed) {

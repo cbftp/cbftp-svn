@@ -78,11 +78,15 @@ bool SiteRace::addSubDirectory(const std::string & subpath) {
 }
 
 bool SiteRace::addSubDirectory(const std::string & subpath, bool knownexists) {
-  if (!skiplist.isAllowed(subpath, true)) {
+  SkipListMatch match = skiplist.check(subpath, true);
+  if (match.action == SKIPLIST_DENY) {
     return false;
   }
   if (getFileListForPath(subpath) != NULL) {
     return true;
+  }
+  if (match.action == SKIPLIST_UNIQUE && filelists[""]->containsPatternBefore(match.matchpattern, true, subpath)) {
+    return false;
   }
   FileList * subdir;
   if (knownexists) {
@@ -216,7 +220,8 @@ void SiteRace::addNewDirectories() {
   for(it = filelist->begin(); it != filelist->end(); it++) {
     File * file = it->second;
     if (file->isDirectory()) {
-      if (!skiplist.isAllowed(it->first, true)) {
+      SkipListMatch match = skiplist.check(it->first, true);
+      if (match.action == SKIPLIST_DENY || (match.action == SKIPLIST_UNIQUE && filelist->containsPatternBefore(match.matchpattern, true, it->first))) {
         continue;
       }
       FileList * fl;

@@ -28,8 +28,8 @@ public:
 private:
   void initialize();
   void saveToTempSkipList();
-  void addPatternLine(int, std::string, bool, bool, int, bool);
-  void addPatternLine(int, std::string, bool, bool, int, bool, Pointer<MenuSelectAdjustableLine>);
+  void addPatternLine(int, std::string, bool, bool, int, SkipListAction);
+  void addPatternLine(int, std::string, bool, bool, int, SkipListAction, Pointer<MenuSelectAdjustableLine>);
   SkipList * skiplist;
   std::string currentlegendtext;
   std::string baselegendtext;

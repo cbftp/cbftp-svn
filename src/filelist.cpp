@@ -251,6 +251,44 @@ bool FileList::contains(const std::string & name) const {
   return false;
 }
 
+bool FileList::containsPattern(const std::string & pattern, bool dir) const {
+  size_t slashpos = pattern.rfind('/');
+  const std::string * usedpattern = &pattern;
+  std::string newpattern;
+  if (slashpos != std::string::npos) {
+    newpattern = pattern.substr(slashpos + 1);
+    usedpattern = &newpattern;
+  }
+  for (std::map<std::string, File *>::const_iterator it = files.begin(); it != files.end(); it++) {
+    if (it->second->isDirectory() == dir && util::wildcmp(usedpattern->c_str(), it->first.c_str())) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool FileList::containsPatternBefore(const std::string & pattern, bool dir, const std::string & item) const {
+  size_t slashpos = pattern.rfind('/');
+  const std::string * usedpattern = &pattern;
+  std::string newpattern;
+  if (slashpos != std::string::npos) {
+    newpattern = pattern.substr(slashpos + 1);
+    usedpattern = &newpattern;
+  }
+  for (std::map<std::string, File *>::const_iterator it = files.begin(); it != files.end(); it++) {
+    if (it->second->isDirectory() != dir) {
+      continue;
+    }
+    if (it->first == item) {
+      return false;
+    }
+    if (util::wildcmp(usedpattern->c_str(), it->first.c_str())) {
+      return true;
+    }
+  }
+  return false;
+}
+
 unsigned int FileList::getSize() const {
   return files.size();
 }

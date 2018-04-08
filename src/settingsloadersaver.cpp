@@ -726,7 +726,7 @@ void SettingsLoaderSaver::addSkipList(SkipList * skiplist, const std::string & o
         (it->matchFile() ? "true" : "false") + "$" +
         (it->matchDir() ? "true" : "false") + "$" +
         util::int2Str(it->matchScope()) + "$" +
-        (it->isAllowed() ? "true" : "false");
+        util::int2Str(it->getAction());
     dfh->addOutputLine(owner, entry + entryline);
   }
 }
@@ -743,16 +743,20 @@ void SettingsLoaderSaver::loadSkipListEntry(SkipList * skiplist, std::string val
     bool dir = value.substr(0, split) == "true" ? true : false;
     value = value.substr(split + 1);
     split = value.find('$');
-    bool allowed;
-    int scope;
-    if (split != std::string::npos) {
-      scope = util::str2Int(value.substr(0, split));
-      allowed = value.substr(split + 1) == "true" ? true : false;
+    int scope = util::str2Int(value.substr(0, split));
+    std::string actionstring = value.substr(split + 1);
+
+    SkipListAction action;
+    // begin compatibility r892
+    if (actionstring == "true") {
+      action = SKIPLIST_ALLOW;
     }
-    else {
-      scope = SCOPE_IN_RACE;
-      allowed = value == "true" ? true : false;
+    else if (actionstring == "false") {
+      action = SKIPLIST_DENY;
     }
-    skiplist->addEntry(pattern, file, dir, scope, allowed);
+    else
+    // end compatibility r892
+    action = static_cast<SkipListAction>(util::str2Int(actionstring));
+    skiplist->addEntry(pattern, file, dir, scope, action);
   }
 }
