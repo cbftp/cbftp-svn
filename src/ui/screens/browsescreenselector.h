@@ -35,4 +35,5 @@ private:
   std::vector<std::pair<std::string, std::string> > entries;
   unsigned int pointer;
   unsigned int currentviewspan;
+  bool gotomode;
 };

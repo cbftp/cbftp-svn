@@ -18,7 +18,8 @@ BrowseScreenSelector::BrowseScreenSelector(Ui * ui) :
   ui(ui),
   focus(true),
   pointer(0),
-  currentviewspan(0) {
+  currentviewspan(0),
+  gotomode(false) {
   SiteManager * sm = global->getSiteManager();
   std::vector<Pointer<Site> >::const_iterator it;
   entries.push_back(std::pair<std::string, std::string>(BROWSESCREENSELECTOR_HOME,
@@ -82,6 +83,23 @@ void BrowseScreenSelector::update() {
 
 BrowseScreenAction BrowseScreenSelector::keyPressed(unsigned int ch) {
   unsigned int pagerows = (unsigned int) row * 0.6;
+  if (gotomode) {
+    if (ch >= 32 && ch <= 126) {
+      for (unsigned int i = 0; i < table.size(); i++) {
+        Pointer<MenuSelectOptionTextButton> msotb = table.getElement(i);
+        std::string label = msotb->getLabelText();
+        if (!label.empty() && toupper(ch) == toupper(label[0])) {
+          table.checkPointer();
+          table.setPointer(msotb);
+          break;
+        }
+      }
+    }
+    gotomode = false;
+    ui->update();
+    ui->setLegend();
+    return BrowseScreenAction();
+  }
   switch (ch) {
     case 27: // esc
       ui->returnToLast();
@@ -147,14 +165,22 @@ BrowseScreenAction BrowseScreenSelector::keyPressed(unsigned int ch) {
       else {
         return BrowseScreenAction(BROWSESCREENACTION_SITE, msotb->getIdentifier());
       }
+      break;
     }
+    case 'q':
+      gotomode = true;
+      ui->update();
+      ui->setLegend();
       break;
   }
   return BrowseScreenAction();
 }
 
 std::string BrowseScreenSelector::getLegendText() const {
-  return "[Up/Down] Navigate - [Enter/Right/b] Browse - [Esc] Cancel - [c]lose";
+  if (gotomode) {
+    return "[Any] Go to matching first letter in site list - [Esc] Cancel";
+  }
+  return "[Up/Down] Navigate - [Enter/Right/b] Browse - [q]uick jump - [Esc] Cancel - [c]lose";
 }
 
 std::string BrowseScreenSelector::getInfoLabel() const {
