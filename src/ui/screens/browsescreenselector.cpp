@@ -98,12 +98,12 @@ BrowseScreenAction BrowseScreenSelector::keyPressed(unsigned int ch) {
     gotomode = false;
     ui->update();
     ui->setLegend();
-    return BrowseScreenAction();
+    return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
   }
   switch (ch) {
     case 27: // esc
       ui->returnToLast();
-      break;
+      return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
     case 'c':
     case KEY_LEFT:
     case KEY_BACKSPACE:
@@ -117,7 +117,7 @@ BrowseScreenAction BrowseScreenSelector::keyPressed(unsigned int ch) {
         pointer--;
         ui->redraw();
       }
-      break;
+      return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
     case KEY_DOWN:
       if (table.goDown()) {
         pointer = table.getElement(table.getSelectionPointer())->getRow() + currentviewspan;
@@ -127,15 +127,15 @@ BrowseScreenAction BrowseScreenSelector::keyPressed(unsigned int ch) {
         pointer++;
         ui->redraw();
       }
-      break;
+      return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
     case KEY_HOME:
       pointer = 0;
       ui->redraw();
-      break;
+      return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
     case KEY_END:
       pointer = entries.size() - 1;
       ui->redraw();
-      break;
+      return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
     case KEY_NPAGE:
       if (pagerows < entries.size() && pointer < entries.size() - 1 - pagerows) {
         pointer += pagerows;
@@ -144,7 +144,7 @@ BrowseScreenAction BrowseScreenSelector::keyPressed(unsigned int ch) {
         pointer = entries.size() - 1;
       }
       ui->redraw();
-      break;
+      return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
     case KEY_PPAGE:
       if (pointer > pagerows) {
         pointer -= pagerows;
@@ -153,7 +153,7 @@ BrowseScreenAction BrowseScreenSelector::keyPressed(unsigned int ch) {
         pointer = 0;
       }
       ui->redraw();
-      break;
+      return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
     case KEY_RIGHT:
     case 10:
     case 'b':
@@ -171,7 +171,7 @@ BrowseScreenAction BrowseScreenSelector::keyPressed(unsigned int ch) {
       gotomode = true;
       ui->update();
       ui->setLegend();
-      break;
+      return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
   }
   return BrowseScreenAction();
 }
