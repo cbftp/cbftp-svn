@@ -85,12 +85,11 @@ BrowseScreenAction BrowseScreenSelector::keyPressed(unsigned int ch) {
   unsigned int pagerows = (unsigned int) row * 0.6;
   if (gotomode) {
     if (ch >= 32 && ch <= 126) {
-      for (unsigned int i = 0; i < table.size(); i++) {
-        Pointer<MenuSelectOptionTextButton> msotb = table.getElement(i);
-        std::string label = msotb->getLabelText();
+      for (unsigned int i = 0; i < entries.size(); i++) {
+        const std::string & label = entries[i].second;
         if (!label.empty() && toupper(ch) == toupper(label[0])) {
-          table.checkPointer();
-          table.setPointer(msotb);
+          pointer = i;
+          ui->redraw();
           break;
         }
       }
