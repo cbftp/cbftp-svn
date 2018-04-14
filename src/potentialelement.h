@@ -10,12 +10,12 @@ class PotentialElement {
   private:
     Pointer<SiteLogic> site;
     int potential;
-    int dnslots;
+    int dstupslots;
     std::string filename;
   public:
     PotentialElement();
     const Pointer<SiteLogic> & getSite() const;
-    int getSiteDownloadSlots() const;
+    int getDestinationSiteUploadSlots() const;
     int getPotential() const;
     std::string getFileName() const;
     void reset();

@@ -1030,17 +1030,9 @@ void Engine::setSpeedScale() {
 }
 
 void Engine::preSeedPotentialData(Pointer<Race> & race) {
-  race->begin();
   std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator srcit;
   std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator dstit;
-  int highestprioritypoints = 0;
-  int maxpointsexceptavgspeed = getMaxPointsFileSize() + getMaxPointsPriority() + getMaxPointsPercentageOwned();
-  for (srcit = race->begin(); srcit != race->end(); srcit++) {
-    int priopoints = getPriorityPoints(srcit->second->getSite()->getPriority());
-    if (priopoints > highestprioritypoints) {
-      highestprioritypoints = priopoints;
-    }
-  }
+  int maxpointssizeandowned = getMaxPointsFileSize() + getMaxPointsPercentageOwned();
   for (srcit = race->begin(); srcit != race->end(); srcit++) {
     const Pointer<SiteLogic> & sls = srcit->second;
     if (sls->getSite()->getAllowDownload() == SITE_ALLOW_TRANSFER_NO ||
@@ -1048,19 +1040,14 @@ void Engine::preSeedPotentialData(Pointer<Race> & race) {
     {
       continue;
     }
-    int maxavgspeed = 0;
     for (dstit = race->begin(); dstit != race->end(); dstit++) {
       const Pointer<SiteLogic> & sld = dstit->second;
       if (!raceTransferPossible(sls, sld, race)) continue;
-      int avgspeed = sls->getSite()->getAverageSpeed(sld->getSite()->getName());
-      if (avgspeed > maxavgspeed) {
-        maxavgspeed = avgspeed;
+      int priopoints = getPriorityPoints(sld->getSite()->getPriority());
+      int speedpoints = getSpeedPoints(sls->getSite()->getAverageSpeed(sld->getSite()->getName()));
+      for (unsigned int i = 0; i < sld->getSite()->getMaxUp(); ++i) {
+        sls->pushPotential(maxpointssizeandowned + priopoints + speedpoints, "preseed", sld);
       }
-    }
-    for (dstit = race->begin(); dstit != race->end(); dstit++) {
-      const Pointer<SiteLogic> & sld = dstit->second;
-      if (!raceTransferPossible(sls, sld, race)) continue;
-      sls->pushPotential(maxpointsexceptavgspeed + getSpeedPoints(maxavgspeed), "preseed", sld);
     }
   }
 }
