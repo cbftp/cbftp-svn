@@ -26,7 +26,7 @@ class ScoreBoard {
     ScoreBoard();
     ~ScoreBoard();
     void add(const std::string &, unsigned short, bool, const Pointer<SiteLogic> &,
-        FileList *, SiteRace *, const Pointer<SiteLogic> &, FileList *, SiteRace *, Pointer<Race> &);
+        FileList *, SiteRace *, const Pointer<SiteLogic> &, FileList *, SiteRace *, Pointer<Race> &, const std::string &);
     unsigned int size() const;
     std::vector<ScoreBoardElement *>::const_iterator begin() const;
     std::vector<ScoreBoardElement *>::const_iterator end() const;

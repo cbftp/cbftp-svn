@@ -700,7 +700,7 @@ void Engine::refreshScoreBoard() {
               if (race->hasFailedTransfer(f, fls, fld)) continue;
               bool prio = false;
               unsigned short score = calculateScore(f, race, fls, srs, fld, srd, avgspeed, &prio, prioritypoints, racemode);
-              scoreboard->add(filename, score, prio, sls, fls, srs, sld, fld, srd, race);
+              scoreboard->add(filename, score, prio, sls, fls, srs, sld, fld, srd, race, itfls->first);
               race->resetUpdateCheckCounter();
             }
           }
@@ -863,7 +863,7 @@ void Engine::issueOptimalTransfers() {
     if (!sbe->getSourceFileList()->getFile(filename)) {
       continue;
     }
-    SkipListMatch match = sbe->getDestination()->getSite()->getSkipList().check(filename, false);
+    SkipListMatch match = sbe->getDestination()->getSite()->getSkipList().check((Path(sbe->subDir()) / filename).toString(), false);
     if (match.action == SKIPLIST_UNIQUE &&
         sbe->getDestinationFileList()->containsPatternBefore(match.matchpattern, false, filename))
     {
