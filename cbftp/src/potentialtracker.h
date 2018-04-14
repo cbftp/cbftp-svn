@@ -18,13 +18,15 @@ class PotentialTracker : private EventReceiver {
   private:
     std::list<PotentialListElement *> potentiallist;
     std::list<PotentialElement *> top;
+    bool maxpotentialcalculated;
     void tick(int);
+    bool allTopSlotsUsedForSite(PotentialElement *) const;
+    std::list<PotentialElement *>::iterator findFirstOfSite(const Pointer<SiteLogic> &);
+    void calculateMaxAvailablePotential();
   public:
     PotentialTracker(int);
     ~PotentialTracker();
     int getMaxAvailablePotential();
     void pushPotential(int, const std::string &, const Pointer<SiteLogic> &, int);
-    std::list<PotentialElement *>::iterator findFirstOfSite(const Pointer<SiteLogic> &);
     void updateSlots(int);
-    bool allTopSlotsUsedForSite(PotentialElement *) const;
 };

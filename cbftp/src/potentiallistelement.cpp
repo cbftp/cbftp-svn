@@ -14,7 +14,7 @@ PotentialListElement::~PotentialListElement() {
   }
 }
 
-void PotentialListElement::update(const Pointer<SiteLogic> & dst, int dstup, int potential, const std::string & filename) {
+bool PotentialListElement::update(const Pointer<SiteLogic> & dst, int dstup, int potential, const std::string & filename) {
   bool allslotsused = allSlotsUsedForSite(dst, dstup);
   PotentialElement * lowelem = NULL;
   int lowest;
@@ -29,7 +29,9 @@ void PotentialListElement::update(const Pointer<SiteLogic> & dst, int dstup, int
   }
   if (lowelem && lowest < potential) {
     lowelem->update(dst, dstup, potential, filename);
+    return true;
   }
+  return false;
 }
 
 std::vector<PotentialElement *> & PotentialListElement::getSlotsVector() {

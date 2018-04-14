@@ -11,12 +11,13 @@ class PotentialElement;
 class PotentialListElement {
   private:
     std::vector<PotentialElement *> slots;
+    bool allSlotsUsedForSite(const Pointer<SiteLogic> &, int) const;
   public:
     PotentialListElement(int);
     ~PotentialListElement();
-    void update(const Pointer<SiteLogic> &, int, int, const std::string &);
+    bool update(const Pointer<SiteLogic> &, int, int, const std::string &);
     void reset();
     std::vector<PotentialElement *> & getSlotsVector();
     void updateSlots(int);
-    bool allSlotsUsedForSite(const Pointer<SiteLogic> &, int) const;
+
 };
