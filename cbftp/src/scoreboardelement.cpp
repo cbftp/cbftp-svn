@@ -4,13 +4,17 @@
 
 ScoreBoardElement::ScoreBoardElement(const std::string & filename, unsigned short score,
     bool prio, const Pointer<SiteLogic> & src, FileList * fls, SiteRace * srcsr,
-    const Pointer<SiteLogic> & dst, FileList * fld, SiteRace * dstsr, Pointer<Race> & race) {
-  reset(filename, score, prio, src, fls, srcsr, dst, fld, dstsr, race);
+    const Pointer<SiteLogic> & dst, FileList * fld, SiteRace * dstsr, Pointer<Race> & race,
+    const std::string & subdir)
+{
+  reset(filename, score, prio, src, fls, srcsr, dst, fld, dstsr, race, subdir);
 }
 
 void ScoreBoardElement::reset(const std::string & filename, unsigned short score,
     bool prio, const Pointer<SiteLogic> & src, FileList * fls, SiteRace * srcsr,
-    const Pointer<SiteLogic> & dst, FileList * fld, SiteRace * dstsr, Pointer<Race> & race) {
+    const Pointer<SiteLogic> & dst, FileList * fld, SiteRace * dstsr, Pointer<Race> & race,
+    const std::string & subdir)
+{
   this->filename = filename;
   this->src = src;
   this->fls = fls;
@@ -22,10 +26,15 @@ void ScoreBoardElement::reset(const std::string & filename, unsigned short score
   this->score = score;
   this->prio = prio;
   attempted = false;
+  this->subdir = subdir;
 }
 
 const std::string & ScoreBoardElement::fileName() const {
   return filename;
+}
+
+const std::string & ScoreBoardElement::subDir() const {
+  return subdir;
 }
 
 const Pointer<SiteLogic> & ScoreBoardElement::getSource() const {

@@ -23,12 +23,14 @@ class ScoreBoardElement {
     unsigned short score;
     bool prio;
     bool attempted;
+    std::string subdir;
   public:
     ScoreBoardElement(const std::string &, unsigned short, bool, const Pointer<SiteLogic> &,
-        FileList *, SiteRace *, const Pointer<SiteLogic> &, FileList *, SiteRace *, Pointer<Race> &);
+        FileList *, SiteRace *, const Pointer<SiteLogic> &, FileList *, SiteRace *, Pointer<Race> &, const std::string &);
     void reset(const std::string &, unsigned short, bool, const Pointer<SiteLogic> &,
-        FileList *, SiteRace *, const Pointer<SiteLogic> &, FileList *, SiteRace *, Pointer<Race> &);
+        FileList *, SiteRace *, const Pointer<SiteLogic> &, FileList *, SiteRace *, Pointer<Race> &, const std::string &);
     const std::string & fileName() const;
+    const std::string & subDir() const;
     const Pointer<SiteLogic> & getSource() const;
     const Pointer<SiteLogic> & getDestination() const;
     FileList * getSourceFileList() const;

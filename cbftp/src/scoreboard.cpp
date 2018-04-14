@@ -23,18 +23,18 @@ void ScoreBoard::add(
     const std::string & name, unsigned short score, bool prio,
     const Pointer<SiteLogic> & src, FileList * fls, SiteRace * srs,
     const Pointer<SiteLogic> & dst, FileList * fld, SiteRace * srd,
-    Pointer<Race> & race)
+    Pointer<Race> & race, const std::string & subdir)
 {
   if (showsize == elements.size()) {
     elements.resize(elements.size() + RESIZE_CHUNK);
     elementstmp.resize(elements.size());
     for (int i = 0; i < RESIZE_CHUNK; i++) {
-      ScoreBoardElement * sbe = new ScoreBoardElement(name, score, prio, src, fls, srs, dst, fld, srd, race);
+      ScoreBoardElement * sbe = new ScoreBoardElement(name, score, prio, src, fls, srs, dst, fld, srd, race, subdir);
       elements[showsize + i] = sbe;
     }
   }
   else {
-    elements[showsize]->reset(name, score, prio, src, fls, srs, dst, fld, srd, race);
+    elements[showsize]->reset(name, score, prio, src, fls, srs, dst, fld, srd, race, subdir);
   }
   ++showsize;
 }
