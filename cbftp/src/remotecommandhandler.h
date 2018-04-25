@@ -28,7 +28,7 @@ private:
   void commandIdle(const std::string &);
   void commandAbort(const std::string &);
   void commandDelete(const std::string &);
-  void commandReset(const std::string &);
+  void commandReset(const std::string &, bool);
   void parseRace(const std::string &, int);
 public:
   RemoteCommandHandler();
