@@ -863,6 +863,9 @@ void Engine::issueOptimalTransfers() {
     if (!sbe->getSourceFileList()->getFile(filename)) {
       continue;
     }
+    if (sbe->getDestinationSiteRace()->isAborted()) {
+      continue;
+    }
     SkipListMatch match = sbe->getDestination()->getSite()->getSkipList().check((Path(sbe->subDir()) / filename).toString(), false);
     if (match.action == SKIPLIST_UNIQUE &&
         sbe->getDestinationFileList()->containsPatternBefore(match.matchpattern, false, filename))
