@@ -153,28 +153,32 @@ std::string AllTransferJobsScreen::getInfoText() const {
 }
 
 void AllTransferJobsScreen::addJobTableRow(unsigned int y, MenuSelectOption & mso, unsigned int id, bool selectable,
-    const std::string & timestamp, const std::string & timespent, const std::string & type, const std::string & name,
-    const std::string & route, const std::string & sizeprogress, const std::string & filesprogress,
+    const std::string & queuetime, const std::string & starttime, const std::string & timespent, const std::string & type,
+    const std::string & name, const std::string & route, const std::string & sizeprogress, const std::string & filesprogress,
     const std::string & remaining, const std::string & speed, const std::string & progress) {
   Pointer<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
   Pointer<MenuSelectOptionTextButton> msotb;
 
-  msotb = mso.addTextButtonNoContent(y, 1, "timestamp", timestamp);
+  msotb = mso.addTextButtonNoContent(y, 1, "queuetime", queuetime);
+  msotb->setSelectable(false);
+  msal->addElement(msotb, 5, RESIZE_REMOVE);
+
+  msotb = mso.addTextButtonNoContent(y, 1, "starttime", starttime);
   msotb->setSelectable(false);
   msal->addElement(msotb, 4, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "timespent", timespent);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 5, RESIZE_REMOVE);
+  msal->addElement(msotb, 6, RESIZE_REMOVE);
 
   msotb = mso.addTextButton(y, 1, "type", type);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 7, RESIZE_REMOVE);
+  msal->addElement(msotb, 8, RESIZE_REMOVE);
 
   msotb = mso.addTextButton(y, 1, "name", name);
   msotb->setSelectable(selectable);
   msotb->setId(id);
-  msal->addElement(msotb, 10, 0, RESIZE_CUTEND, true);
+  msal->addElement(msotb, 11, 0, RESIZE_CUTEND, true);
 
   msotb = mso.addTextButton(y, 1, "route", route);
   msotb->setSelectable(false);
@@ -182,7 +186,7 @@ void AllTransferJobsScreen::addJobTableRow(unsigned int y, MenuSelectOption & ms
 
   msotb = mso.addTextButtonNoContent(y, 1, "sizeprogress", sizeprogress);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 8, RESIZE_REMOVE);
+  msal->addElement(msotb, 9, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "filesprogress", filesprogress);
   msotb->setSelectable(false);
@@ -194,34 +198,43 @@ void AllTransferJobsScreen::addJobTableRow(unsigned int y, MenuSelectOption & ms
 
   msotb = mso.addTextButtonNoContent(y, 1, "speed", speed);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 6, RESIZE_REMOVE);
+  msal->addElement(msotb, 7, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "progress", progress);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 9, RESIZE_REMOVE);
+  msal->addElement(msotb, 10, RESIZE_REMOVE);
 }
 
 void AllTransferJobsScreen::addJobTableHeader(unsigned int y, MenuSelectOption & mso, const std::string & name) {
-  addJobTableRow(y, mso, -1, false, "STARTED", "USE", "TYPE", name, "ROUTE", "SIZE", "FILES", "LEFT", "SPEED", "DONE");
+  addJobTableRow(y, mso, -1, false, "QUEUED", "STARTED", "USE", "TYPE", name, "ROUTE", "SIZE", "FILES", "LEFT", "SPEED", "DONE");
 }
 
 void AllTransferJobsScreen::addJobDetails(unsigned int y, MenuSelectOption & mso, Pointer<TransferJob> tj) {
   std::string timespent = util::simpleTimeFormat(tj->timeSpent());
-  bool aborted = tj->isAborted();
-  std::string timeremaining = aborted ? "-" : util::simpleTimeFormat(tj->timeRemaining());
+  bool running = tj->getStatus() == TRANSFERJOB_RUNNING;
+  bool started = tj->getStatus() != TRANSFERJOB_QUEUED;
+  std::string timeremaining = running ? util::simpleTimeFormat(tj->timeRemaining()) : "-";
   std::string route = TransferJobStatusScreen::getRoute(tj);
   std::string sizeprogress = util::parseSize(tj->sizeProgress()) +
                              " / " + util::parseSize(tj->totalSize());
   std::string filesprogress = util::int2Str(tj->filesProgress()) + "/" +
                               util::int2Str(tj->filesTotal());
-  std::string speed = util::parseSize(tj->getSpeed() * SIZEPOWER) + "/s";
+  std::string speed = started ? util::parseSize(tj->getSpeed() * SIZEPOWER) + "/s" : "-";
   std::string progress = util::int2Str(tj->getProgress()) + "%";
-  std::string status = progress;
-  if (tj->isDone()) {
-    status = "done";
-  }
-  if (tj->isAborted()) {
-    status = "abor";
+  std::string status;
+  switch (tj->getStatus()) {
+    case TRANSFERJOB_QUEUED:
+      status = "queue";
+      break;
+    case TRANSFERJOB_RUNNING:
+      status = progress;
+      break;
+    case TRANSFERJOB_DONE:
+      status = "done";
+      break;
+    case TRANSFERJOB_ABORTED:
+      status = "abor";
+      break;
   }
   std::string type = "FXP";
   switch (tj->getType()) {
@@ -232,5 +245,5 @@ void AllTransferJobsScreen::addJobDetails(unsigned int y, MenuSelectOption & mso
       type = "UL";
       break;
   }
-  addJobTableRow(y, mso, tj->getId(), true, tj->timeStarted(), timespent, type, tj->getSrcFileName(), route, sizeprogress, filesprogress, timeremaining, speed, status);
+  addJobTableRow(y, mso, tj->getId(), true, tj->timeQueued(), tj->timeStarted(), timespent, type, tj->getSrcFileName(), route, sizeprogress, filesprogress, timeremaining, speed, status);
 }

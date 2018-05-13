@@ -8,6 +8,7 @@
 #include "core/eventreceiver.h"
 #include "core/pointer.h"
 
+class CommandOwner;
 class Race;
 class TransferJob;
 class SiteTransferJob;
@@ -53,7 +54,7 @@ public:
   void deleteOnSites(Pointer<Race> &, std::list<Pointer<Site> >);
   void deleteOnSites(Pointer<Race> &, std::list<Pointer<Site> >, bool);
   void abortTransferJob(Pointer<TransferJob> &);
-  void raceFileListRefreshed(SiteLogic *, SiteRace *);
+  void jobFileListRefreshed(SiteLogic *, CommandOwner *);
   void filelistUpdated();
   bool transferJobActionRequest(Pointer<SiteTransferJob> &);
   void raceActionRequest();
