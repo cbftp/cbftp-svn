@@ -204,10 +204,7 @@ void SiteLogic::listRefreshed(int id) {
     }
   }
   if (currentco != NULL) {
-    if (currentco->classType() == COMMANDOWNER_SITERACE) {
-      SiteRace * sr = (SiteRace *)currentco;
-      global->getEngine()->raceFileListRefreshed(this, sr);
-    }
+    global->getEngine()->jobFileListRefreshed(this, currentco);
   }
   handleConnection(id, true);
 }
@@ -857,10 +854,6 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
         }
         getFileListConn(id, tj.get(), fl);
         return;
-      }
-      if (!tj->getTransferJob()->isInitialized()) {
-        targetjobs.push_front(tj);
-        continue;
       }
       int type = tj->getTransferJob()->getType();
       if (((type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) &&

@@ -27,6 +27,7 @@
 #include "transferstatus.h"
 #include "util.h"
 #include "preparedrace.h"
+#include "sitetransferjob.h"
 
 #define SPREAD 0
 #define POKEINTERVAL 1000
@@ -481,16 +482,28 @@ void Engine::abortTransferJob(Pointer<TransferJob> & tj) {
   global->getEventLog()->log("Engine", "Transfer job aborted: " + tj->getSrcFileName());
 }
 
-void Engine::raceFileListRefreshed(SiteLogic * sls, SiteRace * sr) {
-  Pointer<Race> race = sr->getRace();
-  if (currentraces.size() > 0) {
-    if (!global->getWorkManager()->overload()) {
-      estimateRaceSize(race);
-      checkIfRaceComplete(sls, race);
-      filelistUpdated();
+void Engine::jobFileListRefreshed(SiteLogic * sls, CommandOwner * commandowner) {
+  switch (commandowner->classType()) {
+    case COMMANDOWNER_SITERACE: {
+      SiteRace * sr = static_cast<SiteRace *>(commandowner);
+      Pointer<Race> race = sr->getRace();
+      if (currentraces.size() > 0) {
+        if (!global->getWorkManager()->overload()) {
+          estimateRaceSize(race);
+          checkIfRaceComplete(sls, race);
+          filelistUpdated();
+        }
+        else {
+          ++dropped;
+        }
+      }
+      break;
     }
-    else {
-      ++dropped;
+    case COMMANDOWNER_TRANSFERJOB: {
+      SiteTransferJob * stj = static_cast<SiteTransferJob *>(commandowner);
+      Pointer<TransferJob> tj = getTransferJob(stj->getId());
+      refreshPendingTransferList(tj);
+      break;
     }
   }
 }
@@ -517,9 +530,6 @@ bool Engine::transferJobActionRequest(Pointer<SiteTransferJob> & stj) {
   if (it == pendingtransfers.end()) {
     pendingtransfers[tj] = std::list<PendingTransfer>();
     it = pendingtransfers.find(tj);
-  }
-  if (!tj->isInitialized()) {
-    tj->setInitialized();
   }
   refreshPendingTransferList(tj);
   if (it->second.size() == 0) {
@@ -564,6 +574,9 @@ bool Engine::transferJobActionRequest(Pointer<SiteTransferJob> & stj) {
     }
   }
   it->second.pop_front();
+  if (tj->getStatus() == TRANSFERJOB_QUEUED) {
+    tj->start();
+  }
   return true;
 }
 
@@ -816,6 +829,7 @@ void Engine::refreshPendingTransferList(Pointer<TransferJob> & tj) {
       break;
     }
   }
+  tj->updateStatus();
 }
 
 void Engine::addPendingTransfer(std::list<PendingTransfer> & list, PendingTransfer & p) {

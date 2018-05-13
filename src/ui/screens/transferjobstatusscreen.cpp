@@ -30,11 +30,11 @@ void TransferJobStatusScreen::initialize(unsigned int row, unsigned int col, uns
   abortedlegendtext = "[c/Esc] Return";
   defaultlegendtext = abortedlegendtext + " - [Enter] Modify - A[B]ort transfer job - [t]ransfers";
   transferjob = global->getEngine()->getTransferJob(id);
-  currentlegendtext = transferjob->isAborted() ? abortedlegendtext : defaultlegendtext;
+  currentlegendtext = transferjob->getStatus() == TRANSFERJOB_ABORTED ? abortedlegendtext : defaultlegendtext;
   autoupdate = true;
   active = false;
   mso.clear();
-  mso.addIntArrow(3, 40, "slots", "Slots:", transferjob->maxSlots(), 1, transferjob->maxPossibleSlots());
+  mso.addIntArrow(4, 40, "slots", "Slots:", transferjob->maxSlots(), 1, transferjob->maxPossibleSlots());
   mso.enterFocusFrom(0);
   init(row, col);
 }
@@ -44,27 +44,41 @@ void TransferJobStatusScreen::redraw() {
   table.clear();
   progressmap.clear();
   int y = 1;
-  ui->printStr(y, 1, "Started: " + transferjob->timeStarted());
-  ui->printStr(y, 20, "Type: " + transferjob->typeString());
+  bool running = transferjob->getStatus() == TRANSFERJOB_RUNNING;
+  bool started = transferjob->getStatus() != TRANSFERJOB_QUEUED;
+  ui->printStr(y, 1, "Queued: " + transferjob->timeQueued());
+  if (started) {
+    ui->printStr(y, 19, "Started: " + transferjob->timeStarted());
+  }
+  y++;
+  ui->printStr(y, 1, "Type: " + transferjob->typeString());
   std::string route = getRoute(transferjob);
-  ui->printStr(y, 38, "Route: " + route);
-  std::string status = "In progress";
-  if (transferjob->isDone()) {
-    status = "Completed";
+  ui->printStr(y, 19, "Route: " + route);
+  std::string status;
+  switch (transferjob->getStatus()) {
+    case TRANSFERJOB_QUEUED:
+      status = "Queued";
+      break;
+    case TRANSFERJOB_RUNNING:
+      status = "In progress";
+      break;
+    case TRANSFERJOB_DONE:
+      status = "Completed";
+      break;
+    case TRANSFERJOB_ABORTED:
+      status = "Aborted";
+      break;
   }
-  if (transferjob->isAborted()) {
-    status = "Aborted";
-  }
-  ui->printStr(y, 60, std::string("Status: ") + status);
+  ui->printStr(y, 41, std::string("Status: ") + status);
   y++;
   ui->printStr(y, 1, "Size: " + util::parseSize(transferjob->sizeProgress()) +
       " / " + util::parseSize(transferjob->totalSize()));
-  ui->printStr(y, 35, "Speed: " + util::parseSize(transferjob->getSpeed() * SIZEPOWER) + "/s");
+  ui->printStr(y, 35, "Speed: " + (started ? util::parseSize(transferjob->getSpeed() * SIZEPOWER) + "/s" : "-"));
   ui->printStr(y, 60, "Files: " + util::int2Str(transferjob->filesProgress()) + "/" +
       util::int2Str(transferjob->filesTotal()));
   y++;
   ui->printStr(y, 1, "Time spent: " + util::simpleTimeFormat(transferjob->timeSpent()));
-  ui->printStr(y, 21, "Remaining: " + (transferjob->isDone() ? "-" : util::simpleTimeFormat(transferjob->timeRemaining())));
+  ui->printStr(y, 21, "Remaining: " + (running ? util::simpleTimeFormat(transferjob->timeRemaining()) : "-"));
   int progresspercent = transferjob->getProgress();
   std::string progress = "....................";
   int charswithhighlight = progress.length() * progresspercent / 100;

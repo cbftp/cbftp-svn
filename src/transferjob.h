@@ -16,6 +16,13 @@ enum TransferJobType {
   TRANSFERJOB_FXP
 };
 
+enum TransferJobStatus {
+  TRANSFERJOB_QUEUED,
+  TRANSFERJOB_RUNNING,
+  TRANSFERJOB_DONE,
+  TRANSFERJOB_ABORTED
+};
+
 #define TRANSFERJOB_UPDATE_INTERVAL 250
 
 class SiteTransferJob;
@@ -52,6 +59,7 @@ public:
   std::map<std::string, unsigned long long int>::const_iterator pendingTransfersBegin() const;
   std::map<std::string, unsigned long long int>::const_iterator pendingTransfersEnd() const;
   bool isDone() const;
+  TransferJobStatus getStatus() const;
   bool wantsList(bool source);
   Pointer<LocalFileList> wantedLocalDstList(const std::string &);
   FileList * getListTarget(bool source) const;
@@ -67,6 +75,7 @@ public:
   bool listsRefreshed() const;
   bool refreshOrAlmostDone();
   void clearRefreshLists();
+  void start();
   void addPendingTransfer(const Path &, unsigned long long int);
   void addTransfer(const Pointer<TransferStatus> &);
   void targetExists(const Path &);
@@ -77,13 +86,11 @@ public:
   unsigned long long int sizeProgress() const;
   unsigned long long int totalSize() const;
   unsigned int getSpeed() const;
+  std::string timeQueued() const;
   std::string timeStarted() const;
   std::string typeString() const;
   int filesProgress() const;
   int filesTotal() const;
-  bool isInitialized() const;
-  void setInitialized();
-  bool isAborted() const;
   unsigned int getId() const;
   void abort();
   void clearExisting();
@@ -93,6 +100,7 @@ public:
   bool anyListNeedsRefreshing() const;
   Pointer<SiteTransferJob> & getSrcTransferJob();
   Pointer<SiteTransferJob> & getDstTransferJob();
+  void updateStatus();
 private:
   void downloadJob(unsigned int, const Pointer<SiteLogic> &, FileList *, const std::string &, const Path &, const std::string &);
   void uploadJob(unsigned int, const Path &, const std::string &, const Pointer<SiteLogic> &, FileList *, const std::string &);
@@ -100,7 +108,6 @@ private:
   void addTransferAttempt(const Pointer<TransferStatus> &, bool);
   void addSubDirectoryFileLists(std::map<std::string, FileList *> &, FileList *, const Path &);
   void addSubDirectoryFileLists(std::map<std::string, FileList *> &, FileList *, const Path &, File *);
-  void updateStatus();
   void init(unsigned int, TransferJobType, const Pointer<SiteLogic> &, const Pointer<SiteLogic> &, const Path &, const Path &, const std::string &, const std::string &);
   void countTotalFiles();
   void setDone();
@@ -121,9 +128,7 @@ private:
   std::set<std::string> existingtargets;
   std::list<Pointer<TransferStatus> > transfers;
   int slots;
-  bool almostdone;
-  bool done;
-  bool aborted;
+  TransferJobStatus status;
   FileList * srclisttarget;
   FileList * dstlisttarget;
   std::map<FileList *, int> filelistsrefreshed;
@@ -134,10 +139,11 @@ private:
   int timespentmillis;
   int timespentsecs;
   int timeremaining;
+  std::string timequeued;
   std::string timestarted;
   int filesprogress;
   int filestotal;
-  bool initialized;
+  bool almostdone;
   unsigned int id;
   std::map<std::string, int> transferattempts;
   int idletime;

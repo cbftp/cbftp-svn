@@ -26,7 +26,7 @@ public:
 private:
   static void addJobTableRow(unsigned int, MenuSelectOption &, unsigned int, bool, const std::string &,
       const std::string &, const std::string &, const std::string &, const std::string &, const std::string &,
-      const std::string &, const std::string &, const std::string &, const std::string &);
+      const std::string &, const std::string &, const std::string &, const std::string &, const std::string &);
   MenuSelectOption table;
   Engine * engine;
   bool hascontents;

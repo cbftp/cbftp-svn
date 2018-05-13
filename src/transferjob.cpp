@@ -170,10 +170,8 @@ void TransferJob::init(unsigned int id, TransferJobType type, const Pointer<Site
   this->dstpath = dstpath;
   this->srcfile = srcfile;
   this->dstfile = dstfile;
-  done = false;
+  status = TRANSFERJOB_QUEUED;
   almostdone = false;
-  initialized = false;
-  aborted = false;
   slots = 1;
   srclisttarget = NULL;
   dstlisttarget = NULL;
@@ -187,8 +185,8 @@ void TransferJob::init(unsigned int id, TransferJobType type, const Pointer<Site
   filesprogress = 0;
   filestotal = 0;
   idletime = 0;
-  timestarted = util::ctimeLog();
-  global->getTickPoke()->startPoke(this, "TransferJob", TRANSFERJOB_UPDATE_INTERVAL, 0);
+  timequeued = util::ctimeLog();
+  timestarted = "-";
   srcsitetransferjob = makePointer<SiteTransferJob>(this, true);
   dstsitetransferjob = makePointer<SiteTransferJob>(this, false);
 }
@@ -205,8 +203,12 @@ int TransferJob::getType() const {
   return type;
 }
 
+TransferJobStatus TransferJob::getStatus() const {
+  return status;
+}
+
 bool TransferJob::isDone() const {
-  return done;
+  return status == TRANSFERJOB_DONE || status == TRANSFERJOB_ABORTED;
 }
 
 bool TransferJob::wantsList(bool source) {
@@ -468,6 +470,15 @@ void TransferJob::clearRefreshLists() {
   filelistsrefreshed.clear();
 }
 
+void TransferJob::start() {
+  if (status != TRANSFERJOB_QUEUED) {
+    return;
+  }
+  timestarted = util::ctimeLog();
+  status = TRANSFERJOB_RUNNING;
+  global->getTickPoke()->startPoke(this, "TransferJob", TRANSFERJOB_UPDATE_INTERVAL, 0);
+}
+
 void TransferJob::addPendingTransfer(const Path & name, unsigned long long int size) {
   pendingtransfers[name.toString()] = size;
 }
@@ -578,6 +589,10 @@ unsigned int TransferJob::getSpeed() const {
   return speed;
 }
 
+std::string TransferJob::timeQueued() const {
+  return timequeued;
+}
+
 std::string TransferJob::timeStarted() const {
   return timestarted;
 }
@@ -645,17 +660,12 @@ void TransferJob::countTotalFiles() {
   }
 }
 
-bool TransferJob::isInitialized() const {
-  return initialized;
-}
-
-void TransferJob::setInitialized() {
-  initialized = true;
-}
-
 void TransferJob::abort() {
-  aborted = true;
+  if (isDone()) {
+    return;
+  }
   setDone();
+  status = TRANSFERJOB_ABORTED;
 }
 
 void TransferJob::clearExisting() {
@@ -663,17 +673,16 @@ void TransferJob::clearExisting() {
   pendingtransfers.clear();
 }
 
-bool TransferJob::isAborted() const {
-  return aborted;
-}
-
 unsigned int TransferJob::getId() const {
   return id;
 }
 
 void TransferJob::setDone() {
+  if (isDone()) {
+    return;
+  }
   global->getTickPoke()->stopPoke(this, 0);
-  done = true;
+  status = TRANSFERJOB_DONE;
   timeremaining = 0;
 }
 
