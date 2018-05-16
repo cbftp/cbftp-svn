@@ -431,6 +431,9 @@ bool TransferJob::refreshOrAlmostDone() {
   }
   if (finalset && allfinaldone) {
     almostdone = true;
+    if (status == TRANSFERJOB_QUEUED) {
+      start();
+    }
     return false;
   }
   else {
