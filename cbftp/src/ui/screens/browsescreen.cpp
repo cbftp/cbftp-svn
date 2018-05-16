@@ -170,20 +170,22 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
             if (other->type() == BROWSESCREEN_SITE) {
               FileList * otherfl = other.get<BrowseScreenSite>()->fileList();
               if (otherfl != NULL) {
-                global->getEngine()->newTransferJobFXP(active.get<BrowseScreenSite>()->siteName(),
-                                                       activefl,
-                                                       other.get<BrowseScreenSite>()->siteName(),
-                                                       otherfl,
-                                                       f->getName());
+                unsigned int id = global->getEngine()->newTransferJobFXP(active.get<BrowseScreenSite>()->siteName(),
+                                                                         activefl,
+                                                                         other.get<BrowseScreenSite>()->siteName(),
+                                                                         otherfl,
+                                                                         f->getName());
+                ui->addTempLegendTransferJob(id);
               }
             }
             else {
               Pointer<LocalFileList> otherfl = other.get<BrowseScreenLocal>()->fileList();
               if (!!otherfl) {
-                global->getEngine()->newTransferJobDownload(active.get<BrowseScreenSite>()->siteName(),
-                                                            activefl,
-                                                            f->getName(),
-                                                            otherfl->getPath());
+                unsigned int id = global->getEngine()->newTransferJobDownload(active.get<BrowseScreenSite>()->siteName(),
+                                                                              activefl,
+                                                                              f->getName(),
+                                                                              otherfl->getPath());
+                ui->addTempLegendTransferJob(id);
               }
             }
           }
@@ -195,10 +197,11 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
           if (!!activefl && otherfl != NULL && f != NULL &&
               (f->isDirectory() || f->getSize() > 0))
           {
-            global->getEngine()->newTransferJobUpload(activefl->getPath(),
-                                                      f->getName(),
-                                                      other.get<BrowseScreenSite>()->siteName(),
-                                                      otherfl);
+            unsigned int id = global->getEngine()->newTransferJobUpload(activefl->getPath(),
+                                                                        f->getName(),
+                                                                        other.get<BrowseScreenSite>()->siteName(),
+                                                                        otherfl);
+            ui->addTempLegendTransferJob(id);
           }
         }
       }

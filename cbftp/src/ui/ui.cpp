@@ -15,6 +15,9 @@
 #include "../datafilehandler.h"
 #include "../path.h"
 
+#include "legendprinterkeybinds.h"
+#include "legendprinterspreadjob.h"
+#include "legendprintertransferjob.h"
 #include "legendwindow.h"
 #include "infowindow.h"
 #include "uiwindow.h"
@@ -161,6 +164,9 @@ bool Ui::init() {
   mainwindows.push_back(infoscreen);
   mainwindows.push_back(selectjobsscreen);
 
+  legendprinterkeybinds = makePointer<LegendPrinterKeybinds>(this);
+  legendwindow->setMainLegendPrinter(legendprinterkeybinds);
+
   if (global->getSettingsLoaderSaver()->dataExists()) {
     loginscreen->initialize(mainrow, maincol);
     topwindow = loginscreen;
@@ -169,7 +175,7 @@ bool Ui::init() {
     enableInfo();
     enableLegend();
     newkeyscreen->initialize(mainrow, maincol);
-    legendwindow->setText(newkeyscreen->getLegendText());
+    setLegendText(newkeyscreen->getLegendText());
     topwindow = newkeyscreen;
   }
   infowindow->setLabel(topwindow->getInfoLabel());
@@ -443,7 +449,7 @@ void Ui::switchToWindow(Pointer<UIWindow> window, bool allowsplit) {
   if (split && !allowsplit) {
     setSplit(false);
   }
-  legendwindow->setText(window->getLegendText());
+  setLegendText(window->getLegendText());
   infowindow->setLabel(window->getInfoLabel());
   infowindow->setText(window->getInfoText());
   topwindow = window;
@@ -529,9 +535,21 @@ void Ui::update() {
 }
 
 void Ui::setLegend() {
-  legendwindow->setText(topwindow->getLegendText());
+  setLegendText(topwindow->getLegendText());
   infowindow->setText(topwindow->getInfoText());
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+}
+
+void Ui::addTempLegendTransferJob(unsigned int id) {
+  Pointer<LegendPrinterTransferJob> lptj = makePointer<LegendPrinterTransferJob>(this, id);
+  legendwindow->addTempLegendPrinter(lptj);
+  legendwindow->redraw();
+}
+
+void Ui::addTempLegendSpreadJob(unsigned int id) {
+  Pointer<LegendPrinterSpreadJob> lpsj = makePointer<LegendPrinterSpreadJob>(this, id);
+  legendwindow->addTempLegendPrinter(lpsj);
+  legendwindow->redraw();
 }
 
 void Ui::setInfo() {
@@ -576,11 +594,15 @@ void Ui::moveCursor(unsigned int row, unsigned int col) {
 }
 
 void Ui::highlight(bool highlight) {
+  this->highlight(main, highlight);
+}
+
+void Ui::highlight(WINDOW * window, bool highlight) {
   if (highlight) {
-    uiqueue.push(UICommand(UI_COMMAND_HIGHLIGHT_ON, main));
+    uiqueue.push(UICommand(UI_COMMAND_HIGHLIGHT_ON, window));
   }
   else {
-    uiqueue.push(UICommand(UI_COMMAND_HIGHLIGHT_OFF, main));
+    uiqueue.push(UICommand(UI_COMMAND_HIGHLIGHT_OFF, window));
   }
 }
 
@@ -642,21 +664,21 @@ void Ui::printStr(unsigned int row, unsigned int col, const std::basic_string<un
 
 void Ui::printStr(WINDOW * window, unsigned int row, unsigned int col, const std::string & str, unsigned int maxlen, bool highlight, bool rightalign) {
   if (highlight) {
-    this->highlight(true);
+    this->highlight(window, true);
   }
   uiqueue.push(UICommand(UI_COMMAND_PRINT_STR, window, row, col, str, maxlen, rightalign));
   if (highlight) {
-    this->highlight(false);
+    this->highlight(window, false);
   }
 }
 
 void Ui::printStr(WINDOW * window, unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str, unsigned int maxlen, bool highlight, bool rightalign) {
   if (highlight) {
-    this->highlight(true);
+    this->highlight(window, true);
   }
   uiqueue.push(UICommand(UI_COMMAND_PRINT_WIDE_STR, window, row, col, str, maxlen, rightalign));
   if (highlight) {
-    this->highlight(false);
+    this->highlight(window, false);
   }
 }
 
@@ -674,11 +696,11 @@ void Ui::printChar(unsigned int row, unsigned int col, unsigned int c, bool high
 
 void Ui::printChar(WINDOW * window, unsigned int row, unsigned int col, unsigned int c, bool highlight) {
   if (highlight) {
-    this->highlight(true);
+    this->highlight(window, true);
   }
   uiqueue.push(UICommand(UI_COMMAND_PRINT_CHAR, window, row, col, c));
   if (highlight) {
-    this->highlight(false);
+    this->highlight(window, false);
   }
 }
 
@@ -958,13 +980,18 @@ void Ui::returnRaceStatus(unsigned int id) {
   switchToWindow(racestatusscreen);
 }
 
+void Ui::setLegendText(const std::string & legendtext) {
+  legendprinterkeybinds->setText(legendtext);
+  legendwindow->clearTempLegendPrinters();
+  legendwindow->update();
+}
 void Ui::switchToLast() {
   if (split) {
     setSplit(false);
   }
   topwindow = history.back();
   history.pop_back();
-  legendwindow->setText(topwindow->getLegendText());
+  setLegendText(topwindow->getLegendText());
   infowindow->setLabel(topwindow->getInfoLabel());
   infowindow->setText(topwindow->getInfoText());
 }
@@ -1000,4 +1027,8 @@ void Ui::saveSettings(Pointer<DataFileHandler> dfh) {
 
 void Ui::notify() {
   uiqueue.push(UICommand(UI_COMMAND_BELL));
+}
+
+WINDOW * Ui::getLegendWindow() const {
+  return legend;
 }

@@ -155,7 +155,7 @@ std::string AllTransferJobsScreen::getInfoText() const {
 void AllTransferJobsScreen::addJobTableRow(unsigned int y, MenuSelectOption & mso, unsigned int id, bool selectable,
     const std::string & queuetime, const std::string & starttime, const std::string & timespent, const std::string & type,
     const std::string & name, const std::string & route, const std::string & sizeprogress, const std::string & filesprogress,
-    const std::string & remaining, const std::string & speed, const std::string & progress) {
+    const std::string & timeremaining, const std::string & speed, const std::string & progress) {
   Pointer<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
   Pointer<MenuSelectOptionTextButton> msotb;
 
@@ -192,7 +192,7 @@ void AllTransferJobsScreen::addJobTableRow(unsigned int y, MenuSelectOption & ms
   msotb->setSelectable(false);
   msal->addElement(msotb, 1, RESIZE_REMOVE);
 
-  msotb = mso.addTextButtonNoContent(y, 1, "remaining", remaining);
+  msotb = mso.addTextButtonNoContent(y, 1, "timeremaining", timeremaining);
   msotb->setSelectable(false);
   msal->addElement(msotb, 3, RESIZE_REMOVE);
 

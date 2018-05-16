@@ -81,6 +81,7 @@ public:
   void targetExists(const Path &);
   void tick(int);
   int getProgress() const;
+  int getMilliProgress() const;
   int timeSpent() const;
   int timeRemaining() const;
   unsigned long long int sizeProgress() const;
@@ -136,6 +137,7 @@ private:
   unsigned int speed;
   unsigned long long int sizeprogress;
   int progress;
+  int milliprogress;
   int timespentmillis;
   int timespentsecs;
   int timeremaining;

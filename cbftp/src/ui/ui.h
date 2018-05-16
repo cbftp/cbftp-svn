@@ -55,6 +55,7 @@ class TransferStatusScreen;
 class TransfersFilterScreen;
 class InfoScreen;
 class SelectJobsScreen;
+class LegendPrinterKeybinds;
 struct TransferFilteringParameters;
 
 enum LegendMode {
@@ -105,6 +106,7 @@ private:
   Pointer<TransfersFilterScreen> transfersfilterscreen;
   Pointer<InfoScreen> infoscreen;
   Pointer<SelectJobsScreen> selectjobsscreen;
+  Pointer<LegendPrinterKeybinds> legendprinterkeybinds;
   int mainrow;
   int maincol;
   int col;
@@ -135,6 +137,7 @@ private:
   void tick(int);
   void globalKeyBinds(int);
   void switchToLast();
+  void setLegendText(const std::string & legendtext);
 public:
   Ui();
   ~Ui();
@@ -152,6 +155,8 @@ public:
   void returnToLast();
   void update();
   void setLegend();
+  void addTempLegendTransferJob(unsigned int id);
+  void addTempLegendSpreadJob(unsigned int id);
   void setInfo();
   void setSplit(bool);
   void redraw();
@@ -161,6 +166,7 @@ public:
   void hideCursor();
   void moveCursor(unsigned int, unsigned int);
   void highlight(bool);
+  void highlight(WINDOW *, bool);
   void printStr(unsigned int, unsigned int, const std::string &);
   void printStr(unsigned int, unsigned int, const std::basic_string<unsigned int> &);
   void printStr(WINDOW *, unsigned int, unsigned int, const std::string &);
@@ -235,5 +241,6 @@ public:
   void loadSettings(Pointer<DataFileHandler>);
   void saveSettings(Pointer<DataFileHandler>);
   void notify();
+  WINDOW * getLegendWindow() const;
 };
 
