@@ -285,21 +285,22 @@ int Engine::getNextPreparedRaceStarterTimeRemaining() const {
   return nextpreparedtimeremaining / 1000;
 }
 
-void Engine::newTransferJobDownload(const std::string & srcsite, FileList * srcfilelist, const std::string & file, const Path & dstpath) {
-  newTransferJobDownload(srcsite, srcfilelist, file, dstpath, file);
+unsigned int Engine::newTransferJobDownload(const std::string & srcsite, FileList * srcfilelist, const std::string & file, const Path & dstpath) {
+  return newTransferJobDownload(srcsite, srcfilelist, file, dstpath, file);
 }
 
-void Engine::newTransferJobUpload(const Path & srcpath, const std::string & file, const std::string & dstsite, FileList * dstfilelist) {
-  newTransferJobUpload(srcpath, file, dstsite, dstfilelist, file);
+unsigned int Engine::newTransferJobUpload(const Path & srcpath, const std::string & file, const std::string & dstsite, FileList * dstfilelist) {
+  return newTransferJobUpload(srcpath, file, dstsite, dstfilelist, file);
 }
 
-void Engine::newTransferJobFXP(const std::string & srcsite, FileList * srcfilelist, const std::string & dstsite, FileList * dstfilelist, const std::string & file) {
-  newTransferJobFXP(srcsite, srcfilelist, file, dstsite, dstfilelist, file);
+unsigned int Engine::newTransferJobFXP(const std::string & srcsite, FileList * srcfilelist, const std::string & dstsite, FileList * dstfilelist, const std::string & file) {
+  return newTransferJobFXP(srcsite, srcfilelist, file, dstsite, dstfilelist, file);
 }
 
-void Engine::newTransferJobDownload(const std::string & srcsite, FileList * srcfilelist, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
+unsigned int Engine::newTransferJobDownload(const std::string & srcsite, FileList * srcfilelist, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
   const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(srcsite);
-  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, sl, srcfilelist, srcfile, dstpath, dstfile);
+  unsigned int id = nextid++;
+  Pointer<TransferJob> tj = makePointer<TransferJob>(id, sl, srcfilelist, srcfile, dstpath, dstfile);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting download job: " + srcfile +
@@ -307,11 +308,13 @@ void Engine::newTransferJobDownload(const std::string & srcsite, FileList * srcf
   sl->addTransferJob(tj->getSrcTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
+  return id;
 }
 
-void Engine::newTransferJobDownload(const std::string & site, const Path & srcpath, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
+unsigned int Engine::newTransferJobDownload(const std::string & site, const Path & srcpath, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
   const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
-  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, sl, srcpath, srcfile, dstpath, dstfile);
+  unsigned int id = nextid++;
+  Pointer<TransferJob> tj = makePointer<TransferJob>(id, sl, srcpath, srcfile, dstpath, dstfile);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting download job: " + srcfile +
@@ -319,11 +322,13 @@ void Engine::newTransferJobDownload(const std::string & site, const Path & srcpa
   sl->addTransferJob(tj->getSrcTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
+  return id;
 }
 
-void Engine::newTransferJobUpload(const Path & srcpath, const std::string & srcfile, const std::string & dstsite, FileList * dstfilelist, const std::string & dstfile) {
+unsigned int Engine::newTransferJobUpload(const Path & srcpath, const std::string & srcfile, const std::string & dstsite, FileList * dstfilelist, const std::string & dstfile) {
   const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(dstsite);
-  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, srcpath, srcfile, sl, dstfilelist, dstfile);
+  unsigned int id = nextid++;
+  Pointer<TransferJob> tj = makePointer<TransferJob>(id, srcpath, srcfile, sl, dstfilelist, dstfile);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting upload job: " + srcfile +
@@ -331,11 +336,13 @@ void Engine::newTransferJobUpload(const Path & srcpath, const std::string & srcf
   sl->addTransferJob(tj->getDstTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
+  return id;
 }
 
-void Engine::newTransferJobUpload(const Path & srcpath, const std::string & srcfile, const std::string & dstsite, const Path & dstpath, const std::string & dstfile) {
+unsigned int Engine::newTransferJobUpload(const Path & srcpath, const std::string & srcfile, const std::string & dstsite, const Path & dstpath, const std::string & dstfile) {
   const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(dstsite);
-  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, srcpath, srcfile, sl, dstpath, dstfile);
+  unsigned int id = nextid++;
+  Pointer<TransferJob> tj = makePointer<TransferJob>(id, srcpath, srcfile, sl, dstpath, dstfile);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting upload job: " + srcfile +
@@ -343,12 +350,14 @@ void Engine::newTransferJobUpload(const Path & srcpath, const std::string & srcf
   sl->addTransferJob(tj->getDstTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
+  return id;
 }
 
-void Engine::newTransferJobFXP(const std::string & srcsite, FileList * srcfilelist, const std::string & srcfile, const std::string & dstsite, FileList * dstfilelist, const std::string & dstfile) {
+unsigned int Engine::newTransferJobFXP(const std::string & srcsite, FileList * srcfilelist, const std::string & srcfile, const std::string & dstsite, FileList * dstfilelist, const std::string & dstfile) {
   const Pointer<SiteLogic> slsrc = global->getSiteLogicManager()->getSiteLogic(srcsite);
   const Pointer<SiteLogic> sldst = global->getSiteLogicManager()->getSiteLogic(dstsite);
-  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, slsrc, srcfilelist, srcfile, sldst, dstfilelist, dstfile);
+  unsigned int id = nextid++;
+  Pointer<TransferJob> tj = makePointer<TransferJob>(id, slsrc, srcfilelist, srcfile, sldst, dstfilelist, dstfile);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting FXP job: " + srcfile +
@@ -357,12 +366,14 @@ void Engine::newTransferJobFXP(const std::string & srcsite, FileList * srcfileli
   sldst->addTransferJob(tj->getDstTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
+  return id;
 }
 
-void Engine::newTransferJobFXP(const std::string & srcsite, const Path & srcpath, const std::string & srcfile, const std::string & dstsite, const Path & dstpath, const std::string & dstfile) {
+unsigned int Engine::newTransferJobFXP(const std::string & srcsite, const Path & srcpath, const std::string & srcfile, const std::string & dstsite, const Path & dstpath, const std::string & dstfile) {
   const Pointer<SiteLogic> slsrc = global->getSiteLogicManager()->getSiteLogic(srcsite);
   const Pointer<SiteLogic> sldst = global->getSiteLogicManager()->getSiteLogic(dstsite);
-  Pointer<TransferJob> tj = makePointer<TransferJob>(nextid++, slsrc, srcpath, srcfile, sldst, dstpath, dstfile);
+  unsigned int id = nextid++;
+  Pointer<TransferJob> tj = makePointer<TransferJob>(id, slsrc, srcpath, srcfile, sldst, dstpath, dstfile);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting FXP job: " + srcfile +
@@ -371,6 +382,7 @@ void Engine::newTransferJobFXP(const std::string & srcsite, const Path & srcpath
   sldst->addTransferJob(tj->getDstTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
+  return id;
 }
 
 void Engine::removeSiteFromRace(Pointer<Race> & race, const std::string & site) {

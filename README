@@ -78,7 +78,8 @@ STARTING A TRANSFER JOB
 If you would like to transfer something, there are some ways to start a
 transfer job. The simplest way is to select an item that you wish to download
 and then press D. A transfer job for downloading that item will be started
-in the background. By default, download jobs will be downloaded to the
+in the background, and will also be visible in the bottom legend bar while the
+browse screen is open. By default, download jobs will be downloaded to the
 download path specified in the global options screen, press G from the main
 screen to get there.
 For other types of transfer jobs, you'll need to open the split view.
@@ -89,10 +90,12 @@ After opening the split view, you can press TAB at any time to switch side.
 If you wish to start an upload job, browse your download directory, select
 an item that you wish to upload, and then press t. A transfer job will be
 started in the background that uploads your specified item to the directory
-on the site that was opened on the other side of the split view.
+on the site that was opened on the other side of the split view. It will also
+be visible in the bottom legend bar while the browse screen is open.
 The same thing goes for FXP transfer jobs, but you will obviously need to open
 a site instead of the local view. Choose item and press t to start a job
-in the background.
+in the background. It will also be visible in the bottom legend bar while the
+browse screen is open.
 Your newly created transfer job will be visible in the main screen of cbftp.
 Transfer jobs use a single slot on each site by default; this can be modified
 in the detailed view of each transfer job.

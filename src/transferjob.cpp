@@ -181,6 +181,7 @@ void TransferJob::init(unsigned int id, TransferJobType type, const Pointer<Site
   timespentmillis = 0;
   timespentsecs = 0;
   progress = 0;
+  milliprogress = 0;
   speed = 0;
   filesprogress = 0;
   filestotal = 0;
@@ -555,6 +556,7 @@ void TransferJob::updateStatus() {
   sizeprogress = aggregatedsizetransferred;
   if (expectedfinalsize) {
     progress = (100 * sizeprogress) / expectedfinalsize;
+    milliprogress = (1000 * sizeprogress) / expectedfinalsize;
   }
   if (timespentmillis) {
     speed = sizeprogress / timespentmillis;
@@ -570,6 +572,10 @@ void TransferJob::updateStatus() {
 
 int TransferJob::getProgress() const {
   return progress;
+}
+
+int TransferJob::getMilliProgress() const {
+  return milliprogress;
 }
 
 int TransferJob::timeSpent() const {

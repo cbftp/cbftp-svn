@@ -310,6 +310,7 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
       Pointer<Race> race = startRace();
       if (!!race) {
         ui->returnToLast();
+        ui->addTempLegendSpreadJob(race->getId());
       }
       return true;
     }

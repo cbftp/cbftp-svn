@@ -2,6 +2,7 @@
 
 #include "termint.h"
 #include "ui.h"
+#include "legendprinterkeybinds.h"
 #include "../eventlog.h"
 #include "../globalcontext.h"
 
@@ -9,15 +10,22 @@ LegendWindow::LegendWindow(Ui * ui, WINDOW * window, int row, int col) {
   this->ui = ui;
   this->window = window;
   split = false;
-  text = "";
   latestid = 0;
   latestcount = 8;
-  staticcount = 0;
   init(row, col);
 }
 
 void LegendWindow::redraw() {
   ui->erase(window);
+  if (!!mainlegendprinter) {
+    mainlegendprinter->setColumns(col);
+  }
+  std::list<Pointer<LegendPrinter> >::iterator it;
+  for (it = templegendprinters.begin(); it != templegendprinters.end(); it++) {
+    if (!!(*it)) {
+      (*it)->setColumns(col);
+    }
+  }
   latestcount = 8;
   staticcount = 0;
   offset = 0;
@@ -51,59 +59,28 @@ void LegendWindow::update() {
     latestcount++;
     return;
   }
-  unsigned int printpos = 4;
-  if (text.length() > 0) {
-    if (ui->legendMode() == LEGEND_SCROLLING) {
-      std::string scrollingtext = text + "  ::  ";
-      unsigned int textlen = scrollingtext.length();
-      unsigned int internalpos = printpos - offset++;
-      if (offset >= textlen) offset = 0;
-      while (printpos < col - 4) {
-        while (printpos - internalpos < textlen && printpos < col - 4) {
-          ui->printChar(window, 1, printpos, scrollingtext[printpos - internalpos]);
-          ++printpos;
-        }
-        internalpos = printpos;
-      }
-    }
-    else if (ui->legendMode() == LEGEND_STATIC) {
-      if (staticcount++ > 20) { // 5 seconds
-        staticcount = 0;
-        if (text.length() - offset > col - 8) {
-          size_t nextoffset = text.rfind(" - ", offset + col - 8);
-          if (nextoffset != std::string::npos) {
-            offset = nextoffset + 3;
-          }
-          else {
-            offset += col - 8;
-          }
-        }
-        else if (offset) {
-          offset = 0;
-        }
-      }
-      unsigned int textpos = offset;
-      while (printpos < col - 4) {
-        if (textpos >= text.length()) {
-          ui->printChar(window, 1, printpos, ' ');
-        }
-        else {
-          ui->printChar(window, 1, printpos, text[textpos]);
-        }
-        ++printpos;
-        ++textpos;
-      }
+  if (!templegendprinters.empty() && !!templegendprinters.front()) {
+    if (!templegendprinters.front()->print()) {
+      templegendprinters.pop_front();
     }
   }
-}
-
-void LegendWindow::setText(std::string text) {
-  this->text = text;
-  offset = 0;
-  staticcount = 0;
-  update();
+  else if (!!mainlegendprinter) {
+    mainlegendprinter->print();
+  }
 }
 
 void LegendWindow::setSplit(bool split) {
   this->split = split;
+}
+
+void LegendWindow::setMainLegendPrinter(Pointer<LegendPrinter> printer) {
+  mainlegendprinter = printer;
+}
+
+void LegendWindow::addTempLegendPrinter(Pointer<LegendPrinter> printer) {
+  templegendprinters.push_back(printer);
+}
+
+void LegendWindow::clearTempLegendPrinters() {
+  templegendprinters.clear();
 }

@@ -461,8 +461,9 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       break;
     case 'D':
       if (list.cursoredFile() != NULL && (list.cursoredFile()->isDirectory() || list.cursoredFile()->getSize() > 0)) {
-        global->getEngine()->newTransferJobDownload(site->getName(), filelist, list.cursoredFile()->getName(),
-                                                    global->getLocalStorage()->getDownloadPath());
+        unsigned int id = global->getEngine()->newTransferJobDownload(site->getName(), filelist, list.cursoredFile()->getName(),
+                                                                      global->getLocalStorage()->getDownloadPath());
+        ui->addTempLegendTransferJob(id);
       }
       break;
     case 's':
