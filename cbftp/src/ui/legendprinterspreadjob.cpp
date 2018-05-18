@@ -84,6 +84,9 @@ bool LegendPrinterSpreadJob::print() {
   }
   for (unsigned int i = 0; i < mso.size(); i++) {
     Pointer<ResizableElement> re = mso.getElement(i);
+    if (!re->isVisible()) {
+      continue;
+    }
     ui->printStr(ui->getLegendWindow(), re->getRow(), re->getCol(), re->getLabelText());
   }
   if (jobfinishedprintcount >= 20) {

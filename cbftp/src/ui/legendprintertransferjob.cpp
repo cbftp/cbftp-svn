@@ -101,6 +101,9 @@ bool LegendPrinterTransferJob::print() {
   }
   for (unsigned int i = 0; i < mso.size(); i++) {
     Pointer<ResizableElement> re = mso.getElement(i);
+    if (!re->isVisible()) {
+      continue;
+    }
     std::string text = re->getLabelText();
     for (unsigned int i = 0; i < text.length(); i++) {
       bool highlight = i + re->getCol() <= highlightuntilpos;

@@ -47,6 +47,9 @@ void LegendWindow::redraw() {
 void LegendWindow::update() {
   if (global->getEventLog()->getLatestId() != latestid) {
     latestid = global->getEventLog()->getLatestId();
+    if (!templegendprinters.empty()) {
+      return;
+    }
     latestcount = 0;
     latesttext = global->getEventLog()->getLatest();
     for (unsigned int printpos = 4; printpos < col - 4; printpos++) {
