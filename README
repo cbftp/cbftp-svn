@@ -468,13 +468,15 @@ information about that specific transfer.
 
 GLOBAL KEY BINDINGS
 
-There are a few hotkeys that work from anywhere in the cbftp UI:
+There are a few hotkeys that work from (almost) anywhere in the cbftp UI:
 \ - Toggle fullscreen mode (i.e. hide info bar + legend bar).
 p - Start the latest prepared race.
 K - Kill all external viewers (when viewing files in external applications).
 N - Toggle the next prepared race auto starter. While this function is
     enabled, the next 'prepare' remote command that arrives will be started
     immediately. The toggle times out after 10 minutes.
+- - Highlight the entire table line. Usable in lists, tables etc where it
+    might be hard to tell which items that are on the same line
 
 OTHER UI WINDOWS
 

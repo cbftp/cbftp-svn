@@ -194,6 +194,7 @@ void TransfersScreen::initialize(unsigned int row, unsigned int col, const Trans
   numfinishedfiltered = 0;
   addFilterFinishedTransfers();
   ypos = 0;
+  temphighlightline = -1;
   table.reset();
   table.enterFocusFrom(0);
   init(row, col);
@@ -379,11 +380,20 @@ void TransfersScreen::redraw() {
   table.checkPointer();
   hascontents = table.linesSize() > 1;
   table.adjustLines(col - 3);
+  if (temphighlightline != -1) {
+    Pointer<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
+    if (!!highlightline) {
+      std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
+      for (unsigned int i = minmaxcol.first; i <= minmaxcol.second; i++) {
+        ui->printChar(temphighlightline, i, ' ', true);
+      }
+    }
+  }
   bool highlight;
   for (unsigned int i = 0; i < table.size(); i++) {
     Pointer<ResizableElement> re = table.getElement(i);
     highlight = false;
-    if (table.getSelectionPointer() == i && hascontents) {
+    if (hascontents && (table.getSelectionPointer() == i  || (int)re->getRow() == temphighlightline)) {
       highlight = true;
     }
     if (re->isVisible()) {
@@ -411,6 +421,13 @@ void TransfersScreen::update() {
 }
 
 bool TransfersScreen::keyPressed(unsigned int ch) {
+  if (temphighlightline != -1) {
+    temphighlightline = -1;
+    ui->redraw();
+    if (ch == '-') {
+      return true;
+    }
+  }
   switch (ch) {
     case KEY_UP:
       if (hascontents && ypos > 0) {
@@ -476,6 +493,13 @@ bool TransfersScreen::keyPressed(unsigned int ch) {
     case 'c':
     case 27: // esc
       ui->returnToLast();
+      return true;
+    case '-':
+      if (!hascontents) {
+        break;
+      }
+      temphighlightline = table.getElement(table.getSelectionPointer())->getRow();
+      ui->redraw();
       return true;
   }
   return false;

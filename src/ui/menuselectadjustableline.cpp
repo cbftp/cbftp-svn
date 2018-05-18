@@ -32,6 +32,20 @@ Pointer<ResizableElement> MenuSelectAdjustableLine::getElement(unsigned int pos)
   return elements[pos];
 }
 
+std::pair<unsigned int, unsigned int> MenuSelectAdjustableLine::getMinMaxCol() const {
+  if (elements.empty()) {
+    return std::pair<unsigned int, unsigned int>(0, 0);
+  }
+  unsigned int min = elements[0]->getCol();
+  const Pointer<ResizableElement> & maxelem = elements[elements.size() - 1];
+  unsigned int max = maxelem->getCol() + maxelem->getLabelText().length() - 1;
+  return std::pair<unsigned int, unsigned int>(min, max);
+}
+
 unsigned int MenuSelectAdjustableLine::size() const {
   return elements.size();
+}
+
+bool MenuSelectAdjustableLine::empty() const {
+  return elements.empty();
 }

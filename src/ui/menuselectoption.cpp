@@ -405,6 +405,16 @@ Pointer<MenuSelectAdjustableLine> MenuSelectOption::getAdjustableLine(unsigned i
   return adjustablelines[lineindex];
 }
 
+Pointer<MenuSelectAdjustableLine> MenuSelectOption::getAdjustableLineOnRow(unsigned int row) const {
+  std::vector<Pointer<MenuSelectAdjustableLine> >::const_iterator it;
+  for (it = adjustablelines.begin(); it != adjustablelines.end(); it++) {
+    if (!(*it)->empty() && (*it)->getElement(0)->getRow() == row) {
+      return *it;
+    }
+  }
+  return Pointer<MenuSelectAdjustableLine>();
+}
+
 void MenuSelectOption::removeAdjustableLine(Pointer<MenuSelectAdjustableLine> msal) {
   std::vector<Pointer<MenuSelectAdjustableLine> >::iterator it;
   for (it = adjustablelines.begin(); it != adjustablelines.end(); it++) {

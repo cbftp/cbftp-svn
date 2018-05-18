@@ -32,4 +32,5 @@ private:
   bool hascontents;
   unsigned int currentviewspan;
   unsigned int ypos;
+  int temphighlightline;
 };

@@ -60,6 +60,7 @@ void MainScreen::initialize(unsigned int row, unsigned int col) {
     focusedarea = &msos;
     msos.enterFocusFrom(0);
   }
+  temphighlightline = -1;
   init(row, col);
 }
 
@@ -168,41 +169,26 @@ void MainScreen::redraw() {
     focusedarea = &msos;
     focusedarea->enterFocusFrom(0);
   }
-  bool highlight;
-  for (unsigned int i = 0; i < msop.size(); i++) {
-    Pointer<ResizableElement> re = msop.getElement(i);
-    highlight = false;
-    if (msop.isFocused() && msop.getSelectionPointer() == i && listpreparedraces) {
-      highlight = true;
-    }
-    if (re->isVisible()) {
-      ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
-    }
-  }
-  for (unsigned int i = 0; i < msosj.size(); i++) {
-    Pointer<ResizableElement> re = msosj.getElement(i);
-    highlight = false;
-    if (msosj.isFocused() && msosj.getSelectionPointer() == i && listraces) {
-      highlight = true;
-    }
-    if (re->isVisible()) {
-      ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
+  printTable(msop);
+  printTable(msosj);
+  printTable(msotj);
+  printTable(msos);
+}
+
+void MainScreen::printTable(MenuSelectOption & table) {
+  if (temphighlightline != -1) {
+    Pointer<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
+    if (!!highlightline) {
+      std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
+      for (unsigned int i = minmaxcol.first; i <= minmaxcol.second; i++) {
+        ui->printChar(temphighlightline, i, ' ', true);
+      }
     }
   }
-  for (unsigned int i = 0; i < msotj.size(); i++) {
-    Pointer<ResizableElement> re = msotj.getElement(i);
-    highlight = false;
-    if (msotj.isFocused() && msotj.getSelectionPointer() == i && listtransferjobs) {
-      highlight = true;
-    }
-    if (re->isVisible()) {
-      ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
-    }
-  }
-  for (unsigned int i = 0; i < msos.size(); i++) {
-    Pointer<ResizableElement> re = msos.getElement(i);
-    highlight = false;
-    if (msos.isFocused() && msos.getSelectionPointer() == i && totalsitessize) {
+  for (unsigned int i = 0; i < table.size(); i++) {
+    Pointer<ResizableElement> re = table.getElement(i);
+    bool highlight = false;
+    if (table.isFocused() && (table.getSelectionPointer() == i || (int)re->getRow() == temphighlightline)) {
       highlight = true;
     }
     if (re->isVisible()) {
@@ -290,6 +276,13 @@ void MainScreen::keyDown() {
 }
 
 bool MainScreen::keyPressed(unsigned int ch) {
+  if (temphighlightline != -1) {
+    temphighlightline = -1;
+    ui->redraw();
+    if (ch == '-') {
+      return true;
+    }
+  }
   unsigned int pagerows = (unsigned int) (row - sitestartrow) * 0.6;
   if (gotomode) {
     if (ch >= 32 && ch <= 126) {
@@ -307,6 +300,14 @@ bool MainScreen::keyPressed(unsigned int ch) {
     return true;
   }
   switch(ch) {
+    case '-': {
+      MenuSelectOption * target = static_cast<MenuSelectOption *>(focusedarea);
+      if (target && target->size() > 0) {
+        temphighlightline = target->getElement(target->getSelectionPointer())->getRow();
+        ui->redraw();
+      }
+      break;
+    }
     case KEY_UP:
       keyUp();
       ui->redraw();

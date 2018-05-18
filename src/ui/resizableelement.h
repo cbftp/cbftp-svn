@@ -27,6 +27,9 @@ public:
   unsigned int resizeMethod() const {
     return resizemethod;
   }
+  unsigned int getMaxWidth() const {
+    return maxwidth;
+  }
   virtual void setMaxWidth(unsigned int maxwidth) {
     this->maxwidth = maxwidth;
   }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <utility>
 #include <vector>
 
 #include "../core/pointer.h"
@@ -16,7 +17,9 @@ public:
   void addElement(Pointer<ResizableElement>, unsigned int, unsigned int, bool);
   void addElement(Pointer<ResizableElement>, unsigned int, unsigned int, unsigned int, bool);
   Pointer<ResizableElement> getElement(unsigned int) const;
+  std::pair<unsigned int, unsigned int> getMinMaxCol() const;
   unsigned int size() const;
+  bool empty() const;
 private:
   std::vector<Pointer<ResizableElement> > elements;
 };

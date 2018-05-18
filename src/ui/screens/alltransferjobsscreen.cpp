@@ -23,6 +23,7 @@ void AllTransferJobsScreen::initialize(unsigned int row, unsigned int col) {
   hascontents = false;
   currentviewspan = 0;
   ypos = 1;
+  temphighlightline = -1;
   engine = global->getEngine();
   table.reset();
   table.enterFocusFrom(0);
@@ -53,11 +54,20 @@ void AllTransferJobsScreen::redraw() {
   table.checkPointer();
   hascontents = table.linesSize() > 1;
   table.adjustLines(col - 3);
+  if (temphighlightline != -1) {
+    Pointer<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
+    if (!!highlightline) {
+      std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
+      for (unsigned int i = minmaxcol.first; i <= minmaxcol.second; i++) {
+        ui->printChar(temphighlightline, i, ' ', true);
+      }
+    }
+  }
   bool highlight;
   for (unsigned int i = 0; i < table.size(); i++) {
     Pointer<ResizableElement> re = table.getElement(i);
     highlight = false;
-    if (table.getSelectionPointer() == i && hascontents) {
+    if (hascontents && (table.getSelectionPointer() == i  || (int)re->getRow() == temphighlightline)) {
       highlight = true;
     }
     if (re->isVisible()) {
@@ -72,6 +82,13 @@ void AllTransferJobsScreen::update() {
 }
 
 bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
+  if (temphighlightline != -1) {
+    temphighlightline = -1;
+    ui->redraw();
+    if (ch == '-') {
+      return true;
+    }
+  }
   switch (ch) {
     case KEY_UP:
       if (hascontents && ypos > 1) {
@@ -135,6 +152,13 @@ bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
             table.getElement(table.getSelectionPointer());
         ui->goTransferJobStatus(msotb->getId());
       }
+      return true;
+    case '-':
+      if (!hascontents) {
+        break;
+      }
+      temphighlightline = table.getElement(table.getSelectionPointer())->getRow();
+      ui->redraw();
       return true;
   }
   return false;
