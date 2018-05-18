@@ -46,7 +46,8 @@ class MenuSelectOption : public FocusableArea {
     std::vector<Pointer<MenuSelectAdjustableLine> >::iterator linesBegin();
     std::vector<Pointer<MenuSelectAdjustableLine> >::iterator linesEnd();
     Pointer<MenuSelectAdjustableLine> getAdjustableLine(Pointer<MenuSelectOptionElement>) const;
-    Pointer<MenuSelectAdjustableLine> getAdjustableLine(unsigned int) const;
+    Pointer<MenuSelectAdjustableLine> getAdjustableLine(unsigned int lineindex) const;
+    Pointer<MenuSelectAdjustableLine> getAdjustableLineOnRow(unsigned int row) const;
     bool swapLineWithNext(Pointer<MenuSelectAdjustableLine>);
     bool swapLineWithPrevious(Pointer<MenuSelectAdjustableLine>);
     int getLineIndex(Pointer<MenuSelectAdjustableLine>);

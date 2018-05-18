@@ -21,6 +21,7 @@ public:
   std::string getInfoLabel() const;
   std::string getInfoText() const;
 private:
+  void printTable(MenuSelectOption & table);
   void addPreparedRaceTableRow(unsigned int, MenuSelectOption &, unsigned int,
       bool, const std::string &, const std::string &, const std::string &, const std::string &);
   void addPreparedRaceTableHeader(unsigned int, MenuSelectOption &);
@@ -56,4 +57,5 @@ private:
   MenuSelectOption msotj;
   MenuSelectOption msos;
   bool gotomode;
+  int temphighlightline;
 };

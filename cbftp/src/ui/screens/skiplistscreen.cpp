@@ -76,6 +76,7 @@ void SkipListScreen::initialize() {
   testtype->addOption("Dir", 1);
   testtype->setOption(0);
   currentviewspan = 0;
+  temphighlightline = -1;
   init(row, col);
 }
 
@@ -132,6 +133,15 @@ void SkipListScreen::redraw() {
     ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
     ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
+  if (temphighlightline != -1) {
+    Pointer<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
+    if (!!highlightline) {
+      std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
+      for (unsigned int i = minmaxcol.first; i <= minmaxcol.second; i++) {
+        ui->printChar(temphighlightline, i, ' ', true);
+      }
+    }
+  }
   for (unsigned int i = 0; i < table.size(); i++) {
     Pointer<ResizableElement> re = table.getElement(i);
     unsigned int lineindex = table.getLineIndex(table.getAdjustableLine(re));
@@ -140,7 +150,7 @@ void SkipListScreen::redraw() {
       continue;
     }
     highlight = false;
-    if (table.getSelectionPointer() == i && &table == focusedarea) {
+    if ((table.getSelectionPointer() == i || (int)re->getRow() == temphighlightline) && &table == focusedarea) {
       highlight = true;
     }
     if (re->isVisible()) {
@@ -229,6 +239,13 @@ void SkipListScreen::update() {
 }
 
 bool SkipListScreen::keyPressed(unsigned int ch) {
+  if (temphighlightline != -1) {
+    temphighlightline = -1;
+    ui->redraw();
+    if (ch == '-') {
+      return true;
+    }
+  }
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
@@ -352,6 +369,13 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
           ui->redraw();
         }
       }
+      return true;
+    case '-':
+      if (focusedarea != &table) {
+        break;
+      }
+      temphighlightline = table.getElement(table.getSelectionPointer())->getRow();
+      ui->redraw();
       return true;
   }
   return false;

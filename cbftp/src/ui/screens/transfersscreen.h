@@ -83,4 +83,5 @@ private:
   TransferFilteringParameters tfp;
   int numfinishedfiltered;
   std::list<Pointer<TransferStatus> > finishedfilteredtransfers;
+  int temphighlightline;
 };

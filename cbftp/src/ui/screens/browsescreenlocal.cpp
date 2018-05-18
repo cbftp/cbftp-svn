@@ -20,7 +20,7 @@
 BrowseScreenLocal::BrowseScreenLocal(Ui * ui) : ui(ui), currentviewspan(0),
     focus(true), changedsort(false), cwdfailed(false), tickcount(0),
     resort(false), sortmethod(0), gotomode(false), gotomodefirst(false),
-    gotomodeticker(0), filtermodeinput(false)
+    gotomodeticker(0), filtermodeinput(false), temphighlightline(-1)
 {
   gotoPath(global->getLocalStorage()->getDownloadPath());
 }
@@ -74,10 +74,19 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
   }
   table.adjustLines(col - 3);
   table.checkPointer();
+  if (temphighlightline != -1) {
+    Pointer<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
+    if (!!highlightline) {
+      std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
+      for (unsigned int i = minmaxcol.first; i <= minmaxcol.second; i++) {
+        ui->printChar(temphighlightline, i, ' ', true);
+      }
+    }
+  }
   for (unsigned int i = 0; i < table.size(); i++) {
     Pointer<ResizableElement> re = table.getElement(i);
     bool highlight = false;
-    if (table.getSelectionPointer() == i) {
+    if (table.getSelectionPointer() == i || (int)re->getRow() == temphighlightline) {
       highlight = true;
     }
     if (re->isVisible()) {
@@ -117,6 +126,13 @@ void BrowseScreenLocal::command(const std::string &, const std::string &) {
 }
 
 BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
+  if (temphighlightline != -1) {
+    temphighlightline = -1;
+    ui->redraw();
+    if (ch == '-') {
+      return BrowseScreenAction();
+    }
+  }
   bool update = false;
   bool success = false;
   unsigned int pagerows = (unsigned int) row * 0.6;
@@ -360,6 +376,13 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       if (list.cursoredFile() != NULL && !list.cursoredFile()->isDirectory()) {
         ui->goViewFile(filelist->getPath(), list.cursoredFile()->getName());
       }
+      break;
+    case '-':
+      if (list.cursoredFile() == NULL) {
+        break;
+      }
+      temphighlightline = table.getElement(table.getSelectionPointer())->getRow();
+      ui->redraw();
       break;
   }
   return BrowseScreenAction();

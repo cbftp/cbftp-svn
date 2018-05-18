@@ -59,6 +59,7 @@ BrowseScreenSite::BrowseScreenSite(Ui * ui, const std::string & sitestr) {
   currentviewspan = 0;
   sortmethod = 0;
   spinnerpos = 0;
+  temphighlightline = -1;
   filelist = NULL;
   TimeReference::updateTime();
 }
@@ -159,10 +160,19 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
   }
   table.adjustLines(col - 3);
   table.checkPointer();
+  if (temphighlightline != -1) {
+    Pointer<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
+    if (!!highlightline) {
+      std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
+      for (unsigned int i = minmaxcol.first; i <= minmaxcol.second; i++) {
+        ui->printChar(temphighlightline, i, ' ', true);
+      }
+    }
+  }
   for (unsigned int i = 0; i < table.size(); i++) {
     Pointer<ResizableElement> re = table.getElement(i);
     bool highlight = false;
-    if (table.getSelectionPointer() == i) {
+    if (table.getSelectionPointer() == i || (int)re->getRow() == temphighlightline) {
       highlight = true;
     }
     if (re->isVisible()) {
@@ -355,6 +365,13 @@ void BrowseScreenSite::command(const std::string & command, const std::string & 
 }
 
 BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
+  if (temphighlightline != -1) {
+    temphighlightline = -1;
+    ui->redraw();
+    if (ch == '-') {
+      return BrowseScreenAction();
+    }
+  }
   bool update = false;
   bool success = false;
   unsigned int pagerows = (unsigned int) row * 0.6;
@@ -680,6 +697,13 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       else {
         ui->goRawCommand(site->getName(), list.getPath());
       }
+      break;
+    case '-':
+      if (list.cursoredFile() == NULL) {
+        break;
+      }
+      temphighlightline = table.getElement(table.getSelectionPointer())->getRow();
+      ui->redraw();
       break;
   }
   return BrowseScreenAction();

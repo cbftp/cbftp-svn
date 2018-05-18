@@ -45,4 +45,5 @@ private:
   Pointer<MenuSelectOptionTextArrow> testtype;
   unsigned int currentviewspan;
   bool globalskip;
+  int temphighlightline;
 };

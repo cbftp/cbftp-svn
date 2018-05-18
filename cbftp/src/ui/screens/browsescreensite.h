@@ -86,6 +86,7 @@ private:
   std::list<std::pair<Path, std::string> > selectionhistory;
   bool focus;
   MenuSelectOptionTextField filterfield;
+  int temphighlightline;
   void refreshFilelist();
   void disableGotoMode();
 };

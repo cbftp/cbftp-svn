@@ -59,4 +59,5 @@ private:
   Pointer<LocalFileList> filelist;
   Path targetpath;
   MenuSelectOptionTextField filterfield;
+  int temphighlightline;
 };
