@@ -22,6 +22,7 @@ class ScoreBoard {
     unsigned int * count;
     unsigned int * bucketpositions;
     unsigned int countarraybytesize;
+    void shuffle(unsigned int firstpos, unsigned int lastpos);
   public:
     ScoreBoard();
     ~ScoreBoard();
@@ -31,6 +32,7 @@ class ScoreBoard {
     std::vector<ScoreBoardElement *>::const_iterator begin() const;
     std::vector<ScoreBoardElement *>::const_iterator end() const;
     void sort();
+    void shuffleEquals();
     const std::vector<ScoreBoardElement *> & getElementVector() const;
     void wipe();
 };
