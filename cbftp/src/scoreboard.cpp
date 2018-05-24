@@ -79,6 +79,35 @@ void ScoreBoard::sort() {
   }
 }*/
 
+void ScoreBoard::shuffleEquals() {
+  if (!showsize) {
+    return;
+  }
+  unsigned short lastscore = 0;
+  unsigned int equalstart = 0;
+  for (unsigned int i = 0; i < showsize; i++) {
+    unsigned short score = elements[i]->getScore();
+    if (score != lastscore) {
+      if (i > 0) {
+        shuffle(equalstart, i - 1);
+      }
+      equalstart = i;
+      lastscore = score;
+    }
+  }
+  shuffle(equalstart, showsize - 1);
+}
+
+void ScoreBoard::shuffle(unsigned int firstpos, unsigned int lastpos) {
+  ScoreBoardElement * tmp;
+  for (unsigned int i = firstpos; i < lastpos; i++) {
+    unsigned int swappos = i + rand() % (lastpos - i + 1);
+    tmp = elements[i];
+    elements[i] = elements[swappos];
+    elements[swappos] = tmp;
+  }
+}
+
 std::vector<ScoreBoardElement *>::const_iterator ScoreBoard::begin() const {
   return elements.begin();
 }

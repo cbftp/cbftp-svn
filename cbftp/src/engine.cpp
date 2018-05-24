@@ -737,6 +737,7 @@ void Engine::refreshScoreBoard() {
     }
   }
   scoreboard->sort();
+  scoreboard->shuffleEquals();
 }
 
 void Engine::refreshPendingTransferList(Pointer<TransferJob> & tj) {
