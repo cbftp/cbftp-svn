@@ -243,7 +243,7 @@ void UIFileList::setNewCurrentPosition() {
   }
 }
 
-void UIFileList::selectFileName(std::string filename) {
+void UIFileList::selectFileName(const std::string & filename) {
   for (unsigned int i = 0; i < sortedfiles.size(); i++) {
     if (sortedfiles[i] != NULL && sortedfiles[i]->getName() == filename) {
       currentposition = i;
@@ -251,6 +251,15 @@ void UIFileList::selectFileName(std::string filename) {
       return;
     }
   }
+}
+
+bool UIFileList::contains(const std::string & filename) const {
+  for (unsigned int i = 0; i < sortedfiles.size(); i++) {
+    if (sortedfiles[i] != NULL && sortedfiles[i]->getName() == filename) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void UIFileList::fillSortedFiles() {

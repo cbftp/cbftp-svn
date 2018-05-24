@@ -52,7 +52,8 @@ enum RequestType {
   REQ_DEL_OWN,
   REQ_DEL,
   REQ_NUKE,
-  REQ_IDLE
+  REQ_IDLE,
+  REQ_MKDIR
 };
 
 enum Exists {
@@ -332,6 +333,12 @@ void SiteLogic::commandSuccess(int id, int state) {
       break;
     }
     case STATE_MKD:
+      if (connstatetracker[id].hasRequest()) {
+        const Pointer<SiteLogicRequest> request = connstatetracker[id].getRequest();
+        if (request->requestType() == REQ_MKDIR) {
+          setRequestReady(id, NULL, true);
+        }
+      }
       if (conns[id]->hasMKDCWDTarget()) {
         CommandOwner * currentco = conns[id]->currentCommandOwner();
         const Path & targetcwdsect = conns[id]->getMKDCWDTargetSection();
@@ -562,6 +569,14 @@ void SiteLogic::commandFail(int id, int failuretype) {
         return;
       }
       else {
+        if (connstatetracker[id].hasRequest()) {
+          const Pointer<SiteLogicRequest> request = connstatetracker[id].getRequest();
+          if (request->requestType() == REQ_MKDIR) {
+            setRequestReady(id, NULL, false);
+            handleConnection(id);
+            return;
+          }
+        }
         CommandOwner * currentco = conns[id]->currentCommandOwner();
         if (currentco != NULL && currentco->classType() == COMMANDOWNER_TRANSFERJOB) {
           handleConnection(id);
@@ -1031,7 +1046,7 @@ bool SiteLogic::handleRequest(int id) {
     case REQ_NUKE: // nuke
       conns[id]->doNuke(request.requestData(), request.requestData3(), request.requestData2());
       break;
-    case REQ_IDLE: // idle
+    case REQ_IDLE: { // idle
       Path targetpath = request.requestData();
       if (conns[id]->getCurrentPath() != targetpath) {
         conns[id]->doCWD(targetpath);
@@ -1043,6 +1058,10 @@ bool SiteLogic::handleRequest(int id) {
           connstatetracker[id].delayedCommand("quit", request.requestData3() * 1000);
         }
       }
+      break;
+    }
+    case REQ_MKDIR: // make directory
+      conns[id]->doMKD(request.requestData());
       break;
   }
   return true;
@@ -1265,6 +1284,13 @@ int SiteLogic::requestAllIdle(const Path & path, int idletime) {
 
 int SiteLogic::requestAllIdle(int idletime) {
   return requestAllIdle(site->getBasePath(), idletime);
+}
+
+int SiteLogic::requestMakeDirectory(const std::string & dirname) {
+  int requestid = requestidcounter++;
+  requests.push_back(SiteLogicRequest(requestid, REQ_MKDIR, dirname, true));
+  activateOne();
+  return requestid;
 }
 
 bool SiteLogic::requestReady(int requestid) const {

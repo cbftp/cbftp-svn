@@ -55,6 +55,7 @@ private:
   bool deleting;
   bool deletingrecursive;
   bool nuking;
+  bool mkdiring;
   mutable bool changedsort;
   mutable bool cwdfailed;
   mutable bool wipesuccess;
@@ -63,15 +64,16 @@ private:
   mutable bool deletefailed;
   mutable bool nukesuccess;
   mutable bool nukefailed;
+  mutable bool mkdirsuccess;
+  mutable bool mkdirfailed;
   bool gotomode;
   bool gotomodefirst;
   int gotomodeticker;
   bool filtermodeinput;
   std::string gotomodestring;
-  Path nuketarget;
-  Path wipetarget;
-  Path wipepath;
-  std::string wipefile;
+  Path actiontarget;
+  Path actionpath;
+  std::string actionfile;
   unsigned int sortmethod;
   Pointer<Site> site;
   UIFileList list;

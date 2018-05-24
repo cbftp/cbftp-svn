@@ -55,6 +55,7 @@
 #include "screens/transfersfilterscreen.h"
 #include "screens/infoscreen.h"
 #include "screens/selectjobsscreen.h"
+#include "screens/makedirscreen.h"
 
 static Ui * instance = new Ui();
 
@@ -134,6 +135,7 @@ bool Ui::init() {
   transfersfilterscreen = makePointer<TransfersFilterScreen>(this);
   infoscreen = makePointer<InfoScreen>(this);
   selectjobsscreen = makePointer<SelectJobsScreen>(this);
+  makedirscreen = makePointer<MakeDirScreen>(this);
   mainwindows.push_back(mainscreen);
   mainwindows.push_back(confirmationscreen);
   mainwindows.push_back(editsitescreen);
@@ -163,6 +165,7 @@ bool Ui::init() {
   mainwindows.push_back(transfersfilterscreen);
   mainwindows.push_back(infoscreen);
   mainwindows.push_back(selectjobsscreen);
+  mainwindows.push_back(makedirscreen);
 
   legendprinterkeybinds = makePointer<LegendPrinterKeybinds>(this);
   legendwindow->setMainLegendPrinter(legendprinterkeybinds);
@@ -929,6 +932,11 @@ void Ui::goInfo() {
   switchToWindow(infoscreen);
 }
 
+void Ui::goMakeDir(const std::string & site, UIFileList & filelist) {
+  makedirscreen->initialize(mainrow, maincol, site, filelist);
+  switchToWindow(makedirscreen);
+}
+
 void Ui::returnSelectItems(const std::string & items) {
   switchToLast();
   topwindow->command("returnselectitems", items);
@@ -978,6 +986,12 @@ void Ui::returnRaceStatus(unsigned int id) {
   topwindow = mainscreen;
   racestatusscreen->initialize(mainrow, maincol, id);
   switchToWindow(racestatusscreen);
+}
+
+void Ui::returnMakeDir(const std::string & dirname) {
+  switchToLast();
+  topwindow->command("makedir", dirname);
+  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 
 void Ui::setLegendText(const std::string & legendtext) {
