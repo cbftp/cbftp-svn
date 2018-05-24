@@ -19,6 +19,7 @@ class UIWindow;
 class InfoWindow;
 class LegendWindow;
 class FileList;
+class UIFileList;
 class Site;
 class DataFileHandler;
 class TransferStatus;
@@ -55,6 +56,8 @@ class TransferStatusScreen;
 class TransfersFilterScreen;
 class InfoScreen;
 class SelectJobsScreen;
+class MakeDirScreen;
+
 class LegendPrinterKeybinds;
 struct TransferFilteringParameters;
 
@@ -106,6 +109,7 @@ private:
   Pointer<TransfersFilterScreen> transfersfilterscreen;
   Pointer<InfoScreen> infoscreen;
   Pointer<SelectJobsScreen> selectjobsscreen;
+  Pointer<MakeDirScreen> makedirscreen;
   Pointer<LegendPrinterKeybinds> legendprinterkeybinds;
   int mainrow;
   int maincol;
@@ -231,6 +235,7 @@ public:
   void goAllRaces();
   void goAllTransferJobs();
   void goInfo();
+  void goMakeDir(const std::string & site, UIFileList & filelist);
   void returnSelectItems(const std::string &);
   void key(const std::string &);
   void newKey(const std::string &);
@@ -238,6 +243,7 @@ public:
   void confirmNo();
   void returnNuke(int);
   void returnRaceStatus(unsigned int);
+  void returnMakeDir(const std::string & dirname);
   void loadSettings(Pointer<DataFileHandler>);
   void saveSettings(Pointer<DataFileHandler>);
   void notify();

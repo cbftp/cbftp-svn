@@ -44,7 +44,7 @@ public:
   void parse(FileList *);
   void parse(Pointer<LocalFileList> &);
   UIFile * cursoredFile() const;
-  void selectFileName(std::string);
+  void selectFileName(const std::string & filename);
   bool goNext();
   bool goPrevious();
   void toggleSelectCurrent();
@@ -72,6 +72,7 @@ public:
   bool hasUnique() const;
   std::set<std::string> getUniques() const;
   void clearUnique();
+  bool contains(const std::string & filename) const;
 };
 
 bool combinedSort(UIFile *, UIFile *);

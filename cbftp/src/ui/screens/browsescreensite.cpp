@@ -52,6 +52,9 @@ BrowseScreenSite::BrowseScreenSite(Ui * ui, const std::string & sitestr) {
   nuking = false;
   nukesuccess = false;
   nukefailed = false;
+  mkdiring = false;
+  mkdirsuccess = false;
+  mkdirfailed = false;
   gotomode = false;
   filtermodeinput = false;
   withinraceskiplistreach = false;
@@ -202,7 +205,7 @@ void BrowseScreenSite::update() {
       wipe = false;
       if (wipestatus) {
         wipesuccess = true;
-        if (list.getPath() == wipepath) {
+        if (list.getPath() == actionpath) {
           refreshFilelist();
         }
       }
@@ -216,7 +219,7 @@ void BrowseScreenSite::update() {
       deleting = false;
       if (deletestatus) {
         deletesuccess = true;
-        if (list.getPath() == wipepath) {
+        if (list.getPath() == actionpath) {
           refreshFilelist();
         }
       }
@@ -235,6 +238,18 @@ void BrowseScreenSite::update() {
         nukefailed = true;
       }
       refreshFilelist();
+    }
+    else if (mkdiring) {
+      bool mkdirstatus = sitelogic->finishRequest(requestid);
+      requestid = -1;
+      mkdiring = false;
+      if (mkdirstatus) {
+        mkdirsuccess = true;
+        refreshFilelist();
+      }
+      else {
+        mkdirfailed = true;
+      }
     }
     else {
       FileList * newfilelist = sitelogic->getFileList(requestid);
@@ -337,10 +352,10 @@ void BrowseScreenSite::update() {
 void BrowseScreenSite::command(const std::string & command, const std::string & arg) {
   if (command == "yes") {
     if (wipe) {
-      requestid = sitelogic->requestWipe(wipetarget, wiperecursive);
+      requestid = sitelogic->requestWipe(actiontarget, wiperecursive);
     }
     else if (deleting) {
-      requestid = sitelogic->requestDelete(wipetarget, deletingrecursive, true, true);
+      requestid = sitelogic->requestDelete(actiontarget, deletingrecursive, true, true);
     }
     else {
       global->getEventLog()->log("BrowseScreen", "WARNING: got a 'yes' answer for an unknown command");
@@ -358,6 +373,14 @@ void BrowseScreenSite::command(const std::string & command, const std::string & 
   else if (command == "returnnuke") {
     nuking = true;
     requestid = util::str2Int(arg);
+    ui->redraw();
+    ui->setInfo();
+    return;
+  }
+  else if (command == "makedir") {
+    mkdiring = true;
+    requestid = sitelogic->requestMakeDirectory(arg);
+    actiontarget = arg;
     ui->redraw();
     ui->setInfo();
     return;
@@ -508,8 +531,11 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       if (list.cursoredFile() != NULL && list.cursoredFile()->isDirectory()) {
         tickcount = 0;
         ui->goNuke(site->getName(), list.cursoredFile()->getName(), filelist);
-        nuketarget = list.cursoredFile()->getName();
+        actiontarget = list.cursoredFile()->getName();
       }
+      break;
+    case 'm':
+      ui->goMakeDir(site->getName(), list);
       break;
     case KEY_RIGHT:
     case 10:
@@ -550,10 +576,10 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
         wiperecursive = true;
       }
       oldpath = list.getPath();
-      wipepath = oldpath;
-      wipefile = cursoredfile->getName();
-      wipetarget = oldpath / wipefile;
-      ui->goConfirmation("Do you really want to wipe " + wipefile);
+      actionpath = oldpath;
+      actionfile = cursoredfile->getName();
+      actiontarget = oldpath / actionfile;
+      ui->goConfirmation("Do you really want to wipe " + actionfile);
       break;
     case KEY_DC:
       cursoredfile = list.cursoredFile();
@@ -567,10 +593,10 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
         deletingrecursive = true;
       }
       oldpath = list.getPath();
-      wipepath = oldpath;
-      wipefile = cursoredfile->getName();
-      wipetarget = oldpath / wipefile;
-      ui->goConfirmation("Do you really want to delete " + wipefile);
+      actionpath = oldpath;
+      actionfile = cursoredfile->getName();
+      actiontarget = oldpath / actionfile;
+      ui->goConfirmation("Do you really want to delete " + actionfile);
       break;
     case 'q':
       gotomode = true;
@@ -716,7 +742,7 @@ std::string BrowseScreenSite::getLegendText() const {
   if (filtermodeinput) {
     return "[Any] Enter space separated filters. Valid operators are !, *, ?. Must match all negative filters and at least one positive if given. Case insensitive. - [Esc] Cancel";
   }
-  return "[Esc] Cancel - [c]lose - [Up/Down] Navigate - [Enter/Right] open dir - [Backspace/Left] return - sp[r]ead - [v]iew file - [D]ownload - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - Toggle se[P]arators - [q]uick jump - Toggle [f]ilter";
+  return "[Esc] Cancel - [c]lose - [Up/Down] Navigate - [Enter/Right] open dir - [Backspace/Left] return - sp[r]ead - [v]iew file - [D]ownload - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - [m]ake directory - Toggle se[P]arators - [q]uick jump - Toggle [f]ilter";
 }
 
 std::string BrowseScreenSite::getInfoLabel() const {
@@ -727,13 +753,16 @@ std::string BrowseScreenSite::getInfoText() const {
   std::string text = list.getPath().toString();
   if (requestid >= 0) {
     if (wipe) {
-      text = "Wiping " + wipetarget.toString() + "  ";
+      text = "Wiping " + actiontarget.toString() + "  ";
     }
     else if (deleting) {
-      text = "Deleting " + wipetarget.toString() + "  ";
+      text = "Deleting " + actiontarget.toString() + "  ";
     }
     else if (nuking) {
-      text = "Nuking " + wipetarget.toString() + "  ";
+      text = "Nuking " + actiontarget.toString() + "  ";
+    }
+    else if (mkdiring) {
+      text = "Making directory " + actiontarget.toString() + "  ";
     }
     else {
       text = "Getting list for " + requestedpath.toString() + "  ";
@@ -756,7 +785,7 @@ std::string BrowseScreenSite::getInfoText() const {
   }
   if (wipesuccess) {
     if (tickcount++ < 8) {
-      text = "Wipe successful: " + wipetarget.toString();
+      text = "Wipe successful: " + actiontarget.toString();
       return text;
     }
     else {
@@ -765,7 +794,7 @@ std::string BrowseScreenSite::getInfoText() const {
   }
   else if (wipefailed) {
     if (tickcount++ < 8) {
-      text = "Wipe failed: " + wipetarget.toString();
+      text = "Wipe failed: " + actiontarget.toString();
       return text;
     }
     else {
@@ -783,7 +812,7 @@ std::string BrowseScreenSite::getInfoText() const {
   }
   else if (deletesuccess) {
     if (tickcount++ < 8) {
-      text = "Delete successful: " + wipetarget.toString();
+      text = "Delete successful: " + actiontarget.toString();
       return text;
     }
     else {
@@ -792,7 +821,7 @@ std::string BrowseScreenSite::getInfoText() const {
   }
   else if (deletefailed) {
     if (tickcount++ < 8) {
-      text = "Delete failed: " + wipetarget.toString();
+      text = "Delete failed: " + actiontarget.toString();
       return text;
     }
     else {
@@ -801,7 +830,7 @@ std::string BrowseScreenSite::getInfoText() const {
   }
   else if (nukesuccess) {
     if (tickcount++ < 8) {
-      text = "Nuke successful: " + nuketarget.toString();
+      text = "Nuke successful: " + actiontarget.toString();
       return text;
     }
     else {
@@ -810,11 +839,29 @@ std::string BrowseScreenSite::getInfoText() const {
   }
   else if (nukefailed) {
     if (tickcount++ < 8) {
-      text = "Nuke failed: " + nuketarget.toString();
+      text = "Nuke failed: " + actiontarget.toString();
       return text;
     }
     else {
       nukefailed = false;
+    }
+  }
+  else if (mkdirsuccess) {
+    if (tickcount++ < 8) {
+      text = "Directory created: " + actiontarget.toString();
+      return text;
+    }
+    else {
+      mkdirsuccess = false;
+    }
+  }
+  else if (mkdirfailed) {
+    if (tickcount++ < 8) {
+      text = "Directory creation failed: " + actiontarget.toString();
+      return text;
+    }
+    else {
+      mkdirfailed = false;
     }
   }
   else if (changedsort) {
