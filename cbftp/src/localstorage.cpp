@@ -166,12 +166,88 @@ void LocalStorage::purgeStoreContent(int storeid) {
   }
 }
 
-void LocalStorage::deleteFile(const Path & filename) {
+bool LocalStorage::deleteFile(const Path & filename) {
   Path target = filename;
   if (filename.isRelative()) {
     target = temppath / filename;
   }
-  remove(target.toString().c_str());
+  return remove(target.toString().c_str()) == 0;
+}
+
+bool LocalStorage::deleteFileAbsolute(const Path & filename) {
+  if (filename.isRelative()) {
+    return false;
+  }
+  return remove(filename.toString().c_str()) == 0;
+}
+
+bool LocalStorage::deleteRecursive(const Path & path) {
+  LocalFile file = getLocalFile(path);
+  if (file.isDirectory()) {
+    Pointer<LocalFileList> filelist = getLocalFileList(path);
+    std::map<std::string, LocalFile>::const_iterator it;
+    for (it = filelist->begin(); it != filelist->end(); it++) {
+      if (!deleteRecursive(path / it->first)) {
+        return false;
+      }
+    }
+  }
+  return deleteFileAbsolute(path);
+}
+
+LocalPathInfo LocalStorage::getPathInfo(const Path & path) {
+  int depth = 1;
+  return getPathInfo(path, depth);
+}
+
+LocalPathInfo LocalStorage::getPathInfo(const Path & path, int currentdepth) {
+  LocalFile file = getLocalFile(path);
+  if (!file.isDirectory()) {
+    return LocalPathInfo(0, 1, 0, file.getSize());
+  }
+  Pointer<LocalFileList> filelist = getLocalFileList(path);
+  int aggdirs = 1;
+  int aggfiles = 0;
+  int deepest = currentdepth;
+  unsigned long long int aggsize = 0;
+  std::map<std::string, LocalFile>::const_iterator it;
+  for (it = filelist->begin(); it != filelist->end(); it++) {
+    if (it->second.isDirectory()) {
+      LocalPathInfo subpathinfo = getPathInfo(path / it->first, currentdepth + 1);
+      aggdirs += subpathinfo.getNumDirs();
+      aggfiles += subpathinfo.getNumFiles();
+      aggsize += subpathinfo.getSize();
+      int depth = subpathinfo.getDepth();
+      if (depth > deepest) {
+        deepest = depth;
+      }
+    }
+    else {
+      ++aggfiles;
+      aggsize += it->second.getSize();
+    }
+  }
+  return LocalPathInfo(aggdirs, aggfiles, deepest, aggsize);
+}
+
+LocalFile LocalStorage::getLocalFile(const Path & path) {
+  std::string name = path.baseName();
+  struct stat status;
+  lstat((path).toString().c_str(), &status);
+  struct passwd * pwd = getpwuid(status.st_uid);
+  std::string owner = pwd != NULL ? pwd->pw_name : util::int2Str(status.st_uid);
+  struct group * grp = getgrgid(status.st_gid);
+  std::string group = grp != NULL ? grp->gr_name : util::int2Str(status.st_gid);
+  struct tm tm;
+  localtime_r(&status.st_mtime, &tm);
+  int year = 1900 + tm.tm_year;
+  int month = tm.tm_mon + 1;
+  int day = tm.tm_mday;
+  int hour = tm.tm_hour;
+  int minute = tm.tm_min;
+  bool isdir = (status.st_mode & S_IFMT) == S_IFDIR;
+  unsigned long long int size = status.st_size;
+  return LocalFile(name, size, isdir, owner, group, year, month, day, hour, minute);
 }
 
 const Path & LocalStorage::getTempPath() const {
@@ -203,22 +279,9 @@ Pointer<LocalFileList> LocalStorage::getLocalFileList(const Path & path) {
       filelist = makePointer<LocalFileList>(path);
     }
     std::string name = dent->d_name;
-    struct stat status;
-    lstat((path / name).toString().c_str(), &status);
     if (name != ".." && name != ".") {
-      struct passwd * pwd = getpwuid(status.st_uid);
-      std::string owner = pwd != NULL ? pwd->pw_name : util::int2Str(status.st_uid);
-      struct group * grp = getgrgid(status.st_gid);
-      std::string group = grp != NULL ? grp->gr_name : util::int2Str(status.st_gid);
-      struct tm tm;
-      localtime_r(&status.st_mtime, &tm);
-      int year = 1900 + tm.tm_year;
-      int month = tm.tm_mon + 1;
-      int day = tm.tm_mday;
-      int hour = tm.tm_hour;
-      int minute = tm.tm_min;
-      filelist->addFile(name, status.st_size, (status.st_mode & S_IFMT) ==
-                        S_IFDIR, owner, group, year, month, day, hour, minute);
+      LocalFile file = getLocalFile(path / name);
+      filelist->addFile(file);
     }
   }
   if (dir != NULL) {

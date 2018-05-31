@@ -243,14 +243,15 @@ void UIFileList::setNewCurrentPosition() {
   }
 }
 
-void UIFileList::selectFileName(const std::string & filename) {
+bool UIFileList::selectFileName(const std::string & filename) {
   for (unsigned int i = 0; i < sortedfiles.size(); i++) {
     if (sortedfiles[i] != NULL && sortedfiles[i]->getName() == filename) {
       currentposition = i;
       currentcursored = sortedfiles[i];
-      return;
+      return true;
     }
   }
+  return false;
 }
 
 bool UIFileList::contains(const std::string & filename) const {

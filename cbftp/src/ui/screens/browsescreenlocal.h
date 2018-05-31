@@ -47,6 +47,8 @@ private:
   UIFileList list;
   mutable bool changedsort;
   mutable bool cwdfailed;
+  mutable bool deletesuccess;
+  mutable bool deletefailed;
   mutable int tickcount;
   bool resort;
   int sortmethod;
@@ -60,4 +62,6 @@ private:
   Path targetpath;
   MenuSelectOptionTextField filterfield;
   int temphighlightline;
+  bool deleting;
+  Path actiontarget;
 };
