@@ -194,7 +194,8 @@ public:
   void goRawCommand(const std::string &);
   void goRawCommand(const std::string &, const Path &);
   void goRawCommand(const std::string &, const Path &, const std::string &);
-  void goConfirmation(const std::string &);
+  void goConfirmation(const std::string & message);
+  void goStrongConfirmation(const std::string & message);
   void goNuke(const std::string &, const std::string &, FileList *);
   void goViewFile(const std::string &, const std::string &, FileList *);
   void goViewFile(const Path &, const std::string &);

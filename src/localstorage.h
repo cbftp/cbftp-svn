@@ -7,6 +7,8 @@
 #include "core/pointer.h"
 #include "core/types.h"
 #include "path.h"
+#include "localpathinfo.h"
+#include "localfile.h"
 
 class LocalTransfer;
 class LocalDownload;
@@ -32,7 +34,11 @@ public:
   BinaryData getFileContent(const Path &) const;
   const BinaryData & getStoreContent(int) const;
   void purgeStoreContent(int);
-  void deleteFile(const Path &);
+  bool deleteFile(const Path & filename);
+  static bool deleteFileAbsolute(const Path & filename);
+  static bool deleteRecursive(const Path & path);
+  static LocalPathInfo getPathInfo(const Path & path);
+  static LocalFile getLocalFile(const Path & path);
   const Path & getTempPath() const;
   void setTempPath(const std::string &);
   void storeContent(int, const BinaryData &);
@@ -51,6 +57,7 @@ public:
   int getNextActivePort();
   std::string getAddress(LocalTransfer *) const;
 private:
+  static LocalPathInfo getPathInfo(const Path & path, int currentdepth);
   std::map<int, BinaryData> content;
   LocalDownload * getAvailableLocalDownload();
   LocalUpload * getAvailableLocalUpload();

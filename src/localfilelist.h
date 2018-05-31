@@ -10,6 +10,7 @@ class LocalFileList {
 public:
   LocalFileList(const Path &);
   void addFile(const std::string &, unsigned long long int, bool, const std::string &, const std::string &, int, int, int, int, int);
+  void addFile(const LocalFile & file);
   void touchFile(const std::string &);
   std::map<std::string, LocalFile>::const_iterator begin() const;
   std::map<std::string, LocalFile>::const_iterator end() const;

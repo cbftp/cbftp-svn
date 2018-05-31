@@ -18,9 +18,11 @@
 #include "browsescreenaction.h"
 
 BrowseScreenLocal::BrowseScreenLocal(Ui * ui) : ui(ui), currentviewspan(0),
-    focus(true), changedsort(false), cwdfailed(false), tickcount(0),
+    focus(true), changedsort(false), cwdfailed(false), deletesuccess(false),
+    deletefailed(false), tickcount(0),
     resort(false), sortmethod(0), gotomode(false), gotomodefirst(false),
-    gotomodeticker(0), filtermodeinput(false), temphighlightline(-1)
+    gotomodeticker(0), filtermodeinput(false), temphighlightline(-1),
+    deleting(false)
 {
   gotoPath(global->getLocalStorage()->getDownloadPath());
 }
@@ -121,8 +123,20 @@ void BrowseScreenLocal::update() {
   }
 }
 
-void BrowseScreenLocal::command(const std::string &, const std::string &) {
-
+void BrowseScreenLocal::command(const std::string & command, const std::string & arg) {
+  if (command == "yes" && deleting) {
+    if (LocalStorage::deleteRecursive(actiontarget)) {
+      deletesuccess = true;
+    }
+    else {
+      deletefailed = true;
+    }
+    tickcount = 0;
+    gotoPath(list.getPath());
+    ui->setInfo();
+  }
+  deleting = false;
+  ui->redraw();
 }
 
 BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
@@ -209,6 +223,36 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       break;
     case 'c':
       return BrowseScreenAction(BROWSESCREENACTION_CLOSE);
+    case 'W':
+    case KEY_DC: {
+      UIFile * cursoredfile = list.cursoredFile();
+      if (cursoredfile == NULL) {
+        break;
+      }
+      actiontarget = filelist->getPath() / cursoredfile->getName();
+      deleting = true;
+      LocalPathInfo pathinfo = LocalStorage::getPathInfo(actiontarget);
+      std::string dirs = util::int2Str(pathinfo.getNumDirs());
+      std::string files = util::int2Str(pathinfo.getNumFiles());
+      std::string size = util::parseSize(pathinfo.getSize());
+      std::string confirmation = "Do you really want to delete " + cursoredfile->getName() + "?";
+      if (pathinfo.getDepth() > 0) {
+        confirmation += " It contains " + size + " in " + files + "f/" + dirs + "d and is ";
+      }
+      if (pathinfo.getDepth() == 1) {
+        confirmation += "1 level deep.";
+      }
+      else if (pathinfo.getDepth() > 1) {
+        confirmation += util::int2Str(pathinfo.getDepth()) + " levels deep.";
+      }
+      if (pathinfo.getNumDirs() >= 10 || pathinfo.getNumFiles() >= 100 || pathinfo.getSize() >= 100000000000 || pathinfo.getDepth() > 2) {
+        ui->goStrongConfirmation(confirmation);
+      }
+      else {
+        ui->goConfirmation(confirmation);
+      }
+      break;
+    }
     case 'q':
       gotomode = true;
       gotomodefirst = true;
@@ -422,6 +466,24 @@ std::string BrowseScreenLocal::getInfoText() const {
       cwdfailed = false;
     }
   }
+  else if (deletesuccess) {
+    if (tickcount++ < 8) {
+      text = "Delete successful: " + actiontarget.toString();
+      return text;
+    }
+    else {
+      deletesuccess = false;
+    }
+  }
+  else if (deletefailed) {
+    if (tickcount++ < 8) {
+      text = "Delete failed: " + actiontarget.toString();
+      return text;
+    }
+    else {
+      deletefailed = false;
+    }
+  }
   if (list.hasFilters() || list.hasUnique()) {
     if (list.hasFilters()) {
       text += std::string("  FILTER: ") + filterfield.getData();
@@ -517,23 +579,31 @@ void BrowseScreenLocal::gotoPath(const Path & path) {
   else {
     currentviewspan = 0;
   }
-  bool setfilter = false;
+  unsigned int position = 0;
   std::list<std::string> filters;
+  std::set<std::string> uniques;
   if (list.getPath() == filelist->getPath()) {
-    setfilter = list.hasFilters();
+    position = list.currentCursorPosition();
     filters = list.getFilters();
+    uniques = list.getUniques();
   }
   list.parse(filelist);
-  if (setfilter) {
+  if (filters.size()) {
     list.setFilters(filters);
   }
   sort();
   for (std::list<std::pair<Path, std::string> >::iterator it = selectionhistory.begin(); it != selectionhistory.end(); it++) {
     if (it->first == path) {
-      list.selectFileName(it->second);
+      bool selected = list.selectFileName(it->second);
       selectionhistory.erase(it);
+      if (selected) {
+        return;
+      }
       break;
     }
+  }
+  if (position) {
+    list.setCursorPosition(position);
   }
 }
 

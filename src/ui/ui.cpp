@@ -722,7 +722,12 @@ void Ui::goRawCommand(const std::string & site, const Path & path, const std::st
 }
 
 void Ui::goConfirmation(const std::string & message) {
-  confirmationscreen->initialize(mainrow, maincol, message);
+  confirmationscreen->initialize(mainrow, maincol, message, false);
+  switchToWindow(confirmationscreen);
+}
+
+void Ui::goStrongConfirmation(const std::string & message) {
+  confirmationscreen->initialize(mainrow, maincol, message, true);
   switchToWindow(confirmationscreen);
 }
 

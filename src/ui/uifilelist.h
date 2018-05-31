@@ -44,7 +44,7 @@ public:
   void parse(FileList *);
   void parse(Pointer<LocalFileList> &);
   UIFile * cursoredFile() const;
-  void selectFileName(const std::string & filename);
+  bool selectFileName(const std::string & filename);
   bool goNext();
   bool goPrevious();
   void toggleSelectCurrent();
