@@ -28,7 +28,6 @@ void NewRaceScreen::initialize(unsigned int row, unsigned int col, const std::st
   toggleall = false;
   unsigned int y = 2;
   unsigned int x = 1;
-  sectionupdate = false;
   infotext = "";
   std::string sectionstring = section;
   size_t splitpos;
@@ -136,63 +135,7 @@ void NewRaceScreen::redraw() {
 }
 
 void NewRaceScreen::update() {
-  if (sectionupdate) {
-    sectionupdate = false;
-    tempsites.clear();
-    mso.clear();
-    redraw();
-    return;
-  }
-  if (defocusedarea != NULL) {
-    if (defocusedarea == &mso) {
-      Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
-      ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText());
-      ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
-    }
-    else if (defocusedarea == &msos){
-      Pointer<MenuSelectOptionElement> msoe = msos.getElement(msos.getLastSelectionPointer());
-      if (msoe->getId() == 0) {
-        ui->printStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe));
-      }
-      else {
-        ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-        ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
-      }
-    }
-  }
-  if (focusedarea == &mso) {
-    Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText());
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
-    msoe = mso.getElement(mso.getSelectionPointer());
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText(), true);
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
-    if (active && msoe->cursorPosition() >= 0) {
-      ui->showCursor();
-      ui->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1 + msoe->cursorPosition());
-    }
-    else {
-      ui->hideCursor();
-    }
-  }
-  else {
-    Pointer<MenuSelectOptionElement> msoe = msos.getElement(msos.getLastSelectionPointer());
-    if (msoe->getId() == 0) {
-      ui->printStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe));
-    }
-    else {
-      ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-      ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
-    }
-    msoe = msos.getElement(msos.getSelectionPointer());
-    if (msoe->getId() == 0) {
-      ui->printStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe), true);
-    }
-    else {
-      ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
-      ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
-    }
-  }
+  redraw();
 }
 
 bool NewRaceScreen::keyPressed(unsigned int ch) {
@@ -281,10 +224,11 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
           Pointer<MenuSelectOptionElement> msoe = msos.getElement(msos.getSelectionPointer());
           if (msoe->getId() == 0) {
             section = msoe->getIdentifier();
-            sectionupdate = true;
+            tempsites.clear();
+            mso.clear();
           }
         }
-        ui->update();
+        ui->redraw();
         return true;
       }
       active = true;

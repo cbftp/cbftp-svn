@@ -34,7 +34,6 @@ private:
   std::string defaultlegendtext;
   bool active;
   bool toggleall;
-  bool sectionupdate;
   std::string section;
   Pointer<MenuSelectOptionElement> activeelement;
   FocusableArea * focusedarea;
