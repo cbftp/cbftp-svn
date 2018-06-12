@@ -566,13 +566,8 @@ A: Just compile and run the new version. The data file will be adjusted to
 
 Q: Can I make modifications to cbftp?
 A: That's why the source code is provided! If you are adding things that
-   would be useful for others, make sure to pass your changes back to where
-   you got cbftp from, and they might end up in the upstream source tree
-   eventually.
+   would be useful for others, make sure to pass your changes back upstream,
+   and they might end up in the upstream source tree eventually.
 
 Q: Where can I donate to show my support for this awesome software?
 A: No need, I mostly do this for my own amusement.
-
-Q: Where can I grab the latest cbftp version?
-A: There's no public repository available (yet). Ask the person you got it
-   from in the first place.

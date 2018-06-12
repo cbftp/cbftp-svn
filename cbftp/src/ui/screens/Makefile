@@ -7,7 +7,7 @@ all: $(SRC:%.cpp=%.o)
 	@#
 
 ifeq ($(HAS_SVN), 0)
-SVN_DIR := $(ROOT_DIR)/.svn
+SVN_DIR := $(SVN_ROOT_DIR)/.svn
 endif
 
 loginscreen.o: loginscreen.cpp ../../../Makefile.inc $(SVN_DIR)

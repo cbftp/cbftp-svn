@@ -20,6 +20,7 @@ REDIST_VERSION := $(shell cat $(ROOT_DIR)/.version 2>/dev/null)
 
 ifeq ($(HAS_SVN), 0)
 VERSION := "\"svn:r$(shell svn info $(ROOT_DIR)|grep Revision|awk '{ print $$2 }')\""
+SVN_ROOT_DIR := $(shell svn info|grep 'Working Copy Root'|awk '{print $$5 }')
 else ifneq ($(REDIST_VERSION),)
 VERSION := "\"redist:r$(REDIST_VERSION)\""
 else
