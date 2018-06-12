@@ -1,11 +1,11 @@
 #!/bin/bash
-SCRIPTPATH=`pwd`"/"`dirname $0`
+SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 cd $SCRIPTPATH/..
 DIFF=`svn diff|wc -l`
-if [ $DIFF -gt 0 ]; then
-  echo "Error: this is not a clean svn copy."
-  exit 1
-fi
+#if [ $DIFF -gt 0 ]; then
+#  echo "Error: this is not a clean svn copy."
+#  exit 1
+#fi
 VERSION=`svn info|grep Revision|awk '{ print $2 }'`
 echo $VERSION > .version
 VERSION="r"$VERSION
