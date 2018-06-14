@@ -17,7 +17,7 @@ PotentialListElement::~PotentialListElement() {
 bool PotentialListElement::update(const Pointer<SiteLogic> & dst, int dstup, int potential, const std::string & filename) {
   bool allslotsused = allSlotsUsedForSite(dst, dstup);
   PotentialElement * lowelem = NULL;
-  int lowest;
+  int lowest = 0;
   bool initialized = false;
   for (unsigned int i = 0; i < slots.size(); i++) {
     if (allslotsused && slots[i]->getSite() != dst) continue;

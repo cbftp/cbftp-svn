@@ -1271,7 +1271,7 @@ int SiteLogic::requestAllIdle(const Path & path, int idletime) {
   if (!idletime) {
     idletime = site->getMaxIdleTime();
   }
-  int requestid;
+  int requestid = -1;
   for (unsigned int i = 0; i < connstatetracker.size(); i++) {
     requestid = requestidcounter++;
     SiteLogicRequest request(requestid, REQ_IDLE, path.toString(), idletime, false);
