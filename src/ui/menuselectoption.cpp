@@ -293,8 +293,8 @@ void MenuSelectOption::adjustLines(unsigned int linesize) {
     else if (totalwantedwidth > linesize) {
       int leastimportant = -1;
       int leastimportantprio = 0;
-      bool leastimportantpartialremove;
-      bool leastimportanthighprio;
+      bool leastimportantpartialremove = false;
+      bool leastimportanthighprio = false;
       for (unsigned int i = 0; i < elementcount; i++) {
         if (!adjustablelines[0]->getElement(i)->isVisible()) {
           continue;
