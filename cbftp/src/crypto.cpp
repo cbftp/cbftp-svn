@@ -42,7 +42,7 @@ void Crypto::encrypt(const BinaryData & indata, const BinaryData & pass, BinaryD
   for (int i = SALT_LENGTH; i < SALT_STRING_LENGTH; ++i) {
     outdata[i] = (unsigned char)(rand() % UCHAR_MAX);
   }
-  EVP_BytesToKey(cipherp, digest(), &outdata[SALT_STRING_LENGTH - SALT_LENGTH], &pass[0],
+  EVP_BytesToKey(cipherp, digest(), &outdata[SALT_STRING_LENGTH - SALT_LENGTH], !pass.empty() ? &pass[0] : NULL,
                  pass.size(), 1, key, iv);
   int resultlen;
   int finallen;
@@ -66,7 +66,7 @@ void Crypto::decrypt(const BinaryData & indata, const BinaryData & pass, BinaryD
   int keylen = EVP_CIPHER_key_length(cipherp);
   unsigned char * key = (unsigned char *) malloc(keylen);
   unsigned char * iv = (unsigned char *) malloc(ivlen);
-  EVP_BytesToKey(cipherp, digest(), &indata[SALT_STRING_LENGTH - SALT_LENGTH], &pass[0],
+  EVP_BytesToKey(cipherp, digest(), &indata[SALT_STRING_LENGTH - SALT_LENGTH], !pass.empty() ? &pass[0] : NULL,
                  pass.size(), 1, key, iv);
   outdata.resize(indata.size() + blockSize());
   int writelen;
@@ -79,24 +79,6 @@ void Crypto::decrypt(const BinaryData & indata, const BinaryData & pass, BinaryD
   EVP_CIPHER_CTX_free(ctx);
   free(key);
   free(iv);
-}
-
-void Crypto::decryptOld(const BinaryData & indata, const BinaryData & key, BinaryData & outdata) {
-  if (indata.empty()) {
-    outdata.resize(0);
-    return;
-  }
-  EVP_CIPHER_CTX * ctx = EVP_CIPHER_CTX_new();
-  const EVP_CIPHER * cipherp = cipher();
-  int ivlen = EVP_CIPHER_iv_length(cipherp);
-  outdata.resize(indata.size() + blockSize());
-  int writelen;
-  int finalwritelen;
-  EVP_DecryptInit_ex(ctx, cipherp, NULL, &key[0], &indata[0]);
-  EVP_DecryptUpdate(ctx, &outdata[0], &writelen, &indata[ivlen], indata.size() - ivlen);
-  EVP_DecryptFinal_ex(ctx, &outdata[writelen], &finalwritelen);
-  outdata.resize(writelen + finalwritelen);
-  EVP_CIPHER_CTX_free(ctx);
 }
 
 void Crypto::sha256(const BinaryData & indata, BinaryData & outdata) {
