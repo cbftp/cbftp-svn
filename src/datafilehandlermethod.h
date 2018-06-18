@@ -30,12 +30,6 @@ bool encrypt(const BinaryData & indata, const BinaryData & pass, BinaryData & ou
 
 bool decrypt(const BinaryData & indata, const BinaryData & pass, BinaryData & outdata) {
   Crypto::decrypt(indata, pass, outdata);
-  if (isMostlyASCII(outdata)) {
-    return true;
-  }
-  BinaryData keyhash;
-  Crypto::sha256(pass, keyhash);
-  Crypto::decryptOld(indata, keyhash, outdata);
   return isMostlyASCII(outdata);
 }
 
