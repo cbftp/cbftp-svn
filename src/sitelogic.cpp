@@ -507,7 +507,7 @@ void SiteLogic::commandFail(int id, int failuretype) {
         }
         return;
       }
-      else if (conns[id]->hasMKDCWDTarget()) {
+      if (conns[id]->hasMKDCWDTarget()) {
         CommandOwner * currentco = conns[id]->currentCommandOwner();
         if (site->getAllowUpload() == SITE_ALLOW_TRANSFER_NO ||
             (currentco != NULL && currentco->classType() == COMMANDOWNER_SITERACE &&
@@ -526,7 +526,7 @@ void SiteLogic::commandFail(int id, int failuretype) {
           return;
         }
       }
-      else if (connstatetracker[id].hasRequest()) {
+      if (connstatetracker[id].hasRequest()) {
         const Pointer<SiteLogicRequest> request = connstatetracker[id].getRequest();
         if (request->requestType() == REQ_FILELIST ||
             request->requestType() == REQ_RAW ||
@@ -542,6 +542,10 @@ void SiteLogic::commandFail(int id, int failuretype) {
       }
       if (filelistupdated) {
         global->getEngine()->filelistUpdated();
+        handleConnection(id);
+        return;
+      }
+      if (connstatetracker[id].hasTransfer() && !connstatetracker[id].transferInitialized()) {
         handleConnection(id);
         return;
       }
@@ -683,8 +687,8 @@ void SiteLogic::handleTransferFail(int id, int err) {
 void SiteLogic::handleTransferFail(int id, int type, int err) {
   util::assert(connstatetracker[id].isListOrTransferLocked());
   reportTransferErrorAndFinish(id, type, err);
-  bool passive = connstatetracker[id].getTransferPassive();
-  if (connstatetracker[id].transferInitialized() && passive &&
+  if (connstatetracker[id].hasTransfer() && connstatetracker[id].transferInitialized() &&
+      connstatetracker[id].getTransferPassive() &&
       (err == TM_ERR_RETRSTOR || err == TM_ERR_DUPE))
   {
     conns[id]->abortTransferPASV();
