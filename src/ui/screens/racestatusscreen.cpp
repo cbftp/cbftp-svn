@@ -58,13 +58,12 @@ void RaceStatusScreen::redraw() {
   ui->erase();
   ui->printStr(1, 1, "Section: " + race->getSection());
   ui->printStr(1, 20, "Sites: " + race->getSiteListText());
-  std::list<std::string> currsubpaths = race->getSubPaths();
+  std::set<std::string> currsubpaths = race->getSubPaths();
   currnumsubpaths = currsubpaths.size();
-  currsubpaths.sort();
   std::string subpathpresent = "";
   subpaths.clear();
   unsigned int sumguessedsize = 0;
-  for (std::list<std::string>::iterator it = currsubpaths.begin(); it != currsubpaths.end(); it++) {
+  for (std::set<std::string>::iterator it = currsubpaths.begin(); it != currsubpaths.end(); it++) {
     if (subpathpresent.length() > 0) {
       subpathpresent += ", ";
     }
@@ -211,10 +210,10 @@ void RaceStatusScreen::update() {
       ui->setLegend();
     }
   }
-  std::list<std::string> currsubpaths = race->getSubPaths();
+  std::set<std::string> currsubpaths = race->getSubPaths();
   unsigned int sumguessedsize = 0;
   bool haslargepath = false;
-  for (std::list<std::string>::iterator it = currsubpaths.begin(); it != currsubpaths.end(); it++) {
+  for (std::set<std::string>::iterator it = currsubpaths.begin(); it != currsubpaths.end(); it++) {
     unsigned int guessedsize = race->guessedSize(*it);
     sumguessedsize += guessedsize;
     if (guessedsize >= 5) {
@@ -228,7 +227,7 @@ void RaceStatusScreen::update() {
   int x = 1;
   int y = 8;
   mso.clear();
-  for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
+  for (std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
     SiteRace * sr = it->first;
     const Pointer<SiteLogic> & sl = it->second;
     std::string user = sl->getSite()->getUser();
@@ -419,7 +418,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
     case 'A':
     {
       std::list<Pointer<Site> > excludedsites;
-      for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
+      for (std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
         excludedsites.push_back(it->second->getSite());
       }
       std::vector<Pointer<Site> >::const_iterator it;
@@ -460,7 +459,7 @@ void RaceStatusScreen::deleteFiles(bool allfiles) {
   if (race->getStatus() != RACE_STATUS_RUNNING) {
     std::list<Pointer<Site> > sites;
     std::list<Pointer<Site> > preselectsites;
-    std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it;
+    std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it;
     for (it = race->begin(); it != race->end(); it++) {
       sites.push_back(it->second->getSite());
       if (!it->first->isDone() || (it->first->isAborted() && !it->first->doneBeforeAbort())) {

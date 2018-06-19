@@ -1125,6 +1125,9 @@ bool SiteLogic::wasRecentlyListed(SiteRace * sr) const {
 }
 
 void SiteLogic::refreshChangePath(int id, SiteRace * race, bool refresh) {
+  if (race->isAborted()) {
+    return;
+  }
   const Path & currentpath = conns[id]->getCurrentPath();
   std::string subpath = race->getRelevantSubPath();
   Path targetpath = race->getPath() / subpath;
@@ -1308,22 +1311,44 @@ bool SiteLogic::requestReady(int requestid) const {
 }
 
 void SiteLogic::abortRace(unsigned int id) {
-  SiteRace * delrace = NULL;
-  for (std::vector<SiteRace *>::iterator it = races.begin(); it != races.end(); it++) {
-    if ((*it)->getId() == id) {
-      delrace = *it;
-      delrace->abort();
+  SiteRace * delrace = findSiteRace(id);
+  if (delrace == NULL) {
+    return;
+  }
+  delrace->abort();
+  for (std::list<SiteRace *>::iterator it = recentlylistedraces.begin(); it != recentlylistedraces.end(); it++) {
+    if ((*it) == delrace) {
+      recentlylistedraces.erase(it);
       break;
     }
   }
-  if (delrace != NULL) {
-    for (std::list<SiteRace *>::iterator it = recentlylistedraces.begin(); it != recentlylistedraces.end(); it++) {
-      if ((*it) == delrace) {
-        recentlylistedraces.erase(it);
-        break;
-      }
+  for (unsigned int i = 0; i < connstatetracker.size(); i++) {
+    connstatetracker[i].purgeSiteRace(delrace);
+  }
+  for (unsigned int i = 0; i < conns.size(); i++) {
+    if (conns[i]->currentCommandOwner() == delrace) {
+      conns[i]->resetCurrentCommandOwner();
     }
   }
+}
+
+void SiteLogic::removeRace(unsigned int id) {
+  abortRace(id);
+  for (std::vector<SiteRace *>::iterator it = races.begin(); it != races.end(); it++) {
+    if ((*it)->getId() == id) {
+      races.erase(it);
+      return;
+    }
+  }
+}
+
+SiteRace * SiteLogic::findSiteRace(unsigned int id) const {
+  for (std::vector<SiteRace *>::const_iterator it = races.begin(); it != races.end(); it++) {
+    if ((*it)->getId() == id) {
+      return *it;
+    }
+  }
+  return NULL;
 }
 
 FileList * SiteLogic::getFileList(int requestid) const {

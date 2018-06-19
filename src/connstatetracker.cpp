@@ -70,6 +70,16 @@ int ConnStateTracker::checkCount() const {
     return lastcheckedcount;
 }
 
+void ConnStateTracker::purgeSiteRace(SiteRace * sr) {
+  if (lastchecked == sr) {
+    lastchecked = NULL;
+    lastcheckedcount = 0;
+  }
+  if (delayedcommand.isActive() && (SiteRace *)delayedcommand.getArg() == sr) {
+    delayedcommand.set("handle", 0, NULL, false);
+  }
+}
+
 DelayedCommand & ConnStateTracker::getCommand() {
   return delayedcommand;
 }
