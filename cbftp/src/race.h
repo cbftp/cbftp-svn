@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <list>
 #include <set>
 #include <map>
 #include <utility>
@@ -35,6 +34,11 @@ class TransferStatus;
 
 typedef std::pair<std::string, std::pair<FileList *, FileList *> > FailedTransfer;
 
+struct SitesComparator {
+  bool operator()(const std::pair<SiteRace *, Pointer<SiteLogic> > & a,
+                  const std::pair<SiteRace *, Pointer<SiteLogic> > & b) const;
+};
+
 class Race : public EventReceiver, public TransferStatusCallback {
   private:
     void recalculateBestUnknownFileSizeEstimate();
@@ -45,17 +49,17 @@ class Race : public EventReceiver, public TransferStatusCallback {
     std::string name;
     std::string group;
     std::string section;
-    std::list<std::pair<SiteRace *, Pointer<SiteLogic> > > sites;
+    std::set<std::pair<SiteRace *, Pointer<SiteLogic> >, SitesComparator> sites;
     std::map<SiteRace *, std::map<std::string, unsigned int> > sizes;
-    std::list<SiteRace *> semidonesites;
-    std::list<SiteRace *> donesites;
+    std::set<SiteRace *> semidonesites;
+    std::set<SiteRace *> donesites;
     unsigned int maxnumfilessiteprogress;
-    std::map<std::string, std::list<SiteRace *> > sfvreports;
+    std::map<std::string, std::set<SiteRace *> > sfvreports;
     std::map<std::string, unsigned int> estimatedsize;
     std::map<std::string, unsigned long long int> estimatedfilesizes;
     unsigned long long int bestunknownfilesizeestimate;
-    std::map<std::string, std::list<SiteRace *> > subpathoccurences;
-    std::list<std::string> estimatedsubpaths;
+    std::map<std::string, std::set<SiteRace *> > subpathoccurences;
+    std::set<std::string> estimatedsubpaths;
     std::map<std::string, std::map<std::string, unsigned long long int> > guessedfilelists;
     std::map<std::string, unsigned long long int> guessedfileliststotalfilesize;
     unsigned long long int guessedtotalfilesize;
@@ -80,8 +84,8 @@ class Race : public EventReceiver, public TransferStatusCallback {
     void addSite(SiteRace *, const Pointer<SiteLogic> &);
     void removeSite(SiteRace *);
     void removeSite(const Pointer<SiteLogic> &);
-    std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator begin() const;
-    std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator end() const;
+    std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator begin() const;
+    std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator end() const;
     std::string getName() const;
     std::string getGroup() const;
     std::string getSection() const;
@@ -93,7 +97,7 @@ class Race : public EventReceiver, public TransferStatusCallback {
     std::map<std::string, unsigned long long int>::const_iterator guessedFileListBegin(const std::string &) const;
     std::map<std::string, unsigned long long int>::const_iterator guessedFileListEnd(const std::string &) const;
     bool SFVReported(const std::string &) const;
-    std::list<std::string> getSubPaths() const;
+    std::set<std::string> getSubPaths() const;
     int numSitesDone() const;
     int numSites() const;
     void updateSiteProgress(unsigned int);

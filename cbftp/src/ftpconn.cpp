@@ -1229,6 +1229,10 @@ CommandOwner * FTPConn::currentCommandOwner() const {
   return currentco;
 }
 
+void FTPConn::resetCurrentCommandOwner() {
+  currentco = NULL;
+}
+
 bool FTPConn::isProcessing() const {
   return processing;
 }

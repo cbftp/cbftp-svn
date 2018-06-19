@@ -238,6 +238,7 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void tick(int);
     FileList * currentFileList() const;
     CommandOwner * currentCommandOwner() const;
+    void resetCurrentCommandOwner();
     void parseFileList(char *, unsigned int);
     bool isConnected() const;
     void setRawBufferCallback(RawBufferCallback *);

@@ -172,7 +172,7 @@ Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, con
       if (readdtocurrent) {
         global->getEventLog()->log("Engine", "Reactivating spread job: " + section + "/" + release);
         race->setUndone();
-        for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
+        for (std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
           it->second->activateAll();
         }
       }
@@ -390,8 +390,8 @@ void Engine::removeSiteFromRace(Pointer<Race> & race, const std::string & site) 
     SiteRace * sr = race->getSiteRace(site);
     if (sr != NULL) {
       const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
-      sl->abortRace(race->getId());
       race->removeSite(sr);
+      sl->removeRace(race->getId());
     }
   }
 }
@@ -401,9 +401,9 @@ void Engine::removeSiteFromRaceDeleteFiles(Pointer<Race> & race, const std::stri
     SiteRace * sr = race->getSiteRace(site);
     if (sr != NULL) {
       const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
-      sl->abortRace(race->getId());
       race->removeSite(sr);
       sl->requestDelete(sr->getPath(), true, false, allfiles);
+      sl->removeRace(race->getId());
     }
   }
 }
@@ -411,7 +411,7 @@ void Engine::removeSiteFromRaceDeleteFiles(Pointer<Race> & race, const std::stri
 void Engine::abortRace(Pointer<Race> & race) {
   if (!!race) {
     race->abort();
-    for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
+    for (std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
       it->second->abortRace(race->getId());
     }
     currentraces.remove(race);
@@ -422,7 +422,7 @@ void Engine::abortRace(Pointer<Race> & race) {
 void Engine::resetRace(Pointer<Race> & race, bool hard) {
   if (!!race) {
     race->reset();
-    for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
+    for (std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
       if (hard) {
         it->first->hardReset();
       }
@@ -448,7 +448,7 @@ void Engine::resetRace(Pointer<Race> & race, bool hard) {
 
 void Engine::deleteOnAllSites(Pointer<Race> & race) {
   std::list<Pointer<Site> > sites;
-  for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
+  for (std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
     sites.push_back(it->second->getSite());
   }
   deleteOnSites(race, sites);
@@ -607,7 +607,7 @@ void Engine::estimateRaceSize(const Pointer<Race> & race) {
 }
 
 void Engine::estimateRaceSize(const Pointer<Race> & race, bool forceupdate) {
-  for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator its = race->begin(); its != race->end(); its++) {
+  for (std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator its = race->begin(); its != race->end(); its++) {
     SiteRace * srs = its->first;
     const SkipList & skiplist = its->second->getSite()->getSkipList();
     std::map<std::string, FileList *>::const_iterator itfl;
@@ -674,7 +674,7 @@ void Engine::refreshScoreBoard() {
   for (std::list<Pointer<Race> >::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
     Pointer<Race> race = *itr;
     bool racemode = race->getProfile() == SPREAD_RACE;
-    for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator its = race->begin(); its != race->end(); its++) {
+    for (std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator its = race->begin(); its != race->end(); its++) {
       SiteRace * srs = its->first;
       const Pointer<SiteLogic> & sls = its->second;
       const Pointer<Site> & srcsite = sls->getSite();
@@ -684,7 +684,7 @@ void Engine::refreshScoreBoard() {
       {
         continue;
       }
-      for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator itd = race->begin(); itd != race->end(); itd++) {
+      for (std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator itd = race->begin(); itd != race->end(); itd++) {
         SiteRace * srd = itd->first;
         FileList * fldroot = srd->getFileListForPath("");
         const Pointer<SiteLogic> & sld = itd->second;
@@ -914,8 +914,8 @@ void Engine::checkIfRaceComplete(SiteLogic * sls, Pointer<Race> & race) {
     bool unfinisheddirs = false;
     bool emptydirs = false;
     int completedlists = 0;
-    std::list<std::string> subpaths = race->getSubPaths();
-    for (std::list<std::string>::iterator itsp = subpaths.begin(); itsp != subpaths.end(); itsp++) {
+    std::set<std::string> subpaths = race->getSubPaths();
+    for (std::set<std::string>::iterator itsp = subpaths.begin(); itsp != subpaths.end(); itsp++) {
       FileList * spfl = srs->getFileListForPath(*itsp);
       if (spfl != NULL && spfl->getState() == FILELIST_LISTED) {
         if (!race->sizeEstimated(*itsp)) {
@@ -951,7 +951,7 @@ void Engine::checkIfRaceComplete(SiteLogic * sls, Pointer<Race> & race) {
       }
       else {
         int uploadslotcount = 0;
-        for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
+        for (std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
           if (it->second.get() != sls && !it->first->isDone()) {
             uploadslotcount += it->second->getSite()->getMaxUp();
           }
@@ -1050,8 +1050,8 @@ unsigned short Engine::calculateScore(File * f, Pointer<Race> & itr, FileList * 
 void Engine::setSpeedScale() {
   maxavgspeed = 1024;
   for (std::list<Pointer<Race> >::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
-    for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
-      for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
+    for (std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
+      for (std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
         int avgspeed = its->second->getSite()->getAverageSpeed(itd->second->getSite()->getName());
         if (avgspeed > maxavgspeed) maxavgspeed = avgspeed;
       }
@@ -1060,8 +1060,8 @@ void Engine::setSpeedScale() {
 }
 
 void Engine::preSeedPotentialData(Pointer<Race> & race) {
-  std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator srcit;
-  std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator dstit;
+  std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator srcit;
+  std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator dstit;
   int maxpointssizeandowned = getMaxPointsFileSize() + getMaxPointsPercentageOwned();
   for (srcit = race->begin(); srcit != race->end(); srcit++) {
     const Pointer<SiteLogic> & sls = srcit->second;
@@ -1196,7 +1196,7 @@ void Engine::tick(int message) {
       if ((*it)->failedTransfersCleared()) {
         global->getEventLog()->log("Engine", "No activity for " + util::int2Str(MAXCHECKSTIMEOUT) +
             " seconds, aborting spread job: " + (*it)->getName());
-        for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator its = (*it)->begin(); its != (*it)->end(); its++) {
+        for (std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator its = (*it)->begin(); its != (*it)->end(); its++) {
           its->second->raceLocalComplete(its->first, 0);
         }
         (*it)->setTimeout();
@@ -1210,7 +1210,7 @@ void Engine::tick(int message) {
         }
       }
     }
-    for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it2 = (*it)->begin(); it2 != (*it)->end(); it2++) {
+    for (std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it2 = (*it)->begin(); it2 != (*it)->end(); it2++) {
       int wantedlogins = it2->second->getSite()->getMaxDown();
       if (!it2->first->isDone()) {
         wantedlogins = it2->second->getSite()->getMaxLogins();
@@ -1259,7 +1259,7 @@ void Engine::tick(int message) {
 }
 
 void Engine::issueGlobalComplete(Pointer<Race> & race) {
-  for (std::list<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator itd = race->begin(); itd != race->end(); itd++) {
+  for (std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator itd = race->begin(); itd != race->end(); itd++) {
     itd->second->raceGlobalComplete();
   }
 }

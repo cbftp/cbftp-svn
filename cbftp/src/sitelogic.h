@@ -74,6 +74,7 @@ class SiteLogic : public EventReceiver {
     bool handlePreTransfer(int);
     bool handleCommandDelete(int, bool);
     bool makeTargetDirectory(int, bool, CommandOwner *);
+    SiteRace * findSiteRace(unsigned int id) const;
   public:
     SiteLogic(const std::string &);
     ~SiteLogic();
@@ -137,7 +138,8 @@ class SiteLogic : public EventReceiver {
     int requestMakeDirectory(const std::string & dirname);
     bool requestReady(int) const;
     bool requestStatus(int) const;
-    void abortRace(unsigned int);
+    void abortRace(unsigned int id);
+    void removeRace(unsigned int id);
     FileList * getFileList(int) const;
     std::string getRawCommandResult(int);
     bool finishRequest(int);

@@ -64,6 +64,7 @@ public:
   void check(SiteRace *);
   SiteRace * lastChecked() const;
   int checkCount() const;
+  void purgeSiteRace(SiteRace * sr);
   DelayedCommand & getCommand();
   void setDisconnected();
   void setTransfer(const std::string &, bool, bool, bool);
