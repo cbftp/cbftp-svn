@@ -122,31 +122,27 @@ void RemoteCommandHandler::FDData(int sockid, char * data, unsigned int datalen)
   handleMessage(std::string(data, datalen));
 }
 
-void RemoteCommandHandler::handleMessage(std::string message) {
-  message = util::trim(message);
-  size_t passend = message.find(" ");
-  if (passend == std::string::npos) {
-    global->getEventLog()->log("RemoteCommandHandler", "Bad message format: " + message);
+void RemoteCommandHandler::handleMessage(const std::string & message) {
+  std::string trimmedmessage = util::trim(message);
+  std::vector<std::string> tokens = util::splitVec(trimmedmessage);
+  if (tokens.size() < 2) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad message format: " + trimmedmessage);
     return;
   }
-  std::string pass = message.substr(0, passend);
+  std::string & pass = tokens[0];
   bool passok = pass == password;
   if (passok) {
-    for (unsigned int i = 0; i < passend; i++) {
-      message[i] = '*';
+    for (unsigned int i = 0; i < pass.length(); i++) {
+      pass[i] = '*';
     }
   }
-  global->getEventLog()->log("RemoteCommandHandler", "Received: " + message);
+  global->getEventLog()->log("RemoteCommandHandler", "Received: " + util::join(tokens));
   if (!passok) {
     global->getEventLog()->log("RemoteCommandHandler", "Invalid password.");
     return;
   }
-  size_t commandend = message.find(" ", passend + 1);
-  if (commandend == std::string::npos) {
-    commandend = message.length();
-  }
-  std::string command = message.substr(passend + 1, commandend - (passend + 1));
-  std::string remainder = message.substr(commandend + (commandend < message.length() ? 1 : 0));
+  std::string command = tokens[1];
+  std::vector<std::string> remainder(tokens.begin() + 2, tokens.end());
   if (command == "race") {
     commandRace(remainder);
   }
@@ -187,7 +183,7 @@ void RemoteCommandHandler::handleMessage(std::string message) {
       commandReset(remainder, true);
     }
   else {
-    global->getEventLog()->log("RemoteCommandHandler", "Invalid remote command: " + message);
+    global->getEventLog()->log("RemoteCommandHandler", "Invalid remote command: " + util::join(tokens));
     return;
   }
   if (notify) {
@@ -195,26 +191,25 @@ void RemoteCommandHandler::handleMessage(std::string message) {
   }
 }
 
-void RemoteCommandHandler::commandRace(const std::string & message) {
+void RemoteCommandHandler::commandRace(const std::vector<std::string> & message) {
   parseRace(message, RACE);
 }
 
-void RemoteCommandHandler::commandDistribute(const std::string & message) {
+void RemoteCommandHandler::commandDistribute(const std::vector<std::string> & message) {
   parseRace(message, DISTRIBUTE);
 }
 
-void RemoteCommandHandler::commandPrepare(const std::string & message) {
+void RemoteCommandHandler::commandPrepare(const std::vector<std::string> & message) {
   parseRace(message, PREPARE);
 }
 
-void RemoteCommandHandler::commandRaw(const std::string & message) {
-  size_t sitesend = message.find(" ");
-  if (sitesend == std::string::npos || sitesend == message.length()) {
-    global->getEventLog()->log("RemoteCommandHandler", "Bad remote raw command format: " + message);
+void RemoteCommandHandler::commandRaw(const std::vector<std::string> & message) {
+  if (message.size() < 2) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad remote raw command format: " + util::join(message));
     return;
   }
-  std::string sitestring = message.substr(0, sitesend);
-  std::string rawcommand = message.substr(sitesend + 1);
+  std::string sitestring = message[0];
+  std::string rawcommand = util::join(std::vector<std::string>(message.begin() + 1, message.end()));
 
   std::list<Pointer<SiteLogic> > sites = getSiteLogicList(sitestring);
 
@@ -223,20 +218,14 @@ void RemoteCommandHandler::commandRaw(const std::string & message) {
   }
 }
 
-void RemoteCommandHandler::commandRawWithPath(const std::string & message) {
-  size_t sitesend = message.find(" ");
-  if (sitesend == std::string::npos || sitesend == message.length()) {
-    global->getEventLog()->log("RemoteCommandHandler", "Bad remote rawwithpath command format: " + message);
+void RemoteCommandHandler::commandRawWithPath(const std::vector<std::string> & message) {
+  if (message.size() < 3) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad remote rawwithpath command format: " + util::join(message));
     return;
   }
-  size_t pathend = message.find(" ", sitesend + 1);
-  if (pathend == std::string::npos || pathend == message.length()) {
-    global->getEventLog()->log("RemoteCommandHandler", "Bad remote rawwithpath command format: " + message);
-    return;
-  }
-  std::string sitestring = message.substr(0, sitesend);
-  std::string pathstr = message.substr(sitesend + 1, pathend - sitesend - 1);
-  std::string rawcommand = message.substr(pathend + 1);
+  std::string sitestring = message[0];
+  std::string pathstr = message[1];
+  std::string rawcommand = util::join(std::vector<std::string>(message.begin() + 2, message.end()));
 
   std::list<Pointer<SiteLogic> > sites = getSiteLogicList(sitestring);
 
@@ -256,24 +245,23 @@ void RemoteCommandHandler::commandRawWithPath(const std::string & message) {
   }
 }
 
-void RemoteCommandHandler::commandFXP(const std::string & message) {
-  std::vector<std::string> tokens = util::splitVec(message, " ");
-  if (tokens.size() < 5) {
-    global->getEventLog()->log("RemoteCommandHandler", "Bad remote fxp command format: " + message);
+void RemoteCommandHandler::commandFXP(const std::vector<std::string> & message) {
+  if (message.size() < 5) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad remote fxp command format: " + util::join(message));
     return;
   }
-  Pointer<SiteLogic> srcsl = global->getSiteLogicManager()->getSiteLogic(tokens[0]);
-  Pointer<SiteLogic> dstsl = global->getSiteLogicManager()->getSiteLogic(tokens[3]);
+  Pointer<SiteLogic> srcsl = global->getSiteLogicManager()->getSiteLogic(message[0]);
+  Pointer<SiteLogic> dstsl = global->getSiteLogicManager()->getSiteLogic(message[3]);
   if (!srcsl) {
-    global->getEventLog()->log("RemoteCommandHandler", "Bad site name: " + tokens[0]);
+    global->getEventLog()->log("RemoteCommandHandler", "Bad site name: " + message[0]);
     return;
   }
   if (!dstsl) {
-    global->getEventLog()->log("RemoteCommandHandler", "Bad site name: " + tokens[3]);
+    global->getEventLog()->log("RemoteCommandHandler", "Bad site name: " + message[3]);
     return;
   }
-  std::string dstfile = tokens.size() > 5 ? tokens[5] : tokens[2];
-  std::string srcpath = tokens[1];
+  std::string dstfile = message.size() > 5 ? message[5] : message[2];
+  std::string srcpath = message[1];
   if (Path(srcpath).isRelative()) {
     if (srcsl->getSite()->hasSection(srcpath)) {
       srcpath = srcsl->getSite()->getSectionPath(srcpath).toString();
@@ -283,7 +271,7 @@ void RemoteCommandHandler::commandFXP(const std::string & message) {
       return;
     }
   }
-  std::string dstpath = tokens[4];
+  std::string dstpath = message[4];
   if (Path(dstpath).isRelative()) {
     if (dstsl->getSite()->hasSection(dstpath)) {
       dstpath = dstsl->getSite()->getSectionPath(dstpath).toString();
@@ -293,63 +281,61 @@ void RemoteCommandHandler::commandFXP(const std::string & message) {
       return;
     }
   }
-  global->getEngine()->newTransferJobFXP(tokens[0], srcpath, tokens[2], tokens[3], dstpath, dstfile);
+  global->getEngine()->newTransferJobFXP(message[0], srcpath, message[2], message[3], dstpath, dstfile);
 }
 
-void RemoteCommandHandler::commandDownload(const std::string & message) {
-  std::vector<std::string> tokens = util::splitVec(message, " ");
-  if (tokens.size() < 2) {
-    global->getEventLog()->log("RemoteCommandHandler", "Bad download command format: " + message);
+void RemoteCommandHandler::commandDownload(const std::vector<std::string> & message) {
+  if (message.size() < 2) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad download command format: " + util::join(message));
     return;
   }
-  Pointer<SiteLogic> srcsl = global->getSiteLogicManager()->getSiteLogic(tokens[0]);
+  Pointer<SiteLogic> srcsl = global->getSiteLogicManager()->getSiteLogic(message[0]);
   if (!srcsl) {
-    global->getEventLog()->log("RemoteCommandHandler", "Bad site name: " + tokens[0]);
+    global->getEventLog()->log("RemoteCommandHandler", "Bad site name: " + message[0]);
     return;
   }
-  Path srcpath = tokens[1];
+  Path srcpath = message[1];
   std::string file = srcpath.baseName();
-  if (tokens.size() == 2) {
+  if (message.size() == 2) {
     if (srcpath.isRelative()) {
-      global->getEventLog()->log("RemoteCommandHandler", "Path must be absolute or a section name followed by file: " + tokens[1]);
+      global->getEventLog()->log("RemoteCommandHandler", "Path must be absolute or a section name followed by file: " + message[1]);
       return;
     }
     srcpath = srcpath.dirName();
   }
   else {
     if (srcpath.isRelative()) {
-      if (srcsl->getSite()->hasSection(tokens[1])) {
-        srcpath = srcsl->getSite()->getSectionPath(tokens[1]);
+      if (srcsl->getSite()->hasSection(message[1])) {
+        srcpath = srcsl->getSite()->getSectionPath(message[1]);
       }
       else {
-        global->getEventLog()->log("RemoteCommandHandler", "Path must be absolute or a section name: " + tokens[1]);
+        global->getEventLog()->log("RemoteCommandHandler", "Path must be absolute or a section name: " + message[1]);
         return;
       }
     }
-    file = tokens[2];
+    file = message[2];
   }
-  global->getEngine()->newTransferJobDownload(tokens[0], srcpath, file, global->getLocalStorage()->getDownloadPath(), file);
+  global->getEngine()->newTransferJobDownload(message[0], srcpath, file, global->getLocalStorage()->getDownloadPath(), file);
 }
 
-void RemoteCommandHandler::commandUpload(const std::string & message) {
-  std::vector<std::string> tokens = util::splitVec(message, " ");
-  if (tokens.size() < 3) {
-    global->getEventLog()->log("RemoteCommandHandler", "Bad upload command format: " + message);
+void RemoteCommandHandler::commandUpload(const std::vector<std::string> & message) {
+  if (message.size() < 3) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad upload command format: " + util::join(message));
     return;
   }
-  Path srcpath = tokens[0];
+  Path srcpath = message[0];
   std::string file = srcpath.baseName();
   std::string dstsite;
   Path dstpath;
-  if (tokens.size() == 3) {
+  if (message.size() == 3) {
     srcpath = srcpath.dirName();
-    dstsite = tokens[1];
-    dstpath = tokens[2];
+    dstsite = message[1];
+    dstpath = message[2];
   }
   else {
-    file = tokens[1];
-    dstsite = tokens[2];
-    dstpath = tokens[3];
+    file = message[1];
+    dstsite = message[2];
+    dstpath = message[3];
   }
   Pointer<SiteLogic> dstsl = global->getSiteLogicManager()->getSiteLogic(dstsite);
   if (!dstsl) {
@@ -368,17 +354,20 @@ void RemoteCommandHandler::commandUpload(const std::string & message) {
   global->getEngine()->newTransferJobUpload(srcpath, file, dstsite, dstpath, file);
 }
 
-void RemoteCommandHandler::commandIdle(const std::string & message) {
-  size_t sitesend = message.find(" ");
+void RemoteCommandHandler::commandIdle(const std::vector<std::string> & message) {
+  if (message.empty()) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad idle command format: " + util::join(message));
+    return;
+  }
   int idletime;
   std::string sitestring;
-  if (sitesend == std::string::npos || sitesend == message.length()) {
-    sitestring = message;
+  if (message.size() < 2) {
+    sitestring = message[0];
     idletime = 0;
   }
   else {
-    sitestring = message.substr(0, sitesend);
-    idletime = util::str2Int(message.substr(sitesend + 1));
+    sitestring = message[0];
+    idletime = util::str2Int(message[1]);
   }
 
   std::list<Pointer<SiteLogic> > sites = getSiteLogicList(sitestring, false);
@@ -403,25 +392,28 @@ void RemoteCommandHandler::commandIdle(const std::string & message) {
   }
 }
 
-void RemoteCommandHandler::commandAbort(const std::string & message) {
-  Pointer<Race> race = global->getEngine()->getRace(message);
+void RemoteCommandHandler::commandAbort(const std::vector<std::string> & message) {
+  if (message.empty()) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad abort command format: " + util::join(message));
+    return;
+  }
+  Pointer<Race> race = global->getEngine()->getRace(message[0]);
   if (!race) {
-    global->getEventLog()->log("RemoteCommandHandler", "No matching race: " + message);
+    global->getEventLog()->log("RemoteCommandHandler", "No matching race: " + message[0]);
     return;
   }
   global->getEngine()->abortRace(race);
 }
 
-void RemoteCommandHandler::commandDelete(const std::string & message) {
-  std::string release;
-  std::string sitestring;
-  size_t releaseend = message.find(" ");
-  if (releaseend == std::string::npos || releaseend == message.length()) {
-    release = message;
+void RemoteCommandHandler::commandDelete(const std::vector<std::string> & message) {
+  if (message.empty()) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad delete command format: " + util::join(message));
+    return;
   }
-  else {
-    release = message.substr(0, releaseend);
-    sitestring = message.substr(releaseend + 1);
+  std::string release = message[0];
+  std::string sitestring;
+  if (message.size() >= 2) {
+    sitestring = message[1];
   }
   Pointer<Race> race = global->getEngine()->getRace(release);
   if (!race) {
@@ -440,25 +432,27 @@ void RemoteCommandHandler::commandDelete(const std::string & message) {
   global->getEngine()->deleteOnSites(race, sites);
 }
 
-void RemoteCommandHandler::commandReset(const std::string & message, bool hard) {
-  Pointer<Race> race = global->getEngine()->getRace(message);
+void RemoteCommandHandler::commandReset(const std::vector<std::string> & message, bool hard) {
+  if (message.empty()) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad reset command format: " + util::join(message));
+    return;
+  }
+  Pointer<Race> race = global->getEngine()->getRace(message[0]);
   if (!race) {
-    global->getEventLog()->log("RemoteCommandHandler", "No matching race: " + message);
+    global->getEventLog()->log("RemoteCommandHandler", "No matching race: " + message[0]);
     return;
   }
   global->getEngine()->resetRace(race, hard);
 }
 
-void RemoteCommandHandler::parseRace(const std::string & message, int type) {
-  size_t sectionend = message.find(" ");
-  size_t releaseend = message.find(" ", sectionend + 1);
-  if (sectionend == std::string::npos || releaseend == std::string::npos || releaseend == message.length()) {
-    global->getEventLog()->log("RemoteCommandHandler", "Bad remote race command format: " + message);
+void RemoteCommandHandler::parseRace(const std::vector<std::string> & message, int type) {
+  if (message.size() < 3) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad remote race command format: " + util::join(message));
     return;
   }
-  std::string section = message.substr(0, sectionend);
-  std::string release = message.substr(sectionend + 1, releaseend - (sectionend + 1));
-  std::string sitestring = message.substr(releaseend + 1);
+  std::string section = message[0];
+  std::string release = message[1];
+  std::string sitestring = message[2];
   if (sitestring == "*") {
     if (type == RACE) {
       global->getEngine()->newRace(release, section);

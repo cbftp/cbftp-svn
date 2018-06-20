@@ -46,7 +46,7 @@ Engine::Engine() :
   scoreboard(makePointer<ScoreBoard>()),
   maxavgspeed(1024),
   pokeregistered(false),
-  nextid(0),
+  nextid(1),
   maxpointsfilesize(2000),
   maxpointsavgspeed(3000),
   maxpointspriority(2500),
@@ -63,6 +63,14 @@ Engine::~Engine() {
 }
 
 Pointer<Race> Engine::newSpreadJob(int profile, const std::string & release, const std::string & section, const std::list<std::string> & sites) {
+  if (release.empty()) {
+    global->getEventLog()->log("Engine", "Spread job skipped due to missing release name.");
+    return Pointer<Race>();
+  }
+  if (section.empty()) {
+    global->getEventLog()->log("Engine", "Spread job skipped due to missing section name.");
+    return Pointer<Race>();
+  }
   Pointer<Race> race;
   if (profile == SPREAD_PREPARE && startnextprepared) {
     startnextprepared = false;
@@ -299,6 +307,14 @@ unsigned int Engine::newTransferJobFXP(const std::string & srcsite, FileList * s
 
 unsigned int Engine::newTransferJobDownload(const std::string & srcsite, FileList * srcfilelist, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
   const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(srcsite);
+  if (!sl) {
+    global->getEventLog()->log("Engine", "Bad site name: " + srcsite);
+    return 0;
+  }
+  if (srcfile.empty() || dstfile.empty()) {
+    global->getEventLog()->log("Engine", "Bad file name.");
+    return 0;
+  }
   unsigned int id = nextid++;
   Pointer<TransferJob> tj = makePointer<TransferJob>(id, sl, srcfilelist, srcfile, dstpath, dstfile);
   alltransferjobs.push_back(tj);
@@ -311,14 +327,22 @@ unsigned int Engine::newTransferJobDownload(const std::string & srcsite, FileLis
   return id;
 }
 
-unsigned int Engine::newTransferJobDownload(const std::string & site, const Path & srcpath, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
-  const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
+unsigned int Engine::newTransferJobDownload(const std::string & srcsite, const Path & srcpath, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
+  const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(srcsite);
+  if (!sl) {
+    global->getEventLog()->log("Engine", "Bad site name: " + srcsite);
+    return 0;
+  }
+  if (srcfile.empty() || dstfile.empty()) {
+    global->getEventLog()->log("Engine", "Bad file name.");
+    return 0;
+  }
   unsigned int id = nextid++;
   Pointer<TransferJob> tj = makePointer<TransferJob>(id, sl, srcpath, srcfile, dstpath, dstfile);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting download job: " + srcfile +
-            " from " + site);
+            " from " + srcsite);
   sl->addTransferJob(tj->getSrcTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
@@ -327,6 +351,14 @@ unsigned int Engine::newTransferJobDownload(const std::string & site, const Path
 
 unsigned int Engine::newTransferJobUpload(const Path & srcpath, const std::string & srcfile, const std::string & dstsite, FileList * dstfilelist, const std::string & dstfile) {
   const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(dstsite);
+  if (!sl) {
+    global->getEventLog()->log("Engine", "Bad site name: " + dstsite);
+    return 0;
+  }
+  if (srcfile.empty() || dstfile.empty()) {
+    global->getEventLog()->log("Engine", "Bad file name.");
+    return 0;
+  }
   unsigned int id = nextid++;
   Pointer<TransferJob> tj = makePointer<TransferJob>(id, srcpath, srcfile, sl, dstfilelist, dstfile);
   alltransferjobs.push_back(tj);
@@ -341,6 +373,14 @@ unsigned int Engine::newTransferJobUpload(const Path & srcpath, const std::strin
 
 unsigned int Engine::newTransferJobUpload(const Path & srcpath, const std::string & srcfile, const std::string & dstsite, const Path & dstpath, const std::string & dstfile) {
   const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(dstsite);
+  if (!sl) {
+    global->getEventLog()->log("Engine", "Bad site name: " + dstsite);
+    return 0;
+  }
+  if (srcfile.empty() || dstfile.empty()) {
+    global->getEventLog()->log("Engine", "Bad file name.");
+    return 0;
+  }
   unsigned int id = nextid++;
   Pointer<TransferJob> tj = makePointer<TransferJob>(id, srcpath, srcfile, sl, dstpath, dstfile);
   alltransferjobs.push_back(tj);
@@ -356,6 +396,18 @@ unsigned int Engine::newTransferJobUpload(const Path & srcpath, const std::strin
 unsigned int Engine::newTransferJobFXP(const std::string & srcsite, FileList * srcfilelist, const std::string & srcfile, const std::string & dstsite, FileList * dstfilelist, const std::string & dstfile) {
   const Pointer<SiteLogic> slsrc = global->getSiteLogicManager()->getSiteLogic(srcsite);
   const Pointer<SiteLogic> sldst = global->getSiteLogicManager()->getSiteLogic(dstsite);
+  if (!slsrc) {
+    global->getEventLog()->log("Engine", "Bad site name: " + srcsite);
+    return 0;
+  }
+  if (!sldst) {
+    global->getEventLog()->log("Engine", "Bad site name: " + dstsite);
+    return 0;
+  }
+  if (srcfile.empty() || dstfile.empty()) {
+    global->getEventLog()->log("Engine", "Bad file name.");
+    return 0;
+  }
   unsigned int id = nextid++;
   Pointer<TransferJob> tj = makePointer<TransferJob>(id, slsrc, srcfilelist, srcfile, sldst, dstfilelist, dstfile);
   alltransferjobs.push_back(tj);
@@ -372,6 +424,18 @@ unsigned int Engine::newTransferJobFXP(const std::string & srcsite, FileList * s
 unsigned int Engine::newTransferJobFXP(const std::string & srcsite, const Path & srcpath, const std::string & srcfile, const std::string & dstsite, const Path & dstpath, const std::string & dstfile) {
   const Pointer<SiteLogic> slsrc = global->getSiteLogicManager()->getSiteLogic(srcsite);
   const Pointer<SiteLogic> sldst = global->getSiteLogicManager()->getSiteLogic(dstsite);
+  if (!slsrc) {
+    global->getEventLog()->log("Engine", "Bad site name: " + srcsite);
+    return 0;
+  }
+  if (!sldst) {
+    global->getEventLog()->log("Engine", "Bad site name: " + dstsite);
+    return 0;
+  }
+  if (srcfile.empty() || dstfile.empty()) {
+    global->getEventLog()->log("Engine", "Bad file name.");
+    return 0;
+  }
   unsigned int id = nextid++;
   Pointer<TransferJob> tj = makePointer<TransferJob>(id, slsrc, srcpath, srcfile, sldst, dstpath, dstfile);
   alltransferjobs.push_back(tj);
@@ -391,7 +455,9 @@ void Engine::removeSiteFromRace(Pointer<Race> & race, const std::string & site) 
     if (sr != NULL) {
       const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
       race->removeSite(sr);
-      sl->removeRace(race->getId());
+      if (!!sl) {
+        sl->removeRace(race->getId());
+      }
     }
   }
 }
@@ -402,8 +468,10 @@ void Engine::removeSiteFromRaceDeleteFiles(Pointer<Race> & race, const std::stri
     if (sr != NULL) {
       const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
       race->removeSite(sr);
-      sl->requestDelete(sr->getPath(), true, false, allfiles);
-      sl->removeRace(race->getId());
+      if (!!sl) {
+        sl->requestDelete(sr->getPath(), true, false, allfiles);
+        sl->removeRace(race->getId());
+      }
     }
   }
 }
