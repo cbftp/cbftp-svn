@@ -274,6 +274,10 @@ std::list<std::string> split(const std::string & in) {
   return split(in, " ");
 }
 
+std::vector<std::string> splitVec(const std::string & in) {
+  return splitVec(in, " ");
+}
+
 std::string join(const std::list<std::string> & in, const std::string & sep) {
   std::string out;
   for (std::list<std::string>::const_iterator it = in.begin(); it != in.end(); it++) {
@@ -283,6 +287,18 @@ std::string join(const std::list<std::string> & in, const std::string & sep) {
 }
 
 std::string join(const std::list<std::string> & in) {
+  return join(in, " ");
+}
+
+std::string join(const std::vector<std::string> & in, const std::string & sep) {
+  std::string out;
+  for (std::vector<std::string>::const_iterator it = in.begin(); it != in.end(); it++) {
+    out += *it + sep;
+  }
+  return out.substr(0, out.length() - sep.length());
+}
+
+std::string join(const std::vector<std::string> & in) {
   return join(in, " ");
 }
 
