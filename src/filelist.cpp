@@ -63,10 +63,14 @@ bool FileList::updateFile(const std::string & start, int touch) {
     }
     if (newsize > maxfilesize) maxfilesize = newsize;
     if (updatefile->getOwner().compare(file->getOwner()) != 0) {
-      if (file->getOwner().compare(username) == 0) {
+      if (username.compare(file->getOwner()) == 0 ||
+          username.compare(0, 8, file->getOwner()) == 0)
+      {
         editOwnedFileCount(true);
       }
-      else if (updatefile->getOwner().compare(username) == 0) {
+      else if (username.compare(updatefile->getOwner()) == 0 ||
+               username.compare(0, 8, updatefile->getOwner()) == 0)
+      {
         editOwnedFileCount(false);
       }
     }
