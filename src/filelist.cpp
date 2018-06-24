@@ -9,6 +9,23 @@
 #include "util.h"
 #include "commandowner.h"
 
+namespace {
+
+bool sameOwner(const std::string & a, const std::string & b) {
+  size_t alen = a.length();
+  if (alen > 8) {
+    size_t blen = b.length();
+    if (alen < blen) {
+      return a.compare(0, alen, b, 0, alen) == 0;
+    }
+    return a.compare(0, blen, b, 0, blen) == 0;
+  }
+  return a.compare(0, 8, b, 0, 8) == 0;
+}
+
+
+}
+
 FileList::FileList(const std::string & username, const Path & path) {
   init(username, path, FILELIST_UNKNOWN);
 }
@@ -62,17 +79,15 @@ bool FileList::updateFile(const std::string & start, int touch) {
       setChanged();
     }
     if (newsize > maxfilesize) maxfilesize = newsize;
-    if (updatefile->getOwner().compare(file->getOwner()) != 0) {
-      if (username.compare(file->getOwner()) == 0 ||
-          username.compare(0, 8, file->getOwner()) == 0)
-      {
-        editOwnedFileCount(true);
+    if (!sameOwner(file->getOwner(), updatefile->getOwner())) {
+      if (sameOwner(username, file->getOwner())) {
+        owned++;
       }
-      else if (username.compare(updatefile->getOwner()) == 0 ||
-               username.compare(0, 8, updatefile->getOwner()) == 0)
+      else if (sameOwner(username, updatefile->getOwner()))
       {
-        editOwnedFileCount(false);
+        owned--;
       }
+      recalcOwnedPercentage();
     }
     if (updatefile->setOwner(file->getOwner())) {
       setChanged();
@@ -89,7 +104,7 @@ bool FileList::updateFile(const std::string & start, int touch) {
       unsigned int speed = updatefile->getUpdateSpeed();
       const Pointer<Site> & src = updatefile->getUpdateSrc();
       const Pointer<Site> & dst = updatefile->getUpdateDst();
-      if (updatefile->getOwner().compare(username) == 0) {
+      if (sameOwner(username, updatefile->getOwner())) {
         size = newsize;
         updatefile->getUpdateSrc()->pushTransferSpeed(dst->getName(), speed, size);
       }
@@ -101,7 +116,6 @@ bool FileList::updateFile(const std::string & start, int touch) {
       updatefile->unsetUpdateFlag();
     }
     delete file;
-    return true;
   }
   else {
     files[name] = file;
@@ -112,9 +126,10 @@ bool FileList::updateFile(const std::string & start, int touch) {
       totalfilesize += filesize;
     }
     if (filesize > maxfilesize) maxfilesize = filesize;
-    if (file->getOwner().compare(username) == 0) {
-      editOwnedFileCount(true);
+    if (sameOwner(username, file->getOwner())) {
+      owned++;
     }
+    recalcOwnedPercentage();
     setChanged();
   }
   return true;
@@ -133,9 +148,10 @@ void FileList::touchFile(const std::string & name, const std::string & user, boo
     file = new File(name, user);
     files[name] = file;
     lowercasefilemap[util::toLower(name)] = name;
-    if (user.compare(username) == 0) {
-      editOwnedFileCount(true);
+    if (sameOwner(username, user)) {
+      owned++;
     }
+    recalcOwnedPercentage();
     setChanged();
   }
   if (upload && !file->isUploading()) {
@@ -147,8 +163,8 @@ void FileList::touchFile(const std::string & name, const std::string & user, boo
 void FileList::removeFile(const std::string & name) {
   File * f;
   if ((f = getFileCaseSensitive(name)) != NULL) {
-    if (f->getOwner().compare(username) == 0) {
-      editOwnedFileCount(false);
+    if (sameOwner(username, f->getOwner())) {
+      owned--;
     }
     if (f->getSize() > 0 && !f->isDirectory()) {
       uploadedfiles--;
@@ -160,6 +176,7 @@ void FileList::removeFile(const std::string & name) {
     delete f;
     files.erase(name);
     lowercasefilemap.erase(util::toLower(name));
+    recalcOwnedPercentage();
     setChanged();
   }
 }
@@ -366,10 +383,8 @@ void FileList::flush() {
   uploading = 0;
 }
 
-void FileList::editOwnedFileCount(bool add) {
- if (add) ++owned;
- else --owned;
- if (files.size()) {
+void FileList::recalcOwnedPercentage() {
+ if (!files.empty()) {
    ownpercentage = (owned * 100) / files.size();
  }
  else {

@@ -37,7 +37,7 @@ class FileList {
     unsigned long long int totalfilesize;
     unsigned int uploadedfiles;
     int refreshedtime;
-    void editOwnedFileCount(bool);
+    void recalcOwnedPercentage();
     void init(const std::string &, const Path &, FileListState);
   public:
     FileList(const std::string &, const Path &);
