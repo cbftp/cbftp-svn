@@ -138,6 +138,7 @@ const std::list<std::string> & TransferStatus::getLogLines() const {
 void TransferStatus::setFinished() {
   state = TRANSFERSTATUS_STATE_SUCCESSFUL;
   progress = 100;
+  interpolatedtargetsize = knowntargetsize;
   timeremaining = 0;
 }
 
