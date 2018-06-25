@@ -19,6 +19,12 @@
 #include <pwd.h>
 #include <grp.h>
 
+namespace {
+
+BinaryData emptydata;
+
+}
+
 LocalStorage::LocalStorage() :
   temppath("/tmp"),
   downloadpath(std::string(getenv("HOME")) + "/Downloads"),
@@ -157,7 +163,7 @@ const BinaryData & LocalStorage::getStoreContent(int storeid) const {
   if (it != content.end()) {
     return it->second;
   }
-  throw;
+  return emptydata;
 }
 
 void LocalStorage::purgeStoreContent(int storeid) {
