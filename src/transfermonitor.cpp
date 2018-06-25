@@ -1,5 +1,7 @@
 #include "transfermonitor.h"
 
+#include <algorithm>
+
 #include "core/tickpoke.h"
 #include "site.h"
 #include "sitelogic.h"
@@ -87,7 +89,8 @@ void TransferMonitor::engageFXP(
     }
   }
   fld->touchFile(dfile, sld->getSite()->getUser(), true);
-  latesttouch = fld->getFile(dfile)->getTouch();
+  latestsrctouch = fls->getFile(sfile)->getTouch();
+  latestdsttouch = fld->getFile(dfile)->getTouch();
   fls->download(sfile);
 
   ts = makePointer<TransferStatus>(TRANSFERSTATUS_TYPE_FXP, sls->getSite()->getName(),
@@ -399,12 +402,18 @@ void TransferMonitor::finish() {
   if (span == 0) {
     span = 10;
   }
+  if (type == TM_TYPE_FXP) {
+    updateFXPSizeSpeed();
+  }
+  if (type == TM_TYPE_DOWNLOAD || type == TM_TYPE_UPLOAD) {
+    updateLocalTransferSizeSpeed();
+  }
   switch (type) {
     case TM_TYPE_FXP:
     case TM_TYPE_DOWNLOAD: {
       File * srcfile = fls->getFile(sfile);
       if (srcfile) {
-        unsigned long long int size = srcfile->getSize();
+        unsigned long long int size = std::max(srcfile->getSize(), ts->knownTargetSize());
         unsigned int speed = size / span;
         ts->setTargetSize(size);
         ts->setSpeed(speed);
@@ -514,20 +523,31 @@ Pointer<TransferStatus> TransferMonitor::getTransferStatus() const {
 }
 
 void TransferMonitor::updateFXPSizeSpeed() {
-  File * file = fld->getFile(dfile);
-  if (file) {
-    unsigned long long int filesize = file->getSize();
+  File * srcfile = fls->getFile(sfile);
+  if (srcfile) {
+    int srctouch = srcfile->getTouch();
+    if (latestsrctouch != srctouch) {
+      latestsrctouch = srctouch;
+      unsigned long long int srcfilesize = srcfile->getSize();
+      if (srcfilesize > ts->sourceSize()) {
+        ts->setSourceSize(srcfilesize);
+      }
+    }
+  }
+  File * dstfile = fld->getFile(dfile);
+  if (dstfile) {
+    unsigned long long int dstfilesize = dstfile->getSize();
     int span = timestamp - startstamp;
-    int touch = file->getTouch();
+    int dsttouch = dstfile->getTouch();
     if (!span) {
       span = 10;
     }
 
     // if the file list has been updated (as seen on the file's touch stamp
     // the speed shall be recalculated.
-    if (latesttouch != touch) {
-      latesttouch = touch;
-      setTargetSizeSpeed(filesize, span);
+    if (latestdsttouch != dsttouch) {
+      latestdsttouch = dsttouch;
+      setTargetSizeSpeed(dstfilesize, span);
     }
     else {
       // since the actual file size has not changed since last tick,
