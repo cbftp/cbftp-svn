@@ -60,6 +60,7 @@ public:
   void setPassiveAddress(const std::string &);
   void setCipher(const std::string &);
   void setSSLSessionReused(bool);
+  void setSourceSize(unsigned long long int size);
   void addLogLine(const std::string &);
 private:
   void updateProgress();

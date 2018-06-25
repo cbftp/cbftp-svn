@@ -233,6 +233,10 @@ void TransferStatus::setSSLSessionReused(bool reused) {
   this->sslsessionreused = reused;
 }
 
+void TransferStatus::setSourceSize(unsigned long long int size) {
+  sourcesize = size;
+}
+
 void TransferStatus::addLogLine(const std::string & line) {
   util::assert(state == TRANSFERSTATUS_STATE_IN_PROGRESS);
   loglines.push_back(line);

@@ -69,7 +69,8 @@ class TransferMonitor : public EventReceiver, public RawBufferCallback {
     int partialcompletestamp;
     TransferManager * tm;
     Pointer<TransferStatus> ts;
-    int latesttouch;
+    int latestsrctouch;
+    int latestdsttouch;
     bool hiddenfiles;
     LocalTransfer * lt;
     int ticker;
