@@ -1606,6 +1606,7 @@ void SiteLogic::updateName() {
   for (unsigned int i = 0; i < conns.size(); i++) {
     conns[i]->updateName();
   }
+  rawcommandrawbuf->rename(site->getName());
 }
 
 int SiteLogic::getCurrLogins() const {
