@@ -140,6 +140,7 @@ class SiteLogic : public EventReceiver {
     bool requestStatus(int) const;
     void abortRace(unsigned int id);
     void removeRace(unsigned int id);
+    void abortTransfers(CommandOwner * co);
     FileList * getFileList(int) const;
     std::string getRawCommandResult(int);
     bool finishRequest(int);
@@ -160,6 +161,5 @@ class SiteLogic : public EventReceiver {
     void upload(int);
     void list(int);
     void listAll(int);
-    void abortTransfer(int);
     const ConnStateTracker * getConnStateTracker(int) const;
 };

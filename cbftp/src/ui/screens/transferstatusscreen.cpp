@@ -10,6 +10,9 @@
 
 #include "../../transferstatus.h"
 #include "../../util.h"
+#include "../../globalcontext.h"
+#include "../../sitelogicmanager.h"
+#include "../../sitelogic.h"
 
 TransferStatusScreen::TransferStatusScreen(Ui * ui) {
   this->ui = ui;
@@ -91,6 +94,9 @@ void TransferStatusScreen::redraw() {
     case TRANSFERSTATUS_STATE_DUPE:
       progress = "Failed (Dupe)";
       break;
+    case TRANSFERSTATUS_STATE_ABORTED:
+      progress = "Aborted";
+      break;
   }
   ui->printStr(y, 57, "Status: " + progress);
   ++y;
@@ -138,6 +144,9 @@ bool TransferStatusScreen::keyPressed(unsigned int ch) {
     case 10:
     case 27: // esc
       ui->returnToLast();
+      return true;
+    case 'B':
+      abortTransfer(ts);
       return true;
     case KEY_UP:
       if (currentviewspan < 2) {
@@ -194,8 +203,21 @@ bool TransferStatusScreen::keyPressed(unsigned int ch) {
   return false;
 }
 
+void TransferStatusScreen::abortTransfer(Pointer<TransferStatus> ts) {
+  if (ts->getState() == TRANSFERSTATUS_STATE_IN_PROGRESS) {
+    int type = ts->getType();
+    if (type == TRANSFERSTATUS_TYPE_DOWNLOAD || type == TRANSFERSTATUS_TYPE_FXP) {
+      global->getSiteLogicManager()->getSiteLogic(ts->getSource())->disconnectConn(ts->getSourceSlot());
+    }
+    if (type == TRANSFERSTATUS_TYPE_UPLOAD || type == TRANSFERSTATUS_TYPE_FXP) {
+      global->getSiteLogicManager()->getSiteLogic(ts->getTarget())->disconnectConn(ts->getTargetSlot());
+    }
+    ts->setAborted();
+  }
+}
+
 std::string TransferStatusScreen::getLegendText() const {
-  return "[c/Enter/Esc] Return - [Up/Down/Pgup/Pgdn/Home/End] Navigate log";
+  return "[c/Enter/Esc] Return - A[B]ort transfer - [Up/Down/Pgup/Pgdn/Home/End] Navigate log";
 }
 
 std::string TransferStatusScreen::getInfoLabel() const {

@@ -23,6 +23,7 @@ public:
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
+  static void abortTransfer(Pointer<TransferStatus> ts);
 private:
   Pointer<TransferStatus> ts;
   MenuSelectOption table;
