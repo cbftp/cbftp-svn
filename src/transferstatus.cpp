@@ -143,21 +143,29 @@ void TransferStatus::setFinished() {
 }
 
 void TransferStatus::setFailed() {
-  state = TRANSFERSTATUS_STATE_FAILED;
-  knowntargetsize = 0;
-  interpolatedtargetsize = 0;
-  progress = 0;
-  speed = 0;
+  if (state != TRANSFERSTATUS_STATE_ABORTED) {
+    state = TRANSFERSTATUS_STATE_FAILED;
+    knowntargetsize = 0;
+    interpolatedtargetsize = 0;
+    progress = 0;
+    speed = 0;
+  }
   timeremaining = 0;
 }
 
 void TransferStatus::setDupe() {
-  state = TRANSFERSTATUS_STATE_DUPE;
-  knowntargetsize = 0;
-  interpolatedtargetsize = 0;
-  progress = 0;
-  speed = 0;
+  if (state != TRANSFERSTATUS_STATE_ABORTED) {
+    state = TRANSFERSTATUS_STATE_DUPE;
+    knowntargetsize = 0;
+    interpolatedtargetsize = 0;
+    progress = 0;
+    speed = 0;
+  }
   timeremaining = 0;
+}
+
+void TransferStatus::setAborted() {
+  state = TRANSFERSTATUS_STATE_ABORTED;
 }
 
 void TransferStatus::setAwaited(bool awaited) {

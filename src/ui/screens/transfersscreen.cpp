@@ -1,5 +1,7 @@
 #include "transfersscreen.h"
 
+#include "transferstatusscreen.h"
+
 #include "../ui.h"
 #include "../menuselectadjustableline.h"
 #include "../menuselectoptiontextbutton.h"
@@ -490,6 +492,16 @@ bool TransfersScreen::keyPressed(unsigned int ch) {
         ui->redraw();
       }
       return true;
+    case 'B':
+      if (hascontents) {
+        Pointer<MenuSelectOptionTextButton> elem =
+            table.getElement(table.getSelectionPointer());
+        std::map<int, Pointer<TransferStatus> >::iterator it = statusmap.find(elem->getId());
+        if (it != statusmap.end()) {
+          TransferStatusScreen::abortTransfer(it->second);
+        }
+      }
+      return true;
     case 'c':
     case 27: // esc
       ui->returnToLast();
@@ -506,7 +518,7 @@ bool TransfersScreen::keyPressed(unsigned int ch) {
 }
 
 std::string TransfersScreen::getLegendText() const {
-  return "[Esc/c] Return - [Up/Down] Navigate - [Enter] Details - toggle [f]iltering";
+  return "[Esc/c] Return - [Up/Down] Navigate - [Enter] Details - toggle [f]iltering - A[B]ort transfer";
 }
 
 std::string TransfersScreen::getInfoLabel() const {
@@ -564,6 +576,9 @@ TransferDetails TransfersScreen::formatTransferDetails(Pointer<TransferStatus> &
       td.speed = "-";
       td.transferred = "-";
       td.progress = "dupe";
+      break;
+    case TRANSFERSTATUS_STATE_ABORTED:
+      td.progress = "abor";
       break;
   }
   td.transferred += " / " + util::parseSize(ts->sourceSize());

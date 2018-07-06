@@ -188,8 +188,12 @@ void TransferJob::init(unsigned int id, TransferJobType type, const Pointer<Site
   idletime = 0;
   timequeued = util::ctimeLog();
   timestarted = "-";
-  srcsitetransferjob = makePointer<SiteTransferJob>(this, true);
-  dstsitetransferjob = makePointer<SiteTransferJob>(this, false);
+  if (!!src) {
+    srcsitetransferjob = makePointer<SiteTransferJob>(this, true);
+  }
+  if (!!dst) {
+    dstsitetransferjob = makePointer<SiteTransferJob>(this, false);
+  }
 }
 
 std::string TransferJob::getSrcFileName() const {
@@ -675,6 +679,12 @@ void TransferJob::abort() {
   }
   setDone();
   status = TRANSFERJOB_ABORTED;
+  if (!!srcsitetransferjob) {
+    src->abortTransfers(static_cast<CommandOwner *>(srcsitetransferjob.get()));
+  }
+  if (!!dstsitetransferjob) {
+    dst->abortTransfers(static_cast<CommandOwner *>(srcsitetransferjob.get()));
+  }
 }
 
 void TransferJob::clearExisting() {

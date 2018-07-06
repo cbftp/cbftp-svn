@@ -5,14 +5,19 @@
 
 #include "path.h"
 
-#define TRANSFERSTATUS_TYPE_FXP 1892
-#define TRANSFERSTATUS_TYPE_DOWNLOAD 1893
-#define TRANSFERSTATUS_TYPE_UPLOAD 1894
+enum TransferStatusType {
+  TRANSFERSTATUS_TYPE_FXP,
+  TRANSFERSTATUS_TYPE_DOWNLOAD,
+  TRANSFERSTATUS_TYPE_UPLOAD
+};
 
-#define TRANSFERSTATUS_STATE_IN_PROGRESS 1901
-#define TRANSFERSTATUS_STATE_SUCCESSFUL 1902
-#define TRANSFERSTATUS_STATE_FAILED 1903
-#define TRANSFERSTATUS_STATE_DUPE 1904
+enum TransferStatusState {
+  TRANSFERSTATUS_STATE_IN_PROGRESS,
+  TRANSFERSTATUS_STATE_SUCCESSFUL,
+  TRANSFERSTATUS_STATE_FAILED,
+  TRANSFERSTATUS_STATE_DUPE,
+  TRANSFERSTATUS_STATE_ABORTED
+};
 
 class TransferStatusCallback;
 class FileList;
@@ -51,6 +56,7 @@ public:
   void setFinished();
   void setFailed();
   void setDupe();
+  void setAborted();
   void setAwaited(bool);
   void setCallback(TransferStatusCallback *);
   void setTargetSize(unsigned long long int);

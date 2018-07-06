@@ -30,6 +30,7 @@
 #include "util.h"
 #include "race.h"
 #include "sitetransferjob.h"
+#include "transferstatus.h"
 
 //minimum sleep delay (between refreshes / hammer attempts) in ms
 #define SLEEPDELAY 150
@@ -1322,6 +1323,7 @@ void SiteLogic::abortRace(unsigned int id) {
       break;
     }
   }
+  abortTransfers(delrace);
   for (unsigned int i = 0; i < connstatetracker.size(); i++) {
     connstatetracker[i].purgeSiteRace(delrace);
   }
@@ -1338,6 +1340,18 @@ void SiteLogic::removeRace(unsigned int id) {
     if ((*it)->getId() == id) {
       races.erase(it);
       return;
+    }
+  }
+}
+
+void SiteLogic::abortTransfers(CommandOwner * co) {
+  for (unsigned int i = 0; i < connstatetracker.size(); i++) {
+    if (connstatetracker[i].isLoggedIn() && connstatetracker[i].isTransferLocked() &&
+        connstatetracker[i].getCommandOwner() == co)
+    {
+      connstatetracker[i].getTransferMonitor()->getTransferStatus()->setAborted();
+      disconnectConn(i);
+      connectConn(i);
     }
   }
 }
@@ -1862,13 +1876,6 @@ void SiteLogic::list(int id) {
 
 void SiteLogic::listAll(int id) {
   conns[id]->doLISTa();
-}
-
-void SiteLogic::abortTransfer(int id) {
-  if (connstatetracker[id].transferInitialized() && !connstatetracker[id].getTransferAborted()) {
-    transferComplete(id, connstatetracker[id].getTransferType() == CST_DOWNLOAD);
-    connstatetracker[id].abortTransfer();
-  }
 }
 
 void SiteLogic::getFileListConn(int id) {
