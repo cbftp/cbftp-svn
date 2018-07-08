@@ -659,7 +659,7 @@ void TransferMonitor::transferFailed(const Pointer<TransferStatus> & ts, Transfe
 
 void TransferMonitor::newRawBufferLine(const std::pair<std::string, std::string> & line) {
   if (!!ts) {
-    if (rawbufqueue.size()) {
+    if (!rawbufqueue.empty()) {
       for (std::list<std::pair<std::string, std::string> >::const_iterator it = rawbufqueue.begin(); it != rawbufqueue.end(); it++) {
         ts->addLogLine(it->first + " " + it->second);
       }
