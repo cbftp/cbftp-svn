@@ -23,6 +23,7 @@ class TransferJob;
 class CommandOwner;
 class Path;
 class SiteTransferJob;
+class FileListData;
 
 class SiteLogic : public EventReceiver {
   private:
@@ -141,7 +142,7 @@ class SiteLogic : public EventReceiver {
     void abortRace(unsigned int id);
     void removeRace(unsigned int id);
     void abortTransfers(CommandOwner * co);
-    FileList * getFileList(int) const;
+    FileListData * getFileListData(int) const;
     std::string getRawCommandResult(int);
     bool finishRequest(int);
     void pushPotential(int, const std::string &, const Pointer<SiteLogic> &);

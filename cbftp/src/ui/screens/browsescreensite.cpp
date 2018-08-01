@@ -17,6 +17,7 @@
 #include "../../util.h"
 #include "../../timereference.h"
 #include "../../rawbuffer.h"
+#include "../../filelistdata.h"
 
 #include "../ui.h"
 #include "../uifile.h"
@@ -70,7 +71,7 @@ BrowseScreenSite::BrowseScreenSite(Ui * ui, const std::string & sitestr) {
 BrowseScreenSite::~BrowseScreenSite() {
   disableGotoMode();
   if (virgin) {
-    sitelogic->getAggregatedRawBuffer()->uiWatching(false);
+    sitelogic->getAggregatedRawBuffer()->setUiWatching(false);
   }
 }
 
@@ -84,7 +85,7 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
   this->col = col;
   this->coloffset = coloffset;
   if (virgin) {
-    sitelogic->getAggregatedRawBuffer()->uiWatching(true);
+    sitelogic->getAggregatedRawBuffer()->setUiWatching(true);
     unsigned int linessincebookmark = sitelogic->getAggregatedRawBuffer()->linesSinceBookmark();
     if (!linessincebookmark) {
       ui->printStr(0, coloffset + 1, "Awaiting slot...");
@@ -252,21 +253,22 @@ void BrowseScreenSite::update() {
       }
     }
     else {
-      FileList * newfilelist = sitelogic->getFileList(requestid);
-      if (newfilelist == NULL) {
+      FileListData * newfilelistdata = sitelogic->getFileListData(requestid);
+      cwdrawbuffer = newfilelistdata->getCwdRawBuffer();
+      if (newfilelistdata->getFileList() == NULL) {
         cwdfailed = true;
         sitelogic->finishRequest(requestid);
         requestid = -1;
       }
       else {
-        filelist = newfilelist;
+        filelist = newfilelistdata->getFileList();
         if (!virgin) {
           if (list.cursoredFile() != NULL) {
             selectionhistory.push_front(std::pair<Path, std::string>(list.getPath(), list.cursoredFile()->getName()));
           }
         }
         else {
-          sitelogic->getAggregatedRawBuffer()->uiWatching(false);
+          sitelogic->getAggregatedRawBuffer()->setUiWatching(false);
           virgin = false;
         }
         unsigned int position = 0;
@@ -618,6 +620,9 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       ui->redraw();
       ui->setLegend();
       break;
+    case 'l':
+      ui->goRawBuffer(&cwdrawbuffer, "CWD LOG: " + site->getName(), list.getPath().toString());
+      break;
     case KEY_LEFT:
     case 8:
     case 127:
@@ -742,7 +747,7 @@ std::string BrowseScreenSite::getLegendText() const {
   if (filtermodeinput) {
     return "[Any] Enter space separated filters. Valid operators are !, *, ?. Must match all negative filters and at least one positive if given. Case insensitive. - [Esc] Cancel";
   }
-  return "[Esc] Cancel - [c]lose - [Up/Down] Navigate - [Enter/Right] open dir - [Backspace/Left] return - sp[r]ead - [v]iew file - [D]ownload - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - [m]ake directory - Toggle se[P]arators - [q]uick jump - Toggle [f]ilter";
+  return "[Esc] Cancel - [c]lose - [Up/Down] Navigate - [Enter/Right] open dir - [Backspace/Left] return - sp[r]ead - [v]iew file - [D]ownload - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - [m]ake directory - Toggle se[P]arators - [q]uick jump - Toggle [f]ilter - view cwd [l]og";
 }
 
 std::string BrowseScreenSite::getInfoLabel() const {

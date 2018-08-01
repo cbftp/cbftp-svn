@@ -16,6 +16,7 @@ public:
   RawCommandScreen(Ui * ui);
   void initialize(unsigned int, unsigned int, const std::string &, const Path &, const std::string &);
   void initialize(unsigned int, unsigned int, const std::string &);
+  void initialize(unsigned int, unsigned int, RawBuffer * rawbuffer, const std::string & label, const std::string & infotext);
   void redraw();
   void update();
   bool keyPressed(unsigned int);
@@ -27,11 +28,12 @@ private:
   unsigned int copyreadpos;
   unsigned int copysize;
   MenuSelectOptionTextField rawcommandfield;
-  std::string sitename;
+  std::string label;
   std::string selection;
   Path path;
   bool hasselection;
   Pointer<SiteLogic> sitelogic;
   RawBuffer * rawbuf;
   CommandHistory history;
+  bool allowinput;
 };

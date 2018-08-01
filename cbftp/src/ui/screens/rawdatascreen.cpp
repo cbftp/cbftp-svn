@@ -21,7 +21,7 @@ void RawDataScreen::initialize(unsigned int row, unsigned int col, std::string s
   sitelogic = global->getSiteLogicManager()->getSiteLogic(sitename);
   threads = sitelogic->getConns()->size();
   this->rawbuf = sitelogic->getConn(connid)->getRawBuffer();
-  rawbuf->uiWatching(true);
+  rawbuf->setUiWatching(true);
   readfromcopy = false;
   rawcommandmode = false;
   rawcommandswitch = false;
@@ -178,17 +178,17 @@ bool RawDataScreen::keyPressed(unsigned int ch) {
   switch(ch) {
     case KEY_RIGHT:
       if (connid + 1 < threads) {
-        rawbuf->uiWatching(false);
+        rawbuf->setUiWatching(false);
         ui->goRawDataJump(sitename, connid + 1);
       }
       return true;
     case KEY_LEFT:
       if (connid == 0) {
-        rawbuf->uiWatching(false);
+        rawbuf->setUiWatching(false);
         ui->returnToLast();
       }
       else {
-        rawbuf->uiWatching(false);
+        rawbuf->setUiWatching(false);
         ui->goRawDataJump(sitename, connid - 1);
       }
       return true;
@@ -236,7 +236,7 @@ bool RawDataScreen::keyPressed(unsigned int ch) {
       ui->setLegend();
       return true;
     case 27: // esc
-      rawbuf->uiWatching(false);
+      rawbuf->setUiWatching(false);
       ui->returnToLast();
       return true;
   }

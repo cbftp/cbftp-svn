@@ -11,6 +11,7 @@
 #include "../menuselectoption.h"
 #include "../menuselectoptiontextfield.h"
 #include "../../path.h"
+#include "../../rawbuffer.h"
 
 class SiteLogic;
 class Site;
@@ -89,6 +90,7 @@ private:
   bool focus;
   MenuSelectOptionTextField filterfield;
   int temphighlightline;
+  RawBuffer cwdrawbuffer;
   void refreshFilelist();
   void disableGotoMode();
 };

@@ -71,6 +71,7 @@ FTPConn::FTPConn(SiteLogic * sl, int id) :
   mkdtarget(false),
   rawbuf(new RawBuffer(RAWBUFMAXLEN, site->getName(), util::int2Str(id))),
   aggregatedrawbuf(sl->getAggregatedRawBuffer()),
+  cwdrawbuf(new RawBuffer(site->getName())),
   xduperun(false),
   typeirun(false) {
 
@@ -112,6 +113,7 @@ void FTPConn::login() {
   sockid = -1;
   xduperun = false;
   typeirun = false;
+  cwdrawbuf->clear();
   currentpath = "/";
   state = STATE_CONNECTING;
   connectors.push_back(makePointer<FTPConnect>(nextconnectorid++, this, site->getAddress(), site->getPort(), getProxy(), true));
@@ -229,6 +231,9 @@ void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
   }
   if (state != STATE_STAT && state != STATE_STOR && state != STATE_PRET_STOR) {
     rawBufWrite(std::string(data, datalen));
+  }
+  if (state == STATE_CWD) {
+    cwdrawbuf->write(std::string(data, datalen));
   }
   if (parseData(data, datalen, &databuf, databuflen, databufpos, databufcode)) {
     switch(state) {
@@ -944,7 +949,10 @@ void FTPConn::doCWD(const Path & path, FileList * fl, CommandOwner * co) {
     return;
   }
   state = STATE_CWD;
-  sendEcho(("CWD " + path.toString()).c_str());
+  std::string command = ("CWD " + path.toString()).c_str();
+  cwdrawbuf->clear();
+  cwdrawbuf->writeLine(command);
+  sendEcho(command);
 }
 
 void FTPConn::CWDResponse() {
@@ -1164,6 +1172,10 @@ void FTPConn::disconnect() {
 
 RawBuffer * FTPConn::getRawBuffer() const {
   return rawbuf;
+}
+
+RawBuffer * FTPConn::getCwdRawBuffer() const {
+  return cwdrawbuf;
 }
 
 int FTPConn::getSockId() const {
