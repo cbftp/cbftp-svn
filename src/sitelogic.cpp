@@ -1606,7 +1606,7 @@ void SiteLogic::pushPotential(int score, const std::string & file, const Pointer
 
 bool SiteLogic::potentialCheck(int score) {
   int max = ptrack->getMaxAvailablePotential();
-  if (score > max * 0.65) {
+  if (score >= max * 0.65) {
     return true;
   }
   return false;
