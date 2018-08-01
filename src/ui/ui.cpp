@@ -922,6 +922,11 @@ void Ui::goRawDataJump(const std::string & site, int id) {
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 
+void Ui::goRawBuffer(RawBuffer * rawbuf, const std::string & label, const std::string & infotext) {
+  rawcommandscreen->initialize(mainrow, maincol, rawbuf, label, infotext);
+  switchToWindow(rawcommandscreen);
+}
+
 void Ui::goAllRaces() {
   allracesscreen->initialize(mainrow, maincol);
   switchToWindow(allracesscreen);

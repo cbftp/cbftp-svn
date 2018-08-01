@@ -110,6 +110,7 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     std::list<std::string> mkdsubdirs;
     RawBuffer * rawbuf;
     RawBuffer * aggregatedrawbuf;
+    RawBuffer * cwdrawbuf;
     int ticker;
     std::list<std::string> xdupelist;
     bool xduperun;
@@ -225,6 +226,7 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void finishMKDCWDTarget();
     const std::list<std::string> & getMKDSubdirs();
     RawBuffer * getRawBuffer() const;
+    RawBuffer * getCwdRawBuffer() const;
     int getSockId() const;
     static bool parseData(char *, unsigned int, char **, unsigned int &, unsigned int &, int &);
     void FDData(int, char *, unsigned int);

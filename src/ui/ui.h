@@ -25,6 +25,7 @@ class DataFileHandler;
 class TransferStatus;
 class Path;
 class SkipList;
+class RawBuffer;
 class LoginScreen;
 class NewKeyScreen;
 class MainScreen;
@@ -233,6 +234,7 @@ public:
   void goEditProxy(const std::string &);
   void goRawData(const std::string &);
   void goRawDataJump(const std::string &, int);
+  void goRawBuffer(RawBuffer * rawbuffer, const std::string & label, const std::string & infotext);
   void goAllRaces();
   void goAllTransferJobs();
   void goInfo();

@@ -168,6 +168,14 @@ void RawBuffer::freezeCopy() {
   latestpcopy = latestp;
 }
 
-void RawBuffer::uiWatching(bool watching) {
+void RawBuffer::setUiWatching(bool watching) {
   uiwatching = watching;
+}
+
+void RawBuffer::clear() {
+  log.clear();
+  logcopy.clear();
+  latestp = 0;
+  latestpcopy = 0;
+  inprogress = false;
 }

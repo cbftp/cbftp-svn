@@ -31,6 +31,7 @@
 #include "race.h"
 #include "sitetransferjob.h"
 #include "transferstatus.h"
+#include "filelistdata.h"
 
 //minimum sleep delay (between refreshes / hammer attempts) in ms
 #define SLEEPDELAY 150
@@ -199,10 +200,11 @@ void SiteLogic::listRefreshed(int id) {
   if (connstatetracker[id].hasRequest()) {
     const Pointer<SiteLogicRequest> & request = connstatetracker[id].getRequest();
     FileList * filelist = conns[id]->currentFileList();
+    FileListData * filelistdata = new FileListData(filelist, conns[id]->getCwdRawBuffer());
     if (request->requestType() == REQ_FILELIST &&
         request->requestData() == filelist->getPath().toString())
     {
-      setRequestReady(id, filelist, true);
+      setRequestReady(id, filelistdata, true);
     }
   }
   if (currentco != NULL) {
@@ -1365,11 +1367,11 @@ SiteRace * SiteLogic::findSiteRace(unsigned int id) const {
   return NULL;
 }
 
-FileList * SiteLogic::getFileList(int requestid) const {
+FileListData * SiteLogic::getFileListData(int requestid) const {
   std::list<SiteLogicRequestReady>::const_iterator it;
   for (it = requestsready.begin(); it != requestsready.end(); it++) {
     if (it->requestId() == requestid) {
-      return (FileList *) it->requestData();
+      return static_cast<FileListData *>(it->requestData());
     }
   }
   return NULL;
@@ -1379,7 +1381,7 @@ std::string SiteLogic::getRawCommandResult(int requestid) {
   std::list<SiteLogicRequestReady>::iterator it;
   for (it = requestsready.begin(); it != requestsready.end(); it++) {
     if (it->requestId() == requestid) {
-      std::string ret = *(std::string *) it->requestData();
+      std::string ret = *static_cast<std::string *>(it->requestData());
       return ret;
     }
   }
@@ -1943,10 +1945,10 @@ void SiteLogic::clearReadyRequest(SiteLogicRequestReady & request) {
   void * data = request.requestData();
   if (request.requestStatus()) {
     if (request.getType() == REQ_FILELIST) {
-      //delete (FileList *) data;
+      delete static_cast<FileListData *>(data);
     }
     else if (request.getType() == REQ_RAW) {
-      delete (std::string *) data;
+      delete static_cast<std::string *>(data);
     }
   }
 }

@@ -13,7 +13,7 @@ EventLogScreen::EventLogScreen(Ui * ui) {
 void EventLogScreen::initialize(unsigned int row, unsigned int col) {
   expectbackendpush = true;
   this->rawbuf = global->getEventLog()->getRawBuffer();
-  rawbuf->uiWatching(true);
+  rawbuf->setUiWatching(true);
   readfromcopy = false;
   copyreadpos = 0;
   init(row, col);
@@ -79,7 +79,7 @@ bool EventLogScreen::keyPressed(unsigned int ch) {
       return true;
     case 10:
     case 27: // esc
-      rawbuf->uiWatching(false);
+      rawbuf->setUiWatching(false);
       ui->returnToLast();
       return true;
   }

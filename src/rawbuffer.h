@@ -42,5 +42,6 @@ class RawBuffer {
     const std::pair<std::string, std::string> & getLine(unsigned int) const;
     const std::pair<std::string, std::string> & getLineCopy(unsigned int) const;
     void freezeCopy();
-    void uiWatching(bool);
+    void setUiWatching(bool watching);
+    void clear();
 };
