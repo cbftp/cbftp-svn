@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <vector>
 #include <openssl/ec.h>
+#include <openssl/crypto.h>
 
 #include "lock.h"
 #include "util.h"
@@ -190,4 +191,12 @@ void SSLManager::registerKeyAndCertificate() {
 
 const char * SSLManager::getCipher(SSL * ssl) {
   return SSL_CIPHER_get_name(SSL_get_current_cipher(ssl));
+}
+
+std::string SSLManager::version() {
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+  return SSLeay_version(SSLEAY_VERSION);
+#else
+  return OpenSSL_version(OPENSSL_VERSION);
+#endif
 }

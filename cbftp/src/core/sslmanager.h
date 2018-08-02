@@ -1,6 +1,7 @@
 #pragma once
 
 #include <openssl/ssl.h>
+#include <string>
 
 #include "types.h"
 
@@ -18,6 +19,7 @@ public:
   static void setPrivateKey(const BinaryData &);
   static void setCertificate(const BinaryData &);
   static void registerKeyAndCertificate(EVP_PKEY *, X509 *);
+  static std::string version();
 private:
   static void registerKeyAndCertificate();
   static EVP_PKEY * createKey();

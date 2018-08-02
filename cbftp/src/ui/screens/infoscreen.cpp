@@ -3,6 +3,9 @@
 #include "../../globalcontext.h"
 #include "../../statistics.h"
 #include "../../util.h"
+#include "../../buildinfo.h"
+
+#include "../../core/sslmanager.h"
 
 #include "../ui.h"
 
@@ -32,6 +35,11 @@ void InfoScreen::redraw() {
   unsigned int filesdownall = global->getStatistics()->getFilesDownAll();
 
   unsigned int i = 1;
+  ui->printStr(i++, 1, "Compile time: " + BuildInfo::compileTime());
+  ui->printStr(i++, 1, "Version tag: " + BuildInfo::version());
+  ui->printStr(i++, 1, "Distribution tag: " + BuildInfo::tag());
+  ui->printStr(i++, 1, "OpenSSL version: " + SSLManager::version());
+  i++;
   ui->printStr(i++, 1, "Traffic measurements");
   ui->printStr(i++, 1, "FXP      last 24 hours: " + util::parseSize(sizefxpday) + ", " +
                util::int2Str(filesfxpday) + " files - All time: " + util::parseSize(sizefxpall) + ", " +

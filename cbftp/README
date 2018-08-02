@@ -256,7 +256,7 @@ for cbftp to accept the UDP commands.
 
 The available command formats are:
 
-<password> download <srcpath> [srcfile]
+<password> download <srcsite> <srcpath> [srcfile]
 This command will result in cbftp starting a transfer job for downloading
 the specified item to your default download directory. The srcfile field is
 optional, if omitted cbftp will use the base name of the srcpath as file name.
