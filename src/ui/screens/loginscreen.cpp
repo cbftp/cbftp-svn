@@ -7,17 +7,7 @@
 #include "../ui.h"
 #include "../chardraw.h"
 
-#ifndef BOXTAG
-#define BOXTAG ""
-#endif
-
-#ifndef VERSION
-#define VERSION "unknown"
-#endif
-
-#ifndef BUILDTIME
-#define BUILDTIME "unknown"
-#endif
+#include "../../buildinfo.h"
 
 LoginScreen::LoginScreen(Ui * ui) {
   this->ui = ui;
@@ -26,7 +16,7 @@ LoginScreen::LoginScreen(Ui * ui) {
 void LoginScreen::initialize(unsigned int row, unsigned int col) {
   passfield = TextInputField(25, 32, true);
   attempt = false;
-  drawword = BOXTAG;
+  drawword = BuildInfo::tag();
   drawx = 0;
   drawy = 0;
   srand(time(NULL));
@@ -44,8 +34,8 @@ void LoginScreen::redraw() {
   pass_row = row-2;
   pass_col = col-27;
   ui->showCursor();
-  std::string svnstring = " cbftp version tag: " + std::string(VERSION) + " ";
-  std::string compilestring = " Compiled: " + std::string(BUILDTIME) + " ";
+  std::string svnstring = " cbftp version tag: " + BuildInfo::version() + " ";
+  std::string compilestring = " Compiled: " + BuildInfo::compileTime() + " ";
   int boxchar = 0;
   for(unsigned int i = 1; i < row; i++) {
     for(unsigned int j = 0; j < col; j++) {
