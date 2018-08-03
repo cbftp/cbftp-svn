@@ -254,13 +254,13 @@ void BrowseScreenSite::update() {
     }
     else {
       FileListData * newfilelistdata = sitelogic->getFileListData(requestid);
-      cwdrawbuffer = newfilelistdata->getCwdRawBuffer();
-      if (newfilelistdata->getFileList() == NULL) {
+      if (newfilelistdata == NULL) {
         cwdfailed = true;
         sitelogic->finishRequest(requestid);
         requestid = -1;
       }
       else {
+        cwdrawbuffer = newfilelistdata->getCwdRawBuffer();
         filelist = newfilelistdata->getFileList();
         if (!virgin) {
           if (list.cursoredFile() != NULL) {
