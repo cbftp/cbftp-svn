@@ -197,11 +197,11 @@ public:
   void goRawCommand(const std::string &, const Path &, const std::string &);
   void goConfirmation(const std::string & message);
   void goStrongConfirmation(const std::string & message);
-  void goNuke(const std::string &, const std::string &, FileList *);
+  void goNuke(const std::string & site, const std::list<std::pair<std::string, bool> > & items, const Path & path);
   void goViewFile(const std::string &, const std::string &, FileList *);
   void goViewFile(const Path &, const std::string &);
   void goAddSection(const std::string &, const Path &);
-  void goNewRace(const std::string &, const std::string &, const std::string &);
+  void goNewRace(const std::string & site, const std::list<std::string> & sections, const std::list<std::pair<std::string, bool> > & items);
   void goSelectSites(const std::string &, std::list<Pointer<Site> >, std::list<Pointer<Site> >);
   void goSelectSitesFrom(const std::string &, std::list<Pointer<Site> >, std::list<Pointer<Site> >);
   void goSelectSpreadJobs();
@@ -244,7 +244,7 @@ public:
   void newKey(const std::string &);
   void confirmYes();
   void confirmNo();
-  void returnNuke(int);
+  void returnNuke(const std::list<int> & reqids);
   void returnRaceStatus(unsigned int);
   void returnMakeDir(const std::string & dirname);
   void loadSettings(Pointer<DataFileHandler>);

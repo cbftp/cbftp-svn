@@ -18,8 +18,8 @@ private:
   std::string lastmodifiedrepr;
   bool directory;
   bool softlink;
-  bool selected;
-  bool cursored;
+  bool softselected;
+  bool hardselected;
   void parseTimeStamp(const std::string &);
   void parseUNIXTimeStamp(const std::string &, int &, int &, int &, int &, int &);
   void parseWindowsTimeStamp(const std::string &, int &, int &, int &, int &, int &);
@@ -38,10 +38,10 @@ public:
   int getModifyDate() const;
   std::string getName() const;
   std::string getLinkTarget() const;
-  bool isSelected() const;
-  bool isCursored() const;
-  void select();
-  void unSelect();
-  void cursor();
-  void unCursor();
+  bool isSoftSelected() const;
+  bool isHardSelected() const;
+  void softSelect();
+  void hardSelect();
+  void unSoftSelect();
+  void unHardSelect();
 };

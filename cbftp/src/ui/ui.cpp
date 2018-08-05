@@ -731,8 +731,8 @@ void Ui::goStrongConfirmation(const std::string & message) {
   switchToWindow(confirmationscreen);
 }
 
-void Ui::goNuke(const std::string & site, const std::string & target, FileList * filelist) {
-  nukescreen->initialize(mainrow, maincol, site, target, filelist);
+void Ui::goNuke(const std::string & site, const std::list<std::pair<std::string, bool> > & items, const Path & path) {
+  nukescreen->initialize(mainrow, maincol, site, items, path);
   switchToWindow(nukescreen);
 }
 
@@ -751,8 +751,8 @@ void Ui::goAddSection(const std::string & site, const Path & path) {
   switchToWindow(addsectionscreen);
 }
 
-void Ui::goNewRace(const std::string & site, const std::string & section, const std::string & release) {
-  newracescreen->initialize(mainrow, maincol, site, section, release);
+void Ui::goNewRace(const std::string & site, const std::list<std::string> & sections, const std::list<std::pair<std::string, bool> > & items) {
+  newracescreen->initialize(mainrow, maincol, site, sections, items);
   switchToWindow(newracescreen);
 }
 
@@ -985,9 +985,9 @@ void Ui::confirmNo() {
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 
-void Ui::returnNuke(int reqid) {
+void Ui::returnNuke(const std::list<int> & reqids) {
   switchToLast();
-  topwindow->command("returnnuke", util::int2Str(reqid));
+  topwindow->command("returnnuke", reqids);
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 

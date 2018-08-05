@@ -7,6 +7,7 @@
 #include "../../sitelogic.h"
 #include "../../filelist.h"
 #include "../../sitelogicmanager.h"
+#include "../../util.h"
 
 #include "../ui.h"
 #include "../menuselectoptionelement.h"
@@ -22,14 +23,14 @@ NukeScreen::~NukeScreen() {
 
 }
 
-void NukeScreen::initialize(unsigned int row, unsigned int col, const std::string & sitestr, const std::string & release, FileList * filelist) {
+void NukeScreen::initialize(unsigned int row, unsigned int col, const std::string & sitestr, const std::list<std::pair<std::string, bool> > & items, const Path & path) {
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [n]uke - [c]ancel - [p]roper - [r]epack - [d]upe";
   currentlegendtext = defaultlegendtext;
   active = false;
   this->sitestr = sitestr;
-  this->release = release;
+  this->items = items;
   sitelogic = global->getSiteLogicManager()->getSiteLogic(sitestr);
-  path = filelist->getPath();
+  this->path = path;
   std::list<std::string> sections = global->getSiteManager()->getSite(sitestr)->getSectionsForPath(path);
   mso.reset();
   mso.addStringField(5, 1, "reason", "Reason:", "", false, col - 3, 512);
@@ -43,7 +44,11 @@ void NukeScreen::initialize(unsigned int row, unsigned int col, const std::strin
 void NukeScreen::redraw() {
   ui->erase();
   ui->printStr(1, 1, "Site: " + sitestr);
-  ui->printStr(2, 1, "Release: " + release);
+  std::string item = items.front().first;
+  if (items.size() > 1) {
+    item = util::int2Str(static_cast<int>(items.size())) + " items";
+  }
+  ui->printStr(2, 1, "Item: " + item);
   ui->printStr(3, 1, "Path: " + path.toString());
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
@@ -114,8 +119,7 @@ bool NukeScreen::keyPressed(unsigned int ch) {
       activation = activeelement->activate();
       if (!activation) {
         if (activeelement->getIdentifier() == "nuke") {
-          int reqid = nuke();
-          ui->returnNuke(reqid);
+          nuke();
           return true;
         }
         else if (activeelement->getIdentifier() == "cancel") {
@@ -133,30 +137,26 @@ bool NukeScreen::keyPressed(unsigned int ch) {
       ui->returnToLast();
       return true;
     case 'n': {
-      int reqid = nuke();
-      ui->returnNuke(reqid);
+      nuke();
       return true;
     }
     case 'p': {
-      int reqid = sitelogic->requestNuke(path / release, 1, "proper");
-      ui->returnNuke(reqid);
+      nuke(1, "proper");
       return true;
     }
     case 'r': {
-      int reqid = sitelogic->requestNuke(path / release, 1, "repack");
-      ui->returnNuke(reqid);
+      nuke(1, "repack");
       return true;
     }
     case 'd': {
-      int reqid = sitelogic->requestNuke(path / release, 1, "dupe");
-      ui->returnNuke(reqid);
+      nuke(1, "dupe");
       return true;
     }
   }
   return false;
 }
 
-int NukeScreen::nuke() {
+void NukeScreen::nuke() {
   int multiplier = 1;
   std::string reason;
   for (unsigned int i = 0; i < mso.size(); i++) {
@@ -169,8 +169,17 @@ int NukeScreen::nuke() {
       reason = msoe.get<MenuSelectOptionTextField>()->getData();
     }
   }
-  return sitelogic->requestNuke(path / release, multiplier, reason);
+  nuke(multiplier, reason);
 }
+
+void NukeScreen::nuke(int multiplier, const std::string & reason) {
+  std::list<int> reqids;
+  for (std::list<std::pair<std::string, bool> >::const_iterator it = items.begin(); it != items.end(); it++) {
+    reqids.push_back(sitelogic->requestNuke(path / it->first, multiplier, reason));
+  }
+  ui->returnNuke(reqids);
+}
+
 std::string NukeScreen::getLegendText() const {
   return currentlegendtext;
 }

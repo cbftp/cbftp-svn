@@ -17,6 +17,7 @@ class SiteLogic;
 class Site;
 class FileList;
 class Ui;
+class UIFile;
 class BrowseScreenAction;
 
 class BrowseScreenSite : public BrowseScreenSub {
@@ -26,7 +27,8 @@ public:
   BrowseScreenType type() const;
   void redraw(unsigned int, unsigned int, unsigned int);
   void update();
-  void command(const std::string &, const std::string &);
+  void command(const std::string & command, const std::string & arg);
+  void command(const std::string & command, const std::list<int> & reqids);
   BrowseScreenAction keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
@@ -38,9 +40,11 @@ public:
   UIFile * selectedFile() const;
   UIFileList * getUIFileList();
   void sort();
+  std::list<UIFile *> getSelectedUIFiles() const;
   static void addFileDetails(MenuSelectOption &, unsigned int, unsigned int, const std::string &);
   static void addFileDetails(MenuSelectOption &, unsigned int, unsigned int, const std::string &, const std::string &,
-      const std::string &, const std::string &, const std::string &, bool, bool);
+      const std::string &, const std::string &, const std::string &, bool, bool, UIFile * origin);
+  static void printFlipped(Ui * ui, const Pointer<ResizableElement> & re);
 private:
   Ui * ui;
   unsigned int row;
@@ -52,9 +56,7 @@ private:
   bool resort;
   mutable int tickcount;
   bool wipe;
-  bool wiperecursive;
   bool deleting;
-  bool deletingrecursive;
   bool nuking;
   bool mkdiring;
   mutable bool changedsort;
@@ -72,14 +74,13 @@ private:
   int gotomodeticker;
   bool filtermodeinput;
   std::string gotomodestring;
-  Path actiontarget;
   Path actionpath;
-  std::string actionfile;
+  std::list<std::pair<std::string, bool> > actionfiles;
   unsigned int sortmethod;
   Pointer<Site> site;
   UIFileList list;
   Pointer<SiteLogic> sitelogic;
-  int requestid;
+  std::list<int> requestids;
   Path requestedpath;
   mutable int spinnerpos;
   FileList * filelist;
@@ -91,6 +92,10 @@ private:
   MenuSelectOptionTextField filterfield;
   int temphighlightline;
   RawBuffer cwdrawbuffer;
+  bool softselecting;
   void refreshFilelist();
   void disableGotoMode();
+  void clearSoftSelects();
+  bool handleReadyRequests();
+  void printFlipped(const Pointer<ResizableElement> & re);
 };

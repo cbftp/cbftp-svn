@@ -8,6 +8,7 @@ void MenuSelectOptionElement::init(std::string identifier, int row, int col, std
   active = false;
   shown = true;
   selectable = true;
+  origin = NULL;
 }
 
 MenuSelectOptionElement::~MenuSelectOptionElement() {
@@ -91,4 +92,12 @@ void MenuSelectOptionElement::setId(unsigned int id) {
 
 void MenuSelectOptionElement::setLabel(const std::string & label) {
   this->label = label;
+}
+
+void * MenuSelectOptionElement::getOrigin() const {
+  return origin;
+}
+
+void MenuSelectOptionElement::setOrigin(void * origin) {
+  this->origin = origin;
 }

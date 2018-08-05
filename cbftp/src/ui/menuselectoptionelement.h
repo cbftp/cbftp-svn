@@ -10,6 +10,7 @@ class MenuSelectOptionElement {
     bool shown;
     bool selectable;
     unsigned int id;
+    void * origin;
   protected:
     std::string label;
     bool active;
@@ -26,6 +27,8 @@ class MenuSelectOptionElement {
     virtual bool isActive() const;
     virtual int cursorPosition() const;
     virtual void inputChar(int);
+    void setOrigin(void * origin);
+    void * getOrigin() const;
     virtual std::string getLegendText() const;
     unsigned int getCol() const;
     unsigned int getRow() const;

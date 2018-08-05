@@ -23,7 +23,8 @@ public:
   void initialize(unsigned int, unsigned int, ViewMode, const std::string &);
   void redraw();
   void update();
-  void command(const std::string &, const std::string &);
+  void command(const std::string & command, const std::string & arg);
+  void command(const std::string & command, const std::list<int> & reqids);
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;

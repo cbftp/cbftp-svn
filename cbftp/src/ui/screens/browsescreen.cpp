@@ -91,6 +91,10 @@ void BrowseScreen::command(const std::string & command, const std::string & arg)
   active->command(command, arg);
 }
 
+void BrowseScreen::command(const std::string & command, const std::list<int> & reqids) {
+  active->command(command, reqids);
+}
+
 bool BrowseScreen::keyPressed(unsigned int ch) {
   BrowseScreenAction op = active->keyPressed(ch);
   switch (op.getOp()) {
@@ -165,27 +169,39 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
         Pointer<BrowseScreenSub> other = active == left ? right : left;
         if (active->type() == BROWSESCREEN_SITE) {
           FileList * activefl = active.get<BrowseScreenSite>()->fileList();
-          UIFile * f = active.get<BrowseScreenSite>()->selectedFile();
-          if (activefl != NULL && f != NULL && (f->isDirectory() || f->getSize() > 0)) {
+          std::list<UIFile *> files = active.get<BrowseScreenSite>()->getUIFileList()->getSelectedFiles();
+          if (activefl != NULL) {
             if (other->type() == BROWSESCREEN_SITE) {
               FileList * otherfl = other.get<BrowseScreenSite>()->fileList();
               if (otherfl != NULL) {
-                unsigned int id = global->getEngine()->newTransferJobFXP(active.get<BrowseScreenSite>()->siteName(),
-                                                                         activefl,
-                                                                         other.get<BrowseScreenSite>()->siteName(),
-                                                                         otherfl,
-                                                                         f->getName());
-                ui->addTempLegendTransferJob(id);
+                for (std::list<UIFile *>::const_iterator it = files.begin(); it != files.end(); it++) {
+                  UIFile * f = *it;
+                  if (!f || (!f->isDirectory() && !f->getSize())) {
+                    continue;
+                  }
+                  unsigned int id = global->getEngine()->newTransferJobFXP(active.get<BrowseScreenSite>()->siteName(),
+                                                                           activefl,
+                                                                           other.get<BrowseScreenSite>()->siteName(),
+                                                                           otherfl,
+                                                                           f->getName());
+                  ui->addTempLegendTransferJob(id);
+                }
               }
             }
             else {
               Pointer<LocalFileList> otherfl = other.get<BrowseScreenLocal>()->fileList();
               if (!!otherfl) {
-                unsigned int id = global->getEngine()->newTransferJobDownload(active.get<BrowseScreenSite>()->siteName(),
-                                                                              activefl,
-                                                                              f->getName(),
-                                                                              otherfl->getPath());
-                ui->addTempLegendTransferJob(id);
+                for (std::list<UIFile *>::const_iterator it = files.begin(); it != files.end(); it++) {
+                  UIFile * f = *it;
+                  if (!f || (!f->isDirectory() && !f->getSize())) {
+                    continue;
+                  }
+                  unsigned int id = global->getEngine()->newTransferJobDownload(active.get<BrowseScreenSite>()->siteName(),
+                                                                                activefl,
+                                                                                f->getName(),
+                                                                                otherfl->getPath());
+                  ui->addTempLegendTransferJob(id);
+                }
               }
             }
           }
@@ -193,15 +209,19 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
         else if (other->type() == BROWSESCREEN_SITE) {
           Pointer<LocalFileList> activefl = active.get<BrowseScreenLocal>()->fileList();
           FileList * otherfl = other.get<BrowseScreenSite>()->fileList();
-          UIFile * f = active.get<BrowseScreenLocal>()->selectedFile();
-          if (!!activefl && otherfl != NULL && f != NULL &&
-              (f->isDirectory() || f->getSize() > 0))
-          {
-            unsigned int id = global->getEngine()->newTransferJobUpload(activefl->getPath(),
-                                                                        f->getName(),
-                                                                        other.get<BrowseScreenSite>()->siteName(),
-                                                                        otherfl);
-            ui->addTempLegendTransferJob(id);
+          std::list<UIFile *> files = active.get<BrowseScreenLocal>()->getUIFileList()->getSelectedFiles();
+          if (!!activefl && otherfl != NULL) {
+            for (std::list<UIFile *>::const_iterator it = files.begin(); it != files.end(); it++) {
+              UIFile * f = *it;
+              if (!f || (!f->isDirectory() && !f->getSize())) {
+                continue;
+              }
+              unsigned int id = global->getEngine()->newTransferJobUpload(activefl->getPath(),
+                                                                          f->getName(),
+                                                                          other.get<BrowseScreenSite>()->siteName(),
+                                                                          otherfl);
+              ui->addTempLegendTransferJob(id);
+            }
           }
         }
       }

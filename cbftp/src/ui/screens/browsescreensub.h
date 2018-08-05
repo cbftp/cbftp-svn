@@ -1,5 +1,8 @@
 #pragma once
 
+#include <list>
+#include <string>
+
 #include "../../core/eventreceiver.h"
 
 class BrowseScreenAction;
@@ -19,7 +22,8 @@ public:
   virtual std::string getLegendText() const = 0;
   virtual std::string getInfoLabel() const = 0;
   virtual std::string getInfoText() const = 0;
-  virtual void command(const std::string &, const std::string &) { }
+  virtual void command(const std::string & command, const std::string & arg) { }
+  virtual void command(const std::string & command, const std::list<int> & reqids) { }
   virtual BrowseScreenAction keyPressed(unsigned int) = 0;
   virtual void setFocus(bool) = 0;
   virtual UIFileList * getUIFileList() { return NULL; }

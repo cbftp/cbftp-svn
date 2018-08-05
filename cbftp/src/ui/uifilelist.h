@@ -73,6 +73,14 @@ public:
   std::set<std::string> getUniques() const;
   void clearUnique();
   bool contains(const std::string & filename) const;
+  void hardFlipSoftSelected();
+  bool clearSoftSelected();
+  bool clearSelected();
+  const UIFile * getFile(const std::string &) const;
+  const std::list<UIFile *> getSelectedFiles() const;
+  std::list<std::pair<std::string, bool> > getSelectedNames() const;
+  std::list<std::pair<std::string, bool> > getSelectedDirectoryNames() const;
+  std::list<std::pair<std::string, bool> > getSelectedFileNames(bool files, bool dirs) const;
 };
 
 bool combinedSort(UIFile *, UIFile *);

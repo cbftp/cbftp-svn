@@ -7,30 +7,34 @@
 #include "../util.h"
 #include "../timereference.h"
 
-UIFile::UIFile(File * file) {
-  name = file->getName();
-  directory = file->isDirectory();
-  softlink = file->isLink();
-  owner = file->getOwner();
-  group = file->getGroup();
-  size = file->getSize();
-  linktarget = file->getLinkTarget();
-  sizerepr = util::parseSize(size);
+UIFile::UIFile(File * file) :
+  name(file->getName()),
+  size(file->getSize()),
+  sizerepr(util::parseSize(size)),
+  owner(file->getOwner()),
+  group(file->getGroup()),
+
+  linktarget(file->getLinkTarget()),
+
+  directory(file->isDirectory()),
+  softlink(file->isLink()),
+  softselected(false),
+  hardselected(false)
+{
   parseTimeStamp(file->getLastModified());
-  selected = false;
-  cursored = false;
 }
 
-UIFile::UIFile(const LocalFile & file) {
-  name = file.getName();
-  directory = file.isDirectory();
-  softlink = false;
-  size = file.getSize();
-  sizerepr = util::parseSize(size);
-  selected = false;
-  cursored = false;
-  owner = file.getOwner();
-  group = file.getGroup();
+UIFile::UIFile(const LocalFile & file) :
+  name(file.getName()),
+  size(file.getSize()),
+  sizerepr(util::parseSize(size)),
+  owner(file.getOwner()),
+  group(file.getGroup()),
+  directory(file.isDirectory()),
+  softlink(false),
+  softselected(false),
+  hardselected(false)
+{
   setLastModified(file.getYear(), file.getMonth(), file.getDay(), file.getHour(), file.getMinute());
 }
 
@@ -78,28 +82,29 @@ bool UIFile::isLink() const {
   return softlink;
 }
 
-bool UIFile::isSelected() const {
-  return selected;
+bool UIFile::isSoftSelected() const {
+  return softselected;
 }
 
-bool UIFile::isCursored() const {
-  return cursored;
+bool UIFile::isHardSelected() const {
+  return hardselected;
 }
 
-void UIFile::select() {
-  selected = true;
+void UIFile::softSelect() {
+  softselected = true;
 }
 
-void UIFile::unSelect() {
-  selected = false;
+void UIFile::hardSelect() {
+  hardselected = true;
+  softselected = false;
 }
 
-void UIFile::cursor() {
-  cursored = true;
+void UIFile::unSoftSelect() {
+  softselected = false;
 }
 
-void UIFile::unCursor() {
-  cursored = false;
+void UIFile::unHardSelect() {
+  hardselected = false;
 }
 
 void UIFile::parseTimeStamp(const std::string & uglytime) {

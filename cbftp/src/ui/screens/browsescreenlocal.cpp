@@ -22,7 +22,7 @@ BrowseScreenLocal::BrowseScreenLocal(Ui * ui) : ui(ui), currentviewspan(0),
     deletefailed(false), tickcount(0),
     resort(false), sortmethod(0), gotomode(false), gotomodefirst(false),
     gotomodeticker(0), filtermodeinput(false), temphighlightline(-1),
-    deleting(false)
+    deleting(false), softselecting(false)
 {
   gotoPath(global->getLocalStorage()->getDownloadPath());
 }
@@ -72,7 +72,7 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
       prepchar = "L";
     }
     std::string owner = uifile->getOwner() + "/" + uifile->getGroup();
-    BrowseScreenSite::addFileDetails(table, coloffset, i, prepchar, uifile->getName(), uifile->getSizeRepr(), uifile->getLastModified(), owner, true, selected);
+    BrowseScreenSite::addFileDetails(table, coloffset, i, prepchar, uifile->getName(), uifile->getSizeRepr(), uifile->getLastModified(), owner, true, selected, uifile);
   }
   table.adjustLines(col - 3);
   table.checkPointer();
@@ -88,11 +88,20 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
   for (unsigned int i = 0; i < table.size(); i++) {
     Pointer<ResizableElement> re = table.getElement(i);
     bool highlight = false;
-    if (table.getSelectionPointer() == i || (int)re->getRow() == temphighlightline) {
+    bool cursored = table.getSelectionPointer() == i;
+    bool softselected = re->getOrigin() && static_cast<UIFile *>(re->getOrigin())->isSoftSelected();
+    bool hardselected = re->getOrigin() && static_cast<UIFile *>(re->getOrigin())->isHardSelected();
+    if (cursored || (int)re->getRow() == temphighlightline || softselected || hardselected)
+    {
       highlight = true;
     }
     if (re->isVisible()) {
-      ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight && focus);
+      if ((cursored && softselected) || (cursored && hardselected) || (softselected && hardselected)) {
+        BrowseScreenSite::printFlipped(ui, re);
+      }
+      else {
+        ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight && focus);
+      }
     }
   }
   printSlider(ui, row, coloffset + col - 1, listsize, currentviewspan);
@@ -112,9 +121,23 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
 void BrowseScreenLocal::update() {
   if (table.size()) {
     Pointer<ResizableElement> re = table.getElement(table.getLastSelectionPointer());
-    ui->printStr(re->getRow(), re->getCol(), re->getLabelText());
+    bool softselected = re->getOrigin() && static_cast<UIFile *>(re->getOrigin())->isSoftSelected();
+    bool hardselected = re->getOrigin() && static_cast<UIFile *>(re->getOrigin())->isHardSelected();
+    if (softselected && hardselected) {
+      BrowseScreenSite::printFlipped(ui, re);
+    }
+    else {
+      ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), softselected || hardselected);
+    }
     re = table.getElement(table.getSelectionPointer());
-    ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), focus);
+    bool selected = re->getOrigin() && (static_cast<UIFile *>(re->getOrigin())->isSoftSelected() ||
+                                        static_cast<UIFile *>(re->getOrigin())->isHardSelected());
+    if (selected && focus) {
+      BrowseScreenSite::printFlipped(ui, re);
+    }
+    else {
+      ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), focus);
+    }
   }
   if (filtermodeinput) {
     std::string pretag = "[Filter]: ";
@@ -125,11 +148,14 @@ void BrowseScreenLocal::update() {
 
 void BrowseScreenLocal::command(const std::string & command, const std::string & arg) {
   if (command == "yes" && deleting) {
-    if (LocalStorage::deleteRecursive(actiontarget)) {
-      deletesuccess = true;
-    }
-    else {
-      deletefailed = true;
+    for (std::list<std::pair<std::string, bool> >::const_iterator it = actionfiles.begin(); it != actionfiles.end(); it++) {
+      if (LocalStorage::deleteRecursive(actionpath / it->first) && !deletefailed) {
+        deletesuccess = true;
+      }
+      else {
+        deletefailed = true;
+        deletesuccess = false;
+      }
     }
     tickcount = 0;
     gotoPath(list.getPath());
@@ -162,6 +188,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       std::string filter = filterfield.getData();
       if (filter.length()) {
         list.setFilters(util::split(filter));
+        clearSoftSelects();
         resort = true;
       }
       filtermodeinput = false;
@@ -203,6 +230,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
           }
           if (substr == gotomodestring) {
             list.setCursorPosition(i);
+            clearSoftSelects();
             break;
           }
         }
@@ -219,33 +247,57 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
   }
   switch (ch) {
     case 27: // esc
+      if (list.clearSelected()) {
+        ui->redraw();
+        break;
+      }
       ui->returnToLast();
       break;
     case 'c':
       return BrowseScreenAction(BROWSESCREENACTION_CLOSE);
     case 'W':
     case KEY_DC: {
-      UIFile * cursoredfile = list.cursoredFile();
-      if (cursoredfile == NULL) {
+      std::list<std::pair<std::string, bool> > filenames = list.getSelectedNames();
+      if (filenames.empty()) {
         break;
       }
-      actiontarget = filelist->getPath() / cursoredfile->getName();
+      actionpath = filelist->getPath();
+      actionfiles = filenames;
       deleting = true;
-      LocalPathInfo pathinfo = LocalStorage::getPathInfo(actiontarget);
-      std::string dirs = util::int2Str(pathinfo.getNumDirs());
-      std::string files = util::int2Str(pathinfo.getNumFiles());
-      std::string size = util::parseSize(pathinfo.getSize());
-      std::string confirmation = "Do you really want to delete " + cursoredfile->getName() + "?";
-      if (pathinfo.getDepth() > 0) {
-        confirmation += " It contains " + size + " in " + files + "f/" + dirs + "d and is ";
+      int aggdirs = 0;
+      int aggfiles = 0;
+      unsigned long long int aggsize = 0;
+      int maxdepth = 0;
+      for (std::list<std::pair<std::string, bool> >::const_iterator it = filenames.begin(); it != filenames.end(); it++) {
+        LocalPathInfo pathinfo = LocalStorage::getPathInfo(actionpath / it->first);
+        aggdirs += pathinfo.getNumDirs();
+        aggfiles += pathinfo.getNumFiles();
+        aggsize += pathinfo.getSize();
+        int depth = pathinfo.getDepth();
+        if (depth > maxdepth) {
+          maxdepth = depth;
+        }
       }
-      if (pathinfo.getDepth() == 1) {
+      std::string dirs = util::int2Str(aggdirs);
+      std::string files = util::int2Str(aggfiles);
+      std::string size = util::parseSize(aggsize);
+      std::string targettext = "these " + util::int2Str(static_cast<int>(filenames.size())) + " items";
+      if (filenames.size() == 1) {
+        targettext = filenames.front().first;
+      }
+      std::string confirmation = "Do you really want to delete " + targettext + "?";
+      if (maxdepth > 0) {
+        std::string contain = filenames.size() == 1 ? " It contains " : " They contain ";
+        std::string depthpre = filenames.size() == 1 ? "is " : "are ";
+        confirmation += contain + size + " in " + files + "f/" + dirs + "d and " + depthpre;
+      }
+      if (maxdepth == 1) {
         confirmation += "1 level deep.";
       }
-      else if (pathinfo.getDepth() > 1) {
-        confirmation += util::int2Str(pathinfo.getDepth()) + " levels deep.";
+      else if (maxdepth > 1) {
+        confirmation += util::int2Str(maxdepth) + " levels deep.";
       }
-      if (pathinfo.getNumDirs() >= 10 || pathinfo.getNumFiles() >= 100 || pathinfo.getSize() >= 100000000000 || pathinfo.getDepth() > 2) {
+      if (aggdirs >= 10 || aggfiles >= 100 || aggsize >= 100000000000 || maxdepth > 2) {
         ui->goStrongConfirmation(confirmation);
       }
       else {
@@ -297,6 +349,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
     }
     case KEY_DOWN:
       //go down and highlight next item (if not at bottom already)
+      clearSoftSelects();
       update = list.goNext();
       if (list.currentCursorPosition() >= currentviewspan + row) {
         ui->redraw();
@@ -308,6 +361,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       break;
     case KEY_UP:
       //go up and highlight previous item (if not at top already)
+      clearSoftSelects();
       update = list.goPrevious();
       if (list.currentCursorPosition() < currentviewspan) {
         ui->redraw();
@@ -318,6 +372,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       }
       break;
     case KEY_NPAGE:
+      clearSoftSelects();
       for (unsigned int i = 0; i < pagerows; i++) {
         success = list.goNext();
         if (!success) {
@@ -333,6 +388,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       }
       break;
     case KEY_PPAGE:
+      clearSoftSelects();
       for (unsigned int i = 0; i < pagerows; i++) {
         success = list.goPrevious();
         if (!success) {
@@ -378,6 +434,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       break;
     }
     case KEY_HOME:
+      clearSoftSelects();
       while (list.goPrevious()) {
         table.goUp();
         if (!update) {
@@ -389,6 +446,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       }
       break;
     case KEY_END:
+      clearSoftSelects();
       while (list.goNext()) {
         table.goDown();
         if (!update) {
@@ -421,6 +479,74 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
         ui->goViewFile(filelist->getPath(), list.cursoredFile()->getName());
       }
       break;
+    case 'A':
+    case TERMINT_CTRL_A: {
+      const std::vector<UIFile *> * uilist = list.getSortedList();
+      for (unsigned int i = 0; i < uilist->size(); i++) {
+        (*uilist)[i]->softSelect();
+      }
+      softselecting = true;
+      ui->redraw();
+      break;
+    }
+    case KEY_SR: // shift up
+      if (list.cursoredFile() != NULL) {
+        UIFile * lastfile = list.cursoredFile();
+        if (!list.goPrevious()) {
+          break;
+        }
+        UIFile * file = list.cursoredFile();
+        if (file->isSoftSelected()) {
+          file->unSoftSelect();
+        }
+        else {
+          lastfile->softSelect();
+          softselecting = true;
+        }
+        table.goUp();
+        ui->redraw();
+      }
+      break;
+    case KEY_SF: // shift down
+      if (list.cursoredFile() != NULL) {
+        UIFile * lastfile = list.cursoredFile();
+        if (!list.goNext()) {
+          break;
+        }
+        UIFile * file = list.cursoredFile();
+        if (file->isSoftSelected()) {
+          file->unSoftSelect();
+        }
+        else {
+          lastfile->softSelect();
+          softselecting = true;
+        }
+        table.goDown();
+        ui->redraw();
+      }
+      break;
+    case ' ':
+      if (softselecting) {
+        list.hardFlipSoftSelected();
+        softselecting = false;
+        if (list.cursoredFile()->isHardSelected()) {
+          list.cursoredFile()->unHardSelect();
+        }
+        else {
+          list.cursoredFile()->hardSelect();
+        }
+        ui->redraw();
+      }
+      else if (list.cursoredFile() != NULL) {
+        if (list.cursoredFile()->isHardSelected()) {
+          list.cursoredFile()->unHardSelect();
+        }
+        else {
+          list.cursoredFile()->hardSelect();
+        }
+        ui->update();
+      }
+      break;
     case '-':
       if (list.cursoredFile() == NULL) {
         break;
@@ -439,7 +565,7 @@ std::string BrowseScreenLocal::getLegendText() const {
   if (filtermodeinput) {
     return "[Any] Enter space separated filters. Valid operators are !, *, ?. Must match all negative filters and at least one positive if given. Case insensitive. - [Esc] Cancel";
   }
-  return "[Up/Down] Navigate - [Enter/Right] open dir - [s]ort - [Backspace/Left] return - [Esc] Cancel - [c]lose - [q]uick jump - Toggle [f]ilter";
+  return "[Up/Down] Navigate - [Enter/Right] open dir - [s]ort - [Backspace/Left] return - [Esc] Cancel - [c]lose - [q]uick jump - Toggle [f]ilter - [Space] Hard select - [Shift-Up/Down] Soft select - Select [A]ll";
 }
 
 std::string BrowseScreenLocal::getInfoLabel() const {
@@ -448,6 +574,14 @@ std::string BrowseScreenLocal::getInfoLabel() const {
 
 std::string BrowseScreenLocal::getInfoText() const {
   std::string text = list.getPath().toString();
+  std::string target;
+  int total = actionfiles.size();
+  if (total == 1) {
+    target = actionfiles.front().first;
+  }
+  else {
+    target = util::int2Str(static_cast<int>(total)) + " items";
+  }
   if (changedsort) {
     if (tickcount++ < 8) {
       text = "Sort method: " + list.getSortMethod();
@@ -468,7 +602,7 @@ std::string BrowseScreenLocal::getInfoText() const {
   }
   else if (deletesuccess) {
     if (tickcount++ < 8) {
-      text = "Delete successful: " + actiontarget.toString();
+      text = "Delete successful: " + target;
       return text;
     }
     else {
@@ -477,7 +611,7 @@ std::string BrowseScreenLocal::getInfoText() const {
   }
   else if (deletefailed) {
     if (tickcount++ < 8) {
-      text = "Delete failed: " + actiontarget.toString();
+      text = "Delete failed: " + target;
       return text;
     }
     else {
@@ -609,6 +743,14 @@ void BrowseScreenLocal::gotoPath(const Path & path) {
 
 Pointer<LocalFileList> BrowseScreenLocal::fileList() const {
   return filelist;
+}
+
+void BrowseScreenLocal::clearSoftSelects() {
+  if (softselecting) {
+    list.clearSoftSelected();
+    ui->redraw();
+    softselecting = false;
+  }
 }
 
 UIFileList * BrowseScreenLocal::getUIFileList() {
