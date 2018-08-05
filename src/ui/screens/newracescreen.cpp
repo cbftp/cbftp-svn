@@ -5,6 +5,7 @@
 #include "../../sitemanager.h"
 #include "../../engine.h"
 #include "../../race.h"
+#include "../../util.h"
 
 #include "../ui.h"
 #include "../menuselectoptioncheckbox.h"
@@ -21,7 +22,7 @@ NewRaceScreen::~NewRaceScreen() {
 
 }
 
-void NewRaceScreen::initialize(unsigned int row, unsigned int col, const std::string & site, const std::string & section, const std::string & release) {
+void NewRaceScreen::initialize(unsigned int row, unsigned int col, const std::string & site, const std::list<std::string> & sections, const std::list<std::pair<std::string, bool> > & items) {
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [t]oggle all - [s]tart spread job - [S]tart spread job and return to browsing - [c]ancel";
   currentlegendtext = defaultlegendtext;
   active = false;
@@ -29,8 +30,6 @@ void NewRaceScreen::initialize(unsigned int row, unsigned int col, const std::st
   unsigned int y = 2;
   unsigned int x = 1;
   infotext = "";
-  std::string sectionstring = section;
-  size_t splitpos;
   bool sectionset = false;
   int sectx = x + std::string("Section: ").length();
   msos.reset();
@@ -38,28 +37,18 @@ void NewRaceScreen::initialize(unsigned int row, unsigned int col, const std::st
   msota->addOption("Race", SPREAD_RACE);
   msota->addOption("Distribute", SPREAD_DISTRIBUTE);
   msota->setId(1);
-  while (sectionstring.length() > 0) {
-    splitpos = sectionstring.find(";");
-    std::string section;
-    if (splitpos != std::string::npos) {
-      section = sectionstring.substr(0, splitpos);
-      sectionstring = sectionstring.substr(splitpos + 1);
-    }
-    else {
-      section = sectionstring;
-      sectionstring = "";
-    }
-    std::string buttontext = " " + section + " ";
+  for (std::list<std::string>::const_iterator it = sections.begin(); it != sections.end(); it++) {
     if (!sectionset) {
-      this->section = section;
+      this->section = *it;
       sectionset = true;
     }
+    std::string buttontext = " " + section + " ";
     Pointer<MenuSelectOptionTextButton> msotb = msos.addTextButton(y, sectx, section, buttontext);
     msotb->setId(0);
     sectx = sectx + buttontext.length();
   }
   y = y + 2;
-  this->release = release;
+  this->items = items;
   startsite = global->getSiteManager()->getSite(site);
   focusedarea = &msos;
   msos.makeLeavableDown();
@@ -76,7 +65,14 @@ void NewRaceScreen::populateSiteList() {
   if (!tempsites.size()) {
     for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
       const Pointer<Site> & site = *it;
-      if (site->hasSection(section) && !site->getDisabled() && site->getSkipList().check((site->getSectionPath(section) / release).toString(), true, false).action != SKIPLIST_DENY) {
+      bool allowed = true;
+      for (std::list<std::pair<std::string, bool> >::const_iterator itemit = items.begin(); itemit != items.end(); itemit++) {
+        if (site->getSkipList().check((site->getSectionPath(section) / itemit->first).toString(), true, false).action == SKIPLIST_DENY) {
+          allowed = false;
+          break;
+        }
+      }
+      if (site->hasSection(section) && !site->getDisabled() && allowed) {
         tempsites.push_back(std::pair<std::string, bool>(site->getName(), toggleall || site == startsite));
       }
     }
@@ -106,7 +102,11 @@ void NewRaceScreen::redraw() {
     tempsites.push_back(std::pair<std::string, bool>(msocb->getIdentifier(), msocb->getData()));
   }
   populateSiteList();
-  ui->printStr(1, 1, "Directory: " + release);
+  std::string item = items.front().first;
+  if (items.size() > 1) {
+    item = util::int2Str(static_cast<int>(items.size())) + " items";
+  }
+  ui->printStr(1, 1, "Item: " + item);
   ui->printStr(3, 1, "Section: ");
   bool highlight;
   for (unsigned int i = 0; i < msos.size(); i++) {
@@ -243,18 +243,23 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
       return true;
     case 's':
     {
-      Pointer<Race> race = startRace();
+      bool goracestatus = items.size() == 1;
+      Pointer<Race> race = startRace(!goracestatus);
       if (!!race) {
-        ui->returnRaceStatus(race->getId());
+        if (goracestatus) {
+          ui->returnRaceStatus(race->getId());
+        }
+        else {
+          ui->returnToLast();
+        }
       }
       return true;
     }
     case 'S':
     {
-      Pointer<Race> race = startRace();
+      Pointer<Race> race = startRace(true);
       if (!!race) {
         ui->returnToLast();
-        ui->addTempLegendSpreadJob(race->getId());
       }
       return true;
     }
@@ -288,9 +293,10 @@ std::string NewRaceScreen::getSectionButtonText(Pointer<MenuSelectOptionElement>
   return buttontext;
 }
 
-Pointer<Race> NewRaceScreen::startRace() {
+Pointer<Race> NewRaceScreen::startRace(bool addtemplegend) {
   msota->getData();
   std::list<std::string> sites;
+  Pointer<Race> lastrace;
   for (unsigned int i = 0; i < mso.size(); i++) {
     Pointer<MenuSelectOptionCheckBox> msocb = mso.getElement(i);
     if (msocb->getData()) {
@@ -300,12 +306,19 @@ Pointer<Race> NewRaceScreen::startRace() {
   if (sites.size() < 2) {
     infotext = "Cannot start spread job with less than 2 sites!";
     ui->update();
-    return Pointer<Race>();
+    return lastrace;
   }
-  if (msota->getData() == SPREAD_RACE) {
-    return global->getEngine()->newRace(release, section, sites);
+
+  for (std::list<std::pair<std::string, bool> >::const_iterator itemit = items.begin(); itemit != items.end(); itemit++) {
+    if (msota->getData() == SPREAD_RACE) {
+      lastrace = global->getEngine()->newRace(itemit->first, section, sites);
+    }
+    else {
+      lastrace = global->getEngine()->newDistribute(itemit->first, section, sites);
+    }
+    if (addtemplegend) {
+      ui->addTempLegendSpreadJob(lastrace->getId());
+    }
   }
-  else {
-    return global->getEngine()->newDistribute(release, section, sites);
-  }
+  return lastrace;
 }

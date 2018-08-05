@@ -33,6 +33,10 @@ void UIWindow::command(const std::string & command, const std::string & arg) {
 
 }
 
+void UIWindow::command(const std::string & command, const std::list<int> & arg) {
+
+}
+
 bool UIWindow::keyPressed(unsigned int key) {
   return false;
 }

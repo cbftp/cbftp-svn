@@ -18,7 +18,7 @@ class NewRaceScreen : public UIWindow {
 public:
   NewRaceScreen(Ui *);
   ~NewRaceScreen();
-  void initialize(unsigned int, unsigned int, const std::string &, const std::string &, const std::string &);
+  void initialize(unsigned int row, unsigned int col, const std::string & site, const std::list<std::string> & sections, const std::list<std::pair<std::string, bool> > & items);
   void update();
   void redraw();
   bool keyPressed(unsigned int);
@@ -27,7 +27,7 @@ public:
   std::string getInfoText() const;
 private:
   void populateSiteList();
-  Pointer<Race> startRace();
+  Pointer<Race> startRace(bool addtemplegend);
   Pointer<Site> startsite;
   std::string getSectionButtonText(Pointer<MenuSelectOptionElement>) const;
   std::string currentlegendtext;
@@ -41,7 +41,7 @@ private:
   MenuSelectOption msos;
   MenuSelectOption mso;
   std::list<std::string> sections;
-  std::string release;
+  std::list<std::pair<std::string, bool> > items;
   std::string infotext;
   std::list<std::pair<std::string, bool> > tempsites;
   Pointer<MenuSelectOptionTextArrow> msota;

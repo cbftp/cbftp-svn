@@ -17,14 +17,15 @@ class NukeScreen : public UIWindow {
 public:
   NukeScreen(Ui *);
   ~NukeScreen();
-  void initialize(unsigned int, unsigned int, const std::string &, const std::string &, FileList *);
+  void initialize(unsigned int row, unsigned int col, const std::string & sitestr, const std::list<std::pair<std::string, bool> > & items, const Path & path);
   void update();
   void redraw();
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
 private:
-  int nuke();
+  void nuke();
+  void nuke(int multiplier, const std::string & reason);
   std::string sitestr;
   Pointer<SiteLogic> sitelogic;
   std::string currentlegendtext;
@@ -33,6 +34,6 @@ private:
   std::string section;
   Pointer<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;
-  std::string release;
+  std::list<std::pair<std::string, bool> > items;
   Path path;
 };

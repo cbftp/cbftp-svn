@@ -544,6 +544,46 @@ void UIFileList::clearUnique() {
   fillSortedFiles();
 }
 
+void UIFileList::hardFlipSoftSelected() {
+  for (unsigned int i = 0; i < files.size(); i++) {
+    if (files[i].isSoftSelected()) {
+      if (files[i].isHardSelected()) {
+        files[i].unHardSelect();
+      }
+      else {
+        files[i].hardSelect();
+      }
+      files[i].unSoftSelect();
+    }
+  }
+}
+
+bool UIFileList::clearSoftSelected() {
+  bool cleared = false;
+  for (unsigned int i = 0; i < files.size(); i++) {
+    if (files[i].isSoftSelected()) {
+      files[i].unSoftSelect();
+      cleared = true;
+    }
+  }
+  return cleared;
+}
+
+bool UIFileList::clearSelected() {
+  bool cleared = false;
+  for (unsigned int i = 0; i < files.size(); i++) {
+    if (files[i].isSoftSelected()) {
+      files[i].unSoftSelect();
+      cleared = true;
+    }
+    if (files[i].isHardSelected()) {
+      files[i].unHardSelect();
+      cleared = true;
+    }
+  }
+  return cleared;
+}
+
 void UIFileList::setCursorPosition(unsigned int position) {
   if (sortedfiles.size()) {
     while (position >= sortedfiles.size()) {
@@ -556,4 +596,53 @@ void UIFileList::setCursorPosition(unsigned int position) {
     currentposition = 0;
     currentcursored = NULL;
   }
+}
+
+const UIFile * UIFileList::getFile(const std::string & file) const {
+  for (unsigned int i = 0; i < files.size(); i++) {
+    if (files[i].getName() == file) {
+      return &files[i];
+    }
+  }
+  return NULL;
+}
+
+const std::list<UIFile *> UIFileList::getSelectedFiles() const {
+  std::list<UIFile *> selectedfiles;
+  UIFile * cursored = cursoredFile();
+  for (unsigned int i = 0; i < sortedfiles.size(); i++) {
+    UIFile * file = sortedfiles[i];
+    if (file == NULL) {
+      continue;
+    }
+    if (file->isSoftSelected() || file->isHardSelected() || file == cursored) {
+      selectedfiles.push_back(file);
+    }
+  }
+  return selectedfiles;
+}
+
+std::list<std::pair<std::string, bool> > UIFileList::getSelectedNames() const {
+  return getSelectedFileNames(true, true);
+}
+
+std::list<std::pair<std::string, bool> > UIFileList::getSelectedDirectoryNames() const {
+  return getSelectedFileNames(false, true);
+}
+
+std::list<std::pair<std::string, bool> > UIFileList::getSelectedFileNames(bool files, bool dirs) const {
+  std::list<std::pair<std::string, bool> > selectedfiles;
+  UIFile * cursored = cursoredFile();
+  for (unsigned int i = 0; i < sortedfiles.size(); i++) {
+    UIFile * file = sortedfiles[i];
+    if (file == NULL) {
+      continue;
+    }
+    if (file->isSoftSelected() || file->isHardSelected() || file == cursored) {
+      if ((dirs && file->isDirectory()) || (files && !file->isDirectory())) {
+        selectedfiles.push_back(std::pair<std::string, bool>(file->getName(), file->isDirectory()));
+      }
+    }
+  }
+  return selectedfiles;
 }

@@ -37,6 +37,7 @@ public:
 private:
   void disableGotoMode();
   void gotoPath(const Path &);
+  void clearSoftSelects();
   Ui * ui;
   unsigned int row;
   unsigned int col;
@@ -63,5 +64,7 @@ private:
   MenuSelectOptionTextField filterfield;
   int temphighlightline;
   bool deleting;
-  Path actiontarget;
+  Path actionpath;
+  std::list<std::pair<std::string, bool> > actionfiles;
+  bool softselecting;
 };
