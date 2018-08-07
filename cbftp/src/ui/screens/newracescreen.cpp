@@ -42,8 +42,8 @@ void NewRaceScreen::initialize(unsigned int row, unsigned int col, const std::st
       this->section = *it;
       sectionset = true;
     }
-    std::string buttontext = " " + section + " ";
-    Pointer<MenuSelectOptionTextButton> msotb = msos.addTextButton(y, sectx, section, buttontext);
+    std::string buttontext = " " + *it + " ";
+    Pointer<MenuSelectOptionTextButton> msotb = msos.addTextButton(y, sectx, *it, buttontext);
     msotb->setId(0);
     sectx = sectx + buttontext.length();
   }
