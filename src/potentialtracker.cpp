@@ -80,7 +80,7 @@ void PotentialTracker::calculateMaxAvailablePotential() {
   maxpotentialcalculated = true;
 }
 
-void PotentialTracker::pushPotential(int score, const std::string & file, const Pointer<SiteLogic> & dst, int dstup) {
+void PotentialTracker::pushPotential(int score, const std::string & file, const std::shared_ptr<SiteLogic> & dst, int dstup) {
   if (potentiallist.front()->update(dst, dstup, score, file)) {
     maxpotentialcalculated = false;
   }
@@ -93,7 +93,7 @@ void PotentialTracker::tick(int message) {
   maxpotentialcalculated = false;
 }
 
-std::list<PotentialElement *>::iterator PotentialTracker::findFirstOfSite(const Pointer<SiteLogic> & st) {
+std::list<PotentialElement *>::iterator PotentialTracker::findFirstOfSite(const std::shared_ptr<SiteLogic> & st) {
   std::list<PotentialElement *>::iterator ittop;
   for (ittop = top.begin(); ittop != top.end(); ittop++) {
     if ((*ittop)->getSite() == st) return ittop;

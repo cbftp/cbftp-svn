@@ -1,9 +1,9 @@
 #pragma once
 
+#include <memory>
 #include <string>
 
 #include "core/eventreceiver.h"
-#include "core/pointer.h"
 
 class FTPConnectOwner;
 class ProxySession;

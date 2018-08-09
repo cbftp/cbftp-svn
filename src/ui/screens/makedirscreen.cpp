@@ -48,7 +48,7 @@ void MakeDirScreen::redraw() {
   }
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
+    std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
     highlight = false;
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
@@ -136,8 +136,8 @@ bool MakeDirScreen::keyPressed(unsigned int ch) {
 }
 
 void MakeDirScreen::tryMakeDir() {
-  Pointer<MenuSelectOptionElement> msoe = mso.getElement("name");
-  std::string dirname = msoe.get<MenuSelectOptionTextField>()->getData();
+  std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement("name");
+  std::string dirname = std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData();
   if (dirname.empty()) {
     return;
   }

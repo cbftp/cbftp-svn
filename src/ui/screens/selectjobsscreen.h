@@ -3,7 +3,7 @@
 #include <map>
 #include <string>
 
-#include "../../core/pointer.h"
+#include <memory>
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
@@ -28,8 +28,8 @@ public:
   std::string getInfoLabel() const;
   std::string getInfoText() const;
   static void addJobTableHeader(unsigned int, MenuSelectOption &, const std::string &);
-  static void addJobDetails(unsigned int, MenuSelectOption &, Pointer<Race>);
-  static void addJobDetails(unsigned int, MenuSelectOption &, Pointer<TransferJob>);
+  static void addJobDetails(unsigned int, MenuSelectOption &, std::shared_ptr<Race>);
+  static void addJobDetails(unsigned int, MenuSelectOption &, std::shared_ptr<TransferJob>);
 private:
   static void addTableRow(unsigned int, MenuSelectOption &, unsigned int, bool, const std::string &, const std::string &);
   MenuSelectOption table;

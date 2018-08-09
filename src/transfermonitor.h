@@ -1,10 +1,10 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <utility>
 
 #include "core/eventreceiver.h"
-#include "core/pointer.h"
 #include "rawbuffercallback.h"
 #include "path.h"
 
@@ -52,11 +52,11 @@ class TransferMonitor : public EventReceiver, public RawBufferCallback {
     int src;
     int dst;
     int storeid;
-    Pointer<SiteLogic> sls;
-    Pointer<SiteLogic> sld;
+    std::shared_ptr<SiteLogic> sls;
+    std::shared_ptr<SiteLogic> sld;
     FileList * fls;
     FileList * fld;
-    Pointer<LocalFileList> localfl;
+    std::shared_ptr<LocalFileList> localfl;
     Path spath;
     Path dpath;
     bool clientactive;
@@ -68,7 +68,7 @@ class TransferMonitor : public EventReceiver, public RawBufferCallback {
     int startstamp;
     int partialcompletestamp;
     TransferManager * tm;
-    Pointer<TransferStatus> ts;
+    std::shared_ptr<TransferStatus> ts;
     int latestsrctouch;
     int latestdsttouch;
     bool hiddenfiles;
@@ -81,7 +81,7 @@ class TransferMonitor : public EventReceiver, public RawBufferCallback {
     void finish();
     void setTargetSizeSpeed(unsigned long long int, int);
     void reset();
-    void transferFailed(const Pointer<TransferStatus> &, TransferError);
+    void transferFailed(const std::shared_ptr<TransferStatus> &, TransferError);
     void updateFXPSizeSpeed();
     void updateLocalTransferSizeSpeed();
     void checkForDeadFXPTransfers();
@@ -99,15 +99,15 @@ class TransferMonitor : public EventReceiver, public RawBufferCallback {
     void activeStarted();
     void sslDetails(const std::string &, bool);
     bool idle() const;
-    Pointer<TransferStatus> getTransferStatus() const;
-    void engageFXP(const std::string &, const Pointer<SiteLogic> &, FileList *,
-      const std::string &, const Pointer<SiteLogic> &, FileList *,
+    std::shared_ptr<TransferStatus> getTransferStatus() const;
+    void engageFXP(const std::string &, const std::shared_ptr<SiteLogic> &, FileList *,
+      const std::string &, const std::shared_ptr<SiteLogic> &, FileList *,
       CommandOwner *, CommandOwner *);
-    void engageDownload(const std::string &, const Pointer<SiteLogic> &,
-      FileList *, const Pointer<LocalFileList> &, CommandOwner *);
-    void engageUpload(const std::string &, const Pointer<LocalFileList> &,
-      const Pointer<SiteLogic> &, FileList *, CommandOwner *);
-    void engageList(const Pointer<SiteLogic> &, int, bool, FileList *,
+    void engageDownload(const std::string &, const std::shared_ptr<SiteLogic> &,
+      FileList *, const std::shared_ptr<LocalFileList> &, CommandOwner *);
+    void engageUpload(const std::string &, const std::shared_ptr<LocalFileList> &,
+      const std::shared_ptr<SiteLogic> &, FileList *, CommandOwner *);
+    void engageList(const std::shared_ptr<SiteLogic> &, int, bool, FileList *,
       CommandOwner *);
     Status getStatus() const;
     bool willFail() const;

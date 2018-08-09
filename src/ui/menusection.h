@@ -1,10 +1,9 @@
 #pragma once
 
+#include <map>
+#include <memory>
 #include <string>
 #include <vector>
-#include <map>
-
-#include "../core/pointer.h"
 
 #include "focusablearea.h"
 #include "menuselectoptioncontainer.h"
@@ -19,7 +18,7 @@ class MenuSection : public FocusableArea {
     unsigned int pointer;
     unsigned int lastpointer;
     bool needsredraw;
-    Pointer<MenuSelectOptionElement> addbutton;
+    std::shared_ptr<MenuSelectOptionElement> addbutton;
     std::vector<MenuSelectOptionContainer> sectioncontainers;
   public:
     MenuSection();
@@ -33,7 +32,7 @@ class MenuSection : public FocusableArea {
     unsigned int getLastSelectionPointer() const;
     unsigned int getSelectionPointer() const;
     bool activateSelected();
-    Pointer<MenuSelectOptionElement> getElement(unsigned int) const;
+    std::shared_ptr<MenuSelectOptionElement> getElement(unsigned int) const;
     unsigned int getHeaderRow() const;
     unsigned int getHeaderCol() const;
     unsigned int size() const;

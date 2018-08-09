@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../core/pointer.h"
+#include <memory>
 
 #include "../uiwindow.h"
 #include "../menuselectoptiontextfield.h"
@@ -31,7 +31,7 @@ private:
   MenuSelectOptionTextField rawcommandfield;
   std::string sitename;
   int connid;
-  Pointer<SiteLogic> sitelogic;
+  std::shared_ptr<SiteLogic> sitelogic;
   RawBuffer * rawbuf;
   CommandHistory history;
 };

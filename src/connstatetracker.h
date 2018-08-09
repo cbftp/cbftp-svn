@@ -1,10 +1,10 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <list>
 
 #include "delayedcommand.h"
-#include "core/pointer.h"
 
 #define CST_DOWNLOAD 981
 #define CST_UPLOAD 982
@@ -49,8 +49,8 @@ private:
   CommandOwner * co;
   std::string host;
   int port;
-  Pointer<RecursiveCommandLogic> recursivelogic;
-  Pointer<SiteLogicRequest> request;
+  std::shared_ptr<RecursiveCommandLogic> recursivelogic;
+  std::shared_ptr<SiteLogicRequest> request;
   void setTransfer(const std::string &, bool, bool, const std::string &, int, bool, bool);
   void setList(TransferMonitor *, bool, const std::string &, int, bool);
 public:
@@ -84,7 +84,7 @@ public:
   bool isLocked() const;
   bool isListOrTransferLocked() const;
   bool isHardLocked() const;
-  const Pointer<SiteLogicRequest> & getRequest() const;
+  const std::shared_ptr<SiteLogicRequest> & getRequest() const;
   void setRequest(SiteLogicRequest);
   void finishRequest();
   bool isLoggedIn() const;
@@ -101,7 +101,7 @@ public:
   bool getTransferFXP() const;
   std::string getTransferHost() const;
   int getTransferPort() const;
-  Pointer<RecursiveCommandLogic> getRecursiveLogic() const;
+  std::shared_ptr<RecursiveCommandLogic> getRecursiveLogic() const;
   bool transferInitialized() const;
   CommandOwner * getCommandOwner() const;
   void initializeTransfer();

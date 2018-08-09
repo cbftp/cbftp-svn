@@ -43,7 +43,7 @@ void NewRaceScreen::initialize(unsigned int row, unsigned int col, const std::st
       sectionset = true;
     }
     std::string buttontext = " " + *it + " ";
-    Pointer<MenuSelectOptionTextButton> msotb = msos.addTextButton(y, sectx, *it, buttontext);
+    std::shared_ptr<MenuSelectOptionTextButton> msotb = msos.addTextButton(y, sectx, *it, buttontext);
     msotb->setId(0);
     sectx = sectx + buttontext.length();
   }
@@ -60,11 +60,11 @@ void NewRaceScreen::initialize(unsigned int row, unsigned int col, const std::st
 }
 
 void NewRaceScreen::populateSiteList() {
-  std::vector<Pointer<Site> >::const_iterator it;
+  std::vector<std::shared_ptr<Site> >::const_iterator it;
   mso.clear();
   if (!tempsites.size()) {
     for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
-      const Pointer<Site> & site = *it;
+      const std::shared_ptr<Site> & site = *it;
       bool allowed = true;
       for (std::list<std::pair<std::string, bool> >::const_iterator itemit = items.begin(); itemit != items.end(); itemit++) {
         if (site->getSkipList().check((site->getSectionPath(section) / itemit->first).toString(), true, false).action == SKIPLIST_DENY) {
@@ -98,7 +98,7 @@ void NewRaceScreen::populateSiteList() {
 void NewRaceScreen::redraw() {
   ui->erase();
   for (unsigned int i = 0; i < mso.size(); i++) {
-    Pointer<MenuSelectOptionCheckBox> msocb = mso.getElement(i);
+    std::shared_ptr<MenuSelectOptionCheckBox> msocb = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement(i));
     tempsites.push_back(std::pair<std::string, bool>(msocb->getIdentifier(), msocb->getData()));
   }
   populateSiteList();
@@ -110,7 +110,7 @@ void NewRaceScreen::redraw() {
   ui->printStr(3, 1, "Section: ");
   bool highlight;
   for (unsigned int i = 0; i < msos.size(); i++) {
-    Pointer<MenuSelectOptionElement> msoe = msos.getElement(i);
+    std::shared_ptr<MenuSelectOptionElement> msoe = msos.getElement(i);
     highlight = false;
     if (msos.isFocused() && msos.getSelectionPointer() == i) {
       highlight = true;
@@ -124,7 +124,7 @@ void NewRaceScreen::redraw() {
     }
   }
   for (unsigned int i = 0; i < mso.size(); i++) {
-    Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
+    std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
     highlight = false;
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
@@ -221,7 +221,7 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
       activation = focusedarea->getElement(focusedarea->getSelectionPointer())->activate();
       if (!activation) {
         if (focusedarea == &msos) {
-          Pointer<MenuSelectOptionElement> msoe = msos.getElement(msos.getSelectionPointer());
+          std::shared_ptr<MenuSelectOptionElement> msoe = msos.getElement(msos.getSelectionPointer());
           if (msoe->getId() == 0) {
             section = msoe->getIdentifier();
             tempsites.clear();
@@ -244,7 +244,7 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
     case 's':
     {
       bool goracestatus = items.size() == 1;
-      Pointer<Race> race = startRace(!goracestatus);
+      std::shared_ptr<Race> race = startRace(!goracestatus);
       if (!!race) {
         if (goracestatus) {
           ui->returnRaceStatus(race->getId());
@@ -257,7 +257,7 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
     }
     case 'S':
     {
-      Pointer<Race> race = startRace(true);
+      std::shared_ptr<Race> race = startRace(true);
       if (!!race) {
         ui->returnToLast();
       }
@@ -284,7 +284,7 @@ std::string NewRaceScreen::getInfoText() const {
   return infotext;
 }
 
-std::string NewRaceScreen::getSectionButtonText(Pointer<MenuSelectOptionElement> msoe) const {
+std::string NewRaceScreen::getSectionButtonText(std::shared_ptr<MenuSelectOptionElement> msoe) const {
   std::string buttontext = msoe->getLabelText();
   if (msoe->getIdentifier() == section) {
     buttontext[0] = '[';
@@ -293,12 +293,12 @@ std::string NewRaceScreen::getSectionButtonText(Pointer<MenuSelectOptionElement>
   return buttontext;
 }
 
-Pointer<Race> NewRaceScreen::startRace(bool addtemplegend) {
+std::shared_ptr<Race> NewRaceScreen::startRace(bool addtemplegend) {
   msota->getData();
   std::list<std::string> sites;
-  Pointer<Race> lastrace;
+  std::shared_ptr<Race> lastrace;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    Pointer<MenuSelectOptionCheckBox> msocb = mso.getElement(i);
+    std::shared_ptr<MenuSelectOptionCheckBox> msocb = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement(i));
     if (msocb->getData()) {
       sites.push_back(msocb->getIdentifier());
     }

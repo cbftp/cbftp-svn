@@ -1,6 +1,8 @@
 #include "racestatusscreen.h"
 
 #include <set>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "../../race.h"
 #include "../../siterace.h"
@@ -58,12 +60,12 @@ void RaceStatusScreen::redraw() {
   ui->erase();
   ui->printStr(1, 1, "Section: " + race->getSection());
   ui->printStr(1, 20, "Sites: " + race->getSiteListText());
-  std::set<std::string> currsubpaths = race->getSubPaths();
+  std::unordered_set<std::string> currsubpaths = race->getSubPaths();
   currnumsubpaths = currsubpaths.size();
   std::string subpathpresent = "";
   subpaths.clear();
   unsigned int sumguessedsize = 0;
-  for (std::set<std::string>::iterator it = currsubpaths.begin(); it != currsubpaths.end(); it++) {
+  for (std::unordered_set<std::string>::iterator it = currsubpaths.begin(); it != currsubpaths.end(); it++) {
     if (subpathpresent.length() > 0) {
       subpathpresent += ", ";
     }
@@ -101,7 +103,7 @@ void RaceStatusScreen::redraw() {
     std::map<std::string, std::string> localtags;
     while (!finished) {
       finished = true;
-      for (std::map<std::string, unsigned long long int>::const_iterator it =
+      for (std::unordered_map<std::string, unsigned long long int>::const_iterator it =
           race->guessedFileListBegin(*subit); it != race->guessedFileListEnd(*subit); it++) {
         std::string filename = it->first;
         while (filename.length() < 3) {
@@ -210,10 +212,10 @@ void RaceStatusScreen::update() {
       ui->setLegend();
     }
   }
-  std::set<std::string> currsubpaths = race->getSubPaths();
+  std::unordered_set<std::string> currsubpaths = race->getSubPaths();
   unsigned int sumguessedsize = 0;
   bool haslargepath = false;
-  for (std::set<std::string>::iterator it = currsubpaths.begin(); it != currsubpaths.end(); it++) {
+  for (std::unordered_set<std::string>::iterator it = currsubpaths.begin(); it != currsubpaths.end(); it++) {
     unsigned int guessedsize = race->guessedSize(*it);
     sumguessedsize += guessedsize;
     if (guessedsize >= 5) {
@@ -227,9 +229,9 @@ void RaceStatusScreen::update() {
   int x = 1;
   int y = 8;
   mso.clear();
-  for (std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
+  for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
     SiteRace * sr = it->first;
-    const Pointer<SiteLogic> & sl = it->second;
+    const std::shared_ptr<SiteLogic> & sl = it->second;
     std::string user = sl->getSite()->getUser();
     bool trimcompare = user.length() > 8;
     std::string trimuser = user;
@@ -253,7 +255,7 @@ void RaceStatusScreen::update() {
       }
 
       ui->printStr(y, x + 5, printsubpath, longestsubpath);
-      for (std::map<std::string, unsigned long long int>::const_iterator it3 =
+      for (std::unordered_map<std::string, unsigned long long int>::const_iterator it3 =
           race->guessedFileListBegin(origsubpath); it3 != race->guessedFileListEnd(origsubpath); it3++) {
         std::string filename = it3->first;
         if (filename.length() < 3) filename += " ";
@@ -287,7 +289,7 @@ void RaceStatusScreen::update() {
   mso.checkPointer();
   unsigned int selected = mso.getSelectionPointer();
   for (unsigned int i = 0; i < mso.size(); i++) {
-    Pointer<MenuSelectOptionTextButton> msotb = mso.getElement(i);
+    std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(i));
     bool isselected = selected == i;
     ui->printStr(msotb->getRow(), msotb->getCol(), msotb->getLabelText(), 4, isselected);
   }
@@ -316,25 +318,25 @@ void RaceStatusScreen::command(const std::string & command, const std::string & 
   }
   else if (command == "returnselectitems") {
     std::string preselectstr = arg;
-    std::list<Pointer<Site> > selectedsites;
+    std::list<std::shared_ptr<Site> > selectedsites;
     while (true) {
       size_t commapos = preselectstr.find(",");
       if (commapos != std::string::npos) {
         std::string sitename = preselectstr.substr(0, commapos);
-        Pointer<Site> site = global->getSiteManager()->getSite(sitename);
+        std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
         selectedsites.push_back(site);
         preselectstr = preselectstr.substr(commapos + 1);
       }
       else {
         if (preselectstr.length() > 0) {
-          Pointer<Site> site = global->getSiteManager()->getSite(preselectstr);
+          std::shared_ptr<Site> site = global->getSiteManager()->getSite(preselectstr);
           selectedsites.push_back(site);
         }
         break;
       }
     }
     if (selectsitesmode == SELECT_ADD) {
-      for (std::list<Pointer<Site> >::iterator it = selectedsites.begin(); it != selectedsites.end(); it++) {
+      for (std::list<std::shared_ptr<Site> >::iterator it = selectedsites.begin(); it != selectedsites.end(); it++) {
         global->getEngine()->addSiteToRace(race, (*it)->getName());
       }
     }
@@ -375,7 +377,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       return true;
     case KEY_DC:
     {
-      Pointer<MenuSelectOptionTextButton> msotb = mso.getElement(mso.getSelectionPointer());
+      std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
       if (!!msotb) {
         removesite = msotb->getLabelText();
         awaitingremovesite = true;
@@ -394,7 +396,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
         deleteFiles(false);
       }
       else {
-        Pointer<MenuSelectOptionTextButton> msotb = mso.getElement(mso.getSelectionPointer());
+        std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
         if (!!msotb) {
           removesite = msotb->getLabelText();
           awaitingremovesitedelownfiles = true;
@@ -407,7 +409,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
         deleteFiles(true);
       }
       else {
-        Pointer<MenuSelectOptionTextButton> msotb = mso.getElement(mso.getSelectionPointer());
+        std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
         if (!!msotb) {
           removesite = msotb->getLabelText();
           awaitingremovesitedelallfiles = true;
@@ -417,11 +419,11 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       return true;
     case 'A':
     {
-      std::list<Pointer<Site> > excludedsites;
-      for (std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
+      std::list<std::shared_ptr<Site> > excludedsites;
+      for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
         excludedsites.push_back(it->second->getSite());
       }
-      std::vector<Pointer<Site> >::const_iterator it;
+      std::vector<std::shared_ptr<Site> >::const_iterator it;
       for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
         if (!(*it)->hasSection(race->getSection()) ||
             ((((*it)->getAllowDownload() == SITE_ALLOW_DOWNLOAD_MATCH_ONLY && !(*it)->isAffiliated(race->getGroup())) ||
@@ -433,7 +435,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
         }
       }
       selectsitesmode = SELECT_ADD;
-      ui->goSelectSites("Add these sites to the race: " + race->getSection() + "/" + race->getName(), std::list<Pointer<Site> >(), excludedsites);
+      ui->goSelectSites("Add these sites to the race: " + race->getSection() + "/" + race->getName(), std::list<std::shared_ptr<Site> >(), excludedsites);
       return true;
     }
     case 'r':
@@ -446,7 +448,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       ui->goTransfersFilterSpreadJob(race->getName());
       return true;
     case 10:
-      Pointer<MenuSelectOptionTextButton> msotb = mso.getElement(mso.getSelectionPointer());
+      std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
       if (!!msotb) {
         ui->goSiteStatus(msotb->getLabelText());
       }
@@ -457,9 +459,9 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
 
 void RaceStatusScreen::deleteFiles(bool allfiles) {
   if (race->getStatus() != RACE_STATUS_RUNNING) {
-    std::list<Pointer<Site> > sites;
-    std::list<Pointer<Site> > preselectsites;
-    std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator it;
+    std::list<std::shared_ptr<Site> > sites;
+    std::list<std::shared_ptr<Site> > preselectsites;
+    std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator it;
     for (it = race->begin(); it != race->end(); it++) {
       sites.push_back(it->second->getSite());
       if (!it->first->isDone() || (it->first->isAborted() && !it->first->doneBeforeAbort())) {

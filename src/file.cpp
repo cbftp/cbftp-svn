@@ -261,11 +261,11 @@ unsigned int File::getUpdateSpeed() const {
   return updatespeed;
 }
 
-const Pointer<Site> & File::getUpdateSrc() const {
+const std::shared_ptr<Site> & File::getUpdateSrc() const {
   return updatesrc;
 }
 
-const Pointer<Site> & File::getUpdateDst() const {
+const std::shared_ptr<Site> & File::getUpdateDst() const {
   return updatedst;
 }
 
@@ -277,7 +277,7 @@ CommandOwner * File::getUpdateDstCommandOwner() const {
   return updatecodst;
 }
 
-void File::setUpdateFlag(const Pointer<Site> & src, const Pointer<Site> &dst, CommandOwner * cosrc, CommandOwner * codst, unsigned int speed) {
+void File::setUpdateFlag(const std::shared_ptr<Site> & src, const std::shared_ptr<Site> &dst, CommandOwner * cosrc, CommandOwner * codst, unsigned int speed) {
   updatesrc = src;
   updatedst = dst;
   updatecosrc = cosrc;

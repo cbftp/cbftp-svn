@@ -31,7 +31,7 @@ void SelectJobsScreen::initialize(unsigned int row, unsigned int col, JobType ty
   addJobTableHeader(y++, table, "JOB NAME");
   if (type == JOBTYPE_SPREADJOB) {
     totallistsize = global->getEngine()->allRaces();
-    for (std::list<Pointer<Race> >::const_iterator it = --global->getEngine()->getRacesEnd();
+    for (std::list<std::shared_ptr<Race> >::const_iterator it = --global->getEngine()->getRacesEnd();
         it != --global->getEngine()->getRacesBegin(); --it, ++y)
     {
       addJobDetails(y, table, *it);
@@ -39,7 +39,7 @@ void SelectJobsScreen::initialize(unsigned int row, unsigned int col, JobType ty
   }
   else {
     totallistsize = global->getEngine()->allTransferJobs();
-    for (std::list<Pointer<TransferJob> >::const_iterator it = --global->getEngine()->getTransferJobsEnd();
+    for (std::list<std::shared_ptr<TransferJob> >::const_iterator it = --global->getEngine()->getTransferJobsEnd();
         it != --global->getEngine()->getTransferJobsBegin(); --it, ++y)
     {
       addJobDetails(y, table, *it);
@@ -62,9 +62,9 @@ void SelectJobsScreen::redraw() {
     if (i != 0 && (i < currentviewspan + 1 || i > currentviewspan + listspan)) {
       continue;
     }
-    Pointer<MenuSelectAdjustableLine> msal = table.getAdjustableLine(i);
+    std::shared_ptr<MenuSelectAdjustableLine> msal = table.getAdjustableLine(i);
     for (unsigned int j = 0; j < msal->size(); ++j) {
-      Pointer<ResizableElement> re = msal->getElement(j);
+      std::shared_ptr<ResizableElement> re = msal->getElement(j);
       highlight = false;
       if (j == 1 && ypos + 1 == currentviewspan + y && hascontents) {
         highlight = true;
@@ -131,10 +131,10 @@ bool SelectJobsScreen::keyPressed(unsigned int ch) {
     case 10:
     case 32:
       if (hascontents) {
-        Pointer<MenuSelectOptionTextButton> msotb =
-            table.getElement(table.getSelectionPointer());
-        Pointer<MenuSelectAdjustableLine> line = table.getAdjustableLine(msotb);
-        Pointer<MenuSelectOptionCheckBox> checkbox = line->getElement(0);
+        std::shared_ptr<MenuSelectOptionTextButton> msotb =
+            std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
+        std::shared_ptr<MenuSelectAdjustableLine> line = table.getAdjustableLine(msotb);
+        std::shared_ptr<MenuSelectOptionCheckBox> checkbox = std::static_pointer_cast<MenuSelectOptionCheckBox>(line->getElement(0));
         checkbox->activate();
         if (checkbox->getData()) {
           numselected++;
@@ -151,10 +151,10 @@ bool SelectJobsScreen::keyPressed(unsigned int ch) {
     case 'd': {
       std::list<std::string> items;
       for (unsigned int i = 0; i < table.size(); i++) {
-        Pointer<ResizableElement> re = table.getElement(i);
-        if (re->getIdentifier() == "selected" && re.get<MenuSelectOptionCheckBox>()->getData()) {
-          Pointer<MenuSelectAdjustableLine> msal = table.getAdjustableLine(re);
-          Pointer<MenuSelectOptionTextButton> name = msal->getElement(1);
+        std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(i));
+        if (re->getIdentifier() == "selected" && std::static_pointer_cast<MenuSelectOptionCheckBox>(re)->getData()) {
+          std::shared_ptr<MenuSelectAdjustableLine> msal = table.getAdjustableLine(re);
+          std::shared_ptr<MenuSelectOptionTextButton> name = std::static_pointer_cast<MenuSelectOptionTextButton>(msal->getElement(1));
           items.push_back(util::int2Str(name->getId()));
         }
       }
@@ -184,8 +184,8 @@ void SelectJobsScreen::addJobTableHeader(unsigned int y, MenuSelectOption & mso,
 void SelectJobsScreen::addTableRow(unsigned int y, MenuSelectOption & mso, unsigned int id, bool selectable,
     const std::string & name, const std::string & checkboxtext)
 {
-  Pointer<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
-  Pointer<ResizableElement> re;
+  std::shared_ptr<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
+  std::shared_ptr<ResizableElement> re;
 
   re = mso.addCheckBox(y,  1, "selected",  checkboxtext, false);
   re->setSelectable(false);
@@ -197,10 +197,10 @@ void SelectJobsScreen::addTableRow(unsigned int y, MenuSelectOption & mso, unsig
   msal->addElement(re, 1, 1, RESIZE_CUTEND, true);
 }
 
-void SelectJobsScreen::addJobDetails(unsigned int y, MenuSelectOption & mso, Pointer<Race> job) {
+void SelectJobsScreen::addJobDetails(unsigned int y, MenuSelectOption & mso, std::shared_ptr<Race> job) {
   addTableRow(y, mso, job->getId(), true, job->getName(), "[ ]");
 }
 
-void SelectJobsScreen::addJobDetails(unsigned int y, MenuSelectOption & mso, Pointer<TransferJob> job) {
+void SelectJobsScreen::addJobDetails(unsigned int y, MenuSelectOption & mso, std::shared_ptr<TransferJob> job) {
   addTableRow(y, mso, job->getId(), true, job->getName(), "[ ]");
 }

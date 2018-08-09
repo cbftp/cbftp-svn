@@ -39,7 +39,7 @@ void AllRacesScreen::redraw() {
   addRaceTableHeader(y, table, "RELEASE");
   y++;
   unsigned int pos = 0;
-  for (std::list<Pointer<Race> >::const_iterator it = --engine->getRacesEnd(); it != --engine->getRacesBegin() && y < row; it--) {
+  for (std::list<std::shared_ptr<Race> >::const_iterator it = --engine->getRacesEnd(); it != --engine->getRacesBegin() && y < row; it--) {
     if (pos >= currentviewspan) {
       addRaceDetails(y++, table, *it);
       if (pos == ypos) {
@@ -52,7 +52,7 @@ void AllRacesScreen::redraw() {
   hascontents = table.linesSize() > 1;
   table.adjustLines(col - 3);
   if (temphighlightline != -1) {
-    Pointer<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
+    std::shared_ptr<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
     if (!!highlightline) {
       std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
       for (unsigned int i = minmaxcol.first; i <= minmaxcol.second; i++) {
@@ -62,7 +62,7 @@ void AllRacesScreen::redraw() {
   }
   bool highlight;
   for (unsigned int i = 0; i < table.size(); i++) {
-    Pointer<ResizableElement> re = table.getElement(i);
+    std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(i));
     highlight = false;
     if (hascontents && (table.getSelectionPointer() == i  || (int)re->getRow() == temphighlightline)) {
       highlight = true;
@@ -133,8 +133,8 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
       return true;
     case 10:
       if (hascontents) {
-        Pointer<MenuSelectOptionTextButton> msotb =
-            table.getElement(table.getSelectionPointer());
+        std::shared_ptr<MenuSelectOptionTextButton> msotb =
+            std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
         ui->goRaceStatus(msotb->getId());
       }
       return true;
@@ -170,8 +170,8 @@ void AllRacesScreen::addRaceTableRow(unsigned int y, MenuSelectOption & mso, uns
     const std::string & size, const std::string & worst, const std::string & avg, const std::string & best, const std::string & status, const std::string & done,
     const std::string & sites)
 {
-  Pointer<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
-  Pointer<MenuSelectOptionTextButton> msotb;
+  std::shared_ptr<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
+  std::shared_ptr<MenuSelectOptionTextButton> msotb;
 
   msotb = mso.addTextButtonNoContent(y, 1, "timestamp", timestamp);
   msotb->setSelectable(false);
@@ -219,7 +219,7 @@ void AllRacesScreen::addRaceTableRow(unsigned int y, MenuSelectOption & mso, uns
   msal->addElement(msotb, 0, RESIZE_WITHDOTS);
 }
 
-void AllRacesScreen::addRaceDetails(unsigned int y, MenuSelectOption & mso, Pointer<Race> race) {
+void AllRacesScreen::addRaceDetails(unsigned int y, MenuSelectOption & mso, std::shared_ptr<Race> race) {
   std::string done = util::int2Str(race->numSitesDone()) + "/" + util::int2Str(race->numSites());
   std::string timespent = util::simpleTimeFormat(race->getTimeSpent());
   std::string status;

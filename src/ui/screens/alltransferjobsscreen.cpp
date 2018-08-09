@@ -42,7 +42,7 @@ void AllTransferJobsScreen::redraw() {
     y++;
   }
   unsigned int pos = 1;
-  for (std::list<Pointer<TransferJob> >::const_iterator it = --engine->getTransferJobsEnd(); it != --engine->getTransferJobsBegin() && y < row; it--) {
+  for (std::list<std::shared_ptr<TransferJob> >::const_iterator it = --engine->getTransferJobsEnd(); it != --engine->getTransferJobsBegin() && y < row; it--) {
     if (pos >= currentviewspan) {
       addJobDetails(y++, table, *it);
       if (pos == ypos) {
@@ -55,7 +55,7 @@ void AllTransferJobsScreen::redraw() {
   hascontents = table.linesSize() > 1;
   table.adjustLines(col - 3);
   if (temphighlightline != -1) {
-    Pointer<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
+    std::shared_ptr<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
     if (!!highlightline) {
       std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
       for (unsigned int i = minmaxcol.first; i <= minmaxcol.second; i++) {
@@ -65,7 +65,7 @@ void AllTransferJobsScreen::redraw() {
   }
   bool highlight;
   for (unsigned int i = 0; i < table.size(); i++) {
-    Pointer<ResizableElement> re = table.getElement(i);
+    std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(i));
     highlight = false;
     if (hascontents && (table.getSelectionPointer() == i  || (int)re->getRow() == temphighlightline)) {
       highlight = true;
@@ -148,8 +148,8 @@ bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
       return true;
     case 10:
       if (hascontents) {
-        Pointer<MenuSelectOptionTextButton> msotb =
-            table.getElement(table.getSelectionPointer());
+        std::shared_ptr<MenuSelectOptionTextButton> msotb =
+            std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
         ui->goTransferJobStatus(msotb->getId());
       }
       return true;
@@ -180,8 +180,8 @@ void AllTransferJobsScreen::addJobTableRow(unsigned int y, MenuSelectOption & ms
     const std::string & queuetime, const std::string & starttime, const std::string & timespent, const std::string & type,
     const std::string & name, const std::string & route, const std::string & sizeprogress, const std::string & filesprogress,
     const std::string & timeremaining, const std::string & speed, const std::string & progress) {
-  Pointer<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
-  Pointer<MenuSelectOptionTextButton> msotb;
+  std::shared_ptr<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
+  std::shared_ptr<MenuSelectOptionTextButton> msotb;
 
   msotb = mso.addTextButtonNoContent(y, 1, "queuetime", queuetime);
   msotb->setSelectable(false);
@@ -233,7 +233,7 @@ void AllTransferJobsScreen::addJobTableHeader(unsigned int y, MenuSelectOption &
   addJobTableRow(y, mso, -1, false, "QUEUED", "STARTED", "USE", "TYPE", name, "ROUTE", "SIZE", "FILES", "LEFT", "SPEED", "DONE");
 }
 
-void AllTransferJobsScreen::addJobDetails(unsigned int y, MenuSelectOption & mso, Pointer<TransferJob> tj) {
+void AllTransferJobsScreen::addJobDetails(unsigned int y, MenuSelectOption & mso, std::shared_ptr<TransferJob> tj) {
   std::string timespent = util::simpleTimeFormat(tj->timeSpent());
   bool running = tj->getStatus() == TRANSFERJOB_RUNNING;
   bool started = tj->getStatus() != TRANSFERJOB_QUEUED;

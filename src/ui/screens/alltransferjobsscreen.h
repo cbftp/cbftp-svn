@@ -1,9 +1,8 @@
 #pragma once
 
 #include <map>
+#include <memory>
 #include <string>
-
-#include "../../core/pointer.h"
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
@@ -22,7 +21,7 @@ public:
   std::string getInfoLabel() const;
   std::string getInfoText() const;
   static void addJobTableHeader(unsigned int, MenuSelectOption &, const std::string &);
-  static void addJobDetails(unsigned int, MenuSelectOption &, Pointer<TransferJob>);
+  static void addJobDetails(unsigned int, MenuSelectOption &, std::shared_ptr<TransferJob>);
 private:
   static void addJobTableRow(unsigned int, MenuSelectOption &, unsigned int, bool, const std::string &,
       const std::string &, const std::string &, const std::string &, const std::string &, const std::string &,

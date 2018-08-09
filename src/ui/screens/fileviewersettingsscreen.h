@@ -21,7 +21,7 @@ private:
   std::string currentlegendtext;
   std::string defaultlegendtext;
   bool active;
-  Pointer<MenuSelectOptionElement> activeelement;
+  std::shared_ptr<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;
   ExternalFileViewing * efv;
   LocalStorage * ls;

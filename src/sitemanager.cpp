@@ -21,7 +21,7 @@
 #define DEFAULTSSL true
 #define DEFAULTSSLTRANSFER SITE_SSL_PREFER_OFF
 
-bool siteNameComparator(const Pointer<Site> & a, const Pointer<Site> & b) {
+bool siteNameComparator(const std::shared_ptr<Site> & a, const std::shared_ptr<Site> & b) {
   return a->getName().compare(b->getName()) < 0;
 }
 
@@ -41,23 +41,23 @@ int SiteManager::getNumSites() const {
   return sites.size();
 }
 
-Pointer<Site> SiteManager::getSite(const std::string & site) const {
-  std::vector<Pointer<Site> >::const_iterator it;
+std::shared_ptr<Site> SiteManager::getSite(const std::string & site) const {
+  std::vector<std::shared_ptr<Site> >::const_iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {
     if ((*it)->getName().compare(site) == 0) {
       return *it;
     }
   }
-  return Pointer<Site>();
+  return std::shared_ptr<Site>();
 }
 
-Pointer<Site> SiteManager::getSite(unsigned int index) const {
+std::shared_ptr<Site> SiteManager::getSite(unsigned int index) const {
   util::assert(index < sites.size());
   return sites[index];
 }
 
 void SiteManager::deleteSite(const std::string & site) {
-  std::vector<Pointer<Site> >::iterator it;
+  std::vector<std::shared_ptr<Site> >::iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {
     if ((*it)->getName().compare(site) == 0) {
       removeSitePairsForSite(*it);
@@ -68,9 +68,9 @@ void SiteManager::deleteSite(const std::string & site) {
   }
 }
 
-void SiteManager::addSite(const Pointer<Site> & site) {
+void SiteManager::addSite(const std::shared_ptr<Site> & site) {
   sites.push_back(site);
-  std::set<Pointer<Site> >::const_iterator it;
+  std::set<std::shared_ptr<Site> >::const_iterator it;
   for (it = site->exceptSourceSitesBegin(); it != site->exceptSourceSitesEnd(); it++) {
     addExceptSourceForSite(site->getName(), (*it)->getName());
   }
@@ -81,7 +81,7 @@ void SiteManager::addSite(const Pointer<Site> & site) {
   sortSites();
 }
 
-void SiteManager::addSiteLoad(const Pointer<Site> & site) {
+void SiteManager::addSiteLoad(const std::shared_ptr<Site> & site) {
   sites.push_back(site);
 }
 
@@ -89,11 +89,11 @@ void SiteManager::sortSites() {
   std::sort(sites.begin(), sites.end(), siteNameComparator);
 }
 
-std::vector<Pointer<Site> >::const_iterator SiteManager::begin() const {
+std::vector<std::shared_ptr<Site> >::const_iterator SiteManager::begin() const {
   return sites.begin();
 }
 
-std::vector<Pointer<Site> >::const_iterator SiteManager::end() const {
+std::vector<std::shared_ptr<Site> >::const_iterator SiteManager::end() const {
   return sites.end();
 }
 
@@ -162,7 +162,7 @@ void SiteManager::setDefaultSSLTransferPolicy(int policy) {
 }
 
 void SiteManager::proxyRemoved(const std::string & removedproxy) {
-  std::vector<Pointer<Site> >::iterator it;
+  std::vector<std::shared_ptr<Site> >::iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {
     if ((*it)->getProxyType() == SITE_PROXY_USE && (*it)->getProxy() == removedproxy) {
       (*it)->setProxyType(SITE_PROXY_GLOBAL);
@@ -171,20 +171,20 @@ void SiteManager::proxyRemoved(const std::string & removedproxy) {
   }
 }
 
-void SiteManager::removeSitePairsForSite(const Pointer<Site> & site) {
-  std::vector<Pointer<Site> >::iterator it;
+void SiteManager::removeSitePairsForSite(const std::shared_ptr<Site> & site) {
+  std::vector<std::shared_ptr<Site> >::iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {
     (*it)->removeExceptSite(site);
   }
 }
 
 void SiteManager::resetSitePairsForSite(const std::string & site) {
-  Pointer<Site> sitep = getSite(site);
+  std::shared_ptr<Site> sitep = getSite(site);
   if (!sitep) {
     return;
   }
   sitep->clearExceptSites();
-  std::vector<Pointer<Site> >::iterator it;
+  std::vector<std::shared_ptr<Site> >::iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {
     if (*it == sitep) {
       continue;
@@ -205,8 +205,8 @@ void SiteManager::resetSitePairsForSite(const std::string & site) {
 }
 
 void SiteManager::addExceptSourceForSite(const std::string & site, const std::string & exceptsite) {
-  Pointer<Site> sitep = getSite(site);
-  Pointer<Site> exceptsitep = getSite(exceptsite);
+  std::shared_ptr<Site> sitep = getSite(site);
+  std::shared_ptr<Site> exceptsitep = getSite(exceptsite);
   if (!sitep || !exceptsitep || sitep == exceptsitep) {
     return;
   }
@@ -221,8 +221,8 @@ void SiteManager::addExceptSourceForSite(const std::string & site, const std::st
 }
 
 void SiteManager::addExceptTargetForSite(const std::string & site, const std::string & exceptsite) {
-  Pointer<Site> sitep = getSite(site);
-  Pointer<Site> exceptsitep = getSite(exceptsite);
+  std::shared_ptr<Site> sitep = getSite(site);
+  std::shared_ptr<Site> exceptsitep = getSite(exceptsite);
   if (!sitep || !exceptsitep || sitep == exceptsitep) {
     return;
   }

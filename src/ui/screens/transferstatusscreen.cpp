@@ -22,7 +22,7 @@ TransferStatusScreen::~TransferStatusScreen() {
 
 }
 
-void TransferStatusScreen::initialize(unsigned int row, unsigned int col, Pointer<TransferStatus> ts) {
+void TransferStatusScreen::initialize(unsigned int row, unsigned int col, std::shared_ptr<TransferStatus> ts) {
   this->ts = ts;
   autoupdate = true;
   firstdraw = true;
@@ -203,7 +203,7 @@ bool TransferStatusScreen::keyPressed(unsigned int ch) {
   return false;
 }
 
-void TransferStatusScreen::abortTransfer(Pointer<TransferStatus> ts) {
+void TransferStatusScreen::abortTransfer(std::shared_ptr<TransferStatus> ts) {
   if (ts->getState() == TRANSFERSTATUS_STATE_IN_PROGRESS) {
     int type = ts->getType();
     if (type == TRANSFERSTATUS_TYPE_DOWNLOAD || type == TRANSFERSTATUS_TYPE_FXP) {

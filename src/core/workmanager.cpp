@@ -153,7 +153,7 @@ void WorkManager::dispatchAsyncTaskComplete(AsyncTask & task) {
   event.post();
 }
 
-void WorkManager::deferDelete(Pointer<EventReceiver> er) {
+void WorkManager::deferDelete(std::shared_ptr<EventReceiver> er) {
   lowprioqueue.push(Event(er, WORK_DELETE));
   event.post();
 }

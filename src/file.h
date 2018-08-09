@@ -1,8 +1,7 @@
 #pragma once
 
+#include <memory>
 #include <string>
-
-#include "core/pointer.h"
 
 class Site;
 class CommandOwner;
@@ -23,8 +22,8 @@ private:
   std::string group;
   std::string lastmodified;
   unsigned int updatespeed;
-  Pointer<Site> updatesrc;
-  Pointer<Site> updatedst;
+  std::shared_ptr<Site> updatesrc;
+  std::shared_ptr<Site> updatedst;
   CommandOwner * updatecosrc;
   CommandOwner * updatecodst;
   bool updateflag;
@@ -37,7 +36,7 @@ private:
 protected:
   File(const std::string &, const std::string &);
   File(const std::string &, int);
-  void setUpdateFlag(const Pointer<Site> &, const Pointer<Site> &, CommandOwner *, CommandOwner *, unsigned int);
+  void setUpdateFlag(const std::shared_ptr<Site> &, const std::shared_ptr<Site> &, CommandOwner *, CommandOwner *, unsigned int);
   void unsetUpdateFlag();
   bool setSize(unsigned long long int);
   bool setLastModified(const std::string &);
@@ -59,8 +58,8 @@ public:
   std::string getName() const;
   std::string getLinkTarget() const;
   std::string getExtension() const;
-  const Pointer<Site> & getUpdateSrc() const;
-  const Pointer<Site> & getUpdateDst() const;
+  const std::shared_ptr<Site> & getUpdateSrc() const;
+  const std::shared_ptr<Site> & getUpdateDst() const;
   CommandOwner * getUpdateSrcCommandOwner() const;
   CommandOwner * getUpdateDstCommandOwner() const;
   unsigned int getUpdateSpeed() const;

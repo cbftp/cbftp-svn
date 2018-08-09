@@ -51,7 +51,7 @@ Event::Event(EventReceiver * er, int type, int numdata, const std::string & strd
 {
 }
 
-Event::Event(Pointer<EventReceiver> & er, int type) :
+Event::Event(std::shared_ptr<EventReceiver> & er, int type) :
   preceiver(er),
   type(type)
 {

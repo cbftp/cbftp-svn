@@ -1,8 +1,7 @@
 #pragma once
 
 #include <list>
-
-#include "../../core/pointer.h"
+#include <memory>
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
@@ -27,7 +26,7 @@ private:
   std::string defaultlegendtext;
   bool active;
   std::string site;
-  Pointer<MenuSelectOptionElement> activeelement;
+  std::shared_ptr<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;
   std::string release;
   UIFileList filelist;

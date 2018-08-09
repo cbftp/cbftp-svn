@@ -24,17 +24,17 @@ enum RefreshState {
   REFRESH_FINAL_OK
 };
 
-TransferJob::TransferJob(unsigned int id, const Pointer<SiteLogic> & srcsl, FileList * srcfilelist, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
+TransferJob::TransferJob(unsigned int id, const std::shared_ptr<SiteLogic> & srcsl, FileList * srcfilelist, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
   downloadJob(id, srcsl, srcfilelist, srcfile, dstpath, dstfile);
 }
 
-TransferJob::TransferJob(unsigned int id, const Pointer<SiteLogic> & srcsl, const Path & srcpath, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
+TransferJob::TransferJob(unsigned int id, const std::shared_ptr<SiteLogic> & srcsl, const Path & srcpath, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
   FileList * srcfilelist = new FileList(srcsl->getSite()->getUser(), srcpath);
   downloadJob(id, srcsl, srcfilelist, srcfile, dstpath, dstfile);
 }
 
-void TransferJob::downloadJob(unsigned int id, const Pointer<SiteLogic> & srcsl, FileList * srcfilelist, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
-  init(id, TRANSFERJOB_DOWNLOAD, srcsl, Pointer<SiteLogic>(), srcfilelist->getPath(), dstpath, srcfile, dstfile);
+void TransferJob::downloadJob(unsigned int id, const std::shared_ptr<SiteLogic> & srcsl, FileList * srcfilelist, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
+  init(id, TRANSFERJOB_DOWNLOAD, srcsl, std::shared_ptr<SiteLogic>(), srcfilelist->getPath(), dstpath, srcfile, dstfile);
   srcfilelists[""] = srcfilelist;
   updateLocalFileLists();
   if (srcfilelist->getState() == FILELIST_LISTED) {
@@ -45,17 +45,17 @@ void TransferJob::downloadJob(unsigned int id, const Pointer<SiteLogic> & srcsl,
   }
 }
 
-TransferJob::TransferJob(unsigned int id, const Path & srcpath, const std::string & srcfile, const Pointer<SiteLogic> & dstsl, FileList * dstfilelist, const std::string & dstfile) {
+TransferJob::TransferJob(unsigned int id, const Path & srcpath, const std::string & srcfile, const std::shared_ptr<SiteLogic> & dstsl, FileList * dstfilelist, const std::string & dstfile) {
   uploadJob(id, srcpath, srcfile, dstsl, dstfilelist, dstfile);
 }
 
-TransferJob::TransferJob(unsigned int id, const Path & srcpath, const std::string & srcfile, const Pointer<SiteLogic> & dstsl, const Path & dstpath, const std::string & dstfile) {
+TransferJob::TransferJob(unsigned int id, const Path & srcpath, const std::string & srcfile, const std::shared_ptr<SiteLogic> & dstsl, const Path & dstpath, const std::string & dstfile) {
   FileList * dstfilelist = new FileList(dstsl->getSite()->getUser(), dstpath);
   uploadJob(id, srcpath, srcfile, dstsl, dstfilelist, dstfile);
 }
 
-void TransferJob::uploadJob(unsigned int id, const Path & srcpath, const std::string & srcfile, const Pointer<SiteLogic> & dstsl, FileList * dstfilelist, const std::string & dstfile) {
-  init(id, TRANSFERJOB_UPLOAD, Pointer<SiteLogic>(), dstsl, srcpath, dstfilelist->getPath(), srcfile, dstfile);
+void TransferJob::uploadJob(unsigned int id, const Path & srcpath, const std::string & srcfile, const std::shared_ptr<SiteLogic> & dstsl, FileList * dstfilelist, const std::string & dstfile) {
+  init(id, TRANSFERJOB_UPLOAD, std::shared_ptr<SiteLogic>(), dstsl, srcpath, dstfilelist->getPath(), srcfile, dstfile);
   dstfilelists[""] = dstfilelist;
   updateLocalFileLists();
   if (dstfilelist->getState() == FILELIST_LISTED) {
@@ -66,17 +66,17 @@ void TransferJob::uploadJob(unsigned int id, const Path & srcpath, const std::st
   }
 }
 
-TransferJob::TransferJob(unsigned int id, const Pointer<SiteLogic> & srcsl, FileList * srcfilelist, const std::string & srcfile, const Pointer<SiteLogic> & dstsl, FileList * dstfilelist, const std::string & dstfile) {
+TransferJob::TransferJob(unsigned int id, const std::shared_ptr<SiteLogic> & srcsl, FileList * srcfilelist, const std::string & srcfile, const std::shared_ptr<SiteLogic> & dstsl, FileList * dstfilelist, const std::string & dstfile) {
   fxpJob(id, srcsl, srcfilelist, srcfile, dstsl, dstfilelist, dstfile);
 }
 
-TransferJob::TransferJob(unsigned int id, const Pointer<SiteLogic> & srcsl, const Path & srcpath, const std::string & srcfile, const Pointer<SiteLogic> & dstsl, const Path & dstpath, const std::string & dstfile) {
+TransferJob::TransferJob(unsigned int id, const std::shared_ptr<SiteLogic> & srcsl, const Path & srcpath, const std::string & srcfile, const std::shared_ptr<SiteLogic> & dstsl, const Path & dstpath, const std::string & dstfile) {
   FileList * srcfilelist = new FileList(srcsl->getSite()->getUser(), srcpath);
   FileList * dstfilelist = new FileList(dstsl->getSite()->getUser(), dstpath);
   fxpJob(id, srcsl, srcfilelist, srcfile, dstsl, dstfilelist, dstfile);
 }
 
-void TransferJob::fxpJob(unsigned int id, const Pointer<SiteLogic> & srcsl, FileList * srcfilelist, const std::string & srcfile, const Pointer<SiteLogic> & dstsl, FileList * dstfilelist, const std::string & dstfile) {
+void TransferJob::fxpJob(unsigned int id, const std::shared_ptr<SiteLogic> & srcsl, FileList * srcfilelist, const std::string & srcfile, const std::shared_ptr<SiteLogic> & dstsl, FileList * dstfilelist, const std::string & dstfile) {
   init(id, TRANSFERJOB_FXP, srcsl, dstsl, srcfilelist->getPath(), dstfilelist->getPath(), srcfile, dstfile);
   srcfilelists[""] = srcfilelist;
   dstfilelists[""] = dstfilelist;
@@ -121,47 +121,47 @@ const Path & TransferJob::getPath(bool source) const {
   }
 }
 
-std::map<std::string, FileList *>::const_iterator TransferJob::srcFileListsBegin() const {
+std::unordered_map<std::string, FileList *>::const_iterator TransferJob::srcFileListsBegin() const {
   return srcfilelists.begin();
 }
 
-std::map<std::string, FileList *>::const_iterator TransferJob::srcFileListsEnd() const {
+std::unordered_map<std::string, FileList *>::const_iterator TransferJob::srcFileListsEnd() const {
   return srcfilelists.end();
 }
 
-std::map<std::string, FileList *>::const_iterator TransferJob::dstFileListsBegin() const {
+std::unordered_map<std::string, FileList *>::const_iterator TransferJob::dstFileListsBegin() const {
   return dstfilelists.begin();
 }
 
-std::map<std::string, FileList *>::const_iterator TransferJob::dstFileListsEnd() const {
+std::unordered_map<std::string, FileList *>::const_iterator TransferJob::dstFileListsEnd() const {
   return dstfilelists.end();
 }
 
-std::map<std::string, Pointer<LocalFileList> >::const_iterator TransferJob::localFileListsBegin() const {
+std::unordered_map<std::string, std::shared_ptr<LocalFileList> >::const_iterator TransferJob::localFileListsBegin() const {
   return localfilelists.begin();
 }
 
-std::map<std::string, Pointer<LocalFileList> >::const_iterator TransferJob::localFileListsEnd() const {
+std::unordered_map<std::string, std::shared_ptr<LocalFileList> >::const_iterator TransferJob::localFileListsEnd() const {
   return localfilelists.end();
 }
 
-std::map<std::string, unsigned long long int>::const_iterator TransferJob::pendingTransfersBegin() const {
+std::unordered_map<std::string, unsigned long long int>::const_iterator TransferJob::pendingTransfersBegin() const {
   return pendingtransfers.begin();
 }
 
-std::map<std::string, unsigned long long int>::const_iterator TransferJob::pendingTransfersEnd() const {
+std::unordered_map<std::string, unsigned long long int>::const_iterator TransferJob::pendingTransfersEnd() const {
   return pendingtransfers.end();
 }
 
-std::list<Pointer<TransferStatus> >::const_iterator TransferJob::transfersBegin() const {
+std::list<std::shared_ptr<TransferStatus> >::const_iterator TransferJob::transfersBegin() const {
   return transfers.begin();
 }
 
-std::list<Pointer<TransferStatus> >::const_iterator TransferJob::transfersEnd() const {
+std::list<std::shared_ptr<TransferStatus> >::const_iterator TransferJob::transfersEnd() const {
   return transfers.end();
 }
 
-void TransferJob::init(unsigned int id, TransferJobType type, const Pointer<SiteLogic> & srcsl, const Pointer<SiteLogic> & dstsl, const Path & srcpath, const Path & dstpath, const std::string & srcfile, const std::string & dstfile) {
+void TransferJob::init(unsigned int id, TransferJobType type, const std::shared_ptr<SiteLogic> & srcsl, const std::shared_ptr<SiteLogic> & dstsl, const Path & srcpath, const Path & dstpath, const std::string & srcfile, const std::string & dstfile) {
   this->id = id;
   this->type = type;
   this->src = srcsl;
@@ -189,10 +189,10 @@ void TransferJob::init(unsigned int id, TransferJobType type, const Pointer<Site
   timequeued = util::ctimeLog();
   timestarted = "-";
   if (!!src) {
-    srcsitetransferjob = makePointer<SiteTransferJob>(this, true);
+    srcsitetransferjob = std::make_shared<SiteTransferJob>(this, true);
   }
   if (!!dst) {
-    dstsitetransferjob = makePointer<SiteTransferJob>(this, false);
+    dstsitetransferjob = std::make_shared<SiteTransferJob>(this, false);
   }
 }
 
@@ -218,8 +218,8 @@ bool TransferJob::isDone() const {
 
 bool TransferJob::wantsList(bool source) {
   if (source && (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP)) {
-    for (std::map<std::string, FileList *>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
-      std::map<FileList *, int>::iterator it2 = filelistsrefreshed.find(it->second);
+    for (std::unordered_map<std::string, FileList *>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
+      std::unordered_map<FileList *, int>::iterator it2 = filelistsrefreshed.find(it->second);
       FileListState state = it->second->getState();
       if ((state != FILELIST_LISTED && state != FILELIST_NONEXISTENT) || (it2 != filelistsrefreshed.end() &&
           (it2->second == REFRESH_NOW || it2->second == REFRESH_FINAL_NOW)))
@@ -230,8 +230,8 @@ bool TransferJob::wantsList(bool source) {
     }
   }
   else if (!source && (type == TRANSFERJOB_UPLOAD || type == TRANSFERJOB_FXP)) {
-    for (std::map<std::string, FileList *>::iterator it = dstfilelists.begin(); it != dstfilelists.end(); it++) {
-      std::map<FileList *, int>::iterator it2 = filelistsrefreshed.find(it->second);
+    for (std::unordered_map<std::string, FileList *>::iterator it = dstfilelists.begin(); it != dstfilelists.end(); it++) {
+      std::unordered_map<FileList *, int>::iterator it2 = filelistsrefreshed.find(it->second);
       FileListState state = it->second->getState();
       if ((state != FILELIST_LISTED && state != FILELIST_NONEXISTENT) || (it2 != filelistsrefreshed.end() &&
           (it2->second == REFRESH_NOW || it2->second == REFRESH_FINAL_NOW)))
@@ -247,9 +247,9 @@ bool TransferJob::wantsList(bool source) {
   return false;
 }
 
-Pointer<LocalFileList> TransferJob::wantedLocalDstList(const std::string & subdir) {
+std::shared_ptr<LocalFileList> TransferJob::wantedLocalDstList(const std::string & subdir) {
   if (localfilelists.find(subdir) == localfilelists.end()) {
-    localfilelists[subdir] = makePointer<LocalFileList>(dstpath / subdir);
+    localfilelists[subdir] = std::make_shared<LocalFileList>(dstpath / subdir);
   }
   return localfilelists.at(subdir);
 }
@@ -262,7 +262,7 @@ FileList * TransferJob::getListTarget(bool source) const {
 }
 
 void TransferJob::checkFileListExists(FileList * fl) const {
-  std::map<std::string, FileList *>::const_iterator it;
+  std::unordered_map<std::string, FileList *>::const_iterator it;
   for (it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
     if (it->second == fl) {
       return;
@@ -278,7 +278,7 @@ void TransferJob::checkFileListExists(FileList * fl) const {
 
 void TransferJob::fileListUpdated(bool source, FileList * fl) {
   checkFileListExists(fl);
-  std::map<FileList *, int>::iterator it = filelistsrefreshed.find(fl);
+  std::unordered_map<FileList *, int>::iterator it = filelistsrefreshed.find(fl);
   if (it == filelistsrefreshed.end()) {
 
     filelistsrefreshed[fl] = REFRESH_NOW;
@@ -331,7 +331,7 @@ void TransferJob::fileListUpdated(bool source, FileList * fl) {
 }
 
 FileList * TransferJob::findDstList(const std::string & sub) const {
-  std::map<std::string, FileList *>::const_iterator it = dstfilelists.find(sub);
+  std::unordered_map<std::string, FileList *>::const_iterator it = dstfilelists.find(sub);
   if (it != dstfilelists.end()) {
     return it->second;
   }
@@ -339,7 +339,7 @@ FileList * TransferJob::findDstList(const std::string & sub) const {
 }
 
 FileList * TransferJob::getFileListForFullPath(bool source, const Path & path) const {
-  std::map<std::string, FileList *>::const_iterator it;
+  std::unordered_map<std::string, FileList *>::const_iterator it;
   if (source) {
     for (it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
       if (it->second->getPath() == path) {
@@ -357,22 +357,22 @@ FileList * TransferJob::getFileListForFullPath(bool source, const Path & path) c
   return NULL;
 }
 
-Pointer<LocalFileList> TransferJob::findLocalFileList(const std::string & subpath) const {
-  std::map<std::string, Pointer<LocalFileList> >::const_iterator it = localfilelists.find(subpath);
+std::shared_ptr<LocalFileList> TransferJob::findLocalFileList(const std::string & subpath) const {
+  std::unordered_map<std::string, std::shared_ptr<LocalFileList> >::const_iterator it = localfilelists.find(subpath);
   if (it != localfilelists.end()) {
     return it->second;
   }
-  return Pointer<LocalFileList>();
+  return std::shared_ptr<LocalFileList>();
 }
 
-void TransferJob::addSubDirectoryFileLists(std::map<std::string, FileList *> & filelists, FileList * filelist, const Path & subpath) {
-  std::map<std::string, File *>::iterator it;
+void TransferJob::addSubDirectoryFileLists(std::unordered_map<std::string, FileList *> & filelists, FileList * filelist, const Path & subpath) {
+  std::unordered_map<std::string, File *>::iterator it;
   for(it = filelist->begin(); it != filelist->end(); it++) {
     addSubDirectoryFileLists(filelists, filelist, subpath, it->second);
   }
 }
 
-void TransferJob::addSubDirectoryFileLists(std::map<std::string, FileList *> & filelists, FileList * filelist, const Path & subpath, File * file) {
+void TransferJob::addSubDirectoryFileLists(std::unordered_map<std::string, FileList *> & filelists, FileList * filelist, const Path & subpath, File * file) {
   if (file->isDirectory()) {
     SkipListMatch match = !!dst ? dst->getSite()->getSkipList().check(file->getName(), true, false)
                                 : global->getSkipList()->check(file->getName(), true, false);
@@ -389,11 +389,11 @@ void TransferJob::addSubDirectoryFileLists(std::map<std::string, FileList *> & f
   }
 }
 
-const Pointer<SiteLogic> & TransferJob::getSrc() const {
+const std::shared_ptr<SiteLogic> & TransferJob::getSrc() const {
   return src;
 }
 
-const Pointer<SiteLogic> & TransferJob::getDst() const {
+const std::shared_ptr<SiteLogic> & TransferJob::getDst() const {
   return dst;
 }
 
@@ -422,7 +422,7 @@ bool TransferJob::refreshOrAlmostDone() {
   }
   bool allfinaldone = true;
   bool finalset = false;
-  for (std::map<FileList *, int>::iterator it = filelistsrefreshed.begin(); it != filelistsrefreshed.end(); it++) {
+  for (std::unordered_map<FileList *, int>::iterator it = filelistsrefreshed.begin(); it != filelistsrefreshed.end(); it++) {
     if (it->second == REFRESH_FINAL_OK) {
       finalset = true;
     }
@@ -442,17 +442,17 @@ bool TransferJob::refreshOrAlmostDone() {
     return false;
   }
   else {
-    for (std::map<std::string, FileList *>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
+    for (std::unordered_map<std::string, FileList *>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
       if (it->second->getState() != FILELIST_NONEXISTENT) {
-        std::map<FileList *, int>::iterator it2 = filelistsrefreshed.find(it->second);
+        std::unordered_map<FileList *, int>::iterator it2 = filelistsrefreshed.find(it->second);
         if (it2 == filelistsrefreshed.end() || it2->second != REFRESH_FINAL_OK) {
           filelistsrefreshed[it->second] = REFRESH_FINAL_NOW;
         }
       }
     }
-    for (std::map<std::string, FileList *>::iterator it = dstfilelists.begin(); it != dstfilelists.end(); it++) {
+    for (std::unordered_map<std::string, FileList *>::iterator it = dstfilelists.begin(); it != dstfilelists.end(); it++) {
       if (it->second->getState() != FILELIST_NONEXISTENT) {
-        std::map<FileList *, int>::iterator it2 = filelistsrefreshed.find(it->second);
+        std::unordered_map<FileList *, int>::iterator it2 = filelistsrefreshed.find(it->second);
         if (it2 == filelistsrefreshed.end() || it2->second != REFRESH_FINAL_OK) {
           filelistsrefreshed[it->second] = REFRESH_FINAL_NOW;
         }
@@ -466,7 +466,7 @@ bool TransferJob::refreshOrAlmostDone() {
 }
 
 bool TransferJob::anyListNeedsRefreshing() const {
-  for (std::map<FileList *, int>::const_iterator it = filelistsrefreshed.begin(); it != filelistsrefreshed.end(); it++) {
+  for (std::unordered_map<FileList *, int>::const_iterator it = filelistsrefreshed.begin(); it != filelistsrefreshed.end(); it++) {
     if (it->second == REFRESH_NOW || it->second == REFRESH_FINAL_NOW) {
       return true;
     }
@@ -491,7 +491,7 @@ void TransferJob::addPendingTransfer(const Path & name, unsigned long long int s
   pendingtransfers[name.toString()] = size;
 }
 
-void TransferJob::addTransfer(const Pointer<TransferStatus> & ts) {
+void TransferJob::addTransfer(const std::shared_ptr<TransferStatus> & ts) {
   if (!!ts && ts->getState() != TRANSFERSTATUS_STATE_FAILED) {
     idletime = 0;
     transfers.push_front(ts);
@@ -518,10 +518,10 @@ void TransferJob::updateStatus() {
   unsigned long long int aggregatedsize = 0;
   unsigned long long int aggregatedsizetransferred = 0;
   bool ongoingtransfers = false;
-  std::set<std::string> dstpaths;
-  std::set<std::string> filescompleted;
-  std::set<std::string> filesfailed;
-  for (std::list<Pointer<TransferStatus> >::const_iterator it = transfersBegin(); it != transfersEnd(); it++) {
+  std::unordered_set<std::string> dstpaths;
+  std::unordered_set<std::string> filescompleted;
+  std::unordered_set<std::string> filesfailed;
+  for (std::list<std::shared_ptr<TransferStatus> >::const_iterator it = transfersBegin(); it != transfersEnd(); it++) {
     if (pendingtransfers.find((*it)->getFile()) != pendingtransfers.end()) {
       pendingtransfers.erase((*it)->getFile());
     }
@@ -548,10 +548,10 @@ void TransferJob::updateStatus() {
       filesfailed.insert(subpathfile.toString());
     }
   }
-  for (std::map<std::string, unsigned long long int>::const_iterator it = pendingTransfersBegin(); it != pendingTransfersEnd(); it++) {
+  for (std::unordered_map<std::string, unsigned long long int>::const_iterator it = pendingTransfersBegin(); it != pendingTransfersEnd(); it++) {
     aggregatedsize += it->second;
   }
-  for (std::set<std::string>::const_iterator it = filescompleted.begin(); it != filescompleted.end(); it++) {
+  for (std::unordered_set<std::string>::const_iterator it = filescompleted.begin(); it != filescompleted.end(); it++) {
     if (filesfailed.find(*it) != filesfailed.end()) {
       filesfailed.erase(*it);
     }
@@ -640,7 +640,7 @@ void TransferJob::countTotalFiles() {
     case TRANSFERJOB_FXP:
     {
       int files = 0;
-      for (std::map<std::string, FileList *>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
+      for (std::unordered_map<std::string, FileList *>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
         if (it->first == "") {
           File * f = it->second->getFile(srcfile);
           if (f != NULL && !f->isDirectory()) {
@@ -656,10 +656,10 @@ void TransferJob::countTotalFiles() {
     case TRANSFERJOB_UPLOAD:
     {
       int files = 0;
-      std::map<std::string, Pointer<LocalFileList> >::const_iterator it;
+      std::unordered_map<std::string, std::shared_ptr<LocalFileList> >::const_iterator it;
       for (it = localfilelists.begin(); it != localfilelists.end(); it++) {
         if (it->first == "") {
-          std::map<std::string, LocalFile>::const_iterator it2 = it->second->find(srcfile);
+          std::unordered_map<std::string, LocalFile>::const_iterator it2 = it->second->find(srcfile);
           if (it2 != it->second->end() && !it2->second.isDirectory()) {
             ++files;
           }
@@ -708,10 +708,10 @@ void TransferJob::setDone() {
 void TransferJob::updateLocalFileLists() {
   localfilelists.clear();
   Path basepath = type == TRANSFERJOB_DOWNLOAD ? dstpath : srcpath;
-  Pointer<LocalFileList> base = global->getLocalStorage()->getLocalFileList(basepath);
+  std::shared_ptr<LocalFileList> base = global->getLocalStorage()->getLocalFileList(basepath);
   if (!!base) {
     localfilelists[""] = base;
-    std::map<std::string, LocalFile>::const_iterator it = base->find(srcfile);
+    std::unordered_map<std::string, LocalFile>::const_iterator it = base->find(srcfile);
     if (it != base->end() && it->second.isDirectory()) {
       updateLocalFileLists(basepath, basepath / srcfile);
     }
@@ -719,7 +719,7 @@ void TransferJob::updateLocalFileLists() {
 }
 
 void TransferJob::updateLocalFileLists(const Path & basepath, const Path & path) {
-  Pointer<LocalFileList> filelist = global->getLocalStorage()->getLocalFileList(path);
+  std::shared_ptr<LocalFileList> filelist = global->getLocalStorage()->getLocalFileList(path);
   if (!!filelist) {
     std::string subpath = (path - basepath).toString();
     localfilelists[subpath] = filelist;
@@ -733,7 +733,7 @@ void TransferJob::updateLocalFileLists(const Path & basepath, const Path & path)
       dstfilelists[subpath] = fl;
       filelistsrefreshed[fl] = REFRESH_NOW;
     }
-    std::map<std::string, LocalFile>::const_iterator it;
+    std::unordered_map<std::string, LocalFile>::const_iterator it;
     for (it = filelist->begin(); it != filelist->end(); it++) {
       if (it->second.isDirectory()) {
         updateLocalFileLists(basepath, path / it->first);
@@ -743,16 +743,16 @@ void TransferJob::updateLocalFileLists(const Path & basepath, const Path & path)
 }
 
 bool TransferJob::hasFailedTransfer(const std::string & dstpath) const {
-  std::map<std::string, int>::const_iterator it = transferattempts.find(dstpath);
+  std::unordered_map<std::string, int>::const_iterator it = transferattempts.find(dstpath);
   return it != transferattempts.end() && it->second >= MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP;
 }
 
-void TransferJob::transferSuccessful(const Pointer<TransferStatus> & ts) {
+void TransferJob::transferSuccessful(const std::shared_ptr<TransferStatus> & ts) {
   idletime = 0;
   addTransferAttempt(ts, true);
 }
 
-void TransferJob::transferFailed(const Pointer<TransferStatus> & ts, int) {
+void TransferJob::transferFailed(const std::shared_ptr<TransferStatus> & ts, int) {
   if (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) {
     checkFileListExists(ts->getSourceFileList());
   }
@@ -771,9 +771,9 @@ void TransferJob::transferFailed(const Pointer<TransferStatus> & ts, int) {
   addTransferAttempt(ts, false);
 }
 
-void TransferJob::addTransferAttempt(const Pointer<TransferStatus> & ts, bool success) {
+void TransferJob::addTransferAttempt(const std::shared_ptr<TransferStatus> & ts, bool success) {
   std::string dstpath = (Path(ts->getTargetPath()) / ts->getFile()).toString();
-  std::map<std::string, int>::iterator it = transferattempts.find(dstpath);
+  std::unordered_map<std::string, int>::iterator it = transferattempts.find(dstpath);
   if (it == transferattempts.end()) {
     transferattempts[dstpath] = 1;
   }
@@ -785,10 +785,10 @@ void TransferJob::addTransferAttempt(const Pointer<TransferStatus> & ts, bool su
   }
 }
 
-Pointer<SiteTransferJob> & TransferJob::getSrcTransferJob() {
+std::shared_ptr<SiteTransferJob> & TransferJob::getSrcTransferJob() {
   return srcsitetransferjob;
 }
 
-Pointer<SiteTransferJob> & TransferJob::getDstTransferJob() {
+std::shared_ptr<SiteTransferJob> & TransferJob::getDstTransferJob() {
   return dstsitetransferjob;
 }

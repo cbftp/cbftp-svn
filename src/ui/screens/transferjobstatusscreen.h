@@ -1,12 +1,11 @@
 #pragma once
 
-#include <string>
 #include <map>
+#include <memory>
+#include <string>
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
-
-#include "../../core/pointer.h"
 
 class TransferJob;
 class Ui;
@@ -24,17 +23,17 @@ public:
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
-  static std::string getRoute(Pointer<TransferJob>);
+  static std::string getRoute(std::shared_ptr<TransferJob>);
 private:
-  void addTransferDetails(unsigned int, Pointer<TransferStatus>);
+  void addTransferDetails(unsigned int, std::shared_ptr<TransferStatus>);
   void addTransferDetails(unsigned int, const std::string &, const std::string &, const std::string &,
       const std::string &, const std::string &, const std::string &, int);
-  Pointer<TransferJob> transferjob;
+  std::shared_ptr<TransferJob> transferjob;
   MenuSelectOption table;
   MenuSelectOption mso;
-  std::map<Pointer<MenuSelectOptionElement>, int> progressmap;
+  std::map<std::shared_ptr<MenuSelectOptionElement>, int> progressmap;
   bool active;
-  Pointer<MenuSelectOptionElement> activeelement;
+  std::shared_ptr<MenuSelectOptionElement> activeelement;
   std::string defaultlegendtext;
   std::string currentlegendtext;
   std::string abortedlegendtext;

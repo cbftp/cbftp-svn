@@ -35,8 +35,8 @@ void ScoreBoardScreen::redraw() {
   ui->erase();
   unsigned int y = 0;
   table.clear();
-  Pointer<MenuSelectAdjustableLine> msal;
-  Pointer<MenuSelectOptionTextButton> msotb;
+  std::shared_ptr<MenuSelectAdjustableLine> msal;
+  std::shared_ptr<MenuSelectOptionTextButton> msotb;
   msal = table.addAdjustableLine();
   msotb = table.addTextButtonNoContent(y, 1, "filename", "FILE NAME");
   msal->addElement(msotb, 2, 0, RESIZE_CUTEND, true);
@@ -66,7 +66,7 @@ void ScoreBoardScreen::redraw() {
   table.adjustLines(col - 3);
   bool highlight;
   for (unsigned int i = 0; i < table.size(); i++) {
-    Pointer<ResizableElement> re = table.getElement(i);
+    std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(i));
     highlight = false;
     if (table.getSelectionPointer() == i) {
       //highlight = true; // later problem

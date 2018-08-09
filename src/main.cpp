@@ -33,7 +33,7 @@ public:
     TickPoke * tp = new TickPoke(wm);
     IOManager * iom = new IOManager(wm, tp);
 
-    Pointer<EventLog> el = makePointer<EventLog>();
+    std::shared_ptr<EventLog> el = std::make_shared<EventLog>();
     iom->setLogger(el);
 
     global->linkCore(wm, tp, iom, el);

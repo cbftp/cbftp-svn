@@ -44,7 +44,7 @@ public:
   static void addFileDetails(MenuSelectOption &, unsigned int, unsigned int, const std::string &);
   static void addFileDetails(MenuSelectOption &, unsigned int, unsigned int, const std::string &, const std::string &,
       const std::string &, const std::string &, const std::string &, bool, bool, UIFile * origin);
-  static void printFlipped(Ui * ui, const Pointer<ResizableElement> & re);
+  static void printFlipped(Ui * ui, const std::shared_ptr<ResizableElement> & re);
 private:
   Ui * ui;
   unsigned int row;
@@ -77,9 +77,9 @@ private:
   Path actionpath;
   std::list<std::pair<std::string, bool> > actionfiles;
   unsigned int sortmethod;
-  Pointer<Site> site;
+  std::shared_ptr<Site> site;
   UIFileList list;
-  Pointer<SiteLogic> sitelogic;
+  std::shared_ptr<SiteLogic> sitelogic;
   std::list<int> requestids;
   Path requestedpath;
   mutable int spinnerpos;
@@ -97,5 +97,5 @@ private:
   void disableGotoMode();
   void clearSoftSelects();
   bool handleReadyRequests();
-  void printFlipped(const Pointer<ResizableElement> & re);
+  void printFlipped(const std::shared_ptr<ResizableElement> & re);
 };

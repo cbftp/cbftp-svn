@@ -1,12 +1,11 @@
 #pragma once
 
 #include <list>
+#include <memory>
 #include <utility>
 #include <string>
 
 #include "../uiwindow.h"
-
-#include "../../core/pointer.h"
 
 class BrowseScreenSub;
 
@@ -34,9 +33,9 @@ private:
   void switchSide();
   void closeSide();
   bool keyPressedNoSubAction(unsigned int);
-  Pointer<BrowseScreenSub> left;
-  Pointer<BrowseScreenSub> right;
-  Pointer<BrowseScreenSub> active;
+  std::shared_ptr<BrowseScreenSub> left;
+  std::shared_ptr<BrowseScreenSub> right;
+  std::shared_ptr<BrowseScreenSub> active;
   bool split;
   bool initsplitupdate;
 };

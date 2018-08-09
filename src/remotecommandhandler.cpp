@@ -27,11 +27,11 @@ enum RaceType {
   PREPARE
 };
 
-std::list<Pointer<SiteLogic> > getSiteLogicList(const std::string & sitestring, bool log = true) {
-  std::list<Pointer<SiteLogic> > sitelogics;
+std::list<std::shared_ptr<SiteLogic> > getSiteLogicList(const std::string & sitestring, bool log = true) {
+  std::list<std::shared_ptr<SiteLogic> > sitelogics;
   std::list<std::string> sites;
   if (sitestring == "*") {
-    std::vector<Pointer<Site> >::const_iterator it;
+    std::vector<std::shared_ptr<Site> >::const_iterator it;
     for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
       if (!(*it)->getDisabled()) {
         sites.push_back((*it)->getName());
@@ -43,7 +43,7 @@ std::list<Pointer<SiteLogic> > getSiteLogicList(const std::string & sitestring, 
   }
   std::list<std::string> notfoundsites;
   for (std::list<std::string>::const_iterator it = sites.begin(); it != sites.end(); it++) {
-    const Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(*it);
+    const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(*it);
     if (!sl) {
       notfoundsites.push_back(*it);
       continue;
@@ -211,9 +211,9 @@ void RemoteCommandHandler::commandRaw(const std::vector<std::string> & message) 
   std::string sitestring = message[0];
   std::string rawcommand = util::join(std::vector<std::string>(message.begin() + 1, message.end()));
 
-  std::list<Pointer<SiteLogic> > sites = getSiteLogicList(sitestring);
+  std::list<std::shared_ptr<SiteLogic> > sites = getSiteLogicList(sitestring);
 
-  for (std::list<Pointer<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
+  for (std::list<std::shared_ptr<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
     (*it)->requestRawCommand(rawcommand);
   }
 }
@@ -227,9 +227,9 @@ void RemoteCommandHandler::commandRawWithPath(const std::vector<std::string> & m
   std::string pathstr = message[1];
   std::string rawcommand = util::join(std::vector<std::string>(message.begin() + 2, message.end()));
 
-  std::list<Pointer<SiteLogic> > sites = getSiteLogicList(sitestring);
+  std::list<std::shared_ptr<SiteLogic> > sites = getSiteLogicList(sitestring);
 
-  for (std::list<Pointer<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
+  for (std::list<std::shared_ptr<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
     Path path(pathstr);
     if (path.isRelative()) {
       if ((*it)->getSite()->hasSection(path.toString())) {
@@ -250,8 +250,8 @@ void RemoteCommandHandler::commandFXP(const std::vector<std::string> & message) 
     global->getEventLog()->log("RemoteCommandHandler", "Bad remote fxp command format: " + util::join(message));
     return;
   }
-  Pointer<SiteLogic> srcsl = global->getSiteLogicManager()->getSiteLogic(message[0]);
-  Pointer<SiteLogic> dstsl = global->getSiteLogicManager()->getSiteLogic(message[3]);
+  std::shared_ptr<SiteLogic> srcsl = global->getSiteLogicManager()->getSiteLogic(message[0]);
+  std::shared_ptr<SiteLogic> dstsl = global->getSiteLogicManager()->getSiteLogic(message[3]);
   if (!srcsl) {
     global->getEventLog()->log("RemoteCommandHandler", "Bad site name: " + message[0]);
     return;
@@ -289,7 +289,7 @@ void RemoteCommandHandler::commandDownload(const std::vector<std::string> & mess
     global->getEventLog()->log("RemoteCommandHandler", "Bad download command format: " + util::join(message));
     return;
   }
-  Pointer<SiteLogic> srcsl = global->getSiteLogicManager()->getSiteLogic(message[0]);
+  std::shared_ptr<SiteLogic> srcsl = global->getSiteLogicManager()->getSiteLogic(message[0]);
   if (!srcsl) {
     global->getEventLog()->log("RemoteCommandHandler", "Bad site name: " + message[0]);
     return;
@@ -337,7 +337,7 @@ void RemoteCommandHandler::commandUpload(const std::vector<std::string> & messag
     dstsite = message[2];
     dstpath = message[3];
   }
-  Pointer<SiteLogic> dstsl = global->getSiteLogicManager()->getSiteLogic(dstsite);
+  std::shared_ptr<SiteLogic> dstsl = global->getSiteLogicManager()->getSiteLogic(dstsite);
   if (!dstsl) {
     global->getEventLog()->log("RemoteCommandHandler", "Bad site name: " + dstsite);
     return;
@@ -370,13 +370,13 @@ void RemoteCommandHandler::commandIdle(const std::vector<std::string> & message)
     idletime = util::str2Int(message[1]);
   }
 
-  std::list<Pointer<SiteLogic> > sites = getSiteLogicList(sitestring, false);
+  std::list<std::shared_ptr<SiteLogic> > sites = getSiteLogicList(sitestring, false);
 
   if (sites.empty()) {
     bool found = false;
-    for (std::vector<Pointer<Site> >::const_iterator it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); ++it) {
+    for (std::vector<std::shared_ptr<Site> >::const_iterator it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); ++it) {
       if ((*it)->hasSection(sitestring)) {
-        Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic((*it)->getName());
+        std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic((*it)->getName());
         sl->requestAllIdle((*it)->getSectionPath(sitestring), idletime);
         found = true;
       }
@@ -386,7 +386,7 @@ void RemoteCommandHandler::commandIdle(const std::vector<std::string> & message)
     }
   }
   else {
-    for (std::list<Pointer<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
+    for (std::list<std::shared_ptr<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
       (*it)->requestAllIdle(idletime);
     }
   }
@@ -397,7 +397,7 @@ void RemoteCommandHandler::commandAbort(const std::vector<std::string> & message
     global->getEventLog()->log("RemoteCommandHandler", "Bad abort command format: " + util::join(message));
     return;
   }
-  Pointer<Race> race = global->getEngine()->getRace(message[0]);
+  std::shared_ptr<Race> race = global->getEngine()->getRace(message[0]);
   if (!race) {
     global->getEventLog()->log("RemoteCommandHandler", "No matching race: " + message[0]);
     return;
@@ -415,7 +415,7 @@ void RemoteCommandHandler::commandDelete(const std::vector<std::string> & messag
   if (message.size() >= 2) {
     sitestring = message[1];
   }
-  Pointer<Race> race = global->getEngine()->getRace(release);
+  std::shared_ptr<Race> race = global->getEngine()->getRace(release);
   if (!race) {
     global->getEventLog()->log("RemoteCommandHandler", "No matching race: " + release);
     return;
@@ -424,9 +424,9 @@ void RemoteCommandHandler::commandDelete(const std::vector<std::string> & messag
     global->getEngine()->deleteOnAllSites(race);
     return;
   }
-  std::list<Pointer<SiteLogic> > sitelogics = getSiteLogicList(sitestring);
-  std::list<Pointer<Site> > sites;
-  for (std::list<Pointer<SiteLogic> >::const_iterator it = sitelogics.begin(); it != sitelogics.end(); it++) {
+  std::list<std::shared_ptr<SiteLogic> > sitelogics = getSiteLogicList(sitestring);
+  std::list<std::shared_ptr<Site> > sites;
+  for (std::list<std::shared_ptr<SiteLogic> >::const_iterator it = sitelogics.begin(); it != sitelogics.end(); it++) {
     sites.push_back((*it)->getSite());
   }
   global->getEngine()->deleteOnSites(race, sites);
@@ -437,7 +437,7 @@ void RemoteCommandHandler::commandReset(const std::vector<std::string> & message
     global->getEventLog()->log("RemoteCommandHandler", "Bad reset command format: " + util::join(message));
     return;
   }
-  Pointer<Race> race = global->getEngine()->getRace(message[0]);
+  std::shared_ptr<Race> race = global->getEngine()->getRace(message[0]);
   if (!race) {
     global->getEventLog()->log("RemoteCommandHandler", "No matching race: " + message[0]);
     return;

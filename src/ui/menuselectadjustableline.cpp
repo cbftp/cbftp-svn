@@ -4,19 +4,19 @@
 
 #include "resizableelement.h"
 
-void MenuSelectAdjustableLine::addElement(Pointer<ResizableElement> re, unsigned int prio) {
+void MenuSelectAdjustableLine::addElement(std::shared_ptr<ResizableElement> re, unsigned int prio) {
   addElement(re, prio, RESIZE_REMOVE);
 }
 
-void MenuSelectAdjustableLine::addElement(Pointer<ResizableElement> re, unsigned int prio, unsigned int resizemethod) {
+void MenuSelectAdjustableLine::addElement(std::shared_ptr<ResizableElement> re, unsigned int prio, unsigned int resizemethod) {
   addElement(re, prio, resizemethod, false);
 }
 
-void MenuSelectAdjustableLine::addElement(Pointer<ResizableElement> re, unsigned int prio, unsigned int resizemethod, bool expandable) {
+void MenuSelectAdjustableLine::addElement(std::shared_ptr<ResizableElement> re, unsigned int prio, unsigned int resizemethod, bool expandable) {
   addElement(re, prio, prio, resizemethod, expandable);
 }
 
-void MenuSelectAdjustableLine::addElement(Pointer<ResizableElement> re, unsigned int highprio, unsigned int lowprio, unsigned int resizemethod, bool expandable) {
+void MenuSelectAdjustableLine::addElement(std::shared_ptr<ResizableElement> re, unsigned int highprio, unsigned int lowprio, unsigned int resizemethod, bool expandable) {
   re->setHighPriority(highprio);
   re->setLowPriority(lowprio);
   re->setResizeMethod(resizemethod);
@@ -25,9 +25,9 @@ void MenuSelectAdjustableLine::addElement(Pointer<ResizableElement> re, unsigned
   elements.push_back(re);
 }
 
-Pointer<ResizableElement> MenuSelectAdjustableLine::getElement(unsigned int pos) const {
+std::shared_ptr<ResizableElement> MenuSelectAdjustableLine::getElement(unsigned int pos) const {
   if (!elements.size() || elements.size() - 1 < pos) {
-    return Pointer<ResizableElement>();
+    return std::shared_ptr<ResizableElement>();
   }
   return elements[pos];
 }
@@ -37,7 +37,7 @@ std::pair<unsigned int, unsigned int> MenuSelectAdjustableLine::getMinMaxCol() c
     return std::pair<unsigned int, unsigned int>(0, 0);
   }
   unsigned int min = elements[0]->getCol();
-  const Pointer<ResizableElement> & maxelem = elements[elements.size() - 1];
+  const std::shared_ptr<ResizableElement> & maxelem = elements[elements.size() - 1];
   unsigned int max = maxelem->getCol() + maxelem->getLabelText().length() - 1;
   return std::pair<unsigned int, unsigned int>(min, max);
 }

@@ -14,7 +14,7 @@ PotentialListElement::~PotentialListElement() {
   }
 }
 
-bool PotentialListElement::update(const Pointer<SiteLogic> & dst, int dstup, int potential, const std::string & filename) {
+bool PotentialListElement::update(const std::shared_ptr<SiteLogic> & dst, int dstup, int potential, const std::string & filename) {
   bool allslotsused = allSlotsUsedForSite(dst, dstup);
   PotentialElement * lowelem = NULL;
   int lowest = 0;
@@ -54,7 +54,7 @@ void PotentialListElement::updateSlots(int dnslots) {
   }
 }
 
-bool PotentialListElement::allSlotsUsedForSite(const Pointer<SiteLogic> & dst, int dstup) const {
+bool PotentialListElement::allSlotsUsedForSite(const std::shared_ptr<SiteLogic> & dst, int dstup) const {
   int sitematch = 0;
   for (unsigned int i = 0; i < slots.size(); i++) {
     if(slots[i]->getSite() == dst) {

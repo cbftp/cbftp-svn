@@ -86,7 +86,7 @@ SkipListMatch SkipList::check(const std::string & element, const bool dir, const
 
 SkipListMatch SkipList::check(const std::string & element, const bool dir, const bool inrace, const SkipList * fallthrough) const {
   std::string cachetoken = createCacheToken(element, dir, inrace);
-  std::map<std::string, SkipListMatch>::const_iterator mit = matchcache.find(cachetoken);
+  std::unordered_map<std::string, SkipListMatch>::const_iterator mit = matchcache.find(cachetoken);
   if (mit != matchcache.end()) {
     return mit->second;
   }

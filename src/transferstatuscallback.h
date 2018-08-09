@@ -1,12 +1,12 @@
 #pragma once
 
-#include "core/pointer.h"
+#include <memory>
 
 class TransferStatus;
 
 class TransferStatusCallback {
 public:
   virtual ~TransferStatusCallback() {}
-  virtual void transferFailed(const Pointer<TransferStatus> &, int) = 0;
-  virtual void transferSuccessful(const Pointer<TransferStatus> &) = 0;
+  virtual void transferFailed(const std::shared_ptr<TransferStatus> &, int) = 0;
+  virtual void transferSuccessful(const std::shared_ptr<TransferStatus> &) = 0;
 };

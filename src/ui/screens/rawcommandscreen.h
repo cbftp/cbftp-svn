@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../core/pointer.h"
+#include <memory>
 
 #include "../../path.h"
 
@@ -32,7 +32,7 @@ private:
   std::string selection;
   Path path;
   bool hasselection;
-  Pointer<SiteLogic> sitelogic;
+  std::shared_ptr<SiteLogic> sitelogic;
   RawBuffer * rawbuf;
   CommandHistory history;
   bool allowinput;

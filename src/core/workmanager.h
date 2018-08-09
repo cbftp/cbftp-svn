@@ -1,6 +1,5 @@
 #pragma once
 
-#include <map>
 #include <string>
 #include <list>
 #include <vector>
@@ -11,7 +10,6 @@
 #include "signalevents.h"
 #include "semaphore.h"
 #include "lock.h"
-#include "pointer.h"
 #include "event.h"
 #include "asyncworker.h"
 #include "asynctask.h"
@@ -61,7 +59,7 @@ public:
   void dispatchEventSendComplete(EventReceiver *, int, Prio);
   void dispatchSignal(EventReceiver *, int, int);
   void dispatchAsyncTaskComplete(AsyncTask &);
-  void deferDelete(Pointer<EventReceiver>);
+  void deferDelete(std::shared_ptr<EventReceiver>);
   void asyncTask(EventReceiver *, int, void (*)(EventReceiver *, int), int);
   void asyncTask(EventReceiver *, int, void (*)(EventReceiver *, void *), void *);
   DataBlockPool * getBlockPool();

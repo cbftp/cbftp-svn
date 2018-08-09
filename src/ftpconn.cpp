@@ -116,7 +116,7 @@ void FTPConn::login() {
   cwdrawbuf->clear();
   currentpath = "/";
   state = STATE_CONNECTING;
-  connectors.push_back(makePointer<FTPConnect>(nextconnectorid++, this, site->getAddress(), site->getPort(), getProxy(), true));
+  connectors.push_back(std::make_shared<FTPConnect>(nextconnectorid++, this, site->getAddress(), site->getPort(), getProxy(), true));
   ticker = 0;
   global->getTickPoke()->startPoke(this, "FTPConn", FTPCONN_TICK_INTERVAL, 0);
 }
@@ -127,7 +127,7 @@ void FTPConn::connectAllAddresses() {
   Proxy * proxy = getProxy();
   for (std::list<std::pair<std::string, std::string> >::const_iterator it = addresses.begin(); it != addresses.end(); it++) {
     if (it == addresses.begin()) continue; // first one is already connected
-    connectors.push_back(makePointer<FTPConnect>(nextconnectorid++, this, it->first, it->second, proxy, false));
+    connectors.push_back(std::make_shared<FTPConnect>(nextconnectorid++, this, it->first, it->second, proxy, false));
   }
 }
 
@@ -144,8 +144,8 @@ Proxy * FTPConn::getProxy() const {
 }
 
 void FTPConn::clearConnectors() {
-  std::list<Pointer<FTPConnect> >::const_iterator it;
-  for (std::list<Pointer<FTPConnect> >::const_iterator it = connectors.begin(); it != connectors.end(); it++) {
+  std::list<std::shared_ptr<FTPConnect> >::const_iterator it;
+  for (std::list<std::shared_ptr<FTPConnect> >::const_iterator it = connectors.begin(); it != connectors.end(); it++) {
     (*it)->disengage();
     global->getWorkManager()->deferDelete(*it);
   }
@@ -367,7 +367,7 @@ void FTPConn::ftpConnectSuccess(int connectorid) {
   if (state != STATE_CONNECTING) {
     return;
   }
-  std::list<Pointer<FTPConnect> >::const_iterator it;
+  std::list<std::shared_ptr<FTPConnect> >::const_iterator it;
   for (it = connectors.begin(); it != connectors.end(); it++) {
     if ((*it)->getId() == connectorid) {
       break;
@@ -400,7 +400,7 @@ void FTPConn::ftpConnectFail(int connectorid) {
   if (state != STATE_CONNECTING) {
     return;
   }
-  std::list<Pointer<FTPConnect> >::iterator it;
+  std::list<std::shared_ptr<FTPConnect> >::iterator it;
   for (it = connectors.begin(); it != connectors.end(); it++) {
     if ((*it)->getId() == connectorid) {
       break;
@@ -424,8 +424,8 @@ void FTPConn::ftpConnectFail(int connectorid) {
 
 void FTPConn::tick(int) {
   ticker += FTPCONN_TICK_INTERVAL;
-  std::list<Pointer<FTPConnect> > ticklist = connectors;
-  for (std::list<Pointer<FTPConnect> >::const_iterator it = ticklist.begin(); it != ticklist.end(); it++) {
+  std::list<std::shared_ptr<FTPConnect> > ticklist = connectors;
+  for (std::list<std::shared_ptr<FTPConnect> >::const_iterator it = ticklist.begin(); it != ticklist.end(); it++) {
     (*it)->tickIntern();
   }
   if (ticker >= 1000) {

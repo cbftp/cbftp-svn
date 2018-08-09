@@ -1,6 +1,7 @@
 #include "uifilelist.h"
 
 #include <algorithm>
+#include <unordered_map>
 
 #include "../filelist.h"
 #include "../file.h"
@@ -315,7 +316,7 @@ void UIFileList::parse(FileList * filelist) {
   currentcursored = NULL;
   separators = false;
   filters.clear();
-  std::map<std::string, File *>::iterator it;
+  std::unordered_map<std::string, File *>::iterator it;
   int size = filelist->getSize();
   files.reserve(size);
   sortedfiles.reserve(size);
@@ -333,7 +334,7 @@ void UIFileList::parse(FileList * filelist) {
   path = filelist->getPath();
 }
 
-void UIFileList::parse(Pointer<LocalFileList> & filelist) {
+void UIFileList::parse(std::shared_ptr<LocalFileList> & filelist) {
   files.clear();
   numfiles = 0;
   numdirs = 0;
@@ -343,7 +344,7 @@ void UIFileList::parse(Pointer<LocalFileList> & filelist) {
   currentcursored = NULL;
   separators = false;
   filters.clear();
-  std::map<std::string, LocalFile>::const_iterator it;
+  std::unordered_map<std::string, LocalFile>::const_iterator it;
   int size = filelist->size();
   files.reserve(size);
   sortedfiles.reserve(size);

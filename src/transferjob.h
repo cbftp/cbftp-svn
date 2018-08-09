@@ -1,12 +1,12 @@
 #pragma once
 
-#include <string>
-#include <map>
-#include <set>
 #include <list>
+#include <unordered_map>
+#include <memory>
+#include <unordered_set>
+#include <string>
 
 #include "core/eventreceiver.h"
-#include "core/pointer.h"
 #include "transferstatuscallback.h"
 #include "path.h"
 
@@ -35,12 +35,12 @@ class File;
 class TransferJob : public EventReceiver, public TransferStatusCallback {
 public:
   std::string getName() const;
-  TransferJob(unsigned int, const Pointer<SiteLogic> &, FileList *, const std::string &, const Path &, const std::string &);
-  TransferJob(unsigned int, const Pointer<SiteLogic> &, const Path &, const std::string &, const Path &, const std::string &);
-  TransferJob(unsigned int, const Path &, const std::string &, const Pointer<SiteLogic> &, FileList *, const std::string &);
-  TransferJob(unsigned int, const Path &, const std::string &, const Pointer<SiteLogic> &, const Path &, const std::string &);
-  TransferJob(unsigned int, const Pointer<SiteLogic> &, FileList *, const std::string &, const Pointer<SiteLogic> &, FileList *, const std::string &);
-  TransferJob(unsigned int, const Pointer<SiteLogic> &, const Path &, const std::string &, const Pointer<SiteLogic> &, const Path &, const std::string &);
+  TransferJob(unsigned int, const std::shared_ptr<SiteLogic> &, FileList *, const std::string &, const Path &, const std::string &);
+  TransferJob(unsigned int, const std::shared_ptr<SiteLogic> &, const Path &, const std::string &, const Path &, const std::string &);
+  TransferJob(unsigned int, const Path &, const std::string &, const std::shared_ptr<SiteLogic> &, FileList *, const std::string &);
+  TransferJob(unsigned int, const Path &, const std::string &, const std::shared_ptr<SiteLogic> &, const Path &, const std::string &);
+  TransferJob(unsigned int, const std::shared_ptr<SiteLogic> &, FileList *, const std::string &, const std::shared_ptr<SiteLogic> &, FileList *, const std::string &);
+  TransferJob(unsigned int, const std::shared_ptr<SiteLogic> &, const Path &, const std::string &, const std::shared_ptr<SiteLogic> &, const Path &, const std::string &);
   ~TransferJob();
   int getType() const;
   const Path & getSrcPath() const;
@@ -48,27 +48,27 @@ public:
   const Path & getPath(bool source) const;
   std::string getSrcFileName() const;
   std::string getDstFileName() const;
-  std::map<std::string, FileList *>::const_iterator srcFileListsBegin() const;
-  std::map<std::string, FileList *>::const_iterator srcFileListsEnd() const;
-  std::map<std::string, FileList *>::const_iterator dstFileListsBegin() const;
-  std::map<std::string, FileList *>::const_iterator dstFileListsEnd() const;
-  std::map<std::string, Pointer<LocalFileList> >::const_iterator localFileListsBegin() const;
-  std::map<std::string, Pointer<LocalFileList> >::const_iterator localFileListsEnd() const;
-  std::list<Pointer<TransferStatus> >::const_iterator transfersBegin() const;
-  std::list<Pointer<TransferStatus> >::const_iterator transfersEnd() const;
-  std::map<std::string, unsigned long long int>::const_iterator pendingTransfersBegin() const;
-  std::map<std::string, unsigned long long int>::const_iterator pendingTransfersEnd() const;
+  std::unordered_map<std::string, FileList *>::const_iterator srcFileListsBegin() const;
+  std::unordered_map<std::string, FileList *>::const_iterator srcFileListsEnd() const;
+  std::unordered_map<std::string, FileList *>::const_iterator dstFileListsBegin() const;
+  std::unordered_map<std::string, FileList *>::const_iterator dstFileListsEnd() const;
+  std::unordered_map<std::string, std::shared_ptr<LocalFileList> >::const_iterator localFileListsBegin() const;
+  std::unordered_map<std::string, std::shared_ptr<LocalFileList> >::const_iterator localFileListsEnd() const;
+  std::list<std::shared_ptr<TransferStatus> >::const_iterator transfersBegin() const;
+  std::list<std::shared_ptr<TransferStatus> >::const_iterator transfersEnd() const;
+  std::unordered_map<std::string, unsigned long long int>::const_iterator pendingTransfersBegin() const;
+  std::unordered_map<std::string, unsigned long long int>::const_iterator pendingTransfersEnd() const;
   bool isDone() const;
   TransferJobStatus getStatus() const;
   bool wantsList(bool source);
-  Pointer<LocalFileList> wantedLocalDstList(const std::string &);
+  std::shared_ptr<LocalFileList> wantedLocalDstList(const std::string &);
   FileList * getListTarget(bool source) const;
   void fileListUpdated(bool source, FileList *);
   FileList * findDstList(const std::string &) const;
   FileList * getFileListForFullPath(bool source, const Path &) const;
-  Pointer<LocalFileList> findLocalFileList(const std::string &) const;
-  const Pointer<SiteLogic> & getSrc() const;
-  const Pointer<SiteLogic> & getDst() const;
+  std::shared_ptr<LocalFileList> findLocalFileList(const std::string &) const;
+  const std::shared_ptr<SiteLogic> & getSrc() const;
+  const std::shared_ptr<SiteLogic> & getDst() const;
   int maxSlots() const;
   void setSlots(int);
   int maxPossibleSlots() const;
@@ -77,7 +77,7 @@ public:
   void clearRefreshLists();
   void start();
   void addPendingTransfer(const Path &, unsigned long long int);
-  void addTransfer(const Pointer<TransferStatus> &);
+  void addTransfer(const std::shared_ptr<TransferStatus> &);
   void targetExists(const Path &);
   void tick(int);
   int getProgress() const;
@@ -96,43 +96,43 @@ public:
   void abort();
   void clearExisting();
   bool hasFailedTransfer(const std::string &) const;
-  void transferSuccessful(const Pointer<TransferStatus> &);
-  void transferFailed(const Pointer<TransferStatus> &, int);
+  void transferSuccessful(const std::shared_ptr<TransferStatus> &);
+  void transferFailed(const std::shared_ptr<TransferStatus> &, int);
   bool anyListNeedsRefreshing() const;
-  Pointer<SiteTransferJob> & getSrcTransferJob();
-  Pointer<SiteTransferJob> & getDstTransferJob();
+  std::shared_ptr<SiteTransferJob> & getSrcTransferJob();
+  std::shared_ptr<SiteTransferJob> & getDstTransferJob();
   void updateStatus();
 private:
-  void downloadJob(unsigned int, const Pointer<SiteLogic> &, FileList *, const std::string &, const Path &, const std::string &);
-  void uploadJob(unsigned int, const Path &, const std::string &, const Pointer<SiteLogic> &, FileList *, const std::string &);
-  void fxpJob(unsigned int, const Pointer<SiteLogic> &, FileList *, const std::string &, const Pointer<SiteLogic> &, FileList *, const std::string &);
-  void addTransferAttempt(const Pointer<TransferStatus> &, bool);
-  void addSubDirectoryFileLists(std::map<std::string, FileList *> &, FileList *, const Path &);
-  void addSubDirectoryFileLists(std::map<std::string, FileList *> &, FileList *, const Path &, File *);
-  void init(unsigned int, TransferJobType, const Pointer<SiteLogic> &, const Pointer<SiteLogic> &, const Path &, const Path &, const std::string &, const std::string &);
+  void downloadJob(unsigned int, const std::shared_ptr<SiteLogic> &, FileList *, const std::string &, const Path &, const std::string &);
+  void uploadJob(unsigned int, const Path &, const std::string &, const std::shared_ptr<SiteLogic> &, FileList *, const std::string &);
+  void fxpJob(unsigned int, const std::shared_ptr<SiteLogic> &, FileList *, const std::string &, const std::shared_ptr<SiteLogic> &, FileList *, const std::string &);
+  void addTransferAttempt(const std::shared_ptr<TransferStatus> &, bool);
+  void addSubDirectoryFileLists(std::unordered_map<std::string, FileList *> &, FileList *, const Path &);
+  void addSubDirectoryFileLists(std::unordered_map<std::string, FileList *> &, FileList *, const Path &, File *);
+  void init(unsigned int, TransferJobType, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<SiteLogic> &, const Path &, const Path &, const std::string &, const std::string &);
   void countTotalFiles();
   void setDone();
   void updateLocalFileLists();
   void updateLocalFileLists(const Path &, const Path &);
   void checkFileListExists(FileList *) const;
   int type;
-  Pointer<SiteLogic> src;
-  Pointer<SiteLogic> dst;
+  std::shared_ptr<SiteLogic> src;
+  std::shared_ptr<SiteLogic> dst;
   Path srcpath;
   Path dstpath;
   std::string srcfile;
   std::string dstfile;
-  std::map<std::string, FileList *> srcfilelists;
-  std::map<std::string, FileList *> dstfilelists;
-  std::map<std::string, Pointer<LocalFileList> > localfilelists;
-  std::map<std::string, unsigned long long int> pendingtransfers;
-  std::set<std::string> existingtargets;
-  std::list<Pointer<TransferStatus> > transfers;
+  std::unordered_map<std::string, FileList *> srcfilelists;
+  std::unordered_map<std::string, FileList *> dstfilelists;
+  std::unordered_map<std::string, std::shared_ptr<LocalFileList> > localfilelists;
+  std::unordered_map<std::string, unsigned long long int> pendingtransfers;
+  std::unordered_set<std::string> existingtargets;
+  std::list<std::shared_ptr<TransferStatus> > transfers;
   int slots;
   TransferJobStatus status;
   FileList * srclisttarget;
   FileList * dstlisttarget;
-  std::map<FileList *, int> filelistsrefreshed;
+  std::unordered_map<FileList *, int> filelistsrefreshed;
   unsigned long long int expectedfinalsize;
   unsigned int speed;
   unsigned long long int sizeprogress;
@@ -147,8 +147,8 @@ private:
   int filestotal;
   bool almostdone;
   unsigned int id;
-  std::map<std::string, int> transferattempts;
+  std::unordered_map<std::string, int> transferattempts;
   int idletime;
-  Pointer<SiteTransferJob> srcsitetransferjob;
-  Pointer<SiteTransferJob> dstsitetransferjob;
+  std::shared_ptr<SiteTransferJob> srcsitetransferjob;
+  std::shared_ptr<SiteTransferJob> dstsitetransferjob;
 };

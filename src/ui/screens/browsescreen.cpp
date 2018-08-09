@@ -1,9 +1,9 @@
 #include "browsescreen.h"
 
-#include <cctype>
 #include <algorithm>
+#include <cctype>
+#include <memory>
 
-#include "../../core/pointer.h"
 #include "../../globalcontext.h"
 #include "../../util.h"
 #include "../../engine.h"
@@ -33,14 +33,14 @@ void BrowseScreen::initialize(unsigned int row, unsigned int col, ViewMode viewm
   this->split = initsplitupdate = viewmode == VIEW_SPLIT;
   TimeReference::updateTime();
   if (viewmode != VIEW_LOCAL) {
-    left = makePointer<BrowseScreenSite>(ui, sitestr);
+    left = std::make_shared<BrowseScreenSite>(ui, sitestr);
   }
   else {
-    left = makePointer<BrowseScreenLocal>(ui);
+    left = std::make_shared<BrowseScreenLocal>(ui);
   }
   if (split) {
     left->setFocus(false);
-    active = right = makePointer<BrowseScreenSelector>(ui);
+    active = right = std::make_shared<BrowseScreenSelector>(ui);
   }
   else {
     right.reset();
@@ -106,7 +106,7 @@ bool BrowseScreen::keyPressed(unsigned int ch) {
             return true;
           }
           else {
-            active = left = makePointer<BrowseScreenSelector>(ui);
+            active = left = std::make_shared<BrowseScreenSelector>(ui);
             ui->redraw();
             ui->setInfo();
             ui->setLegend();
@@ -119,7 +119,7 @@ bool BrowseScreen::keyPressed(unsigned int ch) {
             return true;
           }
           else {
-            active = right = makePointer<BrowseScreenSelector>(ui);
+            active = right = std::make_shared<BrowseScreenSelector>(ui);
             ui->redraw();
             ui->setInfo();
             ui->setLegend();
@@ -132,13 +132,13 @@ bool BrowseScreen::keyPressed(unsigned int ch) {
       }
       return true;
     case BROWSESCREENACTION_SITE:
-      active = (active == left ? left : right) = makePointer<BrowseScreenSite>(ui, op.getArg());
+      active = (active == left ? left : right) = std::make_shared<BrowseScreenSite>(ui, op.getArg());
       ui->redraw();
       ui->setLegend();
       ui->setInfo();
       return true;
     case BROWSESCREENACTION_HOME:
-      active = (active == left ? left : right) = makePointer<BrowseScreenLocal>(ui);
+      active = (active == left ? left : right) = std::make_shared<BrowseScreenLocal>(ui);
       ui->redraw();
       ui->setLegend();
       ui->setInfo();
@@ -158,7 +158,7 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
     case '\t':
       if (!split) {
         split = true;
-        right = makePointer<BrowseScreenSelector>(ui);
+        right = std::make_shared<BrowseScreenSelector>(ui);
       }
       {
         switchSide();
@@ -166,22 +166,22 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
       return true;
     case 't':
       if (split && left->type() != BROWSESCREEN_SELECTOR && right->type() != BROWSESCREEN_SELECTOR) {
-        Pointer<BrowseScreenSub> other = active == left ? right : left;
+        std::shared_ptr<BrowseScreenSub> other = active == left ? right : left;
         if (active->type() == BROWSESCREEN_SITE) {
-          FileList * activefl = active.get<BrowseScreenSite>()->fileList();
-          std::list<UIFile *> files = active.get<BrowseScreenSite>()->getUIFileList()->getSelectedFiles();
+          FileList * activefl = std::static_pointer_cast<BrowseScreenSite>(active)->fileList();
+          std::list<UIFile *> files = std::static_pointer_cast<BrowseScreenSite>(active)->getUIFileList()->getSelectedFiles();
           if (activefl != NULL) {
             if (other->type() == BROWSESCREEN_SITE) {
-              FileList * otherfl = other.get<BrowseScreenSite>()->fileList();
+              FileList * otherfl = std::static_pointer_cast<BrowseScreenSite>(other)->fileList();
               if (otherfl != NULL) {
                 for (std::list<UIFile *>::const_iterator it = files.begin(); it != files.end(); it++) {
                   UIFile * f = *it;
                   if (!f || (!f->isDirectory() && !f->getSize())) {
                     continue;
                   }
-                  unsigned int id = global->getEngine()->newTransferJobFXP(active.get<BrowseScreenSite>()->siteName(),
+                  unsigned int id = global->getEngine()->newTransferJobFXP(std::static_pointer_cast<BrowseScreenSite>(active)->siteName(),
                                                                            activefl,
-                                                                           other.get<BrowseScreenSite>()->siteName(),
+                                                                           std::static_pointer_cast<BrowseScreenSite>(other)->siteName(),
                                                                            otherfl,
                                                                            f->getName());
                   ui->addTempLegendTransferJob(id);
@@ -189,14 +189,14 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
               }
             }
             else {
-              Pointer<LocalFileList> otherfl = other.get<BrowseScreenLocal>()->fileList();
+              std::shared_ptr<LocalFileList> otherfl = std::static_pointer_cast<BrowseScreenLocal>(other)->fileList();
               if (!!otherfl) {
                 for (std::list<UIFile *>::const_iterator it = files.begin(); it != files.end(); it++) {
                   UIFile * f = *it;
                   if (!f || (!f->isDirectory() && !f->getSize())) {
                     continue;
                   }
-                  unsigned int id = global->getEngine()->newTransferJobDownload(active.get<BrowseScreenSite>()->siteName(),
+                  unsigned int id = global->getEngine()->newTransferJobDownload(std::static_pointer_cast<BrowseScreenSite>(active)->siteName(),
                                                                                 activefl,
                                                                                 f->getName(),
                                                                                 otherfl->getPath());
@@ -207,9 +207,9 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
           }
         }
         else if (other->type() == BROWSESCREEN_SITE) {
-          Pointer<LocalFileList> activefl = active.get<BrowseScreenLocal>()->fileList();
-          FileList * otherfl = other.get<BrowseScreenSite>()->fileList();
-          std::list<UIFile *> files = active.get<BrowseScreenLocal>()->getUIFileList()->getSelectedFiles();
+          std::shared_ptr<LocalFileList> activefl = std::static_pointer_cast<BrowseScreenLocal>(active)->fileList();
+          FileList * otherfl = std::static_pointer_cast<BrowseScreenSite>(other)->fileList();
+          std::list<UIFile *> files = std::static_pointer_cast<BrowseScreenLocal>(active)->getUIFileList()->getSelectedFiles();
           if (!!activefl && otherfl != NULL) {
             for (std::list<UIFile *>::const_iterator it = files.begin(); it != files.end(); it++) {
               UIFile * f = *it;
@@ -218,7 +218,7 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
               }
               unsigned int id = global->getEngine()->newTransferJobUpload(activefl->getPath(),
                                                                           f->getName(),
-                                                                          other.get<BrowseScreenSite>()->siteName(),
+                                                                          std::static_pointer_cast<BrowseScreenSite>(other)->siteName(),
                                                                           otherfl);
               ui->addTempLegendTransferJob(id);
             }
@@ -273,8 +273,8 @@ std::string BrowseScreen::getInfoLabel() const {
   if (split) {
    if (left->type() == BROWSESCREEN_SITE) {
      if (right->type() == BROWSESCREEN_SITE) {
-       return "BROWSING: " + left.get<BrowseScreenSite>()->siteName() + " - " +
-           right.get<BrowseScreenSite>()->siteName();
+       return "BROWSING: " + std::static_pointer_cast<BrowseScreenSite>(left)->siteName() + " - " +
+           std::static_pointer_cast<BrowseScreenSite>(right)->siteName();
      }
      return left->getInfoLabel();
    }

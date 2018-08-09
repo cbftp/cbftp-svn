@@ -101,41 +101,41 @@ bool Ui::init() {
   if (!initret) {
     return false;
   }
-  legendwindow = makePointer<LegendWindow>(this, legend, 2, col);
-  infowindow = makePointer<InfoWindow>(this, info, 2, col);
-  loginscreen = makePointer<LoginScreen>(this);
-  newkeyscreen = makePointer<NewKeyScreen>(this);
+  legendwindow = std::make_shared<LegendWindow>(this, legend, 2, col);
+  infowindow = std::make_shared<InfoWindow>(this, info, 2, col);
+  loginscreen = std::make_shared<LoginScreen>(this);
+  newkeyscreen = std::make_shared<NewKeyScreen>(this);
 
-  mainscreen = makePointer<MainScreen>(this);
-  confirmationscreen = makePointer<ConfirmationScreen>(this);
-  editsitescreen = makePointer<EditSiteScreen>(this);
-  sitestatusscreen = makePointer<SiteStatusScreen>(this);
-  rawdatascreen = makePointer<RawDataScreen>(this);
-  rawcommandscreen = makePointer<RawCommandScreen>(this);
-  browsescreen = makePointer<BrowseScreen>(this);
-  addsectionscreen = makePointer<AddSectionScreen>(this);
-  newracescreen = makePointer<NewRaceScreen>(this);
-  racestatusscreen = makePointer<RaceStatusScreen>(this);
-  globaloptionsscreen = makePointer<GlobalOptionsScreen>(this);
-  skiplistscreen = makePointer<SkipListScreen>(this);
-  changekeyscreen = makePointer<ChangeKeyScreen>(this);
-  eventlogscreen = makePointer<EventLogScreen>(this);
-  proxyoptionsscreen = makePointer<ProxyOptionsScreen>(this);
-  editproxyscreen = makePointer<EditProxyScreen>(this);
-  viewfilescreen = makePointer<ViewFileScreen>(this);
-  nukescreen = makePointer<NukeScreen>(this);
-  fileviewersettingsscreen = makePointer<FileViewerSettingsScreen>(this);
-  scoreboardscreen = makePointer<ScoreBoardScreen>(this);
-  selectsitesscreen = makePointer<SelectSitesScreen>(this);
-  transfersscreen = makePointer<TransfersScreen>(this);
-  transferjobstatusscreen = makePointer<TransferJobStatusScreen>(this);
-  allracesscreen = makePointer<AllRacesScreen>(this);
-  alltransferjobsscreen = makePointer<AllTransferJobsScreen>(this);
-  transferstatusscreen = makePointer<TransferStatusScreen>(this);
-  transfersfilterscreen = makePointer<TransfersFilterScreen>(this);
-  infoscreen = makePointer<InfoScreen>(this);
-  selectjobsscreen = makePointer<SelectJobsScreen>(this);
-  makedirscreen = makePointer<MakeDirScreen>(this);
+  mainscreen = std::make_shared<MainScreen>(this);
+  confirmationscreen = std::make_shared<ConfirmationScreen>(this);
+  editsitescreen = std::make_shared<EditSiteScreen>(this);
+  sitestatusscreen = std::make_shared<SiteStatusScreen>(this);
+  rawdatascreen = std::make_shared<RawDataScreen>(this);
+  rawcommandscreen = std::make_shared<RawCommandScreen>(this);
+  browsescreen = std::make_shared<BrowseScreen>(this);
+  addsectionscreen = std::make_shared<AddSectionScreen>(this);
+  newracescreen = std::make_shared<NewRaceScreen>(this);
+  racestatusscreen = std::make_shared<RaceStatusScreen>(this);
+  globaloptionsscreen = std::make_shared<GlobalOptionsScreen>(this);
+  skiplistscreen = std::make_shared<SkipListScreen>(this);
+  changekeyscreen = std::make_shared<ChangeKeyScreen>(this);
+  eventlogscreen = std::make_shared<EventLogScreen>(this);
+  proxyoptionsscreen = std::make_shared<ProxyOptionsScreen>(this);
+  editproxyscreen = std::make_shared<EditProxyScreen>(this);
+  viewfilescreen = std::make_shared<ViewFileScreen>(this);
+  nukescreen = std::make_shared<NukeScreen>(this);
+  fileviewersettingsscreen = std::make_shared<FileViewerSettingsScreen>(this);
+  scoreboardscreen = std::make_shared<ScoreBoardScreen>(this);
+  selectsitesscreen = std::make_shared<SelectSitesScreen>(this);
+  transfersscreen = std::make_shared<TransfersScreen>(this);
+  transferjobstatusscreen = std::make_shared<TransferJobStatusScreen>(this);
+  allracesscreen = std::make_shared<AllRacesScreen>(this);
+  alltransferjobsscreen = std::make_shared<AllTransferJobsScreen>(this);
+  transferstatusscreen = std::make_shared<TransferStatusScreen>(this);
+  transfersfilterscreen = std::make_shared<TransfersFilterScreen>(this);
+  infoscreen = std::make_shared<InfoScreen>(this);
+  selectjobsscreen = std::make_shared<SelectJobsScreen>(this);
+  makedirscreen = std::make_shared<MakeDirScreen>(this);
   mainwindows.push_back(mainscreen);
   mainwindows.push_back(confirmationscreen);
   mainwindows.push_back(editsitescreen);
@@ -167,7 +167,7 @@ bool Ui::init() {
   mainwindows.push_back(selectjobsscreen);
   mainwindows.push_back(makedirscreen);
 
-  legendprinterkeybinds = makePointer<LegendPrinterKeybinds>(this);
+  legendprinterkeybinds = std::make_shared<LegendPrinterKeybinds>(this);
   legendwindow->setMainLegendPrinter(legendprinterkeybinds);
 
   if (global->getSettingsLoaderSaver()->dataExists()) {
@@ -331,7 +331,7 @@ void Ui::disableLegend() {
 }
 
 void Ui::redrawAll() {
-  std::vector<Pointer<UIWindow> >::iterator it;
+  std::vector<std::shared_ptr<UIWindow> >::iterator it;
   for (it = mainwindows.begin(); it != mainwindows.end(); it++) {
     (*it)->resize(mainrow, maincol);
   }
@@ -443,11 +443,11 @@ void Ui::run() {
   }
 }
 
-void Ui::switchToWindow(Pointer<UIWindow> window) {
+void Ui::switchToWindow(std::shared_ptr<UIWindow> window) {
   switchToWindow(window, false);
 }
 
-void Ui::switchToWindow(Pointer<UIWindow> window, bool allowsplit) {
+void Ui::switchToWindow(std::shared_ptr<UIWindow> window, bool allowsplit) {
   history.push_back(topwindow);
   if (split && !allowsplit) {
     setSplit(false);
@@ -544,13 +544,13 @@ void Ui::setLegend() {
 }
 
 void Ui::addTempLegendTransferJob(unsigned int id) {
-  Pointer<LegendPrinterTransferJob> lptj = makePointer<LegendPrinterTransferJob>(this, id);
+  std::shared_ptr<LegendPrinterTransferJob> lptj = std::make_shared<LegendPrinterTransferJob>(this, id);
   legendwindow->addTempLegendPrinter(lptj);
   legendwindow->redraw();
 }
 
 void Ui::addTempLegendSpreadJob(unsigned int id) {
-  Pointer<LegendPrinterSpreadJob> lpsj = makePointer<LegendPrinterSpreadJob>(this, id);
+  std::shared_ptr<LegendPrinterSpreadJob> lpsj = std::make_shared<LegendPrinterSpreadJob>(this, id);
   legendwindow->addTempLegendPrinter(lpsj);
   legendwindow->redraw();
 }
@@ -756,12 +756,12 @@ void Ui::goNewRace(const std::string & site, const std::list<std::string> & sect
   switchToWindow(newracescreen);
 }
 
-void Ui::goSelectSites(const std::string & message, std::list<Pointer<Site> > currentsitelist, std::list<Pointer<Site> > excludedsitelist) {
+void Ui::goSelectSites(const std::string & message, std::list<std::shared_ptr<Site> > currentsitelist, std::list<std::shared_ptr<Site> > excludedsitelist) {
   selectsitesscreen->initializeExclude(mainrow, maincol, message, currentsitelist, excludedsitelist);
   switchToWindow(selectsitesscreen);
 }
 
-void Ui::goSelectSitesFrom(const std::string & message, std::list<Pointer<Site> > currentsitelist, std::list<Pointer<Site> > sitelist) {
+void Ui::goSelectSitesFrom(const std::string & message, std::list<std::shared_ptr<Site> > currentsitelist, std::list<std::shared_ptr<Site> > sitelist) {
   selectsitesscreen->initializeSelect(mainrow, maincol, message, currentsitelist, sitelist);
   switchToWindow(selectsitesscreen);
 }
@@ -816,7 +816,7 @@ void Ui::goTransferJobStatus(unsigned int id) {
   switchToWindow(transferjobstatusscreen);
 }
 
-void Ui::goTransferStatus(Pointer<TransferStatus> ts) {
+void Ui::goTransferStatus(std::shared_ptr<TransferStatus> ts) {
   transferstatusscreen->initialize(mainrow, maincol, ts);
   switchToWindow(transferstatusscreen);
 }
@@ -1020,7 +1020,7 @@ void Ui::switchToLast() {
   infowindow->setText(topwindow->getInfoText());
 }
 
-void Ui::loadSettings(Pointer<DataFileHandler> dfh) {
+void Ui::loadSettings(std::shared_ptr<DataFileHandler> dfh) {
   std::vector<std::string> lines;
   dfh->getDataFor("UI", &lines);
   std::vector<std::string>::iterator it;
@@ -1045,7 +1045,7 @@ void Ui::loadSettings(Pointer<DataFileHandler> dfh) {
   }
 }
 
-void Ui::saveSettings(Pointer<DataFileHandler> dfh) {
+void Ui::saveSettings(std::shared_ptr<DataFileHandler> dfh) {
   dfh->addOutputLine("UI", "legendmode=" + util::int2Str(legendMode()));
 }
 

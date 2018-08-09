@@ -2,7 +2,7 @@
 
 #include <list>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 #include "skiplistitem.h"
 
@@ -18,7 +18,7 @@ struct SkipListMatch {
 class SkipList {
 private:
   std::list<SkiplistItem> entries;
-  mutable std::map<std::string, SkipListMatch> matchcache;
+  mutable std::unordered_map<std::string, SkipListMatch> matchcache;
   bool defaultallow;
   const SkipList * globalskip;
   void addDefaultEntries();

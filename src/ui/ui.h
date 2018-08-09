@@ -1,7 +1,8 @@
 #pragma once
 
-#include <string>
 #include <list>
+#include <memory>
+#include <string>
 #include <vector>
 
 #include "ncurseswrap.h"
@@ -11,7 +12,6 @@
 #include "../core/semaphore.h"
 #include "../core/eventreceiver.h"
 #include "../core/blockingqueue.h"
-#include "../core/pointer.h"
 #include "../uibase.h"
 #include "../settingsloadersaver.h"
 
@@ -75,43 +75,43 @@ private:
   WINDOW * main;
   WINDOW * info;
   WINDOW * legend;
-  std::vector<Pointer<UIWindow> > mainwindows;
-  Pointer<UIWindow> topwindow;
-  Pointer<InfoWindow> infowindow;
-  Pointer<LegendWindow> legendwindow;
-  Pointer<LoginScreen> loginscreen;
-  Pointer<NewKeyScreen> newkeyscreen;
-  Pointer<MainScreen> mainscreen;
-  Pointer<ConfirmationScreen> confirmationscreen;
-  Pointer<EditSiteScreen> editsitescreen;
-  Pointer<SiteStatusScreen> sitestatusscreen;
-  Pointer<RawDataScreen> rawdatascreen;
-  Pointer<RawCommandScreen> rawcommandscreen;
-  Pointer<BrowseScreen> browsescreen;
-  Pointer<AddSectionScreen> addsectionscreen;
-  Pointer<NewRaceScreen> newracescreen;
-  Pointer<RaceStatusScreen> racestatusscreen;
-  Pointer<GlobalOptionsScreen> globaloptionsscreen;
-  Pointer<SkipListScreen> skiplistscreen;
-  Pointer<ChangeKeyScreen> changekeyscreen;
-  Pointer<EventLogScreen> eventlogscreen;
-  Pointer<ProxyOptionsScreen> proxyoptionsscreen;
-  Pointer<EditProxyScreen> editproxyscreen;
-  Pointer<ViewFileScreen> viewfilescreen;
-  Pointer<NukeScreen> nukescreen;
-  Pointer<FileViewerSettingsScreen> fileviewersettingsscreen;
-  Pointer<ScoreBoardScreen> scoreboardscreen;
-  Pointer<SelectSitesScreen> selectsitesscreen;
-  Pointer<TransfersScreen> transfersscreen;
-  Pointer<TransferJobStatusScreen> transferjobstatusscreen;
-  Pointer<AllRacesScreen> allracesscreen;
-  Pointer<AllTransferJobsScreen> alltransferjobsscreen;
-  Pointer<TransferStatusScreen> transferstatusscreen;
-  Pointer<TransfersFilterScreen> transfersfilterscreen;
-  Pointer<InfoScreen> infoscreen;
-  Pointer<SelectJobsScreen> selectjobsscreen;
-  Pointer<MakeDirScreen> makedirscreen;
-  Pointer<LegendPrinterKeybinds> legendprinterkeybinds;
+  std::vector<std::shared_ptr<UIWindow> > mainwindows;
+  std::shared_ptr<UIWindow> topwindow;
+  std::shared_ptr<InfoWindow> infowindow;
+  std::shared_ptr<LegendWindow> legendwindow;
+  std::shared_ptr<LoginScreen> loginscreen;
+  std::shared_ptr<NewKeyScreen> newkeyscreen;
+  std::shared_ptr<MainScreen> mainscreen;
+  std::shared_ptr<ConfirmationScreen> confirmationscreen;
+  std::shared_ptr<EditSiteScreen> editsitescreen;
+  std::shared_ptr<SiteStatusScreen> sitestatusscreen;
+  std::shared_ptr<RawDataScreen> rawdatascreen;
+  std::shared_ptr<RawCommandScreen> rawcommandscreen;
+  std::shared_ptr<BrowseScreen> browsescreen;
+  std::shared_ptr<AddSectionScreen> addsectionscreen;
+  std::shared_ptr<NewRaceScreen> newracescreen;
+  std::shared_ptr<RaceStatusScreen> racestatusscreen;
+  std::shared_ptr<GlobalOptionsScreen> globaloptionsscreen;
+  std::shared_ptr<SkipListScreen> skiplistscreen;
+  std::shared_ptr<ChangeKeyScreen> changekeyscreen;
+  std::shared_ptr<EventLogScreen> eventlogscreen;
+  std::shared_ptr<ProxyOptionsScreen> proxyoptionsscreen;
+  std::shared_ptr<EditProxyScreen> editproxyscreen;
+  std::shared_ptr<ViewFileScreen> viewfilescreen;
+  std::shared_ptr<NukeScreen> nukescreen;
+  std::shared_ptr<FileViewerSettingsScreen> fileviewersettingsscreen;
+  std::shared_ptr<ScoreBoardScreen> scoreboardscreen;
+  std::shared_ptr<SelectSitesScreen> selectsitesscreen;
+  std::shared_ptr<TransfersScreen> transfersscreen;
+  std::shared_ptr<TransferJobStatusScreen> transferjobstatusscreen;
+  std::shared_ptr<AllRacesScreen> allracesscreen;
+  std::shared_ptr<AllTransferJobsScreen> alltransferjobsscreen;
+  std::shared_ptr<TransferStatusScreen> transferstatusscreen;
+  std::shared_ptr<TransfersFilterScreen> transfersfilterscreen;
+  std::shared_ptr<InfoScreen> infoscreen;
+  std::shared_ptr<SelectJobsScreen> selectjobsscreen;
+  std::shared_ptr<MakeDirScreen> makedirscreen;
+  std::shared_ptr<LegendPrinterKeybinds> legendprinterkeybinds;
   int mainrow;
   int maincol;
   int col;
@@ -128,7 +128,7 @@ private:
   bool fullscreentoggle;
   std::string eventtext;
   Semaphore eventcomplete;
-  std::list<Pointer<UIWindow> > history;
+  std::list<std::shared_ptr<UIWindow> > history;
   void FDData(int);
   void refreshAll();
   void initIntern();
@@ -137,8 +137,8 @@ private:
   void enableLegend();
   void disableLegend();
   void redrawAll();
-  void switchToWindow(Pointer<UIWindow>);
-  void switchToWindow(Pointer<UIWindow>, bool);
+  void switchToWindow(std::shared_ptr<UIWindow>);
+  void switchToWindow(std::shared_ptr<UIWindow>, bool);
   void tick(int);
   void globalKeyBinds(int);
   void switchToLast();
@@ -202,8 +202,8 @@ public:
   void goViewFile(const Path &, const std::string &);
   void goAddSection(const std::string &, const Path &);
   void goNewRace(const std::string & site, const std::list<std::string> & sections, const std::list<std::pair<std::string, bool> > & items);
-  void goSelectSites(const std::string &, std::list<Pointer<Site> >, std::list<Pointer<Site> >);
-  void goSelectSitesFrom(const std::string &, std::list<Pointer<Site> >, std::list<Pointer<Site> >);
+  void goSelectSites(const std::string &, std::list<std::shared_ptr<Site> >, std::list<std::shared_ptr<Site> >);
+  void goSelectSitesFrom(const std::string &, std::list<std::shared_ptr<Site> >, std::list<std::shared_ptr<Site> >);
   void goSelectSpreadJobs();
   void goSelectTransferJobs();
   void goSkiplist();
@@ -214,7 +214,7 @@ public:
   void goSiteStatus(const std::string &);
   void goRaceStatus(unsigned int);
   void goTransferJobStatus(unsigned int);
-  void goTransferStatus(Pointer<TransferStatus>);
+  void goTransferStatus(std::shared_ptr<TransferStatus>);
   void goGlobalOptions();
   void goEventLog();
   void goScoreBoard();
@@ -247,8 +247,8 @@ public:
   void returnNuke(const std::list<int> & reqids);
   void returnRaceStatus(unsigned int);
   void returnMakeDir(const std::string & dirname);
-  void loadSettings(Pointer<DataFileHandler>);
-  void saveSettings(Pointer<DataFileHandler>);
+  void loadSettings(std::shared_ptr<DataFileHandler>);
+  void saveSettings(std::shared_ptr<DataFileHandler>);
   void notify();
   WINDOW * getLegendWindow() const;
 };

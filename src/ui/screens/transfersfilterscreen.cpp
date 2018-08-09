@@ -18,10 +18,10 @@
 
 namespace {
 
-void fillPreselectionList(const std::string & preselectstr, std::list<Pointer<Site> > * list) {
+void fillPreselectionList(const std::string & preselectstr, std::list<std::shared_ptr<Site> > * list) {
   std::list<std::string> preselectlist = util::split(preselectstr, ",");
   for (std::list<std::string>::const_iterator it = preselectlist.begin(); it != preselectlist.end(); it++) {
-    Pointer<Site> site = global->getSiteManager()->getSite(*it);
+    std::shared_ptr<Site> site = global->getSiteManager()->getSite(*it);
     list->push_back(site);
   }
 }
@@ -68,7 +68,7 @@ void TransfersFilterScreen::redraw() {
   ui->erase();
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
+    std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
     highlight = false;
     if (mso.getSelectionPointer() == i) {
       highlight = true;
@@ -97,7 +97,7 @@ void TransfersFilterScreen::command(const std::string & command, const std::stri
       for (std::list<std::string>::const_iterator it = items.begin(); it != items.end(); it++) {
         selectedspreadjobs.push_back(global->getEngine()->getRace(util::str2Int(*it))->getName());
       }
-      mso.getElement("spreadjobs").get<MenuSelectOptionTextField>()->setText(getSpreadJobsText());
+      std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("spreadjobs"))->setText(getSpreadJobsText());
 
     }
     else if (activeelement->getIdentifier() == "transferjobs") {
@@ -105,10 +105,10 @@ void TransfersFilterScreen::command(const std::string & command, const std::stri
       for (std::list<std::string>::const_iterator it = items.begin(); it != items.end(); it++) {
         selectedtransferjobs.push_back(global->getEngine()->getTransferJob(util::str2Int(*it))->getName());
       }
-      mso.getElement("transferjobs").get<MenuSelectOptionTextField>()->setText(getTransferJobsText());
+      std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("transferjobs"))->setText(getTransferJobsText());
     }
     else {
-      activeelement.get<MenuSelectOptionTextField>()->setText(arg);
+      std::static_pointer_cast<MenuSelectOptionTextField>(activeelement)->setText(arg);
     }
     redraw();
   }
@@ -148,25 +148,25 @@ bool TransfersFilterScreen::keyPressed(unsigned int ch) {
     case 'd':
     case 'f': {
       TransferFilteringParameters tfp;
-      tfp.usejobfilter = mso.getElement("jobfilter").get<MenuSelectOptionCheckBox>()->getData();
+      tfp.usejobfilter = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("jobfilter"))->getData();
       tfp.spreadjobsfilter = selectedspreadjobs;
       tfp.transferjobsfilter = selectedtransferjobs;
-      tfp.usesitefilter = mso.getElement("sitesfilter").get<MenuSelectOptionCheckBox>()->getData();
-      tfp.sourcesitefilters = util::split(mso.getElement("source").get<MenuSelectOptionTextField>()->getData(), ",");
-      tfp.targetsitefilters = util::split(mso.getElement("destination").get<MenuSelectOptionTextField>()->getData(), ",");
-      tfp.anydirectionsitefilters = util::split(mso.getElement("anydirection").get<MenuSelectOptionTextField>()->getData(), ",");
-      tfp.usefilenamefilter = mso.getElement("filenamefilter").get<MenuSelectOptionCheckBox>()->getData();
-      tfp.filenamefilter = mso.getElement("filename").get<MenuSelectOptionTextField>()->getData();
-      tfp.usestatusfilter = mso.getElement("statusfilter").get<MenuSelectOptionCheckBox>()->getData();
-      tfp.showstatusinprogress = mso.getElement("statusinprogress").get<MenuSelectOptionCheckBox>()->getData();
-      tfp.showstatusdone = mso.getElement("statusdone").get<MenuSelectOptionCheckBox>()->getData();
-      tfp.showstatusfail= mso.getElement("statusfail").get<MenuSelectOptionCheckBox>()->getData();
-      tfp.showstatusdupe = mso.getElement("statusdupe").get<MenuSelectOptionCheckBox>()->getData();
+      tfp.usesitefilter = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("sitesfilter"))->getData();
+      tfp.sourcesitefilters = util::split(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("source"))->getData(), ",");
+      tfp.targetsitefilters = util::split(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("destination"))->getData(), ",");
+      tfp.anydirectionsitefilters = util::split(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("anydirection"))->getData(), ",");
+      tfp.usefilenamefilter = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("filenamefilter"))->getData();
+      tfp.filenamefilter = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("filename"))->getData();
+      tfp.usestatusfilter = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("statusfilter"))->getData();
+      tfp.showstatusinprogress = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("statusinprogress"))->getData();
+      tfp.showstatusdone = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("statusdone"))->getData();
+      tfp.showstatusfail= std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("statusfail"))->getData();
+      tfp.showstatusdupe = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("statusdupe"))->getData();
       ui->returnTransferFilters(tfp);
       return true;
     }
     case 10: {
-      Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getSelectionPointer());
+      std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getSelectionPointer());
       if (msoe->getIdentifier() == "spreadjobs") {
         activeelement = msoe;
         ui->goSelectSpreadJobs();
@@ -178,15 +178,15 @@ bool TransfersFilterScreen::keyPressed(unsigned int ch) {
         return true;
       }
       if (msoe->getIdentifier() == "source" || msoe->getIdentifier() == "destination" || msoe->getIdentifier() == "anydirection") {
-        std::string preselectstr = msoe.get<MenuSelectOptionTextField>()->getData();
-        std::list<Pointer<Site> > preselected;
+        std::string preselectstr = std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData();
+        std::list<std::shared_ptr<Site> > preselected;
         fillPreselectionList(preselectstr, &preselected);
         activeelement = msoe;
         std::string headerword = msoe->getIdentifier() + " ";
         if (headerword == "anydirection") {
           headerword = "";
         }
-        ui->goSelectSites("Show these " + headerword + "sites in transfers", preselected, std::list<Pointer<Site> >());
+        ui->goSelectSites("Show these " + headerword + "sites in transfers", preselected, std::list<std::shared_ptr<Site> >());
         return true;
       }
       bool activation = msoe->activate();

@@ -2,8 +2,7 @@
 
 #include <list>
 #include <map>
-
-#include "../../core/pointer.h"
+#include <memory>
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
@@ -24,7 +23,7 @@ public:
 private:
   char getFileChar(bool, bool, bool, bool) const;
   void deleteFiles(bool);
-  Pointer<Race> race;
+  std::shared_ptr<Race> race;
   bool smalldirs;
   bool awaitingremovesite;
   bool awaitingremovesitedelownfiles;

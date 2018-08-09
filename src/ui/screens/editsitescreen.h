@@ -1,8 +1,7 @@
 #pragma once
 
 #include <list>
-
-#include "../../core/pointer.h"
+#include <memory>
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
@@ -24,15 +23,15 @@ public:
   std::string getLegendText() const;
   std::string getInfoLabel() const;
 private:
-  void fillPreselectionList(const std::string &, std::list<Pointer<Site> > *) const;
+  void fillPreselectionList(const std::string &, std::list<std::shared_ptr<Site> > *) const;
   FocusableArea * focusedarea;
   FocusableArea * defocusedarea;
   std::string currentlegendtext;
   std::string defaultlegendtext;
   bool active;
-  Pointer<MenuSelectOptionElement> activeelement;
+  std::shared_ptr<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;
   MenuSection ms;
-  Pointer<Site> site;
+  std::shared_ptr<Site> site;
   std::string operation;
 };

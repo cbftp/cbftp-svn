@@ -5,7 +5,7 @@
 PotentialElement::PotentialElement() : site(NULL), potential(0), dstupslots(0) {
 }
 
-const Pointer<SiteLogic> & PotentialElement::getSite() const {
+const std::shared_ptr<SiteLogic> & PotentialElement::getSite() const {
   return site;
 }
 
@@ -13,7 +13,7 @@ int PotentialElement::getPotential() const {
   return potential;
 }
 
-void PotentialElement::update(const Pointer<SiteLogic> & site, int dstupslots, int potential, const std::string & filename) {
+void PotentialElement::update(const std::shared_ptr<SiteLogic> & site, int dstupslots, int potential, const std::string & filename) {
   this->site = site;
   this->dstupslots = dstupslots;
   this->potential = potential;

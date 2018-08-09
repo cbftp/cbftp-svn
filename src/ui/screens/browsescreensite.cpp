@@ -1,10 +1,10 @@
 #include "browsescreensite.h"
 
-#include <cctype>
 #include <algorithm>
+#include <cctype>
+#include <memory>
 
 #include "../../core/tickpoke.h"
-#include "../../core/pointer.h"
 #include "../../sitelogic.h"
 #include "../../sitelogicmanager.h"
 #include "../../site.h"
@@ -164,7 +164,7 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
   table.adjustLines(col - 3);
   table.checkPointer();
   if (temphighlightline != -1) {
-    Pointer<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
+    std::shared_ptr<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
     if (!!highlightline) {
       std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
       for (unsigned int i = minmaxcol.first; i <= minmaxcol.second; i++) {
@@ -173,7 +173,7 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
     }
   }
   for (unsigned int i = 0; i < table.size(); i++) {
-    Pointer<ResizableElement> re = table.getElement(i);
+    std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(i));
     bool highlight = false;
     bool cursored = table.getSelectionPointer() == i;
     bool softselected = re->getOrigin() && static_cast<UIFile *>(re->getOrigin())->isSoftSelected();
@@ -213,7 +213,7 @@ void BrowseScreenSite::update() {
     ui->redraw();
   }
   if (table.size()) {
-    Pointer<ResizableElement> re = table.getElement(table.getLastSelectionPointer());
+    std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(table.getLastSelectionPointer()));
     bool softselected = re->getOrigin() && static_cast<UIFile *>(re->getOrigin())->isSoftSelected();
     bool hardselected = re->getOrigin() && static_cast<UIFile *>(re->getOrigin())->isHardSelected();
     if (softselected && hardselected) {
@@ -222,7 +222,7 @@ void BrowseScreenSite::update() {
     else {
       ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), softselected || hardselected);
     }
-    re = table.getElement(table.getSelectionPointer());
+    re = std::static_pointer_cast<ResizableElement>(table.getElement(table.getSelectionPointer()));
     bool selected = re->getOrigin() && (static_cast<UIFile *>(re->getOrigin())->isSoftSelected() ||
                                         static_cast<UIFile *>(re->getOrigin())->isHardSelected());
     if (selected && focus) {
@@ -1118,8 +1118,8 @@ void BrowseScreenSite::addFileDetails(MenuSelectOption & table, unsigned int col
 }
 
 void BrowseScreenSite::addFileDetails(MenuSelectOption & table, unsigned int coloffset, unsigned int y, const std::string & prepchar, const std::string & name, const std::string & size, const std::string & lastmodified, const std::string & owner, bool selectable, bool cursored, UIFile * origin) {
-  Pointer<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
-  Pointer<MenuSelectOptionTextButton> msotb;
+  std::shared_ptr<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
+  std::shared_ptr<MenuSelectOptionTextButton> msotb;
   msotb = table.addTextButtonNoContent(y, coloffset + 1, "prepchar", prepchar);
   msotb->setSelectable(false);
   msotb->setShortSpacing();
@@ -1165,11 +1165,11 @@ UIFileList * BrowseScreenSite::getUIFileList() {
   return &list;
 }
 
-void BrowseScreenSite::printFlipped(const Pointer<ResizableElement> & re) {
+void BrowseScreenSite::printFlipped(const std::shared_ptr<ResizableElement> & re) {
   printFlipped(ui, re);
 }
 
-void BrowseScreenSite::printFlipped(Ui * ui, const Pointer<ResizableElement> & re) {
+void BrowseScreenSite::printFlipped(Ui * ui, const std::shared_ptr<ResizableElement> & re) {
   int flipper = 0;
   for (unsigned int i = 0; i < re->getLabelText().length(); i++) {
     ui->printChar(re->getRow(), re->getCol() + i, re->getLabelText()[i], flipper++ % 2);

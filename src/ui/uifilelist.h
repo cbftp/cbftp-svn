@@ -1,13 +1,14 @@
 #pragma once
 
-#include <string>
-#include <vector>
 #include <list>
+#include <memory>
 #include <set>
+#include <string>
+#include <set>
+#include <vector>
 
 #include "uifile.h"
 
-#include "../core/pointer.h"
 #include "../path.h"
 
 class FileList;
@@ -42,7 +43,7 @@ public:
   void sortSize(bool);
   void sortOwner(bool);
   void parse(FileList *);
-  void parse(Pointer<LocalFileList> &);
+  void parse(std::shared_ptr<LocalFileList> &);
   UIFile * cursoredFile() const;
   bool selectFileName(const std::string & filename);
   bool goNext();

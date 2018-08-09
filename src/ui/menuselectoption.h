@@ -1,11 +1,10 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "focusablearea.h"
-
-#include "../core/pointer.h"
 
 class MenuSelectOptionElement;
 class MenuSelectOptionTextArrow;
@@ -20,8 +19,8 @@ class MenuSelectOption : public FocusableArea {
     bool navigate(int);
     unsigned int pointer;
     unsigned int lastpointer;
-    std::vector<Pointer<MenuSelectOptionElement> > options;
-    std::vector<Pointer<MenuSelectAdjustableLine> > adjustablelines;
+    std::vector<std::shared_ptr<MenuSelectOptionElement> > options;
+    std::vector<std::shared_ptr<MenuSelectAdjustableLine> > adjustablelines;
   public:
     MenuSelectOption();
     ~MenuSelectOption();
@@ -31,29 +30,29 @@ class MenuSelectOption : public FocusableArea {
     bool goLeft();
     bool goNext();
     bool goPrevious();
-    Pointer<MenuSelectOptionTextField> addStringField(int, int, std::string, std::string, std::string, bool);
-    Pointer<MenuSelectOptionTextField> addStringField(int, int, std::string, std::string, std::string, bool, int);
-    Pointer<MenuSelectOptionTextField> addStringField(int, int, std::string, std::string, std::string, bool, int, int);
-    Pointer<MenuSelectOptionTextArrow> addTextArrow(int, int, std::string, std::string);
-    Pointer<MenuSelectOptionNumArrow> addIntArrow(int, int, std::string, std::string, int, int, int);
-    Pointer<MenuSelectOptionCheckBox> addCheckBox(int, int, std::string, std::string, bool);
-    Pointer<MenuSelectOptionTextButton> addTextButton(int, int, std::string, std::string);
-    Pointer<MenuSelectOptionTextButton> addTextButtonNoContent(int, int, std::string, std::string);
-    Pointer<MenuSelectAdjustableLine> addAdjustableLine();
-    Pointer<MenuSelectAdjustableLine> addAdjustableLineBefore(Pointer<MenuSelectAdjustableLine>);
-    Pointer<MenuSelectOptionElement> getElement(unsigned int) const;
-    Pointer<MenuSelectOptionElement> getElement(std::string) const;
-    std::vector<Pointer<MenuSelectAdjustableLine> >::iterator linesBegin();
-    std::vector<Pointer<MenuSelectAdjustableLine> >::iterator linesEnd();
-    Pointer<MenuSelectAdjustableLine> getAdjustableLine(Pointer<MenuSelectOptionElement>) const;
-    Pointer<MenuSelectAdjustableLine> getAdjustableLine(unsigned int lineindex) const;
-    Pointer<MenuSelectAdjustableLine> getAdjustableLineOnRow(unsigned int row) const;
-    bool swapLineWithNext(Pointer<MenuSelectAdjustableLine>);
-    bool swapLineWithPrevious(Pointer<MenuSelectAdjustableLine>);
-    int getLineIndex(Pointer<MenuSelectAdjustableLine>);
-    void removeAdjustableLine(Pointer<MenuSelectAdjustableLine>);
-    void removeElement(Pointer<MenuSelectOptionElement>);
-    void setPointer(Pointer<MenuSelectOptionElement>);
+    std::shared_ptr<MenuSelectOptionTextField> addStringField(int, int, std::string, std::string, std::string, bool);
+    std::shared_ptr<MenuSelectOptionTextField> addStringField(int, int, std::string, std::string, std::string, bool, int);
+    std::shared_ptr<MenuSelectOptionTextField> addStringField(int, int, std::string, std::string, std::string, bool, int, int);
+    std::shared_ptr<MenuSelectOptionTextArrow> addTextArrow(int, int, std::string, std::string);
+    std::shared_ptr<MenuSelectOptionNumArrow> addIntArrow(int, int, std::string, std::string, int, int, int);
+    std::shared_ptr<MenuSelectOptionCheckBox> addCheckBox(int, int, std::string, std::string, bool);
+    std::shared_ptr<MenuSelectOptionTextButton> addTextButton(int, int, std::string, std::string);
+    std::shared_ptr<MenuSelectOptionTextButton> addTextButtonNoContent(int, int, std::string, std::string);
+    std::shared_ptr<MenuSelectAdjustableLine> addAdjustableLine();
+    std::shared_ptr<MenuSelectAdjustableLine> addAdjustableLineBefore(std::shared_ptr<MenuSelectAdjustableLine>);
+    std::shared_ptr<MenuSelectOptionElement> getElement(unsigned int) const;
+    std::shared_ptr<MenuSelectOptionElement> getElement(std::string) const;
+    std::vector<std::shared_ptr<MenuSelectAdjustableLine> >::iterator linesBegin();
+    std::vector<std::shared_ptr<MenuSelectAdjustableLine> >::iterator linesEnd();
+    std::shared_ptr<MenuSelectAdjustableLine> getAdjustableLine(std::shared_ptr<MenuSelectOptionElement>) const;
+    std::shared_ptr<MenuSelectAdjustableLine> getAdjustableLine(unsigned int lineindex) const;
+    std::shared_ptr<MenuSelectAdjustableLine> getAdjustableLineOnRow(unsigned int row) const;
+    bool swapLineWithNext(std::shared_ptr<MenuSelectAdjustableLine>);
+    bool swapLineWithPrevious(std::shared_ptr<MenuSelectAdjustableLine>);
+    int getLineIndex(std::shared_ptr<MenuSelectAdjustableLine>);
+    void removeAdjustableLine(std::shared_ptr<MenuSelectAdjustableLine>);
+    void removeElement(std::shared_ptr<MenuSelectOptionElement>);
+    void setPointer(std::shared_ptr<MenuSelectOptionElement>);
     unsigned int getLastSelectionPointer() const;
     unsigned int getSelectionPointer() const;
     bool activateSelected();

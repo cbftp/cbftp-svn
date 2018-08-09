@@ -10,7 +10,7 @@ TransferJob * SiteTransferJob::getTransferJob() {
   return transferjob;
 }
 
-Pointer<SiteLogic> SiteTransferJob::getOtherSiteLogic() const {
+std::shared_ptr<SiteLogic> SiteTransferJob::getOtherSiteLogic() const {
   return source ? transferjob->getDst() : transferjob->getSrc();
 }
 

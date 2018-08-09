@@ -1,18 +1,17 @@
 #pragma once
 
+#include <list>
+#include <map>
+#include <memory>
 #include <string>
 #include <vector>
-#include <map>
-#include <list>
-
-#include "core/pointer.h"
 
 class Site;
 
 class SiteManager {
   private:
-    void removeSitePairsForSite(const Pointer<Site> &);
-    std::vector<Pointer<Site> > sites;
+    void removeSitePairsForSite(const std::shared_ptr<Site> &);
+    std::vector<std::shared_ptr<Site> > sites;
     std::string defaultusername;
     std::string defaultpassword;
     unsigned int defaultmaxlogins;
@@ -24,13 +23,13 @@ class SiteManager {
   public:
     SiteManager();
     int getNumSites() const;
-    void addSite(const Pointer<Site> &);
-    void addSiteLoad(const Pointer<Site> &);
-    Pointer<Site> getSite(const std::string &) const;
-    Pointer<Site> getSite(unsigned int) const;
+    void addSite(const std::shared_ptr<Site> &);
+    void addSiteLoad(const std::shared_ptr<Site> &);
+    std::shared_ptr<Site> getSite(const std::string &) const;
+    std::shared_ptr<Site> getSite(unsigned int) const;
     void deleteSite(const std::string &);
-    std::vector<Pointer<Site> >::const_iterator begin() const;
-    std::vector<Pointer<Site> >::const_iterator end() const;
+    std::vector<std::shared_ptr<Site> >::const_iterator begin() const;
+    std::vector<std::shared_ptr<Site> >::const_iterator end() const;
     std::string getDefaultUserName() const;
     void setDefaultUserName(const std::string &);
     std::string getDefaultPassword() const;

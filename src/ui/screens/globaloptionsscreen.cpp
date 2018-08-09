@@ -69,7 +69,7 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   mso.addCheckBox(y++, x, "udpbell", "Remote command bell:", rch->getNotify());
   mso.addStringField(y++, x, "preparedraceexpirytime", "Prepared race expiration time:", util::int2Str(global->getEngine()->getPreparedRaceExpiryTime()), false, 5);
   y++;
-  Pointer<MenuSelectOptionTextArrow> legendmode = mso.addTextArrow(y++, x, "legendmode", "Legend bar:");
+  std::shared_ptr<MenuSelectOptionTextArrow> legendmode = mso.addTextArrow(y++, x, "legendmode", "Legend bar:");
   legendmode->addOption("Disabled", LEGEND_DISABLED);
   legendmode->addOption("Scrolling", LEGEND_SCROLLING);
   legendmode->addOption("Static", LEGEND_STATIC);
@@ -81,7 +81,7 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   mso.addIntArrow(y++, x, "defmaxup", "Default site upload slots:", sm->getDefaultMaxUp(), 0, 99);
   mso.addIntArrow(y++, x, "defmaxdn", "Default site download slots:", sm->getDefaultMaxDown(), 0, 99);
   mso.addCheckBox(y++, x, "deftlsconn", "Default site AUTH TLS:", sm->getDefaultSSL());
-  Pointer<MenuSelectOptionTextArrow> sslfxp = mso.addTextArrow(y++, x, "tlsfxp", "Default TLS transfers:");
+  std::shared_ptr<MenuSelectOptionTextArrow> sslfxp = mso.addTextArrow(y++, x, "tlsfxp", "Default TLS transfers:");
   sslfxp->addOption("Always off", SITE_SSL_ALWAYS_OFF);
   sslfxp->addOption("Prefer off", SITE_SSL_PREFER_OFF);
   sslfxp->addOption("Prefer on", SITE_SSL_PREFER_ON);
@@ -102,7 +102,7 @@ void GlobalOptionsScreen::redraw() {
   ui->erase();
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
+    std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
     highlight = false;
     if (mso.getSelectionPointer() == i) {
       highlight = true;
@@ -113,7 +113,7 @@ void GlobalOptionsScreen::redraw() {
 }
 
 void GlobalOptionsScreen::update() {
-  Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
+  std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
   ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
   ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
@@ -143,7 +143,7 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
     return true;
   }
   bool activation;
-  Pointer<MenuSelectOptionElement> msoe;
+  std::shared_ptr<MenuSelectOptionElement> msoe;
   switch(ch) {
     case KEY_UP:
       mso.goUp();
@@ -190,14 +190,14 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
     case 'd':
       bool udpenable = false;
       for(unsigned int i = 0; i < mso.size(); i++) {
-        Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
+        std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
         std::string identifier = msoe->getIdentifier();
         if (identifier == "defaultinterface") {
-          std::string interface = interfacemap[msoe.get<MenuSelectOptionTextArrow>()->getData()];
+          std::string interface = interfacemap[std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData()];
           global->getIOManager()->setDefaultInterface(interface);
         }
         else if (identifier == "activeportrange") {
-          std::string portrange = msoe.get<MenuSelectOptionTextField>()->getData();
+          std::string portrange = std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData();
           size_t splitpos = portrange.find(":");
           if (splitpos != std::string::npos) {
             int portfirst = util::str2Int(portrange.substr(0, splitpos));
@@ -207,61 +207,61 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
           }
         }
         else if (identifier == "useactiveaddress") {
-          ls->setUseActiveModeAddress(msoe.get<MenuSelectOptionCheckBox>()->getData());
+          ls->setUseActiveModeAddress(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
         }
         else if (identifier == "activeaddress") {
-          ls->setActiveModeAddress(msoe.get<MenuSelectOptionTextField>()->getData());
+          ls->setActiveModeAddress(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "udpenable") {
-          udpenable = msoe.get<MenuSelectOptionCheckBox>()->getData();
+          udpenable = std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData();
           if (rch->isEnabled() && !udpenable) {
             rch->setEnabled(false);
           }
         }
         else if (identifier == "udpport") {
-          rch->setPort(util::str2Int(msoe.get<MenuSelectOptionTextField>()->getData()));
+          rch->setPort(util::str2Int(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData()));
         }
         else if (identifier == "udppass") {
-          rch->setPassword(msoe.get<MenuSelectOptionTextField>()->getData());
+          rch->setPassword(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "udpbell") {
-          rch->setNotify(msoe.get<MenuSelectOptionCheckBox>()->getData());
+          rch->setNotify(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
         }
         else if (identifier == "defuser") {
-          sm->setDefaultUserName(msoe.get<MenuSelectOptionTextField>()->getData());
+          sm->setDefaultUserName(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "defpass") {
-          sm->setDefaultPassword(msoe.get<MenuSelectOptionTextField>()->getData());
+          sm->setDefaultPassword(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "deflogins") {
-          sm->setDefaultMaxLogins(msoe.get<MenuSelectOptionNumArrow>()->getData());
+          sm->setDefaultMaxLogins(std::static_pointer_cast<MenuSelectOptionNumArrow>(msoe)->getData());
         }
         else if (identifier == "defmaxup") {
-          sm->setDefaultMaxUp(msoe.get<MenuSelectOptionNumArrow>()->getData());
+          sm->setDefaultMaxUp(std::static_pointer_cast<MenuSelectOptionNumArrow>(msoe)->getData());
         }
         else if (identifier == "defmaxdn") {
-          sm->setDefaultMaxDown(msoe.get<MenuSelectOptionNumArrow>()->getData());
+          sm->setDefaultMaxDown(std::static_pointer_cast<MenuSelectOptionNumArrow>(msoe)->getData());
         }
         else if (identifier == "deftlsconn") {
-          sm->setDefaultSSL(msoe.get<MenuSelectOptionCheckBox>()->getData());
+          sm->setDefaultSSL(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
         }
         else if (identifier == "tlsfxp") {
-          sm->setDefaultSSLTransferPolicy(msoe.get<MenuSelectOptionTextArrow>()->getData());
+          sm->setDefaultSSLTransferPolicy(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
         }
         else if (identifier == "defidletime") {
-          sm->setDefaultMaxIdleTime(util::str2Int(msoe.get<MenuSelectOptionTextField>()->getData()));
+          sm->setDefaultMaxIdleTime(util::str2Int(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData()));
         }
         else if (identifier == "legend") { // legacy
-          ui->setLegendMode(msoe.get<MenuSelectOptionCheckBox>()->getData() ? LEGEND_SCROLLING : LEGEND_DISABLED);
+          ui->setLegendMode(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData() ? LEGEND_SCROLLING : LEGEND_DISABLED);
         }
         else if (identifier == "legendmode") {
-          ui->setLegendMode((LegendMode)msoe.get<MenuSelectOptionTextArrow>()->getData());
+          ui->setLegendMode((LegendMode)std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
         }
         else if (identifier == "dlpath") {
-          ls->setDownloadPath(msoe.get<MenuSelectOptionTextField>()->getData());
+          ls->setDownloadPath(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "preparedraceexpirytime") {
-          global->getEngine()->setPreparedRaceExpiryTime(util::str2Int(msoe.get<MenuSelectOptionTextField>()->getData()));
+          global->getEngine()->setPreparedRaceExpiryTime(util::str2Int(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData()));
         }
       }
       rch->setEnabled(udpenable);

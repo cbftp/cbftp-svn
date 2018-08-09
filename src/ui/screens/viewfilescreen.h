@@ -1,13 +1,13 @@
 #pragma once
 
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "../uiwindow.h"
 
-#include "../../core/pointer.h"
 #include "../../encoding.h"
 #include "../../path.h"
-
-#include <vector>
-#include <string>
 
 class TransferStatus;
 class SiteLogic;
@@ -31,8 +31,8 @@ public:
 private:
   int state;
   int requestid;
-  Pointer<SiteLogic> sitelogic;
-  Pointer<TransferStatus> ts;
+  std::shared_ptr<SiteLogic> sitelogic;
+  std::shared_ptr<TransferStatus> ts;
   FileList * filelist;
   std::string site;
   std::string file;

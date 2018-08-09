@@ -18,6 +18,7 @@
 #include <dirent.h>
 #include <pwd.h>
 #include <grp.h>
+#include <unordered_map>
 
 namespace {
 
@@ -190,8 +191,8 @@ bool LocalStorage::deleteFileAbsolute(const Path & filename) {
 bool LocalStorage::deleteRecursive(const Path & path) {
   LocalFile file = getLocalFile(path);
   if (file.isDirectory()) {
-    Pointer<LocalFileList> filelist = getLocalFileList(path);
-    std::map<std::string, LocalFile>::const_iterator it;
+    std::shared_ptr<LocalFileList> filelist = getLocalFileList(path);
+    std::unordered_map<std::string, LocalFile>::const_iterator it;
     for (it = filelist->begin(); it != filelist->end(); it++) {
       if (!deleteRecursive(path / it->first)) {
         return false;
@@ -211,12 +212,12 @@ LocalPathInfo LocalStorage::getPathInfo(const Path & path, int currentdepth) {
   if (!file.isDirectory()) {
     return LocalPathInfo(0, 1, 0, file.getSize());
   }
-  Pointer<LocalFileList> filelist = getLocalFileList(path);
+  std::shared_ptr<LocalFileList> filelist = getLocalFileList(path);
   int aggdirs = 1;
   int aggfiles = 0;
   int deepest = currentdepth;
   unsigned long long int aggsize = 0;
-  std::map<std::string, LocalFile>::const_iterator it;
+  std::unordered_map<std::string, LocalFile>::const_iterator it;
   for (it = filelist->begin(); it != filelist->end(); it++) {
     if (it->second.isDirectory()) {
       LocalPathInfo subpathinfo = getPathInfo(path / it->first, currentdepth + 1);
@@ -276,13 +277,13 @@ void LocalStorage::storeContent(int storeid, const BinaryData & data) {
   content[storeid] = data;
 }
 
-Pointer<LocalFileList> LocalStorage::getLocalFileList(const Path & path) {
-  Pointer<LocalFileList> filelist;
+std::shared_ptr<LocalFileList> LocalStorage::getLocalFileList(const Path & path) {
+  std::shared_ptr<LocalFileList> filelist;
   DIR * dir = opendir(path.toString().c_str());
   struct dirent * dent;
   while (dir != NULL && (dent = readdir(dir)) != NULL) {
     if (!filelist) {
-      filelist = makePointer<LocalFileList>(path);
+      filelist = std::make_shared<LocalFileList>(path);
     }
     std::string name = dent->d_name;
     if (name != ".." && name != ".") {

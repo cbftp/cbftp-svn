@@ -38,7 +38,7 @@ void ChangeKeyScreen::redraw() {
   ui->printStr(y, 1, "Please verify with your old encryption key.");
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
+    std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
     highlight = false;
     if (mso.getSelectionPointer() == i) {
       highlight = true;
@@ -52,7 +52,7 @@ void ChangeKeyScreen::update() {
   if (mismatch || oldmismatch || tooshort) {
     redraw();
   }
-  Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
+  std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
   ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
   ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
@@ -124,9 +124,9 @@ bool ChangeKeyScreen::keyPressed(unsigned int ch) {
       ui->returnToLast();
       return true;
     case 'd':
-      Pointer<MenuSelectOptionTextField> field1 = mso.getElement(0);
-      Pointer<MenuSelectOptionTextField> field2 = mso.getElement(1);
-      Pointer<MenuSelectOptionTextField> field3 = mso.getElement(2);
+      std::shared_ptr<MenuSelectOptionTextField> field1 = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement(0));
+      std::shared_ptr<MenuSelectOptionTextField> field2 = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement(1));
+      std::shared_ptr<MenuSelectOptionTextField> field3 = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement(2));
       std::string oldkey = field1->getData();
       std::string newkey = field2->getData();
       std::string newkey2 = field3->getData();

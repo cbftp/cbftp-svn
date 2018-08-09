@@ -60,7 +60,7 @@ void SkipListScreen::initialize() {
   int y = 4;
   int addx = 30;
   if (globalskip) {
-    Pointer<MenuSelectOptionTextArrow> arrow = base.addTextArrow(y, 1, "defaultaction", "Default action:");
+    std::shared_ptr<MenuSelectOptionTextArrow> arrow = base.addTextArrow(y, 1, "defaultaction", "Default action:");
     arrow->addOption("Allow", SKIPLIST_ALLOW);
     arrow->addOption("Deny", SKIPLIST_DENY);
     arrow->setOption(skiplist->defaultAllow() ? SKIPLIST_ALLOW : SKIPLIST_DENY);
@@ -91,8 +91,8 @@ void SkipListScreen::redraw() {
   y += 4;
   unsigned int listspan = row - 8;
   table.clear();
-  Pointer<ResizableElement> re;
-  Pointer<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
+  std::shared_ptr<ResizableElement> re;
+  std::shared_ptr<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
   re = table.addTextButton(y, 1, "pattern", "PATTERN");
   re->setSelectable(false);
   msal->addElement(re, 1, RESIZE_CUTEND, true);
@@ -125,7 +125,7 @@ void SkipListScreen::redraw() {
   adaptViewSpan(currentviewspan, listspan, ypos, table.linesSize() - 1);
   bool highlight;
   for (unsigned int i = 0; i < base.size(); i++) {
-    Pointer<MenuSelectOptionElement> msoe = base.getElement(i);
+    std::shared_ptr<MenuSelectOptionElement> msoe = base.getElement(i);
     highlight = false;
     if (base.getSelectionPointer() == i && &base == focusedarea) {
       highlight = true;
@@ -134,7 +134,7 @@ void SkipListScreen::redraw() {
     ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
   if (temphighlightline != -1) {
-    Pointer<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
+    std::shared_ptr<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
     if (!!highlightline) {
       std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
       for (unsigned int i = minmaxcol.first; i <= minmaxcol.second; i++) {
@@ -143,7 +143,7 @@ void SkipListScreen::redraw() {
     }
   }
   for (unsigned int i = 0; i < table.size(); i++) {
-    Pointer<ResizableElement> re = table.getElement(i);
+    std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(i));
     unsigned int lineindex = table.getLineIndex(table.getAdjustableLine(re));
     ypos = lineindex - 1;
     if (lineindex > 0 && (ypos < currentviewspan || ypos >= currentviewspan + listspan)) {
@@ -164,16 +164,16 @@ void SkipListScreen::redraw() {
 void SkipListScreen::update() {
   if (defocusedarea != NULL) {
     if (defocusedarea == &base) {
-      Pointer<MenuSelectOptionElement> msoe = base.getElement(base.getLastSelectionPointer());
+      std::shared_ptr<MenuSelectOptionElement> msoe = base.getElement(base.getLastSelectionPointer());
       ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
     }
     else if (defocusedarea == &table) {
-      Pointer<MenuSelectOptionElement> msoe = table.getElement(table.getLastSelectionPointer());
+      std::shared_ptr<MenuSelectOptionElement> msoe = table.getElement(table.getLastSelectionPointer());
       ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
     }
     defocusedarea = NULL;
   }
-  Pointer<MenuSelectOptionElement> msoe;
+  std::shared_ptr<MenuSelectOptionElement> msoe;
   if (focusedarea == &base) {
     int lastsel = base.getLastSelectionPointer();
     int sel = base.getSelectionPointer();
@@ -250,7 +250,7 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
     if (ch == 10) {
       activeelement->deactivate();
       if (activeelement->getIdentifier() == "defaultaction") {
-        testskiplist.setDefaultAllow(activeelement.get<MenuSelectOptionTextArrow>()->getData() == SKIPLIST_ALLOW);
+        testskiplist.setDefaultAllow(std::static_pointer_cast<MenuSelectOptionTextArrow>(activeelement)->getData() == SKIPLIST_ALLOW);
       }
       active = false;
       saveToTempSkipList();
@@ -326,8 +326,8 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
       return true;
     case KEY_DC:
       if (focusedarea == &table) {
-        Pointer<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
-        Pointer<MenuSelectAdjustableLine> msal = table.getAdjustableLine(msoe);
+        std::shared_ptr<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
+        std::shared_ptr<MenuSelectAdjustableLine> msal = table.getAdjustableLine(msoe);
         table.removeAdjustableLine(msal);
         saveToTempSkipList();
         if (testskiplist.size() == 0) {
@@ -341,8 +341,8 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
       return true;
     case KEY_IC:
       if (focusedarea == &table) {
-        Pointer<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
-        Pointer<MenuSelectAdjustableLine> msal = table.getAdjustableLine(msoe);
+        std::shared_ptr<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
+        std::shared_ptr<MenuSelectAdjustableLine> msal = table.getAdjustableLine(msoe);
         addPatternLine(0, "", false, false, SCOPE_IN_RACE, SKIPLIST_ALLOW, msal);
         saveToTempSkipList();
         ui->redraw();
@@ -350,8 +350,8 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
       return true;
     case 'o':
       if (focusedarea == &table) {
-        Pointer<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
-        Pointer<MenuSelectAdjustableLine> msal = table.getAdjustableLine(msoe);
+        std::shared_ptr<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
+        std::shared_ptr<MenuSelectAdjustableLine> msal = table.getAdjustableLine(msoe);
         if (table.getLineIndex(msal) > 1 && table.swapLineWithPrevious(msal)) {
           table.goUp();
           saveToTempSkipList();
@@ -361,8 +361,8 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
       return true;
     case 'm':
       if (focusedarea == &table) {
-        Pointer<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
-        Pointer<MenuSelectAdjustableLine> msal = table.getAdjustableLine(msoe);
+        std::shared_ptr<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
+        std::shared_ptr<MenuSelectAdjustableLine> msal = table.getAdjustableLine(msoe);
         if (table.swapLineWithNext(msal)) {
           table.goDown();
           saveToTempSkipList();
@@ -403,40 +403,40 @@ std::string SkipListScreen::getInfoLabel() const {
 }
 
 void SkipListScreen::saveToTempSkipList() {
-  std::vector<Pointer<MenuSelectAdjustableLine> >::iterator it;
+  std::vector<std::shared_ptr<MenuSelectAdjustableLine> >::iterator it;
   testskiplist.clearEntries();
   for (it = table.linesBegin(); it != table.linesEnd(); it++) {
     if (it == table.linesBegin()) {
       continue;
     }
-    std::string pattern = (*it)->getElement(0).get<MenuSelectOptionTextField>()->getData();
-    bool file = (*it)->getElement(1).get<MenuSelectOptionCheckBox>()->getData();
-    bool dir = (*it)->getElement(2).get<MenuSelectOptionCheckBox>()->getData();
-    SkipListAction action = static_cast<SkipListAction>((*it)->getElement(3).get<MenuSelectOptionTextArrow>()->getData());
-    int scope = (*it)->getElement(4).get<MenuSelectOptionTextArrow>()->getData();
+    std::string pattern = std::static_pointer_cast<MenuSelectOptionTextField>((*it)->getElement(0))->getData();
+    bool file = std::static_pointer_cast<MenuSelectOptionCheckBox>((*it)->getElement(1))->getData();
+    bool dir = std::static_pointer_cast<MenuSelectOptionCheckBox>((*it)->getElement(2))->getData();
+    SkipListAction action = static_cast<SkipListAction>(std::static_pointer_cast<MenuSelectOptionTextArrow>((*it)->getElement(3))->getData());
+    int scope = std::static_pointer_cast<MenuSelectOptionTextArrow>((*it)->getElement(4))->getData();
     testskiplist.addEntry(pattern, file, dir, scope, action);
   }
 }
 
 void SkipListScreen::addPatternLine(int y, std::string pattern, bool file, bool dir, int scope, SkipListAction action) {
-  addPatternLine(y, pattern, file, dir, scope, action, Pointer<MenuSelectAdjustableLine>());
+  addPatternLine(y, pattern, file, dir, scope, action, std::shared_ptr<MenuSelectAdjustableLine>());
 }
 
-void SkipListScreen::addPatternLine(int y, std::string pattern, bool file, bool dir, int scope, SkipListAction action, Pointer<MenuSelectAdjustableLine> before) {
-  Pointer<MenuSelectAdjustableLine> msal;
+void SkipListScreen::addPatternLine(int y, std::string pattern, bool file, bool dir, int scope, SkipListAction action, std::shared_ptr<MenuSelectAdjustableLine> before) {
+  std::shared_ptr<MenuSelectAdjustableLine> msal;
   if (!before) {
     msal = table.addAdjustableLine();
   }
   else {
     msal = table.addAdjustableLineBefore(before);
   }
-  Pointer<ResizableElement> re = table.addStringField(y, 1, "patternedit", "", pattern, false, 64);
+  std::shared_ptr<ResizableElement> re = table.addStringField(y, 1, "patternedit", "", pattern, false, 64);
   msal->addElement(re, 1, RESIZE_CUTEND, true);
   re = table.addCheckBox(y, 2, "filebox", "", file);
   msal->addElement(re, 2, RESIZE_REMOVE);
   re = table.addCheckBox(y, 3, "dirbox", "", dir);
   msal->addElement(re, 3, RESIZE_REMOVE);
-  Pointer<MenuSelectOptionTextArrow> msota = table.addTextArrow(y, 4, "actionarrow", "");
+  std::shared_ptr<MenuSelectOptionTextArrow> msota = table.addTextArrow(y, 4, "actionarrow", "");
   msota->addOption("Allow", SKIPLIST_ALLOW);
   msota->addOption("Deny", SKIPLIST_DENY);
   msota->addOption("Unique", SKIPLIST_UNIQUE);

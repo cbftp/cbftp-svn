@@ -40,7 +40,7 @@ void NewKeyScreen::redraw() {
   ui->printStr(y+8, 1, "Good password practice is described well by xkcd: http://xkcd.com/936/");
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
+    std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
     highlight = false;
     if (mso.getSelectionPointer() == i) {
       highlight = true;
@@ -51,7 +51,7 @@ void NewKeyScreen::redraw() {
 }
 
 void NewKeyScreen::update() {
-  Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
+  std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
   ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
   ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
@@ -115,8 +115,8 @@ bool NewKeyScreen::keyPressed(unsigned int ch) {
       ui->setLegend();
       return true;
     case 'd':
-      Pointer<MenuSelectOptionTextField> field1 = mso.getElement(0);
-      Pointer<MenuSelectOptionTextField> field2 = mso.getElement(1);
+      std::shared_ptr<MenuSelectOptionTextField> field1 = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement(0));
+      std::shared_ptr<MenuSelectOptionTextField> field2 = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement(1));
       std::string key = field1->getData();
       std::string key2 = field2->getData();
       field1->clear();

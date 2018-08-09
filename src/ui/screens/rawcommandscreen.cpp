@@ -39,7 +39,7 @@ void RawCommandScreen::initialize(unsigned int row, unsigned int col, const std:
 }
 
 void RawCommandScreen::initialize(unsigned int row, unsigned int col, const std::string & sitename) {
-  Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(sitename);
+  std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(sitename);
   initialize(row, col, sitename, sl->getSite()->getBasePath(), "");
 }
 

@@ -1,9 +1,9 @@
 #pragma once
 
 #include <list>
+#include <memory>
 #include <utility>
 
-#include "../../core/pointer.h"
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
@@ -27,15 +27,15 @@ public:
   std::string getInfoText() const;
 private:
   void populateSiteList();
-  Pointer<Race> startRace(bool addtemplegend);
-  Pointer<Site> startsite;
-  std::string getSectionButtonText(Pointer<MenuSelectOptionElement>) const;
+  std::shared_ptr<Race> startRace(bool addtemplegend);
+  std::shared_ptr<Site> startsite;
+  std::string getSectionButtonText(std::shared_ptr<MenuSelectOptionElement>) const;
   std::string currentlegendtext;
   std::string defaultlegendtext;
   bool active;
   bool toggleall;
   std::string section;
-  Pointer<MenuSelectOptionElement> activeelement;
+  std::shared_ptr<MenuSelectOptionElement> activeelement;
   FocusableArea * focusedarea;
   FocusableArea * defocusedarea;
   MenuSelectOption msos;
@@ -44,5 +44,5 @@ private:
   std::list<std::pair<std::string, bool> > items;
   std::string infotext;
   std::list<std::pair<std::string, bool> > tempsites;
-  Pointer<MenuSelectOptionTextArrow> msota;
+  std::shared_ptr<MenuSelectOptionTextArrow> msota;
 };

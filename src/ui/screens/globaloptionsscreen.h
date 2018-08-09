@@ -2,8 +2,7 @@
 
 #include <list>
 #include <map>
-
-#include "../../core/pointer.h"
+#include <memory>
 
 #include "../menuselectoption.h"
 #include "../uiwindow.h"
@@ -32,7 +31,7 @@ private:
   std::string currentlegendtext;
   std::string defaultlegendtext;
   bool active;
-  Pointer<MenuSelectOptionElement> activeelement;
+  std::shared_ptr<MenuSelectOptionElement> activeelement;
   std::map<int, std::string> interfacemap;
-  Pointer<MenuSelectOptionTextArrow> defaultinterface;
+  std::shared_ptr<MenuSelectOptionTextArrow> defaultinterface;
 };
