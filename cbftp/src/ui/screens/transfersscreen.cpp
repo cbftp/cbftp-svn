@@ -202,7 +202,7 @@ void TransfersScreen::initialize(unsigned int row, unsigned int col, const Trans
   init(row, col);
 }
 
-bool TransfersScreen::showsWhileFiltered(const Pointer<TransferStatus> & ts) const {
+bool TransfersScreen::showsWhileFiltered(const std::shared_ptr<TransferStatus> & ts) const {
   if (tfp.usejobfilter) {
     bool match = false;
     if (!tfp.spreadjobsfilter.empty()) {
@@ -301,8 +301,8 @@ void TransfersScreen::addFilterFinishedTransfers() {
   int i = 0;
   size_t finishedsize = tm->totalFinishedTransfers();
   int count = finishedsize - numfinishedfiltered;
-  std::list<Pointer<TransferStatus> > newfiltered;
-  for (std::list<Pointer<TransferStatus> >::const_iterator it = tm->finishedTransfersBegin(); it != tm->finishedTransfersEnd() && i < count; it++, i++) {
+  std::list<std::shared_ptr<TransferStatus> > newfiltered;
+  for (std::list<std::shared_ptr<TransferStatus> >::const_iterator it = tm->finishedTransfersBegin(); it != tm->finishedTransfersEnd() && i < count; it++, i++) {
     if (showsWhileFiltered(*it)) {
       newfiltered.push_back(*it);
     }
@@ -317,7 +317,7 @@ void TransfersScreen::addFilterFinishedTransfers() {
 unsigned int TransfersScreen::totalListSize() const {
   int ongoingfiltercount = 0;
   if (filtering) {
-    for (std::list<Pointer<TransferStatus> >::const_iterator it = tm->ongoingTransfersBegin(); it != tm->ongoingTransfersEnd(); it++) {
+    for (std::list<std::shared_ptr<TransferStatus> >::const_iterator it = tm->ongoingTransfersBegin(); it != tm->ongoingTransfersEnd(); it++) {
       if (showsWhileFiltered(*it)) {
         ongoingfiltercount++;
       }
@@ -339,7 +339,7 @@ void TransfersScreen::redraw() {
   addTransferTableHeader(y++, table);
 
   unsigned int pos = 0;
-  for (std::list<Pointer<TransferStatus> >::const_iterator it = tm->ongoingTransfersBegin(); it != tm->ongoingTransfersEnd() && y < row; it++) {
+  for (std::list<std::shared_ptr<TransferStatus> >::const_iterator it = tm->ongoingTransfersBegin(); it != tm->ongoingTransfersEnd() && y < row; it++) {
     if (filtering && !showsWhileFiltered(*it)) {
       continue;
     }
@@ -354,7 +354,7 @@ void TransfersScreen::redraw() {
     ++pos;
   }
   if (filtering) {
-    for (std::list<Pointer<TransferStatus> >::const_iterator it = finishedfilteredtransfers.begin(); it != finishedfilteredtransfers.end() && y < row; it++) {
+    for (std::list<std::shared_ptr<TransferStatus> >::const_iterator it = finishedfilteredtransfers.begin(); it != finishedfilteredtransfers.end() && y < row; it++) {
       if (pos >= currentviewspan) {
         int id = nextid++;
         addTransferDetails(y++, table, *it, id);
@@ -367,7 +367,7 @@ void TransfersScreen::redraw() {
     }
   }
   else {
-    for (std::list<Pointer<TransferStatus> >::const_iterator it = tm->finishedTransfersBegin(); it != tm->finishedTransfersEnd() && y < row; it++) {
+    for (std::list<std::shared_ptr<TransferStatus> >::const_iterator it = tm->finishedTransfersBegin(); it != tm->finishedTransfersEnd() && y < row; it++) {
       if (pos >= currentviewspan) {
         int id = nextid++;
         addTransferDetails(y++, table, *it, id);
@@ -383,7 +383,7 @@ void TransfersScreen::redraw() {
   hascontents = table.linesSize() > 1;
   table.adjustLines(col - 3);
   if (temphighlightline != -1) {
-    Pointer<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
+    std::shared_ptr<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
     if (!!highlightline) {
       std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
       for (unsigned int i = minmaxcol.first; i <= minmaxcol.second; i++) {
@@ -393,7 +393,7 @@ void TransfersScreen::redraw() {
   }
   bool highlight;
   for (unsigned int i = 0; i < table.size(); i++) {
-    Pointer<ResizableElement> re = table.getElement(i);
+    std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(i));
     highlight = false;
     if (hascontents && (table.getSelectionPointer() == i  || (int)re->getRow() == temphighlightline)) {
       highlight = true;
@@ -401,7 +401,7 @@ void TransfersScreen::redraw() {
     if (re->isVisible()) {
       if (re->getIdentifier() == "transferred") {
         int progresspercent = 0;
-        std::map<int, Pointer<TransferStatus> >::iterator it = statusmap.find(re->getId());
+        std::map<int, std::shared_ptr<TransferStatus> >::iterator it = statusmap.find(re->getId());
         if (it != statusmap.end()) {
           progresspercent = it->second->getProgress();
         }
@@ -474,9 +474,9 @@ bool TransfersScreen::keyPressed(unsigned int ch) {
       return true;
     case 10:
      if (hascontents) {
-       Pointer<MenuSelectOptionTextButton> elem =
-           table.getElement(table.getSelectionPointer());
-       std::map<int, Pointer<TransferStatus> >::iterator it = statusmap.find(elem->getId());
+       std::shared_ptr<MenuSelectOptionTextButton> elem =
+           std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
+       std::map<int, std::shared_ptr<TransferStatus> >::iterator it = statusmap.find(elem->getId());
        if (it != statusmap.end()) {
          ui->goTransferStatus(it->second);
        }
@@ -494,9 +494,9 @@ bool TransfersScreen::keyPressed(unsigned int ch) {
       return true;
     case 'B':
       if (hascontents) {
-        Pointer<MenuSelectOptionTextButton> elem =
-            table.getElement(table.getSelectionPointer());
-        std::map<int, Pointer<TransferStatus> >::iterator it = statusmap.find(elem->getId());
+        std::shared_ptr<MenuSelectOptionTextButton> elem =
+            std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
+        std::map<int, std::shared_ptr<TransferStatus> >::iterator it = statusmap.find(elem->getId());
         if (it != statusmap.end()) {
           TransferStatusScreen::abortTransfer(it->second);
         }
@@ -537,13 +537,13 @@ void TransfersScreen::addTransferTableHeader(unsigned int y, MenuSelectOption & 
   addTransferTableRow(y, mso, false, "STARTED", "USE", "ROUTE", "PATH", "TRANSFERRED", "FILENAME", "LEFT", "SPEED", "DONE", -1);
 }
 
-void TransfersScreen::addTransferDetails(unsigned int y, MenuSelectOption & mso, Pointer<TransferStatus> ts, int id) {
+void TransfersScreen::addTransferDetails(unsigned int y, MenuSelectOption & mso, std::shared_ptr<TransferStatus> ts, int id) {
   TransferDetails td = formatTransferDetails(ts);
   addTransferTableRow(y, mso, true, ts->getTimestamp(), td.timespent, td.route, td.path, td.transferred,
       ts->getFile(), td.timeremaining, td.speed, td.progress, id);
 }
 
-TransferDetails TransfersScreen::formatTransferDetails(Pointer<TransferStatus> & ts) {
+TransferDetails TransfersScreen::formatTransferDetails(std::shared_ptr<TransferStatus> & ts) {
   TransferDetails td;
   td.route = ts->getSource() + " -> " + ts->getTarget();
   td.path = ts->getSourcePath().toString() + " -> " + ts->getTargetPath().toString();
@@ -590,8 +590,8 @@ void TransfersScreen::addTransferTableRow(unsigned int y, MenuSelectOption & mso
     const std::string & path, const std::string & transferred, const std::string & filename,
     const std::string & timeremaining, const std::string & speed, const std::string & progress, int id)
 {
-  Pointer<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
-  Pointer<MenuSelectOptionTextButton> msotb;
+  std::shared_ptr<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
+  std::shared_ptr<MenuSelectOptionTextButton> msotb;
 
   msotb = mso.addTextButtonNoContent(y, 1, "timestamp", timestamp);
   msotb->setSelectable(false);

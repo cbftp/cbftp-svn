@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../core/pointer.h"
+#include <memory>
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
@@ -21,7 +21,7 @@ public:
   std::string getInfoText() const;
 private:
   Engine * engine;
-  Pointer<ScoreBoard> scoreboard;
+  std::shared_ptr<ScoreBoard> scoreboard;
   MenuSelectOption table;
   unsigned int currentviewspan;
 };

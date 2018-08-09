@@ -12,20 +12,20 @@ SelectSitesScreen::SelectSitesScreen(Ui * ui) {
   this->ui = ui;
 }
 
-void SelectSitesScreen::initializeExclude(unsigned int row, unsigned int col, const std::string & purpose, std::list<Pointer<Site> > preselectedsites, std::list<Pointer<Site> > excludedsites) {
+void SelectSitesScreen::initializeExclude(unsigned int row, unsigned int col, const std::string & purpose, std::list<std::shared_ptr<Site> > preselectedsites, std::list<std::shared_ptr<Site> > excludedsites) {
   sm = global->getSiteManager();
   this->purpose = purpose;
-  std::set<Pointer<Site> > preselected;
-  std::set<Pointer<Site> > excluded;
-  for (std::list<Pointer<Site> >::iterator it = preselectedsites.begin(); it != preselectedsites.end(); it++) {
+  std::set<std::shared_ptr<Site> > preselected;
+  std::set<std::shared_ptr<Site> > excluded;
+  for (std::list<std::shared_ptr<Site> >::iterator it = preselectedsites.begin(); it != preselectedsites.end(); it++) {
     preselected.insert(*it);
   }
-  for (std::list<Pointer<Site> >::iterator it = excludedsites.begin(); it != excludedsites.end(); it++) {
+  for (std::list<std::shared_ptr<Site> >::iterator it = excludedsites.begin(); it != excludedsites.end(); it++) {
     excluded.insert(*it);
   }
   mso.clear();
   mso.enterFocusFrom(0);
-  std::vector<Pointer<Site> >::const_iterator it;
+  std::vector<std::shared_ptr<Site> >::const_iterator it;
   for (it = sm->begin(); it != sm->end(); it++) {
     if (excluded.find(*it) != excluded.end()) {
       continue;
@@ -37,14 +37,14 @@ void SelectSitesScreen::initializeExclude(unsigned int row, unsigned int col, co
   init(row, col);
 }
 
-void SelectSitesScreen::initializeSelect(unsigned int row, unsigned int col, const std::string & purpose, std::list<Pointer<Site> > preselectedsites, std::list<Pointer<Site> > sites) {
+void SelectSitesScreen::initializeSelect(unsigned int row, unsigned int col, const std::string & purpose, std::list<std::shared_ptr<Site> > preselectedsites, std::list<std::shared_ptr<Site> > sites) {
   sm = global->getSiteManager();
   this->purpose = purpose;
-  std::set<Pointer<Site> > preselected;
-  for (std::list<Pointer<Site> >::iterator it = preselectedsites.begin(); it != preselectedsites.end(); it++) {
+  std::set<std::shared_ptr<Site> > preselected;
+  for (std::list<std::shared_ptr<Site> >::iterator it = preselectedsites.begin(); it != preselectedsites.end(); it++) {
     preselected.insert(*it);
   }
-  for (std::list<Pointer<Site> >::iterator it = sites.begin(); it != sites.end(); it++) {
+  for (std::list<std::shared_ptr<Site> >::iterator it = sites.begin(); it != sites.end(); it++) {
     bool selected = preselected.find(*it) != preselected.end();
     tempsites.push_back(std::pair<std::string, bool>((*it)->getName(), selected));
   }
@@ -59,7 +59,7 @@ void SelectSitesScreen::redraw() {
   unsigned int y = 1;
   unsigned int x = 1;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    Pointer<MenuSelectOptionCheckBox> msocb = mso.getElement(i);
+    std::shared_ptr<MenuSelectOptionCheckBox> msocb = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement(i));
     tempsites.push_back(std::pair<std::string, bool>(msocb->getIdentifier(), msocb->getData()));
   }
   mso.clear();
@@ -80,7 +80,7 @@ void SelectSitesScreen::redraw() {
   tempsites.clear();
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
+    std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
     highlight = false;
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
@@ -94,7 +94,7 @@ void SelectSitesScreen::redraw() {
 }
 
 void SelectSitesScreen::update() {
-  Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
+  std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
   ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText());
   ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
@@ -144,7 +144,7 @@ bool SelectSitesScreen::keyPressed(unsigned int ch) {
       return true;
     case 32:
     case 10: {
-      Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getSelectionPointer());
+      std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getSelectionPointer());
       if (!!msoe) {
         activation = msoe->activate();
         if (!activation) {
@@ -159,7 +159,7 @@ bool SelectSitesScreen::keyPressed(unsigned int ch) {
     case 'd': {
       std::string sites = "";
       for (unsigned int i = 0; i < mso.size(); i++) {
-        Pointer<MenuSelectOptionCheckBox> msocb = mso.getElement(i);
+        std::shared_ptr<MenuSelectOptionCheckBox> msocb = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement(i));
         if (msocb->getData()) {
           sites += msocb->getIdentifier() + ",";
         }
@@ -174,7 +174,7 @@ bool SelectSitesScreen::keyPressed(unsigned int ch) {
       bool triggered = false;
       while (!triggered && mso.size()) {
         for (unsigned int i = 0; i < mso.size(); i++) {
-          Pointer<MenuSelectOptionCheckBox> msocb = mso.getElement(i);
+          std::shared_ptr<MenuSelectOptionCheckBox> msocb = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement(i));
           if (togglestate == msocb->getData()) {
             msocb->activate();
             triggered = true;

@@ -112,14 +112,14 @@ void SiteLogic::activateAll() {
   }
 }
 
-SiteRace * SiteLogic::addRace(Pointer<Race> & enginerace, const std::string & section, const std::string & release) {
+SiteRace * SiteLogic::addRace(std::shared_ptr<Race> & enginerace, const std::string & section, const std::string & release) {
   SiteRace * race = new SiteRace(enginerace, site->getName(), site->getSectionPath(section), release, site->getUser(), site->getSkipList());
   races.push_back(race);
   activateAll();
   return race;
 }
 
-void SiteLogic::addTransferJob(Pointer<SiteTransferJob> & tj) {
+void SiteLogic::addTransferJob(std::shared_ptr<SiteTransferJob> & tj) {
   transferjobs.push_back(tj);
   activateOne();
 }
@@ -198,7 +198,7 @@ void SiteLogic::listRefreshed(int id) {
     return;
   }
   if (connstatetracker[id].hasRequest()) {
-    const Pointer<SiteLogicRequest> & request = connstatetracker[id].getRequest();
+    const std::shared_ptr<SiteLogicRequest> & request = connstatetracker[id].getRequest();
     FileList * filelist = conns[id]->currentFileList();
     FileListData * filelistdata = new FileListData(filelist, conns[id]->getCwdRawBuffer());
     if (request->requestType() == REQ_FILELIST &&
@@ -310,7 +310,7 @@ void SiteLogic::commandSuccess(int id, int state) {
         }
       }
       if (connstatetracker[id].hasRequest()) {
-        const Pointer<SiteLogicRequest> request = connstatetracker[id].getRequest();
+        const std::shared_ptr<SiteLogicRequest> request = connstatetracker[id].getRequest();
         if (request->requestType() == REQ_FILELIST) {
           getFileListConn(id);
           return;
@@ -337,7 +337,7 @@ void SiteLogic::commandSuccess(int id, int state) {
     }
     case STATE_MKD:
       if (connstatetracker[id].hasRequest()) {
-        const Pointer<SiteLogicRequest> request = connstatetracker[id].getRequest();
+        const std::shared_ptr<SiteLogicRequest> request = connstatetracker[id].getRequest();
         if (request->requestType() == REQ_MKDIR) {
           setRequestReady(id, NULL, true);
         }
@@ -419,7 +419,7 @@ void SiteLogic::commandSuccess(int id, int state) {
       break;
     case STATE_WIPE:
       if (connstatetracker[id].hasRequest()) {
-        const Pointer<SiteLogicRequest> & request = connstatetracker[id].getRequest();
+        const std::shared_ptr<SiteLogicRequest> & request = connstatetracker[id].getRequest();
         if (request->requestType() == REQ_WIPE_RECURSIVE ||
             request->requestType() == REQ_WIPE)
         {
@@ -530,7 +530,7 @@ void SiteLogic::commandFail(int id, int failuretype) {
         }
       }
       if (connstatetracker[id].hasRequest()) {
-        const Pointer<SiteLogicRequest> request = connstatetracker[id].getRequest();
+        const std::shared_ptr<SiteLogicRequest> request = connstatetracker[id].getRequest();
         if (request->requestType() == REQ_FILELIST ||
             request->requestType() == REQ_RAW ||
             request->requestType() == REQ_IDLE)
@@ -577,7 +577,7 @@ void SiteLogic::commandFail(int id, int failuretype) {
       }
       else {
         if (connstatetracker[id].hasRequest()) {
-          const Pointer<SiteLogicRequest> request = connstatetracker[id].getRequest();
+          const std::shared_ptr<SiteLogicRequest> request = connstatetracker[id].getRequest();
           if (request->requestType() == REQ_MKDIR) {
             setRequestReady(id, NULL, false);
             handleConnection(id);
@@ -621,7 +621,7 @@ void SiteLogic::commandFail(int id, int failuretype) {
       return;
     case STATE_WIPE:
       if (connstatetracker[id].hasRequest()) {
-        const Pointer<SiteLogicRequest> & request = connstatetracker[id].getRequest();
+        const std::shared_ptr<SiteLogicRequest> & request = connstatetracker[id].getRequest();
         if (request->requestType() == REQ_WIPE_RECURSIVE ||
             request->requestType() == REQ_WIPE)
         {
@@ -862,9 +862,9 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
       return;
     }
   }
-  std::list<Pointer<SiteTransferJob> > targetjobs;
-  for (std::list<Pointer<SiteTransferJob> >::iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
-    Pointer<SiteTransferJob> & tj = *it;
+  std::list<std::shared_ptr<SiteTransferJob> > targetjobs;
+  for (std::list<std::shared_ptr<SiteTransferJob> >::iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
+    std::shared_ptr<SiteTransferJob> & tj = *it;
     if (!tj->getTransferJob()->isDone()) {
       if (tj->wantsList()) {
         FileList * fl = tj->getListTarget();
@@ -890,7 +890,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
   if (targetjobs.size()) {
     connstatetracker[id].delayedCommand("handle", SLEEPDELAY);
   }
-  for (std::list<Pointer<SiteTransferJob> >::iterator it = targetjobs.begin(); it != targetjobs.end(); it++) {
+  for (std::list<std::shared_ptr<SiteTransferJob> >::iterator it = targetjobs.begin(); it != targetjobs.end(); it++) {
     if (global->getEngine()->transferJobActionRequest(*it)) {
       return;
     }
@@ -1421,7 +1421,7 @@ bool SiteLogic::finishRequest(int requestid) {
   return false;
 }
 
-const Pointer<Site> & SiteLogic::getSite() const {
+const std::shared_ptr<Site> & SiteLogic::getSite() const {
   return site;
 }
 
@@ -1602,7 +1602,7 @@ bool SiteLogic::getSlot(bool isdownload) {
   return true;
 }
 
-void SiteLogic::pushPotential(int score, const std::string & file, const Pointer<SiteLogic> & dst) {
+void SiteLogic::pushPotential(int score, const std::string & file, const std::shared_ptr<SiteLogic> & dst) {
   ptrack->pushPotential(score, file, dst, dst->getSite()->getMaxUp());
 }
 
@@ -1750,7 +1750,7 @@ void SiteLogic::raceGlobalComplete() {
       break;
     }
   }
-  for (std::list<Pointer<SiteTransferJob> >::const_iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
+  for (std::list<std::shared_ptr<SiteTransferJob> >::const_iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
     if (!(*it)->getTransferJob()->isDone()) {
       stillactive = true;
       break;
@@ -1927,7 +1927,7 @@ const ConnStateTracker * SiteLogic::getConnStateTracker(int id) const {
 }
 
 void SiteLogic::setRequestReady(unsigned int id, void * data, bool status) {
-  const Pointer<SiteLogicRequest> & request = connstatetracker[id].getRequest();
+  const std::shared_ptr<SiteLogicRequest> & request = connstatetracker[id].getRequest();
   requestsready.push_back(SiteLogicRequestReady(request->requestType(), request->requestId(), data, status));
   if (requestsready.size() > MAXREQUESTREADYQUEUE) {
     clearReadyRequest(requestsready.front());

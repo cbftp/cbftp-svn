@@ -1,10 +1,10 @@
 #pragma once
 
 #include <list>
+#include <memory>
 #include <string>
 
 #include "core/eventreceiver.h"
-#include "core/pointer.h"
 #include "ftpconnectowner.h"
 #include "path.h"
 
@@ -80,7 +80,7 @@ class RawBufferCallback;
 
 class FTPConn : private EventReceiver, public FTPConnectOwner {
   private:
-    std::list<Pointer<FTPConnect> > connectors;
+    std::list<std::shared_ptr<FTPConnect> > connectors;
     int nextconnectorid;
     IOManager * iom;
     ProxySession * proxysession;
@@ -93,7 +93,7 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     bool allconnectattempted;
     SiteLogic * sl;
     std::string status;
-    Pointer<Site> site;
+    std::shared_ptr<Site> site;
     int transferstatus;
     int sockid;
     FTPConnState state;

@@ -2,7 +2,7 @@
 
 GlobalContext * global = new GlobalContext();
 
-void GlobalContext::linkCore(WorkManager * wm, TickPoke * tp, IOManager * iom, Pointer<EventLog> & el) {
+void GlobalContext::linkCore(WorkManager * wm, TickPoke * tp, IOManager * iom, std::shared_ptr<EventLog> & el) {
   this->wm = wm;
   this->tp = tp;
   this->iom = iom;
@@ -73,7 +73,7 @@ SkipList * GlobalContext::getSkipList() const {
   return sl;
 }
 
-Pointer<EventLog> & GlobalContext::getEventLog() {
+std::shared_ptr<EventLog> & GlobalContext::getEventLog() {
   return el;
 }
 

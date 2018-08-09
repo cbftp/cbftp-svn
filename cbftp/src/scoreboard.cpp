@@ -21,9 +21,9 @@ ScoreBoard::~ScoreBoard() {
 
 void ScoreBoard::add(
     const std::string & name, unsigned short score, bool prio,
-    const Pointer<SiteLogic> & src, FileList * fls, SiteRace * srs,
-    const Pointer<SiteLogic> & dst, FileList * fld, SiteRace * srd,
-    Pointer<Race> & race, const std::string & subdir)
+    const std::shared_ptr<SiteLogic> & src, FileList * fls, SiteRace * srs,
+    const std::shared_ptr<SiteLogic> & dst, FileList * fld, SiteRace * srd,
+    std::shared_ptr<Race> & race, const std::string & subdir)
 {
   if (showsize == elements.size()) {
     elements.resize(elements.size() + RESIZE_CHUNK);

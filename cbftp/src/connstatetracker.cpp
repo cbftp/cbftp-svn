@@ -21,7 +21,7 @@ ConnStateTracker::ConnStateTracker() :
   listtransfer(false),
   listinitialized(false),
   quitting(false),
-  recursivelogic(makePointer<RecursiveCommandLogic>()) {
+  recursivelogic(std::make_shared<RecursiveCommandLogic>()) {
 }
 
 ConnStateTracker::~ConnStateTracker() {
@@ -296,20 +296,20 @@ bool ConnStateTracker::isHardLocked() const {
   return isTransferLocked() || hasRequest() || isQuitting();
 }
 
-const Pointer<SiteLogicRequest> & ConnStateTracker::getRequest() const {
+const std::shared_ptr<SiteLogicRequest> & ConnStateTracker::getRequest() const {
   return request;
 }
 
 void ConnStateTracker::setRequest(SiteLogicRequest request) {
   util::assert(!this->request);
-  this->request = makePointer<SiteLogicRequest>(request);
+  this->request = std::make_shared<SiteLogicRequest>(request);
 }
 
 void ConnStateTracker::finishRequest() {
   request.reset();
 }
 
-Pointer<RecursiveCommandLogic> ConnStateTracker::getRecursiveLogic() const {
+std::shared_ptr<RecursiveCommandLogic> ConnStateTracker::getRecursiveLogic() const {
   return recursivelogic;
 }
 

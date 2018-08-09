@@ -91,6 +91,6 @@ bool FocusableArea::activateSelected() {
   return false;
 }
 
-Pointer<MenuSelectOptionElement> FocusableArea::getElement(unsigned int i) const {
-  return Pointer<MenuSelectOptionElement>();
+std::shared_ptr<MenuSelectOptionElement> FocusableArea::getElement(unsigned int i) const {
+  return std::shared_ptr<MenuSelectOptionElement>();
 }

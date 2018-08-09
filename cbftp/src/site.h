@@ -1,12 +1,12 @@
 #pragma once
 
-#include <string>
-#include <map>
-#include <set>
 #include <list>
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
 #include <utility>
 
-#include "core/pointer.h"
 #include "path.h"
 #include "skiplist.h"
 #include "statistics.h"
@@ -70,8 +70,8 @@ private:
   std::map<std::string, std::pair<int, unsigned long long int> > avgspeedsamples;
   std::set<std::string> affils;
   std::map<std::string, std::string> affilslower;
-  std::set<Pointer<Site> > exceptsourcesites;
-  std::set<Pointer<Site> > excepttargetsites;
+  std::set<std::shared_ptr<Site> > exceptsourcesites;
+  std::set<std::shared_ptr<Site> > excepttargetsites;
   int proxytype;
   std::string proxyname;
   int transfersourcepolicy;
@@ -167,21 +167,21 @@ public:
   void setTransferSourcePolicy(int);
   void setTransferTargetPolicy(int);
   void setUseXDUPE(bool);
-  void addAllowedSourceSite(const Pointer<Site> &);
-  void addBlockedSourceSite(const Pointer<Site> &);
-  void addExceptSourceSite(const Pointer<Site> &);
-  void addAllowedTargetSite(const Pointer<Site> &);
-  void addBlockedTargetSite(const Pointer<Site> &);
-  void addExceptTargetSite(const Pointer<Site> &);
-  void removeExceptSite(const Pointer<Site> &);
+  void addAllowedSourceSite(const std::shared_ptr<Site> &);
+  void addBlockedSourceSite(const std::shared_ptr<Site> &);
+  void addExceptSourceSite(const std::shared_ptr<Site> &);
+  void addAllowedTargetSite(const std::shared_ptr<Site> &);
+  void addBlockedTargetSite(const std::shared_ptr<Site> &);
+  void addExceptTargetSite(const std::shared_ptr<Site> &);
+  void removeExceptSite(const std::shared_ptr<Site> &);
   void clearExceptSites();
-  bool isAllowedTargetSite(const Pointer<Site> &) const;
+  bool isAllowedTargetSite(const std::shared_ptr<Site> &) const;
   std::set<std::string>::const_iterator affilsBegin() const;
   std::set<std::string>::const_iterator affilsEnd() const;
-  std::set<Pointer<Site> >::const_iterator exceptSourceSitesBegin() const;
-  std::set<Pointer<Site> >::const_iterator exceptSourceSitesEnd() const;
-  std::set<Pointer<Site> >::const_iterator exceptTargetSitesBegin() const;
-  std::set<Pointer<Site> >::const_iterator exceptTargetSitesEnd() const;
+  std::set<std::shared_ptr<Site> >::const_iterator exceptSourceSitesBegin() const;
+  std::set<std::shared_ptr<Site> >::const_iterator exceptSourceSitesEnd() const;
+  std::set<std::shared_ptr<Site> >::const_iterator exceptTargetSitesBegin() const;
+  std::set<std::shared_ptr<Site> >::const_iterator exceptTargetSitesEnd() const;
   void addSection(const std::string &, const std::string &);
   std::list<std::string> getSectionsForPath(const Path &) const;
   std::list<std::string> getSectionsForPartialPath(const Path &) const;

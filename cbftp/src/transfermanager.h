@@ -1,10 +1,9 @@
 #pragma once
 
 #include <list>
-#include <string>
 #include <map>
-
-#include "core/pointer.h"
+#include <memory>
+#include <string>
 
 class CommandOwner;
 class ScoreBoardElement;
@@ -19,37 +18,37 @@ class LocalFileList;
 
 class TransferManager {
   private:
-    std::list<Pointer<TransferMonitor> > transfermonitors;
-    std::list<Pointer<TransferStatus> > ongoingtransfers;
-    std::list<Pointer<TransferStatus> > finishedtransfers;
+    std::list<std::shared_ptr<TransferMonitor> > transfermonitors;
+    std::list<std::shared_ptr<TransferStatus> > ongoingtransfers;
+    std::list<std::shared_ptr<TransferStatus> > finishedtransfers;
     unsigned int totalfinishedtransfers;
-    Pointer<TransferMonitor> getAvailableTransferMonitor();
-    void moveTransferStatusToFinished(const Pointer<TransferStatus> &);
+    std::shared_ptr<TransferMonitor> getAvailableTransferMonitor();
+    void moveTransferStatusToFinished(const std::shared_ptr<TransferStatus> &);
   public:
     TransferManager();
     ~TransferManager();
-    void getFileList(const Pointer<SiteLogic> &, int, bool, FileList *, CommandOwner *);
-    Pointer<TransferStatus> suggestTransfer(
-      const std::string &, const Pointer<SiteLogic> &, FileList *,
-      const Pointer<SiteLogic> &, FileList *, CommandOwner *, CommandOwner *);
-    Pointer<TransferStatus> suggestTransfer(
-      const std::string &, const Pointer<SiteLogic> &, FileList *,
-      const std::string &, const Pointer<SiteLogic> &, FileList *,
+    void getFileList(const std::shared_ptr<SiteLogic> &, int, bool, FileList *, CommandOwner *);
+    std::shared_ptr<TransferStatus> suggestTransfer(
+      const std::string &, const std::shared_ptr<SiteLogic> &, FileList *,
+      const std::shared_ptr<SiteLogic> &, FileList *, CommandOwner *, CommandOwner *);
+    std::shared_ptr<TransferStatus> suggestTransfer(
+      const std::string &, const std::shared_ptr<SiteLogic> &, FileList *,
+      const std::string &, const std::shared_ptr<SiteLogic> &, FileList *,
       CommandOwner *, CommandOwner *);
-    Pointer<TransferStatus> suggestDownload(
-      const std::string &, const Pointer<SiteLogic> &, FileList *,
-      const Pointer<LocalFileList> &, CommandOwner *);
-    Pointer<TransferStatus> suggestUpload(
-      const std::string &, const Pointer<LocalFileList> &,
-      const Pointer<SiteLogic> &, FileList *, CommandOwner *);
-    void transferSuccessful(const Pointer<TransferStatus> &);
-    void transferFailed(const Pointer<TransferStatus> &, int);
-    std::list<Pointer<TransferStatus> >::const_iterator ongoingTransfersBegin() const;
-    std::list<Pointer<TransferStatus> >::const_iterator ongoingTransfersEnd() const;
-    std::list<Pointer<TransferStatus> >::const_iterator finishedTransfersBegin() const;
-    std::list<Pointer<TransferStatus> >::const_iterator finishedTransfersEnd() const;
+    std::shared_ptr<TransferStatus> suggestDownload(
+      const std::string &, const std::shared_ptr<SiteLogic> &, FileList *,
+      const std::shared_ptr<LocalFileList> &, CommandOwner *);
+    std::shared_ptr<TransferStatus> suggestUpload(
+      const std::string &, const std::shared_ptr<LocalFileList> &,
+      const std::shared_ptr<SiteLogic> &, FileList *, CommandOwner *);
+    void transferSuccessful(const std::shared_ptr<TransferStatus> &);
+    void transferFailed(const std::shared_ptr<TransferStatus> &, int);
+    std::list<std::shared_ptr<TransferStatus> >::const_iterator ongoingTransfersBegin() const;
+    std::list<std::shared_ptr<TransferStatus> >::const_iterator ongoingTransfersEnd() const;
+    std::list<std::shared_ptr<TransferStatus> >::const_iterator finishedTransfersBegin() const;
+    std::list<std::shared_ptr<TransferStatus> >::const_iterator finishedTransfersEnd() const;
     unsigned int ongoingTransfersSize() const;
     unsigned int finishedTransfersSize() const;
     unsigned int totalFinishedTransfers() const;
-    void addNewTransferStatus(const Pointer<TransferStatus> &);
+    void addNewTransferStatus(const std::shared_ptr<TransferStatus> &);
 };

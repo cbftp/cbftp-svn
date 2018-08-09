@@ -52,7 +52,7 @@ void NukeScreen::redraw() {
   ui->printStr(3, 1, "Path: " + path.toString());
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
+    std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
     highlight = false;
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
@@ -63,7 +63,7 @@ void NukeScreen::redraw() {
 }
 
 void NukeScreen::update() {
-  Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
+  std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
   ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
   ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
@@ -160,13 +160,13 @@ void NukeScreen::nuke() {
   int multiplier = 1;
   std::string reason;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
+    std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
     std::string identifier = msoe->getIdentifier();
     if (identifier == "multiplier") {
-      multiplier = msoe.get<MenuSelectOptionNumArrow>()->getData();
+      multiplier = std::static_pointer_cast<MenuSelectOptionNumArrow>(msoe)->getData();
     }
     else if (identifier == "reason") {
-      reason = msoe.get<MenuSelectOptionTextField>()->getData();
+      reason = std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData();
     }
   }
   nuke(multiplier, reason);

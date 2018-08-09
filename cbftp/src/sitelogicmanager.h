@@ -1,18 +1,17 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
-
-#include "core/pointer.h"
 
 class SiteLogic;
 
 class SiteLogicManager {
   private:
-    std::vector<Pointer<SiteLogic> > sitelogics;
+    std::vector<std::shared_ptr<SiteLogic> > sitelogics;
   public:
     SiteLogicManager();
-    const Pointer<SiteLogic> getSiteLogic(const std::string &);
-    const Pointer<SiteLogic> getSiteLogic(SiteLogic *);
+    const std::shared_ptr<SiteLogic> getSiteLogic(const std::string &);
+    const std::shared_ptr<SiteLogic> getSiteLogic(SiteLogic *);
     void deleteSiteLogic(const std::string &);
 };

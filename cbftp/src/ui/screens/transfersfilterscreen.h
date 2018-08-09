@@ -1,11 +1,10 @@
 #pragma once
 
 #include <list>
+#include <memory>
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
-
-#include "../../core/pointer.h"
 
 class TransferManager;
 class TransferStatus;
@@ -33,7 +32,7 @@ private:
   std::string currentlegendtext;
   std::string defaultlegendtext;
   bool active;
-  Pointer<MenuSelectOptionElement> activeelement;
+  std::shared_ptr<MenuSelectOptionElement> activeelement;
   std::list<std::string> selectedspreadjobs;
   std::list<std::string> selectedtransferjobs;
 };

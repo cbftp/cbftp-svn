@@ -1,8 +1,8 @@
 #pragma once
 
+#include <memory>
 #include <string>
 
-#include "core/pointer.h"
 #include "commandowner.h"
 
 class FileList;
@@ -13,7 +13,7 @@ class SiteTransferJob : public CommandOwner {
 public:
   SiteTransferJob(TransferJob * tj, bool source);
   TransferJob * getTransferJob();
-  Pointer<SiteLogic> getOtherSiteLogic() const;
+  std::shared_ptr<SiteLogic> getOtherSiteLogic() const;
   bool wantsList();
   bool otherWantsList();
   Path getPath() const;

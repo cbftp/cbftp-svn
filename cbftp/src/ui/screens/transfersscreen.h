@@ -1,12 +1,11 @@
 #pragma once
 
-#include <map>
 #include <list>
+#include <map>
+#include <memory>
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
-
-#include "../../core/pointer.h"
 
 class TransferManager;
 class TransferStatus;
@@ -61,18 +60,18 @@ public:
   std::string getInfoLabel() const;
   std::string getInfoText() const;
   static void addTransferTableHeader(unsigned int, MenuSelectOption &);
-  static TransferDetails formatTransferDetails(Pointer<TransferStatus> &);
+  static TransferDetails formatTransferDetails(std::shared_ptr<TransferStatus> &);
 private:
   static void addTransferTableRow(unsigned int, MenuSelectOption &, bool,
       const std::string &, const std::string &, const std::string &,
       const std::string &, const std::string &, const std::string &,
       const std::string &, const std::string &, const std::string &,
       int);
-  static void addTransferDetails(unsigned int, MenuSelectOption &, Pointer<TransferStatus>, int);
+  static void addTransferDetails(unsigned int, MenuSelectOption &, std::shared_ptr<TransferStatus>, int);
   void addFilterFinishedTransfers();
-  bool showsWhileFiltered(const Pointer<TransferStatus> &) const;
+  bool showsWhileFiltered(const std::shared_ptr<TransferStatus> &) const;
   unsigned int totalListSize() const;
-  std::map<int, Pointer<TransferStatus> > statusmap;
+  std::map<int, std::shared_ptr<TransferStatus> > statusmap;
   TransferManager * tm;
   MenuSelectOption table;
   unsigned int currentviewspan;
@@ -82,6 +81,6 @@ private:
   bool filtering;
   TransferFilteringParameters tfp;
   int numfinishedfiltered;
-  std::list<Pointer<TransferStatus> > finishedfilteredtransfers;
+  std::list<std::shared_ptr<TransferStatus> > finishedfilteredtransfers;
   int temphighlightline;
 };

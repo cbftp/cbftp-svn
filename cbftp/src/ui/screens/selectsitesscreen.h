@@ -17,8 +17,8 @@ class Site;
 class SelectSitesScreen : public UIWindow {
 public:
   SelectSitesScreen(Ui *);
-  void initializeSelect(unsigned int, unsigned int, const std::string &, std::list<Pointer<Site> >, std::list<Pointer<Site> >);
-  void initializeExclude(unsigned int, unsigned int, const std::string &, std::list<Pointer<Site> >, std::list<Pointer<Site> >);
+  void initializeSelect(unsigned int, unsigned int, const std::string &, std::list<std::shared_ptr<Site> >, std::list<std::shared_ptr<Site> >);
+  void initializeExclude(unsigned int, unsigned int, const std::string &, std::list<std::shared_ptr<Site> >, std::list<std::shared_ptr<Site> >);
   void redraw();
   void update();
   bool keyPressed(unsigned int);

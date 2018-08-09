@@ -1,9 +1,8 @@
 #pragma once
 
-#include <vector>
+#include <memory>
 #include <string>
-
-#include "core/pointer.h"
+#include <vector>
 
 class ScoreBoardElement;
 class SiteLogic;
@@ -26,8 +25,8 @@ class ScoreBoard {
   public:
     ScoreBoard();
     ~ScoreBoard();
-    void add(const std::string &, unsigned short, bool, const Pointer<SiteLogic> &,
-        FileList *, SiteRace *, const Pointer<SiteLogic> &, FileList *, SiteRace *, Pointer<Race> &, const std::string &);
+    void add(const std::string &, unsigned short, bool, const std::shared_ptr<SiteLogic> &,
+        FileList *, SiteRace *, const std::shared_ptr<SiteLogic> &, FileList *, SiteRace *, std::shared_ptr<Race> &, const std::string &);
     unsigned int size() const;
     std::vector<ScoreBoardElement *>::const_iterator begin() const;
     std::vector<ScoreBoardElement *>::const_iterator end() const;

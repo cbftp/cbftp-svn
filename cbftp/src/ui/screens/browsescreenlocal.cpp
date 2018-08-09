@@ -77,7 +77,7 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
   table.adjustLines(col - 3);
   table.checkPointer();
   if (temphighlightline != -1) {
-    Pointer<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
+    std::shared_ptr<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
     if (!!highlightline) {
       std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
       for (unsigned int i = minmaxcol.first; i <= minmaxcol.second; i++) {
@@ -86,7 +86,7 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
     }
   }
   for (unsigned int i = 0; i < table.size(); i++) {
-    Pointer<ResizableElement> re = table.getElement(i);
+    std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(i));
     bool highlight = false;
     bool cursored = table.getSelectionPointer() == i;
     bool softselected = re->getOrigin() && static_cast<UIFile *>(re->getOrigin())->isSoftSelected();
@@ -120,7 +120,7 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
 
 void BrowseScreenLocal::update() {
   if (table.size()) {
-    Pointer<ResizableElement> re = table.getElement(table.getLastSelectionPointer());
+    std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(table.getLastSelectionPointer()));
     bool softselected = re->getOrigin() && static_cast<UIFile *>(re->getOrigin())->isSoftSelected();
     bool hardselected = re->getOrigin() && static_cast<UIFile *>(re->getOrigin())->isHardSelected();
     if (softselected && hardselected) {
@@ -129,7 +129,7 @@ void BrowseScreenLocal::update() {
     else {
       ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), softselected || hardselected);
     }
-    re = table.getElement(table.getSelectionPointer());
+    re = std::static_pointer_cast<ResizableElement>(table.getElement(table.getSelectionPointer()));
     bool selected = re->getOrigin() && (static_cast<UIFile *>(re->getOrigin())->isSoftSelected() ||
                                         static_cast<UIFile *>(re->getOrigin())->isHardSelected());
     if (selected && focus) {
@@ -700,7 +700,7 @@ void BrowseScreenLocal::disableGotoMode() {
 
 void BrowseScreenLocal::gotoPath(const Path & path) {
   targetpath = path;
-  Pointer<LocalFileList> filelist = global->getLocalStorage()->getLocalFileList(path);
+  std::shared_ptr<LocalFileList> filelist = global->getLocalStorage()->getLocalFileList(path);
   if (!filelist) {
     cwdfailed = true;
     tickcount = 0;
@@ -741,7 +741,7 @@ void BrowseScreenLocal::gotoPath(const Path & path) {
   }
 }
 
-Pointer<LocalFileList> BrowseScreenLocal::fileList() const {
+std::shared_ptr<LocalFileList> BrowseScreenLocal::fileList() const {
   return filelist;
 }
 

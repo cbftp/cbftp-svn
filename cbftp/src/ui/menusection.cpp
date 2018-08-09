@@ -25,7 +25,7 @@ void MenuSection::initialize(int row, int col, std::map<std::string, Path>::cons
   this->row = row;
   this->col = col;
   std::map<std::string, Path>::const_iterator it;
-  addbutton = makePointer<MenuSelectOptionTextButton>("add", 0, 0, "<Add>");
+  addbutton = std::make_shared<MenuSelectOptionTextButton>("add", 0, 0, "<Add>");
   for(it = sectionsbegin; it != sectionsend; it++) {
     addSection(it->first, it->second);
   }
@@ -104,12 +104,12 @@ unsigned int MenuSection::getSelectionPointer() const {
   return pointer;
 }
 
-Pointer<MenuSelectOptionElement> MenuSection::getElement(unsigned int i) const {
+std::shared_ptr<MenuSelectOptionElement> MenuSection::getElement(unsigned int i) const {
   if (i == 0) {
     return addbutton;
   }
   if (i > sectioncontainers.size() * 3) {
-    return Pointer<MenuSelectOptionElement>();
+    return std::shared_ptr<MenuSelectOptionElement>();
   }
   int id = (i - 1) / 3;
   int internalid = (i - 1) % 3;
@@ -117,7 +117,7 @@ Pointer<MenuSelectOptionElement> MenuSection::getElement(unsigned int i) const {
 }
 
 bool MenuSection::activateSelected() {
-  Pointer<MenuSelectOptionElement> msoe = getElement(pointer);
+  std::shared_ptr<MenuSelectOptionElement> msoe = getElement(pointer);
   if (msoe->getIdentifier() == "add") {
     addSection();
     needsredraw = true;
@@ -154,9 +154,9 @@ unsigned int MenuSection::size() const {
 }
 
 void MenuSection::addSection(std::string nametext, const Path & path) {
-  Pointer<MenuSelectOptionElement> name(makePointer<MenuSelectOptionTextField>("name", 0, 0, "Name:", nametext, 11, 32, false));
-  Pointer<MenuSelectOptionElement> pathe(makePointer<MenuSelectOptionTextField>("path", 0, 0, "Path:", path.toString(), 30, 64, false));
-  Pointer<MenuSelectOptionElement> del(makePointer<MenuSelectOptionTextButton>("delete", 0, 0, "<X>"));
+  std::shared_ptr<MenuSelectOptionElement> name(std::make_shared<MenuSelectOptionTextField>("name", 0, 0, "Name:", nametext, 11, 32, false));
+  std::shared_ptr<MenuSelectOptionElement> pathe(std::make_shared<MenuSelectOptionTextField>("path", 0, 0, "Path:", path.toString(), 30, 64, false));
+  std::shared_ptr<MenuSelectOptionElement> del(std::make_shared<MenuSelectOptionTextButton>("delete", 0, 0, "<X>"));
   MenuSelectOptionContainer msoc = MenuSelectOptionContainer();
   msoc.addElement(name);
   msoc.addElement(pathe);

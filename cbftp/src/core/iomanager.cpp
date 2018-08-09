@@ -56,7 +56,7 @@ IOManager::IOManager(WorkManager * wm, TickPoke * tp) :
   wm(wm),
   tp(tp),
   blockpool(wm->getBlockPool()),
-  sendblockpool(makePointer<DataBlockPool>()),
+  sendblockpool(std::make_shared<DataBlockPool>()),
   blocksize(blockpool->blockSize()),
   sockidcounter(0),
   hasdefaultinterface(false)
@@ -985,7 +985,7 @@ std::string IOManager::getInterfaceAddress(const std::string & interface) {
   return inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
 }
 
-void IOManager::setLogger(Pointer<Logger> logger) {
+void IOManager::setLogger(std::shared_ptr<Logger> logger) {
   this->logger = logger;
 }
 

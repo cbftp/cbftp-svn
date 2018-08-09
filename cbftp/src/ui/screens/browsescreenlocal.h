@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <list>
 #include <utility>
@@ -10,7 +11,6 @@
 #include "../uifilelist.h"
 #include "../menuselectoptiontextfield.h"
 
-#include "../../core/pointer.h"
 #include "../../path.h"
 
 class Ui;
@@ -30,7 +30,7 @@ public:
   std::string getInfoText() const;
   void setFocus(bool);
   void tick(int);
-  Pointer<LocalFileList> fileList() const;
+  std::shared_ptr<LocalFileList> fileList() const;
   UIFile * selectedFile() const;
   UIFileList * getUIFileList();
   void sort();
@@ -59,7 +59,7 @@ private:
   bool filtermodeinput;
   std::string gotomodestring;
   std::list<std::pair<Path, std::string> > selectionhistory;
-  Pointer<LocalFileList> filelist;
+  std::shared_ptr<LocalFileList> filelist;
   Path targetpath;
   MenuSelectOptionTextField filterfield;
   int temphighlightline;

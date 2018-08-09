@@ -1,11 +1,11 @@
 #pragma once
 
+#include <list>
+#include <memory>
 #include <string>
 #include <vector>
-#include <list>
 
 #include "core/eventreceiver.h"
-#include "core/pointer.h"
 
 class TransferMonitor;
 class ConnStateTracker;
@@ -27,12 +27,12 @@ class FileListData;
 
 class SiteLogic : public EventReceiver {
   private:
-    Pointer<Site> site;
+    std::shared_ptr<Site> site;
     std::vector<FTPConn *> conns;
     std::vector<ConnStateTracker> connstatetracker;
     std::vector<SiteRace *> races;
     std::list<SiteRace *> recentlylistedraces;
-    std::list<Pointer<SiteTransferJob> > transferjobs;
+    std::list<std::shared_ptr<SiteTransferJob> > transferjobs;
     RawBuffer * rawcommandrawbuf;
     RawBuffer * aggregatedrawbuf;
     unsigned int maxslotsup;
@@ -80,8 +80,8 @@ class SiteLogic : public EventReceiver {
     SiteLogic(const std::string &);
     ~SiteLogic();
     void runInstance();
-    SiteRace * addRace(Pointer<Race> &, const std::string &, const std::string &);
-    void addTransferJob(Pointer<SiteTransferJob> & tj);
+    SiteRace * addRace(std::shared_ptr<Race> &, const std::string &, const std::string &);
+    void addTransferJob(std::shared_ptr<SiteTransferJob> & tj);
     void tick(int);
     void connectFailed(int);
     void userDenied(int);
@@ -102,7 +102,7 @@ class SiteLogic : public EventReceiver {
     void activateOne();
     void activateAll();
     void haveConnectedActivate(unsigned int);
-    const Pointer<Site> & getSite() const;
+    const std::shared_ptr<Site> & getSite() const;
     SiteRace * getRace(const std::string &) const;
     void lockConnList(int);
     bool lockDownloadConn(FileList *, int *, CommandOwner *, TransferMonitor *);
@@ -145,7 +145,7 @@ class SiteLogic : public EventReceiver {
     FileListData * getFileListData(int) const;
     std::string getRawCommandResult(int);
     bool finishRequest(int);
-    void pushPotential(int, const std::string &, const Pointer<SiteLogic> &);
+    void pushPotential(int, const std::string &, const std::shared_ptr<SiteLogic> &);
     bool potentialCheck(int);
     int getPotential();
     void updateName();

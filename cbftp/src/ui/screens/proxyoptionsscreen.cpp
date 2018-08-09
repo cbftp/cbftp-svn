@@ -73,7 +73,7 @@ void ProxyOptionsScreen::redraw() {
   }
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
+    std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
     highlight = false;
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
@@ -82,7 +82,7 @@ void ProxyOptionsScreen::redraw() {
     ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
   for (unsigned int i = 0; i < msop.size(); i++) {
-    Pointer<MenuSelectOptionElement> msoe = msop.getElement(i);
+    std::shared_ptr<MenuSelectOptionElement> msoe = msop.getElement(i);
     highlight = false;
     if (msop.isFocused() && msop.getSelectionPointer() == i) {
       highlight = true;
@@ -102,16 +102,16 @@ void ProxyOptionsScreen::redraw() {
 void ProxyOptionsScreen::update() {
   if (defocusedarea != NULL) {
     if (defocusedarea == &mso) {
-      Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
+      std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
       ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
     }
     else if (defocusedarea == &msop) {
-      Pointer<MenuSelectOptionElement> msoe = msop.getElement(mso.getLastSelectionPointer());
+      std::shared_ptr<MenuSelectOptionElement> msoe = msop.getElement(mso.getLastSelectionPointer());
       ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
     }
   }
   if (focusedarea == &mso) {
-    Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
+    std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
     ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
     ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
     msoe = mso.getElement(mso.getSelectionPointer());
@@ -119,7 +119,7 @@ void ProxyOptionsScreen::update() {
     ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
   else if (focusedarea == &msop) {
-    Pointer<MenuSelectOptionElement> msoe = msop.getElement(msop.getLastSelectionPointer());
+    std::shared_ptr<MenuSelectOptionElement> msoe = msop.getElement(msop.getLastSelectionPointer());
     ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), (unsigned int) 9);
     msoe = msop.getElement(msop.getSelectionPointer());
     ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), 9, true);
@@ -152,7 +152,7 @@ bool ProxyOptionsScreen::keyPressed(unsigned int ch) {
     return true;
   }
   bool activation;
-  Pointer<MenuSelectOptionElement> selected;
+  std::shared_ptr<MenuSelectOptionElement> selected;
   switch(ch) {
     case KEY_UP:
       if (focusedarea->goUp()) {
@@ -207,10 +207,10 @@ bool ProxyOptionsScreen::keyPressed(unsigned int ch) {
       return true;
     case 'd':
       for(unsigned int i = 0; i < mso.size(); i++) {
-        Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
+        std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
         std::string identifier = msoe->getIdentifier();
         if (identifier == "useproxy") {
-          pm->setDefaultProxy(msoe.get<MenuSelectOptionTextArrow>()->getDataText());
+          pm->setDefaultProxy(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getDataText());
         }
       }
       ui->returnToLast();

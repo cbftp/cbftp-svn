@@ -41,7 +41,7 @@ void FileViewerSettingsScreen::redraw() {
   ui->erase();
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
-    Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
+    std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
     highlight = false;
     if (mso.getSelectionPointer() == i) {
       highlight = true;
@@ -52,7 +52,7 @@ void FileViewerSettingsScreen::redraw() {
 }
 
 void FileViewerSettingsScreen::update() {
-  Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
+  std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
   ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
   ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
@@ -107,22 +107,22 @@ bool FileViewerSettingsScreen::keyPressed(unsigned int ch) {
       return true;
     case 'd':
       for(unsigned int i = 0; i < mso.size(); i++) {
-        Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
+        std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
         std::string identifier = msoe->getIdentifier();
         if (identifier == "temppath") {
-          ls->setTempPath(msoe.get<MenuSelectOptionTextField>()->getData());
+          ls->setTempPath(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "video") {
-          efv->setVideoViewer(msoe.get<MenuSelectOptionTextField>()->getData());
+          efv->setVideoViewer(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "audio") {
-          efv->setAudioViewer(msoe.get<MenuSelectOptionTextField>()->getData());
+          efv->setAudioViewer(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "image") {
-          efv->setImageViewer(msoe.get<MenuSelectOptionTextField>()->getData());
+          efv->setImageViewer(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "pdf") {
-          efv->setPDFViewer(msoe.get<MenuSelectOptionTextField>()->getData());
+          efv->setPDFViewer(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
       }
       ui->returnToLast();

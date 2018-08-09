@@ -1,9 +1,8 @@
 #pragma once
 
 #include <list>
+#include <memory>
 #include <string>
-
-#include "../core/pointer.h"
 
 #include "uiwindow.h"
 
@@ -18,8 +17,8 @@ public:
   void redraw();
   void update();
   void setSplit(bool);
-  void setMainLegendPrinter(Pointer<LegendPrinter> printer);
-  void addTempLegendPrinter(Pointer<LegendPrinter> printer);
+  void setMainLegendPrinter(std::shared_ptr<LegendPrinter> printer);
+  void addTempLegendPrinter(std::shared_ptr<LegendPrinter> printer);
   void clearTempLegendPrinters();
 private:
   int latestid;
@@ -29,6 +28,6 @@ private:
   unsigned int offset;
   bool split;
   WINDOW * window;
-  Pointer<LegendPrinter> mainlegendprinter;
-  std::list<Pointer<LegendPrinter> > templegendprinters;
+  std::shared_ptr<LegendPrinter> mainlegendprinter;
+  std::list<std::shared_ptr<LegendPrinter> > templegendprinters;
 };

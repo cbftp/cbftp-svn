@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../core/pointer.h"
+#include <memory>
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
@@ -20,10 +20,10 @@ public:
   std::string getLegendText() const;
   std::string getInfoLabel() const;
 private:
-  Pointer<Site> modsite;
+  std::shared_ptr<Site> modsite;
   std::string currentlegendtext;
   std::string defaultlegendtext;
   bool active;
-  Pointer<MenuSelectOptionElement> activeelement;
+  std::shared_ptr<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;
 };

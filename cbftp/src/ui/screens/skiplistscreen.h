@@ -1,9 +1,10 @@
 #pragma once
 
+#include <memory>
+
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
 
-#include "../../core/pointer.h"
 #include "../../skiplist.h"
 
 class SkipList;
@@ -29,20 +30,20 @@ private:
   void initialize();
   void saveToTempSkipList();
   void addPatternLine(int, std::string, bool, bool, int, SkipListAction);
-  void addPatternLine(int, std::string, bool, bool, int, SkipListAction, Pointer<MenuSelectAdjustableLine>);
+  void addPatternLine(int, std::string, bool, bool, int, SkipListAction, std::shared_ptr<MenuSelectAdjustableLine>);
   SkipList * skiplist;
   std::string currentlegendtext;
   std::string baselegendtext;
   std::string tablelegendtext;
   bool active;
-  Pointer<MenuSelectOptionElement> activeelement;
+  std::shared_ptr<MenuSelectOptionElement> activeelement;
   MenuSelectOption base;
   MenuSelectOption table;
   FocusableArea * focusedarea;
   FocusableArea * defocusedarea;
   SkipList testskiplist;
-  Pointer<MenuSelectOptionTextField> testpattern;
-  Pointer<MenuSelectOptionTextArrow> testtype;
+  std::shared_ptr<MenuSelectOptionTextField> testpattern;
+  std::shared_ptr<MenuSelectOptionTextArrow> testtype;
   unsigned int currentviewspan;
   bool globalskip;
   int temphighlightline;

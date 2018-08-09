@@ -58,7 +58,7 @@ void EditProxyScreen::redraw() {
   latestauthmethod = authmethod->getData();
   ui->printStr(1, 1, "Type: SOCKS5");
   for (unsigned int i = 0; i < mso.size(); i++) {
-    Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
+    std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
     if (!msoe->visible()) {
       continue;
     }
@@ -76,7 +76,7 @@ void EditProxyScreen::update() {
     redraw();
     return;
   }
-  Pointer<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
+  std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
   if (msoe->visible()) {
     ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
     ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
@@ -136,26 +136,26 @@ bool EditProxyScreen::keyPressed(unsigned int ch) {
         proxy = new Proxy();
       }
       for(unsigned int i = 0; i < mso.size(); i++) {
-        Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
+        std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
         std::string identifier = msoe->getIdentifier();
         if (identifier == "name") {
-          std::string newname = msoe.get<MenuSelectOptionTextField>()->getData();
+          std::string newname = std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData();
           proxy->setName(newname);
         }
         else if (identifier == "addr") {
-          proxy->setAddr(msoe.get<MenuSelectOptionTextField>()->getData());
+          proxy->setAddr(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "port") {
-          proxy->setPort(msoe.get<MenuSelectOptionTextField>()->getData());
+          proxy->setPort(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "user") {
-          proxy->setUser(msoe.get<MenuSelectOptionTextField>()->getData());
+          proxy->setUser(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "pass") {
-          proxy->setPass(msoe.get<MenuSelectOptionTextField>()->getData());
+          proxy->setPass(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "authmethod") {
-          proxy->setAuthMethod(msoe.get<MenuSelectOptionTextArrow>()->getData());
+          proxy->setAuthMethod(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
         }
       }
       if (operation == "add") {

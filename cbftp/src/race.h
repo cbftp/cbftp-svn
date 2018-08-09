@@ -1,12 +1,13 @@
 #pragma once
 
-#include <string>
+#include <memory>
 #include <set>
-#include <map>
+#include <string>
+#include <unordered_set>
+#include <unordered_map>
 #include <utility>
 
 #include "core/eventreceiver.h"
-#include "core/pointer.h"
 #include "sizelocationtrack.h"
 #include "transferstatuscallback.h"
 
@@ -34,9 +35,17 @@ class TransferStatus;
 
 typedef std::pair<std::string, std::pair<FileList *, FileList *> > FailedTransfer;
 
+struct FailedTransferHash {
+public:
+  std::size_t operator()(const std::pair<std::string, std::pair<FileList *, FileList *> > & x) const
+  {
+    return std::hash<std::string>()(x.first) + std::hash<FileList *>()(x.second.first) + std::hash<FileList *>()(x.second.second);
+  }
+};
+
 struct SitesComparator {
-  bool operator()(const std::pair<SiteRace *, Pointer<SiteLogic> > & a,
-                  const std::pair<SiteRace *, Pointer<SiteLogic> > & b) const;
+  bool operator()(const std::pair<SiteRace *, std::shared_ptr<SiteLogic> > & a,
+                  const std::pair<SiteRace *, std::shared_ptr<SiteLogic> > & b) const;
 };
 
 class Race : public EventReceiver, public TransferStatusCallback {
@@ -45,27 +54,27 @@ class Race : public EventReceiver, public TransferStatusCallback {
     void setDone();
     void calculatePercentages();
     void calculateTotal();
-    void addTransferAttempt(const Pointer<TransferStatus> &);
+    void addTransferAttempt(const std::shared_ptr<TransferStatus> &);
     std::string name;
     std::string group;
     std::string section;
-    std::set<std::pair<SiteRace *, Pointer<SiteLogic> >, SitesComparator> sites;
-    std::map<SiteRace *, std::map<std::string, unsigned int> > sizes;
-    std::set<SiteRace *> semidonesites;
-    std::set<SiteRace *> donesites;
+    std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> >, SitesComparator> sites;
+    std::unordered_map<SiteRace *, std::unordered_map<std::string, unsigned int> > sizes;
+    std::unordered_set<SiteRace *> semidonesites;
+    std::unordered_set<SiteRace *> donesites;
     unsigned int maxnumfilessiteprogress;
-    std::map<std::string, std::set<SiteRace *> > sfvreports;
-    std::map<std::string, unsigned int> estimatedsize;
-    std::map<std::string, unsigned long long int> estimatedfilesizes;
+    std::unordered_map<std::string, std::unordered_set<SiteRace *> > sfvreports;
+    std::unordered_map<std::string, unsigned int> estimatedsize;
+    std::unordered_map<std::string, unsigned long long int> estimatedfilesizes;
     unsigned long long int bestunknownfilesizeestimate;
-    std::map<std::string, std::set<SiteRace *> > subpathoccurences;
-    std::set<std::string> estimatedsubpaths;
-    std::map<std::string, std::map<std::string, unsigned long long int> > guessedfilelists;
-    std::map<std::string, unsigned long long int> guessedfileliststotalfilesize;
+    std::unordered_map<std::string, std::unordered_set<SiteRace *> > subpathoccurences;
+    std::unordered_set<std::string> estimatedsubpaths;
+    std::unordered_map<std::string, std::unordered_map<std::string, unsigned long long int> > guessedfilelists;
+    std::unordered_map<std::string, unsigned long long int> guessedfileliststotalfilesize;
     unsigned long long int guessedtotalfilesize;
     unsigned int guessedtotalnumfiles;
-    std::map<std::string, std::map<std::string, SizeLocationTrack> > sizelocationtrackers;
-    std::map<FailedTransfer, int> transferattempts;
+    std::unordered_map<std::string, std::unordered_map<std::string, SizeLocationTrack> > sizelocationtrackers;
+    std::unordered_map<FailedTransfer, int, FailedTransferHash> transferattempts;
     int checkcount;
     std::string timestamp;
     unsigned int timespent;
@@ -81,11 +90,11 @@ class Race : public EventReceiver, public TransferStatusCallback {
   public:
     Race(unsigned int, SpreadProfile, const std::string &, const std::string &);
     ~Race();
-    void addSite(SiteRace *, const Pointer<SiteLogic> &);
+    void addSite(SiteRace *, const std::shared_ptr<SiteLogic> &);
     void removeSite(SiteRace *);
-    void removeSite(const Pointer<SiteLogic> &);
-    std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator begin() const;
-    std::set<std::pair<SiteRace *, Pointer<SiteLogic> > >::const_iterator end() const;
+    void removeSite(const std::shared_ptr<SiteLogic> &);
+    std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator begin() const;
+    std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator end() const;
     std::string getName() const;
     std::string getGroup() const;
     std::string getSection() const;
@@ -94,10 +103,10 @@ class Race : public EventReceiver, public TransferStatusCallback {
     unsigned int guessedSize(const std::string &) const;
     unsigned long long int estimatedTotalSize() const;
     unsigned long long int guessedFileSize(const std::string &, const std::string &) const;
-    std::map<std::string, unsigned long long int>::const_iterator guessedFileListBegin(const std::string &) const;
-    std::map<std::string, unsigned long long int>::const_iterator guessedFileListEnd(const std::string &) const;
+    std::unordered_map<std::string, unsigned long long int>::const_iterator guessedFileListBegin(const std::string &) const;
+    std::unordered_map<std::string, unsigned long long int>::const_iterator guessedFileListEnd(const std::string &) const;
     bool SFVReported(const std::string &) const;
-    std::set<std::string> getSubPaths() const;
+    std::unordered_set<std::string> getSubPaths() const;
     int numSitesDone() const;
     int numSites() const;
     void updateSiteProgress(unsigned int);
@@ -116,7 +125,7 @@ class Race : public EventReceiver, public TransferStatusCallback {
     void reportSFV(SiteRace *, const std::string &);
     void reportDone(SiteRace *);
     void reportSemiDone(SiteRace *);
-    void reportSize(SiteRace *, FileList *, const std::string &, const std::set<std::string> &, bool);
+    void reportSize(SiteRace *, FileList *, const std::string &, const std::unordered_set<std::string> &, bool);
     void setUndone();
     void reset();
     void abort();
@@ -129,9 +138,9 @@ class Race : public EventReceiver, public TransferStatusCallback {
     unsigned int getBestCompletionPercentage() const;
     bool hasFailedTransfer(File *, FileList *, FileList *) const;
     bool failedTransfersCleared() const;
-    void addTransfer(const Pointer<TransferStatus> &);
+    void addTransfer(const std::shared_ptr<TransferStatus> &);
     bool clearTransferAttempts();
-    void transferSuccessful(const Pointer<TransferStatus> &);
-    void transferFailed(const Pointer<TransferStatus> &, int);
+    void transferSuccessful(const std::shared_ptr<TransferStatus> &);
+    void transferFailed(const std::shared_ptr<TransferStatus> &, int);
     void addTransferStatsFile(unsigned long long int);
 };

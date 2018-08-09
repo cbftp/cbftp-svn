@@ -26,18 +26,18 @@ void LocalFileList::touchFile(const std::string & name) {
   addFile(name, 512, false, "", "", 0, 0, 0, 0, 0);
 }
 
-std::map<std::string, LocalFile>::const_iterator LocalFileList::begin() const {
+std::unordered_map<std::string, LocalFile>::const_iterator LocalFileList::begin() const {
   return files.begin();
 }
 
-std::map<std::string, LocalFile>::const_iterator LocalFileList::end() const {
+std::unordered_map<std::string, LocalFile>::const_iterator LocalFileList::end() const {
   return files.end();
 }
 
-std::map<std::string, LocalFile>::const_iterator LocalFileList::find(const std::string & file) const {
-  std::map<std::string, LocalFile>::const_iterator it = files.find(file);
+std::unordered_map<std::string, LocalFile>::const_iterator LocalFileList::find(const std::string & file) const {
+  std::unordered_map<std::string, LocalFile>::const_iterator it = files.find(file);
   if (it == files.end()) {
-    std::map<std::string, std::string>::const_iterator it2 = lowercasefilemap.find(util::toLower(file));
+    std::unordered_map<std::string, std::string>::const_iterator it2 = lowercasefilemap.find(util::toLower(file));
     if (it2 != lowercasefilemap.end()) {
       it = files.find(it2->second);
     }

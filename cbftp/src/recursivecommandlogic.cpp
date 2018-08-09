@@ -1,6 +1,7 @@
 #include "recursivecommandlogic.h"
 
 #include <algorithm>
+#include <unordered_map>
 
 #include "filelist.h"
 #include "file.h"
@@ -81,7 +82,7 @@ void RecursiveCommandLogic::addFileList(FileList * fl) {
     return;
   }
   deletefiles.push_back(std::pair<Path, bool>(path, true));
-  for (std::map<std::string, File *>::iterator it = fl->begin(); it != fl->end(); it++) {
+  for (std::unordered_map<std::string, File *>::iterator it = fl->begin(); it != fl->end(); it++) {
     if (it->second->isDirectory()) {
       wantedlists.push_back(path / it->first);
     }

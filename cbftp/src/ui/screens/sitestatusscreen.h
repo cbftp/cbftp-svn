@@ -1,8 +1,7 @@
 #pragma once
 
+#include <memory>
 #include <vector>
-
-#include "../../core/pointer.h"
 
 #include "../uiwindow.h"
 
@@ -20,6 +19,6 @@ public:
   std::string getInfoLabel() const;
 private:
   std::string sitename;
-  Pointer<Site> site;
-  Pointer<SiteLogic> st;
+  std::shared_ptr<Site> site;
+  std::shared_ptr<SiteLogic> st;
 };

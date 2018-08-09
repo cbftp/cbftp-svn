@@ -1,8 +1,8 @@
 #include "mainscreen.h"
 
 #include <cctype>
+#include <memory>
 
-#include "../../core/pointer.h"
 #include "../../globalcontext.h"
 #include "../../site.h"
 #include "../../race.h"
@@ -80,7 +80,7 @@ void MainScreen::redraw() {
   msos.clear();
   if (listpreparedraces) {
     addPreparedRaceTableHeader(irow++, msop);
-    std::list<Pointer<PreparedRace> >::const_iterator it;
+    std::list<std::shared_ptr<PreparedRace> >::const_iterator it;
     int i = 0;
     for (it = --global->getEngine()->getPreparedRacesEnd(); it != --global->getEngine()->getPreparedRacesBegin() && i < 3; it--, i++) {
       addPreparedRaceDetails(irow++, msop, *it);
@@ -92,7 +92,7 @@ void MainScreen::redraw() {
   if (listraces) {
 
     AllRacesScreen::addRaceTableHeader(irow++, msosj, std::string("RACE NAME") + (listraces > 3 ? " (Showing latest 3)" : ""));
-    std::list<Pointer<Race> >::const_iterator it;
+    std::list<std::shared_ptr<Race> >::const_iterator it;
     int i = 0;
     for (it = --global->getEngine()->getRacesEnd(); it != --global->getEngine()->getRacesBegin() && i < 3; it--, i++) {
       AllRacesScreen::addRaceDetails(irow++, msosj, *it);
@@ -104,7 +104,7 @@ void MainScreen::redraw() {
   if (listtransferjobs) {
 
     AllTransferJobsScreen::addJobTableHeader(irow++, msotj, std::string("TRANSFER JOB NAME") + (listtransferjobs > 3 ? " (Showing latest 3)" : ""));
-    std::list<Pointer<TransferJob> >::const_iterator it;
+    std::list<std::shared_ptr<TransferJob> >::const_iterator it;
     int i = 0;
     for (it = --global->getEngine()->getTransferJobsEnd(); it != --global->getEngine()->getTransferJobsBegin() && i < 3; it--, i++) {
       AllTransferJobsScreen::addJobDetails(irow++, msotj, *it);
@@ -129,8 +129,8 @@ void MainScreen::redraw() {
     sitestartrow = y;
     adaptViewSpan(currentviewspan, row - sitestartrow, sitepos, totalsitessize);
     for (unsigned int i = currentviewspan; (int)i < global->getSiteManager()->getNumSites() && i - currentviewspan < row - sitestartrow; ++i) {
-      Pointer<Site> site = global->getSiteManager()->getSite(i);
-      Pointer<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site->getName());
+      std::shared_ptr<Site> site = global->getSiteManager()->getSite(i);
+      std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site->getName());
       addSiteDetails(y++, msos, sl);
     }
 
@@ -177,7 +177,7 @@ void MainScreen::redraw() {
 
 void MainScreen::printTable(MenuSelectOption & table) {
   if (temphighlightline != -1) {
-    Pointer<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
+    std::shared_ptr<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
     if (!!highlightline) {
       std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
       for (unsigned int i = minmaxcol.first; i <= minmaxcol.second; i++) {
@@ -186,7 +186,7 @@ void MainScreen::printTable(MenuSelectOption & table) {
     }
   }
   for (unsigned int i = 0; i < table.size(); i++) {
-    Pointer<ResizableElement> re = table.getElement(i);
+    std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(i));
     bool highlight = false;
     if (table.isFocused() && (table.getSelectionPointer() == i || (int)re->getRow() == temphighlightline)) {
       highlight = true;
@@ -287,7 +287,7 @@ bool MainScreen::keyPressed(unsigned int ch) {
   if (gotomode) {
     if (ch >= 32 && ch <= 126) {
       for (int i = 0; i < global->getSiteManager()->getNumSites(); i++) {
-        Pointer<Site> site = global->getSiteManager()->getSite(i);
+        std::shared_ptr<Site> site = global->getSiteManager()->getSite(i);
         if (toupper(ch) == toupper(site->getName()[0])) {
           sitepos = i;
           break;
@@ -321,7 +321,7 @@ bool MainScreen::keyPressed(unsigned int ch) {
       if (msos.isFocused()) {
         if (msos.linesSize() == 1) break;
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
-        Pointer<Site> site = global->getSiteManager()->getSite(sitename);
+        std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
         ui->goSiteStatus(site->getName());
       }
       else if (msosj.isFocused() && msosj.size() > 0) {
@@ -379,7 +379,7 @@ bool MainScreen::keyPressed(unsigned int ch) {
     case 'D':
       if (msos.isFocused()) {
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
-        Pointer<Site> site = global->getSiteManager()->getSite(sitename);
+        std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
         if (!site) break;
         deletesite = site->getName();
         ui->goConfirmation("Do you really want to delete site " + deletesite);
@@ -420,8 +420,8 @@ bool MainScreen::keyPressed(unsigned int ch) {
       case 'C': {
         if (msos.linesSize() == 1) break;
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
-        Pointer<Site> oldsite = global->getSiteManager()->getSite(sitename);
-        Pointer<Site> site = makePointer<Site>(*oldsite);
+        std::shared_ptr<Site> oldsite = global->getSiteManager()->getSite(sitename);
+        std::shared_ptr<Site> site = std::make_shared<Site>(*oldsite);
         int i;
         for (i = 0; !!global->getSiteManager()->getSite(site->getName() + "-" + util::int2Str(i)); i++);
         site->setName(site->getName() + "-" + util::int2Str(i));
@@ -497,8 +497,8 @@ void MainScreen::addPreparedRaceTableRow(unsigned int y, MenuSelectOption & mso,
     bool selectable, const std::string & section, const std::string & release, const std::string & ttl,
     const std::string & sites)
 {
-  Pointer<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
-  Pointer<MenuSelectOptionTextButton> msotb;
+  std::shared_ptr<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
+  std::shared_ptr<MenuSelectOptionTextButton> msotb;
 
   msotb = mso.addTextButtonNoContent(y, 1, "section", section);
   msotb->setSelectable(false);
@@ -524,7 +524,7 @@ void MainScreen::addPreparedRaceTableHeader(unsigned int y, MenuSelectOption & m
   addPreparedRaceTableRow(y, mso, -1, false, "SECTION", "PREPARED RACE NAME", "EXPIRES", "SITES");
 }
 
-void MainScreen::addPreparedRaceDetails(unsigned int y, MenuSelectOption & mso, const Pointer<PreparedRace> & preparedrace) {
+void MainScreen::addPreparedRaceDetails(unsigned int y, MenuSelectOption & mso, const std::shared_ptr<PreparedRace> & preparedrace) {
   unsigned int id = preparedrace->getId();
   std::string section = preparedrace->getSection();
   std::string release = preparedrace->getRelease();
@@ -549,8 +549,8 @@ void MainScreen::addSiteRow(unsigned int y, MenuSelectOption & mso, bool selecta
     const std::string & allowup, const std::string & allowdown, const std::string & disabled,
     const std::string & dayup, const std::string & daydn, const std::string & alup, const std::string & aldn)
 {
-  Pointer<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
-  Pointer<MenuSelectOptionTextButton> msotb;
+  std::shared_ptr<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
+  std::shared_ptr<MenuSelectOptionTextButton> msotb;
 
   msotb = mso.addTextButtonNoContent(y, 1, "site", site);
   if (!selectable) {
@@ -609,8 +609,8 @@ void MainScreen::addSiteRow(unsigned int y, MenuSelectOption & mso, bool selecta
   msal->addElement(msotb, 4, RESIZE_REMOVE);
 }
 
-void MainScreen::addSiteDetails(unsigned int y, MenuSelectOption & mso, const Pointer<SiteLogic> & sl) {
-  Pointer<Site> site = sl->getSite();
+void MainScreen::addSiteDetails(unsigned int y, MenuSelectOption & mso, const std::shared_ptr<SiteLogic> & sl) {
+  std::shared_ptr<Site> site = sl->getSite();
   std::string sitename = site->getName();
   std::string logins = util::int2Str(sl->getCurrLogins());
   if (!site->unlimitedLogins()) {

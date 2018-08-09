@@ -1,9 +1,8 @@
 #pragma once
 
 #include <map>
+#include <memory>
 #include <string>
-
-#include "../../core/pointer.h"
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
@@ -22,7 +21,7 @@ public:
   std::string getInfoLabel() const;
   std::string getInfoText() const;
   static void addRaceTableHeader(unsigned int, MenuSelectOption &, const std::string &);
-  static void addRaceDetails(unsigned int, MenuSelectOption &, Pointer<Race>);
+  static void addRaceDetails(unsigned int, MenuSelectOption &, std::shared_ptr<Race>);
 private:
   static void addRaceTableRow(unsigned int, MenuSelectOption &, unsigned int, bool, const std::string &,
       const std::string &, const std::string &, const std::string &, const std::string &, const std::string &,

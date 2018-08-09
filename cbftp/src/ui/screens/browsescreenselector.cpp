@@ -1,6 +1,7 @@
 #include "browsescreenselector.h"
 
-#include "../../core/pointer.h"
+#include <memory>
+
 #include "../../sitemanager.h"
 #include "../../site.h"
 #include "../../globalcontext.h"
@@ -21,7 +22,7 @@ BrowseScreenSelector::BrowseScreenSelector(Ui * ui) :
   currentviewspan(0),
   gotomode(false) {
   SiteManager * sm = global->getSiteManager();
-  std::vector<Pointer<Site> >::const_iterator it;
+  std::vector<std::shared_ptr<Site> >::const_iterator it;
   entries.push_back(std::pair<std::string, std::string>(BROWSESCREENSELECTOR_HOME,
                                                         global->getLocalStorage()->getDownloadPath().toString()));
   entries.push_back(std::pair<std::string, std::string>("", ""));
@@ -47,7 +48,7 @@ void BrowseScreenSelector::redraw(unsigned int row, unsigned int col, unsigned i
 
   int y = 0;
   for (unsigned int i = currentviewspan; i < currentviewspan + row && i < entries.size(); i++) {
-    Pointer<MenuSelectOptionTextButton> msotb =
+    std::shared_ptr<MenuSelectOptionTextButton> msotb =
         table.addTextButtonNoContent(y++, coloffset + 1, entries[i].first, entries[i].second);
     if (entries[i].first == "") {
       msotb->setSelectable(false);
@@ -58,7 +59,7 @@ void BrowseScreenSelector::redraw(unsigned int row, unsigned int col, unsigned i
   }
   table.checkPointer();
   for (unsigned int i = 0; i < table.size(); i++) {
-    Pointer<MenuSelectOptionTextButton> msotb = table.getElement(i);
+    std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(i));
     bool highlight = false;
     if (table.getSelectionPointer() == i) {
       highlight = true;
@@ -74,9 +75,9 @@ void BrowseScreenSelector::update() {
       ui->redraw();
       return;
     }
-    Pointer<ResizableElement> re = table.getElement(table.getLastSelectionPointer());
+    std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(table.getLastSelectionPointer()));
     ui->printStr(re->getRow(), re->getCol(), re->getLabelText());
-    re = table.getElement(table.getSelectionPointer());
+    re = std::static_pointer_cast<ResizableElement>(table.getElement(table.getSelectionPointer()));
     ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), focus);
   }
 }
@@ -157,7 +158,7 @@ BrowseScreenAction BrowseScreenSelector::keyPressed(unsigned int ch) {
     case 10:
     case 'b':
     {
-      Pointer<MenuSelectOptionTextButton> msotb = table.getElement(table.getSelectionPointer());
+      std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
       if (msotb->getIdentifier() == BROWSESCREENSELECTOR_HOME) {
         return BrowseScreenAction(BROWSESCREENACTION_HOME);
       }

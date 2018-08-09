@@ -1,12 +1,11 @@
 #pragma once
 
-#include <string>
 #include <list>
-#include <map>
-#include <set>
+#include <memory>
+#include <string>
+#include <unordered_map>
 
 #include "core/eventreceiver.h"
-#include "core/pointer.h"
 
 class CommandOwner;
 class Race;
@@ -27,12 +26,12 @@ class Engine : public EventReceiver {
 public:
   Engine();
   ~Engine();
-  Pointer<Race> newRace(const std::string &, const std::string &, const std::list<std::string> &);
-  Pointer<Race> newRace(const std::string &, const std::string &);
+  std::shared_ptr<Race> newRace(const std::string &, const std::string &, const std::list<std::string> &);
+  std::shared_ptr<Race> newRace(const std::string &, const std::string &);
   void prepareRace(const std::string &, const std::string &, const std::list<std::string> &);
   void prepareRace(const std::string &, const std::string &);
-  Pointer<Race> newDistribute(const std::string &, const std::string &, const std::list<std::string> &);
-  Pointer<Race> newDistribute(const std::string &, const std::string &);
+  std::shared_ptr<Race> newDistribute(const std::string &, const std::string &, const std::list<std::string> &);
+  std::shared_ptr<Race> newDistribute(const std::string &, const std::string &);
   void startPreparedRace(unsigned int);
   void deletePreparedRace(unsigned int);
   void startLatestPreparedRace();
@@ -46,17 +45,17 @@ public:
   unsigned int newTransferJobFXP(const std::string &, FileList *, const std::string &, FileList *, const std::string &);
   unsigned int newTransferJobFXP(const std::string &, FileList *, const std::string &, const std::string &, FileList *, const std::string &);
   unsigned int newTransferJobFXP(const std::string &, const Path &, const std::string &, const std::string &, const Path &, const std::string &);
-  void removeSiteFromRace(Pointer<Race> &, const std::string &);
-  void removeSiteFromRaceDeleteFiles(Pointer<Race> &, const std::string &, bool);
-  void abortRace(Pointer<Race> &);
-  void resetRace(Pointer<Race> &, bool);
-  void deleteOnAllSites(Pointer<Race> &);
-  void deleteOnSites(Pointer<Race> &, std::list<Pointer<Site> >);
-  void deleteOnSites(Pointer<Race> &, std::list<Pointer<Site> >, bool);
-  void abortTransferJob(Pointer<TransferJob> &);
+  void removeSiteFromRace(std::shared_ptr<Race> &, const std::string &);
+  void removeSiteFromRaceDeleteFiles(std::shared_ptr<Race> &, const std::string &, bool);
+  void abortRace(std::shared_ptr<Race> &);
+  void resetRace(std::shared_ptr<Race> &, bool);
+  void deleteOnAllSites(std::shared_ptr<Race> &);
+  void deleteOnSites(std::shared_ptr<Race> &, std::list<std::shared_ptr<Site> >);
+  void deleteOnSites(std::shared_ptr<Race> &, std::list<std::shared_ptr<Site> >, bool);
+  void abortTransferJob(std::shared_ptr<TransferJob> &);
   void jobFileListRefreshed(SiteLogic *, CommandOwner *);
   void filelistUpdated();
-  bool transferJobActionRequest(Pointer<SiteTransferJob> &);
+  bool transferJobActionRequest(std::shared_ptr<SiteTransferJob> &);
   void raceActionRequest();
   void setPreparedRaceExpiryTime(int);
   void clearSkipListCaches();
@@ -65,18 +64,18 @@ public:
   unsigned int allRaces() const;
   unsigned int currentTransferJobs() const;
   unsigned int allTransferJobs() const;
-  Pointer<Race> getRace(unsigned int) const;
-  Pointer<Race> getRace(const std::string &) const;
-  Pointer<TransferJob> getTransferJob(unsigned int) const;
-  std::list<Pointer<PreparedRace> >::const_iterator getPreparedRacesBegin() const;
-  std::list<Pointer<PreparedRace> >::const_iterator getPreparedRacesEnd() const;
-  std::list<Pointer<Race> >::const_iterator getRacesBegin() const;
-  std::list<Pointer<Race> >::const_iterator getRacesEnd() const;
-  std::list<Pointer<TransferJob> >::const_iterator getTransferJobsBegin() const;
-  std::list<Pointer<TransferJob> >::const_iterator getTransferJobsEnd() const;
+  std::shared_ptr<Race> getRace(unsigned int) const;
+  std::shared_ptr<Race> getRace(const std::string &) const;
+  std::shared_ptr<TransferJob> getTransferJob(unsigned int) const;
+  std::list<std::shared_ptr<PreparedRace> >::const_iterator getPreparedRacesBegin() const;
+  std::list<std::shared_ptr<PreparedRace> >::const_iterator getPreparedRacesEnd() const;
+  std::list<std::shared_ptr<Race> >::const_iterator getRacesBegin() const;
+  std::list<std::shared_ptr<Race> >::const_iterator getRacesEnd() const;
+  std::list<std::shared_ptr<TransferJob> >::const_iterator getTransferJobsBegin() const;
+  std::list<std::shared_ptr<TransferJob> >::const_iterator getTransferJobsEnd() const;
   void tick(int);
-  void addSiteToRace(Pointer<Race> &, const std::string &);
-  Pointer<ScoreBoard> getScoreBoard() const;
+  void addSiteToRace(std::shared_ptr<Race> &, const std::string &);
+  std::shared_ptr<ScoreBoard> getScoreBoard() const;
   int getMaxPointsRaceTotal() const;
   int getMaxPointsFileSize() const;
   int getMaxPointsAvgSpeed() const;
@@ -89,33 +88,33 @@ public:
   bool getNextPreparedRaceStarterEnabled() const;
   int getNextPreparedRaceStarterTimeRemaining() const;
  private:
-  Pointer<Race> newSpreadJob(int, const std::string &, const std::string &, const std::list<std::string> &);
-  Pointer<Race> newSpreadJob(int, const std::string &, const std::string &);
+  std::shared_ptr<Race> newSpreadJob(int, const std::string &, const std::string &, const std::list<std::string> &);
+  std::shared_ptr<Race> newSpreadJob(int, const std::string &, const std::string &);
   void estimateRaceSizes();
-  void estimateRaceSize(const Pointer<Race> &);
-  void estimateRaceSize(const Pointer<Race> &, bool);
+  void estimateRaceSize(const std::shared_ptr<Race> &);
+  void estimateRaceSize(const std::shared_ptr<Race> &, bool);
   void reportCurrentSize(const SkipList &, SiteRace *, FileList *, bool final);
   void refreshScoreBoard();
   void issueOptimalTransfers();
   void setSpeedScale();
-  unsigned short calculateScore(File *, Pointer<Race> &, FileList *, SiteRace *, FileList *, SiteRace *, int, bool *, int prioritypoints, bool) const;
-  void checkIfRaceComplete(SiteLogic *, Pointer<Race> &);
-  void raceComplete(Pointer<Race>);
-  void transferJobComplete(Pointer<TransferJob>);
-  void issueGlobalComplete(Pointer<Race> &);
-  void refreshPendingTransferList(Pointer<TransferJob> &);
+  unsigned short calculateScore(File *, std::shared_ptr<Race> &, FileList *, SiteRace *, FileList *, SiteRace *, int, bool *, int prioritypoints, bool) const;
+  void checkIfRaceComplete(SiteLogic *, std::shared_ptr<Race> &);
+  void raceComplete(std::shared_ptr<Race>);
+  void transferJobComplete(std::shared_ptr<TransferJob>);
+  void issueGlobalComplete(std::shared_ptr<Race> &);
+  void refreshPendingTransferList(std::shared_ptr<TransferJob> &);
   void checkStartPoke();
   void addPendingTransfer(std::list<PendingTransfer> &, PendingTransfer &);
-  Pointer<Race> getCurrentRace(const std::string &) const;
-  void preSeedPotentialData(Pointer<Race> &);
-  bool raceTransferPossible(const Pointer<SiteLogic> &, const Pointer<SiteLogic> &, Pointer<Race> &) const;
-  std::list<Pointer<Race> > allraces;
-  std::list<Pointer<Race> > currentraces;
-  std::list<Pointer<PreparedRace> > preparedraces;
-  std::list<Pointer<TransferJob>  > alltransferjobs;
-  std::list<Pointer<TransferJob> > currenttransferjobs;
-  Pointer<ScoreBoard> scoreboard;
-  std::map<Pointer<TransferJob>, std::list<PendingTransfer> > pendingtransfers;
+  std::shared_ptr<Race> getCurrentRace(const std::string &) const;
+  void preSeedPotentialData(std::shared_ptr<Race> &);
+  bool raceTransferPossible(const std::shared_ptr<SiteLogic> &, const std::shared_ptr<SiteLogic> &, std::shared_ptr<Race> &) const;
+  std::list<std::shared_ptr<Race> > allraces;
+  std::list<std::shared_ptr<Race> > currentraces;
+  std::list<std::shared_ptr<PreparedRace> > preparedraces;
+  std::list<std::shared_ptr<TransferJob>  > alltransferjobs;
+  std::list<std::shared_ptr<TransferJob> > currenttransferjobs;
+  std::shared_ptr<ScoreBoard> scoreboard;
+  std::unordered_map<std::shared_ptr<TransferJob>, std::list<PendingTransfer> > pendingtransfers;
   int maxavgspeed;
   bool pokeregistered;
   unsigned int dropped;

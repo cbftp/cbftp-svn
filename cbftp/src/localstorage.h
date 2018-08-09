@@ -1,10 +1,10 @@
 #pragma once
 
-#include <string>
 #include <list>
 #include <map>
+#include <memory>
+#include <string>
 
-#include "core/pointer.h"
 #include "core/types.h"
 #include "path.h"
 #include "localpathinfo.h"
@@ -44,7 +44,7 @@ public:
   void storeContent(int, const BinaryData &);
   const Path & getDownloadPath() const;
   void setDownloadPath(const Path &);
-  static Pointer<LocalFileList> getLocalFileList(const Path &);
+  static std::shared_ptr<LocalFileList> getLocalFileList(const Path &);
   unsigned long long int getFileSize(const Path &);
   bool getUseActiveModeAddress() const;
   const std::string & getActiveModeAddress() const;

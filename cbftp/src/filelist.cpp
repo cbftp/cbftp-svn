@@ -35,7 +35,7 @@ FileList::FileList(const std::string & username, const Path & path, FileListStat
 }
 
 FileList::~FileList() {
-  for (std::map<std::string, File *>::iterator it = files.begin(); it != files.end(); it++) {
+  for (std::unordered_map<std::string, File *>::iterator it = files.begin(); it != files.end(); it++) {
     delete it->second;
   }
 }
@@ -102,8 +102,8 @@ bool FileList::updateFile(const std::string & start, int touch) {
     if (updatefile->updateFlagSet()) {
       unsigned long long int size = oldsize;
       unsigned int speed = updatefile->getUpdateSpeed();
-      const Pointer<Site> & src = updatefile->getUpdateSrc();
-      const Pointer<Site> & dst = updatefile->getUpdateDst();
+      const std::shared_ptr<Site> & src = updatefile->getUpdateSrc();
+      const std::shared_ptr<Site> & dst = updatefile->getUpdateDst();
       if (sameOwner(username, updatefile->getOwner())) {
         size = newsize;
         updatefile->getUpdateSrc()->pushTransferSpeed(dst->getName(), speed, size);
@@ -182,8 +182,8 @@ void FileList::removeFile(const std::string & name) {
 }
 
 void FileList::setFileUpdateFlag(const std::string & name,
-    unsigned long long int size, unsigned int speed, const Pointer<Site> & src,
-    const Pointer<Site> & dst, CommandOwner * srcco, CommandOwner * dstco)
+    unsigned long long int size, unsigned int speed, const std::shared_ptr<Site> & src,
+    const std::shared_ptr<Site> & dst, CommandOwner * srcco, CommandOwner * dstco)
 {
   File * file;
   if ((file = getFileCaseSensitive(name)) != NULL) {
@@ -203,9 +203,9 @@ void FileList::setFileUpdateFlag(const std::string & name,
 }
 
 File * FileList::getFile(const std::string & name) const {
-  std::map<std::string, File *>::const_iterator it = files.find(name);
+  std::unordered_map<std::string, File *>::const_iterator it = files.find(name);
   if (it == files.end()) {
-    std::map<std::string, std::string>::const_iterator it2 = lowercasefilemap.find(util::toLower(name));
+    std::unordered_map<std::string, std::string>::const_iterator it2 = lowercasefilemap.find(util::toLower(name));
     if (it2 != lowercasefilemap.end()) {
       it = files.find(it2->second);
     }
@@ -217,7 +217,7 @@ File * FileList::getFile(const std::string & name) const {
 }
 
 File * FileList::getFileCaseSensitive(const std::string & name) const {
-  std::map<std::string, File *>::const_iterator it = files.find(name);
+  std::unordered_map<std::string, File *>::const_iterator it = files.find(name);
   if (it == files.end()) {
     return NULL;
   }
@@ -245,19 +245,19 @@ void FileList::setFailed() {
   state = FILELIST_FAILED;
 }
 
-std::map<std::string, File *>::iterator FileList::begin() {
+std::unordered_map<std::string, File *>::iterator FileList::begin() {
   return files.begin();
 }
 
-std::map<std::string, File *>::iterator FileList::end() {
+std::unordered_map<std::string, File *>::iterator FileList::end() {
   return files.end();
 }
 
-std::map<std::string, File *>::const_iterator FileList::begin() const {
+std::unordered_map<std::string, File *>::const_iterator FileList::begin() const {
   return files.begin();
 }
 
-std::map<std::string, File *>::const_iterator FileList::end() const {
+std::unordered_map<std::string, File *>::const_iterator FileList::end() const {
   return files.end();
 }
 
@@ -265,7 +265,7 @@ bool FileList::contains(const std::string & name) const {
   if (files.find(name) != files.end()) {
     return true;
   }
-  std::map<std::string, std::string>::const_iterator it = lowercasefilemap.find(util::toLower(name));
+  std::unordered_map<std::string, std::string>::const_iterator it = lowercasefilemap.find(util::toLower(name));
   if (it != lowercasefilemap.end() && files.find(it->second) != files.end()) {
     return true;
   }
@@ -280,7 +280,7 @@ bool FileList::containsPattern(const std::string & pattern, bool dir) const {
     newpattern = pattern.substr(slashpos + 1);
     usedpattern = &newpattern;
   }
-  for (std::map<std::string, File *>::const_iterator it = files.begin(); it != files.end(); it++) {
+  for (std::unordered_map<std::string, File *>::const_iterator it = files.begin(); it != files.end(); it++) {
     if (it->second->isDirectory() == dir && util::wildcmp(usedpattern->c_str(), it->first.c_str())) {
       return true;
     }
@@ -296,7 +296,7 @@ bool FileList::containsPatternBefore(const std::string & pattern, bool dir, cons
     newpattern = pattern.substr(slashpos + 1);
     usedpattern = &newpattern;
   }
-  for (std::map<std::string, File *>::const_iterator it = files.begin(); it != files.end(); it++) {
+  for (std::unordered_map<std::string, File *>::const_iterator it = files.begin(); it != files.end(); it++) {
     if (it->second->isDirectory() != dir) {
       continue;
     }
@@ -323,7 +323,7 @@ unsigned int FileList::getNumUploadedFiles() const {
 }
 
 bool FileList::hasSFV() const {
-  std::map<std::string, File *>::const_iterator it;
+  std::unordered_map<std::string, File *>::const_iterator it;
   for (it = files.begin(); it != files.end(); it++) {
     if(it->second->getExtension() == ("sfv") &&
         it->second->getSize() > 0) {
@@ -347,7 +347,7 @@ const Path & FileList::getPath() const {
 
 void FileList::cleanSweep(int touch) {
   std::list<std::string> eraselist;
-  std::map<std::string, File *>::iterator it;
+  std::unordered_map<std::string, File *>::iterator it;
   for (it = files.begin(); it != files.end(); it++) {
     File * f = it->second;
     if (f->getTouch() != touch && !f->isUploading()) {
@@ -369,7 +369,7 @@ void FileList::cleanSweep(int touch) {
 }
 
 void FileList::flush() {
-  std::map<std::string, File *>::iterator it;
+  std::unordered_map<std::string, File *>::iterator it;
   for (it = files.begin(); it != files.end(); it++) {
     delete (*it).second;
   }

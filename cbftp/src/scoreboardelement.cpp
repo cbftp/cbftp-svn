@@ -3,16 +3,16 @@
 #include "race.h"
 
 ScoreBoardElement::ScoreBoardElement(const std::string & filename, unsigned short score,
-    bool prio, const Pointer<SiteLogic> & src, FileList * fls, SiteRace * srcsr,
-    const Pointer<SiteLogic> & dst, FileList * fld, SiteRace * dstsr, Pointer<Race> & race,
+    bool prio, const std::shared_ptr<SiteLogic> & src, FileList * fls, SiteRace * srcsr,
+    const std::shared_ptr<SiteLogic> & dst, FileList * fld, SiteRace * dstsr, std::shared_ptr<Race> & race,
     const std::string & subdir)
 {
   reset(filename, score, prio, src, fls, srcsr, dst, fld, dstsr, race, subdir);
 }
 
 void ScoreBoardElement::reset(const std::string & filename, unsigned short score,
-    bool prio, const Pointer<SiteLogic> & src, FileList * fls, SiteRace * srcsr,
-    const Pointer<SiteLogic> & dst, FileList * fld, SiteRace * dstsr, Pointer<Race> & race,
+    bool prio, const std::shared_ptr<SiteLogic> & src, FileList * fls, SiteRace * srcsr,
+    const std::shared_ptr<SiteLogic> & dst, FileList * fld, SiteRace * dstsr, std::shared_ptr<Race> & race,
     const std::string & subdir)
 {
   this->filename = filename;
@@ -37,11 +37,11 @@ const std::string & ScoreBoardElement::subDir() const {
   return subdir;
 }
 
-const Pointer<SiteLogic> & ScoreBoardElement::getSource() const {
+const std::shared_ptr<SiteLogic> & ScoreBoardElement::getSource() const {
   return src;
 }
 
-const Pointer<SiteLogic> & ScoreBoardElement::getDestination() const {
+const std::shared_ptr<SiteLogic> & ScoreBoardElement::getDestination() const {
   return dst;
 }
 
@@ -61,7 +61,7 @@ SiteRace * ScoreBoardElement::getDestinationSiteRace() const {
   return dstsr;
 }
 
-const Pointer<Race> & ScoreBoardElement::getRace() const {
+const std::shared_ptr<Race> & ScoreBoardElement::getRace() const {
   return race;
 }
 

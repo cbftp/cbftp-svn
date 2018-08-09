@@ -1,6 +1,7 @@
 #pragma once
 
-#include "core/pointer.h"
+#include <memory>
+#include <unordered_map>
 
 class Engine;
 class UIBase;
@@ -33,14 +34,14 @@ class GlobalContext {
     TickPoke * tp;
     RemoteCommandHandler * rch;
     SkipList * sl;
-    Pointer<EventLog> el;
+    std::shared_ptr<EventLog> el;
     ProxyManager * pm;
     LocalStorage * ls;
     ExternalFileViewing * efv;
     TimeReference * tr;
     Statistics * s;
   public:
-    void linkCore(WorkManager *, TickPoke *, IOManager *, Pointer<EventLog> &);
+    void linkCore(WorkManager *, TickPoke *, IOManager *, std::shared_ptr<EventLog> &);
     void linkComponents(SettingsLoaderSaver *, Engine *,
         UIBase *, SiteManager *, SiteLogicManager *, TransferManager *,
         RemoteCommandHandler *, SkipList *, ProxyManager *,
@@ -56,7 +57,7 @@ class GlobalContext {
     TickPoke * getTickPoke() const;
     RemoteCommandHandler * getRemoteCommandHandler() const;
     SkipList * getSkipList() const;
-    Pointer<EventLog> & getEventLog();
+    std::shared_ptr<EventLog> & getEventLog();
     ProxyManager * getProxyManager() const;
     LocalStorage * getLocalStorage() const;
     ExternalFileViewing * getExternalFileViewing() const;

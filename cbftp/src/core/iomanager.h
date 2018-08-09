@@ -1,16 +1,17 @@
 #pragma once
 
 #include <map>
+#include <memory>
 #include <string>
 #include <list>
 #include <set>
 #include <openssl/ssl.h>
+#include <unordered_map>
 
 #include "eventreceiver.h"
 #include "socketinfo.h"
 #include "lock.h"
 #include "polling.h"
-#include "pointer.h"
 #include "threading.h"
 
 class DataBlockPool;
@@ -29,14 +30,13 @@ private:
   std::map<int, int> sockfdidmap;
   std::set<int> autopaused;
   std::set<int> manuallypaused;
-  std::map<std::string, SSL_SESSION *> sslsessionmap;
   WorkManager * wm;
   TickPoke * tp;
   DataBlockPool * blockpool;
-  Pointer<DataBlockPool> sendblockpool;
+  std::shared_ptr<DataBlockPool> sendblockpool;
   int blocksize;
   int sockidcounter;
-  Pointer<Logger> logger;
+  std::shared_ptr<Logger> logger;
   std::string defaultinterface;
   bool handleError(EventReceiver *);
   bool investigateSSLError(int, int, int);
@@ -92,7 +92,7 @@ public:
   void setDefaultInterface(const std::string &);
   bool hasDefaultInterface() const;
   std::string getInterfaceAddress(const std::string &);
-  void setLogger(Pointer<Logger>);
+  void setLogger(std::shared_ptr<Logger>);
   void workerReady();
   void pause(int);
   void resume(int);

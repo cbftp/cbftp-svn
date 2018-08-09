@@ -1,10 +1,10 @@
 #pragma once
 
-#include <string>
 #include <list>
+#include <memory>
+#include <string>
 #include <vector>
 
-#include "core/pointer.h"
 #include "core/eventreceiver.h"
 
 #define POTENTIALITY_LIFESPAN 3000
@@ -21,12 +21,12 @@ class PotentialTracker : private EventReceiver {
     bool maxpotentialcalculated;
     void tick(int);
     bool allTopSlotsUsedForSite(PotentialElement *) const;
-    std::list<PotentialElement *>::iterator findFirstOfSite(const Pointer<SiteLogic> &);
+    std::list<PotentialElement *>::iterator findFirstOfSite(const std::shared_ptr<SiteLogic> &);
     void calculateMaxAvailablePotential();
   public:
     PotentialTracker(int);
     ~PotentialTracker();
     int getMaxAvailablePotential();
-    void pushPotential(int, const std::string &, const Pointer<SiteLogic> &, int);
+    void pushPotential(int, const std::string &, const std::shared_ptr<SiteLogic> &, int);
     void updateSlots(int);
 };

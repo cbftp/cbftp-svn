@@ -1,15 +1,14 @@
 #pragma once
 
+#include <memory>
 #include <string>
-
-#include "pointer.h"
 
 class EventReceiver;
 
 class Event {
 private:
   EventReceiver * receiver;
-  Pointer<EventReceiver> preceiver;
+  std::shared_ptr<EventReceiver> preceiver;
   int type;
   void * data;
   int datalen;
@@ -24,7 +23,7 @@ public:
   Event(EventReceiver *, int, int);
   Event(EventReceiver *, int, int, int);
   Event(EventReceiver *, int, int, const std::string &);
-  Event(Pointer<EventReceiver> &, int);
+  Event(std::shared_ptr<EventReceiver> &, int);
   ~Event();
   EventReceiver * getReceiver() const;
   int getType() const;

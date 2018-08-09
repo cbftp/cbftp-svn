@@ -20,7 +20,7 @@ void LegendWindow::redraw() {
   if (!!mainlegendprinter) {
     mainlegendprinter->setColumns(col);
   }
-  std::list<Pointer<LegendPrinter> >::iterator it;
+  std::list<std::shared_ptr<LegendPrinter> >::iterator it;
   for (it = templegendprinters.begin(); it != templegendprinters.end(); it++) {
     if (!!(*it)) {
       (*it)->setColumns(col);
@@ -76,11 +76,11 @@ void LegendWindow::setSplit(bool split) {
   this->split = split;
 }
 
-void LegendWindow::setMainLegendPrinter(Pointer<LegendPrinter> printer) {
+void LegendWindow::setMainLegendPrinter(std::shared_ptr<LegendPrinter> printer) {
   mainlegendprinter = printer;
 }
 
-void LegendWindow::addTempLegendPrinter(Pointer<LegendPrinter> printer) {
+void LegendWindow::addTempLegendPrinter(std::shared_ptr<LegendPrinter> printer) {
   templegendprinters.push_back(printer);
 }
 

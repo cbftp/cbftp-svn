@@ -135,7 +135,7 @@ void ViewFileScreen::redraw() {
       if (sitelogic->requestReady(requestid)) {
         sitelogic->finishRequest(requestid);
         const Path & temppath = global->getLocalStorage()->getTempPath();
-        Pointer<LocalFileList> localfl = global->getLocalStorage()->getLocalFileList(temppath);
+        std::shared_ptr<LocalFileList> localfl = global->getLocalStorage()->getLocalFileList(temppath);
         ts = global->getTransferManager()->suggestDownload(file, sitelogic, filelist, localfl, NULL);
         if (!!ts) {
           state = ViewFileState::DOWNLOADING;
@@ -418,8 +418,8 @@ void ViewFileScreen::printTransferInfo() {
   TransferDetails td = TransfersScreen::formatTransferDetails(ts);
   unsigned int y = 3;
   MenuSelectOption table;
-  Pointer<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
-  Pointer<MenuSelectOptionTextButton> msotb;
+  std::shared_ptr<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
+  std::shared_ptr<MenuSelectOptionTextButton> msotb;
   msotb = table.addTextButtonNoContent(y, 1, "transferred", "TRANSFERRED");
   msal->addElement(msotb, 4, RESIZE_CUTEND);
   msotb = table.addTextButtonNoContent(y, 3, "filename", "FILENAME");
@@ -444,7 +444,7 @@ void ViewFileScreen::printTransferInfo() {
   msal->addElement(msotb, 7, RESIZE_REMOVE);
   table.adjustLines(col - 3);
   for (unsigned int i = 0; i < table.size(); i++) {
-    Pointer<ResizableElement> re = table.getElement(i);
+    std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(i));
     if (re->isVisible()) {
       if (re->getIdentifier() == "transferred") {
         std::string labeltext = re->getLabelText();

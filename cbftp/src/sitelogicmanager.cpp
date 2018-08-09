@@ -8,29 +8,29 @@
 SiteLogicManager::SiteLogicManager() {
 }
 
-const Pointer<SiteLogic> SiteLogicManager::getSiteLogic(const std::string & name) {
-  std::vector<Pointer<SiteLogic> >::iterator it;
+const std::shared_ptr<SiteLogic> SiteLogicManager::getSiteLogic(const std::string & name) {
+  std::vector<std::shared_ptr<SiteLogic> >::iterator it;
   for(it = sitelogics.begin(); it != sitelogics.end(); it++) {
     if ((*it)->getSite()->getName().compare(name) == 0) return *it;
   }
   if (!global->getSiteManager()->getSite(name)) {
-    return Pointer<SiteLogic>();
+    return std::shared_ptr<SiteLogic>();
   }
-  Pointer<SiteLogic> x = makePointer<SiteLogic>(name);
+  std::shared_ptr<SiteLogic> x = std::make_shared<SiteLogic>(name);
   sitelogics.push_back(x);
   return x;
 }
 
-const Pointer<SiteLogic> SiteLogicManager::getSiteLogic(SiteLogic * sl) {
-  std::vector<Pointer<SiteLogic> >::iterator it;
+const std::shared_ptr<SiteLogic> SiteLogicManager::getSiteLogic(SiteLogic * sl) {
+  std::vector<std::shared_ptr<SiteLogic> >::iterator it;
   for(it = sitelogics.begin(); it != sitelogics.end(); it++) {
     if ((*it).get() == sl) return *it;
   }
-  return Pointer<SiteLogic>();
+  return std::shared_ptr<SiteLogic>();
 }
 
 void SiteLogicManager::deleteSiteLogic(const std::string & name) {
-  std::vector<Pointer<SiteLogic> >::iterator it;
+  std::vector<std::shared_ptr<SiteLogic> >::iterator it;
   for(it = sitelogics.begin(); it != sitelogics.end(); it++) {
     if ((*it)->getSite()->getName().compare(name) == 0) {
       sitelogics.erase(it);

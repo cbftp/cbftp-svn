@@ -1,6 +1,7 @@
 #include "transfermonitor.h"
 
 #include <algorithm>
+#include <unordered_map>
 
 #include "core/tickpoke.h"
 #include "site.h"
@@ -46,8 +47,8 @@ bool TransferMonitor::idle() const {
 }
 
 void TransferMonitor::engageFXP(
-  const std::string & sfile, const Pointer<SiteLogic> & sls, FileList * fls,
-  const std::string & dfile, const Pointer<SiteLogic> & sld, FileList * fld,
+  const std::string & sfile, const std::shared_ptr<SiteLogic> & sls, FileList * fls,
+  const std::string & dfile, const std::shared_ptr<SiteLogic> & sld, FileList * fld,
   CommandOwner * srcco, CommandOwner * dstco)
 {
   reset();
@@ -93,7 +94,7 @@ void TransferMonitor::engageFXP(
   latestdsttouch = fld->getFile(dfile)->getTouch();
   fls->download(sfile);
 
-  ts = makePointer<TransferStatus>(TRANSFERSTATUS_TYPE_FXP, sls->getSite()->getName(),
+  ts = std::make_shared<TransferStatus>(TRANSFERSTATUS_TYPE_FXP, sls->getSite()->getName(),
       sld->getSite()->getName(), "", dfile, fls, fls->getPath(), fld, fld->getPath(),
       fls->getFile(sfile)->getSize(),
       sls->getSite()->getAverageSpeed(sld->getSite()->getName()), src, dst, ssl, fxpdstactive);
@@ -109,8 +110,8 @@ void TransferMonitor::engageFXP(
 }
 
 void TransferMonitor::engageDownload(
-  const std::string & sfile, const Pointer<SiteLogic> & sls, FileList * fls,
-  const Pointer<LocalFileList> & localfl, CommandOwner * co)
+  const std::string & sfile, const std::shared_ptr<SiteLogic> & sls, FileList * fls,
+  const std::shared_ptr<LocalFileList> & localfl, CommandOwner * co)
 {
   reset();
   if (!localfl) return;
@@ -134,7 +135,7 @@ void TransferMonitor::engageDownload(
     FileSystem::createDirectoryRecursive(dpath);
   }
   clientactive = !sls->getSite()->hasBrokenPASV();
-  ts = makePointer<TransferStatus>(TRANSFERSTATUS_TYPE_DOWNLOAD,
+  ts = std::make_shared<TransferStatus>(TRANSFERSTATUS_TYPE_DOWNLOAD,
       sls->getSite()->getName(), "/\\", "", dfile, fls, spath,
       (FileList *)NULL, dpath, fls->getFile(sfile)->getSize(), 0, src, -1, ssl, clientactive);
   tm->addNewTransferStatus(ts);
@@ -148,8 +149,8 @@ void TransferMonitor::engageDownload(
 }
 
 void TransferMonitor::engageUpload(
-  const std::string & sfile, const Pointer<LocalFileList> & localfl,
-  const Pointer<SiteLogic> & sld, FileList * fld, CommandOwner * co)
+  const std::string & sfile, const std::shared_ptr<LocalFileList> & localfl,
+  const std::shared_ptr<SiteLogic> & sld, FileList * fld, CommandOwner * co)
 {
   reset();
   if (!localfl) return;
@@ -162,7 +163,7 @@ void TransferMonitor::engageUpload(
   this->fld = fld;
   this->localfl = localfl;
   this->dstco = co;
-  std::map<std::string, LocalFile>::const_iterator it = localfl->find(sfile);
+  std::unordered_map<std::string, LocalFile>::const_iterator it = localfl->find(sfile);
   if (it == localfl->end()) return;
   const LocalFile & lf = it->second;
   if (!sld->lockUploadConn(fld, &dst, dstco, this)) return;
@@ -173,7 +174,7 @@ void TransferMonitor::engageUpload(
   }
   fld->touchFile(dfile, sld->getSite()->getUser(), true);
   clientactive = !sld->getSite()->hasBrokenPASV();
-  ts = makePointer<TransferStatus>(TRANSFERSTATUS_TYPE_UPLOAD,
+  ts = std::make_shared<TransferStatus>(TRANSFERSTATUS_TYPE_UPLOAD,
       "/\\", sld->getSite()->getName(), "", dfile, (FileList *)NULL, spath,
       fld, dpath, lf.getSize(), 0, 0, dst, ssl, clientactive);
   tm->addNewTransferStatus(ts);
@@ -186,7 +187,7 @@ void TransferMonitor::engageUpload(
   }
 }
 
-void TransferMonitor::engageList(const Pointer<SiteLogic> & sls, int connid,
+void TransferMonitor::engageList(const std::shared_ptr<SiteLogic> & sls, int connid,
   bool hiddenfiles, FileList * fl, CommandOwner * co)
 {
   reset();
@@ -518,7 +519,7 @@ void TransferMonitor::targetError(TransferError err) {
   status = TM_STATUS_TARGET_ERROR_AWAITING_SOURCE;
 }
 
-Pointer<TransferStatus> TransferMonitor::getTransferStatus() const {
+std::shared_ptr<TransferStatus> TransferMonitor::getTransferStatus() const {
   return ts;
 }
 
@@ -634,7 +635,7 @@ bool TransferMonitor::willFail() const {
          status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE;
 }
 
-void TransferMonitor::transferFailed(const Pointer<TransferStatus> & ts, TransferError err) {
+void TransferMonitor::transferFailed(const std::shared_ptr<TransferStatus> & ts, TransferError err) {
   if (status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET ||
       status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE)
   {

@@ -1,17 +1,16 @@
 #pragma once
 
+#include <memory>
 #include <vector>
-
-#include "../core/pointer.h"
 
 class MenuSelectOptionElement;
 
 class MenuSelectOptionContainer {
 private:
-  std::vector<Pointer<MenuSelectOptionElement> > elements;
+  std::vector<std::shared_ptr<MenuSelectOptionElement> > elements;
 public:
   MenuSelectOptionContainer();
   ~MenuSelectOptionContainer();
-  void addElement(Pointer<MenuSelectOptionElement>);
-  Pointer<MenuSelectOptionElement> getOption(unsigned int) const;
+  void addElement(std::shared_ptr<MenuSelectOptionElement>);
+  std::shared_ptr<MenuSelectOptionElement> getOption(unsigned int) const;
 };

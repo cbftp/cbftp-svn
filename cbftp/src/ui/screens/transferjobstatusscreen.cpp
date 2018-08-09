@@ -1,5 +1,7 @@
 #include "transferjobstatusscreen.h"
 
+#include <unordered_map>
+
 #include "transfersscreen.h"
 
 #include "../ui.h"
@@ -88,10 +90,10 @@ void TransferJobStatusScreen::redraw() {
   ui->printStr(y, 54 + progress.length(), "] " + util::int2Str(progresspercent) + "%");
   y = y + 2;
   addTransferDetails(y++, "USE", "TRANSFERRED", "FILENAME", "LEFT", "SPEED", "DONE", 0);
-  for (std::list<Pointer<TransferStatus> >::const_iterator it = transferjob->transfersBegin(); it != transferjob->transfersEnd(); it++) {
+  for (std::list<std::shared_ptr<TransferStatus> >::const_iterator it = transferjob->transfersBegin(); it != transferjob->transfersEnd(); it++) {
     addTransferDetails(y++, *it);
   }
-  for (std::map<std::string, unsigned long long int>::const_iterator it = transferjob->pendingTransfersBegin(); it != transferjob->pendingTransfersEnd(); it++) {
+  for (std::unordered_map<std::string, unsigned long long int>::const_iterator it = transferjob->pendingTransfersBegin(); it != transferjob->pendingTransfersEnd(); it++) {
     addTransferDetails(y++, "-", util::parseSize(0) + " / " + util::parseSize(it->second),
         it->first, "-", "-", "wait", 0);
   }
@@ -99,7 +101,7 @@ void TransferJobStatusScreen::redraw() {
   bool highlight;
   if (!transferjob->isDone()) {
     for (unsigned int i = 0; i < mso.size(); i++) {
-      Pointer<MenuSelectOptionElement> msoe = mso.getElement(i);
+      std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
       highlight = false;
       if (mso.isFocused() && mso.getSelectionPointer() == i) {
         highlight = true;
@@ -109,7 +111,7 @@ void TransferJobStatusScreen::redraw() {
     }
   }
   for (unsigned int i = 0; i < table.size(); i++) {
-    Pointer<ResizableElement> re = table.getElement(i);
+    std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(i));
     highlight = false;
     if (table.getSelectionPointer() == i) {
       //highlight = true; // later problem
@@ -117,7 +119,7 @@ void TransferJobStatusScreen::redraw() {
     if (re->isVisible()) {
       if (re->getIdentifier() == "transferred") {
         int progresspercent = 0;
-        std::map<Pointer<MenuSelectOptionElement>, int>::iterator it = progressmap.find(re);
+        std::map<std::shared_ptr<MenuSelectOptionElement>, int>::iterator it = progressmap.find(re);
         if (it != progressmap.end()) {
           progresspercent = it->second;
         }
@@ -155,7 +157,7 @@ bool TransferJobStatusScreen::keyPressed(unsigned int ch) {
       ui->update();
       ui->setLegend();
       if (activeelement->getIdentifier() == "slots") {
-        int slots = activeelement.get<MenuSelectOptionNumArrow>()->getData();
+        int slots = std::static_pointer_cast<MenuSelectOptionNumArrow>(activeelement)->getData();
         transferjob->setSlots(slots);
         int type = transferjob->getType();
         if (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) {
@@ -208,7 +210,7 @@ std::string TransferJobStatusScreen::getInfoLabel() const {
   return "TRANSFER JOB STATUS: " + transferjob->getSrcFileName();
 }
 
-void TransferJobStatusScreen::addTransferDetails(unsigned int y, Pointer<TransferStatus> ts) {
+void TransferJobStatusScreen::addTransferDetails(unsigned int y, std::shared_ptr<TransferStatus> ts) {
   TransferDetails td = TransfersScreen::formatTransferDetails(ts);
   Path subpathfile = (ts->getSourcePath() - transferjob->getSrcPath()) / ts->getFile();
   addTransferDetails(y, td.timespent, td.transferred, subpathfile.toString(), td.timeremaining,
@@ -218,8 +220,8 @@ void TransferJobStatusScreen::addTransferDetails(unsigned int y, Pointer<Transfe
 void TransferJobStatusScreen::addTransferDetails(unsigned int y, const std::string & timespent,
     const std::string & transferred, const std::string & file, const std::string & timeremaining,
     const std::string & speed, const std::string & progress, int progresspercent) {
-  Pointer<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
-  Pointer<MenuSelectOptionTextButton> msotb;
+  std::shared_ptr<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
+  std::shared_ptr<MenuSelectOptionTextButton> msotb;
 
   msotb = table.addTextButtonNoContent(y, 1, "timespent", timespent);
   msal->addElement(msotb, 9, RESIZE_REMOVE);
@@ -241,7 +243,7 @@ void TransferJobStatusScreen::addTransferDetails(unsigned int y, const std::stri
   msal->addElement(msotb, 3, RESIZE_REMOVE);
 }
 
-std::string TransferJobStatusScreen::getRoute(Pointer<TransferJob> tj) {
+std::string TransferJobStatusScreen::getRoute(std::shared_ptr<TransferJob> tj) {
   std::string route;
   switch (tj->getType()) {
     case TRANSFERJOB_DOWNLOAD:

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../core/pointer.h"
+#include <memory>
 
 class MenuSelectOptionElement;
 
@@ -34,5 +34,5 @@ public:
   virtual bool activateSelected();
   virtual unsigned int getLastSelectionPointer() const;
   virtual unsigned int getSelectionPointer() const = 0;
-  virtual Pointer<MenuSelectOptionElement> getElement(unsigned int) const;
+  virtual std::shared_ptr<MenuSelectOptionElement> getElement(unsigned int) const;
 };

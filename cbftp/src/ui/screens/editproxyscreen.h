@@ -21,11 +21,11 @@ private:
   std::string currentlegendtext;
   std::string defaultlegendtext;
   bool active;
-  Pointer<MenuSelectOptionElement> activeelement;
+  std::shared_ptr<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;
   Proxy * proxy;
   Proxy modproxy;
-  Pointer<MenuSelectOptionTextArrow> authmethod;
+  std::shared_ptr<MenuSelectOptionTextArrow> authmethod;
   int latestauthmethod;
   std::string operation;
 };

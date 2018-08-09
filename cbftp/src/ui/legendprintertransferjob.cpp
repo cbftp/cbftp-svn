@@ -59,8 +59,8 @@ bool LegendPrinterTransferJob::print() {
       break;
   }
 
-  Pointer<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
-  Pointer<MenuSelectOptionTextButton> msotb;
+  std::shared_ptr<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
+  std::shared_ptr<MenuSelectOptionTextButton> msotb;
 
   msotb = mso.addTextButtonNoContent(1, 4, "timespent", timespent);
   msal->addElement(msotb, 6, RESIZE_REMOVE);
@@ -100,7 +100,7 @@ bool LegendPrinterTransferJob::print() {
     ui->printChar(ui->getLegendWindow(), 1, i, ' ', highlight);
   }
   for (unsigned int i = 0; i < mso.size(); i++) {
-    Pointer<ResizableElement> re = mso.getElement(i);
+    std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(mso.getElement(i));
     if (!re->isVisible()) {
       continue;
     }

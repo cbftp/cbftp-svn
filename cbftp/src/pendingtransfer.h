@@ -1,8 +1,7 @@
 #pragma once
 
+#include <memory>
 #include <string>
-
-#include "core/pointer.h"
 
 #define PENDINGTRANSFER_DOWNLOAD 5432
 #define PENDINGTRANSFER_UPLOAD 5433
@@ -14,24 +13,24 @@ class LocalFileList;
 
 class PendingTransfer {
 public:
-  PendingTransfer(const Pointer<SiteLogic> &, FileList *, std::string, const Pointer<SiteLogic> &, FileList *, std::string);
-  PendingTransfer(const Pointer<SiteLogic> &, FileList *, std::string, Pointer<LocalFileList>, std::string);
-  PendingTransfer(Pointer<LocalFileList>, std::string, const Pointer<SiteLogic> &, FileList *, std::string);
+  PendingTransfer(const std::shared_ptr<SiteLogic> &, FileList *, std::string, const std::shared_ptr<SiteLogic> &, FileList *, std::string);
+  PendingTransfer(const std::shared_ptr<SiteLogic> &, FileList *, std::string, std::shared_ptr<LocalFileList>, std::string);
+  PendingTransfer(std::shared_ptr<LocalFileList>, std::string, const std::shared_ptr<SiteLogic> &, FileList *, std::string);
   ~PendingTransfer();
   int type() const;
-  const Pointer<SiteLogic> & getSrc() const;
-  const Pointer<SiteLogic> & getDst() const;
+  const std::shared_ptr<SiteLogic> & getSrc() const;
+  const std::shared_ptr<SiteLogic> & getDst() const;
   FileList * getSrcFileList() const;
   FileList * getDstFileList() const;
-  Pointer<LocalFileList> & getLocalFileList();
+  std::shared_ptr<LocalFileList> & getLocalFileList();
   std::string getSrcFileName() const;
   std::string getDstFileName() const;
 private:
-  Pointer<SiteLogic> slsrc;
-  Pointer<SiteLogic> sldst;
+  std::shared_ptr<SiteLogic> slsrc;
+  std::shared_ptr<SiteLogic> sldst;
   FileList * flsrc;
   FileList * fldst;
-  Pointer<LocalFileList> fllocal;
+  std::shared_ptr<LocalFileList> fllocal;
   std::string srcfilename;
   std::string dstfilename;
   int transfertype;

@@ -1,8 +1,7 @@
 #pragma once
 
+#include <memory>
 #include <string>
-
-#include "../core/pointer.h"
 
 #include "legendprinter.h"
 #include "menuselectoption.h"
@@ -16,7 +15,7 @@ public:
   bool print();
 private:
   Ui * ui;
-  Pointer<TransferJob> transferjob;
+  std::shared_ptr<TransferJob> transferjob;
   MenuSelectOption mso;
   int jobfinishedprintcount;
 };
