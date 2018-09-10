@@ -86,10 +86,6 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & rele
       break;
     }
   }
-  if (global->getSkipList()->check(release, true, false).action == SKIPLIST_DENY) {
-    global->getEventLog()->log("Engine", "Spread job skipped due to skiplist match: " + release);
-    return std::shared_ptr<Race>();
-  }
   if (release.find("/") != std::string::npos) {
     global->getEventLog()->log("Engine", "Spread job skipped due to invalid target: " + release);
     return std::shared_ptr<Race>();
@@ -99,6 +95,8 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & rele
   }
   std::list<std::string> addsites;
   std::list<std::shared_ptr<SiteLogic> > addsiteslogics;
+  bool globalskipped = global->getSkipList()->check(release, true, false).action == SKIPLIST_DENY;
+  std::list<std::string> skippedsites;
   for (std::list<std::string>::const_iterator it = sites.begin(); it != sites.end(); it++) {
     const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(*it);
     if (!sl) {
@@ -114,11 +112,9 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & rele
           section + " on " + *it);
       continue;
     }
-    if (sl->getSite()->getSkipList().check((sl->getSite()->getSectionPath(section) / race->getName()).toString(), true, false).action == SKIPLIST_DENY &&
-        !sl->getSite()->isAffiliated(race->getGroup()))
-    {
-      global->getEventLog()->log("Engine", "Skipping site " + sl->getSite()->getName() +
-          " due to skiplist match: " + race->getName());
+    SkipListMatch match = sl->getSite()->getSkipList().check((sl->getSite()->getSectionPath(section) / race->getName()).toString(), true, false);
+    if (match.action == SKIPLIST_DENY && !sl->getSite()->isAffiliated(race->getGroup())) {
+      skippedsites.push_back(sl->getSite()->getName());
       continue;
     }
     bool add = true;
@@ -137,6 +133,17 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & rele
       addsites.push_back(*it);
       addsiteslogics.push_back(sl);
     }
+  }
+  if (!addsites.empty()) {
+    for (const std::string & skipsite : skippedsites) {
+      global->getEventLog()->log("Engine", "Skipping site " + skipsite +
+                                 " due to skiplist match: " + release);
+      continue;
+    }
+  }
+  else if (globalskipped) {
+    global->getEventLog()->log("Engine", "Spread job skipped due to skiplist match: " + release);
+    return std::shared_ptr<Race>();
   }
   bool noupload = true;
   bool nodownload = true;
