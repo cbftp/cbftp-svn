@@ -652,7 +652,10 @@ void TransferMonitor::transferFailed(const std::shared_ptr<TransferStatus> & ts,
     }
   }
   if (type == TM_TYPE_FXP && err != TM_ERR_DUPE) {
-    sls->getSite()->pushTransferSpeed(sld->getSite()->getName(), 0, 0);
+    std::string extension = File::getExtension(dfile);
+    if (extension != "sfv" && extension != "nfo") {
+      sls->getSite()->pushTransferSpeed(sld->getSite()->getName(), 0, 0);
+    }
   }
   tm->transferFailed(ts, err);
   status = TM_STATUS_IDLE;
