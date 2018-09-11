@@ -28,7 +28,6 @@ public:
   void setImageViewer(const std::string &);
   void setPDFViewer(const std::string &);
   std::string getViewApplication(const Path &) const;
-  static std::string getExtension(const std::string &);
 private:
   int view(const Path &, bool);
   void checkDeleteFile(int);
