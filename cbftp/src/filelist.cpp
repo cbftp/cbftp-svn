@@ -106,7 +106,7 @@ bool FileList::updateFile(const std::string & start, int touch) {
       const std::shared_ptr<Site> & dst = updatefile->getUpdateDst();
       if (sameOwner(username, updatefile->getOwner())) {
         size = newsize;
-        std::string extension = File::getExtension(name);
+        std::string extension = updatefile->getExtension();
         if (extension != "sfv" && extension != "nfo") {
           updatefile->getUpdateSrc()->pushTransferSpeed(dst->getName(), speed, size);
         }
@@ -328,8 +328,7 @@ unsigned int FileList::getNumUploadedFiles() const {
 bool FileList::hasSFV() const {
   std::unordered_map<std::string, File *>::const_iterator it;
   for (it = files.begin(); it != files.end(); it++) {
-    if(it->second->getExtension() == ("sfv") &&
-        it->second->getSize() > 0) {
+    if(it->second->getExtension() == "sfv" && it->second->getSize() > 0) {
       return true;
     }
   }

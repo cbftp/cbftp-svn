@@ -284,7 +284,7 @@ void ViewFileScreen::loadViewer() {
     if (deleteafter) {
       global->getLocalStorage()->deleteFile(path);
     }
-    std::string extension = ExternalFileViewing::getExtension(file);
+    std::string extension = File::getExtension(file);
     encoding = encoding::guessEncoding(tmpdata);
     unsigned int tmpdatalen = tmpdata.size();
     if (tmpdatalen > 0) {

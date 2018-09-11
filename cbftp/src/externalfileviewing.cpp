@@ -15,6 +15,7 @@
 #include "localstorage.h"
 #include "eventlog.h"
 #include "path.h"
+#include "file.h"
 
 namespace {
 
@@ -97,7 +98,7 @@ void ExternalFileViewing::killAll() {
 }
 
 std::string ExternalFileViewing::getViewApplication(const Path & path) const {
-  std::string extension = getExtension(path.baseName());
+  std::string extension = File::getExtension(path.baseName());
   std::string application;
   if (extension == "mkv" || extension == "mp4" || extension == "avi" ||
       extension == "wmv" || extension == "vob" || extension == "mov" ||
@@ -116,18 +117,6 @@ std::string ExternalFileViewing::getViewApplication(const Path & path) const {
     application = getPDFViewer();
   }
   return application;
-}
-
-std::string ExternalFileViewing::getExtension(const std::string & file) {
-  size_t suffixdotpos = file.rfind(".");
-  std::string extension;
-  if (suffixdotpos != std::string::npos && suffixdotpos > 0) {
-    extension = file.substr(suffixdotpos + 1);
-  }
-  for (unsigned int i = 0; i < extension.length(); i++) {
-    extension[i] = tolower(extension[i]);
-  }
-  return extension;
 }
 
 void ExternalFileViewing::signal(int signal, int) {
