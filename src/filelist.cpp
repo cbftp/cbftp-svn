@@ -106,7 +106,10 @@ bool FileList::updateFile(const std::string & start, int touch) {
       const std::shared_ptr<Site> & dst = updatefile->getUpdateDst();
       if (sameOwner(username, updatefile->getOwner())) {
         size = newsize;
-        updatefile->getUpdateSrc()->pushTransferSpeed(dst->getName(), speed, size);
+        std::string extension = File::getExtension(name);
+        if (extension != "sfv" && extension != "nfo") {
+          updatefile->getUpdateSrc()->pushTransferSpeed(dst->getName(), speed, size);
+        }
       }
       src->addTransferStatsFile(STATS_DOWN, dst->getName(), size);
       dst->addTransferStatsFile(STATS_UP, src->getName(), size);
