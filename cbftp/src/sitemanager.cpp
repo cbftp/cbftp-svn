@@ -18,7 +18,7 @@
 #define DEFAULTMAXUP 0
 #define DEFAULTMAXDOWN 2
 #define DEFAULTMAXIDLETIME 60
-#define DEFAULTSSL true
+#define DEFAULTTLSMODE TLSMode::AUTH_TLS
 #define DEFAULTSSLTRANSFER SITE_SSL_PREFER_OFF
 
 bool siteNameComparator(const std::shared_ptr<Site> & a, const std::shared_ptr<Site> & b) {
@@ -33,8 +33,8 @@ SiteManager::SiteManager() :
   defaultmaxdown(DEFAULTMAXDOWN),
   defaultmaxidletime(DEFAULTMAXIDLETIME),
   defaultssltransfer(DEFAULTSSLTRANSFER),
-  defaultsslconn(DEFAULTSSL)
-  {
+  defaulttlsmode(DEFAULTTLSMODE)
+{
 }
 
 int SiteManager::getNumSites() const {
@@ -145,12 +145,12 @@ void SiteManager::setDefaultMaxIdleTime(unsigned int idletime) {
   defaultmaxidletime = idletime;
 }
 
-bool SiteManager::getDefaultSSL() const {
-  return defaultsslconn;
+TLSMode SiteManager::getDefaultTLSMode() const {
+  return defaulttlsmode;
 }
 
-void SiteManager::setDefaultSSL(bool ssl) {
-  defaultsslconn = ssl;
+void SiteManager::setDefaultTLSMode(TLSMode mode) {
+  defaulttlsmode = mode;
 }
 
 int SiteManager::getDefaultSSLTransferPolicy() const {

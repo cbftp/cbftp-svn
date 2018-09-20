@@ -276,8 +276,13 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("xdupe")) {
       if (!value.compare("false")) site->setUseXDUPE(false);
     }
+    // begin backward compatibility r938
     else if (!setting.compare("sslconn")) {
-      if (!value.compare("false")) site->setSSL(false);
+      if (!value.compare("false")) site->setTLSMode(TLSMode::NONE);
+    }
+    // end backward compatibility r938
+    else if (!setting.compare("tlsmode")) {
+      site->setTLSMode(static_cast<TLSMode>(std::stoi(value)));
     }
     else if (!setting.compare("sslfxpforced")) {
       if (!value.compare("true")) site->setSSLTransferPolicy(SITE_SSL_ALWAYS_ON);
@@ -442,10 +447,15 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("maxdown")) {
       global->getSiteManager()->setDefaultMaxDown(util::str2Int(value));
     }
+    // begin backward compatibility r938
     else if (!setting.compare("sslconn")) {
       if (!value.compare("false")) {
-        global->getSiteManager()->setDefaultSSL(false);
+        global->getSiteManager()->setDefaultTLSMode(TLSMode::NONE);
       }
+    }
+    // end backward compatibility r938
+    else if (!setting.compare("tlsmode")) {
+      global->getSiteManager()->setDefaultTLSMode(static_cast<TLSMode>(std::stoi(value)));
     }
     else if (!setting.compare("sslfxpforced")) {
       if (!value.compare("true")) {
@@ -596,6 +606,7 @@ void SettingsLoaderSaver::saveSettings() {
       dfh->addOutputLine(filetag, name + "$maxup=" + util::int2Str(site->getInternMaxUp()));
       dfh->addOutputLine(filetag, name + "$maxdn=" + util::int2Str(site->getInternMaxDown()));
       dfh->addOutputLine(filetag, name + "$idletime=" + util::int2Str(site->getMaxIdleTime()));
+      dfh->addOutputLine(filetag, name + "$tlsmode=" + std::to_string(static_cast<int>(site->getTLSMode())));
       dfh->addOutputLine(filetag, name + "$ssltransfer=" + util::int2Str(site->getSSLTransferPolicy()));
       if (!site->supportsSSCN()) dfh->addOutputLine(filetag, name + "$sscn=false");
       if (!site->supportsCPSV()) dfh->addOutputLine(filetag, name + "$cpsv=false");
@@ -603,7 +614,6 @@ void SettingsLoaderSaver::saveSettings() {
       if (site->needsPRET()) dfh->addOutputLine(filetag, name + "$pret=true");
       if (site->forceBinaryMode()) dfh->addOutputLine(filetag, name + "$binary=true");
       if (!site->useXDUPE()) dfh->addOutputLine(filetag, name + "$xdupe=false");
-      if (!site->SSL()) dfh->addOutputLine(filetag, name + "$sslconn=false");
       if (site->getDisabled()) dfh->addOutputLine(filetag, name + "$disabled=true");
       dfh->addOutputLine(filetag, name + "$allowupload=" + util::int2Str(site->getAllowUpload()));
       dfh->addOutputLine(filetag, name + "$allowdownload=" + util::int2Str(site->getAllowDownload()));
@@ -661,7 +671,7 @@ void SettingsLoaderSaver::saveSettings() {
     dfh->addOutputLine(defaultstag, "maxdown=" + util::int2Str(global->getSiteManager()->getDefaultMaxDown()));
     dfh->addOutputLine(defaultstag, "maxidletime=" + util::int2Str(global->getSiteManager()->getDefaultMaxIdleTime()));
     dfh->addOutputLine(defaultstag, "ssltransfer=" + util::int2Str(global->getSiteManager()->getDefaultSSLTransferPolicy()));
-    if (!global->getSiteManager()->getDefaultSSL()) dfh->addOutputLine(defaultstag, "sslconn=false");
+    dfh->addOutputLine(defaultstag, "tlsmode=" + std::to_string(static_cast<int>(global->getSiteManager()->getDefaultTLSMode())));
   }
 
   {

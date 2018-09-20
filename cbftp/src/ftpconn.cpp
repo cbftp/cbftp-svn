@@ -116,7 +116,7 @@ void FTPConn::login() {
   cwdrawbuf->clear();
   currentpath = "/";
   state = STATE_CONNECTING;
-  connectors.push_back(std::make_shared<FTPConnect>(nextconnectorid++, this, site->getAddress(), site->getPort(), getProxy(), true));
+  connectors.push_back(std::make_shared<FTPConnect>(nextconnectorid++, this, site->getAddress(), site->getPort(), getProxy(), true, site->getTLSMode() == TLSMode::IMPLICIT));
   ticker = 0;
   global->getTickPoke()->startPoke(this, "FTPConn", FTPCONN_TICK_INTERVAL, 0);
 }
@@ -127,7 +127,7 @@ void FTPConn::connectAllAddresses() {
   Proxy * proxy = getProxy();
   for (std::list<std::pair<std::string, std::string> >::const_iterator it = addresses.begin(); it != addresses.end(); it++) {
     if (it == addresses.begin()) continue; // first one is already connected
-    connectors.push_back(std::make_shared<FTPConnect>(nextconnectorid++, this, it->first, it->second, proxy, false));
+    connectors.push_back(std::make_shared<FTPConnect>(nextconnectorid++, this, it->first, it->second, proxy, false, site->getTLSMode() == TLSMode::IMPLICIT));
   }
 }
 
@@ -175,7 +175,7 @@ void FTPConn::FDSSLSuccess(int sockid, const std::string & cipher) {
 }
 
 void FTPConn::FDSSLFail(int sockid) {
-
+  rawBufWriteLine("[TLS negotiation failed]");
 }
 
 void FTPConn::printCipher(const std::string & cipher) {
@@ -387,7 +387,7 @@ void FTPConn::ftpConnectSuccess(int connectorid) {
     rawBufWriteLine("[Disconnecting other attempts]");
   }
   clearConnectors();
-  if (site->SSL()) {
+  if (site->getTLSMode() == TLSMode::AUTH_TLS) {
     state = STATE_AUTH_TLS;
     sendEcho("AUTH TLS");
   }

@@ -46,7 +46,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
     this->site->setMaxLogins(sm->getDefaultMaxLogins());
     this->site->setMaxUp(sm->getDefaultMaxUp());
     this->site->setMaxDn(sm->getDefaultMaxDown());
-    this->site->setSSL(sm->getDefaultSSL());
+    this->site->setTLSMode(sm->getDefaultTLSMode());
     this->site->setSSLTransferPolicy(sm->getDefaultSSLTransferPolicy());
     this->site->setMaxIdleTime(sm->getDefaultMaxIdleTime());
     std::vector<std::shared_ptr<Site> >::const_iterator it;
@@ -96,8 +96,12 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   mso.addIntArrow(y, x, "logins", "Login slots:", this->site->getInternMaxLogins(), 0, 99);
   mso.addIntArrow(y, x + 20, "maxup", "Upload slots:", this->site->getInternMaxUp(), 0, 99);
   mso.addIntArrow(y++, x + 40, "maxdn", "Download slots:", this->site->getInternMaxDown(), 0, 99);
-  mso.addCheckBox(y, x, "tls", "AUTH TLS:", this->site->SSL());
-  std::shared_ptr<MenuSelectOptionTextArrow> sslfxp = mso.addTextArrow(y++, x + 20, "tlstransfer", "TLS transfers:");
+  std::shared_ptr<MenuSelectOptionTextArrow> tlsmode = mso.addTextArrow(y, x, "tlsmode", "TLS mode:");
+  tlsmode->addOption("None", static_cast<int>(TLSMode::NONE));
+  tlsmode->addOption("AUTH TLS", static_cast<int>(TLSMode::AUTH_TLS));
+  tlsmode->addOption("Implicit", static_cast<int>(TLSMode::IMPLICIT));
+  tlsmode->setOption(static_cast<int>(this->site->getTLSMode()));
+  std::shared_ptr<MenuSelectOptionTextArrow> sslfxp = mso.addTextArrow(y++, x + 24, "tlstransfer", "TLS transfers:");
   sslfxp->addOption("Always off", SITE_SSL_ALWAYS_OFF);
   sslfxp->addOption("Prefer off", SITE_SSL_PREFER_OFF);
   sslfxp->addOption("Prefer on", SITE_SSL_PREFER_ON);
@@ -462,8 +466,8 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         else if (identifier == "binary") {
           site->setForceBinaryMode(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
         }
-        else if (identifier == "tls") {
-          site->setSSL(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
+        else if (identifier == "tlsmode") {
+          site->setTLSMode(static_cast<TLSMode>(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData()));
         }
         else if (identifier == "tlstransfer") {
           site->setSSLTransferPolicy(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
