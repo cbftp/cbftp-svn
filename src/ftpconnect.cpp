@@ -11,7 +11,7 @@
 
 #define WELCOME_TIMEOUT_MSEC 7000
 
-FTPConnect::FTPConnect(int id, FTPConnectOwner * owner, const std::string & addr, const std::string & port, Proxy * proxy, bool primary) :
+FTPConnect::FTPConnect(int id, FTPConnectOwner * owner, const std::string & addr, const std::string & port, Proxy * proxy, bool primary, bool implicittls) :
   id(id),
   sockid(-1),
   proxynegotiation(false),
@@ -27,7 +27,8 @@ FTPConnect::FTPConnect(int id, FTPConnectOwner * owner, const std::string & addr
   engaged(true),
   connected(false),
   welcomereceived(false),
-  millisecs(0)
+  millisecs(0),
+  implicittls(implicittls)
 {
   bool resolving;
   if (proxy == NULL) {
@@ -80,6 +81,9 @@ void FTPConnect::FDConnected(int sockid) {
   if (proxynegotiation) {
     proxySessionInit();
   }
+  else if (implicittls) {
+    global->getIOManager()->negotiateSSLConnect(sockid);
+  }
 }
 
 void FTPConnect::FDDisconnected(int sockid) {
@@ -119,6 +123,18 @@ void FTPConnect::FDFail(int sockid, const std::string & error) {
   }
 }
 
+void FTPConnect::FDSSLSuccess(int sockid, const std::string & cipher) {
+  owner->ftpConnectInfo(id, "[Cipher: " + cipher + "]");
+}
+
+void FTPConnect::FDSSLFail(int sockid) {
+  if (engaged) {
+    engaged = false;
+    owner->ftpConnectInfo(id, "[TLS negotiation failed]");
+    owner->ftpConnectFail(id);
+  }
+}
+
 int FTPConnect::getId() const {
   return id;
 }
@@ -140,6 +156,9 @@ void FTPConnect::proxySessionInit() {
     case PROXYSESSION_SUCCESS:
       owner->ftpConnectInfo(id, "[Connection established]");
       proxynegotiation = false;
+      if (implicittls) {
+        global->getIOManager()->negotiateSSLConnect(sockid);
+      }
       break;
     case PROXYSESSION_ERROR:
       owner->ftpConnectInfo(id, "[Proxy error: " + proxysession->getErrorMessage() + "]");

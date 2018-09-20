@@ -80,7 +80,11 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   mso.addIntArrow(y++, x, "deflogins", "Default site login slots:", sm->getDefaultMaxLogins(), 0, 99);
   mso.addIntArrow(y++, x, "defmaxup", "Default site upload slots:", sm->getDefaultMaxUp(), 0, 99);
   mso.addIntArrow(y++, x, "defmaxdn", "Default site download slots:", sm->getDefaultMaxDown(), 0, 99);
-  mso.addCheckBox(y++, x, "deftlsconn", "Default site AUTH TLS:", sm->getDefaultSSL());
+  std::shared_ptr<MenuSelectOptionTextArrow> tlsmode = mso.addTextArrow(y++, x, "tlsmode", "Default TLS mode:");
+  tlsmode->addOption("None", static_cast<int>(TLSMode::NONE));
+  tlsmode->addOption("AUTH TLS", static_cast<int>(TLSMode::AUTH_TLS));
+  tlsmode->addOption("Implicit", static_cast<int>(TLSMode::IMPLICIT));
+  tlsmode->setOption(static_cast<int>(sm->getDefaultTLSMode()));
   std::shared_ptr<MenuSelectOptionTextArrow> sslfxp = mso.addTextArrow(y++, x, "tlsfxp", "Default TLS transfers:");
   sslfxp->addOption("Always off", SITE_SSL_ALWAYS_OFF);
   sslfxp->addOption("Prefer off", SITE_SSL_PREFER_OFF);
@@ -242,8 +246,8 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
         else if (identifier == "defmaxdn") {
           sm->setDefaultMaxDown(std::static_pointer_cast<MenuSelectOptionNumArrow>(msoe)->getData());
         }
-        else if (identifier == "deftlsconn") {
-          sm->setDefaultSSL(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
+        else if (identifier == "tlsmode") {
+          sm->setDefaultTLSMode(static_cast<TLSMode>(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData()));
         }
         else if (identifier == "tlsfxp") {
           sm->setDefaultSSLTransferPolicy(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());

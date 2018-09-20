@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-class Site;
+#include "site.h"
 
 class SiteManager {
   private:
@@ -19,7 +19,7 @@ class SiteManager {
     unsigned int defaultmaxdown;
     unsigned int defaultmaxidletime;
     int defaultssltransfer;
-    bool defaultsslconn;
+    TLSMode defaulttlsmode;
   public:
     SiteManager();
     int getNumSites() const;
@@ -42,8 +42,8 @@ class SiteManager {
     void setDefaultMaxDown(unsigned int);
     unsigned int getDefaultMaxIdleTime() const;
     void setDefaultMaxIdleTime(unsigned int);
-    bool getDefaultSSL() const;
-    void setDefaultSSL(bool);
+    TLSMode getDefaultTLSMode() const;
+    void setDefaultTLSMode(TLSMode mode);
     int getDefaultSSLTransferPolicy() const;
     void setDefaultSSLTransferPolicy(int);
     void sortSites();

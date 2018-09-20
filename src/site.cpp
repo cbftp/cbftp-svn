@@ -20,7 +20,7 @@ Site::Site(const std::string & name) :
   pret(false),
   binary(false),
   listcommand(SITE_LIST_STAT),
-  sslconn(true),
+  tlsmode(TLSMode::AUTH_TLS),
   ssltransfer(SITE_SSL_PREFER_OFF),
   sscnsupported(true),
   cpsvsupported(true),
@@ -51,7 +51,7 @@ Site::Site(const Site & other) {
   pret = other.pret;
   binary = other.binary;
   listcommand = other.listcommand;
-  sslconn = other.sslconn;
+  tlsmode = other.tlsmode;
   ssltransfer = other.ssltransfer;
   sscnsupported = other.sscnsupported;
   cpsvsupported = other.cpsvsupported;
@@ -199,8 +199,8 @@ void Site::setForceBinaryMode(bool val) {
   binary = val;
 }
 
-bool Site::SSL() const {
-  return sslconn;
+TLSMode Site::getTLSMode() const {
+  return tlsmode;
 }
 
 int Site::getSSLTransferPolicy() const {
@@ -243,8 +243,8 @@ void Site::setListCommand(int command) {
   listcommand = command;
 }
 
-void Site::setSSL(bool val) {
-  sslconn = val;
+void Site::setTLSMode(TLSMode mode) {
+  tlsmode = mode;
 }
 
 bool Site::getDisabled() const {

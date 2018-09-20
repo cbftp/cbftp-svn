@@ -41,6 +41,12 @@ enum SiteAllowTransfer {
   SITE_ALLOW_DOWNLOAD_MATCH_ONLY = 823
 };
 
+enum class TLSMode {
+  NONE = 0,
+  AUTH_TLS = 1,
+  IMPLICIT = 2
+};
+
 class Site {
 private:
   std::string name;
@@ -55,7 +61,7 @@ private:
   bool pret;
   bool binary;
   int listcommand;
-  bool sslconn;
+  TLSMode tlsmode;
   int ssltransfer;
   bool sscnsupported;
   bool cpsvsupported;
@@ -114,7 +120,7 @@ public:
   void setForceBinaryMode(bool);
   int getSSLTransferPolicy() const;
   int getListCommand() const;
-  bool SSL() const;
+  TLSMode getTLSMode() const;
   void setSSLTransferPolicy(int);
   void setListCommand(int);
   int getPriority() const;
@@ -153,7 +159,7 @@ public:
   void setMaxLogins(unsigned int);
   void setMaxDn(unsigned int);
   void setMaxUp(unsigned int);
-  void setSSL(bool);
+  void setTLSMode(TLSMode mode);
   void setDisabled(bool);
   void setAllowUpload(SiteAllowTransfer);
   void setAllowDownload(SiteAllowTransfer);
