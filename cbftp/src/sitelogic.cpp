@@ -1634,6 +1634,16 @@ int SiteLogic::getCurrUp() const {
   return site->getMaxUp() - slotsup;
 }
 
+int SiteLogic::getCleanlyClosedConnectionsCount() const {
+  int count = 0;
+  for (int i = 0; i < (int)conns.size(); ++i) {
+    if (conns[i]->isCleanlyClosed()) {
+      count++;
+    }
+  }
+  return count;
+}
+
 void SiteLogic::connectConn(int id) {
   if (!conns[id]->isConnected()) {
     connstatetracker[id].resetIdleTime();

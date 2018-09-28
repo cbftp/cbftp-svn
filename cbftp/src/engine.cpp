@@ -39,6 +39,7 @@
 #define SFVDIROBSERVETIME 5000
 #define NFO_PRIO_AFTER_SEC 15
 #define TICK_NEXTPREPARED_TIMEOUT 600000
+#define RETRY_CONNECT_UNTIL_SEC 15
 
 enum EngineTickMessages {
   TICK_MSG_TICKER,
@@ -1292,7 +1293,9 @@ void Engine::tick(int message) {
       if (!it2->first->isDone()) {
         wantedlogins = it2->second->getSite()->getMaxLogins();
       }
-      if (it2->second->getCurrLogins() < wantedlogins && it2->first->getMaxFileSize()) {
+      if (it2->second->getCurrLogins() + it2->second->getCleanlyClosedConnectionsCount() < wantedlogins &&
+          (it2->first->getMaxFileSize() || (*it)->getTimeSpent() < RETRY_CONNECT_UNTIL_SEC))
+      {
         it2->second->activateAll();
       }
     }

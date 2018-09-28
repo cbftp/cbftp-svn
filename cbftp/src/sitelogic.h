@@ -115,6 +115,7 @@ class SiteLogic : public EventReceiver {
     int getCurrLogins() const;
     int getCurrDown() const;
     int getCurrUp() const;
+    int getCleanlyClosedConnectionsCount() const;
     void connectConn(int);
     void disconnectConn(int);
     void disconnectConn(int, bool);
