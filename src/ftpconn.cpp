@@ -73,7 +73,8 @@ FTPConn::FTPConn(SiteLogic * sl, int id) :
   aggregatedrawbuf(sl->getAggregatedRawBuffer()),
   cwdrawbuf(new RawBuffer(site->getName())),
   xduperun(false),
-  typeirun(false) {
+  typeirun(false),
+  cleanlyclosed(false) {
 
 }
 
@@ -113,9 +114,11 @@ void FTPConn::login() {
   sockid = -1;
   xduperun = false;
   typeirun = false;
+  cleanlyclosed = false;
   cwdrawbuf->clear();
   currentpath = "/";
   state = STATE_CONNECTING;
+  clearConnectors();
   connectors.push_back(std::make_shared<FTPConnect>(nextconnectorid++, this, site->getAddress(), site->getPort(), getProxy(), true, site->getTLSMode() == TLSMode::IMPLICIT));
   ticker = 0;
   global->getTickPoke()->startPoke(this, "FTPConn", FTPCONN_TICK_INTERVAL, 0);
@@ -1146,6 +1149,7 @@ void FTPConn::doQUIT() {
   if (state != STATE_DISCONNECTED) {
     state = STATE_QUIT;
     sendEcho("QUIT");
+    cleanlyclosed = true;
   }
 }
 
@@ -1163,6 +1167,7 @@ void FTPConn::disconnect() {
   if (state != STATE_DISCONNECTED) {
     state = STATE_DISCONNECTED;
     processing = false;
+    cleanlyclosed = true;
     iom->closeSocket(sockid);
     clearConnectors();
     this->status = "disconnected";
@@ -1180,6 +1185,10 @@ RawBuffer * FTPConn::getCwdRawBuffer() const {
 
 int FTPConn::getSockId() const {
   return sockid;
+}
+
+bool FTPConn::isCleanlyClosed() const {
+  return cleanlyclosed;
 }
 
 FTPConnState FTPConn::getState() const {

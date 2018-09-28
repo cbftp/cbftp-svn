@@ -115,6 +115,7 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     std::list<std::string> xdupelist;
     bool xduperun;
     bool typeirun;
+    bool cleanlyclosed;
     void AUTHTLSResponse();
     void USERResponse();
     void PASSResponse();
@@ -228,6 +229,7 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     RawBuffer * getRawBuffer() const;
     RawBuffer * getCwdRawBuffer() const;
     int getSockId() const;
+    bool isCleanlyClosed() const;
     static bool parseData(char *, unsigned int, char **, unsigned int &, unsigned int &, int &);
     void FDData(int, char *, unsigned int);
     void FDDisconnected(int);
