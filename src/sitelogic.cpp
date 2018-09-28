@@ -950,36 +950,33 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
     const Path & racepath = race->getPath();
     bool goodpath = currentpath == racepath || // same path
                     currentpath.contains(racepath); // same path, currently in subdir
-    if (goodpath && !refresh) {
-      return;
-    }
-    if (backfromrefresh) {
-      connstatetracker[id].delayedCommand("refreshchangepath", SLEEPDELAY, (void *) race);
-      return;
-    }
-    connstatetracker[id].use();
-
-    if (goodpath) {
-      Path subpath = currentpath - racepath;
-      FileList * fl = race->getFileListForPath(subpath.toString());
-      if (fl == NULL) {
-        if (!race->addSubDirectory(subpath.toString(), true)) {
-          refreshChangePath(id, race, refresh);
-          return;
-        }
-        fl = race->getFileListForPath(subpath.toString());
+    if (!goodpath || refresh) {
+      if (backfromrefresh) {
+        connstatetracker[id].delayedCommand("refreshchangepath", SLEEPDELAY, (void *) race);
+        return;
       }
-      getFileListConn(id, race, fl);
-      return;
-    }
-    else {
-      refreshChangePath(id, race, refresh);
+      connstatetracker[id].use();
+      if (goodpath) {
+        Path subpath = currentpath - racepath;
+        FileList * fl = race->getFileListForPath(subpath.toString());
+        if (fl == NULL) {
+          if (!race->addSubDirectory(subpath.toString(), true)) {
+            refreshChangePath(id, race, refresh);
+            return;
+          }
+          fl = race->getFileListForPath(subpath.toString());
+        }
+        getFileListConn(id, race, fl);
+        return;
+      }
+      else {
+        refreshChangePath(id, race, refresh);
+        return;
+      }
     }
   }
-  else {
-    if (site->getMaxIdleTime() && !connstatetracker[id].getCommand().isActive()) {
-      connstatetracker[id].delayedCommand("quit", site->getMaxIdleTime() * 1000);
-    }
+  if (site->getMaxIdleTime() && !connstatetracker[id].getCommand().isActive()) {
+    connstatetracker[id].delayedCommand("quit", site->getMaxIdleTime() * 1000);
   }
 }
 
