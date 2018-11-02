@@ -21,7 +21,6 @@ public:
   virtual void update();
   virtual void command(const std::string &);
   virtual void command(const std::string &, const std::string &);
-  virtual void command(const std::string &, const std::list<int> &);
   virtual std::string getInfoLabel() const;
   virtual std::string getInfoText() const;
   virtual std::string getLegendText() const;

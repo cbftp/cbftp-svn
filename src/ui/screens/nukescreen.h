@@ -17,7 +17,7 @@ class NukeScreen : public UIWindow {
 public:
   NukeScreen(Ui *);
   ~NukeScreen();
-  void initialize(unsigned int row, unsigned int col, const std::string & sitestr, const std::list<std::pair<std::string, bool> > & items, const Path & path);
+  void initialize(unsigned int row, unsigned int col, const std::string & sitestr, const std::string & items, const Path & path);
   void update();
   void redraw();
   bool keyPressed(unsigned int);
@@ -34,6 +34,6 @@ private:
   std::string section;
   std::shared_ptr<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;
-  std::list<std::pair<std::string, bool> > items;
+  std::string items;
   Path path;
 };

@@ -19,7 +19,7 @@ UIFileList::UIFileList() :
   filterednumfiles(0),
   filterednumdirs(0),
   filteredtotalsize(0),
-  sortmethod("none"),
+  sortmethod(SortMethod::COMBINED),
   separators(false)
 {
 }
@@ -90,9 +90,50 @@ bool ownerSortDesc(UIFile * a, UIFile * b) {
   if (diff == 0) return nameSortAsc(a, b);
   return diff > 0;
 }
-void UIFileList::sortCombined() {
+
+void UIFileList::sortMethod(SortMethod sortmethod) {
+  this->sortmethod = sortmethod;
   removeSeparators();
-  std::sort(sortedfiles.begin(), sortedfiles.end(), combinedSort);
+  switch (sortmethod) {
+    case SortMethod::COMBINED:
+      std::sort(sortedfiles.begin(), sortedfiles.end(), combinedSort);
+      insertDateSeparators();
+      break;
+    case SortMethod::NAME_ASC:
+      std::sort(sortedfiles.begin(), sortedfiles.end(), nameSortAsc);
+      insertFirstLetterSeparators();
+      break;
+    case SortMethod::NAME_DESC:
+      std::sort(sortedfiles.begin(), sortedfiles.end(), nameSortDesc);
+      insertFirstLetterSeparators();
+      break;
+    case SortMethod::SIZE_ASC:
+      std::sort(sortedfiles.begin(), sortedfiles.end(), sizeSortAsc);
+      break;
+    case SortMethod::SIZE_DESC:
+      std::sort(sortedfiles.begin(), sortedfiles.end(), sizeSortDesc);
+      break;
+    case SortMethod::TIME_ASC:
+      std::sort(sortedfiles.begin(), sortedfiles.end(), timeSortAsc);
+      insertDateSeparators();
+      break;
+    case SortMethod::TIME_DESC:
+      std::sort(sortedfiles.begin(), sortedfiles.end(), timeSortDesc);
+      insertDateSeparators();
+      break;
+    case SortMethod::OWNER_ASC:
+      std::sort(sortedfiles.begin(), sortedfiles.end(), ownerSortAsc);
+      insertOwnerSeparators();
+      break;
+    case SortMethod::OWNER_DESC:
+      std::sort(sortedfiles.begin(), sortedfiles.end(), ownerSortDesc);
+      insertOwnerSeparators();
+      break;
+  }
+  setNewCurrentPosition();
+}
+
+void UIFileList::insertDateSeparators() {
   if (separators) {
     int lastdate = 0;
     bool complete = false;
@@ -112,20 +153,9 @@ void UIFileList::sortCombined() {
       }
     }
   }
-  setNewCurrentPosition();
-  sortmethod = "Combined";
 }
 
-void UIFileList::sortName(bool ascending) {
-  removeSeparators();
-  if (ascending) {
-    std::sort(sortedfiles.begin(), sortedfiles.end(), nameSortAsc);
-    sortmethod = "Name (ascending)";
-  }
-  else {
-    std::sort(sortedfiles.begin(), sortedfiles.end(), nameSortDesc);
-    sortmethod = "Name (descending)";
-  }
+void UIFileList::insertFirstLetterSeparators() {
   if (separators) {
     std::string lastletter = "";
     bool complete = false;
@@ -148,64 +178,9 @@ void UIFileList::sortName(bool ascending) {
       }
     }
   }
-  setNewCurrentPosition();
 }
 
-void UIFileList::sortTime(bool ascending) {
-  removeSeparators();
-  if (ascending) {
-    std::sort(sortedfiles.begin(), sortedfiles.end(), timeSortAsc);
-    sortmethod = "Time (ascending)";
-  }
-  else {
-    std::sort(sortedfiles.begin(), sortedfiles.end(), timeSortDesc);
-    sortmethod = "Time (descending)";
-  }
-  if (separators) {
-    int lastdate = 0;
-    bool complete = false;
-    while (!complete) {
-      complete = true;
-      std::vector<UIFile *>::iterator lastit = sortedfiles.end();
-      for (std::vector<UIFile *>::iterator it = sortedfiles.begin(); it != sortedfiles.end(); it++) {
-        if (*it != NULL && (*it)->getModifyDate() != lastdate) {
-          lastdate = (*it)->getModifyDate();
-          if (*lastit != NULL && it != sortedfiles.begin()) {
-            sortedfiles.insert(it, NULL);
-            complete = false;
-            break;
-          }
-        }
-        lastit = it;
-      }
-    }
-  }
-  setNewCurrentPosition();
-}
-
-void UIFileList::sortSize(bool ascending) {
-  removeSeparators();
-  if (ascending) {
-    std::sort(sortedfiles.begin(), sortedfiles.end(), sizeSortAsc);
-    sortmethod = "Size (ascending)";
-  }
-  else {
-    std::sort(sortedfiles.begin(), sortedfiles.end(), sizeSortDesc);
-    sortmethod = "Size (descending)";
-  }
-  setNewCurrentPosition();
-}
-
-void UIFileList::sortOwner(bool ascending) {
-  removeSeparators();
-  if (ascending) {
-    std::sort(sortedfiles.begin(), sortedfiles.end(), ownerSortAsc);
-    sortmethod = "Owner (ascending)";
-  }
-  else {
-    std::sort(sortedfiles.begin(), sortedfiles.end(), ownerSortDesc);
-    sortmethod = "Owner (descending)";
-  }
+void UIFileList::insertOwnerSeparators() {
   if (separators) {
     std::string lastowner;
     bool complete = false;
@@ -225,7 +200,6 @@ void UIFileList::sortOwner(bool ascending) {
       }
     }
   }
-  setNewCurrentPosition();
 }
 
 void UIFileList::setNewCurrentPosition() {
@@ -304,6 +278,7 @@ void UIFileList::fillSortedFiles() {
     }
     filteredtotalsize += file.getSize();
   }
+  sortMethod(sortmethod);
 }
 
 void UIFileList::parse(FileList * filelist) {
@@ -447,7 +422,31 @@ const Path & UIFileList::getPath() const {
 }
 
 std::string UIFileList::getSortMethod() const {
-  return sortmethod;
+  return getSortMethod(sortmethod);
+}
+
+std::string UIFileList::getSortMethod(SortMethod sortmethod) {
+  switch (sortmethod) {
+    case SortMethod::COMBINED:
+      return "Combined";
+    case SortMethod::NAME_ASC:
+      return "Name (ascending)";
+    case SortMethod::NAME_DESC:
+      return "Name (descending)";
+    case SortMethod::SIZE_ASC:
+      return "Size (ascending)";
+    case SortMethod::SIZE_DESC:
+      return "Size (descending)";
+    case SortMethod::TIME_ASC:
+      return "Time (ascending)";
+    case SortMethod::TIME_DESC:
+      return "Time (descending)";
+    case SortMethod::OWNER_ASC:
+      return "Owner (ascending)";
+    case SortMethod::OWNER_DESC:
+      return "Owner (descending)";
+  }
+  return "";
 }
 
 bool UIFileList::separatorsEnabled() const {

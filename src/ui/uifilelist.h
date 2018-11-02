@@ -15,6 +15,18 @@ class FileList;
 class LocalFileList;
 
 class UIFileList {
+public:
+  enum class SortMethod {
+    COMBINED = 0,
+    NAME_ASC = 1,
+    NAME_DESC = 2,
+    SIZE_ASC = 3,
+    SIZE_DESC = 4,
+    TIME_ASC = 5,
+    TIME_DESC = 6,
+    OWNER_ASC = 7,
+    OWNER_DESC = 8,
+  };
 private:
   std::vector<UIFile> files;
   std::vector<UIFile *> sortedfiles;
@@ -28,20 +40,19 @@ private:
   unsigned int filterednumfiles;
   unsigned int filterednumdirs;
   unsigned long long int filteredtotalsize;
-  std::string sortmethod;
+  SortMethod sortmethod;
   bool separators;
   std::list<std::string> filters;
   std::set<std::string> uniques;
   void setNewCurrentPosition();
   void removeSeparators();
   void fillSortedFiles();
+  void insertDateSeparators();
+  void insertFirstLetterSeparators();
+  void insertOwnerSeparators();
 public:
   UIFileList();
-  void sortCombined();
-  void sortName(bool);
-  void sortTime(bool);
-  void sortSize(bool);
-  void sortOwner(bool);
+  void sortMethod(SortMethod sortmethod);
   void parse(FileList *);
   void parse(std::shared_ptr<LocalFileList> &);
   UIFile * cursoredFile() const;
@@ -61,6 +72,7 @@ public:
   unsigned int currentCursorPosition() const;
   const Path & getPath() const;
   std::string getSortMethod() const;
+  static std::string getSortMethod(SortMethod sortmethod);
   bool separatorsEnabled() const;
   void removeFile(std::string);
   void toggleSeparators();

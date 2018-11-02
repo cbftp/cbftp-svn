@@ -91,10 +91,6 @@ void BrowseScreen::command(const std::string & command, const std::string & arg)
   active->command(command, arg);
 }
 
-void BrowseScreen::command(const std::string & command, const std::list<int> & reqids) {
-  active->command(command, reqids);
-}
-
 bool BrowseScreen::keyPressed(unsigned int ch) {
   BrowseScreenAction op = active->keyPressed(ch);
   switch (op.getOp()) {
@@ -248,8 +244,6 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
           leftlist->setUnique(rightuniques);
           rightlist->setUnique(leftuniques);
         }
-        left->sort();
-        right->sort();
       }
       ui->redraw();
       ui->setInfo();
