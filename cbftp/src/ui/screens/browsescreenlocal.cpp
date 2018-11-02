@@ -1,5 +1,7 @@
 #include "browsescreenlocal.h"
 
+
+
 #include "../../core/tickpoke.h"
 #include "../../localstorage.h"
 #include "../../localfilelist.h"
@@ -14,17 +16,21 @@
 #include "../menuselectadjustableline.h"
 #include "../misc.h"
 
-#include "browsescreensite.h"
 #include "browsescreenaction.h"
 
+#include <cassert>
+
 BrowseScreenLocal::BrowseScreenLocal(Ui * ui) : ui(ui), currentviewspan(0),
-    focus(true), changedsort(false), cwdfailed(false), deletesuccess(false),
-    deletefailed(false), tickcount(0),
-    resort(false), sortmethod(0), gotomode(false), gotomodefirst(false),
+    focus(true), spinnerpos(0), tickcount(0),
+    resort(false), sortmethod(UIFileList::SortMethod::COMBINED), gotomode(false), gotomodefirst(false),
     gotomodeticker(0), filtermodeinput(false), temphighlightline(-1),
-    deleting(false), softselecting(false)
+    softselecting(false), lastinfo(LastInfo::NONE)
 {
-  gotoPath(global->getLocalStorage()->getDownloadPath());
+  BrowseScreenRequest request;
+  request.type = BrowseScreenRequestType::FILELIST;
+  request.path = global->getLocalStorage()->getDownloadPath();
+  request.id = global->getLocalStorage()->requestLocalFileList(request.path);
+  requests.push_back(request);
 }
 
 BrowseScreenLocal::~BrowseScreenLocal() {
@@ -42,7 +48,8 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
   this->coloffset = coloffset;
 
   if (resort == true) {
-    sort();
+    list.sortMethod(sortmethod);
+    resort = false;
   }
   unsigned int position = list.currentCursorPosition();
   unsigned int listsize = list.size();
@@ -72,7 +79,7 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
       prepchar = "L";
     }
     std::string owner = uifile->getOwner() + "/" + uifile->getGroup();
-    BrowseScreenSite::addFileDetails(table, coloffset, i, prepchar, uifile->getName(), uifile->getSizeRepr(), uifile->getLastModified(), owner, true, selected, uifile);
+    addFileDetails(table, coloffset, i, uifile->getName(), prepchar, uifile->getSizeRepr(), uifile->getLastModified(), owner, true, selected, uifile);
   }
   table.adjustLines(col - 3);
   table.checkPointer();
@@ -97,7 +104,7 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
     }
     if (re->isVisible()) {
       if ((cursored && softselected) || (cursored && hardselected) || (softselected && hardselected)) {
-        BrowseScreenSite::printFlipped(ui, re);
+        printFlipped(ui, re);
       }
       else {
         ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight && focus);
@@ -119,12 +126,15 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
 }
 
 void BrowseScreenLocal::update() {
+  if (handleReadyRequests()) {
+    return;
+  }
   if (table.size()) {
     std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(table.getLastSelectionPointer()));
     bool softselected = re->getOrigin() && static_cast<UIFile *>(re->getOrigin())->isSoftSelected();
     bool hardselected = re->getOrigin() && static_cast<UIFile *>(re->getOrigin())->isHardSelected();
     if (softselected && hardselected) {
-      BrowseScreenSite::printFlipped(ui, re);
+      printFlipped(ui, re);
     }
     else {
       ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), softselected || hardselected);
@@ -133,7 +143,7 @@ void BrowseScreenLocal::update() {
     bool selected = re->getOrigin() && (static_cast<UIFile *>(re->getOrigin())->isSoftSelected() ||
                                         static_cast<UIFile *>(re->getOrigin())->isHardSelected());
     if (selected && focus) {
-      BrowseScreenSite::printFlipped(ui, re);
+      printFlipped(ui, re);
     }
     else {
       ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), focus);
@@ -146,22 +156,90 @@ void BrowseScreenLocal::update() {
   }
 }
 
-void BrowseScreenLocal::command(const std::string & command, const std::string & arg) {
-  if (command == "yes" && deleting) {
-    for (std::list<std::pair<std::string, bool> >::const_iterator it = actionfiles.begin(); it != actionfiles.end(); it++) {
-      if (LocalStorage::deleteRecursive(actionpath / it->first) && !deletefailed) {
-        deletesuccess = true;
+bool BrowseScreenLocal::handleReadyRequests() {
+  bool handled = false;
+  while (!requests.empty() && global->getLocalStorage()->requestReady(requests.front().id)) {
+    handled = true;
+    const BrowseScreenRequest & request = requests.front();
+    switch (request.type) {
+      case BrowseScreenRequestType::PATH_INFO: {
+        LocalPathInfo pathinfo = global->getLocalStorage()->getPathInfo(request.id);
+        std::string dirs = std::to_string(pathinfo.getNumDirs());
+        std::string files = std::to_string(pathinfo.getNumFiles());
+        std::string size = util::parseSize(pathinfo.getSize());
+        int maxdepth = pathinfo.getDepth();
+        std::string targettext = "these " + util::int2Str(static_cast<int>(request.files.size())) + " items";
+        if (request.files.size() == 1) {
+          targettext = request.files.front().first;
+        }
+        std::string confirmation = "Do you really want to delete " + targettext + "?";
+        if (maxdepth > 0) {
+          std::string contain = request.files.size() == 1 ? " It contains " : " They contain ";
+          std::string depthpre = request.files.size() == 1 ? "is " : "are ";
+          confirmation += contain + size + " in " + files + "f/" + dirs + "d and " + depthpre;
+        }
+        if (maxdepth == 1) {
+          confirmation += "1 level deep.";
+        }
+        else if (maxdepth > 1) {
+          confirmation += util::int2Str(maxdepth) + " levels deep.";
+        }
+        if (pathinfo.getNumDirs() >= 10 || pathinfo.getNumFiles() >= 100 || pathinfo.getSize() >= 100000000000 || pathinfo.getDepth() > 2) {
+          ui->goStrongConfirmation(confirmation);
+        }
+        else {
+          ui->goConfirmation(confirmation);
+        }
+        break;
       }
-      else {
-        deletefailed = true;
-        deletesuccess = false;
+      case BrowseScreenRequestType::FILELIST:
+        gotoPath(request.id, request.path);
+        requests.pop_front();
+        break;
+      case BrowseScreenRequestType::DELETE: {
+        bool success = global->getLocalStorage()->getDeleteResult(request.id);
+        if (success) {
+          lastinfo = LastInfo::DELETE_SUCCESS;
+        }
+        else {
+          lastinfo = LastInfo::DELETE_FAILED;
+        }
+        lastinfotarget = request.files.front().first;
+        tickcount = 0;
+        refreshFilelist();
+        requests.pop_front();
+        break;
       }
+      default:
+        assert(false);
+        break;
     }
-    tickcount = 0;
-    gotoPath(list.getPath());
+  }
+  if (handled) {
+    ui->redraw();
     ui->setInfo();
   }
-  deleting = false;
+  return handled;
+}
+
+void BrowseScreenLocal::command(const std::string & command, const std::string & arg) {
+  if (!requests.empty() && requests.front().type == BrowseScreenRequestType::PATH_INFO) {
+    const BrowseScreenRequest & pathinforequest = requests.front();
+    if (command == "yes") {
+      for (const auto & file : pathinforequest.files) {
+        BrowseScreenRequest delrequest;
+        delrequest.path = pathinforequest.path;
+        std::list<std::pair<std::string, bool>> files;
+        files.push_back(file);
+        delrequest.files = files;
+        delrequest.type = BrowseScreenRequestType::DELETE;
+        delrequest.id = global->getLocalStorage()->requestDelete(delrequest.path / file.first, true);
+        requests.push_back(delrequest);
+      }
+    }
+    requests.pop_front();
+    ui->setInfo();
+  }
   ui->redraw();
 }
 
@@ -261,48 +339,17 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       if (filenames.empty()) {
         break;
       }
-      actionpath = filelist->getPath();
-      actionfiles = filenames;
-      deleting = true;
-      int aggdirs = 0;
-      int aggfiles = 0;
-      unsigned long long int aggsize = 0;
-      int maxdepth = 0;
+      BrowseScreenRequest request;
+      request.path = filelist->getPath();
+      request.files = filenames;
+      request.type = BrowseScreenRequestType::PATH_INFO;
+      std::list<Path> paths;
       for (std::list<std::pair<std::string, bool> >::const_iterator it = filenames.begin(); it != filenames.end(); it++) {
-        LocalPathInfo pathinfo = LocalStorage::getPathInfo(actionpath / it->first);
-        aggdirs += pathinfo.getNumDirs();
-        aggfiles += pathinfo.getNumFiles();
-        aggsize += pathinfo.getSize();
-        int depth = pathinfo.getDepth();
-        if (depth > maxdepth) {
-          maxdepth = depth;
-        }
+        paths.emplace_back(request.path / it->first);
       }
-      std::string dirs = util::int2Str(aggdirs);
-      std::string files = util::int2Str(aggfiles);
-      std::string size = util::parseSize(aggsize);
-      std::string targettext = "these " + util::int2Str(static_cast<int>(filenames.size())) + " items";
-      if (filenames.size() == 1) {
-        targettext = filenames.front().first;
-      }
-      std::string confirmation = "Do you really want to delete " + targettext + "?";
-      if (maxdepth > 0) {
-        std::string contain = filenames.size() == 1 ? " It contains " : " They contain ";
-        std::string depthpre = filenames.size() == 1 ? "is " : "are ";
-        confirmation += contain + size + " in " + files + "f/" + dirs + "d and " + depthpre;
-      }
-      if (maxdepth == 1) {
-        confirmation += "1 level deep.";
-      }
-      else if (maxdepth > 1) {
-        confirmation += util::int2Str(maxdepth) + " levels deep.";
-      }
-      if (aggdirs >= 10 || aggfiles >= 100 || aggsize >= 100000000000 || maxdepth > 2) {
-        ui->goStrongConfirmation(confirmation);
-      }
-      else {
-        ui->goConfirmation(confirmation);
-      }
+      request.id = global->getLocalStorage()->requestPathInfo(paths);
+      requests.push_back(request);
+      ui->setInfo();
       break;
     }
     case 'q':
@@ -335,16 +382,19 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       if (oldpath == "/") {
         return BrowseScreenAction(BROWSESCREENACTION_CLOSE);
       }
-      gotoPath(oldpath.dirName());
+      BrowseScreenRequest request;
+      request.type = BrowseScreenRequestType::FILELIST;
+      request.path = oldpath.dirName();
+      request.id = global->getLocalStorage()->requestLocalFileList(request.path);
+      requests.push_back(request);
       ui->setInfo();
       ui->redraw();
       break;
     }
     case KEY_F(5):
     {
-      gotoPath(list.getPath());
+      refreshFilelist();
       ui->setInfo();
-      ui->redraw();
       break;
     }
     case KEY_DOWN:
@@ -413,21 +463,23 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       bool isdir = cursoredfile->isDirectory();
       bool islink = cursoredfile->isLink();
       if (isdir || islink) {
+        BrowseScreenRequest request;
+        request.type = BrowseScreenRequestType::FILELIST;
         const Path & oldpath = list.getPath();
-        Path targetpath;
         if (islink) {
           Path target = cursoredfile->getLinkTarget();
           if (target.isAbsolute()) {
-            targetpath = target;
+            request.path = target;
           }
           else {
-            targetpath = oldpath / target;
+            request.path = oldpath / target;
           }
         }
         else {
-          targetpath = oldpath / cursoredfile->getName();
+          request.path = oldpath / cursoredfile->getName();
         }
-        gotoPath(targetpath);
+        request.id = global->getLocalStorage()->requestLocalFileList(request.path);
+        requests.push_back(request);
         ui->setInfo();
         ui->redraw();
       }
@@ -458,17 +510,19 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       }
       break;
     case 's':
-      sortmethod++;
+      sortmethod = static_cast<UIFileList::SortMethod>((static_cast<int>(sortmethod) + 1) % 9);
       resort = true;
-      changedsort = true;
+      lastinfo = LastInfo::CHANGED_SORT;
+      lastinfotarget = list.getSortMethod(sortmethod);
       tickcount = 0;
       ui->redraw();
       ui->setInfo();
       break;
     case 'S':
-      sortmethod = 0;
+      sortmethod = UIFileList::SortMethod::COMBINED;
       resort = true;
-      changedsort = true;
+      lastinfo = LastInfo::CHANGED_SORT;
+      lastinfotarget = list.getSortMethod(sortmethod);
       tickcount = 0;
       ui->redraw();
       ui->setInfo();
@@ -574,49 +628,61 @@ std::string BrowseScreenLocal::getInfoLabel() const {
 
 std::string BrowseScreenLocal::getInfoText() const {
   std::string text = list.getPath().toString();
-  std::string target;
-  int total = actionfiles.size();
-  if (total == 1) {
-    target = actionfiles.front().first;
+  if (!requests.empty()) {
+    const BrowseScreenRequest & request = requests.front();
+    std::string target = targetName(request.files);
+    if (requests.size() > 1) {
+      target += " (+ " + std::to_string(requests.size()) + " more)";
+    }
+    switch (request.type) {
+      case BrowseScreenRequestType::DELETE:
+        text = "Deleting " + target + "  ";
+        break;
+      case BrowseScreenRequestType::PATH_INFO:
+        text = "Summarizing " + target + "  ";
+        break;
+      case BrowseScreenRequestType::FILELIST:
+        text = "Getting list for " + request.path.toString() + "  ";
+        break;
+      default:
+        assert(false);
+        break;
+    }
+    switch(spinnerpos++ % 4) {
+      case 0:
+        text += "|";
+        break;
+      case 1:
+        text += "/";
+        break;
+      case 2:
+        text += "-";
+        break;
+      case 3:
+        text += "\\";
+        break;
+    }
+    return text;
   }
-  else {
-    target = util::int2Str(static_cast<int>(total)) + " items";
-  }
-  if (changedsort) {
-    if (tickcount++ < 8) {
-      text = "Sort method: " + list.getSortMethod();
-      return text;
+  if (tickcount++ < 8 && lastinfo != LastInfo::NONE) {
+    switch (lastinfo) {
+      case LastInfo::CHANGED_SORT:
+        text = "Sort method: ";
+        break;
+      case LastInfo::CWD_FAILED:
+        text = "CWD failed: ";
+        break;
+      case LastInfo::DELETE_SUCCESS:
+        text = "Delete successful: ";
+        break;
+      case LastInfo::DELETE_FAILED:
+        text = "Delete failed: ";
+        break;
+      case LastInfo::NONE:
+      default:
+        break;
     }
-    else {
-      changedsort = false;
-    }
-  }
-  else if (cwdfailed) {
-    if (tickcount++ < 8) {
-      text = "CWD failed: " + targetpath.toString();
-      return text;
-    }
-    else {
-      cwdfailed = false;
-    }
-  }
-  else if (deletesuccess) {
-    if (tickcount++ < 8) {
-      text = "Delete successful: " + target;
-      return text;
-    }
-    else {
-      deletesuccess = false;
-    }
-  }
-  else if (deletefailed) {
-    if (tickcount++ < 8) {
-      text = "Delete failed: " + target;
-      return text;
-    }
-    else {
-      deletefailed = false;
-    }
+    return text + lastinfotarget;
   }
   if (list.hasFilters() || list.hasUnique()) {
     if (list.hasFilters()) {
@@ -645,6 +711,14 @@ void BrowseScreenLocal::setFocus(bool focus) {
   }
 }
 
+void BrowseScreenLocal::refreshFilelist() {
+  BrowseScreenRequest request;
+  request.type = BrowseScreenRequestType::FILELIST;
+  request.path = list.getPath();
+  request.id = global->getLocalStorage()->requestLocalFileList(request.path);
+  requests.push_back(request);
+}
+
 void BrowseScreenLocal::tick(int) {
   if (gotomode && !gotomodefirst) {
     if (gotomodeticker++ >= 20) {
@@ -657,39 +731,6 @@ UIFile * BrowseScreenLocal::selectedFile() const {
   return list.cursoredFile();
 }
 
-void BrowseScreenLocal::sort() {
-  switch (sortmethod % 9) {
-    case 0:
-      list.sortCombined();
-      break;
-    case 1:
-      list.sortName(true);
-      break;
-    case 2:
-      list.sortName(false);
-      break;
-    case 3:
-      list.sortSize(false);
-      break;
-    case 4:
-      list.sortSize(true);
-      break;
-    case 5:
-      list.sortTime(false);
-      break;
-    case 6:
-      list.sortTime(true);
-      break;
-    case 7:
-      list.sortOwner(true);
-      break;
-    case 8:
-      list.sortOwner(false);
-      break;
-  }
-  resort = false;
-}
-
 void BrowseScreenLocal::disableGotoMode() {
   if (gotomode) {
     gotomode = false;
@@ -698,11 +739,11 @@ void BrowseScreenLocal::disableGotoMode() {
   }
 }
 
-void BrowseScreenLocal::gotoPath(const Path & path) {
-  targetpath = path;
-  std::shared_ptr<LocalFileList> filelist = global->getLocalStorage()->getLocalFileList(path);
+void BrowseScreenLocal::gotoPath(int requestid, const Path & path) {
+  std::shared_ptr<LocalFileList> filelist = global->getLocalStorage()->getLocalFileList(requestid);
   if (!filelist) {
-    cwdfailed = true;
+    lastinfo = LastInfo::CWD_FAILED;
+    lastinfotarget = path.toString();
     tickcount = 0;
     return;
   }
@@ -725,9 +766,9 @@ void BrowseScreenLocal::gotoPath(const Path & path) {
   if (filters.size()) {
     list.setFilters(filters);
   }
-  sort();
+  list.sortMethod(sortmethod);
   for (std::list<std::pair<Path, std::string> >::iterator it = selectionhistory.begin(); it != selectionhistory.end(); it++) {
-    if (it->first == path) {
+    if (it->first == filelist->getPath()) {
       bool selected = list.selectFileName(it->second);
       selectionhistory.erase(it);
       if (selected) {

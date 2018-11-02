@@ -731,7 +731,7 @@ void Ui::goStrongConfirmation(const std::string & message) {
   switchToWindow(confirmationscreen);
 }
 
-void Ui::goNuke(const std::string & site, const std::list<std::pair<std::string, bool> > & items, const Path & path) {
+void Ui::goNuke(const std::string & site, const std::string & items, const Path & path) {
   nukescreen->initialize(mainrow, maincol, site, items, path);
   switchToWindow(nukescreen);
 }
@@ -985,9 +985,9 @@ void Ui::confirmNo() {
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 
-void Ui::returnNuke(const std::list<int> & reqids) {
+void Ui::returnNuke(int multiplier, const std::string & reason) {
   switchToLast();
-  topwindow->command("returnnuke", reqids);
+  topwindow->command("nuke", std::to_string(multiplier) + ";" + reason);
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 

@@ -19,6 +19,8 @@
 #include "../../rawbuffer.h"
 #include "../../filelistdata.h"
 
+#include <cassert>
+
 #include "../ui.h"
 #include "../uifile.h"
 #include "../termint.h"
@@ -30,40 +32,23 @@
 #include "browsescreenaction.h"
 #include "rawdatascreen.h"
 
-BrowseScreenSite::BrowseScreenSite(Ui * ui, const std::string & sitestr) {
-  this->ui = ui;
-  gotomodeticker = 0;
-  sitelogic = global->getSiteLogicManager()->getSiteLogic(sitestr);
-  site = sitelogic->getSite();
-  requestedpath = site->getBasePath();
+BrowseScreenSite::BrowseScreenSite(Ui * ui, const std::string & sitestr) :
+    ui(ui), row(0), col(0), coloffset(0), currentviewspan(0), virgin(true),
+    resort(false), tickcount(0), gotomode(false), gotomodefirst(false),
+    gotomodeticker(0), filtermodeinput(false),
+    sortmethod(UIFileList::SortMethod::COMBINED),
+    sitelogic(global->getSiteLogicManager()->getSiteLogic(sitestr)),
+    site(sitelogic->getSite()), spinnerpos(0), filelist(nullptr),
+    withinraceskiplistreach(false), focus(true), temphighlightline(-1),
+    softselecting(false), lastinfo(LastInfo::NONE),
+    confirmaction(ConfirmAction::NONE)
+{
   sitelogic->getAggregatedRawBuffer()->bookmark();
-  requestids.push_back(sitelogic->requestFileList(requestedpath));
-  virgin = true;
-  resort = false;
-  changedsort = false;
-  cwdfailed = false;
-  wipe = false;
-  wipesuccess = false;
-  wipefailed = false;
-  deleting = false;
-  deletesuccess = false;
-  deletefailed = false;
-  nuking = false;
-  nukesuccess = false;
-  nukefailed = false;
-  mkdiring = false;
-  mkdirsuccess = false;
-  mkdirfailed = false;
-  gotomode = false;
-  filtermodeinput = false;
-  withinraceskiplistreach = false;
-  focus = true;
-  softselecting = false;
-  currentviewspan = 0;
-  sortmethod = 0;
-  spinnerpos = 0;
-  temphighlightline = -1;
-  filelist = NULL;
+  BrowseScreenRequest request;
+  request.type = BrowseScreenRequestType::FILELIST;
+  request.path = site->getBasePath();
+  request.id = sitelogic->requestFileList(request.path);
+  requests.push_back(request);
   TimeReference::updateTime();
 }
 
@@ -96,7 +81,8 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
     return;
   }
   if (resort == true) {
-    sort();
+    list.sortMethod(sortmethod);
+    resort = false;
   }
   unsigned int position = list.currentCursorPosition();
   unsigned int listsize = list.size();
@@ -158,7 +144,7 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
       prepchar = "L";
     }
     std::string owner = uifile->getOwner() + "/" + uifile->getGroup();
-    addFileDetails(table, coloffset, i, prepchar, uifile->getName(), uifile->getSizeRepr(),
+    addFileDetails(table, coloffset, i, uifile->getName(), prepchar, uifile->getSizeRepr(),
         uifile->getLastModified(), owner, true, cursored, uifile);
   }
   table.adjustLines(col - 3);
@@ -184,7 +170,7 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
     }
     if (re->isVisible()) {
       if ((cursored && softselected) || (cursored && hardselected) || (softselected && hardselected)) {
-        printFlipped(re);
+        printFlipped(ui, re);
       }
       else {
         ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight && focus);
@@ -217,7 +203,7 @@ void BrowseScreenSite::update() {
     bool softselected = re->getOrigin() && static_cast<UIFile *>(re->getOrigin())->isSoftSelected();
     bool hardselected = re->getOrigin() && static_cast<UIFile *>(re->getOrigin())->isHardSelected();
     if (softselected && hardselected) {
-      printFlipped(re);
+      printFlipped(ui, re);
     }
     else {
       ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), softselected || hardselected);
@@ -226,7 +212,7 @@ void BrowseScreenSite::update() {
     bool selected = re->getOrigin() && (static_cast<UIFile *>(re->getOrigin())->isSoftSelected() ||
                                         static_cast<UIFile *>(re->getOrigin())->isHardSelected());
     if (selected && focus) {
-      printFlipped(re);
+      printFlipped(ui, re);
     }
     else {
       ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), focus);
@@ -240,206 +226,226 @@ void BrowseScreenSite::update() {
 }
 
 bool BrowseScreenSite::handleReadyRequests() {
-  tickcount = 0;
-  bool redraw = false;
   bool handled = false;
-  while (!requestids.empty() && sitelogic->requestReady(requestids.front())) {
+  while (!requests.empty() && sitelogic->requestReady(requests.front().id)) {
     handled = true;
-    if (wipe) {
-      bool wipestatus = sitelogic->finishRequest(requestids.front());
-      requestids.pop_front();
-      if (requestids.empty()) {
-        wipe = false;
-        if (wipestatus) {
-          wipesuccess = true;
-          if (list.getPath() == actionpath) {
+    const BrowseScreenRequest & request = requests.front();
+    switch (request.type) {
+      case BrowseScreenRequestType::FILELIST:
+        loadFileListFromRequest();
+        break;
+      case BrowseScreenRequestType::NUKE: {
+        bool success = sitelogic->finishRequest(request.id);
+        if (success) {
+          lastinfo = LastInfo::NUKE_SUCCESS;
+          if (list.getPath() == request.path) {
             refreshFilelist();
           }
         }
         else {
-          wipefailed = true;
+          lastinfo = LastInfo::NUKE_FAILED;
         }
+        lastinfotarget = request.files.front().first;
+        tickcount = 0;
+        break;
       }
-    }
-    else if (deleting) {
-      bool deletestatus = sitelogic->finishRequest(requestids.front());
-      requestids.pop_front();
-      if (requestids.empty()) {
-        deleting = false;
-        if (deletestatus) {
-          deletesuccess = true;
-          if (list.getPath() == actionpath) {
+      case BrowseScreenRequestType::WIPE: {
+        bool success = sitelogic->finishRequest(request.id);
+        if (success) {
+          lastinfo = LastInfo::WIPE_SUCCESS;
+          if (list.getPath() == request.path) {
             refreshFilelist();
           }
         }
         else {
-          deletefailed = true;
+          lastinfo = LastInfo::WIPE_FAILED;
         }
+        lastinfotarget = request.files.front().first;
+        tickcount = 0;
+        break;
       }
-    }
-    else if (nuking) {
-      bool nukestatus = sitelogic->finishRequest(requestids.front());
-      requestids.pop_front();
-      if (requestids.empty()) {
-        nuking = false;
-        if (nukestatus) {
-          nukesuccess = true;
-        }
-        else {
-          nukefailed = true;
-        }
-        refreshFilelist();
-      }
-    }
-    else if (mkdiring) {
-      bool mkdirstatus = sitelogic->finishRequest(requestids.front());
-      requestids.pop_front();
-      if (requestids.empty()) {
-        mkdiring = false;
-        if (mkdirstatus) {
-          mkdirsuccess = true;
-          refreshFilelist();
-        }
-        else {
-          mkdirfailed = true;
-        }
-      }
-    }
-    else {
-      FileListData * newfilelistdata = sitelogic->getFileListData(requestids.front());
-      if (newfilelistdata == NULL) {
-        sitelogic->finishRequest(requestids.front());
-        requestids.pop_front();
-        if (requestids.empty()) {
-          cwdfailed = true;
-        }
-      }
-      else {
-        cwdrawbuffer = newfilelistdata->getCwdRawBuffer();
-        filelist = newfilelistdata->getFileList();
-        if (!virgin) {
-          if (list.cursoredFile() != NULL) {
-            selectionhistory.push_front(std::pair<Path, std::string>(list.getPath(), list.cursoredFile()->getName()));
+      case BrowseScreenRequestType::MKDIR: {
+        bool success = sitelogic->finishRequest(request.id);
+        if (success) {
+          lastinfo = LastInfo::MKDIR_SUCCESS;
+          if (list.getPath() == request.path) {
+            refreshFilelist();
           }
         }
         else {
-          sitelogic->getAggregatedRawBuffer()->setUiWatching(false);
-          virgin = false;
+          lastinfo = LastInfo::MKDIR_FAILED;
         }
-        unsigned int position = 0;
-        bool separatorsenabled = false;
-        std::list<std::string> filters;
-        std::set<std::string> uniques;
-        if (list.getPath() == filelist->getPath()) {
-          position = list.currentCursorPosition();
-          separatorsenabled = list.separatorsEnabled();
-          filters = list.getFilters();
-          uniques = list.getUniques();
+        lastinfotarget = request.files.front().first;
+        tickcount = 0;
+        break;
+      }
+      case BrowseScreenRequestType::DELETE: {
+        bool success = sitelogic->finishRequest(request.id);
+        if (success) {
+          lastinfo = LastInfo::DELETE_SUCCESS;
+          if (list.getPath() == request.path) {
+            refreshFilelist();
+          }
         }
         else {
-          currentviewspan = 0;
+          lastinfo = LastInfo::DELETE_FAILED;
         }
-        list.parse(filelist);
-        sitelogic->finishRequest(requestids.front());
-        requestids.pop_front();
-        if (separatorsenabled) {
-          list.toggleSeparators();
-        }
-        if (filters.size()) {
-          list.setFilters(filters);
-        }
-        if (uniques.size()) {
-          list.setUnique(uniques);
-        }
-        sort();
-        if (position) {
-          list.setCursorPosition(position);
-        }
-        const Path & path = list.getPath();
-        for (std::list<std::pair<Path, std::string> >::iterator it = selectionhistory.begin(); it != selectionhistory.end(); it++) {
-          if (it->first == path) {
-            list.selectFileName(it->second);
-            selectionhistory.erase(it);
-            break;
-          }
-        }
-        std::list<std::string> sections = site->getSectionsForPartialPath(path);
-        int dirlevels = path.split().size();
-        withinraceskiplistreach = false;
-        int closestsectiondirlevel = -1;
-        for (std::list<std::string>::iterator it = sections.begin(); it != sections.end(); it++) {
-          Path sectionpath = site->getSectionPath(*it);
-          int dirleveldifference = dirlevels - sectionpath.split().size();
-          if (dirleveldifference > 0) {
-            withinraceskiplistreach = true;
-            if (dirleveldifference < closestsectiondirlevel || closestsectiondirlevel < 0) {
-              closestsectiondirlevel = dirleveldifference;
-              closestracesectionpath = sectionpath;
-            }
-          }
-          else {
-            withinraceskiplistreach = false;
-            break;
-          }
-        }
-
-        //delete filelist;
+        lastinfotarget = request.files.front().first;
+        tickcount = 0;
+        break;
       }
-      redraw = true;
+      default:
+        assert(false);
+        break;
     }
+    requests.pop_front();
   }
-  if (redraw) {
+  if (handled) {
     ui->redraw();
+    ui->setInfo();
   }
-  ui->setInfo();
   return handled;
 }
-void BrowseScreenSite::command(const std::string & command, const std::string & arg) {
-  if (command == "yes") {
-    if (wipe) {
-      std::list<std::pair<std::string, bool> >::iterator it;
-      for (it = actionfiles.begin(); it != actionfiles.end(); it++) {
-        requestids.push_back(sitelogic->requestWipe(actionpath / it->first, it->second));
-      }
+
+void BrowseScreenSite::loadFileListFromRequest() {
+  assert(!requests.empty());
+  const BrowseScreenRequest & request = requests.front();
+  FileListData * newfilelistdata = sitelogic->getFileListData(request.id);
+  if (newfilelistdata == nullptr) {
+    sitelogic->finishRequest(request.id);
+    lastinfo = LastInfo::CWD_FAILED;
+    tickcount = 0;
+    return;
+  }
+  cwdrawbuffer = newfilelistdata->getCwdRawBuffer();
+  filelist = newfilelistdata->getFileList();
+  if (!virgin) {
+    if (list.cursoredFile() != nullptr) {
+      selectionhistory.push_front(std::pair<Path, std::string>(list.getPath(), list.cursoredFile()->getName()));
     }
-    else if (deleting) {
-      std::list<std::pair<std::string, bool> >::iterator it;
-      for (it = actionfiles.begin(); it != actionfiles.end(); it++) {
-        requestids.push_back(sitelogic->requestDelete(actionpath / it->first, it->second, true, true));
+  }
+  else {
+    sitelogic->getAggregatedRawBuffer()->setUiWatching(false);
+    virgin = false;
+  }
+  unsigned int position = 0;
+  bool separatorsenabled = false;
+  std::list<std::string> filters;
+  std::set<std::string> uniques;
+  if (list.getPath() == filelist->getPath()) {
+    position = list.currentCursorPosition();
+    separatorsenabled = list.separatorsEnabled();
+    filters = list.getFilters();
+    uniques = list.getUniques();
+  }
+  else {
+    currentviewspan = 0;
+    lastinfo = LastInfo::NONE;
+  }
+  list.parse(filelist);
+  sitelogic->finishRequest(request.id);
+  if (separatorsenabled) {
+    list.toggleSeparators();
+  }
+  if (filters.size()) {
+    list.setFilters(filters);
+  }
+  if (uniques.size()) {
+    list.setUnique(uniques);
+  }
+  list.sortMethod(sortmethod);
+  if (position) {
+    list.setCursorPosition(position);
+  }
+  const Path & path = list.getPath();
+  for (std::list<std::pair<Path, std::string> >::iterator it = selectionhistory.begin(); it != selectionhistory.end(); it++) {
+    if (it->first == path) {
+      list.selectFileName(it->second);
+      selectionhistory.erase(it);
+      break;
+    }
+  }
+  std::list<std::string> sections = site->getSectionsForPartialPath(path);
+  int dirlevels = path.split().size();
+  withinraceskiplistreach = false;
+  int closestsectiondirlevel = -1;
+  for (std::list<std::string>::iterator it = sections.begin(); it != sections.end(); it++) {
+    Path sectionpath = site->getSectionPath(*it);
+    int dirleveldifference = dirlevels - sectionpath.split().size();
+    if (dirleveldifference > 0) {
+      withinraceskiplistreach = true;
+      if (dirleveldifference < closestsectiondirlevel || closestsectiondirlevel < 0) {
+        closestsectiondirlevel = dirleveldifference;
+        closestracesectionpath = sectionpath;
       }
     }
     else {
-      global->getEventLog()->log("BrowseScreen", "WARNING: got a 'yes' answer for an unknown command");
+      withinraceskiplistreach = false;
+      break;
     }
-    ui->redraw();
-    ui->setInfo();
-    return;
   }
-  else if (command == "no") {
-    wipe = false;
-    deleting = false;
-    ui->redraw();
-    return;
-  }
-  else if (command == "makedir") {
-    mkdiring = true;
-    requestids.push_back(sitelogic->requestMakeDirectory(arg));
-    actionfiles.push_back(std::pair<std::string, bool>(arg, true));
-    ui->redraw();
-    ui->setInfo();
-    return;
-  }
+  //delete filelist;
 }
 
-void BrowseScreenSite::command(const std::string & command, const std::list<int> & reqids) {
-  if (command == "returnnuke") {
-    nuking = true;
-    for (std::list<int>::const_iterator it = reqids.begin(); it != reqids.end(); it++) {
-      requestids.push_back(*it);
+void BrowseScreenSite::command(const std::string & command, const std::string & arg) {
+  if (command == "yes") {
+    switch (confirmaction) {
+      case ConfirmAction::WIPE:
+        for (const std::pair<std::string, bool> & file : list.getSelectedNames()) {
+          BrowseScreenRequest request;
+          request.id = sitelogic->requestWipe(list.getPath() / file.first, file.second);
+          request.type = BrowseScreenRequestType::WIPE;
+          request.path = list.getPath();
+          request.files = { file };
+          requests.push_back(request);
+        }
+        break;
+      case ConfirmAction::DELETE:
+        for (const std::pair<std::string, bool> & file : list.getSelectedNames()) {
+          BrowseScreenRequest request;
+          request.id = sitelogic->requestDelete(list.getPath() / file.first, file.second, true, true);
+          request.type = BrowseScreenRequestType::DELETE;
+          request.path = list.getPath();
+          request.files = { file };
+          requests.push_back(request);
+        }
+        break;
+      default:
+        assert(false);
+        break;
+    }
+    confirmaction = ConfirmAction::NONE;
+    ui->redraw();
+    ui->setInfo();
+  }
+  else if (command == "no") {
+    confirmaction = ConfirmAction::NONE;
+    ui->redraw();
+  }
+  else if (command == "makedir") {
+    BrowseScreenRequest request;
+    request.id = sitelogic->requestMakeDirectory(arg);
+    request.type = BrowseScreenRequestType::MKDIR;
+    request.path = list.getPath();
+    request.files = { std::pair<std::string, bool>(arg, true) };
+    requests.push_back(request);
+    ui->redraw();
+    ui->setInfo();
+  }
+  else if (command == "nuke") {
+    std::vector<std::string> args = util::splitVec(arg, ";");
+    int multiplier = std::stoi(args[0]);
+    std::string reason = args[1];
+    for (const std::pair<std::string, bool> & item : list.getSelectedDirectoryNames()) {
+      BrowseScreenRequest request;
+      request.id = sitelogic->requestNuke(list.getPath() / item.first, multiplier, reason);
+      request.type = BrowseScreenRequestType::NUKE;
+      request.path = list.getPath();
+      request.files = { item };
+      requests.push_back(request);
     }
     ui->redraw();
     ui->setInfo();
-    return;
   }
 }
 
@@ -573,17 +579,19 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       break;
     }
     case 's':
-      sortmethod++;
+      sortmethod = static_cast<UIFileList::SortMethod>((static_cast<int>(sortmethod) + 1) % 9);
       resort = true;
-      changedsort = true;
+      lastinfo = LastInfo::CHANGED_SORT;
+      lastinfotarget = list.getSortMethod(sortmethod);
       tickcount = 0;
       ui->redraw();
       ui->setInfo();
       break;
     case 'S':
-      sortmethod = 0;
+      sortmethod = UIFileList::SortMethod::COMBINED;
       resort = true;
-      changedsort = true;
+      lastinfo = LastInfo::CHANGED_SORT;
+      lastinfotarget = list.getSortMethod(sortmethod);
       tickcount = 0;
       ui->redraw();
       ui->setInfo();
@@ -593,14 +601,14 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       list.toggleSeparators();
       ui->redraw();
       break;
-    case 'n':
-      tickcount = 0;
-      actionfiles = list.getSelectedDirectoryNames();
-      if (actionfiles.empty()) {
+    case 'n': {
+      std::list<std::pair<std::string, bool>> dirs = list.getSelectedDirectoryNames();
+      if (dirs.empty()) {
         break;
       }
-      ui->goNuke(site->getName(), actionfiles, list.getPath());
+      ui->goNuke(site->getName(), targetName(dirs), list.getPath());
       break;
+    }
     case 'm':
       ui->goMakeDir(site->getName(), list);
       break;
@@ -614,6 +622,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       islink = cursoredfile->isLink();
       if (isdir || islink) {
         oldpath = list.getPath();
+        Path requestedpath;
         if (islink) {
           Path target = cursoredfile->getLinkTarget();
           if (target.isAbsolute()) {
@@ -626,7 +635,11 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
         else {
           requestedpath = oldpath / cursoredfile->getName();
         }
-        requestids.push_back(sitelogic->requestFileList(requestedpath));
+        BrowseScreenRequest request;
+        request.id = sitelogic->requestFileList(requestedpath);
+        request.type = BrowseScreenRequestType::FILELIST;
+        request.path = requestedpath;
+        requests.push_back(request);
         ui->update();
         ui->setInfo();
       }
@@ -636,10 +649,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       if (filenames.empty()) {
         break;
       }
-      tickcount = 0;
-      wipe = true;
-      actionpath = list.getPath();
-      actionfiles = filenames;
+      confirmaction = ConfirmAction::WIPE;
       std::string targettext = "these " + util::int2Str(static_cast<int>(filenames.size())) + " items";
       if (filenames.size() == 1) {
         targettext = filenames.front().first;
@@ -652,10 +662,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       if (filenames.empty()) {
         break;
       }
-      tickcount = 0;
-      deleting = true;
-      actionpath = list.getPath();
-      actionfiles = filenames;
+      confirmaction = ConfirmAction::DELETE;
       std::string targettext = "these " + util::int2Str(static_cast<int>(filenames.size())) + " items";
       if (filenames.size() == 1) {
         targettext = filenames.front().first;
@@ -689,16 +696,21 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
     case KEY_LEFT:
     case 8:
     case 127:
-    case KEY_BACKSPACE:
+    case KEY_BACKSPACE: {
       oldpath = list.getPath();
       if (oldpath == "/") {
         return BrowseScreenAction(BROWSESCREENACTION_CLOSE);
       }
-      requestedpath = oldpath.cutLevels(1);
-      requestids.push_back(sitelogic->requestFileList(requestedpath));
+      Path requestedpath = oldpath.cutLevels(1);
+      BrowseScreenRequest request;
+      request.id = sitelogic->requestFileList(requestedpath);
+      request.type = BrowseScreenRequestType::FILELIST;
+      request.path = requestedpath;
+      requests.push_back(request);
       ui->setInfo();
       //go up one directory level, or return if at top already
       return BrowseScreenAction(BROWSESCREENACTION_CHDIR);
+    }
     case KEY_F(5):
       refreshFilelist();
       ui->setInfo();
@@ -886,33 +898,31 @@ std::string BrowseScreenSite::getInfoLabel() const {
 
 std::string BrowseScreenSite::getInfoText() const {
   std::string text = list.getPath().toString();
-  if (!requestids.empty()) {
-    std::string target;
-    int total = actionfiles.size();
-    if (total == 1) {
-      target = actionfiles.front().first;
+  if (!requests.empty()) {
+    const BrowseScreenRequest & request = requests.front();
+    std::string target = targetName(request.files);
+    if (requests.size() > 1) {
+      target += " (+ " + std::to_string(requests.size()) + " more)";
     }
-    else {
-      int remaining = total - requestids.size();
-      if (remaining <= 0) {
-        remaining = 1;
-      }
-      target = "items (" + util::int2Str(remaining) + "/" + util::int2Str(total) + ")";
-    }
-    if (wipe) {
-      text = "Wiping " + target + "  ";
-    }
-    else if (deleting) {
-      text = "Deleting " + target + "  ";
-    }
-    else if (nuking) {
-      text = "Nuking " + target + "  ";
-    }
-    else if (mkdiring) {
-      text = "Making directory " + target + "  ";
-    }
-    else {
-      text = "Getting list for " + requestedpath.toString() + "  ";
+    switch (request.type) {
+      case BrowseScreenRequestType::WIPE:
+        text = "Wiping " + target + "  ";
+        break;
+      case BrowseScreenRequestType::DELETE:
+        text = "Deleting " + target + "  ";
+        break;
+      case BrowseScreenRequestType::NUKE:
+        text = "Nuking " + target + "  ";
+        break;
+      case BrowseScreenRequestType::MKDIR:
+        text = "Making directory " + target + "  ";
+        break;
+      case BrowseScreenRequestType::FILELIST:
+        text = "Getting list for " + request.path.toString() + "  ";
+        break;
+      default:
+        assert(false);
+        break;
     }
     switch(spinnerpos++ % 4) {
       case 0:
@@ -930,103 +940,42 @@ std::string BrowseScreenSite::getInfoText() const {
     }
     return text;
   }
-  std::string target;
-  int total = actionfiles.size();
-  if (total == 1) {
-    target = actionfiles.front().first;
-  }
-  else {
-    target = util::int2Str(static_cast<int>(total)) + " items";
-  }
-  if (wipesuccess) {
-    if (tickcount++ < 8) {
-      text = "Wipe successful: " + target;
-      return text;
+  if (tickcount++ < 8 && lastinfo != LastInfo::NONE) {
+    switch (lastinfo) {
+      case LastInfo::CHANGED_SORT:
+        text = "Sort method: ";
+        break;
+      case LastInfo::CWD_FAILED:
+        text = "Getting file list failed: ";
+        break;
+      case LastInfo::DELETE_SUCCESS:
+        text = "Delete successful: ";
+        break;
+      case LastInfo::DELETE_FAILED:
+        text = "Delete failed: ";
+        break;
+      case LastInfo::WIPE_SUCCESS:
+        text = "Wipe successful: ";
+        break;
+      case LastInfo::WIPE_FAILED:
+        text = "Wipe failed: ";
+        break;
+      case LastInfo::MKDIR_SUCCESS:
+        text = "Directory created: ";
+        break;
+      case LastInfo::MKDIR_FAILED:
+        text = "Directory creation failed: ";
+        break;
+      case LastInfo::NUKE_SUCCESS:
+        text = "Nuke successful: ";
+        break;
+      case LastInfo::NUKE_FAILED:
+        text = "Nuke failed: ";
+        break;
+      case LastInfo::NONE:
+        break;
     }
-    else {
-      wipesuccess = false;
-    }
-  }
-  else if (wipefailed) {
-    if (tickcount++ < 8) {
-      text = "Wipe failed: " + target;
-      return text;
-    }
-    else {
-      wipefailed = false;
-    }
-  }
-  else if (cwdfailed) {
-    if (tickcount++ < 8) {
-      text = "Getting file list failed: " + requestedpath.toString();
-      return text;
-    }
-    else {
-      cwdfailed = false;
-    }
-  }
-  else if (deletesuccess) {
-    if (tickcount++ < 8) {
-      text = "Delete successful: " + target;
-      return text;
-    }
-    else {
-      deletesuccess = false;
-    }
-  }
-  else if (deletefailed) {
-    if (tickcount++ < 8) {
-      text = "Delete failed: " + target;
-      return text;
-    }
-    else {
-      deletefailed = false;
-    }
-  }
-  else if (nukesuccess) {
-    if (tickcount++ < 8) {
-      text = "Nuke successful: " + target;
-      return text;
-    }
-    else {
-      nukesuccess = false;
-    }
-  }
-  else if (nukefailed) {
-    if (tickcount++ < 8) {
-      text = "Nuke failed: " + target;
-      return text;
-    }
-    else {
-      nukefailed = false;
-    }
-  }
-  else if (mkdirsuccess) {
-    if (tickcount++ < 8) {
-      text = "Directory created: " + target;
-      return text;
-    }
-    else {
-      mkdirsuccess = false;
-    }
-  }
-  else if (mkdirfailed) {
-    if (tickcount++ < 8) {
-      text = "Directory creation failed: " + target;
-      return text;
-    }
-    else {
-      mkdirfailed = false;
-    }
-  }
-  else if (changedsort) {
-    if (tickcount++ < 8) {
-      text = "Sort method: " + list.getSortMethod();
-      return text;
-    }
-    else {
-      changedsort = false;
-    }
+    return text + lastinfotarget;
   }
   if (list.hasFilters() || list.hasUnique()) {
     if (list.hasFilters()) {
@@ -1067,42 +1016,12 @@ UIFile * BrowseScreenSite::selectedFile() const {
   return list.cursoredFile();
 }
 
-void BrowseScreenSite::sort() {
-  switch (sortmethod % 9) {
-    case 0:
-      list.sortCombined();
-      break;
-    case 1:
-      list.sortName(true);
-      break;
-    case 2:
-      list.sortName(false);
-      break;
-    case 3:
-      list.sortSize(false);
-      break;
-    case 4:
-      list.sortSize(true);
-      break;
-    case 5:
-      list.sortTime(false);
-      break;
-    case 6:
-      list.sortTime(true);
-      break;
-    case 7:
-      list.sortOwner(true);
-      break;
-    case 8:
-      list.sortOwner(false);
-      break;
-  }
-  resort = false;
-}
-
 void BrowseScreenSite::refreshFilelist() {
-  requestedpath = list.getPath();
-  requestids.push_back(sitelogic->requestFileList(requestedpath));
+  BrowseScreenRequest request;
+  request.id = sitelogic->requestFileList(list.getPath());
+  request.type = BrowseScreenRequestType::FILELIST;
+  request.path = list.getPath();
+  requests.push_back(request);
 }
 
 void BrowseScreenSite::tick(int) {
@@ -1111,38 +1030,6 @@ void BrowseScreenSite::tick(int) {
       disableGotoMode();
     }
   }
-}
-
-void BrowseScreenSite::addFileDetails(MenuSelectOption & table, unsigned int coloffset, unsigned int y, const std::string & name) {
-  addFileDetails(table, coloffset, y, "", name, "", "", "", false, false, NULL);
-}
-
-void BrowseScreenSite::addFileDetails(MenuSelectOption & table, unsigned int coloffset, unsigned int y, const std::string & prepchar, const std::string & name, const std::string & size, const std::string & lastmodified, const std::string & owner, bool selectable, bool cursored, UIFile * origin) {
-  std::shared_ptr<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
-  std::shared_ptr<MenuSelectOptionTextButton> msotb;
-  msotb = table.addTextButtonNoContent(y, coloffset + 1, "prepchar", prepchar);
-  msotb->setSelectable(false);
-  msotb->setShortSpacing();
-  msal->addElement(msotb, 4, RESIZE_REMOVE);
-  msotb = table.addTextButtonNoContent(y, coloffset + 3, "name", name);
-  if (!selectable) {
-    msotb->setSelectable(false);
-  }
-  msotb->setOrigin(origin);
-  if (cursored) {
-    table.setPointer(msotb);
-  }
-  msal->addElement(msotb, 5, 0, RESIZE_WITHDOTS, true);
-  msotb = table.addTextButtonNoContent(y, coloffset + 3, "size", size);
-  msotb->setSelectable(false);
-  msotb->setRightAligned();
-  msal->addElement(msotb, 3, RESIZE_REMOVE);
-  msotb = table.addTextButtonNoContent(y, coloffset + 3, "lastmodified", lastmodified);
-  msotb->setSelectable(false);
-  msal->addElement(msotb, 2, RESIZE_REMOVE);
-  msotb = table.addTextButtonNoContent(y, coloffset + 3, "owner", owner);
-  msotb->setSelectable(false);
-  msal->addElement(msotb, 1, RESIZE_REMOVE);
 }
 
 void BrowseScreenSite::disableGotoMode() {
@@ -1163,15 +1050,4 @@ void BrowseScreenSite::clearSoftSelects() {
 
 UIFileList * BrowseScreenSite::getUIFileList() {
   return &list;
-}
-
-void BrowseScreenSite::printFlipped(const std::shared_ptr<ResizableElement> & re) {
-  printFlipped(ui, re);
-}
-
-void BrowseScreenSite::printFlipped(Ui * ui, const std::shared_ptr<ResizableElement> & re) {
-  int flipper = 0;
-  for (unsigned int i = 0; i < re->getLabelText().length(); i++) {
-    ui->printChar(re->getRow(), re->getCol() + i, re->getLabelText()[i], flipper++ % 2);
-  }
 }

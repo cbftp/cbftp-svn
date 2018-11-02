@@ -197,7 +197,7 @@ public:
   void goRawCommand(const std::string &, const Path &, const std::string &);
   void goConfirmation(const std::string & message);
   void goStrongConfirmation(const std::string & message);
-  void goNuke(const std::string & site, const std::list<std::pair<std::string, bool> > & items, const Path & path);
+  void goNuke(const std::string & site, const std::string & items, const Path & path);
   void goViewFile(const std::string &, const std::string &, FileList *);
   void goViewFile(const Path &, const std::string &);
   void goAddSection(const std::string &, const Path &);
@@ -244,7 +244,7 @@ public:
   void newKey(const std::string &);
   void confirmYes();
   void confirmNo();
-  void returnNuke(const std::list<int> & reqids);
+  void returnNuke(int multiplier, const std::string & reason);
   void returnRaceStatus(unsigned int);
   void returnMakeDir(const std::string & dirname);
   void loadSettings(std::shared_ptr<DataFileHandler>);

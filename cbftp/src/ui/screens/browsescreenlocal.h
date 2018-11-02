@@ -11,6 +11,7 @@
 #include "../uifilelist.h"
 #include "../menuselectoptiontextfield.h"
 
+#include "../../localstorage.h"
 #include "../../path.h"
 
 class Ui;
@@ -33,10 +34,11 @@ public:
   std::shared_ptr<LocalFileList> fileList() const;
   UIFile * selectedFile() const;
   UIFileList * getUIFileList();
-  void sort();
 private:
+  void refreshFilelist();
+  bool handleReadyRequests();
   void disableGotoMode();
-  void gotoPath(const Path &);
+  void gotoPath(int requestid, const Path & path);
   void clearSoftSelects();
   Ui * ui;
   unsigned int row;
@@ -46,13 +48,11 @@ private:
   bool focus;
   MenuSelectOption table;
   UIFileList list;
-  mutable bool changedsort;
-  mutable bool cwdfailed;
-  mutable bool deletesuccess;
-  mutable bool deletefailed;
+  std::list<BrowseScreenRequest> requests;
+  mutable int spinnerpos;
   mutable int tickcount;
   bool resort;
-  int sortmethod;
+  UIFileList::SortMethod sortmethod;
   bool gotomode;
   bool gotomodefirst;
   int gotomodeticker;
@@ -60,11 +60,9 @@ private:
   std::string gotomodestring;
   std::list<std::pair<Path, std::string> > selectionhistory;
   std::shared_ptr<LocalFileList> filelist;
-  Path targetpath;
   MenuSelectOptionTextField filterfield;
   int temphighlightline;
-  bool deleting;
-  Path actionpath;
-  std::list<std::pair<std::string, bool> > actionfiles;
   bool softselecting;
+  LastInfo lastinfo;
+  std::string lastinfotarget;
 };

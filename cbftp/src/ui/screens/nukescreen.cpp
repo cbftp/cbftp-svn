@@ -23,7 +23,7 @@ NukeScreen::~NukeScreen() {
 
 }
 
-void NukeScreen::initialize(unsigned int row, unsigned int col, const std::string & sitestr, const std::list<std::pair<std::string, bool> > & items, const Path & path) {
+void NukeScreen::initialize(unsigned int row, unsigned int col, const std::string & sitestr, const std::string & items, const Path & path) {
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [n]uke - [c]ancel - [p]roper - [r]epack - [d]upe";
   currentlegendtext = defaultlegendtext;
   active = false;
@@ -44,11 +44,7 @@ void NukeScreen::initialize(unsigned int row, unsigned int col, const std::strin
 void NukeScreen::redraw() {
   ui->erase();
   ui->printStr(1, 1, "Site: " + sitestr);
-  std::string item = items.front().first;
-  if (items.size() > 1) {
-    item = util::int2Str(static_cast<int>(items.size())) + " items";
-  }
-  ui->printStr(2, 1, "Item: " + item);
+  ui->printStr(2, 1, "Item: " + items);
   ui->printStr(3, 1, "Path: " + path.toString());
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
@@ -173,11 +169,7 @@ void NukeScreen::nuke() {
 }
 
 void NukeScreen::nuke(int multiplier, const std::string & reason) {
-  std::list<int> reqids;
-  for (std::list<std::pair<std::string, bool> >::const_iterator it = items.begin(); it != items.end(); it++) {
-    reqids.push_back(sitelogic->requestNuke(path / it->first, multiplier, reason));
-  }
-  ui->returnNuke(reqids);
+  ui->returnNuke(multiplier, reason);
 }
 
 std::string NukeScreen::getLegendText() const {

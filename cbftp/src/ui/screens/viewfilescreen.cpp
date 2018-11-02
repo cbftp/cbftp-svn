@@ -282,7 +282,7 @@ void ViewFileScreen::loadViewer() {
   else {
     BinaryData tmpdata = global->getLocalStorage()->getFileContent(path);
     if (deleteafter) {
-      global->getLocalStorage()->deleteFile(path);
+      global->getLocalStorage()->requestDelete(path);
     }
     std::string extension = File::getExtension(file);
     encoding = encoding::guessEncoding(tmpdata);
