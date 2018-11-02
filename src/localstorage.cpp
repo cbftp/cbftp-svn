@@ -1,5 +1,6 @@
 #include "localstorage.h"
 
+#include "core/workmanager.h"
 #include "localdownload.h"
 #include "localupload.h"
 #include "transfermonitor.h"
@@ -8,7 +9,9 @@
 #include "eventlog.h"
 #include "ftpconn.h"
 #include "globalcontext.h"
+#include "uibase.h"
 
+#include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
@@ -24,6 +27,10 @@ namespace {
 
 BinaryData emptydata;
 
+void asyncRequest(EventReceiver * er, void * data) {
+  static_cast<LocalStorage *>(er)->executeAsyncRequest(static_cast<LocalStorageRequestData *>(data));
+}
+
 }
 
 LocalStorage::LocalStorage() :
@@ -33,7 +40,8 @@ LocalStorage::LocalStorage() :
   useactivemodeaddress(false),
   activeportfirst(47500),
   activeportlast(47600),
-  currentactiveport(activeportfirst)
+  currentactiveport(activeportfirst),
+  requestidcounter(0)
 {
 
 }
@@ -173,6 +181,39 @@ void LocalStorage::purgeStoreContent(int storeid) {
   }
 }
 
+void LocalStorage::executeAsyncRequest(LocalStorageRequestData * data) {
+  switch (data->type) {
+    case LocalStorageRequestType::GET_FILE_LIST: {
+      FileListTaskData * fltdata = static_cast<FileListTaskData *>(data);
+      fltdata->filelist = getLocalFileList(fltdata->path);
+      break;
+    }
+    case LocalStorageRequestType::GET_PATH_INFO: {
+      PathInfoTaskData * pitdata = static_cast<PathInfoTaskData *>(data);
+      pitdata->pathinfo = std::make_shared<LocalPathInfo>(getPathInfo(pitdata->paths));
+      break;
+    }
+    case LocalStorageRequestType::DELETE:
+      DeleteFileTaskData * dftdata = static_cast<DeleteFileTaskData *>(data);
+      dftdata->success = deleteRecursive(dftdata->file);
+      break;
+  }
+}
+
+int LocalStorage::requestDelete(const Path & path, bool care) {
+  Path target = path;
+  if (target.isRelative()) {
+    target = temppath / target;
+  }
+  int requestid = requestidcounter++;
+  DeleteFileTaskData * data = new DeleteFileTaskData();
+  data->requestid = requestid;
+  data->care = care;
+  data->file = target;
+  global->getWorkManager()->asyncTask(this, 0, &asyncRequest, data);
+  return requestid;
+}
+
 bool LocalStorage::deleteFile(const Path & filename) {
   Path target = filename;
   if (filename.isRelative()) {
@@ -192,6 +233,9 @@ bool LocalStorage::deleteRecursive(const Path & path) {
   LocalFile file = getLocalFile(path);
   if (file.isDirectory()) {
     std::shared_ptr<LocalFileList> filelist = getLocalFileList(path);
+    if (!filelist) {
+      return false;
+    }
     std::unordered_map<std::string, LocalFile>::const_iterator it;
     for (it = filelist->begin(); it != filelist->end(); it++) {
       if (!deleteRecursive(path / it->first)) {
@@ -200,6 +244,16 @@ bool LocalStorage::deleteRecursive(const Path & path) {
     }
   }
   return deleteFileAbsolute(path);
+}
+
+bool LocalStorage::getDeleteResult(int requestid) {
+  auto it = readyrequests.find(requestid);
+  assert(it != readyrequests.end() && it->second->type == LocalStorageRequestType::DELETE);
+  DeleteFileTaskData * dftdata = static_cast<DeleteFileTaskData *>(it->second);
+  bool success = dftdata->success;
+  readyrequests.erase(it);
+  delete dftdata;
+  return success;
 }
 
 LocalPathInfo LocalStorage::getPathInfo(const Path & path) {
@@ -213,6 +267,9 @@ LocalPathInfo LocalStorage::getPathInfo(const Path & path, int currentdepth) {
     return LocalPathInfo(0, 1, 0, file.getSize());
   }
   std::shared_ptr<LocalFileList> filelist = getLocalFileList(path);
+  if (!filelist) {
+    return LocalPathInfo(1, 0, 0, file.getSize());
+  }
   int aggdirs = 1;
   int aggfiles = 0;
   int deepest = currentdepth;
@@ -235,6 +292,51 @@ LocalPathInfo LocalStorage::getPathInfo(const Path & path, int currentdepth) {
     }
   }
   return LocalPathInfo(aggdirs, aggfiles, deepest, aggsize);
+}
+
+LocalPathInfo LocalStorage::getPathInfo(const std::list<Path> & paths) {
+  int aggdirs = 0;
+  int aggfiles = 0;
+  unsigned long long int aggsize = 0;
+  int maxdepth = 0;
+  for (const Path & path : paths) {
+    LocalPathInfo pathinfo = getPathInfo(path);
+    aggdirs += pathinfo.getNumDirs();
+    aggfiles += pathinfo.getNumFiles();
+    aggsize += pathinfo.getSize();
+    int depth = pathinfo.getDepth();
+    if (depth > maxdepth) {
+      maxdepth = depth;
+    }
+  }
+  return LocalPathInfo(aggdirs, aggfiles, maxdepth, aggsize);
+}
+
+int LocalStorage::requestPathInfo(const Path & path) {
+  std::list<Path> paths;
+  paths.push_back(path);
+  return requestPathInfo(paths);
+}
+
+int LocalStorage::requestPathInfo(const std::list<Path> & paths) {
+  PathInfoTaskData * data = new PathInfoTaskData();
+  int requestid = requestidcounter++;
+  data->requestid = requestid;
+  data->paths = paths;
+  global->getWorkManager()->asyncTask(this, 0, &asyncRequest, data);
+  return requestid;
+}
+
+
+
+LocalPathInfo LocalStorage::getPathInfo(int requestid) {
+  auto it = readyrequests.find(requestid);
+  assert(it != readyrequests.end() && it->second->type == LocalStorageRequestType::GET_PATH_INFO);
+  PathInfoTaskData * pitdata = static_cast<PathInfoTaskData *>(it->second);
+  std::shared_ptr<LocalPathInfo> pathinfo = pitdata->pathinfo;
+  readyrequests.erase(it);
+  delete pitdata;
+  return *pathinfo;
 }
 
 LocalFile LocalStorage::getLocalFile(const Path & path) {
@@ -295,6 +397,56 @@ std::shared_ptr<LocalFileList> LocalStorage::getLocalFileList(const Path & path)
     closedir(dir);
   }
   return filelist;
+}
+
+int LocalStorage::requestLocalFileList(const Path & path) {
+  FileListTaskData * fltdata = new FileListTaskData();
+  fltdata->path = path;
+  int requestid = requestidcounter++;
+  fltdata->requestid = requestid;
+  global->getWorkManager()->asyncTask(this, 0, &asyncRequest, fltdata);
+  return requestid;
+}
+
+std::shared_ptr<LocalFileList> LocalStorage::getLocalFileList(int requestid) {
+  auto it = readyrequests.find(requestid);
+  assert(it != readyrequests.end() && it->second->type == LocalStorageRequestType::GET_FILE_LIST);
+  FileListTaskData * fltdata = static_cast<FileListTaskData *>(it->second);
+  std::shared_ptr<LocalFileList> filelist = fltdata->filelist;
+  readyrequests.erase(it);
+  delete fltdata;
+  return filelist;
+}
+
+bool LocalStorage::requestReady(int requestid) const {
+  return readyrequests.find(requestid) != readyrequests.end();
+}
+
+void LocalStorage::asyncTaskComplete(int type, void * data) {
+  LocalStorageRequestData * reqdata = static_cast<LocalStorageRequestData *>(data);
+  if (reqdata->care) {
+    readyrequests[reqdata->requestid] = reqdata;
+    global->getUIBase()->backendPush();
+  }
+  else {
+    deleteRequestData(reqdata);
+  }
+}
+
+void LocalStorage::deleteRequestData(LocalStorageRequestData * reqdata) {
+  switch (reqdata->type) {
+    case LocalStorageRequestType::GET_FILE_LIST: {
+      delete static_cast<FileListTaskData *>(reqdata);
+      break;
+    }
+    case LocalStorageRequestType::GET_PATH_INFO: {
+      delete static_cast<PathInfoTaskData *>(reqdata);
+      break;
+    }
+    case LocalStorageRequestType::DELETE:
+      delete static_cast<DeleteFileTaskData *>(reqdata);
+      break;
+  }
 }
 
 unsigned long long int LocalStorage::getFileSize(const Path & file) {
