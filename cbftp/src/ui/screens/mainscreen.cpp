@@ -17,6 +17,8 @@
 #include "../../settingsloadersaver.h"
 #include "../../preparedrace.h"
 
+#include <cassert>
+
 #include "../menuselectoptioncheckbox.h"
 #include "../ui.h"
 #include "../focusablearea.h"
@@ -624,7 +626,18 @@ void MainScreen::addSiteDetails(unsigned int y, MenuSelectOption & mso, const st
   if (!site->unlimitedDown()) {
     downloads += "/" + util::int2Str(site->getMaxDown());
   }
-  std::string up = site->getAllowUpload()? "[X]" : "[ ]";
+  std::string up;
+  switch (site->getAllowUpload()) {
+    case SITE_ALLOW_TRANSFER_NO:
+      up = "[ ]";
+      break;
+    case SITE_ALLOW_TRANSFER_YES:
+      up = "[X]";
+      break;
+    default:
+      assert(false);
+      break;
+  }
   std::string down;
   switch (site->getAllowDownload()) {
     case SITE_ALLOW_TRANSFER_NO:
