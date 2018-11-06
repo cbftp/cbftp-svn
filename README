@@ -181,11 +181,13 @@ each site, and also by specifying site priorities.
 SKIPLISTING
 
 Cbftp supports advanced skiplisting of what to deny or allow, both on job
-and file basis. Skiplisting can be specified globally, and/or per site.
+and file basis. Skiplisting can be specified globally, per section, and/or per
+site.
 
 The global skiplist can be accessed by pressing G from the main screen and
-then selecting "configure skiplist". The site-specific skiplist is available
-when editing a site.
+then selecting "configure skiplist". The section-specific skiplist is available
+when editing sections globally. The site-specific skiplist is available when
+editing a site.
 
 The skiplist works by matching items against the list from the top to the
 bottom. If a rule that matches the item is found, the action of that rule
@@ -211,13 +213,13 @@ on regular transfer jobs, which 'in race' rules do not.
 To test your skiplist rules, you can use the TEST PATTERN function at the
 top.
 
-The site-specific skiplist is applied first for matching on a specific site,
-if no match is found it falls through and uses the global skiplist as well.
+The site-specific skiplist is applied first for matching on a specific site.
+If no match is found it falls through to the section skiplist (for spread
+jobs), which in turn falls through to the global skiplist.
 
-Note that regex is currently not supported. It will be added whenever support
-for older systems is dropped. * (match any number of any character) and ?
-(match any single character) are the currently supported wildcards.
-The skiplists are not case sensitive.
+Note that regex is currently not supported. * (match any number of any
+character) and ? (match any single character) are the currently supported
+wildcards. The skiplists are not case sensitive.
 
 Some skiplisting examples:
 
@@ -414,9 +416,9 @@ Field summary:
 - Block transfers to: The list mentioned above.
 - Affils: Which groups that pre on the site. Set this list properly to avoid
   uploading into affil releases.
-- Sections: Set sections/bookmarks for the site. Transfer jobs uses sections
-  to know match dirs together between sites, i.e. creating a section with the
-  same name on different sites and then using that section in a spread job
+- Configure sections: Set sections/bookmarks for the site. Spread jobs use
+  sections to match dirs together between sites, i.e. creating a section with
+  the same name on different sites and then using that section in a spread job
   will result in the job operating in the specified section directory for
   each site.
 

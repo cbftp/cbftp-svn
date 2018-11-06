@@ -3,6 +3,7 @@
 #include "path.h"
 #include "util.h"
 #include "globalcontext.h"
+#include "sectionmanager.h"
 
 Site::Site() : skiplist(global->getSkipList()) {
 
@@ -291,6 +292,10 @@ std::string Site::getName() const {
   return name;
 }
 
+unsigned int Site::sectionsSize() const {
+  return sections.size();
+}
+
 const Path Site::getSectionPath(const std::string & sectionname) const {
   std::map<std::string, Path>::const_iterator it = sections.find(sectionname);
   if (it == sections.end()) return "/";
@@ -441,6 +446,16 @@ void Site::clearSections() {
 
 void Site::addSection(const std::string & name, const std::string & path) {
   sections[name] = path;
+  global->getSectionManager()->addSection(name);
+}
+
+void Site::renameSection(const std::string & oldname, const std::string & newname) {
+  sections[newname] = sections[oldname];
+  sections.erase(oldname);
+}
+
+void Site::removeSection(const std::string & name) {
+  sections.erase(name);
 }
 
 bool Site::isAffiliated(const std::string & affil) const {

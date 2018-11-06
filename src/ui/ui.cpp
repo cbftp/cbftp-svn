@@ -32,7 +32,6 @@
 #include "screens/sitestatusscreen.h"
 #include "screens/rawdatascreen.h"
 #include "screens/browsescreen.h"
-#include "screens/addsectionscreen.h"
 #include "screens/newracescreen.h"
 #include "screens/racestatusscreen.h"
 #include "screens/rawcommandscreen.h"
@@ -56,6 +55,10 @@
 #include "screens/infoscreen.h"
 #include "screens/selectjobsscreen.h"
 #include "screens/makedirscreen.h"
+#include "screens/sectionsscreen.h"
+#include "screens/editsectionscreen.h"
+#include "screens/sitesectionsscreen.h"
+#include "screens/editsitesectionscreen.h"
 
 static Ui * instance = new Ui();
 
@@ -113,7 +116,6 @@ bool Ui::init() {
   rawdatascreen = std::make_shared<RawDataScreen>(this);
   rawcommandscreen = std::make_shared<RawCommandScreen>(this);
   browsescreen = std::make_shared<BrowseScreen>(this);
-  addsectionscreen = std::make_shared<AddSectionScreen>(this);
   newracescreen = std::make_shared<NewRaceScreen>(this);
   racestatusscreen = std::make_shared<RaceStatusScreen>(this);
   globaloptionsscreen = std::make_shared<GlobalOptionsScreen>(this);
@@ -136,6 +138,10 @@ bool Ui::init() {
   infoscreen = std::make_shared<InfoScreen>(this);
   selectjobsscreen = std::make_shared<SelectJobsScreen>(this);
   makedirscreen = std::make_shared<MakeDirScreen>(this);
+  sectionsscreen = std::make_shared<SectionsScreen>(this);
+  editsectionscreen = std::make_shared<EditSectionScreen>(this);
+  sitesectionsscreen = std::make_shared<SiteSectionsScreen>(this);
+  editsitesectionscreen = std::make_shared<EditSiteSectionScreen>(this);
   mainwindows.push_back(mainscreen);
   mainwindows.push_back(confirmationscreen);
   mainwindows.push_back(editsitescreen);
@@ -143,7 +149,6 @@ bool Ui::init() {
   mainwindows.push_back(rawdatascreen);
   mainwindows.push_back(rawcommandscreen);
   mainwindows.push_back(browsescreen);
-  mainwindows.push_back(addsectionscreen);
   mainwindows.push_back(newracescreen);
   mainwindows.push_back(racestatusscreen);
   mainwindows.push_back(globaloptionsscreen);
@@ -166,6 +171,10 @@ bool Ui::init() {
   mainwindows.push_back(infoscreen);
   mainwindows.push_back(selectjobsscreen);
   mainwindows.push_back(makedirscreen);
+  mainwindows.push_back(sectionsscreen);
+  mainwindows.push_back(editsectionscreen);
+  mainwindows.push_back(sitesectionsscreen);
+  mainwindows.push_back(editsitesectionscreen);
 
   legendprinterkeybinds = std::make_shared<LegendPrinterKeybinds>(this);
   legendwindow->setMainLegendPrinter(legendprinterkeybinds);
@@ -746,11 +755,6 @@ void Ui::goViewFile(const Path & dir, const std::string & file) {
   switchToWindow(viewfilescreen);
 }
 
-void Ui::goAddSection(const std::string & site, const Path & path) {
-  addsectionscreen->initialize(mainrow, maincol, site, path);
-  switchToWindow(addsectionscreen);
-}
-
 void Ui::goNewRace(const std::string & site, const std::list<std::string> & sections, const std::list<std::pair<std::string, bool> > & items) {
   newracescreen->initialize(mainrow, maincol, site, sections, items);
   switchToWindow(newracescreen);
@@ -945,6 +949,45 @@ void Ui::goInfo() {
 void Ui::goMakeDir(const std::string & site, UIFileList & filelist) {
   makedirscreen->initialize(mainrow, maincol, site, filelist);
   switchToWindow(makedirscreen);
+}
+
+void Ui::goSections() {
+  sectionsscreen->initialize(mainrow, maincol);
+  switchToWindow(sectionsscreen);
+}
+
+void Ui::goSelectSection() {
+  sectionsscreen->initialize(mainrow, maincol, true);
+  switchToWindow(sectionsscreen);
+}
+
+void Ui::goSiteSections(const std::shared_ptr<Site> & site) {
+  sitesectionsscreen->initialize(mainrow, maincol, site);
+  switchToWindow(sitesectionsscreen);
+}
+
+void Ui::goEditSection(const std::string & name) {
+  editsectionscreen->initialize(mainrow, maincol, name);
+  switchToWindow(editsectionscreen);
+}
+
+void Ui::goAddSection() {
+  editsectionscreen->initialize(mainrow, maincol);
+  switchToWindow(editsectionscreen);
+}
+
+void Ui::goAddSiteSection(const std::shared_ptr<Site> & site) {
+  goAddSiteSection(site, "");
+}
+
+void Ui::goAddSiteSection(const std::shared_ptr<Site> & site, const Path & path) {
+  editsitesectionscreen->initialize(mainrow, maincol, site, path);
+  switchToWindow(editsitesectionscreen);
+}
+
+void Ui::goEditSiteSection(const std::shared_ptr<Site> & site, const std::string & section) {
+  editsitesectionscreen->initialize(mainrow, maincol, site, section);
+  switchToWindow(editsitesectionscreen);
 }
 
 void Ui::returnSelectItems(const std::string & items) {

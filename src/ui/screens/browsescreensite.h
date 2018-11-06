@@ -69,6 +69,7 @@ private:
   FileList * filelist;
   bool withinraceskiplistreach;
   Path closestracesectionpath;
+  std::string closestracesection;
   std::string separatortext;
   std::list<std::pair<Path, std::string> > selectionhistory;
   bool focus;

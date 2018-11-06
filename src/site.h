@@ -138,6 +138,7 @@ public:
   std::string getProxy() const;
   unsigned int getMaxIdleTime() const;
   std::string getName() const;
+  unsigned int sectionsSize() const;
   const Path getSectionPath(const std::string &) const;
   bool hasSection(const std::string &) const;
   std::string getAddress() const;
@@ -189,6 +190,8 @@ public:
   std::set<std::shared_ptr<Site> >::const_iterator exceptTargetSitesBegin() const;
   std::set<std::shared_ptr<Site> >::const_iterator exceptTargetSitesEnd() const;
   void addSection(const std::string &, const std::string &);
+  void renameSection(const std::string & oldname, const std::string & newname);
+  void removeSection(const std::string & name);
   std::list<std::string> getSectionsForPath(const Path &) const;
   std::list<std::string> getSectionsForPartialPath(const Path &) const;
   std::pair<Path, Path> splitPathInSectionAndSubpath(const Path &) const;

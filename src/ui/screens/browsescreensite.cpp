@@ -18,6 +18,8 @@
 #include "../../timereference.h"
 #include "../../rawbuffer.h"
 #include "../../filelistdata.h"
+#include "../../sectionmanager.h"
+#include "../../section.h"
 
 #include <cassert>
 
@@ -123,9 +125,12 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
     std::string prepchar = " ";
     bool isdir = uifile->isDirectory();
     Path testpath = prepend / uifile->getName();
-    SkipListMatch match = withinraceskiplistreach ?
-                          site->getSkipList().check((prepend / uifile->getName()).toString(), isdir) :
-                          site->getSkipList().check((prepend / uifile->getName()).toString(), isdir, false);
+    SkipList * sectionskiplist = nullptr;
+    Section * section = global->getSectionManager()->getSection(closestracesection);
+    if (section) {
+      sectionskiplist = &section->getSkipList();
+    }
+    SkipListMatch match = site->getSkipList().check((prepend / uifile->getName()).toString(), isdir, withinraceskiplistreach, sectionskiplist);
     bool allowed = !(match.action == SKIPLIST_DENY ||
                     (match.action == SKIPLIST_UNIQUE &&
                      filelist->containsPatternBefore(match.matchpattern, isdir, uifile->getName())));
@@ -377,6 +382,7 @@ void BrowseScreenSite::loadFileListFromRequest() {
       if (dirleveldifference < closestsectiondirlevel || closestsectiondirlevel < 0) {
         closestsectiondirlevel = dirleveldifference;
         closestracesectionpath = sectionpath;
+        closestracesection = *it;
       }
     }
     else {
@@ -557,7 +563,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       break;
     }
     case 'b':
-      ui->goAddSection(site->getName(), list.getPath());
+      ui->goAddSiteSection(site, list.getPath());
       break;
     case 'v':
       //view selected file, do nothing if a directory is selected

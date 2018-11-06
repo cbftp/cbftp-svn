@@ -21,6 +21,7 @@
 #include "timereference.h"
 #include "uibase.h"
 #include "statistics.h"
+#include "sectionmanager.h"
 
 namespace {
 
@@ -50,10 +51,11 @@ public:
     ExternalFileViewing * efv = new ExternalFileViewing();
     TimeReference * tr = new TimeReference();
     Statistics * s = new Statistics();
+    SectionManager * secm = new SectionManager();
 
     UIBase * uibase = UIBase::instance();
 
-    global->linkComponents(sls, e, uibase, sm, slm, tm, rch, sl, pm, ls, efv, tr, s);
+    global->linkComponents(sls, e, uibase, sm, slm, tm, rch, sl, pm, ls, efv, tr, s, secm);
 
     Threading::setCurrentThreadName("cbftp");
 

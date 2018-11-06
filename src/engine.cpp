@@ -30,6 +30,7 @@
 #include "util.h"
 #include "preparedrace.h"
 #include "sitetransferjob.h"
+#include "sectionmanager.h"
 
 #define SPREAD 0
 #define POKEINTERVAL 1000
@@ -74,6 +75,11 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & rele
     global->getEventLog()->log("Engine", "Spread job skipped due to missing section name.");
     return std::shared_ptr<Race>();
   }
+  Section * sectionptr = global->getSectionManager()->getSection(section);
+  if (!sectionptr) {
+    global->getEventLog()->log("Engine", "Spread job skipped due to undefined section: " + section);
+    return std::shared_ptr<Race>();
+  }
   std::shared_ptr<Race> race;
   if (profile == SPREAD_PREPARE && startnextprepared) {
     startnextprepared = false;
@@ -96,7 +102,7 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & rele
   }
   std::list<std::string> addsites;
   std::list<std::shared_ptr<SiteLogic> > addsiteslogics;
-  bool globalskipped = global->getSkipList()->check(release, true, false).action == SKIPLIST_DENY;
+  bool globalskipped = sectionptr->getSkipList().check(release, true, false).action == SKIPLIST_DENY;
   std::list<std::string> skippedsites;
   for (std::list<std::string>::const_iterator it = sites.begin(); it != sites.end(); it++) {
     const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(*it);
@@ -113,7 +119,8 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & rele
           section + " on " + *it);
       continue;
     }
-    SkipListMatch match = sl->getSite()->getSkipList().check((sl->getSite()->getSectionPath(section) / race->getName()).toString(), true, false);
+    SkipListMatch match = sl->getSite()->getSkipList().check((sl->getSite()->getSectionPath(section) / race->getName()).toString(),
+                                                             true, false, &sectionptr->getSkipList());
     if (match.action == SKIPLIST_DENY && !sl->getSite()->isAffiliated(race->getGroup())) {
       skippedsites.push_back(sl->getSite()->getName());
       continue;
@@ -204,6 +211,7 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & rele
       dropped = 0;
       global->getEventLog()->log("Engine", "Starting spread job: " + section + "/" + release +
           " on " + util::int2Str((int)addsites.size()) + " sites.");
+      sectionptr->addJob();
       global->getStatistics()->addSpreadJob();
     }
     else {
@@ -687,22 +695,23 @@ void Engine::estimateRaceSize(const std::shared_ptr<Race> & race) {
 void Engine::estimateRaceSize(const std::shared_ptr<Race> & race, bool forceupdate) {
   for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator its = race->begin(); its != race->end(); its++) {
     SiteRace * srs = its->first;
-    const SkipList & skiplist = its->second->getSite()->getSkipList();
+    const SkipList & siteskiplist = its->second->getSite()->getSkipList();
+    const SkipList & sectionskiplist = race->getSectionSkipList();
     std::unordered_map<std::string, FileList *>::const_iterator itfl;
     for (itfl = srs->fileListsBegin(); itfl != srs->fileListsEnd(); itfl++) {
       FileList * fls = itfl->second;
       if (!forceupdate && srs->sizeEstimated(fls)) {
         continue;
       }
-      reportCurrentSize(skiplist, srs, fls, false);
+      reportCurrentSize(siteskiplist, sectionskiplist, srs, fls, false);
       if (fls->hasSFV()) {
         if (srs->getSFVObservedTime(fls) > SFVDIROBSERVETIME) {
-          reportCurrentSize(skiplist, srs, fls, true);
+          reportCurrentSize(siteskiplist, sectionskiplist, srs, fls, true);
         }
       }
       else {
         if (srs->getObservedTime(fls) > DIROBSERVETIME) {
-          reportCurrentSize(skiplist, srs, fls, true);
+          reportCurrentSize(siteskiplist, sectionskiplist, srs, fls, true);
         }
       }
     }
@@ -718,7 +727,7 @@ bool setContainsPattern(const std::unordered_set<std::string> & uniques, const s
   return false;
 }
 
-void Engine::reportCurrentSize(const SkipList & skiplist, SiteRace * srs, FileList * fls, bool final) {
+void Engine::reportCurrentSize(const SkipList & siteskiplist, const SkipList & sectionskiplist, SiteRace * srs, FileList * fls, bool final) {
   std::unordered_set<std::string> uniques;
   std::unordered_map<std::string, File *>::const_iterator itf;
   std::string subpath = srs->getSubPathForFileList(fls);
@@ -738,7 +747,7 @@ void Engine::reportCurrentSize(const SkipList & skiplist, SiteRace * srs, FileLi
       filename = filename.substr(0, lastdotpos + offsetdot);
     }
     Path prepend = subpath;
-    SkipListMatch match = skiplist.check((prepend / filename).toString(), false);
+    SkipListMatch match = siteskiplist.check((prepend / filename).toString(), false, true, &sectionskiplist);
     if (match.action == SKIPLIST_DENY || (match.action == SKIPLIST_UNIQUE && setContainsPattern(uniques, match.matchpattern))) {
       continue;
     }
@@ -751,6 +760,7 @@ void Engine::refreshScoreBoard() {
   scoreboard->wipe();
   for (std::list<std::shared_ptr<Race> >::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
     std::shared_ptr<Race> race = *itr;
+    const SkipList & secskip = race->getSectionSkipList();
     bool racemode = race->getProfile() == SPREAD_RACE;
     for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator its = race->begin(); its != race->end(); its++) {
       SiteRace * srs = its->first;
@@ -767,7 +777,7 @@ void Engine::refreshScoreBoard() {
         FileList * fldroot = srd->getFileListForPath("");
         const std::shared_ptr<SiteLogic> & sld = itd->second;
         const std::shared_ptr<Site> & dstsite = sld->getSite();
-        SkipList & dstskip = dstsite->getSkipList();
+        const SkipList & dstskip = dstsite->getSkipList();
         if (!raceTransferPossible(sls, sld, race)) continue;
         if (!sld->getCurrLogins()) continue;
         int avgspeed = srcsite->getAverageSpeed(dstsite->getName());
@@ -777,7 +787,7 @@ void Engine::refreshScoreBoard() {
         int prioritypoints = getPriorityPoints(dstsite->getPriority());
         for (std::unordered_map<std::string, FileList *>::const_iterator itfls = srs->fileListsBegin(); itfls != srs->fileListsEnd(); itfls++) {
           if (!itfls->first.empty()) {
-            SkipListMatch dirmatch = dstskip.check(itfls->first, true);
+            SkipListMatch dirmatch = dstskip.check(itfls->first, true, true, &secskip);
             if (dirmatch.action == SKIPLIST_DENY ||
                 (dirmatch.action == SKIPLIST_UNIQUE &&
                  fldroot->containsPatternBefore(dirmatch.matchpattern, true, itfls->first)))
@@ -795,7 +805,7 @@ void Engine::refreshScoreBoard() {
               const std::string filename = f->getName();
               if (fld->contains(filename) || f->isDirectory() || f->getSize() == 0) continue;
               const Path & prepend = itfls->first;
-              SkipListMatch filematch = dstskip.check((prepend / itf->first).toString(), false);
+              SkipListMatch filematch = dstskip.check((prepend / itf->first).toString(), false, true, &secskip);
               if (filematch.action == SKIPLIST_DENY || (filematch.action == SKIPLIST_UNIQUE &&
                                                         fld->containsPatternBefore(filematch.matchpattern, false, filename))) {
                 continue;
@@ -971,7 +981,8 @@ void Engine::issueOptimalTransfers() {
     if (sbe->getDestinationSiteRace()->isAborted()) {
       continue;
     }
-    SkipListMatch match = sbe->getDestination()->getSite()->getSkipList().check((Path(sbe->subDir()) / filename).toString(), false);
+    SkipListMatch match = sbe->getDestination()->getSite()->getSkipList().check(
+        (Path(sbe->subDir()) / filename).toString(), false, true, &race->getSectionSkipList());
     if (match.action == SKIPLIST_UNIQUE &&
         sbe->getDestinationFileList()->containsPatternBefore(match.matchpattern, false, filename))
     {
@@ -1366,7 +1377,8 @@ std::shared_ptr<Race> Engine::getCurrentRace(const std::string & release) const 
 
 void Engine::addSiteToRace(std::shared_ptr<Race> & race, const std::string & site) {
   const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
-  if (sl->getSite()->getSkipList().check((sl->getSite()->getSectionPath(race->getSection()) / race->getName()).toString(), true, false).action != SKIPLIST_DENY ||
+  if (sl->getSite()->getSkipList().check((sl->getSite()->getSectionPath(race->getSection()) / race->getName()).toString(),
+                                         true, false, &race->getSectionSkipList()).action != SKIPLIST_DENY ||
       sl->getSite()->isAffiliated(race->getGroup()))
   {
     SiteRace * sr = sl->addRace(race, race->getSection(), race->getName());

@@ -20,6 +20,7 @@ class ExternalFileViewing;
 class TimeReference;
 class SettingsLoaderSaver;
 class Statistics;
+class SectionManager;
 
 class GlobalContext {
   private:
@@ -40,12 +41,13 @@ class GlobalContext {
     ExternalFileViewing * efv;
     TimeReference * tr;
     Statistics * s;
+    SectionManager * secm;
   public:
     void linkCore(WorkManager *, TickPoke *, IOManager *, std::shared_ptr<EventLog> &);
     void linkComponents(SettingsLoaderSaver *, Engine *,
         UIBase *, SiteManager *, SiteLogicManager *, TransferManager *,
         RemoteCommandHandler *, SkipList *, ProxyManager *,
-        LocalStorage *, ExternalFileViewing *, TimeReference *, Statistics *);
+        LocalStorage *, ExternalFileViewing *, TimeReference *, Statistics *, SectionManager *);
     Engine * getEngine() const;
     SettingsLoaderSaver * getSettingsLoaderSaver() const;
     WorkManager * getWorkManager() const;
@@ -63,6 +65,7 @@ class GlobalContext {
     ExternalFileViewing * getExternalFileViewing() const;
     TimeReference * getTimeReference() const;
     Statistics * getStatistics() const;
+    SectionManager * getSectionManager() const;
 };
 
 extern GlobalContext * global;
