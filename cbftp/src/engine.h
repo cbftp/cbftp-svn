@@ -93,7 +93,7 @@ public:
   void estimateRaceSizes();
   void estimateRaceSize(const std::shared_ptr<Race> &);
   void estimateRaceSize(const std::shared_ptr<Race> &, bool);
-  void reportCurrentSize(const SkipList &, SiteRace *, FileList *, bool final);
+  void reportCurrentSize(const SkipList &, const SkipList &, SiteRace *, FileList *, bool final);
   void refreshScoreBoard();
   void issueOptimalTransfers();
   void setSpeedScale();

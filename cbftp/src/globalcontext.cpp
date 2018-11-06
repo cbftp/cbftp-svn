@@ -13,7 +13,7 @@ void GlobalContext::linkComponents(SettingsLoaderSaver * sls, Engine * e,
     UIBase * uib, SiteManager * sm, SiteLogicManager * slm,
     TransferManager * tm, RemoteCommandHandler * rch,
     SkipList * sl, ProxyManager * pm, LocalStorage * ls,
-    ExternalFileViewing * efv, TimeReference * tr, Statistics * s) {
+    ExternalFileViewing * efv, TimeReference * tr, Statistics * s, SectionManager * secm) {
   this->sls = sls;
   this->e = e;
   this->uib = uib;
@@ -27,6 +27,7 @@ void GlobalContext::linkComponents(SettingsLoaderSaver * sls, Engine * e,
   this->efv = efv;
   this->tr = tr;
   this->s = s;
+  this->secm = secm;
 }
 
 Engine * GlobalContext::getEngine() const {
@@ -96,3 +97,8 @@ TimeReference * GlobalContext::getTimeReference() const {
 Statistics * GlobalContext::getStatistics() const {
   return s;
 }
+
+SectionManager * GlobalContext::getSectionManager() const {
+  return secm;
+}
+

@@ -24,6 +24,7 @@
 #include "engine.h"
 #include "util.h"
 #include "hourlyalltracking.h"
+#include "sectionmanager.h"
 
 #define AUTO_SAVE_INTERVAL 600000 // 10 minutes
 
@@ -482,6 +483,28 @@ void SettingsLoaderSaver::loadSettings() {
     }
   }
 
+  dfh->getDataFor("SectionManager", &lines);
+  for (it = lines.begin(); it != lines.end(); it++) {
+    line = *it;
+    if (line.length() == 0 ||line[0] == '#') continue;
+    size_t tok1 = line.find('$');
+    size_t tok2 = line.find('=', tok1);
+    std::string name = line.substr(0, tok1);
+    std::string setting = line.substr(tok1 + 1, (tok2 - tok1 - 1));
+    std::string value = line.substr(tok2 + 1);
+    Section * section = global->getSectionManager()->getSection(name);
+    if (!section) {
+      global->getSectionManager()->addSection(name);
+      section = global->getSectionManager()->getSection(name);
+    }
+    if (!setting.compare("jobs")) {
+      section->setNumJobs(std::stoi(value));
+    }
+    if (!setting.compare("skiplistentry")) {
+      loadSkipListEntry(&section->getSkipList(), value);
+    }
+  }
+
   dfh->getDataFor("Statistics", &lines);
   for (it = lines.begin(); it != lines.end(); it++) {
     line = *it;
@@ -675,6 +698,15 @@ void SettingsLoaderSaver::saveSettings() {
   }
 
   {
+    std::string filetag = "SectionManager";
+    for (auto it = global->getSectionManager()->begin(); it != global->getSectionManager()->end(); ++it) {
+      const Section & section = it->second;
+      dfh->addOutputLine(filetag, section.getName() + "$jobs=" + std::to_string(section.getNumJobs()));
+      addSkipList(&section.getSkipList(), filetag, section.getName() + "$skiplistentry=");
+    }
+  }
+
+  {
     dfh->addOutputLine("Engine", "preparedraceexpirytime=" + util::int2Str(global->getEngine()->getPreparedRaceExpiryTime()));
   }
   {
@@ -729,7 +761,7 @@ void SettingsLoaderSaver::startAutoSaver() {
   global->getTickPoke()->startPoke(this, "SettingsLoaderSaver", AUTO_SAVE_INTERVAL, 0);
 }
 
-void SettingsLoaderSaver::addSkipList(SkipList * skiplist, const std::string & owner, const std::string & entry) {
+void SettingsLoaderSaver::addSkipList(const SkipList * skiplist, const std::string & owner, const std::string & entry) {
   std::list<SkiplistItem>::const_iterator it;
   for (it = skiplist->entriesBegin(); it != skiplist->entriesEnd(); it++) {
     std::string entryline = it->matchPattern() + "$" +

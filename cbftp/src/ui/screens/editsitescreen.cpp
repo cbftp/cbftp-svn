@@ -13,7 +13,6 @@
 #include "../../settingsloadersaver.h"
 
 #include "../ui.h"
-#include "../focusablearea.h"
 #include "../menuselectoptionelement.h"
 #include "../menuselectoptioncontainer.h"
 #include "../menuselectoptiontextfield.h"
@@ -167,11 +166,8 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
 
   mso.addStringField(y++, x, "exceptdst", "", exceptdst, false, 60, 512);
   mso.addStringField(y++, x, "affils", "Affils:", affilstr, false, 60, 1024);
+  mso.addTextButtonNoContent(y++, x, "sections", "Configure sections...");
   y++;
-  ms.initialize(y++, x, this->site->sectionsBegin(), this->site->sectionsEnd());
-  focusedarea = &mso;
-  mso.makeLeavableDown();
-  ms.makeLeavableUp();
   mso.enterFocusFrom(0);
   init(row, col);
 }
@@ -200,110 +196,21 @@ void EditSiteScreen::redraw() {
     ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
     ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
-  int headrow = ms.getHeaderRow();
-  int headcol = ms.getHeaderCol();
-  ui->printStr(headrow, headcol, "Sections");
-  unsigned int selected = ms.getSelectionPointer();
-  highlight = false;
-  if (ms.isFocused() && selected == 0) {
-    highlight = true;
-  }
-  ui->printStr(headrow, headcol + 9, ms.getElement(0)->getContentText(), highlight);
-  for (unsigned int i = 0; i < ms.size(); i++) {
-    const MenuSelectOptionContainer * msoc = ms.getSectionContainer(i);
-    for (unsigned int j = 0; j < 3; j++) {
-      highlight = ((i * 3) + 1 + j) == selected;
-      int indentation = 0;
-      if (j == 1) {
-        indentation = 12;
-      }
-      else if (j == 2) {
-        indentation = 43;
-      }
-      ui->printStr(headrow + 1 + i, headcol + indentation, msoc->getOption(j)->getContentText(), highlight);
-    }
-  }
 }
 
 void EditSiteScreen::update() {
-  if (defocusedarea != NULL) {
-    if (defocusedarea == &mso) {
-      std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
-      ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-      ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
-    }
-    else if (defocusedarea == &ms) {
-      int headrow = ms.getHeaderRow();
-      int headcol = ms.getHeaderCol();
-      int lastsel = ms.getLastSelectionPointer();
-      if (lastsel == 0) {
-        ui->printStr(headrow, headcol + 9, ms.getElement(0)->getContentText());
-      }
-      else {
-        const MenuSelectOptionContainer * msoc = ms.getSectionContainer((lastsel - 1) / 3);
-        int internalid = (lastsel - 1) % 3;
-        int add = 0;
-        if (internalid == 1) add = 12;
-        else if (internalid == 2) add = 43;
-        ui->printStr(headrow + 1 + ((lastsel - 1) / 3), headcol + add, msoc->getOption(internalid)->getContentText());
-      }
-    }
-    defocusedarea = NULL;
+  std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
+  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  msoe = mso.getElement(mso.getSelectionPointer());
+  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
+  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  if (active && msoe->cursorPosition() >= 0) {
+    ui->showCursor();
+    ui->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
   }
-  if (focusedarea == &mso) {
-    std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
-    msoe = mso.getElement(mso.getSelectionPointer());
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
-    if (active && msoe->cursorPosition() >= 0) {
-      ui->showCursor();
-      ui->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
-    }
-    else {
-      ui->hideCursor();
-    }
-  }
-  else if (focusedarea == &ms) {
-    if (ms.needsRedraw()) {
-      redraw();
-      return;
-    }
-    int headrow = ms.getHeaderRow();
-    int headcol = ms.getHeaderCol();
-    int lastsel = ms.getLastSelectionPointer();
-    int sel = ms.getSelectionPointer();
-    if (lastsel == 0) {
-      ui->printStr(headrow, headcol + 9, ms.getElement(0)->getContentText());
-    }
-    else {
-      const MenuSelectOptionContainer * msoc = ms.getSectionContainer((lastsel - 1) / 3);
-      int internalid = (lastsel - 1) % 3;
-      int add = 0;
-      if (internalid == 1) add = 12;
-      else if (internalid == 2) add = 43;
-      ui->printStr(headrow + 1 + ((lastsel - 1) / 3), headcol + add, msoc->getOption(internalid)->getContentText());
-    }
-    if (sel == 0) {
-      ui->printStr(headrow, headcol + 9, ms.getElement(0)->getContentText(), true);
-    }
-    else {
-      const MenuSelectOptionContainer * msoc = ms.getSectionContainer((sel - 1) / 3);
-      int internalid = (sel - 1) % 3;
-      int add = 0;
-      if (internalid == 1) add = 12;
-      else if (internalid == 2) add = 43;
-      ui->printStr(headrow + 1 + ((sel - 1) / 3), headcol + add, msoc->getOption(internalid)->getContentText(), true);
-      int cursorpos = msoc->getOption(internalid)->cursorPosition();
-      if (active && cursorpos >= 0) {
-        ui->showCursor();
-        ui->moveCursor(headrow + 1 + ((sel - 1) / 3), headcol + add + cursorpos);
-      }
-      else {
-        ui->hideCursor();
-      }
-    }
+  else {
+    ui->hideCursor();
   }
 }
 
@@ -341,54 +248,42 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
   std::string sitename;
   switch(ch) {
     case KEY_UP:
-      if (focusedarea->goUp()) {
-        if (!focusedarea->isFocused()) {
-          defocusedarea = focusedarea;
-          focusedarea = &mso;
-          focusedarea->enterFocusFrom(2);
-        }
+      if (mso.goUp()) {
         ui->update();
       }
       return true;
     case KEY_DOWN:
-      if (focusedarea->goDown()) {
-        if (!focusedarea->isFocused()) {
-          defocusedarea = focusedarea;
-          focusedarea = &ms;
-          focusedarea->enterFocusFrom(0);
-        }
+      if (mso.goDown()) {
         ui->update();
       }
       return true;
     case KEY_LEFT:
-      if (focusedarea->goLeft()) {
-        if (!focusedarea->isFocused()) {
-          // shouldn't happen
-        }
+      if (mso.goLeft()) {
         ui->update();
       }
       return true;
     case KEY_RIGHT:
-      if (focusedarea->goRight()) {
-        if (!focusedarea->isFocused()) {
-          // shouldn't happen
-        }
+      if (mso.goRight()) {
         ui->update();
       }
       return true;
     case 10: {
-      std::shared_ptr<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
+      std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getSelectionPointer());
       if (msoe->getIdentifier() == "skiplist") {
         ui->goSkiplist((SkipList *)&site->getSkipList());
         return true;
       }
-      activation = focusedarea->activateSelected();
+      if (msoe->getIdentifier() == "sections") {
+        ui->goSiteSections(site);
+        return true;
+      }
+      activation = mso.activateSelected();
       if (!activation) {
         ui->update();
         return true;
       }
       active = true;
-      activeelement = focusedarea->getElement(focusedarea->getSelectionPointer());
+      activeelement = mso.getElement(mso.getSelectionPointer());
       if (activeelement->getIdentifier() == "exceptsrc") {
         activeelement->deactivate();
         active = false;
@@ -537,15 +432,6 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         else if (identifier == "exceptdst") {
           std::string sitestr = std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData();
           exceptdstlist = util::split(sitestr, ",");
-        }
-      }
-      site->clearSections();
-      for (unsigned int i = 0; i < ms.size(); i++) {
-        const MenuSelectOptionContainer * msoc = ms.getSectionContainer(i);
-        std::string name = std::static_pointer_cast<MenuSelectOptionTextField>(msoc->getOption(0))->getData();
-        std::string path = std::static_pointer_cast<MenuSelectOptionTextField>(msoc->getOption(1))->getData();
-        if (name.length() > 0 && path.length() > 0) {
-          site->addSection(name, path);
         }
       }
 

@@ -1,12 +1,6 @@
-#include "nukescreen.h"
-
 #include "../../globalcontext.h"
-#include "../../site.h"
-#include "../../sitemanager.h"
-#include "../../engine.h"
-#include "../../sitelogic.h"
-#include "../../filelist.h"
-#include "../../sitelogicmanager.h"
+#include "../../section.h"
+#include "../../sectionmanager.h"
 #include "../../util.h"
 
 #include "../ui.h"
@@ -14,36 +8,44 @@
 #include "../menuselectoptionnumarrow.h"
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptiontextbutton.h"
+#include "editsectionscreen.h"
 
-NukeScreen::NukeScreen(Ui * ui) {
+EditSectionScreen::EditSectionScreen(Ui * ui) : section(nullptr) {
   this->ui = ui;
 }
 
-NukeScreen::~NukeScreen() {
+EditSectionScreen::~EditSectionScreen() {
 
 }
 
-void NukeScreen::initialize(unsigned int row, unsigned int col, const std::string & sitestr, const std::string & items, const Path & path) {
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [n]uke - [c]ancel - [p]roper - [r]epack - [d]upe";
+void EditSectionScreen::initialize(unsigned int row, unsigned int col, const std::string & section) {
+  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel";
   currentlegendtext = defaultlegendtext;
   active = false;
-  this->sitestr = sitestr;
-  this->items = items;
-  sitelogic = global->getSiteLogicManager()->getSiteLogic(sitestr);
-  this->path = path;
-  std::list<std::string> sections = global->getSiteManager()->getSite(sitestr)->getSectionsForPath(path);
+  if (this->section != nullptr) {
+    delete this->section;
+  }
+  if (section == "") {
+    mode = Mode::ADD;
+    this->section = new Section();
+    oldname = "";
+  }
+  else {
+    mode = Mode::EDIT;
+    Section * editsection = global->getSectionManager()->getSection(section);
+    util::assert(editsection != NULL);
+    this->section = new Section(*editsection);
+    oldname = editsection->getName();
+  }
   mso.reset();
-  mso.addStringField(5, 1, "reason", "Reason:", "", false, col - 3, 512);
-  mso.addIntArrow(6, 1, "multiplier", "Multiplier:", 1, 1, 100);
+  mso.addStringField(1, 1, "name", "Section name:", this->section->getName(), false);
+  mso.addTextButtonNoContent(3, 1, "skiplist", "Configure skiplist...");
   mso.enterFocusFrom(0);
   init(row, col);
 }
 
-void NukeScreen::redraw() {
+void EditSectionScreen::redraw() {
   ui->erase();
-  ui->printStr(1, 1, "Site: " + sitestr);
-  ui->printStr(2, 1, "Item: " + items);
-  ui->printStr(3, 1, "Path: " + path.toString());
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
@@ -56,7 +58,7 @@ void NukeScreen::redraw() {
   }
 }
 
-void NukeScreen::update() {
+void EditSectionScreen::update() {
   std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
   ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
   ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
@@ -72,7 +74,7 @@ void NukeScreen::update() {
   }
 }
 
-bool NukeScreen::keyPressed(unsigned int ch) {
+bool EditSectionScreen::keyPressed(unsigned int ch) {
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
@@ -86,6 +88,7 @@ bool NukeScreen::keyPressed(unsigned int ch) {
     ui->update();
     return true;
   }
+  bool activation;
   switch(ch) {
     case KEY_UP:
       if (mso.goUp()) {
@@ -109,7 +112,13 @@ bool NukeScreen::keyPressed(unsigned int ch) {
       return true;
     case 10:
       activeelement = mso.getElement(mso.getSelectionPointer());
-      activeelement->activate();
+      activation = activeelement->activate();
+      if (!activation) {
+        if (activeelement->getIdentifier() == "skiplist") {
+          ui->goSkiplist(&section->getSkipList());
+          return true;
+        }
+      }
       active = true;
       currentlegendtext = activeelement->getLegendText();
       ui->update();
@@ -119,50 +128,43 @@ bool NukeScreen::keyPressed(unsigned int ch) {
     case 'c':
       ui->returnToLast();
       return true;
-    case 'n': {
-      nuke();
+    case 'd':
+      done();
       return true;
-    }
-    case 'p': {
-      nuke(1, "proper");
-      return true;
-    }
-    case 'r': {
-      nuke(1, "repack");
-      return true;
-    }
-    case 'd': {
-      nuke(1, "dupe");
-      return true;
-    }
   }
   return false;
 }
 
-void NukeScreen::nuke() {
-  int multiplier = 1;
-  std::string reason;
-  for (unsigned int i = 0; i < mso.size(); i++) {
+void EditSectionScreen::done() {
+  for(unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
     std::string identifier = msoe->getIdentifier();
-    if (identifier == "multiplier") {
-      multiplier = std::static_pointer_cast<MenuSelectOptionNumArrow>(msoe)->getData();
-    }
-    else if (identifier == "reason") {
-      reason = std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData();
+    if (identifier == "name") {
+      std::string newname = std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData();
+      section->setName(newname);
     }
   }
-  nuke(multiplier, reason);
+  switch (mode) {
+    case Mode::ADD:
+      if (global->getSectionManager()->addSection(*section)) {
+        ui->returnToLast();
+      }
+      break;
+    case Mode::EDIT:
+      if (global->getSectionManager()->replaceSection(*section, oldname)) {
+        ui->returnToLast();
+      }
+      break;
+  }
 }
 
-void NukeScreen::nuke(int multiplier, const std::string & reason) {
-  ui->returnNuke(multiplier, reason);
-}
-
-std::string NukeScreen::getLegendText() const {
+std::string EditSectionScreen::getLegendText() const {
   return currentlegendtext;
 }
 
-std::string NukeScreen::getInfoLabel() const {
-  return "NUKE";
+std::string EditSectionScreen::getInfoLabel() const {
+  if (mode == Mode::ADD) {
+    return "ADD SECTION";
+  }
+  return "EDIT SECTION: " + oldname;
 }

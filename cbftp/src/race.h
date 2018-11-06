@@ -32,6 +32,7 @@ class FileList;
 class File;
 class SiteLogic;
 class TransferStatus;
+class SkipList;
 
 typedef std::pair<std::string, std::pair<FileList *, FileList *> > FailedTransfer;
 
@@ -58,6 +59,7 @@ class Race : public EventReceiver, public TransferStatusCallback {
     std::string name;
     std::string group;
     std::string section;
+    const SkipList & sectionskiplist;
     std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> >, SitesComparator> sites;
     std::unordered_map<SiteRace *, std::unordered_map<std::string, unsigned int> > sizes;
     std::unordered_set<SiteRace *> semidonesites;
@@ -138,6 +140,7 @@ class Race : public EventReceiver, public TransferStatusCallback {
     unsigned int getBestCompletionPercentage() const;
     bool hasFailedTransfer(File *, FileList *, FileList *) const;
     bool failedTransfersCleared() const;
+    const SkipList & getSectionSkipList() const;
     void addTransfer(const std::shared_ptr<TransferStatus> &);
     bool clearTransferAttempts();
     void transferSuccessful(const std::shared_ptr<TransferStatus> &);

@@ -11,6 +11,9 @@
 #include "util.h"
 #include "globalcontext.h"
 #include "transferstatus.h"
+#include "sectionmanager.h"
+#include "section.h"
+#include "skiplist.h"
 
 #define MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP 3
 
@@ -26,6 +29,7 @@ Race::Race(unsigned int id, SpreadProfile profile, const std::string & release, 
   name(release),
   group(util::getGroupNameFromRelease(release)),
   section(section),
+  sectionskiplist(global->getSectionManager()->getSection(section)->getSkipList()),
   maxnumfilessiteprogress(0),
   bestunknownfilesizeestimate(50000000),
   guessedtotalfilesize(0),
@@ -538,6 +542,10 @@ bool Race::hasFailedTransfer(File * f, FileList * fls, FileList * fld) const {
 
 bool Race::failedTransfersCleared() const {
   return transferattemptscleared;
+}
+
+const SkipList & Race::getSectionSkipList() const {
+  return sectionskiplist;
 }
 
 void Race::addTransfer(const std::shared_ptr<TransferStatus> & ts) {

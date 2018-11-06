@@ -1,4 +1,4 @@
-#include "addsectionscreen.h"
+#include "editsitesectionscreen.h"
 
 #include "../../globalcontext.h"
 #include "../../site.h"
@@ -10,28 +10,42 @@
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptionelement.h"
 
-AddSectionScreen::AddSectionScreen(Ui * ui) {
+EditSiteSectionScreen::EditSiteSectionScreen(Ui * ui) {
   this->ui = ui;
-}
-
-AddSectionScreen::~AddSectionScreen() {
-
-}
-
-void AddSectionScreen::initialize(unsigned int row, unsigned int col, std::string site, const Path & path) {
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel";
+}
+
+EditSiteSectionScreen::~EditSiteSectionScreen() {
+
+}
+
+void EditSiteSectionScreen::initialize(unsigned int row, unsigned int col, const std::shared_ptr<Site> & site, const Path & path) {
+  mode = Mode::ADD;
+  initialize(row, col, site, "", path);
+}
+
+void EditSiteSectionScreen::initialize(unsigned int row, unsigned int col, const std::shared_ptr<Site> & site, const std::string & section) {
+  mode = Mode::EDIT;
+  oldsection = section;
+  Path path = site->getSectionPath(section);
+  initialize(row, col, site, section, path);
+}
+
+void EditSiteSectionScreen::initialize(unsigned int row, unsigned int col, const std::shared_ptr<Site> & site, const std::string & section, const Path & path) {
   currentlegendtext = defaultlegendtext;
   active = false;
+  modsite = site;
   unsigned int y = 1;
   unsigned int x = 1;
-  modsite = global->getSiteManager()->getSite(site);
-  mso.clear();
-  mso.addStringField(y++, x, "name", "Name:", "", false);
+  mso.reset();
+  mso.addStringField(y++, x, "name", "Name:", section, false);
+  mso.addTextButtonNoContent(y++, x, "select", "Select name from list...");
   mso.addStringField(y++, x, "path", "Path:", path.toString(), false, 64);
+  mso.enterFocusFrom(0);
   init(row, col);
 }
 
-void AddSectionScreen::redraw() {
+void EditSiteSectionScreen::redraw() {
   ui->erase();
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
@@ -45,7 +59,7 @@ void AddSectionScreen::redraw() {
   }
 }
 
-void AddSectionScreen::update() {
+void EditSiteSectionScreen::update() {
   std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
   ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
   ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
@@ -61,7 +75,7 @@ void AddSectionScreen::update() {
   }
 }
 
-bool AddSectionScreen::keyPressed(unsigned int ch) {
+bool EditSiteSectionScreen::keyPressed(unsigned int ch) {
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
@@ -85,9 +99,13 @@ bool AddSectionScreen::keyPressed(unsigned int ch) {
       mso.goDown();
       ui->update();
       return true;
-    case 10:
-
-      activation = mso.getElement(mso.getSelectionPointer())->activate();
+    case 10: {
+      std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getSelectionPointer());
+      activation = msoe->activate();
+      if (msoe->getIdentifier() == "select") {
+        ui->goSelectSection();
+        return true;
+      }
       if (!activation) {
         ui->update();
         return true;
@@ -98,15 +116,22 @@ bool AddSectionScreen::keyPressed(unsigned int ch) {
       ui->setLegend();
       ui->update();
       return true;
+    }
     case 27: // esc
     case 'c':
       ui->returnToLast();
       return true;
     case 'd':
-      std::shared_ptr<MenuSelectOptionTextField> field1 = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement(0));
-      std::shared_ptr<MenuSelectOptionTextField> field2 = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement(1));
-      std::string name = field1->getData();
-      std::string path = field2->getData();
+      std::shared_ptr<MenuSelectOptionTextField> nameelem = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("name"));
+      std::shared_ptr<MenuSelectOptionTextField> pathelem = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("path"));
+      std::string name = nameelem->getData();
+      std::string path = pathelem->getData();
+      if (path.empty()) {
+        return true;
+      }
+      if (mode == Mode::EDIT && name != oldsection) {
+        modsite->removeSection(oldsection);
+      }
       modsite->addSection(name, path);
       global->getSettingsLoaderSaver()->saveSettings();
       ui->returnToLast();
@@ -115,10 +140,22 @@ bool AddSectionScreen::keyPressed(unsigned int ch) {
   return false;
 }
 
-std::string AddSectionScreen::getLegendText() const {
+void EditSiteSectionScreen::command(const std::string & command, const std::string & arg) {
+  if (command == "returnselectitems") {
+    std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement("name");
+    std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->setText(arg);
+    mso.setPointer(msoe);
+    ui->redraw();
+  }
+}
+
+std::string EditSiteSectionScreen::getLegendText() const {
   return currentlegendtext;
 }
 
-std::string AddSectionScreen::getInfoLabel() const {
-  return "ADD SECTION";
+std::string EditSiteSectionScreen::getInfoLabel() const {
+  if (mode == Mode::EDIT) {
+    return "EDIT SECTION ON " + modsite->getName() + ": " + oldsection;
+  }
+  return "ADD SECTION ON " + modsite->getName();
 }
