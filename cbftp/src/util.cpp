@@ -242,14 +242,10 @@ std::list<std::string> split(const std::string & in, const std::string & sep) {
   size_t end;
   size_t seplength = sep.length();
   while ((end = in.find(sep, start)) != std::string::npos) {
-    if (start != end) {
-      out.push_back(in.substr(start, end - start));
-    }
+    out.push_back(in.substr(start, end - start));
     start = end + seplength;
   }
-  if (start < in.length()) {
-    out.push_back(in.substr(start));
-  }
+  out.push_back(in.substr(start));
   return out;
 }
 
@@ -259,14 +255,10 @@ std::vector<std::string> splitVec(const std::string & in, const std::string & se
   size_t end;
   size_t seplength = sep.length();
   while ((end = in.find(sep, start)) != std::string::npos) {
-    if (start != end) {
-      out.push_back(in.substr(start, end - start));
-    }
+    out.push_back(in.substr(start, end - start));
     start = end + seplength;
   }
-  if (start < in.length()) {
-    out.push_back(in.substr(start));
-  }
+  out.push_back(in.substr(start));
   return out;
 }
 
