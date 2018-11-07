@@ -151,6 +151,7 @@ public:
   int getTransferTargetPolicy() const;
   bool useXDUPE() const;
   SkipList & getSkipList();
+  const std::map<std::string, Path> & getSections() const;
   void setName(const std::string &);
   void setAddresses(std::string);
   void setPrimaryAddress(const std::string &, const std::string &);
@@ -222,4 +223,6 @@ public:
   void setFilesUp(const std::string &, unsigned int);
   void setSizeDown(const std::string &, unsigned long long int);
   void setFilesDown(const std::string &, unsigned int);
+  void setSkipList(const SkipList & skiplist);
+  void setSections(const std::map<std::string, Path> & sections);
 };

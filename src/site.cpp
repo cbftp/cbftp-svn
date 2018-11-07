@@ -365,6 +365,10 @@ SkipList & Site::getSkipList() {
   return skiplist;
 }
 
+const std::map<std::string, Path> & Site::getSections() const {
+  return sections;
+}
+
 void Site::setName(const std::string & name) {
   this->name = name;
 }
@@ -752,4 +756,12 @@ void Site::setSizeDown(const std::string & site, unsigned long long int size) {
 
 void Site::setFilesDown(const std::string & site, unsigned int files) {
   sitesfilesdown[site].set(files);
+}
+
+void Site::setSkipList(const SkipList & skiplist) {
+  this->skiplist = skiplist;
+}
+
+void Site::setSections(const std::map<std::string, Path> & sections) {
+  this->sections = sections;
 }

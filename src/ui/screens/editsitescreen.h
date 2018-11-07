@@ -28,5 +28,6 @@ private:
   std::shared_ptr<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;
   std::shared_ptr<Site> site;
+  std::shared_ptr<Site> modsite;
   std::string operation;
 };

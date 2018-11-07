@@ -68,6 +68,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
       exceptdst += (*it)->getName() + ",";
     }
   }
+  this->modsite = std::make_shared<Site>(*this->site.get());
   if (exceptsrc.length()) {
     exceptsrc = exceptsrc.substr(0, exceptsrc.length() - 1);
   }
@@ -186,6 +187,18 @@ void EditSiteScreen::redraw() {
   else {
     mso.getElement("exceptdst")->setLabel("Allow transfers to:");
   }
+  std::string sectionslabel = "Configure sections...";
+  unsigned int sectionssize = this->modsite->getSections().size();
+  if (sectionssize) {
+    sectionslabel += " (" + std::to_string(sectionssize) + ")";
+  }
+  std::string skiplistlabel = "Configure skiplist...";
+  unsigned int skiplistsize = this->modsite->getSkipList().size();
+  if (skiplistsize) {
+    skiplistlabel += " (" + std::to_string(skiplistsize) + ")";
+  }
+  mso.getElement("sections")->setLabel(sectionslabel);
+  mso.getElement("skiplist")->setLabel(skiplistlabel);
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
@@ -270,11 +283,13 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
     case 10: {
       std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getSelectionPointer());
       if (msoe->getIdentifier() == "skiplist") {
-        ui->goSkiplist((SkipList *)&site->getSkipList());
+        modsite->setName(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("name"))->getData());
+        ui->goSkiplist((SkipList *)&modsite->getSkipList());
         return true;
       }
       if (msoe->getIdentifier() == "sections") {
-        ui->goSiteSections(site);
+        modsite->setName(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("name"))->getData());
+        ui->goSiteSections(modsite);
         return true;
       }
       activation = mso.activateSelected();
@@ -320,15 +335,12 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
       return true;
     }
     case 'd':
-      if (operation == "add") {
-        site = std::make_shared<Site>();
-      }
       for(unsigned int i = 0; i < mso.size(); i++) {
         std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
         std::string identifier = msoe->getIdentifier();
         if (identifier == "name") {
           std::string newname = std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData();
-          if (newname != site->getName()) {
+          if (newname != site->getName() && operation == "edit") {
             changedname = true;
           }
           site->setName(newname);
@@ -434,6 +446,8 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
           exceptdstlist = util::split(sitestr, ",");
         }
       }
+      site->setSkipList(modsite->getSkipList());
+      site->setSections(modsite->getSections());
 
       if (operation == "add") {
         global->getSiteManager()->addSite(site);
