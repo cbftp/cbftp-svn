@@ -378,7 +378,7 @@ void Site::setAddresses(std::string addrports) {
   size_t pos;
   while ((pos = addrports.find(";")) != std::string::npos) addrports[pos] = ' ';
   while ((pos = addrports.find(",")) != std::string::npos) addrports[pos] = ' ';
-  std::list<std::string> addrpairs = util::split(addrports);
+  std::list<std::string> addrpairs = util::trim(util::split(addrports));
   for (std::list<std::string>::const_iterator it = addrpairs.begin(); it != addrpairs.end(); it++) {
     size_t splitpos = it->find(":");
     std::string addr = *it;

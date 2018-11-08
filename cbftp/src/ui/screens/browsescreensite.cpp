@@ -481,7 +481,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
     else if (ch == 10) {
       std::string filter = filterfield.getData();
       if (filter.length()) {
-        list.setFilters(util::split(filter));
+        list.setFilters(util::trim(util::split(filter)));
         clearSoftSelects();
         resort = true;
       }

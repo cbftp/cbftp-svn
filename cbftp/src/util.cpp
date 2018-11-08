@@ -28,6 +28,34 @@ std::string trim(const std::string & trimtarget) {
   return "";
 }
 
+std::list<std::string> trim(const std::list<std::string> & in) {
+  if (!in.empty() && !in.front().empty() && !in.back().empty()) {
+    return in;
+  }
+  std::list<std::string> out = in;
+  if (!out.empty() && out.front().empty()) {
+    out.pop_front();
+  }
+  if (!out.empty() && out.back().empty()) {
+    out.pop_back();
+  }
+  return out;
+}
+
+std::vector<std::string> trim(const std::vector<std::string> & in) {
+  if (!in.empty() && !in.front().empty() && !in.back().empty()) {
+    return in;
+  }
+  std::vector<std::string> out = in;
+  if (!out.empty() && out.front().empty()) {
+    out.erase(out.begin());
+  }
+  if (!out.empty() && out.back().empty()) {
+    out.pop_back();
+  }
+  return out;
+}
+
 unsigned long long int str2Int(const std::string & str) {
   unsigned long long int num;
   std::istringstream ss(str);

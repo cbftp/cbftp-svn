@@ -19,7 +19,7 @@
 namespace {
 
 void fillPreselectionList(const std::string & preselectstr, std::list<std::shared_ptr<Site> > * list) {
-  std::list<std::string> preselectlist = util::split(preselectstr, ",");
+  std::list<std::string> preselectlist = util::trim(util::split(preselectstr, ","));
   for (std::list<std::string>::const_iterator it = preselectlist.begin(); it != preselectlist.end(); it++) {
     std::shared_ptr<Site> site = global->getSiteManager()->getSite(*it);
     list->push_back(site);
@@ -91,7 +91,7 @@ void TransfersFilterScreen::update() {
 
 void TransfersFilterScreen::command(const std::string & command, const std::string & arg) {
   if (command == "returnselectitems") {
-    std::list<std::string> items = util::split(arg, ",");
+    std::list<std::string> items = util::trim(util::split(arg, ","));
     if (activeelement->getIdentifier() == "spreadjobs") {
       selectedspreadjobs.clear();
       for (std::list<std::string>::const_iterator it = items.begin(); it != items.end(); it++) {
@@ -152,9 +152,9 @@ bool TransfersFilterScreen::keyPressed(unsigned int ch) {
       tfp.spreadjobsfilter = selectedspreadjobs;
       tfp.transferjobsfilter = selectedtransferjobs;
       tfp.usesitefilter = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("sitesfilter"))->getData();
-      tfp.sourcesitefilters = util::split(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("source"))->getData(), ",");
-      tfp.targetsitefilters = util::split(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("destination"))->getData(), ",");
-      tfp.anydirectionsitefilters = util::split(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("anydirection"))->getData(), ",");
+      tfp.sourcesitefilters = util::trim(util::split(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("source"))->getData(), ","));
+      tfp.targetsitefilters = util::trim(util::split(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("destination"))->getData(), ","));
+      tfp.anydirectionsitefilters = util::trim(util::split(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("anydirection"))->getData(), ","));
       tfp.usefilenamefilter = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("filenamefilter"))->getData();
       tfp.filenamefilter = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("filename"))->getData();
       tfp.usestatusfilter = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("statusfilter"))->getData();
