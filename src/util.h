@@ -10,6 +10,8 @@
 namespace util {
 
 std::string trim(const std::string &);
+std::list<std::string> trim(const std::list<std::string> & in);
+std::vector<std::string> trim(const std::vector<std::string> & in);
 unsigned long long int str2Int(const std::string &);
 std::string int2Str(int);
 std::string int2Str(unsigned int);

@@ -39,7 +39,7 @@ std::list<std::shared_ptr<SiteLogic> > getSiteLogicList(const std::string & site
     }
   }
   else {
-    sites = util::split(sitestring, ",");
+    sites = util::trim(util::split(sitestring, ","));
   }
   std::list<std::string> notfoundsites;
   for (std::list<std::string>::const_iterator it = sites.begin(); it != sites.end(); it++) {
@@ -465,7 +465,7 @@ void RemoteCommandHandler::parseRace(const std::vector<std::string> & message, i
     }
     return;
   }
-  std::list<std::string> sites = util::split(sitestring, ",");
+  std::list<std::string> sites = util::trim(util::split(sitestring, ","));
   if (type == RACE) {
     global->getEngine()->newRace(release, section, sites);
   }

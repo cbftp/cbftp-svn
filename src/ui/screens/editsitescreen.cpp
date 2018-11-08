@@ -426,7 +426,7 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
           while ((pos = affils.find(";")) != std::string::npos) {
             affils[pos] = ' ';
           }
-          std::list<std::string> affilslist = util::split(affils);
+          std::list<std::string> affilslist = util::trim(util::split(affils));
           for (std::list<std::string>::const_iterator it = affilslist.begin(); it != affilslist.end(); it++) {
             site->addAffil(*it);
           }
@@ -439,11 +439,11 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "exceptsrc") {
           std::string sitestr = std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData();
-          exceptsrclist = util::split(sitestr, ",");
+          exceptsrclist = util::trim(util::split(sitestr, ","));
         }
         else if (identifier == "exceptdst") {
           std::string sitestr = std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData();
-          exceptdstlist = util::split(sitestr, ",");
+          exceptdstlist = util::trim(util::split(sitestr, ","));
         }
       }
       site->setSkipList(modsite->getSkipList());
@@ -490,7 +490,7 @@ std::string EditSiteScreen::getInfoLabel() const {
 }
 
 void EditSiteScreen::fillPreselectionList(const std::string & preselectstr, std::list<std::shared_ptr<Site> > * list) const {
-  std::list<std::string> preselectlist = util::split(preselectstr, ",");
+  std::list<std::string> preselectlist = util::trim(util::split(preselectstr, ","));
   for (std::list<std::string>::const_iterator it = preselectlist.begin(); it != preselectlist.end(); it++) {
     std::shared_ptr<Site> site = global->getSiteManager()->getSite(*it);
     list->push_back(site);
