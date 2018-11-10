@@ -221,8 +221,9 @@ bool TransferJob::wantsList(bool source) {
     for (std::unordered_map<std::string, FileList *>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
       std::unordered_map<FileList *, int>::iterator it2 = filelistsrefreshed.find(it->second);
       FileListState state = it->second->getState();
-      if ((state != FILELIST_LISTED && state != FILELIST_NONEXISTENT) || (it2 != filelistsrefreshed.end() &&
-          (it2->second == REFRESH_NOW || it2->second == REFRESH_FINAL_NOW)))
+      if (state != FILELIST_FAILED &&
+          ((state != FILELIST_LISTED && state != FILELIST_NONEXISTENT) || (it2 != filelistsrefreshed.end() &&
+          (it2->second == REFRESH_NOW || it2->second == REFRESH_FINAL_NOW))))
       {
         srclisttarget = it->second;
         return true;
@@ -233,8 +234,9 @@ bool TransferJob::wantsList(bool source) {
     for (std::unordered_map<std::string, FileList *>::iterator it = dstfilelists.begin(); it != dstfilelists.end(); it++) {
       std::unordered_map<FileList *, int>::iterator it2 = filelistsrefreshed.find(it->second);
       FileListState state = it->second->getState();
-      if ((state != FILELIST_LISTED && state != FILELIST_NONEXISTENT) || (it2 != filelistsrefreshed.end() &&
-          (it2->second == REFRESH_NOW || it2->second == REFRESH_FINAL_NOW)))
+      if (state != FILELIST_FAILED &&
+          ((state != FILELIST_LISTED && state != FILELIST_NONEXISTENT) || (it2 != filelistsrefreshed.end() &&
+          (it2->second == REFRESH_NOW || it2->second == REFRESH_FINAL_NOW))))
       {
         dstlisttarget = it->second;
         return true;
@@ -284,7 +286,7 @@ void TransferJob::fileListUpdated(bool source, FileList * fl) {
     filelistsrefreshed[fl] = REFRESH_NOW;
     it = filelistsrefreshed.find(fl);
   }
-  if (fl->getState() == FILELIST_NONEXISTENT || fl->getState() == FILELIST_LISTED) {
+  if (fl->getState() == FILELIST_NONEXISTENT || fl->getState() == FILELIST_LISTED || fl->getState() == FILELIST_FAILED) {
     if (it->second == REFRESH_FINAL_NOW) {
       it->second = REFRESH_FINAL_OK;
     }
@@ -423,7 +425,7 @@ bool TransferJob::refreshOrAlmostDone() {
   bool allfinaldone = true;
   bool finalset = false;
   for (std::unordered_map<FileList *, int>::iterator it = filelistsrefreshed.begin(); it != filelistsrefreshed.end(); it++) {
-    if (it->second == REFRESH_FINAL_OK) {
+    if (it->first->getState() == FILELIST_FAILED || it->second == REFRESH_FINAL_OK) {
       finalset = true;
     }
     else if (it->second == REFRESH_FINAL_NOW) {
@@ -467,7 +469,7 @@ bool TransferJob::refreshOrAlmostDone() {
 
 bool TransferJob::anyListNeedsRefreshing() const {
   for (std::unordered_map<FileList *, int>::const_iterator it = filelistsrefreshed.begin(); it != filelistsrefreshed.end(); it++) {
-    if (it->second == REFRESH_NOW || it->second == REFRESH_FINAL_NOW) {
+    if (it->first->getState() != FILELIST_FAILED && (it->second == REFRESH_NOW || it->second == REFRESH_FINAL_NOW)) {
       return true;
     }
   }

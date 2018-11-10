@@ -37,6 +37,7 @@ class FileList {
     unsigned long long int totalfilesize;
     unsigned int uploadedfiles;
     int refreshedtime;
+    int listfailures;
     void recalcOwnedPercentage();
     void init(const std::string &, const Path &, FileListState);
   public:
@@ -81,4 +82,5 @@ class FileList {
     void setChanged();
     void setRefreshedTime(int);
     int getRefreshedTime() const;
+    bool addListFailure();
 };

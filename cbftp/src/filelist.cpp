@@ -9,6 +9,8 @@
 #include "util.h"
 #include "commandowner.h"
 
+#define MAX_LIST_FAILURES_BEFORE_STATE_FAILED 3
+
 namespace {
 
 bool sameOwner(const std::string & a, const std::string & b) {
@@ -54,6 +56,7 @@ void FileList::init(const std::string & username, const Path & path, FileListSta
   totalfilesize = 0;
   uploading = 0;
   refreshedtime = 0;
+  listfailures = 0;
 }
 
 bool FileList::updateFile(const std::string & start, int touch) {
@@ -405,6 +408,7 @@ void FileList::resetListChanged() {
 void FileList::setChanged() {
   listchanged = true;
   lastchangedstamp = global->getTimeReference()->timeReference();
+  listfailures = 0;
 }
 
 unsigned long long FileList::timeSinceLastChanged() const {
@@ -448,4 +452,12 @@ void FileList::setRefreshedTime(int newtime) {
 
 int FileList::getRefreshedTime() const {
   return refreshedtime;
+}
+
+bool FileList::addListFailure() {
+  if (++listfailures >= MAX_LIST_FAILURES_BEFORE_STATE_FAILED) {
+    setFailed();
+    return true;
+  }
+  return false;
 }
