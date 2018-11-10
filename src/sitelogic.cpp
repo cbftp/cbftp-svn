@@ -215,30 +215,54 @@ void SiteLogic::listRefreshed(int id) {
 
 bool SiteLogic::setPathExists(int id, int exists, bool refreshtime) {
   FileList * fl = conns[id]->currentFileList();
-  if (fl && (fl->getState() == FILELIST_UNKNOWN || (fl->getState() == FILELIST_NONEXISTENT && exists != EXISTS_NO) ||
-      (fl->getState() == FILELIST_FAILED && exists == EXISTS_YES)))
-  {
-    switch (exists) {
-      case EXISTS_YES:
-        fl->setExists();
-        break;
-      case EXISTS_NO:
-        fl->setNonExistent();
-        break;
-      case EXISTS_FAILED:
-        fl->setFailed();
-        break;
-    }
-    if (refreshtime) {
-      fl->setRefreshedTime(currtime);
-    }
-    CommandOwner * currentco = conns[id]->currentCommandOwner();
-    if (currentco) {
-      currentco->fileListUpdated(this, fl);
-    }
-    return true;
+  if (!fl) {
+    return false;
   }
-  return false;
+  bool statechanged = false;
+  FileListState state = fl->getState();
+  if (state == FILELIST_UNKNOWN) {
+    if (exists == EXISTS_YES) {
+      fl->setExists();
+    }
+    else if (exists == EXISTS_FAILED) {
+      fl->setFailed();
+    }
+    else if (exists == EXISTS_NO) {
+      fl->setNonExistent();
+    }
+    statechanged = true;
+  }
+  else if (state == FILELIST_NONEXISTENT) {
+    if (exists == EXISTS_YES) {
+      fl->setExists();
+      statechanged = true;
+    }
+    else if (exists == EXISTS_FAILED) {
+      fl->setFailed();
+      statechanged = true;
+    }
+  }
+  else if (state == FILELIST_FAILED) {
+    if (exists == EXISTS_YES) {
+      fl->setExists();
+      statechanged = true;
+    }
+  }
+  else if (state == FILELIST_LISTED || state == FILELIST_EXISTS) {
+    if (exists == EXISTS_NO) {
+      if (fl->addListFailure()) {
+        statechanged = true;
+      }
+    }
+  }
+  if (statechanged && refreshtime) {
+    fl->setRefreshedTime(currtime);
+  }
+  CommandOwner * currentco = conns[id]->currentCommandOwner();
+  if (currentco && statechanged) {
+    currentco->fileListUpdated(this, fl);
+  }
+  return statechanged;
 }
 
 bool SiteLogic::handleCommandDelete(int id, bool success) {
@@ -695,9 +719,6 @@ void SiteLogic::handleTransferFail(int id, int type, int err) {
       (err == TM_ERR_RETRSTOR || err == TM_ERR_DUPE))
   {
     conns[id]->abortTransferPASV();
-  }
-  else if (err == TM_ERR_OTHER && !connstatetracker[id].isLocked()) {
-    connstatetracker[id].delayedCommand("handle", SLEEPDELAY * 6);
   }
   else {
     handleConnection(id);
