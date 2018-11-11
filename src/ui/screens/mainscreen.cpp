@@ -70,6 +70,9 @@ void MainScreen::redraw() {
   ui->erase();
   ui->hideCursor();
   totalsitessize = global->getSiteManager()->getNumSites();
+  if (sitepos >= totalsitessize) {
+    --sitepos;
+  }
   numsitestext = "Sites: " + util::int2Str(totalsitessize);
   int listpreparedraces = global->getEngine()->preparedRaces();
   int listraces = global->getEngine()->allRaces();
