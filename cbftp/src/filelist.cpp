@@ -52,6 +52,7 @@ void FileList::init(const std::string & username, const Path & path, FileListSta
   uploadedfiles = 0;
   locked = false;
   listchanged = false;
+  listmetachanged = false;
   lastchangedstamp = 0;
   totalfilesize = 0;
   uploading = 0;
@@ -93,13 +94,13 @@ bool FileList::updateFile(const std::string & start, int touch) {
       recalcOwnedPercentage();
     }
     if (updatefile->setOwner(file->getOwner())) {
-      setChanged();
+      setMetaChanged();
     }
     if (updatefile->setGroup(file->getGroup())) {
-      setChanged();
+      setMetaChanged();
     }
     if (updatefile->setLastModified(file->getLastModified())) {
-      setChanged();
+      setMetaChanged();
     }
     updatefile->setTouch(file->getTouch());
     if (updatefile->updateFlagSet()) {
@@ -401,18 +402,34 @@ bool FileList::listChanged() const {
   return listchanged;
 }
 
+bool FileList::listMetaChanged() const {
+  return listmetachanged;
+}
+
 void FileList::resetListChanged() {
   listchanged = false;
+  listmetachanged = false;
 }
 
 void FileList::setChanged() {
   listchanged = true;
+  listmetachanged = true;
   lastchangedstamp = global->getTimeReference()->timeReference();
+  lastmetachangedstamp = lastchangedstamp;
   listfailures = 0;
+}
+
+void FileList::setMetaChanged() {
+  listmetachanged = true;
+  lastmetachangedstamp = global->getTimeReference()->timeReference();
 }
 
 unsigned long long FileList::timeSinceLastChanged() const {
   return global->getTimeReference()->timePassedSince(lastchangedstamp);
+}
+
+unsigned long long FileList::timeSinceLastMetaChanged() const {
+  return global->getTimeReference()->timePassedSince(lastmetachangedstamp);
 }
 
 std::string FileList::getUser() const {
