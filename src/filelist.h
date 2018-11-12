@@ -29,7 +29,9 @@ class FileList {
     FileListState state;
     bool locked;
     bool listchanged;
+    bool listmetachanged;
     unsigned long long lastchangedstamp;
+    unsigned long long lastmetachangedstamp;
     int owned;
     int ownpercentage;
     int uploading;
@@ -40,6 +42,8 @@ class FileList {
     int listfailures;
     void recalcOwnedPercentage();
     void init(const std::string &, const Path &, FileListState);
+    void setChanged();
+    void setMetaChanged();
   public:
     FileList(const std::string &, const Path &);
     FileList(const std::string &, const Path &, FileListState);
@@ -72,14 +76,15 @@ class FileList {
     void cleanSweep(int);
     void flush();
     bool listChanged() const;
+    bool listMetaChanged() const;
     void resetListChanged();
     unsigned long long timeSinceLastChanged() const;
+    unsigned long long timeSinceLastMetaChanged() const;
     std::string getUser() const;
     void finishUpload(const std::string &);
     void finishDownload(const std::string &);
     void download(const std::string &);
     bool hasFilesUploading() const;
-    void setChanged();
     void setRefreshedTime(int);
     int getRefreshedTime() const;
     bool addListFailure();

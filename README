@@ -500,7 +500,7 @@ Q: Can I change key bindings?
 A: Only by modifying the source code, as of right now. But I encourage you
    to try that :)
 
-Q: Some fields does not seem to be visible in the UI, or are disappearing
+Q: Some fields do not seem to be visible in the UI, or are disappearing
    sometimes. What's going on?
 A: Cbftp adjusts the view dynamically depending on how much space is needed
    to show the fields, and how much space is available. The fields shown

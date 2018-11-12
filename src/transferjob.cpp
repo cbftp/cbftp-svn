@@ -425,15 +425,11 @@ bool TransferJob::refreshOrAlmostDone() {
   bool allfinaldone = true;
   bool finalset = false;
   for (std::unordered_map<FileList *, int>::iterator it = filelistsrefreshed.begin(); it != filelistsrefreshed.end(); it++) {
-    if (it->first->getState() == FILELIST_FAILED || it->second == REFRESH_FINAL_OK) {
-      finalset = true;
-    }
-    else if (it->second == REFRESH_FINAL_NOW) {
+    if (it->second != REFRESH_FINAL_OK && it->first->getState() != FILELIST_FAILED) {
       allfinaldone = false;
-      finalset = true;
     }
-    else {
-      allfinaldone = false;
+    if (it->second == REFRESH_FINAL_OK) {
+      finalset = true;
     }
   }
   if (finalset && allfinaldone) {
