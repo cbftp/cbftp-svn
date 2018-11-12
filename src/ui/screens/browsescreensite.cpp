@@ -908,7 +908,7 @@ std::string BrowseScreenSite::getInfoText() const {
     const BrowseScreenRequest & request = requests.front();
     std::string target = targetName(request.files);
     if (requests.size() > 1) {
-      target += " (+ " + std::to_string(requests.size()) + " more)";
+      target += " (+" + std::to_string(requests.size() - 1) + " more)";
     }
     switch (request.type) {
       case BrowseScreenRequestType::WIPE:
