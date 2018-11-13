@@ -14,6 +14,7 @@
 #include "sectionmanager.h"
 #include "section.h"
 #include "skiplist.h"
+#include "sitelogic.h"
 
 #define MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP 3
 
@@ -404,10 +405,21 @@ void Race::recalculateBestUnknownFileSizeEstimate() {
 }
 
 int Race::checksSinceLastUpdate() {
+  bool sitebusy = false;
   for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::iterator it = sites.begin(); it != sites.end(); it++) {
+    if (it->first->isDone()) {
+      continue;
+    }
     if (it->first->hasBeenUpdatedSinceLastCheck()) {
       checkcount = 0;
+      return checkcount++;
     }
+    else if ((it->second->getCurrLogins() && !it->second->slotsAvailable())) {
+      sitebusy = true;
+    }
+  }
+   if (sitebusy) {
+    return checkcount;
   }
   return checkcount++;
 }
