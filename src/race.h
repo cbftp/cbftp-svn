@@ -132,7 +132,7 @@ class Race : public EventReceiver, public TransferStatusCallback {
     void reset();
     void abort();
     void setTimeout();
-    int checksSinceLastUpdate();
+    int timeoutCheck();
     void resetUpdateCheckCounter();
     void tick(int);
     unsigned int getWorstCompletionPercentage() const;
@@ -142,7 +142,7 @@ class Race : public EventReceiver, public TransferStatusCallback {
     bool failedTransfersCleared() const;
     const SkipList & getSectionSkipList() const;
     void addTransfer(const std::shared_ptr<TransferStatus> &);
-    bool clearTransferAttempts();
+    bool clearTransferAttempts(bool clearstate = true);
     void transferSuccessful(const std::shared_ptr<TransferStatus> &);
     void transferFailed(const std::shared_ptr<TransferStatus> &, int);
     void addTransferStatsFile(unsigned long long int);

@@ -347,7 +347,16 @@ void SiteRace::subPathComplete(FileList * fl) {
   if (isSubPathComplete(subpath)) {
     return;
   }
+  fl->bumpUpdateState(UpdateState::REFRESHED);
   completesubdirs.push_back(subpath);
+}
+
+void SiteRace::resetListsRefreshed() {
+  for (const std::pair<std::string, FileList *> & filelist : filelists) {
+    if (!isSubPathComplete(getSubPath(filelist.second))) {
+      filelist.second->resetUpdateState();
+    }
+  }
 }
 
 bool SiteRace::isSubPathComplete(const std::string & subpath) const {
@@ -410,14 +419,17 @@ int SiteRace::getSFVObservedTime(FileList * fl) {
   return 0;
 }
 
-bool SiteRace::hasBeenUpdatedSinceLastCheck() {
+bool SiteRace::listsChangedSinceLastCheck() {
   bool changed = false;
   std::unordered_map<std::string, FileList *>::iterator it;
   for (it = filelists.begin(); it != filelists.end(); it++) {
-    if (it->second->listChanged() || it->second->hasFilesUploading()) {
+    if (it->second->getUpdateState() == UpdateState::CHANGED) {
+      changed = true;
+      it->second->resetUpdateState();
+    }
+    else if (it->second->hasFilesUploading()) {
       changed = true;
     }
-    it->second->resetListChanged();
   }
   return changed;
 }
@@ -490,6 +502,15 @@ unsigned int SiteRace::getFilesUp() const {
 
 unsigned int SiteRace::getSpeedUp() const {
   return speedup;
+}
+
+bool SiteRace::allListsRefreshed() const {
+  for (const std::pair<std::string, FileList *> & filelist : filelists) {
+    if (!isSubPathComplete(filelist.second) && filelist.second->getUpdateState() < UpdateState::REFRESHED) {
+      return false;
+    }
+  }
+  return true;
 }
 
 std::unordered_map<std::string, unsigned long long int>::const_iterator SiteRace::sizeUpBegin() const {

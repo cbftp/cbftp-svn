@@ -218,6 +218,9 @@ bool SiteLogic::setPathExists(int id, int exists, bool refreshtime) {
   if (!fl) {
     return false;
   }
+  if (exists != EXISTS_YES) {
+    fl->bumpUpdateState(UpdateState::REFRESHED);
+  }
   bool statechanged = false;
   FileListState state = fl->getState();
   if (state == FILELIST_UNKNOWN) {

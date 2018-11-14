@@ -91,12 +91,13 @@ class SiteRace : public CommandOwner {
     void softReset();
     void hardReset();
     void subPathComplete(FileList *);
+    void resetListsRefreshed();
     bool isSubPathComplete(const std::string &) const;
     bool isSubPathComplete(FileList *) const;
     void reportSize(FileList *, const std::unordered_set<std::string> &, bool);
     int getObservedTime(FileList *);
     int getSFVObservedTime(FileList *);
-    bool hasBeenUpdatedSinceLastCheck();
+    bool listsChangedSinceLastCheck();
     void addTransferStatsFile(StatsDirection, const std::string &, unsigned long long int, unsigned int);
     unsigned long long int getSizeDown() const;
     unsigned int getFilesDown() const;
@@ -104,6 +105,7 @@ class SiteRace : public CommandOwner {
     unsigned long long int getSizeUp() const;
     unsigned int getFilesUp() const;
     unsigned int getSpeedUp() const;
+    bool allListsRefreshed() const;
     std::unordered_map<std::string, unsigned long long int>::const_iterator sizeUpBegin() const;
     std::unordered_map<std::string, unsigned int>::const_iterator filesUpBegin() const;
     std::unordered_map<std::string, unsigned int>::const_iterator speedUpBegin() const;
