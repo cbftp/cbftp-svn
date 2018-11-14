@@ -16,6 +16,8 @@
 #include "skiplist.h"
 #include "sitelogic.h"
 
+#define MAX_CHECKS_BEFORE_TIMEOUT 60
+#define MAX_CHECKS_BEFORE_HARD_TIMEOUT 1200
 #define MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP 3
 
 typedef std::pair<FileList *, FileList *> FailedTransferSecond;
@@ -243,13 +245,13 @@ void Race::reportSemiDone(SiteRace * sr) {
 
 void Race::setUndone() {
   status = RACE_STATUS_RUNNING;
-  clearTransferAttempts();
+  clearTransferAttempts(false);
   resetUpdateCheckCounter();
   global->getTickPoke()->startPoke(this, "Race", RACE_UPDATE_INTERVAL, 0);
 }
 
 void Race::reset() {
-  clearTransferAttempts();
+  clearTransferAttempts(false);
   resetUpdateCheckCounter();
   if (isDone()) {
     setUndone();
@@ -404,24 +406,36 @@ void Race::recalculateBestUnknownFileSizeEstimate() {
   }
 }
 
-int Race::checksSinceLastUpdate() {
-  bool sitebusy = false;
+int Race::timeoutCheck() {
+  bool allrefreshed = true;
   for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::iterator it = sites.begin(); it != sites.end(); it++) {
     if (it->first->isDone()) {
       continue;
     }
-    if (it->first->hasBeenUpdatedSinceLastCheck()) {
+    if (it->first->listsChangedSinceLastCheck()) {
       checkcount = 0;
-      return checkcount++;
+      return -1;
     }
-    else if ((it->second->getCurrLogins() && !it->second->slotsAvailable())) {
-      sitebusy = true;
+    else if (checkcount < MAX_CHECKS_BEFORE_TIMEOUT) {
+      it->first->resetListsRefreshed();
+    }
+    else if (checkcount >= MAX_CHECKS_BEFORE_TIMEOUT) {
+      if (it->second->getCurrLogins() && !it->first->allListsRefreshed()) {
+        allrefreshed = false;
+      }
     }
   }
-   if (sitebusy) {
-    return checkcount;
+  if (checkcount >= MAX_CHECKS_BEFORE_TIMEOUT) {
+    if (allrefreshed) {
+      return MAX_CHECKS_BEFORE_TIMEOUT;
+    }
+    return -1;
   }
-  return checkcount++;
+  checkcount++;
+  if (checkcount >= MAX_CHECKS_BEFORE_HARD_TIMEOUT) {
+    return MAX_CHECKS_BEFORE_HARD_TIMEOUT;
+  }
+  return -1;
 }
 
 void Race::resetUpdateCheckCounter() {
@@ -566,10 +580,10 @@ void Race::addTransfer(const std::shared_ptr<TransferStatus> & ts) {
   }
 }
 
-bool Race::clearTransferAttempts() {
+bool Race::clearTransferAttempts(bool clearstate) {
   bool ret = transferattempts.size();
   transferattempts.clear();
-  transferattemptscleared = true;
+  transferattemptscleared = clearstate;
   return ret;
 }
 

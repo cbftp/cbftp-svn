@@ -34,7 +34,6 @@
 
 #define SPREAD 0
 #define POKEINTERVAL 1000
-#define MAXCHECKSTIMEOUT 60
 #define STATICTIMEFORCOMPLETION 5000
 #define DIROBSERVETIME 20000
 #define SFVDIROBSERVETIME 5000
@@ -1281,9 +1280,10 @@ void Engine::tick(int message) {
     }
   }
   for (std::list<std::shared_ptr<Race> >::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
-    if ((*it)->checksSinceLastUpdate() >= MAXCHECKSTIMEOUT) {
+    int timeoutafterseconds = (*it)->timeoutCheck();
+    if (timeoutafterseconds != -1) {
       if ((*it)->failedTransfersCleared()) {
-        global->getEventLog()->log("Engine", "No activity for " + util::int2Str(MAXCHECKSTIMEOUT) +
+        global->getEventLog()->log("Engine", "No activity for " + std::to_string(timeoutafterseconds) +
             " seconds, aborting spread job: " + (*it)->getName());
         for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator its = (*it)->begin(); its != (*it)->end(); its++) {
           its->second->raceLocalComplete(its->first, 0);

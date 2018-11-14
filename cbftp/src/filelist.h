@@ -14,6 +14,13 @@ enum FileListState {
  FILELIST_FAILED
 };
 
+enum class UpdateState {
+  NONE,
+  REFRESHED,
+  META_CHANGED,
+  CHANGED
+};
+
 class File;
 class Site;
 class CommandOwner;
@@ -28,8 +35,7 @@ class FileList {
     Path path;
     FileListState state;
     bool locked;
-    bool listchanged;
-    bool listmetachanged;
+    UpdateState updatestate;
     unsigned long long lastchangedstamp;
     unsigned long long lastmetachangedstamp;
     int owned;
@@ -75,9 +81,9 @@ class FileList {
     unsigned long long int getMaxFileSize() const;
     void cleanSweep(int);
     void flush();
-    bool listChanged() const;
-    bool listMetaChanged() const;
-    void resetListChanged();
+    UpdateState getUpdateState() const;
+    void bumpUpdateState(const UpdateState newstate);
+    void resetUpdateState();
     unsigned long long timeSinceLastChanged() const;
     unsigned long long timeSinceLastMetaChanged() const;
     std::string getUser() const;

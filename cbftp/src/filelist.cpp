@@ -9,6 +9,8 @@
 #include "util.h"
 #include "commandowner.h"
 
+#include <cassert>
+
 #define MAX_LIST_FAILURES_BEFORE_STATE_FAILED 3
 
 namespace {
@@ -51,8 +53,7 @@ void FileList::init(const std::string & username, const Path & path, FileListSta
   maxfilesize = 0;
   uploadedfiles = 0;
   locked = false;
-  listchanged = false;
-  listmetachanged = false;
+  updatestate = UpdateState::NONE;
   lastchangedstamp = 0;
   totalfilesize = 0;
   uploading = 0;
@@ -61,6 +62,7 @@ void FileList::init(const std::string & username, const Path & path, FileListSta
 }
 
 bool FileList::updateFile(const std::string & start, int touch) {
+  bumpUpdateState(UpdateState::REFRESHED);
   File * file = new File(start, touch);
   if (!file->isValid()) {
     delete file;
@@ -236,7 +238,7 @@ FileListState FileList::getState() const {
 }
 
 void FileList::setNonExistent() {
-  util::assert(state == FILELIST_UNKNOWN);
+  assert(state == FILELIST_UNKNOWN);
   state = FILELIST_NONEXISTENT;
 }
 
@@ -398,29 +400,29 @@ void FileList::recalcOwnedPercentage() {
  }
 }
 
-bool FileList::listChanged() const {
-  return listchanged;
+UpdateState FileList::getUpdateState() const {
+  return updatestate;
 }
 
-bool FileList::listMetaChanged() const {
-  return listmetachanged;
+void FileList::resetUpdateState() {
+  updatestate = UpdateState::NONE;
 }
 
-void FileList::resetListChanged() {
-  listchanged = false;
-  listmetachanged = false;
+void FileList::bumpUpdateState(const UpdateState newstate) {
+  if (newstate > updatestate) {
+    updatestate = newstate;
+  }
 }
 
 void FileList::setChanged() {
-  listchanged = true;
-  listmetachanged = true;
+  bumpUpdateState(UpdateState::CHANGED);
   lastchangedstamp = global->getTimeReference()->timeReference();
   lastmetachangedstamp = lastchangedstamp;
   listfailures = 0;
 }
 
 void FileList::setMetaChanged() {
-  listmetachanged = true;
+  bumpUpdateState(UpdateState::META_CHANGED);
   lastmetachangedstamp = global->getTimeReference()->timeReference();
 }
 
