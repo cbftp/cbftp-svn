@@ -82,7 +82,7 @@ class FileList {
     void cleanSweep(int);
     void flush();
     UpdateState getUpdateState() const;
-    void bumpUpdateState(const UpdateState newstate);
+    bool bumpUpdateState(const UpdateState newstate);
     void resetUpdateState();
     unsigned long long timeSinceLastChanged() const;
     unsigned long long timeSinceLastMetaChanged() const;

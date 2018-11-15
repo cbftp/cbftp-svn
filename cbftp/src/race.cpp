@@ -416,10 +416,10 @@ int Race::timeoutCheck() {
       checkcount = 0;
       return -1;
     }
-    else if (checkcount < MAX_CHECKS_BEFORE_TIMEOUT) {
+    else if (checkcount % 10 == 0 && checkcount <= MAX_CHECKS_BEFORE_TIMEOUT) {
       it->first->resetListsRefreshed();
     }
-    else if (checkcount >= MAX_CHECKS_BEFORE_TIMEOUT) {
+    else if (checkcount > MAX_CHECKS_BEFORE_TIMEOUT) {
       if (it->second->getCurrLogins() && !it->first->allListsRefreshed()) {
         allrefreshed = false;
       }

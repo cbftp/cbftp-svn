@@ -120,8 +120,9 @@ std::string SiteRace::getRelevantSubPath() {
     recentlyvisited.pop_front();
     if (!isSubPathComplete(leastrecentlyvisited)) {
       recentlyvisited.push_back(leastrecentlyvisited);
-      if (filelists[leastrecentlyvisited]->getState() != FILELIST_NONEXISTENT &&
-          filelists[leastrecentlyvisited]->getState() != FILELIST_FAILED)
+      FileList * fl = filelists[leastrecentlyvisited];
+      if ((fl->getState() != FILELIST_NONEXISTENT && fl->getState() != FILELIST_FAILED) ||
+          fl->getUpdateState() == UpdateState::NONE)
       {
         return leastrecentlyvisited;
       }
@@ -250,13 +251,20 @@ void SiteRace::markNonExistent(FileList * fl) {
     return;
   }
   for (it = filelists.begin(); it != filelists.end(); it++) {
-    if (it->second != fl && it->second->getState() == FILELIST_UNKNOWN &&
-        it->second->getPath().contains(fl->getPath()))
+    if (it->second == fl) {
+      continue;
+    }
+    if (!it->second->getPath().contains(fl->getPath())) {
+      continue;
+    }
+    if (fl->getState() == FILELIST_NONEXISTENT ||
+        !fl->contains((it->second->getPath() - fl->getPath()).level(1).toString()))
     {
-      if (fl->getState() == FILELIST_NONEXISTENT ||
-          !fl->contains((it->second->getPath() - fl->getPath()).level(1).toString()))
-      {
+      if (it->second->getState() == FILELIST_UNKNOWN) {
         it->second->setNonExistent();
+      }
+      if (it->second->getState() == FILELIST_NONEXISTENT) {
+        it->second->bumpUpdateState(UpdateState::REFRESHED);
       }
     }
   }

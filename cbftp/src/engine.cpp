@@ -797,7 +797,8 @@ void Engine::refreshScoreBoard() {
           FileList * fls = itfls->second;
           FileList * fld = srd->getFileListForPath(itfls->first);
           if (fld != NULL) {
-            if (fld->getState() != FILELIST_LISTED && fld->getState() != FILELIST_NONEXISTENT) continue;
+            FileListState fldstate = fld->getState();
+            if (fldstate == FILELIST_UNKNOWN || fldstate == FILELIST_FAILED) continue;
             std::unordered_map<std::string, File *>::const_iterator itf;
             for (itf = fls->begin(); itf != fls->end(); itf++) {
               File * f = itf->second;

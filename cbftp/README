@@ -530,6 +530,13 @@ A: The profile affects the algorithm that assigns scores to potential
    users everywhere, while the 'distribute' profile focuses on finishing the
    job on all sites as quickly as possible.
 
+Q: What is the block of seemingly random characters above the race status
+   table supposed to be?
+A: Read each column from top to bottom. Cbftp attempts to describe each file
+   in the job by finding a sequence of 3 characters in the file name that are
+   unique to that file. In many cases it will be the file suffix, or maybe
+   some kind of numbering.
+
 Q: How do I disconnect from a site?
 A: Disconnecting is an old habit that comes from traditional clients that
    "lock" slots to the user interface. Cbftp does not do this, and there's

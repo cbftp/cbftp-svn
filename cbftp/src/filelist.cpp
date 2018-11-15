@@ -408,10 +408,12 @@ void FileList::resetUpdateState() {
   updatestate = UpdateState::NONE;
 }
 
-void FileList::bumpUpdateState(const UpdateState newstate) {
+bool FileList::bumpUpdateState(const UpdateState newstate) {
   if (newstate > updatestate) {
     updatestate = newstate;
+    return true;
   }
+  return false;
 }
 
 void FileList::setChanged() {
