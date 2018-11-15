@@ -115,12 +115,16 @@ std::string SiteRace::getSubPath(FileList * filelist) const {
 }
 
 std::string SiteRace::getRelevantSubPath() {
+  FileList * base = filelists.at("");
+  if (base->getState() == FILELIST_UNKNOWN || base->getState() == FILELIST_NONEXISTENT || base->getState() == FILELIST_FAILED) {
+    return "";
+  }
   for (unsigned int i = 0; i < recentlyvisited.size() && recentlyvisited.size(); i++) {
     std::string leastrecentlyvisited = recentlyvisited.front();
     recentlyvisited.pop_front();
     if (!isSubPathComplete(leastrecentlyvisited)) {
       recentlyvisited.push_back(leastrecentlyvisited);
-      FileList * fl = filelists[leastrecentlyvisited];
+      FileList * fl = filelists.at(leastrecentlyvisited);
       if ((fl->getState() != FILELIST_NONEXISTENT && fl->getState() != FILELIST_FAILED) ||
           fl->getUpdateState() == UpdateState::NONE)
       {
@@ -265,6 +269,7 @@ void SiteRace::markNonExistent(FileList * fl) {
       }
       if (it->second->getState() == FILELIST_NONEXISTENT) {
         it->second->bumpUpdateState(UpdateState::REFRESHED);
+        markNonExistent(it->second);
       }
     }
   }

@@ -708,7 +708,7 @@ void SiteLogic::handleFail(int id) {
     handleConnection(id);
     return;
   }
-  connstatetracker[id].delayedCommand("handle", SLEEPDELAY * 6);
+  connstatetracker[id].delayedCommand("handle", SLEEPDELAY);
 }
 
 void SiteLogic::handleTransferFail(int id, int err) {
@@ -936,14 +936,14 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
   }
   else {
     for (unsigned int i = 0; i < races.size(); i++) {
-      if (!races[i]->isDone() && !wasRecentlyListed(races[i]) && races[i]->anyFileListNotNonExistent()) {
+      if (!races[i]->isDone() && !wasRecentlyListed(races[i])) {
         race = races[i];
         break;
       }
     }
     if (race == NULL) {
       for (std::list<SiteRace *>::iterator it = recentlylistedraces.begin(); it != recentlylistedraces.end(); it++) {
-        if (!(*it)->isDone() && (*it)->anyFileListNotNonExistent()) {
+        if (!(*it)->isDone()) {
           race = *it;
           break;
         }
