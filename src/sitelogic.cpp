@@ -1798,8 +1798,8 @@ void SiteLogic::raceGlobalComplete() {
   }
 }
 
-void SiteLogic::raceLocalComplete(SiteRace * sr, int uploadslotsleft) {
-  sr->complete(true);
+void SiteLogic::raceLocalComplete(SiteRace * sr, int uploadslotsleft, bool reportdone) {
+  sr->complete(reportdone);
   bool stillactive = false;
   for (unsigned int i = 0; i < races.size(); i++) {
     if (!races[i]->isDone()) {

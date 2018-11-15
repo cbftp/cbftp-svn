@@ -1287,7 +1287,7 @@ void Engine::tick(int message) {
         global->getEventLog()->log("Engine", "No activity for " + std::to_string(timeoutafterseconds) +
             " seconds, aborting spread job: " + (*it)->getName());
         for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator its = (*it)->begin(); its != (*it)->end(); its++) {
-          its->second->raceLocalComplete(its->first, 0);
+          its->second->raceLocalComplete(its->first, 0, false);
         }
         (*it)->setTimeout();
         issueGlobalComplete(*it);
