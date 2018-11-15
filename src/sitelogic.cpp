@@ -218,9 +218,6 @@ bool SiteLogic::setPathExists(int id, int exists, bool refreshtime) {
   if (!fl) {
     return false;
   }
-  if (exists != EXISTS_YES) {
-    fl->bumpUpdateState(UpdateState::REFRESHED);
-  }
   bool statechanged = false;
   FileListState state = fl->getState();
   if (state == FILELIST_UNKNOWN) {
@@ -264,6 +261,11 @@ bool SiteLogic::setPathExists(int id, int exists, bool refreshtime) {
   CommandOwner * currentco = conns[id]->currentCommandOwner();
   if (currentco && statechanged) {
     currentco->fileListUpdated(this, fl);
+  }
+  if (exists != EXISTS_YES) {
+    if (fl->bumpUpdateState(UpdateState::REFRESHED)) {
+      statechanged = true;
+    }
   }
   return statechanged;
 }
