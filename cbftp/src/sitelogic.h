@@ -125,7 +125,7 @@ class SiteLogic : public EventReceiver {
     RawBuffer * getRawCommandBuffer() const;
     RawBuffer * getAggregatedRawBuffer() const;
     void raceGlobalComplete();
-    void raceLocalComplete(SiteRace *, int);
+    void raceLocalComplete(SiteRace *, int, bool reportdone = true);
     void transferComplete(int, bool isdownload);
     bool getSlot(bool);
     int requestFileList(const Path &);
