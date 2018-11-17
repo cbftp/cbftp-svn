@@ -259,13 +259,13 @@ bool SiteLogic::setPathExists(int id, int exists, bool refreshtime) {
     fl->setRefreshedTime(currtime);
   }
   CommandOwner * currentco = conns[id]->currentCommandOwner();
-  if (currentco && statechanged) {
-    currentco->fileListUpdated(this, fl);
-  }
   if (exists != EXISTS_YES) {
     if (fl->bumpUpdateState(UpdateState::REFRESHED)) {
       statechanged = true;
     }
+  }
+  if (currentco && statechanged) {
+    currentco->fileListUpdated(this, fl);
   }
   return statechanged;
 }
