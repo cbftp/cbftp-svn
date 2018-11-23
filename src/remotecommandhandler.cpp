@@ -375,7 +375,7 @@ void RemoteCommandHandler::commandIdle(const std::vector<std::string> & message)
   if (sites.empty()) {
     bool found = false;
     for (std::vector<std::shared_ptr<Site> >::const_iterator it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); ++it) {
-      if ((*it)->hasSection(sitestring)) {
+      if ((*it)->hasSection(sitestring) && !(*it)->getDisabled()) {
         std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic((*it)->getName());
         sl->requestAllIdle((*it)->getSectionPath(sitestring), idletime);
         found = true;
