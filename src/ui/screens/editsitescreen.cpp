@@ -255,7 +255,6 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
     return true;
   }
   bool activation;
-  bool changedname = false;
   std::list<std::string> exceptsrclist;
   std::list<std::string> exceptdstlist;
   std::string sitename;
@@ -334,18 +333,17 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
       ui->setLegend();
       return true;
     }
-    case 'd':
+    case 'd': {
+      std::string newname = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("name"))->getData();
+      bool changedname = newname != site->getName() && operation == "edit";
+      if ((changedname || operation == "add") && !!global->getSiteManager()->getSite(newname)) {
+        return true;
+      }
+      site->setName(newname);
       for(unsigned int i = 0; i < mso.size(); i++) {
         std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
         std::string identifier = msoe->getIdentifier();
-        if (identifier == "name") {
-          std::string newname = std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData();
-          if (newname != site->getName() && operation == "edit") {
-            changedname = true;
-          }
-          site->setName(newname);
-        }
-        else if (identifier == "addr") {
+        if (identifier == "addr") {
           std::string addrports = std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData();
           site->setAddresses(addrports);
         }
@@ -473,6 +471,7 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
       global->getSettingsLoaderSaver()->saveSettings();
       ui->returnToLast();
       return true;
+    }
     case 27: // esc
     case 'c':
       ui->returnToLast();
