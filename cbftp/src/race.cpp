@@ -407,6 +407,9 @@ void Race::recalculateBestUnknownFileSizeEstimate() {
 }
 
 int Race::timeoutCheck() {
+  if (checkcount >= MAX_CHECKS_BEFORE_HARD_TIMEOUT) {
+    return MAX_CHECKS_BEFORE_HARD_TIMEOUT;
+  }
   bool allrefreshed = true;
   for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::iterator it = sites.begin(); it != sites.end(); it++) {
     if (it->first->isDone()) {
@@ -414,7 +417,6 @@ int Race::timeoutCheck() {
     }
     if (it->first->listsChangedSinceLastCheck()) {
       checkcount = 0;
-      return -1;
     }
     else if (checkcount % 10 == 0 && checkcount <= MAX_CHECKS_BEFORE_TIMEOUT) {
       it->first->resetListsRefreshed();
@@ -425,16 +427,10 @@ int Race::timeoutCheck() {
       }
     }
   }
-  if (checkcount >= MAX_CHECKS_BEFORE_TIMEOUT) {
-    if (allrefreshed) {
-      return MAX_CHECKS_BEFORE_TIMEOUT;
-    }
-    return -1;
+  if (checkcount > MAX_CHECKS_BEFORE_TIMEOUT && allrefreshed) {
+    return MAX_CHECKS_BEFORE_TIMEOUT;
   }
   checkcount++;
-  if (checkcount >= MAX_CHECKS_BEFORE_HARD_TIMEOUT) {
-    return MAX_CHECKS_BEFORE_HARD_TIMEOUT;
-  }
   return -1;
 }
 
