@@ -43,7 +43,7 @@ BrowseScreenSite::BrowseScreenSite(Ui * ui, const std::string & sitestr) :
     site(sitelogic->getSite()), spinnerpos(0), filelist(nullptr),
     withinraceskiplistreach(false), focus(true), temphighlightline(-1),
     softselecting(false), lastinfo(LastInfo::NONE),
-    confirmaction(ConfirmAction::NONE)
+    confirmaction(ConfirmAction::NONE), refreshfilelistafter(false)
 {
   sitelogic->getAggregatedRawBuffer()->bookmark();
   BrowseScreenRequest request;
@@ -244,7 +244,7 @@ bool BrowseScreenSite::handleReadyRequests() {
         if (success) {
           lastinfo = LastInfo::NUKE_SUCCESS;
           if (list.getPath() == request.path) {
-            refreshFilelist();
+            refreshfilelistafter = true;
           }
         }
         else {
@@ -259,7 +259,7 @@ bool BrowseScreenSite::handleReadyRequests() {
         if (success) {
           lastinfo = LastInfo::WIPE_SUCCESS;
           if (list.getPath() == request.path) {
-            refreshFilelist();
+            refreshfilelistafter = true;
           }
         }
         else {
@@ -274,7 +274,7 @@ bool BrowseScreenSite::handleReadyRequests() {
         if (success) {
           lastinfo = LastInfo::MKDIR_SUCCESS;
           if (list.getPath() == request.path) {
-            refreshFilelist();
+            refreshfilelistafter = true;
           }
         }
         else {
@@ -289,7 +289,7 @@ bool BrowseScreenSite::handleReadyRequests() {
         if (success) {
           lastinfo = LastInfo::DELETE_SUCCESS;
           if (list.getPath() == request.path) {
-            refreshFilelist();
+            refreshfilelistafter = true;
           }
         }
         else {
@@ -306,6 +306,10 @@ bool BrowseScreenSite::handleReadyRequests() {
     requests.pop_front();
   }
   if (handled) {
+    if (requests.empty() && refreshfilelistafter) {
+      refreshfilelistafter = false;
+      refreshFilelist();
+    }
     ui->redraw();
     ui->setInfo();
   }

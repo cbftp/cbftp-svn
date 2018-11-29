@@ -47,6 +47,7 @@ class SiteLogic : public EventReceiver {
     int requestidcounter;
     bool poke;
     int currtime;
+    int timesincelastrequestready;
     void handleConnection(int);
     void handleConnection(int, bool);
     bool handleRequest(int);

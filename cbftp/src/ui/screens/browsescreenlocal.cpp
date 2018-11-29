@@ -24,7 +24,7 @@ BrowseScreenLocal::BrowseScreenLocal(Ui * ui) : ui(ui), currentviewspan(0),
     focus(true), spinnerpos(0), tickcount(0),
     resort(false), sortmethod(UIFileList::SortMethod::COMBINED), gotomode(false), gotomodefirst(false),
     gotomodeticker(0), filtermodeinput(false), temphighlightline(-1),
-    softselecting(false), lastinfo(LastInfo::NONE)
+    softselecting(false), lastinfo(LastInfo::NONE), refreshfilelistafter(false)
 {
   BrowseScreenRequest request;
   request.type = BrowseScreenRequestType::FILELIST;
@@ -206,7 +206,7 @@ bool BrowseScreenLocal::handleReadyRequests() {
         }
         lastinfotarget = request.files.front().first;
         tickcount = 0;
-        refreshFilelist();
+        refreshfilelistafter = true;
         requests.pop_front();
         break;
       }
@@ -216,6 +216,10 @@ bool BrowseScreenLocal::handleReadyRequests() {
     }
   }
   if (handled) {
+    if (requests.empty() && refreshfilelistafter) {
+      refreshfilelistafter = false;
+      refreshFilelist();
+    }
     ui->redraw();
     ui->setInfo();
   }

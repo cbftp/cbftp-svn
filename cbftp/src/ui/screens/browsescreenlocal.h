@@ -65,4 +65,5 @@ private:
   bool softselecting;
   LastInfo lastinfo;
   std::string lastinfotarget;
+  bool refreshfilelistafter;
 };
