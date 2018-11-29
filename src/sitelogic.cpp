@@ -34,15 +34,26 @@
 #include "filelistdata.h"
 
 //minimum sleep delay (between refreshes / hammer attempts) in ms
-#define SLEEPDELAY 150
+#define SLEEP_DELAY 150
+
 //maximum number of dir refreshes in a row in the same race
-#define MAXCHECKSROW 5
+#define MAX_CHECKS_ROW 5
 
-// maximum number of ready requests available to be checked out
-#define MAXREQUESTREADYQUEUE 10
+// maximum number of ready requests available to be checked out, unless below
+#define MAX_REQUEST_READY_QUEUE_SIZE 10
 
-#define TICKINTERVAL 50
+// minimum time that requests are guaranteed to live in the ready queue, in ms
+#define MAX_REQUEST_READY_QUEUE_IDLE_TIME 10000
+
+// ticker heartbeat, in ms
+#define TICK_INTERVAL 50
+
+// time that a filelist is considered newly updated and not in need of refresh,
+// in ms
 #define FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH 2000
+
+// time that a filelist is considered newly updated and not in need of refresh
+// when xdupe is enabled, in ms
 #define FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH_XDUPE 5000
 
 enum RequestType {
@@ -77,9 +88,10 @@ SiteLogic::SiteLogic(const std::string & sitename) :
   loggedin(0),
   requestidcounter(0),
   poke(false),
-  currtime(0)
+  currtime(0),
+  timesincelastrequestready(0)
 {
-  global->getTickPoke()->startPoke(this, "SiteLogic", TICKINTERVAL, 0);
+  global->getTickPoke()->startPoke(this, "SiteLogic", TICK_INTERVAL, 0);
 
   for (unsigned int i = 0; i < site->getMaxLogins(); i++) {
     connstatetracker.push_back(ConnStateTracker());
@@ -125,9 +137,10 @@ void SiteLogic::addTransferJob(std::shared_ptr<SiteTransferJob> & tj) {
 }
 
 void SiteLogic::tick(int message) {
-  currtime += TICKINTERVAL;
+  currtime += TICK_INTERVAL;
+  timesincelastrequestready += TICK_INTERVAL;
   for (unsigned int i = 0; i < connstatetracker.size(); i++) {
-    connstatetracker[i].timePassed(TICKINTERVAL);
+    connstatetracker[i].timePassed(TICK_INTERVAL);
     if (connstatetracker[i].getCommand().isReleased()) {
       util::assert(!connstatetracker[i].isLocked() && !conns[i]->isProcessing());
       DelayedCommand eventcommand = connstatetracker[i].getCommand();
@@ -166,7 +179,7 @@ void SiteLogic::userDenied(int id) {
 }
 
 void SiteLogic::userDeniedSiteFull(int id) {
-  connstatetracker[id].delayedCommand("reconnect", SLEEPDELAY, NULL, true);
+  connstatetracker[id].delayedCommand("reconnect", SLEEP_DELAY, NULL, true);
 }
 
 void SiteLogic::userDeniedSimultaneousLogins(int id) {
@@ -708,7 +721,7 @@ void SiteLogic::handleFail(int id) {
     handleConnection(id);
     return;
   }
-  connstatetracker[id].delayedCommand("handle", SLEEPDELAY);
+  connstatetracker[id].delayedCommand("handle", SLEEP_DELAY);
 }
 
 void SiteLogic::handleTransferFail(int id, int err) {
@@ -914,7 +927,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
     }
   }
   if (targetjobs.size()) {
-    connstatetracker[id].delayedCommand("handle", SLEEPDELAY);
+    connstatetracker[id].delayedCommand("handle", SLEEP_DELAY);
   }
   for (std::list<std::shared_ptr<SiteTransferJob> >::iterator it = targetjobs.begin(); it != targetjobs.end(); it++) {
     if (global->getEngine()->transferJobActionRequest(*it)) {
@@ -928,7 +941,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
   bool refresh = false;
   SiteRace * lastchecked = connstatetracker[id].lastChecked();
   if (lastchecked && !lastchecked->isDone() && lastchecked->anyFileListNotNonExistent() &&
-      connstatetracker[id].checkCount() < MAXCHECKSROW)
+      connstatetracker[id].checkCount() < MAX_CHECKS_ROW)
   {
     race = lastchecked;
     refresh = true;
@@ -978,7 +991,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
                     currentpath.contains(racepath); // same path, currently in subdir
     if (!goodpath || refresh) {
       if (backfromrefresh) {
-        connstatetracker[id].delayedCommand("refreshchangepath", SLEEPDELAY, (void *) race);
+        connstatetracker[id].delayedCommand("refreshchangepath", SLEEP_DELAY, (void *) race);
         return;
       }
       connstatetracker[id].use();
@@ -1962,10 +1975,11 @@ const ConnStateTracker * SiteLogic::getConnStateTracker(int id) const {
 void SiteLogic::setRequestReady(unsigned int id, void * data, bool status) {
   const std::shared_ptr<SiteLogicRequest> & request = connstatetracker[id].getRequest();
   requestsready.push_back(SiteLogicRequestReady(request->requestType(), request->requestId(), data, status));
-  if (requestsready.size() > MAXREQUESTREADYQUEUE) {
+  while (requestsready.size() > MAX_REQUEST_READY_QUEUE_SIZE && timesincelastrequestready > MAX_REQUEST_READY_QUEUE_IDLE_TIME) {
     clearReadyRequest(requestsready.front());
     requestsready.pop_front();
   }
+  timesincelastrequestready = 0;
   const bool care = request->doesAnyoneCare();
   connstatetracker[id].finishRequest();
   available++;

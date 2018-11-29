@@ -80,6 +80,7 @@ private:
   LastInfo lastinfo;
   std::string lastinfotarget;
   ConfirmAction confirmaction;
+  bool refreshfilelistafter;
   void refreshFilelist();
   void disableGotoMode();
   void clearSoftSelects();
