@@ -29,6 +29,7 @@ public:
   void tickIntern();
 private:
   void proxySessionInit();
+  void printConnecting(const std::string & addr, bool resolved = false);
   int id;
   int sockid;
   bool proxynegotiation;

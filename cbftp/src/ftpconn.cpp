@@ -384,7 +384,7 @@ void FTPConn::ftpConnectSuccess(int connectorid) {
     std::string addr = (*it)->getAddress();
     std::string port = (*it)->getPort();
     site->setPrimaryAddress((*it)->getAddress(), (*it)->getPort());
-    rawBufWriteLine("[Setting " + addr + ":" + port + " as primary]");
+    rawBufWriteLine("[Setting " + addr + ":" + port + " as primary address]");
   }
   if (connectors.size() > 1) {
     rawBufWriteLine("[Disconnecting other attempts]");
