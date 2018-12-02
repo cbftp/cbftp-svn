@@ -12,6 +12,7 @@ public:
   MenuSelectOptionCheckBox(std::string, int, int, std::string, bool);
   std::string getContentText() const;
   bool activate();
+  void setValue(bool value);
   bool getData() const;
   unsigned int wantedWidth() const;
 };

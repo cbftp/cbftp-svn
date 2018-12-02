@@ -20,7 +20,8 @@ UIFileList::UIFileList() :
   filterednumdirs(0),
   filteredtotalsize(0),
   sortmethod(SortMethod::COMBINED),
-  separators(false)
+  separators(false),
+  initialized(false)
 {
 }
 
@@ -307,6 +308,7 @@ void UIFileList::parse(FileList * filelist) {
   }
   fillSortedFiles();
   path = filelist->getPath();
+  initialized = true;
 }
 
 void UIFileList::parse(std::shared_ptr<LocalFileList> & filelist) {
@@ -336,6 +338,7 @@ void UIFileList::parse(std::shared_ptr<LocalFileList> & filelist) {
   }
   fillSortedFiles();
   path = filelist->getPath();
+  initialized = true;
 }
 
 UIFile * UIFileList::cursoredFile() const {
@@ -451,6 +454,10 @@ std::string UIFileList::getSortMethod(SortMethod sortmethod) {
 
 bool UIFileList::separatorsEnabled() const {
   return separators;
+}
+
+bool UIFileList::isInitialized() const {
+  return initialized;
 }
 
 void UIFileList::removeFile(std::string file) {

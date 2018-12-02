@@ -52,7 +52,6 @@ private:
   unsigned int coloffset;
   MenuSelectOption table;
   unsigned int currentviewspan;
-  bool virgin;
   bool resort;
   mutable int tickcount;
   std::list<BrowseScreenRequest> requests;

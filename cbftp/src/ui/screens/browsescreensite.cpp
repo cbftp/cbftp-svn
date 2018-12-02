@@ -35,7 +35,7 @@
 #include "rawdatascreen.h"
 
 BrowseScreenSite::BrowseScreenSite(Ui * ui, const std::string & sitestr) :
-    ui(ui), row(0), col(0), coloffset(0), currentviewspan(0), virgin(true),
+    ui(ui), row(0), col(0), coloffset(0), currentviewspan(0),
     resort(false), tickcount(0), gotomode(false), gotomodefirst(false),
     gotomodeticker(0), filtermodeinput(false),
     sortmethod(UIFileList::SortMethod::COMBINED),
@@ -56,7 +56,7 @@ BrowseScreenSite::BrowseScreenSite(Ui * ui, const std::string & sitestr) :
 
 BrowseScreenSite::~BrowseScreenSite() {
   disableGotoMode();
-  if (virgin) {
+  if (!list.isInitialized()) {
     sitelogic->getAggregatedRawBuffer()->setUiWatching(false);
   }
 }
@@ -70,7 +70,7 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
   this->row = row;
   this->col = col;
   this->coloffset = coloffset;
-  if (virgin) {
+  if (!list.isInitialized()) {
     sitelogic->getAggregatedRawBuffer()->setUiWatching(true);
     unsigned int linessincebookmark = sitelogic->getAggregatedRawBuffer()->linesSinceBookmark();
     if (!linessincebookmark) {
@@ -200,7 +200,7 @@ void BrowseScreenSite::update() {
   if (handleReadyRequests()) {
     return;
   }
-  if (virgin) {
+  if (!list.isInitialized()) {
     ui->redraw();
   }
   if (table.size()) {
@@ -328,14 +328,13 @@ void BrowseScreenSite::loadFileListFromRequest() {
   }
   cwdrawbuffer = newfilelistdata->getCwdRawBuffer();
   filelist = newfilelistdata->getFileList();
-  if (!virgin) {
+  if (list.isInitialized()) {
     if (list.cursoredFile() != nullptr) {
       selectionhistory.push_front(std::pair<Path, std::string>(list.getPath(), list.cursoredFile()->getName()));
     }
   }
   else {
     sitelogic->getAggregatedRawBuffer()->setUiWatching(false);
-    virgin = false;
   }
   unsigned int position = 0;
   bool separatorsenabled = false;

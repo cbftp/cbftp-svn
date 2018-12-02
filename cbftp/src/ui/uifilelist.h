@@ -44,6 +44,7 @@ private:
   bool separators;
   std::list<std::string> filters;
   std::set<std::string> uniques;
+  bool initialized;
   void setNewCurrentPosition();
   void removeSeparators();
   void fillSortedFiles();
@@ -74,6 +75,7 @@ public:
   std::string getSortMethod() const;
   static std::string getSortMethod(SortMethod sortmethod);
   bool separatorsEnabled() const;
+  bool isInitialized() const;
   void removeFile(std::string);
   void toggleSeparators();
   void setCursorPosition(unsigned int);
