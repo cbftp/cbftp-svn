@@ -375,24 +375,30 @@ std::shared_ptr<LocalFileList> TransferJob::findLocalFileList(const std::string 
 void TransferJob::addSubDirectoryFileLists(std::unordered_map<std::string, FileList *> & filelists, FileList * filelist, const Path & subpath) {
   std::unordered_map<std::string, File *>::iterator it;
   for(it = filelist->begin(); it != filelist->end(); it++) {
-    addSubDirectoryFileLists(filelists, filelist, subpath, it->second);
+    File * file = it->second;
+    if (!file->isDirectory()) {
+      continue;
+    }
+    SkipListMatch match = !!dst ? dst->getSite()->getSkipList().check(file->getName(), true, false)
+                                : global->getSkipList()->check(file->getName(), true, false);
+    if (match.action == SKIPLIST_DENY || (match.action == SKIPLIST_UNIQUE &&
+                                          filelist->containsPatternBefore(match.matchpattern, true, file->getName())))
+    {
+      continue;
+    }
+    addSubDirectoryFileLists(filelists, filelist, subpath, file);
   }
 }
 
 void TransferJob::addSubDirectoryFileLists(std::unordered_map<std::string, FileList *> & filelists, FileList * filelist, const Path & subpath, File * file) {
-  if (file->isDirectory()) {
-    SkipListMatch match = !!dst ? dst->getSite()->getSkipList().check(file->getName(), true, false)
-                                : global->getSkipList()->check(file->getName(), true, false);
-    if (match.action == SKIPLIST_DENY || (match.action == SKIPLIST_UNIQUE &&
-                                          filelist->containsPatternBefore(match.matchpattern, true, file->getName()))) {
-      return;
-    }
-    std::string subpathfile = (subpath / file->getName()).toString();
-    if (filelists.find(subpathfile) == filelists.end()) {
-      FileList * newfl = new FileList(filelists[""]->getUser(), filelists[""]->getPath() / subpathfile);
-      filelists[subpathfile] = newfl;
-      filelistsrefreshed[newfl] = REFRESH_NOW;
-    }
+  if (!file->isDirectory()) {
+    return;
+  }
+  std::string subpathfile = (subpath / file->getName()).toString();
+  if (filelists.find(subpathfile) == filelists.end()) {
+    FileList * newfl = new FileList(filelists[""]->getUser(), filelists[""]->getPath() / subpathfile);
+    filelists[subpathfile] = newfl;
+    filelistsrefreshed[newfl] = REFRESH_NOW;
   }
 }
 
