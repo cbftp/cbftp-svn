@@ -22,6 +22,10 @@ bool MenuSelectOptionCheckBox::activate() {
   return false;
 }
 
+void MenuSelectOptionCheckBox::setValue(bool value) {
+  this->value = value;
+}
+
 bool MenuSelectOptionCheckBox::getData() const {
   return value;
 }

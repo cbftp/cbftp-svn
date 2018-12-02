@@ -92,15 +92,15 @@ void TransfersFilterScreen::update() {
 void TransfersFilterScreen::command(const std::string & command, const std::string & arg) {
   if (command == "returnselectitems") {
     std::list<std::string> items = util::trim(util::split(arg, ","));
-    if (activeelement->getIdentifier() == "spreadjobs") {
+    std::string identifier = activeelement->getIdentifier();
+    if (identifier == "spreadjobs") {
       selectedspreadjobs.clear();
       for (std::list<std::string>::const_iterator it = items.begin(); it != items.end(); it++) {
         selectedspreadjobs.push_back(global->getEngine()->getRace(util::str2Int(*it))->getName());
       }
       std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("spreadjobs"))->setText(getSpreadJobsText());
-
     }
-    else if (activeelement->getIdentifier() == "transferjobs") {
+    else if (identifier == "transferjobs") {
       selectedtransferjobs.clear();
       for (std::list<std::string>::const_iterator it = items.begin(); it != items.end(); it++) {
         selectedtransferjobs.push_back(global->getEngine()->getTransferJob(util::str2Int(*it))->getName());
@@ -110,6 +110,14 @@ void TransfersFilterScreen::command(const std::string & command, const std::stri
     else {
       std::static_pointer_cast<MenuSelectOptionTextField>(activeelement)->setText(arg);
     }
+    if (!items.empty()) {
+      if (identifier == "spreadjobs" || identifier == "transferjobs") {
+        std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("jobfilter"))->setValue(true);
+      }
+      else if (identifier == "source" || identifier == "destination" || identifier == "anydirection") {
+        std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("sitesfilter"))->setValue(true);
+      }
+    }
     redraw();
   }
 }
@@ -118,6 +126,9 @@ bool TransfersFilterScreen::keyPressed(unsigned int ch) {
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
+      if (activeelement->getIdentifier() == "filename" && !std::static_pointer_cast<MenuSelectOptionTextField>(activeelement)->getData().empty()) {
+        std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("filenamefilter"))->setValue(true);
+      }
       active = false;
       currentlegendtext = defaultlegendtext;
       ui->update();
@@ -191,6 +202,12 @@ bool TransfersFilterScreen::keyPressed(unsigned int ch) {
       }
       bool activation = msoe->activate();
       if (!activation) {
+        std::string identifier = msoe->getIdentifier();
+        if ((identifier == "statusinprogress" || identifier == "statusdone" || identifier == "statusdupe" || identifier == "statusfail") &&
+            std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData())
+        {
+          std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("statusfilter"))->setValue(true);
+        }
         ui->update();
         return true;
       }

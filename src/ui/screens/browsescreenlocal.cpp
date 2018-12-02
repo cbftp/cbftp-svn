@@ -113,7 +113,10 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
   }
   printSlider(ui, row, coloffset + col - 1, listsize, currentviewspan);
 
-  if (listsize == 0) {
+  if (!list.isInitialized()) {
+    ui->printStr(0, coloffset + 3, "Loading file list...");
+  }
+  else if (listsize == 0) {
     ui->printStr(0, coloffset + 3, "(empty directory)");
   }
   if (filtermodeinput) {
