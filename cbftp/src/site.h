@@ -124,6 +124,7 @@ public:
   void setSSLTransferPolicy(int);
   void setListCommand(int);
   int getPriority() const;
+  static std::string getPriorityText(int priority);
   void setPriority(int);
   bool hasBrokenPASV() const;
   void setBrokenPASV(bool);

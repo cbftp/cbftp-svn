@@ -31,7 +31,8 @@ private:
       const std::string & site, const std::string & logins, const std::string & uploads,
       const std::string & downloads, const std::string & allowup,
       const std::string & allowdown, const std::string & disabled, const std::string & dayup,
-      const std::string & daydn, const std::string & alup, const std::string & aldn);
+      const std::string & daydn, const std::string & alup, const std::string & aldn,
+      const std::string & prio);
   void addSiteDetails(unsigned int y, MenuSelectOption & mso, const std::shared_ptr<SiteLogic> & sl);
   void keyUp();
   void keyDown();

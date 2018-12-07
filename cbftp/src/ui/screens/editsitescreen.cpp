@@ -149,11 +149,11 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   allowdownload->addOption("Affils only", SITE_ALLOW_DOWNLOAD_MATCH_ONLY);
   allowdownload->setOption(this->site->getAllowDownload());
   std::shared_ptr<MenuSelectOptionTextArrow> priority = mso.addTextArrow(y++, x, "priority", "Priority:");
-  priority->addOption("Very low", SITE_PRIORITY_VERY_LOW);
-  priority->addOption("Low", SITE_PRIORITY_LOW);
-  priority->addOption("Normal", SITE_PRIORITY_NORMAL);
-  priority->addOption("High", SITE_PRIORITY_HIGH);
-  priority->addOption("Very high", SITE_PRIORITY_VERY_HIGH);
+  priority->addOption(Site::getPriorityText(SITE_PRIORITY_VERY_LOW), SITE_PRIORITY_VERY_LOW);
+  priority->addOption(Site::getPriorityText(SITE_PRIORITY_LOW), SITE_PRIORITY_LOW);
+  priority->addOption(Site::getPriorityText(SITE_PRIORITY_NORMAL), SITE_PRIORITY_NORMAL);
+  priority->addOption(Site::getPriorityText(SITE_PRIORITY_HIGH), SITE_PRIORITY_HIGH);
+  priority->addOption(Site::getPriorityText(SITE_PRIORITY_VERY_HIGH), SITE_PRIORITY_VERY_HIGH);
   priority->setOption(this->site->getPriority());
   std::shared_ptr<MenuSelectOptionTextArrow> sourcepolicy = mso.addTextArrow(y, x, "sourcepolicy", "Transfer source policy:");
   sourcepolicy->addOption("Allow", SITE_TRANSFER_POLICY_ALLOW);
