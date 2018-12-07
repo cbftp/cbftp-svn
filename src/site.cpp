@@ -216,6 +216,22 @@ int Site::getPriority() const {
   return priority;
 }
 
+std::string Site::getPriorityText(int priority) {
+  switch (priority) {
+    case SITE_PRIORITY_VERY_LOW:
+      return "Very low";
+    case SITE_PRIORITY_LOW:
+      return "Low";
+    case SITE_PRIORITY_NORMAL:
+      return "Normal";
+    case SITE_PRIORITY_HIGH:
+      return "High";
+    case SITE_PRIORITY_VERY_HIGH:
+      return "Very high";
+  }
+  return "Unknown";
+}
+
 void Site::setPriority(int priority) {
   this->priority = priority;
 }

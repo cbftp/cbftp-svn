@@ -548,13 +548,14 @@ void MainScreen::addPreparedRaceDetails(unsigned int y, MenuSelectOption & mso, 
 }
 
 void MainScreen::addSiteHeader(unsigned int y, MenuSelectOption & mso) {
-  addSiteRow(y, mso, false, "SITE           ", "LOGINS", "UPLOADS", "DOWNLOADS", "UP", "DOWN", "DISABLED", "UP 24HR", "DOWN 24HR", "ALLUP", "ALLDOWN");
+  addSiteRow(y, mso, false, "SITE           ", "LOGINS", "UPLOADS", "DOWNLOADS", "UP", "DOWN", "DISABLED", "UP 24HR", "DOWN 24HR", "ALLUP", "ALLDOWN", "PRIORITY");
 }
 
 void MainScreen::addSiteRow(unsigned int y, MenuSelectOption & mso, bool selectable, const std::string & site,
     const std::string & logins, const std::string & uploads, const std::string & downloads,
     const std::string & allowup, const std::string & allowdown, const std::string & disabled,
-    const std::string & dayup, const std::string & daydn, const std::string & alup, const std::string & aldn)
+    const std::string & dayup, const std::string & daydn, const std::string & alup, const std::string & aldn,
+    const std::string & prio)
 {
   std::shared_ptr<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
   std::shared_ptr<MenuSelectOptionTextButton> msotb;
@@ -563,57 +564,62 @@ void MainScreen::addSiteRow(unsigned int y, MenuSelectOption & mso, bool selecta
   if (!selectable) {
     msotb->setSelectable(false);
   }
-  msal->addElement(msotb, 12, 5, RESIZE_CUTEND, false);
+  msal->addElement(msotb, 13, 6, RESIZE_CUTEND, false);
 
   msotb = mso.addTextButtonNoContent(y, 1, "logins", logins);
   msotb->setSelectable(false);
   msotb->setRightAligned();
-  msal->addElement(msotb, 11, RESIZE_REMOVE);
+  msal->addElement(msotb, 12, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "uploads", uploads);
   msotb->setSelectable(false);
   msotb->setRightAligned();
-  msal->addElement(msotb, 9, RESIZE_REMOVE);
+  msal->addElement(msotb, 10, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "downloads", downloads);
   msotb->setSelectable(false);
   msotb->setRightAligned();
-  msal->addElement(msotb, 10, RESIZE_REMOVE);
+  msal->addElement(msotb, 11, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "up", allowup);
   msotb->setSelectable(false);
   msotb->setRightAligned();
-  msal->addElement(msotb, 7, RESIZE_REMOVE);
+  msal->addElement(msotb, 8, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "down", allowdown);
   msotb->setSelectable(false);
   msotb->setRightAligned();
-  msal->addElement(msotb, 8, RESIZE_REMOVE);
+  msal->addElement(msotb, 9, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "disabled", disabled);
   msotb->setSelectable(false);
   msotb->setRightAligned();
-  msal->addElement(msotb, 6, RESIZE_REMOVE);
+  msal->addElement(msotb, 7, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "dayup", dayup);
   msotb->setSelectable(false);
   msotb->setRightAligned();
-  msal->addElement(msotb, 1, RESIZE_REMOVE);
+  msal->addElement(msotb, 2, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "daydn", daydn);
   msotb->setSelectable(false);
   msotb->setRightAligned();
-  msal->addElement(msotb, 2, RESIZE_REMOVE);
+  msal->addElement(msotb, 3, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "alup", alup);
   msotb->setSelectable(false);
   msotb->setRightAligned();
-  msal->addElement(msotb, 3, RESIZE_REMOVE);
+  msal->addElement(msotb, 4, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "aldn", aldn);
   msotb->setSelectable(false);
   msotb->setRightAligned();
-  msal->addElement(msotb, 4, RESIZE_REMOVE);
+  msal->addElement(msotb, 5, RESIZE_REMOVE);
+
+  msotb = mso.addTextButtonNoContent(y, 1, "prio", prio);
+  msotb->setSelectable(false);
+  msotb->setRightAligned();
+  msal->addElement(msotb, 1, RESIZE_REMOVE);
 }
 
 void MainScreen::addSiteDetails(unsigned int y, MenuSelectOption & mso, const std::shared_ptr<SiteLogic> & sl) {
@@ -660,5 +666,6 @@ void MainScreen::addSiteDetails(unsigned int y, MenuSelectOption & mso, const st
   std::string down24 = util::parseSize(site->getSizeDownLast24Hours());
   std::string allup = util::parseSize(site->getSizeUpAll());
   std::string alldown = util::parseSize(site->getSizeDownAll());
-  addSiteRow(y, mso, true, sitename, logins, uploads, downloads, up, down, disabled, up24, down24, allup, alldown);
+  std::string prio = Site::getPriorityText(site->getPriority());
+  addSiteRow(y, mso, true, sitename, logins, uploads, downloads, up, down, disabled, up24, down24, allup, alldown, prio);
 }
