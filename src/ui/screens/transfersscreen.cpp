@@ -281,6 +281,7 @@ bool TransfersScreen::showsWhileFiltered(const std::shared_ptr<TransferStatus> &
         }
         break;
       case TRANSFERSTATUS_STATE_FAILED:
+      case TRANSFERSTATUS_STATE_ABORTED:
         if (!tfp.showstatusfail) {
           return false;
         }
