@@ -7,6 +7,7 @@
 
 #include "core/eventreceiver.h"
 
+enum class PrioType;
 class CommandOwner;
 class Race;
 class TransferJob;
@@ -21,6 +22,7 @@ class Site;
 class PreparedRace;
 class Path;
 class SkipList;
+class ScoreBoardElement;
 
 class Engine : public EventReceiver {
 public:
@@ -53,8 +55,7 @@ public:
   void deleteOnSites(std::shared_ptr<Race> &, std::list<std::shared_ptr<Site> >);
   void deleteOnSites(std::shared_ptr<Race> &, std::list<std::shared_ptr<Site> >, bool);
   void abortTransferJob(std::shared_ptr<TransferJob> &);
-  void jobFileListRefreshed(SiteLogic *, CommandOwner *);
-  void filelistUpdated();
+  void jobFileListRefreshed(SiteLogic *, CommandOwner *, FileList *);
   bool transferJobActionRequest(std::shared_ptr<SiteTransferJob> &);
   void raceActionRequest();
   void setPreparedRaceExpiryTime(int);
@@ -94,10 +95,20 @@ public:
   void estimateRaceSize(const std::shared_ptr<Race> &);
   void estimateRaceSize(const std::shared_ptr<Race> &, bool);
   void reportCurrentSize(const SkipList &, const SkipList &, SiteRace *, FileList *, bool final);
+  void addToScoreBoard(FileList * fl, SiteRace * sr, SiteLogic * slp);
+  void addToScoreBoardForPair(const std::shared_ptr<SiteLogic> & sls,
+      const std::shared_ptr<Site> & ss, SiteRace * srs,
+      FileList * fls, const std::shared_ptr<SiteLogic> & sld, const std::shared_ptr<Site> & ds,
+      SiteRace * srd, FileList * fld, const SkipList & dstskip,
+      const SkipList & secskip,
+      const std::shared_ptr<Race> & race, const Path & subpath, int prioritypoints,
+      bool racemode);
+  void updateScoreBoard();
   void refreshScoreBoard();
   void issueOptimalTransfers();
   void setSpeedScale();
-  unsigned short calculateScore(File *, std::shared_ptr<Race> &, FileList *, SiteRace *, FileList *, SiteRace *, int, bool *, int prioritypoints, bool) const;
+  unsigned short calculateScore(PrioType priotype, unsigned long long int filesize, const std::shared_ptr<Race> &, FileList *, SiteRace *, FileList *, SiteRace *, int, int prioritypoints, bool) const;
+  unsigned short calculateScore(ScoreBoardElement * sbe) const;
   void checkIfRaceComplete(SiteLogic *, std::shared_ptr<Race> &);
   void raceComplete(std::shared_ptr<Race>);
   void transferJobComplete(std::shared_ptr<TransferJob>);
@@ -108,6 +119,7 @@ public:
   std::shared_ptr<Race> getCurrentRace(const std::string &) const;
   void preSeedPotentialData(std::shared_ptr<Race> &);
   bool raceTransferPossible(const std::shared_ptr<SiteLogic> &, const std::shared_ptr<SiteLogic> &, std::shared_ptr<Race> &) const;
+  void wipeFromScoreBoard(SiteRace * sr);
   std::list<std::shared_ptr<Race> > allraces;
   std::list<std::shared_ptr<Race> > currentraces;
   std::list<std::shared_ptr<PreparedRace> > preparedraces;
@@ -127,4 +139,6 @@ public:
   int preparedraceexpirytime;
   bool startnextprepared;
   int nextpreparedtimeremaining;
+  std::unordered_map<FileList *, std::pair<SiteRace *, std::shared_ptr<SiteLogic>>> spreadjobfilelistschanged;
+  bool forcescoreboard;
 };

@@ -31,7 +31,7 @@ bool sameOwner(const std::string & a, const std::string & b) {
 }
 
 FileList::FileList(const std::string & username, const Path & path) {
-  init(username, path, FILELIST_UNKNOWN);
+  init(username, path, FileListState::UNKNOWN);
 }
 
 FileList::FileList(const std::string & username, const Path & path, FileListState state) {
@@ -54,11 +54,14 @@ void FileList::init(const std::string & username, const Path & path, FileListSta
   uploadedfiles = 0;
   locked = false;
   updatestate = UpdateState::NONE;
+  scoreboardupdatestate = UpdateState::NONE;
   lastchangedstamp = 0;
   totalfilesize = 0;
   uploading = 0;
   refreshedtime = 0;
   listfailures = 0;
+  inscoreboard = false;
+  mkdattempted = false;
 }
 
 bool FileList::updateFile(const std::string & start, int touch) {
@@ -83,6 +86,7 @@ bool FileList::updateFile(const std::string & start, int touch) {
         totalfilesize += newsize - oldsize;
       }
       setChanged();
+      scoreboardchangedfiles.insert(name);
     }
     if (newsize > maxfilesize) maxfilesize = newsize;
     if (!sameOwner(file->getOwner(), updatefile->getOwner())) {
@@ -97,12 +101,15 @@ bool FileList::updateFile(const std::string & start, int touch) {
     }
     if (updatefile->setOwner(file->getOwner())) {
       setMetaChanged();
+      scoreboardchangedfiles.insert(name);
     }
     if (updatefile->setGroup(file->getGroup())) {
       setMetaChanged();
+      // doesn't matter for the scoreboard
     }
     if (updatefile->setLastModified(file->getLastModified())) {
       setMetaChanged();
+      // doesn't matter for the scoreboard
     }
     updatefile->setTouch(file->getTouch());
     if (updatefile->updateFlagSet()) {
@@ -140,6 +147,7 @@ bool FileList::updateFile(const std::string & start, int touch) {
     }
     recalcOwnedPercentage();
     setChanged();
+    scoreboardchangedfiles.insert(name);
   }
   return true;
 }
@@ -162,6 +170,7 @@ void FileList::touchFile(const std::string & name, const std::string & user, boo
     }
     recalcOwnedPercentage();
     setChanged();
+    scoreboardchangedfiles.insert(name);
   }
   if (upload && !file->isUploading()) {
     file->upload();
@@ -187,6 +196,7 @@ void FileList::removeFile(const std::string & name) {
     lowercasefilemap.erase(util::toLower(name));
     recalcOwnedPercentage();
     setChanged();
+    scoreboardchangedfiles.insert(name);
   }
 }
 
@@ -206,6 +216,7 @@ void FileList::setFileUpdateFlag(const std::string & name,
         maxfilesize = size;
       }
       setChanged();
+      scoreboardchangedfiles.insert(name);
     }
     file->setUpdateFlag(src, dst, srcco, dstco, speed);
   }
@@ -238,20 +249,20 @@ FileListState FileList::getState() const {
 }
 
 void FileList::setNonExistent() {
-  assert(state == FILELIST_UNKNOWN);
-  state = FILELIST_NONEXISTENT;
+  assert(state == FileListState::UNKNOWN);
+  state = FileListState::NONEXISTENT;
 }
 
 void FileList::setExists() {
-  state = FILELIST_EXISTS;
+  state = FileListState::EXISTS;
 }
 
 void FileList::setFilled() {
-  state = FILELIST_LISTED;
+  state = FileListState::LISTED;
 }
 
 void FileList::setFailed() {
-  state = FILELIST_FAILED;
+  state = FileListState::FAILED;
 }
 
 std::unordered_map<std::string, File *>::iterator FileList::begin() {
@@ -367,6 +378,7 @@ void FileList::cleanSweep(int touch) {
       removeFile(*it2);
       files.erase(*it2);
       lowercasefilemap.erase(util::toLower(*it2));
+      scoreboardchangedfiles.insert(*it2);
     }
     maxfilesize = 0;
     for (it = files.begin(); it != files.end(); it++) {
@@ -404,11 +416,23 @@ UpdateState FileList::getUpdateState() const {
   return updatestate;
 }
 
+UpdateState FileList::getScoreBoardUpdateState() const {
+  return scoreboardupdatestate;
+}
+
 void FileList::resetUpdateState() {
   updatestate = UpdateState::NONE;
 }
 
+void FileList::resetScoreBoardUpdates() {
+  scoreboardupdatestate = UpdateState::NONE;
+  scoreboardchangedfiles.clear();
+}
+
 bool FileList::bumpUpdateState(const UpdateState newstate) {
+  if (newstate > scoreboardupdatestate) {
+    scoreboardupdatestate = newstate;
+  }
   if (newstate > updatestate) {
     updatestate = newstate;
     return true;
@@ -446,6 +470,7 @@ void FileList::finishUpload(const std::string & file) {
     fileobj->finishUpload();
     uploading--;
     setChanged();
+    // irrelevant to the scoreboard
   }
 }
 
@@ -481,4 +506,32 @@ bool FileList::addListFailure() {
     return true;
   }
   return false;
+}
+
+std::unordered_set<std::string>::const_iterator FileList::scoreBoardChangedFilesBegin() const {
+  return scoreboardchangedfiles.begin();
+}
+
+std::unordered_set<std::string>::const_iterator FileList::scoreBoardChangedFilesEnd() const {
+  return scoreboardchangedfiles.end();
+}
+
+bool FileList::scoreBoardChangedFilesEmpty() const {
+  return scoreboardchangedfiles.empty();
+}
+
+bool FileList::inScoreBoard() const {
+  return inscoreboard;
+}
+
+void FileList::setInScoreBoard() {
+  inscoreboard = true;
+}
+
+bool FileList::mkdAttempted() const {
+  return mkdattempted;
+}
+
+void FileList::setMkdAttempted() {
+  mkdattempted = true;
 }

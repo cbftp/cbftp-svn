@@ -491,10 +491,6 @@ void TransferMonitor::targetError(TransferError err) {
     }
     else {
       fld->finishUpload(dfile);
-      const std::list<std::string> & xdupelist = sld->getConn(dst)->getXDUPEList();
-      for (std::list<std::string>::const_iterator it = xdupelist.begin(); it != xdupelist.end(); it++) {
-        fld->touchFile(*it, "XDUPE");
-      }
     }
   }
   partialcompletestamp = timestamp;

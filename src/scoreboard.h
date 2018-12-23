@@ -2,8 +2,10 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
+enum class PrioType;
 class ScoreBoardElement;
 class SiteLogic;
 class FileList;
@@ -22,16 +24,26 @@ class ScoreBoard {
     unsigned int * bucketpositions;
     unsigned int countarraybytesize;
     void shuffle(unsigned int firstpos, unsigned int lastpos);
+    std::unordered_map<FileList *, std::unordered_map<FileList *,
+      std::unordered_map<std::string, ScoreBoardElement *>>> elementlocator;
   public:
     ScoreBoard();
     ~ScoreBoard();
-    void add(const std::string &, unsigned short, bool, const std::shared_ptr<SiteLogic> &,
-        FileList *, SiteRace *, const std::shared_ptr<SiteLogic> &, FileList *, SiteRace *, std::shared_ptr<Race> &, const std::string &);
+    void update(
+        const std::string & name, unsigned short score, unsigned long long int filesize,
+        PrioType priotype,
+        const std::shared_ptr<SiteLogic> & src, FileList * fls, SiteRace * srs,
+        const std::shared_ptr<SiteLogic> & dst, FileList * fld, SiteRace * srd,
+        const std::shared_ptr<Race> & race, const std::string & subdir);
+    void remove(const std::string & name, FileList * fls, FileList * fld);
     unsigned int size() const;
     std::vector<ScoreBoardElement *>::const_iterator begin() const;
     std::vector<ScoreBoardElement *>::const_iterator end() const;
+    std::vector<ScoreBoardElement *>::iterator begin();
+    std::vector<ScoreBoardElement *>::iterator end();
     void sort();
     void shuffleEquals();
     const std::vector<ScoreBoardElement *> & getElementVector() const;
     void wipe();
+    void wipe(FileList *);
 };

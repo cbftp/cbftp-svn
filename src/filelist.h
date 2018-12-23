@@ -3,15 +3,16 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "path.h"
 
-enum FileListState {
- FILELIST_UNKNOWN,
- FILELIST_NONEXISTENT,
- FILELIST_EXISTS,
- FILELIST_LISTED,
- FILELIST_FAILED
+enum class FileListState {
+ UNKNOWN,
+ NONEXISTENT,
+ EXISTS,
+ LISTED,
+ FAILED
 };
 
 enum class UpdateState {
@@ -36,6 +37,7 @@ class FileList {
     FileListState state;
     bool locked;
     UpdateState updatestate;
+    UpdateState scoreboardupdatestate;
     unsigned long long lastchangedstamp;
     unsigned long long lastmetachangedstamp;
     int owned;
@@ -46,6 +48,9 @@ class FileList {
     unsigned int uploadedfiles;
     int refreshedtime;
     int listfailures;
+    std::unordered_set<std::string> scoreboardchangedfiles;
+    bool inscoreboard;
+    bool mkdattempted;
     void recalcOwnedPercentage();
     void init(const std::string &, const Path &, FileListState);
     void setChanged();
@@ -82,8 +87,10 @@ class FileList {
     void cleanSweep(int);
     void flush();
     UpdateState getUpdateState() const;
+    UpdateState getScoreBoardUpdateState() const;
     bool bumpUpdateState(const UpdateState newstate);
     void resetUpdateState();
+    void resetScoreBoardUpdates();
     unsigned long long timeSinceLastChanged() const;
     unsigned long long timeSinceLastMetaChanged() const;
     std::string getUser() const;
@@ -94,4 +101,11 @@ class FileList {
     void setRefreshedTime(int);
     int getRefreshedTime() const;
     bool addListFailure();
+    std::unordered_set<std::string>::const_iterator scoreBoardChangedFilesBegin() const;
+    std::unordered_set<std::string>::const_iterator scoreBoardChangedFilesEnd() const;
+    bool scoreBoardChangedFilesEmpty() const;
+    bool inScoreBoard() const;
+    void setInScoreBoard();
+    bool mkdAttempted() const;
+    void setMkdAttempted();
 };

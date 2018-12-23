@@ -90,7 +90,7 @@ bool SiteRace::addSubDirectory(const std::string & subpath, bool knownexists) {
   }
   FileList * subdir;
   if (knownexists) {
-    subdir = new FileList(username, path / subpath, FILELIST_EXISTS);
+    subdir = new FileList(username, path / subpath, FileListState::EXISTS);
   }
   else {
     subdir = new FileList(username, path / subpath);
@@ -116,7 +116,7 @@ std::string SiteRace::getSubPath(FileList * filelist) const {
 
 std::string SiteRace::getRelevantSubPath() {
   FileList * base = filelists.at("");
-  if (base->getState() == FILELIST_UNKNOWN || base->getState() == FILELIST_NONEXISTENT || base->getState() == FILELIST_FAILED) {
+  if (base->getState() == FileListState::UNKNOWN || base->getState() == FileListState::NONEXISTENT || base->getState() == FileListState::FAILED) {
     return "";
   }
   for (unsigned int i = 0; i < recentlyvisited.size() && recentlyvisited.size(); i++) {
@@ -125,7 +125,7 @@ std::string SiteRace::getRelevantSubPath() {
     if (!isSubPathComplete(leastrecentlyvisited)) {
       recentlyvisited.push_back(leastrecentlyvisited);
       FileList * fl = filelists.at(leastrecentlyvisited);
-      if ((fl->getState() != FILELIST_NONEXISTENT && fl->getState() != FILELIST_FAILED) ||
+      if ((fl->getState() != FileListState::NONEXISTENT && fl->getState() != FileListState::FAILED) ||
           fl->getUpdateState() == UpdateState::NONE)
       {
         return leastrecentlyvisited;
@@ -138,7 +138,7 @@ std::string SiteRace::getRelevantSubPath() {
 bool SiteRace::anyFileListNotNonExistent() const {
   std::unordered_map<std::string, FileList *>::const_iterator it;
   for (it = filelists.begin(); it != filelists.end(); it++) {
-    if (it->second->getState() != FILELIST_NONEXISTENT) {
+    if (it->second->getState() != FileListState::NONEXISTENT) {
       return true;
     }
   }
@@ -233,8 +233,8 @@ void SiteRace::addNewDirectories() {
       if ((fl = getFileListForPath(file->getName())) == NULL) {
         addSubDirectory(file->getName(), true);
       }
-      else if (fl->getState() == FILELIST_UNKNOWN || fl->getState() == FILELIST_NONEXISTENT ||
-               fl->getState() == FILELIST_FAILED)
+      else if (fl->getState() == FileListState::UNKNOWN || fl->getState() == FileListState::NONEXISTENT ||
+               fl->getState() == FileListState::FAILED)
       {
         fl->setExists();
         race->reportNewSubDir(this, it->first);
@@ -261,13 +261,13 @@ void SiteRace::markNonExistent(FileList * fl) {
     if (!it->second->getPath().contains(fl->getPath())) {
       continue;
     }
-    if (fl->getState() == FILELIST_NONEXISTENT ||
+    if (fl->getState() == FileListState::NONEXISTENT ||
         !fl->contains((it->second->getPath() - fl->getPath()).level(1).toString()))
     {
-      if (it->second->getState() == FILELIST_UNKNOWN) {
+      if (it->second->getState() == FileListState::UNKNOWN) {
         it->second->setNonExistent();
       }
-      if (it->second->getState() == FILELIST_NONEXISTENT) {
+      if (it->second->getState() == FileListState::NONEXISTENT) {
         it->second->bumpUpdateState(UpdateState::REFRESHED);
         markNonExistent(it->second);
       }
@@ -324,12 +324,18 @@ void SiteRace::abort() {
 
 void SiteRace::softReset() {
   recentlyvisited.clear();
+  std::unordered_map<std::string, bool> mkdattempted;
   for (std::unordered_map<std::string, FileList *>::const_iterator it = filelists.begin(); it != filelists.end(); ++it) {
     recentlyvisited.push_back(it->first);
+    mkdattempted[it->first] = it->second->mkdAttempted();
   }
   filelists.clear();
   for (std::list<std::string>::const_iterator it = recentlyvisited.begin(); it != recentlyvisited.end(); ++it) {
-    filelists[*it] = new FileList(username, path / *it, FILELIST_FAILED);
+    FileList * fl = new FileList(username, path / *it);
+    if (mkdattempted.at(*it)) {
+      fl->setMkdAttempted();
+    }
+    filelists[*it] = fl;
   }
   reset();
 
