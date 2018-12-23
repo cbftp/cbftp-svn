@@ -112,7 +112,7 @@ public:
   void checkIfRaceComplete(SiteLogic *, std::shared_ptr<Race> &);
   void raceComplete(std::shared_ptr<Race>);
   void transferJobComplete(std::shared_ptr<TransferJob>);
-  void issueGlobalComplete(std::shared_ptr<Race> &);
+  void issueGlobalComplete(const std::shared_ptr<Race> & race);
   void refreshPendingTransferList(std::shared_ptr<TransferJob> &);
   void checkStartPoke();
   void addPendingTransfer(std::list<PendingTransfer> &, PendingTransfer &);

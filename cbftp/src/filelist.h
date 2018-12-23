@@ -70,6 +70,7 @@ class FileList {
     void setExists();
     void setFilled();
     void setFailed();
+    void setRefreshed();
     std::unordered_map<std::string, File *>::iterator begin();
     std::unordered_map<std::string, File *>::iterator end();
     std::unordered_map<std::string, File *>::const_iterator begin() const;

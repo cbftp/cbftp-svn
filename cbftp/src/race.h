@@ -138,7 +138,7 @@ class Race : public EventReceiver, public TransferStatusCallback {
     unsigned int getWorstCompletionPercentage() const;
     unsigned int getAverageCompletionPercentage() const;
     unsigned int getBestCompletionPercentage() const;
-    bool hasFailedTransfer(File *, FileList *, FileList *) const;
+    bool hasFailedTransfer(const std::string & filename, FileList * fls, FileList * fld) const;
     bool failedTransfersCleared() const;
     const SkipList & getSectionSkipList() const;
     void addTransfer(const std::shared_ptr<TransferStatus> &);
