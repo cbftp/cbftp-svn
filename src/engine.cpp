@@ -1349,7 +1349,7 @@ bool Engine::raceTransferPossible(const std::shared_ptr<SiteLogic> & sls, const 
   if (sls == sld) return false;
   const std::shared_ptr<Site> & srcsite = sls->getSite();
   const std::shared_ptr<Site> & dstsite = sld->getSite();
-  if (!srcsite->getAllowDownload() == SITE_ALLOW_TRANSFER_NO ||
+  if (srcsite->getAllowDownload() == SITE_ALLOW_TRANSFER_NO ||
       (srcsite->getAllowDownload() == SITE_ALLOW_DOWNLOAD_MATCH_ONLY && !srcsite->isAffiliated(race->getGroup())))
   {
     return false;
