@@ -1040,11 +1040,9 @@ void FTPConn::PRETSTORResponse() {
     rawBufWrite(response);
     sl->commandSuccess(id, state);
   }
-  else if (databufcode == 553 && (response.find("dupe") != std::string::npos ||
-           response.find("being uploaded") != std::string::npos))
-  {
+  else if (databufcode == 553 && response.find("uploaded by") != std::string::npos) {
     parseXDUPEData();
-    rawBufWrite(response);
+    rawBufWrite(std::string(databuf, databufpos));
     sl->commandFail(id, FAIL_DUPE);
   }
   else {
@@ -1107,11 +1105,9 @@ void FTPConn::STORResponse() {
   }
   else {
     processing = false;
-    if (databufcode == 553 && (response.find("dupe") != std::string::npos ||
-        response.find("being uploaded") != std::string::npos))
-    {
+    if (databufcode == 553 && response.find("uploaded by") != std::string::npos) {
       parseXDUPEData();
-      rawBufWrite(response);
+      rawBufWrite(std::string(databuf, databufpos));
       sl->commandFail(id, FAIL_DUPE);
     }
     else {
