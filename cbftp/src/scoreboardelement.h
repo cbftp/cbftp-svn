@@ -10,6 +10,12 @@ class FileList;
 class Race;
 class SiteRace;
 
+enum class PrioType {
+  PRIO,
+  PRIO_LATER,
+  NORMAL
+};
+
 class ScoreBoardElement {
   private:
     std::string filename;
@@ -21,14 +27,17 @@ class ScoreBoardElement {
     SiteRace * dstsr;
     std::shared_ptr<Race> race;
     unsigned short score;
-    bool prio;
+    PrioType priotype;
     bool attempted;
     std::string subdir;
+    unsigned long long int filesize;
   public:
-    ScoreBoardElement(const std::string &, unsigned short, bool, const std::shared_ptr<SiteLogic> &,
-        FileList *, SiteRace *, const std::shared_ptr<SiteLogic> &, FileList *, SiteRace *, std::shared_ptr<Race> &, const std::string &);
-    void reset(const std::string &, unsigned short, bool, const std::shared_ptr<SiteLogic> &,
-        FileList *, SiteRace *, const std::shared_ptr<SiteLogic> &, FileList *, SiteRace *, std::shared_ptr<Race> &, const std::string &);
+    ScoreBoardElement(const std::string &, unsigned short, unsigned long long int filesize, PrioType priotype, const std::shared_ptr<SiteLogic> &,
+        FileList *, SiteRace *, const std::shared_ptr<SiteLogic> &, FileList *, SiteRace *, const std::shared_ptr<Race> &, const std::string &);
+    void reset(const std::string &, unsigned short, unsigned long long int filesize, PrioType priotype, const std::shared_ptr<SiteLogic> &,
+        FileList *, SiteRace *, const std::shared_ptr<SiteLogic> &, FileList *, SiteRace *, const std::shared_ptr<Race> &, const std::string &);
+    void reset(const ScoreBoardElement & other);
+    void update(unsigned short);
     const std::string & fileName() const;
     const std::string & subDir() const;
     const std::shared_ptr<SiteLogic> & getSource() const;
@@ -39,7 +48,8 @@ class ScoreBoardElement {
     SiteRace * getDestinationSiteRace() const;
     const std::shared_ptr<Race> & getRace() const;
     unsigned short getScore() const;
-    bool isPrioritized() const;
+    PrioType getPriorityType() const;
+    unsigned long long int getFileSize() const;
     bool wasAttempted() const;
     void setAttempted();
 };

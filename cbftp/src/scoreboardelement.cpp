@@ -3,16 +3,16 @@
 #include "race.h"
 
 ScoreBoardElement::ScoreBoardElement(const std::string & filename, unsigned short score,
-    bool prio, const std::shared_ptr<SiteLogic> & src, FileList * fls, SiteRace * srcsr,
-    const std::shared_ptr<SiteLogic> & dst, FileList * fld, SiteRace * dstsr, std::shared_ptr<Race> & race,
+    unsigned long long int filesize, PrioType priotype, const std::shared_ptr<SiteLogic> & src, FileList * fls, SiteRace * srcsr,
+    const std::shared_ptr<SiteLogic> & dst, FileList * fld, SiteRace * dstsr, const std::shared_ptr<Race> & race,
     const std::string & subdir)
 {
-  reset(filename, score, prio, src, fls, srcsr, dst, fld, dstsr, race, subdir);
+  reset(filename, score, filesize, priotype, src, fls, srcsr, dst, fld, dstsr, race, subdir);
 }
 
 void ScoreBoardElement::reset(const std::string & filename, unsigned short score,
-    bool prio, const std::shared_ptr<SiteLogic> & src, FileList * fls, SiteRace * srcsr,
-    const std::shared_ptr<SiteLogic> & dst, FileList * fld, SiteRace * dstsr, std::shared_ptr<Race> & race,
+    unsigned long long int filesize, PrioType priotype, const std::shared_ptr<SiteLogic> & src, FileList * fls, SiteRace * srcsr,
+    const std::shared_ptr<SiteLogic> & dst, FileList * fld, SiteRace * dstsr, const std::shared_ptr<Race> & race,
     const std::string & subdir)
 {
   this->filename = filename;
@@ -24,9 +24,21 @@ void ScoreBoardElement::reset(const std::string & filename, unsigned short score
   this->dstsr = dstsr;
   this->race = race;
   this->score = score;
-  this->prio = prio;
+  this->priotype = priotype;
   attempted = false;
   this->subdir = subdir;
+  this->filesize = filesize;
+}
+
+void ScoreBoardElement::reset(const ScoreBoardElement & other) {
+  reset(other.filename, other.score, other.filesize, other.priotype, other.src, other.fls,
+        other.srcsr, other.dst, other.fld, other.dstsr, other.race,
+        other.subdir);
+}
+
+void ScoreBoardElement::update(unsigned short score) {
+  this->score = score;
+  attempted = false;
 }
 
 const std::string & ScoreBoardElement::fileName() const {
@@ -69,8 +81,12 @@ unsigned short ScoreBoardElement::getScore() const {
   return score;
 }
 
-bool ScoreBoardElement::isPrioritized() const {
-  return prio;
+PrioType ScoreBoardElement::getPriorityType() const {
+  return priotype;
+}
+
+unsigned long long int ScoreBoardElement::getFileSize() const {
+  return filesize;
 }
 
 bool ScoreBoardElement::wasAttempted() const {

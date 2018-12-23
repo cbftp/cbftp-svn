@@ -221,7 +221,7 @@ void SiteLogic::listRefreshed(int id) {
     }
   }
   if (currentco != NULL) {
-    global->getEngine()->jobFileListRefreshed(this, currentco);
+    global->getEngine()->jobFileListRefreshed(this, currentco, fl);
   }
   handleConnection(id, true);
 }
@@ -233,7 +233,7 @@ bool SiteLogic::setPathExists(int id, int exists, bool refreshtime) {
   }
   bool statechanged = false;
   FileListState state = fl->getState();
-  if (state == FILELIST_UNKNOWN) {
+  if (state == FileListState::UNKNOWN) {
     if (exists == EXISTS_YES) {
       fl->setExists();
     }
@@ -245,7 +245,7 @@ bool SiteLogic::setPathExists(int id, int exists, bool refreshtime) {
     }
     statechanged = true;
   }
-  else if (state == FILELIST_NONEXISTENT) {
+  else if (state == FileListState::NONEXISTENT) {
     if (exists == EXISTS_YES) {
       fl->setExists();
       statechanged = true;
@@ -255,13 +255,13 @@ bool SiteLogic::setPathExists(int id, int exists, bool refreshtime) {
       statechanged = true;
     }
   }
-  else if (state == FILELIST_FAILED) {
+  else if (state == FileListState::FAILED) {
     if (exists == EXISTS_YES) {
       fl->setExists();
       statechanged = true;
     }
   }
-  else if (state == FILELIST_LISTED || state == FILELIST_EXISTS) {
+  else if (state == FileListState::LISTED || state == FileListState::EXISTS) {
     if (exists == EXISTS_NO) {
       if (fl->addListFailure()) {
         statechanged = true;
@@ -310,7 +310,7 @@ bool SiteLogic::makeTargetDirectory(int id, bool includinglast, CommandOwner * c
     subdirs.pop_front();
     FileList * fl = co->getFileListForFullPath(this, trypath);
     if (fl) {
-      if ((fl->getState() == FILELIST_UNKNOWN || fl->getState() == FILELIST_NONEXISTENT)) {
+      if ((fl->getState() == FileListState::UNKNOWN || fl->getState() == FileListState::NONEXISTENT) && !fl->mkdAttempted()) {
         conns[id]->doMKD(fl, co);
         return true;
       }
@@ -552,8 +552,9 @@ void SiteLogic::commandFail(int id, int failuretype) {
         }
         return;
       }
+      FileList * currentfl = conns[id]->currentFileList();
+      CommandOwner * currentco = conns[id]->currentCommandOwner();
       if (conns[id]->hasMKDCWDTarget()) {
-        CommandOwner * currentco = conns[id]->currentCommandOwner();
         if (site->getAllowUpload() == SITE_ALLOW_TRANSFER_NO ||
             (currentco != NULL && currentco->classType() == COMMANDOWNER_SITERACE &&
              site->isAffiliated(((SiteRace *)currentco)->getGroup())))
@@ -561,9 +562,8 @@ void SiteLogic::commandFail(int id, int failuretype) {
           conns[id]->finishMKDCWDTarget();
         }
         else {
-          FileList * fl = conns[id]->currentFileList();
-          if (fl) {
-            conns[id]->doMKD(fl, currentco);
+          if (currentfl) {
+            conns[id]->doMKD(currentfl, currentco);
           }
           else {
             conns[id]->doMKD(conns[id]->getTargetPath(), currentco);
@@ -586,7 +586,9 @@ void SiteLogic::commandFail(int id, int failuretype) {
         }
       }
       if (filelistupdated) {
-        global->getEngine()->filelistUpdated();
+        if (currentco && currentfl) {
+          global->getEngine()->jobFileListRefreshed(this, currentco, currentfl);
+        }
         handleConnection(id);
         return;
       }
@@ -607,8 +609,8 @@ void SiteLogic::commandFail(int id, int failuretype) {
           return;
         }
         conns[id]->finishMKDCWDTarget();
-        setPathExists(id, EXISTS_FAILED, true);
         FileList * fl = conns[id]->currentFileList();
+        fl->setMkdAttempted();
         if (fl) {
           conns[id]->doCWD(fl, currentco);
         }
@@ -748,6 +750,8 @@ void SiteLogic::reportTransferErrorAndFinish(int id, int err) {
 }
 
 void SiteLogic::reportTransferErrorAndFinish(int id, int type, int err) {
+  CommandOwner * co = connstatetracker[id].getCommandOwner();
+  FileList * fl = connstatetracker[id].getTransferFileList();
   if (!connstatetracker[id].getTransferAborted()) {
     switch (type) {
       case CST_DOWNLOAD:
@@ -764,6 +768,13 @@ void SiteLogic::reportTransferErrorAndFinish(int id, int type, int err) {
     }
   }
   connstatetracker[id].finishTransfer();
+  if (type == CST_UPLOAD && err == TM_ERR_DUPE && site->useXDUPE() && co && fl) {
+    const std::list<std::string> & xdupelist = conns[id]->getXDUPEList();
+    for (std::list<std::string>::const_iterator it = xdupelist.begin(); it != xdupelist.end(); it++) {
+      fl->touchFile(*it, "XDUPE");
+    }
+    global->getEngine()->jobFileListRefreshed(this, co, fl);
+  }
 }
 
 void SiteLogic::gotPath(int id, const std::string & path) {
@@ -858,7 +869,7 @@ bool SiteLogic::handlePreTransfer(int id) {
   CommandOwner * co = connstatetracker[id].getCommandOwner();
   if (conns[id]->getCurrentPath() != transferpath) {
     if (connstatetracker[id].getTransferType() == CST_UPLOAD &&
-        fl->getState() == FILELIST_NONEXISTENT)
+        fl->getState() == FileListState::NONEXISTENT && !fl->mkdAttempted())
     {
       std::pair<Path, Path> pathparts;
       if (co && co->classType() == COMMANDOWNER_TRANSFERJOB) {
