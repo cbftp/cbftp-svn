@@ -884,9 +884,7 @@ void Engine::updateScoreBoard() {
     const SkipList & secskip = race->getSectionSkipList();
     for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator cmpit = race->begin(); cmpit != race->end(); cmpit++) {
       const std::shared_ptr<SiteLogic> & cmpsl = cmpit->second;
-      if (!raceTransferPossible(sl, cmpsl, race)) {
-        continue;
-      }
+      bool regulartransferpossible = raceTransferPossible(sl, cmpsl, race);
       const std::shared_ptr<Site> & cmpsite = cmpsl->getSite();
       const SkipList & cmpskip = cmpsite->getSkipList();
       SiteRace * cmpsr = cmpit->first;
@@ -955,7 +953,7 @@ void Engine::updateScoreBoard() {
           scoreboard->remove(name, cmpfl, fl);
           continue;
         }
-        if (f->isDirectory() || f->getSize() == 0) {
+        if (!regulartransferpossible || f->isDirectory() || f->getSize() == 0) {
           continue;
         }
         SkipListMatch filematch = cmpskip.check((subpathpath / name).toString(), false, true, &secskip);
