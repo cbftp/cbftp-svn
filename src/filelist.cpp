@@ -65,7 +65,6 @@ void FileList::init(const std::string & username, const Path & path, FileListSta
 }
 
 bool FileList::updateFile(const std::string & start, int touch) {
-  bumpUpdateState(UpdateState::REFRESHED);
   File * file = new File(start, touch);
   if (!file->isValid()) {
     delete file;
@@ -263,6 +262,10 @@ void FileList::setFilled() {
 
 void FileList::setFailed() {
   state = FileListState::FAILED;
+}
+
+void FileList::setRefreshed() {
+  bumpUpdateState(UpdateState::REFRESHED);
 }
 
 std::unordered_map<std::string, File *>::iterator FileList::begin() {

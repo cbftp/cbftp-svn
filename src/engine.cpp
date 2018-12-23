@@ -1,6 +1,7 @@
 #include "engine.h"
 
 #include <cstdlib>
+#include <fstream>
 #include <set>
 #include <unordered_set>
 
@@ -31,6 +32,8 @@
 #include "preparedrace.h"
 #include "sitetransferjob.h"
 #include "sectionmanager.h"
+
+using std::__basic_file;
 
 #define SPREAD 0
 #define POKEINTERVAL 1000
@@ -936,9 +939,6 @@ void Engine::updateScoreBoard() {
                                                     fl->containsPatternBefore(filematch.matchpattern, false, name))) {
             continue;
           }
-          if (race->hasFailedTransfer(f, cmpfl, fl)) {
-            continue;
-          }
           int prioritypoints = getPriorityPoints(site->getPriority());
           avgspeed = cmpsite->getAverageSpeed(site->getName());
           if (avgspeed > maxavgspeed) {
@@ -961,9 +961,6 @@ void Engine::updateScoreBoard() {
         SkipListMatch filematch = cmpskip.check((subpathpath / name).toString(), false, true, &secskip);
         if (filematch.action == SKIPLIST_DENY || (filematch.action == SKIPLIST_UNIQUE &&
                                                   cmpfl->containsPatternBefore(filematch.matchpattern, false, name))) {
-          continue;
-        }
-        if (race->hasFailedTransfer(f, fl, cmpfl)) {
           continue;
         }
         PrioType p = getPrioType(f);
@@ -1141,6 +1138,9 @@ void Engine::issueOptimalTransfers() {
       continue;
     }
     if (sbe->getDestinationSiteRace()->isAborted()) {
+      continue;
+    }
+    if (sbe->getRace()->hasFailedTransfer(sbe->fileName(), sbe->getSourceFileList(), sbe->getDestinationFileList())) {
       continue;
     }
     SkipListMatch match = sbe->getDestination()->getSite()->getSkipList().check(
@@ -1460,22 +1460,27 @@ void Engine::tick(int message) {
     }
   }
   for (std::list<std::shared_ptr<Race> >::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
-    int timeoutafterseconds = (*it)->timeoutCheck();
+    const std::shared_ptr<Race> & race = *it;
+    int timeoutafterseconds = race->timeoutCheck();
     if (timeoutafterseconds != -1) {
       if ((*it)->failedTransfersCleared()) {
         global->getEventLog()->log("Engine", "No activity for " + std::to_string(timeoutafterseconds) +
             " seconds, aborting spread job: " + (*it)->getName());
-        for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator its = (*it)->begin(); its != (*it)->end(); its++) {
+        for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator its = race->begin(); its != race->end(); its++) {
           its->second->raceLocalComplete(its->first, 0, false);
         }
-        (*it)->setTimeout();
-        issueGlobalComplete(*it);
+        race->setTimeout();
+        issueGlobalComplete(race);
         currentraces.erase(it);
         break;
       }
       else {
-        if ((*it)->clearTransferAttempts()) {
-          (*it)->resetUpdateCheckCounter();
+        if (race->clearTransferAttempts()) {
+          race->resetUpdateCheckCounter();
+          std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator it2;
+          for (it2 = race->begin(); it2 != race->end(); it2++) {
+            it2->second->activateOne();
+          }
         }
       }
     }
@@ -1531,7 +1536,7 @@ void Engine::tick(int message) {
   forcescoreboard = true;
 }
 
-void Engine::issueGlobalComplete(std::shared_ptr<Race> & race) {
+void Engine::issueGlobalComplete(const std::shared_ptr<Race> & race) {
   for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator itd = race->begin(); itd != race->end(); itd++) {
     itd->second->raceGlobalComplete();
     wipeFromScoreBoard(itd->first);

@@ -549,13 +549,13 @@ unsigned int Race::getBestCompletionPercentage() const {
   return best;
 }
 
-bool Race::hasFailedTransfer(File * f, FileList * fls, FileList * fld) const {
-  FailedTransfer matchall = FailedTransfer(f->getName(), FailedTransferSecond(NULL, fld));
+bool Race::hasFailedTransfer(const std::string & filename, FileList * fls, FileList * fld) const {
+  FailedTransfer matchall = FailedTransfer(filename, FailedTransferSecond(NULL, fld));
   auto it = transferattempts.find(matchall);
   if (it != transferattempts.end() && it->second >= MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP) {
     return true;
   }
-  FailedTransfer match = FailedTransfer(f->getName(), FailedTransferSecond(fls, fld));
+  FailedTransfer match = FailedTransfer(filename, FailedTransferSecond(fls, fld));
   it = transferattempts.find(match);
   size_t numsites = sites.size();
   return it != transferattempts.end() && ((numsites == 3 && it->second >= 2) ||

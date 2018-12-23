@@ -1280,7 +1280,10 @@ void FTPConn::parseFileList(char * buf, unsigned int buflen) {
   if (currentfl->getSize() > files) {
     currentfl->cleanSweep(touch);
   }
-  if (currentfl->getState() != FileListState::LISTED) currentfl->setFilled();
+  if (currentfl->getState() != FileListState::LISTED) {
+    currentfl->setFilled();
+  }
+  currentfl->setRefreshed();
 }
 
 void FTPConn::parseXDUPEData() {
