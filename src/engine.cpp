@@ -1125,7 +1125,7 @@ void Engine::issueOptimalTransfers() {
       continue;
     }
     //potentiality handling
-    if (sbe->getPriorityType() != PrioType::NORMAL) { // priority files shouldn't affect the potential tracking
+    if (sbe->getPriorityType() == PrioType::NORMAL) { // priority files shouldn't affect the potential tracking
       sls->pushPotential(sbe->getScore(), filename, sld);
     }
     if (!sls->potentialCheck(sbe->getScore())) {
