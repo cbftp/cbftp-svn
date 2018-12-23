@@ -71,7 +71,7 @@ void ScoreBoard::remove(const std::string & name, FileList * fls, FileList * fld
   }
   ScoreBoardElement * sbe = fileit->second;
   filemap.erase(fileit);
-  if (showsize > 1) {
+  if (showsize && sbe != elements[showsize - 1]) {
     sbe->reset(*elements[showsize - 1]);
     elementlocator[sbe->getSourceFileList()][sbe->getDestinationFileList()][sbe->fileName()] = sbe;
   }
