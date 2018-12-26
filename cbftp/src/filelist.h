@@ -50,7 +50,6 @@ class FileList {
     int listfailures;
     std::unordered_set<std::string> scoreboardchangedfiles;
     bool inscoreboard;
-    bool mkdattempted;
     void recalcOwnedPercentage();
     void init(const std::string &, const Path &, FileListState);
     void setChanged();
@@ -107,6 +106,4 @@ class FileList {
     bool scoreBoardChangedFilesEmpty() const;
     bool inScoreBoard() const;
     void setInScoreBoard();
-    bool mkdAttempted() const;
-    void setMkdAttempted();
 };
