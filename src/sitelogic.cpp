@@ -310,7 +310,7 @@ bool SiteLogic::makeTargetDirectory(int id, bool includinglast, CommandOwner * c
     subdirs.pop_front();
     FileList * fl = co->getFileListForFullPath(this, trypath);
     if (fl) {
-      if ((fl->getState() == FileListState::UNKNOWN || fl->getState() == FileListState::NONEXISTENT) && !fl->mkdAttempted()) {
+      if (fl->getState() == FileListState::UNKNOWN || fl->getState() == FileListState::NONEXISTENT) {
         conns[id]->doMKD(fl, co);
         return true;
       }
@@ -609,8 +609,8 @@ void SiteLogic::commandFail(int id, int failuretype) {
           return;
         }
         conns[id]->finishMKDCWDTarget();
+        setPathExists(id, EXISTS_FAILED, true);
         FileList * fl = conns[id]->currentFileList();
-        fl->setMkdAttempted();
         if (fl) {
           conns[id]->doCWD(fl, currentco);
         }
@@ -869,7 +869,7 @@ bool SiteLogic::handlePreTransfer(int id) {
   CommandOwner * co = connstatetracker[id].getCommandOwner();
   if (conns[id]->getCurrentPath() != transferpath) {
     if (connstatetracker[id].getTransferType() == CST_UPLOAD &&
-        fl->getState() == FileListState::NONEXISTENT && !fl->mkdAttempted())
+        fl->getState() == FileListState::NONEXISTENT)
     {
       std::pair<Path, Path> pathparts;
       if (co && co->classType() == COMMANDOWNER_TRANSFERJOB) {

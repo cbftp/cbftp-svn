@@ -61,7 +61,6 @@ void FileList::init(const std::string & username, const Path & path, FileListSta
   refreshedtime = 0;
   listfailures = 0;
   inscoreboard = false;
-  mkdattempted = false;
 }
 
 bool FileList::updateFile(const std::string & start, int touch) {
@@ -529,12 +528,4 @@ bool FileList::inScoreBoard() const {
 
 void FileList::setInScoreBoard() {
   inscoreboard = true;
-}
-
-bool FileList::mkdAttempted() const {
-  return mkdattempted;
-}
-
-void FileList::setMkdAttempted() {
-  mkdattempted = true;
 }

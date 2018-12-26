@@ -115,6 +115,11 @@ std::string SiteRace::getSubPath(FileList * filelist) const {
 }
 
 std::string SiteRace::getRelevantSubPath() {
+  for (const std::pair<std::string, FileList *> & flpair : filelists) {
+    if (flpair.second->getUpdateState() == UpdateState::NONE) {
+      return flpair.first;
+    }
+  }
   FileList * base = filelists.at("");
   if (base->getState() == FileListState::UNKNOWN || base->getState() == FileListState::NONEXISTENT || base->getState() == FileListState::FAILED) {
     return "";
@@ -125,9 +130,7 @@ std::string SiteRace::getRelevantSubPath() {
     if (!isSubPathComplete(leastrecentlyvisited)) {
       recentlyvisited.push_back(leastrecentlyvisited);
       FileList * fl = filelists.at(leastrecentlyvisited);
-      if ((fl->getState() != FileListState::NONEXISTENT && fl->getState() != FileListState::FAILED) ||
-          fl->getUpdateState() == UpdateState::NONE)
-      {
+      if (fl->getState() != FileListState::NONEXISTENT && fl->getState() != FileListState::FAILED) {
         return leastrecentlyvisited;
       }
     }
@@ -324,21 +327,15 @@ void SiteRace::abort() {
 
 void SiteRace::softReset() {
   recentlyvisited.clear();
-  std::unordered_map<std::string, bool> mkdattempted;
-  for (std::unordered_map<std::string, FileList *>::const_iterator it = filelists.begin(); it != filelists.end(); ++it) {
+  for (std::unordered_map<std::string, FileList *>::iterator it = filelists.begin(); it != filelists.end(); ++it) {
     recentlyvisited.push_back(it->first);
-    mkdattempted[it->first] = it->second->mkdAttempted();
-  }
-  filelists.clear();
-  for (std::list<std::string>::const_iterator it = recentlyvisited.begin(); it != recentlyvisited.end(); ++it) {
-    FileList * fl = new FileList(username, path / *it);
-    if (mkdattempted.at(*it)) {
-      fl->setMkdAttempted();
+    FileListState state = it->second->getState();
+    if (state == FileListState::LISTED) {
+      state = FileListState::EXISTS;
     }
-    filelists[*it] = fl;
+    it->second = new FileList(username, path / it->first, state);
   }
   reset();
-
 }
 
 void SiteRace::hardReset() {
