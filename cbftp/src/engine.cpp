@@ -803,7 +803,7 @@ void Engine::addToScoreBoard(FileList * fl, SiteRace * sr, SiteLogic * slp) {
   Path subpathpath(subpath);
   std::shared_ptr<Race> race = sr->getRace();
   bool racemode = race->getProfile() == SPREAD_RACE;
-  int prioritypoints = getPriorityPoints(site->getPriority());
+  SitePriority priority = site->getPriority();
   const SkipList & secskip = race->getSectionSkipList();
   bool flskip = false;
   if (!subpath.empty()) {
@@ -825,12 +825,12 @@ void Engine::addToScoreBoard(FileList * fl, SiteRace * sr, SiteLogic * slp) {
       cmpsr->addSubDirectory(subpath);
       continue;
     }
-    int cmppp = getPriorityPoints(cmpsite->getPriority());
+    SitePriority cmppriority = cmpsite->getPriority();
     if (raceTransferPossible(cmpsl, sl, race) && !flskip) {
-      addToScoreBoardForPair(cmpsl, cmpsite, cmpsr, cmpfl, sl, site, sr, fl, skip, secskip, race, subpathpath, prioritypoints, racemode);
+      addToScoreBoardForPair(cmpsl, cmpsite, cmpsr, cmpfl, sl, site, sr, fl, skip, secskip, race, subpathpath, priority, racemode);
     }
     if (fl->getNumUploadedFiles() && raceTransferPossible(sl, cmpsl, race)) {
-      addToScoreBoardForPair(sl, site, sr, fl, cmpsl, cmpsite, cmpsr, cmpfl, cmpskip, secskip, race, subpathpath, cmppp, racemode);
+      addToScoreBoardForPair(sl, site, sr, fl, cmpsl, cmpsite, cmpsr, cmpfl, cmpskip, secskip, race, subpathpath, cmppriority, racemode);
     }
   }
   fl->setInScoreBoard();
@@ -840,7 +840,7 @@ void Engine::addToScoreBoardForPair(const std::shared_ptr<SiteLogic> & sls, cons
                             FileList * fls, const std::shared_ptr<SiteLogic> & sld, const std::shared_ptr<Site> & ds,
                             SiteRace * srd, FileList * fld, const SkipList & dstskip,
                             const SkipList & secskip,
-                            const std::shared_ptr<Race> & race, const Path & subpath, int prioritypoints,
+                            const std::shared_ptr<Race> & race, const Path & subpath, SitePriority priority,
                             bool racemode)
 {
   if (fld->getState() != FileListState::NONEXISTENT && fld->getState() != FileListState::LISTED) {
@@ -864,7 +864,7 @@ void Engine::addToScoreBoardForPair(const std::shared_ptr<SiteLogic> & sls, cons
     }
     PrioType p = getPrioType(f);
     unsigned long long int filesize = f->getSize();
-    unsigned short score = calculateScore(p, filesize, race, fls, srs, fld, srd, avgspeed, prioritypoints, racemode);
+    unsigned short score = calculateScore(p, filesize, race, fls, srs, fld, srd, avgspeed, priority, racemode);
     scoreboard->update(name, score, filesize, p, sls, fls, srs, sld, fld, srd, race, subpath.toString());
     race->resetUpdateCheckCounter();
   }
@@ -910,7 +910,7 @@ void Engine::updateScoreBoard() {
       if (avgspeed > maxavgspeed) {
         avgspeed = maxavgspeed;
       }
-      int cmpprioritypoints = getPriorityPoints(cmpsite->getPriority());
+      SitePriority cmppriority = cmpsite->getPriority();
       for (std::unordered_set<std::string>::const_iterator it = fl->scoreBoardChangedFilesBegin(); it != fl->scoreBoardChangedFilesEnd(); it++) {
         const std::string & name = *it;
         File * f = fl->getFile(name);
@@ -937,14 +937,14 @@ void Engine::updateScoreBoard() {
                                                     fl->containsPatternBefore(filematch.matchpattern, false, name))) {
             continue;
           }
-          int prioritypoints = getPriorityPoints(site->getPriority());
+          SitePriority priority = site->getPriority();
           avgspeed = cmpsite->getAverageSpeed(site->getName());
           if (avgspeed > maxavgspeed) {
             avgspeed = maxavgspeed;
           }
           PrioType p = getPrioType(f);
           unsigned long long int filesize = f->getSize();
-          unsigned short score = calculateScore(p, filesize, race, cmpfl, cmpsr, fl, sr, avgspeed, prioritypoints, racemode);
+          unsigned short score = calculateScore(p, filesize, race, cmpfl, cmpsr, fl, sr, avgspeed, priority, racemode);
           scoreboard->update(name, score, filesize, p, cmpsl, cmpfl, cmpsr, sl, fl, sr, race, subpath);
           race->resetUpdateCheckCounter();
           continue;
@@ -963,7 +963,7 @@ void Engine::updateScoreBoard() {
         }
         PrioType p = getPrioType(f);
         unsigned long long int filesize = f->getSize();
-        unsigned short score = calculateScore(p, filesize, race, fl, sr, cmpfl, cmpsr, avgspeed, cmpprioritypoints, racemode);
+        unsigned short score = calculateScore(p, filesize, race, fl, sr, cmpfl, cmpsr, avgspeed, cmppriority, racemode);
         scoreboard->update(name, score, filesize, p, sl, fl, sr, cmpsl, cmpfl, cmpsr, race, subpath);
         race->resetUpdateCheckCounter();
       }
@@ -1246,16 +1246,16 @@ void Engine::transferJobComplete(std::shared_ptr<TransferJob> tj) {
 
 unsigned short Engine::calculateScore(ScoreBoardElement * sbe) const {
   const std::shared_ptr<Race> & race = sbe->getRace();
-  int prioritypoints = getPriorityPoints(sbe->getDestination()->getSite()->getPriority());
+  SitePriority priority = sbe->getDestination()->getSite()->getPriority();
   int avgspeed = sbe->getSource()->getSite()->getAverageSpeed(sbe->getDestination()->getSite()->getName());
   return calculateScore(sbe->getPriorityType(), sbe->getFileSize(), race, sbe->getSourceFileList(), sbe->getSourceSiteRace(),
-      sbe->getDestinationFileList(), sbe->getDestinationSiteRace(), avgspeed, prioritypoints,
+      sbe->getDestinationFileList(), sbe->getDestinationSiteRace(), avgspeed, priority,
       race->getProfile() == SPREAD_RACE);
 }
 
 unsigned short Engine::calculateScore(PrioType priotype, unsigned long long int filesize, const std::shared_ptr<Race> & itr, FileList * fls, SiteRace * srs,
                                       FileList * fld, SiteRace * srd, int avgspeed,
-                                      int prioritypoints, bool racemode) const
+                                      SitePriority priority, bool racemode) const
 {
   switch (priotype) {
     case PrioType::PRIO:
@@ -1287,23 +1287,33 @@ unsigned short Engine::calculateScore(PrioType priotype, unsigned long long int 
   points += getSpeedPoints(avgspeed);
 
   if (racemode) {
-    unsigned long long int pointspercentageowned = maxpointspercentageowned;
-    int unownedpercentage = 100 - fld->getOwnedPercentage();
-    pointspercentageowned *= unownedpercentage;
-    pointspercentageowned /= 100;
-    points += pointspercentageowned;
+    if (priority >= SitePriority::VERY_HIGH) {
+      points += maxpointspercentageowned;
+    }
+    else {
+      unsigned long long int pointspercentageowned = maxpointspercentageowned;
+      int unownedpercentage = 100 - fld->getOwnedPercentage();
+      pointspercentageowned *= unownedpercentage;
+      pointspercentageowned /= 100;
+      points += pointspercentageowned;
+    }
   }
   else {
-    unsigned long long int pointslowprogress = maxpointslowprogress;
-    int maxprogress = itr->getMaxSiteNumFilesProgress();
-    if (maxprogress) {
-      pointslowprogress *= fld->getNumUploadedFiles();
-      pointslowprogress /= maxprogress;
-      points += pointslowprogress;
+    if (priority >= SitePriority::VERY_HIGH) {
+      points += maxpointslowprogress;
+    }
+    else {
+      unsigned long long int pointslowprogress = maxpointslowprogress;
+      int maxprogress = itr->getMaxSiteNumFilesProgress();
+      if (maxprogress) {
+        pointslowprogress *= fld->getNumUploadedFiles();
+        pointslowprogress /= maxprogress;
+        points += pointslowprogress;
+      }
     }
   }
 
-  points += prioritypoints;
+  points += getPriorityPoints(priority);
   util::assert(points >= 0 && points < 10000);
   return points;
 }
@@ -1596,17 +1606,17 @@ int Engine::getMaxPointsLowProgress() const {
   return maxpointslowprogress;
 }
 
-int Engine::getPriorityPoints(int priority) const {
+int Engine::getPriorityPoints(SitePriority priority) const {
   switch (priority) {
-    case SITE_PRIORITY_VERY_LOW:
+    case SitePriority::VERY_LOW:
       return 0;
-    case SITE_PRIORITY_LOW:
+    case SitePriority::LOW:
       return maxpointspriority * 0.2;
-    case SITE_PRIORITY_NORMAL:
+    case SitePriority::NORMAL:
       return maxpointspriority * 0.4;
-    case SITE_PRIORITY_HIGH:
+    case SitePriority::HIGH:
       return maxpointspriority * 0.6;
-    case SITE_PRIORITY_VERY_HIGH:
+    case SitePriority::VERY_HIGH:
       return maxpointspriority;
   }
   return 0;

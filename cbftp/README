@@ -545,6 +545,14 @@ A: Disconnecting is an old habit that comes from traditional clients that
    on the site from the main screen, use the arrow keys to navigate to the
    right connection, and then press d.
 
+Q: Can I use multiple addresses (bouncers) to a site? How do I sort them?
+A: Yes, just add them all on the address line with spaces between. Cbftp does
+   actually have a built-in sorting feature, but it's hard to spot. By default
+   cbftp will attempt to connect on the first address in the list. If it does
+   not manage to connect within 1 second, cbftp will attempt to connect on any
+   other addresses as well. Whichever address manages to connect first will
+   be stored first in the list for next time.
+   
 Q: How do I exit cbftp? Do I need to save the data file somehow?
 A: press ctrl-c. The data file is written automatically once in a while
    when cbftp is running, and upon exit.
