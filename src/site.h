@@ -26,11 +26,13 @@
 #define SITE_LIST_STAT 840
 #define SITE_LIST_LIST 841
 
-#define SITE_PRIORITY_VERY_LOW 711
-#define SITE_PRIORITY_LOW 712
-#define SITE_PRIORITY_NORMAL 713
-#define SITE_PRIORITY_HIGH 714
-#define SITE_PRIORITY_VERY_HIGH 715
+enum class SitePriority {
+  VERY_LOW = 711,
+  LOW = 712,
+  NORMAL = 713,
+  HIGH = 714,
+  VERY_HIGH = 715
+};
 
 #define SITE_TRANSFER_POLICY_ALLOW 817
 #define SITE_TRANSFER_POLICY_BLOCK 818
@@ -69,7 +71,7 @@ private:
   bool disabled;
   SiteAllowTransfer allowupload;
   SiteAllowTransfer allowdownload;
-  int priority;
+  SitePriority priority;
   bool xdupe;
   std::map<std::string, Path> sections;
   std::map<std::string, int> avgspeed;
@@ -123,9 +125,9 @@ public:
   TLSMode getTLSMode() const;
   void setSSLTransferPolicy(int);
   void setListCommand(int);
-  int getPriority() const;
-  static std::string getPriorityText(int priority);
-  void setPriority(int);
+  SitePriority getPriority() const;
+  static std::string getPriorityText(SitePriority priority);
+  void setPriority(SitePriority priority);
   bool hasBrokenPASV() const;
   void setBrokenPASV(bool);
   bool supportsSSCN() const;

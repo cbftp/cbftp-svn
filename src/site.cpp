@@ -29,7 +29,7 @@ Site::Site(const std::string & name) :
   disabled(false),
   allowupload(SITE_ALLOW_TRANSFER_YES),
   allowdownload(SITE_ALLOW_TRANSFER_YES),
-  priority(SITE_PRIORITY_NORMAL),
+  priority(SitePriority::NORMAL),
   xdupe(true),
   proxytype(SITE_PROXY_GLOBAL),
   transfersourcepolicy(SITE_TRANSFER_POLICY_ALLOW),
@@ -212,27 +212,27 @@ void Site::setSSLTransferPolicy(int policy) {
   ssltransfer = policy;
 }
 
-int Site::getPriority() const {
+SitePriority Site::getPriority() const {
   return priority;
 }
 
-std::string Site::getPriorityText(int priority) {
+std::string Site::getPriorityText(SitePriority priority) {
   switch (priority) {
-    case SITE_PRIORITY_VERY_LOW:
+    case SitePriority::VERY_LOW:
       return "Very low";
-    case SITE_PRIORITY_LOW:
+    case SitePriority::LOW:
       return "Low";
-    case SITE_PRIORITY_NORMAL:
+    case SitePriority::NORMAL:
       return "Normal";
-    case SITE_PRIORITY_HIGH:
+    case SitePriority::HIGH:
       return "High";
-    case SITE_PRIORITY_VERY_HIGH:
+    case SitePriority::VERY_HIGH:
       return "Very high";
   }
   return "Unknown";
 }
 
-void Site::setPriority(int priority) {
+void Site::setPriority(SitePriority priority) {
   this->priority = priority;
 }
 

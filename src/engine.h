@@ -8,6 +8,7 @@
 #include "core/eventreceiver.h"
 
 enum class PrioType;
+enum class SitePriority;
 class CommandOwner;
 class Race;
 class TransferJob;
@@ -83,7 +84,7 @@ public:
   int getMaxPointsPriority() const;
   int getMaxPointsPercentageOwned() const;
   int getMaxPointsLowProgress() const;
-  int getPriorityPoints(int) const;
+  int getPriorityPoints(SitePriority priority) const;
   int getSpeedPoints(int) const;
   int getPreparedRaceExpiryTime() const;
   bool getNextPreparedRaceStarterEnabled() const;
@@ -101,13 +102,13 @@ public:
       FileList * fls, const std::shared_ptr<SiteLogic> & sld, const std::shared_ptr<Site> & ds,
       SiteRace * srd, FileList * fld, const SkipList & dstskip,
       const SkipList & secskip,
-      const std::shared_ptr<Race> & race, const Path & subpath, int prioritypoints,
+      const std::shared_ptr<Race> & race, const Path & subpath, SitePriority priority,
       bool racemode);
   void updateScoreBoard();
   void refreshScoreBoard();
   void issueOptimalTransfers();
   void setSpeedScale();
-  unsigned short calculateScore(PrioType priotype, unsigned long long int filesize, const std::shared_ptr<Race> &, FileList *, SiteRace *, FileList *, SiteRace *, int, int prioritypoints, bool) const;
+  unsigned short calculateScore(PrioType priotype, unsigned long long int filesize, const std::shared_ptr<Race> &, FileList *, SiteRace *, FileList *, SiteRace *, int, SitePriority priority, bool) const;
   unsigned short calculateScore(ScoreBoardElement * sbe) const;
   void checkIfRaceComplete(SiteLogic *, std::shared_ptr<Race> &);
   void raceComplete(std::shared_ptr<Race>);

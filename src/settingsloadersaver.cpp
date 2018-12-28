@@ -324,7 +324,7 @@ void SettingsLoaderSaver::loadSettings() {
       }
     }
     else if (!setting.compare("priority")) {
-      site->setPriority(util::str2Int(value));
+      site->setPriority(static_cast<SitePriority>(std::stoi(value)));
     }
     else if (!setting.compare("brokenpasv")) {
       if (!value.compare("true")) site->setBrokenPASV(true);
@@ -640,7 +640,7 @@ void SettingsLoaderSaver::saveSettings() {
       if (site->getDisabled()) dfh->addOutputLine(filetag, name + "$disabled=true");
       dfh->addOutputLine(filetag, name + "$allowupload=" + util::int2Str(site->getAllowUpload()));
       dfh->addOutputLine(filetag, name + "$allowdownload=" + util::int2Str(site->getAllowDownload()));
-      dfh->addOutputLine(filetag, name + "$priority=" + util::int2Str(site->getPriority()));
+      dfh->addOutputLine(filetag, name + "$priority=" + std::to_string(static_cast<int>(site->getPriority())));
       if (site->hasBrokenPASV()) dfh->addOutputLine(filetag, name + "$brokenpasv=true");
       int proxytype = site->getProxyType();
       dfh->addOutputLine(filetag, name + "$proxytype=" + util::int2Str(proxytype));
