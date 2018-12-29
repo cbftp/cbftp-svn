@@ -66,7 +66,12 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   mso.addCheckBox(y++, x, "udpenable", "Enable remote commands:", rch->isEnabled());
   mso.addStringField(y++, x, "udpport", "Remote command UDP Port:", util::int2Str(rch->getUDPPort()), false, 5);
   mso.addStringField(y++, x, "udppass", "Remote command password:", rch->getPassword(), true);
-  mso.addCheckBox(y++, x, "udpbell", "Remote command bell:", rch->getNotify());
+  std::shared_ptr<MenuSelectOptionTextArrow> bell = mso.addTextArrow(y++, x, "udpbell", "Remote command bell:");
+  bell->addOption("Disabled", static_cast<int>(RemoteCommandNotify::DISABLED));
+  bell->addOption("Action requested", static_cast<int>(RemoteCommandNotify::ACTION_REQUESTED));
+  bell->addOption("Jobs added", static_cast<int>(RemoteCommandNotify::JOBS_ADDED));
+  bell->addOption("All commands", static_cast<int>(RemoteCommandNotify::ALL_COMMANDS));
+  bell->setOption(static_cast<int>(rch->getNotify()));
   mso.addStringField(y++, x, "preparedraceexpirytime", "Prepared race expiration time:", util::int2Str(global->getEngine()->getPreparedRaceExpiryTime()), false, 5);
   y++;
   std::shared_ptr<MenuSelectOptionTextArrow> legendmode = mso.addTextArrow(y++, x, "legendmode", "Legend bar:");
@@ -229,7 +234,7 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
           rch->setPassword(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "udpbell") {
-          rch->setNotify(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
+          rch->setNotify(static_cast<RemoteCommandNotify>(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData()));
         }
         else if (identifier == "defuser") {
           sm->setDefaultUserName(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
