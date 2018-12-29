@@ -64,7 +64,7 @@ RemoteCommandHandler::RemoteCommandHandler() :
   port(DEFAULTPORT),
   retrying(false),
   connected(false),
-  notify(false) {
+  notify(RemoteCommandNotify::DISABLED) {
 }
 
 bool RemoteCommandHandler::isEnabled() const {
@@ -95,11 +95,11 @@ void RemoteCommandHandler::setPort(int newport) {
   }
 }
 
-bool RemoteCommandHandler::getNotify() const {
+RemoteCommandNotify RemoteCommandHandler::getNotify() const {
   return notify;
 }
 
-void RemoteCommandHandler::setNotify(bool notify) {
+void RemoteCommandHandler::setNotify(RemoteCommandNotify notify) {
   this->notify = notify;
 }
 
@@ -143,14 +143,24 @@ void RemoteCommandHandler::handleMessage(const std::string & message) {
   }
   std::string command = tokens[1];
   std::vector<std::string> remainder(tokens.begin() + 2, tokens.end());
+  bool notification = notify == RemoteCommandNotify::ALL_COMMANDS;
   if (command == "race") {
-    commandRace(remainder);
+    bool started = commandRace(remainder);
+    if (started && notify >= RemoteCommandNotify::JOBS_ADDED) {
+      notification = true;
+    }
   }
   else if (command == "distribute") {
-    commandDistribute(remainder);
+    bool started = commandDistribute(remainder) && notify >= RemoteCommandNotify::JOBS_ADDED;
+    if (started && notify >= RemoteCommandNotify::JOBS_ADDED) {
+      notification = true;
+    }
   }
   else if (command == "prepare") {
-    commandPrepare(remainder);
+    bool created = commandPrepare(remainder);
+    if (created && notify >= RemoteCommandNotify::ACTION_REQUESTED) {
+      notification = true;
+    }
   }
   else if (command == "raw") {
     commandRaw(remainder);
@@ -159,13 +169,22 @@ void RemoteCommandHandler::handleMessage(const std::string & message) {
     commandRawWithPath(remainder);
   }
   else if (command == "fxp") {
-    commandFXP(remainder);
+    bool started = commandFXP(remainder);
+    if (started && notify >= RemoteCommandNotify::JOBS_ADDED) {
+      notification = true;
+    }
   }
   else if (command == "download") {
-    commandDownload(remainder);
+    bool started = commandDownload(remainder);
+    if (started && notify >= RemoteCommandNotify::JOBS_ADDED) {
+      notification = true;
+    }
   }
   else if (command == "upload") {
-    commandUpload(remainder);
+    bool started = commandUpload(remainder);
+    if (started && notify >= RemoteCommandNotify::JOBS_ADDED) {
+      notification = true;
+    }
   }
   else if (command == "idle") {
     commandIdle(remainder);
@@ -180,27 +199,27 @@ void RemoteCommandHandler::handleMessage(const std::string & message) {
     commandReset(remainder, false);
   }
   else if(command == "hardreset") {
-      commandReset(remainder, true);
-    }
+    commandReset(remainder, true);
+  }
   else {
     global->getEventLog()->log("RemoteCommandHandler", "Invalid remote command: " + util::join(tokens));
     return;
   }
-  if (notify) {
+  if (notification) {
     global->getUIBase()->notify();
   }
 }
 
-void RemoteCommandHandler::commandRace(const std::vector<std::string> & message) {
-  parseRace(message, RACE);
+bool RemoteCommandHandler::commandRace(const std::vector<std::string> & message) {
+  return parseRace(message, RACE);
 }
 
-void RemoteCommandHandler::commandDistribute(const std::vector<std::string> & message) {
-  parseRace(message, DISTRIBUTE);
+bool RemoteCommandHandler::commandDistribute(const std::vector<std::string> & message) {
+  return parseRace(message, DISTRIBUTE);
 }
 
-void RemoteCommandHandler::commandPrepare(const std::vector<std::string> & message) {
-  parseRace(message, PREPARE);
+bool RemoteCommandHandler::commandPrepare(const std::vector<std::string> & message) {
+  return parseRace(message, PREPARE);
 }
 
 void RemoteCommandHandler::commandRaw(const std::vector<std::string> & message) {
@@ -245,20 +264,20 @@ void RemoteCommandHandler::commandRawWithPath(const std::vector<std::string> & m
   }
 }
 
-void RemoteCommandHandler::commandFXP(const std::vector<std::string> & message) {
+bool RemoteCommandHandler::commandFXP(const std::vector<std::string> & message) {
   if (message.size() < 5) {
     global->getEventLog()->log("RemoteCommandHandler", "Bad remote fxp command format: " + util::join(message));
-    return;
+    return false;
   }
   std::shared_ptr<SiteLogic> srcsl = global->getSiteLogicManager()->getSiteLogic(message[0]);
   std::shared_ptr<SiteLogic> dstsl = global->getSiteLogicManager()->getSiteLogic(message[3]);
   if (!srcsl) {
     global->getEventLog()->log("RemoteCommandHandler", "Bad site name: " + message[0]);
-    return;
+    return false;
   }
   if (!dstsl) {
     global->getEventLog()->log("RemoteCommandHandler", "Bad site name: " + message[3]);
-    return;
+    return false;
   }
   std::string dstfile = message.size() > 5 ? message[5] : message[2];
   std::string srcpath = message[1];
@@ -268,7 +287,7 @@ void RemoteCommandHandler::commandFXP(const std::vector<std::string> & message) 
     }
     else {
       global->getEventLog()->log("RemoteCommandHandler", "Path must be absolute or a section name: " + srcpath);
-      return;
+      return false;
     }
   }
   std::string dstpath = message[4];
@@ -278,28 +297,29 @@ void RemoteCommandHandler::commandFXP(const std::vector<std::string> & message) 
     }
     else {
       global->getEventLog()->log("RemoteCommandHandler", "Path must be absolute or a section name: " + dstpath);
-      return;
+      return false;
     }
   }
   global->getEngine()->newTransferJobFXP(message[0], srcpath, message[2], message[3], dstpath, dstfile);
+  return true;
 }
 
-void RemoteCommandHandler::commandDownload(const std::vector<std::string> & message) {
+bool RemoteCommandHandler::commandDownload(const std::vector<std::string> & message) {
   if (message.size() < 2) {
     global->getEventLog()->log("RemoteCommandHandler", "Bad download command format: " + util::join(message));
-    return;
+    return false;
   }
   std::shared_ptr<SiteLogic> srcsl = global->getSiteLogicManager()->getSiteLogic(message[0]);
   if (!srcsl) {
     global->getEventLog()->log("RemoteCommandHandler", "Bad site name: " + message[0]);
-    return;
+    return false;
   }
   Path srcpath = message[1];
   std::string file = srcpath.baseName();
   if (message.size() == 2) {
     if (srcpath.isRelative()) {
       global->getEventLog()->log("RemoteCommandHandler", "Path must be absolute or a section name followed by file: " + message[1]);
-      return;
+      return false;
     }
     srcpath = srcpath.dirName();
   }
@@ -310,18 +330,19 @@ void RemoteCommandHandler::commandDownload(const std::vector<std::string> & mess
       }
       else {
         global->getEventLog()->log("RemoteCommandHandler", "Path must be absolute or a section name: " + message[1]);
-        return;
+        return false;
       }
     }
     file = message[2];
   }
   global->getEngine()->newTransferJobDownload(message[0], srcpath, file, global->getLocalStorage()->getDownloadPath(), file);
+  return true;
 }
 
-void RemoteCommandHandler::commandUpload(const std::vector<std::string> & message) {
+bool RemoteCommandHandler::commandUpload(const std::vector<std::string> & message) {
   if (message.size() < 3) {
     global->getEventLog()->log("RemoteCommandHandler", "Bad upload command format: " + util::join(message));
-    return;
+    return false;
   }
   Path srcpath = message[0];
   std::string file = srcpath.baseName();
@@ -340,7 +361,7 @@ void RemoteCommandHandler::commandUpload(const std::vector<std::string> & messag
   std::shared_ptr<SiteLogic> dstsl = global->getSiteLogicManager()->getSiteLogic(dstsite);
   if (!dstsl) {
     global->getEventLog()->log("RemoteCommandHandler", "Bad site name: " + dstsite);
-    return;
+    return false;
   }
   if (dstpath.isRelative()) {
     if (dstsl->getSite()->hasSection(dstpath.toString())) {
@@ -348,10 +369,11 @@ void RemoteCommandHandler::commandUpload(const std::vector<std::string> & messag
     }
     else {
       global->getEventLog()->log("RemoteCommandHandler", "Path must be absolute or a section name: " + dstpath.toString());
-      return;
+      return false;
     }
   }
   global->getEngine()->newTransferJobUpload(srcpath, file, dstsite, dstpath, file);
+  return true;
 }
 
 void RemoteCommandHandler::commandIdle(const std::vector<std::string> & message) {
@@ -445,35 +467,34 @@ void RemoteCommandHandler::commandReset(const std::vector<std::string> & message
   global->getEngine()->resetRace(race, hard);
 }
 
-void RemoteCommandHandler::parseRace(const std::vector<std::string> & message, int type) {
+bool RemoteCommandHandler::parseRace(const std::vector<std::string> & message, int type) {
   if (message.size() < 3) {
     global->getEventLog()->log("RemoteCommandHandler", "Bad remote race command format: " + util::join(message));
-    return;
+    return false;
   }
   std::string section = message[0];
   std::string release = message[1];
   std::string sitestring = message[2];
   if (sitestring == "*") {
     if (type == RACE) {
-      global->getEngine()->newRace(release, section);
+      return !!global->getEngine()->newRace(release, section);
     }
     else if (type == DISTRIBUTE){
-      global->getEngine()->newDistribute(release, section);
+      return !!global->getEngine()->newDistribute(release, section);
     }
     else {
-      global->getEngine()->prepareRace(release, section);
+      return global->getEngine()->prepareRace(release, section);
     }
-    return;
   }
   std::list<std::string> sites = util::trim(util::split(sitestring, ","));
   if (type == RACE) {
-    global->getEngine()->newRace(release, section, sites);
+    return !!global->getEngine()->newRace(release, section, sites);
   }
   else if (type == DISTRIBUTE){
-    global->getEngine()->newDistribute(release, section, sites);
+    return !!global->getEngine()->newDistribute(release, section, sites);
   }
   else {
-    global->getEngine()->prepareRace(release, section, sites);
+    return global->getEngine()->prepareRace(release, section, sites);
   }
 }
 

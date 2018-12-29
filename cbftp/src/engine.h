@@ -31,8 +31,8 @@ public:
   ~Engine();
   std::shared_ptr<Race> newRace(const std::string &, const std::string &, const std::list<std::string> &);
   std::shared_ptr<Race> newRace(const std::string &, const std::string &);
-  void prepareRace(const std::string &, const std::string &, const std::list<std::string> &);
-  void prepareRace(const std::string &, const std::string &);
+  bool prepareRace(const std::string &, const std::string &, const std::list<std::string> &);
+  bool prepareRace(const std::string &, const std::string &);
   std::shared_ptr<Race> newDistribute(const std::string &, const std::string &, const std::list<std::string> &);
   std::shared_ptr<Race> newDistribute(const std::string &, const std::string &);
   void startPreparedRace(unsigned int);

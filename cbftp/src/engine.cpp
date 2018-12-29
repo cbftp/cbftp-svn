@@ -272,12 +272,16 @@ std::shared_ptr<Race> Engine::newDistribute(const std::string & release, const s
   return newSpreadJob(SPREAD_DISTRIBUTE, release, section);
 }
 
-void Engine::prepareRace(const std::string & release, const std::string & section, const std::list<std::string> & sites) {
+bool Engine::prepareRace(const std::string & release, const std::string & section, const std::list<std::string> & sites) {
+  size_t preparedbefore = preparedraces.size();
   newSpreadJob(SPREAD_PREPARE, release, section, sites);
+  return preparedraces.size() > preparedbefore;
 }
 
-void Engine::prepareRace(const std::string & release, const std::string & section) {
+bool Engine::prepareRace(const std::string & release, const std::string & section) {
+  size_t preparedbefore = preparedraces.size();
   newSpreadJob(SPREAD_PREPARE, release, section);
+  return preparedraces.size() > preparedbefore;
 }
 
 void Engine::startPreparedRace(unsigned int id) {
