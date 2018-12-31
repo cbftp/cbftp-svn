@@ -1,14 +1,13 @@
 #include "uibase.h"
 
+#include <cassert>
 #include <iostream>
 #include <unistd.h>
-
-#include "util.h"
 
 static UIBase * uibase = NULL;
 
 UIBase::UIBase() {
-  util::assert(uibase == NULL);
+  assert(uibase == NULL);
   uibase = this;
 }
 

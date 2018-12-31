@@ -659,7 +659,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
         break;
       }
       confirmaction = ConfirmAction::WIPE;
-      std::string targettext = "these " + util::int2Str(static_cast<int>(filenames.size())) + " items";
+      std::string targettext = "these " + std::to_string(static_cast<int>(filenames.size())) + " items";
       if (filenames.size() == 1) {
         targettext = filenames.front().first;
       }
@@ -672,7 +672,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
         break;
       }
       confirmaction = ConfirmAction::DELETE;
-      std::string targettext = "these " + util::int2Str(static_cast<int>(filenames.size())) + " items";
+      std::string targettext = "these " + std::to_string(static_cast<int>(filenames.size())) + " items";
       if (filenames.size() == 1) {
         targettext = filenames.front().first;
       }
@@ -993,13 +993,13 @@ std::string BrowseScreenSite::getInfoText() const {
     if (list.hasUnique()) {
       text += "  UNIQUES";
     }
-    text += "  " + util::int2Str(list.filteredSizeFiles()) + "/" + util::int2Str(list.sizeFiles()) + "f " +
-        util::int2Str(list.filteredSizeDirs()) + "/" + util::int2Str(list.sizeDirs()) + "d";
+    text += "  " + std::to_string(list.filteredSizeFiles()) + "/" + std::to_string(list.sizeFiles()) + "f " +
+        std::to_string(list.filteredSizeDirs()) + "/" + std::to_string(list.sizeDirs()) + "d";
     text += std::string("  ") + util::parseSize(list.getFilteredTotalSize()) + "/" +
         util::parseSize(list.getTotalSize());
   }
   else {
-    text += "  " + util::int2Str(list.sizeFiles()) + "f " + util::int2Str(list.sizeDirs()) + "d";
+    text += "  " + std::to_string(list.sizeFiles()) + "f " + std::to_string(list.sizeDirs()) + "d";
     text += std::string("  ") + util::parseSize(list.getTotalSize());
   }
   return text;

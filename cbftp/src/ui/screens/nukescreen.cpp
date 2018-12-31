@@ -7,7 +7,6 @@
 #include "../../sitelogic.h"
 #include "../../filelist.h"
 #include "../../sitelogicmanager.h"
-#include "../../util.h"
 
 #include "../ui.h"
 #include "../menuselectoptionelement.h"

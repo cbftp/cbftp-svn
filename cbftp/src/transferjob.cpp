@@ -1,5 +1,7 @@
 #include "transferjob.h"
 
+#include <cassert>
+
 #include "core/tickpoke.h"
 #include "filelist.h"
 #include "file.h"
@@ -280,7 +282,7 @@ void TransferJob::checkFileListExists(FileList * fl) const {
       return;
     }
   }
-  util::assert(false);
+  assert(false);
 }
 
 void TransferJob::fileListUpdated(bool source, FileList * fl) {

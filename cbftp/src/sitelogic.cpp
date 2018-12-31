@@ -1,5 +1,7 @@
 #include "sitelogic.h"
 
+#include <cassert>
+
 #include "core/tickpoke.h"
 #include "core/eventreceiver.h"
 #include "core/types.h"
@@ -27,7 +29,6 @@
 #include "localstorage.h"
 #include "transferjob.h"
 #include "commandowner.h"
-#include "util.h"
 #include "race.h"
 #include "sitetransferjob.h"
 #include "transferstatus.h"
@@ -142,7 +143,7 @@ void SiteLogic::tick(int message) {
   for (unsigned int i = 0; i < connstatetracker.size(); i++) {
     connstatetracker[i].timePassed(TICK_INTERVAL);
     if (connstatetracker[i].getCommand().isReleased()) {
-      util::assert(!connstatetracker[i].isLocked() && !conns[i]->isProcessing());
+      assert(!connstatetracker[i].isLocked() && !conns[i]->isProcessing());
       DelayedCommand eventcommand = connstatetracker[i].getCommand();
       connstatetracker[i].getCommand().reset();
       connstatetracker[i].use();
@@ -409,7 +410,7 @@ void SiteLogic::commandSuccess(int id, int state) {
     case STATE_PRET_RETR:
     case STATE_PRET_STOR:
       if (connstatetracker[id].transferInitialized()) {
-        util::assert(connstatetracker[id].getTransferPassive());
+        assert(connstatetracker[id].getTransferPassive());
         passiveModeCommand(id);
         return;
       }
@@ -422,7 +423,7 @@ void SiteLogic::commandSuccess(int id, int state) {
       }
       return;
     case STATE_RETR_COMPLETE:
-      util::assert(connstatetracker[id].transferInitialized());
+      assert(connstatetracker[id].transferInitialized());
       connstatetracker[id].getTransferMonitor()->sourceComplete();
       transferComplete(id, true);
       connstatetracker[id].finishTransfer();
@@ -439,7 +440,7 @@ void SiteLogic::commandSuccess(int id, int state) {
       }
       return;
     case STATE_STOR_COMPLETE: {
-      util::assert(connstatetracker[id].transferInitialized());
+      assert(connstatetracker[id].transferInitialized());
       connstatetracker[id].getTransferMonitor()->targetComplete();
       transferComplete(id, false);
       FileList * fl = connstatetracker[id].getTransferFileList();
@@ -727,12 +728,12 @@ void SiteLogic::handleFail(int id) {
 }
 
 void SiteLogic::handleTransferFail(int id, int err) {
-  util::assert(connstatetracker[id].isListOrTransferLocked());
+  assert(connstatetracker[id].isListOrTransferLocked());
   handleTransferFail(id, connstatetracker[id].getTransferType(), err);
 }
 
 void SiteLogic::handleTransferFail(int id, int type, int err) {
-  util::assert(connstatetracker[id].isListOrTransferLocked());
+  assert(connstatetracker[id].isListOrTransferLocked());
   reportTransferErrorAndFinish(id, type, err);
   if (connstatetracker[id].hasTransfer() && connstatetracker[id].transferInitialized() &&
       connstatetracker[id].getTransferPassive() &&
@@ -1464,7 +1465,7 @@ bool SiteLogic::finishRequest(int requestid) {
       return true;
     }
   }
-  util::assert(false);
+  assert(false);
   return false;
 }
 
@@ -1754,7 +1755,7 @@ void SiteLogic::cleanupConnection(int id) {
 }
 
 void SiteLogic::finishTransferGracefully(int id) {
-  util::assert(connstatetracker[id].hasTransfer() &&
+  assert(connstatetracker[id].hasTransfer() &&
                !connstatetracker[id].isListLocked());
   switch (connstatetracker[id].getTransferType()) {
     case CST_DOWNLOAD:
@@ -1864,7 +1865,7 @@ FTPConn * SiteLogic::getConn(int id) const {
 std::string SiteLogic::getStatus(int id) const {
   int idletime = connstatetracker[id].getTimePassed()/1000;
   if (!conns[id]->isProcessing() && conns[id]->isConnected() && idletime) {
-    return "IDLE " + util::int2Str(idletime) + "s";
+    return "IDLE " + std::to_string(idletime) + "s";
   }
   return conns[id]->getStatus();
 }
@@ -1957,7 +1958,7 @@ void SiteLogic::getFileListConn(int id, bool hiddenfiles) {
 }
 
 void SiteLogic::getFileListConn(int id, CommandOwner * co, FileList * filelist) {
-  util::assert(filelist != NULL);
+  assert(filelist != NULL);
   if (site->getListCommand() == SITE_LIST_STAT) {
     conns[id]->doSTAT(co, filelist);
   }

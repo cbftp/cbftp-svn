@@ -4,7 +4,6 @@
 
 #include "proxy.h"
 #include "eventlog.h"
-#include "util.h"
 
 ProxyManager::ProxyManager() {
   defaultproxy = NULL;

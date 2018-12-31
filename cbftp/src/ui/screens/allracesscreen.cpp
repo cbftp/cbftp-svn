@@ -158,7 +158,7 @@ std::string AllRacesScreen::getInfoLabel() const {
 }
 
 std::string AllRacesScreen::getInfoText() const {
-  return "Active: " + util::int2Str(engine->currentRaces()) + "  Total: " + util::int2Str(engine->allRaces());
+  return "Active: " + std::to_string(engine->currentRaces()) + "  Total: " + std::to_string(engine->allRaces());
 }
 
 void AllRacesScreen::addRaceTableHeader(unsigned int y, MenuSelectOption & mso, const std::string & release) {
@@ -220,12 +220,12 @@ void AllRacesScreen::addRaceTableRow(unsigned int y, MenuSelectOption & mso, uns
 }
 
 void AllRacesScreen::addRaceDetails(unsigned int y, MenuSelectOption & mso, std::shared_ptr<Race> race) {
-  std::string done = util::int2Str(race->numSitesDone()) + "/" + util::int2Str(race->numSites());
+  std::string done = std::to_string(race->numSitesDone()) + "/" + std::to_string(race->numSites());
   std::string timespent = util::simpleTimeFormat(race->getTimeSpent());
   std::string status;
-  std::string worst = util::int2Str(race->getWorstCompletionPercentage()) + "%";
-  std::string avg = util::int2Str(race->getAverageCompletionPercentage()) + "%";
-  std::string best = util::int2Str(race->getBestCompletionPercentage()) + "%";
+  std::string worst = std::to_string(race->getWorstCompletionPercentage()) + "%";
+  std::string avg = std::to_string(race->getAverageCompletionPercentage()) + "%";
+  std::string best = std::to_string(race->getBestCompletionPercentage()) + "%";
   std::string size = util::parseSize(race->estimatedTotalSize());
   switch (race->getStatus()) {
     case RACE_STATUS_RUNNING:

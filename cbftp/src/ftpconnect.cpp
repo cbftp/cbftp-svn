@@ -1,5 +1,7 @@
 #include "ftpconnect.h"
 
+#include <cassert>
+
 #include "core/iomanager.h"
 #include "site.h"
 #include "ftpconnectowner.h"
@@ -7,7 +9,6 @@
 #include "globalcontext.h"
 #include "proxysession.h"
 #include "proxy.h"
-#include "util.h"
 
 #define WELCOME_TIMEOUT_MSEC 7000
 
@@ -32,7 +33,7 @@ FTPConnect::FTPConnect(int id, FTPConnectOwner * owner, const std::string & addr
 {
   bool resolving;
   if (proxy == NULL) {
-    sockid = global->getIOManager()->registerTCPClientSocket(this, addr, util::str2Int(port), resolving, true);
+    sockid = global->getIOManager()->registerTCPClientSocket(this, addr, std::stoi(port), resolving, true);
     if (resolving) {
       owner->ftpConnectInfo(id, "[" + addr + ":" + port + "][Resolving]");
     }
@@ -43,7 +44,7 @@ FTPConnect::FTPConnect(int id, FTPConnectOwner * owner, const std::string & addr
   else {
     proxynegotiation = true;
     proxysession->prepare(proxy, addr, port);
-    sockid = global->getIOManager()->registerTCPClientSocket(this, proxy->getAddr(), util::str2Int(proxy->getPort()), resolving, true);
+    sockid = global->getIOManager()->registerTCPClientSocket(this, proxy->getAddr(), std::stoi(proxy->getPort()), resolving, true);
     if (resolving) {
       owner->ftpConnectInfo(id, "[" + addr + ":" + port + "][Resolving proxy " + proxy->getAddr() + "]");
     }
@@ -54,7 +55,7 @@ FTPConnect::FTPConnect(int id, FTPConnectOwner * owner, const std::string & addr
 }
 
 FTPConnect::~FTPConnect() {
-  util::assert(!engaged); // must disengage before deleting; events may still be in the work queue
+  assert(!engaged); // must disengage before deleting; events may still be in the work queue
   delete proxysession;
   free(databuf);
 }

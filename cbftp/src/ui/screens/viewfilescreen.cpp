@@ -20,7 +20,6 @@
 #include "../../filelist.h"
 #include "../../file.h"
 #include "../../externalfileviewing.h"
-#include "../../util.h"
 #include "../../core/types.h"
 
 class CommandOwner;
@@ -125,7 +124,7 @@ void ViewFileScreen::redraw() {
       break;
     case ViewFileState::TOO_LARGE_FOR_INTERNAL:
       ui->printStr(1, 1, file + " is too large to download and open in the internal viewer.");
-      ui->printStr(2, 1, "The maximum file size for internal viewing is set to " + util::int2Str(MAXOPENSIZE) + " bytes.");
+      ui->printStr(2, 1, "The maximum file size for internal viewing is set to " + std::to_string(MAXOPENSIZE) + " bytes.");
       break;
     case ViewFileState::NO_DISPLAY:
       ui->printStr(1, 1, file + " cannot be opened in an external viewer.");
@@ -370,8 +369,8 @@ std::string ViewFileScreen::getInfoText() const {
         break;
     }
     unsigned int end = ymax < y + row ? ymax : y + row;
-    return "Line " + util::int2Str(y) + "-" +
-        util::int2Str(end) + "/" + util::int2Str(ymax) + "  Encoding: " + enc;
+    return "Line " + std::to_string(y) + "-" +
+        std::to_string(end) + "/" + std::to_string(ymax) + "  Encoding: " + enc;
   }
   else {
     return "";

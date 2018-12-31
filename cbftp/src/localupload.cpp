@@ -1,5 +1,6 @@
 #include "localupload.h"
 
+#include <cassert>
 #include <cstring>
 #include <cstdlib>
 #include <unistd.h>
@@ -10,7 +11,6 @@
 #include "transfermonitor.h"
 #include "ftpconn.h"
 #include "localstorage.h"
-#include "util.h"
 #include "path.h"
 
 LocalUpload::LocalUpload() :
@@ -73,7 +73,7 @@ void LocalUpload::FDSSLSuccess(int sockid, const std::string & cipher) {
 }
 
 void LocalUpload::sendChunk() {
-  util::assert(fileopened);
+  assert(fileopened);
   filestream.read(buf, buflen);
   int gcount = filestream.gcount();
   if (gcount == 0) {

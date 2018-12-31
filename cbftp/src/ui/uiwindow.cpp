@@ -1,7 +1,5 @@
 #include "uiwindow.h"
 
-#include "../util.h"
-
 void UIWindow::init(unsigned int row, unsigned int col) {
   resize(row, col);
   redraw();

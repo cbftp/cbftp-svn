@@ -96,14 +96,14 @@ void TransfersFilterScreen::command(const std::string & command, const std::stri
     if (identifier == "spreadjobs") {
       selectedspreadjobs.clear();
       for (std::list<std::string>::const_iterator it = items.begin(); it != items.end(); it++) {
-        selectedspreadjobs.push_back(global->getEngine()->getRace(util::str2Int(*it))->getName());
+        selectedspreadjobs.push_back(global->getEngine()->getRace(std::stoi(*it))->getName());
       }
       std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("spreadjobs"))->setText(getSpreadJobsText());
     }
     else if (identifier == "transferjobs") {
       selectedtransferjobs.clear();
       for (std::list<std::string>::const_iterator it = items.begin(); it != items.end(); it++) {
-        selectedtransferjobs.push_back(global->getEngine()->getTransferJob(util::str2Int(*it))->getName());
+        selectedtransferjobs.push_back(global->getEngine()->getTransferJob(std::stoi(*it))->getName());
       }
       std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("transferjobs"))->setText(getTransferJobsText());
     }
@@ -245,7 +245,7 @@ std::string TransfersFilterScreen::getSpreadJobsText() const {
     text = selectedspreadjobs.front();
   }
   else if (size > 1) {
-    text = util::int2Str((int)size) + " spread jobs selected...";
+    text = std::to_string((int)size) + " spread jobs selected...";
   }
   return text;
 }
@@ -257,7 +257,7 @@ std::string TransfersFilterScreen::getTransferJobsText() const {
     text = selectedtransferjobs.front();
   }
   else if (size > 1) {
-    text = util::int2Str((int)size) + " transfer jobs selected...";
+    text = std::to_string((int)size) + " transfer jobs selected...";
   }
   return text;
 }

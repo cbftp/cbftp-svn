@@ -112,7 +112,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   listcommand->addOption("LIST", SITE_LIST_LIST);
   listcommand->setOption(this->site->getListCommand());
   mso.addStringField(y++, x + 26, "basepath", "Base path:", this->site->getBasePath().toString(), false, 40, 512);
-  mso.addStringField(y, x, "idletime", "Max idle time (s):", util::int2Str(this->site->getMaxIdleTime()), false, 4);
+  mso.addStringField(y, x, "idletime", "Max idle time (s):", std::to_string(this->site->getMaxIdleTime()), false, 4);
   mso.addCheckBox(y, x + 24, "sscn", "SSCN supported:", this->site->supportsSSCN());
   mso.addCheckBox(y++, x + 45, "cpsv", "CPSV supported:", this->site->supportsCPSV());
   mso.addCheckBox(y, x, "binary", "Force binary mode:", this->site->forceBinaryMode());
@@ -405,7 +405,7 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
           site->setBrokenPASV(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
         }
         else if (identifier == "idletime") {
-          site->setMaxIdleTime(util::str2Int(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData()));
+          site->setMaxIdleTime(std::stoi(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData()));
         }
         else if (identifier == "useproxy") {
           int proxytype = std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData();

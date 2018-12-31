@@ -73,7 +73,7 @@ void MainScreen::redraw() {
   if (sitepos >= totalsitessize) {
     --sitepos;
   }
-  numsitestext = "Sites: " + util::int2Str(totalsitessize);
+  numsitestext = "Sites: " + std::to_string(totalsitessize);
   int listpreparedraces = global->getEngine()->preparedRaces();
   int listraces = global->getEngine()->allRaces();
   int listtransferjobs = global->getEngine()->allTransferJobs();
@@ -148,13 +148,13 @@ void MainScreen::redraw() {
   int currentraces = global->getEngine()->currentRaces();
   int currenttransferjobs = global->getEngine()->currentTransferJobs();
   if (currentraces) {
-    activeracestext = "Active races: " + util::int2Str(currentraces) + "  ";
+    activeracestext = "Active races: " + std::to_string(currentraces) + "  ";
   }
   else {
     activeracestext = "";
   }
   if (currenttransferjobs) {
-    activejobstext = "Active jobs: " + util::int2Str(currenttransferjobs) + "  ";
+    activejobstext = "Active jobs: " + std::to_string(currenttransferjobs) + "  ";
   }
   else {
     activejobstext = "";
@@ -430,8 +430,8 @@ bool MainScreen::keyPressed(unsigned int ch) {
         std::shared_ptr<Site> oldsite = global->getSiteManager()->getSite(sitename);
         std::shared_ptr<Site> site = std::make_shared<Site>(*oldsite);
         int i;
-        for (i = 0; !!global->getSiteManager()->getSite(site->getName() + "-" + util::int2Str(i)); i++);
-        site->setName(site->getName() + "-" + util::int2Str(i));
+        for (i = 0; !!global->getSiteManager()->getSite(site->getName() + "-" + std::to_string(i)); i++);
+        site->setName(site->getName() + "-" + std::to_string(i));
         global->getSiteManager()->addSite(site);
         global->getSettingsLoaderSaver()->saveSettings();
         ui->redraw();
@@ -625,17 +625,17 @@ void MainScreen::addSiteRow(unsigned int y, MenuSelectOption & mso, bool selecta
 void MainScreen::addSiteDetails(unsigned int y, MenuSelectOption & mso, const std::shared_ptr<SiteLogic> & sl) {
   std::shared_ptr<Site> site = sl->getSite();
   std::string sitename = site->getName();
-  std::string logins = util::int2Str(sl->getCurrLogins());
+  std::string logins = std::to_string(sl->getCurrLogins());
   if (!site->unlimitedLogins()) {
-    logins += "/" + util::int2Str(site->getMaxLogins());
+    logins += "/" + std::to_string(site->getMaxLogins());
   }
-  std::string uploads = util::int2Str(sl->getCurrUp());
+  std::string uploads = std::to_string(sl->getCurrUp());
   if (!site->unlimitedUp()) {
-    uploads += "/" + util::int2Str(site->getMaxUp());
+    uploads += "/" + std::to_string(site->getMaxUp());
   }
-  std::string downloads = util::int2Str(sl->getCurrDown());
+  std::string downloads = std::to_string(sl->getCurrDown());
   if (!site->unlimitedDown()) {
-    downloads += "/" + util::int2Str(site->getMaxDown());
+    downloads += "/" + std::to_string(site->getMaxDown());
   }
   std::string up;
   switch (site->getAllowUpload()) {

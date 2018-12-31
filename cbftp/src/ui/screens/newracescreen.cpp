@@ -5,7 +5,6 @@
 #include "../../sitemanager.h"
 #include "../../engine.h"
 #include "../../race.h"
-#include "../../util.h"
 
 #include "../ui.h"
 #include "../menuselectoptioncheckbox.h"
@@ -104,7 +103,7 @@ void NewRaceScreen::redraw() {
   populateSiteList();
   std::string item = items.front().first;
   if (items.size() > 1) {
-    item = util::int2Str(static_cast<int>(items.size())) + " items";
+    item = std::to_string(static_cast<int>(items.size())) + " items";
   }
   ui->printStr(1, 1, "Item: " + item);
   ui->printStr(3, 1, "Section: ");

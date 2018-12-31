@@ -1,5 +1,6 @@
 #include "racestatusscreen.h"
 
+#include <cassert>
 #include <set>
 #include <unordered_map>
 #include <unordered_set>
@@ -15,7 +16,6 @@
 #include "../../ftpconn.h"
 #include "../../engine.h"
 #include "../../sitemanager.h"
-#include "../../util.h"
 
 #include "../ui.h"
 #include "../menuselectoptiontextbutton.h"
@@ -75,7 +75,7 @@ void RaceStatusScreen::redraw() {
     if (pathshow == "") {
       pathshow = "/";
     }
-    subpathpresent += pathshow + " (" + util::int2Str(guessedsize) + "f";
+    subpathpresent += pathshow + " (" + std::to_string(guessedsize) + "f";
     if (sfvreported) {
       subpathpresent += "/sfv";
     }
@@ -122,7 +122,7 @@ void RaceStatusScreen::redraw() {
             }
             if (bannedsuffixes.find(tag) != bannedsuffixes.end()) {
               for (int i = 0; i < 100; i++) {
-                std::string numtag = util::int2Str(i);
+                std::string numtag = std::to_string(i);
                 while (numtag.length() < 2) {
                   numtag = "0" + numtag;
                 }
@@ -132,7 +132,7 @@ void RaceStatusScreen::redraw() {
                 }
                 if (i == 99) {
                   for (int i = 0; i < 1000; i++) { // last resort
-                    tag = util::int2Str(i);
+                    tag = std::to_string(i);
                     while (tag.length() < 3) {
                       tag = "0" + tag;
                     }
@@ -140,7 +140,7 @@ void RaceStatusScreen::redraw() {
                       break;
                     }
                     if (i == 999) {
-                      util::assert(false); // whatever, this should never happen
+                      assert(false); // whatever, this should never happen
                     }
                   }
                 }

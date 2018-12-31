@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "site.h"
-#include "util.h"
 
 File::File(const std::string & name, const std::string & user) :
   name(name),

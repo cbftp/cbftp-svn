@@ -1,5 +1,6 @@
 #include "engine.h"
 
+#include <cassert>
 #include <cstdlib>
 #include <fstream>
 #include <set>
@@ -32,8 +33,6 @@
 #include "preparedrace.h"
 #include "sitetransferjob.h"
 #include "sectionmanager.h"
-
-using std::__basic_file;
 
 #define SPREAD 0
 #define POKEINTERVAL 1000
@@ -196,7 +195,7 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & rele
     checkStartPoke();
     if (profile == SPREAD_PREPARE) {
       global->getEventLog()->log("Engine", "Preparing spread job: " + section + "/" + release +
-                " on " + util::int2Str((int)addsites.size()) + " sites.");
+                " on " + std::to_string((int)addsites.size()) + " sites.");
       preparedraces.push_back(std::make_shared<PreparedRace>(race->getId(), release, section, addsites, preparedraceexpirytime));
       for (std::list<std::shared_ptr<SiteLogic> >::const_iterator ait = addsiteslogics.begin(); ait != addsiteslogics.end(); ait++) {
         (*ait)->activateAll();
@@ -227,14 +226,14 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & rele
       allraces.push_back(race);
       dropped = 0;
       global->getEventLog()->log("Engine", "Starting spread job: " + section + "/" + release +
-          " on " + util::int2Str((int)addsites.size()) + " sites.");
+          " on " + std::to_string((int)addsites.size()) + " sites.");
       sectionptr->addJob();
       global->getStatistics()->addSpreadJob();
     }
     else {
       if (addsites.size()) {
         global->getEventLog()->log("Engine", "Appending to spread job: " + section + "/" + release +
-            " with " + util::int2Str((int)addsites.size()) + " site" + (addsites.size() > 1 ? "s" : "") + ".");
+            " with " + std::to_string((int)addsites.size()) + " site" + (addsites.size() > 1 ? "s" : "") + ".");
       }
       if (readdtocurrent) {
         currentraces.push_back(race);
@@ -1232,7 +1231,7 @@ void Engine::raceComplete(std::shared_ptr<Race> race) {
   //refreshScoreBoard();
   global->getEventLog()->log("Engine", "Spread job globally completed: " + race->getName());
   if (dropped) {
-    global->getEventLog()->log("Engine", "Scoreboard refreshes dropped since spread job start: " + util::int2Str(dropped));
+    global->getEventLog()->log("Engine", "Scoreboard refreshes dropped since spread job start: " + std::to_string(dropped));
   }
   return;
 }
@@ -1318,7 +1317,7 @@ unsigned short Engine::calculateScore(PrioType priotype, unsigned long long int 
   }
 
   points += getPriorityPoints(priority);
-  util::assert(points >= 0 && points < 10000);
+  assert(points >= 0 && points < 10000);
   return points;
 }
 

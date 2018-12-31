@@ -1,5 +1,7 @@
 #include "rawbuffer.h"
 
+#include <cassert>
+
 #include "uibase.h"
 #include "globalcontext.h"
 #include "util.h"
@@ -138,19 +140,19 @@ std::string RawBuffer::getTag() const {
 }
 
 void RawBuffer::setId(int id) {
-  this->id = util::int2Str(id);
+  this->id = std::to_string(id);
 }
 
 const std::pair<std::string, std::string> & RawBuffer::getLineCopy(unsigned int num) const {
   unsigned int size = getCopySize();
-  util::assert(num < size);
+  assert(num < size);
   int pos = (num < latestpcopy ? latestpcopy - num - 1 : size + latestpcopy - num - 1);
   return logcopy[pos];
 }
 
 const std::pair<std::string, std::string> & RawBuffer::getLine(unsigned int num) const {
   unsigned int size = getSize();
-  util::assert(num < size);
+  assert(num < size);
   int pos = (num < latestp ? latestp - num - 1 : size + latestp - num - 1);
   return log[pos];
 }

@@ -42,17 +42,17 @@ void InfoScreen::redraw() {
   i++;
   ui->printStr(i++, 1, "Traffic measurements");
   ui->printStr(i++, 1, "FXP      last 24 hours: " + util::parseSize(sizefxpday) + ", " +
-               util::int2Str(filesfxpday) + " files - All time: " + util::parseSize(sizefxpall) + ", " +
-               util::int2Str(filesfxpall) + " files");
+               std::to_string(filesfxpday) + " files - All time: " + util::parseSize(sizefxpall) + ", " +
+               std::to_string(filesfxpall) + " files");
   ui->printStr(i++, 1, "Upload   last 24 hours: " + util::parseSize(sizeupday) + ", " +
-                 util::int2Str(filesupday) + " files - All time: " + util::parseSize(sizeupall) + ", " +
-                 util::int2Str(filesupall) + " files");
+                 std::to_string(filesupday) + " files - All time: " + util::parseSize(sizeupall) + ", " +
+                 std::to_string(filesupall) + " files");
   ui->printStr(i++, 1, "Download last 24 hours: " + util::parseSize(sizedownday) + ", " +
-                 util::int2Str(filesdownday) + " files - All time: " + util::parseSize(sizedownall) + ", " +
-                 util::int2Str(filesdownall) + " files");
+                 std::to_string(filesdownday) + " files - All time: " + util::parseSize(sizedownall) + ", " +
+                 std::to_string(filesdownall) + " files");
   ++i;
-  ui->printStr(i++, 1, "All time spread jobs: " + util::int2Str(global->getStatistics()->getSpreadJobs()));
-  ui->printStr(i++, 1, "All time transfer jobs: " + util::int2Str(global->getStatistics()->getTransferJobs()));
+  ui->printStr(i++, 1, "All time spread jobs: " + std::to_string(global->getStatistics()->getSpreadJobs()));
+  ui->printStr(i++, 1, "All time transfer jobs: " + std::to_string(global->getStatistics()->getTransferJobs()));
 }
 
 void InfoScreen::update() {

@@ -22,7 +22,6 @@
 #include "site.h"
 #include "path.h"
 #include "engine.h"
-#include "util.h"
 #include "hourlyalltracking.h"
 #include "sectionmanager.h"
 
@@ -112,7 +111,7 @@ void SettingsLoaderSaver::loadSettings() {
       }
     }
     else if (!setting.compare("port")) {
-      global->getRemoteCommandHandler()->setPort(util::str2Int(value));
+      global->getRemoteCommandHandler()->setPort(std::stoi(value));
     }
     else if (!setting.compare("password")) {
       global->getRemoteCommandHandler()->setPassword(value);
@@ -190,7 +189,7 @@ void SettingsLoaderSaver::loadSettings() {
       proxy->setPort(value);
     }
     else if (!setting.compare("authmethod")) {
-      proxy->setAuthMethod(util::str2Int(value));
+      proxy->setAuthMethod(std::stoi(value));
     }
     else if (!setting.compare("user")) {
       proxy->setUser(value);
@@ -233,10 +232,10 @@ void SettingsLoaderSaver::loadSettings() {
       global->getLocalStorage()->setActiveModeAddress(value);
     }
     else if (!setting.compare("activeportfirst")) {
-      global->getLocalStorage()->setActivePortFirst(util::str2Int(value));
+      global->getLocalStorage()->setActivePortFirst(std::stoi(value));
     }
     else if (!setting.compare("activeportlast")) {
-      global->getLocalStorage()->setActivePortLast(util::str2Int(value));
+      global->getLocalStorage()->setActivePortLast(std::stoi(value));
     }
   }
 
@@ -272,7 +271,7 @@ void SettingsLoaderSaver::loadSettings() {
       site->setBasePath(value);
     }
     else if (!setting.compare("idletime")) {
-      site->setMaxIdleTime(util::str2Int(value));
+      site->setMaxIdleTime(std::stoi(value));
     }
     else if (!setting.compare("pret")) {
       if (!value.compare("true")) site->setPRET(true);
@@ -295,7 +294,7 @@ void SettingsLoaderSaver::loadSettings() {
       if (!value.compare("true")) site->setSSLTransferPolicy(SITE_SSL_ALWAYS_ON);
     }
     else if (!setting.compare("ssltransfer")) {
-      site->setSSLTransferPolicy(util::str2Int(value));
+      site->setSSLTransferPolicy(std::stoi(value));
     }
     else if (!setting.compare("sscn")) {
       if (!value.compare("false")) site->setSupportsSSCN(false);
@@ -304,7 +303,7 @@ void SettingsLoaderSaver::loadSettings() {
       if (!value.compare("false")) site->setSupportsCPSV(false);
     }
     else if (!setting.compare("listcommand")) {
-      site->setListCommand(util::str2Int(value));
+      site->setListCommand(std::stoi(value));
     }
     else if (!setting.compare("disabled")) {
       if (!value.compare("true")) site->setDisabled(true);
@@ -316,7 +315,7 @@ void SettingsLoaderSaver::loadSettings() {
       }
       // compatibility end
       else {
-        site->setAllowUpload(static_cast<SiteAllowTransfer>(util::str2Int(value)));
+        site->setAllowUpload(static_cast<SiteAllowTransfer>(std::stoi(value)));
       }
     }
     else if (!setting.compare("allowdownload")) {
@@ -326,7 +325,7 @@ void SettingsLoaderSaver::loadSettings() {
       }
       // compatibility end
       else {
-        site->setAllowDownload(static_cast<SiteAllowTransfer>(util::str2Int(value)));
+        site->setAllowDownload(static_cast<SiteAllowTransfer>(std::stoi(value)));
       }
     }
     else if (!setting.compare("priority")) {
@@ -336,13 +335,13 @@ void SettingsLoaderSaver::loadSettings() {
       if (!value.compare("true")) site->setBrokenPASV(true);
     }
     else if (!setting.compare("logins")) {
-      site->setMaxLogins(util::str2Int(value));
+      site->setMaxLogins(std::stoi(value));
     }
     else if (!setting.compare("maxdn")) {
-      site->setMaxDn(util::str2Int(value));
+      site->setMaxDn(std::stoi(value));
     }
     else if (!setting.compare("maxup")) {
-      site->setMaxUp(util::str2Int(value));
+      site->setMaxUp(std::stoi(value));
     }
     else if (!setting.compare("section")) {
       size_t split = value.find('$');
@@ -353,23 +352,23 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("avgspeed")) {
       size_t split = value.find('$');
       std::string sitename = value.substr(0, split);
-      int avgspeed = util::str2Int(value.substr(split + 1));
+      int avgspeed = std::stoi(value.substr(split + 1));
       site->setAverageSpeed(sitename, avgspeed);
     }
     else if (!setting.compare("affil")) {
       site->addAffil(value);
     }
     else if (!setting.compare("proxytype")) {
-      site->setProxyType(util::str2Int(value));
+      site->setProxyType(std::stoi(value));
     }
     else if (!setting.compare("proxyname")) {
       site->setProxy(value);
     }
     else if (!setting.compare("transfersourcepolicy")) {
-      site->setTransferSourcePolicy(util::str2Int(value));
+      site->setTransferSourcePolicy(std::stoi(value));
     }
     else if (!setting.compare("transfertargetpolicy")) {
-      site->setTransferTargetPolicy(util::str2Int(value));
+      site->setTransferTargetPolicy(std::stoi(value));
     }
     else if (!setting.compare("exceptsourcesite")) {
       exceptsources.push_back(std::pair<std::string, std::string>(name, value));
@@ -381,39 +380,39 @@ void SettingsLoaderSaver::loadSettings() {
       loadSkipListEntry((SkipList *)&site->getSkipList(), value);
     }
     else if (!setting.compare("sizeup")) {
-      site->setSizeUp(util::str2Int(value));
+      site->setSizeUp(std::stoll(value));
     }
     else if (!setting.compare("filesup")) {
-      site->setFilesUp(util::str2Int(value));
+      site->setFilesUp(std::stoi(value));
     }
     else if (!setting.compare("sizedown")) {
-      site->setSizeDown(util::str2Int(value));
+      site->setSizeDown(std::stoll(value));
     }
     else if (!setting.compare("filesdown")) {
-      site->setFilesDown(util::str2Int(value));
+      site->setFilesDown(std::stoi(value));
     }
     else if (!setting.compare("sitessizeup")) {
       size_t split = value.find('$');
       std::string sitename = value.substr(0, split);
-      unsigned long long int size = util::str2Int(value.substr(split + 1));
+      unsigned long long int size = std::stoll(value.substr(split + 1));
       site->setSizeUp(sitename, size);
     }
     else if (!setting.compare("sitesfilesup")) {
       size_t split = value.find('$');
       std::string sitename = value.substr(0, split);
-      unsigned int files = util::str2Int(value.substr(split + 1));
+      unsigned int files = std::stoi(value.substr(split + 1));
       site->setFilesUp(sitename, files);
     }
     else if (!setting.compare("sitessizedown")) {
       size_t split = value.find('$');
       std::string sitename = value.substr(0, split);
-      unsigned long long int size = util::str2Int(value.substr(split + 1));
+      unsigned long long int size = std::stoll(value.substr(split + 1));
       site->setSizeDown(sitename, size);
     }
     else if (!setting.compare("sitesfilesdown")) {
       size_t split = value.find('$');
       std::string sitename = value.substr(0, split);
-      unsigned int files = util::str2Int(value.substr(split + 1));
+      unsigned int files = std::stoi(value.substr(split + 1));
       site->setFilesDown(sitename, files);
     }
   }
@@ -446,13 +445,13 @@ void SettingsLoaderSaver::loadSettings() {
       global->getSiteManager()->setDefaultPassword(value);
     }
     else if (!setting.compare("maxlogins")) {
-      global->getSiteManager()->setDefaultMaxLogins(util::str2Int(value));
+      global->getSiteManager()->setDefaultMaxLogins(std::stoi(value));
     }
     else if (!setting.compare("maxup")) {
-      global->getSiteManager()->setDefaultMaxUp(util::str2Int(value));
+      global->getSiteManager()->setDefaultMaxUp(std::stoi(value));
     }
     else if (!setting.compare("maxdown")) {
-      global->getSiteManager()->setDefaultMaxDown(util::str2Int(value));
+      global->getSiteManager()->setDefaultMaxDown(std::stoi(value));
     }
     // begin backward compatibility r938
     else if (!setting.compare("sslconn")) {
@@ -470,10 +469,10 @@ void SettingsLoaderSaver::loadSettings() {
       }
     }
     else if (!setting.compare("ssltransfer")) {
-      global->getSiteManager()->setDefaultSSLTransferPolicy(util::str2Int(value));
+      global->getSiteManager()->setDefaultSSLTransferPolicy(std::stoi(value));
     }
     else if (!setting.compare("maxidletime")) {
-      global->getSiteManager()->setDefaultMaxIdleTime(util::str2Int(value));
+      global->getSiteManager()->setDefaultMaxIdleTime(std::stoi(value));
     }
   }
 
@@ -485,7 +484,7 @@ void SettingsLoaderSaver::loadSettings() {
     std::string setting = line.substr(0, tok);
     std::string value = line.substr(tok + 1);
     if (!setting.compare("preparedraceexpirytime")) {
-      global->getEngine()->setPreparedRaceExpiryTime(util::str2Int(value));
+      global->getEngine()->setPreparedRaceExpiryTime(std::stoi(value));
     }
   }
 
@@ -519,28 +518,28 @@ void SettingsLoaderSaver::loadSettings() {
     std::string setting = line.substr(0, tok);
     std::string value = line.substr(tok + 1);
     if (!setting.compare("sizeup")) {
-      global->getStatistics()->setSizeUp(util::str2Int(value));
+      global->getStatistics()->setSizeUp(std::stoll(value));
     }
     else if (!setting.compare("filesup")) {
-      global->getStatistics()->setFilesUp(util::str2Int(value));
+      global->getStatistics()->setFilesUp(std::stoi(value));
     }
     else if (!setting.compare("sizedown")) {
-      global->getStatistics()->setSizeDown(util::str2Int(value));
+      global->getStatistics()->setSizeDown(std::stoll(value));
     }
     else if (!setting.compare("filesdown")) {
-      global->getStatistics()->setFilesDown(util::str2Int(value));
+      global->getStatistics()->setFilesDown(std::stoi(value));
     }
     else if (!setting.compare("sizefxp")) {
-      global->getStatistics()->setSizeFXP(util::str2Int(value));
+      global->getStatistics()->setSizeFXP(std::stoll(value));
     }
     else if (!setting.compare("filesfxp")) {
-      global->getStatistics()->setFilesFXP(util::str2Int(value));
+      global->getStatistics()->setFilesFXP(std::stoi(value));
     }
     else if (!setting.compare("spreadjobs")) {
-      global->getStatistics()->setSpreadJobs(util::str2Int(value));
+      global->getStatistics()->setSpreadJobs(std::stoi(value));
     }
     else if (!setting.compare("transferjobs")) {
-      global->getStatistics()->setTransferJobs(util::str2Int(value));
+      global->getStatistics()->setTransferJobs(std::stoi(value));
     }
   }
 
@@ -574,7 +573,7 @@ void SettingsLoaderSaver::saveSettings() {
   }
 
   if (global->getRemoteCommandHandler()->isEnabled()) dfh->addOutputLine("RemoteCommandHandler", "enabled=true");
-  dfh->addOutputLine("RemoteCommandHandler", "port=" + util::int2Str(global->getRemoteCommandHandler()->getUDPPort()));
+  dfh->addOutputLine("RemoteCommandHandler", "port=" + std::to_string(global->getRemoteCommandHandler()->getUDPPort()));
   dfh->addOutputLine("RemoteCommandHandler", "password=" + global->getRemoteCommandHandler()->getPassword());
   dfh->addOutputLine("RemoteCommandHandler", "notify=" + std::to_string(static_cast<int>(global->getRemoteCommandHandler()->getNotify())));
 
@@ -603,7 +602,7 @@ void SettingsLoaderSaver::saveSettings() {
       dfh->addOutputLine(filetag, name + "$port=" + proxy->getPort());
       dfh->addOutputLine(filetag, name + "$user=" + proxy->getUser());
       dfh->addOutputLine(filetag, name + "$pass=" + proxy->getPass());
-      dfh->addOutputLine(filetag, name + "$authmethod=" + util::int2Str(proxy->getAuthMethod()));
+      dfh->addOutputLine(filetag, name + "$authmethod=" + std::to_string(proxy->getAuthMethod()));
     }
     if (global->getProxyManager()->getDefaultProxy() != NULL) {
       dfh->addOutputLine(defaultstag, "useproxy=" + global->getProxyManager()->getDefaultProxy()->getName());
@@ -616,8 +615,8 @@ void SettingsLoaderSaver::saveSettings() {
     dfh->addOutputLine(filetag, "downloadpath=" + global->getLocalStorage()->getDownloadPath().toString());
     if (global->getLocalStorage()->getUseActiveModeAddress()) dfh->addOutputLine(filetag, "useactivemodeaddr=true");
     dfh->addOutputLine(filetag, "activemodeaddr=" + global->getLocalStorage()->getActiveModeAddress());
-    dfh->addOutputLine(filetag, "activeportfirst=" + util::int2Str(global->getLocalStorage()->getActivePortFirst()));
-    dfh->addOutputLine(filetag, "activeportlast=" + util::int2Str(global->getLocalStorage()->getActivePortLast()));
+    dfh->addOutputLine(filetag, "activeportfirst=" + std::to_string(global->getLocalStorage()->getActivePortFirst()));
+    dfh->addOutputLine(filetag, "activeportlast=" + std::to_string(global->getLocalStorage()->getActivePortLast()));
   }
 
   {
@@ -631,25 +630,25 @@ void SettingsLoaderSaver::saveSettings() {
       dfh->addOutputLine(filetag, name + "$user=" + site->getUser());
       dfh->addOutputLine(filetag, name + "$pass=" + site->getPass());
       dfh->addOutputLine(filetag, name + "$basepath=" + site->getBasePath().toString());
-      dfh->addOutputLine(filetag, name + "$logins=" + util::int2Str(site->getInternMaxLogins()));
-      dfh->addOutputLine(filetag, name + "$maxup=" + util::int2Str(site->getInternMaxUp()));
-      dfh->addOutputLine(filetag, name + "$maxdn=" + util::int2Str(site->getInternMaxDown()));
-      dfh->addOutputLine(filetag, name + "$idletime=" + util::int2Str(site->getMaxIdleTime()));
+      dfh->addOutputLine(filetag, name + "$logins=" + std::to_string(site->getInternMaxLogins()));
+      dfh->addOutputLine(filetag, name + "$maxup=" + std::to_string(site->getInternMaxUp()));
+      dfh->addOutputLine(filetag, name + "$maxdn=" + std::to_string(site->getInternMaxDown()));
+      dfh->addOutputLine(filetag, name + "$idletime=" + std::to_string(site->getMaxIdleTime()));
       dfh->addOutputLine(filetag, name + "$tlsmode=" + std::to_string(static_cast<int>(site->getTLSMode())));
-      dfh->addOutputLine(filetag, name + "$ssltransfer=" + util::int2Str(site->getSSLTransferPolicy()));
+      dfh->addOutputLine(filetag, name + "$ssltransfer=" + std::to_string(site->getSSLTransferPolicy()));
       if (!site->supportsSSCN()) dfh->addOutputLine(filetag, name + "$sscn=false");
       if (!site->supportsCPSV()) dfh->addOutputLine(filetag, name + "$cpsv=false");
-      dfh->addOutputLine(filetag, name + "$listcommand=" + util::int2Str(site->getListCommand()));
+      dfh->addOutputLine(filetag, name + "$listcommand=" + std::to_string(site->getListCommand()));
       if (site->needsPRET()) dfh->addOutputLine(filetag, name + "$pret=true");
       if (site->forceBinaryMode()) dfh->addOutputLine(filetag, name + "$binary=true");
       if (!site->useXDUPE()) dfh->addOutputLine(filetag, name + "$xdupe=false");
       if (site->getDisabled()) dfh->addOutputLine(filetag, name + "$disabled=true");
-      dfh->addOutputLine(filetag, name + "$allowupload=" + util::int2Str(site->getAllowUpload()));
-      dfh->addOutputLine(filetag, name + "$allowdownload=" + util::int2Str(site->getAllowDownload()));
+      dfh->addOutputLine(filetag, name + "$allowupload=" + std::to_string(site->getAllowUpload()));
+      dfh->addOutputLine(filetag, name + "$allowdownload=" + std::to_string(site->getAllowDownload()));
       dfh->addOutputLine(filetag, name + "$priority=" + std::to_string(static_cast<int>(site->getPriority())));
       if (site->hasBrokenPASV()) dfh->addOutputLine(filetag, name + "$brokenpasv=true");
       int proxytype = site->getProxyType();
-      dfh->addOutputLine(filetag, name + "$proxytype=" + util::int2Str(proxytype));
+      dfh->addOutputLine(filetag, name + "$proxytype=" + std::to_string(proxytype));
       if (proxytype == SITE_PROXY_USE) {
         dfh->addOutputLine(filetag, name + "$proxyname=" + site->getProxy());
       }
@@ -659,31 +658,31 @@ void SettingsLoaderSaver::saveSettings() {
       }
       std::map<std::string, int>::const_iterator sit2;
       for (sit2 = site->avgspeedBegin(); sit2 != site->avgspeedEnd(); sit2++) {
-        dfh->addOutputLine(filetag, name + "$avgspeed=" + sit2->first + "$" + util::int2Str(sit2->second));
+        dfh->addOutputLine(filetag, name + "$avgspeed=" + sit2->first + "$" + std::to_string(sit2->second));
       }
-      dfh->addOutputLine(filetag, name + "$sizeup=" + util::int2Str(site->getSizeUpAll()));
-      dfh->addOutputLine(filetag, name + "$filesup=" + util::int2Str(site->getFilesUpAll()));
-      dfh->addOutputLine(filetag, name + "$sizedown=" + util::int2Str(site->getSizeDownAll()));
-      dfh->addOutputLine(filetag, name + "$filesdown=" + util::int2Str(site->getFilesDownAll()));
+      dfh->addOutputLine(filetag, name + "$sizeup=" + std::to_string(site->getSizeUpAll()));
+      dfh->addOutputLine(filetag, name + "$filesup=" + std::to_string(site->getFilesUpAll()));
+      dfh->addOutputLine(filetag, name + "$sizedown=" + std::to_string(site->getSizeDownAll()));
+      dfh->addOutputLine(filetag, name + "$filesdown=" + std::to_string(site->getFilesDownAll()));
       std::map<std::string, HourlyAllTracking>::const_iterator sit5;
       for (sit5 = site->sizeUpBegin(); sit5 != site->sizeUpEnd(); sit5++) {
-        dfh->addOutputLine(filetag, name + "$sitessizeup=" + sit5->first + "$" + util::int2Str(sit5->second.getAll()));
+        dfh->addOutputLine(filetag, name + "$sitessizeup=" + sit5->first + "$" + std::to_string(sit5->second.getAll()));
       }
       for (sit5 = site->filesUpBegin(); sit5 != site->filesUpEnd(); sit5++) {
-        dfh->addOutputLine(filetag, name + "$sitesfilesup=" + sit5->first + "$" + util::int2Str(sit5->second.getAll()));
+        dfh->addOutputLine(filetag, name + "$sitesfilesup=" + sit5->first + "$" + std::to_string(sit5->second.getAll()));
       }
       for (sit5 = site->sizeDownBegin(); sit5 != site->sizeDownEnd(); sit5++) {
-        dfh->addOutputLine(filetag, name + "$sitessizedown=" + sit5->first + "$" + util::int2Str(sit5->second.getAll()));
+        dfh->addOutputLine(filetag, name + "$sitessizedown=" + sit5->first + "$" + std::to_string(sit5->second.getAll()));
       }
       for (sit5 = site->filesDownBegin(); sit5 != site->filesDownEnd(); sit5++) {
-        dfh->addOutputLine(filetag, name + "$sitesfilesdown=" + sit5->first + "$" + util::int2Str(sit5->second.getAll()));
+        dfh->addOutputLine(filetag, name + "$sitesfilesdown=" + sit5->first + "$" + std::to_string(sit5->second.getAll()));
       }
       std::set<std::string>::const_iterator sit3;
       for (sit3 = site->affilsBegin(); sit3 != site->affilsEnd(); sit3++) {
         dfh->addOutputLine(filetag, name + "$affil=" + *sit3);
       }
-      dfh->addOutputLine(filetag, name + "$transfersourcepolicy=" + util::int2Str(site->getTransferSourcePolicy()));
-      dfh->addOutputLine(filetag, name + "$transfertargetpolicy=" + util::int2Str(site->getTransferTargetPolicy()));
+      dfh->addOutputLine(filetag, name + "$transfersourcepolicy=" + std::to_string(site->getTransferSourcePolicy()));
+      dfh->addOutputLine(filetag, name + "$transfertargetpolicy=" + std::to_string(site->getTransferTargetPolicy()));
       std::set<std::shared_ptr<Site> >::const_iterator sit4;
       for (sit4 = site->exceptSourceSitesBegin(); sit4 != site->exceptSourceSitesEnd(); sit4++) {
         dfh->addOutputLine(filetag, name + "$exceptsourcesite=" + (*sit4)->getName());
@@ -695,11 +694,11 @@ void SettingsLoaderSaver::saveSettings() {
     }
     dfh->addOutputLine(defaultstag, "username=" + global->getSiteManager()->getDefaultUserName());
     dfh->addOutputLine(defaultstag, "password=" + global->getSiteManager()->getDefaultPassword());
-    dfh->addOutputLine(defaultstag, "maxlogins=" + util::int2Str(global->getSiteManager()->getDefaultMaxLogins()));
-    dfh->addOutputLine(defaultstag, "maxup=" + util::int2Str(global->getSiteManager()->getDefaultMaxUp()));
-    dfh->addOutputLine(defaultstag, "maxdown=" + util::int2Str(global->getSiteManager()->getDefaultMaxDown()));
-    dfh->addOutputLine(defaultstag, "maxidletime=" + util::int2Str(global->getSiteManager()->getDefaultMaxIdleTime()));
-    dfh->addOutputLine(defaultstag, "ssltransfer=" + util::int2Str(global->getSiteManager()->getDefaultSSLTransferPolicy()));
+    dfh->addOutputLine(defaultstag, "maxlogins=" + std::to_string(global->getSiteManager()->getDefaultMaxLogins()));
+    dfh->addOutputLine(defaultstag, "maxup=" + std::to_string(global->getSiteManager()->getDefaultMaxUp()));
+    dfh->addOutputLine(defaultstag, "maxdown=" + std::to_string(global->getSiteManager()->getDefaultMaxDown()));
+    dfh->addOutputLine(defaultstag, "maxidletime=" + std::to_string(global->getSiteManager()->getDefaultMaxIdleTime()));
+    dfh->addOutputLine(defaultstag, "ssltransfer=" + std::to_string(global->getSiteManager()->getDefaultSSLTransferPolicy()));
     dfh->addOutputLine(defaultstag, "tlsmode=" + std::to_string(static_cast<int>(global->getSiteManager()->getDefaultTLSMode())));
   }
 
@@ -713,18 +712,18 @@ void SettingsLoaderSaver::saveSettings() {
   }
 
   {
-    dfh->addOutputLine("Engine", "preparedraceexpirytime=" + util::int2Str(global->getEngine()->getPreparedRaceExpiryTime()));
+    dfh->addOutputLine("Engine", "preparedraceexpirytime=" + std::to_string(global->getEngine()->getPreparedRaceExpiryTime()));
   }
   {
     std::string filetag = "Statistics";
-    dfh->addOutputLine(filetag, "sizeup=" + util::int2Str(global->getStatistics()->getSizeUpAll()));
-    dfh->addOutputLine(filetag, "filesup=" + util::int2Str(global->getStatistics()->getFilesUpAll()));
-    dfh->addOutputLine(filetag, "sizedown=" + util::int2Str(global->getStatistics()->getSizeDownAll()));
-    dfh->addOutputLine(filetag, "filesdown=" + util::int2Str(global->getStatistics()->getFilesDownAll()));
-    dfh->addOutputLine(filetag, "sizefxp=" + util::int2Str(global->getStatistics()->getSizeFXPAll()));
-    dfh->addOutputLine(filetag, "filesfxp=" + util::int2Str(global->getStatistics()->getFilesFXPAll()));
-    dfh->addOutputLine(filetag, "spreadjobs=" + util::int2Str(global->getStatistics()->getSpreadJobs()));
-    dfh->addOutputLine(filetag, "transferjobs=" + util::int2Str(global->getStatistics()->getTransferJobs()));
+    dfh->addOutputLine(filetag, "sizeup=" + std::to_string(global->getStatistics()->getSizeUpAll()));
+    dfh->addOutputLine(filetag, "filesup=" + std::to_string(global->getStatistics()->getFilesUpAll()));
+    dfh->addOutputLine(filetag, "sizedown=" + std::to_string(global->getStatistics()->getSizeDownAll()));
+    dfh->addOutputLine(filetag, "filesdown=" + std::to_string(global->getStatistics()->getFilesDownAll()));
+    dfh->addOutputLine(filetag, "sizefxp=" + std::to_string(global->getStatistics()->getSizeFXPAll()));
+    dfh->addOutputLine(filetag, "filesfxp=" + std::to_string(global->getStatistics()->getFilesFXPAll()));
+    dfh->addOutputLine(filetag, "spreadjobs=" + std::to_string(global->getStatistics()->getSpreadJobs()));
+    dfh->addOutputLine(filetag, "transferjobs=" + std::to_string(global->getStatistics()->getTransferJobs()));
   }
 
   for (std::list<SettingsAdder *>::iterator it = settingsadders.begin(); it != settingsadders.end(); it++) {
@@ -773,8 +772,8 @@ void SettingsLoaderSaver::addSkipList(const SkipList * skiplist, const std::stri
     std::string entryline = it->matchPattern() + "$" +
         (it->matchFile() ? "true" : "false") + "$" +
         (it->matchDir() ? "true" : "false") + "$" +
-        util::int2Str(it->matchScope()) + "$" +
-        util::int2Str(it->getAction());
+        std::to_string(it->matchScope()) + "$" +
+        std::to_string(it->getAction());
     dfh->addOutputLine(owner, entry + entryline);
   }
 }
@@ -791,7 +790,7 @@ void SettingsLoaderSaver::loadSkipListEntry(SkipList * skiplist, std::string val
     bool dir = value.substr(0, split) == "true" ? true : false;
     value = value.substr(split + 1);
     split = value.find('$');
-    int scope = util::str2Int(value.substr(0, split));
+    int scope = std::stoi(value.substr(0, split));
     std::string actionstring = value.substr(split + 1);
 
     SkipListAction action;
@@ -804,7 +803,7 @@ void SettingsLoaderSaver::loadSkipListEntry(SkipList * skiplist, std::string val
     }
     else
     // end compatibility r892
-    action = static_cast<SkipListAction>(util::str2Int(actionstring));
+    action = static_cast<SkipListAction>(std::stoi(actionstring));
     skiplist->addEntry(pattern, file, dir, scope, action);
   }
 }

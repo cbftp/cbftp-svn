@@ -1,6 +1,7 @@
 #include "transfermonitor.h"
 
 #include <algorithm>
+#include <cassert>
 #include <unordered_map>
 
 #include "core/tickpoke.h"
@@ -19,7 +20,6 @@
 #include "localtransfer.h"
 #include "localdownload.h"
 #include "filesystem.h"
-#include "util.h"
 #include "statistics.h"
 
 #define MAX_WAIT_ERROR 10000
@@ -229,7 +229,7 @@ void TransferMonitor::tick(int msg) {
 }
 
 void TransferMonitor::passiveReady(const std::string & host, int port) {
-  util::assert(status == TM_STATUS_AWAITING_PASSIVE ||
+  assert(status == TM_STATUS_AWAITING_PASSIVE ||
                status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
                status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET);
   if (status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE) {
@@ -244,7 +244,7 @@ void TransferMonitor::passiveReady(const std::string & host, int port) {
   }
   status = TM_STATUS_AWAITING_ACTIVE;
   if (!!ts) {
-    ts->setPassiveAddress(host + ":" + util::int2Str(port));
+    ts->setPassiveAddress(host + ":" + std::to_string(port));
   }
   switch (type) {
     case TM_TYPE_FXP:
@@ -284,7 +284,7 @@ void TransferMonitor::passiveReady(const std::string & host, int port) {
 }
 
 void TransferMonitor::activeReady() {
-  util::assert(status == TM_STATUS_AWAITING_ACTIVE ||
+  assert(status == TM_STATUS_AWAITING_ACTIVE ||
                status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
                status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET);
   if (status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE) {
@@ -311,7 +311,7 @@ void TransferMonitor::activeReady() {
 }
 
 void TransferMonitor::activeStarted() {
-  util::assert(status == TM_STATUS_AWAITING_ACTIVE ||
+  assert(status == TM_STATUS_AWAITING_ACTIVE ||
                status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
                status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET);
   if (status == TM_STATUS_AWAITING_ACTIVE) {
@@ -355,13 +355,13 @@ void TransferMonitor::startClientTransfer() {
       }
       break;
     case TM_TYPE_FXP:
-      util::assert(false);
+      assert(false);
       break;
   }
 }
 
 void TransferMonitor::sourceComplete() {
-  util::assert(status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
+  assert(status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
                status == TM_STATUS_TRANSFERRING ||
                status == TM_STATUS_TRANSFERRING_TARGET_COMPLETE);
   partialcompletestamp = timestamp;
@@ -380,7 +380,7 @@ void TransferMonitor::sourceComplete() {
 }
 
 void TransferMonitor::targetComplete() {
-  util::assert(status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET ||
+  assert(status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET ||
                status == TM_STATUS_TRANSFERRING ||
                status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE);
   partialcompletestamp = timestamp;
@@ -451,7 +451,7 @@ void TransferMonitor::finish() {
 }
 
 void TransferMonitor::sourceError(TransferError err) {
-  util::assert(status == TM_STATUS_AWAITING_ACTIVE ||
+  assert(status == TM_STATUS_AWAITING_ACTIVE ||
                status == TM_STATUS_AWAITING_PASSIVE ||
                status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
                status == TM_STATUS_TRANSFERRING ||
@@ -480,7 +480,7 @@ void TransferMonitor::sourceError(TransferError err) {
 }
 
 void TransferMonitor::targetError(TransferError err) {
-  util::assert(status == TM_STATUS_AWAITING_ACTIVE ||
+  assert(status == TM_STATUS_AWAITING_ACTIVE ||
                status == TM_STATUS_AWAITING_PASSIVE ||
                status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET ||
                status == TM_STATUS_TRANSFERRING ||

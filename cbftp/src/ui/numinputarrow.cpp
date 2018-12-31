@@ -1,7 +1,5 @@
 #include "numinputarrow.h"
 
-#include "../util.h"
-
 NumInputArrow::NumInputArrow() {
 
 }
@@ -50,13 +48,13 @@ void NumInputArrow::deactivate() {
   active = false;
 }
 std::string NumInputArrow::getVisual() const {
-  int maxlen = util::int2Str(max).length() + 4;
+  int maxlen = std::to_string(max).length() + 4;
   std::string out = "";
   if (active) {
-    out = "< " + util::int2Str(val) + " >";
+    out = "< " + std::to_string(val) + " >";
   }
   else {
-    out = util::int2Str(val);
+    out = std::to_string(val);
   }
   while ((int) out.length() < maxlen) out += ' ';
   return out;

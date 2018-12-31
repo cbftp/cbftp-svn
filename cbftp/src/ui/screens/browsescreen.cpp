@@ -5,7 +5,6 @@
 #include <memory>
 
 #include "../../globalcontext.h"
-#include "../../util.h"
 #include "../../engine.h"
 #include "../../localfilelist.h"
 #include "../../timereference.h"

@@ -171,7 +171,7 @@ bool BrowseScreenLocal::handleReadyRequests() {
         std::string files = std::to_string(pathinfo.getNumFiles());
         std::string size = util::parseSize(pathinfo.getSize());
         int maxdepth = pathinfo.getDepth();
-        std::string targettext = "these " + util::int2Str(static_cast<int>(request.files.size())) + " items";
+        std::string targettext = "these " + std::to_string(static_cast<int>(request.files.size())) + " items";
         if (request.files.size() == 1) {
           targettext = request.files.front().first;
         }
@@ -185,7 +185,7 @@ bool BrowseScreenLocal::handleReadyRequests() {
           confirmation += "1 level deep.";
         }
         else if (maxdepth > 1) {
-          confirmation += util::int2Str(maxdepth) + " levels deep.";
+          confirmation += std::to_string(maxdepth) + " levels deep.";
         }
         if (pathinfo.getNumDirs() >= 10 || pathinfo.getNumFiles() >= 100 || pathinfo.getSize() >= 100000000000 || pathinfo.getDepth() > 2) {
           ui->goStrongConfirmation(confirmation);
@@ -698,13 +698,13 @@ std::string BrowseScreenLocal::getInfoText() const {
     if (list.hasUnique()) {
       text += "  UNIQUES";
     }
-    text += "  " + util::int2Str(list.filteredSizeFiles()) + "/" + util::int2Str(list.sizeFiles()) + "f " +
-        util::int2Str(list.filteredSizeDirs()) + "/" + util::int2Str(list.sizeDirs()) + "d";
+    text += "  " + std::to_string(list.filteredSizeFiles()) + "/" + std::to_string(list.sizeFiles()) + "f " +
+        std::to_string(list.filteredSizeDirs()) + "/" + std::to_string(list.sizeDirs()) + "d";
     text += std::string("  ") + util::parseSize(list.getFilteredTotalSize()) + "/" +
         util::parseSize(list.getTotalSize());
   }
   else {
-    text += "  " + util::int2Str(list.sizeFiles()) + "f " + util::int2Str(list.sizeDirs()) + "d";
+    text += "  " + std::to_string(list.sizeFiles()) + "f " + std::to_string(list.sizeDirs()) + "d";
     text += std::string("  ") + util::parseSize(list.getTotalSize());
   }
   return text;

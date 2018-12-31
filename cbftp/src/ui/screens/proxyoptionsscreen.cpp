@@ -10,7 +10,6 @@
 #include "../../proxymanager.h"
 #include "../../sitemanager.h"
 #include "../../eventlog.h"
-#include "../../util.h"
 
 ProxyOptionsScreen::ProxyOptionsScreen(Ui * ui) {
   this->ui = ui;
@@ -241,5 +240,5 @@ std::string ProxyOptionsScreen::getInfoLabel() const {
 }
 
 std::string ProxyOptionsScreen::getInfoText() const {
-  return "Proxies added: " + util::int2Str(pm->size());
+  return "Proxies added: " + std::to_string(pm->size());
 }
