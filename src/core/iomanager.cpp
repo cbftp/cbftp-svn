@@ -11,6 +11,7 @@
 #include <sys/ioctl.h>
 #include <openssl/err.h>
 #include <vector>
+#include <cassert>
 #include <cerrno>
 #include <csignal>
 #include <cstring>
@@ -22,7 +23,6 @@
 #include "logger.h"
 #include "tickpoke.h"
 #include "scopelock.h"
-#include "util.h"
 
 #define TICKPERIOD 100
 #define TIMEOUT_MS 5000
@@ -243,7 +243,7 @@ int IOManager::registerTCPServerSocket(EventReceiver * er, int port, bool local)
   if (local) {
     addr = "127.0.0.1";
   }
-  int retcode = getaddrinfo(addr.c_str(), coreutil::int2Str(port).c_str(), &sock, &res);
+  int retcode = getaddrinfo(addr.c_str(), std::to_string(port).c_str(), &sock, &res);
   if (retcode) {
     if (!handleError(er)) {
       return -1;
@@ -310,7 +310,7 @@ int IOManager::registerUDPServerSocket(EventReceiver * er, int port) {
   sock.ai_socktype = SOCK_DGRAM;
   sock.ai_protocol = IPPROTO_UDP;
   std::string addr = "0.0.0.0";
-  int retcode = getaddrinfo(addr.c_str(), coreutil::int2Str(port).c_str(), &sock, &res);
+  int retcode = getaddrinfo(addr.c_str(), std::to_string(port).c_str(), &sock, &res);
   if (retcode) {
     if (!handleError(er)) {
       return -1;
@@ -410,7 +410,7 @@ bool IOManager::investigateSSLError(int error, int sockid, int b_recv) {
   unsigned long e = ERR_get_error();
   log("SSL error on connection to " +
       it->second.addr + ": " +
-      coreutil::int2Str(error) + " return code: " + coreutil::int2Str(b_recv) +
+      std::to_string(error) + " return code: " + std::to_string(b_recv) +
       " errno: " + strerror(errno) +
       (e ? " String: " + std::string(ERR_error_string(e, NULL)) : ""));
   return false;
@@ -422,7 +422,7 @@ bool IOManager::sendData(int id, const std::string & data) {
 }
 
 bool IOManager::sendData(int id, const char * buf, unsigned int buflen) {
-  coreutil::assert(buflen <= MAX_SEND_BUFFER);
+  assert(buflen <= MAX_SEND_BUFFER);
   unsigned int sendblocksize = sendblockpool->blockSize();
   char * datablock;
   ScopeLock lock(socketinfomaplock);
@@ -500,7 +500,7 @@ void IOManager::resolveDNS(int id) {
   request.ai_family = AF_INET;
   request.ai_socktype = SOCK_STREAM;
   struct addrinfo * result;
-  int retcode = getaddrinfo(addr.c_str(), coreutil::int2Str(port).c_str(), &request, &result);
+  int retcode = getaddrinfo(addr.c_str(), std::to_string(port).c_str(), &request, &result);
   ScopeLock lock(socketinfomaplock);
   it = socketinfomap.find(id);
   if (it == socketinfomap.end()) {
@@ -519,13 +519,13 @@ void IOManager::resolveDNS(int id) {
 }
 
 void IOManager::asyncTaskComplete(int type, int id) {
-  coreutil::assert(type == ASYNC_DNS_RESOLUTION);
+  assert(type == ASYNC_DNS_RESOLUTION);
   ScopeLock lock(socketinfomaplock);
   std::map<int, SocketInfo>::iterator it = socketinfomap.find(id);
   if (it == socketinfomap.end()) {
     return;
   }
-  coreutil::assert(it->second.type == FD_TCP_RESOLVING);
+  assert(it->second.type == FD_TCP_RESOLVING);
   handleTCPNameResolution(it->second);
 }
 
@@ -916,7 +916,7 @@ void IOManager::run() {
           break;
         case FD_TCP_RESOLVING:
         case FD_UNUSED:
-          coreutil::assert(false);
+          assert(false);
           break;
       }
     }

@@ -1,9 +1,10 @@
 #include "connstatetracker.h"
 
+#include <cassert>
+
 #include "delayedcommand.h"
 #include "eventlog.h"
 #include "recursivecommandlogic.h"
-#include "util.h"
 #include "sitelogicrequest.h"
 
 ConnStateTracker::ConnStateTracker() :
@@ -85,10 +86,10 @@ DelayedCommand & ConnStateTracker::getCommand() {
 }
 
 void ConnStateTracker::setDisconnected() {
-  util::assert(!transferlocked);
-  util::assert(!listtransfer);
-  util::assert(!transfer);
-  util::assert(!request);
+  assert(!transferlocked);
+  assert(!listtransfer);
+  assert(!transfer);
+  assert(!request);
   loggedin = false;
   quitting = false;
   delayedcommand.weakReset();
@@ -96,7 +97,7 @@ void ConnStateTracker::setDisconnected() {
 }
 
 void ConnStateTracker::use() {
-  util::assert(!transferlocked);
+  assert(!transferlocked);
   delayedcommand.reset();
   idletime = 0;
 }
@@ -107,10 +108,10 @@ void ConnStateTracker::resetIdleTime() {
 }
 
 void ConnStateTracker::setTransfer(const std::string & file, bool fxp, bool passive, const std::string & host, int port, bool ssl, bool sslclient) {
-  util::assert(transferlocked);
-  util::assert(!transfer);
-  util::assert(!request);
-  util::assert(tm);
+  assert(transferlocked);
+  assert(!transfer);
+  assert(!request);
+  assert(tm);
   this->transfer = true;
   this->initialized = false;
   this->file = file;
@@ -131,9 +132,9 @@ void ConnStateTracker::setTransfer(const std::string & file, bool fxp, const std
 }
 
 void ConnStateTracker::setList(TransferMonitor * tm, bool listpassive, const std::string & host, int port, bool ssl) {
-  util::assert(!transferlocked);
-  util::assert(!listtransfer);
-  util::assert(!transfer);
+  assert(!transferlocked);
+  assert(!listtransfer);
+  assert(!transfer);
   use();
   this->listtransfer = true;
   this->listinitialized = false;
@@ -260,9 +261,9 @@ CommandOwner * ConnStateTracker::getCommandOwner() const {
 }
 
 void ConnStateTracker::lockForTransfer(TransferMonitor * tm, FileList * fl, CommandOwner * co, bool download) {
-  util::assert(!transferlocked);
-  util::assert(!transfer);
-  util::assert(!request);
+  assert(!transferlocked);
+  assert(!transfer);
+  assert(!request);
   use();
   this->tm = tm;
   this->fl = fl;
@@ -301,7 +302,7 @@ const std::shared_ptr<SiteLogicRequest> & ConnStateTracker::getRequest() const {
 }
 
 void ConnStateTracker::setRequest(SiteLogicRequest request) {
-  util::assert(!this->request);
+  assert(!this->request);
   this->request = std::make_shared<SiteLogicRequest>(request);
 }
 

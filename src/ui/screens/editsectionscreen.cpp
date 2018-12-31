@@ -1,14 +1,16 @@
+#include "editsectionscreen.h"
+
+#include <cassert>
+
 #include "../../globalcontext.h"
 #include "../../section.h"
 #include "../../sectionmanager.h"
-#include "../../util.h"
 
 #include "../ui.h"
 #include "../menuselectoptionelement.h"
 #include "../menuselectoptionnumarrow.h"
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptiontextbutton.h"
-#include "editsectionscreen.h"
 
 EditSectionScreen::EditSectionScreen(Ui * ui) : section(nullptr) {
   this->ui = ui;
@@ -33,7 +35,7 @@ void EditSectionScreen::initialize(unsigned int row, unsigned int col, const std
   else {
     mode = Mode::EDIT;
     Section * editsection = global->getSectionManager()->getSection(section);
-    util::assert(editsection != NULL);
+    assert(editsection != NULL);
     this->section = new Section(*editsection);
     oldname = editsection->getName();
   }

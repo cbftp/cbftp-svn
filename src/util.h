@@ -12,16 +12,11 @@ namespace util {
 std::string trim(const std::string &);
 std::list<std::string> trim(const std::list<std::string> & in);
 std::vector<std::string> trim(const std::vector<std::string> & in);
-unsigned long long int str2Int(const std::string &);
-std::string int2Str(int);
-std::string int2Str(unsigned int);
-std::string int2Str(unsigned long long int);
 std::string simpleTimeFormat(int);
 std::string ctimeLog();
 std::string & debugString(const char *);
 std::string parseSize(unsigned long long int);
 std::string getGroupNameFromRelease(const std::string &);
-void assert(bool);
 std::string toLower(const std::string &);
 int wildcmp(const char *, const char *);
 int wildcmpCase(const char *, const char *);

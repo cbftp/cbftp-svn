@@ -19,12 +19,12 @@ bool LegendPrinterSpreadJob::print() {
     return false;
   }
   mso.reset();
-  std::string done = util::int2Str(race->numSitesDone()) + "/" + util::int2Str(race->numSites());
+  std::string done = std::to_string(race->numSitesDone()) + "/" + std::to_string(race->numSites());
   std::string timespent = util::simpleTimeFormat(race->getTimeSpent());
   std::string status;
-  std::string worst = util::int2Str(race->getWorstCompletionPercentage()) + "%";
-  std::string avg = util::int2Str(race->getAverageCompletionPercentage()) + "%";
-  std::string best = util::int2Str(race->getBestCompletionPercentage()) + "%";
+  std::string worst = std::to_string(race->getWorstCompletionPercentage()) + "%";
+  std::string avg = std::to_string(race->getAverageCompletionPercentage()) + "%";
+  std::string best = std::to_string(race->getBestCompletionPercentage()) + "%";
   std::string size = util::parseSize(race->estimatedTotalSize());
   switch (race->getStatus()) {
     case RACE_STATUS_RUNNING:

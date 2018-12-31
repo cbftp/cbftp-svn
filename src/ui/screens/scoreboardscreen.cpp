@@ -13,7 +13,6 @@
 #include "../../scoreboardelement.h"
 #include "../../sitelogic.h"
 #include "../../site.h"
-#include "../../util.h"
 
 ScoreBoardScreen::ScoreBoardScreen(Ui * ui) {
   this->ui = ui;
@@ -57,9 +56,9 @@ void ScoreBoardScreen::redraw() {
       msal->addElement(msotb, 2, 0, RESIZE_CUTEND, true);
       msotb = table.addTextButtonNoContent(y, 2, "sites", sites);
       msal->addElement(msotb, 4, RESIZE_REMOVE);
-      msotb = table.addTextButtonNoContent(y, 3, "potential", util::int2Str((*it)->getSource()->getPotential()));
+      msotb = table.addTextButtonNoContent(y, 3, "potential", std::to_string((*it)->getSource()->getPotential()));
       msal->addElement(msotb, 1, RESIZE_REMOVE);
-      msotb = table.addTextButtonNoContent(y, 4, "score", util::int2Str((*it)->getScore()));
+      msotb = table.addTextButtonNoContent(y, 4, "score", std::to_string((*it)->getScore()));
       msal->addElement(msotb, 3, RESIZE_REMOVE);
     }
   }
@@ -154,7 +153,7 @@ std::string ScoreBoardScreen::getInfoLabel() const {
 }
 
 std::string ScoreBoardScreen::getInfoText() const {
-  std::string size = util::int2Str(scoreboard->size());
-  std::string max = util::int2Str((int)scoreboard->getElementVector().size());
+  std::string size = std::to_string(scoreboard->size());
+  std::string max = std::to_string((int)scoreboard->getElementVector().size());
   return "Size: " + size + "  Max: " + max;
 }

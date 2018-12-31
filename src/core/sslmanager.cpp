@@ -1,12 +1,12 @@
 #include "sslmanager.h"
 
+#include <cassert>
 #include <pthread.h>
 #include <vector>
 #include <openssl/ec.h>
 #include <openssl/crypto.h>
 
 #include "lock.h"
-#include "util.h"
 
 #define ELLIPTIC_CURVE NID_secp521r1
 
@@ -49,7 +49,7 @@ static unsigned long sslThreadIdCallback() {
 }
 
 void SSLManager::init() {
-  coreutil::assert(!initialized);
+  assert(!initialized);
   initialized = true;
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
   ssllocks.resize(CRYPTO_num_locks());
@@ -72,7 +72,7 @@ void SSLManager::init() {
 }
 
 void SSLManager::checkCertificateReady() {
-  coreutil::assert(initialized);
+  assert(initialized);
   if (x509 == NULL || pkey == NULL) {
     pkey = createKey();
     x509 = createCertificate(pkey);
@@ -81,7 +81,7 @@ void SSLManager::checkCertificateReady() {
 }
 
 EVP_PKEY * SSLManager::createKey() {
-  coreutil::assert(initialized);
+  assert(initialized);
   EC_KEY * eckey = EC_KEY_new_by_curve_name(ELLIPTIC_CURVE);
   EC_KEY_set_asn1_flag(eckey, OPENSSL_EC_NAMED_CURVE);
   EC_KEY_generate_key(eckey);
@@ -91,7 +91,7 @@ EVP_PKEY * SSLManager::createKey() {
 }
 
 X509 * SSLManager::createCertificate(EVP_PKEY * pkey) {
-  coreutil::assert(initialized);
+  assert(initialized);
   X509 * x509 = X509_new();
   ASN1_INTEGER_set(X509_get_serialNumber(x509), 1);
   X509_gmtime_adj(X509_get_notBefore(x509), 0);
@@ -107,7 +107,7 @@ X509 * SSLManager::createCertificate(EVP_PKEY * pkey) {
 }
 
 SSL_CTX * SSLManager::getSSLCTX() {
-  coreutil::assert(initialized);
+  assert(initialized);
   return ssl_ctx;
 }
 
@@ -120,7 +120,7 @@ bool SSLManager::hasCertificate() {
 }
 
 BinaryData SSLManager::privateKey() {
-  coreutil::assert(initialized);
+  assert(initialized);
   if (pkey == NULL) {
     return BinaryData();
   }
@@ -132,7 +132,7 @@ BinaryData SSLManager::privateKey() {
 }
 
 BinaryData SSLManager::certificate() {
-  coreutil::assert(initialized);
+  assert(initialized);
   if (x509 == NULL) {
     return BinaryData();
   }
@@ -145,7 +145,7 @@ BinaryData SSLManager::certificate() {
 }
 
 void SSLManager::setPrivateKey(const BinaryData & key) {
-  coreutil::assert(initialized);
+  assert(initialized);
   const unsigned char * bufstart = &key[0];
   EVP_PKEY* pkey = d2i_AutoPrivateKey(NULL, &bufstart, key.size());
   if (!pkey) {
@@ -162,7 +162,7 @@ void SSLManager::setPrivateKey(const BinaryData & key) {
 }
 
 void SSLManager::setCertificate(const BinaryData & certificate) {
-  coreutil::assert(initialized);
+  assert(initialized);
   const unsigned char * bufstart = &certificate[0];
   d2i_X509(&x509, &bufstart, certificate.size());
   if (!x509) {
@@ -175,14 +175,14 @@ void SSLManager::setCertificate(const BinaryData & certificate) {
 }
 
 void SSLManager::registerKeyAndCertificate(EVP_PKEY * pkey, X509 * x509) {
-  coreutil::assert(initialized);
+  assert(initialized);
   ::x509 = x509;
   ::pkey = pkey;
   registerKeyAndCertificate();
 }
 
 void SSLManager::registerKeyAndCertificate() {
-  coreutil::assert(initialized);
+  assert(initialized);
   if (x509 != NULL && pkey != NULL) {
     SSL_CTX_use_certificate(ssl_ctx, x509);
     SSL_CTX_use_PrivateKey(ssl_ctx, pkey);

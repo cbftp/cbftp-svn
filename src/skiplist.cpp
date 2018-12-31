@@ -1,5 +1,6 @@
 #include "skiplist.h"
 
+#include <cassert>
 #include <cstdlib>
 #include <vector>
 
@@ -55,7 +56,7 @@ SkipList::SkipList() : defaultallow(true), globalskip(NULL) {
 }
 
 SkipList::SkipList(const SkipList * globalskip) : defaultallow(true), globalskip(globalskip) {
-  util::assert(globalskip != NULL);
+  assert(globalskip != NULL);
 }
 
 void SkipList::addEntry(std::string pattern, bool file, bool dir, int scope, SkipListAction action) {

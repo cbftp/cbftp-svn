@@ -3,6 +3,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <iostream>
+#include <cassert>
 #include <csignal>
 
 #include "../core/workmanager.h"
@@ -10,7 +11,6 @@
 #include "../core/iomanager.h"
 #include "../globalcontext.h"
 #include "../externalfileviewing.h"
-#include "../util.h"
 #include "../engine.h"
 #include "../datafilehandler.h"
 #include "../path.h"
@@ -241,7 +241,7 @@ void Ui::signal(int signal, int) {
     terminalSizeChanged();
   }
   else {
-    util::assert(false);
+    assert(false);
   }
 }
 
@@ -1011,7 +1011,7 @@ void Ui::key(const std::string & key) {
 }
 
 void Ui::newKey(const std::string & newkey) {
-  util::assert(global->getSettingsLoaderSaver()->enterKey(newkey));
+  assert(global->getSettingsLoaderSaver()->enterKey(newkey));
   mainscreen->initialize(mainrow, maincol);
   switchToWindow(mainscreen);
 }
@@ -1083,13 +1083,13 @@ void Ui::loadSettings(std::shared_ptr<DataFileHandler> dfh) {
       }
     }
     else if (!setting.compare("legendmode")) {
-      setLegendMode((LegendMode) util::str2Int(value));
+      setLegendMode((LegendMode) std::stoi(value));
     }
   }
 }
 
 void Ui::saveSettings(std::shared_ptr<DataFileHandler> dfh) {
-  dfh->addOutputLine("UI", "legendmode=" + util::int2Str(legendMode()));
+  dfh->addOutputLine("UI", "legendmode=" + std::to_string(legendMode()));
 }
 
 void Ui::notify() {

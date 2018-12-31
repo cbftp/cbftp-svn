@@ -5,7 +5,6 @@
 #include "localupload.h"
 #include "transfermonitor.h"
 #include "localfilelist.h"
-#include "util.h"
 #include "eventlog.h"
 #include "ftpconn.h"
 #include "globalcontext.h"
@@ -344,9 +343,9 @@ LocalFile LocalStorage::getLocalFile(const Path & path) {
   struct stat status;
   lstat((path).toString().c_str(), &status);
   struct passwd * pwd = getpwuid(status.st_uid);
-  std::string owner = pwd != NULL ? pwd->pw_name : util::int2Str(status.st_uid);
+  std::string owner = pwd != NULL ? pwd->pw_name : std::to_string(status.st_uid);
   struct group * grp = getgrgid(status.st_gid);
-  std::string group = grp != NULL ? grp->gr_name : util::int2Str(status.st_gid);
+  std::string group = grp != NULL ? grp->gr_name : std::to_string(status.st_gid);
   struct tm tm;
   localtime_r(&status.st_mtime, &tm);
   int year = 1900 + tm.tm_year;

@@ -1,5 +1,7 @@
 #include "transferstatus.h"
 
+#include <cassert>
+
 #include "util.h"
 
 TransferStatus::TransferStatus(int type, std::string source, std::string target,
@@ -246,7 +248,7 @@ void TransferStatus::setSourceSize(unsigned long long int size) {
 }
 
 void TransferStatus::addLogLine(const std::string & line) {
-  util::assert(state == TRANSFERSTATUS_STATE_IN_PROGRESS ||
+  assert(state == TRANSFERSTATUS_STATE_IN_PROGRESS ||
                state == TRANSFERSTATUS_STATE_ABORTED);
   loglines.push_back(line);
 }

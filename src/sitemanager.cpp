@@ -1,5 +1,6 @@
 #include "sitemanager.h"
 
+#include <cassert>
 #include <sstream>
 #include <fstream>
 #include <cstdlib>
@@ -9,7 +10,6 @@
 #include "globalcontext.h"
 #include "connstatetracker.h"
 #include "eventlog.h"
-#include "util.h"
 #include "site.h"
 
 #define DEFAULTUSERNAME "anonymous"
@@ -52,7 +52,7 @@ std::shared_ptr<Site> SiteManager::getSite(const std::string & site) const {
 }
 
 std::shared_ptr<Site> SiteManager::getSite(unsigned int index) const {
-  util::assert(index < sites.size());
+  assert(index < sites.size());
   return sites[index];
 }
 

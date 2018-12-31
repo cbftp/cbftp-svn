@@ -108,11 +108,11 @@ void RemoteCommandHandler::connect() {
   sockid = global->getIOManager()->registerUDPServerSocket(this, udpport);
   if (sockid >= 0) {
     connected = true;
-    global->getEventLog()->log("RemoteCommandHandler", "Listening on UDP port " + util::int2Str(udpport));
+    global->getEventLog()->log("RemoteCommandHandler", "Listening on UDP port " + std::to_string(udpport));
   }
   else {
     int delay = RETRYDELAY / 1000;
-    global->getEventLog()->log("RemoteCommandHandler", "Retrying in " + util::int2Str(delay) + " seconds.");
+    global->getEventLog()->log("RemoteCommandHandler", "Retrying in " + std::to_string(delay) + " seconds.");
     retrying = true;
     global->getTickPoke()->startPoke(this, "RemoteCommandHandler", RETRYDELAY, 0);
   }
@@ -389,7 +389,7 @@ void RemoteCommandHandler::commandIdle(const std::vector<std::string> & message)
   }
   else {
     sitestring = message[0];
-    idletime = util::str2Int(message[1]);
+    idletime = std::stoi(message[1]);
   }
 
   std::list<std::shared_ptr<SiteLogic> > sites = getSiteLogicList(sitestring, false);
@@ -500,7 +500,7 @@ bool RemoteCommandHandler::parseRace(const std::vector<std::string> & message, i
 
 void RemoteCommandHandler::FDFail(int sockid, const std::string & message) {
   global->getEventLog()->log("RemoteCommandHandler", "UDP binding on port " +
-      util::int2Str(getUDPPort()) + " failed: " + message);
+      std::to_string(getUDPPort()) + " failed: " + message);
 }
 
 void RemoteCommandHandler::disconnect() {

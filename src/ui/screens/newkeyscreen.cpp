@@ -1,7 +1,5 @@
 #include "newkeyscreen.h"
 
-#include "../../util.h"
-
 #include "../ui.h"
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptionelement.h"
@@ -59,7 +57,7 @@ void NewKeyScreen::update() {
   ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   std::string error = "                                                          ";
   if (tooshort) {
-    error = "Failed: The passphrase must be at least " + util::int2Str(SHORTESTKEY) + " characters long.";
+    error = "Failed: The passphrase must be at least " + std::to_string(SHORTESTKEY) + " characters long.";
   }
   else if (mismatch) {
     error = "Failed: The keys did not match.";

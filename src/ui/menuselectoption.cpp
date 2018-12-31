@@ -1,5 +1,6 @@
 #include "menuselectoption.h"
 
+#include <cassert>
 #include <cstdlib>
 
 #include "menuselectoptionelement.h"
@@ -9,8 +10,6 @@
 #include "menuselectoptiontextbutton.h"
 #include "menuselectoptiontextarrow.h"
 #include "menuselectadjustableline.h"
-
-#include "../util.h"
 
 #define MAX_DIFF_LR 30
 #define MAX_DIFF_UD 2
@@ -401,7 +400,7 @@ std::shared_ptr<MenuSelectAdjustableLine> MenuSelectOption::getAdjustableLine(st
 }
 
 std::shared_ptr<MenuSelectAdjustableLine> MenuSelectOption::getAdjustableLine(unsigned int lineindex) const {
-  util::assert(lineindex < adjustablelines.size());
+  assert(lineindex < adjustablelines.size());
   return adjustablelines[lineindex];
 }
 

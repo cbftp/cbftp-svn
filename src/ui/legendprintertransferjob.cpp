@@ -28,10 +28,10 @@ bool LegendPrinterTransferJob::print() {
   std::string route = TransferJobStatusScreen::getRoute(transferjob);
   std::string sizeprogress = util::parseSize(transferjob->sizeProgress()) +
                              " / " + util::parseSize(transferjob->totalSize());
-  std::string filesprogress = util::int2Str(transferjob->filesProgress()) + "/" +
-                              util::int2Str(transferjob->filesTotal());
+  std::string filesprogress = std::to_string(transferjob->filesProgress()) + "/" +
+                              std::to_string(transferjob->filesTotal());
   std::string speed = started ? util::parseSize(transferjob->getSpeed() * SIZEPOWER) + "/s" : "-";
-  std::string progress = util::int2Str(transferjob->getProgress()) + "%";
+  std::string progress = std::to_string(transferjob->getProgress()) + "%";
   std::string status;
   switch (transferjob->getStatus()) {
     case TRANSFERJOB_QUEUED:

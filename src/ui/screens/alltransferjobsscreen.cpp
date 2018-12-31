@@ -173,7 +173,7 @@ std::string AllTransferJobsScreen::getInfoLabel() const {
 }
 
 std::string AllTransferJobsScreen::getInfoText() const {
-  return "Active: " + util::int2Str(engine->currentTransferJobs()) + "  Total: " + util::int2Str(engine->allTransferJobs());
+  return "Active: " + std::to_string(engine->currentTransferJobs()) + "  Total: " + std::to_string(engine->allTransferJobs());
 }
 
 void AllTransferJobsScreen::addJobTableRow(unsigned int y, MenuSelectOption & mso, unsigned int id, bool selectable,
@@ -241,10 +241,10 @@ void AllTransferJobsScreen::addJobDetails(unsigned int y, MenuSelectOption & mso
   std::string route = TransferJobStatusScreen::getRoute(tj);
   std::string sizeprogress = util::parseSize(tj->sizeProgress()) +
                              " / " + util::parseSize(tj->totalSize());
-  std::string filesprogress = util::int2Str(tj->filesProgress()) + "/" +
-                              util::int2Str(tj->filesTotal());
+  std::string filesprogress = std::to_string(tj->filesProgress()) + "/" +
+                              std::to_string(tj->filesTotal());
   std::string speed = started ? util::parseSize(tj->getSpeed() * SIZEPOWER) + "/s" : "-";
-  std::string progress = util::int2Str(tj->getProgress()) + "%";
+  std::string progress = std::to_string(tj->getProgress()) + "%";
   std::string status;
   switch (tj->getStatus()) {
     case TRANSFERJOB_QUEUED:

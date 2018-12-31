@@ -14,7 +14,6 @@
 
 #include "../../path.h"
 #include "../../site.h"
-#include "../../util.h"
 
 namespace {
 

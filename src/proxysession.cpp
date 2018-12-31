@@ -6,7 +6,6 @@
 #include <cstring>
 
 #include "proxy.h"
-#include "util.h"
 
 #define PROXYSESSION_SOCKSVERSION 5
 #define PROXYSESSION_AUTHTYPESSUPPORTED 1
@@ -41,7 +40,7 @@ std::string getConnectError(char c) {
     case 8:
       return "Address type not supported";
   }
-  return "Unknown error code: " + util::int2Str(c);
+  return "Unknown error code: " + std::to_string(c);
 }
 
 ProxySession::ProxySession() :

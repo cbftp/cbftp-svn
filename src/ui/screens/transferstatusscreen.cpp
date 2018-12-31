@@ -9,7 +9,6 @@
 #include "../misc.h"
 
 #include "../../transferstatus.h"
-#include "../../util.h"
 #include "../../globalcontext.h"
 #include "../../sitelogicmanager.h"
 #include "../../sitelogic.h"
@@ -42,11 +41,11 @@ void TransferStatusScreen::redraw() {
   ++y;
   unsigned int x = 1;
   if (type != TRANSFERSTATUS_TYPE_UPLOAD) {
-    ui->printStr(y, x, "Source slot: " + util::int2Str(ts->getSourceSlot()));
+    ui->printStr(y, x, "Source slot: " + std::to_string(ts->getSourceSlot()));
     x += 18;
   }
   if (type != TRANSFERSTATUS_TYPE_DOWNLOAD) {
-    ui->printStr(y, x, "Target slot: " + util::int2Str(ts->getTargetSlot()));
+    ui->printStr(y, x, "Target slot: " + std::to_string(ts->getTargetSlot()));
     x += 18;
   }
   bool ssl = ts->getSSL();
@@ -109,7 +108,7 @@ void TransferStatusScreen::redraw() {
   ui->printStr(y, 47, "[");
   ui->printStr(y, 48, progress.substr(0, charswithhighlight), true);
   ui->printStr(y, 48 + charswithhighlight, progress.substr(charswithhighlight));
-  ui->printStr(y, 48 + progress.length(), "] " + util::int2Str(progresspercent) + "%");
+  ui->printStr(y, 48 + progress.length(), "] " + std::to_string(progresspercent) + "%");
   ++y;
   ++y;
   logstart = y;

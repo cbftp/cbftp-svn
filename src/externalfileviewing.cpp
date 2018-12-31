@@ -4,6 +4,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <cassert>
 #include <csignal>
 #include <vector>
 #include <cctype>
@@ -11,7 +12,6 @@
 
 #include "core/workmanager.h"
 #include "globalcontext.h"
-#include "util.h"
 #include "localstorage.h"
 #include "eventlog.h"
 #include "path.h"
@@ -28,7 +28,7 @@ void sighandler(int signal) {
 }
 
 ExternalFileViewing::ExternalFileViewing() {
-  util::assert(instance == NULL);
+  assert(instance == NULL);
   instance = this;
   videoviewer = "mplayer";
   audioviewer = "mplayer";
@@ -133,7 +133,7 @@ void ExternalFileViewing::signal(int signal, int) {
     }
   }
   else {
-    util::assert(false);
+    assert(false);
   }
 }
 

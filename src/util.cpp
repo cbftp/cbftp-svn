@@ -56,48 +56,25 @@ std::vector<std::string> trim(const std::vector<std::string> & in) {
   return out;
 }
 
-unsigned long long int str2Int(const std::string & str) {
-  unsigned long long int num;
-  std::istringstream ss(str);
-  ss >> num;
-  return num;
-}
-
-std::string int2Str(unsigned int i) {
-  return int2Str((int)i);
-}
-
-std::string int2Str(int i) {
-  std::stringstream out;
-  out << i;
-  return out.str();
-}
-
-std::string int2Str(unsigned long long int i) {
-  std::stringstream out;
-  out << i;
-  return out.str();
-}
-
 std::string simpleTimeFormat(int seconds) {
   std::string time;
   if (seconds >= 86400) {
     int days = seconds / 86400;
-    time = int2Str(days) + "d";
+    time = std::to_string(days) + "d";
     seconds = seconds % 86400;
   }
   if (seconds >= 3600) {
     int hours = seconds / 3600;
-    time += int2Str(hours) + "h";
+    time += std::to_string(hours) + "h";
     seconds = seconds % 3600;
   }
   if (seconds >= 60) {
     int minutes = seconds / 60;
-    time += int2Str(minutes) + "m";
+    time += std::to_string(minutes) + "m";
     seconds = seconds % 60;
   }
   if (seconds || !time.length()) {
-    time += int2Str(seconds) + "s";
+    time += std::to_string(seconds) + "s";
   }
   return time;
 }
@@ -120,7 +97,7 @@ std::string parseSize(unsigned long long int size) {
   std::string result;
   int whole = size / currentpower;
   if (iprefix == 0) {
-    result = int2Str(whole) + " B";
+    result = std::to_string(whole) + " B";
   }
   else {
     unsigned long long int decim = ((size % currentpower) * sizegranularity) / currentpower + 5;
@@ -128,11 +105,11 @@ std::string parseSize(unsigned long long int size) {
       whole++;
       decim = 0;
     }
-    std::string decimstr = int2Str(decim);
+    std::string decimstr = std::to_string(decim);
     while (decimstr.length() <= SIZEDECIMALS) {
       decimstr = "0" + decimstr;
     }
-    result = int2Str(whole) + "." + decimstr.substr(0, SIZEDECIMALS) + " ";
+    result = std::to_string(whole) + "." + decimstr.substr(0, SIZEDECIMALS) + " ";
     switch (iprefix) {
       case 1:
         result.append("kB");
@@ -183,12 +160,6 @@ std::string getGroupNameFromRelease(const std::string & release) {
   }
   else {
     return "";
-  }
-}
-
-void assert(bool condition) {
-  if (!condition) {
-    raise(SIGTRAP);
   }
 }
 

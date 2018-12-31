@@ -133,7 +133,7 @@ void UIFile::parseUNIXTimeStamp(const std::string & uglytime, int & year, int & 
   while (uglytime[++pos] == ' '); // meta start at pos
   std::string meta = uglytime.substr(pos);
   month = 0;
-  day = util::str2Int(daytmp);
+  day = std::stoi(daytmp);
   if (monthtmp == "Jan") month = 1;
   else if (monthtmp == "Feb") month = 2;
   else if (monthtmp == "Mar") month = 3;
@@ -148,7 +148,7 @@ void UIFile::parseUNIXTimeStamp(const std::string & uglytime, int & year, int & 
   else if (monthtmp == "Dec") month = 12;
   size_t metabreak = meta.find(":");
   if (metabreak == std::string::npos) {
-    year = util::str2Int(meta);
+    year = std::stoi(meta);
     hour = 0;
     minute = 0;
   }
@@ -158,8 +158,8 @@ void UIFile::parseUNIXTimeStamp(const std::string & uglytime, int & year, int & 
     if (month > currentmonth) {
       year--;
     }
-    hour = util::str2Int(meta.substr(0, metabreak));
-    minute = util::str2Int(meta.substr(metabreak + 1));
+    hour = std::stoi(meta.substr(0, metabreak));
+    minute = std::stoi(meta.substr(metabreak + 1));
   }
 }
 
@@ -170,20 +170,20 @@ void UIFile::parseWindowsTimeStamp(const std::string & uglytime, int & year, int
   while (uglytime[++pos] == ' ');
   std::string timestamp = uglytime.substr(pos);
   if (isdigit(datestamp[2])) { // euro format
-    year = util::str2Int(datestamp.substr(0, 4));
-    month = util::str2Int(datestamp.substr(3, 2));
-    day = util::str2Int(datestamp.substr(6, 2));
+    year = std::stoi(datestamp.substr(0, 4));
+    month = std::stoi(datestamp.substr(3, 2));
+    day = std::stoi(datestamp.substr(6, 2));
   }
   else { // US format
-    month = util::str2Int(datestamp.substr(0, 2));
-    day = util::str2Int(datestamp.substr(3, 2));
-    year = util::str2Int(datestamp.substr(6));
+    month = std::stoi(datestamp.substr(0, 2));
+    day = std::stoi(datestamp.substr(3, 2));
+    year = std::stoi(datestamp.substr(6));
     if (datestamp.length() == 8) { // US short year
       year += 2000;
     }
   }
-  hour = util::str2Int(timestamp.substr(0, 2));
-  minute = util::str2Int(timestamp.substr(3, 2));
+  hour = std::stoi(timestamp.substr(0, 2));
+  minute = std::stoi(timestamp.substr(3, 2));
   if (timestamp.length() == 7) { // US format
     hour %= 12;
     if (timestamp[5] == 'P') {
@@ -193,20 +193,20 @@ void UIFile::parseWindowsTimeStamp(const std::string & uglytime, int & year, int
 }
 
 void UIFile::setLastModified(int year, int month, int day, int hour, int minute) {
-  std::string yearstr = util::int2Str(year);
-  std::string monthstr = util::int2Str(month);
+  std::string yearstr = std::to_string(year);
+  std::string monthstr = std::to_string(month);
   if (month < 10) {
     monthstr = "0" + monthstr;
   }
-  std::string daystr = util::int2Str(day);
+  std::string daystr = std::to_string(day);
   if (day < 10) {
     daystr = "0" + daystr;
   }
-  std::string hourstr = util::int2Str(hour);
+  std::string hourstr = std::to_string(hour);
   if (hour < 10) {
     hourstr = "0" + hourstr;
   }
-  std::string minutestr = util::int2Str(minute);
+  std::string minutestr = std::to_string(minute);
   if (minute < 10) {
     minutestr = "0" + minutestr;
   }

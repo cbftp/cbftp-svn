@@ -155,7 +155,7 @@ bool SelectJobsScreen::keyPressed(unsigned int ch) {
         if (re->getIdentifier() == "selected" && std::static_pointer_cast<MenuSelectOptionCheckBox>(re)->getData()) {
           std::shared_ptr<MenuSelectAdjustableLine> msal = table.getAdjustableLine(re);
           std::shared_ptr<MenuSelectOptionTextButton> name = std::static_pointer_cast<MenuSelectOptionTextButton>(msal->getElement(1));
-          items.push_back(util::int2Str(name->getId()));
+          items.push_back(std::to_string(name->getId()));
         }
       }
       ui->returnSelectItems(util::join(items, ","));
@@ -174,7 +174,7 @@ std::string SelectJobsScreen::getInfoLabel() const {
 }
 
 std::string SelectJobsScreen::getInfoText() const {
-  return "Selected: " + util::int2Str(numselected);
+  return "Selected: " + std::to_string(numselected);
 }
 
 void SelectJobsScreen::addJobTableHeader(unsigned int y, MenuSelectOption & mso, const std::string & release) {

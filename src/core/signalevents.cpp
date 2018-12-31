@@ -1,6 +1,7 @@
 #include "signalevents.h"
 
-#include "util.h"
+#include <cassert>
+
 #include "scopelock.h"
 
 SignalEvents::SignalEvents() :
@@ -102,7 +103,7 @@ bool SignalEvents::set(EventReceiver * er, int signal, int value) {
     return false;
   }
   else {
-    coreutil::assert(false);
+    assert(false);
   }
   hasevent++;
   return true;
@@ -157,7 +158,7 @@ SignalData SignalEvents::getClearFirst() {
     slot10.set = false;
   }
   else {
-    coreutil::assert(false);
+    assert(false);
   }
   hasevent--;
   return ret;

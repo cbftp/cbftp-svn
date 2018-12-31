@@ -555,7 +555,7 @@ TransferDetails TransfersScreen::formatTransferDetails(std::shared_ptr<TransferS
   switch (ts->getState()) {
     case TRANSFERSTATUS_STATE_IN_PROGRESS: {
       int progresspercent = ts->getProgress();
-      td.progress = util::int2Str(progresspercent) + "%";
+      td.progress = std::to_string(progresspercent) + "%";
       int timeremainingnum = ts->getTimeRemaining();
       if (timeremainingnum < 0) {
         td.timeremaining = "?";

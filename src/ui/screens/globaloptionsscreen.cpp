@@ -6,7 +6,6 @@
 #include "../../sitemanager.h"
 #include "../../site.h"
 #include "../../localstorage.h"
-#include "../../util.h"
 #include "../../settingsloadersaver.h"
 #include "../../engine.h"
 #include "../ui.h"
@@ -58,13 +57,13 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   }
   int firstport = ls->getActivePortFirst();
   int lastport = ls->getActivePortLast();
-  std::string portrange = util::int2Str(firstport) + ":" + util::int2Str(lastport);
+  std::string portrange = std::to_string(firstport) + ":" + std::to_string(lastport);
   mso.addStringField(y++, x, "activeportrange", "Active mode port range:", portrange, false, 11);
   mso.addCheckBox(y++, x, "useactiveaddress", "Use active mode address:", ls->getUseActiveModeAddress());
   mso.addStringField(y++, x, "activeaddress", "Active mode address:", ls->getActiveModeAddress(), false, 64);
   y++;
   mso.addCheckBox(y++, x, "udpenable", "Enable remote commands:", rch->isEnabled());
-  mso.addStringField(y++, x, "udpport", "Remote command UDP Port:", util::int2Str(rch->getUDPPort()), false, 5);
+  mso.addStringField(y++, x, "udpport", "Remote command UDP Port:", std::to_string(rch->getUDPPort()), false, 5);
   mso.addStringField(y++, x, "udppass", "Remote command password:", rch->getPassword(), true);
   std::shared_ptr<MenuSelectOptionTextArrow> bell = mso.addTextArrow(y++, x, "udpbell", "Remote command bell:");
   bell->addOption("Disabled", static_cast<int>(RemoteCommandNotify::DISABLED));
@@ -72,7 +71,7 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   bell->addOption("Jobs added", static_cast<int>(RemoteCommandNotify::JOBS_ADDED));
   bell->addOption("All commands", static_cast<int>(RemoteCommandNotify::ALL_COMMANDS));
   bell->setOption(static_cast<int>(rch->getNotify()));
-  mso.addStringField(y++, x, "preparedraceexpirytime", "Prepared race expiration time:", util::int2Str(global->getEngine()->getPreparedRaceExpiryTime()), false, 5);
+  mso.addStringField(y++, x, "preparedraceexpirytime", "Prepared race expiration time:", std::to_string(global->getEngine()->getPreparedRaceExpiryTime()), false, 5);
   y++;
   std::shared_ptr<MenuSelectOptionTextArrow> legendmode = mso.addTextArrow(y++, x, "legendmode", "Legend bar:");
   legendmode->addOption("Disabled", LEGEND_DISABLED);
@@ -96,7 +95,7 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   sslfxp->addOption("Prefer on", SITE_SSL_PREFER_ON);
   sslfxp->addOption("Always on", SITE_SSL_ALWAYS_ON);
   sslfxp->setOption(sm->getDefaultSSLTransferPolicy());
-  mso.addStringField(y++, x, "defidletime", "Default site max idle time (s):", util::int2Str(sm->getDefaultMaxIdleTime()), false);
+  mso.addStringField(y++, x, "defidletime", "Default site max idle time (s):", std::to_string(sm->getDefaultMaxIdleTime()), false);
   y++;
   mso.addStringField(y++, x, "dlpath", "Download path:", ls->getDownloadPath().toString(), false, 128, 128);
   y++;
@@ -209,8 +208,8 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
           std::string portrange = std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData();
           size_t splitpos = portrange.find(":");
           if (splitpos != std::string::npos) {
-            int portfirst = util::str2Int(portrange.substr(0, splitpos));
-            int portlast = util::str2Int(portrange.substr(splitpos + 1));
+            int portfirst = std::stoi(portrange.substr(0, splitpos));
+            int portlast = std::stoi(portrange.substr(splitpos + 1));
             ls->setActivePortFirst(portfirst);
             ls->setActivePortLast(portlast);
           }
@@ -228,7 +227,7 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
           }
         }
         else if (identifier == "udpport") {
-          rch->setPort(util::str2Int(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData()));
+          rch->setPort(std::stoi(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData()));
         }
         else if (identifier == "udppass") {
           rch->setPassword(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
@@ -258,7 +257,7 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
           sm->setDefaultSSLTransferPolicy(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
         }
         else if (identifier == "defidletime") {
-          sm->setDefaultMaxIdleTime(util::str2Int(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData()));
+          sm->setDefaultMaxIdleTime(std::stoi(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData()));
         }
         else if (identifier == "legend") { // legacy
           ui->setLegendMode(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData() ? LEGEND_SCROLLING : LEGEND_DISABLED);
@@ -270,7 +269,7 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
           ls->setDownloadPath(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "preparedraceexpirytime") {
-          global->getEngine()->setPreparedRaceExpiryTime(util::str2Int(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData()));
+          global->getEngine()->setPreparedRaceExpiryTime(std::stoi(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData()));
         }
       }
       rch->setEnabled(udpenable);

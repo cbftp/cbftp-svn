@@ -76,8 +76,8 @@ void TransferJobStatusScreen::redraw() {
   ui->printStr(y, 1, "Size: " + util::parseSize(transferjob->sizeProgress()) +
       " / " + util::parseSize(transferjob->totalSize()));
   ui->printStr(y, 35, "Speed: " + (started ? util::parseSize(transferjob->getSpeed() * SIZEPOWER) + "/s" : "-"));
-  ui->printStr(y, 60, "Files: " + util::int2Str(transferjob->filesProgress()) + "/" +
-      util::int2Str(transferjob->filesTotal()));
+  ui->printStr(y, 60, "Files: " + std::to_string(transferjob->filesProgress()) + "/" +
+      std::to_string(transferjob->filesTotal()));
   y++;
   ui->printStr(y, 1, "Time spent: " + util::simpleTimeFormat(transferjob->timeSpent()));
   ui->printStr(y, 21, "Remaining: " + (running ? util::simpleTimeFormat(transferjob->timeRemaining()) : "-"));
@@ -87,7 +87,7 @@ void TransferJobStatusScreen::redraw() {
   ui->printStr(y, 53, "[");
   ui->printStr(y, 54, progress.substr(0, charswithhighlight), true);
   ui->printStr(y, 54 + charswithhighlight, progress.substr(charswithhighlight));
-  ui->printStr(y, 54 + progress.length(), "] " + util::int2Str(progresspercent) + "%");
+  ui->printStr(y, 54 + progress.length(), "] " + std::to_string(progresspercent) + "%");
   y = y + 2;
   addTransferDetails(y++, "USE", "TRANSFERRED", "FILENAME", "LEFT", "SPEED", "DONE", 0);
   for (std::list<std::shared_ptr<TransferStatus> >::const_iterator it = transferjob->transfersBegin(); it != transferjob->transfersEnd(); it++) {

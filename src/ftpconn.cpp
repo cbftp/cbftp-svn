@@ -1,5 +1,6 @@
 #include "ftpconn.h"
 
+#include <cassert>
 #include <cstdlib>
 #include <cstring>
 #include <cctype>
@@ -32,8 +33,8 @@ void fromPASVString(std::string pasv, std::string & host, int & port) {
   pasv[sep2] = '.';
   pasv[sep3] = '.';
   host = pasv.substr(0, sep4);
-  int major = util::str2Int(pasv.substr(sep4 + 1, sep5 - sep4 + 1));
-  int minor = util::str2Int(pasv.substr(sep5 + 1));
+  int major = std::stoi(pasv.substr(sep4 + 1, sep5 - sep4 + 1));
+  int minor = std::stoi(pasv.substr(sep5 + 1));
   port = major * 256 + minor;
 }
 
@@ -45,7 +46,7 @@ std::string toPASVString(const std::string & addr, int port) {
   }
   int portfirst = port / 256;
   int portsecond = port % 256;
-  return pasv + "," + util::int2Str(portfirst) + "," + util::int2Str(portsecond);
+  return pasv + "," + std::to_string(portfirst) + "," + std::to_string(portsecond);
 }
 
 FTPConn::FTPConn(SiteLogic * sl, int id) :
@@ -69,7 +70,7 @@ FTPConn::FTPConn(SiteLogic * sl, int id) :
   protectedmode(PROT_UNSET),
   sscnmode(false),
   mkdtarget(false),
-  rawbuf(new RawBuffer(RAWBUFMAXLEN, site->getName(), util::int2Str(id))),
+  rawbuf(new RawBuffer(RAWBUFMAXLEN, site->getName(), std::to_string(id))),
   aggregatedrawbuf(sl->getAggregatedRawBuffer()),
   cwdrawbuf(new RawBuffer(site->getName())),
   xduperun(false),
@@ -376,7 +377,7 @@ void FTPConn::ftpConnectSuccess(int connectorid) {
       break;
     }
   }
-  util::assert(it != connectors.end());
+  assert(it != connectors.end());
   sockid = (*it)->handedOver();
   iom->adopt(this, sockid);
   global->getTickPoke()->stopPoke(this, 0);
@@ -409,7 +410,7 @@ void FTPConn::ftpConnectFail(int connectorid) {
       break;
     }
   }
-  util::assert(it != connectors.end());
+  assert(it != connectors.end());
   bool primary = (*it)->isPrimary();
   global->getWorkManager()->deferDelete(*it);
   connectors.erase(it);
@@ -775,7 +776,7 @@ void FTPConn::doWipe(const Path & path, bool recursive) {
 
 void FTPConn::doNuke(const Path & path, int multiplier, const std::string & reason) {
   state = STATE_NUKE;
-  sendEcho("SITE NUKE " + path.toString() + " " + util::int2Str(multiplier) + " " + reason);
+  sendEcho("SITE NUKE " + path.toString() + " " + std::to_string(multiplier) + " " + reason);
 }
 
 void FTPConn::doDELE(const Path & path) {
@@ -942,12 +943,12 @@ void FTPConn::doCWD(FileList * fl, CommandOwner * co) {
 }
 
 void FTPConn::doCWD(const Path & path, FileList * fl, CommandOwner * co) {
-  util::assert(path != "");
+  assert(path != "");
   currentfl = fl;
   currentco = co;
   targetpath = path;
   if (targetpath == currentpath) {
-    global->getEventLog()->log("FTPConn " + site->getName() + util::int2Str(id),
+    global->getEventLog()->log("FTPConn " + site->getName() + std::to_string(id),
         "WARNING: Noop CWD requested: " + path.toString());
     return;
   }
@@ -986,7 +987,7 @@ void FTPConn::doMKD(FileList * fl, CommandOwner * co) {
 }
 
 void FTPConn::doMKD(const Path & dir, FileList * fl, CommandOwner * co) {
-  util::assert(dir != "");
+  assert(dir != "");
   currentfl = fl;
   currentco = co;
   targetpath = dir;
