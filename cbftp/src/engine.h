@@ -121,6 +121,8 @@ public:
   void preSeedPotentialData(std::shared_ptr<Race> &);
   bool raceTransferPossible(const std::shared_ptr<SiteLogic> &, const std::shared_ptr<SiteLogic> &, std::shared_ptr<Race> &) const;
   void wipeFromScoreBoard(SiteRace * sr);
+  bool waitingInScoreBoard(const std::shared_ptr<Race> & race) const;
+  bool transferExpectedSoon(ScoreBoardElement * sbe) const;
   std::list<std::shared_ptr<Race> > allraces;
   std::list<std::shared_ptr<Race> > currentraces;
   std::list<std::shared_ptr<PreparedRace> > preparedraces;

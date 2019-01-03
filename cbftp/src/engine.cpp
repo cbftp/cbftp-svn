@@ -561,6 +561,38 @@ void Engine::wipeFromScoreBoard(SiteRace * sr) {
   }
 }
 
+bool Engine::waitingInScoreBoard(const std::shared_ptr<Race> & race) const {
+  std::vector<ScoreBoardElement *>::iterator it;
+  for (it = scoreboard->begin(); it != scoreboard->end(); ++it) {
+    ScoreBoardElement * sbe = *it;
+    if (sbe->getRace() != race) {
+      continue;
+    }
+    if (transferExpectedSoon(sbe)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool Engine::transferExpectedSoon(ScoreBoardElement * sbe) const {
+  if (!sbe->getSource()->getCurrLogins() || !sbe->getDestination()->getCurrLogins()) {
+    return false;
+  }
+  if (sbe->getRace()->hasFailedTransfer(sbe->fileName(), sbe->getSourceFileList(), sbe->getDestinationFileList())) {
+    return false;
+  }
+  const std::string & filename = sbe->fileName();
+  SkipListMatch match = sbe->getDestination()->getSite()->getSkipList().check(
+      (Path(sbe->subDir()) / filename).toString(), false, true, &sbe->getRace()->getSectionSkipList());
+  if (match.action == SKIPLIST_UNIQUE &&
+      sbe->getDestinationFileList()->containsPatternBefore(match.matchpattern, false, filename))
+  {
+    return false;
+  }
+  return true;
+}
+
 void Engine::deleteOnAllSites(std::shared_ptr<Race> & race) {
   std::list<std::shared_ptr<Site> > sites;
   for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
@@ -1135,20 +1167,13 @@ void Engine::issueOptimalTransfers() {
     if (sbe->wasAttempted()) {
       continue;
     }
-    if (!sbe->getSourceFileList()->getFile(filename)) {
+    if (!sbe->getSourceFileList()->contains(filename)) {
       continue;
     }
     if (sbe->getDestinationSiteRace()->isAborted()) {
       continue;
     }
-    if (sbe->getRace()->hasFailedTransfer(sbe->fileName(), sbe->getSourceFileList(), sbe->getDestinationFileList())) {
-      continue;
-    }
-    SkipListMatch match = sbe->getDestination()->getSite()->getSkipList().check(
-        (Path(sbe->subDir()) / filename).toString(), false, true, &race->getSectionSkipList());
-    if (match.action == SKIPLIST_UNIQUE &&
-        sbe->getDestinationFileList()->containsPatternBefore(match.matchpattern, false, filename))
-    {
+    if (!transferExpectedSoon(sbe)) {
       continue;
     }
     std::shared_ptr<TransferStatus> ts =
@@ -1228,7 +1253,6 @@ void Engine::raceComplete(std::shared_ptr<Race> race) {
     }
   }
   std::set<std::pair<SiteRace, std::shared_ptr<SiteLogic>>>::const_iterator it;
-  //refreshScoreBoard();
   global->getEventLog()->log("Engine", "Spread job globally completed: " + race->getName());
   if (dropped) {
     global->getEventLog()->log("Engine", "Scoreboard refreshes dropped since spread job start: " + std::to_string(dropped));
@@ -1474,6 +1498,10 @@ void Engine::tick(int message) {
     const std::shared_ptr<Race> & race = *it;
     int timeoutafterseconds = race->timeoutCheck();
     if (timeoutafterseconds != -1) {
+      if (waitingInScoreBoard(race)) {
+        race->resetUpdateCheckCounter();
+        continue;
+      }
       if ((*it)->failedTransfersCleared()) {
         global->getEventLog()->log("Engine", "No activity for " + std::to_string(timeoutafterseconds) +
             " seconds, aborting spread job: " + (*it)->getName());
