@@ -984,8 +984,8 @@ void Engine::updateScoreBoard() {
           race->resetUpdateCheckCounter();
           continue;
         }
+        scoreboard->remove(name, cmpfl, fl);
         if (cmpfl->contains(name)) {
-          scoreboard->remove(name, cmpfl, fl);
           continue;
         }
         if (!regulartransferpossible || f->isDirectory() || f->getSize() == 0) {
