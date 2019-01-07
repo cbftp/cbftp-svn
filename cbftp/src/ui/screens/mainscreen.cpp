@@ -70,7 +70,7 @@ void MainScreen::redraw() {
   ui->erase();
   ui->hideCursor();
   totalsitessize = global->getSiteManager()->getNumSites();
-  if (sitepos >= totalsitessize) {
+  if (sitepos && sitepos >= totalsitessize) {
     --sitepos;
   }
   numsitestext = "Sites: " + std::to_string(totalsitessize);
@@ -128,8 +128,8 @@ void MainScreen::redraw() {
   if (!totalsitessize) {
     ui->printStr(irow, 1, "Press 'A' to add a site");
   }
-  int y = irow;
-  if (totalsitessize) {
+  else {
+    int y = irow;
     addSiteHeader(y++, msos);
     sitestartrow = y;
     adaptViewSpan(currentviewspan, row - sitestartrow, sitepos, totalsitessize);
@@ -324,7 +324,7 @@ bool MainScreen::keyPressed(unsigned int ch) {
     case ' ':
     case 10:
       if (msos.isFocused()) {
-        if (msos.linesSize() == 1) break;
+        if (!msos.linesSize()) break;
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
         std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
         ui->goSiteStatus(site->getName());
@@ -416,7 +416,7 @@ bool MainScreen::keyPressed(unsigned int ch) {
   if (msos.isFocused()) {
     switch(ch) {
       case 'E': {
-        if (msos.linesSize() == 1) break;
+        if (!msos.linesSize()) break;
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
         ui->goEditSite(sitename);
         return true;
@@ -425,7 +425,7 @@ bool MainScreen::keyPressed(unsigned int ch) {
         ui->goAddSite();
         return true;
       case 'C': {
-        if (msos.linesSize() == 1) break;
+        if (!msos.linesSize()) break;
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
         std::shared_ptr<Site> oldsite = global->getSiteManager()->getSite(sitename);
         std::shared_ptr<Site> site = std::make_shared<Site>(*oldsite);
@@ -440,7 +440,7 @@ bool MainScreen::keyPressed(unsigned int ch) {
       }
       case 'b':
       case KEY_RIGHT: {
-        if (msos.linesSize() == 1) break;
+        if (!msos.linesSize()) break;
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
         ui->goBrowse(sitename);
         return true;
@@ -451,13 +451,13 @@ bool MainScreen::keyPressed(unsigned int ch) {
         return true;
       }
       case '\t': {
-        if (msos.linesSize() == 1) break;
+        if (!msos.linesSize()) break;
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
         ui->goBrowseSplit(sitename);
         return true;
       }
       case 'w': {
-        if (msos.linesSize() == 1) break;
+        if (!msos.linesSize()) break;
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
         ui->goRawCommand(sitename);
         return true;
