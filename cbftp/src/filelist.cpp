@@ -378,9 +378,6 @@ void FileList::cleanSweep(int touch) {
   if (eraselist.size() > 0) {
     for (std::list<std::string>::iterator it2 = eraselist.begin(); it2 != eraselist.end(); it2++) {
       removeFile(*it2);
-      files.erase(*it2);
-      lowercasefilemap.erase(util::toLower(*it2));
-      scoreboardchangedfiles.insert(*it2);
     }
     maxfilesize = 0;
     for (it = files.begin(); it != files.end(); it++) {

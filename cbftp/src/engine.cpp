@@ -493,6 +493,7 @@ void Engine::removeSiteFromRace(std::shared_ptr<Race> & race, const std::string 
     if (sr != NULL) {
       const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
       race->removeSite(sr);
+      wipeFromScoreBoard(sr);
       if (!!sl) {
         sl->removeRace(race->getId());
       }
@@ -506,6 +507,7 @@ void Engine::removeSiteFromRaceDeleteFiles(std::shared_ptr<Race> & race, const s
     if (sr != NULL) {
       const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
       race->removeSite(sr);
+      wipeFromScoreBoard(sr);
       if (!!sl) {
         sl->requestDelete(sr->getPath(), true, false, allfiles);
         sl->removeRace(race->getId());
@@ -576,13 +578,19 @@ bool Engine::waitingInScoreBoard(const std::shared_ptr<Race> & race) const {
 }
 
 bool Engine::transferExpectedSoon(ScoreBoardElement * sbe) const {
+  const std::string & filename = sbe->fileName();
+  if (!sbe->getSourceFileList()->contains(filename)) {
+    return false;
+  }
+  if (sbe->getDestinationSiteRace()->isAborted()) {
+    return false;
+  }
   if (!sbe->getSource()->getCurrLogins() || !sbe->getDestination()->getCurrLogins()) {
     return false;
   }
   if (sbe->getRace()->hasFailedTransfer(sbe->fileName(), sbe->getSourceFileList(), sbe->getDestinationFileList())) {
     return false;
   }
-  const std::string & filename = sbe->fileName();
   SkipListMatch match = sbe->getDestination()->getSite()->getSkipList().check(
       (Path(sbe->subDir()) / filename).toString(), false, true, &sbe->getRace()->getSectionSkipList());
   if (match.action == SKIPLIST_UNIQUE &&
@@ -938,9 +946,11 @@ void Engine::updateScoreBoard() {
         cmpsr->addSubDirectory(subpath);
         continue;
       }
-      if (cmpfl->getState() != FileListState::NONEXISTENT && cmpfl->getState() != FileListState::LISTED) {
+      FileListState cmpstate = cmpfl->getState();
+      if (cmpstate == FileListState::UNKNOWN || cmpstate == FileListState::EXISTS) {
         continue;
       }
+      bool cmpfailed = cmpstate == FileListState::FAILED;
       int avgspeed = site->getAverageSpeed(cmpsite->getName());
       if (avgspeed > maxavgspeed) {
         avgspeed = maxavgspeed;
@@ -951,8 +961,11 @@ void Engine::updateScoreBoard() {
         File * f = fl->getFile(name);
         if (f == nullptr) { // special case when file has been deleted, reverse transfer from cmp->changed
           scoreboard->remove(name, fl, cmpfl);
+          if (cmpfailed || !raceTransferPossible(cmpsl, sl, race)) {
+            continue;
+          }
           f = cmpfl->getFile(name);
-          if (f == nullptr || !raceTransferPossible(cmpsl, sl, race)) {
+          if (f == nullptr) {
             continue;
           }
           if (!subpath.empty()) {
@@ -985,10 +998,7 @@ void Engine::updateScoreBoard() {
           continue;
         }
         scoreboard->remove(name, cmpfl, fl);
-        if (cmpfl->contains(name)) {
-          continue;
-        }
-        if (!regulartransferpossible || f->isDirectory() || f->getSize() == 0) {
+        if (cmpfailed || cmpfl->contains(name) || !regulartransferpossible || f->isDirectory() || f->getSize() == 0) {
           continue;
         }
         SkipListMatch filematch = cmpskip.check((subpathpath / name).toString(), false, true, &secskip);
@@ -1167,12 +1177,6 @@ void Engine::issueOptimalTransfers() {
     if (sbe->wasAttempted()) {
       continue;
     }
-    if (!sbe->getSourceFileList()->contains(filename)) {
-      continue;
-    }
-    if (sbe->getDestinationSiteRace()->isAborted()) {
-      continue;
-    }
     if (!transferExpectedSoon(sbe)) {
       continue;
     }
@@ -1252,7 +1256,6 @@ void Engine::raceComplete(std::shared_ptr<Race> race) {
       break;
     }
   }
-  std::set<std::pair<SiteRace, std::shared_ptr<SiteLogic>>>::const_iterator it;
   global->getEventLog()->log("Engine", "Spread job globally completed: " + race->getName());
   if (dropped) {
     global->getEventLog()->log("Engine", "Scoreboard refreshes dropped since spread job start: " + std::to_string(dropped));
