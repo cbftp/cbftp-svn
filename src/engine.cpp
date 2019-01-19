@@ -947,9 +947,10 @@ void Engine::updateScoreBoard() {
         continue;
       }
       FileListState cmpstate = cmpfl->getState();
-      if (cmpstate == FileListState::UNKNOWN || cmpstate == FileListState::EXISTS) {
+      if (cmpstate == FileListState::UNKNOWN) {
         continue;
       }
+      bool cmpexists = cmpstate == FileListState::EXISTS;
       bool cmpfailed = cmpstate == FileListState::FAILED;
       int avgspeed = site->getAverageSpeed(cmpsite->getName());
       if (avgspeed > maxavgspeed) {
@@ -998,7 +999,7 @@ void Engine::updateScoreBoard() {
           continue;
         }
         scoreboard->remove(name, cmpfl, fl);
-        if (cmpfailed || cmpfl->contains(name) || !regulartransferpossible || f->isDirectory() || f->getSize() == 0) {
+        if (cmpfailed || cmpexists || cmpfl->contains(name) || !regulartransferpossible || f->isDirectory() || f->getSize() == 0) {
           continue;
         }
         SkipListMatch filematch = cmpskip.check((subpathpath / name).toString(), false, true, &secskip);
