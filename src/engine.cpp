@@ -820,13 +820,24 @@ void Engine::reportCurrentSize(const SkipList & siteskiplist, const SkipList & s
     }
     std::string filename = file->getName();
     size_t lastdotpos = filename.rfind(".");
-    if (lastdotpos != std::string::npos && lastdotpos < filename.length() - 4) {
-      int offsetdot = 4;
-      if (file->getSize() == 0 && lastdotpos > 0 && lastdotpos == filename.length() - 8 &&
-          filename.substr(lastdotpos) == ".missing") { // special hack for some zipscripts
-        offsetdot = -1;
+    if (lastdotpos != std::string::npos && filename.length() > 8 &&
+        lastdotpos == filename.length() - 8 && filename.substr(lastdotpos) == ".missing")
+    {
+      filename = filename.substr(0, lastdotpos); // special hack for some zipscripts
+      lastdotpos = filename.rfind(".");
+    }
+    if (lastdotpos != std::string::npos) {
+      size_t len = filename.length();
+      size_t checkpos = lastdotpos + 1;
+      while (checkpos < len) {
+        if (isalnum(filename[checkpos])) {
+          ++checkpos;
+        }
+        else {
+          filename = filename.substr(0, checkpos);
+          break;
+        }
       }
-      filename = filename.substr(0, lastdotpos + offsetdot);
     }
     Path prepend = subpath;
     SkipListMatch match = siteskiplist.check((prepend / filename).toString(), false, true, &sectionskiplist);
