@@ -23,6 +23,9 @@
 
 #define FTPCONN_TICK_INTERVAL 1000
 
+const char * xdupematch = "X-DUPE: ";
+const size_t xdupematchlen = strlen(xdupematch);
+
 void fromPASVString(std::string pasv, std::string & host, int & port) {
   size_t sep1 = pasv.find(",");
   size_t sep2 = pasv.find(",", sep1 + 1);
@@ -1041,7 +1044,7 @@ void FTPConn::PRETSTORResponse() {
     rawBufWrite(response);
     sl->commandSuccess(id, state);
   }
-  else if (databufcode == 553 && response.find("uploaded by") != std::string::npos) {
+  else if (databufcode == 553 && response.find(xdupematch) != std::string::npos) {
     parseXDUPEData();
     rawBufWrite(std::string(databuf, databufpos));
     sl->commandFail(id, FAIL_DUPE);
@@ -1106,7 +1109,7 @@ void FTPConn::STORResponse() {
   }
   else {
     processing = false;
-    if (databufcode == 553 && response.find("uploaded by") != std::string::npos) {
+    if (databufcode == 553 && response.find(xdupematch) != std::string::npos) {
       parseXDUPEData();
       rawBufWrite(std::string(databuf, databufpos));
       sl->commandFail(id, FAIL_DUPE);
@@ -1298,12 +1301,12 @@ void FTPConn::parseXDUPEData() {
     if (lineendpos > 0 && loc[lineendpos - 1] == '\r') {
       --lastpos;
     }
-    int xdupepos = util::chrstrfind(loc, lastpos, "X-DUPE: ", 8);
+    int xdupepos = util::chrstrfind(loc, lastpos, xdupematch, xdupematchlen);
     if (xdupepos != -1) {
       if (xdupestart == -1) {
         xdupestart = loc - databuf;
       }
-      xdupelist.push_back(std::string(loc + xdupepos + 8, lastpos - (xdupepos + 8)));
+      xdupelist.emplace_back(loc + xdupepos + xdupematchlen, lastpos - (xdupepos + xdupematchlen));
     }
     else if (xdupestart != -1 && xdupeend == -1) {
       xdupeend = loc - databuf;
