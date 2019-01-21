@@ -27,7 +27,7 @@ enum RaceType {
   PREPARE
 };
 
-std::list<std::shared_ptr<SiteLogic> > getSiteLogicList(const std::string & sitestring, bool log = true) {
+std::list<std::shared_ptr<SiteLogic> > getSiteLogicList(const std::string & sitestring) {
   std::list<std::shared_ptr<SiteLogic> > sitelogics;
   std::list<std::string> sites;
   if (sitestring == "*") {
@@ -50,9 +50,21 @@ std::list<std::shared_ptr<SiteLogic> > getSiteLogicList(const std::string & site
     }
     sitelogics.push_back(sl);
   }
-  if (!sitelogics.empty() || log) {
-    for (std::list<std::string>::const_iterator it = notfoundsites.begin(); it != notfoundsites.end(); ++it) {
-      global->getEventLog()->log("RemoteCommandHandler", "Site not found: " + *it);
+  if (sitelogics.empty()) {
+    for (std::vector<std::shared_ptr<Site> >::const_iterator it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); ++it) {
+      if ((*it)->hasSection(sitestring) && !(*it)->getDisabled()) {
+        std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic((*it)->getName());
+        sitelogics.push_back(sl);
+      }
+    }
+  }
+  if (!notfoundsites.empty()) {
+    std::string notfound = util::join(notfoundsites, ",");
+    if (sites.size() == 1) {
+      global->getEventLog()->log("RemoteCommandHandler", "Site or section not found: " + notfound);
+    }
+    else {
+      global->getEventLog()->log("RemoteCommandHandler", "Sites not found: " + notfound);
     }
   }
   return sitelogics;
@@ -257,7 +269,7 @@ void RemoteCommandHandler::commandRawWithPath(const std::vector<std::string> & m
       else {
         global->getEventLog()->log("RemoteCommandHandler", "Path must be absolute or a section name on " +
             (*it)->getSite()->getName() + ": " + path.toString());
-        return;
+        continue;
       }
     }
     (*it)->requestRawCommand(path, rawcommand, false);
@@ -392,25 +404,9 @@ void RemoteCommandHandler::commandIdle(const std::vector<std::string> & message)
     idletime = std::stoi(message[1]);
   }
 
-  std::list<std::shared_ptr<SiteLogic> > sites = getSiteLogicList(sitestring, false);
-
-  if (sites.empty()) {
-    bool found = false;
-    for (std::vector<std::shared_ptr<Site> >::const_iterator it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); ++it) {
-      if ((*it)->hasSection(sitestring) && !(*it)->getDisabled()) {
-        std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic((*it)->getName());
-        sl->requestAllIdle((*it)->getSectionPath(sitestring), idletime);
-        found = true;
-      }
-    }
-    if (!found) {
-      global->getEventLog()->log("RemoteCommandHandler", "Sites or section not found: " + sitestring);
-    }
-  }
-  else {
-    for (std::list<std::shared_ptr<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
-      (*it)->requestAllIdle(idletime);
-    }
+  std::list<std::shared_ptr<SiteLogic> > sites = getSiteLogicList(sitestring);
+  for (std::list<std::shared_ptr<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
+    (*it)->requestAllIdle(idletime);
   }
 }
 

@@ -297,11 +297,12 @@ in the cbftp UI to start the latest prepared job.
 
 <password> raw <sitelist> <command>
 This command makes cbftp issue the given raw command on the listed sites.
+The sitelist can also be a section name.
 
 <password> rawwithpath <sitelist> <path> <command>
 This command makes cbftp change directory to the given path and then issue
-the given raw command on the listed sites. The path field can also be a
-section name.
+the given raw command on the listed sites. The sitelist and path field can also
+be section names.
 
 <password> idle <sitelist> [time]
 This command makes cbftp login and idle on the specified sites. Specifying
@@ -312,9 +313,11 @@ The sitelist can also be a section name.
 <password> abort <job>
 This command makes cbftp abort the specified spread job.
 
-<password> delete <job>
+<password> delete <job> [sites]
 This command makes cbftp abort the specified spread job, and then delete
 all related files on all involved sites.
+If a sitelist is specified, those sites will be removed from the job instead
+of aborting it.
 
 <password> reset <job>
 This command makes cbftp soft reset (no re-mkdir) the specified spread job.
