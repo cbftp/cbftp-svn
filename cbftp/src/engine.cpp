@@ -181,7 +181,7 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & rele
       nodownload = false;
     }
   }
-  if (!append && (noupload || nodownload)) {
+  if (!append && (noupload || nodownload) && profile != SPREAD_DISTRIBUTE) {
     global->getEventLog()->log("Engine", "Ignoring attempt to spread " + release + " in "
         + section + " since no transfers would be performed.");
     return std::shared_ptr<Race>();
