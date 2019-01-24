@@ -51,31 +51,63 @@ void ScoreBoard::update(
     elements[showsize]->reset(name, score, filesize, priotype, src, fls, srs, dst, fld, srd, race, subdir);
   }
   elementlocator[fls][fld][name] = elements[showsize];
+  destinationlocator[fld].insert(elements[showsize]);
   ++showsize;
 }
 
-void ScoreBoard::remove(const std::string & name, FileList * fls, FileList * fld) {
+void ScoreBoard::update(ScoreBoardElement * sbe) {
+  update(sbe->fileName(), sbe->getScore(), sbe->getFileSize(), sbe->getPriorityType(), sbe->getSource(),
+         sbe->getSourceFileList(), sbe->getSourceSiteRace(), sbe->getDestination(),
+         sbe->getDestinationFileList(), sbe->getDestinationSiteRace(), sbe->getRace(), sbe->subDir());
+}
+
+ScoreBoardElement * ScoreBoard::find(const std::string & name, FileList * fls, FileList * fld) const {
+  const auto flsit = elementlocator.find(fls);
+  if (flsit == elementlocator.end()) {
+    return nullptr;
+  }
+  const std::unordered_map<FileList *, std::unordered_map<std::string, ScoreBoardElement *>> & fldmap = flsit->second;
+  auto fldit = fldmap.find(fld);
+  if (fldit == fldmap.end()) {
+    return nullptr;
+  }
+  const std::unordered_map<std::string, ScoreBoardElement *> & filemap = fldit->second;
+  auto fileit = filemap.find(name);
+  if (fileit == filemap.end()) {
+    return nullptr;
+  }
+  return fileit->second;
+}
+
+bool ScoreBoard::remove(ScoreBoardElement * sbe) {
+  return remove(sbe->fileName(), sbe->getSourceFileList(), sbe->getDestinationFileList());
+}
+
+bool ScoreBoard::remove(const std::string & name, FileList * fls, FileList * fld) {
   auto flsit = elementlocator.find(fls);
   if (flsit == elementlocator.end()) {
-    return;
+    return false;
   }
   std::unordered_map<FileList *, std::unordered_map<std::string, ScoreBoardElement *>> & fldmap = flsit->second;
   auto fldit = fldmap.find(fld);
   if (fldit == fldmap.end()) {
-    return;
+    return false;
   }
   std::unordered_map<std::string, ScoreBoardElement *> & filemap = fldit->second;
   auto fileit = filemap.find(name);
   if (fileit == filemap.end()) {
-    return;
+    return false;
   }
   ScoreBoardElement * sbe = fileit->second;
   filemap.erase(fileit);
+  destinationlocator[sbe->getDestinationFileList()].erase(sbe);
   if (showsize && sbe != elements[showsize - 1]) {
     sbe->reset(*elements[showsize - 1]);
     elementlocator[sbe->getSourceFileList()][sbe->getDestinationFileList()][sbe->fileName()] = sbe;
+    destinationlocator[sbe->getDestinationFileList()].insert(sbe);
   }
   --showsize;
+  return true;
 }
 
 void ScoreBoard::sort() {
@@ -174,22 +206,35 @@ const std::vector<ScoreBoardElement *> & ScoreBoard::getElementVector() const{
 void ScoreBoard::wipe() {
   showsize = 0;
   elementlocator.clear();
+  destinationlocator.clear();
 }
 
 void ScoreBoard::wipe(FileList * fl) {
   auto flsit = elementlocator.find(fl);
-  if (flsit == elementlocator.end()) {
-    return;
-  }
-  elementlocator.erase(flsit);
-  for (int i = showsize - 1; i >= 0; i--) {
-    ScoreBoardElement * sbe = elements[i];
-    if (sbe->getSourceFileList() == fl) {
-      if ((unsigned int)i < showsize - 1) {
-        sbe->reset(*elements[showsize - 1]);
-        elementlocator[sbe->getSourceFileList()][sbe->getDestinationFileList()][sbe->fileName()] = sbe;
+  if (flsit != elementlocator.end()) {
+    for (auto fldit : flsit->second) {
+      std::unordered_map<std::string, ScoreBoardElement *> srccopy = fldit.second;
+      for (auto fileit : srccopy) {
+        remove(fileit.second);
       }
-      --showsize;
+    }
+  }
+  auto fldit = destinationlocator.find(fl);
+  if (fldit != destinationlocator.end()) {
+    std::unordered_set<ScoreBoardElement *> destcopy = fldit->second;
+    for (ScoreBoardElement * sbe : destcopy) {
+      remove(sbe);
+    }
+  }
+  elementlocator.erase(fl);
+  destinationlocator.erase(fl);
+}
+
+void ScoreBoard::resetSkipChecked(FileList * fl) {
+  auto it = destinationlocator.find(fl);
+  if (it != destinationlocator.end()) {
+    for (ScoreBoardElement * sbe : it->second) {
+      sbe->resetSkipChecked();
     }
   }
 }

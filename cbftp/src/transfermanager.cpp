@@ -7,6 +7,7 @@
 #include "transferstatus.h"
 #include "localfilelist.h"
 #include "transferstatuscallback.h"
+#include "engine.h"
 
 TransferManager::TransferManager() : totalfinishedtransfers(0) {
 }
@@ -95,6 +96,7 @@ void TransferManager::transferFailed(const std::shared_ptr<TransferStatus> & ts,
     if (callback != NULL) {
       callback->transferFailed(ts, err);
     }
+    global->getEngine()->transferFailed(ts, err);
     moveTransferStatusToFinished(ts);
   }
 }

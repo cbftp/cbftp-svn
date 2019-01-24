@@ -28,6 +28,7 @@ void ScoreBoardElement::reset(const std::string & filename, unsigned short score
   attempted = false;
   this->subdir = subdir;
   this->filesize = filesize;
+  skipchecked = true;
 }
 
 void ScoreBoardElement::reset(const ScoreBoardElement & other) {
@@ -36,9 +37,11 @@ void ScoreBoardElement::reset(const ScoreBoardElement & other) {
         other.subdir);
 }
 
-void ScoreBoardElement::update(unsigned short score) {
+void ScoreBoardElement::update(unsigned short score, bool unsetattempted) {
   this->score = score;
-  attempted = false;
+  if (unsetattempted) {
+    attempted = false;
+  }
 }
 
 const std::string & ScoreBoardElement::fileName() const {
@@ -95,6 +98,18 @@ bool ScoreBoardElement::wasAttempted() const {
 
 void ScoreBoardElement::setAttempted() {
   attempted = true;
+}
+
+bool ScoreBoardElement::skipChecked() const {
+  return skipchecked;
+}
+
+void ScoreBoardElement::setSkipChecked() {
+  skipchecked = true;
+}
+
+void ScoreBoardElement::resetSkipChecked() {
+  skipchecked = false;
 }
 
 std::ostream & operator<<(std::ostream & out, const ScoreBoardElement & sbe) {

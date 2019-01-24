@@ -24,6 +24,7 @@ class PreparedRace;
 class Path;
 class SkipList;
 class ScoreBoardElement;
+class TransferStatus;
 
 class Engine : public EventReceiver {
 public:
@@ -89,6 +90,7 @@ public:
   int getPreparedRaceExpiryTime() const;
   bool getNextPreparedRaceStarterEnabled() const;
   int getNextPreparedRaceStarterTimeRemaining() const;
+  void transferFailed(const std::shared_ptr<TransferStatus> & ts, int err);
  private:
   std::shared_ptr<Race> newSpreadJob(int, const std::string &, const std::string &, const std::list<std::string> &);
   std::shared_ptr<Race> newSpreadJob(int, const std::string &, const std::string &);
@@ -123,12 +125,14 @@ public:
   void wipeFromScoreBoard(SiteRace * sr);
   bool waitingInScoreBoard(const std::shared_ptr<Race> & race) const;
   bool transferExpectedSoon(ScoreBoardElement * sbe) const;
+  void restoreFromFailed(const std::shared_ptr<Race> & race);
   std::list<std::shared_ptr<Race> > allraces;
   std::list<std::shared_ptr<Race> > currentraces;
   std::list<std::shared_ptr<PreparedRace> > preparedraces;
   std::list<std::shared_ptr<TransferJob>  > alltransferjobs;
   std::list<std::shared_ptr<TransferJob> > currenttransferjobs;
   std::shared_ptr<ScoreBoard> scoreboard;
+  std::shared_ptr<ScoreBoard> failboard;
   std::unordered_map<std::shared_ptr<TransferJob>, std::list<PendingTransfer> > pendingtransfers;
   int maxavgspeed;
   bool pokeregistered;
