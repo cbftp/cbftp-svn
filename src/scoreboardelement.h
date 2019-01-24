@@ -31,13 +31,14 @@ class ScoreBoardElement {
     bool attempted;
     std::string subdir;
     unsigned long long int filesize;
+    bool skipchecked;
   public:
     ScoreBoardElement(const std::string &, unsigned short, unsigned long long int filesize, PrioType priotype, const std::shared_ptr<SiteLogic> &,
         FileList *, SiteRace *, const std::shared_ptr<SiteLogic> &, FileList *, SiteRace *, const std::shared_ptr<Race> &, const std::string &);
     void reset(const std::string &, unsigned short, unsigned long long int filesize, PrioType priotype, const std::shared_ptr<SiteLogic> &,
         FileList *, SiteRace *, const std::shared_ptr<SiteLogic> &, FileList *, SiteRace *, const std::shared_ptr<Race> &, const std::string &);
     void reset(const ScoreBoardElement & other);
-    void update(unsigned short);
+    void update(unsigned short, bool unsetattempted = true);
     const std::string & fileName() const;
     const std::string & subDir() const;
     const std::shared_ptr<SiteLogic> & getSource() const;
@@ -52,6 +53,9 @@ class ScoreBoardElement {
     unsigned long long int getFileSize() const;
     bool wasAttempted() const;
     void setAttempted();
+    bool skipChecked() const;
+    void setSkipChecked();
+    void resetSkipChecked();
 };
 
 std::ostream & operator<<(std::ostream &, const ScoreBoardElement &);

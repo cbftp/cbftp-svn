@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 enum class PrioType;
@@ -26,6 +27,7 @@ class ScoreBoard {
     void shuffle(unsigned int firstpos, unsigned int lastpos);
     std::unordered_map<FileList *, std::unordered_map<FileList *,
       std::unordered_map<std::string, ScoreBoardElement *>>> elementlocator;
+    std::unordered_map<FileList *, std::unordered_set<ScoreBoardElement *>> destinationlocator;
   public:
     ScoreBoard();
     ~ScoreBoard();
@@ -35,7 +37,10 @@ class ScoreBoard {
         const std::shared_ptr<SiteLogic> & src, FileList * fls, SiteRace * srs,
         const std::shared_ptr<SiteLogic> & dst, FileList * fld, SiteRace * srd,
         const std::shared_ptr<Race> & race, const std::string & subdir);
-    void remove(const std::string & name, FileList * fls, FileList * fld);
+    void update(ScoreBoardElement * sbe);
+    ScoreBoardElement * find(const std::string & name, FileList * fls, FileList * fld) const;
+    bool remove(ScoreBoardElement * sbe);
+    bool remove(const std::string & name, FileList * fls, FileList * fld);
     unsigned int size() const;
     std::vector<ScoreBoardElement *>::const_iterator begin() const;
     std::vector<ScoreBoardElement *>::const_iterator end() const;
@@ -46,4 +51,5 @@ class ScoreBoard {
     const std::vector<ScoreBoardElement *> & getElementVector() const;
     void wipe();
     void wipe(FileList *);
+    void resetSkipChecked(FileList * fl);
 };
