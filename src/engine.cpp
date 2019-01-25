@@ -1228,13 +1228,13 @@ void Engine::issueOptimalTransfers() {
         sbe->getSourceSiteRace(), sbe->getDestinationSiteRace());
     race->addTransfer(ts);
     sbe->setAttempted();
-    for (ScoreBoardElement * sbe : removelist) {
-      scoreboard->remove(sbe);
-    }
-    if (!removelist.empty()) {
-      scoreboard->sort();
-      scoreboard->shuffleEquals();
-    }
+  }
+  for (ScoreBoardElement * sbe : removelist) {
+    scoreboard->remove(sbe);
+  }
+  if (!removelist.empty()) {
+    scoreboard->sort();
+    scoreboard->shuffleEquals();
   }
 }
 
