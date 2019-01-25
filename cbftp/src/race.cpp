@@ -61,6 +61,10 @@ Race::~Race() {
   }
 }
 
+CallbackType Race::callbackType() const {
+  return CallbackType::RACE;
+}
+
 void Race::addSite(SiteRace * siterace, const std::shared_ptr<SiteLogic> & sl) {
   sites.insert(std::pair<SiteRace *, std::shared_ptr<SiteLogic> >(siterace, sl));
 }

@@ -92,6 +92,7 @@ class Race : public EventReceiver, public TransferStatusCallback {
   public:
     Race(unsigned int, SpreadProfile, const std::string &, const std::string &);
     ~Race();
+    CallbackType callbackType() const override;
     void addSite(SiteRace *, const std::shared_ptr<SiteLogic> &);
     void removeSite(SiteRace *);
     void removeSite(const std::shared_ptr<SiteLogic> &);

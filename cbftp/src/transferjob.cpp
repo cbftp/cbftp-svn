@@ -211,6 +211,10 @@ std::string TransferJob::getDstFileName() const {
   return dstfile;
 }
 
+CallbackType TransferJob::callbackType() const {
+  return CallbackType::TRANSFERJOB;
+}
+
 int TransferJob::getType() const {
   return type;
 }
