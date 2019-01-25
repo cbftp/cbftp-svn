@@ -606,7 +606,7 @@ bool Engine::transferExpectedSoon(ScoreBoardElement * sbe) const {
   if (sbe->wasAttempted()) {
     return false;
   }
-  if (sbe->getSourceFileList()->contains(filename)) {
+  if (!sbe->getSourceFileList()->contains(filename)) {
     return false;
   }
   if (sbe->getDestinationFileList()->contains(filename)) {
