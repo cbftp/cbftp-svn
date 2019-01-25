@@ -1,7 +1,9 @@
 #include "scoreboard.h"
 
-#include <cstring>
 #include <algorithm>
+#include <cstring>
+#include <list>
+#include <tuple>
 
 #include "scoreboardelement.h"
 #include "race.h"
@@ -211,23 +213,31 @@ void ScoreBoard::wipe() {
 
 void ScoreBoard::wipe(FileList * fl) {
   auto flsit = elementlocator.find(fl);
+  std::list<std::tuple<std::string, FileList *, FileList *>> removelist;
   if (flsit != elementlocator.end()) {
     for (auto fldit : flsit->second) {
-      std::unordered_map<std::string, ScoreBoardElement *> srccopy = fldit.second;
-      for (auto fileit : srccopy) {
-        remove(fileit.second);
+      for (auto fileit : fldit.second) {
+        ScoreBoardElement * sbe = fileit.second;
+        removelist.emplace_back(sbe->fileName(), sbe->getSourceFileList(),
+                                sbe->getDestinationFileList());
       }
     }
   }
   auto fldit = destinationlocator.find(fl);
   if (fldit != destinationlocator.end()) {
-    std::unordered_set<ScoreBoardElement *> destcopy = fldit->second;
-    for (ScoreBoardElement * sbe : destcopy) {
-      remove(sbe);
+    for (ScoreBoardElement * sbe : fldit->second) {
+      removelist.emplace_back(sbe->fileName(), sbe->getSourceFileList(),
+                              sbe->getDestinationFileList());
     }
+  }
+  for (const std::tuple<std::string, FileList *, FileList *> & elem : removelist) {
+    remove(std::get<0>(elem), std::get<1>(elem), std::get<2>(elem));
   }
   elementlocator.erase(fl);
   destinationlocator.erase(fl);
+  if (!showsize) {
+    wipe();
+  }
 }
 
 void ScoreBoard::resetSkipChecked(FileList * fl) {

@@ -42,6 +42,7 @@ public:
   TransferJob(unsigned int, const std::shared_ptr<SiteLogic> &, FileList *, const std::string &, const std::shared_ptr<SiteLogic> &, FileList *, const std::string &);
   TransferJob(unsigned int, const std::shared_ptr<SiteLogic> &, const Path &, const std::string &, const std::shared_ptr<SiteLogic> &, const Path &, const std::string &);
   ~TransferJob();
+  CallbackType callbackType() const override;
   int getType() const;
   const Path & getSrcPath() const;
   const Path & getDstPath() const;

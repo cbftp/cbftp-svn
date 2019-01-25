@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <set>
+#include <tuple>
 #include <unordered_set>
 
 #include "core/workmanager.h"
@@ -581,15 +582,17 @@ bool Engine::waitingInScoreBoard(const std::shared_ptr<Race> & race) const {
 
 void Engine::restoreFromFailed(const std::shared_ptr<Race> & race) {
   std::vector<ScoreBoardElement *>::iterator it;
-  std::list<ScoreBoardElement *> removelist;
+  std::list<std::tuple<std::string, FileList *, FileList *>> removelist;
   for (it = failboard->begin(); it != failboard->end(); ++it) {
-    if ((*it)->getRace() == race) {
-      scoreboard->update(*it);
-      removelist.emplace_back(*it);
+    ScoreBoardElement * sbe = *it;
+    if (sbe->getRace() == race) {
+      scoreboard->update(sbe);
+      removelist.emplace_back(sbe->fileName(), sbe->getSourceFileList(),
+                              sbe->getDestinationFileList());
     }
   }
-  for (ScoreBoardElement * sbe : removelist) {
-    failboard->remove(sbe);
+  for (const std::tuple<std::string, FileList *, FileList *> & elem : removelist) {
+    failboard->remove(std::get<0>(elem), std::get<1>(elem), std::get<2>(elem));
   }
   scoreboard->sort();
   scoreboard->shuffleEquals();
@@ -1007,9 +1010,6 @@ void Engine::updateScoreBoard() {
           if (fl->contains(name) || f->isDirectory() || f->getSize() == 0) {
             continue;
           }
-          if (race->hasFailedTransfer(name, cmpfl, fl)) {
-            continue;
-          }
           SkipListMatch filematch = skip.check((subpathpath / name).toString(), false, true, &secskip);
           if (filematch.action == SKIPLIST_DENY || (filematch.action == SKIPLIST_UNIQUE &&
                                                     fl->containsPatternBefore(filematch.matchpattern, false, name))) {
@@ -1023,7 +1023,8 @@ void Engine::updateScoreBoard() {
           PrioType p = getPrioType(f);
           unsigned long long int filesize = f->getSize();
           unsigned short score = calculateScore(p, filesize, race, cmpfl, cmpsr, fl, sr, avgspeed, priority, racemode);
-          scoreboard->update(name, score, filesize, p, cmpsl, cmpfl, cmpsr, sl, fl, sr, race, subpath);
+          std::shared_ptr<ScoreBoard> & updateboard = (race->hasFailedTransfer(name, cmpfl, fl)) ? failboard : scoreboard;
+          updateboard->update(name, score, filesize, p, cmpsl, cmpfl, cmpsr, sl, fl, sr, race, subpath);
           race->resetUpdateCheckCounter();
           continue;
         }
@@ -1034,9 +1035,6 @@ void Engine::updateScoreBoard() {
         if (cmpfailed || cmpexists || cmpfl->contains(name) || !regulartransferpossible || f->isDirectory() || f->getSize() == 0) {
           continue;
         }
-        if (race->hasFailedTransfer(name, fl, cmpfl)) {
-          continue;
-        }
         SkipListMatch filematch = cmpskip.check((subpathpath / name).toString(), false, true, &secskip);
         if (filematch.action == SKIPLIST_DENY || (filematch.action == SKIPLIST_UNIQUE &&
                                                   cmpfl->containsPatternBefore(filematch.matchpattern, false, name))) {
@@ -1045,7 +1043,8 @@ void Engine::updateScoreBoard() {
         PrioType p = getPrioType(f);
         unsigned long long int filesize = f->getSize();
         unsigned short score = calculateScore(p, filesize, race, fl, sr, cmpfl, cmpsr, avgspeed, cmppriority, racemode);
-        scoreboard->update(name, score, filesize, p, sl, fl, sr, cmpsl, cmpfl, cmpsr, race, subpath);
+        std::shared_ptr<ScoreBoard> & updateboard = (race->hasFailedTransfer(name, fl, cmpfl)) ? failboard : scoreboard;
+        updateboard->update(name, score, filesize, p, sl, fl, sr, cmpsl, cmpfl, cmpsr, race, subpath);
         race->resetUpdateCheckCounter();
       }
     }
@@ -1188,7 +1187,7 @@ void Engine::issueOptimalTransfers() {
   std::shared_ptr<SiteLogic> sld;
   std::string filename;
   std::shared_ptr<Race> race;
-  std::list<ScoreBoardElement *> removelist;
+  std::list<std::tuple<std::string, FileList *, FileList *>> removelist;
   for (it = scoreboard->begin(); it != scoreboard->end(); it++) {
     sbe = *it;
     sls = sbe->getSource();
@@ -1205,7 +1204,8 @@ void Engine::issueOptimalTransfers() {
       if (match.action == SKIPLIST_UNIQUE &&
           sbe->getDestinationFileList()->containsPatternBefore(match.matchpattern, false, filename))
       {
-        removelist.emplace_back(sbe);
+        removelist.emplace_back(sbe->fileName(), sbe->getSourceFileList(),
+                                sbe->getDestinationFileList());
         continue;
       }
     }
@@ -1229,8 +1229,8 @@ void Engine::issueOptimalTransfers() {
     race->addTransfer(ts);
     sbe->setAttempted();
   }
-  for (ScoreBoardElement * sbe : removelist) {
-    scoreboard->remove(sbe);
+  for (const std::tuple<std::string, FileList *, FileList *> & elem : removelist) {
+    scoreboard->remove(std::get<0>(elem), std::get<1>(elem), std::get<2>(elem));
   }
   if (!removelist.empty()) {
     scoreboard->sort();
@@ -1239,7 +1239,10 @@ void Engine::issueOptimalTransfers() {
 }
 
 void Engine::transferFailed(const std::shared_ptr<TransferStatus> & ts, int err) {
-  if (ts->getCallback() && static_cast<Race *>(ts->getCallback())->hasFailedTransfer(ts->getFile(), ts->getSourceFileList(), ts->getTargetFileList())) {
+  TransferStatusCallback * cb = ts->getCallback();
+  if (cb && cb->callbackType() == CallbackType::RACE &&
+      static_cast<Race *>(cb)->hasFailedTransfer(ts->getFile(), ts->getSourceFileList(), ts->getTargetFileList()))
+  {
     ScoreBoardElement * sbe = scoreboard->find(ts->getFile(), ts->getSourceFileList(), ts->getTargetFileList());
     if (sbe) {
       failboard->update(sbe);
