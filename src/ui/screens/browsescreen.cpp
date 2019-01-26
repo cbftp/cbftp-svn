@@ -9,6 +9,8 @@
 #include "../../localfilelist.h"
 #include "../../timereference.h"
 #include "../../filelist.h"
+#include "../../sitemanager.h"
+#include "../../site.h"
 
 #include "../ui.h"
 #include "../termint.h"
@@ -27,12 +29,12 @@ BrowseScreen::~BrowseScreen() {
 
 }
 
-void BrowseScreen::initialize(unsigned int row, unsigned int col, ViewMode viewmode, const std::string & sitestr) {
+void BrowseScreen::initialize(unsigned int row, unsigned int col, ViewMode viewmode, const std::string & site, const Path path) {
   expectbackendpush = true;
   this->split = initsplitupdate = viewmode == VIEW_SPLIT;
   TimeReference::updateTime();
   if (viewmode != VIEW_LOCAL) {
-    left = std::make_shared<BrowseScreenSite>(ui, sitestr);
+    left = std::make_shared<BrowseScreenSite>(ui, site, path);
   }
   else {
     left = std::make_shared<BrowseScreenLocal>(ui);
@@ -126,12 +128,26 @@ bool BrowseScreen::keyPressed(unsigned int ch) {
         closeSide();
       }
       return true;
-    case BROWSESCREENACTION_SITE:
-      active = (active == left ? left : right) = std::make_shared<BrowseScreenSite>(ui, op.getArg());
+    case BROWSESCREENACTION_SITE: {
+      Path targetpath;
+      if (split) {
+        std::shared_ptr<BrowseScreenSub> other = active == left ? right : left;
+        if (other->type() == BROWSESCREEN_SITE) {
+          const std::shared_ptr<BrowseScreenSite> & othersite = std::static_pointer_cast<BrowseScreenSite>(other);
+          const Path & path = othersite->getUIFileList()->getPath();
+          std::list<std::string> sections = othersite->getSite()->getSectionsForPath(path);
+          if (!sections.empty()) {
+            std::string section = sections.front();
+            targetpath = global->getSiteManager()->getSite(op.getArg())->getSectionPath(section);
+          }
+        }
+      }
+      active = (active == left ? left : right) = std::make_shared<BrowseScreenSite>(ui, op.getArg(), targetpath);
       ui->redraw();
       ui->setLegend();
       ui->setInfo();
       return true;
+    }
     case BROWSESCREENACTION_HOME:
       active = (active == left ? left : right) = std::make_shared<BrowseScreenLocal>(ui);
       ui->redraw();

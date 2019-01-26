@@ -540,6 +540,44 @@ A: Read each column from top to bottom. Cbftp attempts to describe each file
    unique to that file. In many cases it will be the file suffix, or maybe
    some kind of numbering.
 
+Q: Can I use multiple addresses (bouncers) to a site? How do I sort them?
+A: Yes, just add them all on the address line with spaces between. Cbftp does
+   actually have a built-in sorting feature, but it's hard to spot. By default
+   cbftp will attempt to connect on the first address in the list. If it does
+   not manage to connect within 1 second, cbftp will attempt to connect on any
+   other addresses as well. Whichever address manages to connect first will
+   be stored first in the list for next time.
+
+Q: I have so many spread jobs running! Why won't they finish?
+A: Cbftp tries its best to make sure that all files are uploaded on all
+   involved sites. As long as any site does not have all files, cbftp will
+   keep trying to upload (until a reasonable amount of attempts have been
+   made). If a lot of jobs are started simultaneously and one or more sites
+   can't keep up, there will be lots of running jobs.
+
+Q: I have a spread job that says 100% done but is still running, why?
+A: Cbftp needs to list the directories for a few seconds after all files
+   in a spread job have been uploaded to make sure that the directory is
+   completed. If all slots for any involved site are busy doing other things,
+   like transferring files in other jobs, then the job will stay running
+   until that site has time to list the directory.
+
+Q: My spread jobs end in timeout instead of "done", what's wrong?
+A: Usually this happens because one or more sites cannot finish the job
+   due to being down, out of space, not having any transfer sources, or some
+   other reason for not being able to receive files. Another common reason
+   is that some unwanted files were uploaded on one or several sites during the
+   job, and cb will then expect those files to be uploaded to all other sites
+   as well before considering the job done, which may not always be possible.
+   Make sure to skiplist anything unwanted!
+
+Q: One or several sites is executing STAT/LIST commands over and over, why?
+A: During a spread job, cbftp uses connections that are currently not busy
+   performing file transfers for continuously listing the spread job
+   directories. This information is then used for calculating the transfer
+   speeds of ongoing transfers, figuring out which files to transfer next,
+   and so on. It is completely normal.
+
 Q: How do I disconnect from a site?
 A: Disconnecting is an old habit that comes from traditional clients that
    "lock" slots to the user interface. Cbftp does not do this, and there's
@@ -548,14 +586,6 @@ A: Disconnecting is an old habit that comes from traditional clients that
    on the site from the main screen, use the arrow keys to navigate to the
    right connection, and then press d.
 
-Q: Can I use multiple addresses (bouncers) to a site? How do I sort them?
-A: Yes, just add them all on the address line with spaces between. Cbftp does
-   actually have a built-in sorting feature, but it's hard to spot. By default
-   cbftp will attempt to connect on the first address in the list. If it does
-   not manage to connect within 1 second, cbftp will attempt to connect on any
-   other addresses as well. Whichever address manages to connect first will
-   be stored first in the list for next time.
-   
 Q: How do I exit cbftp? Do I need to save the data file somehow?
 A: press ctrl-c. The data file is written automatically once in a while
    when cbftp is running, and upon exit.

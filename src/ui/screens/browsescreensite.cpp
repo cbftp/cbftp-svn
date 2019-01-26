@@ -34,7 +34,7 @@
 #include "browsescreenaction.h"
 #include "rawdatascreen.h"
 
-BrowseScreenSite::BrowseScreenSite(Ui * ui, const std::string & sitestr) :
+BrowseScreenSite::BrowseScreenSite(Ui * ui, const std::string & sitestr, const Path path) :
     ui(ui), row(0), col(0), coloffset(0), currentviewspan(0),
     resort(false), tickcount(0), gotomode(false), gotomodefirst(false),
     gotomodeticker(0), filtermodeinput(false),
@@ -48,7 +48,7 @@ BrowseScreenSite::BrowseScreenSite(Ui * ui, const std::string & sitestr) :
   sitelogic->getAggregatedRawBuffer()->bookmark();
   BrowseScreenRequest request;
   request.type = BrowseScreenRequestType::FILELIST;
-  request.path = site->getBasePath();
+  request.path = path != "" ? path : site->getBasePath();
   request.id = sitelogic->requestFileList(request.path);
   requests.push_back(request);
   TimeReference::updateTime();
@@ -556,10 +556,12 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       //start a spread job of the selected dir, do nothing if a file is selected
       std::list<std::pair<std::string, bool> > items = list.getSelectedDirectoryNames();
       if (items.empty()) {
+        ui->goInfo("Spread jobs are only applicable for directories. Please select one or more directories to start a spread job.");
         break;
       }
       std::list<std::string> sections = site->getSectionsForPath(list.getPath());
       if (sections.empty()) {
+        ui->goInfo("Cannot start a spread job here since no section is bound to this directory. Please bind a section to this directory first.");
         break;
       }
       ui->goNewRace(site->getName(), sections, items);
@@ -569,10 +571,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       ui->goAddSiteSection(site, list.getPath());
       break;
     case 'v':
-      //view selected file, do nothing if a directory is selected
-      if (list.cursoredFile() != NULL && !list.cursoredFile()->isDirectory()) {
-        ui->goViewFile(site->getName(), list.cursoredFile()->getName(), filelist);
-      }
+      viewCursored();
       break;
     case 'D': {
       const std::list<UIFile *> items = list.getSelectedFiles();
@@ -613,6 +612,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
     case 'n': {
       std::list<std::pair<std::string, bool>> dirs = list.getSelectedDirectoryNames();
       if (dirs.empty()) {
+        ui->goInfo("Please select directories for nuking.");
         break;
       }
       ui->goNuke(site->getName(), targetName(dirs), list.getPath());
@@ -651,6 +651,9 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
         requests.push_back(request);
         ui->update();
         ui->setInfo();
+      }
+      else {
+        viewCursored();
       }
       return BrowseScreenAction(BROWSESCREENACTION_CHDIR);
     case 'W': {
@@ -1059,4 +1062,20 @@ void BrowseScreenSite::clearSoftSelects() {
 
 UIFileList * BrowseScreenSite::getUIFileList() {
   return &list;
+}
+
+const std::shared_ptr<Site> & BrowseScreenSite::getSite() const {
+  return site;
+}
+
+void BrowseScreenSite::viewCursored() {
+  //view selected file, do nothing if a directory is selected
+  if (list.cursoredFile() != NULL) {
+    if (list.cursoredFile()->isDirectory()) {
+      ui->goInfo("Cannot use the file viewer on a directory.");
+    }
+    else {
+      ui->goViewFile(site->getName(), list.cursoredFile()->getName(), filelist);
+    }
+  }
 }

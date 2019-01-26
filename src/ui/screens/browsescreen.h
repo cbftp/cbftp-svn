@@ -6,6 +6,7 @@
 #include <string>
 
 #include "../uiwindow.h"
+#include "../../path.h"
 
 class BrowseScreenSub;
 
@@ -19,7 +20,7 @@ class BrowseScreen : public UIWindow {
 public:
   BrowseScreen(Ui *);
   ~BrowseScreen();
-  void initialize(unsigned int, unsigned int, ViewMode, const std::string &);
+  void initialize(unsigned int, unsigned int, ViewMode, const std::string & site = "", const Path path = Path());
   void redraw();
   void update();
   void command(const std::string & command, const std::string & arg);

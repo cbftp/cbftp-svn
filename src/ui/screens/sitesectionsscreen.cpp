@@ -191,7 +191,7 @@ bool SiteSectionsScreen::keyPressed(unsigned int ch) {
 }
 
 std::string SiteSectionsScreen::getLegendText() const {
-  return "[A]dd section - [Enter/E] Details - [Esc/c/d] Return - [Up/Down] Navigate - [Del]ete section";
+  return "[A]dd section - [Enter/E] Details - [d]one, save changes - [c]ancel, undo changes - [Up/Down] Navigate - [Del]ete section";
 }
 
 std::string SiteSectionsScreen::getInfoLabel() const {

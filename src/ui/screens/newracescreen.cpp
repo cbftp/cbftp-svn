@@ -303,8 +303,7 @@ std::shared_ptr<Race> NewRaceScreen::startRace(bool addtemplegend) {
     }
   }
   if (sites.size() < 2) {
-    infotext = "Cannot start spread job with less than 2 sites!";
-    ui->update();
+    ui->goInfo("Cannot start spread job with less than 2 sites!");
     return lastrace;
   }
 

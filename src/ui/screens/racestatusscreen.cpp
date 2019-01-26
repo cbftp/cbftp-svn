@@ -28,8 +28,8 @@ enum SelectSitesMode {
 
 RaceStatusScreen::RaceStatusScreen(Ui * ui) {
   this->ui = ui;
-  defaultlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [r]eset race - Hard [R]eset race - A[B]ort race - [d]elete site and own files from race - [D]elete site and all files from race - [t]transfers";
-  finishedlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [r]eset race - Hard [R]eset race - [d]elete own files - [D]elete all files - [t]ransfers";
+  defaultlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [r]eset race - Hard [R]eset race - A[B]ort race - [d]elete site and own files from race - [D]elete site and all files from race - [t]transfers - [T]ransfers for site - [b]rowse";
+  finishedlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [r]eset race - Hard [R]eset race - [d]elete own files - [D]elete all files - [t]ransfers - [T]ransfers for site - [b]rowse";
 }
 
 RaceStatusScreen::~RaceStatusScreen() {
@@ -447,12 +447,29 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
     case 't':
       ui->goTransfersFilterSpreadJob(race->getName());
       return true;
-    case 10:
+    case 'T': {
+      std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
+      if (!!msotb) {
+        std::string site = msotb->getLabelText();
+        ui->goTransfersFilterSpreadJobSite(race->getName(), site);
+      }
+      return true;
+    }
+    case 10: {
       std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
       if (!!msotb) {
         ui->goSiteStatus(msotb->getLabelText());
       }
       break;
+    }
+    case 'b': {
+      std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
+      if (!!msotb) {
+        std::string site = msotb->getLabelText();
+        ui->goBrowse(site, race->getSiteRace(site)->getPath());
+      }
+      break;
+    }
   }
   return false;
 }

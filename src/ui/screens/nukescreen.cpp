@@ -23,7 +23,7 @@ NukeScreen::~NukeScreen() {
 }
 
 void NukeScreen::initialize(unsigned int row, unsigned int col, const std::string & sitestr, const std::string & items, const Path & path) {
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [n]uke - [c]ancel - [p]roper - [r]epack - [d]upe";
+  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [n]uke - [c]ancel - [p]roper - [r]epack - [d]upe - dupe [w]eb";
   currentlegendtext = defaultlegendtext;
   active = false;
   this->sitestr = sitestr;
@@ -132,6 +132,10 @@ bool NukeScreen::keyPressed(unsigned int ch) {
     }
     case 'd': {
       nuke(1, "dupe");
+      return true;
+    }
+    case 'w': {
+      nuke(3, "dupe.web");
       return true;
     }
   }

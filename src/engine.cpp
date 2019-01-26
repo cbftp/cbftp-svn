@@ -914,7 +914,7 @@ void Engine::addToScoreBoardForPair(const std::shared_ptr<SiteLogic> & sls, cons
                             const std::shared_ptr<Race> & race, const Path & subpath, SitePriority priority,
                             bool racemode)
 {
-  if (fld->getState() == FileListState::UNKNOWN && fld->getState() == FileListState::FAILED) {
+  if (fld->getState() == FileListState::UNKNOWN || fld->getState() == FileListState::FAILED) {
     return;
   }
   int avgspeed = ss->getAverageSpeed(ds->getName());

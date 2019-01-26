@@ -452,11 +452,7 @@ void Ui::run() {
   }
 }
 
-void Ui::switchToWindow(std::shared_ptr<UIWindow> window) {
-  switchToWindow(window, false);
-}
-
-void Ui::switchToWindow(std::shared_ptr<UIWindow> window, bool allowsplit) {
+void Ui::switchToWindow(std::shared_ptr<UIWindow> window, bool allowsplit, bool doredraw) {
   history.push_back(topwindow);
   if (split && !allowsplit) {
     setSplit(false);
@@ -465,6 +461,9 @@ void Ui::switchToWindow(std::shared_ptr<UIWindow> window, bool allowsplit) {
   infowindow->setLabel(window->getInfoLabel());
   infowindow->setText(window->getInfoText());
   topwindow = window;
+  if (doredraw) {
+    topwindow->redraw();
+  }
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 
@@ -730,13 +729,18 @@ void Ui::goRawCommand(const std::string & site, const Path & path, const std::st
   switchToWindow(rawcommandscreen);
 }
 
+void Ui::goInfo(const std::string & message) {
+  confirmationscreen->initialize(mainrow, maincol, message, ConfirmationMode::INFO);
+  switchToWindow(confirmationscreen);
+}
+
 void Ui::goConfirmation(const std::string & message) {
-  confirmationscreen->initialize(mainrow, maincol, message, false);
+  confirmationscreen->initialize(mainrow, maincol, message, ConfirmationMode::NORMAL);
   switchToWindow(confirmationscreen);
 }
 
 void Ui::goStrongConfirmation(const std::string & message) {
-  confirmationscreen->initialize(mainrow, maincol, message, true);
+  confirmationscreen->initialize(mainrow, maincol, message, ConfirmationMode::STRONG);
   switchToWindow(confirmationscreen);
 }
 
@@ -860,6 +864,11 @@ void Ui::goTransfersFilterTransferJob(const std::string & job) {
   switchToWindow(transfersscreen);
 }
 
+void Ui::goTransfersFilterSpreadJobSite(const std::string & job, const std::string & site) {
+  transfersscreen->initializeFilterSpreadJobSite(mainrow, maincol, job, site);
+  switchToWindow(transfersscreen);
+}
+
 void Ui::returnTransferFilters(const TransferFilteringParameters & tfp) {
   transfersscreen->initialize(mainrow, maincol, tfp);
   switchToLast();
@@ -881,8 +890,8 @@ void Ui::goAddSite() {
   switchToWindow(editsitescreen);
 }
 
-void Ui::goBrowse(const std::string & site) {
-  browsescreen->initialize(mainrow, maincol, VIEW_NORMAL, site);
+void Ui::goBrowse(const std::string & site, const Path path) {
+  browsescreen->initialize(mainrow, maincol, VIEW_NORMAL, site, path);
   switchToWindow(browsescreen);
 }
 
@@ -892,14 +901,13 @@ void Ui::goBrowseSplit(const std::string & site) {
 }
 
 void Ui::goBrowseLocal() {
-  browsescreen->initialize(mainrow, maincol, VIEW_LOCAL, "");
+  browsescreen->initialize(mainrow, maincol, VIEW_LOCAL);
   switchToWindow(browsescreen);
 }
 
 void Ui::goContinueBrowsing() {
   if (browsescreen->isInitialized()) {
-    browsescreen->redraw();
-    switchToWindow(browsescreen, true);
+    switchToWindow(browsescreen, true, true);
   }
 }
 

@@ -30,7 +30,7 @@ EditSiteScreen::~EditSiteScreen() {
 
 void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::string & operation, const std::string & site) {
   active = false;
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one, save changes - [c]ancel, undo changes";
+  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one, save changes - [c]ancel, undo changes - [s]ections - [S]kiplist";
   currentlegendtext = defaultlegendtext;
   this->operation = operation;
   SiteManager * sm = global->getSiteManager();
@@ -337,6 +337,7 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
       std::string newname = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("name"))->getData();
       bool changedname = newname != site->getName() && operation == "edit";
       if ((changedname || operation == "add") && !!global->getSiteManager()->getSite(newname)) {
+        ui->goInfo("A site with that name already exists. Please choose another name.");
         return true;
       }
       site->setName(newname);
@@ -472,6 +473,14 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
       ui->returnToLast();
       return true;
     }
+    case 'S':
+      modsite->setName(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("name"))->getData());
+      ui->goSkiplist((SkipList *)&modsite->getSkipList());
+      return true;
+    case 's':
+      modsite->setName(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("name"))->getData());
+      ui->goSiteSections(modsite);
+      return true;
     case 27: // esc
     case 'c':
       ui->returnToLast();

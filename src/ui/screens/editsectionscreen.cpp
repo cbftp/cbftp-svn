@@ -21,7 +21,7 @@ EditSectionScreen::~EditSectionScreen() {
 }
 
 void EditSectionScreen::initialize(unsigned int row, unsigned int col, const std::string & section) {
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel";
+  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel - [S]kiplist";
   currentlegendtext = defaultlegendtext;
   active = false;
   if (this->section != nullptr) {
@@ -132,6 +132,9 @@ bool EditSectionScreen::keyPressed(unsigned int ch) {
       return true;
     case 'd':
       done();
+      return true;
+    case 'S':
+      ui->goSkiplist(&section->getSkipList());
       return true;
   }
   return false;

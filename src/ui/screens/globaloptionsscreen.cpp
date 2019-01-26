@@ -26,7 +26,7 @@ GlobalOptionsScreen::~GlobalOptionsScreen() {
 }
 
 void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel";
+  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel - [S]kiplist";
   currentlegendtext = defaultlegendtext;
   active = false;
   unsigned int y = 1;
@@ -194,6 +194,9 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
     case 'c':
       global->getSettingsLoaderSaver()->saveSettings();
       ui->returnToLast();
+      return true;
+    case 'S':
+      ui->goSkiplist();
       return true;
     case 'd':
       bool udpenable = false;
