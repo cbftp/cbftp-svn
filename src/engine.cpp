@@ -914,7 +914,7 @@ void Engine::addToScoreBoardForPair(const std::shared_ptr<SiteLogic> & sls, cons
                             const std::shared_ptr<Race> & race, const Path & subpath, SitePriority priority,
                             bool racemode)
 {
-  if (fld->getState() != FileListState::NONEXISTENT && fld->getState() != FileListState::LISTED) {
+  if (fld->getState() == FileListState::UNKNOWN && fld->getState() == FileListState::FAILED) {
     return;
   }
   int avgspeed = ss->getAverageSpeed(ds->getName());
@@ -978,7 +978,6 @@ void Engine::updateScoreBoard() {
       if (cmpstate == FileListState::UNKNOWN) {
         continue;
       }
-      bool cmpexists = cmpstate == FileListState::EXISTS;
       bool cmpfailed = cmpstate == FileListState::FAILED;
       int avgspeed = site->getAverageSpeed(cmpsite->getName());
       if (avgspeed > maxavgspeed) {
@@ -1032,7 +1031,7 @@ void Engine::updateScoreBoard() {
           scoreboard->resetSkipChecked(fl);
         }
         failboard->remove(name, cmpfl, fl);
-        if (cmpfailed || cmpexists || cmpfl->contains(name) || !regulartransferpossible || f->isDirectory() || f->getSize() == 0) {
+        if (cmpfailed || cmpfl->contains(name) || !regulartransferpossible || f->isDirectory() || f->getSize() == 0) {
           continue;
         }
         SkipListMatch filematch = cmpskip.check((subpathpath / name).toString(), false, true, &secskip);
