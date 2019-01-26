@@ -24,6 +24,8 @@
 #define FTPCONN_TICK_INTERVAL 1000
 
 const char * xdupematch = "X-DUPE: ";
+const char * dupematch1 = "uploaded by";
+const char * dupematch2 = "ile exists";
 const size_t xdupematchlen = strlen(xdupematch);
 
 void fromPASVString(std::string pasv, std::string & host, int & port) {
@@ -1040,14 +1042,26 @@ void FTPConn::doPRETSTOR(const std::string & file) {
 void FTPConn::PRETSTORResponse() {
   processing = false;
   std::string response = std::string(databuf, databufpos);
-  if (databufcode == 200) {
-    rawBufWrite(response);
-    sl->commandSuccess(id, state);
+  if (databufcode == 553) {
+    bool dupe = false;
+    if (response.find(xdupematch) != std::string::npos) {
+      parseXDUPEData();
+      dupe = true;
+    }
+    else if (response.find(dupematch1) != std::string::npos ||
+             response.find(dupematch2) != std::string::npos)
+    {
+      dupe = true;
+    }
+    if (dupe) {
+      rawBufWrite(std::string(databuf, databufpos));
+      sl->commandFail(id, FAIL_DUPE);
+      return;
+    }
   }
-  else if (databufcode == 553 && response.find(xdupematch) != std::string::npos) {
-    parseXDUPEData();
-    rawBufWrite(std::string(databuf, databufpos));
-    sl->commandFail(id, FAIL_DUPE);
+  rawBufWrite(response);
+  if (databufcode == 200) {
+    sl->commandSuccess(id, state);
   }
   else {
     sl->commandFail(id);
@@ -1102,22 +1116,32 @@ void FTPConn::doSTOR(const std::string & file) {
 
 void FTPConn::STORResponse() {
   std::string response = std::string(databuf, databufpos);
+  if (databufcode == 553) {
+    processing = false;
+    bool dupe = false;
+    if (response.find(xdupematch) != std::string::npos) {
+      parseXDUPEData();
+      dupe = true;
+    }
+    else if (response.find(dupematch1) != std::string::npos ||
+             response.find(dupematch2) != std::string::npos)
+    {
+      dupe = true;
+    }
+    if (dupe) {
+      rawBufWrite(std::string(databuf, databufpos));
+      sl->commandFail(id, FAIL_DUPE);
+      return;
+    }
+  }
+  rawBufWrite(response);
   if (databufcode == 150 || databufcode == 125) {
-    rawBufWrite(response);
     state = STATE_STOR_COMPLETE;
     sl->commandSuccess(id, STATE_STOR);
   }
   else {
     processing = false;
-    if (databufcode == 553 && response.find(xdupematch) != std::string::npos) {
-      parseXDUPEData();
-      rawBufWrite(std::string(databuf, databufpos));
-      sl->commandFail(id, FAIL_DUPE);
-    }
-    else {
-      rawBufWrite(response);
-      sl->commandFail(id);
-    }
+    sl->commandFail(id);
   }
 }
 
