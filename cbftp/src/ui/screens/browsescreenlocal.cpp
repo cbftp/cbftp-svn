@@ -490,6 +490,9 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
         ui->setInfo();
         ui->redraw();
       }
+      else {
+        viewCursored();
+      }
       break;
     }
     case KEY_HOME:
@@ -535,10 +538,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       ui->setInfo();
       break;
     case 'v':
-      //view selected file, do nothing if a directory is selected
-      if (list.cursoredFile() != NULL && !list.cursoredFile()->isDirectory()) {
-        ui->goViewFile(filelist->getPath(), list.cursoredFile()->getName());
-      }
+      viewCursored();
       break;
     case 'A':
     case TERMINT_CTRL_A: {
@@ -803,4 +803,16 @@ void BrowseScreenLocal::clearSoftSelects() {
 
 UIFileList * BrowseScreenLocal::getUIFileList() {
   return &list;
+}
+
+void BrowseScreenLocal::viewCursored() {
+  //view selected file, do nothing if a directory is selected
+  if (list.cursoredFile() != NULL) {
+    if (list.cursoredFile()->isDirectory()) {
+      ui->goInfo("Cannot use the file viewer on a directory.");
+    }
+    else {
+      ui->goViewFile(filelist->getPath(), list.cursoredFile()->getName());
+    }
+  }
 }

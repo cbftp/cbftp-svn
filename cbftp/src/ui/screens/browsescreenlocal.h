@@ -40,6 +40,7 @@ private:
   void disableGotoMode();
   void gotoPath(int requestid, const Path & path);
   void clearSoftSelects();
+  void viewCursored();
   Ui * ui;
   unsigned int row;
   unsigned int col;

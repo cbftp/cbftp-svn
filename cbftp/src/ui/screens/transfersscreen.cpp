@@ -186,6 +186,15 @@ void TransfersScreen::initializeFilterTransferJob(unsigned int row, unsigned int
   initialize(row, col, tfp);
 }
 
+void TransfersScreen::initializeFilterSpreadJobSite(unsigned int row, unsigned int col, const std::string & job, const std::string & site) {
+  TransferFilteringParameters tfp;
+  tfp.usejobfilter = true;
+  tfp.spreadjobsfilter.push_back(job);
+  tfp.usesitefilter = true;
+  tfp.anydirectionsitefilters.push_back(site);
+  initialize(row, col, tfp);
+}
+
 void TransfersScreen::initialize(unsigned int row, unsigned int col, const TransferFilteringParameters & tfp) {
   filtering = filteringActive(tfp);
   this->tfp = tfp;

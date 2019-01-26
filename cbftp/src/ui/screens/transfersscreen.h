@@ -52,6 +52,7 @@ public:
   void initializeFilterSite(unsigned int, unsigned int, const std::string &);
   void initializeFilterSpreadJob(unsigned int, unsigned int, const std::string &);
   void initializeFilterTransferJob(unsigned int, unsigned int, const std::string &);
+  void initializeFilterSpreadJobSite(unsigned int, unsigned int, const std::string & job, const std::string & site);
   void initialize(unsigned int, unsigned int, const TransferFilteringParameters &);
   void redraw();
   void update();

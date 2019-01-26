@@ -14,6 +14,7 @@
 #include "../core/blockingqueue.h"
 #include "../uibase.h"
 #include "../settingsloadersaver.h"
+#include "../path.h"
 
 class UIWindow;
 class InfoWindow;
@@ -143,8 +144,7 @@ private:
   void enableLegend();
   void disableLegend();
   void redrawAll();
-  void switchToWindow(std::shared_ptr<UIWindow>);
-  void switchToWindow(std::shared_ptr<UIWindow>, bool);
+  void switchToWindow(std::shared_ptr<UIWindow>, bool allowsplit = false, bool doredraw = false);
   void tick(int);
   void globalKeyBinds(int);
   void switchToLast();
@@ -201,6 +201,7 @@ public:
   void goRawCommand(const std::string &);
   void goRawCommand(const std::string &, const Path &);
   void goRawCommand(const std::string &, const Path &, const std::string &);
+  void goInfo(const std::string & message);
   void goConfirmation(const std::string & message);
   void goStrongConfirmation(const std::string & message);
   void goNuke(const std::string & site, const std::string & items, const Path & path);
@@ -227,11 +228,12 @@ public:
   void goTransfersFilterSite(const std::string &);
   void goTransfersFilterSpreadJob(const std::string &);
   void goTransfersFilterTransferJob(const std::string &);
+  void goTransfersFilterSpreadJobSite(const std::string & job, const std::string & site);
   void returnTransferFilters(const TransferFilteringParameters &);
   void goTransfersFiltering(const TransferFilteringParameters &);
   void goEditSite(const std::string &);
   void goAddSite();
-  void goBrowse(const std::string &);
+  void goBrowse(const std::string & site, const Path path = Path());
   void goBrowseSplit(const std::string &);
   void goBrowseLocal();
   void goContinueBrowsing();

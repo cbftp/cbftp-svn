@@ -28,7 +28,7 @@ enum class ConfirmAction {
 
 class BrowseScreenSite : public BrowseScreenSub {
 public:
-  BrowseScreenSite(Ui *, const std::string &);
+  BrowseScreenSite(Ui *, const std::string & sitestr, const Path path = Path());
   ~BrowseScreenSite();
   BrowseScreenType type() const override;
   void redraw(unsigned int, unsigned int, unsigned int) override;
@@ -44,7 +44,7 @@ public:
   FileList * fileList() const;
   UIFile * selectedFile() const;
   UIFileList * getUIFileList() override;
-  std::list<UIFile *> getSelectedUIFiles() const;
+  const std::shared_ptr<Site> & getSite() const;
 private:
   Ui * ui;
   unsigned int row;
@@ -85,4 +85,5 @@ private:
   void clearSoftSelects();
   bool handleReadyRequests();
   void loadFileListFromRequest();
+  void viewCursored();
 };
