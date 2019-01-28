@@ -1058,7 +1058,7 @@ void Engine::refreshScoreBoard() {
   std::vector<ScoreBoardElement *>::iterator it;
   for (it = scoreboard->begin(); it != scoreboard->end(); ++it) {
     ScoreBoardElement * sbe = *it;
-    sbe->update(calculateScore(sbe), false);
+    sbe->update(calculateScore(sbe));
   }
   scoreboard->sort();
   scoreboard->shuffleEquals();

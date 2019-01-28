@@ -37,11 +37,14 @@ void ScoreBoardElement::reset(const ScoreBoardElement & other) {
         other.subdir);
 }
 
-void ScoreBoardElement::update(unsigned short score, bool unsetattempted) {
+void ScoreBoardElement::update(unsigned short score) {
   this->score = score;
-  if (unsetattempted) {
-    attempted = false;
-  }
+}
+
+void ScoreBoardElement::update(unsigned short score, unsigned long long int filesize) {
+  this->score = score;
+  this->filesize = filesize;
+  attempted = false;
 }
 
 const std::string & ScoreBoardElement::fileName() const {
