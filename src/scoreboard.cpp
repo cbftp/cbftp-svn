@@ -1,6 +1,7 @@
 #include "scoreboard.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cstring>
 #include <list>
 #include <tuple>
@@ -36,7 +37,7 @@ void ScoreBoard::update(
       std::unordered_map<std::string, ScoreBoardElement *> & filemap = fldit->second;
       auto fileit = filemap.find(name);
       if (fileit != filemap.end()) {
-        fileit->second->update(score);
+        fileit->second->update(score, filesize);
         return;
       }
     }
@@ -103,9 +104,11 @@ bool ScoreBoard::remove(const std::string & name, FileList * fls, FileList * fld
   ScoreBoardElement * sbe = fileit->second;
   filemap.erase(fileit);
   destinationlocator[sbe->getDestinationFileList()].erase(sbe);
-  if (showsize && sbe != elements[showsize - 1]) {
-    sbe->reset(*elements[showsize - 1]);
+  ScoreBoardElement * remove = elements[showsize - 1];
+  if (showsize && sbe != remove) {
+    sbe->reset(*remove);
     elementlocator[sbe->getSourceFileList()][sbe->getDestinationFileList()][sbe->fileName()] = sbe;
+    destinationlocator[sbe->getDestinationFileList()].erase(remove);
     destinationlocator[sbe->getDestinationFileList()].insert(sbe);
   }
   --showsize;
