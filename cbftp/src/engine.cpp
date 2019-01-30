@@ -735,39 +735,50 @@ bool Engine::transferJobActionRequest(std::shared_ptr<SiteTransferJob> & stj) {
     return action;
   }
   tj->clearRefreshLists();
-  PendingTransfer pt = it->second.front();
-  switch (pt.type()) {
-    case PENDINGTRANSFER_DOWNLOAD:
-    {
-      if (!pt.getSrc()->downloadSlotAvailable()) return false;
-      std::shared_ptr<TransferStatus> ts = global->getTransferManager()->suggestDownload(pt.getSrcFileName(),
-          pt.getSrc(), pt.getSrcFileList(), pt.getLocalFileList(), tj->getSrcTransferJob().get());
-      tj->addTransfer(ts);
-      break;
-    }
-    case PENDINGTRANSFER_UPLOAD:
-    {
-      if (!pt.getDst()->uploadSlotAvailable()) return false;
-      std::shared_ptr<TransferStatus> ts = global->getTransferManager()->suggestUpload(pt.getSrcFileName(),
-          pt.getLocalFileList(), pt.getDst(), pt.getDstFileList(), tj->getDstTransferJob().get());
-      tj->addTransfer(ts);
-      break;
-    }
-    case PENDINGTRANSFER_FXP:
-    {
-      if (!pt.getSrc()->downloadSlotAvailable()) return false;
-      if (!pt.getDst()->uploadSlotAvailable()) return false;
-      if (pt.getDst() == pt.getSrc() && pt.getDst()->slotsAvailable() < 2) {
-        pt.getDst()->haveConnectedActivate(2);
-        return false;
+  bool started = false;
+  while (!it->second.empty() && !started) {
+    PendingTransfer pt = it->second.front();
+    switch (pt.type()) {
+      case PENDINGTRANSFER_DOWNLOAD:
+      {
+        if (!pt.getSrc()->downloadSlotAvailable()) return false;
+        std::shared_ptr<TransferStatus> ts = global->getTransferManager()->suggestDownload(pt.getSrcFileName(),
+            pt.getSrc(), pt.getSrcFileList(), pt.getLocalFileList(), tj->getSrcTransferJob().get());
+        if (!!ts) {
+          tj->addTransfer(ts);
+          started = true;
+        }
+        break;
       }
-      std::shared_ptr<TransferStatus> ts = global->getTransferManager()->suggestTransfer(pt.getSrcFileName(),
-          pt.getSrc(), pt.getSrcFileList(), pt.getDst(), pt.getDstFileList(), tj->getSrcTransferJob().get(), tj->getDstTransferJob().get());
-      tj->addTransfer(ts);
-      break;
+      case PENDINGTRANSFER_UPLOAD:
+      {
+        if (!pt.getDst()->uploadSlotAvailable()) return false;
+        std::shared_ptr<TransferStatus> ts = global->getTransferManager()->suggestUpload(pt.getSrcFileName(),
+            pt.getLocalFileList(), pt.getDst(), pt.getDstFileList(), tj->getDstTransferJob().get());
+        if (!!ts) {
+          tj->addTransfer(ts);
+          started = true;
+        }
+        break;
+      }
+      case PENDINGTRANSFER_FXP:
+      {
+        if (!pt.getSrc()->downloadSlotAvailable()) return false;
+        if (!pt.getDst()->uploadSlotAvailable()) return false;
+        if (pt.getDst() == pt.getSrc() && pt.getDst()->slotsAvailable() < 2) {
+          pt.getDst()->haveConnectedActivate(2);
+          return false;
+        }
+        std::shared_ptr<TransferStatus> ts = global->getTransferManager()->suggestTransfer(pt.getSrcFileName(),
+            pt.getSrc(), pt.getSrcFileList(), pt.getDst(), pt.getDstFileList(), tj->getSrcTransferJob().get(), tj->getDstTransferJob().get());
+        if (!!ts) {
+          tj->addTransfer(ts);
+          started = true;
+        }
+        break;
+      }
     }
   }
-  it->second.pop_front();
   if (tj->getStatus() == TRANSFERJOB_QUEUED) {
     tj->start();
   }
@@ -1225,7 +1236,9 @@ void Engine::issueOptimalTransfers() {
       global->getTransferManager()->suggestTransfer(filename, sls,
         sbe->getSourceFileList(), sld, sbe->getDestinationFileList(),
         sbe->getSourceSiteRace(), sbe->getDestinationSiteRace());
-    race->addTransfer(ts);
+    if (!!ts) {
+      race->addTransfer(ts);
+    }
     sbe->setAttempted();
   }
   for (const std::tuple<std::string, FileList *, FileList *> & elem : removelist) {

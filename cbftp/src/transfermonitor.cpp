@@ -63,16 +63,18 @@ void TransferMonitor::engageFXP(
   this->dfile = dfile;
   this->srcco = srcco;
   this->dstco = dstco;
+  status = TM_STATUS_AWAITING_PASSIVE;
   if (!sls->lockDownloadConn(fls, &src, srcco, this)) {
     tm->transferFailed(ts, TM_ERR_LOCK_DOWN);
+    status = TM_STATUS_IDLE;
     return;
   }
   if (!sld->lockUploadConn(fld, &dst, dstco, this)) {
-    sls->returnConn(src, true);
     tm->transferFailed(ts, TM_ERR_LOCK_UP);
+    sls->returnConn(src, true);
+    status = TM_STATUS_IDLE;
     return;
   }
-  status = TM_STATUS_AWAITING_PASSIVE;
   fxpdstactive = !sls->getSite()->hasBrokenPASV();
   int spol = sls->getSite()->getSSLTransferPolicy();
   int dpol = sld->getSite()->getSSLTransferPolicy();
@@ -139,6 +141,13 @@ void TransferMonitor::engageDownload(
       sls->getSite()->getName(), "/\\", "", dfile, fls, spath,
       (FileList *)NULL, dpath, fls->getFile(sfile)->getSize(), 0, src, -1, ssl, clientactive);
   tm->addNewTransferStatus(ts);
+  if (FileSystem::fileExists(dpath / dfile)) {
+    ts->setDupe();
+    tm->transferFailed(ts, TM_ERR_DUPE);
+    sls->returnConn(src, true);
+    status = TM_STATUS_IDLE;
+    return;
+  }
   if (clientactive) {
     sls->preparePassiveTransfer(src, sfile, false, ssl);
   }
@@ -178,6 +187,13 @@ void TransferMonitor::engageUpload(
       "/\\", sld->getSite()->getName(), "", dfile, (FileList *)NULL, spath,
       fld, dpath, lf.getSize(), 0, 0, dst, ssl, clientactive);
   tm->addNewTransferStatus(ts);
+  if (!FileSystem::fileExists(spath / sfile)) {
+    ts->setFailed();
+    tm->transferFailed(ts, TM_ERR_OTHER);
+    sld->returnConn(dst, true);
+    status = TM_STATUS_IDLE;
+    return;
+  }
   if (clientactive) {
     sld->preparePassiveTransfer(dst, dfile, false, ssl);
   }
