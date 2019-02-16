@@ -34,10 +34,11 @@ MainScreen::MainScreen(Ui * ui) {
 }
 
 void MainScreen::initialize(unsigned int row, unsigned int col) {
-  std::string baselegendtext = "[Down] Next option - [Up] Previous option - [G]lobal settings - Event [l]og - [t]ransfers - All [r]aces - All transfer[j]obs - toggle [U]dp - Browse lo[c]al - General [i]nfo - [s]ections - [Esc] back to browsing";
-  sitelegendtext = baselegendtext + " - [Tab] split browse - [right/b]rowse site - ra[w] command - [A]dd site - [E]dit site - [C]opy site - [D]elete site - [q]uick jump - [L]ogin all slots";
-  preparelegendtext = baselegendtext + " - [Enter/s] start race - [Del] delete race";
-  joblegendtext = baselegendtext + " - [Enter] Details";
+  baselegendtext = "[Down] Next option - [Up] Previous option - [A]dd site - [G]lobal settings - Event [l]og - [t]ransfers - All [r]aces - All transfer[j]obs - toggle [U]dp - Browse lo[c]al - General [i]nfo - [s]ections - [Esc] back to browsing";
+  sitelegendtext = baselegendtext + " - [Tab] split browse - [right/b]rowse site - ra[w] command - [E]dit site - [C]opy site - [D]elete site - [q]uick jump - [L]ogin all slots";
+  preparelegendtext = baselegendtext + " - [Enter/s] start job - [Del] delete race";
+  spreadjoblegendtext = baselegendtext + " - [Enter] Details - a[B]ort job - [T]ransfers for job - [R]eset job";
+  transferjoblegendtext = baselegendtext + " - [Enter] Details - a[B]ort job - [T]ransfers for job";
   gotolegendtext = "[Any] Go to matching first letter in site list - [Esc] Cancel";
   autoupdate = true;
   gotomode = false;
@@ -96,7 +97,7 @@ void MainScreen::redraw() {
   }
   if (listraces) {
 
-    AllRacesScreen::addRaceTableHeader(irow++, msosj, std::string("RACE NAME") + (listraces > 3 ? " (Showing latest 3)" : ""));
+    AllRacesScreen::addRaceTableHeader(irow++, msosj, std::string("SPREAD JOB NAME") + (listraces > 3 ? " (Showing latest 3)" : ""));
     std::list<std::shared_ptr<Race> >::const_iterator it;
     int i = 0;
     for (it = --global->getEngine()->getRacesEnd(); it != --global->getEngine()->getRacesBegin() && i < 3; it--, i++) {
@@ -148,13 +149,13 @@ void MainScreen::redraw() {
   int currentraces = global->getEngine()->currentRaces();
   int currenttransferjobs = global->getEngine()->currentTransferJobs();
   if (currentraces) {
-    activeracestext = "Active races: " + std::to_string(currentraces) + "  ";
+    activeracestext = "Active spread jobs: " + std::to_string(currentraces) + "  ";
   }
   else {
     activeracestext = "";
   }
   if (currenttransferjobs) {
-    activejobstext = "Active jobs: " + std::to_string(currenttransferjobs) + "  ";
+    activejobstext = "Active transfer jobs: " + std::to_string(currenttransferjobs) + "  ";
   }
   else {
     activejobstext = "";
@@ -209,10 +210,20 @@ void MainScreen::update() {
 
 void MainScreen::command(const std::string & command) {
   if (command == "yes") {
-    global->getSiteLogicManager()->deleteSiteLogic(deletesite);
-    global->getSiteManager()->deleteSite(deletesite);
-    global->getSettingsLoaderSaver()->saveSettings();
+    if (!!abortrace) {
+      global->getEngine()->abortRace(abortrace);
+    }
+    else if (!!abortjob) {
+      global->getEngine()->abortTransferJob(abortjob);
+    }
+    else {
+      global->getSiteLogicManager()->deleteSiteLogic(deletesite);
+      global->getSiteManager()->deleteSite(deletesite);
+      global->getSettingsLoaderSaver()->saveSettings();
+    }
   }
+  abortrace.reset();
+  abortjob.reset();
   ui->redraw();
   ui->setInfo();
 }
@@ -361,6 +372,9 @@ bool MainScreen::keyPressed(unsigned int ch) {
     case 'r':
       ui->goAllRaces();
       return true;
+    case 'A':
+      ui->goAddSite();
+      return true;
     case 's':
       if ((msop.isFocused())) {
         unsigned int id = msop.getElement(msop.getSelectionPointer())->getId();
@@ -397,6 +411,42 @@ bool MainScreen::keyPressed(unsigned int ch) {
         ui->redraw();
       }
       return true;
+    case 'B':
+      if (msosj.isFocused() && msosj.size() > 0) {
+        abortrace = global->getEngine()->getRace(msosj.getElement(msosj.getSelectionPointer())->getId());
+        if (!!abortrace && abortrace->getStatus() == RACE_STATUS_RUNNING) {
+          ui->goConfirmation("Do you really want to abort the spread job " + abortrace->getName());
+        }
+      }
+      else if (msotj.isFocused() && msotj.size() > 0) {
+        abortjob = global->getEngine()->getTransferJob(msotj.getElement(msotj.getSelectionPointer())->getId());
+        if (!!abortjob && !abortjob->isDone()) {
+          ui->goConfirmation("Do you really want to abort the transfer job " + abortjob->getName());
+        }
+      }
+      return true;
+    case 'R':
+      if (msosj.isFocused() && msosj.size() > 0) {
+        std::shared_ptr<Race> race = global->getEngine()->getRace(msosj.getElement(msosj.getSelectionPointer())->getId());
+        if (!!race) {
+          global->getEngine()->resetRace(race, false);
+        }
+      }
+      return true;
+    case 'T':
+      if (msosj.isFocused() && msosj.size() > 0) {
+        std::shared_ptr<Race> race = global->getEngine()->getRace(msosj.getElement(msosj.getSelectionPointer())->getId());
+        if (!!race) {
+          ui->goTransfersFilterSpreadJob(race->getName());
+        }
+      }
+      else if (msotj.isFocused() && msotj.size() > 0) {
+        std::shared_ptr<TransferJob> tj = global->getEngine()->getTransferJob(msotj.getElement(msotj.getSelectionPointer())->getId());
+        if (!!tj) {
+          ui->goTransfersFilterTransferJob(tj->getName());
+        }
+      }
+      return true;
     case KEY_NPAGE:
       for (unsigned int i = 0; i < pagerows; i++) {
         keyDown();
@@ -421,9 +471,6 @@ bool MainScreen::keyPressed(unsigned int ch) {
         ui->goEditSite(sitename);
         return true;
       }
-      case 'A':
-        ui->goAddSite();
-        return true;
       case 'C': {
         if (!msos.linesSize()) break;
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
@@ -482,7 +529,13 @@ std::string MainScreen::getLegendText() const {
   if (focusedarea == &msop) {
     return preparelegendtext;
   }
-  return joblegendtext;
+  if (focusedarea == &msosj) {
+    return spreadjoblegendtext;
+  }
+  if (focusedarea == &msotj) {
+    return transferjoblegendtext;
+  }
+  return baselegendtext;
 }
 
 std::string MainScreen::getInfoLabel() const {
@@ -495,7 +548,7 @@ std::string MainScreen::getInfoText() const {
     text += "Remote commands enabled  ";
   }
   if (global->getEngine()->getNextPreparedRaceStarterEnabled()) {
-    text += "Race starter: " + util::simpleTimeFormat(global->getEngine()->getNextPreparedRaceStarterTimeRemaining()) + "  ";
+    text += "Spread job starter: " + util::simpleTimeFormat(global->getEngine()->getNextPreparedRaceStarterTimeRemaining()) + "  ";
   }
   return text + activeracestext + activejobstext + numsitestext;
 }
@@ -528,7 +581,7 @@ void MainScreen::addPreparedRaceTableRow(unsigned int y, MenuSelectOption & mso,
 }
 
 void MainScreen::addPreparedRaceTableHeader(unsigned int y, MenuSelectOption & mso) {
-  addPreparedRaceTableRow(y, mso, -1, false, "SECTION", "PREPARED RACE NAME", "EXPIRES", "SITES");
+  addPreparedRaceTableRow(y, mso, -1, false, "SECTION", "PREPARED SPREAD JOB NAME", "EXPIRES", "SITES");
 }
 
 void MainScreen::addPreparedRaceDetails(unsigned int y, MenuSelectOption & mso, const std::shared_ptr<PreparedRace> & preparedrace) {

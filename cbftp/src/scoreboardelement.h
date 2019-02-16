@@ -23,8 +23,8 @@ class ScoreBoardElement {
     std::shared_ptr<SiteLogic> dst;
     FileList * fls;
     FileList * fld;
-    SiteRace * srcsr;
-    SiteRace * dstsr;
+    std::shared_ptr<SiteRace> srcsr;
+    std::shared_ptr<SiteRace> dstsr;
     std::shared_ptr<Race> race;
     unsigned short score;
     PrioType priotype;
@@ -34,9 +34,9 @@ class ScoreBoardElement {
     bool skipchecked;
   public:
     ScoreBoardElement(const std::string &, unsigned short, unsigned long long int filesize, PrioType priotype, const std::shared_ptr<SiteLogic> &,
-        FileList *, SiteRace *, const std::shared_ptr<SiteLogic> &, FileList *, SiteRace *, const std::shared_ptr<Race> &, const std::string &);
+        FileList *, const std::shared_ptr<SiteRace> & srcsr, const std::shared_ptr<SiteLogic> &, FileList *, const std::shared_ptr<SiteRace> & dstsr, const std::shared_ptr<Race> &, const std::string &);
     void reset(const std::string &, unsigned short, unsigned long long int filesize, PrioType priotype, const std::shared_ptr<SiteLogic> &,
-        FileList *, SiteRace *, const std::shared_ptr<SiteLogic> &, FileList *, SiteRace *, const std::shared_ptr<Race> &, const std::string &);
+        FileList *, const std::shared_ptr<SiteRace> &, const std::shared_ptr<SiteLogic> &, FileList *, const std::shared_ptr<SiteRace> &, const std::shared_ptr<Race> &, const std::string &);
     void reset(const ScoreBoardElement & other);
     void update(unsigned short);
     void update(unsigned short, unsigned long long int filesize);
@@ -46,8 +46,8 @@ class ScoreBoardElement {
     const std::shared_ptr<SiteLogic> & getDestination() const;
     FileList * getSourceFileList() const;
     FileList * getDestinationFileList() const;
-    SiteRace * getSourceSiteRace() const;
-    SiteRace * getDestinationSiteRace() const;
+    const std::shared_ptr<SiteRace> & getSourceSiteRace() const;
+    const std::shared_ptr<SiteRace> & getDestinationSiteRace() const;
     const std::shared_ptr<Race> & getRace() const;
     unsigned short getScore() const;
     PrioType getPriorityType() const;

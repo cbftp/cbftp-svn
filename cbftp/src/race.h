@@ -45,8 +45,8 @@ public:
 };
 
 struct SitesComparator {
-  bool operator()(const std::pair<SiteRace *, std::shared_ptr<SiteLogic> > & a,
-                  const std::pair<SiteRace *, std::shared_ptr<SiteLogic> > & b) const;
+  bool operator()(const std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > & a,
+                  const std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > & b) const;
 };
 
 class Race : public EventReceiver, public TransferStatusCallback {
@@ -60,16 +60,16 @@ class Race : public EventReceiver, public TransferStatusCallback {
     std::string group;
     std::string section;
     const SkipList & sectionskiplist;
-    std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> >, SitesComparator> sites;
-    std::unordered_map<SiteRace *, std::unordered_map<std::string, unsigned int> > sizes;
-    std::unordered_set<SiteRace *> semidonesites;
-    std::unordered_set<SiteRace *> donesites;
+    std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> >, SitesComparator> sites;
+    std::unordered_map<std::shared_ptr<SiteRace>, std::unordered_map<std::string, unsigned int> > sizes;
+    std::unordered_set<std::shared_ptr<SiteRace>> semidonesites;
+    std::unordered_set<std::shared_ptr<SiteRace>> donesites;
     unsigned int maxnumfilessiteprogress;
-    std::unordered_map<std::string, std::unordered_set<SiteRace *> > sfvreports;
+    std::unordered_map<std::string, std::unordered_set<std::shared_ptr<SiteRace>> > sfvreports;
     std::unordered_map<std::string, unsigned int> estimatedsize;
     std::unordered_map<std::string, unsigned long long int> estimatedfilesizes;
     unsigned long long int bestunknownfilesizeestimate;
-    std::unordered_map<std::string, std::unordered_set<SiteRace *> > subpathoccurences;
+    std::unordered_map<std::string, std::unordered_set<std::shared_ptr<SiteRace>> > subpathoccurences;
     std::unordered_set<std::string> estimatedsubpaths;
     std::unordered_map<std::string, std::unordered_map<std::string, unsigned long long int> > guessedfilelists;
     std::unordered_map<std::string, unsigned long long int> guessedfileliststotalfilesize;
@@ -93,11 +93,11 @@ class Race : public EventReceiver, public TransferStatusCallback {
     Race(unsigned int, SpreadProfile, const std::string &, const std::string &);
     ~Race();
     CallbackType callbackType() const override;
-    void addSite(SiteRace *, const std::shared_ptr<SiteLogic> &);
-    void removeSite(SiteRace *);
+    void addSite(const std::shared_ptr<SiteRace> & sr, const std::shared_ptr<SiteLogic> &);
+    void removeSite(const std::shared_ptr<SiteRace> & sr);
     void removeSite(const std::shared_ptr<SiteLogic> &);
-    std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator begin() const;
-    std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator end() const;
+    std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator begin() const;
+    std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator end() const;
     std::string getName() const;
     std::string getGroup() const;
     std::string getSection() const;
@@ -118,17 +118,17 @@ class Race : public EventReceiver, public TransferStatusCallback {
     std::string getTimeStamp() const;
     unsigned int getTimeSpent() const;
     std::string getSiteListText() const;
-    SiteRace * getSiteRace(const std::string &) const;
+    const std::shared_ptr<SiteRace> & getSiteRace(const std::string &) const;
     RaceStatus getStatus() const;
     unsigned int getId() const;
     SpreadProfile getProfile() const;
     unsigned long long int getTransferredSize() const;
     unsigned int getTransferredFiles() const;
-    void reportNewSubDir(SiteRace *, const std::string &);
-    void reportSFV(SiteRace *, const std::string &);
-    void reportDone(SiteRace *);
-    void reportSemiDone(SiteRace *);
-    void reportSize(SiteRace *, FileList *, const std::string &, const std::unordered_set<std::string> &, bool);
+    void reportNewSubDir(const std::shared_ptr<SiteRace> & sr, const std::string &);
+    void reportSFV(const std::shared_ptr<SiteRace> & sr, const std::string &);
+    void reportDone(const std::shared_ptr<SiteRace> & sr);
+    void reportSemiDone(const std::shared_ptr<SiteRace> & sr);
+    void reportSize(const std::shared_ptr<SiteRace> & sr, FileList *, const std::string &, const std::unordered_set<std::string> &, bool);
     void setUndone();
     void reset();
     void abort();

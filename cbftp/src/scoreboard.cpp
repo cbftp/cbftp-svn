@@ -25,8 +25,8 @@ ScoreBoard::~ScoreBoard() {
 void ScoreBoard::update(
     const std::string & name, unsigned short score, unsigned long long int filesize,
     PrioType priotype,
-    const std::shared_ptr<SiteLogic> & src, FileList * fls, SiteRace * srs,
-    const std::shared_ptr<SiteLogic> & dst, FileList * fld, SiteRace * srd,
+    const std::shared_ptr<SiteLogic> & src, FileList * fls, const std::shared_ptr<SiteRace> & srs,
+    const std::shared_ptr<SiteLogic> & dst, FileList * fld, const std::shared_ptr<SiteRace> & srd,
     const std::shared_ptr<Race> & race, const std::string & subdir)
 {
   auto flsit = elementlocator.find(fls);

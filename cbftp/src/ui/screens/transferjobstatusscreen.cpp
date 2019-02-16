@@ -192,7 +192,7 @@ bool TransferJobStatusScreen::keyPressed(unsigned int ch) {
       return true;
     case 'B':
       if (!transferjob->isDone()) {
-        ui->goConfirmation("Do you really want to abort the transfer job " + transferjob->getSrcFileName());
+        ui->goConfirmation("Do you really want to abort the transfer job " + transferjob->getName());
       }
       return true;
     case 't':

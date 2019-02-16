@@ -14,12 +14,13 @@ class AllRacesScreen : public UIWindow {
 public:
   AllRacesScreen(Ui *);
   void initialize(unsigned int, unsigned int);
-  void redraw();
-  void update();
-  bool keyPressed(unsigned int);
-  std::string getLegendText() const;
-  std::string getInfoLabel() const;
-  std::string getInfoText() const;
+  void redraw() override;
+  void update() override;
+  void command(const std::string &, const std::string &) override;
+  bool keyPressed(unsigned int) override;
+  std::string getLegendText() const override;
+  std::string getInfoLabel() const override;
+  std::string getInfoText() const override;
   static void addRaceTableHeader(unsigned int, MenuSelectOption &, const std::string &);
   static void addRaceDetails(unsigned int, MenuSelectOption &, std::shared_ptr<Race>);
 private:
@@ -32,4 +33,5 @@ private:
   unsigned int currentviewspan;
   unsigned int ypos;
   int temphighlightline;
+  std::shared_ptr<Race> abortrace;
 };

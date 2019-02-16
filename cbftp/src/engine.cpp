@@ -35,7 +35,6 @@
 #include "sitetransferjob.h"
 #include "sectionmanager.h"
 
-#define SPREAD 0
 #define POKEINTERVAL 1000
 #define STATICTIMEFORCOMPLETION 5000
 #define DIROBSERVETIME 20000
@@ -215,7 +214,7 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & rele
       if (readdtocurrent) {
         global->getEventLog()->log("Engine", "Reactivating spread job: " + section + "/" + release);
         race->setUndone();
-        for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
+        for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
           it->second->activateAll();
         }
       }
@@ -489,9 +488,9 @@ unsigned int Engine::newTransferJobFXP(const std::string & srcsite, const Path &
   return id;
 }
 
-void Engine::removeSiteFromRace(std::shared_ptr<Race> & race, const std::string & site) {
+void Engine::removeSiteFromRace(const std::shared_ptr<Race> & race, const std::string & site) {
   if (!!race) {
-    SiteRace * sr = race->getSiteRace(site);
+    const std::shared_ptr<SiteRace> & sr = race->getSiteRace(site);
     if (sr != NULL) {
       const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
       race->removeSite(sr);
@@ -503,9 +502,9 @@ void Engine::removeSiteFromRace(std::shared_ptr<Race> & race, const std::string 
   }
 }
 
-void Engine::removeSiteFromRaceDeleteFiles(std::shared_ptr<Race> & race, const std::string & site, bool allfiles) {
+void Engine::removeSiteFromRaceDeleteFiles(const std::shared_ptr<Race> & race, const std::string & site, bool allfiles) {
   if (!!race) {
-    SiteRace * sr = race->getSiteRace(site);
+    const std::shared_ptr<SiteRace> & sr = race->getSiteRace(site);
     if (sr != NULL) {
       const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
       race->removeSite(sr);
@@ -518,10 +517,10 @@ void Engine::removeSiteFromRaceDeleteFiles(std::shared_ptr<Race> & race, const s
   }
 }
 
-void Engine::abortRace(std::shared_ptr<Race> & race) {
+void Engine::abortRace(const std::shared_ptr<Race> & race) {
   if (!!race) {
     race->abort();
-    for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
+    for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
       it->second->abortRace(race->getId());
       wipeFromScoreBoard(it->first);
     }
@@ -530,10 +529,10 @@ void Engine::abortRace(std::shared_ptr<Race> & race) {
   }
 }
 
-void Engine::resetRace(std::shared_ptr<Race> & race, bool hard) {
+void Engine::resetRace(const std::shared_ptr<Race> & race, bool hard) {
   if (!!race) {
     race->reset();
-    for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
+    for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
       wipeFromScoreBoard(it->first);
       if (hard) {
         it->first->hardReset();
@@ -558,7 +557,7 @@ void Engine::resetRace(std::shared_ptr<Race> & race, bool hard) {
   }
 }
 
-void Engine::wipeFromScoreBoard(SiteRace * sr) {
+void Engine::wipeFromScoreBoard(const std::shared_ptr<SiteRace> & sr) {
   std::unordered_map<std::string, FileList *>::const_iterator it;
   for (it = sr->fileListsBegin(); it != sr->fileListsEnd(); it++) {
     scoreboard->wipe(it->second);
@@ -618,19 +617,19 @@ bool Engine::transferExpectedSoon(ScoreBoardElement * sbe) const {
   return true;
 }
 
-void Engine::deleteOnAllSites(std::shared_ptr<Race> & race) {
+void Engine::deleteOnAllSites(const std::shared_ptr<Race> & race) {
   std::list<std::shared_ptr<Site> > sites;
-  for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
+  for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
     sites.push_back(it->second->getSite());
   }
   deleteOnSites(race, sites);
 }
 
-void Engine::deleteOnSites(std::shared_ptr<Race> & race, std::list<std::shared_ptr<Site> > delsites) {
+void Engine::deleteOnSites(const std::shared_ptr<Race> & race, std::list<std::shared_ptr<Site> > delsites) {
   deleteOnSites(race, delsites, true);
 }
 
-void Engine::deleteOnSites(std::shared_ptr<Race> & race, std::list<std::shared_ptr<Site> > delsites, bool allfiles) {
+void Engine::deleteOnSites(const std::shared_ptr<Race> & race, std::list<std::shared_ptr<Site> > delsites, bool allfiles) {
   if (!!race) {
     if (race->getStatus() == RACE_STATUS_RUNNING) {
       abortRace(race);
@@ -644,7 +643,7 @@ void Engine::deleteOnSites(std::shared_ptr<Race> & race, std::list<std::shared_p
       if (!sl) {
         continue;
       }
-      SiteRace * sr = sl->getRace(race->getName());
+      std::shared_ptr<SiteRace> sr = sl->getRace(race->getName());
       if (!sr) {
         global->getEventLog()->log("Engine", "Site " + (*it)->getName() + " is not in spread job: " + race->getName());
         continue;
@@ -660,32 +659,32 @@ void Engine::deleteOnSites(std::shared_ptr<Race> & race, std::list<std::shared_p
   }
 }
 
-void Engine::abortTransferJob(std::shared_ptr<TransferJob> & tj) {
+void Engine::abortTransferJob(const std::shared_ptr<TransferJob> & tj) {
   tj->abort();
   currenttransferjobs.remove(tj);
   global->getEventLog()->log("Engine", "Transfer job aborted: " + tj->getSrcFileName());
 }
 
-void Engine::jobFileListRefreshed(SiteLogic * sls, CommandOwner * commandowner, FileList * fl) {
+void Engine::jobFileListRefreshed(SiteLogic * sls, const std::shared_ptr<CommandOwner> & commandowner, FileList * fl) {
   switch (commandowner->classType()) {
     case COMMANDOWNER_SITERACE: {
-      SiteRace * sr = static_cast<SiteRace *>(commandowner);
+      std::shared_ptr<SiteRace> sr = std::static_pointer_cast<SiteRace>(commandowner);
+      if (sr->isDone()) {
+        break;
+      }
       std::shared_ptr<Race> race = sr->getRace();
       bool addedtoboard = false;
       std::unordered_map<std::string, FileList *>::const_iterator it;
+      std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(sls);
+      if (!sl) {
+        break;
+      }
       for (it = sr->fileListsBegin(); it != sr->fileListsEnd(); it++) {
         FileList * itfl = it->second;
         if (!itfl->inScoreBoard() && (itfl == fl || itfl->getState() == FileListState::NONEXISTENT)) {
           addedtoboard = true;
-          addToScoreBoard(itfl, sr, sls);
+          addToScoreBoard(itfl, sr, sl);
         }
-      }
-      if (sr->isDone()) {
-        break;
-      }
-      std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(sls);
-      if (!sl) {
-        break;
       }
       if (fl->getScoreBoardUpdateState() == UpdateState::CHANGED) {
         spreadjobfilelistschanged[fl] = std::make_pair(sr, sl);
@@ -694,7 +693,7 @@ void Engine::jobFileListRefreshed(SiteLogic * sls, CommandOwner * commandowner, 
         forcescoreboard = false;
         updateScoreBoard();
         issueOptimalTransfers();
-        checkIfRaceComplete(sls, race);
+        checkIfRaceComplete(sl, race);
       }
       else {
         if (addedtoboard) {
@@ -706,7 +705,7 @@ void Engine::jobFileListRefreshed(SiteLogic * sls, CommandOwner * commandowner, 
       break;
     }
     case COMMANDOWNER_TRANSFERJOB: {
-      SiteTransferJob * stj = static_cast<SiteTransferJob *>(commandowner);
+      std::shared_ptr<SiteTransferJob> stj = std::static_pointer_cast<SiteTransferJob>(commandowner);
       std::shared_ptr<TransferJob> tj = getTransferJob(stj->getId());
       refreshPendingTransferList(tj);
       break;
@@ -714,7 +713,7 @@ void Engine::jobFileListRefreshed(SiteLogic * sls, CommandOwner * commandowner, 
   }
 }
 
-bool Engine::transferJobActionRequest(std::shared_ptr<SiteTransferJob> & stj) {
+bool Engine::transferJobActionRequest(const std::shared_ptr<SiteTransferJob> & stj) {
   std::shared_ptr<TransferJob> tj = getTransferJob(stj->getTransferJob()->getId());
   if (tj->getType() == TRANSFERJOB_FXP && stj->otherWantsList()) {
     stj->getOtherSiteLogic()->haveConnectedActivate(1);
@@ -743,7 +742,7 @@ bool Engine::transferJobActionRequest(std::shared_ptr<SiteTransferJob> & stj) {
       {
         if (!pt.getSrc()->downloadSlotAvailable()) return false;
         std::shared_ptr<TransferStatus> ts = global->getTransferManager()->suggestDownload(pt.getSrcFileName(),
-            pt.getSrc(), pt.getSrcFileList(), pt.getLocalFileList(), tj->getSrcTransferJob().get());
+            pt.getSrc(), pt.getSrcFileList(), pt.getLocalFileList(), tj->getSrcTransferJob());
         if (!!ts) {
           tj->addTransfer(ts);
           started = true;
@@ -754,7 +753,7 @@ bool Engine::transferJobActionRequest(std::shared_ptr<SiteTransferJob> & stj) {
       {
         if (!pt.getDst()->uploadSlotAvailable()) return false;
         std::shared_ptr<TransferStatus> ts = global->getTransferManager()->suggestUpload(pt.getSrcFileName(),
-            pt.getLocalFileList(), pt.getDst(), pt.getDstFileList(), tj->getDstTransferJob().get());
+            pt.getLocalFileList(), pt.getDst(), pt.getDstFileList(), tj->getDstTransferJob());
         if (!!ts) {
           tj->addTransfer(ts);
           started = true;
@@ -770,7 +769,7 @@ bool Engine::transferJobActionRequest(std::shared_ptr<SiteTransferJob> & stj) {
           return false;
         }
         std::shared_ptr<TransferStatus> ts = global->getTransferManager()->suggestTransfer(pt.getSrcFileName(),
-            pt.getSrc(), pt.getSrcFileList(), pt.getDst(), pt.getDstFileList(), tj->getSrcTransferJob().get(), tj->getDstTransferJob().get());
+            pt.getSrc(), pt.getSrcFileList(), pt.getDst(), pt.getDstFileList(), tj->getSrcTransferJob(), tj->getDstTransferJob());
         if (!!ts) {
           tj->addTransfer(ts);
           started = true;
@@ -800,8 +799,8 @@ void Engine::estimateRaceSize(const std::shared_ptr<Race> & race) {
 }
 
 void Engine::estimateRaceSize(const std::shared_ptr<Race> & race, bool forceupdate) {
-  for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator its = race->begin(); its != race->end(); its++) {
-    SiteRace * srs = its->first;
+  for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator its = race->begin(); its != race->end(); its++) {
+    const std::shared_ptr<SiteRace> & srs = its->first;
     const SkipList & siteskiplist = its->second->getSite()->getSkipList();
     const SkipList & sectionskiplist = race->getSectionSkipList();
     std::unordered_map<std::string, FileList *>::const_iterator itfl;
@@ -837,7 +836,7 @@ bool setContainsPattern(const std::unordered_set<std::string> & uniques, const s
   return false;
 }
 
-void Engine::reportCurrentSize(const SkipList & siteskiplist, const SkipList & sectionskiplist, SiteRace * srs, FileList * fls, bool final) {
+void Engine::reportCurrentSize(const SkipList & siteskiplist, const SkipList & sectionskiplist, const std::shared_ptr<SiteRace> & srs, FileList * fls, bool final) {
   std::unordered_set<std::string> uniques;
   std::unordered_map<std::string, File *>::const_iterator itf;
   std::string subpath = srs->getSubPathForFileList(fls);
@@ -877,8 +876,7 @@ void Engine::reportCurrentSize(const SkipList & siteskiplist, const SkipList & s
   srs->reportSize(fls, uniques, final);
 }
 
-void Engine::addToScoreBoard(FileList * fl, SiteRace * sr, SiteLogic * slp) {
-  const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(slp);
+void Engine::addToScoreBoard(FileList * fl, const std::shared_ptr<SiteRace> & sr, const std::shared_ptr<SiteLogic> & sl) {
   const std::shared_ptr<Site> & site = sl->getSite();
   const SkipList & skip = site->getSkipList();
   std::string subpath = sr->getSubPathForFileList(fl);
@@ -897,11 +895,11 @@ void Engine::addToScoreBoard(FileList * fl, SiteRace * sr, SiteLogic * slp) {
       flskip = true;
     }
   }
-  for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator cmpit = race->begin(); cmpit != race->end(); cmpit++) {
+  for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator cmpit = race->begin(); cmpit != race->end(); cmpit++) {
     const std::shared_ptr<SiteLogic> & cmpsl = cmpit->second;
     const std::shared_ptr<Site> & cmpsite = cmpsl->getSite();
     const SkipList & cmpskip = cmpsite->getSkipList();
-    SiteRace * cmpsr = cmpit->first;
+    const std::shared_ptr<SiteRace> & cmpsr = cmpit->first;
     FileList * cmpfl = cmpsr->getFileListForPath(subpath);
     if (cmpfl == nullptr) {
       cmpsr->addSubDirectory(subpath);
@@ -918,9 +916,9 @@ void Engine::addToScoreBoard(FileList * fl, SiteRace * sr, SiteLogic * slp) {
   fl->setInScoreBoard();
 }
 
-void Engine::addToScoreBoardForPair(const std::shared_ptr<SiteLogic> & sls, const std::shared_ptr<Site> & ss, SiteRace * srs,
+void Engine::addToScoreBoardForPair(const std::shared_ptr<SiteLogic> & sls, const std::shared_ptr<Site> & ss, const std::shared_ptr<SiteRace> & srs,
                             FileList * fls, const std::shared_ptr<SiteLogic> & sld, const std::shared_ptr<Site> & ds,
-                            SiteRace * srd, FileList * fld, const SkipList & dstskip,
+                            const std::shared_ptr<SiteRace> & srd, FileList * fld, const SkipList & dstskip,
                             const SkipList & secskip,
                             const std::shared_ptr<Race> & race, const Path & subpath, SitePriority priority,
                             bool racemode)
@@ -953,9 +951,9 @@ void Engine::addToScoreBoardForPair(const std::shared_ptr<SiteLogic> & sls, cons
 }
 
 void Engine::updateScoreBoard() {
-  for (const std::pair<FileList *, std::pair<SiteRace *, std::shared_ptr<SiteLogic>>> & changedlist : spreadjobfilelistschanged) {
+  for (const std::pair<FileList *, std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic>>> & changedlist : spreadjobfilelistschanged) {
     FileList * fl = changedlist.first;
-    SiteRace * sr = changedlist.second.first;
+    const std::shared_ptr<SiteRace> & sr = changedlist.second.first;
     const std::shared_ptr<SiteLogic> & sl = changedlist.second.second;
     const std::shared_ptr<Site> & site = sl->getSite();
     const SkipList & skip = site->getSkipList();
@@ -964,12 +962,12 @@ void Engine::updateScoreBoard() {
     std::shared_ptr<Race> race = sr->getRace();
     bool racemode = race->getProfile() == SPREAD_RACE;
     const SkipList & secskip = race->getSectionSkipList();
-    for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator cmpit = race->begin(); cmpit != race->end(); cmpit++) {
+    for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator cmpit = race->begin(); cmpit != race->end(); cmpit++) {
       const std::shared_ptr<SiteLogic> & cmpsl = cmpit->second;
       bool regulartransferpossible = raceTransferPossible(sl, cmpsl, race);
       const std::shared_ptr<Site> & cmpsite = cmpsl->getSite();
       const SkipList & cmpskip = cmpsite->getSkipList();
-      SiteRace * cmpsr = cmpit->first;
+      const std::shared_ptr<SiteRace> & cmpsr = cmpit->first;
       FileList * cmprootfl = cmpsr->getFileListForPath("");
       if (!subpath.empty()) {
         SkipListMatch dirmatch = cmpskip.check(subpath, true, true, &secskip);
@@ -1265,8 +1263,8 @@ void Engine::transferFailed(const std::shared_ptr<TransferStatus> & ts, int err)
   }
 }
 
-void Engine::checkIfRaceComplete(SiteLogic * sls, std::shared_ptr<Race> & race) {
-  SiteRace * srs = sls->getRace(race->getName());
+void Engine::checkIfRaceComplete(const std::shared_ptr<SiteLogic> & sls, std::shared_ptr<Race> & race) {
+  std::shared_ptr<SiteRace> srs = sls->getRace(race->getName());
   if (!srs->isDone()) {
     bool unfinisheddirs = false;
     bool emptydirs = false;
@@ -1308,8 +1306,8 @@ void Engine::checkIfRaceComplete(SiteLogic * sls, std::shared_ptr<Race> & race) 
       }
       else {
         int uploadslotcount = 0;
-        for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
-          if (it->second.get() != sls && !it->first->isDone()) {
+        for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
+          if (it->second != sls && !it->first->isDone()) {
             uploadslotcount += it->second->getSite()->getMaxUp();
           }
         }
@@ -1359,8 +1357,8 @@ unsigned short Engine::calculateScore(ScoreBoardElement * sbe) const {
       race->getProfile() == SPREAD_RACE);
 }
 
-unsigned short Engine::calculateScore(PrioType priotype, unsigned long long int filesize, const std::shared_ptr<Race> & itr, FileList * fls, SiteRace * srs,
-                                      FileList * fld, SiteRace * srd, int avgspeed,
+unsigned short Engine::calculateScore(PrioType priotype, unsigned long long int filesize, const std::shared_ptr<Race> & itr, FileList * fls, const std::shared_ptr<SiteRace> & srs,
+                                      FileList * fld, const std::shared_ptr<SiteRace> & srd, int avgspeed,
                                       SitePriority priority, bool racemode) const
 {
   switch (priotype) {
@@ -1427,8 +1425,8 @@ unsigned short Engine::calculateScore(PrioType priotype, unsigned long long int 
 void Engine::setSpeedScale() {
   maxavgspeed = 1024;
   for (std::list<std::shared_ptr<Race> >::iterator itr = currentraces.begin(); itr != currentraces.end(); itr++) {
-    for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
-      for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
+    for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator its = (*itr)->begin(); its != (*itr)->end(); its++) {
+      for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator itd = (*itr)->begin(); itd != (*itr)->end(); itd++) {
         int avgspeed = its->second->getSite()->getAverageSpeed(itd->second->getSite()->getName());
         if (avgspeed > maxavgspeed) maxavgspeed = avgspeed;
       }
@@ -1437,8 +1435,8 @@ void Engine::setSpeedScale() {
 }
 
 void Engine::preSeedPotentialData(std::shared_ptr<Race> & race) {
-  std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator srcit;
-  std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator dstit;
+  std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator srcit;
+  std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator dstit;
   int maxpointssizeandowned = getMaxPointsFileSize() + getMaxPointsPercentageOwned();
   for (srcit = race->begin(); srcit != race->end(); srcit++) {
     const std::shared_ptr<SiteLogic> & sls = srcit->second;
@@ -1584,7 +1582,7 @@ void Engine::tick(int message) {
       if ((*it)->failedTransfersCleared()) {
         global->getEventLog()->log("Engine", "No activity for " + std::to_string(timeoutafterseconds) +
             " seconds, aborting spread job: " + (*it)->getName());
-        for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator its = race->begin(); its != race->end(); its++) {
+        for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator its = race->begin(); its != race->end(); its++) {
           its->second->raceLocalComplete(its->first, 0, false);
         }
         race->setTimeout();
@@ -1596,14 +1594,14 @@ void Engine::tick(int message) {
         if (race->clearTransferAttempts()) {
           restoreFromFailed(race);
           race->resetUpdateCheckCounter();
-          std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator it2;
+          std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it2;
           for (it2 = race->begin(); it2 != race->end(); it2++) {
             it2->second->activateOne();
           }
         }
       }
     }
-    for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator it2 = (*it)->begin(); it2 != (*it)->end(); it2++) {
+    for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it2 = (*it)->begin(); it2 != (*it)->end(); it2++) {
       int wantedlogins = it2->second->getSite()->getMaxDown();
       if (!it2->first->isDone()) {
         wantedlogins = it2->second->getSite()->getMaxLogins();
@@ -1656,8 +1654,8 @@ void Engine::tick(int message) {
 }
 
 void Engine::issueGlobalComplete(const std::shared_ptr<Race> & race) {
-  for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator itd = race->begin(); itd != race->end(); itd++) {
-    itd->second->raceGlobalComplete();
+  for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator itd = race->begin(); itd != race->end(); itd++) {
+    itd->second->raceGlobalComplete(itd->first);
     wipeFromScoreBoard(itd->first);
   }
 }
@@ -1688,7 +1686,7 @@ void Engine::addSiteToRace(std::shared_ptr<Race> & race, const std::string & sit
                                          true, false, &race->getSectionSkipList()).action != SKIPLIST_DENY ||
       sl->getSite()->isAffiliated(race->getGroup()))
   {
-    SiteRace * sr = sl->addRace(race, race->getSection(), race->getName());
+    std::shared_ptr<SiteRace> sr = sl->addRace(race, race->getSection(), race->getName());
     race->addSite(sr, sl);
   }
 }

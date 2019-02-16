@@ -81,6 +81,13 @@ void AllTransferJobsScreen::update() {
   redraw();
 }
 
+void AllTransferJobsScreen::command(const std::string & command, const std::string & arg) {
+  if (command == "yes") {
+    global->getEngine()->abortTransferJob(abortjob);
+  }
+  ui->redraw();
+}
+
 bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
   if (temphighlightline != -1) {
     temphighlightline = -1;
@@ -153,6 +160,23 @@ bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
         ui->goTransferJobStatus(msotb->getId());
       }
       return true;
+    case 'B':
+      if (hascontents) {
+        abortjob = global->getEngine()->getTransferJob(table.getElement(table.getSelectionPointer())->getId());
+        if (!!abortjob && !abortjob->isDone()) {
+          ui->goConfirmation("Do you really want to abort the transfer job " + abortjob->getName());
+        }
+      }
+      return true;
+    case 't':
+    case 'T':
+      if (hascontents) {
+        std::shared_ptr<TransferJob> tj = global->getEngine()->getTransferJob(table.getElement(table.getSelectionPointer())->getId());
+        if (!!tj) {
+          ui->goTransfersFilterTransferJob(tj->getName());
+        }
+      }
+      return true;
     case '-':
       if (!hascontents) {
         break;
@@ -165,7 +189,7 @@ bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
 }
 
 std::string AllTransferJobsScreen::getLegendText() const {
-  return "[Esc/c] Return - [Enter] Details - [Up/Down] Navigate";
+  return "[Esc/c] Return - [Enter] Details - [Up/Down] Navigate - a[B]ort job - [t]ransfers for job";
 }
 
 std::string AllTransferJobsScreen::getInfoLabel() const {

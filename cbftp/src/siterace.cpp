@@ -98,7 +98,7 @@ bool SiteRace::addSubDirectory(const std::string & subpath, bool knownexists) {
   filelists[subpath] = subdir;
   recentlyvisited.push_back(subpath);
   if (knownexists) {
-    race->reportNewSubDir(this, subpath);
+    race->reportNewSubDir(shared_from_this(), subpath);
   }
   return true;
 }
@@ -201,7 +201,7 @@ void SiteRace::updateNumFilesUploaded() {
     sum += fl->getNumUploadedFiles();
     aggregatedfilesize += fl->getTotalFileSize();
     if (fl->hasSFV()) {
-      race->reportSFV(this, it->first);
+      race->reportSFV(shared_from_this(), it->first);
     }
     unsigned long long int max = fl->getMaxFileSize();
     if (max > maxsize) {
@@ -240,7 +240,7 @@ void SiteRace::addNewDirectories() {
                fl->getState() == FileListState::FAILED)
       {
         fl->setExists();
-        race->reportNewSubDir(this, it->first);
+        race->reportNewSubDir(shared_from_this(), it->first);
       }
     }
   }
@@ -313,7 +313,7 @@ bool SiteRace::isGlobalDone() const {
 void SiteRace::complete(bool report) {
   done = true;
   if (report) {
-    race->reportDone(this);
+    race->reportDone(shared_from_this());
   }
 }
 
@@ -402,7 +402,7 @@ void SiteRace::reportSize(FileList * fl, const std::unordered_set<std::string> &
   std::unordered_map<std::string, FileList *>::iterator it;
   for (it = filelists.begin(); it != filelists.end(); it++) {
     if (it->second == fl) {
-      race->reportSize(this, fl, it->first, uniques, final);
+      race->reportSize(shared_from_this(), fl, it->first, uniques, final);
       if (final) {
         sizeestimated.insert(fl);
       }

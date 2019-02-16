@@ -78,6 +78,13 @@ void AllRacesScreen::update() {
   redraw();
 }
 
+void AllRacesScreen::command(const std::string & command, const std::string & arg) {
+  if (command == "yes") {
+    global->getEngine()->abortRace(abortrace);
+    ui->update();
+  }
+}
+
 bool AllRacesScreen::keyPressed(unsigned int ch) {
   if (temphighlightline != -1) {
     temphighlightline = -1;
@@ -133,9 +140,33 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
       return true;
     case 10:
       if (hascontents) {
-        std::shared_ptr<MenuSelectOptionTextButton> msotb =
-            std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
-        ui->goRaceStatus(msotb->getId());
+        ui->goRaceStatus(table.getElement(table.getSelectionPointer())->getId());
+      }
+      return true;
+    case 'B':
+      if (hascontents) {
+        abortrace = global->getEngine()->getRace(table.getElement(table.getSelectionPointer())->getId());
+        if (!!abortrace && abortrace->getStatus() == RACE_STATUS_RUNNING) {
+          ui->goConfirmation("Do you really want to abort the spread job " + abortrace->getName());
+        }
+      }
+      return true;
+    case 'r':
+    case 'R':
+      if (hascontents) {
+        std::shared_ptr<Race> race = global->getEngine()->getRace(table.getElement(table.getSelectionPointer())->getId());
+        if (!!race) {
+          global->getEngine()->resetRace(race, ch == 'R');
+        }
+      }
+      return true;
+    case 't':
+    case 'T':
+      if (hascontents) {
+        std::shared_ptr<Race> race = global->getEngine()->getRace(table.getElement(table.getSelectionPointer())->getId());
+        if (!!race) {
+          ui->goTransfersFilterSpreadJob(race->getName());
+        }
       }
       return true;
     case '-':
@@ -150,11 +181,11 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
 }
 
 std::string AllRacesScreen::getLegendText() const {
-  return "[Esc/c] Return - [Enter] Details - [Up/Down/Pgup/Pgdn/Home/End] Navigate";
+  return "[Esc/c] Return - [Enter] Details - [Up/Down/Pgup/Pgdn/Home/End] Navigate - [r]eset job - Hard [R]eset job - A[B]ort job - [t]ransfer for job";
 }
 
 std::string AllRacesScreen::getInfoLabel() const {
-  return "ALL RACES";
+  return "ALL SPREAD JOBS";
 }
 
 std::string AllRacesScreen::getInfoText() const {

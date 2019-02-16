@@ -3,16 +3,16 @@
 #include "race.h"
 
 ScoreBoardElement::ScoreBoardElement(const std::string & filename, unsigned short score,
-    unsigned long long int filesize, PrioType priotype, const std::shared_ptr<SiteLogic> & src, FileList * fls, SiteRace * srcsr,
-    const std::shared_ptr<SiteLogic> & dst, FileList * fld, SiteRace * dstsr, const std::shared_ptr<Race> & race,
+    unsigned long long int filesize, PrioType priotype, const std::shared_ptr<SiteLogic> & src, FileList * fls, const std::shared_ptr<SiteRace> & srcsr,
+    const std::shared_ptr<SiteLogic> & dst, FileList * fld, const std::shared_ptr<SiteRace> & dstsr, const std::shared_ptr<Race> & race,
     const std::string & subdir)
 {
   reset(filename, score, filesize, priotype, src, fls, srcsr, dst, fld, dstsr, race, subdir);
 }
 
 void ScoreBoardElement::reset(const std::string & filename, unsigned short score,
-    unsigned long long int filesize, PrioType priotype, const std::shared_ptr<SiteLogic> & src, FileList * fls, SiteRace * srcsr,
-    const std::shared_ptr<SiteLogic> & dst, FileList * fld, SiteRace * dstsr, const std::shared_ptr<Race> & race,
+    unsigned long long int filesize, PrioType priotype, const std::shared_ptr<SiteLogic> & src, FileList * fls, const std::shared_ptr<SiteRace> & srcsr,
+    const std::shared_ptr<SiteLogic> & dst, FileList * fld, const std::shared_ptr<SiteRace> & dstsr, const std::shared_ptr<Race> & race,
     const std::string & subdir)
 {
   this->filename = filename;
@@ -71,11 +71,11 @@ FileList * ScoreBoardElement::getDestinationFileList() const {
   return fld;
 }
 
-SiteRace * ScoreBoardElement::getSourceSiteRace() const {
+const std::shared_ptr<SiteRace> & ScoreBoardElement::getSourceSiteRace() const {
   return srcsr;
 }
 
-SiteRace * ScoreBoardElement::getDestinationSiteRace() const {
+const std::shared_ptr<SiteRace> & ScoreBoardElement::getDestinationSiteRace() const {
   return dstsr;
 }
 

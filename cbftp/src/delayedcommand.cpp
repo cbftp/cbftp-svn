@@ -6,10 +6,10 @@ DelayedCommand::DelayedCommand() :
   persisting(false) {
 }
 
-void DelayedCommand::set(std::string command, unsigned long long int triggertime, void * arg, bool persisting) {
+void DelayedCommand::set(const std::string & command, unsigned long long int triggertime, const std::weak_ptr<CommandOwner> & co, bool persisting) {
   this->command = command;
   this->triggertime = triggertime;
-  this->arg = arg;
+  this->co = co;
   this->persisting = persisting;
   this->active = true;
   this->released = false;
@@ -36,8 +36,8 @@ std::string DelayedCommand::getCommand() const {
   return command;
 }
 
-void * DelayedCommand::getArg() const {
-  return arg;
+std::shared_ptr<CommandOwner> DelayedCommand::getCommandOwner() const {
+  return co.lock();
 }
 
 bool DelayedCommand::isActive() const {

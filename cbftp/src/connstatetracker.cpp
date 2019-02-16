@@ -6,6 +6,7 @@
 #include "eventlog.h"
 #include "recursivecommandlogic.h"
 #include "sitelogicrequest.h"
+#include "siterace.h"
 
 ConnStateTracker::ConnStateTracker() :
   time(0),
@@ -29,16 +30,8 @@ ConnStateTracker::~ConnStateTracker() {
 
 }
 
-void ConnStateTracker::delayedCommand(std::string command, int delay) {
-  delayedCommand(command, delay, NULL);
-}
-
-void ConnStateTracker::delayedCommand(std::string command, int delay, void * arg) {
-  delayedCommand(command, delay, arg, false);
-}
-
-void ConnStateTracker::delayedCommand(std::string command, int delay, void * arg, bool persisting) {
-  delayedcommand.set(command, time + delay, arg, persisting);
+void ConnStateTracker::delayedCommand(const std::string & command, int delay, const std::shared_ptr<CommandOwner> & co, bool persisting) {
+  delayedcommand.set(command, time + delay, co, persisting);
 }
 
 void ConnStateTracker::timePassed(int time) {
@@ -53,7 +46,7 @@ int ConnStateTracker::getTimePassed() const {
   return idletime;
 }
 
-void ConnStateTracker::check(SiteRace * sr) {
+void ConnStateTracker::check(const std::shared_ptr<SiteRace> & sr) {
   if (lastchecked == sr) {
     lastcheckedcount++;
   }
@@ -63,7 +56,7 @@ void ConnStateTracker::check(SiteRace * sr) {
   }
 }
 
-SiteRace * ConnStateTracker::lastChecked() const {
+const std::shared_ptr<SiteRace> & ConnStateTracker::lastChecked() const {
   return lastchecked;
 }
 
@@ -71,13 +64,13 @@ int ConnStateTracker::checkCount() const {
     return lastcheckedcount;
 }
 
-void ConnStateTracker::purgeSiteRace(SiteRace * sr) {
+void ConnStateTracker::purgeSiteRace(const std::shared_ptr<SiteRace> & sr) {
   if (lastchecked == sr) {
     lastchecked = NULL;
     lastcheckedcount = 0;
   }
-  if (delayedcommand.isActive() && (SiteRace *)delayedcommand.getArg() == sr) {
-    delayedcommand.set("handle", 0, NULL, false);
+  if (delayedcommand.isActive() && delayedcommand.getCommandOwner() == sr) {
+    delayedcommand.set("handle", 0);
   }
 }
 
@@ -182,6 +175,7 @@ void ConnStateTracker::finishFileTransfer() {
   transfer = false;
   transferlocked = false;
   tm = NULL;
+  co.reset();
 }
 
 void ConnStateTracker::abortTransfer() {
@@ -256,11 +250,11 @@ bool ConnStateTracker::getTransferSSLClient() const {
   return sslclient;
 }
 
-CommandOwner * ConnStateTracker::getCommandOwner() const {
+const std::shared_ptr<CommandOwner> & ConnStateTracker::getCommandOwner() const {
   return co;
 }
 
-void ConnStateTracker::lockForTransfer(TransferMonitor * tm, FileList * fl, CommandOwner * co, bool download) {
+void ConnStateTracker::lockForTransfer(TransferMonitor * tm, FileList * fl, const std::shared_ptr<CommandOwner> & co, bool download) {
   assert(!transferlocked);
   assert(!transfer);
   assert(!request);
@@ -310,7 +304,7 @@ void ConnStateTracker::finishRequest() {
   request.reset();
 }
 
-std::shared_ptr<RecursiveCommandLogic> ConnStateTracker::getRecursiveLogic() const {
+const std::shared_ptr<RecursiveCommandLogic> & ConnStateTracker::getRecursiveLogic() const {
   return recursivelogic;
 }
 

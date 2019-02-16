@@ -28,8 +28,8 @@ enum SelectSitesMode {
 
 RaceStatusScreen::RaceStatusScreen(Ui * ui) {
   this->ui = ui;
-  defaultlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [r]eset race - Hard [R]eset race - A[B]ort race - [d]elete site and own files from race - [D]elete site and all files from race - [t]transfers - [T]ransfers for site - [b]rowse";
-  finishedlegendtext = "[c/Esc] Return - [Del] Remove site from race - [A]dd site to race - [s]how small dirs - [r]eset race - Hard [R]eset race - [d]elete own files - [D]elete all files - [t]ransfers - [T]ransfers for site - [b]rowse";
+  defaultlegendtext = "[c/Esc] Return - [Del] Remove site from job - [A]dd site to job - [s]how small dirs - [r]eset job - Hard [R]eset job - A[B]ort job - [d]elete site and own files from job - [D]elete site and all files from job - [t]transfers - [T]ransfers for site - [b]rowse - [E]dit site";
+  finishedlegendtext = "[c/Esc] Return - [Del] Remove site from job - [A]dd site to job - [s]how small dirs - [r]eset job - Hard [R]eset job - [d]elete own files - [D]elete all files - [t]ransfers - [T]ransfers for site - [b]rowse - [E]dit site";
 }
 
 RaceStatusScreen::~RaceStatusScreen() {
@@ -229,8 +229,8 @@ void RaceStatusScreen::update() {
   int x = 1;
   int y = 8;
   mso.clear();
-  for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
-    SiteRace * sr = it->first;
+  for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
+    const std::shared_ptr<SiteRace> & sr = it->first;
     const std::shared_ptr<SiteLogic> & sl = it->second;
     std::string user = sl->getSite()->getUser();
     bool trimcompare = user.length() > 8;
@@ -420,7 +420,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
     case 'A':
     {
       std::list<std::shared_ptr<Site> > excludedsites;
-      for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
+      for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
         excludedsites.push_back(it->second->getSite());
       }
       std::vector<std::shared_ptr<Site> >::const_iterator it;
@@ -470,6 +470,14 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       }
       break;
     }
+    case 'E': {
+      std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
+      if (!!msotb) {
+        std::string site = msotb->getLabelText();
+        ui->goEditSite(site);
+      }
+      break;
+    }
   }
   return false;
 }
@@ -478,7 +486,7 @@ void RaceStatusScreen::deleteFiles(bool allfiles) {
   if (race->getStatus() != RACE_STATUS_RUNNING) {
     std::list<std::shared_ptr<Site> > sites;
     std::list<std::shared_ptr<Site> > preselectsites;
-    std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator it;
+    std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it;
     for (it = race->begin(); it != race->end(); it++) {
       sites.push_back(it->second->getSite());
       if (!it->first->isDone() || (it->first->isAborted() && !it->first->doneBeforeAbort())) {

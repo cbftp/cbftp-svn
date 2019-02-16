@@ -52,3 +52,7 @@ int LocalFile::getHour() const {
 int LocalFile::getMinute() const {
   return minute;
 }
+
+void LocalFile::setSize(unsigned long long int size) {
+  this->size = size;
+}

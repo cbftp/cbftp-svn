@@ -595,7 +595,7 @@ void FTPConn::doSTAT() {
   doSTAT(NULL, new FileList(site->getUser(), currentpath));
 }
 
-void FTPConn::doSTAT(CommandOwner * co, FileList * filelist) {
+void FTPConn::doSTAT(const std::shared_ptr<CommandOwner> & co, FileList * filelist) {
   state = STATE_STAT;
   currentco = co;
   currentfl = filelist;
@@ -613,7 +613,7 @@ FileList * FTPConn::newFileList() {
   return new FileList(site->getUser(), currentpath);
 }
 
-void FTPConn::setListData(CommandOwner * co, FileList * filelist) {
+void FTPConn::setListData(const std::shared_ptr<CommandOwner> & co, FileList * filelist) {
   currentco = co;
   currentfl = filelist;
 }
@@ -935,7 +935,7 @@ void FTPConn::doCWD(const Path & path) {
   doCWD(path, NULL, NULL);
 }
 
-void FTPConn::doCWD(const Path & path, CommandOwner * co) {
+void FTPConn::doCWD(const Path & path, const std::shared_ptr<CommandOwner> & co) {
   doCWD(path, NULL, co);
 }
 
@@ -943,11 +943,11 @@ void FTPConn::doCWD(FileList * fl) {
   doCWD(fl->getPath(), fl, NULL);
 }
 
-void FTPConn::doCWD(FileList * fl, CommandOwner * co) {
+void FTPConn::doCWD(FileList * fl, const std::shared_ptr<CommandOwner> & co) {
   doCWD(fl->getPath(), fl, co);
 }
 
-void FTPConn::doCWD(const Path & path, FileList * fl, CommandOwner * co) {
+void FTPConn::doCWD(const Path & path, FileList * fl, const std::shared_ptr<CommandOwner> & co) {
   assert(path != "");
   currentfl = fl;
   currentco = co;
@@ -979,7 +979,7 @@ void FTPConn::doMKD(const Path & dir) {
   doMKD(dir, NULL, NULL);
 }
 
-void FTPConn::doMKD(const Path & dir, CommandOwner * co) {
+void FTPConn::doMKD(const Path & dir, const std::shared_ptr<CommandOwner> & co) {
   doMKD(dir, NULL, co);
 }
 
@@ -987,11 +987,11 @@ void FTPConn::doMKD(FileList * fl) {
   doMKD(fl->getPath(), fl, NULL);
 }
 
-void FTPConn::doMKD(FileList * fl, CommandOwner * co) {
+void FTPConn::doMKD(FileList * fl, const std::shared_ptr<CommandOwner> & co) {
   doMKD(fl->getPath(), fl, co);
 }
 
-void FTPConn::doMKD(const Path & dir, FileList * fl, CommandOwner * co) {
+void FTPConn::doMKD(const Path & dir, FileList * fl, const std::shared_ptr<CommandOwner> & co) {
   assert(dir != "");
   currentfl = fl;
   currentco = co;
@@ -1276,7 +1276,7 @@ FileList * FTPConn::currentFileList() const {
   return currentfl;
 }
 
-CommandOwner * FTPConn::currentCommandOwner() const {
+const std::shared_ptr<CommandOwner> & FTPConn::currentCommandOwner() const {
   return currentco;
 }
 

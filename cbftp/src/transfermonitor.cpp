@@ -49,7 +49,7 @@ bool TransferMonitor::idle() const {
 void TransferMonitor::engageFXP(
   const std::string & sfile, const std::shared_ptr<SiteLogic> & sls, FileList * fls,
   const std::string & dfile, const std::shared_ptr<SiteLogic> & sld, FileList * fld,
-  CommandOwner * srcco, CommandOwner * dstco)
+  const std::shared_ptr<CommandOwner> & srcco, const std::shared_ptr<CommandOwner> & dstco)
 {
   reset();
   type = TM_TYPE_FXP;
@@ -113,7 +113,7 @@ void TransferMonitor::engageFXP(
 
 void TransferMonitor::engageDownload(
   const std::string & sfile, const std::shared_ptr<SiteLogic> & sls, FileList * fls,
-  const std::shared_ptr<LocalFileList> & localfl, CommandOwner * co)
+  const std::shared_ptr<LocalFileList> & localfl, const std::shared_ptr<CommandOwner> & co)
 {
   reset();
   if (!localfl) return;
@@ -141,7 +141,7 @@ void TransferMonitor::engageDownload(
       sls->getSite()->getName(), "/\\", "", dfile, fls, spath,
       (FileList *)NULL, dpath, fls->getFile(sfile)->getSize(), 0, src, -1, ssl, clientactive);
   tm->addNewTransferStatus(ts);
-  if (FileSystem::fileExists(dpath / dfile)) {
+  if (FileSystem::fileExists(dpath / dfile) && global->getLocalStorage()->getLocalFile(dpath / dfile).getSize() > 0) {
     ts->setDupe();
     tm->transferFailed(ts, TM_ERR_DUPE);
     sls->returnConn(src, true);
@@ -159,7 +159,7 @@ void TransferMonitor::engageDownload(
 
 void TransferMonitor::engageUpload(
   const std::string & sfile, const std::shared_ptr<LocalFileList> & localfl,
-  const std::shared_ptr<SiteLogic> & sld, FileList * fld, CommandOwner * co)
+  const std::shared_ptr<SiteLogic> & sld, FileList * fld, const std::shared_ptr<CommandOwner> & co)
 {
   reset();
   if (!localfl) return;
@@ -204,7 +204,7 @@ void TransferMonitor::engageUpload(
 }
 
 void TransferMonitor::engageList(const std::shared_ptr<SiteLogic> & sls, int connid,
-  bool hiddenfiles, FileList * fl, CommandOwner * co)
+  bool hiddenfiles, FileList * fl, const std::shared_ptr<CommandOwner> & co)
 {
   reset();
   type = TM_TYPE_LIST;

@@ -268,19 +268,19 @@ const std::shared_ptr<Site> & File::getUpdateDst() const {
   return updatedst;
 }
 
-CommandOwner * File::getUpdateSrcCommandOwner() const {
+const std::shared_ptr<CommandOwner> & File::getUpdateSrcCommandOwner() const {
   return updatecosrc;
 }
 
-CommandOwner * File::getUpdateDstCommandOwner() const {
+const std::shared_ptr<CommandOwner> & File::getUpdateDstCommandOwner() const {
   return updatecodst;
 }
 
-void File::setUpdateFlag(const std::shared_ptr<Site> & src, const std::shared_ptr<Site> &dst, CommandOwner * cosrc, CommandOwner * codst, unsigned int speed) {
+void File::setUpdateFlag(const std::shared_ptr<Site> & src, const std::shared_ptr<Site> &dst, const std::shared_ptr<CommandOwner> & srcco, const std::shared_ptr<CommandOwner> & dstco, unsigned int speed) {
   updatesrc = src;
   updatedst = dst;
-  updatecosrc = cosrc;
-  updatecodst = codst;
+  updatecosrc = srcco;
+  updatecodst = dstco;
   updatespeed = speed;
   updateflag = true;
 }

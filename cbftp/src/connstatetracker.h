@@ -23,7 +23,7 @@ private:
   unsigned long long int time;
   int idletime;
   int lastcheckedcount;
-  SiteRace * lastchecked;
+  std::shared_ptr<SiteRace> lastchecked;
   DelayedCommand delayedcommand;
   bool transfer;
   bool initialized;
@@ -46,7 +46,7 @@ private:
   std::string listhost;
   int listport;
   TransferMonitor * listtm;
-  CommandOwner * co;
+  std::shared_ptr<CommandOwner> co;
   std::string host;
   int port;
   std::shared_ptr<RecursiveCommandLogic> recursivelogic;
@@ -56,15 +56,13 @@ private:
 public:
   ConnStateTracker();
   ~ConnStateTracker();
-  void delayedCommand(std::string, int);
-  void delayedCommand(std::string, int, void *);
-  void delayedCommand(std::string, int, void *, bool);
+  void delayedCommand(const std::string & command, int delay, const std::shared_ptr<CommandOwner> & co = nullptr, bool persisting = false);
   void timePassed(int);
   int getTimePassed() const;
-  void check(SiteRace *);
-  SiteRace * lastChecked() const;
+  void check(const std::shared_ptr<SiteRace> & sr);
+  const std::shared_ptr<SiteRace> & lastChecked() const;
   int checkCount() const;
-  void purgeSiteRace(SiteRace * sr);
+  void purgeSiteRace(const std::shared_ptr<SiteRace> & sr);
   DelayedCommand & getCommand();
   void setDisconnected();
   void setTransfer(const std::string &, bool, bool, bool);
@@ -77,7 +75,7 @@ public:
   void finishFileTransfer();
   void abortTransfer();
   bool getTransferAborted() const;
-  void lockForTransfer(TransferMonitor *, FileList *, CommandOwner *, bool);
+  void lockForTransfer(TransferMonitor *, FileList *, const std::shared_ptr<CommandOwner> &, bool);
   bool isListLocked() const;
   bool isTransferLocked() const;
   bool hasRequest() const;
@@ -101,9 +99,9 @@ public:
   bool getTransferFXP() const;
   std::string getTransferHost() const;
   int getTransferPort() const;
-  std::shared_ptr<RecursiveCommandLogic> getRecursiveLogic() const;
+  const std::shared_ptr<RecursiveCommandLogic> & getRecursiveLogic() const;
   bool transferInitialized() const;
-  CommandOwner * getCommandOwner() const;
+  const std::shared_ptr<CommandOwner> & getCommandOwner() const;
   void initializeTransfer();
   bool isQuitting() const;
   void setQuitting();

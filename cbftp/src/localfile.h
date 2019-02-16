@@ -15,6 +15,7 @@ public:
   int getDay() const;
   int getHour() const;
   int getMinute() const;
+  void setSize(unsigned long long int size);
 private:
   std::string name;
   unsigned long long int size;

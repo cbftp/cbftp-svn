@@ -24,8 +24,8 @@ private:
   unsigned int updatespeed;
   std::shared_ptr<Site> updatesrc;
   std::shared_ptr<Site> updatedst;
-  CommandOwner * updatecosrc;
-  CommandOwner * updatecodst;
+  std::shared_ptr<CommandOwner> updatecosrc;
+  std::shared_ptr<CommandOwner> updatecodst;
   bool updateflag;
   bool directory;
   bool softlink;
@@ -36,7 +36,7 @@ private:
 protected:
   File(const std::string &, const std::string &);
   File(const std::string &, int);
-  void setUpdateFlag(const std::shared_ptr<Site> &, const std::shared_ptr<Site> &, CommandOwner *, CommandOwner *, unsigned int);
+  void setUpdateFlag(const std::shared_ptr<Site> &, const std::shared_ptr<Site> &, const std::shared_ptr<CommandOwner> & srcco, const std::shared_ptr<CommandOwner> & dstco, unsigned int);
   void unsetUpdateFlag();
   bool setSize(unsigned long long int);
   bool setLastModified(const std::string &);
@@ -60,8 +60,8 @@ public:
   std::string getExtension() const;
   const std::shared_ptr<Site> & getUpdateSrc() const;
   const std::shared_ptr<Site> & getUpdateDst() const;
-  CommandOwner * getUpdateSrcCommandOwner() const;
-  CommandOwner * getUpdateDstCommandOwner() const;
+  const std::shared_ptr<CommandOwner> & getUpdateSrcCommandOwner() const;
+  const std::shared_ptr<CommandOwner> & getUpdateDstCommandOwner() const;
   unsigned int getUpdateSpeed() const;
   bool updateFlagSet() const;
   bool isDownloading() const;

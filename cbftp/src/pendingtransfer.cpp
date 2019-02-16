@@ -14,7 +14,9 @@ PendingTransfer::PendingTransfer(const std::shared_ptr<SiteLogic> & slsrc, FileL
 
 PendingTransfer::PendingTransfer(const std::shared_ptr<SiteLogic> & sl, FileList * fl, std::string srcfilename, std::shared_ptr<LocalFileList> fllocal, std::string dstfilename) :
   slsrc(sl),
+  sldst(nullptr),
   flsrc(fl),
+  fldst(nullptr),
   fllocal(fllocal),
   srcfilename(srcfilename),
   dstfilename(dstfilename),
@@ -22,7 +24,9 @@ PendingTransfer::PendingTransfer(const std::shared_ptr<SiteLogic> & sl, FileList
 }
 
 PendingTransfer::PendingTransfer(std::shared_ptr<LocalFileList> fllocal, std::string srcfilename, const std::shared_ptr<SiteLogic> & sl, FileList * fl, std::string dstfilename) :
+  slsrc(nullptr),
   sldst(sl),
+  flsrc(nullptr),
   fldst(fl),
   fllocal(fllocal),
   srcfilename(srcfilename),
