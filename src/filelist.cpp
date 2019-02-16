@@ -200,7 +200,7 @@ void FileList::removeFile(const std::string & name) {
 
 void FileList::setFileUpdateFlag(const std::string & name,
     unsigned long long int size, unsigned int speed, const std::shared_ptr<Site> & src,
-    const std::shared_ptr<Site> & dst, CommandOwner * srcco, CommandOwner * dstco)
+    const std::shared_ptr<Site> & dst, const std::shared_ptr<CommandOwner> & srcco, const std::shared_ptr<CommandOwner> & dstco)
 {
   File * file;
   if ((file = getFileCaseSensitive(name)) != NULL) {

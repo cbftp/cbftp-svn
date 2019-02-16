@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
 
@@ -8,6 +10,8 @@ class Ui;
 class PreparedRace;
 class SiteLogic;
 class Site;
+class Race;
+class TransferJob;
 
 class MainScreen : public UIWindow {
 public:
@@ -42,7 +46,9 @@ private:
   unsigned int totalsitessize;
   int currentraces;
   int currenttransferjobs;
-  std::string joblegendtext;
+  std::string baselegendtext;
+  std::string spreadjoblegendtext;
+  std::string transferjoblegendtext;
   std::string sitelegendtext;
   std::string preparelegendtext;
   std::string gotolegendtext;
@@ -59,4 +65,6 @@ private:
   MenuSelectOption msos;
   bool gotomode;
   int temphighlightline;
+  std::shared_ptr<Race> abortrace;
+  std::shared_ptr<TransferJob> abortjob;
 };

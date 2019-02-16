@@ -691,10 +691,10 @@ void TransferJob::abort() {
   setDone();
   status = TRANSFERJOB_ABORTED;
   if (!!srcsitetransferjob) {
-    src->abortTransfers(static_cast<CommandOwner *>(srcsitetransferjob.get()));
+    src->abortTransfers(srcsitetransferjob);
   }
   if (!!dstsitetransferjob) {
-    dst->abortTransfers(static_cast<CommandOwner *>(srcsitetransferjob.get()));
+    dst->abortTransfers(srcsitetransferjob);
   }
 }
 

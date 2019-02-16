@@ -15,7 +15,7 @@ class FileList;
 class SiteLogic;
 class SkipList;
 
-class SiteRace : public CommandOwner {
+class SiteRace : public CommandOwner, public std::enable_shared_from_this<SiteRace> {
   private:
     std::shared_ptr<Race> race;
     Path section;

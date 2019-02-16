@@ -15,10 +15,17 @@ void LocalFileList::addFile(const std::string & name, unsigned long long int siz
 
 void LocalFileList::addFile(const LocalFile & file) {
   std::string name = file.getName();
-  files.insert(std::pair<std::string, LocalFile>(name, file));
-  lowercasefilemap[util::toLower(name)] = name;
-  if (!file.isDirectory()) {
-    sizefiles++;
+  auto it = files.insert(std::pair<std::string, LocalFile>(name, file));
+  if (!it.second) {
+    if (it.first->second.getSize() < file.getSize()) {
+      it.first->second.setSize(file.getSize());
+    }
+  }
+  else {
+    lowercasefilemap[util::toLower(name)] = name;
+    if (!file.isDirectory()) {
+      sizefiles++;
+    }
   }
 }
 

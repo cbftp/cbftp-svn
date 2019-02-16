@@ -76,8 +76,8 @@ class TransferMonitor : public EventReceiver, public RawBufferCallback {
     int ticker;
     TransferError error;
     std::list<std::pair<std::string, std::string> > rawbufqueue;
-    CommandOwner * srcco;
-    CommandOwner * dstco;
+    std::shared_ptr<CommandOwner> srcco;
+    std::shared_ptr<CommandOwner> dstco;
     void finish();
     void setTargetSizeSpeed(unsigned long long int, int);
     void reset();
@@ -102,13 +102,13 @@ class TransferMonitor : public EventReceiver, public RawBufferCallback {
     std::shared_ptr<TransferStatus> getTransferStatus() const;
     void engageFXP(const std::string &, const std::shared_ptr<SiteLogic> &, FileList *,
       const std::string &, const std::shared_ptr<SiteLogic> &, FileList *,
-      CommandOwner *, CommandOwner *);
+      const std::shared_ptr<CommandOwner> &, const std::shared_ptr<CommandOwner> &);
     void engageDownload(const std::string &, const std::shared_ptr<SiteLogic> &,
-      FileList *, const std::shared_ptr<LocalFileList> &, CommandOwner *);
+      FileList *, const std::shared_ptr<LocalFileList> &, const std::shared_ptr<CommandOwner> &);
     void engageUpload(const std::string &, const std::shared_ptr<LocalFileList> &,
-      const std::shared_ptr<SiteLogic> &, FileList *, CommandOwner *);
+      const std::shared_ptr<SiteLogic> &, FileList *, const std::shared_ptr<CommandOwner> &);
     void engageList(const std::shared_ptr<SiteLogic> &, int, bool, FileList *,
-      CommandOwner *);
+        const std::shared_ptr<CommandOwner> &);
     Status getStatus() const;
     bool willFail() const;
     void newRawBufferLine(const std::pair<std::string, std::string> &);

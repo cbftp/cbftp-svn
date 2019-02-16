@@ -22,8 +22,8 @@
 
 typedef std::pair<FileList *, FileList *> FailedTransferSecond;
 
-bool SitesComparator::operator()(const std::pair<SiteRace *, std::shared_ptr<SiteLogic> > & a,
-                                 const std::pair<SiteRace *, std::shared_ptr<SiteLogic> > & b) const
+bool SitesComparator::operator()(const std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > & a,
+                                 const std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > & b) const
 {
   return a.first->getSiteName() < b.first->getSiteName();
 }
@@ -65,12 +65,12 @@ CallbackType Race::callbackType() const {
   return CallbackType::RACE;
 }
 
-void Race::addSite(SiteRace * siterace, const std::shared_ptr<SiteLogic> & sl) {
-  sites.insert(std::pair<SiteRace *, std::shared_ptr<SiteLogic> >(siterace, sl));
+void Race::addSite(const std::shared_ptr<SiteRace> & siterace, const std::shared_ptr<SiteLogic> & sl) {
+  sites.insert(std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> >(siterace, sl));
 }
 
 void Race::removeSite(const std::shared_ptr<SiteLogic> & sl) {
-  for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::iterator it = sites.begin(); it != sites.end(); it++) {
+  for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::iterator it = sites.begin(); it != sites.end(); it++) {
     if (it->second == sl) {
       removeSite(it->first);
       break;
@@ -78,8 +78,8 @@ void Race::removeSite(const std::shared_ptr<SiteLogic> & sl) {
   }
 }
 
-void Race::removeSite(SiteRace * siterace) {
-  for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::iterator it = sites.begin(); it != sites.end(); it++) {
+void Race::removeSite(const std::shared_ptr<SiteRace> & siterace) {
+  for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::iterator it = sites.begin(); it != sites.end(); it++) {
     if (it->first == siterace) {
       sites.erase(it);
       break;
@@ -88,19 +88,19 @@ void Race::removeSite(SiteRace * siterace) {
   semidonesites.erase(siterace);
   donesites.erase(siterace);
   sizes.erase(siterace);
-  for (std::unordered_map<std::string, std::unordered_set<SiteRace *> >::iterator it = sfvreports.begin(); it != sfvreports.end(); it++) {
+  for (std::unordered_map<std::string, std::unordered_set<std::shared_ptr<SiteRace>> >::iterator it = sfvreports.begin(); it != sfvreports.end(); it++) {
     it->second.erase(siterace);
   }
-  for (std::unordered_map<std::string, std::unordered_set<SiteRace *> >::iterator it = subpathoccurences.begin(); it != subpathoccurences.end(); it++) {
+  for (std::unordered_map<std::string, std::unordered_set<std::shared_ptr<SiteRace>> >::iterator it = subpathoccurences.begin(); it != subpathoccurences.end(); it++) {
     it->second.erase(siterace);
   }
 }
 
-std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator Race::begin() const {
+std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator Race::begin() const {
   return sites.begin();
 }
 
-std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator Race::end() const {
+std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator Race::end() const {
   return sites.end();
 }
 
@@ -183,7 +183,7 @@ std::unordered_map<std::string, unsigned long long int>::const_iterator Race::gu
 }
 
 bool Race::SFVReported(const std::string & subpath) const {
-  std::unordered_map<std::string, std::unordered_set<SiteRace *> >::const_iterator it = sfvreports.find(subpath);
+  std::unordered_map<std::string, std::unordered_set<std::shared_ptr<SiteRace>> >::const_iterator it = sfvreports.find(subpath);
   return it != sfvreports.end();
 }
 
@@ -203,11 +203,11 @@ bool Race::isDone() const {
   return status != RACE_STATUS_RUNNING;
 }
 
-void Race::reportNewSubDir(SiteRace * sr, const std::string & subdir) {
+void Race::reportNewSubDir(const std::shared_ptr<SiteRace> & sr, const std::string & subdir) {
   if (subpathoccurences.find(subdir) == subpathoccurences.end()) {
-    subpathoccurences[subdir] = std::unordered_set<SiteRace *>();
+    subpathoccurences[subdir] = std::unordered_set<std::shared_ptr<SiteRace>>();
   }
-  std::unordered_set<SiteRace *> & subpathoccurencessubdir = subpathoccurences.at(subdir);
+  std::unordered_set<std::shared_ptr<SiteRace>> & subpathoccurencessubdir = subpathoccurences.at(subdir);
   subpathoccurencessubdir.insert(sr);
   if (subpathoccurencessubdir.size() >= sites.size() * 0.5) {
     estimatedsubpaths.insert(subdir);
@@ -215,15 +215,15 @@ void Race::reportNewSubDir(SiteRace * sr, const std::string & subdir) {
   }
 }
 
-void Race::reportSFV(SiteRace * sr, const std::string & subpath) {
+void Race::reportSFV(const std::shared_ptr<SiteRace> & sr, const std::string & subpath) {
   if (sfvreports.find(subpath) == sfvreports.end()) {
-    sfvreports[subpath] = std::unordered_set<SiteRace *>();
+    sfvreports[subpath] = std::unordered_set<std::shared_ptr<SiteRace>>();
   }
-  std::unordered_set<SiteRace *> & sfvreportssubpath = sfvreports.at(subpath);
+  std::unordered_set<std::shared_ptr<SiteRace>> & sfvreportssubpath = sfvreports.at(subpath);
   sfvreportssubpath.insert(sr);
 }
 
-void Race::reportDone(SiteRace * sr) {
+void Race::reportDone(const std::shared_ptr<SiteRace> & sr) {
   if (donesites.find(sr) != donesites.end()) {
     return;
   }
@@ -234,14 +234,14 @@ void Race::reportDone(SiteRace * sr) {
   }
 }
 
-void Race::reportSemiDone(SiteRace * sr) {
+void Race::reportSemiDone(const std::shared_ptr<SiteRace> & sr) {
   if (semidonesites.find(sr) != semidonesites.end()) {
     return;
   }
   semidonesites.insert(sr);
   if (semidonesites.size() == sites.size()) {
     setDone();
-    for (std::unordered_set<SiteRace *>::iterator it = semidonesites.begin(); it != semidonesites.end(); it++) {
+    for (std::unordered_set<std::shared_ptr<SiteRace>>::iterator it = semidonesites.begin(); it != semidonesites.end(); it++) {
       (*it)->complete(false);
     }
   }
@@ -291,7 +291,7 @@ void Race::setTimeout() {
   status = RACE_STATUS_TIMEOUT;
 }
 
-void Race::reportSize(SiteRace * sr, FileList * fl, const std::string & subpath, const std::unordered_set<std::string > & uniques, bool final) {
+void Race::reportSize(const std::shared_ptr<SiteRace> & sr, FileList * fl, const std::string & subpath, const std::unordered_set<std::string > & uniques, bool final) {
   std::unordered_set<std::string>::const_iterator itu;
   File * file;
   if (sizelocationtrackers.find(subpath) == sizelocationtrackers.end()) {
@@ -347,7 +347,7 @@ void Race::reportSize(SiteRace * sr, FileList * fl, const std::string & subpath,
     }
     if (final) {
       sizes[sr][subpath] = uniques.size();
-      std::unordered_map<SiteRace *, std::unordered_map<std::string, unsigned int> >::iterator it;
+      std::unordered_map<std::shared_ptr<SiteRace>, std::unordered_map<std::string, unsigned int> >::iterator it;
       std::unordered_map<std::string, unsigned int>::iterator it2;
       std::vector<unsigned int> subpathsizes;
       for (it = sizes.begin(); it != sizes.end(); it++) {
@@ -415,7 +415,7 @@ int Race::timeoutCheck() {
     return MAX_CHECKS_BEFORE_HARD_TIMEOUT;
   }
   bool allrefreshed = true;
-  for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::iterator it = sites.begin(); it != sites.end(); it++) {
+  for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::iterator it = sites.begin(); it != sites.end(); it++) {
     if (it->first->isDone()) {
       continue;
     }
@@ -461,7 +461,7 @@ void Race::calculatePercentages() {
   unsigned int totalpercentage = 0;
   unsigned int localworst = 100;
   unsigned int localbest = 0;
-  for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator it = begin(); it != end(); it++) {
+  for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = begin(); it != end(); it++) {
     unsigned int percentagecomplete = 0;
     if (status == RACE_STATUS_RUNNING) {
       if (guessedtotalfilesize) {
@@ -511,7 +511,7 @@ unsigned int Race::getTimeSpent() const {
 
 std::string Race::getSiteListText() const {
   std::string sitestr = "";
-  for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator it = begin(); it != end(); it++) {
+  for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = begin(); it != end(); it++) {
     sitestr += it->first->getSiteName() + ",";
   }
   if (sitestr.length() > 0) {
@@ -532,8 +532,8 @@ SpreadProfile Race::getProfile() const {
   return profile;
 }
 
-SiteRace * Race::getSiteRace(const std::string & site) const {
-  for (std::set<std::pair<SiteRace *, std::shared_ptr<SiteLogic> > >::const_iterator it = begin(); it != end(); it++) {
+const std::shared_ptr<SiteRace> & Race::getSiteRace(const std::string & site) const {
+  for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = begin(); it != end(); it++) {
     if (it->first->getSiteName() == site) {
       return it->first;
     }

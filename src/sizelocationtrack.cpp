@@ -12,8 +12,8 @@ int SizeLocationTrack::numSites() const {
   return sitesizes.size();
 }
 
-bool SizeLocationTrack::add(SiteRace * site, unsigned long long int size) {
-  std::map<SiteRace *, unsigned long long int>::iterator it;
+bool SizeLocationTrack::add(const std::shared_ptr<SiteRace> & site, unsigned long long int size) {
+  std::map<std::shared_ptr<SiteRace>, unsigned long long int>::iterator it;
   it = sitesizes.find(site);
   if (it == sitesizes.end() || it->second != size) {
     sitesizes[site] = size;
@@ -23,8 +23,8 @@ bool SizeLocationTrack::add(SiteRace * site, unsigned long long int size) {
   return false;
 }
 
-void SizeLocationTrack::remove(SiteRace * site) {
-  std::map<SiteRace *, unsigned long long int>::iterator it;
+void SizeLocationTrack::remove(const std::shared_ptr<SiteRace> & site) {
+  std::map<std::shared_ptr<SiteRace>, unsigned long long int>::iterator it;
   it = sitesizes.find(site);
   if (it != sitesizes.end()) {
     sitesizes.erase(it);
@@ -33,7 +33,7 @@ void SizeLocationTrack::remove(SiteRace * site) {
 }
 
 void SizeLocationTrack::recalculate() {
-  std::map<SiteRace *, unsigned long long int>::iterator it;
+  std::map<std::shared_ptr<SiteRace>, unsigned long long int>::iterator it;
   std::map<unsigned long long int, int> commonsizes;
   std::map<unsigned long long int, int>::iterator it2;
   unsigned long long int size;
