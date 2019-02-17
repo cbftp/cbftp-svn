@@ -532,13 +532,13 @@ SpreadProfile Race::getProfile() const {
   return profile;
 }
 
-const std::shared_ptr<SiteRace> & Race::getSiteRace(const std::string & site) const {
+std::shared_ptr<SiteRace> Race::getSiteRace(const std::string & site) const {
   for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = begin(); it != end(); it++) {
     if (it->first->getSiteName() == site) {
       return it->first;
     }
   }
-  return NULL;
+  return std::shared_ptr<SiteRace>();
 }
 
 unsigned int Race::getWorstCompletionPercentage() const {

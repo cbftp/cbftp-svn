@@ -194,13 +194,9 @@ class FTPConn : private EventReceiver, public FTPConnectOwner {
     void doCPSV();
     void doPASV();
     void doPORT(const std::string &, int);
-    void doCWD(const Path &);
-    void doCWD(const Path &, const std::shared_ptr<CommandOwner> & co);
-    void doCWD(FileList *);
-    void doCWD(FileList *, const std::shared_ptr<CommandOwner> & co);
-    void doMKD(const Path &);
-    void doMKD(const Path &, const std::shared_ptr<CommandOwner> & co);
-    void doMKD(FileList *);
+    void doCWD(const Path &, const std::shared_ptr<CommandOwner> & co = std::shared_ptr<CommandOwner>());
+    void doCWD(FileList *, const std::shared_ptr<CommandOwner> & co = std::shared_ptr<CommandOwner>());
+    void doMKD(const Path &, const std::shared_ptr<CommandOwner> & co = std::shared_ptr<CommandOwner>());
     void doMKD(FileList *, const std::shared_ptr<CommandOwner> & co);
     void doPRETRETR(const std::string &);
     void doRETR(const std::string &);

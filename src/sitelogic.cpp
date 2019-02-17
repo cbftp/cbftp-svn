@@ -129,6 +129,20 @@ std::shared_ptr<SiteRace> SiteLogic::addRace(std::shared_ptr<Race> & enginerace,
   return race;
 }
 
+void SiteLogic::resetRace(const std::shared_ptr<SiteRace> & race) {
+  bool current = false;
+  for (const std::shared_ptr<SiteRace> & currentrace : currentraces) {
+    if (currentrace == race) {
+      current = true;
+      break;
+    }
+  }
+  if (!current) {
+    currentraces.push_back(race);
+  }
+  activateAll();
+}
+
 void SiteLogic::addTransferJob(std::shared_ptr<SiteTransferJob> & tj) {
   transferjobs.push_back(tj);
   activateOne();
@@ -182,7 +196,7 @@ void SiteLogic::userDenied(int id) {
 }
 
 void SiteLogic::userDeniedSiteFull(int id) {
-  connstatetracker[id].delayedCommand("reconnect", SLEEP_DELAY, NULL, true);
+  connstatetracker[id].delayedCommand("reconnect", SLEEP_DELAY, true);
 }
 
 void SiteLogic::userDeniedSimultaneousLogins(int id) {
@@ -559,7 +573,7 @@ void SiteLogic::commandFail(int id, int failuretype) {
       std::shared_ptr<CommandOwner> currentco = conns[id]->currentCommandOwner();
       if (conns[id]->hasMKDCWDTarget()) {
         if (site->getAllowUpload() == SITE_ALLOW_TRANSFER_NO ||
-            (currentco != NULL && currentco->classType() == COMMANDOWNER_SITERACE &&
+            (!!currentco && currentco->classType() == COMMANDOWNER_SITERACE &&
              site->isAffiliated(std::static_pointer_cast<SiteRace>(currentco)->getGroup())))
         {
           conns[id]->finishMKDCWDTarget();
@@ -632,7 +646,7 @@ void SiteLogic::commandFail(int id, int failuretype) {
           }
         }
         std::shared_ptr<CommandOwner> currentco = conns[id]->currentCommandOwner();
-        if (currentco != NULL && currentco->classType() == COMMANDOWNER_TRANSFERJOB) {
+        if (!!currentco && currentco->classType() == COMMANDOWNER_TRANSFERJOB) {
           handleConnection(id);
           return;
         }
@@ -1000,7 +1014,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
                     currentpath.contains(racepath); // same path, currently in subdir
     if (!goodpath || refresh) {
       if (backfromrefresh) {
-        connstatetracker[id].delayedCommand("refreshchangepath", SLEEP_DELAY, race);
+        connstatetracker[id].delayedCommand("refreshchangepath", SLEEP_DELAY, false, race);
         return;
       }
       connstatetracker[id].use();
@@ -1360,16 +1374,11 @@ bool SiteLogic::requestReady(int requestid) const {
 
 void SiteLogic::abortRace(unsigned int id) {
   std::shared_ptr<SiteRace> delrace = getRace(id);
-  if (delrace == NULL) {
+  if (!delrace) {
     return;
   }
   delrace->abort();
-  for (std::list<std::shared_ptr<SiteRace>>::iterator it = recentlylistedraces.begin(); it != recentlylistedraces.end(); it++) {
-    if ((*it) == delrace) {
-      recentlylistedraces.erase(it);
-      break;
-    }
-  }
+  removeFromRecentlyListed(delrace);
   abortTransfers(delrace);
   for (unsigned int i = 0; i < connstatetracker.size(); i++) {
     connstatetracker[i].purgeSiteRace(delrace);
@@ -1399,6 +1408,15 @@ void SiteLogic::abortTransfers(const std::shared_ptr<CommandOwner> & co) {
       connstatetracker[i].getTransferMonitor()->getTransferStatus()->setAborted();
       disconnectConn(i);
       connectConn(i);
+    }
+  }
+}
+
+void SiteLogic::removeFromRecentlyListed(const std::shared_ptr<SiteRace> & race) {
+  for (std::list<std::shared_ptr<SiteRace>>::iterator it = recentlylistedraces.begin(); it != recentlylistedraces.end(); it++) {
+    if ((*it) == race) {
+      recentlylistedraces.erase(it);
+      break;
     }
   }
 }
@@ -1800,6 +1818,7 @@ RawBuffer * SiteLogic::getAggregatedRawBuffer() const {
 }
 
 void SiteLogic::raceGlobalComplete(const std::shared_ptr<SiteRace> & sr) {
+  removeFromRecentlyListed(sr);
   for (unsigned int i = 0; i < currentraces.size(); i++) {
     if (currentraces[i] == sr) {
       currentraces.erase(currentraces.begin()+i);
@@ -1952,7 +1971,7 @@ void SiteLogic::getFileListConn(int id, bool hiddenfiles) {
   }
   else {
     FileList * fl = conns[id]->newFileList();
-    global->getTransferManager()->getFileList(global->getSiteLogicManager()->getSiteLogic(this), id, hiddenfiles, fl, NULL);
+    global->getTransferManager()->getFileList(global->getSiteLogicManager()->getSiteLogic(this), id, hiddenfiles, fl);
   }
 }
 

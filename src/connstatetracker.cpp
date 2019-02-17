@@ -30,7 +30,7 @@ ConnStateTracker::~ConnStateTracker() {
 
 }
 
-void ConnStateTracker::delayedCommand(const std::string & command, int delay, const std::shared_ptr<CommandOwner> & co, bool persisting) {
+void ConnStateTracker::delayedCommand(const std::string & command, int delay, bool persisting, const std::shared_ptr<CommandOwner> & co) {
   delayedcommand.set(command, time + delay, co, persisting);
 }
 

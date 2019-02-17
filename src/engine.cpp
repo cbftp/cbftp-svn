@@ -150,7 +150,7 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & rele
       }
     }
     if (add && append) {
-      if (race->getSiteRace(*it) != NULL) {
+      if (!!race->getSiteRace(*it)) {
         continue;
       }
     }
@@ -490,8 +490,8 @@ unsigned int Engine::newTransferJobFXP(const std::string & srcsite, const Path &
 
 void Engine::removeSiteFromRace(const std::shared_ptr<Race> & race, const std::string & site) {
   if (!!race) {
-    const std::shared_ptr<SiteRace> & sr = race->getSiteRace(site);
-    if (sr != NULL) {
+    std::shared_ptr<SiteRace> sr = race->getSiteRace(site);
+    if (!!sr) {
       const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
       race->removeSite(sr);
       wipeFromScoreBoard(sr);
@@ -504,8 +504,8 @@ void Engine::removeSiteFromRace(const std::shared_ptr<Race> & race, const std::s
 
 void Engine::removeSiteFromRaceDeleteFiles(const std::shared_ptr<Race> & race, const std::string & site, bool allfiles) {
   if (!!race) {
-    const std::shared_ptr<SiteRace> & sr = race->getSiteRace(site);
-    if (sr != NULL) {
+    std::shared_ptr<SiteRace> sr = race->getSiteRace(site);
+    if (!!sr) {
       const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
       race->removeSite(sr);
       wipeFromScoreBoard(sr);
@@ -540,7 +540,7 @@ void Engine::resetRace(const std::shared_ptr<Race> & race, bool hard) {
       else {
         it->first->softReset();
       }
-      it->second->activateAll();
+      it->second->resetRace(it->first);
     }
     bool current = false;
     for (std::list<std::shared_ptr<Race> >::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
@@ -705,8 +705,7 @@ void Engine::jobFileListRefreshed(SiteLogic * sls, const std::shared_ptr<Command
       break;
     }
     case COMMANDOWNER_TRANSFERJOB: {
-      std::shared_ptr<SiteTransferJob> stj = std::static_pointer_cast<SiteTransferJob>(commandowner);
-      std::shared_ptr<TransferJob> tj = getTransferJob(stj->getId());
+      std::shared_ptr<TransferJob> tj = getTransferJob(commandowner->getId());
       refreshPendingTransferList(tj);
       break;
     }

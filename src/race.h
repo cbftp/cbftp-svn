@@ -118,7 +118,7 @@ class Race : public EventReceiver, public TransferStatusCallback {
     std::string getTimeStamp() const;
     unsigned int getTimeSpent() const;
     std::string getSiteListText() const;
-    const std::shared_ptr<SiteRace> & getSiteRace(const std::string &) const;
+    std::shared_ptr<SiteRace> getSiteRace(const std::string & site) const;
     RaceStatus getStatus() const;
     unsigned int getId() const;
     SpreadProfile getProfile() const;

@@ -56,7 +56,7 @@ private:
 public:
   ConnStateTracker();
   ~ConnStateTracker();
-  void delayedCommand(const std::string & command, int delay, const std::shared_ptr<CommandOwner> & co = nullptr, bool persisting = false);
+  void delayedCommand(const std::string & command, int delay, bool persisting = false, const std::shared_ptr<CommandOwner> & co = std::shared_ptr<CommandOwner>());
   void timePassed(int);
   int getTimePassed() const;
   void check(const std::shared_ptr<SiteRace> & sr);
