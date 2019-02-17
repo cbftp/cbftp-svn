@@ -358,7 +358,7 @@ void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
         break;
     }
     if (!isProcessing()) {
-      currentco = NULL;
+      currentco.reset();
       currentfl = NULL;
       if (isConnected()) {
         state = STATE_IDLE;
@@ -592,7 +592,10 @@ void FTPConn::reconnect() {
 }
 
 void FTPConn::doSTAT() {
-  doSTAT(NULL, new FileList(site->getUser(), currentpath));
+  state = STATE_STAT;
+  currentco.reset();
+  currentfl = new FileList(site->getUser(), currentpath);
+  sendEcho("STAT -l");
 }
 
 void FTPConn::doSTAT(const std::shared_ptr<CommandOwner> & co, FileList * filelist) {
@@ -604,7 +607,7 @@ void FTPConn::doSTAT(const std::shared_ptr<CommandOwner> & co, FileList * fileli
 
 void FTPConn::doSTATla() {
   state = STATE_STAT;
-  currentco = NULL;
+  currentco.reset();
   currentfl = new FileList(site->getUser(), currentpath);
   sendEcho("STAT -la");
 }
@@ -931,16 +934,8 @@ void FTPConn::PORTResponse() {
   }
 }
 
-void FTPConn::doCWD(const Path & path) {
-  doCWD(path, NULL, NULL);
-}
-
 void FTPConn::doCWD(const Path & path, const std::shared_ptr<CommandOwner> & co) {
-  doCWD(path, NULL, co);
-}
-
-void FTPConn::doCWD(FileList * fl) {
-  doCWD(fl->getPath(), fl, NULL);
+  doCWD(path, nullptr, co);
 }
 
 void FTPConn::doCWD(FileList * fl, const std::shared_ptr<CommandOwner> & co) {
@@ -975,16 +970,8 @@ void FTPConn::CWDResponse() {
   }
 }
 
-void FTPConn::doMKD(const Path & dir) {
-  doMKD(dir, NULL, NULL);
-}
-
 void FTPConn::doMKD(const Path & dir, const std::shared_ptr<CommandOwner> & co) {
-  doMKD(dir, NULL, co);
-}
-
-void FTPConn::doMKD(FileList * fl) {
-  doMKD(fl->getPath(), fl, NULL);
+  doMKD(dir, nullptr, co);
 }
 
 void FTPConn::doMKD(FileList * fl, const std::shared_ptr<CommandOwner> & co) {
@@ -1281,7 +1268,7 @@ const std::shared_ptr<CommandOwner> & FTPConn::currentCommandOwner() const {
 }
 
 void FTPConn::resetCurrentCommandOwner() {
-  currentco = NULL;
+  currentco.reset();
 }
 
 bool FTPConn::isProcessing() const {

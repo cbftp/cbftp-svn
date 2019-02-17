@@ -77,11 +77,13 @@ class SiteLogic : public EventReceiver {
     bool handleCommandDelete(int, bool);
     bool makeTargetDirectory(int, bool, const std::shared_ptr<CommandOwner> & co);
     std::shared_ptr<SiteRace> getRace(unsigned int id) const;
+    void removeFromRecentlyListed(const std::shared_ptr<SiteRace> & race);
   public:
     SiteLogic(const std::string &);
     ~SiteLogic();
     void runInstance();
     std::shared_ptr<SiteRace> addRace(std::shared_ptr<Race> &, const std::string &, const std::string &);
+    void resetRace(const std::shared_ptr<SiteRace> & race);
     void addTransferJob(std::shared_ptr<SiteTransferJob> & tj);
     void tick(int);
     void connectFailed(int);
