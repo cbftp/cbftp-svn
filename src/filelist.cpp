@@ -39,8 +39,8 @@ FileList::FileList(const std::string & username, const Path & path, FileListStat
 }
 
 FileList::~FileList() {
-  for (std::unordered_map<std::string, File *>::iterator it = files.begin(); it != files.end(); it++) {
-    delete it->second;
+  for (File * f : filesfirstseen) {
+    delete f;
   }
 }
 
@@ -61,6 +61,8 @@ void FileList::init(const std::string & username, const Path & path, FileListSta
   refreshedtime = 0;
   listfailures = 0;
   inscoreboard = false;
+  similarchecked = false;
+  firstsimilar = nullptr;
 }
 
 bool FileList::updateFile(const std::string & start, int touch) {
@@ -76,12 +78,17 @@ bool FileList::updateFile(const std::string & start, int touch) {
   }
   File * updatefile;
   if ((updatefile = getFileCaseSensitive(name)) != NULL) {
-    if (updatefile->getSize() == 0 && file->getSize() > 0 && !file->isDirectory()) uploadedfiles++;
     unsigned long long int oldsize = updatefile->getSize();
     unsigned long long int newsize = file->getSize();
     if (updatefile->setSize(newsize)) {
       if (!updatefile->isDirectory()) {
         totalfilesize += newsize - oldsize;
+        if (oldsize == 0 && newsize > 0) {
+          uploadedfiles++;
+        }
+        else if (oldsize > 0 && newsize == 0) {
+          uploadedfiles--;
+        }
       }
       setChanged();
       scoreboardchangedfiles.insert(name);
@@ -132,8 +139,12 @@ bool FileList::updateFile(const std::string & start, int touch) {
     delete file;
   }
   else {
-    files[name] = file;
+    filesfirstseen.push_back(file);
+    files[name] = std::make_pair(file, --filesfirstseen.end());
     lowercasefilemap[util::toLower(name)] = name;
+    if (similarchecked && !firstsimilar) {
+      checkSimilarFile(file);
+    }
     unsigned long long int filesize = file->getSize();
     if (filesize > 0 && !file->isDirectory()) {
       uploadedfiles++;
@@ -150,10 +161,6 @@ bool FileList::updateFile(const std::string & start, int touch) {
   return true;
 }
 
-void FileList::touchFile(const std::string & name, const std::string & user) {
-  touchFile(name, user, false);
-}
-
 void FileList::touchFile(const std::string & name, const std::string & user, bool upload) {
   File * file;
   if ((file = getFileCaseSensitive(name)) != NULL) {
@@ -161,8 +168,12 @@ void FileList::touchFile(const std::string & name, const std::string & user, boo
   }
   else {
     file = new File(name, user);
-    files[name] = file;
+    filesfirstseen.push_back(file);
+    files[name] = std::make_pair(file, --filesfirstseen.end());
     lowercasefilemap[util::toLower(name)] = name;
+    if (similarchecked && !firstsimilar) {
+      checkSimilarFile(file);
+    }
     if (sameOwner(username, user)) {
       owned++;
     }
@@ -177,25 +188,33 @@ void FileList::touchFile(const std::string & name, const std::string & user, boo
 }
 
 void FileList::removeFile(const std::string & name) {
-  File * f;
-  if ((f = getFileCaseSensitive(name)) != NULL) {
-    if (sameOwner(username, f->getOwner())) {
-      owned--;
-    }
-    if (f->getSize() > 0 && !f->isDirectory()) {
-      uploadedfiles--;
-      totalfilesize -= f->getSize();
-    }
-    if (f->isUploading()) {
-      uploading--;
-    }
-    delete f;
-    files.erase(name);
-    lowercasefilemap.erase(util::toLower(name));
-    recalcOwnedPercentage();
-    setChanged();
-    scoreboardchangedfiles.insert(name);
+  std::unordered_map<std::string, std::pair<File *, std::list<File *>::iterator>>::iterator it = files.find(name);
+  if (it == files.end()) {
+    return;
   }
+  File * f = it->second.first;
+  if (sameOwner(username, f->getOwner())) {
+    owned--;
+  }
+  if (f->getSize() > 0 && !f->isDirectory()) {
+    uploadedfiles--;
+    totalfilesize -= f->getSize();
+  }
+  if (f->isUploading()) {
+    uploading--;
+  }
+  filesfirstseen.erase(it->second.second);
+  files.erase(it);
+  lowercasefilemap.erase(util::toLower(name));
+  if (similarchecked && f == firstsimilar) {
+    similarchecked = false;
+    f = nullptr;
+    checkSimilar(similarpatterns);
+  }
+  delete f;
+  recalcOwnedPercentage();
+  setChanged();
+  scoreboardchangedfiles.insert(name);
 }
 
 void FileList::setFileUpdateFlag(const std::string & name,
@@ -221,7 +240,7 @@ void FileList::setFileUpdateFlag(const std::string & name,
 }
 
 File * FileList::getFile(const std::string & name) const {
-  std::unordered_map<std::string, File *>::const_iterator it = files.find(name);
+  std::unordered_map<std::string, std::pair<File *, std::list<File *>::iterator>>::const_iterator it = files.find(name);
   if (it == files.end()) {
     std::unordered_map<std::string, std::string>::const_iterator it2 = lowercasefilemap.find(util::toLower(name));
     if (it2 != lowercasefilemap.end()) {
@@ -231,15 +250,15 @@ File * FileList::getFile(const std::string & name) const {
       return NULL;
     }
   }
-  return it->second;
+  return it->second.first;
 }
 
 File * FileList::getFileCaseSensitive(const std::string & name) const {
-  std::unordered_map<std::string, File *>::const_iterator it = files.find(name);
+  std::unordered_map<std::string, std::pair<File *, std::list<File *>::iterator>>::const_iterator it = files.find(name);
   if (it == files.end()) {
     return NULL;
   }
-  return it->second;
+  return it->second.first;
 }
 
 FileListState FileList::getState() const {
@@ -267,20 +286,20 @@ void FileList::setRefreshed() {
   bumpUpdateState(UpdateState::REFRESHED);
 }
 
-std::unordered_map<std::string, File *>::iterator FileList::begin() {
-  return files.begin();
+std::list<File *>::iterator FileList::begin() {
+  return filesfirstseen.begin();
 }
 
-std::unordered_map<std::string, File *>::iterator FileList::end() {
-  return files.end();
+std::list<File *>::iterator FileList::end() {
+  return filesfirstseen.end();
 }
 
-std::unordered_map<std::string, File *>::const_iterator FileList::begin() const {
-  return files.begin();
+std::list<File *>::const_iterator FileList::begin() const {
+  return filesfirstseen.begin();
 }
 
-std::unordered_map<std::string, File *>::const_iterator FileList::end() const {
-  return files.end();
+std::list<File *>::const_iterator FileList::end() const {
+  return filesfirstseen.end();
 }
 
 bool FileList::contains(const std::string & name) const {
@@ -302,8 +321,8 @@ bool FileList::containsPattern(const std::string & pattern, bool dir) const {
     newpattern = pattern.substr(slashpos + 1);
     usedpattern = &newpattern;
   }
-  for (std::unordered_map<std::string, File *>::const_iterator it = files.begin(); it != files.end(); it++) {
-    if (it->second->isDirectory() == dir && util::wildcmp(usedpattern->c_str(), it->first.c_str())) {
+  for (File * f : filesfirstseen) {
+    if (f->isDirectory() == dir && util::wildcmp(usedpattern->c_str(), f->getName().c_str())) {
       return true;
     }
   }
@@ -318,16 +337,110 @@ bool FileList::containsPatternBefore(const std::string & pattern, bool dir, cons
     newpattern = pattern.substr(slashpos + 1);
     usedpattern = &newpattern;
   }
-  for (std::unordered_map<std::string, File *>::const_iterator it = files.begin(); it != files.end(); it++) {
-    if (it->second->isDirectory() != dir) {
+  for (File * f : filesfirstseen) {
+    const std::string & name = f->getName();
+    if (f->isDirectory() != dir) {
       continue;
     }
-    if (it->first == item) {
+    if (name == item) {
       return false;
     }
-    if (util::wildcmp(usedpattern->c_str(), it->first.c_str())) {
+    if (util::wildcmp(usedpattern->c_str(), name.c_str())) {
       return true;
     }
+  }
+  return false;
+}
+
+bool FileList::containsUnsimilar(const std::string & item) const {
+  assert (similarchecked);
+  if (!firstsimilar) {
+    return false;
+  }
+  const std::string & similar = firstsimilar->getName();
+  return checkUnsimilar(item, similar);
+}
+
+bool FileList::checkUnsimilar(const std::string & item, const std::string & similar) {
+  if (item.empty() || similar.empty()) {
+    return false;
+  }
+  size_t itemlen = item.length();
+  size_t similarlen = similar.length();
+  size_t itemextensionpos = item.rfind(".");
+  size_t similarextensionpos = similar.rfind(".");
+  if (itemextensionpos == std::string::npos) {
+    itemextensionpos = itemlen;
+  }
+  if (similarextensionpos == std::string::npos) {
+    similarextensionpos = similarlen;
+  }
+  bool numberingdiff = false;
+  bool numberingdiffpassed = false;
+  size_t itempos = 0;
+  size_t similarpos = 0;
+  while (itempos < itemextensionpos || similarpos < similarextensionpos) {
+    if (itempos == itemextensionpos) {
+      if (!numberingdiffpassed && isdigit(similar[similarpos])) {
+        numberingdiff = true;
+        ++similarpos;
+        continue;
+      }
+      return true;
+    }
+    if (similarpos == similarextensionpos) {
+      if (!numberingdiffpassed && isdigit(item[itempos])) {
+        numberingdiff = true;
+        ++itempos;
+        continue;
+      }
+      return true;
+    }
+    if (isdigit(item[itempos]) && numberingdiffpassed) {
+      return true;
+    }
+    if (item[itempos] == similar[similarpos]) {
+      itempos++;
+      similarpos++;
+    }
+    else {
+      if (numberingdiffpassed) {
+        return true;
+      }
+      bool either = false;
+      if (isdigit(item[itempos])) {
+        itempos++;
+        either = true;
+      }
+      if (isdigit(similar[similarpos])) {
+        similarpos++;
+        either = true;
+      }
+      if (either && !numberingdiff) {
+        numberingdiff = true;
+      }
+      if (!either) {
+        if (numberingdiff) {
+          numberingdiffpassed = true;
+        }
+        else {
+          return true;
+        }
+      }
+    }
+  }
+  bool extensiondiff = false;
+  while (itempos < itemlen && similarpos < similarlen) {
+    if (item[itempos++] != similar[similarpos++]) {
+      extensiondiff = true;
+      break;
+    }
+  }
+  if (!extensiondiff && (itempos < itemlen || similarpos < similarlen)) {
+    extensiondiff = true;
+  }
+  if (numberingdiff && extensiondiff) {
+    return true;
   }
   return false;
 }
@@ -345,9 +458,9 @@ unsigned int FileList::getNumUploadedFiles() const {
 }
 
 bool FileList::hasSFV() const {
-  std::unordered_map<std::string, File *>::const_iterator it;
-  for (it = files.begin(); it != files.end(); it++) {
-    if(it->second->getExtension() == "sfv" && it->second->getSize() > 0) {
+  std::list<File *>::const_iterator it;
+  for (File * file : filesfirstseen) {
+    if(file->getExtension() == "sfv" && file->getSize() > 0) {
       return true;
     }
   }
@@ -368,38 +481,41 @@ const Path & FileList::getPath() const {
 
 void FileList::cleanSweep(int touch) {
   std::list<std::string> eraselist;
-  std::unordered_map<std::string, File *>::iterator it;
-  for (it = files.begin(); it != files.end(); it++) {
-    File * f = it->second;
+  for (File * f : filesfirstseen) {
     if (f->getTouch() != touch && !f->isUploading()) {
-      eraselist.push_back(it->first);
+      eraselist.push_back(f->getName());
     }
   }
   if (eraselist.size() > 0) {
-    for (std::list<std::string>::iterator it2 = eraselist.begin(); it2 != eraselist.end(); it2++) {
-      removeFile(*it2);
+    for (std::list<std::string>::iterator it = eraselist.begin(); it != eraselist.end(); it++) {
+      removeFile(*it);
     }
     maxfilesize = 0;
-    for (it = files.begin(); it != files.end(); it++) {
-      if (it->second->getSize() > maxfilesize) maxfilesize = it->second->getSize();
+    for (File * f : filesfirstseen) {
+      if (!f->isDirectory() && f->getSize() > maxfilesize) {
+        maxfilesize = f->getSize();
+      }
     }
     setChanged();
   }
 }
 
 void FileList::flush() {
-  std::unordered_map<std::string, File *>::iterator it;
-  for (it = files.begin(); it != files.end(); it++) {
-    delete (*it).second;
+  for (File * f : filesfirstseen) {
+    delete f;
   }
   files.clear();
   lowercasefilemap.clear();
+  filesfirstseen.clear();
   maxfilesize = 0;
   totalfilesize = 0;
   uploadedfiles = 0;  
   owned = 0;
   ownpercentage = 100;
   uploading = 0;
+  similarchecked = false;
+  similarpatterns.clear();
+  firstsimilar = nullptr;
 }
 
 void FileList::recalcOwnedPercentage() {
@@ -525,4 +641,35 @@ bool FileList::inScoreBoard() const {
 
 void FileList::setInScoreBoard() {
   inscoreboard = true;
+}
+
+bool FileList::similarChecked() const {
+  return similarchecked;
+}
+
+void FileList::checkSimilar(const std::list<std::string> & patterns) {
+  similarchecked = true;
+  similarpatterns = patterns;
+  for (File * f : filesfirstseen) {
+    if (checkSimilarFile(f)) {
+      return;
+    }
+  }
+}
+
+bool FileList::checkSimilarFile(File * f) {
+  for (const std::string & pattern : similarpatterns) {
+    if (util::wildcmp(pattern.c_str(), f->getName().c_str())) {
+      firstsimilar = f;
+      return true;
+    }
+  }
+  return false;
+}
+
+std::string FileList::getFirstSimilar() const {
+  if (firstsimilar) {
+    return firstsimilar->getName();
+  }
+  return "";
 }

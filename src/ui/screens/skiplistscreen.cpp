@@ -232,6 +232,9 @@ void SkipListScreen::update() {
     else if (match.action == SKIPLIST_UNIQUE) {
       allowstring = "UNIQUE";
     }
+    else if (match.action == SKIPLIST_SIMILAR) {
+      allowstring = "SIMILAR";
+    }
     ui->printStr(testtype->getRow(), testtype->getCol() + 20, allowstring);
     std::string matchstring = "Match: " + (match.matched ? match.matchpattern : "default");
     ui->printStr(testtype->getRow(), testtype->getCol() + 30, matchstring);
@@ -440,6 +443,7 @@ void SkipListScreen::addPatternLine(int y, std::string pattern, bool file, bool 
   msota->addOption("Allow", SKIPLIST_ALLOW);
   msota->addOption("Deny", SKIPLIST_DENY);
   msota->addOption("Unique", SKIPLIST_UNIQUE);
+  msota->addOption("Similar", SKIPLIST_SIMILAR);
   msota->setOption(static_cast<int>(action));
   msal->addElement(msota, 4, RESIZE_REMOVE);
   msota = table.addTextArrow(y, 5, "scope", "");

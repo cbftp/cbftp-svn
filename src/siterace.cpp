@@ -224,12 +224,13 @@ void SiteRace::updateNumFilesUploaded() {
 
 void SiteRace::addNewDirectories() {
   FileList * filelist = getFileListForPath("");
-  std::unordered_map<std::string, File *>::iterator it;
+  std::list<File *>::iterator it;
   for(it = filelist->begin(); it != filelist->end(); it++) {
-    File * file = it->second;
+    File * file = *it;
+    const std::string & filename = file->getName();
     if (file->isDirectory()) {
-      SkipListMatch match = skiplist.check(it->first, true, true, &race->getSectionSkipList());
-      if (match.action == SKIPLIST_DENY || (match.action == SKIPLIST_UNIQUE && filelist->containsPatternBefore(match.matchpattern, true, it->first))) {
+      SkipListMatch match = skiplist.check(filename, true, true, &race->getSectionSkipList());
+      if (match.action == SKIPLIST_DENY || (match.action == SKIPLIST_UNIQUE && filelist->containsPatternBefore(match.matchpattern, true, filename))) {
         continue;
       }
       FileList * fl;
@@ -240,7 +241,7 @@ void SiteRace::addNewDirectories() {
                fl->getState() == FileListState::FAILED)
       {
         fl->setExists();
-        race->reportNewSubDir(shared_from_this(), it->first);
+        race->reportNewSubDir(shared_from_this(), filename);
       }
     }
   }

@@ -51,11 +51,11 @@ SkipListMatch::SkipListMatch(SkipListAction action, bool matched, const std::str
 
 }
 
-SkipList::SkipList() : defaultallow(true), globalskip(NULL) {
+SkipList::SkipList() : defaultallow(true), globalskip(nullptr), similarpatternsset(false) {
   addDefaultEntries();
 }
 
-SkipList::SkipList(const SkipList * globalskip) : defaultallow(true), globalskip(globalskip) {
+SkipList::SkipList(const SkipList * globalskip) : defaultallow(true), globalskip(globalskip), similarpatternsset(false) {
   assert(globalskip != NULL);
 }
 
@@ -75,14 +75,6 @@ std::list<SkiplistItem>::const_iterator SkipList::entriesBegin() const {
 
 std::list<SkiplistItem>::const_iterator SkipList::entriesEnd() const {
   return entries.end();
-}
-
-SkipListMatch SkipList::check(const std::string & element, const bool dir) const {
-  return check(element, dir, true);
-}
-
-SkipListMatch SkipList::check(const std::string & element, const bool dir, const bool inrace) const {
-  return check(element, dir, inrace, NULL);
 }
 
 SkipListMatch SkipList::check(const std::string & element, const bool dir, const bool inrace, const SkipList * fallthrough) const {
@@ -150,6 +142,7 @@ void SkipList::setDefaultAllow(bool defaultallow) {
 
 void SkipList::wipeCache() {
   matchcache.clear();
+  similarpatternsset = false;
   if (!globalskip) {
     global->getEngine()->clearSkipListCaches();
   }
@@ -157,4 +150,25 @@ void SkipList::wipeCache() {
 
 void SkipList::setGlobalSkip(SkipList * skiplist) {
   globalskip = skiplist;
+}
+
+const std::list<std::string> & SkipList::getSimilarPatterns(const SkipList * fallthrough) const {
+  if (!similarpatternsset) {
+    similarpatterns.clear();
+    for (const SkiplistItem & entry : entries) {
+      if (entry.getAction() == SKIPLIST_SIMILAR && entry.matchFile()) {
+        similarpatterns.push_back(entry.matchPattern());
+      }
+    }
+    if (fallthrough) {
+      const std::list<std::string> & parent = fallthrough->getSimilarPatterns();
+      similarpatterns.insert(similarpatterns.end(), parent.begin(), parent.end());
+    }
+    else if (globalskip) {
+      const std::list<std::string> & parent = globalskip->getSimilarPatterns();
+      similarpatterns.insert(similarpatterns.end(), parent.begin(), parent.end());
+    }
+    similarpatternsset = true;
+  }
+  return similarpatterns;
 }

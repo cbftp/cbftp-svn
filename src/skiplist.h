@@ -21,6 +21,8 @@ private:
   mutable std::unordered_map<std::string, SkipListMatch> matchcache;
   bool defaultallow;
   const SkipList * globalskip;
+  mutable std::list<std::string> similarpatterns;
+  mutable bool similarpatternsset;
   void addDefaultEntries();
 public:
   SkipList();
@@ -29,12 +31,11 @@ public:
   void clearEntries();
   std::list<SkiplistItem>::const_iterator entriesBegin() const;
   std::list<SkiplistItem>::const_iterator entriesEnd() const;
-  SkipListMatch check(const std::string &, const bool) const;
-  SkipListMatch check(const std::string &, const bool, const bool) const;
-  SkipListMatch check(const std::string &, const bool, const bool, const SkipList *) const;
+  SkipListMatch check(const std::string & element, const bool dir, const bool inrace = true, const SkipList * fallthrough = nullptr) const;
   bool defaultAllow() const;
   unsigned int size() const;
   void setDefaultAllow(bool);
   void wipeCache();
   void setGlobalSkip(SkipList *);
+  const std::list<std::string> & getSimilarPatterns(const SkipList * fallthrough = nullptr) const;
 };

@@ -379,9 +379,9 @@ std::shared_ptr<LocalFileList> TransferJob::findLocalFileList(const std::string 
 }
 
 void TransferJob::addSubDirectoryFileLists(std::unordered_map<std::string, FileList *> & filelists, FileList * filelist, const Path & subpath) {
-  std::unordered_map<std::string, File *>::iterator it;
+  std::list<File *>::iterator it;
   for(it = filelist->begin(); it != filelist->end(); it++) {
-    File * file = it->second;
+    File * file = *it;
     if (!file->isDirectory()) {
       continue;
     }

@@ -292,14 +292,14 @@ void UIFileList::parse(FileList * filelist) {
   currentcursored = NULL;
   separators = false;
   filters.clear();
-  std::unordered_map<std::string, File *>::iterator it;
+  std::list<File *>::iterator it;
   int size = filelist->getSize();
   files.reserve(size);
   sortedfiles.reserve(size);
   for (it = filelist->begin(); it != filelist->end(); it++) {
-    files.push_back(UIFile(it->second));
-    totalsize += it->second->getSize();
-    if (it->second->isDirectory()) {
+    files.push_back(UIFile(*it));
+    totalsize += (*it)->getSize();
+    if ((*it)->isDirectory()) {
       numdirs++;
     }
     else {

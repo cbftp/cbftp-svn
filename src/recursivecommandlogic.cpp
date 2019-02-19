@@ -82,15 +82,15 @@ void RecursiveCommandLogic::addFileList(FileList * fl) {
     return;
   }
   deletefiles.push_back(std::pair<Path, bool>(path, true));
-  for (std::unordered_map<std::string, File *>::iterator it = fl->begin(); it != fl->end(); it++) {
-    if (it->second->isDirectory()) {
-      wantedlists.push_back(path / it->first);
+  for (std::list<File *>::iterator it = fl->begin(); it != fl->end(); it++) {
+    if ((*it)->isDirectory()) {
+      wantedlists.push_back(path / (*it)->getName());
     }
     else {
-      if (mode == RCL_DELETEOWN && it->second->getOwner() != user) {
+      if (mode == RCL_DELETEOWN && (*it)->getOwner() != user) {
         continue;
       }
-      deletefiles.push_back(std::pair<Path, bool>(path / it->first, false));
+      deletefiles.push_back(std::pair<Path, bool>(path / (*it)->getName(), false));
     }
   }
   if (!wantedlists.size()) {
