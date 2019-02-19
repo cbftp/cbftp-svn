@@ -193,9 +193,17 @@ The skiplist works by matching items against the list from the top to the
 bottom. If a rule that matches the item is found, the action of that rule
 is applied to the item, and the remainder of the skiplist is ignored.
 
-Possible actions are Allow, Deny and Unique. Unique means that only the first
+Possible actions are Allow, Deny, Unique and Similar.
+
+Unique means that only the first
 file found in a directory that matches the rule will be allowed - others
 will be skipped/denied.
+
+Similar means that the file will only be allowed if its name is similar enough
+to other files in the directory matching any similar-rule.
+The criteria is that only the file extension OR a the last numbering sequence
+in the file names may differ, not both and not anything else.
+Similar-rules only affect files in race.
 
 An item is normally a file name or a directory name. There are buttons
 available on each entry in the skiplist if it should match files and/or
@@ -243,6 +251,12 @@ Only allow one nfo and sfv file within each directory:
 
 Skip files with spaces in the name everywhere:
 * *  [X]  [X]  Deny  Allround
+
+Skip files that don't belong in the directory through Similar-rules:
+*.r??       [X]  [ ]  Similar  In race
+*.s??       [X]  [ ]  Similar  In race
+*.t??       [X]  [ ]  Similar  In race
+*.u??       [X]  [ ]  Similar  In race
 
 And again, note that _the first match applies_! If the skiplist does not
 behave as you expect it to do, then you will need to think through if there

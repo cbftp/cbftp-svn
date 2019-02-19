@@ -10,7 +10,8 @@ enum Scope {
 enum SkipListAction {
   SKIPLIST_ALLOW,
   SKIPLIST_DENY,
-  SKIPLIST_UNIQUE
+  SKIPLIST_UNIQUE,
+  SKIPLIST_SIMILAR
 };
 
 class SkiplistItem {

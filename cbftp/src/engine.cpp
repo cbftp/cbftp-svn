@@ -793,10 +793,6 @@ void Engine::estimateRaceSizes() {
   }
 }
 
-void Engine::estimateRaceSize(const std::shared_ptr<Race> & race) {
-  estimateRaceSize(race, false);
-}
-
 void Engine::estimateRaceSize(const std::shared_ptr<Race> & race, bool forceupdate) {
   for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator its = race->begin(); its != race->end(); its++) {
     const std::shared_ptr<SiteRace> & srs = its->first;
@@ -837,10 +833,12 @@ bool setContainsPattern(const std::unordered_set<std::string> & uniques, const s
 
 void Engine::reportCurrentSize(const SkipList & siteskiplist, const SkipList & sectionskiplist, const std::shared_ptr<SiteRace> & srs, FileList * fls, bool final) {
   std::unordered_set<std::string> uniques;
-  std::unordered_map<std::string, File *>::const_iterator itf;
+  std::list<File *>::const_iterator itf;
   std::string subpath = srs->getSubPathForFileList(fls);
+  bool similar = false;
+  std::string firstsimilar;
   for (itf = fls->begin(); itf != fls->end(); itf++) {
-    File * file = itf->second;
+    File * file = *itf;
     if (file->isDirectory()) {
       continue;
     }
@@ -867,8 +865,19 @@ void Engine::reportCurrentSize(const SkipList & siteskiplist, const SkipList & s
     }
     Path prepend = subpath;
     SkipListMatch match = siteskiplist.check((prepend / filename).toString(), false, true, &sectionskiplist);
-    if (match.action == SKIPLIST_DENY || (match.action == SKIPLIST_UNIQUE && setContainsPattern(uniques, match.matchpattern))) {
+    if (match.action == SKIPLIST_DENY ||
+        (match.action == SKIPLIST_UNIQUE && setContainsPattern(uniques, match.matchpattern)))
+    {
       continue;
+    }
+    if (match.action == SKIPLIST_SIMILAR) {
+      if (!similar) {
+        firstsimilar = filename;
+        similar = true;
+      }
+      else if (FileList::checkUnsimilar(filename, firstsimilar)) {
+        continue;
+      }
     }
     uniques.insert(filename);
   }
@@ -929,17 +938,26 @@ void Engine::addToScoreBoardForPair(const std::shared_ptr<SiteLogic> & sls, cons
   if (avgspeed > maxavgspeed) {
     avgspeed = maxavgspeed;
   }
-  std::unordered_map<std::string, File *>::const_iterator itf;
+  std::list<File *>::const_iterator itf;
   for (itf = fls->begin(); itf != fls->end(); itf++) {
-    const std::string & name = itf->first;
-    File * f = itf->second;
+    File * f = *itf;
+    const std::string & name = f->getName();
     if (fld->contains(name) || f->isDirectory() || f->getSize() == 0) {
       continue;
     }
     SkipListMatch filematch = dstskip.check((subpath / name).toString(), false, true, &secskip);
-    if (filematch.action == SKIPLIST_DENY || (filematch.action == SKIPLIST_UNIQUE &&
-                                              fld->containsPatternBefore(filematch.matchpattern, false, name))) {
+    if (filematch.action == SKIPLIST_DENY ||
+        (filematch.action == SKIPLIST_UNIQUE && fld->containsPattern(filematch.matchpattern, false)))
+    {
       continue;
+    }
+    if (filematch.action == SKIPLIST_SIMILAR) {
+      if (!fld->similarChecked()) {
+        fld->checkSimilar(dstskip.getSimilarPatterns(&secskip));
+      }
+      if (fld->containsUnsimilar(name)) {
+        continue;
+      }
     }
     PrioType p = getPrioType(f);
     unsigned long long int filesize = f->getSize();
@@ -1019,8 +1037,17 @@ void Engine::updateScoreBoard() {
           }
           SkipListMatch filematch = skip.check((subpathpath / name).toString(), false, true, &secskip);
           if (filematch.action == SKIPLIST_DENY || (filematch.action == SKIPLIST_UNIQUE &&
-                                                    fl->containsPatternBefore(filematch.matchpattern, false, name))) {
+                                                    fl->containsPattern(filematch.matchpattern, false)))
+          {
             continue;
+          }
+          if (filematch.action == SKIPLIST_SIMILAR) {
+            if (!fl->similarChecked()) {
+              fl->checkSimilar(skip.getSimilarPatterns(&secskip));
+            }
+            if (fl->containsUnsimilar(name)) {
+              continue;
+            }
           }
           SitePriority priority = site->getPriority();
           avgspeed = cmpsite->getAverageSpeed(site->getName());
@@ -1044,8 +1071,17 @@ void Engine::updateScoreBoard() {
         }
         SkipListMatch filematch = cmpskip.check((subpathpath / name).toString(), false, true, &secskip);
         if (filematch.action == SKIPLIST_DENY || (filematch.action == SKIPLIST_UNIQUE &&
-                                                  cmpfl->containsPatternBefore(filematch.matchpattern, false, name))) {
+                                                  cmpfl->containsPattern(filematch.matchpattern, false)))
+        {
           continue;
+        }
+        if (filematch.action == SKIPLIST_SIMILAR) {
+          if (!cmpfl->similarChecked()) {
+            cmpfl->checkSimilar(cmpskip.getSimilarPatterns(&secskip));
+          }
+          if (cmpfl->containsUnsimilar(name)) {
+            continue;
+          }
         }
         PrioType p = getPrioType(f);
         unsigned long long int filesize = f->getSize();
@@ -1087,26 +1123,28 @@ void Engine::refreshPendingTransferList(std::shared_ptr<TransferJob> & tj) {
       for (it2 = tj->srcFileListsBegin(); it2 != tj->srcFileListsEnd(); it2++) {
         FileList * srclist = it2->second;
         std::shared_ptr<LocalFileList> dstlist = tj->findLocalFileList(it2->first);
-        for (std::unordered_map<std::string, File *>::iterator srcit = srclist->begin(); srcit != srclist->end(); srcit++) {
-          if ((it2->first != "" || srcit->first == tj->getSrcFileName()) &&
-              !srcit->second->isDirectory() && srcit->second->getSize() > 0)
+        for (std::list<File *>::iterator srcit = srclist->begin(); srcit != srclist->end(); srcit++) {
+          File * f = *srcit;
+          const std::string & filename = f->getName();
+          if ((it2->first != "" || filename == tj->getSrcFileName()) &&
+              !f->isDirectory() && f->getSize() > 0)
           {
             std::unordered_map<std::string, LocalFile>::const_iterator dstit;
             if (!dstlist) {
               dstlist = tj->wantedLocalDstList(it2->first);
             }
-            dstit = dstlist->find(srcit->first);
-            if (tj->hasFailedTransfer((Path(dstlist->getPath()) / srcit->first).toString())) {
+            dstit = dstlist->find(filename);
+            if (tj->hasFailedTransfer((Path(dstlist->getPath()) / filename).toString())) {
               continue;
             }
             const Path subpath = it2->first;
             if (!dstlist || dstit == dstlist->end() || dstit->second.getSize() == 0) {
-              PendingTransfer p(tj->getSrc(), srclist, srcit->first, dstlist, srcit->first);
+              PendingTransfer p(tj->getSrc(), srclist, filename, dstlist, filename);
               addPendingTransfer(list, p);
-              tj->addPendingTransfer(subpath / srcit->first, srcit->second->getSize());
+              tj->addPendingTransfer(subpath / filename, f->getSize());
             }
             else {
-              tj->targetExists(subpath / srcit->first);
+              tj->targetExists(subpath / filename);
             }
           }
         }
@@ -1150,11 +1188,12 @@ void Engine::refreshPendingTransferList(std::shared_ptr<TransferJob> & tj) {
         if (dstlist == NULL || dstlist->getState() == FileListState::UNKNOWN || dstlist->getState() == FileListState::EXISTS) {
           continue;
         }
-        for (std::unordered_map<std::string, File *>::iterator srcit = srclist->begin(); srcit != srclist->end(); srcit++) {
-          if ((it2->first != "" || srcit->first == tj->getSrcFileName()) &&
-              !srcit->second->isDirectory() && srcit->second->getSize() > 0)
+        for (std::list<File *>::iterator srcit = srclist->begin(); srcit != srclist->end(); srcit++) {
+          File * f = *srcit;
+          const std::string & filename = f->getName();
+          if ((it2->first != "" || filename == tj->getSrcFileName()) &&
+              !f->isDirectory() && f->getSize() > 0)
           {
-            std::string filename = srcit->first;
             const Path subpath = it2->first;
             if (dstlist->getFile(filename) == NULL) {
               if (tj->hasFailedTransfer((Path(dstlist->getPath()) / filename).toString())) {
@@ -1163,7 +1202,7 @@ void Engine::refreshPendingTransferList(std::shared_ptr<TransferJob> & tj) {
               PendingTransfer p(tj->getSrc(), srclist, filename, tj->getDst(), dstlist, filename);
               addPendingTransfer(list, p);
 
-              tj->addPendingTransfer(subpath / filename, srcit->second->getSize());
+              tj->addPendingTransfer(subpath / filename, f->getSize());
             }
             else {
               tj->targetExists(subpath / filename);
@@ -1208,8 +1247,15 @@ void Engine::issueOptimalTransfers() {
       sbe->setSkipChecked();
       SkipListMatch match = sbe->getDestination()->getSite()->getSkipList().check(
           (Path(sbe->subDir()) / filename).toString(), false, true, &sbe->getRace()->getSectionSkipList());
-      if (match.action == SKIPLIST_UNIQUE &&
-          sbe->getDestinationFileList()->containsPatternBefore(match.matchpattern, false, filename))
+      if (match.action == SKIPLIST_SIMILAR) {
+        if (!sbe->getDestinationFileList()->similarChecked()) {
+          sbe->getDestinationFileList()->checkSimilar(
+              sbe->getDestination()->getSite()->getSkipList().getSimilarPatterns(&sbe->getRace()->getSectionSkipList()));
+        }
+      }
+      if ((match.action == SKIPLIST_UNIQUE &&
+          sbe->getDestinationFileList()->containsPattern(match.matchpattern, false)) ||
+          (match.action == SKIPLIST_SIMILAR && sbe->getDestinationFileList()->containsUnsimilar(filename)))
       {
         removelist.emplace_back(sbe->fileName(), sbe->getSourceFileList(),
                                 sbe->getDestinationFileList());

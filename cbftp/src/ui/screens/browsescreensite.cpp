@@ -131,9 +131,16 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
       sectionskiplist = &section->getSkipList();
     }
     SkipListMatch match = site->getSkipList().check((prepend / uifile->getName()).toString(), isdir, withinraceskiplistreach, sectionskiplist);
+    if (match.action == SKIPLIST_SIMILAR) {
+      if (!filelist->similarChecked()) {
+        filelist->checkSimilar(site->getSkipList().getSimilarPatterns(sectionskiplist));
+      }
+    }
     bool allowed = !(match.action == SKIPLIST_DENY ||
                     (match.action == SKIPLIST_UNIQUE &&
-                     filelist->containsPatternBefore(match.matchpattern, isdir, uifile->getName())));
+                     filelist->containsPatternBefore(match.matchpattern, isdir, uifile->getName())) ||
+                    (match.action == SKIPLIST_SIMILAR &&
+                     filelist->containsUnsimilar(uifile->getName())));
     if (isdir) {
       if (allowed) {
         prepchar = "#";

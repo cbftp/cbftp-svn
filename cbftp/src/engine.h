@@ -95,8 +95,7 @@ public:
   std::shared_ptr<Race> newSpreadJob(int, const std::string &, const std::string &, const std::list<std::string> &);
   std::shared_ptr<Race> newSpreadJob(int, const std::string &, const std::string &);
   void estimateRaceSizes();
-  void estimateRaceSize(const std::shared_ptr<Race> &);
-  void estimateRaceSize(const std::shared_ptr<Race> &, bool);
+  void estimateRaceSize(const std::shared_ptr<Race> &, bool forceupdate = false);
   void reportCurrentSize(const SkipList &, const SkipList &, const std::shared_ptr<SiteRace> & srs, FileList *, bool final);
   void addToScoreBoard(FileList * fl, const std::shared_ptr<SiteRace> & sr, const std::shared_ptr<SiteLogic> & sl);
   void addToScoreBoardForPair(const std::shared_ptr<SiteLogic> & sls,
