@@ -83,7 +83,7 @@ SiteLogic::SiteLogic(const std::string & sitename) :
   slotsdn(0),
   slotsup(0),
   available(0),
-  ptrack(new PotentialTracker(slotsdn)),
+  ptrack(new PotentialTracker(site->getMaxDown())),
   loggedin(0),
   requestidcounter(0),
   poke(false),
