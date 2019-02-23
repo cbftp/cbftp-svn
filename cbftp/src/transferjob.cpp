@@ -179,7 +179,7 @@ void TransferJob::init(unsigned int id, TransferJobType type, const std::shared_
   this->dstfile = dstfile;
   status = TRANSFERJOB_QUEUED;
   almostdone = false;
-  slots = 1;
+  slots = !!src ? src->getSite()->getMaxDownTransferJob() : 1;
   srclisttarget = NULL;
   dstlisttarget = NULL;
   expectedfinalsize = 0;
@@ -430,7 +430,7 @@ int TransferJob::maxPossibleSlots() const {
       return dst->getSite()->getMaxUp();
     case TRANSFERJOB_FXP:
     case TRANSFERJOB_DOWNLOAD:
-      return src->getSite()->getMaxDown();
+      return src->getSite()->getMaxDownTransferJob();
   }
   return 0;
 }

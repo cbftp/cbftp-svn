@@ -135,7 +135,7 @@ void ViewFileScreen::redraw() {
         sitelogic->finishRequest(requestid);
         const Path & temppath = global->getLocalStorage()->getTempPath();
         std::shared_ptr<LocalFileList> localfl = global->getLocalStorage()->getLocalFileList(temppath);
-        ts = global->getTransferManager()->suggestDownload(file, sitelogic, filelist, localfl, NULL);
+        ts = global->getTransferManager()->suggestDownload(file, sitelogic, filelist, localfl);
         if (!!ts) {
           state = ViewFileState::DOWNLOADING;
           ts->setAwaited(true);

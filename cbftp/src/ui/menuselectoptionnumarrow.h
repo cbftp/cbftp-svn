@@ -15,5 +15,6 @@ public:
   bool activate();
   void deactivate();
   int getData() const;
+  void setData(int value);
   std::string getLegendText() const;
 };

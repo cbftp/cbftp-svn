@@ -30,4 +30,5 @@ private:
   std::shared_ptr<Site> site;
   std::shared_ptr<Site> modsite;
   std::string operation;
+  bool slotsupdated;
 };

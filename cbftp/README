@@ -388,6 +388,16 @@ Field summary:
   to perform. Enter 0 for unlimited, or same as the number of logins.
 - Download slots: The number of simultaneous downloads that the site allows
   you to perform. Enter 0 for unlimited, or same as the number of logins.
+- Advanced slot configuration contains the following additional options:
+  - Leave one slot free: Useful if you want to be able to list dirs or issue
+    commands on the site with immediate response even while jobs are running.
+  - Download slots on pre: On jobs that match the affil list, apply this
+    amount of download slots instead.
+  - Download slots on complete spread job: For a spread job that has completed
+    on this site, apply this amount of download slots instead.
+  - Download slots on transfer jobs: The number of download slots available
+    for transfer jobs, and also the default number of slots to use when
+    starting them.
 - AUTH SSL: Whether the site should be connected to securely with SSL. Note
   that not all FTP servers support this - it depends on the server whether it
   works or not.

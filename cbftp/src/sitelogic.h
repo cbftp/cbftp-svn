@@ -25,6 +25,13 @@ class Path;
 class SiteTransferJob;
 class FileListData;
 
+enum class TransferType {
+  REGULAR,
+  PRE,
+  COMPLETE,
+  TRANSFERJOB
+};
+
 class SiteLogic : public EventReceiver {
   private:
     std::shared_ptr<Site> site;
@@ -35,8 +42,6 @@ class SiteLogic : public EventReceiver {
     std::list<std::shared_ptr<SiteTransferJob> > transferjobs;
     RawBuffer * rawcommandrawbuf;
     RawBuffer * aggregatedrawbuf;
-    unsigned int maxslotsup;
-    unsigned int maxslotsdn;
     int slotsdn;
     int slotsup;
     int available;
@@ -112,7 +117,7 @@ class SiteLogic : public EventReceiver {
     bool lockUploadConn(FileList *, int *, const std::shared_ptr<CommandOwner> &, TransferMonitor *);
     void returnConn(int, bool);
     void setNumConnections(unsigned int);
-    bool downloadSlotAvailable() const;
+    bool downloadSlotAvailable(TransferType type = TransferType::REGULAR) const;
     bool uploadSlotAvailable() const;
     int slotsAvailable() const;
     int getCurrLogins() const;
@@ -130,7 +135,7 @@ class SiteLogic : public EventReceiver {
     void raceGlobalComplete(const std::shared_ptr<SiteRace> & sr);
     void raceLocalComplete(const std::shared_ptr<SiteRace> & sr, int uploadslotsleft, bool reportdone = true);
     void transferComplete(int, bool isdownload);
-    bool getSlot(bool);
+    bool getSlot(bool isdownload, TransferType type);
     int requestFileList(const Path &);
     int requestRawCommand(const std::string &);
     int requestRawCommand(const Path &, const std::string &, bool);

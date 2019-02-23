@@ -739,7 +739,9 @@ bool Engine::transferJobActionRequest(const std::shared_ptr<SiteTransferJob> & s
     switch (pt.type()) {
       case PENDINGTRANSFER_DOWNLOAD:
       {
-        if (!pt.getSrc()->downloadSlotAvailable()) return false;
+        if (!pt.getSrc()->downloadSlotAvailable(TransferType::TRANSFERJOB)) {
+          return false;
+        }
         std::shared_ptr<TransferStatus> ts = global->getTransferManager()->suggestDownload(pt.getSrcFileName(),
             pt.getSrc(), pt.getSrcFileList(), pt.getLocalFileList(), tj->getSrcTransferJob());
         if (!!ts) {
@@ -761,8 +763,12 @@ bool Engine::transferJobActionRequest(const std::shared_ptr<SiteTransferJob> & s
       }
       case PENDINGTRANSFER_FXP:
       {
-        if (!pt.getSrc()->downloadSlotAvailable()) return false;
-        if (!pt.getDst()->uploadSlotAvailable()) return false;
+        if (!pt.getSrc()->downloadSlotAvailable(TransferType::TRANSFERJOB)) {
+          return false;
+        }
+        if (!pt.getDst()->uploadSlotAvailable()) {
+          return false;
+        }
         if (pt.getDst() == pt.getSrc() && pt.getDst()->slotsAvailable() < 2) {
           pt.getDst()->haveConnectedActivate(2);
           return false;
@@ -1272,7 +1278,14 @@ void Engine::issueOptimalTransfers() {
     if (!sls->potentialCheck(sbe->getScore())) {
       continue;
     }
-    if (!sls->downloadSlotAvailable()) {
+    TransferType type(TransferType::REGULAR);
+    if (sbe->getSourceSiteRace()->isAffil()) {
+      type = TransferType::PRE;
+    }
+    else if (sbe->getSourceSiteRace()->isDone()) {
+      type = TransferType::COMPLETE;
+    }
+    if (!sls->downloadSlotAvailable(type)) {
       continue;
     }
     std::shared_ptr<TransferStatus> ts =

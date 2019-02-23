@@ -30,6 +30,7 @@ EditSiteScreen::~EditSiteScreen() {
 
 void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::string & operation, const std::string & site) {
   active = false;
+  slotsupdated = false;
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one, save changes - [c]ancel, undo changes - [s]ections - [S]kiplist";
   currentlegendtext = defaultlegendtext;
   this->operation = operation;
@@ -96,6 +97,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   mso.addIntArrow(y, x, "logins", "Login slots:", this->site->getInternMaxLogins(), 0, 99);
   mso.addIntArrow(y, x + 20, "maxup", "Upload slots:", this->site->getInternMaxUp(), 0, 99);
   mso.addIntArrow(y++, x + 40, "maxdn", "Download slots:", this->site->getInternMaxDown(), 0, 99);
+  mso.addTextButtonNoContent(y++, x, "slots", "Advanced slot configuration...");
   std::shared_ptr<MenuSelectOptionTextArrow> tlsmode = mso.addTextArrow(y, x, "tlsmode", "TLS mode:");
   tlsmode->addOption("None", static_cast<int>(TLSMode::NONE));
   tlsmode->addOption("AUTH TLS", static_cast<int>(TLSMode::AUTH_TLS));
@@ -175,6 +177,24 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
 
 void EditSiteScreen::redraw() {
   ui->erase();
+  if (slotsupdated) {
+    std::shared_ptr<MenuSelectOptionNumArrow> logins = std::static_pointer_cast<MenuSelectOptionNumArrow>(mso.getElement("logins"));
+    std::shared_ptr<MenuSelectOptionNumArrow> maxup = std::static_pointer_cast<MenuSelectOptionNumArrow>(mso.getElement("maxup"));
+    std::shared_ptr<MenuSelectOptionNumArrow> maxdn = std::static_pointer_cast<MenuSelectOptionNumArrow>(mso.getElement("maxdn"));
+    logins->setData(modsite->getInternMaxLogins());
+    maxup->setData(modsite->getInternMaxUp());
+    maxdn->setData(modsite->getInternMaxDown());
+    slotsupdated = false;
+  }
+  std::string slotslabel = "Advanced slot configuration...";
+  bool free = modsite->getLeaveFreeSlot();
+  int maxdnpre = modsite->getInternMaxDownPre();
+  int maxdncomplete = modsite->getInternMaxDownComplete();
+  int maxdntransferjob = modsite->getInternMaxDownTransferJob();
+  if (free || maxdnpre || maxdncomplete || maxdntransferjob) {
+    slotslabel = slotslabel + " (" + (free ? "free/" : "") + std::to_string(maxdnpre) + "/" + std::to_string(maxdncomplete) + "/" + std::to_string(maxdntransferjob) + ")";
+  }
+  mso.getElement("slots")->setLabel(slotslabel);
   if (std::static_pointer_cast<MenuSelectOptionTextArrow>(mso.getElement("sourcepolicy"))->getData() == SITE_TRANSFER_POLICY_ALLOW) {
     mso.getElement("exceptsrc")->setLabel("Block transfers from:");
   }
@@ -289,6 +309,18 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
       if (msoe->getIdentifier() == "sections") {
         modsite->setName(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("name"))->getData());
         ui->goSiteSections(modsite);
+        return true;
+      }
+      if (msoe->getIdentifier() == "slots") {
+        modsite->setName(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("name"))->getData());
+        std::shared_ptr<MenuSelectOptionNumArrow> logins = std::static_pointer_cast<MenuSelectOptionNumArrow>(mso.getElement("logins"));
+        std::shared_ptr<MenuSelectOptionNumArrow> maxup = std::static_pointer_cast<MenuSelectOptionNumArrow>(mso.getElement("maxup"));
+        std::shared_ptr<MenuSelectOptionNumArrow> maxdn = std::static_pointer_cast<MenuSelectOptionNumArrow>(mso.getElement("maxdn"));
+        modsite->setMaxLogins(logins->getData());
+        modsite->setMaxUp(maxup->getData());
+        modsite->setMaxDn(maxdn->getData());
+        ui->goSiteSlots(modsite);
+        slotsupdated = true;
         return true;
       }
       activation = mso.activateSelected();
@@ -447,6 +479,11 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
       }
       site->setSkipList(modsite->getSkipList());
       site->setSections(modsite->getSections());
+
+      site->setMaxDnPre(modsite->getInternMaxDownPre());
+      site->setMaxDnComplete(modsite->getInternMaxDownComplete());
+      site->setMaxDnTransferJob(modsite->getInternMaxDownTransferJob());
+      site->setLeaveFreeSlot(modsite->getLeaveFreeSlot());
 
       if (operation == "add") {
         global->getSiteManager()->addSite(site);

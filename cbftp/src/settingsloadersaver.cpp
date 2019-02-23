@@ -340,8 +340,22 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("maxdn")) {
       site->setMaxDn(std::stoi(value));
     }
+    else if (!setting.compare("maxdnpre")) {
+      site->setMaxDnPre(std::stoi(value));
+    }
+    else if (!setting.compare("maxdncomplete")) {
+      site->setMaxDnComplete(std::stoi(value));
+    }
+    else if (!setting.compare("maxdntransferjob")) {
+      site->setMaxDnTransferJob(std::stoi(value));
+    }
     else if (!setting.compare("maxup")) {
       site->setMaxUp(std::stoi(value));
+    }
+    else if (!setting.compare("freeslot")) {
+      if (!value.compare("true")) {
+        site->setLeaveFreeSlot(true);
+      }
     }
     else if (!setting.compare("section")) {
       size_t split = value.find('$');
@@ -633,6 +647,9 @@ void SettingsLoaderSaver::saveSettings() {
       dfh->addOutputLine(filetag, name + "$logins=" + std::to_string(site->getInternMaxLogins()));
       dfh->addOutputLine(filetag, name + "$maxup=" + std::to_string(site->getInternMaxUp()));
       dfh->addOutputLine(filetag, name + "$maxdn=" + std::to_string(site->getInternMaxDown()));
+      dfh->addOutputLine(filetag, name + "$maxdnpre=" + std::to_string(site->getInternMaxDownPre()));
+      dfh->addOutputLine(filetag, name + "$maxdncomplete=" + std::to_string(site->getInternMaxDownComplete()));
+      dfh->addOutputLine(filetag, name + "$maxdntransferjob=" + std::to_string(site->getInternMaxDownTransferJob()));
       dfh->addOutputLine(filetag, name + "$idletime=" + std::to_string(site->getMaxIdleTime()));
       dfh->addOutputLine(filetag, name + "$tlsmode=" + std::to_string(static_cast<int>(site->getTLSMode())));
       dfh->addOutputLine(filetag, name + "$ssltransfer=" + std::to_string(site->getSSLTransferPolicy()));
@@ -647,6 +664,9 @@ void SettingsLoaderSaver::saveSettings() {
       dfh->addOutputLine(filetag, name + "$allowdownload=" + std::to_string(site->getAllowDownload()));
       dfh->addOutputLine(filetag, name + "$priority=" + std::to_string(static_cast<int>(site->getPriority())));
       if (site->hasBrokenPASV()) dfh->addOutputLine(filetag, name + "$brokenpasv=true");
+      if (site->getLeaveFreeSlot()) {
+        dfh->addOutputLine(filetag, name + "$freeslot=true");
+      }
       int proxytype = site->getProxyType();
       dfh->addOutputLine(filetag, name + "$proxytype=" + std::to_string(proxytype));
       if (proxytype == SITE_PROXY_USE) {
