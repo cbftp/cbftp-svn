@@ -57,9 +57,12 @@ private:
   std::string pass;
   Path basepath;
   unsigned int logins;
-  unsigned int max_up;
-  unsigned int max_dn;
-  unsigned int max_idletime;
+  unsigned int maxup;
+  unsigned int maxdn;
+  unsigned int maxdnpre;
+  unsigned int maxdncomplete;
+  unsigned int maxdntransferjob;
+  unsigned int maxidletime;
   bool pret;
   bool binary;
   int listcommand;
@@ -93,6 +96,7 @@ private:
   HourlyAllTracking filesup;
   HourlyAllTracking sizedown;
   HourlyAllTracking filesdown;
+  bool freeslot;
 public:
   Site();
   Site(const std::string &);
@@ -104,9 +108,16 @@ public:
   unsigned int getMaxLogins() const;
   unsigned int getMaxUp() const;
   unsigned int getMaxDown() const;
+  unsigned int getMaxDownPre() const;
+  unsigned int getMaxDownComplete() const;
+  unsigned int getMaxDownTransferJob() const;
   unsigned int getInternMaxLogins() const;
   unsigned int getInternMaxUp() const;
   unsigned int getInternMaxDown() const;
+  unsigned int getInternMaxDownPre() const;
+  unsigned int getInternMaxDownComplete() const;
+  unsigned int getInternMaxDownTransferJob() const;
+  bool getLeaveFreeSlot() const;
   const Path & getBasePath() const;
   bool unlimitedLogins() const;
   bool unlimitedUp() const;
@@ -164,6 +175,10 @@ public:
   void setMaxLogins(unsigned int);
   void setMaxDn(unsigned int);
   void setMaxUp(unsigned int);
+  void setMaxDnPre(unsigned int);
+  void setMaxDnComplete(unsigned int);
+  void setMaxDnTransferJob(unsigned int);
+  void setLeaveFreeSlot(bool free);
   void setTLSMode(TLSMode mode);
   void setDisabled(bool);
   void setAllowUpload(SiteAllowTransfer);

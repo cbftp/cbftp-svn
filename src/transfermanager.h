@@ -37,7 +37,7 @@ class TransferManager {
       const std::shared_ptr<CommandOwner> &, const std::shared_ptr<CommandOwner> &);
     std::shared_ptr<TransferStatus> suggestDownload(
       const std::string &, const std::shared_ptr<SiteLogic> &, FileList *,
-      const std::shared_ptr<LocalFileList> &, const std::shared_ptr<CommandOwner> &);
+      const std::shared_ptr<LocalFileList> &, const std::shared_ptr<CommandOwner> & co = std::shared_ptr<CommandOwner>());
     std::shared_ptr<TransferStatus> suggestUpload(
       const std::string &, const std::shared_ptr<LocalFileList> &,
       const std::shared_ptr<SiteLogic> &, FileList *, const std::shared_ptr<CommandOwner> &);

@@ -15,9 +15,12 @@ Site::Site(const std::string & name) :
   pass("anonymous"),
   basepath("/"),
   logins(0),
-  max_up(0),
-  max_dn(0),
-  max_idletime(60),
+  maxup(0),
+  maxdn(0),
+  maxdnpre(0),
+  maxdncomplete(0),
+  maxdntransferjob(0),
+  maxidletime(60),
   pret(false),
   binary(false),
   listcommand(SITE_LIST_STAT),
@@ -34,7 +37,8 @@ Site::Site(const std::string & name) :
   proxytype(SITE_PROXY_GLOBAL),
   transfersourcepolicy(SITE_TRANSFER_POLICY_ALLOW),
   transfertargetpolicy(SITE_TRANSFER_POLICY_ALLOW),
-  skiplist(global->getSkipList())
+  skiplist(global->getSkipList()),
+  freeslot(false)
 {
   addresses.push_back(std::pair<std::string, std::string>("ftp.sunet.se", "21"));
 }
@@ -46,9 +50,13 @@ Site::Site(const Site & other) {
   pass = other.pass;
   basepath = other.basepath;
   logins = other.logins;
-  max_up = other.max_up;
-  max_dn = other.max_dn;
-  max_idletime = other.max_idletime;
+  maxup = other.maxup;
+  maxdn = other.maxdn;
+  maxdnpre = other.maxdnpre;
+  maxdncomplete = other.maxdncomplete;
+  maxdntransferjob = other.maxdntransferjob;
+  freeslot = other.freeslot;
+  maxidletime = other.maxidletime;
   pret = other.pret;
   binary = other.binary;
   listcommand = other.listcommand;
@@ -95,21 +103,42 @@ unsigned int Site::getMaxLogins() const {
 }
 
 unsigned int Site::getMaxUp() const {
-  if (max_up == 0) {
+  if (maxup == 0) {
     return getMaxLogins();
   }
-  return max_up;
+  return maxup;
 }
 
 unsigned int Site::getMaxDown() const {
-  if (max_dn == 0) {
+  if (maxdn == 0) {
     return getMaxLogins();
   }
-  return max_dn;
+  return maxdn;
+}
+
+unsigned int Site::getMaxDownPre() const {
+  if (maxdnpre == 0) {
+    return getMaxDown();
+  }
+  return maxdnpre;
+}
+
+unsigned int Site::getMaxDownComplete() const {
+  if (maxdncomplete == 0) {
+    return getMaxDown();
+  }
+  return maxdncomplete;
+}
+
+unsigned int Site::getMaxDownTransferJob() const {
+  if (maxdntransferjob == 0) {
+    return getMaxDown();
+  }
+  return maxdntransferjob;
 }
 
 unsigned int Site::getMaxIdleTime() const {
-  return max_idletime;
+  return maxidletime;
 }
 
 unsigned int Site::getInternMaxLogins() const {
@@ -117,11 +146,27 @@ unsigned int Site::getInternMaxLogins() const {
 }
 
 unsigned int Site::getInternMaxUp() const {
-  return max_up;
+  return maxup;
 }
 
 unsigned int Site::getInternMaxDown() const {
-  return max_dn;
+  return maxdn;
+}
+
+unsigned int Site::getInternMaxDownPre() const {
+  return maxdnpre;
+}
+
+unsigned int Site::getInternMaxDownComplete() const {
+  return maxdncomplete;
+}
+
+unsigned int Site::getInternMaxDownTransferJob() const {
+  return maxdntransferjob;
+}
+
+bool Site::getLeaveFreeSlot() const {
+  return freeslot;
 }
 
 const Path & Site::getBasePath() const {
@@ -133,11 +178,11 @@ bool Site::unlimitedLogins() const {
 }
 
 bool Site::unlimitedUp() const {
-  return max_up == 0;
+  return maxup == 0;
 }
 
 bool Site::unlimitedDown() const {
-  return max_dn == 0;
+  return maxdn == 0;
 }
 
 int Site::getAverageSpeed(const std::string & target) const {
@@ -432,24 +477,49 @@ void Site::setBasePath(const std::string & basepath) {
 
 void Site::setMaxLogins(unsigned int num) {
   logins = num;
-  if (num > 0 && max_dn > 0 && max_dn < num) {
-    max_dn = num;
+  if (num > 0 && maxdn > num) {
+    maxdn = num;
   }
-  if (num > 0 && max_up > 0 && max_up < num) {
-    max_up = num;
+  if (num > 0 && maxdnpre > num) {
+    maxdnpre = num;
+  }
+  if (num > 0 && maxdncomplete > num) {
+    maxdncomplete = num;
+  }
+  if (num > 0 && maxdntransferjob > num) {
+    maxdntransferjob = num;
+  }
+  if (num > 0 && maxup > num) {
+    maxup = num;
   }
 }
 
 void Site::setMaxDn(unsigned int num) {
-  max_dn = num > logins && logins > 0 ? logins : num;
+  maxdn = num > logins && logins > 0 ? logins : num;
 }
 
 void Site::setMaxUp(unsigned int num) {
-  max_up = num > logins && logins > 0 ? logins : num;
+  maxup = num > logins && logins > 0 ? logins : num;
+}
+
+void Site::setMaxDnPre(unsigned int num) {
+  maxdnpre = num > logins && logins > 0 ? logins : num;
+}
+
+void Site::setMaxDnComplete(unsigned int num) {
+  maxdncomplete = num > logins && logins > 0 ? logins : num;
+}
+
+void Site::setMaxDnTransferJob(unsigned int num) {
+  maxdntransferjob = num > logins && logins > 0 ? logins : num;
+}
+
+void Site::setLeaveFreeSlot(bool free) {
+  freeslot = free;
 }
 
 void Site::setMaxIdleTime(unsigned int idletime) {
-  max_idletime = idletime;
+  maxidletime = idletime;
 }
 
 void Site::setProxyType(int proxytype) {

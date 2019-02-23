@@ -80,10 +80,8 @@ SiteLogic::SiteLogic(const std::string & sitename) :
   site(global->getSiteManager()->getSite(sitename)),
   rawcommandrawbuf(new RawBuffer(site->getName())),
   aggregatedrawbuf(new RawBuffer(site->getName())),
-  maxslotsup(site->getMaxUp()),
-  maxslotsdn(site->getMaxDown()),
-  slotsdn(maxslotsdn),
-  slotsup(maxslotsup),
+  slotsdn(0),
+  slotsup(0),
   available(0),
   ptrack(new PotentialTracker(slotsdn)),
   loggedin(0),
@@ -123,7 +121,8 @@ void SiteLogic::activateAll() {
 }
 
 std::shared_ptr<SiteRace> SiteLogic::addRace(std::shared_ptr<Race> & enginerace, const std::string & section, const std::string & release) {
-  std::shared_ptr<SiteRace> race = std::make_shared<SiteRace>(enginerace, site->getName(), site->getSectionPath(section), release, site->getUser(), site->getSkipList());
+  std::shared_ptr<SiteRace> race = std::make_shared<SiteRace>(enginerace, site->getName(), site->getSectionPath(section),
+                                                              release, site->getUser(), site->getSkipList(), site->isAffiliated(enginerace->getGroup()));
   currentraces.push_back(race);
   activateAll();
   return race;
@@ -1502,6 +1501,22 @@ bool SiteLogic::lockUploadConn(FileList * fl, int * ret, const std::shared_ptr<C
 }
 
 bool SiteLogic::lockTransferConn(FileList * fl, int * ret, TransferMonitor * tm, const std::shared_ptr<CommandOwner> & co, bool isdownload) {
+  TransferType type(TransferType::REGULAR);
+  if (isdownload) {
+    if (!!co) {
+      if (co->classType() == COMMANDOWNER_SITERACE) {
+        if (std::static_pointer_cast<SiteRace>(co)->isAffil()) {
+          type = TransferType::PRE;
+        }
+        else if (std::static_pointer_cast<SiteRace>(co)->isDone()) {
+          type = TransferType::COMPLETE;
+        }
+      }
+      else if (co->classType() == COMMANDOWNER_TRANSFERJOB) {
+        type = TransferType::TRANSFERJOB;
+      }
+    }
+  }
   int lastreadyid = -1;
   bool foundreadythread = false;
   const Path & path = fl->getPath();
@@ -1512,7 +1527,9 @@ bool SiteLogic::lockTransferConn(FileList * fl, int * ret, TransferMonitor * tm,
       foundreadythread = true;
       lastreadyid = i;
       if (conns[i]->getCurrentPath() == path) {
-        if (!getSlot(isdownload)) return false;
+        if (!getSlot(isdownload, type)) {
+          return false;
+        }
         *ret = i;
         connstatetracker[i].lockForTransfer(tm, fl, co, isdownload);
         conns[i]->setRawBufferCallback(tm);
@@ -1527,7 +1544,9 @@ bool SiteLogic::lockTransferConn(FileList * fl, int * ret, TransferMonitor * tm,
         if (lastreadyid == -1) {
           lastreadyid = i;
           if (conns[i]->getTargetPath() == path) {
-            if (!getSlot(isdownload)) return false;
+            if (!getSlot(isdownload, type)) {
+              return false;
+            }
             *ret = i;
             connstatetracker[i].lockForTransfer(tm, fl, co, isdownload);
             conns[i]->setRawBufferCallback(tm);
@@ -1539,7 +1558,9 @@ bool SiteLogic::lockTransferConn(FileList * fl, int * ret, TransferMonitor * tm,
     }
   }
   if (foundreadythread) {
-    if (!getSlot(isdownload)) return false;
+    if (!getSlot(isdownload, type)) {
+      return false;
+    }
     *ret = lastreadyid;
     connstatetracker[lastreadyid].lockForTransfer(tm, fl, co, isdownload);
     conns[lastreadyid]->setRawBufferCallback(tm);
@@ -1607,31 +1628,39 @@ void SiteLogic::setNumConnections(unsigned int num) {
   for (unsigned int i = 0; i < conns.size(); i++) {
     conns[i]->setId(i);
   }
-  if (maxslotsup < site->getMaxUp()) {
-    slotsup += site->getMaxUp() - maxslotsup;
-    maxslotsup = site->getMaxUp();
-  }
-  if (maxslotsdn < site->getMaxDown()) {
-    slotsdn += site->getMaxDown() - maxslotsdn;
-    maxslotsdn = site->getMaxDown();
-  }
-  if (maxslotsup > site->getMaxUp()) {
-    slotsup -= (maxslotsup - site->getMaxUp());
-    maxslotsup = site->getMaxUp();
-  }
-  if (maxslotsdn > site->getMaxDown()) {
-    slotsdn -= (maxslotsdn - site->getMaxDown());
-    maxslotsdn = site->getMaxDown();
-  }
   ptrack->updateSlots(site->getMaxDown());
 }
 
-bool SiteLogic::downloadSlotAvailable() const {
-  return (available > 0 && slotsdn > 0);
+bool SiteLogic::downloadSlotAvailable(TransferType type) const {
+  if (!available) {
+    return false;
+  }
+  int maxlogins = site->getMaxLogins();
+  if ((site->getLeaveFreeSlot() && slotsdn + slotsup + 1 >= maxlogins && maxlogins > 1)) {
+    return false;
+  }
+  switch (type) {
+    case TransferType::REGULAR:
+      return slotsdn < static_cast<int>(site->getMaxDown());
+    case TransferType::PRE:
+      return slotsdn < static_cast<int>(site->getMaxDownPre());
+    case TransferType::COMPLETE:
+      return slotsdn < static_cast<int>(site->getMaxDownComplete());
+    case TransferType::TRANSFERJOB:
+      return slotsdn < static_cast<int>(site->getMaxDownTransferJob());
+  }
+  return false;
 }
 
 bool SiteLogic::uploadSlotAvailable() const {
-  return (available > 0 && slotsup > 0);
+  if (!available) {
+    return false;
+  }
+  int maxlogins = site->getMaxLogins();
+  if ((site->getLeaveFreeSlot() && slotsdn + slotsup + 1 >= maxlogins && maxlogins > 1)) {
+    return false;
+  }
+  return slotsup < static_cast<int>(site->getMaxUp());
 }
 
 int SiteLogic::slotsAvailable() const {
@@ -1640,24 +1669,31 @@ int SiteLogic::slotsAvailable() const {
 
 void SiteLogic::transferComplete(int id, bool isdownload) {
   if (isdownload) {
-    slotsdn++;
+    slotsdn--;
   }
-  else slotsup++;
+  else {
+    slotsup--;
+  }
   available++;
   conns[id]->unsetRawBufferCallback();
 }
 
-bool SiteLogic::getSlot(bool isdownload) {
+bool SiteLogic::getSlot(bool isdownload, TransferType type) {
   if (isdownload) {
-    if (slotsdn <= 0) {
+    if ((type == TransferType::REGULAR && slotsdn >= static_cast<int>(site->getMaxDown())) ||
+        (type == TransferType::PRE && slotsdn >= static_cast<int>(site->getMaxDownPre())) ||
+        (type == TransferType::COMPLETE && slotsdn >= static_cast<int>(site->getMaxDownComplete())) ||
+        (type == TransferType::TRANSFERJOB && slotsdn >= static_cast<int>(site->getMaxDownTransferJob())))
+    {
       return false;
     }
-    slotsdn--;
-  } else {
-    if (slotsup <= 0) {
+    slotsdn++;
+  }
+  else {
+    if (slotsup >= static_cast<int>(site->getMaxUp())) {
       return false;
     }
-    slotsup--;
+    slotsup++;
   }
   available--;
   return true;
@@ -1691,11 +1727,11 @@ int SiteLogic::getCurrLogins() const {
 }
 
 int SiteLogic::getCurrDown() const {
-  return site->getMaxDown() - slotsdn;
+  return slotsdn;
 }
 
 int SiteLogic::getCurrUp() const {
-  return site->getMaxUp() - slotsup;
+  return slotsup;
 }
 
 int SiteLogic::getCleanlyClosedConnectionsCount() const {
@@ -1848,6 +1884,12 @@ void SiteLogic::raceLocalComplete(const std::shared_ptr<SiteRace> & sr, int uplo
   }
   if (!stillactive) {
     int downloadslots = site->getMaxDown();
+    if (static_cast<int>(site->getMaxDownComplete()) > downloadslots) {
+      downloadslots = site->getMaxDownComplete();
+    }
+    if (sr->isAffil() && static_cast<int>(site->getMaxDownPre()) > downloadslots) {
+      downloadslots = site->getMaxDownPre();
+    }
     int stillneededslots = downloadslots < uploadslotsleft ? downloadslots : uploadslotsleft;
     int killnum = site->getMaxLogins() - stillneededslots;
     if (killnum < 0) {

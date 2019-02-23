@@ -62,6 +62,7 @@ class SectionsScreen;
 class EditSectionScreen;
 class SiteSectionsScreen;
 class EditSiteSectionScreen;
+class SiteSlotsScreen;
 
 class LegendPrinterKeybinds;
 struct TransferFilteringParameters;
@@ -118,6 +119,7 @@ private:
   std::shared_ptr<EditSectionScreen> editsectionscreen;
   std::shared_ptr<SiteSectionsScreen> sitesectionsscreen;
   std::shared_ptr<EditSiteSectionScreen> editsitesectionscreen;
+  std::shared_ptr<SiteSlotsScreen> siteslotsscreen;
   std::shared_ptr<LegendPrinterKeybinds> legendprinterkeybinds;
   int mainrow;
   int maincol;
@@ -246,6 +248,7 @@ public:
   void goAllTransferJobs();
   void goInfo();
   void goMakeDir(const std::string & site, UIFileList & filelist);
+  void goSiteSlots(const std::shared_ptr<Site> & site);
   void goSections();
   void goSelectSection();
   void goSiteSections(const std::shared_ptr<Site> & site);

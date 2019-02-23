@@ -59,6 +59,7 @@
 #include "screens/editsectionscreen.h"
 #include "screens/sitesectionsscreen.h"
 #include "screens/editsitesectionscreen.h"
+#include "screens/siteslotsscreen.h"
 
 static Ui * instance = new Ui();
 
@@ -142,6 +143,7 @@ bool Ui::init() {
   editsectionscreen = std::make_shared<EditSectionScreen>(this);
   sitesectionsscreen = std::make_shared<SiteSectionsScreen>(this);
   editsitesectionscreen = std::make_shared<EditSiteSectionScreen>(this);
+  siteslotsscreen = std::make_shared<SiteSlotsScreen>(this);
   mainwindows.push_back(mainscreen);
   mainwindows.push_back(confirmationscreen);
   mainwindows.push_back(editsitescreen);
@@ -175,6 +177,7 @@ bool Ui::init() {
   mainwindows.push_back(editsectionscreen);
   mainwindows.push_back(sitesectionsscreen);
   mainwindows.push_back(editsitesectionscreen);
+  mainwindows.push_back(siteslotsscreen);
 
   legendprinterkeybinds = std::make_shared<LegendPrinterKeybinds>(this);
   legendwindow->setMainLegendPrinter(legendprinterkeybinds);
@@ -957,6 +960,11 @@ void Ui::goInfo() {
 void Ui::goMakeDir(const std::string & site, UIFileList & filelist) {
   makedirscreen->initialize(mainrow, maincol, site, filelist);
   switchToWindow(makedirscreen);
+}
+
+void Ui::goSiteSlots(const std::shared_ptr<Site> & site) {
+  siteslotsscreen->initialize(mainrow, maincol, site);
+  switchToWindow(siteslotsscreen);
 }
 
 void Ui::goSections() {

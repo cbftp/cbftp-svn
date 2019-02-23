@@ -37,6 +37,10 @@ int MenuSelectOptionNumArrow::getData() const {
   return arrow.getValue();
 }
 
+void MenuSelectOptionNumArrow::setData(int value) {
+  arrow.setValue(value);
+}
+
 std::string MenuSelectOptionNumArrow::getLegendText() const {
   return "[Enter] Finish editing - [Left] Decrease value - [Right] Increase value";
 }

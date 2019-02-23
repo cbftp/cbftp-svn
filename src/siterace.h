@@ -50,6 +50,7 @@ class SiteRace : public CommandOwner, public std::enable_shared_from_this<SiteRa
     unsigned long long int sizeup;
     unsigned int filesup;
     unsigned int speedup;
+    bool affil;
     void updateNumFilesUploaded();
     void addNewDirectories();
     void markNonExistent(FileList *);
@@ -65,7 +66,7 @@ class SiteRace : public CommandOwner, public std::enable_shared_from_this<SiteRa
     unsigned int getId() const;
     std::string getRelevantSubPath();
     bool anyFileListNotNonExistent() const;
-    SiteRace(std::shared_ptr<Race>, const std::string &, const Path &, const std::string &, const std::string &, const SkipList &);
+    SiteRace(std::shared_ptr<Race>, const std::string &, const Path &, const std::string &, const std::string &, const SkipList &, bool affil);
     ~SiteRace();
     FileList * getFileListForPath(const std::string &) const;
     FileList * getFileListForFullPath(SiteLogic * co, const Path &) const;
@@ -106,6 +107,7 @@ class SiteRace : public CommandOwner, public std::enable_shared_from_this<SiteRa
     unsigned int getFilesUp() const;
     unsigned int getSpeedUp() const;
     bool allListsRefreshed() const;
+    bool isAffil() const;
     std::unordered_map<std::string, unsigned long long int>::const_iterator sizeUpBegin() const;
     std::unordered_map<std::string, unsigned int>::const_iterator filesUpBegin() const;
     std::unordered_map<std::string, unsigned int>::const_iterator speedUpBegin() const;
