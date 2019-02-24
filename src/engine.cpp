@@ -238,6 +238,7 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & rele
       }
       if (readdtocurrent) {
         currentraces.push_back(race);
+        removeFromFinished(race);
       }
     }
     setSpeedScale();
@@ -518,13 +519,14 @@ void Engine::removeSiteFromRaceDeleteFiles(const std::shared_ptr<Race> & race, c
 }
 
 void Engine::abortRace(const std::shared_ptr<Race> & race) {
-  if (!!race) {
+  if (!!race && !race->isDone()) {
     race->abort();
     for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
       it->second->abortRace(race->getId());
       wipeFromScoreBoard(it->first);
     }
     currentraces.remove(race);
+    finishedraces.push_back(race);
     global->getEventLog()->log("Engine", "Spread job aborted: " + race->getName());
   }
 }
@@ -551,6 +553,7 @@ void Engine::resetRace(const std::shared_ptr<Race> & race, bool hard) {
     }
     if (!current) {
       currentraces.push_back(race);
+      removeFromFinished(race);
     }
     checkStartPoke();
     global->getEventLog()->log("Engine", "Spread job reset: " + race->getName());
@@ -595,6 +598,15 @@ void Engine::restoreFromFailed(const std::shared_ptr<Race> & race) {
   }
   scoreboard->sort();
   scoreboard->shuffleEquals();
+}
+
+void Engine::removeFromFinished(const std::shared_ptr<Race> & race) {
+  for (std::list<std::shared_ptr<Race>>::iterator it = --finishedraces.end(); it != --finishedraces.begin(); it--) {
+    if (*it == race) {
+      finishedraces.erase(it);
+      break;
+    }
+  }
 }
 
 bool Engine::transferExpectedSoon(ScoreBoardElement * sbe) const {
@@ -1385,6 +1397,7 @@ void Engine::raceComplete(std::shared_ptr<Race> race) {
   for (std::list<std::shared_ptr<Race> >::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
     if ((*it) == race) {
       currentraces.erase(it);
+      finishedraces.push_back(race);
       break;
     }
   }
@@ -1613,6 +1626,22 @@ std::list<std::shared_ptr<Race> >::const_iterator Engine::getRacesEnd() const {
   return allraces.end();
 }
 
+std::list<std::shared_ptr<Race> >::const_iterator Engine::getCurrentRacesBegin() const {
+  return currentraces.begin();
+}
+
+std::list<std::shared_ptr<Race> >::const_iterator Engine::getCurrentRacesEnd() const {
+  return currentraces.end();
+}
+
+std::list<std::shared_ptr<Race> >::const_iterator Engine::getFinishedRacesBegin() const {
+  return finishedraces.begin();
+}
+
+std::list<std::shared_ptr<Race> >::const_iterator Engine::getFinishedRacesEnd() const {
+  return finishedraces.end();
+}
+
 std::list<std::shared_ptr<TransferJob> >::const_iterator Engine::getTransferJobsBegin() const {
   return alltransferjobs.begin();
 }
@@ -1646,6 +1675,7 @@ void Engine::tick(int message) {
         race->setTimeout();
         issueGlobalComplete(race);
         currentraces.erase(it);
+        finishedraces.push_back(race);
         break;
       }
       else {

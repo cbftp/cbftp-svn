@@ -39,7 +39,16 @@ void AllRacesScreen::redraw() {
   addRaceTableHeader(y, table, "RELEASE");
   y++;
   unsigned int pos = 0;
-  for (std::list<std::shared_ptr<Race> >::const_iterator it = --engine->getRacesEnd(); it != --engine->getRacesBegin() && y < row; it--) {
+  for (std::list<std::shared_ptr<Race> >::const_iterator it = --engine->getCurrentRacesEnd(); it != --engine->getCurrentRacesBegin() && y < row; it--) {
+    if (pos >= currentviewspan) {
+      addRaceDetails(y++, table, *it);
+      if (pos == ypos) {
+        table.enterFocusFrom(2);
+      }
+    }
+    ++pos;
+  }
+  for (std::list<std::shared_ptr<Race> >::const_iterator it = --engine->getFinishedRacesEnd(); it != --engine->getFinishedRacesBegin() && y < row; it--) {
     if (pos >= currentviewspan) {
       addRaceDetails(y++, table, *it);
       if (pos == ypos) {

@@ -74,6 +74,10 @@ public:
   std::list<std::shared_ptr<PreparedRace> >::const_iterator getPreparedRacesEnd() const;
   std::list<std::shared_ptr<Race> >::const_iterator getRacesBegin() const;
   std::list<std::shared_ptr<Race> >::const_iterator getRacesEnd() const;
+  std::list<std::shared_ptr<Race> >::const_iterator getCurrentRacesBegin() const;
+  std::list<std::shared_ptr<Race> >::const_iterator getCurrentRacesEnd() const;
+  std::list<std::shared_ptr<Race> >::const_iterator getFinishedRacesBegin() const;
+  std::list<std::shared_ptr<Race> >::const_iterator getFinishedRacesEnd() const;
   std::list<std::shared_ptr<TransferJob> >::const_iterator getTransferJobsBegin() const;
   std::list<std::shared_ptr<TransferJob> >::const_iterator getTransferJobsEnd() const;
   void tick(int);
@@ -125,8 +129,10 @@ public:
   bool waitingInScoreBoard(const std::shared_ptr<Race> & race) const;
   bool transferExpectedSoon(ScoreBoardElement * sbe) const;
   void restoreFromFailed(const std::shared_ptr<Race> & race);
+  void removeFromFinished(const std::shared_ptr<Race> & race);
   std::list<std::shared_ptr<Race> > allraces;
   std::list<std::shared_ptr<Race> > currentraces;
+  std::list<std::shared_ptr<Race> > finishedraces;
   std::list<std::shared_ptr<PreparedRace> > preparedraces;
   std::list<std::shared_ptr<TransferJob>  > alltransferjobs;
   std::list<std::shared_ptr<TransferJob> > currenttransferjobs;

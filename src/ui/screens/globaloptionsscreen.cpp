@@ -71,7 +71,7 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   bell->addOption("Jobs added", static_cast<int>(RemoteCommandNotify::JOBS_ADDED));
   bell->addOption("All commands", static_cast<int>(RemoteCommandNotify::ALL_COMMANDS));
   bell->setOption(static_cast<int>(rch->getNotify()));
-  mso.addStringField(y++, x, "preparedraceexpirytime", "Prepared race expiration time:", std::to_string(global->getEngine()->getPreparedRaceExpiryTime()), false, 5);
+  mso.addStringField(y++, x, "preparedraceexpirytime", "Prepared spread job expiration time:", std::to_string(global->getEngine()->getPreparedRaceExpiryTime()), false, 5);
   y++;
   std::shared_ptr<MenuSelectOptionTextArrow> legendmode = mso.addTextArrow(y++, x, "legendmode", "Legend bar:");
   legendmode->addOption("Disabled", LEGEND_DISABLED);
