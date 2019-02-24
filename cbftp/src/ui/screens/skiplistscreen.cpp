@@ -447,7 +447,7 @@ void SkipListScreen::addPatternLine(int y, std::string pattern, bool file, bool 
   msota->setOption(static_cast<int>(action));
   msal->addElement(msota, 4, RESIZE_REMOVE);
   msota = table.addTextArrow(y, 5, "scope", "");
-  msota->addOption("In race", SCOPE_IN_RACE);
+  msota->addOption("In spread job", SCOPE_IN_RACE);
   msota->addOption("Allround", SCOPE_ALL);
   msota->setOption(scope);
   msal->addElement(msota, 5, RESIZE_REMOVE);

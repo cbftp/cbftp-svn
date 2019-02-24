@@ -157,7 +157,7 @@ how to perform file transfers. It summarizes information about the state of
 all current spread jobs and transfer jobs from all sites, and then calculates
 which transfers that are most favorable to perform by assigning scores to
 potential transfers based on various criteria - site speed vs other sites
-where the file is not yet available, file size, race progress on the site
+where the file is not yet available, file size, spread job progress on the site
 versus other sites, percentage of files uploaded by you, target site priority,
 etc. The potential transfers are summarized in a scoreboard where the ones
 with the highest scores will be performed first, until there are no more
@@ -203,20 +203,20 @@ Similar means that the file will only be allowed if its name is similar enough
 to other files in the directory matching any similar-rule.
 The criteria is that only the file extension OR a the last numbering sequence
 in the file names may differ, not both and not anything else.
-Similar-rules only affect files in race.
+Similar-rules only affect files in spread jobs.
 
 An item is normally a file name or a directory name. There are buttons
 available on each entry in the skiplist if it should match files and/or
 directories.
 
 The scope setting specifies where the skiplist should apply.
-"In race" entries will only be used for matching inside a spread job
+"In spread job" entries will only be used for matching inside a spread job
 directory. It will not be able to match on the name of the spread job
 directory itself, and the path in the entry should start inside the
 spread job directory.
 "Allround" entries will match on entire paths, and can be used to skip
 entire jobs on a specific site, or even globally. Allround rules also apply
-on regular transfer jobs, which 'in race' rules do not.
+on regular transfer jobs, which 'in spread job' rules do not.
 
 To test your skiplist rules, you can use the TEST PATTERN function at the
 top.
@@ -232,31 +232,31 @@ wildcards. The skiplists are not case sensitive.
 Some skiplisting examples:
 
 Skip all files ending with .jpg in the main dir of spread jobs:
-*.jpg  [X]  [ ]  Deny  In race
+*.jpg  [X]  [ ]  Deny  In spread job
 
 Skip all files ending with .jpg in all subdirs of spread jobs:
-*/*.jpg  [X]  [ ]  Deny  In race
+*/*.jpg  [X]  [ ]  Deny  In spread job
 
 Allow only "Sample" and "Proof" as subdirs in spread jobs:
-sample  [ ]  [X]  Allow  In race
-proof   [ ]  [X]  Allow  In race
-*       [ ]  [X]  Deny   In race
+sample  [ ]  [X]  Allow  In spread job
+proof   [ ]  [X]  Allow  In spread job
+*       [ ]  [X]  Deny   In spread job
 
 Skip all spread jobs with .INTERNAL. in the name:
 *.INTERNAL.*  [ ]  [X]  Deny  Allround
 
 Only allow one nfo and sfv file within each directory:
-*.sfv  [X]  [ ]  Unique  In race
-*.nfo  [X]  [ ]  Unique  In race
+*.sfv  [X]  [ ]  Unique  In spread job
+*.nfo  [X]  [ ]  Unique  In spread job
 
 Skip files with spaces in the name everywhere:
 * *  [X]  [X]  Deny  Allround
 
 Skip files that don't belong in the directory through Similar-rules:
-*.r??       [X]  [ ]  Similar  In race
-*.s??       [X]  [ ]  Similar  In race
-*.t??       [X]  [ ]  Similar  In race
-*.u??       [X]  [ ]  Similar  In race
+*.r??       [X]  [ ]  Similar  In spread job
+*.s??       [X]  [ ]  Similar  In spread job
+*.t??       [X]  [ ]  Similar  In spread job
+*.u??       [X]  [ ]  Similar  In spread job
 
 And again, note that _the first match applies_! If the skiplist does not
 behave as you expect it to do, then you will need to think through if there
@@ -475,8 +475,8 @@ Field summary:
   commands for cbftp to accept them.
 - Remote command bell - Trigger the terminal bell when remote commands that
   require user action arrive.
-- Prepared race expiration time - The time that a prepared race will remain
-  available on the main screen before it disappears.
+- Prepared spread job expiration time - The time that a prepared spread job
+  will remain available on the main screen before it disappears.
 - Legend bar - the mode of operation for the legend bar.
 - Default site *** - default values when creating a new site.
 - Download path - the default download path that cbftp should use for
@@ -499,9 +499,9 @@ GLOBAL KEY BINDINGS
 
 There are a few hotkeys that work from (almost) anywhere in the cbftp UI:
 \ - Toggle fullscreen mode (i.e. hide info bar + legend bar).
-p - Start the latest prepared race.
+p - Start the latest prepared spread job.
 K - Kill all external viewers (when viewing files in external applications).
-N - Toggle the next prepared race auto starter. While this function is
+N - Toggle the next prepared spread job auto starter. While this function is
     enabled, the next 'prepare' remote command that arrives will be started
     immediately. The toggle times out after 10 minutes.
 - - Highlight the entire table line. Usable in lists, tables etc where it
@@ -557,7 +557,7 @@ A: The profile affects the algorithm that assigns scores to potential
    users everywhere, while the 'distribute' profile focuses on finishing the
    job on all sites as quickly as possible.
 
-Q: What is the block of seemingly random characters above the race status
+Q: What is the block of seemingly random characters above the spread job status
    table supposed to be?
 A: Read each column from top to bottom. Cbftp attempts to describe each file
    in the job by finding a sequence of 3 characters in the file name that are
