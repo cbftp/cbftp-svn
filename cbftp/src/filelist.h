@@ -26,6 +26,7 @@ enum class UpdateState {
 class File;
 class Site;
 class CommandOwner;
+class SkipList;
 
 class FileList {
   private:
@@ -54,7 +55,8 @@ class FileList {
     bool inscoreboard;
     bool similarchecked;
     File * firstsimilar;
-    std::list<std::string> similarpatterns;
+    const SkipList * siteskip;
+    const SkipList * sectionskip;
     void recalcOwnedPercentage();
     void init(const std::string &, const Path &, FileListState);
     void setChanged();
@@ -113,7 +115,7 @@ class FileList {
     bool inScoreBoard() const;
     void setInScoreBoard();
     bool similarChecked() const;
-    void checkSimilar(const std::list<std::string> & patterns);
+    void checkSimilar(const SkipList * siteskip, const SkipList * sectionskip = nullptr);
     std::string getFirstSimilar() const;
     static bool checkUnsimilar(const std::string & item, const std::string & similar);
 };

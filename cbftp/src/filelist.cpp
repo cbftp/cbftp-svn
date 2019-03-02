@@ -209,7 +209,7 @@ void FileList::removeFile(const std::string & name) {
   if (similarchecked && f == firstsimilar) {
     similarchecked = false;
     f = nullptr;
-    checkSimilar(similarpatterns);
+    checkSimilar(siteskip, sectionskip);
   }
   delete f;
   recalcOwnedPercentage();
@@ -423,6 +423,13 @@ bool FileList::checkUnsimilar(const std::string & item, const std::string & simi
         if (numberingdiff) {
           numberingdiffpassed = true;
         }
+        else if (itempos + 1 == itemextensionpos &&
+            similarpos + 1 == similarextensionpos)
+        {
+          numberingdiff = true;
+          itempos++;
+          similarpos++;
+        }
         else {
           return true;
         }
@@ -514,7 +521,6 @@ void FileList::flush() {
   ownpercentage = 100;
   uploading = 0;
   similarchecked = false;
-  similarpatterns.clear();
   firstsimilar = nullptr;
 }
 
@@ -647,9 +653,10 @@ bool FileList::similarChecked() const {
   return similarchecked;
 }
 
-void FileList::checkSimilar(const std::list<std::string> & patterns) {
+void FileList::checkSimilar(const SkipList * siteskip, const SkipList * sectionskip) {
   similarchecked = true;
-  similarpatterns = patterns;
+  this->siteskip = siteskip;
+  this->sectionskip = sectionskip;
   for (File * f : filesfirstseen) {
     if (checkSimilarFile(f)) {
       return;
@@ -658,11 +665,13 @@ void FileList::checkSimilar(const std::list<std::string> & patterns) {
 }
 
 bool FileList::checkSimilarFile(File * f) {
-  for (const std::string & pattern : similarpatterns) {
-    if (util::wildcmp(pattern.c_str(), f->getName().c_str())) {
-      firstsimilar = f;
-      return true;
-    }
+  if (!siteskip || !sectionskip) {
+    return false;
+  }
+  SkipListMatch match = siteskip->check(f->getName(), f->isDirectory(), true, sectionskip);
+  if (match.action == SKIPLIST_SIMILAR) {
+    firstsimilar = f;
+    return true;
   }
   return false;
 }
