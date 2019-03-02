@@ -1367,30 +1367,37 @@ bool SiteLogic::requestReady(int requestid) const {
   return false;
 }
 
-void SiteLogic::abortRace(unsigned int id) {
-  std::shared_ptr<SiteRace> delrace = getRace(id);
-  if (!delrace) {
+void SiteLogic::abortRace(const std::shared_ptr<SiteRace> & race) {
+  if (!race) {
     return;
   }
-  delrace->abort();
-  removeFromRecentlyListed(delrace);
-  abortTransfers(delrace);
-  for (unsigned int i = 0; i < connstatetracker.size(); i++) {
-    connstatetracker[i].purgeSiteRace(delrace);
-  }
-  for (unsigned int i = 0; i < conns.size(); i++) {
-    if (conns[i]->currentCommandOwner() == delrace) {
-      conns[i]->resetCurrentCommandOwner();
-    }
-  }
+  race->abort();
+  removeRace(race);
 }
 
-void SiteLogic::removeRace(unsigned int id) {
-  abortRace(id);
+void SiteLogic::removeRace(const std::shared_ptr<SiteRace> & race) {
+  if (!race) {
+    return;
+  }
+  abortTransfers(race);
+  for (std::list<std::shared_ptr<SiteRace>>::iterator it = recentlylistedraces.begin(); it != recentlylistedraces.end(); it++) {
+    if (*it == race) {
+      recentlylistedraces.erase(it);
+      break;
+    }
+  }
   for (std::vector<std::shared_ptr<SiteRace>>::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
-    if ((*it)->getId() == id) {
+    if (*it == race) {
       currentraces.erase(it);
       return;
+    }
+  }
+  for (unsigned int i = 0; i < connstatetracker.size(); i++) {
+    connstatetracker[i].purgeSiteRace(race);
+  }
+  for (unsigned int i = 0; i < conns.size(); i++) {
+    if (conns[i]->currentCommandOwner() == race) {
+      conns[i]->resetCurrentCommandOwner();
     }
   }
 }
@@ -1403,15 +1410,6 @@ void SiteLogic::abortTransfers(const std::shared_ptr<CommandOwner> & co) {
       connstatetracker[i].getTransferMonitor()->getTransferStatus()->setAborted();
       disconnectConn(i);
       connectConn(i);
-    }
-  }
-}
-
-void SiteLogic::removeFromRecentlyListed(const std::shared_ptr<SiteRace> & race) {
-  for (std::list<std::shared_ptr<SiteRace>>::iterator it = recentlylistedraces.begin(); it != recentlylistedraces.end(); it++) {
-    if ((*it) == race) {
-      recentlylistedraces.erase(it);
-      break;
     }
   }
 }
@@ -1850,13 +1848,7 @@ RawBuffer * SiteLogic::getAggregatedRawBuffer() const {
 }
 
 void SiteLogic::raceGlobalComplete(const std::shared_ptr<SiteRace> & sr) {
-  removeFromRecentlyListed(sr);
-  for (unsigned int i = 0; i < currentraces.size(); i++) {
-    if (currentraces[i] == sr) {
-      currentraces.erase(currentraces.begin()+i);
-      break;
-    }
-  }
+  removeRace(sr);
   bool stillactive = !currentraces.empty();
   for (std::list<std::shared_ptr<SiteTransferJob> >::const_iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
     if (!(*it)->getTransferJob()->isDone()) {

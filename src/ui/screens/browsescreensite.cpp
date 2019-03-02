@@ -133,7 +133,7 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
     SkipListMatch match = site->getSkipList().check((prepend / uifile->getName()).toString(), isdir, withinraceskiplistreach, sectionskiplist);
     if (match.action == SKIPLIST_SIMILAR) {
       if (!filelist->similarChecked()) {
-        filelist->checkSimilar(site->getSkipList().getSimilarPatterns(sectionskiplist));
+        filelist->checkSimilar(&site->getSkipList(), sectionskiplist);
       }
     }
     bool allowed = !(match.action == SKIPLIST_DENY ||

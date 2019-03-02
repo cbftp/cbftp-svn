@@ -497,7 +497,7 @@ void Engine::removeSiteFromRace(const std::shared_ptr<Race> & race, const std::s
       race->removeSite(sr);
       wipeFromScoreBoard(sr);
       if (!!sl) {
-        sl->removeRace(race->getId());
+        sl->abortRace(sr);
       }
     }
   }
@@ -512,7 +512,7 @@ void Engine::removeSiteFromRaceDeleteFiles(const std::shared_ptr<Race> & race, c
       wipeFromScoreBoard(sr);
       if (!!sl) {
         sl->requestDelete(sr->getPath(), true, false, allfiles);
-        sl->removeRace(race->getId());
+        sl->abortRace(sr);
       }
     }
   }
@@ -522,7 +522,7 @@ void Engine::abortRace(const std::shared_ptr<Race> & race) {
   if (!!race && !race->isDone()) {
     race->abort();
     for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
-      it->second->abortRace(race->getId());
+      it->second->abortRace(it->first);
       wipeFromScoreBoard(it->first);
     }
     currentraces.remove(race);
@@ -655,7 +655,7 @@ void Engine::deleteOnSites(const std::shared_ptr<Race> & race, std::list<std::sh
       if (!sl) {
         continue;
       }
-      std::shared_ptr<SiteRace> sr = sl->getRace(race->getName());
+      std::shared_ptr<SiteRace> sr = race->getSiteRace((*it)->getName());
       if (!sr) {
         global->getEventLog()->log("Engine", "Site " + (*it)->getName() + " is not in spread job: " + race->getName());
         continue;
@@ -971,7 +971,7 @@ void Engine::addToScoreBoardForPair(const std::shared_ptr<SiteLogic> & sls, cons
     }
     if (filematch.action == SKIPLIST_SIMILAR) {
       if (!fld->similarChecked()) {
-        fld->checkSimilar(dstskip.getSimilarPatterns(&secskip));
+        fld->checkSimilar(&dstskip, &secskip);
       }
       if (fld->containsUnsimilar(name)) {
         continue;
@@ -1061,7 +1061,7 @@ void Engine::updateScoreBoard() {
           }
           if (filematch.action == SKIPLIST_SIMILAR) {
             if (!fl->similarChecked()) {
-              fl->checkSimilar(skip.getSimilarPatterns(&secskip));
+              fl->checkSimilar(&skip, &secskip);
             }
             if (fl->containsUnsimilar(name)) {
               continue;
@@ -1095,7 +1095,7 @@ void Engine::updateScoreBoard() {
         }
         if (filematch.action == SKIPLIST_SIMILAR) {
           if (!cmpfl->similarChecked()) {
-            cmpfl->checkSimilar(cmpskip.getSimilarPatterns(&secskip));
+            cmpfl->checkSimilar(&cmpskip, &secskip);
           }
           if (cmpfl->containsUnsimilar(name)) {
             continue;
@@ -1267,8 +1267,8 @@ void Engine::issueOptimalTransfers() {
           (Path(sbe->subDir()) / filename).toString(), false, true, &sbe->getRace()->getSectionSkipList());
       if (match.action == SKIPLIST_SIMILAR) {
         if (!sbe->getDestinationFileList()->similarChecked()) {
-          sbe->getDestinationFileList()->checkSimilar(
-              sbe->getDestination()->getSite()->getSkipList().getSimilarPatterns(&sbe->getRace()->getSectionSkipList()));
+          sbe->getDestinationFileList()->checkSimilar(&sbe->getDestination()->getSite()->getSkipList(),
+                                                      &sbe->getRace()->getSectionSkipList());
         }
       }
       if ((match.action == SKIPLIST_UNIQUE &&

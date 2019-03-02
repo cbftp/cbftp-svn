@@ -82,7 +82,6 @@ class SiteLogic : public EventReceiver {
     bool handleCommandDelete(int, bool);
     bool makeTargetDirectory(int, bool, const std::shared_ptr<CommandOwner> & co);
     std::shared_ptr<SiteRace> getRace(unsigned int id) const;
-    void removeFromRecentlyListed(const std::shared_ptr<SiteRace> & race);
   public:
     SiteLogic(const std::string &);
     ~SiteLogic();
@@ -148,8 +147,8 @@ class SiteLogic : public EventReceiver {
     int requestMakeDirectory(const std::string & dirname);
     bool requestReady(int) const;
     bool requestStatus(int) const;
-    void abortRace(unsigned int id);
-    void removeRace(unsigned int id);
+    void abortRace(const std::shared_ptr<SiteRace> & race);
+    void removeRace(const std::shared_ptr<SiteRace> & race);
     void abortTransfers(const std::shared_ptr<CommandOwner> & co);
     FileListData * getFileListData(int) const;
     std::string getRawCommandResult(int);
