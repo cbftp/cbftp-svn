@@ -61,7 +61,6 @@ public:
   bool transferJobActionRequest(const std::shared_ptr<SiteTransferJob> &);
   void raceActionRequest();
   void setPreparedRaceExpiryTime(int);
-  void clearSkipListCaches();
   unsigned int preparedRaces() const;
   unsigned int currentRaces() const;
   unsigned int allRaces() const;

@@ -57,18 +57,8 @@ void SkipListScreen::initialize() {
     testskiplist.addEntry(it->matchPattern(), it->matchFile(), it->matchDir(), it->matchScope(), it->getAction());
   }
   focusedarea = &base;
-  int y = 4;
-  int addx = 30;
-  if (globalskip) {
-    std::shared_ptr<MenuSelectOptionTextArrow> arrow = base.addTextArrow(y, 1, "defaultaction", "Default action:");
-    arrow->addOption("Allow", SKIPLIST_ALLOW);
-    arrow->addOption("Deny", SKIPLIST_DENY);
-    arrow->setOption(skiplist->defaultAllow() ? SKIPLIST_ALLOW : SKIPLIST_DENY);
-  }
-  else {
-    y++;
-    addx = 1;
-  }
+  int y = globalskip ? 4 : 5;
+  int addx = 1;
   base.addTextButtonNoContent(y++, addx, "add", "<Add pattern>");
   testpattern = base.addStringField(y, 1, "testpattern", "Test pattern:", "", false, 16, 256);
   testtype = base.addTextArrow(y, 34, "testtype", "Test type:");
@@ -236,7 +226,7 @@ void SkipListScreen::update() {
       allowstring = "SIMILAR";
     }
     ui->printStr(testtype->getRow(), testtype->getCol() + 20, allowstring);
-    std::string matchstring = "Match: " + (match.matched ? match.matchpattern : "default");
+    std::string matchstring = "Match: " + (match.matched ? match.matchpattern : "no match (allowed)");
     ui->printStr(testtype->getRow(), testtype->getCol() + 30, matchstring);
   }
 }
@@ -249,12 +239,10 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
       return true;
     }
   }
+  unsigned int pagerows = (row > 8 ? row - 8 : 2) * 0.6;
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
-      if (activeelement->getIdentifier() == "defaultaction") {
-        testskiplist.setDefaultAllow(std::static_pointer_cast<MenuSelectOptionTextArrow>(activeelement)->getData() == SKIPLIST_ALLOW);
-      }
       active = false;
       saveToTempSkipList();
       ui->update();
@@ -268,25 +256,24 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
   bool activation;
   switch(ch) {
     case KEY_UP:
-      focusedarea->goUp();
-      if (!focusedarea->isFocused()) {
-        defocusedarea = focusedarea;
-        focusedarea = &base;
-        focusedarea->enterFocusFrom(2);
-        focusedarea->goLeft();
-        ui->setLegend();
-      }
+      keyUp();
       ui->update();
       return true;
     case KEY_DOWN:
-      focusedarea->goDown();
-      if (!focusedarea->isFocused()) {
-        defocusedarea = focusedarea;
-        focusedarea = &table;
-        focusedarea->enterFocusFrom(0);
-        ui->setLegend();
-      }
+      keyDown();
       ui->update();
+      return true;
+    case KEY_NPAGE:
+      for (unsigned int i = 0; i < pagerows; i++) {
+        keyDown();
+      }
+      ui->redraw();
+      return true;
+    case KEY_PPAGE:
+      for (unsigned int i = 0; i < pagerows; i++) {
+        keyUp();
+      }
+      ui->redraw();
       return true;
     case KEY_LEFT:
       focusedarea->goLeft();
@@ -324,7 +311,6 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
       for (std::list<SkiplistItem>::const_iterator it = testskiplist.entriesBegin(); it != testskiplist.entriesEnd(); it++) {
         skiplist->addEntry(it->matchPattern(), it->matchFile(), it->matchDir(), it->matchScope(), it->getAction());
       }
-      skiplist->setDefaultAllow(testskiplist.defaultAllow());
       ui->returnToLast();
       return true;
     case KEY_DC:
@@ -382,6 +368,27 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
       return true;
   }
   return false;
+}
+
+void SkipListScreen::keyUp() {
+  focusedarea->goUp();
+  if (!focusedarea->isFocused()) {
+    defocusedarea = focusedarea;
+    focusedarea = &base;
+    focusedarea->enterFocusFrom(2);
+    focusedarea->goLeft();
+    ui->setLegend();
+  }
+}
+
+void SkipListScreen::keyDown() {
+  focusedarea->goDown();
+  if (!focusedarea->isFocused()) {
+    defocusedarea = focusedarea;
+    focusedarea = &table;
+    focusedarea->enterFocusFrom(0);
+    ui->setLegend();
+  }
 }
 
 std::string SkipListScreen::getLegendText() const {

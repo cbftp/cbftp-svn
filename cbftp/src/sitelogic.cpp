@@ -900,10 +900,6 @@ bool SiteLogic::handlePreTransfer(int id) {
   return false;
 }
 
-void SiteLogic::handleConnection(int id) {
-  handleConnection(id, false);
-}
-
 void SiteLogic::handleConnection(int id, bool backfromrefresh) {
   if (conns[id]->isProcessing()) {
     return;
@@ -1126,10 +1122,6 @@ bool SiteLogic::handleRequest(int id) {
       break;
   }
   return true;
-}
-
-void SiteLogic::handleRecursiveLogic(int id) {
-  handleRecursiveLogic(id, NULL);
 }
 
 void SiteLogic::handleRecursiveLogic(int id, FileList * fl) {
@@ -1749,10 +1741,6 @@ void SiteLogic::connectConn(int id) {
   }
 }
 
-void SiteLogic::disconnectConn(int id) {
-  disconnectConn(id, false);
-}
-
 void SiteLogic::disconnectConn(int id, bool hard) {
   connstatetracker[id].resetIdleTime();
   cleanupConnection(id);
@@ -1918,17 +1906,9 @@ std::string SiteLogic::getStatus(int id) const {
   return conns[id]->getStatus();
 }
 
-void SiteLogic::preparePassiveTransfer(int id, const std::string & file, bool fxp, bool ssl) {
-  preparePassiveTransfer(id, file, fxp, ssl, false);
-}
-
 void SiteLogic::preparePassiveTransfer(int id, const std::string & file, bool fxp, bool ssl, bool sslclient) {
   connstatetracker[id].setTransfer(file, fxp, ssl, sslclient);
   initTransfer(id);
-}
-
-void SiteLogic::prepareActiveTransfer(int id, const std::string & file, bool fxp, const std::string & host, int port, bool ssl) {
-  prepareActiveTransfer(id, file, fxp, host, port, ssl, false);
 }
 
 void SiteLogic::prepareActiveTransfer(int id, const std::string & file, bool fxp, const std::string & host, int port, bool ssl, bool sslclient) {
@@ -1984,10 +1964,6 @@ void SiteLogic::list(int id) {
 
 void SiteLogic::listAll(int id) {
   conns[id]->doLISTa();
-}
-
-void SiteLogic::getFileListConn(int id) {
-  getFileListConn(id, false);
 }
 
 void SiteLogic::getFileListConn(int id, bool hiddenfiles) {

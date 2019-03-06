@@ -31,6 +31,8 @@ private:
   void saveToTempSkipList();
   void addPatternLine(int, std::string, bool, bool, int, SkipListAction);
   void addPatternLine(int, std::string, bool, bool, int, SkipListAction, std::shared_ptr<MenuSelectAdjustableLine>);
+  void keyUp();
+  void keyDown();
   SkipList * skiplist;
   std::string currentlegendtext;
   std::string baselegendtext;

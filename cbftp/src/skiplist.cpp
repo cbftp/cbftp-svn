@@ -5,8 +5,6 @@
 #include <vector>
 
 #include "util.h"
-#include "globalcontext.h"
-#include "engine.h"
 
 namespace {
 
@@ -51,11 +49,11 @@ SkipListMatch::SkipListMatch(SkipListAction action, bool matched, const std::str
 
 }
 
-SkipList::SkipList() : defaultallow(true), globalskip(nullptr), similarpatternsset(false) {
+SkipList::SkipList() : globalskip(nullptr) {
   addDefaultEntries();
 }
 
-SkipList::SkipList(const SkipList * globalskip) : defaultallow(true), globalskip(globalskip), similarpatternsset(false) {
+SkipList::SkipList(const SkipList * globalskip) : globalskip(globalskip) {
   assert(globalskip != NULL);
 }
 
@@ -78,45 +76,49 @@ std::list<SkiplistItem>::const_iterator SkipList::entriesEnd() const {
 }
 
 SkipListMatch SkipList::check(const std::string & element, const bool dir, const bool inrace, const SkipList * fallthrough) const {
-  std::string cachetoken = createCacheToken(element, dir, inrace);
-  std::unordered_map<std::string, SkipListMatch>::const_iterator mit = matchcache.find(cachetoken);
-  if (mit != matchcache.end()) {
-    return mit->second;
-  }
-  std::list<SkiplistItem>::const_iterator it;
-  std::list<std::string> elementparts;
-  std::list<std::string>::iterator partsit;
-  elementparts.push_back(element);
-  size_t slashpos;
-  std::string elementmp = element;
-  while ((slashpos = elementmp.find('/')) != std::string::npos) {
-    elementmp = elementmp.substr(slashpos + 1);
-    if (elementmp.length()) {
-      elementparts.push_back(elementmp);
+  if (!entries.empty()) {
+    std::string cachetoken = createCacheToken(element, dir, inrace);
+    std::unordered_map<std::string, SkipListMatch>::const_iterator mit = matchcache.find(cachetoken);
+    if (mit != matchcache.end()) {
+      return mit->second;
     }
-  }
-  for (partsit = elementparts.begin(); partsit != elementparts.end(); partsit++) {
-    for (it = entries.begin(); it != entries.end(); it++) {
-      if (it->matchScope() == SCOPE_IN_RACE && !inrace) {
-        continue;
+    std::list<SkiplistItem>::const_iterator it;
+    std::list<std::string> elementparts;
+    std::list<std::string>::iterator partsit;
+    elementparts.push_back(element);
+    size_t slashpos;
+    std::string elementmp = element;
+    while ((slashpos = elementmp.find('/')) != std::string::npos) {
+      elementmp = elementmp.substr(slashpos + 1);
+      if (elementmp.length()) {
+        elementparts.push_back(elementmp);
       }
-      if ((it->matchDir() && dir) || (it->matchFile() && !dir)) {
-        if (fixedSlashCompare(it->matchPattern(), *partsit, false)) {
-          SkipListMatch match(it->getAction(), true, it->matchPattern());
-          matchcache.insert(std::pair<std::string, SkipListMatch>(cachetoken, match));
-          return match;
+    }
+    for (partsit = elementparts.begin(); partsit != elementparts.end(); partsit++) {
+      for (it = entries.begin(); it != entries.end(); it++) {
+        if (it->matchScope() == SCOPE_IN_RACE && !inrace) {
+          continue;
+        }
+        if ((it->matchDir() && dir) || (it->matchFile() && !dir)) {
+          if (fixedSlashCompare(it->matchPattern(), *partsit, false)) {
+            SkipListMatch match(it->getAction(), true, it->matchPattern());
+            matchcache.insert(std::pair<std::string, SkipListMatch>(cachetoken, match));
+            return match;
+          }
         }
       }
     }
+    SkipListMatch nomatch(SKIPLIST_NONE, false, "");
+    matchcache.insert(std::pair<std::string, SkipListMatch>(cachetoken, nomatch));
   }
-  SkipListMatch match(defaultallow ? SKIPLIST_ALLOW : SKIPLIST_DENY, false, "");
+
+  SkipListMatch match(SKIPLIST_ALLOW, false, "");
   if (fallthrough) {
     match = fallthrough->check(element, dir, inrace);
   }
   else if (globalskip) {
       match = globalskip->check(element, dir, inrace);
   }
-  matchcache.insert(std::pair<std::string, SkipListMatch>(cachetoken, match));
   return match;
 }
 
@@ -131,44 +133,10 @@ unsigned int SkipList::size() const {
   return entries.size();
 }
 
-bool SkipList::defaultAllow() const {
-  return defaultallow;
-}
-
-void SkipList::setDefaultAllow(bool defaultallow) {
-  this->defaultallow = defaultallow;
-  wipeCache();
-}
-
 void SkipList::wipeCache() {
   matchcache.clear();
-  similarpatternsset = false;
-  if (!globalskip) {
-    global->getEngine()->clearSkipListCaches();
-  }
 }
 
 void SkipList::setGlobalSkip(SkipList * skiplist) {
   globalskip = skiplist;
-}
-
-const std::list<std::string> & SkipList::getSimilarPatterns(const SkipList * fallthrough) const {
-  if (!similarpatternsset) {
-    similarpatterns.clear();
-    for (const SkiplistItem & entry : entries) {
-      if (entry.getAction() == SKIPLIST_SIMILAR && entry.matchFile()) {
-        similarpatterns.push_back(entry.matchPattern());
-      }
-    }
-    if (fallthrough) {
-      const std::list<std::string> & parent = fallthrough->getSimilarPatterns();
-      similarpatterns.insert(similarpatterns.end(), parent.begin(), parent.end());
-    }
-    else if (globalskip) {
-      const std::list<std::string> & parent = globalskip->getSimilarPatterns();
-      similarpatterns.insert(similarpatterns.end(), parent.begin(), parent.end());
-    }
-    similarpatternsset = true;
-  }
-  return similarpatterns;
 }

@@ -8,6 +8,7 @@ enum Scope {
 };
 
 enum SkipListAction {
+  SKIPLIST_NONE,
   SKIPLIST_ALLOW,
   SKIPLIST_DENY,
   SKIPLIST_UNIQUE,

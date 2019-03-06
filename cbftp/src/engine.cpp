@@ -1836,9 +1836,3 @@ int Engine::getPreparedRaceExpiryTime() const {
 void Engine::setPreparedRaceExpiryTime(int expirytime) {
   preparedraceexpirytime = expirytime;
 }
-
-void Engine::clearSkipListCaches() {
-  for (std::vector<std::shared_ptr<Site> >::const_iterator it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
-    (*it)->getSkipList().wipeCache();
-  }
-}
