@@ -21,6 +21,7 @@ private:
   mutable std::unordered_map<std::string, SkipListMatch> matchcache;
   const SkipList * globalskip;
   void addDefaultEntries();
+  SkipListMatch fallThrough(const std::string & element, const bool dir, const bool inrace, const SkipList * fallthrough) const;
 public:
   SkipList();
   SkipList(const SkipList *);

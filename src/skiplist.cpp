@@ -80,6 +80,9 @@ SkipListMatch SkipList::check(const std::string & element, const bool dir, const
     std::string cachetoken = createCacheToken(element, dir, inrace);
     std::unordered_map<std::string, SkipListMatch>::const_iterator mit = matchcache.find(cachetoken);
     if (mit != matchcache.end()) {
+      if (mit->second.action == SKIPLIST_NONE) {
+        return fallThrough(element, dir, inrace, fallthrough);
+      }
       return mit->second;
     }
     std::list<SkiplistItem>::const_iterator it;
@@ -111,7 +114,11 @@ SkipListMatch SkipList::check(const std::string & element, const bool dir, const
     SkipListMatch nomatch(SKIPLIST_NONE, false, "");
     matchcache.insert(std::pair<std::string, SkipListMatch>(cachetoken, nomatch));
   }
+  return fallThrough(element, dir, inrace, fallthrough);
 
+}
+
+SkipListMatch SkipList::fallThrough(const std::string & element, const bool dir, const bool inrace, const SkipList * fallthrough) const {
   SkipListMatch match(SKIPLIST_ALLOW, false, "");
   if (fallthrough) {
     match = fallthrough->check(element, dir, inrace);

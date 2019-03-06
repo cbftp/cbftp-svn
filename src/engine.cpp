@@ -609,6 +609,21 @@ void Engine::removeFromFinished(const std::shared_ptr<Race> & race) {
   }
 }
 
+void Engine::clearSkipListCaches() {
+  for (const std::shared_ptr<Site> & site : skiplistcachesites) {
+    site->getSkipList().wipeCache();
+  }
+  for (const std::string & section : skiplistcachesections) {
+    Section * sec = global->getSectionManager()->getSection(section);
+    if (sec) {
+      sec->getSkipList().wipeCache();
+    }
+  }
+  global->getSkipList()->wipeCache();
+  skiplistcachesites.clear();
+  skiplistcachesections.clear();
+}
+
 bool Engine::transferExpectedSoon(ScoreBoardElement * sbe) const {
   const std::string & filename = sbe->fileName();
   if (sbe->getDestinationSiteRace()->isAborted()) {
@@ -1393,7 +1408,6 @@ void Engine::checkIfRaceComplete(const std::shared_ptr<SiteLogic> & sls, std::sh
 }
 
 void Engine::raceComplete(std::shared_ptr<Race> race) {
-  issueGlobalComplete(race);
   for (std::list<std::shared_ptr<Race> >::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
     if ((*it) == race) {
       currentraces.erase(it);
@@ -1401,6 +1415,7 @@ void Engine::raceComplete(std::shared_ptr<Race> race) {
       break;
     }
   }
+  issueGlobalComplete(race);
   global->getEventLog()->log("Engine", "Spread job globally completed: " + race->getName());
   if (dropped) {
     global->getEventLog()->log("Engine", "Scoreboard refreshes dropped since spread job start: " + std::to_string(dropped));
@@ -1673,9 +1688,9 @@ void Engine::tick(int message) {
           its->second->raceLocalComplete(its->first, 0, false);
         }
         race->setTimeout();
-        issueGlobalComplete(race);
         currentraces.erase(it);
         finishedraces.push_back(race);
+        issueGlobalComplete(race);
         break;
       }
       else {
@@ -1745,6 +1760,11 @@ void Engine::issueGlobalComplete(const std::shared_ptr<Race> & race) {
   for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator itd = race->begin(); itd != race->end(); itd++) {
     itd->second->raceGlobalComplete(itd->first);
     wipeFromScoreBoard(itd->first);
+    skiplistcachesites.insert(itd->second->getSite());
+  }
+  skiplistcachesections.insert(race->getSection());
+  if (currentraces.empty()) {
+    clearSkipListCaches();
   }
 }
 
