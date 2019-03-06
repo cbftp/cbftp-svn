@@ -8,6 +8,8 @@ class SectionManager {
 public:
   std::unordered_map<std::string, Section>::const_iterator begin() const;
   std::unordered_map<std::string, Section>::const_iterator end() const;
+  std::unordered_map<std::string, Section>::iterator begin();
+  std::unordered_map<std::string, Section>::iterator end();
   size_t size() const;
   Section * getSection(const std::string & name);
   bool addSection(const std::string & name);

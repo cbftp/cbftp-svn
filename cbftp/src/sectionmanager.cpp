@@ -11,6 +11,14 @@ std::unordered_map<std::string, Section>::const_iterator SectionManager::end() c
   return sections.end();
 }
 
+std::unordered_map<std::string, Section>::iterator SectionManager::begin() {
+  return sections.begin();
+}
+
+std::unordered_map<std::string, Section>::iterator SectionManager::end() {
+  return sections.end();
+}
+
 size_t SectionManager::size() const {
   return sections.size();
 }

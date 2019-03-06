@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "core/eventreceiver.h"
 
@@ -129,6 +130,7 @@ public:
   bool transferExpectedSoon(ScoreBoardElement * sbe) const;
   void restoreFromFailed(const std::shared_ptr<Race> & race);
   void removeFromFinished(const std::shared_ptr<Race> & race);
+  void clearSkipListCaches();
   std::list<std::shared_ptr<Race> > allraces;
   std::list<std::shared_ptr<Race> > currentraces;
   std::list<std::shared_ptr<Race> > finishedraces;
@@ -152,4 +154,6 @@ public:
   int nextpreparedtimeremaining;
   std::unordered_map<FileList *, std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic>>> spreadjobfilelistschanged;
   bool forcescoreboard;
+  std::unordered_set<std::shared_ptr<Site>> skiplistcachesites;
+  std::unordered_set<std::string> skiplistcachesections;
 };
