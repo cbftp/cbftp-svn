@@ -162,9 +162,6 @@ void SettingsLoaderSaver::loadSettings() {
     if (!setting.compare("entry")) {
       loadSkipListEntry(global->getSkipList(), value);
     }
-    if (!setting.compare("defaultallow")) {
-      global->getSkipList()->setDefaultAllow(value.compare("true") == 0 ? true : false);
-    }
   }
 
 
@@ -599,11 +596,8 @@ void SettingsLoaderSaver::saveSettings() {
     dfh->addOutputLine(filetag, "pdf=" + global->getExternalFileViewing()->getPDFViewer());
   }
 
-  {
-    addSkipList(global->getSkipList(), "SkipList", "entry=");
-    std::string defaultallowstr = global->getSkipList()->defaultAllow() ? "true" : "false";
-    dfh->addOutputLine("SkipList", "defaultallow=" + defaultallowstr);
-  }
+
+  addSkipList(global->getSkipList(), "SkipList", "entry=");
 
   {
     std::vector<Proxy *>::const_iterator it;

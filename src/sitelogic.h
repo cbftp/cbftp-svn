@@ -53,11 +53,9 @@ class SiteLogic : public EventReceiver {
     bool poke;
     int currtime;
     int timesincelastrequestready;
-    void handleConnection(int);
-    void handleConnection(int, bool);
+    void handleConnection(int id, bool backfromrefresh = false);
     bool handleRequest(int);
-    void handleRecursiveLogic(int);
-    void handleRecursiveLogic(int, FileList *);
+    void handleRecursiveLogic(int id, FileList * fl = nullptr);
     void addRecentList(const std::shared_ptr<SiteRace> & sr);
     bool wasRecentlyListed(const std::shared_ptr<SiteRace> & sr) const;
     void refreshChangePath(int, const std::shared_ptr<SiteRace> & race, bool);
@@ -67,8 +65,7 @@ class SiteLogic : public EventReceiver {
     void handleTransferFail(int, int, int);
     void reportTransferErrorAndFinish(int, int);
     void reportTransferErrorAndFinish(int, int, int);
-    void getFileListConn(int);
-    void getFileListConn(int, bool);
+    void getFileListConn(int id, bool hiddenfiles = false);
     void getFileListConn(int, const std::shared_ptr<CommandOwner> & co, FileList *);
     void passiveModeCommand(int);
     static void * run(void *);
@@ -124,8 +121,7 @@ class SiteLogic : public EventReceiver {
     int getCurrUp() const;
     int getCleanlyClosedConnectionsCount() const;
     void connectConn(int);
-    void disconnectConn(int);
-    void disconnectConn(int, bool);
+    void disconnectConn(int id, bool hard = false);
     void finishTransferGracefully(int);
     void listCompleted(int, int, FileList *, const std::shared_ptr<CommandOwner> & co);
     void issueRawCommand(unsigned int, const std::string &);
@@ -160,10 +156,8 @@ class SiteLogic : public EventReceiver {
     const std::vector<FTPConn *> * getConns() const;
     FTPConn * getConn(int) const;
     std::string getStatus(int) const;
-    void preparePassiveTransfer(int, const std::string &, bool, bool);
-    void preparePassiveTransfer(int, const std::string &, bool, bool, bool);
-    void prepareActiveTransfer(int, const std::string &, bool, const std::string &, int, bool);
-    void prepareActiveTransfer(int, const std::string &, bool, const std::string &, int, bool, bool);
+    void preparePassiveTransfer(int id, const std::string & file, bool fxp, bool ssl, bool sslclient = false);
+    void prepareActiveTransfer(int id, const std::string & file , bool fxp, const std::string & host, int port, bool ssl, bool sslclient = false);
     void preparePassiveList(int, TransferMonitor *, bool);
     void prepareActiveList(int, TransferMonitor *, const std::string &, int, bool);
     void download(int);
