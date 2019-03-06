@@ -8,11 +8,11 @@ enum Scope {
 };
 
 enum SkipListAction {
-  SKIPLIST_NONE,
   SKIPLIST_ALLOW,
   SKIPLIST_DENY,
   SKIPLIST_UNIQUE,
-  SKIPLIST_SIMILAR
+  SKIPLIST_SIMILAR,
+  SKIPLIST_NONE
 };
 
 class SkiplistItem {
