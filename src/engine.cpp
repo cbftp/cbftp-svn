@@ -1674,7 +1674,7 @@ void Engine::tick(int message) {
     }
   }
   for (std::list<std::shared_ptr<Race> >::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
-    const std::shared_ptr<Race> & race = *it;
+    std::shared_ptr<Race> race = *it;
     int timeoutafterseconds = race->timeoutCheck();
     if (timeoutafterseconds != -1) {
       if (waitingInScoreBoard(race)) {
