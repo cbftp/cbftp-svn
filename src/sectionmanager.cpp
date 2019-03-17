@@ -28,7 +28,16 @@ Section * SectionManager::getSection(const std::string & name) {
   if (it != sections.end()) {
     return &it->second;
   }
-  return NULL;
+  return nullptr;
+}
+
+Section * SectionManager::getSection(int hotkey) {
+  for (auto it = sections.begin(); it != sections.end(); it++) {
+    if (it->second.getHotKey() == hotkey) {
+      return &it->second;
+    }
+  }
+  return nullptr;
 }
 
 bool SectionManager::addSection(const std::string & name) {

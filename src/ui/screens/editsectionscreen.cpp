@@ -42,6 +42,8 @@ void EditSectionScreen::initialize(unsigned int row, unsigned int col, const std
   mso.reset();
   mso.addStringField(1, 1, "name", "Section name:", this->section->getName(), false);
   mso.addTextButtonNoContent(3, 1, "skiplist", "Configure skiplist...");
+  std::shared_ptr<MenuSelectOptionNumArrow> hotkeyarrow = mso.addIntArrow(4, 1, "hotkey", "Hotkey:", this->section->getHotKey(), -1, 9);
+  hotkeyarrow->setSubstituteText(-1, "None");
   mso.enterFocusFrom(0);
   init(row, col);
 }
@@ -147,6 +149,9 @@ void EditSectionScreen::done() {
     if (identifier == "name") {
       std::string newname = std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData();
       section->setName(newname);
+    }
+    if (identifier == "hotkey") {
+      section->setHotKey(std::static_pointer_cast<MenuSelectOptionNumArrow>(msoe)->getData());
     }
   }
   switch (mode) {

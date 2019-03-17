@@ -48,14 +48,22 @@ void NumInputArrow::deactivate() {
   active = false;
 }
 std::string NumInputArrow::getVisual() const {
-  int maxlen = std::to_string(max).length() + 4;
-  std::string out = "";
+  unsigned int maxlen = std::to_string(max).length();
+  for (const std::pair<int, std::string> & substitute : substituteTexts) {
+    if (substitute.second.length() > maxlen) {
+      maxlen = substitute.second.length();
+    }
+  }
+  maxlen += 4;
+  std::map<int, std::string>::const_iterator it = substituteTexts.find(val);
+  std::string out = it != substituteTexts.end() ? it->second : std::to_string(val);
   if (active) {
-    out = "< " + std::to_string(val) + " >";
+    out = "< " + out + " >";
   }
-  else {
-    out = std::to_string(val);
-  }
-  while ((int) out.length() < maxlen) out += ' ';
+  while (out.length() < maxlen) out += ' ';
   return out;
+}
+
+void NumInputArrow::setSubstituteText(int value, const std::string & text) {
+  substituteTexts[value] = text;
 }

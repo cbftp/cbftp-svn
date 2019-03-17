@@ -651,11 +651,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
         else {
           requestedpath = oldpath / cursoredfile->getName();
         }
-        BrowseScreenRequest request;
-        request.id = sitelogic->requestFileList(requestedpath);
-        request.type = BrowseScreenRequestType::FILELIST;
-        request.path = requestedpath;
-        requests.push_back(request);
+        gotoPath(requestedpath);
         ui->update();
         ui->setInfo();
       }
@@ -721,11 +717,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
         return BrowseScreenAction(BROWSESCREENACTION_CLOSE);
       }
       Path requestedpath = oldpath.cutLevels(1);
-      BrowseScreenRequest request;
-      request.id = sitelogic->requestFileList(requestedpath);
-      request.type = BrowseScreenRequestType::FILELIST;
-      request.path = requestedpath;
-      requests.push_back(request);
+      gotoPath(requestedpath);
       ui->setInfo();
       //go up one directory level, or return if at top already
       return BrowseScreenAction(BROWSESCREENACTION_CHDIR);
@@ -735,14 +727,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       ui->setInfo();
       break;
     case KEY_DOWN:
-      clearSoftSelects();
-      //go down and highlight next item (if not at bottom already)
-      update = list.goNext();
-      if (list.currentCursorPosition() >= currentviewspan + row) {
-        ui->redraw();
-      }
-      else if (update) {
-        table.goDown();
+      if (!keyDown()) {
         ui->update();
       }
       break;
@@ -870,7 +855,9 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
         else {
           list.cursoredFile()->hardSelect();
         }
-        ui->redraw();
+        if (!keyDown()) {
+          ui->redraw();
+        }
       }
       else if (list.cursoredFile() != NULL) {
         if (list.cursoredFile()->isHardSelected()) {
@@ -879,7 +866,9 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
         else {
           list.cursoredFile()->hardSelect();
         }
-        ui->update();
+        if (!keyDown()) {
+          ui->update();
+        }
       }
       break;
     case 'w':
@@ -908,7 +897,7 @@ std::string BrowseScreenSite::getLegendText() const {
   if (filtermodeinput) {
     return "[Any] Enter space separated filters. Valid operators are !, *, ?. Must match all negative filters and at least one positive if given. Case insensitive. - [Esc] Cancel";
   }
-  return "[Esc] Cancel - [c]lose - [Up/Down] Navigate - [Enter/Right] open dir - [Backspace/Left] return - sp[r]ead - [v]iew file - [D]ownload - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - [m]ake directory - Toggle se[P]arators - [q]uick jump - Toggle [f]ilter - view cwd [l]og - [Space] Hard select - [Shift-Up/Down] Soft select - Select [A]ll";
+  return "[Esc] Cancel - [c]lose - [Up/Down] Navigate - [Enter/Right] open dir - [Backspace/Left] return - sp[r]ead - [v]iew file - [D]ownload - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - [m]ake directory - Toggle se[P]arators - [q]uick jump - Toggle [f]ilter - view cwd [l]og - [Space] Hard select - [Shift-Up/Down] Soft select - Select [A]ll - [0-9] Browse to section";
 }
 
 std::string BrowseScreenSite::getInfoLabel() const {
@@ -1036,11 +1025,7 @@ UIFile * BrowseScreenSite::selectedFile() const {
 }
 
 void BrowseScreenSite::refreshFilelist() {
-  BrowseScreenRequest request;
-  request.id = sitelogic->requestFileList(list.getPath());
-  request.type = BrowseScreenRequestType::FILELIST;
-  request.path = list.getPath();
-  requests.push_back(request);
+  gotoPath(list.getPath());
 }
 
 void BrowseScreenSite::tick(int) {
@@ -1085,4 +1070,26 @@ void BrowseScreenSite::viewCursored() {
       ui->goViewFile(site->getName(), list.cursoredFile()->getName(), filelist);
     }
   }
+}
+
+bool BrowseScreenSite::keyDown() {
+  clearSoftSelects();
+  //go down and highlight next item (if not at bottom already)
+  bool update = list.goNext();
+  if (list.currentCursorPosition() >= currentviewspan + row) {
+    ui->redraw();
+    return true;
+  }
+  else if (update) {
+    table.goDown();
+  }
+  return false;
+}
+
+void BrowseScreenSite::gotoPath(const Path & path) {
+  BrowseScreenRequest request;
+  request.id = sitelogic->requestFileList(path);
+  request.type = BrowseScreenRequestType::FILELIST;
+  request.path = path;
+  requests.push_back(request);
 }

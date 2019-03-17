@@ -17,4 +17,5 @@ public:
   int getData() const;
   void setData(int value);
   std::string getLegendText() const;
+  void setSubstituteText(int value, const std::string & text);
 };

@@ -44,3 +44,7 @@ void MenuSelectOptionNumArrow::setData(int value) {
 std::string MenuSelectOptionNumArrow::getLegendText() const {
   return "[Enter] Finish editing - [Left] Decrease value - [Right] Increase value";
 }
+
+void MenuSelectOptionNumArrow::setSubstituteText(int value, const std::string & text) {
+  arrow.setSubstituteText(value, text);
+}

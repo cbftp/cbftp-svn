@@ -405,14 +405,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       break;
     }
     case KEY_DOWN:
-      //go down and highlight next item (if not at bottom already)
-      clearSoftSelects();
-      update = list.goNext();
-      if (list.currentCursorPosition() >= currentviewspan + row) {
-        ui->redraw();
-      }
-      else if (update) {
-        table.goDown();
+      if (!keyDown()) {
         ui->update();
       }
       break;
@@ -596,7 +589,9 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
         else {
           list.cursoredFile()->hardSelect();
         }
-        ui->redraw();
+        if (!keyDown()) {
+          ui->redraw();
+        }
       }
       else if (list.cursoredFile() != NULL) {
         if (list.cursoredFile()->isHardSelected()) {
@@ -605,7 +600,9 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
         else {
           list.cursoredFile()->hardSelect();
         }
-        ui->update();
+        if (!keyDown()) {
+          ui->update();
+        }
       }
       break;
     case '-':
@@ -815,4 +812,18 @@ void BrowseScreenLocal::viewCursored() {
       ui->goViewFile(filelist->getPath(), list.cursoredFile()->getName());
     }
   }
+}
+
+bool BrowseScreenLocal::keyDown() {
+  clearSoftSelects();
+  //go down and highlight next item (if not at bottom already)
+  bool update = list.goNext();
+  if (list.currentCursorPosition() >= currentviewspan + row) {
+    ui->redraw();
+    return true;
+  }
+  else if (update) {
+    table.goDown();
+  }
+  return false;
 }

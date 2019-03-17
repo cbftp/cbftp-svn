@@ -11,6 +11,8 @@
 #include "../../filelist.h"
 #include "../../sitemanager.h"
 #include "../../site.h"
+#include "../../sectionmanager.h"
+#include "../../section.h"
 
 #include "../ui.h"
 #include "../termint.h"
@@ -263,6 +265,37 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
       ui->redraw();
       ui->setInfo();
       return true;
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9': {
+      int hotkey = ch - '0';
+      Section * section = global->getSectionManager()->getSection(hotkey);
+      if (section == nullptr) {
+        return true;
+      }
+      if (left->type() == BROWSESCREEN_SITE) {
+        std::shared_ptr<Site> site = std::static_pointer_cast<BrowseScreenSite>(left)->getSite();
+        if (site->hasSection(section->getName())) {
+          Path path = site->getSectionPath(section->getName());
+          std::static_pointer_cast<BrowseScreenSite>(left)->gotoPath(path);
+        }
+      }
+      if (split && right->type() == BROWSESCREEN_SITE) {
+        std::shared_ptr<Site> site = std::static_pointer_cast<BrowseScreenSite>(right)->getSite();
+        if (site->hasSection(section->getName())) {
+          Path path = site->getSectionPath(section->getName());
+          std::static_pointer_cast<BrowseScreenSite>(right)->gotoPath(path);
+        }
+      }
+      return true;
+    }
   }
   return false;
 }
