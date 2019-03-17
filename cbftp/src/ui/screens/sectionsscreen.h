@@ -26,7 +26,7 @@ private:
   void addSectionTableHeader(unsigned int y, MenuSelectOption & mso);
   void addSectionDetails(unsigned int y, MenuSelectOption & mso, const Section & section);
   void addSectionTableRow(unsigned int y, MenuSelectOption & mso, bool selectable,
-      const std::string & name, const std::string & skiplist, const std::string & numjobs,
+      const std::string & name, const std::string & skiplist, const std::string & hotkey, const std::string & numjobs,
       const std::string & numsites, const std::string & sites);
   MenuSelectOption table;
   unsigned int currentviewspan;

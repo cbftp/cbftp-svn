@@ -12,6 +12,7 @@ public:
   std::unordered_map<std::string, Section>::iterator end();
   size_t size() const;
   Section * getSection(const std::string & name);
+  Section * getSection(int hotkey);
   bool addSection(const std::string & name);
   bool addSection(const Section & section);
   bool replaceSection(const Section & section, const std::string & oldname);

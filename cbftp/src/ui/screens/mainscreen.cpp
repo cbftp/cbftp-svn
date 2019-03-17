@@ -16,6 +16,8 @@
 #include "../../remotecommandhandler.h"
 #include "../../settingsloadersaver.h"
 #include "../../preparedrace.h"
+#include "../../sectionmanager.h"
+#include "../../section.h"
 
 #include <cassert>
 
@@ -35,7 +37,7 @@ MainScreen::MainScreen(Ui * ui) {
 
 void MainScreen::initialize(unsigned int row, unsigned int col) {
   baselegendtext = "[Down] Next option - [Up] Previous option - [A]dd site - [G]lobal settings - Event [l]og - [t]ransfers - All [r]aces - All transfer[j]obs - toggle [U]dp - Browse lo[c]al - General [i]nfo - [s]ections - [Esc] back to browsing";
-  sitelegendtext = baselegendtext + " - [Tab] split browse - [right/b]rowse site - ra[w] command - [E]dit site - [C]opy site - [D]elete site - [q]uick jump - [L]ogin all slots";
+  sitelegendtext = baselegendtext + " - [Tab] split browse - [right/b]rowse site - ra[w] command - [E]dit site - [C]opy site - [D]elete site - [q]uick jump - [L]ogin all slots - [0-9] Browse to section";
   preparelegendtext = baselegendtext + " - [Enter/s] start job - [Del] delete race";
   spreadjoblegendtext = baselegendtext + " - [Enter] Details - a[B]ort job - [T]ransfers for job - [R]eset job";
   transferjoblegendtext = baselegendtext + " - [Enter] Details - a[B]ort job - [T]ransfers for job";
@@ -301,16 +303,24 @@ bool MainScreen::keyPressed(unsigned int ch) {
   }
   unsigned int pagerows = (unsigned int) (row - sitestartrow) * 0.6;
   if (gotomode) {
+    bool matched = false;
     if (ch >= 32 && ch <= 126) {
       for (int i = 0; i < global->getSiteManager()->getNumSites(); i++) {
         std::shared_ptr<Site> site = global->getSiteManager()->getSite(i);
         if (toupper(ch) == toupper(site->getName()[0])) {
           sitepos = i;
+          matched = true;
           break;
         }
       }
     }
     gotomode = false;
+    if (matched && !msos.isFocused()) {
+      defocusedarea = focusedarea;
+      defocusedarea->defocus();
+      focusedarea = &msos;
+      focusedarea->enterFocusFrom(0);
+    }
     ui->update();
     ui->setLegend();
     return true;
@@ -459,6 +469,11 @@ bool MainScreen::keyPressed(unsigned int ch) {
       }
       ui->redraw();
       return true;
+    case 'q':
+      gotomode = true;
+      ui->update();
+      ui->setLegend();
+      return true;
     case 27: // esc
       ui->goContinueBrowsing();
       return true;
@@ -509,11 +524,32 @@ bool MainScreen::keyPressed(unsigned int ch) {
         ui->goRawCommand(sitename);
         return true;
       }
-      case 'q':
-        gotomode = true;
-        ui->update();
-        ui->setLegend();
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9': {
+        if (!msos.linesSize()) {
+          break;
+        }
+        int hotkey = ch - '0';
+        Section * section = global->getSectionManager()->getSection(hotkey);
+        if (section == nullptr) {
+          return true;
+        }
+        std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
+        std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
+        if (site->hasSection(section->getName())) {
+          Path path = site->getSectionPath(section->getName());
+          ui->goBrowse(sitename, path);
+        }
         return true;
+      }
     }
   }
   return false;

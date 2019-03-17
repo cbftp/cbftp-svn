@@ -516,6 +516,9 @@ void SettingsLoaderSaver::loadSettings() {
     if (!setting.compare("jobs")) {
       section->setNumJobs(std::stoi(value));
     }
+    if (!setting.compare("hotkey")) {
+      section->setHotKey(std::stoi(value));
+    }
     if (!setting.compare("skiplistentry")) {
       loadSkipListEntry(&section->getSkipList(), value);
     }
@@ -721,6 +724,7 @@ void SettingsLoaderSaver::saveSettings() {
     for (auto it = global->getSectionManager()->begin(); it != global->getSectionManager()->end(); ++it) {
       const Section & section = it->second;
       dfh->addOutputLine(filetag, section.getName() + "$jobs=" + std::to_string(section.getNumJobs()));
+      dfh->addOutputLine(filetag,  section.getName() + "$hotkey=" + std::to_string(section.getHotKey()));
       addSkipList(&section.getSkipList(), filetag, section.getName() + "$skiplistentry=");
     }
   }

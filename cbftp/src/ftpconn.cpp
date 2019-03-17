@@ -832,7 +832,9 @@ void FTPConn::WIPEResponse() {
   processing = false;
   if (databufcode == 200) {
     std::string data = std::string(databuf, databufpos);
-    if (data.find("successfully") != std::string::npos) {
+    if (data.find("successfully") != std::string::npos ||
+        data.find("okay") != std::string::npos)
+    {
       sl->commandSuccess(id, state);
       return;
     }
@@ -864,7 +866,9 @@ void FTPConn::NUKEResponse() {
   processing = false;
   if (databufcode == 200) {
     std::string data = std::string(databuf, databufpos);
-    if (data.find("uccess") != std::string::npos) {
+    if (data.find("uccess") != std::string::npos ||
+        data.find("succeeded") != std::string::npos)
+    {
       sl->commandSuccess(id, state);
     }
     else {

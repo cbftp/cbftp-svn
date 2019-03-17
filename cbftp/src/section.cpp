@@ -2,11 +2,11 @@
 
 #include "globalcontext.h"
 
-Section::Section() : jobs(0), skiplist(global->getSkipList()) {
+Section::Section() : jobs(0), skiplist(global->getSkipList()), hotkey(-1) {
 
 }
 
-Section::Section(const std::string & name) : name(name), jobs(0), skiplist(global->getSkipList()) {
+Section::Section(const std::string & name) : name(name), jobs(0), skiplist(global->getSkipList()), hotkey(-1) {
 
 }
 
@@ -36,4 +36,12 @@ void Section::setNumJobs(int jobs) {
 
 void Section::addJob() {
   ++jobs;
+}
+
+int Section::getHotKey() const {
+  return hotkey;
+}
+
+void Section::setHotKey(int hotkey) {
+  this->hotkey = hotkey;
 }

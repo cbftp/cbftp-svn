@@ -41,6 +41,7 @@ private:
   void gotoPath(int requestid, const Path & path);
   void clearSoftSelects();
   void viewCursored();
+  bool keyDown();
   Ui * ui;
   unsigned int row;
   unsigned int col;

@@ -45,6 +45,7 @@ public:
   UIFile * selectedFile() const;
   UIFileList * getUIFileList() override;
   const std::shared_ptr<Site> & getSite() const;
+  void gotoPath(const Path & path);
 private:
   Ui * ui;
   unsigned int row;
@@ -86,4 +87,5 @@ private:
   bool handleReadyRequests();
   void loadFileListFromRequest();
   void viewCursored();
+  bool keyDown();
 };

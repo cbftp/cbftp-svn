@@ -222,7 +222,7 @@ std::string SectionsScreen::getInfoText() const {
 }
 
 void SectionsScreen::addSectionTableHeader(unsigned int y, MenuSelectOption & mso) {
-  addSectionTableRow(y, mso, false, "NAME", "SKIPLIST", "#JOBS", "#SITES", "SITES");
+  addSectionTableRow(y, mso, false, "NAME", "SKIPLIST", "HOTKEY", "#JOBS", "#SITES", "SITES");
 }
 
 void SectionsScreen::addSectionDetails(unsigned int y, MenuSelectOption & mso, const Section & section) {
@@ -233,12 +233,14 @@ void SectionsScreen::addSectionDetails(unsigned int y, MenuSelectOption & mso, c
       sites.push_back((*it)->getName());
     }
   }
-  addSectionTableRow(y, mso, true, section.getName(), skiplist, std::to_string(section.getNumJobs()),
+  int hotkey = section.getHotKey();
+  std::string hotkeystr = hotkey != -1 ? std::to_string(hotkey) : "None";
+  addSectionTableRow(y, mso, true, section.getName(), skiplist, hotkeystr, std::to_string(section.getNumJobs()),
                      std::to_string(sites.size()), util::join(sites, ","));
 }
 
 void SectionsScreen::addSectionTableRow(unsigned int y, MenuSelectOption & mso, bool selectable,
-    const std::string & name, const std::string & skiplist, const std::string & numjobs,
+    const std::string & name, const std::string & skiplist, const std::string & hotkey, const std::string & numjobs,
     const std::string & numsites, const std::string & sites)
 {
   std::shared_ptr<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
@@ -251,15 +253,19 @@ void SectionsScreen::addSectionTableRow(unsigned int y, MenuSelectOption & mso, 
   msotb->setSelectable(false);
   msal->addElement(msotb, 5, RESIZE_REMOVE);
 
-  msotb = mso.addTextButtonNoContent(y, 1, "numjobs", numjobs);
-  msotb->setSelectable(false);
-  msal->addElement(msotb, 3, RESIZE_REMOVE);
-
-  msotb = mso.addTextButtonNoContent(y, 1, "numsites", numsites);
+  msotb = mso.addTextButtonNoContent(y, 1, "hotkey", hotkey);
   msotb->setSelectable(false);
   msal->addElement(msotb, 4, RESIZE_REMOVE);
 
+  msotb = mso.addTextButtonNoContent(y, 1, "numjobs", numjobs);
+  msotb->setSelectable(false);
+  msal->addElement(msotb, 2, RESIZE_REMOVE);
+
+  msotb = mso.addTextButtonNoContent(y, 1, "numsites", numsites);
+  msotb->setSelectable(false);
+  msal->addElement(msotb, 3, RESIZE_REMOVE);
+
   msotb = mso.addTextButtonNoContent(y, 1, "sites", sites);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 2, RESIZE_WITHDOTS);
+  msal->addElement(msotb, 1, RESIZE_WITHDOTS);
 }
