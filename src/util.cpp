@@ -157,7 +157,7 @@ std::string getGroupNameFromRelease(const std::string & release) {
   size_t splitpos = release.rfind("-");
   if (splitpos != std::string::npos) {
     std::string group = release.substr(splitpos + 1);
-    size_t inttag = group.rfind("_");
+    size_t inttag = util::toLower(group).rfind("_int");
     if (inttag != std::string::npos) {
       group = group.substr(0, inttag);
     }
