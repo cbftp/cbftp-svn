@@ -156,7 +156,12 @@ std::vector<unsigned long long int> getPowers() {
 std::string getGroupNameFromRelease(const std::string & release) {
   size_t splitpos = release.rfind("-");
   if (splitpos != std::string::npos) {
-    return release.substr(splitpos + 1);
+    std::string group = release.substr(splitpos + 1);
+    size_t inttag = group.rfind("_");
+    if (inttag != std::string::npos) {
+      group = group.substr(0, inttag);
+    }
+    return group;
   }
   else {
     return "";
