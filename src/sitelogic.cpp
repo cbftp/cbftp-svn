@@ -1782,7 +1782,7 @@ void SiteLogic::cleanupConnection(int id) {
       }
       connstatetracker[id].setRequest(*it);
       requests.erase(it);
-      setRequestReady(id, NULL, false);
+      setRequestReady(id, NULL, false, false);
       erased = true;
       break;
     }
@@ -2008,7 +2008,7 @@ const ConnStateTracker * SiteLogic::getConnStateTracker(int id) const {
   return &connstatetracker[id];
 }
 
-void SiteLogic::setRequestReady(unsigned int id, void * data, bool status) {
+void SiteLogic::setRequestReady(unsigned int id, void * data, bool status, bool returnslot) {
   const std::shared_ptr<SiteLogicRequest> & request = connstatetracker[id].getRequest();
   requestsready.push_back(SiteLogicRequestReady(request->requestType(), request->requestId(), data, status));
   while (requestsready.size() > MAX_REQUEST_READY_QUEUE_SIZE && timesincelastrequestready > MAX_REQUEST_READY_QUEUE_IDLE_TIME) {
@@ -2018,7 +2018,9 @@ void SiteLogic::setRequestReady(unsigned int id, void * data, bool status) {
   timesincelastrequestready = 0;
   const bool care = request->doesAnyoneCare();
   connstatetracker[id].finishRequest();
-  available++;
+  if (returnslot) {
+    available++;
+  }
   if (care) {
     global->getUIBase()->backendPush();
   }

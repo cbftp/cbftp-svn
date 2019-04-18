@@ -70,7 +70,7 @@ class SiteLogic : public EventReceiver {
     void passiveModeCommand(int);
     static void * run(void *);
     bool lockTransferConn(FileList *, int *, TransferMonitor *, const std::shared_ptr<CommandOwner> &, bool);
-    void setRequestReady(unsigned int, void *, bool);
+    void setRequestReady(unsigned int, void *, bool, bool returnslot = true);
     void cleanupConnection(int);
     void checkFailListRequest(int);
     void clearReadyRequest(SiteLogicRequestReady &);
