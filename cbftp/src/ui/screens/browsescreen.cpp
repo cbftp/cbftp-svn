@@ -15,6 +15,7 @@
 #include "../../section.h"
 
 #include "../ui.h"
+#include "../uifilelist.h"
 #include "../termint.h"
 
 #include "browsescreensub.h"
@@ -240,30 +241,10 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
       }
       return true;
     case 'u':
-      if (split && left->type() != BROWSESCREEN_SELECTOR && right->type() != BROWSESCREEN_SELECTOR) {
-        UIFileList * leftlist = left->getUIFileList();
-        UIFileList * rightlist = right->getUIFileList();
-        if (leftlist->hasUnique() || rightlist->hasUnique()) {
-          leftlist->clearUnique();
-          rightlist->clearUnique();
-        }
-        else {
-          std::set<std::string> leftuniques;  // need to make copies of the lists here since setting
-          std::set<std::string> rightuniques; // it on one side will affect the other side
-          const std::vector <UIFile *> * sorteduniquelist = leftlist->getSortedList();
-          for (std::vector<UIFile *>::const_iterator it = sorteduniquelist->begin(); it != sorteduniquelist->end(); it++) {
-            leftuniques.insert((*it)->getName());
-          }
-          sorteduniquelist = rightlist->getSortedList();
-          for (std::vector<UIFile *>::const_iterator it = sorteduniquelist->begin(); it != sorteduniquelist->end(); it++) {
-            rightuniques.insert((*it)->getName());
-          }
-          leftlist->setUnique(rightuniques);
-          rightlist->setUnique(leftuniques);
-        }
-      }
-      ui->redraw();
-      ui->setInfo();
+      toggleCompareListMode(CompareMode::UNIQUE);
+      return true;
+    case 'i':
+      toggleCompareListMode(CompareMode::IDENTICAL);
       return true;
     case '0':
     case '1':
@@ -303,7 +284,7 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
 std::string BrowseScreen::getLegendText() const {
   std::string extra = "";
   if (split && left->type() != BROWSESCREEN_SELECTOR && right->type() != BROWSESCREEN_SELECTOR) {
-    extra += "Show [u]niques - ";
+    extra += "Show [u]niques - Show [i]denticals - ";
     if (left->type() == BROWSESCREEN_SITE || right->type() == BROWSESCREEN_SITE) {
       extra += "[t]ransfer - ";
     }
@@ -378,4 +359,31 @@ void BrowseScreen::closeSide() {
   else {
     ui->returnToLast();
   }
+}
+
+void BrowseScreen::toggleCompareListMode(CompareMode mode) {
+  if (split && left->type() != BROWSESCREEN_SELECTOR && right->type() != BROWSESCREEN_SELECTOR) {
+    UIFileList * leftlist = left->getUIFileList();
+    UIFileList * rightlist = right->getUIFileList();
+    if (leftlist->getCompareListMode() == mode || rightlist->getCompareListMode() == mode) {
+      leftlist->clearCompareListMode();
+      rightlist->clearCompareListMode();
+    }
+    else {
+      std::set<std::string> leftfiles;  // need to make copies of the lists here since setting
+      std::set<std::string> rightfiles; // it on one side will affect the other side
+      const std::vector <UIFile *> * sorteduniquelist = leftlist->getSortedList();
+      for (std::vector<UIFile *>::const_iterator it = sorteduniquelist->begin(); it != sorteduniquelist->end(); it++) {
+        leftfiles.insert((*it)->getName());
+      }
+      sorteduniquelist = rightlist->getSortedList();
+      for (std::vector<UIFile *>::const_iterator it = sorteduniquelist->begin(); it != sorteduniquelist->end(); it++) {
+        rightfiles.insert((*it)->getName());
+      }
+      leftlist->setCompareList(rightfiles, mode);
+      rightlist->setCompareList(leftfiles, mode);
+    }
+  }
+  ui->redraw();
+  ui->setInfo();
 }

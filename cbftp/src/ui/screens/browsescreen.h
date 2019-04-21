@@ -9,6 +9,7 @@
 #include "../../path.h"
 
 class BrowseScreenSub;
+enum class CompareMode;
 
 enum ViewMode {
   VIEW_NORMAL,
@@ -33,6 +34,7 @@ private:
   void switchSide();
   void closeSide();
   bool keyPressedNoSubAction(unsigned int);
+  void toggleCompareListMode(CompareMode mode);
   std::shared_ptr<BrowseScreenSub> left;
   std::shared_ptr<BrowseScreenSub> right;
   std::shared_ptr<BrowseScreenSub> active;

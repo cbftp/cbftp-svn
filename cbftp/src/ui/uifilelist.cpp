@@ -21,6 +21,7 @@ UIFileList::UIFileList() :
   filteredtotalsize(0),
   sortmethod(SortMethod::COMBINED),
   separators(false),
+  comparemode(CompareMode::NONE),
   initialized(false)
 {
 }
@@ -267,7 +268,10 @@ void UIFileList::fillSortedFiles() {
     if (!negativepass || (foundpositive && !positivematch)) {
       continue;
     }
-    if (uniques.find(file.getName()) != uniques.end()) {
+    if (comparemode == CompareMode::UNIQUE && comparelist.find(file.getName()) != comparelist.end()) {
+      continue;
+    }
+    else if (comparemode == CompareMode::IDENTICAL && comparelist.find(file.getName()) == comparelist.end()) {
       continue;
     }
     sortedfiles.push_back(&file);
@@ -533,21 +537,23 @@ void UIFileList::unsetFilters() {
   fillSortedFiles();
 }
 
-void UIFileList::setUnique(const std::set<std::string> & uniques) {
-  this->uniques = uniques;
+void UIFileList::setCompareList(const std::set<std::string> & comparelist, CompareMode mode) {
+  this->comparemode = mode;
+  this->comparelist = comparelist;
   fillSortedFiles();
 }
 
-bool UIFileList::hasUnique() const {
-  return uniques.size();
+CompareMode UIFileList::getCompareListMode() const {
+  return comparemode;
 }
 
-std::set<std::string> UIFileList::getUniques() const {
-  return uniques;
+std::set<std::string> UIFileList::getCompareList() const {
+  return comparelist;
 }
 
-void UIFileList::clearUnique() {
-  uniques.clear();
+void UIFileList::clearCompareListMode() {
+  comparelist.clear();
+  comparemode = CompareMode::NONE;
   fillSortedFiles();
 }
 
