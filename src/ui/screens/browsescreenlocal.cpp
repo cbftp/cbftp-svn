@@ -688,12 +688,15 @@ std::string BrowseScreenLocal::getInfoText() const {
     }
     return text + lastinfotarget;
   }
-  if (list.hasFilters() || list.hasUnique()) {
+  if (list.hasFilters() || list.getCompareListMode() != CompareMode::NONE) {
     if (list.hasFilters()) {
       text += std::string("  FILTER: ") + filterfield.getData();
     }
-    if (list.hasUnique()) {
+    if (list.getCompareListMode() == CompareMode::UNIQUE) {
       text += "  UNIQUES";
+    }
+    else if (list.getCompareListMode() == CompareMode::IDENTICAL) {
+      text += "  IDENTICALS";
     }
     text += "  " + std::to_string(list.filteredSizeFiles()) + "/" + std::to_string(list.sizeFiles()) + "f " +
         std::to_string(list.filteredSizeDirs()) + "/" + std::to_string(list.sizeDirs()) + "d";
@@ -760,15 +763,20 @@ void BrowseScreenLocal::gotoPath(int requestid, const Path & path) {
   }
   unsigned int position = 0;
   std::list<std::string> filters;
-  std::set<std::string> uniques;
+  std::set<std::string> comparefiles;
+  CompareMode comparemode = CompareMode::NONE;
   if (list.getPath() == filelist->getPath()) {
     position = list.currentCursorPosition();
     filters = list.getFilters();
-    uniques = list.getUniques();
+    comparemode = list.getCompareListMode();
+    comparefiles = list.getCompareList();
   }
   list.parse(filelist);
   if (filters.size()) {
     list.setFilters(filters);
+  }
+  if (comparefiles.size()) {
+    list.setCompareList(comparefiles, comparemode);
   }
   list.sortMethod(sortmethod);
   for (std::list<std::pair<Path, std::string> >::iterator it = selectionhistory.begin(); it != selectionhistory.end(); it++) {

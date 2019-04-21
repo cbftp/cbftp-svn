@@ -14,6 +14,12 @@
 class FileList;
 class LocalFileList;
 
+enum class CompareMode {
+  NONE,
+  UNIQUE,
+  IDENTICAL
+};
+
 class UIFileList {
 public:
   enum class SortMethod {
@@ -43,7 +49,8 @@ private:
   SortMethod sortmethod;
   bool separators;
   std::list<std::string> filters;
-  std::set<std::string> uniques;
+  CompareMode comparemode;
+  std::set<std::string> comparelist;
   bool initialized;
   void setNewCurrentPosition();
   void removeSeparators();
@@ -83,10 +90,10 @@ public:
   std::list<std::string> getFilters() const;
   void setFilters(const std::list<std::string> &);
   void unsetFilters();
-  void setUnique(const std::set<std::string> &);
-  bool hasUnique() const;
-  std::set<std::string> getUniques() const;
-  void clearUnique();
+  void setCompareList(const std::set<std::string> & list, CompareMode mode);
+  CompareMode getCompareListMode() const;
+  std::set<std::string> getCompareList() const;
+  void clearCompareListMode();
   bool contains(const std::string & filename) const;
   void hardFlipSoftSelected();
   bool clearSoftSelected();
