@@ -16,7 +16,7 @@ MakeDirScreen::~MakeDirScreen() {
 
 }
 
-void MakeDirScreen::initialize(unsigned int row, unsigned int col, const std::string & site,  UIFileList & filelist) {
+void MakeDirScreen::initialize(unsigned int row, unsigned int col, const std::string & site, UIFileList & filelist) {
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [m]ake directory - [c]ancel";
   currentlegendtext = defaultlegendtext;
   active = false;
