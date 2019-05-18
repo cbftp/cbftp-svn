@@ -442,7 +442,7 @@ void BrowseScreenSite::command(const std::string & command, const std::string & 
   }
   else if (command == "makedir") {
     BrowseScreenRequest request;
-    request.id = sitelogic->requestMakeDirectory(arg);
+    request.id = sitelogic->requestMakeDirectory(list.getPath(), arg);
     request.type = BrowseScreenRequestType::MKDIR;
     request.path = list.getPath();
     request.files = { std::pair<std::string, bool>(arg, true) };

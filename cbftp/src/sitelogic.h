@@ -140,7 +140,7 @@ class SiteLogic : public EventReceiver {
     int requestOneIdle();
     int requestAllIdle(const Path & path, int);
     int requestAllIdle(int);
-    int requestMakeDirectory(const std::string & dirname);
+    int requestMakeDirectory(const Path& path, const std::string & dirname);
     bool requestReady(int) const;
     bool requestStatus(int) const;
     void abortRace(const std::shared_ptr<SiteRace> & race);

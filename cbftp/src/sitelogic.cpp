@@ -386,6 +386,10 @@ void SiteLogic::commandSuccess(int id, int state) {
           }
           return;
         }
+        else if (request->requestType() == REQ_MKDIR) {
+          conns[id]->doMKD(request->requestData2());
+          return;
+        }
       }
       if (connstatetracker[id].getRecursiveLogic()->isActive()) {
         handleRecursiveLogic(id);
@@ -587,7 +591,8 @@ void SiteLogic::commandFail(int id, int failuretype) {
         const std::shared_ptr<SiteLogicRequest> request = connstatetracker[id].getRequest();
         if (request->requestType() == REQ_FILELIST ||
             request->requestType() == REQ_RAW ||
-            request->requestType() == REQ_IDLE)
+            request->requestType() == REQ_IDLE ||
+            request->requestType() == REQ_MKDIR)
         {
           setRequestReady(id, NULL, false);
           handleConnection(id);
@@ -1118,7 +1123,13 @@ bool SiteLogic::handleRequest(int id) {
       break;
     }
     case REQ_MKDIR: // make directory
-      conns[id]->doMKD(request.requestData());
+      Path targetpath = request.requestData();
+      if (conns[id]->getCurrentPath() != targetpath) {
+        conns[id]->doCWD(targetpath);
+      }
+      else {
+        conns[id]->doMKD(request.requestData2());
+      }
       break;
   }
   return true;
@@ -1342,9 +1353,15 @@ int SiteLogic::requestAllIdle(int idletime) {
   return requestAllIdle(site->getBasePath(), idletime);
 }
 
-int SiteLogic::requestMakeDirectory(const std::string & dirname) {
+int SiteLogic::requestMakeDirectory(const Path& path, const std::string & dirname) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(requestid, REQ_MKDIR, dirname, true));
+  Path dirpath(dirname);
+  if (dirpath.isRelative()) {
+    requests.push_back(SiteLogicRequest(requestid, REQ_MKDIR, path.toString(), dirname, true));
+  }
+  else {
+    requests.push_back(SiteLogicRequest(requestid, REQ_MKDIR, dirpath.dirName(), dirpath.baseName(), true));
+  }
   activateOne();
   return requestid;
 }
