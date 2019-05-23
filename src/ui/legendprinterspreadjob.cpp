@@ -80,14 +80,14 @@ bool LegendPrinterSpreadJob::print() {
   mso.adjustLines(col - 8);
 
   for (unsigned int i = 4; i < col - 4; i++) {
-    ui->printChar(ui->getLegendWindow(), 1, i, ' ');
+    ui->printChar(1, i, ' ', false, ui->getLegendWindow());
   }
   for (unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(mso.getElement(i));
     if (!re->isVisible()) {
       continue;
     }
-    ui->printStr(ui->getLegendWindow(), re->getRow(), re->getCol(), re->getLabelText());
+    ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), false, -1, false, ui->getLegendWindow());
   }
   if (jobfinishedprintcount >= 20) {
     return false;

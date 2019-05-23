@@ -99,14 +99,14 @@ void RawDataScreen::printRawBufferLines(Ui * ui, RawBuffer * rawbuf, unsigned in
     unsigned int startprintsecond = 0;
     if (!skiptag) {
       unsigned int length = line.first.length();
-      ui->printStr(i, coloffset, line.first, col - coloffset);
+      ui->printStr(i, coloffset, line.first, false, col - coloffset);
       startprintsecond = length + 1;
     }
     unsigned int start = 0;
     if (cutfirst5 && skipCodePrint(line.second)) {
       start = 5;
     }
-    ui->printStr(i, startprintsecond + coloffset, encoding::cp437toUnicode(line.second.substr(start)), col - coloffset - startprintsecond);
+    ui->printStr(i, startprintsecond + coloffset, encoding::cp437toUnicode(line.second.substr(start)), false, col - coloffset - startprintsecond);
   }
 }
 

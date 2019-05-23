@@ -25,16 +25,9 @@ SkipListScreen::~SkipListScreen() {
 
 }
 
-void SkipListScreen::initialize(unsigned int row, unsigned int col) {
-  globalskip = true;
-  this->skiplist = global->getSkipList();
-  initialize();
-  init(row, col);
-}
-
 void SkipListScreen::initialize(unsigned int row, unsigned int col, SkipList * skiplist) {
-  globalskip = false;
-  this->skiplist = skiplist;
+  globalskip = !skiplist;
+  this->skiplist = globalskip ? global->getSkipList() : skiplist;
   initialize();
   init(row, col);
 }

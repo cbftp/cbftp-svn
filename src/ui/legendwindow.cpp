@@ -29,17 +29,17 @@ void LegendWindow::redraw() {
   latestcount = 8;
   staticcount = 0;
   offset = 0;
-  ui->printChar(window, 0, 1, BOX_CORNER_TL);
-  ui->printChar(window, 1, 0, BOX_HLINE);
-  ui->printChar(window, 1, 1, BOX_CORNER_BR);
-  ui->printChar(window, 1, col - 1, BOX_HLINE);
-  ui->printChar(window, 1, col - 2, BOX_CORNER_BL);
-  ui->printChar(window, 0, col - 2, BOX_CORNER_TR);
+  ui->printChar(0, 1, BOX_CORNER_TL, false, window);
+  ui->printChar(1, 0, BOX_HLINE, false, window);
+  ui->printChar(1, 1, BOX_CORNER_BR, false, window);
+  ui->printChar(1, col - 1, BOX_HLINE, false, window);
+  ui->printChar(1, col - 2, BOX_CORNER_BL, false, window);
+  ui->printChar(0, col - 2, BOX_CORNER_TR, false, window);
   for (unsigned int i = 2; i < col - 2; i++) {
-    ui->printChar(window, 0, i, BOX_HLINE);
+    ui->printChar(0, i, BOX_HLINE, false, window);
   }
   if (split) {
-    ui->printChar(window, 0, col / 2, BOX_HLINE_TOP);
+    ui->printChar(0, col / 2, BOX_HLINE_TOP, false, window);
   }
   update();
 }
@@ -53,9 +53,9 @@ void LegendWindow::update() {
     latestcount = 0;
     latesttext = global->getEventLog()->getLatest();
     for (unsigned int printpos = 4; printpos < col - 4; printpos++) {
-      ui->printChar(window, 1, printpos, ' ');
+      ui->printChar(1, printpos, ' ', false, window);
     }
-    ui->printStr(window, 1, 4, "EVENT: " + latesttext, col - 4 - 4, false);
+    ui->printStr(1, 4, "EVENT: " + latesttext, false, col - 4 - 4, false, window);
     return;
   }
   if (latestcount < 8) { // 2 seconds
