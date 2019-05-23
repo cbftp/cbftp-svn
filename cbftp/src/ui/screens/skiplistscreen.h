@@ -19,8 +19,7 @@ class SkipListScreen : public UIWindow {
 public:
   SkipListScreen(Ui *);
   ~SkipListScreen();
-  void initialize(unsigned int, unsigned int);
-  void initialize(unsigned int, unsigned int, SkipList *);
+  void initialize(unsigned int row, unsigned int col, SkipList * skiplist);
   void update();
   void redraw();
   bool keyPressed(unsigned int);

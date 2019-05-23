@@ -16,7 +16,7 @@ bool LegendPrinterKeybinds::print() {
       if (offset >= textlen) offset = 0;
       while (printpos < col - 4) {
         while (printpos - internalpos < textlen && printpos < col - 4) {
-          ui->printChar(ui->getLegendWindow(), 1, printpos, scrollingtext[printpos - internalpos]);
+          ui->printChar(1, printpos, scrollingtext[printpos - internalpos], false, ui->getLegendWindow());
           ++printpos;
         }
         internalpos = printpos;
@@ -41,10 +41,10 @@ bool LegendPrinterKeybinds::print() {
       unsigned int textpos = offset;
       while (printpos < col - 4) {
         if (textpos >= text.length()) {
-          ui->printChar(ui->getLegendWindow(), 1, printpos, ' ');
+          ui->printChar(1, printpos, ' ', false, ui->getLegendWindow());
         }
         else {
-          ui->printChar(ui->getLegendWindow(), 1, printpos, text[textpos]);
+          ui->printChar(1, printpos, text[textpos], false, ui->getLegendWindow());
         }
         ++printpos;
         ++textpos;

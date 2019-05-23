@@ -254,7 +254,7 @@ void RaceStatusScreen::update() {
         printsubpath = "/";
       }
 
-      ui->printStr(y, x + 5, printsubpath, longestsubpath);
+      ui->printStr(y, x + 5, printsubpath, false, longestsubpath);
       for (std::unordered_map<std::string, unsigned long long int>::const_iterator it3 =
           race->guessedFileListBegin(origsubpath); it3 != race->guessedFileListEnd(origsubpath); it3++) {
         std::string filename = it3->first;
@@ -291,7 +291,7 @@ void RaceStatusScreen::update() {
   for (unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(i));
     bool isselected = selected == i;
-    ui->printStr(msotb->getRow(), msotb->getCol(), msotb->getLabelText(), 4, isselected);
+    ui->printStr(msotb->getRow(), msotb->getCol(), msotb->getLabelText(), isselected, 4);
   }
 }
 

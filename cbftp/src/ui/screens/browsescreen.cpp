@@ -374,11 +374,15 @@ void BrowseScreen::toggleCompareListMode(CompareMode mode) {
       std::set<std::string> rightfiles; // it on one side will affect the other side
       const std::vector <UIFile *> * sorteduniquelist = leftlist->getSortedList();
       for (std::vector<UIFile *>::const_iterator it = sorteduniquelist->begin(); it != sorteduniquelist->end(); it++) {
-        leftfiles.insert((*it)->getName());
+        if (*it != nullptr) {
+          leftfiles.insert((*it)->getName());
+        }
       }
       sorteduniquelist = rightlist->getSortedList();
       for (std::vector<UIFile *>::const_iterator it = sorteduniquelist->begin(); it != sorteduniquelist->end(); it++) {
-        rightfiles.insert((*it)->getName());
+        if (*it != nullptr) {
+          rightfiles.insert((*it)->getName());
+        }
       }
       leftlist->setCompareList(rightfiles, mode);
       rightlist->setCompareList(leftfiles, mode);

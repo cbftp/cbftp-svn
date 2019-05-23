@@ -86,12 +86,12 @@ void ProxyOptionsScreen::redraw() {
     if (msop.isFocused() && msop.getSelectionPointer() == i) {
       highlight = true;
     }
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), 9, highlight);
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight, 9);
     if (msoe->getLabelText() == msoe->getIdentifier()) {
       Proxy * proxy = pm->getProxy(msoe->getLabelText());
       if (proxy != NULL) {
-        ui->printStr(msoe->getRow(), msoe->getCol() + 10, proxy->getAddr(), (unsigned int) 19);
-        ui->printStr(msoe->getRow(), msoe->getCol() + 30, proxy->getPort(), (unsigned int) 5);
+        ui->printStr(msoe->getRow(), msoe->getCol() + 10, proxy->getAddr(), false, 19);
+        ui->printStr(msoe->getRow(), msoe->getCol() + 30, proxy->getPort(), false, 5);
         ui->printStr(msoe->getRow(), msoe->getCol() + 37, proxy->getAuthMethodText());
       }
     }
@@ -119,9 +119,9 @@ void ProxyOptionsScreen::update() {
   }
   else if (focusedarea == &msop) {
     std::shared_ptr<MenuSelectOptionElement> msoe = msop.getElement(msop.getLastSelectionPointer());
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), (unsigned int) 9);
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), false, 9);
     msoe = msop.getElement(msop.getSelectionPointer());
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), 9, true);
+    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true, 9);
   }
 }
 

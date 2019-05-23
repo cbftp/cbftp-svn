@@ -607,11 +607,7 @@ void Ui::moveCursor(unsigned int row, unsigned int col) {
   uiqueue.push(UICommand(UI_COMMAND_CURSOR_MOVE, main, row, col));
 }
 
-void Ui::highlight(bool highlight) {
-  this->highlight(main, highlight);
-}
-
-void Ui::highlight(WINDOW * window, bool highlight) {
+void Ui::highlight(bool highlight, WINDOW * window) {
   if (highlight) {
     uiqueue.push(UICommand(UI_COMMAND_HIGHLIGHT_ON, window));
   }
@@ -620,111 +616,50 @@ void Ui::highlight(WINDOW * window, bool highlight) {
   }
 }
 
-void Ui::printStr(unsigned int row, unsigned int col, const std::string & str) {
-  printStr(row, col, str, false);
-}
-
-void Ui::printStr(unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str) {
-  printStr(row, col, str, false);
-}
-
-void Ui::printStr(WINDOW * window, unsigned int row, unsigned int col, const std::string & str) {
-  printStr(window, row, col, str, str.length(), false);
-}
-
-void Ui::printStr(WINDOW * window, unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str) {
-  printStr(window, row, col, str, str.length(), false);
-}
-
-void Ui::printStr(unsigned int row, unsigned int col, const std::string & str, bool highlight) {
-  printStr(row, col, str, str.length(), highlight, false);
-}
-
-void Ui::printStr(unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str, bool highlight) {
-  printStr(row, col, str, str.length(), highlight, false);
-}
-
-void Ui::printStr(unsigned int row, unsigned int col, const std::string & str, unsigned int maxlen) {
-  printStr(row, col, str, maxlen, false, false);
-}
-
-void Ui::printStr(unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str, unsigned int maxlen) {
-  printStr(row, col, str, maxlen, false, false);
-}
-
-void Ui::printStr(unsigned int row, unsigned int col, const std::string & str, unsigned int maxlen, bool highlight) {
-  printStr(row, col, str, maxlen, highlight, false);
-}
-
-void Ui::printStr(unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str, unsigned int maxlen, bool highlight) {
-  printStr(row, col, str, maxlen, highlight, false);
-}
-
-void Ui::printStr(WINDOW * window, unsigned int row, unsigned int col, const std::string & str, unsigned int maxlen, bool highlight) {
-  printStr(window, row, col, str, maxlen, highlight, false);
-}
-
-void Ui::printStr(WINDOW * window, unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str, unsigned int maxlen, bool highlight) {
-  printStr(window, row, col, str, maxlen, highlight, false);
-}
-
-void Ui::printStr(unsigned int row, unsigned int col, const std::string & str, unsigned int maxlen, bool highlight, bool rightalign) {
-  printStr(main, row, col, str, maxlen, highlight, rightalign);
-}
-
-void Ui::printStr(unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str, unsigned int maxlen, bool highlight, bool rightalign) {
-  printStr(main, row, col, str, maxlen, highlight, rightalign);
-}
-
-void Ui::printStr(WINDOW * window, unsigned int row, unsigned int col, const std::string & str, unsigned int maxlen, bool highlight, bool rightalign) {
+void Ui::printStr(unsigned int row, unsigned int col, const std::string & str, bool highlight, int maxlen, bool rightalign, WINDOW * window) {
+  if (!window) {
+    window = main;
+  }
   if (highlight) {
-    this->highlight(window, true);
+    this->highlight(true, window);
   }
   uiqueue.push(UICommand(UI_COMMAND_PRINT_STR, window, row, col, str, maxlen, rightalign));
   if (highlight) {
-    this->highlight(window, false);
+    this->highlight(false, window);
   }
 }
 
-void Ui::printStr(WINDOW * window, unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str, unsigned int maxlen, bool highlight, bool rightalign) {
+
+
+void Ui::printStr(unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str, bool highlight, int maxlen, bool rightalign, WINDOW * window) {
+  if (!window) {
+    window = main;
+  }
   if (highlight) {
-    this->highlight(window, true);
+    this->highlight(true, window);
   }
   uiqueue.push(UICommand(UI_COMMAND_PRINT_WIDE_STR, window, row, col, str, maxlen, rightalign));
   if (highlight) {
-    this->highlight(window, false);
+    this->highlight(false, window);
   }
 }
 
-void Ui::printChar(unsigned int row, unsigned int col, unsigned int c) {
-  printChar(main, row, col, c);
-}
-
-void Ui::printChar(WINDOW * window, unsigned int row, unsigned int col, unsigned int c) {
-  printChar(window, row, col, c, false);
-}
-
-void Ui::printChar(unsigned int row, unsigned int col, unsigned int c, bool highlight) {
-  printChar(main, row, col, c, highlight);
-}
-
-void Ui::printChar(WINDOW * window, unsigned int row, unsigned int col, unsigned int c, bool highlight) {
+void Ui::printChar(unsigned int row, unsigned int col, unsigned int c, bool highlight, WINDOW * window) {
+  if (!window) {
+    window = main;
+  }
   if (highlight) {
-    this->highlight(window, true);
+    this->highlight(true, window);
   }
   uiqueue.push(UICommand(UI_COMMAND_PRINT_CHAR, window, row, col, c));
   if (highlight) {
-    this->highlight(window, false);
+    this->highlight(false, window);
   }
 }
 
 void Ui::goRawCommand(const std::string & site) {
   rawcommandscreen->initialize(mainrow, maincol, site);
   switchToWindow(rawcommandscreen);
-}
-
-void Ui::goRawCommand(const std::string & site, const Path & path) {
-  goRawCommand(site, path, "");
 }
 
 void Ui::goRawCommand(const std::string & site, const Path & path, const std::string & arg) {
@@ -785,11 +720,6 @@ void Ui::goSelectSpreadJobs() {
 void Ui::goSelectTransferJobs() {
   selectjobsscreen->initialize(mainrow, maincol, JOBTYPE_TRANSFERJOB);
   switchToWindow(selectjobsscreen);
-}
-
-void Ui::goSkiplist() {
-  skiplistscreen->initialize(mainrow, maincol);
-  switchToWindow(skiplistscreen);
 }
 
 void Ui::goSkiplist(SkipList * skiplist) {
@@ -990,10 +920,6 @@ void Ui::goEditSection(const std::string & name) {
 void Ui::goAddSection() {
   editsectionscreen->initialize(mainrow, maincol);
   switchToWindow(editsectionscreen);
-}
-
-void Ui::goAddSiteSection(const std::shared_ptr<Site> & site) {
-  goAddSiteSection(site, "");
 }
 
 void Ui::goAddSiteSection(const std::shared_ptr<Site> & site, const Path & path) {
