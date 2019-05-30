@@ -39,7 +39,7 @@ void MainScreen::initialize(unsigned int row, unsigned int col) {
   baselegendtext = "[Down] Next option - [Up] Previous option - [A]dd site - [G]lobal settings - Event [l]og - [t]ransfers - All [r]aces - All transfer[j]obs - toggle [U]dp - Browse lo[c]al - General [i]nfo - [s]ections - [Esc] back to browsing";
   sitelegendtext = baselegendtext + " - [Tab] split browse - [right/b]rowse site - ra[w] command - [E]dit site - [C]opy site - [D]elete site - [q]uick jump - [L]ogin all slots - [0-9] Browse to section";
   preparelegendtext = baselegendtext + " - [Enter/s] start job - [Del] delete race";
-  spreadjoblegendtext = baselegendtext + " - [Enter] Details - a[B]ort job - [T]ransfers for job - [R]eset job";
+  spreadjoblegendtext = baselegendtext + " - [Enter] Details - a[B]ort job - [T]ransfers for job - [R]eset job - [z] Abort job and delete own files on all sites";
   transferjoblegendtext = baselegendtext + " - [Enter] Details - a[B]ort job - [T]ransfers for job";
   gotolegendtext = "[Any] Go to matching first letter in site list - [Esc] Cancel";
   autoupdate = true;
@@ -218,6 +218,9 @@ void MainScreen::command(const std::string & command) {
     else if (!!abortjob) {
       global->getEngine()->abortTransferJob(abortjob);
     }
+    else if (!!abortdeleterace) {
+      global->getEngine()->deleteOnAllSites(abortdeleterace, false);
+    }
     else {
       global->getSiteLogicManager()->deleteSiteLogic(deletesite);
       global->getSiteManager()->deleteSite(deletesite);
@@ -226,6 +229,7 @@ void MainScreen::command(const std::string & command) {
   }
   abortrace.reset();
   abortjob.reset();
+  abortdeleterace.reset();
   ui->redraw();
   ui->setInfo();
 }
@@ -432,6 +436,19 @@ bool MainScreen::keyPressed(unsigned int ch) {
         abortjob = global->getEngine()->getTransferJob(msotj.getElement(msotj.getSelectionPointer())->getId());
         if (!!abortjob && !abortjob->isDone()) {
           ui->goConfirmation("Do you really want to abort the transfer job " + abortjob->getName());
+        }
+      }
+      return true;
+    case 'z':
+      if (msosj.isFocused() && msosj.size() > 0) {
+        abortdeleterace = global->getEngine()->getRace(msosj.getElement(msosj.getSelectionPointer())->getId());
+        if (!!abortdeleterace) {
+          if (abortdeleterace->getStatus() == RACE_STATUS_RUNNING) {
+            ui->goConfirmation("Do you really want to abort the race " + abortdeleterace->getName() + " and delete your own files on all involved sites?");
+          }
+          else {
+            ui->goConfirmation("Do you really want to delete your own files in " + abortdeleterace->getName() + " on all involved sites?");
+          }
         }
       }
       return true;
