@@ -28,8 +28,8 @@ enum SelectSitesMode {
 
 RaceStatusScreen::RaceStatusScreen(Ui * ui) {
   this->ui = ui;
-  defaultlegendtext = "[c/Esc] Return - [Del] Remove site from job - [A]dd site to job - [s]how small dirs - [r]eset job - Hard [R]eset job - A[B]ort job - [d]elete site and own files from job - [D]elete site and all files from job - [t]transfers - [T]ransfers for site - [b]rowse - [E]dit site";
-  finishedlegendtext = "[c/Esc] Return - [Del] Remove site from job - [A]dd site to job - [s]how small dirs - [r]eset job - Hard [R]eset job - [d]elete own files - [D]elete all files - [t]ransfers - [T]ransfers for site - [b]rowse - [E]dit site";
+  defaultlegendtext = "[c/Esc] Return - [Del] Remove site from job - [A]dd site to job - [s]how small dirs - [r]eset job - Hard [R]eset job - A[B]ort job - [d]elete site and own files from job - [D]elete site and all files from job - [t]transfers - [T]ransfers for site - [b]rowse - [E]dit site - [z] Abort job and delete own files on all sites";
+  finishedlegendtext = "[c/Esc] Return - [Del] Remove site from job - [A]dd site to job - [s]how small dirs - [r]eset job - Hard [R]eset job - [d]elete own files - [D]elete all files - [t]ransfers - [T]ransfers for site - [b]rowse - [E]dit site - [z] Delete own files on all sites";
 }
 
 RaceStatusScreen::~RaceStatusScreen() {
@@ -50,6 +50,7 @@ void RaceStatusScreen::initialize(unsigned int row, unsigned int col, unsigned i
   awaitingremovesitedelownfiles = false;
   awaitingremovesitedelallfiles = false;
   awaitingabort = false;
+  awaitingdeleteownall = false;
   currnumsubpaths = 0;
   currguessedsize = 0;
   mso.enterFocusFrom(0);
@@ -299,21 +300,20 @@ void RaceStatusScreen::command(const std::string & command, const std::string & 
   if (command == "yes") {
     if (awaitingremovesite) {
       global->getEngine()->removeSiteFromRace(race, removesite);
-      awaitingremovesite = false;
     }
     else if (awaitingremovesitedelownfiles) {
       global->getEngine()->removeSiteFromRaceDeleteFiles(race, removesite, false);
-      awaitingremovesitedelownfiles = false;
     }
     else if (awaitingremovesitedelallfiles) {
       global->getEngine()->removeSiteFromRaceDeleteFiles(race, removesite, true);
-      awaitingremovesitedelallfiles = false;
     }
     else if (awaitingabort) {
       global->getEngine()->abortRace(race);
-      awaitingabort = false;
       finished = true;
       ui->setLegend();
+    }
+    else if (awaitingdeleteownall) {
+      global->getEngine()->deleteOnAllSites(race, false);
     }
   }
   else if (command == "returnselectitems") {
@@ -347,6 +347,11 @@ void RaceStatusScreen::command(const std::string & command, const std::string & 
       global->getEngine()->deleteOnSites(race, selectedsites, false);
     }
   }
+  awaitingremovesite = false;
+  awaitingremovesitedelownfiles = false;
+  awaitingremovesitedelallfiles = false;
+  awaitingabort = false;
+  awaitingdeleteownall = false;
   ui->redraw();
 }
 
@@ -415,6 +420,15 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
           awaitingremovesitedelallfiles = true;
           ui->goConfirmation("Do you really want to remove " + removesite + " from the race and delete all files?");
         }
+      }
+      return true;
+    case 'z':
+      awaitingdeleteownall = true;
+      if (race->getStatus() == RACE_STATUS_RUNNING) {
+        ui->goConfirmation("Do you really want to abort the race " + race->getName() + " and delete your own files on all involved sites?");
+      }
+      else {
+        ui->goConfirmation("Do you really want to delete your own files in " + race->getName() + " on all involved sites?");
       }
       return true;
     case 'A':

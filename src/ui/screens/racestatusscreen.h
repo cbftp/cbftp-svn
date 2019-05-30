@@ -29,6 +29,7 @@ private:
   bool awaitingremovesitedelownfiles;
   bool awaitingremovesitedelallfiles;
   bool awaitingabort;
+  bool awaitingdeleteownall;
   unsigned int currnumsubpaths;
   unsigned int currguessedsize;
   unsigned int longestsubpath;

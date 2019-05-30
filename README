@@ -329,7 +329,7 @@ This command makes cbftp abort the specified spread job.
 
 <password> delete <job> [sites]
 This command makes cbftp abort the specified spread job, and then delete
-all related files on all involved sites.
+all your own related files on all involved sites.
 If a sitelist is specified, those sites will be removed from the job instead
 of aborting it.
 
