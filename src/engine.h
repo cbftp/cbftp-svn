@@ -60,7 +60,8 @@ public:
   void jobFileListRefreshed(SiteLogic *, const std::shared_ptr<CommandOwner> & commandowner, FileList *);
   bool transferJobActionRequest(const std::shared_ptr<SiteTransferJob> &);
   void raceActionRequest();
-  void setPreparedRaceExpiryTime(int);
+  void setPreparedRaceExpiryTime(int expirytime);
+  void setNextPreparedRaceStarterTimeout(int timeout);
   unsigned int preparedRaces() const;
   unsigned int currentRaces() const;
   unsigned int allRaces() const;
@@ -92,6 +93,7 @@ public:
   int getSpeedPoints(int) const;
   int getPreparedRaceExpiryTime() const;
   bool getNextPreparedRaceStarterEnabled() const;
+  int getNextPreparedRaceStarterTimeout() const;
   int getNextPreparedRaceStarterTimeRemaining() const;
   void transferFailed(const std::shared_ptr<TransferStatus> & ts, int err);
  private:
@@ -149,6 +151,7 @@ public:
   int maxpointspercentageowned;
   int maxpointslowprogress;
   int preparedraceexpirytime;
+  int startnextpreparedtimeout;
   bool startnextprepared;
   int nextpreparedtimeremaining;
   std::unordered_map<FileList *, std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic>>> spreadjobfilelistschanged;

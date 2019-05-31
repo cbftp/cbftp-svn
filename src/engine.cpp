@@ -40,7 +40,6 @@
 #define DIROBSERVETIME 20000
 #define SFVDIROBSERVETIME 5000
 #define NFO_PRIO_AFTER_SEC 15
-#define TICK_NEXTPREPARED_TIMEOUT 600000
 #define RETRY_CONNECT_UNTIL_SEC 15
 
 namespace {
@@ -73,6 +72,7 @@ Engine::Engine() :
   maxpointspercentageowned(2000),
   maxpointslowprogress(2000),
   preparedraceexpirytime(120),
+  startnextpreparedtimeout(300),
   startnextprepared(false),
   nextpreparedtimeremaining(0),
   forcescoreboard(false)
@@ -315,7 +315,7 @@ void Engine::startLatestPreparedRace() {
 void Engine::toggleStartNextPreparedRace() {
   if (!startnextprepared) {
     startnextprepared = true;
-    nextpreparedtimeremaining = TICK_NEXTPREPARED_TIMEOUT;
+    nextpreparedtimeremaining = getNextPreparedRaceStarterTimeout() * 1000;
     checkStartPoke();
     global->getEventLog()->log("Engine", "Enabling next prepared spread job starter");
   }
@@ -327,6 +327,10 @@ void Engine::toggleStartNextPreparedRace() {
 
 bool Engine::getNextPreparedRaceStarterEnabled() const {
   return startnextprepared;
+}
+
+int Engine::getNextPreparedRaceStarterTimeout() const {
+  return startnextpreparedtimeout;
 }
 
 int Engine::getNextPreparedRaceStarterTimeRemaining() const {
@@ -1662,7 +1666,7 @@ std::list<std::shared_ptr<TransferJob> >::const_iterator Engine::getTransferJobs
 }
 
 void Engine::tick(int message) {
-  if (startnextprepared) {
+  if (startnextprepared && getNextPreparedRaceStarterTimeout() != 0) {
     nextpreparedtimeremaining -= POKEINTERVAL;
     if (nextpreparedtimeremaining <= 0) {
       startnextprepared = false;
@@ -1851,4 +1855,8 @@ int Engine::getPreparedRaceExpiryTime() const {
 
 void Engine::setPreparedRaceExpiryTime(int expirytime) {
   preparedraceexpirytime = expirytime;
+}
+
+void Engine::setNextPreparedRaceStarterTimeout(int timeout) {
+  startnextpreparedtimeout = timeout;
 }

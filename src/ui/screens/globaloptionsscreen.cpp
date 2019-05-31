@@ -72,6 +72,16 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   bell->addOption("All commands", static_cast<int>(RemoteCommandNotify::ALL_COMMANDS));
   bell->setOption(static_cast<int>(rch->getNotify()));
   mso.addStringField(y++, x, "preparedraceexpirytime", "Prepared spread job expiration time:", std::to_string(global->getEngine()->getPreparedRaceExpiryTime()), false, 5);
+  std::shared_ptr<MenuSelectOptionTextArrow> racestarterexpiry = mso.addTextArrow(y++, x, "racestarterexpiry", "Next prepared spread job starter timeout:");
+  racestarterexpiry->addOption("30s", 30);
+  racestarterexpiry->addOption("1m", 60);
+  racestarterexpiry->addOption("3m", 180);
+  racestarterexpiry->addOption("5m", 300);
+  racestarterexpiry->addOption("10m", 600);
+  racestarterexpiry->addOption("30m", 1800);
+  racestarterexpiry->addOption("1h", 3600);
+  racestarterexpiry->addOption("Unlimited", 0);
+  racestarterexpiry->setOption(global->getEngine()->getNextPreparedRaceStarterTimeout());
   y++;
   std::shared_ptr<MenuSelectOptionTextArrow> legendmode = mso.addTextArrow(y++, x, "legendmode", "Legend bar:");
   legendmode->addOption("Disabled", LEGEND_DISABLED);
@@ -273,6 +283,9 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "preparedraceexpirytime") {
           global->getEngine()->setPreparedRaceExpiryTime(std::stoi(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData()));
+        }
+        else if (identifier == "racestarterexpiry") {
+          global->getEngine()->setNextPreparedRaceStarterTimeout(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
         }
       }
       rch->setEnabled(udpenable);
