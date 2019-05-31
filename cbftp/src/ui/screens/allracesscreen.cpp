@@ -97,8 +97,8 @@ void AllRacesScreen::command(const std::string & command, const std::string & ar
     }
     ui->update();
   }
-  abortrace = false;
-  abortdeleterace = false;
+  abortrace.reset();
+  abortdeleterace.reset();
 }
 
 bool AllRacesScreen::keyPressed(unsigned int ch) {
