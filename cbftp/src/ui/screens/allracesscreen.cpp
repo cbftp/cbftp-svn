@@ -89,9 +89,16 @@ void AllRacesScreen::update() {
 
 void AllRacesScreen::command(const std::string & command, const std::string & arg) {
   if (command == "yes") {
-    global->getEngine()->abortRace(abortrace);
+    if (!!abortrace) {
+      global->getEngine()->abortRace(abortrace);
+    }
+    else if (!!abortdeleterace) {
+      global->getEngine()->deleteOnAllSites(abortdeleterace, false);
+    }
     ui->update();
   }
+  abortrace = false;
+  abortdeleterace = false;
 }
 
 bool AllRacesScreen::keyPressed(unsigned int ch) {
@@ -157,6 +164,19 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
         abortrace = global->getEngine()->getRace(table.getElement(table.getSelectionPointer())->getId());
         if (!!abortrace && abortrace->getStatus() == RACE_STATUS_RUNNING) {
           ui->goConfirmation("Do you really want to abort the spread job " + abortrace->getName());
+        }
+      }
+      return true;
+    case 'z':
+      if (hascontents) {
+        abortdeleterace = global->getEngine()->getRace(table.getElement(table.getSelectionPointer())->getId());
+        if (!!abortdeleterace) {
+          if (abortdeleterace->getStatus() == RACE_STATUS_RUNNING) {
+            ui->goConfirmation("Do you really want to abort the race " + abortdeleterace->getName() + " and delete your own files on all involved sites?");
+          }
+          else {
+            ui->goConfirmation("Do you really want to delete your own files in " + abortdeleterace->getName() + " on all involved sites?");
+          }
         }
       }
       return true;
