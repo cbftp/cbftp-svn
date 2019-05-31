@@ -210,7 +210,7 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
 }
 
 std::string AllRacesScreen::getLegendText() const {
-  return "[Esc/c] Return - [Enter] Details - [Up/Down/Pgup/Pgdn/Home/End] Navigate - [r]eset job - Hard [R]eset job - A[B]ort job - [t]ransfer for job";
+  return "[Esc/c] Return - [Enter] Details - [Up/Down/Pgup/Pgdn/Home/End] Navigate - [r]eset job - Hard [R]eset job - A[B]ort job - [t]ransfer for job - [z] Abort job and delete own files on all sites";
 }
 
 std::string AllRacesScreen::getInfoLabel() const {
