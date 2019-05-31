@@ -477,6 +477,8 @@ Field summary:
   require user action arrive.
 - Prepared spread job expiration time - The time that a prepared spread job
   will remain available on the main screen before it disappears.
+- Next prepared spread job starter timeout - The duration that the next
+  prepared spread job starter (N) will stay active if no spread job appears.
 - Legend bar - the mode of operation for the legend bar.
 - Default site *** - default values when creating a new site.
 - Download path - the default download path that cbftp should use for

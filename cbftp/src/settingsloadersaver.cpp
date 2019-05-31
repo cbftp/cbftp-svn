@@ -497,6 +497,9 @@ void SettingsLoaderSaver::loadSettings() {
     if (!setting.compare("preparedraceexpirytime")) {
       global->getEngine()->setPreparedRaceExpiryTime(std::stoi(value));
     }
+    if (!setting.compare("racestarterexpiry")) {
+      global->getEngine()->setNextPreparedRaceStarterTimeout(std::stoi(value));
+    }
   }
 
   dfh->getDataFor("SectionManager", &lines);
@@ -731,6 +734,7 @@ void SettingsLoaderSaver::saveSettings() {
 
   {
     dfh->addOutputLine("Engine", "preparedraceexpirytime=" + std::to_string(global->getEngine()->getPreparedRaceExpiryTime()));
+    dfh->addOutputLine("Engine", "racestarterexpiry=" + std::to_string(global->getEngine()->getNextPreparedRaceStarterTimeout()));
   }
   {
     std::string filetag = "Statistics";

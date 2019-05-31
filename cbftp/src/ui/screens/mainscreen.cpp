@@ -601,7 +601,14 @@ std::string MainScreen::getInfoText() const {
     text += "Remote commands enabled  ";
   }
   if (global->getEngine()->getNextPreparedRaceStarterEnabled()) {
-    text += "Spread job starter: " + util::simpleTimeFormat(global->getEngine()->getNextPreparedRaceStarterTimeRemaining()) + "  ";
+    text += "Next spread job starter: ";
+    if (global->getEngine()->getNextPreparedRaceStarterTimeout() != 0) {
+      text += util::simpleTimeFormat(global->getEngine()->getNextPreparedRaceStarterTimeRemaining());
+    }
+    else {
+      text += "Active";
+    }
+    text += "  ";
   }
   return text + activeracestext + activejobstext + numsitestext;
 }
