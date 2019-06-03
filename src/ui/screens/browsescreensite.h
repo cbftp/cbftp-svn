@@ -60,6 +60,7 @@ private:
   bool gotomodefirst;
   int gotomodeticker;
   bool filtermodeinput;
+  bool filtermodeinputregex;
   std::string gotomodestring;
   UIFileList::SortMethod sortmethod;
   std::shared_ptr<SiteLogic> sitelogic;

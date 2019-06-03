@@ -23,7 +23,7 @@
 BrowseScreenLocal::BrowseScreenLocal(Ui * ui) : ui(ui), currentviewspan(0),
     focus(true), spinnerpos(0), tickcount(0),
     resort(false), sortmethod(UIFileList::SortMethod::COMBINED), gotomode(false), gotomodefirst(false),
-    gotomodeticker(0), filtermodeinput(false), temphighlightline(-1),
+    gotomodeticker(0), filtermodeinput(false), filtermodeinputregex(false), temphighlightline(-1),
     softselecting(false), lastinfo(LastInfo::NONE), refreshfilelistafter(false)
 {
   BrowseScreenRequest request;
@@ -42,7 +42,7 @@ BrowseScreenType BrowseScreenLocal::type() const {
 }
 
 void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int coloffset) {
-  row = row - (filtermodeinput ? 2 : 0);
+  row = row - ((filtermodeinput || filtermodeinputregex) ? 2 : 0);
   this->row = row;
   this->col = col;
   this->coloffset = coloffset;
@@ -119,7 +119,7 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
   else if (listsize == 0) {
     ui->printStr(0, coloffset + 3, "(empty directory)");
   }
-  if (filtermodeinput) {
+  if (filtermodeinput || filtermodeinputregex) {
     std::string oldtext = filterfield.getData();
     filterfield = MenuSelectOptionTextField("filter", row + 1, 1, "", oldtext,
         col - 20, 512, false);
@@ -152,8 +152,8 @@ void BrowseScreenLocal::update() {
       ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), focus);
     }
   }
-  if (filtermodeinput) {
-    std::string pretag = "[Filter]: ";
+  if (filtermodeinput || filtermodeinputregex) {
+    std::string pretag = filtermodeinput ? "[Filter(s)]: " : "[Regex filter]: ";
     ui->printStr(filterfield.getRow(), coloffset + filterfield.getCol(), pretag + filterfield.getContentText());
     ui->moveCursor(filterfield.getRow(), coloffset + filterfield.getCol() + pretag.length() + filterfield.cursorPosition());
   }
@@ -261,7 +261,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
   bool update = false;
   bool success = false;
   unsigned int pagerows = (unsigned int) row * 0.6;
-  if (filtermodeinput) {
+  if (filtermodeinput || filtermodeinputregex) {
     if ((ch >= 32 && ch <= 126) || ch == KEY_BACKSPACE || ch == 8 || ch == 127 ||
         ch == KEY_RIGHT || ch == KEY_LEFT || ch == KEY_DC || ch == KEY_HOME ||
         ch == KEY_END) {
@@ -270,14 +270,27 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
     }
     else if (ch == 10) {
+      ui->hideCursor();
       std::string filter = filterfield.getData();
       if (filter.length()) {
-        list.setFilters(util::trim(util::split(filter)));
+        if (filtermodeinput) {
+          list.setWildcardFilters(util::trim(util::split(filter)));
+        }
+        else {
+          try {
+            std::regex regexfilter(filter);
+            list.setRegexFilter(regexfilter);
+          }
+          catch (std::regex_error& e) {
+            ui->goInfo("Invalid regular expression.");
+            return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
+          }
+        }
         clearSoftSelects();
         resort = true;
       }
       filtermodeinput = false;
-      ui->hideCursor();
+      filtermodeinputregex = false;
       ui->redraw();
       ui->setLegend();
       return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
@@ -289,10 +302,18 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       }
       else {
         filtermodeinput = false;
+        filtermodeinputregex = false;
         ui->hideCursor();
         ui->redraw();
         ui->setLegend();
       }
+      return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
+    }
+    else if (ch == '\t') {
+      filtermodeinput = !filtermodeinput;
+      filtermodeinputregex = !filtermodeinputregex;
+      ui->update();
+      ui->setLegend();
       return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
     }
   }
@@ -369,12 +390,23 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       ui->setLegend();
       break;
     case 'f':
-      if (list.hasFilters()) {
+      if (list.hasWildcardFilters() || list.hasRegexFilter()) {
         resort = true;
         list.unsetFilters();
       }
       else {
         filtermodeinput = true;
+      }
+      ui->redraw();
+      ui->setLegend();
+      break;
+    case 'F':
+      if (list.hasWildcardFilters() || list.hasRegexFilter()) {
+        resort = true;
+        list.unsetFilters();
+      }
+      else {
+        filtermodeinputregex = true;
       }
       ui->redraw();
       ui->setLegend();
@@ -623,6 +655,9 @@ std::string BrowseScreenLocal::getLegendText() const {
   if (filtermodeinput) {
     return "[Any] Enter space separated filters. Valid operators are !, *, ?. Must match all negative filters and at least one positive if given. Case insensitive. - [Esc] Cancel";
   }
+  if (filtermodeinputregex) {
+    return "[Any] Enter regex input - [Tab] switch mode - [Esc] Cancel";
+  }
   return "[Up/Down] Navigate - [Enter/Right] open dir - [s]ort - [Backspace/Left] return - [Esc] Cancel - [c]lose - [q]uick jump - Toggle [f]ilter - [Space] Hard select - [Shift-Up/Down] Soft select - Select [A]ll";
 }
 
@@ -688,9 +723,12 @@ std::string BrowseScreenLocal::getInfoText() const {
     }
     return text + lastinfotarget;
   }
-  if (list.hasFilters() || list.getCompareListMode() != CompareMode::NONE) {
-    if (list.hasFilters()) {
-      text += std::string("  FILTER: ") + filterfield.getData();
+  if (list.hasWildcardFilters() || list.hasRegexFilter() || list.getCompareListMode() != CompareMode::NONE) {
+    if (list.hasWildcardFilters()) {
+      text += "  FILTER: " + filterfield.getData();
+    }
+    else if (list.hasRegexFilter()) {
+      text += "  REGEX FILTER: " + filterfield.getData();
     }
     if (list.getCompareListMode() == CompareMode::UNIQUE) {
       text += "  UNIQUES";
@@ -715,6 +753,7 @@ void BrowseScreenLocal::setFocus(bool focus) {
   if (!focus) {
     disableGotoMode();
     filtermodeinput = false;
+    filtermodeinputregex = false;
   }
 }
 
@@ -762,18 +801,29 @@ void BrowseScreenLocal::gotoPath(int requestid, const Path & path) {
     currentviewspan = 0;
   }
   unsigned int position = 0;
-  std::list<std::string> filters;
+  bool hasregexfilter = false;
+  std::list<std::string> wildcardfilters;
+  std::regex regexfilter;
   std::set<std::string> comparefiles;
   CompareMode comparemode = CompareMode::NONE;
   if (list.getPath() == filelist->getPath()) {
     position = list.currentCursorPosition();
-    filters = list.getFilters();
+    hasregexfilter = list.hasRegexFilter();
+    if (hasregexfilter) {
+      regexfilter = list.getRegexFilter();
+    }
+    else {
+      wildcardfilters = list.getWildcardFilters();
+    }
     comparemode = list.getCompareListMode();
     comparefiles = list.getCompareList();
   }
   list.parse(filelist);
-  if (filters.size()) {
-    list.setFilters(filters);
+  if (hasregexfilter) {
+    list.setRegexFilter(regexfilter);
+  }
+  else if (wildcardfilters.size()) {
+    list.setWildcardFilters(wildcardfilters);
   }
   if (comparefiles.size()) {
     list.setCompareList(comparefiles, comparemode);
