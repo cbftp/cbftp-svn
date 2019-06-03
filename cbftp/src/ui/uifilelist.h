@@ -2,6 +2,7 @@
 
 #include <list>
 #include <memory>
+#include <regex>
 #include <set>
 #include <string>
 #include <set>
@@ -48,7 +49,9 @@ private:
   unsigned long long int filteredtotalsize;
   SortMethod sortmethod;
   bool separators;
-  std::list<std::string> filters;
+  std::list<std::string> wildcardfilters;
+  bool hasregexfilter;
+  std::regex regexfilter;
   CompareMode comparemode;
   std::set<std::string> comparelist;
   bool initialized;
@@ -86,9 +89,12 @@ public:
   void removeFile(std::string);
   void toggleSeparators();
   void setCursorPosition(unsigned int);
-  bool hasFilters() const;
-  std::list<std::string> getFilters() const;
-  void setFilters(const std::list<std::string> &);
+  bool hasWildcardFilters() const;
+  bool hasRegexFilter() const;
+  std::list<std::string> getWildcardFilters() const;
+  std::regex getRegexFilter() const;
+  void setWildcardFilters(const std::list<std::string> & filters);
+  void setRegexFilter(const std::regex & filter);
   void unsetFilters();
   void setCompareList(const std::set<std::string> & list, CompareMode mode);
   CompareMode getCompareListMode() const;

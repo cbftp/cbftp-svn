@@ -1,6 +1,7 @@
 #include "uifilelist.h"
 
 #include <algorithm>
+#include <regex>
 #include <unordered_map>
 
 #include "../filelist.h"
@@ -21,6 +22,7 @@ UIFileList::UIFileList() :
   filteredtotalsize(0),
   sortmethod(SortMethod::COMBINED),
   separators(false),
+  hasregexfilter(false),
   comparemode(CompareMode::NONE),
   initialized(false)
 {
@@ -247,25 +249,30 @@ void UIFileList::fillSortedFiles() {
   filteredtotalsize = 0;
   for (unsigned int i = 0; i < files.size(); i++) {
     UIFile & file = files[i];
-    bool negativepass = true;
-    bool foundpositive = false;
-    bool positivematch = false;
-    for (std::list<std::string>::const_iterator it = filters.begin(); it != filters.end(); it++) {
-      const std::string & filter = *it;
-      if (filter[0] == '!') {
-        if (util::wildcmp(filter.substr(1).c_str(), file.getName().c_str())) {
-          negativepass = false;
-          break;
+    if (!wildcardfilters.empty()) {
+      bool negativepass = true;
+      bool foundpositive = false;
+      bool positivematch = false;
+      for (std::list<std::string>::const_iterator it = wildcardfilters.begin(); it != wildcardfilters.end(); it++) {
+        const std::string & filter = *it;
+        if (filter[0] == '!') {
+          if (util::wildcmp(filter.substr(1).c_str(), file.getName().c_str())) {
+            negativepass = false;
+            break;
+          }
+        }
+        else {
+          foundpositive = true;
+          if (util::wildcmp(filter.c_str(), file.getName().c_str())) {
+            positivematch = true;
+          }
         }
       }
-      else {
-        foundpositive = true;
-        if (util::wildcmp(filter.c_str(), file.getName().c_str())) {
-          positivematch = true;
-        }
+      if (!negativepass || (foundpositive && !positivematch)) {
+        continue;
       }
     }
-    if (!negativepass || (foundpositive && !positivematch)) {
+    else if (hasregexfilter && !std::regex_search(file.getName(), regexfilter)) {
       continue;
     }
     if (comparemode == CompareMode::UNIQUE && comparelist.find(file.getName()) != comparelist.end()) {
@@ -295,7 +302,8 @@ void UIFileList::parse(FileList * filelist) {
   currentposition = 0;
   currentcursored = NULL;
   separators = false;
-  filters.clear();
+  wildcardfilters.clear();
+  hasregexfilter = false;
   std::list<File *>::iterator it;
   int size = filelist->getSize();
   files.reserve(size);
@@ -324,7 +332,8 @@ void UIFileList::parse(std::shared_ptr<LocalFileList> & filelist) {
   currentposition = 0;
   currentcursored = NULL;
   separators = false;
-  filters.clear();
+  wildcardfilters.clear();
+  hasregexfilter = false;
   std::unordered_map<std::string, LocalFile>::const_iterator it;
   int size = filelist->size();
   files.reserve(size);
@@ -519,21 +528,38 @@ void UIFileList::removeSeparators() {
   }
 }
 
-bool UIFileList::hasFilters() const {
-  return filters.size();
+bool UIFileList::hasWildcardFilters() const {
+  return wildcardfilters.size();
 }
 
-std::list<std::string> UIFileList::getFilters() const {
-  return filters;
+bool UIFileList::hasRegexFilter() const {
+  return hasregexfilter;
 }
 
-void UIFileList::setFilters(const std::list<std::string> & filters) {
-  this->filters = filters;
+std::list<std::string> UIFileList::getWildcardFilters() const {
+  return wildcardfilters;
+}
+
+std::regex UIFileList::getRegexFilter() const {
+  return regexfilter;
+}
+
+void UIFileList::setWildcardFilters(const std::list<std::string> & filters) {
+  this->wildcardfilters = filters;
+  hasregexfilter = false;
+  fillSortedFiles();
+}
+
+void UIFileList::setRegexFilter(const std::regex & filter) {
+  regexfilter = filter;
+  hasregexfilter = true;
+  wildcardfilters.clear();
   fillSortedFiles();
 }
 
 void UIFileList::unsetFilters() {
-  filters.clear();
+  wildcardfilters.clear();
+  hasregexfilter = false;
   fillSortedFiles();
 }
 

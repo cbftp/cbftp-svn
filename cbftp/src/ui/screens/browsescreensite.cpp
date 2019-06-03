@@ -37,7 +37,7 @@
 BrowseScreenSite::BrowseScreenSite(Ui * ui, const std::string & sitestr, const Path path) :
     ui(ui), row(0), col(0), coloffset(0), currentviewspan(0),
     resort(false), tickcount(0), gotomode(false), gotomodefirst(false),
-    gotomodeticker(0), filtermodeinput(false),
+    gotomodeticker(0), filtermodeinput(false), filtermodeinputregex(false),
     sortmethod(UIFileList::SortMethod::COMBINED),
     sitelogic(global->getSiteLogicManager()->getSiteLogic(sitestr)),
     site(sitelogic->getSite()), spinnerpos(0), filelist(nullptr),
@@ -66,7 +66,7 @@ BrowseScreenType BrowseScreenSite::type() const {
 }
 
 void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int coloffset) {
-  row = row - (filtermodeinput ? 2 : 0);
+  row = row - ((filtermodeinput || filtermodeinputregex) ? 2 : 0);
   this->row = row;
   this->col = col;
   this->coloffset = coloffset;
@@ -194,7 +194,7 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
   if (listsize == 0) {
     ui->printStr(0, coloffset + 3, "(empty directory)");
   }
-  if (filtermodeinput) {
+  if (filtermodeinput || filtermodeinputregex) {
     std::string oldtext = filterfield.getData();
     filterfield = MenuSelectOptionTextField("filter", row + 1, 1, "", oldtext,
         col - 20, 512, false);
@@ -230,8 +230,8 @@ void BrowseScreenSite::update() {
       ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), focus);
     }
   }
-  if (filtermodeinput) {
-    std::string pretag = "[Filter(s)]: ";
+  if (filtermodeinput || filtermodeinputregex) {
+    std::string pretag = filtermodeinput ? "[Filter(s)]: " : "[Regex filter]: ";
     ui->printStr(filterfield.getRow(), coloffset + filterfield.getCol(), pretag + filterfield.getContentText());
     ui->moveCursor(filterfield.getRow(), coloffset + filterfield.getCol() + pretag.length() + filterfield.cursorPosition());
   }
@@ -345,13 +345,21 @@ void BrowseScreenSite::loadFileListFromRequest() {
   }
   unsigned int position = 0;
   bool separatorsenabled = false;
-  std::list<std::string> filters;
+  bool hasregexfilter = false;
+  std::list<std::string> wildcardfilters;
+  std::regex regexfilter;
   std::set<std::string> comparefiles;
   CompareMode comparemode = CompareMode::NONE;
   if (list.getPath() == filelist->getPath()) {
     position = list.currentCursorPosition();
     separatorsenabled = list.separatorsEnabled();
-    filters = list.getFilters();
+    hasregexfilter = list.hasRegexFilter();
+    if (hasregexfilter) {
+      regexfilter = list.getRegexFilter();
+    }
+    else {
+      wildcardfilters = list.getWildcardFilters();
+    }
     comparemode = list.getCompareListMode();
     comparefiles = list.getCompareList();
   }
@@ -364,8 +372,11 @@ void BrowseScreenSite::loadFileListFromRequest() {
   if (separatorsenabled) {
     list.toggleSeparators();
   }
-  if (filters.size()) {
-    list.setFilters(filters);
+  if (hasregexfilter) {
+    list.setRegexFilter(regexfilter);
+  }
+  else if (wildcardfilters.size()) {
+    list.setWildcardFilters(wildcardfilters);
   }
   if (comparefiles.size()) {
     list.setCompareList(comparefiles, comparemode);
@@ -482,7 +493,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
   bool isdir;
   bool islink;
   UIFile * cursoredfile;
-  if (filtermodeinput) {
+  if (filtermodeinput || filtermodeinputregex) {
     if ((ch >= 32 && ch <= 126) || ch == KEY_BACKSPACE || ch == 8 || ch == 127 ||
         ch == KEY_RIGHT || ch == KEY_LEFT || ch == KEY_DC || ch == KEY_HOME ||
         ch == KEY_END) {
@@ -491,14 +502,27 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
     }
     else if (ch == 10) {
+      ui->hideCursor();
       std::string filter = filterfield.getData();
       if (filter.length()) {
-        list.setFilters(util::trim(util::split(filter)));
+        if (filtermodeinput) {
+          list.setWildcardFilters(util::trim(util::split(filter)));
+        }
+        else {
+          try {
+            std::regex regexfilter(filter);
+            list.setRegexFilter(regexfilter);
+          }
+          catch (std::regex_error& e) {
+            ui->goInfo("Invalid regular expression.");
+            return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
+          }
+        }
         clearSoftSelects();
         resort = true;
       }
       filtermodeinput = false;
-      ui->hideCursor();
+      filtermodeinputregex = false;
       ui->redraw();
       ui->setLegend();
       return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
@@ -510,10 +534,18 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       }
       else {
         filtermodeinput = false;
+        filtermodeinputregex = false;
         ui->hideCursor();
         ui->redraw();
         ui->setLegend();
       }
+      return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
+    }
+    else if (ch == '\t') {
+      filtermodeinput = !filtermodeinput;
+      filtermodeinputregex = !filtermodeinputregex;
+      ui->update();
+      ui->setLegend();
       return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
     }
   }
@@ -697,12 +729,23 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       ui->setLegend();
       break;
     case 'f':
-      if (list.hasFilters()) {
+      if (list.hasWildcardFilters() || list.hasRegexFilter()) {
         resort = true;
         list.unsetFilters();
       }
       else {
         filtermodeinput = true;
+      }
+      ui->redraw();
+      ui->setLegend();
+      break;
+    case 'F':
+      if (list.hasWildcardFilters() || list.hasRegexFilter()) {
+        resort = true;
+        list.unsetFilters();
+      }
+      else {
+        filtermodeinputregex = true;
       }
       ui->redraw();
       ui->setLegend();
@@ -897,9 +940,12 @@ std::string BrowseScreenSite::getLegendText() const {
     return "[Any] Go to first matching entry name - [Esc] Cancel";
   }
   if (filtermodeinput) {
-    return "[Any] Enter space separated filters. Valid operators are !, *, ?. Must match all negative filters and at least one positive if given. Case insensitive. - [Esc] Cancel";
+    return "[Any] Enter space separated filters. Valid operators are !, *, ?. Must match all negative filters and at least one positive if given. Case insensitive. - [Tab] switch mode - [Esc] Cancel";
   }
-  return "[Esc] Cancel - [c]lose - [Up/Down] Navigate - [Enter/Right] open dir - [Backspace/Left] return - sp[r]ead - [v]iew file - [D]ownload - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - [m]ake directory - Toggle se[P]arators - [q]uick jump - Toggle [f]ilter - view cwd [l]og - [Space] Hard select - [Shift-Up/Down] Soft select - Select [A]ll - [0-9] Browse to section";
+  if (filtermodeinputregex) {
+    return "[Any] Enter regex input - [Tab] switch mode - [Esc] Cancel";
+  }
+  return "[Esc] Cancel - [c]lose - [Up/Down] Navigate - [Enter/Right] open dir - [Backspace/Left] return - sp[r]ead - [v]iew file - [D]ownload - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - [m]ake directory - Toggle se[P]arators - [q]uick jump - Toggle [f]ilter - Regex [F]ilter - view cwd [l]og - [Space] Hard select - [Shift-Up/Down] Soft select - Select [A]ll - [0-9] Browse to section";
 }
 
 std::string BrowseScreenSite::getInfoLabel() const {
@@ -987,9 +1033,12 @@ std::string BrowseScreenSite::getInfoText() const {
     }
     return text + lastinfotarget;
   }
-  if (list.hasFilters() || list.getCompareListMode() != CompareMode::NONE) {
-    if (list.hasFilters()) {
-      text += std::string("  FILTER: ") + filterfield.getData();
+  if (list.hasWildcardFilters() || list.hasRegexFilter() || list.getCompareListMode() != CompareMode::NONE) {
+    if (list.hasWildcardFilters()) {
+      text += "  FILTER: " + filterfield.getData();
+    }
+    else if (list.hasRegexFilter()) {
+      text += "  REGEX FILTER: " + filterfield.getData();
     }
     if (list.getCompareListMode() == CompareMode::UNIQUE) {
       text += "  UNIQUES";
@@ -1014,6 +1063,7 @@ void BrowseScreenSite::setFocus(bool focus) {
   if (!focus) {
     disableGotoMode();
     filtermodeinput = false;
+    filtermodeinputregex = false;
   }
 }
 
