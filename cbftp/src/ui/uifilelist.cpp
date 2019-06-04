@@ -272,7 +272,7 @@ void UIFileList::fillSortedFiles() {
         continue;
       }
     }
-    else if (hasregexfilter && !std::regex_search(file.getName(), regexfilter)) {
+    else if (hasregexfilter && !std::regex_match(file.getName(), regexfilter)) {
       continue;
     }
     if (comparemode == CompareMode::UNIQUE && comparelist.find(file.getName()) != comparelist.end()) {

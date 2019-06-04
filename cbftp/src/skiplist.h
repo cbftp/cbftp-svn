@@ -25,7 +25,7 @@ private:
 public:
   SkipList();
   SkipList(const SkipList *);
-  void addEntry(std::string, bool, bool, int, SkipListAction);
+  void addEntry(bool regex, const std::string & pattern, bool file, bool dir, int scope, SkipListAction action);
   void clearEntries();
   std::list<SkiplistItem>::const_iterator entriesBegin() const;
   std::list<SkiplistItem>::const_iterator entriesEnd() const;

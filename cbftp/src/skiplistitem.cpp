@@ -1,7 +1,19 @@
 #include "skiplistitem.h"
 
-SkiplistItem::SkiplistItem(std::string pattern, bool file, bool dir, int scope, SkipListAction action) :
-  pattern(pattern), file(file), dir(dir), scope(scope), action(action) {
+SkiplistItem::SkiplistItem(bool regex, const std::string & pattern, bool file, bool dir, int scope, SkipListAction action) :
+  regex(regex), pattern(pattern), file(file), dir(dir), scope(scope), action(action)
+{
+  if (regex) {
+    regexpattern = std::regex(pattern);
+  }
+}
+
+bool SkiplistItem::matchRegex() const {
+  return regex;
+}
+
+const std::regex & SkiplistItem::matchRegexPattern() const {
+  return regexpattern;
 }
 
 const std::string & SkiplistItem::matchPattern() const {

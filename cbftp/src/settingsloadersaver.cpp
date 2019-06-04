@@ -791,7 +791,8 @@ void SettingsLoaderSaver::startAutoSaver() {
 void SettingsLoaderSaver::addSkipList(const SkipList * skiplist, const std::string & owner, const std::string & entry) {
   std::list<SkiplistItem>::const_iterator it;
   for (it = skiplist->entriesBegin(); it != skiplist->entriesEnd(); it++) {
-    std::string entryline = it->matchPattern() + "$" +
+    std::string entryline = std::string(it->matchRegex() ? "true" : "false") + "$" +
+        it->matchPattern() + "$" +
         (it->matchFile() ? "true" : "false") + "$" +
         (it->matchDir() ? "true" : "false") + "$" +
         std::to_string(it->matchScope()) + "$" +
@@ -804,6 +805,15 @@ void SettingsLoaderSaver::loadSkipListEntry(SkipList * skiplist, std::string val
   size_t split = value.find('$');
   if (split != std::string::npos) {
     std::string pattern = value.substr(0, split);
+    bool regex = false;
+    // begin compatibility r1023
+    if (pattern == "true" || pattern == "false") {
+      regex = pattern == "true";
+      value = value.substr(split + 1);
+      split = value.find('$');
+      pattern = value.substr(0, split);
+    }
+    // end compatibility r1023
     value = value.substr(split + 1);
     split = value.find('$');
     bool file = value.substr(0, split) == "true" ? true : false;
@@ -815,17 +825,7 @@ void SettingsLoaderSaver::loadSkipListEntry(SkipList * skiplist, std::string val
     int scope = std::stoi(value.substr(0, split));
     std::string actionstring = value.substr(split + 1);
 
-    SkipListAction action;
-    // begin compatibility r892
-    if (actionstring == "true") {
-      action = SKIPLIST_ALLOW;
-    }
-    else if (actionstring == "false") {
-      action = SKIPLIST_DENY;
-    }
-    else
-    // end compatibility r892
-    action = static_cast<SkipListAction>(std::stoi(actionstring));
-    skiplist->addEntry(pattern, file, dir, scope, action);
+    SkipListAction action = static_cast<SkipListAction>(std::stoi(actionstring));
+    skiplist->addEntry(regex, pattern, file, dir, scope, action);
   }
 }

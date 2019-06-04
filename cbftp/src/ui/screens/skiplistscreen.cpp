@@ -47,7 +47,7 @@ void SkipListScreen::initialize() {
     testskiplist.setGlobalSkip(skiplist);
   }
   for (it = skiplist->entriesBegin(); it != skiplist->entriesEnd(); it++) {
-    testskiplist.addEntry(it->matchPattern(), it->matchFile(), it->matchDir(), it->matchScope(), it->getAction());
+    testskiplist.addEntry(it->matchRegex(), it->matchPattern(), it->matchFile(), it->matchDir(), it->matchScope(), it->getAction());
   }
   focusedarea = &base;
   int y = globalskip ? 4 : 5;
@@ -69,32 +69,35 @@ void SkipListScreen::redraw() {
   if (!globalskip) {
     ui->printStr(y++, 1, "This skiplist is local and will fall through to the global skiplist if no match is found.");
   }
-  ui->printStr(y++, 1, "Valid expressions are * (match any num of any chars except slash) and ? (match any 1 char except slash)");
+  ui->printStr(y++, 1, "Valid wildcard expressions are *  and ?, unless regex is used.");
   ui->printStr(y++, 1, "The pattern list is parsed from top to bottom and the first match applies. Case insensitive.");
   y += 4;
   unsigned int listspan = row - y - 1;
   table.clear();
   std::shared_ptr<ResizableElement> re;
   std::shared_ptr<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
-  re = table.addTextButton(y, 1, "pattern", "PATTERN");
-  re->setSelectable(false);
-  msal->addElement(re, 1, RESIZE_CUTEND, true);
-  re = table.addTextButton(y, 2, "file", "FILE");
+  re = table.addTextButton(y, 1, "regex", "REGEX");
   re->setSelectable(false);
   msal->addElement(re, 2, RESIZE_REMOVE);
-  re = table.addTextButton(y, 3, "dir", "DIR");
+  re = table.addTextButton(y, 2, "pattern", "PATTERN");
+  re->setSelectable(false);
+  msal->addElement(re, 1, RESIZE_CUTEND, true);
+  re = table.addTextButton(y, 3, "file", "FILE");
   re->setSelectable(false);
   msal->addElement(re, 3, RESIZE_REMOVE);
-  re = table.addTextButton(y, 4, "action", "ACTION");
+  re = table.addTextButton(y, 4, "dir", "DIR");
   re->setSelectable(false);
   msal->addElement(re, 4, RESIZE_REMOVE);
-  re = table.addTextButton(y, 5, "scope", "SCOPE");
+  re = table.addTextButton(y, 5, "action", "ACTION");
   re->setSelectable(false);
   msal->addElement(re, 5, RESIZE_REMOVE);
+  re = table.addTextButton(y, 6, "scope", "SCOPE");
+  re->setSelectable(false);
+  msal->addElement(re, 6, RESIZE_REMOVE);
   std::list<SkiplistItem>::const_iterator it;
   for (it = testskiplist.entriesBegin(); it != testskiplist.entriesEnd(); it++) {
     y++;
-    addPatternLine(y, it->matchPattern(), it->matchFile(), it->matchDir(), it->matchScope(), it->getAction());
+    addPatternLine(y, it->matchRegex(), it->matchPattern(), it->matchFile(), it->matchDir(), it->matchScope(), it->getAction());
   }
   if (testskiplist.size()) {
     base.makeLeavableDown();
@@ -237,6 +240,24 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
     if (ch == 10) {
       activeelement->deactivate();
       active = false;
+      if (activeelement->getIdentifier() == "pattern") {
+        std::shared_ptr<MenuSelectAdjustableLine> line = table.getAdjustableLine(activeelement);
+        if (line) {
+          std::shared_ptr<MenuSelectOptionCheckBox> regexbox = std::static_pointer_cast<MenuSelectOptionCheckBox>(line->getElement(0));
+          if (regexbox->getData()) {
+            try {
+              std::regex(std::static_pointer_cast<MenuSelectOptionTextField>(activeelement)->getData());
+            }
+            catch (std::regex_error&) {
+              ui->update();
+              ui->goInfo("Invalid regular expression.");
+              regexbox->setValue(false);
+              saveToTempSkipList();
+              return true;
+            }
+          }
+        }
+      }
       saveToTempSkipList();
       ui->update();
       ui->setLegend();
@@ -279,11 +300,29 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
     case 10:
       activation = focusedarea->activateSelected();
       if (!activation) {
-        if (focusedarea->getElement(focusedarea->getSelectionPointer())->getIdentifier() == "add") {
-          addPatternLine(0, "", false, false, SCOPE_IN_RACE, SKIPLIST_ALLOW);
+        std::shared_ptr<MenuSelectOptionElement> element = focusedarea->getElement(focusedarea->getSelectionPointer());
+        if (element->getIdentifier() == "add") {
+          addPatternLine(0, false, "", false, false, SCOPE_IN_RACE, SKIPLIST_ALLOW);
           saveToTempSkipList();
           ui->redraw();
           return true;
+        }
+        if (element->getIdentifier() == "regex") {
+          std::shared_ptr<MenuSelectOptionCheckBox> regexbox = std::static_pointer_cast<MenuSelectOptionCheckBox>(element);
+          if (regexbox->getData()) {
+            std::shared_ptr<MenuSelectAdjustableLine> line = table.getAdjustableLine(element);
+            if (line) {
+              try {
+                std::regex(std::static_pointer_cast<MenuSelectOptionTextField>(line->getElement(1))->getData());
+              }
+              catch (std::regex_error&) {
+                ui->goInfo("Invalid regular expression.");
+                regexbox->setValue(false);
+                saveToTempSkipList();
+                return true;
+              }
+            }
+          }
         }
         saveToTempSkipList();
         ui->update();
@@ -302,7 +341,7 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
     case 'd':
       skiplist->clearEntries();
       for (std::list<SkiplistItem>::const_iterator it = testskiplist.entriesBegin(); it != testskiplist.entriesEnd(); it++) {
-        skiplist->addEntry(it->matchPattern(), it->matchFile(), it->matchDir(), it->matchScope(), it->getAction());
+        skiplist->addEntry(it->matchRegex(), it->matchPattern(), it->matchFile(), it->matchDir(), it->matchScope(), it->getAction());
       }
       ui->returnToLast();
       return true;
@@ -325,7 +364,7 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
       if (focusedarea == &table) {
         std::shared_ptr<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
         std::shared_ptr<MenuSelectAdjustableLine> msal = table.getAdjustableLine(msoe);
-        addPatternLine(0, "", false, false, SCOPE_IN_RACE, SKIPLIST_ALLOW, msal);
+        addPatternLine(0, false, "", false, false, SCOPE_IN_RACE, SKIPLIST_ALLOW, msal);
         saveToTempSkipList();
         ui->redraw();
       }
@@ -412,20 +451,20 @@ void SkipListScreen::saveToTempSkipList() {
     if (it == table.linesBegin()) {
       continue;
     }
-    std::string pattern = std::static_pointer_cast<MenuSelectOptionTextField>((*it)->getElement(0))->getData();
-    bool file = std::static_pointer_cast<MenuSelectOptionCheckBox>((*it)->getElement(1))->getData();
-    bool dir = std::static_pointer_cast<MenuSelectOptionCheckBox>((*it)->getElement(2))->getData();
-    SkipListAction action = static_cast<SkipListAction>(std::static_pointer_cast<MenuSelectOptionTextArrow>((*it)->getElement(3))->getData());
-    int scope = std::static_pointer_cast<MenuSelectOptionTextArrow>((*it)->getElement(4))->getData();
-    testskiplist.addEntry(pattern, file, dir, scope, action);
+    bool regex = std::static_pointer_cast<MenuSelectOptionCheckBox>((*it)->getElement(0))->getData();
+    std::string pattern = std::static_pointer_cast<MenuSelectOptionTextField>((*it)->getElement(1))->getData();
+    bool file = std::static_pointer_cast<MenuSelectOptionCheckBox>((*it)->getElement(2))->getData();
+    bool dir = std::static_pointer_cast<MenuSelectOptionCheckBox>((*it)->getElement(3))->getData();
+    SkipListAction action = static_cast<SkipListAction>(std::static_pointer_cast<MenuSelectOptionTextArrow>((*it)->getElement(4))->getData());
+    int scope = std::static_pointer_cast<MenuSelectOptionTextArrow>((*it)->getElement(5))->getData();
+    testskiplist.addEntry(regex, pattern, file, dir, scope, action);
   }
 }
 
-void SkipListScreen::addPatternLine(int y, std::string pattern, bool file, bool dir, int scope, SkipListAction action) {
-  addPatternLine(y, pattern, file, dir, scope, action, std::shared_ptr<MenuSelectAdjustableLine>());
-}
-
-void SkipListScreen::addPatternLine(int y, std::string pattern, bool file, bool dir, int scope, SkipListAction action, std::shared_ptr<MenuSelectAdjustableLine> before) {
+void SkipListScreen::addPatternLine(int y, bool regex, std::string pattern, bool file, bool dir,
+                                    int scope, SkipListAction action,
+                                    std::shared_ptr<MenuSelectAdjustableLine> before)
+{
   std::shared_ptr<MenuSelectAdjustableLine> msal;
   if (!before) {
     msal = table.addAdjustableLine();
@@ -433,22 +472,24 @@ void SkipListScreen::addPatternLine(int y, std::string pattern, bool file, bool 
   else {
     msal = table.addAdjustableLineBefore(before);
   }
-  std::shared_ptr<ResizableElement> re = table.addStringField(y, 1, "patternedit", "", pattern, false, 64);
-  msal->addElement(re, 1, RESIZE_CUTEND, true);
-  re = table.addCheckBox(y, 2, "filebox", "", file);
+  std::shared_ptr<ResizableElement> re = table.addCheckBox(y, 1, "regex", "", regex);
   msal->addElement(re, 2, RESIZE_REMOVE);
-  re = table.addCheckBox(y, 3, "dirbox", "", dir);
+  re = table.addStringField(y, 2, "pattern", "", pattern, false, 64);
+  msal->addElement(re, 1, RESIZE_CUTEND, true);
+  re = table.addCheckBox(y, 3, "filebox", "", file);
   msal->addElement(re, 3, RESIZE_REMOVE);
-  std::shared_ptr<MenuSelectOptionTextArrow> msota = table.addTextArrow(y, 4, "actionarrow", "");
+  re = table.addCheckBox(y, 4, "dirbox", "", dir);
+  msal->addElement(re, 4, RESIZE_REMOVE);
+  std::shared_ptr<MenuSelectOptionTextArrow> msota = table.addTextArrow(y, 5, "actionarrow", "");
   msota->addOption("Allow", SKIPLIST_ALLOW);
   msota->addOption("Deny", SKIPLIST_DENY);
   msota->addOption("Unique", SKIPLIST_UNIQUE);
   msota->addOption("Similar", SKIPLIST_SIMILAR);
   msota->setOption(static_cast<int>(action));
-  msal->addElement(msota, 4, RESIZE_REMOVE);
-  msota = table.addTextArrow(y, 5, "scope", "");
+  msal->addElement(msota, 5, RESIZE_REMOVE);
+  msota = table.addTextArrow(y, 6, "scope", "");
   msota->addOption("In spread job", SCOPE_IN_RACE);
   msota->addOption("Allround", SCOPE_ALL);
   msota->setOption(scope);
-  msal->addElement(msota, 5, RESIZE_REMOVE);
+  msal->addElement(msota, 6, RESIZE_REMOVE);
 }

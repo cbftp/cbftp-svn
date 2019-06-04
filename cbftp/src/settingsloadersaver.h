@@ -30,7 +30,7 @@ private:
   void loadSettings();
   void startAutoSaver();
   void addSkipList(const SkipList *, const std::string &, const std::string &);
-  void loadSkipListEntry(SkipList *, std::string);
+  void loadSkipListEntry(SkipList * skiplist, std::string value);
   std::shared_ptr<DataFileHandler> dfh;
   std::list<SettingsAdder *> settingsadders;
 };
