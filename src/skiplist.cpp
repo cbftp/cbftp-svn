@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cstdlib>
+#include <regex>
 #include <vector>
 
 #include "util.h"
@@ -57,8 +58,8 @@ SkipList::SkipList(const SkipList * globalskip) : globalskip(globalskip) {
   assert(globalskip != NULL);
 }
 
-void SkipList::addEntry(std::string pattern, bool file, bool dir, int scope, SkipListAction action) {
-  entries.push_back(SkiplistItem(pattern, file, dir, scope, action));
+void SkipList::addEntry(bool regex, const std::string & pattern, bool file, bool dir, int scope, SkipListAction action) {
+  entries.push_back(SkiplistItem(regex, pattern, file, dir, scope, action));
   wipeCache();
 }
 
@@ -103,7 +104,9 @@ SkipListMatch SkipList::check(const std::string & element, const bool dir, const
           continue;
         }
         if ((it->matchDir() && dir) || (it->matchFile() && !dir)) {
-          if (fixedSlashCompare(it->matchPattern(), *partsit, false)) {
+          if ((!it->matchRegex() && fixedSlashCompare(it->matchPattern(), *partsit, false)) ||
+              (it->matchRegex() && std::regex_match(*partsit, it->matchRegexPattern())))
+          {
             SkipListMatch match(it->getAction(), true, it->matchPattern());
             matchcache.insert(std::pair<std::string, SkipListMatch>(cachetoken, match));
             return match;
@@ -130,10 +133,10 @@ SkipListMatch SkipList::fallThrough(const std::string & element, const bool dir,
 }
 
 void SkipList::addDefaultEntries() {
-  entries.push_back(SkiplistItem("* *", true, true, SCOPE_ALL, SKIPLIST_DENY));
-  entries.push_back(SkiplistItem("*%*", true, true, SCOPE_IN_RACE, SKIPLIST_DENY));
-  entries.push_back(SkiplistItem("*[*", true, true, SCOPE_IN_RACE, SKIPLIST_DENY));
-  entries.push_back(SkiplistItem("*]*", true, true, SCOPE_IN_RACE, SKIPLIST_DENY));
+  entries.push_back(SkiplistItem(false, "* *", true, true, SCOPE_ALL, SKIPLIST_DENY));
+  entries.push_back(SkiplistItem(false, "*%*", true, true, SCOPE_IN_RACE, SKIPLIST_DENY));
+  entries.push_back(SkiplistItem(false, "*[*", true, true, SCOPE_IN_RACE, SKIPLIST_DENY));
+  entries.push_back(SkiplistItem(false, "*]*", true, true, SCOPE_IN_RACE, SKIPLIST_DENY));
 }
 
 unsigned int SkipList::size() const {

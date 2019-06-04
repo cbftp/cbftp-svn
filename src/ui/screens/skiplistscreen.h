@@ -28,8 +28,9 @@ public:
 private:
   void initialize();
   void saveToTempSkipList();
-  void addPatternLine(int, std::string, bool, bool, int, SkipListAction);
-  void addPatternLine(int, std::string, bool, bool, int, SkipListAction, std::shared_ptr<MenuSelectAdjustableLine>);
+  void addPatternLine(int y, bool regex, std::string pattern, bool file, bool dir,
+                      int scope, SkipListAction action,
+                      std::shared_ptr<MenuSelectAdjustableLine> before = nullptr);
   void keyUp();
   void keyDown();
   SkipList * skiplist;

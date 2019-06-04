@@ -658,7 +658,7 @@ std::string BrowseScreenLocal::getLegendText() const {
   if (filtermodeinputregex) {
     return "[Any] Enter regex input - [Tab] switch mode - [Esc] Cancel";
   }
-  return "[Up/Down] Navigate - [Enter/Right] open dir - [s]ort - [Backspace/Left] return - [Esc] Cancel - [c]lose - [q]uick jump - Toggle [f]ilter - [Space] Hard select - [Shift-Up/Down] Soft select - Select [A]ll";
+  return "[Up/Down] Navigate - [Enter/Right] open dir - [s]ort - [Backspace/Left] return - [Esc] Cancel - [c]lose - [q]uick jump - Toggle [f]ilter - Regex [F]ilter - [Space] Hard select - [Shift-Up/Down] Soft select - Select [A]ll";
 }
 
 std::string BrowseScreenLocal::getInfoLabel() const {

@@ -225,38 +225,38 @@ The site-specific skiplist is applied first for matching on a specific site.
 If no match is found it falls through to the section skiplist (for spread
 jobs), which in turn falls through to the global skiplist.
 
-Note that regex is currently not supported. * (match any number of any
-character) and ? (match any single character) are the currently supported
-wildcards. The skiplists are not case sensitive.
+The wildcard characters * (match any number of any character) and ? (match any
+single character) are the currently supported, or regex mode can be used.
+The skiplists are not case sensitive.
 
 Some skiplisting examples:
 
 Skip all files ending with .jpg in the main dir of spread jobs:
-*.jpg  [X]  [ ]  Deny  In spread job
+[ ] *.jpg  [X]  [ ]  Deny  In spread job
 
 Skip all files ending with .jpg in all subdirs of spread jobs:
-*/*.jpg  [X]  [ ]  Deny  In spread job
+[ ] */*.jpg  [X]  [ ]  Deny  In spread job
 
 Allow only "Sample" and "Proof" as subdirs in spread jobs:
-sample  [ ]  [X]  Allow  In spread job
-proof   [ ]  [X]  Allow  In spread job
-*       [ ]  [X]  Deny   In spread job
+[ ] sample  [ ]  [X]  Allow  In spread job
+[ ] proof   [ ]  [X]  Allow  In spread job
+[ ] *       [ ]  [X]  Deny   In spread job
 
 Skip all spread jobs with .INTERNAL. in the name:
-*.INTERNAL.*  [ ]  [X]  Deny  Allround
+[ ] *.INTERNAL.*  [ ]  [X]  Deny  Allround
 
 Only allow one nfo and sfv file within each directory:
-*.sfv  [X]  [ ]  Unique  In spread job
-*.nfo  [X]  [ ]  Unique  In spread job
+[ ] *.sfv  [X]  [ ]  Unique  In spread job
+[ ] *.nfo  [X]  [ ]  Unique  In spread job
 
 Skip files with spaces in the name everywhere:
-* *  [X]  [X]  Deny  Allround
+[ ] * *  [X]  [X]  Deny  Allround
 
 Skip files that don't belong in the directory through Similar-rules:
-*.r??       [X]  [ ]  Similar  In spread job
-*.s??       [X]  [ ]  Similar  In spread job
-*.t??       [X]  [ ]  Similar  In spread job
-*.u??       [X]  [ ]  Similar  In spread job
+[ ] *.r??       [X]  [ ]  Similar  In spread job
+[ ] *.s??       [X]  [ ]  Similar  In spread job
+[ ] *.t??       [X]  [ ]  Similar  In spread job
+[ ] *.u??       [X]  [ ]  Similar  In spread job
 
 And again, note that _the first match applies_! If the skiplist does not
 behave as you expect it to do, then you will need to think through if there

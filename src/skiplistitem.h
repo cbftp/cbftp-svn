@@ -1,5 +1,6 @@
 #pragma once
 
+#include <regex>
 #include <string>
 
 enum Scope {
@@ -17,14 +18,18 @@ enum SkipListAction {
 
 class SkiplistItem {
 public:
-  SkiplistItem(std::string, bool, bool, int, SkipListAction);
+  SkiplistItem(bool regex, const std::string & pattern, bool file, bool dir, int scope, SkipListAction action);
+  bool matchRegex() const;
   const std::string & matchPattern() const;
+  const std::regex & matchRegexPattern() const;
   bool matchFile() const;
   bool matchDir() const;
   SkipListAction getAction() const;
   int matchScope() const;
 private:
+  bool regex;
   std::string pattern;
+  std::regex regexpattern;
   bool file;
   bool dir;
   int scope;
