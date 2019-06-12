@@ -93,7 +93,7 @@ void AllRacesScreen::command(const std::string & command, const std::string & ar
       global->getEngine()->abortRace(abortrace);
     }
     else if (!!abortdeleterace) {
-      global->getEngine()->deleteOnAllSites(abortdeleterace, false);
+      global->getEngine()->deleteOnAllIncompleteSites(abortdeleterace, false);
     }
     ui->update();
   }
@@ -172,7 +172,7 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
         abortdeleterace = global->getEngine()->getRace(table.getElement(table.getSelectionPointer())->getId());
         if (!!abortdeleterace) {
           if (abortdeleterace->getStatus() == RACE_STATUS_RUNNING) {
-            ui->goConfirmation("Do you really want to abort the race " + abortdeleterace->getName() + " and delete your own files on all involved sites?");
+            ui->goConfirmation("Do you really want to abort the race " + abortdeleterace->getName() + " and delete your own files on all incomplete sites?");
           }
           else {
             ui->goConfirmation("Do you really want to delete your own files in " + abortdeleterace->getName() + " on all involved sites?");
@@ -210,7 +210,7 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
 }
 
 std::string AllRacesScreen::getLegendText() const {
-  return "[Esc/c] Return - [Enter] Details - [Up/Down/Pgup/Pgdn/Home/End] Navigate - [r]eset job - Hard [R]eset job - A[B]ort job - [t]ransfer for job - [z] Abort job and delete own files on all sites";
+  return "[Esc/c] Return - [Enter] Details - [Up/Down/Pgup/Pgdn/Home/End] Navigate - [r]eset job - Hard [R]eset job - A[B]ort job - [t]ransfer for job - [z] Abort job and delete own files on incomplete sites";
 }
 
 std::string AllRacesScreen::getInfoLabel() const {

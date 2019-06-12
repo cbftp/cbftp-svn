@@ -207,6 +207,9 @@ void RemoteCommandHandler::handleMessage(const std::string & message) {
   else if (command == "delete") {
     commandDelete(remainder);
   }
+  else if (command == "abortdeleteincomplete") {
+    commandAbortDeleteIncomplete(remainder);
+  }
   else if(command == "reset") {
     commandReset(remainder, false);
   }
@@ -439,7 +442,7 @@ void RemoteCommandHandler::commandDelete(const std::vector<std::string> & messag
     return;
   }
   if (!sitestring.length()) {
-    global->getEngine()->deleteOnAllSites(race);
+    global->getEngine()->deleteOnAllSites(race, false);
     return;
   }
   std::list<std::shared_ptr<SiteLogic> > sitelogics = getSiteLogicList(sitestring);
@@ -447,7 +450,21 @@ void RemoteCommandHandler::commandDelete(const std::vector<std::string> & messag
   for (std::list<std::shared_ptr<SiteLogic> >::const_iterator it = sitelogics.begin(); it != sitelogics.end(); it++) {
     sites.push_back((*it)->getSite());
   }
-  global->getEngine()->deleteOnSites(race, sites);
+  global->getEngine()->deleteOnSites(race, sites, false);
+}
+
+void RemoteCommandHandler::commandAbortDeleteIncomplete(const std::vector<std::string> & message) {
+  if (message.empty()) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad abortdeleteincomplete command format: " + util::join(message));
+    return;
+  }
+  std::string release = message[0];
+  std::shared_ptr<Race> race = global->getEngine()->getRace(release);
+  if (!race) {
+    global->getEventLog()->log("RemoteCommandHandler", "No matching race: " + release);
+    return;
+  }
+  global->getEngine()->deleteOnAllIncompleteSites(race, false);
 }
 
 void RemoteCommandHandler::commandReset(const std::vector<std::string> & message, bool hard) {

@@ -326,4 +326,15 @@ int chrfind(const char * buf, unsigned int buflen, char target) {
   return -1;
 }
 
+bool eightCharUserCompare(const std::string & a, const std::string & b) {
+  size_t alen = a.length();
+  if (alen > 8) {
+    size_t blen = b.length();
+    if (blen > 8) {
+      return a == b;
+    }
+  }
+  return a.compare(0, 8, b, 0, 8) == 0;
+}
+
 }

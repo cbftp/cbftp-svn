@@ -55,7 +55,8 @@ public:
   void abortRace(const std::shared_ptr<Race> &);
   void resetRace(const std::shared_ptr<Race> &, bool);
   void deleteOnAllSites(const std::shared_ptr<Race> &, bool allfiles = false);
-  void deleteOnSites(const std::shared_ptr<Race> &, std::list<std::shared_ptr<Site> >, bool allfiles = true);
+  void deleteOnAllIncompleteSites(const std::shared_ptr<Race> &, bool allfiles = false);
+  void deleteOnSites(const std::shared_ptr<Race> &, std::list<std::shared_ptr<Site> >, bool allfiles = false);
   void abortTransferJob(const std::shared_ptr<TransferJob> &);
   void jobFileListRefreshed(SiteLogic *, const std::shared_ptr<CommandOwner> & commandowner, FileList *);
   bool transferJobActionRequest(const std::shared_ptr<SiteTransferJob> &);
@@ -95,6 +96,7 @@ public:
   bool getNextPreparedRaceStarterEnabled() const;
   int getNextPreparedRaceStarterTimeout() const;
   int getNextPreparedRaceStarterTimeRemaining() const;
+  bool isIncompleteEnoughForDelete(const std::shared_ptr<Race> & race, const std::shared_ptr<SiteRace> & siterace) const;
   void transferFailed(const std::shared_ptr<TransferStatus> & ts, int err);
  private:
   std::shared_ptr<Race> newSpreadJob(int, const std::string &, const std::string &, const std::list<std::string> &);

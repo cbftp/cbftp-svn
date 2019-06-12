@@ -41,6 +41,7 @@
 #define SFVDIROBSERVETIME 5000
 #define NFO_PRIO_AFTER_SEC 15
 #define RETRY_CONNECT_UNTIL_SEC 15
+#define MAX_PERCENTAGE_FOR_INCOMPLETE_DELETE 95
 
 namespace {
 
@@ -654,6 +655,21 @@ void Engine::deleteOnAllSites(const std::shared_ptr<Race> & race, bool allfiles)
     sites.push_back(it->second->getSite());
   }
   deleteOnSites(race, sites, allfiles);
+}
+
+void Engine::deleteOnAllIncompleteSites(const std::shared_ptr<Race> & race, bool allfiles) {
+  std::list<std::shared_ptr<Site> > sites;
+  for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
+    if (isIncompleteEnoughForDelete(race, it->first)) {
+      sites.push_back(it->second->getSite());
+    }
+  }
+  deleteOnSites(race, sites, allfiles);
+}
+
+bool Engine::isIncompleteEnoughForDelete(const std::shared_ptr<Race> & race, const std::shared_ptr<SiteRace> & siterace) const {
+  return (!siterace->isDone() || (siterace->isAborted() && !siterace->doneBeforeAbort())) &&
+         (siterace->getTotalFileSize() * 100) / race->estimatedTotalSize() < MAX_PERCENTAGE_FOR_INCOMPLETE_DELETE;
 }
 
 void Engine::deleteOnSites(const std::shared_ptr<Race> & race, std::list<std::shared_ptr<Site> > delsites, bool allfiles) {

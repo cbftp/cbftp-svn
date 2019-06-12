@@ -333,6 +333,10 @@ all your own related files on all involved sites.
 If a sitelist is specified, those sites will be removed from the job instead
 of aborting it.
 
+<password> abortdeleteincomplete <job>
+This command makes cbftp abort the specified spread job, and then delete
+all your own related files on all incomplete sites.
+
 <password> reset <job>
 This command makes cbftp soft reset (no re-mkdir) the specified spread job.
 

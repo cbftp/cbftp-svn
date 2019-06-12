@@ -13,23 +13,6 @@
 
 #define MAX_LIST_FAILURES_BEFORE_STATE_FAILED 3
 
-namespace {
-
-bool sameOwner(const std::string & a, const std::string & b) {
-  size_t alen = a.length();
-  if (alen > 8) {
-    size_t blen = b.length();
-    if (alen < blen) {
-      return a.compare(0, alen, b, 0, alen) == 0;
-    }
-    return a.compare(0, blen, b, 0, blen) == 0;
-  }
-  return a.compare(0, 8, b, 0, 8) == 0;
-}
-
-
-}
-
 FileList::FileList(const std::string & username, const Path & path) {
   init(username, path, FileListState::UNKNOWN);
 }
@@ -94,11 +77,11 @@ bool FileList::updateFile(const std::string & start, int touch) {
       scoreboardchangedfiles.insert(name);
     }
     if (newsize > maxfilesize) maxfilesize = newsize;
-    if (!sameOwner(file->getOwner(), updatefile->getOwner())) {
-      if (sameOwner(username, file->getOwner())) {
+    if (!util::eightCharUserCompare(file->getOwner(), updatefile->getOwner())) {
+      if (util::eightCharUserCompare(username, file->getOwner())) {
         owned++;
       }
-      else if (sameOwner(username, updatefile->getOwner()))
+      else if (util::eightCharUserCompare(username, updatefile->getOwner()))
       {
         owned--;
       }
@@ -122,7 +105,7 @@ bool FileList::updateFile(const std::string & start, int touch) {
       unsigned int speed = updatefile->getUpdateSpeed();
       const std::shared_ptr<Site> & src = updatefile->getUpdateSrc();
       const std::shared_ptr<Site> & dst = updatefile->getUpdateDst();
-      if (sameOwner(username, updatefile->getOwner())) {
+      if (util::eightCharUserCompare(username, updatefile->getOwner())) {
         size = newsize;
         std::string extension = updatefile->getExtension();
         if (extension != "sfv" && extension != "nfo") {
@@ -151,7 +134,7 @@ bool FileList::updateFile(const std::string & start, int touch) {
       totalfilesize += filesize;
     }
     if (filesize > maxfilesize) maxfilesize = filesize;
-    if (sameOwner(username, file->getOwner())) {
+    if (util::eightCharUserCompare(username, file->getOwner())) {
       owned++;
     }
     recalcOwnedPercentage();
@@ -174,7 +157,7 @@ void FileList::touchFile(const std::string & name, const std::string & user, boo
     if (similarchecked && !firstsimilar) {
       checkSimilarFile(file);
     }
-    if (sameOwner(username, user)) {
+    if (util::eightCharUserCompare(username, user)) {
       owned++;
     }
     recalcOwnedPercentage();
@@ -193,7 +176,7 @@ void FileList::removeFile(const std::string & name) {
     return;
   }
   File * f = it->second.first;
-  if (sameOwner(username, f->getOwner())) {
+  if (util::eightCharUserCompare(username, f->getOwner())) {
     owned--;
   }
   if (f->getSize() > 0 && !f->isDirectory()) {
