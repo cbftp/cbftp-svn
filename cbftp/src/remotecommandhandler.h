@@ -36,6 +36,7 @@ private:
   void commandIdle(const std::vector<std::string> &);
   void commandAbort(const std::vector<std::string> &);
   void commandDelete(const std::vector<std::string> &);
+  void commandAbortDeleteIncomplete(const std::vector<std::string> &);
   void commandReset(const std::vector<std::string> &, bool);
   bool parseRace(const std::vector<std::string> &, int);
 public:

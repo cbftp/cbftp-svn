@@ -28,7 +28,7 @@ enum SelectSitesMode {
 
 RaceStatusScreen::RaceStatusScreen(Ui * ui) {
   this->ui = ui;
-  defaultlegendtext = "[c/Esc] Return - [Del] Remove site from job - [A]dd site to job - [s]how small dirs - [r]eset job - Hard [R]eset job - A[B]ort job - [d]elete site and own files from job - [D]elete site and all files from job - [t]transfers - [T]ransfers for site - [b]rowse - [E]dit site - [z] Abort job and delete own files on all sites";
+  defaultlegendtext = "[c/Esc] Return - [Del] Remove site from job - [A]dd site to job - [s]how small dirs - [r]eset job - Hard [R]eset job - A[B]ort job - [d]elete site and own files from job - [D]elete site and all files from job - [t]transfers - [T]ransfers for site - [b]rowse - [E]dit site - [z] Abort job and delete own files on incomplete sites";
   finishedlegendtext = "[c/Esc] Return - [Del] Remove site from job - [A]dd site to job - [s]how small dirs - [r]eset job - Hard [R]eset job - [d]elete own files - [D]elete all files - [t]ransfers - [T]ransfers for site - [b]rowse - [E]dit site - [z] Delete own files on all sites";
 }
 
@@ -313,7 +313,7 @@ void RaceStatusScreen::command(const std::string & command, const std::string & 
       ui->setLegend();
     }
     else if (awaitingdeleteownall) {
-      global->getEngine()->deleteOnAllSites(race, false);
+      global->getEngine()->deleteOnAllIncompleteSites(race, false);
     }
   }
   else if (command == "returnselectitems") {
@@ -341,7 +341,7 @@ void RaceStatusScreen::command(const std::string & command, const std::string & 
       }
     }
     else if (selectsitesmode == SELECT_DELETE) {
-      global->getEngine()->deleteOnSites(race, selectedsites);
+      global->getEngine()->deleteOnSites(race, selectedsites, true);
     }
     else if (selectsitesmode == SELECT_DELETE_OWN) {
       global->getEngine()->deleteOnSites(race, selectedsites, false);
@@ -425,7 +425,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
     case 'z':
       awaitingdeleteownall = true;
       if (race->getStatus() == RACE_STATUS_RUNNING) {
-        ui->goConfirmation("Do you really want to abort the race " + race->getName() + " and delete your own files on all involved sites?");
+        ui->goConfirmation("Do you really want to abort the race " + race->getName() + " and delete your own files on all incomplete sites?");
       }
       else {
         ui->goConfirmation("Do you really want to delete your own files in " + race->getName() + " on all involved sites?");
@@ -503,7 +503,7 @@ void RaceStatusScreen::deleteFiles(bool allfiles) {
     std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it;
     for (it = race->begin(); it != race->end(); it++) {
       sites.push_back(it->second->getSite());
-      if (!it->first->isDone() || (it->first->isAborted() && !it->first->doneBeforeAbort())) {
+      if (global->getEngine()->isIncompleteEnoughForDelete(race, it->first)) {
         preselectsites.push_back(it->second->getSite());
 
       }

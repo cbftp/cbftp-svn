@@ -5,6 +5,7 @@
 
 #include "filelist.h"
 #include "file.h"
+#include "util.h"
 
 bool lengthSort(const std::pair<Path, bool> & a, const std::pair<Path, bool> & b) {
   if (a.first.toString().length() < b.first.toString().length()) {
@@ -87,7 +88,7 @@ void RecursiveCommandLogic::addFileList(FileList * fl) {
       wantedlists.push_back(path / (*it)->getName());
     }
     else {
-      if (mode == RCL_DELETEOWN && (*it)->getOwner() != user) {
+      if (mode == RCL_DELETEOWN && !util::eightCharUserCompare((*it)->getOwner(), user)) {
         continue;
       }
       deletefiles.push_back(std::pair<Path, bool>(path / (*it)->getName(), false));
