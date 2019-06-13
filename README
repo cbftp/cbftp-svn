@@ -229,6 +229,9 @@ The wildcard characters * (match any number of any character) and ? (match any
 single character) are the currently supported, or regex mode can be used.
 The skiplists are not case sensitive.
 
+The regex flavor is ECMAScript, which is default in C++'s std::regex,
+with the addition of case insensitivity support via (?i).
+
 Some skiplisting examples:
 
 Skip all files ending with .jpg in the main dir of spread jobs:

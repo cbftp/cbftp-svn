@@ -1,5 +1,6 @@
 #include "settingsloadersaver.h"
 
+#include <regex>
 #include <vector>
 #include <set>
 
@@ -26,6 +27,18 @@
 #include "sectionmanager.h"
 
 #define AUTO_SAVE_INTERVAL 600000 // 10 minutes
+
+namespace {
+
+std::string replaceRegexEnd(const std::string& pattern) {
+  return std::regex_replace(pattern, std::regex("\\$"), "#end#");
+}
+
+std::string restoreRegexEnd(const std::string& pattern) {
+  return std::regex_replace(pattern, std::regex("#end#"), "$");
+}
+
+}
 
 SettingsLoaderSaver::SettingsLoaderSaver() :
   dfh(std::make_shared<DataFileHandler>()){
@@ -792,7 +805,7 @@ void SettingsLoaderSaver::addSkipList(const SkipList * skiplist, const std::stri
   std::list<SkiplistItem>::const_iterator it;
   for (it = skiplist->entriesBegin(); it != skiplist->entriesEnd(); it++) {
     std::string entryline = std::string(it->matchRegex() ? "true" : "false") + "$" +
-        it->matchPattern() + "$" +
+        replaceRegexEnd(it->matchPattern()) + "$" +
         (it->matchFile() ? "true" : "false") + "$" +
         (it->matchDir() ? "true" : "false") + "$" +
         std::to_string(it->matchScope()) + "$" +
@@ -804,28 +817,39 @@ void SettingsLoaderSaver::addSkipList(const SkipList * skiplist, const std::stri
 void SettingsLoaderSaver::loadSkipListEntry(SkipList * skiplist, std::string value) {
   size_t split = value.find('$');
   if (split != std::string::npos) {
-    std::string pattern = value.substr(0, split);
-    bool regex = false;
-    // begin compatibility r1023
-    if (pattern == "true" || pattern == "false") {
-      regex = pattern == "true";
+    try {
+      std::string patterntype = restoreRegexEnd(value.substr(0, split));
+      bool regex = false;
+      std::string pattern;
+      // begin compatibility r1023
+      if (patterntype != "true" && patterntype != "false") {
+        pattern = patterntype;
+      }
+      else
+      // end compatibility r1023
+      {
+        regex = patterntype == "true";
+        value = value.substr(split + 1);
+        split = value.find('$');
+        pattern = restoreRegexEnd(value.substr(0, split));
+      }
       value = value.substr(split + 1);
       split = value.find('$');
-      pattern = value.substr(0, split);
-    }
-    // end compatibility r1023
-    value = value.substr(split + 1);
-    split = value.find('$');
-    bool file = value.substr(0, split) == "true" ? true : false;
-    value = value.substr(split + 1);
-    split = value.find('$');
-    bool dir = value.substr(0, split) == "true" ? true : false;
-    value = value.substr(split + 1);
-    split = value.find('$');
-    int scope = std::stoi(value.substr(0, split));
-    std::string actionstring = value.substr(split + 1);
+      bool file = value.substr(0, split) == "true" ? true : false;
+      value = value.substr(split + 1);
+      split = value.find('$');
+      bool dir = value.substr(0, split) == "true" ? true : false;
+      value = value.substr(split + 1);
+      split = value.find('$');
+      int scope = std::stoi(value.substr(0, split));
+      std::string actionstring = value.substr(split + 1);
 
-    SkipListAction action = static_cast<SkipListAction>(std::stoi(actionstring));
-    skiplist->addEntry(regex, pattern, file, dir, scope, action);
+      SkipListAction action = static_cast<SkipListAction>(std::stoi(actionstring));
+      skiplist->addEntry(regex, pattern, file, dir, scope, action);
+    }
+    catch (std::invalid_argument&) {
+    }
+    catch (std::out_of_range&) {
+    }
   }
 }
