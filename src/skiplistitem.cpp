@@ -1,10 +1,12 @@
 #include "skiplistitem.h"
 
+#include "util.h"
+
 SkiplistItem::SkiplistItem(bool regex, const std::string & pattern, bool file, bool dir, int scope, SkipListAction action) :
   regex(regex), pattern(pattern), file(file), dir(dir), scope(scope), action(action)
 {
   if (regex) {
-    regexpattern = std::regex(pattern);
+    regexpattern = util::regexParse(pattern);
   }
 }
 
