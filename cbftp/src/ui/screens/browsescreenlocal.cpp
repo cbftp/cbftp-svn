@@ -278,7 +278,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
         }
         else {
           try {
-            std::regex regexfilter(filter);
+            std::regex regexfilter = util::regexParse(filter);
             list.setRegexFilter(regexfilter);
           }
           catch (std::regex_error& e) {

@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <list>
+#include <regex>
 
 #define SIZEPOWER 1024
 #define SIZEDECIMALS 2
@@ -31,4 +32,5 @@ std::string join(const std::vector<std::string> &);
 int chrstrfind(const char *, unsigned int, const char *, unsigned int);
 int chrfind(const char *, unsigned int, char);
 bool eightCharUserCompare(const std::string & a, const std::string & b);
+std::regex regexParse(const std::string & pattern);
 }

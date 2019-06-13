@@ -337,4 +337,11 @@ bool eightCharUserCompare(const std::string & a, const std::string & b) {
   return a.compare(0, 8, b, 0, 8) == 0;
 }
 
+std::regex regexParse(const std::string & pattern) {
+  if (!pattern.compare(0, 4, "(?i)")) {
+    return std::regex(pattern.substr(4), std::regex::icase | std::regex::optimize);
+  }
+  return std::regex(pattern, std::regex::optimize);
+}
+
 }

@@ -1,6 +1,7 @@
 #include "skiplistscreen.h"
 
 #include "../../globalcontext.h"
+#include "../../util.h"
 
 #include "../ui.h"
 #include "../focusablearea.h"
@@ -246,7 +247,7 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
           std::shared_ptr<MenuSelectOptionCheckBox> regexbox = std::static_pointer_cast<MenuSelectOptionCheckBox>(line->getElement(0));
           if (regexbox->getData()) {
             try {
-              std::regex(std::static_pointer_cast<MenuSelectOptionTextField>(activeelement)->getData());
+              util::regexParse(std::static_pointer_cast<MenuSelectOptionTextField>(activeelement)->getData());
             }
             catch (std::regex_error&) {
               ui->update();
