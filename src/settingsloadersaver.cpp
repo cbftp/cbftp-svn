@@ -1,5 +1,6 @@
 #include "settingsloadersaver.h"
 
+#include <ctime>
 #include <regex>
 #include <vector>
 #include <set>
@@ -36,6 +37,28 @@ std::string replaceRegexEnd(const std::string& pattern) {
 
 std::string restoreRegexEnd(const std::string& pattern) {
   return std::regex_replace(pattern, std::regex("#end#"), "$");
+}
+
+std::string trackerHoursToString(const HourlyAllTracking& tracker) {
+  std::string out(std::to_string(tracker.getStartTimestamp()) + ";");
+  for (unsigned long long int num : tracker.getHours()) {
+    out += std::to_string(num) + ",";
+  }
+  return out.substr(0, out.length() - 1);
+}
+
+void stringToTrackerHours(HourlyAllTracking& tracker, const std::string& in) {
+  size_t split = in.find(";");
+  unsigned int timestamp = std::stoul(in.substr(0, split));
+  std::vector<unsigned long long int> hours;
+  size_t start = split + 1;
+  size_t end;
+  while ((end = in.find(",", start)) != std::string::npos) {
+    hours.push_back(std::stoul(in.substr(start, end - start)));
+    start = end + 1;
+  }
+  hours.push_back(std::stoul(in.substr(start)));
+  tracker.setHours(hours, timestamp);
 }
 
 }
@@ -403,41 +426,73 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("skiplistentry")) {
       loadSkipListEntry((SkipList *)&site->getSkipList(), value);
     }
+    else if (!setting.compare("sizeup24")) {
+      stringToTrackerHours(site->getSizeUp(), value);
+    }
     else if (!setting.compare("sizeup")) {
-      site->setSizeUp(std::stoll(value));
+      site->getSizeUp().setAll(std::stoll(value));
+    }
+    else if (!setting.compare("filesup24")) {
+      stringToTrackerHours(site->getFilesUp(), value);
     }
     else if (!setting.compare("filesup")) {
-      site->setFilesUp(std::stoi(value));
+      site->getFilesUp().setAll(std::stoi(value));
+    }
+    else if (!setting.compare("sizedown24")) {
+      stringToTrackerHours(site->getSizeDown(), value);
     }
     else if (!setting.compare("sizedown")) {
-      site->setSizeDown(std::stoll(value));
+      site->getSizeDown().setAll(std::stoll(value));
+    }
+    else if (!setting.compare("filesdown24")) {
+      stringToTrackerHours(site->getFilesDown(), value);
     }
     else if (!setting.compare("filesdown")) {
-      site->setFilesDown(std::stoi(value));
+      site->getFilesDown().setAll(std::stoi(value));
+    }
+    else if (!setting.compare("sitessizeup24")) {
+      size_t split = value.find('$');
+      std::string sitename = value.substr(0, split);
+      stringToTrackerHours(site->getSiteSizeUp(sitename), value.substr(split + 1));
     }
     else if (!setting.compare("sitessizeup")) {
       size_t split = value.find('$');
       std::string sitename = value.substr(0, split);
       unsigned long long int size = std::stoll(value.substr(split + 1));
-      site->setSizeUp(sitename, size);
+      site->getSiteSizeUp(sitename).setAll(size);
+    }
+    else if (!setting.compare("sitesfilesup24")) {
+      size_t split = value.find('$');
+      std::string sitename = value.substr(0, split);
+      stringToTrackerHours(site->getSiteFilesUp(sitename), value.substr(split + 1));
     }
     else if (!setting.compare("sitesfilesup")) {
       size_t split = value.find('$');
       std::string sitename = value.substr(0, split);
       unsigned int files = std::stoi(value.substr(split + 1));
-      site->setFilesUp(sitename, files);
+      site->getSiteFilesUp(sitename).setAll(files);
+    }
+    else if (!setting.compare("sitessizedown24")) {
+      size_t split = value.find('$');
+      std::string sitename = value.substr(0, split);
+      stringToTrackerHours(site->getSiteSizeDown(sitename), value.substr(split + 1));
     }
     else if (!setting.compare("sitessizedown")) {
       size_t split = value.find('$');
       std::string sitename = value.substr(0, split);
       unsigned long long int size = std::stoll(value.substr(split + 1));
-      site->setSizeDown(sitename, size);
+      site->getSiteSizeDown(sitename).setAll(size);
+    }
+    else if (!setting.compare("sitesfilesdown24")) {
+      size_t split = value.find('$');
+      std::string sitename = value.substr(0, split);
+      stringToTrackerHours(site->getSiteFilesDown(sitename), value.substr(split + 1));
     }
     else if (!setting.compare("sitesfilesdown")) {
       size_t split = value.find('$');
       std::string sitename = value.substr(0, split);
       unsigned int files = std::stoi(value.substr(split + 1));
-      site->setFilesDown(sitename, files);
+      site->getSiteFilesDown(sitename).setAll(files);
     }
   }
   for (std::list<std::pair<std::string, std::string> >::const_iterator it2 = exceptsources.begin(); it2 != exceptsources.end(); it2++) {
@@ -547,23 +602,41 @@ void SettingsLoaderSaver::loadSettings() {
     size_t tok = line.find('=');
     std::string setting = line.substr(0, tok);
     std::string value = line.substr(tok + 1);
-    if (!setting.compare("sizeup")) {
-      global->getStatistics()->setSizeUp(std::stoll(value));
+    if (!setting.compare("sizeup24")) {
+      stringToTrackerHours(global->getStatistics()->getSizeUp(), value);
+    }
+    else if (!setting.compare("sizeup")) {
+      global->getStatistics()->getSizeUp().setAll(std::stoll(value));
+    }
+    else if (!setting.compare("filesup24")) {
+      stringToTrackerHours(global->getStatistics()->getFilesUp(), value);
     }
     else if (!setting.compare("filesup")) {
-      global->getStatistics()->setFilesUp(std::stoi(value));
+      global->getStatistics()->getFilesUp().setAll(std::stoi(value));
+    }
+    else if (!setting.compare("sizedown24")) {
+      stringToTrackerHours(global->getStatistics()->getSizeDown(), value);
     }
     else if (!setting.compare("sizedown")) {
-      global->getStatistics()->setSizeDown(std::stoll(value));
+      global->getStatistics()->getSizeDown().setAll(std::stoll(value));
+    }
+    else if (!setting.compare("filesdown24")) {
+      stringToTrackerHours(global->getStatistics()->getFilesDown(), value);
     }
     else if (!setting.compare("filesdown")) {
-      global->getStatistics()->setFilesDown(std::stoi(value));
+      global->getStatistics()->getFilesDown().setAll(std::stoi(value));
+    }
+    else if (!setting.compare("sizefxp24")) {
+      stringToTrackerHours(global->getStatistics()->getSizeFXP(), value);
     }
     else if (!setting.compare("sizefxp")) {
-      global->getStatistics()->setSizeFXP(std::stoll(value));
+      global->getStatistics()->getSizeFXP().setAll(std::stoll(value));
+    }
+    else if (!setting.compare("filesfxp24")) {
+      stringToTrackerHours(global->getStatistics()->getFilesFXP(), value);
     }
     else if (!setting.compare("filesfxp")) {
-      global->getStatistics()->setFilesFXP(std::stoi(value));
+      global->getStatistics()->getFilesFXP().setAll(std::stoi(value));
     }
     else if (!setting.compare("spreadjobs")) {
       global->getStatistics()->setSpreadJobs(std::stoi(value));
@@ -693,21 +766,45 @@ void SettingsLoaderSaver::saveSettings() {
       for (sit2 = site->avgspeedBegin(); sit2 != site->avgspeedEnd(); sit2++) {
         dfh->addOutputLine(filetag, name + "$avgspeed=" + sit2->first + "$" + std::to_string(sit2->second));
       }
-      dfh->addOutputLine(filetag, name + "$sizeup=" + std::to_string(site->getSizeUpAll()));
-      dfh->addOutputLine(filetag, name + "$filesup=" + std::to_string(site->getFilesUpAll()));
-      dfh->addOutputLine(filetag, name + "$sizedown=" + std::to_string(site->getSizeDownAll()));
-      dfh->addOutputLine(filetag, name + "$filesdown=" + std::to_string(site->getFilesDownAll()));
+      if (site->getSizeUp().getLast24Hours()) {
+        dfh->addOutputLine(filetag, name + "$sizeup24=" + trackerHoursToString(site->getSizeUp()));
+      }
+      dfh->addOutputLine(filetag, name + "$sizeup=" + std::to_string(site->getSizeUp().getAll()));
+      if (site->getFilesUp().getLast24Hours()) {
+        dfh->addOutputLine(filetag, name + "$filesup24=" + trackerHoursToString(site->getFilesUp()));
+      }
+      dfh->addOutputLine(filetag, name + "$filesup=" + std::to_string(site->getFilesUp().getAll()));
+      if (site->getSizeDown().getLast24Hours()) {
+        dfh->addOutputLine(filetag, name + "$sizedown24=" + trackerHoursToString(site->getSizeDown()));
+      }
+      dfh->addOutputLine(filetag, name + "$sizedown=" + std::to_string(site->getSizeDown().getAll()));
+      if (site->getFilesDown().getLast24Hours()) {
+        dfh->addOutputLine(filetag, name + "$filesdown24=" + trackerHoursToString(site->getFilesDown()));
+      }
+      dfh->addOutputLine(filetag, name + "$filesdown=" + std::to_string(site->getFilesDown().getAll()));
       std::map<std::string, HourlyAllTracking>::const_iterator sit5;
       for (sit5 = site->sizeUpBegin(); sit5 != site->sizeUpEnd(); sit5++) {
+        if (sit5->second.getLast24Hours()) {
+          dfh->addOutputLine(filetag, name + "$sitessizeup24=" + sit5->first + "$" + trackerHoursToString(sit5->second));
+        }
         dfh->addOutputLine(filetag, name + "$sitessizeup=" + sit5->first + "$" + std::to_string(sit5->second.getAll()));
       }
       for (sit5 = site->filesUpBegin(); sit5 != site->filesUpEnd(); sit5++) {
+        if (sit5->second.getLast24Hours()) {
+          dfh->addOutputLine(filetag, name + "$sitesfilesup24=" + sit5->first + "$" + trackerHoursToString(sit5->second));
+        }
         dfh->addOutputLine(filetag, name + "$sitesfilesup=" + sit5->first + "$" + std::to_string(sit5->second.getAll()));
       }
       for (sit5 = site->sizeDownBegin(); sit5 != site->sizeDownEnd(); sit5++) {
+        if (sit5->second.getLast24Hours()) {
+          dfh->addOutputLine(filetag, name + "$sitessizedown24=" + sit5->first + "$" + trackerHoursToString(sit5->second));
+        }
         dfh->addOutputLine(filetag, name + "$sitessizedown=" + sit5->first + "$" + std::to_string(sit5->second.getAll()));
       }
       for (sit5 = site->filesDownBegin(); sit5 != site->filesDownEnd(); sit5++) {
+        if (sit5->second.getLast24Hours()) {
+          dfh->addOutputLine(filetag, name + "$sitesfilesdown24=" + sit5->first + "$" + trackerHoursToString(sit5->second));
+        }
         dfh->addOutputLine(filetag, name + "$sitesfilesdown=" + sit5->first + "$" + std::to_string(sit5->second.getAll()));
       }
       std::set<std::string>::const_iterator sit3;
@@ -751,12 +848,30 @@ void SettingsLoaderSaver::saveSettings() {
   }
   {
     std::string filetag = "Statistics";
-    dfh->addOutputLine(filetag, "sizeup=" + std::to_string(global->getStatistics()->getSizeUpAll()));
-    dfh->addOutputLine(filetag, "filesup=" + std::to_string(global->getStatistics()->getFilesUpAll()));
-    dfh->addOutputLine(filetag, "sizedown=" + std::to_string(global->getStatistics()->getSizeDownAll()));
-    dfh->addOutputLine(filetag, "filesdown=" + std::to_string(global->getStatistics()->getFilesDownAll()));
-    dfh->addOutputLine(filetag, "sizefxp=" + std::to_string(global->getStatistics()->getSizeFXPAll()));
-    dfh->addOutputLine(filetag, "filesfxp=" + std::to_string(global->getStatistics()->getFilesFXPAll()));
+    if (global->getStatistics()->getSizeUp().getLast24Hours()) {
+      dfh->addOutputLine(filetag, "sizeup24=" + trackerHoursToString(global->getStatistics()->getSizeUp()));
+    }
+    dfh->addOutputLine(filetag, "sizeup=" + std::to_string(global->getStatistics()->getSizeUp().getAll()));
+    if (global->getStatistics()->getFilesUp().getLast24Hours()) {
+      dfh->addOutputLine(filetag, "filesup24=" + trackerHoursToString(global->getStatistics()->getFilesUp()));
+    }
+    dfh->addOutputLine(filetag, "filesup=" + std::to_string(global->getStatistics()->getFilesUp().getAll()));
+    if (global->getStatistics()->getSizeDown().getLast24Hours()) {
+      dfh->addOutputLine(filetag, "sizedown24=" + trackerHoursToString(global->getStatistics()->getSizeDown()));
+    }
+    dfh->addOutputLine(filetag, "sizedown=" + std::to_string(global->getStatistics()->getSizeDown().getAll()));
+    if (global->getStatistics()->getFilesDown().getLast24Hours()) {
+      dfh->addOutputLine(filetag, "filesdown24=" + trackerHoursToString(global->getStatistics()->getFilesDown()));
+    }
+    dfh->addOutputLine(filetag, "filesdown=" + std::to_string(global->getStatistics()->getFilesDown().getAll()));
+    if (global->getStatistics()->getSizeFXP().getLast24Hours()) {
+      dfh->addOutputLine(filetag, "sizefxp24=" + trackerHoursToString(global->getStatistics()->getSizeFXP()));
+    }
+    dfh->addOutputLine(filetag, "sizefxp=" + std::to_string(global->getStatistics()->getSizeFXP().getAll()));
+    if (global->getStatistics()->getFilesFXP().getLast24Hours()) {
+      dfh->addOutputLine(filetag, "filesfxp24=" + trackerHoursToString(global->getStatistics()->getFilesFXP()));
+    }
+    dfh->addOutputLine(filetag, "filesfxp=" + std::to_string(global->getStatistics()->getFilesFXP().getAll()));
     dfh->addOutputLine(filetag, "spreadjobs=" + std::to_string(global->getStatistics()->getSpreadJobs()));
     dfh->addOutputLine(filetag, "transferjobs=" + std::to_string(global->getStatistics()->getTransferJobs()));
   }

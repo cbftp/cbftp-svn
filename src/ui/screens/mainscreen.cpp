@@ -18,6 +18,7 @@
 #include "../../preparedrace.h"
 #include "../../sectionmanager.h"
 #include "../../section.h"
+#include "../../hourlyalltracking.h"
 
 #include <cassert>
 
@@ -775,10 +776,10 @@ void MainScreen::addSiteDetails(unsigned int y, MenuSelectOption & mso, const st
       break;
   }
   std::string disabled = site->getDisabled()? "[X]" : "[ ]";
-  std::string up24 = util::parseSize(site->getSizeUpLast24Hours());
-  std::string down24 = util::parseSize(site->getSizeDownLast24Hours());
-  std::string allup = util::parseSize(site->getSizeUpAll());
-  std::string alldown = util::parseSize(site->getSizeDownAll());
+  std::string up24 = util::parseSize(site->getSizeUp().getLast24Hours());
+  std::string down24 = util::parseSize(site->getSizeDown().getLast24Hours());
+  std::string allup = util::parseSize(site->getSizeUp().getAll());
+  std::string alldown = util::parseSize(site->getSizeDown().getAll());
   std::string prio = Site::getPriorityText(site->getPriority());
   addSiteRow(y, mso, true, sitename, logins, uploads, downloads, up, down, disabled, up24, down24, allup, alldown, prio);
 }

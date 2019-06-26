@@ -71,7 +71,7 @@ void TransferJobStatusScreen::redraw() {
       status = "Aborted";
       break;
   }
-  ui->printStr(y, 41, std::string("Status: ") + status);
+  ui->printStr(y, 53, std::string("Status: ") + status);
   y++;
   ui->printStr(y, 1, "Size: " + util::parseSize(transferjob->sizeProgress()) +
       " / " + util::parseSize(transferjob->totalSize()));

@@ -181,8 +181,8 @@ void SiteLogic::tick(int message) {
       }
     }
   }
-  if (currtime % 3600000 == 0) {
-    site->tickHour();
+  if (currtime % 60000 == 0) {
+    site->tickMinute();
   }
 }
 

@@ -99,6 +99,7 @@ bool BrowseScreen::keyPressed(unsigned int ch) {
   BrowseScreenAction op = active->keyPressed(ch);
   switch (op.getOp()) {
     case BROWSESCREENACTION_CLOSE:
+      clearCompareListMode();
       if (active->type() != BROWSESCREEN_SELECTOR && split) {
         if (active == left) {
           if (right->type() == BROWSESCREEN_SELECTOR) {
@@ -162,6 +163,7 @@ bool BrowseScreen::keyPressed(unsigned int ch) {
     case BROWSESCREENACTION_CAUGHT:
       return true;
     case BROWSESCREENACTION_CHDIR:
+      clearCompareListMode();
       return true;
   }
   return false;
@@ -390,4 +392,13 @@ void BrowseScreen::toggleCompareListMode(CompareMode mode) {
   }
   ui->redraw();
   ui->setInfo();
+}
+
+void BrowseScreen::clearCompareListMode() {
+  if (left && left->type() != BROWSESCREEN_SELECTOR) {
+    left->getUIFileList()->clearCompareListMode();
+  }
+  if (right && right->type() != BROWSESCREEN_SELECTOR) {
+    right->getUIFileList()->clearCompareListMode();
+  }
 }

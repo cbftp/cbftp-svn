@@ -729,55 +729,55 @@ void Site::addTransferStatsFile(StatsDirection direction, unsigned long long int
   }
 }
 
-void Site::tickHour() {
-  sizeup.tickHour();
-  filesup.tickHour();
-  sizedown.tickHour();
-  filesdown.tickHour();
+void Site::tickMinute() {
+  sizeup.tickMinute();
+  filesup.tickMinute();
+  sizedown.tickMinute();
+  filesdown.tickMinute();
   for (std::map<std::string, HourlyAllTracking>::iterator it = sitessizeup.begin(); it != sitessizeup.end(); it++) {
-    it->second.tickHour();
+    it->second.tickMinute();
   }
   for (std::map<std::string, HourlyAllTracking>::iterator it = sitesfilesup.begin(); it != sitesfilesup.end(); it++) {
-    it->second.tickHour();
+    it->second.tickMinute();
   }
   for (std::map<std::string, HourlyAllTracking>::iterator it = sitessizedown.begin(); it != sitessizedown.end(); it++) {
-    it->second.tickHour();
+    it->second.tickMinute();
   }
   for (std::map<std::string, HourlyAllTracking>::iterator it = sitesfilesdown.begin(); it != sitesfilesdown.end(); it++) {
-    it->second.tickHour();
+    it->second.tickMinute();
   }
 }
 
-unsigned long long int Site::getSizeUpLast24Hours() const {
-  return sizeup.getLast24Hours();
+const HourlyAllTracking & Site::getSizeUp() const {
+  return sizeup;
 }
 
-unsigned long long int Site::getSizeUpAll() const {
-  return sizeup.getAll();
+const HourlyAllTracking & Site::getSizeDown() const {
+  return sizedown;
 }
 
-unsigned long long int Site::getSizeDownLast24Hours() const {
-  return sizedown.getLast24Hours();
+const HourlyAllTracking & Site::getFilesUp() const {
+  return filesup;
 }
 
-unsigned long long int Site::getSizeDownAll() const {
-  return sizedown.getAll();
+const HourlyAllTracking & Site::getFilesDown() const {
+  return filesdown;
 }
 
-unsigned int Site::getFilesUpLast24Hours() const {
-  return filesup.getLast24Hours();
+HourlyAllTracking & Site::getSizeUp() {
+  return sizeup;
 }
 
-unsigned int Site::getFilesUpAll() const {
-  return filesup.getAll();
+HourlyAllTracking & Site::getSizeDown() {
+  return sizedown;
 }
 
-unsigned int Site::getFilesDownLast24Hours() const {
-  return filesdown.getLast24Hours();
+HourlyAllTracking & Site::getFilesUp() {
+  return filesup;
 }
 
-unsigned int Site::getFilesDownAll() const {
-  return filesdown.getAll();
+HourlyAllTracking & Site::getFilesDown() {
+  return filesdown;
 }
 
 std::map<std::string, HourlyAllTracking>::const_iterator Site::sizeUpBegin() const {
@@ -812,36 +812,20 @@ std::map<std::string, HourlyAllTracking>::const_iterator Site::filesDownEnd() co
   return sitesfilesdown.end();
 }
 
-void Site::setSizeUp(unsigned long long int size) {
-  sizeup.set(size);
+HourlyAllTracking & Site::getSiteSizeUp(const std::string & site) {
+  return sitessizeup[site];
 }
 
-void Site::setFilesUp(unsigned int files) {
-  filesup.set(files);
+HourlyAllTracking & Site::getSiteSizeDown(const std::string & site) {
+  return sitessizedown[site];
 }
 
-void Site::setSizeDown(unsigned long long int size) {
-  sizedown.set(size);
+HourlyAllTracking & Site::getSiteFilesUp(const std::string & site) {
+  return sitesfilesup[site];
 }
 
-void Site::setFilesDown(unsigned int files) {
-  filesdown.set(files);
-}
-
-void Site::setSizeUp(const std::string & site, unsigned long long int size) {
-  sitessizeup[site].set(size);
-}
-
-void Site::setFilesUp(const std::string & site, unsigned int files) {
-  sitesfilesup[site].set(files);
-}
-
-void Site::setSizeDown(const std::string & site, unsigned long long int size) {
-  sitessizedown[site].set(size);
-}
-
-void Site::setFilesDown(const std::string & site, unsigned int files) {
-  sitesfilesdown[site].set(files);
+HourlyAllTracking & Site::getSiteFilesDown(const std::string & site) {
+  return sitesfilesdown[site];
 }
 
 void Site::setSkipList(const SkipList & skiplist) {
