@@ -8,6 +8,7 @@
 #include "../../ftpconn.h"
 #include "../../connstatetracker.h"
 #include "../../util.h"
+#include "../../hourlyalltracking.h"
 
 #include "../ui.h"
 
@@ -55,14 +56,14 @@ void SiteStatusScreen::redraw() {
         " - HL:" + hlstate + " - T:" + tstate + " - " + status);
   }
   ++i;
-  unsigned long long int sizeupday = site->getSizeUpLast24Hours();
-  unsigned int filesupday = site->getFilesUpLast24Hours();
-  unsigned long long int sizeupall = site->getSizeUpAll();
-  unsigned int filesupall = site->getFilesUpAll();
-  unsigned long long int sizedownday = site->getSizeDownLast24Hours();
-  unsigned int filesdownday = site->getFilesDownLast24Hours();
-  unsigned long long int sizedownall = site->getSizeDownAll();
-  unsigned int filesdownall = site->getFilesDownAll();
+  unsigned long long int sizeupday = site->getSizeUp().getLast24Hours();
+  unsigned int filesupday = site->getFilesUp().getLast24Hours();
+  unsigned long long int sizeupall = site->getSizeUp().getAll();
+  unsigned int filesupall = site->getFilesUp().getAll();
+  unsigned long long int sizedownday = site->getSizeDown().getLast24Hours();
+  unsigned int filesdownday = site->getFilesDown().getLast24Hours();
+  unsigned long long int sizedownall = site->getSizeDown().getAll();
+  unsigned int filesdownall = site->getFilesDown().getAll();
   ui->printStr(i++, 1, "Traffic measurements");
   ui->printStr(i++, 1, "Upload   last 24 hours: " + util::parseSize(sizeupday) + ", " +
                  std::to_string(filesupday) + " files - All time: " + util::parseSize(sizeupall) + ", " +

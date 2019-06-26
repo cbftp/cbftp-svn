@@ -4,6 +4,7 @@
 #include "../../statistics.h"
 #include "../../util.h"
 #include "../../buildinfo.h"
+#include "../../hourlyalltracking.h"
 
 #include "../../core/sslmanager.h"
 
@@ -21,18 +22,18 @@ void InfoScreen::initialize(unsigned int row, unsigned int col) {
 void InfoScreen::redraw() {
   ui->erase();
   ui->hideCursor();
-  unsigned long long int sizefxpday = global->getStatistics()->getSizeFXPLast24Hours();
-  unsigned int filesfxpday = global->getStatistics()->getFilesFXPLast24Hours();
-  unsigned long long int sizefxpall = global->getStatistics()->getSizeFXPAll();
-  unsigned int filesfxpall = global->getStatistics()->getFilesFXPAll();
-  unsigned long long int sizeupday = global->getStatistics()->getSizeUpLast24Hours();
-  unsigned int filesupday = global->getStatistics()->getFilesUpLast24Hours();
-  unsigned long long int sizeupall = global->getStatistics()->getSizeUpAll();
-  unsigned int filesupall = global->getStatistics()->getFilesUpAll();
-  unsigned long long int sizedownday = global->getStatistics()->getSizeDownLast24Hours();
-  unsigned int filesdownday = global->getStatistics()->getFilesDownLast24Hours();
-  unsigned long long int sizedownall = global->getStatistics()->getSizeDownAll();
-  unsigned int filesdownall = global->getStatistics()->getFilesDownAll();
+  unsigned long long int sizefxpday = global->getStatistics()->getSizeFXP().getLast24Hours();
+  unsigned int filesfxpday = global->getStatistics()->getFilesFXP().getLast24Hours();
+  unsigned long long int sizefxpall = global->getStatistics()->getSizeFXP().getAll();
+  unsigned int filesfxpall = global->getStatistics()->getFilesFXP().getAll();
+  unsigned long long int sizeupday = global->getStatistics()->getSizeUp().getLast24Hours();
+  unsigned int filesupday = global->getStatistics()->getFilesUp().getLast24Hours();
+  unsigned long long int sizeupall = global->getStatistics()->getSizeUp().getAll();
+  unsigned int filesupall = global->getStatistics()->getFilesUp().getAll();
+  unsigned long long int sizedownday = global->getStatistics()->getSizeDown().getLast24Hours();
+  unsigned int filesdownday = global->getStatistics()->getFilesDown().getLast24Hours();
+  unsigned long long int sizedownall = global->getStatistics()->getSizeDown().getAll();
+  unsigned int filesdownall = global->getStatistics()->getFilesDown().getAll();
 
   unsigned int i = 1;
   ui->printStr(i++, 1, "Compile time: " + BuildInfo::compileTime());

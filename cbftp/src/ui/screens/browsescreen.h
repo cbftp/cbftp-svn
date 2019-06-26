@@ -35,6 +35,7 @@ private:
   void closeSide();
   bool keyPressedNoSubAction(unsigned int);
   void toggleCompareListMode(CompareMode mode);
+  void clearCompareListMode();
   std::shared_ptr<BrowseScreenSub> left;
   std::shared_ptr<BrowseScreenSub> right;
   std::shared_ptr<BrowseScreenSub> active;

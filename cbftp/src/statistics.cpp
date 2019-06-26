@@ -4,16 +4,16 @@
 #include "globalcontext.h"
 
 Statistics::Statistics() : spreadjobs(0), transferjobs(0) {
-  global->getTickPoke()->startPoke(this, "Statistics", 60 * 60 * 1000, 0);
+  global->getTickPoke()->startPoke(this, "Statistics", 60 * 1000, 0);
 }
 
 void Statistics::tick(int message) {
-  sizedown.tickHour();
-  filesdown.tickHour();
-  sizeup.tickHour();
-  filesup.tickHour();
-  sizefxp.tickHour();
-  filesfxp.tickHour();
+  sizedown.tickMinute();
+  filesdown.tickMinute();
+  sizeup.tickMinute();
+  filesup.tickMinute();
+  sizefxp.tickMinute();
+  filesfxp.tickMinute();
 }
 
 void Statistics::addTransferStatsFile(StatsDirection direction, unsigned long long int size) {
@@ -41,50 +41,52 @@ void Statistics::addTransferJob() {
   ++transferjobs;
 }
 
-unsigned long long int Statistics::getSizeDownLast24Hours() const {
-  return sizedown.getLast24Hours();
+const HourlyAllTracking& Statistics::getSizeDown() const {
+  return sizedown;
 }
 
-unsigned int Statistics::getFilesDownLast24Hours() const {
-  return filesdown.getLast24Hours();
+const HourlyAllTracking& Statistics::getSizeUp() const {
+  return sizeup;
 }
 
-unsigned long long int Statistics::getSizeUpLast24Hours() const {
-  return sizeup.getLast24Hours();
+const HourlyAllTracking& Statistics::getSizeFXP() const {
+  return sizefxp;
 }
 
-unsigned int Statistics::getFilesUpLast24Hours() const {
-  return filesup.getLast24Hours();
+const HourlyAllTracking& Statistics::getFilesDown() const {
+  return filesdown;
 }
 
-unsigned long long int Statistics::getSizeFXPLast24Hours() const {
-  return sizefxp.getLast24Hours();
+const HourlyAllTracking& Statistics::getFilesUp() const {
+  return filesup;
 }
 
-unsigned int Statistics::getFilesFXPLast24Hours() const {
-  return filesfxp.getLast24Hours();
+const HourlyAllTracking& Statistics::getFilesFXP() const {
+  return filesfxp;
 }
 
-unsigned long long int Statistics::getSizeDownAll() const {
-  return sizedown.getAll();
+HourlyAllTracking& Statistics::getSizeDown() {
+  return sizedown;
 }
 
-unsigned int Statistics::getFilesDownAll() const {
-  return filesdown.getAll();
+HourlyAllTracking& Statistics::getSizeUp() {
+  return sizeup;
 }
 
-unsigned long long int Statistics::getSizeUpAll() const {
-  return sizeup.getAll();
+HourlyAllTracking& Statistics::getSizeFXP() {
+  return sizefxp;
 }
 
-unsigned int Statistics::getFilesUpAll() const {
-  return filesup.getAll();
+HourlyAllTracking& Statistics::getFilesDown() {
+  return filesdown;
 }
-unsigned long long int Statistics::getSizeFXPAll() const {
-  return sizefxp.getAll();
+
+HourlyAllTracking& Statistics::getFilesUp() {
+  return filesup;
 }
-unsigned int Statistics::getFilesFXPAll() const {
-  return filesfxp.getAll();
+
+HourlyAllTracking& Statistics::getFilesFXP() {
+  return filesfxp;
 }
 
 unsigned int Statistics::getSpreadJobs() const {
@@ -93,29 +95,6 @@ unsigned int Statistics::getSpreadJobs() const {
 
 unsigned int Statistics::getTransferJobs() const {
   return transferjobs;
-}
-
-void Statistics::setSizeDown(unsigned long long int size) {
-  sizedown.set(size);
-}
-void Statistics::setFilesDown(unsigned int files) {
-  filesdown.set(files);
-}
-
-void Statistics::setSizeUp(unsigned long long int size) {
-  sizeup.set(size);
-}
-
-void Statistics::setFilesUp(unsigned int files) {
-  filesup.set(files);
-}
-
-void Statistics::setSizeFXP(unsigned long long int size) {
-  sizefxp.set(size);
-}
-
-void Statistics::setFilesFXP(unsigned int files) {
-  filesfxp.set(files);
 }
 
 void Statistics::setSpreadJobs(unsigned int jobs) {
