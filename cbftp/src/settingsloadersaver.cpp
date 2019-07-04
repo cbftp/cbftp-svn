@@ -54,10 +54,10 @@ void stringToTrackerHours(HourlyAllTracking& tracker, const std::string& in) {
   size_t start = split + 1;
   size_t end;
   while ((end = in.find(",", start)) != std::string::npos) {
-    hours.push_back(std::stoul(in.substr(start, end - start)));
+    hours.push_back(std::stoull(in.substr(start, end - start)));
     start = end + 1;
   }
-  hours.push_back(std::stoul(in.substr(start)));
+  hours.push_back(std::stoull(in.substr(start)));
   tracker.setHours(hours, timestamp);
 }
 
