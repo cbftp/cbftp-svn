@@ -8,6 +8,7 @@
 #include "../../encoding.h"
 
 #include "../ui.h"
+#include "../termint.h"
 
 RawDataScreen::RawDataScreen(Ui * ui) {
   this->ui = ui;
@@ -116,6 +117,12 @@ bool RawDataScreen::skipCodePrint(const std::string & line) {
 
 bool RawDataScreen::keyPressed(unsigned int ch) {
   unsigned int rownum = row;
+  if (ch == TERMINT_CTRL_L) {
+    rawbuf->clear();
+    readfromcopy = false;
+    ui->redraw();
+    return true;
+  }
   if (rawcommandmode) {
     rownum = row - 1;
     if ((ch >= 32 && ch <= 126) || ch == KEY_BACKSPACE || ch == 8 || ch == 127 ||

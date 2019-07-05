@@ -9,6 +9,7 @@
 #include "../../site.h"
 
 #include "../ui.h"
+#include "../termint.h"
 
 #include "rawdatascreen.h"
 
@@ -122,7 +123,11 @@ bool RawCommandScreen::keyPressed(unsigned int ch) {
       }
       ui->update();
       return true;
-
+    case TERMINT_CTRL_L:
+      rawbuf->clear();
+      readfromcopy = false;
+      ui->redraw();
+      return true;
   }
   if (!allowinput) {
     return false;
