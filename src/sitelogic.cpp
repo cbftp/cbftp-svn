@@ -57,6 +57,10 @@
 // when xdupe is enabled, in ms
 #define FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH_XDUPE 5000
 
+// time that a transfer slot stays reserved after disconnecting a connection
+// with an ongoing transfer, in ms
+#define TRANSFER_SLOT_CLEANUP_DELAY 2000
+
 enum RequestType {
   REQ_FILELIST,
   REQ_RAW,
@@ -150,6 +154,22 @@ void SiteLogic::addTransferJob(std::shared_ptr<SiteTransferJob> & tj) {
 void SiteLogic::tick(int message) {
   currtime += TICK_INTERVAL;
   timesincelastrequestready += TICK_INTERVAL;
+  for (std::list<DelayedCommand>::iterator it = delayedcommands.begin(); it != delayedcommands.end(); ++it) {
+    DelayedCommand & delayedcommand = *it;
+    if (delayedcommand.isActive()) {
+      delayedcommand.currentTime(currtime);
+      if (delayedcommand.isReleased()) {
+        std::string event = delayedcommand.getCommand();
+        if (event == "returnuploadslot") {
+          --slotsup;
+        }
+        else if (event == "returndownloadslot") {
+          --slotsdn;
+        }
+        it = delayedcommands.erase(it);
+      }
+    }
+  }
   for (unsigned int i = 0; i < connstatetracker.size(); i++) {
     connstatetracker[i].timePassed(TICK_INTERVAL);
     if (connstatetracker[i].getCommand().isReleased()) {
@@ -510,7 +530,7 @@ void SiteLogic::commandSuccess(int id, int state) {
     case STATE_PRET_LIST:
       if (connstatetracker[id].transferInitialized()) {
         if (connstatetracker[id].getTransferPassive()) {
-          conns[id]->doPASV();
+          passiveModeCommand(id);
           return;
         }
       }
@@ -750,16 +770,14 @@ void SiteLogic::handleTransferFail(int id, int err) {
 
 void SiteLogic::handleTransferFail(int id, int type, int err) {
   assert(connstatetracker[id].isListOrTransferLocked());
-  reportTransferErrorAndFinish(id, type, err);
   if (connstatetracker[id].hasTransfer() && connstatetracker[id].transferInitialized() &&
       connstatetracker[id].getTransferPassive() &&
-      (err == TM_ERR_RETRSTOR || err == TM_ERR_DUPE))
+      !conns[id]->isProcessing() && (err == TM_ERR_RETRSTOR || err == TM_ERR_DUPE))
   {
     conns[id]->abortTransferPASV();
   }
-  else {
-    handleConnection(id);
-  }
+  reportTransferErrorAndFinish(id, type, err);
+  handleConnection(id);
 }
 
 void SiteLogic::reportTransferErrorAndFinish(int id, int err) {
@@ -773,14 +791,22 @@ void SiteLogic::reportTransferErrorAndFinish(int id, int type, int err) {
     switch (type) {
       case CST_DOWNLOAD:
         connstatetracker[id].getTransferMonitor()->sourceError((TransferError)err);
-        transferComplete(id, true);
+        transferComplete(id, true, err != TM_ERR_CLEANUP);
+        if (err == TM_ERR_CLEANUP) {
+          delayedcommands.emplace_back();
+          delayedcommands.back().set("returndownloadslot", currtime + TRANSFER_SLOT_CLEANUP_DELAY);
+        }
         break;
       case CST_LIST:
         connstatetracker[id].getTransferMonitor()->sourceError((TransferError)err);
         break;
       case CST_UPLOAD:
         connstatetracker[id].getTransferMonitor()->targetError((TransferError)err);
-        transferComplete(id, false);
+        transferComplete(id, false, err != TM_ERR_CLEANUP);
+        if (err == TM_ERR_CLEANUP) {
+          delayedcommands.emplace_back();
+          delayedcommands.back().set("returnuploadslot", currtime + TRANSFER_SLOT_CLEANUP_DELAY);
+        }
         break;
     }
   }
@@ -1674,12 +1700,14 @@ int SiteLogic::slotsAvailable() const {
   return available;
 }
 
-void SiteLogic::transferComplete(int id, bool isdownload) {
-  if (isdownload) {
-    slotsdn--;
-  }
-  else {
-    slotsup--;
+void SiteLogic::transferComplete(int id, bool isdownload, bool returntransferslot) {
+  if (returntransferslot) {
+    if (isdownload) {
+      slotsdn--;
+    }
+    else {
+      slotsup--;
+    }
   }
   available++;
   conns[id]->unsetRawBufferCallback();
@@ -1779,7 +1807,7 @@ void SiteLogic::disconnectConn(int id, bool hard) {
 
 void SiteLogic::cleanupConnection(int id) {
   while (connstatetracker[id].isListOrTransferLocked()) {
-    reportTransferErrorAndFinish(id, 3);
+    reportTransferErrorAndFinish(id, TM_ERR_CLEANUP);
   }
   if (connstatetracker[id].hasRequest()) {
     setRequestReady(id, NULL, false);

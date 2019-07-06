@@ -247,6 +247,9 @@ bool ConnStateTracker::getTransferSSL() const {
 }
 
 bool ConnStateTracker::getTransferSSLClient() const {
+  if (listtransfer) {
+    return false;
+  }
   return sslclient;
 }
 

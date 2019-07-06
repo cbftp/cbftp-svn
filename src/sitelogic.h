@@ -24,6 +24,7 @@ class CommandOwner;
 class Path;
 class SiteTransferJob;
 class FileListData;
+class DelayedCommand;
 
 enum class TransferType {
   REGULAR,
@@ -53,6 +54,7 @@ class SiteLogic : public EventReceiver {
     bool poke;
     int currtime;
     int timesincelastrequestready;
+    std::list<DelayedCommand> delayedcommands;
     void handleConnection(int id, bool backfromrefresh = false);
     bool handleRequest(int);
     void handleRecursiveLogic(int id, FileList * fl = nullptr);
@@ -129,7 +131,7 @@ class SiteLogic : public EventReceiver {
     RawBuffer * getAggregatedRawBuffer() const;
     void raceGlobalComplete(const std::shared_ptr<SiteRace> & sr);
     void raceLocalComplete(const std::shared_ptr<SiteRace> & sr, int uploadslotsleft, bool reportdone = true);
-    void transferComplete(int, bool isdownload);
+    void transferComplete(int, bool isdownload, bool returntransferslot = true);
     bool getSlot(bool isdownload, TransferType type);
     int requestFileList(const Path &);
     int requestRawCommand(const std::string &);

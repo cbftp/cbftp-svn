@@ -22,10 +22,16 @@
 #include "filesystem.h"
 #include "statistics.h"
 
-#define MAX_WAIT_ERROR 10000
+// max time to wait for the other site to fail after a failure has happened
+// before a hard disconnect occurs, in ms
+#define MAX_WAIT_ERROR 5000
+
+// max time to wait for the destination to complete the transfer after the
+// source has reported the transfer to be complete, in ms
 #define MAX_WAIT_SOURCE_COMPLETE 60000
 
-#define TICKINTERVAL 50
+// ticker heartbeat, in ms
+#define TICK_INTERVAL 50
 
 TransferMonitor::TransferMonitor(TransferManager * tm) :
   status(TM_STATUS_IDLE),
@@ -35,7 +41,7 @@ TransferMonitor::TransferMonitor(TransferManager * tm) :
   tm(tm),
   ticker(0)
 {
-  global->getTickPoke()->startPoke(this, "TransferMonitor", TICKINTERVAL, 0);
+  global->getTickPoke()->startPoke(this, "TransferMonitor", TICK_INTERVAL, 0);
 }
 
 TransferMonitor::~TransferMonitor() {
@@ -228,7 +234,7 @@ void TransferMonitor::engageList(const std::shared_ptr<SiteLogic> & sls, int con
 
 void TransferMonitor::tick(int msg) {
   if (status != TM_STATUS_IDLE) {
-    timestamp += TICKINTERVAL;
+    timestamp += TICK_INTERVAL;
     ++ticker;
     if (type == TM_TYPE_FXP) {
       updateFXPSizeSpeed();
@@ -566,7 +572,7 @@ void TransferMonitor::updateFXPSizeSpeed() {
       // since the actual file size has not changed since last tick,
       // interpolate an updated file size through the currently known speed
       unsigned long long int speedtemp = ts->getSpeed() * 1024;
-      ts->interpolateAddSize((speedtemp * TICKINTERVAL) / 1000);
+      ts->interpolateAddSize((speedtemp * TICK_INTERVAL) / 1000);
     }
     ts->setTimeSpent(span / 1000);
   }
