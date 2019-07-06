@@ -33,7 +33,8 @@ enum TransferError {
   TM_ERR_OTHER,
   TM_ERR_LOCK_DOWN,
   TM_ERR_LOCK_UP,
-  TM_ERR_DUPE
+  TM_ERR_DUPE,
+  TM_ERR_CLEANUP
 };
 
 class CommandOwner;
