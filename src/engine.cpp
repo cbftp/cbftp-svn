@@ -669,7 +669,7 @@ void Engine::deleteOnAllIncompleteSites(const std::shared_ptr<Race> & race, bool
 
 bool Engine::isIncompleteEnoughForDelete(const std::shared_ptr<Race> & race, const std::shared_ptr<SiteRace> & siterace) const {
   return (!siterace->isDone() || (siterace->isAborted() && !siterace->doneBeforeAbort())) &&
-         (siterace->getTotalFileSize() * 100) / race->estimatedTotalSize() < MAX_PERCENTAGE_FOR_INCOMPLETE_DELETE;
+         (!race->estimatedTotalSize() || (siterace->getTotalFileSize() * 100) / race->estimatedTotalSize() < MAX_PERCENTAGE_FOR_INCOMPLETE_DELETE);
 }
 
 void Engine::deleteOnSites(const std::shared_ptr<Race> & race, std::list<std::shared_ptr<Site> > delsites, bool allfiles) {
