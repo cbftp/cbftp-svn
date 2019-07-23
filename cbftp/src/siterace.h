@@ -74,8 +74,7 @@ class SiteRace : public CommandOwner, public std::enable_shared_from_this<SiteRa
     std::unordered_map<std::string, FileList *>::const_iterator fileListsBegin() const;
     std::unordered_map<std::string, FileList *>::const_iterator fileListsEnd() const;
     std::shared_ptr<Race> getRace() const;
-    bool addSubDirectory(const std::string &);
-    bool addSubDirectory(const std::string &, bool);
+    bool addSubDirectory(const std::string & subpath, bool knownexists = false);
     std::string getSubPath(FileList *) const;
     void fileListUpdated(SiteLogic *, FileList *);
     bool sizeEstimated(FileList *) const;

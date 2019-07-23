@@ -352,6 +352,7 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
         std::shared_ptr<MenuSelectAdjustableLine> msal = table.getAdjustableLine(msoe);
         table.removeAdjustableLine(msal);
         saveToTempSkipList();
+        table.checkPointer();
         if (testskiplist.size() == 0) {
           table.goUp();
           focusedarea = &base;
