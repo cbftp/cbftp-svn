@@ -74,10 +74,6 @@ unsigned int SiteRace::getId() const {
   return race->getId();
 }
 
-bool SiteRace::addSubDirectory(const std::string & subpath) {
-  return addSubDirectory(subpath, false);
-}
-
 bool SiteRace::addSubDirectory(const std::string & subpath, bool knownexists) {
   SkipListMatch match = skiplist.check(subpath, true, true, &race->getSectionSkipList());
   if (match.action == SKIPLIST_DENY) {
@@ -235,8 +231,8 @@ void SiteRace::addNewDirectories() {
         continue;
       }
       FileList * fl;
-      if ((fl = getFileListForPath(file->getName())) == NULL) {
-        addSubDirectory(file->getName(), true);
+      if ((fl = getFileListForPath(filename)) == NULL) {
+        addSubDirectory(filename, true);
       }
       else if (fl->getState() == FileListState::UNKNOWN || fl->getState() == FileListState::NONEXISTENT ||
                fl->getState() == FileListState::FAILED)
