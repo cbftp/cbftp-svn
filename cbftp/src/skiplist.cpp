@@ -98,8 +98,8 @@ SkipListMatch SkipList::check(const std::string & element, const bool dir, const
         elementparts.push_back(elementmp);
       }
     }
-    for (partsit = elementparts.begin(); partsit != elementparts.end(); partsit++) {
-      for (it = entries.begin(); it != entries.end(); it++) {
+    for (it = entries.begin(); it != entries.end(); it++) {
+      for (partsit = elementparts.begin(); partsit != elementparts.end(); partsit++) {
         if (it->matchScope() == SCOPE_IN_RACE && !inrace) {
           continue;
         }
