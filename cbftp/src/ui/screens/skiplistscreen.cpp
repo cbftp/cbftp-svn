@@ -314,7 +314,7 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
             std::shared_ptr<MenuSelectAdjustableLine> line = table.getAdjustableLine(element);
             if (line) {
               try {
-                std::regex(std::static_pointer_cast<MenuSelectOptionTextField>(line->getElement(1))->getData());
+                util::regexParse(std::static_pointer_cast<MenuSelectOptionTextField>(line->getElement(1))->getData());
               }
               catch (std::regex_error&) {
                 ui->goInfo("Invalid regular expression.");
