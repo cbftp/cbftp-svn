@@ -60,6 +60,7 @@
 #include "screens/sitesectionsscreen.h"
 #include "screens/editsitesectionscreen.h"
 #include "screens/siteslotsscreen.h"
+#include "screens/snakescreen.h"
 
 static Ui * instance = new Ui();
 
@@ -144,6 +145,7 @@ bool Ui::init() {
   sitesectionsscreen = std::make_shared<SiteSectionsScreen>(this);
   editsitesectionscreen = std::make_shared<EditSiteSectionScreen>(this);
   siteslotsscreen = std::make_shared<SiteSlotsScreen>(this);
+  snakescreen = std::make_shared<SnakeScreen>(this);
   mainwindows.push_back(mainscreen);
   mainwindows.push_back(confirmationscreen);
   mainwindows.push_back(editsitescreen);
@@ -178,6 +180,7 @@ bool Ui::init() {
   mainwindows.push_back(sitesectionsscreen);
   mainwindows.push_back(editsitesectionscreen);
   mainwindows.push_back(siteslotsscreen);
+  mainwindows.push_back(snakescreen);
 
   legendprinterkeybinds = std::make_shared<LegendPrinterKeybinds>(this);
   legendwindow->setMainLegendPrinter(legendprinterkeybinds);
@@ -932,6 +935,10 @@ void Ui::goEditSiteSection(const std::shared_ptr<Site> & site, const std::string
   switchToWindow(editsitesectionscreen);
 }
 
+void Ui::goSnake() {
+  snakescreen->initialize(mainrow, maincol);
+  switchToWindow(snakescreen);
+}
 void Ui::returnSelectItems(const std::string & items) {
   switchToLast();
   topwindow->command("returnselectitems", items);
