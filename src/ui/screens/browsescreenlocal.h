@@ -69,4 +69,5 @@ private:
   LastInfo lastinfo;
   std::string lastinfotarget;
   bool refreshfilelistafter;
+  unsigned long long int freespace;
 };

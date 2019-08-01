@@ -4,6 +4,7 @@
 #include <fstream>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <sys/statvfs.h>
 #include <list>
 
 #include "path.h"
@@ -97,6 +98,16 @@ void writeFile(const Path & path, const BinaryData & data) {
   outfile.open(path.toString().c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
   outfile.write((const char *)&data[0], data.size());
   outfile.close();
+}
+
+SpaceInfo getSpaceInfo(const Path & path) {
+  struct statvfs stats;
+  statvfs(path.toString().c_str(), &stats);
+  SpaceInfo info;
+  info.size = stats.f_bsize * stats.f_blocks;
+  info.used = stats.f_bsize * (stats.f_blocks - stats.f_bfree);
+  info.avail = stats.f_bsize * stats.f_bavail;
+  return info;
 }
 
 }

@@ -8,6 +8,7 @@
 #include "../../globalcontext.h"
 #include "../../skiplist.h"
 #include "../../util.h"
+#include "../../filesystem.h"
 
 #include "../ui.h"
 #include "../menuselectoptiontextbutton.h"
@@ -24,7 +25,7 @@ BrowseScreenLocal::BrowseScreenLocal(Ui * ui) : ui(ui), currentviewspan(0),
     focus(true), spinnerpos(0), tickcount(0),
     resort(false), sortmethod(UIFileList::SortMethod::COMBINED), gotomode(false), gotomodefirst(false),
     gotomodeticker(0), filtermodeinput(false), filtermodeinputregex(false), temphighlightline(-1),
-    softselecting(false), lastinfo(LastInfo::NONE), refreshfilelistafter(false)
+    softselecting(false), lastinfo(LastInfo::NONE), refreshfilelistafter(false), freespace(0)
 {
   BrowseScreenRequest request;
   request.type = BrowseScreenRequestType::FILELIST;
@@ -745,6 +746,9 @@ std::string BrowseScreenLocal::getInfoText() const {
     text += "  " + std::to_string(list.sizeFiles()) + "f " + std::to_string(list.sizeDirs()) + "d";
     text += std::string("  ") + util::parseSize(list.getTotalSize());
   }
+  if (list.isInitialized()) {
+    text += "  Free: " + util::parseSize(freespace);
+  }
   return text;
 }
 
@@ -800,6 +804,8 @@ void BrowseScreenLocal::gotoPath(int requestid, const Path & path) {
   else {
     currentviewspan = 0;
   }
+  FileSystem::SpaceInfo info = FileSystem::getSpaceInfo(filelist->getPath());
+  freespace = info.avail;
   unsigned int position = 0;
   bool hasregexfilter = false;
   std::list<std::string> wildcardfilters;
