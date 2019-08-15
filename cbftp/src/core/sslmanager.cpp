@@ -289,7 +289,7 @@ SSL_CTX* createServerContext() {
 #if OPENSSL_VERSION_NUMBER < 0x10101000L
   SSL_CTX_set_tlsext_servername_callback(ctx, earlyCallback);
 #else
-  SSL_CTX_set_early_cb(ctx, earlyCallback);
+  SSL_CTX_set_client_hello_cb(ctx, earlyCallback, nullptr);
 #endif
 #if OPENSSL_VERSION_NUMBER < 0x10002000L
   EC_KEY* eckey = EC_KEY_new_by_curve_name(ELLIPTIC_CURVE);
