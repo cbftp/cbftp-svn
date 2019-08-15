@@ -13,7 +13,7 @@ SignalEvents::SignalEvents() :
 bool SignalEvents::set(EventReceiver * er, int signal, int value) {
   std::lock_guard<std::recursive_mutex> lock(signallock);
   for (size_t i = 0; i < slots.size(); ++i) {
-    if (slots[i].set) {
+    if (!slots[i].set) {
       slots[i].set = true;
       slots[i].er = er;
       slots[i].signal = signal;
