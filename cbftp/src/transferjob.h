@@ -32,7 +32,7 @@ class TransferStatus;
 class LocalFileList;
 class File;
 
-class TransferJob : public EventReceiver, public TransferStatusCallback {
+class TransferJob : public Core::EventReceiver, public TransferStatusCallback {
 public:
   std::string getName() const;
   TransferJob(unsigned int, const std::shared_ptr<SiteLogic> &, FileList *, const std::string &, const Path &, const std::string &);

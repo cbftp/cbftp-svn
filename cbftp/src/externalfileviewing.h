@@ -8,7 +8,7 @@
 
 class Path;
 
-class ExternalFileViewing : public EventReceiver {
+class ExternalFileViewing : public Core::EventReceiver {
 public:
   ExternalFileViewing();
   bool isViewable(const Path &) const;

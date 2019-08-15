@@ -45,8 +45,8 @@ bool DataFileHandler::readEncrypted(const std::string & key) {
     return false;
   }
   this->key = key;
-  BinaryData keydata(key.begin(), key.end());
-  BinaryData decryptedtext;
+  Core::BinaryData keydata(key.begin(), key.end());
+  Core::BinaryData decryptedtext;
   if (!DataFileHandlerMethod::decrypt(rawdata, keydata, decryptedtext)) {
     return false;
   }
@@ -79,16 +79,16 @@ void DataFileHandler::writeFile() {
   for (it = outputlines.begin(); it != outputlines.end(); it++) {
     fileoutput.append(*it + "\n");
   }
-  BinaryData datahash;
-  BinaryData fileoutputdata(fileoutput.begin(),
+  Core::BinaryData datahash;
+  Core::BinaryData fileoutputdata(fileoutput.begin(),
                             fileoutput.end() - (fileoutput.size() ? 1 : 0));
   Crypto::sha256(fileoutputdata, datahash);
   if (datahash == filehash) {
     return;
   }
   filehash = datahash;
-  BinaryData ciphertext;
-  BinaryData keydata(key.begin(), key.end());
+  Core::BinaryData ciphertext;
+  Core::BinaryData keydata(key.begin(), key.end());
   DataFileHandlerMethod::encrypt(fileoutputdata, keydata, ciphertext);
   FileSystem::writeFile(path, ciphertext);
 }

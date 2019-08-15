@@ -1,18 +1,17 @@
 #include "tickpoketarget.h"
 
-TickPokeTarget::TickPokeTarget(EventReceiver * pokee, int interval, int message, std::string desc) {
-  this->pokee = pokee;
-  this->interval = interval;
-  this->message = message;
-  this->currentval = 0;
-  this->desc = desc;
+namespace Core {
+
+TickPokeTarget::TickPokeTarget(EventReceiver* pokee, int interval, int message, const std::string& desc) :
+  pokee(pokee), interval(interval), currentval(0), message(message), desc(desc)
+{
 }
 
 int TickPokeTarget::getMessage() const {
   return message;
 }
 
-EventReceiver * TickPokeTarget::getPokee() const {
+EventReceiver* TickPokeTarget::getPokee() const {
   return pokee;
 }
 
@@ -24,3 +23,5 @@ bool TickPokeTarget::tick(int msecs) {
   }
   return false;
 }
+
+} // namespace Core

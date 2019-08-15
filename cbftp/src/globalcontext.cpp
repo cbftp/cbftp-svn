@@ -2,7 +2,7 @@
 
 GlobalContext * global = new GlobalContext();
 
-void GlobalContext::linkCore(WorkManager * wm, TickPoke * tp, IOManager * iom, std::shared_ptr<EventLog> & el) {
+void GlobalContext::linkCore(Core::WorkManager * wm, Core::TickPoke * tp, Core::IOManager * iom, std::shared_ptr<EventLog> & el) {
   this->wm = wm;
   this->tp = tp;
   this->iom = iom;
@@ -38,11 +38,11 @@ SettingsLoaderSaver * GlobalContext::getSettingsLoaderSaver() const {
   return sls;
 }
 
-IOManager * GlobalContext::getIOManager() const {
+Core::IOManager * GlobalContext::getIOManager() const {
   return iom;
 }
 
-WorkManager * GlobalContext::getWorkManager() const {
+Core::WorkManager * GlobalContext::getWorkManager() const {
   return wm;
 }
 
@@ -62,7 +62,7 @@ TransferManager * GlobalContext::getTransferManager() const {
   return tm;
 }
 
-TickPoke * GlobalContext::getTickPoke() const {
+Core::TickPoke * GlobalContext::getTickPoke() const {
   return tp;
 }
 

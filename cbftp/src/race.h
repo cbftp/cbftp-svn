@@ -49,7 +49,7 @@ struct SitesComparator {
                   const std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > & b) const;
 };
 
-class Race : public EventReceiver, public TransferStatusCallback {
+class Race : public Core::EventReceiver, public TransferStatusCallback {
   private:
     void recalculateBestUnknownFileSizeEstimate();
     void setDone();

@@ -10,7 +10,7 @@ class FileList;
 class SiteLogic;
 class Path;
 
-class CommandOwner : public EventReceiver {
+class CommandOwner : public Core::EventReceiver {
 public:
   virtual ~CommandOwner() {
   }

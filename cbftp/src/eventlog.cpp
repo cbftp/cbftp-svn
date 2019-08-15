@@ -11,11 +11,11 @@ EventLog::~EventLog() {
   delete rawbuf;
 }
 
-RawBuffer * EventLog::getRawBuffer() const {
+RawBuffer* EventLog::getRawBuffer() const {
   return rawbuf;
 }
 
-void EventLog::log(const std::string & owner, const std::string & text) {
+void EventLog::log(const std::string& owner, const std::string& text, Core::LogLevel level) {
   std::string line = "<" + owner + "> " + text;
   latest = line;
   latestid++;

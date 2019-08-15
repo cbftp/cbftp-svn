@@ -8,12 +8,12 @@
 
 class DataFileHandler {
 private:
-  BinaryData rawdata;
+  Core::BinaryData rawdata;
   std::vector<std::string> decryptedlines;
   std::vector<std::string> outputlines;
   Path path;
   std::string key;
-  BinaryData filehash;
+  Core::BinaryData filehash;
   bool fileexists;
   bool initialized;
 public:

@@ -63,11 +63,14 @@ enum FailureType {
   FAIL_DUPE
 };
 
+namespace Core {
+class IOManager;
+}
+
 class FTPConnect;
 class SiteRace;
 class FileList;
 class SiteLogic;
-class IOManager;
 class RawBuffer;
 class Site;
 class ProxySession;
@@ -75,14 +78,13 @@ class CommandOwner;
 class Proxy;
 class RawBufferCallback;
 
-#define RAWBUFMAXLEN 1024
-#define DATABUF 2048
+#define DATA_BUF_SIZE 2048
 
-class FTPConn : private EventReceiver, public FTPConnectOwner {
+class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
   private:
     std::list<std::shared_ptr<FTPConnect> > connectors;
     int nextconnectorid;
-    IOManager * iom;
+    Core::IOManager * iom;
     ProxySession * proxysession;
     unsigned int databuflen;
     char * databuf;

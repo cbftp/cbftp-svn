@@ -20,14 +20,14 @@ void showInput(bool show) {
   tcsetattr(STDIN_FILENO, TCSANOW, &tty);
 }
 
-BinaryData getPassphrase() {
+Core::BinaryData getPassphrase() {
   std::cerr << "Passphrase: ";
   showInput(false);
   std::string passphrase;
   std::getline(std::cin, passphrase);
   std::cerr << std::endl;
   showInput(true);
-  return BinaryData(passphrase.begin(), passphrase.end());
+  return Core::BinaryData(passphrase.begin(), passphrase.end());
 }
 
 bool checkInputFile(const Path & path) {

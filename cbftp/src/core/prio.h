@@ -1,7 +1,11 @@
 #pragma once
 
-enum Prio {
-  PRIO_LOW = 0,
-  PRIO_NORMAL = 1,
-  PRIO_HIGH = 2
+namespace Core {
+
+enum class Prio {
+  LOW = 0,
+  NORMAL = 1,
+  HIGH = 2
 };
+
+}

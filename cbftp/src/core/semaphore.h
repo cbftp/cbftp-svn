@@ -2,24 +2,29 @@
 
 #ifndef __APPLE__
 
-#include <semaphore.h>
+#include <condition_variable>
+#include <mutex>
+
+namespace Core {
 
 class Semaphore {
 public:
-  Semaphore() {
-    sem_init(&semaphore, 0, 0);
-  }
-  ~Semaphore() {
-    sem_destroy(&semaphore);
-  }
   void post() {
-    sem_post(&semaphore);
+    std::unique_lock<std::mutex> lock(mutex);
+    ++count;
+    condition.notify_one();
   }
   void wait() {
-    sem_wait(&semaphore);
+    std::unique_lock<std::mutex> lock(mutex);
+    while (!count) { // Handle spurious wake-ups.
+      condition.wait(lock);
+    }
+    --count;
   }
 private:
-  sem_t semaphore;
+  std::mutex mutex;
+  std::condition_variable condition;
+  unsigned long count = 0; // Initialized as locked.
 };
 
 #else
@@ -45,3 +50,5 @@ private:
 };
 
 #endif
+
+} // namespace Core

@@ -24,9 +24,9 @@
 
 namespace {
 
-BinaryData emptydata;
+Core::BinaryData emptydata;
 
-void asyncRequest(EventReceiver * er, void * data) {
+void asyncRequest(Core::EventReceiver * er, void * data) {
   static_cast<LocalStorage *>(er)->executeAsyncRequest(static_cast<LocalStorageRequestData *>(data));
 }
 
@@ -152,22 +152,22 @@ LocalUpload * LocalStorage::getAvailableLocalUpload() {
   return lu;
 }
 
-BinaryData LocalStorage::getTempFileContent(const std::string & filename) const {
+Core::BinaryData LocalStorage::getTempFileContent(const std::string & filename) const {
   return getFileContent(temppath / filename);
 }
 
-BinaryData LocalStorage::getFileContent(const Path & filename) const {
+Core::BinaryData LocalStorage::getFileContent(const Path & filename) const {
   std::ifstream filestream;
   filestream.open(filename.toString().c_str(), std::ios::binary | std::ios::in);
   char * data = (char *) malloc(MAXREAD);
   filestream.read(data, MAXREAD);
-  BinaryData out(data, data + filestream.gcount());
+  Core::BinaryData out(data, data + filestream.gcount());
   delete data;
   return out;
 }
 
-const BinaryData & LocalStorage::getStoreContent(int storeid) const {
-  std::map<int, BinaryData>::const_iterator it = content.find(storeid);
+const Core::BinaryData & LocalStorage::getStoreContent(int storeid) const {
+  std::map<int, Core::BinaryData>::const_iterator it = content.find(storeid);
   if (it != content.end()) {
     return it->second;
   }
@@ -374,7 +374,7 @@ void LocalStorage::setDownloadPath(const Path & path) {
   downloadpath = path;
 }
 
-void LocalStorage::storeContent(int storeid, const BinaryData & data) {
+void LocalStorage::storeContent(int storeid, const Core::BinaryData & data) {
   content[storeid] = data;
 }
 

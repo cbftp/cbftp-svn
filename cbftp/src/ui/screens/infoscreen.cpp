@@ -39,7 +39,7 @@ void InfoScreen::redraw() {
   ui->printStr(i++, 1, "Compile time: " + BuildInfo::compileTime());
   ui->printStr(i++, 1, "Version tag: " + BuildInfo::version());
   ui->printStr(i++, 1, "Distribution tag: " + BuildInfo::tag());
-  ui->printStr(i++, 1, "OpenSSL version: " + SSLManager::version());
+  ui->printStr(i++, 1, "OpenSSL version: " + Core::SSLManager::version());
   i++;
   ui->printStr(i++, 1, "Traffic measurements");
   ui->printStr(i++, 1, "FXP      last 24 hours: " + util::parseSize(sizefxpday) + ", " +

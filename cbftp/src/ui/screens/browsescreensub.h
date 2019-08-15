@@ -15,10 +15,10 @@ class UIFileList;
 class UIFile;
 class Ui;
 
-enum BrowseScreenType {
-  BROWSESCREEN_SITE,
-  BROWSESCREEN_LOCAL,
-  BROWSESCREEN_SELECTOR
+enum class BrowseScreenType {
+  SITE,
+  LOCAL,
+  SELECTOR
 };
 
 enum class LastInfo {
@@ -51,7 +51,7 @@ struct BrowseScreenRequest {
   std::list<std::pair<std::string, bool>> files;
 };
 
-class BrowseScreenSub : public EventReceiver {
+class BrowseScreenSub : public Core::EventReceiver {
 public:
   virtual void redraw(unsigned int, unsigned int, unsigned int) = 0;
   virtual void update() = 0;

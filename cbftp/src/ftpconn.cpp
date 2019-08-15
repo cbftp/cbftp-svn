@@ -22,6 +22,7 @@
 #include "util.h"
 
 #define FTPCONN_TICK_INTERVAL 1000
+#define RAWBUF_MAX_LEN 4096
 
 const char * xdupematch = "X-DUPE: ";
 const char * dupematch1 = "uploaded by";
@@ -57,7 +58,7 @@ std::string toPASVString(const std::string & addr, int port) {
 FTPConn::FTPConn(SiteLogic * sl, int id) :
   nextconnectorid(0),
   iom(global->getIOManager()),
-  databuflen(DATABUF),
+  databuflen(DATA_BUF_SIZE),
   databuf((char *) malloc(databuflen)),
   databufpos(0),
   id(id),
@@ -75,7 +76,7 @@ FTPConn::FTPConn(SiteLogic * sl, int id) :
   protectedmode(PROT_UNSET),
   sscnmode(false),
   mkdtarget(false),
-  rawbuf(new RawBuffer(RAWBUFMAXLEN, site->getName(), std::to_string(id))),
+  rawbuf(new RawBuffer(RAWBUF_MAX_LEN, site->getName(), std::to_string(id))),
   aggregatedrawbuf(sl->getAggregatedRawBuffer()),
   cwdrawbuf(new RawBuffer(site->getName())),
   xduperun(false),
@@ -125,18 +126,18 @@ void FTPConn::login() {
   currentpath = "/";
   state = STATE_CONNECTING;
   clearConnectors();
-  connectors.push_back(std::make_shared<FTPConnect>(nextconnectorid++, this, site->getAddress(), site->getPort(), getProxy(), true, site->getTLSMode() == TLSMode::IMPLICIT));
+  connectors.push_back(std::make_shared<FTPConnect>(nextconnectorid++, this, site->getAddress(), getProxy(), true, site->getTLSMode() == TLSMode::IMPLICIT));
   ticker = 0;
   global->getTickPoke()->startPoke(this, "FTPConn", FTPCONN_TICK_INTERVAL, 0);
 }
 
 void FTPConn::connectAllAddresses() {
   allconnectattempted = true;
-  std::list<std::pair<std::string, std::string> > addresses = site->getAddresses();
+  std::list<Address> addresses = site->getAddresses();
   Proxy * proxy = getProxy();
-  for (std::list<std::pair<std::string, std::string> >::const_iterator it = addresses.begin(); it != addresses.end(); it++) {
+  for (std::list<Address>::const_iterator it = addresses.begin(); it != addresses.end(); it++) {
     if (it == addresses.begin()) continue; // first one is already connected
-    connectors.push_back(std::make_shared<FTPConnect>(nextconnectorid++, this, it->first, it->second, proxy, false, site->getTLSMode() == TLSMode::IMPLICIT));
+    connectors.push_back(std::make_shared<FTPConnect>(nextconnectorid++, this, *it, proxy, false, site->getTLSMode() == TLSMode::IMPLICIT));
   }
 }
 
@@ -376,21 +377,20 @@ void FTPConn::ftpConnectSuccess(int connectorid) {
   if (state != STATE_CONNECTING) {
     return;
   }
-  std::list<std::shared_ptr<FTPConnect> >::const_iterator it;
-  for (it = connectors.begin(); it != connectors.end(); it++) {
-    if ((*it)->getId() == connectorid) {
+  std::shared_ptr<FTPConnect> connector;
+  for (const std::shared_ptr<FTPConnect>& it : connectors) {
+    if (it->getId() == connectorid) {
+      connector = it;
       break;
     }
   }
-  assert(it != connectors.end());
-  sockid = (*it)->handedOver();
+  assert(connector);
+  sockid = connector->handedOver();
   iom->adopt(this, sockid);
   global->getTickPoke()->stopPoke(this, 0);
-  if (!(*it)->isPrimary()) {
-    std::string addr = (*it)->getAddress();
-    std::string port = (*it)->getPort();
-    site->setPrimaryAddress((*it)->getAddress(), (*it)->getPort());
-    rawBufWriteLine("[Setting " + addr + ":" + port + " as primary address]");
+  if (!connector->isPrimary()) {
+    site->setPrimaryAddress(connector->getAddress());
+    rawBufWriteLine("[Setting " + connector->getAddress().toString() + " as primary address]");
   }
   if (connectors.size() > 1) {
     rawBufWriteLine("[Disconnecting other attempts]");

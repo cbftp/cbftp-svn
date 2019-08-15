@@ -5,13 +5,16 @@
 
 #include "core/eventreceiver.h"
 
+#include "address.h"
+
 class FTPConnectOwner;
 class ProxySession;
 class Proxy;
+struct Address;
 
-class FTPConnect : public EventReceiver {
+class FTPConnect : public Core::EventReceiver {
 public:
-  FTPConnect(int, FTPConnectOwner *, const std::string &, const std::string &, Proxy *, bool, bool implicittls);
+  FTPConnect(int, FTPConnectOwner *, const Address& addr, Proxy *, bool, bool implicittls);
   ~FTPConnect();
   void FDConnecting(int, const std::string &);
   void FDConnected(int);
@@ -22,14 +25,13 @@ public:
   void FDSSLFail(int sockid);
   int getId() const;
   int handedOver();
-  std::string getAddress() const;
-  std::string getPort() const;
+  Address getAddress() const;
   bool isPrimary() const;
   void disengage();
   void tickIntern();
 private:
   void proxySessionInit();
-  void printConnecting(const std::string & addr, bool resolved = false);
+  void printConnecting(const Address& addr, bool resolved = false);
   int id;
   int sockid;
   bool proxynegotiation;
@@ -39,8 +41,7 @@ private:
   char * databuf;
   unsigned int databufpos;
   int databufcode;
-  std::string addr;
-  std::string port;
+  Address addr;
   Proxy * proxy;
   bool primary;
   bool engaged;

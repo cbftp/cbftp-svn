@@ -6,6 +6,7 @@
 #include "core/iomanager.h"
 #include "core/tickpoke.h"
 #include "core/threading.h"
+#include "core/logger.h"
 #include "settingsloadersaver.h"
 #include "sitelogicmanager.h"
 #include "transfermanager.h"
@@ -30,12 +31,12 @@ public:
   Main() {
     TimeReference::updateTime();
 
-    WorkManager * wm = new WorkManager();
-    TickPoke * tp = new TickPoke(wm);
-    IOManager * iom = new IOManager(wm, tp);
+    Core::WorkManager * wm = new Core::WorkManager();
+    Core::TickPoke * tp = new Core::TickPoke(*wm);
+    Core::IOManager * iom = new Core::IOManager(*wm, *tp);
 
     std::shared_ptr<EventLog> el = std::make_shared<EventLog>();
-    iom->setLogger(el);
+    Core::setLogger(el);
 
     global->linkCore(wm, tp, iom, el);
 
@@ -57,11 +58,11 @@ public:
 
     global->linkComponents(sls, e, uibase, sm, slm, tm, rch, sl, pm, ls, efv, tr, s, secm);
 
-    Threading::setCurrentThreadName("cbftp");
+    Core::Threading::setCurrentThreadName("cbftp");
 
     if (!uibase->init()) exit(1);
-    wm->init();
-    iom->init();
+    wm->init("cbftp");
+    iom->init("cbftp");
     tp->tickerLoop();
     global->getExternalFileViewing()->killAll();
     uibase->kill();

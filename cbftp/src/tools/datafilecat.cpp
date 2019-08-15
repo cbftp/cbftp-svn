@@ -35,12 +35,12 @@ int main(int argc, char ** argv) {
 
   if (!checkInputFile(path)) return -1;
 
-  BinaryData key = getPassphrase();
+  Core::BinaryData key = getPassphrase();
 
-  BinaryData rawdata;
+  Core::BinaryData rawdata;
   FileSystem::readFile(path, rawdata);
 
-  BinaryData decryptedtext;
+  Core::BinaryData decryptedtext;
   if (!DataFileHandlerMethod::decrypt(rawdata, key, decryptedtext)) {
     std::cerr << "Error: Either the passphrase is wrong, or the input file is"
               << " not a valid cbftp data file."

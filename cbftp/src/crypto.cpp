@@ -25,7 +25,7 @@ int blockSize() {
 
 }
 
-void Crypto::encrypt(const BinaryData & indata, const BinaryData & pass, BinaryData & outdata) {
+void Crypto::encrypt(const Core::BinaryData & indata, const Core::BinaryData & pass, Core::BinaryData & outdata) {
   if (indata.empty()) {
     outdata.resize(0);
     return;
@@ -55,7 +55,7 @@ void Crypto::encrypt(const BinaryData & indata, const BinaryData & pass, BinaryD
   free(iv);
 }
 
-void Crypto::decrypt(const BinaryData & indata, const BinaryData & pass, BinaryData & outdata) {
+void Crypto::decrypt(const Core::BinaryData & indata, const Core::BinaryData & pass, Core::BinaryData & outdata) {
   if (indata.empty()) {
     outdata.resize(0);
     return;
@@ -81,7 +81,7 @@ void Crypto::decrypt(const BinaryData & indata, const BinaryData & pass, BinaryD
   free(iv);
 }
 
-void Crypto::sha256(const BinaryData & indata, BinaryData & outdata) {
+void Crypto::sha256(const Core::BinaryData & indata, Core::BinaryData & outdata) {
   if (indata.empty()) {
     outdata.resize(0);
     return;
@@ -93,7 +93,7 @@ void Crypto::sha256(const BinaryData & indata, BinaryData & outdata) {
   SHA256_Final(&outdata[0], &ctx);
 }
 
-void Crypto::base64Encode(const BinaryData & indata, BinaryData & outdata) {
+void Crypto::base64Encode(const Core::BinaryData & indata, Core::BinaryData & outdata) {
   if (indata.empty()) {
     outdata.resize(0);
     return;
@@ -103,7 +103,7 @@ void Crypto::base64Encode(const BinaryData & indata, BinaryData & outdata) {
   outdata.resize(bytes);
 }
 
-void Crypto::base64Decode(const BinaryData & indata, BinaryData & outdata) {
+void Crypto::base64Decode(const Core::BinaryData & indata, Core::BinaryData & outdata) {
   if (indata.empty()) {
     outdata.resize(0);
     return;

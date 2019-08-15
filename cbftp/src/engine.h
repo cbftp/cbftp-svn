@@ -27,7 +27,7 @@ class SkipList;
 class ScoreBoardElement;
 class TransferStatus;
 
-class Engine : public EventReceiver {
+class Engine : public Core::EventReceiver {
 public:
   Engine();
   ~Engine();

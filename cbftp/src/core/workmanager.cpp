@@ -1,143 +1,113 @@
 #include "workmanager.h"
 
 #include "eventreceiver.h"
-#include "scopelock.h"
 
-#define READYSIZE 8
-#define OVERLOADSIZE 32
+namespace Core {
+
+#define READY_SIZE 8
+#define OVERLOAD_SIZE 32
 #define ASYNC_WORKERS 2
 
-enum WorkType {
-  WORK_DATA,
-  WORK_DATABUF,
-  WORK_TICK,
-  WORK_CONNECTING,
-  WORK_CONNECTED,
-  WORK_DISCONNECTED,
-  WORK_SSL_SUCCESS,
-  WORK_SSL_FAIL,
-  WORK_NEW,
-  WORK_FAIL,
-  WORK_SEND_COMPLETE,
-  WORK_DELETE,
-  WORK_ASYNC_COMPLETE,
-  WORK_ASYNC_COMPLETE_P
-};
-
-WorkManager::WorkManager() : overloaded(false), lowpriooverloaded(false) {
-  for (int i = 0; i < ASYNC_WORKERS; ++i) {
-    asyncworkers.push_back(AsyncWorker(this, asyncqueue));
+WorkManager::WorkManager() : running(false), overloaded(false), lowpriooverloaded(false) {
+  for (unsigned int i = 0; i < ASYNC_WORKERS; ++i) {
+    asyncworkers.emplace_back(*this, asyncqueue);
   }
   eventqueues.push_back(&lowprioqueue);
   eventqueues.push_back(&dataqueue);
   eventqueues.push_back(&highprioqueue);
 }
 
-void WorkManager::init() {
-  thread.start("Worker", this);
+WorkManager::~WorkManager() {
+  stop();
+}
+
+void WorkManager::init(const std::string& prefix, int id) {
+  thread.start((prefix + "-work-" + std::to_string(id)).c_str(), this);
   std::list<AsyncWorker>::iterator it;
-  for (it = asyncworkers.begin(); it != asyncworkers.end(); it++) {
-    it->init();
+  std::lock_guard<std::mutex> lock(worklock);
+  running = true;
+  for (AsyncWorker& aw : asyncworkers) {
+    aw.init(prefix, id);
   }
 }
 
-void WorkManager::dispatchFDData(EventReceiver * er, int sockid) {
-  highprioqueue.push(Event(er, WORK_DATA, sockid));
+void WorkManager::dispatchFDData(EventReceiver* er, int sockid) {
+  er->bindWorkManager(this);
+  highprioqueue.push(Event(er, EventType::DATA, sockid));
   event.post();
   readdata.wait();
 }
 
-bool WorkManager::dispatchFDData(EventReceiver * er, int sockid, char * buf, int len) {
-  return dispatchFDData(er, sockid, buf, len, PRIO_NORMAL);
-}
-
-bool WorkManager::dispatchFDData(EventReceiver * er, int sockid, char * buf, int len, Prio prio) {
-  eventqueues[prio]->push(Event(er, WORK_DATABUF, sockid, buf, len));
+bool WorkManager::dispatchFDData(EventReceiver* er, int sockid, char * buf, int len, Prio prio) {
+  er->bindWorkManager(this);
+  eventqueues[static_cast<int>(prio)]->push(Event(er, EventType::DATABUF, sockid, buf, len));
   event.post();
-  if (prio == PRIO_LOW) {
+  if (prio == Prio::LOW) {
     return !lowPrioOverload();
   }
   return !overload();
 }
 
-void WorkManager::dispatchTick(EventReceiver * er, int interval) {
-  highprioqueue.push(Event(er, WORK_TICK, interval));
+void WorkManager::dispatchTick(EventReceiver* er, int interval) {
+  er->bindWorkManager(this);
+  highprioqueue.push(Event(er, EventType::TICK, interval));
   event.post();
 }
 
-void WorkManager::dispatchEventNew(EventReceiver * er, int sockid) {
-  dispatchEventNew(er, sockid, PRIO_NORMAL);
+bool WorkManager::dispatchEventNew(EventReceiver* er, int sockid, Prio prio) {
+  er->bindWorkManager(this);
+  eventqueues[static_cast<int>(prio)]->push(Event(er, EventType::NEW, sockid));
+  event.post();
+  if (prio == Prio::LOW) {
+    return !lowPrioOverload();
+  }
+  return !overload();
 }
 
-void WorkManager::dispatchEventNew(EventReceiver * er, int sockid, Prio prio) {
-  eventqueues[prio]->push(Event(er, WORK_NEW, sockid));
+void WorkManager::dispatchEventConnecting(EventReceiver* er, int sockid, const std::string & addr, Prio prio) {
+  er->bindWorkManager(this);
+  eventqueues[static_cast<int>(prio)]->push(Event(er, EventType::CONNECTING, sockid, addr));
   event.post();
 }
 
-void WorkManager::dispatchEventConnecting(EventReceiver * er, int sockid, const std::string & addr) {
-  dispatchEventConnecting(er, sockid, addr, PRIO_NORMAL);
-}
-
-void WorkManager::dispatchEventConnecting(EventReceiver * er, int sockid, const std::string & addr, Prio prio) {
-  eventqueues[prio]->push(Event(er, WORK_CONNECTING, sockid, addr));
+void WorkManager::dispatchEventConnected(EventReceiver* er, int sockid, Prio prio) {
+  er->bindWorkManager(this);
+  eventqueues[static_cast<int>(prio)]->push(Event(er, EventType::CONNECTED, sockid));
   event.post();
 }
 
-void WorkManager::dispatchEventConnected(EventReceiver * er, int sockid) {
-  dispatchEventConnected(er, sockid, PRIO_NORMAL);
-}
-
-void WorkManager::dispatchEventConnected(EventReceiver * er, int sockid, Prio prio) {
-  eventqueues[prio]->push(Event(er, WORK_CONNECTED, sockid));
+void WorkManager::dispatchEventDisconnected(EventReceiver* er, int sockid, Prio prio) {
+  er->bindWorkManager(this);
+  eventqueues[static_cast<int>(prio)]->push(Event(er, EventType::DISCONNECTED, sockid));
   event.post();
 }
 
-void WorkManager::dispatchEventDisconnected(EventReceiver * er, int sockid) {
-  dispatchEventDisconnected(er, sockid, PRIO_NORMAL);
-}
-
-void WorkManager::dispatchEventDisconnected(EventReceiver * er, int sockid, Prio prio) {
-  eventqueues[prio]->push(Event(er, WORK_DISCONNECTED, sockid));
+void WorkManager::dispatchEventSSLSuccess(EventReceiver* er, int sockid, const std::string & cipher, Prio prio) {
+  er->bindWorkManager(this);
+  eventqueues[static_cast<int>(prio)]->push(Event(er, EventType::SSL_SUCCESS, sockid, cipher));
   event.post();
 }
 
-void WorkManager::dispatchEventSSLSuccess(EventReceiver * er, int sockid, const std::string & cipher) {
-  dispatchEventSSLSuccess(er, sockid, cipher, PRIO_NORMAL);
-}
-
-void WorkManager::dispatchEventSSLSuccess(EventReceiver * er, int sockid, const std::string & cipher, Prio prio) {
-  eventqueues[prio]->push(Event(er, WORK_SSL_SUCCESS, sockid, cipher));
+void WorkManager::dispatchEventSSLFail(EventReceiver* er, int sockid, Prio prio) {
+  er->bindWorkManager(this);
+  eventqueues[static_cast<int>(prio)]->push(Event(er, EventType::SSL_FAIL, sockid));
   event.post();
 }
 
-void WorkManager::dispatchEventSSLFail(EventReceiver * er, int sockid) {
-  dispatchEventSSLFail(er, sockid, PRIO_NORMAL);
-}
-
-void WorkManager::dispatchEventSSLFail(EventReceiver * er, int sockid, Prio prio) {
-  eventqueues[prio]->push(Event(er, WORK_SSL_FAIL, sockid));
+void WorkManager::dispatchEventFail(EventReceiver* er, int sockid, const std::string & error, Prio prio) {
+  er->bindWorkManager(this);
+  eventqueues[static_cast<int>(prio)]->push(Event(er, EventType::FAIL, sockid, error));
   event.post();
 }
 
-void WorkManager::dispatchEventFail(EventReceiver * er, int sockid, const std::string & error) {
-  dispatchEventFail(er, sockid, error, PRIO_NORMAL);
-}
-
-void WorkManager::dispatchEventFail(EventReceiver * er, int sockid, const std::string & error, Prio prio) {
-  eventqueues[prio]->push(Event(er, WORK_FAIL, sockid, error));
+void WorkManager::dispatchEventSendComplete(EventReceiver* er, int sockid, Prio prio) {
+  er->bindWorkManager(this);
+  eventqueues[static_cast<int>(prio)]->push(Event(er, EventType::SEND_COMPLETE, sockid));
   event.post();
 }
 
-void WorkManager::dispatchEventSendComplete(EventReceiver * er, int sockid) {
-  dispatchEventSendComplete(er, sockid, PRIO_NORMAL);
-}
-
-void WorkManager::dispatchEventSendComplete(EventReceiver * er, int sockid, Prio prio) {
-  eventqueues[prio]->push(Event(er, WORK_SEND_COMPLETE, sockid));
-  event.post();
-}
-
-void WorkManager::dispatchSignal(EventReceiver * er, int signal, int value) {
+void WorkManager::dispatchSignal(EventReceiver* er, int signal, int value) {
+  er->bindWorkManager(this);
   if (signalevents.set(er, signal, value)) {
     event.post();
   }
@@ -145,33 +115,39 @@ void WorkManager::dispatchSignal(EventReceiver * er, int signal, int value) {
 
 void WorkManager::dispatchAsyncTaskComplete(AsyncTask & task) {
   if (task.dataIsPointer()) {
-    dataqueue.push(Event(task.getReceiver(), WORK_ASYNC_COMPLETE_P, task.getType(), task.getData()));
+    dataqueue.push(Event(task.getReceiver(), EventType::ASYNC_COMPLETE_P, task.getType(), task.getData()));
   }
   else {
-    dataqueue.push(Event(task.getReceiver(), WORK_ASYNC_COMPLETE, task.getType(), task.getNumData()));
+    dataqueue.push(Event(task.getReceiver(), EventType::ASYNC_COMPLETE, task.getType(), task.getNumData()));
   }
   event.post();
 }
 
-void WorkManager::deferDelete(std::shared_ptr<EventReceiver> er) {
-  lowprioqueue.push(Event(er, WORK_DELETE));
+void WorkManager::dispatchApplicationMessage(EventReceiver* er, int messageid, void* messagedata, Prio prio) {
+  er->bindWorkManager(this);
+  eventqueues[static_cast<int>(prio)]->push(Event(er, EventType::APPLICATION_MESSAGE, messageid, messagedata));
   event.post();
 }
 
-void WorkManager::asyncTask(EventReceiver * er, int type, void (*taskfunction)(EventReceiver *, int), int data) {
+void WorkManager::deferDelete(const std::shared_ptr<EventReceiver>& er) {
+  lowprioqueue.push(Event(er, EventType::DELETE));
+  event.post();
+}
+
+void WorkManager::asyncTask(EventReceiver* er, int type, void (*taskfunction)(EventReceiver *, int), int data) {
   asyncqueue.push(AsyncTask(er, type, taskfunction, data));
 }
 
-void WorkManager::asyncTask(EventReceiver * er, int type, void (*taskfunction)(EventReceiver *, void *), void * data) {
+void WorkManager::asyncTask(EventReceiver* er, int type, void (*taskfunction)(EventReceiver *, void *), void * data) {
   asyncqueue.push(AsyncTask(er, type, taskfunction, data));
 }
 
-DataBlockPool * WorkManager::getBlockPool() {
-  return &blockpool;
+DataBlockPool& WorkManager::getBlockPool() {
+  return blockpool;
 }
 
 bool WorkManager::overload() {
-  bool currentlyoverloaded = highprioqueue.size() + dataqueue.size() >= OVERLOADSIZE;
+  bool currentlyoverloaded = highprioqueue.size() + dataqueue.size() >= OVERLOAD_SIZE;
   if (currentlyoverloaded) {
     overloaded = true;
     lowpriooverloaded = true;
@@ -180,16 +156,46 @@ bool WorkManager::overload() {
 }
 
 bool WorkManager::lowPrioOverload() {
-  bool currentlyoverloaded = highprioqueue.size() + dataqueue.size() + lowprioqueue.size() >= OVERLOADSIZE;
+  bool currentlyoverloaded = highprioqueue.size() + dataqueue.size() + lowprioqueue.size() >= OVERLOAD_SIZE;
   if (currentlyoverloaded) {
     lowpriooverloaded = true;
   }
   return lowpriooverloaded;
 }
 
-void WorkManager::addReadyNotify(EventReceiver * er) {
-  ScopeLock lock(readylock);
+void WorkManager::addReadyNotify(EventReceiver* er) {
+  std::lock_guard<std::mutex> lock(readylock);
   readynotify.push_back(er);
+}
+
+void WorkManager::flushEventReceiver(EventReceiver* er)
+{
+  worklock.lock();
+  if (running) {
+    worklock.unlock();
+    if (thread.isCurrentThread()) {
+      signalevents.flushEventReceiver(er);
+      for (size_t i = 0; i < eventqueues.size(); ++i) {
+        eventqueues[i]->lock();
+        for (auto it = eventqueues[i]->begin(); it != eventqueues[i]->end();) {
+          if (it->getReceiver() == er) {
+            eventqueues[i]->erase(it);
+          }
+          else {
+            ++it;
+          }
+        }
+        eventqueues[i]->unlock();
+      }
+    }
+    else {
+      eventqueues[static_cast<int>(Prio::LOW)]->push(Event(nullptr, EventType::FLUSH, 0));
+      event.post();
+      flush.wait();
+    }
+    return;
+  }
+  worklock.unlock();
 }
 
 void WorkManager::run() {
@@ -197,6 +203,12 @@ void WorkManager::run() {
     event.wait();
     if (signalevents.hasEvent()) {
       SignalData signal = signalevents.getClearFirst();
+      if (!signal.er) {
+        std::lock_guard<std::mutex> lock(worklock);
+        running = false;
+        flush.post();
+        return;
+      }
       signal.er->signal(signal.signal, signal.value);
     }
     else {
@@ -210,66 +222,94 @@ void WorkManager::run() {
       else {
         event = lowprioqueue.pop();
       }
-      EventReceiver * er = event.getReceiver();
+      EventReceiver* er = event.getReceiver();
       int numdata = event.getNumericalData();
       switch (event.getType()) {
-        case WORK_DATA:
+        case EventType::DATA:
           er->FDData(numdata);
           readdata.post();
           break;
-        case WORK_DATABUF: {
-          char * data = static_cast<char *>(event.getData());
+        case EventType::DATABUF: {
+          char* data = static_cast<char*>(event.getData());
           er->FDData(numdata, data, event.getDataLen());
           blockpool.returnBlock(data);
           break;
         }
-        case WORK_TICK:
+        case EventType::TICK:
           er->tick(numdata);
           break;
-        case WORK_CONNECTING:
+        case EventType::CONNECTING:
           er->FDConnecting(numdata, event.getStrData());
           break;
-        case WORK_CONNECTED:
+        case EventType::CONNECTED:
           er->FDConnected(numdata);
           break;
-        case WORK_DISCONNECTED:
+        case EventType::DISCONNECTED:
           er->FDDisconnected(numdata);
           break;
-        case WORK_SSL_SUCCESS:
+        case EventType::SSL_SUCCESS:
           er->FDSSLSuccess(numdata, event.getStrData());
           break;
-        case WORK_SSL_FAIL:
+        case EventType::SSL_FAIL:
           er->FDSSLFail(numdata);
           break;
-        case WORK_NEW:
+        case EventType::NEW:
           er->FDNew(numdata);
           break;
-        case WORK_FAIL:
+        case EventType::FAIL:
           er->FDFail(numdata, event.getStrData());
           break;
-        case WORK_SEND_COMPLETE:
+        case EventType::SEND_COMPLETE:
           er->FDSendComplete(numdata);
           break;
-        case WORK_DELETE: // will be deleted when going out of scope
+        case EventType::DELETE: // will be deleted when going out of scope
           break;
-        case WORK_ASYNC_COMPLETE:
+        case EventType::ASYNC_COMPLETE:
           er->asyncTaskComplete(numdata, event.getNumericalData2());
           break;
-        case WORK_ASYNC_COMPLETE_P:
+        case EventType::ASYNC_COMPLETE_P:
           er->asyncTaskComplete(numdata, event.getData());
+          break;
+        case EventType::APPLICATION_MESSAGE:
+          er->receivedApplicationMessage(numdata, event.getData());
+          break;
+        case EventType::FLUSH:
+          flush.post();
           break;
       }
       if ((overloaded || lowpriooverloaded) &&
-          dataqueue.size() + highprioqueue.size() + lowprioqueue.size() <= READYSIZE)
+          dataqueue.size() + highprioqueue.size() + lowprioqueue.size() <= READY_SIZE)
       {
         overloaded = false;
         lowpriooverloaded = false;
-        ScopeLock lock(readylock);
-        std::list<EventReceiver *>::iterator it;
-        for (it = readynotify.begin(); it != readynotify.end(); it++) {
-          (*it)->workerReady();
+        std::lock_guard<std::mutex> lock(readylock);
+        for (EventReceiver* ernotify : readynotify) {
+          ernotify->workerReady();
         }
       }
     }
   }
 }
+
+void WorkManager::preStop() {
+  std::lock_guard<std::mutex> lock(worklock);
+  if (!running) {
+    return;
+  }
+  signalevents.set(nullptr, 0, 0);
+  event.post();
+  for (unsigned int i = 0; i < asyncworkers.size(); ++i) {
+    asyncqueue.push(AsyncTask(nullptr, 0, nullptr, 0));
+  }
+}
+
+void WorkManager::stop() {
+  preStop();
+  thread.join();
+  for (auto& aswk : asyncworkers) {
+    aswk.join();
+  }
+  flush.post();
+}
+
+} // namespace Core

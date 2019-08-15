@@ -1,34 +1,34 @@
 #pragma once
 
-#include "lock.h"
+#include <mutex>
+#include <vector>
+
+namespace Core {
 
 class EventReceiver;
 
 struct SignalData {
-  SignalData() : set(false), signal(0), value(0), er(NULL) { }
+  SignalData() : set(false), signal(0), value(0), er(nullptr) { }
   bool set;
   int signal;
   int value;
-  EventReceiver * er;
+  EventReceiver* er;
 };
 
 class SignalEvents {
 public:
   SignalEvents();
-  bool set(EventReceiver *, int, int);
+  bool set(EventReceiver* er, int signal, int value);
   bool hasEvent() const;
   SignalData getClearFirst();
+  void flushEventReceiver(EventReceiver* er);
 private:
   int hasevent;
-  SignalData slot1;
-  SignalData slot2;
-  SignalData slot3;
-  SignalData slot4;
-  SignalData slot5;
-  SignalData slot6;
-  SignalData slot7;
-  SignalData slot8;
-  SignalData slot9;
-  SignalData slot10;
-  mutable Lock signallock;
+  std::vector<SignalData> slots;
+  mutable std::recursive_mutex signallock;
+  /* the lock needs to be recursive since the set method is supposed to be
+   * called from signal handlers, which may interrupt current execution at
+   * any time */
 };
+
+} //namespace Core
