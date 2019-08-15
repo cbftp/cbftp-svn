@@ -12,7 +12,7 @@ enum class RemoteCommandNotify {
   ALL_COMMANDS
 };
 
-class RemoteCommandHandler : private EventReceiver {
+class RemoteCommandHandler : private Core::EventReceiver {
 private:
   bool enabled;
   std::string password;

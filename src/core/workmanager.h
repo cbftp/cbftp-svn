@@ -1,23 +1,120 @@
 #pragma once
 
-#include <string>
 #include <list>
+#include <memory>
+#include <mutex>
+#include <string>
 #include <vector>
 
-#include "threading.h"
-#include "datablockpool.h"
-#include "blockingqueue.h"
-#include "signalevents.h"
-#include "semaphore.h"
-#include "lock.h"
-#include "event.h"
-#include "asyncworker.h"
 #include "asynctask.h"
+#include "asyncworker.h"
+#include "blockingqueue.h"
+#include "datablockpool.h"
+#include "event.h"
 #include "prio.h"
+#include "semaphore.h"
+#include "signalevents.h"
+#include "threading.h"
+
+namespace Core {
 
 class EventReceiver;
 
+/* The WorkManager handles the main workload of an application.
+ * events from IOManager (sockets / file descriptors), TickPoke (time-based events),
+ * AsyncWorkers (asynchronous tasks), signal handlers etc will be
+ * dispatched here and run by the internal Worker thread.
+ * An application built around the WorkManager normally does not have to deal with
+ * any kind of threading, locks or synchronization by itself.
+ */
 class WorkManager {
+public:
+    WorkManager();
+    ~WorkManager();
+
+    /* The WorkManager needs to be initialized by calling this function right before
+     * the application enters its main loop.
+     * @param prefix: prefix name of the thread for debugging purposes
+     * @param id: id number of the thread for debugging purposes
+     */
+    void init(const std::string& prefix, int id = 0);
+
+    /* Begin stopping threads */
+    void preStop();
+
+    /* Stop the Worker and AsyncWorker threads and wait for join */
+    void stop();
+
+    /* Schedule an asynchronous task that runs on a secondary thread.
+     * @param er: The calling EventReceiver where the callback will end up
+     * @param type: The type of callback (for book keeping on the callee side)
+     * @param taskFunction: the callback function with an int as argument
+     * @param taskFunctionP: alternative callback function with a void* as argument
+     * @param data: the data field (int or void* depending on callback type)
+     *
+     * When the task has finished, er->asyncTaskComplete() will be called.
+     */
+    void asyncTask(EventReceiver* er, int type, void (*taskFunction)(EventReceiver*, int), int data);
+    void asyncTask(EventReceiver* er, int type, void (*taskFunctionP)(EventReceiver*, void*), void* data);
+
+    /* Call this to ensure a delayed delete of an EventReceiver until all events
+     * intended for that receiver are flushed from the event queue.
+     */
+    void deferDelete(const std::shared_ptr<EventReceiver>& er);
+
+    /* Flush an EventReceiver from the work queues. */
+    void flushEventReceiver(EventReceiver* er);
+
+    DataBlockPool& getBlockPool();
+
+    /*
+     * Does the worker consider itself overloaded (i.e. is the work queue too large)?
+     */
+    bool overload();
+
+    /*
+     * Does the worker consider itself overloaded in the low-priority queue?
+     */
+    bool lowPrioOverload();
+
+    /* Call from signal handlers to schedule related work on the worker thread */
+    void dispatchSignal(EventReceiver* er, int signal, int value);
+
+    /* These are normally called from the IOManager only */
+    void dispatchFDData(EventReceiver* er, int sockId);
+    bool
+    dispatchFDData(EventReceiver* er, int sockId, char* buf, int len, Prio prio = Prio::NORMAL);
+    bool dispatchEventNew(EventReceiver* er, int sockId, Prio prio = Prio::NORMAL);
+    void dispatchEventConnecting(EventReceiver* er,
+                                 int sockId,
+                                 const std::string& addr,
+                                 Prio prio = Prio::NORMAL);
+    void dispatchEventConnected(EventReceiver* er, int sockId, Prio prio = Prio::NORMAL);
+    void dispatchEventDisconnected(EventReceiver* er, int sockId, Prio prio = Prio::NORMAL);
+    void dispatchEventSSLSuccess(EventReceiver* er,
+                                 int sockId,
+                                 const std::string& cipher,
+                                 Prio prio = Prio::NORMAL);
+    void dispatchEventSSLFail(EventReceiver* er, int sockId, Prio prio = Prio::NORMAL);
+    void dispatchEventFail(EventReceiver* er,
+                           int sockId,
+                           const std::string& error,
+                           Prio prio = Prio::NORMAL);
+    void dispatchEventSendComplete(EventReceiver* er, int sockId, Prio prio = Prio::NORMAL);
+    void addReadyNotify(EventReceiver* er);
+
+    /* Called from TickPoke */
+    void dispatchTick(EventReceiver* er, int interval);
+
+    /* Called from AsyncWorker */
+    void dispatchAsyncTaskComplete(AsyncTask& task);
+
+    void dispatchApplicationMessage(EventReceiver* er,
+                                    int messageId,
+                                    void* messageData = nullptr,
+                                    Prio prio = Prio::NORMAL);
+
+    void run();
 private:
   Thread<WorkManager> thread;
   std::list<AsyncWorker> asyncworkers;
@@ -25,46 +122,18 @@ private:
   BlockingQueue<Event> highprioqueue;
   BlockingQueue<Event> lowprioqueue;
   BlockingQueue<AsyncTask> asyncqueue;
-  Lock readylock;
-  std::list<EventReceiver *> readynotify;
+  std::mutex readylock;
+  std::mutex worklock;
+  std::list<EventReceiver*> readynotify;
   SignalEvents signalevents;
   Semaphore event;
   Semaphore readdata;
+  Semaphore flush;
   DataBlockPool blockpool;
+  bool running;
   bool overloaded;
   bool lowpriooverloaded;
-  std::vector<BlockingQueue<Event> *> eventqueues;
-public:
-  WorkManager();
-  void init();
-  void dispatchFDData(EventReceiver *, int);
-  bool dispatchFDData(EventReceiver *, int, char *, int);
-  bool dispatchFDData(EventReceiver *, int, char *, int, Prio);
-  void dispatchTick(EventReceiver *, int);
-  void dispatchEventNew(EventReceiver *, int);
-  void dispatchEventNew(EventReceiver *, int, Prio);
-  void dispatchEventConnecting(EventReceiver *, int, const std::string &);
-  void dispatchEventConnecting(EventReceiver *, int, const std::string &, Prio);
-  void dispatchEventConnected(EventReceiver *, int);
-  void dispatchEventConnected(EventReceiver *, int, Prio);
-  void dispatchEventDisconnected(EventReceiver *, int);
-  void dispatchEventDisconnected(EventReceiver *, int, Prio);
-  void dispatchEventSSLSuccess(EventReceiver *, int, const std::string &);
-  void dispatchEventSSLSuccess(EventReceiver *, int, const std::string &, Prio);
-  void dispatchEventSSLFail(EventReceiver *, int);
-  void dispatchEventSSLFail(EventReceiver *, int, Prio);
-  void dispatchEventFail(EventReceiver *, int, const std::string &);
-  void dispatchEventFail(EventReceiver *, int, const std::string &, Prio);
-  void dispatchEventSendComplete(EventReceiver *, int);
-  void dispatchEventSendComplete(EventReceiver *, int, Prio);
-  void dispatchSignal(EventReceiver *, int, int);
-  void dispatchAsyncTaskComplete(AsyncTask &);
-  void deferDelete(std::shared_ptr<EventReceiver>);
-  void asyncTask(EventReceiver *, int, void (*)(EventReceiver *, int), int);
-  void asyncTask(EventReceiver *, int, void (*)(EventReceiver *, void *), void *);
-  DataBlockPool * getBlockPool();
-  bool overload();
-  bool lowPrioOverload();
-  void run();
-  void addReadyNotify(EventReceiver *);
+  std::vector<BlockingQueue<Event>*> eventqueues;
 };
+
+} // namespace Core

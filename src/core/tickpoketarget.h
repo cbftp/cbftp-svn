@@ -2,18 +2,22 @@
 
 #include <string>
 
+namespace Core {
+
 class EventReceiver;
 
 class TickPokeTarget {
+public:
+  TickPokeTarget(EventReceiver* pokee, int interval, int message, const std::string& desc);
+  int getMessage() const;
+  EventReceiver* getPokee() const;
+  bool tick(int msecs);
 private:
-  EventReceiver * pokee;
+  EventReceiver* pokee;
   int interval;
   int currentval;
   int message;
   std::string desc;
-public:
-  TickPokeTarget(EventReceiver *, int, int, std::string);
-  int getMessage() const;
-  EventReceiver * getPokee() const;
-  bool tick(int);
 };
+
+} // namespace Core

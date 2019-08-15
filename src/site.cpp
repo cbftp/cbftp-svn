@@ -5,6 +5,57 @@
 #include "globalcontext.h"
 #include "sectionmanager.h"
 
+namespace {
+
+Address parseAddress(std::string address) {
+  Address addr;
+  addr.addrfam = Core::AddressFamily::IPV4_IPV6;
+  addr.port = 21;
+  addr.brackets = false;
+  if (address.length() > 3) {
+    std::string prefix = address.substr(0, 3);
+    if (prefix == "(4)") {
+      addr.addrfam = Core::AddressFamily::IPV4;
+      address = address.substr(3);
+    }
+    else if (prefix == "(6)") {
+      addr.addrfam = Core::AddressFamily::IPV6;
+      address = address.substr(3);
+    }
+  }
+  size_t portpos = std::string::npos;
+  if (!address.empty() && address[0] == '[') {
+    size_t bracketendpos = address.find("]");
+    if (bracketendpos != std::string::npos) {
+      addr.brackets = true;
+      addr.host = address.substr(1, bracketendpos - 1);
+      portpos = address.find(":", bracketendpos);
+    }
+  }
+  if (!addr.brackets) {
+    portpos = address.find(":");
+    if (portpos != std::string::npos) {
+      addr.host = address.substr(0, portpos);
+    }
+    else {
+      addr.host = address;
+    }
+  }
+  if (portpos != std::string::npos) {
+    try {
+      addr.port = std::stoi(address.substr(portpos + 1));
+    }
+    catch (std::exception&) {
+    }
+  }
+  if (addr.port == 21) {
+    addr.brackets = false;
+  }
+  return addr;
+}
+
+}
+
 Site::Site() : skiplist(global->getSkipList()) {
 
 }
@@ -40,7 +91,9 @@ Site::Site(const std::string & name) :
   skiplist(global->getSkipList()),
   freeslot(false)
 {
-  addresses.push_back(std::pair<std::string, std::string>("ftp.sunet.se", "21"));
+  Address addr;
+  addr.host = "ftp.sunet.se";
+  addresses.push_back(addr);
 }
 
 Site::Site(const Site & other) {
@@ -369,35 +422,24 @@ bool Site::hasSection(const std::string & sectionname) const {
   return true;
 }
 
-std::string Site::getAddress() const {
-  if (!addresses.size()) {
-    return "";
+Address Site::getAddress() const {
+  if (addresses.empty()) {
+    return Address();
   }
-  return addresses.front().first;
+  return addresses.front();
 }
 
-std::string Site::getPort() const {
-  if (!addresses.size()) {
-    return "0";
-  }
-  return addresses.front().second;
-}
-
-std::list<std::pair<std::string, std::string> > Site::getAddresses() const {
+std::list<Address> Site::getAddresses() const {
   return addresses;
 }
 
 std::string Site::getAddressesAsString() const {
   std::string addressesconcat;
-  for (std::list<std::pair<std::string, std::string> >::const_iterator it = addresses.begin(); it != addresses.end(); it++) {
-    std::string addrport = it->first;
-    if (it->second != "21") {
-      addrport += ":" + it->second;
-    }
+  for (const Address& addr : addresses) {
     if (addressesconcat.length()) {
       addressesconcat += " ";
     }
-    addressesconcat += addrport;
+    addressesconcat += addr.toString();
   }
   return addressesconcat;
 }
@@ -439,28 +481,21 @@ void Site::setAddresses(std::string addrports) {
   size_t pos;
   while ((pos = addrports.find(";")) != std::string::npos) addrports[pos] = ' ';
   while ((pos = addrports.find(",")) != std::string::npos) addrports[pos] = ' ';
-  std::list<std::string> addrpairs = util::trim(util::split(addrports));
-  for (std::list<std::string>::const_iterator it = addrpairs.begin(); it != addrpairs.end(); it++) {
-    size_t splitpos = it->find(":");
-    std::string addr = *it;
-    std::string port = "21";
-    if (splitpos != std::string::npos) {
-      addr = it->substr(0, splitpos);
-      port = it->substr(splitpos + 1);
-    }
-    addresses.push_back(std::pair<std::string, std::string>(addr, port));
+  std::list<std::string> addrlist = util::trim(util::split(addrports));
+  for (const std::string& address : addrlist) {
+    addresses.push_back(parseAddress(address));
   }
 }
 
-void Site::setPrimaryAddress(const std::string & addr, const std::string & port) {
-  std::list<std::pair<std::string, std::string> >::iterator it;
+void Site::setPrimaryAddress(const Address& addr) {
+  std::list<Address>::iterator it;
   for (it = addresses.begin(); it != addresses.end(); it++) {
-    if (it->first == addr && it->second == port) {
+    if (*it == addr) {
       addresses.erase(it);
       break;
     }
   }
-  addresses.push_front(std::pair<std::string, std::string>(addr, port));
+  addresses.push_front(addr);
 }
 
 void Site::setUser(const std::string & user) {

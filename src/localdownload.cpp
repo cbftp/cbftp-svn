@@ -79,7 +79,7 @@ void LocalDownload::FDDisconnected(int sockid) {
   }
   deactivate();
   if (inmemory) {
-    BinaryData out(buf, buf + bufpos);
+    Core::BinaryData out(buf, buf + bufpos);
     ls->storeContent(storeid, out);
   }
   tm->targetComplete();

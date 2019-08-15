@@ -69,7 +69,7 @@ bool createDirectoryRecursive(const Path & path) {
   return true;
 }
 
-void readFile(const Path & path, BinaryData & rawdata) {
+void readFile(const Path & path, Core::BinaryData & rawdata) {
   std::fstream infile;
   infile.open(path.toString().c_str(), std::ios::in | std::ios::binary);
   int gcount = 0;
@@ -93,7 +93,7 @@ void readFile(const Path & path, BinaryData & rawdata) {
   rawdata.resize(rawdatalen);
 }
 
-void writeFile(const Path & path, const BinaryData & data) {
+void writeFile(const Path & path, const Core::BinaryData & data) {
   std::ofstream outfile;
   outfile.open(path.toString().c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
   outfile.write((const char *)&data[0], data.size());

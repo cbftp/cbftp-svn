@@ -1,23 +1,26 @@
 #pragma once
 
+namespace Core {
+
 class EventReceiver;
 
 class AsyncTask {
-private:
-  EventReceiver * receiver;
-  int type;
-  void (*taskfunction)(EventReceiver *, int);
-  void (*taskfunctionp)(EventReceiver *, void *);
-  bool dataispointer;
-  int data;
-  void * datap;
 public:
-  AsyncTask(EventReceiver *, int, void (*)(EventReceiver *, int), int);
-  AsyncTask(EventReceiver *, int, void (*)(EventReceiver *, void *), void *);
+  AsyncTask(EventReceiver* er, int type, void (*taskfunction)(EventReceiver*, int), int data);
+  AsyncTask(EventReceiver* er, int type, void (*taskfunctionp)(EventReceiver*, void*), void* data);
   void execute();
-  EventReceiver * getReceiver() const;
+  EventReceiver* getReceiver() const;
   int getType() const;
   bool dataIsPointer() const;
-  void * getData() const;
+  void* getData() const;
   int getNumData() const;
+private:
+  EventReceiver* receiver;
+  int type;
+  void (*taskfunction)(EventReceiver*, int);
+  void (*taskfunctionp)(EventReceiver*, void*);
+  int data;
+  void* datap;
 };
+
+} // namespace Core

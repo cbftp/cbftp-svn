@@ -21,7 +21,7 @@ class LocalFileList;
 
 #define MAXREAD 524288
 
-class LocalStorage : public EventReceiver {
+class LocalStorage : public Core::EventReceiver {
 public:
   LocalStorage();
   ~LocalStorage();
@@ -32,9 +32,9 @@ public:
   LocalTransfer * activeModeDownload(TransferMonitor *, const Path &, const std::string &, bool, FTPConn *);
   LocalTransfer * activeModeDownload(TransferMonitor *, bool, FTPConn *);
   LocalTransfer * activeModeUpload(TransferMonitor *, const Path &, const std::string &, bool, FTPConn *);
-  BinaryData getTempFileContent(const std::string &) const;
-  BinaryData getFileContent(const Path &) const;
-  const BinaryData & getStoreContent(int) const;
+  Core::BinaryData getTempFileContent(const std::string &) const;
+  Core::BinaryData getFileContent(const Path &) const;
+  const Core::BinaryData & getStoreContent(int) const;
   void purgeStoreContent(int);
   int requestDelete(const Path & filename, bool care = false);
   bool deleteFile(const Path & filename);
@@ -49,7 +49,7 @@ public:
   static LocalFile getLocalFile(const Path & path);
   const Path & getTempPath() const;
   void setTempPath(const std::string &);
-  void storeContent(int, const BinaryData &);
+  void storeContent(int, const Core::BinaryData &);
   const Path & getDownloadPath() const;
   void setDownloadPath(const Path &);
   static std::shared_ptr<LocalFileList> getLocalFileList(const Path & path);
@@ -72,7 +72,7 @@ public:
 private:
   void deleteRequestData(LocalStorageRequestData * reqdata);
   static LocalPathInfo getPathInfo(const Path & path, int currentdepth);
-  std::map<int, BinaryData> content;
+  std::map<int, Core::BinaryData> content;
   LocalDownload * getAvailableLocalDownload();
   LocalUpload * getAvailableLocalUpload();
   std::list<LocalDownload *> localdownloads;

@@ -279,7 +279,7 @@ void ViewFileScreen::loadViewer() {
     viewExternal();
   }
   else {
-    BinaryData tmpdata = global->getLocalStorage()->getFileContent(path);
+    Core::BinaryData tmpdata = global->getLocalStorage()->getFileContent(path);
     if (deleteafter) {
       global->getLocalStorage()->requestDelete(path);
     }

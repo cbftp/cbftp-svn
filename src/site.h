@@ -7,6 +7,7 @@
 #include <string>
 #include <utility>
 
+#include "address.h"
 #include "path.h"
 #include "skiplist.h"
 #include "statistics.h"
@@ -52,7 +53,7 @@ enum class TLSMode {
 class Site {
 private:
   std::string name;
-  std::list<std::pair<std::string, std::string> > addresses;
+  std::list<Address> addresses;
   std::string user;
   std::string pass;
   Path basepath;
@@ -155,9 +156,8 @@ public:
   unsigned int sectionsSize() const;
   const Path getSectionPath(const std::string &) const;
   bool hasSection(const std::string &) const;
-  std::string getAddress() const;
-  std::string getPort() const;
-  std::list<std::pair<std::string, std::string> > getAddresses() const;
+  Address getAddress() const;
+  std::list<Address> getAddresses() const;
   std::string getAddressesAsString() const;
   std::string getUser() const;
   std::string getPass() const;
@@ -167,8 +167,8 @@ public:
   SkipList & getSkipList();
   const std::map<std::string, Path> & getSections() const;
   void setName(const std::string &);
-  void setAddresses(std::string);
-  void setPrimaryAddress(const std::string &, const std::string &);
+  void setAddresses(std::string addrports);
+  void setPrimaryAddress(const Address& addr);
   void setBasePath(const std::string &);
   void setUser(const std::string &);
   void setPass(const std::string &);

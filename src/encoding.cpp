@@ -125,7 +125,7 @@ std::basic_string<unsigned int> utf8toUnicode(const std::string & in) {
   return out;
 }
 
-Encoding guessEncoding(const BinaryData & data) {
+Encoding guessEncoding(const Core::BinaryData& data) {
   int cp437hitcharsinrow = 0;
   bool cp437hitbefore = false;
   int cp437maxcharsinrow = 0;

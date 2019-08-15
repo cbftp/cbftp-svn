@@ -121,15 +121,18 @@ void SettingsLoaderSaver::loadSettings() {
     size_t tok = line.find('=');
     std::string setting = line.substr(0, tok);
     std::string value = line.substr(tok + 1);
-    if (!setting.compare("certificate") && value.size()) {
-      BinaryData data;
-      Crypto::base64Decode(BinaryData(value.begin(), value.end()), data);
-      SSLManager::setCertificate(data);
-    }
-    if (!setting.compare("privatekey") && value.size()) {
-      BinaryData data;
-      Crypto::base64Decode(BinaryData(value.begin(), value.end()), data);
-      SSLManager::setPrivateKey(data);
+    if (!setting.compare("certkeypair") && value.size()) {
+      size_t splitter = value.find("$");
+      if (splitter == std::string::npos) {
+        continue;
+      }
+      std::string certificate = value.substr(0, splitter);
+      std::string privatekey = value.substr(splitter + 1);
+      Core::BinaryData certdata;
+      Core::BinaryData privkeydata;
+      Crypto::base64Decode(Core::BinaryData(certificate.begin(), certificate.end()), certdata);
+      Crypto::base64Decode(Core::BinaryData(privatekey.begin(), privatekey.end()), privkeydata);
+      Core::SSLManager::addCertKeyPair(privkeydata, certdata);
     }
   }
 
@@ -290,9 +293,6 @@ void SettingsLoaderSaver::loadSettings() {
     }
     if (!setting.compare("addr")) {
       site->setAddresses(value);
-    }
-    else if (!setting.compare("port")) { // legacy
-      site->setAddresses(site->getAddress() + ":" + value);
     }
     else if (!setting.compare("user")) {
       site->setUser(value);
@@ -664,15 +664,12 @@ void SettingsLoaderSaver::saveSettings() {
     dfh->addOutputLine("IOManager", "defaultinterface=" + global->getIOManager()->getDefaultInterface());
   }
 
-  if (SSLManager::hasPrivateKey()) {
-    BinaryData data;
-    Crypto::base64Encode(SSLManager::privateKey(), data);
-    dfh->addOutputLine("SSLManager", "privatekey=" + std::string(data.begin(), data.end()));
-  }
-  if (SSLManager::hasCertificate()) {
-    BinaryData data;
-    Crypto::base64Encode(SSLManager::certificate(), data);
-    dfh->addOutputLine("SSLManager", "certificate=" + std::string(data.begin(), data.end()));
+  for (const std::pair<Core::BinaryData, Core::BinaryData>& pair : Core::SSLManager::certKeyPairs()) {
+    Core::BinaryData key;
+    Core::BinaryData cert;
+    Crypto::base64Encode(pair.first, key);
+    Crypto::base64Encode(pair.second, cert);
+    dfh->addOutputLine("SSLManager", "certkeypair=" + std::string(cert.begin(), cert.end()) + "$" + std::string(key.begin(), key.end()));
   }
 
   if (global->getRemoteCommandHandler()->isEnabled()) dfh->addOutputLine("RemoteCommandHandler", "enabled=true");

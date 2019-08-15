@@ -39,7 +39,7 @@ BrowseScreenLocal::~BrowseScreenLocal() {
 }
 
 BrowseScreenType BrowseScreenLocal::type() const {
-  return BROWSESCREEN_LOCAL;
+  return BrowseScreenType::LOCAL;
 }
 
 void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int coloffset) {

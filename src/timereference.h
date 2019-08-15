@@ -2,7 +2,7 @@
 
 #include "core/eventreceiver.h"
 
-class TimeReference : public EventReceiver {
+class TimeReference : public Core::EventReceiver {
 public:
   TimeReference();
   void tick(int);

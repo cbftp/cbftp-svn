@@ -6,45 +6,45 @@
 
 #include "polling.h"
 
-#define MAXEVENTS 32
+namespace Core {
 
 class PollingImpl : public PollingBase {
 public:
   PollingImpl() :
     epollfd(epoll_create(100)),
-    events(new struct epoll_event[MAXEVENTS]) {
+    events(new struct epoll_event[MAX_EVENTS]) {
   }
   ~PollingImpl() {
     close(epollfd);
     delete[] events;
   }
-  void wait(std::list<std::pair<int, PollEvent> > & fdlist) {
+  void wait(std::list<std::pair<int, PollEvent>>& fdlist) override {
     fdlist.clear();
-    int fds = epoll_wait(epollfd, events, MAXEVENTS, -1);
+    int fds = epoll_wait(epollfd, events, MAX_EVENTS, -1);
     for (int i = 0; i < fds; i++) {
-      PollEvent pollevent = POLLEVENT_UNKNOWN;
+      PollEvent pollevent = PollEvent::UNKNOWN;
       if (events[i].events & EPOLLIN) {
-        pollevent = POLLEVENT_IN;
+        pollevent = PollEvent::IN;
       }
       else if (events[i].events & EPOLLOUT) {
-        pollevent = POLLEVENT_OUT;
+        pollevent = PollEvent::OUT;
       }
-      fdlist.push_back(std::pair<int, PollEvent>(static_cast<int>(events[i].data.fd), pollevent));
+      fdlist.emplace_back(static_cast<int>(events[i].data.fd), pollevent);
     }
   }
-  void addFDIn(int addfd) {
+  void addFDIn(int addfd) override {
     control(EPOLLIN, EPOLL_CTL_ADD, addfd);
   }
-  void addFDOut(int addfd) {
+  void addFDOut(int addfd) override {
     control(EPOLLOUT, EPOLL_CTL_ADD, addfd);
   }
-  void removeFD(int delfd) {
+  void removeFD(int delfd) override {
     control(EPOLLIN | EPOLLOUT, EPOLL_CTL_DEL, delfd);
   }
-  void setFDIn(int modfd) {
+  void setFDIn(int modfd) override {
     control(EPOLLIN, EPOLL_CTL_MOD, modfd);
   }
-  void setFDOut(int modfd) {
+  void setFDOut(int modfd) override {
     control(EPOLLOUT, EPOLL_CTL_MOD, modfd);
   }
 private:
@@ -56,5 +56,7 @@ private:
     epoll_ctl(epollfd, op, fd, &event);
   }
   int epollfd;
-  struct epoll_event * events;
+  struct epoll_event* events;
 };
+
+} // namespace Core

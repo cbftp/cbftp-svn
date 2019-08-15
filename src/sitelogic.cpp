@@ -1851,7 +1851,7 @@ void SiteLogic::finishTransferGracefully(int id) {
 }
 
 void SiteLogic::listCompleted(int id, int storeid, FileList * fl, const std::shared_ptr<CommandOwner> & co) {
-  const BinaryData & data = global->getLocalStorage()->getStoreContent(storeid);
+  const Core::BinaryData& data = global->getLocalStorage()->getStoreContent(storeid);
   conns[id]->setListData(co, fl);
   conns[id]->parseFileList((char *) &data[0], data.size());
   listRefreshed(id);

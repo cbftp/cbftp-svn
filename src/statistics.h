@@ -11,7 +11,7 @@ enum StatsDirection {
   STATS_FXP
 };
 
-class Statistics : public EventReceiver {
+class Statistics : public Core::EventReceiver {
 public:
   Statistics();
   void tick(int);

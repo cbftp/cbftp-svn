@@ -62,7 +62,7 @@ BrowseScreenSite::~BrowseScreenSite() {
 }
 
 BrowseScreenType BrowseScreenSite::type() const {
-  return BROWSESCREEN_SITE;
+  return BrowseScreenType::SITE;
 }
 
 void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int coloffset) {

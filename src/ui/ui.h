@@ -74,10 +74,10 @@ enum LegendMode {
   LEGEND_STATIC = 125
 };
 
-class Ui : public EventReceiver, public UIBase, public SettingsAdder {
+class Ui : public Core::EventReceiver, public UIBase, public SettingsAdder {
 private:
-  Thread<Ui> thread;
-  BlockingQueue<UICommand> uiqueue;
+  Core::Thread<Ui> thread;
+  Core::BlockingQueue<UICommand> uiqueue;
   WINDOW * main;
   WINDOW * info;
   WINDOW * legend;
@@ -138,7 +138,7 @@ private:
   bool split;
   bool fullscreentoggle;
   std::string eventtext;
-  Semaphore eventcomplete;
+  Core::Semaphore eventcomplete;
   std::list<std::shared_ptr<UIWindow> > history;
   void FDData(int);
   void refreshAll();

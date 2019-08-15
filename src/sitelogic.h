@@ -33,7 +33,7 @@ enum class TransferType {
   TRANSFERJOB
 };
 
-class SiteLogic : public EventReceiver {
+class SiteLogic : public Core::EventReceiver {
   private:
     std::shared_ptr<Site> site;
     std::vector<FTPConn *> conns;

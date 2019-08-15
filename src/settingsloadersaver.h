@@ -16,7 +16,7 @@ public:
   virtual void saveSettings(std::shared_ptr<DataFileHandler>) = 0;
 };
 
-class SettingsLoaderSaver : public EventReceiver {
+class SettingsLoaderSaver : public Core::EventReceiver {
 public:
   SettingsLoaderSaver();
   bool enterKey(const std::string &);

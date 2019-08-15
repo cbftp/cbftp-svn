@@ -1,27 +1,35 @@
 #pragma once
 
 #include <pthread.h>
+#include <string>
 #include <unistd.h>
 
+namespace Core {
 namespace Threading {
-void setThreadName(pthread_t thread, const char * name);
-void setCurrentThreadName(const char * name);
-}
+void setThreadName(pthread_t thread, const std::string& name);
+void setCurrentThreadName(const std::string& name);
+} // namespace Threading
 
 template <class T> class Thread {
 public:
-  void start(const char * name, T * instance) {
+  void start(const std::string& name, T* instance) {
     this->instance = instance;
-    pthread_create(&thread, NULL, run, (void *) this);
+    pthread_create(&thread, nullptr, run, (void *) this);
     Threading::setThreadName(thread, name);
   }
-private:
-  static void * run(void * target) {
-    ((Thread *) target)->instance->run();
-    return NULL;
+  void join() {
+    pthread_join(thread, nullptr);
   }
-  T * instance;
+  bool isCurrentThread() {
+    return pthread_self() == thread;
+  }
+private:
+  static void* run(void* target) {
+    ((Thread*) target)->instance->run();
+    return nullptr;
+  }
+  T* instance;
   pthread_t thread;
 };
 
-
+} // namespace Core

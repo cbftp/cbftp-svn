@@ -2,58 +2,50 @@
 
 #include "eventreceiver.h"
 
+namespace Core {
+
 Event::Event() {
 }
 
-Event::Event(EventReceiver * er, int type, int numdata, void * data, int datalen) :
+Event::Event(EventReceiver* er, EventType type, int numdata, void* data, int datalen) :
   receiver(er),
   type(type),
   data(data),
   datalen(datalen),
-  numdata(numdata)
+  numdata(numdata),
+  numdata2(0)
 {
 }
 
-Event::Event(EventReceiver * er, int type, int numdata, void * data) :
+Event::Event(EventReceiver* er, EventType type, int numdata, int numdata2) :
   receiver(er),
   type(type),
-  data(data),
-  numdata(numdata)
-{
-}
-
-Event::Event(EventReceiver * er, int type) :
-  receiver(er),
-  type(type)
-{
-}
-
-Event::Event(EventReceiver * er, int type, int numdata) :
-  receiver(er),
-  type(type),
-  numdata(numdata)
-{
-}
-
-Event::Event(EventReceiver * er, int type, int numdata, int numdata2) :
-  receiver(er),
-  type(type),
+  data(nullptr),
+  datalen(0),
   numdata(numdata),
   numdata2(numdata2)
 {
 }
 
-Event::Event(EventReceiver * er, int type, int numdata, const std::string & strdata) :
+Event::Event(EventReceiver* er, EventType type, int numdata, const std::string& strdata) :
   receiver(er),
   type(type),
+  data(nullptr),
+  datalen(0),
   numdata(numdata),
+  numdata2(0),
   strdata(strdata)
 {
 }
 
-Event::Event(std::shared_ptr<EventReceiver> & er, int type) :
+Event::Event(const std::shared_ptr<EventReceiver>& er, EventType type) :
+  receiver(nullptr),
   preceiver(er),
-  type(type)
+  type(type),
+  data(nullptr),
+  datalen(0),
+  numdata(0),
+  numdata2(0)
 {
 }
 
@@ -61,15 +53,15 @@ Event::~Event() {
 
 }
 
-EventReceiver * Event::getReceiver() const {
+EventReceiver* Event::getReceiver() const {
   return receiver;
 }
 
-int Event::getType() const {
+EventType Event::getType() const {
   return type;
 }
 
-void * Event::getData() const {
+void* Event::getData() const {
   return data;
 }
 
@@ -88,3 +80,5 @@ int Event::getNumericalData2() const {
 std::string Event::getStrData() const {
   return strdata;
 }
+
+} // namespace Core

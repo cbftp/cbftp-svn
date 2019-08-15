@@ -100,9 +100,9 @@ bool BrowseScreen::keyPressed(unsigned int ch) {
   switch (op.getOp()) {
     case BROWSESCREENACTION_CLOSE:
       clearCompareListMode();
-      if (active->type() != BROWSESCREEN_SELECTOR && split) {
+      if (active->type() != BrowseScreenType::SELECTOR && split) {
         if (active == left) {
-          if (right->type() == BROWSESCREEN_SELECTOR) {
+          if (right->type() == BrowseScreenType::SELECTOR) {
             ui->returnToLast();
             return true;
           }
@@ -115,7 +115,7 @@ bool BrowseScreen::keyPressed(unsigned int ch) {
           }
         }
         else {
-          if (left->type() == BROWSESCREEN_SELECTOR) {
+          if (left->type() == BrowseScreenType::SELECTOR) {
             ui->returnToLast();
             return true;
           }
@@ -136,7 +136,7 @@ bool BrowseScreen::keyPressed(unsigned int ch) {
       Path targetpath;
       if (split) {
         std::shared_ptr<BrowseScreenSub> other = active == left ? right : left;
-        if (other->type() == BROWSESCREEN_SITE) {
+        if (other->type() == BrowseScreenType::SITE) {
           const std::shared_ptr<BrowseScreenSite> & othersite = std::static_pointer_cast<BrowseScreenSite>(other);
           const Path & path = othersite->getUIFileList()->getPath();
           std::list<std::string> sections = othersite->getSite()->getSectionsForPath(path);
@@ -181,13 +181,13 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
       }
       return true;
     case 't':
-      if (split && left->type() != BROWSESCREEN_SELECTOR && right->type() != BROWSESCREEN_SELECTOR) {
+      if (split && left->type() != BrowseScreenType::SELECTOR && right->type() != BrowseScreenType::SELECTOR) {
         std::shared_ptr<BrowseScreenSub> other = active == left ? right : left;
-        if (active->type() == BROWSESCREEN_SITE) {
+        if (active->type() == BrowseScreenType::SITE) {
           FileList * activefl = std::static_pointer_cast<BrowseScreenSite>(active)->fileList();
           std::list<UIFile *> files = std::static_pointer_cast<BrowseScreenSite>(active)->getUIFileList()->getSelectedFiles();
           if (activefl != NULL) {
-            if (other->type() == BROWSESCREEN_SITE) {
+            if (other->type() == BrowseScreenType::SITE) {
               FileList * otherfl = std::static_pointer_cast<BrowseScreenSite>(other)->fileList();
               if (otherfl != NULL) {
                 for (std::list<UIFile *>::const_iterator it = files.begin(); it != files.end(); it++) {
@@ -222,7 +222,7 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
             }
           }
         }
-        else if (other->type() == BROWSESCREEN_SITE) {
+        else if (other->type() == BrowseScreenType::SITE) {
           std::shared_ptr<LocalFileList> activefl = std::static_pointer_cast<BrowseScreenLocal>(active)->fileList();
           FileList * otherfl = std::static_pointer_cast<BrowseScreenSite>(other)->fileList();
           std::list<UIFile *> files = std::static_pointer_cast<BrowseScreenLocal>(active)->getUIFileList()->getSelectedFiles();
@@ -263,14 +263,14 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
       if (section == nullptr) {
         return true;
       }
-      if (left->type() == BROWSESCREEN_SITE) {
+      if (left->type() == BrowseScreenType::SITE) {
         std::shared_ptr<Site> site = std::static_pointer_cast<BrowseScreenSite>(left)->getSite();
         if (site->hasSection(section->getName())) {
           Path path = site->getSectionPath(section->getName());
           std::static_pointer_cast<BrowseScreenSite>(left)->gotoPath(path);
         }
       }
-      if (split && right->type() == BROWSESCREEN_SITE) {
+      if (split && right->type() == BrowseScreenType::SITE) {
         std::shared_ptr<Site> site = std::static_pointer_cast<BrowseScreenSite>(right)->getSite();
         if (site->hasSection(section->getName())) {
           Path path = site->getSectionPath(section->getName());
@@ -285,9 +285,9 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
 
 std::string BrowseScreen::getLegendText() const {
   std::string extra = "";
-  if (split && left->type() != BROWSESCREEN_SELECTOR && right->type() != BROWSESCREEN_SELECTOR) {
+  if (split && left->type() != BrowseScreenType::SELECTOR && right->type() != BrowseScreenType::SELECTOR) {
     extra += "Show [u]niques - Show [i]denticals - ";
-    if (left->type() == BROWSESCREEN_SITE || right->type() == BROWSESCREEN_SITE) {
+    if (left->type() == BrowseScreenType::SITE || right->type() == BrowseScreenType::SITE) {
       extra += "[t]ransfer - ";
     }
   }
@@ -296,14 +296,14 @@ std::string BrowseScreen::getLegendText() const {
 
 std::string BrowseScreen::getInfoLabel() const {
   if (split) {
-   if (left->type() == BROWSESCREEN_SITE) {
-     if (right->type() == BROWSESCREEN_SITE) {
+   if (left->type() == BrowseScreenType::SITE) {
+     if (right->type() == BrowseScreenType::SITE) {
        return "BROWSING: " + std::static_pointer_cast<BrowseScreenSite>(left)->siteName() + " - " +
            std::static_pointer_cast<BrowseScreenSite>(right)->siteName();
      }
      return left->getInfoLabel();
    }
-   if (right->type() == BROWSESCREEN_SITE) {
+   if (right->type() == BrowseScreenType::SITE) {
      return right->getInfoLabel();
    }
   }
@@ -349,7 +349,7 @@ void BrowseScreen::closeSide() {
       right.reset();
     }
     active = left;
-    if (active->type() == BROWSESCREEN_SELECTOR) {
+    if (active->type() == BrowseScreenType::SELECTOR) {
       ui->returnToLast();
       return;
     }
@@ -364,7 +364,7 @@ void BrowseScreen::closeSide() {
 }
 
 void BrowseScreen::toggleCompareListMode(CompareMode mode) {
-  if (split && left->type() != BROWSESCREEN_SELECTOR && right->type() != BROWSESCREEN_SELECTOR) {
+  if (split && left->type() != BrowseScreenType::SELECTOR && right->type() != BrowseScreenType::SELECTOR) {
     UIFileList * leftlist = left->getUIFileList();
     UIFileList * rightlist = right->getUIFileList();
     if (leftlist->getCompareListMode() == mode || rightlist->getCompareListMode() == mode) {
@@ -395,10 +395,10 @@ void BrowseScreen::toggleCompareListMode(CompareMode mode) {
 }
 
 void BrowseScreen::clearCompareListMode() {
-  if (left && left->type() != BROWSESCREEN_SELECTOR) {
+  if (left && left->type() != BrowseScreenType::SELECTOR) {
     left->getUIFileList()->clearCompareListMode();
   }
-  if (right && right->type() != BROWSESCREEN_SELECTOR) {
+  if (right && right->type() != BrowseScreenType::SELECTOR) {
     right->getUIFileList()->clearCompareListMode();
   }
 }

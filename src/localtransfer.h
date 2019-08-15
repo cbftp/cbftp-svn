@@ -11,7 +11,7 @@
 class TransferMonitor;
 class FTPConn;
 
-class LocalTransfer : public EventReceiver {
+class LocalTransfer : public Core::EventReceiver {
 public:
   LocalTransfer();
   bool active() const;

@@ -2,26 +2,26 @@
 
 #include <cstdlib>
 
-#include "scopelock.h"
+namespace Core {
 
 #define BLOCKSIZE 16384
 
 DataBlockPool::DataBlockPool() : totalblocks(0) {
-  ScopeLock lock(blocklock);
+  std::lock_guard<std::mutex> lock(blocklock);
   allocateNewBlocks();
 }
 
 DataBlockPool::~DataBlockPool()
 {
-  ScopeLock lock(blocklock);
-  for (std::list<char *>::iterator it = blocks.begin(); it != blocks.end(); it++) {
-    free(*it);
+  std::lock_guard<std::mutex> lock(blocklock);
+  for (char* block : blocks) {
+    free(block);
   }
 }
 
-char * DataBlockPool::getBlock() {
-  char * block;
-  ScopeLock lock(blocklock);
+char* DataBlockPool::getBlock() {
+  char* block;
+  std::lock_guard<std::mutex> lock(blocklock);
   if (availableblocks.empty()) {
     allocateNewBlocks();
   }
@@ -34,16 +34,18 @@ const int DataBlockPool::blockSize() const {
   return BLOCKSIZE;
 }
 
-void DataBlockPool::returnBlock(char * block) {
-  ScopeLock lock(blocklock);
+void DataBlockPool::returnBlock(char* block) {
+  std::lock_guard<std::mutex> lock(blocklock);
   availableblocks.push_back(block);
 }
 
 void DataBlockPool::allocateNewBlocks() {
   for (int i = 0; i < 10; i++) {
-    char * block = (char *) malloc(BLOCKSIZE);
+    char* block = (char*) malloc(BLOCKSIZE);
     blocks.push_back(block);
     availableblocks.push_back(block);
     totalblocks++;
   }
 }
+
+} // namespace Core

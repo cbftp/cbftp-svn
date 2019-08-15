@@ -1,17 +1,19 @@
 #pragma once
 
 #include <memory>
-#include <unordered_map>
+
+namespace Core {
+class IOManager;
+class TickPoke;
+class WorkManager;
+}
 
 class Engine;
 class UIBase;
 class SiteLogicManager;
 class SiteManager;
 class TransferManager;
-class TickPoke;
 class RemoteCommandHandler;
-class IOManager;
-class WorkManager;
 class SkipList;
 class EventLog;
 class ProxyManager;
@@ -26,13 +28,13 @@ class GlobalContext {
   private:
     Engine * e;
     SettingsLoaderSaver * sls;
-    IOManager * iom;
-    WorkManager * wm;
+    Core::IOManager * iom;
+    Core::WorkManager * wm;
     UIBase * uib;
     SiteManager * sm;
     SiteLogicManager * slm;
     TransferManager * tm;
-    TickPoke * tp;
+    Core::TickPoke * tp;
     RemoteCommandHandler * rch;
     SkipList * sl;
     std::shared_ptr<EventLog> el;
@@ -43,20 +45,20 @@ class GlobalContext {
     Statistics * s;
     SectionManager * secm;
   public:
-    void linkCore(WorkManager *, TickPoke *, IOManager *, std::shared_ptr<EventLog> &);
+    void linkCore(Core::WorkManager*, Core::TickPoke*, Core::IOManager*, std::shared_ptr<EventLog>&);
     void linkComponents(SettingsLoaderSaver *, Engine *,
         UIBase *, SiteManager *, SiteLogicManager *, TransferManager *,
         RemoteCommandHandler *, SkipList *, ProxyManager *,
         LocalStorage *, ExternalFileViewing *, TimeReference *, Statistics *, SectionManager *);
     Engine * getEngine() const;
     SettingsLoaderSaver * getSettingsLoaderSaver() const;
-    WorkManager * getWorkManager() const;
-    IOManager * getIOManager() const;
+    Core::WorkManager * getWorkManager() const;
+    Core::IOManager * getIOManager() const;
     UIBase * getUIBase() const;
     SiteManager * getSiteManager() const;
     SiteLogicManager * getSiteLogicManager() const;
     TransferManager * getTransferManager() const;
-    TickPoke * getTickPoke() const;
+    Core::TickPoke * getTickPoke() const;
     RemoteCommandHandler * getRemoteCommandHandler() const;
     SkipList * getSkipList() const;
     std::shared_ptr<EventLog> & getEventLog();

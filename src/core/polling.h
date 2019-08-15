@@ -1,25 +1,31 @@
 #pragma once
 
-#include <utility>
 #include <list>
+#include <utility>
 
-enum PollEvent {
-  POLLEVENT_IN,
-  POLLEVENT_OUT,
-  POLLEVENT_UNKNOWN
+namespace Core {
+
+#define MAX_EVENTS 256
+
+enum class PollEvent {
+  IN,
+  OUT,
+  UNKNOWN
 };
 
 class PollingBase {
 public:
   virtual ~PollingBase() {
   }
-  virtual void wait(std::list<std::pair<int, PollEvent> > &) = 0;
+  virtual void wait(std::list<std::pair<int, PollEvent>>& events) = 0;
   virtual void addFDIn(int) = 0;
   virtual void addFDOut(int) = 0;
   virtual void removeFD(int) = 0;
   virtual void setFDIn(int) = 0;
   virtual void setFDOut(int) = 0;
 };
+
+} // namespace Core
 
 #ifdef __linux
 #include "pollingepoll.h"
@@ -30,9 +36,11 @@ public:
 #include "pollingpoll.h"
 #endif
 
+namespace Core {
+
 class Polling {
 public:
-  void wait(std::list<std::pair<int, PollEvent> > & events) {
+  void wait(std::list<std::pair<int, PollEvent>>& events) {
     impl.wait(events);
   }
   void addFDIn(int addfd) {
@@ -53,3 +61,5 @@ public:
 private:
   PollingImpl impl;
 };
+
+} // namespace Core

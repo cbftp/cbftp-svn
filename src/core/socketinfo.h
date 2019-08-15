@@ -1,45 +1,53 @@
 #pragma once
 
-#include <string>
 #include <list>
+#include <string>
+
 #include <openssl/ssl.h>
 
 #include "datablock.h"
 #include "prio.h"
+#include "types.h"
 
-enum SocketType {
-  FD_UNUSED,
-  FD_KEYBOARD,
-  FD_TCP_PLAIN,
-  FD_TCP_SSL,
-  FD_UDP,
-  FD_TCP_SERVER,
-  FD_TCP_PLAIN_LISTEN,
-  FD_TCP_SSL_NEG_CONNECT,
-  FD_TCP_SSL_NEG_REDO_CONNECT,
-  FD_TCP_SSL_NEG_ACCEPT,
-  FD_TCP_SSL_NEG_REDO_ACCEPT,
-  FD_TCP_SSL_NEG_REDO_HANDSHAKE,
-  FD_TCP_CONNECTING,
-  FD_TCP_RESOLVING
+struct addrinfo;
+
+namespace Core {
+
+enum class SocketType {
+  UNUSED,
+  EXTERNAL,
+  TCP_PLAIN,
+  TCP_SSL,
+  UDP,
+  TCP_SERVER,
+  TCP_SERVER_EXTERNAL,
+  TCP_PLAIN_LISTEN,
+  TCP_SSL_NEG_CONNECT,
+  TCP_SSL_NEG_REDO_CONNECT,
+  TCP_SSL_NEG_ACCEPT,
+  TCP_SSL_NEG_REDO_ACCEPT,
+  TCP_CONNECTING,
+  TCP_RESOLVING,
+  STOP
 };
 
-enum Direction {
-  DIR_IN,
-  DIR_OUT
+enum class Direction {
+  IN,
+  OUT
 };
 
 class EventReceiver;
 
 class SocketInfo {
 public:
-  SocketInfo() : type(FD_UNUSED), fd(-1), id(-1), parentid(-1), port(0), localport(0), gairet(0),
-                 gaires(NULL), gaiasync(false), receiver(NULL), ssl(NULL),
-                 prio(PRIO_NORMAL), paused(false), direction(DIR_IN),
-                 listenimmediately(true)
+  SocketInfo() : type(SocketType::UNUSED), addrfam(AddressFamily::NONE), fd(-1), id(-1), parentid(-1), port(0), localport(0), gairet(0),
+                 gaires(nullptr), gaiasync(false), receiver(nullptr), ssl(nullptr),
+                 prio(Prio::NORMAL), paused(false), direction(Direction::IN),
+                 listenimmediately(true), closing(false), sessionkey(-1)
   {
   }
   SocketType type;
+  AddressFamily addrfam;
   int fd;
   int id;
   int parentid;
@@ -48,14 +56,18 @@ public:
   std::string localaddr;
   int localport;
   int gairet;
-  struct addrinfo * gaires;
+  struct addrinfo* gaires;
   std::string gaierr;
   bool gaiasync;
-  EventReceiver * receiver;
+  EventReceiver* receiver;
   mutable std::list<DataBlock> sendqueue;
-  SSL * ssl;
+  SSL* ssl;
   Prio prio;
   bool paused;
-  int direction;
+  Direction direction;
   bool listenimmediately;
+  bool closing;
+  int sessionkey;
 };
+
+} // namespace Core

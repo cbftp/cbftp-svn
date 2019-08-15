@@ -36,7 +36,7 @@ BrowseScreenSelector::~BrowseScreenSelector() {
 }
 
 BrowseScreenType BrowseScreenSelector::type() const {
-  return BROWSESCREEN_SELECTOR;
+  return BrowseScreenType::SELECTOR;
 }
 
 void BrowseScreenSelector::redraw(unsigned int row, unsigned int col, unsigned int coloffset) {

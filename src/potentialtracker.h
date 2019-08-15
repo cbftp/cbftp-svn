@@ -14,7 +14,7 @@ class PotentialElement;
 class PotentialListElement;
 class SiteLogic;
 
-class PotentialTracker : private EventReceiver {
+class PotentialTracker : private Core::EventReceiver {
   private:
     std::list<PotentialListElement *> potentiallist;
     std::list<PotentialElement *> top;

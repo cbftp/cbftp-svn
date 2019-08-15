@@ -45,7 +45,7 @@ class TransferStatus;
 class LocalTransfer;
 class LocalFileList;
 
-class TransferMonitor : public EventReceiver, public RawBufferCallback {
+class TransferMonitor : public Core::EventReceiver, public RawBufferCallback {
   private:
     Status status;
     std::string sfile;

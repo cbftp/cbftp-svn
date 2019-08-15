@@ -18,6 +18,6 @@ std::basic_string<unsigned int> cp437toUnicode(const std::string &);
 std::basic_string<unsigned int> doublecp437toUnicode(const std::string &);
 std::basic_string<unsigned int> toUnicode(const std::string &);
 std::basic_string<unsigned int> utf8toUnicode(const std::string &);
-Encoding guessEncoding(const BinaryData &);
+Encoding guessEncoding(const Core::BinaryData& data);
 
 }

@@ -7,21 +7,19 @@
 #include <cerrno>
 
 #include "polling.h"
-#include "lock.h"
-#include "scopelock.h"
 #include "semaphore.h"
 
-#define MAXEVENTS 256
+namespace Core {
 
 class PollingImpl : public PollingBase {
 public:
   PollingImpl() :
-    fds(new struct pollfd[MAXEVENTS]), inwait(false), waiting(0) {
+    fds(new struct pollfd[MAX_EVENTS]), inwait(false), waiting(0) {
   }
   ~PollingImpl() {
     delete[] fds;
   }
-  void wait(std::list<std::pair<int, PollEvent> > & fdlist) {
+  void wait(std::list<std::pair<int, PollEvent>>& fdlist) override {
     setInWait(true);
     fdlist.clear();
     while (!fdlist.size()) {
@@ -29,7 +27,7 @@ public:
       int evcount = 0;
       maplock.lock();
       for (std::map<int, int>::const_iterator it = fdmap.begin();
-           it != fdmap.end() && evcount < MAXEVENTS; it++, evcount++)
+           it != fdmap.end() && evcount < MAX_EVENTS; it++, evcount++)
       {
         fds[evcount].fd = it->first;
         fds[evcount].events = it->second;
@@ -39,22 +37,22 @@ public:
         for (int i = 0; i < evcount; i++) {
           int fd = fds[i].fd;
           int revents = fds[i].revents;
-          PollEvent pollevent = POLLEVENT_UNKNOWN;
+          PollEvent pollevent = PollEvent::UNKNOWN;
           if (revents & POLLIN) {
             char c;
             if (recv(fd, &c, 1, MSG_PEEK) <= 0 && errno != ENOTSOCK) {
               removeFDIntern(fd);
             }
-            pollevent = POLLEVENT_IN;
+            pollevent = PollEvent::IN;
           }
           else if (revents & POLLOUT) {
-            pollevent = POLLEVENT_OUT;
+            pollevent = PollEvent::OUT;
           }
           if (revents & (POLLHUP | POLLERR)) {
             removeFDIntern(fd);
           }
-          if (pollevent != POLLEVENT_UNKNOWN) {
-            fdlist.push_back(std::pair<int, PollEvent>(fd, pollevent));
+          if (pollevent != PollEvent::UNKNOWN) {
+            fdlist.emplace_back(fd, pollevent);
           }
         }
       }
@@ -63,17 +61,17 @@ public:
 
     awaitModifiers();
   }
-  void addFDIn(int addfd) {
-    ScopeLock lock(maplock);
+  void addFDIn(int addfd) override {
+    std::lock_guard<std::mutex> lock(maplock);
     std::map<int, int>::iterator it = fdmap.find(addfd);
     it != fdmap.end() ? it->second |= POLLIN : fdmap[addfd] = POLLIN;
   }
-  void addFDOut(int addfd) {
-    ScopeLock lock(maplock);
+  void addFDOut(int addfd) override {
+    std::lock_guard<std::mutex> lock(maplock);
     std::map<int, int>::iterator it = fdmap.find(addfd);
     it != fdmap.end() ? it->second |= POLLOUT : fdmap[addfd] = POLLOUT;
   }
-  void removeFD(int delfd) {
+  void removeFD(int delfd) override {
     awaitCurrentPollFinished();
     std::map<int, int>::iterator it = fdmap.find(delfd);
     if (it != fdmap.end()) {
@@ -81,12 +79,12 @@ public:
     }
     maplock.unlock();
   }
-  void setFDIn(int modfd) {
+  void setFDIn(int modfd) override {
     awaitCurrentPollFinished();
     fdmap[modfd] = POLLIN;
     maplock.unlock();
   }
-  void setFDOut(int modfd) {
+  void setFDOut(int modfd) override {
     awaitCurrentPollFinished();
     fdmap[modfd] = POLLOUT;
     maplock.unlock();
@@ -106,7 +104,7 @@ private:
     waitlock.unlock();
   }
   void awaitModifiers() {
-    ScopeLock lock(waitlock);
+    std::lock_guard<std::mutex> lock(waitlock);
     while (waiting) {
       waitsem.post();
       --waiting;
@@ -114,18 +112,20 @@ private:
     }
   }
   void setInWait(bool value) {
-    ScopeLock lock(waitlock);
+    std::lock_guard<std::mutex> lock(waitlock);
     inwait = value;
   }
   void removeFDIntern(int delfd) {
     fdmap.erase(delfd);
   }
-  Lock maplock;
-  struct pollfd * fds;
+  std::mutex maplock;
+  struct pollfd* fds;
   std::map<int, int> fdmap;
   bool inwait;
   int waiting;
-  Lock waitlock;
+  std::mutex waitlock;
   Semaphore waitsem;
   Semaphore acksem;
 };
+
+} // namespace Core

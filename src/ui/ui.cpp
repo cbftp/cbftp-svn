@@ -98,7 +98,7 @@ bool Ui::init() {
 
   global->getSettingsLoaderSaver()->addSettingsAdder(this);
 
-  thread.start("UserInterface", this);
+  thread.start("cbftp-ui", this);
 
   initret = true;
   uiqueue.push(UICommand(UI_COMMAND_INIT));
@@ -110,7 +110,6 @@ bool Ui::init() {
   infowindow = std::make_shared<InfoWindow>(this, info, 2, col);
   loginscreen = std::make_shared<LoginScreen>(this);
   newkeyscreen = std::make_shared<NewKeyScreen>(this);
-
   mainscreen = std::make_shared<MainScreen>(this);
   confirmationscreen = std::make_shared<ConfirmationScreen>(this);
   editsitescreen = std::make_shared<EditSiteScreen>(this);
@@ -199,7 +198,7 @@ bool Ui::init() {
   infowindow->setLabel(topwindow->getInfoLabel());
   std::cin.putback('#'); // needed to be able to peek properly
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
-  global->getIOManager()->registerStdin(this);
+  global->getIOManager()->registerExternalFD(this, STDIN_FILENO);
   global->getTickPoke()->startPoke(this, "UI", 50, 0);
   return true;
 }

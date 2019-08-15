@@ -21,8 +21,8 @@ bool fileExistsWritable(const Path &);
 bool createDirectory(const Path &);
 bool createDirectory(const Path &, bool);
 bool createDirectoryRecursive(const Path &);
-void readFile(const Path &, BinaryData &);
-void writeFile(const Path &, const BinaryData &);
+void readFile(const Path &, Core::BinaryData &);
+void writeFile(const Path &, const Core::BinaryData &);
 SpaceInfo getSpaceInfo(const Path & path);
 }
 
