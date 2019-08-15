@@ -65,6 +65,9 @@ FTPConnect::~FTPConnect() {
 void FTPConnect::FDConnecting(int sockid, const std::string & addr) {
   Address newaddr = this->addr;
   newaddr.host = addr;
+  if (addr.find(":") != std::string::npos) {
+    newaddr.brackets = true;
+  }
   printConnecting(newaddr, true);
 
 }
