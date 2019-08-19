@@ -25,6 +25,8 @@ class Path;
 class SiteTransferJob;
 class FileListData;
 class DelayedCommand;
+enum class FTPConnState;
+enum class FailureType;
 
 enum class TransferType {
   REGULAR,
@@ -97,9 +99,9 @@ class SiteLogic : public Core::EventReceiver {
     void passDenied(int);
     void TLSFailed(int);
     void listRefreshed(int);
-    void commandSuccess(int, int);
-    void commandFail(int);
-    void commandFail(int, int);
+    void commandSuccess(int id, FTPConnState state);
+    void commandFail(int id);
+    void commandFail(int id, FailureType failuretype);
     void gotPath(int, const std::string &);
     void rawCommandResultRetrieved(int, const std::string &);
     void gotPassiveAddress(int, const std::string &, int);
@@ -158,10 +160,10 @@ class SiteLogic : public Core::EventReceiver {
     const std::vector<FTPConn *> * getConns() const;
     FTPConn * getConn(int) const;
     std::string getStatus(int) const;
-    void preparePassiveTransfer(int id, const std::string & file, bool fxp, bool ssl, bool sslclient = false);
-    void prepareActiveTransfer(int id, const std::string & file , bool fxp, const std::string & host, int port, bool ssl, bool sslclient = false);
-    void preparePassiveList(int, TransferMonitor *, bool);
-    void prepareActiveList(int, TransferMonitor *, const std::string &, int, bool);
+    void preparePassiveTransfer(int id, const std::string& file, bool fxp, bool ipv6, bool ssl, bool sslclient = false);
+    void prepareActiveTransfer(int id, const std::string& file , bool fxp, bool ipv6, const std::string& host, int port, bool ssl, bool sslclient = false);
+    void preparePassiveList(int id, TransferMonitor* tmb, bool ipv6, bool ssl);
+    void prepareActiveList(int id, TransferMonitor* tmb, bool ipv6, const std::string & host, int port, bool ssl);
     void download(int);
     void upload(int);
     void list(int);

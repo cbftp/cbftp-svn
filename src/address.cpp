@@ -4,13 +4,15 @@ Address::Address() : addrfam(Core::AddressFamily::IPV4_IPV6), brackets(false), p
 
 }
 
-std::string Address::toString() const {
+std::string Address::toString(bool includeaddrfam) const {
   std::string addrstr;
-  if (addrfam == Core::AddressFamily::IPV4) {
-    addrstr += "(4)";
-  }
-  else if (addrfam == Core::AddressFamily::IPV6) {
-    addrstr += "(6)";
+  if (includeaddrfam) {
+    if (addrfam == Core::AddressFamily::IPV4) {
+      addrstr += "(4)";
+    }
+    else if (addrfam == Core::AddressFamily::IPV6) {
+      addrstr += "(6)";
+    }
   }
   if (brackets) {
     addrstr += "[";

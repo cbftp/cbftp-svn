@@ -359,28 +359,30 @@ bool SiteLogic::makeTargetDirectory(int id, bool includinglast, const std::share
   return false;
 }
 
-void SiteLogic::commandSuccess(int id, int state) {
+void SiteLogic::commandSuccess(int id, FTPConnState state) {
   connstatetracker[id].resetIdleTime();
   std::list<SiteLogicRequest>::iterator it;
   switch (state) {
-    case STATE_LOGIN:
+    case FTPConnState::LOGIN:
       loggedin++;
       available++;
       connstatetracker[id].setLoggedIn();
       break;
-    case STATE_PBSZ:
-    case STATE_PROT_P:
-    case STATE_PROT_C:
-    case STATE_SSCN_ON:
-    case STATE_SSCN_OFF:
+    case FTPConnState::PBSZ:
+    case FTPConnState::PROT_P:
+    case FTPConnState::PROT_C:
+    case FTPConnState::SSCN_ON:
+    case FTPConnState::SSCN_OFF:
+    case FTPConnState::CEPR_ON:
       break;
-    case STATE_PORT:
+    case FTPConnState::PORT:
+    case FTPConnState::EPRT:
       if (connstatetracker[id].transferInitialized()) {
         connstatetracker[id].getTransferMonitor()->activeReady();
         return;
       }
       break;
-    case STATE_CWD: {
+    case FTPConnState::CWD: {
       setPathExists(id, EXISTS_YES, false);
       if (conns[id]->hasMKDCWDTarget()) {
         if (conns[id]->getCurrentPath() == conns[id]->getMKDCWDTargetSection() / conns[id]->getMKDCWDTargetPath()) {
@@ -417,7 +419,7 @@ void SiteLogic::commandSuccess(int id, int state) {
       }
       break;
     }
-    case STATE_MKD:
+    case FTPConnState::MKD:
       if (connstatetracker[id].hasRequest()) {
         const std::shared_ptr<SiteLogicRequest> request = connstatetracker[id].getRequest();
         if (request->requestType() == REQ_MKDIR) {
@@ -446,22 +448,22 @@ void SiteLogic::commandSuccess(int id, int state) {
         }
       }
       break;
-    case STATE_PRET_RETR:
-    case STATE_PRET_STOR:
+    case FTPConnState::PRET_RETR:
+    case FTPConnState::PRET_STOR:
       if (connstatetracker[id].transferInitialized()) {
         assert(connstatetracker[id].getTransferPassive());
         passiveModeCommand(id);
         return;
       }
       break;
-    case STATE_RETR: // RETR started
+    case FTPConnState::RETR: // RETR started
       if (connstatetracker[id].transferInitialized()) {
         if (!connstatetracker[id].getTransferPassive()) {
           connstatetracker[id].getTransferMonitor()->activeStarted();
         }
       }
       return;
-    case STATE_RETR_COMPLETE:
+    case FTPConnState::RETR_COMPLETE:
       assert(connstatetracker[id].transferInitialized());
       connstatetracker[id].getTransferMonitor()->sourceComplete();
       transferComplete(id, true);
@@ -471,14 +473,14 @@ void SiteLogic::commandSuccess(int id, int state) {
         return;
       }
       break;
-    case STATE_STOR: // STOR started
+    case FTPConnState::STOR: // STOR started
       if (connstatetracker[id].transferInitialized()) {
         if (!connstatetracker[id].getTransferPassive()) {
           connstatetracker[id].getTransferMonitor()->activeStarted();
         }
       }
       return;
-    case STATE_STOR_COMPLETE: {
+    case FTPConnState::STOR_COMPLETE: {
       assert(connstatetracker[id].transferInitialized());
       connstatetracker[id].getTransferMonitor()->targetComplete();
       transferComplete(id, false);
@@ -495,11 +497,11 @@ void SiteLogic::commandSuccess(int id, int state) {
       }
       break;
     }
-    case STATE_ABOR:
+    case FTPConnState::ABOR:
       break;
-    case STATE_PASV_ABORT:
+    case FTPConnState::PASV_ABORT:
       break;
-    case STATE_WIPE:
+    case FTPConnState::WIPE:
       if (connstatetracker[id].hasRequest()) {
         const std::shared_ptr<SiteLogicRequest> & request = connstatetracker[id].getRequest();
         if (request->requestType() == REQ_WIPE_RECURSIVE ||
@@ -509,25 +511,25 @@ void SiteLogic::commandSuccess(int id, int state) {
         }
       }
       break;
-    case STATE_DELE:
-    case STATE_RMD:
+    case FTPConnState::DELE:
+    case FTPConnState::RMD:
       if (handleCommandDelete(id, true)) {
         return;
       }
       break;
-    case STATE_NUKE:
+    case FTPConnState::NUKE:
       if (connstatetracker[id].hasRequest()) {
         if (connstatetracker[id].getRequest()->requestType() == REQ_NUKE) {
           setRequestReady(id, NULL, true);
         }
       }
       break;
-    case STATE_LIST:
+    case FTPConnState::LIST:
       if (!connstatetracker[id].getTransferPassive()) {
         connstatetracker[id].getTransferMonitor()->activeStarted();
       }
       return;
-    case STATE_PRET_LIST:
+    case FTPConnState::PRET_LIST:
       if (connstatetracker[id].transferInitialized()) {
         if (connstatetracker[id].getTransferPassive()) {
           passiveModeCommand(id);
@@ -535,7 +537,7 @@ void SiteLogic::commandSuccess(int id, int state) {
         }
       }
       break;
-    case STATE_LIST_COMPLETE:
+    case FTPConnState::LIST_COMPLETE:
       if (connstatetracker[id].transferInitialized()) {
         TransferMonitor * tm = connstatetracker[id].getTransferMonitor();
         connstatetracker[id].finishTransfer();
@@ -543,27 +545,33 @@ void SiteLogic::commandSuccess(int id, int state) {
       }
       handleConnection(id, true);
       return;
-    case STATE_QUIT:
+    case FTPConnState::QUIT:
       connstatetracker[id].setDisconnected();
+      return;
+    default:
+      assert(false);
       return;
   }
   handleConnection(id);
 }
 
 void SiteLogic::commandFail(int id) {
-  commandFail(id, FAIL_UNDEFINED);
+  commandFail(id, FailureType::UNDEFINED);
 }
 
-void SiteLogic::commandFail(int id, int failuretype) {
+void SiteLogic::commandFail(int id, FailureType failuretype) {
   connstatetracker[id].resetIdleTime();
-  int state = conns[id]->getState();
+  FTPConnState state = conns[id]->getState();
   switch (state) {
-    case STATE_PBSZ:
-    case STATE_PROT_P:
-    case STATE_PROT_C:
-    case STATE_CPSV:
-    case STATE_PASV:
-    case STATE_PORT:
+    case FTPConnState::PBSZ:
+    case FTPConnState::PROT_P:
+    case FTPConnState::PROT_C:
+    case FTPConnState::CPSV:
+    case FTPConnState::PASV:
+    case FTPConnState::PORT:
+    case FTPConnState::CEPR_ON:
+    case FTPConnState::EPSV:
+    case FTPConnState::EPRT:
       if (connstatetracker[id].transferInitialized()) {
         handleTransferFail(id, TM_ERR_OTHER);
         return;
@@ -573,7 +581,7 @@ void SiteLogic::commandFail(int id, int failuretype) {
         return;
       }
       break;
-    case STATE_CWD: {
+    case FTPConnState::CWD: {
       bool filelistupdated = false;
       if (setPathExists(id, EXISTS_NO, true)) {
         filelistupdated = true;
@@ -636,7 +644,7 @@ void SiteLogic::commandFail(int id, int failuretype) {
       handleFail(id);
       return;
     }
-    case STATE_MKD:
+    case FTPConnState::MKD:
       if (conns[id]->hasMKDCWDTarget()) {
         std::shared_ptr<CommandOwner> currentco = conns[id]->currentCommandOwner();
         const Path & targetcwdsect = conns[id]->getMKDCWDTargetSection();
@@ -672,35 +680,35 @@ void SiteLogic::commandFail(int id, int failuretype) {
         }
       }
       break;
-    case STATE_PRET_RETR:
+    case FTPConnState::PRET_RETR:
       handleTransferFail(id, CST_DOWNLOAD, TM_ERR_PRET);
       return;
-    case STATE_PRET_STOR:
-      if (failuretype == FAIL_DUPE) {
+    case FTPConnState::PRET_STOR:
+      if (failuretype == FailureType::DUPE) {
         handleTransferFail(id, CST_UPLOAD, TM_ERR_DUPE);
       }
       else {
         handleTransferFail(id, CST_UPLOAD, TM_ERR_PRET);
       }
       return;
-    case STATE_RETR:
+    case FTPConnState::RETR:
       handleTransferFail(id, CST_DOWNLOAD, TM_ERR_RETRSTOR);
       return;
-    case STATE_RETR_COMPLETE:
+    case FTPConnState::RETR_COMPLETE:
       handleTransferFail(id, CST_DOWNLOAD, TM_ERR_RETRSTOR_COMPLETE);
       return;
-    case STATE_STOR:
-      if (failuretype == FAIL_DUPE) {
+    case FTPConnState::STOR:
+      if (failuretype == FailureType::DUPE) {
         handleTransferFail(id, CST_UPLOAD, TM_ERR_DUPE);
       }
       else {
         handleTransferFail(id, CST_UPLOAD, TM_ERR_RETRSTOR);
       }
       return;
-    case STATE_STOR_COMPLETE:
+    case FTPConnState::STOR_COMPLETE:
       handleTransferFail(id, CST_UPLOAD, TM_ERR_RETRSTOR_COMPLETE);
       return;
-    case STATE_WIPE:
+    case FTPConnState::WIPE:
       if (connstatetracker[id].hasRequest()) {
         const std::shared_ptr<SiteLogicRequest> & request = connstatetracker[id].getRequest();
         if (request->requestType() == REQ_WIPE_RECURSIVE ||
@@ -711,13 +719,13 @@ void SiteLogic::commandFail(int id, int failuretype) {
       }
       handleConnection(id);
       return;
-    case STATE_DELE:
-    case STATE_RMD:
+    case FTPConnState::DELE:
+    case FTPConnState::RMD:
       if (!handleCommandDelete(id, false)) {
         handleConnection(id);
       }
       return;
-    case STATE_NUKE:
+    case FTPConnState::NUKE:
       if (connstatetracker[id].hasRequest()) {
         if (connstatetracker[id].getRequest()->requestType() == REQ_NUKE) {
           setRequestReady(id, NULL, false);
@@ -725,17 +733,20 @@ void SiteLogic::commandFail(int id, int failuretype) {
       }
       handleConnection(id);
       return;
-    case STATE_LIST:
+    case FTPConnState::LIST:
       checkFailListRequest(id);
       handleTransferFail(id, CST_LIST, TM_ERR_RETRSTOR);
       return;
-    case STATE_PRET_LIST:
+    case FTPConnState::PRET_LIST:
       checkFailListRequest(id);
       handleTransferFail(id, CST_LIST, TM_ERR_PRET);
       return;
-    case STATE_LIST_COMPLETE:
+    case FTPConnState::LIST_COMPLETE:
       checkFailListRequest(id);
       handleTransferFail(id, CST_LIST, TM_ERR_RETRSTOR_COMPLETE);
+      return;
+    default:
+      assert(false);
       return;
   }
   // default handling: reconnect
@@ -1250,21 +1261,26 @@ void SiteLogic::initTransfer(int id) {
       return;
     }
   }
-  if (transferssl && conns[id]->getProtectedMode() != PROT_P) {
+  if (transferssl && conns[id]->getProtectedMode() != ProtMode::P) {
     conns[id]->doPROTP();
     return;
   }
-  else if (!transferssl && conns[id]->getProtectedMode() != PROT_C) {
-    if (site->getTLSMode() != TLSMode::NONE || conns[id]->getProtectedMode() == PROT_P) {
+  if (!transferssl && conns[id]->getProtectedMode() != ProtMode::C) {
+    if (site->getTLSMode() != TLSMode::NONE || conns[id]->getProtectedMode() == ProtMode::P) {
       conns[id]->doPROTC();
       return;
     }
+  }
+  bool ipv6 = connstatetracker[id].getTransferIPv6();
+  if (ipv6 && passive && !conns[id]->getCEPREnabled()) {
+    conns[id]->doCEPRON();
+    return;
   }
   if (status != (passive ? TM_STATUS_AWAITING_PASSIVE : TM_STATUS_AWAITING_ACTIVE)) {
     return;
   }
   if (connstatetracker[id].getTransferFXP()) {
-    if (transferssl && (!passive || !site->supportsCPSV())) {
+    if (transferssl && (!passive || ipv6 || !site->supportsCPSV())) {
       if (transfersslclient && !sscnmode) {
         conns[id]->doSSCN(true);
         return;
@@ -1280,8 +1296,12 @@ void SiteLogic::initTransfer(int id) {
     return;
   }
   if (!passive) {
-    conns[id]->doPORT(connstatetracker[id].getTransferHost(),
-                      connstatetracker[id].getTransferPort());
+    if (ipv6) {
+      conns[id]->doEPRT(connstatetracker[id].getTransferHost(), connstatetracker[id].getTransferPort());
+    }
+    else {
+      conns[id]->doPORT(connstatetracker[id].getTransferHost(), connstatetracker[id].getTransferPort());
+    }
   }
   else {
     if (site->needsPRET()) {
@@ -1951,23 +1971,23 @@ std::string SiteLogic::getStatus(int id) const {
   return conns[id]->getStatus();
 }
 
-void SiteLogic::preparePassiveTransfer(int id, const std::string & file, bool fxp, bool ssl, bool sslclient) {
-  connstatetracker[id].setTransfer(file, fxp, ssl, sslclient);
+void SiteLogic::preparePassiveTransfer(int id, const std::string& file, bool fxp, bool ipv6, bool ssl, bool sslclient) {
+  connstatetracker[id].setTransfer(file, fxp, ipv6, ssl, sslclient);
   initTransfer(id);
 }
 
-void SiteLogic::prepareActiveTransfer(int id, const std::string & file, bool fxp, const std::string & host, int port, bool ssl, bool sslclient) {
-  connstatetracker[id].setTransfer(file, fxp, host, port, ssl, sslclient);
+void SiteLogic::prepareActiveTransfer(int id, const std::string& file, bool fxp, bool ipv6, const std::string& host, int port, bool ssl, bool sslclient) {
+  connstatetracker[id].setTransfer(file, fxp, ipv6, host, port, ssl, sslclient);
   initTransfer(id);
 }
 
-void SiteLogic::preparePassiveList(int id, TransferMonitor * tmb, bool ssl) {
-  connstatetracker[id].setList(tmb, ssl);
+void SiteLogic::preparePassiveList(int id, TransferMonitor* tmb, bool ipv6, bool ssl) {
+  connstatetracker[id].setList(tmb, ipv6, ssl);
   initTransfer(id);
 }
 
-void SiteLogic::prepareActiveList(int id, TransferMonitor * tmb, const std::string & host, int port, bool ssl) {
-  connstatetracker[id].setList(tmb, host, port, ssl);
+void SiteLogic::prepareActiveList(int id, TransferMonitor* tmb, bool ipv6, const std::string & host, int port, bool ssl) {
+  connstatetracker[id].setList(tmb, ipv6, host, port, ssl);
   initTransfer(id);
 }
 
@@ -2022,7 +2042,7 @@ void SiteLogic::getFileListConn(int id, bool hiddenfiles) {
   }
   else {
     FileList * fl = conns[id]->newFileList();
-    global->getTransferManager()->getFileList(global->getSiteLogicManager()->getSiteLogic(this), id, hiddenfiles, fl);
+    global->getTransferManager()->getFileList(global->getSiteLogicManager()->getSiteLogic(this), id, hiddenfiles, fl, conns[id]->isIPv6());
   }
 }
 
@@ -2032,11 +2052,15 @@ void SiteLogic::getFileListConn(int id, const std::shared_ptr<CommandOwner> & co
     conns[id]->doSTAT(co, filelist);
   }
   else {
-    global->getTransferManager()->getFileList(global->getSiteLogicManager()->getSiteLogic(this), id, false, filelist, co);
+    global->getTransferManager()->getFileList(global->getSiteLogicManager()->getSiteLogic(this), id, false, filelist, conns[id]->isIPv6(), co);
   }
 }
 
 void SiteLogic::passiveModeCommand(int id) {
+  if (connstatetracker[id].getTransferIPv6()) {
+    conns[id]->doEPSV();
+    return;
+  }
   if (connstatetracker[id].getTransferFXP() &&
       connstatetracker[id].getTransferSSL() &&
       connstatetracker[id].getTransferSSLClient() &&

@@ -100,7 +100,7 @@ void ConnStateTracker::resetIdleTime() {
   idletime = 0;
 }
 
-void ConnStateTracker::setTransfer(const std::string & file, bool fxp, bool passive, const std::string & host, int port, bool ssl, bool sslclient) {
+void ConnStateTracker::setTransfer(const std::string & file, bool fxp, bool ipv6, bool passive, const std::string & host, int port, bool ssl, bool sslclient) {
   assert(transferlocked);
   assert(!transfer);
   assert(!request);
@@ -114,17 +114,18 @@ void ConnStateTracker::setTransfer(const std::string & file, bool fxp, bool pass
   this->port = port;
   this->ssl = ssl;
   this->sslclient = sslclient;
+  this->ipv6 = ipv6;
 }
 
-void ConnStateTracker::setTransfer(const std::string & file, bool fxp, bool ssl, bool sslclient) {
-  setTransfer(file, fxp, true, "", 0, ssl, sslclient);
+void ConnStateTracker::setTransfer(const std::string& file, bool fxp, bool ipv6, bool ssl, bool sslclient) {
+  setTransfer(file, fxp, ipv6, true, "", 0, ssl, sslclient);
 }
 
-void ConnStateTracker::setTransfer(const std::string & file, bool fxp, const std::string & host, int port, bool ssl, bool sslclient) {
-  setTransfer(file, fxp, false, host, port, ssl, sslclient);
+void ConnStateTracker::setTransfer(const std::string& file, bool fxp, bool ipv6, const std::string& host, int port, bool ssl, bool sslclient) {
+  setTransfer(file, fxp, ipv6, false, host, port, ssl, sslclient);
 }
 
-void ConnStateTracker::setList(TransferMonitor * tm, bool listpassive, const std::string & host, int port, bool ssl) {
+void ConnStateTracker::setList(TransferMonitor* tm, bool ipv6, bool listpassive, const std::string& host, int port, bool ssl) {
   assert(!transferlocked);
   assert(!listtransfer);
   assert(!transfer);
@@ -136,14 +137,15 @@ void ConnStateTracker::setList(TransferMonitor * tm, bool listpassive, const std
   this->listhost = host;
   this->listport = port;
   this->listssl = ssl;
+  this->listipv6 = ipv6;
 }
 
-void ConnStateTracker::setList(TransferMonitor * tm, bool ssl) {
-  setList(tm, true, "", 0, ssl);
+void ConnStateTracker::setList(TransferMonitor* tm, bool ipv6, bool ssl) {
+  setList(tm, ipv6, true, "", 0, ssl);
 }
 
-void ConnStateTracker::setList(TransferMonitor * tm, const std::string & host, int port, bool ssl) {
-  setList(tm, false, host, port, ssl);
+void ConnStateTracker::setList(TransferMonitor* tm, bool ipv6, const std::string & host, int port, bool ssl) {
+  setList(tm, ipv6, false, host, port, ssl);
 }
 
 bool ConnStateTracker::isLoggedIn() const {
@@ -244,6 +246,13 @@ bool ConnStateTracker::getTransferSSL() const {
     return listssl;
   }
   return ssl;
+}
+
+bool ConnStateTracker::getTransferIPv6() const {
+  if (listtransfer) {
+    return listipv6;
+  }
+  return ipv6;
 }
 
 bool ConnStateTracker::getTransferSSLClient() const {

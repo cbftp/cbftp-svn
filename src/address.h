@@ -6,7 +6,7 @@
 
 struct Address {
   Address();
-  std::string toString() const;
+  std::string toString(bool includeaddrfam = true) const;
   bool operator==(const Address& other) const;
   Core::AddressFamily addrfam;
   bool brackets;

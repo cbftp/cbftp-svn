@@ -11,6 +11,7 @@
 #include "localpathinfo.h"
 #include "localfile.h"
 #include "localstoragerequestdata.h"
+#include "transferprotocol.h"
 
 class LocalTransfer;
 class LocalDownload;
@@ -25,13 +26,13 @@ class LocalStorage : public Core::EventReceiver {
 public:
   LocalStorage();
   ~LocalStorage();
-  LocalTransfer * passiveModeDownload(TransferMonitor *, const std::string &, const std::string &, int, bool, FTPConn *);
-  LocalTransfer * passiveModeDownload(TransferMonitor *, const Path &, const std::string &, const std::string &, int, bool, FTPConn *);
-  LocalTransfer * passiveModeDownload(TransferMonitor *, const std::string &, int, bool, FTPConn *);
-  LocalTransfer * passiveModeUpload(TransferMonitor *, const Path &, const std::string &, const std::string &, int, bool, FTPConn *);
-  LocalTransfer * activeModeDownload(TransferMonitor *, const Path &, const std::string &, bool, FTPConn *);
-  LocalTransfer * activeModeDownload(TransferMonitor *, bool, FTPConn *);
-  LocalTransfer * activeModeUpload(TransferMonitor *, const Path &, const std::string &, bool, FTPConn *);
+  LocalTransfer * passiveModeDownload(TransferMonitor* tm, const std::string& file, bool ipv6, const std::string& host, int port, bool ssl, FTPConn* ftpconn);
+  LocalTransfer * passiveModeDownload(TransferMonitor* tm, const Path& path, const std::string & file, bool ipv6, const std::string & host, int port, bool ssl, FTPConn* ftpconn);
+  LocalTransfer * passiveModeDownload(TransferMonitor* tm, bool ipv6, const std::string& host, int port, bool ssl, FTPConn* ftpconn);
+  LocalTransfer * passiveModeUpload(TransferMonitor* tm, const Path& path, const std::string& file, bool ipv6, const std::string& host, int port, bool ssl, FTPConn* ftpconn);
+  LocalTransfer * activeModeDownload(TransferMonitor* tm, const Path& path, const std::string& file, bool ipv6, bool ssl, FTPConn* ftpconn);
+  LocalTransfer * activeModeDownload(TransferMonitor* tm, bool ipv6, bool ssl, FTPConn* ftpconn);
+  LocalTransfer * activeModeUpload(TransferMonitor* tm, const Path& path, const std::string& file, bool ipv6, bool ssl, FTPConn* ftpconn);
   Core::BinaryData getTempFileContent(const std::string &) const;
   Core::BinaryData getFileContent(const Path &) const;
   const Core::BinaryData & getStoreContent(int) const;
@@ -59,15 +60,20 @@ public:
   void asyncTaskComplete(int type, void * data);
   unsigned long long int getFileSize(const Path &);
   bool getUseActiveModeAddress() const;
-  const std::string & getActiveModeAddress() const;
+  const std::string& getActiveModeAddress4() const;
+  const std::string& getActiveModeAddress6() const;
   int getActivePortFirst() const;
   int getActivePortLast() const;
   void setUseActiveModeAddress(bool);
-  void setActiveModeAddress(const std::string &);
+  void setActiveModeAddress4(const std::string& address);
+  void setActiveModeAddress6(const std::string& address);
   void setActivePortFirst(int);
   void setActivePortLast(int);
   int getNextActivePort();
-  std::string getAddress(LocalTransfer *) const;
+  std::string getAddress4(LocalTransfer* lt) const;
+  std::string getAddress6(LocalTransfer* lt) const;
+  TransferProtocol getTransferProtocol() const;
+  void setTransferProtocol(TransferProtocol protocol);
   void executeAsyncRequest(LocalStorageRequestData * data);
 private:
   void deleteRequestData(LocalStorageRequestData * reqdata);
@@ -82,9 +88,11 @@ private:
   Path downloadpath;
   int storeidcounter;
   bool useactivemodeaddress;
-  std::string activemodeaddress;
+  std::string activemodeaddress4;
+  std::string activemodeaddress6;
   int activeportfirst;
   int activeportlast;
   int currentactiveport;
   int requestidcounter;
+  TransferProtocol transferprotocol;
 };

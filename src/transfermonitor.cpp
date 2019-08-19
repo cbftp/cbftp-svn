@@ -21,6 +21,7 @@
 #include "localdownload.h"
 #include "filesystem.h"
 #include "statistics.h"
+#include "transferprotocol.h"
 
 // max time to wait for the other site to fail after a failure has happened
 // before a hard disconnect occurs, in ms
@@ -97,6 +98,7 @@ void TransferMonitor::engageFXP(
       sourcesslclient = !sourcesslclient;
     }
   }
+  ipv6 = useIPv6(sls->getSite()->getTransferProtocol(), sld->getSite()->getTransferProtocol());
   fld->touchFile(dfile, sld->getSite()->getUser(), true);
   latestsrctouch = fls->getFile(sfile)->getTouch();
   latestdsttouch = fld->getFile(dfile)->getTouch();
@@ -108,10 +110,10 @@ void TransferMonitor::engageFXP(
       sls->getSite()->getAverageSpeed(sld->getSite()->getName()), src, dst, ssl, fxpdstactive);
   tm->addNewTransferStatus(ts);
   if (fxpdstactive) {
-    sls->preparePassiveTransfer(src, sfile, true, ssl, sourcesslclient);
+    sls->preparePassiveTransfer(src, sfile, true, ipv6, ssl, sourcesslclient);
   }
   else {
-    sld->preparePassiveTransfer(dst, dfile, true, ssl, !sourcesslclient);
+    sld->preparePassiveTransfer(dst, dfile, true, ipv6, ssl, !sourcesslclient);
   }
 
 
@@ -138,6 +140,7 @@ void TransferMonitor::engageDownload(
   if (spol == SITE_SSL_ALWAYS_ON || spol == SITE_SSL_PREFER_ON) {
     ssl = true;
   }
+  ipv6 = useIPv6(sls->getSite()->getTransferProtocol(), global->getLocalStorage()->getTransferProtocol());
   localfl->touchFile(dfile);
   if (!FileSystem::directoryExistsWritable(dpath)) {
     FileSystem::createDirectoryRecursive(dpath);
@@ -155,11 +158,11 @@ void TransferMonitor::engageDownload(
     return;
   }
   if (clientactive) {
-    sls->preparePassiveTransfer(src, sfile, false, ssl);
+    sls->preparePassiveTransfer(src, sfile, false, ipv6, ssl);
   }
   else {
-    lt = global->getLocalStorage()->activeModeDownload(this, dpath, dfile, ssl, sls->getConn(src));
-    passiveReady(global->getLocalStorage()->getAddress(lt), lt->getPort());
+    lt = global->getLocalStorage()->activeModeDownload(this, dpath, dfile, ipv6, ssl, sls->getConn(src));
+    passiveReady(ipv6 ? global->getLocalStorage()->getAddress6(lt) : global->getLocalStorage()->getAddress4(lt), lt->getPort());
   }
 }
 
@@ -187,6 +190,7 @@ void TransferMonitor::engageUpload(
   if (spol == SITE_SSL_ALWAYS_ON || spol == SITE_SSL_PREFER_ON) {
     ssl = true;
   }
+  ipv6 = useIPv6(global->getLocalStorage()->getTransferProtocol(), sld->getSite()->getTransferProtocol());
   fld->touchFile(dfile, sld->getSite()->getUser(), true);
   clientactive = !sld->getSite()->hasBrokenPASV();
   ts = std::make_shared<TransferStatus>(TRANSFERSTATUS_TYPE_UPLOAD,
@@ -201,16 +205,16 @@ void TransferMonitor::engageUpload(
     return;
   }
   if (clientactive) {
-    sld->preparePassiveTransfer(dst, dfile, false, ssl);
+    sld->preparePassiveTransfer(dst, dfile, false, ipv6, ssl);
   }
   else {
-    lt = global->getLocalStorage()->activeModeUpload(this, spath, sfile, ssl, sld->getConn(dst));
-    passiveReady(global->getLocalStorage()->getAddress(lt), lt->getPort());
+    lt = global->getLocalStorage()->activeModeUpload(this, spath, sfile, ipv6, ssl, sld->getConn(dst));
+    passiveReady(ipv6 ? global->getLocalStorage()->getAddress6(lt) : global->getLocalStorage()->getAddress4(lt), lt->getPort());
   }
 }
 
 void TransferMonitor::engageList(const std::shared_ptr<SiteLogic> & sls, int connid,
-  bool hiddenfiles, FileList * fl, const std::shared_ptr<CommandOwner> & co)
+  bool hiddenfiles, FileList * fl, const std::shared_ptr<CommandOwner> & co, bool ipv6)
 {
   reset();
   type = TM_TYPE_LIST;
@@ -220,15 +224,17 @@ void TransferMonitor::engageList(const std::shared_ptr<SiteLogic> & sls, int con
   src = connid;
   this->hiddenfiles = hiddenfiles;
   ssl = sls->getSite()->getTLSMode() != TLSMode::NONE;
+  this->ipv6 = ipv6;
   status = TM_STATUS_AWAITING_PASSIVE;
   if (!sls->getSite()->hasBrokenPASV()) {
-    sls->preparePassiveList(src, this, ssl);
+    sls->preparePassiveList(src, this, ipv6, ssl);
   }
   else {
     clientactive = false;
-    lt = global->getLocalStorage()->activeModeDownload(this, ssl, sls->getConn(src));
+    lt = global->getLocalStorage()->activeModeDownload(this, ipv6, ssl, sls->getConn(src));
     storeid = static_cast<LocalDownload *>(lt)->getStoreId();
-    passiveReady(global->getLocalStorage()->getAddress(lt), lt->getPort());
+    passiveReady((ipv6 ? global->getLocalStorage()->getAddress6(lt) : global->getLocalStorage()->getAddress4(lt)),
+                 lt->getPort());
   }
 }
 
@@ -252,8 +258,8 @@ void TransferMonitor::tick(int msg) {
 
 void TransferMonitor::passiveReady(const std::string & host, int port) {
   assert(status == TM_STATUS_AWAITING_PASSIVE ||
-               status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
-               status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET);
+         status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
+         status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET);
   if (status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE) {
     sourceError(TM_ERR_OTHER);
     sls->returnConn(src, type != TM_TYPE_LIST);
@@ -266,40 +272,40 @@ void TransferMonitor::passiveReady(const std::string & host, int port) {
   }
   status = TM_STATUS_AWAITING_ACTIVE;
   if (!!ts) {
-    ts->setPassiveAddress(host + ":" + std::to_string(port));
+    ts->setPassiveAddress((ipv6 ? "[" + host + "]" : host) + ":" + std::to_string(port));
   }
   switch (type) {
     case TM_TYPE_FXP:
       if (fxpdstactive) {
-        sld->prepareActiveTransfer(dst, dfile, true, host, port, ssl, !sourcesslclient);
+        sld->prepareActiveTransfer(dst, dfile, true, ipv6, host, port, ssl, !sourcesslclient);
       }
       else {
-        sls->prepareActiveTransfer(src, sfile, true, host, port, ssl, sourcesslclient);
+        sls->prepareActiveTransfer(src, sfile, true, ipv6, host, port, ssl, sourcesslclient);
       }
       break;
     case TM_TYPE_DOWNLOAD:
       if (clientactive) {
-        lt = global->getLocalStorage()->passiveModeDownload(this, dpath, dfile, host, port, ssl, sls->getConn(src));
+        lt = global->getLocalStorage()->passiveModeDownload(this, dpath, dfile, ipv6, host, port, ssl, sls->getConn(src));
       }
       else {
-        sls->prepareActiveTransfer(src, sfile, false, host, port, ssl);
+        sls->prepareActiveTransfer(src, sfile, false, ipv6, host, port, ssl);
       }
       break;
     case TM_TYPE_UPLOAD:
       if (clientactive) {
-        lt = global->getLocalStorage()->passiveModeUpload(this, spath, sfile, host, port, ssl, sld->getConn(dst));
+        lt = global->getLocalStorage()->passiveModeUpload(this, spath, sfile, ipv6, host, port, ssl, sld->getConn(dst));
       }
       else {
-        sld->prepareActiveTransfer(dst, dfile, false, host, port, ssl);
+        sld->prepareActiveTransfer(dst, dfile, false, ipv6, host, port, ssl);
       }
       break;
     case TM_TYPE_LIST:
       if (clientactive) {
-        lt = global->getLocalStorage()->passiveModeDownload(this, host, port, ssl, sls->getConn(src));
+        lt = global->getLocalStorage()->passiveModeDownload(this, ipv6, host, port, ssl, sls->getConn(src));
         storeid = static_cast<LocalDownload *>(lt)->getStoreId();
       }
       else {
-        sls->prepareActiveList(src, this, host, port, ssl);
+        sls->prepareActiveList(src, this, ipv6, host, port, ssl);
       }
       break;
   }
@@ -307,8 +313,8 @@ void TransferMonitor::passiveReady(const std::string & host, int port) {
 
 void TransferMonitor::activeReady() {
   assert(status == TM_STATUS_AWAITING_ACTIVE ||
-               status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
-               status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET);
+         status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
+         status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET);
   if (status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE) {
     sourceError(TM_ERR_OTHER);
     sls->returnConn(src, type != TM_TYPE_LIST);
@@ -334,8 +340,8 @@ void TransferMonitor::activeReady() {
 
 void TransferMonitor::activeStarted() {
   assert(status == TM_STATUS_AWAITING_ACTIVE ||
-               status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
-               status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET);
+         status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
+         status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET);
   if (status == TM_STATUS_AWAITING_ACTIVE) {
     status = TM_STATUS_TRANSFERRING;
     if (type == TM_TYPE_FXP) {
@@ -384,8 +390,8 @@ void TransferMonitor::startClientTransfer() {
 
 void TransferMonitor::sourceComplete() {
   assert(status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
-               status == TM_STATUS_TRANSFERRING ||
-               status == TM_STATUS_TRANSFERRING_TARGET_COMPLETE);
+         status == TM_STATUS_TRANSFERRING ||
+         status == TM_STATUS_TRANSFERRING_TARGET_COMPLETE);
   partialcompletestamp = timestamp;
   if (fls != NULL) {
     fls->finishDownload(sfile);
@@ -403,8 +409,8 @@ void TransferMonitor::sourceComplete() {
 
 void TransferMonitor::targetComplete() {
   assert(status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET ||
-               status == TM_STATUS_TRANSFERRING ||
-               status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE);
+         status == TM_STATUS_TRANSFERRING ||
+         status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE);
   partialcompletestamp = timestamp;
   if (fld != NULL) {
     fld->finishUpload(dfile);
@@ -474,10 +480,10 @@ void TransferMonitor::finish() {
 
 void TransferMonitor::sourceError(TransferError err) {
   assert(status == TM_STATUS_AWAITING_ACTIVE ||
-               status == TM_STATUS_AWAITING_PASSIVE ||
-               status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
-               status == TM_STATUS_TRANSFERRING ||
-               status == TM_STATUS_TRANSFERRING_TARGET_COMPLETE);
+         status == TM_STATUS_AWAITING_PASSIVE ||
+         status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
+         status == TM_STATUS_TRANSFERRING ||
+         status == TM_STATUS_TRANSFERRING_TARGET_COMPLETE);
   if (fls != NULL) {
     fls->finishDownload(sfile);
   }
@@ -503,10 +509,10 @@ void TransferMonitor::sourceError(TransferError err) {
 
 void TransferMonitor::targetError(TransferError err) {
   assert(status == TM_STATUS_AWAITING_ACTIVE ||
-               status == TM_STATUS_AWAITING_PASSIVE ||
-               status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET ||
-               status == TM_STATUS_TRANSFERRING ||
-               status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE);
+         status == TM_STATUS_AWAITING_PASSIVE ||
+         status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET ||
+         status == TM_STATUS_TRANSFERRING ||
+         status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE);
   if (fld != NULL) {
     if  (err != TM_ERR_DUPE) {
       fld->removeFile(dfile);

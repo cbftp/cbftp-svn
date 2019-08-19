@@ -42,6 +42,7 @@ private:
   unsigned int databufpos;
   int databufcode;
   Address addr;
+  Address resolvedaddr;
   Proxy * proxy;
   bool primary;
   bool engaged;

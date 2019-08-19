@@ -5,62 +5,66 @@
 #include <string>
 
 #include "core/eventreceiver.h"
+#include "address.h"
 #include "ftpconnectowner.h"
 #include "path.h"
 
-enum FTPConnState {
-  STATE_DISCONNECTED,
-  STATE_CONNECTING,
-  STATE_AUTH_TLS,
-  STATE_USER,
-  STATE_PASS,
-  STATE_LOGIN,
-  STATE_STAT,
-  STATE_PWD,
-  STATE_PROT_P,
-  STATE_PROT_C,
-  STATE_RAW,
-  STATE_CPSV,
-  STATE_PASV,
-  STATE_PORT,
-  STATE_CWD,
-  STATE_MKD,
-  STATE_PRET_RETR,
-  STATE_PRET_STOR,
-  STATE_RETR,
-  STATE_RETR_COMPLETE,
-  STATE_STOR,
-  STATE_STOR_COMPLETE,
-  STATE_ABOR,
-  STATE_QUIT,
-  STATE_USER_LOGINKILL,
-  STATE_PASS_LOGINKILL,
-  STATE_WIPE,
-  STATE_DELE,
-  STATE_RMD,
-  STATE_NUKE,
-  STATE_LIST,
-  STATE_PRET_LIST,
-  STATE_LIST_COMPLETE,
-  STATE_SSCN_ON,
-  STATE_SSCN_OFF,
-  STATE_SSL_HANDSHAKE,
-  STATE_PASV_ABORT,
-  STATE_PBSZ,
-  STATE_TYPEI,
-  STATE_XDUPE,
-  STATE_IDLE
-};
-
-enum ProtMode {
-  PROT_UNSET,
+enum class FTPConnState {
+  DISCONNECTED,
+  CONNECTING,
+  AUTH_TLS,
+  USER,
+  PASS,
+  LOGIN,
+  STAT,
+  PWD,
+  PROT_P,
   PROT_C,
-  PROT_P
+  RAW,
+  CPSV,
+  PASV,
+  PORT,
+  EPSV,
+  EPRT,
+  CEPR_ON,
+  CWD,
+  MKD,
+  PRET_RETR,
+  PRET_STOR,
+  RETR,
+  RETR_COMPLETE,
+  STOR,
+  STOR_COMPLETE,
+  ABOR,
+  QUIT,
+  USER_LOGINKILL,
+  PASS_LOGINKILL,
+  WIPE,
+  DELE,
+  RMD,
+  NUKE,
+  LIST,
+  PRET_LIST,
+  LIST_COMPLETE,
+  SSCN_ON,
+  SSCN_OFF,
+  SSL_HANDSHAKE,
+  PASV_ABORT,
+  PBSZ,
+  TYPEI,
+  XDUPE,
+  IDLE
 };
 
-enum FailureType {
-  FAIL_UNDEFINED,
-  FAIL_DUPE
+enum class ProtMode {
+  UNSET,
+  C,
+  P
+};
+
+enum class FailureType {
+  UNDEFINED,
+  DUPE
 };
 
 namespace Core {
@@ -105,6 +109,7 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     Path currentpath;
     ProtMode protectedmode;
     bool sscnmode;
+    bool ceprenabled;
     Path targetpath;
     bool mkdtarget;
     Path mkdsect;
@@ -118,6 +123,7 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     bool xduperun;
     bool typeirun;
     bool cleanlyclosed;
+    Address connectedaddr;
     void AUTHTLSResponse();
     void USERResponse();
     void PASSResponse();
@@ -129,6 +135,9 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     void CPSVResponse();
     void PASVResponse();
     void PORTResponse();
+    void EPSVResponse();
+    void EPRTResponse();
+    void CEPRONResponse();
     void CWDResponse();
     void MKDResponse();
     void PRETRETRResponse();
@@ -195,7 +204,10 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     void doSSCN(bool);
     void doCPSV();
     void doPASV();
-    void doPORT(const std::string &, int);
+    void doEPSV();
+    void doEPRT(const std::string& host, int port);
+    void doPORT(const std::string& host, int port);
+    void doCEPRON();
     void doCWD(const Path &, const std::shared_ptr<CommandOwner> & co = std::shared_ptr<CommandOwner>());
     void doCWD(FileList *, const std::shared_ptr<CommandOwner> & co = std::shared_ptr<CommandOwner>());
     void doMKD(const Path &, const std::shared_ptr<CommandOwner> & co = std::shared_ptr<CommandOwner>());
@@ -215,8 +227,12 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     FTPConnState getState() const;
     std::string getConnectedAddress() const;
     std::string getInterfaceAddress() const;
+    std::string getInterfaceAddress4() const;
+    std::string getInterfaceAddress6() const;
+    bool isIPv6() const;
     ProtMode getProtectedMode() const;
     bool getSSCNMode() const;
+    bool getCEPREnabled() const;
     void setMKDCWDTarget(const Path &, const Path &);
     bool hasMKDCWDTarget() const;
     const Path & getTargetPath() const;
@@ -234,9 +250,9 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     void FDSSLSuccess(int, const std::string &);
     void FDSSLFail(int);
     void printCipher(const std::string &);
-    void ftpConnectInfo(int, const std::string &);
-    void ftpConnectSuccess(int);
-    void ftpConnectFail(int);
+    void ftpConnectInfo(int id, const std::string& info);
+    void ftpConnectSuccess(int id, const Address& addr);
+    void ftpConnectFail(int id);
     void tick(int);
     FileList * currentFileList() const;
     const std::shared_ptr<CommandOwner> & currentCommandOwner() const;

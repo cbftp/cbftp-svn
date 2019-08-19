@@ -34,6 +34,7 @@ private:
   bool passive;
   bool ssl;
   bool sslclient;
+  bool ipv6;
   bool aborted;
   bool transferlocked;
   bool loggedin;
@@ -41,6 +42,7 @@ private:
   bool listtransfer;
   bool listpassive;
   bool listssl;
+  bool listipv6;
   bool listinitialized;
   bool quitting;
   std::string listhost;
@@ -51,8 +53,8 @@ private:
   int port;
   std::shared_ptr<RecursiveCommandLogic> recursivelogic;
   std::shared_ptr<SiteLogicRequest> request;
-  void setTransfer(const std::string &, bool, bool, const std::string &, int, bool, bool);
-  void setList(TransferMonitor *, bool, const std::string &, int, bool);
+  void setTransfer(const std::string& file, bool fxp, bool ipv6, bool passive, const std::string& host, int port, bool ssl, bool sslclient);
+  void setList(TransferMonitor* tm, bool ipv6, bool listpassive, const std::string& host, int port, bool ssl);
 public:
   ConnStateTracker();
   ~ConnStateTracker();
@@ -65,10 +67,10 @@ public:
   void purgeSiteRace(const std::shared_ptr<SiteRace> & sr);
   DelayedCommand & getCommand();
   void setDisconnected();
-  void setTransfer(const std::string &, bool, bool, bool);
-  void setTransfer(const std::string &, bool, const std::string &, int, bool, bool);
-  void setList(TransferMonitor *, bool);
-  void setList(TransferMonitor *, const std::string &, int, bool);
+  void setTransfer(const std::string& file, bool fxp, bool ipv6, bool ssl, bool sslclient);
+  void setTransfer(const std::string& file, bool fxp, bool ipv6, const std::string& host, int port, bool ssl, bool sslclient);
+  void setList(TransferMonitor* tm, bool ipv6, bool ssl);
+  void setList(TransferMonitor* tm, bool ipv6, const std::string & host, int port, bool ssl);
   bool hasTransfer() const;
   bool hasFileTransfer() const;
   void finishTransfer();
@@ -95,6 +97,7 @@ public:
   int getTransferType() const;
   bool getTransferPassive() const;
   bool getTransferSSL() const;
+  bool getTransferIPv6() const;
   bool getTransferSSLClient() const;
   bool getTransferFXP() const;
   std::string getTransferHost() const;

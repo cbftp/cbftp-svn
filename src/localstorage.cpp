@@ -1,5 +1,6 @@
 #include "localstorage.h"
 
+#include "core/iomanager.h"
 #include "core/workmanager.h"
 #include "localdownload.h"
 #include "localupload.h"
@@ -40,7 +41,8 @@ LocalStorage::LocalStorage() :
   activeportfirst(47500),
   activeportlast(47600),
   currentactiveport(activeportfirst),
-  requestidcounter(0)
+  requestidcounter(0),
+  transferprotocol(TransferProtocol::PREFER_IPV4)
 {
 
 }
@@ -49,37 +51,37 @@ LocalStorage::~LocalStorage() {
 
 }
 
-LocalTransfer * LocalStorage::passiveModeDownload(TransferMonitor * tm, const std::string & file, const std::string & host, int port, bool ssl, FTPConn * ftpconn) {
-  return passiveModeDownload(tm, temppath, file, host, port, ssl, ftpconn);
+LocalTransfer * LocalStorage::passiveModeDownload(TransferMonitor* tm, const std::string& file, bool ipv6, const std::string& host, int port, bool ssl, FTPConn* ftpconn) {
+  return passiveModeDownload(tm, temppath, file, ipv6, host, port, ssl, ftpconn);
 }
 
-LocalTransfer * LocalStorage::passiveModeDownload(TransferMonitor * tm, const Path & path, const std::string & file, const std::string & host, int port, bool ssl, FTPConn * ftpconn) {
-  LocalDownload * ld = getAvailableLocalDownload();
-  ld->engage(tm, path, file, host, port, ssl, ftpconn);
+LocalTransfer * LocalStorage::passiveModeDownload(TransferMonitor* tm, const Path& path, const std::string & file, bool ipv6, const std::string & host, int port, bool ssl, FTPConn* ftpconn) {
+  LocalDownload* ld = getAvailableLocalDownload();
+  ld->engage(tm, path, file, ipv6, host, port, ssl, ftpconn);
   return ld;
 }
 
-LocalTransfer * LocalStorage::passiveModeDownload(TransferMonitor * tm, const std::string & host, int port, bool ssl, FTPConn * ftpconn) {
+LocalTransfer * LocalStorage::passiveModeDownload(TransferMonitor* tm, bool ipv6, const std::string& host, int port, bool ssl, FTPConn* ftpconn) {
   int storeid = storeidcounter++;
-  LocalDownload * ld = getAvailableLocalDownload();
-  ld->engage(tm, storeid, host, port, ssl, ftpconn);
+  LocalDownload* ld = getAvailableLocalDownload();
+  ld->engage(tm, storeid, ipv6, host, port, ssl, ftpconn);
   return ld;
 }
 
-LocalTransfer * LocalStorage::passiveModeUpload(TransferMonitor * tm, const Path & path, const std::string & file, const std::string & host, int port, bool ssl, FTPConn * ftpconn) {
-  LocalUpload * lu = getAvailableLocalUpload();
-  lu->engage(tm, path, file, host, port, ssl, ftpconn);
+LocalTransfer * LocalStorage::passiveModeUpload(TransferMonitor* tm, const Path& path, const std::string& file, bool ipv6, const std::string& host, int port, bool ssl, FTPConn* ftpconn) {
+  LocalUpload* lu = getAvailableLocalUpload();
+  lu->engage(tm, path, file, ipv6, host, port, ssl, ftpconn);
   return lu;
 }
 
-LocalTransfer * LocalStorage::activeModeDownload(TransferMonitor * tm, const Path & path, const std::string & file, bool ssl, FTPConn * ftpconn) {
+LocalTransfer * LocalStorage::activeModeDownload(TransferMonitor* tm, const Path& path, const std::string& file, bool ipv6, bool ssl, FTPConn* ftpconn) {
   int startport = getNextActivePort();
   int port = startport;
   bool entered = false;
   while (!entered || port != startport) {
     entered = true;
-    LocalDownload * ld = getAvailableLocalDownload();
-    if (ld->engage(tm, path, file, port, ssl, ftpconn)) {
+    LocalDownload* ld = getAvailableLocalDownload();
+    if (ld->engage(tm, path, file, ipv6, port, ssl, ftpconn)) {
       return ld;
     }
     port = getNextActivePort();
@@ -88,15 +90,15 @@ LocalTransfer * LocalStorage::activeModeDownload(TransferMonitor * tm, const Pat
   return NULL;
 }
 
-LocalTransfer * LocalStorage::activeModeDownload(TransferMonitor * tm, bool ssl, FTPConn * ftpconn) {
+LocalTransfer * LocalStorage::activeModeDownload(TransferMonitor* tm, bool ipv6, bool ssl, FTPConn* ftpconn) {
   int storeid = storeidcounter++;
   int startport = getNextActivePort();
   int port = startport;
   bool entered = false;
   while (!entered || port != startport) {
     entered = true;
-    LocalDownload * ld = getAvailableLocalDownload();
-    if (ld->engage(tm, storeid, port, ssl, ftpconn)) {
+    LocalDownload* ld = getAvailableLocalDownload();
+    if (ld->engage(tm, storeid, ipv6, port, ssl, ftpconn)) {
       return ld;
     }
     port = getNextActivePort();
@@ -105,14 +107,14 @@ LocalTransfer * LocalStorage::activeModeDownload(TransferMonitor * tm, bool ssl,
   return NULL;
 }
 
-LocalTransfer * LocalStorage::activeModeUpload(TransferMonitor * tm, const Path & path, const std::string & file, bool ssl, FTPConn * ftpconn) {
+LocalTransfer * LocalStorage::activeModeUpload(TransferMonitor* tm, const Path& path, const std::string& file, bool ipv6, bool ssl, FTPConn* ftpconn) {
   int startport = getNextActivePort();
   int port = startport;
   bool entered = false;
   while (!entered || port != startport) {
     entered = true;
-    LocalUpload * lu = getAvailableLocalUpload();
-    if (lu->engage(tm, path, file, port, ssl, ftpconn)) {
+    LocalUpload* lu = getAvailableLocalUpload();
+    if (lu->engage(tm, path, file, ipv6, port, ssl, ftpconn)) {
       return lu;
     }
     port = getNextActivePort();
@@ -458,8 +460,12 @@ bool LocalStorage::getUseActiveModeAddress() const {
   return useactivemodeaddress;
 }
 
-const std::string & LocalStorage::getActiveModeAddress() const {
-  return activemodeaddress;
+const std::string & LocalStorage::getActiveModeAddress4() const {
+  return activemodeaddress4;
+}
+
+const std::string & LocalStorage::getActiveModeAddress6() const {
+  return activemodeaddress6;
 }
 
 int LocalStorage::getActivePortFirst() const {
@@ -474,8 +480,12 @@ void LocalStorage::setUseActiveModeAddress(bool val) {
   useactivemodeaddress = val;
 }
 
-void LocalStorage::setActiveModeAddress(const std::string & addr) {
-  activemodeaddress = addr;
+void LocalStorage::setActiveModeAddress4(const std::string& addr) {
+  activemodeaddress4 = addr;
+}
+
+void LocalStorage::setActiveModeAddress6(const std::string& addr) {
+  activemodeaddress6 = Core::IOManager::compactIPv6Address(addr);
 }
 
 void LocalStorage::setActivePortFirst(int port) {
@@ -494,6 +504,18 @@ int LocalStorage::getNextActivePort() {
   return port;
 }
 
-std::string LocalStorage::getAddress(LocalTransfer * lt) const {
-  return getUseActiveModeAddress() ? getActiveModeAddress() : lt->getConn()->getInterfaceAddress();
+std::string LocalStorage::getAddress4(LocalTransfer* lt) const {
+  return (getUseActiveModeAddress() && !getActiveModeAddress4().empty()) ? getActiveModeAddress4() : lt->getConn()->getInterfaceAddress4();
+}
+
+std::string LocalStorage::getAddress6(LocalTransfer* lt) const {
+  return (getUseActiveModeAddress() && !getActiveModeAddress6().empty()) ? getActiveModeAddress6() : lt->getConn()->getInterfaceAddress6();
+}
+
+TransferProtocol LocalStorage::getTransferProtocol() const {
+  return transferprotocol;
+}
+
+void LocalStorage::setTransferProtocol(TransferProtocol protocol) {
+  transferprotocol = protocol;
 }
