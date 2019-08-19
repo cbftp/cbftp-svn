@@ -64,6 +64,7 @@ class TransferMonitor : public Core::EventReceiver, public RawBufferCallback {
     bool fxpdstactive;
     bool ssl;
     bool sourcesslclient;
+    bool ipv6;
     TransferMonitorType type;
     int timestamp;
     int startstamp;
@@ -109,7 +110,7 @@ class TransferMonitor : public Core::EventReceiver, public RawBufferCallback {
     void engageUpload(const std::string &, const std::shared_ptr<LocalFileList> &,
       const std::shared_ptr<SiteLogic> &, FileList *, const std::shared_ptr<CommandOwner> &);
     void engageList(const std::shared_ptr<SiteLogic> &, int, bool, FileList *,
-        const std::shared_ptr<CommandOwner> &);
+        const std::shared_ptr<CommandOwner> &, bool ipv6);
     Status getStatus() const;
     bool willFail() const;
     void newRawBufferLine(const std::pair<std::string, std::string> &);

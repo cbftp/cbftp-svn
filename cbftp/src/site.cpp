@@ -7,6 +7,8 @@
 
 namespace {
 
+#define REPORT_LOGINS_IF_UNLIMITED 10
+
 Address parseAddress(std::string address) {
   Address addr;
   addr.addrfam = Core::AddressFamily::IPV4_IPV6;
@@ -77,8 +79,10 @@ Site::Site(const std::string & name) :
   listcommand(SITE_LIST_STAT),
   tlsmode(TLSMode::AUTH_TLS),
   ssltransfer(SITE_SSL_PREFER_OFF),
+  transferprotocol(TransferProtocol::IPV4_ONLY),
   sscnsupported(true),
   cpsvsupported(true),
+  ceprsupported(true),
   brokenpasv(false),
   disabled(false),
   allowupload(SITE_ALLOW_TRANSFER_YES),
@@ -115,8 +119,10 @@ Site::Site(const Site & other) {
   listcommand = other.listcommand;
   tlsmode = other.tlsmode;
   ssltransfer = other.ssltransfer;
+  transferprotocol = other.transferprotocol;
   sscnsupported = other.sscnsupported;
   cpsvsupported = other.cpsvsupported;
+  ceprsupported = other.ceprsupported;
   brokenpasv = other.brokenpasv;
   disabled = other.disabled;
   allowupload = other.allowupload;
@@ -302,6 +308,10 @@ TLSMode Site::getTLSMode() const {
   return tlsmode;
 }
 
+TransferProtocol Site::getTransferProtocol() const {
+  return transferprotocol;
+}
+
 int Site::getSSLTransferPolicy() const {
   return ssltransfer;
 }
@@ -342,12 +352,20 @@ bool Site::supportsCPSV() const {
   return cpsvsupported;
 }
 
+bool Site::supportsCEPR() const {
+  return ceprsupported;
+}
+
 void Site::setSupportsSSCN(bool supported) {
   sscnsupported = supported;
 }
 
 void Site::setSupportsCPSV(bool supported) {
   cpsvsupported = supported;
+}
+
+void Site::setSupportsCEPR(bool supported) {
+  ceprsupported = supported;
 }
 
 int Site::getListCommand() const {
@@ -360,6 +378,10 @@ void Site::setListCommand(int command) {
 
 void Site::setTLSMode(TLSMode mode) {
   tlsmode = mode;
+}
+
+void Site::setTransferProtocol(TransferProtocol protocol) {
+  transferprotocol = protocol;
 }
 
 bool Site::getDisabled() const {

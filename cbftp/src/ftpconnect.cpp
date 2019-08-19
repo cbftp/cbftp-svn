@@ -22,6 +22,7 @@ FTPConnect::FTPConnect(int id, FTPConnectOwner * owner, const Address& addr, Pro
   databuf((char *) malloc(databuflen)),
   databufpos(0),
   addr(addr),
+  resolvedaddr(addr),
   proxy(proxy),
   primary(primary),
   engaged(true),
@@ -63,12 +64,9 @@ FTPConnect::~FTPConnect() {
 }
 
 void FTPConnect::FDConnecting(int sockid, const std::string & addr) {
-  Address newaddr = this->addr;
-  newaddr.host = addr;
-  if (addr.find(":") != std::string::npos) {
-    newaddr.brackets = true;
-  }
-  printConnecting(newaddr, true);
+  resolvedaddr.host = addr;
+  resolvedaddr.brackets = addr.find(":") != std::string::npos && resolvedaddr.port != 21;
+  printConnecting(resolvedaddr, true);
 
 }
 
@@ -76,12 +74,12 @@ void FTPConnect::printConnecting(const Address& addr, bool resolved) {
   if (!engaged) {
     return;
   }
-  std::string out = "[" + this->addr.toString() + "][Connecting ";
+  std::string out = "[" + this->addr.toString() + "][Connecting";
   if (proxynegotiation) {
-    out += "to proxy " + addr.toString() + "]";
+    out += " to proxy " + addr.toString() + "]";
   }
   else if (resolved) {
-    out += "to " + addr.toString() + "]";
+    out += " to " + addr.toString(false) + "]";
   }
   else {
     out += "]";
@@ -121,7 +119,7 @@ void FTPConnect::FDData(int sockid, char * data, unsigned int datalen) {
     if (FTPConn::parseData(data, datalen, &databuf, databuflen, databufpos, databufcode)) {
       if (databufcode == 220) {
         welcomereceived = true;
-        owner->ftpConnectSuccess(id);
+        owner->ftpConnectSuccess(id, resolvedaddr);
       }
       else {
         owner->ftpConnectInfo(id, "[" + addr.toString() + "][Unknown response]");

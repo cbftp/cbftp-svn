@@ -12,8 +12,7 @@
 #include "skiplist.h"
 #include "statistics.h"
 #include "hourlyalltracking.h"
-
-#define REPORT_LOGINS_IF_UNLIMITED 10
+#include "transferprotocol.h"
 
 #define SITE_PROXY_GLOBAL 820
 #define SITE_PROXY_NONE 821
@@ -69,8 +68,10 @@ private:
   int listcommand;
   TLSMode tlsmode;
   int ssltransfer;
+  TransferProtocol transferprotocol;
   bool sscnsupported;
   bool cpsvsupported;
+  bool ceprsupported;
   bool brokenpasv;
   bool disabled;
   SiteAllowTransfer allowupload;
@@ -135,17 +136,21 @@ public:
   int getSSLTransferPolicy() const;
   int getListCommand() const;
   TLSMode getTLSMode() const;
+  TransferProtocol getTransferProtocol() const;
   void setSSLTransferPolicy(int);
+  void setTransferProtocol(TransferProtocol protocol);
   void setListCommand(int);
   SitePriority getPriority() const;
   static std::string getPriorityText(SitePriority priority);
   void setPriority(SitePriority priority);
   bool hasBrokenPASV() const;
-  void setBrokenPASV(bool);
+  void setBrokenPASV(bool val);
   bool supportsSSCN() const;
   bool supportsCPSV() const;
-  void setSupportsSSCN(bool);
-  void setSupportsCPSV(bool);
+  bool supportsCEPR() const;
+  void setSupportsSSCN(bool supported);
+  void setSupportsCPSV(bool supported);
+  void setSupportsCEPR(bool supported);
   bool getDisabled() const;
   SiteAllowTransfer getAllowUpload() const;
   SiteAllowTransfer getAllowDownload() const;

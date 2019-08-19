@@ -34,6 +34,7 @@
 #include "preparedrace.h"
 #include "sitetransferjob.h"
 #include "sectionmanager.h"
+#include "transferprotocol.h"
 
 #define POKEINTERVAL 1000
 #define STATICTIMEFORCOMPLETION 5000
@@ -1568,11 +1569,22 @@ bool Engine::raceTransferPossible(const std::shared_ptr<SiteLogic> & sls, const 
   {
     return false;
   }
-  if (dstsite->getAllowUpload() == SITE_ALLOW_TRANSFER_NO) return false;
-  if (!srcsite->isAllowedTargetSite(dstsite)) return false;
-  if (dstsite->isAffiliated(race->getGroup()) && race->getProfile() != SPREAD_DISTRIBUTE) return false;
-  if (srcsite->hasBrokenPASV() &&
-      dstsite->hasBrokenPASV()) return false;
+  if (dstsite->getAllowUpload() == SITE_ALLOW_TRANSFER_NO) {
+    return false;
+  }
+  if (!srcsite->isAllowedTargetSite(dstsite)) {
+    return false;
+  }
+  if (dstsite->isAffiliated(race->getGroup()) && race->getProfile() != SPREAD_DISTRIBUTE) {
+    return false;
+  }
+  if (srcsite->hasBrokenPASV() && dstsite->hasBrokenPASV()) {
+    return false;
+  }
+  // protocol check
+  if (!transferProtocolCombinationPossible(srcsite->getTransferProtocol(), dstsite->getTransferProtocol())) {
+    return false;
+  }
   //ssl check
   int srcpolicy = srcsite->getSSLTransferPolicy();
   int dstpolicy = dstsite->getSSLTransferPolicy();
@@ -1583,7 +1595,7 @@ bool Engine::raceTransferPossible(const std::shared_ptr<SiteLogic> & sls, const 
   {
     return false;
   }
-  if (srcpolicy == SITE_SSL_ALWAYS_ON && dstpolicy == SITE_SSL_ALWAYS_ON &&
+  if ((srcpolicy == SITE_SSL_ALWAYS_ON || dstpolicy == SITE_SSL_ALWAYS_ON) &&
       !srcsite->supportsSSCN() && !dstsite->supportsSSCN())
   {
     return false;

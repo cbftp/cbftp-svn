@@ -18,6 +18,7 @@ MAJOR FEATURES
 - Concurrency: Multiple jobs can run at the same time.
 - Encrypted data file with AES-256
 - SSL support (AUTH TLS) and SSLFXP support
+- IPv6 support and IPv6 FXP support
 - Remote commands for performing various tasks through UDP calls
 - Ncurses UI, runs in a terminal which makes cbftp highly flexible
 - Advanced skiplisting
@@ -385,6 +386,9 @@ Field summary:
 - Address: the hostname or IP address and port of your site. This field
   supports multiple values if a site has multiple entry addresses available,
   and they can be entered on the same line by separating them with spaces.
+- TLS mode: Whether the site should be connected to securely with TLS. Note
+  that not all FTP servers support this - it depends on the server whether it
+  works or not.
 - Username: The username that you use to login onto the site. For sites where
   you do not have a username, 'anonymous' should be entered.
 - Password: The password for your user on the site. If you do not have a user,
@@ -405,10 +409,8 @@ Field summary:
   - Download slots on transfer jobs: The number of download slots available
     for transfer jobs, and also the default number of slots to use when
     starting them.
-- AUTH SSL: Whether the site should be connected to securely with SSL. Note
-  that not all FTP servers support this - it depends on the server whether it
-  works or not.
-- SSL Transfers: The security behavior for transfers to/from this site.
+- TLS Transfers: The security behavior for transfers to/from this site.
+- Transfer protocol: Preferred/supported protocol IPv4/IPv6
 - List command: Which command the site should use to list directories.
   STAT -l is normally faster and better if it is available, but not all FTP
   servers support it.
@@ -416,6 +418,11 @@ Field summary:
   site, or changed into by default when performing raw commands.
 - Max idle time: The number of seconds that the site will stay connected
   before logging out if there's nothing to do.
+- CEPR supported: Custom Extended Passive Reply is an extension of the EPSV
+  command to make its response include the address to connect to. This setting
+  is required for IPv6 transfers to/from another address than the main site
+  address, for example when the site uses an FTP bouncer or when the transfer
+  protocol is different from the control connection protocol.
 - SSCN supported: SSCN is a special command used for SSL FXP transfers.
   Not all servers support this, but it should be enabled if it is supported.
 - CPSV supported: CPSV is a special command used for SSL FXP transfers.
@@ -466,15 +473,18 @@ Field summary:
 - Default network interface - The network interface that cbftp will bind to
   by default. Useful if you have multiple usable network interfaces, otherwise
   you can ignore this setting.
+- Local transfer protocol - Preferred/supported protocol IPv4/IPv6 for local
+  downloads/uploads and file lists (with LIST).
 - Active mode port range - The ports that cbftp will use for active mode
   connections. If you are behind a NAT gateway, you will need to forward
   those ports to your local machine in the gateway. Note that cbftp does not
   use active mode by default - only when a site has 'Broken PASV' enabled.
 - Use active mode address - see below
-- Active mode address - The address to report for active mode connections.
+- Active mode address IPv4 - The address to report for active mode connections.
   If you are behind a NAT gateway, you will need to set this to your external
   IP address (check whatismyip.com). Note that cbftp does not use active mode
   by default - only when a site has 'Broken PASV' enabled.
+- Active mode address IPv6 - same as above but for IPv6 transfers.
 - Enable remote commands - Whether or not to listen on UDP for remote
   commands.
 - Remote command UDP port - the UDP port to listen for remote commands on.
@@ -523,6 +533,13 @@ this readme, but most are quite self-explanatory with the help of the key
 binding information found in the legend bar. You can probably figure it out.
 
 FAQ
+
+Q: Why aren't my IPv6 transfers working?
+A: The site(s) or your local system may not be configured with working IPv6
+   connectivity, or the site(s) might not include an address in its EPSV
+   response. Make sure that CEPR is enabled and that the site responds with an
+   address in the EPSV command response, and that the address returned is
+   connectable.
 
 Q: What key should I press to do xyz?
 A: Check the legend bar at the bottom - most key bindings available in the

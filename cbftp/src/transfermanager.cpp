@@ -17,10 +17,10 @@ TransferManager::~TransferManager() {
 }
 
 void TransferManager::getFileList(
-  const std::shared_ptr<SiteLogic> & sl, int connid, bool hiddenfiles, FileList * fl, const std::shared_ptr<CommandOwner> & co)
+  const std::shared_ptr<SiteLogic> & sl, int connid, bool hiddenfiles, FileList * fl, bool ipv6, const std::shared_ptr<CommandOwner> & co)
 {
   std::shared_ptr<TransferMonitor> target = getAvailableTransferMonitor();
-  target->engageList(sl, connid, hiddenfiles, fl, co);
+  target->engageList(sl, connid, hiddenfiles, fl, co, ipv6);
 }
 
 std::shared_ptr<TransferStatus> TransferManager::suggestTransfer(

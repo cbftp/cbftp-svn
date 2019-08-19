@@ -26,6 +26,7 @@
 #include "engine.h"
 #include "hourlyalltracking.h"
 #include "sectionmanager.h"
+#include "transferprotocol.h"
 
 #define AUTO_SAVE_INTERVAL 600000 // 10 minutes
 
@@ -261,11 +262,22 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("downloadpath")) {
       global->getLocalStorage()->setDownloadPath(value);
     }
+    else if (!setting.compare("transferprotocol")) {
+      global->getLocalStorage()->setTransferProtocol(static_cast<TransferProtocol>(std::stoi(value)));
+    }
     else if (!setting.compare("useactivemodeaddr")) {
       if (!value.compare("true")) global->getLocalStorage()->setUseActiveModeAddress(true);
     }
+    // begin compatibility r1042
     else if (!setting.compare("activemodeaddr")) {
-      global->getLocalStorage()->setActiveModeAddress(value);
+      global->getLocalStorage()->setActiveModeAddress4(value);
+    }
+    // end compatibility r1042
+    else if (!setting.compare("activemodeaddr4")) {
+      global->getLocalStorage()->setActiveModeAddress4(value);
+    }
+    else if (!setting.compare("activemodeaddr6")) {
+      global->getLocalStorage()->setActiveModeAddress6(value);
     }
     else if (!setting.compare("activeportfirst")) {
       global->getLocalStorage()->setActivePortFirst(std::stoi(value));
@@ -329,11 +341,17 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("ssltransfer")) {
       site->setSSLTransferPolicy(std::stoi(value));
     }
+    else if (!setting.compare("transferprotocol")) {
+      site->setTransferProtocol(static_cast<TransferProtocol>(std::stoi(value)));
+    }
     else if (!setting.compare("sscn")) {
       if (!value.compare("false")) site->setSupportsSSCN(false);
     }
     else if (!setting.compare("cpsv")) {
       if (!value.compare("false")) site->setSupportsCPSV(false);
+    }
+    else if (!setting.compare("cepr")) {
+      if (!value.compare("false")) site->setSupportsCEPR(false);
     }
     else if (!setting.compare("listcommand")) {
       site->setListCommand(std::stoi(value));
@@ -710,8 +728,10 @@ void SettingsLoaderSaver::saveSettings() {
     std::string filetag = "LocalStorage";
     dfh->addOutputLine(filetag, "temppath=" + global->getLocalStorage()->getTempPath().toString());
     dfh->addOutputLine(filetag, "downloadpath=" + global->getLocalStorage()->getDownloadPath().toString());
+    dfh->addOutputLine(filetag, "transferprotocol=" + std::to_string(static_cast<int>(global->getLocalStorage()->getTransferProtocol())));
     if (global->getLocalStorage()->getUseActiveModeAddress()) dfh->addOutputLine(filetag, "useactivemodeaddr=true");
-    dfh->addOutputLine(filetag, "activemodeaddr=" + global->getLocalStorage()->getActiveModeAddress());
+    dfh->addOutputLine(filetag, "activemodeaddr4=" + global->getLocalStorage()->getActiveModeAddress4());
+    dfh->addOutputLine(filetag, "activemodeaddr6=" + global->getLocalStorage()->getActiveModeAddress6());
     dfh->addOutputLine(filetag, "activeportfirst=" + std::to_string(global->getLocalStorage()->getActivePortFirst()));
     dfh->addOutputLine(filetag, "activeportlast=" + std::to_string(global->getLocalStorage()->getActivePortLast()));
   }
@@ -736,8 +756,10 @@ void SettingsLoaderSaver::saveSettings() {
       dfh->addOutputLine(filetag, name + "$idletime=" + std::to_string(site->getMaxIdleTime()));
       dfh->addOutputLine(filetag, name + "$tlsmode=" + std::to_string(static_cast<int>(site->getTLSMode())));
       dfh->addOutputLine(filetag, name + "$ssltransfer=" + std::to_string(site->getSSLTransferPolicy()));
+      dfh->addOutputLine(filetag, name + "$transferprotocol=" + std::to_string(static_cast<int>(site->getTransferProtocol())));
       if (!site->supportsSSCN()) dfh->addOutputLine(filetag, name + "$sscn=false");
       if (!site->supportsCPSV()) dfh->addOutputLine(filetag, name + "$cpsv=false");
+      if (!site->supportsCEPR()) dfh->addOutputLine(filetag, name + "$cepr=false");
       dfh->addOutputLine(filetag, name + "$listcommand=" + std::to_string(site->getListCommand()));
       if (site->needsPRET()) dfh->addOutputLine(filetag, name + "$pret=true");
       if (site->forceBinaryMode()) dfh->addOutputLine(filetag, name + "$binary=true");

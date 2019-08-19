@@ -11,6 +11,7 @@
 #include "../../proxy.h"
 #include "../../util.h"
 #include "../../settingsloadersaver.h"
+#include "../../transferprotocol.h"
 
 #include "../ui.h"
 #include "../menuselectoptionelement.h"
@@ -92,31 +93,37 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   mso.addStringField(y, x, "name", "Name:", this->site->getName(), false, 10, 64);
   std::shared_ptr<MenuSelectOptionTextField> msotf = mso.addStringField(y++, x + 17, "addr", "Address:", this->site->getAddressesAsString(), false, 48, 512);
   msotf->setExtraLegendText("Multiple sets of address:port separated by space or semicolon");
-  mso.addStringField(y, x, "user", "Username:", this->site->getUser(), false, 14, 64);
-  mso.addStringField(y++, x + 25, "pass", "Password:", this->site->getPass(), true);
-  mso.addIntArrow(y, x, "logins", "Login slots:", this->site->getInternMaxLogins(), 0, 99);
-  mso.addIntArrow(y, x + 20, "maxup", "Upload slots:", this->site->getInternMaxUp(), 0, 99);
-  mso.addIntArrow(y++, x + 40, "maxdn", "Download slots:", this->site->getInternMaxDown(), 0, 99);
-  mso.addTextButtonNoContent(y++, x, "slots", "Advanced slot configuration...");
   std::shared_ptr<MenuSelectOptionTextArrow> tlsmode = mso.addTextArrow(y, x, "tlsmode", "TLS mode:");
   tlsmode->addOption("None", static_cast<int>(TLSMode::NONE));
   tlsmode->addOption("AUTH TLS", static_cast<int>(TLSMode::AUTH_TLS));
   tlsmode->addOption("Implicit", static_cast<int>(TLSMode::IMPLICIT));
   tlsmode->setOption(static_cast<int>(this->site->getTLSMode()));
-  std::shared_ptr<MenuSelectOptionTextArrow> sslfxp = mso.addTextArrow(y++, x + 24, "tlstransfer", "TLS transfers:");
+  mso.addStringField(y, x + 23, "user", "Username:", this->site->getUser(), false, 10, 64);
+  mso.addStringField(y++, x + 45, "pass", "Password:", this->site->getPass(), true, 22, 128);
+  mso.addIntArrow(y, x, "logins", "Login slots:", this->site->getInternMaxLogins(), 0, 99);
+  mso.addIntArrow(y, x + 20, "maxup", "Upload slots:", this->site->getInternMaxUp(), 0, 99);
+  mso.addIntArrow(y++, x + 40, "maxdn", "Download slots:", this->site->getInternMaxDown(), 0, 99);
+  mso.addTextButtonNoContent(y++, x, "slots", "Advanced slot configuration...");
+  std::shared_ptr<MenuSelectOptionTextArrow> sslfxp = mso.addTextArrow(y, x, "tlstransfer", "TLS transfers:");
   sslfxp->addOption("Always off", SITE_SSL_ALWAYS_OFF);
   sslfxp->addOption("Prefer off", SITE_SSL_PREFER_OFF);
   sslfxp->addOption("Prefer on", SITE_SSL_PREFER_ON);
   sslfxp->addOption("Always on", SITE_SSL_ALWAYS_ON);
   sslfxp->setOption(this->site->getSSLTransferPolicy());
+  std::shared_ptr<MenuSelectOptionTextArrow> transferproto = mso.addTextArrow(y++, x + 30, "transferprotocol", "Transfer protocol:");
+  transferproto->addOption("IPv4 only", static_cast<int>(TransferProtocol::IPV4_ONLY));
+  transferproto->addOption("Prefer IPv4", static_cast<int>(TransferProtocol::PREFER_IPV4));
+  transferproto->addOption("Prefer IPv6", static_cast<int>(TransferProtocol::PREFER_IPV6));
+  transferproto->addOption("IPv6 only", static_cast<int>(TransferProtocol::IPV6_ONLY));
+  transferproto->setOption(static_cast<int>(this->site->getTransferProtocol()));
   std::shared_ptr<MenuSelectOptionTextArrow> listcommand = mso.addTextArrow(y, x, "listcommand", "List command:");
   listcommand->addOption("STAT -l", SITE_LIST_STAT);
   listcommand->addOption("LIST", SITE_LIST_LIST);
   listcommand->setOption(this->site->getListCommand());
   mso.addStringField(y++, x + 26, "basepath", "Base path:", this->site->getBasePath().toString(), false, 40, 512);
-  mso.addStringField(y, x, "idletime", "Max idle time (s):", std::to_string(this->site->getMaxIdleTime()), false, 4);
-  mso.addCheckBox(y, x + 24, "sscn", "SSCN supported:", this->site->supportsSSCN());
-  mso.addCheckBox(y++, x + 45, "cpsv", "CPSV supported:", this->site->supportsCPSV());
+  mso.addCheckBox(y, x, "cepr", "CEPR supported:", this->site->supportsCEPR());
+  mso.addCheckBox(y, x + 21, "sscn", "SSCN supported:", this->site->supportsSSCN());
+  mso.addCheckBox(y++, x + 42, "cpsv", "CPSV supported:", this->site->supportsCPSV());
   mso.addCheckBox(y, x, "binary", "Force binary mode:", this->site->forceBinaryMode());
   mso.addCheckBox(y, x + 23, "brokenpasv", "Broken PASV:", this->site->hasBrokenPASV());
   std::shared_ptr<MenuSelectOptionTextArrow> useproxy = mso.addTextArrow(y++, x + 41, "useproxy", "Proxy:");
@@ -136,8 +143,9 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   if (proxytype == SITE_PROXY_USE) {
     useproxy->setOptionText(this->site->getProxy());
   }
-  mso.addCheckBox(y, x, "xdupe", "Use XDUPE:", this->site->useXDUPE());
-  mso.addCheckBox(y++, x + 23, "pret", "Needs PRET:", this->site->needsPRET());
+  mso.addStringField(y, x, "idletime", "Max idle time (s):", std::to_string(this->site->getMaxIdleTime()), false, 4);
+  mso.addCheckBox(y, x + 25, "xdupe", "Use XDUPE:", this->site->useXDUPE());
+  mso.addCheckBox(y++, x + 41, "pret", "Needs PRET:", this->site->needsPRET());
   mso.addTextButtonNoContent(y++, x, "skiplist", "Configure skiplist...");
   y++;
   mso.addCheckBox(y, x, "disabled", "Disabled:", this->site->getDisabled());
@@ -410,11 +418,17 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         else if (identifier == "tlstransfer") {
           site->setSSLTransferPolicy(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
         }
+        else if (identifier == "transferprotocol") {
+          site->setTransferProtocol(static_cast<TransferProtocol>(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData()));
+        }
         else if (identifier == "sscn") {
           site->setSupportsSSCN(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
         }
         else if (identifier == "cpsv") {
           site->setSupportsCPSV(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
+        }
+        else if (identifier == "cepr") {
+          site->setSupportsCEPR(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
         }
         else if (identifier == "listcommand") {
           site->setListCommand(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());

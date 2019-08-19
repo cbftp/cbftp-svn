@@ -8,6 +8,8 @@
 #include "../../localstorage.h"
 #include "../../settingsloadersaver.h"
 #include "../../engine.h"
+#include "../../transferprotocol.h"
+
 #include "../ui.h"
 #include "../focusablearea.h"
 #include "../menuselectoptioncheckbox.h"
@@ -55,12 +57,19 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
       defaultinterface->setOption(interfaceid - 1);
     }
   }
+  std::shared_ptr<MenuSelectOptionTextArrow> transferproto = mso.addTextArrow(y++, x, "transferprotocol", "Local transfer protocol:");
+  transferproto->addOption("IPv4 only", static_cast<int>(TransferProtocol::IPV4_ONLY));
+  transferproto->addOption("Prefer IPv4", static_cast<int>(TransferProtocol::PREFER_IPV4));
+  transferproto->addOption("Prefer IPv6", static_cast<int>(TransferProtocol::PREFER_IPV6));
+  transferproto->addOption("IPv6 only", static_cast<int>(TransferProtocol::IPV6_ONLY));
+  transferproto->setOption(static_cast<int>(ls->getTransferProtocol()));
   int firstport = ls->getActivePortFirst();
   int lastport = ls->getActivePortLast();
   std::string portrange = std::to_string(firstport) + ":" + std::to_string(lastport);
   mso.addStringField(y++, x, "activeportrange", "Active mode port range:", portrange, false, 11);
   mso.addCheckBox(y++, x, "useactiveaddress", "Use active mode address:", ls->getUseActiveModeAddress());
-  mso.addStringField(y++, x, "activeaddress", "Active mode address:", ls->getActiveModeAddress(), false, 64);
+  mso.addStringField(y++, x, "activeaddress4", "Active mode address IPv4:", ls->getActiveModeAddress4(), false, 64);
+  mso.addStringField(y++, x, "activeaddress6", "Active mode address IPv6:", ls->getActiveModeAddress6(), false, 64);
   y++;
   mso.addCheckBox(y++, x, "udpenable", "Enable remote commands:", rch->isEnabled());
   mso.addStringField(y++, x, "udpport", "Remote command UDP Port:", std::to_string(rch->getUDPPort()), false, 5);
@@ -227,11 +236,17 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
             ls->setActivePortLast(portlast);
           }
         }
+        else if (identifier == "transferprotocol") {
+          ls->setTransferProtocol(static_cast<TransferProtocol>(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData()));
+        }
         else if (identifier == "useactiveaddress") {
           ls->setUseActiveModeAddress(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
         }
-        else if (identifier == "activeaddress") {
-          ls->setActiveModeAddress(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
+        else if (identifier == "activeaddress4") {
+          ls->setActiveModeAddress4(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
+        }
+        else if (identifier == "activeaddress6") {
+          ls->setActiveModeAddress6(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "udpenable") {
           udpenable = std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData();

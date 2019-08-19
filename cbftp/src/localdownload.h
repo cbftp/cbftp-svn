@@ -7,22 +7,22 @@ class Path;
 
 class LocalDownload : public LocalTransfer {
 public:
-  LocalDownload(LocalStorage *);
-  void engage(TransferMonitor *, const Path &, const std::string &, const std::string &, int, bool, FTPConn *);
-  bool engage(TransferMonitor *, const Path &, const std::string &, int, bool, FTPConn *);
-  void engage(TransferMonitor *, int, const std::string &, int, bool, FTPConn *);
-  bool engage(TransferMonitor *, int, int, bool, FTPConn *);
-  void FDConnected(int);
-  void FDDisconnected(int);
-  void FDData(int, char *, unsigned int);
-  void FDSSLSuccess(int, const std::string &);
-  void FDSSLFail(int);
-  void FDFail(int, const std::string &);
+  LocalDownload(LocalStorage* ls);
+  void engage(TransferMonitor* tm, const Path& path, const std::string& filename, bool ipv6, const std::string& addr, int port, bool ssl, FTPConn* ftpconn);
+  bool engage(TransferMonitor* tm, const Path& path, const std::string& filename, bool ipv6, int port, bool ssl, FTPConn* ftpconn);
+  void engage(TransferMonitor* tm, int storeid, bool ipv6, const std::string& addr, int port, bool ssl, FTPConn* ftpconn);
+  bool engage(TransferMonitor* tm, int storeid, bool ipv6, int port, bool ssl, FTPConn* ftpconn);
+  void FDConnected(int sockid);
+  void FDDisconnected(int sockid);
+  void FDData(int sockid, char* data, unsigned int len);
+  void FDSSLSuccess(int sockid, const std::string& cipher);
+  void FDSSLFail(int sockid);
+  void FDFail(int sockid, const std::string& error);
   unsigned long long int size() const;
   int getStoreId() const;
 private:
-  void init(TransferMonitor *, FTPConn *, const Path &, const std::string &, bool, int, bool, int, bool);
-  void append(char *, unsigned int);
+  void init(TransferMonitor* tm, FTPConn* ftpconn, const Path& path, const std::string& filename, bool inmemory, int storeid, bool ssl, int port, bool passivemode);
+  void append(char* data, unsigned int datalen);
   int storeid;
   unsigned long long int filesize;
   unsigned int bufpos;

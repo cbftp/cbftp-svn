@@ -253,6 +253,24 @@ public:
      */
     std::string getInterfaceAddress(int sockid) const;
 
+    /* Return the local address of a socket, either IPv4 or IPv6.
+     * @param sockid: The socket identifier.
+     * @return: The local address
+     */
+    std::string getInterfaceAddress4(int sockid) const;
+
+    /* Return the IPv4 address of the interface that a socket is bound to.
+     * @param sockid: The socket identifier.
+     * @return: The local address
+     */
+    std::string getInterfaceAddress6(int sockid) const;
+
+    /* Return the IPv6 address of the interface that a socket is bound to.
+     * @param sockid: The socket identifier.
+     * @return: The address family
+     */
+    AddressFamily getAddressFamily(int sockid) const;
+
     /* Close a socket as soon as its send queue is emptied.
      * @param sockid: The socket identifier.
      */
@@ -314,9 +332,11 @@ public:
     std::string getDefaultInterface() const;
 
     /* List the available network interfaces
+     * @param ipv4: whether to include ipv4 addresses
+     * @param ipv6: whether to include ipv6 addresses
      * @return: list of interfaces
      */
-    std::list<std::pair<std::string, std::string> > listInterfaces();
+    std::list<std::pair<std::string, std::string> > listInterfaces(bool ipv4 = true, bool ipv6 = false);
 
     /* Set the default network interface
      * @param interface: the interface to set as default
@@ -327,13 +347,19 @@ public:
      * @param interface: The name of the interface
      * @return: the interface address
      */
-    std::string getInterfaceAddress(const std::string& interface);
+    std::string getInterfaceAddress(const std::string& interface) const;
 
     /* Return the IPv6 address of a given interface
      * @param interface: The name of the interface
      * @return: the interface address
      */
-    std::string getInterfaceAddress6(const std::string& interface);
+    std::string getInterfaceAddress6(const std::string& interface) const;
+
+    /* Return the same IPv6 address in a compact format.
+     * @param address: The long address
+     * @return: the shortened version
+     */
+    static std::string compactIPv6Address(const std::string& address);
 
     /* Used internally */
     void run();
@@ -364,6 +390,7 @@ private:
     void setPollWrite(SocketInfo& socketinfo);
     void unsetPoll(SocketInfo& socketinfo);
     void autoPause(SocketInfo& socketinfo);
+    std::string getInterfaceName(const std::string& address) const;
     Polling polling;
     Thread<IOManager> thread;
     mutable std::mutex socketinfomaplock;

@@ -13,34 +13,36 @@
 #include "localstorage.h"
 #include "path.h"
 
-LocalDownload::LocalDownload(LocalStorage * ls) :
+LocalDownload::LocalDownload(LocalStorage* ls) :
   ls(ls)
 {
 }
 
-void LocalDownload::engage(TransferMonitor * tm, const Path & path, const std::string & filename, const std::string & addr, int port, bool ssl, FTPConn * ftpconn) {
+void LocalDownload::engage(TransferMonitor* tm, const Path& path, const std::string& filename, bool ipv6, const std::string& addr, int port, bool ssl, FTPConn* ftpconn) {
   init(tm, ftpconn, path, filename, false, -1, ssl, port, true);
-  sockid = global->getIOManager()->registerTCPClientSocket(this, addr, port);
+  bool resolving;
+  sockid = global->getIOManager()->registerTCPClientSocket(this, addr, port, resolving, ipv6 ? Core::AddressFamily::IPV6 : Core::AddressFamily::IPV4);
 }
 
-bool LocalDownload::engage(TransferMonitor * tm, const Path & path, const std::string & filename, int port, bool ssl, FTPConn * ftpconn) {
+bool LocalDownload::engage(TransferMonitor* tm, const Path& path, const std::string& filename, bool ipv6, int port, bool ssl, FTPConn* ftpconn) {
   init(tm, ftpconn, path, filename, false, -1, ssl, port, false);
-  sockid = global->getIOManager()->registerTCPServerSocket(this, port);
+  sockid = global->getIOManager()->registerTCPServerSocket(this, port, ipv6 ? Core::AddressFamily::IPV6 : Core::AddressFamily::IPV4);
   return sockid != -1;
 }
 
-void LocalDownload::engage(TransferMonitor * tm, int storeid, const std::string & addr, int port, bool ssl, FTPConn * ftpconn) {
+void LocalDownload::engage(TransferMonitor* tm, int storeid, bool ipv6, const std::string& addr, int port, bool ssl, FTPConn* ftpconn) {
   init(tm, ftpconn, "", "", true, storeid, ssl, port, true);
-  sockid = global->getIOManager()->registerTCPClientSocket(this, addr, port);
+  bool resolving;
+  sockid = global->getIOManager()->registerTCPClientSocket(this, addr, port, resolving, ipv6 ? Core::AddressFamily::IPV6 : Core::AddressFamily::IPV4);
 }
 
-bool LocalDownload::engage(TransferMonitor * tm, int storeid, int port, bool ssl, FTPConn * ftpconn) {
+bool LocalDownload::engage(TransferMonitor* tm, int storeid, bool ipv6, int port, bool ssl, FTPConn* ftpconn) {
   init(tm, ftpconn, "", "", true, storeid, ssl, port, false);
-  sockid = global->getIOManager()->registerTCPServerSocket(this, port);
+  sockid = global->getIOManager()->registerTCPServerSocket(this, port, ipv6 ? Core::AddressFamily::IPV6 : Core::AddressFamily::IPV4);
   return sockid != -1;
 }
 
-void LocalDownload::init(TransferMonitor * tm, FTPConn * ftpconn, const Path & path, const std::string & filename, bool inmemory, int storeid, bool ssl, int port, bool passivemode) {
+void LocalDownload::init(TransferMonitor* tm, FTPConn* ftpconn, const Path& path, const std::string& filename, bool inmemory, int storeid, bool ssl, int port, bool passivemode) {
   this->tm = tm;
   this->ftpconn = ftpconn;
   this->path = path;
@@ -85,7 +87,7 @@ void LocalDownload::FDDisconnected(int sockid) {
   tm->targetComplete();
 }
 
-void LocalDownload::FDSSLSuccess(int sockid, const std::string & cipher) {
+void LocalDownload::FDSSLSuccess(int sockid, const std::string& cipher) {
   ftpconn->printCipher(cipher);
   bool sessionreused = global->getIOManager()->getSSLSessionReused(sockid);
   tm->sslDetails(cipher, sessionreused);
@@ -100,11 +102,11 @@ void LocalDownload::FDSSLFail(int sockid) {
   tm->targetError(TM_ERR_OTHER);
 }
 
-void LocalDownload::FDData(int sockid, char * data, unsigned int len) {
+void LocalDownload::FDData(int sockid, char* data, unsigned int len) {
   append(data, len);
 }
 
-void LocalDownload::FDFail(int sockid, const std::string & error) {
+void LocalDownload::FDFail(int sockid, const std::string& error) {
   deactivate();
   if (sockid != -1) {
     tm->targetError(TM_ERR_OTHER);
@@ -115,14 +117,14 @@ unsigned long long int LocalDownload::size() const {
   return filesize + bufpos;
 }
 
-void LocalDownload::append(char * data, unsigned int datalen) {
+void LocalDownload::append(char* data, unsigned int datalen) {
   if (!buflen) {
-    buf = (char *) malloc(CHUNK);
+    buf = (char*) malloc(CHUNK);
     buflen = CHUNK;
   }
   if (bufpos + datalen > buflen) {
     if (inmemory) {
-      char * newbuf = (char *) malloc(buflen * 2);
+      char * newbuf = (char*) malloc(buflen * 2);
       memcpy(newbuf, buf, bufpos);
       delete buf;
       buf = newbuf;
