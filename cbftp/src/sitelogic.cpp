@@ -746,12 +746,10 @@ void SiteLogic::commandFail(int id, FailureType failuretype) {
       handleTransferFail(id, CST_LIST, TM_ERR_RETRSTOR_COMPLETE);
       return;
     default:
-      assert(false);
+      disconnected(id);
+      conns[id]->reconnect();
       return;
   }
-  // default handling: reconnect
-  disconnected(id);
-  conns[id]->reconnect();
 }
 
 void SiteLogic::checkFailListRequest(int id) {
