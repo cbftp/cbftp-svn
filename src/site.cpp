@@ -529,7 +529,7 @@ void Site::setPass(const std::string & pass) {
 }
 
 void Site::setBasePath(const std::string & basepath) {
-  this->basepath = basepath;
+  this->basepath = basepath.empty() ? "/" : basepath;
 }
 
 void Site::setMaxLogins(unsigned int num) {
