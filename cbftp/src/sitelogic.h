@@ -83,6 +83,7 @@ class SiteLogic : public Core::EventReceiver {
     bool handleCommandDelete(int, bool);
     bool makeTargetDirectory(int, bool, const std::shared_ptr<CommandOwner> & co);
     std::shared_ptr<SiteRace> getRace(unsigned int id) const;
+    void antiAntiIdle(int id);
   public:
     SiteLogic(const std::string &);
     ~SiteLogic();

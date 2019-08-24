@@ -99,6 +99,7 @@ private:
   HourlyAllTracking sizedown;
   HourlyAllTracking filesdown;
   bool freeslot;
+  bool stayloggedin;
 public:
   Site();
   Site(const std::string &);
@@ -171,6 +172,7 @@ public:
   bool useXDUPE() const;
   SkipList & getSkipList();
   const std::map<std::string, Path> & getSections() const;
+  bool getStayLoggedIn() const;
   void setName(const std::string &);
   void setAddresses(std::string addrports);
   void setPrimaryAddress(const Address& addr);
@@ -198,6 +200,7 @@ public:
   void setTransferSourcePolicy(int);
   void setTransferTargetPolicy(int);
   void setUseXDUPE(bool);
+  void setStayLoggedIn(bool loggedin);
   void addAllowedSourceSite(const std::shared_ptr<Site> &);
   void addBlockedSourceSite(const std::shared_ptr<Site> &);
   void addExceptSourceSite(const std::shared_ptr<Site> &);
