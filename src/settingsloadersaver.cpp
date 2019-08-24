@@ -327,11 +327,9 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("xdupe")) {
       if (!value.compare("false")) site->setUseXDUPE(false);
     }
-    // begin backward compatibility r938
-    else if (!setting.compare("sslconn")) {
-      if (!value.compare("false")) site->setTLSMode(TLSMode::NONE);
+    else if (!setting.compare("stayloggedin")) {
+      if (!value.compare("true")) site->setStayLoggedIn(true);
     }
-    // end backward compatibility r938
     else if (!setting.compare("tlsmode")) {
       site->setTLSMode(static_cast<TLSMode>(std::stoi(value)));
     }
@@ -360,24 +358,10 @@ void SettingsLoaderSaver::loadSettings() {
       if (!value.compare("true")) site->setDisabled(true);
     }
     else if (!setting.compare("allowupload")) {
-      // compatibility: 889 and below
-      if (!value.compare("false")) {
-        site->setAllowUpload(SITE_ALLOW_TRANSFER_NO);
-      }
-      // compatibility end
-      else {
-        site->setAllowUpload(static_cast<SiteAllowTransfer>(std::stoi(value)));
-      }
+      site->setAllowUpload(static_cast<SiteAllowTransfer>(std::stoi(value)));
     }
     else if (!setting.compare("allowdownload")) {
-      // compatibility: 889 and below
-      if (!value.compare("false")) {
-        site->setAllowDownload(SITE_ALLOW_TRANSFER_NO);
-      }
-      // compatibility end
-      else {
-        site->setAllowDownload(static_cast<SiteAllowTransfer>(std::stoi(value)));
-      }
+      site->setAllowDownload(static_cast<SiteAllowTransfer>(std::stoi(value)));
     }
     else if (!setting.compare("priority")) {
       site->setPriority(static_cast<SitePriority>(std::stoi(value)));
@@ -764,6 +748,7 @@ void SettingsLoaderSaver::saveSettings() {
       if (site->needsPRET()) dfh->addOutputLine(filetag, name + "$pret=true");
       if (site->forceBinaryMode()) dfh->addOutputLine(filetag, name + "$binary=true");
       if (!site->useXDUPE()) dfh->addOutputLine(filetag, name + "$xdupe=false");
+      if (site->getStayLoggedIn()) dfh->addOutputLine(filetag, name + "$stayloggedin=true");
       if (site->getDisabled()) dfh->addOutputLine(filetag, name + "$disabled=true");
       dfh->addOutputLine(filetag, name + "$allowupload=" + std::to_string(site->getAllowUpload()));
       dfh->addOutputLine(filetag, name + "$allowdownload=" + std::to_string(site->getAllowDownload()));

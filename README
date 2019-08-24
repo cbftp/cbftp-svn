@@ -17,7 +17,7 @@ MAJOR FEATURES
   time. A large job does not "lock" slots, and neither does the UI
 - Concurrency: Multiple jobs can run at the same time.
 - Encrypted data file with AES-256
-- SSL support (AUTH TLS) and SSLFXP support
+- TLS support (AUTH TLS) and TLS FXP support
 - IPv6 support and IPv6 FXP support
 - Remote commands for performing various tasks through UDP calls
 - Ncurses UI, runs in a terminal which makes cbftp highly flexible
@@ -411,6 +411,8 @@ Field summary:
     starting them.
 - TLS Transfers: The security behavior for transfers to/from this site.
 - Transfer protocol: Preferred/supported protocol IPv4/IPv6
+- Stay logged in: Don't log out from sites automatically. Enable
+  anti-anti-idle with the configured max idle time as period.
 - List command: Which command the site should use to list directories.
   STAT -l is normally faster and better if it is available, but not all FTP
   servers support it.
@@ -423,9 +425,9 @@ Field summary:
   is required for IPv6 transfers to/from another address than the main site
   address, for example when the site uses an FTP bouncer or when the transfer
   protocol is different from the control connection protocol.
-- SSCN supported: SSCN is a special command used for SSL FXP transfers.
+- SSCN supported: SSCN is a special command used for TLS FXP transfers.
   Not all servers support this, but it should be enabled if it is supported.
-- CPSV supported: CPSV is a special command used for SSL FXP transfers.
+- CPSV supported: CPSV is a special command used for TLS FXP transfers.
   Not all servers support this, but it should be enabled if it is supported.
 - Needs PRET: PRET is a special command needed for transfers on distributed
   FTP servers such as DrFTPD. Should be enabled on such sites, and disabled
@@ -560,7 +562,8 @@ A: Cbftp adjusts the view dynamically depending on how much space is needed
    are chosen based on an internal priority specification. Make your terminal
    larger!
 
-Q: Cbftp gets SSL error when connecting to some of my sites, what should I do?
+Q: Cbftp gets SSL/TLS error when connecting to some of my sites, what should I
+   do?
 A: Your system is probably using an old version of OpenSSL. Either upgrade
    to a newer system version, or grab a copy of the latest OpenSSL version
    from openssl.org, compile it (./config && make) and then let cbftp know

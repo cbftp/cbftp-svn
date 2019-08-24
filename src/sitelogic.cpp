@@ -199,6 +199,9 @@ void SiteLogic::tick(int message) {
       else if (event == "quit") {
         disconnectConn(i);
       }
+      else if (event == "antiantiidle") {
+        antiAntiIdle(i);
+      }
     }
   }
   if (currtime % 60000 == 0) {
@@ -404,7 +407,12 @@ void SiteLogic::commandSuccess(int id, FTPConnState state) {
           setRequestReady(id, NULL, true);
           handleConnection(id);
           if (!conns[id]->isProcessing()) {
-            connstatetracker[id].delayedCommand("quit", request->requestData3() * 1000);
+            if (site->getStayLoggedIn()) {
+              connstatetracker[id].delayedCommand("antiantiidle", site->getMaxIdleTime() * 1000);
+            }
+            else {
+              connstatetracker[id].delayedCommand("quit", request->requestData3() * 1000);
+            }
           }
           return;
         }
@@ -625,7 +633,12 @@ void SiteLogic::commandFail(int id, FailureType failuretype) {
           setRequestReady(id, NULL, false);
           handleConnection(id);
           if (request->requestType() == REQ_IDLE && !conns[id]->isProcessing()) {
-            connstatetracker[id].delayedCommand("quit", request->requestData3() * 1000);
+            if (site->getStayLoggedIn()) {
+              connstatetracker[id].delayedCommand("antiantiidle", site->getMaxIdleTime() * 1000);
+            }
+            else {
+              connstatetracker[id].delayedCommand("quit", request->requestData3() * 1000);
+            }
           }
           return;
         }
@@ -1069,7 +1082,9 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
     }
   }
   if (site->getMaxIdleTime() && !connstatetracker[id].getCommand().isActive()) {
-    connstatetracker[id].delayedCommand("quit", site->getMaxIdleTime() * 1000);
+    int delay = site->getMaxIdleTime() * 1000;
+    std::string command = site->getStayLoggedIn() ? "antiantiidle" : "quit";
+    connstatetracker[id].delayedCommand(command, delay);
   }
 }
 
@@ -1152,7 +1167,12 @@ bool SiteLogic::handleRequest(int id) {
         setRequestReady(id, NULL, true);
         handleConnection(id);
         if (!conns[id]->isProcessing()) {
-          connstatetracker[id].delayedCommand("quit", request.requestData3() * 1000);
+          if (site->getStayLoggedIn()) {
+            connstatetracker[id].delayedCommand("antiantiidle", site->getMaxIdleTime() * 1000);
+          }
+          else {
+            connstatetracker[id].delayedCommand("quit", request.requestData3() * 1000);
+          }
         }
       }
       break;
@@ -1900,6 +1920,9 @@ RawBuffer * SiteLogic::getAggregatedRawBuffer() const {
 
 void SiteLogic::raceGlobalComplete(const std::shared_ptr<SiteRace> & sr) {
   removeRace(sr);
+  if (site->getStayLoggedIn()) {
+    return;
+  }
   bool stillactive = !currentraces.empty();
   for (std::list<std::shared_ptr<SiteTransferJob> >::const_iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
     if (!(*it)->getTransferJob()->isDone()) {
@@ -1918,6 +1941,9 @@ void SiteLogic::raceGlobalComplete(const std::shared_ptr<SiteRace> & sr) {
 
 void SiteLogic::raceLocalComplete(const std::shared_ptr<SiteRace> & sr, int uploadslotsleft, bool reportdone) {
   sr->complete(reportdone);
+  if (site->getStayLoggedIn()) {
+    return;
+  }
   bool stillactive = false;
   for (unsigned int i = 0; i < currentraces.size(); i++) {
     if (!currentraces[i]->isDone()) {
@@ -2102,5 +2128,28 @@ void SiteLogic::clearReadyRequest(SiteLogicRequestReady & request) {
     else if (request.getType() == REQ_RAW) {
       delete static_cast<std::string *>(data);
     }
+  }
+}
+
+void SiteLogic::antiAntiIdle(int id) {
+  handleConnection(id);
+  if (!connstatetracker[id].isLocked() && !conns[id]->isProcessing()) {
+    Path target = site->getBasePath();
+    if (conns[id]->getCurrentPath() == target) {
+      if (!site->getSections().empty()) {
+        int randomsection = rand() % site->getSections().size();
+        int i = 0;
+        for (std::map<std::string, Path>::const_iterator it = site->sectionsBegin(); it != site->sectionsEnd(); ++it, ++i) {
+          if (i == randomsection) {
+            target = it->second;
+          }
+        }
+      }
+    }
+    int requestid = requestidcounter++;
+    SiteLogicRequest request(requestid, REQ_FILELIST, target.toString(), false);
+    request.setConnId(id);
+    requests.push_back(request);
+    handleConnection(id);
   }
 }

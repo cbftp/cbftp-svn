@@ -93,7 +93,8 @@ Site::Site(const std::string & name) :
   transfersourcepolicy(SITE_TRANSFER_POLICY_ALLOW),
   transfertargetpolicy(SITE_TRANSFER_POLICY_ALLOW),
   skiplist(global->getSkipList()),
-  freeslot(false)
+  freeslot(false),
+  stayloggedin(false)
 {
   Address addr;
   addr.host = "ftp.sunet.se";
@@ -494,6 +495,10 @@ const std::map<std::string, Path> & Site::getSections() const {
   return sections;
 }
 
+bool Site::getStayLoggedIn() const {
+  return stayloggedin;
+}
+
 void Site::setName(const std::string & name) {
   this->name = name;
 }
@@ -632,6 +637,10 @@ void Site::setTransferTargetPolicy(int policy) {
 
 void Site::setUseXDUPE(bool xdupe) {
   this->xdupe = xdupe;
+}
+
+void Site::setStayLoggedIn(bool loggedin) {
+  stayloggedin = loggedin;
 }
 
 void Site::addAllowedSourceSite(const std::shared_ptr<Site> & site) {

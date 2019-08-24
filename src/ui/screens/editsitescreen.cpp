@@ -116,11 +116,12 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   transferproto->addOption("Prefer IPv6", static_cast<int>(TransferProtocol::PREFER_IPV6));
   transferproto->addOption("IPv6 only", static_cast<int>(TransferProtocol::IPV6_ONLY));
   transferproto->setOption(static_cast<int>(this->site->getTransferProtocol()));
-  std::shared_ptr<MenuSelectOptionTextArrow> listcommand = mso.addTextArrow(y, x, "listcommand", "List command:");
+  mso.addCheckBox(y, x, "stayloggedin", "Stay logged in:", this->site->getStayLoggedIn());
+  std::shared_ptr<MenuSelectOptionTextArrow> listcommand = mso.addTextArrow(y, x + 21, "listcommand", "List command:");
   listcommand->addOption("STAT -l", SITE_LIST_STAT);
   listcommand->addOption("LIST", SITE_LIST_LIST);
   listcommand->setOption(this->site->getListCommand());
-  mso.addStringField(y++, x + 26, "basepath", "Base path:", this->site->getBasePath().toString(), false, 40, 512);
+  mso.addStringField(y++, x + 47, "basepath", "Base path:", this->site->getBasePath().toString(), false, 19, 512);
   mso.addCheckBox(y, x, "cepr", "CEPR supported:", this->site->supportsCEPR());
   mso.addCheckBox(y, x + 21, "sscn", "SSCN supported:", this->site->supportsSSCN());
   mso.addCheckBox(y++, x + 42, "cpsv", "CPSV supported:", this->site->supportsCPSV());
@@ -429,6 +430,9 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "cepr") {
           site->setSupportsCEPR(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
+        }
+        else if (identifier == "stayloggedin") {
+          site->setStayLoggedIn(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
         }
         else if (identifier == "listcommand") {
           site->setListCommand(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
