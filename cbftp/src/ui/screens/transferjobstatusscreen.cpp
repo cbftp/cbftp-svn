@@ -73,6 +73,8 @@ void TransferJobStatusScreen::redraw() {
   }
   ui->printStr(y, 53, std::string("Status: ") + status);
   y++;
+  ui->printStr(y, 1, "Path: " + transferjob->getSrcPath().toString() + " -> " + transferjob->getDstPath().toString());
+  ++y;
   ui->printStr(y, 1, "Size: " + util::parseSize(transferjob->sizeProgress()) +
       " / " + util::parseSize(transferjob->totalSize()));
   ui->printStr(y, 35, "Speed: " + (started ? util::parseSize(transferjob->getSpeed() * SIZEPOWER) + "/s" : "-"));
