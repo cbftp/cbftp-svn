@@ -36,7 +36,7 @@ void TransferJobStatusScreen::initialize(unsigned int row, unsigned int col, uns
   autoupdate = true;
   active = false;
   mso.clear();
-  mso.addIntArrow(4, 40, "slots", "Slots:", transferjob->maxSlots(), 1, transferjob->maxPossibleSlots());
+  mso.addIntArrow(5, 40, "slots", "Slots:", transferjob->maxSlots(), 1, transferjob->maxPossibleSlots());
   mso.enterFocusFrom(0);
   init(row, col);
 }
