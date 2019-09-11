@@ -124,7 +124,7 @@ void SiteLogic::activateAll() {
   }
 }
 
-std::shared_ptr<SiteRace> SiteLogic::addRace(std::shared_ptr<Race> & enginerace, const std::string & section, const std::string & release) {
+std::shared_ptr<SiteRace> SiteLogic::addRace(const std::shared_ptr<Race>& enginerace, const std::string & section, const std::string & release) {
   std::shared_ptr<SiteRace> race = std::make_shared<SiteRace>(enginerace, site->getName(), site->getSectionPath(section),
                                                               release, site->getUser(), site->getSkipList(), site->isAffiliated(enginerace->getGroup()));
   currentraces.push_back(race);
@@ -239,11 +239,11 @@ void SiteLogic::TLSFailed(int id) {
 
 void SiteLogic::listRefreshed(int id) {
   connstatetracker[id].resetIdleTime();
-  FileList * fl = conns[id]->currentFileList();
+  const std::shared_ptr<FileList>& fl = conns[id]->currentFileList();
   fl->setRefreshedTime(currtime);
-  std::shared_ptr<CommandOwner> currentco = conns[id]->currentCommandOwner();
+  const std::shared_ptr<CommandOwner>& currentco = conns[id]->currentCommandOwner();
   if (!!currentco) {
-    currentco->fileListUpdated(this, conns[id]->currentFileList());
+    currentco->fileListUpdated(this, fl);
   }
   if (connstatetracker[id].getRecursiveLogic()->isActive()) {
     handleRecursiveLogic(id, conns[id]->currentFileList());
@@ -251,10 +251,9 @@ void SiteLogic::listRefreshed(int id) {
   }
   if (connstatetracker[id].hasRequest()) {
     const std::shared_ptr<SiteLogicRequest> & request = connstatetracker[id].getRequest();
-    FileList * filelist = conns[id]->currentFileList();
-    FileListData * filelistdata = new FileListData(filelist, conns[id]->getCwdRawBuffer());
+    FileListData * filelistdata = new FileListData(fl, conns[id]->getCwdRawBuffer());
     if (request->requestType() == REQ_FILELIST &&
-        request->requestData() == filelist->getPath().toString())
+        request->requestData() == fl->getPath().toString())
     {
       setRequestReady(id, filelistdata, true);
     }
@@ -266,7 +265,7 @@ void SiteLogic::listRefreshed(int id) {
 }
 
 bool SiteLogic::setPathExists(int id, int exists, bool refreshtime) {
-  FileList * fl = conns[id]->currentFileList();
+  const std::shared_ptr<FileList>& fl = conns[id]->currentFileList();
   if (!fl) {
     return false;
   }
@@ -347,7 +346,7 @@ bool SiteLogic::makeTargetDirectory(int id, bool includinglast, const std::share
   while (co && subdirs.size() > (includinglast ? 0 : 1)) {
     trypath = trypath / subdirs.front();
     subdirs.pop_front();
-    FileList * fl = co->getFileListForFullPath(this, trypath);
+    std::shared_ptr<FileList> fl = co->getFileListForFullPath(this, trypath);
     if (fl) {
       if (fl->getState() == FileListState::UNKNOWN || fl->getState() == FileListState::NONEXISTENT) {
         conns[id]->doMKD(fl, co);
@@ -442,7 +441,7 @@ void SiteLogic::commandSuccess(int id, FTPConnState state) {
         setPathExists(id, EXISTS_YES, true);
         if (targetpath == targetcwdsect / targetcwdpath) {
           conns[id]->finishMKDCWDTarget();
-          FileList * fl = conns[id]->currentFileList();
+          const std::shared_ptr<FileList>& fl = conns[id]->currentFileList();
           if (fl) {
             conns[id]->doCWD(fl, currentco);
           }
@@ -492,7 +491,7 @@ void SiteLogic::commandSuccess(int id, FTPConnState state) {
       assert(connstatetracker[id].transferInitialized());
       connstatetracker[id].getTransferMonitor()->targetComplete();
       transferComplete(id, false);
-      FileList * fl = connstatetracker[id].getTransferFileList();
+      const std::shared_ptr<FileList>& fl = connstatetracker[id].getTransferFileList();
       connstatetracker[id].finishTransfer();
       int filelistreusetime = currtime - fl->getRefreshedTime();
       if (filelistreusetime < FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH ||
@@ -604,7 +603,7 @@ void SiteLogic::commandFail(int id, FailureType failuretype) {
         }
         return;
       }
-      FileList * currentfl = conns[id]->currentFileList();
+      std::shared_ptr<FileList> currentfl = conns[id]->currentFileList();
       std::shared_ptr<CommandOwner> currentco = conns[id]->currentCommandOwner();
       if (conns[id]->hasMKDCWDTarget()) {
         if (site->getAllowUpload() == SITE_ALLOW_TRANSFER_NO ||
@@ -668,7 +667,7 @@ void SiteLogic::commandFail(int id, FailureType failuretype) {
         }
         conns[id]->finishMKDCWDTarget();
         setPathExists(id, EXISTS_FAILED, true);
-        FileList * fl = conns[id]->currentFileList();
+        const std::shared_ptr<FileList>& fl = conns[id]->currentFileList();
         if (fl) {
           conns[id]->doCWD(fl, currentco);
         }
@@ -808,7 +807,7 @@ void SiteLogic::reportTransferErrorAndFinish(int id, int err) {
 
 void SiteLogic::reportTransferErrorAndFinish(int id, int type, int err) {
   std::shared_ptr<CommandOwner> co = connstatetracker[id].getCommandOwner();
-  FileList * fl = connstatetracker[id].getTransferFileList();
+  std::shared_ptr<FileList> fl = connstatetracker[id].getTransferFileList();
   if (!connstatetracker[id].getTransferAborted()) {
     switch (type) {
       case CST_DOWNLOAD:
@@ -929,7 +928,7 @@ bool SiteLogic::handlePreTransfer(int id) {
     handleTransferFail(id, TM_ERR_OTHER);
     return false;
   }
-  FileList * fl = connstatetracker[id].getTransferFileList();
+  const std::shared_ptr<FileList>& fl = connstatetracker[id].getTransferFileList();
   const Path & transferpath = fl->getPath();
   std::shared_ptr<CommandOwner> co = connstatetracker[id].getCommandOwner();
   if (conns[id]->getCurrentPath() != transferpath) {
@@ -978,7 +977,7 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
     std::shared_ptr<SiteTransferJob> & tj = *it;
     if (!tj->getTransferJob()->isDone()) {
       if (tj->wantsList()) {
-        FileList * fl = tj->getListTarget();
+        std::shared_ptr<FileList> fl = tj->getListTarget();
         const Path & path = fl->getPath();
         connstatetracker[id].use();
         if (path != conns[id]->getCurrentPath()) {
@@ -1064,8 +1063,8 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
       connstatetracker[id].use();
       if (goodpath) {
         Path subpath = currentpath - racepath;
-        FileList * fl = race->getFileListForPath(subpath.toString());
-        if (fl == NULL) {
+        std::shared_ptr<FileList> fl = race->getFileListForPath(subpath.toString());
+        if (!fl) {
           if (!race->addSubDirectory(subpath.toString(), true)) {
             refreshChangePath(id, race, refresh);
             return;
@@ -1190,7 +1189,7 @@ bool SiteLogic::handleRequest(int id) {
   return true;
 }
 
-void SiteLogic::handleRecursiveLogic(int id, FileList * fl) {
+void SiteLogic::handleRecursiveLogic(int id, const std::shared_ptr<FileList>& fl) {
   Path actiontarget;
   if (fl != NULL) {
     connstatetracker[id].getRecursiveLogic()->addFileList(fl);
@@ -1246,7 +1245,7 @@ void SiteLogic::refreshChangePath(int id, const std::shared_ptr<SiteRace> & race
   const Path & currentpath = conns[id]->getCurrentPath();
   std::string subpath = race->getRelevantSubPath();
   Path targetpath = race->getPath() / subpath;
-  FileList * fl = race->getFileListForFullPath(this, targetpath);
+  std::shared_ptr<FileList> fl = race->getFileListForFullPath(this, targetpath);
   if (targetpath != currentpath) {
     conns[id]->doCWD(fl, race);
   }
@@ -1494,7 +1493,7 @@ FileListData * SiteLogic::getFileListData(int requestid) const {
       return static_cast<FileListData *>(it->requestData());
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 std::string SiteLogic::getRawCommandResult(int requestid) {
@@ -1563,15 +1562,15 @@ std::shared_ptr<SiteRace> SiteLogic::getRace(unsigned int id) const {
   return std::shared_ptr<SiteRace>();
 }
 
-bool SiteLogic::lockDownloadConn(FileList * fl, int * ret, const std::shared_ptr<CommandOwner> & co, TransferMonitor * tm) {
+bool SiteLogic::lockDownloadConn(const std::shared_ptr<FileList>& fl, int* ret, const std::shared_ptr<CommandOwner>& co, TransferMonitor* tm) {
   return lockTransferConn(fl, ret, tm, co, true);
 }
 
-bool SiteLogic::lockUploadConn(FileList * fl, int * ret, const std::shared_ptr<CommandOwner> & co, TransferMonitor * tm) {
+bool SiteLogic::lockUploadConn(const std::shared_ptr<FileList>& fl, int* ret, const std::shared_ptr<CommandOwner>& co, TransferMonitor* tm) {
   return lockTransferConn(fl, ret, tm, co, false);
 }
 
-bool SiteLogic::lockTransferConn(FileList * fl, int * ret, TransferMonitor * tm, const std::shared_ptr<CommandOwner> & co, bool isdownload) {
+bool SiteLogic::lockTransferConn(const std::shared_ptr<FileList>& fl, int* ret, TransferMonitor* tm, const std::shared_ptr<CommandOwner>& co, bool isdownload) {
   TransferType type(TransferType::REGULAR);
   if (isdownload) {
     if (!!co) {
@@ -1888,7 +1887,7 @@ void SiteLogic::finishTransferGracefully(int id) {
   connstatetracker[id].finishTransfer();
 }
 
-void SiteLogic::listCompleted(int id, int storeid, FileList * fl, const std::shared_ptr<CommandOwner> & co) {
+void SiteLogic::listCompleted(int id, int storeid, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner> & co) {
   const Core::BinaryData& data = global->getLocalStorage()->getStoreContent(storeid);
   conns[id]->setListData(co, fl);
   conns[id]->parseFileList((char *) &data[0], data.size());
@@ -2065,18 +2064,18 @@ void SiteLogic::getFileListConn(int id, bool hiddenfiles) {
     }
   }
   else {
-    FileList * fl = conns[id]->newFileList();
+    std::shared_ptr<FileList> fl = conns[id]->newFileList();
     global->getTransferManager()->getFileList(global->getSiteLogicManager()->getSiteLogic(this), id, hiddenfiles, fl, conns[id]->isIPv6());
   }
 }
 
-void SiteLogic::getFileListConn(int id, const std::shared_ptr<CommandOwner> & co, FileList * filelist) {
-  assert(filelist != NULL);
+void SiteLogic::getFileListConn(int id, const std::shared_ptr<CommandOwner> & co, const std::shared_ptr<FileList>& fl) {
+  assert(!!fl);
   if (site->getListCommand() == SITE_LIST_STAT) {
-    conns[id]->doSTAT(co, filelist);
+    conns[id]->doSTAT(co, fl);
   }
   else {
-    global->getTransferManager()->getFileList(global->getSiteLogicManager()->getSiteLogic(this), id, false, filelist, conns[id]->isIPv6(), co);
+    global->getTransferManager()->getFileList(global->getSiteLogicManager()->getSiteLogic(this), id, false, fl, conns[id]->isIPv6(), co);
   }
 }
 

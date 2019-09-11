@@ -18,38 +18,38 @@ class SiteRace;
 
 class ScoreBoard {
   private:
-    std::vector<ScoreBoardElement *> elements;
-    std::vector<ScoreBoardElement *> elementstmp;
+    std::vector<ScoreBoardElement*> elements;
+    std::vector<ScoreBoardElement*> elementstmp;
     unsigned int showsize;
-    unsigned int * count;
-    unsigned int * bucketpositions;
+    unsigned int* count;
+    unsigned int* bucketpositions;
     unsigned int countarraybytesize;
     void shuffle(unsigned int firstpos, unsigned int lastpos);
-    std::unordered_map<FileList *, std::unordered_map<FileList *,
-      std::unordered_map<std::string, ScoreBoardElement *>>> elementlocator;
-    std::unordered_map<FileList *, std::unordered_set<ScoreBoardElement *>> destinationlocator;
+    std::unordered_map<std::shared_ptr<FileList>, std::unordered_map<std::shared_ptr<FileList>,
+      std::unordered_map<std::string, ScoreBoardElement*>>> elementlocator;
+    std::unordered_map<std::shared_ptr<FileList>, std::unordered_set<ScoreBoardElement*>> destinationlocator;
   public:
     ScoreBoard();
     ~ScoreBoard();
     void update(
-        const std::string & name, unsigned short score, unsigned long long int filesize,
+        const std::string& name, unsigned short score, unsigned long long int filesize,
         PrioType priotype,
-        const std::shared_ptr<SiteLogic> & src, FileList * fls, const std::shared_ptr<SiteRace> & srs,
-        const std::shared_ptr<SiteLogic> & dst, FileList * fld, const std::shared_ptr<SiteRace> & srd,
-        const std::shared_ptr<Race> & race, const std::string & subdir);
-    void update(ScoreBoardElement * sbe);
-    ScoreBoardElement * find(const std::string & name, FileList * fls, FileList * fld) const;
-    bool remove(ScoreBoardElement * sbe);
-    bool remove(const std::string & name, FileList * fls, FileList * fld);
+        const std::shared_ptr<SiteLogic>& src, const std::shared_ptr<FileList>& fls, const std::shared_ptr<SiteRace>& srs,
+        const std::shared_ptr<SiteLogic>& dst, const std::shared_ptr<FileList>& fld, const std::shared_ptr<SiteRace>& srd,
+        const std::shared_ptr<Race>& race, const std::string & subdir);
+    void update(ScoreBoardElement* sbe);
+    ScoreBoardElement* find(const std::string & name, const std::shared_ptr<FileList>& fls, const std::shared_ptr<FileList>& fld) const;
+    bool remove(ScoreBoardElement* sbe);
+    bool remove(const std::string& name, const std::shared_ptr<FileList>& fls, const std::shared_ptr<FileList>& fld);
     unsigned int size() const;
-    std::vector<ScoreBoardElement *>::const_iterator begin() const;
-    std::vector<ScoreBoardElement *>::const_iterator end() const;
-    std::vector<ScoreBoardElement *>::iterator begin();
-    std::vector<ScoreBoardElement *>::iterator end();
+    std::vector<ScoreBoardElement*>::const_iterator begin() const;
+    std::vector<ScoreBoardElement*>::const_iterator end() const;
+    std::vector<ScoreBoardElement*>::iterator begin();
+    std::vector<ScoreBoardElement*>::iterator end();
     void sort();
     void shuffleEquals();
-    const std::vector<ScoreBoardElement *> & getElementVector() const;
+    const std::vector<ScoreBoardElement*>& getElementVector() const;
     void wipe();
-    void wipe(FileList *);
-    void resetSkipChecked(FileList * fl);
+    void wipe(const std::shared_ptr<FileList>& fl);
+    void resetSkipChecked(const std::shared_ptr<FileList>& fl);
 };

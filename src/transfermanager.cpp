@@ -17,22 +17,22 @@ TransferManager::~TransferManager() {
 }
 
 void TransferManager::getFileList(
-  const std::shared_ptr<SiteLogic> & sl, int connid, bool hiddenfiles, FileList * fl, bool ipv6, const std::shared_ptr<CommandOwner> & co)
+  const std::shared_ptr<SiteLogic> & sl, int connid, bool hiddenfiles, const std::shared_ptr<FileList>& fl, bool ipv6, const std::shared_ptr<CommandOwner> & co)
 {
   std::shared_ptr<TransferMonitor> target = getAvailableTransferMonitor();
   target->engageList(sl, connid, hiddenfiles, fl, co, ipv6);
 }
 
 std::shared_ptr<TransferStatus> TransferManager::suggestTransfer(
-  const std::string & name, const std::shared_ptr<SiteLogic> & src, FileList * fls,
-  const std::shared_ptr<SiteLogic> & dst, FileList * fld, const std::shared_ptr<CommandOwner> & srcco, const std::shared_ptr<CommandOwner> & dstco)
+  const std::string & name, const std::shared_ptr<SiteLogic> & src, const std::shared_ptr<FileList>& fls,
+  const std::shared_ptr<SiteLogic> & dst, const std::shared_ptr<FileList>& fld, const std::shared_ptr<CommandOwner> & srcco, const std::shared_ptr<CommandOwner> & dstco)
 {
   return suggestTransfer(name, src, fls, name, dst, fld, srcco, dstco);
 }
 
 std::shared_ptr<TransferStatus> TransferManager::suggestTransfer(
-  const std::string & srcname, const std::shared_ptr<SiteLogic> & src, FileList * fls,
-  const std::string & dstname, const std::shared_ptr<SiteLogic> & dst, FileList * fld,
+  const std::string & srcname, const std::shared_ptr<SiteLogic> & src, const std::shared_ptr<FileList>& fls,
+  const std::string & dstname, const std::shared_ptr<SiteLogic> & dst, const std::shared_ptr<FileList>& fld,
   const std::shared_ptr<CommandOwner> & srcco, const std::shared_ptr<CommandOwner> & dstco)
 {
   std::shared_ptr<TransferMonitor> target = getAvailableTransferMonitor();
@@ -41,20 +41,20 @@ std::shared_ptr<TransferStatus> TransferManager::suggestTransfer(
 }
 
 std::shared_ptr<TransferStatus> TransferManager::suggestDownload(
-  const std::string & name, const std::shared_ptr<SiteLogic> & sl, FileList * filelist,
+  const std::string & name, const std::shared_ptr<SiteLogic> & sl, const std::shared_ptr<FileList>& fl,
   const std::shared_ptr<LocalFileList> & path, const std::shared_ptr<CommandOwner> & co)
 {
   std::shared_ptr<TransferMonitor> target = getAvailableTransferMonitor();
-  target->engageDownload(name, sl, filelist, path, co);
+  target->engageDownload(name, sl, fl, path, co);
   return target->getTransferStatus();
 }
 
 std::shared_ptr<TransferStatus> TransferManager::suggestUpload(
   const std::string & name, const std::shared_ptr<LocalFileList> & path,
-  const std::shared_ptr<SiteLogic> & sl, FileList * filelist, const std::shared_ptr<CommandOwner> & co)
+  const std::shared_ptr<SiteLogic> & sl, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner> & co)
 {
   std::shared_ptr<TransferMonitor> target = getAvailableTransferMonitor();
-  target->engageUpload(name, path, sl, filelist, co);
+  target->engageUpload(name, path, sl, fl, co);
   return target->getTransferStatus();
 }
 

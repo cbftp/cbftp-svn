@@ -60,12 +60,12 @@ void ViewFileScreen::initialize() {
   ts.reset();
 }
 
-void ViewFileScreen::initialize(unsigned int row, unsigned int col, const std::string & site, const std::string & file, FileList * filelist) {
+void ViewFileScreen::initialize(unsigned int row, unsigned int col, const std::string & site, const std::string & file, const std::shared_ptr<FileList>& fl) {
   initialize();
   deleteafter = true;
   this->site = site;
   this->file = file;
-  this->filelist = filelist;
+  filelist = fl;
   sitelogic = global->getSiteLogicManager()->getSiteLogic(site);
   size = filelist->getFile(file)->getSize();
   state = ViewFileState::CONNECTING;

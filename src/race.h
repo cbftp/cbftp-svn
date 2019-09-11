@@ -34,13 +34,13 @@ class SiteLogic;
 class TransferStatus;
 class SkipList;
 
-typedef std::pair<std::string, std::pair<FileList *, FileList *> > FailedTransfer;
+typedef std::pair<std::string, std::pair<std::shared_ptr<FileList>, std::shared_ptr<FileList>> > FailedTransfer;
 
 struct FailedTransferHash {
 public:
-  std::size_t operator()(const std::pair<std::string, std::pair<FileList *, FileList *> > & x) const
+  std::size_t operator()(const std::pair<std::string, std::pair<std::shared_ptr<FileList>, std::shared_ptr<FileList>> > & x) const
   {
-    return std::hash<std::string>()(x.first) + std::hash<FileList *>()(x.second.first) + std::hash<FileList *>()(x.second.second);
+    return std::hash<std::string>()(x.first) + std::hash<std::shared_ptr<FileList>>()(x.second.first) + std::hash<std::shared_ptr<FileList>>()(x.second.second);
   }
 };
 
@@ -118,17 +118,17 @@ class Race : public Core::EventReceiver, public TransferStatusCallback {
     std::string getTimeStamp() const;
     unsigned int getTimeSpent() const;
     std::string getSiteListText() const;
-    std::shared_ptr<SiteRace> getSiteRace(const std::string & site) const;
+    std::shared_ptr<SiteRace> getSiteRace(const std::string& site) const;
     RaceStatus getStatus() const;
     unsigned int getId() const;
     SpreadProfile getProfile() const;
     unsigned long long int getTransferredSize() const;
     unsigned int getTransferredFiles() const;
-    void reportNewSubDir(const std::shared_ptr<SiteRace> & sr, const std::string &);
-    void reportSFV(const std::shared_ptr<SiteRace> & sr, const std::string &);
-    void reportDone(const std::shared_ptr<SiteRace> & sr);
-    void reportSemiDone(const std::shared_ptr<SiteRace> & sr);
-    void reportSize(const std::shared_ptr<SiteRace> & sr, FileList *, const std::string &, const std::unordered_set<std::string> &, bool);
+    void reportNewSubDir(const std::shared_ptr<SiteRace>& sr, const std::string&);
+    void reportSFV(const std::shared_ptr<SiteRace>& sr, const std::string&);
+    void reportDone(const std::shared_ptr<SiteRace>& sr);
+    void reportSemiDone(const std::shared_ptr<SiteRace>& sr);
+    void reportSize(const std::shared_ptr<SiteRace>& sr, const std::shared_ptr<FileList>& fl, const std::string&, const std::unordered_set<std::string>&, bool);
     void setUndone();
     void reset();
     void abort();
@@ -139,12 +139,12 @@ class Race : public Core::EventReceiver, public TransferStatusCallback {
     unsigned int getWorstCompletionPercentage() const;
     unsigned int getAverageCompletionPercentage() const;
     unsigned int getBestCompletionPercentage() const;
-    bool hasFailedTransfer(const std::string & filename, FileList * fls, FileList * fld) const;
+    bool hasFailedTransfer(const std::string & filename, const std::shared_ptr<FileList>& fls, const std::shared_ptr<FileList>& fld) const;
     bool failedTransfersCleared() const;
-    const SkipList & getSectionSkipList() const;
-    void addTransfer(const std::shared_ptr<TransferStatus> &);
+    const SkipList& getSectionSkipList() const;
+    void addTransfer(const std::shared_ptr<TransferStatus>&);
     bool clearTransferAttempts(bool clearstate = true);
-    void transferSuccessful(const std::shared_ptr<TransferStatus> &);
-    void transferFailed(const std::shared_ptr<TransferStatus> &, int);
+    void transferSuccessful(const std::shared_ptr<TransferStatus>&);
+    void transferFailed(const std::shared_ptr<TransferStatus>&, int);
     void addTransferStatsFile(unsigned long long int);
 };

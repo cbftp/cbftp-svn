@@ -1,7 +1,8 @@
 #pragma once
 
-#include <string>
 #include <list>
+#include <memory>
+#include <string>
 
 #include "path.h"
 
@@ -24,15 +25,15 @@ class FileList;
 
 class TransferStatus {
 public:
-  TransferStatus(int, std::string, std::string, std::string, std::string, FileList *, const Path &, FileList *, const Path &, unsigned long long int, unsigned int, int, int, bool, bool);
+  TransferStatus(int, std::string, std::string, std::string, std::string, const std::shared_ptr<FileList>& fls, const Path &, const std::shared_ptr<FileList>& fld, const Path &, unsigned long long int, unsigned int, int, int, bool, bool);
   std::string getSource() const;
   std::string getTarget() const;
   std::string getRelease() const;
   std::string getFile() const;
-  const Path & getSourcePath() const;
-  const Path & getTargetPath() const;
-  FileList * getSourceFileList() const;
-  FileList * getTargetFileList() const;
+  const Path& getSourcePath() const;
+  const Path& getTargetPath() const;
+  std::shared_ptr<FileList> getSourceFileList() const;
+  std::shared_ptr<FileList> getTargetFileList() const;
   unsigned long long int sourceSize() const;
   unsigned long long int targetSize() const;
   unsigned long long int knownTargetSize() const;
@@ -41,7 +42,7 @@ public:
   int getTimeRemaining() const;
   unsigned int getProgress() const;
   std::string getTimestamp() const;
-  TransferStatusCallback * getCallback() const;
+  TransferStatusCallback* getCallback() const;
   int getState() const;
   int getType() const;
   bool isAwaited() const;
@@ -52,22 +53,22 @@ public:
   std::string getPassiveAddress() const;
   std::string getCipher() const;
   bool getSSLSessionReused() const;
-  const std::list<std::string> & getLogLines() const;
+  const std::list<std::string>& getLogLines() const;
   void setFinished();
   void setFailed();
   void setDupe();
   void setAborted();
   void setAwaited(bool);
-  void setCallback(TransferStatusCallback *);
+  void setCallback(TransferStatusCallback*);
   void setTargetSize(unsigned long long int);
   void interpolateAddSize(unsigned long long int);
   void setSpeed(unsigned int);
   void setTimeSpent(unsigned int);
-  void setPassiveAddress(const std::string &);
-  void setCipher(const std::string &);
+  void setPassiveAddress(const std::string&);
+  void setCipher(const std::string&);
   void setSSLSessionReused(bool);
   void setSourceSize(unsigned long long int size);
-  void addLogLine(const std::string &);
+  void addLogLine(const std::string&);
 private:
   void updateProgress();
   int type;
@@ -88,9 +89,9 @@ private:
   int timeremaining;
   unsigned int progress;
   bool awaited;
-  TransferStatusCallback * callback;
-  FileList * fls;
-  FileList * fld;
+  TransferStatusCallback* callback;
+  std::shared_ptr<FileList> fls;
+  std::shared_ptr<FileList> fld;
   int srcslot;
   int dstslot;
   bool ssl;

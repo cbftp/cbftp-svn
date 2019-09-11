@@ -27,8 +27,8 @@ private:
   DelayedCommand delayedcommand;
   bool transfer;
   bool initialized;
-  TransferMonitor * tm;
-  FileList * fl;
+  TransferMonitor* tm;
+  std::shared_ptr<FileList> fl;
   std::string file;
   int type;
   bool passive;
@@ -58,7 +58,7 @@ private:
 public:
   ConnStateTracker();
   ~ConnStateTracker();
-  void delayedCommand(const std::string & command, int delay, bool persisting = false, const std::shared_ptr<CommandOwner> & co = std::shared_ptr<CommandOwner>());
+  void delayedCommand(const std::string & command, int delay, bool persisting = false, const std::shared_ptr<CommandOwner> & co = nullptr);
   void timePassed(int);
   int getTimePassed() const;
   void check(const std::shared_ptr<SiteRace> & sr);
@@ -77,7 +77,7 @@ public:
   void finishFileTransfer();
   void abortTransfer();
   bool getTransferAborted() const;
-  void lockForTransfer(TransferMonitor *, FileList *, const std::shared_ptr<CommandOwner> &, bool);
+  void lockForTransfer(TransferMonitor *, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner> &, bool);
   bool isListLocked() const;
   bool isTransferLocked() const;
   bool hasRequest() const;
@@ -91,8 +91,8 @@ public:
   void setLoggedIn();
   void use();
   void resetIdleTime();
-  TransferMonitor * getTransferMonitor() const;
-  FileList * getTransferFileList() const;
+  TransferMonitor* getTransferMonitor() const;
+  std::shared_ptr<FileList> getTransferFileList() const;
   std::string getTransferFile() const;
   int getTransferType() const;
   bool getTransferPassive() const;
@@ -102,9 +102,9 @@ public:
   bool getTransferFXP() const;
   std::string getTransferHost() const;
   int getTransferPort() const;
-  const std::shared_ptr<RecursiveCommandLogic> & getRecursiveLogic() const;
+  const std::shared_ptr<RecursiveCommandLogic>& getRecursiveLogic() const;
   bool transferInitialized() const;
-  const std::shared_ptr<CommandOwner> & getCommandOwner() const;
+  const std::shared_ptr<CommandOwner>& getCommandOwner() const;
   void initializeTransfer();
   bool isQuitting() const;
   void setQuitting();

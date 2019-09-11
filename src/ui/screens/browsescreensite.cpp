@@ -1071,7 +1071,7 @@ std::string BrowseScreenSite::siteName() const {
   return site->getName();
 }
 
-FileList * BrowseScreenSite::fileList() const {
+std::shared_ptr<FileList> BrowseScreenSite::fileList() const {
   return filelist;
 }
 

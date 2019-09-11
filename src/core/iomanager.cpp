@@ -611,9 +611,9 @@ void IOManager::closeSocketIntern(int sockid) {
   socketinfomap.erase(it);
 }
 
-ResolverResult IOManager::resolveHost(int id, bool mayblock) {
+ResolverResult IOManager::resolveHost(int sockid, bool mayblock) {
   socketinfomaplock.lock();
-  auto it = socketinfomap.find(id);
+  auto it = socketinfomap.find(sockid);
   if (it == socketinfomap.end()) {
     socketinfomaplock.unlock();
     return ResolverResult::SOCKID_NON_EXISTING;
@@ -640,7 +640,7 @@ ResolverResult IOManager::resolveHost(int id, bool mayblock) {
   struct addrinfo* result;
   int returnCode = getaddrinfo(addr.c_str(), std::to_string(port).c_str(), &request, &result);
   std::lock_guard<std::mutex> lock(socketinfomaplock);
-  it = socketinfomap.find(id);
+  it = socketinfomap.find(sockid);
   if (it == socketinfomap.end()) {
     if (!returnCode) {
       freeaddrinfo(result);
@@ -675,9 +675,9 @@ void IOManager::asyncTaskComplete(int type, int sockid) {
   handleTCPNameResolution(it->second);
 }
 
-std::string IOManager::getCipher(int id) const {
+std::string IOManager::getCipher(int sockid) const {
   std::lock_guard<std::mutex> lock(socketinfomaplock);
-  auto it = socketinfomap.find(id);
+  auto it = socketinfomap.find(sockid);
   if (it == socketinfomap.end() || it->second.ssl == nullptr || it->second.type != SocketType::TCP_SSL) {
     return "?";
   }
@@ -712,46 +712,45 @@ int IOManager::getReusedSessionKey(int sockid) const {
   return -1;
 }
 
-std::string IOManager::getSocketAddress(int id) const {
+std::string IOManager::getSocketAddress(int sockid) const {
   std::lock_guard<std::mutex> lock(socketinfomaplock);
-  auto it = socketinfomap.find(id);
+  auto it = socketinfomap.find(sockid);
   if (it != socketinfomap.end()) {
     return it->second.addr;
   }
-  return "";
+  return "?";
 }
 
-int IOManager::getSocketPort(int id) const {
+int IOManager::getSocketPort(int sockid) const {
   std::lock_guard<std::mutex> lock(socketinfomaplock);
-  auto it = socketinfomap.find(id);
+  auto it = socketinfomap.find(sockid);
   if (it != socketinfomap.end()) {
     return it->second.port;
   }
   return -1;
 }
 
-int IOManager::getSocketFileDescriptor(int id) const {
+int IOManager::getSocketFileDescriptor(int sockid) const {
   std::lock_guard<std::mutex> lock(socketinfomaplock);
-  auto it = socketinfomap.find(id);
+  auto it = socketinfomap.find(sockid);
   if (it != socketinfomap.end()) {
     return it->second.fd;
   }
   return -1;
 }
 
-std::string IOManager::getInterfaceAddress(int id) const {
+std::string IOManager::getInterfaceAddress(int sockid) const {
   std::lock_guard<std::mutex> lock(socketinfomaplock);
-  auto it = socketinfomap.find(id);
+  auto it = socketinfomap.find(sockid);
   if (it != socketinfomap.end()) {
     return it->second.localaddr;
   }
   return "?";
 }
 
-std::string IOManager::getInterfaceAddress4(int id) const {
-  std::string addr = "?";
+std::string IOManager::getInterfaceAddress4(int sockid) const {
   std::lock_guard<std::mutex> lock(socketinfomaplock);
-  auto it = socketinfomap.find(id);
+  auto it = socketinfomap.find(sockid);
   if (it != socketinfomap.end()) {
     if (it->second.addrfam == AddressFamily::IPV4) {
       return it->second.localaddr;
@@ -759,12 +758,12 @@ std::string IOManager::getInterfaceAddress4(int id) const {
     std::string interface = getInterfaceName(it->second.localaddr);
     return getInterfaceAddress(interface);
   }
-  return addr;
+  return "?";
 }
 
-std::string IOManager::getInterfaceAddress6(int id) const {
+std::string IOManager::getInterfaceAddress6(int sockid) const {
   std::lock_guard<std::mutex> lock(socketinfomaplock);
-  auto it = socketinfomap.find(id);
+  auto it = socketinfomap.find(sockid);
   if (it != socketinfomap.end()) {
     if (it->second.addrfam == AddressFamily::IPV6) {
       return it->second.localaddr;
@@ -775,14 +774,14 @@ std::string IOManager::getInterfaceAddress6(int id) const {
   return "?";
 }
 
-AddressFamily IOManager::getAddressFamily(int id) const {
+AddressFamily IOManager::getAddressFamily(int sockid) const {
   std::string addr = "?";
   std::lock_guard<std::mutex> lock(socketinfomaplock);
-  auto it = socketinfomap.find(id);
+  auto it = socketinfomap.find(sockid);
   if (it != socketinfomap.end()) {
     return it->second.addrfam;
   }
-  return Core::AddressFamily::IPV4_IPV6;
+  return AddressFamily::IPV4_IPV6;
 }
 
 void IOManager::handleExternalIn(SocketInfo& socketinfo) {
@@ -1205,7 +1204,7 @@ std::list<std::pair<std::string, std::string>> IOManager::listInterfaces(bool ip
   int s;
   char host[NI_MAXHOST];
   if (getifaddrs(&ifaddr) == -1) {
-    getLogger()->log("IOManager", "Failed to list network interfaces", LogLevel::ERROR);
+    getLogger()->log("IOManager", std::string("Failed to list network interfaces: ") + util::getStrError(errno), LogLevel::ERROR);
     return addrs;
   }
   for (ifa = ifaddr; ifa != nullptr && ifa->ifa_addr != nullptr; ifa = ifa->ifa_next) {
@@ -1215,7 +1214,7 @@ std::list<std::pair<std::string, std::string>> IOManager::listInterfaces(bool ip
     }
     else if (family == AF_INET6 && ipv6) {
       s = getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in6), host, NI_MAXHOST, nullptr, 0, NI_NUMERICHOST);
-      if (std::string(host).compare(0, 4, "fe80") == 0) {
+      if (std::string(host).compare(0, 4, "fe80") == 0) { // link-local address
         continue;
       }
     }
@@ -1223,7 +1222,7 @@ std::list<std::pair<std::string, std::string>> IOManager::listInterfaces(bool ip
       continue;
     }
     if (s != 0) {
-      getLogger()->log("IOManager", "getnameinfo() failed", LogLevel::ERROR);
+      getLogger()->log("IOManager", std::string("getnameinfo() failed: ") + gai_strerror(s), LogLevel::ERROR);
       continue;
     }
     addrs.emplace_back(ifa->ifa_name, host);
@@ -1277,17 +1276,17 @@ std::string IOManager::getInterfaceAddress6(const std::string& interface) const 
   int s;
   char host[NI_MAXHOST];
   if (getifaddrs(&ifaddr) == -1) {
-    getLogger()->log("IOManager", "Failed to list network interfaces", LogLevel::ERROR);
+    getLogger()->log("IOManager", std::string("Failed to list network interfaces: ") + util::getStrError(errno), LogLevel::ERROR);
     return "?";
   }
   for (ifa = ifaddr; ifa != nullptr && ifa->ifa_addr != nullptr; ifa = ifa->ifa_next) {
     if (interface == ifa->ifa_name && ifa->ifa_addr->sa_family == AF_INET6) {
       s = getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in6), host, NI_MAXHOST, nullptr, 0, NI_NUMERICHOST);
-      if (std::string(host).compare(0, 4, "fe80") == 0) {
+      if (std::string(host).compare(0, 4, "fe80") == 0) { // link-local address
         continue;
       }
       if (s != 0) {
-        getLogger()->log("IOManager", "getnameinfo() failed", LogLevel::ERROR);
+        getLogger()->log("IOManager", std::string("getnameinfo() failed: ") + gai_strerror(s), LogLevel::ERROR);
         continue;
       }
       freeifaddrs(ifaddr);
@@ -1315,7 +1314,7 @@ std::string IOManager::getInterfaceName(const std::string& address) const {
   int s;
   char host[NI_MAXHOST];
   if (getifaddrs(&ifaddr) == -1) {
-    getLogger()->log("IOManager", "Failed to list network interfaces", LogLevel::ERROR);
+    getLogger()->log("IOManager", std::string("Failed to list network interfaces: ") + util::getStrError(errno), LogLevel::ERROR);
     return "?";
   }
   for (ifa = ifaddr; ifa != nullptr && ifa->ifa_addr != nullptr; ifa = ifa->ifa_next) {
@@ -1325,15 +1324,12 @@ std::string IOManager::getInterfaceName(const std::string& address) const {
     }
     else if (family == AF_INET6) {
       s = getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in6), host, NI_MAXHOST, nullptr, 0, NI_NUMERICHOST);
-      if (std::string(host).compare(0, 4, "fe80") == 0) {
-        continue;
-      }
     }
     else {
       continue;
     }
     if (s != 0) {
-      getLogger()->log("IOManager", "getnameinfo() failed", LogLevel::ERROR);
+      getLogger()->log("IOManager", std::string("getnameinfo() failed: ") + gai_strerror(s), LogLevel::ERROR);
       continue;
     }
     if (host == address) {

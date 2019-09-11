@@ -339,19 +339,19 @@ int Engine::getNextPreparedRaceStarterTimeRemaining() const {
   return nextpreparedtimeremaining / 1000;
 }
 
-unsigned int Engine::newTransferJobDownload(const std::string & srcsite, FileList * srcfilelist, const std::string & file, const Path & dstpath) {
+unsigned int Engine::newTransferJobDownload(const std::string & srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string & file, const Path & dstpath) {
   return newTransferJobDownload(srcsite, srcfilelist, file, dstpath, file);
 }
 
-unsigned int Engine::newTransferJobUpload(const Path & srcpath, const std::string & file, const std::string & dstsite, FileList * dstfilelist) {
+unsigned int Engine::newTransferJobUpload(const Path & srcpath, const std::string & file, const std::string & dstsite, const std::shared_ptr<FileList>& dstfilelist) {
   return newTransferJobUpload(srcpath, file, dstsite, dstfilelist, file);
 }
 
-unsigned int Engine::newTransferJobFXP(const std::string & srcsite, FileList * srcfilelist, const std::string & dstsite, FileList * dstfilelist, const std::string & file) {
+unsigned int Engine::newTransferJobFXP(const std::string & srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string & dstsite, const std::shared_ptr<FileList>& dstfilelist, const std::string & file) {
   return newTransferJobFXP(srcsite, srcfilelist, file, dstsite, dstfilelist, file);
 }
 
-unsigned int Engine::newTransferJobDownload(const std::string & srcsite, FileList * srcfilelist, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
+unsigned int Engine::newTransferJobDownload(const std::string & srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
   const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(srcsite);
   if (!sl) {
     global->getEventLog()->log("Engine", "Bad site name: " + srcsite);
@@ -395,7 +395,7 @@ unsigned int Engine::newTransferJobDownload(const std::string & srcsite, const P
   return id;
 }
 
-unsigned int Engine::newTransferJobUpload(const Path & srcpath, const std::string & srcfile, const std::string & dstsite, FileList * dstfilelist, const std::string & dstfile) {
+unsigned int Engine::newTransferJobUpload(const Path & srcpath, const std::string & srcfile, const std::string & dstsite, const std::shared_ptr<FileList>& dstfilelist, const std::string & dstfile) {
   const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(dstsite);
   if (!sl) {
     global->getEventLog()->log("Engine", "Bad site name: " + dstsite);
@@ -439,7 +439,7 @@ unsigned int Engine::newTransferJobUpload(const Path & srcpath, const std::strin
   return id;
 }
 
-unsigned int Engine::newTransferJobFXP(const std::string & srcsite, FileList * srcfilelist, const std::string & srcfile, const std::string & dstsite, FileList * dstfilelist, const std::string & dstfile) {
+unsigned int Engine::newTransferJobFXP(const std::string & srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string & srcfile, const std::string & dstsite, const std::shared_ptr<FileList>& dstfilelist, const std::string & dstfile) {
   const std::shared_ptr<SiteLogic> slsrc = global->getSiteLogicManager()->getSiteLogic(srcsite);
   const std::shared_ptr<SiteLogic> sldst = global->getSiteLogicManager()->getSiteLogic(dstsite);
   if (!slsrc) {
@@ -567,7 +567,7 @@ void Engine::resetRace(const std::shared_ptr<Race> & race, bool hard) {
 }
 
 void Engine::wipeFromScoreBoard(const std::shared_ptr<SiteRace> & sr) {
-  std::unordered_map<std::string, FileList *>::const_iterator it;
+  std::unordered_map<std::string, std::shared_ptr<FileList>>::const_iterator it;
   for (it = sr->fileListsBegin(); it != sr->fileListsEnd(); it++) {
     scoreboard->wipe(it->second);
     failboard->wipe(it->second);
@@ -588,18 +588,18 @@ bool Engine::waitingInScoreBoard(const std::shared_ptr<Race> & race) const {
   return false;
 }
 
-void Engine::restoreFromFailed(const std::shared_ptr<Race> & race) {
-  std::vector<ScoreBoardElement *>::iterator it;
-  std::list<std::tuple<std::string, FileList *, FileList *>> removelist;
+void Engine::restoreFromFailed(const std::shared_ptr<Race>& race) {
+  std::vector<ScoreBoardElement*>::iterator it;
+  std::list<std::tuple<std::string, std::shared_ptr<FileList>, std::shared_ptr<FileList>>> removelist;
   for (it = failboard->begin(); it != failboard->end(); ++it) {
-    ScoreBoardElement * sbe = *it;
+    ScoreBoardElement* sbe = *it;
     if (sbe->getRace() == race) {
       scoreboard->update(sbe);
       removelist.emplace_back(sbe->fileName(), sbe->getSourceFileList(),
                               sbe->getDestinationFileList());
     }
   }
-  for (const std::tuple<std::string, FileList *, FileList *> & elem : removelist) {
+  for (const std::tuple<std::string, std::shared_ptr<FileList>, std::shared_ptr<FileList>>& elem : removelist) {
     failboard->remove(std::get<0>(elem), std::get<1>(elem), std::get<2>(elem));
   }
   scoreboard->sort();
@@ -709,7 +709,7 @@ void Engine::abortTransferJob(const std::shared_ptr<TransferJob> & tj) {
   global->getEventLog()->log("Engine", "Transfer job aborted: " + tj->getSrcFileName());
 }
 
-void Engine::jobFileListRefreshed(SiteLogic * sls, const std::shared_ptr<CommandOwner> & commandowner, FileList * fl) {
+void Engine::jobFileListRefreshed(SiteLogic * sls, const std::shared_ptr<CommandOwner> & commandowner, const std::shared_ptr<FileList>& fl) {
   switch (commandowner->classType()) {
     case COMMANDOWNER_SITERACE: {
       std::shared_ptr<SiteRace> sr = std::static_pointer_cast<SiteRace>(commandowner);
@@ -718,13 +718,13 @@ void Engine::jobFileListRefreshed(SiteLogic * sls, const std::shared_ptr<Command
       }
       std::shared_ptr<Race> race = sr->getRace();
       bool addedtoboard = false;
-      std::unordered_map<std::string, FileList *>::const_iterator it;
+      std::unordered_map<std::string, std::shared_ptr<FileList>>::const_iterator it;
       std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(sls);
       if (!sl) {
         break;
       }
       for (it = sr->fileListsBegin(); it != sr->fileListsEnd(); it++) {
-        FileList * itfl = it->second;
+        const std::shared_ptr<FileList>& itfl = it->second;
         if (!itfl->inScoreBoard() && (itfl == fl || itfl->getState() == FileListState::NONEXISTENT)) {
           addedtoboard = true;
           addToScoreBoard(itfl, sr, sl);
@@ -848,9 +848,9 @@ void Engine::estimateRaceSize(const std::shared_ptr<Race> & race, bool forceupda
     const std::shared_ptr<SiteRace> & srs = its->first;
     const SkipList & siteskiplist = its->second->getSite()->getSkipList();
     const SkipList & sectionskiplist = race->getSectionSkipList();
-    std::unordered_map<std::string, FileList *>::const_iterator itfl;
+    std::unordered_map<std::string, std::shared_ptr<FileList>>::const_iterator itfl;
     for (itfl = srs->fileListsBegin(); itfl != srs->fileListsEnd(); itfl++) {
-      FileList * fls = itfl->second;
+      const std::shared_ptr<FileList>& fls = itfl->second;
       if (!forceupdate && srs->sizeEstimated(fls)) {
         continue;
       }
@@ -881,7 +881,7 @@ bool setContainsPattern(const std::unordered_set<std::string> & uniques, const s
   return false;
 }
 
-void Engine::reportCurrentSize(const SkipList & siteskiplist, const SkipList & sectionskiplist, const std::shared_ptr<SiteRace> & srs, FileList * fls, bool final) {
+void Engine::reportCurrentSize(const SkipList & siteskiplist, const SkipList & sectionskiplist, const std::shared_ptr<SiteRace> & srs, const std::shared_ptr<FileList>& fls, bool final) {
   std::unordered_set<std::string> uniques;
   std::list<File *>::const_iterator itf;
   std::string subpath = srs->getSubPathForFileList(fls);
@@ -934,7 +934,7 @@ void Engine::reportCurrentSize(const SkipList & siteskiplist, const SkipList & s
   srs->reportSize(fls, uniques, final);
 }
 
-void Engine::addToScoreBoard(FileList * fl, const std::shared_ptr<SiteRace> & sr, const std::shared_ptr<SiteLogic> & sl) {
+void Engine::addToScoreBoard(const std::shared_ptr<FileList>& fl, const std::shared_ptr<SiteRace> & sr, const std::shared_ptr<SiteLogic> & sl) {
   const std::shared_ptr<Site> & site = sl->getSite();
   const SkipList & skip = site->getSkipList();
   std::string subpath = sr->getSubPathForFileList(fl);
@@ -958,8 +958,8 @@ void Engine::addToScoreBoard(FileList * fl, const std::shared_ptr<SiteRace> & sr
     const std::shared_ptr<Site> & cmpsite = cmpsl->getSite();
     const SkipList & cmpskip = cmpsite->getSkipList();
     const std::shared_ptr<SiteRace> & cmpsr = cmpit->first;
-    FileList * cmpfl = cmpsr->getFileListForPath(subpath);
-    if (cmpfl == nullptr) {
+    std::shared_ptr<FileList> cmpfl = cmpsr->getFileListForPath(subpath);
+    if (!cmpfl) {
       cmpsr->addSubDirectory(subpath);
       continue;
     }
@@ -975,8 +975,8 @@ void Engine::addToScoreBoard(FileList * fl, const std::shared_ptr<SiteRace> & sr
 }
 
 void Engine::addToScoreBoardForPair(const std::shared_ptr<SiteLogic> & sls, const std::shared_ptr<Site> & ss, const std::shared_ptr<SiteRace> & srs,
-                            FileList * fls, const std::shared_ptr<SiteLogic> & sld, const std::shared_ptr<Site> & ds,
-                            const std::shared_ptr<SiteRace> & srd, FileList * fld, const SkipList & dstskip,
+                            const std::shared_ptr<FileList>& fls, const std::shared_ptr<SiteLogic> & sld, const std::shared_ptr<Site> & ds,
+                            const std::shared_ptr<SiteRace> & srd, const std::shared_ptr<FileList>& fld, const SkipList & dstskip,
                             const SkipList & secskip,
                             const std::shared_ptr<Race> & race, const Path & subpath, SitePriority priority,
                             bool racemode)
@@ -1018,12 +1018,12 @@ void Engine::addToScoreBoardForPair(const std::shared_ptr<SiteLogic> & sls, cons
 }
 
 void Engine::updateScoreBoard() {
-  for (const std::pair<FileList *, std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic>>> & changedlist : spreadjobfilelistschanged) {
-    FileList * fl = changedlist.first;
-    const std::shared_ptr<SiteRace> & sr = changedlist.second.first;
-    const std::shared_ptr<SiteLogic> & sl = changedlist.second.second;
-    const std::shared_ptr<Site> & site = sl->getSite();
-    const SkipList & skip = site->getSkipList();
+  for (const std::pair<std::shared_ptr<FileList>, std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic>>> & changedlist : spreadjobfilelistschanged) {
+    const std::shared_ptr<FileList>& fl = changedlist.first;
+    const std::shared_ptr<SiteRace>& sr = changedlist.second.first;
+    const std::shared_ptr<SiteLogic>& sl = changedlist.second.second;
+    const std::shared_ptr<Site>& site = sl->getSite();
+    const SkipList& skip = site->getSkipList();
     std::string subpath = sr->getSubPathForFileList(fl);
     Path subpathpath(subpath);
     std::shared_ptr<Race> race = sr->getRace();
@@ -1035,7 +1035,7 @@ void Engine::updateScoreBoard() {
       const std::shared_ptr<Site> & cmpsite = cmpsl->getSite();
       const SkipList & cmpskip = cmpsite->getSkipList();
       const std::shared_ptr<SiteRace> & cmpsr = cmpit->first;
-      FileList * cmprootfl = cmpsr->getFileListForPath("");
+      std::shared_ptr<FileList> cmprootfl = cmpsr->getFileListForPath("");
       if (!subpath.empty()) {
         SkipListMatch dirmatch = cmpskip.check(subpath, true, true, &secskip);
         if (dirmatch.action == SKIPLIST_DENY ||
@@ -1045,8 +1045,8 @@ void Engine::updateScoreBoard() {
           continue;
         }
       }
-      FileList * cmpfl = cmpsr->getFileListForPath(subpath);
-      if (cmpfl == nullptr) {
+      std::shared_ptr<FileList> cmpfl = cmpsr->getFileListForPath(subpath);
+      if (!cmpfl) {
         cmpsr->addSubDirectory(subpath);
         continue;
       }
@@ -1158,7 +1158,7 @@ void Engine::refreshScoreBoard() {
   scoreboard->shuffleEquals();
 }
 
-void Engine::refreshPendingTransferList(std::shared_ptr<TransferJob> & tj) {
+void Engine::refreshPendingTransferList(const std::shared_ptr<TransferJob>& tj) {
   std::unordered_map<std::shared_ptr<TransferJob>, std::list<PendingTransfer> >::iterator it = pendingtransfers.find(tj);
   if (it == pendingtransfers.end()) {
     pendingtransfers[tj] = std::list<PendingTransfer>();
@@ -1169,9 +1169,9 @@ void Engine::refreshPendingTransferList(std::shared_ptr<TransferJob> & tj) {
   tj->clearExisting();
   switch (tj->getType()) {
     case TRANSFERJOB_DOWNLOAD: {
-      std::unordered_map<std::string, FileList *>::const_iterator it2;
+      std::unordered_map<std::string, std::shared_ptr<FileList>>::const_iterator it2;
       for (it2 = tj->srcFileListsBegin(); it2 != tj->srcFileListsEnd(); it2++) {
-        FileList * srclist = it2->second;
+        const std::shared_ptr<FileList>& srclist = it2->second;
         std::shared_ptr<LocalFileList> dstlist = tj->findLocalFileList(it2->first);
         for (std::list<File *>::iterator srcit = srclist->begin(); srcit != srclist->end(); srcit++) {
           File * f = *srcit;
@@ -1204,7 +1204,7 @@ void Engine::refreshPendingTransferList(std::shared_ptr<TransferJob> & tj) {
     case TRANSFERJOB_UPLOAD: {
       std::unordered_map<std::string, std::shared_ptr<LocalFileList> >::const_iterator lit;
       for (lit = tj->localFileListsBegin(); lit != tj->localFileListsEnd(); lit++) {
-        FileList * dstlist = tj->findDstList(lit->first);
+        std::shared_ptr<FileList> dstlist = tj->findDstList(lit->first);
         if (dstlist == NULL || dstlist->getState() == FileListState::UNKNOWN || dstlist->getState() == FileListState::EXISTS) {
           continue;
         }
@@ -1231,10 +1231,10 @@ void Engine::refreshPendingTransferList(std::shared_ptr<TransferJob> & tj) {
       break;
     }
     case TRANSFERJOB_FXP: {
-      std::unordered_map<std::string, FileList *>::const_iterator it2;
+      std::unordered_map<std::string, std::shared_ptr<FileList>>::const_iterator it2;
       for (it2 = tj->srcFileListsBegin(); it2 != tj->srcFileListsEnd(); it2++) {
-        FileList * srclist = it2->second;
-        FileList * dstlist = tj->findDstList(it2->first);
+        const std::shared_ptr<FileList>& srclist = it2->second;
+        std::shared_ptr<FileList> dstlist = tj->findDstList(it2->first);
         if (dstlist == NULL || dstlist->getState() == FileListState::UNKNOWN || dstlist->getState() == FileListState::EXISTS) {
           continue;
         }
@@ -1283,7 +1283,7 @@ void Engine::issueOptimalTransfers() {
   std::shared_ptr<SiteLogic> sld;
   std::string filename;
   std::shared_ptr<Race> race;
-  std::list<std::tuple<std::string, FileList *, FileList *>> removelist;
+  std::list<std::tuple<std::string, std::shared_ptr<FileList>, std::shared_ptr<FileList>>> removelist;
   for (it = scoreboard->begin(); it != scoreboard->end(); it++) {
     sbe = *it;
     sls = sbe->getSource();
@@ -1341,7 +1341,7 @@ void Engine::issueOptimalTransfers() {
     }
     sbe->setAttempted();
   }
-  for (const std::tuple<std::string, FileList *, FileList *> & elem : removelist) {
+  for (const std::tuple<std::string, std::shared_ptr<FileList>, std::shared_ptr<FileList>> & elem : removelist) {
     scoreboard->remove(std::get<0>(elem), std::get<1>(elem), std::get<2>(elem));
   }
   if (!removelist.empty()) {
@@ -1373,8 +1373,8 @@ void Engine::checkIfRaceComplete(const std::shared_ptr<SiteLogic> & sls, std::sh
     int completedlists = 0;
     std::unordered_set<std::string> subpaths = race->getSubPaths();
     for (std::unordered_set<std::string>::iterator itsp = subpaths.begin(); itsp != subpaths.end(); itsp++) {
-      FileList * spfl = srs->getFileListForPath(*itsp);
-      if (spfl != NULL && spfl->getState() == FileListState::LISTED) {
+      std::shared_ptr<FileList> spfl = srs->getFileListForPath(*itsp);
+      if (!!spfl && spfl->getState() == FileListState::LISTED) {
         if (!race->sizeEstimated(*itsp)) {
           if (spfl->getSize() > 0) {
             unfinisheddirs = true;
@@ -1424,7 +1424,7 @@ void Engine::checkIfRaceComplete(const std::shared_ptr<SiteLogic> & sls, std::sh
   }
 }
 
-void Engine::raceComplete(std::shared_ptr<Race> race) {
+void Engine::raceComplete(const std::shared_ptr<Race>& race) {
   for (std::list<std::shared_ptr<Race> >::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
     if ((*it) == race) {
       currentraces.erase(it);
@@ -1440,7 +1440,7 @@ void Engine::raceComplete(std::shared_ptr<Race> race) {
   return;
 }
 
-void Engine::transferJobComplete(std::shared_ptr<TransferJob> tj) {
+void Engine::transferJobComplete(const std::shared_ptr<TransferJob>& tj) {
 
   for (std::list<std::shared_ptr<TransferJob> >::iterator it = currenttransferjobs.begin(); it != currenttransferjobs.end(); it++) {
     if ((*it) == tj) {
@@ -1460,8 +1460,8 @@ unsigned short Engine::calculateScore(ScoreBoardElement * sbe) const {
       race->getProfile() == SPREAD_RACE);
 }
 
-unsigned short Engine::calculateScore(PrioType priotype, unsigned long long int filesize, const std::shared_ptr<Race> & itr, FileList * fls, const std::shared_ptr<SiteRace> & srs,
-                                      FileList * fld, const std::shared_ptr<SiteRace> & srd, int avgspeed,
+unsigned short Engine::calculateScore(PrioType priotype, unsigned long long int filesize, const std::shared_ptr<Race> & itr, const std::shared_ptr<FileList>& fls, const std::shared_ptr<SiteRace> & srs,
+                                      const std::shared_ptr<FileList>& fld, const std::shared_ptr<SiteRace> & srd, int avgspeed,
                                       SitePriority priority, bool racemode) const
 {
   switch (priotype) {
@@ -1537,7 +1537,7 @@ void Engine::setSpeedScale() {
   }
 }
 
-void Engine::preSeedPotentialData(std::shared_ptr<Race> & race) {
+void Engine::preSeedPotentialData(const std::shared_ptr<Race>& race) {
   std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator srcit;
   std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator dstit;
   int maxpointssizeandowned = getMaxPointsFileSize() + getMaxPointsPercentageOwned();
@@ -1560,7 +1560,7 @@ void Engine::preSeedPotentialData(std::shared_ptr<Race> & race) {
   }
 }
 
-bool Engine::raceTransferPossible(const std::shared_ptr<SiteLogic> & sls, const std::shared_ptr<SiteLogic> & sld, std::shared_ptr<Race> & race) const {
+bool Engine::raceTransferPossible(const std::shared_ptr<SiteLogic>& sls, const std::shared_ptr<SiteLogic>& sld, const std::shared_ptr<Race>& race) const {
   if (sls == sld) return false;
   const std::shared_ptr<Site> & srcsite = sls->getSite();
   const std::shared_ptr<Site> & dstsite = sld->getSite();
@@ -1816,7 +1816,7 @@ std::shared_ptr<Race> Engine::getCurrentRace(const std::string & release) const 
   return std::shared_ptr<Race>();
 }
 
-void Engine::addSiteToRace(std::shared_ptr<Race> & race, const std::string & site) {
+void Engine::addSiteToRace(const std::shared_ptr<Race>& race, const std::string& site) {
   const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
   if (sl->getSite()->getSkipList().check((sl->getSite()->getSectionPath(race->getSection()) / race->getName()).toString(),
                                          true, false, &race->getSectionSkipList()).action != SKIPLIST_DENY ||

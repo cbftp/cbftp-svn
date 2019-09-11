@@ -20,7 +20,7 @@
 #define MAX_CHECKS_BEFORE_HARD_TIMEOUT 1200
 #define MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP 3
 
-typedef std::pair<FileList *, FileList *> FailedTransferSecond;
+typedef std::pair<std::shared_ptr<FileList>, std::shared_ptr<FileList>> FailedTransferSecond;
 
 bool SitesComparator::operator()(const std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > & a,
                                  const std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > & b) const
@@ -28,7 +28,7 @@ bool SitesComparator::operator()(const std::pair<std::shared_ptr<SiteRace>, std:
   return a.first->getSiteName() < b.first->getSiteName();
 }
 
-Race::Race(unsigned int id, SpreadProfile profile, const std::string & release, const std::string & section) :
+Race::Race(unsigned int id, SpreadProfile profile, const std::string& release, const std::string& section) :
   name(release),
   group(util::getGroupNameFromRelease(release)),
   section(section),
@@ -65,11 +65,11 @@ CallbackType Race::callbackType() const {
   return CallbackType::RACE;
 }
 
-void Race::addSite(const std::shared_ptr<SiteRace> & siterace, const std::shared_ptr<SiteLogic> & sl) {
+void Race::addSite(const std::shared_ptr<SiteRace>& siterace, const std::shared_ptr<SiteLogic>& sl) {
   sites.insert(std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> >(siterace, sl));
 }
 
-void Race::removeSite(const std::shared_ptr<SiteLogic> & sl) {
+void Race::removeSite(const std::shared_ptr<SiteLogic>& sl) {
   for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::iterator it = sites.begin(); it != sites.end(); it++) {
     if (it->second == sl) {
       removeSite(it->first);
@@ -78,7 +78,7 @@ void Race::removeSite(const std::shared_ptr<SiteLogic> & sl) {
   }
 }
 
-void Race::removeSite(const std::shared_ptr<SiteRace> & siterace) {
+void Race::removeSite(const std::shared_ptr<SiteRace>& siterace) {
   for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::iterator it = sites.begin(); it != sites.end(); it++) {
     if (it->first == siterace) {
       sites.erase(it);
@@ -124,11 +124,11 @@ int Race::numSites() const {
   return sites.size();
 }
 
-bool Race::sizeEstimated(const std::string & subpath) const {
+bool Race::sizeEstimated(const std::string& subpath) const {
   return estimatedsize.find(subpath) != estimatedsize.end();
 }
 
-unsigned int Race::estimatedSize(const std::string & subpath) const {
+unsigned int Race::estimatedSize(const std::string& subpath) const {
   std::unordered_map<std::string, unsigned int>::const_iterator it = estimatedsize.find(subpath);
   if (it != estimatedsize.end()) {
     return it->second;
@@ -136,7 +136,7 @@ unsigned int Race::estimatedSize(const std::string & subpath) const {
   return 0;
 }
 
-unsigned int Race::guessedSize(const std::string & subpath) const {
+unsigned int Race::guessedSize(const std::string& subpath) const {
   std::unordered_map<std::string, std::unordered_map<std::string, unsigned long long int> >::const_iterator it =
       guessedfilelists.find(subpath);
   if (it != guessedfilelists.end()) {
@@ -149,7 +149,7 @@ unsigned long long int Race::estimatedTotalSize() const {
   return guessedtotalfilesize;
 }
 
-unsigned long long int Race::guessedFileSize(const std::string & subpath, const std::string & file) const {
+unsigned long long int Race::guessedFileSize(const std::string& subpath, const std::string& file) const {
   std::unordered_map<std::string, std::unordered_map<std::string, SizeLocationTrack> >::const_iterator it =
       sizelocationtrackers.find(subpath);
   if (it == sizelocationtrackers.end()) {
@@ -182,7 +182,7 @@ std::unordered_map<std::string, unsigned long long int>::const_iterator Race::gu
   return guessedfilelists.at("").end();
 }
 
-bool Race::SFVReported(const std::string & subpath) const {
+bool Race::SFVReported(const std::string& subpath) const {
   std::unordered_map<std::string, std::unordered_set<std::shared_ptr<SiteRace>> >::const_iterator it = sfvreports.find(subpath);
   return it != sfvreports.end();
 }
@@ -203,7 +203,7 @@ bool Race::isDone() const {
   return status != RACE_STATUS_RUNNING;
 }
 
-void Race::reportNewSubDir(const std::shared_ptr<SiteRace> & sr, const std::string & subdir) {
+void Race::reportNewSubDir(const std::shared_ptr<SiteRace>& sr, const std::string& subdir) {
   if (subpathoccurences.find(subdir) == subpathoccurences.end()) {
     subpathoccurences[subdir] = std::unordered_set<std::shared_ptr<SiteRace>>();
   }
@@ -215,15 +215,15 @@ void Race::reportNewSubDir(const std::shared_ptr<SiteRace> & sr, const std::stri
   }
 }
 
-void Race::reportSFV(const std::shared_ptr<SiteRace> & sr, const std::string & subpath) {
+void Race::reportSFV(const std::shared_ptr<SiteRace>& sr, const std::string& subpath) {
   if (sfvreports.find(subpath) == sfvreports.end()) {
     sfvreports[subpath] = std::unordered_set<std::shared_ptr<SiteRace>>();
   }
-  std::unordered_set<std::shared_ptr<SiteRace>> & sfvreportssubpath = sfvreports.at(subpath);
+  std::unordered_set<std::shared_ptr<SiteRace>>& sfvreportssubpath = sfvreports.at(subpath);
   sfvreportssubpath.insert(sr);
 }
 
-void Race::reportDone(const std::shared_ptr<SiteRace> & sr) {
+void Race::reportDone(const std::shared_ptr<SiteRace>& sr) {
   if (donesites.find(sr) != donesites.end()) {
     return;
   }
@@ -234,7 +234,7 @@ void Race::reportDone(const std::shared_ptr<SiteRace> & sr) {
   }
 }
 
-void Race::reportSemiDone(const std::shared_ptr<SiteRace> & sr) {
+void Race::reportSemiDone(const std::shared_ptr<SiteRace>& sr) {
   if (semidonesites.find(sr) != semidonesites.end()) {
     return;
   }
@@ -291,19 +291,19 @@ void Race::setTimeout() {
   status = RACE_STATUS_TIMEOUT;
 }
 
-void Race::reportSize(const std::shared_ptr<SiteRace> & sr, FileList * fl, const std::string & subpath, const std::unordered_set<std::string > & uniques, bool final) {
+void Race::reportSize(const std::shared_ptr<SiteRace>& sr, const std::shared_ptr<FileList>& fl, const std::string& subpath, const std::unordered_set<std::string >& uniques, bool final) {
   std::unordered_set<std::string>::const_iterator itu;
-  File * file;
+  File* file;
   if (sizelocationtrackers.find(subpath) == sizelocationtrackers.end()) {
     sizelocationtrackers[subpath] = std::unordered_map<std::string, SizeLocationTrack>();
   }
   bool recalc = false;
   for (itu = uniques.begin(); itu != uniques.end(); itu++) {
-    const std::string & unique = *itu;
+    const std::string& unique = *itu;
     if (sizelocationtrackers[subpath].find(unique) == sizelocationtrackers[subpath].end()) {
       sizelocationtrackers[subpath][unique] = SizeLocationTrack();
     }
-    if ((file = fl->getFile(unique)) != NULL) {
+    if ((file = fl->getFile(unique)) != nullptr) {
       if (sizelocationtrackers[subpath][unique].add(sr, file->getSize())) {
         estimatedfilesizes[unique] = sizelocationtrackers[subpath][unique].getEstimatedSize();
         recalc = true;
@@ -553,8 +553,8 @@ unsigned int Race::getBestCompletionPercentage() const {
   return best;
 }
 
-bool Race::hasFailedTransfer(const std::string & filename, FileList * fls, FileList * fld) const {
-  FailedTransfer matchall = FailedTransfer(filename, FailedTransferSecond(NULL, fld));
+bool Race::hasFailedTransfer(const std::string & filename, const std::shared_ptr<FileList>& fls, const std::shared_ptr<FileList>& fld) const {
+  FailedTransfer matchall = FailedTransfer(filename, FailedTransferSecond(nullptr, fld));
   auto it = transferattempts.find(matchall);
   if (it != transferattempts.end() && it->second >= MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP) {
     return true;
@@ -574,7 +574,7 @@ const SkipList & Race::getSectionSkipList() const {
   return sectionskiplist;
 }
 
-void Race::addTransfer(const std::shared_ptr<TransferStatus> & ts) {
+void Race::addTransfer(const std::shared_ptr<TransferStatus>& ts) {
   if (!!ts) {
     ts->setCallback(this);
   }
@@ -587,20 +587,20 @@ bool Race::clearTransferAttempts(bool clearstate) {
   return ret;
 }
 
-void Race::transferSuccessful(const std::shared_ptr<TransferStatus> & ts) {
+void Race::transferSuccessful(const std::shared_ptr<TransferStatus>& ts) {
   addTransferAttempt(ts);
 }
 
-void Race::transferFailed(const std::shared_ptr<TransferStatus> & ts, int) {
+void Race::transferFailed(const std::shared_ptr<TransferStatus>& ts, int) {
   addTransferAttempt(ts);
 }
 
-void Race::addTransferAttempt(const std::shared_ptr<TransferStatus> & ts) {
-  FileList * srcfl = ts->getSourceFileList();
-  FileList * dstfl = ts->getTargetFileList();
+void Race::addTransferAttempt(const std::shared_ptr<TransferStatus>& ts) {
+  std::shared_ptr<FileList> srcfl = ts->getSourceFileList();
+  std::shared_ptr<FileList> dstfl = ts->getTargetFileList();
   std::string file = ts->getFile();
   FailedTransfer match = FailedTransfer(file, FailedTransferSecond(srcfl, dstfl));
-  FailedTransfer matchall = FailedTransfer(file, FailedTransferSecond(NULL, dstfl));
+  FailedTransfer matchall = FailedTransfer(file, FailedTransferSecond(nullptr, dstfl));
   auto it = transferattempts.find(matchall);
   if (it == transferattempts.end()) {
     transferattempts[matchall] = 1;

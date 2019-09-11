@@ -184,11 +184,11 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
       if (split && left->type() != BrowseScreenType::SELECTOR && right->type() != BrowseScreenType::SELECTOR) {
         std::shared_ptr<BrowseScreenSub> other = active == left ? right : left;
         if (active->type() == BrowseScreenType::SITE) {
-          FileList * activefl = std::static_pointer_cast<BrowseScreenSite>(active)->fileList();
+          std::shared_ptr<FileList> activefl = std::static_pointer_cast<BrowseScreenSite>(active)->fileList();
           std::list<UIFile *> files = std::static_pointer_cast<BrowseScreenSite>(active)->getUIFileList()->getSelectedFiles();
           if (activefl != NULL) {
             if (other->type() == BrowseScreenType::SITE) {
-              FileList * otherfl = std::static_pointer_cast<BrowseScreenSite>(other)->fileList();
+              std::shared_ptr<FileList> otherfl = std::static_pointer_cast<BrowseScreenSite>(other)->fileList();
               if (otherfl != NULL) {
                 for (std::list<UIFile *>::const_iterator it = files.begin(); it != files.end(); it++) {
                   UIFile * f = *it;
@@ -224,7 +224,7 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
         }
         else if (other->type() == BrowseScreenType::SITE) {
           std::shared_ptr<LocalFileList> activefl = std::static_pointer_cast<BrowseScreenLocal>(active)->fileList();
-          FileList * otherfl = std::static_pointer_cast<BrowseScreenSite>(other)->fileList();
+          std::shared_ptr<FileList> otherfl = std::static_pointer_cast<BrowseScreenSite>(other)->fileList();
           std::list<UIFile *> files = std::static_pointer_cast<BrowseScreenLocal>(active)->getUIFileList()->getSelectedFiles();
           if (!!activefl && otherfl != NULL) {
             for (std::list<UIFile *>::const_iterator it = files.begin(); it != files.end(); it++) {

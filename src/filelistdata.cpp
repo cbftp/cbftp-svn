@@ -1,15 +1,15 @@
 #include "filelistdata.h"
 
-FileListData::FileListData(FileList * filelist, RawBuffer * cwdrawbuffer)
+FileListData::FileListData(const std::shared_ptr<FileList>& filelist, RawBuffer* cwdrawbuffer)
   : filelist(filelist), cwdrawbuffer(*cwdrawbuffer)
 {
 
 }
 
-FileList * FileListData::getFileList() const {
+std::shared_ptr<FileList> FileListData::getFileList() const {
   return filelist;
 }
 
-const RawBuffer & FileListData::getCwdRawBuffer() const {
+const RawBuffer& FileListData::getCwdRawBuffer() const {
   return cwdrawbuffer;
 }
