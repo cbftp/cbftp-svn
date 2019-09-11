@@ -247,8 +247,8 @@ void RaceStatusScreen::update() {
         continue;
       }
       std::string printsubpath = origsubpath;
-      FileList * fl = sr->getFileListForPath(origsubpath);
-      if (fl == NULL) {
+      std::shared_ptr<FileList> fl = sr->getFileListForPath(origsubpath);
+      if (!fl) {
         continue;
       }
       if (printsubpath == "") {

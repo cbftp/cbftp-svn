@@ -1,8 +1,9 @@
 #include "pendingtransfer.h"
 
+#include "filelist.h"
 #include "localfilelist.h"
 
-PendingTransfer::PendingTransfer(const std::shared_ptr<SiteLogic> & slsrc, FileList * flsrc, std::string srcfilename, const std::shared_ptr<SiteLogic> & sldst, FileList * fldst, std::string dstfilename) :
+PendingTransfer::PendingTransfer(const std::shared_ptr<SiteLogic> & slsrc, const std::shared_ptr<FileList>& flsrc, std::string srcfilename, const std::shared_ptr<SiteLogic> & sldst, const std::shared_ptr<FileList>& fldst, std::string dstfilename) :
   slsrc(slsrc),
   sldst(sldst),
   flsrc(flsrc),
@@ -12,21 +13,17 @@ PendingTransfer::PendingTransfer(const std::shared_ptr<SiteLogic> & slsrc, FileL
   transfertype(PENDINGTRANSFER_FXP) {
 }
 
-PendingTransfer::PendingTransfer(const std::shared_ptr<SiteLogic> & sl, FileList * fl, std::string srcfilename, std::shared_ptr<LocalFileList> fllocal, std::string dstfilename) :
+PendingTransfer::PendingTransfer(const std::shared_ptr<SiteLogic> & sl, const std::shared_ptr<FileList>& fl, std::string srcfilename, std::shared_ptr<LocalFileList> fllocal, std::string dstfilename) :
   slsrc(sl),
-  sldst(nullptr),
   flsrc(fl),
-  fldst(nullptr),
   fllocal(fllocal),
   srcfilename(srcfilename),
   dstfilename(dstfilename),
   transfertype(PENDINGTRANSFER_DOWNLOAD) {
 }
 
-PendingTransfer::PendingTransfer(std::shared_ptr<LocalFileList> fllocal, std::string srcfilename, const std::shared_ptr<SiteLogic> & sl, FileList * fl, std::string dstfilename) :
-  slsrc(nullptr),
+PendingTransfer::PendingTransfer(std::shared_ptr<LocalFileList> fllocal, std::string srcfilename, const std::shared_ptr<SiteLogic> & sl, const std::shared_ptr<FileList>& fl, std::string dstfilename) :
   sldst(sl),
-  flsrc(nullptr),
   fldst(fl),
   fllocal(fllocal),
   srcfilename(srcfilename),
@@ -50,11 +47,11 @@ const std::shared_ptr<SiteLogic> & PendingTransfer::getDst() const {
   return sldst;
 }
 
-FileList * PendingTransfer::getSrcFileList() const {
+std::shared_ptr<FileList> PendingTransfer::getSrcFileList() const {
   return flsrc;
 }
 
-FileList * PendingTransfer::getDstFileList() const {
+std::shared_ptr<FileList> PendingTransfer::getDstFileList() const {
   return fldst;
 }
 

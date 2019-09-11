@@ -2,11 +2,12 @@
 
 #include <cassert>
 
+#include "filelist.h"
 #include "util.h"
 
 TransferStatus::TransferStatus(int type, std::string source, std::string target,
-    std::string release, std::string file, FileList * fls, const Path & sourcepath,
-    FileList * fld, const Path & targetpath, unsigned long long int sourcesize,
+    std::string release, std::string file, const std::shared_ptr<FileList>& fls, const Path & sourcepath,
+    const std::shared_ptr<FileList>& fld, const Path & targetpath, unsigned long long int sourcesize,
     unsigned int assumedspeed, int srcslot, int dstslot, bool ssl, bool defaultactive) :
     type(type), source(source), target(target), release(release), file(file),
     timestamp(util::ctimeLog()), sourcepath(sourcepath),
@@ -49,11 +50,11 @@ const Path & TransferStatus::getTargetPath() const {
   return targetpath;
 }
 
-FileList * TransferStatus::getSourceFileList() const {
+std::shared_ptr<FileList> TransferStatus::getSourceFileList() const {
   return fls;
 }
 
-FileList * TransferStatus::getTargetFileList() const {
+std::shared_ptr<FileList> TransferStatus::getTargetFileList() const {
   return fld;
 }
 

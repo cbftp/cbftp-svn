@@ -41,7 +41,7 @@ public:
   void setFocus(bool) override;
   void tick(int) override;
   std::string siteName() const;
-  FileList * fileList() const;
+  std::shared_ptr<FileList> fileList() const;
   UIFile * selectedFile() const;
   UIFileList * getUIFileList() override;
   const std::shared_ptr<Site> & getSite() const;
@@ -67,7 +67,7 @@ private:
   std::shared_ptr<Site> site;
   UIFileList list;
   mutable int spinnerpos;
-  FileList * filelist;
+  std::shared_ptr<FileList> filelist;
   bool withinraceskiplistreach;
   Path closestracesectionpath;
   std::string closestracesection;

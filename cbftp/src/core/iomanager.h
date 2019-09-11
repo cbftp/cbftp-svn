@@ -125,6 +125,16 @@ public:
      */
     int registerUnixServerSocket(EventReceiver* er, const std::string& path);
 
+    /* Create and listen on an UDP server socket that binds to the specified port.
+     * @param er: The event receiver
+     * @param port: The port to bind to
+     * @param addrfam: The address family (IPv4 or IPv6) of the socket.
+     * @return: a socket identifier
+     *
+     * Events are the same as for registerTCPServerSocket above.
+     */
+    int registerUDPServerSocket(EventReceiver* er, int port, AddressFamily addrfam = AddressFamily::IPV4);
+
     /* Take over a previously registered socket with a new EventReceiver.
      * @param er: The new event receiver
      * @param sockid: The socket identifier to register
@@ -166,16 +176,6 @@ public:
      * an FDSSLSuccess() or an FDSSLFail() event will be produced.
      */
     void negotiateSSLAccept(int sockid);
-
-    /* Create and listen on an UDP server socket that binds to the specified port.
-     * @param er: The event receiver
-     * @param port: The port to bind to
-     * @param addrfam: The address family (IPv4 or IPv6) of the socket.
-     * @return: a socket identifier
-     *
-     * Events are the same as for registerTCPServerSocket above.
-     */
-    int registerUDPServerSocket(EventReceiver* er, int port, AddressFamily addrfam = AddressFamily::IPV4);
 
     /* Send data on a socket.
      * @param sockid: The socket identifier.
@@ -247,25 +247,25 @@ public:
      */
     int getSocketFileDescriptor(int sockid) const;
 
-    /* Return the local address of a socket.
+    /* Return the local address of a socket, either IPv4 or IPv6.
      * @param sockid: The socket identifier.
      * @return: The local address
      */
     std::string getInterfaceAddress(int sockid) const;
 
-    /* Return the local address of a socket, either IPv4 or IPv6.
+    /* Return the IPv4 address of the interface that a socket is bound to.
      * @param sockid: The socket identifier.
      * @return: The local address
      */
     std::string getInterfaceAddress4(int sockid) const;
 
-    /* Return the IPv4 address of the interface that a socket is bound to.
+    /* Return the IPv6 address of the interface that a socket is bound to.
      * @param sockid: The socket identifier.
      * @return: The local address
      */
     std::string getInterfaceAddress6(int sockid) const;
 
-    /* Return the IPv6 address of the interface that a socket is bound to.
+    /* Return the address family of a socket.
      * @param sockid: The socket identifier.
      * @return: The address family
      */
@@ -291,22 +291,11 @@ public:
      */
     void resume(int sockid);
 
-    /* Whether a default interface to bind to has been specified
-     * @return: true or false
-     */
-
     /* set SO_LINGER with timeout 0 on the socket, resulting in an
      * RST instead of FIN when the socket is closed. Used for avoiding
      * TIME_WAIT.
      */
     void setLinger(int sockid);
-
-    /* When reaching EOF while reading from the socket, the default behavior is
-     * to generate an FDDisconnected event and close the socket. If enable
-     * instead is false, an FDData event with length 0 is generated and the
-     * application is responsible to decide what to do with the socket.
-     */
-    void setDisconnectOnEOF(int sockid, bool enable);
 
     /* Store the TLS session for this socket.
      * @param sockid: the socket identifier
@@ -324,6 +313,9 @@ public:
      */
     void clearReusedSession(int sockid);
 
+    /* Whether a default interface to bind to has been specified
+     * @return: true or false
+     */
     bool hasDefaultInterface() const;
 
     /* Get the name of the default interface to bind to, if specified

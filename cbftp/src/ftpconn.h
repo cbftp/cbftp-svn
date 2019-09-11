@@ -104,7 +104,7 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     int sockid;
     FTPConnState state;
     bool aborted;
-    FileList * currentfl;
+    std::shared_ptr<FileList> currentfl;
     std::shared_ptr<CommandOwner> currentco;
     Path currentpath;
     ProtMode protectedmode;
@@ -168,8 +168,8 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     void clearConnectors();
     void rawBufWrite(const std::string &);
     void rawBufWriteLine(const std::string &);
-    void doCWD(const Path &, FileList *, const std::shared_ptr<CommandOwner> & co);
-    void doMKD(const Path &, FileList *, const std::shared_ptr<CommandOwner> & co);
+    void doCWD(const Path& path, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner>& co);
+    void doMKD(const Path& path, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner>& co);
     void parseXDUPEData();
     void finishLogin();
   public:
@@ -181,7 +181,6 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     bool isProcessing() const;
     FTPConn(SiteLogic *, int);
     ~FTPConn();
-    int updateFileList(FileList *);
     void updateName();
     const Path & getCurrentPath() const;
     void doUSER(bool);
@@ -195,11 +194,11 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     void doDELE(const Path &);
     void doRMD(const Path &);
     void doSTAT();
-    void doSTAT(const std::shared_ptr<CommandOwner> & co, FileList *);
+    void doSTAT(const std::shared_ptr<CommandOwner>& co, const std::shared_ptr<FileList>& fl);
     void doLIST();
     void doLISTa();
-    FileList * newFileList();
-    void setListData(const std::shared_ptr<CommandOwner> & co, FileList *);
+    std::shared_ptr<FileList> newFileList() const;
+    void setListData(const std::shared_ptr<CommandOwner>& co, const std::shared_ptr<FileList>& fl);
     void doSTATla();
     void doSSCN(bool);
     void doCPSV();
@@ -209,9 +208,9 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     void doPORT(const std::string& host, int port);
     void doCEPRON();
     void doCWD(const Path &, const std::shared_ptr<CommandOwner> & co = std::shared_ptr<CommandOwner>());
-    void doCWD(FileList *, const std::shared_ptr<CommandOwner> & co = std::shared_ptr<CommandOwner>());
+    void doCWD(const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner>& co = std::shared_ptr<CommandOwner>());
     void doMKD(const Path &, const std::shared_ptr<CommandOwner> & co = std::shared_ptr<CommandOwner>());
-    void doMKD(FileList *, const std::shared_ptr<CommandOwner> & co);
+    void doMKD(const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner>& co);
     void doPRETRETR(const std::string &);
     void doRETR(const std::string &);
     void doPRETSTOR(const std::string &);
@@ -254,7 +253,7 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     void ftpConnectSuccess(int id, const Address& addr);
     void ftpConnectFail(int id);
     void tick(int);
-    FileList * currentFileList() const;
+    std::shared_ptr<FileList> currentFileList() const;
     const std::shared_ptr<CommandOwner> & currentCommandOwner() const;
     void resetCurrentCommandOwner();
     void parseFileList(char *, unsigned int);

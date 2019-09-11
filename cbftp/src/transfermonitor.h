@@ -55,8 +55,8 @@ class TransferMonitor : public Core::EventReceiver, public RawBufferCallback {
     int storeid;
     std::shared_ptr<SiteLogic> sls;
     std::shared_ptr<SiteLogic> sld;
-    FileList * fls;
-    FileList * fld;
+    std::shared_ptr<FileList> fls;
+    std::shared_ptr<FileList> fld;
     std::shared_ptr<LocalFileList> localfl;
     Path spath;
     Path dpath;
@@ -102,14 +102,14 @@ class TransferMonitor : public Core::EventReceiver, public RawBufferCallback {
     void sslDetails(const std::string &, bool);
     bool idle() const;
     std::shared_ptr<TransferStatus> getTransferStatus() const;
-    void engageFXP(const std::string &, const std::shared_ptr<SiteLogic> &, FileList *,
-      const std::string &, const std::shared_ptr<SiteLogic> &, FileList *,
+    void engageFXP(const std::string &, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fls,
+      const std::string &, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fld,
       const std::shared_ptr<CommandOwner> &, const std::shared_ptr<CommandOwner> &);
     void engageDownload(const std::string &, const std::shared_ptr<SiteLogic> &,
-      FileList *, const std::shared_ptr<LocalFileList> &, const std::shared_ptr<CommandOwner> &);
+        const std::shared_ptr<FileList>& fls, const std::shared_ptr<LocalFileList> &, const std::shared_ptr<CommandOwner> &);
     void engageUpload(const std::string &, const std::shared_ptr<LocalFileList> &,
-      const std::shared_ptr<SiteLogic> &, FileList *, const std::shared_ptr<CommandOwner> &);
-    void engageList(const std::shared_ptr<SiteLogic> &, int, bool, FileList *,
+      const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fld, const std::shared_ptr<CommandOwner> &);
+    void engageList(const std::shared_ptr<SiteLogic> &, int, bool, const std::shared_ptr<FileList>& fl,
         const std::shared_ptr<CommandOwner> &, bool ipv6);
     Status getStatus() const;
     bool willFail() const;

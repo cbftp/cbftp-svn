@@ -64,8 +64,8 @@ private:
 public:
   UIFileList();
   void sortMethod(SortMethod sortmethod);
-  void parse(FileList *);
-  void parse(std::shared_ptr<LocalFileList> &);
+  void parse(const std::shared_ptr<FileList>& fl);
+  void parse(const std::shared_ptr<LocalFileList>& fl);
   UIFile * cursoredFile() const;
   bool selectFileName(const std::string & filename);
   bool goNext();

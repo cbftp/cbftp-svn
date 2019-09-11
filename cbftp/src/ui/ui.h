@@ -190,7 +190,7 @@ public:
   void goConfirmation(const std::string & message);
   void goStrongConfirmation(const std::string & message);
   void goNuke(const std::string & site, const std::string & items, const Path & path);
-  void goViewFile(const std::string &, const std::string &, FileList *);
+  void goViewFile(const std::string &, const std::string &, const std::shared_ptr<FileList>& fl);
   void goViewFile(const Path &, const std::string &);
   void goNewRace(const std::string & site, const std::list<std::string> & sections, const std::list<std::pair<std::string, bool> > & items);
   void goSelectSites(const std::string &, std::list<std::shared_ptr<Site> >, std::list<std::shared_ptr<Site> >);

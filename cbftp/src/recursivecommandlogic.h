@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <list>
 #include <vector>
@@ -30,15 +31,16 @@ private:
   Path basepath;
   Path target;
   std::list<Path> wantedlists;
-  std::vector<std::pair<Path, bool> > deletefiles;
+  std::vector<std::pair<Path, bool>> deletefiles;
   bool listtarget;
   Path targetpath;
   std::string user;
 public:
   RecursiveCommandLogic();
-  void initialize(RecursiveCommandType, const Path &, const std::string &);
+  ~RecursiveCommandLogic();
+  void initialize(RecursiveCommandType, const Path&, const std::string&);
   bool isActive() const;
   int getAction(const Path &, Path &);
-  void addFileList(FileList *);
+  void addFileList(const std::shared_ptr<FileList>& fl);
   void failedCwd();
 };

@@ -20,7 +20,7 @@ class ViewFileScreen : public UIWindow {
 public:
   ViewFileScreen(Ui * ui);
   ~ViewFileScreen();
-  void initialize(unsigned int, unsigned int, const std::string &, const std::string &, FileList *);
+  void initialize(unsigned int, unsigned int, const std::string &, const std::string &, const std::shared_ptr<FileList>& fl);
   void initialize(unsigned int, unsigned int, const Path &, const std::string &);
   void redraw();
   void update();
@@ -33,7 +33,7 @@ private:
   int requestid;
   std::shared_ptr<SiteLogic> sitelogic;
   std::shared_ptr<TransferStatus> ts;
-  FileList * filelist;
+  std::shared_ptr<FileList> filelist;
   std::string site;
   std::string file;
   unsigned int x;

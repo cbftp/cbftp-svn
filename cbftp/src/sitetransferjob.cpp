@@ -1,12 +1,13 @@
 #include "sitetransferjob.h"
 
+#include "filelist.h"
 #include "transferjob.h"
 
-SiteTransferJob::SiteTransferJob(TransferJob * tj, bool source) : transferjob(tj), source(source) {
+SiteTransferJob::SiteTransferJob(TransferJob* tj, bool source) : transferjob(tj), source(source) {
 
 }
 
-TransferJob * SiteTransferJob::getTransferJob() {
+TransferJob* SiteTransferJob::getTransferJob() {
   return transferjob;
 }
 
@@ -26,7 +27,7 @@ Path SiteTransferJob::getPath() const {
   return transferjob->getPath(source);
 }
 
-FileList * SiteTransferJob::getListTarget() {
+std::shared_ptr<FileList> SiteTransferJob::getListTarget() {
   return transferjob->getListTarget(source);
 }
 int SiteTransferJob::classType() const {
@@ -40,10 +41,10 @@ std::string SiteTransferJob::getName() const {
 unsigned int SiteTransferJob::getId() const {
   return transferjob->getId();
 }
-void SiteTransferJob::fileListUpdated(SiteLogic * sl, FileList * fl) {
+void SiteTransferJob::fileListUpdated(SiteLogic * sl, const std::shared_ptr<FileList>& fl) {
   return transferjob->fileListUpdated(source, fl);
 }
 
-FileList * SiteTransferJob::getFileListForFullPath(SiteLogic * sl, const Path & path) const {
+std::shared_ptr<FileList> SiteTransferJob::getFileListForFullPath(SiteLogic* sl, const Path& path) const {
   return transferjob->getFileListForFullPath(source, path);
 }

@@ -1,18 +1,23 @@
 #include "scoreboardelement.h"
 
 #include "race.h"
+#include "filelist.h"
 
 ScoreBoardElement::ScoreBoardElement(const std::string & filename, unsigned short score,
-    unsigned long long int filesize, PrioType priotype, const std::shared_ptr<SiteLogic> & src, FileList * fls, const std::shared_ptr<SiteRace> & srcsr,
-    const std::shared_ptr<SiteLogic> & dst, FileList * fld, const std::shared_ptr<SiteRace> & dstsr, const std::shared_ptr<Race> & race,
+    unsigned long long int filesize, PrioType priotype, const std::shared_ptr<SiteLogic> & src, const std::shared_ptr<FileList>& fls, const std::shared_ptr<SiteRace> & srcsr,
+    const std::shared_ptr<SiteLogic> & dst, const std::shared_ptr<FileList>& fld, const std::shared_ptr<SiteRace> & dstsr, const std::shared_ptr<Race> & race,
     const std::string & subdir)
 {
   reset(filename, score, filesize, priotype, src, fls, srcsr, dst, fld, dstsr, race, subdir);
 }
 
+ScoreBoardElement::~ScoreBoardElement() {
+
+}
+
 void ScoreBoardElement::reset(const std::string & filename, unsigned short score,
-    unsigned long long int filesize, PrioType priotype, const std::shared_ptr<SiteLogic> & src, FileList * fls, const std::shared_ptr<SiteRace> & srcsr,
-    const std::shared_ptr<SiteLogic> & dst, FileList * fld, const std::shared_ptr<SiteRace> & dstsr, const std::shared_ptr<Race> & race,
+    unsigned long long int filesize, PrioType priotype, const std::shared_ptr<SiteLogic> & src, const std::shared_ptr<FileList>& fls, const std::shared_ptr<SiteRace> & srcsr,
+    const std::shared_ptr<SiteLogic> & dst, const std::shared_ptr<FileList>& fld, const std::shared_ptr<SiteRace> & dstsr, const std::shared_ptr<Race> & race,
     const std::string & subdir)
 {
   this->filename = filename;
@@ -63,11 +68,11 @@ const std::shared_ptr<SiteLogic> & ScoreBoardElement::getDestination() const {
   return dst;
 }
 
-FileList * ScoreBoardElement::getSourceFileList() const {
+const std::shared_ptr<FileList>& ScoreBoardElement::getSourceFileList() const {
   return fls;
 }
 
-FileList * ScoreBoardElement::getDestinationFileList() const {
+const std::shared_ptr<FileList>& ScoreBoardElement::getDestinationFileList() const {
   return fld;
 }
 

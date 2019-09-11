@@ -27,20 +27,20 @@ class TransferManager {
   public:
     TransferManager();
     ~TransferManager();
-    void getFileList(const std::shared_ptr<SiteLogic> &, int, bool, FileList *, bool ipv6, const std::shared_ptr<CommandOwner> & co = std::shared_ptr<CommandOwner>());
+    void getFileList(const std::shared_ptr<SiteLogic> &, int, bool, const std::shared_ptr<FileList>& fl, bool ipv6, const std::shared_ptr<CommandOwner> & co = std::shared_ptr<CommandOwner>());
     std::shared_ptr<TransferStatus> suggestTransfer(
-      const std::string &, const std::shared_ptr<SiteLogic> &, FileList *,
-      const std::shared_ptr<SiteLogic> &, FileList *, const std::shared_ptr<CommandOwner> &, const std::shared_ptr<CommandOwner> &);
+      const std::string &, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fls,
+      const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fld, const std::shared_ptr<CommandOwner> &, const std::shared_ptr<CommandOwner> &);
     std::shared_ptr<TransferStatus> suggestTransfer(
-      const std::string &, const std::shared_ptr<SiteLogic> &, FileList *,
-      const std::string &, const std::shared_ptr<SiteLogic> &, FileList *,
+      const std::string &, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fls,
+      const std::string &, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fld,
       const std::shared_ptr<CommandOwner> &, const std::shared_ptr<CommandOwner> &);
     std::shared_ptr<TransferStatus> suggestDownload(
-      const std::string &, const std::shared_ptr<SiteLogic> &, FileList *,
+      const std::string &, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fls,
       const std::shared_ptr<LocalFileList> &, const std::shared_ptr<CommandOwner> & co = std::shared_ptr<CommandOwner>());
     std::shared_ptr<TransferStatus> suggestUpload(
       const std::string &, const std::shared_ptr<LocalFileList> &,
-      const std::shared_ptr<SiteLogic> &, FileList *, const std::shared_ptr<CommandOwner> &);
+      const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fld, const std::shared_ptr<CommandOwner> &);
     void transferSuccessful(const std::shared_ptr<TransferStatus> &);
     void transferFailed(const std::shared_ptr<TransferStatus> &, int);
     std::list<std::shared_ptr<TransferStatus> >::const_iterator ongoingTransfersBegin() const;

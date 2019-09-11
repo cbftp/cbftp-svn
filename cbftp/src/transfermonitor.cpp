@@ -54,8 +54,8 @@ bool TransferMonitor::idle() const {
 }
 
 void TransferMonitor::engageFXP(
-  const std::string & sfile, const std::shared_ptr<SiteLogic> & sls, FileList * fls,
-  const std::string & dfile, const std::shared_ptr<SiteLogic> & sld, FileList * fld,
+  const std::string & sfile, const std::shared_ptr<SiteLogic> & sls, const std::shared_ptr<FileList>& fls,
+  const std::string & dfile, const std::shared_ptr<SiteLogic> & sld, const std::shared_ptr<FileList>& fld,
   const std::shared_ptr<CommandOwner> & srcco, const std::shared_ptr<CommandOwner> & dstco)
 {
   reset();
@@ -120,7 +120,7 @@ void TransferMonitor::engageFXP(
 }
 
 void TransferMonitor::engageDownload(
-  const std::string & sfile, const std::shared_ptr<SiteLogic> & sls, FileList * fls,
+  const std::string & sfile, const std::shared_ptr<SiteLogic> & sls, const std::shared_ptr<FileList>& fls,
   const std::shared_ptr<LocalFileList> & localfl, const std::shared_ptr<CommandOwner> & co)
 {
   reset();
@@ -148,7 +148,7 @@ void TransferMonitor::engageDownload(
   clientactive = !sls->getSite()->hasBrokenPASV();
   ts = std::make_shared<TransferStatus>(TRANSFERSTATUS_TYPE_DOWNLOAD,
       sls->getSite()->getName(), "/\\", "", dfile, fls, spath,
-      (FileList *)NULL, dpath, fls->getFile(sfile)->getSize(), 0, src, -1, ssl, clientactive);
+      nullptr, dpath, fls->getFile(sfile)->getSize(), 0, src, -1, ssl, clientactive);
   tm->addNewTransferStatus(ts);
   if (FileSystem::fileExists(dpath / dfile) && global->getLocalStorage()->getLocalFile(dpath / dfile).getSize() > 0) {
     ts->setDupe();
@@ -168,7 +168,7 @@ void TransferMonitor::engageDownload(
 
 void TransferMonitor::engageUpload(
   const std::string & sfile, const std::shared_ptr<LocalFileList> & localfl,
-  const std::shared_ptr<SiteLogic> & sld, FileList * fld, const std::shared_ptr<CommandOwner> & co)
+  const std::shared_ptr<SiteLogic> & sld, const std::shared_ptr<FileList>& fld, const std::shared_ptr<CommandOwner> & co)
 {
   reset();
   if (!localfl) return;
@@ -194,7 +194,7 @@ void TransferMonitor::engageUpload(
   fld->touchFile(dfile, sld->getSite()->getUser(), true);
   clientactive = !sld->getSite()->hasBrokenPASV();
   ts = std::make_shared<TransferStatus>(TRANSFERSTATUS_TYPE_UPLOAD,
-      "/\\", sld->getSite()->getName(), "", dfile, (FileList *)NULL, spath,
+      "/\\", sld->getSite()->getName(), "", dfile, nullptr, spath,
       fld, dpath, lf.getSize(), 0, 0, dst, ssl, clientactive);
   tm->addNewTransferStatus(ts);
   if (!FileSystem::fileExists(spath / sfile)) {
@@ -214,7 +214,7 @@ void TransferMonitor::engageUpload(
 }
 
 void TransferMonitor::engageList(const std::shared_ptr<SiteLogic> & sls, int connid,
-  bool hiddenfiles, FileList * fl, const std::shared_ptr<CommandOwner> & co, bool ipv6)
+  bool hiddenfiles, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner> & co, bool ipv6)
 {
   reset();
   type = TM_TYPE_LIST;
@@ -393,7 +393,7 @@ void TransferMonitor::sourceComplete() {
          status == TM_STATUS_TRANSFERRING ||
          status == TM_STATUS_TRANSFERRING_TARGET_COMPLETE);
   partialcompletestamp = timestamp;
-  if (fls != NULL) {
+  if (fls) {
     fls->finishDownload(sfile);
   }
   if (status == TM_STATUS_TRANSFERRING) {
@@ -412,7 +412,7 @@ void TransferMonitor::targetComplete() {
          status == TM_STATUS_TRANSFERRING ||
          status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE);
   partialcompletestamp = timestamp;
-  if (fld != NULL) {
+  if (fld) {
     fld->finishUpload(dfile);
   }
   if (status == TM_STATUS_TRANSFERRING) {
@@ -484,7 +484,7 @@ void TransferMonitor::sourceError(TransferError err) {
          status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
          status == TM_STATUS_TRANSFERRING ||
          status == TM_STATUS_TRANSFERRING_TARGET_COMPLETE);
-  if (fls != NULL) {
+  if (fls) {
     fls->finishDownload(sfile);
   }
   partialcompletestamp = timestamp;
@@ -498,7 +498,7 @@ void TransferMonitor::sourceError(TransferError err) {
   }
   if (status == TM_STATUS_TRANSFERRING_TARGET_COMPLETE ||
       status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
-      (type == TM_TYPE_DOWNLOAD && lt == NULL))
+      (type == TM_TYPE_DOWNLOAD && lt == nullptr))
   {
     transferFailed(ts, err);
     return;
@@ -513,7 +513,7 @@ void TransferMonitor::targetError(TransferError err) {
          status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET ||
          status == TM_STATUS_TRANSFERRING ||
          status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE);
-  if (fld != NULL) {
+  if (fld) {
     if  (err != TM_ERR_DUPE) {
       fld->removeFile(dfile);
     }
@@ -525,7 +525,7 @@ void TransferMonitor::targetError(TransferError err) {
   if (status == TM_STATUS_AWAITING_PASSIVE || status == TM_STATUS_AWAITING_ACTIVE) {
     if (!!sls && !sls->getConn(src)->isProcessing()) {
       sls->returnConn(src, type != TM_TYPE_LIST);
-      if (fls != NULL) { // NULL in case of LIST
+      if (fls) { // unset in case of LIST
         fls->finishDownload(sfile);
       }
       transferFailed(ts, err);
@@ -534,7 +534,7 @@ void TransferMonitor::targetError(TransferError err) {
   }
   if (status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE ||
       status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET ||
-      (type == TM_TYPE_UPLOAD && lt == NULL))
+      (type == TM_TYPE_UPLOAD && lt == nullptr))
   {
     transferFailed(ts, err);
     return;
@@ -639,12 +639,12 @@ Status TransferMonitor::getStatus() const {
 void TransferMonitor::reset() {
   sls.reset();
   sld.reset();
-  fls = NULL;
-  fld = NULL;
-  lt = NULL;
+  fls.reset();
+  fld.reset();
+  lt = nullptr;
   ts.reset();
-  srcco = NULL;
-  dstco = NULL;
+  srcco.reset();
+  dstco.reset();
   clientactive = true;
   fxpdstactive = true;
   ssl = false;

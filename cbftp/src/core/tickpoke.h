@@ -58,12 +58,18 @@ public:
   void run();
 
 private:
+  void tickIntern(bool adjust = true);
   Thread<TickPoke> thread;
   WorkManager& wm;
   std::list<TickPokeTarget> targets;
   bool forever;
   std::recursive_mutex looplock;
-  unsigned int sleeptime;
+  unsigned int targetsleeptimems;
+  unsigned int actualsleeptimeusecs;
+  long long int basetimems;
+  long long int lasttimediffms;
+  long long int timepassedms;
+
 };
 
 } // namespace Core

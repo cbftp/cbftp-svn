@@ -293,22 +293,22 @@ void UIFileList::fillSortedFiles() {
   sortMethod(sortmethod);
 }
 
-void UIFileList::parse(FileList * filelist) {
+void UIFileList::parse(const std::shared_ptr<FileList>& fl) {
   files.clear();
   numfiles = 0;
   numdirs = 0;
   totalsize = 0;
   selectedfiles.clear();
   currentposition = 0;
-  currentcursored = NULL;
+  currentcursored = nullptr;
   separators = false;
   wildcardfilters.clear();
   hasregexfilter = false;
-  std::list<File *>::iterator it;
-  int size = filelist->getSize();
+  std::list<File*>::iterator it;
+  int size = fl->getSize();
   files.reserve(size);
   sortedfiles.reserve(size);
-  for (it = filelist->begin(); it != filelist->end(); it++) {
+  for (it = fl->begin(); it != fl->end(); it++) {
     files.push_back(UIFile(*it));
     totalsize += (*it)->getSize();
     if ((*it)->isDirectory()) {
@@ -319,27 +319,27 @@ void UIFileList::parse(FileList * filelist) {
     }
   }
   fillSortedFiles();
-  path = filelist->getPath();
+  path = fl->getPath();
   initialized = true;
 }
 
-void UIFileList::parse(std::shared_ptr<LocalFileList> & filelist) {
+void UIFileList::parse(const std::shared_ptr<LocalFileList>& fl) {
   files.clear();
   numfiles = 0;
   numdirs = 0;
   totalsize = 0;
   selectedfiles.clear();
   currentposition = 0;
-  currentcursored = NULL;
+  currentcursored = nullptr;
   separators = false;
   wildcardfilters.clear();
   hasregexfilter = false;
   std::unordered_map<std::string, LocalFile>::const_iterator it;
-  int size = filelist->size();
+  int size = fl->size();
   files.reserve(size);
   sortedfiles.reserve(size);
-  for (it = filelist->begin(); it != filelist->end(); it++) {
-    const LocalFile & f = it->second;
+  for (it = fl->begin(); it != fl->end(); it++) {
+    const LocalFile& f = it->second;
     files.push_back(UIFile(f));
     totalsize += f.getSize();
     if (f.isDirectory()) {
@@ -350,7 +350,7 @@ void UIFileList::parse(std::shared_ptr<LocalFileList> & filelist) {
     }
   }
   fillSortedFiles();
-  path = filelist->getPath();
+  path = fl->getPath();
   initialized = true;
 }
 

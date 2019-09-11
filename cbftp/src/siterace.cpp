@@ -8,7 +8,7 @@
 #include "util.h"
 #include "timereference.h"
 
-SiteRace::SiteRace(std::shared_ptr<Race> race, const std::string & sitename, const Path & section, const std::string & release, const std::string & username, const SkipList & skiplist, bool affil) :
+SiteRace::SiteRace(const std::shared_ptr<Race>& race, const std::string& sitename, const Path& section, const std::string& release, const std::string& username, const SkipList& skiplist, bool affil) :
   race(race),
   section(section),
   release(release),
@@ -33,13 +33,10 @@ SiteRace::SiteRace(std::shared_ptr<Race> race, const std::string & sitename, con
   affil(affil)
 {
   recentlyvisited.push_back("");
-  filelists[""] = new FileList(username, path);
+  filelists[""] = std::make_shared<FileList>(username, path);
 }
 
 SiteRace::~SiteRace() {
-  for (std::unordered_map<std::string, FileList *>::iterator it = filelists.begin(); it != filelists.end(); it++) {
-    delete it->second;
-  }
 }
 
 std::string SiteRace::getName() const {
@@ -54,7 +51,7 @@ std::string SiteRace::getSiteName() const {
   return sitename;
 }
 
-const Path & SiteRace::getSection() const {
+const Path& SiteRace::getSection() const {
   return section;
 }
 
@@ -66,7 +63,7 @@ std::string SiteRace::getGroup() const {
   return group;
 }
 
-const Path & SiteRace::getPath() const {
+const Path& SiteRace::getPath() const {
   return path;
 }
 
@@ -74,7 +71,7 @@ unsigned int SiteRace::getId() const {
   return race->getId();
 }
 
-bool SiteRace::addSubDirectory(const std::string & subpath, bool knownexists) {
+bool SiteRace::addSubDirectory(const std::string& subpath, bool knownexists) {
   SkipListMatch match = skiplist.check(subpath, true, true, &race->getSectionSkipList());
   if (match.action == SKIPLIST_DENY) {
     return false;
@@ -85,12 +82,12 @@ bool SiteRace::addSubDirectory(const std::string & subpath, bool knownexists) {
   if (match.action == SKIPLIST_UNIQUE && filelists[""]->containsPatternBefore(match.matchpattern, true, subpath)) {
     return false;
   }
-  FileList * subdir;
+  std::shared_ptr<FileList> subdir;
   if (knownexists) {
-    subdir = new FileList(username, path / subpath, FileListState::EXISTS);
+    subdir = std::make_shared<FileList>(username, path / subpath, FileListState::EXISTS);
   }
   else {
-    subdir = new FileList(username, path / subpath);
+    subdir = std::make_shared<FileList>(username, path / subpath);
   }
   filelists[subpath] = subdir;
   recentlyvisited.push_back(subpath);
@@ -100,10 +97,10 @@ bool SiteRace::addSubDirectory(const std::string & subpath, bool knownexists) {
   return true;
 }
 
-std::string SiteRace::getSubPath(FileList * filelist) const {
-  std::unordered_map<std::string, FileList *>::const_iterator it;
+std::string SiteRace::getSubPath(const std::shared_ptr<FileList>& fl) const {
+  std::unordered_map<std::string, std::shared_ptr<FileList>>::const_iterator it;
   for (it = filelists.begin(); it != filelists.end(); it++) {
-    if (it->second == filelist) {
+    if (it->second == fl) {
       return it->first;
     }
   }
@@ -112,12 +109,12 @@ std::string SiteRace::getSubPath(FileList * filelist) const {
 }
 
 std::string SiteRace::getRelevantSubPath() {
-  for (const std::pair<std::string, FileList *> & flpair : filelists) {
+  for (const std::pair<std::string, std::shared_ptr<FileList>>& flpair : filelists) {
     if (flpair.second->getUpdateState() == UpdateState::NONE) {
       return flpair.first;
     }
   }
-  FileList * base = filelists.at("");
+  std::shared_ptr<FileList> base = filelists.at("");
   if (base->getState() == FileListState::UNKNOWN || base->getState() == FileListState::NONEXISTENT || base->getState() == FileListState::FAILED) {
     return "";
   }
@@ -126,7 +123,7 @@ std::string SiteRace::getRelevantSubPath() {
     recentlyvisited.pop_front();
     if (!isSubPathComplete(leastrecentlyvisited)) {
       recentlyvisited.push_back(leastrecentlyvisited);
-      FileList * fl = filelists.at(leastrecentlyvisited);
+      std::shared_ptr<FileList> fl = filelists.at(leastrecentlyvisited);
       if (fl->getState() != FileListState::NONEXISTENT && fl->getState() != FileListState::FAILED) {
         return leastrecentlyvisited;
       }
@@ -136,7 +133,7 @@ std::string SiteRace::getRelevantSubPath() {
 }
 
 bool SiteRace::anyFileListNotNonExistent() const {
-  std::unordered_map<std::string, FileList *>::const_iterator it;
+  std::unordered_map<std::string, std::shared_ptr<FileList>>::const_iterator it;
   for (it = filelists.begin(); it != filelists.end(); it++) {
     if (it->second->getState() != FileListState::NONEXISTENT) {
       return true;
@@ -145,26 +142,26 @@ bool SiteRace::anyFileListNotNonExistent() const {
   return false;
 }
 
-FileList * SiteRace::getFileListForPath(const std::string & subpath) const {
-  std::unordered_map<std::string, FileList *>::const_iterator it = filelists.find(subpath);
+std::shared_ptr<FileList> SiteRace::getFileListForPath(const std::string& subpath) const {
+  std::unordered_map<std::string, std::shared_ptr<FileList>>::const_iterator it = filelists.find(subpath);
   if (it != filelists.end()) {
     return it->second;
   }
-  return NULL;
+  return nullptr;
 }
 
-FileList * SiteRace::getFileListForFullPath(SiteLogic *, const Path & path) const {
-  std::unordered_map<std::string, FileList *>::const_iterator it;
+std::shared_ptr<FileList> SiteRace::getFileListForFullPath(SiteLogic*, const Path& path) const {
+  std::unordered_map<std::string, std::shared_ptr<FileList>>::const_iterator it;
   for (it = filelists.begin(); it != filelists.end(); it++) {
     if (it->second->getPath() == path) {
       return it->second;
     }
   }
-  return NULL;
+  return nullptr;
 }
 
-std::string SiteRace::getSubPathForFileList(FileList * fl) const {
-  std::unordered_map<std::string, FileList *>::const_iterator it;
+std::string SiteRace::getSubPathForFileList(const std::shared_ptr<FileList>& fl) const {
+  std::unordered_map<std::string, std::shared_ptr<FileList>>::const_iterator it;
   for (it = filelists.begin(); it != filelists.end(); it++) {
     if (it->second == fl) {
       return it->first;
@@ -173,28 +170,28 @@ std::string SiteRace::getSubPathForFileList(FileList * fl) const {
   return "";
 }
 
-std::unordered_map<std::string, FileList *>::const_iterator SiteRace::fileListsBegin() const {
+std::unordered_map<std::string, std::shared_ptr<FileList>>::const_iterator SiteRace::fileListsBegin() const {
   return filelists.begin();
 }
 
-std::unordered_map<std::string, FileList *>::const_iterator SiteRace::fileListsEnd() const {
+std::unordered_map<std::string, std::shared_ptr<FileList>>::const_iterator SiteRace::fileListsEnd() const {
   return filelists.end();
 }
 
-void SiteRace::fileListUpdated(SiteLogic *, FileList * fl) {
+void SiteRace::fileListUpdated(SiteLogic*, const std::shared_ptr<FileList>& fl) {
   updateNumFilesUploaded();
   addNewDirectories();
   markNonExistent(fl);
 }
 
 void SiteRace::updateNumFilesUploaded() {
-  std::unordered_map<std::string, FileList *>::iterator it;
+  std::unordered_map<std::string, std::shared_ptr<FileList>>::iterator it;
   unsigned int sum = 0;
   unsigned long long int maxsize = 0;
   unsigned long long int maxsizewithfiles = 0;
   unsigned long long int aggregatedfilesize = 0;
   for (it = filelists.begin(); it != filelists.end(); it++) {
-    FileList * fl = it->second;
+    const std::shared_ptr<FileList>& fl = it->second;
     sum += fl->getNumUploadedFiles();
     aggregatedfilesize += fl->getTotalFileSize();
     if (fl->hasSFV()) {
@@ -220,18 +217,18 @@ void SiteRace::updateNumFilesUploaded() {
 }
 
 void SiteRace::addNewDirectories() {
-  FileList * filelist = getFileListForPath("");
-  std::list<File *>::iterator it;
+  std::shared_ptr<FileList> filelist = getFileListForPath("");
+  std::list<File*>::iterator it;
   for(it = filelist->begin(); it != filelist->end(); it++) {
     File * file = *it;
-    const std::string & filename = file->getName();
+    const std::string& filename = file->getName();
     if (file->isDirectory()) {
       SkipListMatch match = skiplist.check(filename, true, true, &race->getSectionSkipList());
       if (match.action == SKIPLIST_DENY || (match.action == SKIPLIST_UNIQUE && filelist->containsPatternBefore(match.matchpattern, true, filename))) {
         continue;
       }
-      FileList * fl;
-      if ((fl = getFileListForPath(filename)) == NULL) {
+      std::shared_ptr<FileList> fl;
+      if (!(fl = getFileListForPath(filename))) {
         addSubDirectory(filename, true);
       }
       else if (fl->getState() == FileListState::UNKNOWN || fl->getState() == FileListState::NONEXISTENT ||
@@ -244,8 +241,8 @@ void SiteRace::addNewDirectories() {
   }
 }
 
-void SiteRace::markNonExistent(FileList * fl) {
-  std::unordered_map<std::string, FileList *>::iterator it;
+void SiteRace::markNonExistent(const std::shared_ptr<FileList>& fl) {
+  std::unordered_map<std::string, std::shared_ptr<FileList>>::iterator it;
   bool found = false;
   for (it = filelists.begin() ;it != filelists.end(); it++) {
     if (fl == it->second) {
@@ -280,7 +277,7 @@ unsigned int SiteRace::getNumUploadedFiles() const {
   return numuploadedfiles;
 }
 
-bool SiteRace::sizeEstimated(FileList * fl) const {
+bool SiteRace::sizeEstimated(const std::shared_ptr<FileList>& fl) const {
   return sizeestimated.find(fl) != sizeestimated.end();
 }
 
@@ -325,20 +322,20 @@ void SiteRace::abort() {
 
 void SiteRace::softReset() {
   recentlyvisited.clear();
-  for (std::unordered_map<std::string, FileList *>::iterator it = filelists.begin(); it != filelists.end(); ++it) {
+  for (std::unordered_map<std::string, std::shared_ptr<FileList>>::iterator it = filelists.begin(); it != filelists.end(); ++it) {
     recentlyvisited.push_back(it->first);
     FileListState state = it->second->getState();
     if (state == FileListState::LISTED) {
       state = FileListState::EXISTS;
     }
-    it->second = new FileList(username, path / it->first, state);
+    it->second = std::make_shared<FileList>(username, path / it->first, state);
   }
   reset();
 }
 
 void SiteRace::hardReset() {
-  filelists.clear(); // memory leak, use std::shared_ptr<FileList> instead
-  filelists[""] = new FileList(username, path);
+  filelists.clear();
+  filelists[""] = std::make_shared<FileList>(username, path);
   recentlyvisited.clear();
   recentlyvisited.push_back("");
   reset();
@@ -356,7 +353,7 @@ void SiteRace::reset() {
   numuploadedfiles = 0;
 }
 
-void SiteRace::subPathComplete(FileList * fl) {
+void SiteRace::subPathComplete(const std::shared_ptr<FileList>& fl) {
   std::string subpath = getSubPathForFileList(fl);
   if (isSubPathComplete(subpath)) {
     return;
@@ -366,14 +363,14 @@ void SiteRace::subPathComplete(FileList * fl) {
 }
 
 void SiteRace::resetListsRefreshed() {
-  for (const std::pair<std::string, FileList *> & filelist : filelists) {
+  for (const std::pair<std::string, std::shared_ptr<FileList>>& filelist : filelists) {
     if (!isSubPathComplete(getSubPath(filelist.second))) {
       filelist.second->resetUpdateState();
     }
   }
 }
 
-bool SiteRace::isSubPathComplete(const std::string & subpath) const {
+bool SiteRace::isSubPathComplete(const std::string& subpath) const {
   std::list<std::string>::const_iterator it;
   for (it = completesubdirs.begin(); it != completesubdirs.end(); it++) {
     if (*it == subpath) {
@@ -383,7 +380,7 @@ bool SiteRace::isSubPathComplete(const std::string & subpath) const {
   return false;
 }
 
-bool SiteRace::isSubPathComplete(FileList * fl) const {
+bool SiteRace::isSubPathComplete(const std::shared_ptr<FileList>& fl) const {
   std::string subpath = getSubPathForFileList(fl);
   return isSubPathComplete(subpath);
 }
@@ -396,8 +393,8 @@ int SiteRace::getProfile() const {
   return profile;
 }
 
-void SiteRace::reportSize(FileList * fl, const std::unordered_set<std::string> & uniques, bool final) {
-  std::unordered_map<std::string, FileList *>::iterator it;
+void SiteRace::reportSize(const std::shared_ptr<FileList>& fl, const std::unordered_set<std::string>& uniques, bool final) {
+  std::unordered_map<std::string, std::shared_ptr<FileList>>::iterator it;
   for (it = filelists.begin(); it != filelists.end(); it++) {
     if (it->second == fl) {
       race->reportSize(shared_from_this(), fl, it->first, uniques, final);
@@ -409,8 +406,8 @@ void SiteRace::reportSize(FileList * fl, const std::unordered_set<std::string> &
   }
 }
 
-int SiteRace::getObservedTime(FileList * fl) {
-  std::unordered_map<FileList *, unsigned long long int>::iterator it;
+int SiteRace::getObservedTime(const std::shared_ptr<FileList>& fl) {
+  std::unordered_map<std::shared_ptr<FileList>, unsigned long long int>::iterator it;
   for (it = observestarts.begin(); it != observestarts.end(); it++) {
     if (it->first == fl) {
       return global->getTimeReference()->timePassedSince(it->second);
@@ -422,8 +419,8 @@ int SiteRace::getObservedTime(FileList * fl) {
   return 0;
 }
 
-int SiteRace::getSFVObservedTime(FileList * fl) {
-  std::unordered_map<FileList *, unsigned long long int>::iterator it;
+int SiteRace::getSFVObservedTime(const std::shared_ptr<FileList>& fl) {
+  std::unordered_map<std::shared_ptr<FileList>, unsigned long long int>::iterator it;
   for (it = sfvobservestarts.begin(); it != sfvobservestarts.end(); it++) {
     if (it->first == fl) {
       return global->getTimeReference()->timePassedSince(it->second);
@@ -435,7 +432,7 @@ int SiteRace::getSFVObservedTime(FileList * fl) {
 
 bool SiteRace::listsChangedSinceLastCheck() {
   bool changed = false;
-  std::unordered_map<std::string, FileList *>::iterator it;
+  std::unordered_map<std::string, std::shared_ptr<FileList>>::iterator it;
   for (it = filelists.begin(); it != filelists.end(); it++) {
     if (it->second->getUpdateState() == UpdateState::CHANGED) {
       changed = true;
@@ -448,7 +445,7 @@ bool SiteRace::listsChangedSinceLastCheck() {
   return changed;
 }
 
-void SiteRace::addTransferStatsFile(StatsDirection direction, const std::string & other, unsigned long long int size, unsigned int speed) {
+void SiteRace::addTransferStatsFile(StatsDirection direction, const std::string& other, unsigned long long int size, unsigned int speed) {
   if (direction == STATS_DOWN) {
     race->addTransferStatsFile(size);
     if (sitessizedown.find(other) == sitessizedown.end()) {
@@ -519,7 +516,7 @@ unsigned int SiteRace::getSpeedUp() const {
 }
 
 bool SiteRace::allListsRefreshed() const {
-  for (const std::pair<std::string, FileList *> & filelist : filelists) {
+  for (const std::pair<std::string, std::shared_ptr<FileList>>& filelist : filelists) {
     if (!isSubPathComplete(filelist.second) && filelist.second->getUpdateState() < UpdateState::REFRESHED) {
       return false;
     }

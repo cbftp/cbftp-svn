@@ -25,13 +25,13 @@ ScoreBoard::~ScoreBoard() {
 void ScoreBoard::update(
     const std::string & name, unsigned short score, unsigned long long int filesize,
     PrioType priotype,
-    const std::shared_ptr<SiteLogic> & src, FileList * fls, const std::shared_ptr<SiteRace> & srs,
-    const std::shared_ptr<SiteLogic> & dst, FileList * fld, const std::shared_ptr<SiteRace> & srd,
+    const std::shared_ptr<SiteLogic> & src, const std::shared_ptr<FileList>& fls, const std::shared_ptr<SiteRace> & srs,
+    const std::shared_ptr<SiteLogic> & dst, const std::shared_ptr<FileList>& fld, const std::shared_ptr<SiteRace> & srd,
     const std::shared_ptr<Race> & race, const std::string & subdir)
 {
   auto flsit = elementlocator.find(fls);
   if (flsit != elementlocator.end()) {
-    std::unordered_map<FileList *, std::unordered_map<std::string, ScoreBoardElement *>> & fldmap = flsit->second;
+    std::unordered_map<std::shared_ptr<FileList>, std::unordered_map<std::string, ScoreBoardElement*>>& fldmap = flsit->second;
     auto fldit = fldmap.find(fld);
     if (fldit != fldmap.end()) {
       std::unordered_map<std::string, ScoreBoardElement *> & filemap = fldit->second;
@@ -64,17 +64,17 @@ void ScoreBoard::update(ScoreBoardElement * sbe) {
          sbe->getDestinationFileList(), sbe->getDestinationSiteRace(), sbe->getRace(), sbe->subDir());
 }
 
-ScoreBoardElement * ScoreBoard::find(const std::string & name, FileList * fls, FileList * fld) const {
+ScoreBoardElement * ScoreBoard::find(const std::string& name, const std::shared_ptr<FileList>& fls, const std::shared_ptr<FileList>& fld) const {
   const auto flsit = elementlocator.find(fls);
   if (flsit == elementlocator.end()) {
     return nullptr;
   }
-  const std::unordered_map<FileList *, std::unordered_map<std::string, ScoreBoardElement *>> & fldmap = flsit->second;
+  const std::unordered_map<std::shared_ptr<FileList>, std::unordered_map<std::string, ScoreBoardElement*>>& fldmap = flsit->second;
   auto fldit = fldmap.find(fld);
   if (fldit == fldmap.end()) {
     return nullptr;
   }
-  const std::unordered_map<std::string, ScoreBoardElement *> & filemap = fldit->second;
+  const std::unordered_map<std::string, ScoreBoardElement*>& filemap = fldit->second;
   auto fileit = filemap.find(name);
   if (fileit == filemap.end()) {
     return nullptr;
@@ -82,29 +82,29 @@ ScoreBoardElement * ScoreBoard::find(const std::string & name, FileList * fls, F
   return fileit->second;
 }
 
-bool ScoreBoard::remove(ScoreBoardElement * sbe) {
+bool ScoreBoard::remove(ScoreBoardElement* sbe) {
   return remove(sbe->fileName(), sbe->getSourceFileList(), sbe->getDestinationFileList());
 }
 
-bool ScoreBoard::remove(const std::string & name, FileList * fls, FileList * fld) {
+bool ScoreBoard::remove(const std::string & name, const std::shared_ptr<FileList>& fls, const std::shared_ptr<FileList>& fld) {
   auto flsit = elementlocator.find(fls);
   if (flsit == elementlocator.end()) {
     return false;
   }
-  std::unordered_map<FileList *, std::unordered_map<std::string, ScoreBoardElement *>> & fldmap = flsit->second;
+  std::unordered_map<std::shared_ptr<FileList>, std::unordered_map<std::string, ScoreBoardElement*>>& fldmap = flsit->second;
   auto fldit = fldmap.find(fld);
   if (fldit == fldmap.end()) {
     return false;
   }
-  std::unordered_map<std::string, ScoreBoardElement *> & filemap = fldit->second;
+  std::unordered_map<std::string, ScoreBoardElement*>& filemap = fldit->second;
   auto fileit = filemap.find(name);
   if (fileit == filemap.end()) {
     return false;
   }
-  ScoreBoardElement * sbe = fileit->second;
+  ScoreBoardElement* sbe = fileit->second;
   filemap.erase(fileit);
   destinationlocator[sbe->getDestinationFileList()].erase(sbe);
-  ScoreBoardElement * remove = elements[showsize - 1];
+  ScoreBoardElement* remove = elements[showsize - 1];
   if (showsize && sbe != remove) {
     sbe->reset(*remove);
     elementlocator[sbe->getSourceFileList()][sbe->getDestinationFileList()][sbe->fileName()] = sbe;
@@ -184,19 +184,19 @@ void ScoreBoard::shuffle(unsigned int firstpos, unsigned int lastpos) {
   }
 }
 
-std::vector<ScoreBoardElement *>::const_iterator ScoreBoard::begin() const {
+std::vector<ScoreBoardElement*>::const_iterator ScoreBoard::begin() const {
   return elements.begin();
 }
 
-std::vector<ScoreBoardElement *>::const_iterator ScoreBoard::end() const {
+std::vector<ScoreBoardElement*>::const_iterator ScoreBoard::end() const {
   return elements.begin() + showsize;
 }
 
-std::vector<ScoreBoardElement *>::iterator ScoreBoard::begin() {
+std::vector<ScoreBoardElement*>::iterator ScoreBoard::begin() {
   return elements.begin();
 }
 
-std::vector<ScoreBoardElement *>::iterator ScoreBoard::end() {
+std::vector<ScoreBoardElement*>::iterator ScoreBoard::end() {
   return elements.begin() + showsize;
 }
 
@@ -204,7 +204,7 @@ unsigned int ScoreBoard::size() const {
   return showsize;
 }
 
-const std::vector<ScoreBoardElement *> & ScoreBoard::getElementVector() const{
+const std::vector<ScoreBoardElement*>& ScoreBoard::getElementVector() const{
   return elements;
 }
 
@@ -214,13 +214,13 @@ void ScoreBoard::wipe() {
   destinationlocator.clear();
 }
 
-void ScoreBoard::wipe(FileList * fl) {
+void ScoreBoard::wipe(const std::shared_ptr<FileList>& fl) {
   auto flsit = elementlocator.find(fl);
-  std::list<std::tuple<std::string, FileList *, FileList *>> removelist;
+  std::list<std::tuple<std::string, std::shared_ptr<FileList>, std::shared_ptr<FileList>>> removelist;
   if (flsit != elementlocator.end()) {
     for (auto fldit : flsit->second) {
       for (auto fileit : fldit.second) {
-        ScoreBoardElement * sbe = fileit.second;
+        ScoreBoardElement* sbe = fileit.second;
         removelist.emplace_back(sbe->fileName(), sbe->getSourceFileList(),
                                 sbe->getDestinationFileList());
       }
@@ -228,12 +228,12 @@ void ScoreBoard::wipe(FileList * fl) {
   }
   auto fldit = destinationlocator.find(fl);
   if (fldit != destinationlocator.end()) {
-    for (ScoreBoardElement * sbe : fldit->second) {
+    for (ScoreBoardElement* sbe : fldit->second) {
       removelist.emplace_back(sbe->fileName(), sbe->getSourceFileList(),
                               sbe->getDestinationFileList());
     }
   }
-  for (const std::tuple<std::string, FileList *, FileList *> & elem : removelist) {
+  for (const std::tuple<std::string, std::shared_ptr<FileList>, std::shared_ptr<FileList>>& elem : removelist) {
     remove(std::get<0>(elem), std::get<1>(elem), std::get<2>(elem));
   }
   elementlocator.erase(fl);
@@ -243,7 +243,7 @@ void ScoreBoard::wipe(FileList * fl) {
   }
 }
 
-void ScoreBoard::resetSkipChecked(FileList * fl) {
+void ScoreBoard::resetSkipChecked(const std::shared_ptr<FileList>& fl) {
   auto it = destinationlocator.find(fl);
   if (it != destinationlocator.end()) {
     for (ScoreBoardElement * sbe : it->second) {

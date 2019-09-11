@@ -59,7 +59,7 @@ class SiteLogic : public Core::EventReceiver {
     std::list<DelayedCommand> delayedcommands;
     void handleConnection(int id, bool backfromrefresh = false);
     bool handleRequest(int);
-    void handleRecursiveLogic(int id, FileList * fl = nullptr);
+    void handleRecursiveLogic(int id, const std::shared_ptr<FileList>& fl = nullptr);
     void addRecentList(const std::shared_ptr<SiteRace> & sr);
     bool wasRecentlyListed(const std::shared_ptr<SiteRace> & sr) const;
     void refreshChangePath(int, const std::shared_ptr<SiteRace> & race, bool);
@@ -70,10 +70,10 @@ class SiteLogic : public Core::EventReceiver {
     void reportTransferErrorAndFinish(int, int);
     void reportTransferErrorAndFinish(int, int, int);
     void getFileListConn(int id, bool hiddenfiles = false);
-    void getFileListConn(int, const std::shared_ptr<CommandOwner> & co, FileList *);
+    void getFileListConn(int, const std::shared_ptr<CommandOwner>& co, const std::shared_ptr<FileList>& fl);
     void passiveModeCommand(int);
     static void * run(void *);
-    bool lockTransferConn(FileList *, int *, TransferMonitor *, const std::shared_ptr<CommandOwner> &, bool);
+    bool lockTransferConn(const std::shared_ptr<FileList>& fl, int* ret, TransferMonitor* tm, const std::shared_ptr<CommandOwner>& co, bool isdownload);
     void setRequestReady(unsigned int, void *, bool, bool returnslot = true);
     void cleanupConnection(int);
     void checkFailListRequest(int);
@@ -88,7 +88,7 @@ class SiteLogic : public Core::EventReceiver {
     SiteLogic(const std::string &);
     ~SiteLogic();
     void runInstance();
-    std::shared_ptr<SiteRace> addRace(std::shared_ptr<Race> &, const std::string &, const std::string &);
+    std::shared_ptr<SiteRace> addRace(const std::shared_ptr<Race>&, const std::string&, const std::string&);
     void resetRace(const std::shared_ptr<SiteRace> & race);
     void addTransferJob(std::shared_ptr<SiteTransferJob> & tj);
     void tick(int);
@@ -114,8 +114,8 @@ class SiteLogic : public Core::EventReceiver {
     const std::shared_ptr<Site> & getSite() const;
     std::shared_ptr<SiteRace> getRace(const std::string & race) const;
     void lockConnList(int);
-    bool lockDownloadConn(FileList *, int *, const std::shared_ptr<CommandOwner> &, TransferMonitor *);
-    bool lockUploadConn(FileList *, int *, const std::shared_ptr<CommandOwner> &, TransferMonitor *);
+    bool lockDownloadConn(const std::shared_ptr<FileList>& fl, int* ret, const std::shared_ptr<CommandOwner>& co, TransferMonitor* tm);
+    bool lockUploadConn(const std::shared_ptr<FileList>& fl, int* ret, const std::shared_ptr<CommandOwner>& co, TransferMonitor* tm);
     void returnConn(int, bool);
     void setNumConnections(unsigned int);
     bool downloadSlotAvailable(TransferType type = TransferType::REGULAR) const;
@@ -128,7 +128,7 @@ class SiteLogic : public Core::EventReceiver {
     void connectConn(int);
     void disconnectConn(int id, bool hard = false);
     void finishTransferGracefully(int);
-    void listCompleted(int, int, FileList *, const std::shared_ptr<CommandOwner> & co);
+    void listCompleted(int id, int storeid, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner>& co);
     void issueRawCommand(unsigned int, const std::string &);
     RawBuffer * getRawCommandBuffer() const;
     RawBuffer * getAggregatedRawBuffer() const;
@@ -151,15 +151,15 @@ class SiteLogic : public Core::EventReceiver {
     void abortRace(const std::shared_ptr<SiteRace> & race);
     void removeRace(const std::shared_ptr<SiteRace> & race);
     void abortTransfers(const std::shared_ptr<CommandOwner> & co);
-    FileListData * getFileListData(int) const;
+    FileListData* getFileListData(int) const;
     std::string getRawCommandResult(int);
     bool finishRequest(int);
     void pushPotential(int, const std::string &, const std::shared_ptr<SiteLogic> &);
     bool potentialCheck(int);
     int getPotential();
     void updateName();
-    const std::vector<FTPConn *> * getConns() const;
-    FTPConn * getConn(int) const;
+    const std::vector<FTPConn*>* getConns() const;
+    FTPConn* getConn(int) const;
     std::string getStatus(int) const;
     void preparePassiveTransfer(int id, const std::string& file, bool fxp, bool ipv6, bool ssl, bool sslclient = false);
     void prepareActiveTransfer(int id, const std::string& file , bool fxp, bool ipv6, const std::string& host, int port, bool ssl, bool sslclient = false);
@@ -169,5 +169,5 @@ class SiteLogic : public Core::EventReceiver {
     void upload(int);
     void list(int);
     void listAll(int);
-    const ConnStateTracker * getConnStateTracker(int) const;
+    const ConnStateTracker* getConnStateTracker(int) const;
 };

@@ -4,6 +4,7 @@
 
 #include "delayedcommand.h"
 #include "eventlog.h"
+#include "filelist.h"
 #include "recursivecommandlogic.h"
 #include "sitelogicrequest.h"
 #include "siterace.h"
@@ -198,7 +199,7 @@ TransferMonitor * ConnStateTracker::getTransferMonitor() const {
   return NULL;
 }
 
-FileList * ConnStateTracker::getTransferFileList() const {
+std::shared_ptr<FileList> ConnStateTracker::getTransferFileList() const {
   return fl;
 }
 
@@ -266,7 +267,7 @@ const std::shared_ptr<CommandOwner> & ConnStateTracker::getCommandOwner() const 
   return co;
 }
 
-void ConnStateTracker::lockForTransfer(TransferMonitor * tm, FileList * fl, const std::shared_ptr<CommandOwner> & co, bool download) {
+void ConnStateTracker::lockForTransfer(TransferMonitor * tm, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner> & co, bool download) {
   assert(!transferlocked);
   assert(!transfer);
   assert(!request);
