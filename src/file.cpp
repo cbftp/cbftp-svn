@@ -289,6 +289,8 @@ void File::unsetUpdateFlag() {
   updateflag = false;
   updatesrc.reset();
   updatedst.reset();
+  updatecosrc.reset();
+  updatecodst.reset();
 }
 
 bool File::setSize(unsigned long long int size) {
