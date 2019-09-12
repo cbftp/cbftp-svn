@@ -47,7 +47,7 @@ $(BINDIR)/datafilewrite: src/crypto.cpp src/tools/datafilewrite.cpp Makefile.inc
 	src/filesystem.cpp src/path.cpp src/tools/datafilewrite.cpp $(SSL_LINKFLAGS) -lpthread
 
 linecount:
-	find|grep -e '\.h$$' -e '\.cpp$$'|awk '{print $$1}'|xargs wc -l	
+	find|grep -e '\.h$$' -e '\.cpp$$'|awk '{print $$1}'|xargs wc -l|sort -n	
 
 clean: $(CLEAN_TARGETS)
 	@if test -d $(BINDIR); then rm -rf $(BINDIR); echo rm -rf $(BINDIR); fi

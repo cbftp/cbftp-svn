@@ -1441,14 +1441,13 @@ void Engine::raceComplete(const std::shared_ptr<Race>& race) {
 }
 
 void Engine::transferJobComplete(const std::shared_ptr<TransferJob>& tj) {
-
+  global->getEventLog()->log("Engine", tj->typeString() + " job complete: " + tj->getSrcFileName());
   for (std::list<std::shared_ptr<TransferJob> >::iterator it = currenttransferjobs.begin(); it != currenttransferjobs.end(); it++) {
     if ((*it) == tj) {
       currenttransferjobs.erase(it);
       break;
     }
   }
-  global->getEventLog()->log("Engine", tj->typeString() + " job complete: " + tj->getSrcFileName());
 }
 
 unsigned short Engine::calculateScore(ScoreBoardElement * sbe) const {

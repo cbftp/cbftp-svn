@@ -5,9 +5,12 @@ SCREENS_SRC = $(wildcard screens/*.cpp)
 LIB = libui.a
 CLEANFILES = $(wildcard $(SRC:%.cpp=%.o) $(SRC:%.cpp=%.d) $(LIB))
 
-all: $(SRC:%.cpp=%.o)
-	@+$(MAKE) -C screens
+all: $(SRC:%.cpp=%.o) screens
 	@+$(MAKE) --no-print-directory $(LIB)
+
+.PHONY: screens
+screens:
+	@+$(MAKE) -C $@
 
 quiet:
 	@#
