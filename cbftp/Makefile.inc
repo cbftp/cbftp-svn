@@ -34,7 +34,7 @@ BOXTAG := "\"cbftp\""
 CXX=g++
 OPTFLAGS=-g -O0 -std=c++11
 CPPFLAGS=$(OPTFLAGS) -Wall -MMD -MP $(STATIC_SSL_INCLUDE)
-LINKFLAGS=-lpthread $(SSL_LINKFLAGS)
+LINKFLAGS=$(SSL_LINKFLAGS) -lpthread
 ifeq ($(UNAME_S),Darwin)
 LINKFLAGS+=-lncurses
 else
