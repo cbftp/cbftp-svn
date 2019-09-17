@@ -16,15 +16,66 @@
 #include "../../ftpconn.h"
 #include "../../engine.h"
 #include "../../sitemanager.h"
+#include "../../util.h"
 
 #include "../ui.h"
 #include "../menuselectoptiontextbutton.h"
+
+namespace {
 
 enum SelectSitesMode {
   SELECT_ADD,
   SELECT_DELETE,
   SELECT_DELETE_OWN
 };
+
+char getFileChar(bool exists, bool owner, bool upload, bool download, bool affil) {
+  char printchar = '_';
+  if (upload) {
+    if (owner) {
+      if (download) {
+        printchar = 'S';
+      }
+      else {
+        printchar = 'U';
+      }
+    }
+    else {
+      if (download) {
+        printchar = 's';
+      }
+      else {
+        printchar = 'u';
+      }
+    }
+  }
+  else {
+    if (owner) {
+      if (download) {
+        printchar = 'D';
+      }
+      else {
+        printchar = 'o';
+      }
+    }
+    else {
+      if (download) {
+        printchar = 'd';
+      }
+      else if (exists) {
+        if (affil) {
+          printchar = 'p';
+        }
+        else {
+          printchar = '.';
+        }
+      }
+    }
+  }
+  return printchar;
+}
+
+}
 
 RaceStatusScreen::RaceStatusScreen(Ui * ui) {
   this->ui = ui;
@@ -53,6 +104,7 @@ void RaceStatusScreen::initialize(unsigned int row, unsigned int col, unsigned i
   awaitingdeleteownall = false;
   currnumsubpaths = 0;
   currguessedsize = 0;
+  currincomplete = 0;
   mso.enterFocusFrom(0);
   init(row, col);
 }
@@ -61,6 +113,11 @@ void RaceStatusScreen::redraw() {
   ui->erase();
   ui->printStr(1, 1, "Section: " + race->getSection());
   ui->printStr(1, 20, "Sites: " + race->getSiteListText());
+  std::list<std::string> incompletesites = getIncompleteSites();
+  if (!incompletesites.empty()) {
+    ui->printStr(3, 18, "Incomplete on: " + util::join(incompletesites, ","));
+  }
+  currincomplete = incompletesites.size();
   std::unordered_set<std::string> currsubpaths = race->getSubPaths();
   currnumsubpaths = currsubpaths.size();
   std::string subpathpresent = "";
@@ -88,7 +145,7 @@ void RaceStatusScreen::redraw() {
   }
   currguessedsize = sumguessedsize;
   ui->printStr(2, 1, "Subpaths: " + subpathpresent);
-  int y = 4;
+  int y = 5;
   longestsubpath = 0;
   std::list<std::string> filetags;
   for (std::list<std::string>::iterator it = subpaths.begin(); it != subpaths.end(); it++) {
@@ -223,10 +280,27 @@ void RaceStatusScreen::update() {
       haslargepath = true;
     }
   }
-  if (currsubpaths.size() != currnumsubpaths || sumguessedsize != currguessedsize) {
+
+  if (currsubpaths.size() != currnumsubpaths || sumguessedsize != currguessedsize || getIncompleteSites().size() != currincomplete) {
     redraw();
     return;
   }
+  std::string status;
+  switch (race->getStatus()) {
+    case RACE_STATUS_RUNNING:
+      status = "Running";
+      break;
+    case RACE_STATUS_DONE:
+      status = "Done   ";
+      break;
+    case RACE_STATUS_ABORTED:
+      status = "Aborted";
+      break;
+    case RACE_STATUS_TIMEOUT:
+      status = "Timeout";
+      break;
+  }
+  ui->printStr(3, 1, "Status: " + status);
   int x = 1;
   int y = 8;
   mso.clear();
@@ -240,6 +314,7 @@ void RaceStatusScreen::update() {
       trimuser = user.substr(0, 8);
     }
     std::string sitename = sl->getSite()->getName();
+    bool affil = sl->getSite()->isAffiliated(race->getGroup());
     mso.addTextButton(y, x, sitename, sitename);
     for (std::list<std::string>::iterator it2 = subpaths.begin(); it2 != subpaths.end(); it2++) {
       std::string origsubpath = *it2;
@@ -280,7 +355,7 @@ void RaceStatusScreen::update() {
           if (file->isDownloading()) {
             download = true;
           }
-          printchar = getFileChar(exists, owner, upload, download);
+          printchar = getFileChar(exists, owner, upload, download, affil);
         }
         ui->printChar(y, filex, printchar, exists);
       }
@@ -513,51 +588,20 @@ void RaceStatusScreen::deleteFiles(bool allfiles) {
   }
 }
 
-char RaceStatusScreen::getFileChar(bool exists, bool owner, bool upload, bool download) const {
-  char printchar = '_';
-  if (upload) {
-    if (owner) {
-      if (download) {
-        printchar = 'S';
-      }
-      else {
-        printchar = 'U';
-      }
-    }
-    else {
-      if (download) {
-        printchar = 's';
-      }
-      else {
-        printchar = 'u';
-      }
-    }
-  }
-  else {
-    if (owner) {
-      if (download) {
-        printchar = 'D';
-      }
-      else {
-        printchar = 'o';
-      }
-    }
-    else {
-      if (download) {
-        printchar = 'd';
-      }
-      else if (exists) {
-        printchar = '.';
-      }
-    }
-  }
-  return printchar;
-}
-
 std::string RaceStatusScreen::getLegendText() const {
   return finished ? finishedlegendtext : defaultlegendtext;
 }
 
 std::string RaceStatusScreen::getInfoLabel() const {
   return "RACE STATUS: " + race->getName();
+}
+
+std::list<std::string> RaceStatusScreen::getIncompleteSites() const {
+  std::list<std::string> incompletesites;
+  for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
+    if (!it->first->isDone()) {
+      incompletesites.push_back(it->first->getSiteName());
+    }
+  }
+  return incompletesites;
 }

@@ -21,8 +21,8 @@ public:
   std::string getLegendText() const;
   std::string getInfoLabel() const;
 private:
-  char getFileChar(bool, bool, bool, bool) const;
   void deleteFiles(bool);
+  std::list<std::string> getIncompleteSites() const;
   std::shared_ptr<Race> race;
   bool smalldirs;
   bool awaitingremovesite;
@@ -32,6 +32,7 @@ private:
   bool awaitingdeleteownall;
   unsigned int currnumsubpaths;
   unsigned int currguessedsize;
+  unsigned int currincomplete;
   unsigned int longestsubpath;
   std::list<std::string> subpaths;
   MenuSelectOption mso;
