@@ -40,7 +40,7 @@ Race::Race(unsigned int id, SpreadProfile profile, const std::string& release, c
   checkcount(0),
   timestamp(util::ctimeLog()),
   timespent(0),
-  status(RACE_STATUS_RUNNING),
+  status(RaceStatus::RUNNING),
   worst(0),
   avg(0),
   best(0),
@@ -200,7 +200,7 @@ unsigned int Race::getMaxSiteNumFilesProgress() const {
 }
 
 bool Race::isDone() const {
-  return status != RACE_STATUS_RUNNING;
+  return status != RaceStatus::RUNNING;
 }
 
 void Race::reportNewSubDir(const std::shared_ptr<SiteRace>& sr, const std::string& subdir) {
@@ -248,7 +248,7 @@ void Race::reportSemiDone(const std::shared_ptr<SiteRace>& sr) {
 }
 
 void Race::setUndone() {
-  status = RACE_STATUS_RUNNING;
+  status = RaceStatus::RUNNING;
   clearTransferAttempts(false);
   resetUpdateCheckCounter();
   global->getTickPoke()->startPoke(this, "Race", RACE_UPDATE_INTERVAL, 0);
@@ -283,12 +283,12 @@ void Race::reset() {
 
 void Race::abort() {
   setDone();
-  status = RACE_STATUS_ABORTED;
+  status = RaceStatus::ABORTED;
 }
 
 void Race::setTimeout() {
   setDone();
-  status = RACE_STATUS_TIMEOUT;
+  status = RaceStatus::TIMEOUT;
 }
 
 void Race::reportSize(const std::shared_ptr<SiteRace>& sr, const std::shared_ptr<FileList>& fl, const std::string& subpath, const std::unordered_set<std::string >& uniques, bool final) {
@@ -447,7 +447,7 @@ std::string Race::getTimeStamp() const {
 }
 
 void Race::setDone() {
-  status = RACE_STATUS_DONE;
+  status = RaceStatus::DONE;
   global->getTickPoke()->stopPoke(this, 0);
   calculatePercentages();
 }
@@ -463,7 +463,7 @@ void Race::calculatePercentages() {
   unsigned int localbest = 0;
   for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = begin(); it != end(); it++) {
     unsigned int percentagecomplete = 0;
-    if (status == RACE_STATUS_RUNNING) {
+    if (status == RaceStatus::RUNNING) {
       if (guessedtotalfilesize) {
         percentagecomplete = (it->first->getTotalFileSize() * 100) / guessedtotalfilesize;
       }

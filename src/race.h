@@ -8,18 +8,13 @@
 #include <utility>
 
 #include "core/eventreceiver.h"
+
 #include "sizelocationtrack.h"
+#include "racestatus.h"
 #include "transferstatuscallback.h"
 
 
 #define RACE_UPDATE_INTERVAL 250
-
-enum RaceStatus {
-  RACE_STATUS_RUNNING,
-  RACE_STATUS_DONE,
-  RACE_STATUS_ABORTED,
-  RACE_STATUS_TIMEOUT
-};
 
 enum SpreadProfile {
   SPREAD_RACE,

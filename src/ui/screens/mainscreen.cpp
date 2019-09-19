@@ -432,7 +432,7 @@ bool MainScreen::keyPressed(unsigned int ch) {
     case 'B':
       if (msosj.isFocused() && msosj.size() > 0) {
         abortrace = global->getEngine()->getRace(msosj.getElement(msosj.getSelectionPointer())->getId());
-        if (!!abortrace && abortrace->getStatus() == RACE_STATUS_RUNNING) {
+        if (!!abortrace && abortrace->getStatus() == RaceStatus::RUNNING) {
           ui->goConfirmation("Do you really want to abort the spread job " + abortrace->getName());
         }
       }
@@ -447,7 +447,7 @@ bool MainScreen::keyPressed(unsigned int ch) {
       if (msosj.isFocused() && msosj.size() > 0) {
         abortdeleterace = global->getEngine()->getRace(msosj.getElement(msosj.getSelectionPointer())->getId());
         if (!!abortdeleterace) {
-          if (abortdeleterace->getStatus() == RACE_STATUS_RUNNING) {
+          if (abortdeleterace->getStatus() == RaceStatus::RUNNING) {
             ui->goConfirmation("Do you really want to abort the race " + abortdeleterace->getName() + " and delete your own files on all incomplete sites?");
           }
           else {

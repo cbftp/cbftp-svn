@@ -162,7 +162,7 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
     case 'B':
       if (hascontents) {
         abortrace = global->getEngine()->getRace(table.getElement(table.getSelectionPointer())->getId());
-        if (!!abortrace && abortrace->getStatus() == RACE_STATUS_RUNNING) {
+        if (!!abortrace && abortrace->getStatus() == RaceStatus::RUNNING) {
           ui->goConfirmation("Do you really want to abort the spread job " + abortrace->getName());
         }
       }
@@ -171,7 +171,7 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
       if (hascontents) {
         abortdeleterace = global->getEngine()->getRace(table.getElement(table.getSelectionPointer())->getId());
         if (!!abortdeleterace) {
-          if (abortdeleterace->getStatus() == RACE_STATUS_RUNNING) {
+          if (abortdeleterace->getStatus() == RaceStatus::RUNNING) {
             ui->goConfirmation("Do you really want to abort the race " + abortdeleterace->getName() + " and delete your own files on all incomplete sites?");
           }
           else {
@@ -288,16 +288,16 @@ void AllRacesScreen::addRaceDetails(unsigned int y, MenuSelectOption & mso, std:
   std::string best = std::to_string(race->getBestCompletionPercentage()) + "%";
   std::string size = util::parseSize(race->estimatedTotalSize());
   switch (race->getStatus()) {
-    case RACE_STATUS_RUNNING:
+    case RaceStatus::RUNNING:
       status = "running";
       break;
-    case RACE_STATUS_DONE:
+    case RaceStatus::DONE:
       status = "done";
       break;
-    case RACE_STATUS_ABORTED:
+    case RaceStatus::ABORTED:
       status = "aborted";
       break;
-    case RACE_STATUS_TIMEOUT:
+    case RaceStatus::TIMEOUT:
       status = "timeout";
       break;
   }

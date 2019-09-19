@@ -27,18 +27,18 @@ bool LegendPrinterSpreadJob::print() {
   std::string best = std::to_string(race->getBestCompletionPercentage()) + "%";
   std::string size = util::parseSize(race->estimatedTotalSize());
   switch (race->getStatus()) {
-    case RACE_STATUS_RUNNING:
+    case RaceStatus::RUNNING:
       status = "running";
       break;
-    case RACE_STATUS_DONE:
+    case RaceStatus::DONE:
       status = "done";
       jobfinishedprintcount++;
       break;
-    case RACE_STATUS_ABORTED:
+    case RaceStatus::ABORTED:
       status = "aborted";
       jobfinishedprintcount++;
       break;
-    case RACE_STATUS_TIMEOUT:
+    case RaceStatus::TIMEOUT:
       status = "timeout";
       jobfinishedprintcount++;
       break;

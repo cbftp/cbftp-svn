@@ -16,9 +16,7 @@ SiteRace::SiteRace(const std::shared_ptr<Race>& race, const std::string& sitenam
   group(util::getGroupNameFromRelease(release)),
   username(username),
   sitename(sitename),
-  done(false),
-  aborted(false),
-  donebeforeabort(false),
+  status(RaceStatus::RUNNING),
   maxfilesize(0),
   totalfilesize(0),
   numuploadedfiles(0),
@@ -290,15 +288,11 @@ unsigned long long int SiteRace::getTotalFileSize() const {
 }
 
 bool SiteRace::isDone() const {
-  return done;
+  return status != RaceStatus::RUNNING;
 }
 
-bool SiteRace::isAborted() const {
-  return aborted;
-}
-
-bool SiteRace::doneBeforeAbort() const {
-  return donebeforeabort;
+RaceStatus SiteRace::getStatus() const {
+  return status;
 }
 
 bool SiteRace::isGlobalDone() const {
@@ -306,17 +300,23 @@ bool SiteRace::isGlobalDone() const {
 }
 
 void SiteRace::complete(bool report) {
-  done = true;
+  if (status == RaceStatus::RUNNING) {
+    status = RaceStatus::DONE;
+  }
   if (report) {
     race->reportDone(shared_from_this());
   }
 }
 
 void SiteRace::abort() {
-  if (!aborted) {
-    donebeforeabort = done;
-    done = true;
-    aborted = true;
+  if (status == RaceStatus::RUNNING) {
+    status = RaceStatus::ABORTED;
+  }
+}
+
+void SiteRace::timeout() {
+  if (status == RaceStatus::RUNNING) {
+    status = RaceStatus::TIMEOUT;
   }
 }
 
@@ -342,8 +342,7 @@ void SiteRace::hardReset() {
 }
 
 void SiteRace::reset() {
-  done = false;
-  aborted = false;
+  status = RaceStatus::RUNNING;
   sfvobservestarts.clear();
   observestarts.clear();
   sizeestimated.clear();

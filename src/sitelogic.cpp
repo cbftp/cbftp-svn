@@ -1239,7 +1239,7 @@ bool SiteLogic::wasRecentlyListed(const std::shared_ptr<SiteRace> & sr) const {
 }
 
 void SiteLogic::refreshChangePath(int id, const std::shared_ptr<SiteRace> & race, bool refresh) {
-  if (race->isAborted()) {
+  if (race->getStatus() == RaceStatus::ABORTED) {
     return;
   }
   const Path & currentpath = conns[id]->getCurrentPath();
