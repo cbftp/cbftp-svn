@@ -133,6 +133,12 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & rele
       global->getEventLog()->log("Engine", "Skipping disabled site: " + *it);
       continue;
     }
+    if (sl->getSite()->isAffiliated(race->getGroup()) &&
+        sl->getSite()->getAllowDownload() == SiteAllowTransfer::SITE_ALLOW_TRANSFER_NO)
+    {
+      global->getEventLog()->log("Engine", "Skipping site because of affil match and download disabled: " + *it);
+      continue;
+    }
     if (!sl->getSite()->hasSection(section)) {
       global->getEventLog()->log("Engine", "Trying to use an undefined section: " +
           section + " on " + *it);
@@ -632,7 +638,7 @@ void Engine::clearSkipListCaches() {
 
 bool Engine::transferExpectedSoon(ScoreBoardElement * sbe) const {
   const std::string & filename = sbe->fileName();
-  if (sbe->getDestinationSiteRace()->isAborted()) {
+  if (sbe->getDestinationSiteRace()->getStatus() != RaceStatus::RUNNING) {
     return false;
   }
   if (!sbe->getSource()->getCurrLogins() || !sbe->getDestination()->getCurrLogins()) {
@@ -669,13 +675,13 @@ void Engine::deleteOnAllIncompleteSites(const std::shared_ptr<Race> & race, bool
 }
 
 bool Engine::isIncompleteEnoughForDelete(const std::shared_ptr<Race> & race, const std::shared_ptr<SiteRace> & siterace) const {
-  return (!siterace->isDone() || (siterace->isAborted() && !siterace->doneBeforeAbort())) &&
+  return siterace->getStatus() != RaceStatus::DONE &&
          (!race->estimatedTotalSize() || (siterace->getTotalFileSize() * 100) / race->estimatedTotalSize() < MAX_PERCENTAGE_FOR_INCOMPLETE_DELETE);
 }
 
 void Engine::deleteOnSites(const std::shared_ptr<Race> & race, std::list<std::shared_ptr<Site> > delsites, bool allfiles) {
   if (!!race) {
-    if (race->getStatus() == RACE_STATUS_RUNNING) {
+    if (race->getStatus() == RaceStatus::RUNNING) {
       abortRace(race);
     }
     std::string sites;
@@ -1712,6 +1718,7 @@ void Engine::tick(int message) {
         global->getEventLog()->log("Engine", "No activity for " + std::to_string(timeoutafterseconds) +
             " seconds, aborting spread job: " + (*it)->getName());
         for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator its = race->begin(); its != race->end(); its++) {
+          its->first->timeout();
           its->second->raceLocalComplete(its->first, 0, false);
         }
         race->setTimeout();

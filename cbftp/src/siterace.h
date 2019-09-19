@@ -9,6 +9,7 @@
 
 #include "commandowner.h"
 #include "path.h"
+#include "racestatus.h"
 
 class Race;
 class FileList;
@@ -27,9 +28,7 @@ class SiteRace : public CommandOwner, public std::enable_shared_from_this<SiteRa
     std::list<std::string> recentlyvisited;
     std::list<std::string> completesubdirs;
     std::unordered_map<std::string, std::shared_ptr<FileList>> filelists;
-    bool done;
-    bool aborted;
-    bool donebeforeabort;
+    RaceStatus status;
     std::unordered_set<std::shared_ptr<FileList>> sizeestimated;
     std::unordered_map<std::shared_ptr<FileList>, unsigned long long int> observestarts;
     std::unordered_map<std::shared_ptr<FileList>, unsigned long long int> sfvobservestarts;
@@ -82,12 +81,12 @@ class SiteRace : public CommandOwner, public std::enable_shared_from_this<SiteRa
     unsigned long long int getMaxFileSize() const;
     unsigned long long int getTotalFileSize() const;
     bool isDone() const;
-    bool isAborted() const;
-    bool doneBeforeAbort() const;
+    RaceStatus getStatus() const;
     bool isGlobalDone() const;
     int getProfile() const;
     void complete(bool);
     void abort();
+    void timeout();
     void softReset();
     void hardReset();
     void subPathComplete(const std::shared_ptr<FileList>& fl);

@@ -89,7 +89,7 @@ RaceStatusScreen::~RaceStatusScreen() {
 
 void RaceStatusScreen::initialize(unsigned int row, unsigned int col, unsigned int id) {
   race = global->getEngine()->getRace(id);
-  if (race->getStatus() == RACE_STATUS_RUNNING) {
+  if (race->getStatus() == RaceStatus::RUNNING) {
     finished = false;
   }
   else {
@@ -265,7 +265,7 @@ void RaceStatusScreen::redraw() {
 
 void RaceStatusScreen::update() {
   if (!finished) {
-    if (race->getStatus() != RACE_STATUS_RUNNING) {
+    if (race->getStatus() != RaceStatus::RUNNING) {
       finished = true;
       ui->setLegend();
     }
@@ -287,16 +287,16 @@ void RaceStatusScreen::update() {
   }
   std::string status;
   switch (race->getStatus()) {
-    case RACE_STATUS_RUNNING:
+    case RaceStatus::RUNNING:
       status = "Running";
       break;
-    case RACE_STATUS_DONE:
+    case RaceStatus::DONE:
       status = "Done   ";
       break;
-    case RACE_STATUS_ABORTED:
+    case RaceStatus::ABORTED:
       status = "Aborted";
       break;
-    case RACE_STATUS_TIMEOUT:
+    case RaceStatus::TIMEOUT:
       status = "Timeout";
       break;
   }
@@ -466,13 +466,13 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       return true;
     }
     case 'B':
-      if (race->getStatus() == RACE_STATUS_RUNNING) {
+      if (race->getStatus() == RaceStatus::RUNNING) {
         awaitingabort = true;
         ui->goConfirmation("Do you really want to abort the race " + race->getName());
       }
       return true;
     case 'd':
-      if (race->getStatus() != RACE_STATUS_RUNNING) {
+      if (race->getStatus() != RaceStatus::RUNNING) {
         deleteFiles(false);
       }
       else {
@@ -485,7 +485,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       }
       return true;
     case 'D':
-      if (race->getStatus() != RACE_STATUS_RUNNING) {
+      if (race->getStatus() != RaceStatus::RUNNING) {
         deleteFiles(true);
       }
       else {
@@ -499,7 +499,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       return true;
     case 'z':
       awaitingdeleteownall = true;
-      if (race->getStatus() == RACE_STATUS_RUNNING) {
+      if (race->getStatus() == RaceStatus::RUNNING) {
         ui->goConfirmation("Do you really want to abort the race " + race->getName() + " and delete your own files on all incomplete sites?");
       }
       else {
@@ -572,7 +572,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
 }
 
 void RaceStatusScreen::deleteFiles(bool allfiles) {
-  if (race->getStatus() != RACE_STATUS_RUNNING) {
+  if (race->getStatus() != RaceStatus::RUNNING) {
     std::list<std::shared_ptr<Site> > sites;
     std::list<std::shared_ptr<Site> > preselectsites;
     std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it;
@@ -599,7 +599,7 @@ std::string RaceStatusScreen::getInfoLabel() const {
 std::list<std::string> RaceStatusScreen::getIncompleteSites() const {
   std::list<std::string> incompletesites;
   for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
-    if (!it->first->isDone()) {
+    if (it->first->getStatus() != RaceStatus::DONE) {
       incompletesites.push_back(it->first->getSiteName());
     }
   }
