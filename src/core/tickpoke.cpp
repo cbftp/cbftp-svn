@@ -33,6 +33,7 @@ TickPoke::~TickPoke() {
 
 void TickPoke::tickerLoop() {
   std::lock_guard<std::recursive_mutex> lock(looplock);
+  basetimems = epochMs();
   while (forever) {
     tickIntern();
     usleep(actualsleeptimeusecs);
