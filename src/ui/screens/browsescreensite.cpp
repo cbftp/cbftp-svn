@@ -49,7 +49,7 @@ BrowseScreenSite::BrowseScreenSite(Ui * ui, const std::string & sitestr, const P
   BrowseScreenRequest request;
   request.type = BrowseScreenRequestType::FILELIST;
   request.path = path != "" ? path : site->getBasePath();
-  request.id = sitelogic->requestFileList(request.path);
+  request.id = sitelogic->requestFileList(ui, request.path);
   requests.push_back(request);
   TimeReference::updateTime();
 }
@@ -422,7 +422,7 @@ void BrowseScreenSite::command(const std::string & command, const std::string & 
       case ConfirmAction::WIPE:
         for (const std::pair<std::string, bool> & file : list.getSelectedNames()) {
           BrowseScreenRequest request;
-          request.id = sitelogic->requestWipe(list.getPath() / file.first, file.second);
+          request.id = sitelogic->requestWipe(ui, list.getPath() / file.first, file.second);
           request.type = BrowseScreenRequestType::WIPE;
           request.path = list.getPath();
           request.files = { file };
@@ -432,7 +432,7 @@ void BrowseScreenSite::command(const std::string & command, const std::string & 
       case ConfirmAction::DELETE:
         for (const std::pair<std::string, bool> & file : list.getSelectedNames()) {
           BrowseScreenRequest request;
-          request.id = sitelogic->requestDelete(list.getPath() / file.first, file.second, true, true);
+          request.id = sitelogic->requestDelete(ui, list.getPath() / file.first, file.second, true, true);
           request.type = BrowseScreenRequestType::DELETE;
           request.path = list.getPath();
           request.files = { file };
@@ -453,7 +453,7 @@ void BrowseScreenSite::command(const std::string & command, const std::string & 
   }
   else if (command == "makedir") {
     BrowseScreenRequest request;
-    request.id = sitelogic->requestMakeDirectory(list.getPath(), arg);
+    request.id = sitelogic->requestMakeDirectory(ui, list.getPath(), arg);
     request.type = BrowseScreenRequestType::MKDIR;
     request.path = list.getPath();
     request.files = { std::pair<std::string, bool>(arg, true) };
@@ -467,7 +467,7 @@ void BrowseScreenSite::command(const std::string & command, const std::string & 
     std::string reason = args[1];
     for (const std::pair<std::string, bool> & item : list.getSelectedDirectoryNames()) {
       BrowseScreenRequest request;
-      request.id = sitelogic->requestNuke(list.getPath() / item.first, multiplier, reason);
+      request.id = sitelogic->requestNuke(ui, list.getPath() / item.first, multiplier, reason);
       request.type = BrowseScreenRequestType::NUKE;
       request.path = list.getPath();
       request.files = { item };
@@ -1143,7 +1143,7 @@ bool BrowseScreenSite::keyDown() {
 
 void BrowseScreenSite::gotoPath(const Path & path) {
   BrowseScreenRequest request;
-  request.id = sitelogic->requestFileList(path);
+  request.id = sitelogic->requestFileList(ui, path);
   request.type = BrowseScreenRequestType::FILELIST;
   request.path = path;
   requests.push_back(request);

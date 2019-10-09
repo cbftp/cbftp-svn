@@ -81,7 +81,7 @@ void ViewFileScreen::initialize(unsigned int row, unsigned int col, const std::s
     }
   }
   if (state == ViewFileState::CONNECTING) {
-    requestid = sitelogic->requestOneIdle();
+    requestid = sitelogic->requestOneIdle(ui);
   }
   if (state == ViewFileState::DOWNLOADING) {
 
