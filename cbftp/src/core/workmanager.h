@@ -81,26 +81,26 @@ public:
     void dispatchSignal(EventReceiver* er, int signal, int value);
 
     /* These are normally called from the IOManager only */
-    void dispatchFDData(EventReceiver* er, int sockId);
+    void dispatchFDData(EventReceiver* er, int sockid);
     bool
-    dispatchFDData(EventReceiver* er, int sockId, char* buf, int len, Prio prio = Prio::NORMAL);
-    bool dispatchEventNew(EventReceiver* er, int sockId, Prio prio = Prio::NORMAL);
+    dispatchFDData(EventReceiver* er, int sockid, char* buf, int len, Prio prio = Prio::NORMAL);
+    bool dispatchEventNew(EventReceiver* er, int sockid, int newsockid, Prio prio = Prio::NORMAL);
     void dispatchEventConnecting(EventReceiver* er,
-                                 int sockId,
+                                 int sockid,
                                  const std::string& addr,
                                  Prio prio = Prio::NORMAL);
-    void dispatchEventConnected(EventReceiver* er, int sockId, Prio prio = Prio::NORMAL);
-    void dispatchEventDisconnected(EventReceiver* er, int sockId, Prio prio = Prio::NORMAL);
+    void dispatchEventConnected(EventReceiver* er, int sockid, Prio prio = Prio::NORMAL);
+    void dispatchEventDisconnected(EventReceiver* er, int sockid, Prio prio = Prio::NORMAL);
     void dispatchEventSSLSuccess(EventReceiver* er,
-                                 int sockId,
+                                 int sockid,
                                  const std::string& cipher,
                                  Prio prio = Prio::NORMAL);
-    void dispatchEventSSLFail(EventReceiver* er, int sockId, Prio prio = Prio::NORMAL);
+    void dispatchEventSSLFail(EventReceiver* er, int sockid, Prio prio = Prio::NORMAL);
     void dispatchEventFail(EventReceiver* er,
-                           int sockId,
+                           int sockid,
                            const std::string& error,
                            Prio prio = Prio::NORMAL);
-    void dispatchEventSendComplete(EventReceiver* er, int sockId, Prio prio = Prio::NORMAL);
+    void dispatchEventSendComplete(EventReceiver* er, int sockid, Prio prio = Prio::NORMAL);
     void addReadyNotify(EventReceiver* er);
 
     /* Called from TickPoke */

@@ -27,6 +27,7 @@
 #include "hourlyalltracking.h"
 #include "sectionmanager.h"
 #include "transferprotocol.h"
+#include "httpserver.h"
 
 #define AUTO_SAVE_INTERVAL 600000 // 10 minutes
 
@@ -157,17 +158,32 @@ void SettingsLoaderSaver::loadSettings() {
       global->getRemoteCommandHandler()->setPassword(value);
     }
     else if (!setting.compare("notify")) {
-      // begin backward compatibility r977
-      if (!value.compare("true")) {
-        global->getRemoteCommandHandler()->setNotify(RemoteCommandNotify::ALL_COMMANDS);
-        continue;
-      }
-      // end backward compatibility r977
       global->getRemoteCommandHandler()->setNotify(static_cast<RemoteCommandNotify>(std::stoi(value)));
     }
   }
   if (enable) {
     global->getRemoteCommandHandler()->setEnabled(true);
+  }
+
+  dfh->getDataFor("HTTPServer", &lines);
+  enable = false;
+  for (it = lines.begin(); it != lines.end(); it++) {
+    line = *it;
+    if (line.length() == 0 ||line[0] == '#') continue;
+    size_t tok = line.find('=');
+    std::string setting = line.substr(0, tok);
+    std::string value = line.substr(tok + 1);
+    if (!setting.compare("enabled")) {
+      if (!value.compare("true")) {
+        enable = true;
+      }
+    }
+    else if (!setting.compare("port")) {
+      global->getHTTPServer()->setPort(std::stoi(value));
+    }
+  }
+  if (enable) {
+    global->getHTTPServer()->setEnabled(true);
   }
 
   dfh->getDataFor("ExternalFileViewing", &lines);
@@ -534,13 +550,6 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("maxdown")) {
       global->getSiteManager()->setDefaultMaxDown(std::stoi(value));
     }
-    // begin backward compatibility r938
-    else if (!setting.compare("sslconn")) {
-      if (!value.compare("false")) {
-        global->getSiteManager()->setDefaultTLSMode(TLSMode::NONE);
-      }
-    }
-    // end backward compatibility r938
     else if (!setting.compare("tlsmode")) {
       global->getSiteManager()->setDefaultTLSMode(static_cast<TLSMode>(std::stoi(value)));
     }
@@ -674,10 +683,17 @@ void SettingsLoaderSaver::saveSettings() {
     dfh->addOutputLine("SSLManager", "certkeypair=" + std::string(cert.begin(), cert.end()) + "$" + std::string(key.begin(), key.end()));
   }
 
-  if (global->getRemoteCommandHandler()->isEnabled()) dfh->addOutputLine("RemoteCommandHandler", "enabled=true");
+  if (global->getRemoteCommandHandler()->isEnabled()) {
+    dfh->addOutputLine("RemoteCommandHandler", "enabled=true");
+  }
   dfh->addOutputLine("RemoteCommandHandler", "port=" + std::to_string(global->getRemoteCommandHandler()->getUDPPort()));
   dfh->addOutputLine("RemoteCommandHandler", "password=" + global->getRemoteCommandHandler()->getPassword());
   dfh->addOutputLine("RemoteCommandHandler", "notify=" + std::to_string(static_cast<int>(global->getRemoteCommandHandler()->getNotify())));
+
+  if (global->getHTTPServer()->getEnabled()) {
+    dfh->addOutputLine("HTTPServer", "enabled=true");
+  }
+  dfh->addOutputLine("HTTPServer", "port=" + std::to_string(global->getHTTPServer()->getPort()));
 
   {
     std::string filetag = "ExternalFileViewing";

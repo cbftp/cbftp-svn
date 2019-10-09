@@ -15,6 +15,7 @@
 #include "../uibase.h"
 #include "../settingsloadersaver.h"
 #include "../path.h"
+#include "../requestcallback.h"
 
 class UIWindow;
 class InfoWindow;
@@ -74,7 +75,7 @@ enum LegendMode {
   LEGEND_STATIC = 125
 };
 
-class Ui : public Core::EventReceiver, public UIBase, public SettingsAdder {
+class Ui : public Core::EventReceiver, public UIBase, public SettingsAdder, public RequestCallback {
 private:
   Core::Thread<Ui> thread;
   Core::BlockingQueue<UICommand> uiqueue;
@@ -140,7 +141,6 @@ private:
   std::string eventtext;
   Core::Semaphore eventcomplete;
   std::list<std::shared_ptr<UIWindow> > history;
-  void FDData(int);
   void refreshAll();
   void initIntern();
   void enableInfo();
@@ -149,10 +149,12 @@ private:
   void disableLegend();
   void redrawAll();
   void switchToWindow(std::shared_ptr<UIWindow>, bool allowsplit = false, bool doredraw = false);
-  void tick(int);
   void globalKeyBinds(int);
   void switchToLast();
   void setLegendText(const std::string & legendtext);
+  void FDData(int) override;
+  void tick(int) override;
+  void requestReady(void* service, int requestid) override;
 public:
   Ui();
   ~Ui();

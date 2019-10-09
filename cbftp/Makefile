@@ -2,7 +2,7 @@ include Makefile.inc
 
 BINS = cbftp $(BINDIR)/cbftp-debug $(BINDIR)/datafilecat $(BINDIR)/datafilewrite
 BINDIR = bin
-SRC_TARGETS := src src/core
+SRC_TARGETS := src src/core src/http src/ext
 SRC = $(wildcard src/*.cpp)
 LIBS := $(wildcard $(addsuffix /*.a,$(SRC_TARGETS)))
 OBJS = $(wildcard $(SRC:%.cpp=%.o))
@@ -39,15 +39,15 @@ $(BINDIR)/cbftp-debug: misc/start_with_gdb.sh | $(BINDIR)
 	cp misc/start_with_gdb.sh $@; chmod +x bin/cbftp-debug
 
 $(BINDIR)/datafilecat: src/crypto.cpp src/tools/datafilecat.cpp Makefile.inc | $(BINDIR)
-	$(CXX) -o $@ $(OPTFLAGS) $(STATIC_SSL_INCLUDE) src/crypto.cpp \
+	$(CXX) -o $@ $(OPTFLAGS) -std=c++11 $(STATIC_SSL_INCLUDE) src/crypto.cpp \
 	src/filesystem.cpp src/path.cpp src/tools/datafilecat.cpp $(SSL_LINKFLAGS) -lpthread
 
 $(BINDIR)/datafilewrite: src/crypto.cpp src/tools/datafilewrite.cpp Makefile.inc | $(BINDIR)
-	$(CXX) -o $@ $(OPTFLAGS) $(STATIC_SSL_INCLUDE) src/crypto.cpp \
+	$(CXX) -o $@ $(OPTFLAGS) -std=c++11 $(STATIC_SSL_INCLUDE) src/crypto.cpp \
 	src/filesystem.cpp src/path.cpp src/tools/datafilewrite.cpp $(SSL_LINKFLAGS) -lpthread
 
 linecount:
-	find|grep -e '\.h$$' -e '\.cpp$$'|awk '{print $$1}'|xargs wc -l|sort -n
+	find -not -path './src/ext/*'|grep -e '\.h$$' -e '\.cpp$$'|awk '{print $$1}'|xargs wc -l|sort -n
 
 clean: $(CLEAN_TARGETS)
 	@if test -d $(BINDIR); then rm -rf $(BINDIR); echo rm -rf $(BINDIR); fi

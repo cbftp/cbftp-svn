@@ -23,6 +23,7 @@ class SiteManager {
   public:
     SiteManager();
     int getNumSites() const;
+    std::shared_ptr<Site> createNewSite() const;
     void addSite(const std::shared_ptr<Site> &);
     void addSiteLoad(const std::shared_ptr<Site> &);
     std::shared_ptr<Site> getSite(const std::string &) const;

@@ -27,70 +27,71 @@ public:
 
   /* FDNew is called when a new connection has been established on a
    * listening socket registered with IOManager.
-   * @param sockId: the identifier for the socket.
+   * @param sockid: the identifier for the listening socket.
+   * @param newsockid: the identifier for the new socket.
    */
-  virtual void FDNew(int sockId);
+  virtual void FDNew(int sockid, int newsockid);
 
   /* FDConnecting is called when a client connection registered through
    * IOManager is currently trying to connect, after a host name
    * has been remotely resolved.
-   * @param sockId: the identifier for the socket.
+   * @param sockid: the identifier for the socket.
    * @param addr: The IP address being connected to.
    */
-  virtual void FDConnecting(int sockId, const std::string& addr);
+  virtual void FDConnecting(int sockid, const std::string& addr);
 
   /* FDConnected is called when a client connection registered through
    * IOManager has connected successfully.
-   * @param sockId: the identifier for the socket.
+   * @param sockid: the identifier for the socket.
    */
-  virtual void FDConnected(int sockId);
+  virtual void FDConnected(int sockid);
 
   /* FDData(int) is called when there's new data available on an
    * external file descriptor registered through IOManager.
-   * @param sockId: the identifier for the socket/file descriptor.
+   * @param sockid: the identifier for the socket/file descriptor.
    */
-  virtual void FDData(int sockId);
+  virtual void FDData(int sockid);
 
   /* FDData(int) is called when there's new data available on a
    * socket registered through IOManager. The provided data has been
    * decoded in case SSL was enabled on the socket.
-   * @param sockId: the identifier for the socket/file descriptor.
+   * @param sockid: the identifier for the socket/file descriptor.
    * @param data: a pointer to the data buffer
    * @param len: the length of the data buffer
    */
-  virtual void FDData(int sockId, char* data, unsigned int len);
+  virtual void FDData(int sockid, char* data, unsigned int len);
 
   /* FDDisconnected is called when a socket registered through IOManager
    * has been disconnected by the remote end.
-   * @param sockId: the identifier for the socket.
+   * @param sockid: the identifier for the socket.
    */
-  virtual void FDDisconnected(int sockId);
+  virtual void FDDisconnected(int sockid);
 
   /* FDFail is called when a socket registered through IOManager fails
    * to connect or bind.
-   * @param sockId: the identifier for the socket.
+   * @param sockid: the identifier for the socket.
    * @param error: the error message for the event.
    */
-  virtual void FDFail(int sockId, const std::string& error);
+  virtual void FDFail(int sockid, const std::string& error);
 
   /* FDSSLSuccess is called when the SSL negotiation for a socket registered
    * through IOManager has completed.
-   * @param sockId: the identifier for the socket.
+   * @param sockid: the identifier for the socket.
    * @param cipher: The negotiated cipher.
    */
-  virtual void FDSSLSuccess(int sockId, const std::string& cipher);
+  virtual void FDSSLSuccess(int sockid, const std::string& cipher);
 
   /* FDSSLFail is called when the SSL negotiation for a socket registered
    * through IOManager has failed.
-   * @param sockId: the identifier for the socket.
+   * @param sockid: the identifier for the socket.
    */
-  virtual void FDSSLFail(int sockId);
+  virtual void FDSSLFail(int sockid);
 
   /* FDSendComplete is called when a socket registered through IOManager
    * has finished sending data.
-   * @param sockId: the identifier for the socket.
+   * @param sockid: the identifier for the socket.
    */
-  virtual void FDSendComplete(int sockId);
+  virtual void FDSendComplete(int sockid);
 
   /* AsyncTaskComplete is a callback for asynchronous tasks created
    * through the WorkManager.

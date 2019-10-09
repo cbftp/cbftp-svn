@@ -1067,7 +1067,7 @@ void IOManager::handleUDPIn(SocketInfo& socketinfo) {
 
 void IOManager::handleTCPServerIn(SocketInfo& socketinfo) {
   int newfd = -1;
-  int newSockId = -1;
+  int newsockid = -1;
   if (socketinfo.addrfam == AddressFamily::IPV4) {
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
@@ -1078,13 +1078,13 @@ void IOManager::handleTCPServerIn(SocketInfo& socketinfo) {
     }
     char buf[INET6_ADDRSTRLEN];
     inet_ntop(AF_INET, &addr.sin_addr, buf, INET_ADDRSTRLEN);
-    newSockId = sockidcounter++;
-    socketinfomap[newSockId].addr = buf;
-    socketinfomap[newSockId].port = ntohs(addr.sin_port);
+    newsockid = sockidcounter++;
+    socketinfomap[newsockid].addr = buf;
+    socketinfomap[newsockid].port = ntohs(addr.sin_port);
     getsockname(newfd, (struct sockaddr*)&addr, &addrLen);
     inet_ntop(AF_INET, &addr.sin_addr, buf, INET_ADDRSTRLEN);
-    socketinfomap[newSockId].localaddr = buf;
-    socketinfomap[newSockId].localport = ntohs(addr.sin_port);
+    socketinfomap[newsockid].localaddr = buf;
+    socketinfomap[newsockid].localport = ntohs(addr.sin_port);
   }
   else {
     struct sockaddr_in6 addr;
@@ -1096,21 +1096,23 @@ void IOManager::handleTCPServerIn(SocketInfo& socketinfo) {
     }
     char buf[INET6_ADDRSTRLEN];
     inet_ntop(AF_INET6, &addr.sin6_addr, buf, INET6_ADDRSTRLEN);
-    newSockId = sockidcounter++;
-    socketinfomap[newSockId].addr = buf;
-    socketinfomap[newSockId].port = ntohs(addr.sin6_port);
+    newsockid = sockidcounter++;
+    socketinfomap[newsockid].addr = buf;
+    socketinfomap[newsockid].port = ntohs(addr.sin6_port);
     getsockname(newfd, (struct sockaddr*)&addr, &addrLen);
     inet_ntop(AF_INET6, &addr.sin6_addr, buf, INET6_ADDRSTRLEN);
-    socketinfomap[newSockId].localaddr = buf;
-    socketinfomap[newSockId].localport = ntohs(addr.sin6_port);
+    socketinfomap[newsockid].localaddr = buf;
+    socketinfomap[newsockid].localport = ntohs(addr.sin6_port);
   }
-  socketinfomap[newSockId].fd = newfd;
-  socketinfomap[newSockId].addrfam = socketinfo.addrfam;
-  socketinfomap[newSockId].id = newSockId;
-  socketinfomap[newSockId].type = SocketType::TCP_PLAIN_LISTEN;
+  socketinfomap[newsockid].fd = newfd;
+  socketinfomap[newsockid].addrfam = socketinfo.addrfam;
+  socketinfomap[newsockid].id = newsockid;
+  socketinfomap[newsockid].type = SocketType::TCP_PLAIN_LISTEN;
   fcntl(newfd, F_SETFL, O_NONBLOCK);
-  sockfdidmap[newfd] = newSockId;
-  if (!workmanager.dispatchEventNew(socketinfo.receiver, newSockId)) {
+  sockfdidmap[newfd] = newsockid;
+  if (!workmanager.dispatchEventNew(socketinfo.receiver, socketinfo.id,
+      newsockid))
+  {
     autoPause(socketinfo);
   }
 }

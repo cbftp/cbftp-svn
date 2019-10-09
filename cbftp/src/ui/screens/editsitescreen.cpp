@@ -35,21 +35,10 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one, save changes - [c]ancel, undo changes - [s]ections - [S]kiplist";
   currentlegendtext = defaultlegendtext;
   this->operation = operation;
-  SiteManager * sm = global->getSiteManager();
-  std::list<std::shared_ptr<Site> > exceptsrclist;
-  std::list<std::shared_ptr<Site> > exceptdstlist;
   std::string exceptsrc = "";
   std::string exceptdst = "";
   if (operation == "add") {
-    this->site = std::make_shared<Site>("SUNET");
-    this->site->setUser(sm->getDefaultUserName());
-    this->site->setPass(sm->getDefaultPassword());
-    this->site->setMaxLogins(sm->getDefaultMaxLogins());
-    this->site->setMaxUp(sm->getDefaultMaxUp());
-    this->site->setMaxDn(sm->getDefaultMaxDown());
-    this->site->setTLSMode(sm->getDefaultTLSMode());
-    this->site->setSSLTransferPolicy(sm->getDefaultSSLTransferPolicy());
-    this->site->setMaxIdleTime(sm->getDefaultMaxIdleTime());
+    this->site = global->getSiteManager()->createNewSite();
     std::vector<std::shared_ptr<Site> >::const_iterator it;
     for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
       if ((*it)->getTransferTargetPolicy() == SITE_TRANSFER_POLICY_BLOCK) {

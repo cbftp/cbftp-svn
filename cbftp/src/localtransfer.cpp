@@ -20,15 +20,15 @@ bool LocalTransfer::active() const {
   return inuse;
 }
 
-void LocalTransfer::FDNew(int sockid) {
-  global->getIOManager()->closeSocket(this->sockid);
+void LocalTransfer::FDNew(int sockid, int newsockid) {
+  global->getIOManager()->closeSocket(sockid);
   if (timeoutticker) {
     global->getTickPoke()->stopPoke(this, 0);
     timeoutticker = false;
   }
-  this->sockid = sockid;
-  global->getIOManager()->registerTCPServerClientSocket(this, sockid);
-  FDConnected(sockid);
+  this->sockid = newsockid;
+  global->getIOManager()->registerTCPServerClientSocket(this, newsockid);
+  FDConnected(newsockid);
 }
 
 void LocalTransfer::tick(int) {

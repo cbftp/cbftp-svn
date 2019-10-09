@@ -16,10 +16,10 @@
 #include "site.h"
 #include "race.h"
 #include "localstorage.h"
+#include "httpserver.h"
 
-#define DEFAULTPORT 55477
-#define DEFAULTPASS "DEFAULT"
-#define RETRYDELAY 30000
+#define DEFAULT_PASS "DEFAULT"
+#define RETRY_DELAY 30000
 
 namespace {
 
@@ -92,8 +92,8 @@ bool useOrSectionTranslate(Path& path, const std::shared_ptr<Site>& site) {
 
 RemoteCommandHandler::RemoteCommandHandler() :
   enabled(false),
-  password(DEFAULTPASS),
-  port(DEFAULTPORT),
+  password(DEFAULT_PASS),
+  port(DEFAULT_API_PORT),
   retrying(false),
   connected(false),
   notify(RemoteCommandNotify::DISABLED) {
@@ -143,10 +143,10 @@ void RemoteCommandHandler::connect() {
     global->getEventLog()->log("RemoteCommandHandler", "Listening on UDP port " + std::to_string(udpport));
   }
   else {
-    int delay = RETRYDELAY / 1000;
+    int delay = RETRY_DELAY / 1000;
     global->getEventLog()->log("RemoteCommandHandler", "Retrying in " + std::to_string(delay) + " seconds.");
     retrying = true;
-    global->getTickPoke()->startPoke(this, "RemoteCommandHandler", RETRYDELAY, 0);
+    global->getTickPoke()->startPoke(this, "RemoteCommandHandler", RETRY_DELAY, 0);
   }
 }
 
@@ -288,7 +288,7 @@ void RemoteCommandHandler::commandRawWithPath(const std::vector<std::string> & m
     if (!useOrSectionTranslate(path, (*it)->getSite())) {
       continue;
     }
-    (*it)->requestRawCommand(path, rawcommand, false);
+    (*it)->requestRawCommand(nullptr, path, rawcommand);
   }
 }
 

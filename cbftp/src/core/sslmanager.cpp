@@ -234,7 +234,7 @@ int earlyCallback(SSL* ssl, int* alarm, void* arg) {
   const char* name = SSL_get_servername(ssl, TLSEXT_NAMETYPE_host_name);
   std::map<std::string, SSLContextInfo&>::const_iterator it;
   if (name != nullptr) {
-    getLogger()->log("SSLManager", std::string("OpenSSL SNI: ") + name, LogLevel::DEBUG);
+    getLogger()->log("SSLManager", std::string("TLS SNI: ") + name, LogLevel::DEBUG);
     if ((it = g_contexthosts.find(name)) != g_contexthosts.end()) {
       getLogger()->log("SSLManager", std::string("Host string ") + name + " matches certificate string " + name +
                              ", switching context", LogLevel::DEBUG);

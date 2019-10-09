@@ -25,6 +25,7 @@ class Path;
 class SiteTransferJob;
 class FileListData;
 class DelayedCommand;
+class RequestCallback;
 enum class FTPConnState;
 enum class FailureType;
 
@@ -138,7 +139,7 @@ class SiteLogic : public Core::EventReceiver {
     bool getSlot(bool isdownload, TransferType type);
     int requestFileList(const Path &);
     int requestRawCommand(const std::string &);
-    int requestRawCommand(const Path &, const std::string &, bool);
+    int requestRawCommand(RequestCallback* cb, const Path &, const std::string &);
     int requestWipe(const Path &, bool);
     int requestDelete(const Path &, bool, bool, bool);
     int requestNuke(const Path &, int, const std::string &);

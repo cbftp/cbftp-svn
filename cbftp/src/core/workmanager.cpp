@@ -54,9 +54,9 @@ void WorkManager::dispatchTick(EventReceiver* er, int interval) {
   event.post();
 }
 
-bool WorkManager::dispatchEventNew(EventReceiver* er, int sockid, Prio prio) {
+bool WorkManager::dispatchEventNew(EventReceiver* er, int sockid, int newsockid, Prio prio) {
   er->bindWorkManager(this);
-  eventqueues[static_cast<int>(prio)]->push(Event(er, EventType::NEW, sockid));
+  eventqueues[static_cast<int>(prio)]->push(Event(er, EventType::NEW, sockid, newsockid));
   event.post();
   if (prio == Prio::LOW) {
     return !lowPrioOverload();
@@ -254,7 +254,7 @@ void WorkManager::run() {
           er->FDSSLFail(numdata);
           break;
         case EventType::NEW:
-          er->FDNew(numdata);
+          er->FDNew(numdata, event.getNumericalData2());
           break;
         case EventType::FAIL:
           er->FDFail(numdata, event.getStrData());

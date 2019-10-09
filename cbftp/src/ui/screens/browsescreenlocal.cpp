@@ -297,7 +297,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
     }
     else if (ch == 27) {
-      if (filterfield.getData() != "") {
+      if (!filterfield.getData().empty()) {
         filterfield.clear();
         ui->update();
       }

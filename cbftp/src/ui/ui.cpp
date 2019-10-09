@@ -1047,3 +1047,7 @@ void Ui::notify() {
 WINDOW * Ui::getLegendWindow() const {
   return legend;
 }
+
+void Ui::requestReady(void* service, int requestid) {
+  backendPush();
+}

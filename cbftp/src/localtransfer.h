@@ -15,13 +15,13 @@ class LocalTransfer : public Core::EventReceiver {
 public:
   LocalTransfer();
   bool active() const;
-  void FDNew(int);
-  void tick(int);
   void openFile(bool);
   int getPort() const;
   virtual unsigned long long int size() const = 0;
   FTPConn * getConn() const;
 protected:
+  void FDNew(int sockid, int newsockid) override;
+  void tick(int) override;
   void activate();
   void deactivate();
   bool ssl;

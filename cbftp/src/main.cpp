@@ -23,6 +23,8 @@
 #include "uibase.h"
 #include "statistics.h"
 #include "sectionmanager.h"
+#include "httpserver.h"
+#include "restapi.h"
 
 namespace {
 
@@ -31,32 +33,35 @@ public:
   Main() {
     TimeReference::updateTime();
 
-    Core::WorkManager * wm = new Core::WorkManager();
-    Core::TickPoke * tp = new Core::TickPoke(*wm);
-    Core::IOManager * iom = new Core::IOManager(*wm, *tp);
+    Core::WorkManager* wm = new Core::WorkManager();
+    Core::TickPoke* tp = new Core::TickPoke(*wm);
+    Core::IOManager* iom = new Core::IOManager(*wm, *tp);
 
     std::shared_ptr<EventLog> el = std::make_shared<EventLog>();
     Core::setLogger(el);
 
     global->linkCore(wm, tp, iom, el);
 
-    SettingsLoaderSaver * sls = new SettingsLoaderSaver();
-    LocalStorage * ls = new LocalStorage();
-    Engine * e = new Engine();
-    SiteManager * sm = new SiteManager();
-    SiteLogicManager * slm = new SiteLogicManager();
-    TransferManager * tm = new TransferManager();
-    RemoteCommandHandler * rch = new RemoteCommandHandler();
-    SkipList * sl = new SkipList();
-    ProxyManager * pm = new ProxyManager();
-    ExternalFileViewing * efv = new ExternalFileViewing();
-    TimeReference * tr = new TimeReference();
-    Statistics * s = new Statistics();
-    SectionManager * secm = new SectionManager();
+    SettingsLoaderSaver* sls = new SettingsLoaderSaver();
+    LocalStorage* ls = new LocalStorage();
+    Engine* e = new Engine();
+    SiteManager* sm = new SiteManager();
+    SiteLogicManager* slm = new SiteLogicManager();
+    TransferManager* tm = new TransferManager();
+    RemoteCommandHandler* rch = new RemoteCommandHandler();
+    SkipList* sl = new SkipList();
+    ProxyManager* pm = new ProxyManager();
+    ExternalFileViewing* efv = new ExternalFileViewing();
+    TimeReference* tr = new TimeReference();
+    Statistics* s = new Statistics();
+    SectionManager* secm = new SectionManager();
+    HTTPServer* httprv = new HTTPServer();
+    RestApi* ra = new RestApi();
 
-    UIBase * uibase = UIBase::instance();
+    UIBase* uibase = UIBase::instance();
 
-    global->linkComponents(sls, e, uibase, sm, slm, tm, rch, sl, pm, ls, efv, tr, s, secm);
+    global->linkComponents(sls, e, uibase, sm, slm, tm, rch, sl, pm, ls, efv,
+                           tr, s, secm, httprv, ra);
 
     Core::Threading::setCurrentThreadName("cbftp");
 
@@ -74,9 +79,9 @@ void sighandler(int sig) {
   global->getTickPoke()->breakLoop();
 }
 
-}
+} // namespace
 
-int main(int argc, char * argv[]) {
+int main(int argc, char* argv[]) {
   struct sigaction sa;
   sa.sa_handler = sighandler;
   sa.sa_flags = SA_RESTART;

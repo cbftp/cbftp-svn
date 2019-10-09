@@ -33,6 +33,7 @@
 #include "sitetransferjob.h"
 #include "transferstatus.h"
 #include "filelistdata.h"
+#include "requestcallback.h"
 
 //minimum sleep delay (between refreshes / hammer attempts) in ms
 #define SLEEP_DELAY 150
@@ -251,10 +252,10 @@ void SiteLogic::listRefreshed(int id) {
   }
   if (connstatetracker[id].hasRequest()) {
     const std::shared_ptr<SiteLogicRequest> & request = connstatetracker[id].getRequest();
-    FileListData * filelistdata = new FileListData(fl, conns[id]->getCwdRawBuffer());
     if (request->requestType() == REQ_FILELIST &&
         request->requestData() == fl->getPath().toString())
     {
+      FileListData * filelistdata = new FileListData(fl, conns[id]->getCwdRawBuffer());
       setRequestReady(id, filelistdata, true);
     }
   }
@@ -1342,18 +1343,18 @@ void SiteLogic::initTransfer(int id) {
 
 int SiteLogic::requestFileList(const Path & path) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(requestid, REQ_FILELIST, path.toString(), true));
+  requests.push_back(SiteLogicRequest(nullptr, requestid, REQ_FILELIST, path.toString()));
   activateOne();
   return requestid;
 }
 
 int SiteLogic::requestRawCommand(const std::string & command) {
-  return requestRawCommand(site->getBasePath(), command, false);
+  return requestRawCommand(nullptr, site->getBasePath(), command);
 }
 
-int SiteLogic::requestRawCommand(const Path & path, const std::string & command, bool care) {
+int SiteLogic::requestRawCommand(RequestCallback* cb, const Path & path, const std::string & command) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(requestid, REQ_RAW, path.toString(), command, care));
+  requests.push_back(SiteLogicRequest(cb, requestid, REQ_RAW, path.toString(), command));
   activateOne();
   return requestid;
 }
@@ -1361,10 +1362,10 @@ int SiteLogic::requestRawCommand(const Path & path, const std::string & command,
 int SiteLogic::requestWipe(const Path & path, bool recursive) {
   int requestid = requestidcounter++;
   if (recursive) {
-    requests.push_back(SiteLogicRequest(requestid, REQ_WIPE_RECURSIVE, path.toString(), true));
+    requests.push_back(SiteLogicRequest(nullptr, requestid, REQ_WIPE_RECURSIVE, path.toString()));
   }
   else {
-    requests.push_back(SiteLogicRequest(requestid, REQ_WIPE, path.toString(), true));
+    requests.push_back(SiteLogicRequest(nullptr, requestid, REQ_WIPE, path.toString()));
   }
   activateOne();
   return requestid;
@@ -1374,10 +1375,10 @@ int SiteLogic::requestDelete(const Path & path, bool recursive, bool interactive
   int requestid = requestidcounter++;
   if (recursive) {
     int req = allfiles ? REQ_DEL_RECURSIVE : REQ_DEL_OWN;
-    requests.push_back(SiteLogicRequest(requestid, req, path.toString(), interactive));
+    requests.push_back(SiteLogicRequest(nullptr, requestid, req, path.toString()));
   }
   else {
-    requests.push_back(SiteLogicRequest(requestid, REQ_DEL, path.toString(), interactive));
+    requests.push_back(SiteLogicRequest(nullptr, requestid, REQ_DEL, path.toString()));
   }
   activateOne();
   return requestid;
@@ -1385,14 +1386,14 @@ int SiteLogic::requestDelete(const Path & path, bool recursive, bool interactive
 
 int SiteLogic::requestNuke(const Path & path, int multiplier, const std::string & reason) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(requestid, REQ_NUKE, path.toString(), reason, multiplier, true));
+  requests.push_back(SiteLogicRequest(nullptr, requestid, REQ_NUKE, path.toString(), reason, multiplier));
   activateOne();
   return requestid;
 }
 
 int SiteLogic::requestOneIdle() {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(requestid, REQ_IDLE, site->getBasePath().toString(), site->getMaxIdleTime(), true));
+  requests.push_back(SiteLogicRequest(nullptr, requestid, REQ_IDLE, site->getBasePath().toString(), site->getMaxIdleTime()));
   activateOne();
   return requestid;
 }
@@ -1404,7 +1405,7 @@ int SiteLogic::requestAllIdle(const Path & path, int idletime) {
   int requestid = -1;
   for (unsigned int i = 0; i < connstatetracker.size(); i++) {
     requestid = requestidcounter++;
-    SiteLogicRequest request(requestid, REQ_IDLE, path.toString(), idletime, false);
+    SiteLogicRequest request(nullptr, requestid, REQ_IDLE, path.toString(), idletime);
     request.setConnId(i);
     requests.push_back(request);
   }
@@ -1420,10 +1421,10 @@ int SiteLogic::requestMakeDirectory(const Path& path, const std::string & dirnam
   int requestid = requestidcounter++;
   Path dirpath(dirname);
   if (dirpath.isRelative()) {
-    requests.push_back(SiteLogicRequest(requestid, REQ_MKDIR, path.toString(), dirname, true));
+    requests.push_back(SiteLogicRequest(nullptr, requestid, REQ_MKDIR, path.toString(), dirname));
   }
   else {
-    requests.push_back(SiteLogicRequest(requestid, REQ_MKDIR, dirpath.dirName(), dirpath.baseName(), true));
+    requests.push_back(SiteLogicRequest(nullptr, requestid, REQ_MKDIR, dirpath.dirName(), dirpath.baseName()));
   }
   activateOne();
   return requestid;
@@ -1897,7 +1898,7 @@ void SiteLogic::listCompleted(int id, int storeid, const std::shared_ptr<FileLis
 
 void SiteLogic::issueRawCommand(unsigned int id, const std::string & command) {
   int requestid = requestidcounter++;
-  SiteLogicRequest request(requestid, REQ_RAW, conns[id]->getCurrentPath().toString(), command, true);
+  SiteLogicRequest request(nullptr, requestid, REQ_RAW, conns[id]->getCurrentPath().toString(), command);
   request.setConnId(id);
   requests.push_back(request);
   if (!conns[id]->isConnected()) {
@@ -2100,21 +2101,22 @@ const ConnStateTracker * SiteLogic::getConnStateTracker(int id) const {
   return &connstatetracker[id];
 }
 
-void SiteLogic::setRequestReady(unsigned int id, void * data, bool status, bool returnslot) {
+void SiteLogic::setRequestReady(unsigned int id, void* data, bool status, bool returnslot) {
   const std::shared_ptr<SiteLogicRequest> & request = connstatetracker[id].getRequest();
-  requestsready.push_back(SiteLogicRequestReady(request->requestType(), request->requestId(), data, status));
+  int requestid = request->requestId();
+  requestsready.push_back(SiteLogicRequestReady(request->requestType(), requestid, data, status));
   while (requestsready.size() > MAX_REQUEST_READY_QUEUE_SIZE && timesincelastrequestready > MAX_REQUEST_READY_QUEUE_IDLE_TIME) {
     clearReadyRequest(requestsready.front());
     requestsready.pop_front();
   }
   timesincelastrequestready = 0;
-  const bool care = request->doesAnyoneCare();
+  RequestCallback* cb = request->callback();
   connstatetracker[id].finishRequest();
   if (returnslot) {
     available++;
   }
-  if (care) {
-    global->getUIBase()->backendPush();
+  if (cb) {
+    cb->requestReady(this, requestid);
   }
 }
 
@@ -2146,7 +2148,7 @@ void SiteLogic::antiAntiIdle(int id) {
       }
     }
     int requestid = requestidcounter++;
-    SiteLogicRequest request(requestid, REQ_FILELIST, target.toString(), false);
+    SiteLogicRequest request(nullptr, requestid, REQ_FILELIST, target.toString());
     request.setConnId(id);
     requests.push_back(request);
     handleConnection(id);

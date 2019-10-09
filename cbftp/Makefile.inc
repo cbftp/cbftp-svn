@@ -20,7 +20,7 @@ REDIST_VERSION := $(shell cat $(ROOT_DIR)/.version 2>/dev/null)
 
 ifeq ($(HAS_SVN), 0)
 VERSION := "\"svn:r$(shell svn info $(ROOT_DIR)|grep Revision|awk '{ print $$2 }')\""
-SVN_ROOT_DIR := $(shell svn info|grep 'Working Copy Root'|awk '{print $$5 }')
+SVN_ROOT_DIR := $(shell svn info $(ROOT_DIR)|grep 'Working Copy Root'|awk '{print $$5 }')
 else ifneq ($(REDIST_VERSION),)
 VERSION := "\"redist:r$(REDIST_VERSION)\""
 else
@@ -32,8 +32,9 @@ DATE := "\"$(shell date)\""
 BOXTAG := "\"cbftp\""
 
 CXX=g++
-OPTFLAGS=-g -O0 -std=c++11
-CPPFLAGS=$(OPTFLAGS) -Wall -MMD -MP $(STATIC_SSL_INCLUDE)
+OPTFLAGS=-g -O0
+CXXFLAGS=$(OPTFLAGS) -std=c++11 -Wall -MMD -MP $(STATIC_SSL_INCLUDE)
+CFLAGS=$(OPTFLAGS) -Wall -MMD -MP
 LINKFLAGS=$(SSL_LINKFLAGS) -lpthread
 ifeq ($(UNAME_S),Darwin)
 LINKFLAGS+=-lncurses
