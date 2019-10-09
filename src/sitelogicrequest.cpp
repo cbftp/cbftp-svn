@@ -1,51 +1,51 @@
 #include "sitelogicrequest.h"
 
-SiteLogicRequest::SiteLogicRequest(int requestid, int requesttype, int data3, bool care) :
+SiteLogicRequest::SiteLogicRequest(RequestCallback* cb, int requestid, int requesttype, int data3) :
   requestid(requestid),
   connid(-1),
   requesttype(requesttype),
   data3(data3),
-  care(care)
+  cb(cb)
 {
 }
 
-SiteLogicRequest::SiteLogicRequest(int requestid, int requesttype, const std::string & data, bool care) :
+SiteLogicRequest::SiteLogicRequest(RequestCallback* cb, int requestid, int requesttype, const std::string & data) :
   requestid(requestid),
   connid(-1),
   requesttype(requesttype),
   data(data),
-  care(care)
+  cb(cb)
 {
 }
 
-SiteLogicRequest::SiteLogicRequest(int requestid, int requesttype, const std::string & data, int data3, bool care) :
+SiteLogicRequest::SiteLogicRequest(RequestCallback* cb, int requestid, int requesttype, const std::string & data, int data3) :
   requestid(requestid),
   connid(-1),
   requesttype(requesttype),
   data(data),
   data3(data3),
-  care(care)
+  cb(cb)
 {
 }
 
-SiteLogicRequest::SiteLogicRequest(int requestid, int requesttype, const std::string & data, const std::string & data2, bool care) :
+SiteLogicRequest::SiteLogicRequest(RequestCallback* cb, int requestid, int requesttype, const std::string & data, const std::string & data2) :
   requestid(requestid),
   connid(-1),
   requesttype(requesttype),
   data(data),
   data2(data2),
-  care(care)
+  cb(cb)
 {
 }
 
-SiteLogicRequest::SiteLogicRequest(int requestid, int requesttype, const std::string & data, const std::string & data2, int data3, bool care) :
+SiteLogicRequest::SiteLogicRequest(RequestCallback* cb, int requestid, int requesttype, const std::string & data, const std::string & data2, int data3) :
   requestid(requestid),
   connid(-1),
   requesttype(requesttype),
   data(data),
   data2(data2),
   data3(data3),
-  care(care)
+  cb(cb)
 {
 }
 
@@ -76,6 +76,6 @@ int SiteLogicRequest::connId() const {
   return connid;
 }
 
-bool SiteLogicRequest::doesAnyoneCare() const {
-  return care;
+RequestCallback* SiteLogicRequest::callback() const {
+  return cb;
 }

@@ -146,7 +146,7 @@ bool RawCommandScreen::keyPressed(unsigned int ch) {
       if (command != "") {
         readfromcopy = false;
         history.push(command);
-        sitelogic->requestRawCommand(path, command, true);
+        sitelogic->requestRawCommand(ui, path, command);
         rawcommandfield.clear();
         ui->update();
       }

@@ -288,6 +288,9 @@ Path Path::level(int level) const {
     lastpos = splitpos + 1;
   }
   if (level == atlevel) {
+    if (lastpos == 1) {
+      --lastpos;
+    }
     return Path(unixpath.substr(lastpos), separatorchar, separatorcertain);
   }
   return Path("", separatorchar, separatorcertain);

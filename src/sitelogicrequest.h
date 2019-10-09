@@ -2,6 +2,8 @@
 
 #include <string>
 
+class RequestCallback;
+
 class SiteLogicRequest {
 private:
   int requestid;
@@ -10,13 +12,13 @@ private:
   std::string data;
   std::string data2;
   int data3;
-  bool care;
+  RequestCallback* cb;
 public:
-  SiteLogicRequest(int, int, int, bool);
-  SiteLogicRequest(int, int, const std::string &, bool);
-  SiteLogicRequest(int, int, const std::string &, int, bool);
-  SiteLogicRequest(int, int, const std::string &, const std::string &, bool);
-  SiteLogicRequest(int, int, const std::string &, const std::string &, int, bool);
+  SiteLogicRequest(RequestCallback* cb, int, int, int);
+  SiteLogicRequest(RequestCallback* cb, int, int, const std::string &);
+  SiteLogicRequest(RequestCallback* cb, int, int, const std::string &, int);
+  SiteLogicRequest(RequestCallback* cb, int, int, const std::string &, const std::string &);
+  SiteLogicRequest(RequestCallback* cb, int, int, const std::string &, const std::string &, int);
   int requestId() const;
   int requestType() const;
   std::string requestData() const;
@@ -24,5 +26,5 @@ public:
   int requestData3() const;
   void setConnId(int);
   int connId() const;
-  bool doesAnyoneCare() const;
+  RequestCallback* callback() const;
 };

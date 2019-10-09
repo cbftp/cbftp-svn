@@ -41,6 +41,19 @@ int SiteManager::getNumSites() const {
   return sites.size();
 }
 
+std::shared_ptr<Site> SiteManager::createNewSite() const {
+  std::shared_ptr<Site> site = std::make_shared<Site>("SUNET");
+  site->setUser(getDefaultUserName());
+  site->setPass(getDefaultPassword());
+  site->setMaxLogins(getDefaultMaxLogins());
+  site->setMaxUp(getDefaultMaxUp());
+  site->setMaxDn(getDefaultMaxDown());
+  site->setTLSMode(getDefaultTLSMode());
+  site->setSSLTransferPolicy(getDefaultSSLTransferPolicy());
+  site->setMaxIdleTime(getDefaultMaxIdleTime());
+  return site;
+}
+
 std::shared_ptr<Site> SiteManager::getSite(const std::string & site) const {
   std::vector<std::shared_ptr<Site> >::const_iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {

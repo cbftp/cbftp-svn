@@ -1,7 +1,7 @@
 -include ../../Makefile.inc
 
 SRC = $(wildcard *.cpp)
-LIB = libcore.a
+LIB = libhttp.a
 CLEANFILES = $(wildcard $(SRC:%.cpp=%.o) $(SRC:%.cpp=%.d) $(LIB))
 
 all: $(SRC:%.cpp=%.o)
@@ -18,9 +18,6 @@ clean:
 
 ifneq ($(wildcard ../../Makefile.inc),)
 $(SRC:%.cpp=%.o): ../../Makefile.inc
-
-sslmanager.o: sslmanager.cpp ../../Makefile.inc
-	$(CXX) $(CXXFLAGS)  -c -o sslmanager.o sslmanager.cpp -DCORP=$(BOXTAG)
 endif
 
 -include $(SRC:%.cpp=%.d)

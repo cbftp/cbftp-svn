@@ -9,6 +9,7 @@
 #include "../../settingsloadersaver.h"
 #include "../../engine.h"
 #include "../../transferprotocol.h"
+#include "../../httpserver.h"
 
 #include "../ui.h"
 #include "../focusablearea.h"
@@ -71,9 +72,11 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   mso.addStringField(y++, x, "activeaddress4", "Active mode address IPv4:", ls->getActiveModeAddress4(), false, 64);
   mso.addStringField(y++, x, "activeaddress6", "Active mode address IPv6:", ls->getActiveModeAddress6(), false, 64);
   y++;
-  mso.addCheckBox(y++, x, "udpenable", "Enable remote commands:", rch->isEnabled());
-  mso.addStringField(y++, x, "udpport", "Remote command UDP Port:", std::to_string(rch->getUDPPort()), false, 5);
-  mso.addStringField(y++, x, "udppass", "Remote command password:", rch->getPassword(), true);
+  mso.addCheckBox(y++, x, "tcpenable", "Enable HTTPS/JSON API:", global->getHTTPServer()->getEnabled());
+  mso.addStringField(y++, x, "tcpport", "HTTPS/JSON API Port:", std::to_string(global->getHTTPServer()->getPort()), false, 5);
+  mso.addCheckBox(y++, x, "udpenable", "Enable UDP API:", rch->isEnabled());
+  mso.addStringField(y++, x, "udpport", "UDP API Port:", std::to_string(rch->getUDPPort()), false, 5);
+  mso.addStringField(y++, x, "apipass", "API password:", rch->getPassword(), true);
   std::shared_ptr<MenuSelectOptionTextArrow> bell = mso.addTextArrow(y++, x, "udpbell", "Remote command bell:");
   bell->addOption("Disabled", static_cast<int>(RemoteCommandNotify::DISABLED));
   bell->addOption("Action requested", static_cast<int>(RemoteCommandNotify::ACTION_REQUESTED));
@@ -248,6 +251,12 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
         else if (identifier == "activeaddress6") {
           ls->setActiveModeAddress6(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
+        else if (identifier == "tcpenable") {
+          global->getHTTPServer()->setEnabled(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
+        }
+        else if (identifier == "tcpport") {
+          global->getHTTPServer()->setPort(std::stoi(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData()));
+        }
         else if (identifier == "udpenable") {
           udpenable = std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData();
           if (rch->isEnabled() && !udpenable) {
@@ -257,7 +266,7 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
         else if (identifier == "udpport") {
           rch->setPort(std::stoi(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData()));
         }
-        else if (identifier == "udppass") {
+        else if (identifier == "apipass") {
           rch->setPassword(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "udpbell") {

@@ -22,7 +22,7 @@ void EventReceiver::signal(int sig, int value) {
 
 }
 
-void EventReceiver::FDNew(int sockid) {
+void EventReceiver::FDNew(int sockid, int newsockid) {
 
 }
 
