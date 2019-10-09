@@ -1341,15 +1341,15 @@ void SiteLogic::initTransfer(int id) {
   }
 }
 
-int SiteLogic::requestFileList(const Path & path) {
+int SiteLogic::requestFileList(RequestCallback* cb, const Path & path) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(nullptr, requestid, REQ_FILELIST, path.toString()));
+  requests.push_back(SiteLogicRequest(cb, requestid, REQ_FILELIST, path.toString()));
   activateOne();
   return requestid;
 }
 
-int SiteLogic::requestRawCommand(const std::string & command) {
-  return requestRawCommand(nullptr, site->getBasePath(), command);
+int SiteLogic::requestRawCommand(RequestCallback* cb, const std::string & command) {
+  return requestRawCommand(cb, site->getBasePath(), command);
 }
 
 int SiteLogic::requestRawCommand(RequestCallback* cb, const Path & path, const std::string & command) {
@@ -1359,53 +1359,53 @@ int SiteLogic::requestRawCommand(RequestCallback* cb, const Path & path, const s
   return requestid;
 }
 
-int SiteLogic::requestWipe(const Path & path, bool recursive) {
+int SiteLogic::requestWipe(RequestCallback* cb, const Path & path, bool recursive) {
   int requestid = requestidcounter++;
   if (recursive) {
-    requests.push_back(SiteLogicRequest(nullptr, requestid, REQ_WIPE_RECURSIVE, path.toString()));
+    requests.push_back(SiteLogicRequest(cb, requestid, REQ_WIPE_RECURSIVE, path.toString()));
   }
   else {
-    requests.push_back(SiteLogicRequest(nullptr, requestid, REQ_WIPE, path.toString()));
+    requests.push_back(SiteLogicRequest(cb, requestid, REQ_WIPE, path.toString()));
   }
   activateOne();
   return requestid;
 }
 
-int SiteLogic::requestDelete(const Path & path, bool recursive, bool interactive, bool allfiles) {
+int SiteLogic::requestDelete(RequestCallback* cb, const Path & path, bool recursive, bool interactive, bool allfiles) {
   int requestid = requestidcounter++;
   if (recursive) {
     int req = allfiles ? REQ_DEL_RECURSIVE : REQ_DEL_OWN;
-    requests.push_back(SiteLogicRequest(nullptr, requestid, req, path.toString()));
+    requests.push_back(SiteLogicRequest(cb, requestid, req, path.toString()));
   }
   else {
-    requests.push_back(SiteLogicRequest(nullptr, requestid, REQ_DEL, path.toString()));
+    requests.push_back(SiteLogicRequest(cb, requestid, REQ_DEL, path.toString()));
   }
   activateOne();
   return requestid;
 }
 
-int SiteLogic::requestNuke(const Path & path, int multiplier, const std::string & reason) {
+int SiteLogic::requestNuke(RequestCallback* cb, const Path & path, int multiplier, const std::string & reason) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(nullptr, requestid, REQ_NUKE, path.toString(), reason, multiplier));
+  requests.push_back(SiteLogicRequest(cb, requestid, REQ_NUKE, path.toString(), reason, multiplier));
   activateOne();
   return requestid;
 }
 
-int SiteLogic::requestOneIdle() {
+int SiteLogic::requestOneIdle(RequestCallback* cb) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(nullptr, requestid, REQ_IDLE, site->getBasePath().toString(), site->getMaxIdleTime()));
+  requests.push_back(SiteLogicRequest(cb, requestid, REQ_IDLE, site->getBasePath().toString(), site->getMaxIdleTime()));
   activateOne();
   return requestid;
 }
 
-int SiteLogic::requestAllIdle(const Path & path, int idletime) {
+int SiteLogic::requestAllIdle(RequestCallback* cb, const Path & path, int idletime) {
   if (!idletime) {
     idletime = site->getMaxIdleTime();
   }
   int requestid = -1;
   for (unsigned int i = 0; i < connstatetracker.size(); i++) {
     requestid = requestidcounter++;
-    SiteLogicRequest request(nullptr, requestid, REQ_IDLE, path.toString(), idletime);
+    SiteLogicRequest request(cb, requestid, REQ_IDLE, path.toString(), idletime);
     request.setConnId(i);
     requests.push_back(request);
   }
@@ -1413,11 +1413,11 @@ int SiteLogic::requestAllIdle(const Path & path, int idletime) {
   return requestid;
 }
 
-int SiteLogic::requestAllIdle(int idletime) {
-  return requestAllIdle(site->getBasePath(), idletime);
+int SiteLogic::requestAllIdle(RequestCallback* cb, int idletime) {
+  return requestAllIdle(cb, site->getBasePath(), idletime);
 }
 
-int SiteLogic::requestMakeDirectory(const Path& path, const std::string & dirname) {
+int SiteLogic::requestMakeDirectory(RequestCallback* cb, const Path& path, const std::string & dirname) {
   int requestid = requestidcounter++;
   Path dirpath(dirname);
   if (dirpath.isRelative()) {

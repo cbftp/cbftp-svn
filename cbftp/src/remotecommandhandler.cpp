@@ -268,7 +268,7 @@ void RemoteCommandHandler::commandRaw(const std::vector<std::string> & message) 
   std::list<std::shared_ptr<SiteLogic> > sites = getSiteLogicList(sitestring);
 
   for (std::list<std::shared_ptr<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
-    (*it)->requestRawCommand(rawcommand);
+    (*it)->requestRawCommand(nullptr, rawcommand);
   }
 }
 
@@ -394,7 +394,7 @@ void RemoteCommandHandler::commandIdle(const std::vector<std::string> & message)
 
   std::list<std::shared_ptr<SiteLogic> > sites = getSiteLogicList(sitestring);
   for (std::list<std::shared_ptr<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
-    (*it)->requestAllIdle(idletime);
+    (*it)->requestAllIdle(nullptr, idletime);
   }
 }
 
