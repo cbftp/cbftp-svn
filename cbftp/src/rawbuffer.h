@@ -9,6 +9,7 @@ class RawBufferCallback;
 class RawBuffer {
   private:
     void lineFinished();
+    void addLogText(const std::string& tag, const std::string& text);
     std::vector<std::pair<std::string, std::string> > log;
     std::vector<std::pair<std::string, std::string> > logcopy;
     unsigned int latestp;

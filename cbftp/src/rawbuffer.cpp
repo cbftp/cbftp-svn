@@ -79,47 +79,48 @@ void RawBuffer::write(const std::string & s) {
 }
 
 void RawBuffer::write(const std::string & tag, const std::string & s) {
-  size_t split = s.find("\r\n");
-  if (!split) {
-    if (s.length() > 2) write(tag, s.substr(2));
-  }
-  else if (split != std::string::npos) {
-    write(tag, s.substr(0, split));
-    lineFinished();
-    if (s.length() > split + 2) write(tag, s.substr(split + 2));
-  }
-  else {
-    split = s.find("\n");
-    if (!split) {
-      if (s.length() > 1) write(tag, s.substr(1));
-    }
-    else if (split != std::string::npos) {
-      write(tag, s.substr(0, split));
+  size_t pos = 0;
+  size_t len = s.length();
+  while (pos < len) {
+    size_t split = s.find('\n', pos);
+    if (split == pos) {
       lineFinished();
-      if (s.length() > split + 1) write(tag, s.substr(split + 1));
+      ++pos;
+    }
+    else if (split == std::string::npos) {
+      addLogText(tag, s.substr(pos));
+      pos = len;
     }
     else {
-      if (inprogress) {
-        log[(latestp > 0 ? latestp : maxlength) - 1].second.append(s);
+      size_t len = split - pos;
+      if (s[split - 1] == '\r') {
+        --len;
       }
-      else {
-        if (log.size() < maxlength) {
-          log.push_back(std::pair<std::string, std::string>(tag, s));
-        }
-        else {
-          log[latestp] = std::pair<std::string, std::string>(tag, s);
-        }
-        if (++latestp == maxlength) {
-          latestp = 0;
-        }
-        ++bookmarklines;
-        inprogress = true;
-      }
+      addLogText(tag, s.substr(pos, len));
+      pos = split;
     }
   }
   if (uiwatching) {
     global->getUIBase()->backendPush();
   }
+}
+
+void RawBuffer::addLogText(const std::string& tag, const std::string& text) {
+  if (inprogress) {
+    log[(latestp > 0 ? latestp : maxlength) - 1].second.append(text);
+    return;
+  }
+  if (log.size() < maxlength) {
+    log.emplace_back(tag, text);
+  }
+  else {
+    log.emplace(log.begin() + latestp, tag, text);
+  }
+  if (++latestp == maxlength) {
+    latestp = 0;
+  }
+  ++bookmarklines;
+  inprogress = true;
 }
 
 void RawBuffer::writeLine(const std::string & s) {
