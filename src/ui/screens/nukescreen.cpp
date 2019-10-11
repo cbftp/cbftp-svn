@@ -33,7 +33,7 @@ void NukeScreen::initialize(unsigned int row, unsigned int col, const std::strin
   std::list<std::string> sections = global->getSiteManager()->getSite(sitestr)->getSectionsForPath(path);
   mso.reset();
   mso.addStringField(5, 1, "reason", "Reason:", "", false, col - 3, 512);
-  mso.addIntArrow(6, 1, "multiplier", "Multiplier:", 1, 1, 100);
+  mso.addIntArrow(6, 1, "multiplier", "Multiplier:", 1, 0, 100);
   mso.enterFocusFrom(0);
   init(row, col);
 }
