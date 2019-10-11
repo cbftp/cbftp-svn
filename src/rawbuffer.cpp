@@ -114,7 +114,7 @@ void RawBuffer::addLogText(const std::string& tag, const std::string& text) {
     log.emplace_back(tag, text);
   }
   else {
-    log.emplace(log.begin() + latestp, tag, text);
+    log[latestp] = std::make_pair(tag, text);
   }
   if (++latestp == maxlength) {
     latestp = 0;
