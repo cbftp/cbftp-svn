@@ -35,7 +35,7 @@ SectionsScreen::~SectionsScreen() {
 
 }
 
-void SectionsScreen::initialize(unsigned int row, unsigned int col, bool selectsection) {
+void SectionsScreen::initialize(unsigned int row, unsigned int col, bool selectsection, const std::list<std::string>& preselected) {
   mode = selectsection ? Mode::SELECT : Mode::EDIT;
   currentviewspan = 0;
   ypos = 0;
@@ -43,6 +43,13 @@ void SectionsScreen::initialize(unsigned int row, unsigned int col, bool selects
   hascontents = false;
   table.reset();
   table.enterFocusFrom(0);
+  selected.clear();
+  for (const std::string& section : preselected) {
+    if (global->getSectionManager()->getSection(section)) {
+      selected.insert(section);
+    }
+  }
+  togglestate = false;
   init(row, col);
 }
 
@@ -112,9 +119,16 @@ bool SectionsScreen::keyPressed(unsigned int ch) {
     }
   }
   if (hascontents && mode == Mode::SELECT && (ch == 10 || ch == 'd')) {
-    std::shared_ptr<MenuSelectOptionTextButton> elem =
-        std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
-    ui->returnSelectItems(elem->getLabelText());
+    std::string selectedstr;
+    if (selected.empty()) {
+      std::shared_ptr<MenuSelectOptionTextButton> elem =
+          std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
+      selectedstr = elem->getLabelText();
+    }
+    else {
+      selectedstr = util::join(selected, ",");
+    }
+    ui->returnSelectItems(selectedstr);
     return true;
   }
   switch (ch) {
@@ -154,6 +168,22 @@ bool SectionsScreen::keyPressed(unsigned int ch) {
       ypos = 0;
       ui->update();
       return true;
+    case ' ':
+      if (hascontents && mode == Mode::SELECT) {
+        std::shared_ptr<MenuSelectOptionTextButton> elem =
+            std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
+        std::string section = elem->getLabelText();
+        if (selected.find(section) == selected.end()) {
+          selected.insert(section);
+        }
+        else {
+          selected.erase(section);
+        }
+        ui->redraw();
+        ui->setLegend();
+        return true;
+      }
+      break;
     case KEY_END:
       ypos = totallistsize - 1;
       ui->update();
@@ -190,6 +220,21 @@ bool SectionsScreen::keyPressed(unsigned int ch) {
       temphighlightline = table.getElement(table.getSelectionPointer())->getRow();
       ui->redraw();
       return true;
+    case 't':
+      if (selected.empty() || !togglestate) {
+        selected.clear();
+        for (auto it = global->getSectionManager()->begin(); it != global->getSectionManager()->end(); ++it) {
+          selected.insert(it->first);
+        }
+        togglestate = true;
+      }
+      else if (selected.size() == global->getSectionManager()->size() || togglestate) {
+        selected.clear();
+        togglestate = false;
+      }
+      ui->redraw();
+      ui->setLegend();
+      return true;
   }
   return false;
 }
@@ -205,14 +250,15 @@ void SectionsScreen::command(const std::string & command, const std::string & ar
 
 std::string SectionsScreen::getLegendText() const {
   if (mode == Mode::SELECT) {
-    return "[Up/Down] Navigate - [Enter/d] Select - [Esc/c] Cancel";
+    std::string enterdesc = selected.empty() ? "Select and return" : "Return selected items";
+    return "[Up/Down] Navigate - [Enter/d] " + enterdesc + " - [Esc/c] Cancel - [Space] Select - [t]oggle all";
   }
   return "[A]dd section - [Enter/E] Details - [Esc/c/d] Return - [Up/Down] Navigate - [Del]ete section";
 }
 
 std::string SectionsScreen::getInfoLabel() const {
   if (mode == Mode::SELECT) {
-    return "SELECT SECTION";
+    return "SELECT SECTIONS";
   }
   return "SECTIONS";
 }
@@ -222,11 +268,12 @@ std::string SectionsScreen::getInfoText() const {
 }
 
 void SectionsScreen::addSectionTableHeader(unsigned int y, MenuSelectOption & mso) {
-  addSectionTableRow(y, mso, false, "NAME", "SKIPLIST", "HOTKEY", "#JOBS", "#SITES", "SITES");
+  addSectionTableRow(y, mso, false, "SEL", "NAME", "SKIPLIST", "HOTKEY", "#JOBS", "#SITES", "SITES");
 }
 
 void SectionsScreen::addSectionDetails(unsigned int y, MenuSelectOption & mso, const Section & section) {
   std::string skiplist = section.getSkipList().size() ? "[X]" : "[ ]";
+  std::string selectedstr = (selected.find(section.getName()) != selected.end()) ? "[X]" : "[ ]";
   std::list<std::string> sites;
   for (auto it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); ++it) {
     if ((*it)->hasSection(section.getName())) {
@@ -235,19 +282,24 @@ void SectionsScreen::addSectionDetails(unsigned int y, MenuSelectOption & mso, c
   }
   int hotkey = section.getHotKey();
   std::string hotkeystr = hotkey != -1 ? std::to_string(hotkey) : "None";
-  addSectionTableRow(y, mso, true, section.getName(), skiplist, hotkeystr, std::to_string(section.getNumJobs()),
+  addSectionTableRow(y, mso, true, selectedstr, section.getName(), skiplist, hotkeystr, std::to_string(section.getNumJobs()),
                      std::to_string(sites.size()), util::join(sites, ","));
 }
 
 void SectionsScreen::addSectionTableRow(unsigned int y, MenuSelectOption & mso, bool selectable,
-    const std::string & name, const std::string & skiplist, const std::string & hotkey, const std::string & numjobs,
+    const std::string& selected, const std::string & name, const std::string & skiplist, const std::string & hotkey, const std::string & numjobs,
     const std::string & numsites, const std::string & sites)
 {
   std::shared_ptr<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
   std::shared_ptr<MenuSelectOptionTextButton> msotb;
 
+  if (mode == Mode::SELECT) {
+    msotb = mso.addTextButtonNoContent(y, 1, "selected", selected);
+    msal->addElement(msotb, 6, RESIZE_CUTEND);
+  }
+
   msotb = mso.addTextButtonNoContent(y, 1, "name", name);
-  msal->addElement(msotb, 6, RESIZE_CUTEND);
+  msal->addElement(msotb, 7, RESIZE_CUTEND);
 
   msotb = mso.addTextButtonNoContent(y, 1, "skiplist", skiplist);
   msotb->setSelectable(false);

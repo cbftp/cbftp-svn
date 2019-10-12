@@ -27,6 +27,7 @@ public:
   std::string getInfoLabel() const override;
 private:
   void initialize(unsigned int row, unsigned int col, const std::shared_ptr<Site> & site, const std::string & section, const Path & path);
+  bool setSections();
   std::shared_ptr<Site> modsite;
   std::string currentlegendtext;
   std::string defaultlegendtext;
@@ -35,4 +36,5 @@ private:
   MenuSelectOption mso;
   Mode mode;
   std::string oldsection;
+  bool exists;
 };

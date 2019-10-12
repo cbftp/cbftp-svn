@@ -240,7 +240,7 @@ int wildcmpCase(const char *wild, const char *string) {
   return !*wild;
 }
 
-std::list<std::string> split(const std::string & in, const std::string & sep) {
+std::list<std::string> split(const std::string& in, const std::string& sep) {
   std::list<std::string> out;
   size_t start = 0;
   size_t end;
@@ -253,7 +253,7 @@ std::list<std::string> split(const std::string & in, const std::string & sep) {
   return out;
 }
 
-std::vector<std::string> splitVec(const std::string & in, const std::string & sep) {
+std::vector<std::string> splitVec(const std::string& in, const std::string& sep) {
   std::vector<std::string> out;
   size_t start = 0;
   size_t end;
@@ -266,15 +266,7 @@ std::vector<std::string> splitVec(const std::string & in, const std::string & se
   return out;
 }
 
-std::list<std::string> split(const std::string & in) {
-  return split(in, " ");
-}
-
-std::vector<std::string> splitVec(const std::string & in) {
-  return splitVec(in, " ");
-}
-
-std::string join(const std::list<std::string> & in, const std::string & sep) {
+std::string join(const std::list<std::string>& in, const std::string& sep) {
   std::string out;
   for (std::list<std::string>::const_iterator it = in.begin(); it != in.end(); it++) {
     out += *it + sep;
@@ -282,11 +274,7 @@ std::string join(const std::list<std::string> & in, const std::string & sep) {
   return out.substr(0, out.length() - sep.length());
 }
 
-std::string join(const std::list<std::string> & in) {
-  return join(in, " ");
-}
-
-std::string join(const std::vector<std::string> & in, const std::string & sep) {
+std::string join(const std::vector<std::string>& in, const std::string& sep) {
   std::string out;
   for (std::vector<std::string>::const_iterator it = in.begin(); it != in.end(); it++) {
     out += *it + sep;
@@ -294,8 +282,12 @@ std::string join(const std::vector<std::string> & in, const std::string & sep) {
   return out.substr(0, out.length() - sep.length());
 }
 
-std::string join(const std::vector<std::string> & in) {
-  return join(in, " ");
+std::string join(const std::set<std::string>& in, const std::string& sep) {
+  std::string out;
+  for (std::set<std::string>::const_iterator it = in.begin(); it != in.end(); it++) {
+    out += *it + sep;
+  }
+  return out.substr(0, out.length() - sep.length());
 }
 
 int chrstrfind(const char * buf, unsigned int buflen, const char * pattern, unsigned int patternlen) {

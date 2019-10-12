@@ -234,7 +234,7 @@ public:
   void goMakeDir(const std::string & site, UIFileList & filelist);
   void goSiteSlots(const std::shared_ptr<Site> & site);
   void goSections();
-  void goSelectSection();
+  void goSelectSection(const std::list<std::string>& preselected = std::list<std::string>());
   void goSiteSections(const std::shared_ptr<Site> & site);
   void goAddSection();
   void goEditSection(const std::string & name);
