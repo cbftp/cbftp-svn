@@ -1,10 +1,13 @@
 #include "editsitesectionscreen.h"
 
+#include <list>
+
 #include "../../globalcontext.h"
 #include "../../site.h"
 #include "../../sitemanager.h"
 #include "../../settingsloadersaver.h"
 #include "../../path.h"
+#include "../../util.h"
 
 #include "../ui.h"
 #include "../menuselectoptiontextfield.h"
@@ -35,10 +38,11 @@ void EditSiteSectionScreen::initialize(unsigned int row, unsigned int col, const
   currentlegendtext = defaultlegendtext;
   active = false;
   modsite = site;
+  exists = false;
   unsigned int y = 1;
   unsigned int x = 1;
   mso.reset();
-  mso.addStringField(y++, x, "name", "Name:", section, false);
+  mso.addStringField(y++, x, "names", (mode == Mode::EDIT ? "Name:" : "Name(s):"), section, false, 64, 128);
   mso.addTextButtonNoContent(y++, x, "select", "Select name from list...");
   mso.addStringField(y++, x, "path", "Path:", path.toString(), false, 64);
   mso.enterFocusFrom(0);
@@ -56,6 +60,19 @@ void EditSiteSectionScreen::redraw() {
     }
     ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
     ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  }
+  unsigned int y = 5;
+  exists = false;
+  if (mode == Mode::ADD) {
+    std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement("names");
+    std::list<std::string> sections = util::split(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData(), ",");
+    for (const std::string& section : sections) {
+      if (modsite->hasSection(section)) {
+        std::string path = modsite->getSectionPath(section).toString();
+        ui->printStr(y++, 1, "Warning: Section " + section + " exists and will be updated. Old path: " + path);
+        exists = true;
+      }
+    }
   }
 }
 
@@ -103,11 +120,13 @@ bool EditSiteSectionScreen::keyPressed(unsigned int ch) {
       std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getSelectionPointer());
       activation = msoe->activate();
       if (msoe->getIdentifier() == "select") {
-        ui->goSelectSection();
+        std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement("names");
+        std::list<std::string> preselected = util::split(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData(), ",");
+        ui->goSelectSection(preselected);
         return true;
       }
       if (!activation) {
-        ui->update();
+        ui->redraw();
         return true;
       }
       active = true;
@@ -122,31 +141,50 @@ bool EditSiteSectionScreen::keyPressed(unsigned int ch) {
       ui->returnToLast();
       return true;
     case 'd':
-      std::shared_ptr<MenuSelectOptionTextField> nameelem = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("name"));
-      std::shared_ptr<MenuSelectOptionTextField> pathelem = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("path"));
-      std::string name = nameelem->getData();
-      std::string path = pathelem->getData();
-      if (path.empty()) {
+      if (exists) {
+        ui->goConfirmation("Warning: one or more specified sections already exist and will be updated. Are you sure?");
         return true;
       }
-      if (mode == Mode::EDIT && name != oldsection) {
-        modsite->removeSection(oldsection);
+      if (setSections()) {
+        ui->returnToLast();
+        return true;
       }
-      modsite->addSection(name, path);
-      global->getSettingsLoaderSaver()->saveSettings();
-      ui->returnToLast();
-      return true;
+      return false;
   }
   return false;
 }
 
+bool EditSiteSectionScreen::setSections() {
+  std::shared_ptr<MenuSelectOptionTextField> nameelem = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("names"));
+  std::shared_ptr<MenuSelectOptionTextField> pathelem = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("path"));
+  std::list<std::string> names = util::split(nameelem->getData(), ",");
+  std::string path = pathelem->getData();
+  if (names.empty() || names.front().empty() || path.empty()) {
+    return false;
+  }
+  if (mode == Mode::EDIT && names.front() != oldsection) {
+    modsite->removeSection(oldsection);
+  }
+  for (const std::string& name : names) {
+    modsite->addSection(name, path);
+  }
+  global->getSettingsLoaderSaver()->saveSettings();
+  return true;
+}
+
 void EditSiteSectionScreen::command(const std::string & command, const std::string & arg) {
   if (command == "returnselectitems") {
-    std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement("name");
+    std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement("names");
     std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->setText(arg);
     mso.setPointer(msoe);
-    ui->redraw();
   }
+  else if (command == "yes") {
+    if (setSections()) {
+      ui->returnToLast();
+      return;
+    }
+  }
+  ui->redraw();
 }
 
 std::string EditSiteSectionScreen::getLegendText() const {

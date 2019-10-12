@@ -904,8 +904,8 @@ void Ui::goSections() {
   switchToWindow(sectionsscreen);
 }
 
-void Ui::goSelectSection() {
-  sectionsscreen->initialize(mainrow, maincol, true);
+void Ui::goSelectSection(const std::list<std::string>& preselected) {
+  sectionsscreen->initialize(mainrow, maincol, true, preselected);
   switchToWindow(sectionsscreen);
 }
 
