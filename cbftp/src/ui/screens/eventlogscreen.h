@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../menuselectoptiontextfield.h"
 #include "../uiwindow.h"
 
 class RawBuffer;
@@ -13,9 +14,13 @@ public:
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
+  std::string getInfoText() const;
 private:
   bool readfromcopy;
   unsigned int copyreadpos;
-  unsigned int copysize;
   RawBuffer * rawbuf;
+  std::string filtertext;
+  bool filtermodeinput;
+  bool filtermodeinputregex;
+  MenuSelectOptionTextField filterfield;
 };

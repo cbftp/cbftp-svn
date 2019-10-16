@@ -18,7 +18,7 @@ RawBuffer::RawBuffer(unsigned int maxlength, std::string site, std::string id) :
   uiwatching(false),
   threads(true),
   eventlog(false),
-  callback(NULL)
+  callback(nullptr)
 {
   writeLine("Log window initialized. Site: " + site + " Thread id: " + id);
 }
@@ -33,7 +33,7 @@ RawBuffer::RawBuffer(std::string site) :
   uiwatching(false),
   threads(false),
   eventlog(false),
-  callback(NULL)
+  callback(nullptr)
 {
   writeLine("Raw command window initialized. Site: " + site);
 }
@@ -47,7 +47,7 @@ RawBuffer::RawBuffer() :
   uiwatching(false),
   threads(false),
   eventlog(true),
-  callback(NULL)
+  callback(nullptr)
 {
   writeLine("Event log initialized.");
 }
@@ -70,7 +70,8 @@ unsigned int RawBuffer::linesSinceBookmark() const {
 
 void RawBuffer::lineFinished() {
   inprogress = false;
-  if (callback != NULL) {
+  addFilterLine(getLine(0), logfiltered, latestpfiltered);
+  if (callback != nullptr) {
     callback->newRawBufferLine(getLine(0));
   }
 }
@@ -116,9 +117,7 @@ void RawBuffer::addLogText(const std::string& tag, const std::string& text) {
   else {
     log[latestp] = std::make_pair(tag, text);
   }
-  if (++latestp == maxlength) {
-    latestp = 0;
-  }
+  ++latestp %= maxlength;
   ++bookmarklines;
   inprogress = true;
 }
@@ -144,30 +143,55 @@ void RawBuffer::setId(int id) {
   this->id = std::to_string(id);
 }
 
-const std::pair<std::string, std::string> & RawBuffer::getLineCopy(unsigned int num) const {
+const std::pair<std::string, std::string>& RawBuffer::getLineCopy(unsigned int num) const {
   unsigned int size = getCopySize();
   assert(num < size);
   int pos = (num < latestpcopy ? latestpcopy - num - 1 : size + latestpcopy - num - 1);
   return logcopy[pos];
 }
 
-const std::pair<std::string, std::string> & RawBuffer::getLine(unsigned int num) const {
+const std::pair<std::string, std::string>& RawBuffer::getLine(unsigned int num) const {
   unsigned int size = getSize();
   assert(num < size);
   int pos = (num < latestp ? latestp - num - 1 : size + latestp - num - 1);
   return log[pos];
 }
 
+const std::pair<std::string, std::string>& RawBuffer::getFilteredLineCopy(unsigned int num) const {
+  unsigned int size = getFilteredCopySize();
+  assert(num < size);
+  int pos = (num < latestpcopyfiltered ? latestpcopyfiltered - num - 1 : size + latestpcopyfiltered - num - 1);
+  return logcopyfiltered[pos];
+}
+
+const std::pair<std::string, std::string>& RawBuffer::getFilteredLine(unsigned int num) const {
+  unsigned int size = getFilteredSize();
+  assert(num < size);
+  int pos = (num < latestpfiltered ? latestpfiltered - num - 1 : size + latestpfiltered - num - 1);
+  return logfiltered[pos];
+}
+
 unsigned int RawBuffer::getSize() const {
   return log.size();
+}
+
+unsigned int RawBuffer::getFilteredSize() const {
+  return logfiltered.size();
 }
 
 unsigned int RawBuffer::getCopySize() const {
   return logcopy.size();
 }
 
+unsigned int RawBuffer::getFilteredCopySize() const {
+  return logcopyfiltered.size();
+}
+
 void RawBuffer::freezeCopy() {
   logcopy = log;
+  if (isFiltered()) {
+    logcopyfiltered = logfiltered;
+  }
   latestpcopy = latestp;
 }
 
@@ -178,7 +202,102 @@ void RawBuffer::setUiWatching(bool watching) {
 void RawBuffer::clear() {
   log.clear();
   logcopy.clear();
+  unsetFilters();
   latestp = 0;
   latestpcopy = 0;
   inprogress = false;
+}
+
+bool RawBuffer::isFiltered() const {
+  return hasWildcardFilters() || hasRegexFilter();
+}
+
+bool RawBuffer::hasWildcardFilters() const {
+  return wildcardfilters.size();
+}
+
+bool RawBuffer::hasRegexFilter() const {
+  return hasregexfilter;
+}
+
+std::list<std::string> RawBuffer::getWildcardFilters() const {
+  return wildcardfilters;
+}
+
+std::regex RawBuffer::getRegexFilter() const {
+  return regexfilter;
+}
+
+void RawBuffer::setWildcardFilters(const std::list<std::string> & filters) {
+  this->wildcardfilters = filters;
+  hasregexfilter = false;
+  applyFilters();
+}
+
+void RawBuffer::setRegexFilter(const std::regex & regexfilter) {
+  this->regexfilter = regexfilter;
+  hasregexfilter = true;
+  wildcardfilters.clear();
+  applyFilters();
+}
+
+void RawBuffer::unsetFilters() {
+  wildcardfilters.clear();
+  hasregexfilter = false;
+  logfiltered.clear();
+  logcopyfiltered.clear();
+}
+
+void RawBuffer::applyFilters() {
+  applyFilters(false);
+  applyFilters(true);
+}
+
+void RawBuffer::applyFilters(bool copy) {
+  const std::vector<std::pair<std::string, std::string>>& source = copy ? logcopy : log;
+  std::vector<std::pair<std::string, std::string>>& target = copy ? logcopyfiltered : logfiltered;
+  target.clear();
+  unsigned int& latest = copy ? latestpcopyfiltered : latestpfiltered;
+  latest = 0;
+  for (unsigned int i = 0; i < source.size(); ++i) {
+    unsigned int pos = source.size() - i - 1;
+    const std::pair<std::string, std::string>& line = copy ? getLineCopy(pos) : getLine(pos);
+    addFilterLine(line, target, latest);
+  }
+}
+
+void RawBuffer::addFilterLine(const std::pair<std::string, std::string>& line, std::vector<std::pair<std::string, std::string>>& target, unsigned int& latest) {
+  if (!wildcardfilters.empty()) {
+    bool negativepass = true;
+    bool foundpositive = false;
+    bool positivematch = false;
+    for (std::list<std::string>::const_iterator it = wildcardfilters.begin(); it != wildcardfilters.end(); it++) {
+      const std::string & filter = *it;
+      if (filter[0] == '!') {
+        if (util::wildcmp(filter.substr(1).c_str(), line.second.c_str())) {
+          negativepass = false;
+          break;
+        }
+      }
+      else {
+        foundpositive = true;
+        if (util::wildcmp(filter.c_str(), line.second.c_str())) {
+          positivematch = true;
+        }
+      }
+    }
+    if (!negativepass || (foundpositive && !positivematch)) {
+      return;
+    }
+  }
+  else if (hasregexfilter && !std::regex_match(line.second, regexfilter)) {
+    return;
+  }
+  if (target.size() < maxlength) {
+    target.emplace_back(line.first, line.second);
+  }
+  else {
+    target[latest] = line;
+  }
+  ++latest %= maxlength;
 }
