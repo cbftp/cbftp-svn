@@ -12,7 +12,8 @@ class RestApiCallback;
 class SiteLogic;
 
 enum class OngoingRequestType {
-  RAW_COMMAND
+  RAW_COMMAND,
+  FILE_LIST
 };
 
 struct OngoingRequest {
