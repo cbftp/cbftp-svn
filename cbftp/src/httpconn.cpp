@@ -13,6 +13,7 @@
 
 namespace {
 const size_t BODY_BUFFER_INIT_CAPACITY = 64;
+const size_t MAX_SEND_BLOCK = 65536;
 } // namespace
 
 HTTPConn::HTTPConn() : addrfam(Core::AddressFamily::IPV4), tls(true), nextrequestid(0),
@@ -153,6 +154,7 @@ void HTTPConn::queueResponse(int requestid, const http::Response& response) {
 }
 
 void HTTPConn::sendResponses() {
+  sendFromBuffer();
   while (!paused && !responses.empty() && responses.front().first == latestrequestidresponded + 1) {
     sendResponse(responses.front().second);
     responses.pop_front();
@@ -168,10 +170,19 @@ void HTTPConn::sendResponse(const http::Response& response) {
     }
   }
   std::vector<char> responsedata = newresponse.serialize();
-  if (global->getIOManager()->sendData(sockid, responsedata.data(), responsedata.size())) {
-    paused = true;
-  }
+  sendbuffer.insert(sendbuffer.end(), responsedata.begin(), responsedata.end());
+  sendFromBuffer();
   ++latestrequestidresponded;
+}
+
+void HTTPConn::sendFromBuffer() {
+  while (!paused && sendbuffer.size()) {
+    size_t size = std::min(sendbuffer.size(), MAX_SEND_BLOCK);
+    if (global->getIOManager()->sendData(sockid, sendbuffer.data(), size)) {
+      paused = true;
+    }
+    sendbuffer.erase(sendbuffer.begin(), sendbuffer.begin() + size);
+  }
 }
 
 void HTTPConn::requestHandled(int requestid, const http::Response& response) {

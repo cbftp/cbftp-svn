@@ -11,6 +11,9 @@
 
 #include "crypto.h"
 #include "eventlog.h"
+#include "file.h"
+#include "filelist.h"
+#include "filelistdata.h"
 #include "globalcontext.h"
 #include "path.h"
 #include "remotecommandhandler.h"
@@ -77,6 +80,20 @@ std::list<std::shared_ptr<SiteLogic>> getSiteLogicList(const nlohmann::json& jso
     }
   }
   return std::list<std::shared_ptr<SiteLogic>>(sitelogics.begin(), sitelogics.end());
+}
+
+bool useOrSectionTranslate(Path& path, const std::shared_ptr<Site>& site) {
+  if (path.isRelative()) {
+    path.level(0);
+    std::string section = path.level(0).toString();
+    if (site->hasSection(section)) {
+      path = site->getSectionPath(section) / path.cutLevels(-1);
+    }
+    else {
+      return false;
+    }
+  }
+  return true;
 }
 
 http::Response badRequestResponse(const std::string& error, int code = 400)
@@ -815,6 +832,55 @@ void RestApi::handleRequest(RestApiCallback* cb, int connrequestid, const http::
         }
       }
     }
+    else if (path.level(0).toString() == "/filelist") {
+      if (path.levels() == 1) {
+        pathmatch = true;
+        if (request.getMethod() == "GET") {
+          methodmatch = true;
+          if (!request.hasQueryParam("site")) {
+            cb->requestHandled(connrequestid, badRequestResponse("Missing query parameter: site"));
+            return;
+          }
+          if (!request.hasQueryParam("path")) {
+            cb->requestHandled(connrequestid, badRequestResponse("Missing query parameter: path"));
+            return;
+          }
+          std::string sitestr = request.getQueryParamValue("site");
+          std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitestr);
+          std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(sitestr);
+          if (!site || !sl) {
+            cb->requestHandled(connrequestid, badRequestResponse("Site not found: " + sitestr));
+            return;
+          }
+          Path path = request.getQueryParamValue("path");
+          if (!useOrSectionTranslate(path, site)) {
+            cb->requestHandled(connrequestid, badRequestResponse("Path must be absolute or a section on " + sitestr + ": " + path.toString()));
+            return;
+          }
+          int timeout = DEFAULT_TIMEOUT_SECONDS;
+          if (request.hasQueryParam("timeout")) {
+            std::string timeoutstr = request.getQueryParamValue("timeout");
+            try {
+
+              timeout = std::stoi(timeoutstr);
+            }
+            catch(std::exception& e) {
+              cb->requestHandled(connrequestid, badRequestResponse("Invalid timeout value: " + timeoutstr));
+              return;
+            }
+          }
+          int servicerequestid = sl->requestFileList(this, path);
+          OngoingRequest request;
+          request.type = OngoingRequestType::FILE_LIST;
+          request.connrequestid = connrequestid;
+          request.apirequestid = nextrequestid++;
+          request.cb = cb;
+          request.timeout = timeout;
+          request.ongoingservicerequests.insert(std::make_pair(sl.get(), servicerequestid));
+          ongoingrequests.push_back(request);
+        }
+      }
+    }
   }
   catch (nlohmann::json::exception& e) {
     cb->requestHandled(connrequestid, badRequestResponse(e.what()));
@@ -875,38 +941,86 @@ void RestApi::requestReady(void* service, int servicerequestid) {
       }
       return;
     }
+    case OngoingRequestType::FILE_LIST: {
+      SiteLogic* sl = static_cast<SiteLogic*>(service);
+      bool status = sl->requestStatus(servicerequestid);
+      if (!status) {
+        http::Response response(502);
+        response.appendHeader("Content-Length", "0");
+        request->cb->requestHandled(request->connrequestid, response);
+      }
+      else {
+        FileListData* data = sl->getFileListData(servicerequestid);
+        std::shared_ptr<FileList> fl = data->getFileList();
+        nlohmann::json j;
+        for (std::list<File*>::const_iterator it = fl->begin(); it != fl->end(); ++it) {
+          File* f = *it;
+          std::string name = f->getName();
+          j[name]["size"] = f->getSize();
+          j[name]["user"] = f->getOwner();
+          j[name]["group"] = f->getGroup();
+          j[name]["type"] = f->isDirectory() ? "DIR" : (f->isLink() ? "LINK" : "FILE");
+          j[name]["last_modified"] = f->getLastModified();
+          if (f->isLink()) {
+            j[name]["link_target"] = f->getLinkTarget();
+          }
+        }
+        http::Response response(200);
+        std::string jsondump = j.dump(2);
+        response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
+        response.addHeader("Content-Type", "application/json");
+        request->cb->requestHandled(request->connrequestid, response);
+      }
+      sl->finishRequest(servicerequestid);
+      for (std::list<OngoingRequest>::iterator it = ongoingrequests.begin(); it != ongoingrequests.end(); ++it) {
+        if (&*it == request) {
+          ongoingrequests.erase(it);
+          break;
+        }
+      }
+      return;
+    }
   }
 }
 
 void RestApi::finalize(OngoingRequest& request) {
-  nlohmann::json successlist = nlohmann::json::array();
-  nlohmann::json failurelist = nlohmann::json::array();
-  for (const std::pair<void*, std::string>& success : request.successes) {
-    SiteLogic* sl = static_cast<SiteLogic*>(success.first);
-    nlohmann::json site;
-    site["name"] = sl->getSite()->getName();
-    site["result"] = success.second;
-    successlist.push_back(site);
+  switch (request.type) {
+    case OngoingRequestType::RAW_COMMAND: {
+      nlohmann::json successlist = nlohmann::json::array();
+      nlohmann::json failurelist = nlohmann::json::array();
+      for (const std::pair<void*, std::string>& success : request.successes) {
+        SiteLogic* sl = static_cast<SiteLogic*>(success.first);
+        nlohmann::json site;
+        site["name"] = sl->getSite()->getName();
+        site["result"] = success.second;
+        successlist.push_back(site);
+      }
+      for (const std::pair<void*, int>& ongoing : request.ongoingservicerequests) {
+        request.failures.emplace_back(ongoing.first, "timeout");
+      }
+      for (const std::pair<void*, std::string>& failure : request.failures) {
+        SiteLogic* sl = static_cast<SiteLogic*>(failure.first);
+        nlohmann::json site;
+        site["name"] = sl->getSite()->getName();
+        site["reason"] = failure.second;
+        failurelist.push_back(site);
+      }
+      nlohmann::json j;
+      j["successes"] = successlist;
+      j["failures"] = failurelist;
+      http::Response response(200);
+      std::string jsondump = j.dump(2);
+      response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
+      response.addHeader("Content-Type", "application/json");
+      request.cb->requestHandled(request.connrequestid, response);
+      break;
+    }
+    case OngoingRequestType::FILE_LIST:
+      http::Response response(504);
+      response.appendHeader("Content-Length", "0");
+      request.cb->requestHandled(request.connrequestid, response);
+      break;
   }
-  for (const std::pair<void*, int>& ongoing : request.ongoingservicerequests) {
-    request.failures.emplace_back(ongoing.first, "timeout");
-  }
-  for (const std::pair<void*, std::string>& failure : request.failures) {
-    SiteLogic* sl = static_cast<SiteLogic*>(failure.first);
-    nlohmann::json site;
-    site["name"] = sl->getSite()->getName();
-    site["reason"] = failure.second;
-    failurelist.push_back(site);
-  }
-  nlohmann::json j;
-  j["result"] = {};
-  j["result"]["successes"] = successlist;
-  j["result"]["failures"] = failurelist;
-  http::Response response(200);
-  std::string jsondump = j.dump(2);
-  response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
-  response.addHeader("Content-Type", "application/json");
-  request.cb->requestHandled(request.connrequestid, response);
   for (std::list<OngoingRequest>::iterator it = ongoingrequests.begin(); it != ongoingrequests.end(); ++it) {
     if (&*it == &request) {
       ongoingrequests.erase(it);

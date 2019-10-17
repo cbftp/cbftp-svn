@@ -155,6 +155,9 @@ An example body when sending a raw command:
 - Get raw command results for an async raw command with id 1
    GET /raw/1
 
+- List a directory. The path can also be a section name. Timeout is optional,
+  defaults to 10
+   GET /filelist?site=SITE1&path=/&timeout=2
 
 
 UDP API

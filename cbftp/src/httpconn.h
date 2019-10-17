@@ -54,6 +54,7 @@ private:
     void queueResponse(int requestid, const http::Response& response);
     void respondAndClose(int statuscode);
     void sendErrorResponse(int requestid, int statuscode);
+    void sendFromBuffer();
     Core::AddressFamily addrfam;
     bool tls;
     int nextrequestid;
@@ -65,4 +66,5 @@ private:
     int latestrequestidresponded;
     std::list<std::pair<int, http::Response>> responses;
     std::vector<char> bodybuffer;
+    std::vector<char> sendbuffer;
 };
