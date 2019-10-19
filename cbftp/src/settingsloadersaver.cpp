@@ -827,7 +827,7 @@ void SettingsLoaderSaver::saveSettings() {
         }
         dfh->addOutputLine(filetag, name + "$sitesfilesdown=" + sit5->first + "$" + std::to_string(sit5->second.getAll()));
       }
-      std::set<std::string>::const_iterator sit3;
+      std::set<std::string, util::naturalComparator>::const_iterator sit3;
       for (sit3 = site->affilsBegin(); sit3 != site->affilsEnd(); sit3++) {
         dfh->addOutputLine(filetag, name + "$affil=" + *sit3);
       }

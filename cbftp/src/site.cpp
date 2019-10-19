@@ -132,7 +132,6 @@ Site::Site(const Site & other) {
   xdupe = other.xdupe;
   sections = other.sections;
   affils = other.affils;
-  affilslower = other.affilslower;
   proxytype = other.proxytype;
   transfersourcepolicy = other.transfersourcepolicy;
   transfertargetpolicy = other.transfertargetpolicy;
@@ -611,20 +610,15 @@ void Site::removeSection(const std::string & name) {
 }
 
 bool Site::isAffiliated(const std::string & affil) const {
-  if (affilslower.find(util::toLower(affil)) != affilslower.end()) {
-    return true;
-  }
-  return false;
+  return (affils.find(affil) != affils.end());
 }
 
 void Site::addAffil(const std::string & affil) {
   affils.insert(affil);
-  affilslower[util::toLower(affil)] = true;
 }
 
 void Site::clearAffils() {
   affils.clear();
-  affilslower.clear();
 }
 
 void Site::setTransferSourcePolicy(int policy) {
@@ -705,11 +699,11 @@ bool Site::isAllowedTargetSite(const std::shared_ptr<Site> & site) const {
   return transfertargetpolicy == SITE_TRANSFER_POLICY_ALLOW;
 }
 
-std::set<std::string>::const_iterator Site::affilsBegin() const {
+std::set<std::string, util::naturalComparator>::const_iterator Site::affilsBegin() const {
   return affils.begin();
 }
 
-std::set<std::string>::const_iterator Site::affilsEnd() const {
+std::set<std::string, util::naturalComparator>::const_iterator Site::affilsEnd() const {
   return affils.end();
 }
 

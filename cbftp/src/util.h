@@ -31,4 +31,7 @@ int chrstrfind(const char *, unsigned int, const char *, unsigned int);
 int chrfind(const char *, unsigned int, char);
 bool eightCharUserCompare(const std::string & a, const std::string & b);
 std::regex regexParse(const std::string & pattern);
+struct naturalComparator {
+  bool operator()(const std::string& a, const std::string& b) const;
+};
 }

@@ -336,4 +336,46 @@ std::regex regexParse(const std::string & pattern) {
   return std::regex(pattern, std::regex::optimize);
 }
 
+bool naturalComparator::operator()(const std::string& a, const std::string& b) const {
+  size_t i = 0;
+  size_t j = 0;
+  for (; i < a.length() && j < b.length(); ++i, ++j) {
+    if (isdigit(a[i])) {
+      if (!isdigit(b[j])) {
+        return true;
+      }
+      size_t adigitstart = i;
+      size_t bdigitstart = j;
+      while (isdigit(a[i]) && i < a.length()) {
+        ++i;
+      }
+      while (isdigit(b[j]) && j < b.length()) {
+        ++j;
+      }
+      long long int anum = std::stoll(a.substr(adigitstart, i - adigitstart));
+      long long int bnum = std::stoll(b.substr(bdigitstart, j - bdigitstart));
+      if (anum < bnum) {
+        return true;
+      }
+      if (anum > bnum) {
+        return false;
+      }
+    }
+    else {
+      if (isdigit(b[j])) {
+        return false;
+      }
+      char ca = tolower(a[i]);
+      char cb = tolower(b[j]);
+      if (ca < cb) {
+        return true;
+      }
+      if (ca > cb) {
+        return false;
+      }
+    }
+  }
+  return a.length() < b.length();
+}
+
 }

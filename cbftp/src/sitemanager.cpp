@@ -11,6 +11,7 @@
 #include "connstatetracker.h"
 #include "eventlog.h"
 #include "site.h"
+#include "util.h"
 
 #define DEFAULTUSERNAME "anonymous"
 #define DEFAULTPASSWORD "anonymous"
@@ -22,7 +23,7 @@
 #define DEFAULTSSLTRANSFER SITE_SSL_PREFER_OFF
 
 bool siteNameComparator(const std::shared_ptr<Site> & a, const std::shared_ptr<Site> & b) {
-  return a->getName().compare(b->getName()) < 0;
+  return util::naturalComparator()(a->getName(), b->getName());
 }
 
 SiteManager::SiteManager() :

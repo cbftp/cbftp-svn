@@ -67,7 +67,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
     exceptdst = exceptdst.substr(0, exceptdst.length() - 1);
   }
   std::string affilstr = "";
-  std::set<std::string>::const_iterator it;
+  std::set<std::string, util::naturalComparator>::const_iterator it;
   for (it = this->site->affilsBegin(); it != this->site->affilsEnd(); it++) {
     affilstr += *it + " ";
   }
