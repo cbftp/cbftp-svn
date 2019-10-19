@@ -8,7 +8,7 @@
 #include "datafilehandlermethod.h"
 #include "path.h"
 
-DataFileHandler::DataFileHandler() {
+DataFileHandler::DataFileHandler() : state(DataFileState::NOT_EXISTING) {
   Path datadirpath = Path(getenv("HOME")) / DATAPATH;
   path = datadirpath / DATAFILE;
   char * specialdatapath = getenv("CBFTP_DATA_PATH");
@@ -27,8 +27,6 @@ DataFileHandler::DataFileHandler() {
       exit(1);
     }
   }
-  fileexists = false;
-  initialized = false;
   if (!FileSystem::fileExists(path)) {
     return;
   }
@@ -36,12 +34,21 @@ DataFileHandler::DataFileHandler() {
     perror(std::string("There was an error accessing " + path.toString()).c_str());
     exit(1);
   }
-  fileexists = true;
   FileSystem::readFile(path, rawdata);
+  if (!DataFileHandlerMethod::isMostlyASCII(rawdata)) {
+    state = DataFileState::EXISTS_ENCRYPTED;
+    return;
+  }
+  state = DataFileState::EXISTS_PLAIN;
+  parseDecryptedFile(rawdata);
 }
 
-bool DataFileHandler::readEncrypted(const std::string & key) {
-  if (!fileexists || initialized) {
+DataFileState DataFileHandler::getState() const {
+  return state;
+}
+
+bool DataFileHandler::tryDecrypt(const std::string& key) {
+  if (state != DataFileState::EXISTS_ENCRYPTED) {
     return false;
   }
   this->key = key;
@@ -50,30 +57,47 @@ bool DataFileHandler::readEncrypted(const std::string & key) {
   if (!DataFileHandlerMethod::decrypt(rawdata, keydata, decryptedtext)) {
     return false;
   }
-  int lastbreakpos = 0;
-  for (unsigned int currentpos = 0; currentpos <= decryptedtext.size(); currentpos++) {
-    if (decryptedtext[currentpos] == '\n' || currentpos == decryptedtext.size()) {
-      decryptedlines.push_back(std::string((const char *)&decryptedtext[lastbreakpos], currentpos - lastbreakpos));
-      lastbreakpos = currentpos + 1;
-    }
-  }
-  Crypto::sha256(decryptedtext, filehash);
-  initialized = true;
+  state = DataFileState::EXISTS_DECRYPTED;
+  parseDecryptedFile(decryptedtext);
   return true;
 }
 
-bool DataFileHandler::readPlain() {
-  return false;
+void DataFileHandler::parseDecryptedFile(const Core::BinaryData& data) {
+  int lastbreakpos = 0;
+  for (unsigned int currentpos = 0; currentpos <= data.size(); currentpos++) {
+    if (data[currentpos] == '\n' || currentpos == data.size()) {
+      decryptedlines.push_back(std::string((const char *)&data[lastbreakpos], currentpos - lastbreakpos));
+      lastbreakpos = currentpos + 1;
+    }
+  }
+  Crypto::sha256(data, filehash);
 }
 
-void DataFileHandler::newDataFile(const std::string & key) {
-  if (!initialized) {
-    this->key = key;
-    initialized = true;
+bool DataFileHandler::setEncrypted(const std::string& key) {
+  if (state == DataFileState::EXISTS_ENCRYPTED || state == DataFileState::EXISTS_DECRYPTED) {
+    return false;
   }
+  this->key = key;
+  state = DataFileState::EXISTS_DECRYPTED;
+  filehash.clear();
+  writeFile();
+  return true;
+}
+
+bool DataFileHandler::setPlain(const std::string& key) {
+  if (state != DataFileState::EXISTS_DECRYPTED || this->key != key) {
+    return false;
+  }
+  state = DataFileState::EXISTS_PLAIN;
+  filehash.clear();
+  writeFile();
+  return true;
 }
 
 void DataFileHandler::writeFile() {
+  if (state == DataFileState::EXISTS_ENCRYPTED) {
+    return;
+  }
   std::string fileoutput = "";
   std::vector<std::string>::iterator it;
   for (it = outputlines.begin(); it != outputlines.end(); it++) {
@@ -87,14 +111,22 @@ void DataFileHandler::writeFile() {
     return;
   }
   filehash = datahash;
-  Core::BinaryData ciphertext;
-  Core::BinaryData keydata(key.begin(), key.end());
-  DataFileHandlerMethod::encrypt(fileoutputdata, keydata, ciphertext);
-  FileSystem::writeFile(path, ciphertext);
+  if (state == DataFileState::EXISTS_DECRYPTED) {
+    Core::BinaryData ciphertext;
+    Core::BinaryData keydata(key.begin(), key.end());
+    DataFileHandlerMethod::encrypt(fileoutputdata, keydata, ciphertext);
+    FileSystem::writeFile(path, ciphertext);
+  }
+  else {
+    if (state == DataFileState::NOT_EXISTING) {
+      state = DataFileState::EXISTS_PLAIN;
+    }
+    FileSystem::writeFile(path, fileoutputdata);
+  }
 }
 
-bool DataFileHandler::changeKey(const std::string & key, const std::string & newkey) {
-  if (this->key != key) {
+bool DataFileHandler::changeKey(const std::string& key, const std::string& newkey) {
+  if (state != DataFileState::EXISTS_DECRYPTED || this->key != key) {
     return false;
   }
   this->key = newkey;
@@ -103,23 +135,15 @@ bool DataFileHandler::changeKey(const std::string & key, const std::string & new
   return true;
 }
 
-bool DataFileHandler::fileExists() const {
-  return fileexists;
-}
-
-bool DataFileHandler::isInitialized() const {
-  return initialized;
-}
-
 void DataFileHandler::clearOutputData() {
   outputlines.clear();
 }
 
-void DataFileHandler::addOutputLine(const std::string & owner, const std::string & line) {
+void DataFileHandler::addOutputLine(const std::string& owner, const std::string& line) {
   outputlines.push_back(owner + "." + line);
 }
 
-void DataFileHandler::getDataFor(const std::string & owner, std::vector<std::string> * matches) {
+void DataFileHandler::getDataFor(const std::string& owner, std::vector<std::string>* matches) {
   matches->clear();
   std::vector<std::string>::iterator it;
   int len = owner.length() + 1;

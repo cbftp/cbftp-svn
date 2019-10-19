@@ -5,6 +5,7 @@
 #include "../../util.h"
 #include "../../buildinfo.h"
 #include "../../hourlyalltracking.h"
+#include "../../settingsloadersaver.h"
 
 #include "../../core/sslmanager.h"
 
@@ -40,6 +41,7 @@ void InfoScreen::redraw() {
   ui->printStr(i++, 1, "Version tag: " + BuildInfo::version());
   ui->printStr(i++, 1, "Distribution tag: " + BuildInfo::tag());
   ui->printStr(i++, 1, "OpenSSL version: " + Core::SSLManager::version());
+  ui->printStr(i++, 1, std::string("Data file encryption: ") + (global->getSettingsLoaderSaver()->getState() == DataFileState::EXISTS_DECRYPTED ? "Enabled" : "Disabled"));
   i++;
   ui->printStr(i++, 1, "Traffic measurements");
   ui->printStr(i++, 1, "FXP      last 24 hours: " + util::parseSize(sizefxpday) + ", " +

@@ -7,10 +7,10 @@
 
 class MenuSelectOptionElement;
 
-class NewKeyScreen : public UIWindow {
+class DisableEncryptionScreen : public UIWindow {
 public:
-  NewKeyScreen(Ui *);
-  ~NewKeyScreen();
+  DisableEncryptionScreen(Ui *);
+  ~DisableEncryptionScreen();
   void initialize(unsigned int, unsigned int);
   void update();
   void redraw();
@@ -22,7 +22,6 @@ private:
   std::string defaultlegendtext;
   bool active;
   bool mismatch;
-  bool tooshort;
   std::shared_ptr<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;
 };

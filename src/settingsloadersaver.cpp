@@ -66,38 +66,65 @@ void stringToTrackerHours(HourlyAllTracking& tracker, const std::string& in) {
 }
 
 SettingsLoaderSaver::SettingsLoaderSaver() :
-  dfh(std::make_shared<DataFileHandler>()){
-
+  dfh(std::make_shared<DataFileHandler>()), loaded(false)
+{
 }
 
-bool SettingsLoaderSaver::enterKey(const std::string & key) {
-  if (dfh->isInitialized()) {
-    return false;
-  }
-  if (dataExists()) {
-    bool result = dfh->readEncrypted(key);
-    if (result) {
-      global->getEventLog()->log("DataLoaderSaver", "Data decryption successful.");
-      loadSettings();
-      startAutoSaver();
-      return true;
-    }
-    global->getEventLog()->log("DataLoaderSaver", "Data decryption failed.");
-    return false;
-  }
-  else {
-    dfh->newDataFile(key);
+bool SettingsLoaderSaver::tryDecrypt(const std::string & key) {
+  bool success = dfh->tryDecrypt(key);
+  if (success) {
+    global->getEventLog()->log("DataLoaderSaver", "Data decryption successful.");
+    loadSettings();
     startAutoSaver();
     return true;
   }
+  global->getEventLog()->log("DataLoaderSaver", "Data decryption failed.");
+  return false;
 }
 
-bool SettingsLoaderSaver::dataExists() const {
-  return dfh->fileExists();
+void SettingsLoaderSaver::init() {
+  bool warn = false;
+  if (dfh->getState() == DataFileState::EXISTS_PLAIN) {
+    loadSettings();
+    startAutoSaver();
+    warn = true;
+  }
+  else if (dfh->getState() == DataFileState::NOT_EXISTING) {
+    startAutoSaver();
+    warn = true;
+  }
+  loaded = true;
+  if (warn) {
+    global->getEventLog()->log("DataLoaderSaver", "Warning: data encryption is not enabled.", Core::LogLevel::WARNING);
+  }
+}
+
+DataFileState SettingsLoaderSaver::getState() const {
+  return dfh->getState();
 }
 
 bool SettingsLoaderSaver::changeKey(const std::string & key, const std::string & newkey) {
-  return dfh->changeKey(key, newkey);
+  bool success = dfh->changeKey(key, newkey);
+  if (success) {
+    global->getEventLog()->log("DataLoaderSaver", "Data encryption key changeds.");
+  }
+  return success;
+}
+
+bool SettingsLoaderSaver::setEncrypted(const std::string& key) {
+  bool success = dfh->setEncrypted(key);
+  if (success) {
+    global->getEventLog()->log("DataLoaderSaver", "Data encryption enabled.");
+  }
+  return success;
+}
+
+bool SettingsLoaderSaver::setPlain(const std::string& key) {
+  bool success = dfh->setPlain(key);
+  if (success) {
+    global->getEventLog()->log("DataLoaderSaver", "Data encryption disabled.");
+  }
+  return success;
 }
 
 void SettingsLoaderSaver::loadSettings() {
@@ -154,8 +181,16 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("port")) {
       global->getRemoteCommandHandler()->setPort(std::stoi(value));
     }
+    // begin compatibility r1065
     else if (!setting.compare("password")) {
       global->getRemoteCommandHandler()->setPassword(value);
+    }
+    // end compatibility r1065
+    else if (!setting.compare("passwordb64")) {
+      Core::BinaryData indata(value.begin(), value.end());
+      Core::BinaryData outdata;
+      Crypto::base64Decode(indata, outdata);
+      global->getRemoteCommandHandler()->setPassword(std::string(outdata.begin(), outdata.end()));
     }
     else if (!setting.compare("notify")) {
       global->getRemoteCommandHandler()->setNotify(static_cast<RemoteCommandNotify>(std::stoi(value)));
@@ -247,8 +282,16 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("user")) {
       proxy->setUser(value);
     }
+    // begin compatibility r1065
     else if (!setting.compare("pass")) {
       proxy->setPass(value);
+    }
+    // end compatibility r1065
+    else if (!setting.compare("passwordb64")) {
+      Core::BinaryData indata(value.begin(), value.end());
+      Core::BinaryData outdata;
+      Crypto::base64Decode(indata, outdata);
+      proxy->setPass(std::string(outdata.begin(), outdata.end()));
     }
   }
   lines.clear();
@@ -325,8 +368,16 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("user")) {
       site->setUser(value);
     }
+    // begin compatibility r1065
     else if (!setting.compare("pass")) {
       site->setPass(value);
+    }
+    // end compatibility r1065
+    else if (!setting.compare("passwordb64")) {
+      Core::BinaryData indata(value.begin(), value.end());
+      Core::BinaryData outdata;
+      Crypto::base64Decode(indata, outdata);
+      site->setPass(std::string(outdata.begin(), outdata.end()));
     }
     else if (!setting.compare("basepath")) {
       site->setBasePath(value);
@@ -538,8 +589,16 @@ void SettingsLoaderSaver::loadSettings() {
     if (!setting.compare("username")) {
       global->getSiteManager()->setDefaultUserName(value);
     }
+    // begin compatibility r1065
     else if (!setting.compare("password")) {
       global->getSiteManager()->setDefaultPassword(value);
+    }
+    // end compatibility r1065
+    else if (!setting.compare("passwordb64")) {
+      Core::BinaryData indata(value.begin(), value.end());
+      Core::BinaryData outdata;
+      Crypto::base64Decode(indata, outdata);
+      global->getSiteManager()->setDefaultPassword(std::string(outdata.begin(), outdata.end()));
     }
     else if (!setting.compare("maxlogins")) {
       global->getSiteManager()->setDefaultMaxLogins(std::stoi(value));
@@ -665,7 +724,7 @@ void SettingsLoaderSaver::loadSettings() {
 }
 
 void SettingsLoaderSaver::saveSettings() {
-  if (!dfh->isInitialized()) {
+  if (dfh->getState() == DataFileState::EXISTS_ENCRYPTED) {
     return;
   }
 
@@ -687,7 +746,11 @@ void SettingsLoaderSaver::saveSettings() {
     dfh->addOutputLine("RemoteCommandHandler", "enabled=true");
   }
   dfh->addOutputLine("RemoteCommandHandler", "port=" + std::to_string(global->getRemoteCommandHandler()->getUDPPort()));
-  dfh->addOutputLine("RemoteCommandHandler", "password=" + global->getRemoteCommandHandler()->getPassword());
+  std::string password = global->getRemoteCommandHandler()->getPassword();
+  Core::BinaryData indata(password.begin(), password.end());
+  Core::BinaryData outdata;
+  Crypto::base64Encode(indata, outdata);
+  dfh->addOutputLine("RemoteCommandHandler", "passwordb64=" + std::string(outdata.begin(), outdata.end()));
   dfh->addOutputLine("RemoteCommandHandler", "notify=" + std::to_string(static_cast<int>(global->getRemoteCommandHandler()->getNotify())));
 
   if (global->getHTTPServer()->getEnabled()) {
@@ -716,7 +779,11 @@ void SettingsLoaderSaver::saveSettings() {
       dfh->addOutputLine(filetag, name + "$addr=" + proxy->getAddr());
       dfh->addOutputLine(filetag, name + "$port=" + proxy->getPort());
       dfh->addOutputLine(filetag, name + "$user=" + proxy->getUser());
-      dfh->addOutputLine(filetag, name + "$pass=" + proxy->getPass());
+      std::string pass = proxy->getPass();
+      Core::BinaryData indata(pass.begin(), pass.end());
+      Core::BinaryData outdata;
+      Crypto::base64Encode(indata, outdata);
+      dfh->addOutputLine(filetag, name + "$passwordb64=" + std::string(outdata.begin(), outdata.end()));
       dfh->addOutputLine(filetag, name + "$authmethod=" + std::to_string(proxy->getAuthMethod()));
     }
     if (global->getProxyManager()->getDefaultProxy() != NULL) {
@@ -745,7 +812,11 @@ void SettingsLoaderSaver::saveSettings() {
       std::string name = site->getName();
       dfh->addOutputLine(filetag, name + "$addr=" + site->getAddressesAsString());
       dfh->addOutputLine(filetag, name + "$user=" + site->getUser());
-      dfh->addOutputLine(filetag, name + "$pass=" + site->getPass());
+      std::string pass = site->getPass();
+      Core::BinaryData indata(pass.begin(), pass.end());
+      Core::BinaryData outdata;
+      Crypto::base64Encode(indata, outdata);
+      dfh->addOutputLine(filetag, name + "$passwordb64=" + std::string(outdata.begin(), outdata.end()));
       dfh->addOutputLine(filetag, name + "$basepath=" + site->getBasePath().toString());
       dfh->addOutputLine(filetag, name + "$logins=" + std::to_string(site->getInternMaxLogins()));
       dfh->addOutputLine(filetag, name + "$maxup=" + std::to_string(site->getInternMaxUp()));
@@ -843,7 +914,11 @@ void SettingsLoaderSaver::saveSettings() {
       addSkipList((SkipList *)&site->getSkipList(), filetag, name + "$skiplistentry=");
     }
     dfh->addOutputLine(defaultstag, "username=" + global->getSiteManager()->getDefaultUserName());
-    dfh->addOutputLine(defaultstag, "password=" + global->getSiteManager()->getDefaultPassword());
+    std::string password = global->getSiteManager()->getDefaultPassword();
+    Core::BinaryData indata(password.begin(), password.end());
+    Core::BinaryData outdata;
+    Crypto::base64Encode(indata, outdata);
+    dfh->addOutputLine(defaultstag, "passwordb64=" + std::string(outdata.begin(), outdata.end()));
     dfh->addOutputLine(defaultstag, "maxlogins=" + std::to_string(global->getSiteManager()->getDefaultMaxLogins()));
     dfh->addOutputLine(defaultstag, "maxup=" + std::to_string(global->getSiteManager()->getDefaultMaxUp()));
     dfh->addOutputLine(defaultstag, "maxdown=" + std::to_string(global->getSiteManager()->getDefaultMaxDown()));
@@ -917,7 +992,7 @@ void SettingsLoaderSaver::addSettingsAdder(SettingsAdder * sa) {
   }
   if (!found) {
     settingsadders.push_back(sa);
-    if (dfh->isInitialized()) {
+    if (loaded && (dfh->getState() == DataFileState::EXISTS_PLAIN || dfh->getState() == DataFileState::EXISTS_DECRYPTED)) {
       sa->loadSettings(dfh);
     }
   }

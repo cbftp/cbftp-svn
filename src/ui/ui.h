@@ -65,6 +65,7 @@ class SiteSectionsScreen;
 class EditSiteSectionScreen;
 class SiteSlotsScreen;
 class SnakeScreen;
+class DisableEncryptionScreen;
 
 class LegendPrinterKeybinds;
 struct TransferFilteringParameters;
@@ -123,6 +124,7 @@ private:
   std::shared_ptr<EditSiteSectionScreen> editsitesectionscreen;
   std::shared_ptr<SiteSlotsScreen> siteslotsscreen;
   std::shared_ptr<SnakeScreen> snakescreen;
+  std::shared_ptr<DisableEncryptionScreen> disableencryptionscreen;
   std::shared_ptr<LegendPrinterKeybinds> legendprinterkeybinds;
   int mainrow;
   int maincol;
@@ -241,6 +243,8 @@ public:
   void goAddSiteSection(const std::shared_ptr<Site> & site, const Path & path = "");
   void goEditSiteSection(const std::shared_ptr<Site> & site, const std::string & section);
   void goSnake();
+  void goEnableEncryption();
+  void goDisableEncryption();
   void returnSelectItems(const std::string &);
   void key(const std::string &);
   void newKey(const std::string &);

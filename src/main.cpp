@@ -68,6 +68,7 @@ public:
     if (!uibase->init()) exit(1);
     wm->init("cbftp");
     iom->init("cbftp");
+    sls->init();
     tp->tickerLoop();
     global->getExternalFileViewing()->killAll();
     uibase->kill();
@@ -89,6 +90,7 @@ int main(int argc, char* argv[]) {
   sigaction(SIGABRT, &sa, NULL);
   sigaction(SIGTERM, &sa, NULL);
   sigaction(SIGINT, &sa, NULL);
+  sigaction(SIGQUIT, &sa, NULL);
 
   Main();
 }
