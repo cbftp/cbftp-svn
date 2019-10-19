@@ -15,7 +15,7 @@ NewKeyScreen::~NewKeyScreen() {
 }
 
 void NewKeyScreen::initialize(unsigned int row, unsigned int col) {
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one";
+  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [Esc/c] Cancel";
   currentlegendtext = defaultlegendtext;
   active = false;
   mismatch = false;
@@ -113,7 +113,7 @@ bool NewKeyScreen::keyPressed(unsigned int ch) {
       ui->update();
       ui->setLegend();
       return true;
-    case 'd':
+    case 'd': {
       std::shared_ptr<MenuSelectOptionTextField> field1 = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement(0));
       std::shared_ptr<MenuSelectOptionTextField> field2 = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement(1));
       std::string key = field1->getData();
@@ -131,6 +131,11 @@ bool NewKeyScreen::keyPressed(unsigned int ch) {
         mismatch = true;
       }
       ui->update();
+      return true;
+    }
+    case 27: // esc
+    case 'c':
+      ui->returnToLast();
       return true;
   }
   return false;

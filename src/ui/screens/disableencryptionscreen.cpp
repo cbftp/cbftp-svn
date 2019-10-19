@@ -94,7 +94,7 @@ bool DisableEncryptionScreen::keyPressed(unsigned int ch) {
       ui->update();
       ui->setLegend();
       return true;
-    case 'd':
+    case 'd': {
       std::shared_ptr<MenuSelectOptionTextField> passfield = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement(0));
       std::string key = passfield->getData();
       passfield->clear();
@@ -106,6 +106,11 @@ bool DisableEncryptionScreen::keyPressed(unsigned int ch) {
         return true;
       }
       ui->update();
+      return true;
+    }
+    case 27: // esc
+    case 'c':
+      ui->returnToLast();
       return true;
   }
   return false;
