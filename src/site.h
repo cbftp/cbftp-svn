@@ -13,6 +13,7 @@
 #include "statistics.h"
 #include "hourlyalltracking.h"
 #include "transferprotocol.h"
+#include "util.h"
 
 #define SITE_PROXY_GLOBAL 820
 #define SITE_PROXY_NONE 821
@@ -80,11 +81,10 @@ private:
   bool xdupe;
   std::map<std::string, Path> sections;
   std::map<std::string, int> avgspeed;
-  std::map<std::string, std::pair<int, unsigned long long int> > avgspeedsamples;
-  std::set<std::string> affils;
-  std::map<std::string, std::string> affilslower;
-  std::set<std::shared_ptr<Site> > exceptsourcesites;
-  std::set<std::shared_ptr<Site> > excepttargetsites;
+  std::map<std::string, std::pair<int, unsigned long long int>> avgspeedsamples;
+  std::set<std::string, util::naturalComparator> affils;
+  std::set<std::shared_ptr<Site>> exceptsourcesites;
+  std::set<std::shared_ptr<Site>> excepttargetsites;
   int proxytype;
   std::string proxyname;
   int transfersourcepolicy;
@@ -104,8 +104,8 @@ public:
   Site();
   Site(const std::string &);
   Site(const Site &);
-  std::map<std::string, Path>::const_iterator sectionsBegin() const;
-  std::map<std::string, Path>::const_iterator sectionsEnd() const;
+  std::map<std::string, Path, util::naturalComparator>::const_iterator sectionsBegin() const;
+  std::map<std::string, Path, util::naturalComparator>::const_iterator sectionsEnd() const;
   std::map<std::string, int>::const_iterator avgspeedBegin() const;
   std::map<std::string, int>::const_iterator avgspeedEnd() const;
   unsigned int getMaxLogins() const;
@@ -210,8 +210,8 @@ public:
   void removeExceptSite(const std::shared_ptr<Site> &);
   void clearExceptSites();
   bool isAllowedTargetSite(const std::shared_ptr<Site> &) const;
-  std::set<std::string>::const_iterator affilsBegin() const;
-  std::set<std::string>::const_iterator affilsEnd() const;
+  std::set<std::string, util::naturalComparator>::const_iterator affilsBegin() const;
+  std::set<std::string, util::naturalComparator>::const_iterator affilsEnd() const;
   std::set<std::shared_ptr<Site> >::const_iterator exceptSourceSitesBegin() const;
   std::set<std::shared_ptr<Site> >::const_iterator exceptSourceSitesEnd() const;
   std::set<std::shared_ptr<Site> >::const_iterator exceptTargetSitesBegin() const;

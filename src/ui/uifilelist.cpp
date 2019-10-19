@@ -42,13 +42,13 @@ bool combinedSort(UIFile * a, UIFile * b) {
 bool nameSortAsc(UIFile * a, UIFile * b) {
   if ((a->isLink() || a->isDirectory()) && !b->isLink() && !b->isDirectory()) return true;
   if (!a->isLink() && !a->isDirectory() && (b->isLink() || b->isDirectory())) return false;
-  return a->getName().compare(b->getName()) < 0;
+  return util::naturalComparator()(a->getName(), b->getName());
 }
 
 bool nameSortDesc(UIFile * a, UIFile * b) {
   if ((a->isLink() || a->isDirectory()) && !b->isLink() && !b->isDirectory()) return true;
   if (!a->isLink() && !a->isDirectory() && (b->isLink() || b->isDirectory())) return false;
-  return a->getName().compare(b->getName()) > 0;
+  return util::naturalComparator()(b->getName(), a->getName());
 }
 
 bool timeSortAsc(UIFile * a, UIFile * b) {
