@@ -35,17 +35,24 @@ int main(int argc, char ** argv) {
 
   if (!checkInputFile(path)) return -1;
 
-  Core::BinaryData key = getPassphrase();
+
 
   Core::BinaryData rawdata;
   FileSystem::readFile(path, rawdata);
 
   Core::BinaryData decryptedtext;
-  if (!DataFileHandlerMethod::decrypt(rawdata, key, decryptedtext)) {
-    std::cerr << "Error: Either the passphrase is wrong, or the input file is"
-              << " not a valid cbftp data file."
-              << std::endl;
-    return -1;
+
+  if (!DataFileHandlerMethod::isMostlyASCII(rawdata)) {
+    Core::BinaryData key = getPassphrase();
+    if (!DataFileHandlerMethod::decrypt(rawdata, key, decryptedtext)) {
+      std::cerr << "Error: Either the passphrase is wrong, or the input file is"
+                << " not a valid cbftp data file."
+                << std::endl;
+      return -1;
+    }
+  }
+  else {
+    decryptedtext = rawdata;
   }
 
   if (useoutfile) {

@@ -43,15 +43,16 @@ newly created cbftp binary: bin/cbftp.
 
 FTP site details and other settings are stored in the cbftp data file, which
 will be created the first time cbftp is started. It is located at
-~/.cbftp/data, and is encrypted with AES-256. You will be prompted for a
-passphrase upon starting cbftp.
+~/.cbftp/data. By default it is stored as plain text, but encryption can
+be enabled through the global settings, and your data file will then be
+encrypted with aes-256-cbc.
 
 GETTING STARTED
 
-After starting cbftp and entering your passphrase, you will end up on the
-main ui screen of the client. This is where your FTP sites will be listed,
-along with the latest few spread jobs and transfer jobs if there are any.
-In the bottom of the screen, there will be various key binding information
+After starting cbftp (and possibly entering your passphrase), you will end up
+on the main ui screen of the client. This is where your FTP sites will be
+listed, along with the latest few spread jobs and transfer jobs if there are
+any. In the bottom of the screen, there will be various key binding information
 scrolling by. This area is known as "the legend bar" and is used to list
 available key bindings at any given time.
 The first thing you will want to do here is probably to add a site, so
@@ -434,6 +435,8 @@ Field summary:
 - Configure proxy settings - add or remove proxies that can be used by sites.
 - Configure file viewing - specify which file types that should be opened
   with what applications. Only applicable when running in a local terminal.
+- Enable/Disable data file encryption - Change the encryption state of the
+  data file.
 - Change encryption key - Set a new encryption key for the data file.
 
 TRANSFERS

@@ -124,15 +124,36 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   mso.addTextButtonNoContent(y++, x, "skiplist", "Configure skiplist...");
   mso.addTextButtonNoContent(y++, x, "proxy", "Configure proxy settings...");
   mso.addTextButtonNoContent(y++, x, "fileviewer", "Configure file viewing...");
-  mso.addTextButtonNoContent(y++, x, "changekey", "Change encryption key...");
+  mso.addTextButtonNoContent(y, x, "disableencryption", "Disable data file encryption...");
+  mso.addTextButtonNoContent(y++, x, "enableencryption", "Enable data file encryption...");
+  mso.addTextButtonNoContent(y++, x, "changekey", "Change data file encryption key...");
   init(row, col);
 }
 
 void GlobalOptionsScreen::redraw() {
   ui->erase();
+  std::shared_ptr<MenuSelectOptionElement> disableencryption = mso.getElement("disableencryption");
+  std::shared_ptr<MenuSelectOptionElement> enableencryption = mso.getElement("enableencryption");
+  if (global->getSettingsLoaderSaver()->getState() == DataFileState::EXISTS_DECRYPTED) {
+    disableencryption->show();
+    enableencryption->hide();
+    if (mso.getElement(mso.getSelectionPointer()) == enableencryption) {
+      mso.setPointer(disableencryption);
+    }
+  }
+  else {
+    disableencryption->hide();
+    enableencryption->show();
+    if (mso.getElement(mso.getSelectionPointer()) == disableencryption) {
+      mso.setPointer(enableencryption);
+    }
+  }
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
+    if (!msoe->visible()) {
+      continue;
+    }
     highlight = false;
     if (mso.getSelectionPointer() == i) {
       highlight = true;
@@ -191,6 +212,14 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
       }
       if (msoe->getIdentifier() == "changekey") {
         ui->goChangeKey();
+        return true;
+      }
+      if (msoe->getIdentifier() == "disableencryption") {
+        ui->goDisableEncryption();
+        return true;
+      }
+      if (msoe->getIdentifier() == "enableencryption") {
+        ui->goEnableEncryption();
         return true;
       }
       if (msoe->getIdentifier() == "proxy") {

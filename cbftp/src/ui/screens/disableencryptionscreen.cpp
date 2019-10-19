@@ -1,42 +1,36 @@
-#include "newkeyscreen.h"
+#include "disableencryptionscreen.h"
 
 #include "../ui.h"
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptionelement.h"
 
-#define MINIMUM_KEY_LENGTH 4
+#include "../../globalcontext.h"
+#include "../../settingsloadersaver.h"
 
-NewKeyScreen::NewKeyScreen(Ui * ui) {
+DisableEncryptionScreen::DisableEncryptionScreen(Ui * ui) {
   this->ui = ui;
 }
 
-NewKeyScreen::~NewKeyScreen() {
+DisableEncryptionScreen::~DisableEncryptionScreen() {
 
 }
 
-void NewKeyScreen::initialize(unsigned int row, unsigned int col) {
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one";
+void DisableEncryptionScreen::initialize(unsigned int row, unsigned int col) {
+  defaultlegendtext = "[Enter] Modify - [d]isable encryption - [Esc/c] Cancel";
   currentlegendtext = defaultlegendtext;
   active = false;
   mismatch = false;
-  tooshort = false;
-  unsigned int y = 9;
-  unsigned int x = 1;
   mso.clear();
-  mso.addStringField(y++, x, "newkey", "Passphrase:", "", true);
-  mso.addStringField(y++, x, "newkey2", "Verify:", "", true);
+  mso.addStringField(5, 1, "newkey", "Passphrase:", "", true);
   init(row, col);
 }
 
-void NewKeyScreen::redraw() {
+void DisableEncryptionScreen::redraw() {
   ui->erase();
   unsigned int y = 1;
-  ui->printStr(y, 1, "Your site and configuration data will be encrypted with AES-256-CBC.");
-  ui->printStr(y+1, 1, "A 256-bit (32 characters) AES key will be generated from the given passphrase.");
-  ui->printStr(y+2, 1, "This means that the level of security increases with the length of the given");
-  ui->printStr(y+3, 1, "passphrase.");
-  ui->printStr(y+4, 1, "The passphrase is not considered secure if it is shorter than 16 characters.");
-  ui->printStr(y+6, 1, "Good password practice is described well by xkcd: http://xkcd.com/936/");
+  ui->printStr(y, 1, "Warning! Disabling encryption means that anyone with read access to your home directory");
+  ui->printStr(y+1, 1, "will be able to read your data file, including your passwords.");
+  ui->printStr(y+2, 1, "Please verify this action by entering your current passphrase.");
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
@@ -49,7 +43,7 @@ void NewKeyScreen::redraw() {
   }
 }
 
-void NewKeyScreen::update() {
+void DisableEncryptionScreen::update() {
   std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
   ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
   ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
@@ -57,13 +51,10 @@ void NewKeyScreen::update() {
   ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
   ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   std::string error = "                                                          ";
-  if (tooshort) {
-    error = "Failed: The passphrase must be at least " + std::to_string(MINIMUM_KEY_LENGTH) + " characters long.";
+  if (mismatch) {
+    error = "Failed: The key did not match.";
   }
-  else if (mismatch) {
-    error = "Failed: The keys did not match.";
-  }
-  ui->printStr(14, 1, error);
+  ui->printStr(7, 1, error);
 
   if (active && msoe->cursorPosition() >= 0) {
     ui->showCursor();
@@ -74,7 +65,7 @@ void NewKeyScreen::update() {
   }
 }
 
-bool NewKeyScreen::keyPressed(unsigned int ch) {
+bool DisableEncryptionScreen::keyPressed(unsigned int ch) {
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
@@ -90,18 +81,8 @@ bool NewKeyScreen::keyPressed(unsigned int ch) {
   }
   bool activation;
   switch(ch) {
-    case KEY_UP:
-      mso.goUp();
-      ui->update();
-      return true;
-    case KEY_DOWN:
-      mso.goDown();
-      ui->update();
-      return true;
     case 10:
-
       activation = mso.getElement(mso.getSelectionPointer())->activate();
-      tooshort = false;
       mismatch = false;
       if (!activation) {
         ui->update();
@@ -114,21 +95,15 @@ bool NewKeyScreen::keyPressed(unsigned int ch) {
       ui->setLegend();
       return true;
     case 'd':
-      std::shared_ptr<MenuSelectOptionTextField> field1 = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement(0));
-      std::shared_ptr<MenuSelectOptionTextField> field2 = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement(1));
-      std::string key = field1->getData();
-      std::string key2 = field2->getData();
-      field1->clear();
-      field2->clear();
-      if (key == key2) {
-        if (key.length() >= MINIMUM_KEY_LENGTH) {
-          ui->newKey(key);
-          return true;
-        }
-        tooshort = true;
+      std::shared_ptr<MenuSelectOptionTextField> passfield = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement(0));
+      std::string key = passfield->getData();
+      passfield->clear();
+      if (!global->getSettingsLoaderSaver()->setPlain(key)) {
+        mismatch = true;
       }
       else {
-        mismatch = true;
+        ui->returnToLast();
+        return true;
       }
       ui->update();
       return true;
@@ -136,10 +111,10 @@ bool NewKeyScreen::keyPressed(unsigned int ch) {
   return false;
 }
 
-std::string NewKeyScreen::getLegendText() const {
+std::string DisableEncryptionScreen::getLegendText() const {
   return currentlegendtext;
 }
 
-std::string NewKeyScreen::getInfoLabel() const {
-  return "ENABLE ENCRYPTION";
+std::string DisableEncryptionScreen::getInfoLabel() const {
+  return "DISABLE ENCRYPTION";
 }

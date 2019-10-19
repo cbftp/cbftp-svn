@@ -61,6 +61,7 @@
 #include "screens/editsitesectionscreen.h"
 #include "screens/siteslotsscreen.h"
 #include "screens/snakescreen.h"
+#include "screens/disableencryptionscreen.h"
 
 static Ui * instance = new Ui();
 
@@ -145,7 +146,9 @@ bool Ui::init() {
   editsitesectionscreen = std::make_shared<EditSiteSectionScreen>(this);
   siteslotsscreen = std::make_shared<SiteSlotsScreen>(this);
   snakescreen = std::make_shared<SnakeScreen>(this);
+  disableencryptionscreen = std::make_shared<DisableEncryptionScreen>(this);
   mainwindows.push_back(mainscreen);
+  mainwindows.push_back(newkeyscreen);
   mainwindows.push_back(confirmationscreen);
   mainwindows.push_back(editsitescreen);
   mainwindows.push_back(sitestatusscreen);
@@ -180,20 +183,20 @@ bool Ui::init() {
   mainwindows.push_back(editsitesectionscreen);
   mainwindows.push_back(siteslotsscreen);
   mainwindows.push_back(snakescreen);
+  mainwindows.push_back(disableencryptionscreen);
 
   legendprinterkeybinds = std::make_shared<LegendPrinterKeybinds>(this);
   legendwindow->setMainLegendPrinter(legendprinterkeybinds);
 
-  if (global->getSettingsLoaderSaver()->dataExists()) {
+  if (global->getSettingsLoaderSaver()->getState() == DataFileState::EXISTS_ENCRYPTED) {
     loginscreen->initialize(mainrow, maincol);
     topwindow = loginscreen;
   }
   else {
+    mainscreen->initialize(mainrow, maincol);
+    topwindow = mainscreen;
     enableInfo();
     enableLegend();
-    newkeyscreen->initialize(mainrow, maincol);
-    setLegendText(newkeyscreen->getLegendText());
-    topwindow = newkeyscreen;
   }
   infowindow->setLabel(topwindow->getInfoLabel());
   std::cin.putback('#'); // needed to be able to peek properly
@@ -938,6 +941,17 @@ void Ui::goSnake() {
   snakescreen->initialize(mainrow, maincol);
   switchToWindow(snakescreen);
 }
+
+void Ui::goEnableEncryption() {
+  newkeyscreen->initialize(mainrow, maincol);
+  switchToWindow(newkeyscreen);
+}
+
+void Ui::goDisableEncryption() {
+  disableencryptionscreen->initialize(mainrow, maincol);
+  switchToWindow(disableencryptionscreen);
+}
+
 void Ui::returnSelectItems(const std::string & items) {
   switchToLast();
   topwindow->command("returnselectitems", items);
@@ -945,7 +959,7 @@ void Ui::returnSelectItems(const std::string & items) {
 }
 
 void Ui::key(const std::string & key) {
-  bool result = global->getSettingsLoaderSaver()->enterKey(key);
+  bool result = global->getSettingsLoaderSaver()->tryDecrypt(key);
   if (result) {
     mainscreen->initialize(mainrow, maincol);
     switchToWindow(mainscreen);
@@ -959,9 +973,8 @@ void Ui::key(const std::string & key) {
 }
 
 void Ui::newKey(const std::string & newkey) {
-  assert(global->getSettingsLoaderSaver()->enterKey(newkey));
-  mainscreen->initialize(mainrow, maincol);
-  switchToWindow(mainscreen);
+  assert(global->getSettingsLoaderSaver()->setEncrypted(newkey));
+  returnToLast();
 }
 
 void Ui::confirmYes() {
