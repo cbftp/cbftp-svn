@@ -340,10 +340,7 @@ bool naturalComparator::operator()(const std::string& a, const std::string& b) c
   size_t i = 0;
   size_t j = 0;
   for (; i < a.length() && j < b.length(); ++i, ++j) {
-    if (isdigit(a[i])) {
-      if (!isdigit(b[j])) {
-        return true;
-      }
+    if (isdigit(a[i]) && isdigit(b[j])) {
       size_t adigitstart = i;
       size_t bdigitstart = j;
       while (isdigit(a[i]) && i < a.length()) {
@@ -362,9 +359,6 @@ bool naturalComparator::operator()(const std::string& a, const std::string& b) c
       }
     }
     else {
-      if (isdigit(b[j])) {
-        return false;
-      }
       char ca = tolower(a[i]);
       char cb = tolower(b[j]);
       if (ca < cb) {
