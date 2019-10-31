@@ -289,8 +289,8 @@ bool Engine::prepareRace(const std::string & release, const std::string & sectio
 
 bool Engine::prepareRace(const std::string & release, const std::string & section) {
   size_t preparedbefore = preparedraces.size();
-  newSpreadJob(SPREAD_PREPARE, release, section);
-  return preparedraces.size() > preparedbefore;
+  std::shared_ptr<Race> race = newSpreadJob(SPREAD_PREPARE, release, section);
+  return preparedraces.size() > preparedbefore || race;
 }
 
 void Engine::startPreparedRace(unsigned int id) {
