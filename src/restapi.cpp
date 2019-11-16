@@ -952,7 +952,7 @@ void RestApi::requestReady(void* service, int servicerequestid) {
       else {
         FileListData* data = sl->getFileListData(servicerequestid);
         std::shared_ptr<FileList> fl = data->getFileList();
-        nlohmann::json j;
+        nlohmann::json j = nlohmann::json::object();
         for (std::list<File*>::const_iterator it = fl->begin(); it != fl->end(); ++it) {
           File* f = *it;
           std::string name = f->getName();
@@ -966,7 +966,7 @@ void RestApi::requestReady(void* service, int servicerequestid) {
           }
         }
         http::Response response(200);
-        std::string jsondump = j.dump(2);
+        std::string jsondump = j.dump(2, ' ', false, nlohmann::json::error_handler_t::replace);
         response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
         response.addHeader("Content-Type", "application/json");
         request->cb->requestHandled(request->connrequestid, response);
@@ -1009,7 +1009,7 @@ void RestApi::finalize(OngoingRequest& request) {
       j["successes"] = successlist;
       j["failures"] = failurelist;
       http::Response response(200);
-      std::string jsondump = j.dump(2);
+      std::string jsondump = j.dump(2, ' ', false, nlohmann::json::error_handler_t::replace);
       response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
       response.addHeader("Content-Type", "application/json");
       request.cb->requestHandled(request.connrequestid, response);
