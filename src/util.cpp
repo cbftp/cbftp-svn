@@ -343,10 +343,10 @@ bool naturalComparator::operator()(const std::string& a, const std::string& b) c
     if (isdigit(a[i]) && isdigit(b[j])) {
       size_t adigitstart = i;
       size_t bdigitstart = j;
-      while (isdigit(a[i]) && i < a.length()) {
+      while (i < a.length() && isdigit(a[i]) && i - adigitstart < 18) {
         ++i;
       }
-      while (isdigit(b[j]) && j < b.length()) {
+      while ( j < b.length() && isdigit(b[j]) && j - bdigitstart < 18) {
         ++j;
       }
       long long int anum = std::stoll(a.substr(adigitstart, i - adigitstart));
