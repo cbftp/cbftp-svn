@@ -30,6 +30,7 @@ public:
   std::string getInfoLabel() const;
   std::string getInfoText() const;
   bool isInitialized() const;
+  void suggestOtherRefresh(BrowseScreenSub* sub);
 private:
   void switchSide();
   void closeSide();

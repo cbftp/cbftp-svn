@@ -147,6 +147,7 @@ class SiteLogic : public Core::EventReceiver {
     int requestAllIdle(RequestCallback* cb, const Path & path, int);
     int requestAllIdle(RequestCallback* cb, int);
     int requestMakeDirectory(RequestCallback* cb, const Path& path, const std::string & dirname);
+    int requestMove(RequestCallback* cb, const Path& srcpath, const Path& dstpath);
     bool requestReady(int) const;
     bool requestStatus(int) const;
     void abortRace(const std::shared_ptr<SiteRace> & race);

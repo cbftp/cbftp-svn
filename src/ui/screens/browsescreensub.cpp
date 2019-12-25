@@ -60,3 +60,7 @@ std::string BrowseScreenSub::targetName(const std::list<std::pair<std::string, b
   }
   return target;
 }
+
+void BrowseScreenSub::refreshFileList() {
+
+}

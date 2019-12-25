@@ -32,10 +32,11 @@
 #include "../misc.h"
 
 #include "browsescreenaction.h"
+#include "browsescreen.h"
 #include "rawdatascreen.h"
 
-BrowseScreenSite::BrowseScreenSite(Ui * ui, const std::string & sitestr, const Path path) :
-    ui(ui), row(0), col(0), coloffset(0), currentviewspan(0),
+BrowseScreenSite::BrowseScreenSite(Ui * ui, BrowseScreen* parent, const std::string & sitestr, const Path path) :
+    ui(ui), parent(parent), row(0), col(0), coloffset(0), currentviewspan(0),
     resort(false), tickcount(0), gotomode(false), gotomodefirst(false),
     gotomodeticker(0), filtermodeinput(false), filtermodeinputregex(false),
     sortmethod(UIFileList::SortMethod::COMBINED),
@@ -306,6 +307,21 @@ bool BrowseScreenSite::handleReadyRequests() {
         tickcount = 0;
         break;
       }
+      case BrowseScreenRequestType::MOVE: {
+        bool success = sitelogic->finishRequest(request.id);
+        if (success) {
+          lastinfo = LastInfo::MOVE_SUCCESS;
+          if (list.getPath() == request.path) {
+            refreshfilelistafter = true;
+          }
+        }
+        else {
+          lastinfo = LastInfo::MOVE_FAILED;
+        }
+        lastinfotarget = request.files.front().first;
+        tickcount = 0;
+        break;
+      }
       default:
         assert(false);
         break;
@@ -315,7 +331,8 @@ bool BrowseScreenSite::handleReadyRequests() {
   if (handled) {
     if (requests.empty() && refreshfilelistafter) {
       refreshfilelistafter = false;
-      refreshFilelist();
+      refreshFileList();
+      parent->suggestOtherRefresh(this);
     }
     ui->redraw();
     ui->setInfo();
@@ -420,7 +437,7 @@ void BrowseScreenSite::command(const std::string & command, const std::string & 
   if (command == "yes") {
     switch (confirmaction) {
       case ConfirmAction::WIPE:
-        for (const std::pair<std::string, bool> & file : list.getSelectedNames()) {
+        for (const std::pair<std::string, bool>& file : list.getSelectedNames()) {
           BrowseScreenRequest request;
           request.id = sitelogic->requestWipe(ui, list.getPath() / file.first, file.second);
           request.type = BrowseScreenRequestType::WIPE;
@@ -430,7 +447,7 @@ void BrowseScreenSite::command(const std::string & command, const std::string & 
         }
         break;
       case ConfirmAction::DELETE:
-        for (const std::pair<std::string, bool> & file : list.getSelectedNames()) {
+        for (const std::pair<std::string, bool>& file : list.getSelectedNames()) {
           BrowseScreenRequest request;
           request.id = sitelogic->requestDelete(ui, list.getPath() / file.first, file.second, true, true);
           request.type = BrowseScreenRequestType::DELETE;
@@ -465,10 +482,23 @@ void BrowseScreenSite::command(const std::string & command, const std::string & 
     std::vector<std::string> args = util::splitVec(arg, ";");
     int multiplier = std::stoi(args[0]);
     std::string reason = args[1];
-    for (const std::pair<std::string, bool> & item : list.getSelectedDirectoryNames()) {
+    for (const std::pair<std::string, bool>& item : list.getSelectedDirectoryNames()) {
       BrowseScreenRequest request;
       request.id = sitelogic->requestNuke(ui, list.getPath() / item.first, multiplier, reason);
       request.type = BrowseScreenRequestType::NUKE;
+      request.path = list.getPath();
+      request.files = { item };
+      requests.push_back(request);
+    }
+    ui->redraw();
+    ui->setInfo();
+  }
+  else if (command == "move") {
+    Path dstpath = arg;
+    for (const std::pair<std::string, bool>& item : list.getSelectedNames()) {
+      BrowseScreenRequest request;
+      request.id = sitelogic->requestMove(ui, list.getPath() / item.first, dstpath.isAbsolute() ? dstpath / item.first : list.getPath() / dstpath);
+      request.type = BrowseScreenRequestType::MOVE;
       request.path = list.getPath();
       request.files = { item };
       requests.push_back(request);
@@ -659,7 +689,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       ui->goNuke(site->getName(), targetName(dirs), list.getPath());
       break;
     }
-    case 'm':
+    case 'M':
       ui->goMakeDir(site->getName(), list);
       break;
     case KEY_RIGHT:
@@ -768,7 +798,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       return BrowseScreenAction(BROWSESCREENACTION_CHDIR);
     }
     case KEY_F(5):
-      refreshFilelist();
+      refreshFileList();
       ui->setInfo();
       break;
     case KEY_DOWN:
@@ -945,7 +975,7 @@ std::string BrowseScreenSite::getLegendText() const {
   if (filtermodeinputregex) {
     return "[Any] Enter regex input - [Tab] switch mode - [Esc] Cancel";
   }
-  return "[Esc] Cancel - [c]lose - [Up/Down] Navigate - [Enter/Right] open dir - [Backspace/Left] return - sp[r]ead - [v]iew file - [D]ownload - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - [m]ake directory - Toggle se[P]arators - [q]uick jump - Toggle [f]ilter - Regex [F]ilter - view cwd [l]og - [Space] Hard select - [Shift-Up/Down] Soft select - Select [A]ll - [0-9] Browse to section";
+  return "[Esc] Cancel - [c]lose - [Up/Down] Navigate - [Enter/Right] open dir - [Backspace/Left] return - sp[r]ead - [v]iew file - [D]ownload - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - [M]ake directory - Toggle se[P]arators - [q]uick jump - Toggle [f]ilter - Regex [F]ilter - view cwd [l]og - [Space] Hard select - [Shift-Up/Down] Soft select - Select [A]ll - [0-9] Browse to section - [m]ove/rename";
 }
 
 std::string BrowseScreenSite::getInfoLabel() const {
@@ -975,6 +1005,9 @@ std::string BrowseScreenSite::getInfoText() const {
         break;
       case BrowseScreenRequestType::FILELIST:
         text = "Getting list for " + request.path.toString() + "  ";
+        break;
+      case BrowseScreenRequestType::MOVE:
+        text = "Moving/renaming " + target + "  ";
         break;
       default:
         assert(false);
@@ -1028,6 +1061,12 @@ std::string BrowseScreenSite::getInfoText() const {
       case LastInfo::NUKE_FAILED:
         text = "Nuke failed: ";
         break;
+      case LastInfo::MOVE_SUCCESS:
+        text = "Move/rename successful: ";
+        break;
+      case LastInfo::MOVE_FAILED:
+        text = "Move/rename failed: ";
+        break;
       case LastInfo::NONE:
         break;
     }
@@ -1079,7 +1118,7 @@ UIFile * BrowseScreenSite::selectedFile() const {
   return list.cursoredFile();
 }
 
-void BrowseScreenSite::refreshFilelist() {
+void BrowseScreenSite::refreshFileList() {
   gotoPath(list.getPath());
 }
 
@@ -1147,4 +1186,9 @@ void BrowseScreenSite::gotoPath(const Path & path) {
   request.type = BrowseScreenRequestType::FILELIST;
   request.path = path;
   requests.push_back(request);
+}
+
+void BrowseScreenSite::initiateMove(const std::string& dstpath) {
+  std::list<std::pair<std::string, bool>> items = list.getSelectedNames();
+  ui->goMove(site->getName(), targetName(items), list.getPath(), dstpath);
 }

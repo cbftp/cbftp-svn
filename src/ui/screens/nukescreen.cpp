@@ -3,10 +3,6 @@
 #include "../../globalcontext.h"
 #include "../../site.h"
 #include "../../sitemanager.h"
-#include "../../engine.h"
-#include "../../sitelogic.h"
-#include "../../filelist.h"
-#include "../../sitelogicmanager.h"
 
 #include "../ui.h"
 #include "../menuselectoptionelement.h"
@@ -23,12 +19,11 @@ NukeScreen::~NukeScreen() {
 }
 
 void NukeScreen::initialize(unsigned int row, unsigned int col, const std::string & sitestr, const std::string & items, const Path & path) {
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [n]uke - [c]ancel - [p]roper - [r]epack - [d]upe - dupe [w]eb - [i]ncomplete";
+  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [n]uke - [c]ancel - [p]roper - [r]epack - d[u]pe - dupe [w]eb - [i]ncomplete";
   currentlegendtext = defaultlegendtext;
   active = false;
   this->sitestr = sitestr;
   this->items = items;
-  sitelogic = global->getSiteLogicManager()->getSiteLogic(sitestr);
   this->path = path;
   std::list<std::string> sections = global->getSiteManager()->getSite(sitestr)->getSectionsForPath(path);
   mso.reset();
@@ -118,6 +113,7 @@ bool NukeScreen::keyPressed(unsigned int ch) {
     case 'c':
       ui->returnToLast();
       return true;
+    case 'd':
     case 'n':
       nuke();
       return true;
@@ -127,7 +123,7 @@ bool NukeScreen::keyPressed(unsigned int ch) {
     case 'r':
       nuke(1, "repack");
       return true;
-    case 'd':
+    case 'u':
       nuke(1, "dupe");
       return true;
     case 'w':

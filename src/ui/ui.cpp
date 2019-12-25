@@ -62,6 +62,7 @@
 #include "screens/siteslotsscreen.h"
 #include "screens/snakescreen.h"
 #include "screens/disableencryptionscreen.h"
+#include "screens/movescreen.h"
 
 static Ui * instance = new Ui();
 
@@ -70,7 +71,7 @@ static void sighandler(int signal) {
 }
 
 Ui::Ui() :
-  main(NULL),
+  main(nullptr),
   ticker(0),
   haspushed(false),
   pushused(false),
@@ -93,7 +94,7 @@ bool Ui::init() {
   sigemptyset(&sa.sa_mask);
   sigaddset(&sa.sa_mask, SIGWINCH);
   sa.sa_handler = sighandler;
-  sigaction(SIGWINCH, &sa, NULL);
+  sigaction(SIGWINCH, &sa, nullptr);
 
   CharDraw::init();
 
@@ -147,6 +148,7 @@ bool Ui::init() {
   siteslotsscreen = std::make_shared<SiteSlotsScreen>(this);
   snakescreen = std::make_shared<SnakeScreen>(this);
   disableencryptionscreen = std::make_shared<DisableEncryptionScreen>(this);
+  movescreen = std::make_shared<MoveScreen>(this);
   mainwindows.push_back(mainscreen);
   mainwindows.push_back(newkeyscreen);
   mainwindows.push_back(confirmationscreen);
@@ -184,6 +186,7 @@ bool Ui::init() {
   mainwindows.push_back(siteslotsscreen);
   mainwindows.push_back(snakescreen);
   mainwindows.push_back(disableencryptionscreen);
+  mainwindows.push_back(movescreen);
 
   legendprinterkeybinds = std::make_shared<LegendPrinterKeybinds>(this);
   legendwindow->setMainLegendPrinter(legendprinterkeybinds);
@@ -952,6 +955,11 @@ void Ui::goDisableEncryption() {
   switchToWindow(disableencryptionscreen);
 }
 
+void Ui::goMove(const std::string& site, const std::string& items, const Path& srcpath, const std::string& dstpath) {
+  movescreen->initialize(mainrow, maincol, site, items, srcpath, dstpath);
+  switchToWindow(movescreen);
+}
+
 void Ui::returnSelectItems(const std::string & items) {
   switchToLast();
   topwindow->command("returnselectitems", items);
@@ -1005,6 +1013,12 @@ void Ui::returnRaceStatus(unsigned int id) {
 void Ui::returnMakeDir(const std::string & dirname) {
   switchToLast();
   topwindow->command("makedir", dirname);
+  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+}
+
+void Ui::returnMove(const std::string& dstpath) {
+  switchToLast();
+  topwindow->command("move", dstpath);
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 

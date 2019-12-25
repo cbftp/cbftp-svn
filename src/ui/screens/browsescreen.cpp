@@ -37,7 +37,7 @@ void BrowseScreen::initialize(unsigned int row, unsigned int col, ViewMode viewm
   this->split = initsplitupdate = viewmode == VIEW_SPLIT;
   TimeReference::updateTime();
   if (viewmode != VIEW_LOCAL) {
-    left = std::make_shared<BrowseScreenSite>(ui, site, path);
+    left = std::make_shared<BrowseScreenSite>(ui, this, site, path);
   }
   else {
     left = std::make_shared<BrowseScreenLocal>(ui);
@@ -146,7 +146,7 @@ bool BrowseScreen::keyPressed(unsigned int ch) {
           }
         }
       }
-      active = (active == left ? left : right) = std::make_shared<BrowseScreenSite>(ui, op.getArg(), targetpath);
+      active = (active == left ? left : right) = std::make_shared<BrowseScreenSite>(ui, this, op.getArg(), targetpath);
       ui->redraw();
       ui->setLegend();
       ui->setInfo();
@@ -248,6 +248,20 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
     case 'i':
       toggleCompareListMode(CompareMode::IDENTICAL);
       return true;
+    case 'm':
+      if (active->type() == BrowseScreenType::SITE) {
+        std::shared_ptr<BrowseScreenSite> activesite = std::static_pointer_cast<BrowseScreenSite>(active);
+        std::shared_ptr<BrowseScreenSub> other = active == left ? right : left;
+        std::string dstpath;
+        if (split && other->type() == BrowseScreenType::SITE) {
+          std::shared_ptr<BrowseScreenSite> othersite = std::static_pointer_cast<BrowseScreenSite>(other);
+          if (activesite->getSite() == othersite->getSite()) {
+            dstpath = othersite->getUIFileList()->getPath().toString();
+          }
+        }
+        activesite->initiateMove(dstpath);
+      }
+      return true;
     case '0':
     case '1':
     case '2':
@@ -316,6 +330,19 @@ std::string BrowseScreen::getInfoText() const {
 
 bool BrowseScreen::isInitialized() const {
   return !!active;
+}
+
+void BrowseScreen::suggestOtherRefresh(BrowseScreenSub* sub) {
+  if (split && left->type() == BrowseScreenType::SITE && right->type() == BrowseScreenType::SITE) {
+    if (std::static_pointer_cast<BrowseScreenSite>(left)->getSite() == std::static_pointer_cast<BrowseScreenSite>(right)->getSite()) {
+      if (sub == left.get()) {
+        right->refreshFileList();
+      }
+      else {
+        left->refreshFileList();
+      }
+    }
+  }
 }
 
 void BrowseScreen::switchSide() {

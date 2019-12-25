@@ -32,6 +32,8 @@ enum class LastInfo {
   NUKE_FAILED,
   MKDIR_SUCCESS,
   MKDIR_FAILED,
+  MOVE_SUCCESS,
+  MOVE_FAILED,
   NONE
 };
 
@@ -41,7 +43,8 @@ enum class BrowseScreenRequestType {
   DELETE,
   WIPE,
   NUKE,
-  MKDIR
+  MKDIR,
+  MOVE
 };
 
 struct BrowseScreenRequest {
@@ -62,6 +65,7 @@ public:
   virtual void command(const std::string & command, const std::string & arg);
   virtual BrowseScreenAction keyPressed(unsigned int) = 0;
   virtual void setFocus(bool) = 0;
+  virtual void refreshFileList();
   virtual UIFileList * getUIFileList();
   static void addFileDetails(MenuSelectOption & table, unsigned int coloffset,
                              unsigned int y, const std::string & name,
