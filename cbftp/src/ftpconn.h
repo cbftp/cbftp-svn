@@ -53,6 +53,8 @@ enum class FTPConnState {
   PBSZ,
   TYPEI,
   XDUPE,
+  RNFR,
+  RNTO,
   IDLE
 };
 
@@ -161,6 +163,8 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     void PBSZ0Response();
     void TYPEIResponse();
     void XDUPEResponse();
+    void RNFRResponse();
+    void RNTOResponse();
     void proxySessionInit(bool);
     void sendEcho(const std::string &);
     void connectAllAddresses();
@@ -222,6 +226,8 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     void doTYPEI();
     void doXDUPE();
     void doQUIT();
+    void doRNFR(const std::string& from);
+    void doRNTO(const std::string& to);
     void disconnect();
     FTPConnState getState() const;
     std::string getConnectedAddress() const;

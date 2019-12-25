@@ -13,6 +13,7 @@
 #include "../../path.h"
 #include "../../rawbuffer.h"
 
+class BrowseScreen;
 class SiteLogic;
 class Site;
 class FileList;
@@ -28,7 +29,7 @@ enum class ConfirmAction {
 
 class BrowseScreenSite : public BrowseScreenSub {
 public:
-  BrowseScreenSite(Ui *, const std::string & sitestr, const Path path = Path());
+  BrowseScreenSite(Ui* ui, BrowseScreen* parent, const std::string & sitestr, const Path path = Path());
   ~BrowseScreenSite();
   BrowseScreenType type() const override;
   void redraw(unsigned int, unsigned int, unsigned int) override;
@@ -46,8 +47,11 @@ public:
   UIFileList * getUIFileList() override;
   const std::shared_ptr<Site> & getSite() const;
   void gotoPath(const Path & path);
+  void initiateMove(const std::string& dstpath);
+  void refreshFileList() override;
 private:
   Ui * ui;
+  BrowseScreen* parent;
   unsigned int row;
   unsigned int col;
   unsigned int coloffset;
@@ -82,7 +86,6 @@ private:
   std::string lastinfotarget;
   ConfirmAction confirmaction;
   bool refreshfilelistafter;
-  void refreshFilelist();
   void disableGotoMode();
   void clearSoftSelects();
   bool handleReadyRequests();

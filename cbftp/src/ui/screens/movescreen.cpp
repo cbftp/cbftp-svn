@@ -1,48 +1,43 @@
-#include "makedirscreen.h"
-
-#include "../../globalcontext.h"
-#include "../../filelist.h"
+#include "movescreen.h"
 
 #include "../ui.h"
 #include "../menuselectoptionelement.h"
 #include "../menuselectoptiontextfield.h"
+#include "../../path.h"
 
-MakeDirScreen::MakeDirScreen(Ui * ui) {
+MoveScreen::MoveScreen(Ui * ui) {
   this->ui = ui;
 }
 
-MakeDirScreen::~MakeDirScreen() {
+MoveScreen::~MoveScreen() {
 
 }
 
-void MakeDirScreen::initialize(unsigned int row, unsigned int col, const std::string & site, UIFileList & filelist) {
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [m]ake directory - [c]ancel";
+void MoveScreen::initialize(unsigned int row, unsigned int col, const std::string & site, const std::string& items, const Path& srcpath, const std::string& dstpath) {
+  defaultlegendtext = "[Enter] Modify - [m]ove - [c]ancel";
   currentlegendtext = defaultlegendtext;
   active = false;
   this->site = site;
-  this->filelist = filelist;
-  alreadyexists = false;
+  this->srcpath = srcpath.toString();
+  this->items = items;
   mso.reset();
-  int y = 3;
+  int y = 4;
   if (!site.empty()) {
     y++;
   }
-  mso.addStringField(y, 1, "name", "Name:", "", false, col - 3, 512);
+  mso.addStringField(y, 1, "dstpath", "Target path/name:", dstpath, false, col - 3, 512);
   mso.enterFocusFrom(0);
   init(row, col);
 }
 
-void MakeDirScreen::redraw() {
+void MoveScreen::redraw() {
   ui->erase();
   int y = 1;
   if (!site.empty()) {
     ui->printStr(y++, 1, "Site: " + site);
   }
-  ui->printStr(y, 1, "Path: " + filelist.getPath().toString());
-  if (alreadyexists) {
-    ui->printStr(y + 3, 1, "ERROR: an item with that name already exists!");
-    alreadyexists = false;
-  }
+  ui->printStr(y++, 1, "Source path: " + srcpath);
+  ui->printStr(y++, 1, "Item: " + items);
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
@@ -62,11 +57,11 @@ void MakeDirScreen::redraw() {
   }
 }
 
-void MakeDirScreen::update() {
+void MoveScreen::update() {
   redraw();
 }
 
-bool MakeDirScreen::keyPressed(unsigned int ch) {
+bool MoveScreen::keyPressed(unsigned int ch) {
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
@@ -95,32 +90,20 @@ bool MakeDirScreen::keyPressed(unsigned int ch) {
       return true;
     case 'd':
     case 'm': {
-      tryMakeDir();
+      std::string dstpath = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("dstpath"))->getData();
+      if (!dstpath.empty()) {
+        ui->returnMove(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("dstpath"))->getData());
+      }
       return true;
     }
   }
   return false;
 }
 
-void MakeDirScreen::tryMakeDir() {
-  std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement("name");
-  std::string dirname = std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData();
-  if (dirname.empty()) {
-    return;
-  }
-  if (filelist.contains(dirname)) {
-    alreadyexists = true;
-    ui->redraw();
-    return;
-  }
-  ui->returnMakeDir(dirname);
-  return;
-}
-
-std::string MakeDirScreen::getLegendText() const {
+std::string MoveScreen::getLegendText() const {
   return currentlegendtext;
 }
 
-std::string MakeDirScreen::getInfoLabel() const {
-  return "MAKE NEW DIRECTORY";
+std::string MoveScreen::getInfoLabel() const {
+  return "MOVE/RENAME";
 }

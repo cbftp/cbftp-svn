@@ -72,7 +72,8 @@ enum RequestType {
   REQ_DEL,
   REQ_NUKE,
   REQ_IDLE,
-  REQ_MKDIR
+  REQ_MKDIR,
+  REQ_MOVE
 };
 
 enum Exists {
@@ -515,7 +516,7 @@ void SiteLogic::commandSuccess(int id, FTPConnState state) {
         if (request->requestType() == REQ_WIPE_RECURSIVE ||
             request->requestType() == REQ_WIPE)
         {
-          setRequestReady(id, NULL, true);
+          setRequestReady(id, nullptr, true);
         }
       }
       break;
@@ -528,7 +529,22 @@ void SiteLogic::commandSuccess(int id, FTPConnState state) {
     case FTPConnState::NUKE:
       if (connstatetracker[id].hasRequest()) {
         if (connstatetracker[id].getRequest()->requestType() == REQ_NUKE) {
-          setRequestReady(id, NULL, true);
+          setRequestReady(id, nullptr, true);
+        }
+      }
+      break;
+    case FTPConnState::RNFR:
+      if (connstatetracker[id].hasRequest()) {
+        if (connstatetracker[id].getRequest()->requestType() == REQ_MOVE) {
+          std::string dstpath = connstatetracker[id].getRequest()->requestData2();
+          conns[id]->doRNTO(dstpath);
+        }
+      }
+      break;
+    case FTPConnState::RNTO:
+      if (connstatetracker[id].hasRequest()) {
+        if (connstatetracker[id].getRequest()->requestType() == REQ_MOVE) {
+          setRequestReady(id, nullptr, true);
         }
       }
       break;
@@ -727,7 +743,7 @@ void SiteLogic::commandFail(int id, FailureType failuretype) {
         if (request->requestType() == REQ_WIPE_RECURSIVE ||
             request->requestType() == REQ_WIPE)
         {
-          setRequestReady(id, NULL, false);
+          setRequestReady(id, nullptr, false);
         }
       }
       handleConnection(id);
@@ -741,7 +757,16 @@ void SiteLogic::commandFail(int id, FailureType failuretype) {
     case FTPConnState::NUKE:
       if (connstatetracker[id].hasRequest()) {
         if (connstatetracker[id].getRequest()->requestType() == REQ_NUKE) {
-          setRequestReady(id, NULL, false);
+          setRequestReady(id, nullptr, false);
+        }
+      }
+      handleConnection(id);
+      return;
+    case FTPConnState::RNFR:
+    case FTPConnState::RNTO:
+      if (connstatetracker[id].hasRequest()) {
+        if (connstatetracker[id].getRequest()->requestType() == REQ_MOVE) {
+          setRequestReady(id, nullptr, false);
         }
       }
       handleConnection(id);
@@ -1177,7 +1202,7 @@ bool SiteLogic::handleRequest(int id) {
       }
       break;
     }
-    case REQ_MKDIR: // make directory
+    case REQ_MKDIR: { // make directory
       Path targetpath = request.requestData();
       if (conns[id]->getCurrentPath() != targetpath) {
         conns[id]->doCWD(targetpath);
@@ -1186,6 +1211,12 @@ bool SiteLogic::handleRequest(int id) {
         conns[id]->doMKD(request.requestData2());
       }
       break;
+    }
+    case REQ_MOVE: { // move item
+      Path srcpath = request.requestData();
+      conns[id]->doRNFR(srcpath.toString());
+      break;
+    }
   }
   return true;
 }
@@ -1421,11 +1452,18 @@ int SiteLogic::requestMakeDirectory(RequestCallback* cb, const Path& path, const
   int requestid = requestidcounter++;
   Path dirpath(dirname);
   if (dirpath.isRelative()) {
-    requests.push_back(SiteLogicRequest(nullptr, requestid, REQ_MKDIR, path.toString(), dirname));
+    requests.emplace_back(cb, requestid, REQ_MKDIR, path.toString(), dirname);
   }
   else {
-    requests.push_back(SiteLogicRequest(nullptr, requestid, REQ_MKDIR, dirpath.dirName(), dirpath.baseName()));
+    requests.emplace_back(cb, requestid, REQ_MKDIR, dirpath.dirName(), dirpath.baseName());
   }
+  activateOne();
+  return requestid;
+}
+
+int SiteLogic::requestMove(RequestCallback* cb, const Path& srcpath, const Path& dstpath) {
+  int requestid = requestidcounter++;
+  requests.emplace_back(cb, requestid, REQ_MOVE, srcpath.toString(), dstpath.toString());
   activateOne();
   return requestid;
 }

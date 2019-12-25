@@ -66,6 +66,7 @@ class EditSiteSectionScreen;
 class SiteSlotsScreen;
 class SnakeScreen;
 class DisableEncryptionScreen;
+class MoveScreen;
 
 class LegendPrinterKeybinds;
 struct TransferFilteringParameters;
@@ -125,6 +126,7 @@ private:
   std::shared_ptr<SiteSlotsScreen> siteslotsscreen;
   std::shared_ptr<SnakeScreen> snakescreen;
   std::shared_ptr<DisableEncryptionScreen> disableencryptionscreen;
+  std::shared_ptr<MoveScreen> movescreen;
   std::shared_ptr<LegendPrinterKeybinds> legendprinterkeybinds;
   int mainrow;
   int maincol;
@@ -245,14 +247,16 @@ public:
   void goSnake();
   void goEnableEncryption();
   void goDisableEncryption();
+  void goMove(const std::string& site, const std::string& items, const Path& srcpath, const std::string& dstpath);
   void returnSelectItems(const std::string &);
   void key(const std::string &);
   void newKey(const std::string &);
   void confirmYes();
   void confirmNo();
-  void returnNuke(int multiplier, const std::string & reason);
+  void returnNuke(int multiplier, const std::string& reason);
   void returnRaceStatus(unsigned int);
-  void returnMakeDir(const std::string & dirname);
+  void returnMakeDir(const std::string& dirname);
+  void returnMove(const std::string& dstpath);
   void loadSettings(std::shared_ptr<DataFileHandler>);
   void saveSettings(std::shared_ptr<DataFileHandler>);
   void notify();

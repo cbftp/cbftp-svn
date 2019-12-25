@@ -366,6 +366,12 @@ void FTPConn::FDData(int sockid, char * data, unsigned int datalen) {
       case FTPConnState::XDUPE: // awaiting XDUPE response
         XDUPEResponse();
         break;
+      case FTPConnState::RNFR: // awaiting RNFR response
+        RNFRResponse();
+        break;
+      case FTPConnState::RNTO: // awaiting RNTO response
+        RNTOResponse();
+        break;
       default: // nothing expected at this time, discard
         break;
     }
@@ -598,6 +604,26 @@ void FTPConn::XDUPEResponse() {
   finishLogin();
 }
 
+void FTPConn::RNFRResponse() {
+  processing = false;
+  if (databufcode == 350) {
+    sl->commandSuccess(id, state);
+  }
+  else {
+    sl->commandFail(id);
+  }
+}
+
+void FTPConn::RNTOResponse() {
+  processing = false;
+  if (databufcode == 250) {
+    sl->commandSuccess(id, state);
+  }
+  else {
+    sl->commandFail(id);
+  }
+}
+
 void FTPConn::reconnect() {
   disconnect();
   login();
@@ -822,6 +848,16 @@ void FTPConn::doTYPEI() {
 void FTPConn::doXDUPE() {
   state = FTPConnState::XDUPE;
   sendEcho("SITE XDUPE 3");
+}
+
+void FTPConn::doRNFR(const std::string& from) {
+  state = FTPConnState::RNFR;
+  sendEcho("RNFR " + from);
+}
+
+void FTPConn::doRNTO(const std::string& to) {
+  state = FTPConnState::RNTO;
+  sendEcho("RNTO " + to);
 }
 
 void FTPConn::PBSZ0Response() {
