@@ -31,13 +31,32 @@ DATE := "\"$(shell date)\""
 
 BOXTAG := "\"cbftp\""
 
-CXX=g++
-OPTFLAGS=-g -O0
-CXXFLAGS=$(OPTFLAGS) -std=c++11 -Wall -MMD -MP $(STATIC_SSL_INCLUDE)
-CFLAGS=$(OPTFLAGS) -Wall -MMD -MP
+CXX ?= g++
+ifndef OPTFLAGS
+OPTFLAGS = -g -O0
+else
+$(info Using OPTFLAGS provided by shell)
+endif
+ifndef CXXFLAGS
+CXXFLAGS = $(OPTFLAGS) -std=c++11 -Wall -MMD -MP
+ifdef STATIC_SSL_INCLUDE
+CXXFLAGS += $(STATIC_SSL_INCLUDE)
+endif
+else
+$(info Using CXXFLAGS provided by shell)
+endif
+ifndef CFLAGS
+CFLAGS = $(OPTFLAGS) -Wall -MMD -MP
+else
+$(info Using CFLAGS provided by shell)
+endif
+ifndef LINKFLAGS
 LINKFLAGS=$(SSL_LINKFLAGS) -lpthread
 ifeq ($(UNAME_S),Darwin)
 LINKFLAGS+=-lncurses
 else
 LINKFLAGS+=-lncursesw
+endif
+else
+$(info Using LINKFLAGS provided by shell)
 endif

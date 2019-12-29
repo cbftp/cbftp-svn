@@ -15,7 +15,7 @@ endif
 endif
 
 buildinfo.o: buildinfo.cpp ../Makefile.inc $(SVN_DIR)
-	$(CXX)  $(CPPFLAGS)  -c -o buildinfo.o buildinfo.cpp -DBUILDTIME=$(DATE) -DVERSION=$(VERSION) -DBOXTAG=$(BOXTAG)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c -o $@ $< -DBUILDTIME=$(DATE) -DVERSION=$(VERSION) -DBOXTAG=$(BOXTAG)
 	
 clean:
 	@if test $(firstword $(OBJS)); then rm -rf $(OBJS); echo rm -rf $(OBJS); fi

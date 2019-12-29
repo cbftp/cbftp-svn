@@ -19,7 +19,7 @@ MAJOR FEATURES
 - Encrypted data file with AES-256
 - TLS support (AUTH TLS) and TLS FXP support
 - IPv6 support and IPv6 FXP support
-- Remote commands for performing various tasks through UDP calls
+- Remote commands for performing various tasks through REST API and UDP calls
 - Ncurses UI, runs in a terminal which makes cbftp highly flexible
 - Advanced skiplisting
 - Internal file viewer with support for multiple encodings
