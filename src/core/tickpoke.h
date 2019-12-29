@@ -33,7 +33,7 @@ public:
   /* Call for a graceful application exit. */
   void breakLoop();
 
-  /* A thread, preferrably the main thread of the application, should rest in this
+  /* A thread, preferably the main thread of the application, should rest in this
    * function.
    */
   void tickerLoop();

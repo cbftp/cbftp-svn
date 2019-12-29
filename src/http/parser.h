@@ -37,7 +37,7 @@ public:
   virtual ~Parser();
 
   /* Feed incoming data from a socket into the parser. Returns false if a parsing
-   * error occured.
+   * error occurred.
    */
   Result feed(const char* data, size_t datalen);
 

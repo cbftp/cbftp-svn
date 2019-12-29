@@ -70,7 +70,7 @@ void SkipListScreen::redraw() {
   if (!globalskip) {
     ui->printStr(y++, 1, "This skiplist is local and will fall through to the global skiplist if no match is found.");
   }
-  ui->printStr(y++, 1, "Valid wildcard expressions are *  and ?, unless regex is used.");
+  ui->printStr(y++, 1, "Valid wildcard expressions are * and ?, unless regex is used.");
   ui->printStr(y++, 1, "The pattern list is parsed from top to bottom and the first match applies. Case insensitive.");
   y += 4;
   unsigned int listspan = row - y - 1;
