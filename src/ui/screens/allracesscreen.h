@@ -34,5 +34,6 @@ private:
   unsigned int ypos;
   int temphighlightline;
   std::shared_ptr<Race> abortrace;
-  std::shared_ptr<Race> abortdeleterace;
+  std::shared_ptr<Race> abortdeleteraceinc;
+  std::shared_ptr<Race> abortdeleteraceall;
 };

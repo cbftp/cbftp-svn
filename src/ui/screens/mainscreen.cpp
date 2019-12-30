@@ -40,7 +40,7 @@ void MainScreen::initialize(unsigned int row, unsigned int col) {
   baselegendtext = "[Down] Next option - [Up] Previous option - [A]dd site - [G]lobal settings - Event [l]og - [t]ransfers - All [r]aces - All transfer[j]obs - toggle [U]dp - Browse lo[c]al - General [i]nfo - [s]ections - [S]nake - [Esc] back to browsing";
   sitelegendtext = baselegendtext + " - [Tab] split browse - [right/b]rowse site - ra[w] command - [E]dit site - [C]opy site - [D]elete site - [q]uick jump - [L]ogin all slots - [0-9] Browse to section";
   preparelegendtext = baselegendtext + " - [Enter/s] start job - [Del] delete race";
-  spreadjoblegendtext = baselegendtext + " - [Enter] Details - a[B]ort job - [T]ransfers for job - [R]eset job - [z] Abort job and delete own files on incomplete sites";
+  spreadjoblegendtext = baselegendtext + " - [Enter] Details - a[B]ort job - [T]ransfers for job - [R]eset job - [z] Abort job and delete own files on incomplete sites - [Z] Abort job and delete own files on ALL involved sites";
   transferjoblegendtext = baselegendtext + " - [Enter] Details - a[B]ort job - [T]ransfers for job";
   gotolegendtext = "[Any] Go to matching first letter in site list - [Esc] Cancel";
   autoupdate = true;
@@ -219,8 +219,11 @@ void MainScreen::command(const std::string & command) {
     else if (!!abortjob) {
       global->getEngine()->abortTransferJob(abortjob);
     }
-    else if (!!abortdeleterace) {
-      global->getEngine()->deleteOnAllIncompleteSites(abortdeleterace, false);
+    else if (!!abortdeleteraceinc) {
+      global->getEngine()->deleteOnAllSites(abortdeleteraceinc, false, false);
+    }
+    else if (!!abortdeleteraceall) {
+      global->getEngine()->deleteOnAllSites(abortdeleteraceall, false, true);
     }
     else {
       global->getSiteLogicManager()->deleteSiteLogic(deletesite);
@@ -230,7 +233,8 @@ void MainScreen::command(const std::string & command) {
   }
   abortrace.reset();
   abortjob.reset();
-  abortdeleterace.reset();
+  abortdeleteraceinc.reset();
+  abortdeleteraceall.reset();
   ui->redraw();
   ui->setInfo();
 }
@@ -445,13 +449,22 @@ bool MainScreen::keyPressed(unsigned int ch) {
       return true;
     case 'z':
       if (msosj.isFocused() && msosj.size() > 0) {
-        abortdeleterace = global->getEngine()->getRace(msosj.getElement(msosj.getSelectionPointer())->getId());
-        if (!!abortdeleterace) {
-          if (abortdeleterace->getStatus() == RaceStatus::RUNNING) {
-            ui->goConfirmation("Do you really want to abort the race " + abortdeleterace->getName() + " and delete your own files on all incomplete sites?");
+        std::shared_ptr<Race> race = global->getEngine()->getRace(msosj.getElement(msosj.getSelectionPointer())->getId());
+        if (!!race && race->getStatus() == RaceStatus::RUNNING) {
+          abortdeleteraceinc = race;
+          ui->goConfirmation("Do you really want to abort the race " + abortdeleteraceinc->getName() + " and delete your own files on all incomplete sites?");
+        }
+      }
+      return true;
+    case 'Z':
+      if (msosj.isFocused() && msosj.size() > 0) {
+        abortdeleteraceall = global->getEngine()->getRace(msosj.getElement(msosj.getSelectionPointer())->getId());
+        if (!!abortdeleteraceall) {
+          if (abortdeleteraceall->getStatus() == RaceStatus::RUNNING) {
+            ui->goConfirmation("Do you really want to abort the race " + abortdeleteraceall->getName() + " and delete your own files on ALL involved sites?");
           }
           else {
-            ui->goConfirmation("Do you really want to delete your own files in " + abortdeleterace->getName() + " on all involved sites?");
+            ui->goConfirmation("Do you really want to delete your own files in " + abortdeleteraceall->getName() + " on ALL involved sites?");
           }
         }
       }

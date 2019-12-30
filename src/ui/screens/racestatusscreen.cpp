@@ -79,8 +79,8 @@ char getFileChar(bool exists, bool owner, bool upload, bool download, bool affil
 
 RaceStatusScreen::RaceStatusScreen(Ui * ui) {
   this->ui = ui;
-  defaultlegendtext = "[c/Esc] Return - [Del] Remove site from job - [A]dd site to job - [s]how small dirs - [r]eset job - Hard [R]eset job - A[B]ort job - [d]elete site and own files from job - [D]elete site and all files from job - [t]transfers - [T]ransfers for site - [b]rowse - [E]dit site - [z] Abort job and delete own files on incomplete sites";
-  finishedlegendtext = "[c/Esc] Return - [Del] Remove site from job - [A]dd site to job - [s]how small dirs - [r]eset job - Hard [R]eset job - [d]elete own files - [D]elete all files - [t]ransfers - [T]ransfers for site - [b]rowse - [E]dit site - [z] Delete own files on all sites";
+  defaultlegendtext = "[c/Esc] Return - [Del] Remove site from job - [A]dd site to job - [s]how small dirs - [r]eset job - Hard [R]eset job - A[B]ort job - [d]elete site and own files from job - [D]elete site and all files from job - [t]transfers - [T]ransfers for site - [b]rowse - [E]dit site - [z] Abort job and delete own files on incomplete sites - [Z] Abort job and delete own files on ALL involved sites";
+  finishedlegendtext = "[c/Esc] Return - [Del] Remove site from job - [A]dd site to job - [s]how small dirs - [r]eset job - Hard [R]eset job - [d]elete own files - [D]elete all files - [t]ransfers - [T]ransfers for site - [b]rowse - [E]dit site - [Z] Delete own files on ALL involved sites";
 }
 
 RaceStatusScreen::~RaceStatusScreen() {
@@ -101,6 +101,7 @@ void RaceStatusScreen::initialize(unsigned int row, unsigned int col, unsigned i
   awaitingremovesitedelownfiles = false;
   awaitingremovesitedelallfiles = false;
   awaitingabort = false;
+  awaitingdeleteowninc = false;
   awaitingdeleteownall = false;
   currnumsubpaths = 0;
   currguessedsize = 0;
@@ -387,8 +388,11 @@ void RaceStatusScreen::command(const std::string & command, const std::string & 
       finished = true;
       ui->setLegend();
     }
+    else if (awaitingdeleteowninc) {
+      global->getEngine()->deleteOnAllSites(race, false, false);
+    }
     else if (awaitingdeleteownall) {
-      global->getEngine()->deleteOnAllIncompleteSites(race, false);
+      global->getEngine()->deleteOnAllSites(race, false, true);
     }
   }
   else if (command == "returnselectitems") {
@@ -426,6 +430,7 @@ void RaceStatusScreen::command(const std::string & command, const std::string & 
   awaitingremovesitedelownfiles = false;
   awaitingremovesitedelallfiles = false;
   awaitingabort = false;
+  awaitingdeleteowninc = false;
   awaitingdeleteownall = false;
   ui->redraw();
 }
@@ -498,12 +503,18 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       }
       return true;
     case 'z':
-      awaitingdeleteownall = true;
       if (race->getStatus() == RaceStatus::RUNNING) {
+        awaitingdeleteowninc = true;
         ui->goConfirmation("Do you really want to abort the race " + race->getName() + " and delete your own files on all incomplete sites?");
       }
+      return true;
+    case 'Z':
+      awaitingdeleteownall = true;
+      if (race->getStatus() == RaceStatus::RUNNING) {
+        ui->goConfirmation("Do you really want to abort the race " + race->getName() + " and delete your own files on ALL involved sites?");
+      }
       else {
-        ui->goConfirmation("Do you really want to delete your own files in " + race->getName() + " on all involved sites?");
+        ui->goConfirmation("Do you really want to delete your own files in " + race->getName() + " on ALL involved sites?");
       }
       return true;
     case 'A':
