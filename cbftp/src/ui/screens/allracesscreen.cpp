@@ -92,13 +92,17 @@ void AllRacesScreen::command(const std::string & command, const std::string & ar
     if (!!abortrace) {
       global->getEngine()->abortRace(abortrace);
     }
-    else if (!!abortdeleterace) {
-      global->getEngine()->deleteOnAllIncompleteSites(abortdeleterace, false);
+    else if (!!abortdeleteraceinc) {
+      global->getEngine()->deleteOnAllSites(abortdeleteraceinc, false, false);
+    }
+    else if (!!abortdeleteraceall) {
+      global->getEngine()->deleteOnAllSites(abortdeleteraceall, false, true);
     }
     ui->update();
   }
   abortrace.reset();
-  abortdeleterace.reset();
+  abortdeleteraceinc.reset();
+  abortdeleteraceall.reset();
 }
 
 bool AllRacesScreen::keyPressed(unsigned int ch) {
@@ -169,13 +173,22 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
       return true;
     case 'z':
       if (hascontents) {
-        abortdeleterace = global->getEngine()->getRace(table.getElement(table.getSelectionPointer())->getId());
-        if (!!abortdeleterace) {
-          if (abortdeleterace->getStatus() == RaceStatus::RUNNING) {
-            ui->goConfirmation("Do you really want to abort the race " + abortdeleterace->getName() + " and delete your own files on all incomplete sites?");
+        std::shared_ptr<Race> race = global->getEngine()->getRace(table.getElement(table.getSelectionPointer())->getId());
+        if (!!race && race->getStatus() == RaceStatus::RUNNING) {
+          abortdeleteraceinc = race;
+          ui->goConfirmation("Do you really want to abort the race " + abortdeleteraceinc->getName() + " and delete your own files on all incomplete sites?");
+        }
+      }
+      return true;
+    case 'Z':
+      if (hascontents) {
+        abortdeleteraceall = global->getEngine()->getRace(table.getElement(table.getSelectionPointer())->getId());
+        if (!!abortdeleteraceall) {
+          if (abortdeleteraceall->getStatus() == RaceStatus::RUNNING) {
+            ui->goConfirmation("Do you really want to abort the race " + abortdeleteraceall->getName() + " and delete your own files on ALL involved sites?");
           }
           else {
-            ui->goConfirmation("Do you really want to delete your own files in " + abortdeleterace->getName() + " on all involved sites?");
+            ui->goConfirmation("Do you really want to delete your own files in " + abortdeleteraceall->getName() + " on ALL involved sites?");
           }
         }
       }
@@ -210,7 +223,7 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
 }
 
 std::string AllRacesScreen::getLegendText() const {
-  return "[Esc/c] Return - [Enter] Details - [Up/Down/Pgup/Pgdn/Home/End] Navigate - [r]eset job - Hard [R]eset job - A[B]ort job - [t]ransfer for job - [z] Abort job and delete own files on incomplete sites";
+  return "[Esc/c] Return - [Enter] Details - [Up/Down/Pgup/Pgdn/Home/End] Navigate - [r]eset job - Hard [R]eset job - A[B]ort job - [t]ransfer for job - [z] Abort job and delete own files on incomplete sites - [Z] Abort job and delete own files on ALL involved sites";
 }
 
 std::string AllRacesScreen::getInfoLabel() const {

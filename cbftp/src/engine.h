@@ -54,8 +54,7 @@ public:
   void removeSiteFromRaceDeleteFiles(const std::shared_ptr<Race> &, const std::string &, bool);
   void abortRace(const std::shared_ptr<Race> &);
   void resetRace(const std::shared_ptr<Race> &, bool);
-  void deleteOnAllSites(const std::shared_ptr<Race> &, bool allfiles = false);
-  void deleteOnAllIncompleteSites(const std::shared_ptr<Race> &, bool allfiles = false);
+  void deleteOnAllSites(const std::shared_ptr<Race> &, bool allfiles = false, bool deleteoncomplete = false);
   void deleteOnSites(const std::shared_ptr<Race> &, std::list<std::shared_ptr<Site> >, bool allfiles = false);
   void abortTransferJob(const std::shared_ptr<TransferJob> &);
   void jobFileListRefreshed(SiteLogic *, const std::shared_ptr<CommandOwner> & commandowner, const std::shared_ptr<FileList>& fl);

@@ -427,7 +427,7 @@ void RemoteCommandHandler::commandDelete(const std::vector<std::string> & messag
     return;
   }
   if (!sitestring.length()) {
-    global->getEngine()->deleteOnAllSites(race, false);
+    global->getEngine()->deleteOnAllSites(race, false, true);
     return;
   }
   std::list<std::shared_ptr<SiteLogic> > sitelogics = getSiteLogicList(sitestring);
@@ -449,7 +449,7 @@ void RemoteCommandHandler::commandAbortDeleteIncomplete(const std::vector<std::s
     global->getEventLog()->log("RemoteCommandHandler", "No matching race: " + release);
     return;
   }
-  global->getEngine()->deleteOnAllIncompleteSites(race, false);
+  global->getEngine()->deleteOnAllSites(race, false, false);
 }
 
 void RemoteCommandHandler::commandReset(const std::vector<std::string> & message, bool hard) {

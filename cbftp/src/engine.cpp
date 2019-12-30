@@ -656,18 +656,10 @@ bool Engine::transferExpectedSoon(ScoreBoardElement * sbe) const {
   return true;
 }
 
-void Engine::deleteOnAllSites(const std::shared_ptr<Race> & race, bool allfiles) {
+void Engine::deleteOnAllSites(const std::shared_ptr<Race> & race, bool allfiles, bool deleteoncomplete) {
   std::list<std::shared_ptr<Site> > sites;
   for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
-    sites.push_back(it->second->getSite());
-  }
-  deleteOnSites(race, sites, allfiles);
-}
-
-void Engine::deleteOnAllIncompleteSites(const std::shared_ptr<Race> & race, bool allfiles) {
-  std::list<std::shared_ptr<Site> > sites;
-  for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
-    if (isIncompleteEnoughForDelete(race, it->first)) {
+    if (deleteoncomplete || isIncompleteEnoughForDelete(race, it->first)) {
       sites.push_back(it->second->getSite());
     }
   }
