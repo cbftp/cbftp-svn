@@ -60,6 +60,13 @@ PrioType getPrioType(File * f) {
   return PrioType::NORMAL;
 }
 
+struct AddSite {
+  AddSite(const std::string& name, const std::shared_ptr<SiteLogic>& sl, bool downloadonly) : name(name), sl(sl), downloadonly(downloadonly) {}
+  std::string name;
+  std::shared_ptr<SiteLogic> sl;
+  bool downloadonly;
+};
+
 }
 
 Engine::Engine() :
@@ -85,7 +92,7 @@ Engine::~Engine() {
 
 }
 
-std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & release, const std::string & section, const std::list<std::string> & sites) {
+std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& release, const std::string& section, const std::list<std::string>& sites, const std::list<std::string>& dlonlysites) {
   if (release.empty()) {
     global->getEventLog()->log("Engine", "Spread job skipped due to missing release name.");
     return std::shared_ptr<Race>();
@@ -119,52 +126,50 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & rele
   if (!race) {
     race = std::make_shared<Race>(nextid++, static_cast<SpreadProfile>(profile), release, section);
   }
-  std::list<std::string> addsites;
-  std::list<std::shared_ptr<SiteLogic> > addsiteslogics;
+  std::list<AddSite> addsites;
   bool globalskipped = sectionptr->getSkipList().check(release, true, false).action == SKIPLIST_DENY;
   std::list<std::string> skippedsites;
-  for (std::list<std::string>::const_iterator it = sites.begin(); it != sites.end(); it++) {
-    const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(*it);
+  std::unordered_map<std::string, bool> allsites; // sitename, download-only
+  for (const std::string& site : sites) {
+    allsites[site] = false;
+  }
+  for (const std::string& site : dlonlysites) {
+    allsites[site] = true;
+  }
+  for (const std::pair<std::string, bool>& site : allsites) {
+    const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site.first);
     if (!sl) {
-      global->getEventLog()->log("Engine", "Trying to use a nonexisting site: " + *it);
+      global->getEventLog()->log("Engine", "Trying to use a nonexisting site: " + site.first);
       continue;
     }
     if (sl->getSite()->getDisabled()) {
-      global->getEventLog()->log("Engine", "Skipping disabled site: " + *it);
+      global->getEventLog()->log("Engine", "Skipping disabled site: " + site.first);
       continue;
     }
-    if (sl->getSite()->isAffiliated(race->getGroup()) &&
-        sl->getSite()->getAllowDownload() == SiteAllowTransfer::SITE_ALLOW_TRANSFER_NO)
-    {
-      global->getEventLog()->log("Engine", "Skipping site because of affil match and download disabled: " + *it);
+    bool downloadonly = site.second || sl->getSite()->isAffiliated(race->getGroup());
+    if (downloadonly && sl->getSite()->getAllowDownload() == SiteAllowTransfer::SITE_ALLOW_TRANSFER_NO) {
+      global->getEventLog()->log("Engine", "Skipping site because of download-only mode and download disabled: " + site.first);
       continue;
     }
     if (!sl->getSite()->hasSection(section)) {
       global->getEventLog()->log("Engine", "Trying to use an undefined section: " +
-          section + " on " + *it);
+          section + " on " + site.first);
       continue;
     }
     SkipListMatch match = sl->getSite()->getSkipList().check((sl->getSite()->getSectionPath(section) / race->getName()).toString(),
                                                              true, false, &sectionptr->getSkipList());
-    if (match.action == SKIPLIST_DENY && !sl->getSite()->isAffiliated(race->getGroup())) {
+    if (match.action == SKIPLIST_DENY && !downloadonly) {
       skippedsites.push_back(sl->getSite()->getName());
       continue;
     }
     bool add = true;
-    for (std::list<std::string>::iterator it2 = addsites.begin(); it2 != addsites.end(); it2++) {
-      if (*it == *it2) {
-        add = false;
-        break;
-      }
-    }
     if (add && append) {
-      if (!!race->getSiteRace(*it)) {
+      if (!!race->getSiteRace(site.first)) {
         continue;
       }
     }
     if (add) {
-      addsites.push_back(*it);
-      addsiteslogics.push_back(sl);
+      addsites.emplace_back(site.first, sl, downloadonly);
     }
   }
   if (!addsites.empty()) {
@@ -180,12 +185,12 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & rele
   }
   bool noupload = true;
   bool nodownload = true;
-  for (std::list<std::shared_ptr<SiteLogic> >::const_iterator it = addsiteslogics.begin(); it != addsiteslogics.end(); ++it) {
-    if ((*it)->getSite()->getAllowUpload() == SITE_ALLOW_TRANSFER_YES && !(*it)->getSite()->isAffiliated(race->getGroup())) {
+  for (const AddSite& site : addsites) {
+    if (site.sl->getSite()->getAllowUpload() == SITE_ALLOW_TRANSFER_YES && !site.downloadonly) {
       noupload = false;
     }
-    if ((*it)->getSite()->getAllowDownload() == SITE_ALLOW_TRANSFER_YES ||
-        ((*it)->getSite()->getAllowDownload() == SITE_ALLOW_DOWNLOAD_MATCH_ONLY && (*it)->getSite()->isAffiliated(race->getGroup())))
+    if (site.sl->getSite()->getAllowDownload() == SITE_ALLOW_TRANSFER_YES ||
+        (site.sl->getSite()->getAllowDownload() == SITE_ALLOW_DOWNLOAD_MATCH_ONLY && site.downloadonly))
     {
       nodownload = false;
     }
@@ -205,9 +210,13 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & rele
     if (profile == SPREAD_PREPARE) {
       global->getEventLog()->log("Engine", "Preparing spread job: " + section + "/" + release +
                 " on " + std::to_string((int)addsites.size()) + " sites.");
-      preparedraces.push_back(std::make_shared<PreparedRace>(race->getId(), release, section, addsites, preparedraceexpirytime));
-      for (std::list<std::shared_ptr<SiteLogic> >::const_iterator ait = addsiteslogics.begin(); ait != addsiteslogics.end(); ait++) {
-        (*ait)->activateAll();
+      std::list<std::pair<std::string, bool>> preparesites;
+      for (const AddSite& site : addsites) {
+        preparesites.emplace_back(site.name, site.downloadonly);
+      }
+      preparedraces.push_back(std::make_shared<PreparedRace>(race->getId(), release, section, preparesites, preparedraceexpirytime));
+      for (const AddSite& site : addsites) {
+        site.sl->activateAll();
       }
       return std::shared_ptr<Race>();
     }
@@ -227,8 +236,8 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & rele
         }
       }
     }
-    for (std::list<std::string>::iterator it = addsites.begin(); it != addsites.end(); it++) {
-      addSiteToRace(race, *it);
+    for (const AddSite& site : addsites) {
+      addSiteToRace(race, site.name, site.downloadonly);
     }
     if (!append) {
       currentraces.push_back(race);
@@ -255,48 +264,34 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & rele
   return race;
 }
 
-std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string & release, const std::string & section) {
-  std::list<std::string> sites;
-  for (std::vector<std::shared_ptr<Site> >::const_iterator it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
-    if ((*it)->hasSection(section) && !(*it)->getDisabled()) {
-      sites.push_back((*it)->getName());
-    }
-  }
-  return newSpreadJob(profile, release, section, sites);
+std::shared_ptr<Race> Engine::newRace(const std::string& release, const std::string& section, const std::list<std::string>& sites, const std::list<std::string>& dlonlysites) {
+  return newSpreadJob(SPREAD_RACE, release, section, sites, dlonlysites);
 }
 
-std::shared_ptr<Race> Engine::newRace(const std::string & release, const std::string & section, const std::list<std::string> & sites) {
-  return newSpreadJob(SPREAD_RACE, release, section, sites);
+std::shared_ptr<Race> Engine::newDistribute(const std::string& release, const std::string& section, const std::list<std::string>& sites, const std::list<std::string>& dlonlysites) {
+  return newSpreadJob(SPREAD_DISTRIBUTE, release, section, sites, dlonlysites);
 }
 
-std::shared_ptr<Race> Engine::newRace(const std::string & release, const std::string & section) {
-  return newSpreadJob(SPREAD_RACE, release, section);
-}
-
-std::shared_ptr<Race> Engine::newDistribute(const std::string & release, const std::string & section, const std::list<std::string> & sites) {
-  return newSpreadJob(SPREAD_DISTRIBUTE, release, section, sites);
-}
-
-std::shared_ptr<Race> Engine::newDistribute(const std::string & release, const std::string & section) {
-  return newSpreadJob(SPREAD_DISTRIBUTE, release, section);
-}
-
-bool Engine::prepareRace(const std::string & release, const std::string & section, const std::list<std::string> & sites) {
+bool Engine::prepareRace(const std::string & release, const std::string& section, const std::list<std::string>& sites, const std::list<std::string>& dlonlysites) {
   size_t preparedbefore = preparedraces.size();
-  std::shared_ptr<Race> race = newSpreadJob(SPREAD_PREPARE, release, section, sites);
-  return preparedraces.size() > preparedbefore || race;
-}
-
-bool Engine::prepareRace(const std::string & release, const std::string & section) {
-  size_t preparedbefore = preparedraces.size();
-  std::shared_ptr<Race> race = newSpreadJob(SPREAD_PREPARE, release, section);
+  std::shared_ptr<Race> race = newSpreadJob(SPREAD_PREPARE, release, section, sites, dlonlysites);
   return preparedraces.size() > preparedbefore || race;
 }
 
 void Engine::startPreparedRace(unsigned int id) {
   for (std::list<std::shared_ptr<PreparedRace> >::iterator it = preparedraces.begin(); it != preparedraces.end(); it++) {
     if ((*it)->getId() == id) {
-      newRace((*it)->getRelease(), (*it)->getSection(), (*it)->getSites());
+      std::list<std::string> sites;
+      std::list<std::string> dlonlysites;
+      for (const std::pair<std::string, bool>& site : (*it)->getSites()) {
+        if (site.second) {
+          dlonlysites.push_back(site.first);
+        }
+        else {
+          sites.push_back(site.first);
+        }
+      }
+      newRace((*it)->getRelease(), (*it)->getSection(), sites, dlonlysites);
       preparedraces.erase(it);
       return;
     }
@@ -315,8 +310,7 @@ void Engine::deletePreparedRace(unsigned int id) {
 void Engine::startLatestPreparedRace() {
   if (preparedraces.size()) {
     std::shared_ptr<PreparedRace> preparedrace = preparedraces.back();
-    preparedraces.pop_back();
-    newRace(preparedrace->getRelease(), preparedrace->getSection(), preparedrace->getSites());
+    startPreparedRace(preparedraces.back()->getId());
   }
 }
 
@@ -962,10 +956,10 @@ void Engine::addToScoreBoard(const std::shared_ptr<FileList>& fl, const std::sha
       continue;
     }
     SitePriority cmppriority = cmpsite->getPriority();
-    if (raceTransferPossible(cmpsl, sl, race) && !flskip) {
+    if (raceTransferPossible(cmpsl, cmpsr, sl, sr, race) && !flskip) {
       addToScoreBoardForPair(cmpsl, cmpsite, cmpsr, cmpfl, sl, site, sr, fl, skip, secskip, race, subpathpath, priority, racemode);
     }
-    if (fl->getNumUploadedFiles() && raceTransferPossible(sl, cmpsl, race)) {
+    if (fl->getNumUploadedFiles() && raceTransferPossible(sl, sr, cmpsl, cmpsr, race)) {
       addToScoreBoardForPair(sl, site, sr, fl, cmpsl, cmpsite, cmpsr, cmpfl, cmpskip, secskip, race, subpathpath, cmppriority, racemode);
     }
   }
@@ -1029,10 +1023,10 @@ void Engine::updateScoreBoard() {
     const SkipList & secskip = race->getSectionSkipList();
     for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator cmpit = race->begin(); cmpit != race->end(); cmpit++) {
       const std::shared_ptr<SiteLogic> & cmpsl = cmpit->second;
-      bool regulartransferpossible = raceTransferPossible(sl, cmpsl, race);
       const std::shared_ptr<Site> & cmpsite = cmpsl->getSite();
       const SkipList & cmpskip = cmpsite->getSkipList();
       const std::shared_ptr<SiteRace> & cmpsr = cmpit->first;
+      bool regulartransferpossible = raceTransferPossible(sl, sr, cmpsl, cmpsr, race);
       std::shared_ptr<FileList> cmprootfl = cmpsr->getFileListForPath("");
       if (!subpath.empty()) {
         SkipListMatch dirmatch = cmpskip.check(subpath, true, true, &secskip);
@@ -1064,7 +1058,7 @@ void Engine::updateScoreBoard() {
         if (f == nullptr) { // special case when file has been deleted, reverse transfer from cmp->changed
           scoreboard->remove(name, fl, cmpfl);
           failboard->remove(name, fl, cmpfl);
-          if (cmpfailed || !raceTransferPossible(cmpsl, sl, race)) {
+          if (cmpfailed || !raceTransferPossible(cmpsl, cmpsr, sl, sr, race)) {
             continue;
           }
           f = cmpfl->getFile(name);
@@ -1321,7 +1315,7 @@ void Engine::issueOptimalTransfers() {
       continue;
     }
     TransferType type(TransferType::REGULAR);
-    if (sbe->getSourceSiteRace()->isAffil()) {
+    if (sbe->getSourceSiteRace()->isDownloadOnly()) {
       type = TransferType::PRE;
     }
     else if (sbe->getSourceSiteRace()->isDone()) {
@@ -1539,15 +1533,19 @@ void Engine::preSeedPotentialData(const std::shared_ptr<Race>& race) {
   std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator dstit;
   int maxpointssizeandowned = getMaxPointsFileSize() + getMaxPointsPercentageOwned();
   for (srcit = race->begin(); srcit != race->end(); srcit++) {
+    const std::shared_ptr<SiteRace>& srs = srcit->first;
     const std::shared_ptr<SiteLogic> & sls = srcit->second;
     if (sls->getSite()->getAllowDownload() == SITE_ALLOW_TRANSFER_NO ||
-        (sls->getSite()->getAllowDownload() == SITE_ALLOW_DOWNLOAD_MATCH_ONLY && !sls->getSite()->isAffiliated(race->getGroup())))
+        (sls->getSite()->getAllowDownload() == SITE_ALLOW_DOWNLOAD_MATCH_ONLY && !srcit->first->isDownloadOnly()))
     {
       continue;
     }
     for (dstit = race->begin(); dstit != race->end(); dstit++) {
+      const std::shared_ptr<SiteRace>& srd = dstit->first;
       const std::shared_ptr<SiteLogic> & sld = dstit->second;
-      if (!raceTransferPossible(sls, sld, race)) continue;
+      if (!raceTransferPossible(sls, srs, sld, srd, race)) {
+        continue;
+      }
       int priopoints = getPriorityPoints(sld->getSite()->getPriority());
       int speedpoints = getSpeedPoints(sls->getSite()->getAverageSpeed(sld->getSite()->getName()));
       for (unsigned int i = 0; i < sld->getSite()->getMaxUp(); ++i) {
@@ -1557,12 +1555,12 @@ void Engine::preSeedPotentialData(const std::shared_ptr<Race>& race) {
   }
 }
 
-bool Engine::raceTransferPossible(const std::shared_ptr<SiteLogic>& sls, const std::shared_ptr<SiteLogic>& sld, const std::shared_ptr<Race>& race) const {
+bool Engine::raceTransferPossible(const std::shared_ptr<SiteLogic>& sls, const std::shared_ptr<SiteRace>& srs, const std::shared_ptr<SiteLogic>& sld, const std::shared_ptr<SiteRace>& srd, const std::shared_ptr<Race>& race) const {
   if (sls == sld) return false;
   const std::shared_ptr<Site> & srcsite = sls->getSite();
   const std::shared_ptr<Site> & dstsite = sld->getSite();
   if (srcsite->getAllowDownload() == SITE_ALLOW_TRANSFER_NO ||
-      (srcsite->getAllowDownload() == SITE_ALLOW_DOWNLOAD_MATCH_ONLY && !srcsite->isAffiliated(race->getGroup())))
+      (srcsite->getAllowDownload() == SITE_ALLOW_DOWNLOAD_MATCH_ONLY && !srs->isDownloadOnly()))
   {
     return false;
   }
@@ -1572,7 +1570,7 @@ bool Engine::raceTransferPossible(const std::shared_ptr<SiteLogic>& sls, const s
   if (!srcsite->isAllowedTargetSite(dstsite)) {
     return false;
   }
-  if (dstsite->isAffiliated(race->getGroup()) && race->getProfile() != SPREAD_DISTRIBUTE) {
+  if (srd->isDownloadOnly() && race->getProfile() != SPREAD_DISTRIBUTE) {
     return false;
   }
   if (srcsite->hasBrokenPASV() && dstsite->hasBrokenPASV()) {
@@ -1814,13 +1812,14 @@ std::shared_ptr<Race> Engine::getCurrentRace(const std::string & release) const 
   return std::shared_ptr<Race>();
 }
 
-void Engine::addSiteToRace(const std::shared_ptr<Race>& race, const std::string& site) {
+void Engine::addSiteToRace(const std::shared_ptr<Race>& race, const std::string& site, bool downloadonly) {
   const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site);
+  bool affil = sl->getSite()->isAffiliated(race->getGroup());
   if (sl->getSite()->getSkipList().check((sl->getSite()->getSectionPath(race->getSection()) / race->getName()).toString(),
                                          true, false, &race->getSectionSkipList()).action != SKIPLIST_DENY ||
-      sl->getSite()->isAffiliated(race->getGroup()))
+      affil || downloadonly)
   {
-    std::shared_ptr<SiteRace> sr = sl->addRace(race, race->getSection(), race->getName());
+    std::shared_ptr<SiteRace> sr = sl->addRace(race, race->getSection(), race->getName(), affil || downloadonly);
     race->addSite(sr, sl);
   }
 }

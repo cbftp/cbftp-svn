@@ -29,7 +29,7 @@ enum SelectSitesMode {
   SELECT_DELETE_OWN
 };
 
-char getFileChar(bool exists, bool owner, bool upload, bool download, bool affil) {
+char getFileChar(bool exists, bool owner, bool upload, bool download, bool downloadonly) {
   char printchar = '_';
   if (upload) {
     if (owner) {
@@ -63,7 +63,7 @@ char getFileChar(bool exists, bool owner, bool upload, bool download, bool affil
         printchar = 'd';
       }
       else if (exists) {
-        if (affil) {
+        if (downloadonly) {
           printchar = 'p';
         }
         else {
@@ -115,8 +115,14 @@ void RaceStatusScreen::redraw() {
   ui->printStr(1, 1, "Section: " + race->getSection());
   ui->printStr(1, 20, "Sites: " + race->getSiteListText());
   std::list<std::string> incompletesites = getIncompleteSites();
+  std::list<std::string> dlonlysites = getDownloadOnlySites();
+  std::string dlonlystr;
+  if (!dlonlysites.empty()) {
+    dlonlystr = "Download-only: " + util::join(dlonlysites, ",") + "  ";
+    ui->printStr(3, 18, dlonlystr);
+  }
   if (!incompletesites.empty()) {
-    ui->printStr(3, 18, "Incomplete on: " + util::join(incompletesites, ","));
+    ui->printStr(3, 18 + dlonlystr.length(), "Incomplete on: " + util::join(incompletesites, ","));
   }
   currincomplete = incompletesites.size();
   std::unordered_set<std::string> currsubpaths = race->getSubPaths();
@@ -315,7 +321,7 @@ void RaceStatusScreen::update() {
       trimuser = user.substr(0, 8);
     }
     std::string sitename = sl->getSite()->getName();
-    bool affil = sl->getSite()->isAffiliated(race->getGroup());
+    bool downloadonly = sr->isDownloadOnly();
     mso.addTextButton(y, x, sitename, sitename);
     for (std::list<std::string>::iterator it2 = subpaths.begin(); it2 != subpaths.end(); it2++) {
       std::string origsubpath = *it2;
@@ -356,7 +362,7 @@ void RaceStatusScreen::update() {
           if (file->isDownloading()) {
             download = true;
           }
-          printchar = getFileChar(exists, owner, upload, download, affil);
+          printchar = getFileChar(exists, owner, upload, download, downloadonly);
         }
         ui->printChar(y, filex, printchar, exists);
       }
@@ -416,7 +422,7 @@ void RaceStatusScreen::command(const std::string & command, const std::string & 
     }
     if (selectsitesmode == SELECT_ADD) {
       for (std::list<std::shared_ptr<Site> >::iterator it = selectedsites.begin(); it != selectedsites.end(); it++) {
-        global->getEngine()->addSiteToRace(race, (*it)->getName());
+        global->getEngine()->addSiteToRace(race, (*it)->getName(), false);
       }
     }
     else if (selectsitesmode == SELECT_DELETE) {
@@ -615,4 +621,14 @@ std::list<std::string> RaceStatusScreen::getIncompleteSites() const {
     }
   }
   return incompletesites;
+}
+
+std::list<std::string> RaceStatusScreen::getDownloadOnlySites() const {
+  std::list<std::string> dlonlysites;
+  for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
+    if (it->first->isDownloadOnly()) {
+      dlonlysites.push_back(it->first->getSiteName());
+    }
+  }
+  return dlonlysites;
 }

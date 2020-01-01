@@ -666,10 +666,10 @@ void MainScreen::addPreparedRaceDetails(unsigned int y, MenuSelectOption & mso, 
   std::string section = preparedrace->getSection();
   std::string release = preparedrace->getRelease();
   std::string ttl = util::simpleTimeFormat(preparedrace->getRemainingTime());
-  std::list<std::string> sites = preparedrace->getSites();
+  std::list<std::pair<std::string, bool>> sites = preparedrace->getSites();
   std::string sitestr;
-  for (std::list<std::string>::const_iterator it = sites.begin(); it != sites.end(); it++) {
-    sitestr += *it + ",";
+  for (const std::pair<std::string, bool>& site : sites) {
+    sitestr += site.first + ",";
   }
   if (sitestr.length() > 0) {
     sitestr = sitestr.substr(0, sitestr.length() - 1);

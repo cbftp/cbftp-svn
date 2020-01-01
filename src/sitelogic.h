@@ -89,7 +89,7 @@ class SiteLogic : public Core::EventReceiver {
     SiteLogic(const std::string &);
     ~SiteLogic();
     void runInstance();
-    std::shared_ptr<SiteRace> addRace(const std::shared_ptr<Race>&, const std::string&, const std::string&);
+    std::shared_ptr<SiteRace> addRace(const std::shared_ptr<Race>&, const std::string&, const std::string&, bool downloadonly);
     void resetRace(const std::shared_ptr<SiteRace> & race);
     void addTransferJob(std::shared_ptr<SiteTransferJob> & tj);
     void tick(int);

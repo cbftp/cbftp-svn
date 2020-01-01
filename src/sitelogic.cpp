@@ -126,9 +126,9 @@ void SiteLogic::activateAll() {
   }
 }
 
-std::shared_ptr<SiteRace> SiteLogic::addRace(const std::shared_ptr<Race>& enginerace, const std::string & section, const std::string & release) {
+std::shared_ptr<SiteRace> SiteLogic::addRace(const std::shared_ptr<Race>& enginerace, const std::string & section, const std::string & release, bool downloadonly) {
   std::shared_ptr<SiteRace> race = std::make_shared<SiteRace>(enginerace, site->getName(), site->getSectionPath(section),
-                                                              release, site->getUser(), site->getSkipList(), site->isAffiliated(enginerace->getGroup()));
+                                                              release, site->getUser(), site->getSkipList(), downloadonly);
   currentraces.push_back(race);
   activateAll();
   return race;
@@ -625,7 +625,7 @@ void SiteLogic::commandFail(int id, FailureType failuretype) {
       if (conns[id]->hasMKDCWDTarget()) {
         if (site->getAllowUpload() == SITE_ALLOW_TRANSFER_NO ||
             (!!currentco && currentco->classType() == COMMANDOWNER_SITERACE &&
-             site->isAffiliated(std::static_pointer_cast<SiteRace>(currentco)->getGroup())))
+             std::static_pointer_cast<SiteRace>(currentco)->isDownloadOnly()))
         {
           conns[id]->finishMKDCWDTarget();
         }
@@ -1614,7 +1614,7 @@ bool SiteLogic::lockTransferConn(const std::shared_ptr<FileList>& fl, int* ret, 
   if (isdownload) {
     if (!!co) {
       if (co->classType() == COMMANDOWNER_SITERACE) {
-        if (std::static_pointer_cast<SiteRace>(co)->isAffil()) {
+        if (std::static_pointer_cast<SiteRace>(co)->isDownloadOnly()) {
           type = TransferType::PRE;
         }
         else if (std::static_pointer_cast<SiteRace>(co)->isDone()) {
@@ -1994,7 +1994,7 @@ void SiteLogic::raceLocalComplete(const std::shared_ptr<SiteRace> & sr, int uplo
     if (static_cast<int>(site->getMaxDownComplete()) > downloadslots) {
       downloadslots = site->getMaxDownComplete();
     }
-    if (sr->isAffil() && static_cast<int>(site->getMaxDownPre()) > downloadslots) {
+    if (sr->isDownloadOnly() && static_cast<int>(site->getMaxDownPre()) > downloadslots) {
       downloadslots = site->getMaxDownPre();
     }
     int stillneededslots = downloadslots < uploadslotsleft ? downloadslots : uploadslotsleft;

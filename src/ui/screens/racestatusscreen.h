@@ -23,6 +23,7 @@ public:
 private:
   void deleteFiles(bool);
   std::list<std::string> getIncompleteSites() const;
+  std::list<std::string> getDownloadOnlySites() const;
   std::shared_ptr<Race> race;
   bool smalldirs;
   bool awaitingremovesite;
