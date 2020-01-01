@@ -8,7 +8,7 @@
 #include "util.h"
 #include "timereference.h"
 
-SiteRace::SiteRace(const std::shared_ptr<Race>& race, const std::string& sitename, const Path& section, const std::string& release, const std::string& username, const SkipList& skiplist, bool affil) :
+SiteRace::SiteRace(const std::shared_ptr<Race>& race, const std::string& sitename, const Path& section, const std::string& release, const std::string& username, const SkipList& skiplist, bool downloadonly) :
   race(race),
   section(section),
   release(release),
@@ -28,7 +28,7 @@ SiteRace::SiteRace(const std::shared_ptr<Race>& race, const std::string& sitenam
   sizeup(0),
   filesup(0),
   speedup(1),
-  affil(affil)
+  downloadonly(downloadonly)
 {
   recentlyvisited.push_back("");
   filelists[""] = std::make_shared<FileList>(username, path);
@@ -523,8 +523,8 @@ bool SiteRace::allListsRefreshed() const {
   return true;
 }
 
-bool SiteRace::isAffil() const {
-  return affil;
+bool SiteRace::isDownloadOnly() const {
+  return downloadonly;
 }
 
 std::unordered_map<std::string, unsigned long long int>::const_iterator SiteRace::sizeUpBegin() const {

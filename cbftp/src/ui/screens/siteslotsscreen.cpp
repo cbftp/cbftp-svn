@@ -28,8 +28,8 @@ void SiteSlotsScreen::initialize(unsigned int row, unsigned int col, const std::
   mso.addIntArrow(y++, x, "maxdn", "Download slots:", modsite->getInternMaxDown(), 0, 99);
   y++;
   mso.addCheckBox(y++, x, "freeslot", "Leave one slot free:", modsite->getLeaveFreeSlot());
-  mso.addIntArrow(y++, x, "maxdnpre", "Download slots on pre:", modsite->getInternMaxDownPre(), 0, 99);
-  mso.addIntArrow(y++, x, "maxdncomplete", "Download slots on complete spread job:", modsite->getInternMaxDownComplete(), 0, 99);
+  mso.addIntArrow(y++, x, "maxdnpre", "Download slots on download-only spread jobs:", modsite->getInternMaxDownPre(), 0, 99);
+  mso.addIntArrow(y++, x, "maxdncomplete", "Download slots on complete spread jobs:", modsite->getInternMaxDownComplete(), 0, 99);
   mso.addIntArrow(y++, x, "maxdntransferjob", "Download slots on transfer jobs:", modsite->getInternMaxDownTransferJob(), 0, 99);
   mso.enterFocusFrom(0);
   init(row, col);

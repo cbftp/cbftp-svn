@@ -473,26 +473,30 @@ bool RemoteCommandHandler::parseRace(const std::vector<std::string> & message, i
   std::string section = message[0];
   std::string release = message[1];
   std::string sitestring = message[2];
+  std::list<std::string> sites;
   if (sitestring == "*") {
-    if (type == RACE) {
-      return !!global->getEngine()->newRace(release, section);
+    for (std::vector<std::shared_ptr<Site> >::const_iterator it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
+      if ((*it)->hasSection(section) && !(*it)->getDisabled()) {
+        sites.push_back((*it)->getName());
+      }
     }
-    else if (type == DISTRIBUTE){
-      return !!global->getEngine()->newDistribute(release, section);
-    }
-    else {
-      return global->getEngine()->prepareRace(release, section);
-    }
-  }
-  std::list<std::string> sites = util::trim(util::split(sitestring, ","));
-  if (type == RACE) {
-    return !!global->getEngine()->newRace(release, section, sites);
-  }
-  else if (type == DISTRIBUTE){
-    return !!global->getEngine()->newDistribute(release, section, sites);
   }
   else {
-    return global->getEngine()->prepareRace(release, section, sites);
+    sites = util::trim(util::split(sitestring, ","));
+  }
+  std::list<std::string> dlonlysites;
+  if (message.size() >= 4) {
+    std::string dlonlysitestring = message[3];
+    dlonlysites = util::trim(util::split(dlonlysitestring, ","));
+  }
+  if (type == RACE) {
+    return !!global->getEngine()->newRace(release, section, sites, dlonlysites);
+  }
+  else if (type == DISTRIBUTE){
+    return !!global->getEngine()->newDistribute(release, section, sites, dlonlysites);
+  }
+  else {
+    return global->getEngine()->prepareRace(release, section, sites, dlonlysites);
   }
 }
 

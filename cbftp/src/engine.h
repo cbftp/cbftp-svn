@@ -31,12 +31,9 @@ class Engine : public Core::EventReceiver {
 public:
   Engine();
   ~Engine();
-  std::shared_ptr<Race> newRace(const std::string &, const std::string &, const std::list<std::string> &);
-  std::shared_ptr<Race> newRace(const std::string &, const std::string &);
-  bool prepareRace(const std::string &, const std::string &, const std::list<std::string> &);
-  bool prepareRace(const std::string &, const std::string &);
-  std::shared_ptr<Race> newDistribute(const std::string &, const std::string &, const std::list<std::string> &);
-  std::shared_ptr<Race> newDistribute(const std::string &, const std::string &);
+  std::shared_ptr<Race> newRace(const std::string& release, const std::string& section, const std::list<std::string>& sites, const std::list<std::string>& dlonlysites = {});
+  bool prepareRace(const std::string& release, const std::string& section, const std::list<std::string>& sites, const std::list<std::string>& dlonlysites = {});
+  std::shared_ptr<Race> newDistribute(const std::string& release, const std::string& section, const std::list<std::string>& sites, const std::list<std::string>& dlonlysites = {});
   void startPreparedRace(unsigned int);
   void deletePreparedRace(unsigned int);
   void startLatestPreparedRace();
@@ -81,7 +78,7 @@ public:
   std::list<std::shared_ptr<TransferJob>>::const_iterator getTransferJobsBegin() const;
   std::list<std::shared_ptr<TransferJob>>::const_iterator getTransferJobsEnd() const;
   void tick(int);
-  void addSiteToRace(const std::shared_ptr<Race>& race, const std::string& site);
+  void addSiteToRace(const std::shared_ptr<Race>& race, const std::string& site, bool downloadonly);
   std::shared_ptr<ScoreBoard> getScoreBoard() const;
   int getMaxPointsRaceTotal() const;
   int getMaxPointsFileSize() const;
@@ -98,8 +95,7 @@ public:
   bool isIncompleteEnoughForDelete(const std::shared_ptr<Race> & race, const std::shared_ptr<SiteRace> & siterace) const;
   void transferFailed(const std::shared_ptr<TransferStatus> & ts, int err);
  private:
-  std::shared_ptr<Race> newSpreadJob(int, const std::string &, const std::string &, const std::list<std::string> &);
-  std::shared_ptr<Race> newSpreadJob(int, const std::string &, const std::string &);
+  std::shared_ptr<Race> newSpreadJob(int profile, const std::string& release, const std::string& section, const std::list<std::string>& sites, const std::list<std::string>& dlonlysites = {});
   void estimateRaceSizes();
   void estimateRaceSize(const std::shared_ptr<Race>&, bool forceupdate = false);
   void reportCurrentSize(const SkipList&, const SkipList&, const std::shared_ptr<SiteRace>& srs, const std::shared_ptr<FileList>& fl, bool final);
@@ -126,7 +122,7 @@ public:
   void addPendingTransfer(std::list<PendingTransfer>&, PendingTransfer&);
   std::shared_ptr<Race> getCurrentRace(const std::string &) const;
   void preSeedPotentialData(const std::shared_ptr<Race>& race);
-  bool raceTransferPossible(const std::shared_ptr<SiteLogic>&, const std::shared_ptr<SiteLogic>&, const std::shared_ptr<Race>&) const;
+  bool raceTransferPossible(const std::shared_ptr<SiteLogic>& sls, const std::shared_ptr<SiteRace>& srs, const std::shared_ptr<SiteLogic>& sld, const std::shared_ptr<SiteRace>& srd, const std::shared_ptr<Race>& race) const;
   void wipeFromScoreBoard(const std::shared_ptr<SiteRace>& sr);
   bool waitingInScoreBoard(const std::shared_ptr<Race>& race) const;
   bool transferExpectedSoon(ScoreBoardElement* sbe) const;

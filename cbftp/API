@@ -192,17 +192,18 @@ is optional and will be the same as srcfile if omitted.
 The srcpath/dstpath fields can also be section names, and if dstpath is a
 section name then dstfile must also be specified.
 
-<password> race <section> <file> <sitelist>
+<password> race <section> <file> <sitelist> [dlonlysitelist]
 This command starts a spread job with the 'race' profile for the specified
 item on the specified sites. The site list is a list of site names,
 comma-separated without spaces. (Example: site1,site2,site3). Wildcard (*)
 also works, which means all sites added in cbftp will be selected.
+An optional site list with download-only sites can be appended.
 
-<password> distribute <section> <file> <sitelist>
+<password> distribute <section> <file> <sitelist> [dlonlysitelist]
 This command starts a spread job with the 'distribute' profile for the
 specified item on the specified sites.
 
-<password> prepare <section> <file> <sitelist>
+<password> prepare <section> <file> <sitelist> [dlonlysitelist]
 This command prepares a spread job with the 'race' profile, which means
 cbftp will log onto the specified sites and await user input. Prepared
 spread jobs are started from a list on the main screen and can be started
