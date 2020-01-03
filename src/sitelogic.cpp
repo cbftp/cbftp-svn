@@ -421,6 +421,18 @@ void SiteLogic::commandSuccess(int id, FTPConnState state) {
           conns[id]->doMKD(request->requestData2());
           return;
         }
+        else if (request->requestType() == REQ_WIPE) {
+          conns[id]->doWipe(request->requestData(), false);
+          return;
+        }
+        else if (request->requestType() == REQ_WIPE_RECURSIVE) {
+          conns[id]->doWipe(request->requestData(), true);
+          return;
+        }
+        else if (request->requestType() == REQ_NUKE) {
+          conns[id]->doNuke(request->requestData(), request->requestData3(), request->requestData2());
+          return;
+        }
       }
       if (connstatetracker[id].getRecursiveLogic()->isActive()) {
         handleRecursiveLogic(id);
@@ -644,7 +656,10 @@ void SiteLogic::commandFail(int id, FailureType failuretype) {
         if (request->requestType() == REQ_FILELIST ||
             request->requestType() == REQ_RAW ||
             request->requestType() == REQ_IDLE ||
-            request->requestType() == REQ_MKDIR)
+            request->requestType() == REQ_MKDIR ||
+            request->requestType() == REQ_WIPE ||
+            request->requestType() == REQ_WIPE_RECURSIVE ||
+            request->requestType() == REQ_NUKE)
         {
           setRequestReady(id, NULL, false);
           handleConnection(id);
@@ -1159,12 +1174,26 @@ bool SiteLogic::handleRequest(int id) {
       }
       break;
     }
-    case REQ_WIPE_RECURSIVE: // recursive wipe
-      conns[id]->doWipe(request.requestData(), true);
+    case REQ_WIPE_RECURSIVE: { // recursive wipe
+      Path path(request.requestData());
+      if (path.isAbsolute() && conns[id]->getCurrentPath() != path.dirName()) {
+        conns[id]->doCWD(path.dirName());
+      }
+      else {
+        conns[id]->doWipe(request.requestData(), true);
+      }
       break;
-    case REQ_WIPE: // wipe
-      conns[id]->doWipe(request.requestData(), false);
+    }
+    case REQ_WIPE: { // wipe
+      Path path(request.requestData());
+      if (path.isAbsolute() && conns[id]->getCurrentPath() != path.dirName()) {
+        conns[id]->doCWD(path.dirName());
+      }
+      else {
+        conns[id]->doWipe(request.requestData(), false);
+      }
       break;
+    }
     case REQ_DEL_RECURSIVE: { // recursive delete
       std::string targetpath = request.requestData();
       connstatetracker[id].getRecursiveLogic()->initialize(RCL_DELETE, targetpath, site->getUser());
@@ -1180,9 +1209,16 @@ bool SiteLogic::handleRequest(int id) {
     case REQ_DEL: // delete
       conns[id]->doDELE(request.requestData());
       break;
-    case REQ_NUKE: // nuke
-      conns[id]->doNuke(request.requestData(), request.requestData3(), request.requestData2());
+    case REQ_NUKE: { // nuke
+      Path path(request.requestData());
+      if (path.isAbsolute() && conns[id]->getCurrentPath() != path.dirName()) {
+        conns[id]->doCWD(path.dirName());
+      }
+      else {
+        conns[id]->doNuke(request.requestData(), request.requestData3(), request.requestData2());
+      }
       break;
+    }
     case REQ_IDLE: { // idle
       Path targetpath = request.requestData();
       if (conns[id]->getCurrentPath() != targetpath) {
