@@ -1,6 +1,6 @@
 HTTPS/JSON REST API
 
-This API is encrypted through TLS/HTTPS and uses JSON syntax for POST/PUT
+This API is encrypted through TLS/HTTPS and uses JSON syntax for POST/PATCH
 commands and all responses.
 
 JSON is a very common standard syntax for data structures, see examples below
@@ -13,7 +13,7 @@ In a REST API, the HTTP methods used are:
 
 GET - Read an existing resource.
 POST - Create a new resource.
-PUT - Update an existing resource.
+PATCH - Update an existing resource.
 DELETE - Delete a resource.
 
 The API password is provided through HTTP Basic auth, which is entered as
@@ -46,9 +46,9 @@ Available commands:
     POST /sites
 
 - Update an existing site
-    PUT /sites/SITE1
+    PATCH /sites/SITE1
 
-An example body when POST/PUT'ing a site:
+An example body when POST/PATCH'ing a site:
 
 {
   "name": "SITE1",
@@ -158,6 +158,31 @@ An example body when sending a raw command:
 - List a directory. The path can also be a section name. Timeout is optional,
   defaults to 10
    GET /filelist?site=SITE1&path=/&timeout=2
+
+- List all spread jobs
+   GET /spreadjobs
+   
+- Get details of a specific spread job
+   GET /spreadjobs/JOBNAME
+   
+- Start a new spread job
+   POST /spreadjobs
+   
+An example body when starting a spread job:
+
+{
+  "section": "LINUX_ISOS",
+  "name": "LATEST_DISTRO_1.0-NEW,
+  "sites": [
+    "SITE1",
+    "SITE2",
+    "SITE3"
+  ],
+  "sites_dlonly": [
+    "SITE1"
+  ],
+  "profile": "DISTRIBUTE"   // (RACE/DISTRIBUTE/PREPARE)
+}
 
 
 UDP API

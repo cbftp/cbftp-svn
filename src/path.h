@@ -26,6 +26,7 @@ public:
   int levels() const;
   Path cutLevels(int) const;
   Path level(int) const;
+  bool operator<(const Path& other) const;
 private:
   Path(const char *, char, bool);
   Path(const std::string &, char, bool);

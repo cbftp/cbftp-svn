@@ -29,6 +29,7 @@ public:
 
   int getStatusCode() const;
   std::string getStatusText() const;
+  void setStatusCode(int code);
 
 private:
   int statuscode;

@@ -10,12 +10,15 @@
 #include "http/response.h"
 
 #include "crypto.h"
+#include "engine.h"
 #include "eventlog.h"
 #include "file.h"
 #include "filelist.h"
 #include "filelistdata.h"
 #include "globalcontext.h"
 #include "path.h"
+#include "race.h"
+#include "racestatus.h"
 #include "remotecommandhandler.h"
 #include "restapicallback.h"
 #include "sectionmanager.h"
@@ -24,6 +27,7 @@
 #include "sitelogic.h"
 #include "sitelogicmanager.h"
 #include "sitemanager.h"
+#include "siterace.h"
 #include "skiplist.h"
 #include "util.h"
 
@@ -232,6 +236,32 @@ std::string proxyTypeToString(int type) {
   return "<unknown proxy type " + std::to_string(type) + ">";
 }
 
+std::string profileToString(SpreadProfile profile) {
+  switch (profile) {
+    case SPREAD_RACE:
+      return "RACE";
+    case SPREAD_DISTRIBUTE:
+      return "DISTRIBUTE";
+    case SPREAD_PREPARE:
+      return "PREPARE";
+  }
+  return "<unknown profile type " + std::to_string(profile) + ">";
+}
+
+std::string raceStatusToString(RaceStatus status) {
+  switch (status) {
+    case RaceStatus::RUNNING:
+      return "RUNNING";
+    case RaceStatus::DONE:
+      return "DONE";
+    case RaceStatus::TIMEOUT:
+      return "TIMEOUT";
+    case RaceStatus::ABORTED:
+      return "ABORTED";
+  }
+  return "<unknown race status type " + std::to_string(static_cast<int>(status)) + ">";
+}
+
 nlohmann::json jsonSkipList(const SkipList& skiplist) {
   nlohmann::json out = nlohmann::json::array();
   for (std::list<SkiplistItem>::const_iterator it = skiplist.entriesBegin(); it != skiplist.entriesEnd(); ++it) {
@@ -360,6 +390,16 @@ int stringToProxyType(const std::string& type) {
     return SITE_PROXY_NONE;
   }
   return SITE_PROXY_USE;
+}
+
+SpreadProfile stringToProfile(const std::string& profile) {
+  if (profile == "DISTRIBUTE") {
+    return SPREAD_DISTRIBUTE;
+  }
+  if (profile == "PREPARE") {
+    return SPREAD_PREPARE;
+  }
+  return SPREAD_RACE;
 }
 
 void updateSkipList(SkipList& skiplist, nlohmann::json jsonlist) {
@@ -549,14 +589,435 @@ std::shared_ptr<http::Response> updateSite(std::shared_ptr<Site>& site, nlohmann
   return nullptr;
 }
 
+nlohmann::json getJsonFromBody(const http::Request& request) {
+  std::shared_ptr<std::vector<char>> body = request.getBody();
+  nlohmann::json jsondata;
+  if (body && !body->empty()) {
+    jsondata = nlohmann::json::parse(std::string(body->begin(), body->end()));
+  }
+  return jsondata;
+}
+
 }
 
 RestApi::RestApi() : nextrequestid(0) {
+  endpoints[std::make_pair(Path("/filelist"), 1)]["GET"] = &RestApi::handleFileListGet;
+  endpoints[std::make_pair(Path("/raw"), 1)]["POST"] = &RestApi::handleRawPost;
+  endpoints[std::make_pair(Path("/raw"), 2)]["GET"] = &RestApi::handleRawGet;
+  endpoints[std::make_pair(Path("/sites"), 1)]["GET"] = &RestApi::handleSitesGet;
+  endpoints[std::make_pair(Path("/sites"), 1)]["POST"] = &RestApi::handleSitesPost;
+  endpoints[std::make_pair(Path("/sites"), 2)]["GET"] = &RestApi::handleSiteGet;
+  endpoints[std::make_pair(Path("/sites"), 2)]["PATCH"] = &RestApi::handleSitePatch;
+  endpoints[std::make_pair(Path("/sites"), 2)]["DELETE"] = &RestApi::handleSiteDelete;
+  endpoints[std::make_pair(Path("/spreadjobs"), 1)]["POST"] = &RestApi::handleSpreadJobPost;
+  endpoints[std::make_pair(Path("/spreadjobs"), 1)]["GET"] = &RestApi::handleSpreadJobsGet;
+  endpoints[std::make_pair(Path("/spreadjobs"), 2)]["GET"] = &RestApi::handleSpreadJobGet;
   global->getTickPoke()->startPoke(this, "RestApi", RESTAPI_TICK_INTERVAL_MS, 0);
 }
 
 RestApi::~RestApi() {
   global->getTickPoke()->stopPoke(this, 0);
+}
+
+void RestApi::handleRawPost(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  nlohmann::json jsondata = getJsonFromBody(request);
+  std::list<std::shared_ptr<SiteLogic>> sites = getSiteLogicList(jsondata);
+  if (sites.empty()) {
+    cb->requestHandled(connrequestid, badRequestResponse("No sites specified"));
+    return;
+  }
+  auto commandit = jsondata.find("command");
+  if (commandit == jsondata.end()) {
+    cb->requestHandled(connrequestid, badRequestResponse("Missing key: command"));
+    return;
+  }
+  std::string command = *commandit;
+  auto pathit = jsondata.find("path_section");
+  bool pathsection = pathit != jsondata.end();
+  std::string path;
+  if (pathsection) {
+    path = *pathit;
+  }
+  if (!pathsection) {
+    pathit = jsondata.find("path");
+    if (pathit != jsondata.end()) {
+      path = *pathit;
+    }
+  }
+  auto asyncit = jsondata.find("async");
+  auto timeoutit = jsondata.find("timeout");
+  OngoingRequest ongoingrequest;
+  ongoingrequest.type = OngoingRequestType::RAW_COMMAND;
+  ongoingrequest.connrequestid = connrequestid;
+  ongoingrequest.apirequestid = nextrequestid++;
+  ongoingrequest.cb = cb;
+  ongoingrequest.async = asyncit != jsondata.end() && static_cast<bool>(*asyncit);
+  ongoingrequest.timeout = timeoutit != jsondata.end() ? static_cast<int>(*timeoutit) : DEFAULT_TIMEOUT_SECONDS;
+  for (std::list<std::shared_ptr<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
+    std::string thispath;
+    if (pathsection) {
+      thispath = (*it)->getSite()->getSectionPath(path).toString();
+    }
+    else {
+      thispath = path;
+    }
+    int servicerequestid = (*it)->requestRawCommand(this, thispath.empty() ? (*it)->getSite()->getBasePath().toString() : thispath, command);
+    ongoingrequest.ongoingservicerequests.insert(std::make_pair(it->get(), servicerequestid));
+  }
+  ongoingrequests.push_back(ongoingrequest);
+  if (ongoingrequest.async) {
+    respondAsynced(ongoingrequest);
+  }
+}
+
+void RestApi::handleRawGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  Path path = request.getPath();
+  std::string apirequestidstr = path.level(1).toString();
+  int apirequestid;
+  try {
+    apirequestid = std::stoi(apirequestidstr);
+  }
+  catch(std::exception& e) {
+    cb->requestHandled(connrequestid, badRequestResponse("Invalid request id: " + apirequestidstr));
+    return;
+  }
+  OngoingRequest* ongoingrequest = findOngoingRequest(apirequestid);
+  if (!ongoingrequest) {
+    http::Response response(404);
+    response.appendHeader("Content-Length", "0");
+    cb->requestHandled(connrequestid, response);
+    return;
+  }
+  if (ongoingrequest->ongoingservicerequests.empty()) {
+    finalize(*ongoingrequest);
+    return;
+  }
+  else {
+    http::Response response(202);
+    response.appendHeader("Content-Length", "0");
+    cb->requestHandled(connrequestid, response);
+    return;
+  }
+}
+
+void RestApi::handleSitesGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  nlohmann::json sitelist = nlohmann::json::array();
+  for (std::vector<std::shared_ptr<Site>>::const_iterator it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); ++it) {
+    sitelist.push_back((*it)->getName());
+  }
+  http::Response response(200);
+  std::string jsondump = sitelist.dump(2);
+  response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
+  response.addHeader("Content-Type", "application/json");
+  cb->requestHandled(connrequestid, response);
+}
+
+void RestApi::handleSitesPost(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  nlohmann::json jsondata = getJsonFromBody(request);
+  std::shared_ptr<Site> site = global->getSiteManager()->createNewSite();
+  auto nameit = jsondata.find("name");
+  if (nameit == jsondata.end()) {
+    cb->requestHandled(connrequestid, badRequestResponse("Missing key: name"));
+    return;
+  }
+  if (global->getSiteManager()->getSite(std::string(*nameit))) {
+    http::Response response(409);
+    response.appendHeader("Content-Length", "0");
+    cb->requestHandled(connrequestid, response);
+    return;
+  }
+  std::shared_ptr<http::Response> updateresponse = updateSite(site, jsondata, true);
+  if (updateresponse) {
+    cb->requestHandled(connrequestid, *updateresponse);
+    return;
+  }
+  http::Response response(201);
+  response.appendHeader("Content-Length", "0");
+  cb->requestHandled(connrequestid, response);
+}
+
+void RestApi::handleSiteGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  Path path = request.getPath();
+  std::string sitename = path.level(1).toString();
+  std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
+  std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(sitename);
+  if (!site || !sl) {
+    http::Response response(404);
+    response.appendHeader("Content-Length", "0");
+    cb->requestHandled(connrequestid, response);
+    return;
+  }
+  nlohmann::json j;
+  nlohmann::json addrlist = nlohmann::json::array();
+  for (Address addr : site->getAddresses()) {
+    addrlist.push_back(addr.toString());
+  }
+  j["addresses"] = addrlist;
+  j["user"] = site->getUser();
+  j["password"] = site->getPass();
+  j["base_path"] = site->getBasePath().toString();
+  j["max_logins"] = site->getMaxLogins();
+  j["max_sim_up"] = site->getInternMaxUp();
+  j["max_sim_down"] = site->getInternMaxDown();
+  j["max_sim_down_pre"] = site->getInternMaxDownPre();
+  j["max_sim_down_complete"] = site->getInternMaxDownComplete();
+  j["max_sim_down_transferjob"] = site->getInternMaxDownTransferJob();
+  j["max_idle_time"] = site->getMaxIdleTime();
+  j["pret"] = site->needsPRET();
+  j["force_binary_mode"] = site->forceBinaryMode();
+  j["list_command"] = listCommandToString(site->getListCommand());
+  j["tls_mode"] = tlsModeToString(site->getTLSMode());
+  j["tls_transfer_policy"] = tlsTransferPolicyToString(site->getSSLTransferPolicy());
+  j["transfer_protocol"] = transferProtocolToString(site->getTransferProtocol());
+  j["sscn"] = site->supportsSSCN();
+  j["cpsv"] = site->supportsCPSV();
+  j["cepr"] = site->supportsCEPR();
+  j["broken_pasv"] = site->hasBrokenPASV();
+  j["disabled"] = site->getDisabled();
+  j["allow_upload"] = siteAllowTransferToString(site->getAllowUpload());
+  j["allow_download"] = siteAllowTransferToString(site->getAllowDownload());
+  j["priority"] = priorityToString(site->getPriority());
+  j["xdupe"] = site->useXDUPE();
+  for (std::map<std::string, Path>::const_iterator it = site->sectionsBegin(); it != site->sectionsEnd(); ++it) {
+    j["sections"][it->first] = it->second.toString();
+  }
+  for (std::map<std::string, int>::const_iterator it = site->avgspeedBegin(); it != site->avgspeedEnd(); ++it) {
+    j["avg_speed"][it->first] = it->second;
+  }
+  nlohmann::json affils = nlohmann::json::array();
+  for (std::set<std::string>::const_iterator it = site->affilsBegin(); it != site->affilsEnd(); ++it) {
+    affils.push_back(*it);
+  }
+  j["affils"] = affils;
+  j["transfer_source_policy"] = siteTransferPolicyToString(site->getTransferSourcePolicy());
+  j["transfer_target_policy"] = siteTransferPolicyToString(site->getTransferTargetPolicy());
+  nlohmann::json exceptsource = nlohmann::json::array();
+  for (std::set<std::shared_ptr<Site> >::const_iterator it = site->exceptSourceSitesBegin(); it != site->exceptSourceSitesEnd(); ++it) {
+    exceptsource.push_back((*it)->getName());
+  }
+  j["except_source_sites"] = exceptsource;
+  nlohmann::json excepttarget = nlohmann::json::array();
+  for (std::set<std::shared_ptr<Site> >::const_iterator it = site->exceptTargetSitesBegin(); it != site->exceptTargetSitesEnd(); ++it) {
+    excepttarget.push_back((*it)->getName());
+  }
+  j["except_target_sites"] = excepttarget;
+  j["leave_free_slot"] = site->getLeaveFreeSlot();
+  j["stay_logged_in"] = site->getStayLoggedIn();
+  j["skiplist"] = jsonSkipList(site->getSkipList());
+  j["proxy_type"] = proxyTypeToString(site->getProxyType());
+  j["proxy_name"] = site->getProxy();
+  j["var"]["size_up_all"] = site->getSizeUp().getAll();
+  j["var"]["size_up_24h"] = site->getSizeUp().getLast24Hours();
+  j["var"]["files_up_all"] = site->getFilesUp().getAll();
+  j["var"]["files_up_24h"] = site->getFilesUp().getLast24Hours();
+  j["var"]["size_down_all"] = site->getSizeDown().getAll();
+  j["var"]["size_down_24h"] = site->getSizeDown().getLast24Hours();
+  j["var"]["files_down_all"] = site->getFilesDown().getAll();
+  j["var"]["files_down_24h"] = site->getFilesDown().getLast24Hours();
+  j["var"]["current_logins"] = sl->getCurrLogins();
+  j["var"]["current_up"] = sl->getCurrUp();
+  j["var"]["current_down"] = sl->getCurrDown();
+  http::Response response(200);
+  std::string jsondump = j.dump(2);
+  response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
+  response.addHeader("Content-Type", "application/json");
+  cb->requestHandled(connrequestid, response);
+}
+
+void RestApi::handleSitePatch(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  Path path = request.getPath();
+  std::string sitename = path.level(1).toString();
+  std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
+  if (!site) {
+    http::Response response(404);
+    response.appendHeader("Content-Length", "0");
+    cb->requestHandled(connrequestid, response);
+    return;
+  }
+  nlohmann::json jsondata = getJsonFromBody(request);
+  std::shared_ptr<http::Response> updateresponse = updateSite(site, jsondata, false);
+  if (updateresponse) {
+    cb->requestHandled(connrequestid, *updateresponse);
+    return;
+  }
+  http::Response response(204);
+  response.appendHeader("Content-Length", "0");
+  cb->requestHandled(connrequestid, response);
+}
+
+void RestApi::handleSiteDelete(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  Path path = request.getPath();
+  std::string sitename = path.level(1).toString();
+  global->getSiteManager()->deleteSite(sitename);
+  http::Response response(204);
+  response.appendHeader("Content-Length", "0");
+  cb->requestHandled(connrequestid, response);
+}
+
+void RestApi::handleFileListGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  if (!request.hasQueryParam("site")) {
+    cb->requestHandled(connrequestid, badRequestResponse("Missing query parameter: site"));
+    return;
+  }
+  if (!request.hasQueryParam("path")) {
+    cb->requestHandled(connrequestid, badRequestResponse("Missing query parameter: path"));
+    return;
+  }
+  std::string sitestr = request.getQueryParamValue("site");
+  std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitestr);
+  std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(sitestr);
+  if (!site || !sl) {
+    cb->requestHandled(connrequestid, badRequestResponse("Site not found: " + sitestr));
+    return;
+  }
+  Path path = request.getQueryParamValue("path");
+  if (!useOrSectionTranslate(path, site)) {
+    cb->requestHandled(connrequestid, badRequestResponse("Path must be absolute or a section on " + sitestr + ": " + path.toString()));
+    return;
+  }
+  int timeout = DEFAULT_TIMEOUT_SECONDS;
+  if (request.hasQueryParam("timeout")) {
+    std::string timeoutstr = request.getQueryParamValue("timeout");
+    try {
+
+      timeout = std::stoi(timeoutstr);
+    }
+    catch(std::exception& e) {
+      cb->requestHandled(connrequestid, badRequestResponse("Invalid timeout value: " + timeoutstr));
+      return;
+    }
+  }
+  int servicerequestid = sl->requestFileList(this, path);
+  OngoingRequest ongoingrequest;
+  ongoingrequest.type = OngoingRequestType::FILE_LIST;
+  ongoingrequest.connrequestid = connrequestid;
+  ongoingrequest.apirequestid = nextrequestid++;
+  ongoingrequest.cb = cb;
+  ongoingrequest.timeout = timeout;
+  ongoingrequest.ongoingservicerequests.insert(std::make_pair(sl.get(), servicerequestid));
+  ongoingrequests.push_back(ongoingrequest);
+}
+
+void RestApi::handleSpreadJobPost(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  nlohmann::json jsondata = getJsonFromBody(request);
+  auto sectionit = jsondata.find("section");
+  if (sectionit == jsondata.end()) {
+
+    cb->requestHandled(connrequestid, badRequestResponse("Missing key: section"));
+    return;
+  }
+  std::string section = *sectionit;
+  auto nameit = jsondata.find("name");
+  if (nameit == jsondata.end()) {
+    cb->requestHandled(connrequestid, badRequestResponse("Missing key: name"));
+    return;
+  }
+  std::string name = *nameit;
+  std::list<std::string> sites;
+  auto sitesit = jsondata.find("sites");
+  if (sitesit != jsondata.end()) {
+    for (auto it = sitesit->begin(); it != sitesit->end(); ++it) {
+      sites.push_back(*it);
+    }
+  }
+  std::list<std::string> dlonlysites;
+  auto dlonlysitesit = jsondata.find("sites_dlonly");
+  if (dlonlysitesit != jsondata.end()) {
+    for (auto it = dlonlysitesit->begin(); it != dlonlysitesit->end(); ++it) {
+      dlonlysites.push_back(*it);
+    }
+  }
+  auto allit = jsondata.find("sites_all");
+  if (allit != jsondata.end() && allit->get<bool>()) {
+    sites.clear();
+    std::vector<std::shared_ptr<Site>>::const_iterator it;
+    for (it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); it++) {
+      if (!(*it)->getDisabled() && (*it)->hasSection(section)) {
+        sites.push_back((*it)->getName());
+      }
+    }
+  }
+  bool success = false;
+  SpreadProfile profile = SPREAD_RACE;
+  auto profileit = jsondata.find("profile");
+  if (profileit != jsondata.end()) {
+    profile = stringToProfile(*profileit);
+  }
+  switch (profile) {
+    case  SPREAD_DISTRIBUTE:
+      success = !!global->getEngine()->newDistribute(name, section, sites, dlonlysites);
+      break;
+    case SPREAD_PREPARE:
+      success = global->getEngine()->prepareRace(name, section, sites, dlonlysites);
+      break;
+    case SPREAD_RACE:
+      success = !!global->getEngine()->newRace(name, section, sites, dlonlysites);
+      break;
+  }
+  http::Response response(201);
+  response.appendHeader("Content-Length", "0");
+  if (!success) {
+    response.setStatusCode(503);
+  }
+  cb->requestHandled(connrequestid, response);
+}
+
+void RestApi::handleSpreadJobGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  std::string name = Path(request.getPath()).baseName();
+  std::shared_ptr<Race> spreadjob = global->getEngine()->getRace(name);
+  if (!spreadjob) {
+    http::Response response(404);
+    response.appendHeader("Content-Length", "0");
+    cb->requestHandled(connrequestid, response);
+    return;
+  }
+  nlohmann::json j;
+
+  nlohmann::json sites = nlohmann::json::array();
+  nlohmann::json dlonlysites = nlohmann::json::array();
+  nlohmann::json incsites = nlohmann::json::array();
+  std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic>>>::const_iterator it;
+  for (it = spreadjob->begin(); it != spreadjob->end(); ++it) {
+    std::string sitename = it->first->getSiteName();
+    sites.push_back(sitename);
+    if (it->first->isDownloadOnly()) {
+      dlonlysites.push_back(sitename);
+    }
+    if (it->first->getStatus() != RaceStatus::DONE) {
+      incsites.push_back(sitename);
+    }
+  }
+  j["section"] = spreadjob->getSection();
+  j["sites"] = sites;
+  j["sites_dlonly"] = dlonlysites;
+  j["sites_incomplete"] = incsites;
+  j["profile"] = profileToString(spreadjob->getProfile());
+  j["status"] = raceStatusToString(spreadjob->getStatus());
+  j["time_started"] = spreadjob->getTimeStamp();
+  j["time_spent_seconds"] = spreadjob->getTimeSpent();
+  j["size_estimated_bytes"] = spreadjob->estimatedTotalSize();
+  j["percentage_complete_worst"] = spreadjob->getWorstCompletionPercentage();
+  j["percentage_complete_average"] = spreadjob->getAverageCompletionPercentage();
+  j["percentage_complete_best"] = spreadjob->getBestCompletionPercentage();
+  http::Response response(200);
+  std::string jsondump = j.dump(2);
+  response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
+  response.addHeader("Content-Type", "application/json");
+  cb->requestHandled(connrequestid, response);
+}
+
+void RestApi::handleSpreadJobsGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  nlohmann::json joblist = nlohmann::json::array();
+  std::list<std::shared_ptr<Race>>::const_iterator it;
+  for (it = global->getEngine()->getRacesBegin(); it != global->getEngine()->getRacesEnd(); ++it) {
+    joblist.push_back((*it)->getName());
+  }
+  http::Response response(200);
+  std::string jsondump = joblist.dump(2);
+  response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
+  response.addHeader("Content-Type", "application/json");
+  cb->requestHandled(connrequestid, response);
+
 }
 
 void RestApi::handleRequest(RestApiCallback* cb, int connrequestid, const http::Request& request) {
@@ -585,316 +1046,30 @@ void RestApi::handleRequest(RestApiCallback* cb, int connrequestid, const http::
   }
   Path path(request.getPath());
   global->getEventLog()->log("RestApi", "Received request for: " + request.getMethod() + " " + path.toString());
-  std::shared_ptr<std::vector<char>> body = request.getBody();
-  nlohmann::json jsondata;
-  bool pathmatch = false;
-  bool methodmatch = false;
+  std::map<std::pair<Path, int>, std::map<std::string, EndpointPointer>>::iterator it;
+  it = endpoints.find(std::make_pair(path, path.levels()));
+  if (it == endpoints.end()) {
+    it = endpoints.find(std::make_pair(path.cutLevels(1), path.levels()));
+  }
+  if (it == endpoints.end()) {
+    http::Response response(404);
+    response.appendHeader("Content-Length", "0");
+    cb->requestHandled(connrequestid, response);
+    return;
+  }
+  std::map<std::string, EndpointPointer>::iterator it2 = it->second.find(request.getMethod());
+  if (it2 == it->second.end()) {
+    http::Response response(405);
+    response.appendHeader("Content-Length", "0");
+    cb->requestHandled(connrequestid, response);
+    return;
+  }
   try {
-    if (body && !body->empty()){
-      jsondata = nlohmann::json::parse(std::string(body->begin(), body->end()));
-    }
-    if (path.level(0).toString() == "/raw") {
-      if (path.levels() == 1) {
-        pathmatch = true;
-      }
-      if (request.getMethod() == "POST") {
-        methodmatch = true;
-        std::list<std::shared_ptr<SiteLogic>> sites = getSiteLogicList(jsondata);
-        if (sites.empty()) {
-          cb->requestHandled(connrequestid, badRequestResponse("No sites specified"));
-          return;
-        }
-        auto commandit = jsondata.find("command");
-        if (commandit == jsondata.end()) {
-          cb->requestHandled(connrequestid, badRequestResponse("Missing key: command"));
-          return;
-        }
-        std::string command = *commandit;
-        auto pathit = jsondata.find("path_section");
-        bool pathsection = pathit != jsondata.end();
-        std::string path;
-        if (pathsection) {
-          path = *pathit;
-        }
-        if (!pathsection) {
-          pathit = jsondata.find("path");
-          if (pathit != jsondata.end()) {
-            path = *pathit;
-          }
-        }
-        auto asyncit = jsondata.find("async");
-        auto timeoutit = jsondata.find("timeout");
-        OngoingRequest request;
-        request.type = OngoingRequestType::RAW_COMMAND;
-        request.connrequestid = connrequestid;
-        request.apirequestid = nextrequestid++;
-        request.cb = cb;
-        request.async = asyncit != jsondata.end() && static_cast<bool>(*asyncit);
-        request.timeout = timeoutit != jsondata.end() ? static_cast<int>(*timeoutit) : DEFAULT_TIMEOUT_SECONDS;
-        for (std::list<std::shared_ptr<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
-          std::string thispath;
-          if (pathsection) {
-            thispath = (*it)->getSite()->getSectionPath(path).toString();
-          }
-          else {
-            thispath = path;
-          }
-          int servicerequestid = (*it)->requestRawCommand(this, thispath.empty() ? (*it)->getSite()->getBasePath().toString() : thispath, command);
-          request.ongoingservicerequests.insert(std::make_pair(it->get(), servicerequestid));
-        }
-        ongoingrequests.push_back(request);
-        if (request.async) {
-          respondAsynced(request);
-          return;
-        }
-      }
-      else if (request.getMethod() == "GET" && path.levels() == 2) {
-        pathmatch = true;
-        methodmatch = true;
-        std::string apirequestidstr = path.level(1).toString();
-        int apirequestid;
-        try {
-          apirequestid = std::stoi(apirequestidstr);
-        }
-        catch(std::exception& e) {
-          cb->requestHandled(connrequestid, badRequestResponse("Invalid request id: " + apirequestidstr));
-          return;
-        }
-        OngoingRequest* request = findOngoingRequest(apirequestid);
-        if (!request) {
-          http::Response response(404);
-          response.appendHeader("Content-Length", "0");
-          cb->requestHandled(connrequestid, response);
-          return;
-        }
-        if (request->ongoingservicerequests.empty()) {
-          finalize(*request);
-          return;
-        }
-        else {
-          http::Response response(202);
-          response.appendHeader("Content-Length", "0");
-          cb->requestHandled(connrequestid, response);
-          return;
-        }
-      }
-    }
-    else if (path.level(0).toString() == "/sites") {
-      if (path.levels() <= 2) {
-        pathmatch = true;
-      }
-      if (path.levels() == 1) {
-        if (request.getMethod() == "GET") {
-          methodmatch = true;
-          nlohmann::json sitelist = nlohmann::json::array();
-          for (std::vector<std::shared_ptr<Site>>::const_iterator it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); ++it) {
-            sitelist.push_back((*it)->getName());
-          }
-          nlohmann::json j;
-          j["sites"] = sitelist;
-          http::Response response(200);
-          std::string jsondump = j.dump(2);
-          response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
-          response.addHeader("Content-Type", "application/json");
-          cb->requestHandled(connrequestid, response);
-          return;
-        }
-        if (request.getMethod() == "POST") {
-          methodmatch = true;
-          std::shared_ptr<Site> site = global->getSiteManager()->createNewSite();
-          auto nameit = jsondata.find("name");
-          if (nameit == jsondata.end()) {
-            cb->requestHandled(connrequestid, badRequestResponse("Missing key: name"));
-            return;
-          }
-          if (global->getSiteManager()->getSite(std::string(*nameit))) {
-            http::Response response(409);
-            response.appendHeader("Content-Length", "0");
-            cb->requestHandled(connrequestid, response);
-            return;
-          }
-          std::shared_ptr<http::Response> updateresponse = updateSite(site, jsondata, true);
-          if (updateresponse) {
-            cb->requestHandled(connrequestid, *updateresponse);
-            return;
-          }
-          http::Response response(201);
-          response.appendHeader("Content-Length", "0");
-          cb->requestHandled(connrequestid, response);
-          return;
-        }
-      }
-      if (path.levels() == 2) {
-        std::string sitename = path.level(1).toString();
-        std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
-        std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(sitename);
-        if (!site || !sl) {
-          http::Response response(404);
-          response.appendHeader("Content-Length", "0");
-          cb->requestHandled(connrequestid, response);
-          return;
-        }
-        if (request.getMethod() == "GET") {
-          nlohmann::json j;
-          nlohmann::json addrlist = nlohmann::json::array();
-          for (Address addr : site->getAddresses()) {
-            addrlist.push_back(addr.toString());
-          }
-          j["addresses"] = addrlist;
-          j["user"] = site->getUser();
-          j["password"] = site->getPass();
-          j["base_path"] = site->getBasePath().toString();
-          j["max_logins"] = site->getMaxLogins();
-          j["max_sim_up"] = site->getInternMaxUp();
-          j["max_sim_down"] = site->getInternMaxDown();
-          j["max_sim_down_pre"] = site->getInternMaxDownPre();
-          j["max_sim_down_complete"] = site->getInternMaxDownComplete();
-          j["max_sim_down_transferjob"] = site->getInternMaxDownTransferJob();
-          j["max_idle_time"] = site->getMaxIdleTime();
-          j["pret"] = site->needsPRET();
-          j["force_binary_mode"] = site->forceBinaryMode();
-          j["list_command"] = listCommandToString(site->getListCommand());
-          j["tls_mode"] = tlsModeToString(site->getTLSMode());
-          j["tls_transfer_policy"] = tlsTransferPolicyToString(site->getSSLTransferPolicy());
-          j["transfer_protocol"] = transferProtocolToString(site->getTransferProtocol());
-          j["sscn"] = site->supportsSSCN();
-          j["cpsv"] = site->supportsCPSV();
-          j["cepr"] = site->supportsCEPR();
-          j["broken_pasv"] = site->hasBrokenPASV();
-          j["disabled"] = site->getDisabled();
-          j["allow_upload"] = siteAllowTransferToString(site->getAllowUpload());
-          j["allow_download"] = siteAllowTransferToString(site->getAllowDownload());
-          j["priority"] = priorityToString(site->getPriority());
-          j["xdupe"] = site->useXDUPE();
-          for (std::map<std::string, Path>::const_iterator it = site->sectionsBegin(); it != site->sectionsEnd(); ++it) {
-            j["sections"][it->first] = it->second.toString();
-          }
-          for (std::map<std::string, int>::const_iterator it = site->avgspeedBegin(); it != site->avgspeedEnd(); ++it) {
-            j["avg_speed"][it->first] = it->second;
-          }
-          nlohmann::json affils = nlohmann::json::array();
-          for (std::set<std::string>::const_iterator it = site->affilsBegin(); it != site->affilsEnd(); ++it) {
-            affils.push_back(*it);
-          }
-          j["affils"] = affils;
-          j["transfer_source_policy"] = siteTransferPolicyToString(site->getTransferSourcePolicy());
-          j["transfer_target_policy"] = siteTransferPolicyToString(site->getTransferTargetPolicy());
-          nlohmann::json exceptsource = nlohmann::json::array();
-          for (std::set<std::shared_ptr<Site> >::const_iterator it = site->exceptSourceSitesBegin(); it != site->exceptSourceSitesEnd(); ++it) {
-            exceptsource.push_back((*it)->getName());
-          }
-          j["except_source_sites"] = exceptsource;
-          nlohmann::json excepttarget = nlohmann::json::array();
-          for (std::set<std::shared_ptr<Site> >::const_iterator it = site->exceptTargetSitesBegin(); it != site->exceptTargetSitesEnd(); ++it) {
-            excepttarget.push_back((*it)->getName());
-          }
-          j["except_target_sites"] = excepttarget;
-          j["leave_free_slot"] = site->getLeaveFreeSlot();
-          j["stay_logged_in"] = site->getStayLoggedIn();
-          j["skiplist"] = jsonSkipList(site->getSkipList());
-          j["proxy_type"] = proxyTypeToString(site->getProxyType());
-          j["proxy_name"] = site->getProxy();
-          j["var"]["size_up_all"] = site->getSizeUp().getAll();
-          j["var"]["size_up_24h"] = site->getSizeUp().getLast24Hours();
-          j["var"]["files_up_all"] = site->getFilesUp().getAll();
-          j["var"]["files_up_24h"] = site->getFilesUp().getLast24Hours();
-          j["var"]["size_down_all"] = site->getSizeDown().getAll();
-          j["var"]["size_down_24h"] = site->getSizeDown().getLast24Hours();
-          j["var"]["files_down_all"] = site->getFilesDown().getAll();
-          j["var"]["files_down_24h"] = site->getFilesDown().getLast24Hours();
-          j["var"]["current_logins"] = sl->getCurrLogins();
-          j["var"]["current_up"] = sl->getCurrUp();
-          j["var"]["current_down"] = sl->getCurrDown();
-          http::Response response(200);
-          std::string jsondump = j.dump(2);
-          response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
-          response.addHeader("Content-Type", "application/json");
-          cb->requestHandled(connrequestid, response);
-          return;
-        }
-        if (request.getMethod() == "PUT") {
-          std::shared_ptr<http::Response> updateresponse = updateSite(site, jsondata, false);
-          if (updateresponse) {
-            cb->requestHandled(connrequestid, *updateresponse);
-            return;
-          }
-          http::Response response(204);
-          response.appendHeader("Content-Length", "0");
-          cb->requestHandled(connrequestid, response);
-          return;
-        }
-        if (request.getMethod() == "DELETE") {
-          global->getSiteManager()->deleteSite(sitename);
-          http::Response response(204);
-          response.appendHeader("Content-Length", "0");
-          cb->requestHandled(connrequestid, response);
-          return;
-        }
-      }
-    }
-    else if (path.level(0).toString() == "/filelist") {
-      if (path.levels() == 1) {
-        pathmatch = true;
-        if (request.getMethod() == "GET") {
-          methodmatch = true;
-          if (!request.hasQueryParam("site")) {
-            cb->requestHandled(connrequestid, badRequestResponse("Missing query parameter: site"));
-            return;
-          }
-          if (!request.hasQueryParam("path")) {
-            cb->requestHandled(connrequestid, badRequestResponse("Missing query parameter: path"));
-            return;
-          }
-          std::string sitestr = request.getQueryParamValue("site");
-          std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitestr);
-          std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(sitestr);
-          if (!site || !sl) {
-            cb->requestHandled(connrequestid, badRequestResponse("Site not found: " + sitestr));
-            return;
-          }
-          Path path = request.getQueryParamValue("path");
-          if (!useOrSectionTranslate(path, site)) {
-            cb->requestHandled(connrequestid, badRequestResponse("Path must be absolute or a section on " + sitestr + ": " + path.toString()));
-            return;
-          }
-          int timeout = DEFAULT_TIMEOUT_SECONDS;
-          if (request.hasQueryParam("timeout")) {
-            std::string timeoutstr = request.getQueryParamValue("timeout");
-            try {
-
-              timeout = std::stoi(timeoutstr);
-            }
-            catch(std::exception& e) {
-              cb->requestHandled(connrequestid, badRequestResponse("Invalid timeout value: " + timeoutstr));
-              return;
-            }
-          }
-          int servicerequestid = sl->requestFileList(this, path);
-          OngoingRequest request;
-          request.type = OngoingRequestType::FILE_LIST;
-          request.connrequestid = connrequestid;
-          request.apirequestid = nextrequestid++;
-          request.cb = cb;
-          request.timeout = timeout;
-          request.ongoingservicerequests.insert(std::make_pair(sl.get(), servicerequestid));
-          ongoingrequests.push_back(request);
-        }
-      }
-    }
+    (this->*(it2->second))(cb, connrequestid, request);
   }
   catch (nlohmann::json::exception& e) {
     cb->requestHandled(connrequestid, badRequestResponse(e.what()));
     return;
-  }
-  if (!pathmatch) {
-    http::Response response(404);
-    response.appendHeader("Content-Length", "0");
-    cb->requestHandled(connrequestid, response);
-  }
-  else if (!methodmatch) {
-    http::Response response(405);
-    response.appendHeader("Content-Length", "0");
-    cb->requestHandled(connrequestid, response);
   }
 }
 
