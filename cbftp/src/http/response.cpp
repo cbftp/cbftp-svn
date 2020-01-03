@@ -164,4 +164,9 @@ int Response::getStatusCode() const {
 std::string Response::getStatusText() const {
     return statustext;
 }
+
+void Response::setStatusCode(int code) {
+  statuscode = code;
+  statustext = statusText(code);
+}
 } // namespace http

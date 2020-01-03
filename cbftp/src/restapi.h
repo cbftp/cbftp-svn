@@ -1,13 +1,16 @@
 #pragma once
 
 #include <list>
+#include <map>
 #include <set>
+#include <utility>
 
 #include "core/eventreceiver.h"
 #include "http/request.h"
 
 #include "requestcallback.h"
 
+class Path;
 class RestApiCallback;
 class SiteLogic;
 
@@ -15,6 +18,10 @@ enum class OngoingRequestType {
   RAW_COMMAND,
   FILE_LIST
 };
+
+class RestApi;
+
+typedef void(RestApi::*EndpointPointer)(RestApiCallback* cb, int connrequestid, const http::Request& request);
 
 struct OngoingRequest {
   OngoingRequestType type;
@@ -41,6 +48,18 @@ private:
   void finalize(OngoingRequest& request);
   OngoingRequest* findOngoingRequest(void* service, int servicerequestid);
   OngoingRequest* findOngoingRequest(int apirequestid);
+  void handleRawPost(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleRawGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleSitesGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleSitesPost(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleSiteGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleSitePatch(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleSiteDelete(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleFileListGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleSpreadJobPost(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleSpreadJobGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleSpreadJobsGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
   std::list<OngoingRequest> ongoingrequests;
   int nextrequestid;
+  std::map<std::pair<Path, int>, std::map<std::string, EndpointPointer>> endpoints;
 };

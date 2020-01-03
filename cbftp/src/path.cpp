@@ -296,6 +296,10 @@ Path Path::level(int level) const {
   return Path("", separatorchar, separatorcertain);
 }
 
+bool Path::operator<(const Path& other) const {
+  return toString() < other.toString();
+}
+
 std::ostream & operator<<(std::ostream & out, const Path & path) {
   return out << path.toString();
 }
