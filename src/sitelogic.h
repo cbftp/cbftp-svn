@@ -85,6 +85,8 @@ class SiteLogic : public Core::EventReceiver {
     bool makeTargetDirectory(int, bool, const std::shared_ptr<CommandOwner> & co);
     std::shared_ptr<SiteRace> getRace(unsigned int id) const;
     void antiAntiIdle(int id);
+    void transferComplete(int, bool isdownload, bool returntransferslot = true);
+    bool getSlot(bool isdownload, TransferType type);
   public:
     SiteLogic(const std::string &);
     ~SiteLogic();
@@ -135,8 +137,6 @@ class SiteLogic : public Core::EventReceiver {
     RawBuffer * getAggregatedRawBuffer() const;
     void raceGlobalComplete(const std::shared_ptr<SiteRace> & sr);
     void raceLocalComplete(const std::shared_ptr<SiteRace> & sr, int uploadslotsleft, bool reportdone = true);
-    void transferComplete(int, bool isdownload, bool returntransferslot = true);
-    bool getSlot(bool isdownload, TransferType type);
     int requestFileList(RequestCallback* cb, const Path &);
     int requestRawCommand(RequestCallback* cb, const std::string &);
     int requestRawCommand(RequestCallback* cb, const Path &, const std::string &);
