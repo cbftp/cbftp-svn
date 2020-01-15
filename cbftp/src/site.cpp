@@ -130,6 +130,8 @@ Site::Site(const Site & other) {
   allowdownload = other.allowdownload;
   priority = other.priority;
   xdupe = other.xdupe;
+  proxytype = other.proxytype;
+  proxyname = other.proxyname;
   sections = other.sections;
   affils = other.affils;
   proxytype = other.proxytype;
