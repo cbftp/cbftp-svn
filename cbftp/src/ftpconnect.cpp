@@ -63,7 +63,7 @@ FTPConnect::~FTPConnect() {
   free(databuf);
 }
 
-void FTPConnect::FDConnecting(int sockid, const std::string & addr) {
+void FTPConnect::FDConnecting(int sockid, const std::string& addr) {
   resolvedaddr.host = addr;
   resolvedaddr.brackets = addr.find(":") != std::string::npos && resolvedaddr.port != 21;
   printConnecting(resolvedaddr, true);
@@ -102,11 +102,11 @@ void FTPConnect::FDConnected(int sockid) {
   }
 }
 
-void FTPConnect::FDDisconnected(int sockid) {
-  FDFail(sockid, "Disconnected");
+void FTPConnect::FDDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) {
+  FDFail(sockid, "Disconnected: " + details);
 }
 
-void FTPConnect::FDData(int sockid, char * data, unsigned int datalen) {
+void FTPConnect::FDData(int sockid, char* data, unsigned int datalen) {
   if (!engaged) {
     return;
   }
@@ -131,7 +131,7 @@ void FTPConnect::FDData(int sockid, char * data, unsigned int datalen) {
   }
 }
 
-void FTPConnect::FDFail(int sockid, const std::string & error) {
+void FTPConnect::FDFail(int sockid, const std::string& error) {
   if (engaged) {
     engaged = false;
     owner->ftpConnectInfo(id, "[" + addr.toString() + "][" + error + "]");
@@ -139,16 +139,8 @@ void FTPConnect::FDFail(int sockid, const std::string & error) {
   }
 }
 
-void FTPConnect::FDSSLSuccess(int sockid, const std::string & cipher) {
+void FTPConnect::FDSSLSuccess(int sockid, const std::string& cipher) {
   owner->ftpConnectInfo(id, "[Cipher: " + cipher + "]");
-}
-
-void FTPConnect::FDSSLFail(int sockid) {
-  if (engaged) {
-    engaged = false;
-    owner->ftpConnectInfo(id, "[TLS negotiation failed]");
-    owner->ftpConnectFail(id);
-  }
 }
 
 int FTPConnect::getId() const {

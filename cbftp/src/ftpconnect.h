@@ -16,13 +16,6 @@ class FTPConnect : public Core::EventReceiver {
 public:
   FTPConnect(int, FTPConnectOwner *, const Address& addr, Proxy *, bool, bool implicittls);
   ~FTPConnect();
-  void FDConnecting(int, const std::string &);
-  void FDConnected(int);
-  void FDDisconnected(int);
-  void FDData(int, char *, unsigned int);
-  void FDFail(int, const std::string &);
-  void FDSSLSuccess(int sockid, const std::string & cipher);
-  void FDSSLFail(int sockid);
   int getId() const;
   int handedOver();
   Address getAddress() const;
@@ -30,6 +23,12 @@ public:
   void disengage();
   void tickIntern();
 private:
+  void FDConnecting(int sockid, const std::string& addr) override;
+  void FDConnected(int sockid) override;
+  void FDDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) override;
+  void FDData(int sockid, char* data, unsigned int datalen) override;
+  void FDFail(int sockid, const std::string& error) override;
+  void FDSSLSuccess(int sockid, const std::string& cipher) override;
   void proxySessionInit();
   void printConnecting(const Address& addr, bool resolved = false);
   int id;

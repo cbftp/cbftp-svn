@@ -19,6 +19,7 @@
 namespace Core {
 
 class EventReceiver;
+enum class DisconnectType;
 
 /* The WorkManager handles the main workload of an application.
  * events from IOManager (sockets / file descriptors), TickPoke (time-based events),
@@ -90,12 +91,15 @@ public:
                                  const std::string& addr,
                                  Prio prio = Prio::NORMAL);
     void dispatchEventConnected(EventReceiver* er, int sockid, Prio prio = Prio::NORMAL);
-    void dispatchEventDisconnected(EventReceiver* er, int sockid, Prio prio = Prio::NORMAL);
+    void dispatchEventDisconnected(EventReceiver* er,
+                                   int sockid,
+                                   const DisconnectType& reason,
+                                   const std::string& details,
+                                   Prio prio = Prio::NORMAL);
     void dispatchEventSSLSuccess(EventReceiver* er,
                                  int sockid,
                                  const std::string& cipher,
                                  Prio prio = Prio::NORMAL);
-    void dispatchEventSSLFail(EventReceiver* er, int sockid, Prio prio = Prio::NORMAL);
     void dispatchEventFail(EventReceiver* er,
                            int sockid,
                            const std::string& error,

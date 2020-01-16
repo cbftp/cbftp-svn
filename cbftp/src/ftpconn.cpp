@@ -164,15 +164,18 @@ void FTPConn::clearConnectors() {
   connectors.clear();
 }
 
-void FTPConn::FDDisconnected(int sockid) {
+void FTPConn::FDDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) {
   if (this->sockid != sockid) {
     return;
   }
   if (state != FTPConnState::DISCONNECTED) {
-    rawBufWriteLine("[Disconnected]");
+    rawBufWriteLine("[Disconnected: " + details + "]");
     this->status = "disconnected";
     state = FTPConnState::DISCONNECTED;
     sl->disconnected(id);
+  }
+  if (reason == Core::DisconnectType::ERROR) {
+    global->getEventLog()->log("FTPConn", site->getName() + " " + std::to_string(id) + ": " + details, Core::LogLevel::ERROR);
   }
 }
 
@@ -186,11 +189,7 @@ void FTPConn::FDSSLSuccess(int sockid, const std::string & cipher) {
   }
 }
 
-void FTPConn::FDSSLFail(int sockid) {
-  rawBufWriteLine("[TLS negotiation failed]");
-}
-
-void FTPConn::printCipher(const std::string & cipher) {
+void FTPConn::printCipher(const std::string& cipher) {
   rawBufWriteLine("[Cipher: " + cipher + "]");
 }
 

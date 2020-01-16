@@ -42,7 +42,7 @@ void EventReceiver::FDData(int sockid, char* data, unsigned int len) {
 
 }
 
-void EventReceiver::FDDisconnected(int sockid) {
+void EventReceiver::FDDisconnected(int sockid, DisconnectType reason, const std::string& details) {
 
 }
 
@@ -51,10 +51,6 @@ void EventReceiver::FDFail(int sockid, const std::string& error) {
 }
 
 void EventReceiver::FDSSLSuccess(int sockid, const std::string& cipher) {
-
-}
-
-void EventReceiver::FDSSLFail(int sockid) {
 
 }
 

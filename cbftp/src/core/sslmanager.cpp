@@ -478,4 +478,38 @@ std::string SSLManager::version() {
 #endif
 }
 
+std::string SSLManager::sslErrorToString(int error) {
+  switch (error) {
+    case SSL_ERROR_NONE:
+      return "SSL_ERROR_NONE";
+    case SSL_ERROR_SSL:
+      return "SSL_ERROR_SSL";
+    case SSL_ERROR_WANT_READ:
+      return "SSL_ERROR_WANT_READ";
+    case SSL_ERROR_WANT_WRITE:
+      return "SSL_ERROR_WANT_WRITE";
+    case SSL_ERROR_WANT_X509_LOOKUP:
+      return "SSL_ERROR_WANT_X509_LOOKUP";
+    case SSL_ERROR_SYSCALL:
+      return "SSL_ERROR_SYSCALL";
+    case SSL_ERROR_ZERO_RETURN:
+      return "SSL_ERROR_ZERO_RETURN";
+    case SSL_ERROR_WANT_CONNECT:
+      return "SSL_ERROR_WANT_CONNECT";
+    case SSL_ERROR_WANT_ACCEPT:
+      return "SSL_ERROR_WANT_ACCEPT";
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+    case SSL_ERROR_WANT_ASYNC:
+      return "SSL_ERROR_WANT_ASYNC";
+    case SSL_ERROR_WANT_ASYNC_JOB:
+      return "SSL_ERROR_WANT_ASYNC_JOB";
+#endif
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+    case SSL_ERROR_WANT_CLIENT_HELLO_CB:
+      return "SSL_ERROR_WANT_CLIENT_HELLO_CB";
+#endif
+  }
+  return std::to_string(error);
+}
+
 } // namespace Core

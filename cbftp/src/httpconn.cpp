@@ -54,8 +54,8 @@ void HTTPConn::FDSSLSuccess(int sockid, const std::string& cipher) {
   global->getEventLog()->log("HTTPConn", "Server-side TLS negotiation successful.", Core::LogLevel::DEBUG);
 }
 
-void HTTPConn::FDDisconnected(int sockid) {
-  global->getEventLog()->log("HTTPConn", "Client closed the connection.", Core::LogLevel::DEBUG);
+void HTTPConn::FDDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) {
+  global->getEventLog()->log("HTTPConn", "Disconnected: " + details, Core::LogLevel::DEBUG);
   deactivate();
 }
 

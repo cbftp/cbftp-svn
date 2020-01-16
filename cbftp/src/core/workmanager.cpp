@@ -76,21 +76,15 @@ void WorkManager::dispatchEventConnected(EventReceiver* er, int sockid, Prio pri
   event.post();
 }
 
-void WorkManager::dispatchEventDisconnected(EventReceiver* er, int sockid, Prio prio) {
+void WorkManager::dispatchEventDisconnected(EventReceiver* er, int sockid, const DisconnectType& reason, const std::string& details, Prio prio) {
   er->bindWorkManager(this);
-  eventqueues[static_cast<int>(prio)]->push(Event(er, EventType::DISCONNECTED, sockid));
+  eventqueues[static_cast<int>(prio)]->push(Event(er, EventType::DISCONNECTED, sockid, details, static_cast<int>(reason)));
   event.post();
 }
 
 void WorkManager::dispatchEventSSLSuccess(EventReceiver* er, int sockid, const std::string & cipher, Prio prio) {
   er->bindWorkManager(this);
   eventqueues[static_cast<int>(prio)]->push(Event(er, EventType::SSL_SUCCESS, sockid, cipher));
-  event.post();
-}
-
-void WorkManager::dispatchEventSSLFail(EventReceiver* er, int sockid, Prio prio) {
-  er->bindWorkManager(this);
-  eventqueues[static_cast<int>(prio)]->push(Event(er, EventType::SSL_FAIL, sockid));
   event.post();
 }
 
@@ -245,13 +239,10 @@ void WorkManager::run() {
           er->FDConnected(numdata);
           break;
         case EventType::DISCONNECTED:
-          er->FDDisconnected(numdata);
+          er->FDDisconnected(numdata, static_cast<DisconnectType>(event.getNumericalData2()), event.getStrData());
           break;
         case EventType::SSL_SUCCESS:
           er->FDSSLSuccess(numdata, event.getStrData());
-          break;
-        case EventType::SSL_FAIL:
-          er->FDSSLFail(numdata);
           break;
         case EventType::NEW:
           er->FDNew(numdata, event.getNumericalData2());

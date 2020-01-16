@@ -6,6 +6,13 @@ namespace Core {
 
 class WorkManager;
 
+enum class DisconnectType {
+  NONE,
+  GRACEFUL,
+  ABRUPT,
+  ERROR
+};
+
 /* This is the base class for all event handling in the core library.
  * Any class that wishes to register for any kind of events should inherit
  * from this class.
@@ -64,8 +71,10 @@ public:
   /* FDDisconnected is called when a socket registered through IOManager
    * has been disconnected by the remote end.
    * @param sockid: the identifier for the socket.
+   * @param reason: the reason for disconnect
+   * @param reasondetails: details for the disconnect reason
    */
-  virtual void FDDisconnected(int sockid);
+  virtual void FDDisconnected(int sockid, DisconnectType reason, const std::string& details);
 
   /* FDFail is called when a socket registered through IOManager fails
    * to connect or bind.
@@ -80,12 +89,6 @@ public:
    * @param cipher: The negotiated cipher.
    */
   virtual void FDSSLSuccess(int sockid, const std::string& cipher);
-
-  /* FDSSLFail is called when the SSL negotiation for a socket registered
-   * through IOManager has failed.
-   * @param sockid: the identifier for the socket.
-   */
-  virtual void FDSSLFail(int sockid);
 
   /* FDSendComplete is called when a socket registered through IOManager
    * has finished sending data.

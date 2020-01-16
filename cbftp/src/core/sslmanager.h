@@ -38,6 +38,7 @@ public:
   static bool addCertKeyPair(EVP_PKEY* pkey, X509* x509);
   static const char* getCipher(SSL* ssl);
   static std::string version();
+  static std::string sslErrorToString(int error);
 };
 
 } // namespace Core
