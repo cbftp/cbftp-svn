@@ -176,6 +176,12 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     void doMKD(const Path& path, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner>& co);
     void parseXDUPEData();
     void finishLogin();
+    void FDData(int sockid, char* data, unsigned int datalen) override;
+    void FDDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) override;
+    void FDSSLSuccess(int sockid, const std::string& cipher) override;
+    void ftpConnectInfo(int id, const std::string& info) override;
+    void ftpConnectSuccess(int id, const Address& addr) override;
+    void ftpConnectFail(int id) override;
   public:
     int getId() const;
     void setId(int);
@@ -249,15 +255,8 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     RawBuffer * getCwdRawBuffer() const;
     int getSockId() const;
     bool isCleanlyClosed() const;
-    static bool parseData(char *, unsigned int, char **, unsigned int &, unsigned int &, int &);
-    void FDData(int, char *, unsigned int);
-    void FDDisconnected(int);
-    void FDSSLSuccess(int, const std::string &);
-    void FDSSLFail(int);
-    void printCipher(const std::string &);
-    void ftpConnectInfo(int id, const std::string& info);
-    void ftpConnectSuccess(int id, const Address& addr);
-    void ftpConnectFail(int id);
+    static bool parseData(char*, unsigned int, char**, unsigned int&, unsigned int&, int&);
+    void printCipher(const std::string& cipher);
     void tick(int);
     std::shared_ptr<FileList> currentFileList() const;
     const std::shared_ptr<CommandOwner> & currentCommandOwner() const;

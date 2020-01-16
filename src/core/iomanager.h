@@ -362,7 +362,6 @@ public:
 
 private:
     bool handleError(EventReceiver* er);
-    bool investigateSSLError(int error, int sockid, int brecv);
     void closeSocketIntern(int sockid);
     void handleExternalIn(SocketInfo& socketinfo);
     void handleTCPConnectingOut(SocketInfo& socketinfo);

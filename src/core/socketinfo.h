@@ -41,7 +41,7 @@ class EventReceiver;
 class SocketInfo {
 public:
   SocketInfo() : type(SocketType::UNUSED), addrfam(AddressFamily::NONE), fd(-1), id(-1), parentid(-1), port(0), localport(0), gairet(0),
-                 gaires(nullptr), gaiasync(false), receiver(nullptr), ssl(nullptr),
+                 gaires(nullptr), gaiasync(false), receiver(nullptr), ssl(nullptr), sslshutdown(true),
                  prio(Prio::NORMAL), paused(false), direction(Direction::IN),
                  listenimmediately(true), closing(false), sessionkey(-1)
   {
@@ -62,6 +62,7 @@ public:
   EventReceiver* receiver;
   mutable std::list<DataBlock> sendqueue;
   SSL* ssl;
+  bool sslshutdown;
   Prio prio;
   bool paused;
   Direction direction;

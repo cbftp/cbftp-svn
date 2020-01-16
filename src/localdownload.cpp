@@ -67,7 +67,7 @@ void LocalDownload::FDConnected(int sockid) {
   }
 }
 
-void LocalDownload::FDDisconnected(int sockid) {
+void LocalDownload::FDDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) {
   if (!inmemory) {
     if (bufpos > 0) {
       if (!fileopened) {
@@ -84,22 +84,18 @@ void LocalDownload::FDDisconnected(int sockid) {
     Core::BinaryData out(buf, buf + bufpos);
     ls->storeContent(storeid, out);
   }
-  tm->targetComplete();
+  if (reason != Core::DisconnectType::ERROR) {
+    tm->targetComplete();
+  }
+  else {
+    tm->targetError(TM_ERR_RETRSTOR_COMPLETE);
+  }
 }
 
 void LocalDownload::FDSSLSuccess(int sockid, const std::string& cipher) {
   ftpconn->printCipher(cipher);
   bool sessionreused = global->getIOManager()->getSSLSessionReused(sockid);
   tm->sslDetails(cipher, sessionreused);
-}
-
-void LocalDownload::FDSSLFail(int sockid) {
-  if (fileopened) { // this can theoretically happen mid-transfer
-    filestream.close();
-  }
-  global->getIOManager()->closeSocket(sockid);
-  deactivate();
-  tm->targetError(TM_ERR_OTHER);
 }
 
 void LocalDownload::FDData(int sockid, char* data, unsigned int len) {

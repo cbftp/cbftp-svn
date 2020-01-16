@@ -47,6 +47,35 @@ void resolveHostAsync(EventReceiver* er, int sockid) {
   static_cast<IOManager*>(er)->resolveHost(sockid, true);
 }
 
+DisconnectType investigateSSLError(SocketInfo& socketinfo, const char* function, int brecv, std::string& errortext) {
+  int errorErrno = errno;
+  int sslError = SSL_get_error(socketinfo.ssl, brecv);
+  switch (sslError) {
+    case SSL_ERROR_WANT_READ:
+      return DisconnectType::NONE;
+    case SSL_ERROR_WANT_WRITE:
+      return DisconnectType::NONE;
+    case SSL_ERROR_ZERO_RETURN:
+      errortext = "Connection closed gracefully by peer";
+      return DisconnectType::GRACEFUL;
+    case SSL_ERROR_SYSCALL:
+      socketinfo.sslshutdown = false;
+      if (!errorErrno) {
+        errortext = "Connection closed abruptly by peer";
+        return DisconnectType::ABRUPT;
+      }
+      break;
+  }
+  unsigned long e = ERR_get_error();
+  char buf[util::ERR_BUF_SIZE];
+  ERR_error_string_n(e, buf, sizeof(buf));
+  errortext = std::string(function) + ": " + SSLManager::sslErrorToString(sslError) +
+                   (e ? ": " + std::string(buf) : ", return code: " +
+                   std::to_string(brecv) + ", errno: " +
+                   std::to_string(errorErrno) + " = " + util::getStrError(errorErrno));
+  return DisconnectType::ERROR;
+}
+
 } // namespace
 
 IOManager::IOManager(WorkManager& wm, TickPoke& tp)
@@ -498,34 +527,6 @@ bool IOManager::handleError(EventReceiver* er) {
   return false;
 }
 
-bool IOManager::investigateSSLError(int error, int sockid, int brecv) {
-  auto it = socketinfomap.find(sockid);
-  if (it == socketinfomap.end()) {
-    return false;
-  }
-  SocketInfo& socketinfo = it->second;
-  switch (error) {
-    case SSL_ERROR_WANT_READ:
-      return true;
-    case SSL_ERROR_WANT_WRITE:
-      return true;
-    case SSL_ERROR_SYSCALL:
-      if (errno == EAGAIN) {
-        setPollWrite(socketinfo);
-        return true;
-      }
-      break;
-  }
-  unsigned long e = ERR_get_error();
-  char buf[util::ERR_BUF_SIZE];
-  ERR_error_string_n(e, buf, sizeof(buf));
-  getLogger()->log("IOManager", "SSL error on connection to " + it->second.addr + ": " + std::to_string(error) +
-                             " return code: " + std::to_string(brecv) + " errno: " + util::getStrError(errno) +
-                             (e ? " String: " + std::string(buf) : ""),
-                         LogLevel::ERROR);
-  return false;
-}
-
 bool IOManager::sendData(int sockid, const std::string& data) {
   return sendData(sockid, data.c_str(), data.length());
 }
@@ -588,7 +589,7 @@ void IOManager::closeSocketIntern(int sockid) {
   }
   SocketInfo& socketinfo = it->second;
   polling.removeFD(socketinfo.fd);
-  if (socketinfo.ssl) {
+  if (socketinfo.ssl && socketinfo.sslshutdown && !SSL_in_init(socketinfo.ssl)) {
     SSL_shutdown(socketinfo.ssl);
   }
   if (socketinfo.type != SocketType::EXTERNAL && socketinfo.type != SocketType::TCP_SERVER_EXTERNAL) {
@@ -841,19 +842,18 @@ void IOManager::handleTCPPlainIn(SocketInfo& socketinfo) {
   int brecv = read(socketinfo.fd, buf, blocksize);
   if (brecv == 0) {
     blockpool.returnBlock(buf);
-    workmanager.dispatchEventDisconnected(socketinfo.receiver, socketinfo.id, socketinfo.prio);
+    workmanager.dispatchEventDisconnected(socketinfo.receiver, socketinfo.id, DisconnectType::GRACEFUL, "Connection closed by peer", socketinfo.prio);
     closeSocketIntern(socketinfo.id);
     return;
   }
   else if (brecv < 0) {
+    int error = errno;
     blockpool.returnBlock(buf);
-    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+    if (error == EAGAIN || error == EWOULDBLOCK) {
       return;
     }
-    workmanager.dispatchEventDisconnected(socketinfo.receiver, socketinfo.id, socketinfo.prio);
-    getLogger()->log("IOManager", "Socket read error on established connection to " + socketinfo.addr + ": " +
-                               util::getStrError(errno),
-                           LogLevel::WARNING);
+    std::string errortext = "Socket read error: " + std::to_string(error) + " = " + util::getStrError(error);
+    workmanager.dispatchEventDisconnected(socketinfo.receiver, socketinfo.id, DisconnectType::ERROR, errortext, socketinfo.prio);
     closeSocketIntern(socketinfo.id);
     return;
   }
@@ -867,14 +867,13 @@ void IOManager::handleTCPPlainOut(SocketInfo& socketinfo) {
     DataBlock& block = socketinfo.sendqueue.front();
     int bsent = write(socketinfo.fd, block.data(), block.dataLength());
     if (bsent < 0) {
-      if (errno == EAGAIN || errno == EWOULDBLOCK) {
+      int error = errno;
+      if (error == EAGAIN || error == EWOULDBLOCK) {
           return;
       }
       if (!socketinfo.closing) {
-        workmanager.dispatchEventDisconnected(socketinfo.receiver, socketinfo.id, socketinfo.prio);
-        getLogger()->log("IOManager", "Socket write error on established connection to " + socketinfo.addr + ": " +
-                                   util::getStrError(errno),
-                               LogLevel::WARNING);
+        std::string errortext = "Socket write error: " + std::to_string(error) + " = " + util::getStrError(error);
+        workmanager.dispatchEventDisconnected(socketinfo.receiver, socketinfo.id, DisconnectType::ERROR, errortext, socketinfo.prio);
       }
       closeSocketIntern(socketinfo.id);
       return;
@@ -899,13 +898,18 @@ void IOManager::handleTCPPlainOut(SocketInfo& socketinfo) {
 void IOManager::handleTCPSSLNegotiationIn(SocketInfo& socketinfo) {
   SSL* ssl = socketinfo.ssl;
   int brecv;
+  const char* function = nullptr;
+  ERR_clear_error();
   if (socketinfo.type == SocketType::TCP_SSL_NEG_REDO_CONNECT) {
+    function = "SSL_connect";
     brecv = SSL_connect(ssl);
   }
   else if (socketinfo.type == SocketType::TCP_SSL_NEG_REDO_ACCEPT) {
+    function = "SSL_accept";
     brecv = SSL_accept(ssl);
   }
   else {
+    function = "SSL_do_handshake";
     brecv = SSL_do_handshake(ssl);
   }
   if (brecv > 0) {
@@ -918,16 +922,12 @@ void IOManager::handleTCPSSLNegotiationIn(SocketInfo& socketinfo) {
       setPollWrite(socketinfo);
     }
   }
-  else if (brecv == 0) {
-    if (!socketinfo.closing) {
-      workmanager.dispatchEventDisconnected(socketinfo.receiver, socketinfo.id, socketinfo.prio);
-    }
-    closeSocketIntern(socketinfo.id);
-  }
   else {
-    if (!investigateSSLError(SSL_get_error(ssl, brecv), socketinfo.id, brecv)) {
+    std::string errortext;
+    DisconnectType type = investigateSSLError(socketinfo, function, brecv, errortext);
+    if (type != DisconnectType::NONE) {
       if (!socketinfo.closing) {
-        workmanager.dispatchEventDisconnected(socketinfo.receiver, socketinfo.id, socketinfo.prio);
+        workmanager.dispatchEventDisconnected(socketinfo.receiver, socketinfo.id, type, errortext, socketinfo.prio);
       }
       closeSocketIntern(socketinfo.id);
     }
@@ -954,10 +954,13 @@ void IOManager::handleTCPSSLNegotiationOut(SocketInfo& socketinfo) {
     }
   }
   int ret = -1;
+  const char* function = nullptr;
   if (socketinfo.type == SocketType::TCP_SSL_NEG_CONNECT) {
+    function = "SSL_connect";
     ret = SSL_connect(ssl);
   }
   else if (socketinfo.type == SocketType::TCP_SSL_NEG_ACCEPT) {
+    function = "SSL_accept";
     ret = SSL_accept(ssl);
   }
   if (ret > 0) {
@@ -971,9 +974,11 @@ void IOManager::handleTCPSSLNegotiationOut(SocketInfo& socketinfo) {
     }
   }
   else {
-    if (!investigateSSLError(SSL_get_error(ssl, ret), socketinfo.id, ret)) {
+    std::string errortext;
+    DisconnectType type = investigateSSLError(socketinfo, function, ret, errortext);
+    if (type != DisconnectType::NONE) {
       if (!socketinfo.closing) {
-        workmanager.dispatchEventDisconnected(socketinfo.receiver, socketinfo.id, socketinfo.prio);
+        workmanager.dispatchEventDisconnected(socketinfo.receiver, socketinfo.id, type, errortext, socketinfo.prio);
       }
       closeSocketIntern(socketinfo.id);
       return;
@@ -996,6 +1001,7 @@ void IOManager::handleTCPSSLIn(SocketInfo& socketinfo) {
     char* buf = blockpool.getBlock();
     int bufpos = 0;
     while (bufpos < blocksize) {
+      ERR_clear_error();
       int brecv = SSL_read(ssl, buf + bufpos, blocksize - bufpos);
       if (brecv <= 0) {
         if (bufpos > 0) {
@@ -1006,8 +1012,10 @@ void IOManager::handleTCPSSLIn(SocketInfo& socketinfo) {
         else {
           blockpool.returnBlock(buf);
         }
-        if (!brecv || !investigateSSLError(SSL_get_error(ssl, brecv), socketinfo.id, brecv)) {
-          workmanager.dispatchEventDisconnected(socketinfo.receiver, socketinfo.id, socketinfo.prio);
+        std::string errortext;
+        DisconnectType type = investigateSSLError(socketinfo, "SSL_read", brecv, errortext);
+        if (type != DisconnectType::NONE) {
+          workmanager.dispatchEventDisconnected(socketinfo.receiver, socketinfo.id, type, errortext, socketinfo.prio);
           closeSocketIntern(socketinfo.id);
         }
         return;
@@ -1030,15 +1038,14 @@ void IOManager::handleTCPSSLOut(SocketInfo& socketinfo) {
   while (!socketinfo.sendqueue.empty()) {
     DataBlock& block = socketinfo.sendqueue.front();
     SSL* ssl = socketinfo.ssl;
+    ERR_clear_error();
     int bsent = SSL_write(ssl, block.data(), block.dataLength());
-    if (bsent < 0) {
-      int code = SSL_get_error(ssl, bsent);
-      if (code == SSL_ERROR_WANT_READ || code == SSL_ERROR_WANT_WRITE) {
-        return;
-      }
-      else {
-        if (socketinfo.closing) {
-          workmanager.dispatchEventDisconnected(socketinfo.receiver, socketinfo.id, socketinfo.prio);
+    if (bsent <= 0) {
+      std::string errortext;
+      DisconnectType type = investigateSSLError(socketinfo, "SSL_write", bsent, errortext);
+      if (type != DisconnectType::NONE) {
+        if (!socketinfo.closing) {
+          workmanager.dispatchEventDisconnected(socketinfo.receiver, socketinfo.id, type, errortext, socketinfo.prio);
         }
         closeSocketIntern(socketinfo.id);
       }

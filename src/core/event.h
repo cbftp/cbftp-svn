@@ -15,7 +15,6 @@ enum class EventType {
   CONNECTED,
   DISCONNECTED,
   SSL_SUCCESS,
-  SSL_FAIL,
   NEW,
   FAIL,
   SEND_COMPLETE,
@@ -31,7 +30,7 @@ public:
   Event();
   Event(EventReceiver* er, EventType type, int numdata = 0, void* data = nullptr, int datalen = 0);
   Event(EventReceiver* er, EventType type, int numdata, int numdata2);
-  Event(EventReceiver* er, EventType type, int numdata, const std::string& strdata);
+  Event(EventReceiver* er, EventType type, int numdata, const std::string& strdata, int numdata2 = 0);
   Event(const std::shared_ptr<EventReceiver>& er, EventType type);
   ~Event();
   EventReceiver* getReceiver() const;

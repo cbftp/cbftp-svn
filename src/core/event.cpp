@@ -27,13 +27,13 @@ Event::Event(EventReceiver* er, EventType type, int numdata, int numdata2) :
 {
 }
 
-Event::Event(EventReceiver* er, EventType type, int numdata, const std::string& strdata) :
+Event::Event(EventReceiver* er, EventType type, int numdata, const std::string& strdata, int numdata2) :
   receiver(er),
   type(type),
   data(nullptr),
   datalen(0),
   numdata(numdata),
-  numdata2(0),
+  numdata2(numdata2),
   strdata(strdata)
 {
 }

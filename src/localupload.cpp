@@ -58,7 +58,7 @@ void LocalUpload::FDConnected(int sockid) {
   }
 }
 
-void LocalUpload::FDDisconnected(int sockid) {
+void LocalUpload::FDDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) {
   if (fileopened) {
     filestream.close();
   }
@@ -89,15 +89,6 @@ void LocalUpload::sendChunk() {
 
 void LocalUpload::FDSendComplete(int sockid) {
   sendChunk();
-}
-
-void LocalUpload::FDSSLFail(int sockid) {
-  if (fileopened) { // this can theoretically happen mid-transfer
-    filestream.close();
-  }
-  global->getIOManager()->closeSocket(sockid);
-  deactivate();
-  tm->sourceError(TM_ERR_OTHER);
 }
 
 void LocalUpload::FDFail(int sockid, const std::string& error) {

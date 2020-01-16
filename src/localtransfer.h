@@ -20,8 +20,6 @@ public:
   virtual unsigned long long int size() const = 0;
   FTPConn * getConn() const;
 protected:
-  void FDNew(int sockid, int newsockid) override;
-  void tick(int) override;
   void activate();
   void deactivate();
   bool ssl;
@@ -40,5 +38,7 @@ protected:
   unsigned int bufpos;
   bool timeoutticker;
 private:
+  void FDNew(int sockid, int newsockid) override;
+  void tick(int) override;
   bool inuse;
 };
