@@ -20,6 +20,16 @@
 #include "../menuselectoptiontextbutton.h"
 #include "../menuselectoptionelement.h"
 
+namespace {
+
+enum class UdpEnable {
+  NO,
+  PLAINTEXT,
+  ENCRYPTED
+};
+
+}
+
 GlobalOptionsScreen::GlobalOptionsScreen(Ui * ui) {
   this->ui = ui;
 }
@@ -74,7 +84,15 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   y++;
   mso.addCheckBox(y++, x, "tcpenable", "Enable HTTPS/JSON API:", global->getHTTPServer()->getEnabled());
   mso.addStringField(y++, x, "tcpport", "HTTPS/JSON API Port:", std::to_string(global->getHTTPServer()->getPort()), false, 5);
-  mso.addCheckBox(y++, x, "udpenable", "Enable UDP API:", rch->isEnabled());
+  std::shared_ptr<MenuSelectOptionTextArrow> udpenable = mso.addTextArrow(y++, x, "udpenable", "Enable UDP API:");
+  udpenable->addOption("No", static_cast<int>(UdpEnable::NO));
+  udpenable->addOption("Plaintext", static_cast<int>(UdpEnable::PLAINTEXT));
+  udpenable->addOption("Encrypted", static_cast<int>(UdpEnable::ENCRYPTED));
+  UdpEnable udpenabled = UdpEnable::NO;
+  if (rch->isEnabled()) {
+    udpenabled = rch->isEncrypted() ? UdpEnable::ENCRYPTED : UdpEnable::PLAINTEXT;
+  }
+  udpenable->setOption(static_cast<int>(udpenabled));
   mso.addStringField(y++, x, "udpport", "UDP API Port:", std::to_string(rch->getUDPPort()), false, 5);
   mso.addStringField(y++, x, "apipass", "API password:", rch->getPassword(), true);
   std::shared_ptr<MenuSelectOptionTextArrow> bell = mso.addTextArrow(y++, x, "udpbell", "Remote command bell:");
@@ -250,7 +268,7 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
       ui->goSkiplist();
       return true;
     case 'd':
-      bool udpenable = false;
+      UdpEnable udpenable = UdpEnable::NO;
       for(unsigned int i = 0; i < mso.size(); i++) {
         std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
         std::string identifier = msoe->getIdentifier();
@@ -287,9 +305,12 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
           global->getHTTPServer()->setPort(std::stoi(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData()));
         }
         else if (identifier == "udpenable") {
-          udpenable = std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData();
-          if (rch->isEnabled() && !udpenable) {
+          udpenable = static_cast<UdpEnable>(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
+          if (udpenable == UdpEnable::NO) {
             rch->setEnabled(false);
+          }
+          else {
+            rch->setEncrypted(udpenable == UdpEnable::ENCRYPTED);
           }
         }
         else if (identifier == "udpport") {
@@ -341,7 +362,7 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
           global->getEngine()->setNextPreparedRaceStarterTimeout(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
         }
       }
-      rch->setEnabled(udpenable);
+      rch->setEnabled(udpenable != UdpEnable::NO);
       global->getSettingsLoaderSaver()->saveSettings();
       ui->returnToLast();
       return true;

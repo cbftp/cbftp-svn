@@ -5,6 +5,8 @@
 
 #include "core/tickpoke.h"
 #include "core/iomanager.h"
+#include "core/types.h"
+#include "crypto.h"
 #include "globalcontext.h"
 #include "engine.h"
 #include "eventlog.h"
@@ -92,6 +94,7 @@ bool useOrSectionTranslate(Path& path, const std::shared_ptr<Site>& site) {
 
 RemoteCommandHandler::RemoteCommandHandler() :
   enabled(false),
+  encrypted(true),
   password(DEFAULT_PASS),
   port(DEFAULT_API_PORT),
   retrying(false),
@@ -101,6 +104,10 @@ RemoteCommandHandler::RemoteCommandHandler() :
 
 bool RemoteCommandHandler::isEnabled() const {
   return enabled;
+}
+
+bool RemoteCommandHandler::isEncrypted() const {
+  return encrypted;
 }
 
 int RemoteCommandHandler::getUDPPort() const {
@@ -116,10 +123,7 @@ void RemoteCommandHandler::setPassword(const std::string & newpass) {
 }
 
 void RemoteCommandHandler::setPort(int newport) {
-  bool reopen = true;
-  if (port == newport || !isEnabled()) {
-    reopen = false;
-  }
+  bool reopen = !(port == newport || !enabled);
   port = newport;
   if (reopen) {
     setEnabled(false);
@@ -151,7 +155,23 @@ void RemoteCommandHandler::connect() {
 }
 
 void RemoteCommandHandler::FDData(int sockid, char * data, unsigned int datalen) {
-  handleMessage(std::string(data, datalen));
+  std::string message;
+  if (encrypted) {
+    Core::BinaryData encrypted(datalen);
+    memcpy(encrypted.data(), data, datalen);
+    Core::BinaryData decrypted;
+    Core::BinaryData key(password.begin(), password.end());
+    Crypto::decrypt(encrypted, key, decrypted);
+    if (!Crypto::isMostlyASCII(decrypted)) {
+      global->getEventLog()->log("RemoteCommandHandler", "Received " + std::to_string(datalen) + " bytes of garbage or wrongly encrypted data");
+      return;
+    }
+    message = std::string(decrypted.begin(), decrypted.end());
+  }
+  else {
+    message = std::string(data, datalen);
+  }
+  handleMessage(message);
 }
 
 void RemoteCommandHandler::handleMessage(const std::string & message) {
@@ -514,7 +534,7 @@ void RemoteCommandHandler::disconnect() {
 }
 
 void RemoteCommandHandler::setEnabled(bool enabled) {
-  if ((isEnabled() && enabled) || (!isEnabled() && !enabled)) {
+  if (this->enabled == enabled) {
     return;
   }
   if (retrying) {
@@ -527,6 +547,10 @@ void RemoteCommandHandler::setEnabled(bool enabled) {
     disconnect();
   }
   this->enabled = enabled;
+}
+
+void RemoteCommandHandler::setEncrypted(bool encrypted) {
+  this->encrypted = encrypted;
 }
 
 void RemoteCommandHandler::stopRetry() {

@@ -4,6 +4,7 @@
 #include <cstdlib>
 
 #include "datafiletoolfuncs.h"
+#include "../crypto.h"
 #include "../datafilehandlermethod.h"
 #include "../filesystem.h"
 #include "../path.h"
@@ -42,7 +43,7 @@ int main(int argc, char ** argv) {
 
   Core::BinaryData decryptedtext;
 
-  if (!DataFileHandlerMethod::isMostlyASCII(rawdata)) {
+  if (!Crypto::isMostlyASCII(rawdata)) {
     Core::BinaryData key = getPassphrase();
     if (!DataFileHandlerMethod::decrypt(rawdata, key, decryptedtext)) {
       std::cerr << "Error: Either the passphrase is wrong, or the input file is"

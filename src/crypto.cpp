@@ -118,3 +118,13 @@ void Crypto::base64Decode(const Core::BinaryData & indata, Core::BinaryData & ou
   EVP_DecodeBlock(&outdata[0], &indata[0], indata.size());
   outdata.resize(outsize - padding);
 }
+
+bool Crypto::isMostlyASCII(const Core::BinaryData& data) {
+  unsigned int asciicount = 0;
+  for (unsigned int i = 0; i < data.size(); ++i) {
+    if (data[i] < 128) {
+      ++asciicount;
+    }
+  }
+  return asciicount > data.size() * 0.9;
+}
