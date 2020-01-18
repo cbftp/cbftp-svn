@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <cstdio>
 
+#include "crypto.h"
 #include "filesystem.h"
 #include "datafilehandlermethod.h"
 #include "path.h"
@@ -35,7 +36,7 @@ DataFileHandler::DataFileHandler() : state(DataFileState::NOT_EXISTING) {
     exit(1);
   }
   FileSystem::readFile(path, rawdata);
-  if (!DataFileHandlerMethod::isMostlyASCII(rawdata)) {
+  if (!Crypto::isMostlyASCII(rawdata)) {
     state = DataFileState::EXISTS_ENCRYPTED;
     return;
   }

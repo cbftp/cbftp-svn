@@ -187,13 +187,18 @@ An example body when starting a spread job:
 
 UDP API
 
-The UDP API is unencrypted and one-way, i.e. does not provide responses.
-Due to being unencrypted, commands over this API should not be sent outside
-of your own host. Use with care.
+The UDP API is one-way, i.e. does not provide responses.
+When encryption is enabled, the encryption key is the same as the password.
 
 Example usage: (Configuration: UDP API port 55477, password bestpass)
 
+Plaintext example:
 echo -n "bestpass raw SITE1 site deluser me" > /dev/udp/127.0.0.1/55477
+
+Encrypted example:
+echo -n "bestpass raw SITE1 site deluser me" | openssl enc -aes-256-cbc \
+  -md sha256 > /dev/udp/127.0.0.1/55477
+(and then enter bestpass again when prompted)
 
 Available commands:
 

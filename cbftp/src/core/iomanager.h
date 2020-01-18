@@ -145,7 +145,7 @@ public:
      * @param sockid: The socket identifier
      *
      * SSL negotiation will proceed in the background. When it has finished,
-     * an FDSSLSuccess() or an FDSSLFail() event will be produced.
+     * an FDSSLSuccess() or an FDDisconnected() event will be produced.
      */
     void negotiateSSLConnect(int sockid);
 
@@ -155,7 +155,7 @@ public:
      * @param sessionkey: The key of the previously stored session.
      *
      * SSL negotiation will proceed in the background. When it has finished,
-     * an FDSSLSuccess() or an FDSSLFail() event will be produced.
+     * an FDSSLSuccess() or an FDDisconnected() event will be produced.
      */
     void negotiateSSLConnect(int sockid, int sessionkey);
 
@@ -165,7 +165,7 @@ public:
      * @param parentsockid: The socket identifier for the parent socket.
      *
      * SSL negotiation will proceed in the background. When it has finished,
-     * an FDSSLSuccess() or an FDSSLFail() event will be produced.
+     * an FDSSLSuccess() or an FDDisconnected() event will be produced.
      */
     void negotiateSSLConnectParent(int sockid, int parentsockid);
 
@@ -173,7 +173,7 @@ public:
      * @param sockid: The socket identifier
      *
      * SSL negotiation will proceed in the background. When it has finished,
-     * an FDSSLSuccess() or an FDSSLFail() event will be produced.
+     * an FDSSLSuccess() or an FDDisconnected() event will be produced.
      */
     void negotiateSSLAccept(int sockid);
 

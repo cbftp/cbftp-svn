@@ -173,10 +173,22 @@ void SettingsLoaderSaver::loadSettings() {
     size_t tok = line.find('=');
     std::string setting = line.substr(0, tok);
     std::string value = line.substr(tok + 1);
-    if (!setting.compare("enabled")) {
+    if (!setting.compare("udpenable")) {
       if (!value.compare("true")) {
         enable = true;
       }
+    }
+    // begin compatibility r1080
+    else if (!setting.compare("enabled")) {
+      if (!value.compare("true")) {
+        enable = true;
+        global->getRemoteCommandHandler()->setEncrypted(false);
+      }
+    }
+    // end compatibility r1080
+    else if (!setting.compare("encrypted")) {
+      bool encrypted = value.compare("false");
+      global->getRemoteCommandHandler()->setEncrypted(encrypted);
     }
     else if (!setting.compare("port")) {
       global->getRemoteCommandHandler()->setPort(std::stoi(value));
@@ -743,8 +755,9 @@ void SettingsLoaderSaver::saveSettings() {
   }
 
   if (global->getRemoteCommandHandler()->isEnabled()) {
-    dfh->addOutputLine("RemoteCommandHandler", "enabled=true");
+    dfh->addOutputLine("RemoteCommandHandler", "udpenable=true");
   }
+  dfh->addOutputLine("RemoteCommandHandler", std::string("encrypted=") + (global->getRemoteCommandHandler()->isEncrypted() ? "true" : "false"));
   dfh->addOutputLine("RemoteCommandHandler", "port=" + std::to_string(global->getRemoteCommandHandler()->getUDPPort()));
   std::string password = global->getRemoteCommandHandler()->getPassword();
   Core::BinaryData indata(password.begin(), password.end());

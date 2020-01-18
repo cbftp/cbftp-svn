@@ -10,18 +10,8 @@ namespace {
 
 namespace DataFileHandlerMethod {
 
-bool isMostlyASCII(const Core::BinaryData& data) {
-  unsigned int asciicount = 0;
-  for (unsigned int i = 0; i < data.size(); ++i) {
-    if (data[i] < 128) {
-      ++asciicount;
-    }
-  }
-  return asciicount > data.size() * 0.9;
-}
-
 bool encrypt(const Core::BinaryData& indata, const Core::BinaryData& pass, Core::BinaryData& outdata) {
-  if (!isMostlyASCII(indata)) {
+  if (!Crypto::isMostlyASCII(indata)) {
     return false;
   }
   Crypto::encrypt(indata, pass, outdata);
@@ -30,7 +20,7 @@ bool encrypt(const Core::BinaryData& indata, const Core::BinaryData& pass, Core:
 
 bool decrypt(const Core::BinaryData& indata, const Core::BinaryData& pass, Core::BinaryData& outdata) {
   Crypto::decrypt(indata, pass, outdata);
-  return isMostlyASCII(outdata);
+  return Crypto::isMostlyASCII(outdata);
 }
 
 }

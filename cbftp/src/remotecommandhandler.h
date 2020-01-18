@@ -15,6 +15,7 @@ enum class RemoteCommandNotify {
 class RemoteCommandHandler : private Core::EventReceiver {
 private:
   bool enabled;
+  bool encrypted;
   std::string password;
   int port;
   int sockid;
@@ -42,13 +43,15 @@ private:
 public:
   RemoteCommandHandler();
   bool isEnabled() const;
+  bool isEncrypted() const;
   int getUDPPort() const;
   std::string getPassword() const;
   void setPassword(const std::string &);
   void setPort(int);
   RemoteCommandNotify getNotify() const;
   void setNotify(RemoteCommandNotify notify);
-  void setEnabled(bool);
+  void setEnabled(bool enable);
+  void setEncrypted(bool encrypted);
   void FDData(int, char *, unsigned int);
   void FDFail(int, const std::string &);
   void tick(int);
