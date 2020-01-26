@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "core/eventreceiver.h"
+#include "refreshgovernor.h"
 
 class TransferMonitor;
 class ConnStateTracker;
@@ -58,7 +59,10 @@ class SiteLogic : public Core::EventReceiver {
     int currtime;
     int timesincelastrequestready;
     std::list<DelayedCommand> delayedcommands;
-    void handleConnection(int id, bool backfromrefresh = false);
+    RefreshGovernor refreshgovernor;
+    std::string lastlistpath;
+    void handleConnection(int id);
+    bool handleSpreadJob(int id);
     bool handleRequest(int);
     void handleRecursiveLogic(int id, const std::shared_ptr<FileList>& fl = nullptr);
     void addRecentList(const std::shared_ptr<SiteRace> & sr);
@@ -78,6 +82,7 @@ class SiteLogic : public Core::EventReceiver {
     void setRequestReady(unsigned int, void *, bool, bool returnslot = true);
     void cleanupConnection(int);
     void checkFailListRequest(int);
+    void clearExpiredReadyRequests();
     void clearReadyRequest(SiteLogicRequestReady &);
     bool setPathExists(int, int, bool);
     bool handlePreTransfer(int);
@@ -159,6 +164,7 @@ class SiteLogic : public Core::EventReceiver {
     void pushPotential(int, const std::string &, const std::shared_ptr<SiteLogic> &);
     bool potentialCheck(int);
     int getPotential();
+    void siteUpdated();
     void updateName();
     const std::vector<FTPConn*>* getConns() const;
     FTPConn* getConn(int) const;
