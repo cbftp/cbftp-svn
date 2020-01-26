@@ -94,7 +94,8 @@ SiteLogic::SiteLogic(const std::string & sitename) :
   requestidcounter(0),
   poke(false),
   currtime(0),
-  timesincelastrequestready(0)
+  timesincelastrequestready(0),
+  refreshgovernor(site)
 {
   global->getTickPoke()->startPoke(this, "SiteLogic", TICK_INTERVAL, 0);
 
@@ -121,7 +122,7 @@ void SiteLogic::activateAll() {
       conns[i]->login();
     }
     else {
-      handleConnection(i, false);
+      handleConnection(i);
     }
   }
 }
@@ -155,7 +156,6 @@ void SiteLogic::addTransferJob(std::shared_ptr<SiteTransferJob> & tj) {
 
 void SiteLogic::tick(int message) {
   currtime += TICK_INTERVAL;
-  timesincelastrequestready += TICK_INTERVAL;
   for (std::list<DelayedCommand>::iterator it = delayedcommands.begin(); it != delayedcommands.end(); ++it) {
     DelayedCommand & delayedcommand = *it;
     if (delayedcommand.isActive()) {
@@ -180,19 +180,7 @@ void SiteLogic::tick(int message) {
       connstatetracker[i].getCommand().reset();
       connstatetracker[i].use();
       std::string event = eventcommand.getCommand();
-      if (event == "refreshchangepath") {
-        std::shared_ptr<SiteRace> race = std::static_pointer_cast<SiteRace>(eventcommand.getCommandOwner());
-        if (!race) {
-          handleConnection(i, false);
-        }
-        else {
-          refreshChangePath(i, race, true);
-        }
-      }
-      else if (event == "handle") {
-        handleConnection(i, false);
-      }
-      else if (event == "userpass") {
+      if (event == "userpass") {
         conns[i]->doUSER(false);
       }
       else if (event == "reconnect") {
@@ -201,13 +189,39 @@ void SiteLogic::tick(int message) {
       else if (event == "quit") {
         disconnectConn(i);
       }
-      else if (event == "antiantiidle") {
-        antiAntiIdle(i);
-      }
     }
   }
   if (currtime % 60000 == 0) {
     site->tickMinute();
+  }
+  timesincelastrequestready += TICK_INTERVAL;
+  clearExpiredReadyRequests();
+  std::vector<unsigned int> idlingconns;
+  for (unsigned int i = 0; i < conns.size(); i++) {
+    if(connstatetracker[i].isLoggedIn() && !connstatetracker[i].isLocked() &&
+        !conns[i]->isProcessing())
+    {
+      idlingconns.push_back(i);
+    }
+  }
+  refreshgovernor.timePassed(TICK_INTERVAL);
+  if (refreshgovernor.refreshAllowed() && !currentraces.empty() && !idlingconns.empty()) {
+    unsigned int winindex = rand() % idlingconns.size();
+    unsigned int winner = idlingconns[winindex];
+    handleConnection(winner);
+    if(connstatetracker[winner].isLocked() || conns[winner]->isProcessing()) {
+      idlingconns.erase(idlingconns.begin() + winindex);
+    }
+  }
+  for (unsigned int i : idlingconns) {
+    if (connstatetracker[i].getTimePassed() > static_cast<int>(site->getMaxIdleTime() * 1000)) {
+      if (site->getStayLoggedIn()) {
+        antiAntiIdle(i);
+      }
+      else {
+        disconnectConn(i);
+      }
+    }
   }
 }
 
@@ -263,7 +277,7 @@ void SiteLogic::listRefreshed(int id) {
   if (!!currentco) {
     global->getEngine()->jobFileListRefreshed(this, currentco, fl);
   }
-  handleConnection(id, true);
+  handleConnection(id);
 }
 
 bool SiteLogic::setPathExists(int id, int exists, bool refreshtime) {
@@ -408,10 +422,7 @@ void SiteLogic::commandSuccess(int id, FTPConnState state) {
           setRequestReady(id, NULL, true);
           handleConnection(id);
           if (!conns[id]->isProcessing()) {
-            if (site->getStayLoggedIn()) {
-              connstatetracker[id].delayedCommand("antiantiidle", site->getMaxIdleTime() * 1000);
-            }
-            else {
+            if (!site->getStayLoggedIn()) {
               connstatetracker[id].delayedCommand("quit", request->requestData3() * 1000);
             }
           }
@@ -579,7 +590,7 @@ void SiteLogic::commandSuccess(int id, FTPConnState state) {
         connstatetracker[id].finishTransfer();
         tm->sourceComplete();
       }
-      handleConnection(id, true);
+      handleConnection(id);
       return;
     case FTPConnState::QUIT:
       connstatetracker[id].setDisconnected();
@@ -822,7 +833,6 @@ void SiteLogic::handleFail(int id) {
     handleConnection(id);
     return;
   }
-  connstatetracker[id].delayedCommand("handle", SLEEP_DELAY);
 }
 
 void SiteLogic::handleTransferFail(int id, int err) {
@@ -895,7 +905,7 @@ void SiteLogic::rawCommandResultRetrieved(int id, const std::string & result) {
       setRequestReady(id, data, true);
     }
   }
-  handleConnection(id, true);
+  handleConnection(id);
 }
 
 void SiteLogic::gotPassiveAddress(int id, const std::string & host, int port) {
@@ -926,7 +936,7 @@ void SiteLogic::activateOne() {
     if (connstatetracker[i].isLoggedIn() && !connstatetracker[i].isLocked() &&
         !conns[i]->isProcessing())
     {
-      handleConnection(i, false);
+      handleConnection(i);
       return;
     }
   }
@@ -957,7 +967,7 @@ void SiteLogic::haveConnectedActivate(unsigned int connected) {
       if (connstatetracker[i].isLoggedIn() && !connstatetracker[i].isLocked() &&
           !conns[i]->isProcessing())
       {
-        handleConnection(i, false);
+        handleConnection(i);
         break;
       }
     }
@@ -993,7 +1003,7 @@ bool SiteLogic::handlePreTransfer(int id) {
   return false;
 }
 
-void SiteLogic::handleConnection(int id, bool backfromrefresh) {
+void SiteLogic::handleConnection(int id) {
   if (conns[id]->isProcessing()) {
     return;
   }
@@ -1038,9 +1048,6 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
       }
     }
   }
-  if (targetjobs.size()) {
-    connstatetracker[id].delayedCommand("handle", SLEEP_DELAY);
-  }
   for (std::list<std::shared_ptr<SiteTransferJob> >::iterator it = targetjobs.begin(); it != targetjobs.end(); it++) {
     if (global->getEngine()->transferJobActionRequest(*it)) {
       return;
@@ -1049,6 +1056,14 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
   if (targetjobs.size()) {
     connstatetracker[id].use();
   }
+  if (currentraces.size()) {
+    if (handleSpreadJob(id)) {
+      return;
+    }
+  }
+}
+
+bool SiteLogic::handleSpreadJob(int id) {
   std::shared_ptr<SiteRace> race;
   bool refresh = false;
   std::shared_ptr<SiteRace> lastchecked = connstatetracker[id].lastChecked();
@@ -1057,7 +1072,6 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
   {
     race = lastchecked;
     refresh = true;
-    connstatetracker[id].check(race);
   }
   else {
     for (unsigned int i = 0; i < currentraces.size(); i++) {
@@ -1076,7 +1090,6 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
     }
     if (!!race) {
       refresh = true;
-      connstatetracker[id].check(race);
       addRecentList(race);
     }
   }
@@ -1088,44 +1101,57 @@ void SiteLogic::handleConnection(int id, bool backfromrefresh) {
       }
     }
   }
-  if (!race && !currentraces.empty()) {
-    race = currentraces.front();
-  }
-  if (!!race) {
-    const Path & currentpath = conns[id]->getCurrentPath();
-    const Path & racepath = race->getPath();
-    bool goodpath = currentpath == racepath || // same path
-                    currentpath.contains(racepath); // same path, currently in subdir
-    if (!goodpath || refresh) {
-      if (backfromrefresh) {
-        connstatetracker[id].delayedCommand("refreshchangepath", SLEEP_DELAY, false, race);
-        return;
-      }
-      connstatetracker[id].use();
-      if (goodpath) {
-        Path subpath = currentpath - racepath;
-        std::shared_ptr<FileList> fl = race->getFileListForPath(subpath.toString());
-        if (!fl) {
-          if (!race->addSubDirectory(subpath.toString(), true)) {
-            refreshChangePath(id, race, refresh);
-            return;
-          }
-          fl = race->getFileListForPath(subpath.toString());
-        }
-        getFileListConn(id, race, fl);
-        return;
-      }
-      else {
-        refreshChangePath(id, race, refresh);
-        return;
-      }
+  if (!race) {
+    if (!currentraces.empty()) {
+      race = currentraces.front();
+    }
+    else {
+      return false;
     }
   }
-  if (site->getMaxIdleTime() && !connstatetracker[id].getCommand().isActive()) {
-    int delay = site->getMaxIdleTime() * 1000;
-    std::string command = site->getStayLoggedIn() ? "antiantiidle" : "quit";
-    connstatetracker[id].delayedCommand(command, delay);
+  connstatetracker[id].setLastChecked(race);
+  if (!connstatetracker[id].hasRefreshToken()) {
+    if (refreshgovernor.refreshAllowed()) {
+      refreshgovernor.useRefresh();
+      connstatetracker[id].setRefreshToken();
+    }
+    else {
+      refresh = false;
+    }
   }
+  const Path & currentpath = conns[id]->getCurrentPath();
+  const Path & racepath = race->getPath();
+  bool goodpath = currentpath == racepath || // same path
+                  currentpath.contains(racepath); // same path, currently in subdir
+  std::shared_ptr<FileList> fl;
+  if (goodpath) {
+    Path subpath = currentpath - racepath;
+    fl = race->getFileListForPath(subpath.toString());
+    if (!fl && race->addSubDirectory(subpath.toString(), true)) {
+      fl = race->getFileListForPath(subpath.toString());
+    }
+    if (refresh && fl && fl->getPath() != connstatetracker[id].getLastRefreshPath()) {
+      connstatetracker[id].check(race);
+      getFileListConn(id, race, fl);
+      return true;
+    }
+  }
+  if (!fl || fl->getPath() == connstatetracker[id].getLastRefreshPath()) {
+    std::string subpath = race->getRelevantSubPath();
+    Path targetpath = race->getPath() / subpath;
+    fl = race->getFileListForFullPath(this, targetpath);
+    if (targetpath != currentpath) {
+      connstatetracker[id].use();
+      conns[id]->doCWD(fl, race);
+      return true;
+    }
+    else if (refresh) {
+      connstatetracker[id].check(race);
+      getFileListConn(id, race, fl);
+      return true;
+    }
+  }
+  return false;
 }
 
 bool SiteLogic::handleRequest(int id) {
@@ -1304,24 +1330,6 @@ bool SiteLogic::wasRecentlyListed(const std::shared_ptr<SiteRace> & sr) const {
     }
   }
   return false;
-}
-
-void SiteLogic::refreshChangePath(int id, const std::shared_ptr<SiteRace> & race, bool refresh) {
-  if (race->getStatus() == RaceStatus::ABORTED) {
-    return;
-  }
-  const Path & currentpath = conns[id]->getCurrentPath();
-  std::string subpath = race->getRelevantSubPath();
-  Path targetpath = race->getPath() / subpath;
-  std::shared_ptr<FileList> fl = race->getFileListForFullPath(this, targetpath);
-  if (targetpath != currentpath) {
-    conns[id]->doCWD(fl, race);
-  }
-  else {
-    if (refresh) {
-      getFileListConn(id, race, fl);
-    }
-  }
 }
 
 void SiteLogic::initTransfer(int id) {
@@ -1862,6 +1870,11 @@ int SiteLogic::getPotential() {
   return ptrack->getMaxAvailablePotential();
 }
 
+void SiteLogic::siteUpdated() {
+  refreshgovernor.update();
+  setNumConnections(site->getMaxLogins());
+}
+
 void SiteLogic::updateName() {
   for (unsigned int i = 0; i < conns.size(); i++) {
     conns[i]->updateName();
@@ -2130,6 +2143,8 @@ void SiteLogic::listAll(int id) {
 }
 
 void SiteLogic::getFileListConn(int id, bool hiddenfiles) {
+  connstatetracker[id].use();
+  connstatetracker[id].useRefreshTokenFor(conns[id]->getCurrentPath().toString());
   if (site->getListCommand() == SITE_LIST_STAT) {
     if (hiddenfiles) {
       conns[id]->doSTATla();
@@ -2146,6 +2161,8 @@ void SiteLogic::getFileListConn(int id, bool hiddenfiles) {
 
 void SiteLogic::getFileListConn(int id, const std::shared_ptr<CommandOwner> & co, const std::shared_ptr<FileList>& fl) {
   assert(!!fl);
+  connstatetracker[id].use();
+  connstatetracker[id].useRefreshTokenFor(fl->getPath().toString());
   if (site->getListCommand() == SITE_LIST_STAT) {
     conns[id]->doSTAT(co, fl);
   }
@@ -2179,10 +2196,7 @@ void SiteLogic::setRequestReady(unsigned int id, void* data, bool status, bool r
   const std::shared_ptr<SiteLogicRequest> & request = connstatetracker[id].getRequest();
   int requestid = request->requestId();
   requestsready.push_back(SiteLogicRequestReady(request->requestType(), requestid, data, status));
-  while (requestsready.size() > MAX_REQUEST_READY_QUEUE_SIZE && timesincelastrequestready > MAX_REQUEST_READY_QUEUE_IDLE_TIME) {
-    clearReadyRequest(requestsready.front());
-    requestsready.pop_front();
-  }
+  clearExpiredReadyRequests();
   timesincelastrequestready = 0;
   RequestCallback* cb = request->callback();
   connstatetracker[id].finishRequest();
@@ -2191,6 +2205,13 @@ void SiteLogic::setRequestReady(unsigned int id, void* data, bool status, bool r
   }
   if (cb) {
     cb->requestReady(this, requestid);
+  }
+}
+
+void SiteLogic::clearExpiredReadyRequests() {
+  while (timesincelastrequestready > MAX_REQUEST_READY_QUEUE_IDLE_TIME && requestsready.size() > MAX_REQUEST_READY_QUEUE_SIZE) {
+    clearReadyRequest(requestsready.front());
+    requestsready.pop_front();
   }
 }
 

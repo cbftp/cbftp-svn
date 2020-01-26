@@ -871,7 +871,7 @@ void FTPConn::PBSZ0Response() {
 
 void FTPConn::RawResponse() {
   processing = false;
-  std::string ret = std::string(databuf, databufpos);
+  std::string ret(databuf, databufpos);
   sl->rawCommandResultRetrieved(id, ret);
 }
 

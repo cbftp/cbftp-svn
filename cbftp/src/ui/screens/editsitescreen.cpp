@@ -508,7 +508,7 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         global->getSiteManager()->addExceptTargetForSite(sitename, *it);
       }
 
-      global->getSiteLogicManager()->getSiteLogic(site->getName())->setNumConnections(site->getMaxLogins());
+      global->getSiteLogicManager()->getSiteLogic(site->getName())->siteUpdated();
       if (changedname) {
         global->getSiteLogicManager()->getSiteLogic(site->getName())->updateName();
       }

@@ -53,6 +53,8 @@ private:
   int port;
   std::shared_ptr<RecursiveCommandLogic> recursivelogic;
   std::shared_ptr<SiteLogicRequest> request;
+  bool refreshtoken;
+  std::string lastrefreshpath;
   void setTransfer(const std::string& file, bool fxp, bool ipv6, bool passive, const std::string& host, int port, bool ssl, bool sslclient);
   void setList(TransferMonitor* tm, bool ipv6, bool listpassive, const std::string& host, int port, bool ssl);
 public:
@@ -61,7 +63,8 @@ public:
   void delayedCommand(const std::string & command, int delay, bool persisting = false, const std::shared_ptr<CommandOwner> & co = nullptr);
   void timePassed(int);
   int getTimePassed() const;
-  void check(const std::shared_ptr<SiteRace> & sr);
+  void check(const std::shared_ptr<SiteRace>& sr);
+  void setLastChecked(const std::shared_ptr<SiteRace>& sr);
   const std::shared_ptr<SiteRace> & lastChecked() const;
   int checkCount() const;
   void purgeSiteRace(const std::shared_ptr<SiteRace> & sr);
@@ -108,4 +111,8 @@ public:
   void initializeTransfer();
   bool isQuitting() const;
   void setQuitting();
+  bool hasRefreshToken() const;
+  void setRefreshToken();
+  void useRefreshTokenFor(const std::string& refreshpath);
+  std::string getLastRefreshPath() const;
 };

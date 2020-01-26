@@ -24,7 +24,9 @@ ConnStateTracker::ConnStateTracker() :
   listtransfer(false),
   listinitialized(false),
   quitting(false),
-  recursivelogic(std::make_shared<RecursiveCommandLogic>()) {
+  recursivelogic(std::make_shared<RecursiveCommandLogic>()),
+  refreshtoken(false)
+{
 }
 
 ConnStateTracker::~ConnStateTracker() {
@@ -47,13 +49,20 @@ int ConnStateTracker::getTimePassed() const {
   return idletime;
 }
 
-void ConnStateTracker::check(const std::shared_ptr<SiteRace> & sr) {
+void ConnStateTracker::check(const std::shared_ptr<SiteRace>& sr) {
   if (lastchecked == sr) {
     lastcheckedcount++;
   }
   else {
     lastchecked = sr;
     lastcheckedcount = 1;
+  }
+}
+
+void ConnStateTracker::setLastChecked(const std::shared_ptr<SiteRace>& sr) {
+  if (lastchecked != sr) {
+    lastchecked = sr;
+    lastcheckedcount = 0;
   }
 }
 
@@ -65,7 +74,7 @@ int ConnStateTracker::checkCount() const {
     return lastcheckedcount;
 }
 
-void ConnStateTracker::purgeSiteRace(const std::shared_ptr<SiteRace> & sr) {
+void ConnStateTracker::purgeSiteRace(const std::shared_ptr<SiteRace>& sr) {
   if (lastchecked == sr) {
     lastchecked = NULL;
     lastcheckedcount = 0;
@@ -343,4 +352,21 @@ bool ConnStateTracker::isQuitting() const {
 
 void ConnStateTracker::setQuitting() {
   quitting = true;
+}
+
+bool ConnStateTracker::hasRefreshToken() const {
+  return refreshtoken;
+}
+
+void ConnStateTracker::setRefreshToken() {
+  refreshtoken = true;
+}
+
+void ConnStateTracker::useRefreshTokenFor(const std::string& refreshpath) {
+  refreshtoken = false;
+  lastrefreshpath = refreshpath;
+}
+
+std::string ConnStateTracker::getLastRefreshPath() const {
+  return lastrefreshpath;
 }

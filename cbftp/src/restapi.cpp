@@ -580,7 +580,7 @@ std::shared_ptr<http::Response> updateSite(std::shared_ptr<Site>& site, nlohmann
     global->getSiteManager()->addExceptTargetForSite(sitename, exceptdstsite);
   }
 
-  global->getSiteLogicManager()->getSiteLogic(site->getName())->setNumConnections(site->getMaxLogins());
+  global->getSiteLogicManager()->getSiteLogic(site->getName())->siteUpdated();
   if (changedname) {
     global->getSiteLogicManager()->getSiteLogic(site->getName())->updateName();
   }
