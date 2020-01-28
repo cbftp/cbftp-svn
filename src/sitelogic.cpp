@@ -1050,6 +1050,7 @@ void SiteLogic::handleConnection(int id) {
   }
   for (std::list<std::shared_ptr<SiteTransferJob> >::iterator it = targetjobs.begin(); it != targetjobs.end(); it++) {
     if (global->getEngine()->transferJobActionRequest(*it)) {
+      handleConnection(id);
       return;
     }
   }
