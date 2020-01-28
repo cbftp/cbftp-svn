@@ -2206,6 +2206,9 @@ void SiteLogic::setRequestReady(unsigned int id, void* data, bool status, bool r
   if (cb) {
     cb->requestReady(this, requestid);
   }
+  else {
+    finishRequest(requestid);
+  }
 }
 
 void SiteLogic::clearExpiredReadyRequests() {
