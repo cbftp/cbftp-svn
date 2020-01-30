@@ -500,6 +500,12 @@ void SiteLogic::commandSuccess(int id, FTPConnState state) {
       connstatetracker[id].getTransferMonitor()->sourceComplete();
       transferComplete(id, true);
       connstatetracker[id].finishTransfer();
+      if (!requests.empty()) {
+        handleConnection(id);
+        if (conns[id]->isProcessing()) {
+          return;
+        }
+      }
       global->getEngine()->raceActionRequest();
       if (conns[id]->isProcessing() || connstatetracker[id].isTransferLocked()) {
         return;
@@ -519,13 +525,18 @@ void SiteLogic::commandSuccess(int id, FTPConnState state) {
       const std::shared_ptr<FileList>& fl = connstatetracker[id].getTransferFileList();
       connstatetracker[id].finishTransfer();
       int filelistreusetime = currtime - fl->getRefreshedTime();
-      if (filelistreusetime < FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH ||
-          (site->useXDUPE() && filelistreusetime < FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH_XDUPE))
+      if (!requests.empty() ||
+          (!site->useXDUPE() && filelistreusetime >= FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH) ||
+          filelistreusetime >= FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH_XDUPE)
       {
-        global->getEngine()->raceActionRequest();
-        if (conns[id]->isProcessing() || connstatetracker[id].isTransferLocked()) {
+        handleConnection(id);
+        if (conns[id]->isProcessing()) {
           return;
         }
+      }
+      global->getEngine()->raceActionRequest();
+      if (conns[id]->isProcessing() || connstatetracker[id].isTransferLocked()) {
+        return;
       }
       break;
     }
@@ -1018,7 +1029,7 @@ void SiteLogic::handleConnection(int id) {
     }
     return;
   }
-  if (requests.size() > 0) {
+  if (!requests.empty()) {
     if (handleRequest(id)) {
       return;
     }
@@ -1053,9 +1064,6 @@ void SiteLogic::handleConnection(int id) {
       handleConnection(id);
       return;
     }
-  }
-  if (targetjobs.size()) {
-    connstatetracker[id].use();
   }
   if (currentraces.size()) {
     if (handleSpreadJob(id)) {
