@@ -7,6 +7,7 @@
 #include "core/tickpoke.h"
 #include "core/threading.h"
 #include "core/logger.h"
+#include "core/signal.h"
 #include "settingsloadersaver.h"
 #include "sitelogicmanager.h"
 #include "transfermanager.h"
@@ -83,14 +84,10 @@ void sighandler(int sig) {
 } // namespace
 
 int main(int argc, char* argv[]) {
-  struct sigaction sa;
-  sa.sa_handler = sighandler;
-  sa.sa_flags = SA_RESTART;
-  sigfillset(&sa.sa_mask);
-  sigaction(SIGABRT, &sa, NULL);
-  sigaction(SIGTERM, &sa, NULL);
-  sigaction(SIGINT, &sa, NULL);
-  sigaction(SIGQUIT, &sa, NULL);
+  Core::registerSignalHandler(SIGABRT, sighandler);
+  Core::registerSignalHandler(SIGTERM, sighandler);
+  Core::registerSignalHandler(SIGINT, sighandler);
+  Core::registerSignalHandler(SIGQUIT, sighandler);
 
   Main();
 }

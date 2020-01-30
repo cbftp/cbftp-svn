@@ -8,6 +8,8 @@ namespace Core {
 namespace Threading {
 void setThreadName(pthread_t thread, const std::string& name);
 void setCurrentThreadName(const std::string& name);
+pthread_t createDetachedThread(void (*func)(void*), void* arg = nullptr);
+void blockSignalsInternal();
 } // namespace Threading
 
 template <class T> class Thread {
@@ -25,6 +27,7 @@ public:
   }
 private:
   static void* run(void* target) {
+    Threading::blockSignalsInternal();
     ((Thread*) target)->instance->run();
     return nullptr;
   }

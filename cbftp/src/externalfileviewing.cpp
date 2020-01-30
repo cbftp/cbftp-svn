@@ -10,6 +10,7 @@
 #include <cctype>
 #include <cstdlib>
 
+#include "core/signal.h"
 #include "core/workmanager.h"
 #include "globalcontext.h"
 #include "localstorage.h"
@@ -17,19 +18,7 @@
 #include "path.h"
 #include "file.h"
 
-namespace {
-
-static ExternalFileViewing * instance = NULL;
-
-void sighandler(int signal) {
-  global->getWorkManager()->dispatchSignal(instance, signal, 0);
-}
-
-}
-
 ExternalFileViewing::ExternalFileViewing() {
-  assert(instance == NULL);
-  instance = this;
   videoviewer = "mplayer";
   audioviewer = "mplayer";
   imageviewer = "eog";
@@ -39,12 +28,7 @@ ExternalFileViewing::ExternalFileViewing() {
   if (displayenv != NULL) {
     display = true;
   }
-  struct sigaction sa;
-  sa.sa_flags = SA_RESTART;
-  sigemptyset(&sa.sa_mask);
-  sigaddset(&sa.sa_mask, SIGCHLD);
-  sa.sa_handler = sighandler;
-  sigaction(SIGCHLD, &sa, NULL);
+  Core::registerSignalDispatch(SIGCHLD, global->getWorkManager(), this);
 }
 
 bool ExternalFileViewing::isViewable(const Path & path) const {
