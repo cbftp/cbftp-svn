@@ -4,11 +4,11 @@
 #include <unistd.h>
 #include <iostream>
 #include <cassert>
-#include <csignal>
 
 #include "../core/workmanager.h"
 #include "../core/tickpoke.h"
 #include "../core/iomanager.h"
+#include "../core/signal.h"
 #include "../globalcontext.h"
 #include "../externalfileviewing.h"
 #include "../engine.h"
@@ -64,11 +64,11 @@
 #include "screens/disableencryptionscreen.h"
 #include "screens/movescreen.h"
 
+namespace {
+
 static Ui * instance = new Ui();
 
-static void sighandler(int signal) {
-  global->getWorkManager()->dispatchSignal(instance, signal, 0);
-}
+} // namespace
 
 Ui::Ui() :
   main(nullptr),
@@ -89,12 +89,8 @@ Ui::~Ui() {
 }
 
 bool Ui::init() {
-  struct sigaction sa;
-  sa.sa_flags = SA_RESTART;
-  sigemptyset(&sa.sa_mask);
-  sigaddset(&sa.sa_mask, SIGWINCH);
-  sa.sa_handler = sighandler;
-  sigaction(SIGWINCH, &sa, nullptr);
+
+  Core::registerSignalDispatch(SIGWINCH, global->getWorkManager(), this);
 
   CharDraw::init();
 
