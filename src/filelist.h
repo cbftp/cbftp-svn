@@ -13,6 +13,7 @@ enum class FileListState {
  NONEXISTENT,
  EXISTS,
  LISTED,
+ PRE_FAIL,
  FAILED
 };
 
@@ -75,6 +76,7 @@ class FileList {
     void setNonExistent();
     void setExists();
     void setFilled();
+    void setPreFailed();
     void setFailed();
     void setRefreshed();
     std::list<File *>::iterator begin();
@@ -114,6 +116,7 @@ class FileList {
     bool scoreBoardChangedFilesEmpty() const;
     bool inScoreBoard() const;
     void setInScoreBoard();
+    void unsetInScoreBoard();
     bool similarChecked() const;
     void checkSimilar(const SkipList * siteskip, const SkipList * sectionskip = nullptr);
     std::string getFirstSimilar() const;

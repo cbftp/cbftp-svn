@@ -133,7 +133,7 @@ std::string SiteRace::getRelevantSubPath() {
 bool SiteRace::anyFileListNotNonExistent() const {
   std::unordered_map<std::string, std::shared_ptr<FileList>>::const_iterator it;
   for (it = filelists.begin(); it != filelists.end(); it++) {
-    if (it->second->getState() != FileListState::NONEXISTENT) {
+    if (it->second->getState() != FileListState::NONEXISTENT && it->second->getState() != FileListState::FAILED) {
       return true;
     }
   }
