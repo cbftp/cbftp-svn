@@ -685,7 +685,7 @@ void SiteLogic::commandFail(int id, FailureType failuretype) {
         filelistupdated = true;
       }
       std::shared_ptr<CommandOwner> currentco = conns[id]->currentCommandOwner();
-      if (currentco->classType() == COMMANDOWNER_SITERACE && connstatetracker[id].lastChecked() == currentco) {
+      if (currentco && currentco->classType() == COMMANDOWNER_SITERACE && connstatetracker[id].lastChecked() == currentco) {
         connstatetracker[id].check(std::static_pointer_cast<SiteRace>(currentco));
       }
       if (connstatetracker[id].getRecursiveLogic()->isActive()) {
