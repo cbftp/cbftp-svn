@@ -261,7 +261,14 @@ void FileList::setFilled() {
   state = FileListState::LISTED;
 }
 
+void FileList::setPreFailed() {
+  state = FileListState::PRE_FAIL;
+}
+
 void FileList::setFailed() {
+  if (state != FileListState::FAILED) {
+    setChanged();
+  }
   state = FileListState::FAILED;
 }
 
@@ -630,6 +637,10 @@ bool FileList::inScoreBoard() const {
 
 void FileList::setInScoreBoard() {
   inscoreboard = true;
+}
+
+void FileList::unsetInScoreBoard() {
+  inscoreboard = false;
 }
 
 bool FileList::similarChecked() const {

@@ -35,11 +35,16 @@
 #include "filelistdata.h"
 #include "requestcallback.h"
 
-//minimum sleep delay (between refreshes / hammer attempts) in ms
+// minimum sleep delay (between refreshes / hammer attempts) in ms
 #define SLEEP_DELAY 150
 
-//maximum number of dir refreshes in a row in the same race
-#define MAX_CHECKS_ROW 5
+// maximum number of dir refreshes in a row in the same race, if there are
+// other races to switch to
+#define MAX_CHECKS_ROW_VERY_LOW 1
+#define MAX_CHECKS_ROW_PRIO_LOW 2
+#define MAX_CHECKS_ROW_PRIO_NORMAL 3
+#define MAX_CHECKS_ROW_PRIO_HIGH 4
+#define MAX_CHECKS_ROW_PRIO_VERY_HIGH 5
 
 // maximum number of ready requests available to be checked out, unless below
 #define MAX_REQUEST_READY_QUEUE_SIZE 10
@@ -62,6 +67,12 @@
 // with an ongoing transfer, in ms
 #define TRANSFER_SLOT_CLEANUP_DELAY 2000
 
+// time to wait before trying to revisit a directory that does not exist and
+// previously could not be mkdired. time in ms
+#define DELAY_BEFORE_REVISIT_FAILED_DIR 2000
+
+namespace {
+
 enum RequestType {
   REQ_FILELIST,
   REQ_RAW,
@@ -76,10 +87,29 @@ enum RequestType {
   REQ_MOVE
 };
 
-enum Exists {
-  EXISTS_NO,
-  EXISTS_YES,
-  EXISTS_FAILED
+int maxChecksRow(SitePriority priority) {
+  switch (priority) {
+    case SitePriority::VERY_LOW:
+      return MAX_CHECKS_ROW_VERY_LOW;
+    case SitePriority::LOW:
+      return MAX_CHECKS_ROW_PRIO_LOW;
+    case SitePriority::NORMAL:
+      return MAX_CHECKS_ROW_PRIO_NORMAL;
+    case SitePriority::HIGH:
+      return MAX_CHECKS_ROW_PRIO_HIGH;
+    case SitePriority::VERY_HIGH:
+    default:
+      return MAX_CHECKS_ROW_PRIO_VERY_HIGH;
+  }
+  return MAX_CHECKS_ROW_PRIO_VERY_HIGH;
+}
+
+} // namespace
+
+enum class Exists {
+  NO,
+  YES,
+  FAIL
 };
 
 SiteLogic::SiteLogic(const std::string & sitename) :
@@ -280,7 +310,7 @@ void SiteLogic::listRefreshed(int id) {
   handleConnection(id);
 }
 
-bool SiteLogic::setPathExists(int id, int exists, bool refreshtime) {
+bool SiteLogic::setPathExists(int id, Exists exists, bool refreshtime) {
   const std::shared_ptr<FileList>& fl = conns[id]->currentFileList();
   if (!fl) {
     return false;
@@ -288,45 +318,55 @@ bool SiteLogic::setPathExists(int id, int exists, bool refreshtime) {
   bool statechanged = false;
   FileListState state = fl->getState();
   if (state == FileListState::UNKNOWN) {
-    if (exists == EXISTS_YES) {
+    if (exists == Exists::YES) {
       fl->setExists();
     }
-    else if (exists == EXISTS_FAILED) {
-      fl->setFailed();
+    else if (exists == Exists::FAIL) {
+      fl->setPreFailed();
     }
-    else if (exists == EXISTS_NO) {
+    else if (exists == Exists::NO) {
       fl->setNonExistent();
     }
     statechanged = true;
   }
   else if (state == FileListState::NONEXISTENT) {
-    if (exists == EXISTS_YES) {
+    if (exists == Exists::YES) {
       fl->setExists();
       statechanged = true;
     }
-    else if (exists == EXISTS_FAILED) {
+    else if (exists == Exists::FAIL) {
+      fl->setPreFailed();
+      statechanged = true;
+    }
+  }
+  else if (state == FileListState::PRE_FAIL) {
+    if (exists == Exists::YES) {
+      fl->setExists();
+      statechanged = true;
+    }
+    else if (exists == Exists::NO) {
       fl->setFailed();
       statechanged = true;
     }
   }
   else if (state == FileListState::FAILED) {
-    if (exists == EXISTS_YES) {
+    if (exists == Exists::YES) {
       fl->setExists();
       statechanged = true;
     }
   }
   else if (state == FileListState::LISTED || state == FileListState::EXISTS) {
-    if (exists == EXISTS_NO) {
+    if (exists == Exists::NO) {
       if (fl->addListFailure()) {
         statechanged = true;
       }
     }
   }
-  if (statechanged && refreshtime) {
+  if (refreshtime) {
     fl->setRefreshedTime(currtime);
   }
   std::shared_ptr<CommandOwner> currentco = conns[id]->currentCommandOwner();
-  if (exists != EXISTS_YES) {
+  if (exists != Exists::YES) {
     if (fl->bumpUpdateState(UpdateState::REFRESHED)) {
       statechanged = true;
     }
@@ -401,7 +441,7 @@ void SiteLogic::commandSuccess(int id, FTPConnState state) {
       }
       break;
     case FTPConnState::CWD: {
-      setPathExists(id, EXISTS_YES, false);
+      setPathExists(id, Exists::YES, false);
       if (conns[id]->hasMKDCWDTarget()) {
         if (conns[id]->getCurrentPath() == conns[id]->getMKDCWDTargetSection() / conns[id]->getMKDCWDTargetPath()) {
           conns[id]->finishMKDCWDTarget();
@@ -463,7 +503,7 @@ void SiteLogic::commandSuccess(int id, FTPConnState state) {
         const Path & targetcwdsect = conns[id]->getMKDCWDTargetSection();
         const Path & targetcwdpath = conns[id]->getMKDCWDTargetPath();
         const Path & targetpath = conns[id]->getTargetPath();
-        setPathExists(id, EXISTS_YES, true);
+        setPathExists(id, Exists::YES, true);
         if (targetpath == targetcwdsect / targetcwdpath) {
           conns[id]->finishMKDCWDTarget();
           const std::shared_ptr<FileList>& fl = conns[id]->currentFileList();
@@ -641,8 +681,12 @@ void SiteLogic::commandFail(int id, FailureType failuretype) {
       break;
     case FTPConnState::CWD: {
       bool filelistupdated = false;
-      if (setPathExists(id, EXISTS_NO, true)) {
+      if (setPathExists(id, Exists::NO, true)) {
         filelistupdated = true;
+      }
+      std::shared_ptr<CommandOwner> currentco = conns[id]->currentCommandOwner();
+      if (currentco->classType() == COMMANDOWNER_SITERACE && connstatetracker[id].lastChecked() == currentco) {
+        connstatetracker[id].check(std::static_pointer_cast<SiteRace>(currentco));
       }
       if (connstatetracker[id].getRecursiveLogic()->isActive()) {
         connstatetracker[id].getRecursiveLogic()->failedCwd();
@@ -655,7 +699,6 @@ void SiteLogic::commandFail(int id, FailureType failuretype) {
         return;
       }
       std::shared_ptr<FileList> currentfl = conns[id]->currentFileList();
-      std::shared_ptr<CommandOwner> currentco = conns[id]->currentCommandOwner();
       if (conns[id]->hasMKDCWDTarget()) {
         if (site->getAllowUpload() == SITE_ALLOW_TRANSFER_NO ||
             (!!currentco && currentco->classType() == COMMANDOWNER_SITERACE &&
@@ -720,7 +763,7 @@ void SiteLogic::commandFail(int id, FailureType failuretype) {
           return;
         }
         conns[id]->finishMKDCWDTarget();
-        setPathExists(id, EXISTS_FAILED, true);
+        setPathExists(id, Exists::FAIL, true);
         const std::shared_ptr<FileList>& fl = conns[id]->currentFileList();
         if (fl) {
           conns[id]->doCWD(fl, currentco);
@@ -1073,92 +1116,106 @@ void SiteLogic::handleConnection(int id) {
 }
 
 bool SiteLogic::handleSpreadJob(int id) {
-  std::shared_ptr<SiteRace> race;
-  bool refresh = false;
-  std::shared_ptr<SiteRace> lastchecked = connstatetracker[id].lastChecked();
-  if (lastchecked && !lastchecked->isDone() && lastchecked->anyFileListNotNonExistent() &&
-      connstatetracker[id].checkCount() < MAX_CHECKS_ROW)
-  {
-    race = lastchecked;
-    refresh = true;
-  }
-  else {
-    for (unsigned int i = 0; i < currentraces.size(); i++) {
-      if (!currentraces[i]->isDone() && !wasRecentlyListed(currentraces[i])) {
-        race = currentraces[i];
-        break;
+  std::set<std::shared_ptr<SiteRace>> triedraces;
+  while (true) {
+    std::shared_ptr<SiteRace> race;
+    bool refresh = false;
+    std::shared_ptr<SiteRace> lastchecked = connstatetracker[id].lastChecked();
+    if (lastchecked && !lastchecked->isDone() && lastchecked->anyFileListNotNonExistent() &&
+        connstatetracker[id].checkCount() < maxChecksRow(site->getPriority()))
+    {
+      race = lastchecked;
+      refresh = true;
+    }
+    else {
+      for (unsigned int i = 0; i < currentraces.size(); i++) {
+        if (!currentraces[i]->isDone() && !wasRecentlyListed(currentraces[i])) {
+          race = currentraces[i];
+          break;
+        }
+      }
+      if (!race) {
+        for (std::list<std::shared_ptr<SiteRace>>::iterator it = recentlylistedraces.begin(); it != recentlylistedraces.end(); it++) {
+          if (!(*it)->isDone()) {
+            race = *it;
+            break;
+          }
+        }
+      }
+      if (!!race) {
+        refresh = true;
+        addRecentList(race);
       }
     }
     if (!race) {
-      for (std::list<std::shared_ptr<SiteRace>>::iterator it = recentlylistedraces.begin(); it != recentlylistedraces.end(); it++) {
-        if (!(*it)->isDone()) {
-          race = *it;
+      for (unsigned int i = 0; i < currentraces.size(); i++) {
+        if (currentraces[i]->anyFileListNotNonExistent()) {
+          race = currentraces[i];
           break;
         }
       }
     }
-    if (!!race) {
-      refresh = true;
-      addRecentList(race);
-    }
-  }
-  if (!race) {
-    for (unsigned int i = 0; i < currentraces.size(); i++) {
-      if (currentraces[i]->anyFileListNotNonExistent()) {
-        race = currentraces[i];
-        break;
+    if (!race) {
+      if (!currentraces.empty()) {
+        race = currentraces.front();
+      }
+      else {
+        return false;
       }
     }
-  }
-  if (!race) {
-    if (!currentraces.empty()) {
-      race = currentraces.front();
-    }
-    else {
+    if (triedraces.find(race) != triedraces.end()) {
       return false;
     }
-  }
-  connstatetracker[id].setLastChecked(race);
-  if (!connstatetracker[id].hasRefreshToken()) {
-    if (refreshgovernor.refreshAllowed()) {
-      refreshgovernor.useRefresh();
-      connstatetracker[id].setRefreshToken();
+    connstatetracker[id].setLastChecked(race);
+    triedraces.insert(race);
+    if (!connstatetracker[id].hasRefreshToken()) {
+      if (refreshgovernor.refreshAllowed()) {
+        refreshgovernor.useRefresh();
+        connstatetracker[id].setRefreshToken();
+      }
+      else {
+        refresh = false;
+      }
     }
-    else {
-      refresh = false;
-    }
-  }
-  const Path & currentpath = conns[id]->getCurrentPath();
-  const Path & racepath = race->getPath();
-  bool goodpath = currentpath == racepath || // same path
-                  currentpath.contains(racepath); // same path, currently in subdir
-  std::shared_ptr<FileList> fl;
-  if (goodpath) {
-    Path subpath = currentpath - racepath;
-    fl = race->getFileListForPath(subpath.toString());
-    if (!fl && race->addSubDirectory(subpath.toString(), true)) {
+    const Path & currentpath = conns[id]->getCurrentPath();
+    const Path & racepath = race->getPath();
+    bool goodpath = currentpath == racepath || // same path
+                    currentpath.contains(racepath); // same path, currently in subdir
+    std::shared_ptr<FileList> fl;
+    if (goodpath) {
+      Path subpath = currentpath - racepath;
       fl = race->getFileListForPath(subpath.toString());
+      if (!fl && race->addSubDirectory(subpath.toString(), true)) {
+        fl = race->getFileListForPath(subpath.toString());
+      }
+      if (refresh && fl && fl->getPath() != connstatetracker[id].getLastRefreshPath()) {
+        connstatetracker[id].check(race);
+        getFileListConn(id, race, fl);
+        return true;
+      }
     }
-    if (refresh && fl && fl->getPath() != connstatetracker[id].getLastRefreshPath()) {
-      connstatetracker[id].check(race);
-      getFileListConn(id, race, fl);
-      return true;
+    if (!fl || fl->getPath() == connstatetracker[id].getLastRefreshPath()) {
+      std::string subpath = race->getRelevantSubPath();
+      Path targetpath = race->getPath() / subpath;
+      fl = race->getFileListForFullPath(this, targetpath);
+      if (fl->getState() == FileListState::FAILED) {
+        int timesincelastrefresh = currtime - fl->getRefreshedTime();
+        if (timesincelastrefresh < DELAY_BEFORE_REVISIT_FAILED_DIR) {
+          continue;
+        }
+      }
+      if (targetpath != currentpath) {
+        connstatetracker[id].use();
+        conns[id]->doCWD(fl, race);
+        return true;
+      }
+      else if (refresh) {
+        connstatetracker[id].check(race);
+        getFileListConn(id, race, fl);
+        return true;
+      }
     }
-  }
-  if (!fl || fl->getPath() == connstatetracker[id].getLastRefreshPath()) {
-    std::string subpath = race->getRelevantSubPath();
-    Path targetpath = race->getPath() / subpath;
-    fl = race->getFileListForFullPath(this, targetpath);
-    if (targetpath != currentpath) {
-      connstatetracker[id].use();
-      conns[id]->doCWD(fl, race);
-      return true;
-    }
-    else if (refresh) {
-      connstatetracker[id].check(race);
-      getFileListConn(id, race, fl);
-      return true;
-    }
+    return false;
   }
   return false;
 }

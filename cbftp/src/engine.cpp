@@ -717,7 +717,10 @@ void Engine::jobFileListRefreshed(SiteLogic * sls, const std::shared_ptr<Command
       }
       for (it = sr->fileListsBegin(); it != sr->fileListsEnd(); it++) {
         const std::shared_ptr<FileList>& itfl = it->second;
-        if (!itfl->inScoreBoard() && (itfl == fl || itfl->getState() == FileListState::NONEXISTENT)) {
+        if (!itfl->inScoreBoard() &&
+            itfl->getState() != FileListState::FAILED &&
+            (itfl == fl || itfl->getState() == FileListState::NONEXISTENT))
+        {
           addedtoboard = true;
           addToScoreBoard(itfl, sr, sl);
         }
@@ -927,6 +930,7 @@ void Engine::reportCurrentSize(const SkipList & siteskiplist, const SkipList & s
 }
 
 void Engine::addToScoreBoard(const std::shared_ptr<FileList>& fl, const std::shared_ptr<SiteRace> & sr, const std::shared_ptr<SiteLogic> & sl) {
+  assert(fl->getState() != FileListState::FAILED);
   const std::shared_ptr<Site> & site = sl->getSite();
   const SkipList & skip = site->getSkipList();
   std::string subpath = sr->getSubPathForFileList(fl);
@@ -973,7 +977,7 @@ void Engine::addToScoreBoardForPair(const std::shared_ptr<SiteLogic> & sls, cons
                             const std::shared_ptr<Race> & race, const Path & subpath, SitePriority priority,
                             bool racemode)
 {
-  if (fld->getState() == FileListState::UNKNOWN || fld->getState() == FileListState::FAILED) {
+  if (fld->getState() == FileListState::UNKNOWN || fld->getState() == FileListState::PRE_FAIL || fld->getState() == FileListState::FAILED) {
     return;
   }
   int avgspeed = ss->getAverageSpeed(ds->getName());
@@ -1021,6 +1025,12 @@ void Engine::updateScoreBoard() {
     std::shared_ptr<Race> race = sr->getRace();
     bool racemode = race->getProfile() == SPREAD_RACE;
     const SkipList & secskip = race->getSectionSkipList();
+    if (fl->getState() == FileListState::FAILED) {
+      scoreboard->wipe(fl);
+      failboard->wipe(fl);
+      fl->unsetInScoreBoard();
+      continue;
+    }
     for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator cmpit = race->begin(); cmpit != race->end(); cmpit++) {
       const std::shared_ptr<SiteLogic> & cmpsl = cmpit->second;
       const std::shared_ptr<Site> & cmpsite = cmpsl->getSite();

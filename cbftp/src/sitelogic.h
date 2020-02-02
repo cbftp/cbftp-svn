@@ -37,6 +37,8 @@ enum class TransferType {
   TRANSFERJOB
 };
 
+enum class Exists;
+
 class SiteLogic : public Core::EventReceiver {
   private:
     std::shared_ptr<Site> site;
@@ -84,7 +86,7 @@ class SiteLogic : public Core::EventReceiver {
     void checkFailListRequest(int);
     void clearExpiredReadyRequests();
     void clearReadyRequest(SiteLogicRequestReady &);
-    bool setPathExists(int, int, bool);
+    bool setPathExists(int id, Exists exists, bool refreshtime);
     bool handlePreTransfer(int);
     bool handleCommandDelete(int, bool);
     bool makeTargetDirectory(int, bool, const std::shared_ptr<CommandOwner> & co);
