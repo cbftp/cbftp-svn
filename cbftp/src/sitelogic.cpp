@@ -69,7 +69,10 @@
 
 // time to wait before trying to revisit a directory that does not exist and
 // previously could not be mkdired. time in ms
-#define DELAY_BEFORE_REVISIT_FAILED_DIR 2000
+#define DELAY_BEFORE_REVISIT_FAILED_DIR 3000
+
+// time to wait before trying to revisit a directory that does not exist
+#define DELAY_BEFORE_REVISIT_NONEXISTING_DIR 1000
 
 namespace {
 
@@ -306,6 +309,7 @@ void SiteLogic::listRefreshed(int id) {
   }
   if (!!currentco) {
     global->getEngine()->jobFileListRefreshed(this, currentco, fl);
+    global->getEngine()->raceActionRequest();
   }
   handleConnection(id);
 }
@@ -540,17 +544,8 @@ void SiteLogic::commandSuccess(int id, FTPConnState state) {
       connstatetracker[id].getTransferMonitor()->sourceComplete();
       transferComplete(id, true);
       connstatetracker[id].finishTransfer();
-      if (!requests.empty()) {
-        handleConnection(id);
-        if (conns[id]->isProcessing()) {
-          return;
-        }
-      }
-      global->getEngine()->raceActionRequest();
-      if (conns[id]->isProcessing() || connstatetracker[id].isTransferLocked()) {
-        return;
-      }
-      break;
+      handlePostDownload(id);
+      return;
     case FTPConnState::STOR: // STOR started
       if (connstatetracker[id].transferInitialized()) {
         if (!connstatetracker[id].getTransferPassive()) {
@@ -564,21 +559,8 @@ void SiteLogic::commandSuccess(int id, FTPConnState state) {
       transferComplete(id, false);
       const std::shared_ptr<FileList>& fl = connstatetracker[id].getTransferFileList();
       connstatetracker[id].finishTransfer();
-      int filelistreusetime = currtime - fl->getRefreshedTime();
-      if (!requests.empty() ||
-          (!site->useXDUPE() && filelistreusetime >= FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH) ||
-          filelistreusetime >= FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH_XDUPE)
-      {
-        handleConnection(id);
-        if (conns[id]->isProcessing()) {
-          return;
-        }
-      }
-      global->getEngine()->raceActionRequest();
-      if (conns[id]->isProcessing() || connstatetracker[id].isTransferLocked()) {
-        return;
-      }
-      break;
+      handlePostUpload(id, fl);
+      return;
     }
     case FTPConnState::ABOR:
       break;
@@ -742,6 +724,7 @@ void SiteLogic::commandFail(int id, FailureType failuretype) {
       if (filelistupdated) {
         if (currentco && currentfl) {
           global->getEngine()->jobFileListRefreshed(this, currentco, currentfl);
+          global->getEngine()->raceActionRequest();
         }
         handleConnection(id);
         return;
@@ -902,8 +885,15 @@ void SiteLogic::handleTransferFail(int id, int type, int err) {
   {
     conns[id]->abortTransferPASV();
   }
+  std::shared_ptr<FileList> fl = connstatetracker[id].getTransferFileList();
   reportTransferErrorAndFinish(id, type, err);
-  handleConnection(id);
+  if (type == CST_UPLOAD) {
+    assert(fl);
+    handlePostUpload(id, fl);
+  }
+  else {
+    handlePostDownload(id);
+  }
 }
 
 void SiteLogic::reportTransferErrorAndFinish(int id, int err) {
@@ -1057,6 +1047,32 @@ bool SiteLogic::handlePreTransfer(int id) {
   return false;
 }
 
+void SiteLogic::handlePostUpload(int id, const std::shared_ptr<FileList>& fl) {
+  int filelistreusetime = currtime - fl->getRefreshedTime();
+  if (!requests.empty() ||
+      (!site->useXDUPE() && filelistreusetime > FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH) ||
+      filelistreusetime > FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH_XDUPE)
+  {
+    handleConnection(id);
+    if (conns[id]->isProcessing()) {
+      return;
+    }
+  }
+  global->getEngine()->raceActionRequest();
+  handleConnection(id);
+}
+
+void SiteLogic::handlePostDownload(int id) {
+  if (!requests.empty()) {
+    handleConnection(id);
+    if (conns[id]->isProcessing()) {
+      return;
+    }
+  }
+  global->getEngine()->raceActionRequest();
+  handleConnection(id);
+}
+
 void SiteLogic::handleConnection(int id) {
   if (conns[id]->isProcessing()) {
     return;
@@ -1112,6 +1128,7 @@ void SiteLogic::handleConnection(int id) {
     if (handleSpreadJob(id)) {
       return;
     }
+    global->getEngine()->raceActionRequest();
   }
 }
 
@@ -1198,13 +1215,13 @@ bool SiteLogic::handleSpreadJob(int id) {
       std::string subpath = race->getRelevantSubPath();
       Path targetpath = race->getPath() / subpath;
       fl = race->getFileListForFullPath(this, targetpath);
-      if (fl->getState() == FileListState::FAILED) {
+      if (targetpath != currentpath) {
         int timesincelastrefresh = currtime - fl->getRefreshedTime();
-        if (timesincelastrefresh < DELAY_BEFORE_REVISIT_FAILED_DIR) {
+        if ((fl->getState() == FileListState::FAILED && timesincelastrefresh < DELAY_BEFORE_REVISIT_FAILED_DIR) ||
+            (fl->getState() == FileListState::NONEXISTENT && timesincelastrefresh < DELAY_BEFORE_REVISIT_NONEXISTING_DIR))
+        {
           continue;
         }
-      }
-      if (targetpath != currentpath) {
         connstatetracker[id].use();
         conns[id]->doCWD(fl, race);
         return true;
