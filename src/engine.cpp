@@ -731,7 +731,6 @@ void Engine::jobFileListRefreshed(SiteLogic * sls, const std::shared_ptr<Command
       if (!global->getWorkManager()->overload() || forcescoreboard) {
         forcescoreboard = false;
         updateScoreBoard();
-        issueOptimalTransfers();
         checkIfRaceComplete(sl, race);
       }
       else {
