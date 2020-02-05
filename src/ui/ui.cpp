@@ -951,8 +951,8 @@ void Ui::goDisableEncryption() {
   switchToWindow(disableencryptionscreen);
 }
 
-void Ui::goMove(const std::string& site, const std::string& items, const Path& srcpath, const std::string& dstpath) {
-  movescreen->initialize(mainrow, maincol, site, items, srcpath, dstpath);
+void Ui::goMove(const std::string& site, const std::string& items, const Path& srcpath, const std::string& dstpath, const std::string& firstitem) {
+  movescreen->initialize(mainrow, maincol, site, items, srcpath, dstpath, firstitem);
   switchToWindow(movescreen);
 }
 

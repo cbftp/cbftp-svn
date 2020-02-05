@@ -13,13 +13,14 @@ MoveScreen::~MoveScreen() {
 
 }
 
-void MoveScreen::initialize(unsigned int row, unsigned int col, const std::string & site, const std::string& items, const Path& srcpath, const std::string& dstpath) {
+void MoveScreen::initialize(unsigned int row, unsigned int col, const std::string & site, const std::string& items, const Path& srcpath, const std::string& dstpath, const std::string& firstitem) {
   defaultlegendtext = "[Enter] Modify - [m]ove - [c]ancel";
   currentlegendtext = defaultlegendtext;
   active = false;
   this->site = site;
   this->srcpath = srcpath.toString();
   this->items = items;
+  this->firstitem = firstitem;
   mso.reset();
   int y = 4;
   if (!site.empty()) {
@@ -61,17 +62,37 @@ void MoveScreen::update() {
   redraw();
 }
 
+void MoveScreen::deactivate() {
+  activeelement->deactivate();
+  active = false;
+  currentlegendtext = defaultlegendtext;
+  ui->update();
+  ui->setLegend();
+}
+
 bool MoveScreen::keyPressed(unsigned int ch) {
   if (active) {
     if (ch == 10) {
-      activeelement->deactivate();
-      active = false;
-      currentlegendtext = defaultlegendtext;
-      ui->update();
-      ui->setLegend();
+      deactivate();
       return true;
     }
-    activeelement->inputChar(ch);
+    else if (ch == KEY_IC && items == firstitem) {
+      for (size_t i = 0; i < firstitem.length(); ++i) {
+        std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("dstpath"))->inputChar(firstitem[i]);
+      }
+    }
+    else if (ch == 27) { // esc
+      std::shared_ptr<MenuSelectOptionTextField> dstpath = std::static_pointer_cast<MenuSelectOptionTextField>(activeelement);
+      if (!dstpath->getData().empty()) {
+        dstpath->clear();
+      }
+      else {
+        deactivate();
+      }
+    }
+    else {
+      activeelement->inputChar(ch);
+    }
     ui->update();
     return true;
   }
@@ -81,10 +102,16 @@ bool MoveScreen::keyPressed(unsigned int ch) {
       activeelement->activate();
       active = true;
       currentlegendtext = activeelement->getLegendText();
+      if (items == firstitem) {
+        currentlegendtext += " - [Insert] insert item name";
+      }
       ui->update();
       ui->setLegend();
       return true;
-    case 27: // esc
+    case 27: { // esc
+      ui->returnToLast();
+      return true;
+    }
     case 'c':
       ui->returnToLast();
       return true;

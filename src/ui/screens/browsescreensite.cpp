@@ -1190,5 +1190,7 @@ void BrowseScreenSite::gotoPath(const Path & path) {
 
 void BrowseScreenSite::initiateMove(const std::string& dstpath) {
   std::list<std::pair<std::string, bool>> items = list.getSelectedNames();
-  ui->goMove(site->getName(), targetName(items), list.getPath(), dstpath);
+  if (!items.empty()) {
+    ui->goMove(site->getName(), targetName(items), list.getPath(), dstpath, items.front().first);
+  }
 }

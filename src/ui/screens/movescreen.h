@@ -13,12 +13,13 @@ class MoveScreen : public UIWindow {
 public:
   MoveScreen(Ui *);
   ~MoveScreen();
-  void initialize(unsigned int row, unsigned int col, const std::string & site, const std::string& items, const Path& srcpath, const std::string& dstpath);
-  void update();
-  void redraw();
-  bool keyPressed(unsigned int ch);
-  std::string getLegendText() const;
-  std::string getInfoLabel() const;
+  void initialize(unsigned int row, unsigned int col, const std::string & site, const std::string& items, const Path& srcpath, const std::string& dstpath, const std::string& firstitem);
+  void update() override;
+  void redraw() override;
+  void deactivate();
+  bool keyPressed(unsigned int ch) override;
+  std::string getLegendText() const override;
+  std::string getInfoLabel() const override;
 private:
   std::string currentlegendtext;
   std::string defaultlegendtext;
@@ -28,4 +29,5 @@ private:
   MenuSelectOption mso;
   std::string srcpath;
   std::string items;
+  std::string firstitem;
 };
