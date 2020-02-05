@@ -247,7 +247,7 @@ public:
   void goSnake();
   void goEnableEncryption();
   void goDisableEncryption();
-  void goMove(const std::string& site, const std::string& items, const Path& srcpath, const std::string& dstpath);
+  void goMove(const std::string& site, const std::string& items, const Path& srcpath, const std::string& dstpath, const std::string& firstitem);
   void returnSelectItems(const std::string &);
   void key(const std::string &);
   void newKey(const std::string &);
