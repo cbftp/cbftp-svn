@@ -146,7 +146,7 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
       global->getEventLog()->log("Engine", "Skipping disabled site: " + site.first);
       continue;
     }
-    bool downloadonly = site.second || sl->getSite()->isAffiliated(race->getGroup());
+    bool downloadonly = site.second || (sl->getSite()->isAffiliated(race->getGroup()) && profile != SPREAD_DISTRIBUTE);
     if (downloadonly && sl->getSite()->getAllowDownload() == SiteAllowTransfer::SITE_ALLOW_TRANSFER_NO) {
       global->getEventLog()->log("Engine", "Skipping site because of download-only mode and download disabled: " + site.first);
       continue;
@@ -1828,7 +1828,8 @@ void Engine::addSiteToRace(const std::shared_ptr<Race>& race, const std::string&
                                          true, false, &race->getSectionSkipList()).action != SKIPLIST_DENY ||
       affil || downloadonly)
   {
-    std::shared_ptr<SiteRace> sr = sl->addRace(race, race->getSection(), race->getName(), affil || downloadonly);
+    downloadonly = downloadonly || (affil && race->getProfile() != SPREAD_PREPARE);
+    std::shared_ptr<SiteRace> sr = sl->addRace(race, race->getSection(), race->getName(), downloadonly);
     race->addSite(sr, sl);
   }
 }
