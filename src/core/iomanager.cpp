@@ -103,6 +103,7 @@ void IOManager::init(const std::string& prefix, int id) {
   sigaction(SIGPIPE, &sa, nullptr);
   thread.start((prefix + "-io-" + std::to_string(id)).c_str(), this);
   tickpoke.startPoke(this, "IOManager", TICKPERIOD, 0);
+  initialized.wait();
 }
 
 void IOManager::preStop() {
@@ -1126,6 +1127,7 @@ void IOManager::handleTCPServerIn(SocketInfo& socketinfo) {
 
 void IOManager::run() {
   SSLManager::init();
+  initialized.post();
   std::list<std::pair<int, PollEvent>> fds;
   std::list<std::pair<int, PollEvent>>::const_iterator polliter;
   std::lock_guard<std::mutex> lock(socketinfomaplock);
