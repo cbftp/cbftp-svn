@@ -11,6 +11,7 @@
 
 #include "eventreceiver.h"
 #include "polling.h"
+#include "semaphore.h"
 #include "socketinfo.h"
 #include "threading.h"
 
@@ -400,6 +401,7 @@ private:
     bool hasdefaultinterface;
     std::unordered_map<int, SSL_SESSION*> sessions;
     int sessionkeycounter;
+    Semaphore initialized;
 };
 
 } // namespace Core
