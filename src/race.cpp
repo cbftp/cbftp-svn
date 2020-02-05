@@ -268,8 +268,8 @@ void Race::reportSemiDone(const std::shared_ptr<SiteRace>& sr) {
   semidonesites.insert(sr);
   if (semidonesites.size() == sites.size() || remainingSitesAreDownloadOnly(sites, semidonesites)) {
     setDone();
-    for (std::unordered_set<std::shared_ptr<SiteRace>>::iterator it = semidonesites.begin(); it != semidonesites.end(); it++) {
-      (*it)->complete(false);
+    for (auto it = sites.begin(); it != sites.end(); it++) {
+      it->first->complete(false);
     }
   }
 }
