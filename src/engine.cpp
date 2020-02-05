@@ -1579,7 +1579,7 @@ bool Engine::raceTransferPossible(const std::shared_ptr<SiteLogic>& sls, const s
   if (!srcsite->isAllowedTargetSite(dstsite)) {
     return false;
   }
-  if (srd->isDownloadOnly() && race->getProfile() != SPREAD_DISTRIBUTE) {
+  if (srd->isDownloadOnly()) {
     return false;
   }
   if (srcsite->hasBrokenPASV() && dstsite->hasBrokenPASV()) {
