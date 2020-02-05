@@ -28,6 +28,33 @@ bool SitesComparator::operator()(const std::pair<std::shared_ptr<SiteRace>, std:
   return a.first->getSiteName() < b.first->getSiteName();
 }
 
+namespace {
+
+bool remainingSitesAreDownloadOnly(const std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic>>, SitesComparator>& allsites,
+                                   const std::unordered_set<std::shared_ptr<SiteRace>>& donesites)
+{
+  std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> >, SitesComparator> remainingsites = allsites;
+  bool erased = true;
+  while (erased) {
+    erased = false;
+    for (auto it = remainingsites.begin(); it != remainingsites.end(); ++it) {
+      if (donesites.find(it->first) != donesites.end()) {
+        erased = true;
+        remainingsites.erase(it);
+        break;
+      }
+    }
+  }
+  for (auto it = remainingsites.begin(); it != remainingsites.end(); ++it) {
+    if (!it->first->isDownloadOnly()) {
+      return false;
+    }
+  }
+  return true;
+}
+
+} // namespace
+
 Race::Race(unsigned int id, SpreadProfile profile, const std::string& release, const std::string& section) :
   name(release),
   group(util::getGroupNameFromRelease(release)),
@@ -229,7 +256,7 @@ void Race::reportDone(const std::shared_ptr<SiteRace>& sr) {
   }
   reportSemiDone(sr);
   donesites.insert(sr);
-  if (donesites.size() == sites.size()) {
+  if (donesites.size() == sites.size() || remainingSitesAreDownloadOnly(sites, donesites)) {
     setDone();
   }
 }
@@ -239,7 +266,7 @@ void Race::reportSemiDone(const std::shared_ptr<SiteRace>& sr) {
     return;
   }
   semidonesites.insert(sr);
-  if (semidonesites.size() == sites.size()) {
+  if (semidonesites.size() == sites.size() || remainingSitesAreDownloadOnly(sites, semidonesites)) {
     setDone();
     for (std::unordered_set<std::shared_ptr<SiteRace>>::iterator it = semidonesites.begin(); it != semidonesites.end(); it++) {
       (*it)->complete(false);
