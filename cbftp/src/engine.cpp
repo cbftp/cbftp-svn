@@ -1828,7 +1828,7 @@ void Engine::addSiteToRace(const std::shared_ptr<Race>& race, const std::string&
                                          true, false, &race->getSectionSkipList()).action != SKIPLIST_DENY ||
       affil || downloadonly)
   {
-    downloadonly = downloadonly || (affil && race->getProfile() != SPREAD_PREPARE);
+    downloadonly = downloadonly || (affil && race->getProfile() != SPREAD_DISTRIBUTE);
     std::shared_ptr<SiteRace> sr = sl->addRace(race, race->getSection(), race->getName(), downloadonly);
     race->addSite(sr, sl);
   }

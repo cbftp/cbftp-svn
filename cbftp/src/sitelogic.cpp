@@ -1627,7 +1627,7 @@ void SiteLogic::removeRace(const std::shared_ptr<SiteRace> & race) {
   for (std::vector<std::shared_ptr<SiteRace>>::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
     if (*it == race) {
       currentraces.erase(it);
-      return;
+      break;
     }
   }
   for (unsigned int i = 0; i < connstatetracker.size(); i++) {
