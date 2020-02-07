@@ -152,6 +152,9 @@ An example body when sending a raw command:
                           // id and let command run in the background
 }
 
+Section paths in the command can be inserted with:
+$path(sectionname)
+  
 - Get raw command results for an async raw command with id 1
    GET /raw/1
 
@@ -243,6 +246,7 @@ in the cbftp UI to start the latest prepared job.
 <password> raw <sitelist> <command>
 This command makes cbftp issue the given raw command on the listed sites.
 The sitelist can also be a section name.
+Section paths in the command can be inserted with: $path(sectionname)
 
 <password> rawwithpath <sitelist> <path> <command>
 This command makes cbftp change directory to the given path and then issue

@@ -1512,7 +1512,8 @@ int SiteLogic::requestRawCommand(RequestCallback* cb, const std::string & comman
 
 int SiteLogic::requestRawCommand(RequestCallback* cb, const Path & path, const std::string & command) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(cb, requestid, REQ_RAW, path.toString(), command));
+  std::string expandedcommand = expandVariables(command);
+  requests.push_back(SiteLogicRequest(cb, requestid, REQ_RAW, path.toString(), expandedcommand));
   activateOne();
   return requestid;
 }
@@ -2068,6 +2069,7 @@ void SiteLogic::listCompleted(int id, int storeid, const std::shared_ptr<FileLis
 
 void SiteLogic::issueRawCommand(unsigned int id, const std::string & command) {
   int requestid = requestidcounter++;
+  std::string expandedcommand = expandVariables(command);
   SiteLogicRequest request(nullptr, requestid, REQ_RAW, conns[id]->getCurrentPath().toString(), command);
   request.setConnId(id);
   requests.push_back(request);
@@ -2334,4 +2336,25 @@ void SiteLogic::antiAntiIdle(int id) {
     requests.push_back(request);
     handleConnection(id);
   }
+}
+
+std::string SiteLogic::expandVariables(const std::string& text) const {
+  std::string expanded = text;
+  std::string pathtoken = "$path(";
+  size_t pos = text.find(pathtoken);
+  if (pos != std::string::npos) {
+    std::string replacewith;
+    size_t endpos = text.find(")", pos);
+    if (endpos != std::string::npos) {
+      std::string section = text.substr(pos + pathtoken.length(), endpos - pos - pathtoken.length());
+      if (site->hasSection(section)) {
+        replacewith = site->getSectionPath(section).toString();
+      }
+      else {
+        replacewith = "<section not found>";
+      }
+      expanded.replace(pos, endpos - pos + 1, replacewith);
+    }
+  }
+  return expanded;
 }

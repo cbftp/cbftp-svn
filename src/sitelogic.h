@@ -96,6 +96,7 @@ class SiteLogic : public Core::EventReceiver {
     bool getSlot(bool isdownload, TransferType type);
     void handlePostUpload(int id, const std::shared_ptr<FileList>& fl);
     void handlePostDownload(int id);
+    std::string expandVariables(const std::string& text) const;
   public:
     SiteLogic(const std::string &);
     ~SiteLogic();
