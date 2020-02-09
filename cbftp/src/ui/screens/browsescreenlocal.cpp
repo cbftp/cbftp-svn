@@ -645,6 +645,11 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       temphighlightline = table.getElement(table.getSelectionPointer())->getRow();
       ui->redraw();
       break;
+    case 'i':
+      if (list.cursoredFile() != nullptr) {
+        ui->goFileInfo(list.cursoredFile());
+      }
+      break;
   }
   return BrowseScreenAction();
 }
@@ -659,7 +664,7 @@ std::string BrowseScreenLocal::getLegendText() const {
   if (filtermodeinputregex) {
     return "[Any] Enter regex input - [Tab] switch mode - [Esc] Cancel";
   }
-  return "[Up/Down] Navigate - [Enter/Right] open dir - [s]ort - [Backspace/Left] return - [Esc] Cancel - [c]lose - [q]uick jump - Toggle [f]ilter - Regex [F]ilter - [Space] Hard select - [Shift-Up/Down] Soft select - Select [A]ll";
+  return "[Up/Down] Navigate - [Enter/Right] open dir - [s]ort - [Backspace/Left] return - [Esc] Cancel - [c]lose - [q]uick jump - Toggle [f]ilter - Regex [F]ilter - [Space] Hard select - [Shift-Up/Down] Soft select - Select [A]ll - File [i]nfo";
 }
 
 std::string BrowseScreenLocal::getInfoLabel() const {
