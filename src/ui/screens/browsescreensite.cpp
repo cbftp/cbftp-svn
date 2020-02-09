@@ -885,7 +885,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       break;
     }
     case KEY_SR: // shift up
-      if (list.cursoredFile() != NULL) {
+      if (list.cursoredFile() != nullptr) {
         UIFile * lastfile = list.cursoredFile();
         if (!list.goPrevious()) {
           break;
@@ -903,7 +903,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       }
       break;
     case KEY_SF: // shift down
-      if (list.cursoredFile() != NULL) {
+      if (list.cursoredFile() != nullptr) {
         UIFile * lastfile = list.cursoredFile();
         if (!list.goNext()) {
           break;
@@ -934,7 +934,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
           ui->redraw();
         }
       }
-      else if (list.cursoredFile() != NULL) {
+      else if (list.cursoredFile() != nullptr) {
         if (list.cursoredFile()->isHardSelected()) {
           list.cursoredFile()->unHardSelect();
         }
@@ -947,7 +947,7 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       }
       break;
     case 'w':
-      if (list.cursoredFile() != NULL) {
+      if (list.cursoredFile() != nullptr) {
         ui->goRawCommand(site->getName(), list.getPath(), list.cursoredFile()->getName());
       }
       else {
@@ -955,11 +955,16 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       }
       break;
     case '-':
-      if (list.cursoredFile() == NULL) {
+      if (list.cursoredFile() == nullptr) {
         break;
       }
       temphighlightline = table.getElement(table.getSelectionPointer())->getRow();
       ui->redraw();
+      break;
+    case 'i':
+      if (list.cursoredFile() != nullptr) {
+        ui->goFileInfo(list.cursoredFile());
+      }
       break;
   }
   return BrowseScreenAction();
@@ -975,7 +980,7 @@ std::string BrowseScreenSite::getLegendText() const {
   if (filtermodeinputregex) {
     return "[Any] Enter regex input - [Tab] switch mode - [Esc] Cancel";
   }
-  return "[Esc] Cancel - [c]lose - [Up/Down] Navigate - [Enter/Right] open dir - [Backspace/Left] return - sp[r]ead - [v]iew file - [D]ownload - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - [M]ake directory - Toggle se[P]arators - [q]uick jump - Toggle [f]ilter - Regex [F]ilter - view cwd [l]og - [Space] Hard select - [Shift-Up/Down] Soft select - Select [A]ll - [0-9] Browse to section - [m]ove/rename";
+  return "[Esc] Cancel - [c]lose - [Up/Down] Navigate - [Enter/Right] open dir - [Backspace/Left] return - sp[r]ead - [v]iew file - [D]ownload - [b]ind to section - [s]ort - ra[w] command - [W]ipe - [Del]ete - [n]uke - [M]ake directory - Toggle se[P]arators - [q]uick jump - Toggle [f]ilter - Regex [F]ilter - view cwd [l]og - [Space] Hard select - [Shift-Up/Down] Soft select - Select [A]ll - [0-9] Browse to section - [m]ove/rename - File [i]nfo";
 }
 
 std::string BrowseScreenSite::getInfoLabel() const {

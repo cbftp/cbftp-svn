@@ -63,6 +63,7 @@
 #include "screens/snakescreen.h"
 #include "screens/disableencryptionscreen.h"
 #include "screens/movescreen.h"
+#include "screens/fileinfoscreen.h"
 
 namespace {
 
@@ -145,6 +146,7 @@ bool Ui::init() {
   snakescreen = std::make_shared<SnakeScreen>(this);
   disableencryptionscreen = std::make_shared<DisableEncryptionScreen>(this);
   movescreen = std::make_shared<MoveScreen>(this);
+  fileinfoscreen = std::make_shared<FileInfoScreen>(this);
   mainwindows.push_back(mainscreen);
   mainwindows.push_back(newkeyscreen);
   mainwindows.push_back(confirmationscreen);
@@ -183,6 +185,7 @@ bool Ui::init() {
   mainwindows.push_back(snakescreen);
   mainwindows.push_back(disableencryptionscreen);
   mainwindows.push_back(movescreen);
+  mainwindows.push_back(fileinfoscreen);
 
   legendprinterkeybinds = std::make_shared<LegendPrinterKeybinds>(this);
   legendwindow->setMainLegendPrinter(legendprinterkeybinds);
@@ -954,6 +957,11 @@ void Ui::goDisableEncryption() {
 void Ui::goMove(const std::string& site, const std::string& items, const Path& srcpath, const std::string& dstpath, const std::string& firstitem) {
   movescreen->initialize(mainrow, maincol, site, items, srcpath, dstpath, firstitem);
   switchToWindow(movescreen);
+}
+
+void Ui::goFileInfo(UIFile* uifile) {
+  fileinfoscreen->initialize(mainrow, maincol, uifile);
+  switchToWindow(fileinfoscreen);
 }
 
 void Ui::returnSelectItems(const std::string & items) {

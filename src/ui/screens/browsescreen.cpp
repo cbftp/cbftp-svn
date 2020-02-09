@@ -245,7 +245,7 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
     case 'u':
       toggleCompareListMode(CompareMode::UNIQUE);
       return true;
-    case 'i':
+    case 'I':
       toggleCompareListMode(CompareMode::IDENTICAL);
       return true;
     case 'm':
@@ -300,7 +300,7 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
 std::string BrowseScreen::getLegendText() const {
   std::string extra = "";
   if (split && left->type() != BrowseScreenType::SELECTOR && right->type() != BrowseScreenType::SELECTOR) {
-    extra += "Show [u]niques - Show [i]denticals - ";
+    extra += "Show [u]niques - Show [I]denticals - ";
     if (left->type() == BrowseScreenType::SITE || right->type() == BrowseScreenType::SITE) {
       extra += "[t]ransfer - ";
     }
