@@ -181,9 +181,13 @@ An example body when starting a spread job:
     "SITE2",
     "SITE3"
   ],
-  "sites_dlonly": [
+  "sites_dlonly": [         // (optional)
     "SITE1"
   ],
+  "sites_all": false,       // (optional) whether to add all sites with the
+                            // section defined
+  "reset": false,           // (optional) whether to reset the job if it
+                            // already exists
   "profile": "DISTRIBUTE"   // (RACE/DISTRIBUTE/PREPARE)
 }
 
