@@ -309,13 +309,13 @@ std::shared_ptr<Race> NewRaceScreen::startRace(bool addtemplegend) {
 
   for (std::list<std::pair<std::string, bool> >::const_iterator itemit = items.begin(); itemit != items.end(); itemit++) {
     if (msota->getData() == SPREAD_RACE) {
-      std::shared_ptr<Race> race = global->getEngine()->newRace(itemit->first, section, sites);
+      std::shared_ptr<Race> race = global->getEngine()->newRace(itemit->first, section, sites, false);
       if (!!race) {
         lastrace = race;
       }
     }
     else {
-      std::shared_ptr<Race> race = global->getEngine()->newDistribute(itemit->first, section, sites);
+      std::shared_ptr<Race> race = global->getEngine()->newDistribute(itemit->first, section, sites, false);
       if (!!race) {
         lastrace = race;
       }
