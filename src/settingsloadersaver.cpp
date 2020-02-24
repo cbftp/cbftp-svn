@@ -106,7 +106,7 @@ DataFileState SettingsLoaderSaver::getState() const {
 bool SettingsLoaderSaver::changeKey(const std::string & key, const std::string & newkey) {
   bool success = dfh->changeKey(key, newkey);
   if (success) {
-    global->getEventLog()->log("DataLoaderSaver", "Data encryption key changeds.");
+    global->getEventLog()->log("DataLoaderSaver", "Data encryption key changed.");
   }
   return success;
 }

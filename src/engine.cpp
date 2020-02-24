@@ -92,7 +92,7 @@ Engine::~Engine() {
 
 }
 
-std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& release, const std::string& section, const std::list<std::string>& sites, const std::list<std::string>& dlonlysites) {
+std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset, const std::list<std::string>& dlonlysites) {
   if (release.empty()) {
     global->getEventLog()->log("Engine", "Spread job skipped due to missing release name.");
     return std::shared_ptr<Race>();
@@ -162,15 +162,10 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
       skippedsites.push_back(sl->getSite()->getName());
       continue;
     }
-    bool add = true;
-    if (add && append) {
-      if (!!race->getSiteRace(site.first)) {
-        continue;
-      }
+    if (append && !!race->getSiteRace(site.first)) {
+      continue;
     }
-    if (add) {
-      addsites.emplace_back(site.first, sl, downloadonly);
-    }
+    addsites.emplace_back(site.first, sl, downloadonly);
   }
   if (!addsites.empty()) {
     for (const std::string & skipsite : skippedsites) {
@@ -214,7 +209,7 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
       for (const AddSite& site : addsites) {
         preparesites.emplace_back(site.name, site.downloadonly);
       }
-      preparedraces.push_back(std::make_shared<PreparedRace>(race->getId(), release, section, preparesites, preparedraceexpirytime));
+      preparedraces.push_back(std::make_shared<PreparedRace>(race->getId(), release, section, preparesites, reset, preparedraceexpirytime));
       for (const AddSite& site : addsites) {
         site.sl->activateAll();
       }
@@ -234,6 +229,9 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
         for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
           it->second->activateAll();
         }
+      }
+      if (reset) {
+        resetRace(race, true);
       }
     }
     for (const AddSite& site : addsites) {
@@ -264,17 +262,17 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
   return race;
 }
 
-std::shared_ptr<Race> Engine::newRace(const std::string& release, const std::string& section, const std::list<std::string>& sites, const std::list<std::string>& dlonlysites) {
-  return newSpreadJob(SPREAD_RACE, release, section, sites, dlonlysites);
+std::shared_ptr<Race> Engine::newRace(const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset, const std::list<std::string>& dlonlysites) {
+  return newSpreadJob(SPREAD_RACE, release, section, sites, reset, dlonlysites);
 }
 
-std::shared_ptr<Race> Engine::newDistribute(const std::string& release, const std::string& section, const std::list<std::string>& sites, const std::list<std::string>& dlonlysites) {
-  return newSpreadJob(SPREAD_DISTRIBUTE, release, section, sites, dlonlysites);
+std::shared_ptr<Race> Engine::newDistribute(const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset, const std::list<std::string>& dlonlysites) {
+  return newSpreadJob(SPREAD_DISTRIBUTE, release, section, sites, reset, dlonlysites);
 }
 
-bool Engine::prepareRace(const std::string & release, const std::string& section, const std::list<std::string>& sites, const std::list<std::string>& dlonlysites) {
+bool Engine::prepareRace(const std::string & release, const std::string& section, const std::list<std::string>& sites, bool reset, const std::list<std::string>& dlonlysites) {
   size_t preparedbefore = preparedraces.size();
-  std::shared_ptr<Race> race = newSpreadJob(SPREAD_PREPARE, release, section, sites, dlonlysites);
+  std::shared_ptr<Race> race = newSpreadJob(SPREAD_PREPARE, release, section, sites, reset, dlonlysites);
   return preparedraces.size() > preparedbefore || race;
 }
 
@@ -291,7 +289,7 @@ void Engine::startPreparedRace(unsigned int id) {
           sites.push_back(site.first);
         }
       }
-      newRace((*it)->getRelease(), (*it)->getSection(), sites, dlonlysites);
+      newRace((*it)->getRelease(), (*it)->getSection(), sites, (*it)->getReset(), dlonlysites);
       preparedraces.erase(it);
       return;
     }

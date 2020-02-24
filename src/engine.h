@@ -31,9 +31,9 @@ class Engine : public Core::EventReceiver {
 public:
   Engine();
   ~Engine();
-  std::shared_ptr<Race> newRace(const std::string& release, const std::string& section, const std::list<std::string>& sites, const std::list<std::string>& dlonlysites = {});
-  bool prepareRace(const std::string& release, const std::string& section, const std::list<std::string>& sites, const std::list<std::string>& dlonlysites = {});
-  std::shared_ptr<Race> newDistribute(const std::string& release, const std::string& section, const std::list<std::string>& sites, const std::list<std::string>& dlonlysites = {});
+  std::shared_ptr<Race> newRace(const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset = false, const std::list<std::string>& dlonlysites = {});
+  bool prepareRace(const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset = false, const std::list<std::string>& dlonlysites = {});
+  std::shared_ptr<Race> newDistribute(const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset = false, const std::list<std::string>& dlonlysites = {});
   void startPreparedRace(unsigned int);
   void deletePreparedRace(unsigned int);
   void startLatestPreparedRace();
@@ -95,7 +95,7 @@ public:
   bool isIncompleteEnoughForDelete(const std::shared_ptr<Race> & race, const std::shared_ptr<SiteRace> & siterace) const;
   void transferFailed(const std::shared_ptr<TransferStatus> & ts, int err);
  private:
-  std::shared_ptr<Race> newSpreadJob(int profile, const std::string& release, const std::string& section, const std::list<std::string>& sites, const std::list<std::string>& dlonlysites = {});
+  std::shared_ptr<Race> newSpreadJob(int profile, const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset, const std::list<std::string>& dlonlysites);
   void estimateRaceSizes();
   void estimateRaceSize(const std::shared_ptr<Race>&, bool forceupdate = false);
   void reportCurrentSize(const SkipList&, const SkipList&, const std::shared_ptr<SiteRace>& srs, const std::shared_ptr<FileList>& fl, bool final);

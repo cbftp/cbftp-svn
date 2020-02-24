@@ -1,10 +1,11 @@
 #include "preparedrace.h"
 
-PreparedRace::PreparedRace(unsigned int id, const std::string& release, const std::string& section, const std::list<std::pair<std::string, bool>>& sites, int ttl) :
+PreparedRace::PreparedRace(unsigned int id, const std::string& release, const std::string& section, const std::list<std::pair<std::string, bool>>& sites, bool reset, int ttl) :
   id(id),
   release(release),
   section(section),
   sites(sites),
+  reset(reset),
   ttl(ttl) {
 
 }
@@ -19,6 +20,10 @@ const std::string& PreparedRace::getRelease() const {
 
 const std::string& PreparedRace::getSection() const {
   return section;
+}
+
+bool PreparedRace::getReset() const {
+  return reset;
 }
 
 const std::list<std::pair<std::string, bool>>& PreparedRace::getSites() const {

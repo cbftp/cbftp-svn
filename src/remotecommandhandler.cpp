@@ -510,13 +510,13 @@ bool RemoteCommandHandler::parseRace(const std::vector<std::string> & message, i
     dlonlysites = util::trim(util::split(dlonlysitestring, ","));
   }
   if (type == RACE) {
-    return !!global->getEngine()->newRace(release, section, sites, dlonlysites);
+    return !!global->getEngine()->newRace(release, section, sites, false, dlonlysites);
   }
   else if (type == DISTRIBUTE){
-    return !!global->getEngine()->newDistribute(release, section, sites, dlonlysites);
+    return !!global->getEngine()->newDistribute(release, section, sites, false, dlonlysites);
   }
   else {
-    return global->getEngine()->prepareRace(release, section, sites, dlonlysites);
+    return global->getEngine()->prepareRace(release, section, sites, false, dlonlysites);
   }
 }
 

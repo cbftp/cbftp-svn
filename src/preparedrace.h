@@ -6,10 +6,11 @@
 
 class PreparedRace {
 public:
-  PreparedRace(unsigned int, const std::string& release, const std::string& section, const std::list<std::pair<std::string, bool>>& sites, int);
+  PreparedRace(unsigned int id, const std::string& release, const std::string& section, const std::list<std::pair<std::string, bool>>& sites, bool reset, int ttl);
   unsigned int getId() const;
   const std::string& getRelease() const;
   const std::string& getSection() const;
+  bool getReset() const;
   const std::list<std::pair<std::string, bool>>& getSites() const;
   int getRemainingTime() const;
   void tick();
@@ -18,5 +19,6 @@ private:
   const std::string release;
   const std::string section;
   const std::list<std::pair<std::string, bool>> sites;
+  bool reset;
   int ttl;
 };

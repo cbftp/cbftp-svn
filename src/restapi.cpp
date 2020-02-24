@@ -937,6 +937,8 @@ void RestApi::handleSpreadJobPost(RestApiCallback* cb, int connrequestid, const 
       }
     }
   }
+  auto resetit = jsondata.find("reset");
+  bool reset = resetit != jsondata.end() && resetit->get<bool>();
   bool success = false;
   SpreadProfile profile = SPREAD_RACE;
   auto profileit = jsondata.find("profile");
@@ -945,13 +947,13 @@ void RestApi::handleSpreadJobPost(RestApiCallback* cb, int connrequestid, const 
   }
   switch (profile) {
     case  SPREAD_DISTRIBUTE:
-      success = !!global->getEngine()->newDistribute(name, section, sites, dlonlysites);
+      success = !!global->getEngine()->newDistribute(name, section, sites, reset, dlonlysites);
       break;
     case SPREAD_PREPARE:
-      success = global->getEngine()->prepareRace(name, section, sites, dlonlysites);
+      success = global->getEngine()->prepareRace(name, section, sites, reset, dlonlysites);
       break;
     case SPREAD_RACE:
-      success = !!global->getEngine()->newRace(name, section, sites, dlonlysites);
+      success = !!global->getEngine()->newRace(name, section, sites, reset, dlonlysites);
       break;
   }
   http::Response response(201);
