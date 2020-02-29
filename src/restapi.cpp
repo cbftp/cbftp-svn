@@ -110,6 +110,17 @@ http::Response badRequestResponse(const std::string& error, int code = 400)
   return response;
 }
 
+http::Response notFoundResponse()
+{
+  http::Response response(404);
+  response.appendHeader("Content-Length", "0");
+  return response;
+}
+
+http::Response emptySectionPathResponse() {
+  return badRequestResponse("section path must not be empty");
+}
+
 std::string listCommandToString(int listcommand) {
   switch (listcommand) {
     case SITE_LIST_STAT:
@@ -275,6 +286,17 @@ nlohmann::json jsonSkipList(const SkipList& skiplist) {
     out.push_back(entry);
   }
   return out;
+}
+
+nlohmann::json jsonSections(const std::shared_ptr<Site>& site) {
+  nlohmann::json j = nlohmann::json::array();
+  for (std::map<std::string, Path>::const_iterator it = site->sectionsBegin(); it != site->sectionsEnd(); ++it) {
+    nlohmann::json sec;
+    sec["name"] = it->first;
+    sec["path"] = it->second.toString();
+    j.push_back(sec);
+  }
+  return j;
 }
 
 int stringToSkiplistScope(const std::string& scope) {
@@ -513,8 +535,13 @@ std::shared_ptr<http::Response> updateSite(std::shared_ptr<Site>& site, nlohmann
       site->setUseXDUPE(it.value());
     }
     else if (it.key() == "sections") {
+      site->clearSections();
       for (nlohmann::json::const_iterator it2 = it.value().begin(); it2 != it.value().end(); ++it2) {
-        site->addSection(it2.key(), it2.value());
+        std::string sectionpath = it2.value()["path"];
+        if (sectionpath.empty()) {
+          return std::make_shared<http::Response>(emptySectionPathResponse());
+        }
+        site->addSection(it2.value()["name"], it2.value()["path"]);
       }
     }
     else if (it.key() == "avg_speed") {
@@ -601,17 +628,22 @@ nlohmann::json getJsonFromBody(const http::Request& request) {
 }
 
 RestApi::RestApi() : nextrequestid(0) {
-  endpoints[std::make_pair(Path("/filelist"), 1)]["GET"] = &RestApi::handleFileListGet;
-  endpoints[std::make_pair(Path("/raw"), 1)]["POST"] = &RestApi::handleRawPost;
-  endpoints[std::make_pair(Path("/raw"), 2)]["GET"] = &RestApi::handleRawGet;
-  endpoints[std::make_pair(Path("/sites"), 1)]["GET"] = &RestApi::handleSitesGet;
-  endpoints[std::make_pair(Path("/sites"), 1)]["POST"] = &RestApi::handleSitesPost;
-  endpoints[std::make_pair(Path("/sites"), 2)]["GET"] = &RestApi::handleSiteGet;
-  endpoints[std::make_pair(Path("/sites"), 2)]["PATCH"] = &RestApi::handleSitePatch;
-  endpoints[std::make_pair(Path("/sites"), 2)]["DELETE"] = &RestApi::handleSiteDelete;
-  endpoints[std::make_pair(Path("/spreadjobs"), 1)]["POST"] = &RestApi::handleSpreadJobPost;
-  endpoints[std::make_pair(Path("/spreadjobs"), 1)]["GET"] = &RestApi::handleSpreadJobsGet;
-  endpoints[std::make_pair(Path("/spreadjobs"), 2)]["GET"] = &RestApi::handleSpreadJobGet;
+  endpoints["/filelist"]["GET"] = &RestApi::handleFileListGet;
+  endpoints["/raw"]["POST"] = &RestApi::handleRawPost;
+  endpoints["/raw/*"]["GET"] = &RestApi::handleRawGet;
+  endpoints["/sites"]["GET"] = &RestApi::handleSitesGet;
+  endpoints["/sites"]["POST"] = &RestApi::handleSitesPost;
+  endpoints["/sites/*"]["GET"] = &RestApi::handleSiteGet;
+  endpoints["/sites/*"]["PATCH"] = &RestApi::handleSitePatch;
+  endpoints["/sites/*"]["DELETE"] = &RestApi::handleSiteDelete;
+  endpoints["/sites/*/sections"]["GET"] = &RestApi::handleSiteSectionsGet;
+  endpoints["/sites/*/sections/*"]["GET"] = &RestApi::handleSiteSectionGet;
+  endpoints["/sites/*/sections"]["POST"] = &RestApi::handleSiteSectionPost;
+  endpoints["/sites/*/sections/*"]["PATCH"] = &RestApi::handleSiteSectionPatch;
+  endpoints["/sites/*/sections/*"]["DELETE"] = &RestApi::handleSiteSectionDelete;
+  endpoints["/spreadjobs"]["POST"] = &RestApi::handleSpreadJobPost;
+  endpoints["/spreadjobs"]["GET"] = &RestApi::handleSpreadJobsGet;
+  endpoints["/spreadjobs/*"]["GET"] = &RestApi::handleSpreadJobGet;
   global->getTickPoke()->startPoke(this, "RestApi", RESTAPI_TICK_INTERVAL_MS, 0);
 }
 
@@ -683,9 +715,7 @@ void RestApi::handleRawGet(RestApiCallback* cb, int connrequestid, const http::R
   }
   OngoingRequest* ongoingrequest = findOngoingRequest(apirequestid);
   if (!ongoingrequest) {
-    http::Response response(404);
-    response.appendHeader("Content-Length", "0");
-    cb->requestHandled(connrequestid, response);
+    cb->requestHandled(connrequestid, notFoundResponse());
     return;
   }
   if (ongoingrequest->ongoingservicerequests.empty()) {
@@ -742,9 +772,7 @@ void RestApi::handleSiteGet(RestApiCallback* cb, int connrequestid, const http::
   std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
   std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(sitename);
   if (!site || !sl) {
-    http::Response response(404);
-    response.appendHeader("Content-Length", "0");
-    cb->requestHandled(connrequestid, response);
+    cb->requestHandled(connrequestid, notFoundResponse());
     return;
   }
   nlohmann::json j;
@@ -778,9 +806,7 @@ void RestApi::handleSiteGet(RestApiCallback* cb, int connrequestid, const http::
   j["allow_download"] = siteAllowTransferToString(site->getAllowDownload());
   j["priority"] = priorityToString(site->getPriority());
   j["xdupe"] = site->useXDUPE();
-  for (std::map<std::string, Path>::const_iterator it = site->sectionsBegin(); it != site->sectionsEnd(); ++it) {
-    j["sections"][it->first] = it->second.toString();
-  }
+  j["sections"] = jsonSections(site);
   for (std::map<std::string, int>::const_iterator it = site->avgspeedBegin(); it != site->avgspeedEnd(); ++it) {
     j["avg_speed"][it->first] = it->second;
   }
@@ -829,9 +855,7 @@ void RestApi::handleSitePatch(RestApiCallback* cb, int connrequestid, const http
   std::string sitename = path.level(1).toString();
   std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
   if (!site) {
-    http::Response response(404);
-    response.appendHeader("Content-Length", "0");
-    cb->requestHandled(connrequestid, response);
+    cb->requestHandled(connrequestid, notFoundResponse());
     return;
   }
   nlohmann::json jsondata = getJsonFromBody(request);
@@ -968,9 +992,7 @@ void RestApi::handleSpreadJobGet(RestApiCallback* cb, int connrequestid, const h
   std::string name = Path(request.getPath()).baseName();
   std::shared_ptr<Race> spreadjob = global->getEngine()->getRace(name);
   if (!spreadjob) {
-    http::Response response(404);
-    response.appendHeader("Content-Length", "0");
-    cb->requestHandled(connrequestid, response);
+    cb->requestHandled(connrequestid, notFoundResponse());
     return;
   }
   nlohmann::json j;
@@ -1019,7 +1041,111 @@ void RestApi::handleSpreadJobsGet(RestApiCallback* cb, int connrequestid, const 
   response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
   response.addHeader("Content-Type", "application/json");
   cb->requestHandled(connrequestid, response);
+}
 
+void RestApi::handleSiteSectionsGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  Path path = request.getPath();
+  std::string sitename = path.level(1).toString();
+  std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
+  if (!site) {
+    cb->requestHandled(connrequestid, notFoundResponse());
+    return;
+  }
+  nlohmann::json sec = jsonSections(site);
+  http::Response response(200);
+  std::string jsondump = sec.dump(2);
+  response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
+  response.addHeader("Content-Type", "application/json");
+  cb->requestHandled(connrequestid, response);
+}
+
+void RestApi::handleSiteSectionGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  Path path = request.getPath();
+  std::string sitename = path.level(1).toString();
+  std::string section = path.level(3).toString();
+  std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
+  if (!site || !site->hasSection(section)) {
+    cb->requestHandled(connrequestid, notFoundResponse());
+    return;
+  }
+  nlohmann::json sec;
+  sec["name"] = section;
+  sec["path"] = site->getSectionPath(section).toString();
+  http::Response response(200);
+  std::string jsondump = sec.dump(2);
+  response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
+  response.addHeader("Content-Type", "application/json");
+  cb->requestHandled(connrequestid, response);
+}
+
+void RestApi::handleSiteSectionPost(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  Path path = request.getPath();
+  std::string sitename = path.level(1).toString();
+  std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
+  if (!site) {
+    cb->requestHandled(connrequestid, notFoundResponse());
+    return;
+  }
+  nlohmann::json jsondata = getJsonFromBody(request);
+  std::string section = jsondata["name"];
+  std::string sectionpath = jsondata["path"];
+  if (site->hasSection(section)) {
+    http::Response response(409);
+    response.appendHeader("Content-Length", "0");
+    cb->requestHandled(connrequestid, response);
+    return;
+  }
+  if (sectionpath.empty()) {
+    cb->requestHandled(connrequestid, emptySectionPathResponse());
+    return;
+  }
+  site->addSection(section, sectionpath);
+  http::Response response(201);
+  std::string jsondump;
+  response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
+  response.addHeader("Content-Type", "application/json");
+  cb->requestHandled(connrequestid, response);
+}
+
+void RestApi::handleSiteSectionPatch(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  Path path = request.getPath();
+  std::string sitename = path.level(1).toString();
+  std::string section = path.level(3).toString();
+  std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
+  if (!site || !site->hasSection(section)) {
+    cb->requestHandled(connrequestid, notFoundResponse());
+    return;
+  }
+  nlohmann::json jsondata = getJsonFromBody(request);
+  std::string sectionpath = jsondata["path"];
+  if (sectionpath.empty()) {
+    cb->requestHandled(connrequestid, emptySectionPathResponse());
+    return;
+  }
+  site->removeSection(section);
+  site->addSection(section, sectionpath);
+  http::Response response(204);
+  std::string jsondump;
+  response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
+  response.addHeader("Content-Type", "application/json");
+  cb->requestHandled(connrequestid, response);
+}
+
+void RestApi::handleSiteSectionDelete(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  Path path = request.getPath();
+  std::string sitename = path.level(1).toString();
+  std::string section = path.level(3).toString();
+  std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
+  if (!site) {
+    cb->requestHandled(connrequestid, notFoundResponse());
+    return;
+  }
+  site->removeSection(section);
+  http::Response response(204);
+  std::string jsondump;
+  response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
+  response.addHeader("Content-Type", "application/json");
+  cb->requestHandled(connrequestid, response);
 }
 
 void RestApi::handleRequest(RestApiCallback* cb, int connrequestid, const http::Request& request) {
@@ -1047,16 +1173,27 @@ void RestApi::handleRequest(RestApiCallback* cb, int connrequestid, const http::
     return;
   }
   Path path(request.getPath());
+  int levels = path.levels();
   global->getEventLog()->log("RestApi", "Received request for: " + request.getMethod() + " " + path.toString());
-  std::map<std::pair<Path, int>, std::map<std::string, EndpointPointer>>::iterator it;
-  it = endpoints.find(std::make_pair(path, path.levels()));
-  if (it == endpoints.end()) {
-    it = endpoints.find(std::make_pair(path.cutLevels(1), path.levels()));
+  std::map<Path, std::map<std::string, EndpointPointer>>::iterator it;
+  for (it = endpoints.begin(); it != endpoints.end(); it++) {
+    const Path& endpointpath = it->first;
+    if (endpointpath.levels() != levels) {
+      continue;
+    }
+    bool mismatch = false;
+    for (int i = 0; i < levels; i++) {
+      if (endpointpath.level(i) != path.level(i) && endpointpath.level(i) != "*") {
+        mismatch = true;
+        break;
+      }
+    }
+    if (!mismatch) {
+      break;
+    }
   }
   if (it == endpoints.end()) {
-    http::Response response(404);
-    response.appendHeader("Content-Length", "0");
-    cb->requestHandled(connrequestid, response);
+    cb->requestHandled(connrequestid, notFoundResponse());
     return;
   }
   std::map<std::string, EndpointPointer>::iterator it2 = it->second.find(request.getMethod());

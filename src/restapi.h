@@ -59,7 +59,12 @@ private:
   void handleSpreadJobPost(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleSpreadJobGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleSpreadJobsGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleSiteSectionsGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleSiteSectionGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleSiteSectionPost(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleSiteSectionPatch(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleSiteSectionDelete(RestApiCallback* cb, int connrequestid, const http::Request& request);
   std::list<OngoingRequest> ongoingrequests;
   int nextrequestid;
-  std::map<std::pair<Path, int>, std::map<std::string, EndpointPointer>> endpoints;
+  std::map<Path, std::map<std::string, EndpointPointer>> endpoints;
 };
