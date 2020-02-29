@@ -92,10 +92,16 @@ An example body when POST/PATCH'ing a site:
   "priority": "HIGH",                // (VERY_LOW/LOW/NORMAL/HIGH/VERY_HIGH)
   "proxy_name": "",
   "proxy_type": "GLOBAL",            // (GLOBAL/NONE/USE)
-  "sections": {
-    "SEC1": "/some/path",
-    "SEC2": "/some/other/path"
-  },
+  "sections": [
+    {
+      "name": "SEC1",
+      "path": "/some/path"
+    },
+    {
+      "name": "SEC2",
+      "path": "/some/other/path"
+    }
+  ],
   "skiplist": [
     {
       "action": "DENY",              // (ALLOW/DENY/UNIQUE/SIMILAR)
@@ -126,6 +132,21 @@ their default values. Example:
     "GROUP3"
   ]
 }
+
+- Get sections for a site (also visible when getting the entire site)
+    GET /sites/SITE1/sections
+
+- Get a single section for a site
+    GET /sites/SITE1/sections/SECTIONNAME
+
+- Add a section to a site
+    POST /sites/SITE1/sections
+
+- Edit a section on a site
+    PATCH /sites/SITE1/sections/SECTIONNAME
+
+- Delete a section on a site
+    DELETE /sites/SITE1/sections/SECTIONNAME
 
 - Delete a site
     DELETE /sites/SITE1
