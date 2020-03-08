@@ -1236,7 +1236,7 @@ void FTPConn::doSTOR(const std::string & file) {
 
 void FTPConn::STORResponse() {
   std::string response = std::string(databuf, databufpos);
-  if (databufcode == 553) {
+  if (databufcode == 550 || databufcode == 553) {
     processing = false;
     bool dupe = false;
     if (response.find(xdupematch) != std::string::npos) {
