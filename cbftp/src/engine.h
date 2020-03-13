@@ -48,7 +48,7 @@ public:
   unsigned int newTransferJobFXP(const std::string &, const std::shared_ptr<FileList>& fls, const std::string &, const std::string &, const std::shared_ptr<FileList>& fld, const std::string &);
   unsigned int newTransferJobFXP(const std::string &, const Path &, const std::string &, const std::string &, const Path &, const std::string &);
   void removeSiteFromRace(const std::shared_ptr<Race> &, const std::string &);
-  void removeSiteFromRaceDeleteFiles(const std::shared_ptr<Race> &, const std::string &, bool);
+  void removeSiteFromRaceDeleteFiles(const std::shared_ptr<Race> &, const std::string &, bool allfiles, bool deleteoncomplete);
   void abortRace(const std::shared_ptr<Race> &);
   void resetRace(const std::shared_ptr<Race> &, bool);
   void deleteOnAllSites(const std::shared_ptr<Race> &, bool allfiles = false, bool deleteoncomplete = false);

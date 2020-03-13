@@ -184,14 +184,14 @@ $path(sectionname)
    GET /filelist?site=SITE1&path=/&timeout=2
 
 - List all spread jobs
-   GET /spreadjobs
+   GET /spreadjobs (no body)
    
 - Get details of a specific spread job
    GET /spreadjobs/JOBNAME
    
 - Start a new spread job
    POST /spreadjobs
-   
+
 An example body when starting a spread job:
 
 {
@@ -212,6 +212,27 @@ An example body when starting a spread job:
   "profile": "DISTRIBUTE"   // (RACE/DISTRIBUTE/PREPARE)
 }
 
+- Reset a spread job
+   POST /spreadjobs/JOBNAME/reset
+
+Example body (optional) when reseting a spread job:
+
+{
+  "hard": false  // optional
+}
+
+- Abort a spread job
+   POST /spreadjobs/JOBNAME/abort
+
+Example body (optional) when aborting a spread job:
+
+{
+  "delete": "NONE", // (optional, NONE/INCOMPLETE/OWN/ALL)
+  "sites": [        // (optional) if specified, remove these sites from job
+                    // instead of aborting
+    "SITE1"
+  ]
+}
 
 UDP API
 
