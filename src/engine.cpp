@@ -507,7 +507,7 @@ void Engine::removeSiteFromRace(const std::shared_ptr<Race> & race, const std::s
   }
 }
 
-void Engine::removeSiteFromRaceDeleteFiles(const std::shared_ptr<Race> & race, const std::string & site, bool allfiles) {
+void Engine::removeSiteFromRaceDeleteFiles(const std::shared_ptr<Race> & race, const std::string & site, bool allfiles, bool deleteoncomplete) {
   if (!!race) {
     std::shared_ptr<SiteRace> sr = race->getSiteRace(site);
     if (!!sr) {
@@ -515,7 +515,9 @@ void Engine::removeSiteFromRaceDeleteFiles(const std::shared_ptr<Race> & race, c
       race->removeSite(sr);
       wipeFromScoreBoard(sr);
       if (!!sl) {
-        sl->requestDelete(nullptr, sr->getPath(), true, false, allfiles);
+        if (deleteoncomplete || isIncompleteEnoughForDelete(race, sr)) {
+          sl->requestDelete(nullptr, sr->getPath(), true, false, allfiles);
+        }
         sl->abortRace(sr);
       }
     }

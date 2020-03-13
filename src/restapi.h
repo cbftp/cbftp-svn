@@ -59,6 +59,8 @@ private:
   void handleSpreadJobPost(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleSpreadJobGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleSpreadJobsGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleSpreadJobReset(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleSpreadJobAbort(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleSiteSectionsGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleSiteSectionGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleSiteSectionPost(RestApiCallback* cb, int connrequestid, const http::Request& request);

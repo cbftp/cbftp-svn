@@ -36,6 +36,13 @@ namespace {
 #define RESTAPI_TICK_INTERVAL_MS 500
 #define DEFAULT_TIMEOUT_SECONDS 60
 
+enum class DeleteMode {
+  NONE,
+  INCOMPLETE,
+  OWN,
+  ALL
+};
+
 std::list<std::shared_ptr<SiteLogic>> getSiteLogicList(const nlohmann::json& jsondata) {
   std::set<std::shared_ptr<SiteLogic>> sitelogics;
   std::list<std::string> sites;
@@ -424,6 +431,19 @@ SpreadProfile stringToProfile(const std::string& profile) {
   return SPREAD_RACE;
 }
 
+DeleteMode stringToDeleteMode(const std::string& mode) {
+  if (mode == "INCOMPLETE") {
+    return DeleteMode::INCOMPLETE;
+  }
+  if (mode == "OWN") {
+    return DeleteMode::OWN;
+  }
+  if (mode == "ALL") {
+    return DeleteMode::ALL;
+  }
+  return DeleteMode::NONE;
+}
+
 void updateSkipList(SkipList& skiplist, nlohmann::json jsonlist) {
   skiplist.clearEntries();
   for (nlohmann::json::const_iterator it = jsonlist.begin(); it != jsonlist.end(); ++it) {
@@ -644,6 +664,8 @@ RestApi::RestApi() : nextrequestid(0) {
   endpoints["/spreadjobs"]["POST"] = &RestApi::handleSpreadJobPost;
   endpoints["/spreadjobs"]["GET"] = &RestApi::handleSpreadJobsGet;
   endpoints["/spreadjobs/*"]["GET"] = &RestApi::handleSpreadJobGet;
+  endpoints["/spreadjobs/*/reset"]["POST"] = &RestApi::handleSpreadJobReset;
+  endpoints["/spreadjobs/*/abort"]["POST"] = &RestApi::handleSpreadJobAbort;
   global->getTickPoke()->startPoke(this, "RestApi", RESTAPI_TICK_INTERVAL_MS, 0);
 }
 
@@ -1043,6 +1065,83 @@ void RestApi::handleSpreadJobsGet(RestApiCallback* cb, int connrequestid, const 
   cb->requestHandled(connrequestid, response);
 }
 
+void RestApi::handleSpreadJobReset(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  nlohmann::json jsondata = getJsonFromBody(request);
+  auto hardit = jsondata.find("hard");
+  bool hard = hardit != jsondata.end() && hardit->get<bool>();
+  Path path = request.getPath();
+  std::string spreadjob = path.level(1).toString();
+  std::shared_ptr<Race> race = global->getEngine()->getRace(spreadjob);
+  if (!race) {
+    cb->requestHandled(connrequestid, notFoundResponse());
+    return;
+  }
+  global->getEngine()->resetRace(race, hard);
+  http::Response response(204);
+  response.appendHeader("Content-Length", "0");
+  cb->requestHandled(connrequestid, response);
+}
+
+void RestApi::handleSpreadJobAbort(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  nlohmann::json jsondata = getJsonFromBody(request);
+  DeleteMode deletemode(DeleteMode::NONE);
+  auto deleteit = jsondata.find("delete");
+  if (deleteit != jsondata.end()) {
+    deletemode = stringToDeleteMode(*deleteit);
+  }
+  std::list<std::string> sites;
+  auto sitesit = jsondata.find("sites");
+  if (sitesit != jsondata.end()) {
+    for (auto it = sitesit->begin(); it != sitesit->end(); ++it) {
+      sites.push_back(*it);
+    }
+  }
+  Path path = request.getPath();
+  std::string spreadjob = path.level(1).toString();
+  std::shared_ptr<Race> race = global->getEngine()->getRace(spreadjob);
+  if (!race) {
+    cb->requestHandled(connrequestid, notFoundResponse());
+    return;
+  }
+  if (sites.empty()) {
+    switch (deletemode) {
+      case DeleteMode::NONE:
+        global->getEngine()->abortRace(race);
+        break;
+      case DeleteMode::INCOMPLETE:
+        global->getEngine()->deleteOnAllSites(race, false, false);
+        break;
+      case DeleteMode::OWN:
+        global->getEngine()->deleteOnAllSites(race, false, true);
+        break;
+      case DeleteMode::ALL:
+        global->getEngine()->deleteOnAllSites(race, true, true);
+        break;
+    }
+  }
+  else {
+    for (const std::string& site : sites) {
+      switch (deletemode) {
+        case DeleteMode::NONE:
+          global->getEngine()->removeSiteFromRace(race, site);
+          break;
+        case DeleteMode::INCOMPLETE:
+          global->getEngine()->removeSiteFromRaceDeleteFiles(race, site, false, false);
+          break;
+        case DeleteMode::OWN:
+          global->getEngine()->removeSiteFromRaceDeleteFiles(race, site, false, true);
+          break;
+        case DeleteMode::ALL:
+          global->getEngine()->removeSiteFromRaceDeleteFiles(race, site, true, true);
+          break;
+      }
+    }
+  }
+  http::Response response(204);
+  response.appendHeader("Content-Length", "0");
+  cb->requestHandled(connrequestid, response);
+}
+
 void RestApi::handleSiteSectionsGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
   Path path = request.getPath();
   std::string sitename = path.level(1).toString();
@@ -1101,9 +1200,7 @@ void RestApi::handleSiteSectionPost(RestApiCallback* cb, int connrequestid, cons
   }
   site->addSection(section, sectionpath);
   http::Response response(201);
-  std::string jsondump;
-  response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
-  response.addHeader("Content-Type", "application/json");
+  response.appendHeader("Content-Length", "0");
   cb->requestHandled(connrequestid, response);
 }
 
@@ -1125,9 +1222,7 @@ void RestApi::handleSiteSectionPatch(RestApiCallback* cb, int connrequestid, con
   site->removeSection(section);
   site->addSection(section, sectionpath);
   http::Response response(204);
-  std::string jsondump;
-  response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
-  response.addHeader("Content-Type", "application/json");
+  response.appendHeader("Content-Length", "0");
   cb->requestHandled(connrequestid, response);
 }
 
@@ -1142,9 +1237,7 @@ void RestApi::handleSiteSectionDelete(RestApiCallback* cb, int connrequestid, co
   }
   site->removeSection(section);
   http::Response response(204);
-  std::string jsondump;
-  response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
-  response.addHeader("Content-Type", "application/json");
+  response.appendHeader("Content-Length", "0");
   cb->requestHandled(connrequestid, response);
 }
 

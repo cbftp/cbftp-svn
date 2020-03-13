@@ -77,7 +77,7 @@ char getFileChar(bool exists, bool owner, bool upload, bool download, bool downl
 
 }
 
-RaceStatusScreen::RaceStatusScreen(Ui * ui) {
+RaceStatusScreen::RaceStatusScreen(Ui* ui) {
   this->ui = ui;
   defaultlegendtext = "[c/Esc] Return - [Del] Remove site from job - [A]dd site to job - [s]how small dirs - [r]eset job - Hard [R]eset job - A[B]ort job - [d]elete site and own files from job - [D]elete site and all files from job - [t]transfers - [T]ransfers for site - [b]rowse - [E]dit site - [z] Abort job and delete own files on incomplete sites - [Z] Abort job and delete own files on ALL involved sites";
   finishedlegendtext = "[c/Esc] Return - [Del] Remove site from job - [A]dd site to job - [s]how small dirs - [r]eset job - Hard [R]eset job - [d]elete own files - [D]elete all files - [t]ransfers - [T]ransfers for site - [b]rowse - [E]dit site - [Z] Delete own files on ALL involved sites";
@@ -384,10 +384,10 @@ void RaceStatusScreen::command(const std::string & command, const std::string & 
       global->getEngine()->removeSiteFromRace(race, removesite);
     }
     else if (awaitingremovesitedelownfiles) {
-      global->getEngine()->removeSiteFromRaceDeleteFiles(race, removesite, false);
+      global->getEngine()->removeSiteFromRaceDeleteFiles(race, removesite, false, true);
     }
     else if (awaitingremovesitedelallfiles) {
-      global->getEngine()->removeSiteFromRaceDeleteFiles(race, removesite, true);
+      global->getEngine()->removeSiteFromRaceDeleteFiles(race, removesite, true, true);
     }
     else if (awaitingabort) {
       global->getEngine()->abortRace(race);
