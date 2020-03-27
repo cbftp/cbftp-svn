@@ -29,8 +29,6 @@ private:
   std::string getSpreadJobsText() const;
   std::string getTransferJobsText() const;
   MenuSelectOption mso;
-  std::string currentlegendtext;
-  std::string defaultlegendtext;
   bool active;
   std::shared_ptr<MenuSelectOptionElement> activeelement;
   std::list<std::string> selectedspreadjobs;

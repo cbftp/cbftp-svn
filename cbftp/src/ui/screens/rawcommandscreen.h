@@ -24,6 +24,7 @@ public:
   std::string getInfoLabel() const;
   std::string getInfoText() const;
 private:
+  int getCurrentScope() const;
   bool readfromcopy;
   unsigned int copyreadpos;
   unsigned int copysize;

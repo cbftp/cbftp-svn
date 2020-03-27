@@ -13,8 +13,13 @@
 
 using namespace Snake;
 
-SnakeScreen::SnakeScreen(Ui * ui) : direction(Direction::UP), lastmoveddirection(Direction::UP), score(0), xmax(0), ymax(0), state(State::RUNNING), timepassed(0) {
-  this->ui = ui;
+SnakeScreen::SnakeScreen(Ui* ui) : UIWindow(ui, "SnakeScreen"), direction(Direction::UP), lastmoveddirection(Direction::UP), score(0), xmax(0), ymax(0), state(State::RUNNING), timepassed(0) {
+  keybinds.addBind('r', KEYACTION_RESET, "Reset");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Close");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
+  keybinds.addBind(KEY_LEFT, KEYACTION_LEFT, "Navigate left");
+  keybinds.addBind(KEY_RIGHT, KEYACTION_RIGHT, "Navigate right");
 }
 
 void SnakeScreen::initialize(unsigned int row, unsigned int col) {
@@ -78,33 +83,33 @@ void SnakeScreen::update() {
 }
 
 bool SnakeScreen::keyPressed(unsigned int ch) {
-  switch (ch) {
-    case KEY_UP:
+  int action = keybinds.getKeyAction(ch);
+  switch (action) {
+    case KEYACTION_UP:
       if (lastmoveddirection != Direction::DOWN) {
         direction = Direction::UP;
       }
       break;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       if (lastmoveddirection != Direction::UP) {
         direction = Direction::DOWN;
       }
       break;
-    case KEY_LEFT:
+    case KEYACTION_LEFT:
       if (lastmoveddirection != Direction::RIGHT) {
         direction = Direction::LEFT;
       }
       break;
-    case KEY_RIGHT:
+    case KEYACTION_RIGHT:
       if (lastmoveddirection != Direction::LEFT) {
         direction = Direction::RIGHT;
       }
       break;
-    case 'r':
+    case KEYACTION_RESET:
       start();
       ui->redraw();
       break;
-    case 27: // esc
-    case 'c':
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
   }
@@ -112,7 +117,7 @@ bool SnakeScreen::keyPressed(unsigned int ch) {
 }
 
 std::string SnakeScreen::getLegendText() const {
-  return "[Arrows] steer - [r]eset - [Esc/c] Close";
+  return keybinds.getLegendSummary();
 }
 
 std::string SnakeScreen::getInfoLabel() const {

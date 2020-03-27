@@ -22,8 +22,6 @@ public:
   std::string getInfoLabel() const;
 private:
   void tryMakeDir();
-  std::string currentlegendtext;
-  std::string defaultlegendtext;
   bool active;
   std::string site;
   std::shared_ptr<MenuSelectOptionElement> activeelement;

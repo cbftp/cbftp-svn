@@ -11,8 +11,8 @@
 
 #include "../ui.h"
 
-InfoScreen::InfoScreen(Ui * ui) {
-  this->ui = ui;
+InfoScreen::InfoScreen(Ui* ui) : UIWindow(ui, "InfoScreen") {
+  allowimplicitgokeybinds = false;
 }
 
 void InfoScreen::initialize(unsigned int row, unsigned int col) {

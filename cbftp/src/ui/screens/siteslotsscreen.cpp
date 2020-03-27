@@ -7,9 +7,12 @@
 #include "../menuselectoptionnumarrow.h"
 #include "../menuselectoptionelement.h"
 
-SiteSlotsScreen::SiteSlotsScreen(Ui * ui) {
-  this->ui = ui;
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel";
+SiteSlotsScreen::SiteSlotsScreen(Ui* ui) : UIWindow(ui, "SiteSlotsScreen") {
+  keybinds.addBind(10, KEYACTION_ENTER, "Modify");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Next option");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Previous option");
+  keybinds.addBind('d', KEYACTION_DONE, "Done");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel");
 }
 
 SiteSlotsScreen::~SiteSlotsScreen() {
@@ -17,7 +20,6 @@ SiteSlotsScreen::~SiteSlotsScreen() {
 }
 
 void SiteSlotsScreen::initialize(unsigned int row, unsigned int col, const std::shared_ptr<Site> & site) {
-  currentlegendtext = defaultlegendtext;
   active = false;
   modsite = site;
   unsigned int y = 4;
@@ -68,11 +70,11 @@ void SiteSlotsScreen::update() {
 }
 
 bool SiteSlotsScreen::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
       active = false;
-      currentlegendtext = defaultlegendtext;
       ui->setLegend();
       ui->update();
       return true;
@@ -82,16 +84,17 @@ bool SiteSlotsScreen::keyPressed(unsigned int ch) {
     return true;
   }
   bool activation;
-  switch(ch) {
-    case KEY_UP:
+  switch(action) {
+    case KEYACTION_UP:
       mso.goUp();
       ui->update();
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       mso.goDown();
       ui->update();
       return true;
-    case 10: {
+    case KEYACTION_ENTER:
+    {
       std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getSelectionPointer());
       activation = msoe->activate();
       if (!activation) {
@@ -100,16 +103,15 @@ bool SiteSlotsScreen::keyPressed(unsigned int ch) {
       }
       active = true;
       activeelement = mso.getElement(mso.getSelectionPointer());
-      currentlegendtext = activeelement->getLegendText();
       ui->setLegend();
       ui->update();
       return true;
     }
-    case 27: // esc
-    case 'c':
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
-    case 'd': {
+    case KEYACTION_DONE:
+    {
       std::shared_ptr<MenuSelectOptionNumArrow> logins = std::static_pointer_cast<MenuSelectOptionNumArrow>(mso.getElement("logins"));
       std::shared_ptr<MenuSelectOptionNumArrow> maxup = std::static_pointer_cast<MenuSelectOptionNumArrow>(mso.getElement("maxup"));
       std::shared_ptr<MenuSelectOptionNumArrow> maxdn = std::static_pointer_cast<MenuSelectOptionNumArrow>(mso.getElement("maxdn"));
@@ -132,7 +134,10 @@ bool SiteSlotsScreen::keyPressed(unsigned int ch) {
 }
 
 std::string SiteSlotsScreen::getLegendText() const {
-  return currentlegendtext;
+  if (active) {
+    return activeelement->getLegendText();
+  }
+  return keybinds.getLegendSummary();
 }
 
 std::string SiteSlotsScreen::getInfoLabel() const {

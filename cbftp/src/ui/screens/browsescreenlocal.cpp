@@ -16,13 +16,14 @@
 #include "../termint.h"
 #include "../menuselectadjustableline.h"
 #include "../misc.h"
+#include "../keybinds.h"
 
 #include "browsescreenaction.h"
 
 #include <cassert>
 
-BrowseScreenLocal::BrowseScreenLocal(Ui * ui) : ui(ui), currentviewspan(0),
-    focus(true), spinnerpos(0), tickcount(0),
+BrowseScreenLocal::BrowseScreenLocal(Ui * ui, KeyBinds& keybinds) : BrowseScreenSub(keybinds),
+    ui(ui), currentviewspan(0), focus(true), spinnerpos(0), tickcount(0),
     resort(false), sortmethod(UIFileList::SortMethod::COMBINED), gotomode(false), gotomodefirst(false),
     gotomodeticker(0), filtermodeinput(false), filtermodeinputregex(false), temphighlightline(-1),
     softselecting(false), lastinfo(LastInfo::NONE), refreshfilelistafter(false), freespace(0)
@@ -252,10 +253,11 @@ void BrowseScreenLocal::command(const std::string & command, const std::string &
 }
 
 BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   if (temphighlightline != -1) {
     temphighlightline = -1;
     ui->redraw();
-    if (ch == '-') {
+    if (action == KEYACTION_HIGHLIGHT_LINE) {
       return BrowseScreenAction();
     }
   }
@@ -352,18 +354,18 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       return BrowseScreenAction();
     }
   }
-  switch (ch) {
-    case 27: // esc
+  switch (action) {
+    case KEYACTION_BACK_CANCEL:
       if (list.clearSelected()) {
         ui->redraw();
         break;
       }
       ui->returnToLast();
       break;
-    case 'c':
+    case KEYACTION_CLOSE:
       return BrowseScreenAction(BROWSESCREENACTION_CLOSE);
-    case 'W':
-    case KEY_DC: {
+    case KEYACTION_WIPE:
+    case KEYACTION_DELETE: {
       std::list<std::pair<std::string, bool> > filenames = list.getSelectedNames();
       if (filenames.empty()) {
         break;
@@ -381,7 +383,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       ui->setInfo();
       break;
     }
-    case 'q':
+    case KEYACTION_QUICK_JUMP:
       gotomode = true;
       gotomodefirst = true;
       gotomodeticker = 0;
@@ -390,7 +392,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       ui->update();
       ui->setLegend();
       break;
-    case 'f':
+    case KEYACTION_FILTER:
       if (list.hasWildcardFilters() || list.hasRegexFilter()) {
         resort = true;
         list.unsetFilters();
@@ -401,7 +403,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       ui->redraw();
       ui->setLegend();
       break;
-    case 'F':
+    case KEYACTION_FILTER_REGEX:
       if (list.hasWildcardFilters() || list.hasRegexFilter()) {
         resort = true;
         list.unsetFilters();
@@ -412,10 +414,8 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       ui->redraw();
       ui->setLegend();
       break;
-    case KEY_LEFT:
-    case 8:
-    case 127:
-    case KEY_BACKSPACE:
+    case KEYACTION_LEFT:
+    case KEYACTION_RETURN:
     {
       //go up one directory level, or return if at top already
       const Path & oldpath = list.getPath();
@@ -431,18 +431,18 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       ui->redraw();
       break;
     }
-    case KEY_F(5):
+    case KEYACTION_REFRESH:
     {
       refreshFilelist();
       ui->setInfo();
       break;
     }
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       if (!keyDown()) {
         ui->update();
       }
       break;
-    case KEY_UP:
+    case KEYACTION_UP:
       //go up and highlight previous item (if not at top already)
       clearSoftSelects();
       update = list.goPrevious();
@@ -454,7 +454,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
         ui->update();
       }
       break;
-    case KEY_NPAGE:
+    case KEYACTION_NEXT_PAGE:
       clearSoftSelects();
       for (unsigned int i = 0; i < pagerows; i++) {
         success = list.goNext();
@@ -470,7 +470,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
         ui->redraw();
       }
       break;
-    case KEY_PPAGE:
+    case KEYACTION_PREVIOUS_PAGE:
       clearSoftSelects();
       for (unsigned int i = 0; i < pagerows; i++) {
         success = list.goPrevious();
@@ -486,8 +486,8 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
         ui->redraw();
       }
       break;
-    case KEY_RIGHT:
-    case 10:
+    case KEYACTION_RIGHT:
+    case KEYACTION_ENTER:
     {
       UIFile * cursoredfile = list.cursoredFile();
       if (cursoredfile == NULL) {
@@ -521,7 +521,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       }
       break;
     }
-    case KEY_HOME:
+    case KEYACTION_TOP:
       clearSoftSelects();
       while (list.goPrevious()) {
         table.goUp();
@@ -533,7 +533,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
         ui->redraw();
       }
       break;
-    case KEY_END:
+    case KEYACTION_BOTTOM:
       clearSoftSelects();
       while (list.goNext()) {
         table.goDown();
@@ -545,7 +545,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
         ui->redraw();
       }
       break;
-    case 's':
+    case KEYACTION_SORT:
       sortmethod = static_cast<UIFileList::SortMethod>((static_cast<int>(sortmethod) + 1) % 9);
       resort = true;
       lastinfo = LastInfo::CHANGED_SORT;
@@ -554,7 +554,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       ui->redraw();
       ui->setInfo();
       break;
-    case 'S':
+    case KEYACTION_SORT_DEFAULT:
       sortmethod = UIFileList::SortMethod::COMBINED;
       resort = true;
       lastinfo = LastInfo::CHANGED_SORT;
@@ -563,11 +563,12 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       ui->redraw();
       ui->setInfo();
       break;
-    case 'v':
+    case KEYACTION_VIEW_FILE:
       viewCursored();
       break;
-    case 'A':
-    case TERMINT_CTRL_A: {
+    case KEYACTION_SELECT_ALL:
+    case KEYACTION_SELECT_ALL2:
+    {
       const std::vector<UIFile *> * uilist = list.getSortedList();
       for (unsigned int i = 0; i < uilist->size(); i++) {
         (*uilist)[i]->softSelect();
@@ -576,7 +577,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       ui->redraw();
       break;
     }
-    case KEY_SR: // shift up
+    case KEYACTION_SOFT_SELECT_UP:
       if (list.cursoredFile() != NULL) {
         UIFile * lastfile = list.cursoredFile();
         if (!list.goPrevious()) {
@@ -594,7 +595,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
         ui->redraw();
       }
       break;
-    case KEY_SF: // shift down
+    case KEYACTION_SOFT_SELECT_DOWN:
       if (list.cursoredFile() != NULL) {
         UIFile * lastfile = list.cursoredFile();
         if (!list.goNext()) {
@@ -612,7 +613,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
         ui->redraw();
       }
       break;
-    case ' ':
+    case KEYACTION_HARD_SELECT:
       if (softselecting) {
         list.hardFlipSoftSelected();
         softselecting = false;
@@ -638,14 +639,14 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
         }
       }
       break;
-    case '-':
+    case KEYACTION_HIGHLIGHT_LINE:
       if (list.cursoredFile() == NULL) {
         break;
       }
       temphighlightline = table.getElement(table.getSelectionPointer())->getRow();
       ui->redraw();
       break;
-    case 'i':
+    case KEYACTION_INFO:
       if (list.cursoredFile() != nullptr) {
         ui->goFileInfo(list.cursoredFile());
       }
@@ -654,7 +655,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
   return BrowseScreenAction();
 }
 
-std::string BrowseScreenLocal::getLegendText() const {
+std::string BrowseScreenLocal::getLegendText(int scope) const {
   if (gotomode) {
     return "[Any] Go to first matching entry name - [Esc] Cancel";
   }
@@ -664,7 +665,7 @@ std::string BrowseScreenLocal::getLegendText() const {
   if (filtermodeinputregex) {
     return "[Any] Enter regex input - [Tab] switch mode - [Esc] Cancel";
   }
-  return "[Up/Down] Navigate - [Enter/Right] open dir - [s]ort - [Backspace/Left] return - [Esc] Cancel - [c]lose - [q]uick jump - Toggle [f]ilter - Regex [F]ilter - [Space] Hard select - [Shift-Up/Down] Soft select - Select [A]ll - File [i]nfo";
+  return keybinds.getLegendSummary(scope);
 }
 
 std::string BrowseScreenLocal::getInfoLabel() const {

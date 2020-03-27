@@ -18,7 +18,6 @@ public:
   void update() override;
   void command(const std::string &, const std::string &) override;
   bool keyPressed(unsigned int) override;
-  std::string getLegendText() const override;
   std::string getInfoLabel() const override;
   std::string getInfoText() const override;
   static void addJobTableHeader(unsigned int, MenuSelectOption &, const std::string &);

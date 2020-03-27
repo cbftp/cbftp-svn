@@ -13,8 +13,15 @@
 #include "../../sitelogicmanager.h"
 #include "../../sitelogic.h"
 
-TransferStatusScreen::TransferStatusScreen(Ui * ui) {
-  this->ui = ui;
+TransferStatusScreen::TransferStatusScreen(Ui* ui) : UIWindow(ui, "TransferStatusScreen") {
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Return");
+  keybinds.addBind('B', KEYACTION_ABORT, "Abort transfer");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
+  keybinds.addBind(KEY_PPAGE, KEYACTION_PREVIOUS_PAGE, "Next page");
+  keybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Previous page");
+  keybinds.addBind(KEY_HOME, KEYACTION_TOP, "Go top");
+  keybinds.addBind(KEY_END, KEYACTION_BOTTOM, "Go bottom");
 }
 
 TransferStatusScreen::~TransferStatusScreen() {
@@ -136,18 +143,17 @@ void TransferStatusScreen::update() {
 }
 
 bool TransferStatusScreen::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   unsigned int totalspan = ts->getLogLines().size();
   unsigned int rowspan = row - logstart;
-  switch (ch) {
-    case 'c':
-    case 10:
-    case 27: // esc
+  switch (action) {
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
-    case 'B':
+    case KEYACTION_ABORT:
       abortTransfer(ts);
       return true;
-    case KEY_UP:
+    case KEYACTION_UP:
       if (currentviewspan < 2) {
         currentviewspan = 0;
       }
@@ -156,7 +162,7 @@ bool TransferStatusScreen::keyPressed(unsigned int ch) {
       }
       ui->update();
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       if (rowspan < totalspan) {
         if (currentviewspan < totalspan - rowspan) {
           currentviewspan += 2;
@@ -170,7 +176,7 @@ bool TransferStatusScreen::keyPressed(unsigned int ch) {
       }
       ui->update();
       return true;
-    case KEY_PPAGE:
+    case KEYACTION_PREVIOUS_PAGE:
       if (currentviewspan < rowspan * 0.5) {
         currentviewspan = 0;
       }
@@ -179,7 +185,7 @@ bool TransferStatusScreen::keyPressed(unsigned int ch) {
       }
       ui->update();
       return true;
-    case KEY_NPAGE:
+    case KEYACTION_NEXT_PAGE:
       if (rowspan * 1.5 < totalspan && currentviewspan < totalspan - rowspan * 1.5) {
         currentviewspan += rowspan * 0.5;
       }
@@ -188,11 +194,11 @@ bool TransferStatusScreen::keyPressed(unsigned int ch) {
       }
       ui->update();
       return true;
-    case KEY_HOME:
+    case KEYACTION_TOP:
       currentviewspan = 0;
       ui->update();
       return true;
-    case KEY_END:
+    case KEYACTION_BOTTOM:
       if (totalspan > rowspan) {
         currentviewspan = totalspan - rowspan;
       }
@@ -216,7 +222,7 @@ void TransferStatusScreen::abortTransfer(std::shared_ptr<TransferStatus> ts) {
 }
 
 std::string TransferStatusScreen::getLegendText() const {
-  return "[c/Enter/Esc] Return - A[B]ort transfer - [Up/Down/Pgup/Pgdn/Home/End] Navigate log";
+  return keybinds.getLegendSummary();
 }
 
 std::string TransferStatusScreen::getInfoLabel() const {

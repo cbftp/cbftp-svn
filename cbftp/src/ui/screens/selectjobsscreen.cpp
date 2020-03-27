@@ -15,8 +15,26 @@
 #include "../../globalcontext.h"
 #include "../../util.h"
 
-SelectJobsScreen::SelectJobsScreen(Ui * ui) {
-  this->ui = ui;
+namespace {
+
+enum KeyAction {
+  KEYACTION_SELECT,
+  KEYACTION_SELECT2
+};
+
+}
+
+SelectJobsScreen::SelectJobsScreen(Ui* ui) : UIWindow(ui, "SelectJobsScreen") {
+  keybinds.addBind('d', KEYACTION_DONE, "Done");
+  keybinds.addBind(10, KEYACTION_SELECT, "Select");
+  keybinds.addBind(' ', KEYACTION_SELECT2, "Select");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Return");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
+  keybinds.addBind(KEY_PPAGE, KEYACTION_PREVIOUS_PAGE, "Next page");
+  keybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Previous page");
+  keybinds.addBind(KEY_HOME, KEYACTION_TOP, "Go top");
+  keybinds.addBind(KEY_END, KEYACTION_BOTTOM, "Go bottom");
 }
 
 void SelectJobsScreen::initialize(unsigned int row, unsigned int col, JobType type) {
@@ -83,22 +101,24 @@ void SelectJobsScreen::update() {
 }
 
 bool SelectJobsScreen::keyPressed(unsigned int ch) {
-  switch (ch) {
-    case KEY_UP:
+  int action = keybinds.getKeyAction(ch);
+  switch (action) {
+    case KEYACTION_UP:
       if (hascontents && ypos > 0) {
         --ypos;
         table.goUp();
         ui->update();
       }
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       if (hascontents && ypos < totallistsize - 1) {
         ++ypos;
         table.goDown();
         ui->update();
       }
       return true;
-    case KEY_NPAGE: {
+    case KEYACTION_NEXT_PAGE:
+    {
       unsigned int pagerows = (unsigned int) row * 0.6;
       for (unsigned int i = 0; i < pagerows && ypos < totallistsize - 1; i++) {
         ypos++;
@@ -107,7 +127,8 @@ bool SelectJobsScreen::keyPressed(unsigned int ch) {
       ui->update();
       return true;
     }
-    case KEY_PPAGE: {
+    case KEYACTION_PREVIOUS_PAGE:
+    {
       unsigned int pagerows = (unsigned int) row * 0.6;
       for (unsigned int i = 0; i < pagerows && ypos > 0; i++) {
         ypos--;
@@ -116,20 +137,19 @@ bool SelectJobsScreen::keyPressed(unsigned int ch) {
       ui->update();
       return true;
     }
-    case KEY_HOME:
+    case KEYACTION_TOP:
       ypos = 0;
       ui->update();
       return true;
-    case KEY_END:
+    case KEYACTION_BOTTOM:
       ypos = totallistsize - 1;
       ui->update();
       return true;
-    case 'c':
-    case 27: // esc
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
-    case 10:
-    case 32:
+    case KEYACTION_SELECT:
+    case KEYACTION_SELECT2:
       if (hascontents) {
         std::shared_ptr<MenuSelectOptionTextButton> msotb =
             std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
@@ -148,7 +168,8 @@ bool SelectJobsScreen::keyPressed(unsigned int ch) {
       ui->setInfo();
       ui->update();
       return true;
-    case 'd': {
+    case KEYACTION_DONE:
+    {
       std::list<std::string> items;
       for (unsigned int i = 0; i < table.size(); i++) {
         std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(i));
@@ -166,7 +187,7 @@ bool SelectJobsScreen::keyPressed(unsigned int ch) {
 }
 
 std::string SelectJobsScreen::getLegendText() const {
-  return "[Esc/c] Return - [Enter/space] Select - [Up/Down/Pgup/Pgdn/Home/End] Navigate - [d]one";
+  return keybinds.getLegendSummary();
 }
 
 std::string SelectJobsScreen::getInfoLabel() const {

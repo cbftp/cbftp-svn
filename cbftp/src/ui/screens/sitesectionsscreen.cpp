@@ -21,10 +21,26 @@ bool sectionNameCompare(const std::pair<std::string, Path> a, const std::pair<st
   return a.first.compare(b.first) < 0;
 }
 
+enum KeyAction {
+  KEYACTION_DETAILS,
+  KEYACTION_ADD_SECTION
+};
+
 }
 
-SiteSectionsScreen::SiteSectionsScreen(Ui * ui) {
-  this->ui = ui;
+SiteSectionsScreen::SiteSectionsScreen(Ui* ui) : UIWindow(ui, "SiteSectionsScreen") {
+  keybinds.addBind(10, KEYACTION_DETAILS, "Details");
+  keybinds.addBind('A', KEYACTION_ADD_SECTION, "Add section");
+  keybinds.addBind('d', KEYACTION_DONE, "Done");
+  keybinds.addBind(KEY_DC, KEYACTION_DELETE, "Delete section");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
+  keybinds.addBind(KEY_PPAGE, KEYACTION_PREVIOUS_PAGE, "Next page");
+  keybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Previous page");
+  keybinds.addBind(KEY_HOME, KEYACTION_TOP, "Go top");
+  keybinds.addBind(KEY_END, KEYACTION_BOTTOM, "Go bottom");
+  keybinds.addBind('-', KEYACTION_HIGHLIGHT_LINE, "Highlight entire line");
 }
 
 SiteSectionsScreen::~SiteSectionsScreen() {
@@ -101,29 +117,31 @@ void SiteSectionsScreen::update() {
 }
 
 bool SiteSectionsScreen::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   if (temphighlightline != -1) {
     temphighlightline = -1;
     ui->redraw();
-    if (ch == '-') {
+    if (action == KEYACTION_HIGHLIGHT_LINE) {
       return true;
     }
   }
-  switch (ch) {
-    case KEY_UP:
+  switch (action) {
+    case KEYACTION_UP:
       if (hascontents && ypos > 0) {
         --ypos;
         table.goUp();
         ui->update();
       }
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       if (hascontents && ypos < totallistsize - 1) {
         ++ypos;
         table.goDown();
         ui->update();
       }
       return true;
-    case KEY_NPAGE: {
+    case KEYACTION_NEXT_PAGE:
+    {
       unsigned int pagerows = (unsigned int) row * 0.6;
       for (unsigned int i = 0; i < pagerows && ypos < totallistsize - 1; i++) {
         ypos++;
@@ -132,7 +150,8 @@ bool SiteSectionsScreen::keyPressed(unsigned int ch) {
       ui->update();
       return true;
     }
-    case KEY_PPAGE: {
+    case KEYACTION_PREVIOUS_PAGE:
+    {
       unsigned int pagerows = (unsigned int) row * 0.6;
       for (unsigned int i = 0; i < pagerows && ypos > 0; i++) {
         ypos--;
@@ -141,26 +160,25 @@ bool SiteSectionsScreen::keyPressed(unsigned int ch) {
       ui->update();
       return true;
     }
-    case KEY_HOME:
+    case KEYACTION_TOP:
       ypos = 0;
       ui->update();
       return true;
-    case KEY_END:
+    case KEYACTION_BOTTOM:
       ypos = totallistsize - 1;
       ui->update();
       return true;
-    case 10:
-    case 'E':
+    case KEYACTION_DETAILS:
      if (hascontents) {
        std::shared_ptr<MenuSelectOptionTextButton> elem =
            std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
        ui->goEditSiteSection(sitecopy, elem->getLabelText());
      }
      return true;
-    case 'A':
+    case KEYACTION_ADD_SECTION:
       ui->goAddSiteSection(sitecopy);
       return true;
-    case KEY_DC:
+    case KEYACTION_DELETE:
       if (hascontents) {
         std::shared_ptr<MenuSelectOptionTextButton> elem =
             std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
@@ -168,18 +186,17 @@ bool SiteSectionsScreen::keyPressed(unsigned int ch) {
         ui->redraw();
       }
       return true;
-    case 'c':
-    case 27: // esc
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
-    case 'd':
+    case KEYACTION_DONE:
       site->clearSections();
       for (auto it = sitecopy->sectionsBegin(); it != sitecopy->sectionsEnd(); ++it) {
         site->addSection(it->first, it->second.toString());
       }
       ui->returnToLast();
       return true;
-    case '-':
+    case KEYACTION_HIGHLIGHT_LINE:
       if (!hascontents) {
         break;
       }
@@ -191,7 +208,7 @@ bool SiteSectionsScreen::keyPressed(unsigned int ch) {
 }
 
 std::string SiteSectionsScreen::getLegendText() const {
-  return "[A]dd section - [Enter/E] Details - [d]one, save changes - [c]ancel, undo changes - [Up/Down] Navigate - [Del]ete section";
+  return keybinds.getLegendSummary();
 }
 
 std::string SiteSectionsScreen::getInfoLabel() const {

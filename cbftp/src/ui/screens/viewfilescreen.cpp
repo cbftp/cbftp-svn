@@ -39,8 +39,30 @@ enum {
 
 }
 
-ViewFileScreen::ViewFileScreen(Ui * ui) {
-  this->ui = ui;
+namespace {
+
+enum KeyScopes {
+  KEYSCOPE_VIEWING_INTERNAL,
+  KEYSCOPE_VIEWING_EXTERNAL
+};
+
+enum KeyAction {
+  KEYACTION_ENCODING,
+  KEYACTION_KILL,
+  KEYACTION_KILL_ALL
+};
+}
+
+ViewFileScreen::ViewFileScreen(Ui* ui) : UIWindow(ui, "ViewFileScreen") {
+  keybinds.addScope(KEYSCOPE_VIEWING_INTERNAL, "During internal viewing");
+  keybinds.addScope(KEYSCOPE_VIEWING_EXTERNAL, "During external viewing");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Return");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up", KEYSCOPE_VIEWING_INTERNAL);
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down", KEYSCOPE_VIEWING_INTERNAL);
+  keybinds.addBind(KEY_PPAGE, KEYACTION_PREVIOUS_PAGE, "Next page", KEYSCOPE_VIEWING_INTERNAL);
+  keybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Previous page", KEYSCOPE_VIEWING_INTERNAL);
+  keybinds.addBind('e', KEYACTION_ENCODING, "Switch encoding", KEYSCOPE_VIEWING_INTERNAL);
+  keybinds.addBind('k', KEYACTION_KILL, "Kill external viewer", KEYSCOPE_VIEWING_EXTERNAL);
 }
 
 ViewFileScreen::~ViewFileScreen() {
@@ -202,47 +224,46 @@ void ViewFileScreen::update() {
 }
 
 bool ViewFileScreen::keyPressed(unsigned int ch) {
-  switch(ch) {
-    case 27: // esc
-    case ' ':
-    case 'c':
-    case 10:
+  int scope = getCurrentScope();
+  int action = keybinds.getKeyAction(ch, scope);
+  switch(action) {
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       if (goDown()) {
         goDown();
         ui->setInfo();
         ui->redraw();
       }
       return true;
-    case KEY_UP:
+    case KEYACTION_UP:
       if (goUp()) {
         goUp();
         ui->setInfo();
         ui->redraw();
       }
       return true;
-    case KEY_NPAGE:
+    case KEYACTION_NEXT_PAGE:
       for (unsigned int i = 0; i < row / 2; i++) {
         goDown();
       }
       ui->setInfo();
       ui->redraw();
       return true;
-    case KEY_PPAGE:
+    case KEYACTION_PREVIOUS_PAGE:
       for (unsigned int i = 0; i < row / 2; i++) {
         goUp();
       }
       ui->setInfo();
       ui->redraw();
       return true;
-    case 'k':
+    case KEYACTION_KILL:
       if (pid) {
         global->getExternalFileViewing()->killProcess(pid);
       }
       return true;
-    case 'e':
+    case KEYACTION_ENCODING:
       if (state == ViewFileState::VIEWING_INTERNAL) {
         if (encoding == encoding::ENCODING_CP437) {
           encoding = encoding::ENCODING_CP437_DOUBLE;
@@ -338,13 +359,7 @@ void ViewFileScreen::viewInternal() {
 }
 
 std::string ViewFileScreen::getLegendText() const {
-  if (state == ViewFileState::VIEWING_EXTERNAL) {
-    return "[Esc/Enter/c] Return - [k]ill external viewer - [K]ill ALL external viewers";
-  }
-  if (state == ViewFileState::VIEWING_INTERNAL) {
-    return "[Arrowkeys] Navigate - [Esc/Enter/c] Return - switch [e]ncoding";
-  }
-  return "[Esc/Enter/c] Return";
+  return keybinds.getLegendSummary(getCurrentScope());
 }
 
 std::string ViewFileScreen::getInfoLabel() const {
@@ -457,4 +472,14 @@ void ViewFileScreen::printTransferInfo() {
       }
     }
   }
+}
+
+int ViewFileScreen::getCurrentScope() const {
+  if (state == ViewFileState::VIEWING_EXTERNAL) {
+    return KEYSCOPE_VIEWING_EXTERNAL;
+  }
+  if (state == ViewFileState::VIEWING_INTERNAL) {
+    return KEYSCOPE_VIEWING_INTERNAL;
+  }
+  return KEYSCOPE_ALL;
 }

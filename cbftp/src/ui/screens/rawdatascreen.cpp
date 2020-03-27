@@ -10,8 +10,39 @@
 #include "../ui.h"
 #include "../termint.h"
 
-RawDataScreen::RawDataScreen(Ui * ui) {
-  this->ui = ui;
+namespace {
+
+enum KeyAction {
+  KEYACTION_CLEAR,
+  KEYACTION_CONNECT,
+  KEYACTION_DISCONNECT,
+  KEYACTION_RAW_COMMAND
+};
+
+enum KeyScopes {
+  KEYSCOPE_INPUT,
+  KEYSCOPE_NOT_INPUT
+};
+
+}
+
+RawDataScreen::RawDataScreen(Ui* ui) : UIWindow(ui, "RawDataScreen") {
+  keybinds.addScope(KEYSCOPE_INPUT, "When entering command");
+  keybinds.addScope(KEYSCOPE_NOT_INPUT, "When not entering command");
+  keybinds.addBind(KEY_PPAGE, KEYACTION_PREVIOUS_PAGE, "Scroll up");
+  keybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Scroll down");
+  keybinds.addBind(TERMINT_CTRL_L, KEYACTION_CLEAR, "Clear log");
+  keybinds.addBind(10, KEYACTION_ENTER, "Send command", KEYSCOPE_INPUT);
+  keybinds.addBind(27, KEYACTION_BACK_CANCEL, "Clear/Cancel", KEYSCOPE_INPUT);
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "History up", KEYSCOPE_INPUT);
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "History down", KEYSCOPE_INPUT);
+  keybinds.addBind('w', KEYACTION_RAW_COMMAND, "Raw command", KEYSCOPE_NOT_INPUT);
+  keybinds.addBind(KEY_LEFT, KEYACTION_LEFT, "Previous screen", KEYSCOPE_NOT_INPUT);
+  keybinds.addBind(KEY_RIGHT, KEYACTION_RIGHT, "Next screen", KEYSCOPE_NOT_INPUT);
+  keybinds.addBind(10, KEYACTION_BACK_CANCEL, "Return", KEYSCOPE_NOT_INPUT);
+  keybinds.addBind('c', KEYACTION_CONNECT, "Connect", KEYSCOPE_NOT_INPUT);
+  keybinds.addBind('d', KEYACTION_DISCONNECT, "Disconnect", KEYSCOPE_NOT_INPUT);
+  allowimplicitgokeybinds = false;
 }
 
 void RawDataScreen::initialize(unsigned int row, unsigned int col, std::string sitename, int connid) {
@@ -116,8 +147,9 @@ bool RawDataScreen::skipCodePrint(const std::string & line) {
 }
 
 bool RawDataScreen::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch, rawcommandmode ? KEYSCOPE_INPUT : KEYSCOPE_NOT_INPUT);
   unsigned int rownum = row;
-  if (ch == TERMINT_CTRL_L) {
+  if (action == KEYACTION_CLEAR) {
     rawbuf->clear();
     readfromcopy = false;
     ui->redraw();
@@ -132,7 +164,7 @@ bool RawDataScreen::keyPressed(unsigned int ch) {
       ui->update();
       return true;
     }
-    else if (ch == 10) {
+    else if (action == KEYACTION_ENTER) {
       std::string command = rawcommandfield.getData();
       if (command == "") {
         rawcommandswitch = true;
@@ -149,7 +181,7 @@ bool RawDataScreen::keyPressed(unsigned int ch) {
       ui->update();
       return true;
     }
-    else if (ch == 27) {
+    else if (action == KEYACTION_BACK_CANCEL) {
       if (rawcommandfield.getData() != "") {
         rawcommandfield.clear();
       }
@@ -162,7 +194,7 @@ bool RawDataScreen::keyPressed(unsigned int ch) {
       ui->update();
       return true;
     }
-    else if (ch == KEY_UP) {
+    else if (action == KEYACTION_UP) {
       if (history.canBack()) {
         if (history.current()) {
           history.setCurrent(rawcommandfield.getData());
@@ -173,7 +205,7 @@ bool RawDataScreen::keyPressed(unsigned int ch) {
       }
       return true;
     }
-    else if (ch == KEY_DOWN) {
+    else if (action == KEYACTION_DOWN) {
       if (history.forward()) {
         rawcommandfield.setText(history.get());
         ui->update();
@@ -181,14 +213,14 @@ bool RawDataScreen::keyPressed(unsigned int ch) {
       return true;
     }
   }
-  switch(ch) {
-    case KEY_RIGHT:
+  switch(action) {
+    case KEYACTION_RIGHT:
       if (connid + 1 < threads) {
         rawbuf->setUiWatching(false);
         ui->goRawDataJump(sitename, connid + 1);
       }
       return true;
-    case KEY_LEFT:
+    case KEYACTION_LEFT:
       if (connid == 0) {
         rawbuf->setUiWatching(false);
         ui->returnToLast();
@@ -198,7 +230,7 @@ bool RawDataScreen::keyPressed(unsigned int ch) {
         ui->goRawDataJump(sitename, connid - 1);
       }
       return true;
-    case KEY_PPAGE:
+    case KEYACTION_PREVIOUS_PAGE:
       if (!readfromcopy) {
         rawbuf->freezeCopy();
         copyreadpos = 0;
@@ -216,7 +248,7 @@ bool RawDataScreen::keyPressed(unsigned int ch) {
       }
       ui->update();
       return true;
-    case KEY_NPAGE:
+    case KEYACTION_NEXT_PAGE:
       if (readfromcopy) {
         if (copyreadpos == 0) {
           readfromcopy = false;
@@ -230,30 +262,30 @@ bool RawDataScreen::keyPressed(unsigned int ch) {
       }
       ui->update();
       return true;
-    case 'c':
+    case KEYACTION_CONNECT:
       sitelogic->connectConn(connid);
       return true;
-    case 'd':
+    case KEYACTION_DISCONNECT:
       sitelogic->disconnectConn(connid);
       return true;
-    case 'w':
+    case KEYACTION_RAW_COMMAND:
       rawcommandswitch = true;
       ui->update();
       ui->setLegend();
       return true;
-    case 27: // esc
+    case KEYACTION_BACK_CANCEL: // esc
       rawbuf->setUiWatching(false);
       ui->returnToLast();
+      return true;
+    case KEYACTION_KEYBINDS:
+      ui->goKeyBinds(&keybinds);
       return true;
   }
   return false;
 }
 
 std::string RawDataScreen::getLegendText() const {
-  if (rawcommandmode) {
-    return "[Enter] Send command - [Pgup] Scroll up - [Pgdn] Scroll down - [ESC] clear / exit - [Any] Input to text";
-  }
-  return "[Left] Previous screen - [Right] Next screen - [Enter] Return - [Pgup] Scroll up - [Pgdn] Scroll down - [c]onnect - [d]isconnect - ra[w] command";
+  return keybinds.getLegendSummary(rawcommandmode ? KEYSCOPE_INPUT : KEYSCOPE_NOT_INPUT);
 }
 
 std::string RawDataScreen::getInfoLabel() const {

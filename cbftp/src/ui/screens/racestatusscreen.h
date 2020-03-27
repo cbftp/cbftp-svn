@@ -24,6 +24,7 @@ private:
   void deleteFiles(bool);
   std::list<std::string> getIncompleteSites() const;
   std::list<std::string> getDownloadOnlySites() const;
+  int getCurrentScope() const;
   std::shared_ptr<Race> race;
   bool smalldirs;
   bool awaitingremovesite;
@@ -41,8 +42,6 @@ private:
   std::map<std::string, int> filetagpos;
   std::map<std::string, std::string> filenametags;
   std::string removesite;
-  std::string defaultlegendtext;
-  std::string finishedlegendtext;
   bool finished;
   int selectsitesmode;
 };

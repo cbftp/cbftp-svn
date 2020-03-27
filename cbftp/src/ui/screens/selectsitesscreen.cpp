@@ -8,8 +8,27 @@
 #include "../../site.h"
 #include "../../globalcontext.h"
 
-SelectSitesScreen::SelectSitesScreen(Ui * ui) {
-  this->ui = ui;
+namespace {
+
+enum KeyAction {
+  KEYACTION_SELECT,
+  KEYACTION_SELECT2
+};
+
+}
+
+SelectSitesScreen::SelectSitesScreen(Ui* ui) : UIWindow(ui, "SelectSitesScreen") {
+  keybinds.addBind('d', KEYACTION_DONE, "Done");
+  keybinds.addBind(10, KEYACTION_SELECT, "Select");
+  keybinds.addBind(' ', KEYACTION_SELECT2, "Select");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Return");
+  keybinds.addBind('t', KEYACTION_TOGGLE_ALL, "Toggle all");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
+  keybinds.addBind(KEY_LEFT, KEYACTION_LEFT, "Navigate left");
+  keybinds.addBind(KEY_RIGHT, KEYACTION_RIGHT, "Navigate right");
+  keybinds.addBind(KEY_PPAGE, KEYACTION_PREVIOUS_PAGE, "Next page");
+  keybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Previous page");
 }
 
 void SelectSitesScreen::initializeExclude(unsigned int row, unsigned int col, const std::string & purpose, std::list<std::shared_ptr<Site> > preselectedsites, std::list<std::shared_ptr<Site> > excludedsites) {
@@ -105,28 +124,29 @@ void SelectSitesScreen::update() {
 bool SelectSitesScreen::keyPressed(unsigned int ch) {
   unsigned int pagerows = (unsigned int) row * 0.6;
   bool activation;
-  switch(ch) {
-    case KEY_UP:
+  int action = keybinds.getKeyAction(ch);
+  switch(action) {
+    case KEYACTION_UP:
       if (mso.goUp()) {
         ui->update();
       }
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       if (mso.goDown()) {
         ui->update();
       }
       return true;
-    case KEY_LEFT:
+    case KEYACTION_LEFT:
       if (mso.goLeft()) {
         ui->update();
       }
       return true;
-    case KEY_RIGHT:
+    case KEYACTION_RIGHT:
       if (mso.goRight()) {
         ui->update();
       }
       return true;
-    case KEY_NPAGE:
+    case KEYACTION_NEXT_PAGE:
       for (unsigned int i = 0; i < pagerows; i++) {
         if (!mso.goDown()) {
           break;
@@ -134,7 +154,7 @@ bool SelectSitesScreen::keyPressed(unsigned int ch) {
       }
       ui->redraw();
       return true;
-    case KEY_PPAGE:
+    case KEYACTION_PREVIOUS_PAGE:
       for (unsigned int i = 0; i < pagerows; i++) {
         if (!mso.goUp()) {
           break;
@@ -142,8 +162,9 @@ bool SelectSitesScreen::keyPressed(unsigned int ch) {
       }
       ui->redraw();
       return true;
-    case 32:
-    case 10: {
+    case KEYACTION_SELECT:
+    case KEYACTION_SELECT2:
+    {
       std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getSelectionPointer());
       if (!!msoe) {
         activation = msoe->activate();
@@ -156,7 +177,8 @@ bool SelectSitesScreen::keyPressed(unsigned int ch) {
       }
       return true;
     }
-    case 'd': {
+    case KEYACTION_DONE:
+    {
       std::string sites = "";
       for (unsigned int i = 0; i < mso.size(); i++) {
         std::shared_ptr<MenuSelectOptionCheckBox> msocb = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement(i));
@@ -170,7 +192,8 @@ bool SelectSitesScreen::keyPressed(unsigned int ch) {
       ui->returnSelectItems(sites);
       return true;
     }
-    case 't': {
+    case KEYACTION_TOGGLE_ALL:
+    {
       bool triggered = false;
       while (!triggered && mso.size()) {
         for (unsigned int i = 0; i < mso.size(); i++) {
@@ -185,8 +208,7 @@ bool SelectSitesScreen::keyPressed(unsigned int ch) {
       ui->redraw();
       break;
     }
-    case 27: // esc
-    case 'c':
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
   }
@@ -194,7 +216,7 @@ bool SelectSitesScreen::keyPressed(unsigned int ch) {
 }
 
 std::string SelectSitesScreen::getLegendText() const {
-  return "[d]one - [c]ancel - [Arrowkeys] Navigate - [t]oggle all";
+  return keybinds.getLegendSummary();
 }
 
 std::string SelectSitesScreen::getInfoLabel() const {

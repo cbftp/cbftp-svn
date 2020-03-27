@@ -21,8 +21,6 @@ public:
   std::string getLegendText() const override;
   std::string getInfoLabel() const override;
 private:
-  std::string currentlegendtext;
-  std::string defaultlegendtext;
   bool active;
   std::string site;
   std::shared_ptr<MenuSelectOptionElement> activeelement;

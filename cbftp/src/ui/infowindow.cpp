@@ -3,8 +3,7 @@
 #include "ui.h"
 #include "termint.h"
 
-InfoWindow::InfoWindow(Ui * ui, WINDOW * window, int row, int col) {
-  this->ui = ui;
+InfoWindow::InfoWindow(Ui* ui, WINDOW * window, int row, int col) : UIWindow(ui, "InfoWindow") {
   this->window = window;
   split = false;
   label = "";

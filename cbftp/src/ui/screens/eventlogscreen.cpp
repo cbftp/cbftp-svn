@@ -7,8 +7,12 @@
 
 #include "../ui.h"
 
-EventLogScreen::EventLogScreen(Ui * ui) {
-  this->ui = ui;
+EventLogScreen::EventLogScreen(Ui* ui) : UIWindow(ui, "EventLogScreen") {
+  keybinds.addBind(KEY_PPAGE, KEYACTION_PREVIOUS_PAGE, "Scroll up");
+  keybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Scroll down");
+  keybinds.addBind(10, KEYACTION_BACK_CANCEL, "Return");
+  keybinds.addBind('f', KEYACTION_FILTER, "Toggle filtering");
+  keybinds.addBind('F', KEYACTION_FILTER_REGEX, "Toggle regex filtering");
 }
 
 void EventLogScreen::initialize(unsigned int row, unsigned int col) {
@@ -68,6 +72,7 @@ void EventLogScreen::update() {
 }
 
 bool EventLogScreen::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   if (filtermodeinput || filtermodeinputregex) {
     if ((ch >= 32 && ch <= 126) || ch == KEY_BACKSPACE || ch == 8 || ch == 127 ||
         ch == KEY_RIGHT || ch == KEY_LEFT || ch == KEY_DC || ch == KEY_HOME ||
@@ -126,8 +131,8 @@ bool EventLogScreen::keyPressed(unsigned int ch) {
       return true;
     }
   }
-  switch(ch) {
-    case KEY_PPAGE:
+  switch(action) {
+    case KEYACTION_PREVIOUS_PAGE:
       if (!readfromcopy) {
         rawbuf->freezeCopy();
         copyreadpos = 0;
@@ -145,7 +150,7 @@ bool EventLogScreen::keyPressed(unsigned int ch) {
       }
       ui->redraw();
       return true;
-    case KEY_NPAGE:
+    case KEYACTION_NEXT_PAGE:
       if (readfromcopy) {
         if (copyreadpos == 0) {
           readfromcopy = false;
@@ -159,7 +164,7 @@ bool EventLogScreen::keyPressed(unsigned int ch) {
       }
       ui->redraw();
       return true;
-    case 'f':
+    case KEYACTION_FILTER:
       if (rawbuf->isFiltered()) {
         rawbuf->unsetFilters();
         ui->setInfo();
@@ -173,7 +178,7 @@ bool EventLogScreen::keyPressed(unsigned int ch) {
       }
       ui->redraw();
       return true;
-    case 'F':
+    case KEYACTION_FILTER_REGEX:
       if (rawbuf->isFiltered()) {
         rawbuf->unsetFilters();
         ui->setInfo();
@@ -187,7 +192,7 @@ bool EventLogScreen::keyPressed(unsigned int ch) {
       }
       ui->redraw();
       return true;
-    case 27: // esc
+    case KEYACTION_BACK_CANCEL:
       rawbuf->setUiWatching(false);
       rawbuf->unsetFilters();
       ui->returnToLast();
@@ -203,7 +208,7 @@ std::string EventLogScreen::getLegendText() const {
   if (filtermodeinputregex) {
     return "[Any] Enter regex input - [Tab] switch mode - [Esc] Cancel";
   }
-  return "[Pgup] Scroll up - [Pgdn] Scroll down - [ESC/Enter] Return - Toggle [f]iltering";
+  return keybinds.getLegendSummary();
 }
 
 std::string EventLogScreen::getInfoLabel() const {

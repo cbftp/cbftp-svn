@@ -15,11 +15,36 @@
 #include "../resizableelement.h"
 #include "../misc.h"
 
-SkipListScreen::SkipListScreen(Ui * ui) {
-  this->ui = ui;
+namespace {
+
+enum KeyAction {
+  KEYACTION_INSERT_ROW,
+  KEYACTION_MOVE_DOWN,
+  KEYACTION_MOVE_UP
+};
+
+enum KeyScopes {
+  KEYSCOPE_IN_TABLE
+};
+}
+
+SkipListScreen::SkipListScreen(Ui* ui) : UIWindow(ui, "SkipListScreen") {
+  keybinds.addScope(KEYSCOPE_IN_TABLE, "In the skiplist table");
+  keybinds.addBind(10, KEYACTION_ENTER, "Modify");
+  keybinds.addBind('d', KEYACTION_DONE, "Done");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
+  keybinds.addBind(KEY_LEFT, KEYACTION_LEFT, "Navigate left");
+  keybinds.addBind(KEY_RIGHT, KEYACTION_RIGHT, "Navigate right");
+  keybinds.addBind(KEY_PPAGE, KEYACTION_PREVIOUS_PAGE, "Next page");
+  keybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Previous page");
+  keybinds.addBind(KEY_DC, KEYACTION_DELETE, "Delete row", KEYSCOPE_IN_TABLE);
+  keybinds.addBind(KEY_IC, KEYACTION_INSERT_ROW, "Add row before", KEYSCOPE_IN_TABLE);
+  keybinds.addBind('m', KEYACTION_MOVE_DOWN, "Move down", KEYSCOPE_IN_TABLE);
+  keybinds.addBind('o', KEYACTION_MOVE_UP, "Move up", KEYSCOPE_IN_TABLE);
+  keybinds.addBind('-', KEYACTION_HIGHLIGHT_LINE, "Highlight entire line", KEYSCOPE_IN_TABLE);
   table.makeLeavableUp();
-  baselegendtext = "[Enter] Modify - [Arrows] select option - [d]one - [c]ancel";
-  tablelegendtext = baselegendtext + " - [Del] delete row - [Insert] add row before - [m]ove down - m[o]ve up";
 }
 
 SkipListScreen::~SkipListScreen() {
@@ -34,7 +59,6 @@ void SkipListScreen::initialize(unsigned int row, unsigned int col, SkipList * s
 }
 
 void SkipListScreen::initialize() {
-  currentlegendtext = "";
   active = false;
   table.reset();
   base.reset();
@@ -229,10 +253,12 @@ void SkipListScreen::update() {
 }
 
 bool SkipListScreen::keyPressed(unsigned int ch) {
+  int scope = getCurrentScope();
+  int action = keybinds.getKeyAction(ch, scope);
   if (temphighlightline != -1) {
     temphighlightline = -1;
     ui->redraw();
-    if (ch == '-') {
+    if (action == KEYACTION_HIGHLIGHT_LINE) {
       return true;
     }
   }
@@ -269,36 +295,36 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
     return true;
   }
   bool activation;
-  switch(ch) {
-    case KEY_UP:
+  switch(action) {
+    case KEYACTION_UP:
       keyUp();
       ui->update();
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       keyDown();
       ui->update();
       return true;
-    case KEY_NPAGE:
+    case KEYACTION_NEXT_PAGE:
       for (unsigned int i = 0; i < pagerows; i++) {
         keyDown();
       }
       ui->redraw();
       return true;
-    case KEY_PPAGE:
+    case KEYACTION_PREVIOUS_PAGE:
       for (unsigned int i = 0; i < pagerows; i++) {
         keyUp();
       }
       ui->redraw();
       return true;
-    case KEY_LEFT:
+    case KEYACTION_LEFT:
       focusedarea->goLeft();
       ui->update();
       return true;
-    case KEY_RIGHT:
+    case KEYACTION_RIGHT:
       focusedarea->goRight();
       ui->update();
       return true;
-    case 10:
+    case KEYACTION_ENTER:
       activation = focusedarea->activateSelected();
       if (!activation) {
         std::shared_ptr<MenuSelectOptionElement> element = focusedarea->getElement(focusedarea->getSelectionPointer());
@@ -331,22 +357,20 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
       }
       active = true;
       activeelement = focusedarea->getElement(focusedarea->getSelectionPointer());
-      currentlegendtext = activeelement->getLegendText();
       ui->update();
       ui->setLegend();
       return true;
-    case 27: // esc
-    case 'c':
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
-    case 'd':
+    case KEYACTION_DONE:
       skiplist->clearEntries();
       for (std::list<SkiplistItem>::const_iterator it = testskiplist.entriesBegin(); it != testskiplist.entriesEnd(); it++) {
         skiplist->addEntry(it->matchRegex(), it->matchPattern(), it->matchFile(), it->matchDir(), it->matchScope(), it->getAction());
       }
       ui->returnToLast();
       return true;
-    case KEY_DC:
+    case KEYACTION_DELETE:
       if (focusedarea == &table) {
         std::shared_ptr<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
         std::shared_ptr<MenuSelectAdjustableLine> msal = table.getAdjustableLine(msoe);
@@ -362,7 +386,7 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
         ui->redraw();
       }
       return true;
-    case KEY_IC:
+    case KEYACTION_INSERT_ROW:
       if (focusedarea == &table) {
         std::shared_ptr<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
         std::shared_ptr<MenuSelectAdjustableLine> msal = table.getAdjustableLine(msoe);
@@ -371,7 +395,7 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
         ui->redraw();
       }
       return true;
-    case 'o':
+    case KEYACTION_MOVE_UP:
       if (focusedarea == &table) {
         std::shared_ptr<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
         std::shared_ptr<MenuSelectAdjustableLine> msal = table.getAdjustableLine(msoe);
@@ -382,7 +406,7 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
         }
       }
       return true;
-    case 'm':
+    case KEYACTION_MOVE_DOWN:
       if (focusedarea == &table) {
         std::shared_ptr<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
         std::shared_ptr<MenuSelectAdjustableLine> msal = table.getAdjustableLine(msoe);
@@ -393,7 +417,7 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
         }
       }
       return true;
-    case '-':
+    case KEYACTION_HIGHLIGHT_LINE:
       if (focusedarea != &table) {
         break;
       }
@@ -427,14 +451,9 @@ void SkipListScreen::keyDown() {
 
 std::string SkipListScreen::getLegendText() const {
   if (active) {
-    return currentlegendtext;
+    return activeelement->getLegendText();
   }
-  else if (focusedarea == &base) {
-    return baselegendtext;
-  }
-  else {
-    return tablelegendtext;
-  }
+  return keybinds.getLegendSummary(getCurrentScope());
 }
 
 std::string SkipListScreen::getInfoLabel() const {
@@ -494,4 +513,11 @@ void SkipListScreen::addPatternLine(int y, bool regex, std::string pattern, bool
   msota->addOption("Allround", SCOPE_ALL);
   msota->setOption(scope);
   msal->addElement(msota, 6, RESIZE_REMOVE);
+}
+
+int SkipListScreen::getCurrentScope() const {
+  if (focusedarea == &table) {
+    return KEYSCOPE_IN_TABLE;
+  }
+  return KEYSCOPE_ALL;
 }

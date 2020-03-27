@@ -6,8 +6,12 @@
 
 #define MINIMUM_KEY_LENGTH 4
 
-NewKeyScreen::NewKeyScreen(Ui * ui) {
-  this->ui = ui;
+NewKeyScreen::NewKeyScreen(Ui* ui) : UIWindow(ui, "NewKeyScreen") {
+  keybinds.addBind(10, KEYACTION_ENTER, "Modify");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Next option");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Previous option");
+  keybinds.addBind('d', KEYACTION_DONE, "Done");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel");
 }
 
 NewKeyScreen::~NewKeyScreen() {
@@ -15,8 +19,6 @@ NewKeyScreen::~NewKeyScreen() {
 }
 
 void NewKeyScreen::initialize(unsigned int row, unsigned int col) {
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [Esc/c] Cancel";
-  currentlegendtext = defaultlegendtext;
   active = false;
   mismatch = false;
   tooshort = false;
@@ -75,11 +77,11 @@ void NewKeyScreen::update() {
 }
 
 bool NewKeyScreen::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
       active = false;
-      currentlegendtext = defaultlegendtext;
       ui->update();
       ui->setLegend();
       return true;
@@ -89,17 +91,16 @@ bool NewKeyScreen::keyPressed(unsigned int ch) {
     return true;
   }
   bool activation;
-  switch(ch) {
-    case KEY_UP:
+  switch(action) {
+    case KEYACTION_UP:
       mso.goUp();
       ui->update();
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       mso.goDown();
       ui->update();
       return true;
-    case 10:
-
+    case KEYACTION_ENTER:
       activation = mso.getElement(mso.getSelectionPointer())->activate();
       tooshort = false;
       mismatch = false;
@@ -109,11 +110,10 @@ bool NewKeyScreen::keyPressed(unsigned int ch) {
       }
       active = true;
       activeelement = mso.getElement(mso.getSelectionPointer());
-      currentlegendtext = activeelement->getLegendText();
       ui->update();
       ui->setLegend();
       return true;
-    case 'd': {
+    case KEYACTION_DONE: {
       std::shared_ptr<MenuSelectOptionTextField> field1 = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement(0));
       std::shared_ptr<MenuSelectOptionTextField> field2 = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement(1));
       std::string key = field1->getData();
@@ -133,8 +133,7 @@ bool NewKeyScreen::keyPressed(unsigned int ch) {
       ui->update();
       return true;
     }
-    case 27: // esc
-    case 'c':
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
   }
@@ -142,7 +141,10 @@ bool NewKeyScreen::keyPressed(unsigned int ch) {
 }
 
 std::string NewKeyScreen::getLegendText() const {
-  return currentlegendtext;
+  if (active) {
+    return activeelement->getLegendText();
+  }
+  return keybinds.getLegendSummary();
 }
 
 std::string NewKeyScreen::getInfoLabel() const {

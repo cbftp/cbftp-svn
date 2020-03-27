@@ -14,8 +14,18 @@
 #include "../../engine.h"
 #include "../../transferjob.h"
 
-AllTransferJobsScreen::AllTransferJobsScreen(Ui * ui) {
-  this->ui = ui;
+AllTransferJobsScreen::AllTransferJobsScreen(Ui* ui) : UIWindow(ui, "AllTransferJobsScreen") {
+  keybinds.addBind(10, KEYACTION_ENTER, "Details");
+  keybinds.addBind('B', KEYACTION_ABORT, "Abort job");
+  keybinds.addBind('t', KEYACTION_TRANSFERS, "Transfers for job");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Return");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
+  keybinds.addBind(KEY_PPAGE, KEYACTION_PREVIOUS_PAGE, "Next page");
+  keybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Previous page");
+  keybinds.addBind(KEY_HOME, KEYACTION_TOP, "Go top");
+  keybinds.addBind(KEY_END, KEYACTION_BOTTOM, "Go bottom");
+  keybinds.addBind('-', KEYACTION_HIGHLIGHT_LINE, "Highlight entire line");
 }
 
 void AllTransferJobsScreen::initialize(unsigned int row, unsigned int col) {
@@ -89,15 +99,16 @@ void AllTransferJobsScreen::command(const std::string & command, const std::stri
 }
 
 bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   if (temphighlightline != -1) {
     temphighlightline = -1;
     ui->redraw();
-    if (ch == '-') {
+    if (action == KEYACTION_HIGHLIGHT_LINE) {
       return true;
     }
   }
-  switch (ch) {
-    case KEY_UP:
+  switch (action) {
+    case KEYACTION_UP:
       if (hascontents && ypos > 1) {
         --ypos;
         table.goUp();
@@ -108,14 +119,14 @@ bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
         ui->update();
       }
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       if (hascontents && ypos < engine->allTransferJobs()) {
         ++ypos;
         table.goDown();
         ui->update();
       }
       return true;
-    case KEY_NPAGE: {
+    case KEYACTION_NEXT_PAGE: {
       unsigned int pagerows = (unsigned int) row * 0.6;
       for (unsigned int i = 0; i < pagerows; i++) {
         if (ypos >= engine->allTransferJobs()) {
@@ -127,7 +138,7 @@ bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
       ui->update();
       return true;
     }
-    case KEY_PPAGE: {
+    case KEYACTION_PREVIOUS_PAGE: {
       unsigned int pagerows = (unsigned int) row * 0.6;
       for (unsigned int i = 0; i < pagerows; i++) {
         if (ypos == 1) {
@@ -140,27 +151,26 @@ bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
       ui->update();
       return true;
     }
-    case KEY_HOME:
+    case KEYACTION_TOP:
       ypos = 1;
       currentviewspan = 0;
       ui->update();
       return true;
-    case KEY_END:
+    case KEYACTION_BOTTOM:
       ypos = engine->allTransferJobs();
       ui->update();
       return true;
-    case 'c':
-    case 27: // esc
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
-    case 10:
+    case KEYACTION_ENTER:
       if (hascontents) {
         std::shared_ptr<MenuSelectOptionTextButton> msotb =
             std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
         ui->goTransferJobStatus(msotb->getId());
       }
       return true;
-    case 'B':
+    case KEYACTION_ABORT:
       if (hascontents) {
         abortjob = global->getEngine()->getTransferJob(table.getElement(table.getSelectionPointer())->getId());
         if (!!abortjob && !abortjob->isDone()) {
@@ -168,8 +178,7 @@ bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
         }
       }
       return true;
-    case 't':
-    case 'T':
+    case KEYACTION_TRANSFERS:
       if (hascontents) {
         std::shared_ptr<TransferJob> tj = global->getEngine()->getTransferJob(table.getElement(table.getSelectionPointer())->getId());
         if (!!tj) {
@@ -177,7 +186,7 @@ bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
         }
       }
       return true;
-    case '-':
+    case KEYACTION_HIGHLIGHT_LINE:
       if (!hascontents) {
         break;
       }
@@ -186,10 +195,6 @@ bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
       return true;
   }
   return false;
-}
-
-std::string AllTransferJobsScreen::getLegendText() const {
-  return "[Esc/c] Return - [Enter] Details - [Up/Down] Navigate - a[B]ort job - [t]ransfers for job";
 }
 
 std::string AllTransferJobsScreen::getInfoLabel() const {

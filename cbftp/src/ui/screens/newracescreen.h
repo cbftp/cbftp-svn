@@ -30,8 +30,6 @@ private:
   std::shared_ptr<Race> startRace(bool addtemplegend);
   std::shared_ptr<Site> startsite;
   std::string getSectionButtonText(std::shared_ptr<MenuSelectOptionElement>) const;
-  std::string currentlegendtext;
-  std::string defaultlegendtext;
   bool active;
   bool toggleall;
   std::string section;

@@ -20,6 +20,7 @@ class FileList;
 class Ui;
 class UIFile;
 class BrowseScreenAction;
+class KeyBinds;
 
 enum class ConfirmAction {
   NONE,
@@ -29,14 +30,14 @@ enum class ConfirmAction {
 
 class BrowseScreenSite : public BrowseScreenSub {
 public:
-  BrowseScreenSite(Ui* ui, BrowseScreen* parent, const std::string & sitestr, const Path path = Path());
+  BrowseScreenSite(Ui* ui, BrowseScreen* parent, KeyBinds& keybinds, const std::string & sitestr, const Path path = Path());
   ~BrowseScreenSite();
   BrowseScreenType type() const override;
   void redraw(unsigned int, unsigned int, unsigned int) override;
   void update() override;
   void command(const std::string & command, const std::string & arg) override;
   BrowseScreenAction keyPressed(unsigned int) override;
-  std::string getLegendText() const override;
+  std::string getLegendText(int scope) const override;
   std::string getInfoLabel() const override;
   std::string getInfoText() const override;
   void setFocus(bool) override;

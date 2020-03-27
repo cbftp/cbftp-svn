@@ -22,8 +22,6 @@ public:
 private:
   FocusableArea * focusedarea;
   FocusableArea * defocusedarea;
-  std::string currentlegendtext;
-  std::string defaultlegendtext;
   bool active;
   bool defaultset;
   std::string deleteproxy;

@@ -25,10 +25,40 @@ bool sectionNameCompare(const Section * a, const Section * b) {
   return a->getName().compare(b->getName()) < 0;
 }
 
+enum KeyAction {
+  KEYACTION_SELECT,
+  KEYACTION_ADD_SECTION,
+  KEYACTION_DETAILS,
+  KEYACTION_RETURN_SELECT,
+  KEYACTION_RETURN_SELECT2
+};
+
+enum KeyScope {
+  KEYSCOPE_SELECT,
+  KEYSCOPE_EDIT
+};
+
 }
 
-SectionsScreen::SectionsScreen(Ui * ui) {
-  this->ui = ui;
+SectionsScreen::SectionsScreen(Ui* ui) : UIWindow(ui, "SectionsScreen") {
+  keybinds.addScope(KEYSCOPE_SELECT, "When selecting sections");
+  keybinds.addScope(KEYSCOPE_EDIT, "When editing sections");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
+  keybinds.addBind(KEY_PPAGE, KEYACTION_PREVIOUS_PAGE, "Next page");
+  keybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Previous page");
+  keybinds.addBind(KEY_HOME, KEYACTION_TOP, "Go top");
+  keybinds.addBind(KEY_END, KEYACTION_BOTTOM, "Go bottom");
+  keybinds.addBind('-', KEYACTION_HIGHLIGHT_LINE, "Highlight entire line");
+  keybinds.addBind(10, KEYACTION_RETURN_SELECT, "Return selected items", KEYSCOPE_SELECT);
+  keybinds.addBind('d', KEYACTION_RETURN_SELECT2, "Return selected items", KEYSCOPE_SELECT);
+  keybinds.addBind(' ', KEYACTION_SELECT, "Select", KEYSCOPE_SELECT);
+  keybinds.addBind('t', KEYACTION_TOGGLE_ALL, "Toggle all", KEYSCOPE_SELECT);
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel", KEYSCOPE_SELECT);
+  keybinds.addBind('A', KEYACTION_ADD_SECTION, "Add section", KEYSCOPE_EDIT);
+  keybinds.addBind(10, KEYACTION_DETAILS, "Details", KEYSCOPE_EDIT);
+  keybinds.addBind('d', KEYACTION_DONE, "Return", KEYSCOPE_EDIT);
+  keybinds.addBind(KEY_DC, KEYACTION_DELETE, "Delete section", KEYSCOPE_EDIT);
 }
 
 SectionsScreen::~SectionsScreen() {
@@ -111,14 +141,16 @@ void SectionsScreen::update() {
 }
 
 bool SectionsScreen::keyPressed(unsigned int ch) {
+  int scope = getCurrentScope();
+  int action = keybinds.getKeyAction(ch, scope);
   if (temphighlightline != -1) {
     temphighlightline = -1;
     ui->redraw();
-    if (ch == '-') {
+    if (action == KEYACTION_HIGHLIGHT_LINE) {
       return true;
     }
   }
-  if (hascontents && mode == Mode::SELECT && (ch == 10 || ch == 'd')) {
+  if (hascontents && mode == Mode::SELECT && (action == KEYACTION_RETURN_SELECT || action == KEYACTION_RETURN_SELECT2)) {
     std::string selectedstr;
     if (selected.empty()) {
       std::shared_ptr<MenuSelectOptionTextButton> elem =
@@ -131,22 +163,22 @@ bool SectionsScreen::keyPressed(unsigned int ch) {
     ui->returnSelectItems(selectedstr);
     return true;
   }
-  switch (ch) {
-    case KEY_UP:
+  switch (action) {
+    case KEYACTION_UP:
       if (hascontents && ypos > 0) {
         --ypos;
         table.goUp();
         ui->update();
       }
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       if (hascontents && ypos < totallistsize - 1) {
         ++ypos;
         table.goDown();
         ui->update();
       }
       return true;
-    case KEY_NPAGE: {
+    case KEYACTION_NEXT_PAGE: {
       unsigned int pagerows = (unsigned int) row * 0.6;
       for (unsigned int i = 0; i < pagerows && ypos < totallistsize - 1; i++) {
         ypos++;
@@ -155,7 +187,7 @@ bool SectionsScreen::keyPressed(unsigned int ch) {
       ui->update();
       return true;
     }
-    case KEY_PPAGE: {
+    case KEYACTION_PREVIOUS_PAGE: {
       unsigned int pagerows = (unsigned int) row * 0.6;
       for (unsigned int i = 0; i < pagerows && ypos > 0; i++) {
         ypos--;
@@ -164,11 +196,11 @@ bool SectionsScreen::keyPressed(unsigned int ch) {
       ui->update();
       return true;
     }
-    case KEY_HOME:
+    case KEYACTION_TOP:
       ypos = 0;
       ui->update();
       return true;
-    case ' ':
+    case KEYACTION_SELECT:
       if (hascontents && mode == Mode::SELECT) {
         std::shared_ptr<MenuSelectOptionTextButton> elem =
             std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
@@ -184,43 +216,41 @@ bool SectionsScreen::keyPressed(unsigned int ch) {
         return true;
       }
       break;
-    case KEY_END:
+    case KEYACTION_BOTTOM:
       ypos = totallistsize - 1;
       ui->update();
       return true;
-    case 10:
-    case 'E':
+    case KEYACTION_DETAILS:
      if (hascontents && mode == Mode::EDIT) {
        std::shared_ptr<MenuSelectOptionTextButton> elem =
            std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
        ui->goEditSection(elem->getLabelText());
      }
      return true;
-    case 'A':
+    case KEYACTION_ADD_SECTION:
       if (mode == Mode::EDIT) {
         ui->goAddSection();
       }
       return true;
-    case KEY_DC:
+    case KEYACTION_DELETE:
       if (hascontents && mode == Mode::EDIT) {
         std::shared_ptr<MenuSelectOptionTextButton> elem =
             std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
         ui->goConfirmation("Are you sure that you wish to remove this section: " + elem->getLabelText());
       }
       return true;
-    case 'c':
-    case 'd':
-    case 27: // esc
+    case KEYACTION_DONE:
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
-    case '-':
+    case KEYACTION_HIGHLIGHT_LINE:
       if (!hascontents) {
         break;
       }
       temphighlightline = table.getElement(table.getSelectionPointer())->getRow();
       ui->redraw();
       return true;
-    case 't':
+    case KEYACTION_TOGGLE_ALL:
       if (selected.empty() || !togglestate) {
         selected.clear();
         for (auto it = global->getSectionManager()->begin(); it != global->getSectionManager()->end(); ++it) {
@@ -249,11 +279,7 @@ void SectionsScreen::command(const std::string & command, const std::string & ar
 }
 
 std::string SectionsScreen::getLegendText() const {
-  if (mode == Mode::SELECT) {
-    std::string enterdesc = selected.empty() ? "Select and return" : "Return selected items";
-    return "[Up/Down] Navigate - [Enter/d] " + enterdesc + " - [Esc/c] Cancel - [Space] Select - [t]oggle all";
-  }
-  return "[A]dd section - [Enter/E] Details - [Esc/c/d] Return - [Up/Down] Navigate - [Del]ete section";
+  return keybinds.getLegendSummary(getCurrentScope());
 }
 
 std::string SectionsScreen::getInfoLabel() const {
@@ -320,4 +346,8 @@ void SectionsScreen::addSectionTableRow(unsigned int y, MenuSelectOption & mso, 
   msotb = mso.addTextButtonNoContent(y, 1, "sites", sites);
   msotb->setSelectable(false);
   msal->addElement(msotb, 1, RESIZE_WITHDOTS);
+}
+
+int SectionsScreen::getCurrentScope() const {
+  return mode == Mode::EDIT ? KEYSCOPE_EDIT : KEYSCOPE_SELECT;
 }

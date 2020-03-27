@@ -29,8 +29,6 @@ private:
   void initialize(unsigned int row, unsigned int col, const std::shared_ptr<Site> & site, const std::string & section, const Path & path);
   bool setSections();
   std::shared_ptr<Site> modsite;
-  std::string currentlegendtext;
-  std::string defaultlegendtext;
   bool active;
   std::shared_ptr<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;

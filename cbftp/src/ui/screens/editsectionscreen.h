@@ -25,8 +25,6 @@ public:
 private:
   void done();
   Section * section;
-  std::string currentlegendtext;
-  std::string defaultlegendtext;
   bool active;
   std::shared_ptr<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;

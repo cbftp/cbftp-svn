@@ -29,6 +29,7 @@ public:
   std::string getInfoLabel() const;
   std::string getInfoText() const;
 private:
+  int getCurrentScope() const;
   int state;
   int requestid;
   std::shared_ptr<SiteLogic> sitelogic;

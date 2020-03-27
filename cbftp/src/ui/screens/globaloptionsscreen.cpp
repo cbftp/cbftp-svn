@@ -30,8 +30,13 @@ enum class UdpEnable {
 
 }
 
-GlobalOptionsScreen::GlobalOptionsScreen(Ui * ui) {
-  this->ui = ui;
+GlobalOptionsScreen::GlobalOptionsScreen(Ui* ui) : UIWindow(ui, "GlobalOptionsScreen") {
+  keybinds.addBind(10, KEYACTION_ENTER, "Modify");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Next option");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Previous option");
+  keybinds.addBind('d', KEYACTION_DONE, "Done");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel");
+  keybinds.addBind('S', KEYACTION_SKIPLIST, "Skiplist");
 }
 
 GlobalOptionsScreen::~GlobalOptionsScreen() {
@@ -39,8 +44,6 @@ GlobalOptionsScreen::~GlobalOptionsScreen() {
 }
 
 void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel - [S]kiplist";
-  currentlegendtext = defaultlegendtext;
   active = false;
   unsigned int y = 1;
   unsigned int x = 1;
@@ -142,6 +145,7 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   mso.addTextButtonNoContent(y++, x, "skiplist", "Configure skiplist...");
   mso.addTextButtonNoContent(y++, x, "proxy", "Configure proxy settings...");
   mso.addTextButtonNoContent(y++, x, "fileviewer", "Configure file viewing...");
+  mso.addTextButtonNoContent(y++, x, "globalkeybinds", "Configure global keybinds...");
   mso.addTextButtonNoContent(y, x, "disableencryption", "Disable data file encryption...");
   mso.addTextButtonNoContent(y++, x, "enableencryption", "Enable data file encryption...");
   mso.addTextButtonNoContent(y++, x, "changekey", "Change data file encryption key...");
@@ -152,8 +156,10 @@ void GlobalOptionsScreen::redraw() {
   ui->erase();
   std::shared_ptr<MenuSelectOptionElement> disableencryption = mso.getElement("disableencryption");
   std::shared_ptr<MenuSelectOptionElement> enableencryption = mso.getElement("enableencryption");
+  std::shared_ptr<MenuSelectOptionElement> changekey = mso.getElement("changekey");
   if (global->getSettingsLoaderSaver()->getState() == DataFileState::EXISTS_DECRYPTED) {
     disableencryption->show();
+    changekey->show();
     enableencryption->hide();
     if (mso.getElement(mso.getSelectionPointer()) == enableencryption) {
       mso.setPointer(disableencryption);
@@ -161,6 +167,7 @@ void GlobalOptionsScreen::redraw() {
   }
   else {
     disableencryption->hide();
+    changekey->hide();
     enableencryption->show();
     if (mso.getElement(mso.getSelectionPointer()) == disableencryption) {
       mso.setPointer(enableencryption);
@@ -198,11 +205,11 @@ void GlobalOptionsScreen::update() {
 }
 
 bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
       active = false;
-      currentlegendtext = defaultlegendtext;
       ui->update();
       ui->setLegend();
       return true;
@@ -213,16 +220,16 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
   }
   bool activation;
   std::shared_ptr<MenuSelectOptionElement> msoe;
-  switch(ch) {
-    case KEY_UP:
+  switch(action) {
+    case KEYACTION_UP:
       mso.goUp();
       ui->update();
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       mso.goDown();
       ui->update();
       return true;
-    case 10:
+    case KEYACTION_ENTER:
       msoe = mso.getElement(mso.getSelectionPointer());
       if (msoe->getIdentifier() == "skiplist") {
         ui->goSkiplist();
@@ -248,6 +255,10 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
         ui->goFileViewerSettings();
         return true;
       }
+      if (msoe->getIdentifier() == "globalkeybinds") {
+        ui->goGlobalKeyBinds();
+        return true;
+      }
       activation = msoe->activate();
       if (!activation) {
         ui->update();
@@ -255,19 +266,17 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
       }
       active = true;
       activeelement = msoe;
-      currentlegendtext = activeelement->getLegendText();
       ui->setLegend();
       ui->update();
       return true;
-    case 27: // esc
-    case 'c':
+    case KEYACTION_BACK_CANCEL:
       global->getSettingsLoaderSaver()->saveSettings();
       ui->returnToLast();
       return true;
-    case 'S':
+    case KEYACTION_SKIPLIST:
       ui->goSkiplist();
       return true;
-    case 'd':
+    case KEYACTION_DONE:
       UdpEnable udpenable = UdpEnable::NO;
       for(unsigned int i = 0; i < mso.size(); i++) {
         std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
@@ -371,7 +380,10 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
 }
 
 std::string GlobalOptionsScreen::getLegendText() const {
-  return currentlegendtext;
+  if (active) {
+    return activeelement->getLegendText();
+  }
+  return keybinds.getLegendSummary();
 }
 
 std::string GlobalOptionsScreen::getInfoLabel() const {

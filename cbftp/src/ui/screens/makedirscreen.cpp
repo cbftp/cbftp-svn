@@ -7,8 +7,10 @@
 #include "../menuselectoptionelement.h"
 #include "../menuselectoptiontextfield.h"
 
-MakeDirScreen::MakeDirScreen(Ui * ui) {
-  this->ui = ui;
+MakeDirScreen::MakeDirScreen(Ui* ui) : UIWindow(ui, "MakeDirScreen") {
+  keybinds.addBind(10, KEYACTION_ENTER, "Modify");
+  keybinds.addBind('m', KEYACTION_DONE, "Make directory");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel");
 }
 
 MakeDirScreen::~MakeDirScreen() {
@@ -16,8 +18,6 @@ MakeDirScreen::~MakeDirScreen() {
 }
 
 void MakeDirScreen::initialize(unsigned int row, unsigned int col, const std::string & site, UIFileList & filelist) {
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [m]ake directory - [c]ancel";
-  currentlegendtext = defaultlegendtext;
   active = false;
   this->site = site;
   this->filelist = filelist;
@@ -67,11 +67,11 @@ void MakeDirScreen::update() {
 }
 
 bool MakeDirScreen::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
       active = false;
-      currentlegendtext = defaultlegendtext;
       ui->update();
       ui->setLegend();
       return true;
@@ -80,24 +80,20 @@ bool MakeDirScreen::keyPressed(unsigned int ch) {
     ui->update();
     return true;
   }
-  switch(ch) {
-    case 10:
+  switch(action) {
+    case KEYACTION_ENTER:
       activeelement = mso.getElement(mso.getSelectionPointer());
       activeelement->activate();
       active = true;
-      currentlegendtext = activeelement->getLegendText();
       ui->update();
       ui->setLegend();
       return true;
-    case 27: // esc
-    case 'c':
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
-    case 'd':
-    case 'm': {
+    case KEYACTION_DONE:
       tryMakeDir();
       return true;
-    }
   }
   return false;
 }
@@ -118,7 +114,10 @@ void MakeDirScreen::tryMakeDir() {
 }
 
 std::string MakeDirScreen::getLegendText() const {
-  return currentlegendtext;
+  if (active) {
+    return activeelement->getLegendText();
+  }
+  return keybinds.getLegendSummary();
 }
 
 std::string MakeDirScreen::getInfoLabel() const {

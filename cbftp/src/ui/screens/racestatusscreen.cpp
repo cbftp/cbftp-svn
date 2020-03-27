@@ -29,6 +29,26 @@ enum SelectSitesMode {
   SELECT_DELETE_OWN
 };
 
+enum KeyAction {
+  KEYACTION_ADD_SITE,
+  KEYACTION_SHOW_SMALL_DIRS,
+  KEYACTION_RESET_HARD,
+  KEYACTION_DELETE_SITE_OWN,
+  KEYACTION_DELETE_SITE_ALL,
+  KEYACTION_DELETE_OWN,
+  KEYACTION_DELETE_ALL,
+  KEYACTION_TRANSFERS_FOR_SITE,
+  KEYACTION_BROWSE,
+  KEYACTION_EDIT_SITE,
+  KEYACTION_ABORT_DELETE_INC,
+  KEYACTION_ABORT_DELETE_ALL
+};
+
+enum KeyScopes {
+  KEYSCOPE_RUNNING,
+  KEYSCOPE_ENDED,
+};
+
 char getFileChar(bool exists, bool owner, bool upload, bool download, bool downloadonly) {
   char printchar = '_';
   if (upload) {
@@ -77,10 +97,30 @@ char getFileChar(bool exists, bool owner, bool upload, bool download, bool downl
 
 }
 
-RaceStatusScreen::RaceStatusScreen(Ui* ui) {
-  this->ui = ui;
-  defaultlegendtext = "[c/Esc] Return - [Del] Remove site from job - [A]dd site to job - [s]how small dirs - [r]eset job - Hard [R]eset job - A[B]ort job - [d]elete site and own files from job - [D]elete site and all files from job - [t]transfers - [T]ransfers for site - [b]rowse - [E]dit site - [z] Abort job and delete own files on incomplete sites - [Z] Abort job and delete own files on ALL involved sites";
-  finishedlegendtext = "[c/Esc] Return - [Del] Remove site from job - [A]dd site to job - [s]how small dirs - [r]eset job - Hard [R]eset job - [d]elete own files - [D]elete all files - [t]ransfers - [T]ransfers for site - [b]rowse - [E]dit site - [Z] Delete own files on ALL involved sites";
+RaceStatusScreen::RaceStatusScreen(Ui* ui) : UIWindow(ui, "RaceStatusScreen") {
+  keybinds.addScope(KEYSCOPE_RUNNING, "While the job is running");
+  keybinds.addScope(KEYSCOPE_ENDED, "When the job has ended");
+  keybinds.addBind(10, KEYACTION_ENTER, "Site status");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Return");
+  keybinds.addBind(KEY_DC, KEYACTION_DELETE, "Remove site from job");
+  keybinds.addBind('A', KEYACTION_ADD_SITE, "Add site to job");
+  keybinds.addBind('s', KEYACTION_SHOW_SMALL_DIRS, "Show small dirs");
+  keybinds.addBind('r', KEYACTION_RESET, "Reset");
+  keybinds.addBind('R', KEYACTION_RESET_HARD, "Hard reset");
+  keybinds.addBind('B', KEYACTION_ABORT, "Abort job");
+  keybinds.addBind('t', KEYACTION_TRANSFERS, "Transfers");
+  keybinds.addBind('T', KEYACTION_TRANSFERS_FOR_SITE, "Transfers for site");
+  keybinds.addBind('b', KEYACTION_BROWSE, "Browse");
+  keybinds.addBind('E', KEYACTION_EDIT_SITE, "Edit site");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
+  keybinds.addBind('d', KEYACTION_DELETE_SITE_OWN, "Delete site and own files from job", KEYSCOPE_RUNNING);
+  keybinds.addBind('D', KEYACTION_DELETE_SITE_ALL, "Delete site and all files from job", KEYSCOPE_RUNNING);
+  keybinds.addBind('z', KEYACTION_ABORT_DELETE_INC, "Abort and delete own files on incomplete sites", KEYSCOPE_RUNNING);
+  keybinds.addBind('Z', KEYACTION_ABORT_DELETE_ALL, "Abort and delete own files on ALL sites", KEYSCOPE_RUNNING);
+  keybinds.addBind('d', KEYACTION_DELETE_OWN, "Delete own files", KEYSCOPE_ENDED);
+  keybinds.addBind('D', KEYACTION_DELETE_ALL, "Delete all files", KEYSCOPE_ENDED);
+  keybinds.addBind('Z', KEYACTION_ABORT_DELETE_ALL, "Delete own files on ALL sites", KEYSCOPE_ENDED);
 }
 
 RaceStatusScreen::~RaceStatusScreen() {
@@ -442,12 +482,13 @@ void RaceStatusScreen::command(const std::string & command, const std::string & 
 }
 
 bool RaceStatusScreen::keyPressed(unsigned int ch) {
-  switch(ch) {
-    case 27: // esc
-    case 'c':
+  int scope = getCurrentScope();
+  int action = keybinds.getKeyAction(ch, scope);
+  switch(action) {
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
-    case 's':
+    case KEYACTION_SHOW_SMALL_DIRS:
       if (smalldirs) {
         smalldirs = false;
       }
@@ -456,17 +497,17 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       }
       ui->redraw();
       return true;
-    case KEY_UP:
+    case KEYACTION_UP:
       if (mso.goUp()) {
         ui->update();
       }
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       if (mso.goDown()) {
         ui->update();
       }
       return true;
-    case KEY_DC:
+    case KEYACTION_DELETE:
     {
       std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
       if (!!msotb) {
@@ -476,45 +517,45 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       }
       return true;
     }
-    case 'B':
+    case KEYACTION_ABORT:
       if (race->getStatus() == RaceStatus::RUNNING) {
         awaitingabort = true;
         ui->goConfirmation("Do you really want to abort the race " + race->getName());
       }
       return true;
-    case 'd':
-      if (race->getStatus() != RaceStatus::RUNNING) {
-        deleteFiles(false);
-      }
-      else {
-        std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
-        if (!!msotb) {
-          removesite = msotb->getLabelText();
-          awaitingremovesitedelownfiles = true;
-          ui->goConfirmation("Do you really want to remove " + removesite + " from the race and delete own files?");
-        }
+    case KEYACTION_DELETE_OWN:
+      deleteFiles(false);
+      return true;
+    case KEYACTION_DELETE_SITE_OWN:
+    {
+      std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
+      if (!!msotb) {
+        removesite = msotb->getLabelText();
+        awaitingremovesitedelownfiles = true;
+        ui->goConfirmation("Do you really want to remove " + removesite + " from the race and delete own files?");
       }
       return true;
-    case 'D':
-      if (race->getStatus() != RaceStatus::RUNNING) {
-        deleteFiles(true);
-      }
-      else {
-        std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
-        if (!!msotb) {
-          removesite = msotb->getLabelText();
-          awaitingremovesitedelallfiles = true;
-          ui->goConfirmation("Do you really want to remove " + removesite + " from the race and delete all files?");
-        }
+    }
+    case KEYACTION_DELETE_ALL:
+      deleteFiles(true);
+      return true;
+    case KEYACTION_DELETE_SITE_ALL:
+    {
+      std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
+      if (!!msotb) {
+        removesite = msotb->getLabelText();
+        awaitingremovesitedelallfiles = true;
+        ui->goConfirmation("Do you really want to remove " + removesite + " from the race and delete all files?");
       }
       return true;
-    case 'z':
+    }
+    case KEYACTION_ABORT_DELETE_INC:
       if (race->getStatus() == RaceStatus::RUNNING) {
         awaitingdeleteowninc = true;
         ui->goConfirmation("Do you really want to abort the race " + race->getName() + " and delete your own files on all incomplete sites?");
       }
       return true;
-    case 'Z':
+    case KEYACTION_ABORT_DELETE_ALL:
       awaitingdeleteownall = true;
       if (race->getStatus() == RaceStatus::RUNNING) {
         ui->goConfirmation("Do you really want to abort the race " + race->getName() + " and delete your own files on ALL involved sites?");
@@ -523,7 +564,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
         ui->goConfirmation("Do you really want to delete your own files in " + race->getName() + " on ALL involved sites?");
       }
       return true;
-    case 'A':
+    case KEYACTION_ADD_SITE:
     {
       std::list<std::shared_ptr<Site> > excludedsites;
       for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
@@ -544,16 +585,17 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       ui->goSelectSites("Add these sites to the race: " + race->getSection() + "/" + race->getName(), std::list<std::shared_ptr<Site> >(), excludedsites);
       return true;
     }
-    case 'r':
+    case KEYACTION_RESET:
       global->getEngine()->resetRace(race, false);
       return true;
-    case 'R':
+    case KEYACTION_RESET_HARD:
       global->getEngine()->resetRace(race, true);
       return true;
-    case 't':
+    case KEYACTION_TRANSFERS:
       ui->goTransfersFilterSpreadJob(race->getName());
       return true;
-    case 'T': {
+    case KEYACTION_TRANSFERS_FOR_SITE:
+    {
       std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
       if (!!msotb) {
         std::string site = msotb->getLabelText();
@@ -561,28 +603,28 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       }
       return true;
     }
-    case 10: {
+    case KEYACTION_ENTER: {
       std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
       if (!!msotb) {
         ui->goSiteStatus(msotb->getLabelText());
       }
-      break;
+      return true;
     }
-    case 'b': {
+    case KEYACTION_BROWSE: {
       std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
       if (!!msotb) {
         std::string site = msotb->getLabelText();
         ui->goBrowse(site, race->getSiteRace(site)->getPath());
       }
-      break;
+      return true;
     }
-    case 'E': {
+    case KEYACTION_EDIT_SITE: {
       std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
       if (!!msotb) {
         std::string site = msotb->getLabelText();
         ui->goEditSite(site);
       }
-      break;
+      return true;
     }
   }
   return false;
@@ -606,7 +648,7 @@ void RaceStatusScreen::deleteFiles(bool allfiles) {
 }
 
 std::string RaceStatusScreen::getLegendText() const {
-  return finished ? finishedlegendtext : defaultlegendtext;
+  return keybinds.getLegendSummary(getCurrentScope());
 }
 
 std::string RaceStatusScreen::getInfoLabel() const {
@@ -631,4 +673,11 @@ std::list<std::string> RaceStatusScreen::getDownloadOnlySites() const {
     }
   }
   return dlonlysites;
+}
+
+int RaceStatusScreen::getCurrentScope() const {
+  if (race->getStatus() == RaceStatus::RUNNING) {
+    return KEYSCOPE_RUNNING;
+  }
+  return KEYSCOPE_ENDED;
 }
