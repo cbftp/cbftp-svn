@@ -121,11 +121,14 @@ BrowseScreen::BrowseScreen(Ui* ui) : UIWindow(ui, "BrowseScreen"),
   localkeybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Page down");
   localkeybinds.addBind('-', KEYACTION_HIGHLIGHT_LINE, "Highlight entire line");
   localkeybinds.addBind('\t', KEYACTION_SPLIT, "Split/switch side");
+  ui->addKeyBinds(&sitekeybinds);
+  ui->addKeyBinds(&localkeybinds);
   allowimplicitgokeybinds = false;
 }
 
 BrowseScreen::~BrowseScreen() {
-
+  ui->removeKeyBinds(&sitekeybinds);
+  ui->removeKeyBinds(&localkeybinds);
 }
 
 void BrowseScreen::initialize(unsigned int row, unsigned int col, ViewMode viewmode, const std::string & site, const Path path) {
