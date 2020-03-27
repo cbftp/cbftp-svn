@@ -22,8 +22,6 @@ public:
   std::string getInfoLabel() const override;
 private:
   void fillPreselectionList(const std::string &, std::list<std::shared_ptr<Site> > *) const;
-  std::string currentlegendtext;
-  std::string defaultlegendtext;
   bool active;
   std::shared_ptr<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;

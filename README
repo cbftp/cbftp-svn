@@ -435,6 +435,8 @@ Field summary:
 - Configure proxy settings - add or remove proxies that can be used by sites.
 - Configure file viewing - specify which file types that should be opened
   with what applications. Only applicable when running in a local terminal.
+- Configure global keybinds - specify hotkeys that are globally available
+  throughout the ui.
 - Enable/Disable data file encryption - Change the encryption state of the
   data file.
 - Change encryption key - Set a new encryption key for the data file.
@@ -457,6 +459,7 @@ N - Toggle the next prepared spread job auto starter. While this function is
     immediately. The toggle times out after 10 minutes.
 - - Highlight the entire table line. Usable in lists, tables etc where it
     might be hard to tell which items that are on the same line
+They can be configured through the global options screen.
 
 OTHER UI WINDOWS
 
@@ -474,8 +477,8 @@ A: The site(s) or your local system may not be configured with working IPv6
    connectable.
 
 Q: What key should I press to do xyz?
-A: Check the legend bar at the bottom - most key bindings available in the
-   current view are presented there.
+A: A full keybind summary and configuration for the current screen is available
+   by pressing '?'. You can also see keybinds in the legend bar at the bottom.
 
 Q: My modifications are not saved when I edit a setting/site/whatever!
 A: You usually need to press 'd' (as in Done) to save settings when editing.

@@ -9,8 +9,8 @@
 
 #include "../../buildinfo.h"
 
-LoginScreen::LoginScreen(Ui * ui) {
-  this->ui = ui;
+LoginScreen::LoginScreen(Ui* ui) : UIWindow(ui, "LoginScreen") {
+  allowimplicitgokeybinds = false;
 }
 
 void LoginScreen::initialize(unsigned int row, unsigned int col) {

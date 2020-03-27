@@ -20,8 +20,20 @@
 #include "../../site.h"
 #include "../../util.h"
 
-TransferJobStatusScreen::TransferJobStatusScreen(Ui * ui) {
-  this->ui = ui;
+namespace {
+
+enum KeyScopes {
+  KEYSCOPE_RUNNING
+};
+
+}
+
+TransferJobStatusScreen::TransferJobStatusScreen(Ui* ui) : UIWindow(ui, "TransferJobStatusScreen") {
+  keybinds.addScope(KEYSCOPE_RUNNING, "While job is running");
+  keybinds.addBind(10, KEYACTION_ENTER, "Modify", KEYSCOPE_RUNNING);
+  keybinds.addBind('B', KEYACTION_ABORT, "Abort transfer job", KEYSCOPE_RUNNING);
+  keybinds.addBind('t', KEYACTION_TRANSFERS, "Transfers");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Return");
 }
 
 TransferJobStatusScreen::~TransferJobStatusScreen() {
@@ -29,10 +41,7 @@ TransferJobStatusScreen::~TransferJobStatusScreen() {
 }
 
 void TransferJobStatusScreen::initialize(unsigned int row, unsigned int col, unsigned int id) {
-  abortedlegendtext = "[c/Esc] Return";
-  defaultlegendtext = abortedlegendtext + " - [Enter] Modify - A[B]ort transfer job - [t]ransfers";
   transferjob = global->getEngine()->getTransferJob(id);
-  currentlegendtext = transferjob->getStatus() == TRANSFERJOB_ABORTED ? abortedlegendtext : defaultlegendtext;
   autoupdate = true;
   active = false;
   mso.clear();
@@ -144,18 +153,18 @@ void TransferJobStatusScreen::update() {
 void TransferJobStatusScreen::command(const std::string & command, const std::string & arg) {
   if (command == "yes") {
     global->getEngine()->abortTransferJob(transferjob);
-    currentlegendtext = abortedlegendtext;
     ui->setLegend();
   }
   ui->redraw();
 }
 
 bool TransferJobStatusScreen::keyPressed(unsigned int ch) {
+  int scope = getCurrentScope();
+  int action = keybinds.getKeyAction(ch, scope);
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
       active = false;
-      currentlegendtext = defaultlegendtext;
       ui->update();
       ui->setLegend();
       if (activeelement->getIdentifier() == "slots") {
@@ -175,29 +184,27 @@ bool TransferJobStatusScreen::keyPressed(unsigned int ch) {
     ui->update();
     return true;
   }
-  switch (ch) {
-    case 'c':
-    case 27: // esc
+  switch (action) {
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
-    case 10:
+    case KEYACTION_ENTER:
       if (!transferjob->isDone()) {
         bool activation = mso.activateSelected();
         if (activation) {
           active = true;
           activeelement = mso.getElement(mso.getSelectionPointer());
-          currentlegendtext = activeelement->getLegendText();
           ui->update();
           ui->setLegend();
         }
       }
       return true;
-    case 'B':
+    case KEYACTION_ABORT:
       if (!transferjob->isDone()) {
         ui->goConfirmation("Do you really want to abort the transfer job " + transferjob->getName());
       }
       return true;
-    case 't':
+    case KEYACTION_TRANSFERS:
       ui->goTransfersFilterTransferJob(transferjob->getName());
       return true;
   }
@@ -205,7 +212,10 @@ bool TransferJobStatusScreen::keyPressed(unsigned int ch) {
 }
 
 std::string TransferJobStatusScreen::getLegendText() const {
-  return currentlegendtext;
+  if (active) {
+    return activeelement->getLegendText();
+  }
+  return keybinds.getLegendSummary(getCurrentScope());
 }
 
 std::string TransferJobStatusScreen::getInfoLabel() const {
@@ -260,4 +270,11 @@ std::string TransferJobStatusScreen::getRoute(std::shared_ptr<TransferJob> tj) {
       break;
   }
   return route;
+}
+
+int TransferJobStatusScreen::getCurrentScope() const {
+  if (transferjob->getStatus() != TRANSFERJOB_RUNNING) {
+    return KEYSCOPE_RUNNING;
+  }
+  return KEYSCOPE_ALL;
 }

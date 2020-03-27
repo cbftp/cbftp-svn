@@ -6,8 +6,7 @@
 #include "../eventlog.h"
 #include "../globalcontext.h"
 
-LegendWindow::LegendWindow(Ui * ui, WINDOW * window, int row, int col) {
-  this->ui = ui;
+LegendWindow::LegendWindow(Ui* ui, WINDOW * window, int row, int col) : UIWindow(ui, "LegendWindow") {
   this->window = window;
   split = false;
   latestid = 0;

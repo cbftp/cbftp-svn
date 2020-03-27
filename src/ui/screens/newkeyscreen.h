@@ -18,8 +18,6 @@ public:
   std::string getLegendText() const;
   std::string getInfoLabel() const;
 private:
-  std::string currentlegendtext;
-  std::string defaultlegendtext;
   bool active;
   bool mismatch;
   bool tooshort;

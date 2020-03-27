@@ -33,10 +33,8 @@ private:
                       std::shared_ptr<MenuSelectAdjustableLine> before = nullptr);
   void keyUp();
   void keyDown();
+  int getCurrentScope() const;
   SkipList * skiplist;
-  std::string currentlegendtext;
-  std::string baselegendtext;
-  std::string tablelegendtext;
   bool active;
   std::shared_ptr<MenuSelectOptionElement> activeelement;
   MenuSelectOption base;

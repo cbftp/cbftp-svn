@@ -1,17 +1,20 @@
 #include "uiwindow.h"
 
+#include "ui.h"
+
 void UIWindow::init(unsigned int row, unsigned int col) {
   resize(row, col);
   redraw();
 }
 
-UIWindow::UIWindow() {
-  autoupdate = false;
-  expectbackendpush = false;
+UIWindow::UIWindow(Ui* ui, const std::string& name) : name(name), row(0), col(0),
+    autoupdate(false), expectbackendpush(false), ui(ui), keybinds(name), allowimplicitgokeybinds(true)
+{
+  ui->addKeyBinds(&keybinds);
 }
 
 UIWindow::~UIWindow() {
-
+  ui->removeKeyBinds(&keybinds);
 }
 
 void UIWindow::resize(unsigned int row, unsigned int col) {
@@ -31,6 +34,15 @@ void UIWindow::command(const std::string & command, const std::string & arg) {
 
 }
 
+bool UIWindow::keyPressedBase(unsigned int key) {
+  int action = keybinds.getKeyAction(key);
+  if (action == KEYACTION_KEYBINDS && allowimplicitgokeybinds) {
+    ui->goKeyBinds(&keybinds);
+    return true;
+  }
+  return keyPressed(key);
+}
+
 bool UIWindow::keyPressed(unsigned int key) {
   return false;
 }
@@ -44,7 +56,7 @@ std::string UIWindow::getInfoText() const {
 }
 
 std::string UIWindow::getLegendText() const {
-  return "";
+  return keybinds.getLegendSummary();
 }
 
 bool UIWindow::autoUpdate() const {

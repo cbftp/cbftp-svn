@@ -9,8 +9,12 @@
 #include "../../externalfileviewing.h"
 #include "../../localstorage.h"
 
-FileViewerSettingsScreen::FileViewerSettingsScreen(Ui * ui) {
-  this->ui = ui;
+FileViewerSettingsScreen::FileViewerSettingsScreen(Ui* ui) : UIWindow(ui, "FileViewerSettingsScreen") {
+  keybinds.addBind(10, KEYACTION_ENTER, "Modify");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Next option");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Previous option");
+  keybinds.addBind('d', KEYACTION_DONE, "Done");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel");
 }
 
 FileViewerSettingsScreen::~FileViewerSettingsScreen() {
@@ -19,8 +23,6 @@ FileViewerSettingsScreen::~FileViewerSettingsScreen() {
 
 void FileViewerSettingsScreen::initialize(unsigned int row, unsigned int col) {
   active = false;
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel";
-  currentlegendtext = defaultlegendtext;
   efv = global->getExternalFileViewing();
   ls = global->getLocalStorage();
   unsigned int y = 1;
@@ -68,11 +70,11 @@ void FileViewerSettingsScreen::update() {
 }
 
 bool FileViewerSettingsScreen::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
       active = false;
-      currentlegendtext = defaultlegendtext;
       ui->update();
       ui->setLegend();
       return true;
@@ -82,18 +84,18 @@ bool FileViewerSettingsScreen::keyPressed(unsigned int ch) {
     return true;
   }
   bool activation;
-  switch(ch) {
-    case KEY_UP:
+  switch(action) {
+    case KEYACTION_UP:
       if (mso.goUp()) {
         ui->update();
       }
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       if (mso.goDown()) {
         ui->update();
       }
       return true;
-    case 10:
+    case KEYACTION_ENTER:
       activation = mso.getElement(mso.getSelectionPointer())->activate();
       if (!activation) {
         ui->update();
@@ -101,11 +103,10 @@ bool FileViewerSettingsScreen::keyPressed(unsigned int ch) {
       }
       active = true;
       activeelement = mso.getElement(mso.getSelectionPointer());
-      currentlegendtext = activeelement->getLegendText();
       ui->update();
       ui->setLegend();
       return true;
-    case 'd':
+    case KEYACTION_DONE:
       for(unsigned int i = 0; i < mso.size(); i++) {
         std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
         std::string identifier = msoe->getIdentifier();
@@ -127,8 +128,7 @@ bool FileViewerSettingsScreen::keyPressed(unsigned int ch) {
       }
       ui->returnToLast();
       return true;
-    case 27: // esc
-    case 'c':
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
   }
@@ -136,7 +136,10 @@ bool FileViewerSettingsScreen::keyPressed(unsigned int ch) {
 }
 
 std::string FileViewerSettingsScreen::getLegendText() const {
-  return currentlegendtext;
+  if (active) {
+    return activeelement->getLegendText();
+  }
+  return keybinds.getLegendSummary();
 }
 
 std::string FileViewerSettingsScreen::getInfoLabel() const {

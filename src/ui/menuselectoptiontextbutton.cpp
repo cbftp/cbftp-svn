@@ -66,3 +66,11 @@ bool MenuSelectOptionTextButton::activate() {
 unsigned int MenuSelectOptionTextButton::wantedWidth() const {
   return label.length();
 }
+
+std::string MenuSelectOptionTextButton::getLegendText() const {
+  return legendtext;
+}
+
+void MenuSelectOptionTextButton::setLegendText(const std::string& text) {
+  legendtext = text;
+}

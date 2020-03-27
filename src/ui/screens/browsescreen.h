@@ -6,6 +6,7 @@
 #include <string>
 
 #include "../uiwindow.h"
+#include "../keybinds.h"
 #include "../../path.h"
 
 class BrowseScreenSub;
@@ -37,9 +38,12 @@ private:
   bool keyPressedNoSubAction(unsigned int);
   void toggleCompareListMode(CompareMode mode);
   void clearCompareListMode();
+  void jumpSectionHotkey(int hotkey);
   std::shared_ptr<BrowseScreenSub> left;
   std::shared_ptr<BrowseScreenSub> right;
   std::shared_ptr<BrowseScreenSub> active;
   bool split;
   bool initsplitupdate;
+  KeyBinds sitekeybinds;
+  KeyBinds localkeybinds;
 };

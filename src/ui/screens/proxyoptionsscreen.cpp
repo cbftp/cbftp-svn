@@ -11,8 +11,13 @@
 #include "../../sitemanager.h"
 #include "../../eventlog.h"
 
-ProxyOptionsScreen::ProxyOptionsScreen(Ui * ui) {
-  this->ui = ui;
+ProxyOptionsScreen::ProxyOptionsScreen(Ui* ui) : UIWindow(ui, "ProxyOptionsScreen") {
+  keybinds.addBind(10, KEYACTION_ENTER, "Modify");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Next option");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Previous option");
+  keybinds.addBind('d', KEYACTION_DONE, "Done");
+  keybinds.addBind(KEY_DC, KEYACTION_DELETE, "Delete proxy");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel");
 }
 
 ProxyOptionsScreen::~ProxyOptionsScreen() {
@@ -24,8 +29,6 @@ void ProxyOptionsScreen::initialize(unsigned int row, unsigned int col) {
   defaultset = false;
   deleteproxy = "";
   editproxy = "";
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel";
-  currentlegendtext = defaultlegendtext;
   pm = global->getProxyManager();
   unsigned int y = 1;
   unsigned int x = 1;
@@ -137,11 +140,11 @@ void ProxyOptionsScreen::command(const std::string & command) {
 }
 
 bool ProxyOptionsScreen::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
       active = false;
-      currentlegendtext = defaultlegendtext;
       ui->update();
       ui->setLegend();
       return true;
@@ -152,8 +155,8 @@ bool ProxyOptionsScreen::keyPressed(unsigned int ch) {
   }
   bool activation;
   std::shared_ptr<MenuSelectOptionElement> selected;
-  switch(ch) {
-    case KEY_UP:
+  switch(action) {
+    case KEYACTION_UP:
       if (focusedarea->goUp()) {
         if (!focusedarea->isFocused()) {
           defocusedarea = focusedarea;
@@ -163,7 +166,7 @@ bool ProxyOptionsScreen::keyPressed(unsigned int ch) {
         ui->update();
       }
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       if (focusedarea->goDown()) {
         if (!focusedarea->isFocused()) {
           defocusedarea = focusedarea;
@@ -173,7 +176,7 @@ bool ProxyOptionsScreen::keyPressed(unsigned int ch) {
         ui->update();
       }
       return true;
-    case 10:
+    case KEYACTION_ENTER:
       selected = focusedarea->getElement(focusedarea->getSelectionPointer());
       if (selected->getIdentifier() == "add") {
         ui->goAddProxy();
@@ -190,21 +193,10 @@ bool ProxyOptionsScreen::keyPressed(unsigned int ch) {
       }
       active = true;
       activeelement = selected;
-      currentlegendtext = activeelement->getLegendText();
       ui->update();
       ui->setLegend();
       return true;
-    case 'E':
-      selected = focusedarea->getElement(focusedarea->getSelectionPointer());
-      if (focusedarea == &msop) {
-        if (selected->getIdentifier() == selected->getLabelText()) {
-          editproxy = selected->getIdentifier();
-          ui->goEditProxy(selected->getLabelText());
-          return true;
-        }
-      }
-      return true;
-    case 'd':
+    case KEYACTION_DONE:
       for(unsigned int i = 0; i < mso.size(); i++) {
         std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
         std::string identifier = msoe->getIdentifier();
@@ -214,8 +206,7 @@ bool ProxyOptionsScreen::keyPressed(unsigned int ch) {
       }
       ui->returnToLast();
       return true;
-    case KEY_DC:
-    case 'D':
+    case KEYACTION_DELETE:
       selected = focusedarea->getElement(focusedarea->getSelectionPointer());
       if (focusedarea == &msop && selected->getLabelText() == selected->getIdentifier()) {
         editproxy = selected->getIdentifier();
@@ -223,8 +214,7 @@ bool ProxyOptionsScreen::keyPressed(unsigned int ch) {
         ui->goConfirmation("Do you really want to delete " + editproxy);
       }
       return true;
-    case 27: // esc
-    case 'c':
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
   }
@@ -232,7 +222,10 @@ bool ProxyOptionsScreen::keyPressed(unsigned int ch) {
 }
 
 std::string ProxyOptionsScreen::getLegendText() const {
-  return currentlegendtext;
+  if (active) {
+    return activeelement->getLegendText();
+  }
+  return keybinds.getLegendSummary();
 }
 
 std::string ProxyOptionsScreen::getInfoLabel() const {

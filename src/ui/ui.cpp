@@ -23,6 +23,7 @@
 #include "uiwindow.h"
 #include "chardraw.h"
 #include "termint.h"
+#include "keybinds.h"
 
 #include "screens/loginscreen.h"
 #include "screens/newkeyscreen.h"
@@ -64,10 +65,18 @@
 #include "screens/disableencryptionscreen.h"
 #include "screens/movescreen.h"
 #include "screens/fileinfoscreen.h"
+#include "screens/keybindsscreen.h"
 
 namespace {
 
 static Ui * instance = new Ui();
+
+enum KeyAction {
+  KEYACTION_KILL_ALL,
+  KEYACTION_START_PREPARED,
+  KEYACTION_FULLSCREEN,
+  KEYACTION_NEXT_PREPARED_STARTER
+};
 
 } // namespace
 
@@ -81,8 +90,14 @@ Ui::Ui() :
   dead(false),
   legendmode(LEGEND_SCROLLING),
   split(false),
-  fullscreentoggle(false)
+  fullscreentoggle(false),
+  globalkeybinds(std::make_shared<KeyBinds>("Global"))
 {
+  globalkeybinds->addBind('K', KEYACTION_KILL_ALL, "Kill all external viewers");
+  globalkeybinds->addBind('p', KEYACTION_START_PREPARED, "Start latest prepared spread job");
+  globalkeybinds->addBind('\\', KEYACTION_FULLSCREEN, "Toggle fullscreen mode");
+  globalkeybinds->addBind('N', KEYACTION_NEXT_PREPARED_STARTER, "Toggle next prepared spread job auto starter");
+  addKeyBinds(globalkeybinds.get());
 }
 
 Ui::~Ui() {
@@ -147,6 +162,7 @@ bool Ui::init() {
   disableencryptionscreen = std::make_shared<DisableEncryptionScreen>(this);
   movescreen = std::make_shared<MoveScreen>(this);
   fileinfoscreen = std::make_shared<FileInfoScreen>(this);
+  keybindsscreen = std::make_shared<KeyBindsScreen>(this);
   mainwindows.push_back(mainscreen);
   mainwindows.push_back(newkeyscreen);
   mainwindows.push_back(confirmationscreen);
@@ -186,6 +202,7 @@ bool Ui::init() {
   mainwindows.push_back(disableencryptionscreen);
   mainwindows.push_back(movescreen);
   mainwindows.push_back(fileinfoscreen);
+  mainwindows.push_back(keybindsscreen);
 
   legendprinterkeybinds = std::make_shared<LegendPrinterKeybinds>(this);
   legendwindow->setMainLegendPrinter(legendprinterkeybinds);
@@ -307,9 +324,10 @@ void Ui::refreshAll() {
 }
 
 void Ui::FDData(int sockid) {
-  int ch = getch();
-  if (!topwindow->keyPressed(ch)) {
-    globalKeyBinds(ch);
+  wint_t wch;
+  get_wch(&wch);
+  if (!topwindow->keyPressedBase(wch)) {
+    globalKeyBinds(wch);
   }
 }
 
@@ -479,17 +497,18 @@ void Ui::switchToWindow(std::shared_ptr<UIWindow> window, bool allowsplit, bool 
 
 void Ui::globalKeyBinds(int ch) {
   bool match = true;
-  switch(ch) {
-    case 'K':
+  int action = globalkeybinds->getKeyAction(ch);
+  switch(action) {
+    case KEYACTION_KILL_ALL:
       global->getExternalFileViewing()->killAll();
       break;
-    case 'p':
+    case KEYACTION_START_PREPARED:
       global->getEngine()->startLatestPreparedRace();
       break;
-    case 'N':
+    case KEYACTION_NEXT_PREPARED_STARTER:
       global->getEngine()->toggleStartNextPreparedRace();
       break;
-    case '\\':
+    case KEYACTION_FULLSCREEN:
       if (fullscreentoggle) {
         enableInfo();
         enableLegend();
@@ -964,6 +983,16 @@ void Ui::goFileInfo(UIFile* uifile) {
   switchToWindow(fileinfoscreen);
 }
 
+void Ui::goKeyBinds(KeyBinds* keybinds) {
+  keybindsscreen->initialize(mainrow, maincol, keybinds);
+  switchToWindow(keybindsscreen);
+}
+
+void Ui::goGlobalKeyBinds() {
+  keybindsscreen->initialize(mainrow, maincol, globalkeybinds.get());
+  switchToWindow(keybindsscreen);
+}
+
 void Ui::returnSelectItems(const std::string & items) {
   switchToLast();
   topwindow->command("returnselectitems", items);
@@ -1064,11 +1093,30 @@ void Ui::loadSettings(std::shared_ptr<DataFileHandler> dfh) {
     else if (!setting.compare("legendmode")) {
       setLegendMode((LegendMode) std::stoi(value));
     }
+    else if (!setting.compare("keybind")) {
+      std::vector<std::string> tokens = util::splitVec(value, "$");
+      int keyaction = std::stoi(tokens[1]);
+      int scope = std::stoi(tokens[2]);
+      unsigned int key = std::stoi(tokens[3]);
+      for (KeyBinds* keybinds : allkeybinds) {
+        if (keybinds->getName() == tokens[0]) {
+          keybinds->customBind(keyaction, scope, key);
+          break;
+        }
+      }
+    }
   }
 }
 
 void Ui::saveSettings(std::shared_ptr<DataFileHandler> dfh) {
   dfh->addOutputLine("UI", "legendmode=" + std::to_string(legendMode()));
+  for (const KeyBinds* keybinds : allkeybinds) {
+    for (std::list<KeyBinds::KeyData>::const_iterator it = keybinds->begin(); it != keybinds->end(); ++it) {
+      if (it->configuredkey != it->originalkey) {
+        dfh->addOutputLine("UI", "keybind=" + keybinds->getName() + "$" + std::to_string(it->keyaction) + "$" + std::to_string(it->scope) + "$" + std::to_string(it->configuredkey));
+      }
+    }
+  }
 }
 
 void Ui::notify() {
@@ -1081,4 +1129,12 @@ WINDOW * Ui::getLegendWindow() const {
 
 void Ui::requestReady(void* service, int requestid) {
   backendPush();
+}
+
+void Ui::addKeyBinds(KeyBinds* keybinds) {
+  allkeybinds.insert(keybinds);
+}
+
+void Ui::removeKeyBinds(KeyBinds* keybinds) {
+  allkeybinds.erase(keybinds);
 }

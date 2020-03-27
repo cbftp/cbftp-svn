@@ -20,8 +20,6 @@ public:
   std::string getInfoLabel() const override;
 private:
   std::shared_ptr<Site> modsite;
-  std::string currentlegendtext;
-  std::string defaultlegendtext;
   bool active;
   std::shared_ptr<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;

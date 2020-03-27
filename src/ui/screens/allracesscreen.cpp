@@ -12,8 +12,32 @@
 #include "../../globalcontext.h"
 #include "../../util.h"
 
-AllRacesScreen::AllRacesScreen(Ui * ui) {
-  this->ui = ui;
+namespace {
+
+enum KeyAction {
+  KEYACTION_RESET_HARD,
+  KEYACTION_ABORT_DELETE_INC,
+  KEYACTION_ABORT_DELETE_ALL
+};
+
+}
+
+AllRacesScreen::AllRacesScreen(Ui* ui) : UIWindow(ui, "AllRacesScreen") {
+  keybinds.addBind(10, KEYACTION_ENTER, "Details");
+  keybinds.addBind('r', KEYACTION_RESET, "Reset job");
+  keybinds.addBind('R', KEYACTION_RESET_HARD, "Hard reset job");
+  keybinds.addBind('B', KEYACTION_ABORT, "Abort job");
+  keybinds.addBind('t', KEYACTION_TRANSFERS, "Transfers for job");
+  keybinds.addBind('z', KEYACTION_ABORT_DELETE_INC, "Abort and delete own files on incomplete sites");
+  keybinds.addBind('Z', KEYACTION_ABORT_DELETE_ALL, "Abort and delete own files on ALL sites");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Return");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
+  keybinds.addBind(KEY_PPAGE, KEYACTION_PREVIOUS_PAGE, "Next page");
+  keybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Previous page");
+  keybinds.addBind(KEY_HOME, KEYACTION_TOP, "Go top");
+  keybinds.addBind(KEY_END, KEYACTION_BOTTOM, "Go bottom");
+  keybinds.addBind('-', KEYACTION_HIGHLIGHT_LINE, "Highlight entire line");
 }
 
 void AllRacesScreen::initialize(unsigned int row, unsigned int col) {
@@ -106,29 +130,30 @@ void AllRacesScreen::command(const std::string & command, const std::string & ar
 }
 
 bool AllRacesScreen::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   if (temphighlightline != -1) {
     temphighlightline = -1;
     ui->redraw();
-    if (ch == '-') {
+    if (action == KEYACTION_HIGHLIGHT_LINE) {
       return true;
     }
   }
-  switch (ch) {
-    case KEY_UP:
+  switch (action) {
+    case KEYACTION_UP:
       if (hascontents && ypos > 0) {
         --ypos;
         table.goUp();
         ui->update();
       }
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       if (hascontents && ypos < engine->allRaces() - 1) {
         ++ypos;
         table.goDown();
         ui->update();
       }
       return true;
-    case KEY_NPAGE: {
+    case KEYACTION_NEXT_PAGE: {
       unsigned int pagerows = (unsigned int) row * 0.6;
       for (unsigned int i = 0; i < pagerows && ypos < engine->allRaces() - 1; i++) {
         ypos++;
@@ -137,7 +162,7 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
       ui->update();
       return true;
     }
-    case KEY_PPAGE: {
+    case KEYACTION_PREVIOUS_PAGE: {
       unsigned int pagerows = (unsigned int) row * 0.6;
       for (unsigned int i = 0; i < pagerows && ypos > 0; i++) {
         ypos--;
@@ -146,24 +171,23 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
       ui->update();
       return true;
     }
-    case KEY_HOME:
+    case KEYACTION_TOP:
       ypos = 0;
       ui->update();
       return true;
-    case KEY_END:
+    case KEYACTION_BOTTOM:
       ypos = engine->allRaces() - 1;
       ui->update();
       return true;
-    case 'c':
-    case 27: // esc
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
-    case 10:
+    case KEYACTION_ENTER:
       if (hascontents) {
         ui->goRaceStatus(table.getElement(table.getSelectionPointer())->getId());
       }
       return true;
-    case 'B':
+    case KEYACTION_ABORT:
       if (hascontents) {
         abortrace = global->getEngine()->getRace(table.getElement(table.getSelectionPointer())->getId());
         if (!!abortrace && abortrace->getStatus() == RaceStatus::RUNNING) {
@@ -171,7 +195,7 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
         }
       }
       return true;
-    case 'z':
+    case KEYACTION_ABORT_DELETE_INC:
       if (hascontents) {
         std::shared_ptr<Race> race = global->getEngine()->getRace(table.getElement(table.getSelectionPointer())->getId());
         if (!!race && race->getStatus() == RaceStatus::RUNNING) {
@@ -180,7 +204,7 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
         }
       }
       return true;
-    case 'Z':
+    case KEYACTION_ABORT_DELETE_ALL:
       if (hascontents) {
         abortdeleteraceall = global->getEngine()->getRace(table.getElement(table.getSelectionPointer())->getId());
         if (!!abortdeleteraceall) {
@@ -193,17 +217,16 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
         }
       }
       return true;
-    case 'r':
-    case 'R':
+    case KEYACTION_RESET:
+    case KEYACTION_RESET_HARD:
       if (hascontents) {
         std::shared_ptr<Race> race = global->getEngine()->getRace(table.getElement(table.getSelectionPointer())->getId());
         if (!!race) {
-          global->getEngine()->resetRace(race, ch == 'R');
+          global->getEngine()->resetRace(race, action == KEYACTION_RESET_HARD);
         }
       }
       return true;
-    case 't':
-    case 'T':
+    case KEYACTION_TRANSFERS:
       if (hascontents) {
         std::shared_ptr<Race> race = global->getEngine()->getRace(table.getElement(table.getSelectionPointer())->getId());
         if (!!race) {
@@ -211,7 +234,7 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
         }
       }
       return true;
-    case '-':
+    case KEYACTION_HIGHLIGHT_LINE:
       if (!hascontents) {
         break;
       }
@@ -220,10 +243,6 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
       return true;
   }
   return false;
-}
-
-std::string AllRacesScreen::getLegendText() const {
-  return "[Esc/c] Return - [Enter] Details - [Up/Down/Pgup/Pgdn/Home/End] Navigate - [r]eset job - Hard [R]eset job - A[B]ort job - [t]ransfer for job - [z] Abort job and delete own files on incomplete sites - [Z] Abort job and delete own files on ALL involved sites";
 }
 
 std::string AllRacesScreen::getInfoLabel() const {

@@ -13,8 +13,27 @@
 #include "../menuselectoptionelement.h"
 #include "../focusablearea.h"
 
-NewRaceScreen::NewRaceScreen(Ui * ui) {
-  this->ui = ui;
+namespace {
+
+enum KeyAction {
+  KEYACTION_START,
+  KEYACTION_START_RETURN,
+};
+
+}
+
+NewRaceScreen::NewRaceScreen(Ui * ui) : UIWindow(ui, "NewRaceScreen") {
+  keybinds.addBind(10, KEYACTION_ENTER, "Modify");
+  keybinds.addBind('s', KEYACTION_START, "Start spread job");
+  keybinds.addBind('S', KEYACTION_START_RETURN, "Start spread job and return to browsing");
+  keybinds.addBind('t', KEYACTION_TOGGLE_ALL, "Toggle all");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
+  keybinds.addBind(KEY_LEFT, KEYACTION_LEFT, "Navigate left");
+  keybinds.addBind(KEY_RIGHT, KEYACTION_RIGHT, "Navigate right");
+  keybinds.addBind(KEY_PPAGE, KEYACTION_PREVIOUS_PAGE, "Page up");
+  keybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Page down");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel");
 }
 
 NewRaceScreen::~NewRaceScreen() {
@@ -22,8 +41,6 @@ NewRaceScreen::~NewRaceScreen() {
 }
 
 void NewRaceScreen::initialize(unsigned int row, unsigned int col, const std::string & site, const std::list<std::string> & sections, const std::list<std::pair<std::string, bool> > & items) {
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [t]oggle all - [s]tart spread job - [S]tart spread job and return to browsing - [c]ancel";
-  currentlegendtext = defaultlegendtext;
   active = false;
   toggleall = false;
   unsigned int y = 2;
@@ -138,13 +155,13 @@ void NewRaceScreen::update() {
 }
 
 bool NewRaceScreen::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   infotext = "";
   unsigned int pagerows = (unsigned int) (row - 6) * 0.6;
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
       active = false;
-      currentlegendtext = defaultlegendtext;
       ui->update();
       ui->setLegend();
       return true;
@@ -154,8 +171,8 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
     return true;
   }
   bool activation;
-  switch(ch) {
-    case KEY_UP:
+  switch(action) {
+    case KEYACTION_UP:
       if (focusedarea->goUp() || focusedarea->goPrevious()) {
         if (!focusedarea->isFocused()) {
           defocusedarea = focusedarea;
@@ -165,7 +182,7 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
         ui->update();
       }
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       if (focusedarea->goDown() || focusedarea->goNext()) {
         if (!focusedarea->isFocused()) {
           defocusedarea = focusedarea;
@@ -175,7 +192,7 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
         ui->update();
       }
       return true;
-    case KEY_LEFT:
+    case KEYACTION_LEFT:
       if (focusedarea->goLeft()) {
         if (!focusedarea->isFocused()) {
           // shouldn't happen
@@ -183,7 +200,7 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
         ui->update();
       }
       return true;
-    case KEY_RIGHT:
+    case KEYACTION_RIGHT:
       if (focusedarea->goRight()) {
         if (!focusedarea->isFocused()) {
           // shouldn't happen
@@ -191,7 +208,7 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
         ui->update();
       }
       return true;
-    case KEY_NPAGE:
+    case KEYACTION_NEXT_PAGE:
       for (unsigned int i = 0; i < pagerows; i++) {
         if (focusedarea->goDown()) {
           if (!focusedarea->isFocused()) {
@@ -203,7 +220,7 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
       }
       ui->redraw();
       return true;
-    case KEY_PPAGE:
+    case KEYACTION_PREVIOUS_PAGE:
       for (unsigned int i = 0; i < pagerows; i++) {
         if (focusedarea->goUp()) {
           if (!focusedarea->isFocused()) {
@@ -215,8 +232,7 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
       }
       ui->redraw();
       return true;
-    case 10:
-
+    case KEYACTION_ENTER:
       activation = focusedarea->getElement(focusedarea->getSelectionPointer())->activate();
       if (!activation) {
         if (focusedarea == &msos) {
@@ -232,15 +248,13 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
       }
       active = true;
       activeelement = focusedarea->getElement(focusedarea->getSelectionPointer());
-      currentlegendtext = activeelement->getLegendText();
       ui->update();
       ui->setLegend();
       return true;
-    case 27: // esc
-    case 'c':
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
-    case 's':
+    case KEYACTION_START:
     {
       bool goracestatus = items.size() == 1;
       std::shared_ptr<Race> race = startRace(!goracestatus);
@@ -254,7 +268,7 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
       }
       return true;
     }
-    case 'S':
+    case KEYACTION_START_RETURN:
     {
       std::shared_ptr<Race> race = startRace(true);
       if (!!race) {
@@ -262,7 +276,7 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
       }
       return true;
     }
-    case 't':
+    case KEYACTION_TOGGLE_ALL:
       toggleall = !toggleall;
       populateSiteList();
       ui->redraw();
@@ -272,7 +286,10 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
 }
 
 std::string NewRaceScreen::getLegendText() const {
-  return currentlegendtext;
+  if (active) {
+    return activeelement->getLegendText();
+  }
+  return keybinds.getLegendSummary();
 }
 
 std::string NewRaceScreen::getInfoLabel() const {

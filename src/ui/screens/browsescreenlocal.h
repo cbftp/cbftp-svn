@@ -16,24 +16,25 @@
 
 class Ui;
 class LocalFileList;
+class KeyBinds;
 
 class BrowseScreenLocal : public BrowseScreenSub {
 public:
-  BrowseScreenLocal(Ui *);
+  BrowseScreenLocal(Ui *, KeyBinds& keybinds);
   ~BrowseScreenLocal();
-  BrowseScreenType type() const;
-  void redraw(unsigned int, unsigned int, unsigned int);
-  void update();
-  void command(const std::string &, const std::string &);
-  BrowseScreenAction keyPressed(unsigned int);
-  std::string getLegendText() const;
-  std::string getInfoLabel() const;
-  std::string getInfoText() const;
-  void setFocus(bool);
-  void tick(int);
+  BrowseScreenType type() const override;
+  void redraw(unsigned int, unsigned int, unsigned int) override;
+  void update() override;
+  void command(const std::string &, const std::string &) override;
+  BrowseScreenAction keyPressed(unsigned int) override;
+  std::string getLegendText(int scope) const override;
+  std::string getInfoLabel() const override;
+  std::string getInfoText() const override;
+  void setFocus(bool) override;
+  void tick(int) override;
   std::shared_ptr<LocalFileList> fileList() const;
   UIFile * selectedFile() const;
-  UIFileList * getUIFileList();
+  UIFileList * getUIFileList() override;
 private:
   void refreshFilelist();
   bool handleReadyRequests();

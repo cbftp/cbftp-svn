@@ -7,8 +7,10 @@
 #include "../../globalcontext.h"
 #include "../../settingsloadersaver.h"
 
-DisableEncryptionScreen::DisableEncryptionScreen(Ui * ui) {
-  this->ui = ui;
+DisableEncryptionScreen::DisableEncryptionScreen(Ui* ui) : UIWindow(ui, "DisableEncryptionScreen") {
+  keybinds.addBind(10, KEYACTION_ENTER, "Modify");
+  keybinds.addBind('d', KEYACTION_DONE, "Disable encryption");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel");
 }
 
 DisableEncryptionScreen::~DisableEncryptionScreen() {
@@ -16,8 +18,6 @@ DisableEncryptionScreen::~DisableEncryptionScreen() {
 }
 
 void DisableEncryptionScreen::initialize(unsigned int row, unsigned int col) {
-  defaultlegendtext = "[Enter] Modify - [d]isable encryption - [Esc/c] Cancel";
-  currentlegendtext = defaultlegendtext;
   active = false;
   mismatch = false;
   mso.clear();
@@ -66,11 +66,11 @@ void DisableEncryptionScreen::update() {
 }
 
 bool DisableEncryptionScreen::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
       active = false;
-      currentlegendtext = defaultlegendtext;
       ui->update();
       ui->setLegend();
       return true;
@@ -80,8 +80,8 @@ bool DisableEncryptionScreen::keyPressed(unsigned int ch) {
     return true;
   }
   bool activation;
-  switch(ch) {
-    case 10:
+  switch(action) {
+    case KEYACTION_ENTER:
       activation = mso.getElement(mso.getSelectionPointer())->activate();
       mismatch = false;
       if (!activation) {
@@ -90,11 +90,10 @@ bool DisableEncryptionScreen::keyPressed(unsigned int ch) {
       }
       active = true;
       activeelement = mso.getElement(mso.getSelectionPointer());
-      currentlegendtext = activeelement->getLegendText();
       ui->update();
       ui->setLegend();
       return true;
-    case 'd': {
+    case KEYACTION_DONE: {
       std::shared_ptr<MenuSelectOptionTextField> passfield = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement(0));
       std::string key = passfield->getData();
       passfield->clear();
@@ -108,8 +107,7 @@ bool DisableEncryptionScreen::keyPressed(unsigned int ch) {
       ui->update();
       return true;
     }
-    case 27: // esc
-    case 'c':
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
   }
@@ -117,7 +115,10 @@ bool DisableEncryptionScreen::keyPressed(unsigned int ch) {
 }
 
 std::string DisableEncryptionScreen::getLegendText() const {
-  return currentlegendtext;
+  if (active) {
+    return activeelement->getLegendText();
+  }
+  return keybinds.getLegendSummary();
 }
 
 std::string DisableEncryptionScreen::getInfoLabel() const {

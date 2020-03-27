@@ -151,10 +151,20 @@ std::string getFilterText(const TransferFilteringParameters & tfp) {
 
 }
 
-TransfersScreen::TransfersScreen(Ui * ui) {
-  this->ui = ui;
+TransfersScreen::TransfersScreen(Ui* ui) : UIWindow(ui, "TransfersScreen") {
   tm = global->getTransferManager();
   nextid = 0;
+  keybinds.addBind(10, KEYACTION_ENTER, "Details");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Return");
+  keybinds.addBind('B', KEYACTION_ABORT, "Abort transfer");
+  keybinds.addBind('f', KEYACTION_FILTER, "Toggle filtering");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
+  keybinds.addBind(KEY_PPAGE, KEYACTION_PREVIOUS_PAGE, "Next page");
+  keybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Previous page");
+  keybinds.addBind(KEY_HOME, KEYACTION_TOP, "Go top");
+  keybinds.addBind(KEY_END, KEYACTION_BOTTOM, "Go bottom");
+  keybinds.addBind('-', KEYACTION_HIGHLIGHT_LINE, "Highlight entire line");
 }
 
 TransfersScreen::~TransfersScreen() {
@@ -433,29 +443,31 @@ void TransfersScreen::update() {
 }
 
 bool TransfersScreen::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   if (temphighlightline != -1) {
     temphighlightline = -1;
     ui->redraw();
-    if (ch == '-') {
+    if (action == KEYACTION_HIGHLIGHT_LINE) {
       return true;
     }
   }
-  switch (ch) {
-    case KEY_UP:
+  switch (action) {
+    case KEYACTION_UP:
       if (hascontents && ypos > 0) {
         --ypos;
         table.goUp();
         ui->update();
       }
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       if (hascontents && ypos < totalListSize() - 1) {
         ++ypos;
         table.goDown();
         ui->update();
       }
       return true;
-    case KEY_NPAGE: {
+    case KEYACTION_NEXT_PAGE:
+    {
       unsigned int pagerows = (unsigned int) row * 0.6;
       unsigned int totallistsize = totalListSize();
       for (unsigned int i = 0; i < pagerows && ypos < totallistsize - 1; i++) {
@@ -465,7 +477,8 @@ bool TransfersScreen::keyPressed(unsigned int ch) {
       ui->update();
       return true;
     }
-    case KEY_PPAGE: {
+    case KEYACTION_PREVIOUS_PAGE:
+    {
       unsigned int pagerows = (unsigned int) row * 0.6;
       for (unsigned int i = 0; i < pagerows && ypos > 0; i++) {
         ypos--;
@@ -474,15 +487,15 @@ bool TransfersScreen::keyPressed(unsigned int ch) {
       ui->update();
       return true;
     }
-    case KEY_HOME:
+    case KEYACTION_TOP:
       ypos = 0;
       ui->update();
       return true;
-    case KEY_END:
+    case KEYACTION_BOTTOM:
       ypos = totalListSize() - 1;
       ui->update();
       return true;
-    case 10:
+    case KEYACTION_ENTER:
      if (hascontents) {
        std::shared_ptr<MenuSelectOptionTextButton> elem =
            std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
@@ -492,7 +505,7 @@ bool TransfersScreen::keyPressed(unsigned int ch) {
        }
      }
      return true;
-    case 'f':
+    case KEYACTION_FILTER:
       if (!filtering) {
         ui->goTransfersFiltering(tfp);
       }
@@ -502,7 +515,7 @@ bool TransfersScreen::keyPressed(unsigned int ch) {
         ui->redraw();
       }
       return true;
-    case 'B':
+    case KEYACTION_ABORT:
       if (hascontents) {
         std::shared_ptr<MenuSelectOptionTextButton> elem =
             std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
@@ -512,11 +525,10 @@ bool TransfersScreen::keyPressed(unsigned int ch) {
         }
       }
       return true;
-    case 'c':
-    case 27: // esc
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
-    case '-':
+    case KEYACTION_HIGHLIGHT_LINE:
       if (!hascontents) {
         break;
       }
@@ -528,7 +540,7 @@ bool TransfersScreen::keyPressed(unsigned int ch) {
 }
 
 std::string TransfersScreen::getLegendText() const {
-  return "[Esc/c] Return - [Up/Down] Navigate - [Enter] Details - toggle [f]iltering - A[B]ort transfer";
+  return keybinds.getLegendSummary();
 }
 
 std::string TransfersScreen::getInfoLabel() const {

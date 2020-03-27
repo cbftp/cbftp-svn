@@ -5,8 +5,10 @@
 #include "../menuselectoptiontextfield.h"
 #include "../../path.h"
 
-MoveScreen::MoveScreen(Ui * ui) {
-  this->ui = ui;
+MoveScreen::MoveScreen(Ui* ui) : UIWindow(ui, "MoveScreen") {
+  keybinds.addBind(10, KEYACTION_ENTER, "Modify");
+  keybinds.addBind('m', KEYACTION_DONE, "Move");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel");
 }
 
 MoveScreen::~MoveScreen() {
@@ -14,8 +16,6 @@ MoveScreen::~MoveScreen() {
 }
 
 void MoveScreen::initialize(unsigned int row, unsigned int col, const std::string & site, const std::string& items, const Path& srcpath, const std::string& dstpath, const std::string& firstitem) {
-  defaultlegendtext = "[Enter] Modify - [m]ove - [c]ancel";
-  currentlegendtext = defaultlegendtext;
   active = false;
   this->site = site;
   this->srcpath = srcpath.toString();
@@ -65,12 +65,12 @@ void MoveScreen::update() {
 void MoveScreen::deactivate() {
   activeelement->deactivate();
   active = false;
-  currentlegendtext = defaultlegendtext;
   ui->update();
   ui->setLegend();
 }
 
 bool MoveScreen::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   if (active) {
     if (ch == 10) {
       deactivate();
@@ -96,27 +96,18 @@ bool MoveScreen::keyPressed(unsigned int ch) {
     ui->update();
     return true;
   }
-  switch(ch) {
-    case 10:
+  switch(action) {
+    case KEYACTION_ENTER:
       activeelement = mso.getElement(mso.getSelectionPointer());
       activeelement->activate();
       active = true;
-      currentlegendtext = activeelement->getLegendText();
-      if (items == firstitem) {
-        currentlegendtext += " - [Insert] insert item name";
-      }
       ui->update();
       ui->setLegend();
       return true;
-    case 27: { // esc
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
-    }
-    case 'c':
-      ui->returnToLast();
-      return true;
-    case 'd':
-    case 'm': {
+    case KEYACTION_DONE: {
       std::string dstpath = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("dstpath"))->getData();
       if (!dstpath.empty()) {
         ui->returnMove(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("dstpath"))->getData());
@@ -128,7 +119,10 @@ bool MoveScreen::keyPressed(unsigned int ch) {
 }
 
 std::string MoveScreen::getLegendText() const {
-  return currentlegendtext;
+  if (active) {
+    return activeelement->getLegendText() + (items == firstitem ? " - [Insert] insert item name" : "");
+  }
+  return keybinds.getLegendSummary();
 }
 
 std::string MoveScreen::getInfoLabel() const {

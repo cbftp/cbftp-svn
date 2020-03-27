@@ -158,19 +158,19 @@ An example body when sending a raw command:
 
 {
   "command": "site deluser me",
-  "sites": [              // run on these sites
+  "sites": [               // run on these sites
     "SITE1"
   ],
-  "site_with_sections": [ // run on sites with these sections defined
+  "sites_with_sections": [ // run on sites with these sections defined
     "SEC1"
   ],
-  "sites_all": true,      // run on all sites
-  "path": "/some/path",   // the path to cwd to before running command
-  "path_section": "SEC1", // section to cwd to before running command
-  "timeout": 10,          // max wait before failing
-  "async": false          // if false, wait for command to finish before
-                          // responding. If true, respond with a request
-                          // id and let command run in the background
+  "sites_all": true,       // run on all sites
+  "path": "/some/path",    // the path to cwd to before running command
+  "path_section": "SEC1",  // section to cwd to before running command
+  "timeout": 10,           // max wait before failing
+  "async": false           // if false, wait for command to finish before
+                           // responding. If true, respond with a request
+                           // id and let command run in the background
 }
 
 Section paths in the command can be inserted with:

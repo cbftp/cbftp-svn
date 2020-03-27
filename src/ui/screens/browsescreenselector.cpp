@@ -12,10 +12,12 @@
 #include "../menuselectoptiontextbutton.h"
 #include "../resizableelement.h"
 #include "../misc.h"
+#include "../keybinds.h"
 
 #include "browsescreenaction.h"
 
-BrowseScreenSelector::BrowseScreenSelector(Ui * ui) :
+BrowseScreenSelector::BrowseScreenSelector(Ui * ui, KeyBinds& keybinds) :
+  BrowseScreenSub(keybinds),
   ui(ui),
   focus(true),
   pointer(0),
@@ -83,6 +85,7 @@ void BrowseScreenSelector::update() {
 }
 
 BrowseScreenAction BrowseScreenSelector::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   unsigned int pagerows = (unsigned int) row * 0.6;
   if (gotomode) {
     if (ch >= 32 && ch <= 126) {
@@ -100,15 +103,14 @@ BrowseScreenAction BrowseScreenSelector::keyPressed(unsigned int ch) {
     ui->setLegend();
     return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
   }
-  switch (ch) {
-    case 27: // esc
+  switch (action) {
+    case KEYACTION_BACK_CANCEL: // esc
       ui->returnToLast();
       return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
-    case 'c':
-    case KEY_LEFT:
-    case KEY_BACKSPACE:
+    case KEYACTION_CLOSE:
+    case KEYACTION_CLOSE2:
       return BrowseScreenAction(BROWSESCREENACTION_CLOSE);
-    case KEY_UP:
+    case KEYACTION_UP:
       if (table.goUp()) {
         pointer = table.getElement(table.getSelectionPointer())->getRow() + currentviewspan;
         ui->update();
@@ -118,7 +120,7 @@ BrowseScreenAction BrowseScreenSelector::keyPressed(unsigned int ch) {
         ui->redraw();
       }
       return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       if (table.goDown()) {
         pointer = table.getElement(table.getSelectionPointer())->getRow() + currentviewspan;
         ui->update();
@@ -128,15 +130,15 @@ BrowseScreenAction BrowseScreenSelector::keyPressed(unsigned int ch) {
         ui->redraw();
       }
       return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
-    case KEY_HOME:
+    case KEYACTION_TOP:
       pointer = 0;
       ui->redraw();
       return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
-    case KEY_END:
+    case KEYACTION_BOTTOM:
       pointer = entries.size() - 1;
       ui->redraw();
       return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
-    case KEY_NPAGE:
+    case KEYACTION_NEXT_PAGE:
       if (pagerows < entries.size() && pointer < entries.size() - 1 - pagerows) {
         pointer += pagerows;
       }
@@ -145,7 +147,7 @@ BrowseScreenAction BrowseScreenSelector::keyPressed(unsigned int ch) {
       }
       ui->redraw();
       return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
-    case KEY_PPAGE:
+    case KEYACTION_PREVIOUS_PAGE:
       if (pointer > pagerows) {
         pointer -= pagerows;
       }
@@ -154,9 +156,9 @@ BrowseScreenAction BrowseScreenSelector::keyPressed(unsigned int ch) {
       }
       ui->redraw();
       return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
-    case KEY_RIGHT:
-    case 10:
-    case 'b':
+    case KEYACTION_RIGHT:
+    case KEYACTION_ENTER:
+    case KEYACTION_BROWSE:
     {
       std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
       if (msotb->getIdentifier() == BROWSESCREENSELECTOR_HOME) {
@@ -167,7 +169,7 @@ BrowseScreenAction BrowseScreenSelector::keyPressed(unsigned int ch) {
       }
       break;
     }
-    case 'q':
+    case KEYACTION_QUICK_JUMP:
       gotomode = true;
       ui->update();
       ui->setLegend();
@@ -176,11 +178,11 @@ BrowseScreenAction BrowseScreenSelector::keyPressed(unsigned int ch) {
   return BrowseScreenAction();
 }
 
-std::string BrowseScreenSelector::getLegendText() const {
+std::string BrowseScreenSelector::getLegendText(int scope) const {
   if (gotomode) {
     return "[Any] Go to matching first letter in site list - [Esc] Cancel";
   }
-  return "[Up/Down] Navigate - [Enter/Right/b] Browse - [q]uick jump - [Esc] Cancel - [c]lose";
+  return keybinds.getLegendSummary(scope);
 }
 
 std::string BrowseScreenSelector::getInfoLabel() const {

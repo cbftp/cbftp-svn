@@ -13,9 +13,12 @@
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptionelement.h"
 
-EditSiteSectionScreen::EditSiteSectionScreen(Ui * ui) {
-  this->ui = ui;
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel";
+EditSiteSectionScreen::EditSiteSectionScreen(Ui* ui) : UIWindow(ui, "EditSiteSectionScreen") {
+  keybinds.addBind(10, KEYACTION_ENTER, "Modify");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Next option");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Previous option");
+  keybinds.addBind('d', KEYACTION_DONE, "Done");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel");
 }
 
 EditSiteSectionScreen::~EditSiteSectionScreen() {
@@ -35,7 +38,6 @@ void EditSiteSectionScreen::initialize(unsigned int row, unsigned int col, const
 }
 
 void EditSiteSectionScreen::initialize(unsigned int row, unsigned int col, const std::shared_ptr<Site> & site, const std::string & section, const Path & path) {
-  currentlegendtext = defaultlegendtext;
   active = false;
   modsite = site;
   exists = false;
@@ -93,11 +95,11 @@ void EditSiteSectionScreen::update() {
 }
 
 bool EditSiteSectionScreen::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
       active = false;
-      currentlegendtext = defaultlegendtext;
       ui->setLegend();
       ui->update();
       return true;
@@ -107,16 +109,16 @@ bool EditSiteSectionScreen::keyPressed(unsigned int ch) {
     return true;
   }
   bool activation;
-  switch(ch) {
-    case KEY_UP:
+  switch(action) {
+    case KEYACTION_UP:
       mso.goUp();
       ui->update();
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       mso.goDown();
       ui->update();
       return true;
-    case 10: {
+    case KEYACTION_ENTER: {
       std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getSelectionPointer());
       activation = msoe->activate();
       if (msoe->getIdentifier() == "select") {
@@ -131,16 +133,14 @@ bool EditSiteSectionScreen::keyPressed(unsigned int ch) {
       }
       active = true;
       activeelement = mso.getElement(mso.getSelectionPointer());
-      currentlegendtext = activeelement->getLegendText();
       ui->setLegend();
       ui->update();
       return true;
     }
-    case 27: // esc
-    case 'c':
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
-    case 'd':
+    case KEYACTION_DONE:
       if (exists) {
         ui->goConfirmation("Warning: one or more specified sections already exist and will be updated. Are you sure?");
         return true;
@@ -188,7 +188,10 @@ void EditSiteSectionScreen::command(const std::string & command, const std::stri
 }
 
 std::string EditSiteSectionScreen::getLegendText() const {
-  return currentlegendtext;
+  if (active) {
+    return activeelement->getLegendText();
+  }
+  return keybinds.getLegendSummary();
 }
 
 std::string EditSiteSectionScreen::getInfoLabel() const {

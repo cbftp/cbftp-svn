@@ -30,6 +30,7 @@ private:
   void addSectionTableRow(unsigned int y, MenuSelectOption & mso, bool selectable,
       const std::string& selected, const std::string & name, const std::string & skiplist, const std::string & hotkey, const std::string & numjobs,
       const std::string & numsites, const std::string & sites);
+  int getCurrentScope() const;
   MenuSelectOption table;
   unsigned int currentviewspan;
   unsigned int ypos;

@@ -8,8 +8,12 @@
 #include "../../globalcontext.h"
 #include "../../proxymanager.h"
 
-EditProxyScreen::EditProxyScreen(Ui * ui) {
-  this->ui = ui;
+EditProxyScreen::EditProxyScreen(Ui* ui) : UIWindow(ui, "EditProxyScreen") {
+  keybinds.addBind(10, KEYACTION_ENTER, "Modify");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Next option");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Previous option");
+  keybinds.addBind('d', KEYACTION_DONE, "Done");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel");
 }
 
 EditProxyScreen::~EditProxyScreen() {
@@ -18,8 +22,6 @@ EditProxyScreen::~EditProxyScreen() {
 
 void EditProxyScreen::initialize(unsigned int row, unsigned int col, std::string operation, std::string proxy) {
   active = false;
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one, save changes - [c]ancel, undo changes";
-  currentlegendtext = defaultlegendtext;
   this->operation = operation;
   if (operation == "add") {
     modproxy = Proxy("proxy1");
@@ -94,11 +96,11 @@ void EditProxyScreen::update() {
 }
 
 bool EditProxyScreen::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
       active = false;
-      currentlegendtext = defaultlegendtext;
       ui->setLegend();
       ui->update();
       return true;
@@ -108,18 +110,18 @@ bool EditProxyScreen::keyPressed(unsigned int ch) {
     return true;
   }
   bool activation;
-  switch(ch) {
-    case KEY_UP:
+  switch(action) {
+    case KEYACTION_UP:
       if (mso.goUp()) {
         ui->update();
       }
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       if (mso.goDown()) {
         ui->update();
       }
       return true;
-    case 10:
+    case KEYACTION_ENTER:
       activation = mso.activateSelected();
       if (!activation) {
         ui->update();
@@ -127,11 +129,10 @@ bool EditProxyScreen::keyPressed(unsigned int ch) {
       }
       active = true;
       activeelement = mso.getElement(mso.getSelectionPointer());
-      currentlegendtext = activeelement->getLegendText();
       ui->setLegend();
       ui->update();
       return true;
-    case 'd':
+    case KEYACTION_DONE:
       if (operation == "add") {
         proxy = new Proxy();
       }
@@ -166,8 +167,7 @@ bool EditProxyScreen::keyPressed(unsigned int ch) {
       }
       ui->returnToLast();
       return true;
-    case 27: // esc
-    case 'c':
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
   }
@@ -175,7 +175,10 @@ bool EditProxyScreen::keyPressed(unsigned int ch) {
 }
 
 std::string EditProxyScreen::getLegendText() const {
-  return currentlegendtext;
+  if (active) {
+    return activeelement->getLegendText();
+  }
+  return keybinds.getLegendSummary();
 }
 
 std::string EditProxyScreen::getInfoLabel() const {

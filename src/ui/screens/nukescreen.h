@@ -24,8 +24,6 @@ private:
   void nuke();
   void nuke(int multiplier, const std::string & reason);
   std::string sitestr;
-  std::string currentlegendtext;
-  std::string defaultlegendtext;
   bool active;
   std::string section;
   std::shared_ptr<MenuSelectOptionElement> activeelement;

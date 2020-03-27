@@ -5,8 +5,8 @@
 #include "../ui.h"
 #include "../uifile.h"
 
-FileInfoScreen::FileInfoScreen(Ui* ui) : uifile(nullptr) {
-  this->ui = ui;
+FileInfoScreen::FileInfoScreen(Ui* ui) : UIWindow(ui, "FileInfoScreen"), uifile(nullptr) {
+  allowimplicitgokeybinds = false;
 }
 
 void FileInfoScreen::initialize(unsigned int row, unsigned int col, UIFile* uifile) {

@@ -21,8 +21,24 @@
 #include "../menuselectoptioncheckbox.h"
 #include "../menuselectoptiontextarrow.h"
 
-EditSiteScreen::EditSiteScreen(Ui * ui) {
-  this->ui = ui;
+namespace {
+
+enum KeyAction {
+  KEYACTION_SECTIONS
+};
+
+}
+
+EditSiteScreen::EditSiteScreen(Ui* ui) : UIWindow(ui, "EditSiteScreen") {
+  keybinds.addBind(10, KEYACTION_ENTER, "Modify");
+  keybinds.addBind('d', KEYACTION_DONE, "Done");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel");
+  keybinds.addBind('S', KEYACTION_SKIPLIST, "Skiplist");
+  keybinds.addBind('s', KEYACTION_SECTIONS, "Sections");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
+  keybinds.addBind(KEY_LEFT, KEYACTION_LEFT, "Navigate left");
+  keybinds.addBind(KEY_RIGHT, KEYACTION_RIGHT, "Navigate right");
 }
 
 EditSiteScreen::~EditSiteScreen() {
@@ -32,8 +48,6 @@ EditSiteScreen::~EditSiteScreen() {
 void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::string & operation, const std::string & site) {
   active = false;
   slotsupdated = false;
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one, save changes - [c]ancel, undo changes - [s]ections - [S]kiplist";
-  currentlegendtext = defaultlegendtext;
   this->operation = operation;
   std::string exceptsrc = "";
   std::string exceptdst = "";
@@ -253,12 +267,12 @@ void EditSiteScreen::command(const std::string & command, const std::string & ar
 }
 
 bool EditSiteScreen::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   if (active) {
     if (ch == 10) {
       std::string identifier = activeelement->getIdentifier();
       activeelement->deactivate();
       active = false;
-      currentlegendtext = defaultlegendtext;
       if (identifier == "sourcepolicy" || identifier == "targetpolicy") {
         ui->redraw();
       }
@@ -276,28 +290,28 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
   std::list<std::string> exceptsrclist;
   std::list<std::string> exceptdstlist;
   std::string sitename;
-  switch(ch) {
-    case KEY_UP:
+  switch(action) {
+    case KEYACTION_UP:
       if (mso.goUp()) {
         ui->update();
       }
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       if (mso.goDown()) {
         ui->update();
       }
       return true;
-    case KEY_LEFT:
+    case KEYACTION_LEFT:
       if (mso.goLeft()) {
         ui->update();
       }
       return true;
-    case KEY_RIGHT:
+    case KEYACTION_RIGHT:
       if (mso.goRight()) {
         ui->update();
       }
       return true;
-    case 10: {
+    case KEYACTION_ENTER: {
       std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getSelectionPointer());
       if (msoe->getIdentifier() == "skiplist") {
         modsite->setName(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("name"))->getData());
@@ -358,12 +372,11 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         ui->goSelectSites(action + " race transfers to these sites", preselected, excluded);
         return true;
       }
-      currentlegendtext = activeelement->getLegendText();
       ui->update();
       ui->setLegend();
       return true;
     }
-    case 'd': {
+    case KEYACTION_DONE: {
       std::string newname = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("name"))->getData();
       bool changedname = newname != site->getName() && operation == "edit";
       if ((changedname || operation == "add") && !!global->getSiteManager()->getSite(newname)) {
@@ -517,16 +530,15 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
       ui->returnToLast();
       return true;
     }
-    case 'S':
+    case KEYACTION_SKIPLIST:
       modsite->setName(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("name"))->getData());
       ui->goSkiplist((SkipList *)&modsite->getSkipList());
       return true;
-    case 's':
+    case KEYACTION_SECTIONS:
       modsite->setName(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("name"))->getData());
       ui->goSiteSections(modsite);
       return true;
-    case 27: // esc
-    case 'c':
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
   }
@@ -534,7 +546,10 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
 }
 
 std::string EditSiteScreen::getLegendText() const {
-  return currentlegendtext;
+  if (active) {
+    return activeelement->getLegendText();
+  }
+  return keybinds.getLegendSummary();
 }
 
 std::string EditSiteScreen::getInfoLabel() const {

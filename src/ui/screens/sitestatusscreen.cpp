@@ -12,8 +12,23 @@
 
 #include "../ui.h"
 
-SiteStatusScreen::SiteStatusScreen(Ui * ui) {
-  this->ui = ui;
+namespace {
+
+enum KeyAction {
+  KEYACTION_RAW_COMMAND,
+  KEYACTION_EDIT_SITE,
+  KEYACTION_BROWSE
+};
+
+}
+
+SiteStatusScreen::SiteStatusScreen(Ui* ui) : UIWindow(ui, "SiteStatusScreen") {
+  keybinds.addBind(KEY_RIGHT, KEYACTION_RIGHT, "Raw data screens");
+  keybinds.addBind(10, KEYACTION_BACK_CANCEL, "Return");
+  keybinds.addBind('b', KEYACTION_BROWSE, "Browse");
+  keybinds.addBind('w', KEYACTION_RAW_COMMAND, "Raw command");
+  keybinds.addBind('E', KEYACTION_EDIT_SITE, "Edit site");
+  keybinds.addBind('t', KEYACTION_TRANSFERS, "Transfers");
 }
 
 void SiteStatusScreen::initialize(unsigned int row, unsigned int col, std::string sitename) {
@@ -78,25 +93,24 @@ void SiteStatusScreen::update() {
 }
 
 bool SiteStatusScreen::keyPressed(unsigned int ch) {
-  switch(ch) {
-    case KEY_RIGHT:
+  int action = keybinds.getKeyAction(ch);
+  switch(action) {
+    case KEYACTION_RIGHT:
       ui->goRawData(site->getName());
       return true;
-    case 'E':
+    case KEYACTION_EDIT_SITE:
       ui->goEditSite(site->getName());
       return true;
-    case 27: // esc
-    case ' ':
-    case 10:
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
-    case 'b':
+    case KEYACTION_BROWSE:
       ui->goBrowse(site->getName());
       return true;
-    case 't':
+    case KEYACTION_TRANSFERS:
       ui->goTransfersFilterSite(site->getName());
       return true;
-    case 'w':
+    case KEYACTION_RAW_COMMAND:
       ui->goRawCommand(site->getName());
       return true;
   }
@@ -104,7 +118,7 @@ bool SiteStatusScreen::keyPressed(unsigned int ch) {
 }
 
 std::string SiteStatusScreen::getLegendText() const {
-  return "[Right] Raw data screens - [Enter] Return - ra[w] command - [E]dit site - [t]ransfers";
+  return keybinds.getLegendSummary();
 }
 
 std::string SiteStatusScreen::getInfoLabel() const {

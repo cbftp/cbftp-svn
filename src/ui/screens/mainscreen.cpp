@@ -32,17 +32,87 @@
 #include "allracesscreen.h"
 #include "alltransferjobsscreen.h"
 
-MainScreen::MainScreen(Ui * ui) {
-  this->ui = ui;
+namespace {
+
+enum KeyActions {
+  KEYACTION_ADD_SITE,
+  KEYACTION_EDIT_SITE,
+  KEYACTION_GLOBAL_SETTINGS,
+  KEYACTION_EVENT_LOG,
+  KEYACTION_ALL_SPREAD_JOBS,
+  KEYACTION_ALL_TRANSFER_JOBS,
+  KEYACTION_TOGGLE_UDP,
+  KEYACTION_BROWSE_LOCAL,
+  KEYACTION_BROWSE_SITE,
+  KEYACTION_BROWSE_SITE2,
+  KEYACTION_BROWSE_SPLIT,
+  KEYACTION_SECTIONS,
+  KEYACTION_SNAKE,
+  KEYACTION_RAW_COMMAND,
+  KEYACTION_COPY,
+  KEYACTION_ABORT_DELETE_INC,
+  KEYACTION_ABORT_DELETE_ALL,
+  KEYACTION_LOGIN,
+  KEYACTION_DELETE2,
+  KEYACTION_SCOREBOARD
+};
+
+enum KeyScopes {
+  KEYSCOPE_PREPARED_SPREAD_JOB,
+  KEYSCOPE_SPREAD_JOB,
+  KEYSCOPE_TRANSFER_JOB,
+  KEYSCOPE_SITE
+};
+
+} // namespace
+
+MainScreen::MainScreen(Ui* ui) : UIWindow(ui, "MainScreen") {
+  keybinds.addScope(KEYSCOPE_PREPARED_SPREAD_JOB, "When a prepared spread job is selected");
+  keybinds.addScope(KEYSCOPE_SPREAD_JOB, "When a spread job is selected");
+  keybinds.addScope(KEYSCOPE_TRANSFER_JOB, "When a transfer job is selected");
+  keybinds.addScope(KEYSCOPE_SITE, "When a site is selected");
+  keybinds.addBind('A', KEYACTION_ADD_SITE, "Add site");
+  keybinds.addBind('G', KEYACTION_GLOBAL_SETTINGS, "Global settings");
+  keybinds.addBind('l', KEYACTION_EVENT_LOG, "Event log");
+  keybinds.addBind('t', KEYACTION_TRANSFERS, "Transfers");
+  keybinds.addBind('r', KEYACTION_ALL_SPREAD_JOBS, "All spread jobs");
+  keybinds.addBind('j', KEYACTION_ALL_TRANSFER_JOBS, "All transfer jobs");
+  keybinds.addBind('q', KEYACTION_QUICK_JUMP, "Quick jump");
+  keybinds.addBind('U', KEYACTION_TOGGLE_UDP, "Toggle UDP");
+  keybinds.addBind('c', KEYACTION_BROWSE_LOCAL, "Browse local");
+  keybinds.addBind('i', KEYACTION_INFO, "General info");
+  keybinds.addBind('s', KEYACTION_SECTIONS, "Sections");
+  keybinds.addBind('S', KEYACTION_SNAKE, "Snake");
+  keybinds.addBind('o', KEYACTION_SCOREBOARD, "Scoreboard");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
+  keybinds.addBind(KEY_PPAGE, KEYACTION_PREVIOUS_PAGE, "Previous page");
+  keybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Next page");
+  keybinds.addBind('-', KEYACTION_HIGHLIGHT_LINE, "Highlight entire line");
+  keybinds.addBind(KEY_RIGHT, KEYACTION_BROWSE_SITE, "Browse", KEYSCOPE_SITE);
+  keybinds.addBind('b', KEYACTION_BROWSE_SITE2, "Browse", KEYSCOPE_SITE);
+  keybinds.addBind('E', KEYACTION_EDIT_SITE, "Edit", KEYSCOPE_SITE);
+  keybinds.addBind('\t', KEYACTION_BROWSE_SPLIT, "Split browse", KEYSCOPE_SITE);
+  keybinds.addBind('w', KEYACTION_RAW_COMMAND, "Raw command", KEYSCOPE_SITE);
+  keybinds.addBind('C', KEYACTION_COPY, "Copy", KEYSCOPE_SITE);
+  keybinds.addBind('D', KEYACTION_DELETE, "Delete", KEYSCOPE_SITE);
+  keybinds.addBind(KEY_DC, KEYACTION_DELETE2, "Delete", KEYSCOPE_SITE);
+  keybinds.addBind(10, KEYACTION_ENTER, "Status", KEYSCOPE_SITE);
+  keybinds.addBind('L', KEYACTION_LOGIN, "Login all slots", KEYSCOPE_SITE);
+  keybinds.addBind(10, KEYACTION_ENTER, "Status", KEYSCOPE_SPREAD_JOB);
+  keybinds.addBind('B', KEYACTION_ABORT, "Abort", KEYSCOPE_SPREAD_JOB);
+  keybinds.addBind('T', KEYACTION_TRANSFERS, "Transfers", KEYSCOPE_SPREAD_JOB);
+  keybinds.addBind('R', KEYACTION_RESET, "Reset", KEYSCOPE_SPREAD_JOB);
+  keybinds.addBind('z', KEYACTION_ABORT_DELETE_INC, "Abort and delete own files on incomplete sites", KEYSCOPE_SPREAD_JOB);
+  keybinds.addBind('Z', KEYACTION_ABORT_DELETE_ALL, "Abort and delete own files on ALL sites", KEYSCOPE_SPREAD_JOB);
+  keybinds.addBind(10, KEYACTION_ENTER, "Status", KEYSCOPE_TRANSFER_JOB);
+  keybinds.addBind('B', KEYACTION_ABORT, "Abort", KEYSCOPE_TRANSFER_JOB);
+  keybinds.addBind('T', KEYACTION_TRANSFERS, "Transfers", KEYSCOPE_TRANSFER_JOB);
+  keybinds.addBind(10, KEYACTION_ENTER, "Start", KEYSCOPE_PREPARED_SPREAD_JOB);
+  keybinds.addBind(KEY_DC, KEYACTION_DELETE, "Delete", KEYSCOPE_PREPARED_SPREAD_JOB);
 }
 
 void MainScreen::initialize(unsigned int row, unsigned int col) {
-  baselegendtext = "[Down] Next option - [Up] Previous option - [A]dd site - [G]lobal settings - Event [l]og - [t]ransfers - All [r]aces - All transfer[j]obs - toggle [U]dp - Browse lo[c]al - General [i]nfo - [s]ections - [S]nake - [Esc] back to browsing";
-  sitelegendtext = baselegendtext + " - [Tab] split browse - [right/b]rowse site - ra[w] command - [E]dit site - [C]opy site - [D]elete site - [q]uick jump - [L]ogin all slots - [0-9] Browse to section";
-  preparelegendtext = baselegendtext + " - [Enter/s] start job - [Del] delete race";
-  spreadjoblegendtext = baselegendtext + " - [Enter] Details - a[B]ort job - [T]ransfers for job - [R]eset job - [z] Abort job and delete own files on incomplete sites - [Z] Abort job and delete own files on ALL involved sites";
-  transferjoblegendtext = baselegendtext + " - [Enter] Details - a[B]ort job - [T]ransfers for job";
-  gotolegendtext = "[Any] Go to matching first letter in site list - [Esc] Cancel";
   autoupdate = true;
   gotomode = false;
   currentviewspan = 0;
@@ -303,10 +373,12 @@ void MainScreen::keyDown() {
 }
 
 bool MainScreen::keyPressed(unsigned int ch) {
+  int scope = getCurrentScope();
+  int action = keybinds.getKeyAction(ch, scope);
   if (temphighlightline != -1) {
     temphighlightline = -1;
     ui->redraw();
-    if (ch == '-') {
+    if (action == KEYACTION_HIGHLIGHT_LINE) {
       return true;
     }
   }
@@ -334,8 +406,8 @@ bool MainScreen::keyPressed(unsigned int ch) {
     ui->setLegend();
     return true;
   }
-  switch(ch) {
-    case '-': {
+  switch(action) {
+    case KEYACTION_HIGHLIGHT_LINE: {
       MenuSelectOption * target = static_cast<MenuSelectOption *>(focusedarea);
       if (target && target->size() > 0) {
         temphighlightline = target->getElement(target->getSelectionPointer())->getRow();
@@ -343,16 +415,15 @@ bool MainScreen::keyPressed(unsigned int ch) {
       }
       break;
     }
-    case KEY_UP:
+    case KEYACTION_UP:
       keyUp();
       ui->redraw();
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       keyDown();
       ui->redraw();
       return true;
-    case ' ':
-    case 10:
+    case KEYACTION_ENTER:
       if (msos.isFocused()) {
         if (!msos.linesSize()) break;
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
@@ -373,53 +444,44 @@ bool MainScreen::keyPressed(unsigned int ch) {
         ui->redraw();
       }
       return true;
-    case 'G':
+    case KEYACTION_GLOBAL_SETTINGS:
       ui->goGlobalOptions();
       return true;
-    case 'i':
+    case KEYACTION_INFO:
       ui->goInfo();
       return true;
-    case 'l':
+    case KEYACTION_EVENT_LOG:
       ui->goEventLog();
       return true;
-    case 'o':
+    case KEYACTION_SCOREBOARD:
       ui->goScoreBoard();
       return true;
-    case 't':
-      ui->goTransfers();
-      return true;
-    case 'r':
+    case KEYACTION_ALL_SPREAD_JOBS:
       ui->goAllRaces();
       return true;
-    case 'A':
+    case KEYACTION_ADD_SITE:
       ui->goAddSite();
       return true;
-    case 's':
-      if ((msop.isFocused())) {
-        unsigned int id = msop.getElement(msop.getSelectionPointer())->getId();
-        global->getEngine()->startPreparedRace(id);
-        ui->redraw();
-        return true;
-      }
+    case KEYACTION_SECTIONS:
       ui->goSections();
       return true;
-    case 'S':
+    case KEYACTION_SNAKE:
       ui->goSnake();
       return true;
-    case 'j':
+    case KEYACTION_ALL_TRANSFER_JOBS:
       ui->goAllTransferJobs();
       return true;
-    case 'U':
+    case KEYACTION_TOGGLE_UDP:
     {
       bool enabled = global->getRemoteCommandHandler()->isEnabled();
       global->getRemoteCommandHandler()->setEnabled(!enabled);
       return true;
     }
-    case 'c':
+    case KEYACTION_BROWSE_LOCAL:
       ui->goBrowseLocal();
       return true;
-    case KEY_DC:
-    case 'D':
+    case KEYACTION_DELETE:
+    case KEYACTION_DELETE2:
       if (msos.isFocused()) {
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
         std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
@@ -433,7 +495,7 @@ bool MainScreen::keyPressed(unsigned int ch) {
         ui->redraw();
       }
       return true;
-    case 'B':
+    case KEYACTION_ABORT:
       if (msosj.isFocused() && msosj.size() > 0) {
         abortrace = global->getEngine()->getRace(msosj.getElement(msosj.getSelectionPointer())->getId());
         if (!!abortrace && abortrace->getStatus() == RaceStatus::RUNNING) {
@@ -447,7 +509,7 @@ bool MainScreen::keyPressed(unsigned int ch) {
         }
       }
       return true;
-    case 'z':
+    case KEYACTION_ABORT_DELETE_INC:
       if (msosj.isFocused() && msosj.size() > 0) {
         std::shared_ptr<Race> race = global->getEngine()->getRace(msosj.getElement(msosj.getSelectionPointer())->getId());
         if (!!race && race->getStatus() == RaceStatus::RUNNING) {
@@ -456,7 +518,7 @@ bool MainScreen::keyPressed(unsigned int ch) {
         }
       }
       return true;
-    case 'Z':
+    case KEYACTION_ABORT_DELETE_ALL:
       if (msosj.isFocused() && msosj.size() > 0) {
         abortdeleteraceall = global->getEngine()->getRace(msosj.getElement(msosj.getSelectionPointer())->getId());
         if (!!abortdeleteraceall) {
@@ -469,7 +531,7 @@ bool MainScreen::keyPressed(unsigned int ch) {
         }
       }
       return true;
-    case 'R':
+    case KEYACTION_RESET:
       if (msosj.isFocused() && msosj.size() > 0) {
         std::shared_ptr<Race> race = global->getEngine()->getRace(msosj.getElement(msosj.getSelectionPointer())->getId());
         if (!!race) {
@@ -477,7 +539,7 @@ bool MainScreen::keyPressed(unsigned int ch) {
         }
       }
       return true;
-    case 'T':
+    case KEYACTION_TRANSFERS:
       if (msosj.isFocused() && msosj.size() > 0) {
         std::shared_ptr<Race> race = global->getEngine()->getRace(msosj.getElement(msosj.getSelectionPointer())->getId());
         if (!!race) {
@@ -490,37 +552,40 @@ bool MainScreen::keyPressed(unsigned int ch) {
           ui->goTransfersFilterTransferJob(tj->getName());
         }
       }
+      else {
+        ui->goTransfers();
+      }
       return true;
-    case KEY_NPAGE:
+    case KEYACTION_NEXT_PAGE:
       for (unsigned int i = 0; i < pagerows; i++) {
         keyDown();
       }
       ui->redraw();
       return true;
-    case KEY_PPAGE:
+    case KEYACTION_PREVIOUS_PAGE:
       for (unsigned int i = 0; i < pagerows; i++) {
         keyUp();
       }
       ui->redraw();
       return true;
-    case 'q':
+    case KEYACTION_QUICK_JUMP:
       gotomode = true;
       ui->update();
       ui->setLegend();
       return true;
-    case 27: // esc
+    case KEYACTION_BACK_CANCEL:
       ui->goContinueBrowsing();
       return true;
   }
   if (msos.isFocused()) {
-    switch(ch) {
-      case 'E': {
+    switch(action) {
+      case KEYACTION_EDIT_SITE: {
         if (!msos.linesSize()) break;
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
         ui->goEditSite(sitename);
         return true;
       }
-      case 'C': {
+      case KEYACTION_COPY: {
         if (!msos.linesSize()) break;
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
         std::shared_ptr<Site> oldsite = global->getSiteManager()->getSite(sitename);
@@ -534,56 +599,60 @@ bool MainScreen::keyPressed(unsigned int ch) {
         ui->setInfo();
         return true;
       }
-      case 'b':
-      case KEY_RIGHT: {
+      case KEYACTION_BROWSE_SITE:
+      case KEYACTION_BROWSE_SITE2: {
         if (!msos.linesSize()) break;
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
         ui->goBrowse(sitename);
         return true;
       }
-      case 'L': {
+      case KEYACTION_LOGIN: {
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
         global->getSiteLogicManager()->getSiteLogic(sitename)->activateAll();
         return true;
       }
-      case '\t': {
+      case KEYACTION_BROWSE_SPLIT: {
         if (!msos.linesSize()) break;
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
         ui->goBrowseSplit(sitename);
         return true;
       }
-      case 'w': {
+      case KEYACTION_RAW_COMMAND: {
         if (!msos.linesSize()) break;
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
         ui->goRawCommand(sitename);
         return true;
       }
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9': {
-        if (!msos.linesSize()) {
-          break;
-        }
-        int hotkey = ch - '0';
-        Section * section = global->getSectionManager()->getSection(hotkey);
-        if (section == nullptr) {
-          return true;
-        }
-        std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
-        std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
-        if (site->hasSection(section->getName())) {
-          Path path = site->getSectionPath(section->getName());
-          ui->goBrowse(sitename, path);
-        }
+      case KEYACTION_0:
+        jumpSectionHotkey(0);
         return true;
-      }
+      case KEYACTION_1:
+        jumpSectionHotkey(1);
+        return true;
+      case KEYACTION_2:
+        jumpSectionHotkey(2);
+        return true;
+      case KEYACTION_3:
+        jumpSectionHotkey(3);
+        return true;
+      case KEYACTION_4:
+        jumpSectionHotkey(4);
+        return true;
+      case KEYACTION_5:
+        jumpSectionHotkey(5);
+        return true;
+      case KEYACTION_6:
+        jumpSectionHotkey(6);
+        return true;
+      case KEYACTION_7:
+        jumpSectionHotkey(7);
+        return true;
+      case KEYACTION_8:
+        jumpSectionHotkey(8);
+        return true;
+      case KEYACTION_9:
+        jumpSectionHotkey(9);
+        return true;
     }
   }
   return false;
@@ -591,21 +660,9 @@ bool MainScreen::keyPressed(unsigned int ch) {
 
 std::string MainScreen::getLegendText() const {
   if (gotomode) {
-    return gotolegendtext;
+    return "[Any] Go to matching first letter in site list - [Esc] Cancel";
   }
-  if (focusedarea == &msos) {
-    return sitelegendtext;
-  }
-  if (focusedarea == &msop) {
-    return preparelegendtext;
-  }
-  if (focusedarea == &msosj) {
-    return spreadjoblegendtext;
-  }
-  if (focusedarea == &msotj) {
-    return transferjoblegendtext;
-  }
-  return baselegendtext;
+  return keybinds.getLegendSummary(getCurrentScope());
 }
 
 std::string MainScreen::getInfoLabel() const {
@@ -798,4 +855,37 @@ void MainScreen::addSiteDetails(unsigned int y, MenuSelectOption & mso, const st
   std::string alldown = util::parseSize(site->getSizeDown().getAll());
   std::string prio = Site::getPriorityText(site->getPriority());
   addSiteRow(y, mso, true, sitename, logins, uploads, downloads, up, down, disabled, up24, down24, allup, alldown, prio);
+}
+
+void MainScreen::jumpSectionHotkey(int hotkey) {
+  if (!msos.linesSize()) {
+    return;
+  }
+  Section * section = global->getSectionManager()->getSection(hotkey);
+  if (section == nullptr) {
+    return;
+  }
+  std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
+  std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
+  if (site->hasSection(section->getName())) {
+    Path path = site->getSectionPath(section->getName());
+    ui->goBrowse(sitename, path);
+  }
+}
+
+int MainScreen::getCurrentScope() const {
+  int scope = KEYSCOPE_ALL;
+  if (msos.isFocused()) {
+    scope = KEYSCOPE_SITE;
+  }
+  else if (msosj.isFocused()) {
+    scope = KEYSCOPE_SPREAD_JOB;
+  }
+  else if (msotj.isFocused()) {
+    scope = KEYSCOPE_TRANSFER_JOB;
+  }
+  else if (msop.isFocused()) {
+    scope = KEYSCOPE_PREPARED_SPREAD_JOB;
+  }
+  return scope;
 }

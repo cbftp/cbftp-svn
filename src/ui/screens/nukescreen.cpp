@@ -10,8 +10,30 @@
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptiontextbutton.h"
 
-NukeScreen::NukeScreen(Ui * ui) {
-  this->ui = ui;
+namespace {
+
+enum KeyAction {
+  KEYACTION_NUKE,
+  KEYACTION_NUKE_PROPER,
+  KEYACTION_NUKE_REPACK,
+  KEYACTION_NUKE_DUPE,
+  KEYACTION_NUKE_DUPE_WEB,
+  KEYACTION_NUKE_INCOMPLETE
+};
+
+}
+
+NukeScreen::NukeScreen(Ui* ui) : UIWindow(ui, "NukeScreen") {
+  keybinds.addBind(10, KEYACTION_ENTER, "Modify");
+  keybinds.addBind('n', KEYACTION_NUKE, "Nuke");
+  keybinds.addBind('p', KEYACTION_NUKE_PROPER, "Proper");
+  keybinds.addBind('r', KEYACTION_NUKE_REPACK, "Repack");
+  keybinds.addBind('u', KEYACTION_NUKE_DUPE, "Dupe");
+  keybinds.addBind('w', KEYACTION_NUKE_DUPE_WEB, "Dupe web");
+  keybinds.addBind('i', KEYACTION_NUKE_INCOMPLETE, "Incomplete");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Next option");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Previous option");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel");
 }
 
 NukeScreen::~NukeScreen() {
@@ -19,8 +41,6 @@ NukeScreen::~NukeScreen() {
 }
 
 void NukeScreen::initialize(unsigned int row, unsigned int col, const std::string & sitestr, const std::string & items, const Path & path) {
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [n]uke - [c]ancel - [p]roper - [r]epack - d[u]pe - dupe [w]eb - [i]ncomplete";
-  currentlegendtext = defaultlegendtext;
   active = false;
   this->sitestr = sitestr;
   this->items = items;
@@ -67,11 +87,11 @@ void NukeScreen::update() {
 }
 
 bool NukeScreen::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
       active = false;
-      currentlegendtext = defaultlegendtext;
       ui->update();
       ui->setLegend();
       return true;
@@ -80,56 +100,43 @@ bool NukeScreen::keyPressed(unsigned int ch) {
     ui->update();
     return true;
   }
-  switch(ch) {
-    case KEY_UP:
+  switch(action) {
+    case KEYACTION_UP:
       if (mso.goUp()) {
         ui->update();
       }
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       if (mso.goDown()) {
         ui->update();
       }
       return true;
-    case KEY_LEFT:
-      if (mso.goLeft()) {
-        ui->update();
-      }
-      return true;
-    case KEY_RIGHT:
-      if (mso.goRight()) {
-        ui->update();
-      }
-      return true;
-    case 10:
+    case KEYACTION_ENTER:
       activeelement = mso.getElement(mso.getSelectionPointer());
       activeelement->activate();
       active = true;
-      currentlegendtext = activeelement->getLegendText();
       ui->update();
       ui->setLegend();
       return true;
-    case 27: // esc
-    case 'c':
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
-    case 'd':
-    case 'n':
+    case KEYACTION_NUKE:
       nuke();
       return true;
-    case 'p':
+    case KEYACTION_NUKE_PROPER:
       nuke(1, "proper");
       return true;
-    case 'r':
+    case KEYACTION_NUKE_REPACK:
       nuke(1, "repack");
       return true;
-    case 'u':
+    case KEYACTION_NUKE_DUPE:
       nuke(1, "dupe");
       return true;
-    case 'w':
+    case KEYACTION_NUKE_DUPE_WEB:
       nuke(3, "dupe.web");
       return true;
-    case 'i':
+    case KEYACTION_NUKE_INCOMPLETE:
       nuke(3, "incomplete");
       return true;
   }
@@ -157,7 +164,10 @@ void NukeScreen::nuke(int multiplier, const std::string & reason) {
 }
 
 std::string NukeScreen::getLegendText() const {
-  return currentlegendtext;
+  if (active) {
+    return activeelement->getLegendText();
+  }
+  return keybinds.getLegendSummary();
 }
 
 std::string NukeScreen::getInfoLabel() const {

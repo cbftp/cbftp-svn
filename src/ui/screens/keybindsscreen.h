@@ -1,30 +1,32 @@
 #pragma once
 
-#define SHORTESTKEY 4
-
+#include <list>
 #include <memory>
+#include <utility>
+
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
 
+class KeyBinds;
 class MenuSelectOptionElement;
 
-class ChangeKeyScreen : public UIWindow {
+class KeyBindsScreen : public UIWindow {
 public:
-  ChangeKeyScreen(Ui *);
-  ~ChangeKeyScreen();
-  void initialize(unsigned int, unsigned int);
+  KeyBindsScreen(Ui *);
+  ~KeyBindsScreen();
+  void initialize(unsigned int row, unsigned int col, KeyBinds* keybinds);
   void update();
   void redraw();
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
 private:
+  void repopulate();
   bool active;
-  bool mismatch;
-  bool oldmismatch;
-  bool tooshort;
   std::shared_ptr<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;
-  std::string operation;
+  KeyBinds* realkeybinds;
+  std::shared_ptr<KeyBinds> tempkeybinds;
+  std::list<std::pair<int, int>> actionandscope;
 };

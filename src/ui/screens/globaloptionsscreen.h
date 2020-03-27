@@ -28,8 +28,6 @@ private:
   RemoteCommandHandler * rch;
   SiteManager * sm;
   LocalStorage * ls;
-  std::string currentlegendtext;
-  std::string defaultlegendtext;
   bool active;
   std::shared_ptr<MenuSelectOptionElement> activeelement;
   std::map<int, std::string> interfacemap;

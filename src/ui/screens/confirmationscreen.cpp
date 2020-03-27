@@ -3,8 +3,8 @@
 #include "../ui.h"
 #include "../textwrap.h"
 
-ConfirmationScreen::ConfirmationScreen(Ui * ui) : mode(ConfirmationMode::NORMAL), strongconfirmstep(0) {
-  this->ui = ui;
+ConfirmationScreen::ConfirmationScreen(Ui* ui) : UIWindow(ui, "ConfirmationScreen"), mode(ConfirmationMode::NORMAL), strongconfirmstep(0) {
+  allowimplicitgokeybinds = false;
 }
 
 void ConfirmationScreen::initialize(unsigned int row, unsigned int col, const std::string & message, ConfirmationMode mode) {

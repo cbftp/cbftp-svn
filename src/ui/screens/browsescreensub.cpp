@@ -6,6 +6,10 @@
 #include "../menuselectoptiontextbutton.h"
 #include "../ui.h"
 
+BrowseScreenSub::BrowseScreenSub(KeyBinds& keybinds) : keybinds(keybinds) {
+
+}
+
 void BrowseScreenSub::command(const std::string & command, const std::string & arg) {
 
 }

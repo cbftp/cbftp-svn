@@ -13,8 +13,30 @@
 
 #include "rawdatascreen.h"
 
-RawCommandScreen::RawCommandScreen(Ui * ui) {
-  this->ui = ui;
+namespace {
+
+enum KeyAction {
+  KEYACTION_INSERT_SELECTION,
+  KEYACTION_CLEAR
+};
+
+enum KeyScopes {
+  KEYSCOPE_INPUT
+};
+
+}
+
+RawCommandScreen::RawCommandScreen(Ui* ui) : UIWindow(ui, "RawCommandScreen") {
+  keybinds.addScope(KEYSCOPE_INPUT, "If input is accepted");
+  keybinds.addBind(27, KEYACTION_BACK_CANCEL, "Return");
+  keybinds.addBind(KEY_PPAGE, KEYACTION_PREVIOUS_PAGE, "Scroll up");
+  keybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Scroll down");
+  keybinds.addBind(TERMINT_CTRL_L, KEYACTION_CLEAR, "Clear log");
+  keybinds.addBind(10, KEYACTION_ENTER, "Send command", KEYSCOPE_INPUT);
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "History up", KEYSCOPE_INPUT);
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "History down", KEYSCOPE_INPUT);
+  keybinds.addBind(KEY_IC, KEYACTION_INSERT_SELECTION, "Insert selection (if available)", KEYSCOPE_INPUT);
+  keybinds.useAlternateKeybindsButton();
 }
 
 void RawCommandScreen::initialize(unsigned int row, unsigned int col, const std::string & sitename, const Path & path, const std::string & selection) {
@@ -78,10 +100,12 @@ void RawCommandScreen::update() {
 }
 
 bool RawCommandScreen::keyPressed(unsigned int ch) {
+  int scope = getCurrentScope();
+  int action = keybinds.getKeyAction(ch, scope);
   unsigned int rownum = allowinput ? row - 1 : row;
   std::string command;
-  switch(ch) {
-    case 27: // esc
+  switch(action) {
+    case KEYACTION_BACK_CANCEL:
       if (rawcommandfield.getData() != "") {
         rawcommandfield.clear();
         ui->update();
@@ -91,7 +115,7 @@ bool RawCommandScreen::keyPressed(unsigned int ch) {
         ui->returnToLast();
       }
       return true;
-    case KEY_PPAGE:
+    case KEYACTION_PREVIOUS_PAGE:
       if (!readfromcopy) {
         rawbuf->freezeCopy();
         copyreadpos = 0;
@@ -109,7 +133,7 @@ bool RawCommandScreen::keyPressed(unsigned int ch) {
       }
       ui->update();
       return true;
-    case KEY_NPAGE:
+    case KEYACTION_NEXT_PAGE:
       if (readfromcopy) {
         if (copyreadpos == 0) {
           readfromcopy = false;
@@ -123,7 +147,7 @@ bool RawCommandScreen::keyPressed(unsigned int ch) {
       }
       ui->update();
       return true;
-    case TERMINT_CTRL_L:
+    case KEYACTION_CLEAR:
       rawbuf->clear();
       readfromcopy = false;
       ui->redraw();
@@ -140,8 +164,8 @@ bool RawCommandScreen::keyPressed(unsigned int ch) {
     ui->update();
     return true;
   }
-  switch (ch) {
-    case 10:
+  switch (action) {
+    case KEYACTION_ENTER:
       command = rawcommandfield.getData();
       if (command != "") {
         readfromcopy = false;
@@ -151,7 +175,7 @@ bool RawCommandScreen::keyPressed(unsigned int ch) {
         ui->update();
       }
       return true;
-    case KEY_UP:
+    case KEYACTION_UP:
       if (history.canBack()) {
         if (history.current()) {
           history.setCurrent(rawcommandfield.getData());
@@ -161,13 +185,13 @@ bool RawCommandScreen::keyPressed(unsigned int ch) {
         ui->update();
       }
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       if (history.forward()) {
         rawcommandfield.setText(history.get());
         ui->update();
       }
       return true;
-    case KEY_IC:
+    case KEYACTION_INSERT_SELECTION:
       if (!allowinput) {
         return false;
       }
@@ -181,14 +205,7 @@ bool RawCommandScreen::keyPressed(unsigned int ch) {
 }
 
 std::string RawCommandScreen::getLegendText() const {
-  std::string legendtext = "[ESC] exit - [Pgup] Scroll up - [Pgdn] Scroll down";
-  if (allowinput) {
-    legendtext = "[ESC] clear / exit - [Pgup] Scroll up - [Pgdn] Scroll down - [Any] Input to text - [Enter] Send command";
-    if (hasselection) {
-      legendtext += " - [Insert] selection";
-    }
-  }
-  return legendtext;
+  return keybinds.getLegendSummary(getCurrentScope());
 }
 
 std::string RawCommandScreen::getInfoLabel() const {
@@ -197,4 +214,11 @@ std::string RawCommandScreen::getInfoLabel() const {
 
 std::string RawCommandScreen::getInfoText() const {
   return path.toString();
+}
+
+int RawCommandScreen::getCurrentScope() const {
+  if (allowinput) {
+    return KEYSCOPE_INPUT;
+  }
+  return KEYSCOPE_ALL;
 }

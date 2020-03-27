@@ -27,8 +27,14 @@ void fillPreselectionList(const std::string & preselectstr, std::list<std::share
 }
 
 }
-TransfersFilterScreen::TransfersFilterScreen(Ui * ui) {
-  this->ui = ui;
+TransfersFilterScreen::TransfersFilterScreen(Ui* ui) : UIWindow(ui, "TransfersFilterScreen") {
+  keybinds.addBind(10, KEYACTION_ENTER, "Modify");
+  keybinds.addBind('d', KEYACTION_DONE, "Done");
+  keybinds.addBind('f', KEYACTION_FILTER, "Done");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel");
+  keybinds.addBind('r', KEYACTION_RESET, "Reset");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
 }
 
 TransfersFilterScreen::~TransfersFilterScreen() {
@@ -36,8 +42,6 @@ TransfersFilterScreen::~TransfersFilterScreen() {
 }
 
 void TransfersFilterScreen::initialize(unsigned int row, unsigned int col, const TransferFilteringParameters & tfp) {
-  defaultlegendtext = "[Enter] Modify - [Down] Next option - [Up] Previous option - [d]one - [c]ancel - [r]eset";
-  currentlegendtext = defaultlegendtext;
   mso.reset();
   selectedspreadjobs = tfp.spreadjobsfilter;
   selectedtransferjobs = tfp.transferjobsfilter;
@@ -123,6 +127,7 @@ void TransfersFilterScreen::command(const std::string & command, const std::stri
 }
 
 bool TransfersFilterScreen::keyPressed(unsigned int ch) {
+  int action = keybinds.getKeyAction(ch);
   if (active) {
     if (ch == 10) {
       activeelement->deactivate();
@@ -130,7 +135,6 @@ bool TransfersFilterScreen::keyPressed(unsigned int ch) {
         std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("filenamefilter"))->setValue(true);
       }
       active = false;
-      currentlegendtext = defaultlegendtext;
       ui->update();
       ui->setLegend();
       return true;
@@ -139,25 +143,18 @@ bool TransfersFilterScreen::keyPressed(unsigned int ch) {
     ui->update();
     return true;
   }
-  switch (ch) {
-    case KEY_UP:
+  switch (action) {
+    case KEYACTION_UP:
       mso.goUp();
       ui->update();
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       mso.goDown();
       ui->update();
       return true;
-    case KEY_LEFT:
-      mso.goLeft();
-      ui->update();
-      return true;
-    case KEY_RIGHT:
-      mso.goRight();
-      ui->update();
-      return true;
-    case 'd':
-    case 'f': {
+    case KEYACTION_DONE:
+    case KEYACTION_FILTER:
+    {
       TransferFilteringParameters tfp;
       tfp.usejobfilter = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("jobfilter"))->getData();
       tfp.spreadjobsfilter = selectedspreadjobs;
@@ -176,7 +173,8 @@ bool TransfersFilterScreen::keyPressed(unsigned int ch) {
       ui->returnTransferFilters(tfp);
       return true;
     }
-    case 10: {
+    case KEYACTION_ENTER:
+    {
       std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getSelectionPointer());
       if (msoe->getIdentifier() == "spreadjobs") {
         activeelement = msoe;
@@ -213,17 +211,15 @@ bool TransfersFilterScreen::keyPressed(unsigned int ch) {
       }
       active = true;
       activeelement = msoe;
-      currentlegendtext = activeelement->getLegendText();
       ui->setLegend();
       ui->update();
       return true;
     }
-    case 'r':
+    case KEYACTION_RESET:
       initialize(row, col, TransferFilteringParameters());
       ui->redraw();
       return true;
-    case 'c':
-    case 27: // esc
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
   }
@@ -231,7 +227,10 @@ bool TransfersFilterScreen::keyPressed(unsigned int ch) {
 }
 
 std::string TransfersFilterScreen::getLegendText() const {
-  return currentlegendtext;
+  if (active) {
+    return activeelement->getLegendText();
+  }
+  return keybinds.getLegendSummary();
 }
 
 std::string TransfersFilterScreen::getInfoLabel() const {

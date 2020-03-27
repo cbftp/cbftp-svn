@@ -14,8 +14,14 @@
 #include "../../sitelogic.h"
 #include "../../site.h"
 
-ScoreBoardScreen::ScoreBoardScreen(Ui * ui) {
-  this->ui = ui;
+ScoreBoardScreen::ScoreBoardScreen(Ui* ui) : UIWindow(ui, "ScoreBoardScreen") {
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Return");
+  keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
+  keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
+  keybinds.addBind(KEY_PPAGE, KEYACTION_PREVIOUS_PAGE, "Next page");
+  keybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Previous page");
+  keybinds.addBind(KEY_HOME, KEYACTION_TOP, "Go top");
+  keybinds.addBind(KEY_END, KEYACTION_BOTTOM, "Go bottom");
 }
 
 ScoreBoardScreen::~ScoreBoardScreen() {
@@ -83,13 +89,12 @@ void ScoreBoardScreen::update() {
 }
 
 bool ScoreBoardScreen::keyPressed(unsigned int ch) {
-  switch(ch) {
-    case 27: // esc
-    case 10: // enter
-    case 'c':
+  int action = keybinds.getKeyAction(ch);
+  switch(action) {
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
-    case KEY_UP:
+    case KEYACTION_UP:
       if (currentviewspan < 2) {
         currentviewspan = 0;
       }
@@ -98,7 +103,7 @@ bool ScoreBoardScreen::keyPressed(unsigned int ch) {
       }
       ui->update();
       return true;
-    case KEY_DOWN:
+    case KEYACTION_DOWN:
       if (row < scoreboard->size() + 1) {
         if (currentviewspan < scoreboard->size() + 1 - row) {
           currentviewspan += 2;
@@ -112,7 +117,7 @@ bool ScoreBoardScreen::keyPressed(unsigned int ch) {
       }
       ui->update();
       return true;
-    case KEY_PPAGE:
+    case KEYACTION_PREVIOUS_PAGE:
       if (currentviewspan < row * 0.5) {
         currentviewspan = 0;
       }
@@ -121,7 +126,7 @@ bool ScoreBoardScreen::keyPressed(unsigned int ch) {
       }
       ui->update();
       return true;
-    case KEY_NPAGE:
+    case KEYACTION_NEXT_PAGE:
       if (row * 1.5 < scoreboard->size() + 1 && currentviewspan < scoreboard->size() + 1 - row * 1.5) {
         currentviewspan += row * 0.5;
       }
@@ -130,11 +135,11 @@ bool ScoreBoardScreen::keyPressed(unsigned int ch) {
       }
       ui->update();
       return true;
-    case KEY_HOME:
+    case KEYACTION_TOP:
       currentviewspan = 0;
       ui->update();
       return true;
-    case KEY_END:
+    case KEYACTION_BOTTOM:
       if (scoreboard->size() + 1 > row) {
         currentviewspan = scoreboard->size() + 1 - row;
       }
@@ -145,7 +150,7 @@ bool ScoreBoardScreen::keyPressed(unsigned int ch) {
 }
 
 std::string ScoreBoardScreen::getLegendText() const {
-  return "[Esc/c/Enter] Return";
+  return keybinds.getLegendSummary();
 }
 
 std::string ScoreBoardScreen::getInfoLabel() const {

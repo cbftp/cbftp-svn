@@ -9,6 +9,7 @@
 #include "../../path.h"
 
 class BrowseScreenAction;
+class KeyBinds;
 class ResizableElement;
 class MenuSelectOption;
 class UIFileList;
@@ -47,6 +48,40 @@ enum class BrowseScreenRequestType {
   MOVE
 };
 
+enum BrowseScreenKeyAction {
+  KEYACTION_CLOSE2,
+  KEYACTION_BROWSE,
+  KEYACTION_RETURN,
+  KEYACTION_SPREAD,
+  KEYACTION_VIEW_FILE,
+  KEYACTION_DOWNLOAD,
+  KEYACTION_BIND_SECTION,
+  KEYACTION_SORT,
+  KEYACTION_SORT_DEFAULT,
+  KEYACTION_RAW_COMMAND,
+  KEYACTION_WIPE,
+  KEYACTION_NUKE,
+  KEYACTION_MKDIR,
+  KEYACTION_TOGGLE_SEPARATORS,
+  KEYACTION_COMMAND_LOG,
+  KEYACTION_SOFT_SELECT_UP,
+  KEYACTION_SOFT_SELECT_DOWN,
+  KEYACTION_HARD_SELECT,
+  KEYACTION_SELECT_ALL,
+  KEYACTION_SELECT_ALL2,
+  KEYACTION_MOVE,
+  KEYACTION_REFRESH,
+  KEYACTION_SPLIT,
+  KEYACTION_TRANSFER,
+  KEYACTION_COMPARE_UNIQUE,
+  KEYACTION_COMPARE_IDENTICAL
+};
+
+enum BrowseScreenKeyScopes {
+  KEYSCOPE_SPLIT_SITE_SITE,
+  KEYSCOPE_SPLIT_SITE_LOCAL
+};
+
 struct BrowseScreenRequest {
   int id;
   BrowseScreenRequestType type;
@@ -56,10 +91,11 @@ struct BrowseScreenRequest {
 
 class BrowseScreenSub : public Core::EventReceiver {
 public:
+  BrowseScreenSub(KeyBinds& keybinds);
   virtual void redraw(unsigned int, unsigned int, unsigned int) = 0;
   virtual void update() = 0;
   virtual BrowseScreenType type() const = 0;
-  virtual std::string getLegendText() const = 0;
+  virtual std::string getLegendText(int scope) const = 0;
   virtual std::string getInfoLabel() const = 0;
   virtual std::string getInfoText() const = 0;
   virtual void command(const std::string & command, const std::string & arg);
@@ -74,4 +110,6 @@ public:
                              bool selectable = false, bool cursored = false, UIFile * origin = nullptr);
   static void printFlipped(Ui * ui, const std::shared_ptr<ResizableElement> & re);
   static std::string targetName(const std::list<std::pair<std::string, bool>> & items);
+protected:
+  KeyBinds& keybinds;
 };

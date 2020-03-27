@@ -2,6 +2,7 @@
 
 #include <list>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -29,6 +30,7 @@ class TransferStatus;
 class Path;
 class SkipList;
 class RawBuffer;
+class KeyBinds;
 class LoginScreen;
 class NewKeyScreen;
 class MainScreen;
@@ -69,6 +71,7 @@ class SnakeScreen;
 class DisableEncryptionScreen;
 class MoveScreen;
 class FileInfoScreen;
+class KeyBindsScreen;
 
 class LegendPrinterKeybinds;
 struct TransferFilteringParameters;
@@ -130,6 +133,7 @@ private:
   std::shared_ptr<DisableEncryptionScreen> disableencryptionscreen;
   std::shared_ptr<MoveScreen> movescreen;
   std::shared_ptr<FileInfoScreen> fileinfoscreen;
+  std::shared_ptr<KeyBindsScreen> keybindsscreen;
   std::shared_ptr<LegendPrinterKeybinds> legendprinterkeybinds;
   int mainrow;
   int maincol;
@@ -148,6 +152,8 @@ private:
   std::string eventtext;
   Core::Semaphore eventcomplete;
   std::list<std::shared_ptr<UIWindow> > history;
+  std::shared_ptr<KeyBinds> globalkeybinds;
+  std::set<KeyBinds*> allkeybinds;
   void refreshAll();
   void initIntern();
   void enableInfo();
@@ -252,6 +258,8 @@ public:
   void goDisableEncryption();
   void goMove(const std::string& site, const std::string& items, const Path& srcpath, const std::string& dstpath, const std::string& firstitem);
   void goFileInfo(UIFile* uifile);
+  void goKeyBinds(KeyBinds* keybinds);
+  void goGlobalKeyBinds();
   void returnSelectItems(const std::string &);
   void key(const std::string &);
   void newKey(const std::string &);
@@ -265,5 +273,7 @@ public:
   void saveSettings(std::shared_ptr<DataFileHandler>);
   void notify();
   WINDOW * getLegendWindow() const;
+  void addKeyBinds(KeyBinds* keybinds);
+  void removeKeyBinds(KeyBinds* keybinds);
 };
 
