@@ -707,16 +707,24 @@ void RestApi::handleRawPost(RestApiCallback* cb, int connrequestid, const http::
   ongoingrequest.cb = cb;
   ongoingrequest.async = asyncit != jsondata.end() && static_cast<bool>(*asyncit);
   ongoingrequest.timeout = timeoutit != jsondata.end() ? static_cast<int>(*timeoutit) : DEFAULT_TIMEOUT_SECONDS;
+  std::list<std::pair<std::shared_ptr<SiteLogic>, Path>> verifiedsites;
   for (std::list<std::shared_ptr<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
     std::string thispath;
     if (pathsection) {
+      if (!(*it)->getSite()->hasSection(path)) {
+        cb->requestHandled(connrequestid, badRequestResponse("Section " + path + " is not defined on site " + (*it)->getSite()->getName()));
+        return;
+      }
       thispath = (*it)->getSite()->getSectionPath(path).toString();
     }
     else {
       thispath = path;
     }
-    int servicerequestid = (*it)->requestRawCommand(this, thispath.empty() ? (*it)->getSite()->getBasePath().toString() : thispath, command);
-    ongoingrequest.ongoingservicerequests.insert(std::make_pair(it->get(), servicerequestid));
+    verifiedsites.emplace_back(*it, thispath.empty() ? (*it)->getSite()->getBasePath().toString() : thispath);
+  }
+  for (const std::pair<std::shared_ptr<SiteLogic>, Path>& site : verifiedsites) {
+    int servicerequestid = site.first->requestRawCommand(this, site.second, command);
+    ongoingrequest.ongoingservicerequests.insert(std::make_pair(site.first.get(), servicerequestid));
   }
   ongoingrequests.push_back(ongoingrequest);
   if (ongoingrequest.async) {
