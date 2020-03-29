@@ -41,9 +41,10 @@ void MenuSelectOptionTextField::inputChar(int ch) {
     textfield.moveCursorEnd();
   }
   else if (ch == KEY_DC) {
-    if (textfield.moveCursorRight()) {
-      textfield.erase();
-    }
+    textfield.eraseForward();
+  }
+  else if (ch == 23) { // ctrl+w
+    textfield.eraseCursoredWord();
   }
 }
 
