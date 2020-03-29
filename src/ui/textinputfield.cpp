@@ -126,6 +126,36 @@ void TextInputField::erase() {
   }
 }
 
+void TextInputField::eraseForward() {
+  if (moveCursorRight()) {
+    erase();
+  }
+}
+
+void TextInputField::eraseCursoredWord() {
+  if (text.empty()) {
+    return;
+  }
+  unsigned int erasestart = cursor - 1;
+  bool foundword = false;
+  for (;; --erasestart) {
+    bool erase = false;
+    if (text[erasestart] == ' ' && foundword) {
+      ++erasestart;
+      erase = true;
+    }
+    if (erase || erasestart == 0) {
+      std::string newtext = text.substr(0, erasestart) + text.substr(cursor);
+      cursor -= (text.length() - newtext.length());
+      text = newtext;
+      return;
+    }
+    if (text[erasestart] != ' ') {
+      foundword = true;
+    }
+  }
+}
+
 void TextInputField::setText(std::string text) {
   this->text = text;
   moveCursorEnd();

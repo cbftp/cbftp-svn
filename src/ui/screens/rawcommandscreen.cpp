@@ -28,7 +28,7 @@ enum KeyScopes {
 
 RawCommandScreen::RawCommandScreen(Ui* ui) : UIWindow(ui, "RawCommandScreen") {
   keybinds.addScope(KEYSCOPE_INPUT, "If input is accepted");
-  keybinds.addBind(27, KEYACTION_BACK_CANCEL, "Return");
+  keybinds.addBind(27, KEYACTION_BACK_CANCEL, "Clear/Return");
   keybinds.addBind(KEY_PPAGE, KEYACTION_PREVIOUS_PAGE, "Scroll up");
   keybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Scroll down");
   keybinds.addBind(TERMINT_CTRL_L, KEYACTION_CLEAR, "Clear log");
@@ -156,9 +156,9 @@ bool RawCommandScreen::keyPressed(unsigned int ch) {
   if (!allowinput) {
     return false;
   }
-  if ((ch >= 32 && ch <= 126) || ch == KEY_BACKSPACE || ch == 8 || ch == 127 ||
-      ch == KEY_LEFT || ch == KEY_RIGHT || ch == KEY_HOME || ch == KEY_END ||
-      ch == KEY_DC)
+  if ((ch >= 32 && ch <= 126) || ch == KEY_BACKSPACE || ch == 8 || ch == 23 ||
+      ch == 127 || ch == KEY_RIGHT || ch == KEY_LEFT || ch == KEY_DC ||
+      ch == KEY_HOME || ch == KEY_END)
   {
     rawcommandfield.inputChar(ch);
     ui->update();

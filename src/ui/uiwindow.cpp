@@ -35,12 +35,16 @@ void UIWindow::command(const std::string & command, const std::string & arg) {
 }
 
 bool UIWindow::keyPressedBase(unsigned int key) {
+  bool caught = keyPressed(key);
+  if (caught) {
+    return true;
+  }
   int action = keybinds.getKeyAction(key);
   if (action == KEYACTION_KEYBINDS && allowimplicitgokeybinds) {
     ui->goKeyBinds(&keybinds);
     return true;
   }
-  return keyPressed(key);
+  return false;
 }
 
 bool UIWindow::keyPressed(unsigned int key) {

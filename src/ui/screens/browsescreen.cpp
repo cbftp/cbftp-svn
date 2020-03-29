@@ -66,7 +66,7 @@ BrowseScreen::BrowseScreen(Ui* ui) : UIWindow(ui, "BrowseScreen"),
   sitekeybinds.addBind(KEY_DC, KEYACTION_DELETE, "Delete");
   sitekeybinds.addBind('n', KEYACTION_NUKE, "Nuke");
   sitekeybinds.addBind('M', KEYACTION_MKDIR, "Make directory");
-  sitekeybinds.addBind('p', KEYACTION_TOGGLE_SEPARATORS, "Toggle separators");
+  sitekeybinds.addBind('P', KEYACTION_TOGGLE_SEPARATORS, "Toggle separators");
   sitekeybinds.addBind('q', KEYACTION_QUICK_JUMP, "Quick jump");
   sitekeybinds.addBind('f', KEYACTION_FILTER, "Toggle filter");
   sitekeybinds.addBind('F', KEYACTION_FILTER_REGEX, "Regex filter");
@@ -102,7 +102,7 @@ BrowseScreen::BrowseScreen(Ui* ui) : UIWindow(ui, "BrowseScreen"),
   localkeybinds.addBind('S', KEYACTION_SORT_DEFAULT, "Default sort");
   localkeybinds.addBind(KEY_DC, KEYACTION_DELETE, "Delete");
   localkeybinds.addBind('W', KEYACTION_WIPE, "Delete");
-  localkeybinds.addBind('p', KEYACTION_TOGGLE_SEPARATORS, "Toggle separators");
+  localkeybinds.addBind('P', KEYACTION_TOGGLE_SEPARATORS, "Toggle separators");
   localkeybinds.addBind('q', KEYACTION_QUICK_JUMP, "Quick jump");
   localkeybinds.addBind('f', KEYACTION_FILTER, "Toggle filter");
   localkeybinds.addBind('F', KEYACTION_FILTER_REGEX, "Regex filter");

@@ -120,9 +120,10 @@ bool LoginScreen::keyPressed(unsigned int ch) {
         passfield.moveCursorRight();
         break;
       case KEY_DC:
-        if (passfield.moveCursorRight()) {
-          passfield.erase();
-        }
+        passfield.eraseForward();
+        break;
+      case 23:
+        passfield.eraseCursoredWord();
         break;
       case KEY_ENTER:
       case 10:

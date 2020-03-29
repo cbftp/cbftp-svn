@@ -13,6 +13,8 @@ public:
   unsigned int getVisualCursorPosition() const;
   bool addchar(char);
   void erase();
+  void eraseForward();
+  void eraseCursoredWord();
   bool moveCursorLeft();
   bool moveCursorRight();
   void moveCursorHome();
