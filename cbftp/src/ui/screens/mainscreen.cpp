@@ -108,6 +108,7 @@ MainScreen::MainScreen(Ui* ui) : UIWindow(ui, "MainScreen") {
   keybinds.addBind(10, KEYACTION_ENTER, "Status", KEYSCOPE_TRANSFER_JOB);
   keybinds.addBind('B', KEYACTION_ABORT, "Abort", KEYSCOPE_TRANSFER_JOB);
   keybinds.addBind('T', KEYACTION_TRANSFERS, "Transfers", KEYSCOPE_TRANSFER_JOB);
+  keybinds.addBind('R', KEYACTION_RESET, "Reset", KEYSCOPE_TRANSFER_JOB);
   keybinds.addBind(10, KEYACTION_ENTER, "Start", KEYSCOPE_PREPARED_SPREAD_JOB);
   keybinds.addBind(KEY_DC, KEYACTION_DELETE, "Delete", KEYSCOPE_PREPARED_SPREAD_JOB);
 }
@@ -536,6 +537,14 @@ bool MainScreen::keyPressed(unsigned int ch) {
         std::shared_ptr<Race> race = global->getEngine()->getRace(msosj.getElement(msosj.getSelectionPointer())->getId());
         if (!!race) {
           global->getEngine()->resetRace(race, false);
+          ui->redraw();
+        }
+      }
+      else if (msotj.isFocused() && msotj.size() > 0) {
+        std::shared_ptr<TransferJob> tj = global->getEngine()->getTransferJob(msotj.getElement(msotj.getSelectionPointer())->getId());
+        if (!!tj) {
+          global->getEngine()->resetTransferJob(tj);
+          ui->redraw();
         }
       }
       return true;

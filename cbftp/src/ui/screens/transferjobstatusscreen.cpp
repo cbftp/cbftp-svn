@@ -31,8 +31,9 @@ enum KeyScopes {
 TransferJobStatusScreen::TransferJobStatusScreen(Ui* ui) : UIWindow(ui, "TransferJobStatusScreen") {
   keybinds.addScope(KEYSCOPE_RUNNING, "While job is running");
   keybinds.addBind(10, KEYACTION_ENTER, "Modify", KEYSCOPE_RUNNING);
-  keybinds.addBind('B', KEYACTION_ABORT, "Abort transfer job", KEYSCOPE_RUNNING);
+  keybinds.addBind('B', KEYACTION_ABORT, "Abort transfer job");
   keybinds.addBind('t', KEYACTION_TRANSFERS, "Transfers");
+  keybinds.addBind('r', KEYACTION_RESET, "Reset");
   keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Return");
 }
 
@@ -207,6 +208,11 @@ bool TransferJobStatusScreen::keyPressed(unsigned int ch) {
     case KEYACTION_TRANSFERS:
       ui->goTransfersFilterTransferJob(transferjob->getName());
       return true;
+    case KEYACTION_RESET:
+      global->getEngine()->resetTransferJob(transferjob);
+      ui->setLegend();
+      ui->redraw();
+      return true;
   }
   return false;
 }
@@ -273,7 +279,7 @@ std::string TransferJobStatusScreen::getRoute(std::shared_ptr<TransferJob> tj) {
 }
 
 int TransferJobStatusScreen::getCurrentScope() const {
-  if (transferjob->getStatus() != TRANSFERJOB_RUNNING) {
+  if (transferjob->getStatus() == TRANSFERJOB_RUNNING) {
     return KEYSCOPE_RUNNING;
   }
   return KEYSCOPE_ALL;

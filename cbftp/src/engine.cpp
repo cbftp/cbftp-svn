@@ -695,10 +695,32 @@ void Engine::deleteOnSites(const std::shared_ptr<Race> & race, std::list<std::sh
   }
 }
 
-void Engine::abortTransferJob(const std::shared_ptr<TransferJob> & tj) {
+void Engine::abortTransferJob(const std::shared_ptr<TransferJob>& tj) {
   tj->abort();
   currenttransferjobs.remove(tj);
   global->getEventLog()->log("Engine", "Transfer job aborted: " + tj->getSrcFileName());
+}
+
+void Engine::resetTransferJob(const std::shared_ptr<TransferJob>& tj) {
+  tj->reset();
+  bool current = false;
+  for (const std::shared_ptr<TransferJob>& currenttj : currenttransferjobs) {
+    if (currenttj == tj) {
+      current = true;
+      break;
+    }
+  }
+  if (!current) {
+    currenttransferjobs.push_back(tj);
+  }
+  if (tj->getSrc()) {
+    tj->getSrc()->activateOne();
+  }
+  if (tj->getDst()) {
+    tj->getDst()->activateOne();
+  }
+  checkStartPoke();
+  global->getEventLog()->log("Engine", "Transfer job reset: " + tj->getSrcFileName());
 }
 
 void Engine::jobFileListRefreshed(SiteLogic * sls, const std::shared_ptr<CommandOwner> & commandowner, const std::shared_ptr<FileList>& fl) {

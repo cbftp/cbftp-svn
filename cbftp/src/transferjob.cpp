@@ -177,22 +177,7 @@ void TransferJob::init(unsigned int id, TransferJobType type, const std::shared_
   this->dstpath = dstpath;
   this->srcfile = srcfile;
   this->dstfile = dstfile;
-  status = TRANSFERJOB_QUEUED;
-  almostdone = false;
-  slots = !!src ? src->getSite()->getMaxDownTransferJob() : 1;
-  expectedfinalsize = 0;
-  sizeprogress = 0;
-  timeremaining = -1;
-  timespentmillis = 0;
-  timespentsecs = 0;
-  progress = 0;
-  milliprogress = 0;
-  speed = 0;
-  filesprogress = 0;
-  filestotal = 0;
-  idletime = 0;
-  timequeued = util::ctimeLog();
-  timestarted = "-";
+  resetValues();
   if (!!src) {
     srcsitetransferjob = std::make_shared<SiteTransferJob>(this, true);
   }
@@ -272,23 +257,25 @@ std::shared_ptr<FileList> TransferJob::getListTarget(bool source) const {
   return dstlisttarget;
 }
 
-void TransferJob::checkFileListExists(const std::shared_ptr<FileList>& fl) const {
+bool TransferJob::checkFileListExists(const std::shared_ptr<FileList>& fl) const {
   std::unordered_map<std::string, std::shared_ptr<FileList>>::const_iterator it;
   for (it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
     if (it->second == fl) {
-      return;
+      return true;
     }
   }
   for (it = dstfilelists.begin(); it != dstfilelists.end(); it++) {
     if (it->second == fl) {
-      return;
+      return true;
     }
   }
-  assert(false);
+  return false;
 }
 
 void TransferJob::fileListUpdated(bool source, const std::shared_ptr<FileList>& fl) {
-  checkFileListExists(fl);
+  if (!checkFileListExists(fl)) {
+    return;
+  }
   std::unordered_map<std::shared_ptr<FileList>, int>::iterator it = filelistsrefreshed.find(fl);
   if (it == filelistsrefreshed.end()) {
 
@@ -763,10 +750,14 @@ void TransferJob::transferSuccessful(const std::shared_ptr<TransferStatus>& ts) 
 
 void TransferJob::transferFailed(const std::shared_ptr<TransferStatus>& ts, int) {
   if (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) {
-    checkFileListExists(ts->getSourceFileList());
+    if (!checkFileListExists(ts->getSourceFileList())) {
+      return;
+    }
   }
   if (type == TRANSFERJOB_UPLOAD || type == TRANSFERJOB_FXP) {
-    checkFileListExists(ts->getTargetFileList());
+    if (!checkFileListExists(ts->getTargetFileList())) {
+      return;
+    }
   }
   idletime = 0;
   if (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) {
@@ -802,4 +793,49 @@ std::shared_ptr<SiteTransferJob>& TransferJob::getSrcTransferJob() {
 
 std::shared_ptr<SiteTransferJob>& TransferJob::getDstTransferJob() {
   return dstsitetransferjob;
+}
+
+void TransferJob::reset() {
+  global->getTickPoke()->stopPoke(this, 0);
+  srcfilelists.clear();
+  dstfilelists.clear();
+  localfilelists.clear();
+  pendingtransfers.clear();
+  existingtargets.clear();
+  srclisttarget.reset();
+  dstlisttarget.reset();
+  filelistsrefreshed.clear();
+  resetValues();
+  if (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) {
+    std::shared_ptr<FileList> srcfilelist = std::make_shared<FileList>(src->getSite()->getUser(), srcpath);
+    srcfilelists[""] = srcfilelist;
+    filelistsrefreshed[srcfilelist] = REFRESH_NOW;
+  }
+  if (type == TRANSFERJOB_UPLOAD || type == TRANSFERJOB_FXP) {
+    std::shared_ptr<FileList> dstfilelist = std::make_shared<FileList>(dst->getSite()->getUser(), dstpath);
+    dstfilelists[""] = dstfilelist;
+    filelistsrefreshed[dstfilelist] = REFRESH_NOW;
+  }
+  if (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_UPLOAD) {
+    updateLocalFileLists();
+  }
+}
+
+void TransferJob::resetValues() {
+  status = TRANSFERJOB_QUEUED;
+  timequeued = util::ctimeLog();
+  almostdone = false;
+  slots = !!src ? src->getSite()->getMaxDownTransferJob() : 1;
+  expectedfinalsize = 0;
+  sizeprogress = 0;
+  timeremaining = -1;
+  timespentmillis = 0;
+  timespentsecs = 0;
+  progress = 0;
+  milliprogress = 0;
+  speed = 0;
+  filesprogress = 0;
+  filestotal = 0;
+  idletime = 0;
+  timestarted = "-";
 }

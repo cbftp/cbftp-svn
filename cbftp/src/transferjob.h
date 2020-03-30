@@ -103,6 +103,7 @@ public:
   std::shared_ptr<SiteTransferJob> & getSrcTransferJob();
   std::shared_ptr<SiteTransferJob> & getDstTransferJob();
   void updateStatus();
+  void reset();
 private:
   void downloadJob(unsigned int, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fl, const std::string &, const Path &, const std::string &);
   void uploadJob(unsigned int, const Path &, const std::string &, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fl, const std::string &);
@@ -115,7 +116,8 @@ private:
   void setDone();
   void updateLocalFileLists();
   void updateLocalFileLists(const Path &, const Path &);
-  void checkFileListExists(const std::shared_ptr<FileList>& fl) const;
+  bool checkFileListExists(const std::shared_ptr<FileList>& fl) const;
+  void resetValues();
   int type;
   std::shared_ptr<SiteLogic> src;
   std::shared_ptr<SiteLogic> dst;
