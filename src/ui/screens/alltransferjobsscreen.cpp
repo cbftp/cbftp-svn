@@ -18,6 +18,7 @@ AllTransferJobsScreen::AllTransferJobsScreen(Ui* ui) : UIWindow(ui, "AllTransfer
   keybinds.addBind(10, KEYACTION_ENTER, "Details");
   keybinds.addBind('B', KEYACTION_ABORT, "Abort job");
   keybinds.addBind('t', KEYACTION_TRANSFERS, "Transfers for job");
+  keybinds.addBind('r', KEYACTION_RESET, "Reset");
   keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Return");
   keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
   keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
@@ -183,6 +184,15 @@ bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
         std::shared_ptr<TransferJob> tj = global->getEngine()->getTransferJob(table.getElement(table.getSelectionPointer())->getId());
         if (!!tj) {
           ui->goTransfersFilterTransferJob(tj->getName());
+        }
+      }
+      return true;
+    case KEYACTION_RESET:
+      if (hascontents) {
+        std::shared_ptr<TransferJob> tj = global->getEngine()->getTransferJob(table.getElement(table.getSelectionPointer())->getId());
+        if (!!tj) {
+          global->getEngine()->resetTransferJob(tj);
+          ui->redraw();
         }
       }
       return true;
