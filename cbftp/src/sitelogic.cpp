@@ -424,6 +424,14 @@ bool SiteLogic::makeTargetDirectory(int id, bool includinglast, const std::share
 void SiteLogic::commandSuccess(int id, FTPConnState state) {
   connstatetracker[id].resetIdleTime();
   std::list<SiteLogicRequest>::iterator it;
+  if (!refreshgovernor.refreshAllowed() && refreshgovernor.immediateRefreshAllowed()) {
+    if (state != FTPConnState::CWD && state != FTPConnState::LIST && state != FTPConnState::LIST_COMPLETE &&
+        state != FTPConnState::PRET_LIST)
+    {
+      connstatetracker[id].setRefreshToken();
+      refreshgovernor.useRefresh();
+    }
+  }
   switch (state) {
     case FTPConnState::LOGIN:
       loggedin++;
@@ -642,6 +650,14 @@ void SiteLogic::commandFail(int id) {
 void SiteLogic::commandFail(int id, FailureType failuretype) {
   connstatetracker[id].resetIdleTime();
   FTPConnState state = conns[id]->getState();
+  if (!refreshgovernor.refreshAllowed() && refreshgovernor.immediateRefreshAllowed()) {
+    if (state != FTPConnState::CWD && state != FTPConnState::LIST && state != FTPConnState::LIST_COMPLETE &&
+        state != FTPConnState::PRET_LIST)
+    {
+      connstatetracker[id].setRefreshToken();
+      refreshgovernor.useRefresh();
+    }
+  }
   switch (state) {
     case FTPConnState::PBSZ:
     case FTPConnState::PROT_P:
@@ -668,7 +684,7 @@ void SiteLogic::commandFail(int id, FailureType failuretype) {
       }
       std::shared_ptr<CommandOwner> currentco = conns[id]->currentCommandOwner();
       if (currentco && currentco->classType() == COMMANDOWNER_SITERACE && connstatetracker[id].lastChecked() == currentco) {
-        connstatetracker[id].check(std::static_pointer_cast<SiteRace>(currentco));
+        connstatetracker[id].check();
       }
       if (connstatetracker[id].getRecursiveLogic()->isActive()) {
         connstatetracker[id].getRecursiveLogic()->failedCwd();
@@ -1138,13 +1154,16 @@ bool SiteLogic::handleSpreadJob(int id) {
     std::shared_ptr<SiteRace> race;
     bool refresh = false;
     std::shared_ptr<SiteRace> lastchecked = connstatetracker[id].lastChecked();
+    bool uselastchecked = false;
     if (lastchecked && !lastchecked->isDone() && lastchecked->anyFileListNotNonExistent() &&
         connstatetracker[id].checkCount() < maxChecksRow(site->getPriority()))
     {
       race = lastchecked;
       refresh = true;
+      uselastchecked = true;
     }
     else {
+      connstatetracker[id].resetLastChecked();
       for (unsigned int i = 0; i < currentraces.size(); i++) {
         if (!currentraces[i]->isDone() && !wasRecentlyListed(currentraces[i])) {
           race = currentraces[i];
@@ -1206,28 +1225,30 @@ bool SiteLogic::handleSpreadJob(int id) {
         fl = race->getFileListForPath(subpath.toString());
       }
       if (refresh && fl && fl->getPath() != connstatetracker[id].getLastRefreshPath()) {
-        connstatetracker[id].check(race);
+        connstatetracker[id].check();
         getFileListConn(id, race, fl);
         return true;
       }
     }
     if (!fl || fl->getPath() == connstatetracker[id].getLastRefreshPath()) {
-      std::string subpath = race->getRelevantSubPath();
-      Path targetpath = race->getPath() / subpath;
-      fl = race->getFileListForFullPath(this, targetpath);
-      if (targetpath != currentpath) {
-        int timesincelastrefresh = currtime - fl->getRefreshedTime();
-        if ((fl->getState() == FileListState::FAILED && timesincelastrefresh < DELAY_BEFORE_REVISIT_FAILED_DIR) ||
-            (fl->getState() == FileListState::NONEXISTENT && timesincelastrefresh < DELAY_BEFORE_REVISIT_NONEXISTING_DIR))
-        {
-          continue;
+      if (!fl || !uselastchecked) {
+        std::string subpath = race->getRelevantSubPath();
+        Path targetpath = race->getPath() / subpath;
+        fl = race->getFileListForFullPath(this, targetpath);
+        if (targetpath != currentpath) {
+          int timesincelastrefresh = currtime - fl->getRefreshedTime();
+          if ((fl->getState() == FileListState::FAILED && timesincelastrefresh < DELAY_BEFORE_REVISIT_FAILED_DIR) ||
+              (fl->getState() == FileListState::NONEXISTENT && timesincelastrefresh < DELAY_BEFORE_REVISIT_NONEXISTING_DIR))
+          {
+            continue;
+          }
+          connstatetracker[id].use();
+          conns[id]->doCWD(fl, race);
+          return true;
         }
-        connstatetracker[id].use();
-        conns[id]->doCWD(fl, race);
-        return true;
       }
-      else if (refresh) {
-        connstatetracker[id].check(race);
+      if (refresh) {
+        connstatetracker[id].check();
         getFileListConn(id, race, fl);
         return true;
       }

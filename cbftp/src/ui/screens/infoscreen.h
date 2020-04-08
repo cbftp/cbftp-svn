@@ -4,11 +4,11 @@
 
 class InfoScreen : public UIWindow {
 public:
-  InfoScreen(Ui *);
-  void initialize(unsigned int, unsigned int);
+  InfoScreen(Ui* ui);
+  void initialize(unsigned int row, unsigned int col);
   void redraw();
   void update();
-  bool keyPressed(unsigned int);
+  bool keyPressed(unsigned int ch);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
 };

@@ -377,6 +377,10 @@ Field summary:
 - Priority: How important the site is considered to be during spread jobs.
   The priority is factored into the transfer scoring - you can read more about
   this in the "the transfer engine" section.
+- List frequency: The rate of file list refreshes during active spread jobs.
+  Dynamic mode is normally optimal and based on current cpu load (low load = 
+  higher refresh rate). Having too many sites at a fixed high refresh rate may
+  overload the cpu and cause unwanted latency.
 - Transfer source policy: Sets whether to have a block list or an allow list
   of sites to transfer with. Setting the policy to "allow" means the
   list below will be a block list, and vice versa.
@@ -485,8 +489,7 @@ A: You usually need to press 'd' (as in Done) to save settings when editing.
    Pressing c or escape normally means cancel without saving changes.
 
 Q: Can I change key bindings?
-A: Only by modifying the source code, as of right now. But I encourage you
-   to try that :)
+A: Yes, press '?' to see and edit keybindings for the current screen.
 
 Q: Some fields do not seem to be visible in the UI, or are disappearing
    sometimes. What's going on?

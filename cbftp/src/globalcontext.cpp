@@ -17,7 +17,8 @@ void GlobalContext::linkComponents(SettingsLoaderSaver* sls, Engine* e,
     TransferManager* tm, RemoteCommandHandler* rch,
     SkipList* sl, ProxyManager* pm, LocalStorage* ls,
     ExternalFileViewing* efv, TimeReference* tr, Statistics* s,
-    SectionManager* secm, HTTPServer* httpsrv, RestApi* ra)
+    SectionManager* secm, HTTPServer* httpsrv, RestApi* ra,
+    LoadMonitor* lm)
 {
   this->sls = sls;
   this->e = e;
@@ -35,6 +36,7 @@ void GlobalContext::linkComponents(SettingsLoaderSaver* sls, Engine* e,
   this->secm = secm;
   this->httpsrv = httpsrv;
   this->ra = ra;
+  this->lm = lm;
 }
 
 Engine* GlobalContext::getEngine() const {
@@ -115,4 +117,8 @@ HTTPServer* GlobalContext::getHTTPServer() const {
 
 RestApi* GlobalContext::getRestApi() const {
   return ra;
+}
+
+LoadMonitor* GlobalContext::getLoadMonitor() const {
+  return lm;
 }

@@ -66,6 +66,7 @@
 #include "screens/movescreen.h"
 #include "screens/fileinfoscreen.h"
 #include "screens/keybindsscreen.h"
+#include "screens/metricsscreen.h"
 
 namespace {
 
@@ -163,6 +164,7 @@ bool Ui::init() {
   movescreen = std::make_shared<MoveScreen>(this);
   fileinfoscreen = std::make_shared<FileInfoScreen>(this);
   keybindsscreen = std::make_shared<KeyBindsScreen>(this);
+  metricsscreen = std::make_shared<MetricsScreen>(this);
   mainwindows.push_back(mainscreen);
   mainwindows.push_back(newkeyscreen);
   mainwindows.push_back(confirmationscreen);
@@ -203,6 +205,7 @@ bool Ui::init() {
   mainwindows.push_back(movescreen);
   mainwindows.push_back(fileinfoscreen);
   mainwindows.push_back(keybindsscreen);
+  mainwindows.push_back(metricsscreen);
 
   legendprinterkeybinds = std::make_shared<LegendPrinterKeybinds>(this);
   legendwindow->setMainLegendPrinter(legendprinterkeybinds);
@@ -991,6 +994,11 @@ void Ui::goKeyBinds(KeyBinds* keybinds) {
 void Ui::goGlobalKeyBinds() {
   keybindsscreen->initialize(mainrow, maincol, globalkeybinds.get());
   switchToWindow(keybindsscreen);
+}
+
+void Ui::goMetrics() {
+  metricsscreen->initialize(mainrow, maincol);
+  switchToWindow(metricsscreen);
 }
 
 void Ui::returnSelectItems(const std::string & items) {

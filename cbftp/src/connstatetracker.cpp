@@ -49,14 +49,8 @@ int ConnStateTracker::getTimePassed() const {
   return idletime;
 }
 
-void ConnStateTracker::check(const std::shared_ptr<SiteRace>& sr) {
-  if (lastchecked == sr) {
-    lastcheckedcount++;
-  }
-  else {
-    lastchecked = sr;
-    lastcheckedcount = 1;
-  }
+void ConnStateTracker::check() {
+  lastcheckedcount++;
 }
 
 void ConnStateTracker::setLastChecked(const std::shared_ptr<SiteRace>& sr) {
@@ -64,6 +58,11 @@ void ConnStateTracker::setLastChecked(const std::shared_ptr<SiteRace>& sr) {
     lastchecked = sr;
     lastcheckedcount = 0;
   }
+}
+
+void ConnStateTracker::resetLastChecked() {
+  lastchecked = nullptr;
+  lastcheckedcount = 0;
 }
 
 const std::shared_ptr<SiteRace> & ConnStateTracker::lastChecked() const {

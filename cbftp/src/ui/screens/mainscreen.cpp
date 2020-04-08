@@ -54,7 +54,8 @@ enum KeyActions {
   KEYACTION_ABORT_DELETE_ALL,
   KEYACTION_LOGIN,
   KEYACTION_DELETE2,
-  KEYACTION_SCOREBOARD
+  KEYACTION_SCOREBOARD,
+  KEYACTION_METRICS
 };
 
 enum KeyScopes {
@@ -84,6 +85,7 @@ MainScreen::MainScreen(Ui* ui) : UIWindow(ui, "MainScreen") {
   keybinds.addBind('s', KEYACTION_SECTIONS, "Sections");
   keybinds.addBind('S', KEYACTION_SNAKE, "Snake");
   keybinds.addBind('o', KEYACTION_SCOREBOARD, "Scoreboard");
+  keybinds.addBind('m', KEYACTION_METRICS, "Metrics");
   keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
   keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
   keybinds.addBind(KEY_PPAGE, KEYACTION_PREVIOUS_PAGE, "Previous page");
@@ -456,6 +458,9 @@ bool MainScreen::keyPressed(unsigned int ch) {
       return true;
     case KEYACTION_SCOREBOARD:
       ui->goScoreBoard();
+      return true;
+    case KEYACTION_METRICS:
+      ui->goMetrics();
       return true;
     case KEYACTION_ALL_SPREAD_JOBS:
       ui->goAllRaces();

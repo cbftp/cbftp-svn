@@ -63,8 +63,9 @@ public:
   void delayedCommand(const std::string & command, int delay, bool persisting = false, const std::shared_ptr<CommandOwner> & co = nullptr);
   void timePassed(int);
   int getTimePassed() const;
-  void check(const std::shared_ptr<SiteRace>& sr);
+  void check();
   void setLastChecked(const std::shared_ptr<SiteRace>& sr);
+  void resetLastChecked();
   const std::shared_ptr<SiteRace> & lastChecked() const;
   int checkCount() const;
   void purgeSiteRace(const std::shared_ptr<SiteRace> & sr);

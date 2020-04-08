@@ -88,6 +88,7 @@ Site::Site(const std::string & name) :
   allowupload(SITE_ALLOW_TRANSFER_YES),
   allowdownload(SITE_ALLOW_TRANSFER_YES),
   priority(SitePriority::NORMAL),
+  refreshrate(RefreshRate::DYNAMIC),
   xdupe(true),
   proxytype(SITE_PROXY_GLOBAL),
   transfersourcepolicy(SITE_TRANSFER_POLICY_ALLOW),
@@ -129,6 +130,7 @@ Site::Site(const Site & other) {
   allowupload = other.allowupload;
   allowdownload = other.allowdownload;
   priority = other.priority;
+  refreshrate = other.refreshrate;
   xdupe = other.xdupe;
   proxytype = other.proxytype;
   proxyname = other.proxyname;
@@ -326,6 +328,10 @@ SitePriority Site::getPriority() const {
   return priority;
 }
 
+RefreshRate Site::getRefreshRate() const {
+  return refreshrate;
+}
+
 std::string Site::getPriorityText(SitePriority priority) {
   switch (priority) {
     case SitePriority::VERY_LOW:
@@ -342,8 +348,30 @@ std::string Site::getPriorityText(SitePriority priority) {
   return "Unknown";
 }
 
+std::string Site::getRefreshRateText(RefreshRate rate) {
+  switch (rate) {
+    case RefreshRate::VERY_LOW:
+      return "Fixed very low";
+    case RefreshRate::LOW:
+      return "Fixed low";
+    case RefreshRate::AVERAGE:
+      return "Fixed average";
+    case RefreshRate::HIGH:
+      return "Fixed high";
+    case RefreshRate::VERY_HIGH:
+      return "Fixed very high";
+    case RefreshRate::DYNAMIC:
+      return "Dynamic";
+  }
+  return "Unknown";
+}
+
 void Site::setPriority(SitePriority priority) {
   this->priority = priority;
+}
+
+void Site::setRefreshRate(RefreshRate rate) {
+  refreshrate = rate;
 }
 
 bool Site::supportsSSCN() const {

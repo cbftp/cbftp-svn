@@ -72,6 +72,7 @@ class DisableEncryptionScreen;
 class MoveScreen;
 class FileInfoScreen;
 class KeyBindsScreen;
+class MetricsScreen;
 
 class LegendPrinterKeybinds;
 struct TransferFilteringParameters;
@@ -134,6 +135,7 @@ private:
   std::shared_ptr<MoveScreen> movescreen;
   std::shared_ptr<FileInfoScreen> fileinfoscreen;
   std::shared_ptr<KeyBindsScreen> keybindsscreen;
+  std::shared_ptr<MetricsScreen> metricsscreen;
   std::shared_ptr<LegendPrinterKeybinds> legendprinterkeybinds;
   int mainrow;
   int maincol;
@@ -260,6 +262,7 @@ public:
   void goFileInfo(UIFile* uifile);
   void goKeyBinds(KeyBinds* keybinds);
   void goGlobalKeyBinds();
+  void goMetrics();
   void returnSelectItems(const std::string &);
   void key(const std::string &);
   void newKey(const std::string &);
