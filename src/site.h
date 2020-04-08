@@ -35,6 +35,15 @@ enum class SitePriority {
   VERY_HIGH = 715
 };
 
+enum class RefreshRate {
+  VERY_LOW = 751,
+  LOW = 752,
+  AVERAGE = 753,
+  HIGH = 754,
+  VERY_HIGH = 755,
+  DYNAMIC = 756
+};
+
 #define SITE_TRANSFER_POLICY_ALLOW 817
 #define SITE_TRANSFER_POLICY_BLOCK 818
 
@@ -78,6 +87,7 @@ private:
   SiteAllowTransfer allowupload;
   SiteAllowTransfer allowdownload;
   SitePriority priority;
+  RefreshRate refreshrate;
   bool xdupe;
   std::map<std::string, Path> sections;
   std::map<std::string, int> avgspeed;
@@ -142,8 +152,11 @@ public:
   void setTransferProtocol(TransferProtocol protocol);
   void setListCommand(int);
   SitePriority getPriority() const;
+  RefreshRate getRefreshRate() const;
   static std::string getPriorityText(SitePriority priority);
+  static std::string getRefreshRateText(RefreshRate rate);
   void setPriority(SitePriority priority);
+  void setRefreshRate(RefreshRate rate);
   bool hasBrokenPASV() const;
   void setBrokenPASV(bool val);
   bool supportsSSCN() const;

@@ -26,6 +26,7 @@
 #include "sectionmanager.h"
 #include "httpserver.h"
 #include "restapi.h"
+#include "loadmonitor.h"
 
 namespace {
 
@@ -58,11 +59,12 @@ public:
     SectionManager* secm = new SectionManager();
     HTTPServer* httprv = new HTTPServer();
     RestApi* ra = new RestApi();
+    LoadMonitor* lm = new LoadMonitor();
 
     UIBase* uibase = UIBase::instance();
 
     global->linkComponents(sls, e, uibase, sm, slm, tm, rch, sl, pm, ls, efv,
-                           tr, s, secm, httprv, ra);
+                           tr, s, secm, httprv, ra, lm);
 
     Core::Threading::setCurrentThreadName("cbftp");
 

@@ -6,6 +6,7 @@
 #include "../../buildinfo.h"
 #include "../../hourlyalltracking.h"
 #include "../../settingsloadersaver.h"
+#include "../../loadmonitor.h"
 
 #include "../../core/sslmanager.h"
 
@@ -56,6 +57,10 @@ void InfoScreen::redraw() {
   ++i;
   ui->printStr(i++, 1, "All time spread jobs: " + std::to_string(global->getStatistics()->getSpreadJobs()));
   ui->printStr(i++, 1, "All time transfer jobs: " + std::to_string(global->getStatistics()->getTransferJobs()));
+  ++i;
+  ui->printStr(i++, 1, "Current CPU load total: " + std::to_string(global->getLoadMonitor()->getCurrentCpuUsageAll()) + "%");
+  ui->printStr(i++, 1, "Current CPU load worker: " + std::to_string(global->getLoadMonitor()->getCurrentCpuUsageWorker()) + "%");
+  ui->printStr(i++, 1, "Current performance level: " + std::to_string(global->getLoadMonitor()->getCurrentRecommendedPerformanceLevel()));
 }
 
 void InfoScreen::update() {

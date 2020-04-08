@@ -162,13 +162,21 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   allowdownload->addOption("Yes", SITE_ALLOW_TRANSFER_YES);
   allowdownload->addOption("Affils only", SITE_ALLOW_DOWNLOAD_MATCH_ONLY);
   allowdownload->setOption(this->site->getAllowDownload());
-  std::shared_ptr<MenuSelectOptionTextArrow> priority = mso.addTextArrow(y++, x, "priority", "Priority:");
+  std::shared_ptr<MenuSelectOptionTextArrow> priority = mso.addTextArrow(y, x, "priority", "Priority:");
   priority->addOption(Site::getPriorityText(SitePriority::VERY_LOW), static_cast<int>(SitePriority::VERY_LOW));
   priority->addOption(Site::getPriorityText(SitePriority::LOW), static_cast<int>(SitePriority::LOW));
   priority->addOption(Site::getPriorityText(SitePriority::NORMAL), static_cast<int>(SitePriority::NORMAL));
   priority->addOption(Site::getPriorityText(SitePriority::HIGH), static_cast<int>(SitePriority::HIGH));
   priority->addOption(Site::getPriorityText(SitePriority::VERY_HIGH), static_cast<int>(SitePriority::VERY_HIGH));
   priority->setOption(static_cast<int>(this->site->getPriority()));
+  std::shared_ptr<MenuSelectOptionTextArrow> refreshrate = mso.addTextArrow(y++, x + 24, "refreshrate", "List frequency:");
+  refreshrate->addOption(Site::getRefreshRateText(RefreshRate::VERY_LOW), static_cast<int>(RefreshRate::VERY_LOW));
+  refreshrate->addOption(Site::getRefreshRateText(RefreshRate::LOW), static_cast<int>(RefreshRate::LOW));
+  refreshrate->addOption(Site::getRefreshRateText(RefreshRate::AVERAGE), static_cast<int>(RefreshRate::AVERAGE));
+  refreshrate->addOption(Site::getRefreshRateText(RefreshRate::HIGH), static_cast<int>(RefreshRate::HIGH));
+  refreshrate->addOption(Site::getRefreshRateText(RefreshRate::VERY_HIGH), static_cast<int>(RefreshRate::VERY_HIGH));
+  refreshrate->addOption(Site::getRefreshRateText(RefreshRate::DYNAMIC), static_cast<int>(RefreshRate::DYNAMIC));
+  refreshrate->setOption(static_cast<int>(this->site->getRefreshRate()));
   std::shared_ptr<MenuSelectOptionTextArrow> sourcepolicy = mso.addTextArrow(y, x, "sourcepolicy", "Transfer source policy:");
   sourcepolicy->addOption("Allow", SITE_TRANSFER_POLICY_ALLOW);
   sourcepolicy->addOption("Block", SITE_TRANSFER_POLICY_BLOCK);
@@ -453,6 +461,9 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "priority") {
           site->setPriority(static_cast<SitePriority>(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData()));
+        }
+        else if (identifier == "refreshrate") {
+          site->setRefreshRate(static_cast<RefreshRate>(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData()));
         }
         else if (identifier == "brokenpasv") {
           site->setBrokenPASV(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());

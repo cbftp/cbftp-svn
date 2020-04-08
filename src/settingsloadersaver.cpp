@@ -445,6 +445,9 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("priority")) {
       site->setPriority(static_cast<SitePriority>(std::stoi(value)));
     }
+    else if (!setting.compare("refreshrate")) {
+      site->setRefreshRate(static_cast<RefreshRate>(std::stoi(value)));
+    }
     else if (!setting.compare("brokenpasv")) {
       if (!value.compare("true")) site->setBrokenPASV(true);
     }
@@ -853,6 +856,7 @@ void SettingsLoaderSaver::saveSettings() {
       dfh->addOutputLine(filetag, name + "$allowupload=" + std::to_string(site->getAllowUpload()));
       dfh->addOutputLine(filetag, name + "$allowdownload=" + std::to_string(site->getAllowDownload()));
       dfh->addOutputLine(filetag, name + "$priority=" + std::to_string(static_cast<int>(site->getPriority())));
+      dfh->addOutputLine(filetag, name + "$refreshrate=" + std::to_string(static_cast<int>(site->getRefreshRate())));
       if (site->hasBrokenPASV()) dfh->addOutputLine(filetag, name + "$brokenpasv=true");
       if (site->getLeaveFreeSlot()) {
         dfh->addOutputLine(filetag, name + "$freeslot=true");
