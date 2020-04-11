@@ -465,6 +465,19 @@ N - Toggle the next prepared spread job auto starter. While this function is
     might be hard to tell which items that are on the same line
 They can be configured through the global options screen.
 
+METRICS
+
+In the metrics screen, there are a few metrics shown as graphs:
+- CPU load total: the total CPU usage of the cbftp process, for all CPU cores.
+  (100% load on all cores => 100% in this metric)
+- CPU load worker: The load of the worker thread in cbftp.
+- Performance level: an internal level used for deciding file list frequency
+  during spread jobs on sites where dynamic list frequency is specified.
+  High CPU load causes the level to drop, and it will rise back up again
+  once the CPU load shrinks. The idea is to avoid full load on the CPU since
+  it results in latency when work is queued up, and slightly lower list
+  frequency is often preferable over latency.
+
 OTHER UI WINDOWS
 
 There are various other views in the cbftp UI that are not mentioned here in

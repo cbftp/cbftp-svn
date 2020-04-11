@@ -7,6 +7,22 @@
 #include "../ui.h"
 #include "../braillegraph.h"
 
+namespace {
+
+void drawAllIn(Ui* ui, const std::list<BrailleGraph::GraphChar>& list, unsigned int startrow) {
+  for (const BrailleGraph::GraphChar& ch : list) {
+    ui->printChar(ch.row + startrow, ch.col, ch.ch);
+  }
+}
+
+void drawGraph(Ui* ui, const std::unique_ptr<BrailleGraph>& graph, unsigned int startrow = 0) {
+  drawAllIn(ui, graph->getStaticBorderChars(), startrow);
+  drawAllIn(ui, graph->getChangingBorderChars(), startrow);
+  drawAllIn(ui, graph->getGraphChars(), startrow);
+}
+
+}
+
 MetricsScreen::MetricsScreen(Ui* ui) : UIWindow(ui, "MetricsScreen") {
   allowimplicitgokeybinds = false;
   autoupdate = true;
@@ -22,54 +38,34 @@ void MetricsScreen::initialize(unsigned int row, unsigned int col) {
   cpuall = std::unique_ptr<BrailleGraph>(new BrailleGraph(graphheight, col, "CPU load total", "%", 0, 100));
   cpuworker = std::unique_ptr<BrailleGraph>(new BrailleGraph(graphheight, col, "CPU load worker", "%", 0, 100));
   perflevel = std::unique_ptr<BrailleGraph>(new BrailleGraph(graphheight, col, "Performance level", "", 1, 9));
+  cpuall->setData(global->getLoadMonitor()->getCpuUsageAllHistory());
+  cpuworker->setData(global->getLoadMonitor()->getCpuUsageWorkerHistory());
+  perflevel->setData(global->getLoadMonitor()->getPerformanceLevelHistory());
   init(row, col);
 }
 
 void MetricsScreen::redraw() {
-  ui->erase();
-  ui->hideCursor();
   unsigned int graphheight = row / 3;
-  cpuall->resize(graphheight, col);
-  cpuworker->resize(graphheight, col);
-  perflevel->resize(graphheight, col);
-  cpuall->setData(global->getLoadMonitor()->getCpuUsageAllHistory());
-  cpuworker->setData(global->getLoadMonitor()->getCpuUsageWorkerHistory());
-  perflevel->setData(global->getLoadMonitor()->getPerformanceLevelHistory());
-
-  for (unsigned int y = 0; y < cpuall->rows(); ++y) {
-    for (unsigned int x = 0; x < cpuall->cols(); ++x) {
-      unsigned int chr = cpuall->getChar(y, x);
-      if (chr) {
-        ui->printChar(y, x, chr);
-      }
-    }
-  }
-  for (unsigned int y = 0; y < cpuworker->rows(); ++y) {
-    for (unsigned int x = 0; x < cpuworker->cols(); ++x) {
-      unsigned int chr = cpuworker->getChar(y, x);
-      if (chr) {
-        ui->printChar(y + cpuall->rows(), x, chr);
-      }
-    }
-  }
-  for (unsigned int y = 0; y < perflevel->rows(); ++y) {
-    for (unsigned int x = 0; x < perflevel->cols(); ++x) {
-      unsigned int chr = perflevel->getChar(y, x);
-      if (chr) {
-        ui->printChar(y + cpuall->rows() + cpuworker->rows(), x, chr);
-      }
-    }
-  }
+  cpuall->resize(graphheight, col, true);
+  cpuworker->resize(graphheight, col, true);
+  perflevel->resize(graphheight, col, true);
+  update();
 }
 
 void MetricsScreen::update() {
-  redraw();
+  ui->erase();
+  ui->hideCursor();
+  cpuall->addNewData(global->getLoadMonitor()->getUnseenCpuUsageAllHistory());
+  cpuworker->addNewData(global->getLoadMonitor()->getUnseenCpuUsageWorkerHistory());
+  perflevel->addNewData(global->getLoadMonitor()->getUnseenPerformanceLevelHistory());
+  drawGraph(ui, cpuall);
+  drawGraph(ui, cpuworker, cpuall->rows());
+  drawGraph(ui, perflevel, cpuall->rows() + cpuworker->rows());
 }
 
 bool MetricsScreen::keyPressed(unsigned int ch) {
   switch(ch) {
     case 27: // esc
-    case ' ':
     case 10:
       ui->returnToLast();
       return true;
@@ -78,7 +74,7 @@ bool MetricsScreen::keyPressed(unsigned int ch) {
 }
 
 std::string MetricsScreen::getLegendText() const {
-  return "[Any] Return";
+  return "[Esc/Enter] Return";
 }
 
 std::string MetricsScreen::getInfoLabel() const {

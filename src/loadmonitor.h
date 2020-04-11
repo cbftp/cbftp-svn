@@ -18,6 +18,9 @@ public:
   const std::list<unsigned int>& getCpuUsageAllHistory() const;
   const std::list<unsigned int>& getCpuUsageWorkerHistory() const;
   const std::list<unsigned int>& getPerformanceLevelHistory() const;
+  std::list<unsigned int> getUnseenCpuUsageAllHistory() const;
+  std::list<unsigned int> getUnseenCpuUsageWorkerHistory() const;
+  std::list<unsigned int> getUnseenPerformanceLevelHistory() const;
   int getHistoryLengthSeconds() const;
 private:
   void tick(int message) override;
@@ -27,6 +30,9 @@ private:
   std::list<unsigned int> allhistory;
   std::list<unsigned int> workerhistory;
   std::list<unsigned int> perflevelhistory;
+  mutable std::list<unsigned int> allhistoryunseen;
+  mutable std::list<unsigned int> workerhistoryunseen;
+  mutable std::list<unsigned int> perflevelhistoryunseen;
   unsigned int numcores;
   unsigned int throttletoppc;
   unsigned int throttlebottompc;
