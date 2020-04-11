@@ -55,7 +55,8 @@ enum KeyActions {
   KEYACTION_LOGIN,
   KEYACTION_DELETE2,
   KEYACTION_SCOREBOARD,
-  KEYACTION_METRICS
+  KEYACTION_METRICS,
+  KEYACTION_ALL_TRANSFERS
 };
 
 enum KeyScopes {
@@ -75,7 +76,7 @@ MainScreen::MainScreen(Ui* ui) : UIWindow(ui, "MainScreen") {
   keybinds.addBind('A', KEYACTION_ADD_SITE, "Add site");
   keybinds.addBind('G', KEYACTION_GLOBAL_SETTINGS, "Global settings");
   keybinds.addBind('l', KEYACTION_EVENT_LOG, "Event log");
-  keybinds.addBind('t', KEYACTION_TRANSFERS, "Transfers");
+  keybinds.addBind('t', KEYACTION_ALL_TRANSFERS, "Transfers");
   keybinds.addBind('r', KEYACTION_ALL_SPREAD_JOBS, "All spread jobs");
   keybinds.addBind('j', KEYACTION_ALL_TRANSFER_JOBS, "All transfer jobs");
   keybinds.addBind('q', KEYACTION_QUICK_JUMP, "Quick jump");
@@ -101,6 +102,7 @@ MainScreen::MainScreen(Ui* ui) : UIWindow(ui, "MainScreen") {
   keybinds.addBind(KEY_DC, KEYACTION_DELETE2, "Delete", KEYSCOPE_SITE);
   keybinds.addBind(10, KEYACTION_ENTER, "Status", KEYSCOPE_SITE);
   keybinds.addBind('L', KEYACTION_LOGIN, "Login all slots", KEYSCOPE_SITE);
+  keybinds.addBind('T', KEYACTION_TRANSFERS, "Transfers", KEYSCOPE_SITE);
   keybinds.addBind(10, KEYACTION_ENTER, "Status", KEYSCOPE_SPREAD_JOB);
   keybinds.addBind('B', KEYACTION_ABORT, "Abort", KEYSCOPE_SPREAD_JOB);
   keybinds.addBind('T', KEYACTION_TRANSFERS, "Transfers", KEYSCOPE_SPREAD_JOB);
@@ -553,6 +555,9 @@ bool MainScreen::keyPressed(unsigned int ch) {
         }
       }
       return true;
+    case KEYACTION_ALL_TRANSFERS:
+      ui->goTransfers();
+      return true;
     case KEYACTION_TRANSFERS:
       if (msosj.isFocused() && msosj.size() > 0) {
         std::shared_ptr<Race> race = global->getEngine()->getRace(msosj.getElement(msosj.getSelectionPointer())->getId());
@@ -566,8 +571,12 @@ bool MainScreen::keyPressed(unsigned int ch) {
           ui->goTransfersFilterTransferJob(tj->getName());
         }
       }
-      else {
-        ui->goTransfers();
+      else if (msos.isFocused() && msos.size() > 0) {
+        std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
+        std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
+        if (site) {
+          ui->goTransfersFilterSite(sitename);
+        }
       }
       return true;
     case KEYACTION_NEXT_PAGE:

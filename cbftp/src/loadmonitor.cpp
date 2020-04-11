@@ -8,18 +8,22 @@
 #include "globalcontext.h"
 #include "loadmonitorcallback.h"
 
+namespace {
 
-#define LOAD_MONITOR_CHECK_INTERVAL_MS 250
-#define HISTORY_LENGTH_SECONDS 60
-#define PERFLEVEL_MIN 1
-#define PERFLEVEL_MAX 9
-#define PERFLEVEL_THROTTLE_THRESHOLD_PC 82
-#define PERFLEVEL_THROTTLE_THRESHOLD_TOLERANCE 10
+const unsigned int LOAD_MONITOR_CHECK_INTERVAL_MS = 250;
+const unsigned int HISTORY_LENGTH_SECONDS = 60;
+const unsigned int PERFLEVEL_MIN = 1;
+const unsigned int PERFLEVEL_MAX = 9;
+const unsigned int PERFLEVEL_THROTTLE_THRESHOLD_PC = 75;
+const unsigned int PERFLEVEL_THROTTLE_THRESHOLD_TOLERANCE = 10;
+const unsigned int HISTORY_SLOTS = HISTORY_LENGTH_SECONDS * (1000 / LOAD_MONITOR_CHECK_INTERVAL_MS);
+
+}
 
 LoadMonitor::LoadMonitor() : lasttimeallms(0), lasttimeworkerms(0), perflevel(PERFLEVEL_MAX),
-  allhistory(HISTORY_LENGTH_SECONDS * (1000 / LOAD_MONITOR_CHECK_INTERVAL_MS), 0),
-  workerhistory(HISTORY_LENGTH_SECONDS * (1000 / LOAD_MONITOR_CHECK_INTERVAL_MS), 0),
-  perflevelhistory(HISTORY_LENGTH_SECONDS * (1000 / LOAD_MONITOR_CHECK_INTERVAL_MS), PERFLEVEL_MAX),
+  allhistory(HISTORY_SLOTS, 0),
+  workerhistory(HISTORY_SLOTS, 0),
+  perflevelhistory(HISTORY_SLOTS, PERFLEVEL_MAX),
   numcores(std::thread::hardware_concurrency()),
   throttletoppc(PERFLEVEL_THROTTLE_THRESHOLD_PC + PERFLEVEL_THROTTLE_THRESHOLD_TOLERANCE),
   throttlebottompc(PERFLEVEL_THROTTLE_THRESHOLD_PC - PERFLEVEL_THROTTLE_THRESHOLD_TOLERANCE)
@@ -42,10 +46,18 @@ void LoadMonitor::tick(int message) {
   unsigned long long int currtimeworkerms = timeworkerms - lasttimeworkerms;
   unsigned int currallpc = currtimeallms * 100 / numcores / LOAD_MONITOR_CHECK_INTERVAL_MS;
   unsigned int currworkerpc = currtimeworkerms * 100 / LOAD_MONITOR_CHECK_INTERVAL_MS;
-  allhistory.push_front(currallpc);
-  allhistory.pop_back();
-  workerhistory.push_front(currworkerpc);
-  workerhistory.pop_back();
+  allhistory.push_back(currallpc);
+  allhistory.pop_front();
+  allhistoryunseen.push_back(currallpc);
+  if (allhistoryunseen.size() > HISTORY_SLOTS) {
+    allhistoryunseen.pop_front();
+  }
+  workerhistory.push_back(currworkerpc);
+  workerhistory.pop_front();
+  workerhistoryunseen.push_back(currworkerpc);
+  if (workerhistoryunseen.size() > HISTORY_SLOTS) {
+    workerhistoryunseen.pop_front();
+  }
   bool perflevelchanged = false;
   if ((currallpc > throttletoppc || currworkerpc > throttletoppc) && perflevel > PERFLEVEL_MIN) {
     --perflevel;
@@ -55,8 +67,12 @@ void LoadMonitor::tick(int message) {
     ++perflevel;
     perflevelchanged = true;
   }
-  perflevelhistory.push_front(perflevel);
-  perflevelhistory.pop_back();
+  perflevelhistory.push_back(perflevel);
+  perflevelhistory.pop_front();
+  perflevelhistoryunseen.push_back(perflevel);
+  if (perflevelhistoryunseen.size() > HISTORY_SLOTS) {
+    perflevelhistoryunseen.pop_front();
+  }
   lasttimeallms = timeallms;
   lasttimeworkerms = timeworkerms;
   if (perflevelchanged) {
@@ -71,10 +87,10 @@ unsigned int LoadMonitor::getCurrentRecommendedPerformanceLevel() const {
 }
 
 unsigned int LoadMonitor::getCurrentCpuUsageAll() const {
-  return allhistory.front();
+  return allhistory.back();
 }
 unsigned int LoadMonitor::getCurrentCpuUsageWorker() const {
-  return workerhistory.front();
+  return workerhistory.back();
 }
 
 void LoadMonitor::addListener(LoadMonitorCallback* cb) {
@@ -86,15 +102,36 @@ void LoadMonitor::removeListener(LoadMonitorCallback* cb) {
 }
 
 const std::list<unsigned int>& LoadMonitor::getCpuUsageAllHistory() const {
+  allhistoryunseen.clear();
   return allhistory;
 }
 
 const std::list<unsigned int>& LoadMonitor::getCpuUsageWorkerHistory() const {
+  workerhistoryunseen.clear();
   return workerhistory;
 }
 
 const std::list<unsigned int>& LoadMonitor::getPerformanceLevelHistory() const {
+  perflevelhistoryunseen.clear();
   return perflevelhistory;
+}
+
+std::list<unsigned int> LoadMonitor::getUnseenCpuUsageAllHistory() const {
+  std::list<unsigned int> out = allhistoryunseen;
+  allhistoryunseen.clear();
+  return out;
+}
+
+std::list<unsigned int> LoadMonitor::getUnseenCpuUsageWorkerHistory() const {
+  std::list<unsigned int> out = workerhistoryunseen;
+  workerhistoryunseen.clear();
+  return out;
+}
+
+std::list<unsigned int> LoadMonitor::getUnseenPerformanceLevelHistory() const {
+  std::list<unsigned int> out = perflevelhistoryunseen;
+  perflevelhistoryunseen.clear();
+  return out;
 }
 
 int LoadMonitor::getHistoryLengthSeconds() const {
