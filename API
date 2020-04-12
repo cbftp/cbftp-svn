@@ -234,6 +234,49 @@ Example body (optional) when aborting a spread job:
   ]
 }
 
+- List all transfer jobs
+   GET /transferjobs (no body)
+   
+- Get details of a specific transfer job
+   GET /transferjobs/JOBNAME
+   
+- Start a new transfer job
+   POST /transferjobs
+   
+An example body when starting an FXP job:
+
+{
+  "src_site": "SITE1",
+  "src_section": "SECTION1",        // src_section or src_path
+  "dst_site": "SITE2",
+  "dst_path": "/MISC"               // dst_section or dst_path
+  "name": "LATEST_DISTRO_1.0-NEW"
+}
+
+An example body when starting a download job:
+
+{
+  "src_site": "SITE1",
+  "src_section": "SECTION1",        // src_section or src_path
+  "name": "LATEST_DISTRO_1.0-NEW"
+  "dst_path": "/linux-isos"         // optional
+}
+
+An example body when starting an upload job:
+
+{
+  "dst_site": "SITE1",
+  "dst_path": "/linux-isos",        // dst_section or dst_path
+  "name": "LATEST_DISTRO_1.0-NEW"
+  "src_path": "/linux-isos"         // optional
+}
+
+- Reset a transfer job
+   POST /transferjobs/JOBNAME/reset (no body)
+   
+- Abort a transfer job
+   POST /transferjobs/JOBNAME/abort (no body)
+
 UDP API
 
 The UDP API is one-way, i.e. does not provide responses.
