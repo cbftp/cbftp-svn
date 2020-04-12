@@ -1659,7 +1659,7 @@ std::shared_ptr<Race> Engine::getRace(unsigned int id) const {
   return std::shared_ptr<Race>();
 }
 
-std::shared_ptr<Race> Engine::getRace(const std::string & race) const {
+std::shared_ptr<Race> Engine::getRace(const std::string& race) const {
   std::list<std::shared_ptr<Race> >::const_iterator it;
   for (it = allraces.begin(); it != allraces.end(); it++) {
     if ((*it)->getName() == race) {
@@ -1673,6 +1673,16 @@ std::shared_ptr<TransferJob> Engine::getTransferJob(unsigned int id) const {
   std::list<std::shared_ptr<TransferJob> >::const_iterator it;
   for (it = alltransferjobs.begin(); it != alltransferjobs.end(); it++) {
     if ((*it)->getId() == id) {
+      return *it;
+    }
+  }
+  return std::shared_ptr<TransferJob>();
+}
+
+std::shared_ptr<TransferJob> Engine::getTransferJob(const std::string& tj) const {
+  std::list<std::shared_ptr<TransferJob> >::const_iterator it;
+  for (it = alltransferjobs.begin(); it != alltransferjobs.end(); it++) {
+    if ((*it)->getName() == tj) {
       return *it;
     }
   }

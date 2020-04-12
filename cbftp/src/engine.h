@@ -65,9 +65,10 @@ public:
   unsigned int allRaces() const;
   unsigned int currentTransferJobs() const;
   unsigned int allTransferJobs() const;
-  std::shared_ptr<Race> getRace(unsigned int) const;
-  std::shared_ptr<Race> getRace(const std::string&) const;
-  std::shared_ptr<TransferJob> getTransferJob(unsigned int) const;
+  std::shared_ptr<Race> getRace(unsigned int id) const;
+  std::shared_ptr<Race> getRace(const std::string& race) const;
+  std::shared_ptr<TransferJob> getTransferJob(unsigned int id) const;
+  std::shared_ptr<TransferJob> getTransferJob(const std::string& tj) const;
   std::list<std::shared_ptr<PreparedRace>>::const_iterator getPreparedRacesBegin() const;
   std::list<std::shared_ptr<PreparedRace>>::const_iterator getPreparedRacesEnd() const;
   std::list<std::shared_ptr<Race>>::const_iterator getRacesBegin() const;

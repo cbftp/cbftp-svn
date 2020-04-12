@@ -16,6 +16,7 @@
 #include "filelist.h"
 #include "filelistdata.h"
 #include "globalcontext.h"
+#include "localstorage.h"
 #include "path.h"
 #include "race.h"
 #include "racestatus.h"
@@ -29,6 +30,7 @@
 #include "sitemanager.h"
 #include "siterace.h"
 #include "skiplist.h"
+#include "transferjob.h"
 #include "util.h"
 
 namespace {
@@ -278,6 +280,32 @@ std::string raceStatusToString(RaceStatus status) {
       return "ABORTED";
   }
   return "<unknown race status type " + std::to_string(static_cast<int>(status)) + ">";
+}
+
+std::string transferJobStatusToString(TransferJobStatus status) {
+  switch (status) {
+    case TransferJobStatus::TRANSFERJOB_RUNNING:
+      return "RUNNING";
+    case TransferJobStatus::TRANSFERJOB_DONE:
+      return "DONE";
+    case TransferJobStatus::TRANSFERJOB_QUEUED:
+      return "TIMEOUT";
+    case TransferJobStatus::TRANSFERJOB_ABORTED:
+      return "ABORTED";
+  }
+  return "<unknown transferjob status type " + std::to_string(static_cast<int>(status)) + ">";
+}
+
+std::string transferJobTypeToString(int type) {
+  switch (type) {
+    case TransferJobType::TRANSFERJOB_DOWNLOAD:
+      return "DOWNLOAD";
+    case TransferJobType::TRANSFERJOB_UPLOAD:
+      return "UPLOAD";
+    case TransferJobType::TRANSFERJOB_FXP:
+      return "FXP";
+  }
+  return "<unknown transferjob type " + std::to_string(static_cast<int>(type)) + ">";
 }
 
 nlohmann::json jsonSkipList(const SkipList& skiplist) {
@@ -666,6 +694,12 @@ RestApi::RestApi() : nextrequestid(0) {
   endpoints["/spreadjobs/*"]["GET"] = &RestApi::handleSpreadJobGet;
   endpoints["/spreadjobs/*/reset"]["POST"] = &RestApi::handleSpreadJobReset;
   endpoints["/spreadjobs/*/abort"]["POST"] = &RestApi::handleSpreadJobAbort;
+  endpoints["/transferjobs"]["POST"] = &RestApi::handleTransferJobPost;
+  endpoints["/transferjobs"]["GET"] = &RestApi::handleTransferJobsGet;
+  endpoints["/transferjobs/*"]["GET"] = &RestApi::handleTransferJobGet;
+  endpoints["/transferjobs/*/reset"]["POST"] = &RestApi::handleTransferJobReset;
+  endpoints["/transferjobs/*/abort"]["POST"] = &RestApi::handleTransferJobAbort;
+
   global->getTickPoke()->startPoke(this, "RestApi", RESTAPI_TICK_INTERVAL_MS, 0);
 }
 
@@ -1244,6 +1278,190 @@ void RestApi::handleSiteSectionDelete(RestApiCallback* cb, int connrequestid, co
     return;
   }
   site->removeSection(section);
+  http::Response response(204);
+  response.appendHeader("Content-Length", "0");
+  cb->requestHandled(connrequestid, response);
+}
+
+void RestApi::handleTransferJobsGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  nlohmann::json joblist = nlohmann::json::array();
+  std::list<std::shared_ptr<TransferJob>>::const_iterator it;
+  for (it = global->getEngine()->getTransferJobsBegin(); it != global->getEngine()->getTransferJobsEnd(); ++it) {
+    joblist.push_back((*it)->getName());
+  }
+
+  http::Response response(200);
+  std::string jsondump = joblist.dump(2);
+  response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
+  response.addHeader("Content-Type", "application/json");
+  cb->requestHandled(connrequestid, response);
+}
+
+void RestApi::handleTransferJobPost(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  nlohmann::json jsondata = getJsonFromBody(request);
+  auto srcsiteit = jsondata.find("src_site");
+  auto dstsiteit = jsondata.find("dst_site");
+  std::shared_ptr<SiteLogic> srcsl;
+  std::shared_ptr<SiteLogic> dstsl;
+  if (srcsiteit != jsondata.end()) {
+    srcsl = global->getSiteLogicManager()->getSiteLogic(*srcsiteit);
+    if (!srcsl) {
+      cb->requestHandled(connrequestid, badRequestResponse("Site not found: " + srcsiteit->get<std::string>()));
+      return;
+    }
+  }
+  if (dstsiteit != jsondata.end()) {
+    dstsl = global->getSiteLogicManager()->getSiteLogic(*dstsiteit);
+    if (!dstsl) {
+      cb->requestHandled(connrequestid, badRequestResponse("Site not found: " + dstsiteit->get<std::string>()));
+      return;
+    }
+  }
+  if (!srcsl && !dstsl) {
+    cb->requestHandled(connrequestid, badRequestResponse("Missing keys: src_site || dst_site"));
+    return;
+  }
+  std::string srcpath;
+  auto srcsectionit = jsondata.find("src_section");
+  if (srcsectionit != jsondata.end()) {
+    if (!srcsl) {
+      cb->requestHandled(connrequestid, badRequestResponse("src_section can not be used without src_site"));
+      return;
+    }
+    if (!srcsl->getSite()->hasSection(*srcsectionit)) {
+      cb->requestHandled(connrequestid, badRequestResponse("Section " + srcsectionit->get<std::string>() + " is not defined on site " + srcsl->getSite()->getName()));
+      return;
+    }
+    srcpath = srcsl->getSite()->getSectionPath(*srcsectionit).toString();
+  }
+  else {
+    auto srcpathit = jsondata.find("src_path");
+    if (srcpathit != jsondata.end()) {
+      srcpath = *srcpathit;
+    }
+    else if (!srcsl) { // omitting src_path is ok for uploda jobs
+       srcpath = global->getLocalStorage()->getDownloadPath().toString();
+    }
+    else {
+      cb->requestHandled(connrequestid, badRequestResponse("Missing key: src_path"));
+      return;
+    }
+  }
+  std::string dstpath;
+  auto dstsectionit = jsondata.find("dst_section");
+  if (dstsectionit != jsondata.end()) {
+    if (!dstsl) {
+      cb->requestHandled(connrequestid, badRequestResponse("dst_section can not be used without dst_site"));
+      return;
+    }
+    if (!dstsl->getSite()->hasSection(*dstsectionit)) {
+      cb->requestHandled(connrequestid, badRequestResponse("Section " + dstsectionit->get<std::string>() + " is not defined on site " + dstsl->getSite()->getName()));
+      return;
+    }
+    dstpath = dstsl->getSite()->getSectionPath(*dstsectionit).toString();
+  }
+  else {
+    auto dstpathit = jsondata.find("dst_path");
+    if (dstpathit != jsondata.end()) {
+      dstpath = *dstpathit;
+    }
+    else if (!dstsl) { // omitting dst_path is ok for download jobs
+      dstpath = global->getLocalStorage()->getDownloadPath().toString();
+    }
+    else {
+      cb->requestHandled(connrequestid, badRequestResponse("Missing key: dst_path"));
+      return;
+    }
+  }
+  std::string name;
+  auto nameit = jsondata.find("name");
+  if (nameit != jsondata.end()) {
+    name = *nameit;
+  }
+  else {
+    cb->requestHandled(connrequestid, badRequestResponse("Missing key: name"));
+    return;
+  }
+
+  bool success = false;
+  if (srcsl && dstsl) {
+    success = !!global->getEngine()->newTransferJobFXP(srcsl->getSite()->getName(), srcpath, name, dstsl->getSite()->getName(), dstpath, name);
+  }
+  else if (srcsl && !dstsl) {
+    success = !!global->getEngine()->newTransferJobDownload(srcsl->getSite()->getName(), srcpath, name, dstpath, name);
+  }
+  else if (!srcsl && dstsl) {
+    success = !!global->getEngine()->newTransferJobUpload(srcpath, name, dstsl->getSite()->getName(), dstpath, name);
+  }
+  http::Response response(201);
+  response.appendHeader("Content-Length", "0");
+  if (!success) {
+    response.setStatusCode(503);
+  }
+  cb->requestHandled(connrequestid, response);
+}
+
+void RestApi::handleTransferJobGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  std::string name = Path(request.getPath()).baseName();
+  std::shared_ptr<TransferJob> transferjob = global->getEngine()->getTransferJob(name);
+  if (!transferjob) {
+    cb->requestHandled(connrequestid, notFoundResponse());
+    return;
+  }
+  nlohmann::json j;
+  int type = transferjob->getType();
+  j["type"] = transferJobTypeToString(transferjob->getType());
+  if (type == TRANSFERJOB_FXP || type == TRANSFERJOB_DOWNLOAD) {
+    j["src_site"] = transferjob->getSrc()->getSite()->getName();
+  }
+  if (type == TRANSFERJOB_FXP || type == TRANSFERJOB_UPLOAD) {
+    j["dst_site"] = transferjob->getDst()->getSite()->getName();
+  }
+  j["name"] = transferjob->getName();
+  j["status"] = transferJobStatusToString(transferjob->getStatus());
+  j["src_path"] = transferjob->getSrcPath().toString();
+  j["dst_path"] = transferjob->getDstPath().toString();
+  j["time_started"] = transferjob->timeStarted();
+  j["time_spent_seconds"] = transferjob->timeSpent();
+  j["time_remaining_seconds"] = transferjob->timeRemaining();
+  j["size_progress_bytes"] = transferjob->sizeProgress();
+  j["size_estimated_bytes"] = transferjob->totalSize();
+  j["files_progress"] = transferjob->filesProgress();
+  j["files_total"] = transferjob->filesTotal();
+  j["percentage_complete"] = transferjob->getProgress();
+
+  http::Response response(200);
+  std::string jsondump = j.dump(2);
+  response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
+  response.addHeader("Content-Type", "application/json");
+  cb->requestHandled(connrequestid, response);
+}
+
+void RestApi::handleTransferJobReset(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  nlohmann::json jsondata = getJsonFromBody(request);
+  Path path = request.getPath();
+  std::string transferjob = path.level(1).toString();
+  std::shared_ptr<TransferJob> tj = global->getEngine()->getTransferJob(transferjob);
+  if (!tj) {
+    cb->requestHandled(connrequestid, notFoundResponse());
+    return;
+  }
+  global->getEngine()->resetTransferJob(tj);
+  http::Response response(204);
+  response.appendHeader("Content-Length", "0");
+  cb->requestHandled(connrequestid, response);
+}
+
+void RestApi::handleTransferJobAbort(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  nlohmann::json jsondata = getJsonFromBody(request);
+  Path path = request.getPath();
+  std::string transferjob = path.level(1).toString();
+  std::shared_ptr<TransferJob> tj = global->getEngine()->getTransferJob(transferjob);
+  if (!tj) {
+    cb->requestHandled(connrequestid, notFoundResponse());
+    return;
+  }
+  global->getEngine()->abortTransferJob(tj);
   http::Response response(204);
   response.appendHeader("Content-Length", "0");
   cb->requestHandled(connrequestid, response);
