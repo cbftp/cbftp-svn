@@ -19,6 +19,7 @@ public:
   void update(); // call when site settings have changed
 private:
   void recommendedPerformanceLevelChanged(int newlevel) override;
+  void setDynamicInterval(int newlevel, SitePriority priority);
   std::shared_ptr<Site> site;
   int interval;
   int timepassed;

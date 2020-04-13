@@ -90,6 +90,10 @@ An example body when POST/PATCH'ing a site:
   "password": "SecretPassword",
   "pret": false,
   "priority": "HIGH",                // (VERY_LOW/LOW/NORMAL/HIGH/VERY_HIGH)
+  "list_frequency": "AUTO",          // (VERY_LOW/FIXED_LOW/FIXED_AVERAGE/ 
+                                     //  FIXED_HIGH/FIXED_VERY_HIGH/AUTO/
+                                     //  DYNAMIC_LOW/DYNAMIC_AVERAGE/
+                                     //  DYNAMIC_HIGH/DYNAMIC_VERY_HIGH)
   "proxy_name": "",
   "proxy_type": "GLOBAL",            // (GLOBAL/NONE/USE)
   "sections": [
