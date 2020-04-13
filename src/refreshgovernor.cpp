@@ -6,8 +6,12 @@
 
 namespace {
 
+unsigned int freqToInterval(float timespersecond) {
+  return 1000 / timespersecond;
+}
+
 struct RefreshItem {
-  RefreshItem(float timespersecond, bool immediate) : interval(1000 / timespersecond), immediate(immediate) {
+  RefreshItem(float timespersecond, bool immediate) : interval(freqToInterval(timespersecond)), immediate(immediate) {
 
   }
   unsigned int interval;
@@ -41,24 +45,24 @@ std::map<unsigned int, std::map<SitePriority, RefreshItem>> populateRefreshRateM
   rates[5].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(5, false)));
   rates[6].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(8, false)));
   rates[7].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(10, true)));
-  rates[8].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(15, true)));
-  rates[9].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(20, true)));
+  rates[8].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(12, true)));
+  rates[9].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(15, true)));
   rates[1].insert(std::make_pair(SitePriority::HIGH, RefreshItem(2, false)));
   rates[2].insert(std::make_pair(SitePriority::HIGH, RefreshItem(3, false)));
   rates[3].insert(std::make_pair(SitePriority::HIGH, RefreshItem(4, false)));
   rates[4].insert(std::make_pair(SitePriority::HIGH, RefreshItem(5, false)));
   rates[5].insert(std::make_pair(SitePriority::HIGH, RefreshItem(8, false)));
-  rates[6].insert(std::make_pair(SitePriority::HIGH, RefreshItem(12, true)));
-  rates[7].insert(std::make_pair(SitePriority::HIGH, RefreshItem(15, true)));
-  rates[8].insert(std::make_pair(SitePriority::HIGH, RefreshItem(18, true)));
-  rates[9].insert(std::make_pair(SitePriority::HIGH, RefreshItem(20, true)));
+  rates[6].insert(std::make_pair(SitePriority::HIGH, RefreshItem(10, true)));
+  rates[7].insert(std::make_pair(SitePriority::HIGH, RefreshItem(12, true)));
+  rates[8].insert(std::make_pair(SitePriority::HIGH, RefreshItem(15, true)));
+  rates[9].insert(std::make_pair(SitePriority::HIGH, RefreshItem(18, true)));
   rates[1].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(2, false)));
   rates[2].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(5, false)));
   rates[3].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(8, false)));
   rates[4].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(10, true)));
-  rates[5].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(15, true)));
-  rates[6].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(18, true)));
-  rates[7].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(20, true)));
+  rates[5].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(12, true)));
+  rates[6].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(15, true)));
+  rates[7].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(18, true)));
   rates[8].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(20, true)));
   rates[9].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(20, true)));
   return rates;
@@ -106,37 +110,57 @@ void RefreshGovernor::update() {
 
 void RefreshGovernor::recommendedPerformanceLevelChanged(int newlevel) {
   if (site->getListCommand() == SITE_LIST_LIST) {
-    interval = 1000;
+    interval = freqToInterval(1);
     immediaterefreshallowed = false;
     return;
   }
   switch (site->getRefreshRate()) {
     case RefreshRate::VERY_LOW:
-      interval = 1000;
+      interval = freqToInterval(1);
       immediaterefreshallowed = false;
       break;
-    case RefreshRate::LOW:
-      interval = 500;
+    case RefreshRate::FIXED_LOW:
+      interval = freqToInterval(2);
       immediaterefreshallowed = false;
       break;
-    case RefreshRate::AVERAGE:
-      interval = 166;
+    case RefreshRate::FIXED_AVERAGE:
+      interval = freqToInterval(6);
       immediaterefreshallowed = true;
       break;
-    case RefreshRate::HIGH:
-      interval = 100;
+    case RefreshRate::FIXED_HIGH:
+      interval = freqToInterval(10);
       immediaterefreshallowed = true;
       break;
-    case RefreshRate::VERY_HIGH:
-      interval = 50;
+    case RefreshRate::FIXED_VERY_HIGH:
+      interval = freqToInterval(20);
       immediaterefreshallowed = true;
       break;
-    case RefreshRate::DYNAMIC:
+    case RefreshRate::AUTO:
     {
-      const RefreshItem& item = rates.at(newlevel).at(site->getPriority());
-      interval = item.interval;
-      immediaterefreshallowed = item.immediate;
+      SitePriority prio = site->getPriority();
+      if (prio > SitePriority::NORMAL) {
+        prio = SitePriority::NORMAL;
+      }
+      setDynamicInterval(newlevel, prio);
       break;
     }
+    case RefreshRate::DYNAMIC_LOW:
+      setDynamicInterval(newlevel, SitePriority::LOW);
+      break;
+    case RefreshRate::DYNAMIC_AVERAGE:
+      setDynamicInterval(newlevel, SitePriority::NORMAL);
+      break;
+    case RefreshRate::DYNAMIC_HIGH:
+      setDynamicInterval(newlevel, SitePriority::HIGH);
+      break;
+    case RefreshRate::DYNAMIC_VERY_HIGH:
+      setDynamicInterval(newlevel, SitePriority::VERY_HIGH);
+      break;
   }
+}
+
+void RefreshGovernor::setDynamicInterval(int newlevel, SitePriority priority) {
+  const RefreshItem& item = rates.at(newlevel).at(priority);
+  interval = item.interval;
+  immediaterefreshallowed = item.immediate;
 }

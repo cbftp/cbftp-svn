@@ -208,6 +208,31 @@ std::string priorityToString(SitePriority priority) {
   return "<unknown priority type " + std::to_string(static_cast<int>(priority)) + ">";
 }
 
+std::string refreshRateToString(RefreshRate rate) {
+  switch (rate) {
+    case RefreshRate::VERY_LOW:
+      return "VERY_LOW";
+    case RefreshRate::FIXED_LOW:
+      return "FIXED_LOW";
+    case RefreshRate::FIXED_AVERAGE:
+      return "FIXED_AVERAGE";
+    case RefreshRate::FIXED_HIGH:
+      return "FIXED_HIGH";
+    case RefreshRate::FIXED_VERY_HIGH:
+      return "FIXED_VERY_HIGH";
+    case RefreshRate::AUTO:
+      return "AUTO";
+    case RefreshRate::DYNAMIC_LOW:
+      return "DYNAMIC_LOW";
+    case RefreshRate::DYNAMIC_AVERAGE:
+      return "DYNAMIC_AVERAGE";
+    case RefreshRate::DYNAMIC_HIGH:
+      return "DYNAMIC_HIGH";
+    case RefreshRate::DYNAMIC_VERY_HIGH:
+      return "DYNAMIC_VERY_HIGH";
+  }
+  return "Unknown";
+}
 std::string siteTransferPolicyToString(int policy) {
   switch (policy) {
     case SITE_TRANSFER_POLICY_ALLOW:
@@ -384,6 +409,37 @@ SitePriority stringToSitePriority(const std::string& priority) {
     return SitePriority::VERY_HIGH;
   }
   return SitePriority::NORMAL;
+}
+
+RefreshRate stringToRefreshRate(const std::string& rate) {
+  if (rate == "VERY_LOW") {
+    return RefreshRate::VERY_LOW;
+  }
+  if (rate == "FIXED_LOW") {
+    return RefreshRate::FIXED_LOW;
+  }
+  if (rate == "FIXED_AVERAGE") {
+    return RefreshRate::FIXED_AVERAGE;
+  }
+  if (rate == "FIXED_HIGH") {
+    return RefreshRate::FIXED_HIGH;
+  }
+  if (rate == "FIXED_VERY_HIGH") {
+    return RefreshRate::FIXED_VERY_HIGH;
+  }
+  if (rate == "DYNAMIC_LOW") {
+    return RefreshRate::DYNAMIC_LOW;
+  }
+  if (rate == "DYNAMIC_AVERAGE") {
+    return RefreshRate::DYNAMIC_AVERAGE;
+  }
+  if (rate == "DYNAMIC_HIGH") {
+    return RefreshRate::DYNAMIC_HIGH;
+  }
+  if (rate == "DYNAMIC_VERY_HIGH") {
+    return RefreshRate::DYNAMIC_VERY_HIGH;
+  }
+  return RefreshRate::AUTO;
 }
 
 TransferProtocol stringToTransferProtocol(const std::string& protocol) {
@@ -578,6 +634,9 @@ std::shared_ptr<http::Response> updateSite(std::shared_ptr<Site>& site, nlohmann
     }
     else if (it.key() == "priority") {
       site->setPriority(stringToSitePriority(it.value()));
+    }
+    else if (it.key() == "list_frequency") {
+      site->setRefreshRate(stringToRefreshRate(it.value()));
     }
     else if (it.key() == "xdupe") {
       site->setUseXDUPE(it.value());
@@ -869,6 +928,7 @@ void RestApi::handleSiteGet(RestApiCallback* cb, int connrequestid, const http::
   j["allow_upload"] = siteAllowTransferToString(site->getAllowUpload());
   j["allow_download"] = siteAllowTransferToString(site->getAllowDownload());
   j["priority"] = priorityToString(site->getPriority());
+  j["list_frequency"] = refreshRateToString(site->getRefreshRate());
   j["xdupe"] = site->useXDUPE();
   j["sections"] = jsonSections(site);
   for (std::map<std::string, int>::const_iterator it = site->avgspeedBegin(); it != site->avgspeedEnd(); ++it) {
