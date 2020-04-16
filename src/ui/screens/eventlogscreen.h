@@ -16,6 +16,7 @@ public:
   std::string getInfoLabel() const;
   std::string getInfoText() const;
 private:
+  void fixCopyReadPos();
   bool readfromcopy;
   unsigned int copyreadpos;
   RawBuffer * rawbuf;

@@ -83,6 +83,7 @@ void RawCommandScreen::redraw() {
   ui->erase();
   std::string oldtext = rawcommandfield.getData();
   rawcommandfield = MenuSelectOptionTextField("rawcommand", row-1, 10, "", oldtext, col-10, 65536, false);
+  fixCopyReadPos();
   update();
 }
 
@@ -124,12 +125,7 @@ bool RawCommandScreen::keyPressed(unsigned int ch) {
       }
       else {
         copyreadpos = copyreadpos + rownum / 2;
-        if (rownum >= copysize) {
-          copyreadpos = 0;
-        }
-        else if (copyreadpos + rownum > copysize) {
-          copyreadpos = copysize - rownum;
-        }
+        fixCopyReadPos();
       }
       ui->update();
       return true;
@@ -221,4 +217,14 @@ int RawCommandScreen::getCurrentScope() const {
     return KEYSCOPE_INPUT;
   }
   return KEYSCOPE_ALL;
+}
+
+void RawCommandScreen::fixCopyReadPos() {
+  unsigned int rownum = allowinput ? row - 1 : row;
+  if (rownum >= copysize) {
+    copyreadpos = 0;
+  }
+  else if (copyreadpos + rownum > copysize) {
+    copyreadpos = copysize - rownum;
+  }
 }

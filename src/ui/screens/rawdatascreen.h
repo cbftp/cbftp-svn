@@ -22,6 +22,7 @@ public:
   static void printRawBufferLines(Ui *, RawBuffer *, unsigned int, unsigned int, unsigned int, bool, unsigned int, unsigned int);
 private:
   static bool skipCodePrint(const std::string &);
+  void fixCopyReadPos();
   bool rawcommandmode;
   bool rawcommandswitch;
   int threads;
