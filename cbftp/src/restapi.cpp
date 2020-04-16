@@ -1645,18 +1645,20 @@ void RestApi::requestReady(void* service, int servicerequestid) {
       else {
         FileListData* data = sl->getFileListData(servicerequestid);
         std::shared_ptr<FileList> fl = data->getFileList();
-        nlohmann::json j = nlohmann::json::object();
+        nlohmann::json j = nlohmann::json::array();
         for (std::list<File*>::const_iterator it = fl->begin(); it != fl->end(); ++it) {
           File* f = *it;
-          std::string name = f->getName();
-          j[name]["size"] = f->getSize();
-          j[name]["user"] = f->getOwner();
-          j[name]["group"] = f->getGroup();
-          j[name]["type"] = f->isDirectory() ? "DIR" : (f->isLink() ? "LINK" : "FILE");
-          j[name]["last_modified"] = f->getLastModified();
+          nlohmann::json jf;
+          jf["name"] = f->getName();
+          jf["size"] = f->getSize();
+          jf["user"] = f->getOwner();
+          jf["group"] = f->getGroup();
+          jf["type"] = f->isDirectory() ? "DIR" : (f->isLink() ? "LINK" : "FILE");
+          jf["last_modified"] = f->getLastModified();
           if (f->isLink()) {
-            j[name]["link_target"] = f->getLinkTarget();
+            jf["link_target"] = f->getLinkTarget();
           }
+          j.push_back(jf);
         }
         http::Response response(200);
         std::string jsondump = j.dump(2, ' ', false, nlohmann::json::error_handler_t::replace);

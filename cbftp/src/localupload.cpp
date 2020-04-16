@@ -46,6 +46,9 @@ void LocalUpload::init(TransferMonitor* tm, FTPConn* ftpconn, const Path& path, 
 }
 
 void LocalUpload::FDConnected(int sockid) {
+  if (sockid != this->sockid) {
+    return;
+  }
   if (passivemode) {
     tm->activeStarted();
   }
@@ -59,14 +62,21 @@ void LocalUpload::FDConnected(int sockid) {
 }
 
 void LocalUpload::FDDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) {
+  if (sockid != this->sockid) {
+    return;
+  }
   if (fileopened) {
     filestream.close();
   }
   deactivate();
   tm->sourceError(TM_ERR_OTHER);
+  this->sockid = -1;
 }
 
 void LocalUpload::FDSSLSuccess(int sockid, const std::string& cipher) {
+  if (sockid != this->sockid) {
+    return;
+  }
   ftpconn->printCipher(cipher);
   bool sessionreused = global->getIOManager()->getSSLSessionReused(sockid);
   tm->sslDetails(cipher, sessionreused);
@@ -88,17 +98,25 @@ void LocalUpload::sendChunk() {
 }
 
 void LocalUpload::FDSendComplete(int sockid) {
+  if (sockid != this->sockid) {
+    return;
+  }
   sendChunk();
 }
 
 void LocalUpload::FDFail(int sockid, const std::string& error) {
-  deactivate();
-  if (sockid != -1) {
-    tm->sourceError(TM_ERR_OTHER);
+  if (sockid != this->sockid) {
+    return;
   }
+  deactivate();
+  tm->sourceError(TM_ERR_OTHER);
+  this->sockid = -1;
 }
 
 void LocalUpload::FDData(int sockid, char* data, unsigned int len) {
+  if (sockid != this->sockid) {
+    return;
+  }
   if (fileopened) {
     filestream.close();
   }
