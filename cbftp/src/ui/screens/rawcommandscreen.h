@@ -25,6 +25,7 @@ public:
   std::string getInfoText() const;
 private:
   int getCurrentScope() const;
+  void fixCopyReadPos();
   bool readfromcopy;
   unsigned int copyreadpos;
   unsigned int copysize;

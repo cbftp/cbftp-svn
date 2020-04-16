@@ -62,10 +62,13 @@ void RawDataScreen::initialize(unsigned int row, unsigned int col, std::string s
 
 void RawDataScreen::redraw() {
   ui->erase();
+  unsigned int rownum = row;
   if (rawcommandmode) {
+    --rownum;
     std::string oldtext = rawcommandfield.getData();
     rawcommandfield = MenuSelectOptionTextField("rawcommand", row-1, 10, "", oldtext, col-10, 65536, false);
   }
+  fixCopyReadPos();
   update();
 }
 
@@ -240,12 +243,8 @@ bool RawDataScreen::keyPressed(unsigned int ch) {
       }
       else {
         copyreadpos = copyreadpos + rownum / 2;
-        if (rownum >= copysize) {
-          copyreadpos = 0;
-        }
-        else if (copyreadpos + rownum > copysize) {
-          copyreadpos = copysize - rownum;
-        }
+        fixCopyReadPos();
+
       }
       ui->update();
       return true;
@@ -291,4 +290,14 @@ std::string RawDataScreen::getLegendText() const {
 
 std::string RawDataScreen::getInfoLabel() const {
   return "RAW DATA: " + sitename + " #" + std::to_string(connid);
+}
+
+void RawDataScreen::fixCopyReadPos() {
+  unsigned int rownum = rawcommandmode ? row - 1 : row;
+  if (rownum >= copysize) {
+    copyreadpos = 0;
+  }
+  else if (copyreadpos + rownum > copysize) {
+    copyreadpos = copysize - rownum;
+  }
 }

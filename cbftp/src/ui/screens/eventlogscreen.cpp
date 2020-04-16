@@ -39,6 +39,7 @@ void EventLogScreen::redraw() {
       ftext = filtertext.substr(1);
     }
   }
+  fixCopyReadPos();
   unsigned int size = rawbuf->isFiltered() ? rawbuf->getFilteredSize() : rawbuf->getSize();
   if (readfromcopy) {
     size = rawbuf->isFiltered() ? rawbuf->getFilteredCopySize() : rawbuf->getCopySize();
@@ -139,14 +140,8 @@ bool EventLogScreen::keyPressed(unsigned int ch) {
         readfromcopy = true;
       }
       else {
-        unsigned int copysize = rawbuf->isFiltered() ? rawbuf->getFilteredCopySize() : rawbuf->getCopySize();
         copyreadpos = copyreadpos + row / 2;
-        if (row >= copysize) {
-          copyreadpos = 0;
-        }
-        else if (copyreadpos + row > copysize) {
-          copyreadpos = copysize - row;
-        }
+        fixCopyReadPos();
       }
       ui->redraw();
       return true;
@@ -220,4 +215,14 @@ std::string EventLogScreen::getInfoText() const {
     return "FILTERING ON: " + filtertext;
   }
   return "";
+}
+
+void EventLogScreen::fixCopyReadPos() {
+  unsigned int copysize = rawbuf->isFiltered() ? rawbuf->getFilteredCopySize() : rawbuf->getCopySize();
+  if (row >= copysize) {
+    copyreadpos = 0;
+  }
+  else if (copyreadpos + row > copysize) {
+    copyreadpos = copysize - row;
+  }
 }
