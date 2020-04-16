@@ -59,6 +59,9 @@ void LocalDownload::init(TransferMonitor* tm, FTPConn* ftpconn, const Path& path
 }
 
 void LocalDownload::FDConnected(int sockid) {
+  if (sockid != this->sockid) {
+    return;
+  }
   if (passivemode) {
     tm->activeStarted();
   }
@@ -68,6 +71,9 @@ void LocalDownload::FDConnected(int sockid) {
 }
 
 void LocalDownload::FDDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) {
+  if (sockid != this->sockid) {
+    return;
+  }
   if (!inmemory) {
     if (bufpos > 0) {
       if (!fileopened) {
@@ -90,23 +96,32 @@ void LocalDownload::FDDisconnected(int sockid, Core::DisconnectType reason, cons
   else {
     tm->targetError(TM_ERR_RETRSTOR_COMPLETE);
   }
+  this->sockid = -1;
 }
 
 void LocalDownload::FDSSLSuccess(int sockid, const std::string& cipher) {
+  if (sockid != this->sockid) {
+    return;
+  }
   ftpconn->printCipher(cipher);
   bool sessionreused = global->getIOManager()->getSSLSessionReused(sockid);
   tm->sslDetails(cipher, sessionreused);
 }
 
 void LocalDownload::FDData(int sockid, char* data, unsigned int len) {
+  if (sockid != this->sockid) {
+    return;
+  }
   append(data, len);
 }
 
 void LocalDownload::FDFail(int sockid, const std::string& error) {
-  deactivate();
-  if (sockid != -1) {
-    tm->targetError(TM_ERR_OTHER);
+  if (sockid != this->sockid) {
+    return;
   }
+  deactivate();
+  tm->targetError(TM_ERR_OTHER);
+  this->sockid = -1;
 }
 
 unsigned long long int LocalDownload::size() const {
