@@ -4,8 +4,6 @@
 
 #include "../util.h"
 
-#define KEY_UNSET 4711
-
 KeyRepr KeyBinds::getKeyRepr(unsigned int key) {
   KeyRepr repr;
   repr.wch = key;
