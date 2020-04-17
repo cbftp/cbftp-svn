@@ -160,6 +160,12 @@ void SiteLogic::activateAll() {
   }
 }
 
+void SiteLogic::disconnectAll(bool hard) {
+  for (unsigned int i = 0; i < conns.size(); i++) {
+    disconnectConn(i, hard);
+  }
+}
+
 std::shared_ptr<SiteRace> SiteLogic::addRace(const std::shared_ptr<Race>& enginerace, const std::string & section, const std::string & release, bool downloadonly) {
   std::shared_ptr<SiteRace> race = std::make_shared<SiteRace>(enginerace, site->getName(), site->getSectionPath(section),
                                                               release, site->getUser(), site->getSkipList(), downloadonly);

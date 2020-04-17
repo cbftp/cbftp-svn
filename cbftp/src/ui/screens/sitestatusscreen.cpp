@@ -17,7 +17,10 @@ namespace {
 enum KeyAction {
   KEYACTION_RAW_COMMAND,
   KEYACTION_EDIT_SITE,
-  KEYACTION_BROWSE
+  KEYACTION_BROWSE,
+  KEYACTION_FORCE_DISCONNECT_ALL_SLOTS,
+  KEYACTION_DISCONNECT_ALL_SLOTS,
+  KEYACTION_LOGIN_ALL_SLOTS
 };
 
 }
@@ -29,6 +32,9 @@ SiteStatusScreen::SiteStatusScreen(Ui* ui) : UIWindow(ui, "SiteStatusScreen") {
   keybinds.addBind('w', KEYACTION_RAW_COMMAND, "Raw command");
   keybinds.addBind('E', KEYACTION_EDIT_SITE, "Edit site");
   keybinds.addBind('t', KEYACTION_TRANSFERS, "Transfers");
+  keybinds.addBind('K', KEYACTION_FORCE_DISCONNECT_ALL_SLOTS, "Kill all slots");
+  keybinds.addBind('k', KEYACTION_DISCONNECT_ALL_SLOTS, "Disconnect all slots");
+  keybinds.addBind('L', KEYACTION_LOGIN_ALL_SLOTS, "Login all slots");
 }
 
 void SiteStatusScreen::initialize(unsigned int row, unsigned int col, std::string sitename) {
@@ -112,6 +118,17 @@ bool SiteStatusScreen::keyPressed(unsigned int ch) {
       return true;
     case KEYACTION_RAW_COMMAND:
       ui->goRawCommand(site->getName());
+      return true;
+    case KEYACTION_FORCE_DISCONNECT_ALL_SLOTS:
+      st->disconnectAll(true);
+      return true;
+    case KEYACTION_DISCONNECT_ALL_SLOTS:
+      st->disconnectAll();
+      return true;
+    case KEYACTION_LOGIN_ALL_SLOTS:
+      for(unsigned int j = 0; j < st->getConns()->size(); j++) {
+        st->connectConn(j);
+      }
       return true;
   }
   return false;

@@ -123,6 +123,7 @@ class SiteLogic : public Core::EventReceiver {
     void disconnected(int);
     void activateOne();
     void activateAll();
+    void disconnectAll(bool hard = false);
     void haveConnectedActivate(unsigned int);
     const std::shared_ptr<Site> & getSite() const;
     std::shared_ptr<SiteRace> getRace(const std::string & race) const;

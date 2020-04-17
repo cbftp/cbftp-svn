@@ -56,7 +56,9 @@ enum KeyActions {
   KEYACTION_DELETE2,
   KEYACTION_SCOREBOARD,
   KEYACTION_METRICS,
-  KEYACTION_ALL_TRANSFERS
+  KEYACTION_ALL_TRANSFERS,
+  KEYACTION_FORCE_DISCONNECT_ALL_SLOTS,
+  KEYACTION_DISCONNECT_ALL_SLOTS
 };
 
 enum KeyScopes {
@@ -103,6 +105,8 @@ MainScreen::MainScreen(Ui* ui) : UIWindow(ui, "MainScreen") {
   keybinds.addBind(10, KEYACTION_ENTER, "Status", KEYSCOPE_SITE);
   keybinds.addBind('L', KEYACTION_LOGIN, "Login all slots", KEYSCOPE_SITE);
   keybinds.addBind('T', KEYACTION_TRANSFERS, "Transfers", KEYSCOPE_SITE);
+  keybinds.addBind('K', KEYACTION_FORCE_DISCONNECT_ALL_SLOTS, "Kill all slots", KEYSCOPE_SITE);
+  keybinds.addBind('k', KEYACTION_DISCONNECT_ALL_SLOTS, "Disconnect all slots", KEYSCOPE_SITE);
   keybinds.addBind(10, KEYACTION_ENTER, "Status", KEYSCOPE_SPREAD_JOB);
   keybinds.addBind('B', KEYACTION_ABORT, "Abort", KEYSCOPE_SPREAD_JOB);
   keybinds.addBind('T', KEYACTION_TRANSFERS, "Transfers", KEYSCOPE_SPREAD_JOB);
@@ -634,6 +638,16 @@ bool MainScreen::keyPressed(unsigned int ch) {
         global->getSiteLogicManager()->getSiteLogic(sitename)->activateAll();
         return true;
       }
+      case KEYACTION_FORCE_DISCONNECT_ALL_SLOTS: {
+        std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
+        global->getSiteLogicManager()->getSiteLogic(sitename)->disconnectAll(true);
+        return true;
+      }
+      case KEYACTION_DISCONNECT_ALL_SLOTS: {
+        std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
+        global->getSiteLogicManager()->getSiteLogic(sitename)->disconnectAll();
+        return true;
+      }
       case KEYACTION_BROWSE_SPLIT: {
         if (!msos.linesSize()) break;
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
@@ -898,7 +912,7 @@ void MainScreen::jumpSectionHotkey(int hotkey) {
 
 int MainScreen::getCurrentScope() const {
   int scope = KEYSCOPE_ALL;
-  if (msos.isFocused()) {
+  if (msos.isFocused() && msos.size() > 0) {
     scope = KEYSCOPE_SITE;
   }
   else if (msosj.isFocused()) {

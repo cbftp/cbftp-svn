@@ -48,6 +48,8 @@ enum GenericKeyScope {
   KEYSCOPE_ALL = 42
 };
 
+#define KEY_UNSET 4711
+
 struct KeyRepr {
   std::string repr;
   unsigned int wch;

@@ -94,7 +94,7 @@ Ui::Ui() :
   fullscreentoggle(false),
   globalkeybinds(std::make_shared<KeyBinds>("Global"))
 {
-  globalkeybinds->addBind('K', KEYACTION_KILL_ALL, "Kill all external viewers");
+  globalkeybinds->addBind(KEY_UNSET, KEYACTION_KILL_ALL, "Kill all external viewers");
   globalkeybinds->addBind('p', KEYACTION_START_PREPARED, "Start latest prepared spread job");
   globalkeybinds->addBind('\\', KEYACTION_FULLSCREEN, "Toggle fullscreen mode");
   globalkeybinds->addBind('N', KEYACTION_NEXT_PREPARED_STARTER, "Toggle next prepared spread job auto starter");
