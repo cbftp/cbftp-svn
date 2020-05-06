@@ -94,6 +94,7 @@ void LocalDownload::FDDisconnected(int sockid, Core::DisconnectType reason, cons
     tm->targetComplete();
   }
   else {
+    tm->localError(details);
     tm->targetError(TM_ERR_RETRSTOR_COMPLETE);
   }
   this->sockid = -1;
@@ -120,6 +121,7 @@ void LocalDownload::FDFail(int sockid, const std::string& error) {
     return;
   }
   deactivate();
+  tm->localError(error);
   tm->targetError(TM_ERR_OTHER);
   this->sockid = -1;
 }
@@ -142,9 +144,17 @@ void LocalDownload::append(char* data, unsigned int datalen) {
     }
     else {
       if (!fileopened) {
-        openFile(false);
+        if (!openFile(false)) {
+          return;
+        }
       }
       filestream.write(buf, bufpos);
+      if (filestream.fail()) {
+        filestream.close();
+        global->getIOManager()->closeSocket(sockid);
+        FDFail(sockid, "Failed writing file " + (path / filename).toString());
+        return;
+      }
       filesize = filestream.tellg();
       bufpos = 0;
     }

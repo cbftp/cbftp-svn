@@ -305,6 +305,11 @@ void SettingsLoaderSaver::loadSettings() {
       Crypto::base64Decode(indata, outdata);
       proxy->setPass(std::string(outdata.begin(), outdata.end()));
     }
+    else if (!setting.compare("resolvehosts")) {
+      if (!value.compare("false")) {
+        proxy->setResolveHosts(false);
+      }
+    }
   }
   lines.clear();
   dfh->getDataFor("ProxyManagerDefaults", &lines);
@@ -316,6 +321,9 @@ void SettingsLoaderSaver::loadSettings() {
     std::string value = line.substr(tok + 1);
     if (!setting.compare("useproxy")) {
       global->getProxyManager()->setDefaultProxy(value);
+    }
+    if (!setting.compare("dataproxy")) {
+      global->getProxyManager()->setDefaultDataProxy(value);
     }
   }
   global->getProxyManager()->sortProxys();
@@ -494,6 +502,12 @@ void SettingsLoaderSaver::loadSettings() {
     }
     else if (!setting.compare("proxyname")) {
       site->setProxy(value);
+    }
+    else if (!setting.compare("dataproxytype")) {
+      site->setDataProxyType(std::stoi(value));
+    }
+    else if (!setting.compare("dataproxyname")) {
+      site->setDataProxy(value);
     }
     else if (!setting.compare("transfersourcepolicy")) {
       site->setTransferSourcePolicy(std::stoi(value));
@@ -801,9 +815,15 @@ void SettingsLoaderSaver::saveSettings() {
       Crypto::base64Encode(indata, outdata);
       dfh->addOutputLine(filetag, name + "$passwordb64=" + std::string(outdata.begin(), outdata.end()));
       dfh->addOutputLine(filetag, name + "$authmethod=" + std::to_string(proxy->getAuthMethod()));
+      if (!proxy->getResolveHosts()) {
+        dfh->addOutputLine(filetag, name + "$resolvehosts=false");
+      }
     }
-    if (global->getProxyManager()->getDefaultProxy() != NULL) {
+    if (global->getProxyManager()->getDefaultProxy() != nullptr) {
       dfh->addOutputLine(defaultstag, "useproxy=" + global->getProxyManager()->getDefaultProxy()->getName());
+    }
+    if (global->getProxyManager()->getDefaultDataProxy() != nullptr) {
+      dfh->addOutputLine(defaultstag, "dataproxy=" + global->getProxyManager()->getDefaultDataProxy()->getName());
     }
   }
 
@@ -865,6 +885,11 @@ void SettingsLoaderSaver::saveSettings() {
       dfh->addOutputLine(filetag, name + "$proxytype=" + std::to_string(proxytype));
       if (proxytype == SITE_PROXY_USE) {
         dfh->addOutputLine(filetag, name + "$proxyname=" + site->getProxy());
+      }
+      int dataproxytype = site->getDataProxyType();
+      dfh->addOutputLine(filetag, name + "$dataproxytype=" + std::to_string(dataproxytype));
+      if (dataproxytype == SITE_PROXY_USE) {
+        dfh->addOutputLine(filetag, name + "$dataproxyname=" + site->getDataProxy());
       }
       std::map<std::string, Path>::const_iterator sit;
       for (sit = site->sectionsBegin(); sit != site->sectionsEnd(); sit++) {

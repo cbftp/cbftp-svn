@@ -70,8 +70,8 @@ public:
   void setActivePortFirst(int);
   void setActivePortLast(int);
   int getNextActivePort();
-  std::string getAddress4(LocalTransfer* lt) const;
-  std::string getAddress6(LocalTransfer* lt) const;
+  Core::StringResult getAddress4(FTPConn* conn) const;
+  Core::StringResult getAddress6(FTPConn* conn) const;
   TransferProtocol getTransferProtocol() const;
   void setTransferProtocol(TransferProtocol protocol);
   void executeAsyncRequest(LocalStorageRequestData * data);

@@ -101,6 +101,8 @@ private:
   std::set<std::shared_ptr<Site>> excepttargetsites;
   int proxytype;
   std::string proxyname;
+  int dataproxytype;
+  std::string dataproxyname;
   int transfersourcepolicy;
   int transfertargetpolicy;
   SkipList skiplist;
@@ -174,6 +176,8 @@ public:
   SiteAllowTransfer getAllowDownload() const;
   int getProxyType() const;
   std::string getProxy() const;
+  int getDataProxyType() const;
+  std::string getDataProxy() const;
   unsigned int getMaxIdleTime() const;
   std::string getName() const;
   unsigned int sectionsSize() const;
@@ -208,8 +212,10 @@ public:
   void setAllowUpload(SiteAllowTransfer);
   void setAllowDownload(SiteAllowTransfer);
   void setMaxIdleTime(unsigned int);
-  void setProxyType(int);
-  void setProxy(const std::string &);
+  void setProxyType(int proxytype);
+  void setProxy(const std::string& proxyname);
+  void setDataProxyType(int proxytype);
+  void setDataProxy(const std::string& proxyname);
   void clearSections();
   bool isAffiliated(const std::string &) const;
   void addAffil(const std::string &);

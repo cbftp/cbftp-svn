@@ -70,7 +70,7 @@ private:
       int);
   static void addTransferDetails(unsigned int, MenuSelectOption &, std::shared_ptr<TransferStatus>, int);
   void addFilterFinishedTransfers();
-  bool showsWhileFiltered(const std::shared_ptr<TransferStatus> &) const;
+  bool showsWhileFiltered(const std::shared_ptr<TransferStatus>& ts) const;
   unsigned int totalListSize() const;
   std::map<int, std::shared_ptr<TransferStatus> > statusmap;
   TransferManager * tm;

@@ -5,6 +5,7 @@
 #include <string>
 
 #include "core/eventreceiver.h"
+#include "core/types.h"
 #include "address.h"
 #include "ftpconnectowner.h"
 #include "path.h"
@@ -168,7 +169,7 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     void proxySessionInit(bool);
     void sendEcho(const std::string &);
     void connectAllAddresses();
-    Proxy * getProxy() const;
+    Proxy* getProxy() const;
     void clearConnectors();
     void rawBufWrite(const std::string &);
     void rawBufWriteLine(const std::string &);
@@ -238,8 +239,8 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     FTPConnState getState() const;
     std::string getConnectedAddress() const;
     std::string getInterfaceAddress() const;
-    std::string getInterfaceAddress4() const;
-    std::string getInterfaceAddress6() const;
+    Core::StringResult getInterfaceAddress4() const;
+    Core::StringResult getInterfaceAddress6() const;
     bool isIPv6() const;
     ProtMode getProtectedMode() const;
     bool getSSCNMode() const;
@@ -257,6 +258,7 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     bool isCleanlyClosed() const;
     static bool parseData(char*, unsigned int, char**, unsigned int&, unsigned int&, int&);
     void printCipher(const std::string& cipher);
+    void printLocalError(const std::string& info);
     void tick(int);
     std::shared_ptr<FileList> currentFileList() const;
     const std::shared_ptr<CommandOwner> & currentCommandOwner() const;
@@ -266,4 +268,5 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     void setRawBufferCallback(RawBufferCallback *);
     void unsetRawBufferCallback();
     const std::list<std::string> & getXDUPEList() const;
+    Proxy* getDataProxy() const;
 };

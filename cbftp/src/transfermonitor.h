@@ -88,6 +88,9 @@ class TransferMonitor : public Core::EventReceiver, public RawBufferCallback {
     void updateLocalTransferSizeSpeed();
     void checkForDeadFXPTransfers();
     void startClientTransfer();
+    void lateFXPFailure(const std::string& reason);
+    void lateDownloadFailure(const std::string& reason, bool dupe = false);
+    void lateUploadFailure(const std::string& reason, bool dupe = false);
   public:
     TransferMonitor(TransferManager *);
     ~TransferMonitor();
@@ -114,4 +117,5 @@ class TransferMonitor : public Core::EventReceiver, public RawBufferCallback {
     Status getStatus() const;
     bool willFail() const;
     void newRawBufferLine(const std::pair<std::string, std::string> &);
+    void localError(const std::string& info);
 };

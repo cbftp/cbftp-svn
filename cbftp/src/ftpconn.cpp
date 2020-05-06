@@ -143,14 +143,26 @@ void FTPConn::connectAllAddresses() {
   }
 }
 
-Proxy * FTPConn::getProxy() const {
-  Proxy * proxy = NULL;
+Proxy* FTPConn::getProxy() const {
+  Proxy* proxy = nullptr;
   int proxytype = site->getProxyType();
   if (proxytype == SITE_PROXY_USE) {
     proxy = global->getProxyManager()->getProxy(site->getProxy());
   }
   else if (proxytype == SITE_PROXY_GLOBAL) {
     proxy = global->getProxyManager()->getDefaultProxy();
+  }
+  return proxy;
+}
+
+Proxy* FTPConn::getDataProxy() const {
+  Proxy* proxy = nullptr;
+  int proxytype = site->getDataProxyType();
+  if (proxytype == SITE_PROXY_USE) {
+    proxy = global->getProxyManager()->getProxy(site->getDataProxy());
+  }
+  else if (proxytype == SITE_PROXY_GLOBAL) {
+    proxy = global->getProxyManager()->getDefaultDataProxy();
   }
   return proxy;
 }
@@ -191,6 +203,10 @@ void FTPConn::FDSSLSuccess(int sockid, const std::string & cipher) {
 
 void FTPConn::printCipher(const std::string& cipher) {
   rawBufWriteLine("[Cipher: " + cipher + "]");
+}
+
+void FTPConn::printLocalError(const std::string& info) {
+  rawBufWriteLine("[Error: " + info + "]");
 }
 
 bool FTPConn::parseData(char * data, unsigned int datalen, char ** databuf, unsigned int & databuflen, unsigned int & databufpos, int & databufcode) {
@@ -1353,11 +1369,11 @@ std::string FTPConn::getInterfaceAddress() const {
   return iom->getInterfaceAddress(sockid);
 }
 
-std::string FTPConn::getInterfaceAddress4() const {
+Core::StringResult FTPConn::getInterfaceAddress4() const {
   return iom->getInterfaceAddress4(sockid);
 }
 
-std::string FTPConn::getInterfaceAddress6() const {
+Core::StringResult FTPConn::getInterfaceAddress6() const {
   return iom->getInterfaceAddress6(sockid);
 }
 

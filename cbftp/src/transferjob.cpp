@@ -488,13 +488,15 @@ void TransferJob::addPendingTransfer(const Path& name, unsigned long long int si
 }
 
 void TransferJob::addTransfer(const std::shared_ptr<TransferStatus>& ts) {
-  if (!!ts && ts->getState() != TRANSFERSTATUS_STATE_FAILED) {
+  if (!!ts) {
     idletime = 0;
     transfers.push_front(ts);
-    ts->setCallback(this);
-    Path subpathfile = (ts->getSourcePath() - srcpath) / ts->getFile();
-    if (pendingtransfers.find(subpathfile.toString()) != pendingtransfers.end()) {
-      pendingtransfers.erase(subpathfile.toString());
+    if (ts->getState() != TRANSFERSTATUS_STATE_FAILED) {
+      ts->setCallback(this);
+      Path subpathfile = (ts->getSourcePath() - srcpath) / ts->getFile();
+      if (pendingtransfers.find(subpathfile.toString()) != pendingtransfers.end()) {
+        pendingtransfers.erase(subpathfile.toString());
+      }
     }
   }
 }

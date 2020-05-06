@@ -504,12 +504,18 @@ int LocalStorage::getNextActivePort() {
   return port;
 }
 
-std::string LocalStorage::getAddress4(LocalTransfer* lt) const {
-  return (getUseActiveModeAddress() && !getActiveModeAddress4().empty()) ? getActiveModeAddress4() : lt->getConn()->getInterfaceAddress4();
+Core::StringResult LocalStorage::getAddress4(FTPConn* conn) const {
+  if (getUseActiveModeAddress() && !getActiveModeAddress4().empty()) {
+    return getActiveModeAddress4();
+  }
+  return conn->getInterfaceAddress4();
 }
 
-std::string LocalStorage::getAddress6(LocalTransfer* lt) const {
-  return (getUseActiveModeAddress() && !getActiveModeAddress6().empty()) ? getActiveModeAddress6() : lt->getConn()->getInterfaceAddress6();
+Core::StringResult LocalStorage::getAddress6(FTPConn* conn) const {
+  if (getUseActiveModeAddress() && !getActiveModeAddress6().empty()) {
+    return getActiveModeAddress6();
+  }
+  return conn->getInterfaceAddress6();
 }
 
 TransferProtocol LocalStorage::getTransferProtocol() const {

@@ -8,12 +8,12 @@
 #include "util.h"
 #include "timereference.h"
 
-SiteRace::SiteRace(const std::shared_ptr<Race>& race, const std::string& sitename, const Path& section, const std::string& release, const std::string& username, const SkipList& skiplist, bool downloadonly) :
+SiteRace::SiteRace(const std::shared_ptr<Race>& race, const std::string& sitename, const Path& section, const std::string& jobname, const std::string& username, const SkipList& skiplist, bool downloadonly) :
   race(race),
   section(section),
-  release(release),
-  path(section / release),
-  group(util::getGroupNameFromRelease(release)),
+  jobname(jobname),
+  path(section / jobname),
+  group(util::getGroupNameFromRelease(jobname)),
   username(username),
   sitename(sitename),
   status(RaceStatus::RUNNING),
@@ -38,7 +38,7 @@ SiteRace::~SiteRace() {
 }
 
 std::string SiteRace::getName() const {
-  return release;
+  return jobname;
 }
 
 int SiteRace::classType() const {
@@ -51,10 +51,6 @@ std::string SiteRace::getSiteName() const {
 
 const Path& SiteRace::getSection() const {
   return section;
-}
-
-std::string SiteRace::getRelease() const {
-  return release;
 }
 
 std::string SiteRace::getGroup() const {
