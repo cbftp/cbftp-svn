@@ -44,6 +44,8 @@ void TransferStatusScreen::redraw() {
   std::string route = ts->getSource() + " -> " + ts->getTarget();
   ui->printStr(y, 20, "Route: " + route);
   ++y;
+  ui->printStr(y, 1, "Job name: " + ts->getJobName());
+  ++y;
   ui->printStr(y, 1, "File name: " + ts->getFile());
   ++y;
   unsigned int x = 1;

@@ -5,17 +5,18 @@
 #include "filelist.h"
 #include "util.h"
 
-TransferStatus::TransferStatus(int type, std::string source, std::string target,
-    std::string release, std::string file, const std::shared_ptr<FileList>& fls, const Path & sourcepath,
-    const std::shared_ptr<FileList>& fld, const Path & targetpath, unsigned long long int sourcesize,
-    unsigned int assumedspeed, int srcslot, int dstslot, bool ssl, bool defaultactive) :
-    type(type), source(source), target(target), release(release), file(file),
+TransferStatus::TransferStatus(int type, const std::string& source, const std::string& target,
+    const std::string& jobname, const std::string& file, const std::shared_ptr<FileList>& fls,
+    const Path& sourcepath, const std::shared_ptr<FileList>& fld, const Path& targetpath,
+    unsigned long long int sourcesize, unsigned int assumedspeed, int srcslot,
+    int dstslot, bool ssl, bool defaultactive) :
+    type(type), source(source), target(target), jobname(jobname), file(file),
     timestamp(util::ctimeLog()), sourcepath(sourcepath),
     targetpath(targetpath), sourcesize(sourcesize), knowntargetsize(0),
     interpolatedtargetsize(0), interpolationfilltargetsize(0), speed(assumedspeed),
     state(TRANSFERSTATUS_STATE_IN_PROGRESS), timespent(0), progress(0),
     awaited(false), callback(NULL), fls(fls), fld(fld), srcslot(srcslot), dstslot(dstslot),
-    ssl(ssl), defaultactive(defaultactive), passiveaddr("-"), cipher("-")
+    ssl(ssl), defaultactive(defaultactive), passiveaddr("-"), cipher("-"), sslsessionreused(false)
 {
   if (!this->speed) {
     this->speed = 1024;
@@ -34,8 +35,8 @@ std::string TransferStatus::getTarget() const {
   return target;
 }
 
-std::string TransferStatus::getRelease() const {
-  return release;
+std::string TransferStatus::getJobName() const {
+  return jobname;
 }
 
 std::string TransferStatus::getFile() const {

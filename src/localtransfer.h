@@ -15,7 +15,7 @@ class LocalTransfer : public Core::EventReceiver {
 public:
   LocalTransfer();
   bool active() const;
-  void openFile(bool);
+  bool openFile(bool);
   int getPort() const;
   virtual unsigned long long int size() const = 0;
   FTPConn * getConn() const;

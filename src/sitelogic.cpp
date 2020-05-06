@@ -1740,7 +1740,7 @@ const std::shared_ptr<Site> & SiteLogic::getSite() const {
 
 std::shared_ptr<SiteRace> SiteLogic::getRace(const std::string & race) const {
   for (std::vector<std::shared_ptr<SiteRace>>::const_iterator it = currentraces.begin(); it != currentraces.end(); it++) {
-    if ((*it)->getRelease().compare(race) == 0) {
+    if ((*it)->getName().compare(race) == 0) {
       return *it;
     }
   }

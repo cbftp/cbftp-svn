@@ -25,10 +25,14 @@ class FileList;
 
 class TransferStatus {
 public:
-  TransferStatus(int, std::string, std::string, std::string, std::string, const std::shared_ptr<FileList>& fls, const Path &, const std::shared_ptr<FileList>& fld, const Path &, unsigned long long int, unsigned int, int, int, bool, bool);
+  TransferStatus(int type, const std::string& source, const std::string& target,
+      const std::string& jobname, const std::string& file, const std::shared_ptr<FileList>& fls,
+      const Path& sourcepath, const std::shared_ptr<FileList>& fld, const Path& targetpath,
+      unsigned long long int sourcesize, unsigned int assumedspeed, int srcslot,
+      int dstslot, bool ssl, bool defaultactive);
   std::string getSource() const;
   std::string getTarget() const;
-  std::string getRelease() const;
+  std::string getJobName() const;
   std::string getFile() const;
   const Path& getSourcePath() const;
   const Path& getTargetPath() const;
@@ -74,7 +78,7 @@ private:
   int type;
   std::string source;
   std::string target;
-  std::string release;
+  std::string jobname;
   std::string file;
   std::string timestamp;
   Path sourcepath;

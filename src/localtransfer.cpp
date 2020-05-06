@@ -37,14 +37,22 @@ void LocalTransfer::tick(int) {
   FDFail(sockid, "Connection timed out");
 }
 
-void LocalTransfer::openFile(bool read) {
+bool LocalTransfer::openFile(bool read) {
   if (read ? !FileSystem::fileExistsReadable(path) : !FileSystem::fileExistsWritable(path)) {
-    perror(std::string("There was an error accessing " + path.toString()).c_str());
-    exit(1);
+    global->getIOManager()->closeSocket(sockid);
+    FDFail(sockid, std::string("Failed to access " + path.toString()).c_str());
+    return false;
   }
   filestream.clear();
   filestream.open((path / filename).toString().c_str(), std::ios::binary | (read ? std::ios::in : (std::ios::ate | std::ios::out)));
+  if (filestream.fail()) {
+    filestream.close();
+    global->getIOManager()->closeSocket(sockid);
+    FDFail(sockid, "Failed to open file " + (path / filename).toString());
+    return false;
+  }
   fileopened = true;
+  return true;
 }
 
 int LocalTransfer::getPort() const {

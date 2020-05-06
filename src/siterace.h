@@ -20,7 +20,7 @@ class SiteRace : public CommandOwner, public std::enable_shared_from_this<SiteRa
   private:
     std::shared_ptr<Race> race;
     Path section;
-    std::string release;
+    std::string jobname;
     Path path;
     std::string group;
     std::string username;
@@ -59,13 +59,12 @@ class SiteRace : public CommandOwner, public std::enable_shared_from_this<SiteRa
     int classType() const;
     std::string getSiteName() const;
     const Path& getSection() const;
-    std::string getRelease() const;
     std::string getGroup() const;
     const Path& getPath() const;
     unsigned int getId() const;
     std::string getRelevantSubPath();
     bool anyFileListNotNonExistent() const;
-    SiteRace(const std::shared_ptr<Race>& race, const std::string& sitename, const Path& section, const std::string& release, const std::string& username, const SkipList& skiplist, bool downloadonly);
+    SiteRace(const std::shared_ptr<Race>& race, const std::string& sitename, const Path& section, const std::string& jobname, const std::string& username, const SkipList& skiplist, bool downloadonly);
     ~SiteRace();
     std::shared_ptr<FileList> getFileListForPath(const std::string& path) const;
     std::shared_ptr<FileList> getFileListForFullPath(SiteLogic* co, const Path& path) const;

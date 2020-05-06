@@ -221,12 +221,12 @@ void TransfersScreen::initialize(unsigned int row, unsigned int col, const Trans
   init(row, col);
 }
 
-bool TransfersScreen::showsWhileFiltered(const std::shared_ptr<TransferStatus> & ts) const {
+bool TransfersScreen::showsWhileFiltered(const std::shared_ptr<TransferStatus>& ts) const {
   if (tfp.usejobfilter) {
     bool match = false;
     if (!tfp.spreadjobsfilter.empty()) {
       for (std::list<std::string>::const_iterator it = tfp.spreadjobsfilter.begin(); it != tfp.spreadjobsfilter.end(); it++) {
-        if (ts->getTargetPath().toString().find(*it) != std::string::npos) {
+        if (ts->getJobName() == *it) {
           match = true;
           break;
         }
@@ -234,7 +234,7 @@ bool TransfersScreen::showsWhileFiltered(const std::shared_ptr<TransferStatus> &
     }
     if (!match && !tfp.transferjobsfilter.empty()) {
       for (std::list<std::string>::const_iterator it = tfp.transferjobsfilter.begin(); it != tfp.transferjobsfilter.end(); it++) {
-        if (ts->getTargetPath().toString().find(*it) != std::string::npos) {
+        if (ts->getJobName() == *it) {
           match = true;
           break;
         }

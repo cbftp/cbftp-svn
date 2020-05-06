@@ -725,7 +725,7 @@ std::string MainScreen::getInfoText() const {
 }
 
 void MainScreen::addPreparedRaceTableRow(unsigned int y, MenuSelectOption & mso, unsigned int id,
-    bool selectable, const std::string & section, const std::string & release, const std::string & ttl,
+    bool selectable, const std::string & section, const std::string & name, const std::string & ttl,
     const std::string & sites)
 {
   std::shared_ptr<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
@@ -735,7 +735,7 @@ void MainScreen::addPreparedRaceTableRow(unsigned int y, MenuSelectOption & mso,
   msotb->setSelectable(false);
   msal->addElement(msotb, 2, RESIZE_REMOVE);
 
-  msotb = mso.addTextButton(y, 1, "release", release);
+  msotb = mso.addTextButton(y, 1, "name", name);
   if (!selectable) {
     msotb->setSelectable(false);
   }
@@ -758,7 +758,7 @@ void MainScreen::addPreparedRaceTableHeader(unsigned int y, MenuSelectOption & m
 void MainScreen::addPreparedRaceDetails(unsigned int y, MenuSelectOption & mso, const std::shared_ptr<PreparedRace> & preparedrace) {
   unsigned int id = preparedrace->getId();
   std::string section = preparedrace->getSection();
-  std::string release = preparedrace->getRelease();
+  std::string name = preparedrace->getName();
   std::string ttl = util::simpleTimeFormat(preparedrace->getRemainingTime());
   std::list<std::pair<std::string, bool>> sites = preparedrace->getSites();
   std::string sitestr;
@@ -768,7 +768,7 @@ void MainScreen::addPreparedRaceDetails(unsigned int y, MenuSelectOption & mso, 
   if (sitestr.length() > 0) {
     sitestr = sitestr.substr(0, sitestr.length() - 1);
   }
-  addPreparedRaceTableRow(y, mso, id, true, section, release, ttl, sitestr);
+  addPreparedRaceTableRow(y, mso, id, true, section, name, ttl, sitestr);
 }
 
 void MainScreen::addSiteHeader(unsigned int y, MenuSelectOption & mso) {

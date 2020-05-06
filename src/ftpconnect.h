@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 
-#include "core/eventreceiver.h"
+#include "eventreceiverproxyintermediate.h"
 
 #include "address.h"
 
@@ -12,9 +12,9 @@ class ProxySession;
 class Proxy;
 struct Address;
 
-class FTPConnect : public Core::EventReceiver {
+class FTPConnect : public EventReceiverProxyIntermediate {
 public:
-  FTPConnect(int, FTPConnectOwner *, const Address& addr, Proxy *, bool, bool implicittls);
+  FTPConnect(int id, FTPConnectOwner* owner, const Address& addr, Proxy* proxy, bool primary, bool implicittls);
   ~FTPConnect();
   int getId() const;
   int handedOver();
@@ -23,18 +23,15 @@ public:
   void disengage();
   void tickIntern();
 private:
-  void FDConnecting(int sockid, const std::string& addr) override;
-  void FDConnected(int sockid) override;
+  void FDInterConnecting(int sockid, const std::string& addr) override;
+  void FDInterConnected(int sockid) override;
+  void FDInterData(int sockid, char* data, unsigned int datalen) override;
+  void FDInterInfo(int sockid, const std::string& info) override;
   void FDDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) override;
-  void FDData(int sockid, char* data, unsigned int datalen) override;
   void FDFail(int sockid, const std::string& error) override;
   void FDSSLSuccess(int sockid, const std::string& cipher) override;
   void proxySessionInit();
-  void printConnecting(const Address& addr, bool resolved = false);
   int id;
-  int sockid;
-  bool proxynegotiation;
-  ProxySession * proxysession;
   FTPConnectOwner * owner;
   unsigned int databuflen;
   char * databuf;
@@ -42,7 +39,6 @@ private:
   int databufcode;
   Address addr;
   Address resolvedaddr;
-  Proxy * proxy;
   bool primary;
   bool engaged;
   bool connected;

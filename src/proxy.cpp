@@ -4,13 +4,10 @@ Proxy::Proxy() {
 
 }
 
-Proxy::Proxy(std::string name) {
-  this->name = name;
-  addr = "127.0.0.1";
-  port = "8080";
-  authmethod = PROXY_AUTH_NONE;
-  user = "";
-  pass = "";
+Proxy::Proxy(const std::string& name) : name(name), addr("127.0.0.1"),
+    port("8080"), authmethod(PROXY_AUTH_NONE), resolvehosts(true)
+{
+
 }
 
 std::string Proxy::getName() const {
@@ -47,15 +44,19 @@ std::string Proxy::getPass() const {
   return pass;
 }
 
-void Proxy::setName(std::string name) {
+bool Proxy::getResolveHosts() const {
+  return resolvehosts;
+}
+
+void Proxy::setName(const std::string& name) {
   this->name = name;
 }
 
-void Proxy::setAddr(std::string addr) {
+void Proxy::setAddr(const std::string& addr) {
   this->addr = addr;
 }
 
-void Proxy::setPort(std::string port) {
+void Proxy::setPort(const std::string& port) {
   this->port = port;
 }
 
@@ -63,10 +64,14 @@ void Proxy::setAuthMethod(int authmethod) {
   this->authmethod = authmethod;
 }
 
-void Proxy::setUser(std::string user) {
+void Proxy::setUser(const std::string& user) {
   this->user = user;
 }
 
-void Proxy::setPass(std::string pass) {
+void Proxy::setPass(const std::string& pass) {
   this->pass = pass;
+}
+
+void Proxy::setResolveHosts(bool resolve) {
+  resolvehosts = resolve;
 }

@@ -52,7 +52,9 @@ void LocalUpload::FDConnected(int sockid) {
   if (passivemode) {
     tm->activeStarted();
   }
-  openFile(true);
+  if (!openFile(true)) {
+    return;
+  }
   if (ssl) {
     global->getIOManager()->negotiateSSLConnect(sockid, ftpconn->getSockId());
   }
@@ -70,6 +72,9 @@ void LocalUpload::FDDisconnected(int sockid, Core::DisconnectType reason, const 
   }
   deactivate();
   tm->sourceError(TM_ERR_OTHER);
+  if (reason == Core::DisconnectType::ERROR) {
+    tm->localError(details);
+  }
   this->sockid = -1;
 }
 
@@ -86,6 +91,12 @@ void LocalUpload::FDSSLSuccess(int sockid, const std::string& cipher) {
 void LocalUpload::sendChunk() {
   assert(fileopened);
   filestream.read(buf, buflen);
+  if (filestream.fail()) {
+    filestream.close();
+    global->getIOManager()->closeSocket(sockid);
+    FDFail(sockid, "Failed reading file " + (path / filename).toString());
+    return;
+  }
   int gcount = filestream.gcount();
   if (gcount == 0) {
     filestream.close();
@@ -109,6 +120,7 @@ void LocalUpload::FDFail(int sockid, const std::string& error) {
     return;
   }
   deactivate();
+  tm->localError(error);
   tm->sourceError(TM_ERR_OTHER);
   this->sockid = -1;
 }

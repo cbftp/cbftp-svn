@@ -91,6 +91,7 @@ Site::Site(const std::string & name) :
   refreshrate(RefreshRate::AUTO),
   xdupe(true),
   proxytype(SITE_PROXY_GLOBAL),
+  dataproxytype(SITE_PROXY_GLOBAL),
   transfersourcepolicy(SITE_TRANSFER_POLICY_ALLOW),
   transfertargetpolicy(SITE_TRANSFER_POLICY_ALLOW),
   skiplist(global->getSkipList()),
@@ -115,6 +116,7 @@ Site::Site(const Site & other) {
   maxdncomplete = other.maxdncomplete;
   maxdntransferjob = other.maxdntransferjob;
   freeslot = other.freeslot;
+  stayloggedin = other.stayloggedin;
   maxidletime = other.maxidletime;
   pret = other.pret;
   binary = other.binary;
@@ -134,9 +136,10 @@ Site::Site(const Site & other) {
   xdupe = other.xdupe;
   proxytype = other.proxytype;
   proxyname = other.proxyname;
+  dataproxytype = other.dataproxytype;
+  dataproxyname = other.dataproxyname;
   sections = other.sections;
   affils = other.affils;
-  proxytype = other.proxytype;
   transfersourcepolicy = other.transfersourcepolicy;
   transfertargetpolicy = other.transfertargetpolicy;
   skiplist = other.skiplist;
@@ -442,6 +445,14 @@ std::string Site::getProxy() const {
   return proxyname;
 }
 
+int Site::getDataProxyType() const {
+  return dataproxytype;
+}
+
+std::string Site::getDataProxy() const {
+  return dataproxyname;
+}
+
 void Site::setDisabled(bool val) {
   disabled = val;
 }
@@ -627,6 +638,14 @@ void Site::setProxyType(int proxytype) {
 
 void Site::setProxy(const std::string & proxyname) {
   this->proxyname = proxyname;
+}
+
+void Site::setDataProxyType(int proxytype) {
+  this->dataproxytype = proxytype;
+}
+
+void Site::setDataProxy(const std::string& proxyname) {
+  this->dataproxyname = proxyname;
 }
 
 void Site::clearSections() {

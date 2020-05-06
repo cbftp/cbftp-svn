@@ -8,7 +8,7 @@
 class Proxy {
 public:
   Proxy();
-  Proxy(std::string);
+  Proxy(const std::string& name);
   std::string getName() const;
   std::string getAddr() const;
   std::string getPort() const;
@@ -16,12 +16,14 @@ public:
   std::string getAuthMethodText() const;
   std::string getUser() const;
   std::string getPass() const;
-  void setName(std::string);
-  void setAddr(std::string);
-  void setPort(std::string);
-  void setAuthMethod(int);
-  void setUser(std::string);
-  void setPass(std::string);
+  bool getResolveHosts() const;
+  void setName(const std::string& name);
+  void setAddr(const std::string& addr);
+  void setPort(const std::string& port);
+  void setAuthMethod(int authmethod);
+  void setUser(const std::string& user);
+  void setPass(const std::string& pass);
+  void setResolveHosts(bool resolvehosts);
 private:
   std::string name;
   std::string addr;
@@ -29,4 +31,5 @@ private:
   int authmethod;
   std::string user;
   std::string pass;
+  bool resolvehosts;
 };

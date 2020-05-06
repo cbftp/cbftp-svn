@@ -289,7 +289,7 @@ void Engine::startPreparedRace(unsigned int id) {
           sites.push_back(site.first);
         }
       }
-      newRace((*it)->getRelease(), (*it)->getSection(), sites, (*it)->getReset(), dlonlysites);
+      newRace((*it)->getName(), (*it)->getSection(), sites, (*it)->getReset(), dlonlysites);
       preparedraces.erase(it);
       return;
     }

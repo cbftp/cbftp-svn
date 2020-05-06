@@ -54,9 +54,9 @@ bool TransferMonitor::idle() const {
 }
 
 void TransferMonitor::engageFXP(
-  const std::string & sfile, const std::shared_ptr<SiteLogic> & sls, const std::shared_ptr<FileList>& fls,
-  const std::string & dfile, const std::shared_ptr<SiteLogic> & sld, const std::shared_ptr<FileList>& fld,
-  const std::shared_ptr<CommandOwner> & srcco, const std::shared_ptr<CommandOwner> & dstco)
+  const std::string& sfile, const std::shared_ptr<SiteLogic>& sls, const std::shared_ptr<FileList>& fls,
+  const std::string& dfile, const std::shared_ptr<SiteLogic>& sld, const std::shared_ptr<FileList>& fld,
+  const std::shared_ptr<CommandOwner>& srcco, const std::shared_ptr<CommandOwner>& dstco)
 {
   reset();
   type = TM_TYPE_FXP;
@@ -87,8 +87,7 @@ void TransferMonitor::engageFXP(
   int dpol = sld->getSite()->getSSLTransferPolicy();
   if (spol != SITE_SSL_ALWAYS_OFF && dpol != SITE_SSL_ALWAYS_OFF &&
       (spol == SITE_SSL_ALWAYS_ON || dpol == SITE_SSL_ALWAYS_ON ||
-      (spol == SITE_SSL_PREFER_ON && dpol == SITE_SSL_PREFER_ON)) &&
-      (sls->getSite()->supportsSSCN() || sld->getSite()->supportsSSCN()))
+      (spol == SITE_SSL_PREFER_ON && dpol == SITE_SSL_PREFER_ON)))
   {
     ssl = true;
     sourcesslclient = fxpdstactive;
@@ -98,21 +97,43 @@ void TransferMonitor::engageFXP(
       sourcesslclient = !sourcesslclient;
     }
   }
-  ipv6 = useIPv6(sls->getSite()->getTransferProtocol(), sld->getSite()->getTransferProtocol());
+  TransferProtocol sprot = sls->getSite()->getTransferProtocol();
+  TransferProtocol dprot = sld->getSite()->getTransferProtocol();
+  ipv6 = useIPv6(sprot, dprot);
   fld->touchFile(dfile, sld->getSite()->getUser(), true);
   latestsrctouch = fls->getFile(sfile)->getTouch();
   latestdsttouch = fld->getFile(dfile)->getTouch();
   fls->download(sfile);
 
   ts = std::make_shared<TransferStatus>(TRANSFERSTATUS_TYPE_FXP, sls->getSite()->getName(),
-      sld->getSite()->getName(), "", dfile, fls, fls->getPath(), fld, fld->getPath(),
+      sld->getSite()->getName(), srcco->getName(), dfile, fls, fls->getPath(), fld, fld->getPath(),
       fls->getFile(sfile)->getSize(),
       sls->getSite()->getAverageSpeed(sld->getSite()->getName()), src, dst, ssl, fxpdstactive);
   tm->addNewTransferStatus(ts);
+  if ((spol == SITE_SSL_ALWAYS_OFF && dpol == SITE_SSL_ALWAYS_ON) ||
+      (spol == SITE_SSL_ALWAYS_ON && dpol == SITE_SSL_ALWAYS_OFF))
+  {
+    lateFXPFailure("FXP transfer not possible due to conflicting TLS settings");
+    return;
+  }
+  if ((spol == SITE_SSL_ALWAYS_ON || dpol == SITE_SSL_ALWAYS_ON) &&
+      !sls->getSite()->supportsSSCN() && !sld->getSite()->supportsSSCN())
+  {
+    lateFXPFailure("TLS FXP transfer not possible due to neither site supporting SSCN");
+    return;
+  }
+  if (!transferProtocolCombinationPossible(sprot, dprot)) {
+    lateFXPFailure("FXP transfer not possible due to conflicting IPv4/IPv6 settings");
+    return;
+  }
   if (fxpdstactive) {
     sls->preparePassiveTransfer(src, sfile, true, ipv6, ssl, sourcesslclient);
   }
   else {
+    if (sld->getSite()->hasBrokenPASV()) {
+      lateFXPFailure("FXP transfer not possible due to both sites having broken PASV");
+      return;
+    }
     sld->preparePassiveTransfer(dst, dfile, true, ipv6, ssl, !sourcesslclient);
   }
 
@@ -120,8 +141,8 @@ void TransferMonitor::engageFXP(
 }
 
 void TransferMonitor::engageDownload(
-  const std::string & sfile, const std::shared_ptr<SiteLogic> & sls, const std::shared_ptr<FileList>& fls,
-  const std::shared_ptr<LocalFileList> & localfl, const std::shared_ptr<CommandOwner> & co)
+  const std::string& sfile, const std::shared_ptr<SiteLogic>& sls, const std::shared_ptr<FileList>& fls,
+  const std::shared_ptr<LocalFileList>& localfl, const std::shared_ptr<CommandOwner>& co)
 {
   reset();
   if (!localfl) return;
@@ -134,41 +155,52 @@ void TransferMonitor::engageDownload(
   this->fls = fls;
   this->localfl = localfl;
   this->srcco = co;
-  if (!sls->lockDownloadConn(fls, &src, srcco, this)) return;
+  if (!sls->lockDownloadConn(fls, &src, srcco, this)) {
+    return;
+  }
   status = TM_STATUS_AWAITING_PASSIVE;
   int spol = sls->getSite()->getSSLTransferPolicy();
   if (spol == SITE_SSL_ALWAYS_ON || spol == SITE_SSL_PREFER_ON) {
     ssl = true;
   }
-  ipv6 = useIPv6(sls->getSite()->getTransferProtocol(), global->getLocalStorage()->getTransferProtocol());
+  TransferProtocol sprot = sls->getSite()->getTransferProtocol();
+  TransferProtocol dprot = global->getLocalStorage()->getTransferProtocol();
+  ipv6 = useIPv6(sprot, dprot);
   localfl->touchFile(dfile);
   if (!FileSystem::directoryExistsWritable(dpath)) {
     FileSystem::createDirectoryRecursive(dpath);
   }
   clientactive = !sls->getSite()->hasBrokenPASV();
   ts = std::make_shared<TransferStatus>(TRANSFERSTATUS_TYPE_DOWNLOAD,
-      sls->getSite()->getName(), "/\\", "", dfile, fls, spath,
+      sls->getSite()->getName(), "/\\", co->getName(), dfile, fls, spath,
       nullptr, dpath, fls->getFile(sfile)->getSize(), 0, src, -1, ssl, clientactive);
   tm->addNewTransferStatus(ts);
   if (FileSystem::fileExists(dpath / dfile) && global->getLocalStorage()->getLocalFile(dpath / dfile).getSize() > 0) {
-    ts->setDupe();
-    tm->transferFailed(ts, TM_ERR_DUPE);
-    sls->returnConn(src, true);
-    status = TM_STATUS_IDLE;
+    lateDownloadFailure((dpath / dfile).toString() + " already exists", true);
+    return;
+  }
+  if (!transferProtocolCombinationPossible(sprot, dprot)) {
+    lateDownloadFailure("Transfer not possible due to conflicting IPv4/IPv6 settings");
     return;
   }
   if (clientactive) {
     sls->preparePassiveTransfer(src, sfile, false, ipv6, ssl);
   }
   else {
-    lt = global->getLocalStorage()->activeModeDownload(this, dpath, dfile, ipv6, ssl, sls->getConn(src));
-    passiveReady(ipv6 ? global->getLocalStorage()->getAddress6(lt) : global->getLocalStorage()->getAddress4(lt), lt->getPort());
+    FTPConn* conn = sls->getConn(src);
+    Core::StringResult passiveresult = ipv6 ? global->getLocalStorage()->getAddress6(conn) : global->getLocalStorage()->getAddress4(conn);
+    if (!passiveresult.success) {
+      lateDownloadFailure(passiveresult.error);
+      return;
+    }
+    lt = global->getLocalStorage()->activeModeDownload(this, dpath, dfile, ipv6, ssl, conn);
+    passiveReady(passiveresult.result, lt->getPort());
   }
 }
 
 void TransferMonitor::engageUpload(
-  const std::string & sfile, const std::shared_ptr<LocalFileList> & localfl,
-  const std::shared_ptr<SiteLogic> & sld, const std::shared_ptr<FileList>& fld, const std::shared_ptr<CommandOwner> & co)
+  const std::string& sfile, const std::shared_ptr<LocalFileList>& localfl,
+  const std::shared_ptr<SiteLogic>& sld, const std::shared_ptr<FileList>& fld, const std::shared_ptr<CommandOwner>& co)
 {
   reset();
   if (!localfl) return;
@@ -184,37 +216,52 @@ void TransferMonitor::engageUpload(
   std::unordered_map<std::string, LocalFile>::const_iterator it = localfl->find(sfile);
   if (it == localfl->end()) return;
   const LocalFile & lf = it->second;
-  if (!sld->lockUploadConn(fld, &dst, dstco, this)) return;
+  if (!sld->lockUploadConn(fld, &dst, dstco, this)) {
+    return;
+  }
   status = TM_STATUS_AWAITING_PASSIVE;
   int spol = sld->getSite()->getSSLTransferPolicy();
   if (spol == SITE_SSL_ALWAYS_ON || spol == SITE_SSL_PREFER_ON) {
     ssl = true;
   }
-  ipv6 = useIPv6(global->getLocalStorage()->getTransferProtocol(), sld->getSite()->getTransferProtocol());
+  TransferProtocol sprot = global->getLocalStorage()->getTransferProtocol();
+  TransferProtocol dprot = sld->getSite()->getTransferProtocol();
+  ipv6 = useIPv6(sprot, dprot);
   fld->touchFile(dfile, sld->getSite()->getUser(), true);
   clientactive = !sld->getSite()->hasBrokenPASV();
   ts = std::make_shared<TransferStatus>(TRANSFERSTATUS_TYPE_UPLOAD,
-      "/\\", sld->getSite()->getName(), "", dfile, nullptr, spath,
+      "/\\", sld->getSite()->getName(), co->getName(), dfile, nullptr, spath,
       fld, dpath, lf.getSize(), 0, 0, dst, ssl, clientactive);
   tm->addNewTransferStatus(ts);
   if (!FileSystem::fileExists(spath / sfile)) {
-    ts->setFailed();
-    tm->transferFailed(ts, TM_ERR_OTHER);
-    sld->returnConn(dst, true);
-    status = TM_STATUS_IDLE;
+    lateUploadFailure((spath / sfile).toString() + " already exists", true);
+    return;
+  }
+  if (!transferProtocolCombinationPossible(sprot, dprot)) {
+    lateUploadFailure("Transfer not possible due to conflicting IPv4/IPv6 settings");
     return;
   }
   if (clientactive) {
     sld->preparePassiveTransfer(dst, dfile, false, ipv6, ssl);
   }
   else {
-    lt = global->getLocalStorage()->activeModeUpload(this, spath, sfile, ipv6, ssl, sld->getConn(dst));
-    passiveReady(ipv6 ? global->getLocalStorage()->getAddress6(lt) : global->getLocalStorage()->getAddress4(lt), lt->getPort());
+    FTPConn* conn = sld->getConn(dst);
+    Core::StringResult passiveresult = ipv6 ? global->getLocalStorage()->getAddress6(conn) : global->getLocalStorage()->getAddress4(conn);
+    if (!passiveresult.success) {
+      localError(passiveresult.error);
+      ts->setFailed();
+      tm->transferFailed(ts, TM_ERR_OTHER);
+      sld->returnConn(dst, true);
+      status = TM_STATUS_IDLE;
+      return;
+    }
+    lt = global->getLocalStorage()->activeModeUpload(this, spath, sfile, ipv6, ssl, conn);
+    passiveReady(passiveresult.result, lt->getPort());
   }
 }
 
-void TransferMonitor::engageList(const std::shared_ptr<SiteLogic> & sls, int connid,
-  bool hiddenfiles, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner> & co, bool ipv6)
+void TransferMonitor::engageList(const std::shared_ptr<SiteLogic>& sls, int connid,
+  bool hiddenfiles, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner>& co, bool ipv6)
 {
   reset();
   type = TM_TYPE_LIST;
@@ -231,10 +278,16 @@ void TransferMonitor::engageList(const std::shared_ptr<SiteLogic> & sls, int con
   }
   else {
     clientactive = false;
-    lt = global->getLocalStorage()->activeModeDownload(this, ipv6, ssl, sls->getConn(src));
+    FTPConn* conn = sls->getConn(src);
+    Core::StringResult passiveresult = ipv6 ? global->getLocalStorage()->getAddress6(conn) : global->getLocalStorage()->getAddress4(conn);
+    if (!passiveresult.success) { // should be impossible since the protocol is the same as the control connection
+      sls->getConn(src)->printLocalError(passiveresult.error);
+      status = TM_STATUS_IDLE;
+      return;
+    }
+    lt = global->getLocalStorage()->activeModeDownload(this, ipv6, ssl, conn);
     storeid = static_cast<LocalDownload *>(lt)->getStoreId();
-    passiveReady((ipv6 ? global->getLocalStorage()->getAddress6(lt) : global->getLocalStorage()->getAddress4(lt)),
-                 lt->getPort());
+    passiveReady(passiveresult.result, lt->getPort());
   }
 }
 
@@ -698,4 +751,46 @@ void TransferMonitor::newRawBufferLine(const std::pair<std::string, std::string>
   else {
     rawbufqueue.push_back(line);
   }
+}
+
+void TransferMonitor::localError(const std::string& info) {
+  std::string localtag = "[" + util::ctimeLog() + "]";
+  newRawBufferLine(std::make_pair(localtag, "Error: " + info));
+}
+
+void TransferMonitor::lateFXPFailure(const std::string& reason) {
+  localError(reason);
+  ts->setFailed();
+  tm->transferFailed(ts, TM_ERR_OTHER);
+  sls->returnConn(src, true);
+  sld->returnConn(dst, true);
+  status = TM_STATUS_IDLE;
+}
+
+void TransferMonitor::lateDownloadFailure(const std::string& reason, bool dupe) {
+  localError(reason);
+  if (dupe) {
+    ts->setDupe();
+  }
+  else {
+    ts->setFailed();
+  }
+  tm->transferFailed(ts, dupe ? TM_ERR_DUPE : TM_ERR_OTHER);
+  sls->returnConn(src, true);
+  status = TM_STATUS_IDLE;
+  return;
+}
+
+void TransferMonitor::lateUploadFailure(const std::string& reason, bool dupe) {
+  localError(reason);
+  if (dupe) {
+    ts->setDupe();
+  }
+  else {
+    ts->setFailed();
+  }
+  tm->transferFailed(ts, dupe ? TM_ERR_DUPE : TM_ERR_OTHER);
+  sld->returnConn(dst, true);
+  status = TM_STATUS_IDLE;
+  return;
 }
