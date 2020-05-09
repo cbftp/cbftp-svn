@@ -1369,14 +1369,6 @@ std::string FTPConn::getInterfaceAddress() const {
   return iom->getInterfaceAddress(sockid);
 }
 
-Core::StringResult FTPConn::getInterfaceAddress4() const {
-  return iom->getInterfaceAddress4(sockid);
-}
-
-Core::StringResult FTPConn::getInterfaceAddress6() const {
-  return iom->getInterfaceAddress6(sockid);
-}
-
 bool FTPConn::isIPv6() const {
   return iom->getAddressFamily(sockid) == Core::AddressFamily::IPV6;
 }

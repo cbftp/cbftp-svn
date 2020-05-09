@@ -24,6 +24,7 @@ private:
   Proxy * proxy;
   Proxy modproxy;
   std::shared_ptr<MenuSelectOptionTextArrow> authmethod;
+  std::shared_ptr<MenuSelectOptionTextArrow> ampm;
   int latestauthmethod;
   std::string operation;
 };

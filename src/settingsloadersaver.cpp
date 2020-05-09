@@ -310,6 +310,18 @@ void SettingsLoaderSaver::loadSettings() {
         proxy->setResolveHosts(false);
       }
     }
+    else if (!setting.compare("activeaddresssource")) {
+      proxy->setActiveAddressSource(static_cast<ActiveAddressSource>(std::stoi(value)));
+    }
+    else if (!setting.compare("activeportsmethod")) {
+      proxy->setActivePortsMethod(static_cast<ActivePortsMethod>(std::stoi(value)));
+    }
+    else if (!setting.compare("activeportfirst")) {
+      proxy->setActivePortFirst(std::stoi(value));
+    }
+    else if (!setting.compare("activeportlast")) {
+      proxy->setActivePortLast(std::stoi(value));
+    }
   }
   lines.clear();
   dfh->getDataFor("ProxyManagerDefaults", &lines);
@@ -818,6 +830,10 @@ void SettingsLoaderSaver::saveSettings() {
       if (!proxy->getResolveHosts()) {
         dfh->addOutputLine(filetag, name + "$resolvehosts=false");
       }
+      dfh->addOutputLine(filetag, name + "$activeaddresssource=" + std::to_string(static_cast<int>(proxy->getActiveAddressSource())));
+      dfh->addOutputLine(filetag, name + "$activeportsmethod=" + std::to_string(static_cast<int>(proxy->getActivePortsMethod())));
+      dfh->addOutputLine(filetag, name + "$activeportfirst=" + std::to_string(proxy->getActivePortFirst()));
+      dfh->addOutputLine(filetag, name + "$activeportlast=" + std::to_string(proxy->getActivePortLast()));
     }
     if (global->getProxyManager()->getDefaultProxy() != nullptr) {
       dfh->addOutputLine(defaultstag, "useproxy=" + global->getProxyManager()->getDefaultProxy()->getName());

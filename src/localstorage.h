@@ -70,8 +70,8 @@ public:
   void setActivePortFirst(int);
   void setActivePortLast(int);
   int getNextActivePort();
-  Core::StringResult getAddress4(FTPConn* conn) const;
-  Core::StringResult getAddress6(FTPConn* conn) const;
+  Core::StringResult getAddress4(int fallbacksockid) const;
+  Core::StringResult getAddress6(int fallbacksockid) const;
   TransferProtocol getTransferProtocol() const;
   void setTransferProtocol(TransferProtocol protocol);
   void executeAsyncRequest(LocalStorageRequestData * data);

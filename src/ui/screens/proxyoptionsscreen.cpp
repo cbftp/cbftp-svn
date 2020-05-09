@@ -27,13 +27,16 @@ ProxyOptionsScreen::~ProxyOptionsScreen() {
 void ProxyOptionsScreen::initialize(unsigned int row, unsigned int col) {
   active = false;
   defaultset = false;
+  defaultdataset = false;
   deleteproxy = "";
   editproxy = "";
   pm = global->getProxyManager();
   unsigned int y = 1;
   unsigned int x = 1;
-  mso.clear();
+  mso.reset();
+  msop.reset();
   useproxy = mso.addTextArrow(y++, x, "useproxy", "Default proxy:");
+  dataproxy = mso.addTextArrow(y++, x, "dataproxy", "Default data proxy:");
   focusedarea = &mso;
   mso.makeLeavableDown();
   msop.makeLeavableUp();
@@ -43,35 +46,49 @@ void ProxyOptionsScreen::initialize(unsigned int row, unsigned int col) {
 
 void ProxyOptionsScreen::redraw() {
   ui->erase();
-  if (editproxy != "" && pm->getProxy(editproxy) == NULL) {
+  if (editproxy != "" && pm->getProxy(editproxy) == nullptr) {
     global->getSiteManager()->proxyRemoved(editproxy);
     editproxy = "";
   }
   std::string prevselect = useproxy->getDataText();
+  std::string prevdataselect = dataproxy->getDataText();
   useproxy->clear();
+  dataproxy->clear();
   useproxy->addOption("None", 0);
-  unsigned int y = 6;
+  dataproxy->addOption("None", 0);
+  unsigned int y = 7;
   unsigned int x = 1;
   msop.clear();
-  msop.addTextButtonNoContent(2, x, "add", "Add proxy");
-  ui->printStr(4, x, "Name");
-  ui->printStr(4, x + 10, "Address");
-  ui->printStr(4, x + 30, "Port");
-  ui->printStr(4, x + 37, "Auth");
+  msop.addTextButtonNoContent(3, x, "add", "Add proxy");
+  ui->printStr(5, x, "Name");
+  ui->printStr(5, x + 10, "Address");
+  ui->printStr(5, x + 30, "Port");
+  ui->printStr(5, x + 37, "Auth");
+  ui->printStr(5, x + 48, "Resolve");
   for(std::vector<Proxy *>::const_iterator it = pm->begin(); it != pm->end(); it++) {
     std::string name = (*it)->getName();
     useproxy->addOption(name, 1);
+    dataproxy->addOption(name, 1);
     msop.addTextButton(y++, x, name, name);
   }
   msop.checkPointer();
   if (!defaultset) {
-    if (pm->getDefaultProxy() != NULL) {
+    if (pm->getDefaultProxy() != nullptr) {
       useproxy->setOptionText(pm->getDefaultProxy()->getName());
     }
     defaultset = true;
   }
   else {
     useproxy->setOptionText(prevselect);
+  }
+  if (!defaultdataset) {
+    if (pm->getDefaultDataProxy() != nullptr) {
+      dataproxy->setOptionText(pm->getDefaultDataProxy()->getName());
+    }
+    defaultdataset = true;
+  }
+  else {
+    dataproxy->setOptionText(prevdataselect);
   }
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
@@ -96,36 +113,14 @@ void ProxyOptionsScreen::redraw() {
         ui->printStr(msoe->getRow(), msoe->getCol() + 10, proxy->getAddr(), false, 19);
         ui->printStr(msoe->getRow(), msoe->getCol() + 30, proxy->getPort(), false, 5);
         ui->printStr(msoe->getRow(), msoe->getCol() + 37, proxy->getAuthMethodText());
+        ui->printStr(msoe->getRow(), msoe->getCol() + 48, proxy->getResolveHosts() ? "[X]" : "[ ]");
       }
     }
   }
 }
 
 void ProxyOptionsScreen::update() {
-  if (defocusedarea != NULL) {
-    if (defocusedarea == &mso) {
-      std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
-      ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-    }
-    else if (defocusedarea == &msop) {
-      std::shared_ptr<MenuSelectOptionElement> msoe = msop.getElement(mso.getLastSelectionPointer());
-      ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-    }
-  }
-  if (focusedarea == &mso) {
-    std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
-    msoe = mso.getElement(mso.getSelectionPointer());
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
-  }
-  else if (focusedarea == &msop) {
-    std::shared_ptr<MenuSelectOptionElement> msoe = msop.getElement(msop.getLastSelectionPointer());
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), false, 9);
-    msoe = msop.getElement(msop.getSelectionPointer());
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true, 9);
-  }
+  redraw();
 }
 
 void ProxyOptionsScreen::command(const std::string & command) {
@@ -202,6 +197,9 @@ bool ProxyOptionsScreen::keyPressed(unsigned int ch) {
         std::string identifier = msoe->getIdentifier();
         if (identifier == "useproxy") {
           pm->setDefaultProxy(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getDataText());
+        }
+        else if (identifier == "dataproxy") {
+          pm->setDefaultDataProxy(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getDataText());
         }
       }
       ui->returnToLast();

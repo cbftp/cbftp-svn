@@ -24,6 +24,7 @@ private:
   FocusableArea * defocusedarea;
   bool active;
   bool defaultset;
+  bool defaultdataset;
   std::string deleteproxy;
   std::string editproxy;
   std::shared_ptr<MenuSelectOptionElement> activeelement;
@@ -31,4 +32,5 @@ private:
   MenuSelectOption msop;
   ProxyManager * pm;
   std::shared_ptr<MenuSelectOptionTextArrow> useproxy;
+  std::shared_ptr<MenuSelectOptionTextArrow> dataproxy;
 };

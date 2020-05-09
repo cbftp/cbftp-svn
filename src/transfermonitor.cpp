@@ -106,7 +106,7 @@ void TransferMonitor::engageFXP(
   fls->download(sfile);
 
   ts = std::make_shared<TransferStatus>(TRANSFERSTATUS_TYPE_FXP, sls->getSite()->getName(),
-      sld->getSite()->getName(), srcco->getName(), dfile, fls, fls->getPath(), fld, fld->getPath(),
+      sld->getSite()->getName(), srcco ? srcco->getName() : "", dfile, fls, fls->getPath(), fld, fld->getPath(),
       fls->getFile(sfile)->getSize(),
       sls->getSite()->getAverageSpeed(sld->getSite()->getName()), src, dst, ssl, fxpdstactive);
   tm->addNewTransferStatus(ts);
@@ -172,7 +172,7 @@ void TransferMonitor::engageDownload(
   }
   clientactive = !sls->getSite()->hasBrokenPASV();
   ts = std::make_shared<TransferStatus>(TRANSFERSTATUS_TYPE_DOWNLOAD,
-      sls->getSite()->getName(), "/\\", co->getName(), dfile, fls, spath,
+      sls->getSite()->getName(), "/\\", co ? co->getName() : "", dfile, fls, spath,
       nullptr, dpath, fls->getFile(sfile)->getSize(), 0, src, -1, ssl, clientactive);
   tm->addNewTransferStatus(ts);
   if (FileSystem::fileExists(dpath / dfile) && global->getLocalStorage()->getLocalFile(dpath / dfile).getSize() > 0) {
@@ -188,13 +188,14 @@ void TransferMonitor::engageDownload(
   }
   else {
     FTPConn* conn = sls->getConn(src);
-    Core::StringResult passiveresult = ipv6 ? global->getLocalStorage()->getAddress6(conn) : global->getLocalStorage()->getAddress4(conn);
-    if (!passiveresult.success) {
-      lateDownloadFailure(passiveresult.error);
-      return;
+    if (!conn->getDataProxy()) {
+      Core::StringResult passiveresult = ipv6 ? global->getLocalStorage()->getAddress6(conn->getSockId()) : global->getLocalStorage()->getAddress4(conn->getSockId());
+      if (!passiveresult.success) {
+        lateDownloadFailure(passiveresult.error);
+        return;
+      }
     }
     lt = global->getLocalStorage()->activeModeDownload(this, dpath, dfile, ipv6, ssl, conn);
-    passiveReady(passiveresult.result, lt->getPort());
   }
 }
 
@@ -230,7 +231,7 @@ void TransferMonitor::engageUpload(
   fld->touchFile(dfile, sld->getSite()->getUser(), true);
   clientactive = !sld->getSite()->hasBrokenPASV();
   ts = std::make_shared<TransferStatus>(TRANSFERSTATUS_TYPE_UPLOAD,
-      "/\\", sld->getSite()->getName(), co->getName(), dfile, nullptr, spath,
+      "/\\", sld->getSite()->getName(), co ? co->getName() : "", dfile, nullptr, spath,
       fld, dpath, lf.getSize(), 0, 0, dst, ssl, clientactive);
   tm->addNewTransferStatus(ts);
   if (!FileSystem::fileExists(spath / sfile)) {
@@ -246,17 +247,18 @@ void TransferMonitor::engageUpload(
   }
   else {
     FTPConn* conn = sld->getConn(dst);
-    Core::StringResult passiveresult = ipv6 ? global->getLocalStorage()->getAddress6(conn) : global->getLocalStorage()->getAddress4(conn);
-    if (!passiveresult.success) {
-      localError(passiveresult.error);
-      ts->setFailed();
-      tm->transferFailed(ts, TM_ERR_OTHER);
-      sld->returnConn(dst, true);
-      status = TM_STATUS_IDLE;
-      return;
+    if (!conn->getDataProxy()) {
+      Core::StringResult passiveresult = ipv6 ? global->getLocalStorage()->getAddress6(conn->getSockId()) : global->getLocalStorage()->getAddress4(conn->getSockId());
+      if (!passiveresult.success) {
+        localError(passiveresult.error);
+        ts->setFailed();
+        tm->transferFailed(ts, TM_ERR_OTHER);
+        sld->returnConn(dst, true);
+        status = TM_STATUS_IDLE;
+        return;
+      }
     }
     lt = global->getLocalStorage()->activeModeUpload(this, spath, sfile, ipv6, ssl, conn);
-    passiveReady(passiveresult.result, lt->getPort());
   }
 }
 
@@ -279,15 +281,16 @@ void TransferMonitor::engageList(const std::shared_ptr<SiteLogic>& sls, int conn
   else {
     clientactive = false;
     FTPConn* conn = sls->getConn(src);
-    Core::StringResult passiveresult = ipv6 ? global->getLocalStorage()->getAddress6(conn) : global->getLocalStorage()->getAddress4(conn);
-    if (!passiveresult.success) { // should be impossible since the protocol is the same as the control connection
-      sls->getConn(src)->printLocalError(passiveresult.error);
-      status = TM_STATUS_IDLE;
-      return;
+    if (!conn->getDataProxy()) {
+      Core::StringResult passiveresult = ipv6 ? global->getLocalStorage()->getAddress6(conn->getSockId()) : global->getLocalStorage()->getAddress4(conn->getSockId());
+      if (!passiveresult.success) { // should be impossible since the protocol is the same as the control connection
+        sls->getConn(src)->printLocalError(passiveresult.error);
+        status = TM_STATUS_IDLE;
+        return;
+      }
     }
     lt = global->getLocalStorage()->activeModeDownload(this, ipv6, ssl, conn);
     storeid = static_cast<LocalDownload *>(lt)->getStoreId();
-    passiveReady(passiveresult.result, lt->getPort());
   }
 }
 
@@ -753,9 +756,13 @@ void TransferMonitor::newRawBufferLine(const std::pair<std::string, std::string>
   }
 }
 
-void TransferMonitor::localError(const std::string& info) {
+void TransferMonitor::localInfo(const std::string& info) {
   std::string localtag = "[" + util::ctimeLog() + "]";
-  newRawBufferLine(std::make_pair(localtag, "Error: " + info));
+  newRawBufferLine(std::make_pair(localtag, "[" + info + "]"));
+}
+
+void TransferMonitor::localError(const std::string& info) {
+  localInfo("Error: " + info);
 }
 
 void TransferMonitor::lateFXPFailure(const std::string& reason) {
