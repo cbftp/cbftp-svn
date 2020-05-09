@@ -2,6 +2,7 @@
 
 #include "../ui.h"
 #include "../menuselectoptionelement.h"
+#include "../menuselectoptioncheckbox.h"
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptiontextarrow.h"
 
@@ -36,12 +37,25 @@ void EditProxyScreen::initialize(unsigned int row, unsigned int col, std::string
   mso.addStringField(y++, x, "name", "Name:", modproxy.getName(), false);
   mso.addStringField(y++, x, "addr", "Address:", modproxy.getAddr(), false);
   mso.addStringField(y++, x, "port", "Port:", modproxy.getPort(), false);
+  mso.addCheckBox(y++, x, "resolve", "Resolve DNS through proxy:", modproxy.getResolveHosts());
   authmethod = mso.addTextArrow(y++, x, "authmethod", "Auth method:");
   authmethod->addOption("None", PROXY_AUTH_NONE);
   authmethod->addOption("User/pass", PROXY_AUTH_USERPASS);
   authmethod->setOption(modproxy.getAuthMethod());
   mso.addStringField(y++, x, "user", "Username:", modproxy.getUser(), false);
   mso.addStringField(y++, x, "pass", "Password:", modproxy.getPass(), true);
+  std::shared_ptr<MenuSelectOptionTextArrow> amas = mso.addTextArrow(y++, x, "activemodeaddresssource", "Active mode address source:");
+  amas->addOption("Auto by proxy", static_cast<int>(ActiveAddressSource::AUTO_BY_PROXY));
+  amas->addOption("Connected address", static_cast<int>(ActiveAddressSource::CONNECTED_ADDRESS));
+  amas->setOption(static_cast<int>(modproxy.getActiveAddressSource()));
+  ampm = mso.addTextArrow(y++, x, "activemodeportsmethod", "Active mode ports method:");
+  ampm->addOption("Auto by proxy", static_cast<int>(ActivePortsMethod::AUTO_BY_PROXY));
+  ampm->addOption("Manual", static_cast<int>(ActivePortsMethod::MANUAL));
+  ampm->setOption(static_cast<int>(modproxy.getActivePortsMethod()));
+  int firstport = modproxy.getActivePortFirst();
+  int lastport = modproxy.getActivePortLast();
+  std::string portrange = std::to_string(firstport) + ":" + std::to_string(lastport);
+  mso.addStringField(y++, x, "activeportrange", "Active mode port range:", portrange, false, 11);
   mso.enterFocusFrom(0);
   init(row, col);
 }
@@ -57,8 +71,16 @@ void EditProxyScreen::redraw() {
     mso.getElement("user")->show();
     mso.getElement("pass")->show();
   }
+  if (static_cast<ActivePortsMethod>(ampm->getData()) == ActivePortsMethod::AUTO_BY_PROXY) {
+    mso.getElement("activeportrange")->hide();
+  }
+  else {
+    mso.getElement("activeportrange")->show();
+  }
   latestauthmethod = authmethod->getData();
   ui->printStr(1, 1, "Type: SOCKS5");
+  ui->printStr(14, 1, "Active mode settings are only used for sites with broken PASV enabled.");
+  ui->printStr(15, 1, "The active (bind) mode feature is not supported by all proxy servers.");
   for (unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
     if (!msoe->visible()) {
@@ -71,21 +93,7 @@ void EditProxyScreen::redraw() {
     ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
     ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
-}
-
-void EditProxyScreen::update() {
-  if (latestauthmethod != authmethod->getData() && !authmethod->isActive()) {
-    redraw();
-    return;
-  }
-  std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
-  if (msoe->visible()) {
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
-  }
-  msoe = mso.getElement(mso.getSelectionPointer());
-  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
-  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getSelectionPointer());
   if (active && msoe->cursorPosition() >= 0) {
     ui->showCursor();
     ui->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
@@ -93,6 +101,10 @@ void EditProxyScreen::update() {
   else {
     ui->hideCursor();
   }
+}
+
+void EditProxyScreen::update() {
+  redraw();
 }
 
 bool EditProxyScreen::keyPressed(unsigned int ch) {
@@ -157,6 +169,25 @@ bool EditProxyScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "authmethod") {
           proxy->setAuthMethod(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
+        }
+        else if (identifier == "resolve") {
+          proxy->setResolveHosts(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
+        }
+        else if (identifier == "activemodeaddresssource") {
+          proxy->setActiveAddressSource(static_cast<ActiveAddressSource>(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData()));
+        }
+        else if (identifier == "activemodeportsmethod") {
+          proxy->setActivePortsMethod(static_cast<ActivePortsMethod>(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData()));
+        }
+        else if (identifier == "activeportrange") {
+          std::string portrange = std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData();
+          size_t splitpos = portrange.find(":");
+          if (splitpos != std::string::npos) {
+            int portfirst = std::stoi(portrange.substr(0, splitpos));
+            int portlast = std::stoi(portrange.substr(splitpos + 1));
+            proxy->setActivePortFirst(portfirst);
+            proxy->setActivePortLast(portlast);
+          }
         }
       }
       if (operation == "add") {

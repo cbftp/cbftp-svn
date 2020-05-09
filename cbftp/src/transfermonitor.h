@@ -117,5 +117,6 @@ class TransferMonitor : public Core::EventReceiver, public RawBufferCallback {
     Status getStatus() const;
     bool willFail() const;
     void newRawBufferLine(const std::pair<std::string, std::string> &);
+    void localInfo(const std::string& info);
     void localError(const std::string& info);
 };

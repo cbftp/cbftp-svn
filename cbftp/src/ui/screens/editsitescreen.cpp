@@ -129,27 +129,41 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   mso.addCheckBox(y, x + 21, "sscn", "SSCN supported:", this->site->supportsSSCN());
   mso.addCheckBox(y++, x + 42, "cpsv", "CPSV supported:", this->site->supportsCPSV());
   mso.addCheckBox(y, x, "binary", "Force binary mode:", this->site->forceBinaryMode());
-  mso.addCheckBox(y, x + 23, "brokenpasv", "Broken PASV:", this->site->hasBrokenPASV());
-  std::shared_ptr<MenuSelectOptionTextArrow> useproxy = mso.addTextArrow(y++, x + 41, "useproxy", "Proxy:");
-  ProxyManager * pm = global->getProxyManager();
-  Proxy * proxy = pm->getDefaultProxy();
-  std::string globalproxyname = "None";
-  if (proxy != NULL) {
-    globalproxyname = proxy->getName();
-  }
-  useproxy->addOption("(Global) " + globalproxyname, SITE_PROXY_GLOBAL);
-  useproxy->addOption("None", SITE_PROXY_NONE);
-  for (std::vector<Proxy *>::const_iterator it = pm->begin(); it != pm->end(); it++) {
-    useproxy->addOption((*it)->getName(), SITE_PROXY_USE);
-  }
-  int proxytype = this->site->getProxyType();
-  useproxy->setOption(proxytype);
-  if (proxytype == SITE_PROXY_USE) {
-    useproxy->setOptionText(this->site->getProxy());
-  }
+  mso.addCheckBox(y++, x + 23, "brokenpasv", "Broken PASV:", this->site->hasBrokenPASV());
   mso.addStringField(y, x, "idletime", "Max idle time (s):", std::to_string(this->site->getMaxIdleTime()), false, 4);
   mso.addCheckBox(y, x + 25, "xdupe", "Use XDUPE:", this->site->useXDUPE());
   mso.addCheckBox(y++, x + 41, "pret", "Needs PRET:", this->site->needsPRET());
+  std::shared_ptr<MenuSelectOptionTextArrow> useproxy = mso.addTextArrow(y, x, "useproxy", "Proxy:");
+  std::shared_ptr<MenuSelectOptionTextArrow> usedataproxy = mso.addTextArrow(y++, x + 25, "dataproxy", "Data proxy:");
+  ProxyManager * pm = global->getProxyManager();
+  Proxy * proxy = pm->getDefaultProxy();
+  Proxy * dataproxy = pm->getDefaultDataProxy();
+  std::string globalproxyname = "None";
+  if (proxy != nullptr) {
+   globalproxyname = proxy->getName();
+  }
+  std::string globaldataproxyname = "None";
+  if (dataproxy != nullptr) {
+   globaldataproxyname = dataproxy->getName();
+  }
+  useproxy->addOption("(Global) " + globalproxyname, SITE_PROXY_GLOBAL);
+  usedataproxy->addOption("(Global) " + globaldataproxyname, SITE_PROXY_GLOBAL);
+  useproxy->addOption("None", SITE_PROXY_NONE);
+  usedataproxy->addOption("None", SITE_PROXY_NONE);
+  for (std::vector<Proxy *>::const_iterator it = pm->begin(); it != pm->end(); it++) {
+   useproxy->addOption((*it)->getName(), SITE_PROXY_USE);
+   usedataproxy->addOption((*it)->getName(), SITE_PROXY_USE);
+  }
+  int proxytype = this->site->getProxyType();
+  int dataproxytype = this->site->getDataProxyType();
+  useproxy->setOption(proxytype);
+  usedataproxy->setOption(dataproxytype);
+  if (proxytype == SITE_PROXY_USE) {
+   useproxy->setOptionText(this->site->getProxy());
+  }
+  if (dataproxytype == SITE_PROXY_USE) {
+   usedataproxy->setOptionText(this->site->getDataProxy());
+  }
   mso.addTextButtonNoContent(y++, x, "skiplist", "Configure skiplist...");
   y++;
   mso.addCheckBox(y, x, "disabled", "Disabled:", this->site->getDisabled());
@@ -480,6 +494,13 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
           site->setProxyType(proxytype);
           if (proxytype == SITE_PROXY_USE) {
             site->setProxy(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getDataText());
+          }
+        }
+        else if (identifier == "dataproxy") {
+          int proxytype = std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData();
+          site->setDataProxyType(proxytype);
+          if (proxytype == SITE_PROXY_USE) {
+            site->setDataProxy(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getDataText());
           }
         }
         else if (identifier == "affils") {

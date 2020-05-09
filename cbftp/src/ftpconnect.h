@@ -27,7 +27,7 @@ private:
   void FDInterConnected(int sockid) override;
   void FDInterData(int sockid, char* data, unsigned int datalen) override;
   void FDInterInfo(int sockid, const std::string& info) override;
-  void FDDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) override;
+  void FDInterDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) override;
   void FDFail(int sockid, const std::string& error) override;
   void FDSSLSuccess(int sockid, const std::string& cipher) override;
   void proxySessionInit();

@@ -332,7 +332,6 @@ void ViewFileScreen::loadViewer() {
 void ViewFileScreen::viewExternal() {
   ui->printStr(1, 1, "Opening " + file + " with: " + global->getExternalFileViewing()->getViewApplication(file));
   ui->printStr(3, 1, "Press 'k' to kill this external viewer instance.");
-  ui->printStr(4, 1, "You can always press 'K' to kill ALL external viewers.");
 }
 
 void ViewFileScreen::viewInternal() {

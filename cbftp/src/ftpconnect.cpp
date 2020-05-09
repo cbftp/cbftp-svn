@@ -47,13 +47,13 @@ void FTPConnect::FDInterConnected(int sockid) {
   }
   connected = true;
   millisecs = 0;
-  owner->ftpConnectInfo(id, "[" + addr.toString() + "][Established]");
+  owner->ftpConnectInfo(id, "[" + addr.toString() + "][Connection established]");
   if (implicittls) {
     negotiateSSLConnect();
   }
 }
 
-void FTPConnect::FDDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) {
+void FTPConnect::FDInterDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) {
   FDFail(sockid, "Disconnected: " + details);
 }
 

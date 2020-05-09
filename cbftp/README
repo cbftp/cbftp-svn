@@ -345,8 +345,7 @@ Field summary:
   servers support it.
 - Base path: The default path that should be listed first when browsing the
   site, or changed into by default when performing raw commands.
-- Max idle time: The number of seconds that the site will stay connected
-  before logging out if there's nothing to do.
+
 - CEPR supported: Custom Extended Passive Reply is an extension of the EPSV
   command to make its response include the address to connect to. This setting
   is required for IPv6 transfers to/from another address than the main site
@@ -356,17 +355,22 @@ Field summary:
   Not all servers support this, but it should be enabled if it is supported.
 - CPSV supported: CPSV is a special command used for TLS FXP transfers.
   Not all servers support this, but it should be enabled if it is supported.
-- Needs PRET: PRET is a special command needed for transfers on distributed
-  FTP servers such as DrFTPD. Should be enabled on such sites, and disabled
-  on all others.
 - Force binary mode: Force the site to use binary mode for transfers. This
   is normally the default, but on some FTP servers it is not, in which case
   this option should be enabled.
 - Broken PASV: Enable this option if the site reports a bad passive IP or
   does not allow connections on the host/ports it provides.
-- Proxy: select which proxy (if any) to use for this site.
+- Max idle time: The number of seconds that the site will stay connected
+  before logging out if there's nothing to do.
 - Use XDUPE: This is a special command that reduces control overhead during
   multi-file transfers, but few servers support it.
+- Needs PRET: PRET is a special command needed for transfers on distributed
+  FTP servers such as DrFTPD. Should be enabled on such sites, and disabled
+  on all others.
+- Proxy: select which proxy (if any) to use for control connections to this
+  site.
+- Data proxy: select which proxy (if any) to use for data connections to this
+  site.
 - Configure skiplist: Set up a skiplist specific to this site. In most cases,
   using the global skiplist is preferred instead.
 - Disabled: Disables a site from participating in spread jobs.
@@ -457,7 +461,6 @@ GLOBAL KEY BINDINGS
 There are a few hotkeys that work from (almost) anywhere in the cbftp UI:
 \ - Toggle fullscreen mode (i.e. hide info bar + legend bar).
 p - Start the latest prepared spread job.
-K - Kill all external viewers (when viewing files in external applications).
 N - Toggle the next prepared spread job auto starter. While this function is
     enabled, the next 'prepare' remote command that arrives will be started
     immediately. The toggle times out after 10 minutes.

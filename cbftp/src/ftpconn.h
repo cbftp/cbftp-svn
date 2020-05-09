@@ -239,8 +239,6 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     FTPConnState getState() const;
     std::string getConnectedAddress() const;
     std::string getInterfaceAddress() const;
-    Core::StringResult getInterfaceAddress4() const;
-    Core::StringResult getInterfaceAddress6() const;
     bool isIPv6() const;
     ProtMode getProtectedMode() const;
     bool getSSCNMode() const;

@@ -3,7 +3,7 @@
 #include <string>
 #include <fstream>
 
-#include "core/eventreceiver.h"
+#include "eventreceiverproxyintermediate.h"
 #include "path.h"
 
 #define CHUNK 524288
@@ -11,7 +11,7 @@
 class TransferMonitor;
 class FTPConn;
 
-class LocalTransfer : public Core::EventReceiver {
+class LocalTransfer : public EventReceiverProxyIntermediate {
 public:
   LocalTransfer();
   bool active() const;
@@ -23,7 +23,6 @@ protected:
   void activate();
   void deactivate();
   bool ssl;
-  int sockid;
   bool inmemory;
   bool passivemode;
   int port;
@@ -38,7 +37,8 @@ protected:
   unsigned int bufpos;
   bool timeoutticker;
 private:
-  void FDNew(int sockid, int newsockid) override;
+  void FDInterNew(int sockid, int newsockid) override;
+  void FDInterInfo(int sockid, const std::string& info) override;
   void tick(int) override;
   bool inuse;
 };

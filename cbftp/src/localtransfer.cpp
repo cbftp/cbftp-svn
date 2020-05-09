@@ -5,6 +5,7 @@
 
 #include "core/iomanager.h"
 #include "core/tickpoke.h"
+#include "core/util.h"
 #include "globalcontext.h"
 #include "transfermonitor.h"
 #include "filesystem.h"
@@ -20,15 +21,24 @@ bool LocalTransfer::active() const {
   return inuse;
 }
 
-void LocalTransfer::FDNew(int sockid, int newsockid) {
-  global->getIOManager()->closeSocket(sockid);
+void LocalTransfer::FDInterNew(int sockid, int newsockid) {
+  if (sockid != newsockid) {
+    global->getIOManager()->closeSocket(sockid);
+    this->sockid = newsockid;
+    global->getIOManager()->registerTCPServerClientSocket(this, newsockid);
+  }
   if (timeoutticker) {
     global->getTickPoke()->stopPoke(this, 0);
     timeoutticker = false;
   }
-  this->sockid = newsockid;
-  global->getIOManager()->registerTCPServerClientSocket(this, newsockid);
-  FDConnected(newsockid);
+  FDInterConnected(newsockid);
+}
+
+void LocalTransfer::FDInterInfo(int sockid, const std::string& info) {
+  if (this->sockid != -1 && this->sockid != sockid) {
+    return;
+  }
+  tm->localInfo(info);
 }
 
 void LocalTransfer::tick(int) {
@@ -46,9 +56,10 @@ bool LocalTransfer::openFile(bool read) {
   filestream.clear();
   filestream.open((path / filename).toString().c_str(), std::ios::binary | (read ? std::ios::in : (std::ios::ate | std::ios::out)));
   if (filestream.fail()) {
+    std::string error = Core::util::getStrError(errno);
     filestream.close();
     global->getIOManager()->closeSocket(sockid);
-    FDFail(sockid, "Failed to open file " + (path / filename).toString());
+    FDFail(sockid, "Failed to open file " + (path / filename).toString() + ": " + error);
     return false;
   }
   fileopened = true;
