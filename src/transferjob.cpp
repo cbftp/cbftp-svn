@@ -807,6 +807,7 @@ void TransferJob::reset() {
   srclisttarget.reset();
   dstlisttarget.reset();
   filelistsrefreshed.clear();
+  transferattempts.clear();
   resetValues();
   if (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) {
     std::shared_ptr<FileList> srcfilelist = std::make_shared<FileList>(src->getSite()->getUser(), srcpath);
