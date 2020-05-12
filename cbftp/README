@@ -345,7 +345,6 @@ Field summary:
   servers support it.
 - Base path: The default path that should be listed first when browsing the
   site, or changed into by default when performing raw commands.
-
 - CEPR supported: Custom Extended Passive Reply is an extension of the EPSV
   command to make its response include the address to connect to. This setting
   is required for IPv6 transfers to/from another address than the main site
@@ -481,6 +480,39 @@ In the metrics screen, there are a few metrics shown as graphs:
   it results in latency when work is queued up, and slightly lower list
   frequency is often preferable over latency.
 
+SPREAD JOB STATUS
+
+The spread job status screen has a table of files that might seem rather
+unintelligible at a glance.
+The table shows all files in the job and their status on all sites.
+Each row represents a site and each column represents a file. The three
+characters above each table column vertically represents a unique pattern as a
+way to identify the file. For example, a directory containing rar archives
+with the same name except for the file name extension will show the file name
+extension there - rar, r01, r02 etc, since that is the only unique pattern to be
+found. For other kinds content, the unique tag may be found elsewhere in the
+file names.
+
+Example:
+         rrrrr        
+         a0000  <-- unique file name pattern: *.rar, *.r00, *.r01, *.r02, *.r03
+         r0123
+ SITE1 / .UooU
+ SITE2 / ....u <--- file markers
+ SITE3 / .Do.d
+
+The single character markign each file describes the state of the file:
+_ - file does not exist
+. - file exists
+o - you own this file
+u - someone is uploading this file
+U - you are uploading this file
+d - you are downloading this file
+D - you are downloading this file and you also own it
+s - you are downloading this file that someone else is uploading
+S - you are uploading and downloading this file
+p - file exists and the site is download-only in this job
+
 OTHER UI WINDOWS
 
 There are various other views in the cbftp UI that are not mentioned here in
@@ -514,6 +546,30 @@ A: Cbftp adjusts the view dynamically depending on how much space is needed
    are chosen based on an internal priority specification. Make your terminal
    larger!
 
+Q: What is the difference between fixed and dynamic list frequency? And what
+   does auto mean in this context?
+   Dynamic list frequency means that the number of times per second that cbftp
+   will refresh file lists on that site will drop voluntarily if the CPU load
+   gets too high, but also that it refreshes a little faster than its fixed
+   counterpart otherwise. This is in theory a good thing since lower rate is
+   usually preferred over added latency. Fixed list frequency is the opposite:
+   it will always attempt to refresh a fixed number of times per second. Very
+   high means about 20 times per second for both fixed and dynamic. Very low
+   means once per second, and the rest of the options are somewhere in between.
+   Auto means a dynamic rate matching the priority of the site, but not higher
+   than "normal". The auto mode is meant to be a balanced setting that works
+   very well in most scenarios.
+
+Q: Cbftp looks weird. It shows things like ljljljljljljljljlj in various
+   places. And/or I can't see the snake when trying to play snake. Why?
+A: Cbftp is meant to be displayed with unicode. Somewhere between cbftp and
+   your terminal emulator, there is a component that strips unicode characters
+   away. It could be that your system locale is not set to UTF-8, that your
+   screen or tmux doesn't have UTF-8 enabled, that the ncurses build on your
+   system doesn't support wide characters, that your ssh client gui application
+   doesn't use UTF-8... Go through every step of the way and make sure that
+   unicode/UTF-8 support is enabled everywhere.
+
 Q: Cbftp gets SSL/TLS error when connecting to some of my sites, what should I
    do?
 A: Your system is probably using an old version of OpenSSL. Either upgrade
@@ -543,7 +599,7 @@ Q: What is the block of seemingly random characters above the spread job status
 A: Read each column from top to bottom. Cbftp attempts to describe each file
    in the job by finding a sequence of 3 characters in the file name that are
    unique to that file. In many cases it will be the file suffix, or maybe
-   some kind of numbering.
+   some kind of numbering. See the "spread job status" section above.
 
 Q: Can I use multiple addresses (bouncers) to a site? How do I sort them?
 A: Yes, just add them all on the address line with spaces between. Cbftp does
@@ -587,7 +643,8 @@ Q: How do I disconnect from a site?
 A: Disconnecting is an old habit that comes from traditional clients that
    "lock" slots to the user interface. Cbftp does not do this, and there's
    really no gain in disconnecting manually. Cbftp will disconnect by itself
-   after a while. If you really want to disconnect manually, press enter
+   after a while. If you really want to disconnect manually you can press K
+   from the main screen. To disconnect single conections, press enter
    on the site from the main screen, use the arrow keys to navigate to the
    right connection, and then press d.
 
