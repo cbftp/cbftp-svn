@@ -107,10 +107,6 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
     return std::shared_ptr<Race>();
   }
   std::shared_ptr<Race> race;
-  if (profile == SPREAD_PREPARE && startnextprepared) {
-    startnextprepared = false;
-    profile = SPREAD_RACE;
-  }
   bool append = false;
   for (std::list<std::shared_ptr<Race> >::iterator it = allraces.begin(); it != allraces.end(); it++) {
     if ((*it)->getName() == release && (*it)->getSection() == section) {
@@ -203,17 +199,23 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
   if (addsites.size() > 0 || append) {
     checkStartPoke();
     if (profile == SPREAD_PREPARE) {
-      global->getEventLog()->log("Engine", "Preparing spread job: " + section + "/" + release +
-                " on " + std::to_string((int)addsites.size()) + " sites.");
-      std::list<std::pair<std::string, bool>> preparesites;
-      for (const AddSite& site : addsites) {
-        preparesites.emplace_back(site.name, site.downloadonly);
+      if (startnextprepared) {
+        startnextprepared = false;
+        profile = SPREAD_RACE;
       }
-      preparedraces.push_back(std::make_shared<PreparedRace>(race->getId(), release, section, preparesites, reset, preparedraceexpirytime));
-      for (const AddSite& site : addsites) {
-        site.sl->activateAll();
+      else {
+        global->getEventLog()->log("Engine", "Preparing spread job: " + section + "/" + release +
+                  " on " + std::to_string((int)addsites.size()) + " sites.");
+        std::list<std::pair<std::string, bool>> preparesites;
+        for (const AddSite& site : addsites) {
+          preparesites.emplace_back(site.name, site.downloadonly);
+        }
+        preparedraces.push_back(std::make_shared<PreparedRace>(race->getId(), release, section, preparesites, reset, preparedraceexpirytime));
+        for (const AddSite& site : addsites) {
+          site.sl->activateAll();
+        }
+        return std::shared_ptr<Race>();
       }
-      return std::shared_ptr<Race>();
     }
     bool readdtocurrent = true;
     if (append) {

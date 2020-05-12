@@ -23,7 +23,7 @@ private:
   void addDefaultEntries();
   SkipListMatch fallThrough(const std::string & element, const bool dir, const bool inrace, const SkipList * fallthrough) const;
 public:
-  SkipList();
+  SkipList(bool adddefault = true);
   SkipList(const SkipList *);
   void addEntry(bool regex, const std::string & pattern, bool file, bool dir, int scope, SkipListAction action);
   void clearEntries();

@@ -133,7 +133,7 @@ void TextInputField::eraseForward() {
 }
 
 void TextInputField::eraseCursoredWord() {
-  if (text.empty()) {
+  if (text.empty() || !cursor) {
     return;
   }
   unsigned int erasestart = cursor - 1;

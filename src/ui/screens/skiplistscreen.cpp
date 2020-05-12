@@ -495,7 +495,7 @@ void SkipListScreen::addPatternLine(int y, bool regex, std::string pattern, bool
   }
   std::shared_ptr<ResizableElement> re = table.addCheckBox(y, 1, "regex", "", regex);
   msal->addElement(re, 2, RESIZE_REMOVE);
-  re = table.addStringField(y, 2, "pattern", "", pattern, false, 64);
+  re = table.addStringField(y, 2, "pattern", "", pattern, false, 256);
   msal->addElement(re, 1, RESIZE_CUTEND, true);
   re = table.addCheckBox(y, 3, "filebox", "", file);
   msal->addElement(re, 3, RESIZE_REMOVE);

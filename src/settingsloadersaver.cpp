@@ -809,7 +809,7 @@ void SettingsLoaderSaver::saveSettings() {
   }
 
 
-  addSkipList(global->getSkipList(), "SkipList", "entry=");
+  addSkipList(dfh, global->getSkipList(), "SkipList", "entry=");
 
   {
     std::vector<Proxy *>::const_iterator it;
@@ -969,7 +969,7 @@ void SettingsLoaderSaver::saveSettings() {
       for (sit4 = site->exceptTargetSitesBegin(); sit4 != site->exceptTargetSitesEnd(); sit4++) {
         dfh->addOutputLine(filetag, name + "$excepttargetsite=" + (*sit4)->getName());
       }
-      addSkipList((SkipList *)&site->getSkipList(), filetag, name + "$skiplistentry=");
+      addSkipList(dfh, (SkipList *)&site->getSkipList(), filetag, name + "$skiplistentry=");
     }
     dfh->addOutputLine(defaultstag, "username=" + global->getSiteManager()->getDefaultUserName());
     std::string password = global->getSiteManager()->getDefaultPassword();
@@ -991,7 +991,7 @@ void SettingsLoaderSaver::saveSettings() {
       const Section & section = it->second;
       dfh->addOutputLine(filetag, section.getName() + "$jobs=" + std::to_string(section.getNumJobs()));
       dfh->addOutputLine(filetag,  section.getName() + "$hotkey=" + std::to_string(section.getHotKey()));
-      addSkipList(&section.getSkipList(), filetag, section.getName() + "$skiplistentry=");
+      addSkipList(dfh, &section.getSkipList(), filetag, section.getName() + "$skiplistentry=");
     }
   }
 
@@ -1069,7 +1069,7 @@ void SettingsLoaderSaver::startAutoSaver() {
   global->getTickPoke()->startPoke(this, "SettingsLoaderSaver", AUTO_SAVE_INTERVAL, 0);
 }
 
-void SettingsLoaderSaver::addSkipList(const SkipList * skiplist, const std::string & owner, const std::string & entry) {
+void SettingsLoaderSaver::addSkipList(const std::shared_ptr<DataFileHandler>& dfh, const SkipList* skiplist, const std::string& owner, const std::string& entry) {
   std::list<SkiplistItem>::const_iterator it;
   for (it = skiplist->entriesBegin(); it != skiplist->entriesEnd(); it++) {
     std::string entryline = std::string(it->matchRegex() ? "true" : "false") + "$" +
@@ -1082,7 +1082,7 @@ void SettingsLoaderSaver::addSkipList(const SkipList * skiplist, const std::stri
   }
 }
 
-void SettingsLoaderSaver::loadSkipListEntry(SkipList * skiplist, std::string value) {
+void SettingsLoaderSaver::loadSkipListEntry(SkipList* skiplist, std::string value) {
   size_t split = value.find('$');
   if (split != std::string::npos) {
     try {

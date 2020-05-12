@@ -31,11 +31,11 @@ public:
   void tick(int);
   void addSettingsAdder(SettingsAdder *);
   void removeSettingsAdder(SettingsAdder *);
+  static void addSkipList(const std::shared_ptr<DataFileHandler>& dfh, const SkipList* skiplist, const std::string& owner, const std::string&);
+  static void loadSkipListEntry(SkipList* skiplist, std::string value);
 private:
   void loadSettings();
   void startAutoSaver();
-  void addSkipList(const SkipList *, const std::string &, const std::string &);
-  void loadSkipListEntry(SkipList * skiplist, std::string value);
   std::shared_ptr<DataFileHandler> dfh;
   std::list<SettingsAdder *> settingsadders;
   bool loaded;

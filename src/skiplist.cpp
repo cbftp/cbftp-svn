@@ -50,8 +50,10 @@ SkipListMatch::SkipListMatch(SkipListAction action, bool matched, const std::str
 
 }
 
-SkipList::SkipList() : globalskip(nullptr) {
-  addDefaultEntries();
+SkipList::SkipList(bool adddefault) : globalskip(nullptr) {
+  if (adddefault) {
+    addDefaultEntries();
+  }
 }
 
 SkipList::SkipList(const SkipList * globalskip) : globalskip(globalskip) {
