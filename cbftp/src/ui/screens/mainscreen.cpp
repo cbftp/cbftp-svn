@@ -41,7 +41,6 @@ enum KeyActions {
   KEYACTION_EVENT_LOG,
   KEYACTION_ALL_SPREAD_JOBS,
   KEYACTION_ALL_TRANSFER_JOBS,
-  KEYACTION_TOGGLE_UDP,
   KEYACTION_BROWSE_LOCAL,
   KEYACTION_BROWSE_SITE,
   KEYACTION_BROWSE_SITE2,
@@ -82,7 +81,6 @@ MainScreen::MainScreen(Ui* ui) : UIWindow(ui, "MainScreen") {
   keybinds.addBind('r', KEYACTION_ALL_SPREAD_JOBS, "All spread jobs");
   keybinds.addBind('j', KEYACTION_ALL_TRANSFER_JOBS, "All transfer jobs");
   keybinds.addBind('q', KEYACTION_QUICK_JUMP, "Quick jump");
-  keybinds.addBind('U', KEYACTION_TOGGLE_UDP, "Toggle UDP");
   keybinds.addBind('c', KEYACTION_BROWSE_LOCAL, "Browse local");
   keybinds.addBind('i', KEYACTION_INFO, "General info");
   keybinds.addBind('s', KEYACTION_SECTIONS, "Sections");
@@ -483,12 +481,6 @@ bool MainScreen::keyPressed(unsigned int ch) {
     case KEYACTION_ALL_TRANSFER_JOBS:
       ui->goAllTransferJobs();
       return true;
-    case KEYACTION_TOGGLE_UDP:
-    {
-      bool enabled = global->getRemoteCommandHandler()->isEnabled();
-      global->getRemoteCommandHandler()->setEnabled(!enabled);
-      return true;
-    }
     case KEYACTION_BROWSE_LOCAL:
       ui->goBrowseLocal();
       return true;

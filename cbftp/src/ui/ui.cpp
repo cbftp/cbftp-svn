@@ -14,6 +14,7 @@
 #include "../engine.h"
 #include "../datafilehandler.h"
 #include "../path.h"
+#include "../remotecommandhandler.h"
 
 #include "legendprinterkeybinds.h"
 #include "legendprinterspreadjob.h"
@@ -76,7 +77,8 @@ enum KeyAction {
   KEYACTION_KILL_ALL,
   KEYACTION_START_PREPARED,
   KEYACTION_FULLSCREEN,
-  KEYACTION_NEXT_PREPARED_STARTER
+  KEYACTION_NEXT_PREPARED_STARTER,
+  KEYACTION_TOGGLE_UDP
 };
 
 } // namespace
@@ -98,6 +100,7 @@ Ui::Ui() :
   globalkeybinds->addBind('p', KEYACTION_START_PREPARED, "Start latest prepared spread job");
   globalkeybinds->addBind('\\', KEYACTION_FULLSCREEN, "Toggle fullscreen mode");
   globalkeybinds->addBind('N', KEYACTION_NEXT_PREPARED_STARTER, "Toggle next prepared spread job auto starter");
+  globalkeybinds->addBind('U', KEYACTION_TOGGLE_UDP, "Toggle UDP");
   addKeyBinds(globalkeybinds.get());
 }
 
@@ -511,6 +514,12 @@ void Ui::globalKeyBinds(int ch) {
     case KEYACTION_NEXT_PREPARED_STARTER:
       global->getEngine()->toggleStartNextPreparedRace();
       break;
+    case KEYACTION_TOGGLE_UDP:
+    {
+      bool enabled = global->getRemoteCommandHandler()->isEnabled();
+      global->getRemoteCommandHandler()->setEnabled(!enabled);
+      break;
+    }
     case KEYACTION_FULLSCREEN:
       if (fullscreentoggle) {
         enableInfo();
