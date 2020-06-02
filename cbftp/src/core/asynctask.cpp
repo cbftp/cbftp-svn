@@ -12,13 +12,17 @@ AsyncTask::AsyncTask(EventReceiver* er, int type, void (*taskfunction)(EventRece
 {
 }
 
-void AsyncTask::execute() {
+bool AsyncTask::execute() {
   if (taskfunctionp) {
     taskfunctionp(receiver, datap);
   }
-  else {
+  else if (taskfunction) {
     taskfunction(receiver, data);
   }
+  else {
+    return false;
+  }
+  return true;
 }
 
 EventReceiver* AsyncTask::getReceiver() const {

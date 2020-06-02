@@ -16,7 +16,9 @@ void AsyncWorker::init(const std::string& prefix, int id) {
 void AsyncWorker::run() {
   while (true) {
     AsyncTask task = queue.pop();
-    task.execute();
+    if (!task.execute()) {
+      return;
+    }
     wm.dispatchAsyncTaskComplete(task);
   }
 }

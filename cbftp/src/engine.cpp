@@ -873,7 +873,7 @@ void Engine::estimateRaceSize(const std::shared_ptr<Race> & race, bool forceupda
         continue;
       }
 
-      if (fls->hasSFV()) {
+      if (fls->hasExtension("sfv")) {
         if (srs->getSFVObservedTime(fls) > SFVDIROBSERVETIME) {
           reportCurrentSize(siteskiplist, sectionskiplist, srs, fls, true);
           continue;

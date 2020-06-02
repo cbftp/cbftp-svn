@@ -188,7 +188,7 @@ void SiteRace::updateNumFilesUploaded() {
     const std::shared_ptr<FileList>& fl = it->second;
     sum += fl->getNumUploadedFiles();
     aggregatedfilesize += fl->getTotalFileSize();
-    if (fl->hasSFV()) {
+    if (fl->hasExtension("sfv")) {
       race->reportSFV(shared_from_this(), it->first);
     }
     unsigned long long int max = fl->getMaxFileSize();

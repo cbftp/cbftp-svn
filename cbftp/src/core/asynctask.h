@@ -8,7 +8,7 @@ class AsyncTask {
 public:
   AsyncTask(EventReceiver* er, int type, void (*taskfunction)(EventReceiver*, int), int data);
   AsyncTask(EventReceiver* er, int type, void (*taskfunctionp)(EventReceiver*, void*), void* data);
-  void execute();
+  bool execute();
   EventReceiver* getReceiver() const;
   int getType() const;
   bool dataIsPointer() const;

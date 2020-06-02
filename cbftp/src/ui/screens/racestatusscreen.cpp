@@ -41,7 +41,8 @@ enum KeyAction {
   KEYACTION_BROWSE,
   KEYACTION_EDIT_SITE,
   KEYACTION_ABORT_DELETE_INC,
-  KEYACTION_ABORT_DELETE_ALL
+  KEYACTION_ABORT_DELETE_ALL,
+  KEYACTION_RAW_COMMAND
 };
 
 enum KeyScopes {
@@ -112,6 +113,7 @@ RaceStatusScreen::RaceStatusScreen(Ui* ui) : UIWindow(ui, "RaceStatusScreen") {
   keybinds.addBind('T', KEYACTION_TRANSFERS_FOR_SITE, "Transfers for site");
   keybinds.addBind('b', KEYACTION_BROWSE, "Browse");
   keybinds.addBind('E', KEYACTION_EDIT_SITE, "Edit site");
+  keybinds.addBind('w', KEYACTION_RAW_COMMAND, "Raw command");
   keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
   keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
   keybinds.addBind('d', KEYACTION_DELETE_SITE_OWN, "Delete site and own files from job", KEYSCOPE_RUNNING);
@@ -623,6 +625,17 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       if (!!msotb) {
         std::string site = msotb->getLabelText();
         ui->goEditSite(site);
+      }
+      return true;
+    }
+    case KEYACTION_RAW_COMMAND: {
+      std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
+      if (!!msotb) {
+        std::string site = msotb->getLabelText();
+        std::shared_ptr<SiteRace> sr = race->getSiteRace(site);
+        if (sr) {
+          ui->goRawCommand(site, sr->getPath());
+        }
       }
       return true;
     }
