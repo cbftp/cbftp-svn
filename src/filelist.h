@@ -91,7 +91,7 @@ class FileList {
     unsigned long long int getTotalFileSize() const;
     unsigned int getNumUploadedFiles() const;
     const Path & getPath() const;
-    bool hasSFV() const;
+    bool hasExtension(const std::string& extension) const;
     int getOwnedPercentage() const;
     unsigned long long int getMaxFileSize() const;
     void cleanSweep(int);

@@ -454,10 +454,10 @@ unsigned int FileList::getNumUploadedFiles() const {
   return uploadedfiles;
 }
 
-bool FileList::hasSFV() const {
+bool FileList::hasExtension(const std::string& extension) const {
   std::list<File *>::const_iterator it;
   for (File * file : filesfirstseen) {
-    if(file->getExtension() == "sfv" && file->getSize() > 0) {
+    if(file->getExtension() == extension && file->getSize() > 0) {
       return true;
     }
   }
