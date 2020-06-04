@@ -18,7 +18,8 @@ RawBuffer::RawBuffer(unsigned int maxlength, std::string site, std::string id) :
   uiwatching(false),
   threads(true),
   eventlog(false),
-  callback(nullptr)
+  callback(nullptr),
+  hasregexfilter(false)
 {
   writeLine("Log window initialized. Site: " + site + " Thread id: " + id);
 }
@@ -33,7 +34,8 @@ RawBuffer::RawBuffer(std::string site) :
   uiwatching(false),
   threads(false),
   eventlog(false),
-  callback(nullptr)
+  callback(nullptr),
+  hasregexfilter(false)
 {
   writeLine("Raw command window initialized. Site: " + site);
 }
@@ -47,7 +49,8 @@ RawBuffer::RawBuffer() :
   uiwatching(false),
   threads(false),
   eventlog(true),
-  callback(nullptr)
+  callback(nullptr),
+  hasregexfilter(false)
 {
   writeLine("Event log initialized.");
 }

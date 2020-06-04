@@ -31,14 +31,6 @@ void EventLogScreen::redraw() {
   rawbuf->bookmark();
   unsigned int rows = (filtermodeinput || filtermodeinputregex) ? row - 2 : row;
   std::list<std::string> printlines;
-  bool negative = false;
-  if (rawbuf->isFiltered()) {
-    std::string ftext = filtertext;
-    negative = !ftext.empty() && ftext[0] == '!';
-    if (negative) {
-      ftext = filtertext.substr(1);
-    }
-  }
   fixCopyReadPos();
   unsigned int size = rawbuf->isFiltered() ? rawbuf->getFilteredSize() : rawbuf->getSize();
   if (readfromcopy) {

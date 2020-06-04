@@ -26,11 +26,11 @@ void UIWindow::update() {
 
 }
 
-void UIWindow::command(const std::string & command) {
-  this->command(command, "");
+void UIWindow::command(const std::string& command) {
+
 }
 
-void UIWindow::command(const std::string & command, const std::string & arg) {
+void UIWindow::command(const std::string& command, const std::string& arg) {
 
 }
 
@@ -61,6 +61,21 @@ std::string UIWindow::getInfoText() const {
 
 std::string UIWindow::getLegendText() const {
   return keybinds.getLegendSummary();
+}
+
+std::basic_string<unsigned int> UIWindow::getWideInfoLabel() const {
+  std::string label = getInfoLabel();
+  return std::basic_string<unsigned int>(label.begin(), label.end());
+}
+
+std::basic_string<unsigned int> UIWindow::getWideInfoText() const {
+  std::string text = getInfoText();
+  return std::basic_string<unsigned int>(text.begin(), text.end());
+}
+
+std::basic_string<unsigned int> UIWindow::getWideLegendText() const {
+  std::string text = getLegendText();
+  return std::basic_string<unsigned int>(text.begin(), text.end());
 }
 
 bool UIWindow::autoUpdate() const {

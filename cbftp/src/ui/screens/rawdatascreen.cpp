@@ -6,6 +6,7 @@
 #include "../../sitelogicmanager.h"
 #include "../../globalcontext.h"
 #include "../../encoding.h"
+#include "../../util.h"
 
 #include "../ui.h"
 #include "../termint.h"
@@ -42,7 +43,8 @@ RawDataScreen::RawDataScreen(Ui* ui) : UIWindow(ui, "RawDataScreen") {
   keybinds.addBind(10, KEYACTION_BACK_CANCEL, "Return", KEYSCOPE_NOT_INPUT);
   keybinds.addBind('c', KEYACTION_CONNECT, "Connect", KEYSCOPE_NOT_INPUT);
   keybinds.addBind('d', KEYACTION_DISCONNECT, "Disconnect", KEYSCOPE_NOT_INPUT);
-  allowimplicitgokeybinds = false;
+  keybinds.addBind('f', KEYACTION_FILTER, "Toggle filtering", KEYSCOPE_NOT_INPUT);
+  keybinds.addBind('F', KEYACTION_FILTER_REGEX, "Toggle regex filtering", KEYSCOPE_NOT_INPUT);
 }
 
 void RawDataScreen::initialize(unsigned int row, unsigned int col, std::string sitename, int connid) {
@@ -57,6 +59,8 @@ void RawDataScreen::initialize(unsigned int row, unsigned int col, std::string s
   rawcommandmode = false;
   rawcommandswitch = false;
   copyreadpos = 0;
+  filtermodeinput = false;
+  filtermodeinputregex = false;
   init(row, col);
 }
 
@@ -69,6 +73,8 @@ void RawDataScreen::redraw() {
     rawcommandfield = MenuSelectOptionTextField("rawcommand", row-1, 10, "", oldtext, col-10, 65536, false);
   }
   fixCopyReadPos();
+  std::string oldtext = filterfield.getData();
+  filterfield = MenuSelectOptionTextField("filter", row - 1, 1, "", oldtext, col - 20, 512, false);
   update();
 }
 
@@ -91,29 +97,42 @@ void RawDataScreen::update() {
   if (rawcommandmode) {
     rownum = row - 1;
   }
-  printRawBufferLines(ui, rawbuf, rownum, col, 0, readfromcopy, copysize, copyreadpos);
+  else if (filtermodeinput || filtermodeinputregex) {
+    rownum = row - 2;
+  }
+  printRawBufferLines(ui, rawbuf, rownum, col, 0, readfromcopy, copyreadpos);
   if (rawcommandmode) {
     std::string pretag = "[Raw command]: ";
     ui->printStr(rownum, 0, pretag + rawcommandfield.getContentText());
     ui->moveCursor(rownum, pretag.length() + rawcommandfield.cursorPosition());
   }
+  if (filtermodeinput || filtermodeinputregex) {
+    ui->showCursor();
+    std::string pretag = filtermodeinput ? "[Filter(s)]: " : "[Regex filter]: ";
+    ui->printStr(filterfield.getRow(), filterfield.getCol(), pretag + filterfield.getContentText());
+    ui->moveCursor(filterfield.getRow(), filterfield.getCol() + pretag.length() + filterfield.cursorPosition());
+  }
 }
 
 void RawDataScreen::printRawBufferLines(Ui * ui, RawBuffer * rawbuf, unsigned int rownum, unsigned int col, unsigned int coloffset) {
-  printRawBufferLines(ui, rawbuf, rownum, col, coloffset, false, 0, 0);
+  printRawBufferLines(ui, rawbuf, rownum, col, coloffset, false, 0);
 }
 
-void RawDataScreen::printRawBufferLines(Ui * ui, RawBuffer * rawbuf, unsigned int rownum, unsigned int col, unsigned int coloffset, bool readfromcopy, unsigned int copysize, unsigned int copyreadpos) {
+void RawDataScreen::printRawBufferLines(Ui * ui, RawBuffer * rawbuf, unsigned int rownum, unsigned int col, unsigned int coloffset, bool readfromcopy, unsigned int copyreadpos) {
   bool cutfirst5 = false;
   bool skiptag = false;
   bool skiptagchecked = false;
-  unsigned int numlinestoprint = !readfromcopy
-                                 ? (rawbuf->getSize() < rownum ? rawbuf->getSize() : rownum)
-                                 : (copysize < rownum ? copysize : rownum);
-  for (unsigned int i = 0; i < numlinestoprint; i++) {
-    const std::pair<std::string, std::string> & line = !readfromcopy
-                            ? rawbuf->getLine(numlinestoprint - i - 1)
-                            : rawbuf->getLineCopy(numlinestoprint - i - 1 + copyreadpos);
+  unsigned int size = rawbuf->isFiltered() ? rawbuf->getFilteredSize() : rawbuf->getSize();
+  if (readfromcopy) {
+    size = rawbuf->isFiltered() ? rawbuf->getFilteredCopySize() : rawbuf->getCopySize();
+  }
+  unsigned int numlinestoprint = size < rownum ? size : rownum;
+  for (unsigned int i = 0; i < numlinestoprint; ++i) {
+    unsigned int pos = numlinestoprint - i - 1;
+    const std::pair<std::string, std::string>& line = readfromcopy ?
+        (rawbuf->isFiltered() ? rawbuf->getFilteredLineCopy(pos + copyreadpos) :
+        rawbuf->getLineCopy(pos + copyreadpos))
+     : (rawbuf->isFiltered() ? rawbuf->getFilteredLine(pos) : rawbuf->getLine(pos));
     if (!skiptagchecked) {
       if (col <= 80 + line.first.length()) {
         skiptag = true;
@@ -128,9 +147,11 @@ void RawDataScreen::printRawBufferLines(Ui * ui, RawBuffer * rawbuf, unsigned in
     }
   }
   for (unsigned int i = 0; i < numlinestoprint; i++) {
-    const std::pair<std::string, std::string> & line = !readfromcopy
-                            ? rawbuf->getLine(numlinestoprint - i - 1)
-                            : rawbuf->getLineCopy(numlinestoprint - i - 1 + copyreadpos);
+    unsigned int pos = numlinestoprint - i - 1;
+    const std::pair<std::string, std::string>& line = readfromcopy ?
+        (rawbuf->isFiltered() ? rawbuf->getFilteredLineCopy(pos + copyreadpos) :
+        rawbuf->getLineCopy(pos + copyreadpos))
+     : (rawbuf->isFiltered() ? rawbuf->getFilteredLine(pos) : rawbuf->getLine(pos));
     unsigned int startprintsecond = 0;
     if (!skiptag) {
       unsigned int length = line.first.length();
@@ -151,6 +172,64 @@ bool RawDataScreen::skipCodePrint(const std::string & line) {
 
 bool RawDataScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch, rawcommandmode ? KEYSCOPE_INPUT : KEYSCOPE_NOT_INPUT);
+  if (filtermodeinput || filtermodeinputregex) {
+    if ((ch >= 32 && ch <= 126) || ch == KEY_BACKSPACE || ch == 8 || ch == 23 ||
+        ch == 127 || ch == KEY_RIGHT || ch == KEY_LEFT || ch == KEY_DC ||
+        ch == KEY_HOME || ch == KEY_END)
+    {
+      filterfield.inputChar(ch);
+      ui->update();
+      return true;
+    }
+    else if (ch == 10) {
+      ui->hideCursor();
+      filtertext = filterfield.getData();
+      if (filtertext.length()) {
+        if (filtermodeinput) {
+          rawbuf->setWildcardFilters(util::trim(util::split(filtertext)));
+        }
+        else {
+          try {
+            std::regex regexfilter = util::regexParse(filtertext);
+            rawbuf->setRegexFilter(regexfilter);
+          }
+          catch (std::regex_error& e) {
+            ui->goInfo("Invalid regular expression.");
+            return true;
+          }
+        }
+        if (readfromcopy) {
+          copyreadpos = 0;
+        }
+      }
+      filtermodeinput = false;
+      filtermodeinputregex = false;
+      ui->redraw();
+      ui->setLegend();
+      return true;
+    }
+    else if (ch == 27) {
+      if (!filterfield.getData().empty()) {
+        filterfield.clear();
+        ui->update();
+      }
+      else {
+        filtermodeinput = false;
+        filtermodeinputregex = false;
+        ui->hideCursor();
+        ui->redraw();
+        ui->setLegend();
+      }
+      return true;
+    }
+    else if (ch == '\t') {
+      filtermodeinput = !filtermodeinput;
+      filtermodeinputregex = !filtermodeinputregex;
+      ui->update();
+      ui->setLegend();
+      return true;
+    }
+  }
   unsigned int rownum = row;
   if (action == KEYACTION_CLEAR) {
     rawbuf->clear();
@@ -238,7 +317,6 @@ bool RawDataScreen::keyPressed(unsigned int ch) {
       if (!readfromcopy) {
         rawbuf->freezeCopy();
         copyreadpos = 0;
-        copysize = rawbuf->getCopySize();
         readfromcopy = true;
       }
       else {
@@ -273,18 +351,50 @@ bool RawDataScreen::keyPressed(unsigned int ch) {
       ui->update();
       ui->setLegend();
       return true;
+    case KEYACTION_FILTER:
+      if (rawbuf->isFiltered()) {
+        rawbuf->unsetFilters();
+        ui->setInfo();
+        if (readfromcopy) {
+          copyreadpos = 0;
+        }
+      }
+      else {
+        filtermodeinput = true;
+        ui->setLegend();
+      }
+      ui->redraw();
+      return true;
+    case KEYACTION_FILTER_REGEX:
+      if (rawbuf->isFiltered()) {
+        rawbuf->unsetFilters();
+        ui->setInfo();
+        if (readfromcopy) {
+          copyreadpos = 0;
+        }
+      }
+      else {
+        filtermodeinputregex = true;
+        ui->setLegend();
+      }
+      ui->redraw();
+      return true;
     case KEYACTION_BACK_CANCEL: // esc
       rawbuf->setUiWatching(false);
+      rawbuf->unsetFilters();
       ui->returnToLast();
-      return true;
-    case KEYACTION_KEYBINDS:
-      ui->goKeyBinds(&keybinds);
       return true;
   }
   return false;
 }
 
 std::string RawDataScreen::getLegendText() const {
+  if (filtermodeinput) {
+    return "[Any] Enter space separated filters. Valid operators are !, *, ?. Must match all negative filters and at least one positive if given. Case insensitive. - [Tab] switch mode - [Esc] Cancel";
+  }
+  if (filtermodeinputregex) {
+    return "[Any] Enter regex input - [Tab] switch mode - [Esc] Cancel";
+  }
   return keybinds.getLegendSummary(rawcommandmode ? KEYSCOPE_INPUT : KEYSCOPE_NOT_INPUT);
 }
 
@@ -292,8 +402,16 @@ std::string RawDataScreen::getInfoLabel() const {
   return "RAW DATA: " + sitename + " #" + std::to_string(connid);
 }
 
+std::string RawDataScreen::getInfoText() const {
+  if (rawbuf->isFiltered()) {
+    return "FILTERING ON: " + filtertext;
+  }
+  return "";
+}
+
 void RawDataScreen::fixCopyReadPos() {
   unsigned int rownum = rawcommandmode ? row - 1 : row;
+  unsigned int copysize = rawbuf->isFiltered() ? rawbuf->getFilteredCopySize() : rawbuf->getCopySize();
   if (rownum >= copysize) {
     copyreadpos = 0;
   }
