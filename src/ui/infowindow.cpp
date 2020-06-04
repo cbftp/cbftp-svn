@@ -6,8 +6,6 @@
 InfoWindow::InfoWindow(Ui* ui, WINDOW * window, int row, int col) : UIWindow(ui, "InfoWindow") {
   this->window = window;
   split = false;
-  label = "";
-  text = "";
   init(row, col);
 }
 
@@ -37,11 +35,11 @@ void InfoWindow::update() {
   ui->printStr(0, 4 + labellen + 2, text, false, col - 4 - 4 - labellen - 2, true, window);
 }
 
-void InfoWindow::setLabel(std::string label) {
+void InfoWindow::setLabel(const std::basic_string<unsigned int>& label) {
   this->label = label;
   update();
 }
-void InfoWindow::setText(std::string text) {
+void InfoWindow::setText(const std::basic_string<unsigned int>& text) {
   this->text = text;
   update();
 

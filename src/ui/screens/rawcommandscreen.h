@@ -28,7 +28,6 @@ private:
   void fixCopyReadPos();
   bool readfromcopy;
   unsigned int copyreadpos;
-  unsigned int copysize;
   MenuSelectOptionTextField rawcommandfield;
   std::string label;
   std::string selection;

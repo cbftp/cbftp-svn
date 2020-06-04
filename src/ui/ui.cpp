@@ -223,7 +223,7 @@ bool Ui::init() {
     enableInfo();
     enableLegend();
   }
-  infowindow->setLabel(topwindow->getInfoLabel());
+  infowindow->setLabel(topwindow->getWideInfoLabel());
   std::cin.putback('#'); // needed to be able to peek properly
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
   global->getIOManager()->registerExternalFD(this, STDIN_FILENO);
@@ -405,7 +405,7 @@ void Ui::tick(int message) {
     }
     if (infoenabled) {
       refresh = true;
-      infowindow->setText(topwindow->getInfoText());
+      infowindow->setText(topwindow->getWideInfoText());
     }
     if (refresh) {
       uiqueue.push(UICommand(UI_COMMAND_REFRESH));
@@ -492,8 +492,8 @@ void Ui::switchToWindow(std::shared_ptr<UIWindow> window, bool allowsplit, bool 
     setSplit(false);
   }
   setLegendText(window->getLegendText());
-  infowindow->setLabel(window->getInfoLabel());
-  infowindow->setText(window->getInfoText());
+  infowindow->setLabel(window->getWideInfoLabel());
+  infowindow->setText(window->getWideInfoText());
   topwindow = window;
   if (doredraw) {
     topwindow->redraw();
@@ -577,7 +577,7 @@ void Ui::resizeTerm() {
 void Ui::returnToLast() {
   switchToLast();
   topwindow->redraw();
-  infowindow->setText(topwindow->getInfoText());
+  infowindow->setText(topwindow->getWideInfoText());
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 
@@ -588,7 +588,7 @@ void Ui::update() {
 
 void Ui::setLegend() {
   setLegendText(topwindow->getLegendText());
-  infowindow->setText(topwindow->getInfoText());
+  infowindow->setText(topwindow->getWideInfoText());
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 
@@ -605,8 +605,8 @@ void Ui::addTempLegendSpreadJob(unsigned int id) {
 }
 
 void Ui::setInfo() {
-  infowindow->setLabel(topwindow->getInfoLabel());
-  infowindow->setText(topwindow->getInfoText());
+  infowindow->setLabel(topwindow->getWideInfoLabel());
+  infowindow->setText(topwindow->getWideInfoText());
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 
@@ -900,8 +900,8 @@ void Ui::goRawData(const std::string & site) {
 void Ui::goRawDataJump(const std::string & site, int id) {
   rawdatascreen->initialize(mainrow, maincol, site, id);
   topwindow = rawdatascreen;
-  infowindow->setLabel(topwindow->getInfoLabel());
-  infowindow->setText(topwindow->getInfoText());
+  infowindow->setLabel(topwindow->getWideInfoLabel());
+  infowindow->setText(topwindow->getWideInfoText());
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 
@@ -1072,7 +1072,7 @@ void Ui::returnMove(const std::string& dstpath) {
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 
-void Ui::setLegendText(const std::string & legendtext) {
+void Ui::setLegendText(const std::string& legendtext) {
   legendprinterkeybinds->setText(legendtext);
   legendwindow->clearTempLegendPrinters();
   legendwindow->update();
@@ -1084,8 +1084,8 @@ void Ui::switchToLast() {
   topwindow = history.back();
   history.pop_back();
   setLegendText(topwindow->getLegendText());
-  infowindow->setLabel(topwindow->getInfoLabel());
-  infowindow->setText(topwindow->getInfoText());
+  infowindow->setLabel(topwindow->getWideInfoLabel());
+  infowindow->setText(topwindow->getWideInfoText());
 }
 
 void Ui::loadSettings(std::shared_ptr<DataFileHandler> dfh) {

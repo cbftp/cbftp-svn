@@ -97,7 +97,7 @@ void RawCommandScreen::update() {
     ui->printStr(rownum, 0, pretag + rawcommandfield.getContentText());
     ui->moveCursor(rownum, pretag.length() + rawcommandfield.cursorPosition());
   }
-  RawDataScreen::printRawBufferLines(ui, rawbuf, rownum, col, 0, readfromcopy, copysize, copyreadpos);
+  RawDataScreen::printRawBufferLines(ui, rawbuf, rownum, col, 0, readfromcopy, copyreadpos);
 }
 
 bool RawCommandScreen::keyPressed(unsigned int ch) {
@@ -120,7 +120,6 @@ bool RawCommandScreen::keyPressed(unsigned int ch) {
       if (!readfromcopy) {
         rawbuf->freezeCopy();
         copyreadpos = 0;
-        copysize = rawbuf->getCopySize();
         readfromcopy = true;
       }
       else {
@@ -221,6 +220,7 @@ int RawCommandScreen::getCurrentScope() const {
 
 void RawCommandScreen::fixCopyReadPos() {
   unsigned int rownum = allowinput ? row - 1 : row;
+  unsigned int copysize = rawbuf->getCopySize();
   if (rownum >= copysize) {
     copyreadpos = 0;
   }

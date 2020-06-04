@@ -18,8 +18,9 @@ public:
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
+  std::string getInfoText() const;
   static void printRawBufferLines(Ui *, RawBuffer *, unsigned int, unsigned int, unsigned int);
-  static void printRawBufferLines(Ui *, RawBuffer *, unsigned int, unsigned int, unsigned int, bool, unsigned int, unsigned int);
+  static void printRawBufferLines(Ui *, RawBuffer *, unsigned int, unsigned int, unsigned int, bool, unsigned int);
 private:
   static bool skipCodePrint(const std::string &);
   void fixCopyReadPos();
@@ -28,11 +29,14 @@ private:
   int threads;
   bool readfromcopy;
   unsigned int copyreadpos;
-  unsigned int copysize;
   MenuSelectOptionTextField rawcommandfield;
   std::string sitename;
   int connid;
   std::shared_ptr<SiteLogic> sitelogic;
   RawBuffer * rawbuf;
   CommandHistory history;
+  std::string filtertext;
+  bool filtermodeinput;
+  bool filtermodeinputregex;
+  MenuSelectOptionTextField filterfield;
 };

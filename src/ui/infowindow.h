@@ -9,15 +9,15 @@ typedef struct _win_st WINDOW;
 
 class InfoWindow : public UIWindow {
 public:
-  InfoWindow(Ui *, WINDOW *, int, int);
+  InfoWindow(Ui* ui, WINDOW* window, int row, int col);
   void redraw();
   void update();
-  void setLabel(std::string);
-  void setText(std::string);
-  void setSplit(bool);
+  void setLabel(const std::basic_string<unsigned int>& label);
+  void setText(const std::basic_string<unsigned int>& text);
+  void setSplit(bool split);
 private:
-  std::string label;
-  std::string text;
+  std::basic_string<unsigned int> label;
+  std::basic_string<unsigned int> text;
   bool split;
   WINDOW * window;
 };
