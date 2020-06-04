@@ -173,28 +173,28 @@ std::unordered_map<std::string, std::shared_ptr<FileList>>::const_iterator SiteR
 }
 
 void SiteRace::fileListUpdated(SiteLogic*, const std::shared_ptr<FileList>& fl) {
-  updateNumFilesUploaded();
-  addNewDirectories();
+  updateNumFilesUploaded(fl);
+  addNewDirectories(fl);
   markNonExistent(fl);
 }
 
-void SiteRace::updateNumFilesUploaded() {
+void SiteRace::updateNumFilesUploaded(const std::shared_ptr<FileList>& fl) {
   std::unordered_map<std::string, std::shared_ptr<FileList>>::iterator it;
   unsigned int sum = 0;
   unsigned long long int maxsize = 0;
   unsigned long long int maxsizewithfiles = 0;
   unsigned long long int aggregatedfilesize = 0;
   for (it = filelists.begin(); it != filelists.end(); it++) {
-    const std::shared_ptr<FileList>& fl = it->second;
-    sum += fl->getNumUploadedFiles();
-    aggregatedfilesize += fl->getTotalFileSize();
-    if (fl->hasExtension("sfv")) {
+    const std::shared_ptr<FileList>& currfl = it->second;
+    sum += currfl->getNumUploadedFiles();
+    aggregatedfilesize += currfl->getTotalFileSize();
+    if (fl == currfl && currfl->hasExtension("sfv")) {
       race->reportSFV(shared_from_this(), it->first);
     }
-    unsigned long long int max = fl->getMaxFileSize();
+    unsigned long long int max = currfl->getMaxFileSize();
     if (max > maxsize) {
       maxsize = max;
-      if (fl->getSize() >= 5) {
+      if (currfl->getSize() >= 5) {
         maxsizewithfiles = max;
       }
     }
@@ -210,25 +210,28 @@ void SiteRace::updateNumFilesUploaded() {
   race->updateSiteProgress(sum);
 }
 
-void SiteRace::addNewDirectories() {
-  std::shared_ptr<FileList> filelist = getFileListForPath("");
+void SiteRace::addNewDirectories(const std::shared_ptr<FileList>& fl) {
+  if (fl != getFileListForPath("") || fl->getState() != FileListState::LISTED) {
+    return;
+  }
   std::list<File*>::iterator it;
-  for(it = filelist->begin(); it != filelist->end(); it++) {
+  for(it = fl->begin(); it != fl->end(); it++) {
     File * file = *it;
     const std::string& filename = file->getName();
     if (file->isDirectory()) {
       SkipListMatch match = skiplist.check(filename, true, true, &race->getSectionSkipList());
-      if (match.action == SKIPLIST_DENY || (match.action == SKIPLIST_UNIQUE && filelist->containsPatternBefore(match.matchpattern, true, filename))) {
+      if (match.action == SKIPLIST_DENY || (match.action == SKIPLIST_UNIQUE && fl->containsPatternBefore(match.matchpattern, true, filename)))
+      {
         continue;
       }
-      std::shared_ptr<FileList> fl;
-      if (!(fl = getFileListForPath(filename))) {
+      std::shared_ptr<FileList> sublist;
+      if (!(sublist = getFileListForPath(filename))) {
         addSubDirectory(filename, true);
       }
-      else if (fl->getState() == FileListState::UNKNOWN || fl->getState() == FileListState::NONEXISTENT ||
-               fl->getState() == FileListState::FAILED)
+      else if (sublist->getState() == FileListState::UNKNOWN || sublist->getState() == FileListState::NONEXISTENT ||
+          sublist->getState() == FileListState::FAILED)
       {
-        fl->setExists();
+        sublist->setExists();
         race->reportNewSubDir(shared_from_this(), filename);
       }
     }

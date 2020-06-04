@@ -50,8 +50,8 @@ class SiteRace : public CommandOwner, public std::enable_shared_from_this<SiteRa
     unsigned int filesup;
     unsigned int speedup;
     bool downloadonly;
-    void updateNumFilesUploaded();
-    void addNewDirectories();
+    void updateNumFilesUploaded(const std::shared_ptr<FileList>& fl);
+    void addNewDirectories(const std::shared_ptr<FileList>& fl);
     void markNonExistent(const std::shared_ptr<FileList>& fl);
     void reset();
   public:
