@@ -300,16 +300,17 @@ bool RawDataScreen::keyPressed(unsigned int ch) {
     case KEYACTION_RIGHT:
       if (connid + 1 < threads) {
         rawbuf->setUiWatching(false);
+        rawbuf->unsetFilters();
         ui->goRawDataJump(sitename, connid + 1);
       }
       return true;
     case KEYACTION_LEFT:
+      rawbuf->unsetFilters();
+      rawbuf->setUiWatching(false);
       if (connid == 0) {
-        rawbuf->setUiWatching(false);
         ui->returnToLast();
       }
       else {
-        rawbuf->setUiWatching(false);
         ui->goRawDataJump(sitename, connid - 1);
       }
       return true;
