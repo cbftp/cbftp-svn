@@ -652,25 +652,25 @@ void Site::clearSections() {
   sections.clear();
 }
 
-void Site::addSection(const std::string & name, const std::string & path) {
+void Site::addSection(const std::string& name, const std::string& path) {
   sections[name] = path;
   global->getSectionManager()->addSection(name);
 }
 
-void Site::renameSection(const std::string & oldname, const std::string & newname) {
+void Site::renameSection(const std::string& oldname, const std::string& newname) {
   sections[newname] = sections[oldname];
   sections.erase(oldname);
 }
 
-void Site::removeSection(const std::string & name) {
+void Site::removeSection(const std::string& name) {
   sections.erase(name);
 }
 
-bool Site::isAffiliated(const std::string & affil) const {
+bool Site::isAffiliated(const std::string& affil) const {
   return (affils.find(affil) != affils.end());
 }
 
-void Site::addAffil(const std::string & affil) {
+void Site::addAffil(const std::string& affil) {
   affils.insert(affil);
 }
 
@@ -694,7 +694,7 @@ void Site::setStayLoggedIn(bool loggedin) {
   stayloggedin = loggedin;
 }
 
-void Site::addAllowedSourceSite(const std::shared_ptr<Site> & site) {
+void Site::addAllowedSourceSite(const std::shared_ptr<Site>& site) {
   if (transfersourcepolicy == SITE_TRANSFER_POLICY_BLOCK) {
     exceptsourcesites.insert(site);
   }
@@ -703,7 +703,7 @@ void Site::addAllowedSourceSite(const std::shared_ptr<Site> & site) {
   }
 }
 
-void Site::addBlockedSourceSite(const std::shared_ptr<Site> & site) {
+void Site::addBlockedSourceSite(const std::shared_ptr<Site>& site) {
   if (transfersourcepolicy == SITE_TRANSFER_POLICY_ALLOW) {
     exceptsourcesites.insert(site);
   }
@@ -712,7 +712,7 @@ void Site::addBlockedSourceSite(const std::shared_ptr<Site> & site) {
   }
 }
 
-void Site::addAllowedTargetSite(const std::shared_ptr<Site> & site) {
+void Site::addAllowedTargetSite(const std::shared_ptr<Site>& site) {
   if (transfertargetpolicy == SITE_TRANSFER_POLICY_BLOCK) {
     excepttargetsites.insert(site);
   }
@@ -721,7 +721,7 @@ void Site::addAllowedTargetSite(const std::shared_ptr<Site> & site) {
   }
 }
 
-void Site::addBlockedTargetSite(const std::shared_ptr<Site> & site) {
+void Site::addBlockedTargetSite(const std::shared_ptr<Site>& site) {
   if (transfertargetpolicy == SITE_TRANSFER_POLICY_ALLOW) {
     excepttargetsites.insert(site);
   }
@@ -730,17 +730,24 @@ void Site::addBlockedTargetSite(const std::shared_ptr<Site> & site) {
   }
 }
 
-void Site::addExceptSourceSite(const std::shared_ptr<Site> & site) {
+void Site::addExceptSourceSite(const std::shared_ptr<Site>& site) {
   exceptsourcesites.insert(site);
 }
 
-void Site::addExceptTargetSite(const std::shared_ptr<Site> & site) {
+void Site::addExceptTargetSite(const std::shared_ptr<Site>& site) {
   excepttargetsites.insert(site);
 }
 
-void Site::removeExceptSite(const std::shared_ptr<Site> & site) {
+void Site::purgeOtherSite(const std::shared_ptr<Site>& site) {
+  std::string name = site->getName();
   exceptsourcesites.erase(site);
   excepttargetsites.erase(site);
+  avgspeed.erase(name);
+  avgspeedsamples.erase(name);
+  sitessizedown.erase(name);
+  sitessizeup.erase(name);
+  sitesfilesup.erase(name);
+  sitesfilesdown.erase(name);
 }
 
 void Site::clearExceptSites() {
