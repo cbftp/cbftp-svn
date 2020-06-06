@@ -10,7 +10,7 @@
 
 class SiteManager {
   private:
-    void removeSitePairsForSite(const std::shared_ptr<Site> &);
+    void purgeSite(const std::shared_ptr<Site>& site);
     std::vector<std::shared_ptr<Site> > sites;
     std::string defaultusername;
     std::string defaultpassword;

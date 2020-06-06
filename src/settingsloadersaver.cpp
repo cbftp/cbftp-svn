@@ -913,6 +913,9 @@ void SettingsLoaderSaver::saveSettings() {
       }
       std::map<std::string, int>::const_iterator sit2;
       for (sit2 = site->avgspeedBegin(); sit2 != site->avgspeedEnd(); sit2++) {
+        if (!global->getSiteManager()->getSite(sit2->first)) {
+          continue;
+        }
         dfh->addOutputLine(filetag, name + "$avgspeed=" + sit2->first + "$" + std::to_string(sit2->second));
       }
       if (site->getSizeUp().getLast24Hours()) {
@@ -933,24 +936,36 @@ void SettingsLoaderSaver::saveSettings() {
       dfh->addOutputLine(filetag, name + "$filesdown=" + std::to_string(site->getFilesDown().getAll()));
       std::map<std::string, HourlyAllTracking>::const_iterator sit5;
       for (sit5 = site->sizeUpBegin(); sit5 != site->sizeUpEnd(); sit5++) {
+        if (!global->getSiteManager()->getSite(sit5->first)) {
+          continue;
+        }
         if (sit5->second.getLast24Hours()) {
           dfh->addOutputLine(filetag, name + "$sitessizeup24=" + sit5->first + "$" + trackerHoursToString(sit5->second));
         }
         dfh->addOutputLine(filetag, name + "$sitessizeup=" + sit5->first + "$" + std::to_string(sit5->second.getAll()));
       }
       for (sit5 = site->filesUpBegin(); sit5 != site->filesUpEnd(); sit5++) {
+        if (!global->getSiteManager()->getSite(sit5->first)) {
+          continue;
+        }
         if (sit5->second.getLast24Hours()) {
           dfh->addOutputLine(filetag, name + "$sitesfilesup24=" + sit5->first + "$" + trackerHoursToString(sit5->second));
         }
         dfh->addOutputLine(filetag, name + "$sitesfilesup=" + sit5->first + "$" + std::to_string(sit5->second.getAll()));
       }
       for (sit5 = site->sizeDownBegin(); sit5 != site->sizeDownEnd(); sit5++) {
+        if (!global->getSiteManager()->getSite(sit5->first)) {
+          continue;
+        }
         if (sit5->second.getLast24Hours()) {
           dfh->addOutputLine(filetag, name + "$sitessizedown24=" + sit5->first + "$" + trackerHoursToString(sit5->second));
         }
         dfh->addOutputLine(filetag, name + "$sitessizedown=" + sit5->first + "$" + std::to_string(sit5->second.getAll()));
       }
       for (sit5 = site->filesDownBegin(); sit5 != site->filesDownEnd(); sit5++) {
+        if (!global->getSiteManager()->getSite(sit5->first)) {
+          continue;
+        }
         if (sit5->second.getLast24Hours()) {
           dfh->addOutputLine(filetag, name + "$sitesfilesdown24=" + sit5->first + "$" + trackerHoursToString(sit5->second));
         }

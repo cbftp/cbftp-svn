@@ -74,10 +74,9 @@ void SiteManager::deleteSite(const std::string & site) {
   std::vector<std::shared_ptr<Site> >::iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {
     if ((*it)->getName().compare(site) == 0) {
-      removeSitePairsForSite(*it);
+      purgeSite(*it);
       sites.erase(it);
       global->getEventLog()->log("SiteManager", "Site " + site + " deleted.");
-      return;
     }
   }
 }
@@ -185,10 +184,10 @@ void SiteManager::proxyRemoved(const std::string & removedproxy) {
   }
 }
 
-void SiteManager::removeSitePairsForSite(const std::shared_ptr<Site> & site) {
+void SiteManager::purgeSite(const std::shared_ptr<Site>& site) {
   std::vector<std::shared_ptr<Site> >::iterator it;
   for (it = sites.begin(); it != sites.end(); it++) {
-    (*it)->removeExceptSite(site);
+    (*it)->purgeOtherSite(site);
   }
 }
 
