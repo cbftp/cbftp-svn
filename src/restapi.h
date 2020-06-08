@@ -71,6 +71,11 @@ private:
   void handleTransferJobGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleTransferJobReset(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleTransferJobAbort(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleSectionsGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleSectionPost(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleSectionGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleSectionPatch(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleSectionDelete(RestApiCallback* cb, int connrequestid, const http::Request& request);
   std::list<OngoingRequest> ongoingrequests;
   int nextrequestid;
   std::map<Path, std::map<std::string, EndpointPointer>> endpoints;
