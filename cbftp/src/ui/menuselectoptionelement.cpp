@@ -61,8 +61,8 @@ int MenuSelectOptionElement::cursorPosition() const {
   return -1;
 }
 
-void MenuSelectOptionElement::inputChar(int ch) {
-
+bool MenuSelectOptionElement::inputChar(int ch) {
+  return false;
 }
 
 void MenuSelectOptionElement::hide() {

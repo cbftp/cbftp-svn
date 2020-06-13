@@ -11,7 +11,7 @@ private:
 public:
   MenuSelectOptionNumArrow(std::string, int, int, std::string, int, int, int);
   std::string getContentText() const;
-  void inputChar(int);
+  bool inputChar(int ch) override;
   bool activate();
   void deactivate();
   int getData() const;

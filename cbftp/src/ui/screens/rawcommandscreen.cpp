@@ -151,11 +151,7 @@ bool RawCommandScreen::keyPressed(unsigned int ch) {
   if (!allowinput) {
     return false;
   }
-  if ((ch >= 32 && ch <= 126) || ch == KEY_BACKSPACE || ch == 8 || ch == 23 ||
-      ch == 127 || ch == KEY_RIGHT || ch == KEY_LEFT || ch == KEY_DC ||
-      ch == KEY_HOME || ch == KEY_END)
-  {
-    rawcommandfield.inputChar(ch);
+  if (rawcommandfield.inputChar(ch)) {
     ui->update();
     return true;
   }

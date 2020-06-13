@@ -26,7 +26,7 @@ class MenuSelectOptionElement {
     virtual void deactivate();
     virtual bool isActive() const;
     virtual int cursorPosition() const;
-    virtual void inputChar(int);
+    virtual bool inputChar(int);
     void setOrigin(void * origin);
     void * getOrigin() const;
     virtual std::string getLegendText() const;

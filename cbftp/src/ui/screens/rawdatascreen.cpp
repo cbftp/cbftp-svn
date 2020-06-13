@@ -173,11 +173,7 @@ bool RawDataScreen::skipCodePrint(const std::string & line) {
 bool RawDataScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch, rawcommandmode ? KEYSCOPE_INPUT : KEYSCOPE_NOT_INPUT);
   if (filtermodeinput || filtermodeinputregex) {
-    if ((ch >= 32 && ch <= 126) || ch == KEY_BACKSPACE || ch == 8 || ch == 23 ||
-        ch == 127 || ch == KEY_RIGHT || ch == KEY_LEFT || ch == KEY_DC ||
-        ch == KEY_HOME || ch == KEY_END)
-    {
-      filterfield.inputChar(ch);
+    if (filterfield.inputChar(ch)) {
       ui->update();
       return true;
     }
@@ -239,11 +235,8 @@ bool RawDataScreen::keyPressed(unsigned int ch) {
   }
   if (rawcommandmode) {
     rownum = row - 1;
-    if ((ch >= 32 && ch <= 126) || ch == KEY_BACKSPACE || ch == 8 || ch == 23 ||
-        ch == 127 || ch == KEY_RIGHT || ch == KEY_LEFT || ch == KEY_DC ||
-        ch == KEY_HOME || ch == KEY_END)
+    if (rawcommandfield.inputChar(ch))
     {
-      rawcommandfield.inputChar(ch);
       ui->update();
       return true;
     }

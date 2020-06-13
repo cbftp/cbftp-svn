@@ -2,6 +2,7 @@
 
 #include <list>
 #include <memory>
+#include <stdexcept>
 
 #include "core/tickpoke.h"
 #include "core/types.h"
@@ -375,7 +376,7 @@ int stringToSkiplistScope(const std::string& scope) {
   else if (scope == "ALL") {
     return SCOPE_ALL;
   }
-  return -1;
+  throw std::range_error("Unknown skiplist scope: " + scope);
 }
 
 SkipListAction stringToSkiplistAction(const std::string& action) {
@@ -391,7 +392,7 @@ SkipListAction stringToSkiplistAction(const std::string& action) {
   else if (action == "SIMILAR") {
     return SKIPLIST_SIMILAR;
   }
-  return SKIPLIST_NONE;
+  throw std::range_error("Unknown skiplist action: " + action);
 }
 
 int stringToTransferPolicy(const std::string& policy) {
@@ -401,7 +402,7 @@ int stringToTransferPolicy(const std::string& policy) {
   else if (policy == "BLOCK") {
     return SITE_TRANSFER_POLICY_BLOCK;
   }
-  return -1;
+  throw std::range_error("Unknown transfer policy: " + policy);
 }
 
 SitePriority stringToSitePriority(const std::string& priority) {
@@ -417,7 +418,10 @@ SitePriority stringToSitePriority(const std::string& priority) {
   if (priority == "VERY_HIGH") {
     return SitePriority::VERY_HIGH;
   }
-  return SitePriority::NORMAL;
+  if (priority == "NORMAL") {
+    return SitePriority::NORMAL;
+  }
+  throw std::range_error("Unknown site priority: " + priority);
 }
 
 RefreshRate stringToRefreshRate(const std::string& rate) {
@@ -448,7 +452,10 @@ RefreshRate stringToRefreshRate(const std::string& rate) {
   if (rate == "DYNAMIC_VERY_HIGH") {
     return RefreshRate::DYNAMIC_VERY_HIGH;
   }
-  return RefreshRate::AUTO;
+  if (rate == "AUTO") {
+    return RefreshRate::AUTO;
+  }
+  throw std::range_error("Unknown refresh rate: " + rate);
 }
 
 TransferProtocol stringToTransferProtocol(const std::string& protocol) {
@@ -461,7 +468,10 @@ TransferProtocol stringToTransferProtocol(const std::string& protocol) {
   if (protocol == "PREFER_IPV6") {
     return TransferProtocol::PREFER_IPV6;
   }
-  return TransferProtocol::IPV6_ONLY;
+  if (protocol == "IPV6_ONLY") {
+    return TransferProtocol::IPV6_ONLY;
+  }
+  throw std::range_error("Unknown transfer protocol: " + protocol);
 }
 
 int stringToTlsTransferPolicy(const std::string& policy) {
@@ -474,7 +484,10 @@ int stringToTlsTransferPolicy(const std::string& policy) {
   if (policy == "PREFER_ON") {
     return SITE_SSL_PREFER_ON;
   }
-  return SITE_SSL_ALWAYS_ON;
+  if (policy == "ALWAYS_ON") {
+    return SITE_SSL_ALWAYS_ON;
+  }
+  throw std::range_error("Unknown TLS transfer policy: " + policy);
 }
 
 TLSMode stringToTlsMode(const std::string& mode) {
@@ -484,14 +497,20 @@ TLSMode stringToTlsMode(const std::string& mode) {
   if (mode == "AUTH_TLS") {
     return TLSMode::AUTH_TLS;
   }
-  return TLSMode::IMPLICIT;
+  if (mode == "IMPLICIT") {
+    return TLSMode::IMPLICIT;
+  }
+  throw std::range_error("Unknown TLS mode: " + mode);
 }
 
 int stringToListCommand(const std::string& command) {
   if (command == "STAT_L") {
     return SITE_LIST_STAT;
   }
-  return SITE_LIST_LIST;
+  if (command == "LIST") {
+    return SITE_LIST_LIST;
+  }
+  throw std::range_error("Unknown list command: " + command);
 }
 
 SiteAllowTransfer stringToSiteAllowTransfer(const std::string& allow) {
@@ -501,7 +520,10 @@ SiteAllowTransfer stringToSiteAllowTransfer(const std::string& allow) {
   if (allow == "YES") {
     return SITE_ALLOW_TRANSFER_YES;
   }
-  return SITE_ALLOW_DOWNLOAD_MATCH_ONLY;
+  if (allow == "MATCH_ONLY") {
+    return SITE_ALLOW_DOWNLOAD_MATCH_ONLY;
+  }
+  throw std::range_error("Unknown allow transfer setting: " + allow);
 }
 
 int stringToProxyType(const std::string& type) {
@@ -511,7 +533,10 @@ int stringToProxyType(const std::string& type) {
   if (type == "NONE") {
     return SITE_PROXY_NONE;
   }
-  return SITE_PROXY_USE;
+  if (type == "USE") {
+    return SITE_PROXY_USE;
+  }
+  throw std::range_error("Unknown proxy type: " + type);
 }
 
 SpreadProfile stringToProfile(const std::string& profile) {
@@ -521,7 +546,10 @@ SpreadProfile stringToProfile(const std::string& profile) {
   if (profile == "PREPARE") {
     return SPREAD_PREPARE;
   }
-  return SPREAD_RACE;
+  if (profile == "RACE") {
+    return SPREAD_RACE;
+  }
+  throw std::range_error("Unknown spread job profile: " + profile);
 }
 
 DeleteMode stringToDeleteMode(const std::string& mode) {
@@ -534,7 +562,10 @@ DeleteMode stringToDeleteMode(const std::string& mode) {
   if (mode == "ALL") {
     return DeleteMode::ALL;
   }
-  return DeleteMode::NONE;
+  if (mode == "NONE") {
+    return DeleteMode::NONE;
+  }
+  throw std::range_error("Unknown delete mode: " + mode);
 }
 
 void updateSkipList(SkipList& skiplist, nlohmann::json jsonlist) {
@@ -550,7 +581,7 @@ void updateSkipList(SkipList& skiplist, nlohmann::json jsonlist) {
   }
 }
 
-std::shared_ptr<http::Response> updateSite(std::shared_ptr<Site>& site, nlohmann::json jsondata, bool add) {
+void updateSite(std::shared_ptr<Site>& site, nlohmann::json jsondata, bool add) {
   bool changedname = false;
   std::list<std::string> exceptsrclist;
   std::list<std::string> exceptdstlist;
@@ -655,7 +686,7 @@ std::shared_ptr<http::Response> updateSite(std::shared_ptr<Site>& site, nlohmann
       for (nlohmann::json::const_iterator it2 = it.value().begin(); it2 != it.value().end(); ++it2) {
         std::string sectionpath = it2.value()["path"];
         if (sectionpath.empty()) {
-          return std::make_shared<http::Response>(emptySectionPathResponse());
+          throw std::invalid_argument("Section path must not be empty");
         }
         site->addSection(it2.value()["name"], it2.value()["path"]);
       }
@@ -705,7 +736,7 @@ std::shared_ptr<http::Response> updateSite(std::shared_ptr<Site>& site, nlohmann
       site->setProxy(it.value());
     }
     else {
-      return std::make_shared<http::Response>(badRequestResponse("Unrecognized key: " + it.key()));
+      throw std::range_error("Unrecognized key: " + it.key());
     }
   }
   if (add) {
@@ -729,10 +760,9 @@ std::shared_ptr<http::Response> updateSite(std::shared_ptr<Site>& site, nlohmann
   }
 
   global->getSettingsLoaderSaver()->saveSettings();
-  return nullptr;
 }
 
-std::shared_ptr<http::Response> updateSection(Section* section, nlohmann::json jsondata) {
+void updateSection(Section* section, nlohmann::json jsondata) {
   for (nlohmann::json::const_iterator it = jsondata.begin(); it != jsondata.end(); ++it) {
     if (it.key() == "name") {
       section->setName(it.value());
@@ -747,11 +777,10 @@ std::shared_ptr<http::Response> updateSection(Section* section, nlohmann::json j
       section->setHotKey(it.value());
     }
     else {
-      return std::make_shared<http::Response>(badRequestResponse("Unrecognized key: " + it.key()));
+      throw std::range_error("Unrecognized key: " + it.key());
     }
   }
   global->getSettingsLoaderSaver()->saveSettings();
-  return nullptr;
 }
 
 nlohmann::json getJsonFromBody(const http::Request& request) {
@@ -915,11 +944,7 @@ void RestApi::handleSitesPost(RestApiCallback* cb, int connrequestid, const http
     cb->requestHandled(connrequestid, response);
     return;
   }
-  std::shared_ptr<http::Response> updateresponse = updateSite(site, jsondata, true);
-  if (updateresponse) {
-    cb->requestHandled(connrequestid, *updateresponse);
-    return;
-  }
+  updateSite(site, jsondata, true);
   http::Response response(201);
   response.appendHeader("Content-Length", "0");
   cb->requestHandled(connrequestid, response);
@@ -1019,11 +1044,7 @@ void RestApi::handleSitePatch(RestApiCallback* cb, int connrequestid, const http
     return;
   }
   nlohmann::json jsondata = getJsonFromBody(request);
-  std::shared_ptr<http::Response> updateresponse = updateSite(site, jsondata, false);
-  if (updateresponse) {
-    cb->requestHandled(connrequestid, *updateresponse);
-    return;
-  }
+  updateSite(site, jsondata, false);
   http::Response response(204);
   response.appendHeader("Content-Length", "0");
   cb->requestHandled(connrequestid, response);
@@ -1589,11 +1610,7 @@ void RestApi::handleSectionPost(RestApiCallback* cb, int connrequestid, const ht
     return;
   }
   Section section;
-  std::shared_ptr<http::Response> updateresponse = updateSection(&section, jsondata);
-  if (updateresponse) {
-    cb->requestHandled(connrequestid, *updateresponse);
-    return;
-  }
+  updateSection(&section, jsondata);
   global->getSectionManager()->addSection(section);
   http::Response response(201);
   response.appendHeader("Content-Length", "0");
@@ -1626,11 +1643,7 @@ void RestApi::handleSectionPatch(RestApiCallback* cb, int connrequestid, const h
   }
   Section section = *sectionptr;
   nlohmann::json jsondata = getJsonFromBody(request);
-  std::shared_ptr<http::Response> updateresponse = updateSection(&section, jsondata);
-  if (updateresponse) {
-    cb->requestHandled(connrequestid, *updateresponse);
-    return;
-  }
+  updateSection(&section, jsondata);
   if (!global->getSectionManager()->replaceSection(section, sectionname)) {
     http::Response response(409);
     response.appendHeader("Content-Length", "0");
@@ -1710,6 +1723,14 @@ void RestApi::handleRequest(RestApiCallback* cb, int connrequestid, const http::
     (this->*(it2->second))(cb, connrequestid, request);
   }
   catch (nlohmann::json::exception& e) {
+    cb->requestHandled(connrequestid, badRequestResponse(e.what()));
+    return;
+  }
+  catch (std::range_error& e) {
+    cb->requestHandled(connrequestid, badRequestResponse(e.what()));
+    return;
+  }
+  catch (std::invalid_argument& e) {
     cb->requestHandled(connrequestid, badRequestResponse(e.what()));
     return;
   }
