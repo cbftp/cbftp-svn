@@ -19,6 +19,8 @@ public:
   bool moveCursorRight();
   void moveCursorHome();
   void moveCursorEnd();
+  void moveCursorPreviousWord();
+  void moveCursorNextWord();
   void setText(std::string);
   void clear();
   void setVisibleLength(unsigned int);

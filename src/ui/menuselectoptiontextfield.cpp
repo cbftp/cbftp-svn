@@ -6,7 +6,10 @@ MenuSelectOptionTextField::MenuSelectOptionTextField() {
   textfield = TextInputField("", 0, 0, false);
   init("none", 0, 0, "none");
 }
-MenuSelectOptionTextField::MenuSelectOptionTextField(std::string identifier, int row, int col, std::string label, std::string starttext, int visiblelen, int maxlen, bool secret) {
+MenuSelectOptionTextField::MenuSelectOptionTextField(const std::string& identifier,
+    int row, int col, const std::string& label, const std::string& starttext,
+    int visiblelen, int maxlen, bool secret)
+{
   textfield = TextInputField(starttext, visiblelen, maxlen, secret);
   init(identifier, row, col, label);
 }
@@ -21,9 +24,9 @@ bool MenuSelectOptionTextField::activate() {
   return true;
 }
 
-void MenuSelectOptionTextField::inputChar(int ch) {
+bool MenuSelectOptionTextField::inputChar(int ch) {
   if (ch >= 32 && ch <= 126) {
-      textfield.addchar(ch);
+    textfield.addchar(ch);
   }
   else if (ch == KEY_BACKSPACE || ch == 8 || ch == 127) {
     textfield.erase();
@@ -46,6 +49,19 @@ void MenuSelectOptionTextField::inputChar(int ch) {
   else if (ch == 23) { // ctrl+w
     textfield.eraseCursoredWord();
   }
+  else if (ch == 544) { // ctrl+left
+    textfield.moveCursorPreviousWord();
+  }
+  else if (ch == 559) { // ctrl+right
+    textfield.moveCursorNextWord();
+  }
+  else if (ch == 21) { // ctrl+u
+    textfield.clear();
+  }
+  else {
+    return false;
+  }
+  return true;
 }
 
 int MenuSelectOptionTextField::cursorPosition() const {
@@ -60,7 +76,7 @@ void MenuSelectOptionTextField::clear() {
   textfield.clear();
 }
 
-void MenuSelectOptionTextField::setText(const std::string & text) {
+void MenuSelectOptionTextField::setText(const std::string& text) {
   textfield.setText(text);
 }
 
@@ -68,7 +84,7 @@ std::string MenuSelectOptionTextField::getLegendText() const {
   return "[Enter] Finish editing - [Any] Input to text" + extralegend;
 }
 
-void MenuSelectOptionTextField::setExtraLegendText(const std::string & extra) {
+void MenuSelectOptionTextField::setExtraLegendText(const std::string& extra) {
   extralegend = " - " + extra;
 }
 

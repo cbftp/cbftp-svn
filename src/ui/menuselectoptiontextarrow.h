@@ -12,7 +12,7 @@ private:
 public:
   MenuSelectOptionTextArrow(std::string, int, int, std::string);
   std::string getContentText() const;
-  void inputChar(int);
+  bool inputChar(int ch) override;
   bool activate();
   void deactivate();
   bool isActive() const;

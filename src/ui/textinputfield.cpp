@@ -156,6 +156,32 @@ void TextInputField::eraseCursoredWord() {
   }
 }
 
+void TextInputField::moveCursorPreviousWord() {
+  bool alphanumpassed = false;
+  while (cursor > 0) {
+    if (isalnum(text[cursor - 1])) {
+      alphanumpassed = true;
+    }
+    else if (alphanumpassed) {
+      return;
+    }
+    cursor--;
+  }
+}
+
+void TextInputField::moveCursorNextWord() {
+  bool alphanumpassed = false;
+  while (cursor < text.length()) {
+    if (isalnum(text[cursor])) {
+      alphanumpassed = true;
+    }
+    else if (alphanumpassed) {
+      return;
+    }
+    cursor++;
+  }
+}
+
 void TextInputField::setText(std::string text) {
   this->text = text;
   moveCursorEnd();

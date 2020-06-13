@@ -188,7 +188,7 @@ $path(sectionname)
    GET /filelist?site=SITE1&path=/&timeout=2
 
 - List all spread jobs
-   GET /spreadjobs (no body)
+   GET /spreadjobs
    
 - Get details of a specific spread job
    GET /spreadjobs/JOBNAME
@@ -239,7 +239,7 @@ Example body (optional) when aborting a spread job:
 }
 
 - List all transfer jobs
-   GET /transferjobs (no body)
+   GET /transferjobs
    
 - Get details of a specific transfer job
    GET /transferjobs/JOBNAME
@@ -280,6 +280,39 @@ An example body when starting an upload job:
    
 - Abort a transfer job
    POST /transferjobs/JOBNAME/abort (no body)
+
+- List all sections
+   GET /sections
+
+- Show details for a specific section
+   GET /sections/SECTIONNAME
+
+- Add a section
+   POST /sections
+
+- Modify a section
+   PATCH /sections/SECTIONNAME
+
+An example body when adding or modifying a section:
+
+{
+  "name": "TESTSEC1",
+  "hotkey": 7,           // optional, 0-9
+  "num_jobs": 0,         // optional, why would anyone edit this?
+  "skiplist": [
+    {
+      "action": "DENY",     // (ALLOW/DENY/UNIQUE/SIMILAR)
+      "dir": false,
+      "file": true,
+      "pattern": "*asdf*",
+      "regex": false,
+      "scope": "ALL"   // (IN_RACE/ALL)
+    }
+  ]
+}
+
+- Delete a section
+   DELETE /sections/SECTIONNAME
 
 UDP API
 

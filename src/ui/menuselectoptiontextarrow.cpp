@@ -11,17 +11,18 @@ std::string MenuSelectOptionTextArrow::getContentText() const {
   return arrow.getVisual();
 }
 
-void MenuSelectOptionTextArrow::inputChar(int ch) {
+bool MenuSelectOptionTextArrow::inputChar(int ch) {
   switch(ch) {
     case KEY_DOWN:
     case KEY_LEFT:
       arrow.previous();
-      break;
+      return true;
     case KEY_UP:
     case KEY_RIGHT:
       arrow.next();
-      break;
+      return true;
   }
+  return false;
 }
 
 bool MenuSelectOptionTextArrow::activate() {

@@ -12,16 +12,18 @@ private:
   std::string extralegend;
 public:
   MenuSelectOptionTextField();
-  MenuSelectOptionTextField(std::string, int, int, std::string, std::string, int, int, bool);
-  std::string getContentText() const;
-  bool activate();
-  void inputChar(int);
-  int cursorPosition() const;
+  MenuSelectOptionTextField(const std::string& identifier, int row, int col,
+      const std::string& label, const std::string& starttext, int visiblelen,
+      int maxlen, bool secret);
+  std::string getContentText() const override;
+  bool activate() override;
+  bool inputChar(int ch) override;
+  int cursorPosition() const override;
   std::string getData() const;
   void clear();
-  void setText(const std::string &);
-  std::string getLegendText() const;
-  void setExtraLegendText(const std::string &);
-  unsigned int wantedWidth() const;
-  void setMaxWidth(unsigned int);
+  void setText(const std::string& text);
+  std::string getLegendText() const override;
+  void setExtraLegendText(const std::string& extra);
+  unsigned int wantedWidth() const override;
+  void setMaxWidth(unsigned int maxwidth) override;
 };
