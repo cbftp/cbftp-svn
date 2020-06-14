@@ -48,10 +48,10 @@ KeyRepr KeyBinds::getKeyRepr(unsigned int key) {
     case 331:
       repr.repr = "Insert";
       return repr;
-    case 336:
+    case TERMINT_SHIFT_DOWN:
       repr.repr = "Shift+Down";
       return repr;
-    case 337:
+    case TERMINT_SHIFT_UP:
       repr.repr = "Shift+Up";
       return repr;
     case 338:
@@ -69,10 +69,10 @@ KeyRepr KeyBinds::getKeyRepr(unsigned int key) {
     case 383:
       repr.repr = "Shift+Delete";
       return repr;
-    case 393:
+    case TERMINT_SHIFT_LEFT:
       repr.repr = "Shift+Left";
       return repr;
-    case 402:
+    case TERMINT_SHIFT_RIGHT:
       repr.repr = "Shift+Right";
       return repr;
     case TERMINT_CTRL_DOWN:

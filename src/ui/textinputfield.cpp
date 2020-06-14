@@ -156,6 +156,12 @@ void TextInputField::eraseCursoredWord() {
   }
 }
 
+void TextInputField::eraseAllBefore() {
+  while (cursor > 0) {
+    erase();
+  }
+}
+
 void TextInputField::moveCursorPreviousWord() {
   bool alphanumpassed = false;
   while (cursor > 0) {

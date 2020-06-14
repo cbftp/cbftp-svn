@@ -228,18 +228,6 @@ bool Ui::init() {
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
   global->getIOManager()->registerExternalFD(this, STDIN_FILENO);
   global->getTickPoke()->startPoke(this, "UI", 50, 0);
-#ifdef NCURSES_VERSION
-  define_key("\E[1;5A", TERMINT_CTRL_UP);
-  define_key("\E0a", TERMINT_CTRL_UP);
-  define_key("\E[1;5B", TERMINT_CTRL_DOWN);
-  define_key("\E0b", TERMINT_CTRL_DOWN);
-  define_key("\E[1;5C", TERMINT_CTRL_RIGHT);
-  define_key("\E0c", TERMINT_CTRL_RIGHT);
-  define_key("\E[1;5D", TERMINT_CTRL_LEFT);
-  define_key("\E0d", TERMINT_CTRL_LEFT);
-  define_key("\E[1;6C", TERMINT_CTRL_SHIFT_RIGHT);
-  define_key("\E[1;6D", TERMINT_CTRL_SHIFT_LEFT);
-#endif
   return true;
 }
 
@@ -261,6 +249,26 @@ void Ui::initIntern() {
   set_escdelay(25);
 #else
   ESCDELAY = 25;
+#endif
+#ifdef NCURSES_VERSION
+  define_key("\E[1;2A", TERMINT_SHIFT_UP);
+  define_key("\E[1;2B", TERMINT_SHIFT_DOWN);
+  define_key("\E[1;2C", TERMINT_SHIFT_RIGHT);
+  define_key("\E[1;2D", TERMINT_SHIFT_LEFT);
+  define_key("\E[1;5A", TERMINT_CTRL_UP);
+  define_key("\E[1;5B", TERMINT_CTRL_DOWN);
+  define_key("\E[1;5C", TERMINT_CTRL_RIGHT);
+  define_key("\E[1;5D", TERMINT_CTRL_LEFT);
+  define_key("\E[1;6C", TERMINT_CTRL_SHIFT_RIGHT);
+  define_key("\E[1;6D", TERMINT_CTRL_SHIFT_LEFT);
+  define_key("\EOa", TERMINT_CTRL_UP);
+  define_key("\EOb", TERMINT_CTRL_DOWN);
+  define_key("\EOc", TERMINT_CTRL_RIGHT);
+  define_key("\EOd", TERMINT_CTRL_LEFT);
+  define_key("\E[a", TERMINT_SHIFT_DOWN);
+  define_key("\E[b", TERMINT_SHIFT_UP);
+  define_key("\E[c", TERMINT_SHIFT_RIGHT);
+  define_key("\E[d", TERMINT_SHIFT_LEFT);
 #endif
   mainrow = row;
   maincol = col;
