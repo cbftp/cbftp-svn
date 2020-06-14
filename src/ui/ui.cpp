@@ -261,14 +261,18 @@ void Ui::initIntern() {
   define_key("\E[1;5D", TERMINT_CTRL_LEFT);
   define_key("\E[1;6C", TERMINT_CTRL_SHIFT_RIGHT);
   define_key("\E[1;6D", TERMINT_CTRL_SHIFT_LEFT);
+  define_key("\EOH", TERMINT_HOME);
+  define_key("\EOF", TERMINT_END);
   define_key("\EOa", TERMINT_CTRL_UP);
   define_key("\EOb", TERMINT_CTRL_DOWN);
   define_key("\EOc", TERMINT_CTRL_RIGHT);
   define_key("\EOd", TERMINT_CTRL_LEFT);
-  define_key("\E[a", TERMINT_SHIFT_DOWN);
-  define_key("\E[b", TERMINT_SHIFT_UP);
+  define_key("\E[a", TERMINT_SHIFT_UP);
+  define_key("\E[b", TERMINT_SHIFT_DOWN);
   define_key("\E[c", TERMINT_SHIFT_RIGHT);
   define_key("\E[d", TERMINT_SHIFT_LEFT);
+  define_key("\E[7~", TERMINT_HOME);
+  define_key("\E[8~", TERMINT_END);
 #endif
   mainrow = row;
   maincol = col;

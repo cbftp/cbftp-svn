@@ -36,7 +36,7 @@ KeyRepr KeyBinds::getKeyRepr(unsigned int key) {
     case 261:
       repr.repr = "Right";
       return repr;
-    case 262:
+    case TERMINT_HOME:
       repr.repr = "Home";
       return repr;
     case 263:
@@ -63,7 +63,7 @@ KeyRepr KeyBinds::getKeyRepr(unsigned int key) {
     case 353:
       repr.repr = "Shift+Tab";
       return repr;
-    case 360:
+    case TERMINT_END:
       repr.repr = "End";
       return repr;
     case 383:
