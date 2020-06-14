@@ -22,6 +22,8 @@ typedef struct _win_st WINDOW;
 enum CursesSpecialKeys {
   TERMINT_CTRL_A = 1,
   TERMINT_CTRL_L = 12,
+  TERMINT_HOME = 262,
+  TERMINT_END = 360,
   TERMINT_SHIFT_DOWN = 336,
   TERMINT_SHIFT_UP = 337,
   TERMINT_SHIFT_LEFT = 393,
