@@ -2,6 +2,7 @@
 
 #include <cassert>
 
+#include "termint.h"
 #include "../util.h"
 
 KeyRepr KeyBinds::getKeyRepr(unsigned int key) {
@@ -74,22 +75,22 @@ KeyRepr KeyBinds::getKeyRepr(unsigned int key) {
     case 402:
       repr.repr = "Shift+Right";
       return repr;
-    case 524:
+    case TERMINT_CTRL_DOWN:
       repr.repr = "Ctrl+Down";
       return repr;
-    case 544:
+    case TERMINT_CTRL_LEFT:
       repr.repr = "Ctrl+Left";
       return repr;
-    case 545:
+    case TERMINT_CTRL_SHIFT_LEFT:
       repr.repr = "Ctrl+Shift+Left";
       return repr;
-    case 559:
+    case TERMINT_CTRL_RIGHT:
       repr.repr = "Ctrl+Right";
       return repr;
-    case 560:
+    case TERMINT_CTRL_SHIFT_RIGHT:
       repr.repr = "Ctrl+Shift+Right";
       return repr;
-    case 565:
+    case TERMINT_CTRL_UP:
       repr.repr = "Ctrl+Up";
       return repr;
     case KEY_UNSET:

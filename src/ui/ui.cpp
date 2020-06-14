@@ -228,6 +228,18 @@ bool Ui::init() {
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
   global->getIOManager()->registerExternalFD(this, STDIN_FILENO);
   global->getTickPoke()->startPoke(this, "UI", 50, 0);
+#ifdef NCURSES_VERSION
+  define_key("\E[1;5A", TERMINT_CTRL_UP);
+  define_key("\E0a", TERMINT_CTRL_UP);
+  define_key("\E[1;5B", TERMINT_CTRL_DOWN);
+  define_key("\E0b", TERMINT_CTRL_DOWN);
+  define_key("\E[1;5C", TERMINT_CTRL_RIGHT);
+  define_key("\E0c", TERMINT_CTRL_RIGHT);
+  define_key("\E[1;5D", TERMINT_CTRL_LEFT);
+  define_key("\E0d", TERMINT_CTRL_LEFT);
+  define_key("\E[1;6C", TERMINT_CTRL_SHIFT_RIGHT);
+  define_key("\E[1;6D", TERMINT_CTRL_SHIFT_LEFT);
+#endif
   return true;
 }
 
