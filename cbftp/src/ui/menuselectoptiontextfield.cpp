@@ -56,7 +56,7 @@ bool MenuSelectOptionTextField::inputChar(int ch) {
     textfield.moveCursorNextWord();
   }
   else if (ch == 21) { // ctrl+u
-    textfield.clear();
+    textfield.eraseAllBefore();
   }
   else {
     return false;

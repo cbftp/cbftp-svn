@@ -15,6 +15,7 @@ public:
   void erase();
   void eraseForward();
   void eraseCursoredWord();
+  void eraseAllBefore();
   bool moveCursorLeft();
   bool moveCursorRight();
   void moveCursorHome();
