@@ -509,6 +509,12 @@ void Engine::removeSiteFromRace(const std::shared_ptr<Race> & race, const std::s
   }
 }
 
+void Engine::removeSiteFromAllRunningSpreadJobs(const std::string& site) {
+  for (std::list<std::shared_ptr<Race>>::const_iterator it = getCurrentRacesBegin(); it != getCurrentRacesEnd(); ++it) {
+    removeSiteFromRace(*it, site);
+  }
+}
+
 void Engine::removeSiteFromRaceDeleteFiles(const std::shared_ptr<Race> & race, const std::string & site, bool allfiles, bool deleteoncomplete) {
   if (!!race) {
     std::shared_ptr<SiteRace> sr = race->getSiteRace(site);

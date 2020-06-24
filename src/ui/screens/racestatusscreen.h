@@ -33,6 +33,7 @@ private:
   bool awaitingabort;
   bool awaitingdeleteowninc;
   bool awaitingdeleteownall;
+  bool awaitingremovesitefromallspreadjobs;
   unsigned int currnumsubpaths;
   unsigned int currguessedsize;
   unsigned int currincomplete;

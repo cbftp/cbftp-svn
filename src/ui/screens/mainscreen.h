@@ -48,6 +48,8 @@ private:
   unsigned int totalsitessize;
   int currentraces;
   int currenttransferjobs;
+  bool awaitingremovesitefromallspreadjobs;
+  std::string removesite;
   std::string activeracestext;
   std::string activejobstext;
   std::string numsitestext;
