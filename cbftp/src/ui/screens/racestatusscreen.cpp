@@ -42,7 +42,8 @@ enum KeyAction {
   KEYACTION_EDIT_SITE,
   KEYACTION_ABORT_DELETE_INC,
   KEYACTION_ABORT_DELETE_ALL,
-  KEYACTION_RAW_COMMAND
+  KEYACTION_RAW_COMMAND,
+  KEYACTION_REMOVE_SITE_FROM_ALL_SPREADJOBS
 };
 
 enum KeyScopes {
@@ -116,6 +117,7 @@ RaceStatusScreen::RaceStatusScreen(Ui* ui) : UIWindow(ui, "RaceStatusScreen") {
   keybinds.addBind('w', KEYACTION_RAW_COMMAND, "Raw command");
   keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
   keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
+  keybinds.addBind('X', KEYACTION_REMOVE_SITE_FROM_ALL_SPREADJOBS, "Remove site from all running spreadjobs");
   keybinds.addBind('d', KEYACTION_DELETE_SITE_OWN, "Delete site and own files from job", KEYSCOPE_RUNNING);
   keybinds.addBind('D', KEYACTION_DELETE_SITE_ALL, "Delete site and all files from job", KEYSCOPE_RUNNING);
   keybinds.addBind('z', KEYACTION_ABORT_DELETE_INC, "Abort and delete own files on incomplete sites", KEYSCOPE_RUNNING);
@@ -145,6 +147,7 @@ void RaceStatusScreen::initialize(unsigned int row, unsigned int col, unsigned i
   awaitingabort = false;
   awaitingdeleteowninc = false;
   awaitingdeleteownall = false;
+  awaitingremovesitefromallspreadjobs = false;
   currnumsubpaths = 0;
   currguessedsize = 0;
   currincomplete = 0;
@@ -442,6 +445,9 @@ void RaceStatusScreen::command(const std::string & command, const std::string & 
     else if (awaitingdeleteownall) {
       global->getEngine()->deleteOnAllSites(race, false, true);
     }
+    else if (awaitingremovesitefromallspreadjobs) {
+      global->getEngine()->removeSiteFromAllRunningSpreadJobs(removesite);
+    }
   }
   else if (command == "returnselectitems") {
     std::string preselectstr = arg;
@@ -480,6 +486,7 @@ void RaceStatusScreen::command(const std::string & command, const std::string & 
   awaitingabort = false;
   awaitingdeleteowninc = false;
   awaitingdeleteownall = false;
+  awaitingremovesitefromallspreadjobs = false;
   ui->redraw();
 }
 
@@ -636,6 +643,15 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
         if (sr) {
           ui->goRawCommand(site, sr->getPath());
         }
+      }
+      return true;
+    }
+    case KEYACTION_REMOVE_SITE_FROM_ALL_SPREADJOBS: {
+      std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
+      if (!!msotb) {
+        removesite = msotb->getLabelText();
+        awaitingremovesitefromallspreadjobs = true;
+        ui->goStrongConfirmation("Do you really want to remove " + removesite + " from ALL running spreadjobs?");
       }
       return true;
     }

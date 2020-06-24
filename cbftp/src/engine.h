@@ -48,11 +48,12 @@ public:
   unsigned int newTransferJobFXP(const std::string &, const std::shared_ptr<FileList>& fls, const std::string &, const std::string &, const std::shared_ptr<FileList>& fld, const std::string &);
   unsigned int newTransferJobFXP(const std::string &, const Path &, const std::string &, const std::string &, const Path &, const std::string &);
   void removeSiteFromRace(const std::shared_ptr<Race> &, const std::string &);
-  void removeSiteFromRaceDeleteFiles(const std::shared_ptr<Race> &, const std::string &, bool allfiles, bool deleteoncomplete);
-  void abortRace(const std::shared_ptr<Race> &);
-  void resetRace(const std::shared_ptr<Race> &, bool);
-  void deleteOnAllSites(const std::shared_ptr<Race> &, bool allfiles = false, bool deleteoncomplete = false);
-  void deleteOnSites(const std::shared_ptr<Race> &, std::list<std::shared_ptr<Site> >, bool allfiles = false);
+  void removeSiteFromAllRunningSpreadJobs(const std::string& site);
+  void removeSiteFromRaceDeleteFiles(const std::shared_ptr<Race>& race, const std::string& site, bool allfiles, bool deleteoncomplete);
+  void abortRace(const std::shared_ptr<Race>& race);
+  void resetRace(const std::shared_ptr<Race>& race, bool hard);
+  void deleteOnAllSites(const std::shared_ptr<Race>& race, bool allfiles = false, bool deleteoncomplete = false);
+  void deleteOnSites(const std::shared_ptr<Race>& race, std::list<std::shared_ptr<Site>>, bool allfiles = false);
   void abortTransferJob(const std::shared_ptr<TransferJob>& tj);
   void resetTransferJob(const std::shared_ptr<TransferJob>& tj);
   void jobFileListRefreshed(SiteLogic *, const std::shared_ptr<CommandOwner> & commandowner, const std::shared_ptr<FileList>& fl);

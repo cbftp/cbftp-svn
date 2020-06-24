@@ -57,7 +57,8 @@ enum KeyActions {
   KEYACTION_METRICS,
   KEYACTION_ALL_TRANSFERS,
   KEYACTION_FORCE_DISCONNECT_ALL_SLOTS,
-  KEYACTION_DISCONNECT_ALL_SLOTS
+  KEYACTION_DISCONNECT_ALL_SLOTS,
+  KEYACTION_REMOVE_SITE_FROM_ALL_SPREADJOBS
 };
 
 enum KeyScopes {
@@ -105,6 +106,7 @@ MainScreen::MainScreen(Ui* ui) : UIWindow(ui, "MainScreen") {
   keybinds.addBind('T', KEYACTION_TRANSFERS, "Transfers", KEYSCOPE_SITE);
   keybinds.addBind('K', KEYACTION_FORCE_DISCONNECT_ALL_SLOTS, "Kill all slots", KEYSCOPE_SITE);
   keybinds.addBind('k', KEYACTION_DISCONNECT_ALL_SLOTS, "Disconnect all slots", KEYSCOPE_SITE);
+  keybinds.addBind('X', KEYACTION_REMOVE_SITE_FROM_ALL_SPREADJOBS, "Remove site from all running spreadjobs", KEYSCOPE_SITE);
   keybinds.addBind(10, KEYACTION_ENTER, "Status", KEYSCOPE_SPREAD_JOB);
   keybinds.addBind('B', KEYACTION_ABORT, "Abort", KEYSCOPE_SPREAD_JOB);
   keybinds.addBind('T', KEYACTION_TRANSFERS, "Transfers", KEYSCOPE_SPREAD_JOB);
@@ -127,6 +129,7 @@ void MainScreen::initialize(unsigned int row, unsigned int col) {
   currentraces = 0;
   currenttransferjobs = 0;
   sitepos = 0;
+  awaitingremovesitefromallspreadjobs = false;
   if (global->getEngine()->preparedRaces()) {
     focusedarea = &msop;
     msop.enterFocusFrom(0);
@@ -302,12 +305,16 @@ void MainScreen::command(const std::string & command) {
     else if (!!abortdeleteraceall) {
       global->getEngine()->deleteOnAllSites(abortdeleteraceall, false, true);
     }
+    else if (awaitingremovesitefromallspreadjobs) {
+      global->getEngine()->removeSiteFromAllRunningSpreadJobs(removesite);
+    }
     else {
       global->getSiteLogicManager()->deleteSiteLogic(deletesite);
       global->getSiteManager()->deleteSite(deletesite);
       global->getSettingsLoaderSaver()->saveSettings();
     }
   }
+  awaitingremovesitefromallspreadjobs = false;
   abortrace.reset();
   abortjob.reset();
   abortdeleteraceinc.reset();
@@ -650,6 +657,13 @@ bool MainScreen::keyPressed(unsigned int ch) {
         if (!msos.linesSize()) break;
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
         ui->goRawCommand(sitename);
+        return true;
+      }
+      case KEYACTION_REMOVE_SITE_FROM_ALL_SPREADJOBS: {
+        if (!msos.linesSize()) break;
+        removesite = msos.getElement(msos.getSelectionPointer())->getLabelText();
+        awaitingremovesitefromallspreadjobs = true;
+        ui->goStrongConfirmation("Do you really want to remove " + removesite + " from ALL running spreadjobs?");
         return true;
       }
       case KEYACTION_0:
