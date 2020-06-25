@@ -1,5 +1,7 @@
 #include "browsescreensub.h"
 
+#include "browsescreenaction.h"
+
 #include "../resizableelement.h"
 #include "../menuselectoption.h"
 #include "../menuselectadjustableline.h"
@@ -67,4 +69,8 @@ std::string BrowseScreenSub::targetName(const std::list<std::pair<std::string, b
 
 void BrowseScreenSub::refreshFileList() {
 
+}
+
+BrowseScreenAction BrowseScreenSub::tryJumpSection(const std::string& section) {
+  return BrowseScreenAction(BROWSESCREENACTION_NOOP);
 }

@@ -13,9 +13,12 @@
 #include "../../util.h"
 #include "../../engine.h"
 #include "../../transferjob.h"
+#include "../../site.h"
+#include "../../sitelogic.h"
 
 AllTransferJobsScreen::AllTransferJobsScreen(Ui* ui) : UIWindow(ui, "AllTransferJobsScreen") {
   keybinds.addBind(10, KEYACTION_ENTER, "Details");
+  keybinds.addBind('b', KEYACTION_BROWSE, "Browse");
   keybinds.addBind('B', KEYACTION_ABORT, "Abort job");
   keybinds.addBind('t', KEYACTION_TRANSFERS, "Transfers for job");
   keybinds.addBind('r', KEYACTION_RESET, "Reset");
@@ -169,6 +172,28 @@ bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
         std::shared_ptr<MenuSelectOptionTextButton> msotb =
             std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
         ui->goTransferJobStatus(msotb->getId());
+      }
+      return true;
+    case KEYACTION_BROWSE:
+      if (hascontents) {
+        std::shared_ptr<TransferJob> tj = global->getEngine()->getTransferJob(table.getElement(table.getSelectionPointer())->getId());
+        if (!!tj) {
+          Path srcpath = tj->getSrcPath();
+          Path dstpath = tj->getDstPath();
+          if (tj->isDirectory()) {
+            srcpath = srcpath / tj->getSrcFileName();
+            dstpath = dstpath / tj->getDstFileName();
+          }
+          if (tj->getType() == TRANSFERJOB_FXP) {
+            ui->goBrowseSplit(tj->getSrc()->getSite()->getName(), tj->getDst()->getSite()->getName(), srcpath, dstpath);
+          }
+          else if (tj->getType() == TRANSFERJOB_DOWNLOAD) {
+            ui->goBrowseSplit(tj->getSrc()->getSite()->getName(), srcpath, dstpath);
+          }
+          else if (tj->getType() == TRANSFERJOB_UPLOAD) {
+            ui->goBrowseSplit(tj->getDst()->getSite()->getName(), dstpath, srcpath);
+          }
+        }
       }
       return true;
     case KEYACTION_ABORT:

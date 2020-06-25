@@ -12,6 +12,7 @@
 #include "skiplist.h"
 #include "statistics.h"
 #include "hourlyalltracking.h"
+#include "transferpairing.h"
 #include "transferprotocol.h"
 #include "util.h"
 
@@ -116,6 +117,7 @@ private:
   HourlyAllTracking filesdown;
   bool freeslot;
   bool stayloggedin;
+  TransferPairing transferpairing;
 public:
   Site();
   Site(const std::string &);
@@ -191,7 +193,8 @@ public:
   int getTransferSourcePolicy() const;
   int getTransferTargetPolicy() const;
   bool useXDUPE() const;
-  SkipList & getSkipList();
+  SkipList& getSkipList();
+  TransferPairing& getTransferPairing();
   const std::map<std::string, Path> & getSections() const;
   bool getStayLoggedIn() const;
   void setName(const std::string &);
@@ -270,4 +273,5 @@ public:
   HourlyAllTracking & getSiteFilesDown(const std::string & site);
   void setSkipList(const SkipList & skiplist);
   void setSections(const std::map<std::string, Path> & sections);
+  void setTransferPairing(const TransferPairing& transferpairing);
 };

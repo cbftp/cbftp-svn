@@ -50,7 +50,6 @@ enum class BrowseScreenRequestType {
 
 enum BrowseScreenKeyAction {
   KEYACTION_CLOSE2,
-  KEYACTION_BROWSE,
   KEYACTION_RETURN,
   KEYACTION_SPREAD,
   KEYACTION_VIEW_FILE,
@@ -89,7 +88,7 @@ struct BrowseScreenRequest {
   std::list<std::pair<std::string, bool>> files;
 };
 
-class BrowseScreenSub : public Core::EventReceiver {
+class BrowseScreenSub : protected Core::EventReceiver {
 public:
   BrowseScreenSub(KeyBinds& keybinds);
   virtual void redraw(unsigned int, unsigned int, unsigned int) = 0;
@@ -110,6 +109,7 @@ public:
                              bool selectable = false, bool cursored = false, UIFile * origin = nullptr);
   static void printFlipped(Ui * ui, const std::shared_ptr<ResizableElement> & re);
   static std::string targetName(const std::list<std::pair<std::string, bool>> & items);
+  virtual BrowseScreenAction tryJumpSection(const std::string& section);
 protected:
   KeyBinds& keybinds;
 };

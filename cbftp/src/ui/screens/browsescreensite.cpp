@@ -36,8 +36,10 @@
 #include "browsescreen.h"
 #include "rawdatascreen.h"
 
-BrowseScreenSite::BrowseScreenSite(Ui * ui, BrowseScreen* parent, KeyBinds& keybinds, const std::string & sitestr, const Path path) :
-    BrowseScreenSub(keybinds), ui(ui), parent(parent), row(0), col(0), coloffset(0), currentviewspan(0),
+BrowseScreenSite::BrowseScreenSite(Ui* ui, BrowseScreen* parent,
+    KeyBinds& keybinds, const std::string& sitestr, const Path& path) :
+    BrowseScreenSub(keybinds), ui(ui), parent(parent), row(0), col(0),
+    coloffset(0), currentviewspan(0),
     resort(false), tickcount(0), gotomode(false), gotomodefirst(false),
     gotomodeticker(0), filtermodeinput(false), filtermodeinputregex(false),
     sortmethod(UIFileList::SortMethod::COMBINED),
@@ -48,11 +50,32 @@ BrowseScreenSite::BrowseScreenSite(Ui * ui, BrowseScreen* parent, KeyBinds& keyb
     confirmaction(ConfirmAction::NONE), refreshfilelistafter(false)
 {
   sitelogic->getAggregatedRawBuffer()->bookmark();
-  BrowseScreenRequest request;
-  request.type = BrowseScreenRequestType::FILELIST;
-  request.path = path != "" ? path : site->getBasePath();
-  request.id = sitelogic->requestFileList(ui, request.path);
-  requests.push_back(request);
+  TimeReference::updateTime();
+  gotoPath(path != "" ? path : site->getBasePath());
+}
+
+BrowseScreenSite::BrowseScreenSite(Ui* ui, BrowseScreen* parent,
+    KeyBinds& keybinds, const std::string& sitestr, const std::string& section) :
+    BrowseScreenSub(keybinds), ui(ui), parent(parent), row(0), col(0),
+    coloffset(0), currentviewspan(0),
+    resort(false), tickcount(0), gotomode(false), gotomodefirst(false),
+    gotomodeticker(0), filtermodeinput(false), filtermodeinputregex(false),
+    sortmethod(UIFileList::SortMethod::COMBINED),
+    sitelogic(global->getSiteLogicManager()->getSiteLogic(sitestr)),
+    site(sitelogic->getSite()), spinnerpos(0), filelist(nullptr),
+    withinraceskiplistreach(false), focus(true), temphighlightline(-1),
+    softselecting(false), lastinfo(LastInfo::NONE),
+    confirmaction(ConfirmAction::NONE), refreshfilelistafter(false)
+{
+  sitelogic->getAggregatedRawBuffer()->bookmark();
+  TimeReference::updateTime();
+  if (!section.empty()) {
+    BrowseScreenAction action = tryJumpSection(section);
+    if (action.getOp() == BROWSESCREENACTION_CHDIR) {
+      return;
+    }
+  }
+  gotoPath(site->getBasePath());
   TimeReference::updateTime();
 }
 
@@ -1129,6 +1152,25 @@ UIFile * BrowseScreenSite::selectedFile() const {
 
 void BrowseScreenSite::refreshFileList() {
   gotoPath(list.getPath());
+}
+
+BrowseScreenAction BrowseScreenSite::tryJumpSection(const std::string& section) {
+  if (site->hasSection(section)) {
+    Path path = site->getSectionPath(section);
+    gotoPath(path);
+    lastjumpsection = section;
+    lastjumppath = path;
+    return BrowseScreenAction(BROWSESCREENACTION_CHDIR);
+  }
+  return BrowseScreenAction(BROWSESCREENACTION_NOOP);
+}
+
+std::string BrowseScreenSite::getLastJumpSection() const {
+  return lastjumpsection;
+}
+
+Path BrowseScreenSite::getLastJumpPath() const {
+  return lastjumppath;
 }
 
 void BrowseScreenSite::tick(int) {

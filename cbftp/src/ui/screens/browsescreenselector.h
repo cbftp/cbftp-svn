@@ -26,6 +26,7 @@ public:
   std::string getInfoLabel() const override;
   std::string getInfoText() const override;
   void setFocus(bool) override;
+  BrowseScreenAction tryJumpSection(const std::string& section) override;
 private:
   Ui * ui;
   unsigned int row;

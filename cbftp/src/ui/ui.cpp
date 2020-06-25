@@ -68,6 +68,7 @@
 #include "screens/fileinfoscreen.h"
 #include "screens/keybindsscreen.h"
 #include "screens/metricsscreen.h"
+#include "screens/transferpairingscreen.h"
 
 namespace {
 
@@ -168,6 +169,7 @@ bool Ui::init() {
   fileinfoscreen = std::make_shared<FileInfoScreen>(this);
   keybindsscreen = std::make_shared<KeyBindsScreen>(this);
   metricsscreen = std::make_shared<MetricsScreen>(this);
+  transferpairingscreen = std::make_shared<TransferPairingScreen>(this);
   mainwindows.push_back(mainscreen);
   mainwindows.push_back(newkeyscreen);
   mainwindows.push_back(confirmationscreen);
@@ -209,6 +211,7 @@ bool Ui::init() {
   mainwindows.push_back(fileinfoscreen);
   mainwindows.push_back(keybindsscreen);
   mainwindows.push_back(metricsscreen);
+  mainwindows.push_back(transferpairingscreen);
 
   legendprinterkeybinds = std::make_shared<LegendPrinterKeybinds>(this);
   legendwindow->setMainLegendPrinter(legendprinterkeybinds);
@@ -844,38 +847,38 @@ void Ui::goTransfers() {
   switchToWindow(transfersscreen);
 }
 
-void Ui::goTransfersFilterSite(const std::string & site) {
+void Ui::goTransfersFilterSite(const std::string& site) {
   transfersscreen->initializeFilterSite(mainrow, maincol, site);
   switchToWindow(transfersscreen);
 }
 
-void Ui::goTransfersFilterSpreadJob(const std::string & job) {
+void Ui::goTransfersFilterSpreadJob(const std::string& job) {
   transfersscreen->initializeFilterSpreadJob(mainrow, maincol, job);
   switchToWindow(transfersscreen);
 }
 
-void Ui::goTransfersFilterTransferJob(const std::string & job) {
+void Ui::goTransfersFilterTransferJob(const std::string& job) {
   transfersscreen->initializeFilterTransferJob(mainrow, maincol, job);
   switchToWindow(transfersscreen);
 }
 
-void Ui::goTransfersFilterSpreadJobSite(const std::string & job, const std::string & site) {
+void Ui::goTransfersFilterSpreadJobSite(const std::string& job, const std::string& site) {
   transfersscreen->initializeFilterSpreadJobSite(mainrow, maincol, job, site);
   switchToWindow(transfersscreen);
 }
 
-void Ui::returnTransferFilters(const TransferFilteringParameters & tfp) {
+void Ui::returnTransferFilters(const TransferFilteringParameters& tfp) {
   transfersscreen->initialize(mainrow, maincol, tfp);
   switchToLast();
   uiqueue.push(UICommand(UI_COMMAND_REFRESH));
 }
 
-void Ui::goTransfersFiltering(const TransferFilteringParameters & tfp) {
+void Ui::goTransfersFiltering(const TransferFilteringParameters& tfp) {
   transfersfilterscreen->initialize(mainrow, maincol, tfp);
   switchToWindow(transfersfilterscreen);
 }
 
-void Ui::goEditSite(const std::string & site) {
+void Ui::goEditSite(const std::string& site) {
   editsitescreen->initialize(mainrow, maincol, "edit", site);
   switchToWindow(editsitescreen);
 }
@@ -885,18 +888,33 @@ void Ui::goAddSite() {
   switchToWindow(editsitescreen);
 }
 
-void Ui::goBrowse(const std::string & site, const Path path) {
-  browsescreen->initialize(mainrow, maincol, VIEW_NORMAL, site, path);
+void Ui::goBrowse(const std::string& site, const Path& path) {
+  browsescreen->initializeSite(mainrow, maincol, site, path);
   switchToWindow(browsescreen);
 }
 
-void Ui::goBrowseSplit(const std::string & site) {
-  browsescreen->initialize(mainrow, maincol, VIEW_SPLIT, site);
+void Ui::goBrowseSection(const std::string& site, const std::string& section) {
+  browsescreen->initializeSite(mainrow, maincol, site, section);
+  switchToWindow(browsescreen);
+}
+
+void Ui::goBrowseSplit(const std::string& site) {
+  browsescreen->initializeSplit(mainrow, maincol, site);
+  switchToWindow(browsescreen, true);
+}
+
+void Ui::goBrowseSplit(const std::string& site, const Path& sitepath, const Path& localpath) {
+  browsescreen->initializeSiteLocal(mainrow, maincol, site, sitepath, localpath);
+  switchToWindow(browsescreen, true);
+}
+
+void Ui::goBrowseSplit(const std::string& leftsite, const std::string& rightsite, const Path& leftpath, const Path& rightpath) {
+  browsescreen->initializeSiteSite(mainrow, maincol, leftsite, rightsite, leftpath, rightpath);
   switchToWindow(browsescreen, true);
 }
 
 void Ui::goBrowseLocal() {
-  browsescreen->initialize(mainrow, maincol, VIEW_LOCAL);
+  browsescreen->initializeLocal(mainrow, maincol);
   switchToWindow(browsescreen);
 }
 
@@ -911,17 +929,17 @@ void Ui::goAddProxy() {
   switchToWindow(editproxyscreen);
 }
 
-void Ui::goEditProxy(const std::string & proxy) {
+void Ui::goEditProxy(const std::string& proxy) {
   editproxyscreen->initialize(mainrow, maincol, "edit", proxy);
   switchToWindow(editproxyscreen);
 }
 
-void Ui::goRawData(const std::string & site) {
+void Ui::goRawData(const std::string& site) {
   rawdatascreen->initialize(mainrow, maincol, site, 0);
   switchToWindow(rawdatascreen);
 }
 
-void Ui::goRawDataJump(const std::string & site, int id) {
+void Ui::goRawDataJump(const std::string& site, int id) {
   rawdatascreen->initialize(mainrow, maincol, site, id);
   topwindow = rawdatascreen;
   infowindow->setLabel(topwindow->getWideInfoLabel());
@@ -1032,6 +1050,11 @@ void Ui::goGlobalKeyBinds() {
 void Ui::goMetrics() {
   metricsscreen->initialize(mainrow, maincol);
   switchToWindow(metricsscreen);
+}
+
+void Ui::goTransferPairing(TransferPairing* transferpairing) {
+  transferpairingscreen->initialize(mainrow, maincol, transferpairing);
+  switchToWindow(transferpairingscreen);
 }
 
 void Ui::returnSelectItems(const std::string & items) {

@@ -62,7 +62,7 @@ Site::Site() : skiplist(global->getSkipList()) {
 
 }
 
-Site::Site(const std::string & name) :
+Site::Site(const std::string& name) :
   name(name),
   user("anonymous"),
   pass("anonymous"),
@@ -103,7 +103,7 @@ Site::Site(const std::string & name) :
   addresses.push_back(addr);
 }
 
-Site::Site(const Site & other) {
+Site::Site(const Site& other) {
   name = other.name;
   addresses = other.addresses;
   user = other.user;
@@ -143,6 +143,7 @@ Site::Site(const Site & other) {
   transfersourcepolicy = other.transfersourcepolicy;
   transfertargetpolicy = other.transfertargetpolicy;
   skiplist = other.skiplist;
+  transferpairing = other.transferpairing;
 }
 
 std::map<std::string, Path>::const_iterator Site::sectionsBegin() const {
@@ -251,19 +252,19 @@ bool Site::unlimitedDown() const {
   return maxdn == 0;
 }
 
-int Site::getAverageSpeed(const std::string & target) const {
+int Site::getAverageSpeed(const std::string& target) const {
   std::map<std::string, int>::const_iterator it = avgspeed.find(target);
   if (it == avgspeed.end()) return 1024;
   return it->second;
 }
 
-void Site::setAverageSpeed(const std::string & target, int speed) {
+void Site::setAverageSpeed(const std::string& target, int speed) {
   std::map<std::string, int>::iterator it = avgspeed.find(target);
   if (it != avgspeed.end()) avgspeed.erase(it);
   avgspeed[target] = speed;
 }
 
-void Site::pushTransferSpeed(const std::string & target, int speed, unsigned long long int size) {
+void Site::pushTransferSpeed(const std::string& target, int speed, unsigned long long int size) {
   std::map<std::string, int>::iterator it = avgspeed.find(target);
   int oldspeed;
   if (it == avgspeed.end()) {
@@ -279,7 +280,7 @@ void Site::pushTransferSpeed(const std::string & target, int speed, unsigned lon
   avgspeedsamples[target].second += size;
 }
 
-std::pair<int, unsigned long long int> Site::getAverageSpeedSamples(const std::string & target) const {
+std::pair<int, unsigned long long int> Site::getAverageSpeedSamples(const std::string& target) const {
   std::map<std::string, std::pair<int, unsigned long long int> >::const_iterator it = avgspeedsamples.find(target);
   if (it != avgspeedsamples.end()) {
     return it->second;
@@ -287,7 +288,7 @@ std::pair<int, unsigned long long int> Site::getAverageSpeedSamples(const std::s
   return std::pair<int, unsigned long long int>(0, 0);
 }
 
-void Site::resetAverageSpeedSamples(const std::string & target) {
+void Site::resetAverageSpeedSamples(const std::string& target) {
   std::map<std::string, std::pair<int, unsigned long long int> >::iterator it = avgspeedsamples.find(target);
   if (it != avgspeedsamples.end()) {
     it->second.first = 0;
@@ -481,13 +482,13 @@ unsigned int Site::sectionsSize() const {
   return sections.size();
 }
 
-const Path Site::getSectionPath(const std::string & sectionname) const {
+const Path Site::getSectionPath(const std::string& sectionname) const {
   std::map<std::string, Path>::const_iterator it = sections.find(sectionname);
   if (it == sections.end()) return "/";
   return it->second;
 }
 
-bool Site::hasSection(const std::string & sectionname) const {
+bool Site::hasSection(const std::string& sectionname) const {
   std::map<std::string, Path>::const_iterator it = sections.find(sectionname);
   if (it == sections.end()) return false;
   return true;
@@ -539,7 +540,11 @@ SkipList & Site::getSkipList() {
   return skiplist;
 }
 
-const std::map<std::string, Path> & Site::getSections() const {
+TransferPairing& Site::getTransferPairing() {
+  return transferpairing;
+}
+
+const std::map<std::string, Path>& Site::getSections() const {
   return sections;
 }
 
@@ -547,7 +552,7 @@ bool Site::getStayLoggedIn() const {
   return stayloggedin;
 }
 
-void Site::setName(const std::string & name) {
+void Site::setName(const std::string& name) {
   this->name = name;
 }
 
@@ -755,7 +760,7 @@ void Site::clearExceptSites() {
   excepttargetsites.clear();
 }
 
-bool Site::isAllowedTargetSite(const std::shared_ptr<Site> & site) const {
+bool Site::isAllowedTargetSite(const std::shared_ptr<Site>& site) const {
   std::set<std::shared_ptr<Site> >::const_iterator it = excepttargetsites.find(site);
   if (it != excepttargetsites.end()) {
     return transfertargetpolicy == SITE_TRANSFER_POLICY_BLOCK;
@@ -787,7 +792,7 @@ std::set<std::shared_ptr<Site> >::const_iterator Site::exceptTargetSitesEnd() co
   return excepttargetsites.end();
 }
 
-std::list<std::string> Site::getSectionsForPath(const Path & path) const {
+std::list<std::string> Site::getSectionsForPath(const Path& path) const {
   std::map<std::string, Path>::const_iterator it;
   std::list<std::string> retsections;
   for (it = sections.begin(); it!= sections.end(); it++) {
@@ -798,7 +803,7 @@ std::list<std::string> Site::getSectionsForPath(const Path & path) const {
   return retsections;
 }
 
-std::list<std::string> Site::getSectionsForPartialPath(const Path & path) const {
+std::list<std::string> Site::getSectionsForPartialPath(const Path& path) const {
   std::map<std::string, Path>::const_iterator it;
   std::list<std::string> retsections;
   for (it = sections.begin(); it!= sections.end(); it++) {
@@ -809,7 +814,7 @@ std::list<std::string> Site::getSectionsForPartialPath(const Path & path) const 
   return retsections;
 }
 
-std::pair<Path, Path> Site::splitPathInSectionAndSubpath(const Path & path) const {
+std::pair<Path, Path> Site::splitPathInSectionAndSubpath(const Path& path) const {
   Path sectionpath("/");
   std::list<std::string> sections = getSectionsForPartialPath(path);
   for (std::list<std::string>::const_iterator it = sections.begin(); it != sections.end(); ++it) {
@@ -822,7 +827,7 @@ std::pair<Path, Path> Site::splitPathInSectionAndSubpath(const Path & path) cons
   return std::pair<Path, Path>(sectionpath, subpath);
 }
 
-void Site::addTransferStatsFile(StatsDirection direction, const std::string & other, unsigned long long int size) {
+void Site::addTransferStatsFile(StatsDirection direction, const std::string& other, unsigned long long int size) {
   if (direction == STATS_DOWN) {
     if (sitessizedown.find(other) == sitessizedown.end()) {
       sitessizedown[other] = HourlyAllTracking();
@@ -872,35 +877,35 @@ void Site::tickMinute() {
   }
 }
 
-const HourlyAllTracking & Site::getSizeUp() const {
+const HourlyAllTracking& Site::getSizeUp() const {
   return sizeup;
 }
 
-const HourlyAllTracking & Site::getSizeDown() const {
+const HourlyAllTracking& Site::getSizeDown() const {
   return sizedown;
 }
 
-const HourlyAllTracking & Site::getFilesUp() const {
+const HourlyAllTracking& Site::getFilesUp() const {
   return filesup;
 }
 
-const HourlyAllTracking & Site::getFilesDown() const {
+const HourlyAllTracking& Site::getFilesDown() const {
   return filesdown;
 }
 
-HourlyAllTracking & Site::getSizeUp() {
+HourlyAllTracking& Site::getSizeUp() {
   return sizeup;
 }
 
-HourlyAllTracking & Site::getSizeDown() {
+HourlyAllTracking& Site::getSizeDown() {
   return sizedown;
 }
 
-HourlyAllTracking & Site::getFilesUp() {
+HourlyAllTracking& Site::getFilesUp() {
   return filesup;
 }
 
-HourlyAllTracking & Site::getFilesDown() {
+HourlyAllTracking& Site::getFilesDown() {
   return filesdown;
 }
 
@@ -936,26 +941,30 @@ std::map<std::string, HourlyAllTracking>::const_iterator Site::filesDownEnd() co
   return sitesfilesdown.end();
 }
 
-HourlyAllTracking & Site::getSiteSizeUp(const std::string & site) {
+HourlyAllTracking& Site::getSiteSizeUp(const std::string& site) {
   return sitessizeup[site];
 }
 
-HourlyAllTracking & Site::getSiteSizeDown(const std::string & site) {
+HourlyAllTracking& Site::getSiteSizeDown(const std::string& site) {
   return sitessizedown[site];
 }
 
-HourlyAllTracking & Site::getSiteFilesUp(const std::string & site) {
+HourlyAllTracking& Site::getSiteFilesUp(const std::string& site) {
   return sitesfilesup[site];
 }
 
-HourlyAllTracking & Site::getSiteFilesDown(const std::string & site) {
+HourlyAllTracking& Site::getSiteFilesDown(const std::string& site) {
   return sitesfilesdown[site];
 }
 
-void Site::setSkipList(const SkipList & skiplist) {
+void Site::setSkipList(const SkipList& skiplist) {
   this->skiplist = skiplist;
 }
 
-void Site::setSections(const std::map<std::string, Path> & sections) {
+void Site::setSections(const std::map<std::string, Path>& sections) {
   this->sections = sections;
+}
+
+void Site::setTransferPairing(const TransferPairing& transferpairing) {
+  this->transferpairing = transferpairing;
 }

@@ -196,3 +196,11 @@ std::string BrowseScreenSelector::getInfoText() const {
 void BrowseScreenSelector::setFocus(bool focus) {
   this->focus = focus;
 }
+
+BrowseScreenAction BrowseScreenSelector::tryJumpSection(const std::string& section) {
+  std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
+  if (msotb->getIdentifier() != BROWSESCREENSELECTOR_HOME) {
+    return BrowseScreenAction(BROWSESCREENACTION_SITE, msotb->getIdentifier());
+  }
+  return BrowseScreenAction(BROWSESCREENACTION_NOOP);
+}

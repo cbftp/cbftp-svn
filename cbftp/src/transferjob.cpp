@@ -210,6 +210,15 @@ bool TransferJob::isDone() const {
   return status == TRANSFERJOB_DONE || status == TRANSFERJOB_ABORTED;
 }
 
+bool TransferJob::isDirectory() const {
+  if (type == TRANSFERJOB_FXP || type == TRANSFERJOB_DOWNLOAD) {
+    File* f = srcfilelists.at("")->getFile(srcfile);
+    return f != nullptr && f->isDirectory();
+  }
+  auto it = localfilelists.at("")->find(dstfile);
+  return it != localfilelists.at("")->end() && it->second.isDirectory();
+}
+
 bool TransferJob::wantsList(bool source) {
   if (source && (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP)) {
     for (std::unordered_map<std::string, std::shared_ptr<FileList>>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
