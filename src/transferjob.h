@@ -60,6 +60,7 @@ public:
   std::unordered_map<std::string, unsigned long long int>::const_iterator pendingTransfersBegin() const;
   std::unordered_map<std::string, unsigned long long int>::const_iterator pendingTransfersEnd() const;
   bool isDone() const;
+  bool isDirectory() const;
   TransferJobStatus getStatus() const;
   bool wantsList(bool source);
   std::shared_ptr<LocalFileList> wantedLocalDstList(const std::string &);

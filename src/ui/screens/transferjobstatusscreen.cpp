@@ -31,6 +31,7 @@ enum KeyScopes {
 TransferJobStatusScreen::TransferJobStatusScreen(Ui* ui) : UIWindow(ui, "TransferJobStatusScreen") {
   keybinds.addScope(KEYSCOPE_RUNNING, "While job is running");
   keybinds.addBind(10, KEYACTION_ENTER, "Modify", KEYSCOPE_RUNNING);
+  keybinds.addBind('b', KEYACTION_BROWSE, "Browse");
   keybinds.addBind('B', KEYACTION_ABORT, "Abort transfer job");
   keybinds.addBind('t', KEYACTION_TRANSFERS, "Transfers");
   keybinds.addBind('r', KEYACTION_RESET, "Reset");
@@ -189,6 +190,24 @@ bool TransferJobStatusScreen::keyPressed(unsigned int ch) {
     case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
+    case KEYACTION_BROWSE: {
+      Path srcpath = transferjob->getSrcPath();
+      Path dstpath = transferjob->getDstPath();
+      if (transferjob->isDirectory()) {
+        srcpath = srcpath / transferjob->getSrcFileName();
+        dstpath = dstpath / transferjob->getDstFileName();
+      }
+      if (transferjob->getType() == TRANSFERJOB_FXP) {
+        ui->goBrowseSplit(transferjob->getSrc()->getSite()->getName(), transferjob->getDst()->getSite()->getName(), srcpath, dstpath);
+      }
+      else if (transferjob->getType() == TRANSFERJOB_DOWNLOAD) {
+        ui->goBrowseSplit(transferjob->getSrc()->getSite()->getName(), srcpath, dstpath);
+      }
+      else if (transferjob->getType() == TRANSFERJOB_UPLOAD) {
+        ui->goBrowseSplit(transferjob->getDst()->getSite()->getName(), dstpath, srcpath);
+      }
+      return true;
+    }
     case KEYACTION_ENTER:
       if (!transferjob->isDone()) {
         bool activation = mso.activateSelected();

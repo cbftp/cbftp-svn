@@ -30,7 +30,10 @@ enum class ConfirmAction {
 
 class BrowseScreenSite : public BrowseScreenSub {
 public:
-  BrowseScreenSite(Ui* ui, BrowseScreen* parent, KeyBinds& keybinds, const std::string & sitestr, const Path path = Path());
+  BrowseScreenSite(Ui* ui, BrowseScreen* parent, KeyBinds& keybinds,
+      const std::string& sitestr, const Path& path = Path());
+  BrowseScreenSite(Ui* ui, BrowseScreen* parent, KeyBinds& keybinds,
+      const std::string& sitestr, const std::string& section);
   ~BrowseScreenSite();
   BrowseScreenType type() const override;
   void redraw(unsigned int, unsigned int, unsigned int) override;
@@ -50,6 +53,9 @@ public:
   void gotoPath(const Path & path);
   void initiateMove(const std::string& dstpath);
   void refreshFileList() override;
+  BrowseScreenAction tryJumpSection(const std::string& section) override;
+  std::string getLastJumpSection() const;
+  Path getLastJumpPath() const;
 private:
   Ui * ui;
   BrowseScreen* parent;
@@ -87,6 +93,8 @@ private:
   std::string lastinfotarget;
   ConfirmAction confirmaction;
   bool refreshfilelistafter;
+  std::string lastjumpsection;
+  Path lastjumppath;
   void disableGotoMode();
   void clearSoftSelects();
   bool handleReadyRequests();

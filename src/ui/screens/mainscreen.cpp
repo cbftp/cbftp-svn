@@ -43,7 +43,6 @@ enum KeyActions {
   KEYACTION_ALL_TRANSFER_JOBS,
   KEYACTION_BROWSE_LOCAL,
   KEYACTION_BROWSE_SITE,
-  KEYACTION_BROWSE_SITE2,
   KEYACTION_BROWSE_SPLIT,
   KEYACTION_SECTIONS,
   KEYACTION_SNAKE,
@@ -94,7 +93,7 @@ MainScreen::MainScreen(Ui* ui) : UIWindow(ui, "MainScreen") {
   keybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Next page");
   keybinds.addBind('-', KEYACTION_HIGHLIGHT_LINE, "Highlight entire line");
   keybinds.addBind(KEY_RIGHT, KEYACTION_BROWSE_SITE, "Browse", KEYSCOPE_SITE);
-  keybinds.addBind('b', KEYACTION_BROWSE_SITE2, "Browse", KEYSCOPE_SITE);
+  keybinds.addBind('b', KEYACTION_BROWSE, "Browse", KEYSCOPE_SITE);
   keybinds.addBind('E', KEYACTION_EDIT_SITE, "Edit", KEYSCOPE_SITE);
   keybinds.addBind('\t', KEYACTION_BROWSE_SPLIT, "Split browse", KEYSCOPE_SITE);
   keybinds.addBind('w', KEYACTION_RAW_COMMAND, "Raw command", KEYSCOPE_SITE);
@@ -113,6 +112,7 @@ MainScreen::MainScreen(Ui* ui) : UIWindow(ui, "MainScreen") {
   keybinds.addBind('R', KEYACTION_RESET, "Reset", KEYSCOPE_SPREAD_JOB);
   keybinds.addBind('z', KEYACTION_ABORT_DELETE_INC, "Abort and delete own files on incomplete sites", KEYSCOPE_SPREAD_JOB);
   keybinds.addBind('Z', KEYACTION_ABORT_DELETE_ALL, "Abort and delete own files on ALL sites", KEYSCOPE_SPREAD_JOB);
+  keybinds.addBind('b', KEYACTION_BROWSE, "Browse", KEYSCOPE_TRANSFER_JOB);
   keybinds.addBind(10, KEYACTION_ENTER, "Status", KEYSCOPE_TRANSFER_JOB);
   keybinds.addBind('B', KEYACTION_ABORT, "Abort", KEYSCOPE_TRANSFER_JOB);
   keybinds.addBind('T', KEYACTION_TRANSFERS, "Transfers", KEYSCOPE_TRANSFER_JOB);
@@ -599,6 +599,27 @@ bool MainScreen::keyPressed(unsigned int ch) {
       ui->update();
       ui->setLegend();
       return true;
+    case KEYACTION_BROWSE:
+      if (scope == KEYSCOPE_TRANSFER_JOB) {
+        std::shared_ptr<TransferJob> tj = global->getEngine()->getTransferJob(msotj.getElement(msotj.getSelectionPointer())->getId());
+        Path srcpath = tj->getSrcPath();
+        Path dstpath = tj->getDstPath();
+        if (tj->isDirectory()) {
+          srcpath = srcpath / tj->getSrcFileName();
+          dstpath = dstpath / tj->getDstFileName();
+        }
+        if (tj->getType() == TRANSFERJOB_FXP) {
+          ui->goBrowseSplit(tj->getSrc()->getSite()->getName(), tj->getDst()->getSite()->getName(), srcpath, dstpath);
+        }
+        else if (tj->getType() == TRANSFERJOB_DOWNLOAD) {
+          ui->goBrowseSplit(tj->getSrc()->getSite()->getName(), srcpath, dstpath);
+        }
+        else if (tj->getType() == TRANSFERJOB_UPLOAD) {
+          ui->goBrowseSplit(tj->getDst()->getSite()->getName(), dstpath, srcpath);
+        }
+        return true;
+      }
+      break;
     case KEYACTION_BACK_CANCEL:
       ui->goContinueBrowsing();
       return true;
@@ -626,8 +647,7 @@ bool MainScreen::keyPressed(unsigned int ch) {
         return true;
       }
       case KEYACTION_BROWSE_SITE:
-      case KEYACTION_BROWSE_SITE2: {
-        if (!msos.linesSize()) break;
+      case KEYACTION_BROWSE: {
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
         ui->goBrowse(sitename);
         return true;
@@ -911,8 +931,7 @@ void MainScreen::jumpSectionHotkey(int hotkey) {
   std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
   std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
   if (site->hasSection(section->getName())) {
-    Path path = site->getSectionPath(section->getName());
-    ui->goBrowse(sitename, path);
+    ui->goBrowseSection(sitename, section->getName());
   }
 }
 

@@ -22,7 +22,8 @@
 
 #include <cassert>
 
-BrowseScreenLocal::BrowseScreenLocal(Ui * ui, KeyBinds& keybinds) : BrowseScreenSub(keybinds),
+BrowseScreenLocal::BrowseScreenLocal(Ui* ui, KeyBinds& keybinds,
+    const Path& path) : BrowseScreenSub(keybinds),
     ui(ui), currentviewspan(0), focus(true), spinnerpos(0), tickcount(0),
     resort(false), sortmethod(UIFileList::SortMethod::COMBINED), gotomode(false), gotomodefirst(false),
     gotomodeticker(0), filtermodeinput(false), filtermodeinputregex(false), temphighlightline(-1),
@@ -30,7 +31,7 @@ BrowseScreenLocal::BrowseScreenLocal(Ui * ui, KeyBinds& keybinds) : BrowseScreen
 {
   BrowseScreenRequest request;
   request.type = BrowseScreenRequestType::FILELIST;
-  request.path = global->getLocalStorage()->getDownloadPath();
+  request.path = path != "" ? path :global->getLocalStorage()->getDownloadPath();
   request.id = global->getLocalStorage()->requestLocalFileList(request.path);
   requests.push_back(request);
 }

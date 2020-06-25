@@ -129,26 +129,77 @@ BrowseScreen::BrowseScreen(Ui* ui) : UIWindow(ui, "BrowseScreen"),
 BrowseScreen::~BrowseScreen() {
   ui->removeKeyBinds(&sitekeybinds);
   ui->removeKeyBinds(&localkeybinds);
+  expectbackendpush = true;
 }
 
-void BrowseScreen::initialize(unsigned int row, unsigned int col, ViewMode viewmode, const std::string & site, const Path path) {
-  expectbackendpush = true;
-  this->split = initsplitupdate = viewmode == VIEW_SPLIT;
+void BrowseScreen::initializeSite(unsigned int row, unsigned int col,
+    const std::string& site, const Path& path)
+{
   TimeReference::updateTime();
-  if (viewmode != VIEW_LOCAL) {
-    left = std::make_shared<BrowseScreenSite>(ui, this, sitekeybinds, site, path);
-  }
-  else {
-    left = std::make_shared<BrowseScreenLocal>(ui, localkeybinds);
-  }
-  if (split) {
-    left->setFocus(false);
-    active = right = std::make_shared<BrowseScreenSelector>(ui, keybinds);
-  }
-  else {
-    right.reset();
-    active = left;
-  }
+  split = false;
+  left = std::make_shared<BrowseScreenSite>(ui, this, sitekeybinds, site, path);
+  right.reset();
+  active = left;
+  init(row, col);
+}
+
+void BrowseScreen::initializeSite(unsigned int row, unsigned int col,
+    const std::string& site, const std::string& section)
+{
+  TimeReference::updateTime();
+  split = false;
+  left = std::make_shared<BrowseScreenSite>(ui, this, sitekeybinds, site, section);
+  right.reset();
+  active = left;
+
+  init(row, col);
+}
+
+void BrowseScreen::initializeLocal(unsigned int row, unsigned int col,
+    const Path& path)
+{
+  TimeReference::updateTime();
+  split = false;
+  left = std::make_shared<BrowseScreenLocal>(ui, localkeybinds, path);
+  right.reset();
+  active = left;
+  init(row, col);
+}
+
+void BrowseScreen::initializeSplit(unsigned int row, unsigned int col,
+    const std::string& site)
+{
+  TimeReference::updateTime();
+  split = true;
+  left = std::make_shared<BrowseScreenSite>(ui, this, sitekeybinds, site);
+  right = std::make_shared<BrowseScreenSelector>(ui, keybinds);
+  left->setFocus(false);
+  active = right;
+  init(row, col);
+}
+
+void BrowseScreen::initializeSiteLocal(unsigned int row, unsigned int col,
+    const std::string& site, const Path& sitepath, const Path& localpath)
+{
+  TimeReference::updateTime();
+  split = true;
+  left = std::make_shared<BrowseScreenSite>(ui, this, sitekeybinds, site, sitepath);
+  right = std::make_shared<BrowseScreenLocal>(ui, localkeybinds, localpath);
+  right->setFocus(false);
+  active = left;
+  init(row, col);
+}
+
+void BrowseScreen::initializeSiteSite(unsigned int row, unsigned int col,
+    const std::string& leftsite, const std::string& rightsite,
+    const Path& leftpath, const Path& rightpath)
+{
+  TimeReference::updateTime();
+  split = true;
+  left = std::make_shared<BrowseScreenSite>(ui, this, sitekeybinds, leftsite, leftpath);
+  right = std::make_shared<BrowseScreenSite>(ui, this, sitekeybinds, rightsite, rightpath);
+  right->setFocus(false);
+  active = left;
   init(row, col);
 }
 
@@ -232,23 +283,7 @@ bool BrowseScreen::keyPressed(unsigned int ch) {
       }
       return true;
     case BROWSESCREENACTION_SITE: {
-      Path targetpath;
-      if (split) {
-        std::shared_ptr<BrowseScreenSub> other = active == left ? right : left;
-        if (other->type() == BrowseScreenType::SITE) {
-          const std::shared_ptr<BrowseScreenSite> & othersite = std::static_pointer_cast<BrowseScreenSite>(other);
-          const Path & path = othersite->getUIFileList()->getPath();
-          std::list<std::string> sections = othersite->getSite()->getSectionsForPath(path);
-          if (!sections.empty()) {
-            std::string section = sections.front();
-            targetpath = global->getSiteManager()->getSite(op.getArg())->getSectionPath(section);
-          }
-        }
-      }
-      active = (active == left ? left : right) = std::make_shared<BrowseScreenSite>(ui, this, sitekeybinds, op.getArg(), targetpath);
-      ui->redraw();
-      ui->setLegend();
-      ui->setInfo();
+      goSite(active == left, op.getArg());
       return true;
     }
     case BROWSESCREENACTION_HOME:
@@ -556,18 +591,50 @@ void BrowseScreen::jumpSectionHotkey(int hotkey) {
   if (section == nullptr) {
     return;
   }
-  if (left->type() == BrowseScreenType::SITE) {
-    std::shared_ptr<Site> site = std::static_pointer_cast<BrowseScreenSite>(left)->getSite();
-    if (site->hasSection(section->getName())) {
-      Path path = site->getSectionPath(section->getName());
-      std::static_pointer_cast<BrowseScreenSite>(left)->gotoPath(path);
+  if (active == left || left->type() != BrowseScreenType::SELECTOR) {
+    BrowseScreenAction action = left->tryJumpSection(section->getName());
+    if (action.getOp() == BROWSESCREENACTION_SITE) {
+      goSite(true, action.getArg(), section->getName());
     }
   }
-  if (split && right->type() == BrowseScreenType::SITE) {
-    std::shared_ptr<Site> site = std::static_pointer_cast<BrowseScreenSite>(right)->getSite();
-    if (site->hasSection(section->getName())) {
-      Path path = site->getSectionPath(section->getName());
-      std::static_pointer_cast<BrowseScreenSite>(right)->gotoPath(path);
+  if (split && (active == right || right->type() != BrowseScreenType::SELECTOR)) {
+    BrowseScreenAction action = right->tryJumpSection(section->getName());
+    if (action.getOp() == BROWSESCREENACTION_SITE) {
+      goSite(false, action.getArg(), section->getName());
     }
   }
+}
+
+void BrowseScreen::goSite(bool leftside, const std::string& site, const std::string& section) {
+  std::string targetsection = section;
+  if (split) {
+    std::shared_ptr<Site> siteptr = global->getSiteManager()->getSite(site);
+    std::shared_ptr<BrowseScreenSub> other = leftside ? right : left;
+    if (targetsection.empty()) {
+      if (other->type() == BrowseScreenType::SITE) {
+        const std::shared_ptr<BrowseScreenSite>& othersite = std::static_pointer_cast<BrowseScreenSite>(other);
+        Path otherpath = othersite->getUIFileList()->getPath();
+        if (otherpath == othersite->getLastJumpPath()) {
+          targetsection = othersite->getLastJumpSection();
+        }
+        else {
+          std::list<std::string> sections = othersite->getSite()->getSectionsForPath(otherpath);
+          for (const std::string& sec : sections) {
+            if (siteptr->hasSection(sec)) {
+              targetsection = sec;
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+  bool updateactive = (active == left && leftside) || (active == right && !leftside);
+  (leftside ? left : right) = std::make_shared<BrowseScreenSite>(ui, this, sitekeybinds, site, targetsection);
+  if (updateactive) {
+    active = leftside ? left : right;
+  }
+  ui->redraw();
+  ui->setLegend();
+  ui->setInfo();
 }

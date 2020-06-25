@@ -20,7 +20,7 @@ class KeyBinds;
 
 class BrowseScreenLocal : public BrowseScreenSub {
 public:
-  BrowseScreenLocal(Ui *, KeyBinds& keybinds);
+  BrowseScreenLocal(Ui *, KeyBinds& keybinds, const Path& path = Path());
   ~BrowseScreenLocal();
   BrowseScreenType type() const override;
   void redraw(unsigned int, unsigned int, unsigned int) override;
