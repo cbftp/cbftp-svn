@@ -280,7 +280,7 @@ void KeyBinds::generateLegendSummaries() {
   for (const std::pair<int, std::string>& scope : scopes) {
     std::list<KeyBinds::KeyData> binds = getBindsForScope(scope.first);
     std::string summary;
-    if (allowkeybinds) {
+    if (allowkeybinds && scope.first != KEYSCOPE_ALL) {
       summary += "[" + (alternatebutton ? getKeyRepr(276).repr : "?") + "] All keybinds";
     }
     for (const KeyBinds::KeyData& keydata : binds) {
@@ -310,6 +310,9 @@ void KeyBinds::generateLegendSummaries() {
     if (it->first != KEYSCOPE_ALL) {
       it->second += (!it->second.empty() ? " - " : "") + all;
     }
+  }
+  if (allowkeybinds) {
+    legendsummaries[KEYSCOPE_ALL] = "[" + (alternatebutton ? getKeyRepr(276).repr : "?") + "] All keybinds" + legendsummaries[KEYSCOPE_ALL];
   }
 }
 

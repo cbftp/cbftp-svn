@@ -63,8 +63,13 @@ void EditSiteSectionScreen::redraw() {
     ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
     ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
-  unsigned int y = 5;
   exists = false;
+  unsigned int y = 5;
+  std::shared_ptr<MenuSelectOptionElement> path = mso.getElement("path");
+  std::list<std::string> alreadyboundsections = modsite->getSectionsForPath(std::static_pointer_cast<MenuSelectOptionTextField>(path)->getData());
+  if (!alreadyboundsections.empty()) {
+    ui->printStr(y++, 1, "Sections currently bound to this path: " + util::join(alreadyboundsections, ", "));
+  }
   if (mode == Mode::ADD) {
     std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement("names");
     std::list<std::string> sections = util::split(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData(), ",");
@@ -76,6 +81,7 @@ void EditSiteSectionScreen::redraw() {
       }
     }
   }
+  update();
 }
 
 void EditSiteSectionScreen::update() {
@@ -101,7 +107,7 @@ bool EditSiteSectionScreen::keyPressed(unsigned int ch) {
       activeelement->deactivate();
       active = false;
       ui->setLegend();
-      ui->update();
+      ui->redraw();
       return true;
     }
     activeelement->inputChar(ch);

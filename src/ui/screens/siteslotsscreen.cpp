@@ -4,7 +4,7 @@
 
 #include "../ui.h"
 #include "../menuselectoptioncheckbox.h"
-#include "../menuselectoptionnumarrow.h"
+#include "../menuselectoptiontextarrow.h"
 #include "../menuselectoptionelement.h"
 
 SiteSlotsScreen::SiteSlotsScreen(Ui* ui) : UIWindow(ui, "SiteSlotsScreen") {
@@ -25,14 +25,40 @@ void SiteSlotsScreen::initialize(unsigned int row, unsigned int col, const std::
   unsigned int y = 4;
   unsigned int x = 1;
   mso.reset();
-  mso.addIntArrow(y++, x, "logins", "Login slots:", modsite->getInternMaxLogins(), 0, 99);
-  mso.addIntArrow(y++, x, "maxup", "Upload slots:", modsite->getInternMaxUp(), 0, 99);
-  mso.addIntArrow(y++, x, "maxdn", "Download slots:", modsite->getInternMaxDown(), 0, 99);
+  std::shared_ptr<MenuSelectOptionTextArrow> logins = mso.addTextArrow(y++, x, "logins", "Login slots:");
+  std::shared_ptr<MenuSelectOptionTextArrow> maxup = mso.addTextArrow(y++, x, "maxup", "Upload slots:");
+  std::shared_ptr<MenuSelectOptionTextArrow> maxdn = mso.addTextArrow(y++, x, "maxdn", "Download slots:");
   y++;
   mso.addCheckBox(y++, x, "freeslot", "Leave one slot free:", modsite->getLeaveFreeSlot());
-  mso.addIntArrow(y++, x, "maxdnpre", "Download slots on download-only spread jobs:", modsite->getInternMaxDownPre(), 0, 99);
-  mso.addIntArrow(y++, x, "maxdncomplete", "Download slots on complete spread jobs:", modsite->getInternMaxDownComplete(), 0, 99);
-  mso.addIntArrow(y++, x, "maxdntransferjob", "Download slots on transfer jobs:", modsite->getInternMaxDownTransferJob(), 0, 99);
+  std::shared_ptr<MenuSelectOptionTextArrow> maxdnpre = mso.addTextArrow(y++, x, "maxdnpre", "Download slots on download-only spread jobs:");
+  std::shared_ptr<MenuSelectOptionTextArrow> maxdncomplete = mso.addTextArrow(y++, x, "maxdncomplete", "Download slots on complete spread jobs:");
+  std::shared_ptr<MenuSelectOptionTextArrow> maxdntransferjob = mso.addTextArrow(y++, x, "maxdntransferjob", "Download slots on transfer jobs:");
+  logins->addOption("Many", -1);
+  maxup->addOption("All", -1);
+  maxdn->addOption("All", -1);
+  maxdnpre->addOption("All", -1);
+  maxdncomplete->addOption("All", -1);
+  maxdntransferjob->addOption("All", -1);
+  maxdnpre->addOption("Normal", -2);
+  maxdncomplete->addOption("Normal", -2);
+  maxdntransferjob->addOption("Normal", -2);
+  for (unsigned int i = 0; i < 100; ++i) {
+    std::string num = std::to_string(i);
+    if (i > 0) {
+      logins->addOption(num, i);
+    }
+    maxup->addOption(num, i);
+    maxdn->addOption(num, i);
+    maxdnpre->addOption(num, i);
+    maxdncomplete->addOption(num, i);
+    maxdntransferjob->addOption(num, i);
+  }
+  logins->setOption(modsite->getInternMaxLogins());
+  maxup->setOption(modsite->getInternMaxUp());
+  maxdn->setOption(modsite->getInternMaxDown());
+  maxdnpre->setOption(modsite->getInternMaxDownPre());
+  maxdncomplete->setOption(modsite->getInternMaxDownComplete());
+  maxdntransferjob->setOption(modsite->getInternMaxDownTransferJob());
   mso.enterFocusFrom(0);
   init(row, col);
 }
@@ -112,12 +138,12 @@ bool SiteSlotsScreen::keyPressed(unsigned int ch) {
       return true;
     case KEYACTION_DONE:
     {
-      std::shared_ptr<MenuSelectOptionNumArrow> logins = std::static_pointer_cast<MenuSelectOptionNumArrow>(mso.getElement("logins"));
-      std::shared_ptr<MenuSelectOptionNumArrow> maxup = std::static_pointer_cast<MenuSelectOptionNumArrow>(mso.getElement("maxup"));
-      std::shared_ptr<MenuSelectOptionNumArrow> maxdn = std::static_pointer_cast<MenuSelectOptionNumArrow>(mso.getElement("maxdn"));
-      std::shared_ptr<MenuSelectOptionNumArrow> maxdnpre = std::static_pointer_cast<MenuSelectOptionNumArrow>(mso.getElement("maxdnpre"));
-      std::shared_ptr<MenuSelectOptionNumArrow> maxdncomplete = std::static_pointer_cast<MenuSelectOptionNumArrow>(mso.getElement("maxdncomplete"));
-      std::shared_ptr<MenuSelectOptionNumArrow> maxdntransferjob = std::static_pointer_cast<MenuSelectOptionNumArrow>(mso.getElement("maxdntransferjob"));
+      std::shared_ptr<MenuSelectOptionTextArrow> logins = std::static_pointer_cast<MenuSelectOptionTextArrow>(mso.getElement("logins"));
+      std::shared_ptr<MenuSelectOptionTextArrow> maxup = std::static_pointer_cast<MenuSelectOptionTextArrow>(mso.getElement("maxup"));
+      std::shared_ptr<MenuSelectOptionTextArrow> maxdn = std::static_pointer_cast<MenuSelectOptionTextArrow>(mso.getElement("maxdn"));
+      std::shared_ptr<MenuSelectOptionTextArrow> maxdnpre = std::static_pointer_cast<MenuSelectOptionTextArrow>(mso.getElement("maxdnpre"));
+      std::shared_ptr<MenuSelectOptionTextArrow> maxdncomplete = std::static_pointer_cast<MenuSelectOptionTextArrow>(mso.getElement("maxdncomplete"));
+      std::shared_ptr<MenuSelectOptionTextArrow> maxdntransferjob = std::static_pointer_cast<MenuSelectOptionTextArrow>(mso.getElement("maxdntransferjob"));
       std::shared_ptr<MenuSelectOptionCheckBox> freeslot = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("freeslot"));
       modsite->setMaxLogins(logins->getData());
       modsite->setMaxUp(maxup->getData());

@@ -650,7 +650,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
       if (!!msotb) {
         removesite = msotb->getLabelText();
         awaitingremovesitefromallspreadjobs = true;
-        ui->goStrongConfirmation("Do you really want to remove " + removesite + " from ALL running spreadjobs?");
+        ui->goConfirmation("Do you really want to remove " + removesite + " from ALL running spreadjobs?");
       }
       return true;
     }

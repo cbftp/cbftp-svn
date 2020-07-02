@@ -683,7 +683,7 @@ bool MainScreen::keyPressed(unsigned int ch) {
         if (!msos.linesSize()) break;
         removesite = msos.getElement(msos.getSelectionPointer())->getLabelText();
         awaitingremovesitefromallspreadjobs = true;
-        ui->goStrongConfirmation("Do you really want to remove " + removesite + " from ALL running spreadjobs?");
+        ui->goConfirmation("Do you really want to remove " + removesite + " from ALL running spreadjobs?");
         return true;
       }
       case KEYACTION_0:

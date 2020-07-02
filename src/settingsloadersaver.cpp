@@ -471,24 +471,44 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("brokenpasv")) {
       if (!value.compare("true")) site->setBrokenPASV(true);
     }
-    else if (!setting.compare("logins")) {
+    else if (!setting.compare("logins2")) {
       site->setMaxLogins(std::stoi(value));
     }
-    else if (!setting.compare("maxdn")) {
+    else if (!setting.compare("maxdn2")) {
       site->setMaxDn(std::stoi(value));
     }
-    else if (!setting.compare("maxdnpre")) {
+    else if (!setting.compare("maxdnpre2")) {
       site->setMaxDnPre(std::stoi(value));
     }
-    else if (!setting.compare("maxdncomplete")) {
+    else if (!setting.compare("maxdncomplete2")) {
       site->setMaxDnComplete(std::stoi(value));
     }
-    else if (!setting.compare("maxdntransferjob")) {
+    else if (!setting.compare("maxdntransferjob2")) {
       site->setMaxDnTransferJob(std::stoi(value));
     }
-    else if (!setting.compare("maxup")) {
+    else if (!setting.compare("maxup2")) {
       site->setMaxUp(std::stoi(value));
     }
+    // begin compatibility r1133
+    else if (!setting.compare("logins")) {
+      site->setMaxLogins(value == "0" ? -1 : std::stoi(value));
+    }
+    else if (!setting.compare("maxdn")) {
+      site->setMaxDn(value == "0" ? -1 : std::stoi(value));
+    }
+    else if (!setting.compare("maxdnpre")) {
+      site->setMaxDnPre(value == "0" ? -2 : std::stoi(value));
+    }
+    else if (!setting.compare("maxdncomplete")) {
+      site->setMaxDnComplete(value == "0" ? -2 : std::stoi(value));
+    }
+    else if (!setting.compare("maxdntransferjob")) {
+      site->setMaxDnTransferJob(value == "0" ? -2 : std::stoi(value));
+    }
+    else if (!setting.compare("maxup")) {
+      site->setMaxUp(value == "0" ? -1 : std::stoi(value));
+    }
+    // end compatibility r1133
     else if (!setting.compare("freeslot")) {
       if (!value.compare("true")) {
         site->setLeaveFreeSlot(true);
@@ -641,15 +661,26 @@ void SettingsLoaderSaver::loadSettings() {
       Crypto::base64Decode(indata, outdata);
       global->getSiteManager()->setDefaultPassword(std::string(outdata.begin(), outdata.end()));
     }
-    else if (!setting.compare("maxlogins")) {
+    else if (!setting.compare("maxlogins2")) {
       global->getSiteManager()->setDefaultMaxLogins(std::stoi(value));
     }
-    else if (!setting.compare("maxup")) {
+    else if (!setting.compare("maxup2")) {
       global->getSiteManager()->setDefaultMaxUp(std::stoi(value));
     }
-    else if (!setting.compare("maxdown")) {
+    else if (!setting.compare("maxdown2")) {
       global->getSiteManager()->setDefaultMaxDown(std::stoi(value));
     }
+    // begin compatibility r1133
+    else if (!setting.compare("maxlogins")) {
+      global->getSiteManager()->setDefaultMaxLogins(value == "0" ? -1 : std::stoi(value));
+    }
+    else if (!setting.compare("maxup")) {
+      global->getSiteManager()->setDefaultMaxUp(value == "0" ? -1 : std::stoi(value));
+    }
+    else if (!setting.compare("maxdown")) {
+      global->getSiteManager()->setDefaultMaxDown(value == "0" ? -1 : std::stoi(value));
+    }
+    // end compatibility r1133
     else if (!setting.compare("tlsmode")) {
       global->getSiteManager()->setDefaultTLSMode(static_cast<TLSMode>(std::stoi(value)));
     }
@@ -870,12 +901,12 @@ void SettingsLoaderSaver::saveSettings() {
       Crypto::base64Encode(indata, outdata);
       dfh->addOutputLine(filetag, name + "$passwordb64=" + std::string(outdata.begin(), outdata.end()));
       dfh->addOutputLine(filetag, name + "$basepath=" + site->getBasePath().toString());
-      dfh->addOutputLine(filetag, name + "$logins=" + std::to_string(site->getInternMaxLogins()));
-      dfh->addOutputLine(filetag, name + "$maxup=" + std::to_string(site->getInternMaxUp()));
-      dfh->addOutputLine(filetag, name + "$maxdn=" + std::to_string(site->getInternMaxDown()));
-      dfh->addOutputLine(filetag, name + "$maxdnpre=" + std::to_string(site->getInternMaxDownPre()));
-      dfh->addOutputLine(filetag, name + "$maxdncomplete=" + std::to_string(site->getInternMaxDownComplete()));
-      dfh->addOutputLine(filetag, name + "$maxdntransferjob=" + std::to_string(site->getInternMaxDownTransferJob()));
+      dfh->addOutputLine(filetag, name + "$logins2=" + std::to_string(site->getInternMaxLogins()));
+      dfh->addOutputLine(filetag, name + "$maxup2=" + std::to_string(site->getInternMaxUp()));
+      dfh->addOutputLine(filetag, name + "$maxdn2=" + std::to_string(site->getInternMaxDown()));
+      dfh->addOutputLine(filetag, name + "$maxdnpre2=" + std::to_string(site->getInternMaxDownPre()));
+      dfh->addOutputLine(filetag, name + "$maxdncomplete2=" + std::to_string(site->getInternMaxDownComplete()));
+      dfh->addOutputLine(filetag, name + "$maxdntransferjob2=" + std::to_string(site->getInternMaxDownTransferJob()));
       dfh->addOutputLine(filetag, name + "$idletime=" + std::to_string(site->getMaxIdleTime()));
       dfh->addOutputLine(filetag, name + "$tlsmode=" + std::to_string(static_cast<int>(site->getTLSMode())));
       dfh->addOutputLine(filetag, name + "$ssltransfer=" + std::to_string(site->getSSLTransferPolicy()));
@@ -992,9 +1023,9 @@ void SettingsLoaderSaver::saveSettings() {
     Core::BinaryData outdata;
     Crypto::base64Encode(indata, outdata);
     dfh->addOutputLine(defaultstag, "passwordb64=" + std::string(outdata.begin(), outdata.end()));
-    dfh->addOutputLine(defaultstag, "maxlogins=" + std::to_string(global->getSiteManager()->getDefaultMaxLogins()));
-    dfh->addOutputLine(defaultstag, "maxup=" + std::to_string(global->getSiteManager()->getDefaultMaxUp()));
-    dfh->addOutputLine(defaultstag, "maxdown=" + std::to_string(global->getSiteManager()->getDefaultMaxDown()));
+    dfh->addOutputLine(defaultstag, "maxlogins2=" + std::to_string(global->getSiteManager()->getDefaultMaxLogins()));
+    dfh->addOutputLine(defaultstag, "maxup2=" + std::to_string(global->getSiteManager()->getDefaultMaxUp()));
+    dfh->addOutputLine(defaultstag, "maxdown2=" + std::to_string(global->getSiteManager()->getDefaultMaxDown()));
     dfh->addOutputLine(defaultstag, "maxidletime=" + std::to_string(global->getSiteManager()->getDefaultMaxIdleTime()));
     dfh->addOutputLine(defaultstag, "ssltransfer=" + std::to_string(global->getSiteManager()->getDefaultSSLTransferPolicy()));
     dfh->addOutputLine(defaultstag, "tlsmode=" + std::to_string(static_cast<int>(global->getSiteManager()->getDefaultTLSMode())));

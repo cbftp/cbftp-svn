@@ -124,9 +124,23 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   y++;
   mso.addStringField(y++, x, "defuser", "Default site username:", sm->getDefaultUserName(), false);
   mso.addStringField(y++, x, "defpass", "Default site password:", sm->getDefaultPassword(), true);
-  mso.addIntArrow(y++, x, "deflogins", "Default site login slots:", sm->getDefaultMaxLogins(), 0, 99);
-  mso.addIntArrow(y++, x, "defmaxup", "Default site upload slots:", sm->getDefaultMaxUp(), 0, 99);
-  mso.addIntArrow(y++, x, "defmaxdn", "Default site download slots:", sm->getDefaultMaxDown(), 0, 99);
+  std::shared_ptr<MenuSelectOptionTextArrow> logins = mso.addTextArrow(y++, x, "deflogins", "Default site login slots:");
+  std::shared_ptr<MenuSelectOptionTextArrow> maxup = mso.addTextArrow(y++, x, "defmaxup", "Default site upload slots:");
+  std::shared_ptr<MenuSelectOptionTextArrow> maxdn = mso.addTextArrow(y++, x, "defmaxdn", "Default site download slots:");
+  logins->addOption("Many", -1);
+  maxup->addOption("All", -1);
+  maxdn->addOption("All", -1);
+  for (unsigned int i = 0; i < 100; ++i) {
+    std::string num = std::to_string(i);
+    if (i > 0) {
+      logins->addOption(num, i);
+    }
+    maxup->addOption(num, i);
+    maxdn->addOption(num, i);
+  }
+  logins->setOption(sm->getDefaultMaxLogins());
+  maxup->setOption(sm->getDefaultMaxUp());
+  maxdn->setOption(sm->getDefaultMaxDown());
   std::shared_ptr<MenuSelectOptionTextArrow> tlsmode = mso.addTextArrow(y++, x, "tlsmode", "Default TLS mode:");
   tlsmode->addOption("None", static_cast<int>(TLSMode::NONE));
   tlsmode->addOption("AUTH TLS", static_cast<int>(TLSMode::AUTH_TLS));
@@ -338,13 +352,13 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
           sm->setDefaultPassword(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "deflogins") {
-          sm->setDefaultMaxLogins(std::static_pointer_cast<MenuSelectOptionNumArrow>(msoe)->getData());
+          sm->setDefaultMaxLogins(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
         }
         else if (identifier == "defmaxup") {
-          sm->setDefaultMaxUp(std::static_pointer_cast<MenuSelectOptionNumArrow>(msoe)->getData());
+          sm->setDefaultMaxUp(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
         }
         else if (identifier == "defmaxdn") {
-          sm->setDefaultMaxDown(std::static_pointer_cast<MenuSelectOptionNumArrow>(msoe)->getData());
+          sm->setDefaultMaxDown(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
         }
         else if (identifier == "tlsmode") {
           sm->setDefaultTLSMode(static_cast<TLSMode>(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData()));
