@@ -16,7 +16,7 @@
 #define DEFAULTUSERNAME "anonymous"
 #define DEFAULTPASSWORD "anonymous"
 #define DEFAULTMAXLOGINS 3
-#define DEFAULTMAXUP 0
+#define DEFAULTMAXUP -1
 #define DEFAULTMAXDOWN 2
 #define DEFAULTMAXIDLETIME 60
 #define DEFAULTTLSMODE TLSMode::AUTH_TLS
@@ -77,6 +77,7 @@ void SiteManager::deleteSite(const std::string & site) {
       purgeSite(*it);
       sites.erase(it);
       global->getEventLog()->log("SiteManager", "Site " + site + " deleted.");
+      return;
     }
   }
 }
@@ -126,27 +127,27 @@ void SiteManager::setDefaultPassword(const std::string & password) {
   defaultpassword = password;
 }
 
-unsigned int SiteManager::getDefaultMaxLogins() const {
+int SiteManager::getDefaultMaxLogins() const {
   return defaultmaxlogins;
 }
 
-void SiteManager::setDefaultMaxLogins(unsigned int maxlogins) {
+void SiteManager::setDefaultMaxLogins(int maxlogins) {
   defaultmaxlogins = maxlogins;
 }
 
-unsigned int SiteManager::getDefaultMaxUp() const {
+int SiteManager::getDefaultMaxUp() const {
   return defaultmaxup;
 }
 
-void SiteManager::setDefaultMaxUp(unsigned int maxup) {
+void SiteManager::setDefaultMaxUp(int maxup) {
   defaultmaxup = maxup;
 }
 
-unsigned int SiteManager::getDefaultMaxDown() const {
+int SiteManager::getDefaultMaxDown() const {
   return defaultmaxdown;
 }
 
-void SiteManager::setDefaultMaxDown(unsigned int maxdown) {
+void SiteManager::setDefaultMaxDown(int maxdown) {
   defaultmaxdown = maxdown;
 }
 

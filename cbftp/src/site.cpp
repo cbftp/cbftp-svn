@@ -67,12 +67,12 @@ Site::Site(const std::string& name) :
   user("anonymous"),
   pass("anonymous"),
   basepath("/"),
-  logins(0),
-  maxup(0),
-  maxdn(0),
-  maxdnpre(0),
-  maxdncomplete(0),
-  maxdntransferjob(0),
+  logins(3),
+  maxup(-1),
+  maxdn(2),
+  maxdnpre(-2),
+  maxdncomplete(-2),
+  maxdntransferjob(-2),
   maxidletime(60),
   pret(false),
   binary(false),
@@ -163,42 +163,51 @@ std::map<std::string, int>::const_iterator Site::avgspeedEnd() const {
 }
 
 unsigned int Site::getMaxLogins() const {
-  if (logins == 0) {
+  if (logins == -1) {
     return REPORT_LOGINS_IF_UNLIMITED;
   }
   return logins;
 }
 
 unsigned int Site::getMaxUp() const {
-  if (maxup == 0) {
+  if (maxup == -1) {
     return getMaxLogins();
   }
   return maxup;
 }
 
 unsigned int Site::getMaxDown() const {
-  if (maxdn == 0) {
+  if (maxdn == -1) {
     return getMaxLogins();
   }
   return maxdn;
 }
 
 unsigned int Site::getMaxDownPre() const {
-  if (maxdnpre == 0) {
+  if (maxdnpre == -1) {
+    return getMaxLogins();
+  }
+  if (maxdnpre == -2) {
     return getMaxDown();
   }
   return maxdnpre;
 }
 
 unsigned int Site::getMaxDownComplete() const {
-  if (maxdncomplete == 0) {
+  if (maxdncomplete == -1) {
+    return getMaxLogins();
+  }
+  if (maxdncomplete == -2) {
     return getMaxDown();
   }
   return maxdncomplete;
 }
 
 unsigned int Site::getMaxDownTransferJob() const {
-  if (maxdntransferjob == 0) {
+  if (maxdntransferjob == -1) {
+    return getMaxLogins();
+  }
+  if (maxdntransferjob == -2) {
     return getMaxDown();
   }
   return maxdntransferjob;
@@ -208,27 +217,27 @@ unsigned int Site::getMaxIdleTime() const {
   return maxidletime;
 }
 
-unsigned int Site::getInternMaxLogins() const {
+int Site::getInternMaxLogins() const {
   return logins;
 }
 
-unsigned int Site::getInternMaxUp() const {
+int Site::getInternMaxUp() const {
   return maxup;
 }
 
-unsigned int Site::getInternMaxDown() const {
+int Site::getInternMaxDown() const {
   return maxdn;
 }
 
-unsigned int Site::getInternMaxDownPre() const {
+int Site::getInternMaxDownPre() const {
   return maxdnpre;
 }
 
-unsigned int Site::getInternMaxDownComplete() const {
+int Site::getInternMaxDownComplete() const {
   return maxdncomplete;
 }
 
-unsigned int Site::getInternMaxDownTransferJob() const {
+int Site::getInternMaxDownTransferJob() const {
   return maxdntransferjob;
 }
 
@@ -241,15 +250,15 @@ const Path & Site::getBasePath() const {
 }
 
 bool Site::unlimitedLogins() const {
-  return logins == 0;
+  return logins == -1;
 }
 
 bool Site::unlimitedUp() const {
-  return maxup == 0;
+  return maxup == -1;
 }
 
 bool Site::unlimitedDown() const {
-  return maxdn == 0;
+  return maxdn == -1;
 }
 
 int Site::getAverageSpeed(const std::string& target) const {
@@ -590,7 +599,7 @@ void Site::setBasePath(const std::string & basepath) {
   this->basepath = basepath.empty() ? "/" : basepath;
 }
 
-void Site::setMaxLogins(unsigned int num) {
+void Site::setMaxLogins(int num) {
   logins = num;
   if (num > 0 && maxdn > num) {
     maxdn = num;
@@ -609,23 +618,23 @@ void Site::setMaxLogins(unsigned int num) {
   }
 }
 
-void Site::setMaxDn(unsigned int num) {
+void Site::setMaxDn(int num) {
   maxdn = num > logins && logins > 0 ? logins : num;
 }
 
-void Site::setMaxUp(unsigned int num) {
+void Site::setMaxUp(int num) {
   maxup = num > logins && logins > 0 ? logins : num;
 }
 
-void Site::setMaxDnPre(unsigned int num) {
+void Site::setMaxDnPre(int num) {
   maxdnpre = num > logins && logins > 0 ? logins : num;
 }
 
-void Site::setMaxDnComplete(unsigned int num) {
+void Site::setMaxDnComplete(int num) {
   maxdncomplete = num > logins && logins > 0 ? logins : num;
 }
 
-void Site::setMaxDnTransferJob(unsigned int num) {
+void Site::setMaxDnTransferJob(int num) {
   maxdntransferjob = num > logins && logins > 0 ? logins : num;
 }
 

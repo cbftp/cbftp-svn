@@ -103,9 +103,23 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   tlsmode->setOption(static_cast<int>(this->site->getTLSMode()));
   mso.addStringField(y, x + 23, "user", "Username:", this->site->getUser(), false, 10, 64);
   mso.addStringField(y++, x + 45, "pass", "Password:", this->site->getPass(), true, 22, 128);
-  mso.addIntArrow(y, x, "logins", "Login slots:", this->site->getInternMaxLogins(), 0, 99);
-  mso.addIntArrow(y, x + 20, "maxup", "Upload slots:", this->site->getInternMaxUp(), 0, 99);
-  mso.addIntArrow(y++, x + 40, "maxdn", "Download slots:", this->site->getInternMaxDown(), 0, 99);
+  std::shared_ptr<MenuSelectOptionTextArrow> logins = mso.addTextArrow(y, x, "logins", "Login slots:");
+  std::shared_ptr<MenuSelectOptionTextArrow> maxup = mso.addTextArrow(y, x + 22, "maxup", "Upload slots:");
+  std::shared_ptr<MenuSelectOptionTextArrow> maxdn = mso.addTextArrow(y++, x + 44, "maxdn", "Download slots:");
+  logins->addOption("Many", -1);
+  maxup->addOption("All", -1);
+  maxdn->addOption("All", -1);
+  for (unsigned int i = 0; i < 100; ++i) {
+    std::string num = std::to_string(i);
+    if (i > 0) {
+      logins->addOption(num, i);
+    }
+    maxup->addOption(num, i);
+    maxdn->addOption(num, i);
+  }
+  logins->setOption(this->site->getInternMaxLogins());
+  maxup->setOption(this->site->getInternMaxUp());
+  maxdn->setOption(this->site->getInternMaxDown());
   mso.addTextButtonNoContent(y++, x, "slots", "Advanced slot configuration...");
   std::shared_ptr<MenuSelectOptionTextArrow> sslfxp = mso.addTextArrow(y, x, "tlstransfer", "TLS transfers:");
   sslfxp->addOption("Always off", SITE_SSL_ALWAYS_OFF);
@@ -216,12 +230,12 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
 void EditSiteScreen::redraw() {
   ui->erase();
   if (slotsupdated) {
-    std::shared_ptr<MenuSelectOptionNumArrow> logins = std::static_pointer_cast<MenuSelectOptionNumArrow>(mso.getElement("logins"));
-    std::shared_ptr<MenuSelectOptionNumArrow> maxup = std::static_pointer_cast<MenuSelectOptionNumArrow>(mso.getElement("maxup"));
-    std::shared_ptr<MenuSelectOptionNumArrow> maxdn = std::static_pointer_cast<MenuSelectOptionNumArrow>(mso.getElement("maxdn"));
-    logins->setData(modsite->getInternMaxLogins());
-    maxup->setData(modsite->getInternMaxUp());
-    maxdn->setData(modsite->getInternMaxDown());
+    std::shared_ptr<MenuSelectOptionTextArrow> logins = std::static_pointer_cast<MenuSelectOptionTextArrow>(mso.getElement("logins"));
+    std::shared_ptr<MenuSelectOptionTextArrow> maxup = std::static_pointer_cast<MenuSelectOptionTextArrow>(mso.getElement("maxup"));
+    std::shared_ptr<MenuSelectOptionTextArrow> maxdn = std::static_pointer_cast<MenuSelectOptionTextArrow>(mso.getElement("maxdn"));
+    logins->setOption(modsite->getInternMaxLogins());
+    maxup->setOption(modsite->getInternMaxUp());
+    maxdn->setOption(modsite->getInternMaxDown());
     slotsupdated = false;
   }
   std::string slotslabel = "Advanced slot configuration...";
@@ -229,8 +243,11 @@ void EditSiteScreen::redraw() {
   int maxdnpre = modsite->getInternMaxDownPre();
   int maxdncomplete = modsite->getInternMaxDownComplete();
   int maxdntransferjob = modsite->getInternMaxDownTransferJob();
+  std::string maxdnprestr = maxdnpre == -1 ? "All" : (maxdnpre == -2 ? "Normal" : std::to_string(maxdnpre));
+  std::string maxdncompletestr = maxdncomplete == -1 ? "All" : (maxdncomplete == -2 ? "Normal" : std::to_string(maxdncomplete));
+  std::string maxdntransferjobstr = maxdntransferjob == -1 ? "All" : (maxdntransferjob == -2 ? "Normal" : std::to_string(maxdntransferjob));
   if (free || maxdnpre || maxdncomplete || maxdntransferjob) {
-    slotslabel = slotslabel + " (" + (free ? "free/" : "") + std::to_string(maxdnpre) + "/" + std::to_string(maxdncomplete) + "/" + std::to_string(maxdntransferjob) + ")";
+    slotslabel = slotslabel + " (" + (free ? "free/" : "") + maxdnprestr + "/" + maxdncompletestr + "/" + maxdntransferjobstr + ")";
   }
   mso.getElement("slots")->setLabel(slotslabel);
   if (std::static_pointer_cast<MenuSelectOptionTextArrow>(mso.getElement("sourcepolicy"))->getData() == SITE_TRANSFER_POLICY_ALLOW) {
@@ -351,9 +368,9 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
       }
       if (msoe->getIdentifier() == "slots") {
         modsite->setName(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("name"))->getData());
-        std::shared_ptr<MenuSelectOptionNumArrow> logins = std::static_pointer_cast<MenuSelectOptionNumArrow>(mso.getElement("logins"));
-        std::shared_ptr<MenuSelectOptionNumArrow> maxup = std::static_pointer_cast<MenuSelectOptionNumArrow>(mso.getElement("maxup"));
-        std::shared_ptr<MenuSelectOptionNumArrow> maxdn = std::static_pointer_cast<MenuSelectOptionNumArrow>(mso.getElement("maxdn"));
+        std::shared_ptr<MenuSelectOptionTextArrow> logins = std::static_pointer_cast<MenuSelectOptionTextArrow>(mso.getElement("logins"));
+        std::shared_ptr<MenuSelectOptionTextArrow> maxup = std::static_pointer_cast<MenuSelectOptionTextArrow>(mso.getElement("maxup"));
+        std::shared_ptr<MenuSelectOptionTextArrow> maxdn = std::static_pointer_cast<MenuSelectOptionTextArrow>(mso.getElement("maxdn"));
         modsite->setMaxLogins(logins->getData());
         modsite->setMaxUp(maxup->getData());
         modsite->setMaxDn(maxdn->getData());
@@ -427,13 +444,13 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
           site->setBasePath(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "logins") {
-          site->setMaxLogins(std::static_pointer_cast<MenuSelectOptionNumArrow>(msoe)->getData());
+          site->setMaxLogins(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
         }
         else if (identifier == "maxup") {
-          site->setMaxUp(std::static_pointer_cast<MenuSelectOptionNumArrow>(msoe)->getData());
+          site->setMaxUp(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
         }
         else if (identifier == "maxdn") {
-          site->setMaxDn(std::static_pointer_cast<MenuSelectOptionNumArrow>(msoe)->getData());
+          site->setMaxDn(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
         }
         else if (identifier == "pret") {
           site->setPRET(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());

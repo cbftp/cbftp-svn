@@ -49,6 +49,7 @@ SectionsScreen::SectionsScreen(Ui* ui) : UIWindow(ui, "SectionsScreen") {
   keybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Previous page");
   keybinds.addBind(KEY_HOME, KEYACTION_TOP, "Go top");
   keybinds.addBind(KEY_END, KEYACTION_BOTTOM, "Go bottom");
+  keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel");
   keybinds.addBind('-', KEYACTION_HIGHLIGHT_LINE, "Highlight entire line");
   keybinds.addBind(10, KEYACTION_RETURN_SELECT, "Return selected items", KEYSCOPE_SELECT);
   keybinds.addBind('d', KEYACTION_RETURN_SELECT2, "Return selected items", KEYSCOPE_SELECT);
