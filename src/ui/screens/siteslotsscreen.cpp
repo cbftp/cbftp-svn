@@ -22,7 +22,7 @@ SiteSlotsScreen::~SiteSlotsScreen() {
 void SiteSlotsScreen::initialize(unsigned int row, unsigned int col, const std::shared_ptr<Site> & site) {
   active = false;
   modsite = site;
-  unsigned int y = 4;
+  unsigned int y = 1;
   unsigned int x = 1;
   mso.reset();
   std::shared_ptr<MenuSelectOptionTextArrow> logins = mso.addTextArrow(y++, x, "logins", "Login slots:");
@@ -65,8 +65,6 @@ void SiteSlotsScreen::initialize(unsigned int row, unsigned int col, const std::
 
 void SiteSlotsScreen::redraw() {
   ui->erase();
-  ui->printStr(1, 1, "Setting the download/upload slots counters to 0 means same as the number of logins.");
-  ui->printStr(2, 1, "Setting the special download slots counters to 0 means same as the number of download slots.");
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
