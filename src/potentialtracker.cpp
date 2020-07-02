@@ -9,7 +9,9 @@ PotentialTracker::PotentialTracker(int dnslots) : maxpotentialcalculated(true) {
   for (int i = 0; i < POTENTIALITY_SLICES; i++) {
     potentiallist.push_back(new PotentialListElement(dnslots));
   }
-  for (int i = 0; i < dnslots; i++) top.push_back(new PotentialElement());
+  for (int i = 0; i < dnslots; i++) {
+    top.push_back(new PotentialElement());
+  }
   global->getTickPoke()->startPoke(this, "PotentialTracker", POTENTIALITY_LIFESPAN / POTENTIALITY_SLICES, 0);
 }
 
@@ -24,6 +26,9 @@ PotentialTracker::~PotentialTracker() {
 }
 
 int PotentialTracker::getMaxAvailablePotential() {
+  if (top.empty()) {
+    return 0;
+  }
   if (!maxpotentialcalculated) {
     calculateMaxAvailablePotential();
   }
