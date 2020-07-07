@@ -11,16 +11,14 @@
 namespace {
 
 enum KeyAction {
-  KEYACTION_SELECT,
-  KEYACTION_SELECT2
+  KEYACTION_SELECT
 };
 
 }
 
 SelectSitesScreen::SelectSitesScreen(Ui* ui) : UIWindow(ui, "SelectSitesScreen") {
   keybinds.addBind('d', KEYACTION_DONE, "Done");
-  keybinds.addBind(10, KEYACTION_SELECT, "Select");
-  keybinds.addBind(' ', KEYACTION_SELECT2, "Select");
+  keybinds.addBind({10, ' '}, KEYACTION_SELECT, "Select");
   keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Return");
   keybinds.addBind('t', KEYACTION_TOGGLE_ALL, "Toggle all");
   keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
@@ -163,7 +161,6 @@ bool SelectSitesScreen::keyPressed(unsigned int ch) {
       ui->redraw();
       return true;
     case KEYACTION_SELECT:
-    case KEYACTION_SELECT2:
     {
       std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getSelectionPointer());
       if (!!msoe) {

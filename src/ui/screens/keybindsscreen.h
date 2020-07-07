@@ -29,4 +29,5 @@ private:
   KeyBinds* realkeybinds;
   std::shared_ptr<KeyBinds> tempkeybinds;
   std::list<std::pair<int, int>> actionandscope;
+  bool addextrakey;
 };

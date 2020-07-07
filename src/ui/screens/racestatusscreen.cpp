@@ -156,19 +156,21 @@ void RaceStatusScreen::initialize(unsigned int row, unsigned int col, unsigned i
 
 void RaceStatusScreen::redraw() {
   ui->erase();
-  ui->printStr(1, 1, "Section: " + race->getSection());
-  ui->printStr(1, 20, "Sites: " + race->getSiteListText());
-  std::list<std::string> incompletesites = getIncompleteSites();
-  std::list<std::string> dlonlysites = getDownloadOnlySites();
-  std::string dlonlystr;
-  if (!dlonlysites.empty()) {
-    dlonlystr = "Download-only: " + util::join(dlonlysites, ",") + "  ";
-    ui->printStr(3, 18, dlonlystr);
+  std::string section = race->getSection();
+  ui->printStr(1, 1, "Section: " + section);
+  ui->printStr(1, 11 + section.length(), "Sites: " + race->getSiteListText());
+  std::string incompletesitestr = race->getSiteListText(SiteListType::INCOMPLETE);
+  std::string dlonlysitestr = race->getSiteListText(SiteListType::DLONLY);
+  unsigned int x = 18;
+  if (!dlonlysitestr.empty()) {
+    ui->printStr(3, x, "Download-only: " + dlonlysitestr);
+    x += 16 + dlonlysitestr.length();
   }
-  if (!incompletesites.empty()) {
-    ui->printStr(3, 18 + dlonlystr.length(), "Incomplete on: " + util::join(incompletesites, ","));
+  if (!incompletesitestr.empty()) {
+    ui->printStr(3, x, "Incomplete on: " + incompletesitestr);
+    x += 17 + incompletesitestr.length();
   }
-  currincomplete = incompletesites.size();
+  currincomplete = getIncompleteSites().size();
   std::unordered_set<std::string> currsubpaths = race->getSubPaths();
   currnumsubpaths = currsubpaths.size();
   std::string subpathpresent = "";
@@ -691,16 +693,6 @@ std::list<std::string> RaceStatusScreen::getIncompleteSites() const {
     }
   }
   return incompletesites;
-}
-
-std::list<std::string> RaceStatusScreen::getDownloadOnlySites() const {
-  std::list<std::string> dlonlysites;
-  for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
-    if (it->first->isDownloadOnly()) {
-      dlonlysites.push_back(it->first->getSiteName());
-    }
-  }
-  return dlonlysites;
 }
 
 int RaceStatusScreen::getCurrentScope() const {

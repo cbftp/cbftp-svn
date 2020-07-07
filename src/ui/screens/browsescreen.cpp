@@ -28,8 +28,7 @@ BrowseScreen::BrowseScreen(Ui* ui) : UIWindow(ui, "BrowseScreen"),
   sitekeybinds("BrowseScreenSite"), localkeybinds("BrowseScreenLocal")
 {
   keybinds.addBind(27, KEYACTION_BACK_CANCEL, "Cancel");
-  keybinds.addBind('c', KEYACTION_CLOSE, "Close");
-  keybinds.addBind(KEY_LEFT, KEYACTION_CLOSE2, "Close");
+  keybinds.addBind({'c', KEY_LEFT}, KEYACTION_CLOSE, "Close");
   keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
   keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
   keybinds.addBind(KEY_HOME, KEYACTION_TOP, "Jump top");
@@ -74,8 +73,7 @@ BrowseScreen::BrowseScreen(Ui* ui) : UIWindow(ui, "BrowseScreen"),
   sitekeybinds.addBind(337, KEYACTION_SOFT_SELECT_UP, "Soft select up");
   sitekeybinds.addBind(336, KEYACTION_SOFT_SELECT_DOWN, "Soft select down");
   sitekeybinds.addBind(' ', KEYACTION_HARD_SELECT, "Hard select");
-  sitekeybinds.addBind('A', KEYACTION_SELECT_ALL, "Select all");
-  sitekeybinds.addBind(1, KEYACTION_SELECT_ALL2, "Select all");
+  sitekeybinds.addBind({'A', 1}, KEYACTION_SELECT_ALL, "Select all");
   sitekeybinds.addBind('m', KEYACTION_MOVE, "Move/rename");
   sitekeybinds.addBind('i', KEYACTION_INFO, "File info");
   sitekeybinds.addBind(KEY_F(5), KEYACTION_REFRESH, "Refresh dir");
@@ -109,8 +107,7 @@ BrowseScreen::BrowseScreen(Ui* ui) : UIWindow(ui, "BrowseScreen"),
   localkeybinds.addBind(337, KEYACTION_SOFT_SELECT_UP, "Soft select up");
   localkeybinds.addBind(336, KEYACTION_SOFT_SELECT_DOWN, "Soft select down");
   localkeybinds.addBind(' ', KEYACTION_HARD_SELECT, "Hard select");
-  localkeybinds.addBind('A', KEYACTION_SELECT_ALL, "Select all");
-  localkeybinds.addBind(1, KEYACTION_SELECT_ALL2, "Select all");
+  localkeybinds.addBind({'A', 1}, KEYACTION_SELECT_ALL, "Select all");
   localkeybinds.addBind(KEY_F(5), KEYACTION_REFRESH, "Refresh dir");
   localkeybinds.addBind('i', KEYACTION_INFO, "File info");
   localkeybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");

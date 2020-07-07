@@ -565,7 +565,6 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       viewCursored();
       break;
     case KEYACTION_SELECT_ALL:
-    case KEYACTION_SELECT_ALL2:
     {
       const std::vector<UIFile *> * uilist = list.getSortedList();
       for (unsigned int i = 0; i < uilist->size(); i++) {

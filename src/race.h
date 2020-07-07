@@ -22,6 +22,13 @@ enum SpreadProfile {
   SPREAD_PREPARE
 };
 
+enum SiteListType {
+  ALL,
+  DLONLY,
+  INCOMPLETE,
+  COMPLETE
+};
+
 class SiteRace;
 class FileList;
 class File;
@@ -112,7 +119,7 @@ class Race : public Core::EventReceiver, public TransferStatusCallback {
     bool isDone() const;
     std::string getTimeStamp() const;
     unsigned int getTimeSpent() const;
-    std::string getSiteListText() const;
+    std::string getSiteListText(SiteListType = SiteListType::ALL) const;
     std::shared_ptr<SiteRace> getSiteRace(const std::string& site) const;
     RaceStatus getStatus() const;
     unsigned int getId() const;

@@ -113,7 +113,7 @@ bool SnakeScreen::keyPressed(unsigned int ch) {
       ui->returnToLast();
       return true;
   }
-  return true;
+  return false;
 }
 
 std::string SnakeScreen::getLegendText() const {

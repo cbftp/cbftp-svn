@@ -97,7 +97,7 @@ Ui::Ui() :
   fullscreentoggle(false),
   globalkeybinds(std::make_shared<KeyBinds>("Global"))
 {
-  globalkeybinds->addBind(KEY_UNSET, KEYACTION_KILL_ALL, "Kill all external viewers");
+  globalkeybinds->addBind({}, KEYACTION_KILL_ALL, "Kill all external viewers");
   globalkeybinds->addBind('p', KEYACTION_START_PREPARED, "Start latest prepared spread job");
   globalkeybinds->addBind('\\', KEYACTION_FULLSCREEN, "Toggle fullscreen mode");
   globalkeybinds->addBind('N', KEYACTION_NEXT_PREPARED_STARTER, "Toggle next prepared spread job auto starter");
@@ -1161,10 +1161,14 @@ void Ui::loadSettings(std::shared_ptr<DataFileHandler> dfh) {
       std::vector<std::string> tokens = util::splitVec(value, "$");
       int keyaction = std::stoi(tokens[1]);
       int scope = std::stoi(tokens[2]);
-      unsigned int key = std::stoi(tokens[3]);
+      std::list<std::string> keys = util::split(tokens[3], ",");
+      std::set<unsigned int> keyset;
+      for (const std::string& key : keys) {
+        keyset.insert(std::stoi(key));
+      }
       for (KeyBinds* keybinds : allkeybinds) {
         if (keybinds->getName() == tokens[0]) {
-          keybinds->customBind(keyaction, scope, key);
+          keybinds->replaceBind(keyaction, scope, keyset);
           break;
         }
       }
@@ -1176,8 +1180,12 @@ void Ui::saveSettings(std::shared_ptr<DataFileHandler> dfh) {
   dfh->addOutputLine("UI", "legendmode=" + std::to_string(legendMode()));
   for (const KeyBinds* keybinds : allkeybinds) {
     for (std::list<KeyBinds::KeyData>::const_iterator it = keybinds->begin(); it != keybinds->end(); ++it) {
-      if (it->configuredkey != it->originalkey) {
-        dfh->addOutputLine("UI", "keybind=" + keybinds->getName() + "$" + std::to_string(it->keyaction) + "$" + std::to_string(it->scope) + "$" + std::to_string(it->configuredkey));
+      if (it->configuredkeys != it->originalkeys) {
+        std::string keys;
+        for (unsigned int key : it->configuredkeys) {
+          keys += (keys.empty() ? "" : ",") + std::to_string(key);
+        }
+        dfh->addOutputLine("UI", "keybind=" + keybinds->getName() + "$" + std::to_string(it->keyaction) + "$" + std::to_string(it->scope) + "$" + keys);
       }
     }
   }

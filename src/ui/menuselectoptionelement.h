@@ -15,9 +15,9 @@ class MenuSelectOptionElement {
     std::string label;
     bool active;
   public:
-    void init(std::string, int, int, std::string);
+    void init(const std::string& identifier, int row, int col, const std::string& label);
     virtual ~MenuSelectOptionElement();
-    void setPosition(int, int);
+    void setPosition(int row, int col);
     virtual std::string getLabelText() const;
     std::string getIdentifier() const;
     unsigned int getId() const;
@@ -26,9 +26,9 @@ class MenuSelectOptionElement {
     virtual void deactivate();
     virtual bool isActive() const;
     virtual int cursorPosition() const;
-    virtual bool inputChar(int);
-    void setOrigin(void * origin);
-    void * getOrigin() const;
+    virtual bool inputChar(int ch);
+    void setOrigin(void* origin);
+    void* getOrigin() const;
     virtual std::string getLegendText() const;
     unsigned int getCol() const;
     unsigned int getRow() const;
@@ -38,5 +38,5 @@ class MenuSelectOptionElement {
     bool isSelectable() const;
     void setSelectable(bool);
     void setId(unsigned int);
-    void setLabel(const std::string &);
+    void setLabel(const std::string& label);
 };

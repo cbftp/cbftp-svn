@@ -18,16 +18,14 @@
 namespace {
 
 enum KeyAction {
-  KEYACTION_SELECT,
-  KEYACTION_SELECT2
+  KEYACTION_SELECT
 };
 
 }
 
 SelectJobsScreen::SelectJobsScreen(Ui* ui) : UIWindow(ui, "SelectJobsScreen") {
   keybinds.addBind('d', KEYACTION_DONE, "Done");
-  keybinds.addBind(10, KEYACTION_SELECT, "Select");
-  keybinds.addBind(' ', KEYACTION_SELECT2, "Select");
+  keybinds.addBind({10, ' '}, KEYACTION_SELECT, "Select");
   keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Return");
   keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
   keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
@@ -149,7 +147,6 @@ bool SelectJobsScreen::keyPressed(unsigned int ch) {
       ui->returnToLast();
       return true;
     case KEYACTION_SELECT:
-    case KEYACTION_SELECT2:
       if (hascontents) {
         std::shared_ptr<MenuSelectOptionTextButton> msotb =
             std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));

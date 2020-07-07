@@ -42,7 +42,6 @@ enum KeyActions {
   KEYACTION_ALL_SPREAD_JOBS,
   KEYACTION_ALL_TRANSFER_JOBS,
   KEYACTION_BROWSE_LOCAL,
-  KEYACTION_BROWSE_SITE,
   KEYACTION_BROWSE_SPLIT,
   KEYACTION_SECTIONS,
   KEYACTION_SNAKE,
@@ -51,7 +50,6 @@ enum KeyActions {
   KEYACTION_ABORT_DELETE_INC,
   KEYACTION_ABORT_DELETE_ALL,
   KEYACTION_LOGIN,
-  KEYACTION_DELETE2,
   KEYACTION_SCOREBOARD,
   KEYACTION_METRICS,
   KEYACTION_ALL_TRANSFERS,
@@ -92,14 +90,12 @@ MainScreen::MainScreen(Ui* ui) : UIWindow(ui, "MainScreen") {
   keybinds.addBind(KEY_PPAGE, KEYACTION_PREVIOUS_PAGE, "Previous page");
   keybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Next page");
   keybinds.addBind('-', KEYACTION_HIGHLIGHT_LINE, "Highlight entire line");
-  keybinds.addBind(KEY_RIGHT, KEYACTION_BROWSE_SITE, "Browse", KEYSCOPE_SITE);
-  keybinds.addBind('b', KEYACTION_BROWSE, "Browse", KEYSCOPE_SITE);
+  keybinds.addBind({'b', KEY_RIGHT}, KEYACTION_BROWSE, "Browse", KEYSCOPE_SITE);
   keybinds.addBind('E', KEYACTION_EDIT_SITE, "Edit", KEYSCOPE_SITE);
   keybinds.addBind('\t', KEYACTION_BROWSE_SPLIT, "Split browse", KEYSCOPE_SITE);
   keybinds.addBind('w', KEYACTION_RAW_COMMAND, "Raw command", KEYSCOPE_SITE);
   keybinds.addBind('C', KEYACTION_COPY, "Copy", KEYSCOPE_SITE);
-  keybinds.addBind('D', KEYACTION_DELETE, "Delete", KEYSCOPE_SITE);
-  keybinds.addBind(KEY_DC, KEYACTION_DELETE2, "Delete", KEYSCOPE_SITE);
+  keybinds.addBind({'D', KEY_DC}, KEYACTION_DELETE, "Delete", KEYSCOPE_SITE);
   keybinds.addBind(10, KEYACTION_ENTER, "Status", KEYSCOPE_SITE);
   keybinds.addBind('L', KEYACTION_LOGIN, "Login all slots", KEYSCOPE_SITE);
   keybinds.addBind('T', KEYACTION_TRANSFERS, "Transfers", KEYSCOPE_SITE);
@@ -492,7 +488,6 @@ bool MainScreen::keyPressed(unsigned int ch) {
       ui->goBrowseLocal();
       return true;
     case KEYACTION_DELETE:
-    case KEYACTION_DELETE2:
       if (msos.isFocused()) {
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
         std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
@@ -646,7 +641,6 @@ bool MainScreen::keyPressed(unsigned int ch) {
         ui->setInfo();
         return true;
       }
-      case KEYACTION_BROWSE_SITE:
       case KEYACTION_BROWSE: {
         std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
         ui->goBrowse(sitename);
