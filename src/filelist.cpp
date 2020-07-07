@@ -39,9 +39,10 @@ void FileList::init(const std::string & username, const Path & path, FileListSta
   updatestate = UpdateState::NONE;
   scoreboardupdatestate = UpdateState::NONE;
   lastchangedstamp = 0;
+  lastmetachangedstamp = 0;
+  lastrefreshedstamp = 0;
   totalfilesize = 0;
   uploading = 0;
-  refreshedtime = 0;
   listfailures = 0;
   inscoreboard = false;
   similarchecked = false;
@@ -273,6 +274,7 @@ void FileList::setFailed() {
 }
 
 void FileList::setRefreshed() {
+  lastrefreshedstamp = global->getTimeReference()->timeReference();
   bumpUpdateState(UpdateState::REFRESHED);
 }
 
@@ -571,6 +573,10 @@ unsigned long long FileList::timeSinceLastMetaChanged() const {
   return global->getTimeReference()->timePassedSince(lastmetachangedstamp);
 }
 
+unsigned long long FileList::timeSinceLastRefreshed() const {
+  return global->getTimeReference()->timePassedSince(lastrefreshedstamp);
+}
+
 std::string FileList::getUser() const {
   return username;
 }
@@ -601,14 +607,6 @@ void FileList::download(const std::string & file) {
 
 bool FileList::hasFilesUploading() const {
   return uploading > 0;
-}
-
-void FileList::setRefreshedTime(int newtime) {
-  refreshedtime = newtime;
-}
-
-int FileList::getRefreshedTime() const {
-  return refreshedtime;
 }
 
 bool FileList::addListFailure() {
