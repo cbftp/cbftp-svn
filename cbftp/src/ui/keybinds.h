@@ -49,8 +49,6 @@ enum GenericKeyScope {
   KEYSCOPE_ALL = 42
 };
 
-#define KEY_UNSET 4711
-
 struct KeyRepr {
   std::string repr;
   unsigned int wch;
@@ -60,9 +58,12 @@ class KeyBinds {
 public:
   KeyBinds(const std::string& name);
   KeyBinds(const KeyBinds& other);
+  void addBind(const std::list<int>& keys, int keyaction, const std::string& description, int scope = KEYSCOPE_ALL);
   void addBind(int key, int keyaction, const std::string& description, int scope = KEYSCOPE_ALL);
   void addScope(int scope, const std::string& description);
-  void customBind(int keyaction, int scope, int newkey);
+  void addCustomBind(int keyaction, int scope, int newkey);
+  void replaceBind(int keyaction, int scope, const std::set<unsigned int>& newkeys);
+  void replaceBind(int keyaction, int scope, unsigned int newkey);
   void resetBind(int keyaction, int scope);
   void unbind(int keyaction, int scope);
   void resetAll();
@@ -74,8 +75,8 @@ public:
     int keyaction;
     int scope;
     std::string description;
-    unsigned int originalkey;
-    unsigned int configuredkey;
+    std::set<unsigned int> originalkeys;
+    std::set<unsigned int> configuredkeys;
   };
   std::list<KeyData> getBindsForScope(int scope) const;
   std::map<int, std::string>::const_iterator scopesBegin() const;
@@ -88,6 +89,8 @@ public:
   void disallowKeybinds();
   void useAlternateKeybindsButton();
 private:
+  void regenerate();
+  void generateIndex();
   void generateLegendSummaries();
   std::string name;
   std::map<KeyAndScope, std::list<KeyData>::iterator> keybinds;

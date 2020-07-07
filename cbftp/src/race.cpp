@@ -536,10 +536,34 @@ unsigned int Race::getTimeSpent() const {
   return timespent / 1000;
 }
 
-std::string Race::getSiteListText() const {
+std::string Race::getSiteListText(const SiteListType listtype) const {
   std::string sitestr = "";
   for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = begin(); it != end(); it++) {
-    sitestr += it->first->getSiteName() + ",";
+    std::string sitename = it->first->getSiteName();
+    switch (listtype) {
+      case SiteListType::ALL: {
+        sitestr += sitename + ",";
+        break;
+      }
+      case SiteListType::DLONLY: {
+        if (it->first->isDownloadOnly()) {
+          sitestr += sitename + ",";
+        }
+        break;
+      }
+      case SiteListType::INCOMPLETE: {
+        if (!it->first->isDone()) {
+          sitestr += sitename + ",";
+        }
+        break;
+      }
+      case SiteListType::COMPLETE: {
+        if (it->first->isDone()) {
+          sitestr += sitename + ",";
+        }
+        break;
+      }
+    }
   }
   if (sitestr.length() > 0) {
     sitestr = sitestr.substr(0, sitestr.length() - 1);

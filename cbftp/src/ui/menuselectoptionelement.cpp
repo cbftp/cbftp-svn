@@ -1,6 +1,6 @@
 #include "menuselectoptionelement.h"
 
-void MenuSelectOptionElement::init(std::string identifier, int row, int col, std::string label) {
+void MenuSelectOptionElement::init(const std::string& identifier, int row, int col, const std::string& label) {
   this->identifier = identifier;
   this->row = row;
   this->col = col;
@@ -8,7 +8,8 @@ void MenuSelectOptionElement::init(std::string identifier, int row, int col, std
   active = false;
   shown = true;
   selectable = true;
-  origin = NULL;
+  id = 0;
+  origin = nullptr;
 }
 
 MenuSelectOptionElement::~MenuSelectOptionElement() {
@@ -90,7 +91,7 @@ void MenuSelectOptionElement::setId(unsigned int id) {
 }
 
 
-void MenuSelectOptionElement::setLabel(const std::string & label) {
+void MenuSelectOptionElement::setLabel(const std::string& label) {
   this->label = label;
 }
 
@@ -98,6 +99,6 @@ void * MenuSelectOptionElement::getOrigin() const {
   return origin;
 }
 
-void MenuSelectOptionElement::setOrigin(void * origin) {
+void MenuSelectOptionElement::setOrigin(void* origin) {
   this->origin = origin;
 }

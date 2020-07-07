@@ -108,7 +108,6 @@ BrowseScreenAction BrowseScreenSelector::keyPressed(unsigned int ch) {
       ui->returnToLast();
       return BrowseScreenAction(BROWSESCREENACTION_CAUGHT);
     case KEYACTION_CLOSE:
-    case KEYACTION_CLOSE2:
       return BrowseScreenAction(BROWSESCREENACTION_CLOSE);
     case KEYACTION_UP:
       if (table.goUp()) {

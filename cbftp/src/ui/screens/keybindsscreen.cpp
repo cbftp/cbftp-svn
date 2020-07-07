@@ -17,13 +17,15 @@
 
 namespace {
 enum KeyActions {
-  KEYACTION_RESET_ALL
+  KEYACTION_RESET_ALL,
+  KEYACTION_ADD_KEY
 };
 
 }
 KeyBindsScreen::KeyBindsScreen(Ui* ui) : UIWindow(ui, "KeyBindsScreen") {
   keybinds.addBind('d', KEYACTION_DONE, "Done, save changes");
-  keybinds.addBind(10, KEYACTION_ENTER, "Modify");
+  keybinds.addBind(10, KEYACTION_ENTER, "New key");
+  keybinds.addBind({'+', 'A'}, KEYACTION_ADD_KEY, "Add extra key");
   keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel");
   keybinds.addBind(KEY_UP, KEYACTION_UP, "Previous option");
   keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Next option");
@@ -65,17 +67,29 @@ void KeyBindsScreen::repopulate() {
       std::shared_ptr<MenuSelectOptionTextButton> desc = mso.addTextButtonNoContent(y, 1, keydata.description, keydata.description);
       desc->setSelectable(false);
       msal->addElement(desc, 1, RESIZE_WITHDOTS);
-      KeyRepr repr = KeyBinds::getKeyRepr(keydata.configuredkey);
-      std::string keytext = repr.repr;
-      if (keydata.originalkey != keydata.configuredkey) {
-        KeyRepr origrepr = KeyBinds::getKeyRepr(keydata.originalkey);
-        std::string origkey = origrepr.repr.empty() ? std::string() + static_cast<char>(origrepr.wch) : origrepr.repr;
-        keytext += " (Default: " + origkey + ")";
+      std::string keytext;
+      std::string origkeytext;
+      unsigned int setwch = 0;
+      for (unsigned int key : keydata.configuredkeys) {
+        KeyRepr repr = KeyBinds::getKeyRepr(key);
+        std::string keyrepr = repr.repr.empty() ? std::string() + static_cast<char>(repr.wch) : repr.repr;
+        keytext += (keytext.empty() ? "" : ",") + keyrepr;
+        if (repr.repr.empty() && setwch == 0) {
+          setwch = repr.wch;
+        }
+      }
+      for (unsigned int key : keydata.originalkeys) {
+        KeyRepr repr = KeyBinds::getKeyRepr(key);
+        std::string keyrepr = repr.repr.empty() ? std::string() + static_cast<char>(repr.wch) : repr.repr;
+        origkeytext += (origkeytext.empty() ? "" : ",") + keyrepr;
+      }
+      if (keydata.originalkeys != keydata.configuredkeys) {
+        keytext += " (Default: " + origkeytext + ")";
       }
       std::shared_ptr<MenuSelectOptionTextButton> boundkey = mso.addTextButtonNoContent(y++, 1, keydata.description + "-bind", keytext);
-      boundkey->setId(repr.wch);
+      boundkey->setId(setwch);
       boundkey->setOrigin(static_cast<void*>(&actionandscope.back()));
-      boundkey->setLegendText("[Esc] Cancel - [Any] set new key bind");
+      boundkey->setLegendText("[Esc] Cancel - [Any] set key bind");
       msal->addElement(boundkey, 2, RESIZE_REMOVE, true);
     }
     y++;
@@ -92,7 +106,7 @@ void KeyBindsScreen::redraw() {
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    std::string text = msoe->isActive() ? "<Press new key>" : msoe->getLabelText();
+    std::string text = msoe->isActive() ? "<Press " + std::string(addextrakey ? "additional" : "new") + " key>" : msoe->getLabelText();
     if (!text.empty()) {
       int add = 0;
       if (text[0] == ' ') {
@@ -116,7 +130,12 @@ bool KeyBindsScreen::keyPressed(unsigned int ch) {
   if (active) {
     if (ch != 27 && activeelement->getOrigin()) {
       std::pair<int, int> actionscope = *static_cast<std::pair<int, int>*>(activeelement->getOrigin());
-      tempkeybinds->customBind(actionscope.first, actionscope.second, ch);
+      if (addextrakey) {
+        tempkeybinds->addCustomBind(actionscope.first, actionscope.second, ch);
+      }
+      else {
+        tempkeybinds->replaceBind(actionscope.first, actionscope.second, ch);
+      }
     }
     activeelement->deactivate();
     active = false;
@@ -137,6 +156,15 @@ bool KeyBindsScreen::keyPressed(unsigned int ch) {
       return true;
     case KEYACTION_ENTER:
       mso.getElement(mso.getSelectionPointer())->activate();
+      addextrakey = false;
+      active = true;
+      activeelement = mso.getElement(mso.getSelectionPointer());
+      ui->update();
+      ui->setLegend();
+      return true;
+    case KEYACTION_ADD_KEY:
+      mso.getElement(mso.getSelectionPointer())->activate();
+      addextrakey = true;
       active = true;
       activeelement = mso.getElement(mso.getSelectionPointer());
       ui->update();
@@ -148,8 +176,8 @@ bool KeyBindsScreen::keyPressed(unsigned int ch) {
     case KEYACTION_DONE:
       realkeybinds->resetAll();
       for (std::list<KeyBinds::KeyData>::const_iterator it = tempkeybinds->begin(); it != tempkeybinds->end(); ++it) {
-        if (it->originalkey != it->configuredkey) {
-          realkeybinds->customBind(it->keyaction, it->scope, it->configuredkey);
+        if (it->originalkeys != it->configuredkeys) {
+          realkeybinds->replaceBind(it->keyaction, it->scope, it->configuredkeys);
         }
       }
       ui->returnToLast();

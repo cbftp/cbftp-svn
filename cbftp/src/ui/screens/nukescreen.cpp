@@ -25,7 +25,7 @@ enum KeyAction {
 
 NukeScreen::NukeScreen(Ui* ui) : UIWindow(ui, "NukeScreen") {
   keybinds.addBind(10, KEYACTION_ENTER, "Modify");
-  keybinds.addBind('n', KEYACTION_NUKE, "Nuke");
+  keybinds.addBind({'d', 'n'}, KEYACTION_NUKE, "Nuke");
   keybinds.addBind('p', KEYACTION_NUKE_PROPER, "Proper");
   keybinds.addBind('r', KEYACTION_NUKE_REPACK, "Repack");
   keybinds.addBind('u', KEYACTION_NUKE_DUPE, "Dupe");

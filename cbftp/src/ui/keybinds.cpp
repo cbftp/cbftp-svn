@@ -93,9 +93,6 @@ KeyRepr KeyBinds::getKeyRepr(unsigned int key) {
     case TERMINT_CTRL_UP:
       repr.repr = "Ctrl+Up";
       return repr;
-    case KEY_UNSET:
-      repr.repr = "None";
-      return repr;
   }
   if (repr.wch >= 1 && repr.wch <= 26) {
     char ctrlkey = repr.wch + 96;
@@ -119,43 +116,63 @@ KeyBinds::KeyBinds(const std::string& name) : name(name), allowkeybinds(true), a
 KeyBinds::KeyBinds(const KeyBinds& other) : name(other.name), keydata(other.keydata),
     scopes(other.scopes), actions(other.actions), allowkeybinds(other.allowkeybinds)
 {
-  for (std::list<KeyData>::iterator it = keydata.begin(); it != keydata.end(); ++it) {
-    KeyAndScope token(it->configuredkey, it->scope);
-    keybinds[token] = it;
-  }
+  regenerate();
 }
 
-void KeyBinds::addBind(int key, int keyaction, const std::string& description, int scope) {
+void KeyBinds::addBind(const std::list<int>& keys, int keyaction, const std::string& description, int scope) {
   ActionAndScope action(keyaction, scope);
   assert(actions.find(action) == actions.end());
   assert(scopes.find(scope) != scopes.end());
-  KeyAndScope token(key, scope);
-  std::map<KeyAndScope, std::list<KeyData>::iterator>::const_iterator it = keybinds.find(token);
-  assert(it == keybinds.end());
   actions.insert(action);
   KeyData keydat;
   keydat.keyaction = keyaction;
   keydat.description = description;
-  keydat.originalkey = key;
+  keydat.originalkeys = std::set<unsigned int>(keys.begin(), keys.end());
   keydat.scope = scope;
-  keydat.configuredkey = key;
+  keydat.configuredkeys = keydat.originalkeys;
   keydata.push_back(keydat);
-  keybinds[token] = --keydata.end();
-  generateLegendSummaries();
+  for (int key : keys) {
+    KeyAndScope token(key, scope);
+    std::map<KeyAndScope, std::list<KeyData>::iterator>::const_iterator it = keybinds.find(token);
+    assert(it == keybinds.end());
+  }
+  regenerate();
+}
+
+void KeyBinds::addBind(int key, int keyaction, const std::string& description, int scope) {
+  std::list<int> keys = {key};
+  addBind(keys, keyaction, description, scope);
 }
 
 void KeyBinds::addScope(int scope, const std::string& description) {
   scopes[scope] = description;
 }
 
-void KeyBinds::customBind(int keyaction, int scope, int newkey) {
+void KeyBinds::addCustomBind(int keyaction, int scope, int newkey) {
   for (std::list<KeyData>::iterator it = keydata.begin(); it != keydata.end(); ++it) {
     if (it->scope == scope && it->keyaction == keyaction) {
-      keybinds.erase(KeyAndScope(it->configuredkey, scope));
-      it->configuredkey = newkey;
-      KeyAndScope token(newkey, scope);
-      keybinds[token] = it;
-      generateLegendSummaries();
+      it->configuredkeys.insert(newkey);
+      regenerate();
+      return;
+    }
+  }
+}
+
+void KeyBinds::replaceBind(int keyaction, int scope, const std::set<unsigned int>& newkeys) {
+  for (std::list<KeyData>::iterator it = keydata.begin(); it != keydata.end(); ++it) {
+    if (it->scope == scope && it->keyaction == keyaction) {
+      it->configuredkeys = newkeys;
+      regenerate();
+      return;
+    }
+  }
+}
+
+void KeyBinds::replaceBind(int keyaction, int scope, unsigned int newkey) {
+  for (std::list<KeyData>::iterator it = keydata.begin(); it != keydata.end(); ++it) {
+    if (it->scope == scope && it->keyaction == keyaction) {
+      it->configuredkeys = {newkey};
+      regenerate();
       return;
     }
   }
@@ -164,14 +181,11 @@ void KeyBinds::customBind(int keyaction, int scope, int newkey) {
 void KeyBinds::resetBind(int keyaction, int scope) {
   for (std::list<KeyData>::iterator it = keydata.begin(); it != keydata.end(); ++it) {
     if (it->scope == scope && it->keyaction == keyaction) {
-      if (it->configuredkey == it->originalkey) {
+      if (it->configuredkeys == it->originalkeys) {
         return;
       }
-      keybinds.erase(KeyAndScope(it->configuredkey, scope));
-      it->configuredkey = it->originalkey;
-      KeyAndScope token(it->originalkey, scope);
-      keybinds[token] = it;
-      generateLegendSummaries();
+      it->configuredkeys = it->originalkeys;
+      regenerate();
       return;
     }
   }
@@ -180,22 +194,18 @@ void KeyBinds::resetBind(int keyaction, int scope) {
 void KeyBinds::unbind(int keyaction, int scope) {
   for (std::list<KeyData>::iterator it = keydata.begin(); it != keydata.end(); ++it) {
     if (it->scope == scope && it->keyaction == keyaction) {
-      keybinds.erase(KeyAndScope(it->configuredkey, scope));
-      it->configuredkey = KEY_UNSET;
-      generateLegendSummaries();
+      it->configuredkeys.clear();
+      regenerate();
       return;
     }
   }
 }
 
 void KeyBinds::resetAll() {
-  keybinds.clear();
   for (std::list<KeyData>::iterator it = keydata.begin(); it != keydata.end(); ++it) {
-    it->configuredkey = it->originalkey;
-    KeyAndScope token(it->originalkey, it->scope);
-    keybinds[token] = it;
+    it->configuredkeys = it->originalkeys;
   }
-  generateLegendSummaries();
+  regenerate();
 }
 
 int KeyBinds::getKeyAction(int key, int scope) const {
@@ -277,26 +287,32 @@ std::string KeyBinds::getLegendSummary(int scope) const {
 }
 
 void KeyBinds::generateLegendSummaries() {
+  std::string allkeybindstext = "[" + (alternatebutton ? getKeyRepr(276).repr : "?") + "] All keybinds";
   for (const std::pair<int, std::string>& scope : scopes) {
     std::list<KeyBinds::KeyData> binds = getBindsForScope(scope.first);
     std::string summary;
     if (allowkeybinds && scope.first != KEYSCOPE_ALL) {
-      summary += "[" + (alternatebutton ? getKeyRepr(276).repr : "?") + "] All keybinds";
+      summary += allkeybindstext;
     }
     for (const KeyBinds::KeyData& keydata : binds) {
       summary += summary.empty() ? "" : " - ";
-      KeyRepr repr = getKeyRepr(keydata.configuredkey);
-      std::string append = keydata.description;
-      std::string key = repr.repr.empty() ? std::string() + static_cast<char>(repr.wch) : repr.repr;
-      if (scope.first == KEYSCOPE_ALL && keydata.keyaction == KEYACTION_BACK_CANCEL && keydata.configuredkey != 27) {
-        key = "Esc/" + key;
+      std::string keystr;
+      for (unsigned int nkey : keydata.configuredkeys) {
+        KeyRepr repr = getKeyRepr(nkey);
+        std::string append = keydata.description;
+        std::string key = repr.repr.empty() ? std::string() + static_cast<char>(repr.wch) : repr.repr;
+        keystr += (keystr.empty() ? "" : "/") + key;
       }
-      size_t pos = util::toLower(keydata.description).find(util::toLower(key));
+      if (scope.first == KEYSCOPE_ALL && keydata.keyaction == KEYACTION_BACK_CANCEL && keystr.find("Esc") == std::string::npos) {
+        keystr = "Esc/" + keystr;
+      }
+      std::string append = keydata.description;
+      size_t pos = util::toLower(append).find(util::toLower(keystr));
       if (pos != std::string::npos) {
-        append = append.substr(0, pos) + "[" + key + "]" + append.substr(pos + key.length());
+        append = append.substr(0, pos) + "[" + keystr + "]" + append.substr(pos + keystr.length());
       }
       else {
-        append = "[" + key + "] " + append;
+        append = "[" + keystr + "] " + append;
       }
       summary += append;
     }
@@ -312,7 +328,7 @@ void KeyBinds::generateLegendSummaries() {
     }
   }
   if (allowkeybinds) {
-    legendsummaries[KEYSCOPE_ALL] = "[" + (alternatebutton ? getKeyRepr(276).repr : "?") + "] All keybinds" + legendsummaries[KEYSCOPE_ALL];
+    legendsummaries[KEYSCOPE_ALL] = allkeybindstext + " - " + legendsummaries[KEYSCOPE_ALL];
   }
 }
 
@@ -335,5 +351,20 @@ void KeyBinds::disallowKeybinds() {
 
 void KeyBinds::useAlternateKeybindsButton() {
   alternatebutton = true;
+  generateLegendSummaries();
+}
+
+void KeyBinds::generateIndex() {
+  keybinds.clear();
+  for (std::list<KeyData>::iterator it = keydata.begin(); it != keydata.end(); ++it) {
+    for (int key : it->configuredkeys) {
+      KeyAndScope token(key, it->scope);
+      keybinds[token] = it;
+    }
+  }
+}
+
+void KeyBinds::regenerate() {
+  generateIndex();
   generateLegendSummaries();
 }
