@@ -295,7 +295,6 @@ void SiteLogic::TLSFailed(int id) {
 void SiteLogic::listRefreshed(int id) {
   connstatetracker[id].resetIdleTime();
   const std::shared_ptr<FileList>& fl = conns[id]->currentFileList();
-  fl->setRefreshedTime(currtime);
   const std::shared_ptr<CommandOwner>& currentco = conns[id]->currentCommandOwner();
   if (!!currentco) {
     currentco->fileListUpdated(this, fl);
@@ -373,7 +372,7 @@ bool SiteLogic::setPathExists(int id, Exists exists, bool refreshtime) {
     }
   }
   if (refreshtime) {
-    fl->setRefreshedTime(currtime);
+    fl->setRefreshed();
   }
   std::shared_ptr<CommandOwner> currentco = conns[id]->currentCommandOwner();
   if (exists != Exists::YES) {
@@ -1070,7 +1069,7 @@ bool SiteLogic::handlePreTransfer(int id) {
 }
 
 void SiteLogic::handlePostUpload(int id, const std::shared_ptr<FileList>& fl) {
-  int filelistreusetime = currtime - fl->getRefreshedTime();
+  int filelistreusetime = fl->timeSinceLastRefreshed();
   if (!requests.empty() ||
       (!site->useXDUPE() && filelistreusetime > FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH) ||
       filelistreusetime > FILELIST_MAX_REUSE_TIME_BEFORE_REFRESH_XDUPE)
@@ -1242,7 +1241,7 @@ bool SiteLogic::handleSpreadJob(int id) {
         Path targetpath = race->getPath() / subpath;
         fl = race->getFileListForFullPath(this, targetpath);
         if (targetpath != currentpath) {
-          int timesincelastrefresh = currtime - fl->getRefreshedTime();
+          int timesincelastrefresh = fl->timeSinceLastRefreshed();
           if ((fl->getState() == FileListState::FAILED && timesincelastrefresh < DELAY_BEFORE_REVISIT_FAILED_DIR) ||
               (fl->getState() == FileListState::NONEXISTENT && timesincelastrefresh < DELAY_BEFORE_REVISIT_NONEXISTING_DIR))
           {
