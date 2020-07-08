@@ -371,14 +371,14 @@ bool SiteLogic::setPathExists(int id, Exists exists, bool refreshtime) {
       }
     }
   }
-  if (refreshtime) {
-    fl->setRefreshed();
-  }
   std::shared_ptr<CommandOwner> currentco = conns[id]->currentCommandOwner();
   if (exists != Exists::YES) {
     if (fl->bumpUpdateState(UpdateState::REFRESHED)) {
       statechanged = true;
     }
+  }
+  if (refreshtime) {
+    fl->setRefreshed();
   }
   if (currentco && statechanged) {
     currentco->fileListUpdated(this, fl);
