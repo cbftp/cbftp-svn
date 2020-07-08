@@ -118,9 +118,6 @@ void Race::removeSite(const std::shared_ptr<SiteRace>& siterace) {
   for (std::unordered_map<std::string, std::unordered_set<std::shared_ptr<SiteRace>> >::iterator it = sfvreports.begin(); it != sfvreports.end(); it++) {
     it->second.erase(siterace);
   }
-  for (std::unordered_map<std::string, std::unordered_set<std::shared_ptr<SiteRace>> >::iterator it = subpathoccurences.begin(); it != subpathoccurences.end(); it++) {
-    it->second.erase(siterace);
-  }
 }
 
 std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator Race::begin() const {
@@ -231,12 +228,7 @@ bool Race::isDone() const {
 }
 
 void Race::reportNewSubDir(const std::shared_ptr<SiteRace>& sr, const std::string& subdir) {
-  if (subpathoccurences.find(subdir) == subpathoccurences.end()) {
-    subpathoccurences[subdir] = std::unordered_set<std::shared_ptr<SiteRace>>();
-  }
-  std::unordered_set<std::shared_ptr<SiteRace>> & subpathoccurencessubdir = subpathoccurences.at(subdir);
-  subpathoccurencessubdir.insert(sr);
-  if (subpathoccurencessubdir.size() >= sites.size() * 0.5) {
+  if (estimatedsubpaths.find(subdir) == estimatedsubpaths.end()) {
     estimatedsubpaths.insert(subdir);
     guessedfilelists[subdir] = std::unordered_map<std::string, unsigned long long int>();
   }
@@ -297,7 +289,6 @@ void Race::reset() {
   sfvreports.clear();
   estimatedsize.clear();
   estimatedfilesizes.clear();
-  subpathoccurences.clear();
   guessedfileliststotalfilesize.clear();
   sizelocationtrackers.clear();
   maxnumfilessiteprogress = 0;
