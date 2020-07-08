@@ -71,7 +71,6 @@ class Race : public Core::EventReceiver, public TransferStatusCallback {
     std::unordered_map<std::string, unsigned int> estimatedsize;
     std::unordered_map<std::string, unsigned long long int> estimatedfilesizes;
     unsigned long long int bestunknownfilesizeestimate;
-    std::unordered_map<std::string, std::unordered_set<std::shared_ptr<SiteRace>> > subpathoccurences;
     std::unordered_set<std::string> estimatedsubpaths;
     std::unordered_map<std::string, std::unordered_map<std::string, unsigned long long int> > guessedfilelists;
     std::unordered_map<std::string, unsigned long long int> guessedfileliststotalfilesize;
