@@ -713,22 +713,36 @@ void TransferJob::setDone() {
 }
 
 void TransferJob::updateLocalFileLists() {
-  localfilelists.clear();
-  Path basepath = type == TRANSFERJOB_DOWNLOAD ? dstpath : srcpath;
-  std::shared_ptr<LocalFileList> base = global->getLocalStorage()->getLocalFileList(basepath);
-  if (!!base) {
-    localfilelists[""] = base;
-    std::unordered_map<std::string, LocalFile>::const_iterator it = base->find(srcfile);
-    if (it != base->end() && it->second.isDirectory()) {
-      updateLocalFileLists(basepath, basepath / srcfile);
-    }
+  std::shared_ptr<LocalFileList> base;
+  auto it = localfilelists.find("");
+  if (it != localfilelists.end()) {
+    base = it->second;
+    global->getLocalStorage()->updateLocalFileList(base);
+  }
+  else {
+    Path basepath = type == TRANSFERJOB_DOWNLOAD ? dstpath : srcpath;
+    localfilelists[""] = base = global->getLocalStorage()->getLocalFileList(basepath);
+  }
+  global->getLocalStorage()->updateLocalFileList(base);
+  std::unordered_map<std::string, LocalFile>::const_iterator it2 = base->find(srcfile);
+  if (it2 != base->end() && it2->second.isDirectory()) {
+    updateLocalFileLists(base->getPath(), base->getPath() / srcfile);
   }
 }
 
 void TransferJob::updateLocalFileLists(const Path& basepath, const Path& path) {
-  std::shared_ptr<LocalFileList> filelist = global->getLocalStorage()->getLocalFileList(path);
+  std::string subpath = (path - basepath).toString();
+  auto it = localfilelists.find(subpath);
+  std::shared_ptr<LocalFileList> filelist;
+  if (it != localfilelists.end()) {
+    filelist = it->second;
+    global->getLocalStorage()->updateLocalFileList(filelist);
+
+  }
+  else {
+    filelist = global->getLocalStorage()->getLocalFileList(path);
+  }
   if (!!filelist) {
-    std::string subpath = (path - basepath).toString();
     localfilelists[subpath] = filelist;
     if (type == TRANSFERJOB_DOWNLOAD && srcfilelists.find(subpath) == srcfilelists.end()) {
       std::shared_ptr<FileList> fl = std::make_shared<FileList>(srcfilelists[""]->getUser(), srcpath / subpath);

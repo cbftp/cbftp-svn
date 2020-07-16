@@ -91,6 +91,7 @@ class TransferMonitor : public Core::EventReceiver, public RawBufferCallback {
     void lateFXPFailure(const std::string& reason);
     void lateDownloadFailure(const std::string& reason, bool dupe = false);
     void lateUploadFailure(const std::string& reason, bool dupe = false);
+    void setStatus(Status status);
   public:
     TransferMonitor(TransferManager *);
     ~TransferMonitor();

@@ -120,7 +120,7 @@ void LocalUpload::FDInterSendComplete(int sockid) {
 }
 
 void LocalUpload::FDFail(int sockid, const std::string& error) {
-  if (sockid != this->sockid) {
+  if (sockid == -1 || sockid != this->sockid) {
     return;
   }
   deactivate();

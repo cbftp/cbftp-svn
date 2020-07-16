@@ -4,7 +4,9 @@
 
 class LocalFile {
 public:
-  LocalFile(std::string, unsigned long long int, bool, std::string, std::string, int, int, int, int, int);
+  LocalFile(const std::string& name, unsigned long long int size, bool isdir,
+      const std::string& owner, const std::string& group, int year, int month,
+      int day, int hour, int minute, bool download = false);
   std::string getName() const;
   unsigned long long int getSize() const;
   bool isDirectory() const;
@@ -16,6 +18,11 @@ public:
   int getHour() const;
   int getMinute() const;
   void setSize(unsigned long long int size);
+  int getTouch() const;
+  void setTouch(int touch);
+  bool isDownloading() const;
+  void setDownloading();
+  void finishDownload();
 private:
   std::string name;
   unsigned long long int size;
@@ -27,4 +34,6 @@ private:
   int day;
   int hour;
   int minute;
+  int touch;
+  bool download;
 };
