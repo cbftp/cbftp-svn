@@ -12,7 +12,7 @@ class MenuSelectOptionElement;
 class CommandOwner;
 class Race;
 class TransferJob;
-class TransferFilteringParameters;
+struct TransferFilteringParameters;
 
 class TransfersFilterScreen : public UIWindow {
 public:
