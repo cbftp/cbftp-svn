@@ -70,12 +70,17 @@ void KeyBindsScreen::repopulate() {
       std::string keytext;
       std::string origkeytext;
       unsigned int setwch = 0;
-      for (unsigned int key : keydata.configuredkeys) {
-        KeyRepr repr = KeyBinds::getKeyRepr(key);
-        std::string keyrepr = repr.repr.empty() ? std::string() + static_cast<char>(repr.wch) : repr.repr;
-        keytext += (keytext.empty() ? "" : ",") + keyrepr;
-        if (repr.repr.empty() && setwch == 0) {
-          setwch = repr.wch;
+      if (keydata.configuredkeys.empty()) {
+        keytext = "None";
+      }
+      else {
+        for (unsigned int key : keydata.configuredkeys) {
+          KeyRepr repr = KeyBinds::getKeyRepr(key);
+          std::string keyrepr = repr.repr.empty() ? std::string() + static_cast<char>(repr.wch) : repr.repr;
+          keytext += (keytext.empty() ? "" : ",") + keyrepr;
+          if (repr.repr.empty() && setwch == 0) {
+            setwch = repr.wch;
+          }
         }
       }
       for (unsigned int key : keydata.originalkeys) {
