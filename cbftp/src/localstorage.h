@@ -54,6 +54,7 @@ public:
   const Path & getDownloadPath() const;
   void setDownloadPath(const Path &);
   static std::shared_ptr<LocalFileList> getLocalFileList(const Path & path);
+  static bool updateLocalFileList(const std::shared_ptr<LocalFileList>& filelist);
   int requestLocalFileList(const Path & path);
   bool requestReady(int requestid) const;
   std::shared_ptr<LocalFileList> getLocalFileList(int requestid);

@@ -70,16 +70,16 @@ void TransferMonitor::engageFXP(
   this->dfile = dfile;
   this->srcco = srcco;
   this->dstco = dstco;
-  status = TM_STATUS_AWAITING_PASSIVE;
+  setStatus(TM_STATUS_AWAITING_PASSIVE);
   if (!sls->lockDownloadConn(fls, &src, srcco, this)) {
     tm->transferFailed(ts, TM_ERR_LOCK_DOWN);
-    status = TM_STATUS_IDLE;
+    setStatus(TM_STATUS_IDLE);
     return;
   }
   if (!sld->lockUploadConn(fld, &dst, dstco, this)) {
     tm->transferFailed(ts, TM_ERR_LOCK_UP);
     sls->returnConn(src, true);
-    status = TM_STATUS_IDLE;
+    setStatus(TM_STATUS_IDLE);
     return;
   }
   fxpdstactive = !sls->getSite()->hasBrokenPASV();
@@ -158,7 +158,7 @@ void TransferMonitor::engageDownload(
   if (!sls->lockDownloadConn(fls, &src, srcco, this)) {
     return;
   }
-  status = TM_STATUS_AWAITING_PASSIVE;
+  setStatus(TM_STATUS_AWAITING_PASSIVE);
   int spol = sls->getSite()->getSSLTransferPolicy();
   if (spol == SITE_SSL_ALWAYS_ON || spol == SITE_SSL_PREFER_ON) {
     ssl = true;
@@ -166,7 +166,7 @@ void TransferMonitor::engageDownload(
   TransferProtocol sprot = sls->getSite()->getTransferProtocol();
   TransferProtocol dprot = global->getLocalStorage()->getTransferProtocol();
   ipv6 = useIPv6(sprot, dprot);
-  localfl->touchFile(dfile);
+  localfl->touchFile(dfile, true);
   if (!FileSystem::directoryExistsWritable(dpath)) {
     FileSystem::createDirectoryRecursive(dpath);
   }
@@ -220,7 +220,7 @@ void TransferMonitor::engageUpload(
   if (!sld->lockUploadConn(fld, &dst, dstco, this)) {
     return;
   }
-  status = TM_STATUS_AWAITING_PASSIVE;
+  setStatus(TM_STATUS_AWAITING_PASSIVE);
   int spol = sld->getSite()->getSSLTransferPolicy();
   if (spol == SITE_SSL_ALWAYS_ON || spol == SITE_SSL_PREFER_ON) {
     ssl = true;
@@ -254,7 +254,7 @@ void TransferMonitor::engageUpload(
         ts->setFailed();
         tm->transferFailed(ts, TM_ERR_OTHER);
         sld->returnConn(dst, true);
-        status = TM_STATUS_IDLE;
+        setStatus(TM_STATUS_IDLE);
         return;
       }
     }
@@ -274,7 +274,7 @@ void TransferMonitor::engageList(const std::shared_ptr<SiteLogic>& sls, int conn
   this->hiddenfiles = hiddenfiles;
   ssl = sls->getSite()->getTLSMode() != TLSMode::NONE;
   this->ipv6 = ipv6;
-  status = TM_STATUS_AWAITING_PASSIVE;
+  setStatus(TM_STATUS_AWAITING_PASSIVE);
   if (!sls->getSite()->hasBrokenPASV()) {
     sls->preparePassiveList(src, this, ipv6, ssl);
   }
@@ -285,7 +285,7 @@ void TransferMonitor::engageList(const std::shared_ptr<SiteLogic>& sls, int conn
       Core::StringResult passiveresult = ipv6 ? global->getLocalStorage()->getAddress6(conn->getSockId()) : global->getLocalStorage()->getAddress4(conn->getSockId());
       if (!passiveresult.success) { // should be impossible since the protocol is the same as the control connection
         sls->getConn(src)->printLocalError(passiveresult.error);
-        status = TM_STATUS_IDLE;
+        setStatus(TM_STATUS_IDLE);
         return;
       }
     }
@@ -326,7 +326,7 @@ void TransferMonitor::passiveReady(const std::string & host, int port) {
     sld->returnConn(dst, type != TM_TYPE_LIST);
     return;
   }
-  status = TM_STATUS_AWAITING_ACTIVE;
+  setStatus(TM_STATUS_AWAITING_ACTIVE);
   if (!!ts) {
     ts->setPassiveAddress((ipv6 ? "[" + host + "]" : host) + ":" + std::to_string(port));
   }
@@ -399,7 +399,7 @@ void TransferMonitor::activeStarted() {
          status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
          status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET);
   if (status == TM_STATUS_AWAITING_ACTIVE) {
-    status = TM_STATUS_TRANSFERRING;
+    setStatus(TM_STATUS_TRANSFERRING);
     if (type == TM_TYPE_FXP) {
       if (fxpdstactive) {
         sls->download(src);
@@ -453,7 +453,7 @@ void TransferMonitor::sourceComplete() {
     fls->finishDownload(sfile);
   }
   if (status == TM_STATUS_TRANSFERRING) {
-    status = TM_STATUS_TRANSFERRING_SOURCE_COMPLETE;
+    setStatus(TM_STATUS_TRANSFERRING_SOURCE_COMPLETE);
   }
   else if (status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE) {
     transferFailed(ts, error);
@@ -471,8 +471,11 @@ void TransferMonitor::targetComplete() {
   if (fld) {
     fld->finishUpload(dfile);
   }
+  if (type == TM_TYPE_DOWNLOAD) {
+    localfl->finishDownload(dfile);
+  }
   if (status == TM_STATUS_TRANSFERRING) {
-    status = TM_STATUS_TRANSFERRING_TARGET_COMPLETE;
+    setStatus(TM_STATUS_TRANSFERRING_TARGET_COMPLETE);
   }
   else if (status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET) {
     transferFailed(ts, error);
@@ -531,7 +534,7 @@ void TransferMonitor::finish() {
     ts->setFinished();
   }
   tm->transferSuccessful(ts);
-  status = TM_STATUS_IDLE;
+  setStatus(TM_STATUS_IDLE);
 }
 
 void TransferMonitor::sourceError(TransferError err) {
@@ -560,7 +563,7 @@ void TransferMonitor::sourceError(TransferError err) {
     return;
   }
   error = err;
-  status = TM_STATUS_SOURCE_ERROR_AWAITING_TARGET;
+  setStatus(TM_STATUS_SOURCE_ERROR_AWAITING_TARGET);
 }
 
 void TransferMonitor::targetError(TransferError err) {
@@ -596,7 +599,7 @@ void TransferMonitor::targetError(TransferError err) {
     return;
   }
   error = err;
-  status = TM_STATUS_TARGET_ERROR_AWAITING_SOURCE;
+  setStatus(TM_STATUS_TARGET_ERROR_AWAITING_SOURCE);
 }
 
 std::shared_ptr<TransferStatus> TransferMonitor::getTransferStatus() const {
@@ -738,7 +741,7 @@ void TransferMonitor::transferFailed(const std::shared_ptr<TransferStatus> & ts,
     }
   }
   tm->transferFailed(ts, err);
-  status = TM_STATUS_IDLE;
+  setStatus(TM_STATUS_IDLE);
 }
 
 void TransferMonitor::newRawBufferLine(const std::pair<std::string, std::string> & line) {
@@ -771,7 +774,7 @@ void TransferMonitor::lateFXPFailure(const std::string& reason) {
   tm->transferFailed(ts, TM_ERR_OTHER);
   sls->returnConn(src, true);
   sld->returnConn(dst, true);
-  status = TM_STATUS_IDLE;
+  setStatus(TM_STATUS_IDLE);
 }
 
 void TransferMonitor::lateDownloadFailure(const std::string& reason, bool dupe) {
@@ -784,7 +787,7 @@ void TransferMonitor::lateDownloadFailure(const std::string& reason, bool dupe) 
   }
   tm->transferFailed(ts, dupe ? TM_ERR_DUPE : TM_ERR_OTHER);
   sls->returnConn(src, true);
-  status = TM_STATUS_IDLE;
+  setStatus(TM_STATUS_IDLE);
   return;
 }
 
@@ -798,6 +801,10 @@ void TransferMonitor::lateUploadFailure(const std::string& reason, bool dupe) {
   }
   tm->transferFailed(ts, dupe ? TM_ERR_DUPE : TM_ERR_OTHER);
   sld->returnConn(dst, true);
-  status = TM_STATUS_IDLE;
+  setStatus(TM_STATUS_IDLE);
   return;
+}
+
+void TransferMonitor::setStatus(Status status) {
+  this->status = status;
 }

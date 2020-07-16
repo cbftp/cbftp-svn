@@ -360,23 +360,35 @@ void LocalStorage::storeContent(int storeid, const Core::BinaryData & data) {
 }
 
 std::shared_ptr<LocalFileList> LocalStorage::getLocalFileList(const Path & path) {
-  std::shared_ptr<LocalFileList> filelist;
+  std::shared_ptr<LocalFileList> filelist = std::make_shared<LocalFileList>(path);
+  if (updateLocalFileList(filelist)) {
+    return filelist;
+  }
+  return std::shared_ptr<LocalFileList>();
+}
+
+bool LocalStorage::updateLocalFileList(const std::shared_ptr<LocalFileList>& filelist) {
+  Path path = filelist->getPath();
+  unsigned int files = 0;
+  int touch = rand();
   DIR * dir = opendir(path.toString().c_str());
-  struct dirent * dent;
-  while (dir != NULL && (dent = readdir(dir)) != NULL) {
-    if (!filelist) {
-      filelist = std::make_shared<LocalFileList>(path);
+    struct dirent * dent;
+    while (dir != nullptr && (dent = readdir(dir)) != nullptr) {
+      std::string name = dent->d_name;
+      if (name != ".." && name != ".") {
+        LocalFile file = getLocalFile(path / name);
+        filelist->updateFile(file, touch);
+        ++files;
+      }
     }
-    std::string name = dent->d_name;
-    if (name != ".." && name != ".") {
-      LocalFile file = getLocalFile(path / name);
-      filelist->addFile(file);
+    if (dir != nullptr) {
+      closedir(dir);
+      if (filelist->size() > files) {
+        filelist->cleanSweep(touch);
+      }
+      return true;
     }
-  }
-  if (dir != NULL) {
-    closedir(dir);
-  }
-  return filelist;
+    return false;
 }
 
 int LocalStorage::requestLocalFileList(const Path & path) {

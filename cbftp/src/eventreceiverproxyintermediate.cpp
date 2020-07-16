@@ -56,7 +56,7 @@ int EventReceiverProxyIntermediate::interListen(Core::AddressFamily addrfam, Pro
         FDInterInfo(sockid, "Listening on port " + std::to_string(port));
         Core::StringResult res = addrfam == Core::AddressFamily::IPV4 ? global->getLocalStorage()->getAddress4(parentsockid) : global->getLocalStorage()->getAddress6(parentsockid);
         FDInterListening(sockid, Address(res.result, port, addrfam));
-        break;
+        return sockid;
       }
       port = global->getLocalStorage()->getNextActivePort();
     }

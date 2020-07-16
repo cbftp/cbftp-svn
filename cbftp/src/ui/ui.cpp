@@ -1164,7 +1164,9 @@ void Ui::loadSettings(std::shared_ptr<DataFileHandler> dfh) {
       std::list<std::string> keys = util::split(tokens[3], ",");
       std::set<unsigned int> keyset;
       for (const std::string& key : keys) {
-        keyset.insert(std::stoi(key));
+        if (!key.empty()) {
+          keyset.insert(std::stoi(key));
+        }
       }
       for (KeyBinds* keybinds : allkeybinds) {
         if (keybinds->getName() == tokens[0]) {
