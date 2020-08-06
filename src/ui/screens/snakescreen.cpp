@@ -49,7 +49,7 @@ void SnakeScreen::update() {
   }
   timepassed += 250;
   Pos target = getTarget(direction);
-  if (target.x < 0 || target.x >= xmax || target.y < 0 || target.y >= ymax) {
+  if (target.x >= xmax || target.y >= ymax) {
     lose();
     ui->setInfo();
     return;
