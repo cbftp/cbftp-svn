@@ -32,7 +32,6 @@
 #include "transferstatus.h"
 #include "util.h"
 #include "preparedrace.h"
-#include "sitetransferjob.h"
 #include "sectionmanager.h"
 #include "transferprotocol.h"
 
@@ -1598,9 +1597,23 @@ bool Engine::raceTransferPossible(const std::shared_ptr<SiteLogic>& sls, const s
   if (sls == sld) return false;
   const std::shared_ptr<Site> & srcsite = sls->getSite();
   const std::shared_ptr<Site> & dstsite = sld->getSite();
-  if (srcsite->getAllowDownload() == SITE_ALLOW_TRANSFER_NO ||
-      (srcsite->getAllowDownload() == SITE_ALLOW_DOWNLOAD_MATCH_ONLY && !srs->isDownloadOnly()))
-  {
+  if (srcsite->getAllowDownload() == SITE_ALLOW_TRANSFER_NO) {
+    return false;
+  }
+  if (srs->isDownloadOnly()) {
+    if (!srcsite->getMaxDownPre()) {
+      return false;
+    }
+  }
+  else if (srcsite->getAllowDownload() == SITE_ALLOW_DOWNLOAD_MATCH_ONLY) {
+    return false;
+  }
+  else if (srs->isDone()) {
+    if (!srcsite->getMaxDownComplete()) {
+      return false;
+    }
+  }
+  else if (!srcsite->getMaxDown() && !srcsite->getMaxDownComplete()) {
     return false;
   }
   if (dstsite->getAllowUpload() == SITE_ALLOW_TRANSFER_NO) {

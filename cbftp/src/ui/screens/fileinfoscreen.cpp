@@ -44,6 +44,7 @@ bool FileInfoScreen::keyPressed(unsigned int ch) {
   switch(ch) {
     case 27: // esc
     case ' ':
+    case 'c':
     case 10:
       ui->returnToLast();
       return true;
@@ -52,7 +53,7 @@ bool FileInfoScreen::keyPressed(unsigned int ch) {
 }
 
 std::string FileInfoScreen::getLegendText() const {
-  return "[Any] Return";
+  return "[Esc/Space/Enter/c] Return";
 }
 
 std::string FileInfoScreen::getInfoLabel() const {

@@ -15,7 +15,6 @@
 #include "../../globalcontext.h"
 #include "../../engine.h"
 #include "../../transferstatus.h"
-#include "../../transferjob.h"
 #include "../../sitelogic.h"
 #include "../../site.h"
 #include "../../util.h"

@@ -66,6 +66,8 @@ void MetricsScreen::update() {
 bool MetricsScreen::keyPressed(unsigned int ch) {
   switch(ch) {
     case 27: // esc
+    case ' ':
+    case 'c':
     case 10:
       ui->returnToLast();
       return true;
@@ -74,7 +76,7 @@ bool MetricsScreen::keyPressed(unsigned int ch) {
 }
 
 std::string MetricsScreen::getLegendText() const {
-  return "[Esc/Enter] Return";
+  return "[Esc/Space/Enter/c] Return";
 }
 
 std::string MetricsScreen::getInfoLabel() const {

@@ -8,7 +8,6 @@
 #include "../../race.h"
 #include "../../engine.h"
 #include "../../sitemanager.h"
-#include "../../site.h"
 #include "../../sitelogic.h"
 #include "../../sitelogicmanager.h"
 #include "../../transferjob.h"
