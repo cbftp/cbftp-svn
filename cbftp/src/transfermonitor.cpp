@@ -397,7 +397,8 @@ void TransferMonitor::activeReady() {
 void TransferMonitor::activeStarted() {
   assert(status == TM_STATUS_AWAITING_ACTIVE ||
          status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
-         status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET);
+         status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET ||
+         status == TM_STATUS_TRANSFERRING_TARGET_COMPLETE);
   if (status == TM_STATUS_AWAITING_ACTIVE) {
     setStatus(TM_STATUS_TRANSFERRING);
     if (type == TM_TYPE_FXP) {
@@ -466,7 +467,8 @@ void TransferMonitor::sourceComplete() {
 void TransferMonitor::targetComplete() {
   assert(status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET ||
          status == TM_STATUS_TRANSFERRING ||
-         status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE);
+         status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE ||
+         status == TM_STATUS_AWAITING_ACTIVE);
   partialcompletestamp = timestamp;
   if (fld) {
     fld->finishUpload(dfile);
@@ -474,7 +476,7 @@ void TransferMonitor::targetComplete() {
   if (type == TM_TYPE_DOWNLOAD) {
     localfl->finishDownload(dfile);
   }
-  if (status == TM_STATUS_TRANSFERRING) {
+  if (status == TM_STATUS_TRANSFERRING || status == TM_STATUS_AWAITING_ACTIVE) {
     setStatus(TM_STATUS_TRANSFERRING_TARGET_COMPLETE);
   }
   else if (status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET) {

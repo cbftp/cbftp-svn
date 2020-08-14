@@ -543,7 +543,7 @@ std::string Race::getSiteListText(const SiteListType listtype) const {
         break;
       }
       case SiteListType::INCOMPLETE: {
-        if (!it->first->isDone()) {
+        if (it->first->getStatus() != RaceStatus::DONE) {
           sitestr += sitename + ",";
         }
         break;
