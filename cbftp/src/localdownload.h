@@ -26,6 +26,5 @@ private:
   void append(char* data, unsigned int datalen);
   int storeid;
   unsigned long long int filesize;
-  unsigned int bufpos;
   LocalStorage * ls;
 };
