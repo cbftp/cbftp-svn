@@ -210,8 +210,10 @@ void FTPConn::printLocalError(const std::string& info) {
 }
 
 bool FTPConn::parseData(char * data, unsigned int datalen, char ** databuf, unsigned int & databuflen, unsigned int & databufpos, int & databufcode) {
-  while (databufpos + datalen > databuflen) {
-    databuflen = databuflen * 2;
+  if (databufpos + datalen > databuflen) {
+    while (databufpos + datalen > databuflen) {
+      databuflen *= 2;
+    }
     char * newdatabuf = (char *) malloc(databuflen);
     memcpy(newdatabuf, *databuf, databufpos);
     delete *databuf;

@@ -152,7 +152,11 @@ void LocalDownload::append(char* data, unsigned int datalen) {
   }
   if (bufpos + datalen > buflen) {
     if (inmemory) {
-      char * newbuf = (char*) malloc(buflen * 2);
+      while (bufpos + datalen > buflen) {
+        buflen *= 2;
+      }
+      char* newbuf = static_cast<char*>(malloc(buflen));
+      global->getEventLog()->log("test", "Increasing to " + std::to_string(buflen));
       memcpy(newbuf, buf, bufpos);
       delete buf;
       buf = newbuf;
