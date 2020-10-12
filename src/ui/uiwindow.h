@@ -9,6 +9,7 @@ class Ui;
 
 class UIWindow {
 protected:
+  bool isTop() const;
   std::string name;
   unsigned int row;
   unsigned int col;

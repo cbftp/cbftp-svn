@@ -285,5 +285,6 @@ public:
   WINDOW * getLegendWindow() const;
   void addKeyBinds(KeyBinds* keybinds);
   void removeKeyBinds(KeyBinds* keybinds);
+  bool isTop(const UIWindow* window) const;
 };
 

@@ -1438,13 +1438,12 @@ void FTPConn::parseFileList(char * buf, unsigned int buflen) {
   char * loc = buf, * start;
   unsigned int files = 0;
   int touch = rand();
-  while (loc + 4 < buf + buflen && !(*(loc + 1) == '2' && *(loc + 2) == '1' && *(loc + 4) == ' ')) {
-    if (*(loc + 1) == '2' && *(loc + 2) == '1' && *(loc + 4) == '-') loc += 4;
-    start = loc;
-    while (loc < buf + buflen && loc - start < 40) {
-      start = loc;
-      while(loc < buf + buflen && *loc++ != '\n');
+  while (loc + 4 < buf + buflen && !(*loc == '2' && *(loc + 1) == '1' && *(loc + 3) == ' ')) {
+    if (*loc == '2' && *(loc + 1) == '1' && *(loc + 3) == '-') {
+      loc += 4;
     }
+    start = loc;
+    while(loc < buf + buflen && *loc++ != '\n');
     if (loc - start >= 40) {
       if (currentfl->updateFile(std::string(start, loc - start), touch)) {
         files++;
