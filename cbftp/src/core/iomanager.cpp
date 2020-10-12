@@ -1370,6 +1370,10 @@ void IOManager::workerReady() {
     }
     if (manuallypaused.find(sockid) == manuallypaused.end()) {
       siit->second.paused = false;
+      if (siit->second.receiver == nullptr) {
+        // if no EventReceiver has been registered for the socket yet
+        continue;
+      }
       if (siit->second.direction == Direction::IN) {
         polling.addFDIn(siit->second.fd);
       }

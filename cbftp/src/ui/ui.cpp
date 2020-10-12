@@ -1212,3 +1212,7 @@ void Ui::addKeyBinds(KeyBinds* keybinds) {
 void Ui::removeKeyBinds(KeyBinds* keybinds) {
   allkeybinds.erase(keybinds);
 }
+
+bool Ui::isTop(const UIWindow* window) const {
+  return window == topwindow.get();
+}

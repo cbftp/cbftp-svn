@@ -233,6 +233,9 @@ void BrowseScreen::update() {
   if (!!left) {
     left->update();
   }
+  if (!isTop()) {
+    return;
+  }
   if (!!right) {
     right->update();
   }

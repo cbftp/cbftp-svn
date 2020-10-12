@@ -108,11 +108,11 @@ void UIFile::unHardSelect() {
 }
 
 void UIFile::parseTimeStamp(const std::string & uglytime) {
-  int year;
-  int month;
-  int day;
-  int hour;
-  int minute;
+  int year = 0;
+  int month = 0;
+  int day = 0;
+  int hour = 0;
+  int minute = 0;
   if (isdigit(uglytime[0]) && isdigit(uglytime[1])) {
     parseWindowsTimeStamp(uglytime, year, month, day, hour, minute);
   }
@@ -123,14 +123,18 @@ void UIFile::parseTimeStamp(const std::string & uglytime) {
 }
 
 void UIFile::parseUNIXTimeStamp(const std::string & uglytime, int & year, int & month, int & day, int & hour, int & minute) {
-  int pos = 0; // month start at 0
-  while (uglytime[++pos] != ' ');
+  if (uglytime.empty()) {
+    return;
+  }
+  size_t len = uglytime.length();
+  size_t pos = 0; // month start at 0
+  while (pos < len - 1 && uglytime[++pos] != ' ');
   std::string monthtmp = uglytime.substr(0, pos);
-  while (uglytime[++pos] == ' '); // day start at pos
+  while (pos < len - 1 && uglytime[++pos] == ' '); // day start at pos
   int start = pos;
-  while (uglytime[++pos] != ' ');
+  while (pos < len - 1 && uglytime[++pos] != ' ');
   std::string daytmp = uglytime.substr(start, pos - start);
-  while (uglytime[++pos] == ' '); // meta start at pos
+  while (pos < len - 1 && uglytime[++pos] == ' '); // meta start at pos
   std::string meta = uglytime.substr(pos);
   month = 0;
   day = std::stoi(daytmp);
@@ -164,11 +168,21 @@ void UIFile::parseUNIXTimeStamp(const std::string & uglytime, int & year, int & 
 }
 
 void UIFile::parseWindowsTimeStamp(const std::string & uglytime, int & year, int & month, int & day, int & hour, int & minute) {
-  int pos = 0, start = 0; // date start at 0
-  while (uglytime[++pos] != ' ');
+  if (uglytime.empty()) {
+    return;
+  }
+  size_t len = uglytime.length();
+  size_t pos = 0, start = 0; // date start at 0
+  while (pos < len - 1 && uglytime[++pos] != ' ');
   std::string datestamp = uglytime.substr(start, pos - start);
-  while (uglytime[++pos] == ' ');
+  if (datestamp.length() < 8) { // bad format
+    return;
+  }
+  while (pos < len - 1 && uglytime[++pos] == ' ');
   std::string timestamp = uglytime.substr(pos);
+  if (timestamp.length() < 5) { // bad format
+    return;
+  }
   if (isdigit(datestamp[2])) { // euro format
     year = std::stoi(datestamp.substr(0, 4));
     month = std::stoi(datestamp.substr(3, 2));

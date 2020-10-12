@@ -85,3 +85,7 @@ bool UIWindow::autoUpdate() const {
 bool UIWindow::expectBackendPush() const {
   return expectbackendpush;
 }
+
+bool UIWindow::isTop() const {
+  return ui->isTop(this);
+}
