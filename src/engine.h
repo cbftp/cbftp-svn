@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <list>
 #include <memory>
 #include <string>
@@ -26,6 +27,88 @@ class Path;
 class SkipList;
 class ScoreBoardElement;
 class TransferStatus;
+
+template <class T> class JobList {
+public:
+  typename std::list<T>::iterator begin() {
+    return items.begin();
+  }
+  typename std::list<T>::const_iterator begin() const {
+    return items.begin();
+  }
+  typename std::list<T>::iterator end() {
+    return items.end();
+  }
+  typename std::list<T>::const_iterator end() const {
+    return items.end();
+  }
+  T& front() {
+    return items.front();
+  }
+  T& back() {
+    return items.back();
+  }
+  void push_back(const T& t) {
+    items.push_back(t);
+    typename std::pair<typename std::unordered_map<unsigned int, typename std::list<T>::iterator>::iterator, bool> res = index.emplace(t->getId(), --items.end());
+    assert(res.second);
+  }
+  bool empty() const {
+    return items.empty();
+  }
+  typename std::list<T>::const_iterator find(unsigned int id) const {
+    typename std::unordered_map<unsigned int, typename std::list<T>::iterator>::const_iterator it = index.find(id);
+    if (it != index.end()) {
+      return it->second;
+    }
+    return items.end();
+  }
+  typename std::list<T>::const_iterator find(const T& t) const {
+    return find(t->getId());
+  }
+ typename std::list<T>::iterator find(unsigned int id) {
+    typename std::unordered_map<unsigned int, typename std::list<T>::iterator>::iterator it = index.find(id);
+    if (it != index.end()) {
+      return it->second;
+    }
+    return items.end();
+  }
+  typename std::list<T>::iterator find(const T& t) {
+    return find(t->getId());
+  }
+  bool contains(unsigned int id) {
+    return index.find(id) != index.end();
+  }
+  bool contains(const T& t) {
+    return contains(t->getId());
+  }
+  void erase(unsigned int id) {
+    typename std::unordered_map<unsigned int, typename std::list<T>::iterator>::iterator it = index.find(id);
+    if (it != index.end()) {
+      items.erase(it->second);
+      index.erase(id);
+    }
+  }
+  void erase(const T& t) {
+    erase(t->getId());
+  }
+  void erase(typename std::list<T>::iterator it) {
+    erase((*it)->getId());
+  }
+  void remove(const T& t) {
+    erase(t->getId());
+  }
+  void clear() {
+    index.clear();
+    items.clear();
+  }
+  size_t size() const {
+    return index.size();
+  }
+private:
+  std::unordered_map<unsigned int, typename std::list<T>::iterator> index;
+  std::list<T> items;
+};
 
 class Engine : public Core::EventReceiver {
 public:
@@ -132,12 +215,12 @@ public:
   void restoreFromFailed(const std::shared_ptr<Race>& race);
   void removeFromFinished(const std::shared_ptr<Race>& race);
   void clearSkipListCaches();
-  std::list<std::shared_ptr<Race>> allraces;
-  std::list<std::shared_ptr<Race>> currentraces;
-  std::list<std::shared_ptr<Race>> finishedraces;
-  std::list<std::shared_ptr<PreparedRace>> preparedraces;
-  std::list<std::shared_ptr<TransferJob>> alltransferjobs;
-  std::list<std::shared_ptr<TransferJob>> currenttransferjobs;
+  JobList<std::shared_ptr<Race>> allraces;
+  JobList<std::shared_ptr<Race>> currentraces;
+  JobList<std::shared_ptr<Race>> finishedraces;
+  JobList<std::shared_ptr<PreparedRace>> preparedraces;
+  JobList<std::shared_ptr<TransferJob>> alltransferjobs;
+  JobList<std::shared_ptr<TransferJob>> currenttransferjobs;
   std::shared_ptr<ScoreBoard> scoreboard;
   std::shared_ptr<ScoreBoard> failboard;
   std::unordered_map<std::shared_ptr<TransferJob>, std::list<PendingTransfer>> pendingtransfers;
