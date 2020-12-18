@@ -61,6 +61,9 @@ bool File::parseUNIXSTATLine(const std::string & statline) {
     return false;
   }
   --maxpos;
+  while (pos < maxpos && statline[pos] == ' ') {
+    ++pos;
+  }
   if (statline[pos] == 'd') directory = true;
   else if (statline[pos] == 'l') softlink = true;
   while (pos < maxpos && statline[++pos] != ' ');

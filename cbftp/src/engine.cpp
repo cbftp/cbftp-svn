@@ -218,11 +218,8 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
     }
     bool readdtocurrent = true;
     if (append) {
-      for (std::list<std::shared_ptr<Race> >::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
-        if (*it == race) {
-          readdtocurrent = false;
-          break;
-        }
+      if (currentraces.contains(race)) {
+        readdtocurrent = false;
       }
       if (readdtocurrent) {
         global->getEventLog()->log("Engine", "Reactivating spread job: " + section + "/" + release);
@@ -278,32 +275,25 @@ bool Engine::prepareRace(const std::string & release, const std::string& section
 }
 
 void Engine::startPreparedRace(unsigned int id) {
-  for (std::list<std::shared_ptr<PreparedRace> >::iterator it = preparedraces.begin(); it != preparedraces.end(); it++) {
-    if ((*it)->getId() == id) {
-      std::list<std::string> sites;
-      std::list<std::string> dlonlysites;
-      for (const std::pair<std::string, bool>& site : (*it)->getSites()) {
-        if (site.second) {
-          dlonlysites.push_back(site.first);
-        }
-        else {
-          sites.push_back(site.first);
-        }
+  std::list<std::shared_ptr<PreparedRace>>::iterator it = preparedraces.find(id);
+  if (it != preparedraces.end()) {
+    std::list<std::string> sites;
+    std::list<std::string> dlonlysites;
+    for (const std::pair<std::string, bool>& site : (*it)->getSites()) {
+      if (site.second) {
+        dlonlysites.push_back(site.first);
       }
-      newRace((*it)->getName(), (*it)->getSection(), sites, (*it)->getReset(), dlonlysites);
-      preparedraces.erase(it);
-      return;
+      else {
+        sites.push_back(site.first);
+      }
     }
+    newRace((*it)->getName(), (*it)->getSection(), sites, (*it)->getReset(), dlonlysites);
+    preparedraces.erase(it);
   }
 }
 
 void Engine::deletePreparedRace(unsigned int id) {
-  for (std::list<std::shared_ptr<PreparedRace> >::iterator it = preparedraces.begin(); it != preparedraces.end(); it++) {
-    if ((*it)->getId() == id) {
-      preparedraces.erase(it);
-      return;
-    }
-  }
+  preparedraces.erase(id);
 }
 
 void Engine::startLatestPreparedRace() {
@@ -557,14 +547,7 @@ void Engine::resetRace(const std::shared_ptr<Race> & race, bool hard) {
       }
       it->second->resetRace(it->first);
     }
-    bool current = false;
-    for (std::list<std::shared_ptr<Race> >::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
-      if (*it == race) {
-        current = true;
-        break;
-      }
-    }
-    if (!current) {
+    if (!currentraces.contains(race)) {
       currentraces.push_back(race);
       removeFromFinished(race);
     }
@@ -614,12 +597,7 @@ void Engine::restoreFromFailed(const std::shared_ptr<Race>& race) {
 }
 
 void Engine::removeFromFinished(const std::shared_ptr<Race> & race) {
-  for (std::list<std::shared_ptr<Race>>::iterator it = --finishedraces.end(); it != --finishedraces.begin(); it--) {
-    if (*it == race) {
-      finishedraces.erase(it);
-      break;
-    }
-  }
+  finishedraces.erase(race);
 }
 
 void Engine::clearSkipListCaches() {
@@ -1455,12 +1433,10 @@ void Engine::checkIfRaceComplete(const std::shared_ptr<SiteLogic> & sls, std::sh
 }
 
 void Engine::raceComplete(const std::shared_ptr<Race>& race) {
-  for (std::list<std::shared_ptr<Race> >::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
-    if ((*it) == race) {
-      currentraces.erase(it);
-      finishedraces.push_back(race);
-      break;
-    }
+  std::list<std::shared_ptr<Race> >::iterator it = currentraces.find(race);
+  if (it != currentraces.end()) {
+    currentraces.erase(it);
+    finishedraces.push_back(race);
   }
   issueGlobalComplete(race);
   global->getEventLog()->log("Engine", "Spread job globally completed: " + race->getName());
@@ -1472,12 +1448,7 @@ void Engine::raceComplete(const std::shared_ptr<Race>& race) {
 
 void Engine::transferJobComplete(const std::shared_ptr<TransferJob>& tj) {
   global->getEventLog()->log("Engine", tj->typeString() + " job complete: " + tj->getSrcFileName());
-  for (std::list<std::shared_ptr<TransferJob> >::iterator it = currenttransferjobs.begin(); it != currenttransferjobs.end(); it++) {
-    if ((*it) == tj) {
-      currenttransferjobs.erase(it);
-      break;
-    }
-  }
+  currenttransferjobs.erase(tj);
 }
 
 unsigned short Engine::calculateScore(ScoreBoardElement * sbe) const {
@@ -1671,11 +1642,9 @@ unsigned int Engine::allTransferJobs() const {
 }
 
 std::shared_ptr<Race> Engine::getRace(unsigned int id) const {
-  std::list<std::shared_ptr<Race> >::const_iterator it;
-  for (it = allraces.begin(); it != allraces.end(); it++) {
-    if ((*it)->getId() == id) {
-      return *it;
-    }
+  std::list<std::shared_ptr<Race> >::const_iterator it = allraces.find(id);
+  if (it != allraces.end()) {
+    return *it;
   }
   return std::shared_ptr<Race>();
 }
@@ -1691,11 +1660,9 @@ std::shared_ptr<Race> Engine::getRace(const std::string& race) const {
 }
 
 std::shared_ptr<TransferJob> Engine::getTransferJob(unsigned int id) const {
-  std::list<std::shared_ptr<TransferJob> >::const_iterator it;
-  for (it = alltransferjobs.begin(); it != alltransferjobs.end(); it++) {
-    if ((*it)->getId() == id) {
-      return *it;
-    }
+  std::list<std::shared_ptr<TransferJob> >::const_iterator it = alltransferjobs.find(id);
+  if (it != alltransferjobs.end()) {
+    return *it;
   }
   return std::shared_ptr<TransferJob>();
 }
@@ -1823,17 +1790,12 @@ void Engine::tick(int message) {
       removeids.push_back((*it)->getId());
     }
   }
-  while (removeids.size() > 0) {
+  while (!removeids.empty()) {
     unsigned int id = removeids.front();
     removeids.pop_front();
-    for (std::list<std::shared_ptr<PreparedRace> >::iterator it = preparedraces.begin(); it != preparedraces.end(); it++) {
-      if ((*it)->getId() == id) {
-        preparedraces.erase(it);
-        break;
-      }
-    }
+    preparedraces.erase(id);
   }
-  if (!currentraces.size() && !currenttransferjobs.size() && !preparedraces.size() && !startnextprepared && pokeregistered) {
+  if (currentraces.empty() && currenttransferjobs.empty() && preparedraces.empty() && !startnextprepared && pokeregistered) {
     global->getTickPoke()->stopPoke(this, 0);
     pokeregistered = false;
   }
