@@ -9,7 +9,7 @@
 #include "../path.h"
 
 int usage() {
-  std::cout << "datafilewrite: encrypts the content of a cbftp plain text "
+  std::cerr << "datafilewrite: encrypts the content of a cbftp plain text "
             << "data file.\n\n"
             << "Usage: datafilewrite <infile> <--outfile= OR --defaultoutfile>"
             << std::endl;
@@ -21,7 +21,7 @@ int main(int argc, char ** argv) {
     return usage();
   }
   const std::string path = argv[1];
-  Path outpath = Path(getenv("HOME")) / DATAPATH / DATAFILE;
+  Path outpath = DataFileHandlerMethod::getDataFile();
   bool outfileset = false;
   std::string outfile;
   for (int i = 2; i < argc; i++) {
@@ -41,7 +41,7 @@ int main(int argc, char ** argv) {
   }
 
   if (!checkInputFile(path)) return -1;
-
+  std::cerr << "Using data file: " << outpath.toString() << std::endl;
   Core::BinaryData key = getPassphrase();
 
   Core::BinaryData rawdata;
