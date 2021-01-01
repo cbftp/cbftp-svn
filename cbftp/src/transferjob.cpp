@@ -644,7 +644,6 @@ int TransferJob::filesTotal() const {
 void TransferJob::countTotalFiles() {
   switch (type) {
     case TRANSFERJOB_DOWNLOAD:
-    case TRANSFERJOB_FXP:
     {
       int files = 0;
       for (std::unordered_map<std::string, std::shared_ptr<FileList>>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
@@ -655,7 +654,53 @@ void TransferJob::countTotalFiles() {
           }
           continue;
         }
-        files += it->second->getNumUploadedFiles();
+        for (std::list<File*>::const_iterator it2 = it->second->begin(); it2 != it->second->end(); ++it2) {
+          if ((*it2)->isDirectory()) {
+            continue;
+          }
+          SkipListMatch filematch = global->getSkipList()->check((dstpath / it->first / (*it2)->getName()).toString(), false, false);
+          if (filematch.action != SKIPLIST_DENY) {
+            ++files;
+          }
+        }
+      }
+      filestotal = files;
+      break;
+    }
+    case TRANSFERJOB_FXP:
+    {
+      int files = 0;
+      const SkipList& dstskip = dst->getSite()->getSkipList();
+      for (std::unordered_map<std::string, std::shared_ptr<FileList>>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
+        std::shared_ptr<FileList> dstlist = dstfilelists.at(it->first);
+        if (it->first == "") {
+          File* f = it->second->getFile(srcfile);
+          if (f != NULL && !f->isDirectory()) {
+            ++files;
+          }
+          continue;
+        }
+        for (std::list<File*>::const_iterator it2 = it->second->begin(); it2 != it->second->end(); ++it2) {
+          if ((*it2)->isDirectory()) {
+            continue;
+          }
+          std::string filename = (*it2)->getName();
+          SkipListMatch filematch = dstskip.check((dstlist->getPath() / filename).toString(), false, false);
+          if (filematch.action == SKIPLIST_DENY ||
+              (filematch.action == SKIPLIST_UNIQUE && dstlist->containsPattern(filematch.matchpattern, false)))
+          {
+           continue;
+          }
+          if (filematch.action == SKIPLIST_SIMILAR) {
+            if (!dstlist->similarChecked()) {
+              dstlist->checkSimilar(&dstskip);
+            }
+            if (dstlist->containsUnsimilar(filename)) {
+              continue;
+            }
+          }
+          ++files;
+        }
       }
       filestotal = files;
       break;
@@ -663,8 +708,10 @@ void TransferJob::countTotalFiles() {
     case TRANSFERJOB_UPLOAD:
     {
       int files = 0;
+      const SkipList& dstskip = dst->getSite()->getSkipList();
       std::unordered_map<std::string, std::shared_ptr<LocalFileList>>::const_iterator it;
       for (it = localfilelists.begin(); it != localfilelists.end(); it++) {
+        std::shared_ptr<FileList> dstlist = dstfilelists.at(it->first);
         if (it->first == "") {
           std::unordered_map<std::string, LocalFile>::const_iterator it2 = it->second->find(srcfile);
           if (it2 != it->second->end() && !it2->second.isDirectory()) {
@@ -672,7 +719,27 @@ void TransferJob::countTotalFiles() {
           }
           continue;
         }
-        files += it->second->sizeFiles();
+        for (std::unordered_map<std::string, LocalFile>::const_iterator it2 = it->second->begin(); it2 != it->second->end(); ++it2) {
+          if (it2->second.isDirectory()) {
+            continue;
+          }
+          std::string filename = it2->first;
+          SkipListMatch filematch = dstskip.check((dstlist->getPath() / filename).toString(), false, false);
+          if (filematch.action == SKIPLIST_DENY ||
+             (filematch.action == SKIPLIST_UNIQUE && dstlist->containsPattern(filematch.matchpattern, false)))
+          {
+            continue;
+          }
+          if (filematch.action == SKIPLIST_SIMILAR) {
+            if (!dstlist->similarChecked()) {
+              dstlist->checkSimilar(&dstskip);
+            }
+            if (dstlist->containsUnsimilar(filename)) {
+              continue;
+            }
+          }
+          ++files;
+        }
       }
       filestotal = files;
       break;
