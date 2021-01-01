@@ -10,14 +10,14 @@
 #include "../path.h"
 
 int usage() {
-  std::cout << "datafilecat: decrypts the content of a cbftp data file.\n\n"
+  std::cerr << "datafilecat: decrypts the content of a cbftp data file.\n\n"
             << "Usage: datafilecat [--infile=] [--outfile=]"
             << std::endl;
   return 0;
 }
 
 int main(int argc, char ** argv) {
-  Path path = Path(getenv("HOME")) / DATAPATH / DATAFILE;
+  Path path = DataFileHandlerMethod::getDataFile();
   bool useoutfile = false;
   std::string outfile;
   for (int i = 1; i < argc; i++) {
@@ -35,7 +35,7 @@ int main(int argc, char ** argv) {
 
 
   if (!checkInputFile(path)) return -1;
-
+  std::cerr << "Using data file: " << path.toString() << std::endl;
 
 
   Core::BinaryData rawdata;

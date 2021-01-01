@@ -4,6 +4,9 @@
 # relative path to the ui to use
 UI_PATH := src/ui
 
+# path where the data file will be stored
+DATA_FILE := "\"~/.cbftp/data\""
+
 UNAME_S := $(shell uname -s)
 ifneq ($(STATIC_SSL_PATH),)
 STATIC_SSL_INCLUDE := -I$(STATIC_SSL_PATH)/include

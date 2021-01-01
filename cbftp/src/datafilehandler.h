@@ -19,7 +19,7 @@ private:
   Core::BinaryData rawdata;
   std::vector<std::string> decryptedlines;
   std::vector<std::string> outputlines;
-  Path path;
+  Path datafile;
   std::string key;
   Core::BinaryData filehash;
   DataFileState state;
