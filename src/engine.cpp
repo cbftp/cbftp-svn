@@ -1184,7 +1184,8 @@ void Engine::refreshPendingTransferList(const std::shared_ptr<TransferJob>& tj) 
         for (std::list<File *>::iterator srcit = srclist->begin(); srcit != srclist->end(); srcit++) {
           File * f = *srcit;
           const std::string & filename = f->getName();
-          if ((it2->first != "" || filename == tj->getSrcFileName()) &&
+          bool onefilejob = it2->first == "" && !f->isDirectory() && filename == tj->getSrcFileName();
+          if ((it2->first != "" || onefilejob) &&
               !f->isDirectory() && f->getSize() > 0)
           {
             std::unordered_map<std::string, LocalFile>::const_iterator dstit;
@@ -1197,6 +1198,12 @@ void Engine::refreshPendingTransferList(const std::shared_ptr<TransferJob>& tj) 
             }
             const Path subpath = it2->first;
             if (!dstlist || dstit == dstlist->end() || dstit->second.getSize() == 0) {
+              if (!onefilejob) {
+                SkipListMatch match = global->getSkipList()->check((dstlist->getPath() / filename).toString(), false, false);
+                if (match.action == SKIPLIST_DENY) {
+                  continue;
+                }
+              }
               PendingTransfer p(tj->getSrc(), srclist, filename, dstlist, filename);
               addPendingTransfer(list, p);
               tj->addPendingTransfer(subpath / filename, f->getSize());
@@ -1210,6 +1217,7 @@ void Engine::refreshPendingTransferList(const std::shared_ptr<TransferJob>& tj) 
       break;
     }
     case TRANSFERJOB_UPLOAD: {
+      const SkipList& dstskip = &tj->getDst()->getSite()->getSkipList();
       std::unordered_map<std::string, std::shared_ptr<LocalFileList> >::const_iterator lit;
       for (lit = tj->localFileListsBegin(); lit != tj->localFileListsEnd(); lit++) {
         std::shared_ptr<FileList> dstlist = tj->findDstList(lit->first);
@@ -1217,7 +1225,8 @@ void Engine::refreshPendingTransferList(const std::shared_ptr<TransferJob>& tj) 
           continue;
         }
         for (std::unordered_map<std::string, LocalFile>::const_iterator lfit = lit->second->begin(); lfit != lit->second->end(); lfit++) {
-          if ((lit->first != "" || lfit->first == tj->getSrcFileName()) &&
+          bool onefilejob = lit->first == "" && !lfit->second.isDirectory() && lfit->first == tj->getSrcFileName();
+          if ((lit->first != "" || onefilejob) &&
               !lfit->second.isDirectory() && lfit->second.getSize() > 0)
           {
             std::string filename = lfit->first;
@@ -1225,6 +1234,22 @@ void Engine::refreshPendingTransferList(const std::shared_ptr<TransferJob>& tj) 
             if (dstlist->getFile(filename) == NULL) {
               if (tj->hasFailedTransfer((Path(dstlist->getPath()) / filename).toString())) {
                 continue;
+              }
+              if (!onefilejob) {
+                SkipListMatch filematch = dstskip.check((dstlist->getPath() / filename).toString(), false, false);
+                if (filematch.action == SKIPLIST_DENY ||
+                    (filematch.action == SKIPLIST_UNIQUE && dstlist->containsPattern(filematch.matchpattern, false)))
+                {
+                  continue;
+                }
+                if (filematch.action == SKIPLIST_SIMILAR) {
+                  if (!dstlist->similarChecked()) {
+                    dstlist->checkSimilar(&dstskip);
+                  }
+                  if (dstlist->containsUnsimilar(filename)) {
+                    continue;
+                  }
+                }
               }
               PendingTransfer p(lit->second, filename, tj->getDst(), dstlist, filename);
               addPendingTransfer(list, p);
@@ -1239,6 +1264,7 @@ void Engine::refreshPendingTransferList(const std::shared_ptr<TransferJob>& tj) 
       break;
     }
     case TRANSFERJOB_FXP: {
+      const SkipList& dstskip = &tj->getDst()->getSite()->getSkipList();
       std::unordered_map<std::string, std::shared_ptr<FileList>>::const_iterator it2;
       for (it2 = tj->srcFileListsBegin(); it2 != tj->srcFileListsEnd(); it2++) {
         const std::shared_ptr<FileList>& srclist = it2->second;
@@ -1249,13 +1275,30 @@ void Engine::refreshPendingTransferList(const std::shared_ptr<TransferJob>& tj) 
         for (std::list<File *>::iterator srcit = srclist->begin(); srcit != srclist->end(); srcit++) {
           File * f = *srcit;
           const std::string & filename = f->getName();
-          if ((it2->first != "" || filename == tj->getSrcFileName()) &&
+          bool onefilejob = it2->first == "" && !f->isDirectory() && filename == tj->getSrcFileName();
+          if ((it2->first != "" || onefilejob) &&
               !f->isDirectory() && f->getSize() > 0)
           {
             const Path subpath = it2->first;
             if (dstlist->getFile(filename) == NULL) {
               if (tj->hasFailedTransfer((Path(dstlist->getPath()) / filename).toString())) {
                 continue;
+              }
+              if (!onefilejob) {
+                SkipListMatch filematch = dstskip.check((dstlist->getPath() / filename).toString(), false, false);
+                if (filematch.action == SKIPLIST_DENY ||
+                   (filematch.action == SKIPLIST_UNIQUE && dstlist->containsPattern(filematch.matchpattern, false)))
+                {
+                 continue;
+                }
+                if (filematch.action == SKIPLIST_SIMILAR) {
+                  if (!dstlist->similarChecked()) {
+                    dstlist->checkSimilar(&dstskip);
+                  }
+                  if (dstlist->containsUnsimilar(filename)) {
+                    continue;
+                  }
+                }
               }
               PendingTransfer p(tj->getSrc(), srclist, filename, tj->getDst(), dstlist, filename);
               addPendingTransfer(list, p);

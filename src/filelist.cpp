@@ -657,7 +657,7 @@ void FileList::checkSimilar(const SkipList * siteskip, const SkipList * sections
 }
 
 bool FileList::checkSimilarFile(File * f) {
-  if (!siteskip || !sectionskip) {
+  if (!siteskip) {
     return false;
   }
   SkipListMatch match = siteskip->check(f->getName(), f->isDirectory(), true, sectionskip);
