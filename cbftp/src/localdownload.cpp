@@ -63,7 +63,7 @@ void LocalDownload::init(TransferMonitor* tm, FTPConn* ftpconn, const Path& path
 }
 
 void LocalDownload::FDInterConnected(int sockid) {
-  if (sockid != this->sockid) {
+  if (this->sockid == -1 || sockid != this->sockid) {
     return;
   }
   tm->localInfo("Connection established");
@@ -77,13 +77,15 @@ void LocalDownload::FDInterConnected(int sockid) {
 }
 
 void LocalDownload::FDInterDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) {
-  if (sockid != this->sockid) {
+  if (this->sockid == -1 || sockid != this->sockid) {
     return;
   }
   if (!inmemory) {
     if (bufpos > 0) {
       if (!fileopened) {
-        openFile(false);
+        if (!openFile(false)) {
+          return;
+        }
       }
       filestream.write(buf, bufpos);
     }
@@ -108,7 +110,7 @@ void LocalDownload::FDInterDisconnected(int sockid, Core::DisconnectType reason,
 }
 
 void LocalDownload::FDSSLSuccess(int sockid, const std::string& cipher) {
-  if (sockid != this->sockid) {
+  if (this->sockid == -1 || sockid != this->sockid) {
     return;
   }
   tm->localInfo("TLS handshake successful");
@@ -118,21 +120,21 @@ void LocalDownload::FDSSLSuccess(int sockid, const std::string& cipher) {
 }
 
 void LocalDownload::FDInterData(int sockid, char* data, unsigned int len) {
-  if (sockid != this->sockid) {
+  if (this->sockid == -1 || sockid != this->sockid) {
     return;
   }
   append(data, len);
 }
 
 void LocalDownload::FDInterListening(int sockid, const Address& addr) {
-  if (sockid != this->sockid) {
+  if (this->sockid == -1 || sockid != this->sockid) {
     return;
   }
   tm->passiveReady(addr.host, addr.port);
 }
 
 void LocalDownload::FDFail(int sockid, const std::string& error) {
-  if (sockid == -1 || sockid != this->sockid) {
+  if (this->sockid == -1 || sockid != this->sockid) {
     return;
   }
   deactivate();
