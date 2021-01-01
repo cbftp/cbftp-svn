@@ -368,6 +368,9 @@ std::shared_ptr<LocalFileList> LocalStorage::getLocalFileList(const Path & path)
 }
 
 bool LocalStorage::updateLocalFileList(const std::shared_ptr<LocalFileList>& filelist) {
+  if (!filelist) {
+    return false;
+  }
   Path path = filelist->getPath();
   unsigned int files = 0;
   int touch = rand();

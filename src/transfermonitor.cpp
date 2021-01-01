@@ -167,14 +167,17 @@ void TransferMonitor::engageDownload(
   TransferProtocol dprot = global->getLocalStorage()->getTransferProtocol();
   ipv6 = useIPv6(sprot, dprot);
   localfl->touchFile(dfile, true);
-  if (!FileSystem::directoryExistsWritable(dpath)) {
-    FileSystem::createDirectoryRecursive(dpath);
-  }
   clientactive = !sls->getSite()->hasBrokenPASV();
   ts = std::make_shared<TransferStatus>(TRANSFERSTATUS_TYPE_DOWNLOAD,
       sls->getSite()->getName(), "/\\", co ? co->getName() : "", dfile, fls, spath,
       nullptr, dpath, fls->getFile(sfile)->getSize(), 0, src, -1, ssl, clientactive);
   tm->addNewTransferStatus(ts);
+  if (!FileSystem::directoryExistsWritable(dpath)) {
+    if (!FileSystem::createDirectoryRecursive(dpath)) {
+      lateDownloadFailure("Failed to create directory: " + dpath.toString());
+      return;
+    }
+  }
   if (FileSystem::fileExists(dpath / dfile) && global->getLocalStorage()->getLocalFile(dpath / dfile).getSize() > 0) {
     lateDownloadFailure((dpath / dfile).toString() + " already exists", true);
     return;

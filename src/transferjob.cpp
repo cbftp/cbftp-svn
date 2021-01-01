@@ -723,7 +723,9 @@ void TransferJob::updateLocalFileLists() {
     Path basepath = type == TRANSFERJOB_DOWNLOAD ? dstpath : srcpath;
     localfilelists[""] = base = global->getLocalStorage()->getLocalFileList(basepath);
   }
-  global->getLocalStorage()->updateLocalFileList(base);
+  if (!base) {
+    return;
+  }
   std::unordered_map<std::string, LocalFile>::const_iterator it2 = base->find(srcfile);
   if (it2 != base->end() && it2->second.isDirectory()) {
     updateLocalFileLists(base->getPath(), base->getPath() / srcfile);
