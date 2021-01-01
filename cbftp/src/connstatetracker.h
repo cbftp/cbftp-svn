@@ -45,6 +45,7 @@ private:
   bool listipv6;
   bool listinitialized;
   bool quitting;
+  bool handling;
   std::string listhost;
   int listport;
   TransferMonitor * listtm;
@@ -115,5 +116,7 @@ public:
   bool hasRefreshToken() const;
   void setRefreshToken();
   void useRefreshTokenFor(const std::string& refreshpath);
+  bool isHandlingConnection() const;
+  void setHandlingConnection(bool handling);
   std::string getLastRefreshPath() const;
 };

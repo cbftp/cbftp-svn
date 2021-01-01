@@ -107,6 +107,18 @@ int maxChecksRow(SitePriority priority) {
   return MAX_CHECKS_ROW_PRIO_VERY_HIGH;
 }
 
+class HandlingConnGuard {
+public:
+  HandlingConnGuard(ConnStateTracker& cst) : cst(cst) {
+    cst.setHandlingConnection(true);
+  }
+  ~HandlingConnGuard() {
+    cst.setHandlingConnection(false);
+  }
+private:
+  ConnStateTracker& cst;
+};
+
 } // namespace
 
 enum class Exists {
@@ -1030,7 +1042,7 @@ void SiteLogic::haveConnectedActivate(unsigned int connected) {
   else {
     for (unsigned int i = 0; i < conns.size(); i++) {
       if (connstatetracker[i].isLoggedIn() && !connstatetracker[i].isLocked() &&
-          !conns[i]->isProcessing())
+          !conns[i]->isProcessing() && !connstatetracker[i].isHandlingConnection())
       {
         handleConnection(i);
         break;
@@ -1095,6 +1107,7 @@ void SiteLogic::handlePostDownload(int id) {
 }
 
 void SiteLogic::handleConnection(int id) {
+  HandlingConnGuard hcg(connstatetracker[id]);
   if (conns[id]->isProcessing()) {
     return;
   }

@@ -24,6 +24,7 @@ ConnStateTracker::ConnStateTracker() :
   listtransfer(false),
   listinitialized(false),
   quitting(false),
+  handling(false),
   recursivelogic(std::make_shared<RecursiveCommandLogic>()),
   refreshtoken(false)
 {
@@ -368,4 +369,12 @@ void ConnStateTracker::useRefreshTokenFor(const std::string& refreshpath) {
 
 std::string ConnStateTracker::getLastRefreshPath() const {
   return lastrefreshpath;
+}
+
+bool ConnStateTracker::isHandlingConnection() const {
+  return handling;
+}
+
+void ConnStateTracker::setHandlingConnection(bool handling) {
+  this->handling = handling;
 }
