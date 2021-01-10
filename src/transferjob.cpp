@@ -649,13 +649,13 @@ void TransferJob::countTotalFiles() {
       for (std::unordered_map<std::string, std::shared_ptr<FileList>>::iterator it = srcfilelists.begin(); it != srcfilelists.end(); it++) {
         if (it->first == "") {
           File* f = it->second->getFile(srcfile);
-          if (f != NULL && !f->isDirectory()) {
+          if (f != NULL && !f->isDirectory() && f->getSize() > 0) {
             ++files;
           }
           continue;
         }
         for (std::list<File*>::const_iterator it2 = it->second->begin(); it2 != it->second->end(); ++it2) {
-          if ((*it2)->isDirectory()) {
+          if ((*it2)->isDirectory() || !(*it2)->getSize()) {
             continue;
           }
           SkipListMatch filematch = global->getSkipList()->check((dstpath / it->first / (*it2)->getName()).toString(), false, false);
@@ -675,13 +675,13 @@ void TransferJob::countTotalFiles() {
         std::shared_ptr<FileList> dstlist = dstfilelists.at(it->first);
         if (it->first == "") {
           File* f = it->second->getFile(srcfile);
-          if (f != NULL && !f->isDirectory()) {
+          if (f != NULL && !f->isDirectory() && f->getSize() > 0) {
             ++files;
           }
           continue;
         }
         for (std::list<File*>::const_iterator it2 = it->second->begin(); it2 != it->second->end(); ++it2) {
-          if ((*it2)->isDirectory()) {
+          if ((*it2)->isDirectory() || !(*it2)->getSize()) {
             continue;
           }
           std::string filename = (*it2)->getName();
@@ -714,13 +714,13 @@ void TransferJob::countTotalFiles() {
         std::shared_ptr<FileList> dstlist = dstfilelists.at(it->first);
         if (it->first == "") {
           std::unordered_map<std::string, LocalFile>::const_iterator it2 = it->second->find(srcfile);
-          if (it2 != it->second->end() && !it2->second.isDirectory()) {
+          if (it2 != it->second->end() && !it2->second.isDirectory() && it2->second.getSize() > 0) {
             ++files;
           }
           continue;
         }
         for (std::unordered_map<std::string, LocalFile>::const_iterator it2 = it->second->begin(); it2 != it->second->end(); ++it2) {
-          if (it2->second.isDirectory()) {
+          if (it2->second.isDirectory() || !it2->second.getSize()) {
             continue;
           }
           std::string filename = it2->first;
