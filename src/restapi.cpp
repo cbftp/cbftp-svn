@@ -315,7 +315,7 @@ std::string transferJobStatusToString(TransferJobStatus status) {
     case TransferJobStatus::TRANSFERJOB_DONE:
       return "DONE";
     case TransferJobStatus::TRANSFERJOB_QUEUED:
-      return "TIMEOUT";
+      return "QUEUED";
     case TransferJobStatus::TRANSFERJOB_ABORTED:
       return "ABORTED";
   }
@@ -566,6 +566,38 @@ DeleteMode stringToDeleteMode(const std::string& mode) {
     return DeleteMode::NONE;
   }
   throw std::range_error("Unknown delete mode: " + mode);
+}
+
+TransferJobStatus stringToTransferJobStatus(const std::string& status) {
+  if (status == "RUNNING") {
+    return TransferJobStatus::TRANSFERJOB_RUNNING;
+  }
+  else if (status == "DONE") {
+    return TransferJobStatus::TRANSFERJOB_DONE;
+  }
+  else if (status == "QUEUED") {
+    return TransferJobStatus::TRANSFERJOB_QUEUED;
+  }
+  else if (status == "ABORTED") {
+    return TransferJobStatus::TRANSFERJOB_ABORTED;
+  }
+  throw std::range_error("Unknown transfer job status: " + status);
+}
+
+RaceStatus stringToRaceStatus(const std::string& status) {
+  if (status == "RUNNING") {
+    return RaceStatus::RUNNING;
+  }
+  else if (status == "DONE") {
+    return RaceStatus::DONE;
+  }
+  else if (status == "ABORTED") {
+    return RaceStatus::ABORTED;
+  }
+  else if (status == "TIMEOUT") {
+    return RaceStatus::TIMEOUT;
+  }
+  throw std::range_error("Unknown spread job status: " + status);
 }
 
 void updateSkipList(SkipList& skiplist, nlohmann::json jsonlist) {
@@ -1214,8 +1246,21 @@ void RestApi::handleSpreadJobGet(RestApiCallback* cb, int connrequestid, const h
 void RestApi::handleSpreadJobsGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
   nlohmann::json joblist = nlohmann::json::array();
   std::list<std::shared_ptr<Race>>::const_iterator it;
+  bool filterstatus = false;
+  std::string statusstr = request.getQueryParamValue("status");
+  RaceStatus status;
+  if (!statusstr.empty()) {
+    try {
+      status = stringToRaceStatus(statusstr);
+      filterstatus = true;
+    }
+    catch (std::range_error& e) {
+    }
+  }
   for (it = global->getEngine()->getRacesBegin(); it != global->getEngine()->getRacesEnd(); ++it) {
-    joblist.push_back((*it)->getName());
+    if (!filterstatus || ((*it)->getStatus() == status)) {
+      joblist.push_back((*it)->getName());
+    }
   }
   http::Response response(200);
   std::string jsondump = joblist.dump(2);
@@ -1402,9 +1447,22 @@ void RestApi::handleSiteSectionDelete(RestApiCallback* cb, int connrequestid, co
 
 void RestApi::handleTransferJobsGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
   nlohmann::json joblist = nlohmann::json::array();
+  bool filterstatus = false;
+  std::string statusstr = request.getQueryParamValue("status");
+  TransferJobStatus status;
+  if (!statusstr.empty()) {
+    try {
+      status = stringToTransferJobStatus(statusstr);
+      filterstatus = true;
+    }
+    catch (std::range_error& e) {
+    }
+  }
   std::list<std::shared_ptr<TransferJob>>::const_iterator it;
   for (it = global->getEngine()->getTransferJobsBegin(); it != global->getEngine()->getTransferJobsEnd(); ++it) {
-    joblist.push_back((*it)->getName());
+    if (!filterstatus || (*it)->getStatus() == status) {
+      joblist.push_back((*it)->getName());
+    }
   }
 
   http::Response response(200);

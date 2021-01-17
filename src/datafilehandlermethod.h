@@ -7,7 +7,7 @@ namespace {
 
 namespace DataFileHandlerMethod {
 
-bool encrypt(const Core::BinaryData& indata, const Core::BinaryData& pass, Core::BinaryData& outdata) {
+inline bool encrypt(const Core::BinaryData& indata, const Core::BinaryData& pass, Core::BinaryData& outdata) {
   if (!Crypto::isMostlyASCII(indata)) {
     return false;
   }
@@ -15,12 +15,12 @@ bool encrypt(const Core::BinaryData& indata, const Core::BinaryData& pass, Core:
   return true;
 }
 
-bool decrypt(const Core::BinaryData& indata, const Core::BinaryData& pass, Core::BinaryData& outdata) {
+inline bool decrypt(const Core::BinaryData& indata, const Core::BinaryData& pass, Core::BinaryData& outdata) {
   Crypto::decrypt(indata, pass, outdata);
   return Crypto::isMostlyASCII(outdata);
 }
 
-Path getDataFile() {
+inline Path getDataFile() {
   std::string datafilestr = DATA_FILE;
   char * overridedf = getenv("CBFTP_DATA_PATH");
   if (overridedf != nullptr) {
