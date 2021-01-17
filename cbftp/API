@@ -187,8 +187,8 @@ $path(sectionname)
   defaults to 10
    GET /filelist?site=SITE1&path=/&timeout=2
 
-- List all spread jobs
-   GET /spreadjobs
+- List all spread jobs. Status is optional
+   GET /spreadjobs?status=RUNNING
    
 - Get details of a specific spread job
    GET /spreadjobs/JOBNAME
@@ -238,8 +238,8 @@ Example body (optional) when aborting a spread job:
   ]
 }
 
-- List all transfer jobs
-   GET /transferjobs
+- List all transfer jobs. Status is optional
+   GET /transferjobs?status=RUNNING
    
 - Get details of a specific transfer job
    GET /transferjobs/JOBNAME
