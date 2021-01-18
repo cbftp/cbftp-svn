@@ -36,8 +36,9 @@ Add a site (read json blob from file):
 
 Available commands:
 
-- List all sites
+- List all sites. Section filter is optional
     GET /sites
+    GET /sites?section=sectionname
 
 - Get details of a specific site
     GET /sites/SITE1
@@ -187,7 +188,8 @@ $path(sectionname)
   defaults to 10
    GET /filelist?site=SITE1&path=/&timeout=2
 
-- List all spread jobs. Status is optional
+- List all spread jobs. Status filter is optional
+   GET /spreadjobs
    GET /spreadjobs?status=RUNNING
    
 - Get details of a specific spread job
@@ -238,7 +240,8 @@ Example body (optional) when aborting a spread job:
   ]
 }
 
-- List all transfer jobs. Status is optional
+- List all transfer jobs. Status filter is optional
+   GET /transferjobs
    GET /transferjobs?status=RUNNING
    
 - Get details of a specific transfer job
