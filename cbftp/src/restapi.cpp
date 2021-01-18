@@ -952,8 +952,16 @@ void RestApi::handleRawGet(RestApiCallback* cb, int connrequestid, const http::R
 
 void RestApi::handleSitesGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
   nlohmann::json sitelist = nlohmann::json::array();
+  bool filtersection = request.hasQueryParam("section");
+  std::string section = request.getQueryParamValue("section");
+  if (!global->getSectionManager()->getSection(section)) {
+    cb->requestHandled(connrequestid, badRequestResponse("Unknown section: " + section));
+    return;
+  }
   for (std::vector<std::shared_ptr<Site>>::const_iterator it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); ++it) {
-    sitelist.push_back((*it)->getName());
+    if (!filtersection || (*it)->hasSection(section)) {
+      sitelist.push_back((*it)->getName());
+    }
   }
   http::Response response(200);
   std::string jsondump = sitelist.dump(2);
@@ -1246,15 +1254,16 @@ void RestApi::handleSpreadJobGet(RestApiCallback* cb, int connrequestid, const h
 void RestApi::handleSpreadJobsGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
   nlohmann::json joblist = nlohmann::json::array();
   std::list<std::shared_ptr<Race>>::const_iterator it;
-  bool filterstatus = false;
+  bool filterstatus = request.hasQueryParam("status");
   std::string statusstr = request.getQueryParamValue("status");
   RaceStatus status;
-  if (!statusstr.empty()) {
+  if (filterstatus) {
     try {
       status = stringToRaceStatus(statusstr);
-      filterstatus = true;
     }
     catch (std::range_error& e) {
+      cb->requestHandled(connrequestid, badRequestResponse(e.what()));
+      return;
     }
   }
   for (it = global->getEngine()->getRacesBegin(); it != global->getEngine()->getRacesEnd(); ++it) {
@@ -1447,15 +1456,16 @@ void RestApi::handleSiteSectionDelete(RestApiCallback* cb, int connrequestid, co
 
 void RestApi::handleTransferJobsGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
   nlohmann::json joblist = nlohmann::json::array();
-  bool filterstatus = false;
+  bool filterstatus = request.hasQueryParam("status");
   std::string statusstr = request.getQueryParamValue("status");
   TransferJobStatus status;
-  if (!statusstr.empty()) {
+  if (filterstatus) {
     try {
       status = stringToTransferJobStatus(statusstr);
-      filterstatus = true;
     }
     catch (std::range_error& e) {
+      cb->requestHandled(connrequestid, badRequestResponse(e.what()));
+      return;
     }
   }
   std::list<std::shared_ptr<TransferJob>>::const_iterator it;
