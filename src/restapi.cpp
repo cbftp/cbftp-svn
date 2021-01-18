@@ -954,7 +954,7 @@ void RestApi::handleSitesGet(RestApiCallback* cb, int connrequestid, const http:
   nlohmann::json sitelist = nlohmann::json::array();
   bool filtersection = request.hasQueryParam("section");
   std::string section = request.getQueryParamValue("section");
-  if (!global->getSectionManager()->getSection(section)) {
+  if (filtersection && !global->getSectionManager()->getSection(section)) {
     cb->requestHandled(connrequestid, badRequestResponse("Unknown section: " + section));
     return;
   }
