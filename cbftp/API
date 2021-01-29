@@ -188,9 +188,10 @@ $path(sectionname)
   defaults to 10
    GET /filelist?site=SITE1&path=/&timeout=2
 
-- List all spread jobs. Status filter is optional
+- List all spread jobs. Filters are optional
    GET /spreadjobs
-   GET /spreadjobs?status=RUNNING
+   GET /spreadjobs?status=RUNNING&section=SOMESECTION
+   GET /spreadjobs?profile=RACE&site=SOMESITE&name=*debian*
    
 - Get details of a specific spread job
    GET /spreadjobs/JOBNAME
@@ -240,9 +241,11 @@ Example body (optional) when aborting a spread job:
   ]
 }
 
-- List all transfer jobs. Status filter is optional
+- List all transfer jobs. Filters are optional.
    GET /transferjobs
-   GET /transferjobs?status=RUNNING
+   GET /transferjobs?status=RUNNING&src_site=SOMESITE&type=FXP
+   GET /transferjobs?dst_site=SOMESITE&type=UPLOAD
+   GET /transferjobs?site=SOMESITE&name=*debian*
    
 - Get details of a specific transfer job
    GET /transferjobs/JOBNAME
