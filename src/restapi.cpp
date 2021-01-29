@@ -600,6 +600,19 @@ RaceStatus stringToRaceStatus(const std::string& status) {
   throw std::range_error("Unknown spread job status: " + status);
 }
 
+TransferJobType stringToTransferJobType(const std::string& type) {
+  if (type == "FXP") {
+    return TRANSFERJOB_FXP;
+  }
+  else if (type == "DOWNLOAD") {
+    return TRANSFERJOB_DOWNLOAD;
+  }
+  else if (type == "UPLOAD") {
+    return TRANSFERJOB_UPLOAD;
+  }
+  throw std::range_error("Unknown transfer job type: " + type);
+}
+
 void updateSkipList(SkipList& skiplist, nlohmann::json jsonlist) {
   skiplist.clearEntries();
   for (nlohmann::json::const_iterator it = jsonlist.begin(); it != jsonlist.end(); ++it) {
@@ -1255,8 +1268,13 @@ void RestApi::handleSpreadJobsGet(RestApiCallback* cb, int connrequestid, const 
   nlohmann::json joblist = nlohmann::json::array();
   std::list<std::shared_ptr<Race>>::const_iterator it;
   bool filterstatus = request.hasQueryParam("status");
+  bool filtersite = request.hasQueryParam("site");
+  bool filterprofile = request.hasQueryParam("profile");
+  bool filtersection = request.hasQueryParam("section");
+  bool filtername = request.hasQueryParam("name");
   std::string statusstr = request.getQueryParamValue("status");
-  RaceStatus status;
+  std::string namestr = request.getQueryParamValue("name");
+  RaceStatus status = RaceStatus::DONE;
   if (filterstatus) {
     try {
       status = stringToRaceStatus(statusstr);
@@ -1266,10 +1284,37 @@ void RestApi::handleSpreadJobsGet(RestApiCallback* cb, int connrequestid, const 
       return;
     }
   }
-  for (it = global->getEngine()->getRacesBegin(); it != global->getEngine()->getRacesEnd(); ++it) {
-    if (!filterstatus || ((*it)->getStatus() == status)) {
-      joblist.push_back((*it)->getName());
+  std::string sectionstr = request.getQueryParamValue("section");
+  std::string profilestr = request.getQueryParamValue("profile");
+  SpreadProfile profile = SPREAD_RACE;
+  if (filterprofile) {
+    try {
+      profile = stringToProfile(profilestr);
     }
+    catch (std::range_error& e) {
+      cb->requestHandled(connrequestid, badRequestResponse(e.what()));
+      return;
+    }
+  }
+  if (filtersection && !global->getSectionManager()->getSection(sectionstr)) {
+    cb->requestHandled(connrequestid, badRequestResponse("Unknown section: " + sectionstr));
+    return;
+  }
+  std::string sitestr = request.getQueryParamValue("site");
+  if (filtersite && !global->getSiteManager()->getSite(sitestr)) {
+    cb->requestHandled(connrequestid, badRequestResponse("No such site: " + sitestr));
+    return;
+  }
+  for (it = global->getEngine()->getRacesBegin(); it != global->getEngine()->getRacesEnd(); ++it) {
+    if ((filterstatus && (*it)->getStatus() != status) ||
+        (filtersite && (*it)->getSiteRace(sitestr) == nullptr) ||
+        (filterprofile && (*it)->getProfile() != profile) ||
+        (filtersection && (*it)->getSection() != sectionstr) ||
+        (filtername && !util::wildcmp(namestr.c_str(), (*it)->getName().c_str())))
+    {
+      continue;
+    }
+    joblist.push_back((*it)->getName());
   }
   http::Response response(200);
   std::string jsondump = joblist.dump(2);
@@ -1457,8 +1502,18 @@ void RestApi::handleSiteSectionDelete(RestApiCallback* cb, int connrequestid, co
 void RestApi::handleTransferJobsGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
   nlohmann::json joblist = nlohmann::json::array();
   bool filterstatus = request.hasQueryParam("status");
+  bool filtersite = request.hasQueryParam("site");
+  bool filtersrcsite = request.hasQueryParam("src_site");
+  bool filterdstsite = request.hasQueryParam("dst_site");
+  bool filtertype = request.hasQueryParam("type");
+  bool filtername = request.hasQueryParam("name");
   std::string statusstr = request.getQueryParamValue("status");
-  TransferJobStatus status;
+  std::string sitestr = request.getQueryParamValue("site");
+  std::string srcsitestr = request.getQueryParamValue("src_site");
+  std::string dstsitestr = request.getQueryParamValue("dst_site");
+  std::string typestr = request.getQueryParamValue("type");
+  std::string namestr = request.getQueryParamValue("name");
+  TransferJobStatus status = TRANSFERJOB_QUEUED;
   if (filterstatus) {
     try {
       status = stringToTransferJobStatus(statusstr);
@@ -1468,11 +1523,35 @@ void RestApi::handleTransferJobsGet(RestApiCallback* cb, int connrequestid, cons
       return;
     }
   }
+  TransferJobType type = TRANSFERJOB_FXP;
+  if (filtertype) {
+    try {
+      type = stringToTransferJobType(typestr);
+    }
+    catch (std::range_error& e) {
+      cb->requestHandled(connrequestid, badRequestResponse(e.what()));
+      return;
+    }
+  }
+  if ((filtersite && !global->getSiteManager()->getSite(sitestr)) ||
+      (filtersrcsite && !global->getSiteManager()->getSite(srcsitestr)) ||
+      (filterdstsite && !global->getSiteManager()->getSite(dstsitestr)))
+  {
+    cb->requestHandled(connrequestid, badRequestResponse("No such site: " + sitestr));
+    return;
+  }
   std::list<std::shared_ptr<TransferJob>>::const_iterator it;
   for (it = global->getEngine()->getTransferJobsBegin(); it != global->getEngine()->getTransferJobsEnd(); ++it) {
-    if (!filterstatus || (*it)->getStatus() == status) {
-      joblist.push_back((*it)->getName());
+    if ((filterstatus && (*it)->getStatus() != status) ||
+        (filtersite && (!(*it)->getDst() || (*it)->getDst()->getSite()->getName() != sitestr) && (!(*it)->getSrc() || (*it)->getSrc()->getSite()->getName() != sitestr)) ||
+        (filtersrcsite && (!(*it)->getSrc() || (*it)->getSrc()->getSite()->getName() != srcsitestr)) ||
+        (filterdstsite && (!(*it)->getDst() || (*it)->getDst()->getSite()->getName() != dstsitestr)) ||
+        (filtertype && (*it)->getType() != type) ||
+        (filtername && !util::wildcmp(namestr.c_str(), (*it)->getName().c_str())))
+    {
+      continue;
     }
+    joblist.push_back((*it)->getName());
   }
 
   http::Response response(200);
