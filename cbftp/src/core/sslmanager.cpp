@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <pthread.h>
 #include <string>
+#include <sys/socket.h>
 #include <vector>
 
 #include <openssl/asn1.h>

@@ -58,7 +58,7 @@ void registerSignalHandler(int sig, void (*sighandler)(int)) {
 void blockAllRegisteredSignals() {
   sigset_t set;
   sigemptyset(&set);
-  for (const std::pair<int, Sig>& sig : registeredsignals) {
+  for (const std::pair<const int, Sig>& sig : registeredsignals) {
     sigaddset(&set, sig.first);
   }
   pthread_sigmask(SIG_BLOCK, &set, nullptr);

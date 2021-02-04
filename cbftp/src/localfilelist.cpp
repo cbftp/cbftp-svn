@@ -64,7 +64,7 @@ unsigned int LocalFileList::sizeFiles() const {
 
 void LocalFileList::cleanSweep(int touch) {
   std::list<std::string> eraselist;
-  for (const std::pair<std::string, LocalFile>& file : files) {
+  for (const std::pair<const std::string, LocalFile>& file : files) {
     if (file.second.getTouch() != touch && !file.second.isDownloading()) {
       eraselist.push_back(file.first);
     }
@@ -75,7 +75,7 @@ void LocalFileList::cleanSweep(int touch) {
       lowercasefilemap.erase(util::toLower(file));
     }
     sizefiles = 0;
-    for (const std::pair<std::string, LocalFile>& file : files) {
+    for (const std::pair<const std::string, LocalFile>& file : files) {
       if (!file.second.isDirectory()) {
         ++sizefiles;
       }

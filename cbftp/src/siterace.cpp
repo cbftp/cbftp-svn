@@ -103,7 +103,7 @@ std::string SiteRace::getSubPath(const std::shared_ptr<FileList>& fl) const {
 }
 
 std::string SiteRace::getRelevantSubPath() {
-  for (const std::pair<std::string, std::shared_ptr<FileList>>& flpair : filelists) {
+  for (const std::pair<const std::string, std::shared_ptr<FileList>>& flpair : filelists) {
     if (flpair.second->getUpdateState() == UpdateState::NONE) {
       return flpair.first;
     }
@@ -361,7 +361,7 @@ void SiteRace::subPathComplete(const std::shared_ptr<FileList>& fl) {
 }
 
 void SiteRace::resetListsRefreshed() {
-  for (const std::pair<std::string, std::shared_ptr<FileList>>& filelist : filelists) {
+  for (const std::pair<const std::string, std::shared_ptr<FileList>>& filelist : filelists) {
     if (!isSubPathComplete(getSubPath(filelist.second))) {
       filelist.second->resetUpdateState();
     }
@@ -514,7 +514,7 @@ unsigned int SiteRace::getSpeedUp() const {
 }
 
 bool SiteRace::allListsRefreshed() const {
-  for (const std::pair<std::string, std::shared_ptr<FileList>>& filelist : filelists) {
+  for (const std::pair<const std::string, std::shared_ptr<FileList>>& filelist : filelists) {
     if (!isSubPathComplete(filelist.second) && filelist.second->getUpdateState() < UpdateState::REFRESHED) {
       return false;
     }
