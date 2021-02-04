@@ -49,7 +49,7 @@ void NumInputArrow::deactivate() {
 }
 std::string NumInputArrow::getVisual() const {
   unsigned int maxlen = std::to_string(max).length();
-  for (const std::pair<int, std::string> & substitute : substituteTexts) {
+  for (const std::pair<const int, std::string> & substitute : substituteTexts) {
     if (substitute.second.length() > maxlen) {
       maxlen = substitute.second.length();
     }

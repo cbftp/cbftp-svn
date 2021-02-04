@@ -143,7 +143,7 @@ Core::BinaryData LocalStorage::getFileContent(const Path & filename) const {
   char * data = (char *) malloc(MAXREAD);
   filestream.read(data, MAXREAD);
   Core::BinaryData out(data, data + filestream.gcount());
-  delete data;
+  free(data);
   return out;
 }
 

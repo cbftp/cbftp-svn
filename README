@@ -28,12 +28,13 @@ MAJOR FEATURES
 
 INSTALLATION
 
-Build dependencies: make g++ libssl-dev libncursesw5-dev
+Linux build dependencies: make g++ libssl-dev libncursesw5-dev
+BSD build dependencies: gmake gcc11-devel openssl ncurses
 
-Procedure: run 'make' in the cbftp root. This produces a cbftp binary in the
-'bin' directory, which can then be placed anywhere in the system. Cbftp does
-not depend on any other files in the build tree, and it can be removed
-afterwards if desired.
+Procedure: run 'make' in the cbftp root (or gmake if using *BSD). This produces
+a cbftp binary in the 'bin' directory, which can then be placed anywhere in the
+system. Cbftp does not depend on any other files in the build tree, and it can
+be removed afterwards if desired.
 
 If you wish to use your cpu more efficiently while compiling, you can specify
 i.e. -j8 to make, to make it build with 8 separate threads.

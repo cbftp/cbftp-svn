@@ -276,7 +276,7 @@ void IOManager::handleTCPNameResolution(SocketInfo& socketinfo) {
   }
   if (socketinfo.addrfam == AddressFamily::IPV6) {
     int yes = 1;
-    setsockopt(sockfd, SOL_IPV6, IPV6_V6ONLY, &yes, sizeof(int));
+    setsockopt(sockfd, IPPROTO_IPV6, IPV6_V6ONLY, &yes, sizeof(int));
   }
   socketinfo.fd = sockfd;
   socketinfo.type = SocketType::TCP_CONNECTING;
@@ -349,7 +349,7 @@ int IOManager::registerTCPServerSocket(EventReceiver* er, int port, AddressFamil
   int yes = 1;
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
   if (addrfam == AddressFamily::IPV6) {
-    setsockopt(sockfd, SOL_IPV6, IPV6_V6ONLY, &yes, sizeof(int));
+    setsockopt(sockfd, IPPROTO_IPV6, IPV6_V6ONLY, &yes, sizeof(int));
   }
   returncode = bind(sockfd, res->ai_addr, res->ai_addrlen);
   freeaddrinfo(res);
@@ -440,7 +440,7 @@ int IOManager::registerUDPServerSocket(EventReceiver* er, int port, AddressFamil
   int yes = 1;
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
   if (addrfam == AddressFamily::IPV6) {
-    setsockopt(sockfd, SOL_IPV6, IPV6_V6ONLY, &yes, sizeof(int));
+    setsockopt(sockfd, IPPROTO_IPV6, IPV6_V6ONLY, &yes, sizeof(int));
   }
   returncode = bind(sockfd, res->ai_addr, res->ai_addrlen);
   freeaddrinfo(res);
@@ -1011,7 +1011,9 @@ void IOManager::handleTCPSSLIn(SocketInfo& socketinfo) {
     int bufpos = 0;
     while (bufpos < blocksize) {
       ERR_clear_error();
+      socketinfomaplock.unlock();
       int brecv = SSL_read(ssl, buf + bufpos, blocksize - bufpos);
+      socketinfomaplock.lock();
       if (brecv <= 0) {
         if (bufpos > 0) {
           if (!workmanager.dispatchFDData(socketinfo.receiver, socketinfo.id, buf, bufpos, socketinfo.prio)) {

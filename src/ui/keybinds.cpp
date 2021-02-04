@@ -288,7 +288,7 @@ std::string KeyBinds::getLegendSummary(int scope) const {
 
 void KeyBinds::generateLegendSummaries() {
   std::string allkeybindstext = "[" + (alternatebutton ? getKeyRepr(276).repr : "?") + "] All keybinds";
-  for (const std::pair<int, std::string>& scope : scopes) {
+  for (const std::pair<const int, std::string>& scope : scopes) {
     std::list<KeyBinds::KeyData> binds = getBindsForScope(scope.first);
     std::string summary;
     if (allowkeybinds && scope.first != KEYSCOPE_ALL) {

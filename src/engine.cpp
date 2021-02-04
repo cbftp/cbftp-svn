@@ -131,7 +131,7 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
   for (const std::string& site : dlonlysites) {
     allsites[site] = true;
   }
-  for (const std::pair<std::string, bool>& site : allsites) {
+  for (const std::pair<const std::string, bool>& site : allsites) {
     const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site.first);
     if (!sl) {
       global->getEventLog()->log("Engine", "Trying to use a nonexisting site: " + site.first);
@@ -1020,7 +1020,7 @@ void Engine::addToScoreBoardForPair(const std::shared_ptr<SiteLogic> & sls, cons
 }
 
 void Engine::updateScoreBoard() {
-  for (const std::pair<std::shared_ptr<FileList>, std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic>>> & changedlist : spreadjobfilelistschanged) {
+  for (const std::pair<const std::shared_ptr<FileList>, std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic>>> & changedlist : spreadjobfilelistschanged) {
     const std::shared_ptr<FileList>& fl = changedlist.first;
     const std::shared_ptr<SiteRace>& sr = changedlist.second.first;
     const std::shared_ptr<SiteLogic>& sl = changedlist.second.second;
