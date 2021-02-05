@@ -1011,9 +1011,7 @@ void IOManager::handleTCPSSLIn(SocketInfo& socketinfo) {
     int bufpos = 0;
     while (bufpos < blocksize) {
       ERR_clear_error();
-      socketinfomaplock.unlock();
       int brecv = SSL_read(ssl, buf + bufpos, blocksize - bufpos);
-      socketinfomaplock.lock();
       if (brecv <= 0) {
         if (bufpos > 0) {
           if (!workmanager.dispatchFDData(socketinfo.receiver, socketinfo.id, buf, bufpos, socketinfo.prio)) {
