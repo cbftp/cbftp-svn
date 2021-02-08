@@ -31,6 +31,8 @@ private:
 
 #include <dispatch/dispatch.h>
 
+namespace Core {
+
 class Semaphore {
 public:
   Semaphore() :

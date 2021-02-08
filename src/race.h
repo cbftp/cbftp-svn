@@ -58,6 +58,10 @@ class Race : public Core::EventReceiver, public TransferStatusCallback {
     void calculatePercentages();
     void calculateTotal();
     void addTransferAttempt(const std::shared_ptr<TransferStatus> &);
+    CallbackType callbackType() const override;
+    void transferSuccessful(const std::shared_ptr<TransferStatus>&) override;
+    void transferFailed(const std::shared_ptr<TransferStatus>&, int) override;
+    void tick(int message) override;
     std::string name;
     std::string group;
     std::string section;
@@ -93,7 +97,6 @@ class Race : public Core::EventReceiver, public TransferStatusCallback {
   public:
     Race(unsigned int, SpreadProfile, const std::string &, const std::string &);
     ~Race();
-    CallbackType callbackType() const override;
     void addSite(const std::shared_ptr<SiteRace> & sr, const std::shared_ptr<SiteLogic> &);
     void removeSite(const std::shared_ptr<SiteRace> & sr);
     void removeSite(const std::shared_ptr<SiteLogic> &);
@@ -136,7 +139,6 @@ class Race : public Core::EventReceiver, public TransferStatusCallback {
     void setTimeout();
     int timeoutCheck();
     void resetUpdateCheckCounter();
-    void tick(int);
     unsigned int getWorstCompletionPercentage() const;
     unsigned int getAverageCompletionPercentage() const;
     unsigned int getBestCompletionPercentage() const;
@@ -145,7 +147,5 @@ class Race : public Core::EventReceiver, public TransferStatusCallback {
     const SkipList& getSectionSkipList() const;
     void addTransfer(const std::shared_ptr<TransferStatus>&);
     bool clearTransferAttempts(bool clearstate = true);
-    void transferSuccessful(const std::shared_ptr<TransferStatus>&);
-    void transferFailed(const std::shared_ptr<TransferStatus>&, int);
     void addTransferStatsFile(unsigned long long int);
 };

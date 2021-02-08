@@ -32,7 +32,7 @@ class TransferStatus;
 class LocalFileList;
 class File;
 
-class TransferJob : public Core::EventReceiver, public TransferStatusCallback {
+class TransferJob : public Core::EventReceiver, private TransferStatusCallback {
 public:
   std::string getName() const;
   TransferJob(unsigned int, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fl, const std::string &, const Path &, const std::string &);
@@ -42,7 +42,6 @@ public:
   TransferJob(unsigned int, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fls, const std::string &, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fld, const std::string &);
   TransferJob(unsigned int, const std::shared_ptr<SiteLogic> &, const Path &, const std::string &, const std::shared_ptr<SiteLogic> &, const Path &, const std::string &);
   ~TransferJob();
-  CallbackType callbackType() const override;
   int getType() const;
   const Path & getSrcPath() const;
   const Path & getDstPath() const;
@@ -81,7 +80,6 @@ public:
   void addPendingTransfer(const Path &, unsigned long long int);
   void addTransfer(const std::shared_ptr<TransferStatus> &);
   void targetExists(const Path &);
-  void tick(int);
   int getProgress() const;
   int getMilliProgress() const;
   int timeSpent() const;
@@ -98,8 +96,6 @@ public:
   void abort();
   void clearExisting();
   bool hasFailedTransfer(const std::string &) const;
-  void transferSuccessful(const std::shared_ptr<TransferStatus> &);
-  void transferFailed(const std::shared_ptr<TransferStatus> &, int);
   bool anyListNeedsRefreshing() const;
   std::shared_ptr<SiteTransferJob> & getSrcTransferJob();
   std::shared_ptr<SiteTransferJob> & getDstTransferJob();
@@ -119,6 +115,10 @@ private:
   void updateLocalFileLists(const Path &, const Path &);
   bool checkFileListExists(const std::shared_ptr<FileList>& fl) const;
   void resetValues();
+  CallbackType callbackType() const override;
+  void transferSuccessful(const std::shared_ptr<TransferStatus> &) override;
+  void transferFailed(const std::shared_ptr<TransferStatus> &, int) override;
+  void tick(int message) override;
   int type;
   std::shared_ptr<SiteLogic> src;
   std::shared_ptr<SiteLogic> dst;
