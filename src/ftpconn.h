@@ -183,6 +183,7 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     void ftpConnectInfo(int id, const std::string& info) override;
     void ftpConnectSuccess(int id, const Address& addr) override;
     void ftpConnectFail(int id) override;
+    void tick(int message) override;
   public:
     int getId() const;
     void setId(int);
@@ -257,7 +258,6 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     static bool parseData(char*, unsigned int, char**, unsigned int&, unsigned int&, int&);
     void printCipher(const std::string& cipher);
     void printLocalError(const std::string& info);
-    void tick(int);
     std::shared_ptr<FileList> currentFileList() const;
     const std::shared_ptr<CommandOwner> & currentCommandOwner() const;
     void resetCurrentCommandOwner();

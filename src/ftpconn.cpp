@@ -466,7 +466,7 @@ void FTPConn::ftpConnectFail(int connectorid) {
   }
 }
 
-void FTPConn::tick(int) {
+void FTPConn::tick(int message) {
   ticker += FTPCONN_TICK_INTERVAL;
   std::list<std::shared_ptr<FTPConnect> > ticklist = connectors;
   for (std::list<std::shared_ptr<FTPConnect> >::const_iterator it = ticklist.begin(); it != ticklist.end(); it++) {

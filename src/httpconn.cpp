@@ -28,7 +28,7 @@ HTTPConn::~HTTPConn() {
   }
 }
 
-bool HTTPConn::activate(int sockid, Core::AddressFamily addrFam, bool tls) {
+bool HTTPConn::activate(int sockid, Core::AddressFamily addrfam, bool tls) {
   if (active()) {
       return false;
   }

@@ -94,7 +94,7 @@ void Message::setBody(const std::vector<char>& body) {
 
 std::vector<char> Message::serializeCommon(const std::string& startline) const {
   std::string concatdata = startline + "\r\n";
-  for (std::pair<std::string, HeaderValues> header : headers) {
+  for (const std::pair<const std::string, HeaderValues>& header : headers) {
     const HeaderValues& values = header.second;
     concatdata += values.name + ": " + join(values.values) + "\r\n";
   }
