@@ -470,7 +470,7 @@ void Race::setDone() {
   calculatePercentages();
 }
 
-void Race::tick(int) {
+void Race::tick(int message) {
   timespent += RACE_UPDATE_INTERVAL;
   calculatePercentages();
 }
