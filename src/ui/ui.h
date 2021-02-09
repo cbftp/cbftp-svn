@@ -177,11 +177,11 @@ public:
   Ui();
   ~Ui();
   void run();
-  bool init();
-  void backendPush();
+  bool init() override;
+  void backendPush() override;
   void terminalSizeChanged();
-  void signal(int, int);
-  void kill();
+  void signal(int, int) override;
+  void kill() override;
   void resizeTerm();
   void readConfiguration();
   void writeState();
@@ -279,9 +279,9 @@ public:
   void returnRaceStatus(unsigned int);
   void returnMakeDir(const std::string& dirname);
   void returnMove(const std::string& dstpath);
-  void loadSettings(std::shared_ptr<DataFileHandler>);
-  void saveSettings(std::shared_ptr<DataFileHandler>);
-  void notify();
+  void loadSettings(std::shared_ptr<DataFileHandler>) override;
+  void saveSettings(std::shared_ptr<DataFileHandler>) override;
+  void notify() override;
   WINDOW * getLegendWindow() const;
   void addKeyBinds(KeyBinds* keybinds);
   void removeKeyBinds(KeyBinds* keybinds);

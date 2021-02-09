@@ -1,7 +1,5 @@
 #include "requestparser.h"
 
-#include <cassert>
-
 #include "../ext/picohttpparser.h"
 
 #include "request.h"
