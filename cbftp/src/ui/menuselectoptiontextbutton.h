@@ -12,11 +12,11 @@ private:
 public:
   MenuSelectOptionTextButton(std::string, int, int, std::string);
   MenuSelectOptionTextButton(std::string, int, int, std::string, bool);
-  std::string getContentText() const;
-  std::string getLabelText() const;
+  std::string getContentText() const override;
+  std::string getLabelText() const override;
   bool isActivated() const;
-  bool activate();
-  unsigned int wantedWidth() const;
+  bool activate() override;
+  unsigned int wantedWidth() const override;
   std::string getLegendText() const override;
   void setLegendText(const std::string& text);
 };

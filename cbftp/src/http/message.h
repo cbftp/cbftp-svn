@@ -11,14 +11,6 @@ namespace http {
 /* Base class for the common parts of HTTPRequests and HTTPResponses. */
 class Message {
 public:
-  struct HeaderValues {
-    explicit HeaderValues(const std::string& name);
-    HeaderValues() = default;
-
-    const std::string name;
-    std::list<std::string> values;
-  };
-
   explicit Message(const std::string& protocol = "HTTP/1.1");
   virtual ~Message();
 
@@ -53,6 +45,13 @@ protected:
   std::string protocol;
 
 private:
+  struct HeaderValues {
+    explicit HeaderValues(const std::string& name);
+    HeaderValues() = default;
+
+    std::string name;
+    std::list<std::string> values;
+  };
   std::map<std::string, HeaderValues> headers;
   std::shared_ptr<std::vector<char>> body;
 };
