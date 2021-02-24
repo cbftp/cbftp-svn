@@ -388,7 +388,6 @@ private:
   mutable std::mutex socketinfomaplock;
   std::unordered_map<int, SocketInfo> socketinfomap;
   std::unordered_map<int, int> connecttimemap;
-  std::unordered_map<int, int> sockfdidmap;
   std::unordered_set<int> autopaused;
   std::unordered_set<int> manuallypaused;
   WorkManager& workmanager;

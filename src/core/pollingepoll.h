@@ -18,41 +18,42 @@ public:
     close(epollfd);
     delete[] events;
   }
-  void wait(std::list<std::pair<int, PollEvent>>& fdlist) override {
-    fdlist.clear();
+  void wait(std::list<PollEvent>& eventlist) override {
+    eventlist.clear();
     int fds = epoll_wait(epollfd, events, MAX_EVENTS, -1);
     for (int i = 0; i < fds; i++) {
-      PollEvent pollevent = PollEvent::UNKNOWN;
+      PollEventType pollevent = PollEventType::UNKNOWN;
       if (events[i].events & EPOLLIN) {
-        pollevent = PollEvent::IN;
+        pollevent = PollEventType::IN;
       }
       else if (events[i].events & EPOLLOUT) {
-        pollevent = PollEvent::OUT;
+        pollevent = PollEventType::OUT;
       }
-      fdlist.emplace_back(static_cast<int>(events[i].data.fd), pollevent);
+      eventlist.emplace_back(static_cast<int>(events[i].data.u64 & 0xFFFFFFFF),
+                             pollevent, events[i].data.u64 >> 32);
     }
   }
-  void addFDIn(int addfd) override {
-    control(EPOLLIN, EPOLL_CTL_ADD, addfd);
+  void addFDIn(int addfd, unsigned int userdata) override {
+    control(EPOLLIN, EPOLL_CTL_ADD, addfd, userdata);
   }
-  void addFDOut(int addfd) override {
-    control(EPOLLOUT, EPOLL_CTL_ADD, addfd);
+  void addFDOut(int addfd, unsigned int userdata) override {
+    control(EPOLLOUT, EPOLL_CTL_ADD, addfd, userdata);
   }
   void removeFD(int delfd) override {
     control(EPOLLIN | EPOLLOUT, EPOLL_CTL_DEL, delfd);
   }
-  void setFDIn(int modfd) override {
-    control(EPOLLIN, EPOLL_CTL_MOD, modfd);
+  void setFDIn(int modfd, unsigned int userdata) override {
+    control(EPOLLIN, EPOLL_CTL_MOD, modfd, userdata);
   }
-  void setFDOut(int modfd) override {
-    control(EPOLLOUT, EPOLL_CTL_MOD, modfd);
+  void setFDOut(int modfd, unsigned int userdata) override {
+    control(EPOLLOUT, EPOLL_CTL_MOD, modfd, userdata);
   }
 private:
-  void control(int ev, int op, int fd) {
+  void control(int ev, int op, int fd, unsigned int userdata = 0) {
     struct epoll_event event;
     memset(&event, 0, sizeof(event));
     event.events = ev;
-    event.data.fd = fd;
+    event.data.u64 = (static_cast<uint64_t>(userdata) << 32) + fd;
     epoll_ctl(epollfd, op, fd, &event);
   }
   int epollfd;

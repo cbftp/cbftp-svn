@@ -19,40 +19,44 @@ public:
   ~PollingImpl() {
     delete[] fds;
   }
-  void wait(std::list<std::pair<int, PollEvent>>& fdlist) override {
+  void wait(std::list<PollEvent>& eventlist) override {
     setInWait(true);
-    fdlist.clear();
-    while (!fdlist.size()) {
+    eventlist.clear();
+    while (!eventlist.size()) {
       awaitModifiers();
       int evcount = 0;
       maplock.lock();
-      for (std::map<int, int>::const_iterator it = fdmap.begin();
+      for (std::map<int, Event>::const_iterator it = fdmap.begin();
            it != fdmap.end() && evcount < MAX_EVENTS; it++, evcount++)
       {
         fds[evcount].fd = it->first;
-        fds[evcount].events = it->second;
+        fds[evcount].events = it->second.events;
       }
       maplock.unlock();
       if (poll(fds, evcount, 10)) {
         for (int i = 0; i < evcount; i++) {
           int fd = fds[i].fd;
           int revents = fds[i].revents;
-          PollEvent pollevent = PollEvent::UNKNOWN;
+          PollEventType type = PollEventType::UNKNOWN;
           if (revents & POLLIN) {
             char c;
             if (recv(fd, &c, 1, MSG_PEEK) <= 0 && errno != ENOTSOCK) {
               removeFDIntern(fd);
             }
-            pollevent = PollEvent::IN;
+            type = PollEventType::IN;
           }
           else if (revents & POLLOUT) {
-            pollevent = PollEvent::OUT;
+            type = PollEventType::OUT;
           }
           if (revents & (POLLHUP | POLLERR)) {
             removeFDIntern(fd);
           }
-          if (pollevent != PollEvent::UNKNOWN) {
-            fdlist.emplace_back(fd, pollevent);
+          if (type != PollEventType::UNKNOWN) {
+            maplock.lock();
+            std::map<int, Event>::const_iterator it = fdmap.find(fd);
+            unsigned int userdata = it != fdmap.end() ? it->second.userdata : 0;
+            maplock.unlock();
+            eventlist.emplace_back(fd, type, userdata);
           }
         }
       }
@@ -61,32 +65,42 @@ public:
 
     awaitModifiers();
   }
-  void addFDIn(int addfd) override {
+  void addFDIn(int addfd, unsigned int userdata) override {
     std::lock_guard<std::mutex> lock(maplock);
-    std::map<int, int>::iterator it = fdmap.find(addfd);
-    it != fdmap.end() ? it->second |= POLLIN : fdmap[addfd] = POLLIN;
+    std::map<int, Event>::iterator it = fdmap.find(addfd);
+    if (it != fdmap.end()) {
+      it->second.events |= POLLIN;
+    }
+    else {
+      fdmap[addfd] = {POLLIN, userdata};
+    }
   }
-  void addFDOut(int addfd) override {
+  void addFDOut(int addfd, unsigned int userdata) override {
     std::lock_guard<std::mutex> lock(maplock);
-    std::map<int, int>::iterator it = fdmap.find(addfd);
-    it != fdmap.end() ? it->second |= POLLOUT : fdmap[addfd] = POLLOUT;
+    std::map<int, Event>::iterator it = fdmap.find(addfd);
+    if (it != fdmap.end()) {
+      it->second.events |= POLLOUT;
+    }
+    else {
+      fdmap[addfd] = {POLLOUT, userdata};
+    }
   }
   void removeFD(int delfd) override {
     awaitCurrentPollFinished();
-    std::map<int, int>::iterator it = fdmap.find(delfd);
+    std::map<int, Event>::iterator it = fdmap.find(delfd);
     if (it != fdmap.end()) {
       fdmap.erase(it);
     }
     maplock.unlock();
   }
-  void setFDIn(int modfd) override {
+  void setFDIn(int modfd, int unsigned userdata) override {
     awaitCurrentPollFinished();
-    fdmap[modfd] = POLLIN;
+    fdmap[modfd] = {POLLIN, userdata};
     maplock.unlock();
   }
-  void setFDOut(int modfd) override {
+  void setFDOut(int modfd, unsigned int userdata) override {
     awaitCurrentPollFinished();
-    fdmap[modfd] = POLLOUT;
+    fdmap[modfd] = {POLLOUT, userdata};
     maplock.unlock();
   }
 private:
@@ -120,7 +134,11 @@ private:
   }
   std::mutex maplock;
   struct pollfd* fds;
-  std::map<int, int> fdmap;
+  struct Event {
+    int events;
+    unsigned int userdata;
+  };
+  std::map<int, Event> fdmap;
   bool inwait;
   int waiting;
   std::mutex waitlock;
