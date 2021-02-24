@@ -130,7 +130,6 @@ void IOManager::preStop() {
   socketinfo.id = sockid;
   socketinfo.type = SocketType::STOP;
   socketinfo.receiver = nullptr;
-  sockfdidmap[fd[1]] = sockid;
   socketinfomaplock.unlock();
   pollWrite(socketinfo);
 }
@@ -182,28 +181,28 @@ void IOManager::tick(int message) {
 void IOManager::pollRead(SocketInfo& socketinfo) {
   socketinfo.direction = Direction::IN;
   if (!socketinfo.paused) {
-    polling.addFDIn(socketinfo.fd);
+    polling.addFDIn(socketinfo.fd, socketinfo.id);
   }
 }
 
 void IOManager::pollWrite(SocketInfo& socketinfo) {
   socketinfo.direction = Direction::OUT;
   if (!socketinfo.paused) {
-    polling.addFDOut(socketinfo.fd);
+    polling.addFDOut(socketinfo.fd, socketinfo.id);
   }
 }
 
 void IOManager::setPollRead(SocketInfo& socketinfo) {
   socketinfo.direction = Direction::IN;
   if (!socketinfo.paused) {
-    polling.setFDIn(socketinfo.fd);
+    polling.setFDIn(socketinfo.fd, socketinfo.id);
   }
 }
 
 void IOManager::setPollWrite(SocketInfo& socketinfo) {
   socketinfo.direction = Direction::OUT;
   if (!socketinfo.paused) {
-    polling.setFDOut(socketinfo.fd);
+    polling.setFDOut(socketinfo.fd, socketinfo.id);
   }
 }
 
@@ -282,7 +281,6 @@ void IOManager::handleTCPNameResolution(SocketInfo& socketinfo) {
   socketinfo.type = SocketType::TCP_CONNECTING;
   socketinfo.addr = buf;
   connecttimemap[socketinfo.id] = 0;
-  sockfdidmap[sockfd] = socketinfo.id;
   if (hasDefaultInterface()) {
     struct addrinfo request, *res;
     memset(&request, 0, sizeof(request));
@@ -374,7 +372,6 @@ int IOManager::registerTCPServerSocket(EventReceiver* er, int port, AddressFamil
   socketinfo.id = sockid;
   socketinfo.type = SocketType::TCP_SERVER;
   socketinfo.receiver = er;
-  sockfdidmap[sockfd] = sockid;
   pollRead(socketinfo);
   return sockid;
 }
@@ -388,7 +385,6 @@ int IOManager::registerTCPServerSocketExternalFD(EventReceiver* er, int sockfd, 
   socketinfo.id = sockid;
   socketinfo.type = SocketType::TCP_SERVER_EXTERNAL;
   socketinfo.receiver = er;
-  sockfdidmap[sockfd] = sockid;
   pollRead(socketinfo);
   return sockid;
 }
@@ -411,7 +407,6 @@ int IOManager::registerExternalFD(EventReceiver* er, int fd) {
   socketinfo.id = sockid;
   socketinfo.type = SocketType::EXTERNAL;
   socketinfo.receiver = er;
-  sockfdidmap[fd] = sockid;
   pollRead(socketinfo);
   return sockid;
 }
@@ -458,7 +453,6 @@ int IOManager::registerUDPServerSocket(EventReceiver* er, int port, AddressFamil
   socketinfo.id = sockid;
   socketinfo.type = SocketType::UDP;
   socketinfo.receiver = er;
-  sockfdidmap[sockfd] = sockid;
   pollRead(socketinfo);
   return sockid;
 }
@@ -608,7 +602,6 @@ void IOManager::closeSocketIntern(int sockid) {
     sendblockpool->returnBlock(block.rawData());
   }
   socketinfo.sendqueue.clear();
-  sockfdidmap.erase(socketinfo.fd);
   connecttimemap.erase(sockid);
   autopaused.erase(sockid);
   manuallypaused.erase(sockid);
@@ -1125,7 +1118,6 @@ void IOManager::handleTCPServerIn(SocketInfo& socketinfo) {
   socketinfomap[newsockid].id = newsockid;
   socketinfomap[newsockid].type = SocketType::TCP_PLAIN_LISTEN;
   fcntl(newfd, F_SETFL, O_NONBLOCK);
-  sockfdidmap[newfd] = newsockid;
   if (!workmanager.dispatchEventNew(socketinfo.receiver, socketinfo.id,
       newsockid))
   {
@@ -1136,21 +1128,15 @@ void IOManager::handleTCPServerIn(SocketInfo& socketinfo) {
 void IOManager::run() {
   SSLManager::init();
   initialized.post();
-  std::list<std::pair<int, PollEvent>> fds;
-  std::list<std::pair<int, PollEvent>>::const_iterator polliter;
+  std::list<PollEvent> events;
   std::lock_guard<std::mutex> lock(socketinfomaplock);
   while (true) {
     socketinfomaplock.unlock();
-    polling.wait(fds);
+    polling.wait(events);
     socketinfomaplock.lock();
-    for (auto& polliter : fds) {
-      int currfd = polliter.first;
-      PollEvent pollevent = polliter.second;
-      auto idit = sockfdidmap.find(currfd);
-      if (idit == sockfdidmap.end()) {
-          continue;
-      }
-      int sockid = idit->second;
+    for (auto& polliter : events) {
+      PollEventType pollevent = polliter.type;
+      int sockid = polliter.userdata;
       auto it = socketinfomap.find(sockid);
       if (it == socketinfomap.end()) {
           continue;
@@ -1161,47 +1147,47 @@ void IOManager::run() {
           handleExternalIn(socketinfo);
           break;
         case SocketType::TCP_CONNECTING:
-          if (pollevent == PollEvent::OUT) {
+          if (pollevent == PollEventType::OUT) {
             handleTCPConnectingOut(socketinfo);
           }
           break;
         case SocketType::TCP_PLAIN: // tcp plain
         case SocketType::TCP_PLAIN_LISTEN:
-          if (pollevent == PollEvent::IN) { // incoming data
+          if (pollevent == PollEventType::IN) { // incoming data
             handleTCPPlainIn(socketinfo);
           }
-          else if (pollevent == PollEvent::OUT) {
+          else if (pollevent == PollEventType::OUT) {
             handleTCPPlainOut(socketinfo);
           }
           break;
         case SocketType::TCP_SSL_NEG_CONNECT: // tcp ssl redo connect
         case SocketType::TCP_SSL_NEG_ACCEPT:  // tcp ssl accept
-          if (pollevent == PollEvent::OUT) {
+          if (pollevent == PollEventType::OUT) {
             handleTCPSSLNegotiationOut(socketinfo);
           }
           break;
         case SocketType::TCP_SSL_NEG_REDO_CONNECT: // tcp ssl redo connect
         case SocketType::TCP_SSL_NEG_REDO_ACCEPT:  // tcp ssl accept
-          if (pollevent == PollEvent::IN) { // incoming data
+          if (pollevent == PollEventType::IN) { // incoming data
             handleTCPSSLNegotiationIn(socketinfo);
           }
           break;
         case SocketType::TCP_SSL: // tcp ssl
-          if (pollevent == PollEvent::IN) { // incoming data
+          if (pollevent == PollEventType::IN) { // incoming data
             handleTCPSSLIn(socketinfo);
           }
-          else if (pollevent == PollEvent::OUT) {
+          else if (pollevent == PollEventType::OUT) {
             handleTCPSSLOut(socketinfo);
           }
           break;
         case SocketType::UDP: // udp
-          if (pollevent == PollEvent::IN) { // incoming data
+          if (pollevent == PollEventType::IN) { // incoming data
             handleUDPIn(socketinfo);
           }
           break;
         case SocketType::TCP_SERVER:          // tcp server
         case SocketType::TCP_SERVER_EXTERNAL: // also tcp server
-          if (pollevent == PollEvent::IN) { // incoming connection
+          if (pollevent == PollEventType::IN) { // incoming connection
             handleTCPServerIn(socketinfo);
           }
           break;
@@ -1375,10 +1361,10 @@ void IOManager::workerReady() {
         continue;
       }
       if (siit->second.direction == Direction::IN) {
-        polling.addFDIn(siit->second.fd);
+        polling.addFDIn(siit->second.fd, sockid);
       }
       else {
-        polling.addFDOut(siit->second.fd);
+        polling.addFDOut(siit->second.fd, sockid);
       }
     }
   }
@@ -1414,10 +1400,10 @@ void IOManager::resume(int sockid) {
   if (autopaused.find(sockid) == autopaused.end()) {
     it->second.paused = false;
     if (it->second.direction == Direction::IN) {
-      polling.addFDIn(it->second.fd);
+      polling.addFDIn(it->second.fd, sockid);
     }
     else {
-      polling.addFDOut(it->second.fd);
+      polling.addFDOut(it->second.fd, sockid);
     }
   }
 }

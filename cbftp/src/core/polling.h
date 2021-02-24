@@ -1,28 +1,36 @@
 #pragma once
 
 #include <list>
-#include <utility>
 
 namespace Core {
 
 #define MAX_EVENTS 256
 
-enum class PollEvent {
+enum class PollEventType {
   IN,
   OUT,
   UNKNOWN
+};
+
+struct PollEvent {
+  PollEvent(int fd, PollEventType type, unsigned int userdata)
+    : fd(fd), type(type), userdata(userdata)
+  {}
+  int fd;
+  PollEventType type;
+  unsigned int userdata;
 };
 
 class PollingBase {
 public:
   virtual ~PollingBase() {
   }
-  virtual void wait(std::list<std::pair<int, PollEvent>>& events) = 0;
-  virtual void addFDIn(int) = 0;
-  virtual void addFDOut(int) = 0;
-  virtual void removeFD(int) = 0;
-  virtual void setFDIn(int) = 0;
-  virtual void setFDOut(int) = 0;
+  virtual void wait(std::list<PollEvent>& events) = 0;
+  virtual void addFDIn(int addfd, unsigned int userdata) = 0;
+  virtual void addFDOut(int addfd, unsigned int userdata) = 0;
+  virtual void removeFD(int delfd) = 0;
+  virtual void setFDIn(int modfd, unsigned int userdata) = 0;
+  virtual void setFDOut(int modfd, unsigned int userdata) = 0;
 };
 
 } // namespace Core
@@ -40,23 +48,23 @@ namespace Core {
 
 class Polling {
 public:
-  void wait(std::list<std::pair<int, PollEvent>>& events) {
+  void wait(std::list<PollEvent>& events) {
     impl.wait(events);
   }
-  void addFDIn(int addfd) {
-    impl.addFDIn(addfd);
+  void addFDIn(int addfd, unsigned int userdata = 0) {
+    impl.addFDIn(addfd, userdata);
   }
-  void addFDOut(int addfd) {
-    impl.addFDOut(addfd);
+  void addFDOut(int addfd, unsigned int userdata = 0) {
+    impl.addFDOut(addfd, userdata);
   }
   void removeFD(int delfd) {
     impl.removeFD(delfd);
   }
-  void setFDIn(int modfd) {
-    impl.setFDIn(modfd);
+  void setFDIn(int modfd, unsigned int userdata = 0) {
+    impl.setFDIn(modfd, userdata);
   }
-  void setFDOut(int modfd) {
-    impl.setFDOut(modfd);
+  void setFDOut(int modfd, unsigned int userdata = 0) {
+    impl.setFDOut(modfd, userdata);
   }
 private:
   PollingImpl impl;

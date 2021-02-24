@@ -19,45 +19,46 @@ public:
     close(kqueuefd);
     delete[] events;
   }
-  void wait(std::list<std::pair<int, PollEvent>>& fdlist) override {
-    fdlist.clear();
+  void wait(std::list<PollEvent>& eventlist) override {
+    eventlist.clear();
     int fds = kevent(kqueuefd, nullptr, 0, events, MAX_EVENTS, nullptr);
     for (int i = 0; i < fds; i++) {
-      PollEvent pollevent = PollEvent::UNKNOWN;
+      PollEventType type = PollEventType::UNKNOWN;
       if (events[i].filter == EVFILT_READ) {
-        pollevent = PollEvent::IN;
+        type = PollEventType::IN;
       }
       else if (events[i].filter == EVFILT_WRITE) {
-        pollevent = PollEvent::OUT;
+        type = PollEventType::OUT;
       }
-      fdlist.emplace_back(static_cast<int>(events[i].ident), pollevent);
+      eventlist.emplace_back(static_cast<int>(events[i].ident), type,
+          static_cast<unsigned long long int>(events[i].udata));
     }
   }
-  void addFDIn(int addfd) override {
-    control(addfd, EVFILT_READ, EV_ADD);
+  void addFDIn(int addfd, unsigned int userdata) override {
+    control(addfd, EVFILT_READ, EV_ADD, userdata);
   }
-  void addFDOut(int addfd) override {
-    control(addfd, EVFILT_WRITE, EV_ADD);
+  void addFDOut(int addfd, unsigned int userdata) override {
+    control(addfd, EVFILT_WRITE, EV_ADD, userdata);
   }
   void removeFD(int delfd) override {
     control(delfd, EVFILT_READ | EVFILT_WRITE, EV_DELETE);
   }
-  void setFDIn(int modfd) override {
-    controlSet(modfd, EVFILT_READ, EVFILT_WRITE);
+  void setFDIn(int modfd, unsigned int userdata) override {
+    controlSet(modfd, EVFILT_READ, EVFILT_WRITE, userdata);
   }
-  void setFDOut(int modfd) override {
-    controlSet(modfd, EVFILT_WRITE, EVFILT_READ);
+  void setFDOut(int modfd, unsigned int userdata) override {
+    controlSet(modfd, EVFILT_WRITE, EVFILT_READ, userdata);
   }
 private:
-  void control(int fd, int filter, int flag) {
+  void control(int fd, int filter, int flag, unsigned int userdata = 0) {
     struct kevent ev;
-    EV_SET(&ev, fd, filter, flag, 0, 0, 0);
+    EV_SET(&ev, fd, filter, flag, 0, 0, static_cast<void*>(userdata));
     kevent(kqueuefd, &ev, 1, nullptr, 0, nullptr);
   }
-  void controlSet(int fd, int addfilter, int removefilter) {
+  void controlSet(int fd, int addfilter, int removefilter, unsigned int userdata = 0) {
     struct kevent ev[2];
-    EV_SET(&ev[0], fd, removefilter, EV_DELETE, 0, 0, 0);
-    EV_SET(&ev[1], fd, addfilter, EV_ADD, 0, 0, 0);
+    EV_SET(&ev[0], fd, removefilter, EV_DELETE, 0, 0, reinterpret_cast<void*>(userdata));
+    EV_SET(&ev[1], fd, addfilter, EV_ADD, 0, 0, reinterpret_cast<void*>(userdata));
     kevent(kqueuefd, ev, 2, nullptr, 0, nullptr);
   }
   int kqueuefd;
