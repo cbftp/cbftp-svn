@@ -113,7 +113,7 @@ void ConnStateTracker::resetIdleTime() {
 void ConnStateTracker::setTransfer(const std::string & file, bool fxp, bool ipv6, bool passive, const std::string & host, int port, bool ssl, bool sslclient) {
   assert(transferlocked);
   assert(!transfer);
-  assert(!request);
+  assert(!fxp || !request);
   assert(tm);
   this->transfer = true;
   this->initialized = false;
@@ -279,7 +279,7 @@ const std::shared_ptr<CommandOwner> & ConnStateTracker::getCommandOwner() const 
 void ConnStateTracker::lockForTransfer(TransferMonitor * tm, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner> & co, bool download) {
   assert(!transferlocked);
   assert(!transfer);
-  assert(!request);
+  assert(download || !request);
   use();
   this->tm = tm;
   this->fl = fl;

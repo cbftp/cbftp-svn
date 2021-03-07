@@ -11,14 +11,14 @@ int SiteLogicRequestReady::getType() const {
   return type;
 }
 
-int SiteLogicRequestReady::requestId() const {
+int SiteLogicRequestReady::getId() const {
   return requestid;
 }
 
-void * SiteLogicRequestReady::requestData() const {
+void * SiteLogicRequestReady::getData() const {
   return data;
 }
 
-bool SiteLogicRequestReady::requestStatus() const {
+bool SiteLogicRequestReady::getStatus() const {
   return status;
 }

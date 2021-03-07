@@ -28,17 +28,19 @@ class TransferManager {
     TransferManager();
     ~TransferManager();
     void getFileList(const std::shared_ptr<SiteLogic> &, int, bool, const std::shared_ptr<FileList>& fl, bool ipv6, const std::shared_ptr<CommandOwner> & co = std::shared_ptr<CommandOwner>());
-    std::shared_ptr<TransferStatus> suggestTransfer(
+    std::shared_ptr<TransferStatus> attemptTransfer(
       const std::string &, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fls,
       const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fld, const std::shared_ptr<CommandOwner> &, const std::shared_ptr<CommandOwner> &);
-    std::shared_ptr<TransferStatus> suggestTransfer(
+    std::shared_ptr<TransferStatus> attemptTransfer(
       const std::string &, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fls,
       const std::string &, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fld,
       const std::shared_ptr<CommandOwner> &, const std::shared_ptr<CommandOwner> &);
-    std::shared_ptr<TransferStatus> suggestDownload(
-      const std::string &, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fls,
+    std::shared_ptr<TransferStatus> attemptDownload(
+      const std::string &, const std::shared_ptr<SiteLogic> &,const std::shared_ptr<FileList>& fls,
       const std::shared_ptr<LocalFileList> &, const std::shared_ptr<CommandOwner> & co = std::shared_ptr<CommandOwner>());
-    std::shared_ptr<TransferStatus> suggestUpload(
+    std::shared_ptr<TransferStatus> attemptDownload(const std::string& file, const std::shared_ptr<SiteLogic>& sl,
+      int srcslotid, const std::shared_ptr<FileList>& fls, const std::shared_ptr<LocalFileList>& localfl = nullptr);
+    std::shared_ptr<TransferStatus> attemptUpload(
       const std::string &, const std::shared_ptr<LocalFileList> &,
       const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fld, const std::shared_ptr<CommandOwner> &);
     void transferSuccessful(const std::shared_ptr<TransferStatus> &);

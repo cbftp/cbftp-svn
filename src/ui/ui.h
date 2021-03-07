@@ -173,6 +173,7 @@ private:
   void FDData(int) override;
   void tick(int) override;
   void requestReady(void* service, int requestid) override;
+  void intermediateData(void* service, int requestid, void* data) override;
 public:
   Ui();
   ~Ui();

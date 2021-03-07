@@ -6,6 +6,8 @@
 
 #include "../uiwindow.h"
 
+#include "../../core/types.h"
+
 #include "../../encoding.h"
 #include "../../path.h"
 
@@ -50,6 +52,7 @@ private:
   Path path;
   int pid;
   encoding::Encoding encoding;
+  Core::BinaryData tmpdata;
   bool goDown();
   bool goUp();
   void printTransferInfo();

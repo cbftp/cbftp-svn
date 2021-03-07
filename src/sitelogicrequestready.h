@@ -9,7 +9,7 @@ private:
 public:
   SiteLogicRequestReady(int, int, void *, bool);
   int getType() const;
-  int requestId() const;
-  void * requestData() const;
-  bool requestStatus() const;
+  int getId() const;
+  void * getData() const;
+  bool getStatus() const;
 };

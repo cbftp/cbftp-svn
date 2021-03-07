@@ -185,8 +185,12 @@ $path(sectionname)
    GET /raw/1
 
 - List a directory. The path can also be a section name. Timeout is optional,
-  defaults to 10
+  defaults to 60 seconds
    GET /filelist?site=SITE1&path=/&timeout=2
+
+- Show a file. Timeout is optional, defaults to 60 seconds. The maximum allowed
+  file size is hardcoded to 500k by default.
+   GET /file?site=SITENAME&path=/path/to/some/file.nfo&timeout=10
 
 - List all spread jobs. Filters are optional
    GET /spreadjobs

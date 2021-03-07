@@ -106,15 +106,16 @@ class TransferMonitor : public Core::EventReceiver, public RawBufferCallback {
     void sslDetails(const std::string &, bool);
     bool idle() const;
     std::shared_ptr<TransferStatus> getTransferStatus() const;
-    void engageFXP(const std::string &, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fls,
-      const std::string &, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fld,
-      const std::shared_ptr<CommandOwner> &, const std::shared_ptr<CommandOwner> &);
-    void engageDownload(const std::string &, const std::shared_ptr<SiteLogic> &,
-        const std::shared_ptr<FileList>& fls, const std::shared_ptr<LocalFileList> &, const std::shared_ptr<CommandOwner> &);
-    void engageUpload(const std::string &, const std::shared_ptr<LocalFileList> &,
-      const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fld, const std::shared_ptr<CommandOwner> &);
-    void engageList(const std::shared_ptr<SiteLogic> &, int, bool, const std::shared_ptr<FileList>& fl,
-        const std::shared_ptr<CommandOwner> &, bool ipv6);
+    void engageFXP(const std::string& sfile, const std::shared_ptr<SiteLogic>& sls, const std::shared_ptr<FileList>& fls,
+      const std::string& dfile, const std::shared_ptr<SiteLogic>& sld, const std::shared_ptr<FileList>& fld,
+      const std::shared_ptr<CommandOwner>& srcco, const std::shared_ptr<CommandOwner>& dstco);
+    void engageDownload(const std::string& sfile, const std::shared_ptr<SiteLogic>& sls,
+        const std::shared_ptr<FileList>& fls, const std::shared_ptr<LocalFileList>& localfl,
+        const std::shared_ptr<CommandOwner>& co = nullptr, int connid = -1);
+    void engageUpload(const std::string& sfile, const std::shared_ptr<LocalFileList>& localfl,
+      const std::shared_ptr<SiteLogic>& sld, const std::shared_ptr<FileList>& fld, const std::shared_ptr<CommandOwner>& co);
+    void engageList(const std::shared_ptr<SiteLogic>& sls, int connid, bool hiddenfiles, const std::shared_ptr<FileList>& fl,
+        const std::shared_ptr<CommandOwner>& co, bool ipv6);
     Status getStatus() const;
     bool willFail() const;
     void newRawBufferLine(const std::pair<std::string, std::string> &);
