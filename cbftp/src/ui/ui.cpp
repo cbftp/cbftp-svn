@@ -1205,6 +1205,10 @@ void Ui::requestReady(void* service, int requestid) {
   backendPush();
 }
 
+void Ui::intermediateData(void* service, int requestid, void* data) {
+  backendPush();
+}
+
 void Ui::addKeyBinds(KeyBinds* keybinds) {
   allkeybinds.insert(keybinds);
 }

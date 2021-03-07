@@ -13,6 +13,7 @@
 #include "crypto.h"
 #include "engine.h"
 #include "eventlog.h"
+#include "downloadfiledata.h"
 #include "file.h"
 #include "filelist.h"
 #include "filelistdata.h"
@@ -840,6 +841,7 @@ nlohmann::json getJsonFromBody(const http::Request& request) {
 }
 
 RestApi::RestApi() : nextrequestid(0) {
+  endpoints["/file"]["GET"] = &RestApi::handleFileGet;
   endpoints["/filelist"]["GET"] = &RestApi::handleFileListGet;
   endpoints["/raw"]["POST"] = &RestApi::handleRawPost;
   endpoints["/raw/*"]["GET"] = &RestApi::handleRawGet;
@@ -874,6 +876,46 @@ RestApi::RestApi() : nextrequestid(0) {
 
 RestApi::~RestApi() {
   global->getTickPoke()->stopPoke(this, 0);
+}
+
+void RestApi::handleFileGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  if (!request.hasQueryParam("site")) {
+    cb->requestHandled(connrequestid, badRequestResponse("Missing query parameter: site"));
+    return;
+  }
+  if (!request.hasQueryParam("path")) {
+    cb->requestHandled(connrequestid, badRequestResponse("Missing query parameter: path"));
+    return;
+  }
+  std::string sitestr = request.getQueryParamValue("site");
+  std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitestr);
+  std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(sitestr);
+  if (!site || !sl) {
+    cb->requestHandled(connrequestid, badRequestResponse("Site not found: " + sitestr));
+    return;
+  }
+  Path path = request.getQueryParamValue("path");
+  int timeout = DEFAULT_TIMEOUT_SECONDS;
+  if (request.hasQueryParam("timeout")) {
+    std::string timeoutstr = request.getQueryParamValue("timeout");
+    try {
+
+      timeout = std::stoi(timeoutstr);
+    }
+    catch(std::exception& e) {
+      cb->requestHandled(connrequestid, badRequestResponse("Invalid timeout value: " + timeoutstr));
+      return;
+    }
+  }
+  int servicerequestid = sl->requestDownloadFile(this, path.dirName(), path.baseName(), true);
+  OngoingRequest ongoingrequest;
+  ongoingrequest.type = OngoingRequestType::DOWNLOAD_FILE;
+  ongoingrequest.connrequestid = connrequestid;
+  ongoingrequest.apirequestid = nextrequestid++;
+  ongoingrequest.cb = cb;
+  ongoingrequest.timeout = timeout;
+  ongoingrequest.ongoingservicerequests.insert(std::make_pair(sl.get(), servicerequestid));
+  ongoingrequests.push_back(ongoingrequest);
 }
 
 void RestApi::handleRawPost(RestApiCallback* cb, int connrequestid, const http::Request& request) {
@@ -1967,6 +2009,29 @@ void RestApi::requestReady(void* service, int servicerequestid) {
       }
       return;
     }
+    case OngoingRequestType::DOWNLOAD_FILE: {
+      SiteLogic* sl = static_cast<SiteLogic*>(service);
+      bool status = sl->requestStatus(servicerequestid);
+      if (!status) {
+        http::Response response(502);
+        response.appendHeader("Content-Length", "0");
+        request->cb->requestHandled(request->connrequestid, response);
+      }
+      else {
+        DownloadFileData* data = sl->getDownloadFileData(servicerequestid);
+        http::Response response(200);
+        response.setBody(std::vector<char>(data->data.begin(), data->data.end()));
+        request->cb->requestHandled(request->connrequestid, response);
+      }
+      sl->finishRequest(servicerequestid);
+      for (std::list<OngoingRequest>::iterator it = ongoingrequests.begin(); it != ongoingrequests.end(); ++it) {
+        if (&*it == request) {
+          ongoingrequests.erase(it);
+          break;
+        }
+      }
+      return;
+    }
   }
 }
 
@@ -2003,6 +2068,7 @@ void RestApi::finalize(OngoingRequest& request) {
       break;
     }
     case OngoingRequestType::FILE_LIST:
+    case OngoingRequestType::DOWNLOAD_FILE:
       http::Response response(504);
       response.appendHeader("Content-Length", "0");
       request.cb->requestHandled(request.connrequestid, response);

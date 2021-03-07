@@ -27,6 +27,7 @@ class SiteTransferJob;
 class FileListData;
 class DelayedCommand;
 class RequestCallback;
+struct DownloadFileData;
 enum class FTPConnState;
 enum class FailureType;
 
@@ -131,6 +132,7 @@ class SiteLogic : public Core::EventReceiver {
     bool lockDownloadConn(const std::shared_ptr<FileList>& fl, int* ret, const std::shared_ptr<CommandOwner>& co, TransferMonitor* tm);
     bool lockUploadConn(const std::shared_ptr<FileList>& fl, int* ret, const std::shared_ptr<CommandOwner>& co, TransferMonitor* tm);
     void returnConn(int, bool);
+    void registerDownloadLock(int id, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner>& co, TransferMonitor* tm);
     void setNumConnections(unsigned int);
     bool downloadSlotAvailable(TransferType type = TransferType::REGULAR) const;
     bool uploadSlotAvailable() const;
@@ -143,12 +145,15 @@ class SiteLogic : public Core::EventReceiver {
     void disconnectConn(int id, bool hard = false);
     void finishTransferGracefully(int);
     void listCompleted(int id, int storeid, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner>& co);
+    void downloadCompleted(int id, int storeid, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner>& co);
     void issueRawCommand(unsigned int, const std::string &);
     RawBuffer * getRawCommandBuffer() const;
     RawBuffer * getAggregatedRawBuffer() const;
     void raceGlobalComplete(const std::shared_ptr<SiteRace> & sr);
     void raceLocalComplete(const std::shared_ptr<SiteRace> & sr, int uploadslotsleft, bool reportdone = true);
     int requestFileList(RequestCallback* cb, const Path &);
+    int requestDownloadFile(RequestCallback* cb, const Path& path, const std::string& file, bool inmemory);
+    int requestDownloadFile(RequestCallback* cb, const std::shared_ptr<FileList>& fl, const std::string& file, bool inmemory);
     int requestRawCommand(RequestCallback* cb, const std::string &);
     int requestRawCommand(RequestCallback* cb, const Path &, const std::string &);
     int requestWipe(RequestCallback* cb, const Path &, bool);
@@ -164,8 +169,10 @@ class SiteLogic : public Core::EventReceiver {
     void abortRace(const std::shared_ptr<SiteRace> & race);
     void removeRace(const std::shared_ptr<SiteRace> & race);
     void abortTransfers(const std::shared_ptr<CommandOwner> & co);
-    FileListData* getFileListData(int) const;
-    std::string getRawCommandResult(int);
+    FileListData* getFileListData(int requestid) const;
+    DownloadFileData* getDownloadFileData(int requestid) const;
+    void* getOngoingRequestData(int requestid) const;
+    std::string getRawCommandResult(int requestid);
     bool finishRequest(int);
     void pushPotential(int, const std::string &, const std::shared_ptr<SiteLogic> &);
     bool potentialCheck(int);

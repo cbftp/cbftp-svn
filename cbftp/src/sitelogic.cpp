@@ -7,6 +7,7 @@
 #include "core/types.h"
 #include "sitemanager.h"
 #include "ftpconn.h"
+#include "file.h"
 #include "filelist.h"
 #include "siterace.h"
 #include "site.h"
@@ -34,6 +35,7 @@
 #include "transferstatus.h"
 #include "filelistdata.h"
 #include "requestcallback.h"
+#include "downloadfiledata.h"
 
 // minimum sleep delay (between refreshes / hammer attempts) in ms
 #define SLEEP_DELAY 150
@@ -87,7 +89,9 @@ enum RequestType {
   REQ_NUKE,
   REQ_IDLE,
   REQ_MKDIR,
-  REQ_MOVE
+  REQ_MOVE,
+  REQ_DOWNLOAD_FILE_STAGE1,
+  REQ_DOWNLOAD_FILE_STAGE2
 };
 
 int maxChecksRow(SitePriority priority) {
@@ -118,6 +122,32 @@ public:
 private:
   ConnStateTracker& cst;
 };
+
+TransferType getTransferType(bool isdownload, const std::shared_ptr<CommandOwner>& co) {
+  TransferType type(TransferType::REGULAR);
+  if (isdownload) {
+    if (!!co) {
+      if (co->classType() == COMMANDOWNER_SITERACE) {
+        if (std::static_pointer_cast<SiteRace>(co)->isDownloadOnly()) {
+          type = TransferType::PRE;
+        }
+        else if (std::static_pointer_cast<SiteRace>(co)->isDone()) {
+          type = TransferType::COMPLETE;
+        }
+      }
+      else if (co->classType() == COMMANDOWNER_TRANSFERJOB) {
+        type = TransferType::TRANSFERJOB;
+      }
+    }
+  }
+  return type;
+}
+
+void cleanupFailedRequest(const std::shared_ptr<SiteLogicRequest> & request) {
+  if (request->getType() == REQ_DOWNLOAD_FILE_STAGE2) {
+    delete static_cast<DownloadFileData*>(request->getPtrData());
+  }
+}
 
 } // namespace
 
@@ -316,12 +346,29 @@ void SiteLogic::listRefreshed(int id) {
     return;
   }
   if (connstatetracker[id].hasRequest()) {
-    const std::shared_ptr<SiteLogicRequest> & request = connstatetracker[id].getRequest();
-    if (request->requestType() == REQ_FILELIST &&
-        request->requestData() == fl->getPath().toString())
+    const std::shared_ptr<SiteLogicRequest> request = connstatetracker[id].getRequest();
+    if (request->getType() == REQ_FILELIST &&
+        request->getData() == fl->getPath().toString())
     {
       FileListData * filelistdata = new FileListData(fl, conns[id]->getCwdRawBuffer());
       setRequestReady(id, filelistdata, true);
+    }
+    else if (request->getType() == REQ_DOWNLOAD_FILE_STAGE1 &&
+             request->getData() == fl->getPath().toString())
+    {
+      File* f = fl->getFile(request->getData2());
+      if (!f || f->isDirectory() || f->getSize() > 524288) {
+        setRequestReady(id, nullptr, false);
+      }
+      else {
+        connstatetracker[id].finishRequest();
+        available++;
+        DownloadFileData* dlfdata = new DownloadFileData();
+        dlfdata->fl = fl;
+        dlfdata->file = request->getData2();
+        dlfdata->inmemory = request->getNumData();
+        requests.emplace_back(request->getCallback(), request->getId(), REQ_DOWNLOAD_FILE_STAGE2, dlfdata);
+      }
     }
   }
   if (!!currentco) {
@@ -400,7 +447,7 @@ bool SiteLogic::setPathExists(int id, Exists exists, bool refreshtime) {
 
 bool SiteLogic::handleCommandDelete(int id, bool success) {
   if (connstatetracker[id].hasRequest()) {
-    int type = connstatetracker[id].getRequest()->requestType();
+    int type = connstatetracker[id].getRequest()->getType();
     if (type == REQ_DEL) {
       setRequestReady(id, NULL, success);
     }
@@ -478,39 +525,41 @@ void SiteLogic::commandSuccess(int id, FTPConnState state) {
       }
       if (connstatetracker[id].hasRequest()) {
         const std::shared_ptr<SiteLogicRequest> request = connstatetracker[id].getRequest();
-        if (request->requestType() == REQ_FILELIST) {
+        if (request->getType() == REQ_FILELIST ||
+            request->getType() == REQ_DOWNLOAD_FILE_STAGE1)
+        {
           getFileListConn(id);
           return;
         }
-        else if (request->requestType() == REQ_RAW) {
-          rawcommandrawbuf->writeLine(request->requestData2());
-          conns[id]->doRaw(request->requestData2());
+        else if (request->getType() == REQ_RAW) {
+          rawcommandrawbuf->writeLine(request->getData2());
+          conns[id]->doRaw(request->getData2());
           return;
         }
-        else if (request->requestType() == REQ_IDLE) {
+        else if (request->getType() == REQ_IDLE) {
           setRequestReady(id, NULL, true);
           handleConnection(id);
           if (!conns[id]->isProcessing()) {
             if (!site->getStayLoggedIn()) {
-              connstatetracker[id].delayedCommand("quit", request->requestData3() * 1000);
+              connstatetracker[id].delayedCommand("quit", request->getNumData() * 1000);
             }
           }
           return;
         }
-        else if (request->requestType() == REQ_MKDIR) {
-          conns[id]->doMKD(request->requestData2());
+        else if (request->getType() == REQ_MKDIR) {
+          conns[id]->doMKD(request->getData2());
           return;
         }
-        else if (request->requestType() == REQ_WIPE) {
-          conns[id]->doWipe(request->requestData(), false);
+        else if (request->getType() == REQ_WIPE) {
+          conns[id]->doWipe(request->getData(), false);
           return;
         }
-        else if (request->requestType() == REQ_WIPE_RECURSIVE) {
-          conns[id]->doWipe(request->requestData(), true);
+        else if (request->getType() == REQ_WIPE_RECURSIVE) {
+          conns[id]->doWipe(request->getData(), true);
           return;
         }
-        else if (request->requestType() == REQ_NUKE) {
-          conns[id]->doNuke(request->requestData(), request->requestData3(), request->requestData2());
+        else if (request->getType() == REQ_NUKE) {
+          conns[id]->doNuke(request->getData(), request->getNumData(), request->getData2());
           return;
         }
       }
@@ -523,7 +572,7 @@ void SiteLogic::commandSuccess(int id, FTPConnState state) {
     case FTPConnState::MKD:
       if (connstatetracker[id].hasRequest()) {
         const std::shared_ptr<SiteLogicRequest> request = connstatetracker[id].getRequest();
-        if (request->requestType() == REQ_MKDIR) {
+        if (request->getType() == REQ_MKDIR) {
           setRequestReady(id, NULL, true);
         }
       }
@@ -594,8 +643,8 @@ void SiteLogic::commandSuccess(int id, FTPConnState state) {
     case FTPConnState::WIPE:
       if (connstatetracker[id].hasRequest()) {
         const std::shared_ptr<SiteLogicRequest> & request = connstatetracker[id].getRequest();
-        if (request->requestType() == REQ_WIPE_RECURSIVE ||
-            request->requestType() == REQ_WIPE)
+        if (request->getType() == REQ_WIPE_RECURSIVE ||
+            request->getType() == REQ_WIPE)
         {
           setRequestReady(id, nullptr, true);
         }
@@ -609,22 +658,22 @@ void SiteLogic::commandSuccess(int id, FTPConnState state) {
       break;
     case FTPConnState::NUKE:
       if (connstatetracker[id].hasRequest()) {
-        if (connstatetracker[id].getRequest()->requestType() == REQ_NUKE) {
+        if (connstatetracker[id].getRequest()->getType() == REQ_NUKE) {
           setRequestReady(id, nullptr, true);
         }
       }
       break;
     case FTPConnState::RNFR:
       if (connstatetracker[id].hasRequest()) {
-        if (connstatetracker[id].getRequest()->requestType() == REQ_MOVE) {
-          std::string dstpath = connstatetracker[id].getRequest()->requestData2();
+        if (connstatetracker[id].getRequest()->getType() == REQ_MOVE) {
+          std::string dstpath = connstatetracker[id].getRequest()->getData2();
           conns[id]->doRNTO(dstpath);
         }
       }
       break;
     case FTPConnState::RNTO:
       if (connstatetracker[id].hasRequest()) {
-        if (connstatetracker[id].getRequest()->requestType() == REQ_MOVE) {
+        if (connstatetracker[id].getRequest()->getType() == REQ_MOVE) {
           setRequestReady(id, nullptr, true);
         }
       }
@@ -733,22 +782,24 @@ void SiteLogic::commandFail(int id, FailureType failuretype) {
       }
       if (connstatetracker[id].hasRequest()) {
         const std::shared_ptr<SiteLogicRequest> request = connstatetracker[id].getRequest();
-        if (request->requestType() == REQ_FILELIST ||
-            request->requestType() == REQ_RAW ||
-            request->requestType() == REQ_IDLE ||
-            request->requestType() == REQ_MKDIR ||
-            request->requestType() == REQ_WIPE ||
-            request->requestType() == REQ_WIPE_RECURSIVE ||
-            request->requestType() == REQ_NUKE)
+        if (request->getType() == REQ_FILELIST ||
+            request->getType() == REQ_RAW ||
+            request->getType() == REQ_IDLE ||
+            request->getType() == REQ_MKDIR ||
+            request->getType() == REQ_WIPE ||
+            request->getType() == REQ_WIPE_RECURSIVE ||
+            request->getType() == REQ_NUKE ||
+            request->getType() == REQ_DOWNLOAD_FILE_STAGE1 ||
+            request->getType() == REQ_DOWNLOAD_FILE_STAGE2)
         {
           setRequestReady(id, NULL, false);
           handleConnection(id);
-          if (request->requestType() == REQ_IDLE && !conns[id]->isProcessing()) {
+          if (request->getType() == REQ_IDLE && !conns[id]->isProcessing()) {
             if (site->getStayLoggedIn()) {
               connstatetracker[id].delayedCommand("antiantiidle", site->getMaxIdleTime() * 1000);
             }
             else {
-              connstatetracker[id].delayedCommand("quit", request->requestData3() * 1000);
+              connstatetracker[id].delayedCommand("quit", request->getNumData() * 1000);
             }
           }
           return;
@@ -792,7 +843,7 @@ void SiteLogic::commandFail(int id, FailureType failuretype) {
       else {
         if (connstatetracker[id].hasRequest()) {
           const std::shared_ptr<SiteLogicRequest> request = connstatetracker[id].getRequest();
-          if (request->requestType() == REQ_MKDIR) {
+          if (request->getType() == REQ_MKDIR) {
             setRequestReady(id, NULL, false);
             handleConnection(id);
             return;
@@ -836,8 +887,8 @@ void SiteLogic::commandFail(int id, FailureType failuretype) {
     case FTPConnState::WIPE:
       if (connstatetracker[id].hasRequest()) {
         const std::shared_ptr<SiteLogicRequest> & request = connstatetracker[id].getRequest();
-        if (request->requestType() == REQ_WIPE_RECURSIVE ||
-            request->requestType() == REQ_WIPE)
+        if (request->getType() == REQ_WIPE_RECURSIVE ||
+            request->getType() == REQ_WIPE)
         {
           setRequestReady(id, nullptr, false);
         }
@@ -852,7 +903,7 @@ void SiteLogic::commandFail(int id, FailureType failuretype) {
       return;
     case FTPConnState::NUKE:
       if (connstatetracker[id].hasRequest()) {
-        if (connstatetracker[id].getRequest()->requestType() == REQ_NUKE) {
+        if (connstatetracker[id].getRequest()->getType() == REQ_NUKE) {
           setRequestReady(id, nullptr, false);
         }
       }
@@ -861,7 +912,7 @@ void SiteLogic::commandFail(int id, FailureType failuretype) {
     case FTPConnState::RNFR:
     case FTPConnState::RNTO:
       if (connstatetracker[id].hasRequest()) {
-        if (connstatetracker[id].getRequest()->requestType() == REQ_MOVE) {
+        if (connstatetracker[id].getRequest()->getType() == REQ_MOVE) {
           setRequestReady(id, nullptr, false);
         }
       }
@@ -888,7 +939,7 @@ void SiteLogic::commandFail(int id, FailureType failuretype) {
 
 void SiteLogic::checkFailListRequest(int id) {
   if (connstatetracker[id].hasRequest()) {
-    if (connstatetracker[id].getRequest()->requestType() == REQ_FILELIST) {
+    if (connstatetracker[id].getRequest()->getType() == REQ_FILELIST) {
       setRequestReady(id, NULL, false);
     }
   }
@@ -960,6 +1011,12 @@ void SiteLogic::reportTransferErrorAndFinish(int id, int type, int err) {
     }
   }
   connstatetracker[id].finishTransfer();
+  if (connstatetracker[id].hasRequest()) {
+    const std::shared_ptr<SiteLogicRequest> request = connstatetracker[id].getRequest();
+    if (request->getType() == REQ_DOWNLOAD_FILE_STAGE1 || request->getType() == REQ_DOWNLOAD_FILE_STAGE2) {
+      setRequestReady(id, nullptr, false);
+    }
+  }
   if (type == CST_UPLOAD && err == TM_ERR_DUPE && site->useXDUPE() && co && fl) {
     const std::list<std::string> & xdupelist = conns[id]->getXDUPEList();
     for (std::list<std::string>::const_iterator it = xdupelist.begin(); it != xdupelist.end(); it++) {
@@ -977,7 +1034,7 @@ void SiteLogic::rawCommandResultRetrieved(int id, const std::string & result) {
   connstatetracker[id].resetIdleTime();
   rawcommandrawbuf->write(result);
   if (connstatetracker[id].hasRequest()) {
-    if (connstatetracker[id].getRequest()->requestType() == REQ_RAW) {
+    if (connstatetracker[id].getRequest()->getType() == REQ_RAW) {
       std::string * data = new std::string(result);
       setRequestReady(id, data, true);
     }
@@ -1279,13 +1336,17 @@ bool SiteLogic::handleSpreadJob(int id) {
 bool SiteLogic::handleRequest(int id) {
   std::list<SiteLogicRequest>::iterator it;
   for (it = requests.begin(); it != requests.end(); it++) {
-    if (it->connId() == id) {
+    if (it->getConnId() == id) {
       break;
     }
   }
   if (it == requests.end()) {
     for (it = requests.begin(); it != requests.end(); it++) {
-      if (it->connId() == -1) {
+      if (it->getConnId() == -1) {
+        if (it->getType() == REQ_DOWNLOAD_FILE_STAGE2 && !downloadSlotAvailable())
+        {
+          continue;
+        }
         it->setConnId(id);
         break;
       }
@@ -1300,9 +1361,10 @@ bool SiteLogic::handleRequest(int id) {
   connstatetracker[id].setRequest(request);
   available--;
 
-  switch (request.requestType()) {
+  switch (request.getType()) {
+    case REQ_DOWNLOAD_FILE_STAGE1:
     case REQ_FILELIST: { // filelist
-      Path targetpath = request.requestData();
+      Path targetpath = request.getData();
       if (conns[id]->getCurrentPath() == targetpath) {
         getFileListConn(id);
       }
@@ -1311,64 +1373,75 @@ bool SiteLogic::handleRequest(int id) {
       }
       break;
     }
+    case REQ_DOWNLOAD_FILE_STAGE2: {
+      DownloadFileData* dlfdata = static_cast<DownloadFileData*>(request.getPtrData());
+      std::shared_ptr<LocalFileList> localfl;
+      if (!dlfdata->inmemory) {
+        const Path temppath = global->getLocalStorage()->getTempPath();
+        localfl = global->getLocalStorage()->getLocalFileList(temppath);
+      }
+      dlfdata->ts = global->getTransferManager()->attemptDownload(dlfdata->file, global->getSiteLogicManager()->getSiteLogic(this), id, dlfdata->fl, localfl);
+      request.getCallback()->intermediateData(this, request.getId(), dlfdata);
+      break;
+    }
     case REQ_RAW: { // raw command
-      Path targetpath = request.requestData();
+      Path targetpath = request.getData();
       if (conns[id]->getCurrentPath() != targetpath) {
         conns[id]->doCWD(targetpath);
       }
       else {
-        rawcommandrawbuf->writeLine(request.requestData2());
-        conns[id]->doRaw(request.requestData2());
+        rawcommandrawbuf->writeLine(request.getData2());
+        conns[id]->doRaw(request.getData2());
       }
       break;
     }
     case REQ_WIPE_RECURSIVE: { // recursive wipe
-      Path path(request.requestData());
+      Path path(request.getData());
       if (path.isAbsolute() && conns[id]->getCurrentPath() != path.dirName()) {
         conns[id]->doCWD(path.dirName());
       }
       else {
-        conns[id]->doWipe(request.requestData(), true);
+        conns[id]->doWipe(request.getData(), true);
       }
       break;
     }
     case REQ_WIPE: { // wipe
-      Path path(request.requestData());
+      Path path(request.getData());
       if (path.isAbsolute() && conns[id]->getCurrentPath() != path.dirName()) {
         conns[id]->doCWD(path.dirName());
       }
       else {
-        conns[id]->doWipe(request.requestData(), false);
+        conns[id]->doWipe(request.getData(), false);
       }
       break;
     }
     case REQ_DEL_RECURSIVE: { // recursive delete
-      std::string targetpath = request.requestData();
+      std::string targetpath = request.getData();
       connstatetracker[id].getRecursiveLogic()->initialize(RCL_DELETE, targetpath, site->getUser());
       handleRecursiveLogic(id);
       break;
     }
     case REQ_DEL_OWN: { // recursive delete of own files
-      std::string targetpath = request.requestData();
+      std::string targetpath = request.getData();
       connstatetracker[id].getRecursiveLogic()->initialize(RCL_DELETEOWN, targetpath, site->getUser());
       handleRecursiveLogic(id);
       break;
     }
     case REQ_DEL: // delete
-      conns[id]->doDELE(request.requestData());
+      conns[id]->doDELE(request.getData());
       break;
     case REQ_NUKE: { // nuke
-      Path path(request.requestData());
+      Path path(request.getData());
       if (path.isAbsolute() && conns[id]->getCurrentPath() != path.dirName()) {
         conns[id]->doCWD(path.dirName());
       }
       else {
-        conns[id]->doNuke(request.requestData(), request.requestData3(), request.requestData2());
+        conns[id]->doNuke(request.getData(), request.getNumData(), request.getData2());
       }
       break;
     }
     case REQ_IDLE: { // idle
-      Path targetpath = request.requestData();
+      Path targetpath = request.getData();
       if (conns[id]->getCurrentPath() != targetpath) {
         conns[id]->doCWD(targetpath);
       }
@@ -1380,24 +1453,24 @@ bool SiteLogic::handleRequest(int id) {
             connstatetracker[id].delayedCommand("antiantiidle", site->getMaxIdleTime() * 1000);
           }
           else {
-            connstatetracker[id].delayedCommand("quit", request.requestData3() * 1000);
+            connstatetracker[id].delayedCommand("quit", request.getNumData() * 1000);
           }
         }
       }
       break;
     }
     case REQ_MKDIR: { // make directory
-      Path targetpath = request.requestData();
+      Path targetpath = request.getData();
       if (conns[id]->getCurrentPath() != targetpath) {
         conns[id]->doCWD(targetpath);
       }
       else {
-        conns[id]->doMKD(request.requestData2());
+        conns[id]->doMKD(request.getData2());
       }
       break;
     }
     case REQ_MOVE: { // move item
-      Path srcpath = request.requestData();
+      Path srcpath = request.getData();
       conns[id]->doRNFR(srcpath.toString());
       break;
     }
@@ -1425,7 +1498,7 @@ void SiteLogic::handleRecursiveLogic(int id, const std::shared_ptr<FileList>& fl
       break;
     case RCL_ACTION_NOOP:
       if (connstatetracker[id].hasRequest()) {
-        int type = connstatetracker[id].getRequest()->requestType();
+        int type = connstatetracker[id].getRequest()->getType();
         if (type == REQ_DEL || type == REQ_DEL_RECURSIVE || type == REQ_DEL_OWN) {
           setRequestReady(id, NULL, true);
         }
@@ -1540,7 +1613,25 @@ void SiteLogic::initTransfer(int id) {
 
 int SiteLogic::requestFileList(RequestCallback* cb, const Path & path) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(cb, requestid, REQ_FILELIST, path.toString()));
+  requests.emplace_back(cb, requestid, REQ_FILELIST, path.toString());
+  activateOne();
+  return requestid;
+}
+
+int SiteLogic::requestDownloadFile(RequestCallback* cb, const Path& path, const std::string& file, bool inmemory) {
+  int requestid = requestidcounter++;
+  requests.emplace_back(cb, requestid, REQ_DOWNLOAD_FILE_STAGE1, path.toString(), file, inmemory);
+  activateOne();
+  return requestid;
+}
+
+int SiteLogic::requestDownloadFile(RequestCallback* cb, const std::shared_ptr<FileList>& fl, const std::string& file, bool inmemory) {
+  int requestid = requestidcounter++;
+  DownloadFileData* dlfdata = new DownloadFileData();
+  dlfdata->fl = fl;
+  dlfdata->inmemory = inmemory;
+  dlfdata->file = file;
+  requests.emplace_back(cb, requestid, REQ_DOWNLOAD_FILE_STAGE2, dlfdata);
   activateOne();
   return requestid;
 }
@@ -1552,7 +1643,7 @@ int SiteLogic::requestRawCommand(RequestCallback* cb, const std::string & comman
 int SiteLogic::requestRawCommand(RequestCallback* cb, const Path & path, const std::string & command) {
   int requestid = requestidcounter++;
   std::string expandedcommand = expandVariables(command);
-  requests.push_back(SiteLogicRequest(cb, requestid, REQ_RAW, path.toString(), expandedcommand));
+  requests.emplace_back(cb, requestid, REQ_RAW, path.toString(), expandedcommand);
   activateOne();
   return requestid;
 }
@@ -1560,10 +1651,10 @@ int SiteLogic::requestRawCommand(RequestCallback* cb, const Path & path, const s
 int SiteLogic::requestWipe(RequestCallback* cb, const Path & path, bool recursive) {
   int requestid = requestidcounter++;
   if (recursive) {
-    requests.push_back(SiteLogicRequest(cb, requestid, REQ_WIPE_RECURSIVE, path.toString()));
+    requests.emplace_back(cb, requestid, REQ_WIPE_RECURSIVE, path.toString());
   }
   else {
-    requests.push_back(SiteLogicRequest(cb, requestid, REQ_WIPE, path.toString()));
+    requests.emplace_back(cb, requestid, REQ_WIPE, path.toString());
   }
   activateOne();
   return requestid;
@@ -1573,10 +1664,10 @@ int SiteLogic::requestDelete(RequestCallback* cb, const Path & path, bool recurs
   int requestid = requestidcounter++;
   if (recursive) {
     int req = allfiles ? REQ_DEL_RECURSIVE : REQ_DEL_OWN;
-    requests.push_back(SiteLogicRequest(cb, requestid, req, path.toString()));
+    requests.emplace_back(cb, requestid, req, path.toString());
   }
   else {
-    requests.push_back(SiteLogicRequest(cb, requestid, REQ_DEL, path.toString()));
+    requests.emplace_back(cb, requestid, REQ_DEL, path.toString());
   }
   activateOne();
   return requestid;
@@ -1584,14 +1675,14 @@ int SiteLogic::requestDelete(RequestCallback* cb, const Path & path, bool recurs
 
 int SiteLogic::requestNuke(RequestCallback* cb, const Path & path, int multiplier, const std::string & reason) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(cb, requestid, REQ_NUKE, path.toString(), reason, multiplier));
+  requests.emplace_back(cb, requestid, REQ_NUKE, path.toString(), reason, multiplier);
   activateOne();
   return requestid;
 }
 
 int SiteLogic::requestOneIdle(RequestCallback* cb) {
   int requestid = requestidcounter++;
-  requests.push_back(SiteLogicRequest(cb, requestid, REQ_IDLE, site->getBasePath().toString(), site->getMaxIdleTime()));
+  requests.emplace_back(cb, requestid, REQ_IDLE, site->getBasePath().toString(), site->getMaxIdleTime());
   activateOne();
   return requestid;
 }
@@ -1638,7 +1729,7 @@ int SiteLogic::requestMove(RequestCallback* cb, const Path& srcpath, const Path&
 bool SiteLogic::requestReady(int requestid) const {
   std::list<SiteLogicRequestReady>::const_iterator it;
   for (it = requestsready.begin(); it != requestsready.end(); it++) {
-    if (it->requestId() == requestid) {
+    if (it->getId() == requestid) {
       return true;
     }
   }
@@ -1692,11 +1783,33 @@ void SiteLogic::abortTransfers(const std::shared_ptr<CommandOwner> & co) {
   }
 }
 
-FileListData * SiteLogic::getFileListData(int requestid) const {
+FileListData* SiteLogic::getFileListData(int requestid) const {
   std::list<SiteLogicRequestReady>::const_iterator it;
   for (it = requestsready.begin(); it != requestsready.end(); it++) {
-    if (it->requestId() == requestid) {
-      return static_cast<FileListData *>(it->requestData());
+    if (it->getId() == requestid) {
+      return static_cast<FileListData*>(it->getData());
+    }
+  }
+  return nullptr;
+}
+
+DownloadFileData* SiteLogic::getDownloadFileData(int requestid) const {
+  std::list<SiteLogicRequestReady>::const_iterator it;
+  for (it = requestsready.begin(); it != requestsready.end(); it++) {
+    if (it->getId() == requestid) {
+      return static_cast<DownloadFileData*>(it->getData());
+    }
+  }
+  return nullptr;
+}
+
+void* SiteLogic::getOngoingRequestData(int requestid) const {
+  for (size_t i = 0; i < connstatetracker.size(); ++i) {
+    if (connstatetracker[i].hasRequest()) {
+      const std::shared_ptr<SiteLogicRequest>& request = connstatetracker[i].getRequest();
+      if (request->getId() == requestid) {
+        return request->getPtrData();
+      }
     }
   }
   return nullptr;
@@ -1705,8 +1818,8 @@ FileListData * SiteLogic::getFileListData(int requestid) const {
 std::string SiteLogic::getRawCommandResult(int requestid) {
   std::list<SiteLogicRequestReady>::iterator it;
   for (it = requestsready.begin(); it != requestsready.end(); it++) {
-    if (it->requestId() == requestid) {
-      std::string ret = *static_cast<std::string *>(it->requestData());
+    if (it->getId() == requestid) {
+      std::string ret = *static_cast<std::string *>(it->getData());
       return ret;
     }
   }
@@ -1716,8 +1829,8 @@ std::string SiteLogic::getRawCommandResult(int requestid) {
 bool SiteLogic::requestStatus(int requestid) const {
   std::list<SiteLogicRequestReady>::const_iterator it;
   for (it = requestsready.begin(); it != requestsready.end(); it++) {
-    if (it->requestId() == requestid) {
-      return it->requestStatus();
+    if (it->getId() == requestid) {
+      return it->getStatus();
     }
   }
   return false;
@@ -1726,8 +1839,8 @@ bool SiteLogic::requestStatus(int requestid) const {
 bool SiteLogic::finishRequest(int requestid) {
   std::list<SiteLogicRequestReady>::iterator it;
   for (it = requestsready.begin(); it != requestsready.end(); it++) {
-    if (it->requestId() == requestid) {
-      bool status = it->requestStatus();
+    if (it->getId() == requestid) {
+      bool status = it->getStatus();
       clearReadyRequest(*it);
       requestsready.erase(it);
       return status;
@@ -1735,7 +1848,7 @@ bool SiteLogic::finishRequest(int requestid) {
   }
   for (unsigned int i = 0; i < connstatetracker.size(); i++) {
     if (connstatetracker[i].hasRequest() &&
-        connstatetracker[i].getRequest()->requestId() == requestid)
+        connstatetracker[i].getRequest()->getId() == requestid)
     {
       connstatetracker[i].finishRequest();
       available++;
@@ -1777,22 +1890,7 @@ bool SiteLogic::lockUploadConn(const std::shared_ptr<FileList>& fl, int* ret, co
 }
 
 bool SiteLogic::lockTransferConn(const std::shared_ptr<FileList>& fl, int* ret, TransferMonitor* tm, const std::shared_ptr<CommandOwner>& co, bool isdownload) {
-  TransferType type(TransferType::REGULAR);
-  if (isdownload) {
-    if (!!co) {
-      if (co->classType() == COMMANDOWNER_SITERACE) {
-        if (std::static_pointer_cast<SiteRace>(co)->isDownloadOnly()) {
-          type = TransferType::PRE;
-        }
-        else if (std::static_pointer_cast<SiteRace>(co)->isDone()) {
-          type = TransferType::COMPLETE;
-        }
-      }
-      else if (co->classType() == COMMANDOWNER_TRANSFERJOB) {
-        type = TransferType::TRANSFERJOB;
-      }
-    }
-  }
+  TransferType type = getTransferType(isdownload, co);
   int lastreadyid = -1;
   bool foundreadythread = false;
   const Path & path = fl->getPath();
@@ -1859,6 +1957,15 @@ void SiteLogic::returnConn(int id, bool istransfer) {
   else {
     connstatetracker[id].finishTransfer();
   }
+  handleConnection(id);
+}
+
+void SiteLogic::registerDownloadLock(int id, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner>& co, TransferMonitor* tm) {
+  TransferType type = getTransferType(true, co);
+  available++;
+  assert(getSlot(true, type));
+  connstatetracker[id].lockForTransfer(tm, fl, co, true);
+  conns[id]->setRawBufferCallback(tm);
   handleConnection(id);
 }
 
@@ -2070,7 +2177,7 @@ void SiteLogic::cleanupConnection(int id) {
     erased = false;
     for (std::list<SiteLogicRequest>::iterator it = requests.begin(); it != requests.end(); it++)
     {
-      if (it->connId() != -1 && it->connId() != id) {
+      if (it->getConnId() != -1 && it->getConnId() != id) {
         continue;
       }
       connstatetracker[id].setRequest(*it);
@@ -2104,6 +2211,22 @@ void SiteLogic::listCompleted(int id, int storeid, const std::shared_ptr<FileLis
   conns[id]->parseFileList((char *) &data[0], data.size());
   listRefreshed(id);
   global->getLocalStorage()->purgeStoreContent(storeid);
+}
+
+void SiteLogic::downloadCompleted(int id, int storeid, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner> & co) {
+  if (!connstatetracker[id].hasRequest()) {
+    return;
+  }
+  std::shared_ptr<SiteLogicRequest> request = connstatetracker[id].getRequest();
+  if (request->getType() != REQ_DOWNLOAD_FILE_STAGE2) {
+    return;
+  }
+  DownloadFileData* dlfdata = static_cast<DownloadFileData*>(request->getPtrData());
+  if (storeid != -1) {
+    dlfdata->data = global->getLocalStorage()->getStoreContent(storeid);
+    global->getLocalStorage()->purgeStoreContent(storeid);
+  }
+  setRequestReady(id, dlfdata, true);
 }
 
 void SiteLogic::issueRawCommand(unsigned int id, const std::string & command) {
@@ -2318,11 +2441,14 @@ const ConnStateTracker * SiteLogic::getConnStateTracker(int id) const {
 
 void SiteLogic::setRequestReady(unsigned int id, void* data, bool status, bool returnslot) {
   const std::shared_ptr<SiteLogicRequest> & request = connstatetracker[id].getRequest();
-  int requestid = request->requestId();
-  requestsready.push_back(SiteLogicRequestReady(request->requestType(), requestid, data, status));
+  int requestid = request->getId();
+  requestsready.push_back(SiteLogicRequestReady(request->getType(), requestid, data, status));
   clearExpiredReadyRequests();
   timesincelastrequestready = 0;
-  RequestCallback* cb = request->callback();
+  RequestCallback* cb = request->getCallback();
+  if (!status) {
+    cleanupFailedRequest(request);
+  }
   connstatetracker[id].finishRequest();
   if (returnslot) {
     available++;
@@ -2343,13 +2469,16 @@ void SiteLogic::clearExpiredReadyRequests() {
 }
 
 void SiteLogic::clearReadyRequest(SiteLogicRequestReady & request) {
-  void * data = request.requestData();
-  if (request.requestStatus()) {
+  void * data = request.getData();
+  if (request.getStatus()) {
     if (request.getType() == REQ_FILELIST) {
       delete static_cast<FileListData *>(data);
     }
     else if (request.getType() == REQ_RAW) {
       delete static_cast<std::string *>(data);
+    }
+    else if (request.getType() == REQ_DOWNLOAD_FILE_STAGE2) {
+      delete static_cast<DownloadFileData*>(data);
     }
   }
 }

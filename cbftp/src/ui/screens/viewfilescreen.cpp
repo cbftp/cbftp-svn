@@ -21,20 +21,21 @@
 #include "../../file.h"
 #include "../../externalfileviewing.h"
 #include "../../core/types.h"
+#include "../../downloadfiledata.h"
 
 class CommandOwner;
 
 namespace ViewFileState {
 
 enum {
-  NO_SLOTS_AVAILABLE,
   TOO_LARGE_FOR_INTERNAL,
   NO_DISPLAY,
   CONNECTING,
   DOWNLOADING,
   LOADING_VIEWER,
   VIEWING_EXTERNAL,
-  VIEWING_INTERNAL
+  VIEWING_INTERNAL,
+  DOWNLOAD_FAILED
 };
 
 }
@@ -71,6 +72,7 @@ ViewFileScreen::~ViewFileScreen() {
 
 void ViewFileScreen::initialize() {
   rawcontents.clear();
+  tmpdata.clear();
   x = 0;
   y = 0;
   ymax = 0;
@@ -103,16 +105,7 @@ void ViewFileScreen::initialize(unsigned int row, unsigned int col, const std::s
     }
   }
   if (state == ViewFileState::CONNECTING) {
-    requestid = sitelogic->requestOneIdle(ui);
-  }
-  if (state == ViewFileState::DOWNLOADING) {
-
-    if (!ts) {
-      state = ViewFileState::NO_SLOTS_AVAILABLE;
-    }
-    else {
-
-    }
+    requestid = sitelogic->requestDownloadFile(ui, filelist, file, !externallyviewable);
   }
   init(row, col);
 }
@@ -141,9 +134,6 @@ void ViewFileScreen::initialize(unsigned int row, unsigned int col, const Path &
 void ViewFileScreen::redraw() {
   ui->erase();
   switch (state) {
-    case ViewFileState::NO_SLOTS_AVAILABLE:
-      ui->printStr(1, 1, "No download slots available at " + site + ".");
-      break;
     case ViewFileState::TOO_LARGE_FOR_INTERNAL:
       ui->printStr(1, 1, file + " is too large to download and open in the internal viewer.");
       ui->printStr(2, 1, "The maximum file size for internal viewing is set to " + std::to_string(MAXOPENSIZE) + " bytes.");
@@ -152,40 +142,59 @@ void ViewFileScreen::redraw() {
       ui->printStr(1, 1, file + " cannot be opened in an external viewer.");
       ui->printStr(2, 1, "The DISPLAY environment variable is not set.");
       break;
-    case ViewFileState::CONNECTING:
-      if (sitelogic->requestReady(requestid)) {
-        sitelogic->finishRequest(requestid);
-        const Path & temppath = global->getLocalStorage()->getTempPath();
-        std::shared_ptr<LocalFileList> localfl = global->getLocalStorage()->getLocalFileList(temppath);
-        ts = global->getTransferManager()->suggestDownload(file, sitelogic, filelist, localfl);
+    case ViewFileState::DOWNLOAD_FAILED:
+      ui->printStr(1, 1, "Download of " + file + " from " + site + " failed.");
+      break;
+    case ViewFileState::CONNECTING: {
+      void* data = sitelogic->getOngoingRequestData(requestid);
+      if (data) {
+        DownloadFileData* dlfdata = static_cast<DownloadFileData*>(data);
+        ts = dlfdata->ts;
         if (!!ts) {
           state = ViewFileState::DOWNLOADING;
           ts->setAwaited(true);
-          path = temppath / file;
+          path = ts->getTargetPath() / file;
           expectbackendpush = true;
-        }
-        else {
-          state = ViewFileState::NO_SLOTS_AVAILABLE;
-          redraw();
         }
       }
       else {
-        ui->printStr(1, 1, "Awaiting slot...");
+        if (sitelogic->requestReady(requestid)) {
+          if (sitelogic->requestStatus(requestid)) {
+            DownloadFileData* dlfdata = sitelogic->getDownloadFileData(requestid);
+            if (dlfdata->inmemory) {
+              tmpdata = dlfdata->data;
+            }
+            loadViewer();
+          }
+          else {
+            state = ViewFileState::DOWNLOAD_FAILED;
+            redraw();
+            return;
+          }
+          sitelogic->finishRequest(requestid);
+        }
+        else {
+          ui->printStr(1, 1, "Awaiting download slot...");
+        }
       }
       break;
+    }
     case ViewFileState::DOWNLOADING:
-      switch(ts->getState()) {
-        case TRANSFERSTATUS_STATE_IN_PROGRESS:
-          ui->printStr(1, 1, "Downloading from " + site + "...");
-          printTransferInfo();
-          break;
-        case TRANSFERSTATUS_STATE_FAILED:
-          ui->printStr(1, 1, "Download of " + file + " from " + site + " failed.");
-          autoupdate = false;
-          break;
-        case TRANSFERSTATUS_STATE_SUCCESSFUL:
-          loadViewer();
-          break;
+      if (sitelogic->requestReady(requestid)) {
+        DownloadFileData* dlfdata = sitelogic->getDownloadFileData(requestid);
+        if (dlfdata->inmemory) {
+          tmpdata = dlfdata->data;
+        }
+        sitelogic->finishRequest(requestid);
+        loadViewer();
+      }
+      else if (ts->getState() == TRANSFERSTATUS_STATE_FAILED) {
+        ui->printStr(1, 1, "Download of " + file + " from " + site + " failed.");
+        autoupdate = false;
+      }
+      else {
+        ui->printStr(1, 1, "Downloading from " + site + "...");
+        printTransferInfo();
       }
       break;
     case ViewFileState::LOADING_VIEWER:
@@ -300,11 +309,12 @@ void ViewFileScreen::loadViewer() {
     viewExternal();
   }
   else {
-    Core::BinaryData tmpdata = global->getLocalStorage()->getFileContent(path);
+    if (tmpdata.empty()) {
+      tmpdata = global->getLocalStorage()->getFileContent(path);
+    }
     if (deleteafter) {
       global->getLocalStorage()->requestDelete(path);
     }
-    std::string extension = File::getExtension(file);
     encoding = encoding::guessEncoding(tmpdata);
     unsigned int tmpdatalen = tmpdata.size();
     if (tmpdatalen > 0) {

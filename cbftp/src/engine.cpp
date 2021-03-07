@@ -787,7 +787,7 @@ bool Engine::transferJobActionRequest(const std::shared_ptr<SiteTransferJob> & s
         if (!pt.getSrc()->downloadSlotAvailable(TransferType::TRANSFERJOB)) {
           return false;
         }
-        std::shared_ptr<TransferStatus> ts = global->getTransferManager()->suggestDownload(pt.getSrcFileName(),
+        std::shared_ptr<TransferStatus> ts = global->getTransferManager()->attemptDownload(pt.getSrcFileName(),
             pt.getSrc(), pt.getSrcFileList(), pt.getLocalFileList(), tj->getSrcTransferJob());
         if (!!ts) {
           tj->addTransfer(ts);
@@ -798,7 +798,7 @@ bool Engine::transferJobActionRequest(const std::shared_ptr<SiteTransferJob> & s
       case PENDINGTRANSFER_UPLOAD:
       {
         if (!pt.getDst()->uploadSlotAvailable()) return false;
-        std::shared_ptr<TransferStatus> ts = global->getTransferManager()->suggestUpload(pt.getSrcFileName(),
+        std::shared_ptr<TransferStatus> ts = global->getTransferManager()->attemptUpload(pt.getSrcFileName(),
             pt.getLocalFileList(), pt.getDst(), pt.getDstFileList(), tj->getDstTransferJob());
         if (!!ts) {
           tj->addTransfer(ts);
@@ -818,7 +818,7 @@ bool Engine::transferJobActionRequest(const std::shared_ptr<SiteTransferJob> & s
           pt.getDst()->haveConnectedActivate(2);
           return false;
         }
-        std::shared_ptr<TransferStatus> ts = global->getTransferManager()->suggestTransfer(pt.getSrcFileName(),
+        std::shared_ptr<TransferStatus> ts = global->getTransferManager()->attemptTransfer(pt.getSrcFileName(),
             pt.getSrc(), pt.getSrcFileList(), pt.getDst(), pt.getDstFileList(), tj->getSrcTransferJob(), tj->getDstTransferJob());
         if (!!ts) {
           tj->addTransfer(ts);
@@ -1384,7 +1384,7 @@ void Engine::issueOptimalTransfers() {
       continue;
     }
     std::shared_ptr<TransferStatus> ts =
-      global->getTransferManager()->suggestTransfer(filename, sls,
+      global->getTransferManager()->attemptTransfer(filename, sls,
         sbe->getSourceFileList(), sld, sbe->getDestinationFileList(),
         sbe->getSourceSiteRace(), sbe->getDestinationSiteRace());
     if (!!ts) {

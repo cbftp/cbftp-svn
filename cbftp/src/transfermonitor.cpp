@@ -142,21 +142,28 @@ void TransferMonitor::engageFXP(
 
 void TransferMonitor::engageDownload(
   const std::string& sfile, const std::shared_ptr<SiteLogic>& sls, const std::shared_ptr<FileList>& fls,
-  const std::shared_ptr<LocalFileList>& localfl, const std::shared_ptr<CommandOwner>& co)
+  const std::shared_ptr<LocalFileList>& localfl, const std::shared_ptr<CommandOwner>& co, int connid)
 {
   reset();
-  if (!localfl) return;
   type = TM_TYPE_DOWNLOAD;
   this->sls = sls;
   this->sfile = sfile;
   this->dfile = sfile;
   this->spath = fls->getPath();
-  this->dpath = localfl->getPath();
+  if (localfl) {
+    this->dpath = localfl->getPath();
+  }
   this->fls = fls;
   this->localfl = localfl;
   this->srcco = co;
-  if (!sls->lockDownloadConn(fls, &src, srcco, this)) {
-    return;
+  this->src = connid;
+  if (src == -1) {
+    if (!sls->lockDownloadConn(fls, &src, srcco, this)) {
+      return;
+    }
+  }
+  else {
+    sls->registerDownloadLock(src, fls, srcco, this);
   }
   setStatus(TM_STATUS_AWAITING_PASSIVE);
   int spol = sls->getSite()->getSSLTransferPolicy();
@@ -166,21 +173,23 @@ void TransferMonitor::engageDownload(
   TransferProtocol sprot = sls->getSite()->getTransferProtocol();
   TransferProtocol dprot = global->getLocalStorage()->getTransferProtocol();
   ipv6 = useIPv6(sprot, dprot);
-  localfl->touchFile(dfile, true);
   clientactive = !sls->getSite()->hasBrokenPASV();
   ts = std::make_shared<TransferStatus>(TRANSFERSTATUS_TYPE_DOWNLOAD,
       sls->getSite()->getName(), "/\\", co ? co->getName() : "", dfile, fls, spath,
       nullptr, dpath, fls->getFile(sfile)->getSize(), 0, src, -1, ssl, clientactive);
   tm->addNewTransferStatus(ts);
-  if (!FileSystem::directoryExistsWritable(dpath)) {
-    if (!FileSystem::createDirectoryRecursive(dpath)) {
-      lateDownloadFailure("Failed to create directory: " + dpath.toString());
+  if (localfl) {
+    localfl->touchFile(dfile, true);
+    if (!FileSystem::directoryExistsWritable(dpath)) {
+      if (!FileSystem::createDirectoryRecursive(dpath)) {
+        lateDownloadFailure("Failed to create directory: " + dpath.toString());
+        return;
+      }
+    }
+    if (FileSystem::fileExists(dpath / dfile) && global->getLocalStorage()->getLocalFile(dpath / dfile).getSize() > 0) {
+      lateDownloadFailure((dpath / dfile).toString() + " already exists", true);
       return;
     }
-  }
-  if (FileSystem::fileExists(dpath / dfile) && global->getLocalStorage()->getLocalFile(dpath / dfile).getSize() > 0) {
-    lateDownloadFailure((dpath / dfile).toString() + " already exists", true);
-    return;
   }
   if (!transferProtocolCombinationPossible(sprot, dprot)) {
     lateDownloadFailure("Transfer not possible due to conflicting IPv4/IPv6 settings");
@@ -198,7 +207,13 @@ void TransferMonitor::engageDownload(
         return;
       }
     }
-    lt = global->getLocalStorage()->activeModeDownload(this, dpath, dfile, ipv6, ssl, conn);
+    if (localfl) {
+      lt = global->getLocalStorage()->activeModeDownload(this, dpath, dfile, ipv6, ssl, conn);
+    }
+    else {
+      lt = global->getLocalStorage()->activeModeDownload(this, ipv6, ssl, conn);
+      storeid = static_cast<LocalDownload *>(lt)->getStoreId();
+    }
   }
 }
 
@@ -344,7 +359,13 @@ void TransferMonitor::passiveReady(const std::string & host, int port) {
       break;
     case TM_TYPE_DOWNLOAD:
       if (clientactive) {
-        lt = global->getLocalStorage()->passiveModeDownload(this, dpath, dfile, ipv6, host, port, ssl, sls->getConn(src));
+        if (localfl) {
+          lt = global->getLocalStorage()->passiveModeDownload(this, dpath, dfile, ipv6, host, port, ssl, sls->getConn(src));
+        }
+        else {
+          lt = global->getLocalStorage()->passiveModeDownload(this, ipv6, host, port, ssl, sls->getConn(src));
+          storeid = static_cast<LocalDownload *>(lt)->getStoreId();
+        }
       }
       else {
         sls->prepareActiveTransfer(src, sfile, false, ipv6, host, port, ssl);
@@ -477,7 +498,9 @@ void TransferMonitor::targetComplete() {
     fld->finishUpload(dfile);
   }
   if (type == TM_TYPE_DOWNLOAD) {
-    localfl->finishDownload(dfile);
+    if (localfl) {
+      localfl->finishDownload(dfile);
+    }
   }
   if (status == TM_STATUS_TRANSFERRING || status == TM_STATUS_AWAITING_ACTIVE) {
     setStatus(TM_STATUS_TRANSFERRING_TARGET_COMPLETE);
@@ -518,6 +541,9 @@ void TransferMonitor::finish() {
           global->getStatistics()->addTransferStatsFile(STATS_DOWN, lt->size());
           sls->getSite()->addTransferStatsFile(STATS_DOWN, lt->size());
         }
+      }
+      if (type == TM_TYPE_DOWNLOAD) {
+        sls->downloadCompleted(src, storeid, fls, srcco);
       }
       break;
     }
@@ -716,6 +742,7 @@ void TransferMonitor::reset() {
   startstamp = 0;
   partialcompletestamp = 0;
   rawbufqueue.clear();
+  storeid = -1;
 }
 
 bool TransferMonitor::willFail() const {

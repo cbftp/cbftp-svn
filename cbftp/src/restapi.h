@@ -16,7 +16,8 @@ class SiteLogic;
 
 enum class OngoingRequestType {
   RAW_COMMAND,
-  FILE_LIST
+  FILE_LIST,
+  DOWNLOAD_FILE
 };
 
 class RestApi;
@@ -48,6 +49,7 @@ private:
   void finalize(OngoingRequest& request);
   OngoingRequest* findOngoingRequest(void* service, int servicerequestid);
   OngoingRequest* findOngoingRequest(int apirequestid);
+  void handleFileGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleRawPost(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleRawGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleSitesGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
