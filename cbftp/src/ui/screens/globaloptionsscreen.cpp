@@ -51,24 +51,24 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   sm = global->getSiteManager();
   ls = global->getLocalStorage();
   mso.reset();
-  defaultinterface = mso.addTextArrow(y++, x, "defaultinterface", "Default network interface:");
-  defaultinterface->addOption("Unspecified", 0);
+  bindinterface = mso.addTextArrow(y++, x, "bindinterface", "Bind to network interface:");
+  bindinterface->addOption("Unspecified", 0);
   interfacemap[0] = "";
   std::list<std::pair<std::string, std::string> > interfaces = global->getIOManager()->listInterfaces();
   int interfaceid = 1;
-  bool hasdefault = global->getIOManager()->hasDefaultInterface();
-  std::string defaultinterfacename;
-  if (hasdefault) {
-    defaultinterfacename = global->getIOManager()->getDefaultInterface();
+  bool hasbind = global->getIOManager()->hasBindInterface();
+  std::string bindinterfacename;
+  if (hasbind) {
+    bindinterfacename = global->getIOManager()->getBindInterface();
   }
   for (std::list<std::pair<std::string, std::string> >::iterator it = interfaces.begin(); it != interfaces.end(); it++) {
     if (it->first == "lo") {
       continue;
     }
     interfacemap[interfaceid] = it->first;
-    defaultinterface->addOption(it->first + ", " + it->second, interfaceid++);
-    if (hasdefault && it->first == defaultinterfacename) {
-      defaultinterface->setOption(interfaceid - 1);
+    bindinterface->addOption(it->first + ", " + it->second, interfaceid++);
+    if (hasbind && it->first == bindinterfacename) {
+      bindinterface->setOption(interfaceid - 1);
     }
   }
   std::shared_ptr<MenuSelectOptionTextArrow> transferproto = mso.addTextArrow(y++, x, "transferprotocol", "Local transfer protocol:");
@@ -295,9 +295,9 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
       for(unsigned int i = 0; i < mso.size(); i++) {
         std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
         std::string identifier = msoe->getIdentifier();
-        if (identifier == "defaultinterface") {
+        if (identifier == "bindinterface") {
           std::string interface = interfacemap[std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData()];
-          global->getIOManager()->setDefaultInterface(interface);
+          global->getIOManager()->setBindInterface(interface);
         }
         else if (identifier == "activeportrange") {
           std::string portrange = std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData();

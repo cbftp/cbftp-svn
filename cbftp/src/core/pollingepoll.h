@@ -3,6 +3,7 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 #include <cstring>
+#include <vector>
 
 #include "polling.h"
 
@@ -12,25 +13,27 @@ class PollingImpl : public PollingBase {
 public:
   PollingImpl() :
     epollfd(epoll_create(100)),
-    events(new struct epoll_event[MAX_EVENTS]) {
+    events(MAX_EVENTS) {
   }
   ~PollingImpl() {
     close(epollfd);
-    delete[] events;
+  }
+  static std::string type() {
+    return "epoll";
   }
   void wait(std::list<PollEvent>& eventlist) override {
     eventlist.clear();
-    int fds = epoll_wait(epollfd, events, MAX_EVENTS, -1);
+    int fds = epoll_wait(epollfd, events.data(), MAX_EVENTS, -1);
     for (int i = 0; i < fds; i++) {
-      PollEventType pollevent = PollEventType::UNKNOWN;
+      PollEventType type = PollEventType::UNKNOWN;
       if (events[i].events & EPOLLIN) {
-        pollevent = PollEventType::IN;
+        type = PollEventType::IN;
       }
       else if (events[i].events & EPOLLOUT) {
-        pollevent = PollEventType::OUT;
+        type = PollEventType::OUT;
       }
       eventlist.emplace_back(static_cast<int>(events[i].data.u64 & 0xFFFFFFFF),
-                             pollevent, events[i].data.u64 >> 32);
+          type, events[i].data.u64 >> 32);
     }
   }
   void addFDIn(int addfd, unsigned int userdata) override {
@@ -57,7 +60,7 @@ private:
     epoll_ctl(epollfd, op, fd, &event);
   }
   int epollfd;
-  struct epoll_event* events;
+  std::vector<struct epoll_event> events;
 };
 
 } // namespace Core

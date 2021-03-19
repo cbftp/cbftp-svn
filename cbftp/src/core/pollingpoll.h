@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <map>
 #include <cerrno>
+#include <vector>
 
 #include "polling.h"
 #include "semaphore.h"
@@ -13,34 +14,45 @@ namespace Core {
 
 class PollingImpl : public PollingBase {
 public:
-  PollingImpl() :
-    fds(new struct pollfd[MAX_EVENTS]), inwait(false), waiting(0) {
+  PollingImpl() : fds(MAX_EVENTS), userdatas(MAX_EVENTS), fdmapupdated(false)
+  {
   }
-  ~PollingImpl() {
-    delete[] fds;
+  static std::string type() {
+    return "poll";
   }
   void wait(std::list<PollEvent>& eventlist) override {
-    setInWait(true);
     eventlist.clear();
     while (!eventlist.size()) {
-      awaitModifiers();
       int evcount = 0;
-      maplock.lock();
-      for (std::map<int, Event>::const_iterator it = fdmap.begin();
-           it != fdmap.end() && evcount < MAX_EVENTS; it++, evcount++)
       {
-        fds[evcount].fd = it->first;
-        fds[evcount].events = it->second.events;
+        std::lock_guard<std::mutex> lock(maplock);
+        for (std::map<int, Event>::const_iterator it = fdmap.begin();
+             it != fdmap.end() && evcount < MAX_EVENTS; it++, evcount++)
+        {
+          fds[evcount].fd = it->first;
+          fds[evcount].events = it->second.events;
+          userdatas[evcount] = it->second.userdata;
+        }
+        fdmapupdated = false;
       }
-      maplock.unlock();
-      if (poll(fds, evcount, 10)) {
+      if (poll(fds.data(), evcount, 10)) {
+        {
+          std::lock_guard<std::mutex> lock(maplock);
+          if (fdmapupdated) {
+            continue;
+          }
+        }
         for (int i = 0; i < evcount; i++) {
-          int fd = fds[i].fd;
           int revents = fds[i].revents;
+          if (!revents) {
+            continue;
+          }
+          int fd = fds[i].fd;
+          unsigned int userdata = userdatas[i];
           PollEventType type = PollEventType::UNKNOWN;
           if (revents & POLLIN) {
             char c;
-            if (recv(fd, &c, 1, MSG_PEEK) <= 0 && errno != ENOTSOCK) {
+            if (recv(fd, &c, 1, MSG_PEEK) <= 0 && errno != ENOTSOCK && errno != ENOTCONN) {
               removeFDIntern(fd);
             }
             type = PollEventType::IN;
@@ -52,18 +64,11 @@ public:
             removeFDIntern(fd);
           }
           if (type != PollEventType::UNKNOWN) {
-            maplock.lock();
-            std::map<int, Event>::const_iterator it = fdmap.find(fd);
-            unsigned int userdata = it != fdmap.end() ? it->second.userdata : 0;
-            maplock.unlock();
             eventlist.emplace_back(fd, type, userdata);
           }
         }
       }
     }
-    setInWait(false);
-
-    awaitModifiers();
   }
   void addFDIn(int addfd, unsigned int userdata) override {
     std::lock_guard<std::mutex> lock(maplock);
@@ -74,6 +79,7 @@ public:
     else {
       fdmap[addfd] = {POLLIN, userdata};
     }
+    fdmapupdated = true;
   }
   void addFDOut(int addfd, unsigned int userdata) override {
     std::lock_guard<std::mutex> lock(maplock);
@@ -84,66 +90,39 @@ public:
     else {
       fdmap[addfd] = {POLLOUT, userdata};
     }
+    fdmapupdated = true;
   }
   void removeFD(int delfd) override {
-    awaitCurrentPollFinished();
+    std::lock_guard<std::mutex> lock(maplock);
     std::map<int, Event>::iterator it = fdmap.find(delfd);
     if (it != fdmap.end()) {
       fdmap.erase(it);
     }
-    maplock.unlock();
+    fdmapupdated = true;
   }
   void setFDIn(int modfd, int unsigned userdata) override {
-    awaitCurrentPollFinished();
+    std::lock_guard<std::mutex> lock(maplock);
     fdmap[modfd] = {POLLIN, userdata};
-    maplock.unlock();
+    fdmapupdated = true;
   }
   void setFDOut(int modfd, unsigned int userdata) override {
-    awaitCurrentPollFinished();
+    std::lock_guard<std::mutex> lock(maplock);
     fdmap[modfd] = {POLLOUT, userdata};
-    maplock.unlock();
+    fdmapupdated = true;
   }
 private:
-  void awaitCurrentPollFinished() {
-    waitlock.lock();
-    if (inwait) {
-      ++waiting;
-      waitlock.unlock();
-      waitsem.wait();
-      maplock.lock();
-      acksem.post();
-      return;
-    }
-    maplock.lock();
-    waitlock.unlock();
-  }
-  void awaitModifiers() {
-    std::lock_guard<std::mutex> lock(waitlock);
-    while (waiting) {
-      waitsem.post();
-      --waiting;
-      acksem.wait();
-    }
-  }
-  void setInWait(bool value) {
-    std::lock_guard<std::mutex> lock(waitlock);
-    inwait = value;
-  }
   void removeFDIntern(int delfd) {
     fdmap.erase(delfd);
   }
   std::mutex maplock;
-  struct pollfd* fds;
+  std::vector<struct pollfd> fds;
+  std::vector<unsigned int> userdatas;
   struct Event {
     int events;
     unsigned int userdata;
   };
   std::map<int, Event> fdmap;
-  bool inwait;
-  int waiting;
-  std::mutex waitlock;
-  Semaphore waitsem;
-  Semaphore acksem;
+  bool fdmapupdated;
 };
 
 } // namespace Core

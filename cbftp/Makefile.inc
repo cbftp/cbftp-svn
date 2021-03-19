@@ -58,7 +58,15 @@ LINKFLAGS=$(SSL_LINKFLAGS) -lpthread
 ifeq ($(UNAME_S),Darwin)
 LINKFLAGS+=-lncurses
 else
+ifeq ($(UNAME_S),OpenBSD)
+LINKFLAGS+=-lncurses
+else
+ifeq ($(UNAME_S),NetBSD)
+LINKFLAGS+=-lncurses
+else
 LINKFLAGS+=-lncursesw
+endif
+endif
 endif
 else
 $(info Using LINKFLAGS provided by shell)

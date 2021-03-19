@@ -314,15 +314,25 @@ public:
    */
   void clearReusedSession(int sockid);
 
-  /* Whether a default interface to bind to has been specified
+  /* Whether a network interface to bind to has been specified
    * @return: true or false
    */
-  bool hasDefaultInterface() const;
+  bool hasBindInterface() const;
 
-  /* Get the name of the default interface to bind to, if specified
+  /* Get the name of the network interface to bind to, if specified
    * @return: the name
    */
-  std::string getDefaultInterface() const;
+  std::string getBindInterface() const;
+
+  /* Whether a local IP address to bind to has been specified
+   * @return: true or false
+   */
+  bool hasBindAddress() const;
+
+  /* Get the local IP address to bind to, if specified
+   * @return: the IP address
+   */
+  std::string getBindAddress() const;
 
   /* List the available network interfaces
    * @param ipv4: whether to include ipv4 addresses
@@ -331,18 +341,24 @@ public:
    */
   std::list<std::pair<std::string, std::string> > listInterfaces(bool ipv4 = true, bool ipv6 = false);
 
-  /* Set the default network interface
-   * @param interface: the interface to set as default
+  /* Set the network interface to bind to
+   * @param interface: the interface to bind to
    */
-  void setDefaultInterface(const std::string& interface);
+  void setBindInterface(const std::string& interface);
 
-  /* Return the IPv4 address of a given interface
+  /* Set the local IP address to bind to.
+   * This setting will take precedence over setBindInterface
+   * @param address: the local IP address to bind to
+   */
+  void setBindAddress(const std::string& address);
+
+  /* Return the primary IPv4 address of a given interface
    * @param interface: The name of the interface
    * @return: the interface address
    */
   StringResult getInterfaceAddress(const std::string& interface) const;
 
-  /* Return the IPv6 address of a given interface
+  /* Return the primary IPv6 address of a given interface
    * @param interface: The name of the interface
    * @return: the interface address
    */
@@ -383,6 +399,7 @@ private:
   void unsetPoll(SocketInfo& socketinfo);
   void autoPause(SocketInfo& socketinfo);
   StringResult getInterfaceName(const std::string& address) const;
+  StringResult getAddressToBind(const AddressFamily addrfam, const SocketType socktype);
   Polling polling;
   Thread<IOManager> thread;
   mutable std::mutex socketinfomaplock;
@@ -396,8 +413,10 @@ private:
   std::shared_ptr<DataBlockPool> sendblockpool;
   int blocksize;
   int sockidcounter;
-  std::string defaultinterface;
-  bool hasdefaultinterface;
+  std::string bindinterface;
+  std::string bindaddress;
+  bool hasbindinterface;
+  bool hasbindaddress;
   std::unordered_map<int, SSL_SESSION*> sessions;
   int sessionkeycounter;
   Semaphore initialized;

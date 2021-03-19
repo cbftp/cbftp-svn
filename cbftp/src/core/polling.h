@@ -1,6 +1,7 @@
 #pragma once
 
 #include <list>
+#include <string>
 
 namespace Core {
 
@@ -48,6 +49,9 @@ namespace Core {
 
 class Polling {
 public:
+  static std::string type() {
+    return PollingImpl::type();
+  }
   void wait(std::list<PollEvent>& events) {
     impl.wait(events);
   }

@@ -209,7 +209,8 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
         for (const AddSite& site : addsites) {
           preparesites.emplace_back(site.name, site.downloadonly);
         }
-        preparedraces.push_back(std::make_shared<PreparedRace>(race->getId(), release, section, preparesites, reset, preparedraceexpirytime));
+        int preparedraceid = append ? nextid++ : race->getId();
+        preparedraces.push_back(std::make_shared<PreparedRace>(preparedraceid, release, section, preparesites, reset, preparedraceexpirytime));
         for (const AddSite& site : addsites) {
           site.sl->activateAll();
         }

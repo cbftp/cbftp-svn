@@ -20,7 +20,7 @@ ifneq ($(wildcard ../../Makefile.inc),)
 $(SRC:%.cpp=%.o): ../../Makefile.inc
 
 sslmanager.o: sslmanager.cpp ../../Makefile.inc
-	$(CXX) $(CXXFLAGS)  -c -o sslmanager.o sslmanager.cpp -DCORP=$(BOXTAG)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c -o sslmanager.o sslmanager.cpp -DCORP=$(BOXTAG)
 endif
 
 -include $(SRC:%.cpp=%.d)
