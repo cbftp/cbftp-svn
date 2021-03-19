@@ -657,7 +657,7 @@ Q: Can I edit the data file manually?
 A: Yes, there are tools provided for that: bin/datafilecat and
    bin/datafilewrite. You can also read the file directly through OpenSSL
    commands:
-   openssl enc -d -aes-256-cbc -md sha256 -in ~/.cbftp/data
+   openssl enc -d -aes-256-cbc -pbkdf2 -md sha256 -in ~/.cbftp/data
 
 Q: Can I run cbftp on Windows?
 A: Yes, it should work through cygwin, but it hasn't been tested lately and

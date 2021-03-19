@@ -31,5 +31,5 @@ private:
   bool active;
   std::shared_ptr<MenuSelectOptionElement> activeelement;
   std::map<int, std::string> interfacemap;
-  std::shared_ptr<MenuSelectOptionTextArrow> defaultinterface;
+  std::shared_ptr<MenuSelectOptionTextArrow> bindinterface;
 };

@@ -85,7 +85,7 @@ IOManager::IOManager(WorkManager& wm, TickPoke& tp)
   , sendblockpool(std::make_shared<DataBlockPool>())
   , blocksize(blockpool.blockSize())
   , sockidcounter(0)
-  , hasdefaultinterface(false)
+  , hasbindinterface(false)
   , sessionkeycounter(0)
 {
   workmanager.addReadyNotify(this);
@@ -281,19 +281,18 @@ void IOManager::handleTCPNameResolution(SocketInfo& socketinfo) {
   socketinfo.type = SocketType::TCP_CONNECTING;
   socketinfo.addr = buf;
   connecttimemap[socketinfo.id] = 0;
-  if (hasDefaultInterface()) {
+  StringResult bindto = getAddressToBind(socketinfo.addrfam, socketinfo.type);
+  if (!bindto.success) {
+    workmanager.dispatchEventFail(socketinfo.receiver, socketinfo.id, bindto.error);
+    closeSocketIntern(socketinfo.id);
+    return;
+  }
+  if (!bindto.result.empty()) {
     struct addrinfo request, *res;
     memset(&request, 0, sizeof(request));
     request.ai_family = (socketinfo.addrfam == AddressFamily::IPV4 ? AF_INET : AF_INET6);
     request.ai_socktype = SOCK_STREAM;
-    StringResult interfaceaddress = (socketinfo.addrfam == AddressFamily::IPV4) ? getInterfaceAddress(getDefaultInterface()) :
-                                                                                 getInterfaceAddress6(getDefaultInterface());
-    if (!interfaceaddress.success) {
-      workmanager.dispatchEventFail(socketinfo.receiver, socketinfo.id, interfaceaddress.error);
-      closeSocketIntern(socketinfo.id);
-      return;
-    }
-    int returncode = getaddrinfo(interfaceaddress.result.c_str(), "0", &request, &res);
+    int returncode = getaddrinfo(bindto.result.c_str(), "0", &request, &res);
     if (returncode) {
       workmanager.dispatchEventFail(socketinfo.receiver, socketinfo.id, gai_strerror(returncode));
       closeSocketIntern(socketinfo.id);
@@ -327,6 +326,11 @@ void IOManager::handleTCPNameResolution(SocketInfo& socketinfo) {
 int IOManager::registerTCPServerSocket(EventReceiver* er, int port, AddressFamily addrfam, bool local) {
   struct addrinfo sock, *res;
   memset(&sock, 0, sizeof(sock));
+  StringResult bindto = getAddressToBind(addrfam, SocketType::TCP_SERVER);
+  if (!bindto.success) {
+    workmanager.dispatchEventFail(er, -1, bindto.error);
+    return -1;
+  }
   std::string addr;
   if (addrfam == AddressFamily::IPV4) {
     sock.ai_family = AF_INET;
@@ -335,6 +339,9 @@ int IOManager::registerTCPServerSocket(EventReceiver* er, int port, AddressFamil
   else {
     sock.ai_family = AF_INET6;
     addr = local ? "::1" : "::";
+  }
+  if (!bindto.result.empty() && !local) {
+    addr = bindto.result;
   }
   sock.ai_socktype = SOCK_STREAM;
   int returncode = getaddrinfo(addr.c_str(), std::to_string(port).c_str(), &sock, &res);
@@ -1212,7 +1219,10 @@ std::list<std::pair<std::string, std::string>> IOManager::listInterfaces(bool ip
     getLogger()->log("IOManager", std::string("Failed to list network interfaces: ") + util::getStrError(errno), LogLevel::ERROR);
     return addrs;
   }
-  for (ifa = ifaddr; ifa != nullptr && ifa->ifa_addr != nullptr; ifa = ifa->ifa_next) {
+  for (ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
+    if (ifa->ifa_addr == nullptr) {
+      continue;
+    }
     int family = ifa->ifa_addr->sa_family;
     if (family == AF_INET && ipv4) {
       s = getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in), host, NI_MAXHOST, nullptr, 0, NI_NUMERICHOST);
@@ -1236,28 +1246,54 @@ std::list<std::pair<std::string, std::string>> IOManager::listInterfaces(bool ip
   return addrs;
 }
 
-std::string IOManager::getDefaultInterface() const {
-  return defaultinterface;
+std::string IOManager::getBindInterface() const {
+  return bindinterface;
 }
 
-void IOManager::setDefaultInterface(const std::string& interface) {
-  if (interface.empty() || !getInterfaceAddress(interface).success) {
-    if (hasdefaultinterface) {
-      hasdefaultinterface = false;
-      getLogger()->log("IOManager", "Default network interface removed", LogLevel::INFO);
+std::string IOManager::getBindAddress() const {
+  return bindaddress;
+}
+
+void IOManager::setBindInterface(const std::string& interface) {
+  if (interface.empty()) {
+    if (hasbindinterface) {
+      hasbindinterface = false;
+      getLogger()->log("IOManager", "Bind network interface removed", LogLevel::INFO);
     }
+    return;
   }
-  else {
-    if (hasdefaultinterface == false || defaultinterface != interface) {
-      defaultinterface = interface;
-      hasdefaultinterface = true;
-      getLogger()->log("IOManager", "Default network interface set to: " + interface, LogLevel::INFO);
-    }
+  if (!getInterfaceAddress(interface).success) {
+    getLogger()->log("IOManager", "Failed to find interface address for: " + interface, LogLevel::ERROR);
+    return;
+  }
+  if (hasbindinterface == false || bindinterface != interface) {
+    bindinterface = interface;
+    hasbindinterface = true;
+    getLogger()->log("IOManager", "Bind network interface set to: " + interface, LogLevel::INFO);
   }
 }
 
-bool IOManager::hasDefaultInterface() const {
-  return hasdefaultinterface;
+void IOManager::setBindAddress(const std::string& address) {
+  if (address.empty()) {
+    if (hasbindaddress) {
+      hasbindaddress = false;
+      getLogger()->log("IOManager", "Bind IP address removed", LogLevel::INFO);
+    }
+    return;
+  }
+  if (!hasbindaddress && bindaddress != address) {
+    bindaddress = address;
+    hasbindaddress = true;
+    getLogger()->log("IOManager", "Bind IP address set to: " + address, LogLevel::INFO);
+  }
+}
+
+bool IOManager::hasBindInterface() const {
+  return hasbindinterface;
+}
+
+bool IOManager::hasBindAddress() const {
+  return hasbindaddress;
 }
 
 StringResult IOManager::getInterfaceAddress(const std::string& interface) const {
@@ -1345,6 +1381,23 @@ StringResult IOManager::getInterfaceName(const std::string& address) const {
   }
   freeifaddrs(ifaddr);
   return StringResultError("No matching interface found");
+}
+
+StringResult IOManager::getAddressToBind(const AddressFamily addrfam, const SocketType socktype) {
+  std::string bindto;
+  if (hasBindAddress()) {
+    bindto = bindaddress;
+  }
+  else if (hasBindInterface()) {
+    struct addrinfo request;
+    memset(&request, 0, sizeof(request));
+    request.ai_family = (addrfam == AddressFamily::IPV4 ? AF_INET : AF_INET6);
+    request.ai_socktype = (socktype != SocketType::UDP ? SOCK_STREAM : SOCK_DGRAM);
+    StringResult interfaceaddress = (addrfam == AddressFamily::IPV4) ? getInterfaceAddress(getBindInterface()) :
+                                                                       getInterfaceAddress6(getBindInterface());
+    return interfaceaddress;
+  }
+  return bindto;
 }
 
 void IOManager::workerReady() {

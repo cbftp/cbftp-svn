@@ -138,8 +138,8 @@ void SettingsLoaderSaver::loadSettings() {
     size_t tok = line.find('=');
     std::string setting = line.substr(0, tok);
     std::string value = line.substr(tok + 1);
-    if (!setting.compare("defaultinterface")) {
-      global->getIOManager()->setDefaultInterface(value);
+    if (!setting.compare("bindinterface")) {
+      global->getIOManager()->setBindInterface(value);
     }
   }
 
@@ -802,8 +802,8 @@ void SettingsLoaderSaver::saveSettings() {
 
   dfh->clearOutputData();
 
-  if (global->getIOManager()->hasDefaultInterface()) {
-    dfh->addOutputLine("IOManager", "defaultinterface=" + global->getIOManager()->getDefaultInterface());
+  if (global->getIOManager()->hasBindInterface()) {
+    dfh->addOutputLine("IOManager", "bindinterface=" + global->getIOManager()->getBindInterface());
   }
 
   for (const std::pair<Core::BinaryData, Core::BinaryData>& pair : Core::SSLManager::certKeyPairs()) {
