@@ -1851,7 +1851,9 @@ bool SiteLogic::finishRequest(int requestid) {
         connstatetracker[i].getRequest()->getId() == requestid)
     {
       connstatetracker[i].finishRequest();
-      available++;
+      if (!connstatetracker[i].isTransferLocked()) {
+        available++;
+      }
       return true;
     }
   }
@@ -2059,7 +2061,9 @@ void SiteLogic::transferComplete(int id, bool isdownload, bool returntransferslo
       slotsup--;
     }
   }
-  available++;
+  if (!connstatetracker[id].hasRequest()) {
+    available++;
+  }
   conns[id]->unsetRawBufferCallback();
 }
 
@@ -2450,7 +2454,7 @@ void SiteLogic::setRequestReady(unsigned int id, void* data, bool status, bool r
     cleanupFailedRequest(request);
   }
   connstatetracker[id].finishRequest();
-  if (returnslot) {
+  if (returnslot && !connstatetracker[id].isTransferLocked()) {
     available++;
   }
   if (cb) {
