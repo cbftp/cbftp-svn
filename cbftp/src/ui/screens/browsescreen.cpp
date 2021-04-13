@@ -85,6 +85,7 @@ BrowseScreen::BrowseScreen(Ui* ui) : UIWindow(ui, "BrowseScreen"),
   sitekeybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Page down");
   sitekeybinds.addBind('-', KEYACTION_HIGHLIGHT_LINE, "Highlight entire line");
   sitekeybinds.addBind('\t', KEYACTION_SPLIT, "Split/switch side");
+  sitekeybinds.addBind('h', KEYACTION_TOGGLE_SHOW_NAMES_ONLY, "Show names only");
   localkeybinds.addScope(KEYSCOPE_SPLIT_SITE_LOCAL, "When split browsing local-site");
   localkeybinds.addBind('t', KEYACTION_TRANSFER, "Transfer (Upload)", KEYSCOPE_SPLIT_SITE_LOCAL);
   localkeybinds.addBind('u', KEYACTION_COMPARE_UNIQUE, "Unique compare", KEYSCOPE_SPLIT_SITE_LOCAL);
@@ -118,6 +119,7 @@ BrowseScreen::BrowseScreen(Ui* ui) : UIWindow(ui, "BrowseScreen"),
   localkeybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Page down");
   localkeybinds.addBind('-', KEYACTION_HIGHLIGHT_LINE, "Highlight entire line");
   localkeybinds.addBind('\t', KEYACTION_SPLIT, "Split/switch side");
+  localkeybinds.addBind('h', KEYACTION_TOGGLE_SHOW_NAMES_ONLY, "Show names only");
   ui->addKeyBinds(&sitekeybinds);
   ui->addKeyBinds(&localkeybinds);
   allowimplicitgokeybinds = false;

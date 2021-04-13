@@ -15,6 +15,7 @@
 #include "../../path.h"
 
 class Ui;
+class VirtualView;
 class LocalFileList;
 class KeyBinds;
 
@@ -43,7 +44,8 @@ private:
   void clearSoftSelects();
   void viewCursored();
   bool keyDown();
-  Ui * ui;
+  Ui* ui;
+  VirtualView* vv;
   unsigned int row;
   unsigned int col;
   unsigned int coloffset;
@@ -71,4 +73,5 @@ private:
   std::string lastinfotarget;
   bool refreshfilelistafter;
   unsigned long long int freespace;
+  bool nameonly;
 };

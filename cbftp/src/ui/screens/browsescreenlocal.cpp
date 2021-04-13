@@ -27,7 +27,8 @@ BrowseScreenLocal::BrowseScreenLocal(Ui* ui, KeyBinds& keybinds,
     ui(ui), currentviewspan(0), focus(true), spinnerpos(0), tickcount(0),
     resort(false), sortmethod(UIFileList::SortMethod::COMBINED), gotomode(false), gotomodefirst(false),
     gotomodeticker(0), filtermodeinput(false), filtermodeinputregex(false), temphighlightline(-1),
-    softselecting(false), lastinfo(LastInfo::NONE), refreshfilelistafter(false), freespace(0)
+    softselecting(false), lastinfo(LastInfo::NONE), refreshfilelistafter(false), freespace(0),
+    nameonly(false)
 {
   BrowseScreenRequest request;
   request.type = BrowseScreenRequestType::FILELIST;
@@ -82,7 +83,7 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
       prepchar = "L";
     }
     std::string owner = uifile->getOwner() + "/" + uifile->getGroup();
-    addFileDetails(table, coloffset, i, uifile->getName(), prepchar, uifile->getSizeRepr(), uifile->getLastModified(), owner, true, selected, uifile);
+    addFileDetails(table, coloffset, i, uifile->getName(), prepchar, uifile->getSizeRepr(), uifile->getLastModified(), owner, true, selected, uifile, nameonly);
   }
   table.adjustLines(col - 3);
   table.checkPointer();
@@ -647,6 +648,10 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       if (list.cursoredFile() != nullptr) {
         ui->goFileInfo(list.cursoredFile());
       }
+      break;
+    case KEYACTION_TOGGLE_SHOW_NAMES_ONLY:
+      nameonly = !nameonly;
+      ui->redraw();
       break;
   }
   return BrowseScreenAction();
