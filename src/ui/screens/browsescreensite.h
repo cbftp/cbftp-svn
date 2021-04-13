@@ -18,6 +18,7 @@ class SiteLogic;
 class Site;
 class FileList;
 class Ui;
+class VirtualView;
 class UIFile;
 class BrowseScreenAction;
 class KeyBinds;
@@ -57,7 +58,8 @@ public:
   std::string getLastJumpSection() const;
   Path getLastJumpPath() const;
 private:
-  Ui * ui;
+  Ui* ui;
+  VirtualView* vv;
   BrowseScreen* parent;
   unsigned int row;
   unsigned int col;
@@ -95,6 +97,7 @@ private:
   bool refreshfilelistafter;
   std::string lastjumpsection;
   Path lastjumppath;
+  bool nameonly;
   void disableGotoMode();
   void clearSoftSelects();
   bool handleReadyRequests();

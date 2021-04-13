@@ -47,7 +47,8 @@ BrowseScreenSite::BrowseScreenSite(Ui* ui, BrowseScreen* parent,
     site(sitelogic->getSite()), spinnerpos(0), filelist(nullptr),
     withinraceskiplistreach(false), focus(true), temphighlightline(-1),
     softselecting(false), lastinfo(LastInfo::NONE),
-    confirmaction(ConfirmAction::NONE), refreshfilelistafter(false)
+    confirmaction(ConfirmAction::NONE), refreshfilelistafter(false),
+    nameonly(false)
 {
   sitelogic->getAggregatedRawBuffer()->bookmark();
   TimeReference::updateTime();
@@ -65,7 +66,8 @@ BrowseScreenSite::BrowseScreenSite(Ui* ui, BrowseScreen* parent,
     site(sitelogic->getSite()), spinnerpos(0), filelist(nullptr),
     withinraceskiplistreach(false), focus(true), temphighlightline(-1),
     softselecting(false), lastinfo(LastInfo::NONE),
-    confirmaction(ConfirmAction::NONE), refreshfilelistafter(false)
+    confirmaction(ConfirmAction::NONE), refreshfilelistafter(false),
+    nameonly(false)
 {
   sitelogic->getAggregatedRawBuffer()->bookmark();
   TimeReference::updateTime();
@@ -182,7 +184,7 @@ void BrowseScreenSite::redraw(unsigned int row, unsigned int col, unsigned int c
     }
     std::string owner = uifile->getOwner() + "/" + uifile->getGroup();
     addFileDetails(table, coloffset, i, uifile->getName(), prepchar, uifile->getSizeRepr(),
-        uifile->getLastModified(), owner, true, cursored, uifile);
+        uifile->getLastModified(), owner, true, cursored, uifile, nameonly);
   }
   table.adjustLines(col - 3);
   table.checkPointer();
@@ -991,6 +993,10 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       if (list.cursoredFile() != nullptr) {
         ui->goFileInfo(list.cursoredFile());
       }
+      break;
+    case KEYACTION_TOGGLE_SHOW_NAMES_ONLY:
+      nameonly = !nameonly;
+      ui->redraw();
       break;
   }
   return BrowseScreenAction();

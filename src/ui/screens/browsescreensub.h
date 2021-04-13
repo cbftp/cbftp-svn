@@ -71,7 +71,8 @@ enum BrowseScreenKeyAction {
   KEYACTION_SPLIT,
   KEYACTION_TRANSFER,
   KEYACTION_COMPARE_UNIQUE,
-  KEYACTION_COMPARE_IDENTICAL
+  KEYACTION_COMPARE_IDENTICAL,
+  KEYACTION_TOGGLE_SHOW_NAMES_ONLY
 };
 
 enum BrowseScreenKeyScopes {
@@ -104,7 +105,8 @@ public:
                              unsigned int y, const std::string & name,
                              const std::string & prepchar = "", const std::string & size = "",
                              const std::string & lastmodified = "", const std::string & owner = "",
-                             bool selectable = false, bool cursored = false, UIFile * origin = nullptr);
+                             bool selectable = false, bool cursored = false, UIFile * origin = nullptr,
+                             bool nameonly = false);
   static void printFlipped(Ui * ui, const std::shared_ptr<ResizableElement> & re);
   static std::string targetName(const std::list<std::pair<std::string, bool>> & items);
   virtual BrowseScreenAction tryJumpSection(const std::string& section);

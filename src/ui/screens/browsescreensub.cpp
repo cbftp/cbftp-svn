@@ -27,7 +27,7 @@ void BrowseScreenSub::printFlipped(Ui * ui, const std::shared_ptr<ResizableEleme
   }
 }
 
-void BrowseScreenSub::addFileDetails(MenuSelectOption & table, unsigned int coloffset, unsigned int y, const std::string & name, const std::string & prepchar, const std::string & size, const std::string & lastmodified, const std::string & owner, bool selectable, bool cursored, UIFile * origin) {
+void BrowseScreenSub::addFileDetails(MenuSelectOption & table, unsigned int coloffset, unsigned int y, const std::string & name, const std::string & prepchar, const std::string & size, const std::string & lastmodified, const std::string & owner, bool selectable, bool cursored, UIFile * origin, bool nameonly) {
   std::shared_ptr<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
   std::shared_ptr<MenuSelectOptionTextButton> msotb;
   msotb = table.addTextButtonNoContent(y, coloffset + 1, "prepchar", prepchar);
@@ -43,6 +43,9 @@ void BrowseScreenSub::addFileDetails(MenuSelectOption & table, unsigned int colo
     table.setPointer(msotb);
   }
   msal->addElement(msotb, 5, 0, RESIZE_WITHDOTS, true);
+  if (nameonly) {
+    return;
+  }
   msotb = table.addTextButtonNoContent(y, coloffset + 3, "size", size);
   msotb->setSelectable(false);
   msotb->setRightAligned();
