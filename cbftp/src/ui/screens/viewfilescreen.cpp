@@ -142,9 +142,17 @@ void ViewFileScreen::redraw() {
       ui->printStr(1, 1, file + " cannot be opened in an external viewer.");
       ui->printStr(2, 1, "The DISPLAY environment variable is not set.");
       break;
-    case ViewFileState::DOWNLOAD_FAILED:
+    case ViewFileState::DOWNLOAD_FAILED: {
       ui->printStr(1, 1, "Download of " + file + " from " + site + " failed.");
+      int x = 3;
+      if (ts) {
+        for (const std::string& line : ts->getLogLines()) {
+          ui->printStr(x++, 1, line);
+        }
+      }
+      autoupdate = false;
       break;
+    }
     case ViewFileState::CONNECTING: {
       void* data = sitelogic->getOngoingRequestData(requestid);
       if (data) {
@@ -155,23 +163,22 @@ void ViewFileScreen::redraw() {
           ts->setAwaited(true);
           path = ts->getTargetPath() / file;
           expectbackendpush = true;
+          redraw();
         }
       }
       else {
         if (sitelogic->requestReady(requestid)) {
-          if (sitelogic->requestStatus(requestid)) {
-            DownloadFileData* dlfdata = sitelogic->getDownloadFileData(requestid);
-            if (dlfdata->inmemory) {
-              tmpdata = dlfdata->data;
-            }
-            loadViewer();
-          }
-          else {
+          if (!sitelogic->requestStatus(requestid)) {
             state = ViewFileState::DOWNLOAD_FAILED;
             redraw();
             return;
           }
+          DownloadFileData* dlfdata = sitelogic->getDownloadFileData(requestid);
+          if (dlfdata->inmemory) {
+            tmpdata = dlfdata->data;
+          }
           sitelogic->finishRequest(requestid);
+          loadViewer();
         }
         else {
           ui->printStr(1, 1, "Awaiting download slot...");
@@ -181,6 +188,11 @@ void ViewFileScreen::redraw() {
     }
     case ViewFileState::DOWNLOADING:
       if (sitelogic->requestReady(requestid)) {
+        if (!sitelogic->requestStatus(requestid)) {
+          state = ViewFileState::DOWNLOAD_FAILED;
+          redraw();
+          return;
+        }
         DownloadFileData* dlfdata = sitelogic->getDownloadFileData(requestid);
         if (dlfdata->inmemory) {
           tmpdata = dlfdata->data;
@@ -189,8 +201,8 @@ void ViewFileScreen::redraw() {
         loadViewer();
       }
       else if (ts->getState() == TRANSFERSTATUS_STATE_FAILED) {
-        ui->printStr(1, 1, "Download of " + file + " from " + site + " failed.");
-        autoupdate = false;
+        state = ViewFileState::DOWNLOAD_FAILED;
+        redraw();
       }
       else {
         ui->printStr(1, 1, "Downloading from " + site + "...");
