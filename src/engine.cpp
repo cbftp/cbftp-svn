@@ -219,18 +219,18 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
     }
     bool readdtocurrent = true;
     if (append) {
+      if (reset) {
+        resetRace(race, true);
+      }
       if (currentraces.contains(race)) {
         readdtocurrent = false;
       }
-      if (readdtocurrent) {
+      else {
         global->getEventLog()->log("Engine", "Reactivating spread job: " + section + "/" + release);
         race->setUndone();
         for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
           it->second->activateAll();
         }
-      }
-      if (reset) {
-        resetRace(race, true);
       }
     }
     for (const AddSite& site : addsites) {
