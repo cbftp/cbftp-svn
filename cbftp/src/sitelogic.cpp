@@ -1660,7 +1660,7 @@ int SiteLogic::requestWipe(RequestCallback* cb, const Path & path, bool recursiv
   return requestid;
 }
 
-int SiteLogic::requestDelete(RequestCallback* cb, const Path & path, bool recursive, bool interactive, bool allfiles) {
+int SiteLogic::requestDelete(RequestCallback* cb, const Path& path, bool recursive, bool allfiles) {
   int requestid = requestidcounter++;
   if (recursive) {
     int req = allfiles ? REQ_DEL_RECURSIVE : REQ_DEL_OWN;

@@ -49,6 +49,8 @@ private:
   void finalize(OngoingRequest& request);
   OngoingRequest* findOngoingRequest(void* service, int servicerequestid);
   OngoingRequest* findOngoingRequest(int apirequestid);
+  void handlePathDelete(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handlePathGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleFileGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleRawPost(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleRawGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
@@ -57,7 +59,6 @@ private:
   void handleSiteGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleSitePatch(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleSiteDelete(RestApiCallback* cb, int connrequestid, const http::Request& request);
-  void handleFileListGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleSpreadJobPost(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleSpreadJobGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleSpreadJobsGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
