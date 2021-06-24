@@ -157,7 +157,7 @@ class SiteLogic : public Core::EventReceiver {
     int requestRawCommand(RequestCallback* cb, const std::string &);
     int requestRawCommand(RequestCallback* cb, const Path &, const std::string &);
     int requestWipe(RequestCallback* cb, const Path &, bool);
-    int requestDelete(RequestCallback* cb, const Path &, bool, bool, bool);
+    int requestDelete(RequestCallback* cb, const Path& path, bool recursive,  bool allfiles);
     int requestNuke(RequestCallback* cb, const Path &, int, const std::string &);
     int requestOneIdle(RequestCallback* cb);
     int requestAllIdle(RequestCallback* cb, const Path & path, int);

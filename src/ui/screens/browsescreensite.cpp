@@ -475,7 +475,7 @@ void BrowseScreenSite::command(const std::string & command, const std::string & 
       case ConfirmAction::DELETE:
         for (const std::pair<std::string, bool>& file : list.getSelectedNames()) {
           BrowseScreenRequest request;
-          request.id = sitelogic->requestDelete(ui, list.getPath() / file.first, file.second, true, true);
+          request.id = sitelogic->requestDelete(ui, list.getPath() / file.first, file.second, true);
           request.type = BrowseScreenRequestType::DELETE;
           request.path = list.getPath();
           request.files = { file };

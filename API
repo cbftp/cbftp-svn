@@ -186,7 +186,11 @@ $path(sectionname)
 
 - List a directory. The path can also be a section name. Timeout is optional,
   defaults to 60 seconds
-   GET /filelist?site=SITE1&path=/&timeout=2
+   GET /path?site=SITE1&path=/&timeout=2
+
+- Delete a directory. The path can also be a section name. Type is optional,
+  defaults to ALL
+   DELETE /path?site=SITE1&path=/unwanted/dir&type=OWN
 
 - Show a file. Timeout is optional, defaults to 60 seconds. The maximum allowed
   file size is hardcoded to 500k by default.

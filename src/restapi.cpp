@@ -842,7 +842,9 @@ nlohmann::json getJsonFromBody(const http::Request& request) {
 
 RestApi::RestApi() : nextrequestid(0) {
   endpoints["/file"]["GET"] = &RestApi::handleFileGet;
-  endpoints["/filelist"]["GET"] = &RestApi::handleFileListGet;
+  endpoints["/filelist"]["GET"] = &RestApi::handlePathGet; // deprecated, use /path
+  endpoints["/path"]["DELETE"] = &RestApi::handlePathDelete;
+  endpoints["/path"]["GET"] = &RestApi::handlePathGet;
   endpoints["/raw"]["POST"] = &RestApi::handleRawPost;
   endpoints["/raw/*"]["GET"] = &RestApi::handleRawGet;
   endpoints["/sites"]["GET"] = &RestApi::handleSitesGet;
@@ -1154,7 +1156,45 @@ void RestApi::handleSiteDelete(RestApiCallback* cb, int connrequestid, const htt
   cb->requestHandled(connrequestid, response);
 }
 
-void RestApi::handleFileListGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+void RestApi::handlePathDelete(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  if (!request.hasQueryParam("site")) {
+    cb->requestHandled(connrequestid, badRequestResponse("Missing query parameter: site"));
+    return;
+  }
+  if (!request.hasQueryParam("path")) {
+    cb->requestHandled(connrequestid, badRequestResponse("Missing query parameter: path"));
+    return;
+  }
+  bool allfiles = true;
+  if (request.hasQueryParam("type")) {
+    std::string deltype = request.getQueryParamValue("type");
+    if (deltype == "OWN") {
+      allfiles = false;
+    }
+    else if (deltype != "OWN") {
+      cb->requestHandled(connrequestid, badRequestResponse("Invalid type: " + deltype));
+      return;
+    }
+  }
+  std::string sitestr = request.getQueryParamValue("site");
+  std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitestr);
+  std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(sitestr);
+  if (!site || !sl) {
+    cb->requestHandled(connrequestid, badRequestResponse("Site not found: " + sitestr));
+    return;
+  }
+  Path path = request.getQueryParamValue("path");
+  if (!useOrSectionTranslate(path, site)) {
+    cb->requestHandled(connrequestid, badRequestResponse("Path must be absolute or a section on " + sitestr + ": " + path.toString()));
+    return;
+  }
+  sl->requestDelete(nullptr, path, true, allfiles);
+  http::Response response(204);
+  response.appendHeader("Content-Length", "0");
+  cb->requestHandled(connrequestid, response);
+}
+
+void RestApi::handlePathGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
   if (!request.hasQueryParam("site")) {
     cb->requestHandled(connrequestid, badRequestResponse("Missing query parameter: site"));
     return;
