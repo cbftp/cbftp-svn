@@ -328,15 +328,18 @@ bool RemoteCommandHandler::commandFXP(const std::vector<std::string> & message) 
     return false;
   }
   std::string dstfile = message.size() > 5 ? message[5] : message[2];
+
   Path srcpath(message[1]);
+  std::string srcsection = srcpath.isRelative() ? srcpath.toString() : "";
   if (!useOrSectionTranslate(srcpath, srcsl->getSite())) {
     return false;
   }
   Path dstpath(message[4]);
+  std::string dstsection = dstpath.isRelative() ? dstpath.toString() : "";
   if (!useOrSectionTranslate(dstpath, dstsl->getSite())) {
     return false;
   }
-  global->getEngine()->newTransferJobFXP(message[0], srcpath, message[2], message[3], dstpath, dstfile);
+  global->getEngine()->newTransferJobFXP(message[0], srcpath, srcsection, message[2], message[3], dstpath, dstsection, dstfile);
   return true;
 }
 
@@ -351,6 +354,7 @@ bool RemoteCommandHandler::commandDownload(const std::vector<std::string> & mess
     return false;
   }
   Path srcpath = message[1];
+  std::string srcsection = srcpath.isRelative() ? srcpath.toString() : "";
   if (!useOrSectionTranslate(srcpath, srcsl->getSite())) {
     return false;
   }
@@ -361,7 +365,7 @@ bool RemoteCommandHandler::commandDownload(const std::vector<std::string> & mess
   else {
     file = message[2];
   }
-  global->getEngine()->newTransferJobDownload(message[0], srcpath, file, global->getLocalStorage()->getDownloadPath(), file);
+  global->getEngine()->newTransferJobDownload(message[0], srcpath, srcsection, file, global->getLocalStorage()->getDownloadPath(), file);
   return true;
 }
 
@@ -389,10 +393,11 @@ bool RemoteCommandHandler::commandUpload(const std::vector<std::string> & messag
     global->getEventLog()->log("RemoteCommandHandler", "Bad site name: " + dstsite);
     return false;
   }
+  std::string dstsection = dstpath.isRelative() ? dstpath.toString() : "";
   if (!useOrSectionTranslate(dstpath, dstsl->getSite())) {
     return false;
   }
-  global->getEngine()->newTransferJobUpload(srcpath, file, dstsite, dstpath, file);
+  global->getEngine()->newTransferJobUpload(srcpath, file, dstsite, dstpath, dstsection, file);
   return true;
 }
 

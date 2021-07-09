@@ -15,6 +15,8 @@
 #include "localfilelist.h"
 #include "localfile.h"
 #include "filesystem.h"
+#include "section.h"
+#include "sectionmanager.h"
 #include "sitetransferjob.h"
 
 #define MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP 3
@@ -26,17 +28,17 @@ enum RefreshState {
   REFRESH_FINAL_OK
 };
 
-TransferJob::TransferJob(unsigned int id, const std::shared_ptr<SiteLogic> & srcsl, const std::shared_ptr<FileList>& srcfilelist, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
-  downloadJob(id, srcsl, srcfilelist, srcfile, dstpath, dstfile);
+TransferJob::TransferJob(unsigned int id, const std::shared_ptr<SiteLogic>& srcsl, const std::shared_ptr<FileList>& srcfilelist, const std::string& srcfile, const Path& dstpath, const std::string& dstfile) {
+  downloadJob(id, srcsl, srcfilelist, "", srcfile, dstpath, dstfile);
 }
 
-TransferJob::TransferJob(unsigned int id, const std::shared_ptr<SiteLogic> & srcsl, const Path & srcpath, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
+TransferJob::TransferJob(unsigned int id, const std::shared_ptr<SiteLogic>& srcsl, const Path& srcpath, const std::string& srcsection, const std::string& srcfile, const Path& dstpath, const std::string& dstfile) {
   std::shared_ptr<FileList> srcfilelist = std::make_shared<FileList>(srcsl->getSite()->getUser(), srcpath);
-  downloadJob(id, srcsl, srcfilelist, srcfile, dstpath, dstfile);
+  downloadJob(id, srcsl, srcfilelist, srcsection, srcfile, dstpath, dstfile);
 }
 
-void TransferJob::downloadJob(unsigned int id, const std::shared_ptr<SiteLogic> & srcsl, const std::shared_ptr<FileList>& srcfilelist, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
-  init(id, TRANSFERJOB_DOWNLOAD, srcsl, std::shared_ptr<SiteLogic>(), srcfilelist->getPath(), dstpath, srcfile, dstfile);
+void TransferJob::downloadJob(unsigned int id, const std::shared_ptr<SiteLogic>& srcsl, const std::shared_ptr<FileList>& srcfilelist, const std::string& srcsection, const std::string& srcfile, const Path& dstpath, const std::string& dstfile) {
+  init(id, TRANSFERJOB_DOWNLOAD, srcsl, std::shared_ptr<SiteLogic>(), srcfilelist->getPath(), dstpath, srcsection, "", srcfile, dstfile);
   srcfilelists[""] = srcfilelist;
   updateLocalFileLists();
   if (srcfilelist->getState() == FileListState::LISTED) {
@@ -48,17 +50,17 @@ void TransferJob::downloadJob(unsigned int id, const std::shared_ptr<SiteLogic> 
   }
 }
 
-TransferJob::TransferJob(unsigned int id, const Path & srcpath, const std::string & srcfile, const std::shared_ptr<SiteLogic> & dstsl, const std::shared_ptr<FileList>& dstfilelist, const std::string & dstfile) {
-  uploadJob(id, srcpath, srcfile, dstsl, dstfilelist, dstfile);
+TransferJob::TransferJob(unsigned int id, const Path& srcpath, const std::string& srcfile, const std::shared_ptr<SiteLogic>& dstsl, const std::shared_ptr<FileList>& dstfilelist, const std::string& dstfile) {
+  uploadJob(id, srcpath, srcfile, dstsl, dstfilelist, "", dstfile);
 }
 
-TransferJob::TransferJob(unsigned int id, const Path & srcpath, const std::string & srcfile, const std::shared_ptr<SiteLogic> & dstsl, const Path & dstpath, const std::string & dstfile) {
+TransferJob::TransferJob(unsigned int id, const Path& srcpath, const std::string& srcfile, const std::shared_ptr<SiteLogic>& dstsl, const Path& dstpath, const std::string& dstsection, const std::string& dstfile) {
   std::shared_ptr<FileList> dstfilelist = std::make_shared<FileList>(dstsl->getSite()->getUser(), dstpath);
-  uploadJob(id, srcpath, srcfile, dstsl, dstfilelist, dstfile);
+  uploadJob(id, srcpath, srcfile, dstsl, dstfilelist, dstsection, dstfile);
 }
 
-void TransferJob::uploadJob(unsigned int id, const Path & srcpath, const std::string & srcfile, const std::shared_ptr<SiteLogic> & dstsl, const std::shared_ptr<FileList>& dstfilelist, const std::string & dstfile) {
-  init(id, TRANSFERJOB_UPLOAD, std::shared_ptr<SiteLogic>(), dstsl, srcpath, dstfilelist->getPath(), srcfile, dstfile);
+void TransferJob::uploadJob(unsigned int id, const Path& srcpath, const std::string& srcfile, const std::shared_ptr<SiteLogic>& dstsl, const std::shared_ptr<FileList>& dstfilelist, const std::string& dstsection, const std::string& dstfile) {
+  init(id, TRANSFERJOB_UPLOAD, std::shared_ptr<SiteLogic>(), dstsl, srcpath, dstfilelist->getPath(), "", dstsection, srcfile, dstfile);
   dstfilelists[""] = dstfilelist;
   updateLocalFileLists();
   if (dstfilelist->getState() == FileListState::LISTED) {
@@ -70,18 +72,18 @@ void TransferJob::uploadJob(unsigned int id, const Path & srcpath, const std::st
   }
 }
 
-TransferJob::TransferJob(unsigned int id, const std::shared_ptr<SiteLogic> & srcsl, const std::shared_ptr<FileList>& srcfilelist, const std::string & srcfile, const std::shared_ptr<SiteLogic> & dstsl, const std::shared_ptr<FileList>& dstfilelist, const std::string & dstfile) {
-  fxpJob(id, srcsl, srcfilelist, srcfile, dstsl, dstfilelist, dstfile);
+TransferJob::TransferJob(unsigned int id, const std::shared_ptr<SiteLogic>& srcsl, const std::shared_ptr<FileList>& srcfilelist, const std::string& srcfile, const std::shared_ptr<SiteLogic>& dstsl, const std::shared_ptr<FileList>& dstfilelist, const std::string& dstfile) {
+  fxpJob(id, srcsl, srcfilelist, "", srcfile, dstsl, dstfilelist, "", dstfile);
 }
 
-TransferJob::TransferJob(unsigned int id, const std::shared_ptr<SiteLogic> & srcsl, const Path & srcpath, const std::string & srcfile, const std::shared_ptr<SiteLogic> & dstsl, const Path & dstpath, const std::string & dstfile) {
+TransferJob::TransferJob(unsigned int id, const std::shared_ptr<SiteLogic>& srcsl, const Path& srcpath, const std::string& srcsection, const std::string& srcfile, const std::shared_ptr<SiteLogic>& dstsl, const Path& dstpath, const std::string& dstsection, const std::string& dstfile) {
   std::shared_ptr<FileList> srcfilelist = std::make_shared<FileList>(srcsl->getSite()->getUser(), srcpath);
   std::shared_ptr<FileList> dstfilelist = std::make_shared<FileList>(dstsl->getSite()->getUser(), dstpath);
-  fxpJob(id, srcsl, srcfilelist, srcfile, dstsl, dstfilelist, dstfile);
+  fxpJob(id, srcsl, srcfilelist, srcsection, srcfile, dstsl, dstfilelist, dstsection, dstfile);
 }
 
-void TransferJob::fxpJob(unsigned int id, const std::shared_ptr<SiteLogic> & srcsl, const std::shared_ptr<FileList>& srcfilelist, const std::string & srcfile, const std::shared_ptr<SiteLogic> & dstsl, const std::shared_ptr<FileList>& dstfilelist, const std::string & dstfile) {
-  init(id, TRANSFERJOB_FXP, srcsl, dstsl, srcfilelist->getPath(), dstfilelist->getPath(), srcfile, dstfile);
+void TransferJob::fxpJob(unsigned int id, const std::shared_ptr<SiteLogic>& srcsl, const std::shared_ptr<FileList>& srcfilelist, const std::string& srcsection, const std::string& srcfile, const std::shared_ptr<SiteLogic>& dstsl, const std::shared_ptr<FileList>& dstfilelist, const std::string& dstsection, const std::string& dstfile) {
+  init(id, TRANSFERJOB_FXP, srcsl, dstsl, srcfilelist->getPath(), dstfilelist->getPath(), srcsection, dstsection, srcfile, dstfile);
   srcfilelists[""] = srcfilelist;
   dstfilelists[""] = dstfilelist;
   if (srcfilelist->getState() == FileListState::LISTED) {
@@ -128,6 +130,14 @@ const Path & TransferJob::getPath(bool source) const {
   }
 }
 
+std::string TransferJob::getSrcSection() const {
+  return srcsection;
+}
+
+std::string TransferJob::getDstSection() const {
+  return dstsection;
+}
+
 std::unordered_map<std::string, std::shared_ptr<FileList>>::const_iterator TransferJob::srcFileListsBegin() const {
   return srcfilelists.begin();
 }
@@ -168,13 +178,15 @@ std::list<std::shared_ptr<TransferStatus>>::const_iterator TransferJob::transfer
   return transfers.end();
 }
 
-void TransferJob::init(unsigned int id, TransferJobType type, const std::shared_ptr<SiteLogic> & srcsl, const std::shared_ptr<SiteLogic> & dstsl, const Path & srcpath, const Path & dstpath, const std::string & srcfile, const std::string & dstfile) {
+void TransferJob::init(unsigned int id, TransferJobType type, const std::shared_ptr<SiteLogic>& srcsl, const std::shared_ptr<SiteLogic>& dstsl, const Path& srcpath, const Path& dstpath, const std::string& srcsection, const std::string& dstsection, const std::string& srcfile, const std::string& dstfile) {
   this->id = id;
   this->type = type;
   this->src = srcsl;
   this->dst = dstsl;
   this->srcpath = srcpath;
   this->dstpath = dstpath;
+  this->srcsection = srcsection;
+  this->dstsection = dstsection;
   this->srcfile = srcfile;
   this->dstfile = dstfile;
   resetValues();
@@ -184,6 +196,14 @@ void TransferJob::init(unsigned int id, TransferJobType type, const std::shared_
   if (!!dst) {
     dstsitetransferjob = std::make_shared<SiteTransferJob>(this, false);
   }
+  dstsectionskiplist = nullptr;
+  if (!dstsection.empty()) {
+    Section* section = global->getSectionManager()->getSection(dstsection);
+    if (section != nullptr) {
+      dstsectionskiplist = &section->getSkipList();
+    }
+  }
+
 }
 
 std::string TransferJob::getSrcFileName() const {
@@ -379,7 +399,7 @@ void TransferJob::addSubDirectoryFileLists(std::unordered_map<std::string, std::
     if (!file->isDirectory()) {
       continue;
     }
-    SkipListMatch match = !!dst ? dst->getSite()->getSkipList().check(file->getName(), true, false)
+    SkipListMatch match = !!dst ? dst->getSite()->getSkipList().check(file->getName(), true, false, dstsectionskiplist)
                                 : global->getSkipList()->check(file->getName(), true, false);
     if (match.action == SKIPLIST_DENY || (match.action == SKIPLIST_UNIQUE &&
                                           fl->containsPatternBefore(match.matchpattern, true, file->getName())))
@@ -685,7 +705,7 @@ void TransferJob::countTotalFiles() {
             continue;
           }
           std::string filename = (*it2)->getName();
-          SkipListMatch filematch = dstskip.check((dstlist->getPath() / filename).toString(), false, false);
+          SkipListMatch filematch = dstskip.check((dstlist->getPath() / filename).toString(), false, false, dstsectionskiplist);
           if (filematch.action == SKIPLIST_DENY ||
               (filematch.action == SKIPLIST_UNIQUE && dstlist->containsPattern(filematch.matchpattern, false)))
           {
@@ -724,7 +744,7 @@ void TransferJob::countTotalFiles() {
             continue;
           }
           std::string filename = it2->first;
-          SkipListMatch filematch = dstskip.check((dstlist->getPath() / filename).toString(), false, false);
+          SkipListMatch filematch = dstskip.check((dstlist->getPath() / filename).toString(), false, false, dstsectionskiplist);
           if (filematch.action == SKIPLIST_DENY ||
              (filematch.action == SKIPLIST_UNIQUE && dstlist->containsPattern(filematch.matchpattern, false)))
           {
@@ -887,6 +907,10 @@ std::shared_ptr<SiteTransferJob>& TransferJob::getSrcTransferJob() {
 
 std::shared_ptr<SiteTransferJob>& TransferJob::getDstTransferJob() {
   return dstsitetransferjob;
+}
+
+SkipList* TransferJob::getDstSectionSkipList() const {
+  return dstsectionskiplist;
 }
 
 void TransferJob::reset() {

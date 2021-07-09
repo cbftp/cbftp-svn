@@ -329,19 +329,19 @@ int Engine::getNextPreparedRaceStarterTimeRemaining() const {
   return nextpreparedtimeremaining / 1000;
 }
 
-unsigned int Engine::newTransferJobDownload(const std::string & srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string & file, const Path & dstpath) {
+unsigned int Engine::newTransferJobDownload(const std::string& srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string& file, const Path& dstpath) {
   return newTransferJobDownload(srcsite, srcfilelist, file, dstpath, file);
 }
 
-unsigned int Engine::newTransferJobUpload(const Path & srcpath, const std::string & file, const std::string & dstsite, const std::shared_ptr<FileList>& dstfilelist) {
+unsigned int Engine::newTransferJobUpload(const Path& srcpath, const std::string& file, const std::string& dstsite, const std::shared_ptr<FileList>& dstfilelist) {
   return newTransferJobUpload(srcpath, file, dstsite, dstfilelist, file);
 }
 
-unsigned int Engine::newTransferJobFXP(const std::string & srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string & dstsite, const std::shared_ptr<FileList>& dstfilelist, const std::string & file) {
+unsigned int Engine::newTransferJobFXP(const std::string& srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string& dstsite, const std::shared_ptr<FileList>& dstfilelist, const std::string& file) {
   return newTransferJobFXP(srcsite, srcfilelist, file, dstsite, dstfilelist, file);
 }
 
-unsigned int Engine::newTransferJobDownload(const std::string & srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
+unsigned int Engine::newTransferJobDownload(const std::string& srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string& srcfile, const Path& dstpath, const std::string& dstfile) {
   const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(srcsite);
   if (!sl) {
     global->getEventLog()->log("Engine", "Bad site name: " + srcsite);
@@ -363,10 +363,14 @@ unsigned int Engine::newTransferJobDownload(const std::string & srcsite, const s
   return id;
 }
 
-unsigned int Engine::newTransferJobDownload(const std::string & srcsite, const Path & srcpath, const std::string & srcfile, const Path & dstpath, const std::string & dstfile) {
+unsigned int Engine::newTransferJobDownload(const std::string& srcsite, const Path& srcpath, const std::string& srcsection, const std::string& srcfile, const Path& dstpath, const std::string& dstfile) {
   const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(srcsite);
   if (!sl) {
     global->getEventLog()->log("Engine", "Bad site name: " + srcsite);
+    return 0;
+  }
+  if (!srcsection.empty() && !sl->getSite()->hasSection(srcsection)) {
+    global->getEventLog()->log("Engine", "Bad section name: " + srcsection);
     return 0;
   }
   if (srcfile.empty() || dstfile.empty()) {
@@ -374,7 +378,7 @@ unsigned int Engine::newTransferJobDownload(const std::string & srcsite, const P
     return 0;
   }
   unsigned int id = nextid++;
-  std::shared_ptr<TransferJob> tj = std::make_shared<TransferJob>(id, sl, srcpath, srcfile, dstpath, dstfile);
+  std::shared_ptr<TransferJob> tj = std::make_shared<TransferJob>(id, sl, srcpath, srcsection, srcfile, dstpath, dstfile);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting download job: " + srcfile +
@@ -385,7 +389,7 @@ unsigned int Engine::newTransferJobDownload(const std::string & srcsite, const P
   return id;
 }
 
-unsigned int Engine::newTransferJobUpload(const Path & srcpath, const std::string & srcfile, const std::string & dstsite, const std::shared_ptr<FileList>& dstfilelist, const std::string & dstfile) {
+unsigned int Engine::newTransferJobUpload(const Path& srcpath, const std::string& srcfile, const std::string& dstsite, const std::shared_ptr<FileList>& dstfilelist, const std::string& dstfile) {
   const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(dstsite);
   if (!sl) {
     global->getEventLog()->log("Engine", "Bad site name: " + dstsite);
@@ -407,10 +411,14 @@ unsigned int Engine::newTransferJobUpload(const Path & srcpath, const std::strin
   return id;
 }
 
-unsigned int Engine::newTransferJobUpload(const Path & srcpath, const std::string & srcfile, const std::string & dstsite, const Path & dstpath, const std::string & dstfile) {
+unsigned int Engine::newTransferJobUpload(const Path& srcpath, const std::string& srcfile, const std::string& dstsite, const Path& dstpath, const std::string& dstsection, const std::string& dstfile) {
   const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(dstsite);
   if (!sl) {
     global->getEventLog()->log("Engine", "Bad site name: " + dstsite);
+    return 0;
+  }
+  if (!dstsection.empty() && !sl->getSite()->hasSection(dstsection)) {
+    global->getEventLog()->log("Engine", "Bad section name: " + dstsection);
     return 0;
   }
   if (srcfile.empty() || dstfile.empty()) {
@@ -418,7 +426,7 @@ unsigned int Engine::newTransferJobUpload(const Path & srcpath, const std::strin
     return 0;
   }
   unsigned int id = nextid++;
-  std::shared_ptr<TransferJob> tj = std::make_shared<TransferJob>(id, srcpath, srcfile, sl, dstpath, dstfile);
+  std::shared_ptr<TransferJob> tj = std::make_shared<TransferJob>(id, srcpath, srcfile, sl, dstpath, dstsection, dstfile);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting upload job: " + srcfile +
@@ -429,7 +437,7 @@ unsigned int Engine::newTransferJobUpload(const Path & srcpath, const std::strin
   return id;
 }
 
-unsigned int Engine::newTransferJobFXP(const std::string & srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string & srcfile, const std::string & dstsite, const std::shared_ptr<FileList>& dstfilelist, const std::string & dstfile) {
+unsigned int Engine::newTransferJobFXP(const std::string& srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string& srcfile, const std::string& dstsite, const std::shared_ptr<FileList>& dstfilelist, const std::string& dstfile) {
   const std::shared_ptr<SiteLogic> slsrc = global->getSiteLogicManager()->getSiteLogic(srcsite);
   const std::shared_ptr<SiteLogic> sldst = global->getSiteLogicManager()->getSiteLogic(dstsite);
   if (!slsrc) {
@@ -457,7 +465,7 @@ unsigned int Engine::newTransferJobFXP(const std::string & srcsite, const std::s
   return id;
 }
 
-unsigned int Engine::newTransferJobFXP(const std::string & srcsite, const Path & srcpath, const std::string & srcfile, const std::string & dstsite, const Path & dstpath, const std::string & dstfile) {
+unsigned int Engine::newTransferJobFXP(const std::string& srcsite, const Path& srcpath, const std::string& srcsection, const std::string& srcfile, const std::string& dstsite, const Path& dstpath, const std::string& dstsection, const std::string& dstfile) {
   const std::shared_ptr<SiteLogic> slsrc = global->getSiteLogicManager()->getSiteLogic(srcsite);
   const std::shared_ptr<SiteLogic> sldst = global->getSiteLogicManager()->getSiteLogic(dstsite);
   if (!slsrc) {
@@ -468,12 +476,20 @@ unsigned int Engine::newTransferJobFXP(const std::string & srcsite, const Path &
     global->getEventLog()->log("Engine", "Bad site name: " + dstsite);
     return 0;
   }
+  if (!srcsection.empty() && !slsrc->getSite()->hasSection(srcsection)) {
+    global->getEventLog()->log("Engine", "Bad section name: " + srcsection);
+    return 0;
+  }
+  if (!dstsection.empty() && !sldst->getSite()->hasSection(dstsection)) {
+    global->getEventLog()->log("Engine", "Bad section name: " + dstsection);
+    return 0;
+  }
   if (srcfile.empty() || dstfile.empty()) {
     global->getEventLog()->log("Engine", "Bad file name.");
     return 0;
   }
   unsigned int id = nextid++;
-  std::shared_ptr<TransferJob> tj = std::make_shared<TransferJob>(id, slsrc, srcpath, srcfile, sldst, dstpath, dstfile);
+  std::shared_ptr<TransferJob> tj = std::make_shared<TransferJob>(id, slsrc, srcpath, srcsection, srcfile, sldst, dstpath, dstsection, dstfile);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting FXP job: " + srcfile +
@@ -1237,7 +1253,7 @@ void Engine::refreshPendingTransferList(const std::shared_ptr<TransferJob>& tj) 
                 continue;
               }
               if (!onefilejob) {
-                SkipListMatch filematch = dstskip.check((dstlist->getPath() / filename).toString(), false, false);
+                SkipListMatch filematch = dstskip.check((dstlist->getPath() / filename).toString(), false, false, tj->getDstSectionSkipList());
                 if (filematch.action == SKIPLIST_DENY ||
                     (filematch.action == SKIPLIST_UNIQUE && dstlist->containsPattern(filematch.matchpattern, false)))
                 {
@@ -1286,7 +1302,7 @@ void Engine::refreshPendingTransferList(const std::shared_ptr<TransferJob>& tj) 
                 continue;
               }
               if (!onefilejob) {
-                SkipListMatch filematch = dstskip.check((dstlist->getPath() / filename).toString(), false, false);
+                SkipListMatch filematch = dstskip.check((dstlist->getPath() / filename).toString(), false, false, tj->getDstSectionSkipList());
                 if (filematch.action == SKIPLIST_DENY ||
                    (filematch.action == SKIPLIST_UNIQUE && dstlist->containsPattern(filematch.matchpattern, false)))
                 {
