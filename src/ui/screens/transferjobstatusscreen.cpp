@@ -83,7 +83,11 @@ void TransferJobStatusScreen::redraw() {
   }
   ui->printStr(y, 53, std::string("Status: ") + status);
   y++;
-  ui->printStr(y, 1, "Path: " + transferjob->getSrcPath().toString() + " -> " + transferjob->getDstPath().toString());
+  std::string srcsection = transferjob->getSrcSection();
+  std::string dstsection = transferjob->getDstSection();
+  std::string srcpath = srcsection.empty() ? transferjob->getSrcPath().toString() : srcsection;
+  std::string dstpath = dstsection.empty() ? transferjob->getDstPath().toString() : dstsection;
+  ui->printStr(y, 1, "Path: " + srcpath + " -> " + dstpath);
   ++y;
   ui->printStr(y, 1, "Size: " + util::parseSize(transferjob->sizeProgress()) +
       " / " + util::parseSize(transferjob->totalSize()));

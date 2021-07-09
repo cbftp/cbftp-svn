@@ -1668,8 +1668,10 @@ void RestApi::handleTransferJobPost(RestApiCallback* cb, int connrequestid, cons
     return;
   }
   std::string srcpath;
+  std::string srcsection;
   auto srcsectionit = jsondata.find("src_section");
   if (srcsectionit != jsondata.end()) {
+    srcsection = *srcsectionit;
     if (!srcsl) {
       cb->requestHandled(connrequestid, badRequestResponse("src_section can not be used without src_site"));
       return;
@@ -1694,8 +1696,10 @@ void RestApi::handleTransferJobPost(RestApiCallback* cb, int connrequestid, cons
     }
   }
   std::string dstpath;
+  std::string dstsection;
   auto dstsectionit = jsondata.find("dst_section");
   if (dstsectionit != jsondata.end()) {
+    dstsection = *dstsectionit;
     if (!dstsl) {
       cb->requestHandled(connrequestid, badRequestResponse("dst_section can not be used without dst_site"));
       return;
@@ -1731,13 +1735,13 @@ void RestApi::handleTransferJobPost(RestApiCallback* cb, int connrequestid, cons
 
   bool success = false;
   if (srcsl && dstsl) {
-    success = !!global->getEngine()->newTransferJobFXP(srcsl->getSite()->getName(), srcpath, name, dstsl->getSite()->getName(), dstpath, name);
+    success = !!global->getEngine()->newTransferJobFXP(srcsl->getSite()->getName(), srcpath, srcsection, name, dstsl->getSite()->getName(), dstpath, dstsection, name);
   }
   else if (srcsl && !dstsl) {
-    success = !!global->getEngine()->newTransferJobDownload(srcsl->getSite()->getName(), srcpath, name, dstpath, name);
+    success = !!global->getEngine()->newTransferJobDownload(srcsl->getSite()->getName(), srcpath, srcsection, name, dstpath, name);
   }
   else if (!srcsl && dstsl) {
-    success = !!global->getEngine()->newTransferJobUpload(srcpath, name, dstsl->getSite()->getName(), dstpath, name);
+    success = !!global->getEngine()->newTransferJobUpload(srcpath, name, dstsl->getSite()->getName(), dstpath, dstsection, name);
   }
   http::Response response(201);
   response.appendHeader("Content-Length", "0");

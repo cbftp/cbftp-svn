@@ -31,21 +31,24 @@ class FileList;
 class TransferStatus;
 class LocalFileList;
 class File;
+class SkipList;
 
 class TransferJob : public Core::EventReceiver, private TransferStatusCallback {
 public:
   std::string getName() const;
-  TransferJob(unsigned int, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fl, const std::string &, const Path &, const std::string &);
-  TransferJob(unsigned int, const std::shared_ptr<SiteLogic> &, const Path &, const std::string &, const Path &, const std::string &);
-  TransferJob(unsigned int, const Path &, const std::string &, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fl, const std::string &);
-  TransferJob(unsigned int, const Path &, const std::string &, const std::shared_ptr<SiteLogic> &, const Path &, const std::string &);
-  TransferJob(unsigned int, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fls, const std::string &, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fld, const std::string &);
-  TransferJob(unsigned int, const std::shared_ptr<SiteLogic> &, const Path &, const std::string &, const std::shared_ptr<SiteLogic> &, const Path &, const std::string &);
+  TransferJob(unsigned int id, const std::shared_ptr<SiteLogic>& srcsl, const std::shared_ptr<FileList>& srcfilelist, const std::string& srcfile, const Path& dstpath, const std::string& dstfile);
+  TransferJob(unsigned int id, const std::shared_ptr<SiteLogic>& srcsl, const Path& srcpath, const std::string& srcsection, const std::string& srcfile, const Path& dstpath, const std::string& dstfile);
+  TransferJob(unsigned int id, const Path& srcpath, const std::string& srcfile, const std::shared_ptr<SiteLogic>& dstsl, const std::shared_ptr<FileList>& dstfilelist, const std::string& dstfile);
+  TransferJob(unsigned int id, const Path& srcpath, const std::string& srcfile, const std::shared_ptr<SiteLogic>& dstsl, const Path& dstpath, const std::string& dstsection, const std::string& dstfile);
+  TransferJob(unsigned int id, const std::shared_ptr<SiteLogic>& srcsl, const std::shared_ptr<FileList>& srcfilelist, const std::string& srcfile, const std::shared_ptr<SiteLogic>& dstsl, const std::shared_ptr<FileList>& dstfilelist, const std::string& dstfile);
+  TransferJob(unsigned int id, const std::shared_ptr<SiteLogic>& srcsl, const Path& srcpath, const std::string& srcsection, const std::string& srcfile, const std::shared_ptr<SiteLogic>& dstsl, const Path& dstpath, const std::string& dstsection, const std::string& dstfile);
   ~TransferJob();
   int getType() const;
   const Path & getSrcPath() const;
   const Path & getDstPath() const;
   const Path & getPath(bool source) const;
+  std::string getSrcSection() const;
+  std::string getDstSection() const;
   std::string getSrcFileName() const;
   std::string getDstFileName() const;
   std::unordered_map<std::string, std::shared_ptr<FileList>>::const_iterator srcFileListsBegin() const;
@@ -70,6 +73,7 @@ public:
   std::shared_ptr<LocalFileList> findLocalFileList(const std::string &) const;
   const std::shared_ptr<SiteLogic> & getSrc() const;
   const std::shared_ptr<SiteLogic> & getDst() const;
+  SkipList* getDstSectionSkipList() const;
   int maxSlots() const;
   void setSlots(int);
   int maxPossibleSlots() const;
@@ -102,13 +106,13 @@ public:
   void updateStatus();
   void reset();
 private:
-  void downloadJob(unsigned int, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fl, const std::string &, const Path &, const std::string &);
-  void uploadJob(unsigned int, const Path &, const std::string &, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fl, const std::string &);
-  void fxpJob(unsigned int, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fls, const std::string &, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<FileList>& fld, const std::string &);
+  void downloadJob(unsigned int id, const std::shared_ptr<SiteLogic>& srcsl, const std::shared_ptr<FileList>& srcfilelist, const std::string& srcsection, const std::string& srcfile, const Path& dstpath, const std::string& dstfile);
+  void uploadJob(unsigned int id, const Path& srcpath, const std::string& srcfile, const std::shared_ptr<SiteLogic>& dstsl, const std::shared_ptr<FileList>& dstfilelist, const std::string& dstsection, const std::string& dstfile);
+  void fxpJob(unsigned int id, const std::shared_ptr<SiteLogic>& srcsl, const std::shared_ptr<FileList>& srcfilelist, const std::string& srcsection, const std::string& srcfile, const std::shared_ptr<SiteLogic>& dstsl, const std::shared_ptr<FileList>& dstfilelist, const std::string& dstsection, const std::string& dstfile);
   void addTransferAttempt(const std::shared_ptr<TransferStatus> &, bool);
   void addSubDirectoryFileLists(std::unordered_map<std::string, std::shared_ptr<FileList>>&, const std::shared_ptr<FileList>& fl, const Path &);
   void addSubDirectoryFileLists(std::unordered_map<std::string, std::shared_ptr<FileList>>&, const std::shared_ptr<FileList>& fl, const Path &, File *);
-  void init(unsigned int, TransferJobType, const std::shared_ptr<SiteLogic> &, const std::shared_ptr<SiteLogic> &, const Path &, const Path &, const std::string &, const std::string &);
+  void init(unsigned int id, TransferJobType type, const std::shared_ptr<SiteLogic>& srcsl, const std::shared_ptr<SiteLogic>& dstsl, const Path& srcpath, const Path& dstpath, const std::string& srcsection, const std::string& dstsection, const std::string& srcfile, const std::string& dstfile);
   void countTotalFiles();
   void setDone();
   void updateLocalFileLists();
@@ -124,6 +128,9 @@ private:
   std::shared_ptr<SiteLogic> dst;
   Path srcpath;
   Path dstpath;
+  std::string srcsection;
+  std::string dstsection;
+  SkipList* dstsectionskiplist;
   std::string srcfile;
   std::string dstfile;
   std::unordered_map<std::string, std::shared_ptr<FileList>> srcfilelists;
