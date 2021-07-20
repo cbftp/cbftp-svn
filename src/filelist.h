@@ -2,6 +2,7 @@
 
 #include <list>
 #include <memory>
+#include <regex>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -83,9 +84,11 @@ class FileList {
     std::list<File *>::iterator end();
     std::list<File *>::const_iterator begin() const;
     std::list<File *>::const_iterator end() const;
-    bool contains(const std::string &) const;
-    bool containsPattern(const std::string &, bool) const;
-    bool containsPatternBefore(const std::string &, bool, const std::string &) const;
+    bool contains(const std::string& name) const;
+    bool containsPattern(const std::string& pattern, bool dir) const;
+    bool containsRegexPattern(const std::regex& pattern, bool dir) const;
+    bool containsPatternBefore(const std::string& pattern, bool dir, const std::string& item) const;
+    bool containsRegexPatternBefore(const std::regex& pattern, bool dir, const std::string& item) const;
     bool containsUnsimilar(const std::string & filename) const;
     unsigned int getSize() const;
     unsigned long long int getTotalFileSize() const;

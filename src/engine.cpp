@@ -66,6 +66,16 @@ struct AddSite {
   bool downloadonly;
 };
 
+bool containsPattern(const std::shared_ptr<FileList>& fl, const SkipListMatch& match, bool dir) {
+  return (!match.regex && fl->containsPattern(match.matchpattern, dir)) ||
+         (match.regex && fl->containsRegexPattern(match.matchregexpattern, dir));
+}
+
+bool containsPatternBefore(const std::shared_ptr<FileList>& fl, const SkipListMatch& match, bool dir, const std::string& item) {
+  return (!match.regex && fl->containsPatternBefore(match.matchpattern, dir, item)) ||
+         (match.regex && fl->containsRegexPatternBefore(match.matchregexpattern, dir, item));
+}
+
 }
 
 Engine::Engine() :
@@ -967,7 +977,7 @@ void Engine::addToScoreBoard(const std::shared_ptr<FileList>& fl, const std::sha
     SkipListMatch dirmatch = skip.check(subpath, true, true, &secskip);
     if (dirmatch.action == SKIPLIST_DENY ||
         (dirmatch.action == SKIPLIST_UNIQUE &&
-         sr->getFileListForPath("")->containsPatternBefore(dirmatch.matchpattern, true, subpath)))
+         containsPatternBefore(sr->getFileListForPath(""), dirmatch, true, subpath)))
     {
       flskip = true;
     }
@@ -1016,7 +1026,7 @@ void Engine::addToScoreBoardForPair(const std::shared_ptr<SiteLogic> & sls, cons
     }
     SkipListMatch filematch = dstskip.check((subpath / name).toString(), false, true, &secskip);
     if (filematch.action == SKIPLIST_DENY ||
-        (filematch.action == SKIPLIST_UNIQUE && fld->containsPattern(filematch.matchpattern, false)))
+        (filematch.action == SKIPLIST_UNIQUE && containsPattern(fld, filematch, false)))
     {
       continue;
     }
@@ -1065,7 +1075,7 @@ void Engine::updateScoreBoard() {
         SkipListMatch dirmatch = cmpskip.check(subpath, true, true, &secskip);
         if (dirmatch.action == SKIPLIST_DENY ||
             (dirmatch.action == SKIPLIST_UNIQUE &&
-             cmprootfl->containsPatternBefore(dirmatch.matchpattern, true, subpath)))
+             containsPatternBefore(cmprootfl, dirmatch, true, subpath)))
         {
           continue;
         }
@@ -1102,7 +1112,7 @@ void Engine::updateScoreBoard() {
             SkipListMatch dirmatch = skip.check(subpath, true, true, &secskip);
             if (dirmatch.action == SKIPLIST_DENY ||
                 (dirmatch.action == SKIPLIST_UNIQUE &&
-                 sr->getFileListForPath("")->containsPatternBefore(dirmatch.matchpattern, true, subpath)))
+                 containsPatternBefore(sr->getFileListForPath(""), dirmatch, true, subpath)))
             {
               continue;
             }
@@ -1112,7 +1122,7 @@ void Engine::updateScoreBoard() {
           }
           SkipListMatch filematch = skip.check((subpathpath / name).toString(), false, true, &secskip);
           if (filematch.action == SKIPLIST_DENY || (filematch.action == SKIPLIST_UNIQUE &&
-                                                    fl->containsPattern(filematch.matchpattern, false)))
+                                                    containsPattern(fl, filematch, false)))
           {
             continue;
           }
@@ -1146,7 +1156,7 @@ void Engine::updateScoreBoard() {
         }
         SkipListMatch filematch = cmpskip.check((subpathpath / name).toString(), false, true, &secskip);
         if (filematch.action == SKIPLIST_DENY || (filematch.action == SKIPLIST_UNIQUE &&
-                                                  cmpfl->containsPattern(filematch.matchpattern, false)))
+                                                  containsPattern(cmpfl, filematch, false)))
         {
           continue;
         }
@@ -1255,7 +1265,7 @@ void Engine::refreshPendingTransferList(const std::shared_ptr<TransferJob>& tj) 
               if (!onefilejob) {
                 SkipListMatch filematch = dstskip.check((dstlist->getPath() / filename).toString(), false, false, tj->getDstSectionSkipList());
                 if (filematch.action == SKIPLIST_DENY ||
-                    (filematch.action == SKIPLIST_UNIQUE && dstlist->containsPattern(filematch.matchpattern, false)))
+                    (filematch.action == SKIPLIST_UNIQUE && containsPattern(dstlist, filematch, false)))
                 {
                   continue;
                 }
@@ -1304,7 +1314,7 @@ void Engine::refreshPendingTransferList(const std::shared_ptr<TransferJob>& tj) 
               if (!onefilejob) {
                 SkipListMatch filematch = dstskip.check((dstlist->getPath() / filename).toString(), false, false, tj->getDstSectionSkipList());
                 if (filematch.action == SKIPLIST_DENY ||
-                   (filematch.action == SKIPLIST_UNIQUE && dstlist->containsPattern(filematch.matchpattern, false)))
+                   (filematch.action == SKIPLIST_UNIQUE && containsPattern(dstlist, filematch, false)))
                 {
                  continue;
                 }
@@ -1372,7 +1382,7 @@ void Engine::issueOptimalTransfers() {
         }
       }
       if ((match.action == SKIPLIST_UNIQUE &&
-          sbe->getDestinationFileList()->containsPattern(match.matchpattern, false)) ||
+          containsPattern(sbe->getDestinationFileList(), match, false)) ||
           (match.action == SKIPLIST_SIMILAR && sbe->getDestinationFileList()->containsUnsimilar(filename)))
       {
         removelist.emplace_back(sbe->fileName(), sbe->getSourceFileList(),
