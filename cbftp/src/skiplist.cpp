@@ -46,7 +46,11 @@ std::string createCacheToken(const std::string & pattern, const bool dir, const 
 
 }
 
-SkipListMatch::SkipListMatch(SkipListAction action, bool matched, const std::string & matchpattern) : action(action), matched(matched), matchpattern(matchpattern) {
+SkipListMatch::SkipListMatch(SkipListAction action, bool matched, const std::string& matchpattern) : action(action), matched(matched), regex(false), matchpattern(matchpattern) {
+
+}
+
+SkipListMatch::SkipListMatch(SkipListAction action, bool matched, const std::string& matchpattern, const std::regex& matchregexpattern) : action(action), matched(matched), regex(true), matchpattern(matchpattern), matchregexpattern(matchregexpattern) {
 
 }
 
@@ -78,7 +82,7 @@ std::list<SkiplistItem>::const_iterator SkipList::entriesEnd() const {
   return entries.end();
 }
 
-SkipListMatch SkipList::check(const std::string & element, const bool dir, const bool inrace, const SkipList * fallthrough) const {
+SkipListMatch SkipList::check(const std::string& element, const bool dir, const bool inrace, const SkipList* fallthrough) const {
   if (!entries.empty()) {
     std::string cachetoken = createCacheToken(element, dir, inrace);
     std::unordered_map<std::string, SkipListMatch>::const_iterator mit = matchcache.find(cachetoken);
@@ -106,10 +110,14 @@ SkipListMatch SkipList::check(const std::string & element, const bool dir, const
           continue;
         }
         if ((it->matchDir() && dir) || (it->matchFile() && !dir)) {
-          if ((!it->matchRegex() && fixedSlashCompare(it->matchPattern(), *partsit, false)) ||
-              (it->matchRegex() && std::regex_match(*partsit, it->matchRegexPattern())))
-          {
+          if (!it->matchRegex() && fixedSlashCompare(it->matchPattern(), *partsit, false)) {
+
             SkipListMatch match(it->getAction(), true, it->matchPattern());
+            matchcache.insert(std::pair<std::string, SkipListMatch>(cachetoken, match));
+            return match;
+          }
+          else if (it->matchRegex() && std::regex_match(*partsit, it->matchRegexPattern())) {
+            SkipListMatch match(it->getAction(), true, it->matchPattern(), it->matchRegexPattern());
             matchcache.insert(std::pair<std::string, SkipListMatch>(cachetoken, match));
             return match;
           }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <list>
+#include <regex>
 #include <string>
 #include <unordered_map>
 
@@ -9,10 +10,13 @@
 class Site;
 
 struct SkipListMatch {
-  SkipListMatch(SkipListAction action, bool matched, const std::string & matchpattern);
+  SkipListMatch(SkipListAction action, bool matched, const std::string& matchpattern);
+  SkipListMatch(SkipListAction action, bool matched, const std::string& matchpattern, const std::regex& matchregexpattern);
   SkipListAction action;
   bool matched;
+  bool regex;
   std::string matchpattern;
+  std::regex matchregexpattern;
 };
 
 class SkipList {
