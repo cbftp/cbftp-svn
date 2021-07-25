@@ -303,3 +303,7 @@ bool Path::operator<(const Path& other) const {
 std::ostream & operator<<(std::ostream & out, const Path & path) {
   return out << path.toString();
 }
+
+bool Path::empty() const {
+  return unixpath.empty();
+}

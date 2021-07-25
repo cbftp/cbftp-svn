@@ -305,26 +305,37 @@ bool FileList::contains(const std::string& name) const {
   return false;
 }
 
-bool FileList::containsPattern(const std::string& pattern, bool dir) const {
-  size_t slashpos = pattern.rfind('/');
-  const std::string* usedpattern = &pattern;
-  std::string newpattern;
-  if (slashpos != std::string::npos) {
-    newpattern = pattern.substr(slashpos + 1);
-    usedpattern = &newpattern;
+bool FileList::containsPattern(const std::string& pattern, const Path& path, bool dir) const {
+  if (path.empty()) {
+    for (File* f : filesfirstseen) {
+      if (f->isDirectory() == dir && util::wildcmp(pattern.c_str(), f->getName().c_str())) {
+        return true;
+      }
+    }
   }
-  for (File* f : filesfirstseen) {
-    if (f->isDirectory() == dir && util::wildcmp(usedpattern->c_str(), f->getName().c_str())) {
-      return true;
+  else {
+    for (File* f : filesfirstseen) {
+      if (f->isDirectory() == dir && util::wildcmp(pattern.c_str(), (path.dirName() + "/" + f->getName()).c_str())) {
+        return true;
+      }
     }
   }
   return false;
 }
 
-bool FileList::containsRegexPattern(const std::regex& pattern, bool dir) const {
-  for (File* f : filesfirstseen) {
-    if (f->isDirectory() == dir && std::regex_match(f->getName(), pattern)) {
-      return true;
+bool FileList::containsRegexPattern(const std::regex& pattern, const Path& path, bool dir) const {
+  if (path.empty()) {
+    for (File* f : filesfirstseen) {
+      if (f->isDirectory() == dir && std::regex_match(f->getName(), pattern)) {
+        return true;
+      }
+    }
+  }
+  else {
+    for (File* f : filesfirstseen) {
+      if (f->isDirectory() == dir && std::regex_match(path.dirName() + "/" + f->getName(), pattern)) {
+        return true;
+      }
     }
   }
   return false;

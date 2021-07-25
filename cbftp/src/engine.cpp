@@ -67,13 +67,13 @@ struct AddSite {
 };
 
 bool containsPattern(const std::shared_ptr<FileList>& fl, const SkipListMatch& match, bool dir) {
-  return (!match.regex && fl->containsPattern(match.matchpattern, dir)) ||
-         (match.regex && fl->containsRegexPattern(match.matchregexpattern, dir));
+  return (!match.regex && fl->containsPattern(match.matchpattern, match.matchedpath, dir)) ||
+         (match.regex && fl->containsRegexPattern(match.matchregexpattern, match.matchedpath, dir));
 }
 
-bool containsPatternBefore(const std::shared_ptr<FileList>& fl, const SkipListMatch& match, bool dir, const std::string& item) {
-  return (!match.regex && fl->containsPatternBefore(match.matchpattern, dir, item)) ||
-         (match.regex && fl->containsRegexPatternBefore(match.matchregexpattern, dir, item));
+bool containsPatternBefore(const std::shared_ptr<FileList>& fl, const SkipListMatch& match, const std::string& item) {
+  return (!match.regex && fl->containsPatternBefore(match.matchpattern, true, item)) ||
+         (match.regex && fl->containsRegexPatternBefore(match.matchregexpattern, true, item));
 }
 
 }
@@ -900,10 +900,38 @@ void Engine::estimateRaceSize(const std::shared_ptr<Race> & race, bool forceupda
   }
 }
 
-bool setContainsPattern(const std::unordered_set<std::string> & uniques, const std::string & matchpattern) {
-  for (const std::string & unique : uniques) {
-    if (util::wildcmp(matchpattern.c_str(), unique.c_str())) {
-      return true;
+bool setContainsPattern(const std::unordered_set<std::string> & uniques, const SkipListMatch& match) {
+  std::string path = Path(match.matchedpath).dirName();
+  if (match.regex) {
+    if (path.empty()) {
+      for (const std::string & unique : uniques) {
+        if (std::regex_match(unique, match.matchregexpattern)) {
+          return true;
+        }
+      }
+    }
+    else {
+      for (const std::string & unique : uniques) {
+        if (std::regex_match(path + "/" + unique, match.matchregexpattern)) {
+          return true;
+        }
+      }
+    }
+  }
+  else {
+    if (path.empty()) {
+      for (const std::string & unique : uniques) {
+        if (util::wildcmp(match.matchpattern.c_str(), unique.c_str())) {
+          return true;
+        }
+      }
+    }
+    else {
+      for (const std::string & unique : uniques) {
+        if (util::wildcmp(match.matchpattern.c_str(), (path + "/" + unique).c_str())) {
+          return true;
+        }
+      }
     }
   }
   return false;
@@ -944,7 +972,7 @@ void Engine::reportCurrentSize(const SkipList & siteskiplist, const SkipList & s
     Path prepend = subpath;
     SkipListMatch match = siteskiplist.check((prepend / filename).toString(), false, true, &sectionskiplist);
     if (match.action == SKIPLIST_DENY ||
-        (match.action == SKIPLIST_UNIQUE && setContainsPattern(uniques, match.matchpattern)))
+        (match.action == SKIPLIST_UNIQUE && setContainsPattern(uniques, match)))
     {
       continue;
     }
@@ -977,7 +1005,7 @@ void Engine::addToScoreBoard(const std::shared_ptr<FileList>& fl, const std::sha
     SkipListMatch dirmatch = skip.check(subpath, true, true, &secskip);
     if (dirmatch.action == SKIPLIST_DENY ||
         (dirmatch.action == SKIPLIST_UNIQUE &&
-         containsPatternBefore(sr->getFileListForPath(""), dirmatch, true, subpath)))
+         containsPatternBefore(sr->getFileListForPath(""), dirmatch, subpath)))
     {
       flskip = true;
     }
@@ -1075,7 +1103,7 @@ void Engine::updateScoreBoard() {
         SkipListMatch dirmatch = cmpskip.check(subpath, true, true, &secskip);
         if (dirmatch.action == SKIPLIST_DENY ||
             (dirmatch.action == SKIPLIST_UNIQUE &&
-             containsPatternBefore(cmprootfl, dirmatch, true, subpath)))
+             containsPatternBefore(cmprootfl, dirmatch, subpath)))
         {
           continue;
         }
@@ -1112,7 +1140,7 @@ void Engine::updateScoreBoard() {
             SkipListMatch dirmatch = skip.check(subpath, true, true, &secskip);
             if (dirmatch.action == SKIPLIST_DENY ||
                 (dirmatch.action == SKIPLIST_UNIQUE &&
-                 containsPatternBefore(sr->getFileListForPath(""), dirmatch, true, subpath)))
+                 containsPatternBefore(sr->getFileListForPath(""), dirmatch, subpath)))
             {
               continue;
             }
@@ -1372,7 +1400,6 @@ void Engine::issueOptimalTransfers() {
       continue;
     }
     if (!sbe->skipChecked()) {
-      sbe->setSkipChecked();
       SkipListMatch match = sbe->getDestination()->getSite()->getSkipList().check(
           (Path(sbe->subDir()) / filename).toString(), false, true, &sbe->getRace()->getSectionSkipList());
       if (match.action == SKIPLIST_SIMILAR) {
@@ -1381,12 +1408,22 @@ void Engine::issueOptimalTransfers() {
                                                       &sbe->getRace()->getSectionSkipList());
         }
       }
-      if ((match.action == SKIPLIST_UNIQUE &&
-          containsPattern(sbe->getDestinationFileList(), match, false)) ||
-          (match.action == SKIPLIST_SIMILAR && sbe->getDestinationFileList()->containsUnsimilar(filename)))
+      bool remove = false;
+      if (match.action == SKIPLIST_UNIQUE) {
+        if (containsPattern(sbe->getDestinationFileList(), match, false)) {
+          remove = true;
+        }
+      }
+      else {
+        sbe->setSkipChecked();
+      }
+      if (match.action == SKIPLIST_SIMILAR && sbe->getDestinationFileList()->containsUnsimilar(filename))
       {
+        remove = true;
+      }
+      if (remove) {
         removelist.emplace_back(sbe->fileName(), sbe->getSourceFileList(),
-                                sbe->getDestinationFileList());
+                                        sbe->getDestinationFileList());
         continue;
       }
     }
