@@ -85,8 +85,8 @@ class FileList {
     std::list<File *>::const_iterator begin() const;
     std::list<File *>::const_iterator end() const;
     bool contains(const std::string& name) const;
-    bool containsPattern(const std::string& pattern, bool dir) const;
-    bool containsRegexPattern(const std::regex& pattern, bool dir) const;
+    bool containsPattern(const std::string& pattern, const Path& path, bool dir) const;
+    bool containsRegexPattern(const std::regex& pattern, const Path& path, bool dir) const;
     bool containsPatternBefore(const std::string& pattern, bool dir, const std::string& item) const;
     bool containsRegexPatternBefore(const std::regex& pattern, bool dir, const std::string& item) const;
     bool containsUnsimilar(const std::string & filename) const;

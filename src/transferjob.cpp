@@ -707,7 +707,7 @@ void TransferJob::countTotalFiles() {
           std::string filename = (*it2)->getName();
           SkipListMatch filematch = dstskip.check((dstlist->getPath() / filename).toString(), false, false, dstsectionskiplist);
           if (filematch.action == SKIPLIST_DENY ||
-              (filematch.action == SKIPLIST_UNIQUE && dstlist->containsPattern(filematch.matchpattern, false)))
+              (filematch.action == SKIPLIST_UNIQUE && dstlist->containsPattern(filematch.matchpattern, filematch.matchedpath, false)))
           {
            continue;
           }
@@ -746,7 +746,7 @@ void TransferJob::countTotalFiles() {
           std::string filename = it2->first;
           SkipListMatch filematch = dstskip.check((dstlist->getPath() / filename).toString(), false, false, dstsectionskiplist);
           if (filematch.action == SKIPLIST_DENY ||
-             (filematch.action == SKIPLIST_UNIQUE && dstlist->containsPattern(filematch.matchpattern, false)))
+             (filematch.action == SKIPLIST_UNIQUE && dstlist->containsPattern(filematch.matchpattern, filematch.matchedpath, false)))
           {
             continue;
           }

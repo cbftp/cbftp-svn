@@ -46,11 +46,11 @@ std::string createCacheToken(const std::string & pattern, const bool dir, const 
 
 }
 
-SkipListMatch::SkipListMatch(SkipListAction action, bool matched, const std::string& matchpattern) : action(action), matched(matched), regex(false), matchpattern(matchpattern) {
+SkipListMatch::SkipListMatch(SkipListAction action, bool matched, const std::string& matchpattern, const std::string& matchedpath) : action(action), matched(matched), regex(false), matchpattern(matchpattern), matchedpath(matchedpath) {
 
 }
 
-SkipListMatch::SkipListMatch(SkipListAction action, bool matched, const std::string& matchpattern, const std::regex& matchregexpattern) : action(action), matched(matched), regex(true), matchpattern(matchpattern), matchregexpattern(matchregexpattern) {
+SkipListMatch::SkipListMatch(SkipListAction action, bool matched, const std::string& matchpattern, const std::regex& matchregexpattern, const std::string& matchedpath) : action(action), matched(matched), regex(true), matchpattern(matchpattern), matchregexpattern(matchregexpattern), matchedpath(matchedpath) {
 
 }
 
@@ -112,19 +112,19 @@ SkipListMatch SkipList::check(const std::string& element, const bool dir, const 
         if ((it->matchDir() && dir) || (it->matchFile() && !dir)) {
           if (!it->matchRegex() && fixedSlashCompare(it->matchPattern(), *partsit, false)) {
 
-            SkipListMatch match(it->getAction(), true, it->matchPattern());
+            SkipListMatch match(it->getAction(), true, it->matchPattern(), *partsit);
             matchcache.insert(std::pair<std::string, SkipListMatch>(cachetoken, match));
             return match;
           }
           else if (it->matchRegex() && std::regex_match(*partsit, it->matchRegexPattern())) {
-            SkipListMatch match(it->getAction(), true, it->matchPattern(), it->matchRegexPattern());
+            SkipListMatch match(it->getAction(), true, it->matchPattern(), it->matchRegexPattern(), *partsit);
             matchcache.insert(std::pair<std::string, SkipListMatch>(cachetoken, match));
             return match;
           }
         }
       }
     }
-    SkipListMatch nomatch(SKIPLIST_NONE, false, "");
+    SkipListMatch nomatch(SKIPLIST_NONE, false, "", "");
     matchcache.insert(std::pair<std::string, SkipListMatch>(cachetoken, nomatch));
   }
   return fallThrough(element, dir, inrace, fallthrough);
@@ -132,7 +132,7 @@ SkipListMatch SkipList::check(const std::string& element, const bool dir, const 
 }
 
 SkipListMatch SkipList::fallThrough(const std::string & element, const bool dir, const bool inrace, const SkipList * fallthrough) const {
-  SkipListMatch match(SKIPLIST_ALLOW, false, "");
+  SkipListMatch match(SKIPLIST_ALLOW, false, "", "");
   if (fallthrough) {
     match = fallthrough->check(element, dir, inrace);
   }

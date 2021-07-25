@@ -33,7 +33,7 @@ void ScoreBoardElement::reset(const std::string & filename, unsigned short score
   attempted = false;
   this->subdir = subdir;
   this->filesize = filesize;
-  skipchecked = true;
+  skipchecked = false;
 }
 
 void ScoreBoardElement::reset(const ScoreBoardElement & other) {

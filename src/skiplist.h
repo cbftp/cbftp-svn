@@ -10,13 +10,14 @@
 class Site;
 
 struct SkipListMatch {
-  SkipListMatch(SkipListAction action, bool matched, const std::string& matchpattern);
-  SkipListMatch(SkipListAction action, bool matched, const std::string& matchpattern, const std::regex& matchregexpattern);
+  SkipListMatch(SkipListAction action, bool matched, const std::string& matchpattern, const std::string& matchedpath);
+  SkipListMatch(SkipListAction action, bool matched, const std::string& matchpattern, const std::regex& matchregexpattern, const std::string& matchedpath);
   SkipListAction action;
   bool matched;
   bool regex;
   std::string matchpattern;
   std::regex matchregexpattern;
+  std::string matchedpath;
 };
 
 class SkipList {
