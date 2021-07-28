@@ -51,6 +51,7 @@ private:
   OngoingRequest* findOngoingRequest(int apirequestid);
   void handlePathDelete(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handlePathGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  void handleInfoGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleFileGet(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleRawPost(RestApiCallback* cb, int connrequestid, const http::Request& request);
   void handleRawGet(RestApiCallback* cb, int connrequestid, const http::Request& request);

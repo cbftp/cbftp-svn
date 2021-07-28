@@ -4,12 +4,15 @@
 #include <memory>
 #include <stdexcept>
 
+#include "core/polling.h"
+#include "core/sslmanager.h"
 #include "core/tickpoke.h"
 #include "core/types.h"
 #include "ext/json.hpp"
 #include "http/request.h"
 #include "http/response.h"
 
+#include "buildinfo.h"
 #include "crypto.h"
 #include "engine.h"
 #include "eventlog.h"
@@ -18,6 +21,7 @@
 #include "filelist.h"
 #include "filelistdata.h"
 #include "globalcontext.h"
+#include "loadmonitor.h"
 #include "localstorage.h"
 #include "path.h"
 #include "race.h"
@@ -843,6 +847,7 @@ nlohmann::json getJsonFromBody(const http::Request& request) {
 RestApi::RestApi() : nextrequestid(0) {
   endpoints["/file"]["GET"] = &RestApi::handleFileGet;
   endpoints["/filelist"]["GET"] = &RestApi::handlePathGet; // deprecated, use /path
+  endpoints["/info"]["GET"] = &RestApi::handleInfoGet;
   endpoints["/path"]["DELETE"] = &RestApi::handlePathDelete;
   endpoints["/path"]["GET"] = &RestApi::handlePathGet;
   endpoints["/raw"]["POST"] = &RestApi::handleRawPost;
@@ -1236,6 +1241,53 @@ void RestApi::handlePathGet(RestApiCallback* cb, int connrequestid, const http::
   ongoingrequest.timeout = timeout;
   ongoingrequest.ongoingservicerequests.insert(std::make_pair(sl.get(), servicerequestid));
   ongoingrequests.push_back(ongoingrequest);
+}
+
+void RestApi::handleInfoGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  unsigned long long int sizefxpday = global->getStatistics()->getSizeFXP().getLast24Hours();
+  unsigned int filesfxpday = global->getStatistics()->getFilesFXP().getLast24Hours();
+  unsigned long long int sizefxpall = global->getStatistics()->getSizeFXP().getAll();
+  unsigned int filesfxpall = global->getStatistics()->getFilesFXP().getAll();
+  unsigned long long int sizeupday = global->getStatistics()->getSizeUp().getLast24Hours();
+  unsigned int filesupday = global->getStatistics()->getFilesUp().getLast24Hours();
+  unsigned long long int sizeupall = global->getStatistics()->getSizeUp().getAll();
+  unsigned int filesupall = global->getStatistics()->getFilesUp().getAll();
+  unsigned long long int sizedownday = global->getStatistics()->getSizeDown().getLast24Hours();
+  unsigned int filesdownday = global->getStatistics()->getFilesDown().getLast24Hours();
+  unsigned long long int sizedownall = global->getStatistics()->getSizeDown().getAll();
+  unsigned int filesdownall = global->getStatistics()->getFilesDown().getAll();
+  nlohmann::json j;
+  nlohmann::json& buildinfo = j["build_info"];
+  nlohmann::json& stats = j["stats"];
+  nlohmann::json& load = j["load"];
+  buildinfo["compile_time"] = BuildInfo::compileTime();
+  buildinfo["version_tag"] = BuildInfo::version();
+  buildinfo["distribution_tag"] = BuildInfo::tag();
+  buildinfo["openssl_version"] = Core::SSLManager::version();
+  buildinfo["polling_syscall"] = Core::Polling::type();
+  j["data_file_encryption_enabled"] = global->getSettingsLoaderSaver()->getState() == DataFileState::EXISTS_DECRYPTED;
+  stats["spread_jobs_all"] = global->getStatistics()->getSpreadJobs();
+  stats["transfer_jobs_all"] = global->getStatistics()->getTransferJobs();
+  load["cpu_load_total_pc"] = global->getLoadMonitor()->getCurrentCpuUsageAll();
+  load["cpu_load_worker_pc"] = global->getLoadMonitor()->getCurrentCpuUsageWorker();
+  load["performance_level"] = global->getLoadMonitor()->getCurrentRecommendedPerformanceLevel();
+  stats["files_fxp_24h"] = filesfxpday;
+  stats["size_fxp_24h"] = sizefxpday;
+  stats["files_fxp_all"] = filesfxpall;
+  stats["size_fxp_all"] = sizefxpall;
+  stats["files_down_24h"] = filesdownday;
+  stats["size_down_24h"] = sizedownday;
+  stats["files_down_all"] = filesdownall;
+  stats["size_down_all"] = sizedownall;
+  stats["files_up_24h"] = filesupday;
+  stats["size_up_24h"] = sizeupday;
+  stats["files_up_all"] = filesupall;
+  stats["size_up_all"] = sizeupall;
+  http::Response response(200);
+  std::string jsondump = j.dump(2);
+  response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
+  response.addHeader("Content-Type", "application/json");
+  cb->requestHandled(connrequestid, response);
 }
 
 void RestApi::handleSpreadJobPost(RestApiCallback* cb, int connrequestid, const http::Request& request) {
