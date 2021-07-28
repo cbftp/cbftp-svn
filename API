@@ -328,6 +328,9 @@ An example body when adding or modifying a section:
 - Delete a section
    DELETE /sections/SECTIONNAME
 
+- Show various build information, stats etc
+   GET /info
+
 UDP API
 
 The UDP API is one-way, i.e. does not provide responses.
