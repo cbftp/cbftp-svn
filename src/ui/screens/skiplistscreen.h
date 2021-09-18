@@ -31,6 +31,8 @@ private:
   void addPatternLine(int y, bool regex, std::string pattern, bool file, bool dir,
                       int scope, SkipListAction action,
                       std::shared_ptr<MenuSelectAdjustableLine> before = nullptr);
+  void keyUp();
+  void keyDown();
   int getCurrentScope() const;
   SkipList * skiplist;
   bool active;
