@@ -83,6 +83,7 @@ void SkipListScreen::initialize() {
   testtype->addOption("File", 0);
   testtype->addOption("Dir", 1);
   testtype->setOption(0);
+  testinspreadjob = base.addCheckBox(++y, 1, "testinspreadjob", "Test in spread job:", true);
   currentviewspan = 0;
   temphighlightline = -1;
   init(row, col);
@@ -96,7 +97,7 @@ void SkipListScreen::redraw() {
   }
   ui->printStr(y++, 1, "Valid wildcard expressions are * and ?, unless regex is used.");
   ui->printStr(y++, 1, "The pattern list is parsed from top to bottom and the first match applies. Case insensitive.");
-  y += 4;
+  y += 5;
   unsigned int listspan = row - y - 1;
   table.clear();
   std::shared_ptr<ResizableElement> re;
@@ -233,7 +234,7 @@ void SkipListScreen::update() {
   }
   if (testpattern->getData().length() > 0) {
     std::string allowstring;
-    SkipListMatch match = testskiplist.check(testpattern->getData(), testtype->getData());
+    SkipListMatch match = testskiplist.check(testpattern->getData(), testtype->getData(), testinspreadjob->getData());
     if (match.action == SKIPLIST_ALLOW) {
       allowstring = "ALLOWED";
     }
