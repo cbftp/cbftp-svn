@@ -808,6 +808,11 @@ void TransferJob::updateLocalFileLists() {
   }
   else {
     Path basepath = type == TRANSFERJOB_DOWNLOAD ? dstpath : srcpath;
+    if (!FileSystem::directoryExistsWritable(basepath)) {
+      if (type == TRANSFERJOB_UPLOAD || !FileSystem::createDirectoryRecursive(basepath)) {
+        return;
+      }
+    }
     localfilelists[""] = base = global->getLocalStorage()->getLocalFileList(basepath);
   }
   if (!base) {
