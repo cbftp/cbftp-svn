@@ -9,7 +9,7 @@ all: $(SRC:%.cpp=%.o)
 
 quiet:
 	@#
-	
+
 $(LIB): $(SRC:%.cpp=%.o) | quiet
 	ar rc $@ $^ && ranlib $@
 
@@ -17,7 +17,7 @@ clean:
 	@if test $(firstword $(CLEANFILES)); then rm -rf $(CLEANFILES); echo rm -rf $(CLEANFILES); fi
 
 ifneq ($(wildcard ../../Makefile.inc),)
-$(SRC:%.cpp=%.o): ../../Makefile.inc
+%.o: %.cpp: ../../Makefile.inc
 endif
 
 -include $(SRC:%.cpp=%.d)

@@ -26,7 +26,7 @@ MAJOR FEATURES
 - File viewing through external applications when running in a local terminal
 - SOCKS5 proxy support
 
-INSTALLATION
+RUNNING NATIVELY
 
 Linux build dependencies: make g++ libssl-dev libncursesw5-dev
 BSD build dependencies: gmake gcc11-devel openssl ncurses
@@ -47,6 +47,16 @@ will be created the first time cbftp is started. It is located at
 ~/.cbftp/data. By default it is stored as plain text, but encryption can
 be enabled through the global settings, and your data file will then be
 encrypted with aes-256-cbc.
+
+RUNNING IN DOCKER
+
+As an alternative, it is also possible to build and run cbftp through docker.
+By default, the data dir at ~/.cbftp is mounted into the docker image
+and the default API port (55477) is forwarded from the host.
+
+Procedure: run 'make docker-build' in the cbftp root.
+When the build procedure has completed, you can start cbftp by running
+'make docker-run'.
 
 GETTING STARTED
 
