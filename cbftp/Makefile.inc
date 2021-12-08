@@ -54,20 +54,18 @@ else
 $(info Using CFLAGS provided by shell)
 endif
 ifndef LINKFLAGS
-LINKFLAGS=$(SSL_LINKFLAGS) -lpthread
-ifeq ($(UNAME_S),Darwin)
-LINKFLAGS+=-lncurses
+  LINKFLAGS=$(SSL_LINKFLAGS) -lpthread
+  ifneq ($(filter $(UNAME_S),Darwin OpenBSD NetBSD),)
+    NO_NCURSESW=1
+  endif
+  ifneq ($(wildcard /etc/alpine-release),)
+    NO_NCURSESW=1
+  endif
+  ifneq ($(NO_NCURSESW),)
+    LINKFLAGS+=-lncurses
+  else
+    LINKFLAGS+=-lncursesw
+  endif
 else
-ifeq ($(UNAME_S),OpenBSD)
-LINKFLAGS+=-lncurses
-else
-ifeq ($(UNAME_S),NetBSD)
-LINKFLAGS+=-lncurses
-else
-LINKFLAGS+=-lncursesw
-endif
-endif
-endif
-else
-$(info Using LINKFLAGS provided by shell)
+  $(info Using LINKFLAGS provided by shell)
 endif

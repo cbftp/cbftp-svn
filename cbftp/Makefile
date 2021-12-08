@@ -32,6 +32,12 @@ $(BINDIR):
 cbftp: $(SRC_TARGETS) | $(BINDIR)
 	@+$(MAKE) --no-print-directory $(BINDIR)/cbftp
 
+docker-build:
+	docker build -t cbftp .
+
+docker-run:
+	docker run -it -p 55477:55477 --mount 'type=bind,source=$(HOME)/.cbftp,target=/root/.cbftp' cbftp
+
 $(BINDIR)/cbftp: $(OBJS) $(UI_DEP) $(LIBS)
 	$(CXX) -o $(BINDIR)/cbftp $(OPTFLAGS) $(SRC:%.cpp=%.o) $(UI_LINK) $(LIBS) $(LINKFLAGS)
 

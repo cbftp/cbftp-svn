@@ -9,6 +9,11 @@ all: $(SRC:%.cpp=%.o)
 clean:
 	@if test $(firstword $(CLEANFILES)); then rm -rf $(CLEANFILES); echo rm -rf $(CLEANFILES); fi
 
-$(SRC:%.cpp=%.o): ../../../Makefile.inc
+%.o: %.cpp ../../../Makefile.inc
+ifneq ($(NO_NCURSESW),)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c -o $@ $< -DNO_NCURSESW=$(NO_NCURSESW)
+else
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c -o $@ $<
+endif
 
 -include $(SRC:%.cpp=%.d)

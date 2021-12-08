@@ -23,6 +23,6 @@ datafilehandler.o: datafilehandler.cpp ../Makefile.inc $(SVN_DIR)
 clean:
 	@if test $(firstword $(OBJS)); then rm -rf $(OBJS); echo rm -rf $(OBJS); fi
 
-$(SRC:%.cpp=%.o): ../Makefile.inc
+%.o: %.cpp ../Makefile.inc
 
 -include $(SRC:%.cpp=%.d)

@@ -11,7 +11,7 @@ all: $(OBJS)
 
 quiet:
 	@#
-	
+
 $(LIB): $(OBJS) | quiet
 	ar rc $@ $^ && ranlib $@
 
