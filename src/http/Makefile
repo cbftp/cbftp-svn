@@ -17,7 +17,7 @@ clean:
 	@if test $(firstword $(CLEANFILES)); then rm -rf $(CLEANFILES); echo rm -rf $(CLEANFILES); fi
 
 ifneq ($(wildcard ../../Makefile.inc),)
-%.o: %.cpp: ../../Makefile.inc
+%.o: %.cpp ../../Makefile.inc
 endif
 
 -include $(SRC:%.cpp=%.d)

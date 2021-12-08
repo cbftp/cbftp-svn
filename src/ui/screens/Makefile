@@ -11,7 +11,7 @@ clean:
 
 %.o: %.cpp ../../../Makefile.inc
 ifneq ($(NO_NCURSESW),)
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c -o $@ $< -DNO_NCURSESW=$(NO_NCURSESW)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c -o $@ $< -DNO_NCURSESW
 else
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c -o $@ $<
 endif
