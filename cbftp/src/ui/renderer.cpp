@@ -3,6 +3,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+#include "misc.h"
 #include "termint.h"
 
 Renderer::Renderer() : main(nullptr), dead(false) {
@@ -29,7 +30,7 @@ unsigned int Renderer::getRow() const {
 }
 
 WINDOW* Renderer::getWindow(Window window) {
-  WINDOW* w;
+  WINDOW* w = nullptr;
   switch (window) {
     case Window::MAIN:
       w = main;
@@ -95,7 +96,7 @@ void Renderer::initIntern() {
   assume_default_colors(-1, -1);
   for (int i = -1; i < 8; i++) {
     for (int j = -1; j < 8; j++) {
-      init_pair(i * 7 + j, i, j);
+      init_pair(encodeColorRepresentation(i, j), i, j);
     }
   }
   noecho();
@@ -318,7 +319,7 @@ void Renderer::printStr(unsigned int row, unsigned int col, const std::string & 
   if (bold) {
     this->bold(true, window);
   }
-  if (color != -1) {
+  if (color != -1 && color != encodeColorRepresentation()) {
     this->color(true, color, window);
   }
   uiqueue.push(UICommand(UI_COMMAND_PRINT_STR, getWindow(window), row, col, str, maxlen, rightalign));
@@ -328,7 +329,7 @@ void Renderer::printStr(unsigned int row, unsigned int col, const std::string & 
   if (bold) {
     this->bold(false, window);
   }
-  if (color != -1) {
+  if (color != -1 && color != encodeColorRepresentation()) {
     this->color(false, color, window);
   }
 }
@@ -340,7 +341,7 @@ void Renderer::printStr(unsigned int row, unsigned int col, const std::basic_str
   if (bold) {
     this->bold(true, window);
   }
-  if (color != -1) {
+  if (color != -1 && color != encodeColorRepresentation()) {
     this->color(true, color, window);
   }
   uiqueue.push(UICommand(UI_COMMAND_PRINT_WIDE_STR, getWindow(window), row, col, str, maxlen, rightalign));
@@ -350,7 +351,7 @@ void Renderer::printStr(unsigned int row, unsigned int col, const std::basic_str
   if (bold) {
     this->bold(false, window);
   }
-  if (color != -1) {
+  if (color != -1 && color != encodeColorRepresentation()) {
     this->color(false, color, window);
   }
 }
@@ -362,7 +363,7 @@ void Renderer::printChar(unsigned int row, unsigned int col, unsigned int c, boo
   if (bold) {
     this->bold(true, window);
   }
-  if (color != -1) {
+  if (color != -1 && color != encodeColorRepresentation()) {
     this->color(true, color, window);
   }
   uiqueue.push(UICommand(UI_COMMAND_PRINT_CHAR, getWindow(window), row, col, c));
@@ -372,7 +373,7 @@ void Renderer::printChar(unsigned int row, unsigned int col, unsigned int c, boo
   if (bold) {
     this->bold(false, window);
   }
-  if (color != -1) {
+  if (color != -1 && color != encodeColorRepresentation()) {
     this->color(false, color, window);
   }
 }

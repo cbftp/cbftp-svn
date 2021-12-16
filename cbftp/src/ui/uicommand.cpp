@@ -113,11 +113,11 @@ unsigned int UICommand::getChar() const {
   return c;
 }
 
-unsigned int UICommand::getColor() const {
+int UICommand::getColor() const {
   return color;
 }
 
-unsigned int UICommand::getBgColor() const {
+int UICommand::getBgColor() const {
   return bgcolor;
 }
 

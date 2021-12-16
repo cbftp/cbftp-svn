@@ -1,9 +1,11 @@
 #include "virtualviewelement.h"
 
+#include "misc.h"
+
 VirtualViewElement::VirtualViewElement() :
   c(0), newc(32), highlight(false), newhighlight(false), bold(false),
   newbold(false), cleariteration(0), redrawiteration(0), newcleariteration(0),
-  newredrawiteration(0), color(-1), newcolor(-1)
+  newredrawiteration(0), color(encodeColorRepresentation()), newcolor(encodeColorRepresentation())
 {
 }
 
@@ -91,5 +93,6 @@ void VirtualViewElement::clear() {
   newc = 32;
   newhighlight = false;
   newbold = false;
-  newcolor = -1;
+  newcolor = encodeColorRepresentation();
 }
+

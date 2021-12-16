@@ -236,14 +236,16 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
   bool activation;
   std::shared_ptr<MenuSelectOptionElement> msoe;
   switch(action) {
-    case KEYACTION_UP:
-      mso.goUp();
+    case KEYACTION_UP: {
+      bool moved = mso.goUp();
       ui->update();
-      return true;
-    case KEYACTION_DOWN:
-      mso.goDown();
+      return moved;
+    }
+    case KEYACTION_DOWN: {
+      bool moved = mso.goDown();
       ui->update();
-      return true;
+      return moved;
+    }
     case KEYACTION_ENTER:
       msoe = mso.getElement(mso.getSelectionPointer());
       if (msoe->getIdentifier() == "skiplist") {

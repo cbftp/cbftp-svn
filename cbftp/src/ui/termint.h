@@ -36,35 +36,6 @@ enum CursesSpecialKeys {
   TERMINT_CTRL_SHIFT_RIGHT = 560
 };
 
-enum class FgColor {
-  DEFAULT,
-  RED,
-  GREEN,
-  YELLOW,
-  BLUE,
-  PURPLE,
-  TEAL,
-  GRAY,
-  RED_BOLD,
-  GREEN_BOLD,
-  YELLOW_BOLD,
-  BLUE_BOLD,
-  PURPLE_BOLD,
-  TEAL_BOLD,
-  GREY_BOLD
-};
-
-enum class BgColor {
-  DEFAULT,
-  RED,
-  GREEN,
-  YELLOW,
-  BLUE,
-  PURPLE,
-  TEAL,
-  GRAY
-};
-
 class TermInt {
 private:
   static unsigned int cursorrow;
