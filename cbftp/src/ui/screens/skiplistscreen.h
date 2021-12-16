@@ -20,7 +20,6 @@ public:
   SkipListScreen(Ui *);
   ~SkipListScreen();
   void initialize(unsigned int row, unsigned int col, SkipList * skiplist);
-  void update();
   void redraw();
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
@@ -34,6 +33,7 @@ private:
   bool keyUp() override;
   bool keyDown() override;
   int getCurrentScope() const;
+  void recreateTable();
   SkipList * skiplist;
   bool active;
   std::shared_ptr<MenuSelectOptionElement> activeelement;
