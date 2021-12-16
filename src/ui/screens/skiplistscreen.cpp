@@ -87,6 +87,13 @@ void SkipListScreen::initialize() {
   currentviewspan = 0;
   temphighlightline = false;
   y += 2;
+  recreateTable();
+  init(row, col);
+}
+
+void SkipListScreen::recreateTable() {
+  table.clear();
+  int y = globalskip ? 8 : 9;
   std::shared_ptr<ResizableElement> re;
   std::shared_ptr<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
   re = table.addTextButton(y, 1, "regex", "REGEX");
@@ -107,11 +114,11 @@ void SkipListScreen::initialize() {
   re = table.addTextButton(y, 6, "scope", "SCOPE");
   re->setSelectable(false);
   msal->addElement(re, 6, RESIZE_REMOVE);
+  std::list<SkiplistItem>::const_iterator it;
   for (it = testskiplist.entriesBegin(); it != testskiplist.entriesEnd(); it++) {
     y++;
     addPatternLine(y, it->matchRegex(), it->matchPattern(), it->matchFile(), it->matchDir(), it->matchScope(), it->getAction());
   }
-  init(row, col);
 }
 
 void SkipListScreen::redraw() {
@@ -162,10 +169,6 @@ void SkipListScreen::redraw() {
     vv->highlightOn(highlightline->getRow(), minmaxcol.first, minmaxcol.second - minmaxcol.first + 1);
   }
   printSlider(vv, vv->getActualRealRows(), y + 1, vv->getActualRealCols() - 1, testskiplist.size(), currentviewspan);
-  update();
-}
-
-void SkipListScreen::update() {
   std::shared_ptr<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
   if (!!msoe) {
     int cursorpos = msoe->cursorPosition();
@@ -298,6 +301,7 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
         if (element->getIdentifier() == "add") {
           addPatternLine(0, false, "", false, false, SCOPE_IN_RACE, SKIPLIST_ALLOW);
           saveToTempSkipList();
+          recreateTable();
           ui->redraw();
           return true;
         }
@@ -350,6 +354,7 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
           focusedarea->enterFocusFrom(2);
           ui->setLegend();
         }
+        recreateTable();
         ui->redraw();
       }
       return true;
@@ -359,6 +364,7 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
         std::shared_ptr<MenuSelectAdjustableLine> msal = table.getAdjustableLine(msoe);
         addPatternLine(0, false, "", false, false, SCOPE_IN_RACE, SKIPLIST_ALLOW, msal);
         saveToTempSkipList();
+        recreateTable();
         ui->redraw();
       }
       return true;
@@ -369,6 +375,7 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
         if (table.getLineIndex(msal) > 1 && table.swapLineWithPrevious(msal)) {
           table.goUp();
           saveToTempSkipList();
+          recreateTable();
           ui->redraw();
         }
       }
@@ -380,6 +387,7 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
         if (table.swapLineWithNext(msal)) {
           table.goDown();
           saveToTempSkipList();
+          recreateTable();
           ui->redraw();
         }
       }
