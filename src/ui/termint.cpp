@@ -1,5 +1,6 @@
 #include "termint.h"
 
+#include "misc.h"
 #include "ncurseswrap.h"
 
 void TermInt::printChar(WINDOW * window, unsigned int row, unsigned int col, unsigned int c) {
@@ -48,20 +49,20 @@ void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, cons
     if (len - i > 3 && str[i] == '%') {
       if (str[i+1] == 'C' && str[i+2] == '(') {
         if (str[i+3] == ')') {
-          wattroff(window, COLOR_PAIR(1));
+          wattroff(window, COLOR_PAIR(encodeColorRepresentation()));
           i += 3;
           continue;
         }
         else if (len - i > 4 && str[i+4] == ')') {
           int arg = atoi(reinterpret_cast<const char*>(str.data() + i + 3));
-          wattron(window, COLOR_PAIR(arg * 7 - 1));
+          wattron(window, COLOR_PAIR(encodeColorRepresentation(arg)));
           i += 4;
           continue;
         }
         else if (len - i > 6 && str[i+4] == ',' && str[i+6] == ')') {
           int arg1 = atoi(reinterpret_cast<const char*>(str.data() + i + 3));
           int arg2 = atoi(reinterpret_cast<const char*>(str.data() + i + 5));
-          wattron(window, COLOR_PAIR(arg1 * 7 + arg2));
+          wattron(window, COLOR_PAIR(encodeColorRepresentation(arg1, arg2)));
           i += 6;
           continue;
         }
@@ -98,20 +99,20 @@ void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, cons
     if (len - i > 3 && str[i] == '%') {
       if (str[i+1] == 'C' && str[i+2] == '(') {
         if (str[i+3] == ')') {
-          wattroff(window, COLOR_PAIR(1));
+          wattroff(window, COLOR_PAIR(encodeColorRepresentation()));
           i += 3;
           continue;
         }
         else if (len - i > 4 && str[i+4] == ')') {
           int arg = atoi(reinterpret_cast<const char*>(str.data() + i + 3));
-          wattron(window, COLOR_PAIR(arg * 7 - 1));
+          wattron(window, COLOR_PAIR(encodeColorRepresentation(arg)));
           i += 4;
           continue;
         }
         else if (len - i > 6 && str[i+4] == ',' && str[i+6] == ')') {
           int arg1 = atoi(reinterpret_cast<const char*>(str.data() + i + 3));
           int arg2 = atoi(reinterpret_cast<const char*>(str.data() + i + 5));
-          wattron(window, COLOR_PAIR(arg1 * 7 + arg2));
+          wattron(window, COLOR_PAIR(encodeColorRepresentation(arg1, arg2)));
           i += 6;
           continue;
         }
@@ -143,3 +144,4 @@ void TermInt::moveCursor(WINDOW * window, unsigned int row, unsigned int col) {
 unsigned int TermInt::cursorrow = 0;
 unsigned int TermInt::cursorcol = 0;
 WINDOW * TermInt::cursorwindow = stdscr;
+

@@ -49,8 +49,8 @@ public:
   int getMaxlen() const;
   bool getRightAlign() const;
   unsigned int getChar() const;
-  unsigned int getColor() const;
-  unsigned int getBgColor() const;
+  int getColor() const;
+  int getBgColor() const;
   bool getShow() const;
   bool getInfoEnabled() const;
   bool getLegendEnabled() const;

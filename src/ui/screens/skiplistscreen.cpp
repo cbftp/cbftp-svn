@@ -76,8 +76,7 @@ void SkipListScreen::initialize() {
   }
   focusedarea = &base;
   int y = globalskip ? 4 : 5;
-  int addx = 1;
-  base.addTextButtonNoContent(y++, addx, "add", "<Add pattern>");
+  base.addTextButtonNoContent(y++, 1, "add", "<Add pattern>");
   testpattern = base.addStringField(y, 1, "testpattern", "Test pattern:", "", false, 16, 256);
   testtype = base.addTextArrow(y, 34, "testtype", "Test type:");
   testtype->addOption("File", 0);
@@ -86,7 +85,6 @@ void SkipListScreen::initialize() {
   testinspreadjob = base.addCheckBox(++y, 1, "testinspreadjob", "Test in spread job:", true);
   currentviewspan = 0;
   temphighlightline = false;
-  y += 2;
   recreateTable();
   init(row, col);
 }
