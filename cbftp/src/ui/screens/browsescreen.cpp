@@ -203,13 +203,13 @@ void BrowseScreen::initializeSiteSite(unsigned int row, unsigned int col,
 }
 
 void BrowseScreen::redraw() {
-  ui->erase();
+  vv->clear();
   ui->hideCursor();
   ui->setSplit(split);
   unsigned int splitcol = col / 2;
   if (split) {
     for (unsigned int i = 0; i < row; i++) {
-      ui->printChar(i, splitcol, BOX_VLINE);
+      vv->putChar(i, splitcol, BOX_VLINE);
     }
   }
   if (!!left) {

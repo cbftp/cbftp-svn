@@ -9,16 +9,16 @@
 
 namespace {
 
-void drawAllIn(Ui* ui, const std::list<BrailleGraph::GraphChar>& list, unsigned int startrow) {
+void drawAllIn(VirtualView* vv, const std::list<BrailleGraph::GraphChar>& list, unsigned int startrow) {
   for (const BrailleGraph::GraphChar& ch : list) {
-    ui->printChar(ch.row + startrow, ch.col, ch.ch);
+    vv->putChar(ch.row + startrow, ch.col, ch.ch);
   }
 }
 
-void drawGraph(Ui* ui, const std::unique_ptr<BrailleGraph>& graph, unsigned int startrow = 0) {
-  drawAllIn(ui, graph->getStaticBorderChars(), startrow);
-  drawAllIn(ui, graph->getChangingBorderChars(), startrow);
-  drawAllIn(ui, graph->getGraphChars(), startrow);
+void drawGraph(VirtualView* vv, const std::unique_ptr<BrailleGraph>& graph, unsigned int startrow = 0) {
+  drawAllIn(vv, graph->getStaticBorderChars(), startrow);
+  drawAllIn(vv, graph->getChangingBorderChars(), startrow);
+  drawAllIn(vv, graph->getGraphChars(), startrow);
 }
 
 }
@@ -53,14 +53,14 @@ void MetricsScreen::redraw() {
 }
 
 void MetricsScreen::update() {
-  ui->erase();
+  vv->clear();
   ui->hideCursor();
   cpuall->addNewData(global->getLoadMonitor()->getUnseenCpuUsageAllHistory());
   cpuworker->addNewData(global->getLoadMonitor()->getUnseenCpuUsageWorkerHistory());
   perflevel->addNewData(global->getLoadMonitor()->getUnseenPerformanceLevelHistory());
-  drawGraph(ui, cpuall);
-  drawGraph(ui, cpuworker, cpuall->rows());
-  drawGraph(ui, perflevel, cpuall->rows() + cpuworker->rows());
+  drawGraph(vv, cpuall);
+  drawGraph(vv, cpuworker, cpuall->rows());
+  drawGraph(vv, perflevel, cpuall->rows() + cpuworker->rows());
 }
 
 bool MetricsScreen::keyPressed(unsigned int ch) {

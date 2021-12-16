@@ -6,6 +6,7 @@
 #include "keybinds.h"
 
 class Ui;
+class VirtualView;
 
 class UIWindow {
 protected:
@@ -16,6 +17,7 @@ protected:
   bool autoupdate;
   bool expectbackendpush;
   Ui * ui;
+  VirtualView* vv;
   KeyBinds keybinds;
   bool allowimplicitgokeybinds;
 public:
@@ -37,4 +39,6 @@ public:
   virtual bool keyPressed(unsigned int);
   bool autoUpdate() const;
   bool expectBackendPush() const;
+  virtual bool keyUp();
+  virtual bool keyDown();
 };

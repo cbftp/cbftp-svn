@@ -7,7 +7,7 @@
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptionelement.h"
 
-ChangeKeyScreen::ChangeKeyScreen(Ui* ui) : UIWindow(ui, "ChangeKeyScreen") {
+ChangeKeyScreen::ChangeKeyScreen(Ui* ui) : UIWindow(ui, "ChangeKeyScreen"), mso(*vv) {
   keybinds.addBind(10, KEYACTION_ENTER, "Modify");
   keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Next option");
   keybinds.addBind(KEY_UP, KEYACTION_UP, "Previous option");
@@ -34,9 +34,9 @@ void ChangeKeyScreen::initialize(unsigned int row, unsigned int col) {
 }
 
 void ChangeKeyScreen::redraw() {
-  ui->erase();
+  vv->clear();
   unsigned int y = 1;
-  ui->printStr(y, 1, "Please verify with your old encryption key.");
+  vv->putStr(y, 1, "Please verify with your old encryption key.");
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
@@ -44,21 +44,15 @@ void ChangeKeyScreen::redraw() {
     if (mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
-  }
-}
-
-void ChangeKeyScreen::update() {
-  if (mismatch || oldmismatch || tooshort) {
-    redraw();
+    vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+    vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
   std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
-  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+  vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
-  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
-  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
+  vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   std::string error = "                                                          ";
   if (tooshort) {
     error = "Failed: The passphrase must be at least " + std::to_string(SHORTESTKEY) + " characters long.";
@@ -69,11 +63,11 @@ void ChangeKeyScreen::update() {
   else if (oldmismatch) {
     error = "Failed: the old key was not correct.";
   }
-  ui->printStr(8, 1, error);
+  vv->putStr(8, 1, error);
 
   if (active && msoe->cursorPosition() >= 0) {
     ui->showCursor();
-    ui->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
+    vv->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
   }
   else {
     ui->hideCursor();
@@ -96,14 +90,16 @@ bool ChangeKeyScreen::keyPressed(unsigned int ch) {
   }
   bool activation;
   switch(action) {
-    case KEYACTION_UP:
-      mso.goUp();
+    case KEYACTION_UP: {
+      bool moved = mso.goUp();
       ui->update();
-      return true;
-    case KEYACTION_DOWN:
-      mso.goDown();
+      return moved;
+    }
+    case KEYACTION_DOWN: {
+      bool moved = mso.goDown();
       ui->update();
-      return true;
+      return moved;
+    }
     case KEYACTION_ENTER:
       activation = mso.getElement(mso.getSelectionPointer())->activate();
       tooshort = false;

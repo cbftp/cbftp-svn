@@ -5,9 +5,30 @@ UICommand::UICommand(int command) :
 {
 }
 
+UICommand::UICommand(int command, int fgcolor, int bgcolor) :
+  command(command),
+  color(fgcolor),
+  bgcolor(bgcolor)
+{
+}
+
 UICommand::UICommand(int command, bool show) :
   command(command),
   show(show)
+{
+}
+
+UICommand::UICommand(int command, bool infoenabled, bool legendenabled) :
+  command(command),
+  infoenabled(infoenabled),
+  legendenabled(legendenabled)
+{
+}
+
+UICommand::UICommand(int command, WINDOW * window, int color) :
+  command(command),
+  window(window),
+  color(color)
 {
 }
 
@@ -92,6 +113,22 @@ unsigned int UICommand::getChar() const {
   return c;
 }
 
+unsigned int UICommand::getColor() const {
+  return color;
+}
+
+unsigned int UICommand::getBgColor() const {
+  return bgcolor;
+}
+
 bool UICommand::getShow() const {
   return show;
+}
+
+bool UICommand::getInfoEnabled() const {
+  return infoenabled;
+}
+
+bool UICommand::getLegendEnabled() const {
+  return legendenabled;
 }

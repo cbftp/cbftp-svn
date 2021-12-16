@@ -151,7 +151,7 @@ std::string getFilterText(const TransferFilteringParameters & tfp) {
 
 }
 
-TransfersScreen::TransfersScreen(Ui* ui) : UIWindow(ui, "TransfersScreen") {
+TransfersScreen::TransfersScreen(Ui* ui) : UIWindow(ui, "TransfersScreen"), table(*vv) {
   tm = global->getTransferManager();
   nextid = 0;
   keybinds.addBind(10, KEYACTION_ENTER, "Details");
@@ -215,7 +215,7 @@ void TransfersScreen::initialize(unsigned int row, unsigned int col, const Trans
   numfinishedfiltered = 0;
   addFilterFinishedTransfers();
   ypos = 0;
-  temphighlightline = -1;
+  temphighlightline = false;
   table.reset();
   table.enterFocusFrom(0);
   init(row, col);
@@ -347,7 +347,7 @@ unsigned int TransfersScreen::totalListSize() const {
 }
 
 void TransfersScreen::redraw() {
-  ui->erase();
+  vv->clear();
   addFilterFinishedTransfers();
   unsigned int y = 0;
   unsigned int listspan = row - 1;
@@ -402,22 +402,10 @@ void TransfersScreen::redraw() {
   table.checkPointer();
   hascontents = table.linesSize() > 1;
   table.adjustLines(col - 3);
-  if (temphighlightline != -1) {
-    std::shared_ptr<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
-    if (!!highlightline) {
-      std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
-      for (unsigned int i = minmaxcol.first; i <= minmaxcol.second; i++) {
-        ui->printChar(temphighlightline, i, ' ', true);
-      }
-    }
-  }
-  bool highlight;
+  std::shared_ptr<MenuSelectAdjustableLine> highlightline;
   for (unsigned int i = 0; i < table.size(); i++) {
     std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(i));
-    highlight = false;
-    if (hascontents && (table.getSelectionPointer() == i  || (int)re->getRow() == temphighlightline)) {
-      highlight = true;
-    }
+    bool highlight = hascontents && table.getSelectionPointer() == i;
     if (re->isVisible()) {
       if (re->getIdentifier() == "transferred") {
         int progresspercent = 0;
@@ -427,25 +415,28 @@ void TransfersScreen::redraw() {
         }
         std::string labeltext = re->getLabelText();
         int charswithhighlight = labeltext.length() * progresspercent / 100;
-        ui->printStr(re->getRow(), re->getCol(), labeltext.substr(0, charswithhighlight), true);
-        ui->printStr(re->getRow(), re->getCol() + charswithhighlight, labeltext.substr(charswithhighlight));
+        vv->putStr(re->getRow(), re->getCol(), labeltext.substr(0, charswithhighlight), true);
+        vv->putStr(re->getRow(), re->getCol() + charswithhighlight, labeltext.substr(charswithhighlight));
       }
       else {
-        ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
+        vv->putStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
+      }
+      if (highlight && (temphighlightline ^ ui->getHighlightEntireLine())) {
+        highlightline = table.getAdjustableLine(re);
       }
     }
   }
-  printSlider(ui, row, 1, col - 1, totallistsize, currentviewspan);
-}
-
-void TransfersScreen::update() {
-  redraw();
+  if (highlightline) {
+    std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
+    vv->highlightOn(highlightline->getRow(), minmaxcol.first, minmaxcol.second - minmaxcol.first + 1);
+  }
+  printSlider(vv, row, 1, col - 1, totallistsize, currentviewspan);
 }
 
 bool TransfersScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
-  if (temphighlightline != -1) {
-    temphighlightline = -1;
+  if (temphighlightline) {
+    temphighlightline = false;
     ui->redraw();
     if (action == KEYACTION_HIGHLIGHT_LINE) {
       return true;
@@ -457,15 +448,17 @@ bool TransfersScreen::keyPressed(unsigned int ch) {
         --ypos;
         table.goUp();
         ui->update();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_DOWN:
       if (hascontents && ypos < totalListSize() - 1) {
         ++ypos;
         table.goDown();
         ui->update();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_NEXT_PAGE:
     {
       unsigned int pagerows = (unsigned int) row * 0.6;
@@ -532,7 +525,7 @@ bool TransfersScreen::keyPressed(unsigned int ch) {
       if (!hascontents) {
         break;
       }
-      temphighlightline = table.getElement(table.getSelectionPointer())->getRow();
+      temphighlightline = true;
       ui->redraw();
       return true;
   }

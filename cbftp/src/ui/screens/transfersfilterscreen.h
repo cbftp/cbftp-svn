@@ -20,7 +20,6 @@ public:
   ~TransfersFilterScreen();
   void initialize(unsigned int, unsigned int, const TransferFilteringParameters &);
   void redraw();
-  void update();
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;

@@ -45,7 +45,7 @@ void SiteStatusScreen::initialize(unsigned int row, unsigned int col, std::strin
 }
 
 void SiteStatusScreen::redraw() {
-  ui->erase();
+  vv->clear();
   ui->hideCursor();
   std::string loginslots = "Login slots:    " + std::to_string(st->getCurrLogins());
   if (!site->unlimitedLogins()) {
@@ -59,10 +59,10 @@ void SiteStatusScreen::redraw() {
   if (!site->unlimitedDown()) {
     downslots += "/" + std::to_string(site->getMaxDown());
   }
-  ui->printStr(1, 1, loginslots);
-  ui->printStr(2, 1, upslots);
-  ui->printStr(3, 1, downslots);
-  ui->printStr(5, 1, "Login threads:");
+  vv->putStr(1, 1, loginslots);
+  vv->putStr(2, 1, upslots);
+  vv->putStr(3, 1, downslots);
+  vv->putStr(5, 1, "Login threads:");
   int i = 8;
   for(unsigned int j = 0; j < st->getConns()->size(); j++) {
     std::string status = st->getStatus(j);
@@ -72,7 +72,7 @@ void SiteStatusScreen::redraw() {
         ? "Y" : "N";
     std::string tstate = st->getConnStateTracker(j)->hasFileTransfer()
         ? "Y" : "N";
-    ui->printStr(i++, 1, "#" + std::to_string((int)j) + " - LL:" + llstate +
+    vv->putStr(i++, 1, "#" + std::to_string((int)j) + " - LL:" + llstate +
         " - HL:" + hlstate + " - T:" + tstate + " - " + status);
   }
   ++i;
@@ -84,17 +84,13 @@ void SiteStatusScreen::redraw() {
   unsigned int filesdownday = site->getFilesDown().getLast24Hours();
   unsigned long long int sizedownall = site->getSizeDown().getAll();
   unsigned int filesdownall = site->getFilesDown().getAll();
-  ui->printStr(i++, 1, "Traffic measurements");
-  ui->printStr(i++, 1, "Upload   last 24 hours: " + util::parseSize(sizeupday) + ", " +
+  vv->putStr(i++, 1, "Traffic measurements");
+  vv->putStr(i++, 1, "Upload   last 24 hours: " + util::parseSize(sizeupday) + ", " +
                  std::to_string(filesupday) + " files - All time: " + util::parseSize(sizeupall) + ", " +
                  std::to_string(filesupall) + " files");
-  ui->printStr(i++, 1, "Download last 24 hours: " + util::parseSize(sizedownday) + ", " +
+  vv->putStr(i++, 1, "Download last 24 hours: " + util::parseSize(sizedownday) + ", " +
                  std::to_string(filesdownday) + " files - All time: " + util::parseSize(sizedownall) + ", " +
                  std::to_string(filesdownall) + " files");
-}
-
-void SiteStatusScreen::update() {
-  redraw();
 }
 
 bool SiteStatusScreen::keyPressed(unsigned int ch) {

@@ -98,7 +98,7 @@ char getFileChar(bool exists, bool owner, bool upload, bool download, bool downl
 
 }
 
-RaceStatusScreen::RaceStatusScreen(Ui* ui) : UIWindow(ui, "RaceStatusScreen") {
+RaceStatusScreen::RaceStatusScreen(Ui* ui) : UIWindow(ui, "RaceStatusScreen"), mso(*vv) {
   keybinds.addScope(KEYSCOPE_RUNNING, "While the job is running");
   keybinds.addScope(KEYSCOPE_ENDED, "When the job has ended");
   keybinds.addBind(10, KEYACTION_ENTER, "Site status");
@@ -155,19 +155,19 @@ void RaceStatusScreen::initialize(unsigned int row, unsigned int col, unsigned i
 }
 
 void RaceStatusScreen::redraw() {
-  ui->erase();
+  vv->clear();
   std::string section = race->getSection();
-  ui->printStr(1, 1, "Section: " + section);
-  ui->printStr(1, 11 + section.length(), "Sites: " + race->getSiteListText());
+  vv->putStr(1, 1, "Section: " + section);
+  vv->putStr(1, 11 + section.length(), "Sites: " + race->getSiteListText());
   std::string incompletesitestr = race->getSiteListText(SiteListType::INCOMPLETE);
   std::string dlonlysitestr = race->getSiteListText(SiteListType::DLONLY);
   unsigned int x = 18;
   if (!dlonlysitestr.empty()) {
-    ui->printStr(3, x, "Download-only: " + dlonlysitestr);
+    vv->putStr(3, x, "Download-only: " + dlonlysitestr);
     x += 16 + dlonlysitestr.length();
   }
   if (!incompletesitestr.empty()) {
-    ui->printStr(3, x, "Incomplete on: " + incompletesitestr);
+    vv->putStr(3, x, "Incomplete on: " + incompletesitestr);
     x += 17 + incompletesitestr.length();
   }
   currincomplete = getIncompleteSites().size();
@@ -197,7 +197,7 @@ void RaceStatusScreen::redraw() {
     sumguessedsize += guessedsize;
   }
   currguessedsize = sumguessedsize;
-  ui->printStr(2, 1, "Subpaths: " + subpathpresent);
+  vv->putStr(2, 1, "Subpaths: " + subpathpresent);
   int y = 5;
   longestsubpath = 0;
   std::list<std::string> filetags;
@@ -309,9 +309,9 @@ void RaceStatusScreen::redraw() {
   for (std::list<std::string>::iterator it = filetags.begin(); it != filetags.end(); it++) {
     std::string tag = *it;
     filetagpos[tag] = tagx;
-    ui->printStr(y, tagx, tag.substr(0, 1));
-    ui->printStr(y+1, tagx, tag.substr(1, 1));
-    ui->printStr(y+2, tagx++, tag.substr(2));
+    vv->putStr(y, tagx, tag.substr(0, 1));
+    vv->putStr(y+1, tagx, tag.substr(1, 1));
+    vv->putStr(y+2, tagx++, tag.substr(2));
   }
   update();
 }
@@ -353,7 +353,7 @@ void RaceStatusScreen::update() {
       status = "Timeout";
       break;
   }
-  ui->printStr(3, 1, "Status: " + status);
+  vv->putStr(3, 1, "Status: " + status);
   int x = 1;
   int y = 8;
   mso.clear();
@@ -383,7 +383,7 @@ void RaceStatusScreen::update() {
         printsubpath = "/";
       }
 
-      ui->printStr(y, x + 5, printsubpath, false, longestsubpath);
+      vv->putStr(y, x + 5, printsubpath, false, longestsubpath);
       for (std::unordered_map<std::string, unsigned long long int>::const_iterator it3 =
           race->guessedFileListBegin(origsubpath); it3 != race->guessedFileListEnd(origsubpath); it3++) {
         std::string filename = it3->first;
@@ -410,7 +410,7 @@ void RaceStatusScreen::update() {
           }
           printchar = getFileChar(exists, owner, upload, download, downloadonly);
         }
-        ui->printChar(y, filex, printchar, exists);
+        vv->putChar(y, filex, printchar, exists);
       }
       y++;
     }
@@ -420,7 +420,7 @@ void RaceStatusScreen::update() {
   for (unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(i));
     bool isselected = selected == i;
-    ui->printStr(msotb->getRow(), msotb->getCol(), msotb->getLabelText(), isselected, 4);
+    vv->putStr(msotb->getRow(), msotb->getCol(), msotb->getLabelText(), isselected, 4);
   }
 }
 

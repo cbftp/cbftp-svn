@@ -55,7 +55,6 @@ public:
   void initializeFilterSpreadJobSite(unsigned int, unsigned int, const std::string & job, const std::string & site);
   void initialize(unsigned int, unsigned int, const TransferFilteringParameters &);
   void redraw();
-  void update();
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
@@ -83,5 +82,5 @@ private:
   TransferFilteringParameters tfp;
   int numfinishedfiltered;
   std::list<std::shared_ptr<TransferStatus> > finishedfilteredtransfers;
-  int temphighlightline;
+  bool temphighlightline;
 };

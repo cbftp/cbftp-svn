@@ -20,7 +20,6 @@ public:
   void initializeSelect(unsigned int, unsigned int, const std::string &, std::list<std::shared_ptr<Site> >, std::list<std::shared_ptr<Site> >);
   void initializeExclude(unsigned int, unsigned int, const std::string &, std::list<std::shared_ptr<Site> >, std::list<std::shared_ptr<Site> >);
   void redraw();
-  void update();
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;

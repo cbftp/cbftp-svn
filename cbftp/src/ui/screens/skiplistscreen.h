@@ -31,8 +31,8 @@ private:
   void addPatternLine(int y, bool regex, std::string pattern, bool file, bool dir,
                       int scope, SkipListAction action,
                       std::shared_ptr<MenuSelectAdjustableLine> before = nullptr);
-  void keyUp();
-  void keyDown();
+  bool keyUp() override;
+  bool keyDown() override;
   int getCurrentScope() const;
   SkipList * skiplist;
   bool active;
@@ -47,5 +47,5 @@ private:
   std::shared_ptr<MenuSelectOptionCheckBox> testinspreadjob;
   unsigned int currentviewspan;
   bool globalskip;
-  int temphighlightline;
+  bool temphighlightline;
 };

@@ -6,7 +6,7 @@
 
 #define MINIMUM_KEY_LENGTH 4
 
-NewKeyScreen::NewKeyScreen(Ui* ui) : UIWindow(ui, "NewKeyScreen") {
+NewKeyScreen::NewKeyScreen(Ui* ui) : UIWindow(ui, "NewKeyScreen"), mso(*vv) {
   keybinds.addBind(10, KEYACTION_ENTER, "Modify");
   keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Next option");
   keybinds.addBind(KEY_UP, KEYACTION_UP, "Previous option");
@@ -31,14 +31,14 @@ void NewKeyScreen::initialize(unsigned int row, unsigned int col) {
 }
 
 void NewKeyScreen::redraw() {
-  ui->erase();
+  vv->clear();
   unsigned int y = 1;
-  ui->printStr(y, 1, "Your site and configuration data will be encrypted with AES-256-CBC.");
-  ui->printStr(y+1, 1, "A 256-bit (32 characters) AES key will be generated from the given passphrase.");
-  ui->printStr(y+2, 1, "This means that the level of security increases with the length of the given");
-  ui->printStr(y+3, 1, "passphrase.");
-  ui->printStr(y+4, 1, "The passphrase is not considered secure if it is shorter than 16 characters.");
-  ui->printStr(y+6, 1, "Good password practice is described well by xkcd: http://xkcd.com/936/");
+  vv->putStr(y, 1, "Your site and configuration data will be encrypted with AES-256-CBC.");
+  vv->putStr(y+1, 1, "A 256-bit (32 characters) AES key will be generated from the given passphrase.");
+  vv->putStr(y+2, 1, "This means that the level of security increases with the length of the given");
+  vv->putStr(y+3, 1, "passphrase.");
+  vv->putStr(y+4, 1, "The passphrase is not considered secure if it is shorter than 16 characters.");
+  vv->putStr(y+6, 1, "Good password practice is described well by xkcd: http://xkcd.com/936/");
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
@@ -46,18 +46,15 @@ void NewKeyScreen::redraw() {
     if (mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+    vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
-}
-
-void NewKeyScreen::update() {
   std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
-  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+  vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
-  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
-  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
+  vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   std::string error = "                                                          ";
   if (tooshort) {
     error = "Failed: The passphrase must be at least " + std::to_string(MINIMUM_KEY_LENGTH) + " characters long.";
@@ -65,11 +62,11 @@ void NewKeyScreen::update() {
   else if (mismatch) {
     error = "Failed: The keys did not match.";
   }
-  ui->printStr(14, 1, error);
+  vv->putStr(14, 1, error);
 
   if (active && msoe->cursorPosition() >= 0) {
     ui->showCursor();
-    ui->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
+    vv->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
   }
   else {
     ui->hideCursor();
@@ -92,14 +89,16 @@ bool NewKeyScreen::keyPressed(unsigned int ch) {
   }
   bool activation;
   switch(action) {
-    case KEYACTION_UP:
-      mso.goUp();
+    case KEYACTION_UP: {
+      bool moved = mso.goUp();
       ui->update();
-      return true;
-    case KEYACTION_DOWN:
-      mso.goDown();
+      return moved;
+    }
+    case KEYACTION_DOWN: {
+      bool moved = mso.goDown();
       ui->update();
-      return true;
+      return moved;
+    }
     case KEYACTION_ENTER:
       activation = mso.getElement(mso.getSelectionPointer())->activate();
       tooshort = false;

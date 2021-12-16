@@ -1,9 +1,8 @@
 #include "ui.h"
 
-#include <sys/ioctl.h>
-#include <unistd.h>
 #include <iostream>
 #include <cassert>
+#include <unistd.h>
 
 #include "../core/workmanager.h"
 #include "../core/tickpoke.h"
@@ -23,7 +22,6 @@
 #include "infowindow.h"
 #include "uiwindow.h"
 #include "chardraw.h"
-#include "termint.h"
 #include "keybinds.h"
 
 #include "screens/loginscreen.h"
@@ -85,14 +83,15 @@ enum KeyAction {
 } // namespace
 
 Ui::Ui() :
-  main(nullptr),
+  vv(renderer),
   ticker(0),
   haspushed(false),
   pushused(false),
   legendenabled(false),
   infoenabled(false),
-  dead(false),
   legendmode(LEGEND_SCROLLING),
+  highlightentireline(false),
+  showxmastree(true),
   split(false),
   fullscreentoggle(false),
   globalkeybinds(std::make_shared<KeyBinds>("Global"))
@@ -117,16 +116,15 @@ bool Ui::init() {
 
   global->getSettingsLoaderSaver()->addSettingsAdder(this);
 
-  thread.start("cbftp-ui", this);
-
-  initret = true;
-  uiqueue.push(UICommand(UI_COMMAND_INIT));
-  eventcomplete.wait();
-  if (!initret) {
+  if (!renderer.init()) {
     return false;
   }
-  legendwindow = std::make_shared<LegendWindow>(this, legend, 2, col);
-  infowindow = std::make_shared<InfoWindow>(this, info, 2, col);
+  mainrow = renderer.getRow();
+  col = renderer.getCol();
+  vv.resize(mainrow, col);
+
+  legendwindow = std::make_shared<LegendWindow>(this, 2, col);
+  infowindow = std::make_shared<InfoWindow>(this, 2, col);
   loginscreen = std::make_shared<LoginScreen>(this);
   newkeyscreen = std::make_shared<NewKeyScreen>(this);
   mainscreen = std::make_shared<MainScreen>(this);
@@ -217,81 +215,30 @@ bool Ui::init() {
   legendwindow->setMainLegendPrinter(legendprinterkeybinds);
 
   if (global->getSettingsLoaderSaver()->getState() == DataFileState::EXISTS_ENCRYPTED) {
-    loginscreen->initialize(mainrow, maincol);
+    loginscreen->initialize(mainrow, col);
     topwindow = loginscreen;
   }
   else {
-    mainscreen->initialize(mainrow, maincol);
+    mainscreen->initialize(mainrow, col);
     topwindow = mainscreen;
     enableInfo();
     enableLegend();
   }
   infowindow->setLabel(topwindow->getWideInfoLabel());
   std::cin.putback('#'); // needed to be able to peek properly
-  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+  vv.render();
+  renderer.refresh(infoenabled, legendenabled);
   global->getIOManager()->registerExternalFD(this, STDIN_FILENO);
   global->getTickPoke()->startPoke(this, "UI", 50, 0);
   return true;
-}
-
-void Ui::initIntern() {
-  setlocale(LC_ALL, "");
-  initscr();
-  cbreak();
-  curs_set(0);
-  refresh();
-  getmaxyx(stdscr, row, col);
-  if (row < 24 || col < 80) {
-    endwin();
-    printf("Error: terminal too small. 80x24 required. (Current %dx%d)\n", col, row);
-    initret = false;
-    eventcomplete.post();
-    return;
-  }
-#if NCURSES_EXT_FUNCS >= 20081102
-  set_escdelay(25);
-#else
-  ESCDELAY = 25;
-#endif
-#ifdef NCURSES_VERSION
-  define_key("\E[1;2A", TERMINT_SHIFT_UP);
-  define_key("\E[1;2B", TERMINT_SHIFT_DOWN);
-  define_key("\E[1;2C", TERMINT_SHIFT_RIGHT);
-  define_key("\E[1;2D", TERMINT_SHIFT_LEFT);
-  define_key("\E[1;5A", TERMINT_CTRL_UP);
-  define_key("\E[1;5B", TERMINT_CTRL_DOWN);
-  define_key("\E[1;5C", TERMINT_CTRL_RIGHT);
-  define_key("\E[1;5D", TERMINT_CTRL_LEFT);
-  define_key("\E[1;6C", TERMINT_CTRL_SHIFT_RIGHT);
-  define_key("\E[1;6D", TERMINT_CTRL_SHIFT_LEFT);
-  define_key("\EOH", TERMINT_HOME);
-  define_key("\EOF", TERMINT_END);
-  define_key("\EOa", TERMINT_CTRL_UP);
-  define_key("\EOb", TERMINT_CTRL_DOWN);
-  define_key("\EOc", TERMINT_CTRL_RIGHT);
-  define_key("\EOd", TERMINT_CTRL_LEFT);
-  define_key("\E[a", TERMINT_SHIFT_UP);
-  define_key("\E[b", TERMINT_SHIFT_DOWN);
-  define_key("\E[c", TERMINT_SHIFT_RIGHT);
-  define_key("\E[d", TERMINT_SHIFT_LEFT);
-  define_key("\E[7~", TERMINT_HOME);
-  define_key("\E[8~", TERMINT_END);
-#endif
-  mainrow = row;
-  maincol = col;
-  main = newwin(row, col, 0, 0);
-  legend = newwin(2, col, row - 2, 0);
-  info = newwin(2, col, 0, 0);
-  keypad(stdscr, TRUE);
-  noecho();
-  eventcomplete.post();
 }
 
 void Ui::backendPush() {
   haspushed = true;
   if (!pushused) {
     topwindow->update();
-    uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+    vv.render();
+    renderer.refresh(infoenabled, legendenabled);
     pushused = true;
   }
 }
@@ -306,13 +253,21 @@ void Ui::signal(int signal, int) {
 }
 
 void Ui::terminalSizeChanged() {
-  uiqueue.push(UICommand(UI_COMMAND_RESIZE));
-  eventcomplete.wait();
+  renderer.resize(infoenabled, legendenabled);
+  mainrow = renderer.getRow();
+  if (infoenabled) {
+    mainrow -= 2;
+  }
+  if (legendenabled) {
+    mainrow -= 2;
+  }
+  col = renderer.getCol();
+  vv.resize(mainrow, col);
   redrawAll();
-  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+  renderer.refresh(infoenabled, legendenabled);
 }
 
-LegendMode Ui::legendMode() const {
+LegendMode Ui::getLegendMode() const {
   return legendmode;
 }
 
@@ -332,33 +287,28 @@ void Ui::setLegendMode(LegendMode newmode) {
   }
 }
 
-void Ui::kill() {
-  uiqueue.push(UICommand(UI_COMMAND_KILL));
-  for (int i = 0; i < 10; i++) {
-    usleep(100000);
-    if (dead) {
-      break;
-    }
-  }
-  if (!dead) {
-    endwin();
-  }
+bool Ui::getHighlightEntireLine() const {
+  return highlightentireline;
 }
 
-void Ui::refreshAll() {
-  if (legendenabled) {
-    wnoutrefresh(legend);
-  }
-  if (infoenabled) {
-    wnoutrefresh(info);
-  }
-  wnoutrefresh(main);
-  doupdate();
+void Ui::setHighlightEntireLine(bool highlight) {
+  highlightentireline = highlight;
+}
+
+bool Ui::getShowXmasTree() const {
+  return showxmastree;
+}
+
+void Ui::setShowXmasTree(bool show) {
+  showxmastree = show;
+}
+
+void Ui::kill() {
+  renderer.kill();
 }
 
 void Ui::FDData(int sockid) {
-  wint_t wch;
-  get_wch(&wch);
+  unsigned int wch = renderer.read();
   if (!topwindow->keyPressedBase(wch)) {
     globalKeyBinds(wch);
   }
@@ -367,45 +317,53 @@ void Ui::FDData(int sockid) {
 void Ui::enableInfo() {
   if (!infoenabled) {
     infoenabled = true;
-    mainrow = mainrow - 2;
+    mainrow -= 2;
+    vv.resize(mainrow, col);
+    vv.reset();
     redrawAll();
-    uiqueue.push(UICommand(UI_COMMAND_ADJUST_INFO, true));
+    renderer.adjust(infoenabled, legendenabled);
   }
 }
 
 void Ui::disableInfo() {
   if (infoenabled) {
     infoenabled = false;
-    mainrow = mainrow + 2;
+    mainrow += 2;
+    vv.resize(mainrow, col);
+    vv.reset();
     redrawAll();
-    uiqueue.push(UICommand(UI_COMMAND_ADJUST_INFO, false));
+    renderer.adjust(infoenabled, legendenabled);
   }
 }
 
 void Ui::enableLegend() {
-  if (!legendenabled && legendMode() != LEGEND_DISABLED) {
+  if (!legendenabled && getLegendMode() != LEGEND_DISABLED) {
     legendenabled = true;
-    mainrow = mainrow - 2;
+    mainrow -= 2;
+    vv.resize(mainrow, col);
+    vv.reset();
     redrawAll();
-    uiqueue.push(UICommand(UI_COMMAND_ADJUST_LEGEND));
+    renderer.adjust(infoenabled, legendenabled);
   }
 }
 
 void Ui::disableLegend() {
   if (legendenabled) {
     legendenabled = false;
-    mainrow = mainrow + 2;
+    mainrow += 2;
+    vv.resize(mainrow, col);
+    vv.reset();
     redrawAll();
-    uiqueue.push(UICommand(UI_COMMAND_ADJUST_LEGEND));
+    renderer.adjust(infoenabled, legendenabled);
   }
 }
 
 void Ui::redrawAll() {
   std::vector<std::shared_ptr<UIWindow> >::iterator it;
   for (it = mainwindows.begin(); it != mainwindows.end(); it++) {
-    (*it)->resize(mainrow, maincol);
+    (*it)->resize(mainrow, col);
   }
-  if (legendMode() != LEGEND_DISABLED) {
+  if (getLegendMode() != LEGEND_DISABLED) {
     legendwindow->resize(2, col);
     legendwindow->redraw();
   }
@@ -414,9 +372,10 @@ void Ui::redrawAll() {
     infowindow->redraw();
   }
   if (!!topwindow) {
-    topwindow->resize(mainrow, maincol);
+    topwindow->resize(mainrow, col);
     topwindow->redraw();
   }
+  vv.render();
 }
 
 void Ui::tick(int message) {
@@ -424,6 +383,7 @@ void Ui::tick(int message) {
     bool refresh = false;
     if (topwindow->autoUpdate()) {
       topwindow->update();
+      vv.render();
       refresh = true;
     }
     if (legendenabled) {
@@ -435,7 +395,7 @@ void Ui::tick(int message) {
       infowindow->setText(topwindow->getWideInfoText());
     }
     if (refresh) {
-      uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+      renderer.refresh(infoenabled, legendenabled);
     }
   }
   pushused = false;
@@ -445,75 +405,7 @@ void Ui::tick(int message) {
   }
 }
 
-void Ui::run() {
-  while(1) {
-    UICommand command = uiqueue.pop();
-    switch (command.getCommand()) {
-      case UI_COMMAND_INIT:
-        initIntern();
-        break;
-      case UI_COMMAND_REFRESH:
-        refreshAll();
-        break;
-      case UI_COMMAND_HIGHLIGHT_OFF:
-        wattroff(command.getWindow(), A_REVERSE);
-        break;
-      case UI_COMMAND_HIGHLIGHT_ON:
-        wattron(command.getWindow(), A_REVERSE);
-        break;
-      case UI_COMMAND_CURSOR_SHOW:
-        curs_set(1);
-        break;
-      case UI_COMMAND_CURSOR_HIDE:
-        curs_set(0);
-        break;
-      case UI_COMMAND_CURSOR_MOVE:
-        TermInt::moveCursor(command.getWindow(), command.getRow(), command.getCol());
-        break;
-      case UI_COMMAND_ERASE:
-        werase(command.getWindow());
-        break;
-      case UI_COMMAND_PRINT_STR:
-        TermInt::printStr(command.getWindow(), command.getRow(), command.getCol(),
-            command.getText(), command.getMaxlen(), command.getRightAlign());
-        break;
-      case UI_COMMAND_PRINT_WIDE_STR:
-        TermInt::printStr(command.getWindow(), command.getRow(), command.getCol(),
-            command.getWideText(), command.getMaxlen(), command.getRightAlign());
-        break;
-      case UI_COMMAND_PRINT_CHAR:
-        TermInt::printChar(command.getWindow(), command.getRow(), command.getCol(),
-            command.getChar());
-        break;
-      case UI_COMMAND_RESIZE:
-        resizeTerm();
-        break;
-      case UI_COMMAND_ADJUST_LEGEND:
-        wresize(main, mainrow, maincol);
-        refreshAll();
-        break;
-      case UI_COMMAND_ADJUST_INFO:
-        wresize(main, mainrow, maincol);
-        if (command.getShow()) {
-          mvwin(main, 2, 0);
-        }
-        else {
-          mvwin(main, 0, 0);
-        }
-        refreshAll();
-        break;
-      case UI_COMMAND_KILL:
-        endwin();
-        dead = true;
-        return;
-      case UI_COMMAND_BELL:
-        beep();
-        break;
-    }
-  }
-}
-
-void Ui::switchToWindow(std::shared_ptr<UIWindow> window, bool allowsplit, bool doredraw) {
+void Ui::switchToWindow(const std::shared_ptr<UIWindow>& window, bool allowsplit, bool doredraw) {
   history.push_back(topwindow);
   if (split && !allowsplit) {
     setSplit(false);
@@ -522,10 +414,13 @@ void Ui::switchToWindow(std::shared_ptr<UIWindow> window, bool allowsplit, bool 
   infowindow->setLabel(window->getWideInfoLabel());
   infowindow->setText(window->getWideInfoText());
   topwindow = window;
+
   if (doredraw) {
+    vv.reset();
     topwindow->redraw();
   }
-  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+  vv.render();
+  renderer.refresh(infoenabled, legendenabled);
 }
 
 void Ui::globalKeyBinds(int ch) {
@@ -568,55 +463,24 @@ void Ui::globalKeyBinds(int ch) {
   }
 }
 
-void Ui::resizeTerm() {
-  struct winsize size;
-  bool trytodraw = false;
-  if (ioctl(fileno(stdout), TIOCGWINSZ, &size) == 0) {
-    if (size.ws_row >= 5 && size.ws_col >= 10) {
-      trytodraw = true;
-    }
-  }
-  if (trytodraw) {
-    resizeterm(size.ws_row, size.ws_col);
-    endwin();
-    timeout(0);
-    while (getch() != ERR);
-    timeout(-1);
-    refresh();
-    getmaxyx(stdscr, row, col);
-    unsigned int newmainrow = row;
-    if (legendenabled) {
-      newmainrow = newmainrow - 2;
-    }
-    if (infoenabled) {
-      newmainrow = newmainrow - 2;
-    }
-    maincol = col;
-    mainrow = newmainrow;
-    wresize(main, mainrow, maincol);
-    wresize(legend, 2, col);
-    wresize(info, 2, col);
-    mvwin(legend, row - 2, 0);
-  }
-  eventcomplete.post();
-}
-
 void Ui::returnToLast() {
   switchToLast();
   topwindow->redraw();
   infowindow->setText(topwindow->getWideInfoText());
-  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+  vv.render();
+  renderer.refresh(infoenabled, legendenabled);
 }
 
 void Ui::update() {
   topwindow->update();
-  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+  vv.render();
+  renderer.refresh(infoenabled, legendenabled);
 }
 
 void Ui::setLegend() {
   setLegendText(topwindow->getLegendText());
   infowindow->setText(topwindow->getWideInfoText());
-  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+  renderer.refresh(infoenabled, legendenabled);
 }
 
 void Ui::addTempLegendTransferJob(unsigned int id) {
@@ -632,9 +496,12 @@ void Ui::addTempLegendSpreadJob(unsigned int id) {
 }
 
 void Ui::setInfo() {
+  if (!topwindow) {
+    return;
+  }
   infowindow->setLabel(topwindow->getWideInfoLabel());
   infowindow->setText(topwindow->getWideInfoText());
-  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+  renderer.refresh(infoenabled, legendenabled);
 }
 
 void Ui::setSplit(bool split) {
@@ -649,272 +516,215 @@ void Ui::setSplit(bool split) {
 
 void Ui::redraw() {
   topwindow->redraw();
-  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+  vv.render();
+  renderer.refresh(infoenabled, legendenabled);
 }
 
 void Ui::hideCursor() {
-  uiqueue.push(UICommand(UI_COMMAND_CURSOR_HIDE));
+  renderer.hideCursor();
 }
 
 void Ui::showCursor() {
-  uiqueue.push(UICommand(UI_COMMAND_CURSOR_SHOW));
+  renderer.showCursor();
 }
 
-void Ui::erase() {
-  erase(main);
-}
-
-void Ui::erase(WINDOW * window) {
-  uiqueue.push(UICommand(UI_COMMAND_ERASE, window));
-}
-
-void Ui::moveCursor(unsigned int row, unsigned int col) {
-  uiqueue.push(UICommand(UI_COMMAND_CURSOR_MOVE, main, row, col));
-}
-
-void Ui::highlight(bool highlight, WINDOW * window) {
-  if (highlight) {
-    uiqueue.push(UICommand(UI_COMMAND_HIGHLIGHT_ON, window));
-  }
-  else {
-    uiqueue.push(UICommand(UI_COMMAND_HIGHLIGHT_OFF, window));
-  }
-}
-
-void Ui::printStr(unsigned int row, unsigned int col, const std::string & str, bool highlight, int maxlen, bool rightalign, WINDOW * window) {
-  if (!window) {
-    window = main;
-  }
-  if (highlight) {
-    this->highlight(true, window);
-  }
-  uiqueue.push(UICommand(UI_COMMAND_PRINT_STR, window, row, col, str, maxlen, rightalign));
-  if (highlight) {
-    this->highlight(false, window);
-  }
-}
-
-
-
-void Ui::printStr(unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str, bool highlight, int maxlen, bool rightalign, WINDOW * window) {
-  if (!window) {
-    window = main;
-  }
-  if (highlight) {
-    this->highlight(true, window);
-  }
-  uiqueue.push(UICommand(UI_COMMAND_PRINT_WIDE_STR, window, row, col, str, maxlen, rightalign));
-  if (highlight) {
-    this->highlight(false, window);
-  }
-}
-
-void Ui::printChar(unsigned int row, unsigned int col, unsigned int c, bool highlight, WINDOW * window) {
-  if (!window) {
-    window = main;
-  }
-  if (highlight) {
-    this->highlight(true, window);
-  }
-  uiqueue.push(UICommand(UI_COMMAND_PRINT_CHAR, window, row, col, c));
-  if (highlight) {
-    this->highlight(false, window);
-  }
+void Ui::highlight(bool highlight) {
+  renderer.highlight(highlight);
 }
 
 void Ui::goRawCommand(const std::string & site) {
-  rawcommandscreen->initialize(mainrow, maincol, site);
+  rawcommandscreen->initialize(mainrow, col, site);
   switchToWindow(rawcommandscreen);
 }
 
 void Ui::goRawCommand(const std::string & site, const Path & path, const std::string & arg) {
-  rawcommandscreen->initialize(mainrow, maincol, site, path, arg);
+  rawcommandscreen->initialize(mainrow, col, site, path, arg);
   switchToWindow(rawcommandscreen);
 }
 
 void Ui::goInfo(const std::string & message) {
-  confirmationscreen->initialize(mainrow, maincol, message, ConfirmationMode::INFO);
+  confirmationscreen->initialize(mainrow, col, message, ConfirmationMode::INFO);
   switchToWindow(confirmationscreen);
 }
 
 void Ui::goConfirmation(const std::string & message) {
-  confirmationscreen->initialize(mainrow, maincol, message, ConfirmationMode::NORMAL);
+  confirmationscreen->initialize(mainrow, col, message, ConfirmationMode::NORMAL);
   switchToWindow(confirmationscreen);
 }
 
 void Ui::goStrongConfirmation(const std::string & message) {
-  confirmationscreen->initialize(mainrow, maincol, message, ConfirmationMode::STRONG);
+  confirmationscreen->initialize(mainrow, col, message, ConfirmationMode::STRONG);
   switchToWindow(confirmationscreen);
 }
 
 void Ui::goNuke(const std::string & site, const std::string & items, const Path & path) {
-  nukescreen->initialize(mainrow, maincol, site, items, path);
+  nukescreen->initialize(mainrow, col, site, items, path);
   switchToWindow(nukescreen);
 }
 
 void Ui::goViewFile(const std::string & site, const std::string & file, const std::shared_ptr<FileList>& fl) {
-  viewfilescreen->initialize(mainrow, maincol, site, file, fl);
+  viewfilescreen->initialize(mainrow, col, site, file, fl);
   switchToWindow(viewfilescreen);
 }
 
 void Ui::goViewFile(const Path & dir, const std::string & file) {
-  viewfilescreen->initialize(mainrow, maincol, dir, file);
+  viewfilescreen->initialize(mainrow, col, dir, file);
   switchToWindow(viewfilescreen);
 }
 
 void Ui::goNewRace(const std::string & site, const std::list<std::string> & sections, const std::list<std::pair<std::string, bool> > & items) {
-  newracescreen->initialize(mainrow, maincol, site, sections, items);
+  newracescreen->initialize(mainrow, col, site, sections, items);
   switchToWindow(newracescreen);
 }
 
 void Ui::goSelectSites(const std::string & message, std::list<std::shared_ptr<Site> > currentsitelist, std::list<std::shared_ptr<Site> > excludedsitelist) {
-  selectsitesscreen->initializeExclude(mainrow, maincol, message, currentsitelist, excludedsitelist);
+  selectsitesscreen->initializeExclude(mainrow, col, message, currentsitelist, excludedsitelist);
   switchToWindow(selectsitesscreen);
 }
 
 void Ui::goSelectSitesFrom(const std::string & message, std::list<std::shared_ptr<Site> > currentsitelist, std::list<std::shared_ptr<Site> > sitelist) {
-  selectsitesscreen->initializeSelect(mainrow, maincol, message, currentsitelist, sitelist);
+  selectsitesscreen->initializeSelect(mainrow, col, message, currentsitelist, sitelist);
   switchToWindow(selectsitesscreen);
 }
 
 void Ui::goSelectSpreadJobs() {
-  selectjobsscreen->initialize(mainrow, maincol, JOBTYPE_SPREADJOB);
+  selectjobsscreen->initialize(mainrow, col, JOBTYPE_SPREADJOB);
   switchToWindow(selectjobsscreen);
 }
 
 void Ui::goSelectTransferJobs() {
-  selectjobsscreen->initialize(mainrow, maincol, JOBTYPE_TRANSFERJOB);
+  selectjobsscreen->initialize(mainrow, col, JOBTYPE_TRANSFERJOB);
   switchToWindow(selectjobsscreen);
 }
 
 void Ui::goSkiplist(SkipList * skiplist) {
-  skiplistscreen->initialize(mainrow, maincol, skiplist);
+  skiplistscreen->initialize(mainrow, col, skiplist);
   switchToWindow(skiplistscreen);
 }
 
 void Ui::goChangeKey() {
-  changekeyscreen->initialize(mainrow, maincol);
+  changekeyscreen->initialize(mainrow, col);
   switchToWindow(changekeyscreen);
 }
 
 void Ui::goProxy() {
-  proxyoptionsscreen->initialize(mainrow, maincol);
+  proxyoptionsscreen->initialize(mainrow, col);
   switchToWindow(proxyoptionsscreen);
 }
 
 void Ui::goFileViewerSettings() {
-  fileviewersettingsscreen->initialize(mainrow, maincol);
+  fileviewersettingsscreen->initialize(mainrow, col);
   switchToWindow(fileviewersettingsscreen);
 }
 
 void Ui::goSiteStatus(const std::string & site) {
-  sitestatusscreen->initialize(mainrow, maincol, site);
+  sitestatusscreen->initialize(mainrow, col, site);
   switchToWindow(sitestatusscreen);
 }
 
 void Ui::goRaceStatus(unsigned int id) {
-  racestatusscreen->initialize(mainrow, maincol, id);
+  racestatusscreen->initialize(mainrow, col, id);
   switchToWindow(racestatusscreen);
 }
 
 void Ui::goTransferJobStatus(unsigned int id) {
-  transferjobstatusscreen->initialize(mainrow, maincol, id);
+  transferjobstatusscreen->initialize(mainrow, col, id);
   switchToWindow(transferjobstatusscreen);
 }
 
 void Ui::goTransferStatus(std::shared_ptr<TransferStatus> ts) {
-  transferstatusscreen->initialize(mainrow, maincol, ts);
+  transferstatusscreen->initialize(mainrow, col, ts);
   switchToWindow(transferstatusscreen);
 }
 
 void Ui::goGlobalOptions() {
-  globaloptionsscreen->initialize(mainrow, maincol);
+  globaloptionsscreen->initialize(mainrow, col);
   switchToWindow(globaloptionsscreen);
 }
 
 void Ui::goEventLog() {
-  eventlogscreen->initialize(mainrow, maincol);
+  eventlogscreen->initialize(mainrow, col);
   switchToWindow(eventlogscreen);
 }
 
 void Ui::goScoreBoard() {
-  scoreboardscreen->initialize(mainrow, maincol);
+  scoreboardscreen->initialize(mainrow, col);
   switchToWindow(scoreboardscreen);
 }
 
 void Ui::goTransfers() {
-  transfersscreen->initialize(mainrow, maincol);
+  transfersscreen->initialize(mainrow, col);
   switchToWindow(transfersscreen);
 }
 
 void Ui::goTransfersFilterSite(const std::string& site) {
-  transfersscreen->initializeFilterSite(mainrow, maincol, site);
+  transfersscreen->initializeFilterSite(mainrow, col, site);
   switchToWindow(transfersscreen);
 }
 
 void Ui::goTransfersFilterSpreadJob(const std::string& job) {
-  transfersscreen->initializeFilterSpreadJob(mainrow, maincol, job);
+  transfersscreen->initializeFilterSpreadJob(mainrow, col, job);
   switchToWindow(transfersscreen);
 }
 
 void Ui::goTransfersFilterTransferJob(const std::string& job) {
-  transfersscreen->initializeFilterTransferJob(mainrow, maincol, job);
+  transfersscreen->initializeFilterTransferJob(mainrow, col, job);
   switchToWindow(transfersscreen);
 }
 
 void Ui::goTransfersFilterSpreadJobSite(const std::string& job, const std::string& site) {
-  transfersscreen->initializeFilterSpreadJobSite(mainrow, maincol, job, site);
+  transfersscreen->initializeFilterSpreadJobSite(mainrow, col, job, site);
   switchToWindow(transfersscreen);
 }
 
 void Ui::returnTransferFilters(const TransferFilteringParameters& tfp) {
-  transfersscreen->initialize(mainrow, maincol, tfp);
+  transfersscreen->initialize(mainrow, col, tfp);
   switchToLast();
-  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+  renderer.refresh(infoenabled, legendenabled);
 }
 
 void Ui::goTransfersFiltering(const TransferFilteringParameters& tfp) {
-  transfersfilterscreen->initialize(mainrow, maincol, tfp);
+  transfersfilterscreen->initialize(mainrow, col, tfp);
   switchToWindow(transfersfilterscreen);
 }
 
 void Ui::goEditSite(const std::string& site) {
-  editsitescreen->initialize(mainrow, maincol, "edit", site);
+  editsitescreen->initialize(mainrow, col, "edit", site);
   switchToWindow(editsitescreen);
 }
 
 void Ui::goAddSite() {
-  editsitescreen->initialize(mainrow, maincol, "add", "");
+  editsitescreen->initialize(mainrow, col, "add", "");
   switchToWindow(editsitescreen);
 }
 
 void Ui::goBrowse(const std::string& site, const Path& path) {
-  browsescreen->initializeSite(mainrow, maincol, site, path);
+  browsescreen->initializeSite(mainrow, col, site, path);
   switchToWindow(browsescreen);
 }
 
 void Ui::goBrowseSection(const std::string& site, const std::string& section) {
-  browsescreen->initializeSite(mainrow, maincol, site, section);
+  browsescreen->initializeSite(mainrow, col, site, section);
   switchToWindow(browsescreen);
 }
 
 void Ui::goBrowseSplit(const std::string& site) {
-  browsescreen->initializeSplit(mainrow, maincol, site);
+  browsescreen->initializeSplit(mainrow, col, site);
   switchToWindow(browsescreen, true);
 }
 
 void Ui::goBrowseSplit(const std::string& site, const Path& sitepath, const Path& localpath) {
-  browsescreen->initializeSiteLocal(mainrow, maincol, site, sitepath, localpath);
+  browsescreen->initializeSiteLocal(mainrow, col, site, sitepath, localpath);
   switchToWindow(browsescreen, true);
 }
 
 void Ui::goBrowseSplit(const std::string& leftsite, const std::string& rightsite, const Path& leftpath, const Path& rightpath) {
-  browsescreen->initializeSiteSite(mainrow, maincol, leftsite, rightsite, leftpath, rightpath);
+  browsescreen->initializeSiteSite(mainrow, col, leftsite, rightsite, leftpath, rightpath);
   switchToWindow(browsescreen, true);
 }
 
 void Ui::goBrowseLocal() {
-  browsescreen->initializeLocal(mainrow, maincol);
+  browsescreen->initializeLocal(mainrow, col);
   switchToWindow(browsescreen);
 }
 
@@ -925,155 +735,157 @@ void Ui::goContinueBrowsing() {
 }
 
 void Ui::goAddProxy() {
-  editproxyscreen->initialize(mainrow, maincol, "add", "");
+  editproxyscreen->initialize(mainrow, col, "add", "");
   switchToWindow(editproxyscreen);
 }
 
 void Ui::goEditProxy(const std::string& proxy) {
-  editproxyscreen->initialize(mainrow, maincol, "edit", proxy);
+  editproxyscreen->initialize(mainrow, col, "edit", proxy);
   switchToWindow(editproxyscreen);
 }
 
 void Ui::goRawData(const std::string& site) {
-  rawdatascreen->initialize(mainrow, maincol, site, 0);
+  rawdatascreen->initialize(mainrow, col, site, 0);
   switchToWindow(rawdatascreen);
 }
 
 void Ui::goRawDataJump(const std::string& site, int id) {
-  rawdatascreen->initialize(mainrow, maincol, site, id);
+  rawdatascreen->initialize(mainrow, col, site, id);
   topwindow = rawdatascreen;
   infowindow->setLabel(topwindow->getWideInfoLabel());
   infowindow->setText(topwindow->getWideInfoText());
-  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+  vv.render();
+  renderer.refresh(infoenabled, legendenabled);
 }
 
 void Ui::goRawBuffer(RawBuffer * rawbuf, const std::string & label, const std::string & infotext) {
-  rawcommandscreen->initialize(mainrow, maincol, rawbuf, label, infotext);
+  rawcommandscreen->initialize(mainrow, col, rawbuf, label, infotext);
   switchToWindow(rawcommandscreen);
 }
 
 void Ui::goAllRaces() {
-  allracesscreen->initialize(mainrow, maincol);
+  allracesscreen->initialize(mainrow, col);
   switchToWindow(allracesscreen);
 }
 
 void Ui::goAllTransferJobs() {
-  alltransferjobsscreen->initialize(mainrow, maincol);
+  alltransferjobsscreen->initialize(mainrow, col);
   switchToWindow(alltransferjobsscreen);
 }
 
 void Ui::goInfo() {
-  infoscreen->initialize(mainrow, maincol);
+  infoscreen->initialize(mainrow, col);
   switchToWindow(infoscreen);
 }
 
 void Ui::goMakeDir(const std::string & site, UIFileList & filelist) {
-  makedirscreen->initialize(mainrow, maincol, site, filelist);
+  makedirscreen->initialize(mainrow, col, site, filelist);
   switchToWindow(makedirscreen);
 }
 
 void Ui::goSiteSlots(const std::shared_ptr<Site> & site) {
-  siteslotsscreen->initialize(mainrow, maincol, site);
+  siteslotsscreen->initialize(mainrow, col, site);
   switchToWindow(siteslotsscreen);
 }
 
 void Ui::goSections() {
-  sectionsscreen->initialize(mainrow, maincol);
+  sectionsscreen->initialize(mainrow, col);
   switchToWindow(sectionsscreen);
 }
 
 void Ui::goSelectSection(const std::list<std::string>& preselected) {
-  sectionsscreen->initialize(mainrow, maincol, true, preselected);
+  sectionsscreen->initialize(mainrow, col, true, preselected);
   switchToWindow(sectionsscreen);
 }
 
 void Ui::goSiteSections(const std::shared_ptr<Site> & site) {
-  sitesectionsscreen->initialize(mainrow, maincol, site);
+  sitesectionsscreen->initialize(mainrow, col, site);
   switchToWindow(sitesectionsscreen);
 }
 
 void Ui::goEditSection(const std::string & name) {
-  editsectionscreen->initialize(mainrow, maincol, name);
+  editsectionscreen->initialize(mainrow, col, name);
   switchToWindow(editsectionscreen);
 }
 
 void Ui::goAddSection() {
-  editsectionscreen->initialize(mainrow, maincol);
+  editsectionscreen->initialize(mainrow, col);
   switchToWindow(editsectionscreen);
 }
 
 void Ui::goAddSiteSection(const std::shared_ptr<Site> & site, const Path & path) {
-  editsitesectionscreen->initialize(mainrow, maincol, site, path);
+  editsitesectionscreen->initialize(mainrow, col, site, path);
   switchToWindow(editsitesectionscreen);
 }
 
 void Ui::goEditSiteSection(const std::shared_ptr<Site> & site, const std::string & section) {
-  editsitesectionscreen->initialize(mainrow, maincol, site, section);
+  editsitesectionscreen->initialize(mainrow, col, site, section);
   switchToWindow(editsitesectionscreen);
 }
 
 void Ui::goSnake() {
-  snakescreen->initialize(mainrow, maincol);
+  snakescreen->initialize(mainrow, col);
   switchToWindow(snakescreen);
 }
 
 void Ui::goEnableEncryption() {
-  newkeyscreen->initialize(mainrow, maincol);
+  newkeyscreen->initialize(mainrow, col);
   switchToWindow(newkeyscreen);
 }
 
 void Ui::goDisableEncryption() {
-  disableencryptionscreen->initialize(mainrow, maincol);
+  disableencryptionscreen->initialize(mainrow, col);
   switchToWindow(disableencryptionscreen);
 }
 
 void Ui::goMove(const std::string& site, const std::string& items, const Path& srcpath, const std::string& dstpath, const std::string& firstitem) {
-  movescreen->initialize(mainrow, maincol, site, items, srcpath, dstpath, firstitem);
+  movescreen->initialize(mainrow, col, site, items, srcpath, dstpath, firstitem);
   switchToWindow(movescreen);
 }
 
 void Ui::goFileInfo(UIFile* uifile) {
-  fileinfoscreen->initialize(mainrow, maincol, uifile);
+  fileinfoscreen->initialize(mainrow, col, uifile);
   switchToWindow(fileinfoscreen);
 }
 
 void Ui::goKeyBinds(KeyBinds* keybinds) {
-  keybindsscreen->initialize(mainrow, maincol, keybinds);
+  keybindsscreen->initialize(mainrow, col, keybinds);
   switchToWindow(keybindsscreen);
 }
 
 void Ui::goGlobalKeyBinds() {
-  keybindsscreen->initialize(mainrow, maincol, globalkeybinds.get());
+  keybindsscreen->initialize(mainrow, col, globalkeybinds.get());
   switchToWindow(keybindsscreen);
 }
 
 void Ui::goMetrics() {
-  metricsscreen->initialize(mainrow, maincol);
+  metricsscreen->initialize(mainrow, col);
   switchToWindow(metricsscreen);
 }
 
 void Ui::goTransferPairing(TransferPairing* transferpairing) {
-  transferpairingscreen->initialize(mainrow, maincol, transferpairing);
+  transferpairingscreen->initialize(mainrow, col, transferpairing);
   switchToWindow(transferpairingscreen);
 }
 
 void Ui::returnSelectItems(const std::string & items) {
   switchToLast();
   topwindow->command("returnselectitems", items);
-  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+  renderer.refresh(infoenabled, legendenabled);
 }
 
 void Ui::key(const std::string & key) {
   bool result = global->getSettingsLoaderSaver()->tryDecrypt(key);
   if (result) {
-    mainscreen->initialize(mainrow, maincol);
+    mainscreen->initialize(mainrow, col);
     switchToWindow(mainscreen);
     enableInfo();
     enableLegend();
   }
   else {
     topwindow->update();
-    uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+    vv.render();
+    renderer.refresh(infoenabled, legendenabled);
   }
 }
 
@@ -1085,38 +897,38 @@ void Ui::newKey(const std::string & newkey) {
 void Ui::confirmYes() {
   switchToLast();
   topwindow->command("yes");
-  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+  renderer.refresh(infoenabled, legendenabled);
 }
 
 void Ui::confirmNo() {
   switchToLast();
   topwindow->command("no");
-  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+  renderer.refresh(infoenabled, legendenabled);
 }
 
 void Ui::returnNuke(int multiplier, const std::string & reason) {
   switchToLast();
   topwindow->command("nuke", std::to_string(multiplier) + ";" + reason);
-  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+  renderer.refresh(infoenabled, legendenabled);
 }
 
 void Ui::returnRaceStatus(unsigned int id) {
   history.clear();
   topwindow = mainscreen;
-  racestatusscreen->initialize(mainrow, maincol, id);
+  racestatusscreen->initialize(mainrow, col, id);
   switchToWindow(racestatusscreen);
 }
 
 void Ui::returnMakeDir(const std::string & dirname) {
   switchToLast();
   topwindow->command("makedir", dirname);
-  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+  renderer.refresh(infoenabled, legendenabled);
 }
 
 void Ui::returnMove(const std::string& dstpath) {
   switchToLast();
   topwindow->command("move", dstpath);
-  uiqueue.push(UICommand(UI_COMMAND_REFRESH));
+  renderer.refresh(infoenabled, legendenabled);
 }
 
 void Ui::setLegendText(const std::string& legendtext) {
@@ -1125,6 +937,7 @@ void Ui::setLegendText(const std::string& legendtext) {
   legendwindow->update();
 }
 void Ui::switchToLast() {
+  vv.reset();
   if (split) {
     setSplit(false);
   }
@@ -1146,16 +959,11 @@ void Ui::loadSettings(std::shared_ptr<DataFileHandler> dfh) {
     size_t tok = line.find('=');
     std::string setting = line.substr(0, tok);
     std::string value = line.substr(tok + 1);
-    if (!setting.compare("legend")) {
-      if (!value.compare("true")) {
-        setLegendMode(LEGEND_SCROLLING);
-      }
-      else {
-        setLegendMode(LEGEND_DISABLED);
-      }
-    }
-    else if (!setting.compare("legendmode")) {
+    if (!setting.compare("legendmode")) {
       setLegendMode((LegendMode) std::stoi(value));
+    }
+    else if (!setting.compare("highlightentireline")) {
+      setHighlightEntireLine(!value.compare("true"));
     }
     else if (!setting.compare("keybind")) {
       std::vector<std::string> tokens = util::splitVec(value, "$");
@@ -1179,7 +987,8 @@ void Ui::loadSettings(std::shared_ptr<DataFileHandler> dfh) {
 }
 
 void Ui::saveSettings(std::shared_ptr<DataFileHandler> dfh) {
-  dfh->addOutputLine("UI", "legendmode=" + std::to_string(legendMode()));
+  dfh->addOutputLine("UI", "legendmode=" + std::to_string(getLegendMode()));
+  dfh->addOutputLine("UI", "highlightentireline=" + std::string(getHighlightEntireLine() ? "true" : "false"));
   for (const KeyBinds* keybinds : allkeybinds) {
     for (std::list<KeyBinds::KeyData>::const_iterator it = keybinds->begin(); it != keybinds->end(); ++it) {
       if (it->configuredkeys != it->originalkeys) {
@@ -1194,11 +1003,7 @@ void Ui::saveSettings(std::shared_ptr<DataFileHandler> dfh) {
 }
 
 void Ui::notify() {
-  uiqueue.push(UICommand(UI_COMMAND_BELL));
-}
-
-WINDOW * Ui::getLegendWindow() const {
-  return legend;
+  renderer.bell();
 }
 
 void Ui::requestReady(void* service, int requestid) {
@@ -1220,3 +1025,11 @@ void Ui::removeKeyBinds(KeyBinds* keybinds) {
 bool Ui::isTop(const UIWindow* window) const {
   return window == topwindow.get();
 }
+
+Renderer& Ui::getRenderer() {
+  return renderer;
+}
+VirtualView& Ui::getVirtualView() {
+  return vv;
+}
+

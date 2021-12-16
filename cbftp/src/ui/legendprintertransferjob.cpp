@@ -12,7 +12,7 @@
 
 #include "ui.h"
 
-LegendPrinterTransferJob::LegendPrinterTransferJob(Ui * ui, unsigned int id) : ui(ui), jobfinishedprintcount(0) {
+LegendPrinterTransferJob::LegendPrinterTransferJob(Ui * ui, unsigned int id) : ui(ui), mso(ui->getVirtualView()), jobfinishedprintcount(0) {
   transferjob = global->getEngine()->getTransferJob(id);
 }
 
@@ -97,7 +97,7 @@ bool LegendPrinterTransferJob::print() {
   }
   for (unsigned int i = 4; i < col - 4; i++) {
     bool highlight = i <= highlightuntilpos;
-    ui->printChar(1, i, ' ', highlight, ui->getLegendWindow());
+    ui->getRenderer().printChar(1, i, ' ', highlight, false, -1, Window::LEGEND);
   }
   for (unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(mso.getElement(i));
@@ -107,7 +107,7 @@ bool LegendPrinterTransferJob::print() {
     std::string text = re->getLabelText();
     for (unsigned int i = 0; i < text.length(); i++) {
       bool highlight = i + re->getCol() <= highlightuntilpos;
-      ui->printChar(re->getRow(), re->getCol() + i, text[i], highlight, ui->getLegendWindow());
+      ui->getRenderer().printChar(re->getRow(), re->getCol() + i, text[i], highlight, false, -1, Window::LEGEND);
     }
   }
   if (jobfinishedprintcount >= 20) {

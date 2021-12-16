@@ -13,7 +13,6 @@ public:
   SectionsScreen(Ui *);
   ~SectionsScreen();
   void initialize(unsigned int row, unsigned int col, bool selectsection = false, const std::list<std::string>& preselected = std::list<std::string>());
-  void update() override;
   void redraw() override;
   bool keyPressed(unsigned int) override;
   std::string getLegendText() const override;
@@ -34,7 +33,7 @@ private:
   MenuSelectOption table;
   unsigned int currentviewspan;
   unsigned int ypos;
-  int temphighlightline;
+  bool temphighlightline;
   bool hascontents;
   unsigned int totallistsize;
   Mode mode;

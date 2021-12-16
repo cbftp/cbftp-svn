@@ -24,12 +24,13 @@
 
 BrowseScreenLocal::BrowseScreenLocal(Ui* ui, KeyBinds& keybinds,
     const Path& path) : BrowseScreenSub(keybinds),
-    ui(ui), currentviewspan(0), focus(true), spinnerpos(0), tickcount(0),
+    ui(ui), currentviewspan(0), focus(true), table(ui->getVirtualView()), spinnerpos(0), tickcount(0),
     resort(false), sortmethod(UIFileList::SortMethod::COMBINED), gotomode(false), gotomodefirst(false),
-    gotomodeticker(0), filtermodeinput(false), filtermodeinputregex(false), temphighlightline(-1),
+    gotomodeticker(0), filtermodeinput(false), filtermodeinputregex(false), temphighlightline(false),
     softselecting(false), lastinfo(LastInfo::NONE), refreshfilelistafter(false), freespace(0),
     nameonly(false)
 {
+  vv = &ui->getVirtualView();
   BrowseScreenRequest request;
   request.type = BrowseScreenRequestType::FILELIST;
   request.path = path != "" ? path :global->getLocalStorage()->getDownloadPath();
@@ -87,41 +88,36 @@ void BrowseScreenLocal::redraw(unsigned int row, unsigned int col, unsigned int 
   }
   table.adjustLines(col - 3);
   table.checkPointer();
-  if (temphighlightline != -1) {
-    std::shared_ptr<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
-    if (!!highlightline) {
-      std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
-      for (unsigned int i = minmaxcol.first; i <= minmaxcol.second; i++) {
-        ui->printChar(temphighlightline, i, ' ', true);
-      }
-    }
-  }
+  std::shared_ptr<MenuSelectAdjustableLine> highlightline;
   for (unsigned int i = 0; i < table.size(); i++) {
     std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(i));
-    bool highlight = false;
     bool cursored = table.getSelectionPointer() == i;
     bool softselected = re->getOrigin() && static_cast<UIFile *>(re->getOrigin())->isSoftSelected();
     bool hardselected = re->getOrigin() && static_cast<UIFile *>(re->getOrigin())->isHardSelected();
-    if (cursored || (int)re->getRow() == temphighlightline || softselected || hardselected)
-    {
-      highlight = true;
-    }
+    bool highlight = cursored || softselected || hardselected;
     if (re->isVisible()) {
       if ((cursored && softselected) || (cursored && hardselected) || (softselected && hardselected)) {
         printFlipped(ui, re);
       }
       else {
-        ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight && focus);
+        vv->putStr(re->getRow(), re->getCol(), re->getLabelText(), highlight && focus);
       }
     }
+    if (cursored && (temphighlightline ^ ui->getHighlightEntireLine())) {
+      highlightline = table.getAdjustableLine(re);
+    }
   }
-  printSlider(ui, row, coloffset + col - 1, listsize, currentviewspan);
+  if (highlightline) {
+    std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
+    vv->highlightOn(highlightline->getRow(), minmaxcol.first, minmaxcol.second - minmaxcol.first + 1);
+  }
+  printSlider(vv, row, coloffset + col - 1, listsize, currentviewspan);
 
   if (!list.isInitialized()) {
-    ui->printStr(0, coloffset + 3, "Loading file list...");
+    vv->putStr(0, coloffset + 3, "Loading file list...");
   }
   else if (listsize == 0) {
-    ui->printStr(0, coloffset + 3, "(empty directory)");
+    vv->putStr(0, coloffset + 3, "(empty directory)");
   }
   if (filtermodeinput || filtermodeinputregex) {
     std::string oldtext = filterfield.getData();
@@ -140,26 +136,37 @@ void BrowseScreenLocal::update() {
     std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(table.getLastSelectionPointer()));
     bool softselected = re->getOrigin() && static_cast<UIFile *>(re->getOrigin())->isSoftSelected();
     bool hardselected = re->getOrigin() && static_cast<UIFile *>(re->getOrigin())->isHardSelected();
+    std::shared_ptr<MenuSelectAdjustableLine> highlightline = table.getAdjustableLine(re);
+    std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
+    vv->highlightOff(highlightline->getRow(), minmaxcol.first, minmaxcol.second - minmaxcol.first + 1);
     if (softselected && hardselected) {
       printFlipped(ui, re);
     }
     else {
-      ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), softselected || hardselected);
+      vv->putStr(re->getRow(), re->getCol(), re->getLabelText(), softselected || hardselected);
     }
     re = std::static_pointer_cast<ResizableElement>(table.getElement(table.getSelectionPointer()));
     bool selected = re->getOrigin() && (static_cast<UIFile *>(re->getOrigin())->isSoftSelected() ||
                                         static_cast<UIFile *>(re->getOrigin())->isHardSelected());
+    highlightline = table.getAdjustableLine(re);
+    minmaxcol = highlightline->getMinMaxCol();
+    if (temphighlightline ^ ui->getHighlightEntireLine()) {
+      vv->highlightOn(highlightline->getRow(), minmaxcol.first, minmaxcol.second - minmaxcol.first + 1);
+    }
+    else {
+      vv->highlightOff(highlightline->getRow(), minmaxcol.first, minmaxcol.second - minmaxcol.first + 1);
+    }
     if (selected && focus) {
       printFlipped(ui, re);
     }
     else {
-      ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), focus);
+      vv->putStr(re->getRow(), re->getCol(), re->getLabelText(), focus);
     }
   }
   if (filtermodeinput || filtermodeinputregex) {
     std::string pretag = filtermodeinput ? "[Filter(s)]: " : "[Regex filter]: ";
-    ui->printStr(filterfield.getRow(), coloffset + filterfield.getCol(), pretag + filterfield.getContentText());
-    ui->moveCursor(filterfield.getRow(), coloffset + filterfield.getCol() + pretag.length() + filterfield.cursorPosition());
+    vv->putStr(filterfield.getRow(), coloffset + filterfield.getCol(), pretag + filterfield.getContentText());
+    vv->moveCursor(filterfield.getRow(), coloffset + filterfield.getCol() + pretag.length() + filterfield.cursorPosition());
   }
 }
 
@@ -256,8 +263,8 @@ void BrowseScreenLocal::command(const std::string & command, const std::string &
 
 BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
-  if (temphighlightline != -1) {
-    temphighlightline = -1;
+  if (temphighlightline) {
+    temphighlightline = false;
     ui->redraw();
     if (action == KEYACTION_HIGHLIGHT_LINE) {
       return BrowseScreenAction();
@@ -641,7 +648,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       if (list.cursoredFile() == NULL) {
         break;
       }
-      temphighlightline = table.getElement(table.getSelectionPointer())->getRow();
+      temphighlightline = true;
       ui->redraw();
       break;
     case KEYACTION_INFO:

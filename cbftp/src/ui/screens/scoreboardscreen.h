@@ -14,7 +14,6 @@ public:
   ~ScoreBoardScreen();
   void initialize(unsigned int, unsigned int);
   void redraw();
-  void update();
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;

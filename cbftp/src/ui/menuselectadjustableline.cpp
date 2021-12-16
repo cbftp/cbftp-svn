@@ -32,14 +32,29 @@ std::shared_ptr<ResizableElement> MenuSelectAdjustableLine::getElement(unsigned 
   return elements[pos];
 }
 
-std::pair<unsigned int, unsigned int> MenuSelectAdjustableLine::getMinMaxCol() const {
+std::pair<unsigned int, unsigned int> MenuSelectAdjustableLine::getMinMaxCol(bool usecontent) const {
   if (elements.empty()) {
     return std::pair<unsigned int, unsigned int>(0, 0);
   }
   unsigned int min = elements[0]->getCol();
-  const std::shared_ptr<ResizableElement> & maxelem = elements[elements.size() - 1];
-  unsigned int max = maxelem->getCol() + maxelem->getLabelText().length() - 1;
+  unsigned int maxelempos = elements.size() - 1;
+  std::shared_ptr<ResizableElement> maxelem = elements[0];
+  while (maxelempos > 0) {
+    const std::shared_ptr<ResizableElement>& tmpmaxelem = elements[maxelempos--];
+    if (tmpmaxelem->isVisible()) {
+      maxelem = tmpmaxelem;
+      break;
+    }
+  }
+  unsigned int max = maxelem->getCol() + (usecontent ? maxelem->getContentText().length() : maxelem->getLabelText().length()) - 1;
   return std::pair<unsigned int, unsigned int>(min, max);
+}
+
+unsigned int MenuSelectAdjustableLine::getRow() const {
+  if (elements.empty()) {
+    return 0;
+  }
+  return elements[0]->getRow();
 }
 
 unsigned int MenuSelectAdjustableLine::size() const {

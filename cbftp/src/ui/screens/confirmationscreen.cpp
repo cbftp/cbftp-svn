@@ -15,14 +15,24 @@ void ConfirmationScreen::initialize(unsigned int row, unsigned int col, const st
 }
 
 void ConfirmationScreen::redraw() {
-  ui->erase();
+  vv->clear();
   std::list<std::string> text = TextWrap::wrap(mode == ConfirmationMode::NORMAL ? (message + " (y/N)?") : message, col - 2);
   unsigned int y = 1;
   for (const std::string & line : text) {
-    ui->printStr(y++, 1, line);
+    vv->putStr(y++, 1, line);
   }
   if (mode == ConfirmationMode::STRONG) {
-    ui->printStr(y++, 1, "WARNING! Strong confirmation required. Please type \"yes\" to confirm.");
+    vv->putStr(y++, 1, "WARNING! Strong confirmation required. Please type \"yes\" to confirm.");
+  }
+  y++;
+  if (strongconfirmstep >= 1) {
+    vv->putChar(y, 1, 'y');
+  }
+  if (strongconfirmstep >= 2) {
+    vv->putChar(y, 2, 'e');
+  }
+  if (strongconfirmstep >= 3) {
+    vv->putChar(y, 2, 's');
   }
 }
 
@@ -42,9 +52,11 @@ bool ConfirmationScreen::keyPressed(unsigned int ch) {
     case ConfirmationMode::STRONG:
       if (strongconfirmstep == 0 && (ch == 'y' || ch == 'Y')) {
         ++strongconfirmstep;
+        ui->redraw();
       }
       else if (strongconfirmstep == 1 && (ch == 'e' || ch == 'E')) {
         ++strongconfirmstep;
+        ui->redraw();
       }
       else if (strongconfirmstep == 2 && (ch == 's' || ch == 'S')) {
         ui->confirmYes();

@@ -15,7 +15,6 @@ public:
   NukeScreen(Ui *);
   ~NukeScreen();
   void initialize(unsigned int row, unsigned int col, const std::string & sitestr, const std::string & items, const Path & path);
-  void update();
   void redraw();
   bool keyPressed(unsigned int);
   std::string getLegendText() const;

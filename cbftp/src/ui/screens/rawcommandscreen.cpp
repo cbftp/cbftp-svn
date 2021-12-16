@@ -80,24 +80,24 @@ void RawCommandScreen::initialize(unsigned int row, unsigned int col, RawBuffer 
 }
 
 void RawCommandScreen::redraw() {
-  ui->erase();
+  vv->clear();
   std::string oldtext = rawcommandfield.getData();
-  rawcommandfield = MenuSelectOptionTextField("rawcommand", row-1, 10, "", oldtext, col-10, 65536, false);
+  rawcommandfield = MenuSelectOptionTextField("rawcommand", row-1, 10, "", oldtext, col-15, 65536, false);
   fixCopyReadPos();
   update();
 }
 
 void RawCommandScreen::update() {
-  ui->erase();
+  vv->clear();
   unsigned int rownum = row;
   if (allowinput) {
     rownum--;
     ui->showCursor();
     std::string pretag = "[Raw command]: ";
-    ui->printStr(rownum, 0, pretag + rawcommandfield.getContentText());
-    ui->moveCursor(rownum, pretag.length() + rawcommandfield.cursorPosition());
+    vv->putStr(rownum, 0, pretag + rawcommandfield.getContentText());
+    vv->moveCursor(rownum, pretag.length() + rawcommandfield.cursorPosition());
   }
-  RawDataScreen::printRawBufferLines(ui, rawbuf, rownum, col, 0, readfromcopy, copyreadpos);
+  RawDataScreen::printRawBufferLines(vv, rawbuf, rownum, col, 0, readfromcopy, copyreadpos);
 }
 
 bool RawCommandScreen::keyPressed(unsigned int ch) {

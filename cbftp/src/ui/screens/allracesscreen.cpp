@@ -22,7 +22,7 @@ enum KeyAction {
 
 }
 
-AllRacesScreen::AllRacesScreen(Ui* ui) : UIWindow(ui, "AllRacesScreen") {
+AllRacesScreen::AllRacesScreen(Ui* ui) : UIWindow(ui, "AllRacesScreen"), table(*vv) {
   keybinds.addBind(10, KEYACTION_ENTER, "Details");
   keybinds.addBind('r', KEYACTION_RESET, "Reset job");
   keybinds.addBind('R', KEYACTION_RESET_HARD, "Hard reset job");
@@ -45,7 +45,7 @@ void AllRacesScreen::initialize(unsigned int row, unsigned int col) {
   hascontents = false;
   currentviewspan = 0;
   ypos = 0;
-  temphighlightline = -1;
+  temphighlightline = false;
   engine = global->getEngine();
   table.reset();
   table.enterFocusFrom(0);
@@ -53,7 +53,7 @@ void AllRacesScreen::initialize(unsigned int row, unsigned int col) {
 }
 
 void AllRacesScreen::redraw() {
-  ui->erase();
+  vv->clear();
   unsigned int y = 0;
   unsigned int listspan = row - 1;
   unsigned int totallistsize = engine->allRaces();
@@ -84,31 +84,22 @@ void AllRacesScreen::redraw() {
   table.checkPointer();
   hascontents = table.linesSize() > 1;
   table.adjustLines(col - 3);
-  if (temphighlightline != -1) {
-    std::shared_ptr<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
-    if (!!highlightline) {
-      std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
-      for (unsigned int i = minmaxcol.first; i <= minmaxcol.second; i++) {
-        ui->printChar(temphighlightline, i, ' ', true);
-      }
-    }
-  }
-  bool highlight;
+  std::shared_ptr<MenuSelectAdjustableLine> highlightline;
   for (unsigned int i = 0; i < table.size(); i++) {
     std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(i));
-    highlight = false;
-    if (hascontents && (table.getSelectionPointer() == i  || (int)re->getRow() == temphighlightline)) {
-      highlight = true;
-    }
+    bool highlight = hascontents && table.getSelectionPointer() == i;
     if (re->isVisible()) {
-      ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
+      vv->putStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
+    }
+    if (highlight && (temphighlightline ^ ui->getHighlightEntireLine())) {
+      highlightline = table.getAdjustableLine(re);
     }
   }
-  printSlider(ui, row, 1, col - 1, totallistsize, currentviewspan);
-}
-
-void AllRacesScreen::update() {
-  redraw();
+  if (highlightline) {
+    std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
+    vv->highlightOn(highlightline->getRow(), minmaxcol.first, minmaxcol.second - minmaxcol.first + 1);
+  }
+  printSlider(vv, row, 1, col - 1, totallistsize, currentviewspan);
 }
 
 void AllRacesScreen::command(const std::string & command, const std::string & arg) {
@@ -131,8 +122,8 @@ void AllRacesScreen::command(const std::string & command, const std::string & ar
 
 bool AllRacesScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
-  if (temphighlightline != -1) {
-    temphighlightline = -1;
+  if (temphighlightline) {
+    temphighlightline = false;
     ui->redraw();
     if (action == KEYACTION_HIGHLIGHT_LINE) {
       return true;
@@ -238,7 +229,7 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
       if (!hascontents) {
         break;
       }
-      temphighlightline = table.getElement(table.getSelectionPointer())->getRow();
+      temphighlightline = true;
       ui->redraw();
       return true;
   }

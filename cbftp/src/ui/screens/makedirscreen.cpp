@@ -7,7 +7,7 @@
 #include "../menuselectoptionelement.h"
 #include "../menuselectoptiontextfield.h"
 
-MakeDirScreen::MakeDirScreen(Ui* ui) : UIWindow(ui, "MakeDirScreen") {
+MakeDirScreen::MakeDirScreen(Ui* ui) : UIWindow(ui, "MakeDirScreen"), mso(*vv) {
   keybinds.addBind(10, KEYACTION_ENTER, "Modify");
   keybinds.addBind('m', KEYACTION_DONE, "Make directory");
   keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel");
@@ -33,14 +33,14 @@ void MakeDirScreen::initialize(unsigned int row, unsigned int col, const std::st
 }
 
 void MakeDirScreen::redraw() {
-  ui->erase();
+  vv->clear();
   int y = 1;
   if (!site.empty()) {
-    ui->printStr(y++, 1, "Site: " + site);
+    vv->putStr(y++, 1, "Site: " + site);
   }
-  ui->printStr(y, 1, "Path: " + filelist.getPath().toString());
+  vv->putStr(y, 1, "Path: " + filelist.getPath().toString());
   if (alreadyexists) {
-    ui->printStr(y + 3, 1, "ERROR: an item with that name already exists!");
+    vv->putStr(y + 3, 1, "ERROR: an item with that name already exists!");
     alreadyexists = false;
   }
   bool highlight;
@@ -50,20 +50,16 @@ void MakeDirScreen::redraw() {
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+    vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
   if (active && activeelement->cursorPosition() >= 0) {
     ui->showCursor();
-    ui->moveCursor(activeelement->getRow(), activeelement->getCol() + activeelement->getLabelText().length() + 1 + activeelement->cursorPosition());
+    vv->moveCursor(activeelement->getRow(), activeelement->getCol() + activeelement->getLabelText().length() + 1 + activeelement->cursorPosition());
   }
   else {
-    curs_set(0);
+    ui->hideCursor();
   }
-}
-
-void MakeDirScreen::update() {
-  redraw();
 }
 
 bool MakeDirScreen::keyPressed(unsigned int ch) {

@@ -14,7 +14,7 @@
 #include "../../sitelogic.h"
 #include "../../site.h"
 
-ScoreBoardScreen::ScoreBoardScreen(Ui* ui) : UIWindow(ui, "ScoreBoardScreen") {
+ScoreBoardScreen::ScoreBoardScreen(Ui* ui) : UIWindow(ui, "ScoreBoardScreen"), table(*vv) {
   keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Return");
   keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
   keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Navigate down");
@@ -37,7 +37,7 @@ void ScoreBoardScreen::initialize(unsigned int row, unsigned int col) {
 }
 
 void ScoreBoardScreen::redraw() {
-  ui->erase();
+  vv->clear();
   unsigned int y = 0;
   table.clear();
   std::shared_ptr<MenuSelectAdjustableLine> msal;
@@ -77,15 +77,11 @@ void ScoreBoardScreen::redraw() {
       //highlight = true; // later problem
     }
     if (re->isVisible()) {
-      ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
+      vv->putStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
     }
   }
 
-  printSlider(ui, row, 1, col - 1, scoreboard->size(), currentviewspan);
-}
-
-void ScoreBoardScreen::update() {
-  redraw();
+  printSlider(vv, row, 1, col - 1, scoreboard->size(), currentviewspan);
 }
 
 bool ScoreBoardScreen::keyPressed(unsigned int ch) {

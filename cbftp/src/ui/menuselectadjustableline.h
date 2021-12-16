@@ -16,7 +16,8 @@ public:
   void addElement(std::shared_ptr<ResizableElement>, unsigned int, unsigned int, bool);
   void addElement(std::shared_ptr<ResizableElement>, unsigned int, unsigned int, unsigned int, bool);
   std::shared_ptr<ResizableElement> getElement(unsigned int) const;
-  std::pair<unsigned int, unsigned int> getMinMaxCol() const;
+  std::pair<unsigned int, unsigned int> getMinMaxCol(bool usecontent = false) const;
+  unsigned int getRow() const;
   unsigned int size() const;
   bool empty() const;
 private:

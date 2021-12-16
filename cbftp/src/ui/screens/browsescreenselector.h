@@ -11,6 +11,7 @@
 #define BROWSESCREENSELECTOR_HOME "$HOME$"
 
 class Ui;
+class VirtualView;
 class BrowseScreenAction;
 class KeyBinds;
 
@@ -28,7 +29,8 @@ public:
   void setFocus(bool) override;
   BrowseScreenAction tryJumpSection(const std::string& section) override;
 private:
-  Ui * ui;
+  Ui* ui;
+  VirtualView* vv;
   unsigned int row;
   unsigned int col;
   unsigned int coloffset;

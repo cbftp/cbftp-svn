@@ -88,7 +88,7 @@ private:
   std::list<std::pair<Path, std::string> > selectionhistory;
   bool focus;
   MenuSelectOptionTextField filterfield;
-  int temphighlightline;
+  bool temphighlightline;
   RawBuffer cwdrawbuffer;
   bool softselecting;
   LastInfo lastinfo;

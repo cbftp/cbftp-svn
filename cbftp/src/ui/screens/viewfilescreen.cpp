@@ -132,22 +132,22 @@ void ViewFileScreen::initialize(unsigned int row, unsigned int col, const Path &
 }
 
 void ViewFileScreen::redraw() {
-  ui->erase();
+  vv->clear();
   switch (state) {
     case ViewFileState::TOO_LARGE_FOR_INTERNAL:
-      ui->printStr(1, 1, file + " is too large to download and open in the internal viewer.");
-      ui->printStr(2, 1, "The maximum file size for internal viewing is set to " + std::to_string(MAXOPENSIZE) + " bytes.");
+      vv->putStr(1, 1, file + " is too large to download and open in the internal viewer.");
+      vv->putStr(2, 1, "The maximum file size for internal viewing is set to " + std::to_string(MAXOPENSIZE) + " bytes.");
       break;
     case ViewFileState::NO_DISPLAY:
-      ui->printStr(1, 1, file + " cannot be opened in an external viewer.");
-      ui->printStr(2, 1, "The DISPLAY environment variable is not set.");
+      vv->putStr(1, 1, file + " cannot be opened in an external viewer.");
+      vv->putStr(2, 1, "The DISPLAY environment variable is not set.");
       break;
     case ViewFileState::DOWNLOAD_FAILED: {
-      ui->printStr(1, 1, "Download of " + file + " from " + site + " failed.");
+      vv->putStr(1, 1, "Download of " + file + " from " + site + " failed.");
       int x = 3;
       if (ts) {
         for (const std::string& line : ts->getLogLines()) {
-          ui->printStr(x++, 1, line);
+          vv->putStr(x++, 1, line);
         }
       }
       autoupdate = false;
@@ -181,7 +181,7 @@ void ViewFileScreen::redraw() {
           loadViewer();
         }
         else {
-          ui->printStr(1, 1, "Awaiting download slot...");
+          vv->putStr(1, 1, "Awaiting download slot...");
         }
       }
       break;
@@ -205,7 +205,7 @@ void ViewFileScreen::redraw() {
         redraw();
       }
       else {
-        ui->printStr(1, 1, "Downloading from " + site + "...");
+        vv->putStr(1, 1, "Downloading from " + site + "...");
         printTransferInfo();
       }
       break;
@@ -256,15 +256,17 @@ bool ViewFileScreen::keyPressed(unsigned int ch) {
         goDown();
         ui->setInfo();
         ui->redraw();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_UP:
       if (goUp()) {
         goUp();
         ui->setInfo();
         ui->redraw();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_NEXT_PAGE:
       for (unsigned int i = 0; i < row / 2; i++) {
         goDown();
@@ -352,8 +354,8 @@ void ViewFileScreen::loadViewer() {
 }
 
 void ViewFileScreen::viewExternal() {
-  ui->printStr(1, 1, "Opening " + file + " with: " + global->getExternalFileViewing()->getViewApplication(file));
-  ui->printStr(3, 1, "Press 'k' to kill this external viewer instance.");
+  vv->putStr(1, 1, "Opening " + file + " with: " + global->getExternalFileViewing()->getViewApplication(file));
+  vv->putStr(3, 1, "Press 'k' to kill this external viewer instance.");
 }
 
 void ViewFileScreen::viewInternal() {
@@ -372,11 +374,11 @@ void ViewFileScreen::viewInternal() {
   for (unsigned int i = 0; i < row && i < ymax; i++) {
     std::basic_string<unsigned int> & line = translatedcontents[y + i];
     for (unsigned int j = 0; j < line.length() && j < col - 2; j++) {
-      ui->printChar(i, j + 1, line[j]);
+      vv->putChar(i, j + 1, line[j]);
     }
   }
 
-  printSlider(ui, row, col - 1, ymax, y);
+  printSlider(vv, row, col - 1, ymax, y);
 }
 
 std::string ViewFileScreen::getLegendText() const {
@@ -452,7 +454,7 @@ bool ViewFileScreen::goUp() {
 void ViewFileScreen::printTransferInfo() {
   TransferDetails td = TransfersScreen::formatTransferDetails(ts);
   unsigned int y = 3;
-  MenuSelectOption table;
+  MenuSelectOption table(*vv);
   std::shared_ptr<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
   std::shared_ptr<MenuSelectOptionTextButton> msotb;
   msotb = table.addTextButtonNoContent(y, 1, "transferred", "TRANSFERRED");
@@ -485,11 +487,11 @@ void ViewFileScreen::printTransferInfo() {
         std::string labeltext = re->getLabelText();
         bool highlight = table.getLineIndex(table.getAdjustableLine(re)) == 1;
         int charswithhighlight = highlight ? labeltext.length() * ts->getProgress() / 100 : 0;
-        ui->printStr(re->getRow(), re->getCol(), labeltext.substr(0, charswithhighlight), true);
-        ui->printStr(re->getRow(), re->getCol() + charswithhighlight, labeltext.substr(charswithhighlight));
+        vv->putStr(re->getRow(), re->getCol(), labeltext.substr(0, charswithhighlight), true);
+        vv->putStr(re->getRow(), re->getCol() + charswithhighlight, labeltext.substr(charswithhighlight));
       }
       else {
-        ui->printStr(re->getRow(), re->getCol(), re->getLabelText());
+        vv->putStr(re->getRow(), re->getCol(), re->getLabelText());
       }
     }
   }

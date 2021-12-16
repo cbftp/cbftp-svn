@@ -10,6 +10,7 @@ class MenuSelectOptionElement {
     bool shown;
     bool selectable;
     unsigned int id;
+    std::string extradata;
     void * origin;
   protected:
     std::string label;
@@ -21,7 +22,9 @@ class MenuSelectOptionElement {
     virtual std::string getLabelText() const;
     std::string getIdentifier() const;
     unsigned int getId() const;
+    std::string getExtraData() const;
     virtual std::string getContentText() const = 0;
+    virtual unsigned int getTotalWidth() const;
     virtual bool activate();
     virtual void deactivate();
     virtual bool isActive() const;
@@ -38,5 +41,6 @@ class MenuSelectOptionElement {
     bool isSelectable() const;
     void setSelectable(bool);
     void setId(unsigned int);
+    void setExtraData(const std::string& data);
     void setLabel(const std::string& label);
 };

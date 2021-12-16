@@ -22,7 +22,6 @@ public:
   SelectJobsScreen(Ui *);
   void initialize(unsigned int, unsigned int, JobType);
   void redraw();
-  void update();
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;

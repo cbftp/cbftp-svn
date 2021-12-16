@@ -23,7 +23,7 @@ enum KeyAction {
 
 }
 
-SelectJobsScreen::SelectJobsScreen(Ui* ui) : UIWindow(ui, "SelectJobsScreen") {
+SelectJobsScreen::SelectJobsScreen(Ui* ui) : UIWindow(ui, "SelectJobsScreen"), table(*vv) {
   keybinds.addBind('d', KEYACTION_DONE, "Done");
   keybinds.addBind({10, ' '}, KEYACTION_SELECT, "Select");
   keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Return");
@@ -66,7 +66,7 @@ void SelectJobsScreen::initialize(unsigned int row, unsigned int col, JobType ty
 }
 
 void SelectJobsScreen::redraw() {
-  ui->erase();
+  vv->clear();
   unsigned int listspan = row - 1;
   adaptViewSpan(currentviewspan, listspan, ypos, totallistsize);
   table.checkPointer();
@@ -86,16 +86,12 @@ void SelectJobsScreen::redraw() {
         highlight = true;
       }
       if (re->isVisible()) {
-        ui->printStr(y, re->getCol(), re->getLabelText(), highlight);
+        vv->putStr(y, re->getCol(), re->getLabelText(), highlight);
       }
     }
     y++;
   }
-  printSlider(ui, row, 1, col - 1, totallistsize, currentviewspan);
-}
-
-void SelectJobsScreen::update() {
-  redraw();
+  printSlider(vv, row, 1, col - 1, totallistsize, currentviewspan);
 }
 
 bool SelectJobsScreen::keyPressed(unsigned int ch) {
@@ -106,15 +102,17 @@ bool SelectJobsScreen::keyPressed(unsigned int ch) {
         --ypos;
         table.goUp();
         ui->update();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_DOWN:
       if (hascontents && ypos < totallistsize - 1) {
         ++ypos;
         table.goDown();
         ui->update();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_NEXT_PAGE:
     {
       unsigned int pagerows = (unsigned int) row * 0.6;

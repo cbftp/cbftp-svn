@@ -24,7 +24,7 @@ void LoginScreen::initialize(unsigned int row, unsigned int col) {
 }
 
 void LoginScreen::redraw() {
-  ui->erase();
+  vv->clear();
   randomizeDrawLocation();
   background.clear();
   for (unsigned int i = 0; i < row; i++) {
@@ -55,13 +55,13 @@ void LoginScreen::redraw() {
       }
       else boxchar = (i+j)%2==0 ? BOX_CORNER_TL : BOX_CORNER_BR;
       if (boxchar) {
-        ui->printChar(i, j, boxchar);
+        vv->putChar(i, j, boxchar);
         background[i][j] = boxchar;
       }
     }
   }
-  ui->printStr(0, 3, svnstring);
-  ui->printStr(0, col - compilestring.length() - 3, compilestring);
+  vv->putStr(0, 3, svnstring);
+  vv->putStr(0, col - compilestring.length() - 3, compilestring);
   update();
 
 }
@@ -73,9 +73,9 @@ void LoginScreen::update() {
     ui->showCursor();
   }
   int currdrawx = drawx;
-  ui->printStr(pass_row-1, pass_col, passtext);
-  ui->printStr(pass_row, pass_col, passfield.getVisualText());
-  ui->moveCursor(pass_row, pass_col + passfield.getVisualCursorPosition());
+  vv->putStr(pass_row-1, pass_col, passtext);
+  vv->putStr(pass_row, pass_col, passfield.getVisualText());
+  vv->moveCursor(pass_row, pass_col + passfield.getVisualCursorPosition());
   for (unsigned int drawchar = 0; drawchar < drawword.length(); drawchar++) {
     bool show = passfield.getText().length() > drawchar &&
         passfield.getText().length() - drawchar < drawword.length() + 1;
@@ -85,7 +85,7 @@ void LoginScreen::update() {
         int bgchar = background[drawy + i][currdrawx + j];
         int c = show ? CharDraw::getMixedChar(bgchar, draw[j]) : bgchar;
         if (c) {
-          ui->printChar(drawy + i, currdrawx + j, c);
+          vv->putChar(drawy + i, currdrawx + j, c);
         }
       }
     }

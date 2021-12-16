@@ -33,6 +33,14 @@ unsigned int MenuSelectOptionElement::getId() const {
   return id;
 }
 
+std::string MenuSelectOptionElement::getExtraData() const {
+  return extradata;
+}
+
+unsigned int MenuSelectOptionElement::getTotalWidth() const {
+  return getLabelText().length() + 1 + getContentText().length();
+}
+
 bool MenuSelectOptionElement::activate() {
   active = true;
   return true;
@@ -90,6 +98,9 @@ void MenuSelectOptionElement::setId(unsigned int id) {
   this->id = id;
 }
 
+void MenuSelectOptionElement::setExtraData(const std::string& data) {
+  extradata = data;
+}
 
 void MenuSelectOptionElement::setLabel(const std::string& label) {
   this->label = label;

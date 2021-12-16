@@ -5,7 +5,7 @@
 #include "../menuselectoptiontextfield.h"
 #include "../../path.h"
 
-MoveScreen::MoveScreen(Ui* ui) : UIWindow(ui, "MoveScreen") {
+MoveScreen::MoveScreen(Ui* ui) : UIWindow(ui, "MoveScreen"), mso(*vv) {
   keybinds.addBind(10, KEYACTION_ENTER, "Modify");
   keybinds.addBind('m', KEYACTION_DONE, "Move");
   keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel");
@@ -32,13 +32,13 @@ void MoveScreen::initialize(unsigned int row, unsigned int col, const std::strin
 }
 
 void MoveScreen::redraw() {
-  ui->erase();
+  vv->clear();
   int y = 1;
   if (!site.empty()) {
-    ui->printStr(y++, 1, "Site: " + site);
+    vv->putStr(y++, 1, "Site: " + site);
   }
-  ui->printStr(y++, 1, "Source path: " + srcpath);
-  ui->printStr(y++, 1, "Item: " + items);
+  vv->putStr(y++, 1, "Source path: " + srcpath);
+  vv->putStr(y++, 1, "Item: " + items);
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
@@ -46,20 +46,16 @@ void MoveScreen::redraw() {
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+    vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
   if (active && activeelement->cursorPosition() >= 0) {
     ui->showCursor();
-    ui->moveCursor(activeelement->getRow(), activeelement->getCol() + activeelement->getLabelText().length() + 1 + activeelement->cursorPosition());
+    vv->moveCursor(activeelement->getRow(), activeelement->getCol() + activeelement->getLabelText().length() + 1 + activeelement->cursorPosition());
   }
   else {
-    curs_set(0);
+    ui->hideCursor();
   }
-}
-
-void MoveScreen::update() {
-  redraw();
 }
 
 void MoveScreen::deactivate() {

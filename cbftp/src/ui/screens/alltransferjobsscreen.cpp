@@ -16,7 +16,7 @@
 #include "../../site.h"
 #include "../../sitelogic.h"
 
-AllTransferJobsScreen::AllTransferJobsScreen(Ui* ui) : UIWindow(ui, "AllTransferJobsScreen") {
+AllTransferJobsScreen::AllTransferJobsScreen(Ui* ui) : UIWindow(ui, "AllTransferJobsScreen"), table(*vv) {
   keybinds.addBind(10, KEYACTION_ENTER, "Details");
   keybinds.addBind('b', KEYACTION_BROWSE, "Browse");
   keybinds.addBind('B', KEYACTION_ABORT, "Abort job");
@@ -37,7 +37,7 @@ void AllTransferJobsScreen::initialize(unsigned int row, unsigned int col) {
   hascontents = false;
   currentviewspan = 0;
   ypos = 1;
-  temphighlightline = -1;
+  temphighlightline = false;
   engine = global->getEngine();
   table.reset();
   table.enterFocusFrom(0);
@@ -45,7 +45,7 @@ void AllTransferJobsScreen::initialize(unsigned int row, unsigned int col) {
 }
 
 void AllTransferJobsScreen::redraw() {
-  ui->erase();
+  vv->clear();
   unsigned int y = 0;
   unsigned int totallistsize = engine->allTransferJobs() + 1;
   table.reset();
@@ -68,31 +68,22 @@ void AllTransferJobsScreen::redraw() {
   table.checkPointer();
   hascontents = table.linesSize() > 1;
   table.adjustLines(col - 3);
-  if (temphighlightline != -1) {
-    std::shared_ptr<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
-    if (!!highlightline) {
-      std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
-      for (unsigned int i = minmaxcol.first; i <= minmaxcol.second; i++) {
-        ui->printChar(temphighlightline, i, ' ', true);
-      }
-    }
-  }
-  bool highlight;
+  std::shared_ptr<MenuSelectAdjustableLine> highlightline;
   for (unsigned int i = 0; i < table.size(); i++) {
     std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(i));
-    highlight = false;
-    if (hascontents && (table.getSelectionPointer() == i  || (int)re->getRow() == temphighlightline)) {
-      highlight = true;
-    }
+    bool highlight = hascontents && table.getSelectionPointer() == i;
     if (re->isVisible()) {
-      ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
+      vv->putStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
+    }
+    if (highlight && (temphighlightline ^ ui->getHighlightEntireLine())) {
+      highlightline = table.getAdjustableLine(re);
     }
   }
-  printSlider(ui, row, col - 1, totallistsize, currentviewspan);
-}
-
-void AllTransferJobsScreen::update() {
-  redraw();
+  if (highlightline) {
+    std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
+    vv->highlightOn(highlightline->getRow(), minmaxcol.first, minmaxcol.second - minmaxcol.first + 1);
+  }
+  printSlider(vv, row, col - 1, totallistsize, currentviewspan);
 }
 
 void AllTransferJobsScreen::command(const std::string & command, const std::string & arg) {
@@ -104,8 +95,8 @@ void AllTransferJobsScreen::command(const std::string & command, const std::stri
 
 bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
-  if (temphighlightline != -1) {
-    temphighlightline = -1;
+  if (temphighlightline) {
+    temphighlightline = false;
     ui->redraw();
     if (action == KEYACTION_HIGHLIGHT_LINE) {
       return true;
@@ -225,7 +216,7 @@ bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
       if (!hascontents) {
         break;
       }
-      temphighlightline = table.getElement(table.getSelectionPointer())->getRow();
+      temphighlightline = true;
       ui->redraw();
       return true;
   }
@@ -259,16 +250,16 @@ void AllTransferJobsScreen::addJobTableRow(unsigned int y, MenuSelectOption & ms
   msotb->setSelectable(false);
   msal->addElement(msotb, 6, RESIZE_REMOVE);
 
-  msotb = mso.addTextButton(y, 1, "type", type);
+  msotb = mso.addTextButtonNoContent(y, 1, "type", type);
   msotb->setSelectable(false);
   msal->addElement(msotb, 8, RESIZE_REMOVE);
 
-  msotb = mso.addTextButton(y, 1, "name", name);
+  msotb = mso.addTextButtonNoContent(y, 1, "name", name);
   msotb->setSelectable(selectable);
   msotb->setId(id);
   msal->addElement(msotb, 11, 0, RESIZE_CUTEND, true);
 
-  msotb = mso.addTextButton(y, 1, "route", route);
+  msotb = mso.addTextButtonNoContent(y, 1, "route", route);
   msotb->setSelectable(false);
   msal->addElement(msotb, 2, RESIZE_REMOVE);
 

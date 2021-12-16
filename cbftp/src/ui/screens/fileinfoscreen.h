@@ -9,7 +9,6 @@ public:
   FileInfoScreen(Ui* ui);
   void initialize(unsigned int row, unsigned int col, UIFile* uifile);
   void redraw();
-  void update();
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;

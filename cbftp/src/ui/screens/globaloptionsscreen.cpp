@@ -19,6 +19,7 @@
 #include "../menuselectoptiontextarrow.h"
 #include "../menuselectoptiontextbutton.h"
 #include "../menuselectoptionelement.h"
+#include "../misc.h"
 
 namespace {
 
@@ -30,7 +31,7 @@ enum class UdpEnable {
 
 }
 
-GlobalOptionsScreen::GlobalOptionsScreen(Ui* ui) : UIWindow(ui, "GlobalOptionsScreen") {
+GlobalOptionsScreen::GlobalOptionsScreen(Ui* ui) : UIWindow(ui, "GlobalOptionsScreen"), mso(*vv) {
   keybinds.addBind(10, KEYACTION_ENTER, "Modify");
   keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Next option");
   keybinds.addBind(KEY_UP, KEYACTION_UP, "Previous option");
@@ -82,8 +83,8 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   std::string portrange = std::to_string(firstport) + ":" + std::to_string(lastport);
   mso.addStringField(y++, x, "activeportrange", "Active mode port range:", portrange, false, 11);
   mso.addCheckBox(y++, x, "useactiveaddress", "Use active mode address:", ls->getUseActiveModeAddress());
-  mso.addStringField(y++, x, "activeaddress4", "Active mode address IPv4:", ls->getActiveModeAddress4(), false, 64);
-  mso.addStringField(y++, x, "activeaddress6", "Active mode address IPv6:", ls->getActiveModeAddress6(), false, 64);
+  mso.addStringField(y++, x, "activeaddress4", "Active mode address IPv4:", ls->getActiveModeAddress4(), false, 52, 64);
+  mso.addStringField(y++, x, "activeaddress6", "Active mode address IPv6:", ls->getActiveModeAddress6(), false, 52, 64);
   y++;
   mso.addCheckBox(y++, x, "tcpenable", "Enable HTTPS/JSON API:", global->getHTTPServer()->getEnabled());
   mso.addStringField(y++, x, "tcpport", "HTTPS/JSON API Port:", std::to_string(global->getHTTPServer()->getPort()), false, 5);
@@ -120,7 +121,11 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   legendmode->addOption("Disabled", LEGEND_DISABLED);
   legendmode->addOption("Scrolling", LEGEND_SCROLLING);
   legendmode->addOption("Static", LEGEND_STATIC);
-  legendmode->setOption(ui->legendMode());
+  legendmode->setOption(ui->getLegendMode());
+  mso.addCheckBox(y++, x, "highlightentireline", "Highlight entire lines:", ui->getHighlightEntireLine());
+  if (isYearEnd()) {
+    mso.addCheckBox(y++, x, "xmastree", "Show xmas tree:", ui->getShowXmasTree());
+  }
   y++;
   mso.addStringField(y++, x, "defuser", "Default site username:", sm->getDefaultUserName(), false);
   mso.addStringField(y++, x, "defpass", "Default site password:", sm->getDefaultPassword(), true);
@@ -154,7 +159,7 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   sslfxp->setOption(sm->getDefaultSSLTransferPolicy());
   mso.addStringField(y++, x, "defidletime", "Default site max idle time (s):", std::to_string(sm->getDefaultMaxIdleTime()), false);
   y++;
-  mso.addStringField(y++, x, "dlpath", "Download path:", ls->getDownloadPath().toString(), false, 128, 128);
+  mso.addStringField(y++, x, "dlpath", "Download path:", ls->getDownloadPath().toString(), false, 53, 128);
   y++;
   mso.addTextButtonNoContent(y++, x, "skiplist", "Configure skiplist...");
   mso.addTextButtonNoContent(y++, x, "proxy", "Configure proxy settings...");
@@ -167,7 +172,7 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
 }
 
 void GlobalOptionsScreen::redraw() {
-  ui->erase();
+  vv->clear();
   std::shared_ptr<MenuSelectOptionElement> disableencryption = mso.getElement("disableencryption");
   std::shared_ptr<MenuSelectOptionElement> enableencryption = mso.getElement("enableencryption");
   std::shared_ptr<MenuSelectOptionElement> changekey = mso.getElement("changekey");
@@ -197,21 +202,17 @@ void GlobalOptionsScreen::redraw() {
     if (mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+    vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
 }
 
 void GlobalOptionsScreen::update() {
-  std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
-  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
-  msoe = mso.getElement(mso.getSelectionPointer());
-  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
-  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  redraw();
+  std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getSelectionPointer());
   if (active && msoe->cursorPosition() >= 0) {
     ui->showCursor();
-    ui->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
+    vv->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
   }
   else {
     ui->hideCursor();
@@ -369,11 +370,14 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
         else if (identifier == "defidletime") {
           sm->setDefaultMaxIdleTime(std::stoi(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData()));
         }
-        else if (identifier == "legend") { // legacy
-          ui->setLegendMode(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData() ? LEGEND_SCROLLING : LEGEND_DISABLED);
-        }
         else if (identifier == "legendmode") {
           ui->setLegendMode((LegendMode)std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
+        }
+        else if (identifier == "highlightentireline") {
+          ui->setHighlightEntireLine(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
+        }
+        else if (identifier == "xmastree") {
+          ui->setShowXmasTree(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
         }
         else if (identifier == "dlpath") {
           ls->setDownloadPath(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());

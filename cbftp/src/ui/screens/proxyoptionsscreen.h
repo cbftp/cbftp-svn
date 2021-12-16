@@ -12,7 +12,6 @@ public:
   ProxyOptionsScreen(Ui *);
   ~ProxyOptionsScreen();
   void initialize(unsigned int, unsigned int);
-  void update();
   void redraw();
   void command(const std::string &);
   bool keyPressed(unsigned int);

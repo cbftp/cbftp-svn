@@ -144,6 +144,11 @@ void KeyBinds::addBind(int key, int keyaction, const std::string& description, i
   addBind(keys, keyaction, description, scope);
 }
 
+bool KeyBinds::hasBind(int keyaction, int scope) const {
+  ActionAndScope action(keyaction, scope);
+  return actions.find(action) != actions.end();
+}
+
 void KeyBinds::addScope(int scope, const std::string& description) {
   scopes[scope] = description;
 }

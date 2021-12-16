@@ -16,7 +16,7 @@ enum KeyAction {
 
 }
 
-SelectSitesScreen::SelectSitesScreen(Ui* ui) : UIWindow(ui, "SelectSitesScreen") {
+SelectSitesScreen::SelectSitesScreen(Ui* ui) : UIWindow(ui, "SelectSitesScreen"), mso(*vv) {
   keybinds.addBind('d', KEYACTION_DONE, "Done");
   keybinds.addBind({10, ' '}, KEYACTION_SELECT, "Select");
   keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Return");
@@ -72,7 +72,7 @@ void SelectSitesScreen::initializeSelect(unsigned int row, unsigned int col, con
 }
 
 void SelectSitesScreen::redraw() {
-  ui->erase();
+  vv->clear();
   unsigned int y = 1;
   unsigned int x = 1;
   for (unsigned int i = 0; i < mso.size(); i++) {
@@ -102,21 +102,12 @@ void SelectSitesScreen::redraw() {
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText(), highlight);
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
+    vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText(), highlight);
+    vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
   }
   if (!mso.size()) {
-    ui->printStr(1, 1, "(no sites available)");
+    vv->putStr(1, 1, "(no sites available)");
   }
-}
-
-void SelectSitesScreen::update() {
-  std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
-  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText());
-  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
-  msoe = mso.getElement(mso.getSelectionPointer());
-  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText(), true);
-  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
 }
 
 bool SelectSitesScreen::keyPressed(unsigned int ch) {
@@ -127,23 +118,27 @@ bool SelectSitesScreen::keyPressed(unsigned int ch) {
     case KEYACTION_UP:
       if (mso.goUp()) {
         ui->update();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_DOWN:
       if (mso.goDown()) {
         ui->update();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_LEFT:
       if (mso.goLeft()) {
         ui->update();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_RIGHT:
       if (mso.goRight()) {
         ui->update();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_NEXT_PAGE:
       for (unsigned int i = 0; i < pagerows; i++) {
         if (!mso.goDown()) {

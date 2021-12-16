@@ -29,7 +29,7 @@ enum KeyAction {
 
 }
 
-EditSiteScreen::EditSiteScreen(Ui* ui) : UIWindow(ui, "EditSiteScreen") {
+EditSiteScreen::EditSiteScreen(Ui* ui) : UIWindow(ui, "EditSiteScreen"), mso(*vv) {
   keybinds.addBind(10, KEYACTION_ENTER, "Modify");
   keybinds.addBind('d', KEYACTION_DONE, "Done");
   keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Cancel");
@@ -217,9 +217,9 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   targetpolicy->addOption("Allow", SITE_TRANSFER_POLICY_ALLOW);
   targetpolicy->addOption("Block", SITE_TRANSFER_POLICY_BLOCK);
   targetpolicy->setOption(this->site->getTransferTargetPolicy());
-  mso.addStringField(y++, x, "exceptsrc", "", exceptsrc, false, 60, 512);
+  mso.addStringField(y++, x, "exceptsrc", "", exceptsrc, false, 50, 512);
 
-  mso.addStringField(y++, x, "exceptdst", "", exceptdst, false, 60, 512);
+  mso.addStringField(y++, x, "exceptdst", "", exceptdst, false, 50, 512);
   mso.addStringField(y++, x, "affils", "Affils:", affilstr, false, 60, 1024);
   mso.addTextButtonNoContent(y++, x, "sections", "Configure sections...");
   y++;
@@ -228,7 +228,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
 }
 
 void EditSiteScreen::redraw() {
-  ui->erase();
+  vv->clear();
   if (slotsupdated) {
     std::shared_ptr<MenuSelectOptionTextArrow> logins = std::static_pointer_cast<MenuSelectOptionTextArrow>(mso.getElement("logins"));
     std::shared_ptr<MenuSelectOptionTextArrow> maxup = std::static_pointer_cast<MenuSelectOptionTextArrow>(mso.getElement("maxup"));
@@ -281,21 +281,18 @@ void EditSiteScreen::redraw() {
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+    vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
-}
-
-void EditSiteScreen::update() {
   std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
-  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+  vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
-  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
-  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
+  vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   if (active && msoe->cursorPosition() >= 0) {
     ui->showCursor();
-    ui->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
+    vv->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
   }
   else {
     ui->hideCursor();
@@ -336,24 +333,28 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
   switch(action) {
     case KEYACTION_UP:
       if (mso.goUp()) {
-        ui->update();
+        ui->redraw();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_DOWN:
       if (mso.goDown()) {
-        ui->update();
+        ui->redraw();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_LEFT:
       if (mso.goLeft()) {
-        ui->update();
+        ui->redraw();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_RIGHT:
       if (mso.goRight()) {
-        ui->update();
+        ui->redraw();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_ENTER: {
       std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getSelectionPointer());
       if (msoe->getIdentifier() == "skiplist") {

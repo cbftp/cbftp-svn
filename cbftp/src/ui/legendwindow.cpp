@@ -6,8 +6,7 @@
 #include "../eventlog.h"
 #include "../globalcontext.h"
 
-LegendWindow::LegendWindow(Ui* ui, WINDOW * window, int row, int col) : UIWindow(ui, "LegendWindow") {
-  this->window = window;
+LegendWindow::LegendWindow(Ui* ui, unsigned int row, unsigned int col) : UIWindow(ui, "LegendWindow") {
   split = false;
   latestid = 0;
   latestcount = 8;
@@ -15,7 +14,7 @@ LegendWindow::LegendWindow(Ui* ui, WINDOW * window, int row, int col) : UIWindow
 }
 
 void LegendWindow::redraw() {
-  ui->erase(window);
+  ui->getRenderer().erase(Window::LEGEND);
   if (!!mainlegendprinter) {
     mainlegendprinter->setColumns(col);
   }
@@ -27,18 +26,17 @@ void LegendWindow::redraw() {
   }
   latestcount = 8;
   staticcount = 0;
-  offset = 0;
-  ui->printChar(0, 1, BOX_CORNER_TL, false, window);
-  ui->printChar(1, 0, BOX_HLINE, false, window);
-  ui->printChar(1, 1, BOX_CORNER_BR, false, window);
-  ui->printChar(1, col - 1, BOX_HLINE, false, window);
-  ui->printChar(1, col - 2, BOX_CORNER_BL, false, window);
-  ui->printChar(0, col - 2, BOX_CORNER_TR, false, window);
+  ui->getRenderer().printChar(0, 1, BOX_CORNER_TL, false, false, -1, Window::LEGEND);
+  ui->getRenderer().printChar(1, 0, BOX_HLINE, false, false, -1, Window::LEGEND);
+  ui->getRenderer().printChar(1, 1, BOX_CORNER_BR, false, false, -1, Window::LEGEND);
+  ui->getRenderer().printChar(1, col - 1, BOX_HLINE, false, false, -1, Window::LEGEND);
+  ui->getRenderer().printChar(1, col - 2, BOX_CORNER_BL, false, false, -1, Window::LEGEND);
+  ui->getRenderer().printChar(0, col - 2, BOX_CORNER_TR, false, false, -1, Window::LEGEND);
   for (unsigned int i = 2; i < col - 2; i++) {
-    ui->printChar(0, i, BOX_HLINE, false, window);
+    ui->getRenderer().printChar(0, i, BOX_HLINE, false, false, -1, Window::LEGEND);
   }
   if (split) {
-    ui->printChar(0, col / 2, BOX_HLINE_TOP, false, window);
+    ui->getRenderer().printChar(0, col / 2, BOX_HLINE_TOP, false, false, -1, Window::LEGEND);
   }
   update();
 }
@@ -52,9 +50,9 @@ void LegendWindow::update() {
     latestcount = 0;
     latesttext = global->getEventLog()->getLatest();
     for (unsigned int printpos = 4; printpos < col - 4; printpos++) {
-      ui->printChar(1, printpos, ' ', false, window);
+      ui->getRenderer().printChar(1, printpos, ' ', false, false, -1, Window::LEGEND);
     }
-    ui->printStr(1, 4, "EVENT: " + latesttext, false, col - 4 - 4, false, window);
+    ui->getRenderer().printStr(1, 4, "EVENT: " + latesttext, false, false, -1, col - 4 - 4, false, Window::LEGEND);
     return;
   }
   if (latestcount < 8) { // 2 seconds

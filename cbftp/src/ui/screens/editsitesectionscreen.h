@@ -20,7 +20,6 @@ public:
   ~EditSiteSectionScreen();
   void initialize(unsigned int row, unsigned int col, const std::shared_ptr<Site> & site, const Path & path);
   void initialize(unsigned int row, unsigned int col, const std::shared_ptr<Site> & site, const std::string & section);
-  void update() override;
   void redraw() override;
   bool keyPressed(unsigned int) override;
   void command(const std::string & command, const std::string & arg) override;

@@ -9,7 +9,7 @@
 #include "../../globalcontext.h"
 #include "../../proxymanager.h"
 
-EditProxyScreen::EditProxyScreen(Ui* ui) : UIWindow(ui, "EditProxyScreen") {
+EditProxyScreen::EditProxyScreen(Ui* ui) : UIWindow(ui, "EditProxyScreen"), mso(*vv) {
   keybinds.addBind(10, KEYACTION_ENTER, "Modify");
   keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Next option");
   keybinds.addBind(KEY_UP, KEYACTION_UP, "Previous option");
@@ -61,7 +61,7 @@ void EditProxyScreen::initialize(unsigned int row, unsigned int col, std::string
 }
 
 void EditProxyScreen::redraw() {
-  ui->erase();
+  vv->clear();
   bool highlight;
   if (authmethod->getData() == PROXY_AUTH_NONE) {
     mso.getElement("user")->hide();
@@ -78,9 +78,9 @@ void EditProxyScreen::redraw() {
     mso.getElement("activeportrange")->show();
   }
   latestauthmethod = authmethod->getData();
-  ui->printStr(1, 1, "Type: SOCKS5");
-  ui->printStr(14, 1, "Active mode settings are only used for sites with broken PASV enabled.");
-  ui->printStr(15, 1, "The active (bind) mode feature is not supported by all proxy servers.");
+  vv->putStr(1, 1, "Type: SOCKS5");
+  vv->putStr(14, 1, "Active mode settings are only used for sites with broken PASV enabled.");
+  vv->putStr(15, 1, "The active (bind) mode feature is not supported by all proxy servers.");
   for (unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
     if (!msoe->visible()) {
@@ -90,21 +90,17 @@ void EditProxyScreen::redraw() {
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+    vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
   std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getSelectionPointer());
   if (active && msoe->cursorPosition() >= 0) {
     ui->showCursor();
-    ui->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
+    vv->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
   }
   else {
     ui->hideCursor();
   }
-}
-
-void EditProxyScreen::update() {
-  redraw();
 }
 
 bool EditProxyScreen::keyPressed(unsigned int ch) {

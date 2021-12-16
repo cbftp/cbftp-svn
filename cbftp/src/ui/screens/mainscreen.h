@@ -17,7 +17,6 @@ class MainScreen : public UIWindow {
 public:
   MainScreen(Ui *);
   void initialize(unsigned int, unsigned int);
-  void update();
   void redraw();
   void command(const std::string &);
   bool keyPressed(unsigned int);
@@ -38,8 +37,8 @@ private:
       const std::string & daydn, const std::string & alup, const std::string & aldn,
       const std::string & prio);
   void addSiteDetails(unsigned int y, MenuSelectOption & mso, const std::shared_ptr<SiteLogic> & sl);
-  void keyUp();
-  void keyDown();
+  bool keyUp() override;
+  bool keyDown() override;
   void jumpSectionHotkey(int hotkey);
   int getCurrentScope() const;
   unsigned int currentviewspan;
@@ -61,7 +60,7 @@ private:
   MenuSelectOption msotj;
   MenuSelectOption msos;
   bool gotomode;
-  int temphighlightline;
+  bool temphighlightline;
   std::shared_ptr<Race> abortrace;
   std::shared_ptr<Race> abortdeleteraceinc;
   std::shared_ptr<Race> abortdeleteraceall;

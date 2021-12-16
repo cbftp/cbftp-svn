@@ -20,9 +20,12 @@ BrowseScreenSelector::BrowseScreenSelector(Ui * ui, KeyBinds& keybinds) :
   BrowseScreenSub(keybinds),
   ui(ui),
   focus(true),
+  table(ui->getVirtualView()),
   pointer(0),
   currentviewspan(0),
-  gotomode(false) {
+  gotomode(false)
+{
+  vv = &ui->getVirtualView();
   SiteManager * sm = global->getSiteManager();
   std::vector<std::shared_ptr<Site> >::const_iterator it;
   entries.push_back(std::pair<std::string, std::string>(BROWSESCREENSELECTOR_HOME,
@@ -66,9 +69,9 @@ void BrowseScreenSelector::redraw(unsigned int row, unsigned int col, unsigned i
     if (table.getSelectionPointer() == i) {
       highlight = true;
     }
-    ui->printStr(msotb->getRow(), msotb->getCol(), msotb->getLabelText(), highlight && focus);
+    vv->putStr(msotb->getRow(), msotb->getCol(), msotb->getLabelText(), highlight && focus);
   }
-  printSlider(ui, row, coloffset + col - 1, entries.size(), currentviewspan);
+  printSlider(vv, row, coloffset + col - 1, entries.size(), currentviewspan);
 }
 
 void BrowseScreenSelector::update() {
@@ -78,9 +81,9 @@ void BrowseScreenSelector::update() {
       return;
     }
     std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(table.getLastSelectionPointer()));
-    ui->printStr(re->getRow(), re->getCol(), re->getLabelText());
+    vv->putStr(re->getRow(), re->getCol(), re->getLabelText());
     re = std::static_pointer_cast<ResizableElement>(table.getElement(table.getSelectionPointer()));
-    ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), focus);
+    vv->putStr(re->getRow(), re->getCol(), re->getLabelText(), focus);
   }
 }
 
