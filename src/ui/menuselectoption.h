@@ -13,6 +13,7 @@ class MenuSelectOptionTextButton;
 class MenuSelectOptionTextField;
 class MenuSelectOptionNumArrow;
 class MenuSelectOptionCheckBox;
+class VirtualView;
 
 class MenuSelectOption : public FocusableArea {
   private:
@@ -21,8 +22,10 @@ class MenuSelectOption : public FocusableArea {
     unsigned int lastpointer;
     std::vector<std::shared_ptr<MenuSelectOptionElement> > options;
     std::vector<std::shared_ptr<MenuSelectAdjustableLine> > adjustablelines;
+    VirtualView& vv;
+    bool affectvvvertical;
   public:
-    MenuSelectOption();
+    MenuSelectOption(VirtualView& vv, bool affectvvvertical = true);
     ~MenuSelectOption();
     bool goDown();
     bool goUp();

@@ -28,17 +28,17 @@ void SnakeScreen::initialize(unsigned int row, unsigned int col) {
 }
 
 void SnakeScreen::redraw() {
-  ui->erase();
+  vv->clear();
   if (state == State::RUNNING && (xmax != col || ymax != row)) {
     start();
   }
   for (unsigned int i = 0; i < grid.size(); ++i) {
     const Pixel & pixel = grid[i];
     if (pixel == Pixel::SNAKEPART) {
-      ui->printChar(i / xmax, i % xmax, CHAR_SNAKEPART);
+      vv->putChar(i / xmax, i % xmax, CHAR_SNAKEPART);
     }
     else if (pixel == Pixel::FRUIT) {
-      ui->printChar(i / xmax, i % xmax, CHAR_FRUIT);
+      vv->putChar(i / xmax, i % xmax, CHAR_FRUIT);
     }
   }
 }
@@ -71,10 +71,10 @@ void SnakeScreen::update() {
       break;
     case Pixel::EMPTY:
       getPixel(target.y, target.x) = Pixel::SNAKEPART;
-      ui->printChar(target.y, target.x, CHAR_SNAKEPART);
+      vv->putChar(target.y, target.x, CHAR_SNAKEPART);
       const Pos & tail = snakepos.front();
       getPixel(tail.y, tail.x) = Pixel::EMPTY;
-      ui->printChar(tail.y, tail.x, ' ');
+      vv->putChar(tail.y, tail.x, ' ');
       snakepos.pop_front();
       snakepos.push_back(target);
       break;
@@ -182,7 +182,7 @@ void SnakeScreen::grow() {
   Pos newhead = getTarget(direction);
   snakepos.push_back(newhead);
   getPixel(newhead.y, newhead.x) = Pixel::SNAKEPART;
-  ui->printChar(newhead.y, newhead.x, CHAR_SNAKEPART);
+  vv->putChar(newhead.y, newhead.x, CHAR_SNAKEPART);
 }
 
 bool SnakeScreen::placeFruit() {
@@ -190,7 +190,7 @@ bool SnakeScreen::placeFruit() {
     int testpos = rand() % grid.size();
     if (grid[testpos] == Pixel::EMPTY) {
       grid[testpos] = Pixel::FRUIT;
-      ui->printChar(testpos / xmax, testpos % xmax, CHAR_FRUIT);
+      vv->putChar(testpos / xmax, testpos % xmax, CHAR_FRUIT);
       return true;
     }
   }
@@ -210,7 +210,7 @@ bool SnakeScreen::placeFruit() {
     std::advance(emptypixel, listpos - 1);
   }
   grid[*emptypixel] = Pixel::FRUIT;
-  ui->printChar(*emptypixel / xmax, *emptypixel % xmax, CHAR_FRUIT);
+  vv->putChar(*emptypixel / xmax, *emptypixel % xmax, CHAR_FRUIT);
   return true;
 }
 

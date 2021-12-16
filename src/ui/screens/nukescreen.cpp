@@ -23,7 +23,7 @@ enum KeyAction {
 
 }
 
-NukeScreen::NukeScreen(Ui* ui) : UIWindow(ui, "NukeScreen") {
+NukeScreen::NukeScreen(Ui* ui) : UIWindow(ui, "NukeScreen"), mso(*vv) {
   keybinds.addBind(10, KEYACTION_ENTER, "Modify");
   keybinds.addBind({'d', 'n'}, KEYACTION_NUKE, "Nuke");
   keybinds.addBind('p', KEYACTION_NUKE_PROPER, "Proper");
@@ -47,17 +47,17 @@ void NukeScreen::initialize(unsigned int row, unsigned int col, const std::strin
   this->path = path;
   std::list<std::string> sections = global->getSiteManager()->getSite(sitestr)->getSectionsForPath(path);
   mso.reset();
-  mso.addStringField(5, 1, "reason", "Reason:", "", false, col - 3, 512);
+  mso.addStringField(5, 1, "reason", "Reason:", "", false, col - 10, 512);
   mso.addIntArrow(6, 1, "multiplier", "Multiplier:", 1, 0, 100);
   mso.enterFocusFrom(0);
   init(row, col);
 }
 
 void NukeScreen::redraw() {
-  ui->erase();
-  ui->printStr(1, 1, "Site: " + sitestr);
-  ui->printStr(2, 1, "Item: " + items);
-  ui->printStr(3, 1, "Path: " + path.toString());
+  vv->clear();
+  vv->putStr(1, 1, "Site: " + sitestr);
+  vv->putStr(2, 1, "Item: " + items);
+  vv->putStr(3, 1, "Path: " + path.toString());
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
@@ -65,24 +65,21 @@ void NukeScreen::redraw() {
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+    vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
-}
-
-void NukeScreen::update() {
   std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
-  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+  vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
-  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
-  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
+  vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   if (active && msoe->cursorPosition() >= 0) {
     ui->showCursor();
-    ui->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
+    vv->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
   }
   else {
-    curs_set(0);
+    ui->hideCursor();
   }
 }
 
@@ -103,14 +100,16 @@ bool NukeScreen::keyPressed(unsigned int ch) {
   switch(action) {
     case KEYACTION_UP:
       if (mso.goUp()) {
-        ui->update();
+        ui->redraw();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_DOWN:
       if (mso.goDown()) {
-        ui->update();
+        ui->redraw();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_ENTER:
       activeelement = mso.getElement(mso.getSelectionPointer());
       activeelement->activate();

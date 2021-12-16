@@ -27,7 +27,7 @@ void EventLogScreen::initialize(unsigned int row, unsigned int col) {
 }
 
 void EventLogScreen::redraw() {
-  ui->erase();
+  vv->clear();
   rawbuf->bookmark();
   unsigned int rows = (filtermodeinput || filtermodeinputregex) ? row - 2 : row;
   std::list<std::string> printlines;
@@ -44,7 +44,7 @@ void EventLogScreen::redraw() {
         rawbuf->getLineCopy(pos + copyreadpos))
      : (rawbuf->isFiltered() ? rawbuf->getFilteredLine(pos) : rawbuf->getLine(pos));
     std::string line = entry.first + " " + entry.second;
-    ui->printStr(i, 0, line);
+    vv->putStr(i, 0, line);
   }
   std::string oldtext = filterfield.getData();
   filterfield = MenuSelectOptionTextField("filter", row - 1, 1, "", oldtext, col - 20, 512, false);
@@ -59,8 +59,8 @@ void EventLogScreen::update() {
   if (filtermodeinput || filtermodeinputregex) {
     ui->showCursor();
     std::string pretag = filtermodeinput ? "[Filter(s)]: " : "[Regex filter]: ";
-    ui->printStr(filterfield.getRow(), filterfield.getCol(), pretag + filterfield.getContentText());
-    ui->moveCursor(filterfield.getRow(), filterfield.getCol() + pretag.length() + filterfield.cursorPosition());
+    vv->putStr(filterfield.getRow(), filterfield.getCol(), pretag + filterfield.getContentText());
+    vv->moveCursor(filterfield.getRow(), filterfield.getCol() + pretag.length() + filterfield.cursorPosition());
   }
 }
 

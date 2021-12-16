@@ -27,7 +27,7 @@ void fillPreselectionList(const std::string & preselectstr, std::list<std::share
 }
 
 }
-TransfersFilterScreen::TransfersFilterScreen(Ui* ui) : UIWindow(ui, "TransfersFilterScreen") {
+TransfersFilterScreen::TransfersFilterScreen(Ui* ui) : UIWindow(ui, "TransfersFilterScreen"), mso(*vv) {
   keybinds.addBind(10, KEYACTION_ENTER, "Modify");
   keybinds.addBind('d', KEYACTION_DONE, "Done");
   keybinds.addBind('f', KEYACTION_FILTER, "Done");
@@ -69,7 +69,7 @@ void TransfersFilterScreen::initialize(unsigned int row, unsigned int col, const
 }
 
 void TransfersFilterScreen::redraw() {
-  ui->erase();
+  vv->clear();
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
@@ -78,19 +78,15 @@ void TransfersFilterScreen::redraw() {
       highlight = true;
       if (active && msoe->cursorPosition() >= 0) {
         ui->showCursor();
-        ui->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
+        vv->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
       }
       else {
         ui->hideCursor();
       }
     }
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+    vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
-}
-
-void TransfersFilterScreen::update() {
-  redraw();
 }
 
 void TransfersFilterScreen::command(const std::string & command, const std::string & arg) {
@@ -144,14 +140,16 @@ bool TransfersFilterScreen::keyPressed(unsigned int ch) {
     return true;
   }
   switch (action) {
-    case KEYACTION_UP:
-      mso.goUp();
+    case KEYACTION_UP: {
+      bool moved = mso.goUp();
       ui->update();
-      return true;
-    case KEYACTION_DOWN:
-      mso.goDown();
+      return moved;
+    }
+    case KEYACTION_DOWN: {
+      bool moved = mso.goDown();
       ui->update();
-      return true;
+      return moved;
+    }
     case KEYACTION_DONE:
     case KEYACTION_FILTER:
     {

@@ -12,7 +12,6 @@ public:
   NewKeyScreen(Ui *);
   ~NewKeyScreen();
   void initialize(unsigned int, unsigned int);
-  void update();
   void redraw();
   bool keyPressed(unsigned int);
   std::string getLegendText() const;

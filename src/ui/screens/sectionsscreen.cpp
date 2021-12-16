@@ -40,7 +40,7 @@ enum KeyScope {
 
 }
 
-SectionsScreen::SectionsScreen(Ui* ui) : UIWindow(ui, "SectionsScreen") {
+SectionsScreen::SectionsScreen(Ui* ui) : UIWindow(ui, "SectionsScreen"), table(*vv) {
   keybinds.addScope(KEYSCOPE_SELECT, "When selecting sections");
   keybinds.addScope(KEYSCOPE_EDIT, "When editing sections");
   keybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
@@ -70,7 +70,7 @@ void SectionsScreen::initialize(unsigned int row, unsigned int col, bool selects
   mode = selectsection ? Mode::SELECT : Mode::EDIT;
   currentviewspan = 0;
   ypos = 0;
-  temphighlightline = -1;
+  temphighlightline = false;
   hascontents = false;
   table.reset();
   table.enterFocusFrom(0);
@@ -85,7 +85,7 @@ void SectionsScreen::initialize(unsigned int row, unsigned int col, bool selects
 }
 
 void SectionsScreen::redraw() {
-  ui->erase();
+  vv->clear();
   unsigned int y = 0;
   unsigned int listspan = row - 1;
   totallistsize = global->getSectionManager()->size();
@@ -114,38 +114,29 @@ void SectionsScreen::redraw() {
   table.checkPointer();
   hascontents = table.linesSize() > 1;
   table.adjustLines(col - 3);
-  if (temphighlightline != -1) {
-    std::shared_ptr<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
-    if (!!highlightline) {
-      std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
-      for (unsigned int i = minmaxcol.first; i <= minmaxcol.second; i++) {
-        ui->printChar(temphighlightline, i, ' ', true);
-      }
-    }
-  }
-  bool highlight;
+  std::shared_ptr<MenuSelectAdjustableLine> highlightline;
   for (unsigned int i = 0; i < table.size(); i++) {
     std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(i));
-    highlight = false;
-    if (hascontents && (table.getSelectionPointer() == i  || (int)re->getRow() == temphighlightline)) {
-      highlight = true;
-    }
+    bool highlight = hascontents && table.getSelectionPointer() == i;
     if (re->isVisible()) {
-      ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
+      vv->putStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
+    }
+    if (highlight && (temphighlightline ^ ui->getHighlightEntireLine())) {
+      highlightline = table.getAdjustableLine(re);
     }
   }
-  printSlider(ui, row, 1, col - 1, totallistsize, currentviewspan);
-}
-
-void SectionsScreen::update() {
-  redraw();
+  if (highlightline) {
+    std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
+    vv->highlightOn(highlightline->getRow(), minmaxcol.first, minmaxcol.second - minmaxcol.first + 1);
+  }
+  printSlider(vv, row, 1, col - 1, totallistsize, currentviewspan);
 }
 
 bool SectionsScreen::keyPressed(unsigned int ch) {
   int scope = getCurrentScope();
   int action = keybinds.getKeyAction(ch, scope);
-  if (temphighlightline != -1) {
-    temphighlightline = -1;
+  if (temphighlightline) {
+    temphighlightline = false;
     ui->redraw();
     if (action == KEYACTION_HIGHLIGHT_LINE) {
       return true;
@@ -170,15 +161,17 @@ bool SectionsScreen::keyPressed(unsigned int ch) {
         --ypos;
         table.goUp();
         ui->update();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_DOWN:
       if (hascontents && ypos < totallistsize - 1) {
         ++ypos;
         table.goDown();
         ui->update();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_NEXT_PAGE: {
       unsigned int pagerows = (unsigned int) row * 0.6;
       for (unsigned int i = 0; i < pagerows && ypos < totallistsize - 1; i++) {
@@ -248,7 +241,7 @@ bool SectionsScreen::keyPressed(unsigned int ch) {
       if (!hascontents) {
         break;
       }
-      temphighlightline = table.getElement(table.getSelectionPointer())->getRow();
+      temphighlightline = true;
       ui->redraw();
       return true;
     case KEYACTION_TOGGLE_ALL:

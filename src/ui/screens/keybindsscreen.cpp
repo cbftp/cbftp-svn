@@ -22,7 +22,7 @@ enum KeyActions {
 };
 
 }
-KeyBindsScreen::KeyBindsScreen(Ui* ui) : UIWindow(ui, "KeyBindsScreen") {
+KeyBindsScreen::KeyBindsScreen(Ui* ui) : UIWindow(ui, "KeyBindsScreen"), mso(*vv) {
   keybinds.addBind('d', KEYACTION_DONE, "Done, save changes");
   keybinds.addBind(10, KEYACTION_ENTER, "New key");
   keybinds.addBind({'+', 'A'}, KEYACTION_ADD_KEY, "Add extra key");
@@ -101,7 +101,7 @@ void KeyBindsScreen::repopulate() {
   }
 }
 void KeyBindsScreen::redraw() {
-  ui->erase();
+  vv->clear();
   mso.adjustLines(col - 3);
   bool highlight;
 
@@ -115,20 +115,16 @@ void KeyBindsScreen::redraw() {
     if (!text.empty()) {
       int add = 0;
       if (text[0] == ' ') {
-        ui->printChar(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getId(), highlight);
+        vv->putChar(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getId(), highlight);
         ++add;
       }
-      ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1 + add, text, highlight);
+      vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1 + add, text, highlight);
     }
     else {
-      ui->printChar(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getId(), highlight);
+      vv->putChar(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getId(), highlight);
     }
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
+    vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
   }
-}
-
-void KeyBindsScreen::update() {
-  redraw();
 }
 
 bool KeyBindsScreen::keyPressed(unsigned int ch) {
@@ -152,13 +148,17 @@ bool KeyBindsScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
   switch(action) {
     case KEYACTION_UP:
-      mso.goUp();
-      ui->update();
-      return true;
+      if (mso.goUp()) {
+        ui->update();
+        return true;
+      }
+      return false;
     case KEYACTION_DOWN:
-      mso.goDown();
-      ui->update();
-      return true;
+      if (mso.goDown()) {
+        ui->update();
+        return true;
+      }
+      return false;
     case KEYACTION_ENTER:
       mso.getElement(mso.getSelectionPointer())->activate();
       addextrakey = false;

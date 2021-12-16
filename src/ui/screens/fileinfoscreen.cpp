@@ -15,11 +15,11 @@ void FileInfoScreen::initialize(unsigned int row, unsigned int col, UIFile* uifi
 }
 
 void FileInfoScreen::redraw() {
-  ui->erase();
+  vv->clear();
   ui->hideCursor();
 
   unsigned int i = 1;
-  ui->printStr(i++, 1, "Name: " + uifile->getName());
+  vv->putStr(i++, 1, "Name: " + uifile->getName());
   std::string type = "File";
   if (uifile->isDirectory()) {
     type = "Directory";
@@ -27,17 +27,13 @@ void FileInfoScreen::redraw() {
   else if (uifile->isLink()) {
     type = "Link";
   }
-  ui->printStr(i++, 1, "Type: " + type);
-  ui->printStr(i++, 1, "Size: " + uifile->getSizeRepr());
-  ui->printStr(i++, 1, "Last modified: " + uifile->getLastModified());
-  ui->printStr(i++, 1, "Owner: " + uifile->getOwner() + "/" + uifile->getGroup());
+  vv->putStr(i++, 1, "Type: " + type);
+  vv->putStr(i++, 1, "Size: " + uifile->getSizeRepr());
+  vv->putStr(i++, 1, "Last modified: " + uifile->getLastModified());
+  vv->putStr(i++, 1, "Owner: " + uifile->getOwner() + "/" + uifile->getGroup());
   if (uifile->isLink()) {
-    ui->printStr(i++, 1, "Link target: " + uifile->getLinkTarget());
+    vv->putStr(i++, 1, "Link target: " + uifile->getLinkTarget());
   }
-}
-
-void FileInfoScreen::update() {
-  redraw();
 }
 
 bool FileInfoScreen::keyPressed(unsigned int ch) {

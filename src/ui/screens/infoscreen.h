@@ -7,7 +7,6 @@ public:
   InfoScreen(Ui* ui);
   void initialize(unsigned int row, unsigned int col);
   void redraw();
-  void update();
   bool keyPressed(unsigned int ch);
   std::string getLegendText() const;
   std::string getInfoLabel() const;

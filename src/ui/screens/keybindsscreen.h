@@ -16,7 +16,6 @@ public:
   KeyBindsScreen(Ui *);
   ~KeyBindsScreen();
   void initialize(unsigned int row, unsigned int col, KeyBinds* keybinds);
-  void update();
   void redraw();
   bool keyPressed(unsigned int);
   std::string getLegendText() const;

@@ -23,7 +23,7 @@ UIFileList * BrowseScreenSub::getUIFileList() {
 void BrowseScreenSub::printFlipped(Ui * ui, const std::shared_ptr<ResizableElement> & re) {
   int flipper = 0;
   for (unsigned int i = 0; i < re->getLabelText().length(); i++) {
-    ui->printChar(re->getRow(), re->getCol() + i, re->getLabelText()[i], flipper++ % 2);
+    ui->getVirtualView().putChar(re->getRow(), re->getCol() + i, re->getLabelText()[i], flipper++ % 2);
   }
 }
 
@@ -42,7 +42,7 @@ void BrowseScreenSub::addFileDetails(MenuSelectOption & table, unsigned int colo
   if (cursored) {
     table.setPointer(msotb);
   }
-  msal->addElement(msotb, 5, 0, RESIZE_WITHDOTS, true);
+  msal->addElement(msotb, 5, 0, RESIZE_WITHLAST3, true);
   if (nameonly) {
     return;
   }

@@ -6,17 +6,14 @@
 #include <string>
 #include <vector>
 
-#include "ncurseswrap.h"
-#include "uicommand.h"
-
-#include "../core/threading.h"
-#include "../core/semaphore.h"
 #include "../core/eventreceiver.h"
-#include "../core/blockingqueue.h"
 #include "../uibase.h"
 #include "../settingsloadersaver.h"
 #include "../path.h"
 #include "../requestcallback.h"
+
+#include "renderer.h"
+#include "virtualview.h"
 
 class UIWindow;
 class InfoWindow;
@@ -87,11 +84,8 @@ enum LegendMode {
 
 class Ui : public Core::EventReceiver, public UIBase, public SettingsAdder, public RequestCallback {
 private:
-  Core::Thread<Ui> thread;
-  Core::BlockingQueue<UICommand> uiqueue;
-  WINDOW * main;
-  WINDOW * info;
-  WINDOW * legend;
+  Renderer renderer;
+  VirtualView vv;
   std::vector<std::shared_ptr<UIWindow> > mainwindows;
   std::shared_ptr<UIWindow> topwindow;
   std::shared_ptr<InfoWindow> infowindow;
@@ -140,71 +134,65 @@ private:
   std::shared_ptr<MetricsScreen> metricsscreen;
   std::shared_ptr<TransferPairingScreen> transferpairingscreen;
   std::shared_ptr<LegendPrinterKeybinds> legendprinterkeybinds;
-  int mainrow;
-  int maincol;
-  int col;
-  int row;
+  unsigned int mainrow;
+  unsigned int col;
   int ticker;
   bool haspushed;
   bool pushused;
-  bool initret;
   bool legendenabled;
   bool infoenabled;
-  bool dead;
   LegendMode legendmode;
+  bool highlightentireline;
+  bool showxmastree;
   bool split;
   bool fullscreentoggle;
   std::string eventtext;
-  Core::Semaphore eventcomplete;
   std::list<std::shared_ptr<UIWindow> > history;
   std::shared_ptr<KeyBinds> globalkeybinds;
   std::set<KeyBinds*> allkeybinds;
-  void refreshAll();
-  void initIntern();
   void enableInfo();
   void disableInfo();
   void enableLegend();
   void disableLegend();
   void redrawAll();
-  void switchToWindow(std::shared_ptr<UIWindow>, bool allowsplit = false, bool doredraw = false);
+  void switchToWindow(const std::shared_ptr<UIWindow>& window, bool allowsplit = false, bool doredraw = false);
   void globalKeyBinds(int);
   void switchToLast();
-  void setLegendText(const std::string & legendtext);
-  void FDData(int) override;
-  void tick(int) override;
+  void setLegendText(const std::string& legendtext);
+  void FDData(int sockid) override;
+  void tick(int message) override;
   void requestReady(void* service, int requestid) override;
   void intermediateData(void* service, int requestid, void* data) override;
 public:
   Ui();
   ~Ui();
-  void run();
   bool init() override;
   void backendPush() override;
   void terminalSizeChanged();
-  void signal(int, int) override;
+  void signal(int signal, int) override;
   void kill() override;
+  Renderer& getRenderer();
+  VirtualView& getVirtualView();
   void resizeTerm();
   void readConfiguration();
   void writeState();
-  LegendMode legendMode() const;
+  LegendMode getLegendMode() const;
   void setLegendMode(LegendMode);
+  bool getHighlightEntireLine() const;
+  void setHighlightEntireLine(bool highlight);
+  bool getShowXmasTree() const;
+  void setShowXmasTree(bool show);
   void returnToLast();
   void update();
   void setLegend();
   void addTempLegendTransferJob(unsigned int id);
   void addTempLegendSpreadJob(unsigned int id);
   void setInfo();
-  void setSplit(bool);
+  void setSplit(bool split);
   void redraw();
-  void erase();
-  void erase(WINDOW *);
   void showCursor();
   void hideCursor();
-  void moveCursor(unsigned int, unsigned int);
-  void highlight(bool, WINDOW * window = nullptr);
-  void printStr(unsigned int row, unsigned int col, const std::string & str, bool highlight = false, int maxlen = -1, bool rightalign = false, WINDOW * window = nullptr);
-  void printStr(unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str, bool highlight = false, int maxlen = -1, bool rightalign = false, WINDOW * window = nullptr);
-  void printChar(unsigned int row, unsigned int col, unsigned int c, bool highlight = false, WINDOW * window = nullptr);
+  void highlight(bool highlight);
   void goRawCommand(const std::string & site);
   void goRawCommand(const std::string & site, const Path & path, const std::string & arg = "");
   void goInfo(const std::string & message);

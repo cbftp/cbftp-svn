@@ -15,7 +15,6 @@ public:
   MakeDirScreen(Ui *);
   ~MakeDirScreen();
   void initialize(unsigned int row, unsigned int col, const std::string & site,  UIFileList & filelist);
-  void update();
   void redraw();
   bool keyPressed(unsigned int);
   std::string getLegendText() const;

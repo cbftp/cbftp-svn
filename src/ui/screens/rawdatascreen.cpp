@@ -65,12 +65,12 @@ void RawDataScreen::initialize(unsigned int row, unsigned int col, std::string s
 }
 
 void RawDataScreen::redraw() {
-  ui->erase();
+  vv->clear();
   unsigned int rownum = row;
   if (rawcommandmode) {
     --rownum;
     std::string oldtext = rawcommandfield.getData();
-    rawcommandfield = MenuSelectOptionTextField("rawcommand", row-1, 10, "", oldtext, col-10, 65536, false);
+    rawcommandfield = MenuSelectOptionTextField("rawcommand", row-1, 10, "", oldtext, col-15, 65536, false);
   }
   fixCopyReadPos();
   std::string oldtext = filterfield.getData();
@@ -92,7 +92,7 @@ void RawDataScreen::update() {
     redraw();
     return;
   }
-  ui->erase();
+  vv->clear();
   unsigned int rownum = row;
   if (rawcommandmode) {
     rownum = row - 1;
@@ -100,25 +100,25 @@ void RawDataScreen::update() {
   else if (filtermodeinput || filtermodeinputregex) {
     rownum = row - 2;
   }
-  printRawBufferLines(ui, rawbuf, rownum, col, 0, readfromcopy, copyreadpos);
+  printRawBufferLines(vv, rawbuf, rownum, col, 0, readfromcopy, copyreadpos);
   if (rawcommandmode) {
     std::string pretag = "[Raw command]: ";
-    ui->printStr(rownum, 0, pretag + rawcommandfield.getContentText());
-    ui->moveCursor(rownum, pretag.length() + rawcommandfield.cursorPosition());
+    vv->putStr(rownum, 0, pretag + rawcommandfield.getContentText());
+    vv->moveCursor(rownum, pretag.length() + rawcommandfield.cursorPosition());
   }
   if (filtermodeinput || filtermodeinputregex) {
     ui->showCursor();
     std::string pretag = filtermodeinput ? "[Filter(s)]: " : "[Regex filter]: ";
-    ui->printStr(filterfield.getRow(), filterfield.getCol(), pretag + filterfield.getContentText());
-    ui->moveCursor(filterfield.getRow(), filterfield.getCol() + pretag.length() + filterfield.cursorPosition());
+    vv->putStr(filterfield.getRow(), filterfield.getCol(), pretag + filterfield.getContentText());
+    vv->moveCursor(filterfield.getRow(), filterfield.getCol() + pretag.length() + filterfield.cursorPosition());
   }
 }
 
-void RawDataScreen::printRawBufferLines(Ui * ui, RawBuffer * rawbuf, unsigned int rownum, unsigned int col, unsigned int coloffset) {
-  printRawBufferLines(ui, rawbuf, rownum, col, coloffset, false, 0);
+void RawDataScreen::printRawBufferLines(VirtualView* vv, RawBuffer * rawbuf, unsigned int rownum, unsigned int col, unsigned int coloffset) {
+  printRawBufferLines(vv, rawbuf, rownum, col, coloffset, false, 0);
 }
 
-void RawDataScreen::printRawBufferLines(Ui * ui, RawBuffer * rawbuf, unsigned int rownum, unsigned int col, unsigned int coloffset, bool readfromcopy, unsigned int copyreadpos) {
+void RawDataScreen::printRawBufferLines(VirtualView* vv, RawBuffer * rawbuf, unsigned int rownum, unsigned int col, unsigned int coloffset, bool readfromcopy, unsigned int copyreadpos) {
   bool cutfirst5 = false;
   bool skiptag = false;
   bool skiptagchecked = false;
@@ -155,14 +155,14 @@ void RawDataScreen::printRawBufferLines(Ui * ui, RawBuffer * rawbuf, unsigned in
     unsigned int startprintsecond = 0;
     if (!skiptag) {
       unsigned int length = line.first.length();
-      ui->printStr(i, coloffset, line.first, false, col - coloffset);
+      vv->putStr(i, coloffset, line.first, false, col - coloffset);
       startprintsecond = length + 1;
     }
     unsigned int start = 0;
     if (cutfirst5 && skipCodePrint(line.second)) {
       start = 5;
     }
-    ui->printStr(i, startprintsecond + coloffset, encoding::cp437toUnicode(line.second.substr(start)), false, col - coloffset - startprintsecond);
+    vv->putStr(i, startprintsecond + coloffset, encoding::cp437toUnicode(line.second.substr(start)), false, col - coloffset - startprintsecond);
   }
 }
 

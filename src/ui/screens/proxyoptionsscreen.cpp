@@ -11,7 +11,7 @@
 #include "../../sitemanager.h"
 #include "../../eventlog.h"
 
-ProxyOptionsScreen::ProxyOptionsScreen(Ui* ui) : UIWindow(ui, "ProxyOptionsScreen") {
+ProxyOptionsScreen::ProxyOptionsScreen(Ui* ui) : UIWindow(ui, "ProxyOptionsScreen"), mso(*vv), msop(*vv) {
   keybinds.addBind(10, KEYACTION_ENTER, "Modify");
   keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Next option");
   keybinds.addBind(KEY_UP, KEYACTION_UP, "Previous option");
@@ -45,7 +45,7 @@ void ProxyOptionsScreen::initialize(unsigned int row, unsigned int col) {
 }
 
 void ProxyOptionsScreen::redraw() {
-  ui->erase();
+  vv->clear();
   if (editproxy != "" && pm->getProxy(editproxy) == nullptr) {
     global->getSiteManager()->proxyRemoved(editproxy);
     editproxy = "";
@@ -60,11 +60,11 @@ void ProxyOptionsScreen::redraw() {
   unsigned int x = 1;
   msop.clear();
   msop.addTextButtonNoContent(3, x, "add", "Add proxy");
-  ui->printStr(5, x, "Name");
-  ui->printStr(5, x + 10, "Address");
-  ui->printStr(5, x + 30, "Port");
-  ui->printStr(5, x + 37, "Auth");
-  ui->printStr(5, x + 48, "Resolve");
+  vv->putStr(5, x, "Name");
+  vv->putStr(5, x + 10, "Address");
+  vv->putStr(5, x + 30, "Port");
+  vv->putStr(5, x + 37, "Auth");
+  vv->putStr(5, x + 48, "Resolve");
   for(std::vector<Proxy *>::const_iterator it = pm->begin(); it != pm->end(); it++) {
     std::string name = (*it)->getName();
     useproxy->addOption(name, 1);
@@ -97,8 +97,8 @@ void ProxyOptionsScreen::redraw() {
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+    vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
   for (unsigned int i = 0; i < msop.size(); i++) {
     std::shared_ptr<MenuSelectOptionElement> msoe = msop.getElement(i);
@@ -106,21 +106,17 @@ void ProxyOptionsScreen::redraw() {
     if (msop.isFocused() && msop.getSelectionPointer() == i) {
       highlight = true;
     }
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight, 9);
+    vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight, 9);
     if (msoe->getLabelText() == msoe->getIdentifier()) {
       Proxy * proxy = pm->getProxy(msoe->getLabelText());
       if (proxy != NULL) {
-        ui->printStr(msoe->getRow(), msoe->getCol() + 10, proxy->getAddr(), false, 19);
-        ui->printStr(msoe->getRow(), msoe->getCol() + 30, proxy->getPort(), false, 5);
-        ui->printStr(msoe->getRow(), msoe->getCol() + 37, proxy->getAuthMethodText());
-        ui->printStr(msoe->getRow(), msoe->getCol() + 48, proxy->getResolveHosts() ? "[X]" : "[ ]");
+        vv->putStr(msoe->getRow(), msoe->getCol() + 10, proxy->getAddr(), false, 19);
+        vv->putStr(msoe->getRow(), msoe->getCol() + 30, proxy->getPort(), false, 5);
+        vv->putStr(msoe->getRow(), msoe->getCol() + 37, proxy->getAuthMethodText());
+        vv->putStr(msoe->getRow(), msoe->getCol() + 48, proxy->getResolveHosts() ? "[X]" : "[ ]");
       }
     }
   }
-}
-
-void ProxyOptionsScreen::update() {
-  redraw();
 }
 
 void ProxyOptionsScreen::command(const std::string & command) {
@@ -159,8 +155,9 @@ bool ProxyOptionsScreen::keyPressed(unsigned int ch) {
           focusedarea->enterFocusFrom(2);
         }
         ui->update();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_DOWN:
       if (focusedarea->goDown()) {
         if (!focusedarea->isFocused()) {
@@ -169,8 +166,9 @@ bool ProxyOptionsScreen::keyPressed(unsigned int ch) {
           focusedarea->enterFocusFrom(0);
         }
         ui->update();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_ENTER:
       selected = focusedarea->getElement(focusedarea->getSelectionPointer());
       if (selected->getIdentifier() == "add") {

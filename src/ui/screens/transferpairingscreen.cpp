@@ -27,7 +27,7 @@ enum KeyScopes {
 };
 }
 
-TransferPairingScreen::TransferPairingScreen(Ui* ui) : UIWindow(ui, "TransferPairingScreen") {
+TransferPairingScreen::TransferPairingScreen(Ui* ui) : UIWindow(ui, "TransferPairingScreen"), table(*vv) {
   keybinds.addScope(KEYSCOPE_IN_TABLE, "In the skiplist table");
   keybinds.addBind(10, KEYACTION_ENTER, "Modify");
   keybinds.addBind('d', KEYACTION_DONE, "Done");
@@ -60,12 +60,12 @@ void TransferPairingScreen::initialize() {
   active = false;
   table.reset();
   currentviewspan = 0;
-  temphighlightline = -1;
+  temphighlightline = false;
   init(row, col);
 }
 
 void TransferPairingScreen::redraw() {
-  ui->erase();
+  vv->clear();
   int y = 1;
   unsigned int listspan = row - y - 1;
   table.clear();
@@ -93,25 +93,13 @@ void TransferPairingScreen::redraw() {
   table.checkPointer();
   unsigned int ypos = table.getLineIndex(table.getAdjustableLine(table.getElement(table.getSelectionPointer()))) - 1;
   adaptViewSpan(currentviewspan, listspan, ypos, table.linesSize() - 1);
-  bool highlight;
   for (unsigned int i = 0; i < table.size(); i++) {
     std::shared_ptr<MenuSelectOptionElement> msoe = table.getElement(i);
-    highlight = false;
-    if (table.getSelectionPointer() == i) {
-      highlight = true;
-    }
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    bool highlight = table.getSelectionPointer() == i;
+    vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+    vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
-  if (temphighlightline != -1) {
-    std::shared_ptr<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
-    if (!!highlightline) {
-      std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
-      for (unsigned int i = minmaxcol.first; i <= minmaxcol.second; i++) {
-        ui->printChar(temphighlightline, i, ' ', true);
-      }
-    }
-  }
+  std::shared_ptr<MenuSelectAdjustableLine> highlightline;
   for (unsigned int i = 0; i < table.size(); i++) {
     std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(i));
     unsigned int lineindex = table.getLineIndex(table.getAdjustableLine(re));
@@ -119,32 +107,20 @@ void TransferPairingScreen::redraw() {
     if (lineindex > 0 && (ypos < currentviewspan || ypos >= currentviewspan + listspan)) {
       continue;
     }
-    highlight = false;
-    if (table.getSelectionPointer() == i || (int)re->getRow() == temphighlightline) {
-      highlight = true;
-    }
+    bool highlight = table.getSelectionPointer() == i;
     if (re->isVisible()) {
-      ui->printStr(re->getRow() - (lineindex ? currentviewspan : 0), re->getCol(), re->getContentText(), highlight);
+      vv->putStr(re->getRow() - (lineindex ? currentviewspan : 0), re->getCol(), re->getContentText(), highlight);
+    }
+    if (highlight && (temphighlightline ^ ui->getHighlightEntireLine())) {
+      highlightline = table.getAdjustableLine(re);
     }
   }
-  printSlider(ui, row, 1, col - 1, 0, currentviewspan);
-  update();
-}
-
-void TransferPairingScreen::update() {
-  std::shared_ptr<MenuSelectOptionElement> msoe;
-  unsigned int ypos = table.getLineIndex(table.getAdjustableLine(table.getElement(table.getSelectionPointer()))) - 1;
-  if (ypos < currentviewspan || ypos >= currentviewspan + row - 9) {
-    ui->redraw();
-    return;
+  if (highlightline) {
+    std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
+    vv->highlightOn(highlightline->getRow(), minmaxcol.first, minmaxcol.second - minmaxcol.first + 1);
   }
-  int lastsel = table.getLastSelectionPointer();
-  int sel = table.getSelectionPointer();
-
-  msoe = table.getElement(lastsel);
-  ui->printStr(msoe->getRow() - currentviewspan, msoe->getCol(), msoe->getContentText(), false);
-  msoe = table.getElement(sel);
-  ui->printStr(msoe->getRow() - currentviewspan, msoe->getCol(), msoe->getContentText(), true);
+  printSlider(vv, row, 1, col - 1, 0, currentviewspan);
+  std::shared_ptr<MenuSelectOptionElement> msoe = table.getElement(table.getSelectionPointer());
   if (!!msoe) {
     int cursorpos = msoe->cursorPosition();
     if (active && cursorpos >= 0) {
@@ -152,7 +128,7 @@ void TransferPairingScreen::update() {
       unsigned int cursorcol = msoe->getCol() + cursorpos;
       unsigned int cursorrow = msoe->getRow();
       cursorrow -= currentviewspan;
-      ui->moveCursor(cursorrow, cursorcol);
+      vv->moveCursor(cursorrow, cursorcol);
     }
     else {
       ui->hideCursor();
@@ -162,8 +138,8 @@ void TransferPairingScreen::update() {
 
 bool TransferPairingScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
-  if (temphighlightline != -1) {
-    temphighlightline = -1;
+  if (temphighlightline) {
+    temphighlightline = false;
     ui->redraw();
     if (action == KEYACTION_HIGHLIGHT_LINE) {
       return true;
@@ -281,7 +257,7 @@ bool TransferPairingScreen::keyPressed(unsigned int ch) {
       return true;
     }
     case KEYACTION_HIGHLIGHT_LINE:
-      temphighlightline = table.getElement(table.getSelectionPointer())->getRow();
+      temphighlightline = true;
       ui->redraw();
       return true;
   }

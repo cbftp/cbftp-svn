@@ -13,7 +13,7 @@
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptionelement.h"
 
-EditSiteSectionScreen::EditSiteSectionScreen(Ui* ui) : UIWindow(ui, "EditSiteSectionScreen") {
+EditSiteSectionScreen::EditSiteSectionScreen(Ui* ui) : UIWindow(ui, "EditSiteSectionScreen"), mso(*vv) {
   keybinds.addBind(10, KEYACTION_ENTER, "Modify");
   keybinds.addBind(KEY_DOWN, KEYACTION_DOWN, "Next option");
   keybinds.addBind(KEY_UP, KEYACTION_UP, "Previous option");
@@ -52,7 +52,7 @@ void EditSiteSectionScreen::initialize(unsigned int row, unsigned int col, const
 }
 
 void EditSiteSectionScreen::redraw() {
-  ui->erase();
+  vv->clear();
   bool highlight;
   for (unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
@@ -60,15 +60,15 @@ void EditSiteSectionScreen::redraw() {
     if (mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+    vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
   exists = false;
   unsigned int y = 5;
   std::shared_ptr<MenuSelectOptionElement> path = mso.getElement("path");
   std::list<std::string> alreadyboundsections = modsite->getSectionsForPath(std::static_pointer_cast<MenuSelectOptionTextField>(path)->getData());
   if (!alreadyboundsections.empty()) {
-    ui->printStr(y++, 1, "Sections currently bound to this path: " + util::join(alreadyboundsections, ", "));
+    vv->putStr(y++, 1, "Sections currently bound to this path: " + util::join(alreadyboundsections, ", "));
   }
   if (mode == Mode::ADD) {
     std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement("names");
@@ -76,24 +76,20 @@ void EditSiteSectionScreen::redraw() {
     for (const std::string& section : sections) {
       if (modsite->hasSection(section)) {
         std::string path = modsite->getSectionPath(section).toString();
-        ui->printStr(y++, 1, "Warning: Section " + section + " exists and will be updated. Old path: " + path);
+        vv->putStr(y++, 1, "Warning: Section " + section + " exists and will be updated. Old path: " + path);
         exists = true;
       }
     }
   }
-  update();
-}
-
-void EditSiteSectionScreen::update() {
   std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getLastSelectionPointer());
-  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
+  vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   msoe = mso.getElement(mso.getSelectionPointer());
-  ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
-  ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+  vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
+  vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   if (active && msoe->cursorPosition() >= 0) {
     ui->showCursor();
-    ui->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
+    vv->moveCursor(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 + msoe->cursorPosition());
   }
   else {
     ui->hideCursor();
@@ -116,14 +112,16 @@ bool EditSiteSectionScreen::keyPressed(unsigned int ch) {
   }
   bool activation;
   switch(action) {
-    case KEYACTION_UP:
-      mso.goUp();
+    case KEYACTION_UP: {
+      bool moved = mso.goUp();
       ui->update();
-      return true;
-    case KEYACTION_DOWN:
-      mso.goDown();
+      return moved;
+    }
+    case KEYACTION_DOWN: {
+      bool moved = mso.goDown();
       ui->update();
-      return true;
+      return moved;
+    }
     case KEYACTION_ENTER: {
       std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getSelectionPointer());
       activation = msoe->activate();

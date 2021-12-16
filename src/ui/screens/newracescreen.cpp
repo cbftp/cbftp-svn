@@ -22,7 +22,7 @@ enum KeyAction {
 
 }
 
-NewRaceScreen::NewRaceScreen(Ui * ui) : UIWindow(ui, "NewRaceScreen") {
+NewRaceScreen::NewRaceScreen(Ui * ui) : UIWindow(ui, "NewRaceScreen"), msos(*vv), mso(*vv) {
   keybinds.addBind(10, KEYACTION_ENTER, "Modify");
   keybinds.addBind('s', KEYACTION_START, "Start spread job");
   keybinds.addBind('S', KEYACTION_START_RETURN, "Start spread job and return to browsing");
@@ -112,7 +112,7 @@ void NewRaceScreen::populateSiteList() {
 }
 
 void NewRaceScreen::redraw() {
-  ui->erase();
+  vv->clear();
   for (unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<MenuSelectOptionCheckBox> msocb = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement(i));
     tempsites.push_back(std::pair<std::string, bool>(msocb->getIdentifier(), msocb->getData()));
@@ -122,8 +122,8 @@ void NewRaceScreen::redraw() {
   if (items.size() > 1) {
     item = std::to_string(static_cast<int>(items.size())) + " items";
   }
-  ui->printStr(1, 1, "Item: " + item);
-  ui->printStr(3, 1, "Section: ");
+  vv->putStr(1, 1, "Item: " + item);
+  vv->putStr(3, 1, "Section: ");
   bool highlight;
   for (unsigned int i = 0; i < msos.size(); i++) {
     std::shared_ptr<MenuSelectOptionElement> msoe = msos.getElement(i);
@@ -132,11 +132,11 @@ void NewRaceScreen::redraw() {
       highlight = true;
     }
     if (msoe->getId() == 0) {
-      ui->printStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe), highlight);
+      vv->putStr(msoe->getRow(), msoe->getCol(), getSectionButtonText(msoe), highlight);
     }
     else {
-      ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
-      ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+      vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+      vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
     }
   }
   for (unsigned int i = 0; i < mso.size(); i++) {
@@ -145,13 +145,9 @@ void NewRaceScreen::redraw() {
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText(), highlight);
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
+    vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getContentText().length() + 1, msoe->getLabelText(), highlight);
+    vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
   }
-}
-
-void NewRaceScreen::update() {
-  redraw();
 }
 
 bool NewRaceScreen::keyPressed(unsigned int ch) {
@@ -180,8 +176,9 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
           focusedarea->enterFocusFrom(2);
         }
         ui->update();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_DOWN:
       if (focusedarea->goDown() || focusedarea->goNext()) {
         if (!focusedarea->isFocused()) {
@@ -190,24 +187,27 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
           focusedarea->enterFocusFrom(0);
         }
         ui->update();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_LEFT:
       if (focusedarea->goLeft()) {
         if (!focusedarea->isFocused()) {
           // shouldn't happen
         }
         ui->update();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_RIGHT:
       if (focusedarea->goRight()) {
         if (!focusedarea->isFocused()) {
           // shouldn't happen
         }
         ui->update();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_NEXT_PAGE:
       for (unsigned int i = 0; i < pagerows; i++) {
         if (focusedarea->goDown()) {

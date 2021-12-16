@@ -11,10 +11,10 @@ class Ui;
 
 class LegendPrinterSpreadJob : public LegendPrinter {
 public:
-  LegendPrinterSpreadJob(Ui * ui, unsigned int id);
+  LegendPrinterSpreadJob(Ui* ui, unsigned int id);
   bool print();
 private:
-  Ui * ui;
+  Ui* ui;
   std::shared_ptr<Race> race;
   MenuSelectOption mso;
   int jobfinishedprintcount;

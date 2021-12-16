@@ -10,6 +10,7 @@
 #include "menuselectoptiontextbutton.h"
 #include "menuselectoptiontextarrow.h"
 #include "menuselectadjustableline.h"
+#include "virtualview.h"
 
 #define MAX_DIFF_LR 30
 #define MAX_DIFF_UD 2
@@ -21,7 +22,7 @@ enum Direction {
   RIGHT
 };
 
-MenuSelectOption::MenuSelectOption() {
+MenuSelectOption::MenuSelectOption(VirtualView& vv, bool affectvvvertical) : vv(vv), affectvvvertical(affectvvvertical) {
   pointer = 0;
   lastpointer = 0;
 }
@@ -57,6 +58,10 @@ bool MenuSelectOption::navigate(int dir) {
     }
   }
   if (movefound) {
+    const std::shared_ptr<MenuSelectOptionElement>& msoe = options[closestelem];
+    if (affectvvvertical || static_cast<unsigned int>(crow) == msoe->getRow()) {
+      vv.viewPosition(msoe->getRow(), msoe->getCol(), msoe->getTotalWidth());
+    }
     lastpointer = pointer;
     pointer = closestelem;
     return true;
@@ -227,6 +232,10 @@ void MenuSelectOption::enterFocusFrom(int dir) {
     pointer = lastpointer = size() - 1;
   }
   checkPointer();
+  if (size()) {
+    const std::shared_ptr<MenuSelectOptionElement>& msoe = options[pointer];
+    vv.viewPosition(msoe->getRow(), msoe->getCol(), msoe->getTotalWidth());
+  }
 }
 
 unsigned int MenuSelectOption::size() const {

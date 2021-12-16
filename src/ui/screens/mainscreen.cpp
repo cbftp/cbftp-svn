@@ -64,9 +64,57 @@ enum KeyScopes {
   KEYSCOPE_SITE
 };
 
+void putIfClear(VirtualView* vv, unsigned int row, unsigned int col, int c) {
+  if (vv->isClear(row, col)) {
+    vv->putChar(row, col, c, false);
+  }
+}
+
+void drawTree(VirtualView* vv) {
+  unsigned int row = vv->getActualRealRows();
+  unsigned int col = vv->getActualRealCols();
+  if (row < 16 || col < 26) {
+    return;
+  }
+  unsigned int startrow = row - 16;
+  unsigned int startcol = col - 27;
+  putIfClear(vv, startrow, startcol + 12, '*');
+  putIfClear(vv, startrow + 6, startcol + 10, 0x25CF);
+  putIfClear(vv, startrow + 4, startcol + 13, 0x25CF);
+  putIfClear(vv, startrow + 7, startcol + 16, 0x25CF);
+  putIfClear(vv, startrow + 8, startcol + 7, 0x25CF);
+  putIfClear(vv, startrow + 9, startcol + 12, 0x25CF);
+  putIfClear(vv, startrow + 2, startcol + 11, 0x25CF);
+  putIfClear(vv, startrow + 10, startcol + 6, 0x25CF);
+  putIfClear(vv, startrow + 11, startcol + 15, 0x25CF);
+  putIfClear(vv, startrow + 10, startcol + 19, 0x25CF);
+  vv->setColor(startrow, startcol + 12, COLOR_WHITE, COLOR_YELLOW);
+  vv->setColor(startrow + 1, startcol + 11, COLOR_RED, COLOR_GREEN, 3);
+  vv->setColor(startrow + 2, startcol + 10, COLOR_RED, COLOR_GREEN, 5);
+  vv->setColor(startrow + 3, startcol + 9, COLOR_RED, COLOR_GREEN, 7);
+  vv->setColor(startrow + 4, startcol + 8, COLOR_RED, COLOR_GREEN, 9);
+  vv->setColor(startrow + 5, startcol + 7, COLOR_RED, COLOR_GREEN, 11);
+  vv->setColor(startrow + 6, startcol + 6, COLOR_RED, COLOR_GREEN, 13);
+  vv->setColor(startrow + 7, startcol + 5, COLOR_RED, COLOR_GREEN, 15);
+  if (vv->isClear(startrow + 12, startcol, 25)) {
+    vv->putStr(startrow + 12, startcol + 6, "Merry xmas &");
+    vv->putStr(startrow + 13, startcol + 10, "happy");
+    vv->putStr(startrow + 14, startcol + 11, "new");
+    vv->putStr(startrow + 15, startcol + 10, "year!");
+  }
+  vv->setColor(startrow + 8, startcol + 4, COLOR_RED, COLOR_GREEN, 17);
+  vv->setColor(startrow + 9, startcol + 3, COLOR_RED, COLOR_GREEN, 19);
+  vv->setColor(startrow + 10, startcol + 2, COLOR_RED, COLOR_GREEN, 21);
+  vv->setColor(startrow + 11, startcol + 1, COLOR_RED, COLOR_GREEN, 23);
+  vv->setColor(startrow + 12, startcol, COLOR_RED, COLOR_GREEN, 25);
+  vv->setColor(startrow + 13, startcol + 10, COLOR_BLACK, COLOR_YELLOW, 5);
+  vv->setColor(startrow + 14, startcol + 10, COLOR_BLACK, COLOR_YELLOW, 5);
+  vv->setColor(startrow + 15, startcol + 10, COLOR_BLACK, COLOR_YELLOW, 5);
+}
+
 } // namespace
 
-MainScreen::MainScreen(Ui* ui) : UIWindow(ui, "MainScreen") {
+MainScreen::MainScreen(Ui* ui) : UIWindow(ui, "MainScreen"), msop(*vv), msosj(*vv), msotj(*vv), msos(*vv) {
   keybinds.addScope(KEYSCOPE_PREPARED_SPREAD_JOB, "When a prepared spread job is selected");
   keybinds.addScope(KEYSCOPE_SPREAD_JOB, "When a spread job is selected");
   keybinds.addScope(KEYSCOPE_TRANSFER_JOB, "When a transfer job is selected");
@@ -141,12 +189,12 @@ void MainScreen::initialize(unsigned int row, unsigned int col) {
     focusedarea = &msos;
     msos.enterFocusFrom(0);
   }
-  temphighlightline = -1;
+  temphighlightline = false;
   init(row, col);
 }
 
 void MainScreen::redraw() {
-  ui->erase();
+  vv->clear();
   ui->hideCursor();
   totalsitessize = global->getSiteManager()->getNumSites();
   if (sitepos && sitepos >= totalsitessize) {
@@ -205,7 +253,7 @@ void MainScreen::redraw() {
   msos.makeLeavableUp(listpreparedraces || listraces || listtransferjobs);
 
   if (!totalsitessize) {
-    ui->printStr(irow, 1, "Press 'A' to add a site");
+    vv->putStr(irow, 1, "Press 'A' to add a site");
   }
   else {
     int y = irow;
@@ -222,7 +270,7 @@ void MainScreen::redraw() {
     msos.checkPointer();
     msos.adjustLines(col - 3);
 
-    printSlider(ui, row, sitestartrow, col - 1, totalsitessize, currentviewspan);
+    printSlider(vv, row, sitestartrow, col - 1, totalsitessize, currentviewspan);
   }
   int currentraces = global->getEngine()->currentRaces();
   int currenttransferjobs = global->getEngine()->currentTransferJobs();
@@ -257,33 +305,28 @@ void MainScreen::redraw() {
   printTable(msosj);
   printTable(msotj);
   printTable(msos);
+  ui->setInfo();
+  if (ui->getShowXmasTree() && isYearEnd()) {
+    drawTree(vv);
+  }
 }
 
 void MainScreen::printTable(MenuSelectOption & table) {
-  if (temphighlightline != -1) {
-    std::shared_ptr<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
-    if (!!highlightline) {
-      std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
-      for (unsigned int i = minmaxcol.first; i <= minmaxcol.second; i++) {
-        ui->printChar(temphighlightline, i, ' ', true);
-      }
-    }
-  }
+  std::shared_ptr<MenuSelectAdjustableLine> highlightline;
   for (unsigned int i = 0; i < table.size(); i++) {
     std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(i));
-    bool highlight = false;
-    if (table.isFocused() && (table.getSelectionPointer() == i || (int)re->getRow() == temphighlightline)) {
-      highlight = true;
-    }
+    bool highlight = table.isFocused() && table.getSelectionPointer() == i;
     if (re->isVisible()) {
-      ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
+      vv->putStr(re->getRow(), re->getCol(), re->getLabelText(), highlight);
+    }
+    if (highlight && (temphighlightline ^ ui->getHighlightEntireLine())) {
+      highlightline = table.getAdjustableLine(re);
     }
   }
-}
-
-void MainScreen::update() {
-  redraw();
-  ui->setInfo();
+  if (highlightline) {
+    std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
+    vv->highlightOn(highlightline->getRow(), minmaxcol.first, minmaxcol.second - minmaxcol.first + 1);
+  }
 }
 
 void MainScreen::command(const std::string & command) {
@@ -318,7 +361,7 @@ void MainScreen::command(const std::string & command) {
   ui->setInfo();
 }
 
-void MainScreen::keyUp() {
+bool MainScreen::keyUp() {
   if (focusedarea == &msos) {
     if (sitepos) {
       --sitepos;
@@ -349,9 +392,10 @@ void MainScreen::keyUp() {
     focusedarea->enterFocusFrom(2);
     ui->setLegend();
   }
+  return true;
 }
 
-void MainScreen::keyDown() {
+bool MainScreen::keyDown() {
   if (focusedarea == &msos) {
     if (sitepos + 1 < totalsitessize) {
       ++sitepos;
@@ -379,13 +423,14 @@ void MainScreen::keyDown() {
     focusedarea->enterFocusFrom(0);
     ui->setLegend();
   }
+  return true;
 }
 
 bool MainScreen::keyPressed(unsigned int ch) {
   int scope = getCurrentScope();
   int action = keybinds.getKeyAction(ch, scope);
-  if (temphighlightline != -1) {
-    temphighlightline = -1;
+  if (temphighlightline) {
+    temphighlightline = false;
     ui->redraw();
     if (action == KEYACTION_HIGHLIGHT_LINE) {
       return true;
@@ -416,26 +461,14 @@ bool MainScreen::keyPressed(unsigned int ch) {
     return true;
   }
   switch(action) {
-    case KEYACTION_HIGHLIGHT_LINE: {
-      MenuSelectOption * target = static_cast<MenuSelectOption *>(focusedarea);
-      if (target && target->size() > 0) {
-        temphighlightline = target->getElement(target->getSelectionPointer())->getRow();
-        ui->redraw();
-      }
+    case KEYACTION_HIGHLIGHT_LINE:
+      temphighlightline = true;
+      ui->redraw();
       break;
-    }
-    case KEYACTION_UP:
-      keyUp();
-      ui->redraw();
-      return true;
-    case KEYACTION_DOWN:
-      keyDown();
-      ui->redraw();
-      return true;
     case KEYACTION_ENTER:
       if (msos.isFocused()) {
         if (!msos.linesSize()) break;
-        std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
+        std::string sitename = msos.getElement(msos.getSelectionPointer())->getExtraData();
         std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
         ui->goSiteStatus(site->getName());
       }
@@ -488,7 +521,7 @@ bool MainScreen::keyPressed(unsigned int ch) {
       return true;
     case KEYACTION_DELETE:
       if (msos.isFocused()) {
-        std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
+        std::string sitename = msos.getElement(msos.getSelectionPointer())->getExtraData();
         std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
         if (!site) break;
         deletesite = site->getName();
@@ -569,7 +602,7 @@ bool MainScreen::keyPressed(unsigned int ch) {
         }
       }
       else if (msos.isFocused() && msos.size() > 0) {
-        std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
+        std::string sitename = msos.getElement(msos.getSelectionPointer())->getExtraData();
         std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
         if (site) {
           ui->goTransfersFilterSite(sitename);
@@ -622,13 +655,13 @@ bool MainScreen::keyPressed(unsigned int ch) {
     switch(action) {
       case KEYACTION_EDIT_SITE: {
         if (!msos.linesSize()) break;
-        std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
+        std::string sitename = msos.getElement(msos.getSelectionPointer())->getExtraData();
         ui->goEditSite(sitename);
         return true;
       }
       case KEYACTION_COPY: {
         if (!msos.linesSize()) break;
-        std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
+        std::string sitename = msos.getElement(msos.getSelectionPointer())->getExtraData();
         std::shared_ptr<Site> oldsite = global->getSiteManager()->getSite(sitename);
         std::shared_ptr<Site> site = std::make_shared<Site>(*oldsite);
         int i;
@@ -641,40 +674,40 @@ bool MainScreen::keyPressed(unsigned int ch) {
         return true;
       }
       case KEYACTION_BROWSE: {
-        std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
+        std::string sitename = msos.getElement(msos.getSelectionPointer())->getExtraData();
         ui->goBrowse(sitename);
         return true;
       }
       case KEYACTION_LOGIN: {
-        std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
+        std::string sitename = msos.getElement(msos.getSelectionPointer())->getExtraData();
         global->getSiteLogicManager()->getSiteLogic(sitename)->activateAll();
         return true;
       }
       case KEYACTION_FORCE_DISCONNECT_ALL_SLOTS: {
-        std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
+        std::string sitename = msos.getElement(msos.getSelectionPointer())->getExtraData();
         global->getSiteLogicManager()->getSiteLogic(sitename)->disconnectAll(true);
         return true;
       }
       case KEYACTION_DISCONNECT_ALL_SLOTS: {
-        std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
+        std::string sitename = msos.getElement(msos.getSelectionPointer())->getExtraData();
         global->getSiteLogicManager()->getSiteLogic(sitename)->disconnectAll();
         return true;
       }
       case KEYACTION_BROWSE_SPLIT: {
         if (!msos.linesSize()) break;
-        std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
+        std::string sitename = msos.getElement(msos.getSelectionPointer())->getExtraData();
         ui->goBrowseSplit(sitename);
         return true;
       }
       case KEYACTION_RAW_COMMAND: {
         if (!msos.linesSize()) break;
-        std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
+        std::string sitename = msos.getElement(msos.getSelectionPointer())->getExtraData();
         ui->goRawCommand(sitename);
         return true;
       }
       case KEYACTION_REMOVE_SITE_FROM_ALL_SPREADJOBS: {
         if (!msos.linesSize()) break;
-        removesite = msos.getElement(msos.getSelectionPointer())->getLabelText();
+        removesite = msos.getElement(msos.getSelectionPointer())->getExtraData();
         awaitingremovesitefromallspreadjobs = true;
         ui->goConfirmation("Do you really want to remove " + removesite + " from ALL running spreadjobs?");
         return true;
@@ -807,6 +840,7 @@ void MainScreen::addSiteRow(unsigned int y, MenuSelectOption & mso, bool selecta
   if (!selectable) {
     msotb->setSelectable(false);
   }
+  msotb->setExtraData(site);
   msal->addElement(msotb, 13, 6, RESIZE_CUTEND, false);
 
   msotb = mso.addTextButtonNoContent(y, 1, "logins", logins);
@@ -921,7 +955,7 @@ void MainScreen::jumpSectionHotkey(int hotkey) {
   if (section == nullptr) {
     return;
   }
-  std::string sitename = msos.getElement(msos.getSelectionPointer())->getLabelText();
+  std::string sitename = msos.getElement(msos.getSelectionPointer())->getExtraData();
   std::shared_ptr<Site> site = global->getSiteManager()->getSite(sitename);
   if (site->hasSection(section->getName())) {
     ui->goBrowseSection(sitename, section->getName());

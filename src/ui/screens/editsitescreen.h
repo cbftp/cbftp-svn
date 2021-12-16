@@ -14,7 +14,6 @@ public:
   EditSiteScreen(Ui * ui);
   ~EditSiteScreen();
   void initialize(unsigned int row, unsigned int col, const std::string & operation, const std::string & site);
-  void update() override;
   void redraw() override;
   void command(const std::string & command, const std::string & arg) override;
   bool keyPressed(unsigned int ch) override;

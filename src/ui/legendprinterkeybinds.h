@@ -8,11 +8,11 @@ class Ui;
 
 class LegendPrinterKeybinds : public LegendPrinter {
 public:
-  LegendPrinterKeybinds(Ui * ui);
+  LegendPrinterKeybinds(Ui* ui);
   bool print();
-  void setText(const std::string & text);
+  void setText(const std::string& text);
 private:
-  Ui * ui;
+  Ui* ui;
   std::string text;
   unsigned int offset;
   int staticcount;

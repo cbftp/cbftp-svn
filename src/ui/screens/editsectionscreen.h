@@ -17,7 +17,6 @@ public:
   EditSectionScreen(Ui *);
   ~EditSectionScreen();
   void initialize(unsigned int row, unsigned int col, const std::string & section = "");
-  void update() override;
   void redraw() override;
   bool keyPressed(unsigned int) override;
   std::string getLegendText() const override;

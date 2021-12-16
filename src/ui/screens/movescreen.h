@@ -14,7 +14,6 @@ public:
   MoveScreen(Ui *);
   ~MoveScreen();
   void initialize(unsigned int row, unsigned int col, const std::string & site, const std::string& items, const Path& srcpath, const std::string& dstpath, const std::string& firstitem);
-  void update() override;
   void redraw() override;
   void deactivate();
   bool keyPressed(unsigned int ch) override;

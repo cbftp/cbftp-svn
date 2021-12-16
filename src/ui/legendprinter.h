@@ -1,8 +1,5 @@
 #pragma once
 
-struct _win_st;
-typedef struct _win_st WINDOW;
-
 class LegendPrinter {
 public:
   virtual ~LegendPrinter();

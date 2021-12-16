@@ -65,6 +65,7 @@ public:
   void replaceBind(int keyaction, int scope, const std::set<unsigned int>& newkeys);
   void replaceBind(int keyaction, int scope, unsigned int newkey);
   void resetBind(int keyaction, int scope);
+  bool hasBind(int keyaction, int scope) const;
   void unbind(int keyaction, int scope);
   void resetAll();
   int getKeyAction(int key, int scope = KEYSCOPE_ALL) const;

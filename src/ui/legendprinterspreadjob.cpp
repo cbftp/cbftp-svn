@@ -10,7 +10,7 @@
 
 #include "ui.h"
 
-LegendPrinterSpreadJob::LegendPrinterSpreadJob(Ui * ui, unsigned int id) : ui(ui), jobfinishedprintcount(0) {
+LegendPrinterSpreadJob::LegendPrinterSpreadJob(Ui * ui, unsigned int id) : ui(ui), mso(ui->getVirtualView()), jobfinishedprintcount(0) {
   race = global->getEngine()->getRace(id);
 }
 
@@ -80,14 +80,14 @@ bool LegendPrinterSpreadJob::print() {
   mso.adjustLines(col - 8);
 
   for (unsigned int i = 4; i < col - 4; i++) {
-    ui->printChar(1, i, ' ', false, ui->getLegendWindow());
+    ui->getRenderer().printChar(1, i, ' ', false, false, -1, Window::LEGEND);
   }
   for (unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(mso.getElement(i));
     if (!re->isVisible()) {
       continue;
     }
-    ui->printStr(re->getRow(), re->getCol(), re->getLabelText(), false, -1, false, ui->getLegendWindow());
+    ui->getRenderer().printStr(re->getRow(), re->getCol(), re->getLabelText(), false, false, -1, -1, false, Window::LEGEND);
   }
   if (jobfinishedprintcount >= 20) {
     return false;

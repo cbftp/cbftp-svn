@@ -1,13 +1,13 @@
 #include "misc.h"
 
 #include "termint.h"
-#include "ui.h"
+#include "virtualview.h"
 
-void printSlider(Ui * ui, unsigned int row, unsigned int xpos, unsigned int totalspan, unsigned int currentviewspan) {
-  printSlider(ui, row, 0, xpos, totalspan, currentviewspan);
+void printSlider(VirtualView* vv, unsigned int row, unsigned int xpos, unsigned int totalspan, unsigned int currentviewspan) {
+  printSlider(vv, row, 0, xpos, totalspan, currentviewspan);
 }
 
-void printSlider(Ui * ui, unsigned int row, unsigned int ypos, unsigned int xpos, unsigned int totalspan, unsigned int currentviewspan) {
+void printSlider(VirtualView* vv, unsigned int row, unsigned int ypos, unsigned int xpos, unsigned int totalspan, unsigned int currentviewspan) {
   unsigned int slidersize = 0;
   unsigned int sliderstart = 0;
   unsigned int spanlength = row - ypos;
@@ -28,14 +28,14 @@ void printSlider(Ui * ui, unsigned int row, unsigned int ypos, unsigned int xpos
     }
     for (unsigned int i = 0; i < spanlength; i++) {
       if (i >= sliderstart && i < sliderstart + slidersize) {
-        ui->printChar(i + ypos, xpos, ' ', true);
+        vv->putChar(i + ypos, xpos, ' ', true);
       }
       else {
-        ui->printChar(i + ypos, xpos, BOX_VLINE);
+        vv->putChar(i + ypos, xpos, BOX_VLINE);
       }
     }
     if (spanlength == 1) {
-      ui->printChar(ypos, xpos, BOX_CROSS);
+      vv->putChar(ypos, xpos, BOX_CROSS);
     }
   }
 }
@@ -60,4 +60,10 @@ bool adaptViewSpan(unsigned int & currentviewspan, unsigned int row, unsigned in
     viewspanchanged = true;
   }
   return viewspanchanged;
+}
+
+bool isYearEnd() {
+  time_t rawtime = time(nullptr);
+  struct tm* ti = localtime(&rawtime);
+  return !ti->tm_yday || (ti->tm_mon == 11 && ti->tm_mday >= 24);
 }

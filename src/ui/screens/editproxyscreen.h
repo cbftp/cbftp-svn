@@ -12,7 +12,6 @@ public:
   EditProxyScreen(Ui *);
   ~EditProxyScreen();
   void initialize(unsigned int, unsigned int, std::string, std::string);
-  void update();
   void redraw();
   bool keyPressed(unsigned int);
   std::string getLegendText() const;

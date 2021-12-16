@@ -18,7 +18,6 @@ public:
   ~TransferJobStatusScreen();
   void initialize(unsigned int, unsigned int, unsigned int);
   void redraw();
-  void update();
   void command(const std::string &, const std::string &);
   bool keyPressed(unsigned int);
   std::string getLegendText() const;

@@ -13,7 +13,6 @@ public:
   SiteSlotsScreen(Ui *);
   ~SiteSlotsScreen();
   void initialize(unsigned int row, unsigned int col, const std::shared_ptr<Site> & site);
-  void update() override;
   void redraw() override;
   bool keyPressed(unsigned int) override;
   std::string getLegendText() const override;

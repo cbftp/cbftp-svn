@@ -28,7 +28,7 @@ enum KeyScopes {
 };
 }
 
-SkipListScreen::SkipListScreen(Ui* ui) : UIWindow(ui, "SkipListScreen") {
+SkipListScreen::SkipListScreen(Ui* ui) : UIWindow(ui, "SkipListScreen"), base(*vv), table(*vv, false) {
   keybinds.addScope(KEYSCOPE_IN_TABLE, "In the skiplist table");
   keybinds.addBind(10, KEYACTION_ENTER, "Modify");
   keybinds.addBind('d', KEYACTION_DONE, "Done");
@@ -85,21 +85,8 @@ void SkipListScreen::initialize() {
   testtype->setOption(0);
   testinspreadjob = base.addCheckBox(++y, 1, "testinspreadjob", "Test in spread job:", true);
   currentviewspan = 0;
-  temphighlightline = -1;
-  init(row, col);
-}
-
-void SkipListScreen::redraw() {
-  ui->erase();
-  int y = 1;
-  if (!globalskip) {
-    ui->printStr(y++, 1, "This skiplist is local and will fall through to the global skiplist if no match is found.");
-  }
-  ui->printStr(y++, 1, "Valid wildcard expressions are * and ?, unless regex is used.");
-  ui->printStr(y++, 1, "The pattern list is parsed from top to bottom and the first match applies. Case insensitive.");
-  y += 5;
-  unsigned int listspan = row - y - 1;
-  table.clear();
+  temphighlightline = false;
+  y += 2;
   std::shared_ptr<ResizableElement> re;
   std::shared_ptr<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
   re = table.addTextButton(y, 1, "regex", "REGEX");
@@ -120,11 +107,23 @@ void SkipListScreen::redraw() {
   re = table.addTextButton(y, 6, "scope", "SCOPE");
   re->setSelectable(false);
   msal->addElement(re, 6, RESIZE_REMOVE);
-  std::list<SkiplistItem>::const_iterator it;
   for (it = testskiplist.entriesBegin(); it != testskiplist.entriesEnd(); it++) {
     y++;
     addPatternLine(y, it->matchRegex(), it->matchPattern(), it->matchFile(), it->matchDir(), it->matchScope(), it->getAction());
   }
+  init(row, col);
+}
+
+void SkipListScreen::redraw() {
+  vv->clear();
+  int y = 1;
+  if (!globalskip) {
+    vv->putStr(y++, 1, "This skiplist is local and will fall through to the global skiplist if no match is found.");
+  }
+  vv->putStr(y++, 1, "Valid wildcard expressions are * and ?, unless regex is used.");
+  vv->putStr(y++, 1, "The pattern list is parsed from top to bottom and the first match applies. Case insensitive.");
+  y += 5;
+  unsigned int listspan = vv->getActualRealRows() - y - 1;
   if (testskiplist.size()) {
     base.makeLeavableDown();
   }
@@ -138,22 +137,11 @@ void SkipListScreen::redraw() {
   bool highlight;
   for (unsigned int i = 0; i < base.size(); i++) {
     std::shared_ptr<MenuSelectOptionElement> msoe = base.getElement(i);
-    highlight = false;
-    if (base.getSelectionPointer() == i && &base == focusedarea) {
-      highlight = true;
-    }
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    highlight = base.getSelectionPointer() == i && &base == focusedarea;
+    vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
+    vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
   }
-  if (temphighlightline != -1) {
-    std::shared_ptr<MenuSelectAdjustableLine> highlightline = table.getAdjustableLineOnRow(temphighlightline);
-    if (!!highlightline) {
-      std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol();
-      for (unsigned int i = minmaxcol.first; i <= minmaxcol.second; i++) {
-        ui->printChar(temphighlightline, i, ' ', true);
-      }
-    }
-  }
+  std::shared_ptr<MenuSelectAdjustableLine> highlightline;
   for (unsigned int i = 0; i < table.size(); i++) {
     std::shared_ptr<ResizableElement> re = std::static_pointer_cast<ResizableElement>(table.getElement(i));
     unsigned int lineindex = table.getLineIndex(table.getAdjustableLine(re));
@@ -161,54 +149,24 @@ void SkipListScreen::redraw() {
     if (lineindex > 0 && (ypos < currentviewspan || ypos >= currentviewspan + listspan)) {
       continue;
     }
-    highlight = false;
-    if ((table.getSelectionPointer() == i || (int)re->getRow() == temphighlightline) && &table == focusedarea) {
-      highlight = true;
-    }
+    highlight = table.getSelectionPointer() == i && &table == focusedarea;
     if (re->isVisible()) {
-      ui->printStr(re->getRow() - (lineindex ? currentviewspan : 0), re->getCol(), re->getContentText(), highlight);
+      vv->putStr(re->getRow() - (lineindex ? currentviewspan : 0), re->getCol(), re->getContentText(), highlight);
+    }
+    if (highlight && temphighlightline) {
+      highlightline = table.getAdjustableLine(re);
     }
   }
-  printSlider(ui, row, globalskip ? 8 : 9, col - 1, testskiplist.size(), currentviewspan);
+  if (highlightline) {
+    std::pair<unsigned int, unsigned int> minmaxcol = highlightline->getMinMaxCol(true);
+    vv->highlightOn(highlightline->getRow(), minmaxcol.first, minmaxcol.second - minmaxcol.first + 1);
+  }
+  printSlider(vv, vv->getActualRealRows(), y + 1, vv->getActualRealCols() - 1, testskiplist.size(), currentviewspan);
   update();
 }
 
 void SkipListScreen::update() {
-  if (defocusedarea != NULL) {
-    if (defocusedarea == &base) {
-      std::shared_ptr<MenuSelectOptionElement> msoe = base.getElement(base.getLastSelectionPointer());
-      ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText());
-    }
-    else if (defocusedarea == &table) {
-      std::shared_ptr<MenuSelectOptionElement> msoe = table.getElement(table.getLastSelectionPointer());
-      ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getContentText());
-    }
-    defocusedarea = NULL;
-  }
-  std::shared_ptr<MenuSelectOptionElement> msoe;
-  if (focusedarea == &base) {
-    int lastsel = base.getLastSelectionPointer();
-    int sel = base.getSelectionPointer();
-    msoe = base.getElement(lastsel);
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), false);
-    msoe = base.getElement(sel);
-    ui->printStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), true);
-    ui->printStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
-  }
-  else if (focusedarea == &table) {
-    unsigned int ypos = table.getLineIndex(table.getAdjustableLine(table.getElement(table.getSelectionPointer()))) - 1;
-    if (ypos < currentviewspan || ypos >= currentviewspan + row - (globalskip ? 8 : 9)) {
-      ui->redraw();
-      return;
-    }
-    int lastsel = table.getLastSelectionPointer();
-    int sel = table.getSelectionPointer();
-
-    msoe = table.getElement(lastsel);
-    ui->printStr(msoe->getRow() - currentviewspan, msoe->getCol(), msoe->getContentText(), false);
-    msoe = table.getElement(sel);
-    ui->printStr(msoe->getRow() - currentviewspan, msoe->getCol(), msoe->getContentText(), true);
-  }
+  std::shared_ptr<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
   if (!!msoe) {
     int cursorpos = msoe->cursorPosition();
     if (active && cursorpos >= 0) {
@@ -221,7 +179,7 @@ void SkipListScreen::update() {
       else {
         cursorrow -= currentviewspan;
       }
-      ui->moveCursor(cursorrow, cursorcol);
+      vv->moveCursor(cursorrow, cursorcol);
     }
     else {
       ui->hideCursor();
@@ -230,7 +188,7 @@ void SkipListScreen::update() {
 
   if (col > testtype->getCol() + 20) {
     std::string empty(col - (testtype->getCol() + 20), ' ');
-    ui->printStr(testtype->getRow(), testtype->getCol() + 20, empty);
+    vv->putStr(testtype->getRow(), testtype->getCol() + 20, empty);
   }
   if (testpattern->getData().length() > 0) {
     std::string allowstring;
@@ -247,17 +205,17 @@ void SkipListScreen::update() {
     else if (match.action == SKIPLIST_SIMILAR) {
       allowstring = "SIMILAR";
     }
-    ui->printStr(testtype->getRow(), testtype->getCol() + 20, allowstring);
+    vv->putStr(testtype->getRow(), testtype->getCol() + 20, allowstring);
     std::string matchstring = "Match: " + (match.matched ? match.matchpattern : "no match (allowed)");
-    ui->printStr(testtype->getRow(), testtype->getCol() + 30, matchstring);
+    vv->putStr(testtype->getRow(), testtype->getCol() + 30, matchstring);
   }
 }
 
 bool SkipListScreen::keyPressed(unsigned int ch) {
   int scope = getCurrentScope();
   int action = keybinds.getKeyAction(ch, scope);
-  if (temphighlightline != -1) {
-    temphighlightline = -1;
+  if (temphighlightline) {
+    temphighlightline = false;
     ui->redraw();
     if (action == KEYACTION_HIGHLIGHT_LINE) {
       return true;
@@ -287,44 +245,52 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
         }
       }
       saveToTempSkipList();
-      ui->update();
+      ui->redraw();
       ui->setLegend();
       return true;
     }
     activeelement->inputChar(ch);
-    ui->update();
+    ui->redraw();
     return true;
   }
   bool activation;
   switch(action) {
-    case KEYACTION_UP:
-      keyUp();
-      ui->update();
-      return true;
-    case KEYACTION_DOWN:
-      keyDown();
-      ui->update();
-      return true;
-    case KEYACTION_NEXT_PAGE:
+    case KEYACTION_UP: {
+      bool moved = keyUp();
+      ui->redraw();
+      return moved;
+    }
+    case KEYACTION_DOWN: {
+      bool moved = keyDown();
+      ui->redraw();
+      return moved;
+    }
+    case KEYACTION_NEXT_PAGE: {
+      bool moved = false;
       for (unsigned int i = 0; i < pagerows; i++) {
-        keyDown();
+        moved = keyDown() || moved;
       }
       ui->redraw();
-      return true;
-    case KEYACTION_PREVIOUS_PAGE:
+      return moved;
+    }
+    case KEYACTION_PREVIOUS_PAGE: {
+      bool moved = false;
       for (unsigned int i = 0; i < pagerows; i++) {
-        keyUp();
+        moved = keyUp() || moved;
       }
       ui->redraw();
-      return true;
-    case KEYACTION_LEFT:
-      focusedarea->goLeft();
-      ui->update();
-      return true;
-    case KEYACTION_RIGHT:
-      focusedarea->goRight();
-      ui->update();
-      return true;
+      return moved;
+    }
+    case KEYACTION_LEFT: {
+      bool moved = focusedarea->goLeft();
+      ui->redraw();
+      return moved;
+    }
+    case KEYACTION_RIGHT: {
+      bool moved = focusedarea->goRight();
+      ui->redraw();
+      return moved;
+    }
     case KEYACTION_ENTER:
       activation = focusedarea->activateSelected();
       if (!activation) {
@@ -353,12 +319,12 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
           }
         }
         saveToTempSkipList();
-        ui->update();
+        ui->redraw();
         return true;
       }
       active = true;
       activeelement = focusedarea->getElement(focusedarea->getSelectionPointer());
-      ui->update();
+      ui->redraw();
       ui->setLegend();
       return true;
     case KEYACTION_BACK_CANCEL:
@@ -422,15 +388,15 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
       if (focusedarea != &table) {
         break;
       }
-      temphighlightline = table.getElement(table.getSelectionPointer())->getRow();
+      temphighlightline = true;
       ui->redraw();
       return true;
   }
   return false;
 }
 
-void SkipListScreen::keyUp() {
-  focusedarea->goUp();
+bool SkipListScreen::keyUp() {
+  bool moved = focusedarea->goUp();
   if (!focusedarea->isFocused()) {
     defocusedarea = focusedarea;
     focusedarea = &base;
@@ -438,16 +404,18 @@ void SkipListScreen::keyUp() {
     focusedarea->goLeft();
     ui->setLegend();
   }
+  return moved;
 }
 
-void SkipListScreen::keyDown() {
-  focusedarea->goDown();
+bool SkipListScreen::keyDown() {
+  bool moved = focusedarea->goDown();
   if (!focusedarea->isFocused()) {
     defocusedarea = focusedarea;
     focusedarea = &table;
     focusedarea->enterFocusFrom(0);
     ui->setLegend();
   }
+  return moved;
 }
 
 std::string SkipListScreen::getLegendText() const {

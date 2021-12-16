@@ -15,7 +15,6 @@ public:
   AllRacesScreen(Ui *);
   void initialize(unsigned int, unsigned int);
   void redraw() override;
-  void update() override;
   void command(const std::string &, const std::string &) override;
   bool keyPressed(unsigned int) override;
   std::string getInfoLabel() const override;
@@ -31,7 +30,7 @@ private:
   bool hascontents;
   unsigned int currentviewspan;
   unsigned int ypos;
-  int temphighlightline;
+  bool temphighlightline;
   std::shared_ptr<Race> abortrace;
   std::shared_ptr<Race> abortdeleteraceinc;
   std::shared_ptr<Race> abortdeleteraceall;
