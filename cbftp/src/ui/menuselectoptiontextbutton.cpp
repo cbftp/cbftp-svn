@@ -74,3 +74,7 @@ std::string MenuSelectOptionTextButton::getLegendText() const {
 void MenuSelectOptionTextButton::setLegendText(const std::string& text) {
   legendtext = text;
 }
+
+unsigned int MenuSelectOptionTextButton::getTotalWidth() const {
+  return getLabelText().length() + (text.empty() ? 0 : 1 + getContentText().length());
+}

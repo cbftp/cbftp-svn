@@ -67,7 +67,7 @@ private:
   std::list<std::pair<Path, std::string> > selectionhistory;
   std::shared_ptr<LocalFileList> filelist;
   MenuSelectOptionTextField filterfield;
-  int temphighlightline;
+  bool temphighlightline;
   bool softselecting;
   LastInfo lastinfo;
   std::string lastinfotarget;

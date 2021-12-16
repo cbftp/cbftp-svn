@@ -19,4 +19,5 @@ public:
   unsigned int wantedWidth() const override;
   std::string getLegendText() const override;
   void setLegendText(const std::string& text);
+  virtual unsigned int getTotalWidth() const override;
 };
