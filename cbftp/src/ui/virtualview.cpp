@@ -564,7 +564,13 @@ void VirtualView::setRedrawAll() {
 }
 
 bool VirtualView::isClear(unsigned int row, unsigned int col, unsigned int len) const {
+  if (row >= virtualrows) {
+    return true;
+  }
   for (unsigned int i = col; i < col + len; ++i) {
+    if (col >= virtualcols) {
+      return true;
+    }
     const VirtualViewElement& vve = virtualchars.at(row).at(i);
     if (!(vve.isClear() || currentredrawiteration != vve.getRedrawIteration() || currentcleariteration != vve.getClearIteration())) {
       return false;
