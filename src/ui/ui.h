@@ -29,6 +29,8 @@ class SkipList;
 class RawBuffer;
 class KeyBinds;
 class TransferPairing;
+class ExternalScripts;
+
 class LoginScreen;
 class NewKeyScreen;
 class MainScreen;
@@ -72,6 +74,7 @@ class FileInfoScreen;
 class KeyBindsScreen;
 class MetricsScreen;
 class TransferPairingScreen;
+class ExternalScriptsScreen;
 
 class LegendPrinterKeybinds;
 struct TransferFilteringParameters;
@@ -133,6 +136,7 @@ private:
   std::shared_ptr<KeyBindsScreen> keybindsscreen;
   std::shared_ptr<MetricsScreen> metricsscreen;
   std::shared_ptr<TransferPairingScreen> transferpairingscreen;
+  std::shared_ptr<ExternalScriptsScreen> externalscriptsscreen;
   std::shared_ptr<LegendPrinterKeybinds> legendprinterkeybinds;
   unsigned int mainrow;
   unsigned int col;
@@ -259,6 +263,7 @@ public:
   void goGlobalKeyBinds();
   void goMetrics();
   void goTransferPairing(TransferPairing* transferpairing);
+  void goExternalScripts(ExternalScripts* externalscripts);
   void returnSelectItems(const std::string &);
   void key(const std::string &);
   void newKey(const std::string &);

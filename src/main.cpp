@@ -27,6 +27,7 @@
 #include "httpserver.h"
 #include "restapi.h"
 #include "loadmonitor.h"
+#include "externalscriptsmanager.h"
 
 namespace {
 
@@ -60,11 +61,12 @@ public:
     HTTPServer* httprv = new HTTPServer();
     RestApi* ra = new RestApi();
     LoadMonitor* lm = new LoadMonitor();
+    ExternalScriptsManager* esm = new ExternalScriptsManager();
 
     UIBase* uibase = UIBase::instance();
 
     global->linkComponents(sls, e, uibase, sm, slm, tm, rch, sl, pm, ls, efv,
-                           tr, s, secm, httprv, ra, lm);
+                           tr, s, secm, httprv, ra, lm, esm);
 
     Core::Threading::setCurrentThreadName("cbftp");
 

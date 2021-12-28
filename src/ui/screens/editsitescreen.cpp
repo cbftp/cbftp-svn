@@ -302,7 +302,7 @@ void EditSiteScreen::redraw() {
 void EditSiteScreen::command(const std::string & command, const std::string & arg) {
   if (command == "returnselectitems") {
     std::static_pointer_cast<MenuSelectOptionTextField>(activeelement)->setText(arg);
-    redraw();
+    ui->redraw();
   }
 }
 

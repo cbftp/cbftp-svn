@@ -69,7 +69,7 @@ void VirtualView::putStr(unsigned int row, unsigned int col, const std::basic_st
   int color = encodeColorRepresentation();
   bool bold = false;
   int writepos = 0;
-  for (size_t i = 0; i < str.length() && (maxlen < 0 || static_cast<int>(i) < maxlen); ++i) {
+  for (size_t i = 0; i < static_cast<unsigned int>(len) && (maxlen < 0 || static_cast<int>(i) < maxlen); ++i) {
     if (len - i > 3 && str[i] == '%') {
       if (str[i+1] == 'C' && str[i+2] == '(') {
         if (str[i+3] == ')') {
@@ -349,14 +349,14 @@ void VirtualView::renderVerticalSlider() {
     }
     for (unsigned int i = 0; i < spanlength; i++) {
       if (i >= sliderstart && i < sliderstart + slidersize) {
-        renderer.printChar(i + ypos, xpos, ' ', true);
+        drawSliderChar(i + ypos, xpos, ' ', true);
       }
       else {
-        renderer.printChar(i + ypos, xpos, BOX_VLINE);
+        drawSliderChar(i + ypos, xpos, BOX_VLINE);
       }
     }
     if (spanlength == 1) {
-      renderer.printChar(ypos, xpos, BOX_CROSS);
+      drawSliderChar(ypos, xpos, BOX_CROSS);
     }
   }
 }
@@ -385,16 +385,28 @@ void VirtualView::renderHorizontalSlider() {
     }
     for (unsigned int i = 0; i < spanlength; i++) {
       if (i >= sliderstart && i < sliderstart + slidersize) {
-        renderer.printChar(ypos, i + xpos, 0x25A0);
+        drawSliderChar(ypos, i + xpos, 0x25A0);
+
       }
       else {
-        renderer.printChar(ypos, i + xpos, BOX_HLINE);
+        drawSliderChar(ypos, i + xpos, BOX_HLINE);
       }
     }
     if (spanlength == 1) {
-      renderer.printChar(ypos, xpos, BOX_CROSS);
+      drawSliderChar(ypos, xpos, BOX_CROSS);
     }
   }
+}
+
+void VirtualView::drawSliderChar(unsigned int row, unsigned int col, unsigned int c, bool highlight) {
+  VirtualViewElement& rvve = realchars[row][col];
+  VirtualViewElement& vvve = virtualchars[row][col];
+  rvve.set(c, highlight, false, encodeColorRepresentation(), currentcleariteration, currentredrawiteration);
+  vvve.set(c, highlight, false, encodeColorRepresentation(), currentcleariteration, currentredrawiteration);
+  rvve.render();
+  vvve.render();
+  renderedchars.insert(std::pair<unsigned int, unsigned int>(row, col));
+  renderer.printChar(row, col, c, highlight);
 }
 
 bool VirtualView::horizontalSlider() const {

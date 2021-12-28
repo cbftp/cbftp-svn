@@ -788,6 +788,18 @@ void SettingsLoaderSaver::loadSettings() {
     }
   }
 
+  dfh->getDataFor("ExternalScripts", &lines);
+  for (it = lines.begin(); it != lines.end(); it++) {
+    line = *it;
+    if (line.length() == 0 ||line[0] == '#') continue;
+    size_t tok = line.find('=');
+    std::string setting = line.substr(0, tok);
+    std::string value = line.substr(tok + 1);
+    if (!setting.compare("script")) {
+      global->getEngine()->setPreparedRaceExpiryTime(std::stoi(value));
+    }
+  }
+
   global->getSiteManager()->sortSites();
 
   for (std::list<SettingsAdder *>::iterator it = settingsadders.begin(); it != settingsadders.end(); it++) {

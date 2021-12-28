@@ -45,6 +45,7 @@ private:
   void renderVerticalSlider();
   void renderHorizontalSlider();
   void setRedrawAll();
+  void drawSliderChar(unsigned int row, unsigned int col, unsigned int c, bool highlight = false);
   Renderer& renderer;
   unsigned int realrows;
   unsigned int realcols;

@@ -6,6 +6,8 @@
 
 #include "../../globalcontext.h"
 #include "../../engine.h"
+#include "../../externalscripts.h"
+#include "../../externalscriptsmanager.h"
 #include "../../localfilelist.h"
 #include "../../timereference.h"
 #include "../../filelist.h"
@@ -25,7 +27,7 @@
 #include "browsescreenlocal.h"
 
 BrowseScreen::BrowseScreen(Ui* ui) : UIWindow(ui, "BrowseScreen"),
-  sitekeybinds("BrowseScreenSite"), localkeybinds("BrowseScreenLocal")
+  sitekeybinds("BrowseScreenSite"), localkeybinds("BrowseScreenLocal"), externalscripts(std::make_shared<ExternalScripts>())
 {
   keybinds.addBind(27, KEYACTION_BACK_CANCEL, "Cancel");
   keybinds.addBind({'c', KEY_LEFT}, KEYACTION_CLOSE, "Close");
@@ -86,6 +88,7 @@ BrowseScreen::BrowseScreen(Ui* ui) : UIWindow(ui, "BrowseScreen"),
   sitekeybinds.addBind('-', KEYACTION_HIGHLIGHT_LINE, "Highlight entire line");
   sitekeybinds.addBind('\t', KEYACTION_SPLIT, "Split/switch side");
   sitekeybinds.addBind('h', KEYACTION_TOGGLE_SHOW_NAMES_ONLY, "Show names only");
+  sitekeybinds.addBind('x', KEYACTION_EXTERNAL_SCRIPTS, "Configure external scripts");
   localkeybinds.addScope(KEYSCOPE_SPLIT_SITE_LOCAL, "When split browsing local-site");
   localkeybinds.addBind('t', KEYACTION_TRANSFER, "Transfer (Upload)", KEYSCOPE_SPLIT_SITE_LOCAL);
   localkeybinds.addBind('u', KEYACTION_COMPARE_UNIQUE, "Unique compare", KEYSCOPE_SPLIT_SITE_LOCAL);
@@ -120,8 +123,10 @@ BrowseScreen::BrowseScreen(Ui* ui) : UIWindow(ui, "BrowseScreen"),
   localkeybinds.addBind('-', KEYACTION_HIGHLIGHT_LINE, "Highlight entire line");
   localkeybinds.addBind('\t', KEYACTION_SPLIT, "Split/switch side");
   localkeybinds.addBind('h', KEYACTION_TOGGLE_SHOW_NAMES_ONLY, "Show names only");
+  localkeybinds.addBind('x', KEYACTION_EXTERNAL_SCRIPTS, "Configure external scripts");
   ui->addKeyBinds(&sitekeybinds);
   ui->addKeyBinds(&localkeybinds);
+  global->getExternalScriptsManager()->addExternalScripts(name, externalscripts.get());
   allowimplicitgokeybinds = false;
 }
 
@@ -212,6 +217,14 @@ void BrowseScreen::redraw() {
       vv->putChar(i, splitcol, BOX_VLINE);
     }
   }
+  if (!!right) {
+    if (!split) {
+      right->redraw(row, col, 0);
+    }
+    else {
+      right->redraw(row, col - splitcol - 1, splitcol + 1);
+    }
+  }
   if (!!left) {
     if (!split) {
       left->redraw(row, col, 0);
@@ -221,14 +234,7 @@ void BrowseScreen::redraw() {
       left->redraw(row, splitcol, 0);
     }
   }
-  if (!!right) {
-    if (!split) {
-      right->redraw(row, col, 0);
-    }
-    else {
-      right->redraw(row, col - splitcol - 1, splitcol + 1);
-    }
-  }
+
 }
 
 void BrowseScreen::update() {
@@ -449,6 +455,9 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
       return true;
     case KEYACTION_KEYBINDS:
       ui->goKeyBinds(binds);
+      return true;
+    case KEYACTION_EXTERNAL_SCRIPTS:
+      ui->goExternalScripts(externalscripts.get());
       return true;
   }
   return false;

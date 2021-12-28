@@ -268,7 +268,7 @@ void AllRacesScreen::addRaceTableRow(unsigned int y, MenuSelectOption & mso, uns
   msotb->setSelectable(false);
   msal->addElement(msotb, 3, RESIZE_REMOVE);
 
-  msotb = mso.addTextButton(y, 1, "release", release);
+  msotb = mso.addTextButtonNoContent(y, 1, "release", release);
   msotb->setSelectable(selectable);
   msotb->setId(id);
   msal->addElement(msotb, 12, 1, RESIZE_CUTEND, true);
