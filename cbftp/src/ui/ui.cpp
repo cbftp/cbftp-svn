@@ -67,6 +67,7 @@
 #include "screens/keybindsscreen.h"
 #include "screens/metricsscreen.h"
 #include "screens/transferpairingscreen.h"
+#include "screens/externalscriptsscreen.h"
 
 namespace {
 
@@ -168,6 +169,7 @@ bool Ui::init() {
   keybindsscreen = std::make_shared<KeyBindsScreen>(this);
   metricsscreen = std::make_shared<MetricsScreen>(this);
   transferpairingscreen = std::make_shared<TransferPairingScreen>(this);
+  externalscriptsscreen = std::make_shared<ExternalScriptsScreen>(this);
   mainwindows.push_back(mainscreen);
   mainwindows.push_back(newkeyscreen);
   mainwindows.push_back(confirmationscreen);
@@ -210,6 +212,7 @@ bool Ui::init() {
   mainwindows.push_back(keybindsscreen);
   mainwindows.push_back(metricsscreen);
   mainwindows.push_back(transferpairingscreen);
+  mainwindows.push_back(externalscriptsscreen);
 
   legendprinterkeybinds = std::make_shared<LegendPrinterKeybinds>(this);
   legendwindow->setMainLegendPrinter(legendprinterkeybinds);
@@ -866,6 +869,11 @@ void Ui::goMetrics() {
 void Ui::goTransferPairing(TransferPairing* transferpairing) {
   transferpairingscreen->initialize(mainrow, col, transferpairing);
   switchToWindow(transferpairingscreen);
+}
+
+void Ui::goExternalScripts(ExternalScripts* externalscripts) {
+  externalscriptsscreen->initialize(mainrow, col, externalscripts);
+  switchToWindow(externalscriptsscreen);
 }
 
 void Ui::returnSelectItems(const std::string & items) {

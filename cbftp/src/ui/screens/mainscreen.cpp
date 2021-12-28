@@ -73,7 +73,7 @@ void putIfClear(VirtualView* vv, unsigned int row, unsigned int col, int c) {
 void drawTree(VirtualView* vv) {
   unsigned int row = vv->getActualRealRows();
   unsigned int col = vv->getActualRealCols();
-  if (row < 16 || col < 26) {
+  if (row < 16 || col < 27) {
     return;
   }
   unsigned int startrow = row - 16;

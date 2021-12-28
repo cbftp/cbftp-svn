@@ -7,7 +7,7 @@ JSON is a very common standard syntax for data structures, see examples below
 and here: https://en.wikipedia.org/wiki/JSON
 
 Cbftp uses a self-signed TLS certificate, so certificate verification must be
-disabled (which is what the --insecure flag to curl does).
+disabled (which is what the -k flag to curl does).
 
 In a REST API, the HTTP methods used are:
 
@@ -23,15 +23,14 @@ The username is ignored.
 Example usage: (Configuration: HTTPS/JSON API port 55477, password bestpass)
 
 List sites:
-  curl -u :bestpass https://localhost:55477/sites --insecure
+  curl -k -u :bestpass https://localhost:55477/sites
 
 Send a raw command (and get results):
-  curl -u :bestpass -X POST https://localhost:55477/raw -d '{
-    "command": "site deluser me", "sites": ["SITE1"]}' --insecure
+  curl -k -u :bestpass -X POST https://localhost:55477/raw -d '{
+    "command": "site deluser me", "sites": ["SITE1"]}'
 
 Add a site (read json blob from file):
-  curl -u :bestpass -X POST https://localhost:55477/sites -d @newsite.json \
-    --insecure
+  curl -k -u :bestpass -X POST https://localhost:55477/sites -d @newsite.json
 
 
 Available commands:

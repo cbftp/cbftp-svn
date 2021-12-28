@@ -26,6 +26,7 @@ class SectionManager;
 class HTTPServer;
 class RestApi;
 class LoadMonitor;
+class ExternalScriptsManager;
 
 class GlobalContext {
   private:
@@ -50,6 +51,7 @@ class GlobalContext {
     HTTPServer* httpsrv;
     RestApi* ra;
     LoadMonitor* lm;
+    ExternalScriptsManager* esm;
   public:
     void linkCore(Core::WorkManager* wm, Core::TickPoke* tp,
                   Core::IOManager* iom, std::shared_ptr<EventLog>& el);
@@ -59,7 +61,7 @@ class GlobalContext {
         SkipList* sl, ProxyManager* pm, LocalStorage* ls,
         ExternalFileViewing* efv, TimeReference* tr, Statistics* s,
         SectionManager* secm, HTTPServer* httpsrv, RestApi* ra,
-        LoadMonitor* lm);
+        LoadMonitor* lm, ExternalScriptsManager* esm);
     Engine* getEngine() const;
     SettingsLoaderSaver* getSettingsLoaderSaver() const;
     Core::WorkManager* getWorkManager() const;
@@ -81,6 +83,7 @@ class GlobalContext {
     HTTPServer* getHTTPServer() const;
     RestApi* getRestApi() const;
     LoadMonitor* getLoadMonitor() const;
+    ExternalScriptsManager* getExternalScriptsManager() const;
 };
 
 extern GlobalContext* global;

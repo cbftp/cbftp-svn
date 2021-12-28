@@ -124,7 +124,7 @@ void ProxyOptionsScreen::command(const std::string & command) {
     if (deleteproxy != "") {
       pm->removeProxy(deleteproxy);
       deleteproxy = "";
-      redraw();
+      ui->redraw();
       return;
     }
   }

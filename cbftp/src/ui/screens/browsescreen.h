@@ -11,6 +11,7 @@
 
 class BrowseScreenSub;
 enum class CompareMode;
+class ExternalScripts;
 
 class BrowseScreen : public UIWindow {
 public:
@@ -54,4 +55,5 @@ private:
   bool initsplitupdate;
   KeyBinds sitekeybinds;
   KeyBinds localkeybinds;
+  std::shared_ptr<ExternalScripts> externalscripts;
 };

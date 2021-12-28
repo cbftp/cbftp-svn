@@ -1,5 +1,6 @@
 #include "renderer.h"
 
+#include <clocale>
 #include <sys/ioctl.h>
 #include <unistd.h>
 

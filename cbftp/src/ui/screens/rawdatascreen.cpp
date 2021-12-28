@@ -162,7 +162,7 @@ void RawDataScreen::printRawBufferLines(VirtualView* vv, RawBuffer * rawbuf, uns
     if (cutfirst5 && skipCodePrint(line.second)) {
       start = 5;
     }
-    vv->putStr(i, startprintsecond + coloffset, encoding::cp437toUnicode(line.second.substr(start)), false, col - coloffset - startprintsecond);
+    vv->putStr(i, startprintsecond + coloffset, encoding::cp437toUnicode(line.second.substr(start)), false, col - startprintsecond);
   }
 }
 

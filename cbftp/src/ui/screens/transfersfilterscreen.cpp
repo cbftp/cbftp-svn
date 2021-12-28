@@ -118,7 +118,7 @@ void TransfersFilterScreen::command(const std::string & command, const std::stri
         std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("sitesfilter"))->setValue(true);
       }
     }
-    redraw();
+    ui->redraw();
   }
 }
 

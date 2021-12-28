@@ -252,7 +252,7 @@ void BrowseScreenSite::update() {
                                         static_cast<UIFile *>(re->getOrigin())->isHardSelected());
     highlightline = table.getAdjustableLine(re);
     minmaxcol = highlightline->getMinMaxCol();
-    if (temphighlightline ^ ui->getHighlightEntireLine()) {
+    if ((temphighlightline ^ ui->getHighlightEntireLine()) && focus) {
       vv->highlightOn(highlightline->getRow(), minmaxcol.first, minmaxcol.second - minmaxcol.first + 1);
     }
     else {
