@@ -1,5 +1,7 @@
 #include "restapi.h"
 
+#include <cstdlib>
+#include <ctime>
 #include <list>
 #include <memory>
 #include <stdexcept>
@@ -1949,6 +1951,24 @@ void RestApi::handleSectionDelete(RestApiCallback* cb, int connrequestid, const 
   cb->requestHandled(connrequestid, response);
 }
 
+std::string RestApi::createTemporaryAuthToken() {
+  srand(time(NULL));
+  Core::BinaryData data;
+  data.resize(16);
+  for (int i = 0; i < 16; ++i) {
+    data[i] = static_cast<unsigned char>(rand() % 256);
+  }
+  Core::BinaryData hash;
+  Crypto::sha256(data, hash);
+  std::string token(hash.begin(), hash.end());
+  tempauthtokens.insert(token);
+  return token;
+}
+
+void RestApi::removeTemporaryAuthToken(const std::string& token) {
+  tempauthtokens.erase(token);
+}
+
 void RestApi::handleRequest(RestApiCallback* cb, int connrequestid, const http::Request& request) {
   bool authorized = false;
   if (request.hasHeader("Authorization")) {
@@ -1960,7 +1980,7 @@ void RestApi::handleRequest(RestApiCallback* cb, int connrequestid, const http::
       size_t split = decoded.find(':');
       if (split != std::string::npos) {
         std::string password = decoded.substr(split + 1);
-        if (password == global->getRemoteCommandHandler()->getPassword()) {
+        if (password == global->getRemoteCommandHandler()->getPassword() || tempauthtokens.find(password) != tempauthtokens.end()) {
           authorized = true;
         }
       }

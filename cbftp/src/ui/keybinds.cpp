@@ -5,6 +5,10 @@
 #include "termint.h"
 #include "../util.h"
 
+QueuedReplaceBind::QueuedReplaceBind(int keyaction, int scope, const std::set<unsigned int>& newkeys) : keyaction(keyaction), scope(scope), newkeys(newkeys) {
+
+}
+
 KeyRepr KeyBinds::getKeyRepr(unsigned int key) {
   KeyRepr repr;
   repr.wch = key;
@@ -136,12 +140,17 @@ void KeyBinds::addBind(const std::list<int>& keys, int keyaction, const std::str
     std::map<KeyAndScope, std::list<KeyData>::iterator>::const_iterator it = keybinds.find(token);
     assert(it == keybinds.end());
   }
+  applyQueuedReplaceBinds();
   regenerate();
 }
 
 void KeyBinds::addBind(int key, int keyaction, const std::string& description, int scope) {
   std::list<int> keys = {key};
   addBind(keys, keyaction, description, scope);
+}
+
+void KeyBinds::addUnboundBind(int keyaction, const std::string& description, int scope) {
+  addBind(std::list<int>(), keyaction, description, scope);
 }
 
 bool KeyBinds::hasBind(int keyaction, int scope) const {
@@ -164,23 +173,13 @@ void KeyBinds::addCustomBind(int keyaction, int scope, int newkey) {
 }
 
 void KeyBinds::replaceBind(int keyaction, int scope, const std::set<unsigned int>& newkeys) {
-  for (std::list<KeyData>::iterator it = keydata.begin(); it != keydata.end(); ++it) {
-    if (it->scope == scope && it->keyaction == keyaction) {
-      it->configuredkeys = newkeys;
-      regenerate();
-      return;
-    }
-  }
+  queuedreplacebinds.emplace_back(keyaction, scope, newkeys);
+  applyQueuedReplaceBinds();
 }
 
 void KeyBinds::replaceBind(int keyaction, int scope, unsigned int newkey) {
-  for (std::list<KeyData>::iterator it = keydata.begin(); it != keydata.end(); ++it) {
-    if (it->scope == scope && it->keyaction == keyaction) {
-      it->configuredkeys = {newkey};
-      regenerate();
-      return;
-    }
-  }
+  std::set<unsigned int> newkeys = {newkey};
+  replaceBind(keyaction, scope, newkeys);
 }
 
 void KeyBinds::resetBind(int keyaction, int scope) {
@@ -200,6 +199,26 @@ void KeyBinds::unbind(int keyaction, int scope) {
   for (std::list<KeyData>::iterator it = keydata.begin(); it != keydata.end(); ++it) {
     if (it->scope == scope && it->keyaction == keyaction) {
       it->configuredkeys.clear();
+      regenerate();
+      return;
+    }
+  }
+}
+
+void KeyBinds::removeBind(int keyaction, int scope) {
+  for (std::list<KeyData>::iterator it = keydata.begin(); it != keydata.end(); ++it) {
+    if (it->scope == scope && it->keyaction == keyaction) {
+      keydata.erase(it);
+      regenerate();
+      return;
+    }
+  }
+}
+
+void KeyBinds::setBindDescription(int keyaction, const std::string& description, int scope) {
+  for (std::list<KeyData>::iterator it = keydata.begin(); it != keydata.end(); ++it) {
+    if (it->scope == scope && it->keyaction == keyaction) {
+      it->description = description;
       regenerate();
       return;
     }
@@ -373,3 +392,26 @@ void KeyBinds::regenerate() {
   generateIndex();
   generateLegendSummaries();
 }
+
+void KeyBinds::applyQueuedReplaceBinds() {
+  bool regen = false;
+  for (std::list<QueuedReplaceBind>::const_iterator it = queuedreplacebinds.begin(); it != queuedreplacebinds.end();) {
+    bool found = false;
+    for (std::list<KeyData>::iterator it2 = keydata.begin(); it2 != keydata.end(); ++it2) {
+      if (it2->scope == it->scope && it2->keyaction == it->keyaction) {
+        it2->configuredkeys = it->newkeys;
+        regen = true;
+        found = true;
+        it = queuedreplacebinds.erase(it);
+        break;
+      }
+    }
+    if (!found) {
+      ++it;
+    }
+  }
+  if (regen) {
+    regenerate();
+  }
+}
+

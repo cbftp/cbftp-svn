@@ -42,6 +42,8 @@ public:
   RestApi();
   ~RestApi();
   void handleRequest(RestApiCallback* cb, int connrequestid, const http::Request& request);
+  std::string createTemporaryAuthToken();
+  void removeTemporaryAuthToken(const std::string& token);
 private:
   void tick(int message) override;
   void requestReady(void* service, int servicerequestid) override;
@@ -83,4 +85,5 @@ private:
   std::list<OngoingRequest> ongoingrequests;
   int nextrequestid;
   std::map<Path, std::map<std::string, EndpointPointer>> endpoints;
+  std::set<std::string> tempauthtokens;
 };

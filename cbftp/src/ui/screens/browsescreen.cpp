@@ -27,7 +27,8 @@
 #include "browsescreenlocal.h"
 
 BrowseScreen::BrowseScreen(Ui* ui) : UIWindow(ui, "BrowseScreen"),
-  sitekeybinds("BrowseScreenSite"), localkeybinds("BrowseScreenLocal"), externalscripts(std::make_shared<ExternalScripts>())
+  sitekeybinds("BrowseScreenSite"), localkeybinds("BrowseScreenLocal"), externalscripts(std::make_shared<ExternalScripts>(name)),
+  reloadextrakeybinds(false)
 {
   keybinds.addBind(27, KEYACTION_BACK_CANCEL, "Cancel");
   keybinds.addBind({'c', KEY_LEFT}, KEYACTION_CLOSE, "Close");
@@ -136,6 +137,38 @@ BrowseScreen::~BrowseScreen() {
   expectbackendpush = true;
 }
 
+void BrowseScreen::loadExtraKeyBinds() {
+  for (std::list<std::pair<int, std::string>>::const_iterator it = externalscriptbinds.begin(); it != externalscriptbinds.end();) {
+    if (!externalscripts->hasScript(it->first)) {
+      sitekeybinds.removeBind(it->first + KEYACTION_EXTERNAL_SCRIPT_START, KEYSCOPE_ALL);
+      localkeybinds.removeBind(it->first + KEYACTION_EXTERNAL_SCRIPT_START, KEYSCOPE_ALL);
+      it = externalscriptbinds.erase(it);
+    }
+    else {
+      std::string newname = externalscripts->getScriptName(it->first);
+      if (newname != it->second) {
+        sitekeybinds.setBindDescription(KEYACTION_EXTERNAL_SCRIPT_START + it->first, "Run external script (" + newname + ")", KEYSCOPE_ALL);
+        localkeybinds.setBindDescription(KEYACTION_EXTERNAL_SCRIPT_START + it->first, "Run external script (" + newname + ")", KEYSCOPE_ALL);
+      }
+      ++it;
+    }
+  }
+  for (std::list<ExternalScript>::const_iterator it = externalscripts->begin(); it != externalscripts->end(); ++it) {
+    bool found = false;
+    for (std::list<std::pair<int, std::string>>::const_iterator it2 = externalscriptbinds.begin(); it2 != externalscriptbinds.end(); ++it2) {
+      if (it->id == it2->first) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      externalscriptbinds.emplace_back(it->id, it->name);
+      sitekeybinds.addUnboundBind(KEYACTION_EXTERNAL_SCRIPT_START + it->id, "Run external script (" + it->name + ")");
+      localkeybinds.addUnboundBind(KEYACTION_EXTERNAL_SCRIPT_START + it->id, "Run external script (" + it->name + ")");
+    }
+  }
+}
+
 void BrowseScreen::initializeSite(unsigned int row, unsigned int col,
     const std::string& site, const Path& path)
 {
@@ -144,6 +177,7 @@ void BrowseScreen::initializeSite(unsigned int row, unsigned int col,
   left = std::make_shared<BrowseScreenSite>(ui, this, sitekeybinds, site, path);
   right.reset();
   active = left;
+  loadExtraKeyBinds();
   init(row, col);
 }
 
@@ -155,7 +189,7 @@ void BrowseScreen::initializeSite(unsigned int row, unsigned int col,
   left = std::make_shared<BrowseScreenSite>(ui, this, sitekeybinds, site, section);
   right.reset();
   active = left;
-
+  loadExtraKeyBinds();
   init(row, col);
 }
 
@@ -167,6 +201,7 @@ void BrowseScreen::initializeLocal(unsigned int row, unsigned int col,
   left = std::make_shared<BrowseScreenLocal>(ui, localkeybinds, path);
   right.reset();
   active = left;
+  loadExtraKeyBinds();
   init(row, col);
 }
 
@@ -179,6 +214,7 @@ void BrowseScreen::initializeSplit(unsigned int row, unsigned int col,
   right = std::make_shared<BrowseScreenSelector>(ui, keybinds);
   left->setFocus(false);
   active = right;
+  loadExtraKeyBinds();
   init(row, col);
 }
 
@@ -191,6 +227,7 @@ void BrowseScreen::initializeSiteLocal(unsigned int row, unsigned int col,
   right = std::make_shared<BrowseScreenLocal>(ui, localkeybinds, localpath);
   right->setFocus(false);
   active = left;
+  loadExtraKeyBinds();
   init(row, col);
 }
 
@@ -204,10 +241,15 @@ void BrowseScreen::initializeSiteSite(unsigned int row, unsigned int col,
   right = std::make_shared<BrowseScreenSite>(ui, this, sitekeybinds, rightsite, rightpath);
   right->setFocus(false);
   active = left;
+  loadExtraKeyBinds();
   init(row, col);
 }
 
 void BrowseScreen::redraw() {
+  if (reloadextrakeybinds) {
+    loadExtraKeyBinds();
+    reloadextrakeybinds = false;
+  }
   vv->clear();
   ui->hideCursor();
   ui->setSplit(split);
@@ -457,8 +499,68 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
       ui->goKeyBinds(binds);
       return true;
     case KEYACTION_EXTERNAL_SCRIPTS:
-      ui->goExternalScripts(externalscripts.get());
+      ui->goExternalScripts(externalscripts.get(),
+          "Here you can add external scripts that can be bound to hotkeys in the browse screen.\n"
+          "The scripts will be executed with various args, depending on situation:\n"
+          "- <api-key> browse-site <sitename> <path> <selecteditems>\n"
+          "- <api-key> browse-site-site <sitename1> <path1> <selecteditems> <sitename2> <path2>\n"
+          "- <api-key> browse-site-local <sitename> <path> <selecteditems> <localpath>\n"
+          "- <api-key> browse-local <localpath> <selecteditems>\n"
+          "- <api-key> browse-local-site <localpath> <selecteditems> <sitename> <path>");
+      reloadextrakeybinds = true;
       return true;
+  }
+  if (action >= KEYACTION_EXTERNAL_SCRIPT_START && action < KEYACTION_EXTERNAL_SCRIPT_MAX) {
+    std::vector<std::string> args;
+    std::shared_ptr<BrowseScreenSub> other = active == left ? right : left;
+    if (active->type() == BrowseScreenType::SITE) {
+      std::shared_ptr<BrowseScreenSite> activesite = std::static_pointer_cast<BrowseScreenSite>(active);
+      std::string site = activesite->getSite()->getName();
+      Path path = active->getUIFileList()->getPath();
+      std::list<std::pair<std::string, bool>> selecteditemswithtype = active->getUIFileList()->getSelectedNames();
+      std::list<std::string> selecteditems;
+      for (const std::pair<std::string, bool>& pair : selecteditemswithtype) {
+        selecteditems.push_back(pair.first);
+      }
+      if (split && other->type() != BrowseScreenType::SELECTOR) {
+        if (other->type() == BrowseScreenType::SITE) {
+          std::shared_ptr<BrowseScreenSite> othersite = std::static_pointer_cast<BrowseScreenSite>(other);
+          std::string othersitename = othersite->getSite()->getName();
+          Path otherpath = othersite->getUIFileList()->getPath();
+          args = {"browse-site-site", site, path.toString(), util::join(selecteditems, ","), othersitename, otherpath.toString()};
+        }
+        else if (other->type() == BrowseScreenType::LOCAL) {
+          Path otherpath = other->getUIFileList()->getPath();
+          args = {"browse-site-local", site, path.toString(), util::join(selecteditems, ","), otherpath.toString()};
+        }
+      }
+      else {
+        args = {"browse-site", site, path.toString(), util::join(selecteditems, ",")};
+      }
+    }
+    else if (active->type() == BrowseScreenType::LOCAL) {
+      Path path = active->getUIFileList()->getPath();
+      std::list<std::pair<std::string, bool>> selecteditemswithtype = active->getUIFileList()->getSelectedNames();
+      std::list<std::string> selecteditems;
+      for (const std::pair<std::string, bool>& pair : selecteditemswithtype) {
+        selecteditems.push_back(pair.first);
+      }
+      if (split && other->type() == BrowseScreenType::SITE) {
+        std::shared_ptr<BrowseScreenSite> othersite = std::static_pointer_cast<BrowseScreenSite>(other);
+        std::string othersitename = othersite->getSite()->getName();
+        Path otherpath = othersite->getUIFileList()->getPath();
+        args = {"browse-local-site", path.toString(), util::join(selecteditems, ","), othersitename, otherpath.toString()};
+      }
+      else {
+        args = {"browse-local", path.toString(), util::join(selecteditems, ",")};
+      }
+    }
+    else {
+      return false;
+    }
+    int scriptid = action - KEYACTION_EXTERNAL_SCRIPT_START;
+    std::shared_ptr<RawBuffer> rawbuf = externalscripts->execute(scriptid, args);
+    return true;
   }
   return false;
 }

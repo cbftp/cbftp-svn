@@ -19,7 +19,6 @@
 #include "eventlog.h"
 #include "proxymanager.h"
 #include "localstorage.h"
-#include "externalfileviewing.h"
 #include "timereference.h"
 #include "uibase.h"
 #include "statistics.h"
@@ -28,6 +27,7 @@
 #include "restapi.h"
 #include "loadmonitor.h"
 #include "externalscriptsmanager.h"
+#include "subprocessmanager.h"
 
 namespace {
 
@@ -54,7 +54,6 @@ public:
     RemoteCommandHandler* rch = new RemoteCommandHandler();
     SkipList* sl = new SkipList();
     ProxyManager* pm = new ProxyManager();
-    ExternalFileViewing* efv = new ExternalFileViewing();
     TimeReference* tr = new TimeReference();
     Statistics* s = new Statistics();
     SectionManager* secm = new SectionManager();
@@ -62,11 +61,12 @@ public:
     RestApi* ra = new RestApi();
     LoadMonitor* lm = new LoadMonitor();
     ExternalScriptsManager* esm = new ExternalScriptsManager();
+    SubProcessManager* spm = new SubProcessManager();
 
     UIBase* uibase = UIBase::instance();
 
-    global->linkComponents(sls, e, uibase, sm, slm, tm, rch, sl, pm, ls, efv,
-                           tr, s, secm, httprv, ra, lm, esm);
+    global->linkComponents(sls, e, uibase, sm, slm, tm, rch, sl, pm, ls,
+                           tr, s, secm, httprv, ra, lm, esm, spm);
 
     Core::Threading::setCurrentThreadName("cbftp");
 
@@ -75,7 +75,7 @@ public:
     iom->init("cbftp");
     sls->init();
     tp->tickerLoop();
-    global->getExternalFileViewing()->killAll();
+    global->getSubProcessManager()->killAll();
     uibase->kill();
     sls->saveSettings();
   }

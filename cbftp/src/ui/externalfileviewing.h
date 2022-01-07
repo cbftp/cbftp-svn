@@ -1,22 +1,19 @@
 #pragma once
 
 #include <string>
-#include <list>
 #include <map>
 
-#include "core/eventreceiver.h"
+#include "../subprocessmanager.h"
 
 class Path;
 
-class ExternalFileViewing : public Core::EventReceiver {
+class ExternalFileViewing : public SubProcessCallback {
 public:
   ExternalFileViewing();
   bool isViewable(const Path &) const;
   int view(const Path &);
   int viewThenDelete(const Path &);
-  void killProcess(int);
-  void killAll();
-  void signal(int, int);
+  void killViewer(int pid);
   bool hasDisplay() const;
   bool stillViewing(int) const;
   std::string getVideoViewer() const;
@@ -31,7 +28,7 @@ public:
 private:
   int view(const Path &, bool);
   void checkDeleteFile(int);
-  std::list<int> subprocesses;
+  void processExited(int pid, int status) override;
   std::map<int, Path> files;
   std::string videoviewer;
   std::string audioviewer;

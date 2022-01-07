@@ -4,7 +4,6 @@
 #include "../menuselectoption.h"
 
 class MenuSelectOptionTextArrow;
-class ExternalFileViewing;
 class LocalStorage;
 
 class FileViewerSettingsScreen : public UIWindow {
@@ -20,6 +19,5 @@ private:
   bool active;
   std::shared_ptr<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;
-  ExternalFileViewing * efv;
   LocalStorage * ls;
 };

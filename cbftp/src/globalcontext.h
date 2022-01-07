@@ -18,7 +18,6 @@ class SkipList;
 class EventLog;
 class ProxyManager;
 class LocalStorage;
-class ExternalFileViewing;
 class TimeReference;
 class SettingsLoaderSaver;
 class Statistics;
@@ -27,6 +26,7 @@ class HTTPServer;
 class RestApi;
 class LoadMonitor;
 class ExternalScriptsManager;
+class SubProcessManager;
 
 class GlobalContext {
   private:
@@ -44,7 +44,6 @@ class GlobalContext {
     std::shared_ptr<EventLog> el;
     ProxyManager* pm;
     LocalStorage* ls;
-    ExternalFileViewing* efv;
     TimeReference* tr;
     Statistics* s;
     SectionManager* secm;
@@ -52,6 +51,7 @@ class GlobalContext {
     RestApi* ra;
     LoadMonitor* lm;
     ExternalScriptsManager* esm;
+    SubProcessManager* spm;
   public:
     void linkCore(Core::WorkManager* wm, Core::TickPoke* tp,
                   Core::IOManager* iom, std::shared_ptr<EventLog>& el);
@@ -59,9 +59,9 @@ class GlobalContext {
         UIBase* uib, SiteManager* sm, SiteLogicManager* slm,
         TransferManager* tm, RemoteCommandHandler* rch,
         SkipList* sl, ProxyManager* pm, LocalStorage* ls,
-        ExternalFileViewing* efv, TimeReference* tr, Statistics* s,
+        TimeReference* tr, Statistics* s,
         SectionManager* secm, HTTPServer* httpsrv, RestApi* ra,
-        LoadMonitor* lm, ExternalScriptsManager* esm);
+        LoadMonitor* lm, ExternalScriptsManager* esm, SubProcessManager* spm);
     Engine* getEngine() const;
     SettingsLoaderSaver* getSettingsLoaderSaver() const;
     Core::WorkManager* getWorkManager() const;
@@ -76,7 +76,6 @@ class GlobalContext {
     std::shared_ptr<EventLog>& getEventLog();
     ProxyManager* getProxyManager() const;
     LocalStorage* getLocalStorage() const;
-    ExternalFileViewing* getExternalFileViewing() const;
     TimeReference* getTimeReference() const;
     Statistics* getStatistics() const;
     SectionManager* getSectionManager() const;
@@ -84,6 +83,7 @@ class GlobalContext {
     RestApi* getRestApi() const;
     LoadMonitor* getLoadMonitor() const;
     ExternalScriptsManager* getExternalScriptsManager() const;
+    SubProcessManager* getSubProcessManager() const;
 };
 
 extern GlobalContext* global;

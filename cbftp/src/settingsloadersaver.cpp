@@ -13,7 +13,6 @@
 #include "datafilehandler.h"
 #include "eventlog.h"
 #include "remotecommandhandler.h"
-#include "externalfileviewing.h"
 #include "skiplist.h"
 #include "skiplistitem.h"
 #include "proxymanager.h"
@@ -28,6 +27,8 @@
 #include "sectionmanager.h"
 #include "transferprotocol.h"
 #include "httpserver.h"
+#include "externalscriptsmanager.h"
+#include "externalscripts.h"
 
 #define AUTO_SAVE_INTERVAL 600000 // 10 minutes
 
@@ -178,14 +179,6 @@ void SettingsLoaderSaver::loadSettings() {
         enable = true;
       }
     }
-    // begin compatibility r1080
-    else if (!setting.compare("enabled")) {
-      if (!value.compare("true")) {
-        enable = true;
-        global->getRemoteCommandHandler()->setEncrypted(false);
-      }
-    }
-    // end compatibility r1080
     else if (!setting.compare("encrypted")) {
       bool encrypted = value.compare("false");
       global->getRemoteCommandHandler()->setEncrypted(encrypted);
@@ -193,11 +186,6 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("port")) {
       global->getRemoteCommandHandler()->setPort(std::stoi(value));
     }
-    // begin compatibility r1065
-    else if (!setting.compare("password")) {
-      global->getRemoteCommandHandler()->setPassword(value);
-    }
-    // end compatibility r1065
     else if (!setting.compare("passwordb64")) {
       Core::BinaryData indata(value.begin(), value.end());
       Core::BinaryData outdata;
@@ -231,27 +219,6 @@ void SettingsLoaderSaver::loadSettings() {
   }
   if (enable) {
     global->getHTTPServer()->setEnabled(true);
-  }
-
-  dfh->getDataFor("ExternalFileViewing", &lines);
-  for (it = lines.begin(); it != lines.end(); it++) {
-    line = *it;
-    if (line.length() == 0 ||line[0] == '#') continue;
-    size_t tok = line.find('=');
-    std::string setting = line.substr(0, tok);
-    std::string value = line.substr(tok + 1);
-    if (!setting.compare("video")) {
-      global->getExternalFileViewing()->setVideoViewer(value);
-    }
-    else if (!setting.compare("audio")) {
-      global->getExternalFileViewing()->setAudioViewer(value);
-    }
-    else if (!setting.compare("image")) {
-      global->getExternalFileViewing()->setImageViewer(value);
-    }
-    else if (!setting.compare("pdf")) {
-      global->getExternalFileViewing()->setPDFViewer(value);
-    }
   }
 
   global->getSkipList()->clearEntries();
@@ -294,11 +261,6 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("user")) {
       proxy->setUser(value);
     }
-    // begin compatibility r1065
-    else if (!setting.compare("pass")) {
-      proxy->setPass(value);
-    }
-    // end compatibility r1065
     else if (!setting.compare("passwordb64")) {
       Core::BinaryData indata(value.begin(), value.end());
       Core::BinaryData outdata;
@@ -359,11 +321,6 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("useactivemodeaddr")) {
       if (!value.compare("true")) global->getLocalStorage()->setUseActiveModeAddress(true);
     }
-    // begin compatibility r1042
-    else if (!setting.compare("activemodeaddr")) {
-      global->getLocalStorage()->setActiveModeAddress4(value);
-    }
-    // end compatibility r1042
     else if (!setting.compare("activemodeaddr4")) {
       global->getLocalStorage()->setActiveModeAddress4(value);
     }
@@ -400,11 +357,6 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("user")) {
       site->setUser(value);
     }
-    // begin compatibility r1065
-    else if (!setting.compare("pass")) {
-      site->setPass(value);
-    }
-    // end compatibility r1065
     else if (!setting.compare("passwordb64")) {
       Core::BinaryData indata(value.begin(), value.end());
       Core::BinaryData outdata;
@@ -650,11 +602,6 @@ void SettingsLoaderSaver::loadSettings() {
     if (!setting.compare("username")) {
       global->getSiteManager()->setDefaultUserName(value);
     }
-    // begin compatibility r1065
-    else if (!setting.compare("password")) {
-      global->getSiteManager()->setDefaultPassword(value);
-    }
-    // end compatibility r1065
     else if (!setting.compare("passwordb64")) {
       Core::BinaryData indata(value.begin(), value.end());
       Core::BinaryData outdata;
@@ -788,15 +735,28 @@ void SettingsLoaderSaver::loadSettings() {
     }
   }
 
-  dfh->getDataFor("ExternalScripts", &lines);
+  dfh->getDataFor("ExternalScriptsManager", &lines);
   for (it = lines.begin(); it != lines.end(); it++) {
     line = *it;
     if (line.length() == 0 ||line[0] == '#') continue;
-    size_t tok = line.find('=');
-    std::string setting = line.substr(0, tok);
-    std::string value = line.substr(tok + 1);
-    if (!setting.compare("script")) {
-      global->getEngine()->setPreparedRaceExpiryTime(std::stoi(value));
+    size_t tok1 = line.find('$');
+    size_t tok2 = line.find('=');
+    std::string name = line.substr(0, tok1);
+    std::string setting = line.substr(tok1 + 1, (tok2 - tok1 - 1));
+    std::string value = line.substr(tok2 + 1);
+    ExternalScripts* externalscripts = global->getExternalScriptsManager()->getExternalScripts(name);
+    if (!externalscripts) {
+      externalscripts = new ExternalScripts(name);
+      global->getExternalScriptsManager()->addExternalScripts(name, externalscripts);
+    }
+    if (!setting.compare("entry")) {
+      size_t split = value.find('$');
+      std::string name = value.substr(0, split);
+      value = value.substr(split + 1);
+      split = value.find('$');
+      std::string path = value.substr(0, split);
+      int id = std::stol(value.substr(split + 1));
+      externalscripts->addScript(name, path, id);
     }
   }
 
@@ -842,15 +802,6 @@ void SettingsLoaderSaver::saveSettings() {
     dfh->addOutputLine("HTTPServer", "enabled=true");
   }
   dfh->addOutputLine("HTTPServer", "port=" + std::to_string(global->getHTTPServer()->getPort()));
-
-  {
-    std::string filetag = "ExternalFileViewing";
-    dfh->addOutputLine(filetag, "video=" + global->getExternalFileViewing()->getVideoViewer());
-    dfh->addOutputLine(filetag, "audio=" + global->getExternalFileViewing()->getAudioViewer());
-    dfh->addOutputLine(filetag, "image=" + global->getExternalFileViewing()->getImageViewer());
-    dfh->addOutputLine(filetag, "pdf=" + global->getExternalFileViewing()->getPDFViewer());
-  }
-
 
   addSkipList(dfh, global->getSkipList(), "SkipList", "entry=");
 
@@ -1086,6 +1037,15 @@ void SettingsLoaderSaver::saveSettings() {
     dfh->addOutputLine(filetag, "spreadjobs=" + std::to_string(global->getStatistics()->getSpreadJobs()));
     dfh->addOutputLine(filetag, "transferjobs=" + std::to_string(global->getStatistics()->getTransferJobs()));
   }
+  {
+    std::string filetag = "ExternalScriptsManager";
+    for (std::map<std::string, ExternalScripts*>::const_iterator it = global->getExternalScriptsManager()->begin(); it != global->getExternalScriptsManager()->end(); ++it) {
+      ExternalScripts* es = it->second;
+      for (std::list<ExternalScript>::const_iterator it2 = es->begin(); it2 != es->end(); ++it2) {
+        dfh->addOutputLine(filetag, es->getName() + "$entry=" + it2->name + "$" + it2->path.toString() + "$" + std::to_string(it2->id));
+      }
+    }
+  }
 
   for (std::list<SettingsAdder *>::iterator it = settingsadders.begin(); it != settingsadders.end(); it++) {
     (*it)->saveSettings(dfh);
@@ -1147,12 +1107,6 @@ void SettingsLoaderSaver::loadSkipListEntry(SkipList* skiplist, std::string valu
       std::string patterntype = restoreRegexEnd(value.substr(0, split));
       bool regex = false;
       std::string pattern;
-      // begin compatibility r1023
-      if (patterntype != "true" && patterntype != "false") {
-        pattern = patterntype;
-      }
-      else
-      // end compatibility r1023
       {
         regex = patterntype == "true";
         value = value.substr(split + 1);

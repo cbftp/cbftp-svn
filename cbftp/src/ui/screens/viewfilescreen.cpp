@@ -9,6 +9,7 @@
 #include "../menuselectoptiontextbutton.h"
 #include "../termint.h"
 #include "../misc.h"
+#include "../externalfileviewing.h"
 
 #include "../../transferstatus.h"
 #include "../../globalcontext.h"
@@ -19,7 +20,7 @@
 #include "../../localfilelist.h"
 #include "../../filelist.h"
 #include "../../file.h"
-#include "../../externalfileviewing.h"
+
 #include "../../core/types.h"
 #include "../../downloadfiledata.h"
 
@@ -93,8 +94,8 @@ void ViewFileScreen::initialize(unsigned int row, unsigned int col, const std::s
   sitelogic = global->getSiteLogicManager()->getSiteLogic(site);
   size = filelist->getFile(file)->getSize();
   state = ViewFileState::CONNECTING;
-  if (global->getExternalFileViewing()->isViewable(file)) {
-    if (!global->getExternalFileViewing()->hasDisplay()) {
+  if (ui->getExternalFileViewing().isViewable(file)) {
+    if (!ui->getExternalFileViewing().hasDisplay()) {
       state = ViewFileState::NO_DISPLAY;
     }
     externallyviewable = true;
@@ -117,8 +118,8 @@ void ViewFileScreen::initialize(unsigned int row, unsigned int col, const Path &
   this->file = file;
   size = global->getLocalStorage()->getFileSize(path);
   state = ViewFileState::LOADING_VIEWER;
-  if (global->getExternalFileViewing()->isViewable(file)) {
-    if (!global->getExternalFileViewing()->hasDisplay()) {
+  if (ui->getExternalFileViewing().isViewable(file)) {
+    if (!ui->getExternalFileViewing().hasDisplay()) {
       state = ViewFileState::NO_DISPLAY;
     }
     externallyviewable = true;
@@ -223,7 +224,7 @@ void ViewFileScreen::redraw() {
 
 void ViewFileScreen::update() {
   if (pid) {
-    if (!global->getExternalFileViewing()->stillViewing(pid)) {
+    if (!ui->getExternalFileViewing().stillViewing(pid)) {
       ui->returnToLast();
     }
     else if (!legendupdated) {
@@ -283,7 +284,7 @@ bool ViewFileScreen::keyPressed(unsigned int ch) {
       return true;
     case KEYACTION_KILL:
       if (pid) {
-        global->getExternalFileViewing()->killProcess(pid);
+        ui->getExternalFileViewing().killViewer(pid);
       }
       return true;
     case KEYACTION_ENCODING:
@@ -313,10 +314,10 @@ void ViewFileScreen::loadViewer() {
   if (externallyviewable) {
     if (!pid) {
       if (deleteafter) {
-        pid = global->getExternalFileViewing()->viewThenDelete(path);
+        pid = ui->getExternalFileViewing().viewThenDelete(path);
       }
       else {
-        pid = global->getExternalFileViewing()->view(path);
+        pid = ui->getExternalFileViewing().view(path);
       }
     }
     state = ViewFileState::VIEWING_EXTERNAL;
@@ -354,7 +355,7 @@ void ViewFileScreen::loadViewer() {
 }
 
 void ViewFileScreen::viewExternal() {
-  vv->putStr(1, 1, "Opening " + file + " with: " + global->getExternalFileViewing()->getViewApplication(file));
+  vv->putStr(1, 1, "Opening " + file + " with: " + ui->getExternalFileViewing().getViewApplication(file));
   vv->putStr(3, 1, "Press 'k' to kill this external viewer instance.");
 }
 

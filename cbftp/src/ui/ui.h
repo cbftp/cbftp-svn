@@ -12,6 +12,7 @@
 #include "../path.h"
 #include "../requestcallback.h"
 
+#include "externalfileviewing.h"
 #include "renderer.h"
 #include "virtualview.h"
 
@@ -89,6 +90,7 @@ class Ui : public Core::EventReceiver, public UIBase, public SettingsAdder, publ
 private:
   Renderer renderer;
   VirtualView vv;
+  ExternalFileViewing efv;
   std::vector<std::shared_ptr<UIWindow> > mainwindows;
   std::shared_ptr<UIWindow> topwindow;
   std::shared_ptr<InfoWindow> infowindow;
@@ -177,6 +179,7 @@ public:
   void kill() override;
   Renderer& getRenderer();
   VirtualView& getVirtualView();
+  ExternalFileViewing& getExternalFileViewing();
   void resizeTerm();
   void readConfiguration();
   void writeState();
@@ -263,7 +266,7 @@ public:
   void goGlobalKeyBinds();
   void goMetrics();
   void goTransferPairing(TransferPairing* transferpairing);
-  void goExternalScripts(ExternalScripts* externalscripts);
+  void goExternalScripts(ExternalScripts* externalscripts, const std::string& description);
   void returnSelectItems(const std::string &);
   void key(const std::string &);
   void newKey(const std::string &);
