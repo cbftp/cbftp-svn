@@ -42,6 +42,10 @@ DataFileHandler::DataFileHandler() : state(DataFileState::NOT_EXISTING) {
   parseDecryptedFile(rawdata);
 }
 
+Path DataFileHandler::getDataDir() {
+  return DataFileHandlerMethod::getDataFile().dirName();
+}
+
 DataFileState DataFileHandler::getState() const {
   return state;
 }

@@ -21,6 +21,7 @@ public:
   void highlightOn(unsigned int row, unsigned int col, unsigned int len = 1);
   void highlightOff(unsigned int row, unsigned int col, unsigned int len = 1);
   void setColor(unsigned int row, unsigned int col, int fgcolor, int bgcolor = COLOR_DEFAULT, unsigned int len = 1);
+  void setBold(unsigned int row, unsigned int col, bool bold, unsigned int len = 1);
   bool tryFocus(unsigned int row, unsigned int col, unsigned int len = 1);
   void resize(unsigned int row, unsigned int col);
   bool isClear(unsigned int row, unsigned int col, unsigned int len = 1) const;

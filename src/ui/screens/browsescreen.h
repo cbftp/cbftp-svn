@@ -1,6 +1,7 @@
 #pragma once
 
 #include <list>
+#include <map>
 #include <memory>
 #include <utility>
 #include <string>
@@ -48,6 +49,7 @@ private:
   void clearCompareListMode();
   void jumpSectionHotkey(int hotkey);
   void goSite(bool leftside, const std::string& site, const std::string& section = "");
+  void loadExtraKeyBinds();
   std::shared_ptr<BrowseScreenSub> left;
   std::shared_ptr<BrowseScreenSub> right;
   std::shared_ptr<BrowseScreenSub> active;
@@ -56,4 +58,6 @@ private:
   KeyBinds sitekeybinds;
   KeyBinds localkeybinds;
   std::shared_ptr<ExternalScripts> externalscripts;
+  std::list<std::pair<int, std::string>> externalscriptbinds;
+  bool reloadextrakeybinds;
 };

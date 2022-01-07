@@ -524,6 +524,29 @@ s - you are downloading this file that someone else is uploading
 S - you are uploading and downloading this file
 p - file exists and the site is download-only in this job
 
+EXTERNAL SCRIPTS
+
+Cbftp can be configured to execute external scripts based on certain triggers.
+There is an intended default directory for scripts at ~/.cbftp/scripts, but
+they may be placed anywhere. The scripts may be written in any language, the
+only requirement is that they are saved as executable files - a hashbang
+specifier at the first line of the file along with execute permission will be
+required for scripting languages.
+Information regarding the reason for execution is provided in args to the
+script.
+Scripts are meant to communicate with cbftp using the API. The script will be
+provided with a temporary API auth token that only works for the duration of
+the script, to avoid having to store the API password in the script itself.
+The args to the scripts are: <api-token> <trigger> [various trigger args]
+
+Currently, external scripts are available in the browse screen. Press x
+while browsing to configure scripts, and then go to the keybinds screen to bind
+a key for executing the script.
+An example script execution from there might have the following args:
+<api-token> browse-site <site> <path> <selected-items>
+
+Example scripts are available in the examples directory.
+
 OTHER UI WINDOWS
 
 There are various other views in the cbftp UI that are not mentioned here in

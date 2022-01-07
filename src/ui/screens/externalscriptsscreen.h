@@ -15,14 +15,13 @@ class ExternalScriptsScreen : public UIWindow {
 public:
   ExternalScriptsScreen(Ui *);
   ~ExternalScriptsScreen();
-  void initialize(unsigned int row, unsigned int col, ExternalScripts* externalscripts);
+  void initialize(unsigned int row, unsigned int col, ExternalScripts* externalscripts, const std::string& description);
   void redraw();
   bool keyPressed(unsigned int);
   std::string getLegendText() const;
   std::string getInfoLabel() const;
 private:
-  void initialize();
-  void addScriptLine(int y, const std::string& name, const Path& path,
+  void addScriptLine(int y, const std::string& name, const Path& path, int id = -1,
       const std::shared_ptr<MenuSelectAdjustableLine>& before = nullptr);
   bool keyUp() override;
   bool keyDown() override;
@@ -38,4 +37,5 @@ private:
   bool temphighlightline;
   std::shared_ptr<ExternalScripts> tempexternalscripts;
   ExternalScripts* externalscripts;
+  std::list<std::string> description;
 };

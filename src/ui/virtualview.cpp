@@ -187,6 +187,31 @@ void VirtualView::setColor(unsigned int row, unsigned int col, int fgcolor, int 
   }
 }
 
+void VirtualView::setBold(unsigned int row, unsigned int col, bool bold, unsigned int len) {
+  expandIfNeeded(row, col + len - 1);
+  for (size_t i = 0; i < len; ++i) {
+    VirtualViewElement& vve = virtualchars[row][col + i];
+    if (vve.getClearIteration() != currentcleariteration) {
+      vve.clear();
+    }
+    if (bold) {
+      vve.setBoldOn(currentcleariteration, currentredrawiteration);
+    }
+    else {
+      vve.setBoldOff(currentcleariteration, currentredrawiteration);
+    }
+    if (vve.isModified()) {
+      modifiedchars.emplace_back(row, col + i);
+    }
+  }
+  if (col > maxrenderedcol) {
+    maxrenderedcol = col;
+  }
+  if (row > maxrenderedrow) {
+    maxrenderedrow = row;
+  }
+}
+
 bool VirtualView::tryFocus(unsigned int row, unsigned int col, unsigned int len) {
   return true;
 }

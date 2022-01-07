@@ -9,7 +9,7 @@
 #include "../core/iomanager.h"
 #include "../core/signal.h"
 #include "../globalcontext.h"
-#include "../externalfileviewing.h"
+#include "../subprocessmanager.h"
 #include "../engine.h"
 #include "../datafilehandler.h"
 #include "../path.h"
@@ -431,7 +431,7 @@ void Ui::globalKeyBinds(int ch) {
   int action = globalkeybinds->getKeyAction(ch);
   switch(action) {
     case KEYACTION_KILL_ALL:
-      global->getExternalFileViewing()->killAll();
+      global->getSubProcessManager()->killAll();
       break;
     case KEYACTION_START_PREPARED:
       global->getEngine()->startLatestPreparedRace();
@@ -871,8 +871,8 @@ void Ui::goTransferPairing(TransferPairing* transferpairing) {
   switchToWindow(transferpairingscreen);
 }
 
-void Ui::goExternalScripts(ExternalScripts* externalscripts) {
-  externalscriptsscreen->initialize(mainrow, col, externalscripts);
+void Ui::goExternalScripts(ExternalScripts* externalscripts, const std::string& description) {
+  externalscriptsscreen->initialize(mainrow, col, externalscripts, description);
   switchToWindow(externalscriptsscreen);
 }
 
@@ -992,6 +992,26 @@ void Ui::loadSettings(std::shared_ptr<DataFileHandler> dfh) {
       }
     }
   }
+  dfh->getDataFor("ExternalFileViewing", &lines);
+  for (it = lines.begin(); it != lines.end(); it++) {
+    line = *it;
+    if (line.length() == 0 ||line[0] == '#') continue;
+    size_t tok = line.find('=');
+    std::string setting = line.substr(0, tok);
+    std::string value = line.substr(tok + 1);
+    if (!setting.compare("video")) {
+      efv.setVideoViewer(value);
+    }
+    else if (!setting.compare("audio")) {
+      efv.setAudioViewer(value);
+    }
+    else if (!setting.compare("image")) {
+      efv.setImageViewer(value);
+    }
+    else if (!setting.compare("pdf")) {
+      efv.setPDFViewer(value);
+    }
+  }
 }
 
 void Ui::saveSettings(std::shared_ptr<DataFileHandler> dfh) {
@@ -1008,6 +1028,11 @@ void Ui::saveSettings(std::shared_ptr<DataFileHandler> dfh) {
       }
     }
   }
+  std::string filetag = "ExternalFileViewing";
+  dfh->addOutputLine(filetag, "video=" + efv.getVideoViewer());
+  dfh->addOutputLine(filetag, "audio=" + efv.getAudioViewer());
+  dfh->addOutputLine(filetag, "image=" + efv.getImageViewer());
+  dfh->addOutputLine(filetag, "pdf=" + efv.getPDFViewer());
 }
 
 void Ui::notify() {
@@ -1041,3 +1066,6 @@ VirtualView& Ui::getVirtualView() {
   return vv;
 }
 
+ExternalFileViewing& Ui::getExternalFileViewing() {
+  return efv;
+}

@@ -88,7 +88,7 @@ void KeyBindsScreen::repopulate() {
         std::string keyrepr = repr.repr.empty() ? std::string() + static_cast<char>(repr.wch) : repr.repr;
         origkeytext += (origkeytext.empty() ? "" : ",") + keyrepr;
       }
-      if (keydata.originalkeys != keydata.configuredkeys) {
+      if (keydata.originalkeys != keydata.configuredkeys && !origkeytext.empty()) {
         keytext += " (Default: " + origkeytext + ")";
       }
       std::shared_ptr<MenuSelectOptionTextButton> boundkey = mso.addTextButtonNoContent(y++, 1, keydata.description + "-bind", keytext);

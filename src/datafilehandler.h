@@ -34,4 +34,5 @@ public:
   void clearOutputData();
   void addOutputLine(const std::string& owner, const std::string& line);
   void getDataFor(const std::string& owner, std::vector<std::string>* matches);
+  static Path getDataDir();
 };

@@ -54,13 +54,9 @@ ExternalScriptsScreen::~ExternalScriptsScreen() {
 
 }
 
-void ExternalScriptsScreen::initialize(unsigned int row, unsigned int col, ExternalScripts* externalscripts) {
+void ExternalScriptsScreen::initialize(unsigned int row, unsigned int col, ExternalScripts* externalscripts, const std::string& description) {
   this->externalscripts = externalscripts;
-  initialize();
-  init(row, col);
-}
-
-void ExternalScriptsScreen::initialize() {
+  this->description = util::split(description, "\n");
   active = false;
   table.reset();
   base.reset();
@@ -68,10 +64,10 @@ void ExternalScriptsScreen::initialize() {
   std::list<ExternalScript>::const_iterator it;
   tempexternalscripts->clear();
   for (it = externalscripts->begin(); it != externalscripts->end(); it++) {
-    tempexternalscripts->addScript(it->name, it->path);
+    tempexternalscripts->addScript(it->name, it->path, it->id);
   }
   focusedarea = &base;
-  int y = 5;
+  int y = this->description.size() + 2;
   base.addTextButtonNoContent(y++, 1, "add", "<Add script>");
   temphighlightline = false;
   recreateTable();
@@ -80,7 +76,7 @@ void ExternalScriptsScreen::initialize() {
 
 void ExternalScriptsScreen::recreateTable() {
   table.clear();
-  int y = 7;
+  int y = description.size() + 4;
   std::shared_ptr<ResizableElement> re;
   std::shared_ptr<MenuSelectAdjustableLine> msal = table.addAdjustableLine();
   re = table.addTextButton(y, 1, "name", "NAME");
@@ -88,19 +84,20 @@ void ExternalScriptsScreen::recreateTable() {
   msal->addElement(re, 2, RESIZE_REMOVE);
   re = table.addTextButton(y, 2, "path", "PATH");
   re->setSelectable(false);
+  msal->addElement(re, 1, RESIZE_CUTEND, true);
   std::list<ExternalScript>::const_iterator it;
   for (it = tempexternalscripts->begin(); it != tempexternalscripts->end(); it++) {
     y++;
-    addScriptLine(y, it->name, it->path);
+    addScriptLine(y, it->name, it->path, it->id);
   }
 }
 
 void ExternalScriptsScreen::redraw() {
   vv->clear();
   int y = 1;
-  vv->putStr(y++, 1, "Here you can add external scripts that can be bound to hotkeys in the browse screen.");
-  vv->putStr(y++, 1, "The scripts will be executed with args: browse-site <sitename> <path> <items>");
-  vv->putStr(y++, 1, "(This feature isn't finished yet, don't try to use it)");
+  for (const std::string& line : description) {
+    vv->putStr(y++, 1, line);
+  }
   if (tempexternalscripts->size()) {
     base.makeLeavableDown();
   }
@@ -138,7 +135,6 @@ void ExternalScriptsScreen::redraw() {
       ui->showCursor();
       unsigned int cursorcol = msoe->getCol() + cursorpos;
       unsigned int cursorrow = msoe->getRow();
-      cursorcol += msoe->getLabelText().length() + 1;
       vv->moveCursor(cursorrow, cursorcol);
     }
     else {
@@ -213,7 +209,7 @@ bool ExternalScriptsScreen::keyPressed(unsigned int ch) {
       if (!activation) {
         std::shared_ptr<MenuSelectOptionElement> element = focusedarea->getElement(focusedarea->getSelectionPointer());
         if (element->getIdentifier() == "add") {
-          addScriptLine(0, "", "");
+          addScriptLine(0, "example", "scripts/example.sh");
           saveToTempScriptList();
           recreateTable();
         }
@@ -229,9 +225,10 @@ bool ExternalScriptsScreen::keyPressed(unsigned int ch) {
       ui->returnToLast();
       return true;
     case KEYACTION_DONE:
+      saveToTempScriptList();
       externalscripts->clear();
       for (std::list<ExternalScript>::const_iterator it = tempexternalscripts->begin(); it != tempexternalscripts->end(); it++) {
-        externalscripts->addScript(it->name, it->path);
+        externalscripts->addScript(it->name, it->path, it->id);
       }
       ui->returnToLast();
       return true;
@@ -256,7 +253,7 @@ bool ExternalScriptsScreen::keyPressed(unsigned int ch) {
       if (focusedarea == &table) {
         std::shared_ptr<MenuSelectOptionElement> msoe = focusedarea->getElement(focusedarea->getSelectionPointer());
         std::shared_ptr<MenuSelectAdjustableLine> msal = table.getAdjustableLine(msoe);
-        addScriptLine(0, "", "", msal);
+        addScriptLine(0, "example", "scripts/example.sh", -1, msal);
         saveToTempScriptList();
         recreateTable();
         ui->redraw();
@@ -328,7 +325,7 @@ std::string ExternalScriptsScreen::getLegendText() const {
 }
 
 std::string ExternalScriptsScreen::getInfoLabel() const {
-  return "CONFIGURE EXTERNAL SCRIPTS";
+  return "CONFIGURE EXTERNAL SCRIPTS FOR: " + externalscripts->getName();
 }
 
 void ExternalScriptsScreen::saveToTempScriptList() {
@@ -340,11 +337,12 @@ void ExternalScriptsScreen::saveToTempScriptList() {
     }
     std::string name = std::static_pointer_cast<MenuSelectOptionTextField>((*it)->getElement(0))->getData();
     Path path = std::static_pointer_cast<MenuSelectOptionTextField>((*it)->getElement(1))->getData();
-    tempexternalscripts->addScript(name, path);
+    int id = (*it)->getElement(0)->getId();
+    tempexternalscripts->addScript(name, path, id);
   }
 }
 
-void ExternalScriptsScreen::addScriptLine(int y, const std::string& name, const Path& path,
+void ExternalScriptsScreen::addScriptLine(int y, const std::string& name, const Path& path, int id,
                                     const std::shared_ptr<MenuSelectAdjustableLine>& before)
 {
   std::shared_ptr<MenuSelectAdjustableLine> msal;
@@ -354,9 +352,10 @@ void ExternalScriptsScreen::addScriptLine(int y, const std::string& name, const 
   else {
     msal = table.addAdjustableLineBefore(before);
   }
-  std::shared_ptr<ResizableElement> re = table.addStringField(y, 1, "name", "", name, false);
+  std::shared_ptr<ResizableElement> re = table.addStringField(y, 1, "name", "", name, false, 8, 32);
+  re->setId(id);
   msal->addElement(re, 2, RESIZE_REMOVE);
-  re = table.addStringField(y, 2, "path", "", path.toString(), false, 256);
+  re = table.addStringField(y, 2, "path", "", path.toString(), false, 64, 256);
   msal->addElement(re, 1, RESIZE_CUTEND, true);
 }
 

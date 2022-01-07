@@ -43,7 +43,9 @@ enum GenericKeyActions {
   KEYACTION_QUICK_JUMP,
   KEYACTION_CLOSE,
   KEYACTION_BROWSE,
-  KEYACTION_EXTERNAL_SCRIPTS
+  KEYACTION_EXTERNAL_SCRIPTS,
+  KEYACTION_EXTERNAL_SCRIPT_START = 40000,
+  KEYACTION_EXTERNAL_SCRIPT_MAX = 40200
 };
 
 enum GenericKeyScope {
@@ -55,12 +57,20 @@ struct KeyRepr {
   unsigned int wch;
 };
 
+struct QueuedReplaceBind {
+  QueuedReplaceBind(int keyaction, int scope, const std::set<unsigned int>& newkeys);
+  int keyaction;
+  int scope;
+  const std::set<unsigned int> newkeys;
+};
+
 class KeyBinds {
 public:
   KeyBinds(const std::string& name);
   KeyBinds(const KeyBinds& other);
   void addBind(const std::list<int>& keys, int keyaction, const std::string& description, int scope = KEYSCOPE_ALL);
   void addBind(int key, int keyaction, const std::string& description, int scope = KEYSCOPE_ALL);
+  void addUnboundBind(int keyaction, const std::string& description, int scope = KEYSCOPE_ALL);
   void addScope(int scope, const std::string& description);
   void addCustomBind(int keyaction, int scope, int newkey);
   void replaceBind(int keyaction, int scope, const std::set<unsigned int>& newkeys);
@@ -68,6 +78,8 @@ public:
   void resetBind(int keyaction, int scope);
   bool hasBind(int keyaction, int scope) const;
   void unbind(int keyaction, int scope);
+  void removeBind(int keyaction, int scope);
+  void setBindDescription(int keyaction, const std::string& description, int scope);
   void resetAll();
   int getKeyAction(int key, int scope = KEYSCOPE_ALL) const;
   std::string getName() const;
@@ -94,6 +106,7 @@ private:
   void regenerate();
   void generateIndex();
   void generateLegendSummaries();
+  void applyQueuedReplaceBinds();
   std::string name;
   std::map<KeyAndScope, std::list<KeyData>::iterator> keybinds;
   std::list<KeyData> keydata;
@@ -102,4 +115,5 @@ private:
   std::map<int, std::string> legendsummaries;
   bool allowkeybinds;
   bool alternatebutton;
+  std::list<QueuedReplaceBind> queuedreplacebinds;
 };

@@ -1,22 +1,12 @@
 #include "externalfileviewing.h"
 
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <cassert>
-#include <csignal>
-#include <vector>
-#include <cctype>
 #include <cstdlib>
 
-#include "core/signal.h"
-#include "core/workmanager.h"
-#include "globalcontext.h"
-#include "localstorage.h"
-#include "eventlog.h"
-#include "path.h"
-#include "file.h"
+#include "../globalcontext.h"
+#include "../localstorage.h"
+#include "../eventlog.h"
+#include "../path.h"
+#include "../file.h"
 
 ExternalFileViewing::ExternalFileViewing() {
   videoviewer = "mplayer";
@@ -25,10 +15,9 @@ ExternalFileViewing::ExternalFileViewing() {
   pdfviewer = "evince";
   display = false;
   char * displayenv = getenv("DISPLAY");
-  if (displayenv != NULL) {
+  if (displayenv != nullptr) {
     display = true;
   }
-  Core::registerSignalDispatch(SIGCHLD, global->getWorkManager(), this);
 }
 
 bool ExternalFileViewing::isViewable(const Path & path) const {
@@ -46,39 +35,17 @@ int ExternalFileViewing::viewThenDelete(const Path & path) {
 int ExternalFileViewing::view(const Path & path, bool deleteafter) {
   std::string application = getViewApplication(path);
   global->getEventLog()->log("ExternalFileViewing", "Opening " + path.toString() + " with " + application);
-  int pid = fork();
-  if (!pid) {
-    int devnull = open("/dev/null", O_WRONLY);
-    dup2(devnull, STDOUT_FILENO);
-    dup2(devnull, STDERR_FILENO);
-    execlp(application.c_str(), application.c_str(), path.toString().c_str(), (char *)0);
+  std::vector<std::string> args = {path.toString()};
+  std::shared_ptr<SubProcess> subprocess = global->getSubProcessManager()->runProcess(this, application, args);
+  if (deleteafter) {
+    files[subprocess->pid] = path;
   }
-  else {
-    if (deleteafter) {
-      files[pid] = path;
-    }
-    subprocesses.push_back(pid);
-  }
-  return pid;
+  return subprocess->pid;
 }
 
-void ExternalFileViewing::killProcess(int pid) {
-  for (std::list<int>::iterator it = subprocesses.begin(); it != subprocesses.end(); it++) {
-    if (*it == pid) {
-      kill(pid, SIGHUP);
-      checkDeleteFile(*it);
-      subprocesses.erase(it);
-      break;
-    }
-  }
-}
-
-void ExternalFileViewing::killAll() {
-  for (std::list<int>::iterator it = subprocesses.begin(); it != subprocesses.end(); it++) {
-    kill(*it, SIGHUP);
-    checkDeleteFile(*it);
-  }
-  subprocesses.clear();
+void ExternalFileViewing::killViewer(int pid) {
+  global->getSubProcessManager()->killProcess(pid);
+  checkDeleteFile(pid);
 }
 
 std::string ExternalFileViewing::getViewApplication(const Path & path) const {
@@ -103,24 +70,6 @@ std::string ExternalFileViewing::getViewApplication(const Path & path) const {
   return application;
 }
 
-void ExternalFileViewing::signal(int signal, int) {
-  if (signal == SIGCHLD) {
-    int pid = 0;
-    while ((pid = waitpid(-1, NULL, WNOHANG)) > 0) {
-      for (std::list<int>::iterator it = subprocesses.begin(); it != subprocesses.end(); it++) {
-        if (*it == pid) {
-          checkDeleteFile(*it);
-          subprocesses.erase(it);
-          break;
-        }
-      }
-    }
-  }
-  else {
-    assert(false);
-  }
-}
-
 void ExternalFileViewing::checkDeleteFile(int pid) {
   if (files.find(pid) != files.end()) {
     global->getEventLog()->log("ExternalFileViewing", "Deleting temporary file: " + files[pid].toString());
@@ -134,12 +83,11 @@ bool ExternalFileViewing::hasDisplay() const {
 }
 
 bool ExternalFileViewing::stillViewing(int pid) const {
-  for (std::list<int>::const_iterator it = subprocesses.begin(); it != subprocesses.end(); it++) {
-    if (*it == pid) {
-      return true;
-    }
-  }
-  return false;
+  return global->getSubProcessManager()->getIsRunning(pid);
+}
+
+void ExternalFileViewing::processExited(int pid, int status) {
+  checkDeleteFile(pid);
 }
 
 std::string ExternalFileViewing::getVideoViewer() const {

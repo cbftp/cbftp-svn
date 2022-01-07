@@ -4,9 +4,9 @@
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptionelement.h"
 #include "../menuselectoptiontextbutton.h"
+#include "../externalfileviewing.h"
 
 #include "../../globalcontext.h"
-#include "../../externalfileviewing.h"
 #include "../../localstorage.h"
 
 FileViewerSettingsScreen::FileViewerSettingsScreen(Ui* ui) : UIWindow(ui, "FileViewerSettingsScreen"), mso(*vv) {
@@ -23,17 +23,16 @@ FileViewerSettingsScreen::~FileViewerSettingsScreen() {
 
 void FileViewerSettingsScreen::initialize(unsigned int row, unsigned int col) {
   active = false;
-  efv = global->getExternalFileViewing();
   ls = global->getLocalStorage();
   unsigned int y = 1;
   unsigned int x = 1;
   mso.clear();
   mso.addStringField(y++, x, "temppath", "Temporary download path:", ls->getTempPath().toString(), false, 128, 128);
   y++;
-  mso.addStringField(y++, x, "video", "Video viewer:", efv->getVideoViewer(), false);
-  mso.addStringField(y++, x, "audio", "Audio viewer:", efv->getAudioViewer(), false);
-  mso.addStringField(y++, x, "image", "Image viewer:", efv->getImageViewer(), false);
-  mso.addStringField(y++, x, "pdf", "PDF viewer:", efv->getPDFViewer(), false);
+  mso.addStringField(y++, x, "video", "Video viewer:", ui->getExternalFileViewing().getVideoViewer(), false);
+  mso.addStringField(y++, x, "audio", "Audio viewer:", ui->getExternalFileViewing().getAudioViewer(), false);
+  mso.addStringField(y++, x, "image", "Image viewer:", ui->getExternalFileViewing().getImageViewer(), false);
+  mso.addStringField(y++, x, "pdf", "PDF viewer:", ui->getExternalFileViewing().getPDFViewer(), false);
   mso.makeLeavableDown();
   mso.enterFocusFrom(0);
   init(row, col);
@@ -113,16 +112,16 @@ bool FileViewerSettingsScreen::keyPressed(unsigned int ch) {
           ls->setTempPath(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "video") {
-          efv->setVideoViewer(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
+          ui->getExternalFileViewing().setVideoViewer(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "audio") {
-          efv->setAudioViewer(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
+          ui->getExternalFileViewing().setAudioViewer(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "image") {
-          efv->setImageViewer(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
+          ui->getExternalFileViewing().setImageViewer(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "pdf") {
-          efv->setPDFViewer(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
+          ui->getExternalFileViewing().setPDFViewer(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
       }
       ui->returnToLast();

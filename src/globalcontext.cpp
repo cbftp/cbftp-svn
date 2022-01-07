@@ -16,9 +16,9 @@ void GlobalContext::linkComponents(SettingsLoaderSaver* sls, Engine* e,
     UIBase* uib, SiteManager* sm, SiteLogicManager* slm,
     TransferManager* tm, RemoteCommandHandler* rch,
     SkipList* sl, ProxyManager* pm, LocalStorage* ls,
-    ExternalFileViewing* efv, TimeReference* tr, Statistics* s,
+    TimeReference* tr, Statistics* s,
     SectionManager* secm, HTTPServer* httpsrv, RestApi* ra,
-    LoadMonitor* lm, ExternalScriptsManager* esm)
+    LoadMonitor* lm, ExternalScriptsManager* esm, SubProcessManager* spm)
 {
   this->sls = sls;
   this->e = e;
@@ -30,7 +30,6 @@ void GlobalContext::linkComponents(SettingsLoaderSaver* sls, Engine* e,
   this->sl = sl;
   this->pm = pm;
   this->ls = ls;
-  this->efv = efv;
   this->tr = tr;
   this->s = s;
   this->secm = secm;
@@ -38,6 +37,7 @@ void GlobalContext::linkComponents(SettingsLoaderSaver* sls, Engine* e,
   this->ra = ra;
   this->lm = lm;
   this->esm = esm;
+  this->spm = spm;
 }
 
 Engine* GlobalContext::getEngine() const {
@@ -96,10 +96,6 @@ LocalStorage* GlobalContext::getLocalStorage() const {
   return ls;
 }
 
-ExternalFileViewing* GlobalContext::getExternalFileViewing() const {
-  return efv;
-}
-
 TimeReference* GlobalContext::getTimeReference() const {
   return tr;
 }
@@ -127,3 +123,8 @@ LoadMonitor* GlobalContext::getLoadMonitor() const {
 ExternalScriptsManager* GlobalContext::getExternalScriptsManager() const {
   return esm;
 }
+
+SubProcessManager* GlobalContext::getSubProcessManager() const {
+  return spm;
+}
+
