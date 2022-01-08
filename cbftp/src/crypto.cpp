@@ -1,5 +1,6 @@
 #include "crypto.h"
 
+#include <sstream>
 #include <climits>
 #include <ctime>
 #include <cstring>
@@ -22,6 +23,25 @@ const EVP_MD * digest() {
 
 int blockSize() {
   return EVP_CIPHER_block_size(cipher());
+}
+
+unsigned char hex2uc(char c) {
+  if (c >= '0' && c <= '9') {
+    return c - '0';
+  }
+  if (tolower(c) >= 'a' && tolower(c) <= 'f') {
+    return c - 'W';
+  }
+  return 0;
+}
+
+std::string uc2hex(unsigned char c) {
+  std::string out;
+  char major = c / 16;
+  out += major >= 10 ? major + 'W' : major + '0';
+  char minor = c % 16;
+  out += minor >= 10 ? minor + 'W' : minor + '0';
+  return out;
 }
 
 }
@@ -153,3 +173,20 @@ bool Crypto::isMostlyASCII(const Core::BinaryData& data) {
   }
   return asciicount > data.size() * 0.9;
 }
+
+std::string Crypto::toHex(const Core::BinaryData& indata) {
+  std::stringstream sstream;
+  for (size_t i = 0; i < indata.size(); ++i) {
+    sstream << uc2hex(indata[i]);
+  }
+  return sstream.str();
+}
+
+void Crypto::fromHex(const std::string& indata, Core::BinaryData& outdata) {
+  outdata.resize(indata.size() / 2);
+  for (size_t i = 0; i < outdata.size(); ++i) {
+    outdata[i] = hex2uc(indata[i * 2]) * 16 + hex2uc(indata[i * 2 + 1]);
+  }
+}
+
+
