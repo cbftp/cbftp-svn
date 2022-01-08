@@ -249,10 +249,12 @@ void VirtualView::render() {
   if (redrawall) {
     renderer.erase();
   }
+  unsigned int actualrealrows = getActualRealRows();
+  unsigned int actualrealcols = getActualRealCols();
   for (std::set<std::pair<unsigned int, unsigned int>>::iterator it = renderedchars.begin(); it != renderedchars.end(); ++it) {
     unsigned int realrow = it->first;
     unsigned int realcol = it->second;
-    if (realrow >= realrows || realcol >= realcols) {
+    if (realrow >= actualrealrows || realcol >= actualrealcols) {
       continue;
     }
     int virtrow = realrow + currentviewrow;
@@ -278,14 +280,14 @@ void VirtualView::render() {
   for (const std::pair<unsigned int, unsigned int>& chr : modifiedchars) {
     unsigned int virtrow = chr.first;
     unsigned int virtcol = chr.second;
-    unsigned int realrow = virtrow - currentviewrow;
-    unsigned int realcol = virtcol - currentviewcol;
-    renderedchars.insert(std::pair<unsigned int, unsigned int>(realrow, realcol));
-    if ((virtrow < currentviewrow || virtrow >= currentviewrow + realrows) ||
-        (virtcol < currentviewcol || virtcol >= currentviewcol + realcols))
+    if ((virtrow < currentviewrow || virtrow >= currentviewrow + actualrealrows) ||
+        (virtcol < currentviewcol || virtcol >= currentviewcol + actualrealcols))
     {
       continue;
     }
+    unsigned int realrow = virtrow - currentviewrow;
+    unsigned int realcol = virtcol - currentviewcol;
+    renderedchars.insert(std::pair<unsigned int, unsigned int>(realrow, realcol));
     VirtualViewElement& vvve = virtualchars[virtrow][virtcol];
     VirtualViewElement& rvve = realchars[realrow][realcol];
     if (redrawall || vvve.isModified()) { // might be from the renderedchars loop above

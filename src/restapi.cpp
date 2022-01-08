@@ -1958,9 +1958,7 @@ std::string RestApi::createTemporaryAuthToken() {
   for (int i = 0; i < 16; ++i) {
     data[i] = static_cast<unsigned char>(rand() % 256);
   }
-  Core::BinaryData hash;
-  Crypto::sha256(data, hash);
-  std::string token(hash.begin(), hash.end());
+  std::string token = Crypto::toHex(data);
   tempauthtokens.insert(token);
   return token;
 }

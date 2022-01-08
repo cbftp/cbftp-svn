@@ -368,7 +368,8 @@ void RaceStatusScreen::update() {
     }
     std::string sitename = sl->getSite()->getName();
     bool downloadonly = sr->isDownloadOnly();
-    mso.addTextButton(y, x, sitename, sitename);
+    std::shared_ptr<MenuSelectOptionTextButton> msotb = mso.addTextButton(y, x, sitename, sitename);
+    msotb->setExtraData(sitename);
     for (std::list<std::string>::iterator it2 = subpaths.begin(); it2 != subpaths.end(); it2++) {
       std::string origsubpath = *it2;
       if (haslargepath && !smalldirs && race->guessedSize(origsubpath) < 5) {
@@ -510,18 +511,20 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
     case KEYACTION_UP:
       if (mso.goUp()) {
         ui->update();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_DOWN:
       if (mso.goDown()) {
         ui->update();
+        return true;
       }
-      return true;
+      return false;
     case KEYACTION_DELETE:
     {
       std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
       if (!!msotb) {
-        removesite = msotb->getLabelText();
+        removesite = msotb->getExtraData();
         awaitingremovesite = true;
         ui->goConfirmation("Do you really want to remove " + removesite + " from the race?");
       }
@@ -540,7 +543,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
     {
       std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
       if (!!msotb) {
-        removesite = msotb->getLabelText();
+        removesite = msotb->getExtraData();
         awaitingremovesitedelownfiles = true;
         ui->goConfirmation("Do you really want to remove " + removesite + " from the race and delete own files?");
       }
@@ -553,7 +556,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
     {
       std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
       if (!!msotb) {
-        removesite = msotb->getLabelText();
+        removesite = msotb->getExtraData();
         awaitingremovesitedelallfiles = true;
         ui->goConfirmation("Do you really want to remove " + removesite + " from the race and delete all files?");
       }
@@ -608,7 +611,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
     {
       std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
       if (!!msotb) {
-        std::string site = msotb->getLabelText();
+        std::string site = msotb->getExtraData();
         ui->goTransfersFilterSpreadJobSite(race->getName(), site);
       }
       return true;
@@ -616,14 +619,14 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
     case KEYACTION_ENTER: {
       std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
       if (!!msotb) {
-        ui->goSiteStatus(msotb->getLabelText());
+        ui->goSiteStatus(msotb->getExtraData());
       }
       return true;
     }
     case KEYACTION_BROWSE: {
       std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
       if (!!msotb) {
-        std::string site = msotb->getLabelText();
+        std::string site = msotb->getExtraData();
         ui->goBrowse(site, race->getSiteRace(site)->getPath());
       }
       return true;
@@ -631,7 +634,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
     case KEYACTION_EDIT_SITE: {
       std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
       if (!!msotb) {
-        std::string site = msotb->getLabelText();
+        std::string site = msotb->getExtraData();
         ui->goEditSite(site);
       }
       return true;
@@ -639,7 +642,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
     case KEYACTION_RAW_COMMAND: {
       std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
       if (!!msotb) {
-        std::string site = msotb->getLabelText();
+        std::string site = msotb->getExtraData();
         std::shared_ptr<SiteRace> sr = race->getSiteRace(site);
         if (sr) {
           ui->goRawCommand(site, sr->getPath());
@@ -650,7 +653,7 @@ bool RaceStatusScreen::keyPressed(unsigned int ch) {
     case KEYACTION_REMOVE_SITE_FROM_ALL_SPREADJOBS: {
       std::shared_ptr<MenuSelectOptionTextButton> msotb = std::static_pointer_cast<MenuSelectOptionTextButton>(mso.getElement(mso.getSelectionPointer()));
       if (!!msotb) {
-        removesite = msotb->getLabelText();
+        removesite = msotb->getExtraData();
         awaitingremovesitefromallspreadjobs = true;
         ui->goConfirmation("Do you really want to remove " + removesite + " from ALL running spreadjobs?");
       }

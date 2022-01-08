@@ -29,7 +29,7 @@ void EventLogScreen::initialize(unsigned int row, unsigned int col) {
 void EventLogScreen::redraw() {
   vv->clear();
   rawbuf->bookmark();
-  unsigned int rows = (filtermodeinput || filtermodeinputregex) ? row - 2 : row;
+  unsigned int rows = (filtermodeinput || filtermodeinputregex) ? vv->getActualRealRows() - 2 : vv->getActualRealRows();
   std::list<std::string> printlines;
   fixCopyReadPos();
   unsigned int size = rawbuf->isFiltered() ? rawbuf->getFilteredSize() : rawbuf->getSize();
@@ -47,7 +47,7 @@ void EventLogScreen::redraw() {
     vv->putStr(i, 0, line);
   }
   std::string oldtext = filterfield.getData();
-  filterfield = MenuSelectOptionTextField("filter", row - 1, 1, "", oldtext, col - 20, 512, false);
+  filterfield = MenuSelectOptionTextField("filter", vv->getActualRealRows() - 1, 1, "", oldtext, vv->getActualRealCols() - 20, 512, false);
   update();
 }
 
@@ -128,7 +128,7 @@ bool EventLogScreen::keyPressed(unsigned int ch) {
         readfromcopy = true;
       }
       else {
-        copyreadpos = copyreadpos + row / 2;
+        copyreadpos = copyreadpos + vv->getActualRealRows() / 2;
         fixCopyReadPos();
       }
       ui->redraw();
@@ -138,11 +138,11 @@ bool EventLogScreen::keyPressed(unsigned int ch) {
         if (copyreadpos == 0) {
           readfromcopy = false;
         }
-        else if (copyreadpos < row / 2) {
+        else if (copyreadpos < vv->getActualRealRows() / 2) {
           copyreadpos = 0;
         }
         else {
-          copyreadpos = copyreadpos - row / 2;
+          copyreadpos = copyreadpos - vv->getActualRealRows() / 2;
         }
       }
       ui->redraw();
@@ -207,10 +207,10 @@ std::string EventLogScreen::getInfoText() const {
 
 void EventLogScreen::fixCopyReadPos() {
   unsigned int copysize = rawbuf->isFiltered() ? rawbuf->getFilteredCopySize() : rawbuf->getCopySize();
-  if (row >= copysize) {
+  if (vv->getActualRealRows() >= copysize) {
     copyreadpos = 0;
   }
-  else if (copyreadpos + row > copysize) {
-    copyreadpos = copysize - row;
+  else if (copyreadpos + vv->getActualRealRows() > copysize) {
+    copyreadpos = copysize - vv->getActualRealRows();
   }
 }

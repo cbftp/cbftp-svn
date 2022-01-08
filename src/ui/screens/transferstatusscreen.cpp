@@ -118,8 +118,7 @@ void TransferStatusScreen::redraw() {
   vv->putStr(y, 48 + progress.length(), "] " + std::to_string(progresspercent) + "%");
   ++y;
   ++y;
-  unsigned int i = 0;
-  for (std::list<std::string>::const_iterator it = ts->getLogLines().begin(); it != ts->getLogLines().end() && y < row; it++, i++) {
+  for (std::list<std::string>::const_iterator it = ts->getLogLines().begin(); it != ts->getLogLines().end(); it++) {
     vv->putStr(y++, 1, *it);
   }
 }
