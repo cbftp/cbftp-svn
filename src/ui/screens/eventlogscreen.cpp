@@ -27,24 +27,33 @@ void EventLogScreen::initialize(unsigned int row, unsigned int col) {
 }
 
 void EventLogScreen::redraw() {
-  vv->clear();
   rawbuf->bookmark();
+  vv->clear();
   unsigned int rows = (filtermodeinput || filtermodeinputregex) ? vv->getActualRealRows() - 2 : vv->getActualRealRows();
-  std::list<std::string> printlines;
-  fixCopyReadPos();
-  unsigned int size = rawbuf->isFiltered() ? rawbuf->getFilteredSize() : rawbuf->getSize();
-  if (readfromcopy) {
-    size = rawbuf->isFiltered() ? rawbuf->getFilteredCopySize() : rawbuf->getCopySize();
-  }
-  unsigned int numlinestoprint = size < rows ? size : rows;
-  for (unsigned int i = 0; i < numlinestoprint; ++i) {
-    unsigned int pos = numlinestoprint - i - 1;
-    const std::pair<std::string, std::string> & entry = readfromcopy ?
-        (rawbuf->isFiltered() ? rawbuf->getFilteredLineCopy(pos + copyreadpos) :
-        rawbuf->getLineCopy(pos + copyreadpos))
-     : (rawbuf->isFiltered() ? rawbuf->getFilteredLine(pos) : rawbuf->getLine(pos));
-    std::string line = entry.first + " " + entry.second;
-    vv->putStr(i, 0, line);
+  while (true) {
+    vv->clear();
+    std::list<std::string> printlines;
+    fixCopyReadPos();
+    unsigned int size = rawbuf->isFiltered() ? rawbuf->getFilteredSize() : rawbuf->getSize();
+    if (readfromcopy) {
+      size = rawbuf->isFiltered() ? rawbuf->getFilteredCopySize() : rawbuf->getCopySize();
+    }
+    unsigned int numlinestoprint = size < rows ? size : rows;
+    for (unsigned int i = 0; i < numlinestoprint; ++i) {
+      unsigned int pos = numlinestoprint - i - 1;
+      const std::pair<std::string, std::string> & entry = readfromcopy ?
+          (rawbuf->isFiltered() ? rawbuf->getFilteredLineCopy(pos + copyreadpos) :
+          rawbuf->getLineCopy(pos + copyreadpos))
+       : (rawbuf->isFiltered() ? rawbuf->getFilteredLine(pos) : rawbuf->getLine(pos));
+      std::string line = entry.first + " " + entry.second;
+      vv->putStr(i, 0, line);
+    }
+    unsigned int newrows = (filtermodeinput || filtermodeinputregex) ? vv->getActualRealRows() - 2 : vv->getActualRealRows();
+    if (rows <= newrows) { // check if the rendering wrote a too long line and therefore caused the horizontal slider to show up,
+                           // which reduces the number of available rows by 1
+      break;
+    }
+    rows = newrows;
   }
   std::string oldtext = filterfield.getData();
   filterfield = MenuSelectOptionTextField("filter", vv->getActualRealRows() - 1, 1, "", oldtext, vv->getActualRealCols() - 20, 512, false);

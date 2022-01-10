@@ -314,6 +314,7 @@ void VirtualView::reset() {
 
 void VirtualView::clear() {
   currentcleariteration++;
+  modifiedchars.clear();
   maxrenderedrow = 0;
   maxrenderedcol = 0;
 }
