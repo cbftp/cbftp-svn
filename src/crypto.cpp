@@ -126,16 +126,22 @@ void Crypto::decryptOld(const Core::BinaryData & indata, const Core::BinaryData 
   EVP_CIPHER_CTX_free(ctx);
 }
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#define EVP_MD_CTX_new EVP_MD_CTX_create
+#define EVP_MD_CTX_free EVP_MD_CTX_destroy
+#endif
+
 void Crypto::sha256(const Core::BinaryData & indata, Core::BinaryData & outdata) {
   if (indata.empty()) {
     outdata.resize(0);
     return;
   }
-  outdata.resize(SHA256_DIGEST_LENGTH);
-  SHA256_CTX ctx;
-  SHA256_Init(&ctx);
-  SHA256_Update(&ctx, &indata[0], indata.size());
-  SHA256_Final(&outdata[0], &ctx);
+  outdata.resize(EVP_MD_size(digest()));
+  EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+  EVP_DigestInit(ctx, digest());
+  EVP_DigestUpdate(ctx, &indata[0], indata.size());
+  EVP_DigestFinal(ctx, &outdata[0], nullptr);
+  EVP_MD_CTX_free(ctx);
 }
 
 void Crypto::base64Encode(const Core::BinaryData & indata, Core::BinaryData & outdata) {

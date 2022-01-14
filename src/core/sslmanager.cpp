@@ -16,6 +16,10 @@
 #include <openssl/asn1.h>
 #include <openssl/ec.h>
 #include <openssl/err.h>
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#include <openssl/sslerr.h>
+#endif
+#include <openssl/evp.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 
@@ -87,6 +91,8 @@ pthread_t sslThreadIdCallback() {
 
 EVP_PKEY* createPrivateKey() {
   assert(g_initialized);
+  EVP_PKEY* pkey = nullptr;
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
   EC_KEY* eckey = EC_KEY_new_by_curve_name(ELLIPTIC_CURVE);
   if (!eckey) {
     getLogger()->log("SSLManager", "Creating EC KEY failed: " + SSLErrors(), LogLevel::ERROR);
@@ -98,9 +104,10 @@ EVP_PKEY* createPrivateKey() {
     EC_KEY_free(eckey);
     return nullptr;
   }
-  EVP_PKEY* pkey = EVP_PKEY_new();
+  pkey = EVP_PKEY_new();
   if (!pkey) {
     getLogger()->log("SSLManager", "Creating EVP PKEY failed: " + SSLErrors(), LogLevel::ERROR);
+    EVP_PKEY_free(pkey);
     EC_KEY_free(eckey);
     return nullptr;
   }
@@ -110,6 +117,33 @@ EVP_PKEY* createPrivateKey() {
     EC_KEY_free(eckey);
     return nullptr;
   }
+#else
+  EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, nullptr);
+  if (!ctx) {
+    getLogger()->log("SSLManager", "EVP_PKEY_CTX_new_id failed: " + SSLErrors(), LogLevel::ERROR);
+    return nullptr;
+  }
+  if (EVP_PKEY_paramgen_init(ctx) < 1) {
+    getLogger()->log("SSLManager", "EVP_PKEY_paramgen_init failed: " + SSLErrors(), LogLevel::ERROR);
+    EVP_PKEY_CTX_free(ctx);
+  }
+  if (EVP_PKEY_keygen_init(ctx) < 1) {
+    getLogger()->log("SSLManager", "EVP_PKEY_keygen_init failed: " + SSLErrors(), LogLevel::ERROR);
+    EVP_PKEY_CTX_free(ctx);
+    return nullptr;
+  }
+  if (EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx, ELLIPTIC_CURVE) < 1) {
+    getLogger()->log("SSLManager", "EVP_PKEY_CTX_set_ec_paramgen_curve_nid failed: " + SSLErrors(), LogLevel::ERROR);
+    EVP_PKEY_CTX_free(ctx);
+    return nullptr;
+  }
+  if (EVP_PKEY_keygen(ctx, &pkey) < 1) {
+    getLogger()->log("SSLManager", "EVP_PKEY_keygen failed: " + SSLErrors(), LogLevel::ERROR);
+    EVP_PKEY_CTX_free(ctx);
+    return nullptr;
+  }
+  EVP_PKEY_CTX_free(ctx);
+#endif
   return pkey;
 }
 
@@ -511,6 +545,16 @@ std::string SSLManager::sslErrorToString(int error) {
 #endif
   }
   return std::to_string(error);
+}
+
+bool SSLManager::isAbruptDisconnectError(unsigned long e) {
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
+#else
+  if ((e & ERR_REASON_MASK) == SSL_R_UNEXPECTED_EOF_WHILE_READING) {
+    return true;
+  }
+#endif
+  return false;
 }
 
 } // namespace Core
