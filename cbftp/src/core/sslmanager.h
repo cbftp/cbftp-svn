@@ -39,6 +39,7 @@ public:
   static const char* getCipher(SSL* ssl);
   static std::string version();
   static std::string sslErrorToString(int error);
+  static bool isAbruptDisconnectError(unsigned long e);
 };
 
 } // namespace Core

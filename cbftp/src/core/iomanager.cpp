@@ -65,8 +65,15 @@ DisconnectType investigateSSLError(SocketInfo& socketinfo, const char* function,
         return DisconnectType::ABRUPT;
       }
       break;
+    case SSL_ERROR_SSL:
+      socketinfo.sslshutdown = false;
+      break;
   }
   unsigned long e = ERR_get_error();
+  if (SSLManager::isAbruptDisconnectError(e)) {
+    errortext = "Connection closed abruptly by peer";
+    return DisconnectType::ABRUPT;
+  }
   char buf[util::ERR_BUF_SIZE];
   ERR_error_string_n(e, buf, sizeof(buf));
   errortext = std::string(function) + ": " + SSLManager::sslErrorToString(sslError) +
