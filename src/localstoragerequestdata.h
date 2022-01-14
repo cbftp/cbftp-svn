@@ -8,7 +8,8 @@ class LocalPathInfo;
 enum class LocalStorageRequestType {
   GET_FILE_LIST,
   GET_PATH_INFO,
-  DELETE
+  DELETE,
+  MKDIR
 };
 
 struct LocalStorageRequestData {
@@ -33,5 +34,12 @@ struct PathInfoTaskData : public LocalStorageRequestData {
 struct DeleteFileTaskData : public LocalStorageRequestData {
   DeleteFileTaskData();
   Path file;
+  bool success;
+};
+
+struct MakeDirTaskData : public LocalStorageRequestData {
+  MakeDirTaskData();
+  Path path;
+  std::string dirname;
   bool success;
 };

@@ -224,6 +224,18 @@ bool BrowseScreenLocal::handleReadyRequests() {
         requests.pop_front();
         break;
       }
+      case BrowseScreenRequestType::MKDIR: {
+        bool success = global->getLocalStorage()->getMakeDirResult(request.id);
+        if (success) {
+          lastinfo = LastInfo::MKDIR_SUCCESS;
+        }
+        else {
+          lastinfo = LastInfo::MKDIR_FAILED;
+        }
+        refreshfilelistafter = true;
+        requests.pop_front();
+        break;
+      }
       default:
         assert(false);
         break;
@@ -256,6 +268,15 @@ void BrowseScreenLocal::command(const std::string & command, const std::string &
       }
     }
     requests.pop_front();
+    ui->setInfo();
+  }
+  else if (command == "makedir") {
+    BrowseScreenRequest request;
+    request.id = global->getLocalStorage()->requestMakeDirectory(list.getPath(), arg);
+    request.type = BrowseScreenRequestType::MKDIR;
+    request.path = list.getPath();
+    request.files = { std::make_pair(arg, true) };
+    requests.push_back(request);
     ui->setInfo();
   }
   ui->redraw();
@@ -660,6 +681,9 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       nameonly = !nameonly;
       ui->redraw();
       break;
+    case KEYACTION_MKDIR:
+      ui->goMakeDir("", list);
+      break;
   }
   return BrowseScreenAction();
 }
@@ -699,6 +723,9 @@ std::string BrowseScreenLocal::getInfoText() const {
       case BrowseScreenRequestType::FILELIST:
         text = "Getting list for " + request.path.toString() + "  ";
         break;
+      case BrowseScreenRequestType::MKDIR:
+        text = "Creating directory " + target + "  ";
+        break;
       default:
         assert(false);
         break;
@@ -732,6 +759,12 @@ std::string BrowseScreenLocal::getInfoText() const {
         break;
       case LastInfo::DELETE_FAILED:
         text = "Delete failed: ";
+        break;
+      case LastInfo::MKDIR_SUCCESS:
+        text = "Dir creation successful: ";
+        break;
+      case LastInfo::MKDIR_FAILED:
+        text = "Dir creation failed: ";
         break;
       case LastInfo::NONE:
       default:
