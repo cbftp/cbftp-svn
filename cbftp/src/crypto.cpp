@@ -53,7 +53,7 @@ void Crypto::encrypt(const Core::BinaryData & indata, const Core::BinaryData & p
   }
   EVP_CIPHER_CTX * ctx = EVP_CIPHER_CTX_new();
   const EVP_CIPHER * cipherp = cipher();
-  int ivlen = EVP_CIPHER_iv_length(cipherp);
+
   int keylen = EVP_CIPHER_key_length(cipherp);
   unsigned char tmpkeyiv[EVP_MAX_KEY_LENGTH + EVP_MAX_IV_LENGTH];
   unsigned char* key = tmpkeyiv;
@@ -64,9 +64,15 @@ void Crypto::encrypt(const Core::BinaryData & indata, const Core::BinaryData & p
   for (int i = SALT_LENGTH; i < SALT_STRING_LENGTH; ++i) {
     outdata[i] = (unsigned char)(rand() % UCHAR_MAX);
   }
+#if OPENSSL_VERSION_NUMBER < 0x10000000L
+  EVP_BytesToKey(cipherp, digest(), &outdata[SALT_STRING_LENGTH - SALT_LENGTH], !pass.empty() ? pass.data() : NULL,
+                 pass.size(), 1, key, iv);
+#else
+  int ivlen = EVP_CIPHER_iv_length(cipherp);
   PKCS5_PBKDF2_HMAC(reinterpret_cast<const char*>(pass.data()), pass.size(),
                     &outdata[SALT_STRING_LENGTH - SALT_LENGTH], SALT_LENGTH,
                     DEFAULT_ITER, digest(), keylen + ivlen, tmpkeyiv);
+#endif
   int resultlen;
   int finallen;
   EVP_EncryptInit_ex(ctx, cipherp, NULL, key, iv);
@@ -83,14 +89,20 @@ void Crypto::decrypt(const Core::BinaryData & indata, const Core::BinaryData & p
   }
   EVP_CIPHER_CTX * ctx = EVP_CIPHER_CTX_new();
   const EVP_CIPHER * cipherp = cipher();
-  int ivlen = EVP_CIPHER_iv_length(cipherp);
+
   int keylen = EVP_CIPHER_key_length(cipherp);
   unsigned char tmpkeyiv[EVP_MAX_KEY_LENGTH + EVP_MAX_IV_LENGTH];
   unsigned char* key = tmpkeyiv;
   unsigned char* iv = tmpkeyiv + keylen;
+#if OPENSSL_VERSION_NUMBER < 0x10000000L
+  EVP_BytesToKey(cipherp, digest(), &indata[SALT_STRING_LENGTH - SALT_LENGTH], !pass.empty() ? pass.data() : NULL,
+                 pass.size(), 1, key, iv);
+#else
+  int ivlen = EVP_CIPHER_iv_length(cipherp);
   PKCS5_PBKDF2_HMAC(reinterpret_cast<const char*>(pass.data()), pass.size(),
                     &indata[SALT_STRING_LENGTH - SALT_LENGTH], SALT_LENGTH,
                     DEFAULT_ITER, digest(), keylen + ivlen, tmpkeyiv);
+#endif
   outdata.resize(indata.size() + blockSize());
   int writelen;
   int finalwritelen;

@@ -16,3 +16,7 @@ PathInfoTaskData::PathInfoTaskData() {
 DeleteFileTaskData::DeleteFileTaskData() {
   type = LocalStorageRequestType::DELETE;
 }
+
+MakeDirTaskData::MakeDirTaskData() {
+  type = LocalStorageRequestType::MKDIR;
+}

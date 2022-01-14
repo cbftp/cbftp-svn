@@ -26,7 +26,7 @@ void MoveScreen::initialize(unsigned int row, unsigned int col, const std::strin
   if (!site.empty()) {
     y++;
   }
-  mso.addStringField(y, 1, "dstpath", "Target path/name:", dstpath, false, col - 3, 512);
+  mso.addStringField(y, 1, "dstpath", "Target path/name:", dstpath, false, col - 22, 512);
   mso.enterFocusFrom(0);
   init(row, col);
 }

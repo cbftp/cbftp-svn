@@ -173,10 +173,17 @@ void LocalStorage::executeAsyncRequest(LocalStorageRequestData * data) {
       pitdata->pathinfo = std::make_shared<LocalPathInfo>(getPathInfo(pitdata->paths));
       break;
     }
-    case LocalStorageRequestType::DELETE:
+    case LocalStorageRequestType::DELETE: {
       DeleteFileTaskData * dftdata = static_cast<DeleteFileTaskData *>(data);
       dftdata->success = deleteRecursive(dftdata->file);
       break;
+    }
+    case LocalStorageRequestType::MKDIR: {
+      MakeDirTaskData * mkdirdata = static_cast<MakeDirTaskData *>(data);
+      mkdirdata->success = tryMakeDir(mkdirdata->path, mkdirdata->dirname);
+      break;
+
+    }
   }
 }
 
@@ -413,6 +420,43 @@ std::shared_ptr<LocalFileList> LocalStorage::getLocalFileList(int requestid) {
   return filelist;
 }
 
+int LocalStorage::requestMakeDirectory(const Path& path, const std::string & dirname) {
+  MakeDirTaskData * mkdirdata = new MakeDirTaskData();
+  int requestid = requestidcounter++;
+  mkdirdata->requestid = requestid;
+
+  Path dirpath(dirname);
+  if (dirpath.isRelative()) {
+    mkdirdata->path = path;
+    mkdirdata->dirname = dirname;
+  }
+  else {
+    mkdirdata->path = dirpath.dirName();
+    mkdirdata->dirname = dirpath.baseName();
+  }
+  global->getWorkManager()->asyncTask(this, 0, &asyncRequest, mkdirdata);
+  return requestid;
+}
+
+bool LocalStorage::tryMakeDir(const Path& path, const std::string& dirname){
+  if (getLocalFile(path).isDirectory()) {
+    Path newdir = path / Path(dirname);
+    return mkdir(newdir.toString().c_str(), 0777) == 0;
+  }
+  return false;
+}
+
+bool LocalStorage::getMakeDirResult(const int requestid) {
+  auto it = readyrequests.find(requestid);
+  assert(it != readyrequests.end() && it->second->type == LocalStorageRequestType::MKDIR);
+  MakeDirTaskData* mkdirdata = static_cast<MakeDirTaskData*>(it->second);
+  bool success = mkdirdata->success;
+  readyrequests.erase(it);
+  delete mkdirdata;
+  return success;
+}
+
+
 bool LocalStorage::requestReady(int requestid) const {
   return readyrequests.find(requestid) != readyrequests.end();
 }
@@ -438,9 +482,14 @@ void LocalStorage::deleteRequestData(LocalStorageRequestData * reqdata) {
       delete static_cast<PathInfoTaskData *>(reqdata);
       break;
     }
-    case LocalStorageRequestType::DELETE:
+    case LocalStorageRequestType::DELETE: {
       delete static_cast<DeleteFileTaskData *>(reqdata);
       break;
+    }
+    case LocalStorageRequestType::MKDIR: {
+      delete static_cast<MakeDirTaskData *>(reqdata);
+      break;
+    }
   }
 }
 

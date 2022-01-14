@@ -27,7 +27,7 @@ void MakeDirScreen::initialize(unsigned int row, unsigned int col, const std::st
   if (!site.empty()) {
     y++;
   }
-  mso.addStringField(y, 1, "name", "Name:", "", false, col - 3, 512);
+  mso.addStringField(y, 1, "name", "Name:", "", false, col - 10, 512);
   mso.enterFocusFrom(0);
   init(row, col);
 }
@@ -40,7 +40,7 @@ void MakeDirScreen::redraw() {
   }
   vv->putStr(y, 1, "Path: " + filelist.getPath().toString());
   if (alreadyexists) {
-    vv->putStr(y + 3, 1, "ERROR: an item with that name already exists!");
+    vv->putStr(y + 4, 1, "ERROR: an item with that name already exists!");
     alreadyexists = false;
   }
   bool highlight;

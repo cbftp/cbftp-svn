@@ -308,11 +308,11 @@ SSL_CTX* createContext() {
     getLogger()->log("SSLManager", "SSL_CTX_new failed: " + SSLErrors(), LogLevel::ERROR);
     return nullptr;
   }
-  if (!SSL_CTX_set_cipher_list(ctx, "DEFAULT:!SEED")) {
+/*  if (!SSL_CTX_set_cipher_list(ctx, "DEFAULT:!SEED")) {
     getLogger()->log("SSLManager", "SSL_CTX_set_cipher_list failed: " + SSLErrors(), LogLevel::ERROR);
     SSL_CTX_free(ctx);
     return nullptr;
-  }
+  }*/
   return ctx;
 }
 
