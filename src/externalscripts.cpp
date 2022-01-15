@@ -23,7 +23,12 @@ RunningScript::RunningScript(int pid, const std::string& name, const std::string
 
 ExternalScripts::ExternalScripts(const std::string& name) : name(name) {
   Path scriptspath = DataFileHandler::getDataDir() / "scripts";
-  if (FileSystem::directoryExistsReadable(scriptspath)) {
+  if (FileSystem::directoryExists(scriptspath)) {
+    if (!FileSystem::directoryExistsReadable(scriptspath)) {
+      std::string errorstring = "Error: no read access to " + scriptspath.toString();
+      perror(errorstring.c_str());
+      exit(1);
+    }
     if (!FileSystem::directoryExistsWritable(scriptspath)) {
       std::string errorstring = "Error: no write access to " + scriptspath.toString();
       perror(errorstring.c_str());
@@ -31,8 +36,9 @@ ExternalScripts::ExternalScripts(const std::string& name) : name(name) {
     }
   }
   else {
-    if (!FileSystem::createDirectory(scriptspath, true)) {
-      std::string errorstring = "Error: could not create " + scriptspath.toString();
+    FileSystem::Result res = FileSystem::createDirectory(scriptspath, true);
+    if (!res.success) {
+      std::string errorstring = "Error: could not create " + scriptspath.toString() + ":" + res.error;
       perror(errorstring.c_str());
       exit(1);
     }

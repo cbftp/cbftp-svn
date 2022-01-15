@@ -13,15 +13,22 @@
 
 DataFileHandler::DataFileHandler() : state(DataFileState::NOT_EXISTING) {
   datafile = DataFileHandlerMethod::getDataFile();
-  if (FileSystem::directoryExistsReadable(datafile.dirName())) {
+  if (FileSystem::directoryExists(datafile.dirName())) {
+    if (!FileSystem::directoryExistsReadable(datafile.dirName())) {
+      std::string errorstring = "Error: no read access to " + datafile.dirName();
+      perror(errorstring.c_str());
+      exit(1);
+    }
     if (!FileSystem::directoryExistsWritable(datafile.dirName())) {
-      perror(std::string("Error: no write access to " + datafile.dirName()).c_str());
+      std::string errorstring = "Error: no write access to " + datafile.dirName();
+      perror(errorstring.c_str());
       exit(1);
     }
   }
   else {
-    if (!FileSystem::createDirectory(datafile.dirName(), true)) {
-      perror(std::string("Error: could not create " + datafile.dirName()).c_str());
+    FileSystem::Result res = FileSystem::createDirectory(datafile.dirName(), true);
+    if (!res.success) {
+      perror(std::string("Error: could not create " + datafile.dirName() + ": " + res.error).c_str());
       exit(1);
     }
   }
@@ -29,11 +36,19 @@ DataFileHandler::DataFileHandler() : state(DataFileState::NOT_EXISTING) {
   if (!FileSystem::fileExists(datafile)) {
     return;
   }
+  if (!FileSystem::fileExistsReadable(datafile)) {
+    perror(std::string("There was an error accessing " + datafile.toString()).c_str());
+    exit(1);
+  }
   if (!FileSystem::fileExistsWritable(datafile)) {
     perror(std::string("There was an error accessing " + datafile.toString()).c_str());
     exit(1);
   }
-  FileSystem::readFile(datafile, rawdata);
+  FileSystem::Result res = FileSystem::readFile(datafile, rawdata);
+  if (!res.success) {
+    perror(std::string("Error: failed to read " + datafile.toString() + ": " + res.error).c_str());
+    exit(1);
+  }
   if (!Crypto::isMostlyASCII(rawdata)) {
     state = DataFileState::EXISTS_ENCRYPTED;
     return;
@@ -114,17 +129,29 @@ void DataFileHandler::writeFile() {
     return;
   }
   filehash = datahash;
+  Path tmpdatafile = datafile.toString() + ".tmp";
+  FileSystem::Result res;
   if (state == DataFileState::EXISTS_DECRYPTED) {
     Core::BinaryData ciphertext;
     Core::BinaryData keydata(key.begin(), key.end());
     DataFileHandlerMethod::encrypt(fileoutputdata, keydata, ciphertext);
-    FileSystem::writeFile(datafile, ciphertext);
+    res = FileSystem::writeFile(tmpdatafile, ciphertext);
   }
   else {
     if (state == DataFileState::NOT_EXISTING) {
       state = DataFileState::EXISTS_PLAIN;
     }
-    FileSystem::writeFile(datafile, fileoutputdata);
+    res = FileSystem::writeFile(tmpdatafile, fileoutputdata);
+
+  }
+  if (!res.success) {
+    global->getEventLog()->log("DataFileHandler", "Error writing " + tmpdatafile.toString() + ": " + res.error);
+    return;
+  }
+  res = FileSystem::move(tmpdatafile, datafile);
+  if (!res.success) {
+    global->getEventLog()->log("DataFileHandler", "Error moving " + tmpdatafile.toString() + " -> " + datafile.toString() + ": " + res.error);
+    return;
   }
 }
 

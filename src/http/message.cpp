@@ -30,10 +30,10 @@ Message::~Message() {
 }
 
 void Message::addHeader(const std::string& header, const std::string& value) {
-  const std::string key = normalizeHeader(header);
+  std::string key = normalizeHeader(header);
   auto it = headers.find(key);
   if (it == headers.end()) {
-    headers.emplace(key, header);
+    headers.emplace(key, HeaderValues(header));
   }
   else {
     it->second.values.clear();
@@ -45,7 +45,7 @@ void Message::appendHeader(const std::string& header, const std::string& value) 
   const std::string key = normalizeHeader(header);
   auto it = headers.find(key);
   if (it == headers.end()) {
-    headers.emplace(key, header);
+    headers.emplace(key, HeaderValues(header));
   }
   headers[key].values.push_back(value);
 }

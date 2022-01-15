@@ -18,6 +18,7 @@
 #include "section.h"
 #include "sectionmanager.h"
 #include "sitetransferjob.h"
+#include "eventlog.h"
 
 #define MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP 3
 
@@ -808,8 +809,13 @@ void TransferJob::updateLocalFileLists() {
   }
   else {
     Path basepath = type == TRANSFERJOB_DOWNLOAD ? dstpath : srcpath;
-    if (!FileSystem::directoryExistsWritable(basepath)) {
-      if (type == TRANSFERJOB_UPLOAD || !FileSystem::createDirectoryRecursive(basepath)) {
+    if (!FileSystem::directoryExists(basepath)) {
+      if (type == TRANSFERJOB_UPLOAD) {
+        return;
+      }
+      FileSystem::Result res = FileSystem::createDirectoryRecursive(basepath);
+      if (!res.success) {
+        global->getEventLog()->log("TransferJob", "Failed to create " + basepath.toString() + ": " + res.error);
         return;
       }
     }
