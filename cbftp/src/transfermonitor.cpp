@@ -180,9 +180,10 @@ void TransferMonitor::engageDownload(
   tm->addNewTransferStatus(ts);
   if (localfl) {
     localfl->touchFile(dfile, true);
-    if (!FileSystem::directoryExistsWritable(dpath)) {
-      if (!FileSystem::createDirectoryRecursive(dpath)) {
-        lateDownloadFailure("Failed to create directory: " + dpath.toString());
+    if (!FileSystem::directoryExists(dpath)) {
+      FileSystem::Result res = FileSystem::createDirectoryRecursive(dpath);
+      if (!res.success) {
+        lateDownloadFailure("Failed to create directory " + dpath.toString() + ": " + res.error);
         return;
       }
     }

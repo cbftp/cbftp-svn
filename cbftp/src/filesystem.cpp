@@ -1,5 +1,6 @@
 #include "filesystem.h"
 
+#include <cstdio>
 #include <cstring>
 #include <fstream>
 #include <unistd.h>
@@ -7,13 +8,24 @@
 #include <sys/statvfs.h>
 #include <list>
 
+#include "core/util.h"
 #include "path.h"
 
 #define READBLOCKSIZE 256
 
 namespace FileSystem {
 
-bool directoryExistsAccessible(const Path & path, bool write) {
+Result::Result() : success(true) {
+
+}
+
+Result::Result(bool success, const std::string& error) :
+    success(success), error(error)
+{
+
+}
+
+bool directoryExistsAccessible(const Path& path, bool write) {
   int how = write ? R_OK | W_OK : R_OK;
   if (access(path.toString().c_str(), how) == 0) {
     struct stat status;
@@ -25,53 +37,60 @@ bool directoryExistsAccessible(const Path & path, bool write) {
   return false;
 }
 
-bool directoryExistsWritable(const Path & path) {
+bool directoryExistsWritable(const Path& path) {
   return directoryExistsAccessible(path, true);
 }
 
-bool directoryExistsReadable(const Path & path) {
+bool directoryExistsReadable(const Path& path) {
   return directoryExistsAccessible(path, false);
 }
 
-bool fileExists(const Path & path) {
+bool fileExists(const Path& path) {
   return !access(path.toString().c_str(), F_OK);
 }
 
-bool fileExistsReadable(const Path & path) {
+bool directoryExists(const Path& path) {
+  return !access(path.toString().c_str(), F_OK);
+}
+
+bool fileExistsReadable(const Path& path) {
   return !access(path.toString().c_str(), R_OK);
 }
 
-bool fileExistsWritable(const Path & path) {
+bool fileExistsWritable(const Path& path) {
   return !access(path.toString().c_str(), R_OK | W_OK);
 }
 
-bool createDirectory(const Path & path) {
-  return createDirectory(path, false);
-}
-
-bool createDirectory(const Path & path, bool privatedir) {
+Result createDirectory(const Path& path, bool privatedir) {
   mode_t mode = privatedir ? 0700 : 0755;
-  return mkdir(path.toString().c_str(), mode) >= 0;
+  if (mkdir(path.toString().c_str(), mode) != 0) {
+    return Result(false, Core::util::getStrError(errno));
+  }
+  return true;
 }
 
-bool createDirectoryRecursive(const Path & path) {
+Result createDirectoryRecursive(const Path& path) {
   std::list<std::string> pathdirs = path.split();
   Path partialpath = path.isAbsolute() ? "/" : "";
   while (pathdirs.size() > 0) {
     partialpath = partialpath / pathdirs.front();
     pathdirs.pop_front();
-    if (!directoryExistsReadable(partialpath)) {
-      if (!createDirectory(partialpath)) {
-        return false;
+    if (!directoryExists(partialpath)) {
+      Result res = createDirectory(partialpath);
+      if (!res.success) {
+        return res;
       }
     }
   }
   return true;
 }
 
-void readFile(const Path & path, Core::BinaryData & rawdata) {
+Result readFile(const Path& path, Core::BinaryData& rawdata) {
   std::fstream infile;
   infile.open(path.toString().c_str(), std::ios::in | std::ios::binary);
+  if (!infile) {
+    return Result(false, Core::util::getStrError(errno));
+  }
   int gcount = 0;
   std::vector<unsigned char *> rawdatablocks;
   while (!infile.eof() && infile.good()) {
@@ -91,13 +110,33 @@ void readFile(const Path & path, Core::BinaryData & rawdata) {
     delete[] *it;
   }
   rawdata.resize(rawdatalen);
+  return true;
 }
 
-void writeFile(const Path & path, const Core::BinaryData & data) {
+Result writeFile(const Path& path, const Core::BinaryData& data) {
   std::ofstream outfile;
   outfile.open(path.toString().c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+  if (!outfile) {
+    return Result(false, Core::util::getStrError(errno));
+  }
   outfile.write((const char *)&data[0], data.size());
+  if (!outfile) {
+    std::string error = Core::util::getStrError(errno);
+    outfile.close();
+    return Result(false, error);
+  }
   outfile.close();
+  if (!outfile) {
+    return Result(false, Core::util::getStrError(errno));
+  }
+  return true;
+}
+
+Result move(const Path& src, const Path& dst) {
+  if (rename(src.toString().c_str(), dst.toString().c_str()) != 0) {
+    return Result(false, Core::util::getStrError(errno));
+  }
+  return true;
 }
 
 SpaceInfo getSpaceInfo(const Path & path) {
