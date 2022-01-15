@@ -6,6 +6,7 @@ SRC_TARGETS := src src/core src/http src/ext
 SRC = $(wildcard src/*.cpp)
 LIBS := $(wildcard $(addsuffix /*.a,$(SRC_TARGETS)))
 OBJS = $(wildcard $(SRC:%.cpp=%.o))
+DATAFILETOOL_SRC_DEP = src/crypto.cpp src/filesystem.cpp src/path.cpp src/core/util.cpp
 
 ifneq ($(UI_PATH),)
 UI_DEP = $(wildcard $(UI_PATH)/*.a)
@@ -44,13 +45,13 @@ $(BINDIR)/cbftp: $(OBJS) $(UI_DEP) $(LIBS)
 $(BINDIR)/cbftp-debug: misc/start_with_gdb.sh | $(BINDIR)
 	cp misc/start_with_gdb.sh $@; chmod +x bin/cbftp-debug
 
-$(BINDIR)/datafilecat: src/crypto.cpp src/tools/datafilecat.cpp Makefile.inc | $(BINDIR)
-	$(CXX) -o $@ $(OPTFLAGS) -std=c++11 -DDATA_FILE=$(DATA_FILE) $(STATIC_SSL_INCLUDE) src/crypto.cpp \
-	src/filesystem.cpp src/path.cpp src/tools/datafilecat.cpp $(SSL_LINKFLAGS) -lpthread
+$(BINDIR)/datafilecat: $(DATAFILETOOL_SRC_DEP) src/tools/datafilecat.cpp Makefile.inc | $(BINDIR)
+	$(CXX) -o $@ $(OPTFLAGS) -std=c++11 -DDATA_FILE=$(DATA_FILE) $(STATIC_SSL_INCLUDE) \
+	$(DATAFILETOOL_SRC_DEP) src/tools/datafilecat.cpp $(SSL_LINKFLAGS) -lpthread
 
-$(BINDIR)/datafilewrite: src/crypto.cpp src/tools/datafilewrite.cpp Makefile.inc | $(BINDIR)
-	$(CXX) -o $@ $(OPTFLAGS) -std=c++11 -DDATA_FILE=$(DATA_FILE) $(STATIC_SSL_INCLUDE) src/crypto.cpp \
-	src/filesystem.cpp src/path.cpp src/tools/datafilewrite.cpp $(SSL_LINKFLAGS) -lpthread
+$(BINDIR)/datafilewrite: $(DATAFILETOOL_SRC_DEP) src/tools/datafilewrite.cpp Makefile.inc | $(BINDIR)
+	$(CXX) -o $@ $(OPTFLAGS) -std=c++11 -DDATA_FILE=$(DATA_FILE) $(STATIC_SSL_INCLUDE) \
+	$(DATAFILETOOL_SRC_DEP) src/tools/datafilewrite.cpp $(SSL_LINKFLAGS) -lpthread
 
 linecount:
 	find -not -path './src/ext/*'|grep -e '\.h$$' -e '\.cpp$$'|awk '{print $$1}'|xargs wc -l|sort -n
