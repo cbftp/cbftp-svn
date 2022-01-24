@@ -44,6 +44,7 @@ public:
   void handleRequest(RestApiCallback* cb, int connrequestid, const http::Request& request);
   std::string createTemporaryAuthToken();
   void removeTemporaryAuthToken(const std::string& token);
+  void cancelOngoingSyncRequests(RestApiCallback* cb);
 private:
   void tick(int message) override;
   void requestReady(void* service, int servicerequestid) override;

@@ -75,6 +75,7 @@ void HTTPConn::respondAndClose(int statuscode) {
 void HTTPConn::deactivate() {
   state = HTTPConnState::DISCONNECTED;
   responses.clear();
+  global->getRestApi()->cancelOngoingSyncRequests(this);
 }
 
 void HTTPConn::FDData(int sockid, char* data, unsigned int datalen) {
