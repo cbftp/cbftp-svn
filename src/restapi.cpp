@@ -1967,6 +1967,17 @@ void RestApi::removeTemporaryAuthToken(const std::string& token) {
   tempauthtokens.erase(token);
 }
 
+void RestApi::cancelOngoingSyncRequests(RestApiCallback* cb) {
+  for (std::list<OngoingRequest>::iterator it = ongoingrequests.begin(); it != ongoingrequests.end();) {
+    if (it->cb == cb && !it->async) {
+      it = ongoingrequests.erase(it);
+    }
+    else {
+      ++it;
+    }
+  }
+}
+
 void RestApi::handleRequest(RestApiCallback* cb, int connrequestid, const http::Request& request) {
   bool authorized = false;
   if (request.hasHeader("Authorization")) {
