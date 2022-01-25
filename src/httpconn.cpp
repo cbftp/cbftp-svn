@@ -75,6 +75,7 @@ void HTTPConn::respondAndClose(int statuscode) {
 void HTTPConn::deactivate() {
   state = HTTPConnState::DISCONNECTED;
   responses.clear();
+  sendbuffer.clear();
   global->getRestApi()->cancelOngoingSyncRequests(this);
 }
 
@@ -187,6 +188,7 @@ void HTTPConn::sendFromBuffer() {
 }
 
 void HTTPConn::requestHandled(int requestid, const http::Response& response) {
+  assert(state != HTTPConnState::DISCONNECTED);
   queueResponse(requestid, response);
 }
 
