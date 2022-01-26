@@ -65,7 +65,10 @@ class SiteLogic : public Core::EventReceiver {
     RefreshGovernor refreshgovernor;
     std::string lastlistpath;
     void handleConnection(int id);
+    bool handleLockCheck(int id);
     bool handleSpreadJob(int id);
+    bool handleSpreadJobs(int id);
+    bool handleTransferJobs(int id);
     bool handleRequest(int);
     void handleRecursiveLogic(int id, const std::shared_ptr<FileList>& fl = nullptr);
     void addRecentList(const std::shared_ptr<SiteRace> & sr);

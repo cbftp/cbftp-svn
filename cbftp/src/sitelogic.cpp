@@ -289,7 +289,7 @@ void SiteLogic::tick(int message) {
   if (refreshgovernor.refreshAllowed() && !currentraces.empty() && !idlingconns.empty()) {
     unsigned int winindex = rand() % idlingconns.size();
     unsigned int winner = idlingconns[winindex];
-    handleConnection(winner);
+    handleSpreadJobs(winner);
     if(connstatetracker[winner].isLocked() || conns[winner]->isProcessing()) {
       idlingconns.erase(idlingconns.begin() + winindex);
     }
@@ -1168,22 +1168,45 @@ void SiteLogic::handleConnection(int id) {
   if (conns[id]->isProcessing()) {
     return;
   }
+  if (handleLockCheck(id)) {
+    return;
+  }
+  if (handleRequest(id)) {
+    return;
+  }
+  if (handleTransferJobs(id)) {
+    return;
+  }
+  handleSpreadJobs(id);
+}
+
+bool SiteLogic::handleLockCheck(int id) {
   if (connstatetracker[id].isLocked()) {
     if (connstatetracker[id].hasTransfer()) {
       connstatetracker[id].resetIdleTime();
       initTransfer(id);
-      return;
+      return true;
     }
     if (connstatetracker[id].isTransferLocked()) {
       handlePreTransfer(id);
     }
-    return;
+    return true;
   }
-  if (!requests.empty()) {
-    if (handleRequest(id)) {
-      return;
+  return false;
+}
+
+bool SiteLogic::handleSpreadJobs(int id) {
+  if (currentraces.size()) {
+    if (handleSpreadJob(id)) {
+      return true;
     }
+    global->getEngine()->raceActionRequest();
+    return true;
   }
+  return false;
+}
+
+bool SiteLogic::handleTransferJobs(int id) {
   std::list<std::shared_ptr<SiteTransferJob> > targetjobs;
   for (std::list<std::shared_ptr<SiteTransferJob> >::iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
     std::shared_ptr<SiteTransferJob> & tj = *it;
@@ -1194,10 +1217,10 @@ void SiteLogic::handleConnection(int id) {
         connstatetracker[id].use();
         if (path != conns[id]->getCurrentPath()) {
           conns[id]->doCWD(fl, tj);
-          return;
+          return true;
         }
         getFileListConn(id, tj, fl);
-        return;
+        return true;
       }
       int type = tj->getTransferJob()->getType();
       if (((type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) &&
@@ -1212,15 +1235,10 @@ void SiteLogic::handleConnection(int id) {
   for (std::list<std::shared_ptr<SiteTransferJob> >::iterator it = targetjobs.begin(); it != targetjobs.end(); it++) {
     if (global->getEngine()->transferJobActionRequest(*it)) {
       handleConnection(id);
-      return;
+      return true;
     }
   }
-  if (currentraces.size()) {
-    if (handleSpreadJob(id)) {
-      return;
-    }
-    global->getEngine()->raceActionRequest();
-  }
+  return false;
 }
 
 bool SiteLogic::handleSpreadJob(int id) {
@@ -1334,6 +1352,9 @@ bool SiteLogic::handleSpreadJob(int id) {
 }
 
 bool SiteLogic::handleRequest(int id) {
+  if (requests.empty()) {
+    return false;
+  }
   std::list<SiteLogicRequest>::iterator it;
   for (it = requests.begin(); it != requests.end(); it++) {
     if (it->getConnId() == id) {
