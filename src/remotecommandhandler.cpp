@@ -19,6 +19,7 @@
 #include "race.h"
 #include "localstorage.h"
 #include "httpserver.h"
+#include "sectionutil.h"
 
 #define DEFAULT_PASS "DEFAULT"
 #define RETRY_DELAY 30000
@@ -72,22 +73,6 @@ std::list<std::shared_ptr<SiteLogic> > getSiteLogicList(const std::string & site
     }
   }
   return sitelogics;
-}
-
-bool useOrSectionTranslate(Path& path, const std::shared_ptr<Site>& site) {
-  if (path.isRelative()) {
-    path.level(0);
-    std::string section = path.level(0).toString();
-    if (site->hasSection(section)) {
-      path = site->getSectionPath(section) / path.cutLevels(-1);
-    }
-    else {
-      global->getEventLog()->log("RemoteCommandHandler", "Path must be absolute or a section name on " +
-          site->getName() + ": " + path.toString());
-      return false;
-    }
-  }
-  return true;
 }
 
 }
@@ -304,8 +289,10 @@ void RemoteCommandHandler::commandRawWithPath(const std::vector<std::string> & m
   std::list<std::shared_ptr<SiteLogic> > sites = getSiteLogicList(sitestring);
 
   for (std::list<std::shared_ptr<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
-    Path path(pathstr);
-    if (!useOrSectionTranslate(path, (*it)->getSite())) {
+    Path path;
+    util::Result res = SectionUtil::useOrSectionTranslate(Path(pathstr), (*it)->getSite(), path);
+    if (!res.success) {
+      global->getEventLog()->log("RemoteCommandHandler", res.error);
       continue;
     }
     (*it)->requestRawCommand(nullptr, path, rawcommand);
@@ -329,14 +316,18 @@ bool RemoteCommandHandler::commandFXP(const std::vector<std::string> & message) 
   }
   std::string dstfile = message.size() > 5 ? message[5] : message[2];
 
-  Path srcpath(message[1]);
-  std::string srcsection = srcpath.isRelative() ? srcpath.toString() : "";
-  if (!useOrSectionTranslate(srcpath, srcsl->getSite())) {
+  Path srcpath;
+  std::string srcsection;
+  util::Result res = SectionUtil::useOrSectionTranslate(message[1], srcsl->getSite(), srcsection, srcpath);
+  if (!res.success) {
+    global->getEventLog()->log("RemoteCommandHandler", res.error);
     return false;
   }
-  Path dstpath(message[4]);
-  std::string dstsection = dstpath.isRelative() ? dstpath.toString() : "";
-  if (!useOrSectionTranslate(dstpath, dstsl->getSite())) {
+  Path dstpath;
+  std::string dstsection;
+  res = SectionUtil::useOrSectionTranslate(message[4], dstsl->getSite(), dstsection, dstpath);
+  if (!res.success) {
+    global->getEventLog()->log("RemoteCommandHandler", res.error);
     return false;
   }
   global->getEngine()->newTransferJobFXP(message[0], srcpath, srcsection, message[2], message[3], dstpath, dstsection, dstfile);
@@ -353,9 +344,11 @@ bool RemoteCommandHandler::commandDownload(const std::vector<std::string> & mess
     global->getEventLog()->log("RemoteCommandHandler", "Bad site name: " + message[0]);
     return false;
   }
-  Path srcpath = message[1];
-  std::string srcsection = srcpath.isRelative() ? srcpath.toString() : "";
-  if (!useOrSectionTranslate(srcpath, srcsl->getSite())) {
+  Path srcpath;
+  std::string srcsection;
+  util::Result res = SectionUtil::useOrSectionTranslate(message[1], srcsl->getSite(), srcsection, srcpath);
+  if (!res.success) {
+    global->getEventLog()->log("RemoteCommandHandler", res.error);
     return false;
   }
   std::string file = srcpath.baseName();
@@ -377,24 +370,27 @@ bool RemoteCommandHandler::commandUpload(const std::vector<std::string> & messag
   Path srcpath = message[0];
   std::string file = srcpath.baseName();
   std::string dstsite;
-  Path dstpath;
+  std::string dstpathstr;
   if (message.size() == 3) {
     srcpath = srcpath.dirName();
     dstsite = message[1];
-    dstpath = message[2];
+    dstpathstr = message[2];
   }
   else {
     file = message[1];
     dstsite = message[2];
-    dstpath = message[3];
+    dstpathstr = message[3];
   }
   std::shared_ptr<SiteLogic> dstsl = global->getSiteLogicManager()->getSiteLogic(dstsite);
   if (!dstsl) {
     global->getEventLog()->log("RemoteCommandHandler", "Bad site name: " + dstsite);
     return false;
   }
-  std::string dstsection = dstpath.isRelative() ? dstpath.toString() : "";
-  if (!useOrSectionTranslate(dstpath, dstsl->getSite())) {
+  Path dstpath;
+  std::string dstsection;
+  util::Result res = SectionUtil::useOrSectionTranslate(dstpathstr, dstsl->getSite(), dstsection, dstpath);
+  if (!res.success) {
+    global->getEventLog()->log("RemoteCommandHandler", res.error);
     return false;
   }
   global->getEngine()->newTransferJobUpload(srcpath, file, dstsite, dstpath, dstsection, file);

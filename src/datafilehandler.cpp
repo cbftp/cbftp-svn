@@ -10,6 +10,7 @@
 #include "eventlog.h"
 #include "globalcontext.h"
 #include "path.h"
+#include "util.h"
 
 DataFileHandler::DataFileHandler() : state(DataFileState::NOT_EXISTING) {
   datafile = DataFileHandlerMethod::getDataFile();
@@ -26,7 +27,7 @@ DataFileHandler::DataFileHandler() : state(DataFileState::NOT_EXISTING) {
     }
   }
   else {
-    FileSystem::Result res = FileSystem::createDirectory(datafile.dirName(), true);
+    util::Result res = FileSystem::createDirectory(datafile.dirName(), true);
     if (!res.success) {
       perror(std::string("Error: could not create " + datafile.dirName() + ": " + res.error).c_str());
       exit(1);
@@ -44,7 +45,7 @@ DataFileHandler::DataFileHandler() : state(DataFileState::NOT_EXISTING) {
     perror(std::string("There was an error accessing " + datafile.toString()).c_str());
     exit(1);
   }
-  FileSystem::Result res = FileSystem::readFile(datafile, rawdata);
+  util::Result res = FileSystem::readFile(datafile, rawdata);
   if (!res.success) {
     perror(std::string("Error: failed to read " + datafile.toString() + ": " + res.error).c_str());
     exit(1);
@@ -130,7 +131,7 @@ void DataFileHandler::writeFile() {
   }
   filehash = datahash;
   Path tmpdatafile = datafile.toString() + ".tmp";
-  FileSystem::Result res;
+  util::Result res;
   if (state == DataFileState::EXISTS_DECRYPTED) {
     Core::BinaryData ciphertext;
     Core::BinaryData keydata(key.begin(), key.end());

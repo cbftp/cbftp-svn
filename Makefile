@@ -6,7 +6,7 @@ SRC_TARGETS := src src/core src/http src/ext
 SRC = $(wildcard src/*.cpp)
 LIBS := $(wildcard $(addsuffix /*.a,$(SRC_TARGETS)))
 OBJS = $(wildcard $(SRC:%.cpp=%.o))
-DATAFILETOOL_SRC_DEP = src/crypto.cpp src/filesystem.cpp src/path.cpp src/core/util.cpp
+DATAFILETOOL_SRC_DEP = src/crypto.cpp src/filesystem.cpp src/path.cpp src/core/util.cpp src/util.cpp
 
 ifneq ($(UI_PATH),)
 UI_DEP = $(wildcard $(UI_PATH)/*.a)

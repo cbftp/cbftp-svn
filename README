@@ -512,7 +512,7 @@ Example:
  SITE2 / ....u <--- file markers
  SITE3 / .Do.d
 
-The single character markign each file describes the state of the file:
+The single character marking each file describes the state of the file:
 _ - file does not exist
 . - file exists
 o - you own this file

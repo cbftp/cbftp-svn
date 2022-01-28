@@ -15,16 +15,6 @@
 
 namespace FileSystem {
 
-Result::Result() : success(true) {
-
-}
-
-Result::Result(bool success, const std::string& error) :
-    success(success), error(error)
-{
-
-}
-
 bool directoryExistsAccessible(const Path& path, bool write) {
   int how = write ? R_OK | W_OK : R_OK;
   if (access(path.toString().c_str(), how) == 0) {
@@ -61,22 +51,22 @@ bool fileExistsWritable(const Path& path) {
   return !access(path.toString().c_str(), R_OK | W_OK);
 }
 
-Result createDirectory(const Path& path, bool privatedir) {
+util::Result createDirectory(const Path& path, bool privatedir) {
   mode_t mode = privatedir ? 0700 : 0755;
   if (mkdir(path.toString().c_str(), mode) != 0) {
-    return Result(false, Core::util::getStrError(errno));
+    return util::Result(false, Core::util::getStrError(errno));
   }
   return true;
 }
 
-Result createDirectoryRecursive(const Path& path) {
+util::Result createDirectoryRecursive(const Path& path) {
   std::list<std::string> pathdirs = path.split();
   Path partialpath = path.isAbsolute() ? "/" : "";
   while (pathdirs.size() > 0) {
     partialpath = partialpath / pathdirs.front();
     pathdirs.pop_front();
     if (!directoryExists(partialpath)) {
-      Result res = createDirectory(partialpath);
+      util::Result res = createDirectory(partialpath);
       if (!res.success) {
         return res;
       }
@@ -85,11 +75,11 @@ Result createDirectoryRecursive(const Path& path) {
   return true;
 }
 
-Result readFile(const Path& path, Core::BinaryData& rawdata) {
+util::Result readFile(const Path& path, Core::BinaryData& rawdata) {
   std::fstream infile;
   infile.open(path.toString().c_str(), std::ios::in | std::ios::binary);
   if (!infile) {
-    return Result(false, Core::util::getStrError(errno));
+    return util::Result(false, Core::util::getStrError(errno));
   }
   int gcount = 0;
   std::vector<unsigned char *> rawdatablocks;
@@ -113,28 +103,28 @@ Result readFile(const Path& path, Core::BinaryData& rawdata) {
   return true;
 }
 
-Result writeFile(const Path& path, const Core::BinaryData& data) {
+util::Result writeFile(const Path& path, const Core::BinaryData& data) {
   std::ofstream outfile;
   outfile.open(path.toString().c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
   if (!outfile) {
-    return Result(false, Core::util::getStrError(errno));
+    return util::Result(false, Core::util::getStrError(errno));
   }
   outfile.write((const char *)&data[0], data.size());
   if (!outfile) {
     std::string error = Core::util::getStrError(errno);
     outfile.close();
-    return Result(false, error);
+    return util::Result(false, error);
   }
   outfile.close();
   if (!outfile) {
-    return Result(false, Core::util::getStrError(errno));
+    return util::Result(false, Core::util::getStrError(errno));
   }
   return true;
 }
 
-Result move(const Path& src, const Path& dst) {
+util::Result move(const Path& src, const Path& dst) {
   if (rename(src.toString().c_str(), dst.toString().c_str()) != 0) {
-    return Result(false, Core::util::getStrError(errno));
+    return util::Result(false, Core::util::getStrError(errno));
   }
   return true;
 }

@@ -31,6 +31,7 @@
 #include "remotecommandhandler.h"
 #include "restapicallback.h"
 #include "sectionmanager.h"
+#include "sectionutil.h"
 #include "settingsloadersaver.h"
 #include "site.h"
 #include "sitelogic.h"
@@ -941,12 +942,11 @@ void RestApi::handleRawPost(RestApiCallback* cb, int connrequestid, const http::
   }
   std::string command = *commandit;
   auto pathit = jsondata.find("path_section");
-  bool pathsection = pathit != jsondata.end();
   std::string path;
-  if (pathsection) {
+  if (pathit != jsondata.end()) {
     path = *pathit;
   }
-  if (!pathsection) {
+  else {
     pathit = jsondata.find("path");
     if (pathit != jsondata.end()) {
       path = *pathit;
@@ -963,16 +963,13 @@ void RestApi::handleRawPost(RestApiCallback* cb, int connrequestid, const http::
   ongoingrequest.timeout = timeoutit != jsondata.end() ? static_cast<int>(*timeoutit) : DEFAULT_TIMEOUT_SECONDS;
   std::list<std::pair<std::shared_ptr<SiteLogic>, Path>> verifiedsites;
   for (std::list<std::shared_ptr<SiteLogic> >::const_iterator it = sites.begin(); it != sites.end(); it++) {
-    std::string thispath;
-    if (pathsection) {
-      if (!(*it)->getSite()->hasSection(path)) {
-        cb->requestHandled(connrequestid, badRequestResponse("Section " + path + " is not defined on site " + (*it)->getSite()->getName()));
+    Path thispath;
+    if (!path.empty()) {
+      util::Result res = SectionUtil::useOrSectionTranslate(path, (*it)->getSite(), thispath);
+      if (!res.success) {
+        cb->requestHandled(connrequestid, badRequestResponse(res.error));
         return;
       }
-      thispath = (*it)->getSite()->getSectionPath(path).toString();
-    }
-    else {
-      thispath = path;
     }
     verifiedsites.emplace_back(*it, thispath.empty() ? (*it)->getSite()->getBasePath().toString() : thispath);
   }
@@ -1736,16 +1733,28 @@ void RestApi::handleTransferJobPost(RestApiCallback* cb, int connrequestid, cons
     }
     srcpath = srcsl->getSite()->getSectionPath(*srcsectionit).toString();
   }
-  else {
-    auto srcpathit = jsondata.find("src_path");
-    if (srcpathit != jsondata.end()) {
-      srcpath = *srcpathit;
+  auto srcpathit = jsondata.find("src_path");
+  if (srcpathit != jsondata.end()) {
+    std::string section;
+    Path path(*srcpathit);
+    if (srcsl) {
+      util::Result res = SectionUtil::useOrSectionTranslate(Path(*srcpathit), srcsl->getSite(), section, path);
+      if (!res.success) {
+        cb->requestHandled(connrequestid, badRequestResponse(res.error));
+        return;
+      }
     }
-    else if (!srcsl) { // omitting src_path is ok for uploda jobs
+    srcpath = path.toString();
+    if (!section.empty()) {
+      srcsection = section;
+    }
+  }
+  if (srcpath.empty()) {
+    if (!srcsl) { // omitting src_path is ok for upload jobs
        srcpath = global->getLocalStorage()->getDownloadPath().toString();
     }
     else {
-      cb->requestHandled(connrequestid, badRequestResponse("Missing key: src_path"));
+      cb->requestHandled(connrequestid, badRequestResponse("Missing keys: src_path || src_section"));
       return;
     }
   }
@@ -1764,16 +1773,28 @@ void RestApi::handleTransferJobPost(RestApiCallback* cb, int connrequestid, cons
     }
     dstpath = dstsl->getSite()->getSectionPath(*dstsectionit).toString();
   }
-  else {
-    auto dstpathit = jsondata.find("dst_path");
-    if (dstpathit != jsondata.end()) {
-      dstpath = *dstpathit;
+  auto dstpathit = jsondata.find("dst_path");
+  if (dstpathit != jsondata.end()) {
+    std::string section;
+    Path path(*dstpathit);
+    if (dstsl) {
+      util::Result res = SectionUtil::useOrSectionTranslate(Path(*dstpathit), dstsl->getSite(), section, path);
+      if (!res.success) {
+        cb->requestHandled(connrequestid, badRequestResponse(res.error));
+        return;
+      }
     }
-    else if (!dstsl) { // omitting dst_path is ok for download jobs
+    dstpath = path.toString();
+    if (!section.empty()) {
+      dstsection = section;
+    }
+  }
+  if (dstpath.empty()) {
+    if (!dstsl) { // omitting dst_path is ok for download jobs
       dstpath = global->getLocalStorage()->getDownloadPath().toString();
     }
     else {
-      cb->requestHandled(connrequestid, badRequestResponse("Missing key: dst_path"));
+      cb->requestHandled(connrequestid, badRequestResponse("Missing key: dst_path || dst_section"));
       return;
     }
   }

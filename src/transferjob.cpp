@@ -813,7 +813,7 @@ void TransferJob::updateLocalFileLists() {
       if (type == TRANSFERJOB_UPLOAD) {
         return;
       }
-      FileSystem::Result res = FileSystem::createDirectoryRecursive(basepath);
+      util::Result res = FileSystem::createDirectoryRecursive(basepath);
       if (!res.success) {
         global->getEventLog()->log("TransferJob", "Failed to create " + basepath.toString() + ": " + res.error);
         return;
