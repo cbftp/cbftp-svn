@@ -7,6 +7,16 @@
 
 namespace util {
 
+Result::Result() : success(true) {
+
+}
+
+Result::Result(bool success, const std::string& error) :
+    success(success), error(error)
+{
+
+}
+
 int getSizeGranularity();
 std::vector<unsigned long long int> getPowers();
 

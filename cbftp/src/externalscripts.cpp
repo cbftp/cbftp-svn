@@ -36,7 +36,7 @@ ExternalScripts::ExternalScripts(const std::string& name) : name(name) {
     }
   }
   else {
-    FileSystem::Result res = FileSystem::createDirectory(scriptspath, true);
+    util::Result res = FileSystem::createDirectory(scriptspath, true);
     if (!res.success) {
       std::string errorstring = "Error: could not create " + scriptspath.toString() + ":" + res.error;
       perror(errorstring.c_str());

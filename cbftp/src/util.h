@@ -11,6 +11,13 @@
 
 namespace util {
 
+struct Result {
+  Result();
+  Result(bool success, const std::string& error = "");
+  bool success;
+  std::string error;
+};
+
 std::string trim(const std::string &);
 std::list<std::string> trim(const std::list<std::string> & in);
 std::vector<std::string> trim(const std::vector<std::string> & in);

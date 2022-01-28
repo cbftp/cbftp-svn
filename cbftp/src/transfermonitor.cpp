@@ -181,7 +181,7 @@ void TransferMonitor::engageDownload(
   if (localfl) {
     localfl->touchFile(dfile, true);
     if (!FileSystem::directoryExists(dpath)) {
-      FileSystem::Result res = FileSystem::createDirectoryRecursive(dpath);
+      util::Result res = FileSystem::createDirectoryRecursive(dpath);
       if (!res.success) {
         lateDownloadFailure("Failed to create directory " + dpath.toString() + ": " + res.error);
         return;
