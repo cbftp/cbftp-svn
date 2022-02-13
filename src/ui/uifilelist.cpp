@@ -544,14 +544,19 @@ std::regex UIFileList::getRegexFilter() const {
   return regexfilter;
 }
 
-void UIFileList::setWildcardFilters(const std::list<std::string> & filters) {
+std::string UIFileList::getRegexFilterString() const {
+  return regexfilterstr;
+}
+
+void UIFileList::setWildcardFilters(const std::list<std::string>& filters) {
   this->wildcardfilters = filters;
   hasregexfilter = false;
   fillSortedFiles();
 }
 
-void UIFileList::setRegexFilter(const std::regex & filter) {
+void UIFileList::setRegexFilter(const std::regex& filter, const std::string& regexfilterstr) {
   regexfilter = filter;
+  this->regexfilterstr = regexfilterstr;
   hasregexfilter = true;
   wildcardfilters.clear();
   fillSortedFiles();
@@ -563,7 +568,7 @@ void UIFileList::unsetFilters() {
   fillSortedFiles();
 }
 
-void UIFileList::setCompareList(const std::set<std::string> & comparelist, CompareMode mode) {
+void UIFileList::setCompareList(const std::set<std::string>& comparelist, CompareMode mode) {
   this->comparemode = mode;
   this->comparelist = comparelist;
   fillSortedFiles();

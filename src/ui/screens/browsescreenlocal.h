@@ -63,10 +63,11 @@ private:
   int gotomodeticker;
   bool filtermodeinput;
   bool filtermodeinputregex;
+  bool gotopathinput;
   std::string gotomodestring;
   std::list<std::pair<Path, std::string> > selectionhistory;
   std::shared_ptr<LocalFileList> filelist;
-  MenuSelectOptionTextField filterfield;
+  MenuSelectOptionTextField bottomlinetextfield;
   bool temphighlightline;
   bool softselecting;
   LastInfo lastinfo;
