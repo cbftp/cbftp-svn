@@ -74,6 +74,7 @@ private:
   int gotomodeticker;
   bool filtermodeinput;
   bool filtermodeinputregex;
+  bool gotopathinput;
   std::string gotomodestring;
   UIFileList::SortMethod sortmethod;
   std::shared_ptr<SiteLogic> sitelogic;
@@ -87,7 +88,7 @@ private:
   std::string separatortext;
   std::list<std::pair<Path, std::string> > selectionhistory;
   bool focus;
-  MenuSelectOptionTextField filterfield;
+  MenuSelectOptionTextField bottomlinetextfield;
   bool temphighlightline;
   RawBuffer cwdrawbuffer;
   bool softselecting;
