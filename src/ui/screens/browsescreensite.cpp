@@ -381,6 +381,7 @@ void BrowseScreenSite::loadFileListFromRequest() {
   if (newfilelistdata == nullptr) {
     sitelogic->finishRequest(request.id);
     lastinfo = LastInfo::CWD_FAILED;
+    lastinfotarget = request.path.toString();
     tickcount = 0;
     return;
   }
