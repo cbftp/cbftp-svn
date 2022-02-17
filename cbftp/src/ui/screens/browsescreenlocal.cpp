@@ -225,13 +225,31 @@ bool BrowseScreenLocal::handleReadyRequests() {
         break;
       }
       case BrowseScreenRequestType::MKDIR: {
-        bool success = global->getLocalStorage()->getMakeDirResult(request.id);
-        if (success) {
+        util::Result res = global->getLocalStorage()->getMakeDirResult(request.id);
+        if (res.success) {
           lastinfo = LastInfo::MKDIR_SUCCESS;
+          lastinfotarget = request.files.front().first;
         }
         else {
           lastinfo = LastInfo::MKDIR_FAILED;
+          lastinfotarget = res.error;
         }
+        tickcount = 0;
+        refreshfilelistafter = true;
+        requests.pop_front();
+        break;
+      }
+      case BrowseScreenRequestType::MOVE: {
+        util::Result res = global->getLocalStorage()->getMoveResult(request.id);
+        if (res.success) {
+          lastinfo = LastInfo::MOVE_SUCCESS;
+          lastinfotarget = request.files.front().first;
+        }
+        else {
+          lastinfo = LastInfo::MOVE_FAILED;
+          lastinfotarget = res.error;
+        }
+        tickcount = 0;
         refreshfilelistafter = true;
         requests.pop_front();
         break;
@@ -268,7 +286,6 @@ void BrowseScreenLocal::command(const std::string & command, const std::string &
       }
     }
     requests.pop_front();
-    ui->setInfo();
   }
   else if (command == "makedir") {
     BrowseScreenRequest request;
@@ -277,8 +294,19 @@ void BrowseScreenLocal::command(const std::string & command, const std::string &
     request.path = list.getPath();
     request.files = { std::make_pair(arg, true) };
     requests.push_back(request);
-    ui->setInfo();
   }
+  else if (command == "move") {
+    Path dstpath = arg;
+    for (const std::pair<std::string, bool>& item : list.getSelectedNames()) {
+      BrowseScreenRequest request;
+      request.id = global->getLocalStorage()->requestMove(list.getPath() / item.first, dstpath.isAbsolute() ? dstpath : list.getPath() / dstpath);
+      request.type = BrowseScreenRequestType::MOVE;
+      request.path = list.getPath();
+      request.files = { item };
+      requests.push_back(request);
+    }
+  }
+  ui->setInfo();
   ui->redraw();
 }
 
@@ -746,6 +774,9 @@ std::string BrowseScreenLocal::getInfoText() const {
       case BrowseScreenRequestType::MKDIR:
         text = "Creating directory " + target + "  ";
         break;
+      case BrowseScreenRequestType::MOVE:
+        text = "Moving/renaming " + target + "  ";
+        break;
       default:
         assert(false);
         break;
@@ -785,6 +816,12 @@ std::string BrowseScreenLocal::getInfoText() const {
         break;
       case LastInfo::MKDIR_FAILED:
         text = "Dir creation failed: ";
+        break;
+      case LastInfo::MOVE_SUCCESS:
+        text = "Move/rename successful: ";
+        break;
+      case LastInfo::MOVE_FAILED:
+        text = "Move/rename failed: ";
         break;
       case LastInfo::NONE:
       default:
@@ -962,3 +999,11 @@ bool BrowseScreenLocal::keyDown() {
   }
   return false;
 }
+
+void BrowseScreenLocal::initiateMove(const std::string& dstpath) {
+  std::list<std::pair<std::string, bool>> items = list.getSelectedNames();
+  if (!items.empty()) {
+    ui->goMove(targetName(items), list.getPath(), dstpath, items.front().first);
+  }
+}
+

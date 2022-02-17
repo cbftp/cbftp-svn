@@ -116,6 +116,7 @@ BrowseScreen::BrowseScreen(Ui* ui) : UIWindow(ui, "BrowseScreen"),
   localkeybinds.addBind(336, KEYACTION_SOFT_SELECT_DOWN, "Soft select down");
   localkeybinds.addBind(' ', KEYACTION_HARD_SELECT, "Hard select");
   localkeybinds.addBind({'A', 1}, KEYACTION_SELECT_ALL, "Select all");
+  localkeybinds.addBind('m', KEYACTION_MOVE, "Move/rename");
   localkeybinds.addBind(KEY_F(5), KEYACTION_REFRESH, "Refresh dir");
   localkeybinds.addBind('i', KEYACTION_INFO, "File info");
   localkeybinds.addBind(KEY_UP, KEYACTION_UP, "Navigate up");
@@ -466,6 +467,14 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
           }
         }
         activesite->initiateMove(dstpath);
+      }
+      else if (active->type() == BrowseScreenType::LOCAL) {
+        std::shared_ptr<BrowseScreenSub> other = active == left ? right : left;
+        std::string dstpath;
+        if (split && other->type() == BrowseScreenType::LOCAL) {
+          dstpath = other->getUIFileList()->getPath().toString();
+        }
+        active->initiateMove(dstpath);
       }
       return true;
     case KEYACTION_0:

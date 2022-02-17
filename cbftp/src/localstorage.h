@@ -12,6 +12,7 @@
 #include "localfile.h"
 #include "localstoragerequestdata.h"
 #include "transferprotocol.h"
+#include "util.h"
 
 class LocalTransfer;
 class LocalDownload;
@@ -42,8 +43,9 @@ public:
   static bool deleteFileAbsolute(const Path & filename);
   static bool deleteRecursive(const Path & path);
   int requestMakeDirectory(const Path& path, const std::string& dirname);
-  static bool tryMakeDir(const Path& path, const std::string& dirname);
-  bool getMakeDirResult(const int requestid);
+  int requestMove(const Path& srcpath, const Path& dstpath);
+  util::Result getMakeDirResult(int requestid);
+  util::Result getMoveResult(int requestid);
   bool getDeleteResult(int requestid);
   static LocalPathInfo getPathInfo(const Path & path);
   static LocalPathInfo getPathInfo(const std::list<Path> & paths);

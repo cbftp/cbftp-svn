@@ -77,3 +77,7 @@ void BrowseScreenSub::refreshFileList() {
 BrowseScreenAction BrowseScreenSub::tryJumpSection(const std::string& section) {
   return BrowseScreenAction(BROWSESCREENACTION_NOOP);
 }
+
+void BrowseScreenSub::initiateMove(const std::string& dstpath) {
+
+}

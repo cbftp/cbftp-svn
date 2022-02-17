@@ -52,7 +52,7 @@ public:
   UIFileList * getUIFileList() override;
   const std::shared_ptr<Site> & getSite() const;
   void gotoPath(const Path & path);
-  void initiateMove(const std::string& dstpath);
+  void initiateMove(const std::string& dstpath) override;
   void refreshFileList() override;
   BrowseScreenAction tryJumpSection(const std::string& section) override;
   std::string getLastJumpSection() const;

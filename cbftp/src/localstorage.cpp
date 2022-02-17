@@ -10,6 +10,7 @@
 #include "ftpconn.h"
 #include "globalcontext.h"
 #include "uibase.h"
+#include "filesystem.h"
 
 #include <cassert>
 #include <cstdio>
@@ -180,9 +181,13 @@ void LocalStorage::executeAsyncRequest(LocalStorageRequestData * data) {
     }
     case LocalStorageRequestType::MKDIR: {
       MakeDirTaskData * mkdirdata = static_cast<MakeDirTaskData *>(data);
-      mkdirdata->success = tryMakeDir(mkdirdata->path, mkdirdata->dirname);
+      mkdirdata->result = FileSystem::createDirectory(mkdirdata->path / mkdirdata->dirname);
       break;
-
+    }
+    case LocalStorageRequestType::MOVE: {
+      MoveTaskData* movedata = static_cast<MoveTaskData*>(data);
+      movedata->result = FileSystem::move(movedata->srcpath, movedata->dstpath);
+      break;
     }
   }
 }
@@ -438,24 +443,35 @@ int LocalStorage::requestMakeDirectory(const Path& path, const std::string & dir
   return requestid;
 }
 
-bool LocalStorage::tryMakeDir(const Path& path, const std::string& dirname){
-  if (getLocalFile(path).isDirectory()) {
-    Path newdir = path / Path(dirname);
-    return mkdir(newdir.toString().c_str(), 0777) == 0;
-  }
-  return false;
+int LocalStorage::requestMove(const Path& srcpath, const Path& dstpath) {
+  MoveTaskData* movedata = new MoveTaskData();
+  int requestid = requestidcounter++;
+  movedata->requestid = requestid;
+  movedata->srcpath = srcpath;
+  movedata->dstpath = dstpath;
+  global->getWorkManager()->asyncTask(this, 0, &asyncRequest, movedata);
+  return requestid;
 }
 
-bool LocalStorage::getMakeDirResult(const int requestid) {
+util::Result LocalStorage::getMakeDirResult(int requestid) {
   auto it = readyrequests.find(requestid);
   assert(it != readyrequests.end() && it->second->type == LocalStorageRequestType::MKDIR);
   MakeDirTaskData* mkdirdata = static_cast<MakeDirTaskData*>(it->second);
-  bool success = mkdirdata->success;
+  util::Result res = mkdirdata->result;
   readyrequests.erase(it);
   delete mkdirdata;
-  return success;
+  return res;
 }
 
+util::Result LocalStorage::getMoveResult(int requestid) {
+  auto it = readyrequests.find(requestid);
+  assert(it != readyrequests.end() && it->second->type == LocalStorageRequestType::MOVE);
+  MoveTaskData* movetaskdata = static_cast<MoveTaskData*>(it->second);
+  util::Result res = movetaskdata->result;
+  readyrequests.erase(it);
+  delete movetaskdata;
+  return res;
+}
 
 bool LocalStorage::requestReady(int requestid) const {
   return readyrequests.find(requestid) != readyrequests.end();
@@ -472,24 +488,23 @@ void LocalStorage::asyncTaskComplete(int type, void * data) {
   }
 }
 
-void LocalStorage::deleteRequestData(LocalStorageRequestData * reqdata) {
+void LocalStorage::deleteRequestData(LocalStorageRequestData* reqdata) {
   switch (reqdata->type) {
-    case LocalStorageRequestType::GET_FILE_LIST: {
-      delete static_cast<FileListTaskData *>(reqdata);
+    case LocalStorageRequestType::GET_FILE_LIST:
+      delete static_cast<FileListTaskData*>(reqdata);
       break;
-    }
-    case LocalStorageRequestType::GET_PATH_INFO: {
-      delete static_cast<PathInfoTaskData *>(reqdata);
+    case LocalStorageRequestType::GET_PATH_INFO:
+      delete static_cast<PathInfoTaskData*>(reqdata);
       break;
-    }
-    case LocalStorageRequestType::DELETE: {
-      delete static_cast<DeleteFileTaskData *>(reqdata);
+    case LocalStorageRequestType::DELETE:
+      delete static_cast<DeleteFileTaskData*>(reqdata);
       break;
-    }
-    case LocalStorageRequestType::MKDIR: {
-      delete static_cast<MakeDirTaskData *>(reqdata);
+    case LocalStorageRequestType::MKDIR:
+      delete static_cast<MakeDirTaskData*>(reqdata);
       break;
-    }
+    case LocalStorageRequestType::MOVE:
+      delete static_cast<MoveTaskData*>(reqdata);
+      break;
   }
 }
 
