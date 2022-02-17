@@ -36,6 +36,7 @@ public:
   std::shared_ptr<LocalFileList> fileList() const;
   UIFile * selectedFile() const;
   UIFileList * getUIFileList() override;
+  void initiateMove(const std::string& dstpath) override;
 private:
   void refreshFilelist();
   bool handleReadyRequests();

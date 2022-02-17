@@ -1,6 +1,7 @@
 #include <memory>
 
 #include "path.h"
+#include "util.h"
 
 class LocalFileList;
 class LocalPathInfo;
@@ -9,7 +10,8 @@ enum class LocalStorageRequestType {
   GET_FILE_LIST,
   GET_PATH_INFO,
   DELETE,
-  MKDIR
+  MKDIR,
+  MOVE
 };
 
 struct LocalStorageRequestData {
@@ -41,5 +43,12 @@ struct MakeDirTaskData : public LocalStorageRequestData {
   MakeDirTaskData();
   Path path;
   std::string dirname;
-  bool success;
+  util::Result result;
+};
+
+struct MoveTaskData : public LocalStorageRequestData {
+  MoveTaskData();
+  Path srcpath;
+  Path dstpath;
+  util::Result result;
 };

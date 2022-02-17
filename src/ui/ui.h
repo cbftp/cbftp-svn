@@ -260,7 +260,7 @@ public:
   void goSnake();
   void goEnableEncryption();
   void goDisableEncryption();
-  void goMove(const std::string& site, const std::string& items, const Path& srcpath, const std::string& dstpath, const std::string& firstitem);
+  void goMove(const std::string& items, const Path& srcpath, const std::string& dstpath, const std::string& firstitem, const std::string& site = "");
   void goFileInfo(UIFile* uifile);
   void goKeyBinds(KeyBinds* keybinds);
   void goGlobalKeyBinds();

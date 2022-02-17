@@ -20,3 +20,7 @@ DeleteFileTaskData::DeleteFileTaskData() {
 MakeDirTaskData::MakeDirTaskData() {
   type = LocalStorageRequestType::MKDIR;
 }
+
+MoveTaskData::MoveTaskData() {
+  type = LocalStorageRequestType::MOVE;
+}

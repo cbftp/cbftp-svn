@@ -110,6 +110,7 @@ public:
   static void printFlipped(Ui * ui, const std::shared_ptr<ResizableElement> & re);
   static std::string targetName(const std::list<std::pair<std::string, bool>> & items);
   virtual BrowseScreenAction tryJumpSection(const std::string& section);
+  virtual void initiateMove(const std::string& dstpath);
 protected:
   KeyBinds& keybinds;
 };
