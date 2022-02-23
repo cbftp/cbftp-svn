@@ -118,6 +118,20 @@ bool useOrSectionTranslate(Path& path, const std::shared_ptr<Site>& site) {
   return true;
 }
 
+bool getQueryParamBoolValue(const http::Request& request, const std::string& param, bool defaultvalue = false) {
+  bool boolvalue = defaultvalue;
+  if (request.hasQueryParam(param)) {
+    std::string value = request.getQueryParamValue(param);
+    if (value != "0" && value != "false" && value != "NO") {
+      boolvalue = true;
+    }
+    else {
+      boolvalue = false;
+    }
+  }
+  return boolvalue;
+}
+
 http::Response badRequestResponse(const std::string& error, int code = 400)
 {
   http::Response response(400);
@@ -1646,6 +1660,7 @@ void RestApi::handleTransferJobsGet(RestApiCallback* cb, int connrequestid, cons
   std::string dstsitestr = request.getQueryParamValue("dst_site");
   std::string typestr = request.getQueryParamValue("type");
   std::string namestr = request.getQueryParamValue("name");
+  bool showid = getQueryParamBoolValue(request, "id");
   TransferJobStatus status = TRANSFERJOB_QUEUED;
   if (filterstatus) {
     try {
@@ -1684,7 +1699,15 @@ void RestApi::handleTransferJobsGet(RestApiCallback* cb, int connrequestid, cons
     {
       continue;
     }
-    joblist.push_back((*it)->getName());
+    if (showid) {
+      nlohmann::json entry;
+      entry["name"] = (*it)->getName();
+      entry["id"] = (*it)->getId();
+      joblist.push_back(entry);
+    }
+    else {
+      joblist.push_back((*it)->getName());
+    }
   }
 
   http::Response response(200);
@@ -1827,8 +1850,9 @@ void RestApi::handleTransferJobPost(RestApiCallback* cb, int connrequestid, cons
 }
 
 void RestApi::handleTransferJobGet(RestApiCallback* cb, int connrequestid, const http::Request& request) {
+  bool byid = getQueryParamBoolValue(request, "id");
   std::string name = Path(request.getPath()).baseName();
-  std::shared_ptr<TransferJob> transferjob = global->getEngine()->getTransferJob(name);
+  std::shared_ptr<TransferJob> transferjob = byid ? global->getEngine()->getTransferJob(std::stol(name)) : global->getEngine()->getTransferJob(name);
   if (!transferjob) {
     cb->requestHandled(connrequestid, notFoundResponse());
     return;
@@ -1843,6 +1867,7 @@ void RestApi::handleTransferJobGet(RestApiCallback* cb, int connrequestid, const
     j["dst_site"] = transferjob->getDst()->getSite()->getName();
   }
   j["name"] = transferjob->getName();
+  j["id"] = transferjob->getId();
   j["status"] = transferJobStatusToString(transferjob->getStatus());
   j["src_path"] = transferjob->getSrcPath().toString();
   j["dst_path"] = transferjob->getDstPath().toString();
@@ -1864,9 +1889,10 @@ void RestApi::handleTransferJobGet(RestApiCallback* cb, int connrequestid, const
 
 void RestApi::handleTransferJobReset(RestApiCallback* cb, int connrequestid, const http::Request& request) {
   nlohmann::json jsondata = getJsonFromBody(request);
+  bool byid = getQueryParamBoolValue(request, "id");
   Path path = request.getPath();
   std::string transferjob = path.level(1).toString();
-  std::shared_ptr<TransferJob> tj = global->getEngine()->getTransferJob(transferjob);
+  std::shared_ptr<TransferJob> tj = byid ? global->getEngine()->getTransferJob(std::stol(transferjob)) : global->getEngine()->getTransferJob(transferjob);
   if (!tj) {
     cb->requestHandled(connrequestid, notFoundResponse());
     return;
@@ -1879,9 +1905,10 @@ void RestApi::handleTransferJobReset(RestApiCallback* cb, int connrequestid, con
 
 void RestApi::handleTransferJobAbort(RestApiCallback* cb, int connrequestid, const http::Request& request) {
   nlohmann::json jsondata = getJsonFromBody(request);
+  bool byid = getQueryParamBoolValue(request, "id");
   Path path = request.getPath();
   std::string transferjob = path.level(1).toString();
-  std::shared_ptr<TransferJob> tj = global->getEngine()->getTransferJob(transferjob);
+  std::shared_ptr<TransferJob> tj = byid ? global->getEngine()->getTransferJob(std::stol(transferjob)) : global->getEngine()->getTransferJob(transferjob);
   if (!tj) {
     cb->requestHandled(connrequestid, notFoundResponse());
     return;
