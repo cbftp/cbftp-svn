@@ -249,13 +249,14 @@ Example body (optional) when aborting a spread job:
 }
 
 - List all transfer jobs. Filters are optional.
-   GET /transferjobs
+   GET /transferjobs?id=false
    GET /transferjobs?status=RUNNING&src_site=SOMESITE&type=FXP
    GET /transferjobs?dst_site=SOMESITE&type=UPLOAD
    GET /transferjobs?site=SOMESITE&name=*debian*
    
-- Get details of a specific transfer job
-   GET /transferjobs/JOBNAME
+- Get details of a specific transfer job. Use the id query param to get job via
+  id instead of name
+   GET /transferjobs/JOBNAME_OR_ID?id=false
    
 - Start a new transfer job
    POST /transferjobs
@@ -289,10 +290,10 @@ An example body when starting an upload job:
 }
 
 - Reset a transfer job
-   POST /transferjobs/JOBNAME/reset (no body)
+   POST /transferjobs/JOBNAME_OR_ID/reset?id=false (no body)
    
 - Abort a transfer job
-   POST /transferjobs/JOBNAME/abort (no body)
+   POST /transferjobs/JOBNAME_OR_ID/abort?id=false (no body)
 
 - List all sections
    GET /sections

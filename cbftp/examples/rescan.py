@@ -54,6 +54,8 @@ if operation.startswith("browse-site"):
       if file['name'] == item:
         if file['type'] == "DIR":
           rescan_list.append(f"{path}/{item}")
+        elif file['type'] == "LINK":
+          rescan_list.append(file['link_target'])
         else:
           rescan_base = True
         break
