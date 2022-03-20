@@ -349,7 +349,7 @@ std::regex regexParse(const std::string & pattern) {
 bool naturalComparator::operator()(const std::string& a, const std::string& b) const {
   size_t i = 0;
   size_t j = 0;
-  for (; i < a.length() && j < b.length(); ++i, ++j) {
+  while (i < a.length() && j < b.length()) {
     if (isdigit(a[i]) && isdigit(b[j])) {
       size_t adigitstart = i;
       size_t bdigitstart = j;
@@ -377,6 +377,8 @@ bool naturalComparator::operator()(const std::string& a, const std::string& b) c
       if (ca > cb) {
         return false;
       }
+      ++i;
+      ++j;
     }
   }
   return a.length() < b.length();
