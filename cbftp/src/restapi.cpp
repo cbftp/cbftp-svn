@@ -1831,20 +1831,27 @@ void RestApi::handleTransferJobPost(RestApiCallback* cb, int connrequestid, cons
     return;
   }
 
-  bool success = false;
+  unsigned int id;
   if (srcsl && dstsl) {
-    success = !!global->getEngine()->newTransferJobFXP(srcsl->getSite()->getName(), srcpath, srcsection, name, dstsl->getSite()->getName(), dstpath, dstsection, name);
+    id = global->getEngine()->newTransferJobFXP(srcsl->getSite()->getName(), srcpath, srcsection, name, dstsl->getSite()->getName(), dstpath, dstsection, name);
   }
   else if (srcsl && !dstsl) {
-    success = !!global->getEngine()->newTransferJobDownload(srcsl->getSite()->getName(), srcpath, srcsection, name, dstpath, name);
+    id = global->getEngine()->newTransferJobDownload(srcsl->getSite()->getName(), srcpath, srcsection, name, dstpath, name);
   }
   else if (!srcsl && dstsl) {
-    success = !!global->getEngine()->newTransferJobUpload(srcpath, name, dstsl->getSite()->getName(), dstpath, dstsection, name);
+    id = global->getEngine()->newTransferJobUpload(srcpath, name, dstsl->getSite()->getName(), dstpath, dstsection, name);
   }
   http::Response response(201);
-  response.appendHeader("Content-Length", "0");
-  if (!success) {
+  if (id == 0) {
     response.setStatusCode(503);
+    response.appendHeader("Content-Length", "0");
+  }
+  else {
+    nlohmann::json j;
+    j["id"] = id;
+    std::string jsondump = j.dump(2);
+    response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
+    response.addHeader("Content-Type", "application/json");
   }
   cb->requestHandled(connrequestid, response);
 }
