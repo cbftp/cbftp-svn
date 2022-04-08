@@ -157,6 +157,10 @@ bool WorkManager::lowPrioOverload() {
   return lowpriooverloaded;
 }
 
+unsigned int WorkManager::getQueueSize() const {
+  return highprioqueue.size() + dataqueue.size() + lowprioqueue.size();
+}
+
 void WorkManager::addReadyNotify(EventReceiver* er) {
   std::lock_guard<std::mutex> lock(readylock);
   readynotify.push_back(er);

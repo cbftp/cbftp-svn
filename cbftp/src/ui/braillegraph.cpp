@@ -1,5 +1,6 @@
 #include "braillegraph.h"
 
+#include <algorithm>
 #include <cassert>
 #include <set>
 
@@ -21,9 +22,10 @@ struct BrailleGraph::DataPoint {
 
 BrailleGraph::BrailleGraph(unsigned int row, unsigned int col,
   const std::string& title, const std::string& unit, unsigned int floor,
-  unsigned int ceiling) : row(row), col(col), min(0), max(0), avg(0),
-  graphfloor(floor), graphceiling(ceiling), title(title), unit(unit),
-  even(false), curroffset(0), idcounter(0)
+  unsigned int ceiling, bool dynamicceiling) : row(row), col(col), min(0), max(0), avg(0),
+  graphfloor(floor), graphceiling(ceiling), graphceilingdynamic(ceiling),
+  dynamicceiling(dynamicceiling), title(title), unit(unit), even(false),
+  curroffset(0), idcounter(0)
 {
 
 }
@@ -47,9 +49,15 @@ unsigned int BrailleGraph::rows() const {
 
 void BrailleGraph::setData(const std::list<unsigned int>& data) {
   this->data.clear();
+  graphceilingdynamic = graphceiling;
   for (unsigned int ndata : data) {
-    if (ndata > graphceiling) {
-      ndata = graphceiling;
+    if (ndata > graphceilingdynamic) {
+      if (!dynamicceiling) {
+        ndata = graphceiling;
+      }
+      else {
+        graphceilingdynamic = ndata;
+      }
     }
     if (ndata < graphfloor) {
       ndata = graphfloor;
@@ -176,8 +184,13 @@ void BrailleGraph::renderNew(const std::list<unsigned int>& newdata) {
   int lastrow = biggraphrows - ((rowfactor * data.back().data) + 0.5);
   int lastcol = -1;
   for (unsigned int& datapoint : renderdata) {
-    if (datapoint > graphceiling) {
-      datapoint = graphceiling;
+    if (datapoint > graphceilingdynamic) {
+      if (!dynamicceiling) {
+        datapoint = graphceilingdynamic;
+      }
+      else {
+        graphceilingdynamic = datapoint;
+      }
     }
     if (datapoint < graphfloor) {
       datapoint = graphfloor;
@@ -278,6 +291,11 @@ void BrailleGraph::renderNew(const std::list<unsigned int>& newdata) {
   if (newminmax) {
     calcMinMax();
   }
+  if (oldmax != max && (oldmax > graphceiling || max > graphceiling)) {
+    graphceilingdynamic = std::max(graphceiling, max);
+    render();
+    return;
+  }
   avg = avgsum / data.size();
   if (oldmin != min || oldmax != max || oldavg != avg || oldnow != data.back().data) {
     renderChangingBorderParts();
@@ -363,9 +381,9 @@ void BrailleGraph::renderGraph() {
   biggraphrows = graphrows * 4;
   std::map<unsigned int, std::set<unsigned int>> biggraph;
   colfactor = static_cast<float>(biggraphcols) / data.size();
-  rowfactor = static_cast<float>(biggraphrows) / (graphceiling - graphfloor + 1);
+  rowfactor = static_cast<float>(biggraphrows) / (graphceilingdynamic - graphfloor + 1);
   int datapos = 0;
-  min = graphceiling;
+  min = graphceilingdynamic;
   max = graphfloor;
   avgsum = 0;
   int lastrow = -1;
@@ -441,7 +459,7 @@ void BrailleGraph::renderChangingBorderParts() {
     std::string maxstr = std::to_string(max) + unit;
     std::string nowstr = std::to_string(data.back().data) + unit;
     std::string floorstr = std::to_string(graphfloor) + unit;
-    std::string ceilingstr = std::to_string(graphceiling) + unit;
+    std::string ceilingstr = std::to_string(graphceilingdynamic) + unit;
     unsigned int pos = 1;
     changingborderchars.emplace_back(0, pos++, ' ');
     for (unsigned int i = 0; i < ceilingstr.length(); ++i) {

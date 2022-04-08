@@ -4,6 +4,7 @@
 #include <thread>
 
 #include "core/tickpoke.h"
+#include "core/workmanager.h"
 
 #include "globalcontext.h"
 #include "loadmonitorcallback.h"
@@ -23,6 +24,7 @@ const unsigned int HISTORY_SLOTS = HISTORY_LENGTH_SECONDS * (1000 / LOAD_MONITOR
 LoadMonitor::LoadMonitor() : lasttimeallms(0), lasttimeworkerms(0), perflevel(PERFLEVEL_MAX),
   allhistory(HISTORY_SLOTS, 0),
   workerhistory(HISTORY_SLOTS, 0),
+  workqueuesizehistory(HISTORY_SLOTS, 0),
   perflevelhistory(HISTORY_SLOTS, PERFLEVEL_MAX),
   numcores(std::thread::hardware_concurrency()),
   throttletoppc(PERFLEVEL_THROTTLE_THRESHOLD_PC + PERFLEVEL_THROTTLE_THRESHOLD_TOLERANCE),
@@ -46,6 +48,8 @@ void LoadMonitor::tick(int message) {
   unsigned long long int currtimeworkerms = timeworkerms - lasttimeworkerms;
   unsigned int currallpc = currtimeallms * 100 / numcores / LOAD_MONITOR_CHECK_INTERVAL_MS;
   unsigned int currworkerpc = currtimeworkerms * 100 / LOAD_MONITOR_CHECK_INTERVAL_MS;
+  unsigned int workqueuesize = global->getWorkManager()->getQueueSize();
+
   allhistory.push_back(currallpc);
   allhistory.pop_front();
   allhistoryunseen.push_back(currallpc);
@@ -57,6 +61,12 @@ void LoadMonitor::tick(int message) {
   workerhistoryunseen.push_back(currworkerpc);
   if (workerhistoryunseen.size() > HISTORY_SLOTS) {
     workerhistoryunseen.pop_front();
+  }
+  workqueuesizehistory.push_back(workqueuesize);
+  workqueuesizehistory.pop_front();
+  workqueuesizehistoryunseen.push_back(workqueuesize);
+  if (workqueuesizehistoryunseen.size() > HISTORY_SLOTS) {
+    workqueuesizehistoryunseen.pop_front();
   }
   bool perflevelchanged = false;
   if ((currallpc > throttletoppc || currworkerpc > throttletoppc) && perflevel > PERFLEVEL_MIN) {
@@ -89,8 +99,13 @@ unsigned int LoadMonitor::getCurrentRecommendedPerformanceLevel() const {
 unsigned int LoadMonitor::getCurrentCpuUsageAll() const {
   return allhistory.back();
 }
+
 unsigned int LoadMonitor::getCurrentCpuUsageWorker() const {
   return workerhistory.back();
+}
+
+unsigned int LoadMonitor::getCurrentWorkerQueueSize() const {
+  return workqueuesizehistory.back();
 }
 
 void LoadMonitor::addListener(LoadMonitorCallback* cb) {
@@ -111,6 +126,11 @@ const std::list<unsigned int>& LoadMonitor::getCpuUsageWorkerHistory() const {
   return workerhistory;
 }
 
+const std::list<unsigned int>& LoadMonitor::getWorkQueueSizeHistory() const {
+  workqueuesizehistoryunseen.clear();
+  return workqueuesizehistory;
+}
+
 const std::list<unsigned int>& LoadMonitor::getPerformanceLevelHistory() const {
   perflevelhistoryunseen.clear();
   return perflevelhistory;
@@ -125,6 +145,12 @@ std::list<unsigned int> LoadMonitor::getUnseenCpuUsageAllHistory() const {
 std::list<unsigned int> LoadMonitor::getUnseenCpuUsageWorkerHistory() const {
   std::list<unsigned int> out = workerhistoryunseen;
   workerhistoryunseen.clear();
+  return out;
+}
+
+std::list<unsigned int> LoadMonitor::getUnseenWorkQueueSizeHistory() const {
+  std::list<unsigned int> out = workqueuesizehistoryunseen;
+  workqueuesizehistoryunseen.clear();
   return out;
 }
 

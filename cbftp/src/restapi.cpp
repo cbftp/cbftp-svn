@@ -1831,7 +1831,7 @@ void RestApi::handleTransferJobPost(RestApiCallback* cb, int connrequestid, cons
     return;
   }
 
-  unsigned int id;
+  unsigned int id = 0;
   if (srcsl && dstsl) {
     id = global->getEngine()->newTransferJobFXP(srcsl->getSite()->getName(), srcpath, srcsection, name, dstsl->getSite()->getName(), dstpath, dstsection, name);
   }

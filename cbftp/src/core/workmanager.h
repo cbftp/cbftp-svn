@@ -78,6 +78,11 @@ public:
      */
     bool lowPrioOverload();
 
+    /*
+     * Total current size of the event queues
+     */
+    unsigned int getQueueSize() const;
+
     /* Call from signal handlers to schedule related work on the worker thread */
     void dispatchSignal(EventReceiver* er, int signal, int value);
 
