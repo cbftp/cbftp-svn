@@ -62,6 +62,7 @@ void InfoScreen::redraw() {
   ++i;
   vv->putStr(i++, 1, "Current CPU load total: " + std::to_string(global->getLoadMonitor()->getCurrentCpuUsageAll()) + "%");
   vv->putStr(i++, 1, "Current CPU load worker: " + std::to_string(global->getLoadMonitor()->getCurrentCpuUsageWorker()) + "%");
+  vv->putStr(i++, 1, "Current worker queue size: " + std::to_string(global->getLoadMonitor()->getCurrentWorkerQueueSize()));
   vv->putStr(i++, 1, "Current performance level: " + std::to_string(global->getLoadMonitor()->getCurrentRecommendedPerformanceLevel()));
 }
 

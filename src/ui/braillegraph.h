@@ -13,7 +13,7 @@ public:
     unsigned int col;
     unsigned int ch;
   };
-  BrailleGraph(unsigned int row, unsigned int col, const std::string& title, const std::string& unit, unsigned int floor, unsigned int ceiling);
+  BrailleGraph(unsigned int row, unsigned int col, const std::string& title, const std::string& unit, unsigned int floor, unsigned int ceiling, bool dynamicceiling = false);
   ~BrailleGraph();
   void resize(unsigned int row, unsigned int col, bool redraw);
   void setData(const std::list<unsigned int>& data);
@@ -45,6 +45,8 @@ private:
   unsigned long long int avgsum;
   unsigned int graphfloor;
   unsigned int graphceiling;
+  unsigned int graphceilingdynamic;
+  bool dynamicceiling;
   float colfactor;
   float rowfactor;
   unsigned int graphrows;

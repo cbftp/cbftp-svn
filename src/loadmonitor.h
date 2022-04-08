@@ -13,13 +13,16 @@ public:
   unsigned int getCurrentRecommendedPerformanceLevel() const;
   unsigned int getCurrentCpuUsageAll() const;
   unsigned int getCurrentCpuUsageWorker() const;
+  unsigned int getCurrentWorkerQueueSize() const;
   void addListener(LoadMonitorCallback* cb);
   void removeListener(LoadMonitorCallback* cb);
   const std::list<unsigned int>& getCpuUsageAllHistory() const;
   const std::list<unsigned int>& getCpuUsageWorkerHistory() const;
+  const std::list<unsigned int>& getWorkQueueSizeHistory() const;
   const std::list<unsigned int>& getPerformanceLevelHistory() const;
   std::list<unsigned int> getUnseenCpuUsageAllHistory() const;
   std::list<unsigned int> getUnseenCpuUsageWorkerHistory() const;
+  std::list<unsigned int> getUnseenWorkQueueSizeHistory() const;
   std::list<unsigned int> getUnseenPerformanceLevelHistory() const;
   int getHistoryLengthSeconds() const;
 private:
@@ -29,9 +32,11 @@ private:
   unsigned int perflevel;
   std::list<unsigned int> allhistory;
   std::list<unsigned int> workerhistory;
+  std::list<unsigned int> workqueuesizehistory;
   std::list<unsigned int> perflevelhistory;
   mutable std::list<unsigned int> allhistoryunseen;
   mutable std::list<unsigned int> workerhistoryunseen;
+  mutable std::list<unsigned int> workqueuesizehistoryunseen;
   mutable std::list<unsigned int> perflevelhistoryunseen;
   unsigned int numcores;
   unsigned int throttletoppc;
