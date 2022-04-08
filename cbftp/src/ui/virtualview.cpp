@@ -218,7 +218,7 @@ bool VirtualView::tryFocus(unsigned int row, unsigned int col, unsigned int len)
 
 void VirtualView::resize(unsigned int row, unsigned int col) {
   realchars.resize(row);
-  for (std::deque<VirtualViewElement>& cols : realchars) {
+  for (auto& cols : realchars) {
     cols.resize(col);
   }
   realrows = row;
@@ -329,7 +329,7 @@ void VirtualView::expandIfNeeded(unsigned int row, unsigned int col) {
 
 void VirtualView::virtualResize(unsigned int row, unsigned int col) {
   virtualchars.resize(row);
-  for (std::deque<VirtualViewElement>& cols : virtualchars) {
+  for (auto& cols : virtualchars) {
     cols.resize(col);
   }
   virtualrows = row;

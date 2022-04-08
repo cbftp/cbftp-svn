@@ -1,10 +1,10 @@
 #pragma once
 
-#include <deque>
 #include <list>
 #include <set>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "virtualviewelement.h"
 
@@ -54,8 +54,8 @@ private:
   unsigned int virtualcols;
   unsigned int currentviewrow;
   unsigned int currentviewcol;
-  std::deque<std::deque<VirtualViewElement>> virtualchars;
-  std::deque<std::deque<VirtualViewElement>> realchars;
+  std::vector<std::vector<VirtualViewElement>> virtualchars;
+  std::vector<std::vector<VirtualViewElement>> realchars;
   std::list<std::pair<unsigned int, unsigned int>> modifiedchars;
   std::set<std::pair<unsigned int, unsigned int>> renderedchars;
   bool redrawall;
