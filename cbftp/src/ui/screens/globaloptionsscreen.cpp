@@ -142,7 +142,7 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   std::shared_ptr<MenuSelectOptionTextArrow> transferhistory = mso.addTextArrow(y++, x, "transferhistory", "Transfer history:");
   addHistoryOptions(spreadjobhistory);
   addHistoryOptions(transferjobhistory);
-  addHistoryOptions(transferhistory, true);
+  addHistoryOptions(transferhistory, false);
   spreadjobhistory->setOption(global->getEngine()->getMaxSpreadJobsHistory());
   transferjobhistory->setOption(global->getEngine()->getMaxTransferJobsHistory());
   transferhistory->setOption(global->getTransferManager()->getMaxTransferHistory());

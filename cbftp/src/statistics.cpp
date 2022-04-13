@@ -104,3 +104,23 @@ void Statistics::setSpreadJobs(unsigned int jobs) {
 void Statistics::setTransferJobs(unsigned int jobs) {
   transferjobs = jobs;
 }
+
+void Statistics::resetHourlyStats() {
+  filesdown.resetHours();
+  filesup.resetHours();
+  sizedown.resetHours();
+  sizeup.resetHours();
+  filesfxp.resetHours();
+  sizefxp.resetHours();
+}
+
+void Statistics::resetAllStats() {
+  filesdown.reset();
+  filesup.reset();
+  sizedown.reset();
+  sizeup.reset();
+  filesfxp.reset();
+  sizefxp.reset();
+  spreadjobs = 0;
+  transferjobs = 0;
+}

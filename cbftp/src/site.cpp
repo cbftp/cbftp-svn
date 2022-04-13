@@ -977,3 +977,41 @@ void Site::setSections(const std::map<std::string, Path>& sections) {
 void Site::setTransferPairing(const TransferPairing& transferpairing) {
   this->transferpairing = transferpairing;
 }
+
+void Site::resetHourlyStats() {
+  filesdown.resetHours();
+  filesup.resetHours();
+  sizedown.resetHours();
+  sizeup.resetHours();
+  for (std::pair<const std::string, HourlyAllTracking>& site : sitessizeup) {
+    site.second.resetHours();
+  }
+  for (std::pair<const std::string, HourlyAllTracking>& site : sitessizedown) {
+    site.second.resetHours();
+  }
+  for (std::pair<const std::string, HourlyAllTracking>& site : sitesfilesup) {
+    site.second.resetHours();
+  }
+  for (std::pair<const std::string, HourlyAllTracking>& site : sitesfilesdown) {
+    site.second.resetHours();
+  }
+}
+
+void Site::resetAllStats() {
+  filesdown.reset();
+  filesup.reset();
+  sizedown.reset();
+  sizeup.reset();
+  for (std::pair<const std::string, HourlyAllTracking>& site : sitessizeup) {
+    site.second.reset();
+  }
+  for (std::pair<const std::string, HourlyAllTracking>& site : sitessizedown) {
+    site.second.reset();
+  }
+  for (std::pair<const std::string, HourlyAllTracking>& site : sitesfilesup) {
+    site.second.reset();
+  }
+  for (std::pair<const std::string, HourlyAllTracking>& site : sitesfilesdown) {
+    site.second.reset();
+  }
+}

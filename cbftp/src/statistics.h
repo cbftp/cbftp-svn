@@ -34,6 +34,8 @@ public:
   unsigned int getTransferJobs() const;
   void setSpreadJobs(unsigned int);
   void setTransferJobs(unsigned int);
+  void resetHourlyStats();
+  void resetAllStats();
 private:
   HourlyAllTracking sizedown;
   HourlyAllTracking filesdown;

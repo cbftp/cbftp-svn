@@ -52,4 +52,6 @@ class SiteManager {
     void resetSitePairsForSite(const std::string &);
     void addExceptSourceForSite(const std::string &, const std::string &);
     void addExceptTargetForSite(const std::string &, const std::string &);
+    void resetHourlyStats();
+    void resetAllStats();
 };

@@ -8,6 +8,8 @@ public:
   void initialize(unsigned int row, unsigned int col);
   void redraw();
   bool keyPressed(unsigned int ch);
-  std::string getLegendText() const;
   std::string getInfoLabel() const;
+  void command(const std::string& command, const std::string& arg);
+private:
+  int confirmaction;
 };
