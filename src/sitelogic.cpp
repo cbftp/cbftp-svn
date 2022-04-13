@@ -1309,6 +1309,9 @@ bool SiteLogic::handleSpreadJob(int id) {
         refresh = false;
       }
     }
+    else {
+      refreshgovernor.useRefresh();
+    }
     const Path & currentpath = conns[id]->getCurrentPath();
     const Path & racepath = race->getPath();
     bool goodpath = currentpath == racepath || // same path
