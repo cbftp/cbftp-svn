@@ -82,21 +82,22 @@ public:
   bool contains(const T& t) {
     return contains(t->getId());
   }
-  void erase(unsigned int id) {
+  typename std::list<T>::iterator erase(unsigned int id) {
     typename std::unordered_map<unsigned int, typename std::list<T>::iterator>::iterator it = index.find(id);
     if (it != index.end()) {
-      items.erase(it->second);
       index.erase(id);
+      return items.erase(it->second);
     }
+    return items.end();
   }
-  void erase(const T& t) {
-    erase(t->getId());
+  typename std::list<T>::iterator erase(const T& t) {
+    return erase(t->getId());
   }
-  void erase(typename std::list<T>::iterator it) {
-    erase((*it)->getId());
+  typename std::list<T>::iterator erase(typename std::list<T>::iterator it) {
+    return erase((*it)->getId());
   }
-  void remove(const T& t) {
-    erase(t->getId());
+  typename std::list<T>::iterator remove(const T& t) {
+    return erase(t->getId());
   }
   void clear() {
     index.clear();
@@ -180,6 +181,10 @@ public:
   int getNextPreparedRaceStarterTimeRemaining() const;
   bool isIncompleteEnoughForDelete(const std::shared_ptr<Race> & race, const std::shared_ptr<SiteRace> & siterace) const;
   void transferFailed(const std::shared_ptr<TransferStatus> & ts, int err);
+  int getMaxSpreadJobsHistory() const;
+  int getMaxTransferJobsHistory() const;
+  void setMaxSpreadJobsHistory(int jobs);
+  void setMaxTransferJobsHistory(int jobs);
  private:
   std::shared_ptr<Race> newSpreadJob(int profile, const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset, const std::list<std::string>& dlonlysites);
   void estimateRaceSizes();
@@ -215,6 +220,8 @@ public:
   void restoreFromFailed(const std::shared_ptr<Race>& race);
   void removeFromFinished(const std::shared_ptr<Race>& race);
   void clearSkipListCaches();
+  void rotateSpreadJobsHistory();
+  void rotateTransferJobsHistory();
   JobList<std::shared_ptr<Race>> allraces;
   JobList<std::shared_ptr<Race>> currentraces;
   JobList<std::shared_ptr<Race>> finishedraces;
@@ -241,4 +248,6 @@ public:
   bool forcescoreboard;
   std::unordered_set<std::shared_ptr<Site>> skiplistcachesites;
   std::unordered_set<std::string> skiplistcachesections;
+  int maxspreadjobshistory;
+  int maxtransferjobshistory;
 };

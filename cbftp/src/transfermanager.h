@@ -14,8 +14,6 @@ class FileList;
 class TransferStatus;
 class LocalFileList;
 
-#define MAX_TRANSFER_HISTORY 10000
-
 class TransferManager {
   private:
     std::list<std::shared_ptr<TransferMonitor> > transfermonitors;
@@ -24,6 +22,7 @@ class TransferManager {
     unsigned int totalfinishedtransfers;
     std::shared_ptr<TransferMonitor> getAvailableTransferMonitor();
     void moveTransferStatusToFinished(const std::shared_ptr<TransferStatus> &);
+    int maxtransferhistory;
   public:
     TransferManager();
     ~TransferManager();
@@ -53,4 +52,6 @@ class TransferManager {
     unsigned int finishedTransfersSize() const;
     unsigned int totalFinishedTransfers() const;
     void addNewTransferStatus(const std::shared_ptr<TransferStatus> &);
+    int getMaxTransferHistory() const;
+    void setMaxTransferHistory(int history);
 };

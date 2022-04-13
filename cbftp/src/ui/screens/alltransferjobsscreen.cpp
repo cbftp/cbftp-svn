@@ -49,6 +49,9 @@ void AllTransferJobsScreen::redraw() {
   unsigned int y = 0;
   unsigned int totallistsize = engine->allTransferJobs() + 1;
   table.reset();
+  while (ypos > 1 && ypos > engine->allTransferJobs()) {
+    --ypos;
+  }
   adaptViewSpan(currentviewspan, row, ypos, totallistsize);
 
   if (!currentviewspan) {

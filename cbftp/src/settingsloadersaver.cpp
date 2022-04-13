@@ -29,6 +29,8 @@
 #include "httpserver.h"
 #include "externalscriptsmanager.h"
 #include "externalscripts.h"
+#include "transfermanager.h"
+#include "logmanager.h"
 
 #define AUTO_SAVE_INTERVAL 600000 // 10 minutes
 
@@ -654,8 +656,38 @@ void SettingsLoaderSaver::loadSettings() {
     if (!setting.compare("preparedraceexpirytime")) {
       global->getEngine()->setPreparedRaceExpiryTime(std::stoi(value));
     }
-    if (!setting.compare("racestarterexpiry")) {
+    else if (!setting.compare("racestarterexpiry")) {
       global->getEngine()->setNextPreparedRaceStarterTimeout(std::stoi(value));
+    }
+    else if (!setting.compare("maxspreadjobshistory")) {
+      global->getEngine()->setMaxSpreadJobsHistory(std::stoi(value));
+    }
+    else if (!setting.compare("maxtransferjobshistory")) {
+      global->getEngine()->setMaxTransferJobsHistory(std::stoi(value));
+    }
+  }
+
+  dfh->getDataFor("TransferManager", &lines);
+  for (it = lines.begin(); it != lines.end(); it++) {
+    line = *it;
+    if (line.length() == 0 ||line[0] == '#') continue;
+    size_t tok = line.find('=');
+    std::string setting = line.substr(0, tok);
+    std::string value = line.substr(tok + 1);
+    if (!setting.compare("maxtransferhistory")) {
+      global->getTransferManager()->setMaxTransferHistory(std::stoi(value));
+    }
+  }
+
+  dfh->getDataFor("LogManager", &lines);
+  for (it = lines.begin(); it != lines.end(); it++) {
+    line = *it;
+    if (line.length() == 0 ||line[0] == '#') continue;
+    size_t tok = line.find('=');
+    std::string setting = line.substr(0, tok);
+    std::string value = line.substr(tok + 1);
+    if (!setting.compare("maxrawbuflines")) {
+      global->getLogManager()->setMaxRawbufLines(std::stoi(value));
     }
   }
 
@@ -1007,6 +1039,14 @@ void SettingsLoaderSaver::saveSettings() {
   {
     dfh->addOutputLine("Engine", "preparedraceexpirytime=" + std::to_string(global->getEngine()->getPreparedRaceExpiryTime()));
     dfh->addOutputLine("Engine", "racestarterexpiry=" + std::to_string(global->getEngine()->getNextPreparedRaceStarterTimeout()));
+    dfh->addOutputLine("Engine", "maxspreadjobshistory=" + std::to_string(global->getEngine()->getMaxSpreadJobsHistory()));
+    dfh->addOutputLine("Engine", "maxtransferjobshistory=" + std::to_string(global->getEngine()->getMaxTransferJobsHistory()));
+  }
+  {
+    dfh->addOutputLine("TransferManager", "maxtransferhistory=" + std::to_string(global->getTransferManager()->getMaxTransferHistory()));
+  }
+  {
+    dfh->addOutputLine("LogManager", "maxrawbuflines=" + std::to_string(global->getLogManager()->getMaxRawbufLines()));
   }
   {
     std::string filetag = "Statistics";

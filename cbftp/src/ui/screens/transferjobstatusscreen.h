@@ -16,7 +16,7 @@ class TransferJobStatusScreen : public UIWindow {
 public:
   TransferJobStatusScreen(Ui *);
   ~TransferJobStatusScreen();
-  void initialize(unsigned int, unsigned int, unsigned int);
+  bool initialize(unsigned int, unsigned int, unsigned int);
   void redraw();
   void command(const std::string &, const std::string &);
   bool keyPressed(unsigned int);

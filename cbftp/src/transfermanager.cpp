@@ -9,7 +9,7 @@
 #include "transferstatuscallback.h"
 #include "engine.h"
 
-TransferManager::TransferManager() : totalfinishedtransfers(0) {
+TransferManager::TransferManager() : totalfinishedtransfers(0), maxtransferhistory(10000) {
 }
 
 TransferManager::~TransferManager() {
@@ -144,7 +144,7 @@ void TransferManager::moveTransferStatusToFinished(const std::shared_ptr<Transfe
       break;
     }
   }
-  if (finishedtransfers.size() > MAX_TRANSFER_HISTORY) {
+  if (maxtransferhistory != -1 && finishedtransfers.size() > (unsigned int)maxtransferhistory) {
     finishedtransfers.pop_back();
   }
   finishedtransfers.push_front(movets);
@@ -154,3 +154,12 @@ void TransferManager::moveTransferStatusToFinished(const std::shared_ptr<Transfe
 unsigned int TransferManager::totalFinishedTransfers() const {
   return totalfinishedtransfers;
 }
+
+int TransferManager::getMaxTransferHistory() const {
+  return maxtransferhistory;
+}
+
+void TransferManager::setMaxTransferHistory(int history) {
+  maxtransferhistory = history;
+}
+

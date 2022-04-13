@@ -130,8 +130,11 @@ RaceStatusScreen::~RaceStatusScreen() {
 
 }
 
-void RaceStatusScreen::initialize(unsigned int row, unsigned int col, unsigned int id) {
+bool RaceStatusScreen::initialize(unsigned int row, unsigned int col, unsigned int id) {
   race = global->getEngine()->getRace(id);
+  if (!race) {
+    return false;
+  }
   if (race->getStatus() == RaceStatus::RUNNING) {
     finished = false;
   }
@@ -152,6 +155,7 @@ void RaceStatusScreen::initialize(unsigned int row, unsigned int col, unsigned i
   currincomplete = 0;
   mso.enterFocusFrom(0);
   init(row, col);
+  return true;
 }
 
 void RaceStatusScreen::redraw() {

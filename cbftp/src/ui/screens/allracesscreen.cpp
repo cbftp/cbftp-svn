@@ -58,6 +58,9 @@ void AllRacesScreen::redraw() {
   unsigned int listspan = row - 1;
   unsigned int totallistsize = engine->allRaces();
   table.reset();
+  while (ypos && ypos >= engine->allRaces()) {
+    --ypos;
+  }
   adaptViewSpan(currentviewspan, listspan, ypos, totallistsize);
 
   addRaceTableHeader(y, table, "RELEASE");

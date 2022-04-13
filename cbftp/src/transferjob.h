@@ -43,6 +43,7 @@ public:
   TransferJob(unsigned int id, const std::shared_ptr<SiteLogic>& srcsl, const std::shared_ptr<FileList>& srcfilelist, const std::string& srcfile, const std::shared_ptr<SiteLogic>& dstsl, const std::shared_ptr<FileList>& dstfilelist, const std::string& dstfile);
   TransferJob(unsigned int id, const std::shared_ptr<SiteLogic>& srcsl, const Path& srcpath, const std::string& srcsection, const std::string& srcfile, const std::shared_ptr<SiteLogic>& dstsl, const Path& dstpath, const std::string& dstsection, const std::string& dstfile);
   ~TransferJob();
+  void createSiteTransferJobs(const std::shared_ptr<TransferJob>& tj);
   int getType() const;
   const Path & getSrcPath() const;
   const Path & getDstPath() const;

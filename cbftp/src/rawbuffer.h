@@ -36,8 +36,8 @@ class RawBuffer {
     bool hasregexfilter;
     std::regex regexfilter;
   public:
-    RawBuffer(unsigned int, std::string, std::string);
-    RawBuffer(std::string);
+    RawBuffer(const std::string& site, const std::string& id);
+    RawBuffer(const std::string& site);
     RawBuffer();
     void setCallback(RawBufferCallback *);
     void unsetCallback();

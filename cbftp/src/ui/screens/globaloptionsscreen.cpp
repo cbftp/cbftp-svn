@@ -9,7 +9,9 @@
 #include "../../settingsloadersaver.h"
 #include "../../engine.h"
 #include "../../transferprotocol.h"
+#include "../../transfermanager.h"
 #include "../../httpserver.h"
+#include "../../logmanager.h"
 
 #include "../ui.h"
 #include "../focusablearea.h"
@@ -29,6 +31,24 @@ enum class UdpEnable {
   ENCRYPTED
 };
 
+void addHistoryOptions(std::shared_ptr<MenuSelectOptionTextArrow>& arrow, bool includelow = true) {
+  if (includelow) {
+    arrow->addOption("10", 10);
+    arrow->addOption("25", 25);
+    arrow->addOption("50", 50);
+  }
+  arrow->addOption("100", 100);
+  arrow->addOption("250", 250);
+  arrow->addOption("500", 500);
+  arrow->addOption("1000", 1000);
+  arrow->addOption("3000", 3000);
+  arrow->addOption("10000", 10000);
+  if (!includelow) {
+    arrow->addOption("50000", 50000);
+    arrow->addOption("100000", 100000);
+  }
+  arrow->addOption("Unlimited", -1);
+}
 }
 
 GlobalOptionsScreen::GlobalOptionsScreen(Ui* ui) : UIWindow(ui, "GlobalOptionsScreen"), mso(*vv) {
@@ -116,6 +136,26 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   racestarterexpiry->addOption("1h", 3600);
   racestarterexpiry->addOption("Unlimited", 0);
   racestarterexpiry->setOption(global->getEngine()->getNextPreparedRaceStarterTimeout());
+  y++;
+  std::shared_ptr<MenuSelectOptionTextArrow> spreadjobhistory = mso.addTextArrow(y++, x, "spreadjobhistory", "Spread job history:");
+  std::shared_ptr<MenuSelectOptionTextArrow> transferjobhistory = mso.addTextArrow(y++, x, "transferjobhistory", "Transfer job history:");
+  std::shared_ptr<MenuSelectOptionTextArrow> transferhistory = mso.addTextArrow(y++, x, "transferhistory", "Transfer history:");
+  addHistoryOptions(spreadjobhistory);
+  addHistoryOptions(transferjobhistory);
+  addHistoryOptions(transferhistory, true);
+  spreadjobhistory->setOption(global->getEngine()->getMaxSpreadJobsHistory());
+  transferjobhistory->setOption(global->getEngine()->getMaxTransferJobsHistory());
+  transferhistory->setOption(global->getTransferManager()->getMaxTransferHistory());
+  std::shared_ptr<MenuSelectOptionTextArrow> logbufferhistory = mso.addTextArrow(y++, x, "logbufferhistory", "Log buffer history:");
+  logbufferhistory->addOption("16", 16);
+  logbufferhistory->addOption("64", 64);
+  logbufferhistory->addOption("256", 256);
+  logbufferhistory->addOption("1024", 1024);
+  logbufferhistory->addOption("4096", 4096);
+  logbufferhistory->addOption("16384", 16384);
+  logbufferhistory->addOption("65536", 65536);
+  logbufferhistory->addOption("Unlimited", -1);
+  logbufferhistory->setOption(global->getLogManager()->getMaxRawbufLines());
   y++;
   std::shared_ptr<MenuSelectOptionTextArrow> legendmode = mso.addTextArrow(y++, x, "legendmode", "Legend bar:");
   legendmode->addOption("Disabled", LEGEND_DISABLED);
@@ -389,6 +429,18 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "racestarterexpiry") {
           global->getEngine()->setNextPreparedRaceStarterTimeout(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
+        }
+        else if (identifier == "spreadjobhistory") {
+          global->getEngine()->setMaxSpreadJobsHistory(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
+        }
+        else if (identifier == "transferjobhistory") {
+          global->getEngine()->setMaxTransferJobsHistory(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
+        }
+        else if (identifier == "transferhistory") {
+          global->getTransferManager()->setMaxTransferHistory(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
+        }
+        else if (identifier == "logbufferhistory") {
+          global->getLogManager()->setMaxRawbufLines(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
         }
       }
       rch->setEnabled(udpenable != UdpEnable::NO);

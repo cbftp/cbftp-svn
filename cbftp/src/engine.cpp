@@ -93,7 +93,9 @@ Engine::Engine() :
   startnextpreparedtimeout(300),
   startnextprepared(false),
   nextpreparedtimeremaining(0),
-  forcescoreboard(false)
+  forcescoreboard(false),
+  maxspreadjobshistory(100),
+  maxtransferjobshistory(100)
 {
 }
 
@@ -249,6 +251,7 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
     if (!append) {
       currentraces.push_back(race);
       allraces.push_back(race);
+      rotateSpreadJobsHistory();
       dropped = 0;
       global->getEventLog()->log("Engine", "Starting spread job: " + section + "/" + release +
           " on " + std::to_string((int)addsites.size()) + " sites.");
@@ -363,6 +366,7 @@ unsigned int Engine::newTransferJobDownload(const std::string& srcsite, const st
   }
   unsigned int id = nextid++;
   std::shared_ptr<TransferJob> tj = std::make_shared<TransferJob>(id, sl, srcfilelist, srcfile, dstpath, dstfile);
+  tj->createSiteTransferJobs(tj);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting download job: " + srcfile +
@@ -370,6 +374,7 @@ unsigned int Engine::newTransferJobDownload(const std::string& srcsite, const st
   sl->addTransferJob(tj->getSrcTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
+  rotateTransferJobsHistory();
   return id;
 }
 
@@ -389,6 +394,7 @@ unsigned int Engine::newTransferJobDownload(const std::string& srcsite, const Pa
   }
   unsigned int id = nextid++;
   std::shared_ptr<TransferJob> tj = std::make_shared<TransferJob>(id, sl, srcpath, srcsection, srcfile, dstpath, dstfile);
+  tj->createSiteTransferJobs(tj);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting download job: " + srcfile +
@@ -396,6 +402,7 @@ unsigned int Engine::newTransferJobDownload(const std::string& srcsite, const Pa
   sl->addTransferJob(tj->getSrcTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
+  rotateTransferJobsHistory();
   return id;
 }
 
@@ -411,6 +418,7 @@ unsigned int Engine::newTransferJobUpload(const Path& srcpath, const std::string
   }
   unsigned int id = nextid++;
   std::shared_ptr<TransferJob> tj = std::make_shared<TransferJob>(id, srcpath, srcfile, sl, dstfilelist, dstfile);
+  tj->createSiteTransferJobs(tj);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting upload job: " + srcfile +
@@ -418,6 +426,7 @@ unsigned int Engine::newTransferJobUpload(const Path& srcpath, const std::string
   sl->addTransferJob(tj->getDstTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
+  rotateTransferJobsHistory();
   return id;
 }
 
@@ -437,6 +446,7 @@ unsigned int Engine::newTransferJobUpload(const Path& srcpath, const std::string
   }
   unsigned int id = nextid++;
   std::shared_ptr<TransferJob> tj = std::make_shared<TransferJob>(id, srcpath, srcfile, sl, dstpath, dstsection, dstfile);
+  tj->createSiteTransferJobs(tj);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting upload job: " + srcfile +
@@ -444,6 +454,7 @@ unsigned int Engine::newTransferJobUpload(const Path& srcpath, const std::string
   sl->addTransferJob(tj->getDstTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
+  rotateTransferJobsHistory();
   return id;
 }
 
@@ -464,6 +475,7 @@ unsigned int Engine::newTransferJobFXP(const std::string& srcsite, const std::sh
   }
   unsigned int id = nextid++;
   std::shared_ptr<TransferJob> tj = std::make_shared<TransferJob>(id, slsrc, srcfilelist, srcfile, sldst, dstfilelist, dstfile);
+  tj->createSiteTransferJobs(tj);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting FXP job: " + srcfile +
@@ -472,6 +484,7 @@ unsigned int Engine::newTransferJobFXP(const std::string& srcsite, const std::sh
   sldst->addTransferJob(tj->getDstTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
+  rotateTransferJobsHistory();
   return id;
 }
 
@@ -500,6 +513,7 @@ unsigned int Engine::newTransferJobFXP(const std::string& srcsite, const Path& s
   }
   unsigned int id = nextid++;
   std::shared_ptr<TransferJob> tj = std::make_shared<TransferJob>(id, slsrc, srcpath, srcsection, srcfile, sldst, dstpath, dstsection, dstfile);
+  tj->createSiteTransferJobs(tj);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
   global->getEventLog()->log("Engine", "Starting FXP job: " + srcfile +
@@ -508,6 +522,7 @@ unsigned int Engine::newTransferJobFXP(const std::string& srcsite, const Path& s
   sldst->addTransferJob(tj->getDstTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
+  rotateTransferJobsHistory();
   return id;
 }
 
@@ -558,6 +573,7 @@ void Engine::abortRace(const std::shared_ptr<Race> & race) {
     currentraces.remove(race);
     finishedraces.push_back(race);
     global->getEventLog()->log("Engine", "Spread job aborted: " + race->getName());
+    rotateSpreadJobsHistory();
   }
 }
 
@@ -711,6 +727,7 @@ void Engine::abortTransferJob(const std::shared_ptr<TransferJob>& tj) {
   tj->abort();
   currenttransferjobs.remove(tj);
   global->getEventLog()->log("Engine", "Transfer job aborted: " + tj->getSrcFileName());
+  rotateTransferJobsHistory();
 }
 
 void Engine::resetTransferJob(const std::shared_ptr<TransferJob>& tj) {
@@ -742,7 +759,10 @@ void Engine::jobFileListRefreshed(SiteLogic * sls, const std::shared_ptr<Command
       if (sr->isDone()) {
         break;
       }
-      std::shared_ptr<Race> race = sr->getRace();
+      std::shared_ptr<Race> race = sr->getRace().lock();
+      if (!race) {
+        break;
+      }
       bool addedtoboard = false;
       std::unordered_map<std::string, std::shared_ptr<FileList>>::const_iterator it;
       std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(sls);
@@ -777,7 +797,8 @@ void Engine::jobFileListRefreshed(SiteLogic * sls, const std::shared_ptr<Command
       break;
     }
     case COMMANDOWNER_TRANSFERJOB: {
-      std::shared_ptr<TransferJob> tj = getTransferJob(commandowner->getId());
+      std::shared_ptr<TransferJob> tj = std::static_pointer_cast<SiteTransferJob>(commandowner)->getTransferJob().lock();
+      assert(tj);
       refreshPendingTransferList(tj);
       break;
     }
@@ -785,7 +806,8 @@ void Engine::jobFileListRefreshed(SiteLogic * sls, const std::shared_ptr<Command
 }
 
 bool Engine::transferJobActionRequest(const std::shared_ptr<SiteTransferJob> & stj) {
-  std::shared_ptr<TransferJob> tj = getTransferJob(stj->getTransferJob()->getId());
+  std::shared_ptr<TransferJob> tj = stj->getTransferJob().lock();
+  assert(tj);
   if (tj->getType() == TRANSFERJOB_FXP && stj->otherWantsList()) {
     stj->getOtherSiteLogic()->haveConnectedActivate(1);
     return false;
@@ -996,7 +1018,10 @@ void Engine::addToScoreBoard(const std::shared_ptr<FileList>& fl, const std::sha
   const SkipList & skip = site->getSkipList();
   std::string subpath = sr->getSubPathForFileList(fl);
   Path subpathpath(subpath);
-  std::shared_ptr<Race> race = sr->getRace();
+  std::shared_ptr<Race> race = sr->getRace().lock();
+  if (!race) {
+    return;
+  }
   bool racemode = race->getProfile() == SPREAD_RACE;
   SitePriority priority = site->getPriority();
   const SkipList & secskip = race->getSectionSkipList();
@@ -1083,7 +1108,10 @@ void Engine::updateScoreBoard() {
     const SkipList& skip = site->getSkipList();
     std::string subpath = sr->getSubPathForFileList(fl);
     Path subpathpath(subpath);
-    std::shared_ptr<Race> race = sr->getRace();
+    std::shared_ptr<Race> race = sr->getRace().lock();
+    if (!race) {
+      continue;
+    }
     bool racemode = race->getProfile() == SPREAD_RACE;
     const SkipList & secskip = race->getSectionSkipList();
     if (fl->getState() == FileListState::FAILED) {
@@ -1556,6 +1584,7 @@ void Engine::raceComplete(const std::shared_ptr<Race>& race) {
 void Engine::transferJobComplete(const std::shared_ptr<TransferJob>& tj) {
   global->getEventLog()->log("Engine", tj->typeString() + " job complete: " + tj->getSrcFileName());
   currenttransferjobs.erase(tj);
+  rotateTransferJobsHistory();
 }
 
 unsigned short Engine::calculateScore(ScoreBoardElement * sbe) const {
@@ -1921,6 +1950,7 @@ void Engine::issueGlobalComplete(const std::shared_ptr<Race> & race) {
   if (currentraces.empty()) {
     clearSkipListCaches();
   }
+  rotateSpreadJobsHistory();
 }
 
 std::shared_ptr<ScoreBoard> Engine::getScoreBoard() const {
@@ -2016,4 +2046,50 @@ void Engine::setPreparedRaceExpiryTime(int expirytime) {
 
 void Engine::setNextPreparedRaceStarterTimeout(int timeout) {
   startnextpreparedtimeout = timeout;
+}
+
+int Engine::getMaxSpreadJobsHistory() const {
+  return maxspreadjobshistory;
+}
+
+int Engine::getMaxTransferJobsHistory() const {
+  return maxtransferjobshistory;
+}
+
+void Engine::setMaxSpreadJobsHistory(int jobs) {
+  maxspreadjobshistory = jobs;
+  rotateSpreadJobsHistory();
+}
+
+void Engine::setMaxTransferJobsHistory(int jobs) {
+  maxtransferjobshistory = jobs;
+  rotateTransferJobsHistory();
+}
+
+void Engine::rotateSpreadJobsHistory() {
+  if (maxspreadjobshistory == -1 || allraces.size() <= (unsigned int)maxspreadjobshistory) {
+    return;
+  }
+  for (std::list<std::shared_ptr<Race>>::iterator it = finishedraces.begin(); it != finishedraces.end() && allraces.size() > (unsigned int)maxspreadjobshistory;) {
+    unsigned int id = (*it)->getId();
+    it = finishedraces.erase(it);
+    allraces.erase(id);
+  }
+}
+
+void Engine::rotateTransferJobsHistory() {
+  if (maxtransferjobshistory == -1 || alltransferjobs.size() <= (unsigned int)maxtransferjobshistory) {
+    return;
+  }
+  for (std::list<std::shared_ptr<TransferJob>>::iterator it = alltransferjobs.begin(); it != alltransferjobs.end() && alltransferjobs.size() > (unsigned int)maxtransferjobshistory;) {
+    if ((*it)->isDone()) {
+      std::string name = (*it)->getName();
+      pendingtransfers.erase(*it);
+      currenttransferjobs.erase(*it);
+      it = alltransferjobs.erase(it);
+    }
+    else {
+      ++it;
+    }
+  }
 }

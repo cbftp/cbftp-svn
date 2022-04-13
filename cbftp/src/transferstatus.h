@@ -30,6 +30,7 @@ public:
       const Path& sourcepath, const std::shared_ptr<FileList>& fld, const Path& targetpath,
       unsigned long long int sourcesize, unsigned int assumedspeed, int srcslot,
       int dstslot, bool ssl, bool defaultactive);
+  ~TransferStatus();
   std::string getSource() const;
   std::string getTarget() const;
   std::string getJobName() const;

@@ -3,48 +3,53 @@
 #include "filelist.h"
 #include "transferjob.h"
 
-SiteTransferJob::SiteTransferJob(TransferJob* tj, bool source) : transferjob(tj), source(source) {
+SiteTransferJob::SiteTransferJob(const std::shared_ptr<TransferJob>& tj, bool source) : transferjob(tj), source(source) {
 
 }
 
-TransferJob* SiteTransferJob::getTransferJob() {
+std::weak_ptr<TransferJob> SiteTransferJob::getTransferJob() {
   return transferjob;
 }
 
 std::shared_ptr<SiteLogic> SiteTransferJob::getOtherSiteLogic() const {
-  return source ? transferjob->getDst() : transferjob->getSrc();
+  return source ? transferjob.lock()->getDst() : transferjob.lock()->getSrc();
 }
 
 bool SiteTransferJob::wantsList() {
-  return transferjob->wantsList(source);
+  return transferjob.lock()->wantsList(source);
 }
 
 bool SiteTransferJob::otherWantsList() {
-  return transferjob->getSrc() != transferjob->getDst() && transferjob->wantsList(!source);
+  return transferjob.lock()->getSrc() != transferjob.lock()->getDst() && transferjob.lock()->wantsList(!source);
+}
+
+bool SiteTransferJob::isDone() const {
+  std::shared_ptr<TransferJob> tj = transferjob.lock();
+  return !tj || tj->isDone();
 }
 
 Path SiteTransferJob::getPath() const {
-  return transferjob->getPath(source);
+  return transferjob.lock()->getPath(source);
 }
 
 std::shared_ptr<FileList> SiteTransferJob::getListTarget() {
-  return transferjob->getListTarget(source);
+  return transferjob.lock()->getListTarget(source);
 }
 int SiteTransferJob::classType() const {
   return COMMANDOWNER_TRANSFERJOB;
 }
 
 std::string SiteTransferJob::getName() const {
-  return transferjob->getName();
+  return transferjob.lock()->getName();
 }
 
 unsigned int SiteTransferJob::getId() const {
-  return transferjob->getId();
+  return transferjob.lock()->getId();
 }
 void SiteTransferJob::fileListUpdated(SiteLogic * sl, const std::shared_ptr<FileList>& fl) {
-  return transferjob->fileListUpdated(source, fl);
+  return transferjob.lock()->fileListUpdated(source, fl);
 }
 
 std::shared_ptr<FileList> SiteTransferJob::getFileListForFullPath(SiteLogic* sl, const Path& path) const {
-  return transferjob->getFileListForFullPath(source, path);
+  return transferjob.lock()->getFileListForFullPath(source, path);
 }

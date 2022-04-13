@@ -11,11 +11,12 @@ class TransferJob;
 
 class SiteTransferJob : public CommandOwner {
 public:
-  SiteTransferJob(TransferJob* tj, bool source);
-  TransferJob* getTransferJob();
+  SiteTransferJob(const std::shared_ptr<TransferJob>& tj, bool source);
+  std::weak_ptr<TransferJob> getTransferJob();
   std::shared_ptr<SiteLogic> getOtherSiteLogic() const;
   bool wantsList();
   bool otherWantsList();
+  bool isDone() const;
   Path getPath() const;
   std::shared_ptr<FileList> getListTarget();
   int classType() const override;
@@ -24,6 +25,6 @@ public:
   void fileListUpdated(SiteLogic* sl, const std::shared_ptr<FileList>& fl) override;
   std::shared_ptr<FileList> getFileListForFullPath(SiteLogic* sl, const Path& path) const override;
 private:
-  TransferJob* transferjob;
+  std::weak_ptr<TransferJob> transferjob;
   bool source;
 };

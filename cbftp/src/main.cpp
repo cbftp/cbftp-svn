@@ -28,6 +28,7 @@
 #include "loadmonitor.h"
 #include "externalscriptsmanager.h"
 #include "subprocessmanager.h"
+#include "logmanager.h"
 
 namespace {
 
@@ -62,11 +63,12 @@ public:
     LoadMonitor* lm = new LoadMonitor();
     ExternalScriptsManager* esm = new ExternalScriptsManager();
     SubProcessManager* spm = new SubProcessManager();
+    LogManager* logm = new LogManager();
 
     UIBase* uibase = UIBase::instance();
 
     global->linkComponents(sls, e, uibase, sm, slm, tm, rch, sl, pm, ls,
-                           tr, s, secm, httprv, ra, lm, esm, spm);
+                           tr, s, secm, httprv, ra, lm, esm, spm, logm);
 
     Core::Threading::setCurrentThreadName("cbftp");
 

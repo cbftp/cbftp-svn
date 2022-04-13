@@ -28,7 +28,8 @@ SiteRace::SiteRace(const std::shared_ptr<Race>& race, const std::string& sitenam
   sizeup(0),
   filesup(0),
   speedup(1),
-  downloadonly(downloadonly)
+  downloadonly(downloadonly),
+  id(race->getId())
 {
   recentlyvisited.push_back("");
   filelists[""] = std::make_shared<FileList>(username, path);
@@ -62,11 +63,15 @@ const Path& SiteRace::getPath() const {
 }
 
 unsigned int SiteRace::getId() const {
-  return race->getId();
+  return id;
 }
 
 bool SiteRace::addSubDirectory(const std::string& subpath, bool knownexists) {
-  SkipListMatch match = skiplist.check(subpath, true, true, &race->getSectionSkipList());
+  std::shared_ptr<Race> srace = race.lock();
+  if (!srace) {
+    return false;
+  }
+  SkipListMatch match = skiplist.check(subpath, true, true, &srace->getSectionSkipList());
   if (match.action == SKIPLIST_DENY) {
     return false;
   }
@@ -86,7 +91,7 @@ bool SiteRace::addSubDirectory(const std::string& subpath, bool knownexists) {
   filelists[subpath] = subdir;
   recentlyvisited.push_back(subpath);
   if (knownexists) {
-    race->reportNewSubDir(shared_from_this(), subpath);
+    srace->reportNewSubDir(shared_from_this(), subpath);
   }
   return true;
 }
@@ -179,6 +184,10 @@ void SiteRace::fileListUpdated(SiteLogic*, const std::shared_ptr<FileList>& fl) 
 }
 
 void SiteRace::updateNumFilesUploaded(const std::shared_ptr<FileList>& fl) {
+  std::shared_ptr<Race> srace = race.lock();
+  if (!srace) {
+    return;
+  }
   std::unordered_map<std::string, std::shared_ptr<FileList>>::iterator it;
   unsigned int sum = 0;
   unsigned long long int maxsize = 0;
@@ -189,7 +198,7 @@ void SiteRace::updateNumFilesUploaded(const std::shared_ptr<FileList>& fl) {
     sum += currfl->getNumUploadedFiles();
     aggregatedfilesize += currfl->getTotalFileSize();
     if (fl == currfl && currfl->hasExtension("sfv")) {
-      race->reportSFV(shared_from_this(), it->first);
+      srace->reportSFV(shared_from_this(), it->first);
     }
     unsigned long long int max = currfl->getMaxFileSize();
     if (max > maxsize) {
@@ -207,10 +216,14 @@ void SiteRace::updateNumFilesUploaded(const std::shared_ptr<FileList>& fl) {
   }
   numuploadedfiles = sum;
   totalfilesize = aggregatedfilesize;
-  race->updateSiteProgress(sum);
+  srace->updateSiteProgress(sum);
 }
 
 void SiteRace::addNewDirectories(const std::shared_ptr<FileList>& fl) {
+  std::shared_ptr<Race> srace = race.lock();
+  if (!srace) {
+    return;
+  }
   if (fl != getFileListForPath("") || fl->getState() != FileListState::LISTED) {
     return;
   }
@@ -219,7 +232,7 @@ void SiteRace::addNewDirectories(const std::shared_ptr<FileList>& fl) {
     File * file = *it;
     const std::string& filename = file->getName();
     if (file->isDirectory()) {
-      SkipListMatch match = skiplist.check(filename, true, true, &race->getSectionSkipList());
+      SkipListMatch match = skiplist.check(filename, true, true, &srace->getSectionSkipList());
       if (match.action == SKIPLIST_DENY || (match.action == SKIPLIST_UNIQUE && fl->containsPatternBefore(match.matchpattern, true, filename)))
       {
         continue;
@@ -232,7 +245,7 @@ void SiteRace::addNewDirectories(const std::shared_ptr<FileList>& fl) {
           sublist->getState() == FileListState::FAILED)
       {
         sublist->setExists();
-        race->reportNewSubDir(shared_from_this(), filename);
+        srace->reportNewSubDir(shared_from_this(), filename);
       }
     }
   }
@@ -295,15 +308,23 @@ RaceStatus SiteRace::getStatus() const {
 }
 
 bool SiteRace::isGlobalDone() const {
-  return race->isDone();
+  std::shared_ptr<Race> srace = race.lock();
+  if (!srace) {
+    return true;
+  }
+  return srace->isDone();
 }
 
 void SiteRace::complete(bool report) {
+  std::shared_ptr<Race> srace = race.lock();
+  if (!srace) {
+    return;
+  }
   if (status == RaceStatus::RUNNING) {
     status = RaceStatus::DONE;
   }
   if (report) {
-    race->reportDone(shared_from_this());
+    srace->reportDone(shared_from_this());
   }
 }
 
@@ -383,7 +404,7 @@ bool SiteRace::isSubPathComplete(const std::shared_ptr<FileList>& fl) const {
   return isSubPathComplete(subpath);
 }
 
-std::shared_ptr<Race> SiteRace::getRace() const {
+std::weak_ptr<Race> SiteRace::getRace() const {
   return race;
 }
 
@@ -392,10 +413,14 @@ int SiteRace::getProfile() const {
 }
 
 void SiteRace::reportSize(const std::shared_ptr<FileList>& fl, const std::unordered_set<std::string>& uniques, bool final) {
+  std::shared_ptr<Race> srace = race.lock();
+  if (!srace) {
+    return;
+  }
   std::unordered_map<std::string, std::shared_ptr<FileList>>::iterator it;
   for (it = filelists.begin(); it != filelists.end(); it++) {
     if (it->second == fl) {
-      race->reportSize(shared_from_this(), fl, it->first, uniques, final);
+      srace->reportSize(shared_from_this(), fl, it->first, uniques, final);
       if (final) {
         sizeestimated.insert(fl);
       }
@@ -444,8 +469,12 @@ bool SiteRace::listsChangedSinceLastCheck() {
 }
 
 void SiteRace::addTransferStatsFile(StatsDirection direction, const std::string& other, unsigned long long int size, unsigned int speed) {
+  std::shared_ptr<Race> srace = race.lock();
+  if (!srace) {
+    return;
+  }
   if (direction == STATS_DOWN) {
-    race->addTransferStatsFile(size);
+    srace->addTransferStatsFile(size);
     if (sitessizedown.find(other) == sitessizedown.end()) {
       sitessizedown[other] = 0;
       sitesfilesdown[other] = 0;

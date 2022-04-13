@@ -110,6 +110,15 @@ TransferJob::~TransferJob() {
   }
 }
 
+void TransferJob::createSiteTransferJobs(const std::shared_ptr<TransferJob>& tj) {
+  if (!!src) {
+    srcsitetransferjob = std::make_shared<SiteTransferJob>(tj, true);
+  }
+  if (!!dst) {
+    dstsitetransferjob = std::make_shared<SiteTransferJob>(tj, false);
+  }
+}
+
 std::string TransferJob::getName() const {
   return dstfile;
 }
@@ -191,12 +200,6 @@ void TransferJob::init(unsigned int id, TransferJobType type, const std::shared_
   this->srcfile = srcfile;
   this->dstfile = dstfile;
   resetValues();
-  if (!!src) {
-    srcsitetransferjob = std::make_shared<SiteTransferJob>(this, true);
-  }
-  if (!!dst) {
-    dstsitetransferjob = std::make_shared<SiteTransferJob>(this, false);
-  }
   dstsectionskiplist = nullptr;
   if (!dstsection.empty()) {
     Section* section = global->getSectionManager()->getSection(dstsection);
