@@ -27,6 +27,9 @@ TransferStatus::TransferStatus(int type, const std::string& source, const std::s
   this->timeremaining = this->sourcesize / (this->speed * 1024);
 }
 
+TransferStatus::~TransferStatus() {
+}
+
 std::string TransferStatus::getSource() const {
   return source;
 }

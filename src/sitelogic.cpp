@@ -232,7 +232,7 @@ void SiteLogic::resetRace(const std::shared_ptr<SiteRace> & race) {
 
 void SiteLogic::addTransferJob(std::shared_ptr<SiteTransferJob> & tj) {
   transferjobs.push_back(tj);
-  haveConnectedActivate(tj->getTransferJob()->maxSlots());
+  haveConnectedActivate(tj->getTransferJob().lock()->maxSlots());
 }
 
 void SiteLogic::tick(int message) {
@@ -1208,29 +1208,32 @@ bool SiteLogic::handleSpreadJobs(int id) {
 
 bool SiteLogic::handleTransferJobs(int id) {
   std::list<std::shared_ptr<SiteTransferJob> > targetjobs;
-  for (std::list<std::shared_ptr<SiteTransferJob> >::iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
+  for (std::list<std::shared_ptr<SiteTransferJob> >::iterator it = transferjobs.begin(); it != transferjobs.end();) {
     std::shared_ptr<SiteTransferJob> & tj = *it;
-    if (!tj->getTransferJob()->isDone()) {
-      if (tj->wantsList()) {
-        std::shared_ptr<FileList> fl = tj->getListTarget();
-        const Path & path = fl->getPath();
-        connstatetracker[id].use();
-        if (path != conns[id]->getCurrentPath()) {
-          conns[id]->doCWD(fl, tj);
-          return true;
-        }
-        getFileListConn(id, tj, fl);
+    if (tj->isDone()) {
+      it = transferjobs.erase(it);
+      continue;
+    }
+    if (tj->wantsList()) {
+      std::shared_ptr<FileList> fl = tj->getListTarget();
+      const Path & path = fl->getPath();
+      connstatetracker[id].use();
+      if (path != conns[id]->getCurrentPath()) {
+        conns[id]->doCWD(fl, tj);
         return true;
       }
-      int type = tj->getTransferJob()->getType();
-      if (((type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) &&
-            tj->getTransferJob()->getSrc()->getCurrDown() < tj->getTransferJob()->maxSlots()) ||
-          (type == TRANSFERJOB_UPLOAD && getCurrUp() < tj->getTransferJob()->maxSlots()))
-      {
-        targetjobs.push_back(tj);
-        continue;
-      }
+      getFileListConn(id, tj, fl);
+      return true;
     }
+    std::shared_ptr<TransferJob> ptj = tj->getTransferJob().lock();
+    int type = ptj->getType();
+    if (((type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) &&
+         ptj->getSrc()->getCurrDown() < ptj->maxSlots()) ||
+        (type == TRANSFERJOB_UPLOAD && getCurrUp() < ptj->maxSlots()))
+    {
+      targetjobs.push_back(tj);
+    }
+    ++it;
   }
   for (std::list<std::shared_ptr<SiteTransferJob> >::iterator it = targetjobs.begin(); it != targetjobs.end(); it++) {
     if (global->getEngine()->transferJobActionRequest(*it)) {
@@ -2284,7 +2287,7 @@ void SiteLogic::raceGlobalComplete(const std::shared_ptr<SiteRace> & sr) {
   }
   bool stillactive = !currentraces.empty();
   for (std::list<std::shared_ptr<SiteTransferJob> >::const_iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
-    if (!(*it)->getTransferJob()->isDone()) {
+    if (!(*it)->isDone()) {
       stillactive = true;
       break;
     }

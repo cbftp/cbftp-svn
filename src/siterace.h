@@ -18,7 +18,7 @@ class SkipList;
 
 class SiteRace : public CommandOwner, public std::enable_shared_from_this<SiteRace> {
   private:
-    std::shared_ptr<Race> race;
+    std::weak_ptr<Race> race;
     Path section;
     std::string jobname;
     Path path;
@@ -50,6 +50,7 @@ class SiteRace : public CommandOwner, public std::enable_shared_from_this<SiteRa
     unsigned int filesup;
     unsigned int speedup;
     bool downloadonly;
+    unsigned int id;
     void updateNumFilesUploaded(const std::shared_ptr<FileList>& fl);
     void addNewDirectories(const std::shared_ptr<FileList>& fl);
     void markNonExistent(const std::shared_ptr<FileList>& fl);
@@ -71,7 +72,7 @@ class SiteRace : public CommandOwner, public std::enable_shared_from_this<SiteRa
     std::string getSubPathForFileList(const std::shared_ptr<FileList>& fl) const;
     std::unordered_map<std::string, std::shared_ptr<FileList>>::const_iterator fileListsBegin() const;
     std::unordered_map<std::string, std::shared_ptr<FileList>>::const_iterator fileListsEnd() const;
-    std::shared_ptr<Race> getRace() const;
+    std::weak_ptr<Race> getRace() const;
     bool addSubDirectory(const std::string& subpath, bool knownexists = false);
     std::string getSubPath(const std::shared_ptr<FileList>& fl) const;
     void fileListUpdated(SiteLogic* sl, const std::shared_ptr<FileList>& fl);

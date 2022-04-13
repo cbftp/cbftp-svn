@@ -328,8 +328,9 @@ void TransfersScreen::addFilterFinishedTransfers() {
     }
   }
   finishedfilteredtransfers.splice(finishedfilteredtransfers.begin(), newfiltered);
-  if (finishedfilteredtransfers.size() > MAX_TRANSFER_HISTORY) {
-    finishedfilteredtransfers.resize(MAX_TRANSFER_HISTORY);
+  int maxtransferhistory = tm->getMaxTransferHistory();
+  if (maxtransferhistory != -1 && finishedfilteredtransfers.size() > (unsigned int)maxtransferhistory) {
+    finishedfilteredtransfers.resize(maxtransferhistory);
   }
   numfinishedfiltered = finishedsize;
 }

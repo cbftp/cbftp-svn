@@ -18,7 +18,8 @@ void GlobalContext::linkComponents(SettingsLoaderSaver* sls, Engine* e,
     SkipList* sl, ProxyManager* pm, LocalStorage* ls,
     TimeReference* tr, Statistics* s,
     SectionManager* secm, HTTPServer* httpsrv, RestApi* ra,
-    LoadMonitor* lm, ExternalScriptsManager* esm, SubProcessManager* spm)
+    LoadMonitor* lm, ExternalScriptsManager* esm, SubProcessManager* spm,
+    LogManager* logm)
 {
   this->sls = sls;
   this->e = e;
@@ -38,6 +39,7 @@ void GlobalContext::linkComponents(SettingsLoaderSaver* sls, Engine* e,
   this->lm = lm;
   this->esm = esm;
   this->spm = spm;
+  this->logm = logm;
 }
 
 Engine* GlobalContext::getEngine() const {
@@ -126,5 +128,9 @@ ExternalScriptsManager* GlobalContext::getExternalScriptsManager() const {
 
 SubProcessManager* GlobalContext::getSubProcessManager() const {
   return spm;
+}
+
+LogManager* GlobalContext::getLogManager() const {
+  return logm;
 }
 

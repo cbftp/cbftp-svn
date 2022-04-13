@@ -22,7 +22,6 @@
 #include "util.h"
 
 #define FTPCONN_TICK_INTERVAL 1000
-#define RAWBUF_MAX_LEN 4096
 
 const char * xdupematch = "X-DUPE: ";
 const char * dupematch1 = "uploaded by";
@@ -77,7 +76,7 @@ FTPConn::FTPConn(SiteLogic * sl, int id) :
   sscnmode(false),
   ceprenabled(false),
   mkdtarget(false),
-  rawbuf(new RawBuffer(RAWBUF_MAX_LEN, site->getName(), std::to_string(id))),
+  rawbuf(new RawBuffer(site->getName(), std::to_string(id))),
   aggregatedrawbuf(sl->getAggregatedRawBuffer()),
   cwdrawbuf(new RawBuffer(site->getName())),
   xduperun(false),

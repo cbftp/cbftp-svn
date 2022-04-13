@@ -41,14 +41,18 @@ TransferJobStatusScreen::~TransferJobStatusScreen() {
 
 }
 
-void TransferJobStatusScreen::initialize(unsigned int row, unsigned int col, unsigned int id) {
+bool TransferJobStatusScreen::initialize(unsigned int row, unsigned int col, unsigned int id) {
   transferjob = global->getEngine()->getTransferJob(id);
+  if (!transferjob) {
+    return false;
+  }
   autoupdate = true;
   active = false;
   mso.clear();
   mso.addIntArrow(5, 40, "slots", "Slots:", transferjob->maxSlots(), 1, transferjob->maxPossibleSlots());
   mso.enterFocusFrom(0);
   init(row, col);
+  return true;
 }
 
 void TransferJobStatusScreen::redraw() {

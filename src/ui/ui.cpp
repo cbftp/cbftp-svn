@@ -626,12 +626,16 @@ void Ui::goSiteStatus(const std::string & site) {
 }
 
 void Ui::goRaceStatus(unsigned int id) {
-  racestatusscreen->initialize(mainrow, col, id);
+  if (!racestatusscreen->initialize(mainrow, col, id)) {
+    return;
+  }
   switchToWindow(racestatusscreen);
 }
 
 void Ui::goTransferJobStatus(unsigned int id) {
-  transferjobstatusscreen->initialize(mainrow, col, id);
+  if (!transferjobstatusscreen->initialize(mainrow, col, id)) {
+    return;
+  }
   switchToWindow(transferjobstatusscreen);
 }
 

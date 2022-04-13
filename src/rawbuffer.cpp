@@ -6,11 +6,12 @@
 #include "globalcontext.h"
 #include "util.h"
 #include "rawbuffercallback.h"
+#include "logmanager.h"
 
-RawBuffer::RawBuffer(unsigned int maxlength, std::string site, std::string id) :
+RawBuffer::RawBuffer(const std::string& site, const std::string& id) :
   latestp(0),
   latestpcopy(0),
-  maxlength(maxlength),
+  maxlength(global->getLogManager()->getMaxRawbufLines()),
   bookmarklines(0),
   site(site),
   id(id),
@@ -24,10 +25,10 @@ RawBuffer::RawBuffer(unsigned int maxlength, std::string site, std::string id) :
   writeLine("Log window initialized. Site: " + site + " Thread id: " + id);
 }
 
-RawBuffer::RawBuffer(std::string site) :
+RawBuffer::RawBuffer(const std::string& site) :
   latestp(0),
   latestpcopy(0),
-  maxlength(1024),
+  maxlength(global->getLogManager()->getMaxRawbufLines()),
   bookmarklines(0),
   site(site),
   inprogress(false),
