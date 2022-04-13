@@ -19,7 +19,9 @@ enum KeyAction {
   KEYACTION_EDIT_SITE,
   KEYACTION_FORCE_DISCONNECT_ALL_SLOTS,
   KEYACTION_DISCONNECT_ALL_SLOTS,
-  KEYACTION_LOGIN_ALL_SLOTS
+  KEYACTION_LOGIN_ALL_SLOTS,
+  KEYACTION_RESET_HOURLY,
+  KEYACTION_RESET_ALL
 };
 
 }
@@ -34,6 +36,8 @@ SiteStatusScreen::SiteStatusScreen(Ui* ui) : UIWindow(ui, "SiteStatusScreen") {
   keybinds.addBind('K', KEYACTION_FORCE_DISCONNECT_ALL_SLOTS, "Kill all slots");
   keybinds.addBind('k', KEYACTION_DISCONNECT_ALL_SLOTS, "Disconnect all slots");
   keybinds.addBind('L', KEYACTION_LOGIN_ALL_SLOTS, "Login all slots");
+  keybinds.addBind('r', KEYACTION_RESET_HOURLY, "Reset 24-hour stats");
+  keybinds.addBind('R', KEYACTION_RESET_ALL, "Reset all time stats");
 }
 
 void SiteStatusScreen::initialize(unsigned int row, unsigned int col, std::string sitename) {
@@ -95,6 +99,7 @@ void SiteStatusScreen::redraw() {
 
 bool SiteStatusScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
+  confirmaction = action;
   switch(action) {
     case KEYACTION_RIGHT:
       ui->goRawData(site->getName());
@@ -125,6 +130,12 @@ bool SiteStatusScreen::keyPressed(unsigned int ch) {
         st->connectConn(j);
       }
       return true;
+    case KEYACTION_RESET_HOURLY:
+      ui->goConfirmation("Do you really wish to reset the 24-hour stats for " + site->getName());
+      return true;
+    case KEYACTION_RESET_ALL:
+      ui->goStrongConfirmation("Do you really wish to reset the all time stats for " + site->getName() + "?");
+      return true;
   }
   return false;
 }
@@ -135,4 +146,18 @@ std::string SiteStatusScreen::getLegendText() const {
 
 std::string SiteStatusScreen::getInfoLabel() const {
   return "DETAILED STATUS: " + site->getName();
+}
+
+void SiteStatusScreen::command(const std::string& command, const std::string& arg) {
+  if (command == "yes") {
+    switch (confirmaction) {
+      case KEYACTION_RESET_HOURLY:
+        st->getSite()->resetHourlyStats();
+        break;
+      case KEYACTION_RESET_ALL:
+        st->getSite()->resetAllStats();
+        break;
+    }
+  }
+  ui->redraw();
 }

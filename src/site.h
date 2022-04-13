@@ -274,4 +274,6 @@ public:
   void setSkipList(const SkipList & skiplist);
   void setSections(const std::map<std::string, Path> & sections);
   void setTransferPairing(const TransferPairing& transferpairing);
+  void resetHourlyStats();
+  void resetAllStats();
 };

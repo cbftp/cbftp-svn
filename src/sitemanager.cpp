@@ -249,3 +249,17 @@ void SiteManager::addExceptTargetForSite(const std::string & site, const std::st
     exceptsitep->addAllowedSourceSite(sitep);
   }
 }
+
+void SiteManager::resetHourlyStats() {
+  std::vector<std::shared_ptr<Site> >::iterator it;
+  for (it = sites.begin(); it != sites.end(); it++) {
+    (*it)->resetHourlyStats();
+  }
+}
+
+void SiteManager::resetAllStats() {
+  std::vector<std::shared_ptr<Site> >::iterator it;
+  for (it = sites.begin(); it != sites.end(); it++) {
+    (*it)->resetAllStats();
+  }
+}

@@ -7,14 +7,29 @@
 #include "../../hourlyalltracking.h"
 #include "../../settingsloadersaver.h"
 #include "../../loadmonitor.h"
+#include "../../sitemanager.h"
 
 #include "../../core/polling.h"
 #include "../../core/sslmanager.h"
 
 #include "../ui.h"
 
+namespace {
+
+enum KeyAction {
+  KEYACTION_RESET_HOURLY,
+  KEYACTION_RESET_ALL,
+  KEYACTION_RESET_SITES_HOURLY,
+  KEYACTION_RESET_SITES_ALL
+};
+
+}
+
 InfoScreen::InfoScreen(Ui* ui) : UIWindow(ui, "InfoScreen") {
-  allowimplicitgokeybinds = false;
+  keybinds.addBind('r', KEYACTION_RESET_HOURLY, "Reset global 24-hour stats");
+  keybinds.addBind('R', KEYACTION_RESET_ALL, "Reset global all time stats");
+  keybinds.addBind('l', KEYACTION_RESET_SITES_HOURLY, "Reset 24-hour stats for all sites");
+  keybinds.addBind('L', KEYACTION_RESET_SITES_ALL, "Reset all time stats for all sites");
 }
 
 void InfoScreen::initialize(unsigned int row, unsigned int col) {
@@ -66,20 +81,47 @@ void InfoScreen::redraw() {
   vv->putStr(i++, 1, "Current performance level: " + std::to_string(global->getLoadMonitor()->getCurrentRecommendedPerformanceLevel()));
 }
 
+void InfoScreen::command(const std::string& command, const std::string& arg) {
+  if (command == "yes") {
+    switch (confirmaction) {
+      case KEYACTION_RESET_HOURLY:
+        global->getStatistics()->resetHourlyStats();
+        break;
+      case KEYACTION_RESET_ALL:
+        global->getStatistics()->resetAllStats();
+        break;
+      case KEYACTION_RESET_SITES_HOURLY:
+        global->getSiteManager()->resetHourlyStats();
+        break;
+      case KEYACTION_RESET_SITES_ALL:
+        global->getSiteManager()->resetAllStats();
+        break;
+    }
+  }
+  ui->redraw();
+}
+
 bool InfoScreen::keyPressed(unsigned int ch) {
-  switch(ch) {
-    case 27: // esc
-    case ' ':
-    case 'c':
-    case 10:
+  int action = keybinds.getKeyAction(ch);
+  confirmaction = action;
+  switch (action) {
+    case KEYACTION_RESET_HOURLY:
+      ui->goConfirmation("Do you really wish to reset the global 24-hour stats");
+      return true;
+    case KEYACTION_RESET_ALL:
+      ui->goStrongConfirmation("Do you really wish to reset the global all time stats?");
+      return true;
+    case KEYACTION_RESET_SITES_HOURLY:
+      ui->goConfirmation("Do you really wish to reset the 24-hour stats for all sites");
+      return true;
+    case KEYACTION_RESET_SITES_ALL:
+      ui->goStrongConfirmation("Do you really wish to reset the all time stats for all sites?");
+      return true;
+    case KEYACTION_BACK_CANCEL:
       ui->returnToLast();
       return true;
   }
   return false;
-}
-
-std::string InfoScreen::getLegendText() const {
-  return "[Esc/Space/Enter/c] Return";
 }
 
 std::string InfoScreen::getInfoLabel() const {
