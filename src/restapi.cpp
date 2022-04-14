@@ -1284,6 +1284,8 @@ void RestApi::handleInfoGet(RestApiCallback* cb, int connrequestid, const http::
   load["cpu_load_total_pc"] = global->getLoadMonitor()->getCurrentCpuUsageAll();
   load["cpu_load_worker_pc"] = global->getLoadMonitor()->getCurrentCpuUsageWorker();
   load["performance_level"] = global->getLoadMonitor()->getCurrentRecommendedPerformanceLevel();
+  load["worker_queue_size"] = global->getLoadMonitor()->getCurrentWorkerQueueSize();
+  load["file_list_refresh_rate"] = global->getLoadMonitor()->getCurrentFileListRefreshRate();
   stats["files_fxp_24h"] = filesfxpday;
   stats["size_fxp_24h"] = sizefxpday;
   stats["files_fxp_all"] = filesfxpall;

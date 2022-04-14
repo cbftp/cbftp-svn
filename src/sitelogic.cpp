@@ -336,6 +336,7 @@ void SiteLogic::TLSFailed(int id) {
 
 void SiteLogic::listRefreshed(int id) {
   connstatetracker[id].resetIdleTime();
+  global->getStatistics()->addFileListRefresh();
   const std::shared_ptr<FileList>& fl = conns[id]->currentFileList();
   const std::shared_ptr<CommandOwner>& currentco = conns[id]->currentCommandOwner();
   if (!!currentco) {

@@ -3,17 +3,35 @@
 #include "core/tickpoke.h"
 #include "globalcontext.h"
 
-Statistics::Statistics() : spreadjobs(0), transferjobs(0) {
-  global->getTickPoke()->startPoke(this, "Statistics", 60 * 1000, 0);
+enum {
+  TICK_MINUTE,
+  TICK_SECOND
+};
+
+Statistics::Statistics() : spreadjobs(0), transferjobs(0), currentsecondrefreshtrack(0), lastsecondrefreshtrack(0)
+{
+  global->getTickPoke()->startPoke(this, "Statistics", 60 * 1000, TICK_MINUTE);
+  global->getTickPoke()->startPoke(this, "Statistics", 1000, TICK_SECOND);
+}
+
+Statistics::~Statistics() {
+  global->getTickPoke()->stopPoke(this, TICK_MINUTE);
+  global->getTickPoke()->stopPoke(this, TICK_SECOND);
 }
 
 void Statistics::tick(int message) {
-  sizedown.tickMinute();
-  filesdown.tickMinute();
-  sizeup.tickMinute();
-  filesup.tickMinute();
-  sizefxp.tickMinute();
-  filesfxp.tickMinute();
+  if (message == TICK_MINUTE) {
+    sizedown.tickMinute();
+    filesdown.tickMinute();
+    sizeup.tickMinute();
+    filesup.tickMinute();
+    sizefxp.tickMinute();
+    filesfxp.tickMinute();
+  }
+  else if (message == TICK_SECOND) {
+    lastsecondrefreshtrack = currentsecondrefreshtrack;
+    currentsecondrefreshtrack = 0;
+  }
 }
 
 void Statistics::addTransferStatsFile(StatsDirection direction, unsigned long long int size) {
@@ -39,6 +57,10 @@ void Statistics::addSpreadJob() {
 
 void Statistics::addTransferJob() {
   ++transferjobs;
+}
+
+void Statistics::addFileListRefresh() {
+  ++currentsecondrefreshtrack;
 }
 
 const HourlyAllTracking& Statistics::getSizeDown() const {
@@ -95,6 +117,10 @@ unsigned int Statistics::getSpreadJobs() const {
 
 unsigned int Statistics::getTransferJobs() const {
   return transferjobs;
+}
+
+unsigned int Statistics::getFileListRefreshRate() const {
+  return lastsecondrefreshtrack;
 }
 
 void Statistics::setSpreadJobs(unsigned int jobs) {

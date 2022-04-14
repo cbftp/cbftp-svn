@@ -14,10 +14,12 @@ enum StatsDirection {
 class Statistics : public Core::EventReceiver {
 public:
   Statistics();
+  ~Statistics();
   void tick(int);
   void addTransferStatsFile(StatsDirection, unsigned long long int size);
   void addSpreadJob();
   void addTransferJob();
+  void addFileListRefresh();
   const HourlyAllTracking& getSizeDown() const;
   const HourlyAllTracking& getSizeUp() const;
   const HourlyAllTracking& getSizeFXP() const;
@@ -32,6 +34,7 @@ public:
   HourlyAllTracking& getFilesFXP();
   unsigned int getSpreadJobs() const;
   unsigned int getTransferJobs() const;
+  unsigned int getFileListRefreshRate() const;
   void setSpreadJobs(unsigned int);
   void setTransferJobs(unsigned int);
   void resetHourlyStats();
@@ -45,4 +48,6 @@ private:
   HourlyAllTracking filesfxp;
   unsigned int spreadjobs;
   unsigned int transferjobs;
+  unsigned int currentsecondrefreshtrack;
+  unsigned int lastsecondrefreshtrack;
 };
