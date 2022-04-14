@@ -39,7 +39,7 @@ void MetricsScreen::initialize(unsigned int row, unsigned int col) {
   cpuworker = std::unique_ptr<BrailleGraph>(new BrailleGraph(graphheight, col, "CPU load worker", "%", 0, 100));
   workqueuesize = std::unique_ptr<BrailleGraph>(new BrailleGraph(graphheight, col, "Worker queue size", "", 0, 100, true));
   perflevel = std::unique_ptr<BrailleGraph>(new BrailleGraph(graphheight, col, "Performance level", "", 1, 9));
-  filelistrefreshrate = std::unique_ptr<BrailleGraph>(new BrailleGraph(graphheight, col, "Total file list refresh rate", "/s", 0, 100));
+  filelistrefreshrate = std::unique_ptr<BrailleGraph>(new BrailleGraph(graphheight, col, "Total file list refresh rate", "/s", 0, 100, true));
   cpuall->setData(global->getLoadMonitor()->getCpuUsageAllHistory());
   cpuworker->setData(global->getLoadMonitor()->getCpuUsageWorkerHistory());
   workqueuesize->setData(global->getLoadMonitor()->getWorkQueueSizeHistory());

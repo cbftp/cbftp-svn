@@ -79,7 +79,7 @@ void InfoScreen::redraw() {
   vv->putStr(i++, 1, "Current CPU load worker: " + std::to_string(global->getLoadMonitor()->getCurrentCpuUsageWorker()) + "%");
   vv->putStr(i++, 1, "Current worker queue size: " + std::to_string(global->getLoadMonitor()->getCurrentWorkerQueueSize()));
   vv->putStr(i++, 1, "Current performance level: " + std::to_string(global->getLoadMonitor()->getCurrentRecommendedPerformanceLevel()));
-  vv->putStr(i++, 1, "Current file list refresh rate: " + std::to_string(global->getLoadMonitor()->getCurrentFileListRefreshRate()));
+  vv->putStr(i++, 1, "Current file list refresh rate: " + std::to_string(global->getLoadMonitor()->getCurrentFileListRefreshRate()) + "/s");
 }
 
 void InfoScreen::command(const std::string& command, const std::string& arg) {
