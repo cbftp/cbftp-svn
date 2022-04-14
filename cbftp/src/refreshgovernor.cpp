@@ -20,50 +20,50 @@ struct RefreshItem {
 
 std::map<unsigned int, std::map<SitePriority, RefreshItem>> populateRefreshRateMap() {
   std::map<unsigned int, std::map<SitePriority, RefreshItem>> rates;
-  rates[1].insert(std::make_pair(SitePriority::VERY_LOW, RefreshItem(0.5, false)));
-  rates[2].insert(std::make_pair(SitePriority::VERY_LOW, RefreshItem(0.5, false)));
-  rates[3].insert(std::make_pair(SitePriority::VERY_LOW, RefreshItem(1, false)));
-  rates[4].insert(std::make_pair(SitePriority::VERY_LOW, RefreshItem(1, false)));
-  rates[5].insert(std::make_pair(SitePriority::VERY_LOW, RefreshItem(2, false)));
-  rates[6].insert(std::make_pair(SitePriority::VERY_LOW, RefreshItem(2, false)));
-  rates[7].insert(std::make_pair(SitePriority::VERY_LOW, RefreshItem(3, false)));
-  rates[8].insert(std::make_pair(SitePriority::VERY_LOW, RefreshItem(4, false)));
-  rates[9].insert(std::make_pair(SitePriority::VERY_LOW, RefreshItem(5, true)));
-  rates[1].insert(std::make_pair(SitePriority::LOW, RefreshItem(0.5, false)));
-  rates[2].insert(std::make_pair(SitePriority::LOW, RefreshItem(1, false)));
-  rates[3].insert(std::make_pair(SitePriority::LOW, RefreshItem(1, false)));
-  rates[4].insert(std::make_pair(SitePriority::LOW, RefreshItem(2, false)));
-  rates[5].insert(std::make_pair(SitePriority::LOW, RefreshItem(3, false)));
-  rates[6].insert(std::make_pair(SitePriority::LOW, RefreshItem(4, false)));
-  rates[7].insert(std::make_pair(SitePriority::LOW, RefreshItem(6, false)));
-  rates[8].insert(std::make_pair(SitePriority::LOW, RefreshItem(8, true)));
-  rates[9].insert(std::make_pair(SitePriority::LOW, RefreshItem(10, true)));
-  rates[1].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(1, false)));
-  rates[2].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(2, false)));
-  rates[3].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(3, false)));
-  rates[4].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(4, false)));
-  rates[5].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(5, false)));
-  rates[6].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(8, false)));
-  rates[7].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(10, true)));
-  rates[8].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(12, true)));
-  rates[9].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(15, true)));
-  rates[1].insert(std::make_pair(SitePriority::HIGH, RefreshItem(2, false)));
-  rates[2].insert(std::make_pair(SitePriority::HIGH, RefreshItem(3, false)));
-  rates[3].insert(std::make_pair(SitePriority::HIGH, RefreshItem(4, false)));
-  rates[4].insert(std::make_pair(SitePriority::HIGH, RefreshItem(5, false)));
-  rates[5].insert(std::make_pair(SitePriority::HIGH, RefreshItem(8, false)));
-  rates[6].insert(std::make_pair(SitePriority::HIGH, RefreshItem(10, true)));
-  rates[7].insert(std::make_pair(SitePriority::HIGH, RefreshItem(12, true)));
-  rates[8].insert(std::make_pair(SitePriority::HIGH, RefreshItem(15, true)));
-  rates[9].insert(std::make_pair(SitePriority::HIGH, RefreshItem(18, true)));
-  rates[1].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(2, false)));
-  rates[2].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(5, false)));
-  rates[3].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(8, false)));
-  rates[4].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(10, true)));
-  rates[5].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(12, true)));
-  rates[6].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(15, true)));
-  rates[7].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(18, true)));
-  rates[8].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(20, true)));
+  rates[1].insert(std::make_pair(SitePriority::VERY_LOW, RefreshItem(0.1, false)));
+  rates[2].insert(std::make_pair(SitePriority::VERY_LOW, RefreshItem(0.2, false)));
+  rates[3].insert(std::make_pair(SitePriority::VERY_LOW, RefreshItem(0.3, false)));
+  rates[4].insert(std::make_pair(SitePriority::VERY_LOW, RefreshItem(0.5, false)));
+  rates[5].insert(std::make_pair(SitePriority::VERY_LOW, RefreshItem(0.5, false)));
+  rates[6].insert(std::make_pair(SitePriority::VERY_LOW, RefreshItem(1, false)));
+  rates[7].insert(std::make_pair(SitePriority::VERY_LOW, RefreshItem(1, false)));
+  rates[8].insert(std::make_pair(SitePriority::VERY_LOW, RefreshItem(2, false)));
+  rates[9].insert(std::make_pair(SitePriority::VERY_LOW, RefreshItem(2, true)));
+  rates[1].insert(std::make_pair(SitePriority::LOW, RefreshItem(0.2, false)));
+  rates[2].insert(std::make_pair(SitePriority::LOW, RefreshItem(0.3, false)));
+  rates[3].insert(std::make_pair(SitePriority::LOW, RefreshItem(0.5, false)));
+  rates[4].insert(std::make_pair(SitePriority::LOW, RefreshItem(0.7, false)));
+  rates[5].insert(std::make_pair(SitePriority::LOW, RefreshItem(1, false)));
+  rates[6].insert(std::make_pair(SitePriority::LOW, RefreshItem(2, false)));
+  rates[7].insert(std::make_pair(SitePriority::LOW, RefreshItem(3, false)));
+  rates[8].insert(std::make_pair(SitePriority::LOW, RefreshItem(4, true)));
+  rates[9].insert(std::make_pair(SitePriority::LOW, RefreshItem(5, true)));
+  rates[1].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(0.5, false)));
+  rates[2].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(0.7, false)));
+  rates[3].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(1, false)));
+  rates[4].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(2, false)));
+  rates[5].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(3, false)));
+  rates[6].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(4, false)));
+  rates[7].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(6, true)));
+  rates[8].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(8, true)));
+  rates[9].insert(std::make_pair(SitePriority::NORMAL, RefreshItem(10, true)));
+  rates[1].insert(std::make_pair(SitePriority::HIGH, RefreshItem(0.5, false)));
+  rates[2].insert(std::make_pair(SitePriority::HIGH, RefreshItem(1, false)));
+  rates[3].insert(std::make_pair(SitePriority::HIGH, RefreshItem(2, false)));
+  rates[4].insert(std::make_pair(SitePriority::HIGH, RefreshItem(3, false)));
+  rates[5].insert(std::make_pair(SitePriority::HIGH, RefreshItem(5, false)));
+  rates[6].insert(std::make_pair(SitePriority::HIGH, RefreshItem(8, true)));
+  rates[7].insert(std::make_pair(SitePriority::HIGH, RefreshItem(10, true)));
+  rates[8].insert(std::make_pair(SitePriority::HIGH, RefreshItem(12, true)));
+  rates[9].insert(std::make_pair(SitePriority::HIGH, RefreshItem(15, true)));
+  rates[1].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(1, false)));
+  rates[2].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(2, false)));
+  rates[3].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(3, false)));
+  rates[4].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(5, true)));
+  rates[5].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(8, true)));
+  rates[6].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(10, true)));
+  rates[7].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(12, true)));
+  rates[8].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(15, true)));
   rates[9].insert(std::make_pair(SitePriority::VERY_HIGH, RefreshItem(20, true)));
   return rates;
 }
@@ -116,7 +116,7 @@ void RefreshGovernor::recommendedPerformanceLevelChanged(int newlevel) {
   }
   switch (site->getRefreshRate()) {
     case RefreshRate::VERY_LOW:
-      interval = freqToInterval(1);
+      interval = freqToInterval(0.5);
       immediaterefreshallowed = false;
       break;
     case RefreshRate::FIXED_LOW:
@@ -124,7 +124,7 @@ void RefreshGovernor::recommendedPerformanceLevelChanged(int newlevel) {
       immediaterefreshallowed = false;
       break;
     case RefreshRate::FIXED_AVERAGE:
-      interval = freqToInterval(6);
+      interval = freqToInterval(5);
       immediaterefreshallowed = true;
       break;
     case RefreshRate::FIXED_HIGH:

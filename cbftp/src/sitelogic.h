@@ -67,7 +67,7 @@ class SiteLogic : public Core::EventReceiver {
     void handleConnection(int id);
     bool handleLockCheck(int id);
     bool handleSpreadJob(int id);
-    bool handleSpreadJobs(int id);
+    bool handleSpreadJobs(int id, bool requestaction = true);
     bool handleTransferJobs(int id);
     bool handleRequest(int);
     void handleRecursiveLogic(int id, const std::shared_ptr<FileList>& fl = nullptr);
