@@ -34,24 +34,27 @@ MetricsScreen::~MetricsScreen() {
 
 void MetricsScreen::initialize(unsigned int row, unsigned int col) {
   autoupdate = true;
-  unsigned int graphheight = row / 3;
+  unsigned int graphheight = row / 5;
   cpuall = std::unique_ptr<BrailleGraph>(new BrailleGraph(graphheight, col, "CPU load total", "%", 0, 100));
   cpuworker = std::unique_ptr<BrailleGraph>(new BrailleGraph(graphheight, col, "CPU load worker", "%", 0, 100));
   workqueuesize = std::unique_ptr<BrailleGraph>(new BrailleGraph(graphheight, col, "Worker queue size", "", 0, 100, true));
   perflevel = std::unique_ptr<BrailleGraph>(new BrailleGraph(graphheight, col, "Performance level", "", 1, 9));
+  filelistrefreshrate = std::unique_ptr<BrailleGraph>(new BrailleGraph(graphheight, col, "Total file list refresh rate", "/s", 0, 100));
   cpuall->setData(global->getLoadMonitor()->getCpuUsageAllHistory());
   cpuworker->setData(global->getLoadMonitor()->getCpuUsageWorkerHistory());
   workqueuesize->setData(global->getLoadMonitor()->getWorkQueueSizeHistory());
   perflevel->setData(global->getLoadMonitor()->getPerformanceLevelHistory());
+  filelistrefreshrate->setData(global->getLoadMonitor()->getFileListRefreshRateHistory());
   init(row, col);
 }
 
 void MetricsScreen::redraw() {
-  unsigned int graphheight = row / 4;
+  unsigned int graphheight = row / 5;
   cpuall->resize(graphheight, col, true);
   cpuworker->resize(graphheight, col, true);
   workqueuesize->resize(graphheight, col, true);
   perflevel->resize(graphheight, col, true);
+  filelistrefreshrate->resize(graphheight, col, true);
   update();
 }
 
@@ -62,10 +65,12 @@ void MetricsScreen::update() {
   cpuworker->addNewData(global->getLoadMonitor()->getUnseenCpuUsageWorkerHistory());
   workqueuesize->addNewData(global->getLoadMonitor()->getUnseenWorkQueueSizeHistory());
   perflevel->addNewData(global->getLoadMonitor()->getUnseenPerformanceLevelHistory());
+  filelistrefreshrate->addNewData(global->getLoadMonitor()->getUnseenFileListRefreshRateHistory());
   drawGraph(vv, cpuall);
   drawGraph(vv, cpuworker, cpuall->rows());
   drawGraph(vv, workqueuesize, cpuall->rows() + cpuworker->rows());
   drawGraph(vv, perflevel, cpuall->rows() + cpuworker->rows() + workqueuesize->rows());
+  drawGraph(vv, filelistrefreshrate, cpuall->rows() + cpuworker->rows() + workqueuesize->rows() + perflevel->rows());
 }
 
 bool MetricsScreen::keyPressed(unsigned int ch) {

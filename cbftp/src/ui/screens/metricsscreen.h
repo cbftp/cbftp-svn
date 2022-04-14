@@ -22,4 +22,5 @@ private:
   std::unique_ptr<BrailleGraph> cpuworker;
   std::unique_ptr<BrailleGraph> workqueuesize;
   std::unique_ptr<BrailleGraph> perflevel;
+  std::unique_ptr<BrailleGraph> filelistrefreshrate;
 };

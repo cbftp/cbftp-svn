@@ -8,6 +8,7 @@
 
 #include "globalcontext.h"
 #include "loadmonitorcallback.h"
+#include "statistics.h"
 
 namespace {
 
@@ -26,6 +27,7 @@ LoadMonitor::LoadMonitor() : lasttimeallms(0), lasttimeworkerms(0), perflevel(PE
   workerhistory(HISTORY_SLOTS, 0),
   workqueuesizehistory(HISTORY_SLOTS, 0),
   perflevelhistory(HISTORY_SLOTS, PERFLEVEL_MAX),
+  filelistrefreshratehistory(HISTORY_SLOTS, 0),
   numcores(std::thread::hardware_concurrency()),
   throttletoppc(PERFLEVEL_THROTTLE_THRESHOLD_PC + PERFLEVEL_THROTTLE_THRESHOLD_TOLERANCE),
   throttlebottompc(PERFLEVEL_THROTTLE_THRESHOLD_PC - PERFLEVEL_THROTTLE_THRESHOLD_TOLERANCE)
@@ -49,6 +51,7 @@ void LoadMonitor::tick(int message) {
   unsigned int currallpc = currtimeallms * 100 / numcores / LOAD_MONITOR_CHECK_INTERVAL_MS;
   unsigned int currworkerpc = currtimeworkerms * 100 / LOAD_MONITOR_CHECK_INTERVAL_MS;
   unsigned int workqueuesize = global->getWorkManager()->getQueueSize();
+  unsigned int filelistrefreshrate = global->getStatistics()->getFileListRefreshRate();
 
   allhistory.push_back(currallpc);
   allhistory.pop_front();
@@ -67,6 +70,12 @@ void LoadMonitor::tick(int message) {
   workqueuesizehistoryunseen.push_back(workqueuesize);
   if (workqueuesizehistoryunseen.size() > HISTORY_SLOTS) {
     workqueuesizehistoryunseen.pop_front();
+  }
+  filelistrefreshratehistory.push_back(filelistrefreshrate);
+  filelistrefreshratehistory.pop_front();
+  filelistrefreshratehistoryunseen.push_back(filelistrefreshrate);
+  if (filelistrefreshratehistoryunseen.size() > HISTORY_SLOTS) {
+    filelistrefreshratehistoryunseen.pop_front();
   }
   bool perflevelchanged = false;
   if ((currallpc > throttletoppc || currworkerpc > throttletoppc) && perflevel > PERFLEVEL_MIN) {
@@ -108,6 +117,10 @@ unsigned int LoadMonitor::getCurrentWorkerQueueSize() const {
   return workqueuesizehistory.back();
 }
 
+unsigned int LoadMonitor::getCurrentFileListRefreshRate() const {
+  return filelistrefreshratehistory.back();
+}
+
 void LoadMonitor::addListener(LoadMonitorCallback* cb) {
   listeners.push_back(cb);
 }
@@ -136,6 +149,11 @@ const std::list<unsigned int>& LoadMonitor::getPerformanceLevelHistory() const {
   return perflevelhistory;
 }
 
+const std::list<unsigned int>& LoadMonitor::getFileListRefreshRateHistory() const {
+  filelistrefreshratehistoryunseen.clear();
+  return filelistrefreshratehistory;
+}
+
 std::list<unsigned int> LoadMonitor::getUnseenCpuUsageAllHistory() const {
   std::list<unsigned int> out = allhistoryunseen;
   allhistoryunseen.clear();
@@ -157,6 +175,12 @@ std::list<unsigned int> LoadMonitor::getUnseenWorkQueueSizeHistory() const {
 std::list<unsigned int> LoadMonitor::getUnseenPerformanceLevelHistory() const {
   std::list<unsigned int> out = perflevelhistoryunseen;
   perflevelhistoryunseen.clear();
+  return out;
+}
+
+std::list<unsigned int> LoadMonitor::getUnseenFileListRefreshRateHistory() const {
+  std::list<unsigned int> out = filelistrefreshratehistoryunseen;
+  filelistrefreshratehistoryunseen.clear();
   return out;
 }
 
