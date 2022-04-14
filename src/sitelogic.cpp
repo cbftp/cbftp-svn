@@ -289,7 +289,7 @@ void SiteLogic::tick(int message) {
   if (refreshgovernor.refreshAllowed() && !currentraces.empty() && !idlingconns.empty()) {
     unsigned int winindex = rand() % idlingconns.size();
     unsigned int winner = idlingconns[winindex];
-    handleSpreadJobs(winner);
+    handleSpreadJobs(winner, false);
     if(connstatetracker[winner].isLocked() || conns[winner]->isProcessing()) {
       idlingconns.erase(idlingconns.begin() + winindex);
     }
@@ -1195,13 +1195,15 @@ bool SiteLogic::handleLockCheck(int id) {
   return false;
 }
 
-bool SiteLogic::handleSpreadJobs(int id) {
+bool SiteLogic::handleSpreadJobs(int id, bool requestaction) {
   if (currentraces.size()) {
     if (handleSpreadJob(id)) {
       return true;
     }
-    global->getEngine()->raceActionRequest();
-    return true;
+    if (requestaction) {
+      global->getEngine()->raceActionRequest();
+      return true;
+    }
   }
   return false;
 }
