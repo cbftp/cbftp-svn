@@ -85,8 +85,9 @@ public:
   typename std::list<T>::iterator erase(unsigned int id) {
     typename std::unordered_map<unsigned int, typename std::list<T>::iterator>::iterator it = index.find(id);
     if (it != index.end()) {
+      typename std::list<T>::iterator it2 = items.erase(it->second);
       index.erase(id);
-      return items.erase(it->second);
+      return it2;
     }
     return items.end();
   }
