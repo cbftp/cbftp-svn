@@ -160,6 +160,13 @@ void TransferStatus::setFailed() {
   timeremaining = 0;
 }
 
+void TransferStatus::setTimeout() {
+  if (state != TRANSFERSTATUS_STATE_ABORTED) {
+    state = TRANSFERSTATUS_STATE_TIMEOUT;
+  }
+  timeremaining = 0;
+}
+
 void TransferStatus::setDupe() {
   if (state != TRANSFERSTATUS_STATE_ABORTED) {
     state = TRANSFERSTATUS_STATE_DUPE;

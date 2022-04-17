@@ -80,13 +80,16 @@ class TransferMonitor : public Core::EventReceiver, public RawBufferCallback {
     std::list<std::pair<std::string, std::string> > rawbufqueue;
     std::shared_ptr<CommandOwner> srcco;
     std::shared_ptr<CommandOwner> dstco;
+    int maxtransfertimeseconds;
+    bool timeout;
     void finish();
     void setTargetSizeSpeed(unsigned long long int, int);
     void reset();
     void transferFailed(const std::shared_ptr<TransferStatus> &, TransferError);
     void updateFXPSizeSpeed();
     void updateLocalTransferSizeSpeed();
-    void checkForDeadFXPTransfers();
+    bool checkForDeadFXPTransfers();
+    bool checkMaxTransferTime();
     void startClientTransfer();
     void lateFXPFailure(const std::string& reason);
     void lateDownloadFailure(const std::string& reason, bool dupe = false);

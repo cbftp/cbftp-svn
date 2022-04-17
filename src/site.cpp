@@ -96,7 +96,9 @@ Site::Site(const std::string& name) :
   transfertargetpolicy(SITE_TRANSFER_POLICY_ALLOW),
   skiplist(global->getSkipList()),
   freeslot(false),
-  stayloggedin(false)
+  stayloggedin(false),
+  maxtransfertimeseconds(-1),
+  maxspreadjobtimeseconds(-1)
 {
   Address addr;
   addr.host = "ftp.sunet.se";
@@ -144,6 +146,8 @@ Site::Site(const Site& other) {
   transfertargetpolicy = other.transfertargetpolicy;
   skiplist = other.skiplist;
   transferpairing = other.transferpairing;
+  maxtransfertimeseconds = other.maxtransfertimeseconds;
+  maxspreadjobtimeseconds = other.maxspreadjobtimeseconds;
 }
 
 std::map<std::string, Path>::const_iterator Site::sectionsBegin() const {
@@ -1015,3 +1019,20 @@ void Site::resetAllStats() {
     site.second.reset();
   }
 }
+
+int Site::getMaxTransferTimeSeconds() const {
+  return maxtransfertimeseconds;
+}
+
+void Site::setMaxTransferTimeSeconds(int seconds) {
+  maxtransfertimeseconds = seconds;
+}
+
+int Site::getMaxSpreadJobTimeSeconds() const {
+  return maxspreadjobtimeseconds;
+}
+
+void Site::setMaxSpreadJobTimeSeconds(int seconds) {
+  maxspreadjobtimeseconds = seconds;
+}
+

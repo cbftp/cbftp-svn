@@ -49,6 +49,22 @@ void addHistoryOptions(std::shared_ptr<MenuSelectOptionTextArrow>& arrow, bool i
   }
   arrow->addOption("Unlimited", -1);
 }
+
+void addRuntimeOptions(std::shared_ptr<MenuSelectOptionTextArrow>& arrow) {
+  arrow->addOption("10s", 10);
+  arrow->addOption("30s", 30);
+  arrow->addOption("1m", 60);
+  arrow->addOption("3m", 180);
+  arrow->addOption("5m", 300);
+  arrow->addOption("10m", 600);
+  arrow->addOption("30m", 1800);
+  arrow->addOption("1h", 3600);
+  arrow->addOption("2h", 7200);
+  arrow->addOption("8h", 28800);
+  arrow->addOption("24h", 86400);
+  arrow->addOption("Unlimited", 0);
+}
+
 }
 
 GlobalOptionsScreen::GlobalOptionsScreen(Ui* ui) : UIWindow(ui, "GlobalOptionsScreen"), mso(*vv) {
@@ -127,15 +143,15 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   bell->setOption(static_cast<int>(rch->getNotify()));
   mso.addStringField(y++, x, "preparedraceexpirytime", "Prepared spread job expiration time:", std::to_string(global->getEngine()->getPreparedRaceExpiryTime()), false, 5);
   std::shared_ptr<MenuSelectOptionTextArrow> racestarterexpiry = mso.addTextArrow(y++, x, "racestarterexpiry", "Next prepared spread job starter timeout:");
-  racestarterexpiry->addOption("30s", 30);
-  racestarterexpiry->addOption("1m", 60);
-  racestarterexpiry->addOption("3m", 180);
-  racestarterexpiry->addOption("5m", 300);
-  racestarterexpiry->addOption("10m", 600);
-  racestarterexpiry->addOption("30m", 1800);
-  racestarterexpiry->addOption("1h", 3600);
-  racestarterexpiry->addOption("Unlimited", 0);
+
   racestarterexpiry->setOption(global->getEngine()->getNextPreparedRaceStarterTimeout());
+  y++;
+  std::shared_ptr<MenuSelectOptionTextArrow> maxspreadjobtimeseconds = mso.addTextArrow(y++, x, "maxspreadjobtimeseconds", "Max spread job runtime:");
+  std::shared_ptr<MenuSelectOptionTextArrow> maxtransfertimeseconds = mso.addTextArrow(y++, x, "maxtransfertimeseconds", "Max transfer runtime:");
+  addRuntimeOptions(maxspreadjobtimeseconds);
+  addRuntimeOptions(maxtransfertimeseconds);
+  maxspreadjobtimeseconds->setOption(global->getEngine()->getMaxSpreadJobTimeSeconds());
+  maxtransfertimeseconds->setOption(global->getTransferManager()->getMaxTransferTimeSeconds());
   y++;
   std::shared_ptr<MenuSelectOptionTextArrow> spreadjobhistory = mso.addTextArrow(y++, x, "spreadjobhistory", "Spread job history:");
   std::shared_ptr<MenuSelectOptionTextArrow> transferjobhistory = mso.addTextArrow(y++, x, "transferjobhistory", "Transfer job history:");
@@ -441,6 +457,12 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "logbufferhistory") {
           global->getLogManager()->setMaxRawbufLines(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
+        }
+        else if (identifier == "maxspreadjobtimeseconds") {
+          global->getEngine()->setMaxSpreadJobTimeSeconds(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
+        }
+        else if (identifier == "maxtransfertimeseconds") {
+          global->getTransferManager()->setMaxTransferTimeSeconds(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
         }
       }
       rch->setEnabled(udpenable != UdpEnable::NO);

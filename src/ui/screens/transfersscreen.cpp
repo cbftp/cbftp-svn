@@ -301,6 +301,7 @@ bool TransfersScreen::showsWhileFiltered(const std::shared_ptr<TransferStatus>& 
         break;
       case TRANSFERSTATUS_STATE_FAILED:
       case TRANSFERSTATUS_STATE_ABORTED:
+      case TRANSFERSTATUS_STATE_TIMEOUT:
         if (!tfp.showstatusfail) {
           return false;
         }
@@ -595,6 +596,9 @@ TransferDetails TransfersScreen::formatTransferDetails(std::shared_ptr<TransferS
       break;
     case TRANSFERSTATUS_STATE_ABORTED:
       td.progress = "abor";
+      break;
+    case TRANSFERSTATUS_STATE_TIMEOUT:
+      td.progress = "time";
       break;
   }
   td.transferred += " / " + util::parseSize(ts->sourceSize());

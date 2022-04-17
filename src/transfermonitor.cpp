@@ -136,8 +136,16 @@ void TransferMonitor::engageFXP(
     }
     sld->preparePassiveTransfer(dst, dfile, true, ipv6, ssl, !sourcesslclient);
   }
-
-
+  int maxsls = sls->getSite()->getMaxTransferTimeSeconds();
+  int maxsld = sld->getSite()->getMaxTransferTimeSeconds();
+  int maxtime = tm->getMaxTransferTimeSeconds();
+  if (maxsls >= 0) {
+    maxtime = maxsls;
+  }
+  if (maxsld > 0 && (maxsls == 0 || maxsld < maxsls)) {
+    maxtime = maxsld;
+  }
+  maxtransfertimeseconds = maxtime;
 }
 
 void TransferMonitor::engageDownload(
@@ -216,6 +224,12 @@ void TransferMonitor::engageDownload(
       storeid = static_cast<LocalDownload *>(lt)->getStoreId();
     }
   }
+  int maxsls = sls->getSite()->getMaxTransferTimeSeconds();
+  int maxtime = tm->getMaxTransferTimeSeconds();
+  if (maxsls >= 0) {
+    maxtime = maxsls;
+  }
+  maxtransfertimeseconds = maxtime;
 }
 
 void TransferMonitor::engageUpload(
@@ -279,6 +293,12 @@ void TransferMonitor::engageUpload(
     }
     lt = global->getLocalStorage()->activeModeUpload(this, spath, sfile, ipv6, ssl, conn);
   }
+  int maxsld = sld->getSite()->getMaxTransferTimeSeconds();
+  int maxtime = tm->getMaxTransferTimeSeconds();
+  if (maxsld >= 0) {
+    maxtime = maxsld;
+  }
+  maxtransfertimeseconds = maxtime;
 }
 
 void TransferMonitor::engageList(const std::shared_ptr<SiteLogic>& sls, int connid,
@@ -311,6 +331,7 @@ void TransferMonitor::engageList(const std::shared_ptr<SiteLogic>& sls, int conn
     lt = global->getLocalStorage()->activeModeDownload(this, ipv6, ssl, conn);
     storeid = static_cast<LocalDownload *>(lt)->getStoreId();
   }
+  maxtransfertimeseconds = 30;
 }
 
 void TransferMonitor::tick(int msg) {
@@ -320,12 +341,19 @@ void TransferMonitor::tick(int msg) {
     if (type == TM_TYPE_FXP) {
       updateFXPSizeSpeed();
       if (ticker % 20 == 0) { // run once per second
-        checkForDeadFXPTransfers();
+        if (checkForDeadFXPTransfers()) {
+          return;
+        }
       }
     }
     if (type == TM_TYPE_DOWNLOAD || type == TM_TYPE_UPLOAD) {
       if (ticker % 4 == 0) { // run every 200 ms
         updateLocalTransferSizeSpeed();
+      }
+    }
+    if (ticker % 20 == 0) {
+      if (checkMaxTransferTime()) {
+        return;
       }
     }
   }
@@ -687,28 +715,54 @@ void TransferMonitor::updateLocalTransferSizeSpeed() {
   }
 }
 
-void TransferMonitor::checkForDeadFXPTransfers() {
+bool TransferMonitor::checkForDeadFXPTransfers() {
   if ((status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET &&
        timestamp - partialcompletestamp > MAX_WAIT_ERROR) ||
       (status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE &&
        timestamp - partialcompletestamp > MAX_WAIT_SOURCE_COMPLETE))
   {
+    ts->addLogLine("[" + util::ctimeLog() + "] [Partial completion timeout reached. Disconnecting target]");
     sld->disconnectConn(dst);
     sld->connectConn(dst);
+    return true;
   }
   else if (status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE &&
            timestamp - partialcompletestamp > MAX_WAIT_ERROR)
   {
+    ts->addLogLine("[" + util::ctimeLog() + "] [Partial completion timeout reached. Disconnecting source]");
     sls->disconnectConn(src);
     sls->connectConn(src);
+    return true;
   }
   else if (status == TM_STATUS_TRANSFERRING_TARGET_COMPLETE &&
            timestamp - partialcompletestamp > MAX_WAIT_ERROR)
   {
+    ts->addLogLine("[" + util::ctimeLog() + "] [Partial completion timeout reached. Disconnecting source]");
     sls->finishTransferGracefully(src);
     sls->disconnectConn(src);
     sls->connectConn(src);
+    return true;
   }
+  return false;
+}
+
+bool TransferMonitor::checkMaxTransferTime() {
+  if (maxtransfertimeseconds > 0 && timestamp / 1000 > maxtransfertimeseconds) {
+    if (status == TM_STATUS_TRANSFERRING || status == TM_STATUS_AWAITING_ACTIVE || status == TM_STATUS_AWAITING_PASSIVE) {
+      ts->addLogLine("[" + util::ctimeLog() + "] [Timeout reached after " + std::to_string(maxtransfertimeseconds) + " seconds. Disconnecting]");
+      if (sld) {
+        sld->disconnectConn(dst);
+        sld->connectConn(dst);
+      }
+      if (sls) {
+        sls->disconnectConn(src);
+        sls->connectConn(src);
+      }
+      timeout = true;
+      return true;
+    }
+  }
+  return false;
 }
 
 void TransferMonitor::setTargetSizeSpeed(unsigned long long int filesize, int span) {
@@ -744,6 +798,8 @@ void TransferMonitor::reset() {
   partialcompletestamp = 0;
   rawbufqueue.clear();
   storeid = -1;
+  maxtransfertimeseconds = -1;
+  timeout = false;
 }
 
 bool TransferMonitor::willFail() const {
@@ -764,7 +820,12 @@ void TransferMonitor::transferFailed(const std::shared_ptr<TransferStatus> & ts,
       ts->setDupe();
     }
     else {
-      ts->setFailed();
+      if (timeout) {
+        ts->setTimeout();
+      }
+      else {
+        ts->setFailed();
+      }
     }
   }
   if (type == TM_TYPE_FXP && err != TM_ERR_DUPE) {
