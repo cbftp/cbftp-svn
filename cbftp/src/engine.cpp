@@ -95,7 +95,8 @@ Engine::Engine() :
   nextpreparedtimeremaining(0),
   forcescoreboard(false),
   maxspreadjobshistory(100),
-  maxtransferjobshistory(100)
+  maxtransferjobshistory(100),
+  maxspreadjobtimeseconds(0)
 {
 }
 
@@ -1602,10 +1603,10 @@ unsigned short Engine::calculateScore(PrioType priotype, unsigned long long int 
 {
   switch (priotype) {
     case PrioType::PRIO:
-      return 10000;
+      return 65535;
     case PrioType::PRIO_LATER:
       if (itr->getTimeSpent() > NFO_PRIO_AFTER_SEC) {
-        return 10000;
+        return 65535;
       }
       break;
     case PrioType::NORMAL:
@@ -1657,7 +1658,6 @@ unsigned short Engine::calculateScore(PrioType priotype, unsigned long long int 
   }
 
   points += getPriorityPoints(priority);
-  assert(points >= 0 && points < 10000);
   return points;
 }
 
@@ -1869,9 +1869,9 @@ void Engine::tick(int message) {
         race->resetUpdateCheckCounter();
         continue;
       }
-      if ((*it)->failedTransfersCleared()) {
+      if (race->failedTransfersCleared()) {
         global->getEventLog()->log("Engine", "No activity for " + std::to_string(timeoutafterseconds) +
-            " seconds, aborting spread job: " + (*it)->getName());
+            " seconds, aborting spread job: " + race->getName());
         for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator its = race->begin(); its != race->end(); its++) {
           its->first->timeout();
           its->second->raceLocalComplete(its->first, 0, false);
@@ -1893,13 +1893,32 @@ void Engine::tick(int message) {
         }
       }
     }
-    for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it2 = (*it)->begin(); it2 != (*it)->end(); it2++) {
+    if (maxspreadjobtimeseconds > 0 && static_cast<int>(race->getTimeSpent()) > maxspreadjobtimeseconds) {
+      global->getEventLog()->log("Engine", "Spread job " + race->getName() + " timed out after " + std::to_string(maxspreadjobtimeseconds) + " seconds.");
+      for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator its = race->begin(); its != race->end(); its++) {
+        its->first->timeout();
+        its->second->raceLocalComplete(its->first, 0, false);
+      }
+      race->setTimeout();
+      currentraces.erase(it);
+      finishedraces.push_back(race);
+      issueGlobalComplete(race);
+      break;
+    }
+    for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it2 = race->begin(); it2 != race->end(); it2++) {
+      int maxtimeseconds = it2->second->getSite()->getMaxSpreadJobTimeSeconds();
+      if (maxtimeseconds > 0 && static_cast<int>(race->getTimeSpent()) > maxtimeseconds) {
+        global->getEventLog()->log("Engine", "Spread job " + race->getName() + " timed out on " + it2->second->getSite()->getName() + " after " + std::to_string(maxtimeseconds) + " seconds.");
+        it2->first->timeout();
+        it2->second->raceLocalComplete(it2->first, 0, false);
+        continue;
+      }
       int wantedlogins = it2->second->getSite()->getMaxDown();
       if (!it2->first->isDone()) {
         wantedlogins = it2->second->getSite()->getMaxLogins();
       }
       if (it2->second->getCurrLogins() + it2->second->getCleanlyClosedConnectionsCount() < wantedlogins &&
-          (it2->first->getMaxFileSize() || (*it)->getTimeSpent() < RETRY_CONNECT_UNTIL_SEC))
+          (it2->first->getMaxFileSize() || race->getTimeSpent() < RETRY_CONNECT_UNTIL_SEC))
       {
         it2->second->activateAll();
       }
@@ -2092,4 +2111,12 @@ void Engine::rotateTransferJobsHistory() {
       ++it;
     }
   }
+}
+
+int Engine::getMaxSpreadJobTimeSeconds() const {
+  return maxspreadjobtimeseconds;
+}
+
+void Engine::setMaxSpreadJobTimeSeconds(int seconds) {
+  maxspreadjobtimeseconds = seconds;
 }

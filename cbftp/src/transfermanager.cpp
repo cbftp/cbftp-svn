@@ -163,3 +163,11 @@ void TransferManager::setMaxTransferHistory(int history) {
   maxtransferhistory = history;
 }
 
+int TransferManager::getMaxTransferTimeSeconds() const {
+  return maxtransfertimeseconds;
+}
+
+void TransferManager::setMaxTransferTimeSeconds(int seconds) {
+  this->maxtransfertimeseconds = seconds;
+}
+

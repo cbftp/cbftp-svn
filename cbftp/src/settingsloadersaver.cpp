@@ -578,6 +578,12 @@ void SettingsLoaderSaver::loadSettings() {
       unsigned int files = std::stoi(value.substr(split + 1));
       site->getSiteFilesDown(sitename).setAll(files);
     }
+    else if (!setting.compare("maxtransfertimeseconds")) {
+      site->setMaxTransferTimeSeconds(std::stoi(value));
+    }
+    else if (!setting.compare("maxspreadjobtimeseconds")) {
+      site->setMaxSpreadJobTimeSeconds(std::stoi(value));
+    }
   }
   for (std::list<std::pair<std::string, std::string> >::const_iterator it2 = exceptsources.begin(); it2 != exceptsources.end(); it2++) {
     std::shared_ptr<Site> site = global->getSiteManager()->getSite(it2->first);
@@ -665,6 +671,9 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("maxtransferjobshistory")) {
       global->getEngine()->setMaxTransferJobsHistory(std::stoi(value));
     }
+    else if (!setting.compare("maxspreadjobtimeseconds")) {
+      global->getEngine()->setMaxSpreadJobTimeSeconds(std::stoi(value));
+    }
   }
 
   dfh->getDataFor("TransferManager", &lines);
@@ -676,6 +685,9 @@ void SettingsLoaderSaver::loadSettings() {
     std::string value = line.substr(tok + 1);
     if (!setting.compare("maxtransferhistory")) {
       global->getTransferManager()->setMaxTransferHistory(std::stoi(value));
+    }
+    else if (!setting.compare("maxtransfertimeseconds")) {
+      global->getTransferManager()->setMaxTransferTimeSeconds(std::stoi(value));
     }
   }
 
@@ -1011,6 +1023,8 @@ void SettingsLoaderSaver::saveSettings() {
         dfh->addOutputLine(filetag, name + "$excepttargetsite=" + (*sit4)->getName());
       }
       addSkipList(dfh, (SkipList *)&site->getSkipList(), filetag, name + "$skiplistentry=");
+      dfh->addOutputLine(filetag, name + "$maxtransfertimeseconds=" + std::to_string(site->getMaxTransferTimeSeconds()));
+      dfh->addOutputLine(filetag, name + "$maxspreadjobtimeseconds=" + std::to_string(site->getMaxSpreadJobTimeSeconds()));
     }
     dfh->addOutputLine(defaultstag, "username=" + global->getSiteManager()->getDefaultUserName());
     std::string password = global->getSiteManager()->getDefaultPassword();
@@ -1041,9 +1055,11 @@ void SettingsLoaderSaver::saveSettings() {
     dfh->addOutputLine("Engine", "racestarterexpiry=" + std::to_string(global->getEngine()->getNextPreparedRaceStarterTimeout()));
     dfh->addOutputLine("Engine", "maxspreadjobshistory=" + std::to_string(global->getEngine()->getMaxSpreadJobsHistory()));
     dfh->addOutputLine("Engine", "maxtransferjobshistory=" + std::to_string(global->getEngine()->getMaxTransferJobsHistory()));
+    dfh->addOutputLine("Engine", "maxspreadjobtimeseconds=" + std::to_string(global->getEngine()->getMaxSpreadJobTimeSeconds()));
   }
   {
     dfh->addOutputLine("TransferManager", "maxtransferhistory=" + std::to_string(global->getTransferManager()->getMaxTransferHistory()));
+    dfh->addOutputLine("TransferManager", "maxtransfertimeseconds=" + std::to_string(global->getTransferManager()->getMaxTransferTimeSeconds()));
   }
   {
     dfh->addOutputLine("LogManager", "maxrawbuflines=" + std::to_string(global->getLogManager()->getMaxRawbufLines()));

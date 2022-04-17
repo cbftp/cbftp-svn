@@ -186,6 +186,8 @@ public:
   int getMaxTransferJobsHistory() const;
   void setMaxSpreadJobsHistory(int jobs);
   void setMaxTransferJobsHistory(int jobs);
+  int getMaxSpreadJobTimeSeconds() const;
+  void setMaxSpreadJobTimeSeconds(int seconds);
  private:
   std::shared_ptr<Race> newSpreadJob(int profile, const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset, const std::list<std::string>& dlonlysites);
   void estimateRaceSizes();
@@ -251,4 +253,5 @@ public:
   std::unordered_set<std::string> skiplistcachesections;
   int maxspreadjobshistory;
   int maxtransferjobshistory;
+  int maxspreadjobtimeseconds;
 };

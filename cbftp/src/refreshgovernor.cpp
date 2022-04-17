@@ -115,26 +115,36 @@ void RefreshGovernor::recommendedPerformanceLevelChanged(int newlevel) {
     return;
   }
   switch (site->getRefreshRate()) {
-    case RefreshRate::VERY_LOW:
-      interval = freqToInterval(0.5);
-      immediaterefreshallowed = false;
+    case RefreshRate::VERY_LOW: {
+      const RefreshItem& item = rates.at(5).at(SitePriority::VERY_LOW);
+      interval = item.interval;
+      immediaterefreshallowed = item.immediate;
       break;
-    case RefreshRate::FIXED_LOW:
-      interval = freqToInterval(2);
-      immediaterefreshallowed = false;
+    }
+    case RefreshRate::FIXED_LOW: {
+      const RefreshItem& item = rates.at(6).at(SitePriority::LOW);
+      interval = item.interval;
+      immediaterefreshallowed = item.immediate;
       break;
-    case RefreshRate::FIXED_AVERAGE:
-      interval = freqToInterval(5);
-      immediaterefreshallowed = true;
+    }
+    case RefreshRate::FIXED_AVERAGE: {
+      const RefreshItem& item = rates.at(7).at(SitePriority::NORMAL);
+      interval = item.interval;
+      immediaterefreshallowed = item.immediate;
       break;
-    case RefreshRate::FIXED_HIGH:
-      interval = freqToInterval(10);
-      immediaterefreshallowed = true;
+    }
+    case RefreshRate::FIXED_HIGH: {
+      const RefreshItem& item = rates.at(7).at(SitePriority::HIGH);
+      interval = item.interval;
+      immediaterefreshallowed = item.immediate;
       break;
-    case RefreshRate::FIXED_VERY_HIGH:
-      interval = freqToInterval(20);
-      immediaterefreshallowed = true;
+    }
+    case RefreshRate::FIXED_VERY_HIGH: {
+      const RefreshItem& item = rates.at(9).at(SitePriority::VERY_HIGH);
+      interval = item.interval;
+      immediaterefreshallowed = item.immediate;
       break;
+    }
     case RefreshRate::AUTO:
     {
       SitePriority prio = site->getPriority();

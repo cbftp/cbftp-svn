@@ -27,6 +27,22 @@ enum KeyAction {
   KEYACTION_SECTIONS
 };
 
+void addRuntimeOptions(std::shared_ptr<MenuSelectOptionTextArrow>& arrow) {
+  arrow->addOption("Default", -1);
+  arrow->addOption("10s", 10);
+  arrow->addOption("30s", 30);
+  arrow->addOption("1m", 60);
+  arrow->addOption("3m", 180);
+  arrow->addOption("5m", 300);
+  arrow->addOption("10m", 600);
+  arrow->addOption("30m", 1800);
+  arrow->addOption("1h", 3600);
+  arrow->addOption("2h", 7200);
+  arrow->addOption("8h", 28800);
+  arrow->addOption("24h", 86400);
+  arrow->addOption("Unlimited", 0);
+}
+
 }
 
 EditSiteScreen::EditSiteScreen(Ui* ui) : UIWindow(ui, "EditSiteScreen"), mso(*vv) {
@@ -222,6 +238,12 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   mso.addStringField(y++, x, "exceptdst", "", exceptdst, false, 50, 512);
   mso.addStringField(y++, x, "affils", "Affils:", affilstr, false, 60, 1024);
   mso.addTextButtonNoContent(y++, x, "sections", "Configure sections...");
+  std::shared_ptr<MenuSelectOptionTextArrow> maxspreadjobtimeseconds = mso.addTextArrow(y++, x, "maxspreadjobtimeseconds", "Max spread job runtime:");
+  std::shared_ptr<MenuSelectOptionTextArrow> maxtransfertimeseconds = mso.addTextArrow(y++, x, "maxtransfertimeseconds", "Max transfer runtime:");
+  addRuntimeOptions(maxspreadjobtimeseconds);
+  addRuntimeOptions(maxtransfertimeseconds);
+  maxspreadjobtimeseconds->setOption(this->site->getMaxSpreadJobTimeSeconds());
+  maxtransfertimeseconds->setOption(this->site->getMaxTransferTimeSeconds());
   y++;
   mso.enterFocusFrom(0);
   init(row, col);
@@ -549,6 +571,12 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         else if (identifier == "exceptdst") {
           std::string sitestr = std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData();
           exceptdstlist = util::trim(util::split(sitestr, ","));
+        }
+        else if (identifier == "maxspreadjobtimeseconds") {
+          site->setMaxSpreadJobTimeSeconds(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
+        }
+        else if (identifier == "maxtransfertimeseconds") {
+          site->setMaxTransferTimeSeconds(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
         }
       }
       site->setSkipList(modsite->getSkipList());

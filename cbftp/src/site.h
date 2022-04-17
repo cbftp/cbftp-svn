@@ -118,6 +118,8 @@ private:
   bool freeslot;
   bool stayloggedin;
   TransferPairing transferpairing;
+  int maxtransfertimeseconds;
+  int maxspreadjobtimeseconds;
 public:
   Site();
   Site(const std::string &);
@@ -276,4 +278,8 @@ public:
   void setTransferPairing(const TransferPairing& transferpairing);
   void resetHourlyStats();
   void resetAllStats();
+  int getMaxTransferTimeSeconds() const;
+  void setMaxTransferTimeSeconds(int seconds);
+  int getMaxSpreadJobTimeSeconds() const;
+  void setMaxSpreadJobTimeSeconds(int seconds);
 };

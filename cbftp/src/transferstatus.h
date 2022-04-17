@@ -17,7 +17,8 @@ enum TransferStatusState {
   TRANSFERSTATUS_STATE_SUCCESSFUL,
   TRANSFERSTATUS_STATE_FAILED,
   TRANSFERSTATUS_STATE_DUPE,
-  TRANSFERSTATUS_STATE_ABORTED
+  TRANSFERSTATUS_STATE_ABORTED,
+  TRANSFERSTATUS_STATE_TIMEOUT
 };
 
 class TransferStatusCallback;
@@ -61,6 +62,7 @@ public:
   const std::list<std::string>& getLogLines() const;
   void setFinished();
   void setFailed();
+  void setTimeout();
   void setDupe();
   void setAborted();
   void setAwaited(bool);

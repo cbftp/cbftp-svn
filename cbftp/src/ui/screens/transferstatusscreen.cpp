@@ -103,6 +103,9 @@ void TransferStatusScreen::redraw() {
     case TRANSFERSTATUS_STATE_ABORTED:
       progress = "Aborted";
       break;
+    case TRANSFERSTATUS_STATE_TIMEOUT:
+      progress = "Timeout";
+      break;
   }
   vv->putStr(y, 57, "Status: " + progress);
   ++y;
