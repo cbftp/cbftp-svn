@@ -292,6 +292,7 @@ void Race::reset() {
   guessedfileliststotalfilesize.clear();
   sizelocationtrackers.clear();
   maxnumfilessiteprogress = 0;
+  timespent = 0;
   worst = 0;
   avg = 0;
   best = 0;
