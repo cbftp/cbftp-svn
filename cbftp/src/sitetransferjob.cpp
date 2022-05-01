@@ -47,7 +47,10 @@ unsigned int SiteTransferJob::getId() const {
   return transferjob.lock()->getId();
 }
 void SiteTransferJob::fileListUpdated(SiteLogic * sl, const std::shared_ptr<FileList>& fl) {
-  return transferjob.lock()->fileListUpdated(source, fl);
+  std::shared_ptr<TransferJob> tj = transferjob.lock();
+  if (tj) {
+    tj->fileListUpdated(source, fl);
+  }
 }
 
 std::shared_ptr<FileList> SiteTransferJob::getFileListForFullPath(SiteLogic* sl, const Path& path) const {
