@@ -799,8 +799,9 @@ void Engine::jobFileListRefreshed(SiteLogic * sls, const std::shared_ptr<Command
     }
     case COMMANDOWNER_TRANSFERJOB: {
       std::shared_ptr<TransferJob> tj = std::static_pointer_cast<SiteTransferJob>(commandowner)->getTransferJob().lock();
-      assert(tj);
-      refreshPendingTransferList(tj);
+      if (tj) {
+        refreshPendingTransferList(tj);
+      }
       break;
     }
   }
