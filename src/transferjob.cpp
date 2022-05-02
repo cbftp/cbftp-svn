@@ -108,7 +108,6 @@ TransferJob::~TransferJob() {
   if (!isDone()) {
     setDone();
   }
-  global->getEventLog()->log("TransferJob", "Destroying!");
 }
 
 void TransferJob::createSiteTransferJobs(const std::shared_ptr<TransferJob>& tj) {

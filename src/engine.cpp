@@ -742,12 +742,20 @@ void Engine::resetTransferJob(const std::shared_ptr<TransferJob>& tj) {
   }
   if (!current) {
     currenttransferjobs.push_back(tj);
+    if (tj->getSrc()) {
+      tj->getSrc()->addTransferJob(tj->getSrcTransferJob());
+    }
+    if (tj->getDst()) {
+      tj->getDst()->addTransferJob(tj->getDstTransferJob());
+    }
   }
-  if (tj->getSrc()) {
-    tj->getSrc()->activateOne();
-  }
-  if (tj->getDst()) {
-    tj->getDst()->activateOne();
+  else {
+    if (tj->getSrc()) {
+      tj->getSrc()->activateOne();
+    }
+    if (tj->getDst()) {
+      tj->getDst()->activateOne();
+    }
   }
   checkStartPoke();
   global->getEventLog()->log("Engine", "Transfer job reset: " + tj->getSrcFileName());
