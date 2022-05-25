@@ -206,12 +206,15 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     void doDELE(const Path &);
     void doRMD(const Path &);
     void doSTAT();
+    void doSTATBigL();
     void doSTAT(const std::shared_ptr<CommandOwner>& co, const std::shared_ptr<FileList>& fl);
+    void doSTATBigL(const std::shared_ptr<CommandOwner>& co, const std::shared_ptr<FileList>& fl);
     void doLIST();
     void doLISTa();
     std::shared_ptr<FileList> newFileList() const;
     void setListData(const std::shared_ptr<CommandOwner>& co, const std::shared_ptr<FileList>& fl);
     void doSTATla();
+    void doSTATBigLa();
     void doSSCN(bool);
     void doCPSV();
     void doPASV();
