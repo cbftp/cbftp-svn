@@ -27,6 +27,7 @@
 
 #define SITE_LIST_STAT 840
 #define SITE_LIST_LIST 841
+#define SITE_LIST_STAT_BIGL 842
 
 enum class SitePriority {
   VERY_LOW = 711,

@@ -652,6 +652,13 @@ void FTPConn::doSTAT() {
   sendEcho("STAT -l");
 }
 
+void FTPConn::doSTATBigL() {
+  state = FTPConnState::STAT;
+  currentco.reset();
+  currentfl = newFileList();
+  sendEcho("STAT -L");
+}
+
 void FTPConn::doSTAT(const std::shared_ptr<CommandOwner> & co, const std::shared_ptr<FileList>& fl) {
   state = FTPConnState::STAT;
   currentco = co;
@@ -659,11 +666,25 @@ void FTPConn::doSTAT(const std::shared_ptr<CommandOwner> & co, const std::shared
   sendEcho("STAT -l");
 }
 
+void FTPConn::doSTATBigL(const std::shared_ptr<CommandOwner> & co, const std::shared_ptr<FileList>& fl) {
+  state = FTPConnState::STAT;
+  currentco = co;
+  currentfl = fl;
+  sendEcho("STAT -L");
+}
+
 void FTPConn::doSTATla() {
   state = FTPConnState::STAT;
   currentco.reset();
   currentfl = newFileList();
   sendEcho("STAT -la");
+}
+
+void FTPConn::doSTATBigLa() {
+  state = FTPConnState::STAT;
+  currentco.reset();
+  currentfl = newFileList();
+  sendEcho("STAT -La");
 }
 
 std::shared_ptr<FileList> FTPConn::newFileList() const {

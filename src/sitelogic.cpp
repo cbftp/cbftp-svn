@@ -2434,6 +2434,14 @@ void SiteLogic::getFileListConn(int id, bool hiddenfiles) {
       conns[id]->doSTAT();
     }
   }
+  else if (site->getListCommand() == SITE_LIST_STAT_BIGL) {
+    if (hiddenfiles) {
+      conns[id]->doSTATBigLa();
+    }
+    else {
+      conns[id]->doSTATBigL();
+    }
+  }
   else {
     std::shared_ptr<FileList> fl = conns[id]->newFileList();
     global->getTransferManager()->getFileList(global->getSiteLogicManager()->getSiteLogic(this), id, hiddenfiles, fl, conns[id]->isIPv6());
@@ -2446,6 +2454,9 @@ void SiteLogic::getFileListConn(int id, const std::shared_ptr<CommandOwner> & co
   connstatetracker[id].useRefreshTokenFor(fl->getPath().toString());
   if (site->getListCommand() == SITE_LIST_STAT) {
     conns[id]->doSTAT(co, fl);
+  }
+  else if (site->getListCommand() == SITE_LIST_STAT_BIGL) {
+    conns[id]->doSTATBigL(co, fl);
   }
   else {
     global->getTransferManager()->getFileList(global->getSiteLogicManager()->getSiteLogic(this), id, false, fl, conns[id]->isIPv6(), co);

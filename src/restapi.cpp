@@ -159,6 +159,8 @@ std::string listCommandToString(int listcommand) {
       return "STAT_L";
     case SITE_LIST_LIST:
       return "LIST";
+    case SITE_LIST_STAT_BIGL:
+      return "STAT_BIGL";
   }
   return "<unknown list command type " + std::to_string(listcommand) + ">";
 }
@@ -531,6 +533,9 @@ int stringToListCommand(const std::string& command) {
   }
   if (command == "LIST") {
     return SITE_LIST_LIST;
+  }
+  if (command == "STAT_BIGL") {
+    return SITE_LIST_STAT_BIGL;
   }
   throw std::range_error("Unknown list command: " + command);
 }

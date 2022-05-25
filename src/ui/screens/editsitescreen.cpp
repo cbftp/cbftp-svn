@@ -153,6 +153,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   std::shared_ptr<MenuSelectOptionTextArrow> listcommand = mso.addTextArrow(y, x + 21, "listcommand", "List command:");
   listcommand->addOption("STAT -l", SITE_LIST_STAT);
   listcommand->addOption("LIST", SITE_LIST_LIST);
+  listcommand->addOption("STAT -L", SITE_LIST_STAT_BIGL);
   listcommand->setOption(this->site->getListCommand());
   mso.addStringField(y++, x + 47, "basepath", "Base path:", this->site->getBasePath().toString(), false, 19, 512);
   mso.addCheckBox(y, x, "cepr", "CEPR supported:", this->site->supportsCEPR());
