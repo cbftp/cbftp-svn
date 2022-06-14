@@ -1551,8 +1551,14 @@ void Engine::checkIfRaceComplete(const std::shared_ptr<SiteLogic> & sls, std::sh
         }
       }
       else {
-        unfinisheddirs = true;
-        continue;
+        SkipListMatch dirmatch = sls->getSite()->getSkipList().check(*itsp, true, true, &race->getSectionSkipList());
+        if (!(dirmatch.action == SKIPLIST_DENY ||
+            (dirmatch.action == SKIPLIST_UNIQUE &&
+             containsPatternBefore(srs->getFileListForPath(""), dirmatch, *itsp))))
+        {
+          unfinisheddirs = true;
+          continue;
+        }
       }
     }
     if (completedlists > 0 && !unfinisheddirs) {
