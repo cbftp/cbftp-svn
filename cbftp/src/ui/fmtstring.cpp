@@ -65,6 +65,26 @@ bool FmtString::operator==(const std::basic_string<unsigned int>& other) const {
   return raw == other;
 }
 
+bool FmtString::operator==(const FmtString& other) const {
+  return raw == other.raw;
+}
+
+bool FmtString::operator!=(const char* other) const {
+  return rawlegacy != other;
+}
+
+bool FmtString::operator!=(const std::string& other) const {
+  return rawlegacy != other;
+}
+
+bool FmtString::operator!=(const std::basic_string<unsigned int>& other) const {
+  return raw != other;
+}
+
+bool FmtString::operator!=(const FmtString& other) const {
+  return raw != other.raw;
+}
+
 FmtString FmtString::operator+(const char* rhs) const {
   return rawlegacy + rhs;
 }
