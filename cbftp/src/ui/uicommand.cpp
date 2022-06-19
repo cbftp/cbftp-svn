@@ -46,23 +46,12 @@ UICommand::UICommand(int command, WINDOW * window) :
 {
 }
 
-UICommand::UICommand(int command, WINDOW * window, unsigned int row, unsigned int col, std::string text, int maxlen, bool rightalign) :
+UICommand::UICommand(int command, WINDOW * window, unsigned int row, unsigned int col, const FmtString& text, int maxlen, bool rightalign) :
   command(command),
   window(window),
   row(row),
   col(col),
   text(text),
-  maxlen(maxlen),
-  rightalign(rightalign)
-{
-}
-
-UICommand::UICommand(int command, WINDOW * window, unsigned int row, unsigned int col, std::basic_string<unsigned int> text, int maxlen, bool rightalign) :
-  command(command),
-  window(window),
-  row(row),
-  col(col),
-  wtext(text),
   maxlen(maxlen),
   rightalign(rightalign)
 {
@@ -93,12 +82,8 @@ unsigned int UICommand::getCol() const {
   return col;
 }
 
-std::string UICommand::getText() const {
+FmtString UICommand::getText() const {
   return text;
-}
-
-std::basic_string<unsigned int> UICommand::getWideText() const {
-  return wtext;
 }
 
 int UICommand::getMaxlen() const {

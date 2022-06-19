@@ -14,7 +14,7 @@ MenuSelectOptionTextField::MenuSelectOptionTextField(const std::string& identifi
   init(identifier, row, col, label);
 }
 
-std::string MenuSelectOptionTextField::getContentText() const {
+FmtString MenuSelectOptionTextField::getContentText() const {
   return textfield.getVisualText();
 }
 

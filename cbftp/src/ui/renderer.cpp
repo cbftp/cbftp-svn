@@ -173,10 +173,6 @@ void Renderer::run() {
         TermInt::printStr(command.getWindow(), command.getRow(), command.getCol(),
             command.getText(), command.getMaxlen(), command.getRightAlign());
         break;
-      case UI_COMMAND_PRINT_WIDE_STR:
-        TermInt::printStr(command.getWindow(), command.getRow(), command.getCol(),
-            command.getWideText(), command.getMaxlen(), command.getRightAlign());
-        break;
       case UI_COMMAND_PRINT_CHAR:
         TermInt::printChar(command.getWindow(), command.getRow(), command.getCol(),
             command.getChar());
@@ -313,7 +309,7 @@ void Renderer::color(bool enabled, int color, Window window) {
   }
 }
 
-void Renderer::printStr(unsigned int row, unsigned int col, const std::string & str, bool highlight, bool bold, int color, int maxlen, bool rightalign, Window window) {
+void Renderer::printStr(unsigned int row, unsigned int col, const FmtString& str, bool highlight, bool bold, int color, int maxlen, bool rightalign, Window window) {
   if (highlight) {
     this->highlight(true, window);
   }
@@ -324,28 +320,6 @@ void Renderer::printStr(unsigned int row, unsigned int col, const std::string & 
     this->color(true, color, window);
   }
   uiqueue.push(UICommand(UI_COMMAND_PRINT_STR, getWindow(window), row, col, str, maxlen, rightalign));
-  if (highlight) {
-    this->highlight(false, window);
-  }
-  if (bold) {
-    this->bold(false, window);
-  }
-  if (color != -1 && color != encodeColorRepresentation()) {
-    this->color(false, color, window);
-  }
-}
-
-void Renderer::printStr(unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str, bool highlight, bool bold, int color, int maxlen, bool rightalign, Window window) {
-  if (highlight) {
-    this->highlight(true, window);
-  }
-  if (bold) {
-    this->bold(true, window);
-  }
-  if (color != -1 && color != encodeColorRepresentation()) {
-    this->color(true, color, window);
-  }
-  uiqueue.push(UICommand(UI_COMMAND_PRINT_WIDE_STR, getWindow(window), row, col, str, maxlen, rightalign));
   if (highlight) {
     this->highlight(false, window);
   }

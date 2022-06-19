@@ -1,5 +1,6 @@
 #pragma once
 
+#include "fmtstring.h"
 #include "uicommand.h"
 #include "ncurseswrap.h"
 
@@ -33,8 +34,7 @@ public:
   void highlight(bool highlight, Window window = Window::MAIN);
   void bold(bool bold, Window window = Window::MAIN);
   void color(bool enabled, int color, Window window = Window::MAIN);
-  void printStr(unsigned int row, unsigned int col, const std::string & str, bool highlight = false, bool bold = false, int color = -1, int maxlen = -1, bool rightalign = false, Window window = Window::MAIN);
-  void printStr(unsigned int row, unsigned int col, const std::basic_string<unsigned int> & str, bool highlight = false, bool bold = false, int color = -1, int maxlen = -1, bool rightalign = false, Window window = Window::MAIN);
+  void printStr(unsigned int row, unsigned int col, const FmtString& str, bool highlight = false, bool bold = false, int color = -1, int maxlen = -1, bool rightalign = false, Window window = Window::MAIN);
   void printChar(unsigned int row, unsigned int col, unsigned int c, bool highlight = false, bool bold = false, int color = -1, Window window = Window::MAIN);
   void setDefaultColors(int fgcolor, int bgcolor);
 

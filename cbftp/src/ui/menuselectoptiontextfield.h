@@ -15,7 +15,7 @@ public:
   MenuSelectOptionTextField(const std::string& identifier, int row, int col,
       const std::string& label, const std::string& starttext, int visiblelen,
       int maxlen, bool secret);
-  std::string getContentText() const override;
+  FmtString getContentText() const override;
   bool activate() override;
   bool inputChar(int ch) override;
   int cursorPosition() const override;

@@ -14,11 +14,11 @@ MenuSelectOptionTextButton::MenuSelectOptionTextButton(std::string identifier, i
   init(identifier, row, col, text);
 }
 
-std::string MenuSelectOptionTextButton::getContentText() const {
+FmtString MenuSelectOptionTextButton::getContentText() const {
   return text;
 }
 
-std::string MenuSelectOptionTextButton::getLabelText() const {
+FmtString MenuSelectOptionTextButton::getLabelText() const {
   if (label.length() <= maxwidth) {
     std::string alignextra;
     if (rightaligned) {
@@ -26,7 +26,7 @@ std::string MenuSelectOptionTextButton::getLabelText() const {
         alignextra += " ";
       }
     }
-    return alignextra + label;
+    return FmtString(alignextra) + label;
   }
   else {
     switch (resizemethod) {
