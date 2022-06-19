@@ -20,7 +20,7 @@ void VirtualView::putStr(unsigned int row, unsigned int col, const FmtString& st
   int color = encodeColorRepresentation();
   bool bold = false;
   int writepos = 0;
-  for (size_t i = 0; i < rawlen && (maxlen < 0 || static_cast<int>(i) < maxlen); ++i) {
+  for (size_t i = 0; i < rawlen && (maxlen < 0 || writepos < maxlen); ++i) {
     if (rawlen - i > 3 && str[i] == '%') {
       if (str[i+1] == 'C' && str[i+2] == '(') {
         if (str[i+3] == ')') {
