@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string>
+#include "fmtstring.h"
 
 struct _win_st;
 typedef struct _win_st WINDOW;
@@ -14,7 +14,6 @@ enum UICommandType {
   UI_COMMAND_CURSOR_MOVE,
   UI_COMMAND_ERASE,
   UI_COMMAND_PRINT_STR,
-  UI_COMMAND_PRINT_WIDE_STR,
   UI_COMMAND_PRINT_CHAR,
   UI_COMMAND_INIT,
   UI_COMMAND_KILL,
@@ -37,15 +36,13 @@ public:
   UICommand(int command, WINDOW *, int);
   UICommand(int command, WINDOW *, unsigned int, unsigned int);
   UICommand(int command, WINDOW *);
-  UICommand(int command, WINDOW *, unsigned int, unsigned int, std::string, int, bool);
-  UICommand(int command, WINDOW *, unsigned int, unsigned int, std::basic_string<unsigned int>, int, bool);
+  UICommand(int command, WINDOW *, unsigned int, unsigned int, const FmtString& str, int, bool);
   UICommand(int command, WINDOW *, unsigned int, unsigned int, unsigned int);
   int getCommand() const;
   WINDOW * getWindow() const;
   unsigned int getRow() const;
   unsigned int getCol() const;
-  std::string getText() const;
-  std::basic_string<unsigned int> getWideText() const;
+  FmtString getText() const;
   int getMaxlen() const;
   bool getRightAlign() const;
   unsigned int getChar() const;
@@ -59,8 +56,7 @@ private:
   WINDOW * window;
   unsigned int row;
   unsigned int col;
-  std::string text;
-  std::basic_string<unsigned int> wtext;
+  FmtString text;
   int maxlen;
   bool rightalign;
   unsigned int c;

@@ -6,6 +6,7 @@
 #include <utility>
 #include <vector>
 
+#include "fmtstring.h"
 #include "virtualviewelement.h"
 
 #define COLOR_DEFAULT -1
@@ -15,8 +16,7 @@ class Renderer;
 class VirtualView {
 public:
   VirtualView(Renderer& renderer);
-  void putStr(unsigned int row, unsigned int col, const std::string& str, bool highlight = false, int maxlen = -1, bool rightalign = false);
-  void putStr(unsigned int row, unsigned int col, const std::basic_string<unsigned int>& str, bool highlight = false, int maxlen = -1, bool rightalign = false);
+  void putStr(unsigned int row, unsigned int col, const FmtString& str, bool highlight = false, int maxlen = -1, bool rightalign = false);
   void putChar(unsigned int row, unsigned int col, int c, bool highlight = false);
   void highlightOn(unsigned int row, unsigned int col, unsigned int len = 1);
   void highlightOff(unsigned int row, unsigned int col, unsigned int len = 1);

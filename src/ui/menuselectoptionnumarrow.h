@@ -10,7 +10,7 @@ private:
   NumInputArrow arrow;
 public:
   MenuSelectOptionNumArrow(std::string, int, int, std::string, int, int, int);
-  std::string getContentText() const override;
+  FmtString getContentText() const override;
   bool inputChar(int ch) override;
   bool activate() override;
   void deactivate() override;

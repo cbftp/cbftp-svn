@@ -7,7 +7,7 @@ MenuSelectOptionTextArrow::MenuSelectOptionTextArrow(std::string identifier, int
   init(identifier, row, col, label);
 }
 
-std::string MenuSelectOptionTextArrow::getContentText() const {
+FmtString MenuSelectOptionTextArrow::getContentText() const {
   return arrow.getVisual();
 }
 

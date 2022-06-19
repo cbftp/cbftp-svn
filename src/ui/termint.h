@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string>
+#include "fmtstring.h"
 
 struct _win_st;
 typedef struct _win_st WINDOW;
@@ -43,12 +43,9 @@ private:
   static WINDOW * cursorwindow;
 public:
   static void printChar(WINDOW *, unsigned int, unsigned int, unsigned int);
-  static void printStr(WINDOW *, unsigned int, unsigned int, const std::string &);
-  static void printStr(WINDOW *, unsigned int, unsigned int, const std::basic_string<unsigned int> &);
-  static void printStr(WINDOW *, unsigned int, unsigned int, const std::string &, unsigned int);
-  static void printStr(WINDOW *, unsigned int, unsigned int, const std::basic_string<unsigned int> &, unsigned int);
-  static void printStr(WINDOW *, unsigned int, unsigned int, const std::string &, unsigned int, bool);
-  static void printStr(WINDOW *, unsigned int, unsigned int, const std::basic_string<unsigned int> &, unsigned int, bool);
+  static void printStr(WINDOW *, unsigned int, unsigned int, const FmtString& str);
+  static void printStr(WINDOW *, unsigned int, unsigned int, const FmtString& str, unsigned int);
+  static void printStr(WINDOW *, unsigned int, unsigned int, const FmtString& str, unsigned int, bool);
   static void moveCursor(WINDOW *, unsigned int, unsigned int);
 };
 

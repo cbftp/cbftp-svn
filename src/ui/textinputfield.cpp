@@ -12,11 +12,11 @@ TextInputField::TextInputField(int visiblelen, int maxlen, bool secret) {
   construct("", visiblelen, maxlen, secret);
 }
 
-TextInputField::TextInputField(std::string starttext, int visiblelen, int maxlen, bool secret) {
+TextInputField::TextInputField(const FmtString& starttext, int visiblelen, int maxlen, bool secret) {
   construct(starttext, visiblelen, maxlen, secret);
 }
 
-void TextInputField::construct(std::string starttext, int visiblelen, int maxlen, bool secret) {
+void TextInputField::construct(const FmtString& starttext, int visiblelen, int maxlen, bool secret) {
   this->text = starttext;
   this->visiblelen = visiblelen;
   this->maxlen = maxlen;
@@ -24,12 +24,12 @@ void TextInputField::construct(std::string starttext, int visiblelen, int maxlen
   this->cursor = starttext.length();
 }
 
-std::string TextInputField::getText() const {
+FmtString TextInputField::getText() const {
   return text;
 }
 
-std::string TextInputField::getVisualText() const {
-  std::string visualtext = "";
+FmtString TextInputField::getVisualText() const {
+  FmtString visualtext = "";
   unsigned int writelen = text.length();
   unsigned int start = 0;
   if (writelen > visiblelen) {
@@ -44,11 +44,14 @@ std::string TextInputField::getVisualText() const {
     }
     writelen = visiblelen;
   }
-  for (unsigned int i = 0; i < writelen; i++) {
-    visualtext += secret ? '*' : text[start+i];
+  if (secret) {
+    visualtext = std::string(writelen, '*');
   }
-  for (unsigned int i = writelen; i < visiblelen; i++) {
-    visualtext += ' ';
+  else {
+    visualtext = text.substr(start, writelen);
+  }
+  if (visiblelen > writelen) {
+    visualtext += std::string(visiblelen - writelen, ' ');
   }
   return visualtext;
 }
@@ -70,20 +73,14 @@ unsigned int TextInputField::getVisualCursorPosition() const {
 }
 
 bool TextInputField::addchar(char c) {
-  if (text.length() < maxlen) {
-    if (cursor == 0) {
-      text = c + text;
-    }
-    else if (cursor < text.length()) {
-      text = text.substr(0, cursor) + c + text.substr(cursor);
-    }
-    else {
-      text+= c;
-    }
-    cursor++;
-    return true;
+  size_t len = text.length();
+  if (len >= maxlen) {
+    return false;
   }
-  return false;
+  unsigned int rawpos = text.positionInRaw(cursor);
+  text = text.rawSubstr(0, rawpos) + c + text.rawSubstr(rawpos);
+  cursor = text.positionInFormatted(rawpos + 1);
+  return true;
 }
 
 bool TextInputField::moveCursorLeft() {
@@ -111,25 +108,27 @@ void TextInputField::moveCursorEnd() {
 }
 
 void TextInputField::erase() {
-  if (cursor == 0) {
+  if (text.rawLength() == 0) {
+    return;
+  }
+  unsigned int pos = text.positionInRaw(cursor);
+  if (pos == 0) {
     return;
   }
   int len = text.length();
-  if (len > 0) {
-    if (cursor == 1) {
-      text = text.substr(1);
-    }
-    else {
-      text = text.substr(0, cursor - 1) + text.substr(cursor);
-    }
-    cursor--;
-  }
+  text = text.rawSubstr(0, pos - 1) + text.rawSubstr(pos);
+  cursor = cursor - (len - text.length());
 }
 
 void TextInputField::eraseForward() {
-  if (moveCursorRight()) {
-    erase();
+  if (text.rawLength() == 0) {
+    return;
   }
+  unsigned int pos = text.positionInRaw(cursor, false);
+  if (pos == text.rawLength()) {
+    return;
+  }
+  text = text.rawSubstr(0, pos) + text.rawSubstr(pos + 1);
 }
 
 void TextInputField::eraseCursoredWord() {
@@ -145,7 +144,7 @@ void TextInputField::eraseCursoredWord() {
       erase = true;
     }
     if (erase || erasestart == 0) {
-      std::string newtext = text.substr(0, erasestart) + text.substr(cursor);
+      FmtString newtext = text.substr(0, erasestart) + text.substr(cursor);
       cursor -= (text.length() - newtext.length());
       text = newtext;
       return;
@@ -188,7 +187,7 @@ void TextInputField::moveCursorNextWord() {
   }
 }
 
-void TextInputField::setText(std::string text) {
+void TextInputField::setText(const FmtString& text) {
   this->text = text;
   moveCursorEnd();
 }

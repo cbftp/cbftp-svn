@@ -12,78 +12,29 @@ VirtualView::VirtualView(Renderer& renderer) : renderer(renderer), currentviewro
 {
 }
 
-void VirtualView::putStr(unsigned int row, unsigned int col, const std::string& str, bool highlight, int maxlen, bool rightalign) {
+void VirtualView::putStr(unsigned int row, unsigned int col, const FmtString& str, bool highlight, int maxlen, bool rightalign) {
+  size_t rawlen = str.rawLength();
   int len = str.length();
   size_t offset = rightalign ? (maxlen > len ? maxlen - len : 0) : 0;
   expandIfNeeded(row, col + offset + len - 1);
   int color = encodeColorRepresentation();
   bool bold = false;
   int writepos = 0;
-  for (size_t i = 0; i < str.length() && (maxlen < 0 || static_cast<int>(i) < maxlen); ++i) {
-    if (len - i > 3 && str[i] == '%') {
+  for (size_t i = 0; i < rawlen && (maxlen < 0 || static_cast<int>(i) < maxlen); ++i) {
+    if (rawlen - i > 3 && str[i] == '%') {
       if (str[i+1] == 'C' && str[i+2] == '(') {
         if (str[i+3] == ')') {
           color = encodeColorRepresentation();
           i += 3;
           continue;
         }
-        else if (len - i > 4 && str[i+4] == ')') {
+        else if (rawlen - i > 4 && str[i+4] == ')') {
           int arg = atoi(reinterpret_cast<const char*>(str.data() + i + 3));
           color = encodeColorRepresentation(arg);
           i += 4;
           continue;
         }
-        else if (len - i > 6 && str[i+4] == ',' && str[i+6] == ')') {
-          int arg1 = atoi(reinterpret_cast<const char*>(str.data() + i + 3));
-          int arg2 = atoi(reinterpret_cast<const char*>(str.data() + i + 5));
-          color = encodeColorRepresentation(arg1, arg2);
-          i += 6;
-          continue;
-        }
-      }
-      else if (str[i+1] == 'B' && str[i+2] == '(' && str[i+3] == ')') {
-        bold ^= 1;
-        i += 3;
-        continue;
-      }
-    }
-    VirtualViewElement& vve = virtualchars[row][col + writepos + offset];
-    vve.set(str[i], highlight, bold, color, currentcleariteration, currentredrawiteration);
-    if (col + writepos > maxrenderedcol) {
-      maxrenderedcol = col + writepos;
-    }
-    if (vve.isModified()) {
-      modifiedchars.emplace_back(row, col + writepos + offset);
-    }
-    writepos++;
-  }
-  if (row > maxrenderedrow) {
-    maxrenderedrow = row;
-  }
-}
-
-void VirtualView::putStr(unsigned int row, unsigned int col, const std::basic_string<unsigned int>& str, bool highlight, int maxlen, bool rightalign) {
-  int len = str.length();
-  size_t offset = rightalign ? (maxlen > len ? maxlen - len : 0) : 0;
-  expandIfNeeded(row, col + offset + len - 1);
-  int color = encodeColorRepresentation();
-  bool bold = false;
-  int writepos = 0;
-  for (size_t i = 0; i < static_cast<unsigned int>(len) && (maxlen < 0 || static_cast<int>(i) < maxlen); ++i) {
-    if (len - i > 3 && str[i] == '%') {
-      if (str[i+1] == 'C' && str[i+2] == '(') {
-        if (str[i+3] == ')') {
-          color = encodeColorRepresentation();
-          i += 3;
-          continue;
-        }
-        else if (len - i > 4 && str[i+4] == ')') {
-          int arg = atoi(reinterpret_cast<const char*>(str.data() + i + 3));
-          color = encodeColorRepresentation(arg);
-          i += 4;
-          continue;
-        }
-        else if (len - i > 6 && str[i+4] == ',' && str[i+6] == ')') {
+        else if (rawlen - i > 6 && str[i+4] == ',' && str[i+6] == ')') {
           int arg1 = atoi(reinterpret_cast<const char*>(str.data() + i + 3));
           int arg2 = atoi(reinterpret_cast<const char*>(str.data() + i + 5));
           color = encodeColorRepresentation(arg1, arg2);

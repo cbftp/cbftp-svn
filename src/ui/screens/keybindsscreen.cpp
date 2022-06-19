@@ -111,7 +111,7 @@ void KeyBindsScreen::redraw() {
     if (mso.isFocused() && mso.getSelectionPointer() == i) {
       highlight = true;
     }
-    std::string text = msoe->isActive() ? "<Press " + std::string(addextrakey ? "additional" : "new") + " key>" : msoe->getLabelText();
+    FmtString text = msoe->isActive() ? "<Press " + FmtString(addextrakey ? "additional" : "new") + " key>" : msoe->getLabelText();
     if (!text.empty()) {
       int add = 0;
       if (text[0] == ' ') {

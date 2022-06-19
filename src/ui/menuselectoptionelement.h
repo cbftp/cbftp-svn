@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string>
+#include "fmtstring.h"
 
 class MenuSelectOptionElement {
   private:
@@ -13,17 +13,17 @@ class MenuSelectOptionElement {
     std::string extradata;
     void * origin;
   protected:
-    std::string label;
+    FmtString label;
     bool active;
   public:
     void init(const std::string& identifier, int row, int col, const std::string& label);
     virtual ~MenuSelectOptionElement();
     void setPosition(int row, int col);
-    virtual std::string getLabelText() const;
+    virtual FmtString getLabelText() const;
     std::string getIdentifier() const;
     unsigned int getId() const;
     std::string getExtraData() const;
-    virtual std::string getContentText() const = 0;
+    virtual FmtString getContentText() const = 0;
     virtual unsigned int getTotalWidth() const;
     virtual bool activate();
     virtual void deactivate();

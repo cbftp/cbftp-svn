@@ -21,7 +21,7 @@ void MenuSelectOptionElement::setPosition(int row, int col) {
   this->col = col;
 }
 
-std::string MenuSelectOptionElement::getLabelText() const {
+FmtString MenuSelectOptionElement::getLabelText() const {
   return label;
 }
 

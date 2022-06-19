@@ -35,13 +35,16 @@ void InfoWindow::update() {
 }
 
 void InfoWindow::setLabel(const std::basic_string<unsigned int>& label) {
-  this->label = label;
-  update();
+  if (this->label != label) {
+    this->label = label;
+    update();
+  }
 }
 void InfoWindow::setText(const std::basic_string<unsigned int>& text) {
-  this->text = text;
-  update();
-
+  if (this->text != text) {
+    this->text = text;
+    update();
+  }
 }
 
 void InfoWindow::setSplit(bool split) {
