@@ -38,7 +38,7 @@ void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, cons
   }
   bool bold = false;
   unsigned int writepos = 0;
-  for (unsigned int i = 0; i < rawlen || writepos < len; i++) {
+  for (unsigned int i = 0; i < rawlen; i++) {
     if (rawlen - i > 3 && str[i] == '%') {
       if (str[i+1] == 'C' && str[i+2] == '(') {
         if (str[i+3] == ')') {
@@ -72,7 +72,10 @@ void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, cons
         continue;
       }
     }
-    printChar(window, row, col + writepos++ + rightadjust, (unsigned char)str[i]);
+    if (writepos >= len) {
+      break;
+    }
+    printChar(window, row, col + writepos++ + rightadjust, str[i]);
   }
   wmove(cursorwindow, cursorrow, cursorcol);
 }
