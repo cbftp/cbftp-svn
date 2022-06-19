@@ -12,7 +12,9 @@ class SectionsScreen : public UIWindow {
 public:
   SectionsScreen(Ui *);
   ~SectionsScreen();
-  void initialize(unsigned int row, unsigned int col, bool selectsection = false, const std::list<std::string>& preselected = std::list<std::string>());
+  void initialize(unsigned int row, unsigned int col, bool selectsection = false,
+      const std::list<std::string>& preselected = std::list<std::string>(),
+      const std::list<std::string>& alreadybound = std::list<std::string>());
   void redraw() override;
   bool keyPressed(unsigned int) override;
   std::string getLegendText() const override;
@@ -38,5 +40,6 @@ private:
   unsigned int totallistsize;
   Mode mode;
   std::set<std::string> selected;
+  std::set<std::string> alreadybound;
   bool togglestate;
 };

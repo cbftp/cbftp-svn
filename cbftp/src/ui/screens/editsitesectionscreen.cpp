@@ -126,9 +126,11 @@ bool EditSiteSectionScreen::keyPressed(unsigned int ch) {
       std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(mso.getSelectionPointer());
       activation = msoe->activate();
       if (msoe->getIdentifier() == "select") {
-        std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement("names");
-        std::list<std::string> preselected = util::split(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData(), ",");
-        ui->goSelectSection(preselected);
+        std::shared_ptr<MenuSelectOptionElement> names = mso.getElement("names");
+        std::shared_ptr<MenuSelectOptionElement> path = mso.getElement("path");
+        std::list<std::string> preselected = util::split(std::static_pointer_cast<MenuSelectOptionTextField>(names)->getData(), ",");
+        std::list<std::string> alreadybound = modsite->getSectionsForPath(std::static_pointer_cast<MenuSelectOptionTextField>(path)->getData());
+        ui->goSelectSection(preselected, alreadybound);
         return true;
       }
       if (!activation) {
