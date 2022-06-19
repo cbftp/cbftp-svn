@@ -66,7 +66,9 @@ SectionsScreen::~SectionsScreen() {
 
 }
 
-void SectionsScreen::initialize(unsigned int row, unsigned int col, bool selectsection, const std::list<std::string>& preselected) {
+void SectionsScreen::initialize(unsigned int row, unsigned int col, bool selectsection,
+    const std::list<std::string>& preselected, const std::list<std::string>& alreadybound)
+{
   mode = selectsection ? Mode::SELECT : Mode::EDIT;
   currentviewspan = 0;
   ypos = 0;
@@ -75,10 +77,14 @@ void SectionsScreen::initialize(unsigned int row, unsigned int col, bool selects
   table.reset();
   table.enterFocusFrom(0);
   selected.clear();
+  this->alreadybound.clear();
   for (const std::string& section : preselected) {
     if (global->getSectionManager()->getSection(section)) {
       selected.insert(section);
     }
+  }
+  for (const std::string& section : alreadybound) {
+    this->alreadybound.insert(section);
   }
   togglestate = false;
   init(row, col);
@@ -293,7 +299,13 @@ void SectionsScreen::addSectionTableHeader(unsigned int y, MenuSelectOption & ms
 
 void SectionsScreen::addSectionDetails(unsigned int y, MenuSelectOption & mso, const Section & section) {
   std::string skiplist = section.getSkipList().size() ? "[X]" : "[ ]";
-  std::string selectedstr = (selected.find(section.getName()) != selected.end()) ? "[X]" : "[ ]";
+  std::string selectedstr = "[ ]";
+  if (selected.find(section.getName()) != selected.end()) {
+    selectedstr = "[X]";
+  }
+  else if (alreadybound.find(section.getName()) != alreadybound.end()) {
+    selectedstr = "[B]";
+  }
   std::list<std::string> sites;
   for (auto it = global->getSiteManager()->begin(); it != global->getSiteManager()->end(); ++it) {
     if ((*it)->hasSection(section.getName())) {
