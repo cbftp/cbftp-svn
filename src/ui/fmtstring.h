@@ -14,6 +14,11 @@ public:
   bool operator==(const char* other) const;
   bool operator==(const std::string& other) const;
   bool operator==(const std::basic_string<unsigned int>& other) const;
+  bool operator==(const FmtString& other) const;
+  bool operator!=(const char* other) const;
+  bool operator!=(const std::string& other) const;
+  bool operator!=(const std::basic_string<unsigned int>& other) const;
+  bool operator!=(const FmtString& other) const;
   FmtString operator+(const char* rhs) const;
   FmtString operator+(const std::string& rhs) const;
   FmtString operator+(const std::basic_string<unsigned int>& rhs) const;

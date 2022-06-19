@@ -34,13 +34,13 @@ void InfoWindow::update() {
   ui->getRenderer().printStr(0, 4 + labellen + 2, text, false, false, -1, col - 4 - 4 - labellen - 2, true, Window::INFO);
 }
 
-void InfoWindow::setLabel(const std::basic_string<unsigned int>& label) {
+void InfoWindow::setLabel(const FmtString& label) {
   if (this->label != label) {
     this->label = label;
     update();
   }
 }
-void InfoWindow::setText(const std::basic_string<unsigned int>& text) {
+void InfoWindow::setText(const FmtString& text) {
   if (this->text != text) {
     this->text = text;
     update();

@@ -28,6 +28,7 @@ void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, cons
 
 void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, const FmtString& str, unsigned int maxlen, bool rightalign) {
   unsigned int len = str.length();
+  unsigned int rawlen = str.rawLength();
   if (len > maxlen) {
     len = maxlen;
   }
@@ -36,22 +37,22 @@ void TermInt::printStr(WINDOW * window, unsigned int row, unsigned int col, cons
     rightadjust = maxlen - len;
   }
   bool bold = false;
-  int writepos = 0;
-  for (unsigned int i = 0; i < len; i++) {
-    if (len - i > 3 && str[i] == '%') {
+  unsigned int writepos = 0;
+  for (unsigned int i = 0; i < rawlen || writepos < len; i++) {
+    if (rawlen - i > 3 && str[i] == '%') {
       if (str[i+1] == 'C' && str[i+2] == '(') {
         if (str[i+3] == ')') {
           wattroff(window, COLOR_PAIR(encodeColorRepresentation()));
           i += 3;
           continue;
         }
-        else if (len - i > 4 && str[i+4] == ')') {
+        else if (rawlen - i > 4 && str[i+4] == ')') {
           int arg = atoi(reinterpret_cast<const char*>(str.data() + i + 3));
           wattron(window, COLOR_PAIR(encodeColorRepresentation(arg)));
           i += 4;
           continue;
         }
-        else if (len - i > 6 && str[i+4] == ',' && str[i+6] == ')') {
+        else if (rawlen - i > 6 && str[i+4] == ',' && str[i+6] == ')') {
           int arg1 = atoi(reinterpret_cast<const char*>(str.data() + i + 3));
           int arg2 = atoi(reinterpret_cast<const char*>(str.data() + i + 5));
           wattron(window, COLOR_PAIR(encodeColorRepresentation(arg1, arg2)));
