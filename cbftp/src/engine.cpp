@@ -1551,6 +1551,10 @@ void Engine::checkIfRaceComplete(const std::shared_ptr<SiteLogic> & sls, std::sh
         }
       }
       else {
+        if (*itsp == "") {
+          unfinisheddirs = true;
+          continue;
+        }
         SkipListMatch dirmatch = sls->getSite()->getSkipList().check(*itsp, true, true, &race->getSectionSkipList());
         if (!(dirmatch.action == SKIPLIST_DENY ||
             (dirmatch.action == SKIPLIST_UNIQUE &&
