@@ -91,6 +91,7 @@ BrowseScreen::BrowseScreen(Ui* ui) : UIWindow(ui, "BrowseScreen"),
   sitekeybinds.addBind('\t', KEYACTION_SPLIT, "Split/switch side");
   sitekeybinds.addBind('h', KEYACTION_TOGGLE_SHOW_NAMES_ONLY, "Show names only");
   sitekeybinds.addBind('x', KEYACTION_EXTERNAL_SCRIPTS, "Configure external scripts");
+  sitekeybinds.addBind('E', KEYACTION_EDIT_SECTIONS, "Edit sections");
   localkeybinds.addScope(KEYSCOPE_SPLIT_SITE_LOCAL, "When split browsing local-site");
   localkeybinds.addBind('t', KEYACTION_TRANSFER, "Transfer (Upload)", KEYSCOPE_SPLIT_SITE_LOCAL);
   localkeybinds.addBind('u', KEYACTION_COMPARE_UNIQUE, "Unique compare", KEYSCOPE_SPLIT_SITE_LOCAL);
