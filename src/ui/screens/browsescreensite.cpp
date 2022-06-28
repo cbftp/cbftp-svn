@@ -1021,6 +1021,9 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
       nameonly = !nameonly;
       ui->redraw();
       break;
+    case KEYACTION_EDIT_SECTIONS:
+      ui->goSiteSections(site);
+      break;
   }
   return BrowseScreenAction();
 }
