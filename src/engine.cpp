@@ -76,6 +76,143 @@ bool containsPatternBefore(const std::shared_ptr<FileList>& fl, const SkipListMa
          (match.regex && fl->containsRegexPatternBefore(match.matchregexpattern, true, item));
 }
 
+bool raceTransferPossible(const std::shared_ptr<SiteLogic>& sls, const std::shared_ptr<SiteRace>& srs, const std::shared_ptr<SiteLogic>& sld, const std::shared_ptr<SiteRace>& srd, const std::shared_ptr<Race>& race) {
+  if (sls == sld) {
+    return false;
+  }
+  const std::shared_ptr<Site> & srcsite = sls->getSite();
+  const std::shared_ptr<Site> & dstsite = sld->getSite();
+  if (srcsite->getAllowDownload() == SITE_ALLOW_TRANSFER_NO) {
+    return false;
+  }
+  if (srs->isDownloadOnly()) {
+    if (!srcsite->getMaxDownPre()) {
+      return false;
+    }
+  }
+  else if (srcsite->getAllowDownload() == SITE_ALLOW_DOWNLOAD_MATCH_ONLY) {
+    return false;
+  }
+  else if (srs->isDone()) {
+    if (!srcsite->getMaxDownComplete()) {
+      return false;
+    }
+  }
+  else if (!srcsite->getMaxDown() && !srcsite->getMaxDownComplete()) {
+    return false;
+  }
+  if (!dstsite->getMaxUp()) {
+    return false;
+  }
+  if (dstsite->getAllowUpload() == SITE_ALLOW_TRANSFER_NO) {
+    return false;
+  }
+  if (!srcsite->isAllowedTargetSite(dstsite)) {
+    return false;
+  }
+  if (srd->isDownloadOnly()) {
+    return false;
+  }
+  if (srcsite->hasBrokenPASV() && dstsite->hasBrokenPASV()) {
+    return false;
+  }
+  // protocol check
+  if (!transferProtocolCombinationPossible(srcsite->getTransferProtocol(), dstsite->getTransferProtocol())) {
+    return false;
+  }
+  //ssl check
+  int srcpolicy = srcsite->getSSLTransferPolicy();
+  int dstpolicy = dstsite->getSSLTransferPolicy();
+  if ((srcpolicy == SITE_SSL_ALWAYS_OFF &&
+       dstpolicy == SITE_SSL_ALWAYS_ON) ||
+      (srcpolicy == SITE_SSL_ALWAYS_ON &&
+       dstpolicy == SITE_SSL_ALWAYS_OFF))
+  {
+    return false;
+  }
+  if ((srcpolicy == SITE_SSL_ALWAYS_ON || dstpolicy == SITE_SSL_ALWAYS_ON) &&
+      !srcsite->supportsSSCN() && !dstsite->supportsSSCN())
+  {
+    return false;
+  }
+  return true;
+}
+
+bool raceTransferPossible(const std::shared_ptr<Site> & srcsite, bool srcdownloadonly, const std::shared_ptr<Site> & dstsite, bool dstdownloadonly) {
+  if (srcsite == dstsite) {
+    return false;
+  }
+  if (srcsite->getAllowDownload() == SITE_ALLOW_TRANSFER_NO) {
+    return false;
+  }
+  if (dstsite->getAllowUpload() == SITE_ALLOW_TRANSFER_NO) {
+    return false;
+  }
+  if (dstdownloadonly) {
+    return false;
+  }
+  if (srcdownloadonly) {
+    if (!srcsite->getMaxDownPre()) {
+      return false;
+    }
+  }
+  else if (!srcsite->getMaxDown() && !srcsite->getMaxDownComplete()) {
+    return false;
+  }
+  else if (srcsite->getAllowDownload() == SITE_ALLOW_DOWNLOAD_MATCH_ONLY) {
+    return false;
+  }
+  if (!dstsite->getMaxUp()) {
+    return false;
+  }
+  if (!srcsite->isAllowedTargetSite(dstsite)) {
+    return false;
+  }
+  if (srcsite->hasBrokenPASV() && dstsite->hasBrokenPASV()) {
+    return false;
+  }
+  // protocol check
+  if (!transferProtocolCombinationPossible(srcsite->getTransferProtocol(), dstsite->getTransferProtocol())) {
+    return false;
+  }
+  //ssl check
+  int srcpolicy = srcsite->getSSLTransferPolicy();
+  int dstpolicy = dstsite->getSSLTransferPolicy();
+  if ((srcpolicy == SITE_SSL_ALWAYS_OFF &&
+       dstpolicy == SITE_SSL_ALWAYS_ON) ||
+      (srcpolicy == SITE_SSL_ALWAYS_ON &&
+       dstpolicy == SITE_SSL_ALWAYS_OFF))
+  {
+    return false;
+  }
+  if ((srcpolicy == SITE_SSL_ALWAYS_ON || dstpolicy == SITE_SSL_ALWAYS_ON) &&
+      !srcsite->supportsSSCN() && !dstsite->supportsSSCN())
+  {
+    return false;
+  }
+  return true;
+}
+
+bool transferExpectedSoon(ScoreBoardElement* sbe) {
+  const std::string & filename = sbe->fileName();
+  if (sbe->getDestinationSiteRace()->getStatus() != RaceStatus::RUNNING) {
+    return false;
+  }
+  if (!sbe->getSource()->getCurrLogins() || !sbe->getDestination()->getCurrLogins()) {
+    return false;
+  }
+  if (sbe->wasAttempted()) {
+    return false;
+  }
+  if (!sbe->getSourceFileList()->contains(filename)) {
+    return false;
+  }
+  if (sbe->getDestinationFileList()->contains(filename)) {
+    return false;
+  }
+  return true;
+}
+
 }
 
 Engine::Engine() :
@@ -186,19 +323,21 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
     global->getEventLog()->log("Engine", "Spread job skipped due to skiplist match: " + release);
     return std::shared_ptr<Race>();
   }
-  bool noupload = true;
-  bool nodownload = true;
-  for (const AddSite& site : addsites) {
-    if (site.sl->getSite()->getAllowUpload() == SITE_ALLOW_TRANSFER_YES && !site.downloadonly) {
-      noupload = false;
-    }
-    if (site.sl->getSite()->getAllowDownload() == SITE_ALLOW_TRANSFER_YES ||
-        (site.sl->getSite()->getAllowDownload() == SITE_ALLOW_DOWNLOAD_MATCH_ONLY && site.downloadonly))
+  bool notransfer = true;
+  for (const AddSite& srcsite : addsites) {
+    if (srcsite.sl->getSite()->getAllowDownload() == SITE_ALLOW_TRANSFER_NO ||
+        (srcsite.sl->getSite()->getAllowDownload() == SITE_ALLOW_DOWNLOAD_MATCH_ONLY && !srcsite.downloadonly))
     {
-      nodownload = false;
+      continue;
+    }
+    for (const AddSite& dstsite : addsites) {
+      if (raceTransferPossible(srcsite.sl->getSite(), srcsite.downloadonly, dstsite.sl->getSite(), dstsite.downloadonly)) {
+        notransfer = false;
+        break;
+      }
     }
   }
-  if (!append && (noupload || nodownload) && profile != SPREAD_DISTRIBUTE) {
+  if (!append && notransfer && profile != SPREAD_DISTRIBUTE) {
     global->getEventLog()->log("Engine", "Ignoring attempt to spread " + release + " in "
         + section + " since no transfers would be performed.");
     return std::shared_ptr<Race>();
@@ -657,26 +796,6 @@ void Engine::clearSkipListCaches() {
   global->getSkipList()->wipeCache();
   skiplistcachesites.clear();
   skiplistcachesections.clear();
-}
-
-bool Engine::transferExpectedSoon(ScoreBoardElement * sbe) const {
-  const std::string & filename = sbe->fileName();
-  if (sbe->getDestinationSiteRace()->getStatus() != RaceStatus::RUNNING) {
-    return false;
-  }
-  if (!sbe->getSource()->getCurrLogins() || !sbe->getDestination()->getCurrLogins()) {
-    return false;
-  }
-  if (sbe->wasAttempted()) {
-    return false;
-  }
-  if (!sbe->getSourceFileList()->contains(filename)) {
-    return false;
-  }
-  if (sbe->getDestinationFileList()->contains(filename)) {
-    return false;
-  }
-  return true;
 }
 
 void Engine::deleteOnAllSites(const std::shared_ptr<Race> & race, bool allfiles, bool deleteoncomplete) {
@@ -1717,63 +1836,6 @@ void Engine::preSeedPotentialData(const std::shared_ptr<Race>& race) {
       }
     }
   }
-}
-
-bool Engine::raceTransferPossible(const std::shared_ptr<SiteLogic>& sls, const std::shared_ptr<SiteRace>& srs, const std::shared_ptr<SiteLogic>& sld, const std::shared_ptr<SiteRace>& srd, const std::shared_ptr<Race>& race) const {
-  if (sls == sld) return false;
-  const std::shared_ptr<Site> & srcsite = sls->getSite();
-  const std::shared_ptr<Site> & dstsite = sld->getSite();
-  if (srcsite->getAllowDownload() == SITE_ALLOW_TRANSFER_NO) {
-    return false;
-  }
-  if (srs->isDownloadOnly()) {
-    if (!srcsite->getMaxDownPre()) {
-      return false;
-    }
-  }
-  else if (srcsite->getAllowDownload() == SITE_ALLOW_DOWNLOAD_MATCH_ONLY) {
-    return false;
-  }
-  else if (srs->isDone()) {
-    if (!srcsite->getMaxDownComplete()) {
-      return false;
-    }
-  }
-  else if (!srcsite->getMaxDown() && !srcsite->getMaxDownComplete()) {
-    return false;
-  }
-  if (dstsite->getAllowUpload() == SITE_ALLOW_TRANSFER_NO) {
-    return false;
-  }
-  if (!srcsite->isAllowedTargetSite(dstsite)) {
-    return false;
-  }
-  if (srd->isDownloadOnly()) {
-    return false;
-  }
-  if (srcsite->hasBrokenPASV() && dstsite->hasBrokenPASV()) {
-    return false;
-  }
-  // protocol check
-  if (!transferProtocolCombinationPossible(srcsite->getTransferProtocol(), dstsite->getTransferProtocol())) {
-    return false;
-  }
-  //ssl check
-  int srcpolicy = srcsite->getSSLTransferPolicy();
-  int dstpolicy = dstsite->getSSLTransferPolicy();
-  if ((srcpolicy == SITE_SSL_ALWAYS_OFF &&
-       dstpolicy == SITE_SSL_ALWAYS_ON) ||
-      (srcpolicy == SITE_SSL_ALWAYS_ON &&
-       dstpolicy == SITE_SSL_ALWAYS_OFF))
-  {
-    return false;
-  }
-  if ((srcpolicy == SITE_SSL_ALWAYS_ON || dstpolicy == SITE_SSL_ALWAYS_ON) &&
-      !srcsite->supportsSSCN() && !dstsite->supportsSSCN())
-  {
-    return false;
-  }
-  return true;
 }
 
 unsigned int Engine::preparedRaces() const {

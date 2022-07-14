@@ -216,10 +216,8 @@ public:
   void addPendingTransfer(std::list<PendingTransfer>&, PendingTransfer&);
   std::shared_ptr<Race> getCurrentRace(const std::string &) const;
   void preSeedPotentialData(const std::shared_ptr<Race>& race);
-  bool raceTransferPossible(const std::shared_ptr<SiteLogic>& sls, const std::shared_ptr<SiteRace>& srs, const std::shared_ptr<SiteLogic>& sld, const std::shared_ptr<SiteRace>& srd, const std::shared_ptr<Race>& race) const;
   void wipeFromScoreBoard(const std::shared_ptr<SiteRace>& sr);
   bool waitingInScoreBoard(const std::shared_ptr<Race>& race) const;
-  bool transferExpectedSoon(ScoreBoardElement* sbe) const;
   void restoreFromFailed(const std::shared_ptr<Race>& race);
   void removeFromFinished(const std::shared_ptr<Race>& race);
   void clearSkipListCaches();
