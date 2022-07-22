@@ -1247,9 +1247,13 @@ void FTPConn::doRETR(const std::string & file) {
 }
 
 void FTPConn::RETRResponse() {
-  if (databufcode == 150 || databufcode == 125) {
+  if (databufcode == 150 || databufcode == 125 || databufcode == 226) {
     state = FTPConnState::RETR_COMPLETE;
     sl->commandSuccess(id, FTPConnState::RETR);
+    if (databufcode == 226) {
+      processing = false;
+      sl->commandSuccess(id, state);
+    }
   }
   else {
     processing = false;
@@ -1293,9 +1297,13 @@ void FTPConn::STORResponse() {
     }
   }
   rawBufWrite(response);
-  if (databufcode == 150 || databufcode == 125) {
+  if (databufcode == 150 || databufcode == 125 || databufcode == 226) {
     state = FTPConnState::STOR_COMPLETE;
     sl->commandSuccess(id, FTPConnState::STOR);
+    if (databufcode == 226) {
+      processing = false;
+      sl->commandSuccess(id, state);
+    }
   }
   else {
     processing = false;
