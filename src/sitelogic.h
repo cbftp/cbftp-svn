@@ -101,6 +101,7 @@ class SiteLogic : public Core::EventReceiver {
     void handlePostUpload(int id, const std::shared_ptr<FileList>& fl);
     void handlePostDownload(int id);
     std::string expandVariables(const std::string& text) const;
+    void removeRace(const std::shared_ptr<SiteRace>& race, bool aborttransfers);
   public:
     SiteLogic(const std::string &);
     ~SiteLogic();
@@ -170,7 +171,6 @@ class SiteLogic : public Core::EventReceiver {
     bool requestReady(int) const;
     bool requestStatus(int) const;
     void abortRace(const std::shared_ptr<SiteRace> & race);
-    void removeRace(const std::shared_ptr<SiteRace> & race);
     void abortTransfers(const std::shared_ptr<CommandOwner> & co);
     FileListData* getFileListData(int requestid) const;
     DownloadFileData* getDownloadFileData(int requestid) const;

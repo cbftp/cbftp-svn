@@ -1771,14 +1771,16 @@ void SiteLogic::abortRace(const std::shared_ptr<SiteRace> & race) {
     return;
   }
   race->abort();
-  removeRace(race);
+  removeRace(race, true);
 }
 
-void SiteLogic::removeRace(const std::shared_ptr<SiteRace> & race) {
+void SiteLogic::removeRace(const std::shared_ptr<SiteRace>& race, bool aborttransfers) {
   if (!race) {
     return;
   }
-  abortTransfers(race);
+  if (aborttransfers) {
+    abortTransfers(race);
+  }
   for (std::list<std::shared_ptr<SiteRace>>::iterator it = recentlylistedraces.begin(); it != recentlylistedraces.end(); it++) {
     if (*it == race) {
       recentlylistedraces.erase(it);
@@ -2287,7 +2289,7 @@ RawBuffer * SiteLogic::getAggregatedRawBuffer() const {
 }
 
 void SiteLogic::raceGlobalComplete(const std::shared_ptr<SiteRace> & sr) {
-  removeRace(sr);
+  removeRace(sr, false);
   if (site->getStayLoggedIn()) {
     return;
   }
