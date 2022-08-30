@@ -65,15 +65,8 @@ DisconnectType investigateSSLError(SocketInfo& socketinfo, const char* function,
         return DisconnectType::ABRUPT;
       }
       break;
-    case SSL_ERROR_SSL:
-      socketinfo.sslshutdown = false;
-      break;
   }
   unsigned long e = ERR_get_error();
-  if (SSLManager::isAbruptDisconnectError(e)) {
-    errortext = "Connection closed abruptly by peer";
-    return DisconnectType::ABRUPT;
-  }
   char buf[util::ERR_BUF_SIZE];
   ERR_error_string_n(e, buf, sizeof(buf));
   errortext = std::string(function) + ": " + SSLManager::sslErrorToString(sslError) +
@@ -878,7 +871,7 @@ void IOManager::handleTCPPlainIn(SocketInfo& socketinfo) {
   }
 }
 
-void IOManager::handleTCPPlainOut(SocketInfo& socketinfo) {
+void IOManager::handleTCPPlainOut(SocketInfo& socketinfo, bool readafter) {
   while (!socketinfo.sendqueue.empty()) {
     DataBlock& block = socketinfo.sendqueue.front();
     int bsent = write(socketinfo.fd, block.data(), block.dataLength());
@@ -907,7 +900,9 @@ void IOManager::handleTCPPlainOut(SocketInfo& socketinfo) {
     closeSocketIntern(socketinfo.id);
     return;
   }
-  setPollRead(socketinfo);
+  if (readafter) {
+    setPollRead(socketinfo);
+  }
   workmanager.dispatchEventSendComplete(socketinfo.receiver, socketinfo.id, socketinfo.prio);
 }
 
@@ -951,6 +946,9 @@ void IOManager::handleTCPSSLNegotiationIn(SocketInfo& socketinfo) {
 }
 
 void IOManager::handleTCPSSLNegotiationOut(SocketInfo& socketinfo) {
+  if (!socketinfo.sendqueue.empty()) {
+    handleTCPPlainOut(socketinfo, false);
+  }
   SSL* ssl = SSL_new(socketinfo.type == SocketType::TCP_SSL_NEG_CONNECT ? SSLManager::getClientSSLCTX()
                                                                         : SSLManager::getServerSSLCTX());
   SSL_set_mode(ssl, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
@@ -1257,8 +1255,8 @@ std::string IOManager::getBindInterface() const {
   return bindinterface;
 }
 
-std::string IOManager::getBindAddress() const {
-  return bindaddress;
+std::string IOManager::getBindAddress(AddressFamily addrfam) const {
+  return addrfam == AddressFamily::IPV4 ? bindaddress4 : bindaddress6;
 }
 
 void IOManager::setBindInterface(const std::string& interface) {
@@ -1280,18 +1278,34 @@ void IOManager::setBindInterface(const std::string& interface) {
   }
 }
 
-void IOManager::setBindAddress(const std::string& address) {
+void IOManager::setBindAddress(AddressFamily addrfam, const std::string& address) {
+  bool *hasbindaddress = nullptr;
+  std::string *bindaddress = nullptr;
+  std::string addrtype;
+  if (addrfam == AddressFamily::IPV4) {
+    hasbindaddress = &hasbindaddress4;
+    bindaddress = &bindaddress4;
+    addrtype = "IPv4";
+  }
+  else if (addrfam == AddressFamily::IPV6) {
+    hasbindaddress = &hasbindaddress6;
+    bindaddress = &bindaddress6;
+    addrtype = "IPv6";
+  }
+  else {
+    return;
+  }
   if (address.empty()) {
-    if (hasbindaddress) {
-      hasbindaddress = false;
-      getLogger()->log("IOManager", "Bind IP address removed", LogLevel::INFO);
+    if (*hasbindaddress) {
+      *hasbindaddress = false;
+      getLogger()->log("IOManager", "Bind " + addrtype + " address removed", LogLevel::INFO);
     }
     return;
   }
-  if (!hasbindaddress && bindaddress != address) {
-    bindaddress = address;
-    hasbindaddress = true;
-    getLogger()->log("IOManager", "Bind IP address set to: " + address, LogLevel::INFO);
+  if (!*hasbindaddress && *bindaddress != address) {
+    *bindaddress = address;
+    *hasbindaddress = true;
+    getLogger()->log("IOManager", "Bind " + addrtype + " address set to: " + address, LogLevel::INFO);
   }
 }
 
@@ -1299,8 +1313,8 @@ bool IOManager::hasBindInterface() const {
   return hasbindinterface;
 }
 
-bool IOManager::hasBindAddress() const {
-  return hasbindaddress;
+bool IOManager::hasBindAddress(AddressFamily addrfam) const {
+  return addrfam == AddressFamily::IPV4 ? hasbindaddress4 : hasbindaddress6;
 }
 
 StringResult IOManager::getInterfaceAddress(const std::string& interface) const {
@@ -1392,8 +1406,8 @@ StringResult IOManager::getInterfaceName(const std::string& address) const {
 
 StringResult IOManager::getAddressToBind(const AddressFamily addrfam, const SocketType socktype) {
   std::string bindto;
-  if (hasBindAddress()) {
-    bindto = bindaddress;
+  if (hasBindAddress(addrfam)) {
+    bindto = getBindAddress(addrfam);
   }
   else if (hasBindInterface()) {
     struct addrinfo request;
