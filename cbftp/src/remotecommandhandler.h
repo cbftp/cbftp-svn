@@ -33,6 +33,7 @@ private:
   void commandRawWithPath(const std::vector<std::string> &);
   bool commandFXP(const std::vector<std::string> &);
   bool commandDownload(const std::vector<std::string> &);
+  bool commandDownloadToPath(const std::vector<std::string> &);
   bool commandUpload(const std::vector<std::string> &);
   void commandIdle(const std::vector<std::string> &);
   void commandAbort(const std::vector<std::string> &);

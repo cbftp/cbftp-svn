@@ -217,6 +217,12 @@ void RemoteCommandHandler::handleMessage(const std::string & message) {
       notification = true;
     }
   }
+  else if (command == "downloadtopath") {
+    bool started = commandDownloadToPath(remainder);
+    if (started && notify >= RemoteCommandNotify::JOBS_ADDED) {
+      notification = true;
+    }
+  }
   else if (command == "upload") {
     bool started = commandUpload(remainder);
     if (started && notify >= RemoteCommandNotify::JOBS_ADDED) {
@@ -359,6 +365,37 @@ bool RemoteCommandHandler::commandDownload(const std::vector<std::string> & mess
     file = message[2];
   }
   global->getEngine()->newTransferJobDownload(message[0], srcpath, srcsection, file, global->getLocalStorage()->getDownloadPath(), file);
+  return true;
+}
+
+bool RemoteCommandHandler::commandDownloadToPath(const std::vector<std::string> & message) {
+  if (message.size() < 3) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad downloadtopath command format: " + util::join(message));
+    return false;
+  }
+  std::shared_ptr<SiteLogic> srcsl = global->getSiteLogicManager()->getSiteLogic(message[0]);
+  if (!srcsl) {
+    global->getEventLog()->log("RemoteCommandHandler", "Bad site name: " + message[0]);
+    return false;
+  }
+  Path srcpath;
+  std::string srcsection;
+  util::Result res = SectionUtil::useOrSectionTranslate(message[1], srcsl->getSite(), srcsection, srcpath);
+  if (!res.success) {
+    global->getEventLog()->log("RemoteCommandHandler", res.error);
+    return false;
+  }
+  std::string file = srcpath.baseName();
+  Path dstpath;
+  if (message.size() == 3) {
+    srcpath = srcpath.dirName();
+    dstpath = message[2];
+  }
+  else {
+    file = message[2];
+    dstpath = message[3];
+  }
+  global->getEngine()->newTransferJobDownload(message[0], srcpath, srcsection, file, dstpath, file);
   return true;
 }
 

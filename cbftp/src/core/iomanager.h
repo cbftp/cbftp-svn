@@ -325,14 +325,16 @@ public:
   std::string getBindInterface() const;
 
   /* Whether a local IP address to bind to has been specified
+   * @param addrfam: The address family (IPv4 or IPv6) to use
    * @return: true or false
    */
-  bool hasBindAddress() const;
+  bool hasBindAddress(AddressFamily addrfam) const;
 
   /* Get the local IP address to bind to, if specified
+   * @param addrfam: The address family (IPv4 or IPv6) to use
    * @return: the IP address
    */
-  std::string getBindAddress() const;
+  std::string getBindAddress(AddressFamily addrfam) const;
 
   /* List the available network interfaces
    * @param ipv4: whether to include ipv4 addresses
@@ -348,9 +350,10 @@ public:
 
   /* Set the local IP address to bind to.
    * This setting will take precedence over setBindInterface
+   * @param addrfam: The address family (IPv4 or IPv6) to use
    * @param address: the local IP address to bind to
    */
-  void setBindAddress(const std::string& address);
+  void setBindAddress(AddressFamily addrfam, const std::string& address);
 
   /* Return the primary IPv4 address of a given interface
    * @param interface: The name of the interface
@@ -383,7 +386,7 @@ private:
   void handleExternalIn(SocketInfo& socketinfo);
   void handleTCPConnectingOut(SocketInfo& socketinfo);
   void handleTCPPlainIn(SocketInfo& socketinfo);
-  void handleTCPPlainOut(SocketInfo& socketinfo);
+  void handleTCPPlainOut(SocketInfo& socketinfo, bool readafter = true);
   void handleTCPSSLNegotiationIn(SocketInfo& socketinfo);
   void handleTCPSSLNegotiationOut(SocketInfo& socketinfo);
   void handleTCPSSLIn(SocketInfo& socketinfo);
@@ -414,9 +417,11 @@ private:
   int blocksize;
   int sockidcounter;
   std::string bindinterface;
-  std::string bindaddress;
+  std::string bindaddress4;
+  std::string bindaddress6;
   bool hasbindinterface;
-  bool hasbindaddress;
+  bool hasbindaddress4;
+  bool hasbindaddress6;
   std::unordered_map<int, SSL_SESSION*> sessions;
   int sessionkeycounter;
   Semaphore initialized;
