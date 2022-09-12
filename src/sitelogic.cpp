@@ -231,7 +231,16 @@ void SiteLogic::resetRace(const std::shared_ptr<SiteRace> & race) {
 }
 
 void SiteLogic::addTransferJob(std::shared_ptr<SiteTransferJob> & tj) {
-  transferjobs.push_back(tj);
+  bool alreadyadded = false;
+  for (std::list<std::shared_ptr<SiteTransferJob> >::iterator it = transferjobs.begin(); it != transferjobs.end(); ++it) {
+    if (*it == tj) {
+      alreadyadded = true;
+      break;
+    }
+  }
+  if (!alreadyadded) {
+    transferjobs.push_back(tj);
+  }
   haveConnectedActivate(tj->getTransferJob().lock()->maxSlots());
 }
 
