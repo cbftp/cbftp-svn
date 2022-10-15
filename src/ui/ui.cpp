@@ -687,6 +687,8 @@ void Ui::goTransfersFilterSpreadJobSite(const std::string& job, const std::strin
 void Ui::returnTransferFilters(const TransferFilteringParameters& tfp) {
   transfersscreen->initialize(mainrow, col, tfp);
   switchToLast();
+  topwindow->redraw();
+  vv.render();
   renderer.refresh(infoenabled, legendenabled);
 }
 

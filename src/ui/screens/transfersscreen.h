@@ -26,7 +26,9 @@ struct TransferFilteringParameters {
   TransferFilteringParameters() :
     usejobfilter(false), usesitefilter(false), usefilenamefilter(false),
     usestatusfilter(false), showstatusinprogress(false),
-    showstatusdone(false), showstatusfail(false), showstatusdupe(false) { }
+    showstatusdone(false), showstatusfail(false), showstatusdupe(false),
+    usespeedbelowfilter(false), speedbelowfilter(0),
+    usespeedabovefilter(false), speedabovefilter(0) { }
   bool usejobfilter;
   std::list<std::string> spreadjobsfilter;
   std::list<std::string> transferjobsfilter;
@@ -41,7 +43,10 @@ struct TransferFilteringParameters {
   bool showstatusdone;
   bool showstatusfail;
   bool showstatusdupe;
-
+  bool usespeedbelowfilter;
+  unsigned int speedbelowfilter;
+  bool usespeedabovefilter;
+  unsigned int speedabovefilter;
 };
 
 class TransfersScreen : public UIWindow {
