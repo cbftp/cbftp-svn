@@ -21,7 +21,8 @@ bool filteringActive(const TransferFilteringParameters & tfp) {
   bool sitefilter = tfp.usesitefilter && (!tfp.sourcesitefilters.empty() || !tfp.targetsitefilters.empty() || !tfp.anydirectionsitefilters.empty());
   bool filenamefilter = tfp.usefilenamefilter && !tfp.filenamefilter.empty();
   bool statusfilter = tfp.usestatusfilter && (tfp.showstatusinprogress || tfp.showstatusdone || tfp.showstatusfail || tfp.showstatusdupe);
-  return jobfilter || sitefilter || filenamefilter || statusfilter;
+  bool speedfilter = tfp.usespeedbelowfilter || tfp.usespeedabovefilter;
+  return jobfilter || sitefilter || filenamefilter || statusfilter || speedfilter;
 }
 
 std::string getFilterText(const TransferFilteringParameters & tfp) {
@@ -43,7 +44,12 @@ std::string getFilterText(const TransferFilteringParameters & tfp) {
   if (statusfilter) {
     filters++;
   }
-
+  if (tfp.usespeedbelowfilter) {
+    filters++;
+  }
+  if (tfp.usespeedabovefilter) {
+    filters++;
+  }
   if (jobfilter) {
     size_t size = tfp.spreadjobsfilter.size() + tfp.transferjobsfilter.size();
     if (size > 1 || filters > 1) {
@@ -141,6 +147,22 @@ std::string getFilterText(const TransferFilteringParameters & tfp) {
       if (statustext.length()) {
         output += statustext.substr(0, statustext.length() - 1);
       }
+    }
+  }
+  if (tfp.usespeedbelowfilter) {
+    if (filters > 1) {
+      output += "speedbelow,";
+    }
+    else {
+      output += "speed below: " + std::to_string(tfp.speedbelowfilter) + " MB/s";
+    }
+  }
+  if (tfp.usespeedabovefilter) {
+    if (filters > 1) {
+      output += "speedabove,";
+    }
+    else {
+      output += "speed above: " + std::to_string(tfp.speedabovefilter) + " MB/s";
     }
   }
   if (filters > 1) {
@@ -311,6 +333,12 @@ bool TransfersScreen::showsWhileFiltered(const std::shared_ptr<TransferStatus>& 
           return false;
         }
     }
+  }
+  if (tfp.usespeedbelowfilter && tfp.speedbelowfilter * 1024 < ts->getSpeed()) {
+    return false;
+  }
+  if (tfp.usespeedabovefilter && tfp.speedabovefilter * 1024 >= ts->getSpeed()) {
+    return false;
   }
   return true;
 }

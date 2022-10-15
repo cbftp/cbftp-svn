@@ -64,6 +64,12 @@ void TransfersFilterScreen::initialize(unsigned int row, unsigned int col, const
   mso.addCheckBox(y++, 1, "statusdone", "Done:", tfp.showstatusdone);
   mso.addCheckBox(y++, 1, "statusfail", "Failed:", tfp.showstatusfail);
   mso.addCheckBox(y++, 1, "statusdupe", "Dupe:", tfp.showstatusdupe);
+  y++;
+  mso.addCheckBox(y++, 1, "speedbelowfilter", "Enable speed below filtering:", tfp.usespeedbelowfilter);
+  mso.addStringField(y++, 1, "speedbelow", "Speed below:", std::to_string(tfp.speedbelowfilter), false, 7, 7);
+  mso.addCheckBox(y++, 1, "speedabovefilter", "Enable speed above filtering:", tfp.usespeedabovefilter);
+  mso.addStringField(y++, 1, "speedabove", "Speed above:", std::to_string(tfp.speedabovefilter), false, 7, 7);
+
   mso.enterFocusFrom(0);
   init(row, col);
 }
@@ -86,6 +92,10 @@ void TransfersFilterScreen::redraw() {
     }
     vv->putStr(msoe->getRow(), msoe->getCol(), msoe->getLabelText(), highlight);
     vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1, msoe->getContentText());
+    if (msoe->getIdentifier() == "speedbelow" || msoe->getIdentifier() == "speedabove") {
+      vv->putStr(msoe->getRow(), msoe->getCol() + msoe->getLabelText().length() + 1 +
+       std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData().length() + 1, "MB/s");
+    }
   }
 }
 
@@ -168,6 +178,20 @@ bool TransfersFilterScreen::keyPressed(unsigned int ch) {
       tfp.showstatusdone = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("statusdone"))->getData();
       tfp.showstatusfail= std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("statusfail"))->getData();
       tfp.showstatusdupe = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("statusdupe"))->getData();
+      tfp.usespeedbelowfilter = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("speedbelowfilter"))->getData();
+      try {
+        tfp.speedbelowfilter = std::stol(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("speedbelow"))->getData());
+      }
+      catch (std::exception&) {
+        tfp.speedbelowfilter = 0;
+      }
+      tfp.usespeedabovefilter = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("speedabovefilter"))->getData();
+      try {
+        tfp.speedabovefilter = std::stol(std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("speedabove"))->getData());
+      }
+      catch (std::exception&) {
+        tfp.speedabovefilter = 0;
+      }
       ui->returnTransferFilters(tfp);
       return true;
     }
