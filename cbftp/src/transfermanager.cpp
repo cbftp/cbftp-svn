@@ -9,7 +9,7 @@
 #include "transferstatuscallback.h"
 #include "engine.h"
 
-TransferManager::TransferManager() : totalfinishedtransfers(0), maxtransferhistory(10000) {
+TransferManager::TransferManager() : totalfinishedtransfers(0), maxtransferhistory(10000), maxtransfertimeseconds(0) {
 }
 
 TransferManager::~TransferManager() {

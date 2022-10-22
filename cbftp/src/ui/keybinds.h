@@ -83,6 +83,7 @@ public:
   void setBindDescription(int keyaction, const std::string& description, int scope);
   void resetAll();
   int getKeyAction(int key, int scope = KEYSCOPE_ALL) const;
+  unsigned int getKey(int keyaction, int scope = KEYSCOPE_ALL) const;
   std::string getName() const;
   typedef std::pair<int, int> KeyAndScope;
   typedef std::pair<int, int> ActionAndScope;

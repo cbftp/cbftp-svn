@@ -55,16 +55,13 @@ $(info Using CFLAGS provided by shell)
 endif
 ifndef LINKFLAGS
   LINKFLAGS=$(SSL_LINKFLAGS) -lpthread
-  ifneq ($(filter $(UNAME_S),Darwin OpenBSD NetBSD),)
-    NO_NCURSESW=1
+  ifneq ($(wildcard /etc/debian_version),)
+    DEBIAN=1
   endif
-  ifneq ($(wildcard /etc/alpine-release),)
-    NO_NCURSESW=1
-  endif
-  ifneq ($(NO_NCURSESW),)
-    LINKFLAGS+=-lncurses
-  else
+  ifneq ($(DEBIAN),)
     LINKFLAGS+=-lncursesw
+  else
+    LINKFLAGS+=-lncurses
   endif
 else
   $(info Using LINKFLAGS provided by shell)

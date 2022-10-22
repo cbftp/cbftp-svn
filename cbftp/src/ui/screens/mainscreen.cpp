@@ -253,7 +253,7 @@ void MainScreen::redraw() {
   msos.makeLeavableUp(listpreparedraces || listraces || listtransferjobs);
 
   if (!totalsitessize) {
-    vv->putStr(irow, 1, "Press 'A' to add a site");
+    vv->putStr(irow, 1, "Press '" + keybinds.getKeyRepr(keybinds.getKey(KEYACTION_ADD_SITE)).repr + "' to add a site");
   }
   else {
     int y = irow;

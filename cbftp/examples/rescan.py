@@ -12,12 +12,25 @@ import sys
 import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+pool_mgr = urllib3.PoolManager(cert_reqs=ssl.CERT_NONE)
+
+def shutdown_tls_sessions_nicely():
+  # This is not really needed but makes cbftp consider the api connection
+  # gracefully closed.
+  for pool_key in pool_mgr.pools.keys():
+    pool = pool_mgr.pools[pool_key]
+    for https_conn in pool.pool.queue:
+      if https_conn:
+        https_conn.sock.unwrap()
+
+def exit(status):
+  shutdown_tls_sessions_nicely()
+  sys.exit(status)
 
 def req(path, body=None):
-  http = urllib3.PoolManager(cert_reqs=ssl.CERT_NONE)
   headers = urllib3.make_headers(basic_auth=':%s' % api_token)
   command = 'GET' if body is None else 'POST'
-  r = http.request(command, 'https://localhost:%s/%s' % (cb_api_port, path),
+  r = pool_mgr.request(command, 'https://localhost:%s/%s' % (cb_api_port, path),
     headers=headers, body=None if body is None else json.dumps(body))
   if r.status >= 400:
     if r.status == 401:
@@ -26,7 +39,7 @@ def req(path, body=None):
       print(f"Error: path not found: {path}")
     else:
       print(f"Error: Received HTTP status {r.status} for {path}")
-    sys.exit(1)
+    exit(1)
   if len(r.data) == 0:
     return {}
   return json.loads(r.data)
@@ -69,6 +82,7 @@ if operation.startswith("browse-site"):
   for rescan_item in rescan_list:
     rescan(site, rescan_item)
   print("Rescan complete!")
+  exit(0)
 else:
   print(f"Unsupported operation: {operation}")
-  sys.exit(1)
+  exit(1)

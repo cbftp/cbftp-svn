@@ -17,6 +17,7 @@ public:
       PairingJobType type, const std::string& jobnamepattern, bool allsections,
       const std::list<std::string>& sections, PairingAction action, int slots);
   void clear();
+  bool empty() const;
 private:
   std::list<TransferPairingItem> entries;
 };

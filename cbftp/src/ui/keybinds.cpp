@@ -110,6 +110,9 @@ KeyRepr KeyBinds::getKeyRepr(unsigned int key) {
     char fkey = repr.wch - 226;
     repr.repr = std::string("F1") + fkey;
   }
+  if (repr.repr.empty()) {
+    repr.repr = static_cast<char>(repr.wch);
+  }
   return repr;
 }
 
@@ -278,6 +281,17 @@ int KeyBinds::getKeyAction(int key, int scope) const {
     return it->second->keyaction;
   }
   return KEYACTION_NONE;
+}
+
+unsigned int KeyBinds::getKey(int keyaction, int scope) const {
+  for (std::list<KeyData>::const_iterator it = keydata.begin(); it != keydata.end(); ++it) {
+    if (it->keyaction == keyaction && it->scope == scope) {
+      if (!it->configuredkeys.empty()) {
+        return *it->configuredkeys.begin();
+      }
+    }
+  }
+  return 0;
 }
 
 std::string KeyBinds::getName() const {

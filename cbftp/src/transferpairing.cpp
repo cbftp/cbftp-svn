@@ -27,3 +27,7 @@ void TransferPairing::add(bool allsites, const std::list<std::string>& targetsit
 void TransferPairing::clear() {
   entries.clear();
 }
+
+bool TransferPairing::empty() const {
+  return entries.empty();
+}
