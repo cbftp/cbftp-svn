@@ -1,5 +1,7 @@
 #include "misc.h"
 
+#include <ctime>
+
 #include "termint.h"
 #include "virtualview.h"
 
