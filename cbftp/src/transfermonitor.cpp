@@ -335,26 +335,27 @@ void TransferMonitor::engageList(const std::shared_ptr<SiteLogic>& sls, int conn
 }
 
 void TransferMonitor::tick(int msg) {
-  if (status != TM_STATUS_IDLE) {
-    timestamp += TICK_INTERVAL;
-    ++ticker;
-    if (type == TM_TYPE_FXP) {
-      updateFXPSizeSpeed();
-      if (ticker % 20 == 0) { // run once per second
-        if (checkForDeadFXPTransfers()) {
-          return;
-        }
-      }
-    }
-    if (type == TM_TYPE_DOWNLOAD || type == TM_TYPE_UPLOAD) {
-      if (ticker % 4 == 0) { // run every 200 ms
-        updateLocalTransferSizeSpeed();
-      }
-    }
-    if (ticker % 20 == 0) {
-      if (checkMaxTransferTime()) {
+  if (status == TM_STATUS_IDLE) {
+    return;
+  }
+  timestamp += TICK_INTERVAL;
+  ++ticker;
+  if (type == TM_TYPE_FXP) {
+    updateFXPSizeSpeed();
+    if (ticker % 20 == 0) { // run once per second
+      if (checkForDeadFXPTransfers()) {
         return;
       }
+    }
+  }
+  if (type == TM_TYPE_DOWNLOAD || type == TM_TYPE_UPLOAD) {
+    if (ticker % 4 == 0) { // run every 200 ms
+      updateLocalTransferSizeSpeed();
+    }
+  }
+  if (ticker % 20 == 0) {
+    if (checkMaxTransferTime()) {
+      return;
     }
   }
 }
@@ -749,7 +750,9 @@ bool TransferMonitor::checkForDeadFXPTransfers() {
 bool TransferMonitor::checkMaxTransferTime() {
   if (maxtransfertimeseconds > 0 && timestamp / 1000 > maxtransfertimeseconds) {
     if (status == TM_STATUS_TRANSFERRING || status == TM_STATUS_AWAITING_ACTIVE || status == TM_STATUS_AWAITING_PASSIVE) {
-      ts->addLogLine("[" + util::ctimeLog() + "] [Timeout reached after " + std::to_string(maxtransfertimeseconds) + " seconds. Disconnecting]");
+      if (!!ts) {
+        ts->addLogLine("[" + util::ctimeLog() + "] [Timeout reached after " + std::to_string(maxtransfertimeseconds) + " seconds. Disconnecting]");
+      }
       if (sld) {
         sld->disconnectConn(dst);
         sld->connectConn(dst);
