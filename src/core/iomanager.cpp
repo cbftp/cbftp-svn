@@ -93,6 +93,8 @@ IOManager::IOManager(WorkManager& wm, TickPoke& tp)
   , blocksize(blockpool.blockSize())
   , sockidcounter(0)
   , hasbindinterface(false)
+  , hasbindaddress4(false)
+  , hasbindaddress6(false)
   , sessionkeycounter(0)
 {
   workmanager.addReadyNotify(this);
@@ -1403,8 +1405,9 @@ StringResult IOManager::getInterfaceName(const std::string& address) const {
       continue;
     }
     if (host == address) {
+      std::string ifname = ifa->ifa_name;
       freeifaddrs(ifaddr);
-      return ifa->ifa_name;
+      return ifname;
     }
   }
   freeifaddrs(ifaddr);

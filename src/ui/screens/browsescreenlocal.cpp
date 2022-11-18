@@ -348,6 +348,9 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
           BrowseScreenRequest request;
           request.type = BrowseScreenRequestType::FILELIST;
           request.path = text;
+          if (request.path.isRelative()) {
+            request.path = list.getPath() / request.path;
+          }
           request.id = global->getLocalStorage()->requestLocalFileList(request.path);
           requests.push_back(request);
           bottomlinetextfield.clear();

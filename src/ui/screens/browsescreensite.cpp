@@ -1267,10 +1267,11 @@ bool BrowseScreenSite::keyDown() {
 }
 
 void BrowseScreenSite::gotoPath(const Path & path) {
+  Path abspath = path.isRelative() ? list.getPath() / path : path;
   BrowseScreenRequest request;
-  request.id = sitelogic->requestFileList(ui, path);
+  request.id = sitelogic->requestFileList(ui, abspath);
   request.type = BrowseScreenRequestType::FILELIST;
-  request.path = path;
+  request.path = abspath;
   requests.push_back(request);
 }
 

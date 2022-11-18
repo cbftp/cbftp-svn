@@ -1,5 +1,7 @@
 #include "viewfilescreen.h"
 
+#include <cassert>
+
 #include "transfersscreen.h"
 
 #include "../ui.h"
@@ -87,9 +89,9 @@ void ViewFileScreen::initialize() {
 
 void ViewFileScreen::initialize(unsigned int row, unsigned int col, const std::string & site, const std::string & file, const std::shared_ptr<FileList>& fl) {
   initialize();
-  deleteafter = true;
   this->site = site;
   this->file = file;
+  path = "";
   filelist = fl;
   sitelogic = global->getSiteLogicManager()->getSiteLogic(site);
   size = filelist->getFile(file)->getSize();
@@ -108,6 +110,7 @@ void ViewFileScreen::initialize(unsigned int row, unsigned int col, const std::s
   if (state == ViewFileState::CONNECTING) {
     requestid = sitelogic->requestDownloadFile(ui, filelist, file, !externallyviewable);
   }
+  deleteafter = externallyviewable;
   init(row, col);
 }
 
@@ -162,7 +165,7 @@ void ViewFileScreen::redraw() {
         if (!!ts) {
           state = ViewFileState::DOWNLOADING;
           ts->setAwaited(true);
-          path = ts->getTargetPath() / file;
+          path = ts->getTargetPath().empty() ? "" : ts->getTargetPath() / file;
           expectbackendpush = true;
           redraw();
         }
@@ -175,6 +178,10 @@ void ViewFileScreen::redraw() {
             return;
           }
           DownloadFileData* dlfdata = sitelogic->getDownloadFileData(requestid);
+          if (!ts) {
+            ts = dlfdata->ts;
+            path = ts->getTargetPath().empty() ? "" : ts->getTargetPath() / file;
+          }
           if (dlfdata->inmemory) {
             tmpdata = dlfdata->data;
           }
@@ -312,6 +319,7 @@ bool ViewFileScreen::keyPressed(unsigned int ch) {
 
 void ViewFileScreen::loadViewer() {
   if (externallyviewable) {
+    assert(!path.empty());
     if (!pid) {
       if (deleteafter) {
         pid = ui->getExternalFileViewing().viewThenDelete(path);
@@ -325,10 +333,8 @@ void ViewFileScreen::loadViewer() {
   }
   else {
     if (tmpdata.empty()) {
+      assert(!path.empty());
       tmpdata = global->getLocalStorage()->getFileContent(path);
-    }
-    if (deleteafter) {
-      global->getLocalStorage()->requestDelete(path);
     }
     encoding = encoding::guessEncoding(tmpdata);
     unsigned int tmpdatalen = tmpdata.size();
@@ -366,7 +372,7 @@ void ViewFileScreen::viewInternal() {
   while (ymax > row && y + row > ymax) {
     --y;
   }
-  ymax = rawcontents.size();
+  ymax = translatedcontents.size();
   for (unsigned int i = 0; i < ymax; i++) {
     if (translatedcontents[i].length() > xmax) {
       xmax = translatedcontents[i].length();

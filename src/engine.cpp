@@ -296,6 +296,12 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
       global->getEventLog()->log("Engine", "Skipping site because of download-only mode and download disabled: " + site.first);
       continue;
     }
+    if (!downloadonly && sl->getSite()->getAllowDownload() == SiteAllowTransfer::SITE_ALLOW_DOWNLOAD_MATCH_ONLY &&
+        sl->getSite()->getAllowUpload() == SiteAllowTransfer::SITE_ALLOW_TRANSFER_NO)
+    {
+      global->getEventLog()->log("Engine", "Skipping site because upload disabled and download only allowed for download-only jobs: " + site.first);
+      continue;
+    }
     if (!sl->getSite()->hasSection(section)) {
       global->getEventLog()->log("Engine", "Trying to use an undefined section: " +
           section + " on " + site.first);
