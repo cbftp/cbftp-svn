@@ -15,10 +15,10 @@ public:
   MakeDirScreen(Ui *);
   ~MakeDirScreen();
   void initialize(unsigned int row, unsigned int col, const std::string & site,  UIFileList & filelist);
-  void redraw();
-  bool keyPressed(unsigned int);
-  std::string getLegendText() const;
-  std::string getInfoLabel() const;
+  void redraw() override;
+  bool keyPressed(unsigned int) override;
+  std::string getLegendText() const override;
+  std::string getInfoLabel() const override;
 private:
   void tryMakeDir();
   bool active;

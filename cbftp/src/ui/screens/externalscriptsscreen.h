@@ -16,10 +16,10 @@ public:
   ExternalScriptsScreen(Ui *);
   ~ExternalScriptsScreen();
   void initialize(unsigned int row, unsigned int col, ExternalScripts* externalscripts, const std::string& description);
-  void redraw();
-  bool keyPressed(unsigned int);
-  std::string getLegendText() const;
-  std::string getInfoLabel() const;
+  void redraw() override;
+  bool keyPressed(unsigned int) override;
+  std::string getLegendText() const override;
+  std::string getInfoLabel() const override;
 private:
   void addScriptLine(int y, const std::string& name, const Path& path, int id = -1,
       const std::shared_ptr<MenuSelectAdjustableLine>& before = nullptr);

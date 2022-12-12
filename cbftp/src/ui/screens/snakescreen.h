@@ -38,19 +38,19 @@ class SnakeScreen : public UIWindow {
 public:
   SnakeScreen(Ui *);
   void initialize(unsigned int row, unsigned int col);
-  void redraw();
-  void update();
-  bool keyPressed(unsigned int ch);
-  std::string getLegendText() const;
-  std::string getInfoLabel() const;
-  std::string getInfoText() const;
+  void redraw() override;
+  void update() override;
+  bool keyPressed(unsigned int ch) override;
+  std::string getLegendText() const override;
+  std::string getInfoLabel() const override;
+  std::string getInfoText() const override;
 private:
   void start();
   void grow();
   bool placeFruit();
   void lose();
   void win();
-  Snake::Pixel & getPixel(unsigned int y, unsigned int x);
+  Snake::Pixel& getPixel(unsigned int y, unsigned int x);
   Snake::Pos getTarget(Snake::Direction direction) const;
   std::list<Snake::Pos> snakepos;
   std::vector<Snake::Pixel> grid;

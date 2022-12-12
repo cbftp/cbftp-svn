@@ -21,11 +21,11 @@ class SelectJobsScreen : public UIWindow {
 public:
   SelectJobsScreen(Ui *);
   void initialize(unsigned int, unsigned int, JobType);
-  void redraw();
-  bool keyPressed(unsigned int);
-  std::string getLegendText() const;
-  std::string getInfoLabel() const;
-  std::string getInfoText() const;
+  void redraw() override;
+  bool keyPressed(unsigned int) override;
+  std::string getLegendText() const override;
+  std::string getInfoLabel() const override;
+  std::string getInfoText() const override;
   static void addJobTableHeader(unsigned int, MenuSelectOption &, const std::string &);
   static void addJobDetails(unsigned int, MenuSelectOption &, std::shared_ptr<Race>);
   static void addJobDetails(unsigned int, MenuSelectOption &, std::shared_ptr<TransferJob>);

@@ -32,13 +32,13 @@ public:
   void initializeSiteSite(unsigned int row, unsigned int col,
       const std::string& leftsite, const std::string& rightsite,
       const Path& leftpath = Path(), const Path& rightpath = Path());
-  void redraw();
-  void update();
-  void command(const std::string& command, const std::string& arg);
-  bool keyPressed(unsigned int);
-  std::string getLegendText() const;
-  std::string getInfoLabel() const;
-  std::string getInfoText() const;
+  void redraw() override;
+  void update() override;
+  void command(const std::string& command, const std::string& arg) override;
+  bool keyPressed(unsigned int) override;
+  std::string getLegendText() const override;
+  std::string getInfoLabel() const override;
+  std::string getInfoText() const override;
   bool isInitialized() const;
   void suggestOtherRefresh(BrowseScreenSub* sub);
 private:

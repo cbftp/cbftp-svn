@@ -11,10 +11,10 @@ public:
   FileViewerSettingsScreen(Ui *);
   ~FileViewerSettingsScreen();
   void initialize(unsigned int, unsigned int);
-  void redraw();
-  bool keyPressed(unsigned int);
-  std::string getLegendText() const;
-  std::string getInfoLabel() const;
+  void redraw() override;
+  bool keyPressed(unsigned int) override;
+  std::string getLegendText() const override;
+  std::string getInfoLabel() const override;
 private:
   bool active;
   std::shared_ptr<MenuSelectOptionElement> activeelement;

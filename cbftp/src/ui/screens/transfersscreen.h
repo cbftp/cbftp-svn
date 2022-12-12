@@ -59,11 +59,11 @@ public:
   void initializeFilterTransferJob(unsigned int, unsigned int, const std::string &);
   void initializeFilterSpreadJobSite(unsigned int, unsigned int, const std::string & job, const std::string & site);
   void initialize(unsigned int, unsigned int, const TransferFilteringParameters &);
-  void redraw();
-  bool keyPressed(unsigned int);
-  std::string getLegendText() const;
-  std::string getInfoLabel() const;
-  std::string getInfoText() const;
+  void redraw() override;
+  bool keyPressed(unsigned int) override;
+  std::string getLegendText() const override;
+  std::string getInfoLabel() const override;
+  std::string getInfoText() const override;
   static void addTransferTableHeader(unsigned int, MenuSelectOption &);
   static TransferDetails formatTransferDetails(std::shared_ptr<TransferStatus> &);
 private:

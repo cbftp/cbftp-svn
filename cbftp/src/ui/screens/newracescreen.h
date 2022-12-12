@@ -19,11 +19,11 @@ public:
   NewRaceScreen(Ui *);
   ~NewRaceScreen();
   void initialize(unsigned int row, unsigned int col, const std::string & site, const std::list<std::string> & sections, const std::list<std::pair<std::string, bool> > & items);
-  void redraw();
-  bool keyPressed(unsigned int);
-  std::string getLegendText() const;
-  std::string getInfoLabel() const;
-  std::string getInfoText() const;
+  void redraw() override;
+  bool keyPressed(unsigned int) override;
+  std::string getLegendText() const override;
+  std::string getInfoLabel() const override;
+  std::string getInfoText() const override;
 private:
   void populateSiteList();
   std::shared_ptr<Race> startRace(bool addtemplegend);

@@ -14,12 +14,12 @@ public:
   RaceStatusScreen(Ui *);
   ~RaceStatusScreen();
   bool initialize(unsigned int, unsigned int, unsigned int);
-  void redraw();
-  void update();
-  void command(const std::string &, const std::string &);
-  bool keyPressed(unsigned int);
-  std::string getLegendText() const;
-  std::string getInfoLabel() const;
+  void redraw() override;
+  void update() override;
+  void command(const std::string &, const std::string &) override;
+  bool keyPressed(unsigned int) override;
+  std::string getLegendText() const override;
+  std::string getInfoLabel() const override;
 private:
   void deleteFiles(bool);
   std::list<std::string> getIncompleteSites() const;
