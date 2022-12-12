@@ -58,7 +58,10 @@ ifndef LINKFLAGS
   ifneq ($(wildcard /etc/debian_version),)
     DEBIAN=1
   endif
-  ifneq ($(DEBIAN),)
+  ifneq ($(filter $(UNAME_S),FreeBSD),)
+    FREEBSD=1
+  endif
+  ifneq ($(DEBIAN)$(FREEBSD),)
     LINKFLAGS+=-lncursesw
   else
     LINKFLAGS+=-lncurses

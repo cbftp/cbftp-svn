@@ -17,11 +17,11 @@ public:
   TransferJobStatusScreen(Ui *);
   ~TransferJobStatusScreen();
   bool initialize(unsigned int, unsigned int, unsigned int);
-  void redraw();
-  void command(const std::string &, const std::string &);
-  bool keyPressed(unsigned int);
-  std::string getLegendText() const;
-  std::string getInfoLabel() const;
+  void redraw() override;
+  void command(const std::string &, const std::string &) override;
+  bool keyPressed(unsigned int) override;
+  std::string getLegendText() const override;
+  std::string getInfoLabel() const override;
   static std::string getRoute(std::shared_ptr<TransferJob>);
 private:
   void addTransferDetails(unsigned int, std::shared_ptr<TransferStatus>);

@@ -17,10 +17,10 @@ public:
   TransferStatusScreen(Ui *);
   ~TransferStatusScreen();
   void initialize(unsigned int, unsigned int, std::shared_ptr<TransferStatus>);
-  void redraw();
-  bool keyPressed(unsigned int);
-  std::string getLegendText() const;
-  std::string getInfoLabel() const;
+  void redraw() override;
+  bool keyPressed(unsigned int) override;
+  std::string getLegendText() const override;
+  std::string getInfoLabel() const override;
   static void abortTransfer(std::shared_ptr<TransferStatus> ts);
 private:
   std::shared_ptr<TransferStatus> ts;

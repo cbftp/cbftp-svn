@@ -18,11 +18,11 @@ public:
   GlobalOptionsScreen(Ui *);
   ~GlobalOptionsScreen();
   void initialize(unsigned int, unsigned int);
-  void update();
-  void redraw();
-  bool keyPressed(unsigned int);
-  std::string getLegendText() const;
-  std::string getInfoLabel() const;
+  void update() override;
+  void redraw() override;
+  bool keyPressed(unsigned int) override;
+  std::string getLegendText() const override;
+  std::string getInfoLabel() const override;
 private:
   MenuSelectOption mso;
   RemoteCommandHandler * rch;

@@ -24,12 +24,12 @@ public:
   ~ViewFileScreen();
   void initialize(unsigned int, unsigned int, const std::string &, const std::string &, const std::shared_ptr<FileList>& fl);
   void initialize(unsigned int, unsigned int, const Path &, const std::string &);
-  void redraw();
-  void update();
-  bool keyPressed(unsigned int);
-  std::string getLegendText() const;
-  std::string getInfoLabel() const;
-  std::string getInfoText() const;
+  void redraw() override;
+  void update() override;
+  bool keyPressed(unsigned int) override;
+  std::string getLegendText() const override;
+  std::string getInfoLabel() const override;
+  std::string getInfoText() const override;
 private:
   int getCurrentScope() const;
   int state;

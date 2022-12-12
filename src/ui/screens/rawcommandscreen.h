@@ -17,12 +17,12 @@ public:
   void initialize(unsigned int, unsigned int, const std::string &, const Path &, const std::string &);
   void initialize(unsigned int, unsigned int, const std::string &);
   void initialize(unsigned int, unsigned int, RawBuffer * rawbuffer, const std::string & label, const std::string & infotext);
-  void redraw();
-  void update();
-  bool keyPressed(unsigned int);
-  std::string getLegendText() const;
-  std::string getInfoLabel() const;
-  std::string getInfoText() const;
+  void redraw() override;
+  void update() override;
+  bool keyPressed(unsigned int) override;
+  std::string getLegendText() const override;
+  std::string getInfoLabel() const override;
+  std::string getInfoText() const override;
 private:
   int getCurrentScope() const;
   void fixCopyReadPos();

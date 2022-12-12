@@ -13,11 +13,11 @@ public:
   ScoreBoardScreen(Ui *);
   ~ScoreBoardScreen();
   void initialize(unsigned int, unsigned int);
-  void redraw();
-  bool keyPressed(unsigned int);
-  std::string getLegendText() const;
-  std::string getInfoLabel() const;
-  std::string getInfoText() const;
+  void redraw() override;
+  bool keyPressed(unsigned int) override;
+  std::string getLegendText() const override;
+  std::string getInfoLabel() const override;
+  std::string getInfoText() const override;
 private:
   Engine * engine;
   std::shared_ptr<ScoreBoard> scoreboard;

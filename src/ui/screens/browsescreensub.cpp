@@ -23,7 +23,7 @@ UIFileList * BrowseScreenSub::getUIFileList() {
 void BrowseScreenSub::printFlipped(Ui * ui, const std::shared_ptr<ResizableElement> & re) {
   int flipper = 0;
   for (unsigned int i = 0; i < re->getLabelText().length(); i++) {
-    ui->getVirtualView().putChar(re->getRow(), re->getCol() + i, re->getLabelText()[i], flipper++ % 2);
+    ui->getVirtualView().putStr(re->getRow(), re->getCol() + i, re->getLabelText().substr(i, 1), flipper++ % 2);
   }
 }
 

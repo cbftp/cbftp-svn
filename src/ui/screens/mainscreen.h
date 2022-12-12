@@ -17,12 +17,12 @@ class MainScreen : public UIWindow {
 public:
   MainScreen(Ui *);
   void initialize(unsigned int, unsigned int);
-  void redraw();
-  void command(const std::string &);
-  bool keyPressed(unsigned int);
-  std::string getLegendText() const;
-  std::string getInfoLabel() const;
-  std::string getInfoText() const;
+  void redraw() override;
+  void command(const std::string &) override;
+  bool keyPressed(unsigned int) override;
+  std::string getLegendText() const override;
+  std::string getInfoLabel() const override;
+  std::string getInfoText() const override;
 private:
   void printTable(MenuSelectOption & table);
   void addPreparedRaceTableRow(unsigned int, MenuSelectOption &, unsigned int,

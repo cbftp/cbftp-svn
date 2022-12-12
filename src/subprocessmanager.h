@@ -41,7 +41,7 @@ public:
   void killProcess(int pid);
   void killAll();
   bool getIsRunning(int pid) const;
-  void signal(int signal, int);
+  void signal(int signal, int) override;
 private:
   void FDData(int sockid) override;
   std::list<std::shared_ptr<SubProcess>> subprocesses;

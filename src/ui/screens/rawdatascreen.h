@@ -13,12 +13,12 @@ class RawDataScreen : public UIWindow {
 public:
   RawDataScreen(Ui *);
   void initialize(unsigned int, unsigned int, std::string, int);
-  void redraw();
-  void update();
-  bool keyPressed(unsigned int);
-  std::string getLegendText() const;
-  std::string getInfoLabel() const;
-  std::string getInfoText() const;
+  void redraw() override;
+  void update() override;
+  bool keyPressed(unsigned int) override;
+  std::string getLegendText() const override;
+  std::string getInfoLabel() const override;
+  std::string getInfoText() const override;
   static void printRawBufferLines(VirtualView* vv, RawBuffer *, unsigned int, unsigned int, unsigned int);
   static void printRawBufferLines(VirtualView* vv, RawBuffer *, unsigned int, unsigned int, unsigned int, bool, unsigned int);
 private:
