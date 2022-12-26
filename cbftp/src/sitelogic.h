@@ -59,7 +59,7 @@ class SiteLogic : public Core::EventReceiver {
     std::list<SiteLogicRequestReady> requestsready;
     int requestidcounter;
     bool poke;
-    int currtime;
+    unsigned long long int currtime;
     int timesincelastrequestready;
     std::list<DelayedCommand> delayedcommands;
     RefreshGovernor refreshgovernor;

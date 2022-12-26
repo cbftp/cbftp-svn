@@ -245,6 +245,7 @@ void SiteLogic::addTransferJob(std::shared_ptr<SiteTransferJob> & tj) {
 }
 
 void SiteLogic::tick(int message) {
+  unsigned long long int prevtime = currtime;
   currtime += TICK_INTERVAL;
   for (std::list<DelayedCommand>::iterator it = delayedcommands.begin(); it != delayedcommands.end(); ++it) {
     DelayedCommand & delayedcommand = *it;
@@ -281,7 +282,7 @@ void SiteLogic::tick(int message) {
       }
     }
   }
-  if (currtime % 60000 == 0) {
+  if (currtime / 60000 > prevtime / 60000) { // if rollover to the next minute happened during this tick
     site->tickMinute();
   }
   timesincelastrequestready += TICK_INTERVAL;

@@ -15,7 +15,7 @@ class Statistics : public Core::EventReceiver {
 public:
   Statistics();
   ~Statistics();
-  void tick(int);
+  void tick(int message) override;
   void addTransferStatsFile(StatsDirection, unsigned long long int size);
   void addSpreadJob();
   void addTransferJob();
