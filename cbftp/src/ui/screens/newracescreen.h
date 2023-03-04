@@ -7,6 +7,7 @@
 
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
+#include "../../engine.h"
 
 class FocusableArea;
 class MenuSelectOptionElement;
@@ -26,7 +27,7 @@ public:
   std::string getInfoText() const override;
 private:
   void populateSiteList();
-  std::shared_ptr<Race> startRace(bool addtemplegend);
+  JobStartResult startRace(bool addtemplegend);
   std::shared_ptr<Site> startsite;
   std::string getSectionButtonText(std::shared_ptr<MenuSelectOptionElement>) const;
   bool active;

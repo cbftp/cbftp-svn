@@ -87,4 +87,5 @@ private:
   int nextrequestid;
   std::map<Path, std::map<std::string, EndpointPointer>> endpoints;
   std::set<std::string> tempauthtokens;
+  bool notifyoncurrentrequest;
 };

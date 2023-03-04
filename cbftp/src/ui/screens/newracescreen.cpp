@@ -257,10 +257,10 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
     case KEYACTION_START:
     {
       bool goracestatus = items.size() == 1;
-      std::shared_ptr<Race> race = startRace(!goracestatus);
-      if (!!race) {
+      JobStartResult result = startRace(!goracestatus);
+      if (result) {
         if (goracestatus) {
-          ui->returnRaceStatus(race->getId());
+          ui->returnRaceStatus(result.id);
         }
         else {
           ui->returnToLast();
@@ -270,8 +270,8 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
     }
     case KEYACTION_START_RETURN:
     {
-      std::shared_ptr<Race> race = startRace(true);
-      if (!!race) {
+      JobStartResult result = startRace(true);
+      if (result) {
         ui->returnToLast();
       }
       return true;
@@ -309,10 +309,9 @@ std::string NewRaceScreen::getSectionButtonText(std::shared_ptr<MenuSelectOption
   return buttontext;
 }
 
-std::shared_ptr<Race> NewRaceScreen::startRace(bool addtemplegend) {
-  msota->getData();
+JobStartResult NewRaceScreen::startRace(bool addtemplegend) {
   std::list<std::string> sites;
-  std::shared_ptr<Race> lastrace;
+  JobStartResult lastresult("No spread job started");
   for (unsigned int i = 0; i < mso.size(); i++) {
     std::shared_ptr<MenuSelectOptionCheckBox> msocb = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement(i));
     if (msocb->getData()) {
@@ -320,26 +319,27 @@ std::shared_ptr<Race> NewRaceScreen::startRace(bool addtemplegend) {
     }
   }
   if (sites.size() < 2) {
-    ui->goInfo("Cannot start spread job with less than 2 sites!");
-    return lastrace;
+    std::string error = "Cannot start spread job with less than 2 sites!";
+    ui->goInfo(error);
+    return JobStartResult(error);
   }
 
   for (std::list<std::pair<std::string, bool> >::const_iterator itemit = items.begin(); itemit != items.end(); itemit++) {
     if (msota->getData() == SPREAD_RACE) {
-      std::shared_ptr<Race> race = global->getEngine()->newRace(itemit->first, section, sites, false);
-      if (!!race) {
-        lastrace = race;
+      JobStartResult result = global->getEngine()->newRace(itemit->first, section, sites, false);
+      if (result) {
+        lastresult = result;
       }
     }
     else {
-      std::shared_ptr<Race> race = global->getEngine()->newDistribute(itemit->first, section, sites, false);
-      if (!!race) {
-        lastrace = race;
+      JobStartResult result = global->getEngine()->newDistribute(itemit->first, section, sites, false);
+      if (result) {
+        lastresult = result;
       }
     }
   }
-  if (addtemplegend && !!lastrace) {
-    ui->addTempLegendSpreadJob(lastrace->getId());
+  if (addtemplegend && lastresult) {
+    ui->addTempLegendSpreadJob(lastresult.id);
   }
-  return lastrace;
+  return lastresult;
 }
