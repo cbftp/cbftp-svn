@@ -40,6 +40,7 @@
 #include "siterace.h"
 #include "skiplist.h"
 #include "transferjob.h"
+#include "uibase.h"
 #include "util.h"
 
 namespace {
@@ -132,12 +133,45 @@ bool getQueryParamBoolValue(const http::Request& request, const std::string& par
   return boolvalue;
 }
 
-http::Response badRequestResponse(const std::string& error, int code = 400)
-{
-  http::Response response(400);
+http::Response badRequestResponse(const std::string& error, int code = 400) {
+  http::Response response(code);
   nlohmann::json j = {{"error", error}};
   std::string errorjson = j.dump(2);
   response.setBody(std::vector<char>(errorjson.begin(), errorjson.end()));
+  response.addHeader("Content-Type", "application/json");
+  return response;
+}
+
+std::string jobStateToString(JobStartResult::JobStartState state) {
+  switch (state) {
+    case JobStartResult::JobStartState::STARTED:
+      return "STARTED";
+    case JobStartResult::JobStartState::PREPARED:
+      return "PREPARED";
+    case JobStartResult::JobStartState::ERROR:
+      return "ERROR";
+  }
+  return "<unknown job start state " + std::to_string(static_cast<int>(state)) +">";
+}
+
+http::Response jobStartResponse(const JobStartResult& result) {
+  http::Response response;
+  nlohmann::json info = nlohmann::json::array();
+  for (const std::string& infomessage : result.infomessages) {
+    info.push_back(infomessage);
+  }
+  nlohmann::json j = {{"info", info}};
+  if (result) {
+    response.setStatusCode(201);
+    j["id"] = result.id;
+    j["state"] = jobStateToString(result.state);
+  }
+  else {
+    response.setStatusCode(503);
+    j["error"] = result.error;
+  }
+  std::string serialized = j.dump(2);
+  response.setBody(std::vector<char>(serialized.begin(), serialized.end()));
   response.addHeader("Content-Type", "application/json");
   return response;
 }
@@ -866,7 +900,7 @@ nlohmann::json getJsonFromBody(const http::Request& request) {
 
 }
 
-RestApi::RestApi() : nextrequestid(0) {
+RestApi::RestApi() : nextrequestid(0), notifyoncurrentrequest(false) {
   endpoints["/file"]["GET"] = &RestApi::handleFileGet;
   endpoints["/filelist"]["GET"] = &RestApi::handlePathGet; // deprecated, use /path
   endpoints["/info"]["GET"] = &RestApi::handleInfoGet;
@@ -1351,28 +1385,31 @@ void RestApi::handleSpreadJobPost(RestApiCallback* cb, int connrequestid, const 
   }
   auto resetit = jsondata.find("reset");
   bool reset = resetit != jsondata.end() && resetit->get<bool>();
-  bool success = false;
   SpreadProfile profile = SPREAD_RACE;
   auto profileit = jsondata.find("profile");
   if (profileit != jsondata.end()) {
     profile = stringToProfile(*profileit);
   }
+  JobStartResult result;
   switch (profile) {
     case  SPREAD_DISTRIBUTE:
-      success = !!global->getEngine()->newDistribute(name, section, sites, reset, dlonlysites);
+      result = global->getEngine()->newDistribute(name, section, sites, reset, dlonlysites);
       break;
     case SPREAD_PREPARE:
-      success = global->getEngine()->prepareRace(name, section, sites, reset, dlonlysites);
+      result = global->getEngine()->prepareRace(name, section, sites, reset, dlonlysites);
       break;
     case SPREAD_RACE:
-      success = !!global->getEngine()->newRace(name, section, sites, reset, dlonlysites);
+      result = global->getEngine()->newRace(name, section, sites, reset, dlonlysites);
       break;
   }
-  http::Response response(201);
-  response.appendHeader("Content-Length", "0");
-  if (!success) {
-    response.setStatusCode(503);
+  if (result) {
+    if (global->getRemoteCommandHandler()->getNotify() >= RemoteCommandNotify::JOBS_ADDED ||
+        (result.state == JobStartResult::JobStartState::PREPARED && global->getRemoteCommandHandler()->getNotify() >= RemoteCommandNotify::ACTION_REQUESTED))
+    {
+      notifyoncurrentrequest = true;
+    }
   }
+  http::Response response = jobStartResponse(result);
   cb->requestHandled(connrequestid, response);
 }
 
@@ -1838,28 +1875,20 @@ void RestApi::handleTransferJobPost(RestApiCallback* cb, int connrequestid, cons
     return;
   }
 
-  unsigned int id = 0;
+  JobStartResult result;
   if (srcsl && dstsl) {
-    id = global->getEngine()->newTransferJobFXP(srcsl->getSite()->getName(), srcpath, srcsection, name, dstsl->getSite()->getName(), dstpath, dstsection, name);
+    result = global->getEngine()->newTransferJobFXP(srcsl->getSite()->getName(), srcpath, srcsection, name, dstsl->getSite()->getName(), dstpath, dstsection, name);
   }
   else if (srcsl && !dstsl) {
-    id = global->getEngine()->newTransferJobDownload(srcsl->getSite()->getName(), srcpath, srcsection, name, dstpath, name);
+    result = global->getEngine()->newTransferJobDownload(srcsl->getSite()->getName(), srcpath, srcsection, name, dstpath, name);
   }
   else if (!srcsl && dstsl) {
-    id = global->getEngine()->newTransferJobUpload(srcpath, name, dstsl->getSite()->getName(), dstpath, dstsection, name);
+    result = global->getEngine()->newTransferJobUpload(srcpath, name, dstsl->getSite()->getName(), dstpath, dstsection, name);
   }
-  http::Response response(201);
-  if (id == 0) {
-    response.setStatusCode(503);
-    response.appendHeader("Content-Length", "0");
+  if (result && global->getRemoteCommandHandler()->getNotify() >= RemoteCommandNotify::JOBS_ADDED) {
+    notifyoncurrentrequest = true;
   }
-  else {
-    nlohmann::json j;
-    j["id"] = id;
-    std::string jsondump = j.dump(2);
-    response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
-    response.addHeader("Content-Type", "application/json");
-  }
+  http::Response response = jobStartResponse(result);
   cb->requestHandled(connrequestid, response);
 }
 
@@ -2095,6 +2124,7 @@ void RestApi::handleRequest(RestApiCallback* cb, int connrequestid, const http::
     cb->requestHandled(connrequestid, response);
     return;
   }
+  notifyoncurrentrequest = global->getRemoteCommandHandler()->getNotify() >= RemoteCommandNotify::ALL_COMMANDS;
   try {
     (this->*(it2->second))(cb, connrequestid, request);
   }
@@ -2109,6 +2139,10 @@ void RestApi::handleRequest(RestApiCallback* cb, int connrequestid, const http::
   catch (std::invalid_argument& e) {
     cb->requestHandled(connrequestid, badRequestResponse(e.what()));
     return;
+  }
+  if (notifyoncurrentrequest) {
+    global->getUIBase()->notify();
+    notifyoncurrentrequest = false;
   }
 }
 

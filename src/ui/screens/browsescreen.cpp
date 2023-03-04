@@ -403,12 +403,14 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
                   if (!f || (!f->isDirectory() && !f->getSize())) {
                     continue;
                   }
-                  unsigned int id = global->getEngine()->newTransferJobFXP(std::static_pointer_cast<BrowseScreenSite>(active)->siteName(),
+                  JobStartResult result = global->getEngine()->newTransferJobFXP(std::static_pointer_cast<BrowseScreenSite>(active)->siteName(),
                                                                            activefl,
                                                                            std::static_pointer_cast<BrowseScreenSite>(other)->siteName(),
                                                                            otherfl,
                                                                            f->getName());
-                  ui->addTempLegendTransferJob(id);
+                  if (result) {
+                    ui->addTempLegendTransferJob(result.id);
+                  }
                 }
               }
             }
@@ -420,11 +422,13 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
                   if (!f || (!f->isDirectory() && !f->getSize())) {
                     continue;
                   }
-                  unsigned int id = global->getEngine()->newTransferJobDownload(std::static_pointer_cast<BrowseScreenSite>(active)->siteName(),
+                  JobStartResult result = global->getEngine()->newTransferJobDownload(std::static_pointer_cast<BrowseScreenSite>(active)->siteName(),
                                                                                 activefl,
                                                                                 f->getName(),
                                                                                 otherfl->getPath());
-                  ui->addTempLegendTransferJob(id);
+                  if (result) {
+                    ui->addTempLegendTransferJob(result.id);
+                  }
                 }
               }
             }
@@ -440,11 +444,13 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
               if (!f || (!f->isDirectory() && !f->getSize())) {
                 continue;
               }
-              unsigned int id = global->getEngine()->newTransferJobUpload(activefl->getPath(),
+              JobStartResult result = global->getEngine()->newTransferJobUpload(activefl->getPath(),
                                                                           f->getName(),
                                                                           std::static_pointer_cast<BrowseScreenSite>(other)->siteName(),
                                                                           otherfl);
-              ui->addTempLegendTransferJob(id);
+              if (result) {
+                ui->addTempLegendTransferJob(result.id);
+              }
             }
           }
         }

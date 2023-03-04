@@ -182,20 +182,22 @@ void RemoteCommandHandler::handleMessage(const std::string & message) {
   std::vector<std::string> remainder(tokens.begin() + 2, tokens.end());
   bool notification = notify == RemoteCommandNotify::ALL_COMMANDS;
   if (command == "race") {
-    bool started = commandRace(remainder);
-    if (started && notify >= RemoteCommandNotify::JOBS_ADDED) {
+    JobStartResult result = commandRace(remainder);
+    if (result && notify >= RemoteCommandNotify::JOBS_ADDED) {
       notification = true;
     }
   }
   else if (command == "distribute") {
-    bool started = commandDistribute(remainder) && notify >= RemoteCommandNotify::JOBS_ADDED;
-    if (started && notify >= RemoteCommandNotify::JOBS_ADDED) {
+    JobStartResult result = commandDistribute(remainder) && notify >= RemoteCommandNotify::JOBS_ADDED;
+    if (result && notify >= RemoteCommandNotify::JOBS_ADDED) {
       notification = true;
     }
   }
   else if (command == "prepare") {
-    bool created = commandPrepare(remainder);
-    if (created && notify >= RemoteCommandNotify::ACTION_REQUESTED) {
+    JobStartResult result = commandPrepare(remainder);
+    if ((result.state == JobStartResult::JobStartState::PREPARED && notify >= RemoteCommandNotify::ACTION_REQUESTED) ||
+        (result.state == JobStartResult::JobStartState::STARTED && notify >= RemoteCommandNotify::JOBS_ADDED))
+    {
       notification = true;
     }
   }
@@ -256,15 +258,15 @@ void RemoteCommandHandler::handleMessage(const std::string & message) {
   }
 }
 
-bool RemoteCommandHandler::commandRace(const std::vector<std::string> & message) {
+JobStartResult RemoteCommandHandler::commandRace(const std::vector<std::string> & message) {
   return parseRace(message, RACE);
 }
 
-bool RemoteCommandHandler::commandDistribute(const std::vector<std::string> & message) {
+JobStartResult RemoteCommandHandler::commandDistribute(const std::vector<std::string> & message) {
   return parseRace(message, DISTRIBUTE);
 }
 
-bool RemoteCommandHandler::commandPrepare(const std::vector<std::string> & message) {
+JobStartResult RemoteCommandHandler::commandPrepare(const std::vector<std::string> & message) {
   return parseRace(message, PREPARE);
 }
 
@@ -336,8 +338,7 @@ bool RemoteCommandHandler::commandFXP(const std::vector<std::string> & message) 
     global->getEventLog()->log("RemoteCommandHandler", res.error);
     return false;
   }
-  global->getEngine()->newTransferJobFXP(message[0], srcpath, srcsection, message[2], message[3], dstpath, dstsection, dstfile);
-  return true;
+  return global->getEngine()->newTransferJobFXP(message[0], srcpath, srcsection, message[2], message[3], dstpath, dstsection, dstfile);
 }
 
 bool RemoteCommandHandler::commandDownload(const std::vector<std::string> & message) {
@@ -364,8 +365,7 @@ bool RemoteCommandHandler::commandDownload(const std::vector<std::string> & mess
   else {
     file = message[2];
   }
-  global->getEngine()->newTransferJobDownload(message[0], srcpath, srcsection, file, global->getLocalStorage()->getDownloadPath(), file);
-  return true;
+  return global->getEngine()->newTransferJobDownload(message[0], srcpath, srcsection, file, global->getLocalStorage()->getDownloadPath(), file);
 }
 
 bool RemoteCommandHandler::commandDownloadToPath(const std::vector<std::string> & message) {
@@ -395,8 +395,7 @@ bool RemoteCommandHandler::commandDownloadToPath(const std::vector<std::string> 
     file = message[2];
     dstpath = message[3];
   }
-  global->getEngine()->newTransferJobDownload(message[0], srcpath, srcsection, file, dstpath, file);
-  return true;
+  return global->getEngine()->newTransferJobDownload(message[0], srcpath, srcsection, file, dstpath, file);
 }
 
 bool RemoteCommandHandler::commandUpload(const std::vector<std::string> & message) {
@@ -430,8 +429,7 @@ bool RemoteCommandHandler::commandUpload(const std::vector<std::string> & messag
     global->getEventLog()->log("RemoteCommandHandler", res.error);
     return false;
   }
-  global->getEngine()->newTransferJobUpload(srcpath, file, dstsite, dstpath, dstsection, file);
-  return true;
+  return global->getEngine()->newTransferJobUpload(srcpath, file, dstsite, dstpath, dstsection, file);
 }
 
 void RemoteCommandHandler::commandIdle(const std::vector<std::string> & message) {
@@ -523,7 +521,7 @@ void RemoteCommandHandler::commandReset(const std::vector<std::string> & message
   global->getEngine()->resetRace(race, hard);
 }
 
-bool RemoteCommandHandler::parseRace(const std::vector<std::string> & message, int type) {
+JobStartResult RemoteCommandHandler::parseRace(const std::vector<std::string> & message, int type) {
   if (message.size() < 3) {
     global->getEventLog()->log("RemoteCommandHandler", "Bad remote race command format: " + util::join(message));
     return false;
@@ -547,15 +545,17 @@ bool RemoteCommandHandler::parseRace(const std::vector<std::string> & message, i
     std::string dlonlysitestring = message[3];
     dlonlysites = util::trim(util::split(dlonlysitestring, ","));
   }
+  JobStartResult result;
   if (type == RACE) {
-    return !!global->getEngine()->newRace(release, section, sites, false, dlonlysites);
+    result = global->getEngine()->newRace(release, section, sites, false, dlonlysites);
   }
   else if (type == DISTRIBUTE){
-    return !!global->getEngine()->newDistribute(release, section, sites, false, dlonlysites);
+    result = global->getEngine()->newDistribute(release, section, sites, false, dlonlysites);
   }
   else {
-    return global->getEngine()->prepareRace(release, section, sites, false, dlonlysites);
+    result = global->getEngine()->prepareRace(release, section, sites, false, dlonlysites);
   }
+  return result;
 }
 
 void RemoteCommandHandler::FDFail(int sockid, const std::string & message) {

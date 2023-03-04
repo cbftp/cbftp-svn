@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "core/eventreceiver.h"
+#include "engine.h"
 
 enum class RemoteCommandNotify {
   DISABLED,
@@ -26,9 +27,9 @@ private:
   void disconnect();
   void handleMessage(const std::string & message);
   void stopRetry();
-  bool commandRace(const std::vector<std::string> &);
-  bool commandDistribute(const std::vector<std::string> &);
-  bool commandPrepare(const std::vector<std::string> &);
+  JobStartResult commandRace(const std::vector<std::string> &);
+  JobStartResult commandDistribute(const std::vector<std::string> &);
+  JobStartResult commandPrepare(const std::vector<std::string> &);
   void commandRaw(const std::vector<std::string> &);
   void commandRawWithPath(const std::vector<std::string> &);
   bool commandFXP(const std::vector<std::string> &);
@@ -40,7 +41,7 @@ private:
   void commandDelete(const std::vector<std::string> &);
   void commandAbortDeleteIncomplete(const std::vector<std::string> &);
   void commandReset(const std::vector<std::string> &, bool);
-  bool parseRace(const std::vector<std::string> &, int);
+  JobStartResult parseRace(const std::vector<std::string> &, int);
 public:
   RemoteCommandHandler();
   bool isEnabled() const;

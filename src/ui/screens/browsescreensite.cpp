@@ -694,9 +694,11 @@ BrowseScreenAction BrowseScreenSite::keyPressed(unsigned int ch) {
         if (!file->isDirectory() && !file->getSize()) {
           continue;
         }
-        unsigned int id = global->getEngine()->newTransferJobDownload(site->getName(), filelist, file->getName(),
+        JobStartResult result = global->getEngine()->newTransferJobDownload(site->getName(), filelist, file->getName(),
                                                                       global->getLocalStorage()->getDownloadPath());
-        ui->addTempLegendTransferJob(id);
+        if (result) {
+          ui->addTempLegendTransferJob(result.id);
+        }
       }
       break;
     }

@@ -8,6 +8,7 @@
 #include <unordered_set>
 
 #include "core/eventreceiver.h"
+#include "joblist.h"
 
 enum class PrioType;
 enum class SitePriority;
@@ -28,110 +29,42 @@ class SkipList;
 class ScoreBoardElement;
 class TransferStatus;
 
-template <class T> class JobList {
-public:
-  typename std::list<T>::iterator begin() {
-    return items.begin();
-  }
-  typename std::list<T>::const_iterator begin() const {
-    return items.begin();
-  }
-  typename std::list<T>::iterator end() {
-    return items.end();
-  }
-  typename std::list<T>::const_iterator end() const {
-    return items.end();
-  }
-  T& front() {
-    return items.front();
-  }
-  T& back() {
-    return items.back();
-  }
-  void push_back(const T& t) {
-    items.push_back(t);
-    typename std::pair<typename std::unordered_map<unsigned int, typename std::list<T>::iterator>::iterator, bool> res = index.emplace(t->getId(), --items.end());
-    assert(res.second);
-  }
-  bool empty() const {
-    return items.empty();
-  }
-  typename std::list<T>::const_iterator find(unsigned int id) const {
-    typename std::unordered_map<unsigned int, typename std::list<T>::iterator>::const_iterator it = index.find(id);
-    if (it != index.end()) {
-      return it->second;
-    }
-    return items.end();
-  }
-  typename std::list<T>::const_iterator find(const T& t) const {
-    return find(t->getId());
-  }
- typename std::list<T>::iterator find(unsigned int id) {
-    typename std::unordered_map<unsigned int, typename std::list<T>::iterator>::iterator it = index.find(id);
-    if (it != index.end()) {
-      return it->second;
-    }
-    return items.end();
-  }
-  typename std::list<T>::iterator find(const T& t) {
-    return find(t->getId());
-  }
-  bool contains(unsigned int id) {
-    return index.find(id) != index.end();
-  }
-  bool contains(const T& t) {
-    return contains(t->getId());
-  }
-  typename std::list<T>::iterator erase(unsigned int id) {
-    typename std::unordered_map<unsigned int, typename std::list<T>::iterator>::iterator it = index.find(id);
-    if (it != index.end()) {
-      typename std::list<T>::iterator it2 = items.erase(it->second);
-      index.erase(id);
-      return it2;
-    }
-    return items.end();
-  }
-  typename std::list<T>::iterator erase(const T& t) {
-    return erase(t->getId());
-  }
-  typename std::list<T>::iterator erase(typename std::list<T>::iterator it) {
-    return erase((*it)->getId());
-  }
-  typename std::list<T>::iterator remove(const T& t) {
-    return erase(t->getId());
-  }
-  void clear() {
-    index.clear();
-    items.clear();
-  }
-  size_t size() const {
-    return index.size();
-  }
-private:
-  std::unordered_map<unsigned int, typename std::list<T>::iterator> index;
-  std::list<T> items;
+struct JobStartResult {
+  enum class JobStartState {
+    STARTED,
+    PREPARED,
+    ERROR
+  } state;
+  JobStartResult();
+  JobStartResult(const std::string& error, const std::list<std::string>& infomessages = std::list<std::string>());
+  JobStartResult(int id, const std::list<std::string>& infomessages = std::list<std::string>(),
+    JobStartResult::JobStartState state = JobStartResult::JobStartState::STARTED);
+  operator bool() const;
+  unsigned int id;
+  std::string error;
+  std::list<std::string> infomessages;
 };
 
 class Engine : public Core::EventReceiver {
 public:
   Engine();
   ~Engine();
-  std::shared_ptr<Race> newRace(const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset = false, const std::list<std::string>& dlonlysites = {});
-  bool prepareRace(const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset = false, const std::list<std::string>& dlonlysites = {});
-  std::shared_ptr<Race> newDistribute(const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset = false, const std::list<std::string>& dlonlysites = {});
-  void startPreparedRace(unsigned int);
+  JobStartResult newRace(const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset = false, const std::list<std::string>& dlonlysites = {});
+  JobStartResult prepareRace(const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset = false, const std::list<std::string>& dlonlysites = {});
+  JobStartResult newDistribute(const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset = false, const std::list<std::string>& dlonlysites = {});
+  JobStartResult startPreparedRace(unsigned int);
   void deletePreparedRace(unsigned int);
-  void startLatestPreparedRace();
+  JobStartResult startLatestPreparedRace();
   void toggleStartNextPreparedRace();
-  unsigned int newTransferJobDownload(const std::string& srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string& file, const Path& dstpath);
-  unsigned int newTransferJobDownload(const std::string& srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string& srcfile, const Path& dstpath, const std::string& dstfile);
-  unsigned int newTransferJobDownload(const std::string& srcsite, const Path& srcpath, const std::string& srcsection, const std::string& srcfile, const Path& dstpath, const std::string& dstfile);
-  unsigned int newTransferJobUpload(const Path& srcpath, const std::string& file, const std::string& dstsite, const std::shared_ptr<FileList>& dstfilelist);
-  unsigned int newTransferJobUpload(const Path& srcpath, const std::string& srcfile, const std::string& dstsite, const std::shared_ptr<FileList>& dstfilelist, const std::string& dstfile);
-  unsigned int newTransferJobUpload(const Path& srcpath, const std::string& srcfile, const std::string& dstsite, const Path& dstpath, const std::string& dstsection, const std::string& dstfile);
-  unsigned int newTransferJobFXP(const std::string& srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string& dstsite, const std::shared_ptr<FileList>& dstfilelist, const std::string& file);
-  unsigned int newTransferJobFXP(const std::string& srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string& srcfile, const std::string& dstsite, const std::shared_ptr<FileList>& dstfilelist, const std::string& dstfile);
-  unsigned int newTransferJobFXP(const std::string& srcsite, const Path& srcpath, const std::string& srcsection, const std::string& srcfile, const std::string& dstsite, const Path& dstpath, const std::string& dstsection, const std::string& dstfile);
+  JobStartResult newTransferJobDownload(const std::string& srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string& file, const Path& dstpath);
+  JobStartResult newTransferJobDownload(const std::string& srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string& srcfile, const Path& dstpath, const std::string& dstfile);
+  JobStartResult newTransferJobDownload(const std::string& srcsite, const Path& srcpath, const std::string& srcsection, const std::string& srcfile, const Path& dstpath, const std::string& dstfile);
+  JobStartResult newTransferJobUpload(const Path& srcpath, const std::string& file, const std::string& dstsite, const std::shared_ptr<FileList>& dstfilelist);
+  JobStartResult newTransferJobUpload(const Path& srcpath, const std::string& srcfile, const std::string& dstsite, const std::shared_ptr<FileList>& dstfilelist, const std::string& dstfile);
+  JobStartResult newTransferJobUpload(const Path& srcpath, const std::string& srcfile, const std::string& dstsite, const Path& dstpath, const std::string& dstsection, const std::string& dstfile);
+  JobStartResult newTransferJobFXP(const std::string& srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string& dstsite, const std::shared_ptr<FileList>& dstfilelist, const std::string& file);
+  JobStartResult newTransferJobFXP(const std::string& srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string& srcfile, const std::string& dstsite, const std::shared_ptr<FileList>& dstfilelist, const std::string& dstfile);
+  JobStartResult newTransferJobFXP(const std::string& srcsite, const Path& srcpath, const std::string& srcsection, const std::string& srcfile, const std::string& dstsite, const Path& dstpath, const std::string& dstsection, const std::string& dstfile);
   void removeSiteFromRace(const std::shared_ptr<Race> &, const std::string &);
   void removeSiteFromAllRunningSpreadJobs(const std::string& site);
   void removeSiteFromRaceDeleteFiles(const std::shared_ptr<Race>& race, const std::string& site, bool allfiles, bool deleteoncomplete);
@@ -189,7 +122,7 @@ public:
   int getMaxSpreadJobTimeSeconds() const;
   void setMaxSpreadJobTimeSeconds(int seconds);
  private:
-  std::shared_ptr<Race> newSpreadJob(int profile, const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset, const std::list<std::string>& dlonlysites);
+  JobStartResult newSpreadJob(int profile, const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset, const std::list<std::string>& dlonlysites);
   void estimateRaceSizes();
   void estimateRaceSize(const std::shared_ptr<Race>&, bool forceupdate = false);
   void reportCurrentSize(const SkipList&, const SkipList&, const std::shared_ptr<SiteRace>& srs, const std::shared_ptr<FileList>& fl, bool final);
