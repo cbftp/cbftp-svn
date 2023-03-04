@@ -213,6 +213,33 @@ bool transferExpectedSoon(ScoreBoardElement* sbe) {
   return true;
 }
 
+JobStartResult jobStartErrorLogged(const std::string& error, const std::list<std::string>& infomessages) {
+  global->getEventLog()->log("Engine", error);
+  return JobStartResult(error, infomessages);
+}
+
+void logAndAppendInfo(std::list<std::string>& infomessages, const std::string& info) {
+  infomessages.push_back(info);
+  global->getEventLog()->log("Engine", info);
+}
+
+}
+
+JobStartResult::JobStartResult() : state(JobStartResult::JobStartState::ERROR), id(0) {
+}
+
+JobStartResult::JobStartResult(const std::string& error, const std::list<std::string>& infomessages) :
+  state(JobStartResult::JobStartState::ERROR), id(0), error(error), infomessages(infomessages)
+{
+}
+
+JobStartResult::JobStartResult(int id, const std::list<std::string>& infomessages, JobStartResult::JobStartState state) :
+  state(state), id(id), infomessages(infomessages)
+{
+}
+
+JobStartResult::operator bool() const {
+  return state != JobStartState::ERROR;
 }
 
 Engine::Engine() :
@@ -241,19 +268,17 @@ Engine::~Engine() {
 
 }
 
-std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset, const std::list<std::string>& dlonlysites) {
+JobStartResult Engine::newSpreadJob(int profile, const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset, const std::list<std::string>& dlonlysites) {
+  std::list<std::string> infomessages;
   if (release.empty()) {
-    global->getEventLog()->log("Engine", "Spread job skipped due to missing release name.");
-    return std::shared_ptr<Race>();
+    return jobStartErrorLogged("Spread job skipped due to missing release name.", infomessages);
   }
   if (section.empty()) {
-    global->getEventLog()->log("Engine", "Spread job skipped due to missing section name.");
-    return std::shared_ptr<Race>();
+    return jobStartErrorLogged("Spread job skipped due to missing section name.", infomessages);
   }
   Section * sectionptr = global->getSectionManager()->getSection(section);
   if (!sectionptr) {
-    global->getEventLog()->log("Engine", "Spread job skipped due to undefined section: " + section);
-    return std::shared_ptr<Race>();
+    return jobStartErrorLogged("Spread job skipped due to undefined section: " + section, infomessages);
   }
   std::shared_ptr<Race> race;
   bool append = false;
@@ -265,8 +290,7 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
     }
   }
   if (release.find("/") != std::string::npos) {
-    global->getEventLog()->log("Engine", "Spread job skipped due to invalid target: " + release);
-    return std::shared_ptr<Race>();
+    return jobStartErrorLogged("Spread job skipped due to invalid target: " + release, infomessages);
   }
   if (!race) {
     race = std::make_shared<Race>(nextid++, static_cast<SpreadProfile>(profile), release, section);
@@ -284,26 +308,26 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
   for (const std::pair<const std::string, bool>& site : allsites) {
     const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(site.first);
     if (!sl) {
-      global->getEventLog()->log("Engine", "Trying to use a nonexisting site: " + site.first);
+      logAndAppendInfo(infomessages, "Trying to use a nonexisting site: " + site.first);
       continue;
     }
     if (sl->getSite()->getDisabled()) {
-      global->getEventLog()->log("Engine", "Skipping disabled site: " + site.first);
+      logAndAppendInfo(infomessages, "Skipping disabled site: " + site.first);
       continue;
     }
     bool downloadonly = site.second || (sl->getSite()->isAffiliated(race->getGroup()) && profile != SPREAD_DISTRIBUTE);
     if (downloadonly && sl->getSite()->getAllowDownload() == SiteAllowTransfer::SITE_ALLOW_TRANSFER_NO) {
-      global->getEventLog()->log("Engine", "Skipping site because of download-only mode and download disabled: " + site.first);
+      logAndAppendInfo(infomessages, "Skipping site because of download-only mode and download disabled: " + site.first);
       continue;
     }
     if (!downloadonly && sl->getSite()->getAllowDownload() == SiteAllowTransfer::SITE_ALLOW_DOWNLOAD_MATCH_ONLY &&
         sl->getSite()->getAllowUpload() == SiteAllowTransfer::SITE_ALLOW_TRANSFER_NO)
     {
-      global->getEventLog()->log("Engine", "Skipping site because upload disabled and download only allowed for download-only jobs: " + site.first);
+      logAndAppendInfo(infomessages, "Skipping site because upload disabled and download only allowed for download-only jobs: " + site.first);
       continue;
     }
     if (!sl->getSite()->hasSection(section)) {
-      global->getEventLog()->log("Engine", "Trying to use an undefined section: " +
+      logAndAppendInfo(infomessages, "Trying to use an undefined section: " +
           section + " on " + site.first);
       continue;
     }
@@ -320,14 +344,13 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
   }
   if (!addsites.empty()) {
     for (const std::string & skipsite : skippedsites) {
-      global->getEventLog()->log("Engine", "Skipping site " + skipsite +
+      logAndAppendInfo(infomessages, "Skipping site " + skipsite +
                                  " due to skiplist match: " + release);
       continue;
     }
   }
   else if (globalskipped) {
-    global->getEventLog()->log("Engine", "Spread job skipped due to skiplist match: " + release);
-    return std::shared_ptr<Race>();
+    return jobStartErrorLogged("Spread job skipped due to skiplist match: " + release, infomessages);
   }
   bool notransfer = true;
   for (const AddSite& srcsite : addsites) {
@@ -344,14 +367,10 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
     }
   }
   if (!append && notransfer && profile != SPREAD_DISTRIBUTE) {
-    global->getEventLog()->log("Engine", "Ignoring attempt to spread " + release + " in "
-        + section + " since no transfers would be performed.");
-    return std::shared_ptr<Race>();
+    return jobStartErrorLogged("Ignoring attempt to spread " + release + " in " + section + " since no transfers would be performed.", infomessages);
   }
   if (addsites.size() < 2 && !append) {
-    global->getEventLog()->log("Engine", "Ignoring attempt to spread " + release + " in "
-        + section + " on less than 2 sites.");
-    return std::shared_ptr<Race>();
+    return jobStartErrorLogged("Ignoring attempt to spread " + release + " in " + section + " on less than 2 sites.", infomessages);
   }
   if (addsites.size() > 0 || append) {
     checkStartPoke();
@@ -361,7 +380,7 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
         profile = SPREAD_RACE;
       }
       else {
-        global->getEventLog()->log("Engine", "Preparing spread job: " + section + "/" + release +
+        logAndAppendInfo(infomessages, "Preparing spread job: " + section + "/" + release +
                   " on " + std::to_string((int)addsites.size()) + " sites.");
         std::list<std::pair<std::string, bool>> preparesites;
         for (const AddSite& site : addsites) {
@@ -372,7 +391,7 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
         for (const AddSite& site : addsites) {
           site.sl->activateAll();
         }
-        return std::shared_ptr<Race>();
+        return JobStartResult(preparedraceid, infomessages, JobStartResult::JobStartState::PREPARED);
       }
     }
     bool readdtocurrent = true;
@@ -384,7 +403,7 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
         readdtocurrent = false;
       }
       else {
-        global->getEventLog()->log("Engine", "Reactivating spread job: " + section + "/" + release);
+        logAndAppendInfo(infomessages, "Reactivating spread job: " + section + "/" + release);
         race->setUndone();
         for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
           it->second->activateAll();
@@ -399,14 +418,14 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
       allraces.push_back(race);
       rotateSpreadJobsHistory();
       dropped = 0;
-      global->getEventLog()->log("Engine", "Starting spread job: " + section + "/" + release +
+      logAndAppendInfo(infomessages, "Starting spread job: " + section + "/" + release +
           " on " + std::to_string((int)addsites.size()) + " sites.");
       sectionptr->addJob();
       global->getStatistics()->addSpreadJob();
     }
     else {
       if (addsites.size()) {
-        global->getEventLog()->log("Engine", "Appending to spread job: " + section + "/" + release +
+        logAndAppendInfo(infomessages, "Appending to spread job: " + section + "/" + release +
             " with " + std::to_string((int)addsites.size()) + " site" + (addsites.size() > 1 ? "s" : "") + ".");
       }
       if (readdtocurrent) {
@@ -417,24 +436,22 @@ std::shared_ptr<Race> Engine::newSpreadJob(int profile, const std::string& relea
     setSpeedScale();
     preSeedPotentialData(race);
   }
-  return race;
+  return JobStartResult(race->getId(), infomessages);
 }
 
-std::shared_ptr<Race> Engine::newRace(const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset, const std::list<std::string>& dlonlysites) {
+JobStartResult Engine::newRace(const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset, const std::list<std::string>& dlonlysites) {
   return newSpreadJob(SPREAD_RACE, release, section, sites, reset, dlonlysites);
 }
 
-std::shared_ptr<Race> Engine::newDistribute(const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset, const std::list<std::string>& dlonlysites) {
+JobStartResult Engine::newDistribute(const std::string& release, const std::string& section, const std::list<std::string>& sites, bool reset, const std::list<std::string>& dlonlysites) {
   return newSpreadJob(SPREAD_DISTRIBUTE, release, section, sites, reset, dlonlysites);
 }
 
-bool Engine::prepareRace(const std::string & release, const std::string& section, const std::list<std::string>& sites, bool reset, const std::list<std::string>& dlonlysites) {
-  size_t preparedbefore = preparedraces.size();
-  std::shared_ptr<Race> race = newSpreadJob(SPREAD_PREPARE, release, section, sites, reset, dlonlysites);
-  return preparedraces.size() > preparedbefore || race;
+JobStartResult Engine::prepareRace(const std::string & release, const std::string& section, const std::list<std::string>& sites, bool reset, const std::list<std::string>& dlonlysites) {
+  return newSpreadJob(SPREAD_PREPARE, release, section, sites, reset, dlonlysites);
 }
 
-void Engine::startPreparedRace(unsigned int id) {
+JobStartResult Engine::startPreparedRace(unsigned int id) {
   std::list<std::shared_ptr<PreparedRace>>::iterator it = preparedraces.find(id);
   if (it != preparedraces.end()) {
     std::list<std::string> sites;
@@ -447,20 +464,23 @@ void Engine::startPreparedRace(unsigned int id) {
         sites.push_back(site.first);
       }
     }
-    newRace((*it)->getName(), (*it)->getSection(), sites, (*it)->getReset(), dlonlysites);
+    JobStartResult result = newRace((*it)->getName(), (*it)->getSection(), sites, (*it)->getReset(), dlonlysites);
     preparedraces.erase(it);
+    return result;
   }
+  return JobStartResult("No prepared race found with id " + std::to_string(id));
 }
 
 void Engine::deletePreparedRace(unsigned int id) {
   preparedraces.erase(id);
 }
 
-void Engine::startLatestPreparedRace() {
+JobStartResult Engine::startLatestPreparedRace() {
   if (preparedraces.size()) {
     std::shared_ptr<PreparedRace> preparedrace = preparedraces.back();
-    startPreparedRace(preparedraces.back()->getId());
+    return startPreparedRace(preparedraces.back()->getId());
   }
+  return JobStartResult("No prepared race found");
 }
 
 void Engine::toggleStartNextPreparedRace() {
@@ -488,188 +508,170 @@ int Engine::getNextPreparedRaceStarterTimeRemaining() const {
   return nextpreparedtimeremaining / 1000;
 }
 
-unsigned int Engine::newTransferJobDownload(const std::string& srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string& file, const Path& dstpath) {
+JobStartResult Engine::newTransferJobDownload(const std::string& srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string& file, const Path& dstpath) {
   return newTransferJobDownload(srcsite, srcfilelist, file, dstpath, file);
 }
 
-unsigned int Engine::newTransferJobUpload(const Path& srcpath, const std::string& file, const std::string& dstsite, const std::shared_ptr<FileList>& dstfilelist) {
+JobStartResult Engine::newTransferJobUpload(const Path& srcpath, const std::string& file, const std::string& dstsite, const std::shared_ptr<FileList>& dstfilelist) {
   return newTransferJobUpload(srcpath, file, dstsite, dstfilelist, file);
 }
 
-unsigned int Engine::newTransferJobFXP(const std::string& srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string& dstsite, const std::shared_ptr<FileList>& dstfilelist, const std::string& file) {
+JobStartResult Engine::newTransferJobFXP(const std::string& srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string& dstsite, const std::shared_ptr<FileList>& dstfilelist, const std::string& file) {
   return newTransferJobFXP(srcsite, srcfilelist, file, dstsite, dstfilelist, file);
 }
 
-unsigned int Engine::newTransferJobDownload(const std::string& srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string& srcfile, const Path& dstpath, const std::string& dstfile) {
+JobStartResult Engine::newTransferJobDownload(const std::string& srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string& srcfile, const Path& dstpath, const std::string& dstfile) {
+  std::list<std::string> infomessages;
   const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(srcsite);
   if (!sl) {
-    global->getEventLog()->log("Engine", "Bad site name: " + srcsite);
-    return 0;
+    return jobStartErrorLogged("Bad site name: " + srcsite, infomessages);
   }
   if (srcfile.empty() || dstfile.empty()) {
-    global->getEventLog()->log("Engine", "Bad file name.");
-    return 0;
+    return jobStartErrorLogged("File name cannot be empty.", infomessages);
   }
   unsigned int id = nextid++;
   std::shared_ptr<TransferJob> tj = std::make_shared<TransferJob>(id, sl, srcfilelist, srcfile, dstpath, dstfile);
   tj->createSiteTransferJobs(tj);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
-  global->getEventLog()->log("Engine", "Starting download job: " + srcfile +
-            " from " + srcsite);
+  logAndAppendInfo(infomessages, "Starting download job: " + srcfile + " from " + srcsite);
   sl->addTransferJob(tj->getSrcTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
   rotateTransferJobsHistory();
-  return id;
+  return JobStartResult(id, infomessages);
 }
 
-unsigned int Engine::newTransferJobDownload(const std::string& srcsite, const Path& srcpath, const std::string& srcsection, const std::string& srcfile, const Path& dstpath, const std::string& dstfile) {
+JobStartResult Engine::newTransferJobDownload(const std::string& srcsite, const Path& srcpath, const std::string& srcsection, const std::string& srcfile, const Path& dstpath, const std::string& dstfile) {
+  std::list<std::string> infomessages;
   const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(srcsite);
   if (!sl) {
-    global->getEventLog()->log("Engine", "Bad site name: " + srcsite);
-    return 0;
+    return jobStartErrorLogged("Bad site name: " + srcsite, infomessages);
   }
   if (!srcsection.empty() && !sl->getSite()->hasSection(srcsection)) {
-    global->getEventLog()->log("Engine", "Bad section name: " + srcsection);
-    return 0;
+    return jobStartErrorLogged("Bad section name: " + srcsection, infomessages);
   }
   if (srcfile.empty() || dstfile.empty()) {
-    global->getEventLog()->log("Engine", "Bad file name.");
-    return 0;
+    return jobStartErrorLogged("File name cannot be empty.", infomessages);
   }
   unsigned int id = nextid++;
   std::shared_ptr<TransferJob> tj = std::make_shared<TransferJob>(id, sl, srcpath, srcsection, srcfile, dstpath, dstfile);
   tj->createSiteTransferJobs(tj);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
-  global->getEventLog()->log("Engine", "Starting download job: " + srcfile +
-            " from " + srcsite);
+  logAndAppendInfo(infomessages, "Starting download job: " + srcfile + " from " + srcsite);
   sl->addTransferJob(tj->getSrcTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
   rotateTransferJobsHistory();
-  return id;
+  return JobStartResult(id, infomessages);
 }
 
-unsigned int Engine::newTransferJobUpload(const Path& srcpath, const std::string& srcfile, const std::string& dstsite, const std::shared_ptr<FileList>& dstfilelist, const std::string& dstfile) {
+JobStartResult Engine::newTransferJobUpload(const Path& srcpath, const std::string& srcfile, const std::string& dstsite, const std::shared_ptr<FileList>& dstfilelist, const std::string& dstfile) {
+  std::list<std::string> infomessages;
   const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(dstsite);
   if (!sl) {
-    global->getEventLog()->log("Engine", "Bad site name: " + dstsite);
-    return 0;
+    return jobStartErrorLogged("Bad site name: " + dstsite, infomessages);
   }
   if (srcfile.empty() || dstfile.empty()) {
-    global->getEventLog()->log("Engine", "Bad file name.");
-    return 0;
+    return jobStartErrorLogged("File name cannot be empty.", infomessages);
   }
   unsigned int id = nextid++;
   std::shared_ptr<TransferJob> tj = std::make_shared<TransferJob>(id, srcpath, srcfile, sl, dstfilelist, dstfile);
   tj->createSiteTransferJobs(tj);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
-  global->getEventLog()->log("Engine", "Starting upload job: " + srcfile +
-            " to " + dstsite);
+  logAndAppendInfo(infomessages, "Starting upload job: " + srcfile + " to " + dstsite);
   sl->addTransferJob(tj->getDstTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
   rotateTransferJobsHistory();
-  return id;
+  return JobStartResult(id, infomessages);
 }
 
-unsigned int Engine::newTransferJobUpload(const Path& srcpath, const std::string& srcfile, const std::string& dstsite, const Path& dstpath, const std::string& dstsection, const std::string& dstfile) {
+JobStartResult Engine::newTransferJobUpload(const Path& srcpath, const std::string& srcfile, const std::string& dstsite, const Path& dstpath, const std::string& dstsection, const std::string& dstfile) {
+  std::list<std::string> infomessages;
   const std::shared_ptr<SiteLogic> sl = global->getSiteLogicManager()->getSiteLogic(dstsite);
   if (!sl) {
-    global->getEventLog()->log("Engine", "Bad site name: " + dstsite);
-    return 0;
+    return jobStartErrorLogged("Bad site name: " + dstsite, infomessages);
   }
   if (!dstsection.empty() && !sl->getSite()->hasSection(dstsection)) {
-    global->getEventLog()->log("Engine", "Bad section name: " + dstsection);
-    return 0;
+    return jobStartErrorLogged("Bad section name: " + dstsection, infomessages);
   }
   if (srcfile.empty() || dstfile.empty()) {
-    global->getEventLog()->log("Engine", "Bad file name.");
-    return 0;
+    return jobStartErrorLogged("File name cannot be empty.", infomessages);
   }
   unsigned int id = nextid++;
   std::shared_ptr<TransferJob> tj = std::make_shared<TransferJob>(id, srcpath, srcfile, sl, dstpath, dstsection, dstfile);
   tj->createSiteTransferJobs(tj);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
-  global->getEventLog()->log("Engine", "Starting upload job: " + srcfile +
-            " to " + dstsite);
+  logAndAppendInfo(infomessages, "Starting upload job: " + srcfile + " to " + dstsite);
   sl->addTransferJob(tj->getDstTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
   rotateTransferJobsHistory();
-  return id;
+  return JobStartResult(id, infomessages);
 }
 
-unsigned int Engine::newTransferJobFXP(const std::string& srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string& srcfile, const std::string& dstsite, const std::shared_ptr<FileList>& dstfilelist, const std::string& dstfile) {
+JobStartResult Engine::newTransferJobFXP(const std::string& srcsite, const std::shared_ptr<FileList>& srcfilelist, const std::string& srcfile, const std::string& dstsite, const std::shared_ptr<FileList>& dstfilelist, const std::string& dstfile) {
+  std::list<std::string> infomessages;
   const std::shared_ptr<SiteLogic> slsrc = global->getSiteLogicManager()->getSiteLogic(srcsite);
   const std::shared_ptr<SiteLogic> sldst = global->getSiteLogicManager()->getSiteLogic(dstsite);
   if (!slsrc) {
-    global->getEventLog()->log("Engine", "Bad site name: " + srcsite);
-    return 0;
+    return jobStartErrorLogged("Bad site name: " + srcsite, infomessages);
   }
   if (!sldst) {
-    global->getEventLog()->log("Engine", "Bad site name: " + dstsite);
-    return 0;
+    return jobStartErrorLogged("Bad site name: " + dstsite, infomessages);
   }
   if (srcfile.empty() || dstfile.empty()) {
-    global->getEventLog()->log("Engine", "Bad file name.");
-    return 0;
+    return jobStartErrorLogged("File name cannot be empty.", infomessages);
   }
   unsigned int id = nextid++;
   std::shared_ptr<TransferJob> tj = std::make_shared<TransferJob>(id, slsrc, srcfilelist, srcfile, sldst, dstfilelist, dstfile);
   tj->createSiteTransferJobs(tj);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
-  global->getEventLog()->log("Engine", "Starting FXP job: " + srcfile +
-            " - " + srcsite + " -> " + dstsite);
+  logAndAppendInfo(infomessages, "Starting FXP job: " + srcfile + " - " + srcsite + " -> " + dstsite);
   slsrc->addTransferJob(tj->getSrcTransferJob());
   sldst->addTransferJob(tj->getDstTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
   rotateTransferJobsHistory();
-  return id;
+  return JobStartResult(id, infomessages);
 }
 
-unsigned int Engine::newTransferJobFXP(const std::string& srcsite, const Path& srcpath, const std::string& srcsection, const std::string& srcfile, const std::string& dstsite, const Path& dstpath, const std::string& dstsection, const std::string& dstfile) {
+JobStartResult Engine::newTransferJobFXP(const std::string& srcsite, const Path& srcpath, const std::string& srcsection, const std::string& srcfile, const std::string& dstsite, const Path& dstpath, const std::string& dstsection, const std::string& dstfile) {
+  std::list<std::string> infomessages;
   const std::shared_ptr<SiteLogic> slsrc = global->getSiteLogicManager()->getSiteLogic(srcsite);
   const std::shared_ptr<SiteLogic> sldst = global->getSiteLogicManager()->getSiteLogic(dstsite);
   if (!slsrc) {
-    global->getEventLog()->log("Engine", "Bad site name: " + srcsite);
-    return 0;
+    return jobStartErrorLogged("Bad site name: " + srcsite, infomessages);
   }
   if (!sldst) {
-    global->getEventLog()->log("Engine", "Bad site name: " + dstsite);
-    return 0;
+    return jobStartErrorLogged("Bad site name: " + dstsite, infomessages);
   }
   if (!srcsection.empty() && !slsrc->getSite()->hasSection(srcsection)) {
-    global->getEventLog()->log("Engine", "Bad section name: " + srcsection);
-    return 0;
+    return jobStartErrorLogged("Bad section name: " + srcsection, infomessages);
   }
   if (!dstsection.empty() && !sldst->getSite()->hasSection(dstsection)) {
-    global->getEventLog()->log("Engine", "Bad section name: " + dstsection);
-    return 0;
+    return jobStartErrorLogged("Bad section name: " + dstsection, infomessages);
   }
   if (srcfile.empty() || dstfile.empty()) {
-    global->getEventLog()->log("Engine", "Bad file name.");
-    return 0;
+    return jobStartErrorLogged("File name cannot be empty.", infomessages);
   }
   unsigned int id = nextid++;
   std::shared_ptr<TransferJob> tj = std::make_shared<TransferJob>(id, slsrc, srcpath, srcsection, srcfile, sldst, dstpath, dstsection, dstfile);
   tj->createSiteTransferJobs(tj);
   alltransferjobs.push_back(tj);
   currenttransferjobs.push_back(tj);
-  global->getEventLog()->log("Engine", "Starting FXP job: " + srcfile +
-            " - " + srcsite + " -> " + dstsite);
+  logAndAppendInfo(infomessages, "Starting FXP job: " + srcfile + " - " + srcsite + " -> " + dstsite);
   slsrc->addTransferJob(tj->getSrcTransferJob());
   sldst->addTransferJob(tj->getDstTransferJob());
   checkStartPoke();
   global->getStatistics()->addTransferJob();
   rotateTransferJobsHistory();
-  return id;
+  return JobStartResult(id, infomessages);
 }
 
 void Engine::removeSiteFromRace(const std::shared_ptr<Race> & race, const std::string & site) {
