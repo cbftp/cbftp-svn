@@ -78,7 +78,8 @@ enum BrowseScreenKeyAction {
 
 enum BrowseScreenKeyScopes {
   KEYSCOPE_SPLIT_SITE_SITE,
-  KEYSCOPE_SPLIT_SITE_LOCAL
+  KEYSCOPE_SPLIT_SITE_LOCAL,
+  KEYSCOPE_SPLIT_LOCAL_LOCAL
 };
 
 struct BrowseScreenRequest {

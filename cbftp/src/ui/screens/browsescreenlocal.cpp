@@ -504,7 +504,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       requests.push_back(request);
       ui->setInfo();
       ui->redraw();
-      break;
+      return BrowseScreenAction(BROWSESCREENACTION_CHDIR);
     }
     case KEYACTION_REFRESH:
     {
@@ -594,7 +594,7 @@ BrowseScreenAction BrowseScreenLocal::keyPressed(unsigned int ch) {
       else {
         viewCursored();
       }
-      break;
+      return BrowseScreenAction(BROWSESCREENACTION_CHDIR);
     }
     case KEYACTION_TOP:
       clearSoftSelects();
