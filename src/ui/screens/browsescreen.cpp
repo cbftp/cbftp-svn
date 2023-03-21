@@ -93,6 +93,9 @@ BrowseScreen::BrowseScreen(Ui* ui) : UIWindow(ui, "BrowseScreen"),
   sitekeybinds.addBind('x', KEYACTION_EXTERNAL_SCRIPTS, "Configure external scripts");
   sitekeybinds.addBind('E', KEYACTION_EDIT_SECTIONS, "Edit sections");
   localkeybinds.addScope(KEYSCOPE_SPLIT_SITE_LOCAL, "When split browsing local-site");
+  localkeybinds.addScope(KEYSCOPE_SPLIT_LOCAL_LOCAL, "When split browsing local-local");
+  localkeybinds.addBind('u', KEYACTION_COMPARE_UNIQUE, "Unique compare", KEYSCOPE_SPLIT_LOCAL_LOCAL);
+  localkeybinds.addBind('I', KEYACTION_COMPARE_IDENTICAL, "Identical compare", KEYSCOPE_SPLIT_LOCAL_LOCAL);
   localkeybinds.addBind('t', KEYACTION_TRANSFER, "Transfer (Upload)", KEYSCOPE_SPLIT_SITE_LOCAL);
   localkeybinds.addBind('u', KEYACTION_COMPARE_UNIQUE, "Unique compare", KEYSCOPE_SPLIT_SITE_LOCAL);
   localkeybinds.addBind('I', KEYACTION_COMPARE_IDENTICAL, "Identical compare", KEYSCOPE_SPLIT_SITE_LOCAL);
@@ -364,10 +367,13 @@ bool BrowseScreen::keyPressedNoSubAction(unsigned int ch) {
     if (left->type() == BrowseScreenType::SITE && right->type() == BrowseScreenType::SITE) {
       scope = KEYSCOPE_SPLIT_SITE_SITE;
     }
-    if ((left->type() == BrowseScreenType::LOCAL && right->type() == BrowseScreenType::SITE) ||
+    else if ((left->type() == BrowseScreenType::LOCAL && right->type() == BrowseScreenType::SITE) ||
         (left->type() == BrowseScreenType::SITE && right->type() == BrowseScreenType::LOCAL))
     {
       scope = KEYSCOPE_SPLIT_SITE_LOCAL;
+    }
+    else if (left->type() == BrowseScreenType::LOCAL && right->type() == BrowseScreenType::LOCAL) {
+      scope = KEYSCOPE_SPLIT_LOCAL_LOCAL;
     }
   }
   KeyBinds* binds = &keybinds;
