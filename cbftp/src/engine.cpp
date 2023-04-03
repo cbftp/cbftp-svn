@@ -1987,15 +1987,15 @@ void Engine::tick(int message) {
       break;
     }
     for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it2 = race->begin(); it2 != race->end(); it2++) {
-      int maxtimeseconds = it2->second->getSite()->getMaxSpreadJobTimeSeconds();
-      if (maxtimeseconds > 0 && static_cast<int>(race->getTimeSpent()) > maxtimeseconds) {
-        global->getEventLog()->log("Engine", "Spread job " + race->getName() + " timed out on " + it2->second->getSite()->getName() + " after " + std::to_string(maxtimeseconds) + " seconds.");
-        it2->first->timeout();
-        it2->second->raceLocalComplete(it2->first, 0, false);
-        continue;
-      }
       int wantedlogins = it2->second->getSite()->getMaxDown();
       if (!it2->first->isDone()) {
+        int maxtimeseconds = it2->second->getSite()->getMaxSpreadJobTimeSeconds();
+        if (maxtimeseconds > 0 && static_cast<int>(race->getTimeSpent()) > maxtimeseconds) {
+          global->getEventLog()->log("Engine", "Spread job " + race->getName() + " timed out on " + it2->second->getSite()->getName() + " after " + std::to_string(maxtimeseconds) + " seconds.");
+          it2->first->timeout();
+          it2->second->raceLocalComplete(it2->first, 0, false);
+          continue;
+        }
         wantedlogins = it2->second->getSite()->getMaxLogins();
       }
       if (it2->second->getCurrLogins() + it2->second->getCleanlyClosedConnectionsCount() < wantedlogins &&
