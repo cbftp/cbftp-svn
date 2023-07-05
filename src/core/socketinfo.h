@@ -9,6 +9,8 @@
 #include "prio.h"
 #include "types.h"
 
+#define _POSIX_C_SOURCE 200809L
+
 struct addrinfo;
 
 namespace Core {
