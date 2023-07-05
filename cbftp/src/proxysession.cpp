@@ -1,5 +1,7 @@
 #include "proxysession.h"
 
+#define _POSIX_C_SOURCE 200809L
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -7,8 +9,6 @@
 #include <cstring>
 
 #include "proxy.h"
-
-#define _POSIX_C_SOURCE 200809L
 
 #define PROXYSESSION_SOCKSVERSION 5
 #define PROXYSESSION_AUTHTYPESSUPPORTED 1
