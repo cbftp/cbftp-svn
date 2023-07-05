@@ -1,5 +1,7 @@
 #include "subprocessmanager.h"
 
+#define _POSIX_C_SOURCE 200809L
+
 #include <iostream>
 #include <sys/types.h>
 #include <sys/wait.h>

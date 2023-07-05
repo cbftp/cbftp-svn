@@ -1,5 +1,7 @@
 #pragma once
 
+#define _POSIX_C_SOURCE 200809L
+
 #include <list>
 #include <string>
 
@@ -8,8 +10,6 @@
 #include "datablock.h"
 #include "prio.h"
 #include "types.h"
-
-#define _POSIX_C_SOURCE 200809L
 
 struct addrinfo;
 
