@@ -22,6 +22,7 @@
 #include "filesystem.h"
 #include "statistics.h"
 #include "transferprotocol.h"
+#include "timereference.h"
 
 // max time to wait for the other site to fail after a failure has happened
 // before a hard disconnect occurs, in ms
@@ -722,7 +723,7 @@ bool TransferMonitor::checkForDeadFXPTransfers() {
       (status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE &&
        timestamp - partialcompletestamp > MAX_WAIT_SOURCE_COMPLETE))
   {
-    ts->addLogLine("[" + util::ctimeLog() + "] [Partial completion timeout reached. Disconnecting target]");
+    ts->addLogLine("[" + global->getTimeReference()->getCurrentLogTimeStamp() + "] [Partial completion timeout reached. Disconnecting target]");
     sld->disconnectConn(dst);
     sld->connectConn(dst);
     return true;
@@ -730,7 +731,7 @@ bool TransferMonitor::checkForDeadFXPTransfers() {
   else if (status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE &&
            timestamp - partialcompletestamp > MAX_WAIT_ERROR)
   {
-    ts->addLogLine("[" + util::ctimeLog() + "] [Partial completion timeout reached. Disconnecting source]");
+    ts->addLogLine("[" + global->getTimeReference()->getCurrentLogTimeStamp() + "] [Partial completion timeout reached. Disconnecting source]");
     sls->disconnectConn(src);
     sls->connectConn(src);
     return true;
@@ -738,7 +739,7 @@ bool TransferMonitor::checkForDeadFXPTransfers() {
   else if (status == TM_STATUS_TRANSFERRING_TARGET_COMPLETE &&
            timestamp - partialcompletestamp > MAX_WAIT_ERROR)
   {
-    ts->addLogLine("[" + util::ctimeLog() + "] [Partial completion timeout reached. Disconnecting source]");
+    ts->addLogLine("[" + global->getTimeReference()->getCurrentLogTimeStamp() + "] [Partial completion timeout reached. Disconnecting source]");
     sls->finishTransferGracefully(src);
     sls->disconnectConn(src);
     sls->connectConn(src);
@@ -751,7 +752,7 @@ bool TransferMonitor::checkMaxTransferTime() {
   if (maxtransfertimeseconds > 0 && timestamp / 1000 > maxtransfertimeseconds) {
     if (status == TM_STATUS_TRANSFERRING || status == TM_STATUS_AWAITING_ACTIVE || status == TM_STATUS_AWAITING_PASSIVE) {
       if (!!ts) {
-        ts->addLogLine("[" + util::ctimeLog() + "] [Timeout reached after " + std::to_string(maxtransfertimeseconds) + " seconds. Disconnecting]");
+        ts->addLogLine("[" + global->getTimeReference()->getCurrentLogTimeStamp() + "] [Timeout reached after " + std::to_string(maxtransfertimeseconds) + " seconds. Disconnecting]");
       }
       if (sld) {
         sld->disconnectConn(dst);
@@ -857,7 +858,7 @@ void TransferMonitor::newRawBufferLine(const std::pair<std::string, std::string>
 }
 
 void TransferMonitor::localInfo(const std::string& info) {
-  std::string localtag = "[" + util::ctimeLog() + "]";
+  std::string localtag = "[" + global->getTimeReference()->getCurrentLogTimeStamp() + "]";
   newRawBufferLine(std::make_pair(localtag, "[" + info + "]"));
 }
 

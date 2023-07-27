@@ -15,6 +15,7 @@
 #include "section.h"
 #include "skiplist.h"
 #include "sitelogic.h"
+#include "timereference.h"
 
 #define MAX_CHECKS_BEFORE_TIMEOUT 60
 #define MAX_CHECKS_BEFORE_HARD_TIMEOUT 1200
@@ -65,7 +66,7 @@ Race::Race(unsigned int id, SpreadProfile profile, const std::string& release, c
   guessedtotalfilesize(0),
   guessedtotalnumfiles(0),
   checkcount(0),
-  timestamp(util::ctimeLog()),
+  timestamp(global->getTimeReference()->getCurrentLogTimeStamp()),
   timespent(0),
   status(RaceStatus::RUNNING),
   worst(0),

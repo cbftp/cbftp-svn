@@ -12,6 +12,7 @@
 #include "../../transfermanager.h"
 #include "../../httpserver.h"
 #include "../../logmanager.h"
+#include "../../timereference.h"
 
 #include "../ui.h"
 #include "../focusablearea.h"
@@ -180,6 +181,10 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   logbufferhistory->addOption("Unlimited", -1);
   logbufferhistory->setOption(global->getLogManager()->getMaxRawbufLines());
   y++;
+  std::shared_ptr<MenuSelectOptionTextArrow> timestampgranularity = mso.addTextArrow(y++, x, "timestampgranularity", "Time stamp granularity:");
+  timestampgranularity->addOption("Seconds", 0);
+  timestampgranularity->addOption("Milliseconds", 1);
+  timestampgranularity->setOption(global->getTimeReference()->getLogTimeStampMilliseconds() ? 1 : 0);
   std::shared_ptr<MenuSelectOptionTextArrow> legendmode = mso.addTextArrow(y++, x, "legendmode", "Legend bar:");
   legendmode->addOption("Disabled", LEGEND_DISABLED);
   legendmode->addOption("Scrolling", LEGEND_SCROLLING);
@@ -434,6 +439,9 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "defidletime") {
           sm->setDefaultMaxIdleTime(std::stoi(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData()));
+        }
+        else if (identifier == "timestampgranularity") {
+          global->getTimeReference()->setLogTimeStampMilliseconds(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
         }
         else if (identifier == "legendmode") {
           ui->setLegendMode((LegendMode)std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());

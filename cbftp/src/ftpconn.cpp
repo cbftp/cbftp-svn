@@ -510,6 +510,12 @@ void FTPConn::doUSER(bool killer) {
 }
 
 void FTPConn::USERResponse() {
+  if (databufcode == 230) {
+    processing = false;
+    this->status = "connected";
+    finishLogin();
+    return;
+  }
   if (databufcode == 331) {
     std::string pass = site->getPass();
     std::string passc = "";
@@ -1132,7 +1138,7 @@ void FTPConn::doCWD(const Path& path, const std::shared_ptr<FileList>& fl, const
 
 void FTPConn::CWDResponse() {
   processing = false;
-  if (databufcode == 250) {
+  if (databufcode == 250 || databufcode == 200) {
     currentpath = targetpath;
     sl->commandSuccess(id, state);
   }

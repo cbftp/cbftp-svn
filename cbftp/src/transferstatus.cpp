@@ -4,6 +4,8 @@
 
 #include "filelist.h"
 #include "util.h"
+#include "globalcontext.h"
+#include "timereference.h"
 
 TransferStatus::TransferStatus(int type, const std::string& source, const std::string& target,
     const std::string& jobname, const std::string& file, const std::shared_ptr<FileList>& fls,
@@ -11,7 +13,7 @@ TransferStatus::TransferStatus(int type, const std::string& source, const std::s
     unsigned long long int sourcesize, unsigned int assumedspeed, int srcslot,
     int dstslot, bool ssl, bool defaultactive) :
     type(type), source(source), target(target), jobname(jobname), file(file),
-    timestamp(util::ctimeLog()), sourcepath(sourcepath),
+    timestamp(global->getTimeReference()->getCurrentLogTimeStamp()), sourcepath(sourcepath),
     targetpath(targetpath), sourcesize(sourcesize), knowntargetsize(0),
     interpolatedtargetsize(0), interpolationfilltargetsize(0), speed(assumedspeed),
     state(TRANSFERSTATUS_STATE_IN_PROGRESS), timespent(0), progress(0),

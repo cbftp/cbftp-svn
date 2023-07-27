@@ -22,7 +22,6 @@ std::string trim(const std::string &);
 std::list<std::string> trim(const std::list<std::string> & in);
 std::vector<std::string> trim(const std::vector<std::string> & in);
 std::string simpleTimeFormat(int);
-std::string ctimeLog();
 std::string & debugString(const char *);
 std::string parseSize(unsigned long long int);
 std::string getGroupNameFromRelease(const std::string &);

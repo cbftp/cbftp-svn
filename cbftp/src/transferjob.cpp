@@ -19,6 +19,7 @@
 #include "sectionmanager.h"
 #include "sitetransferjob.h"
 #include "eventlog.h"
+#include "timereference.h"
 
 #define MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP 3
 
@@ -511,7 +512,7 @@ void TransferJob::start() {
   if (status != TRANSFERJOB_QUEUED) {
     return;
   }
-  timestarted = util::ctimeLog();
+  timestarted = global->getTimeReference()->getCurrentLogTimeStamp();
   status = TRANSFERJOB_RUNNING;
   global->getTickPoke()->startPoke(this, "TransferJob", TRANSFERJOB_UPDATE_INTERVAL, 0);
 }
@@ -956,7 +957,7 @@ void TransferJob::reset() {
 
 void TransferJob::resetValues() {
   status = TRANSFERJOB_QUEUED;
-  timequeued = util::ctimeLog();
+  timequeued = global->getTimeReference()->getCurrentLogTimeStamp();
   almostdone = false;
   slots = !!src ? src->getSite()->getMaxDownTransferJob() : 1;
   expectedfinalsize = 0;

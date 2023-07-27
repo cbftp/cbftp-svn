@@ -7,6 +7,7 @@
 #include "util.h"
 #include "rawbuffercallback.h"
 #include "logmanager.h"
+#include "timereference.h"
 
 RawBuffer::RawBuffer(const std::string& site, const std::string& id) :
   latestp(0),
@@ -140,7 +141,7 @@ void RawBuffer::rename(std::string name) {
 }
 
 std::string RawBuffer::getTag() const {
-  return "[" + util::ctimeLog() + (eventlog ? "" : " " + site + (threads ? " " + id : "")) + "]";
+  return "[" + global->getTimeReference()->getCurrentLogTimeStamp() + (eventlog ? "" : " " + site + (threads ? " " + id : "")) + "]";
 }
 
 void RawBuffer::setId(int id) {
