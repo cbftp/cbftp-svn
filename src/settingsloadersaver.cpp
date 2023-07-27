@@ -31,6 +31,7 @@
 #include "externalscripts.h"
 #include "transfermanager.h"
 #include "logmanager.h"
+#include "timereference.h"
 
 #define AUTO_SAVE_INTERVAL 600000 // 10 minutes
 
@@ -703,6 +704,19 @@ void SettingsLoaderSaver::loadSettings() {
     }
   }
 
+  dfh->getDataFor("TimeReference", &lines);
+  for (it = lines.begin(); it != lines.end(); it++) {
+    line = *it;
+    if (line.length() == 0 ||line[0] == '#') continue;
+    size_t tok = line.find('=');
+    std::string setting = line.substr(0, tok);
+    std::string value = line.substr(tok + 1);
+    if (!setting.compare("logtimestampms")) {
+      bool logtimestampms = !value.compare("true");
+      global->getTimeReference()->setLogTimeStampMilliseconds(logtimestampms);
+    }
+  }
+
   dfh->getDataFor("SectionManager", &lines);
   for (it = lines.begin(); it != lines.end(); it++) {
     line = *it;
@@ -1063,6 +1077,11 @@ void SettingsLoaderSaver::saveSettings() {
   }
   {
     dfh->addOutputLine("LogManager", "maxrawbuflines=" + std::to_string(global->getLogManager()->getMaxRawbufLines()));
+  }
+  {
+    if (global->getTimeReference()->getLogTimeStampMilliseconds()) {
+      dfh->addOutputLine("TimeReference", "logtimestampms=true");
+    }
   }
   {
     std::string filetag = "Statistics";

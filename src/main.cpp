@@ -41,10 +41,14 @@ public:
     Core::TickPoke* tp = new Core::TickPoke(*wm);
     Core::IOManager* iom = new Core::IOManager(*wm, *tp);
 
+    global->linkCore(wm, tp, iom);
+
+    TimeReference* tr = new TimeReference();
+    global->linkTimeReference(tr);
+
     std::shared_ptr<EventLog> el = std::make_shared<EventLog>();
     Core::setLogger(el);
-
-    global->linkCore(wm, tp, iom, el);
+    global->linkEventLogger(el);
 
     SettingsLoaderSaver* sls = new SettingsLoaderSaver();
     LocalStorage* ls = new LocalStorage();
@@ -55,7 +59,6 @@ public:
     RemoteCommandHandler* rch = new RemoteCommandHandler();
     SkipList* sl = new SkipList();
     ProxyManager* pm = new ProxyManager();
-    TimeReference* tr = new TimeReference();
     Statistics* s = new Statistics();
     SectionManager* secm = new SectionManager();
     HTTPServer* httprv = new HTTPServer();
@@ -68,7 +71,7 @@ public:
     UIBase* uibase = UIBase::instance();
 
     global->linkComponents(sls, e, uibase, sm, slm, tm, rch, sl, pm, ls,
-                           tr, s, secm, httprv, ra, lm, esm, spm, logm);
+                           s, secm, httprv, ra, lm, esm, spm, logm);
 
     Core::Threading::setCurrentThreadName("cbftp");
 

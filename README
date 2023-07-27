@@ -141,7 +141,7 @@ that it occurs in. To use multiple slots or multiple sites, separate tabs
 or windows must be opened. This is possibly where cbftp differs the most from
 other clients - cbftp handles slots and pairs in a very different way.
 
-First and foremost, the UI in cbftp s merely a complement to the backend.
+First and foremost, the UI in cbftp is merely a complement to the backend.
 Cbftp can actually be compiled and run just fine completely without UI.
 Secondly, cbftp considers each site as an entity, rather than each login
 slot - a specific slot can be used and reused for any purpose at any time.

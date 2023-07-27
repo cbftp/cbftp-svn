@@ -3,20 +3,26 @@
 GlobalContext* global = new GlobalContext();
 
 void GlobalContext::linkCore(Core::WorkManager* wm, Core::TickPoke* tp,
-                             Core::IOManager* iom,
-                             std::shared_ptr<EventLog>& el)
+                             Core::IOManager* iom)
 {
   this->wm = wm;
   this->tp = tp;
   this->iom = iom;
+}
+
+void GlobalContext::linkEventLogger(std::shared_ptr<EventLog>& el) {
   this->el = el;
+}
+
+void GlobalContext::linkTimeReference(TimeReference* tr) {
+  this->tr = tr;
 }
 
 void GlobalContext::linkComponents(SettingsLoaderSaver* sls, Engine* e,
     UIBase* uib, SiteManager* sm, SiteLogicManager* slm,
     TransferManager* tm, RemoteCommandHandler* rch,
     SkipList* sl, ProxyManager* pm, LocalStorage* ls,
-    TimeReference* tr, Statistics* s,
+    Statistics* s,
     SectionManager* secm, HTTPServer* httpsrv, RestApi* ra,
     LoadMonitor* lm, ExternalScriptsManager* esm, SubProcessManager* spm,
     LogManager* logm)
@@ -31,7 +37,6 @@ void GlobalContext::linkComponents(SettingsLoaderSaver* sls, Engine* e,
   this->sl = sl;
   this->pm = pm;
   this->ls = ls;
-  this->tr = tr;
   this->s = s;
   this->secm = secm;
   this->httpsrv = httpsrv;

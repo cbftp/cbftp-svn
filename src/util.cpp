@@ -1,7 +1,6 @@
 #include "util.h"
 
 #include <sstream>
-#include <ctime>
 #include <csignal>
 #include <cctype>
 
@@ -87,13 +86,6 @@ std::string simpleTimeFormat(int seconds) {
     time += std::to_string(seconds) + "s";
   }
   return time;
-}
-
-std::string ctimeLog() {
-  time_t rawtime = time(NULL);
-  char timebuf[26];
-  ctime_r(&rawtime, timebuf);
-  return std::string(timebuf + 11, 8);
 }
 
 std::string & debugString(const char * s) {

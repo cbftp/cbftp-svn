@@ -56,12 +56,14 @@ class GlobalContext {
     LogManager* logm;
   public:
     void linkCore(Core::WorkManager* wm, Core::TickPoke* tp,
-                  Core::IOManager* iom, std::shared_ptr<EventLog>& el);
+                  Core::IOManager* iom);
+    void linkEventLogger(std::shared_ptr<EventLog>& el);
+    void linkTimeReference(TimeReference* tr);
     void linkComponents(SettingsLoaderSaver* sls, Engine* e,
         UIBase* uib, SiteManager* sm, SiteLogicManager* slm,
         TransferManager* tm, RemoteCommandHandler* rch,
         SkipList* sl, ProxyManager* pm, LocalStorage* ls,
-        TimeReference* tr, Statistics* s,
+        Statistics* s,
         SectionManager* secm, HTTPServer* httpsrv, RestApi* ra,
         LoadMonitor* lm, ExternalScriptsManager* esm, SubProcessManager* spm,
         LogManager* logm);
