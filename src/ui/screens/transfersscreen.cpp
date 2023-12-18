@@ -16,7 +16,7 @@
 
 namespace {
 
-bool filteringActive(const TransferFilteringParameters & tfp) {
+bool filteringActive(const TransferFilteringParameters& tfp) {
   bool jobfilter = tfp.usejobfilter && (!tfp.spreadjobsfilter.empty() || !tfp.transferjobsfilter.empty());
   bool sitefilter = tfp.usesitefilter && (!tfp.sourcesitefilters.empty() || !tfp.targetsitefilters.empty() || !tfp.anydirectionsitefilters.empty());
   bool filenamefilter = tfp.usefilenamefilter && !tfp.filenamefilter.empty();
@@ -25,7 +25,7 @@ bool filteringActive(const TransferFilteringParameters & tfp) {
   return jobfilter || sitefilter || filenamefilter || statusfilter || speedfilter;
 }
 
-std::string getFilterText(const TransferFilteringParameters & tfp) {
+std::string getFilterText(const TransferFilteringParameters& tfp) {
   std::string output;
   int filters = 0;
   bool jobfilter = tfp.usejobfilter && (!tfp.spreadjobsfilter.empty() || !tfp.transferjobsfilter.empty());
@@ -197,28 +197,28 @@ void TransfersScreen::initialize(unsigned int row, unsigned int col) {
   initialize(row, col, TransferFilteringParameters());
 }
 
-void TransfersScreen::initializeFilterSite(unsigned int row, unsigned int col, const std::string & site) {
+void TransfersScreen::initializeFilterSite(unsigned int row, unsigned int col, const std::string& site) {
   TransferFilteringParameters tfp;
   tfp.usesitefilter = true;
   tfp.anydirectionsitefilters.push_back(site);
   initialize(row, col, tfp);
 }
 
-void TransfersScreen::initializeFilterSpreadJob(unsigned int row, unsigned int col, const std::string & job) {
+void TransfersScreen::initializeFilterSpreadJob(unsigned int row, unsigned int col, const std::string& job) {
   TransferFilteringParameters tfp;
   tfp.usejobfilter = true;
   tfp.spreadjobsfilter.push_back(job);
   initialize(row, col, tfp);
 }
 
-void TransfersScreen::initializeFilterTransferJob(unsigned int row, unsigned int col, const std::string & job) {
+void TransfersScreen::initializeFilterTransferJob(unsigned int row, unsigned int col, const std::string& job) {
   TransferFilteringParameters tfp;
   tfp.usejobfilter = true;
   tfp.transferjobsfilter.push_back(job);
   initialize(row, col, tfp);
 }
 
-void TransfersScreen::initializeFilterSpreadJobSite(unsigned int row, unsigned int col, const std::string & job, const std::string & site) {
+void TransfersScreen::initializeFilterSpreadJobSite(unsigned int row, unsigned int col, const std::string& job, const std::string& site) {
   TransferFilteringParameters tfp;
   tfp.usejobfilter = true;
   tfp.spreadjobsfilter.push_back(job);
@@ -227,7 +227,7 @@ void TransfersScreen::initializeFilterSpreadJobSite(unsigned int row, unsigned i
   initialize(row, col, tfp);
 }
 
-void TransfersScreen::initialize(unsigned int row, unsigned int col, const TransferFilteringParameters & tfp) {
+void TransfersScreen::initialize(unsigned int row, unsigned int col, const TransferFilteringParameters& tfp) {
   filtering = filteringActive(tfp);
   this->tfp = tfp;
   autoupdate = true;
@@ -578,17 +578,17 @@ std::string TransfersScreen::getInfoText() const {
   return output;
 }
 
-void TransfersScreen::addTransferTableHeader(unsigned int y, MenuSelectOption & mso) {
+void TransfersScreen::addTransferTableHeader(unsigned int y, MenuSelectOption& mso) {
   addTransferTableRow(y, mso, false, "STARTED", "USE", "ROUTE", "PATH", "TRANSFERRED", "FILENAME", "LEFT", "SPEED", "DONE", -1);
 }
 
-void TransfersScreen::addTransferDetails(unsigned int y, MenuSelectOption & mso, std::shared_ptr<TransferStatus> ts, int id) {
+void TransfersScreen::addTransferDetails(unsigned int y, MenuSelectOption& mso, std::shared_ptr<TransferStatus> ts, int id) {
   TransferDetails td = formatTransferDetails(ts);
   addTransferTableRow(y, mso, true, ts->getTimestamp(), td.timespent, td.route, td.path, td.transferred,
       ts->getFile(), td.timeremaining, td.speed, td.progress, id);
 }
 
-TransferDetails TransfersScreen::formatTransferDetails(std::shared_ptr<TransferStatus> & ts) {
+TransferDetails TransfersScreen::formatTransferDetails(std::shared_ptr<TransferStatus>& ts) {
   TransferDetails td;
   td.route = ts->getSource() + " -> " + ts->getTarget();
   td.path = ts->getSourcePath().toString() + " -> " + ts->getTargetPath().toString();

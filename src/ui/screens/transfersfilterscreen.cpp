@@ -6,28 +6,17 @@
 #include "../menuselectoptionelement.h"
 #include "../menuselectoptiontextfield.h"
 #include "../menuselectoptioncheckbox.h"
+#include "../siteselection.h"
 
 #include "../../commandowner.h"
 #include "../../globalcontext.h"
-#include "../../sitemanager.h"
 #include "../../site.h"
 #include "../../engine.h"
 #include "../../race.h"
 #include "../../transferjob.h"
 #include "../../util.h"
 
-namespace {
-
-void fillPreselectionList(const std::string & preselectstr, std::list<std::shared_ptr<Site> > * list) {
-  std::list<std::string> preselectlist = util::trim(util::split(preselectstr, ","));
-  for (std::list<std::string>::const_iterator it = preselectlist.begin(); it != preselectlist.end(); it++) {
-    std::shared_ptr<Site> site = global->getSiteManager()->getSite(*it);
-    list->push_back(site);
-  }
-}
-
-}
-TransfersFilterScreen::TransfersFilterScreen(Ui* ui) : UIWindow(ui, "TransfersFilterScreen"), mso(*vv) {
+TransfersFilterScreen::TransfersFilterScreen(Ui* ui) : UIWindow(ui, "TransfersFilterScreen"), mso(*vv), active(false) {
   keybinds.addBind(10, KEYACTION_ENTER, "Modify");
   keybinds.addBind('d', KEYACTION_DONE, "Done");
   keybinds.addBind('f', KEYACTION_FILTER, "Done");
@@ -210,14 +199,14 @@ bool TransfersFilterScreen::keyPressed(unsigned int ch) {
       }
       if (msoe->getIdentifier() == "source" || msoe->getIdentifier() == "destination" || msoe->getIdentifier() == "anydirection") {
         std::string preselectstr = std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData();
-        std::list<std::shared_ptr<Site> > preselected;
+        std::list<std::shared_ptr<Site>> preselected;
         fillPreselectionList(preselectstr, &preselected);
         activeelement = msoe;
         std::string headerword = msoe->getIdentifier() + " ";
         if (headerword == "anydirection") {
           headerword = "";
         }
-        ui->goSelectSites("Show these " + headerword + "sites in transfers", preselected, std::list<std::shared_ptr<Site> >());
+        ui->goSelectSites("Show these " + headerword + "sites in transfers", preselected, std::list<std::shared_ptr<Site>>());
         return true;
       }
       bool activation = msoe->activate();

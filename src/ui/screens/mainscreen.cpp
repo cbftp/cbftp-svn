@@ -502,7 +502,7 @@ bool MainScreen::keyPressed(unsigned int ch) {
       ui->goMetrics();
       return true;
     case KEYACTION_ALL_SPREAD_JOBS:
-      ui->goAllRaces();
+      ui->goAllSpreadJobs();
       return true;
     case KEYACTION_ADD_SITE:
       ui->goAddSite();

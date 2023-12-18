@@ -45,7 +45,6 @@ public:
   std::string getInfoLabel() const override;
   std::string getInfoText() const override;
   void setFocus(bool) override;
-  void tick(int) override;
   std::string siteName() const;
   std::shared_ptr<FileList> fileList() const;
   UIFile * selectedFile() const;
@@ -58,6 +57,13 @@ public:
   std::string getLastJumpSection() const;
   Path getLastJumpPath() const;
 private:
+  void tick(int) override;
+  void disableGotoMode();
+  void clearSoftSelects();
+  bool handleReadyRequests();
+  void loadFileListFromRequest();
+  void viewCursored();
+  bool keyDown();
   Ui* ui;
   VirtualView* vv;
   BrowseScreen* parent;
@@ -99,10 +105,4 @@ private:
   std::string lastjumpsection;
   Path lastjumppath;
   bool nameonly;
-  void disableGotoMode();
-  void clearSoftSelects();
-  bool handleReadyRequests();
-  void loadFileListFromRequest();
-  void viewCursored();
-  bool keyDown();
 };

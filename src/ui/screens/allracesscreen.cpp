@@ -7,6 +7,8 @@
 #include "../menuselectoptiontextbutton.h"
 #include "../misc.h"
 
+#include "../../core/tickpoke.h"
+
 #include "../../race.h"
 #include "../../engine.h"
 #include "../../globalcontext.h"
@@ -20,6 +22,103 @@ enum KeyAction {
   KEYACTION_ABORT_DELETE_ALL
 };
 
+bool filteringActive(const SpreadJobsFilteringParameters& sjfp) {
+  bool jobnamefilter = sjfp.usejobnamefilter && !sjfp.jobnamefilter.empty();
+  bool sitefilter = sjfp.usesitefilter && (!sjfp.anysitefilters.empty() || !sjfp.allsitefilters.empty());
+  bool statusfilter = sjfp.usestatusfilter && (sjfp.showstatusinprogress || sjfp.showstatusdone || sjfp.showstatustimeout || sjfp.showstatusaborted);
+  return jobnamefilter || sitefilter || statusfilter;
+}
+
+std::string getFilterText(const SpreadJobsFilteringParameters& sjfp) {
+  std::string output;
+  int filters = 0;
+  bool jobnamefilter = sjfp.usejobnamefilter && !sjfp.jobnamefilter.empty();
+  bool sitefilter = sjfp.usesitefilter && (!sjfp.anysitefilters.empty() || !sjfp.allsitefilters.empty());
+  bool statusfilter = sjfp.usestatusfilter && (sjfp.showstatusinprogress || sjfp.showstatusdone || sjfp.showstatustimeout || sjfp.showstatusaborted);
+  if (jobnamefilter) {
+    filters++;
+  }
+  if (sitefilter) {
+    filters++;
+  }
+  if (statusfilter) {
+    filters++;
+  }
+  if (jobnamefilter) {
+    if (filters > 1) {
+      output += "jobname,";
+    }
+    else {
+      output += "jobname: " + sjfp.jobnamefilter;
+    }
+  }
+  if (sitefilter) {
+    int sitefilters = 0;
+    if (!sjfp.anysitefilters.empty()) {
+      sitefilters++;
+    }
+    if (!sjfp.allsitefilters.empty()) {
+      sitefilters++;
+    }
+    if (filters > 1 || sitefilters > 1) {
+      output += "sites";
+      if (filters > 1) {
+        output += ",";
+      }
+    }
+    else {
+      if (!sjfp.anysitefilters.empty()) {
+        std::string sitelist = util::join(sjfp.anysitefilters, ",");
+        if (sitelist.length() > 10) {
+          output += "any sites";
+        }
+        else {
+          output += "site";
+          output += (sjfp.anysitefilters.size() > 1 ? "s: " : ": ") + sitelist;
+        }
+      }
+      else if (!sjfp.allsitefilters.empty()) {
+        std::string sitelist = util::join(sjfp.allsitefilters, ",");
+        if (sitelist.length() > 10) {
+          output += "all sites";
+        }
+        else {
+          output += "site";
+          output += (sjfp.allsitefilters.size() > 1 ? "s: " : ": ") + sitelist;
+        }
+      }
+    }
+  }
+  if (statusfilter) {
+    if (filters > 1) {
+      output += "status,";
+    }
+    else {
+      output += "status: ";
+      std::string statustext;
+      if (sjfp.showstatusinprogress) {
+        statustext += "inprogress,";
+      }
+      if (sjfp.showstatusdone) {
+        statustext += "done,";
+      }
+      if (sjfp.showstatustimeout) {
+        statustext += "timeout,";
+      }
+      if (sjfp.showstatusaborted) {
+        statustext += "aborted,";
+      }
+      if (statustext.length()) {
+        output += statustext.substr(0, statustext.length() - 1);
+      }
+    }
+  }
+  if (filters > 1) {
+    output = output.substr(0, output.length() - 1);
+  }
+  return output;
+}
+
 }
 
 AllRacesScreen::AllRacesScreen(Ui* ui) : UIWindow(ui, "AllRacesScreen"), table(*vv) {
@@ -27,6 +126,8 @@ AllRacesScreen::AllRacesScreen(Ui* ui) : UIWindow(ui, "AllRacesScreen"), table(*
   keybinds.addBind('r', KEYACTION_RESET, "Reset job");
   keybinds.addBind('R', KEYACTION_RESET_HARD, "Hard reset job");
   keybinds.addBind('B', KEYACTION_ABORT, "Abort job");
+  keybinds.addBind('f', KEYACTION_FILTER, "Toggle filtering");
+  keybinds.addBind('q', KEYACTION_QUICK_JUMP, "Quick jump");
   keybinds.addBind('t', KEYACTION_TRANSFERS, "Transfers for job");
   keybinds.addBind('z', KEYACTION_ABORT_DELETE_INC, "Abort and delete own files on incomplete sites");
   keybinds.addBind('Z', KEYACTION_ABORT_DELETE_ALL, "Abort and delete own files on ALL sites");
@@ -40,7 +141,24 @@ AllRacesScreen::AllRacesScreen(Ui* ui) : UIWindow(ui, "AllRacesScreen"), table(*
   keybinds.addBind('-', KEYACTION_HIGHLIGHT_LINE, "Highlight entire line");
 }
 
+AllRacesScreen::~AllRacesScreen() {
+  disableGotoMode();
+}
+
 void AllRacesScreen::initialize(unsigned int row, unsigned int col) {
+  initialize(row, col, SpreadJobsFilteringParameters());
+}
+
+void AllRacesScreen::initializeFilterSite(unsigned int row, unsigned int col, const std::string& site) {
+  SpreadJobsFilteringParameters sjfp;
+  sjfp.usesitefilter = true;
+  sjfp.anysitefilters.push_back(site);
+  initialize(row, col, sjfp);
+}
+
+void AllRacesScreen::initialize(unsigned int row, unsigned int col, const SpreadJobsFilteringParameters& sjfp) {
+  filtering = filteringActive(sjfp);
+  this->sjfp = sjfp;
   autoupdate = true;
   hascontents = false;
   currentviewspan = 0;
@@ -52,11 +170,83 @@ void AllRacesScreen::initialize(unsigned int row, unsigned int col) {
   init(row, col);
 }
 
+bool AllRacesScreen::showsWhileFiltered(const std::shared_ptr<Race>& race) const {
+  if (sjfp.usejobnamefilter && !sjfp.jobnamefilter.empty()) {
+    if (!util::wildcmp(sjfp.jobnamefilter.c_str(), race->getName().c_str())) {
+      return false;
+    }
+  }
+  if (sjfp.usesitefilter) {
+    if (!sjfp.anysitefilters.empty()) {
+      bool match = false;
+      for (std::list<std::string>::const_iterator it = sjfp.anysitefilters.begin(); it != sjfp.anysitefilters.end(); it++) {
+        if (race->getSiteRace(*it)) {
+          match = true;
+          break;
+        }
+      }
+      if (!match) {
+        return false;
+      }
+    }
+    if (!sjfp.allsitefilters.empty()) {
+      bool match = true;
+      for (std::list<std::string>::const_iterator it = sjfp.allsitefilters.begin(); it != sjfp.allsitefilters.end(); it++) {
+        if (!race->getSiteRace(*it)) {
+          match = false;
+          break;
+        }
+      }
+      if (!match) {
+        return false;
+      }
+    }
+  }
+
+  if (sjfp.usestatusfilter && (sjfp.showstatusinprogress || sjfp.showstatusdone || sjfp.showstatustimeout || sjfp.showstatusaborted)) {
+    switch (race->getStatus()) {
+      case RaceStatus::RUNNING:
+        if (!sjfp.showstatusinprogress) {
+          return false;
+        }
+        break;
+      case RaceStatus::DONE:
+        if (!sjfp.showstatusdone) {
+          return false;
+        }
+        break;
+      case RaceStatus::ABORTED:
+        if (!sjfp.showstatusaborted) {
+          return false;
+        }
+        break;
+      case RaceStatus::TIMEOUT:
+        if (!sjfp.showstatustimeout) {
+          return false;
+        }
+        break;
+    }
+  }
+  return true;
+}
+
+unsigned int AllRacesScreen::totalListSize() const {
+  int filteredcount = 0;
+  if (filtering) {
+    for (std::list<std::shared_ptr<Race>>::const_iterator it = engine->getRacesBegin(); it != engine->getRacesEnd(); ++it) {
+      if (showsWhileFiltered(*it)) {
+        filteredcount++;
+      }
+    }
+  }
+  return filtering ? filteredcount : engine->allRaces();
+}
+
 void AllRacesScreen::redraw() {
   vv->clear();
   unsigned int y = 0;
   unsigned int listspan = row - 1;
-  unsigned int totallistsize = engine->allRaces();
+  unsigned int totallistsize = totalListSize();
   table.reset();
   while (ypos && ypos >= engine->allRaces()) {
     --ypos;
@@ -67,6 +257,9 @@ void AllRacesScreen::redraw() {
   y++;
   unsigned int pos = 0;
   for (std::list<std::shared_ptr<Race> >::const_iterator it = --engine->getCurrentRacesEnd(); it != --engine->getCurrentRacesBegin() && y < row; it--) {
+    if (filtering && !showsWhileFiltered(*it)) {
+      continue;
+    }
     if (pos >= currentviewspan) {
       addRaceDetails(y++, table, *it);
       if (pos == ypos) {
@@ -76,6 +269,9 @@ void AllRacesScreen::redraw() {
     ++pos;
   }
   for (std::list<std::shared_ptr<Race> >::const_iterator it = --engine->getFinishedRacesEnd(); it != --engine->getFinishedRacesBegin() && y < row; it--) {
+    if (filtering && !showsWhileFiltered(*it)) {
+      continue;
+    }
     if (pos >= currentviewspan) {
       addRaceDetails(y++, table, *it);
       if (pos == ypos) {
@@ -132,6 +328,63 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
       return true;
     }
   }
+  if (gotomode) {
+      if (gotomodefirst) {
+        gotomodefirst = false;
+      }
+      if (ch >= 32 && ch <= 126) {
+        gotomodeticker = 0;
+        gotomodestring += toupper(ch);
+        unsigned int gotomodelength = gotomodestring.length();
+        unsigned int pos = 0;
+        bool found = false;
+        for (std::list<std::shared_ptr<Race> >::const_iterator it = --engine->getCurrentRacesEnd(); it != --engine->getCurrentRacesBegin(); it--) {
+          if (filtering && !showsWhileFiltered(*it)) {
+            continue;
+          }
+          std::string name = (*it)->getName();
+          if (name.length() >= gotomodelength) {
+            std::string substr = name.substr(0, gotomodelength);
+              for (unsigned int j = 0; j < gotomodelength; j++) {
+                substr[j] = toupper(substr[j]);
+              }
+              if (substr == gotomodestring) {
+                ypos = pos;
+                found = true;
+                break;
+              }
+          }
+          ++pos;
+        }
+        if (!found) {
+          for (std::list<std::shared_ptr<Race> >::const_iterator it = --engine->getFinishedRacesEnd(); it != --engine->getFinishedRacesBegin(); it--) {
+            if (filtering && !showsWhileFiltered(*it)) {
+              continue;
+            }
+            std::string name = (*it)->getName();
+            if (name.length() >= gotomodelength) {
+              std::string substr = name.substr(0, gotomodelength);
+                for (unsigned int j = 0; j < gotomodelength; j++) {
+                  substr[j] = toupper(substr[j]);
+                }
+                if (substr == gotomodestring) {
+                  ypos = pos;
+                  break;
+                }
+            }
+            ++pos;
+          }
+        }
+        ui->redraw();
+        return true;
+      }
+      else {
+        disableGotoMode();
+      }
+      if (ch == 27) {
+        return false;
+      }
+    }
   switch (action) {
     case KEYACTION_UP:
       if (hascontents && ypos > 0) {
@@ -179,6 +432,25 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
     case KEYACTION_ENTER:
       if (hascontents) {
         ui->goRaceStatus(table.getElement(table.getSelectionPointer())->getId());
+      }
+      return true;
+    case KEYACTION_QUICK_JUMP:
+      gotomode = true;
+      gotomodefirst = true;
+      gotomodeticker = 0;
+      gotomodestring = "";
+      global->getTickPoke()->startPoke(this, "AllRacesScreen", 50, 0);
+      ui->update();
+      ui->setLegend();
+      break;
+    case KEYACTION_FILTER:
+      if (!filtering) {
+        ui->goSpreadJobsFiltering(sjfp);
+      }
+      else {
+        filtering = false;
+        ui->setInfo();
+        ui->redraw();
       }
       return true;
     case KEYACTION_ABORT:
@@ -239,12 +511,38 @@ bool AllRacesScreen::keyPressed(unsigned int ch) {
   return false;
 }
 
+void AllRacesScreen::tick(int) {
+  if (gotomode && !gotomodefirst) {
+    if (gotomodeticker++ >= 20) {
+      disableGotoMode();
+    }
+  }
+}
+
+void AllRacesScreen::disableGotoMode() {
+  if (gotomode) {
+    gotomode = false;
+    global->getTickPoke()->stopPoke(this, 0);
+    ui->setLegend();
+  }
+}
+
 std::string AllRacesScreen::getInfoLabel() const {
   return "ALL SPREAD JOBS";
 }
 
 std::string AllRacesScreen::getInfoText() const {
+  if (filtering) {
+    return "FILTERING: " + getFilterText(sjfp);
+  }
   return "Active: " + std::to_string(engine->currentRaces()) + "  Total: " + std::to_string(engine->allRaces());
+}
+
+std::string AllRacesScreen::getLegendText() const {
+  if (gotomode) {
+    return "[Any] Go to first matching entry name - [Esc] Cancel";
+  }
+  return keybinds.getLegendSummary();
 }
 
 void AllRacesScreen::addRaceTableHeader(unsigned int y, MenuSelectOption & mso, const std::string & release) {

@@ -53,19 +53,19 @@ class TransfersScreen : public UIWindow {
 public:
   TransfersScreen(Ui *);
   ~TransfersScreen();
-  void initialize(unsigned int, unsigned int);
-  void initializeFilterSite(unsigned int, unsigned int, const std::string &);
-  void initializeFilterSpreadJob(unsigned int, unsigned int, const std::string &);
-  void initializeFilterTransferJob(unsigned int, unsigned int, const std::string &);
-  void initializeFilterSpreadJobSite(unsigned int, unsigned int, const std::string & job, const std::string & site);
-  void initialize(unsigned int, unsigned int, const TransferFilteringParameters &);
+  void initialize(unsigned int row, unsigned int col);
+  void initializeFilterSite(unsigned int row, unsigned int col, const std::string& site);
+  void initializeFilterSpreadJob(unsigned int row, unsigned int col, const std::string& job);
+  void initializeFilterTransferJob(unsigned int row, unsigned int col, const std::string& job);
+  void initializeFilterSpreadJobSite(unsigned int row, unsigned int col, const std::string& job, const std::string& site);
+  void initialize(unsigned int row, unsigned int col, const TransferFilteringParameters& tfp);
   void redraw() override;
   bool keyPressed(unsigned int) override;
   std::string getLegendText() const override;
   std::string getInfoLabel() const override;
   std::string getInfoText() const override;
-  static void addTransferTableHeader(unsigned int, MenuSelectOption &);
-  static TransferDetails formatTransferDetails(std::shared_ptr<TransferStatus> &);
+  static void addTransferTableHeader(unsigned int y, MenuSelectOption& mso);
+  static TransferDetails formatTransferDetails(std::shared_ptr<TransferStatus>& ts);
 private:
   static void addTransferTableRow(unsigned int, MenuSelectOption &, bool,
       const std::string &, const std::string &, const std::string &,

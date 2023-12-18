@@ -76,9 +76,13 @@ class KeyBindsScreen;
 class MetricsScreen;
 class TransferPairingScreen;
 class ExternalScriptsScreen;
+class TransferJobsFilterScreen;
+class SpreadJobsFilterScreen;
 
 class LegendPrinterKeybinds;
 struct TransferFilteringParameters;
+struct TransferJobsFilteringParameters;
+struct SpreadJobsFilteringParameters;
 
 enum LegendMode {
   LEGEND_DISABLED = 123,
@@ -119,7 +123,7 @@ private:
   std::shared_ptr<SelectSitesScreen> selectsitesscreen;
   std::shared_ptr<TransfersScreen> transfersscreen;
   std::shared_ptr<TransferJobStatusScreen> transferjobstatusscreen;
-  std::shared_ptr<AllRacesScreen> allracesscreen;
+  std::shared_ptr<AllRacesScreen> allspreadjobsscreen;
   std::shared_ptr<AllTransferJobsScreen> alltransferjobsscreen;
   std::shared_ptr<TransferStatusScreen> transferstatusscreen;
   std::shared_ptr<TransfersFilterScreen> transfersfilterscreen;
@@ -139,6 +143,8 @@ private:
   std::shared_ptr<MetricsScreen> metricsscreen;
   std::shared_ptr<TransferPairingScreen> transferpairingscreen;
   std::shared_ptr<ExternalScriptsScreen> externalscriptsscreen;
+  std::shared_ptr<TransferJobsFilterScreen> transferjobsfilterscreen;
+  std::shared_ptr<SpreadJobsFilterScreen> spreadjobsfilterscreen;
   std::shared_ptr<LegendPrinterKeybinds> legendprinterkeybinds;
   unsigned int mainrow;
   unsigned int col;
@@ -225,12 +231,16 @@ public:
   void goEventLog();
   void goScoreBoard();
   void goTransfers();
-  void goTransfersFilterSite(const std::string &);
-  void goTransfersFilterSpreadJob(const std::string &);
-  void goTransfersFilterTransferJob(const std::string &);
-  void goTransfersFilterSpreadJobSite(const std::string & job, const std::string & site);
-  void returnTransferFilters(const TransferFilteringParameters &);
-  void goTransfersFiltering(const TransferFilteringParameters &);
+  void goTransfersFilterSite(const std::string& site);
+  void goTransfersFilterSpreadJob(const std::string& job);
+  void goTransfersFilterTransferJob(const std::string& job);
+  void goTransfersFilterSpreadJobSite(const std::string& job, const std::string& site);
+  void goTransfersFiltering(const TransferFilteringParameters& tfp);
+  void returnTransferFilters(const TransferFilteringParameters& tfp);
+  void goTransferJobsFiltering(const TransferJobsFilteringParameters& tjfp);
+  void returnTransferJobsFilters(const TransferJobsFilteringParameters& tjfp);
+  void goSpreadJobsFiltering(const SpreadJobsFilteringParameters& tjfp);
+  void returnSpreadJobsFilters(const SpreadJobsFilteringParameters& sjfp);
   void goEditSite(const std::string &);
   void goAddSite();
   void goBrowse(const std::string& site, const Path& path = Path());
@@ -245,8 +255,10 @@ public:
   void goRawData(const std::string& site);
   void goRawDataJump(const std::string& site, int id);
   void goRawBuffer(RawBuffer * rawbuffer, const std::string & label, const std::string & infotext);
-  void goAllRaces();
+  void goAllSpreadJobs();
+  void goAllSpreadJobsFilterSite(const std::string& site);
   void goAllTransferJobs();
+  void goAllTransferJobsFilterSite(const std::string& site);
   void goInfo();
   void goMakeDir(const std::string & site, UIFileList & filelist);
   void goSiteSlots(const std::shared_ptr<Site> & site);

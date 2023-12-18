@@ -68,6 +68,8 @@
 #include "screens/metricsscreen.h"
 #include "screens/transferpairingscreen.h"
 #include "screens/externalscriptsscreen.h"
+#include "screens/transferjobsfilterscreen.h"
+#include "screens/spreadjobsfilterscreen.h"
 
 namespace {
 
@@ -150,7 +152,7 @@ bool Ui::init() {
   selectsitesscreen = std::make_shared<SelectSitesScreen>(this);
   transfersscreen = std::make_shared<TransfersScreen>(this);
   transferjobstatusscreen = std::make_shared<TransferJobStatusScreen>(this);
-  allracesscreen = std::make_shared<AllRacesScreen>(this);
+  allspreadjobsscreen = std::make_shared<AllRacesScreen>(this);
   alltransferjobsscreen = std::make_shared<AllTransferJobsScreen>(this);
   transferstatusscreen = std::make_shared<TransferStatusScreen>(this);
   transfersfilterscreen = std::make_shared<TransfersFilterScreen>(this);
@@ -170,6 +172,8 @@ bool Ui::init() {
   metricsscreen = std::make_shared<MetricsScreen>(this);
   transferpairingscreen = std::make_shared<TransferPairingScreen>(this);
   externalscriptsscreen = std::make_shared<ExternalScriptsScreen>(this);
+  transferjobsfilterscreen = std::make_shared<TransferJobsFilterScreen>(this);
+  spreadjobsfilterscreen = std::make_shared<SpreadJobsFilterScreen>(this);
   mainwindows.push_back(mainscreen);
   mainwindows.push_back(newkeyscreen);
   mainwindows.push_back(confirmationscreen);
@@ -193,7 +197,7 @@ bool Ui::init() {
   mainwindows.push_back(selectsitesscreen);
   mainwindows.push_back(transfersscreen);
   mainwindows.push_back(transferjobstatusscreen);
-  mainwindows.push_back(allracesscreen);
+  mainwindows.push_back(allspreadjobsscreen);
   mainwindows.push_back(alltransferjobsscreen);
   mainwindows.push_back(transferstatusscreen);
   mainwindows.push_back(transfersfilterscreen);
@@ -684,6 +688,11 @@ void Ui::goTransfersFilterSpreadJobSite(const std::string& job, const std::strin
   switchToWindow(transfersscreen);
 }
 
+void Ui::goTransfersFiltering(const TransferFilteringParameters& tfp) {
+  transfersfilterscreen->initialize(mainrow, col, tfp);
+  switchToWindow(transfersfilterscreen);
+}
+
 void Ui::returnTransferFilters(const TransferFilteringParameters& tfp) {
   transfersscreen->initialize(mainrow, col, tfp);
   switchToLast();
@@ -692,9 +701,30 @@ void Ui::returnTransferFilters(const TransferFilteringParameters& tfp) {
   renderer.refresh(infoenabled, legendenabled);
 }
 
-void Ui::goTransfersFiltering(const TransferFilteringParameters& tfp) {
-  transfersfilterscreen->initialize(mainrow, col, tfp);
-  switchToWindow(transfersfilterscreen);
+void Ui::goTransferJobsFiltering(const TransferJobsFilteringParameters& tjfp) {
+  transferjobsfilterscreen->initialize(mainrow, col, tjfp);
+  switchToWindow(transferjobsfilterscreen);
+}
+
+void Ui::returnTransferJobsFilters(const TransferJobsFilteringParameters& tjfp) {
+  alltransferjobsscreen->initialize(mainrow, col, tjfp);
+  switchToLast();
+  topwindow->redraw();
+  vv.render();
+  renderer.refresh(infoenabled, legendenabled);
+}
+
+void Ui::goSpreadJobsFiltering(const SpreadJobsFilteringParameters& sjfp) {
+  spreadjobsfilterscreen->initialize(mainrow, col, sjfp);
+  switchToWindow(spreadjobsfilterscreen);
+}
+
+void Ui::returnSpreadJobsFilters(const SpreadJobsFilteringParameters& sjfp) {
+  allspreadjobsscreen->initialize(mainrow, col, sjfp);
+  switchToLast();
+  topwindow->redraw();
+  vv.render();
+  renderer.refresh(infoenabled, legendenabled);
 }
 
 void Ui::goEditSite(const std::string& site) {
@@ -772,13 +802,23 @@ void Ui::goRawBuffer(RawBuffer * rawbuf, const std::string & label, const std::s
   switchToWindow(rawcommandscreen);
 }
 
-void Ui::goAllRaces() {
-  allracesscreen->initialize(mainrow, col);
-  switchToWindow(allracesscreen);
+void Ui::goAllSpreadJobs() {
+  allspreadjobsscreen->initialize(mainrow, col);
+  switchToWindow(allspreadjobsscreen);
+}
+
+void Ui::goAllSpreadJobsFilterSite(const std::string& site) {
+  allspreadjobsscreen->initializeFilterSite(mainrow, col, site);
+  switchToWindow(allspreadjobsscreen);
 }
 
 void Ui::goAllTransferJobs() {
   alltransferjobsscreen->initialize(mainrow, col);
+  switchToWindow(alltransferjobsscreen);
+}
+
+void Ui::goAllTransferJobsFilterSite(const std::string& site) {
+  alltransferjobsscreen->initializeFilterSite(mainrow,  col, site);
   switchToWindow(alltransferjobsscreen);
 }
 

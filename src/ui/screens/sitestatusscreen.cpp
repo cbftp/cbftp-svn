@@ -21,7 +21,9 @@ enum KeyAction {
   KEYACTION_DISCONNECT_ALL_SLOTS,
   KEYACTION_LOGIN_ALL_SLOTS,
   KEYACTION_RESET_HOURLY,
-  KEYACTION_RESET_ALL
+  KEYACTION_RESET_ALL,
+  KEYACTION_TRANSFER_JOBS,
+  KEYACTION_SPREAD_JOBS
 };
 
 }
@@ -36,8 +38,10 @@ SiteStatusScreen::SiteStatusScreen(Ui* ui) : UIWindow(ui, "SiteStatusScreen") {
   keybinds.addBind('K', KEYACTION_FORCE_DISCONNECT_ALL_SLOTS, "Kill all slots");
   keybinds.addBind('k', KEYACTION_DISCONNECT_ALL_SLOTS, "Disconnect all slots");
   keybinds.addBind('L', KEYACTION_LOGIN_ALL_SLOTS, "Login all slots");
-  keybinds.addBind('r', KEYACTION_RESET_HOURLY, "Reset 24-hour stats");
+  keybinds.addBind('h', KEYACTION_RESET_HOURLY, "Reset 24-hour stats");
   keybinds.addBind('R', KEYACTION_RESET_ALL, "Reset all time stats");
+  keybinds.addBind('j', KEYACTION_TRANSFER_JOBS, "Transfer jobs");
+  keybinds.addBind('r', KEYACTION_SPREAD_JOBS, "Spread jobs");
 }
 
 void SiteStatusScreen::initialize(unsigned int row, unsigned int col, std::string sitename) {
@@ -135,6 +139,12 @@ bool SiteStatusScreen::keyPressed(unsigned int ch) {
       return true;
     case KEYACTION_RESET_ALL:
       ui->goStrongConfirmation("Do you really wish to reset the all time stats for " + site->getName() + "?");
+      return true;
+    case KEYACTION_TRANSFER_JOBS:
+      ui->goAllTransferJobsFilterSite(site->getName());
+      return true;
+    case KEYACTION_SPREAD_JOBS:
+      ui->goAllSpreadJobsFilterSite(site->getName());
       return true;
   }
   return false;

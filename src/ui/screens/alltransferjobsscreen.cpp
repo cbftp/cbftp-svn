@@ -9,6 +9,8 @@
 #include "../menuselectoptiontextbutton.h"
 #include "../misc.h"
 
+#include "../../core/tickpoke.h"
+
 #include "../../globalcontext.h"
 #include "../../util.h"
 #include "../../engine.h"
@@ -16,10 +18,126 @@
 #include "../../site.h"
 #include "../../sitelogic.h"
 
+namespace {
+
+bool filteringActive(const TransferJobsFilteringParameters& tjfp) {
+  bool jobnamefilter = tjfp.usejobnamefilter && !tjfp.jobnamefilter.empty();
+  bool sitefilter = tjfp.usesitefilter && (!tjfp.sourcesitefilters.empty() || !tjfp.targetsitefilters.empty() || !tjfp.anydirectionsitefilters.empty());
+  bool statusfilter = tjfp.usestatusfilter && (tjfp.showstatusqueued || tjfp.showstatusinprogress || tjfp.showstatusdone || tjfp.showstatusaborted);
+  return jobnamefilter || sitefilter || statusfilter;
+}
+
+std::string getFilterText(const TransferJobsFilteringParameters& tjfp) {
+  std::string output;
+  int filters = 0;
+  bool jobnamefilter = tjfp.usejobnamefilter && !tjfp.jobnamefilter.empty();
+  bool sitefilter = tjfp.usesitefilter && (!tjfp.sourcesitefilters.empty() || !tjfp.targetsitefilters.empty() || !tjfp.anydirectionsitefilters.empty());
+  bool statusfilter = tjfp.usestatusfilter && (tjfp.showstatusqueued || tjfp.showstatusinprogress || tjfp.showstatusdone || tjfp.showstatusaborted);
+  if (jobnamefilter) {
+    filters++;
+  }
+  if (sitefilter) {
+    filters++;
+  }
+  if (statusfilter) {
+    filters++;
+  }
+  if (jobnamefilter) {
+    if (filters > 1) {
+      output += "jobname,";
+    }
+    else {
+      output += "jobname: " + tjfp.jobnamefilter;
+    }
+  }
+  if (sitefilter) {
+    int sitefilters = 0;
+    if (!tjfp.sourcesitefilters.empty()) {
+      sitefilters++;
+    }
+    if (!tjfp.targetsitefilters.empty()) {
+      sitefilters++;
+    }
+    if (!tjfp.anydirectionsitefilters.empty()) {
+      sitefilters++;
+    }
+    if (filters > 1 || sitefilters > 1) {
+      output += "sites";
+      if (filters > 1) {
+        output += ",";
+      }
+    }
+    else {
+      if (!tjfp.sourcesitefilters.empty()) {
+        std::string sitelist = util::join(tjfp.sourcesitefilters, ",");
+        if (sitelist.length() > 10) {
+          output += "source sites";
+        }
+        else {
+          output += "source site";
+          output += (tjfp.sourcesitefilters.size() > 1 ? "s: " : ": ") + sitelist;
+        }
+      }
+      else if (!tjfp.targetsitefilters.empty()) {
+        std::string sitelist = util::join(tjfp.targetsitefilters, ",");
+        if (sitelist.length() > 10) {
+          output += "target sites";
+        }
+        else {
+          output += "target site";
+          output += (tjfp.targetsitefilters.size() > 1 ? "s: " : ": ") + sitelist;
+        }
+      }
+      else if (!tjfp.anydirectionsitefilters.empty()) {
+        std::string sitelist = util::join(tjfp.anydirectionsitefilters, ",");
+        if (sitelist.length() > 10) {
+          output += "sites";
+        }
+        else {
+          output += "site";
+          output += (tjfp.anydirectionsitefilters.size() > 1 ? "s: " : ": ") + sitelist;
+        }
+      }
+    }
+  }
+  if (statusfilter) {
+    if (filters > 1) {
+      output += "status,";
+    }
+    else {
+      output += "status: ";
+      std::string statustext;
+      if (tjfp.showstatusqueued) {
+        statustext += "queued,";
+      }
+      if (tjfp.showstatusinprogress) {
+        statustext += "inprogress,";
+      }
+      if (tjfp.showstatusdone) {
+        statustext += "done,";
+      }
+      if (tjfp.showstatusaborted) {
+        statustext += "aborted,";
+      }
+      if (statustext.length()) {
+        output += statustext.substr(0, statustext.length() - 1);
+      }
+    }
+  }
+  if (filters > 1) {
+    output = output.substr(0, output.length() - 1);
+  }
+  return output;
+}
+
+}
+
 AllTransferJobsScreen::AllTransferJobsScreen(Ui* ui) : UIWindow(ui, "AllTransferJobsScreen"), table(*vv) {
   keybinds.addBind(10, KEYACTION_ENTER, "Details");
   keybinds.addBind('b', KEYACTION_BROWSE, "Browse");
   keybinds.addBind('B', KEYACTION_ABORT, "Abort job");
+  keybinds.addBind('f', KEYACTION_FILTER, "Toggle filtering");
+  keybinds.addBind('q', KEYACTION_QUICK_JUMP, "Quick jump");
   keybinds.addBind('t', KEYACTION_TRANSFERS, "Transfers for job");
   keybinds.addBind('r', KEYACTION_RESET, "Reset");
   keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Return");
@@ -32,7 +150,24 @@ AllTransferJobsScreen::AllTransferJobsScreen(Ui* ui) : UIWindow(ui, "AllTransfer
   keybinds.addBind('-', KEYACTION_HIGHLIGHT_LINE, "Highlight entire line");
 }
 
+AllTransferJobsScreen::~AllTransferJobsScreen() {
+  disableGotoMode();
+}
+
 void AllTransferJobsScreen::initialize(unsigned int row, unsigned int col) {
+  initialize(row, col, TransferJobsFilteringParameters());
+}
+
+void AllTransferJobsScreen::initializeFilterSite(unsigned int row, unsigned int col, const std::string& site) {
+  TransferJobsFilteringParameters tjfp;
+  tjfp.usesitefilter = true;
+  tjfp.anydirectionsitefilters.push_back(site);
+  initialize(row, col, tjfp);
+}
+
+void AllTransferJobsScreen::initialize(unsigned int row, unsigned int col, const TransferJobsFilteringParameters& tjfp) {
+  filtering = filteringActive(tjfp);
+  this->tjfp = tjfp;
   autoupdate = true;
   hascontents = false;
   currentviewspan = 0;
@@ -44,12 +179,96 @@ void AllTransferJobsScreen::initialize(unsigned int row, unsigned int col) {
   init(row, col);
 }
 
+bool AllTransferJobsScreen::showsWhileFiltered(const std::shared_ptr<TransferJob>& tj) const {
+  if (tjfp.usejobnamefilter && !tjfp.jobnamefilter.empty()) {
+    if (!util::wildcmp(tjfp.jobnamefilter.c_str(), tj->getName().c_str())) {
+      return false;
+    }
+  }
+  if (tjfp.usesitefilter) {
+    if (!tjfp.sourcesitefilters.empty() && tj->getSrc()) {
+      bool match = false;
+      for (std::list<std::string>::const_iterator it = tjfp.sourcesitefilters.begin(); it != tjfp.sourcesitefilters.end(); it++) {
+        if (tj->getSrc()->getSite()->getName() == *it) {
+          match = true;
+          break;
+        }
+      }
+      if (!match) {
+        return false;
+      }
+    }
+    if (!tjfp.targetsitefilters.empty() && tj->getDst()) {
+      bool match = false;
+      for (std::list<std::string>::const_iterator it = tjfp.targetsitefilters.begin(); it != tjfp.targetsitefilters.end(); it++) {
+        if (tj->getDst()->getSite()->getName() == *it) {
+          match = true;
+          break;
+        }
+      }
+      if (!match) {
+        return false;
+      }
+    }
+    if (!tjfp.anydirectionsitefilters.empty() && (tjfp.sourcesitefilters.empty() || tjfp.targetsitefilters.empty())) {
+      bool match = false;
+      for (std::list<std::string>::const_iterator it = tjfp.anydirectionsitefilters.begin(); it != tjfp.anydirectionsitefilters.end(); it++) {
+        if ((tj->getSrc() && tj->getSrc()->getSite()->getName() == *it) || (tj->getDst() && tj->getDst()->getSite()->getName() == *it)) {
+          match = true;
+          break;
+        }
+      }
+      if (!match) {
+        return false;
+      }
+    }
+  }
+
+  if (tjfp.usestatusfilter && (tjfp.showstatusqueued || tjfp.showstatusinprogress || tjfp.showstatusdone || tjfp.showstatusaborted)) {
+    switch (tj->getStatus()) {
+      case TRANSFERJOB_QUEUED:
+        if (!tjfp.showstatusqueued) {
+          return false;
+        }
+        break;
+      case TRANSFERJOB_RUNNING:
+        if (!tjfp.showstatusinprogress) {
+          return false;
+        }
+        break;
+      case TRANSFERJOB_DONE:
+        if (!tjfp.showstatusdone) {
+          return false;
+        }
+        break;
+      case TRANSFERJOB_ABORTED:
+        if (!tjfp.showstatusaborted) {
+          return false;
+        }
+        break;
+    }
+  }
+  return true;
+}
+
+unsigned int AllTransferJobsScreen::totalListSize() const {
+  int filteredcount = 0;
+  if (filtering) {
+    for (std::list<std::shared_ptr<TransferJob> >::const_iterator it = engine->getTransferJobsBegin(); it != engine->getTransferJobsEnd(); ++it) {
+      if (showsWhileFiltered(*it)) {
+        filteredcount++;
+      }
+    }
+  }
+  return (filtering ? filteredcount : engine->allTransferJobs()) + 1;
+}
+
 void AllTransferJobsScreen::redraw() {
   vv->clear();
   unsigned int y = 0;
-  unsigned int totallistsize = engine->allTransferJobs() + 1;
+  unsigned int totallistsize = totalListSize();
   table.reset();
-  while (ypos > 1 && ypos > engine->allTransferJobs()) {
+  while (ypos > 1 && ypos >= totallistsize) {
     --ypos;
   }
   adaptViewSpan(currentviewspan, row, ypos, totallistsize);
@@ -60,6 +279,9 @@ void AllTransferJobsScreen::redraw() {
   }
   unsigned int pos = 1;
   for (std::list<std::shared_ptr<TransferJob> >::const_iterator it = --engine->getTransferJobsEnd(); it != --engine->getTransferJobsBegin() && y < row; it--) {
+    if (filtering && !showsWhileFiltered(*it)) {
+      continue;
+    }
     if (pos >= currentviewspan) {
       addJobDetails(y++, table, *it);
       if (pos == ypos) {
@@ -105,6 +327,42 @@ bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
       return true;
     }
   }
+  if (gotomode) {
+      if (gotomodefirst) {
+        gotomodefirst = false;
+      }
+      if (ch >= 32 && ch <= 126) {
+        gotomodeticker = 0;
+        gotomodestring += toupper(ch);
+        unsigned int gotomodelength = gotomodestring.length();
+        unsigned int pos = 0;
+        for (std::list<std::shared_ptr<TransferJob> >::const_iterator it = --engine->getTransferJobsEnd(); it != --engine->getTransferJobsBegin(); it--) {
+          if (filtering && !showsWhileFiltered(*it)) {
+            continue;
+          }
+          std::string name = (*it)->getName();
+          if (name.length() >= gotomodelength) {
+            std::string substr = name.substr(0, gotomodelength);
+              for (unsigned int j = 0; j < gotomodelength; j++) {
+                substr[j] = toupper(substr[j]);
+              }
+              if (substr == gotomodestring) {
+                ypos = pos;
+                break;
+              }
+          }
+          ++pos;
+        }
+        ui->redraw();
+        return true;
+      }
+      else {
+        disableGotoMode();
+      }
+      if (ch == 27) {
+        return false;
+      }
+    }
   switch (action) {
     case KEYACTION_UP:
       if (hascontents && ypos > 1) {
@@ -190,6 +448,16 @@ bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
         }
       }
       return true;
+    case KEYACTION_FILTER:
+      if (!filtering) {
+        ui->goTransferJobsFiltering(tjfp);
+      }
+      else {
+        filtering = false;
+        ui->setInfo();
+        ui->redraw();
+      }
+      return true;
     case KEYACTION_ABORT:
       if (hascontents) {
         abortjob = global->getEngine()->getTransferJob(table.getElement(table.getSelectionPointer())->getId());
@@ -226,12 +494,38 @@ bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
   return false;
 }
 
+void AllTransferJobsScreen::tick(int) {
+  if (gotomode && !gotomodefirst) {
+    if (gotomodeticker++ >= 20) {
+      disableGotoMode();
+    }
+  }
+}
+
+void AllTransferJobsScreen::disableGotoMode() {
+  if (gotomode) {
+    gotomode = false;
+    global->getTickPoke()->stopPoke(this, 0);
+    ui->setLegend();
+  }
+}
+
 std::string AllTransferJobsScreen::getInfoLabel() const {
   return "ALL TRANSFER JOBS";
 }
 
 std::string AllTransferJobsScreen::getInfoText() const {
+  if (filtering) {
+    return "FILTERING: " + getFilterText(tjfp);
+  }
   return "Active: " + std::to_string(engine->currentTransferJobs()) + "  Total: " + std::to_string(engine->allTransferJobs());
+}
+
+std::string AllTransferJobsScreen::getLegendText() const {
+  if (gotomode) {
+    return "[Any] Go to first matching entry name - [Esc] Cancel";
+  }
+  return keybinds.getLegendSummary();
 }
 
 void AllTransferJobsScreen::addJobTableRow(unsigned int y, MenuSelectOption & mso, unsigned int id, bool selectable,
