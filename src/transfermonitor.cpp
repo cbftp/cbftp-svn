@@ -162,6 +162,9 @@ void TransferMonitor::engageDownload(
   if (localfl) {
     this->dpath = localfl->getPath();
   }
+  else { // in-memory download
+    this->dpath = "(none)";
+  }
   this->fls = fls;
   this->localfl = localfl;
   this->srcco = co;
@@ -184,7 +187,7 @@ void TransferMonitor::engageDownload(
   ipv6 = useIPv6(sprot, dprot);
   clientactive = !sls->getSite()->hasBrokenPASV();
   ts = std::make_shared<TransferStatus>(TRANSFERSTATUS_TYPE_DOWNLOAD,
-      sls->getSite()->getName(), "/\\", co ? co->getName() : "", dfile, fls, spath,
+      sls->getSite()->getName(), "(local)", co ? co->getName() : "", dfile, fls, spath,
       nullptr, dpath, fls->getFile(sfile)->getSize(), 0, src, -1, ssl, clientactive);
   tm->addNewTransferStatus(ts);
   if (localfl) {
@@ -265,7 +268,7 @@ void TransferMonitor::engageUpload(
   fld->touchFile(dfile, sld->getSite()->getUser(), true);
   clientactive = !sld->getSite()->hasBrokenPASV();
   ts = std::make_shared<TransferStatus>(TRANSFERSTATUS_TYPE_UPLOAD,
-      "/\\", sld->getSite()->getName(), co ? co->getName() : "", dfile, nullptr, spath,
+      "(local)", sld->getSite()->getName(), co ? co->getName() : "", dfile, nullptr, spath,
       fld, dpath, lf.getSize(), 0, 0, dst, ssl, clientactive);
   tm->addNewTransferStatus(ts);
   if (!FileSystem::fileExists(spath / sfile)) {
