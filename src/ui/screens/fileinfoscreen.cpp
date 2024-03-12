@@ -28,7 +28,7 @@ void FileInfoScreen::redraw() {
     type = "Link";
   }
   vv->putStr(i++, 1, "Type: " + type);
-  vv->putStr(i++, 1, "Size: " + uifile->getSizeRepr());
+  vv->putStr(i++, 1, "Size: " + uifile->getSizeRepr() + " (" + std::to_string(uifile->getSize()) + " bytes)");
   vv->putStr(i++, 1, "Last modified: " + uifile->getLastModified());
   vv->putStr(i++, 1, "Owner: " + uifile->getOwner() + "/" + uifile->getGroup());
   if (uifile->isLink()) {
