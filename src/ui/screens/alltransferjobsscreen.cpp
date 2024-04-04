@@ -448,6 +448,15 @@ bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
         }
       }
       return true;
+    case KEYACTION_QUICK_JUMP:
+      gotomode = true;
+      gotomodefirst = true;
+      gotomodeticker = 0;
+      gotomodestring = "";
+      global->getTickPoke()->startPoke(this, "AllRacesScreen", 50, 0);
+      ui->update();
+      ui->setLegend();
+      break;
     case KEYACTION_FILTER:
       if (!filtering) {
         ui->goTransferJobsFiltering(tjfp);
