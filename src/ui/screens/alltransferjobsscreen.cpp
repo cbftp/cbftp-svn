@@ -335,7 +335,7 @@ bool AllTransferJobsScreen::keyPressed(unsigned int ch) {
         gotomodeticker = 0;
         gotomodestring += toupper(ch);
         unsigned int gotomodelength = gotomodestring.length();
-        unsigned int pos = 0;
+        unsigned int pos = 1;
         for (std::list<std::shared_ptr<TransferJob> >::const_iterator it = --engine->getTransferJobsEnd(); it != --engine->getTransferJobsBegin(); it--) {
           if (filtering && !showsWhileFiltered(*it)) {
             continue;
