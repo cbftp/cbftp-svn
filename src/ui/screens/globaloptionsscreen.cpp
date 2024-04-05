@@ -191,6 +191,7 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   legendmode->addOption("Static", LEGEND_STATIC);
   legendmode->setOption(ui->getLegendMode());
   mso.addCheckBox(y++, x, "highlightentireline", "Highlight entire lines:", ui->getHighlightEntireLine());
+  mso.addCheckBox(y++, x, "showfreetext", "Show freetext on mainscreen:", ui->getShowFreeText());
   if (isYearEnd()) {
     mso.addCheckBox(y++, x, "xmastree", "Show xmas tree:", ui->getShowXmasTree());
   }
@@ -448,6 +449,9 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "highlightentireline") {
           ui->setHighlightEntireLine(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
+        }
+        else if (identifier == "showfreetext") {
+          ui->setShowFreeText(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
         }
         else if (identifier == "xmastree") {
           ui->setShowXmasTree(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());

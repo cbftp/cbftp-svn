@@ -121,6 +121,7 @@ private:
   TransferPairing transferpairing;
   int maxtransfertimeseconds;
   int maxspreadjobtimeseconds;
+  std::string freetext;
 public:
   Site();
   Site(const std::string &);
@@ -283,4 +284,6 @@ public:
   void setMaxTransferTimeSeconds(int seconds);
   int getMaxSpreadJobTimeSeconds() const;
   void setMaxSpreadJobTimeSeconds(int seconds);
+  std::string getFreeText() const;
+  void setFreeText(const std::string& freetext);
 };

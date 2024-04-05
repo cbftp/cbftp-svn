@@ -35,7 +35,7 @@ private:
       const std::string & downloads, const std::string & allowup,
       const std::string & allowdown, const std::string & disabled, const std::string & dayup,
       const std::string & daydn, const std::string & alup, const std::string & aldn,
-      const std::string & prio);
+      const std::string & prio, const std::string& freetext);
   void addSiteDetails(unsigned int y, MenuSelectOption & mso, const std::shared_ptr<SiteLogic> & sl);
   bool keyUp() override;
   bool keyDown() override;

@@ -824,14 +824,14 @@ void MainScreen::addPreparedRaceDetails(unsigned int y, MenuSelectOption & mso, 
 }
 
 void MainScreen::addSiteHeader(unsigned int y, MenuSelectOption & mso) {
-  addSiteRow(y, mso, false, "SITE           ", "LOGINS", "UPLOADS", "DOWNLOADS", "UP", "DOWN", "DISABLED", "UP 24HR", "DOWN 24HR", "ALLUP", "ALLDOWN", "PRIORITY");
+  addSiteRow(y, mso, false, "SITE           ", "LOGINS", "UPLOADS", "DOWNLOADS", "UP", "DOWN", "DISABLED", "UP 24HR", "DOWN 24HR", "ALLUP", "ALLDOWN", "PRIORITY", "TEXT");
 }
 
 void MainScreen::addSiteRow(unsigned int y, MenuSelectOption & mso, bool selectable, const std::string & site,
     const std::string & logins, const std::string & uploads, const std::string & downloads,
     const std::string & allowup, const std::string & allowdown, const std::string & disabled,
     const std::string & dayup, const std::string & daydn, const std::string & alup, const std::string & aldn,
-    const std::string & prio)
+    const std::string & prio, const std::string& freetext)
 {
   std::shared_ptr<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
   std::shared_ptr<MenuSelectOptionTextButton> msotb;
@@ -897,6 +897,12 @@ void MainScreen::addSiteRow(unsigned int y, MenuSelectOption & mso, bool selecta
   msotb->setSelectable(false);
   msotb->setRightAligned();
   msal->addElement(msotb, 1, RESIZE_REMOVE);
+
+  if (ui->getShowFreeText()) {
+    msotb = mso.addTextButtonNoContent(y, 1, "freetext", freetext);
+    msotb->setSelectable(false);
+    msal->addElement(msotb, 0, RESIZE_WITHDOTS);
+  }
 }
 
 void MainScreen::addSiteDetails(unsigned int y, MenuSelectOption & mso, const std::shared_ptr<SiteLogic> & sl) {
@@ -944,7 +950,8 @@ void MainScreen::addSiteDetails(unsigned int y, MenuSelectOption & mso, const st
   std::string allup = util::parseSize(site->getSizeUp().getAll());
   std::string alldown = util::parseSize(site->getSizeDown().getAll());
   std::string prio = Site::getPriorityText(site->getPriority());
-  addSiteRow(y, mso, true, sitename, logins, uploads, downloads, up, down, disabled, up24, down24, allup, alldown, prio);
+  std::string freetext = site->getFreeText();
+  addSiteRow(y, mso, true, sitename, logins, uploads, downloads, up, down, disabled, up24, down24, allup, alldown, prio, freetext);
 }
 
 void MainScreen::jumpSectionHotkey(int hotkey) {

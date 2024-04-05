@@ -94,6 +94,7 @@ Ui::Ui() :
   infoenabled(false),
   legendmode(LEGEND_SCROLLING),
   highlightentireline(false),
+  showfreetext(true),
   showxmastree(true),
   split(false),
   fullscreentoggle(false),
@@ -300,6 +301,14 @@ bool Ui::getHighlightEntireLine() const {
 
 void Ui::setHighlightEntireLine(bool highlight) {
   highlightentireline = highlight;
+}
+
+bool Ui::getShowFreeText() const {
+  return showfreetext;
+}
+
+void Ui::setShowFreeText(bool show) {
+  showfreetext = show;
 }
 
 bool Ui::getShowXmasTree() const {
@@ -1019,6 +1028,9 @@ void Ui::loadSettings(std::shared_ptr<DataFileHandler> dfh) {
     else if (!setting.compare("highlightentireline")) {
       setHighlightEntireLine(!value.compare("true"));
     }
+    else if (!setting.compare("showfreetext")) {
+      setShowFreeText(!value.compare("true"));
+    }
     else if (!setting.compare("keybind")) {
       std::vector<std::string> tokens = util::splitVec(value, "$");
       int keyaction = std::stoi(tokens[1]);
@@ -1063,6 +1075,7 @@ void Ui::loadSettings(std::shared_ptr<DataFileHandler> dfh) {
 void Ui::saveSettings(std::shared_ptr<DataFileHandler> dfh) {
   dfh->addOutputLine("UI", "legendmode=" + std::to_string(getLegendMode()));
   dfh->addOutputLine("UI", "highlightentireline=" + std::string(getHighlightEntireLine() ? "true" : "false"));
+  dfh->addOutputLine("UI", "showfreetext=" + getShowFreeText());
   for (const KeyBinds* keybinds : allkeybinds) {
     for (std::list<KeyBinds::KeyData>::const_iterator it = keybinds->begin(); it != keybinds->end(); ++it) {
       if (it->configuredkeys != it->originalkeys) {

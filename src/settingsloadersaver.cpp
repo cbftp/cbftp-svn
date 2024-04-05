@@ -585,6 +585,12 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("maxspreadjobtimeseconds")) {
       site->setMaxSpreadJobTimeSeconds(std::stoi(value));
     }
+    else if (!setting.compare("freetextb64")) {
+      Core::BinaryData indata(value.begin(), value.end());
+      Core::BinaryData outdata;
+      Crypto::base64Decode(indata, outdata);
+      site->setFreeText(std::string(outdata.begin(), outdata.end()));
+    }
   }
   for (std::list<std::pair<std::string, std::string> >::const_iterator it2 = exceptsources.begin(); it2 != exceptsources.end(); it2++) {
     std::shared_ptr<Site> site = global->getSiteManager()->getSite(it2->first);
@@ -1039,6 +1045,10 @@ void SettingsLoaderSaver::saveSettings() {
       addSkipList(dfh, (SkipList *)&site->getSkipList(), filetag, name + "$skiplistentry=");
       dfh->addOutputLine(filetag, name + "$maxtransfertimeseconds=" + std::to_string(site->getMaxTransferTimeSeconds()));
       dfh->addOutputLine(filetag, name + "$maxspreadjobtimeseconds=" + std::to_string(site->getMaxSpreadJobTimeSeconds()));
+      std::string freetext = site->getFreeText();
+      indata = Core::BinaryData(freetext.begin(), freetext.end());
+      Crypto::base64Encode(indata, outdata);
+      dfh->addOutputLine(filetag, name + "$freetextb64=" + std::string(outdata.begin(), outdata.end()));
     }
     dfh->addOutputLine(defaultstag, "username=" + global->getSiteManager()->getDefaultUserName());
     std::string password = global->getSiteManager()->getDefaultPassword();

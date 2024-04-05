@@ -195,6 +195,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   if (dataproxytype == SITE_PROXY_USE) {
    usedataproxy->setOptionText(this->site->getDataProxy());
   }
+  msotf = mso.addStringField(y++, x, "freetext", "Freetext:", this->site->getFreeText(), false, 70, 65536);
   mso.addTextButtonNoContent(y++, x, "skiplist", "Configure skiplist...");
   y++;
   mso.addCheckBox(y, x, "disabled", "Disabled:", this->site->getDisabled());
@@ -508,6 +509,9 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "xdupe") {
           site->setUseXDUPE(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
+        }
+        else if (identifier == "freetext") {
+          site->setFreeText(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "disabled") {
           site->setDisabled(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());

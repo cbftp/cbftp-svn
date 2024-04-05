@@ -769,6 +769,12 @@ void updateSite(std::shared_ptr<Site>& site, nlohmann::json jsondata, bool add) 
     else if (it.key() == "broken_pasv") {
       site->setBrokenPASV(it.value());
     }
+    else if (it.key() == "freetextb64") {
+      Core::BinaryData indata(it.value().begin(), it.value().end());
+      Core::BinaryData outdata;
+      Crypto::base64Decode(indata, outdata);
+      site->setFreeText(std::string(outdata.begin(), outdata.end()));
+    }
     else if (it.key() == "disabled") {
       site->setDisabled(it.value());
     }
@@ -1139,6 +1145,11 @@ void RestApi::handleSiteGet(RestApiCallback* cb, int connrequestid, const http::
   j["cpsv"] = site->supportsCPSV();
   j["cepr"] = site->supportsCEPR();
   j["broken_pasv"] = site->hasBrokenPASV();
+  std::string freetext = site->getFreeText();
+  Core::BinaryData indata(freetext.begin(), freetext.end());
+  Core::BinaryData outdata;
+  Crypto::base64Encode(indata, outdata);
+  j["freetextb64"] = std::string(outdata.begin(), outdata.end());
   j["disabled"] = site->getDisabled();
   j["allow_upload"] = siteAllowTransferToString(site->getAllowUpload());
   j["allow_download"] = siteAllowTransferToString(site->getAllowDownload());

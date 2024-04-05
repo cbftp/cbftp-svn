@@ -1036,3 +1036,10 @@ void Site::setMaxSpreadJobTimeSeconds(int seconds) {
   maxspreadjobtimeseconds = seconds;
 }
 
+std::string Site::getFreeText() const {
+  return freetext;
+}
+
+void Site::setFreeText(const std::string& freetext) {
+  this->freetext = freetext;
+}

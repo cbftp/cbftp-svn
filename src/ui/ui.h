@@ -155,6 +155,7 @@ private:
   bool infoenabled;
   LegendMode legendmode;
   bool highlightentireline;
+  bool showfreetext;
   bool showxmastree;
   bool split;
   bool fullscreentoggle;
@@ -193,6 +194,8 @@ public:
   void setLegendMode(LegendMode);
   bool getHighlightEntireLine() const;
   void setHighlightEntireLine(bool highlight);
+  bool getShowFreeText() const;
+  void setShowFreeText(bool show);
   bool getShowXmasTree() const;
   void setShowXmasTree(bool show);
   void returnToLast();
