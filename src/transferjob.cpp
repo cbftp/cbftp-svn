@@ -35,7 +35,9 @@ enum RefreshState {
 std::shared_ptr<FileList> createPrunedFileList(const std::shared_ptr<FileList>& fl, const std::string& remainingfile) {
   std::shared_ptr<FileList> pruned = std::make_shared<FileList>(fl->getUser(), fl->getPath(), fl->getState());
   File* file = fl->getFile(remainingfile);
-  pruned->updateFile(file);
+  if (file) {
+    pruned->updateFile(file);
+  }
   return pruned;
 }
 
@@ -52,14 +54,15 @@ TransferJob::TransferJob(unsigned int id, const std::shared_ptr<SiteLogic>& srcs
 
 void TransferJob::downloadJob(unsigned int id, const std::shared_ptr<SiteLogic>& srcsl, const std::shared_ptr<FileList>& srcfilelist, const std::string& srcsection, const std::string& srcfile, const Path& dstpath, const std::string& dstfile) {
   init(id, TRANSFERJOB_DOWNLOAD, srcsl, std::shared_ptr<SiteLogic>(), srcfilelist->getPath(), dstpath, srcsection, "", srcfile, dstfile);
-  srcfilelists[""] = createPrunedFileList(srcfilelist, srcfile);
+  std::shared_ptr<FileList> prunedsrclist = createPrunedFileList(srcfilelist, srcfile);
+  srcfilelists[""] = prunedsrclist;
   updateLocalFileLists();
-  if (srcfilelist->getState() == FileListState::LISTED) {
-    fileListUpdated(true, srcfilelist);
+  if (prunedsrclist->getState() == FileListState::LISTED) {
+    fileListUpdated(true, prunedsrclist);
   }
   else {
-    filelistsrefreshed[srcfilelist] = REFRESH_NOW;
-    srcfilelist->resetUpdateState();
+    filelistsrefreshed[prunedsrclist] = REFRESH_NOW;
+    prunedsrclist->resetUpdateState();
   }
 }
 
@@ -74,14 +77,15 @@ TransferJob::TransferJob(unsigned int id, const Path& srcpath, const std::string
 
 void TransferJob::uploadJob(unsigned int id, const Path& srcpath, const std::string& srcfile, const std::shared_ptr<SiteLogic>& dstsl, const std::shared_ptr<FileList>& dstfilelist, const std::string& dstsection, const std::string& dstfile) {
   init(id, TRANSFERJOB_UPLOAD, std::shared_ptr<SiteLogic>(), dstsl, srcpath, dstfilelist->getPath(), "", dstsection, srcfile, dstfile);
-  dstfilelists[""] = createPrunedFileList(dstfilelist, dstfile);
+  std::shared_ptr<FileList> pruneddstlist = createPrunedFileList(dstfilelist, dstfile);
+  dstfilelists[""] = pruneddstlist;
   updateLocalFileLists();
-  if (dstfilelist->getState() == FileListState::LISTED) {
-    fileListUpdated(false, dstfilelist);
+  if (pruneddstlist->getState() == FileListState::LISTED) {
+    fileListUpdated(false, pruneddstlist);
   }
   else {
-    filelistsrefreshed[dstfilelist] = REFRESH_NOW;
-    dstfilelist->resetUpdateState();
+    filelistsrefreshed[pruneddstlist] = REFRESH_NOW;
+    pruneddstlist->resetUpdateState();
   }
 }
 
@@ -97,22 +101,24 @@ TransferJob::TransferJob(unsigned int id, const std::shared_ptr<SiteLogic>& srcs
 
 void TransferJob::fxpJob(unsigned int id, const std::shared_ptr<SiteLogic>& srcsl, const std::shared_ptr<FileList>& srcfilelist, const std::string& srcsection, const std::string& srcfile, const std::shared_ptr<SiteLogic>& dstsl, const std::shared_ptr<FileList>& dstfilelist, const std::string& dstsection, const std::string& dstfile) {
   init(id, TRANSFERJOB_FXP, srcsl, dstsl, srcfilelist->getPath(), dstfilelist->getPath(), srcsection, dstsection, srcfile, dstfile);
-  srcfilelists[""] = createPrunedFileList(srcfilelist, srcfile);
-  dstfilelists[""] = createPrunedFileList(dstfilelist, dstfile);
-  if (srcfilelist->getState() == FileListState::LISTED) {
-    fileListUpdated(true, srcfilelist);
+  std::shared_ptr<FileList> prunedsrclist = createPrunedFileList(srcfilelist, srcfile);
+  std::shared_ptr<FileList> pruneddstlist = createPrunedFileList(dstfilelist, dstfile);
+  srcfilelists[""] = prunedsrclist;
+  dstfilelists[""] = pruneddstlist;
+  if (prunedsrclist->getState() == FileListState::LISTED) {
+    fileListUpdated(true, prunedsrclist);
   }
   else {
-    filelistsrefreshed[srcfilelist] = REFRESH_NOW;
-    srcfilelist->resetUpdateState();
+    filelistsrefreshed[prunedsrclist] = REFRESH_NOW;
+    prunedsrclist->resetUpdateState();
 
   }
-  if (dstfilelist->getState() == FileListState::LISTED) {
-    fileListUpdated(false, dstfilelist);
+  if (pruneddstlist->getState() == FileListState::LISTED) {
+    fileListUpdated(false, pruneddstlist);
   }
   else {
-    filelistsrefreshed[dstfilelist] = REFRESH_NOW;
-    dstfilelist->resetUpdateState();
+    filelistsrefreshed[pruneddstlist] = REFRESH_NOW;
+    pruneddstlist->resetUpdateState();
   }
 }
 
