@@ -351,6 +351,12 @@ void SiteLogic::listRefreshed(int id) {
   const std::shared_ptr<CommandOwner>& currentco = conns[id]->currentCommandOwner();
   if (!!currentco) {
     currentco->fileListUpdated(this, fl);
+    if (currentco->classType() == COMMANDOWNER_TRANSFERJOB && currentco->isRootFileList(fl)) {
+      // some other transfer job might be interested in this file list as well
+      for (const std::shared_ptr<SiteTransferJob>& transferjob : transferjobs) {
+        transferjob->fileListUpdated(this, fl);
+      }
+    }
   }
   if (connstatetracker[id].getRecursiveLogic()->isActive()) {
     handleRecursiveLogic(id, conns[id]->currentFileList());

@@ -69,6 +69,7 @@ public:
   std::shared_ptr<LocalFileList> wantedLocalDstList(const std::string &);
   std::shared_ptr<FileList> getListTarget(bool source) const;
   void fileListUpdated(bool source, const std::shared_ptr<FileList>& fl);
+  bool isRootFileList(bool source, const std::shared_ptr<FileList>& fl) const;
   std::shared_ptr<FileList> findDstList(const std::string &) const;
   std::shared_ptr<FileList> getFileListForFullPath(bool source, const Path &) const;
   std::shared_ptr<LocalFileList> findLocalFileList(const std::string &) const;

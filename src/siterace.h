@@ -118,4 +118,5 @@ class SiteRace : public CommandOwner, public std::enable_shared_from_this<SiteRa
     std::unordered_map<std::string, unsigned long long int>::const_iterator sizeDownEnd() const;
     std::unordered_map<std::string, unsigned int>::const_iterator filesDownEnd() const;
     std::unordered_map<std::string, unsigned int>::const_iterator speedDownEnd() const;
+    bool isRootFileList(const std::shared_ptr<FileList>& fl) const;
 };

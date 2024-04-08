@@ -49,8 +49,17 @@ void FileList::init(const std::string & username, const Path & path, FileListSta
   firstsimilar = nullptr;
 }
 
-bool FileList::updateFile(const std::string & start, int touch) {
-  File * file = new File(start, touch);
+bool FileList::updateFile(const std::string& start, int touch) {
+  File* file = new File(start, touch);
+  return updateFileInternal(file);
+}
+
+bool FileList::updateFile(File* f) {
+  File* file = new File(*f);
+  return updateFileInternal(file);
+}
+
+bool FileList::updateFileInternal(File* file) {
   if (!file->isValid()) {
     delete file;
     return false;
@@ -544,7 +553,7 @@ void FileList::flush() {
   filesfirstseen.clear();
   maxfilesize = 0;
   totalfilesize = 0;
-  uploadedfiles = 0;  
+  uploadedfiles = 0;
   owned = 0;
   ownpercentage = 100;
   uploading = 0;

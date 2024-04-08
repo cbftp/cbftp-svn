@@ -379,6 +379,14 @@ std::shared_ptr<LocalFileList> LocalStorage::getLocalFileList(const Path & path)
   return std::shared_ptr<LocalFileList>();
 }
 
+std::shared_ptr<LocalFileList> LocalStorage::getLocalFileListPrune(const Path& path, const std::string& remainingfile) {
+  std::shared_ptr<LocalFileList> filelist = std::make_shared<LocalFileList>(path);
+  if (updateLocalFileListPrune(filelist, remainingfile)) {
+    return filelist;
+  }
+  return std::shared_ptr<LocalFileList>();
+}
+
 bool LocalStorage::updateLocalFileList(const std::shared_ptr<LocalFileList>& filelist) {
   if (!filelist) {
     return false;
@@ -391,6 +399,33 @@ bool LocalStorage::updateLocalFileList(const std::shared_ptr<LocalFileList>& fil
     while (dir != nullptr && (dent = readdir(dir)) != nullptr) {
       std::string name = dent->d_name;
       if (name != ".." && name != ".") {
+        LocalFile file = getLocalFile(path / name);
+        filelist->updateFile(file, touch);
+        ++files;
+      }
+    }
+    if (dir != nullptr) {
+      closedir(dir);
+      if (filelist->size() > files) {
+        filelist->cleanSweep(touch);
+      }
+      return true;
+    }
+    return false;
+}
+
+bool LocalStorage::updateLocalFileListPrune(const std::shared_ptr<LocalFileList>& filelist, const std::string& remainingfile) {
+  if (!filelist) {
+    return false;
+  }
+  Path path = filelist->getPath();
+  unsigned int files = 0;
+  int touch = rand();
+  DIR * dir = opendir(path.toString().c_str());
+    struct dirent * dent;
+    while (dir != nullptr && (dent = readdir(dir)) != nullptr) {
+      std::string name = dent->d_name;
+      if (name == remainingfile) {
         LocalFile file = getLocalFile(path / name);
         filelist->updateFile(file, touch);
         ++files;

@@ -22,4 +22,5 @@ public:
   virtual void fileListUpdated(SiteLogic* sl, const std::shared_ptr<FileList>& fl) = 0;
   virtual std::shared_ptr<FileList> getFileListForFullPath(SiteLogic* sl, const Path& path) const = 0;
   virtual void addTransferStatsFile(StatsDirection, const std::string &, unsigned long long int, unsigned int) { }
+  virtual bool isRootFileList(const std::shared_ptr<FileList>& fl) const = 0;
 };

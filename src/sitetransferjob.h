@@ -24,6 +24,7 @@ public:
   unsigned int getId() const override;
   void fileListUpdated(SiteLogic* sl, const std::shared_ptr<FileList>& fl) override;
   std::shared_ptr<FileList> getFileListForFullPath(SiteLogic* sl, const Path& path) const override;
+  bool isRootFileList(const std::shared_ptr<FileList>& fl) const;
 private:
   std::weak_ptr<TransferJob> transferjob;
   bool source;

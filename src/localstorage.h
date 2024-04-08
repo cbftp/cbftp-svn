@@ -58,8 +58,10 @@ public:
   void storeContent(int, const Core::BinaryData &);
   const Path & getDownloadPath() const;
   void setDownloadPath(const Path &);
-  static std::shared_ptr<LocalFileList> getLocalFileList(const Path & path);
+  static std::shared_ptr<LocalFileList> getLocalFileList(const Path& path);
+  static std::shared_ptr<LocalFileList> getLocalFileListPrune(const Path& path, const std::string& remainingfile);
   static bool updateLocalFileList(const std::shared_ptr<LocalFileList>& filelist);
+  static bool updateLocalFileListPrune(const std::shared_ptr<LocalFileList>& filelist, const std::string& remainingfile);
   int requestLocalFileList(const Path & path);
   bool requestReady(int requestid) const;
   std::shared_ptr<LocalFileList> getLocalFileList(int requestid);

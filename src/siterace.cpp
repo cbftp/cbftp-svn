@@ -602,3 +602,7 @@ std::unordered_map<std::string, unsigned int>::const_iterator SiteRace::filesDow
 std::unordered_map<std::string, unsigned int>::const_iterator SiteRace::speedDownEnd() const {
   return sitesspeeddown.end();
 }
+
+bool SiteRace::isRootFileList(const std::shared_ptr<FileList>& fl) const {
+  return fl == filelists.at("");
+}

@@ -64,11 +64,13 @@ class FileList {
     void setChanged();
     void setMetaChanged();
     bool checkSimilarFile(File * f);
+    bool updateFileInternal(File* f);
   public:
     FileList(const std::string &, const Path &);
     FileList(const std::string &, const Path &, FileListState);
     ~FileList();
-    bool updateFile(const std::string &, int);
+    bool updateFile(const std::string& start, int touch);
+    bool updateFile(File* f);
     void touchFile(const std::string &, const std::string &, bool upload = false);
     void removeFile(const std::string &);
     void setFileUpdateFlag(const std::string &, unsigned long long int, unsigned int, const std::shared_ptr<Site> &, const std::shared_ptr<Site> &, const std::shared_ptr<CommandOwner> & srcco, const std::shared_ptr<CommandOwner> & dstco);

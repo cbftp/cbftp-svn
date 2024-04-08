@@ -9,7 +9,6 @@ class CommandOwner;
 class File {
   friend class FileList;
 private:
-  File(const File &);
   bool parseUNIXSTATLine(const std::string &);
   bool parseBrokenUNIXSTATLine(const std::string &, size_t, size_t &);
   bool parseMSDOSSTATLine(const std::string &);

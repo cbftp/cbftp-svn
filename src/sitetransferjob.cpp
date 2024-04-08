@@ -56,3 +56,11 @@ void SiteTransferJob::fileListUpdated(SiteLogic * sl, const std::shared_ptr<File
 std::shared_ptr<FileList> SiteTransferJob::getFileListForFullPath(SiteLogic* sl, const Path& path) const {
   return transferjob.lock()->getFileListForFullPath(source, path);
 }
+
+bool SiteTransferJob::isRootFileList(const std::shared_ptr<FileList>& fl) const {
+  std::shared_ptr<TransferJob> tj = transferjob.lock();
+  if (!tj) {
+    return false;
+  }
+  return tj->isRootFileList(source, fl);
+}
