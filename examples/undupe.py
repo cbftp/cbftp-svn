@@ -13,7 +13,7 @@ operation = sys.argv[2]
 cbapi.init(api_token)
 
 def undupe(site, path, filename):
-  req("raw", {
+  cbapi.req("raw", {
     "sites": site,
     "path": path,
     "command": "site undupe " + filename,
