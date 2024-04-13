@@ -10,5 +10,5 @@ cbapi.init(cb_api_pass)
 transferjobs = cbapi.req("transferjobs?id=true")
 for transferjob in transferjobs:
   id = transferjob["id"]
-  cbapi.req(f"transferjobz/{id}/reset?id=true", '{}')
+  cbapi.req(f"transferjobs/{id}/reset?id=true", '{}')
 cbapi.exit(0)
