@@ -1,6 +1,7 @@
 #include "externalfileviewing.h"
 
 #include <cstdlib>
+#include <cstring>
 
 #include "../globalcontext.h"
 #include "../localstorage.h"
