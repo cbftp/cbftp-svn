@@ -46,7 +46,7 @@ if operation.startswith("browse-site"):
   sys.stdout.flush()
   for rescan_item in rescan_list:
     rescan(site, rescan_item)
-  print("Rescan complete! lulz")
+  print("Rescan complete!")
   cbapi.exit(0)
 else:
   print(f"Unsupported operation: {operation}")

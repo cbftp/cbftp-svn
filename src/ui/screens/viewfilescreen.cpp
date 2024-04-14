@@ -144,7 +144,8 @@ void ViewFileScreen::redraw() {
       break;
     case ViewFileState::NO_DISPLAY:
       vv->putStr(1, 1, file + " cannot be opened in an external viewer.");
-      vv->putStr(2, 1, "The DISPLAY environment variable is not set.");
+      vv->putStr(2, 1, "There does not seem to be a desktop environment running, or the environment");
+      vv->putStr(3, 1, "variables XDG_SESSION_TYPE and/or DISPLAY are not set properly.");
       break;
     case ViewFileState::DOWNLOAD_FAILED: {
       vv->putStr(1, 1, "Download of " + file + " from " + site + " failed.");

@@ -14,9 +14,18 @@ ExternalFileViewing::ExternalFileViewing() {
   imageviewer = "eog";
   pdfviewer = "evince";
   display = false;
-  char * displayenv = getenv("DISPLAY");
-  if (displayenv != nullptr) {
+  char* xdgsessiontypeenv = getenv("XDG_SESSION_TYPE");
+  if (xdgsessiontypeenv != nullptr) {
     display = true;
+    if (!strcmp(xdgsessiontypeenv, "x11")) {
+      char* displayenv = getenv("DISPLAY");
+      if (displayenv == nullptr) {
+        // In x11, this var does not have a fallback and must be set.
+        // The corresponding var in wayland (WAYLAND_DISPLAY)
+        // has a fallback so no point in checking it.
+        display = false;
+      }
+    }
   }
 }
 
