@@ -78,8 +78,8 @@ std::string ExternalScripts::getName() const {
 }
 
 bool ExternalScripts::hasScript(const std::string& scriptname) const {
-  for (std::list<ExternalScript>::const_iterator it = scripts.begin(); it != scripts.end(); ++it) {
-    if (it->name == scriptname) {
+  for (const ExternalScript& script : scripts) {
+    if (script.name == scriptname) {
       return true;
     }
   }
@@ -87,8 +87,8 @@ bool ExternalScripts::hasScript(const std::string& scriptname) const {
 }
 
 bool ExternalScripts::hasScript(int id) const {
-  for (std::list<ExternalScript>::const_iterator it = scripts.begin(); it != scripts.end(); ++it) {
-    if (it->id == id) {
+  for (const ExternalScript& script : scripts) {
+    if (script.id == id) {
       return true;
     }
   }
@@ -96,29 +96,33 @@ bool ExternalScripts::hasScript(int id) const {
 }
 
 std::string ExternalScripts::getScriptName(int id) const {
-  for (std::list<ExternalScript>::const_iterator it = scripts.begin(); it != scripts.end(); ++it) {
-    if (it->id == id) {
-      return it->name;
+  for (const ExternalScript& script : scripts) {
+    if (script.id == id) {
+      return script.name;
     }
   }
   return "";
 }
 
 std::shared_ptr<RawBuffer> ExternalScripts::execute(int id, const std::vector<std::string>& args) {
-  for (std::list<ExternalScript>::const_iterator it = scripts.begin(); it != scripts.end(); ++it) {
-    if (it->id == id) {
-      Path path = it->path;
-      if (path.isRelative()) {
-        path = DataFileHandler::getDataDir() / path;
+  for (const ExternalScript& script : scripts) {
+    if (script.id == id) {
+      Path scriptPath = script.path;
+      if (scriptPath.isRelative()) {
+        scriptPath = DataFileHandler::getDataDir() / scriptPath;
+      }
+      if (!FileSystem::fileExists(scriptPath)) {
+        global->getEventLog()->log("ExternalScripts", "Error: Script not found: " + scriptPath.toString());
+        return nullptr;
       }
       std::string token = global->getRestApi()->createTemporaryAuthToken();
       std::vector<std::string> pargs = args;
       pargs.insert(pargs.begin(), token);
-      std::shared_ptr<SubProcess> subprocess = global->getSubProcessManager()->runProcess(this, path, pargs);
+      std::shared_ptr<SubProcess> subprocess = global->getSubProcessManager()->runProcess(this, scriptPath, pargs);
       if (subprocess) {
-        runningscripts.emplace_back(subprocess->pid, it->name, token);
+        runningscripts.emplace_back(subprocess->pid, script.name, token);
         pargs[0] = "********";
-        global->getEventLog()->log("ExternalScripts", "Running: " + path.toString() + " " + util::join(pargs, " "));
+        global->getEventLog()->log("ExternalScripts", "Running: " + scriptPath.toString() + " " + util::join(pargs, " "));
       }
       break;
     }
@@ -137,18 +141,18 @@ void ExternalScripts::processExited(int pid, int status) {
 }
 
 void ExternalScripts::processStdOut(int pid, const std::string& text) {
-  for (std::list<RunningScript>::const_iterator it = runningscripts.begin(); it != runningscripts.end(); ++it) {
-    if (it->pid == pid) {
-      global->getEventLog()->log("ExternalScripts", it->name + ": " + text);
+  for (const RunningScript& script : runningscripts) {
+    if (script.pid == pid) {
+      global->getEventLog()->log("ExternalScripts", script.name + ": " + text);
       return;
     }
   }
 }
 
 void ExternalScripts::processStdErr(int pid, const std::string& text) {
-  for (std::list<RunningScript>::const_iterator it = runningscripts.begin(); it != runningscripts.end(); ++it) {
-    if (it->pid == pid) {
-      global->getEventLog()->log("ExternalScripts", it->name + ": " + text);
+  for (const RunningScript& script : runningscripts) {
+    if (script.pid == pid) {
+      global->getEventLog()->log("ExternalScripts", script.name + ": " + text);
       return;
     }
   }
@@ -157,8 +161,8 @@ void ExternalScripts::processStdErr(int pid, const std::string& text) {
 int ExternalScripts::nextAvailableId() const {
   for (int testid = 0; testid < 1000; ++testid) {
     bool found = false;
-    for (std::list<ExternalScript>::const_iterator it = scripts.begin(); it != scripts.end(); ++it) {
-      if (it->id == testid) {
+    for (const ExternalScript& script : scripts) {
+      if (script.id == testid) {
         found = true;
         break;
       }
