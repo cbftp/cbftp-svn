@@ -26,6 +26,8 @@
 
 namespace {
 
+#define LINKTARGETBUFSIZ 1024
+
 Core::BinaryData emptydata;
 
 void asyncRequest(Core::EventReceiver * er, void * data) {
@@ -334,7 +336,7 @@ LocalPathInfo LocalStorage::getPathInfo(int requestid) {
 LocalFile LocalStorage::getLocalFile(const Path & path) {
   std::string name = path.baseName();
   struct stat status;
-  lstat((path).toString().c_str(), &status);
+  lstat(path.toString().c_str(), &status);
   struct passwd * pwd = getpwuid(status.st_uid);
   std::string owner = pwd != NULL ? pwd->pw_name : std::to_string(status.st_uid);
   struct group * grp = getgrgid(status.st_gid);
@@ -346,9 +348,22 @@ LocalFile LocalStorage::getLocalFile(const Path & path) {
   int day = tm.tm_mday;
   int hour = tm.tm_hour;
   int minute = tm.tm_min;
-  bool isdir = (status.st_mode & S_IFMT) == S_IFDIR;
+  LocalFileType type = LocalFileType::FILE;
+  int modetype = status.st_mode & S_IFMT;
+  std::string linktarget;
+  if (modetype == S_IFDIR) {
+    type = LocalFileType::DIR;
+  }
+  else if (modetype == S_IFLNK) {
+    type = LocalFileType::LINK;
+    char buf[LINKTARGETBUFSIZ];
+    ssize_t linktargetlen = readlink(path.toString().c_str(), buf, LINKTARGETBUFSIZ);
+    if (linktargetlen > 0) {
+      linktarget = std::string(buf, linktargetlen);
+    }
+  }
   unsigned long long int size = status.st_size;
-  return LocalFile(name, size, isdir, owner, group, year, month, day, hour, minute);
+  return LocalFile(name, size, type, owner, group, year, month, day, hour, minute, linktarget);
 }
 
 const Path & LocalStorage::getTempPath() const {

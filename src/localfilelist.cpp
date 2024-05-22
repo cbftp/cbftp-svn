@@ -27,7 +27,7 @@ void LocalFileList::updateFile(const LocalFile& file, int touch) {
 }
 
 void LocalFileList::touchFile(const std::string& name, bool download) {
-  LocalFile file(name, 512, false, "", "", 0, 0, 0, 0, 0, download);
+  LocalFile file(name, 512, LocalFileType::FILE, "", "", 0, 0, 0, 0, 0, "", download);
   updateFile(file);
 }
 

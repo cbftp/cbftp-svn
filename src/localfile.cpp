@@ -1,11 +1,12 @@
 #include "localfile.h"
 
-LocalFile::LocalFile(const std::string& name, unsigned long long int size, bool isdir, const std::string& owner, const std::string& group, int year, int month, int day, int hour, int minute, bool download) :
+LocalFile::LocalFile(const std::string& name, unsigned long long int size, LocalFileType type, const std::string& owner, const std::string& group, int year, int month, int day, int hour, int minute, const std::string& linktarget, bool download) :
   name(name),
   size(size),
-  isdir(isdir),
+  type(type),
   owner(owner),
   group(group),
+  linktarget(linktarget),
   year(year),
   month(month),
   day(day),
@@ -24,8 +25,16 @@ unsigned long long int LocalFile::getSize() const {
   return size;
 }
 
+bool LocalFile::isFile() const {
+  return type == LocalFileType::FILE;
+}
+
 bool LocalFile::isDirectory() const {
-  return isdir;
+  return type == LocalFileType::DIR;
+}
+
+bool LocalFile::isLink() const {
+  return type == LocalFileType::LINK;
 }
 
 std::string LocalFile::getOwner() const {
@@ -34,6 +43,10 @@ std::string LocalFile::getOwner() const {
 
 std::string LocalFile::getGroup() const {
   return group;
+}
+
+std::string LocalFile::getLinkTarget() const {
+  return linktarget;
 }
 
 int LocalFile::getYear() const {

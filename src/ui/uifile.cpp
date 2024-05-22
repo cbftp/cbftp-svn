@@ -7,15 +7,13 @@
 #include "../util.h"
 #include "../timereference.h"
 
-UIFile::UIFile(File * file) :
+UIFile::UIFile(File* file) :
   name(file->getName()),
   size(file->getSize()),
   sizerepr(util::parseSize(size)),
   owner(file->getOwner()),
   group(file->getGroup()),
-
   linktarget(file->getLinkTarget()),
-
   directory(file->isDirectory()),
   softlink(file->isLink()),
   softselected(false),
@@ -24,14 +22,15 @@ UIFile::UIFile(File * file) :
   parseTimeStamp(file->getLastModified());
 }
 
-UIFile::UIFile(const LocalFile & file) :
+UIFile::UIFile(const LocalFile& file) :
   name(file.getName()),
   size(file.getSize()),
   sizerepr(util::parseSize(size)),
   owner(file.getOwner()),
   group(file.getGroup()),
+  linktarget(file.getLinkTarget()),
   directory(file.isDirectory()),
-  softlink(false),
+  softlink(file.isLink()),
   softselected(false),
   hardselected(false)
 {
