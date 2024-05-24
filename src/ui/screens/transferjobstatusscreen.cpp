@@ -81,6 +81,9 @@ void TransferJobStatusScreen::redraw() {
     case TRANSFERJOB_DONE:
       status = "Completed";
       break;
+    case TRANSFERJOB_FAILED:
+      status = "Failed";
+      break;
     case TRANSFERJOB_ABORTED:
       status = "Aborted";
       break;

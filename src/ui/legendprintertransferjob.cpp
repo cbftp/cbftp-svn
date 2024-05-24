@@ -44,6 +44,10 @@ bool LegendPrinterTransferJob::print() {
       status = "done";
       jobfinishedprintcount++;
       break;
+    case TRANSFERJOB_FAILED:
+      status = "fail";
+      jobfinishedprintcount++;
+      break;
     case TRANSFERJOB_ABORTED:
       status = "abor";
       jobfinishedprintcount++;

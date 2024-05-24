@@ -44,6 +44,7 @@ void TransferJobsFilterScreen::initialize(unsigned int row, unsigned int col, co
   mso.addCheckBox(y++, 1, "statusqueued", "Queued:", tjfp.showstatusqueued);
   mso.addCheckBox(y++, 1, "statusinprogress", "In progress:", tjfp.showstatusinprogress);
   mso.addCheckBox(y++, 1, "statusdone", "Done:", tjfp.showstatusdone);
+  mso.addCheckBox(y++, 1, "statusfailed", "Failed:", tjfp.showstatusfailed);
   mso.addCheckBox(y++, 1, "statusabort", "Aborted:", tjfp.showstatusaborted);
 
   mso.enterFocusFrom(0);
@@ -127,6 +128,7 @@ bool TransferJobsFilterScreen::keyPressed(unsigned int ch) {
       tjfp.showstatusqueued = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("statusqueued"))->getData();
       tjfp.showstatusinprogress = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("statusinprogress"))->getData();
       tjfp.showstatusdone = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("statusdone"))->getData();
+      tjfp.showstatusfailed = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("statusfailed"))->getData();
       tjfp.showstatusaborted = std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("statusabort"))->getData();
       ui->returnTransferJobsFilters(tjfp);
       return true;

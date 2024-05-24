@@ -21,7 +21,6 @@ public:
   bool keyPressed(unsigned int) override;
   std::string getLegendText() const override;
   std::string getInfoLabel() const override;
-  static void abortTransfer(std::shared_ptr<TransferStatus> ts);
 private:
   std::shared_ptr<TransferStatus> ts;
   std::shared_ptr<MenuSelectOptionElement> activeelement;

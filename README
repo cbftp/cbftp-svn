@@ -571,7 +571,7 @@ A: A full keybind summary and configuration for the current screen is available
    by pressing '?'. You can also see keybinds in the legend bar at the bottom.
 
 Q: My modifications are not saved when I edit a setting/site/whatever!
-A: You usually need to press 'd' (as in Done) to save settings when editing.
+A: You normally need to press 'd' (as in Done) to save settings when editing.
    Pressing c or escape normally means cancel without saving changes.
 
 Q: Can I change key bindings?
@@ -586,7 +586,7 @@ A: Cbftp adjusts the view dynamically depending on how much space is needed
 
 Q: What is the difference between fixed and dynamic list frequency? And what
    does auto mean in this context?
-   Dynamic list frequency means that the number of times per second that cbftp
+A: Dynamic list frequency means that the number of times per second that cbftp
    will refresh file lists on that site will drop voluntarily if the CPU load
    gets too high, but also that it refreshes a little faster than its fixed
    counterpart otherwise. This is in theory a good thing since lower rate is
@@ -697,8 +697,8 @@ A: Yes, there are tools provided for that: bin/datafilecat and
    openssl enc -d -aes-256-cbc -pbkdf2 -md sha256 -in ~/.cbftp/data
 
 Q: Can I run cbftp on Windows?
-A: Yes, it should work through cygwin, but it hasn't been tested lately and
-   the polling mechanism available there is not as efficient.
+A: Yes with extra steps - it works fine in the Windows Sybsystem for Linux
+   (WSL) and/or Cygwin, but you'll need to figure those tools out first.
 
 Q: Can I share this software with others?
 A: Sure, go ahead.

@@ -103,4 +103,5 @@ private:
   int currentactiveport;
   int requestidcounter;
   TransferProtocol transferprotocol;
+  int nextlocaltransferid;
 };

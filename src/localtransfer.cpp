@@ -74,8 +74,9 @@ FTPConn * LocalTransfer::getConn() const {
   return ftpconn;
 }
 
-void LocalTransfer::activate() {
+void LocalTransfer::activate(int localtransferid) {
   inuse = true;
+  this->localtransferid = localtransferid;
   timeoutticker = false;
   if (!passivemode) {
     global->getTickPoke()->startPoke(this, "LocalTransfer", 5000, 0);

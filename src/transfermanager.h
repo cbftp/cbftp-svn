@@ -24,6 +24,7 @@ class TransferManager {
     void moveTransferStatusToFinished(const std::shared_ptr<TransferStatus> &);
     int maxtransferhistory;
     int maxtransfertimeseconds;
+    int nexttransferid;
   public:
     TransferManager();
     ~TransferManager();
@@ -57,4 +58,5 @@ class TransferManager {
     void setMaxTransferHistory(int history);
     int getMaxTransferTimeSeconds() const;
     void setMaxTransferTimeSeconds(int seconds);
+    void abortTransfer(int transferid);
 };

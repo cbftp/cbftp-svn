@@ -116,6 +116,9 @@ std::string getFilterText(const TransferJobsFilteringParameters& tjfp) {
       if (tjfp.showstatusdone) {
         statustext += "done,";
       }
+      if (tjfp.showstatusfailed) {
+        statustext += "failed,";
+      }
       if (tjfp.showstatusaborted) {
         statustext += "aborted,";
       }
@@ -238,6 +241,11 @@ bool AllTransferJobsScreen::showsWhileFiltered(const std::shared_ptr<TransferJob
         break;
       case TRANSFERJOB_DONE:
         if (!tjfp.showstatusdone) {
+          return false;
+        }
+        break;
+      case TRANSFERJOB_FAILED:
+        if (!tjfp.showstatusfailed) {
           return false;
         }
         break;
@@ -616,6 +624,9 @@ void AllTransferJobsScreen::addJobDetails(unsigned int y, MenuSelectOption & mso
       break;
     case TRANSFERJOB_DONE:
       status = "done";
+      break;
+    case TRANSFERJOB_FAILED:
+      status = "fail";
       break;
     case TRANSFERJOB_ABORTED:
       status = "abor";

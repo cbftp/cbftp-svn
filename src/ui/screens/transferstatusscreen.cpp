@@ -12,6 +12,7 @@
 #include "../../globalcontext.h"
 #include "../../sitelogicmanager.h"
 #include "../../sitelogic.h"
+#include "../../transfermanager.h"
 
 TransferStatusScreen::TransferStatusScreen(Ui* ui) : UIWindow(ui, "TransferStatusScreen") {
   keybinds.addBind('c', KEYACTION_BACK_CANCEL, "Return");
@@ -133,23 +134,10 @@ bool TransferStatusScreen::keyPressed(unsigned int ch) {
       ui->returnToLast();
       return true;
     case KEYACTION_ABORT:
-      abortTransfer(ts);
+      global->getTransferManager()->abortTransfer(ts->getTransferId());
       return true;
   }
   return false;
-}
-
-void TransferStatusScreen::abortTransfer(std::shared_ptr<TransferStatus> ts) {
-  if (ts->getState() == TRANSFERSTATUS_STATE_IN_PROGRESS) {
-    int type = ts->getType();
-    if (type == TRANSFERSTATUS_TYPE_DOWNLOAD || type == TRANSFERSTATUS_TYPE_FXP) {
-      global->getSiteLogicManager()->getSiteLogic(ts->getSource())->disconnectConn(ts->getSourceSlot());
-    }
-    if (type == TRANSFERSTATUS_TYPE_UPLOAD || type == TRANSFERSTATUS_TYPE_FXP) {
-      global->getSiteLogicManager()->getSiteLogic(ts->getTarget())->disconnectConn(ts->getTargetSlot());
-    }
-    ts->setAborted();
-  }
 }
 
 std::string TransferStatusScreen::getLegendText() const {

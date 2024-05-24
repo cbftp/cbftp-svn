@@ -17,7 +17,7 @@ struct TransferJobsFilteringParameters {
   TransferJobsFilteringParameters() :
     usejobnamefilter(false), usesitefilter(false),
     usestatusfilter(false), showstatusqueued(false), showstatusinprogress(false),
-    showstatusdone(false), showstatusaborted(false) { }
+    showstatusdone(false), showstatusfailed(false), showstatusaborted(false) { }
   bool usejobnamefilter;
   bool usesitefilter;
   std::list<std::string> sourcesitefilters;
@@ -28,6 +28,7 @@ struct TransferJobsFilteringParameters {
   bool showstatusqueued;
   bool showstatusinprogress;
   bool showstatusdone;
+  bool showstatusfailed;
   bool showstatusaborted;
 };
 

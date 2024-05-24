@@ -26,12 +26,13 @@ class FileList;
 
 class TransferStatus {
 public:
-  TransferStatus(int type, const std::string& source, const std::string& target,
+  TransferStatus(int transferid, int type, const std::string& source, const std::string& target,
       const std::string& jobname, const std::string& file, const std::shared_ptr<FileList>& fls,
       const Path& sourcepath, const std::shared_ptr<FileList>& fld, const Path& targetpath,
       unsigned long long int sourcesize, unsigned int assumedspeed, int srcslot,
       int dstslot, bool ssl, bool defaultactive);
   ~TransferStatus();
+  int getTransferId() const;
   std::string getSource() const;
   std::string getTarget() const;
   std::string getJobName() const;
@@ -79,6 +80,7 @@ public:
 private:
   void updateProgress();
   int type;
+  int transferid;
   std::string source;
   std::string target;
   std::string jobname;

@@ -20,33 +20,33 @@ LocalDownload::LocalDownload(LocalStorage* ls) :
 {
 }
 
-void LocalDownload::engage(TransferMonitor* tm, const Path& path, const std::string& filename, bool ipv6, const std::string& addr, int port, bool ssl, FTPConn* ftpconn) {
-  init(tm, ftpconn, path, filename, false, -1, ssl, true, port);
+void LocalDownload::engage(TransferMonitor* tm, int localtransferid, const Path& path, const std::string& filename, bool ipv6, const std::string& addr, int port, bool ssl, FTPConn* ftpconn) {
+  init(tm, localtransferid, ftpconn, path, filename, false, -1, ssl, true, port);
   sockid = -1;
   sockid = interConnect(Address(addr, port, ipv6 ? Core::AddressFamily::IPV6 : Core::AddressFamily::IPV4), ftpconn->getDataProxy());
 }
 
-bool LocalDownload::engage(TransferMonitor* tm, const Path& path, const std::string& filename, bool ipv6, bool ssl, FTPConn* ftpconn) {
-  init(tm, ftpconn, path, filename, false, -1, ssl, false);
+bool LocalDownload::engage(TransferMonitor* tm, int localtransferid, const Path& path, const std::string& filename, bool ipv6, bool ssl, FTPConn* ftpconn) {
+  init(tm, localtransferid, ftpconn, path, filename, false, -1, ssl, false);
   sockid = -1;
   sockid = interListen(ipv6 ? Core::AddressFamily::IPV6 : Core::AddressFamily::IPV4, ftpconn->getDataProxy(), ftpconn->getSockId());
   return sockid != -1;
 }
 
-void LocalDownload::engage(TransferMonitor* tm, int storeid, bool ipv6, const std::string& addr, int port, bool ssl, FTPConn* ftpconn) {
-  init(tm, ftpconn, "", "", true, storeid, ssl, true, port);
+void LocalDownload::engage(TransferMonitor* tm, int localtransferid, int storeid, bool ipv6, const std::string& addr, int port, bool ssl, FTPConn* ftpconn) {
+  init(tm, localtransferid, ftpconn, "", "", true, storeid, ssl, true, port);
   sockid = -1;
   sockid = interConnect(Address(addr, port, ipv6 ? Core::AddressFamily::IPV6 : Core::AddressFamily::IPV4), ftpconn->getDataProxy());
 }
 
-bool LocalDownload::engage(TransferMonitor* tm, int storeid, bool ipv6, bool ssl, FTPConn* ftpconn) {
-  init(tm, ftpconn, "", "", true, storeid, ssl, false);
+bool LocalDownload::engage(TransferMonitor* tm, int localtransferid, int storeid, bool ipv6, bool ssl, FTPConn* ftpconn) {
+  init(tm, localtransferid, ftpconn, "", "", true, storeid, ssl, false);
   sockid = -1;
   sockid = interListen(ipv6 ? Core::AddressFamily::IPV6 : Core::AddressFamily::IPV4, ftpconn->getDataProxy(), ftpconn->getSockId());
   return sockid != -1;
 }
 
-void LocalDownload::init(TransferMonitor* tm, FTPConn* ftpconn, const Path& path, const std::string& filename, bool inmemory, int storeid, bool ssl, bool passivemode, int port) {
+void LocalDownload::init(TransferMonitor* tm, int localtransferid, FTPConn* ftpconn, const Path& path, const std::string& filename, bool inmemory, int storeid, bool ssl, bool passivemode, int port) {
   this->tm = tm;
   this->ftpconn = ftpconn;
   this->path = path;
@@ -59,7 +59,7 @@ void LocalDownload::init(TransferMonitor* tm, FTPConn* ftpconn, const Path& path
   bufpos = 0;
   filesize = 0;
   fileopened = false;
-  activate();
+  activate(localtransferid);
 }
 
 void LocalDownload::FDInterConnected(int sockid) {
@@ -187,4 +187,17 @@ void LocalDownload::append(char* data, unsigned int datalen) {
 
 int LocalDownload::getStoreId() const {
   return storeid;
+}
+
+void LocalDownload::disconnect() {
+  if (sockid == -1) {
+    return;
+  }
+  if (fileopened) {
+    filestream.close();
+  }
+  deactivate();
+  global->getIOManager()->closeSocket(sockid);
+  tm->localInfo("Closing connection");
+  tm->targetError(TM_ERR_OTHER);
 }

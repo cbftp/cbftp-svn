@@ -36,6 +36,7 @@
 #define TICK_INTERVAL 50
 
 TransferMonitor::TransferMonitor(TransferManager * tm) :
+  transferid(0),
   status(TM_STATUS_IDLE),
   clientactive(true),
   fxpdstactive(true),
@@ -55,11 +56,13 @@ bool TransferMonitor::idle() const {
 }
 
 void TransferMonitor::engageFXP(
+  int transferid,
   const std::string& sfile, const std::shared_ptr<SiteLogic>& sls, const std::shared_ptr<FileList>& fls,
   const std::string& dfile, const std::shared_ptr<SiteLogic>& sld, const std::shared_ptr<FileList>& fld,
   const std::shared_ptr<CommandOwner>& srcco, const std::shared_ptr<CommandOwner>& dstco)
 {
   reset();
+  this->transferid = transferid;
   type = TM_TYPE_FXP;
   this->sls = sls;
   this->sld = sld;
@@ -106,7 +109,7 @@ void TransferMonitor::engageFXP(
   latestdsttouch = fld->getFile(dfile)->getTouch();
   fls->download(sfile);
 
-  ts = std::make_shared<TransferStatus>(TRANSFERSTATUS_TYPE_FXP, sls->getSite()->getName(),
+  ts = std::make_shared<TransferStatus>(transferid, TRANSFERSTATUS_TYPE_FXP, sls->getSite()->getName(),
       sld->getSite()->getName(), srcco ? srcco->getName() : "", dfile, fls, fls->getPath(), fld, fld->getPath(),
       fls->getFile(sfile)->getSize(),
       sls->getSite()->getAverageSpeed(sld->getSite()->getName()), src, dst, ssl, fxpdstactive);
@@ -150,11 +153,13 @@ void TransferMonitor::engageFXP(
 }
 
 void TransferMonitor::engageDownload(
+  int transferid,
   const std::string& sfile, const std::shared_ptr<SiteLogic>& sls, const std::shared_ptr<FileList>& fls,
   const std::shared_ptr<LocalFileList>& localfl, const std::shared_ptr<CommandOwner>& co, int connid)
 {
   reset();
   type = TM_TYPE_DOWNLOAD;
+  this->transferid = transferid;
   this->sls = sls;
   this->sfile = sfile;
   this->dfile = sfile;
@@ -186,7 +191,7 @@ void TransferMonitor::engageDownload(
   TransferProtocol dprot = global->getLocalStorage()->getTransferProtocol();
   ipv6 = useIPv6(sprot, dprot);
   clientactive = !sls->getSite()->hasBrokenPASV();
-  ts = std::make_shared<TransferStatus>(TRANSFERSTATUS_TYPE_DOWNLOAD,
+  ts = std::make_shared<TransferStatus>(transferid, TRANSFERSTATUS_TYPE_DOWNLOAD,
       sls->getSite()->getName(), "(local)", co ? co->getName() : "", dfile, fls, spath,
       nullptr, dpath, fls->getFile(sfile)->getSize(), 0, src, -1, ssl, clientactive);
   tm->addNewTransferStatus(ts);
@@ -237,12 +242,14 @@ void TransferMonitor::engageDownload(
 }
 
 void TransferMonitor::engageUpload(
+  int transferid,
   const std::string& sfile, const std::shared_ptr<LocalFileList>& localfl,
   const std::shared_ptr<SiteLogic>& sld, const std::shared_ptr<FileList>& fld, const std::shared_ptr<CommandOwner>& co)
 {
   reset();
   if (!localfl) return;
   type = TM_TYPE_UPLOAD;
+  this->transferid = transferid;
   this->sld = sld;
   this->sfile = sfile;
   this->dfile = sfile;
@@ -267,7 +274,7 @@ void TransferMonitor::engageUpload(
   ipv6 = useIPv6(sprot, dprot);
   fld->touchFile(dfile, sld->getSite()->getUser(), true);
   clientactive = !sld->getSite()->hasBrokenPASV();
-  ts = std::make_shared<TransferStatus>(TRANSFERSTATUS_TYPE_UPLOAD,
+  ts = std::make_shared<TransferStatus>(transferid, TRANSFERSTATUS_TYPE_UPLOAD,
       "(local)", sld->getSite()->getName(), co ? co->getName() : "", dfile, nullptr, spath,
       fld, dpath, lf.getSize(), 0, 0, dst, ssl, clientactive);
   tm->addNewTransferStatus(ts);
@@ -305,11 +312,12 @@ void TransferMonitor::engageUpload(
   maxtransfertimeseconds = maxtime;
 }
 
-void TransferMonitor::engageList(const std::shared_ptr<SiteLogic>& sls, int connid,
+void TransferMonitor::engageList(int transferid, const std::shared_ptr<SiteLogic>& sls, int connid,
   bool hiddenfiles, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner>& co, bool ipv6)
 {
   reset();
   type = TM_TYPE_LIST;
+  this->transferid = transferid;
   this->sls = sls;
   this->fls = fl;
   this->srcco = co;
@@ -629,6 +637,9 @@ void TransferMonitor::sourceError(TransferError err) {
   }
   error = err;
   setStatus(TM_STATUS_SOURCE_ERROR_AWAITING_TARGET);
+  if (type == TM_TYPE_DOWNLOAD) {
+    closeRemainingConnections();
+  }
 }
 
 void TransferMonitor::targetError(TransferError err) {
@@ -665,6 +676,9 @@ void TransferMonitor::targetError(TransferError err) {
   }
   error = err;
   setStatus(TM_STATUS_TARGET_ERROR_AWAITING_SOURCE);
+  if (type == TM_TYPE_UPLOAD) {
+    closeRemainingConnections();
+  }
 }
 
 std::shared_ptr<TransferStatus> TransferMonitor::getTransferStatus() const {
@@ -727,16 +741,14 @@ bool TransferMonitor::checkForDeadFXPTransfers() {
        timestamp - partialcompletestamp > MAX_WAIT_SOURCE_COMPLETE))
   {
     ts->addLogLine("[" + global->getTimeReference()->getCurrentLogTimeStamp() + "] [Partial completion timeout reached. Disconnecting target]");
-    sld->disconnectConn(dst);
-    sld->connectConn(dst);
+    closeRemainingConnections();
     return true;
   }
   else if (status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE &&
            timestamp - partialcompletestamp > MAX_WAIT_ERROR)
   {
     ts->addLogLine("[" + global->getTimeReference()->getCurrentLogTimeStamp() + "] [Partial completion timeout reached. Disconnecting source]");
-    sls->disconnectConn(src);
-    sls->connectConn(src);
+    closeRemainingConnections();
     return true;
   }
   else if (status == TM_STATUS_TRANSFERRING_TARGET_COMPLETE &&
@@ -744,8 +756,7 @@ bool TransferMonitor::checkForDeadFXPTransfers() {
   {
     ts->addLogLine("[" + global->getTimeReference()->getCurrentLogTimeStamp() + "] [Partial completion timeout reached. Disconnecting source]");
     sls->finishTransferGracefully(src);
-    sls->disconnectConn(src);
-    sls->connectConn(src);
+    closeRemainingConnections();
     return true;
   }
   return false;
@@ -757,14 +768,7 @@ bool TransferMonitor::checkMaxTransferTime() {
       if (!!ts) {
         ts->addLogLine("[" + global->getTimeReference()->getCurrentLogTimeStamp() + "] [Timeout reached after " + std::to_string(maxtransfertimeseconds) + " seconds. Disconnecting]");
       }
-      if (sld) {
-        sld->disconnectConn(dst);
-        sld->connectConn(dst);
-      }
-      if (sls) {
-        sls->disconnectConn(src);
-        sls->connectConn(src);
-      }
+      closeRemainingConnections();
       timeout = true;
       return true;
     }
@@ -807,6 +811,7 @@ void TransferMonitor::reset() {
   storeid = -1;
   maxtransfertimeseconds = -1;
   timeout = false;
+  transferid = -1;
 }
 
 bool TransferMonitor::willFail() const {
@@ -908,4 +913,39 @@ void TransferMonitor::lateUploadFailure(const std::string& reason, bool dupe) {
 
 void TransferMonitor::setStatus(Status status) {
   this->status = status;
+}
+
+int TransferMonitor::getTransferId() const {
+  return transferid;
+}
+
+void TransferMonitor::abortTransfer() {
+  ts->addLogLine("[" + global->getTimeReference()->getCurrentLogTimeStamp() + "] [Aborting transfer]");
+  closeRemainingConnections();
+  ts->setAborted();
+}
+
+void TransferMonitor::closeRemainingConnections() {
+  if (idle()) {
+    return;
+  }
+  if (sld) {
+    if (status != TM_STATUS_TARGET_ERROR_AWAITING_SOURCE && status != TM_STATUS_TRANSFERRING_TARGET_COMPLETE) {
+      sld->disconnectConn(dst);
+      sld->connectConn(dst);
+    }
+  }
+  if (sls) {
+    if (status != TM_STATUS_SOURCE_ERROR_AWAITING_TARGET && status != TM_STATUS_TRANSFERRING_SOURCE_COMPLETE) {
+      sls->disconnectConn(src);
+      sls->connectConn(src);
+    }
+  }
+  if (lt) {
+    if (((type == TM_TYPE_DOWNLOAD || type == TM_TYPE_LIST) && status != TM_STATUS_TARGET_ERROR_AWAITING_SOURCE && status != TM_STATUS_TRANSFERRING_TARGET_COMPLETE) ||
+        (type == TM_TYPE_UPLOAD && status != TM_STATUS_SOURCE_ERROR_AWAITING_TARGET && status != TM_STATUS_TRANSFERRING_SOURCE_COMPLETE))
+    {
+      lt->disconnect();
+    }
+  }
 }

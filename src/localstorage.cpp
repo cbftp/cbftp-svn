@@ -45,7 +45,8 @@ LocalStorage::LocalStorage() :
   activeportlast(47600),
   currentactiveport(activeportfirst),
   requestidcounter(0),
-  transferprotocol(TransferProtocol::PREFER_IPV4)
+  transferprotocol(TransferProtocol::PREFER_IPV4),
+  nextlocaltransferid(0)
 {
 
 }
@@ -60,26 +61,26 @@ LocalTransfer * LocalStorage::passiveModeDownload(TransferMonitor* tm, const std
 
 LocalTransfer * LocalStorage::passiveModeDownload(TransferMonitor* tm, const Path& path, const std::string & file, bool ipv6, const std::string & host, int port, bool ssl, FTPConn* ftpconn) {
   LocalDownload* ld = getAvailableLocalDownload();
-  ld->engage(tm, path, file, ipv6, host, port, ssl, ftpconn);
+  ld->engage(tm, nextlocaltransferid++, path, file, ipv6, host, port, ssl, ftpconn);
   return ld;
 }
 
 LocalTransfer * LocalStorage::passiveModeDownload(TransferMonitor* tm, bool ipv6, const std::string& host, int port, bool ssl, FTPConn* ftpconn) {
   int storeid = storeidcounter++;
   LocalDownload* ld = getAvailableLocalDownload();
-  ld->engage(tm, storeid, ipv6, host, port, ssl, ftpconn);
+  ld->engage(tm, nextlocaltransferid++, storeid, ipv6, host, port, ssl, ftpconn);
   return ld;
 }
 
 LocalTransfer * LocalStorage::passiveModeUpload(TransferMonitor* tm, const Path& path, const std::string& file, bool ipv6, const std::string& host, int port, bool ssl, FTPConn* ftpconn) {
   LocalUpload* lu = getAvailableLocalUpload();
-  lu->engage(tm, path, file, ipv6, host, port, ssl, ftpconn);
+  lu->engage(tm, nextlocaltransferid++, path, file, ipv6, host, port, ssl, ftpconn);
   return lu;
 }
 
 LocalTransfer* LocalStorage::activeModeDownload(TransferMonitor* tm, const Path& path, const std::string& file, bool ipv6, bool ssl, FTPConn* ftpconn) {
   LocalDownload* ld = getAvailableLocalDownload();
-  if (ld->engage(tm, path, file, ipv6, ssl, ftpconn)) {
+  if (ld->engage(tm, nextlocaltransferid++, path, file, ipv6, ssl, ftpconn)) {
     return ld;
   }
   global->getEventLog()->log("LocalStorage", "Error: no local ports available for active mode");
@@ -89,7 +90,7 @@ LocalTransfer* LocalStorage::activeModeDownload(TransferMonitor* tm, const Path&
 LocalTransfer* LocalStorage::activeModeDownload(TransferMonitor* tm, bool ipv6, bool ssl, FTPConn* ftpconn) {
   int storeid = storeidcounter++;
   LocalDownload* ld = getAvailableLocalDownload();
-  if (ld->engage(tm, storeid, ipv6, ssl, ftpconn)) {
+  if (ld->engage(tm, nextlocaltransferid++, storeid, ipv6, ssl, ftpconn)) {
     return ld;
   }
   global->getEventLog()->log("LocalStorage", "Error: no local ports available for active mode");
@@ -98,7 +99,7 @@ LocalTransfer* LocalStorage::activeModeDownload(TransferMonitor* tm, bool ipv6, 
 
 LocalTransfer* LocalStorage::activeModeUpload(TransferMonitor* tm, const Path& path, const std::string& file, bool ipv6, bool ssl, FTPConn* ftpconn) {
   LocalUpload* lu = getAvailableLocalUpload();
-  if (lu->engage(tm, path, file, ipv6, ssl, ftpconn)) {
+  if (lu->engage(tm, nextlocaltransferid++, path, file, ipv6, ssl, ftpconn)) {
     return lu;
   }
   global->getEventLog()->log("LocalStorage", "Error: no local ports available for active mode");

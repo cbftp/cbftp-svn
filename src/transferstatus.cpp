@@ -7,12 +7,12 @@
 #include "globalcontext.h"
 #include "timereference.h"
 
-TransferStatus::TransferStatus(int type, const std::string& source, const std::string& target,
+TransferStatus::TransferStatus(int transferid, int type, const std::string& source, const std::string& target,
     const std::string& jobname, const std::string& file, const std::shared_ptr<FileList>& fls,
     const Path& sourcepath, const std::shared_ptr<FileList>& fld, const Path& targetpath,
     unsigned long long int sourcesize, unsigned int assumedspeed, int srcslot,
     int dstslot, bool ssl, bool defaultactive) :
-    type(type), source(source), target(target), jobname(jobname), file(file),
+    type(type), transferid(transferid), source(source), target(target), jobname(jobname), file(file),
     timestamp(global->getTimeReference()->getCurrentLogTimeStamp()), sourcepath(sourcepath),
     targetpath(targetpath), sourcesize(sourcesize), knowntargetsize(0),
     interpolatedtargetsize(0), interpolationfilltargetsize(0), speed(assumedspeed),
@@ -30,6 +30,10 @@ TransferStatus::TransferStatus(int type, const std::string& source, const std::s
 }
 
 TransferStatus::~TransferStatus() {
+}
+
+int TransferStatus::getTransferId() const {
+  return transferid;
 }
 
 std::string TransferStatus::getSource() const {

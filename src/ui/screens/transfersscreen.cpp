@@ -544,7 +544,7 @@ bool TransfersScreen::keyPressed(unsigned int ch) {
             std::static_pointer_cast<MenuSelectOptionTextButton>(table.getElement(table.getSelectionPointer()));
         std::map<int, std::shared_ptr<TransferStatus> >::iterator it = statusmap.find(elem->getId());
         if (it != statusmap.end()) {
-          TransferStatusScreen::abortTransfer(it->second);
+          tm->abortTransfer(it->second->getTransferId());
         }
       }
       return true;

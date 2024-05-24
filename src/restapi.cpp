@@ -374,6 +374,8 @@ std::string transferJobStatusToString(TransferJobStatus status) {
       return "DONE";
     case TransferJobStatus::TRANSFERJOB_QUEUED:
       return "QUEUED";
+    case TransferJobStatus::TRANSFERJOB_FAILED:
+      return "FAILED";
     case TransferJobStatus::TRANSFERJOB_ABORTED:
       return "ABORTED";
   }

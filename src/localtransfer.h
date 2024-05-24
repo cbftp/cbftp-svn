@@ -17,10 +17,11 @@ public:
   bool active() const;
   bool openFile(bool);
   int getPort() const;
+  virtual void disconnect() = 0;
   virtual unsigned long long int size() const = 0;
   FTPConn * getConn() const;
 protected:
-  void activate();
+  void activate(int localtransferid);
   void deactivate();
   bool ssl;
   bool inmemory;
@@ -41,4 +42,5 @@ private:
   void FDInterInfo(int sockid, const std::string& info) override;
   void tick(int) override;
   bool inuse;
+  int localtransferid;
 };

@@ -249,7 +249,7 @@ TransferJobStatus TransferJob::getStatus() const {
 }
 
 bool TransferJob::isDone() const {
-  return status == TRANSFERJOB_DONE || status == TRANSFERJOB_ABORTED;
+  return status == TRANSFERJOB_DONE || status == TRANSFERJOB_FAILED || status == TRANSFERJOB_ABORTED;
 }
 
 bool TransferJob::isDirectory() const {
@@ -639,7 +639,12 @@ void TransferJob::updateStatus() {
   }
   filesprogress = existingtargets.size() + filescompleted.size();
   if (almostdone && !ongoingtransfers && filesprogress + (int)filesfailed.size() >= filestotal) {
-    setDone();
+    if (!filescompleted.size()) {
+      setFailed();
+    }
+    else {
+      setDone();
+    }
   }
 }
 
@@ -830,6 +835,14 @@ void TransferJob::clearExisting() {
 
 unsigned int TransferJob::getId() const {
   return id;
+}
+
+void TransferJob::setFailed() {
+  if (isDone()) {
+    return;
+  }
+  setDone();
+  status = TRANSFERJOB_FAILED;
 }
 
 void TransferJob::setDone() {

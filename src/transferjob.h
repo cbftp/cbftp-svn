@@ -20,6 +20,7 @@ enum TransferJobStatus {
   TRANSFERJOB_QUEUED,
   TRANSFERJOB_RUNNING,
   TRANSFERJOB_DONE,
+  TRANSFERJOB_FAILED,
   TRANSFERJOB_ABORTED
 };
 
@@ -116,6 +117,7 @@ private:
   void addSubDirectoryFileLists(std::unordered_map<std::string, std::shared_ptr<FileList>>&, const std::shared_ptr<FileList>& fl, const Path &, File *);
   void init(unsigned int id, TransferJobType type, const std::shared_ptr<SiteLogic>& srcsl, const std::shared_ptr<SiteLogic>& dstsl, const Path& srcpath, const Path& dstpath, const std::string& srcsection, const std::string& dstsection, const std::string& srcfile, const std::string& dstfile);
   void countTotalFiles();
+  void setFailed();
   void setDone();
   void updateLocalFileLists();
   void updateLocalFileLists(const Path &, const Path &);
