@@ -2241,7 +2241,7 @@ void SiteLogic::cleanupConnection(int id) {
   }
 }
 
-void SiteLogic::finishTransferGracefully(int id) {
+void SiteLogic::finishTransferGracefullyPrematurely(int id) {
   assert(connstatetracker[id].hasTransfer() &&
                !connstatetracker[id].isListLocked());
   switch (connstatetracker[id].getTransferType()) {
@@ -2255,6 +2255,8 @@ void SiteLogic::finishTransferGracefully(int id) {
       break;
   }
   connstatetracker[id].finishTransfer();
+  disconnectConn(id);
+  connectConn(id);
 }
 
 void SiteLogic::listCompleted(int id, int storeid, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner> & co) {

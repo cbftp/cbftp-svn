@@ -147,7 +147,7 @@ class SiteLogic : public Core::EventReceiver {
     int getCleanlyClosedConnectionsCount() const;
     void connectConn(int);
     void disconnectConn(int id, bool hard = false);
-    void finishTransferGracefully(int);
+    void finishTransferGracefullyPrematurely(int);
     void listCompleted(int id, int storeid, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner>& co);
     void downloadCompleted(int id, int storeid, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner>& co);
     void issueRawCommand(unsigned int, const std::string &);

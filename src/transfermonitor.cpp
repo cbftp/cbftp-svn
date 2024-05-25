@@ -755,8 +755,7 @@ bool TransferMonitor::checkForDeadFXPTransfers() {
            timestamp - partialcompletestamp > MAX_WAIT_ERROR)
   {
     ts->addLogLine("[" + global->getTimeReference()->getCurrentLogTimeStamp() + "] [Partial completion timeout reached. Disconnecting source]");
-    sls->finishTransferGracefully(src);
-    closeRemainingConnections();
+    sls->finishTransferGracefullyPrematurely(src);
     return true;
   }
   return false;

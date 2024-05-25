@@ -609,12 +609,15 @@ void TransferJob::updateStatus() {
     }
     Path subpathfile = ((*it)->getSourcePath() - srcpath) / (*it)->getFile();
     if (state == TRANSFERSTATUS_STATE_SUCCESSFUL) {
-      if (existingtargets.find(subpathfile.toString()) == existingtargets.end()) {
-        filescompleted.insert(subpathfile.toString());
-      }
+      existingtargets.erase(subpathfile.toString());
+      filescompleted.insert(subpathfile.toString());
+      filesfailed.erase(subpathfile.toString());
+
     }
     if (state == TRANSFERSTATUS_STATE_FAILED || state == TRANSFERSTATUS_STATE_DUPE) {
-      filesfailed.insert(subpathfile.toString());
+      if (filescompleted.find(subpathfile.toString()) == filescompleted.end()) {
+        filesfailed.insert(subpathfile.toString());
+      }
     }
   }
   for (std::unordered_map<std::string, unsigned long long int>::const_iterator it = pendingTransfersBegin(); it != pendingTransfersEnd(); it++) {
@@ -639,7 +642,7 @@ void TransferJob::updateStatus() {
   }
   filesprogress = existingtargets.size() + filescompleted.size();
   if (almostdone && !ongoingtransfers && filesprogress + (int)filesfailed.size() >= filestotal) {
-    if (!filescompleted.size()) {
+    if (filescompleted.size() < filesfailed.size()) {
       setFailed();
     }
     else {
