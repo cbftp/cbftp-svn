@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <csignal>
+#include <cstdio>
 #include <cctype>
 
 namespace util {
@@ -195,7 +196,7 @@ std::string urlDecode(const std::string& url) {
       if (url.length() > i + 2) {
         std::string sub = url.substr(i + 1, 2);
         if (isHex(sub)) {
-          int val;
+          unsigned int val;
           sscanf(url.substr(i + 1, 2).c_str(), "%x", &val);
           out += static_cast<char>(val);
         }
