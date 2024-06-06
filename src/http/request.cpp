@@ -1,5 +1,7 @@
 #include "request.h"
 
+#include "../util.h"
+
 namespace http {
 
 Request::Request() : Request("", "", 0) {
@@ -8,10 +10,11 @@ Request::Request() : Request("", "", 0) {
 Request::Request(const std::string& method, const std::string& path, int minorversion)
     : Message("HTTP/1." + std::to_string(minorversion)), method(method), pathwithqueryparams(path)
 {
-  size_t queryParamSeparator = path.find("?");
+  std::string decodedPath = util::urlDecode(path);
+  size_t queryParamSeparator = decodedPath.find("?");
   if (queryParamSeparator != std::string::npos) {
-    this->path = path.substr(0, queryParamSeparator);
-    parseQueryParams(path.substr(queryParamSeparator + 1));
+    this->path = decodedPath.substr(0, queryParamSeparator);
+    parseQueryParams(decodedPath.substr(queryParamSeparator + 1));
   }
   else {
     this->path = path;

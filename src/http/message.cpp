@@ -1,14 +1,8 @@
 #include "message.h"
 
-namespace {
+#include "../util.h"
 
-std::string join(const std::list<std::string>& items) {
-  std::string joined;
-  for (const std::string& item : items) {
-    joined += (joined.empty() ? "" : ", ") + item;
-  }
-  return joined;
-}
+namespace {
 
 std::string normalizeHeader(const std::string& str) {
   std::string data(str);
@@ -62,7 +56,7 @@ std::string Message::getHeaderValue(const std::string& header) const {
   std::map<std::string, HeaderValues>::const_iterator it;
   it = headers.find(normalizeHeader(header));
   if (it != headers.end()) {
-    return join(it->second.values);
+    return util::join(it->second.values, ", ");
   }
   return "";
 }
@@ -96,7 +90,7 @@ std::vector<char> Message::serializeCommon(const std::string& startline) const {
   std::string concatdata = startline + "\r\n";
   for (const std::pair<const std::string, HeaderValues>& header : headers) {
     const HeaderValues& values = header.second;
-    concatdata += values.name + ": " + join(values.values) + "\r\n";
+    concatdata += values.name + ": " + util::join(values.values, ", ") + "\r\n";
   }
   concatdata += "\r\n";
   std::vector<char> data(concatdata.begin(), concatdata.end());

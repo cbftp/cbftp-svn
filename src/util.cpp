@@ -178,6 +178,40 @@ std::string toLower(const std::string & in) {
   return ret;
 }
 
+bool isHex (const std::string& hex) {
+  for (size_t i = 0; i < hex.length(); ++i) {
+    char c = hex[i];
+    if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+std::string urlDecode(const std::string& url) {
+  std::string out;
+  for (size_t i = 0; i < url.length(); ++i) {
+    if (url[i] == '%') {
+      if (url.length() > i + 2) {
+        std::string sub = url.substr(i + 1, 2);
+        if (isHex(sub)) {
+          int val;
+          sscanf(url.substr(i + 1, 2).c_str(), "%x", &val);
+          out += static_cast<char>(val);
+        }
+      }
+      i += 2;
+    }
+    else if (url[i] == '+') {
+      out += ' ';
+    }
+    else {
+      out += url[i];
+    }
+  }
+  return out;
+}
+
 int wildcmp(const char *wild, const char *string) {
   const char *cp = NULL, *mp = NULL;
   while ((*string) && (*wild != '*')) {

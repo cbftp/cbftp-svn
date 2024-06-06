@@ -26,6 +26,8 @@ std::string & debugString(const char *);
 std::string parseSize(unsigned long long int);
 std::string getGroupNameFromRelease(const std::string &);
 std::string toLower(const std::string &);
+bool isHex(const std::string& hex);
+std::string urlDecode(const std::string& url);
 int wildcmp(const char *, const char *);
 int wildcmpCase(const char *, const char *);
 std::list<std::string> split(const std::string& in, const std::string& sep = " ");
