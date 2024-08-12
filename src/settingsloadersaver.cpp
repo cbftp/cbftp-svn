@@ -198,6 +198,10 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("notify")) {
       global->getRemoteCommandHandler()->setNotify(static_cast<RemoteCommandNotify>(std::stoi(value)));
     }
+    else if (!setting.compare("listenall")) {
+      bool listenall = !value.compare("true");
+      global->getRemoteCommandHandler()->setListenAll(listenall);
+    }
   }
   if (enable) {
     global->getRemoteCommandHandler()->setEnabled(true);
@@ -861,6 +865,9 @@ void SettingsLoaderSaver::saveSettings() {
   Crypto::base64Encode(indata, outdata);
   dfh->addOutputLine("RemoteCommandHandler", "passwordb64=" + std::string(outdata.begin(), outdata.end()));
   dfh->addOutputLine("RemoteCommandHandler", "notify=" + std::to_string(static_cast<int>(global->getRemoteCommandHandler()->getNotify())));
+  if (global->getRemoteCommandHandler()->getListenAll()) {
+    dfh->addOutputLine("RemoteCommandHandler", "listenall=true");
+  }
 
   if (global->getHTTPServer()->getEnabled()) {
     dfh->addOutputLine("HTTPServer", "enabled=true");

@@ -46,9 +46,11 @@ void HTTPServer::setPort(int port) {
 }
 
 void HTTPServer::bindListen() {
-  sockid4 = global->getIOManager()->registerTCPServerSocket(this, port, Core::AddressFamily::IPV4);
-  sockid6 = global->getIOManager()->registerTCPServerSocket(this, port, Core::AddressFamily::IPV6);
-  global->getEventLog()->log("HTTPServer", "Listening on TCP port " + std::to_string(port));
+  bool listenall = global->getRemoteCommandHandler()->getListenAll();
+  sockid4 = global->getIOManager()->registerTCPServerSocket(this, port, Core::AddressFamily::IPV4, !listenall);
+  sockid6 = global->getIOManager()->registerTCPServerSocket(this, port, Core::AddressFamily::IPV6, !listenall);
+  std::string listeninterface = listenall ? "all interfaces" : "localhost";
+  global->getEventLog()->log("HTTPServer", "Listening on " + listeninterface + " TCP port " + std::to_string(port));
 }
 
 void HTTPServer::close() {

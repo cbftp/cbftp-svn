@@ -427,17 +427,25 @@ int IOManager::registerExternalFD(EventReceiver* er, int fd) {
   return sockid;
 }
 
-int IOManager::registerUDPServerSocket(EventReceiver* er, int port, AddressFamily addrfam) {
+int IOManager::registerUDPServerSocket(EventReceiver* er, int port, AddressFamily addrfam, bool local) {
   struct addrinfo sock, *res;
   memset(&sock, 0, sizeof(sock));
+  StringResult bindto = getAddressToBind(addrfam, SocketType::UDP);
+  if (!bindto.success) {
+    workmanager.dispatchEventFail(er, -1, bindto.error);
+    return -1;
+  }
   std::string addr;
   if (addrfam == AddressFamily::IPV4) {
       sock.ai_family = AF_INET;
-      addr = "0.0.0.0";
+      addr = local ? "127.0.0.1" : "0.0.0.0";
   }
   else {
       sock.ai_family = AF_INET6;
-      addr = "::";
+      addr = local ? "::1" : "::";
+  }
+  if (!bindto.result.empty() && !local) {
+    addr = bindto.result;
   }
   sock.ai_socktype = SOCK_DGRAM;
   sock.ai_protocol = IPPROTO_UDP;

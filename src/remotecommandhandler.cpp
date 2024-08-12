@@ -84,7 +84,9 @@ RemoteCommandHandler::RemoteCommandHandler() :
   port(DEFAULT_API_PORT),
   retrying(false),
   connected(false),
-  notify(RemoteCommandNotify::DISABLED) {
+  notify(RemoteCommandNotify::DISABLED),
+  listenall(false)
+{
 }
 
 bool RemoteCommandHandler::isEnabled() const {
@@ -101,6 +103,10 @@ int RemoteCommandHandler::getUDPPort() const {
 
 std::string RemoteCommandHandler::getPassword() const {
   return password;
+}
+
+bool RemoteCommandHandler::getListenAll() const {
+  return listenall;
 }
 
 void RemoteCommandHandler::setPassword(const std::string & newpass) {
@@ -126,10 +132,11 @@ void RemoteCommandHandler::setNotify(RemoteCommandNotify notify) {
 
 void RemoteCommandHandler::connect() {
   int udpport = getUDPPort();
-  sockid = global->getIOManager()->registerUDPServerSocket(this, udpport);
+  sockid = global->getIOManager()->registerUDPServerSocket(this, udpport, Core::AddressFamily::IPV4, !listenall);
   if (sockid >= 0) {
     connected = true;
-    global->getEventLog()->log("RemoteCommandHandler", "Listening on UDP port " + std::to_string(udpport));
+    std::string listeninterface = listenall ? "all interfaces" : "localhost";
+    global->getEventLog()->log("RemoteCommandHandler", "Listening on " + listeninterface + " UDP port " + std::to_string(udpport));
   }
   else {
     int delay = RETRY_DELAY / 1000;
@@ -461,7 +468,7 @@ void RemoteCommandHandler::commandAbort(const std::vector<std::string> & message
   }
   std::shared_ptr<Race> race = global->getEngine()->getRace(message[0]);
   if (!race) {
-    global->getEventLog()->log("RemoteCommandHandler", "No matching race: " + message[0]);
+    global->getEventLog()->log("RemoteCommandHandler", "No matching spread job: " + message[0]);
     return;
   }
   global->getEngine()->abortRace(race);
@@ -479,7 +486,7 @@ void RemoteCommandHandler::commandDelete(const std::vector<std::string> & messag
   }
   std::shared_ptr<Race> race = global->getEngine()->getRace(release);
   if (!race) {
-    global->getEventLog()->log("RemoteCommandHandler", "No matching race: " + release);
+    global->getEventLog()->log("RemoteCommandHandler", "No matching spread job: " + release);
     return;
   }
   if (!sitestring.length()) {
@@ -502,7 +509,7 @@ void RemoteCommandHandler::commandAbortDeleteIncomplete(const std::vector<std::s
   std::string release = message[0];
   std::shared_ptr<Race> race = global->getEngine()->getRace(release);
   if (!race) {
-    global->getEventLog()->log("RemoteCommandHandler", "No matching race: " + release);
+    global->getEventLog()->log("RemoteCommandHandler", "No matching spread job: " + release);
     return;
   }
   global->getEngine()->deleteOnAllSites(race, false, false);
@@ -515,7 +522,7 @@ void RemoteCommandHandler::commandReset(const std::vector<std::string> & message
   }
   std::shared_ptr<Race> race = global->getEngine()->getRace(message[0]);
   if (!race) {
-    global->getEventLog()->log("RemoteCommandHandler", "No matching race: " + message[0]);
+    global->getEventLog()->log("RemoteCommandHandler", "No matching spread job: " + message[0]);
     return;
   }
   global->getEngine()->resetRace(race, hard);
@@ -589,6 +596,15 @@ void RemoteCommandHandler::setEnabled(bool enabled) {
 
 void RemoteCommandHandler::setEncrypted(bool encrypted) {
   this->encrypted = encrypted;
+}
+
+void RemoteCommandHandler::setListenAll(bool listenall) {
+  bool reopen = !(this->listenall == listenall || !enabled);
+  this->listenall = listenall;
+  if (reopen) {
+    setEnabled(false);
+    setEnabled(true);
+  }
 }
 
 void RemoteCommandHandler::stopRetry() {

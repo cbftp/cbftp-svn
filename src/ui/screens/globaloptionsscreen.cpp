@@ -136,6 +136,11 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   udpenable->setOption(static_cast<int>(udpenabled));
   mso.addStringField(y++, x, "udpport", "UDP API Port:", std::to_string(rch->getUDPPort()), false, 5);
   mso.addStringField(y++, x, "apipass", "API password:", rch->getPassword(), true);
+  std::shared_ptr<MenuSelectOptionTextArrow> listeningmode = mso.addTextArrow(y++, x, "listeningmode", "API listening mode:");
+  listeningmode->addOption("Localhost", static_cast<int>(ListeningMode::LOCALHOST));
+  listeningmode->addOption("All interfaces", static_cast<int>(ListeningMode::ALL));
+  ListeningMode listenmode = rch->getListenAll() ? ListeningMode::ALL : ListeningMode::LOCALHOST;
+  listeningmode->setOption(static_cast<int>(listenmode));
   std::shared_ptr<MenuSelectOptionTextArrow> bell = mso.addTextArrow(y++, x, "udpbell", "Remote command bell:");
   bell->addOption("Disabled", static_cast<int>(RemoteCommandNotify::DISABLED));
   bell->addOption("Action requested", static_cast<int>(RemoteCommandNotify::ACTION_REQUESTED));
@@ -364,6 +369,8 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
       return true;
     case KEYACTION_DONE:
       UdpEnable udpenable = UdpEnable::NO;
+      bool tcpenable = false;
+      bool reenablehttpserver = false;
       for(unsigned int i = 0; i < mso.size(); i++) {
         std::shared_ptr<MenuSelectOptionElement> msoe = mso.getElement(i);
         std::string identifier = msoe->getIdentifier();
@@ -394,7 +401,10 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
           ls->setActiveModeAddress6(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
         }
         else if (identifier == "tcpenable") {
-          global->getHTTPServer()->setEnabled(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
+          tcpenable = std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData();
+          if (!tcpenable) {
+            global->getHTTPServer()->setEnabled(false);
+          }
         }
         else if (identifier == "tcpport") {
           global->getHTTPServer()->setPort(std::stoi(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData()));
@@ -406,6 +416,16 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
           }
           else {
             rch->setEncrypted(udpenable == UdpEnable::ENCRYPTED);
+          }
+        }
+        else if (identifier == "listeningmode") {
+          ListeningMode listeningmode = static_cast<ListeningMode>(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
+          reenablehttpserver = (listeningmode == ListeningMode::ALL) != rch->getListenAll();
+          if (listeningmode == ListeningMode::LOCALHOST) {
+            rch->setListenAll(false);
+          }
+          else {
+            rch->setListenAll(true);
           }
         }
         else if (identifier == "udpport") {
@@ -485,6 +505,10 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
         }
       }
       rch->setEnabled(udpenable != UdpEnable::NO);
+      if (reenablehttpserver && global->getHTTPServer()->getEnabled()) {
+        global->getHTTPServer()->setEnabled(false);
+      }
+      global->getHTTPServer()->setEnabled(tcpenable);
       global->getSettingsLoaderSaver()->saveSettings();
       ui->returnToLast();
       return true;

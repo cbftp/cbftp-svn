@@ -130,11 +130,15 @@ public:
    * @param er: The event receiver
    * @param port: The port to bind to
    * @param addrfam: The address family (IPv4 or IPv6) of the socket.
+   * @param local: whether to listen for local connections only
    * @return: a socket identifier
    *
    * Events are the same as for registerTCPServerSocket above.
    */
-  int registerUDPServerSocket(EventReceiver* er, int port, AddressFamily addrfam = AddressFamily::IPV4);
+  int registerUDPServerSocket(EventReceiver* er,
+                              int port,
+                              AddressFamily addrfam = AddressFamily::IPV4,
+                              bool local = false);
 
   /* Take over a previously registered socket with a new EventReceiver.
    * @param er: The new event receiver
