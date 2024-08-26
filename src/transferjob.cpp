@@ -589,6 +589,7 @@ void TransferJob::updateStatus() {
   bool ongoingtransfers = false;
   std::unordered_set<std::string> dstpaths;
   std::unordered_set<std::string> filescompleted;
+  std::unordered_set<std::string> filesdupe;
   std::unordered_set<std::string> filesfailed;
   for (std::list<std::shared_ptr<TransferStatus> >::const_iterator it = transfersBegin(); it != transfersEnd(); it++) {
     if (pendingtransfers.find((*it)->getFile()) != pendingtransfers.end()) {
@@ -612,21 +613,21 @@ void TransferJob::updateStatus() {
       existingtargets.erase(subpathfile.toString());
       filescompleted.insert(subpathfile.toString());
       filesfailed.erase(subpathfile.toString());
-
+      filesdupe.erase(subpathfile.toString());
     }
-    if (state == TRANSFERSTATUS_STATE_FAILED || state == TRANSFERSTATUS_STATE_DUPE) {
+    else if (state == TRANSFERSTATUS_STATE_FAILED) {
       if (filescompleted.find(subpathfile.toString()) == filescompleted.end()) {
         filesfailed.insert(subpathfile.toString());
+      }
+    }
+    else if (state == TRANSFERSTATUS_STATE_DUPE) {
+      if (filescompleted.find(subpathfile.toString()) == filescompleted.end()) {
+        filesdupe.insert(subpathfile.toString());
       }
     }
   }
   for (std::unordered_map<std::string, unsigned long long int>::const_iterator it = pendingTransfersBegin(); it != pendingTransfersEnd(); it++) {
     aggregatedsize += it->second;
-  }
-  for (std::unordered_set<std::string>::const_iterator it = filescompleted.begin(); it != filescompleted.end(); it++) {
-    if (filesfailed.find(*it) != filesfailed.end()) {
-      filesfailed.erase(*it);
-    }
   }
   expectedfinalsize = aggregatedsize;
   sizeprogress = aggregatedsizetransferred;

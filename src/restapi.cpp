@@ -966,6 +966,10 @@ void RestApi::handleFileGet(RestApiCallback* cb, int connrequestid, const http::
     return;
   }
   Path path = request.getQueryParamValue("path");
+  if (!useOrSectionTranslate(path, site)) {
+    cb->requestHandled(connrequestid, badRequestResponse("Path must be absolute or a section on " + sitestr + ": " + path.toString()));
+    return;
+  }
   int timeout = DEFAULT_TIMEOUT_SECONDS;
   if (request.hasQueryParam("timeout")) {
     std::string timeoutstr = request.getQueryParamValue("timeout");
