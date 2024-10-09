@@ -934,11 +934,17 @@ void TransferMonitor::closeRemainingConnections() {
       sld->connectConn(dst);
     }
   }
+  if (idle()) {
+    return;
+  }
   if (sls) {
     if (status != TM_STATUS_SOURCE_ERROR_AWAITING_TARGET && status != TM_STATUS_TRANSFERRING_SOURCE_COMPLETE) {
       sls->disconnectConn(src);
       sls->connectConn(src);
     }
+  }
+  if (idle()) {
+    return;
   }
   if (lt) {
     if (((type == TM_TYPE_DOWNLOAD || type == TM_TYPE_LIST) && status != TM_STATUS_TARGET_ERROR_AWAITING_SOURCE && status != TM_STATUS_TRANSFERRING_TARGET_COMPLETE) ||
