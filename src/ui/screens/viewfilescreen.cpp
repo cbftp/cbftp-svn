@@ -347,7 +347,7 @@ void ViewFileScreen::loadViewer() {
           current.clear();
         }
         else if (tmpdata[i] == '\r') {
-          i++;
+          // skip
         }
         else {
           current += tmpdata[i];
