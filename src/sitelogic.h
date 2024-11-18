@@ -138,7 +138,9 @@ class SiteLogic : public Core::EventReceiver {
     void returnConn(int, bool);
     void registerDownloadLock(int id, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner>& co, TransferMonitor* tm);
     void setNumConnections(unsigned int);
+    int downloadSlotsAvailable(TransferType type = TransferType::REGULAR) const;
     bool downloadSlotAvailable(TransferType type = TransferType::REGULAR) const;
+    int getAvailableDownloadSlots() const;
     bool uploadSlotAvailable() const;
     int slotsAvailable() const;
     int getCurrLogins() const;
@@ -178,7 +180,7 @@ class SiteLogic : public Core::EventReceiver {
     std::string getRawCommandResult(int requestid);
     bool finishRequest(int);
     void pushPotential(int, const std::string &, const std::shared_ptr<SiteLogic> &);
-    bool potentialCheck(int);
+    bool potentialCheck(int score, TransferType type);
     int getPotential();
     void siteUpdated();
     void updateName();

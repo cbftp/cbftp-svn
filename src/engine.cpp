@@ -1591,9 +1591,6 @@ void Engine::issueOptimalTransfers() {
     if (sbe->getPriorityType() == PrioType::NORMAL) { // priority files shouldn't affect the potential tracking
       sls->pushPotential(sbe->getScore(), filename, sld);
     }
-    if (!sls->potentialCheck(sbe->getScore())) {
-      continue;
-    }
     TransferType type(TransferType::REGULAR);
     if (sbe->getSourceSiteRace()->isDownloadOnly()) {
       type = TransferType::PRE;
@@ -1602,6 +1599,9 @@ void Engine::issueOptimalTransfers() {
       type = TransferType::COMPLETE;
     }
     if (!sls->downloadSlotAvailable(type)) {
+      continue;
+    }
+    if (!sls->potentialCheck(sbe->getScore(), type) && race->getProfile() == SPREAD_RACE) {
       continue;
     }
     std::shared_ptr<TransferStatus> ts =
