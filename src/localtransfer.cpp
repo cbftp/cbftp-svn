@@ -86,6 +86,7 @@ void LocalTransfer::activate(int localtransferid) {
 
 void LocalTransfer::deactivate() {
   inuse = false;
+  sockid = -1;
   if (timeoutticker) {
     global->getTickPoke()->stopPoke(this, 0);
     timeoutticker = false;

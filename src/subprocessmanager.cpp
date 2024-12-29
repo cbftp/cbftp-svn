@@ -42,9 +42,10 @@ std::shared_ptr<SubProcess> SubProcessManager::runProcess(SubProcessCallback* cb
   int stdinpipe[2];
   int stdoutpipe[2];
   int stderrpipe[2];
-  pipe(stdinpipe);
-  pipe(stdoutpipe);
-  pipe(stderrpipe);
+  if (pipe(stdinpipe) || pipe(stdoutpipe) || pipe(stderrpipe)) {
+    perror(("Error during pipe(): " + Core::util::getStrError(errno)).c_str());
+    exit(EXIT_FAILURE);
+  };
   int pid = fork();
   if (!pid) {
     const char* cargs[256];

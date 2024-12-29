@@ -828,7 +828,7 @@ void TransferJob::abort() {
     src->abortTransfers(srcsitetransferjob);
   }
   if (!!dstsitetransferjob) {
-    dst->abortTransfers(srcsitetransferjob);
+    dst->abortTransfers(dstsitetransferjob);
   }
 }
 

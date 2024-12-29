@@ -50,6 +50,8 @@ $(info Using CXXFLAGS provided by shell)
 endif
 ifndef CFLAGS
 CFLAGS = $(OPTFLAGS) -Wall -MMD -MP
+AR ?= ar
+RANLIB ?= ranlib
 else
 $(info Using CFLAGS provided by shell)
 endif

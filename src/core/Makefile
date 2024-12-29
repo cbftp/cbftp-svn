@@ -11,7 +11,7 @@ quiet:
 	@#
 
 $(LIB): $(SRC:%.cpp=%.o) | quiet
-	ar rc $@ $^ && ranlib $@
+	$(AR) rc $@ $^ && $(RANLIB) $@
 
 clean:
 	@if test $(firstword $(CLEANFILES)); then rm -rf $(CLEANFILES); echo rm -rf $(CLEANFILES); fi
