@@ -43,7 +43,7 @@ void EditProxyScreen::initialize(unsigned int row, unsigned int col, std::string
   authmethod->addOption("User/pass", PROXY_AUTH_USERPASS);
   authmethod->setOption(modproxy.getAuthMethod());
   mso.addStringField(y++, x, "user", "Username:", modproxy.getUser(), false);
-  mso.addStringField(y++, x, "pass", "Password:", modproxy.getPass(), true);
+  mso.addStringField(y++, x, "pass", "Password:", modproxy.getPass(), true, 32, 256);
   std::shared_ptr<MenuSelectOptionTextArrow> amas = mso.addTextArrow(y++, x, "activemodeaddresssource", "Active mode address source:");
   amas->addOption("Auto by proxy", static_cast<int>(ActiveAddressSource::AUTO_BY_PROXY));
   amas->addOption("Connected address", static_cast<int>(ActiveAddressSource::CONNECTED_ADDRESS));

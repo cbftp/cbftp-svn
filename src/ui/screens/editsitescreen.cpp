@@ -118,7 +118,7 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   tlsmode->addOption("Implicit", static_cast<int>(TLSMode::IMPLICIT));
   tlsmode->setOption(static_cast<int>(this->site->getTLSMode()));
   mso.addStringField(y, x + 23, "user", "Username:", this->site->getUser(), false, 10, 64);
-  mso.addStringField(y++, x + 45, "pass", "Password:", this->site->getPass(), true, 22, 128);
+  mso.addStringField(y++, x + 45, "pass", "Password:", this->site->getPass(), true, 22, 256);
   std::shared_ptr<MenuSelectOptionTextArrow> logins = mso.addTextArrow(y, x, "logins", "Login slots:");
   std::shared_ptr<MenuSelectOptionTextArrow> maxup = mso.addTextArrow(y, x + 22, "maxup", "Upload slots:");
   std::shared_ptr<MenuSelectOptionTextArrow> maxdn = mso.addTextArrow(y++, x + 44, "maxdn", "Download slots:");

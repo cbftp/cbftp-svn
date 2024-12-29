@@ -14,7 +14,7 @@ LoginScreen::LoginScreen(Ui* ui) : UIWindow(ui, "LoginScreen") {
 }
 
 void LoginScreen::initialize(unsigned int row, unsigned int col) {
-  passfield = TextInputField(25, 32, true);
+  passfield = TextInputField(25, 256, true);
   attempt = false;
   drawword = BuildInfo::tag();
   drawx = 0;
@@ -31,8 +31,8 @@ void LoginScreen::redraw() {
     background.push_back(std::vector<int>());
     background[i].resize(col);
   }
-  pass_row = row-2;
-  pass_col = col-27;
+  passrow = row - 2;
+  passcol = col - 27;
   ui->showCursor();
   std::string svnstring = " cbftp version tag: " + BuildInfo::version() + " ";
   std::string compilestring = " Compiled: " + BuildInfo::compileTime() + " ";
@@ -73,9 +73,9 @@ void LoginScreen::update() {
     ui->showCursor();
   }
   int currdrawx = drawx;
-  vv->putStr(pass_row-1, pass_col, passtext);
-  vv->putStr(pass_row, pass_col, passfield.getVisualText());
-  vv->moveCursor(pass_row, pass_col + passfield.getVisualCursorPosition());
+  vv->putStr(passrow - 1, passcol, passtext);
+  vv->putStr(passrow, passcol, passfield.getVisualText());
+  vv->moveCursor(passrow, passcol + passfield.getVisualCursorPosition());
   for (unsigned int drawchar = 0; drawchar < drawword.length(); drawchar++) {
     bool show = passfield.getText().length() > drawchar &&
         passfield.getText().length() - drawchar < drawword.length() + 1;

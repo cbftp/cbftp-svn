@@ -25,8 +25,8 @@ void NewKeyScreen::initialize(unsigned int row, unsigned int col) {
   unsigned int y = 9;
   unsigned int x = 1;
   mso.clear();
-  mso.addStringField(y++, x, "newkey", "Passphrase:", "", true);
-  mso.addStringField(y++, x, "newkey2", "Verify:", "", true);
+  mso.addStringField(y++, x, "newkey", "Passphrase:", "", true, 32, 256);
+  mso.addStringField(y++, x, "newkey2", "Verify:", "", true, 32, 256);
   init(row, col);
 }
 

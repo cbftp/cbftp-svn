@@ -27,9 +27,9 @@ void ChangeKeyScreen::initialize(unsigned int row, unsigned int col) {
   unsigned int y = 4;
   unsigned int x = 1;
   mso.clear();
-  mso.addStringField(y++, x, "oldkey", "Old passphrase:", "", true);
-  mso.addStringField(y++, x, "newkey", "New passphrase:", "", true);
-  mso.addStringField(y++, x, "newkey2", "Verify new:", "", true);
+  mso.addStringField(y++, x, "oldkey", "Old passphrase:", "", true, 32, 256);
+  mso.addStringField(y++, x, "newkey", "New passphrase:", "", true, 32, 256);
+  mso.addStringField(y++, x, "newkey2", "Verify new:", "", true, 32, 256);
   init(row, col);
 }
 

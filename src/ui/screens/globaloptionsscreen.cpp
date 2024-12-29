@@ -135,7 +135,7 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   }
   udpenable->setOption(static_cast<int>(udpenabled));
   mso.addStringField(y++, x, "udpport", "UDP API Port:", std::to_string(rch->getUDPPort()), false, 5);
-  mso.addStringField(y++, x, "apipass", "API password:", rch->getPassword(), true);
+  mso.addStringField(y++, x, "apipass", "API password:", rch->getPassword(), true, 32, 256);
   std::shared_ptr<MenuSelectOptionTextArrow> listeningmode = mso.addTextArrow(y++, x, "listeningmode", "API listening mode:");
   listeningmode->addOption("Localhost", static_cast<int>(ListeningMode::LOCALHOST));
   listeningmode->addOption("All interfaces", static_cast<int>(ListeningMode::ALL));
@@ -202,7 +202,7 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   }
   y++;
   mso.addStringField(y++, x, "defuser", "Default site username:", sm->getDefaultUserName(), false);
-  mso.addStringField(y++, x, "defpass", "Default site password:", sm->getDefaultPassword(), true);
+  mso.addStringField(y++, x, "defpass", "Default site password:", sm->getDefaultPassword(), true, 32, 256);
   std::shared_ptr<MenuSelectOptionTextArrow> logins = mso.addTextArrow(y++, x, "deflogins", "Default site login slots:");
   std::shared_ptr<MenuSelectOptionTextArrow> maxup = mso.addTextArrow(y++, x, "defmaxup", "Default site upload slots:");
   std::shared_ptr<MenuSelectOptionTextArrow> maxdn = mso.addTextArrow(y++, x, "defmaxdn", "Default site download slots:");

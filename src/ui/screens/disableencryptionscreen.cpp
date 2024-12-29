@@ -21,7 +21,7 @@ void DisableEncryptionScreen::initialize(unsigned int row, unsigned int col) {
   active = false;
   mismatch = false;
   mso.clear();
-  mso.addStringField(5, 1, "newkey", "Passphrase:", "", true);
+  mso.addStringField(5, 1, "newkey", "Passphrase:", "", true, 32, 256);
   init(row, col);
 }
 

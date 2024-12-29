@@ -18,8 +18,8 @@ private:
   std::vector<std::vector<int> > background;
   std::string passphrase;
   TextInputField passfield;
-  int pass_row;
-  int pass_col;
+  int passrow;
+  int passcol;
   int drawx;
   int drawy;
   bool attempt;
