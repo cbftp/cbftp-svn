@@ -5,11 +5,13 @@
 #include "../../globalcontext.h"
 #include "../../util.h"
 
+#include "../termint.h"
 #include "../ui.h"
 
 EventLogScreen::EventLogScreen(Ui* ui) : UIWindow(ui, "EventLogScreen") {
   keybinds.addBind(KEY_PPAGE, KEYACTION_PREVIOUS_PAGE, "Scroll up");
   keybinds.addBind(KEY_NPAGE, KEYACTION_NEXT_PAGE, "Scroll down");
+  keybinds.addBind(TERMINT_CTRL_L, KEYACTION_CLEAR, "Clear log");
   keybinds.addBind(10, KEYACTION_BACK_CANCEL, "Return");
   keybinds.addBind('f', KEYACTION_FILTER, "Toggle filtering");
   keybinds.addBind('F', KEYACTION_FILTER_REGEX, "Toggle regex filtering");
@@ -154,6 +156,11 @@ bool EventLogScreen::keyPressed(unsigned int ch) {
           copyreadpos = copyreadpos - vv->getActualRealRows() / 2;
         }
       }
+      ui->redraw();
+      return true;
+    case KEYACTION_CLEAR:
+      rawbuf->clear();
+      readfromcopy = false;
       ui->redraw();
       return true;
     case KEYACTION_FILTER:

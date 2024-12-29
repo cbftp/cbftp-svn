@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include "../timestamps.h"
+
 class File;
 class LocalFile;
 
@@ -20,10 +22,7 @@ private:
   bool softlink;
   bool softselected;
   bool hardselected;
-  void parseTimeStamp(const std::string &);
-  void parseUNIXTimeStamp(const std::string &, int &, int &, int &, int &, int &);
-  void parseWindowsTimeStamp(const std::string &, int &, int &, int &, int &, int &);
-  void setLastModified(int, int, int, int, int);
+  void setLastModified(const timestamps::Timestamp& timestamp);
 public:
   UIFile(File *);
   UIFile(const LocalFile &);

@@ -39,6 +39,7 @@
 #include "sitemanager.h"
 #include "siterace.h"
 #include "skiplist.h"
+#include "timestamps.h"
 #include "transferjob.h"
 #include "uibase.h"
 #include "util.h"
@@ -2226,7 +2227,7 @@ void RestApi::requestReady(void* service, int servicerequestid) {
           jf["user"] = f->getOwner();
           jf["group"] = f->getGroup();
           jf["type"] = f->isDirectory() ? "DIR" : (f->isLink() ? "LINK" : "FILE");
-          jf["last_modified"] = f->getLastModified();
+          jf["last_modified"] = timestamps::parseTimestamp(f->getLastModified()).toString();
           if (f->isLink()) {
             jf["link_target"] = f->getLinkTarget();
           }

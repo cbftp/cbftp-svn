@@ -17,7 +17,6 @@ namespace {
 
 enum KeyAction {
   KEYACTION_INSERT_SELECTION,
-  KEYACTION_CLEAR
 };
 
 enum KeyScopes {
