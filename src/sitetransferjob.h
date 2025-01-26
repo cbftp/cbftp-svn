@@ -1,5 +1,6 @@
 #pragma once
 
+#include <list>
 #include <memory>
 #include <string>
 
@@ -14,11 +15,11 @@ public:
   SiteTransferJob(const std::shared_ptr<TransferJob>& tj, bool source);
   std::weak_ptr<TransferJob> getTransferJob();
   std::shared_ptr<SiteLogic> getOtherSiteLogic() const;
-  bool wantsList();
-  bool otherWantsList();
+  bool otherWantsList() const;
+  bool tryReserveListTarget(const std::shared_ptr<FileList>& fl, int connid);
   bool isDone() const;
   Path getPath() const;
-  std::shared_ptr<FileList> getListTarget();
+  std::list<std::shared_ptr<FileList>> getListTargets() const;
   int classType() const override;
   std::string getName() const override;
   unsigned int getId() const override;

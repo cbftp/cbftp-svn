@@ -15,12 +15,12 @@ std::shared_ptr<SiteLogic> SiteTransferJob::getOtherSiteLogic() const {
   return source ? transferjob.lock()->getDst() : transferjob.lock()->getSrc();
 }
 
-bool SiteTransferJob::wantsList() {
-  return transferjob.lock()->wantsList(source);
+bool SiteTransferJob::otherWantsList() const {
+  return transferjob.lock()->getSrc() != transferjob.lock()->getDst() && !transferjob.lock()->getListTargets(!source).empty();
 }
 
-bool SiteTransferJob::otherWantsList() {
-  return transferjob.lock()->getSrc() != transferjob.lock()->getDst() && transferjob.lock()->wantsList(!source);
+bool SiteTransferJob::tryReserveListTarget(const std::shared_ptr<FileList>& fl, int connid) {
+  return transferjob.lock()->tryReserveListTarget(fl, connid);
 }
 
 bool SiteTransferJob::isDone() const {
@@ -32,9 +32,10 @@ Path SiteTransferJob::getPath() const {
   return transferjob.lock()->getPath(source);
 }
 
-std::shared_ptr<FileList> SiteTransferJob::getListTarget() {
-  return transferjob.lock()->getListTarget(source);
+std::list<std::shared_ptr<FileList>> SiteTransferJob::getListTargets() const {
+  return transferjob.lock()->getListTargets(source);
 }
+
 int SiteTransferJob::classType() const {
   return COMMANDOWNER_TRANSFERJOB;
 }
@@ -46,6 +47,7 @@ std::string SiteTransferJob::getName() const {
 unsigned int SiteTransferJob::getId() const {
   return transferjob.lock()->getId();
 }
+
 void SiteTransferJob::fileListUpdated(SiteLogic * sl, const std::shared_ptr<FileList>& fl) {
   std::shared_ptr<TransferJob> tj = transferjob.lock();
   if (tj) {

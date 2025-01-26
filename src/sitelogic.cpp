@@ -1233,24 +1233,33 @@ bool SiteLogic::handleSpreadJobs(int id, bool requestaction) {
 }
 
 bool SiteLogic::handleTransferJobs(int id) {
-  std::list<std::shared_ptr<SiteTransferJob> > targetjobs;
-  for (std::list<std::shared_ptr<SiteTransferJob> >::iterator it = transferjobs.begin(); it != transferjobs.end();) {
-    std::shared_ptr<SiteTransferJob> & tj = *it;
-    if (tj->isDone()) {
-      it = transferjobs.erase(it);
-      continue;
-    }
-    if (tj->wantsList()) {
-      std::shared_ptr<FileList> fl = tj->getListTarget();
-      const Path & path = fl->getPath();
-      connstatetracker[id].use();
-      if (path != conns[id]->getCurrentPath()) {
-        conns[id]->doCWD(fl, tj);
+  for (int round = 0; round < 2; ++round) { // two rounds, first respects target reservations, second does not
+    for (std::list<std::shared_ptr<SiteTransferJob> >::iterator it = transferjobs.begin(); it != transferjobs.end();) {
+      std::shared_ptr<SiteTransferJob> & tj = *it;
+      if (tj->isDone()) {
+        it = transferjobs.erase(it);
+        continue;
+      }
+      std::list<std::shared_ptr<FileList>> listtargets = tj->getListTargets();
+      for (const std::shared_ptr<FileList>& fl : listtargets) {
+        const Path& path = fl->getPath();
+        if (!round && !tj->tryReserveListTarget(fl, id)) {
+          continue;
+        }
+        connstatetracker[id].use();
+        if (path != conns[id]->getCurrentPath()) {
+          conns[id]->doCWD(fl, tj);
+          return true;
+        }
+        getFileListConn(id, tj, fl);
         return true;
       }
-      getFileListConn(id, tj, fl);
-      return true;
+      ++it;
     }
+  }
+  std::list<std::shared_ptr<SiteTransferJob> > targetjobs;
+  for (std::list<std::shared_ptr<SiteTransferJob> >::iterator it = transferjobs.begin(); it != transferjobs.end(); it++) {
+    std::shared_ptr<SiteTransferJob> & tj = *it;
     std::shared_ptr<TransferJob> ptj = tj->getTransferJob().lock();
     int type = ptj->getType();
     if (((type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) &&
@@ -1259,7 +1268,6 @@ bool SiteLogic::handleTransferJobs(int id) {
     {
       targetjobs.push_back(tj);
     }
-    ++it;
   }
   for (std::list<std::shared_ptr<SiteTransferJob> >::iterator it = targetjobs.begin(); it != targetjobs.end(); it++) {
     if (global->getEngine()->transferJobActionRequest(*it)) {

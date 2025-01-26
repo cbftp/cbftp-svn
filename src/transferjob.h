@@ -66,9 +66,9 @@ public:
   bool isDone() const;
   bool isDirectory() const;
   TransferJobStatus getStatus() const;
-  bool wantsList(bool source);
+  bool tryReserveListTarget(const std::shared_ptr<FileList>& fl, int connid);
+  std::list<std::shared_ptr<FileList>> getListTargets(bool source) const;
   std::shared_ptr<LocalFileList> wantedLocalDstList(const std::string &);
-  std::shared_ptr<FileList> getListTarget(bool source) const;
   void fileListUpdated(bool source, const std::shared_ptr<FileList>& fl);
   bool isRootFileList(bool source, const std::shared_ptr<FileList>& fl) const;
   std::shared_ptr<FileList> findDstList(const std::string &) const;
@@ -142,6 +142,7 @@ private:
   std::unordered_map<std::string, std::shared_ptr<LocalFileList> > localfilelists;
   std::unordered_map<std::string, unsigned long long int> pendingtransfers;
   std::unordered_set<std::string> existingtargets;
+  std::unordered_map<std::shared_ptr<FileList>, int> reservedlisttargets;
   std::list<std::shared_ptr<TransferStatus> > transfers;
   int slots;
   TransferJobStatus status;

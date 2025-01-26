@@ -64,6 +64,7 @@ class SiteLogic : public Core::EventReceiver {
     std::list<DelayedCommand> delayedcommands;
     RefreshGovernor refreshgovernor;
     std::string lastlistpath;
+    std::map<Path, int> transferjoblisttargets;
     void handleConnection(int id);
     bool handleLockCheck(int id);
     bool handleSpreadJob(int id);
