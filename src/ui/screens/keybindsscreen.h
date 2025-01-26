@@ -18,12 +18,10 @@ public:
   void initialize(unsigned int row, unsigned int col, KeyBinds* keybinds);
   void redraw() override;
   bool keyPressed(unsigned int) override;
-  std::string getLegendText() const override;
   std::string getInfoLabel() const override;
 private:
   void repopulate();
-  bool active;
-  std::shared_ptr<MenuSelectOptionElement> activeelement;
+  void onKeyPressedActive(unsigned int ch) override;
   MenuSelectOption mso;
   KeyBinds* realkeybinds;
   std::shared_ptr<KeyBinds> tempkeybinds;

@@ -41,7 +41,6 @@ NukeScreen::~NukeScreen() {
 }
 
 void NukeScreen::initialize(unsigned int row, unsigned int col, const std::string & sitestr, const std::string & items, const Path & path) {
-  active = false;
   this->sitestr = sitestr;
   this->items = items;
   this->path = path;
@@ -85,18 +84,6 @@ void NukeScreen::redraw() {
 
 bool NukeScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
-  if (active) {
-    if (ch == 10) {
-      activeelement->deactivate();
-      active = false;
-      ui->update();
-      ui->setLegend();
-      return true;
-    }
-    activeelement->inputChar(ch);
-    ui->update();
-    return true;
-  }
   switch(action) {
     case KEYACTION_UP:
       if (mso.goUp()) {
@@ -160,13 +147,6 @@ void NukeScreen::nuke() {
 
 void NukeScreen::nuke(int multiplier, const std::string & reason) {
   ui->returnNuke(multiplier, reason);
-}
-
-std::string NukeScreen::getLegendText() const {
-  if (active) {
-    return activeelement->getLegendText();
-  }
-  return keybinds.getLegendSummary();
 }
 
 std::string NukeScreen::getInfoLabel() const {

@@ -57,7 +57,6 @@ ExternalScriptsScreen::~ExternalScriptsScreen() {
 void ExternalScriptsScreen::initialize(unsigned int row, unsigned int col, ExternalScripts* externalscripts, const std::string& description) {
   this->externalscripts = externalscripts;
   this->description = util::split(description, "\n");
-  active = false;
   table.reset();
   base.reset();
   base.enterFocusFrom(0);
@@ -154,18 +153,6 @@ bool ExternalScriptsScreen::keyPressed(unsigned int ch) {
     }
   }
   unsigned int pagerows = (row > 8 ? row - 8 : 2) * 0.6;
-  if (active) {
-    if (ch == 10) {
-      activeelement->deactivate();
-      active = false;
-      ui->redraw();
-      ui->setLegend();
-      return true;
-    }
-    activeelement->inputChar(ch);
-    ui->redraw();
-    return true;
-  }
   bool activation;
   switch(action) {
     case KEYACTION_UP: {
@@ -315,13 +302,6 @@ bool ExternalScriptsScreen::keyDown() {
     ui->setLegend();
   }
   return moved;
-}
-
-std::string ExternalScriptsScreen::getLegendText() const {
-  if (active) {
-    return activeelement->getLegendText();
-  }
-  return keybinds.getLegendSummary(getCurrentScope());
 }
 
 std::string ExternalScriptsScreen::getInfoLabel() const {

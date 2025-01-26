@@ -20,7 +20,6 @@ SiteSlotsScreen::~SiteSlotsScreen() {
 }
 
 void SiteSlotsScreen::initialize(unsigned int row, unsigned int col, const std::shared_ptr<Site> & site) {
-  active = false;
   modsite = site;
   unsigned int y = 1;
   unsigned int x = 1;
@@ -87,18 +86,6 @@ void SiteSlotsScreen::redraw() {
 
 bool SiteSlotsScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
-  if (active) {
-    if (ch == 10) {
-      activeelement->deactivate();
-      active = false;
-      ui->setLegend();
-      ui->update();
-      return true;
-    }
-    activeelement->inputChar(ch);
-    ui->update();
-    return true;
-  }
   bool activation;
   switch(action) {
     case KEYACTION_UP: {
@@ -149,13 +136,6 @@ bool SiteSlotsScreen::keyPressed(unsigned int ch) {
     }
   }
   return false;
-}
-
-std::string SiteSlotsScreen::getLegendText() const {
-  if (active) {
-    return activeelement->getLegendText();
-  }
-  return keybinds.getLegendSummary();
 }
 
 std::string SiteSlotsScreen::getInfoLabel() const {

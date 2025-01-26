@@ -2,15 +2,19 @@
 
 #include <string>
 #include <list>
+#include <memory>
 
 #include "keybinds.h"
 
+class MenuSelectOptionElement;
 class Ui;
 class VirtualView;
 
 class UIWindow {
 protected:
   bool isTop() const;
+  virtual bool onDeactivated(const std::shared_ptr<MenuSelectOptionElement>& msoe);
+  virtual void onKeyPressedActive(unsigned int key);
   std::string name;
   unsigned int row;
   unsigned int col;
@@ -20,6 +24,8 @@ protected:
   VirtualView* vv;
   KeyBinds keybinds;
   bool allowimplicitgokeybinds;
+  bool active;
+  std::shared_ptr<MenuSelectOptionElement> activeelement;
 public:
   void init(unsigned int row, unsigned int col);
   UIWindow(Ui* ui, const std::string& name);

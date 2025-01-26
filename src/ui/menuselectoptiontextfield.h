@@ -10,6 +10,7 @@ class MenuSelectOptionTextField : public ResizableElement {
 private:
   TextInputField textfield;
   std::string extralegend;
+  std::string lasttext;
 public:
   MenuSelectOptionTextField();
   MenuSelectOptionTextField(const std::string& identifier, int row, int col,

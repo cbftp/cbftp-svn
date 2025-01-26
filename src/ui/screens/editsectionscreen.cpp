@@ -26,7 +26,6 @@ EditSectionScreen::~EditSectionScreen() {
 }
 
 void EditSectionScreen::initialize(unsigned int row, unsigned int col, const std::string & section) {
-  active = false;
   if (this->section != nullptr) {
     delete this->section;
   }
@@ -80,18 +79,6 @@ void EditSectionScreen::redraw() {
 
 bool EditSectionScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
-  if (active) {
-    if (ch == 10) {
-      activeelement->deactivate();
-      active = false;
-      ui->update();
-      ui->setLegend();
-      return true;
-    }
-    activeelement->inputChar(ch);
-    ui->update();
-    return true;
-  }
   bool activation;
   switch(action) {
     case KEYACTION_UP:
@@ -156,13 +143,6 @@ void EditSectionScreen::done() {
       }
       break;
   }
-}
-
-std::string EditSectionScreen::getLegendText() const {
-  if (active) {
-    return activeelement->getLegendText();
-  }
-  return keybinds.getLegendSummary();
 }
 
 std::string EditSectionScreen::getInfoLabel() const {

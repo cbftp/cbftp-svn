@@ -1,11 +1,8 @@
 #pragma once
 
-#include <memory>
-
 #include "../uiwindow.h"
 #include "../menuselectoption.h"
 
-class MenuSelectOptionElement;
 class CommandOwner;
 struct TransferJobsFilteringParameters;
 
@@ -16,11 +13,9 @@ public:
   void initialize(unsigned int row, unsigned int col, const TransferJobsFilteringParameters& jfp);
   void redraw() override;
   bool keyPressed(unsigned int ch) override;
-  std::string getLegendText() const override;
   std::string getInfoLabel() const override;
   void command(const std::string& command, const std::string& arg) override;
 private:
+  bool onDeactivated(const std::shared_ptr<MenuSelectOptionElement>& msoe) override;
   MenuSelectOption mso;
-  bool active;
-  std::shared_ptr<MenuSelectOptionElement> activeelement;
 };

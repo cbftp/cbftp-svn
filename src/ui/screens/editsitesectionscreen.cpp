@@ -38,7 +38,6 @@ void EditSiteSectionScreen::initialize(unsigned int row, unsigned int col, const
 }
 
 void EditSiteSectionScreen::initialize(unsigned int row, unsigned int col, const std::shared_ptr<Site> & site, const std::string & section, const Path & path) {
-  active = false;
   modsite = site;
   exists = false;
   unsigned int y = 1;
@@ -98,18 +97,6 @@ void EditSiteSectionScreen::redraw() {
 
 bool EditSiteSectionScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
-  if (active) {
-    if (ch == 10) {
-      activeelement->deactivate();
-      active = false;
-      ui->setLegend();
-      ui->redraw();
-      return true;
-    }
-    activeelement->inputChar(ch);
-    ui->update();
-    return true;
-  }
   bool activation;
   switch(action) {
     case KEYACTION_UP: {
@@ -191,13 +178,6 @@ void EditSiteSectionScreen::command(const std::string & command, const std::stri
     }
   }
   ui->redraw();
-}
-
-std::string EditSiteSectionScreen::getLegendText() const {
-  if (active) {
-    return activeelement->getLegendText();
-  }
-  return keybinds.getLegendSummary();
 }
 
 std::string EditSiteSectionScreen::getInfoLabel() const {

@@ -18,7 +18,6 @@ MakeDirScreen::~MakeDirScreen() {
 }
 
 void MakeDirScreen::initialize(unsigned int row, unsigned int col, const std::string & site, UIFileList & filelist) {
-  active = false;
   this->site = site;
   this->filelist = filelist;
   alreadyexists = false;
@@ -64,18 +63,6 @@ void MakeDirScreen::redraw() {
 
 bool MakeDirScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
-  if (active) {
-    if (ch == 10) {
-      activeelement->deactivate();
-      active = false;
-      ui->update();
-      ui->setLegend();
-      return true;
-    }
-    activeelement->inputChar(ch);
-    ui->update();
-    return true;
-  }
   switch(action) {
     case KEYACTION_ENTER:
       activeelement = mso.getElement(mso.getSelectionPointer());
@@ -107,13 +94,6 @@ void MakeDirScreen::tryMakeDir() {
   }
   ui->returnMakeDir(dirname);
   return;
-}
-
-std::string MakeDirScreen::getLegendText() const {
-  if (active) {
-    return activeelement->getLegendText();
-  }
-  return keybinds.getLegendSummary();
 }
 
 std::string MakeDirScreen::getInfoLabel() const {

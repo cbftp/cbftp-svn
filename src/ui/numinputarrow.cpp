@@ -47,6 +47,11 @@ void NumInputArrow::activate() {
 void NumInputArrow::deactivate() {
   active = false;
 }
+
+bool NumInputArrow::isActive() const {
+  return active;
+}
+
 std::string NumInputArrow::getVisual() const {
   unsigned int maxlen = std::to_string(max).length();
   for (const std::pair<const int, std::string> & substitute : substituteTexts) {

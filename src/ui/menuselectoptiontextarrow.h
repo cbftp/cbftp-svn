@@ -9,6 +9,7 @@
 class MenuSelectOptionTextArrow : public ResizableElement {
 private:
   TextArrow arrow;
+  int lastoption;
 public:
   MenuSelectOptionTextArrow(std::string, int, int, std::string);
   FmtString getContentText() const override;

@@ -1,15 +1,17 @@
 #include "uiwindow.h"
 
+#include "menuselectoptionelement.h"
 #include "ui.h"
 
 void UIWindow::init(unsigned int row, unsigned int col) {
+  active = false;
   resize(row, col);
   vv->reset();
   redraw();
 }
 
 UIWindow::UIWindow(Ui* ui, const std::string& name) : name(name), row(0), col(0),
-    autoupdate(false), expectbackendpush(false), ui(ui), keybinds(name), allowimplicitgokeybinds(true)
+    autoupdate(false), expectbackendpush(false), ui(ui), keybinds(name), allowimplicitgokeybinds(true), active(false)
 {
   vv = &ui->getVirtualView();
   ui->addKeyBinds(&keybinds);
@@ -36,7 +38,23 @@ void UIWindow::command(const std::string& command, const std::string& arg) {
 
 }
 
+void UIWindow::onKeyPressedActive(unsigned int key) {
+    activeelement->inputChar(key);
+    if (!activeelement->isActive()) {
+      active = false;
+      if (onDeactivated(activeelement)) {
+        return;
+      }
+      ui->setLegend();
+    }
+    ui->update();
+}
+
 bool UIWindow::keyPressedBase(unsigned int key) {
+  if (active) {
+    onKeyPressedActive(key);
+    return true;
+  }
   bool caught = keyPressed(key);
   if (caught) {
     return true;
@@ -141,6 +159,9 @@ std::string UIWindow::getInfoText() const {
 }
 
 std::string UIWindow::getLegendText() const {
+  if (active) {
+    return activeelement->getLegendText();
+  }
   return keybinds.getLegendSummary();
 }
 
@@ -169,4 +190,8 @@ bool UIWindow::expectBackendPush() const {
 
 bool UIWindow::isTop() const {
   return ui->isTop(this);
+}
+
+bool UIWindow::onDeactivated(const std::shared_ptr<MenuSelectOptionElement>& msoe) {
+  return false;
 }

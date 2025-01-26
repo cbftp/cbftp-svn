@@ -19,13 +19,10 @@ public:
   void initialize(unsigned int row, unsigned int col, const std::string & section = "");
   void redraw() override;
   bool keyPressed(unsigned int) override;
-  std::string getLegendText() const override;
   std::string getInfoLabel() const override;
 private:
   void done();
   Section * section;
-  bool active;
-  std::shared_ptr<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;
   Mode mode;
   std::string oldname;

@@ -20,7 +20,6 @@ ChangeKeyScreen::~ChangeKeyScreen() {
 }
 
 void ChangeKeyScreen::initialize(unsigned int row, unsigned int col) {
-  active = false;
   mismatch = false;
   oldmismatch = false;
   tooshort = false;
@@ -76,18 +75,6 @@ void ChangeKeyScreen::redraw() {
 
 bool ChangeKeyScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
-  if (active) {
-    if (ch == 10) {
-      activeelement->deactivate();
-      active = false;
-      ui->setLegend();
-      ui->update();
-      return true;
-    }
-    activeelement->inputChar(ch);
-    ui->update();
-    return true;
-  }
   bool activation;
   switch(action) {
     case KEYACTION_UP: {
@@ -149,13 +136,6 @@ bool ChangeKeyScreen::keyPressed(unsigned int ch) {
     }
   }
   return false;
-}
-
-std::string ChangeKeyScreen::getLegendText() const {
-  if (active) {
-    return activeelement->getLegendText();
-  }
-  return keybinds.getLegendSummary();
 }
 
 std::string ChangeKeyScreen::getInfoLabel() const {

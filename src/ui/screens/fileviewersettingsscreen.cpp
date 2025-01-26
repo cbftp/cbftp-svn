@@ -67,18 +67,6 @@ void FileViewerSettingsScreen::redraw() {
 
 bool FileViewerSettingsScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
-  if (active) {
-    if (ch == 10) {
-      activeelement->deactivate();
-      active = false;
-      ui->update();
-      ui->setLegend();
-      return true;
-    }
-    activeelement->inputChar(ch);
-    ui->update();
-    return true;
-  }
   bool activation;
   switch(action) {
     case KEYACTION_UP:
@@ -131,13 +119,6 @@ bool FileViewerSettingsScreen::keyPressed(unsigned int ch) {
       return true;
   }
   return false;
-}
-
-std::string FileViewerSettingsScreen::getLegendText() const {
-  if (active) {
-    return activeelement->getLegendText();
-  }
-  return keybinds.getLegendSummary();
 }
 
 std::string FileViewerSettingsScreen::getInfoLabel() const {

@@ -21,17 +21,35 @@ bool MenuSelectOptionNumArrow::inputChar(int ch) {
     case KEY_RIGHT:
       arrow.increase();
       return true;
+    case 10: // enter
+      if (arrow.isActive()) {
+        deactivate();
+        return true;
+      }
+      break;
+    case 27: // escape
+      if (arrow.isActive()) {
+        arrow.setValue(lastvalue);
+        deactivate();
+        return true;
+      }
+      break;
   }
   return false;
 }
 
 bool MenuSelectOptionNumArrow::activate() {
+  lastvalue = arrow.getValue();
   arrow.activate();
   return true;
 }
 
 void MenuSelectOptionNumArrow::deactivate() {
   arrow.deactivate();
+}
+
+bool MenuSelectOptionNumArrow::isActive() const {
+  return arrow.isActive();
 }
 
 int MenuSelectOptionNumArrow::getData() const {

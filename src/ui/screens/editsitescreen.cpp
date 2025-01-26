@@ -332,24 +332,6 @@ void EditSiteScreen::command(const std::string & command, const std::string & ar
 
 bool EditSiteScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
-  if (active) {
-    if (ch == 10) {
-      std::string identifier = activeelement->getIdentifier();
-      activeelement->deactivate();
-      active = false;
-      if (identifier == "sourcepolicy" || identifier == "targetpolicy") {
-        ui->redraw();
-      }
-      else {
-        ui->update();
-      }
-      ui->setLegend();
-      return true;
-    }
-    activeelement->inputChar(ch);
-    ui->update();
-    return true;
-  }
   bool activation;
   std::list<std::string> exceptsrclist;
   std::list<std::string> exceptdstlist;
@@ -630,13 +612,6 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
       return true;
   }
   return false;
-}
-
-std::string EditSiteScreen::getLegendText() const {
-  if (active) {
-    return activeelement->getLegendText();
-  }
-  return keybinds.getLegendSummary();
 }
 
 std::string EditSiteScreen::getInfoLabel() const {

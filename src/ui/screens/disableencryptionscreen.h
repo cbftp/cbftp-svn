@@ -14,11 +14,8 @@ public:
   void initialize(unsigned int, unsigned int);
   void redraw() override;
   bool keyPressed(unsigned int) override;
-  std::string getLegendText() const override;
   std::string getInfoLabel() const override;
 private:
-  bool active;
   bool mismatch;
-  std::shared_ptr<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;
 };

@@ -17,13 +17,10 @@ public:
   void initialize(unsigned int row, unsigned int col, const std::string & site,  UIFileList & filelist);
   void redraw() override;
   bool keyPressed(unsigned int) override;
-  std::string getLegendText() const override;
   std::string getInfoLabel() const override;
 private:
   void tryMakeDir();
-  bool active;
   std::string site;
-  std::shared_ptr<MenuSelectOptionElement> activeelement;
   MenuSelectOption mso;
   std::string release;
   UIFileList filelist;

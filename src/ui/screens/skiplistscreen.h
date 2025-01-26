@@ -34,9 +34,8 @@ private:
   bool keyDown() override;
   int getCurrentScope() const;
   void recreateTable();
+  bool onDeactivated(const std::shared_ptr<MenuSelectOptionElement>& msoe) override;
   SkipList * skiplist;
-  bool active;
-  std::shared_ptr<MenuSelectOptionElement> activeelement;
   MenuSelectOption base;
   MenuSelectOption table;
   FocusableArea * focusedarea;

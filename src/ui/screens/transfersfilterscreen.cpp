@@ -16,7 +16,7 @@
 #include "../../transferjob.h"
 #include "../../util.h"
 
-TransfersFilterScreen::TransfersFilterScreen(Ui* ui) : UIWindow(ui, "TransfersFilterScreen"), mso(*vv), active(false) {
+TransfersFilterScreen::TransfersFilterScreen(Ui* ui) : UIWindow(ui, "TransfersFilterScreen"), mso(*vv) {
   keybinds.addBind(10, KEYACTION_ENTER, "Modify");
   keybinds.addBind('d', KEYACTION_DONE, "Done");
   keybinds.addBind('f', KEYACTION_FILTER, "Done");
@@ -34,7 +34,6 @@ void TransfersFilterScreen::initialize(unsigned int row, unsigned int col, const
   mso.reset();
   selectedspreadjobs = tfp.spreadjobsfilter;
   selectedtransferjobs = tfp.transferjobsfilter;
-  active = false;
   int y = 1;
   mso.addCheckBox(y++, 1, "jobfilter", "Enable job filtering:", tfp.usejobfilter);
   mso.addStringField(y++, 1, "spreadjobs", "Spread jobs:", getSpreadJobsText(), false, 60, 512);
@@ -121,23 +120,15 @@ void TransfersFilterScreen::command(const std::string & command, const std::stri
   }
 }
 
+bool TransfersFilterScreen::onDeactivated(const std::shared_ptr<MenuSelectOptionElement>& msoe) {
+  if (activeelement->getIdentifier() == "filename" && !std::static_pointer_cast<MenuSelectOptionTextField>(activeelement)->getData().empty()) {
+    std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("filenamefilter"))->setValue(true);
+  }
+  return false;
+}
+
 bool TransfersFilterScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
-  if (active) {
-    if (ch == 10) {
-      activeelement->deactivate();
-      if (activeelement->getIdentifier() == "filename" && !std::static_pointer_cast<MenuSelectOptionTextField>(activeelement)->getData().empty()) {
-        std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("filenamefilter"))->setValue(true);
-      }
-      active = false;
-      ui->update();
-      ui->setLegend();
-      return true;
-    }
-    activeelement->inputChar(ch);
-    ui->update();
-    return true;
-  }
   switch (action) {
     case KEYACTION_UP: {
       bool moved = mso.goUp();
@@ -235,13 +226,6 @@ bool TransfersFilterScreen::keyPressed(unsigned int ch) {
       return true;
   }
   return false;
-}
-
-std::string TransfersFilterScreen::getLegendText() const {
-  if (active) {
-    return activeelement->getLegendText();
-  }
-  return keybinds.getLegendSummary();
 }
 
 std::string TransfersFilterScreen::getInfoLabel() const {

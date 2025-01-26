@@ -20,6 +20,7 @@ FmtString MenuSelectOptionTextField::getContentText() const {
 
 bool MenuSelectOptionTextField::activate() {
   active = true;
+  lasttext = textfield.getText();
   textfield.moveCursorEnd();
   return true;
 }
@@ -57,6 +58,13 @@ bool MenuSelectOptionTextField::inputChar(int ch) {
   }
   else if (ch == 21) { // ctrl+u
     textfield.eraseAllBefore();
+  }
+  else if (ch == 10 && active) { // enter
+    deactivate();
+  }
+  else if (ch == 27 && active) { // escape
+    textfield.setText(lasttext);
+    deactivate();
   }
   else {
     return false;

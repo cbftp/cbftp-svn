@@ -18,7 +18,6 @@ public:
   void initialize(unsigned int row, unsigned int col, ExternalScripts* externalscripts, const std::string& description);
   void redraw() override;
   bool keyPressed(unsigned int) override;
-  std::string getLegendText() const override;
   std::string getInfoLabel() const override;
 private:
   void addScriptLine(int y, const std::string& name, const Path& path, int id = -1,
@@ -28,8 +27,6 @@ private:
   int getCurrentScope() const;
   void recreateTable();
   void saveToTempScriptList();
-  bool active;
-  std::shared_ptr<MenuSelectOptionElement> activeelement;
   MenuSelectOption base;
   MenuSelectOption table;
   FocusableArea* focusedarea;

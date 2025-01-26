@@ -82,7 +82,6 @@ GlobalOptionsScreen::~GlobalOptionsScreen() {
 }
 
 void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
-  active = false;
   unsigned int y = 1;
   unsigned int x = 1;
   rch = global->getRemoteCommandHandler();
@@ -295,18 +294,6 @@ void GlobalOptionsScreen::update() {
 
 bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
-  if (active) {
-    if (ch == 10) {
-      activeelement->deactivate();
-      active = false;
-      ui->update();
-      ui->setLegend();
-      return true;
-    }
-    activeelement->inputChar(ch);
-    ui->update();
-    return true;
-  }
   bool activation;
   std::shared_ptr<MenuSelectOptionElement> msoe;
   switch(action) {
@@ -514,13 +501,6 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
       return true;
   }
   return false;
-}
-
-std::string GlobalOptionsScreen::getLegendText() const {
-  if (active) {
-    return activeelement->getLegendText();
-  }
-  return keybinds.getLegendSummary();
 }
 
 std::string GlobalOptionsScreen::getInfoLabel() const {

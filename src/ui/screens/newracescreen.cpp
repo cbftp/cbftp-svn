@@ -41,7 +41,6 @@ NewRaceScreen::~NewRaceScreen() {
 }
 
 void NewRaceScreen::initialize(unsigned int row, unsigned int col, const std::string & site, const std::list<std::string> & sections, const std::list<std::pair<std::string, bool> > & items) {
-  active = false;
   toggleall = false;
   unsigned int y = 2;
   unsigned int x = 1;
@@ -154,18 +153,6 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
   infotext = "";
   unsigned int pagerows = (unsigned int) (row - 6) * 0.6;
-  if (active) {
-    if (ch == 10) {
-      activeelement->deactivate();
-      active = false;
-      ui->update();
-      ui->setLegend();
-      return true;
-    }
-    activeelement->inputChar(ch);
-    ui->update();
-    return true;
-  }
   bool activation;
   switch(action) {
     case KEYACTION_UP:
@@ -283,13 +270,6 @@ bool NewRaceScreen::keyPressed(unsigned int ch) {
       return true;
   }
   return false;
-}
-
-std::string NewRaceScreen::getLegendText() const {
-  if (active) {
-    return activeelement->getLegendText();
-  }
-  return keybinds.getLegendSummary();
 }
 
 std::string NewRaceScreen::getInfoLabel() const {

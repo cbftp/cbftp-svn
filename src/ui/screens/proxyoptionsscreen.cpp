@@ -132,18 +132,6 @@ void ProxyOptionsScreen::command(const std::string & command) {
 
 bool ProxyOptionsScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
-  if (active) {
-    if (ch == 10) {
-      activeelement->deactivate();
-      active = false;
-      ui->update();
-      ui->setLegend();
-      return true;
-    }
-    activeelement->inputChar(ch);
-    ui->update();
-    return true;
-  }
   bool activation;
   std::shared_ptr<MenuSelectOptionElement> selected;
   switch(action) {
@@ -215,13 +203,6 @@ bool ProxyOptionsScreen::keyPressed(unsigned int ch) {
       return true;
   }
   return false;
-}
-
-std::string ProxyOptionsScreen::getLegendText() const {
-  if (active) {
-    return activeelement->getLegendText();
-  }
-  return keybinds.getLegendSummary();
 }
 
 std::string ProxyOptionsScreen::getInfoLabel() const {

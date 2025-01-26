@@ -22,7 +22,6 @@ EditProxyScreen::~EditProxyScreen() {
 }
 
 void EditProxyScreen::initialize(unsigned int row, unsigned int col, std::string operation, std::string proxy) {
-  active = false;
   this->operation = operation;
   if (operation == "add") {
     modproxy = Proxy("proxy1");
@@ -105,18 +104,6 @@ void EditProxyScreen::redraw() {
 
 bool EditProxyScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
-  if (active) {
-    if (ch == 10) {
-      activeelement->deactivate();
-      active = false;
-      ui->setLegend();
-      ui->update();
-      return true;
-    }
-    activeelement->inputChar(ch);
-    ui->update();
-    return true;
-  }
   bool activation;
   switch(action) {
     case KEYACTION_UP:
@@ -199,13 +186,6 @@ bool EditProxyScreen::keyPressed(unsigned int ch) {
       return true;
   }
   return false;
-}
-
-std::string EditProxyScreen::getLegendText() const {
-  if (active) {
-    return activeelement->getLegendText();
-  }
-  return keybinds.getLegendSummary();
 }
 
 std::string EditProxyScreen::getInfoLabel() const {

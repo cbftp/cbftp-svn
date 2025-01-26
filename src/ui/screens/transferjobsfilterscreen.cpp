@@ -30,7 +30,6 @@ TransferJobsFilterScreen::~TransferJobsFilterScreen() {
 
 void TransferJobsFilterScreen::initialize(unsigned int row, unsigned int col, const TransferJobsFilteringParameters& tjfp) {
   mso.reset();
-  active = false;
   int y = 1;
   mso.addCheckBox(y++, 1, "jobnamefilter", "Enable job name filtering:", tjfp.usejobnamefilter);
   mso.addStringField(y++, 1, "jobname", "Job name:", tjfp.jobnamefilter, false, 60, 512);
@@ -86,23 +85,15 @@ void TransferJobsFilterScreen::command(const std::string & command, const std::s
   }
 }
 
+bool TransferJobsFilterScreen::onDeactivated(const std::shared_ptr<MenuSelectOptionElement>& msoe) {
+  if (msoe->getIdentifier() == "jobname" && !std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData().empty()) {
+    std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("jobnamefilter"))->setValue(true);
+  }
+  return false;
+}
+
 bool TransferJobsFilterScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
-  if (active) {
-    if (ch == 10) {
-      activeelement->deactivate();
-      if (activeelement->getIdentifier() == "jobname" && !std::static_pointer_cast<MenuSelectOptionTextField>(activeelement)->getData().empty()) {
-        std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("jobnamefilter"))->setValue(true);
-      }
-      active = false;
-      ui->update();
-      ui->setLegend();
-      return true;
-    }
-    activeelement->inputChar(ch);
-    ui->update();
-    return true;
-  }
   switch (action) {
     case KEYACTION_UP: {
       bool moved = mso.goUp();
@@ -174,13 +165,6 @@ bool TransferJobsFilterScreen::keyPressed(unsigned int ch) {
       return true;
   }
   return false;
-}
-
-std::string TransferJobsFilterScreen::getLegendText() const {
-  if (active) {
-    return activeelement->getLegendText();
-  }
-  return keybinds.getLegendSummary();
 }
 
 std::string TransferJobsFilterScreen::getInfoLabel() const {

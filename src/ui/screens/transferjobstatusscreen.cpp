@@ -47,7 +47,6 @@ bool TransferJobStatusScreen::initialize(unsigned int row, unsigned int col, uns
     return false;
   }
   autoupdate = true;
-  active = false;
   mso.clear();
   mso.addIntArrow(5, 40, "slots", "Slots:", transferjob->maxSlots(), 1, transferjob->maxPossibleSlots());
   mso.enterFocusFrom(0);
@@ -166,32 +165,24 @@ void TransferJobStatusScreen::command(const std::string & command, const std::st
   ui->redraw();
 }
 
+bool TransferJobStatusScreen::onDeactivated(const std::shared_ptr<MenuSelectOptionElement>& msoe) {
+  if (msoe->getIdentifier() == "slots") {
+    int slots = std::static_pointer_cast<MenuSelectOptionNumArrow>(msoe)->getData();
+    transferjob->setSlots(slots);
+    int type = transferjob->getType();
+    if (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) {
+      transferjob->getSrc()->haveConnectedActivate(slots);
+    }
+    if (type == TRANSFERJOB_UPLOAD || type == TRANSFERJOB_FXP) {
+      transferjob->getDst()->haveConnectedActivate(slots);
+    }
+  }
+  return false;
+}
+
 bool TransferJobStatusScreen::keyPressed(unsigned int ch) {
   int scope = getCurrentScope();
   int action = keybinds.getKeyAction(ch, scope);
-  if (active) {
-    if (ch == 10) {
-      activeelement->deactivate();
-      active = false;
-      ui->update();
-      ui->setLegend();
-      if (activeelement->getIdentifier() == "slots") {
-        int slots = std::static_pointer_cast<MenuSelectOptionNumArrow>(activeelement)->getData();
-        transferjob->setSlots(slots);
-        int type = transferjob->getType();
-        if (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) {
-          transferjob->getSrc()->haveConnectedActivate(slots);
-        }
-        if (type == TRANSFERJOB_UPLOAD || type == TRANSFERJOB_FXP) {
-          transferjob->getDst()->haveConnectedActivate(slots);
-        }
-      }
-      return true;
-    }
-    activeelement->inputChar(ch);
-    ui->update();
-    return true;
-  }
   switch (action) {
     case KEYACTION_BACK_CANCEL:
       ui->returnToLast();

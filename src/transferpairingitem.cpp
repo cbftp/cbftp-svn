@@ -34,3 +34,11 @@ PairingAction TransferPairingItem::getPairingAction() const {
 int TransferPairingItem::getSlots() const {
   return slots;
 }
+
+std::list<std::string> TransferPairingItem::getSites() const {
+  return targetsites;
+}
+
+std::list<std::string> TransferPairingItem::getSections() const {
+  return sections;
+}

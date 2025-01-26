@@ -40,7 +40,6 @@ KeyBindsScreen::~KeyBindsScreen() {
 }
 
 void KeyBindsScreen::initialize(unsigned int row, unsigned int col, KeyBinds* keybinds) {
-  active = false;
   realkeybinds = keybinds;
   tempkeybinds = std::make_shared<KeyBinds>(*realkeybinds);
   mso.reset();
@@ -127,24 +126,24 @@ void KeyBindsScreen::redraw() {
   }
 }
 
-bool KeyBindsScreen::keyPressed(unsigned int ch) {
-  if (active) {
-    if (ch != 27 && activeelement->getOrigin()) {
-      std::pair<int, int> actionscope = *static_cast<std::pair<int, int>*>(activeelement->getOrigin());
-      if (addextrakey) {
-        tempkeybinds->addCustomBind(actionscope.first, actionscope.second, ch);
-      }
-      else {
-        tempkeybinds->replaceBind(actionscope.first, actionscope.second, ch);
-      }
+void KeyBindsScreen::onKeyPressedActive(unsigned int ch) {
+  if (ch != 27 && activeelement->getOrigin()) {
+    std::pair<int, int> actionscope = *static_cast<std::pair<int, int>*>(activeelement->getOrigin());
+    if (addextrakey) {
+      tempkeybinds->addCustomBind(actionscope.first, actionscope.second, ch);
     }
-    activeelement->deactivate();
-    active = false;
-    repopulate();
-    ui->update();
-    ui->setLegend();
-    return true;
+    else {
+      tempkeybinds->replaceBind(actionscope.first, actionscope.second, ch);
+    }
   }
+  activeelement->deactivate();
+  active = false;
+  repopulate();
+  ui->update();
+  ui->setLegend();
+}
+
+bool KeyBindsScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
   switch(action) {
     case KEYACTION_UP:
@@ -214,13 +213,6 @@ bool KeyBindsScreen::keyPressed(unsigned int ch) {
       return true;
   }
   return false;
-}
-
-std::string KeyBindsScreen::getLegendText() const {
-  if (active) {
-    return activeelement->getLegendText();
-  }
-  return keybinds.getLegendSummary();
 }
 
 std::string KeyBindsScreen::getInfoLabel() const {

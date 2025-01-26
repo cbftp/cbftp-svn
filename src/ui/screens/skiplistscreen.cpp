@@ -59,7 +59,6 @@ void SkipListScreen::initialize(unsigned int row, unsigned int col, SkipList * s
 }
 
 void SkipListScreen::initialize() {
-  active = false;
   table.reset();
   base.reset();
   base.enterFocusFrom(0);
@@ -212,6 +211,29 @@ void SkipListScreen::redraw() {
   }
 }
 
+bool SkipListScreen::onDeactivated(const std::shared_ptr<MenuSelectOptionElement>& msoe) {
+  if (msoe->getIdentifier() == "pattern") {
+    std::shared_ptr<MenuSelectAdjustableLine> line = table.getAdjustableLine(msoe);
+    if (line) {
+      std::shared_ptr<MenuSelectOptionCheckBox> regexbox = std::static_pointer_cast<MenuSelectOptionCheckBox>(line->getElement(0));
+      if (regexbox->getData()) {
+        try {
+          util::regexParse(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
+        }
+        catch (std::regex_error&) {
+          ui->update();
+          ui->goInfo("Invalid regular expression.");
+          regexbox->setValue(false);
+          saveToTempSkipList();
+          return true;
+        }
+      }
+    }
+  }
+  saveToTempSkipList();
+  return false;
+}
+
 bool SkipListScreen::keyPressed(unsigned int ch) {
   int scope = getCurrentScope();
   int action = keybinds.getKeyAction(ch, scope);
@@ -223,37 +245,6 @@ bool SkipListScreen::keyPressed(unsigned int ch) {
     }
   }
   unsigned int pagerows = (row > 8 ? row - 8 : 2) * 0.6;
-  if (active) {
-    if (ch == 10) {
-      activeelement->deactivate();
-      active = false;
-      if (activeelement->getIdentifier() == "pattern") {
-        std::shared_ptr<MenuSelectAdjustableLine> line = table.getAdjustableLine(activeelement);
-        if (line) {
-          std::shared_ptr<MenuSelectOptionCheckBox> regexbox = std::static_pointer_cast<MenuSelectOptionCheckBox>(line->getElement(0));
-          if (regexbox->getData()) {
-            try {
-              util::regexParse(std::static_pointer_cast<MenuSelectOptionTextField>(activeelement)->getData());
-            }
-            catch (std::regex_error&) {
-              ui->update();
-              ui->goInfo("Invalid regular expression.");
-              regexbox->setValue(false);
-              saveToTempSkipList();
-              return true;
-            }
-          }
-        }
-      }
-      saveToTempSkipList();
-      ui->redraw();
-      ui->setLegend();
-      return true;
-    }
-    activeelement->inputChar(ch);
-    ui->redraw();
-    return true;
-  }
   bool activation;
   switch(action) {
     case KEYACTION_UP: {

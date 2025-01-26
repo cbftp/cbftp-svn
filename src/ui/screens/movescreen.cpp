@@ -58,40 +58,13 @@ void MoveScreen::redraw() {
   }
 }
 
-void MoveScreen::deactivate() {
-  activeelement->deactivate();
-  active = false;
-  ui->update();
-  ui->setLegend();
-}
-
 bool MoveScreen::keyPressed(unsigned int ch) {
-  int action = keybinds.getKeyAction(ch);
-  if (active) {
-    if (ch == 10) {
-      deactivate();
-      return true;
+  if (active && ch == KEY_IC && items == firstitem) {
+    for (size_t i = 0; i < firstitem.length(); ++i) {
+      std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("dstpath"))->inputChar(firstitem[i]);
     }
-    else if (ch == KEY_IC && items == firstitem) {
-      for (size_t i = 0; i < firstitem.length(); ++i) {
-        std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("dstpath"))->inputChar(firstitem[i]);
-      }
-    }
-    else if (ch == 27) { // esc
-      std::shared_ptr<MenuSelectOptionTextField> dstpath = std::static_pointer_cast<MenuSelectOptionTextField>(activeelement);
-      if (!dstpath->getData().empty()) {
-        dstpath->clear();
-      }
-      else {
-        deactivate();
-      }
-    }
-    else {
-      activeelement->inputChar(ch);
-    }
-    ui->update();
-    return true;
   }
+  int action = keybinds.getKeyAction(ch);
   switch(action) {
     case KEYACTION_ENTER:
       activeelement = mso.getElement(mso.getSelectionPointer());

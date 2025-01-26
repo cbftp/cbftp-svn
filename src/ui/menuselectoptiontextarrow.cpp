@@ -21,11 +21,25 @@ bool MenuSelectOptionTextArrow::inputChar(int ch) {
     case KEY_RIGHT:
       arrow.next();
       return true;
+    case 10:
+      if (arrow.isActive()) {
+        deactivate();
+        return true;
+      }
+      break;
+    case 27:
+      if (arrow.isActive()) {
+        arrow.setOption(lastoption);
+        deactivate();
+        return true;
+      }
+      break;
   }
   return false;
 }
 
 bool MenuSelectOptionTextArrow::activate() {
+  lastoption = arrow.getOption();
   arrow.activate();
   return true;
 }

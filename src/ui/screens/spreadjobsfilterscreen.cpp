@@ -14,7 +14,7 @@
 #include "../../site.h"
 #include "../../util.h"
 
-SpreadJobsFilterScreen::SpreadJobsFilterScreen(Ui* ui) : UIWindow(ui, "JobsFilterScreen"), mso(*vv), active(false) {
+SpreadJobsFilterScreen::SpreadJobsFilterScreen(Ui* ui) : UIWindow(ui, "JobsFilterScreen"), mso(*vv) {
   keybinds.addBind(10, KEYACTION_ENTER, "Modify");
   keybinds.addBind('d', KEYACTION_DONE, "Done");
   keybinds.addBind('f', KEYACTION_FILTER, "Done");
@@ -30,7 +30,6 @@ SpreadJobsFilterScreen::~SpreadJobsFilterScreen() {
 
 void SpreadJobsFilterScreen::initialize(unsigned int row, unsigned int col, const SpreadJobsFilteringParameters& sjfp) {
   mso.reset();
-  active = false;
   int y = 1;
   mso.addCheckBox(y++, 1, "jobnamefilter", "Enable job name filtering:", sjfp.usejobnamefilter);
   mso.addStringField(y++, 1, "jobname", "Job name:", sjfp.jobnamefilter, false, 60, 512);
@@ -84,23 +83,15 @@ void SpreadJobsFilterScreen::command(const std::string & command, const std::str
   }
 }
 
+bool SpreadJobsFilterScreen::onDeactivated(const std::shared_ptr<MenuSelectOptionElement>& msoe) {
+  if (msoe->getIdentifier() == "jobname" && !std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData().empty()) {
+    std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("jobnamefilter"))->setValue(true);
+  }
+  return false;
+}
+
 bool SpreadJobsFilterScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
-  if (active) {
-    if (ch == 10) {
-      activeelement->deactivate();
-      if (activeelement->getIdentifier() == "jobname" && !std::static_pointer_cast<MenuSelectOptionTextField>(activeelement)->getData().empty()) {
-        std::static_pointer_cast<MenuSelectOptionCheckBox>(mso.getElement("jobnamefilter"))->setValue(true);
-      }
-      active = false;
-      ui->update();
-      ui->setLegend();
-      return true;
-    }
-    activeelement->inputChar(ch);
-    ui->update();
-    return true;
-  }
   switch (action) {
     case KEYACTION_UP: {
       bool moved = mso.goUp();
@@ -167,13 +158,6 @@ bool SpreadJobsFilterScreen::keyPressed(unsigned int ch) {
       return true;
   }
   return false;
-}
-
-std::string SpreadJobsFilterScreen::getLegendText() const {
-  if (active) {
-    return activeelement->getLegendText();
-  }
-  return keybinds.getLegendSummary();
 }
 
 std::string SpreadJobsFilterScreen::getInfoLabel() const {

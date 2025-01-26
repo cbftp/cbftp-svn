@@ -21,15 +21,12 @@ public:
   void update() override;
   void redraw() override;
   bool keyPressed(unsigned int) override;
-  std::string getLegendText() const override;
   std::string getInfoLabel() const override;
 private:
   MenuSelectOption mso;
   RemoteCommandHandler * rch;
   SiteManager * sm;
   LocalStorage * ls;
-  bool active;
-  std::shared_ptr<MenuSelectOptionElement> activeelement;
   std::map<int, std::string> interfacemap;
   std::shared_ptr<MenuSelectOptionTextArrow> bindinterface;
 };

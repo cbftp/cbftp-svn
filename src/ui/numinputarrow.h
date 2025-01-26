@@ -11,6 +11,7 @@ public:
   bool setValue(int);
   bool increase();
   bool decrease();
+  bool isActive() const;
   std::string getVisual() const;
   void activate();
   void deactivate();
