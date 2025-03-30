@@ -13,9 +13,6 @@
 #include "racestatus.h"
 #include "transferstatuscallback.h"
 
-
-#define RACE_UPDATE_INTERVAL 250
-
 enum SpreadProfile {
   SPREAD_RACE,
   SPREAD_DISTRIBUTE,
@@ -36,7 +33,7 @@ class SiteLogic;
 class TransferStatus;
 class SkipList;
 
-typedef std::pair<std::string, std::pair<std::shared_ptr<FileList>, std::shared_ptr<FileList>> > FailedTransfer;
+typedef std::pair<std::string, std::pair<std::shared_ptr<FileList>, std::shared_ptr<FileList>> > FailedTransferKey;
 
 struct FailedTransferHash {
 public:
@@ -44,6 +41,13 @@ public:
   {
     return std::hash<std::string>()(x.first) + std::hash<std::shared_ptr<FileList>>()(x.second.first) + std::hash<std::shared_ptr<FileList>>()(x.second.second);
   }
+};
+
+struct TransferAttemptCounter {
+  TransferAttemptCounter(int timestamp);
+  void addAttempt(int timestamp);
+  int count;
+  int lastfail;
 };
 
 struct SitesComparator {
@@ -81,7 +85,7 @@ class Race : public Core::EventReceiver, public TransferStatusCallback {
     unsigned long long int guessedtotalfilesize;
     unsigned int guessedtotalnumfiles;
     std::unordered_map<std::string, std::unordered_map<std::string, SizeLocationTrack> > sizelocationtrackers;
-    std::unordered_map<FailedTransfer, int, FailedTransferHash> transferattempts;
+    std::unordered_map<FailedTransferKey, TransferAttemptCounter, FailedTransferHash> transferattempts;
     int checkcount;
     std::string timestamp;
     unsigned int timespent;
@@ -142,7 +146,8 @@ class Race : public Core::EventReceiver, public TransferStatusCallback {
     unsigned int getWorstCompletionPercentage() const;
     unsigned int getAverageCompletionPercentage() const;
     unsigned int getBestCompletionPercentage() const;
-    bool hasFailedTransfer(const std::string & filename, const std::shared_ptr<FileList>& fls, const std::shared_ptr<FileList>& fld) const;
+    bool hasFailedTransfer(const std::string& filename, const std::shared_ptr<FileList>& fls, const std::shared_ptr<FileList>& fld) const;
+    bool hasTransferRetryBackoff(const std::string& filename, const std::shared_ptr<FileList>& fls, const std::shared_ptr<FileList>& fld) const;
     bool failedTransfersCleared() const;
     const SkipList& getSectionSkipList() const;
     void addTransfer(const std::shared_ptr<TransferStatus>&);

@@ -19,7 +19,11 @@
 
 #define MAX_CHECKS_BEFORE_TIMEOUT 60
 #define MAX_CHECKS_BEFORE_HARD_TIMEOUT 1200
-#define MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP 3
+#define MAX_SINGLE_PAIR_FILE_TRANSFER_ATTEMPTS 4
+#define MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP 7
+#define RACE_UPDATE_INTERVAL_MS 250
+#define SINGLE_PAIR_FILE_TRANSFER_ATTEMPT_RETRY_BACKOFF_AFTER_TWO_FAILS_MS 3000
+#define SINGLE_PAIR_FILE_TRANSFER_ATTEMPT_RETRY_BACKOFF_AFTER_THREE_FAILS_MS 10000
 
 typedef std::pair<std::shared_ptr<FileList>, std::shared_ptr<FileList>> FailedTransferSecond;
 
@@ -55,6 +59,14 @@ bool remainingSitesAreDownloadOnly(const std::set<std::pair<std::shared_ptr<Site
 }
 
 } // namespace
+
+TransferAttemptCounter::TransferAttemptCounter(int timestamp) : count(1), lastfail(timestamp) {
+}
+
+void TransferAttemptCounter::addAttempt(int timestamp) {
+  ++count;
+  lastfail = timestamp;
+}
 
 Race::Race(unsigned int id, SpreadProfile profile, const std::string& release, const std::string& section) :
   name(release),
@@ -271,7 +283,7 @@ void Race::setUndone() {
   status = RaceStatus::RUNNING;
   clearTransferAttempts(false);
   resetUpdateCheckCounter();
-  global->getTickPoke()->startPoke(this, "Race", RACE_UPDATE_INTERVAL, 0);
+  global->getTickPoke()->startPoke(this, "Race", RACE_UPDATE_INTERVAL_MS, 0);
 }
 
 void Race::reset() {
@@ -473,7 +485,7 @@ void Race::setDone() {
 }
 
 void Race::tick(int message) {
-  timespent += RACE_UPDATE_INTERVAL;
+  timespent += RACE_UPDATE_INTERVAL_MS;
   calculatePercentages();
 }
 
@@ -597,17 +609,26 @@ unsigned int Race::getBestCompletionPercentage() const {
   return best;
 }
 
-bool Race::hasFailedTransfer(const std::string & filename, const std::shared_ptr<FileList>& fls, const std::shared_ptr<FileList>& fld) const {
-  FailedTransfer matchall = FailedTransfer(filename, FailedTransferSecond(nullptr, fld));
-  auto it = transferattempts.find(matchall);
-  if (it != transferattempts.end() && it->second >= MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP) {
+bool Race::hasFailedTransfer(const std::string& filename, const std::shared_ptr<FileList>& fls, const std::shared_ptr<FileList>& fld) const {
+  FailedTransferKey matchall = FailedTransferKey(filename, FailedTransferSecond(nullptr, fld));
+  std::unordered_map<FailedTransferKey, TransferAttemptCounter, FailedTransferHash>::const_iterator it = transferattempts.find(matchall);
+  if (it != transferattempts.end() && it->second.count >= MAX_TRANSFER_ATTEMPTS_BEFORE_SKIP) {
     return true;
   }
-  FailedTransfer match = FailedTransfer(filename, FailedTransferSecond(fls, fld));
+  FailedTransferKey match(filename, FailedTransferSecond(fls, fld));
   it = transferattempts.find(match);
-  size_t numsites = sites.size();
-  return it != transferattempts.end() && ((numsites == 3 && it->second >= 2) ||
-                                          (numsites > 3 && it->second >= 1));
+  return it != transferattempts.end() && it->second.count >= MAX_SINGLE_PAIR_FILE_TRANSFER_ATTEMPTS;
+}
+
+bool Race::hasTransferRetryBackoff(const std::string& filename, const std::shared_ptr<FileList>& fls, const std::shared_ptr<FileList>& fld) const {
+  FailedTransferKey match(filename, FailedTransferSecond(fls, fld));
+  std::unordered_map<FailedTransferKey, TransferAttemptCounter, FailedTransferHash>::const_iterator it = transferattempts.find(match);
+  if (it == transferattempts.end()) {
+    return false;
+  }
+  int timesincelastfail = timespent - it->second.lastfail;
+  return (it->second.count == 2 && timesincelastfail < SINGLE_PAIR_FILE_TRANSFER_ATTEMPT_RETRY_BACKOFF_AFTER_TWO_FAILS_MS) ||
+         (it->second.count >= 3 && timesincelastfail < SINGLE_PAIR_FILE_TRANSFER_ATTEMPT_RETRY_BACKOFF_AFTER_THREE_FAILS_MS);
 }
 
 bool Race::failedTransfersCleared() const {
@@ -643,21 +664,21 @@ void Race::addTransferAttempt(const std::shared_ptr<TransferStatus>& ts) {
   std::shared_ptr<FileList> srcfl = ts->getSourceFileList();
   std::shared_ptr<FileList> dstfl = ts->getTargetFileList();
   std::string file = ts->getFile();
-  FailedTransfer match = FailedTransfer(file, FailedTransferSecond(srcfl, dstfl));
-  FailedTransfer matchall = FailedTransfer(file, FailedTransferSecond(nullptr, dstfl));
-  auto it = transferattempts.find(matchall);
+  FailedTransferKey match(file, FailedTransferSecond(srcfl, dstfl));
+  FailedTransferKey matchall(file, FailedTransferSecond(nullptr, dstfl));
+  std::unordered_map<FailedTransferKey, TransferAttemptCounter, FailedTransferHash>::iterator it = transferattempts.find(matchall);
   if (it == transferattempts.end()) {
-    transferattempts[matchall] = 1;
+    transferattempts.emplace(matchall, timespent);
   }
   else {
-    it->second++;
+    it->second.addAttempt(timespent);
   }
   it = transferattempts.find(match);
   if (it == transferattempts.end()) {
-    transferattempts[match] = 1;
+    transferattempts.emplace(match, timespent);
   }
   else {
-    it->second++;
+    it->second.addAttempt(timespent);
   }
 }
 
