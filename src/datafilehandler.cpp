@@ -84,7 +84,7 @@ bool DataFileHandler::tryDecrypt(const std::string& key) {
 void DataFileHandler::parseDecryptedFile(const Core::BinaryData& data) {
   int lastbreakpos = 0;
   for (unsigned int currentpos = 0; currentpos <= data.size(); currentpos++) {
-    if (data[currentpos] == '\n' || currentpos == data.size()) {
+    if (currentpos == data.size() || data[currentpos] == '\n') {
       decryptedlines.push_back(std::string((const char *)&data[lastbreakpos], currentpos - lastbreakpos));
       lastbreakpos = currentpos + 1;
     }
