@@ -1,6 +1,8 @@
 #include "proxysession.h"
 
+#ifdef __CYGWIN__
 #define _POSIX_C_SOURCE 200809L
+#endif
 
 #include <sys/socket.h>
 #include <netinet/in.h>
