@@ -4,11 +4,11 @@
 
 namespace encoding {
 
-std::map<unsigned char, unsigned int> getCP437toUnicodeMap();
-static std::map<unsigned char, unsigned int> cp437unicode = getCP437toUnicodeMap();
+std::map<unsigned char, char32_t> getCP437toUnicodeMap();
+static std::map<unsigned char, char32_t> cp437unicode = getCP437toUnicodeMap();
 
-unsigned int cp437toUnicode(unsigned char c) {
-  std::map<unsigned char, unsigned int>::iterator it = cp437unicode.find(c);
+char32_t cp437toUnicode(unsigned char c) {
+  std::map<unsigned char, char32_t>::iterator it = cp437unicode.find(c);
   return it != cp437unicode.end() ? it->second : c;
 }
 
@@ -27,21 +27,21 @@ unsigned int harddoublecp437toUnicode(unsigned char c) {
   return cp437toUnicode(c);
 }
 
-bool certainlyASCII(unsigned int c) {
+bool certainlyASCII(char32_t c) {
   // some uncertain chars, may be misconverted in double cp437
   return c != 'U' && c != 'Y' && c != '_' && c != ' ' && c < 0x80;
 }
 
-std::basic_string<unsigned int> cp437toUnicode(const std::string & in) {
-  std::basic_string<unsigned int> out;
+std::basic_string<char32_t> cp437toUnicode(const std::string& in) {
+  std::basic_string<char32_t> out;
   for (unsigned int i = 0; i < in.length(); i++) {
     out.push_back(cp437toUnicode(in[i]));
   }
   return out;
 }
 
-std::basic_string<unsigned int> doublecp437toUnicode(const std::string & in) {
-  std::basic_string<unsigned int> out;
+std::basic_string<char32_t> doublecp437toUnicode(const std::string& in) {
+  std::basic_string<char32_t> out;
   for (unsigned int i = 0; i < in.length(); i++) {
     if ((i > 0 && certainlyASCII(in[i - 1])) || (i < in.length() - 1 && certainlyASCII(in[i + 1]))) {
       out.push_back(in[i]);
@@ -53,18 +53,18 @@ std::basic_string<unsigned int> doublecp437toUnicode(const std::string & in) {
   return out;
 }
 
-std::basic_string<unsigned int> toUnicode(const std::string & in) {
-  std::basic_string<unsigned int> out;
+std::basic_string<char32_t> toUnicode(const std::string& in) {
+  std::basic_string<char32_t> out;
   for (unsigned int i = 0; i < in.length(); i++) {
-    out.push_back(static_cast<unsigned char>(in[i]));
+    out.push_back(static_cast<char32_t>(static_cast<unsigned char>(in[i])));
   }
   return out;
 }
 
 template <typename T>
-bool isCurrentPosValidUTF8(const T & in, unsigned int pos,
-                           unsigned int & unicodepoint,
-                           unsigned int & bytes)
+bool isCurrentPosValidUTF8(const T& in, unsigned int pos,
+                           char32_t& unicodepoint,
+                           unsigned int& bytes)
 {
   if (pos >= in.size()) {
     return false;
@@ -109,10 +109,10 @@ bool isCurrentPosValidUTF8(const T & in, unsigned int pos,
   return false;
 }
 
-std::basic_string<unsigned int> utf8toUnicode(const std::string & in) {
-  std::basic_string<unsigned int> out;
+std::basic_string<char32_t> utf8toUnicode(const std::string& in) {
+  std::basic_string<char32_t> out;
   for (unsigned int i = 0; i < in.length(); i++) {
-    unsigned int unicodepoint;
+    char32_t unicodepoint;
     unsigned int bytes;
     if (isCurrentPosValidUTF8(in, i, unicodepoint, bytes)) {
       out.push_back(unicodepoint);
@@ -171,7 +171,7 @@ Encoding guessEncoding(const Core::BinaryData& data) {
       doublecp437hitbefore = false;
     }
     if (data[i] >= 128) {
-      unsigned int unicodepoint;
+      char32_t unicodepoint;
       unsigned int bytes;
       if (isCurrentPosValidUTF8(data, i, unicodepoint, bytes)) {
         ++validmultibyteutf8;
@@ -197,8 +197,8 @@ Encoding guessEncoding(const Core::BinaryData& data) {
   }
 }
 
-std::map<unsigned char, unsigned int> getCP437toUnicodeMap() {
-  std::map<unsigned char, unsigned int> map;
+std::map<unsigned char, char32_t> getCP437toUnicodeMap() {
+  std::map<unsigned char, char32_t> map;
   map[0x80] = 0x00C7;
   map[0x81] = 0x00FC;
   map[0x82] = 0x00E9;

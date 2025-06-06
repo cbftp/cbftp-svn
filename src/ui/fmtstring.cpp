@@ -19,7 +19,7 @@ FmtString::FmtString(const char* str) : rawlegacy(str) {
   calculateFormattedLength();
 }
 
-FmtString::FmtString(const std::basic_string<unsigned int>& str) : raw(str) {
+FmtString::FmtString(const std::basic_string<char32_t>& str) : raw(str) {
   rawlegacy.resize(str.length());
   for (size_t i = 0; i < str.length(); ++i) {
     rawlegacy[i] = str[i];
@@ -47,7 +47,7 @@ FmtString& FmtString::operator=(const std::string& str) {
   return *this;
 }
 
-FmtString& FmtString::operator=(const std::basic_string<unsigned int>& str) {
+FmtString& FmtString::operator=(const std::basic_string<char32_t>& str) {
   raw = str;
   calculateFormattedLength();
   return *this;
@@ -61,7 +61,7 @@ bool FmtString::operator==(const std::string& other) const {
   return rawlegacy == other;
 }
 
-bool FmtString::operator==(const std::basic_string<unsigned int>& other) const {
+bool FmtString::operator==(const std::basic_string<char32_t>& other) const {
   return raw == other;
 }
 
@@ -77,7 +77,7 @@ bool FmtString::operator!=(const std::string& other) const {
   return rawlegacy != other;
 }
 
-bool FmtString::operator!=(const std::basic_string<unsigned int>& other) const {
+bool FmtString::operator!=(const std::basic_string<char32_t>& other) const {
   return raw != other;
 }
 
@@ -93,15 +93,15 @@ FmtString FmtString::operator+(const std::string& rhs) const {
   return rawlegacy + rhs;
 }
 
-FmtString FmtString::operator+(const std::basic_string<unsigned int>& rhs) const {
+FmtString FmtString::operator+(const std::basic_string<char32_t>& rhs) const {
   return raw + rhs;
 }
 
 FmtString FmtString::operator+(const FmtString& rhs) const {
-  return raw + std::basic_string<unsigned int>(rhs);
+  return raw + std::basic_string<char32_t>(rhs);
 }
 
-FmtString FmtString::operator+(unsigned int rhs) const {
+FmtString FmtString::operator+(char32_t rhs) const {
   return raw + rhs;
 }
 
@@ -125,7 +125,7 @@ FmtString& FmtString::operator+=(const std::string& rhs) {
   return *this;
 }
 
-FmtString& FmtString::operator+=(const std::basic_string<unsigned int>& rhs) {
+FmtString& FmtString::operator+=(const std::basic_string<char32_t>& rhs) {
   raw += rhs;
   rawlegacy.resize(raw.length());
   for (size_t i = 0; i < raw.length(); ++i) {
@@ -135,7 +135,7 @@ FmtString& FmtString::operator+=(const std::basic_string<unsigned int>& rhs) {
   return *this;
 }
 
-FmtString& FmtString::operator+=(unsigned int rhs) {
+FmtString& FmtString::operator+=(char32_t rhs) {
   raw+= rhs;
   rawlegacy += static_cast<char>(rhs);
   if (rhs == ')') {
@@ -151,11 +151,11 @@ FmtString::operator std::string() const {
   return rawlegacy;
 }
 
-FmtString::operator std::basic_string<unsigned int>() const {
+FmtString::operator std::basic_string<char32_t>() const {
   return raw;
 }
 
-unsigned int FmtString::operator[](std::size_t idx) const {
+char32_t FmtString::operator[](std::size_t idx) const {
   return raw[idx];
 }
 
@@ -207,14 +207,14 @@ bool FmtString::empty() const {
   return !raw.length();
 }
 
-const unsigned int* FmtString::data() const {
+const char32_t* FmtString::data() const {
   return raw.data();
 }
 
 FmtString FmtString::substr(size_t pos, size_t count) const {
-  std::basic_string<unsigned int> out;
+  std::basic_string<char32_t> out;
   size_t len = raw.length();
-  std::basic_string<unsigned int> color;
+  std::basic_string<char32_t> color;
   bool bold = false;
   size_t i = 0;
   for (size_t formattedpos = 0; i < len && formattedpos < pos; ++i) {
@@ -295,7 +295,7 @@ FmtString FmtString::rawSubstr(size_t pos, size_t count) const {
   return raw.substr(pos, count);
 }
 
-unsigned int FmtString::positionInRaw(unsigned int pos, bool post) const {
+size_t FmtString::positionInRaw(size_t pos, bool post) const {
   size_t i = 0;
   size_t len = raw.length();
   for (size_t formattedpos = 0; i < len && (post || formattedpos < pos); ++i) {
@@ -327,7 +327,7 @@ unsigned int FmtString::positionInRaw(unsigned int pos, bool post) const {
   return i;
 }
 
-unsigned int FmtString::positionInFormatted(unsigned int rawpos) const {
+size_t FmtString::positionInFormatted(size_t rawpos) const {
   size_t len = raw.length();
   size_t formattedpos = 0;
   for (size_t i = 0; i < rawpos; ++i) {
@@ -364,11 +364,11 @@ FmtString operator+(const std::string& lhs, const FmtString& rhs) {
   return FmtString(lhs) + rhs;
 }
 
-FmtString operator+(const std::basic_string<unsigned int>& lhs, const FmtString& rhs) {
+FmtString operator+(const std::basic_string<char32_t>& lhs, const FmtString& rhs) {
   return FmtString(lhs) + rhs;
 }
 
-FmtString operator+(unsigned int lhs, const FmtString& rhs) {
+FmtString operator+(char32_t lhs, const FmtString& rhs) {
   return FmtString() + lhs + rhs;
 }
 

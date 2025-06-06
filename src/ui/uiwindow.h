@@ -38,9 +38,9 @@ public:
   virtual std::string getInfoLabel() const;
   virtual std::string getInfoText() const;
   virtual std::string getLegendText() const;
-  virtual std::basic_string<unsigned int> getWideInfoLabel() const;
-  virtual std::basic_string<unsigned int> getWideInfoText() const;
-  virtual std::basic_string<unsigned int> getWideLegendText() const;
+  virtual std::basic_string<char32_t> getWideInfoLabel() const;
+  virtual std::basic_string<char32_t> getWideInfoText() const;
+  virtual std::basic_string<char32_t> getWideLegendText() const;
   bool keyPressedBase(unsigned int);
   virtual bool keyPressed(unsigned int);
   bool autoUpdate() const;

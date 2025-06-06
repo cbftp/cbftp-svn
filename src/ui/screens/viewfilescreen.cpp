@@ -383,7 +383,7 @@ void ViewFileScreen::viewInternal() {
     }
   }
   for (unsigned int i = 0; i < row && i < ymax; i++) {
-    std::basic_string<unsigned int> & line = translatedcontents[y + i];
+    std::basic_string<char32_t>& line = translatedcontents[y + i];
     for (unsigned int j = 0; j < line.length() && j < col - 2; j++) {
       vv->putChar(i, j + 1, line[j]);
     }
@@ -429,7 +429,7 @@ std::string ViewFileScreen::getInfoText() const {
 void ViewFileScreen::translate() {
   translatedcontents.clear();
   for (unsigned int i = 0; i < rawcontents.size(); i++) {
-    std::basic_string<unsigned int> current;
+    std::basic_string<char32_t> current;
     if (encoding == encoding::ENCODING_CP437_DOUBLE) {
       current = encoding::doublecp437toUnicode(rawcontents[i]);
     }

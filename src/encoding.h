@@ -13,11 +13,11 @@ enum Encoding {
   ENCODING_UTF8
 };
 
-unsigned int cp437toUnicode(unsigned char);
-std::basic_string<unsigned int> cp437toUnicode(const std::string &);
-std::basic_string<unsigned int> doublecp437toUnicode(const std::string &);
-std::basic_string<unsigned int> toUnicode(const std::string &);
-std::basic_string<unsigned int> utf8toUnicode(const std::string &);
+char32_t cp437toUnicode(unsigned char);
+std::basic_string<char32_t> cp437toUnicode(const std::string& in);
+std::basic_string<char32_t> doublecp437toUnicode(const std::string& in);
+std::basic_string<char32_t> toUnicode(const std::string& in);
+std::basic_string<char32_t> utf8toUnicode(const std::string& in);
 Encoding guessEncoding(const Core::BinaryData& data);
 
 }

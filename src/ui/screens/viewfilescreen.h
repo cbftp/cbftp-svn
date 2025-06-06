@@ -48,7 +48,7 @@ private:
   bool legendupdated;
   bool deleteafter;
   std::vector<std::string > rawcontents;
-  std::vector<std::basic_string<unsigned int> > translatedcontents;
+  std::vector<std::basic_string<char32_t> > translatedcontents;
   Path path;
   int pid;
   encoding::Encoding encoding;

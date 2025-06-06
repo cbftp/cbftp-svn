@@ -165,19 +165,19 @@ std::string UIWindow::getLegendText() const {
   return keybinds.getLegendSummary();
 }
 
-std::basic_string<unsigned int> UIWindow::getWideInfoLabel() const {
+std::basic_string<char32_t> UIWindow::getWideInfoLabel() const {
   std::string label = getInfoLabel();
-  return std::basic_string<unsigned int>(label.begin(), label.end());
+  return std::basic_string<char32_t>(label.begin(), label.end());
 }
 
-std::basic_string<unsigned int> UIWindow::getWideInfoText() const {
+std::basic_string<char32_t> UIWindow::getWideInfoText() const {
   std::string text = getInfoText();
-  return std::basic_string<unsigned int>(text.begin(), text.end());
+  return std::basic_string<char32_t>(text.begin(), text.end());
 }
 
-std::basic_string<unsigned int> UIWindow::getWideLegendText() const {
+std::basic_string<char32_t> UIWindow::getWideLegendText() const {
   std::string text = getLegendText();
-  return std::basic_string<unsigned int>(text.begin(), text.end());
+  return std::basic_string<char32_t>(text.begin(), text.end());
 }
 
 bool UIWindow::autoUpdate() const {
