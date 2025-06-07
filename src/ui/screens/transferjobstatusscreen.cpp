@@ -119,6 +119,14 @@ void TransferJobStatusScreen::redraw() {
     addTransferDetails(y++, "-", util::parseSize(0) + " / " + util::parseSize(it->second),
         it->first, "-", "-", "wait", 0);
   }
+  for (std::unordered_map<std::string, unsigned long long int>::const_iterator it = transferjob->existingTargetsBegin(); it != transferjob->existingTargetsEnd(); it++) {
+    addTransferDetails(y++, "-", util::parseSize(0) + " / " + util::parseSize(it->second),
+        it->first, "-", "-", "exists", 0);
+  }
+  for (std::unordered_map<std::string, unsigned long long int>::const_iterator it = transferjob->skippedTransfersBegin(); it != transferjob->skippedTransfersEnd(); it++) {
+    addTransferDetails(y++, "-", util::parseSize(0) + " / " + util::parseSize(it->second),
+        it->first, "-", "-", "skip", 0);
+  }
   table.adjustLines(col - 3);
   bool highlight;
   if (!transferjob->isDone()) {

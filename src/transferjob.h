@@ -63,6 +63,10 @@ public:
   std::list<std::shared_ptr<TransferStatus>>::const_iterator transfersEnd() const;
   std::unordered_map<std::string, unsigned long long int>::const_iterator pendingTransfersBegin() const;
   std::unordered_map<std::string, unsigned long long int>::const_iterator pendingTransfersEnd() const;
+  std::unordered_map<std::string, unsigned long long int>::const_iterator skippedTransfersBegin() const;
+  std::unordered_map<std::string, unsigned long long int>::const_iterator skippedTransfersEnd() const;
+  std::unordered_map<std::string, unsigned long long int>::const_iterator existingTargetsBegin() const;
+  std::unordered_map<std::string, unsigned long long int>::const_iterator existingTargetsEnd() const;
   bool isDone() const;
   bool isDirectory() const;
   TransferJobStatus getStatus() const;
@@ -84,9 +88,10 @@ public:
   bool refreshOrAlmostDone();
   void clearRefreshLists();
   void start();
-  void addPendingTransfer(const Path &, unsigned long long int);
+  void addPendingTransfer(const Path& name, unsigned long long int size);
+  void addSkippedTransfer(const Path& name, unsigned long long int size);
   void addTransfer(const std::shared_ptr<TransferStatus> &);
-  void targetExists(const Path &);
+  void targetExists(const Path& target, unsigned long long int size);
   int getProgress() const;
   int getMilliProgress() const;
   int timeSpent() const;
@@ -141,9 +146,11 @@ private:
   std::unordered_map<std::string, std::shared_ptr<FileList>> dstfilelists;
   std::unordered_map<std::string, std::shared_ptr<LocalFileList> > localfilelists;
   std::unordered_map<std::string, unsigned long long int> pendingtransfers;
-  std::unordered_set<std::string> existingtargets;
+  std::unordered_map<std::string, unsigned long long int> skippedtransfers;
+  std::unordered_map<std::string, unsigned long long int> existingtargets;
   std::unordered_map<std::shared_ptr<FileList>, int> reservedlisttargets;
-  std::list<std::shared_ptr<TransferStatus> > transfers;
+  std::unordered_map<std::string, std::list<std::shared_ptr<TransferStatus>>::const_iterator> indexedtransfers;
+  std::list<std::shared_ptr<TransferStatus>> transfers;
   int slots;
   TransferJobStatus status;
   std::shared_ptr<FileList> srclisttarget;

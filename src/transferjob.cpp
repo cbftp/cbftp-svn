@@ -198,6 +198,22 @@ std::unordered_map<std::string, unsigned long long int>::const_iterator Transfer
   return pendingtransfers.end();
 }
 
+std::unordered_map<std::string, unsigned long long int>::const_iterator TransferJob::skippedTransfersBegin() const {
+  return skippedtransfers.begin();
+}
+
+std::unordered_map<std::string, unsigned long long int>::const_iterator TransferJob::skippedTransfersEnd() const {
+  return skippedtransfers.end();
+}
+
+std::unordered_map<std::string, unsigned long long int>::const_iterator TransferJob::existingTargetsBegin() const {
+  return existingtargets.begin();
+}
+
+std::unordered_map<std::string, unsigned long long int>::const_iterator TransferJob::existingTargetsEnd() const {
+  return existingtargets.end();
+}
+
 std::list<std::shared_ptr<TransferStatus>>::const_iterator TransferJob::transfersBegin() const {
   return transfers.begin();
 }
@@ -560,22 +576,36 @@ void TransferJob::addPendingTransfer(const Path& name, unsigned long long int si
   pendingtransfers[name.toString()] = size;
 }
 
+void TransferJob::addSkippedTransfer(const Path& name, unsigned long long int size) {
+  skippedtransfers[name.toString()] = size;
+}
+
 void TransferJob::addTransfer(const std::shared_ptr<TransferStatus>& ts) {
   if (!!ts) {
     idletime = 0;
+    Path subpathfile = (ts->getSourcePath() - srcpath) / ts->getFile();
     transfers.push_front(ts);
+    indexedtransfers[subpathfile.toString()] = transfers.begin();
     if (ts->getState() != TRANSFERSTATUS_STATE_FAILED) {
       ts->setCallback(this);
-      Path subpathfile = (ts->getSourcePath() - srcpath) / ts->getFile();
       if (pendingtransfers.find(subpathfile.toString()) != pendingtransfers.end()) {
         pendingtransfers.erase(subpathfile.toString());
+      }
+      if (existingtargets.find(subpathfile.toString()) != existingtargets.end()) {
+        existingtargets.erase(subpathfile.toString());
+      }
+      if (skippedtransfers.find(subpathfile.toString()) != skippedtransfers.end()) {
+        skippedtransfers.erase(subpathfile.toString());
       }
     }
   }
 }
 
-void TransferJob::targetExists(const Path& target) {
-  existingtargets.insert(target.toString());
+void TransferJob::targetExists(const Path& target, unsigned long long int size) {
+  if (indexedtransfers.find(target.toString()) != indexedtransfers.end()) {
+    return;
+  }
+  existingtargets[target.toString()] = size;
 }
 
 void TransferJob::tick(int message) {
@@ -596,6 +626,12 @@ void TransferJob::updateStatus() {
   for (std::list<std::shared_ptr<TransferStatus> >::const_iterator it = transfersBegin(); it != transfersEnd(); it++) {
     if (pendingtransfers.find((*it)->getFile()) != pendingtransfers.end()) {
       pendingtransfers.erase((*it)->getFile());
+    }
+    if (existingtargets.find((*it)->getFile()) != existingtargets.end()) {
+      existingtargets.erase((*it)->getFile());
+    }
+    if (skippedtransfers.find((*it)->getFile()) != skippedtransfers.end()) {
+      skippedtransfers.erase((*it)->getFile());
     }
     int state = (*it)->getState();
     if (state == TRANSFERSTATUS_STATE_IN_PROGRESS) {
@@ -837,6 +873,7 @@ void TransferJob::abort() {
 void TransferJob::clearExisting() {
   existingtargets.clear();
   pendingtransfers.clear();
+  skippedtransfers.clear();
 }
 
 unsigned int TransferJob::getId() const {
@@ -991,10 +1028,13 @@ void TransferJob::reset() {
   dstfilelists.clear();
   localfilelists.clear();
   pendingtransfers.clear();
+  skippedtransfers.clear();
   existingtargets.clear();
   srclisttarget.reset();
   dstlisttarget.reset();
   filelistsrefreshed.clear();
+  transfers.clear();
+  indexedtransfers.clear();
   transferattempts.clear();
   resetValues();
   if (type == TRANSFERJOB_DOWNLOAD || type == TRANSFERJOB_FXP) {

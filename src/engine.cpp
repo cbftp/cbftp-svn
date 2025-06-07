@@ -1,3 +1,4 @@
+
 #include "engine.h"
 
 #include <cassert>
@@ -1413,6 +1414,7 @@ void Engine::refreshPendingTransferList(const std::shared_ptr<TransferJob>& tj) 
               if (!onefilejob) {
                 SkipListMatch match = global->getSkipList()->check((dstlist->getPath() / filename).toString(), false, false);
                 if (match.action == SKIPLIST_DENY) {
+                  tj->addSkippedTransfer(subpath / filename, f->getSize());
                   continue;
                 }
               }
@@ -1421,7 +1423,7 @@ void Engine::refreshPendingTransferList(const std::shared_ptr<TransferJob>& tj) 
               tj->addPendingTransfer(subpath / filename, f->getSize());
             }
             else {
-              tj->targetExists(subpath / filename);
+              tj->targetExists(subpath / filename, f->getSize());
             }
           }
         }
@@ -1452,6 +1454,7 @@ void Engine::refreshPendingTransferList(const std::shared_ptr<TransferJob>& tj) 
                 if (filematch.action == SKIPLIST_DENY ||
                     (filematch.action == SKIPLIST_UNIQUE && containsPattern(dstlist, filematch, false)))
                 {
+                  tj->addSkippedTransfer(subpath / filename, lfit->second.getSize());
                   continue;
                 }
                 if (filematch.action == SKIPLIST_SIMILAR) {
@@ -1459,6 +1462,7 @@ void Engine::refreshPendingTransferList(const std::shared_ptr<TransferJob>& tj) 
                     dstlist->checkSimilar(&dstskip);
                   }
                   if (dstlist->containsUnsimilar(filename)) {
+                    tj->addSkippedTransfer(subpath / filename, lfit->second.getSize());
                     continue;
                   }
                 }
@@ -1468,7 +1472,7 @@ void Engine::refreshPendingTransferList(const std::shared_ptr<TransferJob>& tj) 
               tj->addPendingTransfer(subpath / filename, lfit->second.getSize());
             }
             else {
-              tj->targetExists(subpath / filename);
+              tj->targetExists(subpath / filename, lfit->second.getSize());
             }
           }
         }
@@ -1501,24 +1505,25 @@ void Engine::refreshPendingTransferList(const std::shared_ptr<TransferJob>& tj) 
                 if (filematch.action == SKIPLIST_DENY ||
                    (filematch.action == SKIPLIST_UNIQUE && containsPattern(dstlist, filematch, false)))
                 {
-                 continue;
+                  tj->addSkippedTransfer(subpath / filename, f->getSize());
+                  continue;
                 }
                 if (filematch.action == SKIPLIST_SIMILAR) {
                   if (!dstlist->similarChecked()) {
                     dstlist->checkSimilar(&dstskip);
                   }
                   if (dstlist->containsUnsimilar(filename)) {
+                    tj->addSkippedTransfer(subpath / filename, f->getSize());
                     continue;
                   }
                 }
               }
               PendingTransfer p(tj->getSrc(), srclist, filename, tj->getDst(), dstlist, filename);
               addPendingTransfer(list, p);
-
               tj->addPendingTransfer(subpath / filename, f->getSize());
             }
             else {
-              tj->targetExists(subpath / filename);
+              tj->targetExists(subpath / filename, f->getSize());
             }
           }
         }
@@ -1529,7 +1534,7 @@ void Engine::refreshPendingTransferList(const std::shared_ptr<TransferJob>& tj) 
   tj->updateStatus();
 }
 
-void Engine::addPendingTransfer(std::list<PendingTransfer> & list, PendingTransfer & p) {
+void Engine::addPendingTransfer(std::list<PendingTransfer>& list, PendingTransfer& p) {
   std::string extension = File::getExtension(p.getSrcFileName());
   if (extension == "sfv" || extension == "nfo") {
     list.push_front(p); // sfv and nfo files have top priority
