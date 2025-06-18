@@ -627,9 +627,6 @@ void TransferJob::updateStatus() {
     if (pendingtransfers.find((*it)->getFile()) != pendingtransfers.end()) {
       pendingtransfers.erase((*it)->getFile());
     }
-    if (existingtargets.find((*it)->getFile()) != existingtargets.end()) {
-      existingtargets.erase((*it)->getFile());
-    }
     if (skippedtransfers.find((*it)->getFile()) != skippedtransfers.end()) {
       skippedtransfers.erase((*it)->getFile());
     }
