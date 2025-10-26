@@ -676,8 +676,10 @@ void TransferJob::updateStatus() {
   if (speed) {
     timeremaining = (expectedfinalsize - sizeprogress) / (speed * 1024);
   }
-  filesprogress = existingtargets.size() + filescompleted.size();
-  if (almostdone && !ongoingtransfers && filesprogress + (int)filesfailed.size() >= filestotal) {
+  filesprogress = filescompleted.size();
+  int filesexistingorcompleted = util::merge(existingtargets, filescompleted).size();
+  int filesfailedordupe = util::merge(filesdupe, filesfailed).size();
+  if (almostdone && !ongoingtransfers && filesexistingorcompleted + filesfailedordupe >= filestotal) {
     if (filescompleted.size() < filesfailed.size()) {
       setFailed();
     }

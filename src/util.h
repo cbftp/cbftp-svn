@@ -5,6 +5,8 @@
 #include <list>
 #include <regex>
 #include <set>
+#include <unordered_map>
+#include <unordered_set>
 
 #define SIZEPOWER 1024
 #define SIZEDECIMALS 2
@@ -35,6 +37,8 @@ std::vector<std::string> splitVec(const std::string& in, const std::string& sep 
 std::string join(const std::list<std::string>& in, const std::string& sep = " ");
 std::string join(const std::vector<std::string>& in, const std::string& sep = " ");
 std::string join(const std::set<std::string>& in, const std::string& sep = " ");
+std::unordered_set<std::string> merge(const std::unordered_set<std::string>& in1, const std::unordered_set<std::string>& in2);
+std::unordered_set<std::string> merge(const std::unordered_map<std::string, unsigned long long int>& in1, const std::unordered_set<std::string>& in2);
 int chrstrfind(const char *, unsigned int, const char *, unsigned int);
 int chrfind(const char *, unsigned int, char);
 bool eightCharUserCompare(const std::string & a, const std::string & b);

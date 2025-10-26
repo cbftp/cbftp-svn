@@ -327,6 +327,28 @@ std::string join(const std::set<std::string>& in, const std::string& sep) {
   return out.substr(0, out.length() - sep.length());
 }
 
+std::unordered_set<std::string> merge(const std::unordered_set<std::string>& in1, const std::unordered_set<std::string>& in2) {
+  std::unordered_set<std::string> out;
+  for (const std::string& member : in1) {
+    out.insert(member);
+  }
+  for (const std::string& member : in2) {
+    out.insert(member);
+  }
+  return out;
+}
+
+std::unordered_set<std::string> merge(const std::unordered_map<std::string, unsigned long long int>& in1, const std::unordered_set<std::string>& in2) {
+  std::unordered_set<std::string> out;
+  for (const std::pair<std::string, unsigned long long int>& member : in1) {
+    out.insert(member.first);
+  }
+  for (const std::string& member : in2) {
+    out.insert(member);
+  }
+  return out;
+}
+
 int chrstrfind(const char * buf, unsigned int buflen, const char * pattern, unsigned int patternlen) {
   unsigned int matchedchars = 0;
   for (unsigned int i = 0; i < buflen;) {
