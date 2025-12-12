@@ -10,19 +10,22 @@ DATA_FILE := "\"~/.cbftp/data\""
 UNAME_S := $(shell uname -s)
 
 ifeq ($(UNAME_S),Darwin)
-  ifeq ($(STATIC_SSL_PATH),)
-    HOMEBREW_SSL_PATH := $(shell find /opt/homebrew/Cellar -name libssl.a -printf "%h\n")
+  ifndef STATIC_SSL_PATH
+    HOMEBREW_SSL_PATH := $(shell find /opt/homebrew/Cellar -name libssl.a | xargs dirname | xargs dirname | tail -n 1)
     ifneq ($(HOMEBREW_SSL_PATH),)
       STATIC_SSL_PATH := $(HOMEBREW_SSL_PATH)
+      STATIC_SSL_LINK := $(STATIC_SSL_PATH)/lib/libssl.a $(STATIC_SSL_PATH)/lib/libcrypto.a
     else
       $(error Could not find any OpenSSL installed in /opt/homebrew/Cellar. Please specify your path to OpenSSL by editing STATIC_SSL_PATH in Makefile.inc)
     endif
   endif
 endif
 
-ifneq ($(STATIC_SSL_PATH),)
+ifdef STATIC_SSL_PATH
   STATIC_SSL_INCLUDE := -I$(STATIC_SSL_PATH)/include
-  STATIC_SSL_LINK := $(STATIC_SSL_PATH)/libssl.a $(STATIC_SSL_PATH)/libcrypto.a
+  ifndef STATIC_SSL_LINK
+    STATIC_SSL_LINK := $(STATIC_SSL_PATH)/libssl.a $(STATIC_SSL_PATH)/libcrypto.a
+  endif
   SSL_LINKFLAGS := $(STATIC_SSL_LINK) -ldl
 else
   SSL_LINKFLAGS := -lssl -lcrypto

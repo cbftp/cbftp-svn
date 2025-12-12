@@ -340,7 +340,7 @@ std::unordered_set<std::string> merge(const std::unordered_set<std::string>& in1
 
 std::unordered_set<std::string> merge(const std::unordered_map<std::string, unsigned long long int>& in1, const std::unordered_set<std::string>& in2) {
   std::unordered_set<std::string> out;
-  for (const std::pair<std::string, unsigned long long int>& member : in1) {
+  for (const std::pair<const std::string, unsigned long long int>& member : in1) {
     out.insert(member.first);
   }
   for (const std::string& member : in2) {
