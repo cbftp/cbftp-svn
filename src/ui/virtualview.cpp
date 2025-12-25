@@ -50,7 +50,7 @@ void VirtualView::putStr(unsigned int row, unsigned int col, const FmtString& st
         continue;
       }
     }
-    else if (rawlen - i > 3 && str[i] == '\e') {
+    else if (rawlen - i > 3 && str[i] == '\033') {
       std::string scanned;
       int fgcolor = encodeColorRepresentation();
       int bgcolor = -1;

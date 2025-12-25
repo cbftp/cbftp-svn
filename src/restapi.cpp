@@ -138,7 +138,7 @@ std::string stripColorCodes(const std::string& str) {
   std::string out;
   size_t rawlen = str.length();
   for (size_t i = 0; i < rawlen; ++i) {
-    if (rawlen - i > 3 && str[i] == '\e') {
+    if (rawlen - i > 3 && str[i] == '\033') {
       int closepos = -1;
       for (int j = 0; j < 9 && closepos == -1; ++j) {
         size_t pos = i + 2 + j;
