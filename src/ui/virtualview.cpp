@@ -1,5 +1,7 @@
 #include "virtualview.h"
 
+#include <cctype>
+
 #include "renderer.h"
 #include "termint.h"
 #include "misc.h"
@@ -45,6 +47,56 @@ void VirtualView::putStr(unsigned int row, unsigned int col, const FmtString& st
       else if (str[i+1] == 'B' && str[i+2] == '(' && str[i+3] == ')') {
         bold ^= 1;
         i += 3;
+        continue;
+      }
+    }
+    else if (rawlen - i > 3 && str[i] == '\e') {
+      std::string scanned;
+      int fgcolor = encodeColorRepresentation();
+      int bgcolor = -1;
+      int tmpbold = false;
+      int closepos = -1;
+      for (int j = 0; j < 9 && closepos == -1; ++j) {
+        size_t pos = i + 2 + j;
+        if (rawlen > pos) {
+          if (isdigit(str[pos])) {
+            scanned += str[pos];
+          }
+          else if (str[pos] == ';' || str[pos] == 'm') {
+            if (str[pos] == 'm') {
+              closepos = pos;
+            }
+            if (!scanned.empty()) {
+              int scancode = atoi(scanned.c_str());
+              scanned.clear();
+              if (scancode == 0) {
+                tmpbold = false;
+              }
+              else if (scancode == 1) {
+                tmpbold = true;
+              }
+              else if (scancode >= 30 && scancode < 40) {
+                fgcolor = scancode - 30;
+              }
+              else if (scancode >= 40 && scancode < 50) {
+                bgcolor = scancode - 40;
+              }
+            }
+          }
+          else {
+            break;
+          }
+        }
+      }
+      if (closepos != -1) {
+        if (bgcolor != -1) {
+          color = encodeColorRepresentation(fgcolor, bgcolor);
+        }
+        else {
+          color = encodeColorRepresentation(fgcolor);
+        }
+        bold = tmpbold;
+        i = closepos;
         continue;
       }
     }

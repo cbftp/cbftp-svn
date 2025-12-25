@@ -134,6 +134,37 @@ bool getQueryParamBoolValue(const http::Request& request, const std::string& par
   return boolvalue;
 }
 
+std::string stripColorCodes(const std::string& str) {
+  std::string out;
+  size_t rawlen = str.length();
+  for (size_t i = 0; i < rawlen; ++i) {
+    if (rawlen - i > 3 && str[i] == '\e') {
+      int closepos = -1;
+      for (int j = 0; j < 9 && closepos == -1; ++j) {
+        size_t pos = i + 2 + j;
+        if (rawlen > pos) {
+          if (isdigit(str[pos])) {
+          }
+          else if (str[pos] == ';' || str[pos] == 'm') {
+            if (str[pos] == 'm') {
+              closepos = pos;
+            }
+          }
+          else {
+            break;
+          }
+        }
+      }
+      if (closepos != -1) {
+        i = closepos;
+        continue;
+      }
+    }
+    out += str[i];
+  }
+  return out;
+}
+
 http::Response badRequestResponse(const std::string& error, int code = 400) {
   http::Response response(code);
   nlohmann::json j = {{"error", error}};
@@ -2198,6 +2229,7 @@ void RestApi::requestReady(void* service, int servicerequestid) {
       }
       else {
         std::string result = sl->getRawCommandResult(servicerequestid);
+        result = stripColorCodes(result);
         request->successes.emplace_back(service, result);
       }
       sl->finishRequest(servicerequestid);
