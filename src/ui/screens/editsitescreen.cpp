@@ -392,6 +392,7 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
       }
       active = true;
       activeelement = mso.getElement(mso.getSelectionPointer());
+      std::string bonusselectsitesheader = modsite->getFreeText().empty() ? "" : " - Freetext: " + modsite->getFreeText();
       if (activeelement->getIdentifier() == "exceptsrc") {
         activeelement->deactivate();
         active = false;
@@ -404,7 +405,7 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         if (std::static_pointer_cast<MenuSelectOptionTextArrow>(mso.getElement("sourcepolicy"))->getData() == SITE_TRANSFER_POLICY_BLOCK) {
           action = "Allow";
         }
-        ui->goSelectSites(action + " race transfers from these sites", preselected, excluded);
+        ui->goSelectSites(action + " race transfers to " + modsite->getName() + " from these sites" + bonusselectsitesheader, preselected, excluded);
         return true;
       }
       if (activeelement->getIdentifier() == "exceptdst") {
@@ -419,7 +420,7 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         if (std::static_pointer_cast<MenuSelectOptionTextArrow>(mso.getElement("targetpolicy"))->getData() == SITE_TRANSFER_POLICY_BLOCK) {
           action = "Allow";
         }
-        ui->goSelectSites(action + " race transfers to these sites", preselected, excluded);
+        ui->goSelectSites(action + " race transfers from " + modsite->getName() + " to these sites" + bonusselectsitesheader, preselected, excluded);
         return true;
       }
       ui->update();

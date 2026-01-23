@@ -148,6 +148,7 @@ Site::Site(const Site& other) {
   transferpairing = other.transferpairing;
   maxtransfertimeseconds = other.maxtransfertimeseconds;
   maxspreadjobtimeseconds = other.maxspreadjobtimeseconds;
+  freetext = other.freetext;
 }
 
 std::map<std::string, Path>::const_iterator Site::sectionsBegin() const {
