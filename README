@@ -28,7 +28,7 @@ MAJOR FEATURES
 
 RUNNING NATIVELY
 
-Linux build dependencies: make g++ libssl-dev libncursesw5-dev
+Linux build dependencies: make g++ libssl-dev libncurses-dev
 BSD build dependencies: gmake gcc11-devel openssl ncurses
 
 Procedure: run 'make' in the cbftp root (or gmake if using *BSD). This produces

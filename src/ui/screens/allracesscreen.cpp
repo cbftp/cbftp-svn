@@ -4,6 +4,7 @@
 #include "../menuselectadjustableline.h"
 #include "../menuselectoptionelement.h"
 #include "../resizableelement.h"
+#include "../menuselectoptionalttextbutton.h"
 #include "../menuselectoptiontextbutton.h"
 #include "../misc.h"
 
@@ -546,61 +547,62 @@ std::string AllRacesScreen::getLegendText() const {
 }
 
 void AllRacesScreen::addRaceTableHeader(unsigned int y, MenuSelectOption & mso, const std::string & release) {
-  addRaceTableRow(y, mso, -1, false, "STARTED", "USE", "SECTION", release, "SIZE", "WORST", "AVG", "BEST", "STATUS", "DONE", "SITES");
+  addRaceTableRow(y, mso, -1, false, "STARTED", "STARTED", "USE", "SECTION", release, "SIZE", "WORST", "AVG", "BEST", "STATUS", "DONE", "SITES");
 }
 
 void AllRacesScreen::addRaceTableRow(unsigned int y, MenuSelectOption & mso, unsigned int id, bool selectable,
-    const std::string & timestamp, const std::string & timespent, const std::string & section, const std::string & release,
+    const std::string& timestampfull, const std::string& timestamp, const std::string & timespent, const std::string & section, const std::string & release,
     const std::string & size, const std::string & worst, const std::string & avg, const std::string & best, const std::string & status, const std::string & done,
     const std::string & sites)
 {
   std::shared_ptr<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
+  std::shared_ptr<MenuSelectOptionAltTextButton> msoatb;
   std::shared_ptr<MenuSelectOptionTextButton> msotb;
 
-  msotb = mso.addTextButtonNoContent(y, 1, "timestamp", timestamp);
-  msotb->setSelectable(false);
-  msal->addElement(msotb, 7, RESIZE_REMOVE);
+  msoatb = mso.addAltTextButton(y, 1, "timestamp", timestampfull, timestamp);
+  msoatb->setSelectable(false);
+  msal->addElement(msoatb, 9, 1, RESIZE_REMOVE, false);
 
   msotb = mso.addTextButtonNoContent(y, 1, "timespent", timespent);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 8, RESIZE_REMOVE);
+  msal->addElement(msotb, 10, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "section", section);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 3, RESIZE_REMOVE);
+  msal->addElement(msotb, 5, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "release", release);
   msotb->setSelectable(selectable);
   msotb->setId(id);
-  msal->addElement(msotb, 12, 1, RESIZE_CUTEND, true);
+  msal->addElement(msotb, 14, 3, RESIZE_CUTEND, true);
 
   msotb = mso.addTextButtonNoContent(y, 1, "size", size);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 10, RESIZE_REMOVE);
+  msal->addElement(msotb, 12, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "worst", worst);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 2, RESIZE_REMOVE);
+  msal->addElement(msotb, 4, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "avg", avg);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 5, RESIZE_REMOVE);
+  msal->addElement(msotb, 7, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "best", best);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 4, RESIZE_REMOVE);
+  msal->addElement(msotb, 6, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "status", status);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 11, RESIZE_REMOVE);
+  msal->addElement(msotb, 13, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "done", done);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 6, RESIZE_REMOVE);
+  msal->addElement(msotb, 8, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "sites", sites);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 0, RESIZE_WITHDOTS);
+  msal->addElement(msotb, 2, RESIZE_WITHDOTS);
 }
 
 void AllRacesScreen::addRaceDetails(unsigned int y, MenuSelectOption & mso, std::shared_ptr<Race> race) {
@@ -625,7 +627,7 @@ void AllRacesScreen::addRaceDetails(unsigned int y, MenuSelectOption & mso, std:
       status = "timeout";
       break;
   }
-  addRaceTableRow(y, mso, race->getId(), true, race->getTimeStamp(), timespent, race->getSection(),
-                  race->getName(), size, worst, avg, best, status, done,
-                  race->getSiteListText());
+  addRaceTableRow(y, mso, race->getId(), true, race->getTimeStampFull(), race->getTimeStamp(),
+                  timespent, race->getSection(), race->getName(), size, worst, avg, best,
+                  status, done, race->getSiteListText());
 }

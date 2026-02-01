@@ -279,7 +279,7 @@ void TransferMonitor::engageUpload(
       fld, dpath, lf.getSize(), 0, 0, dst, ssl, clientactive);
   tm->addNewTransferStatus(ts);
   if (!FileSystem::fileExists(spath / sfile)) {
-    lateUploadFailure((spath / sfile).toString() + " already exists", true);
+    lateUploadFailure((spath / sfile).toString() + " does not exist", true);
     return;
   }
   if (!transferProtocolCombinationPossible(sprot, dprot)) {

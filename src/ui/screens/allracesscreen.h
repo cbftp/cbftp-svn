@@ -48,7 +48,8 @@ public:
 private:
   static void addRaceTableRow(unsigned int, MenuSelectOption &, unsigned int, bool, const std::string &,
       const std::string &, const std::string &, const std::string &, const std::string &, const std::string &,
-      const std::string &, const std::string &, const std::string &, const std::string &, const std::string &);
+      const std::string &, const std::string &, const std::string &, const std::string &, const std::string &,
+      const std::string&);
   bool showsWhileFiltered(const std::shared_ptr<Race>& race) const;
   unsigned int totalListSize() const;
   void tick(int) override;

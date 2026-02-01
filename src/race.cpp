@@ -79,6 +79,7 @@ Race::Race(unsigned int id, SpreadProfile profile, const std::string& release, c
   guessedtotalnumfiles(0),
   checkcount(0),
   timestamp(global->getTimeReference()->getCurrentLogTimeStamp()),
+  timestampfull(global->getTimeReference()->getCurrentFullTimeStamp()),
   timespent(0),
   status(RaceStatus::RUNNING),
   worst(0),
@@ -476,6 +477,10 @@ void Race::resetUpdateCheckCounter() {
 
 std::string Race::getTimeStamp() const {
   return timestamp;
+}
+
+std::string Race::getTimeStampFull() const {
+  return timestampfull;
 }
 
 void Race::setDone() {

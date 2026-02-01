@@ -568,6 +568,7 @@ void TransferJob::start() {
     return;
   }
   timestarted = global->getTimeReference()->getCurrentLogTimeStamp();
+  timestartedfull = global->getTimeReference()->getCurrentFullTimeStamp();
   status = TRANSFERJOB_RUNNING;
   global->getTickPoke()->startPoke(this, "TransferJob", TRANSFERJOB_UPDATE_INTERVAL, 0);
 }
@@ -723,6 +724,14 @@ std::string TransferJob::timeQueued() const {
 
 std::string TransferJob::timeStarted() const {
   return timestarted;
+}
+
+std::string TransferJob::timeQueuedFull() const {
+  return timequeuedfull;
+}
+
+std::string TransferJob::timeStartedFull() const {
+  return timestartedfull;
 }
 
 std::string TransferJob::typeString() const {
@@ -1054,6 +1063,7 @@ void TransferJob::reset() {
 void TransferJob::resetValues() {
   status = TRANSFERJOB_QUEUED;
   timequeued = global->getTimeReference()->getCurrentLogTimeStamp();
+  timequeuedfull = global->getTimeReference()->getCurrentFullTimeStamp();
   almostdone = false;
   slots = !!src ? src->getSite()->getMaxDownTransferJob() : 1;
   expectedfinalsize = 0;

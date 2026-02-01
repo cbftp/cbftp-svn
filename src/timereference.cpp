@@ -1,6 +1,7 @@
 #include "timereference.h"
 
 #include <ctime>
+#include <cstdio>
 #include <sys/time.h>
 
 #include "core/tickpoke.h"
@@ -20,20 +21,30 @@ void TimeReference::tick(int) {
   timeticker += INTERVAL;
 }
 
-std::string TimeReference::getCurrentLogTimeStamp() const {
-  struct timeval tp;
-  gettimeofday(&tp, nullptr);
+std::string TimeReference::getCurrentTimeStamp(bool includedate) const {
   time_t rawtime = time(NULL);
-  char timebuf[26];
-  ctime_r(&rawtime, timebuf);
-  if (logtimestampms) {
-    std::string ms = std::to_string(tp.tv_usec / 1000);
-    while (ms.length() < 3) {
-      ms = "0" + ms;
-    }
-    return std::string(timebuf + 11, 8) + "." + ms;
+  struct tm tm;
+  localtime_r(&rawtime, &tm);
+  char timebuf[32];
+  int pos = 0;
+  if (includedate) {
+    pos = std::sprintf(timebuf, "%d-%.2d-%.2d ", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
   }
-  return std::string(timebuf + 11, 8);
+  pos += std::sprintf(timebuf + pos, "%.2d:%.2d:%.2d", tm.tm_hour, tm.tm_min, tm.tm_sec);
+  if (logtimestampms) {
+    struct timespec tp;
+    clock_gettime(CLOCK_REALTIME, &tp);
+    std::sprintf(timebuf + pos, ".%.3d", (unsigned int)(tp.tv_nsec / 1000000));
+  }
+  return timebuf;
+}
+
+std::string TimeReference::getCurrentFullTimeStamp() const {
+  return getCurrentTimeStamp(true);
+}
+
+std::string TimeReference::getCurrentLogTimeStamp() const {
+  return getCurrentTimeStamp(false);
 }
 
 bool TimeReference::getLogTimeStampMilliseconds() const {

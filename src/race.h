@@ -88,6 +88,7 @@ class Race : public Core::EventReceiver, public TransferStatusCallback {
     std::unordered_map<FailedTransferKey, TransferAttemptCounter, FailedTransferHash> transferattempts;
     int checkcount;
     std::string timestamp;
+    std::string timestampfull;
     unsigned int timespent;
     RaceStatus status;
     unsigned int worst;
@@ -124,6 +125,7 @@ class Race : public Core::EventReceiver, public TransferStatusCallback {
     unsigned int getMaxSiteNumFilesProgress() const;
     bool isDone() const;
     std::string getTimeStamp() const;
+    std::string getTimeStampFull() const;
     unsigned int getTimeSpent() const;
     std::string getSiteListText(SiteListType = SiteListType::ALL) const;
     std::shared_ptr<SiteRace> getSiteRace(const std::string& site) const;

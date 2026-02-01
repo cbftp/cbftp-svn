@@ -61,9 +61,9 @@ void TransferJobStatusScreen::redraw() {
   int y = 1;
   bool running = transferjob->getStatus() == TRANSFERJOB_RUNNING;
   bool started = transferjob->getStatus() != TRANSFERJOB_QUEUED;
-  vv->putStr(y, 1, "Queued: " + transferjob->timeQueued());
+  vv->putStr(y, 1, "Queued: " + transferjob->timeQueuedFull());
   if (started) {
-    vv->putStr(y, 19, "Started: " + transferjob->timeStarted());
+    vv->putStr(y, 15 + transferjob->timeQueuedFull().length(), "Started: " + transferjob->timeStartedFull());
   }
   y++;
   vv->putStr(y, 1, "Type: " + transferjob->typeString());

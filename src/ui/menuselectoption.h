@@ -9,6 +9,7 @@
 class MenuSelectOptionElement;
 class MenuSelectOptionTextArrow;
 class MenuSelectAdjustableLine;
+class MenuSelectOptionAltTextButton;
 class MenuSelectOptionTextButton;
 class MenuSelectOptionTextField;
 class MenuSelectOptionNumArrow;
@@ -41,6 +42,7 @@ class MenuSelectOption : public FocusableArea {
     std::shared_ptr<MenuSelectOptionCheckBox> addCheckBox(int, int, std::string, std::string, bool);
     std::shared_ptr<MenuSelectOptionTextButton> addTextButton(int, int, std::string, std::string);
     std::shared_ptr<MenuSelectOptionTextButton> addTextButtonNoContent(int, int, std::string, std::string);
+    std::shared_ptr<MenuSelectOptionAltTextButton> addAltTextButton(int row, int col, const std::string& identifier, const std::string& longtext, const std::string& shorttext);
     std::shared_ptr<MenuSelectAdjustableLine> addAdjustableLine();
     std::shared_ptr<MenuSelectAdjustableLine> addAdjustableLineBefore(std::shared_ptr<MenuSelectAdjustableLine>);
     std::shared_ptr<MenuSelectOptionElement> getElement(unsigned int) const;

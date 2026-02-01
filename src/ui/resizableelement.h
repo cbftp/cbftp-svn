@@ -6,6 +6,7 @@
 #define RESIZE_WITHDOTS 1192
 #define RESIZE_WITHLAST3 1193
 #define RESIZE_CUTEND 1194
+#define RESIZE_ALTERNATE 1195
 
 class ResizableElement : public MenuSelectOptionElement {
 public:
@@ -18,6 +19,9 @@ public:
   virtual ~ResizableElement() {
   }
   virtual unsigned int wantedWidth() const = 0;
+  virtual unsigned int alternateWantedWidth() const {
+    return wantedWidth();
+  }
   unsigned int highPriority() const {
     return highprio;
   }

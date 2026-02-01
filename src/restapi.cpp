@@ -1492,6 +1492,7 @@ void RestApi::handleSpreadJobGet(RestApiCallback* cb, int connrequestid, const h
   j["profile"] = profileToString(spreadjob->getProfile());
   j["status"] = raceStatusToString(spreadjob->getStatus());
   j["time_started"] = spreadjob->getTimeStamp();
+  j["time_started_full"] = spreadjob->getTimeStampFull();
   j["time_spent_seconds"] = spreadjob->getTimeSpent();
   j["size_estimated_bytes"] = spreadjob->estimatedTotalSize();
   j["percentage_complete_worst"] = spreadjob->getWorstCompletionPercentage();
@@ -1964,6 +1965,9 @@ void RestApi::handleTransferJobGet(RestApiCallback* cb, int connrequestid, const
   j["src_path"] = transferjob->getSrcPath().toString();
   j["dst_path"] = transferjob->getDstPath().toString();
   j["time_started"] = transferjob->timeStarted();
+  j["time_started_full"] = transferjob->timeStartedFull();
+  j["time_queued"] = transferjob->timeQueued();
+  j["time_queued_full"] = transferjob->timeQueuedFull();
   j["time_spent_seconds"] = transferjob->timeSpent();
   j["time_remaining_seconds"] = transferjob->timeRemaining();
   j["size_progress_bytes"] = transferjob->sizeProgress();

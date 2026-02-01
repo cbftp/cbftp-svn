@@ -100,7 +100,9 @@ public:
   unsigned long long int totalSize() const;
   unsigned int getSpeed() const;
   std::string timeQueued() const;
+  std::string timeQueuedFull() const;
   std::string timeStarted() const;
+  std::string timeStartedFull() const;
   std::string typeString() const;
   int filesProgress() const;
   int filesTotal() const;
@@ -165,7 +167,9 @@ private:
   int timespentsecs;
   int timeremaining;
   std::string timequeued;
+  std::string timequeuedfull;
   std::string timestarted;
+  std::string timestartedfull;
   int filesprogress;
   int filestotal;
   bool almostdone;

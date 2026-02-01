@@ -7,6 +7,7 @@
 #include "menuselectoptiontextfield.h"
 #include "menuselectoptionnumarrow.h"
 #include "menuselectoptioncheckbox.h"
+#include "menuselectoptionalttextbutton.h"
 #include "menuselectoptiontextbutton.h"
 #include "menuselectoptiontextarrow.h"
 #include "menuselectadjustableline.h"
@@ -163,6 +164,12 @@ std::shared_ptr<MenuSelectOptionTextButton> MenuSelectOption::addTextButtonNoCon
   return msotb;
 }
 
+std::shared_ptr<MenuSelectOptionAltTextButton> MenuSelectOption::addAltTextButton(int row, int col, const std::string& identifier, const std::string& longtext, const std::string& shorttext) {
+  std::shared_ptr<MenuSelectOptionAltTextButton> msoatb(std::make_shared<MenuSelectOptionAltTextButton>(identifier, row, col, longtext, shorttext));
+  options.push_back(msoatb);
+  return msoatb;
+}
+
 std::shared_ptr<MenuSelectAdjustableLine> MenuSelectOption::addAdjustableLine() {
   std::shared_ptr<MenuSelectAdjustableLine> msal(std::make_shared<MenuSelectAdjustableLine>());
   adjustablelines.push_back(msal);
@@ -255,9 +262,11 @@ void MenuSelectOption::adjustLines(unsigned int linesize) {
     return;
   }
   std::vector<unsigned int> maxwantedwidths;
+  std::vector<unsigned int> maxalternatewantedwidths;
   std::vector<unsigned int> maxwidths;
   std::vector<unsigned int> averagewantedwidths;
   maxwantedwidths.resize(elementcount); // int is initialized to 0
+  maxalternatewantedwidths.resize(elementcount);
   maxwidths.resize(elementcount);
   averagewantedwidths.resize(elementcount);
   int shortspaces = 0;
@@ -265,8 +274,12 @@ void MenuSelectOption::adjustLines(unsigned int linesize) {
     for (unsigned int i = 0; i < elementcount; i++) {
       std::shared_ptr<ResizableElement> re = (*it)->getElement(i);
       unsigned int wantedwidth = re->wantedWidth();
+      unsigned int alternatewantedwidth = re->alternateWantedWidth();
       if (wantedwidth > maxwantedwidths[i]) {
         maxwantedwidths[i] = wantedwidth;
+      }
+      if (alternatewantedwidth > maxalternatewantedwidths[i]) {
+        maxalternatewantedwidths[i] = alternatewantedwidth;
       }
       averagewantedwidths[i] += wantedwidth;
       if (it == adjustablelines.begin() && re->shortSpacing() && i + 1 != elementcount) {
@@ -314,7 +327,10 @@ void MenuSelectOption::adjustLines(unsigned int linesize) {
         bool athighprio = false;
         if (prio != highprio) {
           partialremove = true;
-          if (maxwidths[i] <= averagewantedwidths[i]) {
+          size_t resizemethod = re->resizeMethod();
+          if ((resizemethod != RESIZE_ALTERNATE && maxwidths[i] <= averagewantedwidths[i]) ||
+              (resizemethod == RESIZE_ALTERNATE && maxwidths[i] <= maxalternatewantedwidths[i]))
+          {
             athighprio = true;
             prio = highprio;
             partialremove = false;
@@ -350,6 +366,18 @@ void MenuSelectOption::adjustLines(unsigned int linesize) {
           else {
             leastimportantelem->setVisible(false);
             totalwantedwidth -= maxsaving;
+          }
+          break;
+        }
+        case RESIZE_ALTERNATE: {
+          if (leastimportantpartialremove && !leastimportanthighprio) {
+            int reduction = maxwantedwidths[leastimportant] - maxalternatewantedwidths[leastimportant];
+            maxwidths[leastimportant] -= reduction;
+            totalwantedwidth -= reduction;
+          }
+          else {
+            leastimportantelem->setVisible(false);
+            totalwantedwidth -= maxalternatewantedwidths[leastimportant] + spacing;
           }
           break;
         }

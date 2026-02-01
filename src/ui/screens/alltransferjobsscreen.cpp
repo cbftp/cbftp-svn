@@ -6,6 +6,7 @@
 #include "../menuselectadjustableline.h"
 #include "../menuselectoptionelement.h"
 #include "../resizableelement.h"
+#include "../menuselectoptionalttextbutton.h"
 #include "../menuselectoptiontextbutton.h"
 #include "../misc.h"
 
@@ -546,60 +547,61 @@ std::string AllTransferJobsScreen::getLegendText() const {
 }
 
 void AllTransferJobsScreen::addJobTableRow(unsigned int y, MenuSelectOption & mso, unsigned int id, bool selectable,
-    const std::string & queuetime, const std::string & starttime, const std::string & timespent, const std::string & type,
+    const std::string& queuetimefull, const std::string & queuetime, const std::string& starttimefull, const std::string & starttime, const std::string & timespent, const std::string & type,
     const std::string & name, const std::string & route, const std::string & sizeprogress, const std::string & filesprogress,
     const std::string & timeremaining, const std::string & speed, const std::string & progress) {
   std::shared_ptr<MenuSelectAdjustableLine> msal = mso.addAdjustableLine();
   std::shared_ptr<MenuSelectOptionTextButton> msotb;
+  std::shared_ptr<MenuSelectOptionAltTextButton> msoatb;
 
-  msotb = mso.addTextButtonNoContent(y, 1, "queuetime", queuetime);
-  msotb->setSelectable(false);
-  msal->addElement(msotb, 5, RESIZE_REMOVE);
+  msoatb = mso.addAltTextButton(y, 1, "queuetime", queuetimefull, queuetime);
+  msoatb->setSelectable(false);
+  msal->addElement(msoatb, 8, 2, RESIZE_ALTERNATE, false);
 
-  msotb = mso.addTextButtonNoContent(y, 1, "starttime", starttime);
-  msotb->setSelectable(false);
-  msal->addElement(msotb, 4, RESIZE_REMOVE);
+  msoatb = mso.addAltTextButton(y, 1, "starttime", starttimefull, starttime);
+  msoatb->setSelectable(false);
+  msal->addElement(msoatb, 7, 1, RESIZE_ALTERNATE, false);
 
   msotb = mso.addTextButtonNoContent(y, 1, "timespent", timespent);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 6, RESIZE_REMOVE);
+  msal->addElement(msotb, 9, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "type", type);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 8, RESIZE_REMOVE);
+  msal->addElement(msotb, 11, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "name", name);
   msotb->setSelectable(selectable);
   msotb->setId(id);
-  msal->addElement(msotb, 11, 0, RESIZE_CUTEND, true);
+  msal->addElement(msotb, 14, 3, RESIZE_CUTEND, true);
 
   msotb = mso.addTextButtonNoContent(y, 1, "route", route);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 2, RESIZE_REMOVE);
+  msal->addElement(msotb, 5, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "sizeprogress", sizeprogress);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 9, RESIZE_REMOVE);
+  msal->addElement(msotb, 12, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "filesprogress", filesprogress);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 1, RESIZE_REMOVE);
+  msal->addElement(msotb, 4, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "timeremaining", timeremaining);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 3, RESIZE_REMOVE);
+  msal->addElement(msotb, 6, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "speed", speed);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 7, RESIZE_REMOVE);
+  msal->addElement(msotb, 10, RESIZE_REMOVE);
 
   msotb = mso.addTextButtonNoContent(y, 1, "progress", progress);
   msotb->setSelectable(false);
-  msal->addElement(msotb, 10, RESIZE_REMOVE);
+  msal->addElement(msotb, 13, RESIZE_REMOVE);
 }
 
 void AllTransferJobsScreen::addJobTableHeader(unsigned int y, MenuSelectOption & mso, const std::string & name) {
-  addJobTableRow(y, mso, -1, false, "QUEUED", "STARTED", "USE", "TYPE", name, "ROUTE", "SIZE", "FILES", "LEFT", "SPEED", "DONE");
+  addJobTableRow(y, mso, -1, false, "QUEUED", "QUEUED", "STARTED", "STARTED", "USE", "TYPE", name, "ROUTE", "SIZE", "FILES", "LEFT", "SPEED", "DONE");
 }
 
 void AllTransferJobsScreen::addJobDetails(unsigned int y, MenuSelectOption & mso, std::shared_ptr<TransferJob> tj) {
@@ -641,5 +643,5 @@ void AllTransferJobsScreen::addJobDetails(unsigned int y, MenuSelectOption & mso
       type = "UL";
       break;
   }
-  addJobTableRow(y, mso, tj->getId(), true, tj->timeQueued(), tj->timeStarted(), timespent, type, tj->getSrcFileName(), route, sizeprogress, filesprogress, timeremaining, speed, status);
+  addJobTableRow(y, mso, tj->getId(), true, tj->timeQueuedFull(), tj->timeQueued(), tj->timeStartedFull(), tj->timeStarted(), timespent, type, tj->getSrcFileName(), route, sizeprogress, filesprogress, timeremaining, speed, status);
 }

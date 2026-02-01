@@ -50,7 +50,8 @@ public:
 private:
   static void addJobTableRow(unsigned int, MenuSelectOption &, unsigned int, bool, const std::string &,
       const std::string &, const std::string &, const std::string &, const std::string &, const std::string &,
-      const std::string &, const std::string &, const std::string &, const std::string &, const std::string &);
+      const std::string &, const std::string &, const std::string &, const std::string &, const std::string &,
+      const std::string &, const std::string &);
   bool showsWhileFiltered(const std::shared_ptr<TransferJob>& tj) const;
   unsigned int totalListSize() const;
   void tick(int) override;
