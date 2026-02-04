@@ -561,7 +561,7 @@ void AllRacesScreen::addRaceTableRow(unsigned int y, MenuSelectOption & mso, uns
 
   msoatb = mso.addAltTextButton(y, 1, "timestamp", timestampfull, timestamp);
   msoatb->setSelectable(false);
-  msal->addElement(msoatb, 9, 1, RESIZE_REMOVE, false);
+  msal->addElement(msoatb, 9, 1, RESIZE_ALTERNATE, false);
 
   msotb = mso.addTextButtonNoContent(y, 1, "timespent", timespent);
   msotb->setSelectable(false);
