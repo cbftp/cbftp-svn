@@ -58,12 +58,19 @@ void MoveScreen::redraw() {
   }
 }
 
-bool MoveScreen::keyPressed(unsigned int ch) {
-  if (active && ch == KEY_IC && items == firstitem) {
+void MoveScreen::onKeyPressedActive(unsigned int ch) {
+  if (ch == KEY_IC && items == firstitem) {
+    std::shared_ptr<MenuSelectOptionTextField> dstpathfield = std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("dstpath"));
     for (size_t i = 0; i < firstitem.length(); ++i) {
-      std::static_pointer_cast<MenuSelectOptionTextField>(mso.getElement("dstpath"))->inputChar(firstitem[i]);
+      dstpathfield->inputChar(firstitem[i]);
     }
+    ui->update();
+    return;
   }
+  UIWindow::onKeyPressedActive(ch);
+}
+
+bool MoveScreen::keyPressed(unsigned int ch) {
   int action = keybinds.getKeyAction(ch);
   switch(action) {
     case KEYACTION_ENTER:
