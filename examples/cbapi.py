@@ -26,7 +26,7 @@ def _shutdown_tls_sessions_nicely():
   for pool_key in pool_mgr.pools.keys():
     pool = pool_mgr.pools[pool_key]
     for https_conn in pool.pool.queue:
-      if https_conn:
+      if https_conn and https_conn.sock:
         https_conn.sock.unwrap()
 
 def init(password, port=55477):
