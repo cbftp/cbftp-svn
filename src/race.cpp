@@ -80,6 +80,7 @@ Race::Race(unsigned int id, SpreadProfile profile, const std::string& release, c
   checkcount(0),
   timestamp(global->getTimeReference()->getCurrentLogTimeStamp()),
   timestampfull(global->getTimeReference()->getCurrentFullTimeStamp()),
+  createdepoch(util::getEpochNow()),
   timespent(0),
   status(RaceStatus::RUNNING),
   worst(0),
@@ -481,6 +482,10 @@ std::string Race::getTimeStamp() const {
 
 std::string Race::getTimeStampFull() const {
   return timestampfull;
+}
+
+unsigned long long int Race::getCreatedEpoch() const {
+  return createdepoch;
 }
 
 void Race::setDone() {

@@ -96,6 +96,8 @@ public:
   std::list<std::shared_ptr<Race>>::const_iterator getCurrentRacesEnd() const;
   std::list<std::shared_ptr<Race>>::const_iterator getFinishedRacesBegin() const;
   std::list<std::shared_ptr<Race>>::const_iterator getFinishedRacesEnd() const;
+  std::list<std::shared_ptr<TransferJob>>::const_iterator getCurrentTransferJobsBegin() const;
+  std::list<std::shared_ptr<TransferJob>>::const_iterator getCurrentTransferJobsEnd() const;
   std::list<std::shared_ptr<TransferJob>>::const_iterator getTransferJobsBegin() const;
   std::list<std::shared_ptr<TransferJob>>::const_iterator getTransferJobsEnd() const;
   void tick(int);

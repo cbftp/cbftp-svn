@@ -103,6 +103,7 @@ public:
   std::string timeQueuedFull() const;
   std::string timeStarted() const;
   std::string timeStartedFull() const;
+  unsigned long long int getStartedEpoch() const;
   std::string typeString() const;
   int filesProgress() const;
   int filesTotal() const;
@@ -170,6 +171,7 @@ private:
   std::string timequeuedfull;
   std::string timestarted;
   std::string timestartedfull;
+  unsigned long long int startedepoch;
   int filesprogress;
   int filestotal;
   bool almostdone;

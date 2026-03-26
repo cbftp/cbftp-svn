@@ -569,6 +569,7 @@ void TransferJob::start() {
   }
   timestarted = global->getTimeReference()->getCurrentLogTimeStamp();
   timestartedfull = global->getTimeReference()->getCurrentFullTimeStamp();
+  startedepoch = util::getEpochNow();
   status = TRANSFERJOB_RUNNING;
   global->getTickPoke()->startPoke(this, "TransferJob", TRANSFERJOB_UPDATE_INTERVAL, 0);
 }
@@ -732,6 +733,10 @@ std::string TransferJob::timeQueuedFull() const {
 
 std::string TransferJob::timeStartedFull() const {
   return timestartedfull;
+}
+
+unsigned long long int TransferJob::getStartedEpoch() const {
+  return startedepoch;
 }
 
 std::string TransferJob::typeString() const {
@@ -1078,4 +1083,5 @@ void TransferJob::resetValues() {
   filestotal = 0;
   idletime = 0;
   timestarted = "-";
+  startedepoch = 0;
 }

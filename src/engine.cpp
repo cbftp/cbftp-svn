@@ -1934,6 +1934,14 @@ std::list<std::shared_ptr<Race> >::const_iterator Engine::getFinishedRacesEnd() 
   return finishedraces.end();
 }
 
+std::list<std::shared_ptr<TransferJob> >::const_iterator Engine::getCurrentTransferJobsBegin() const {
+  return currenttransferjobs.begin();
+}
+
+std::list<std::shared_ptr<TransferJob> >::const_iterator Engine::getCurrentTransferJobsEnd() const {
+  return currenttransferjobs.end();
+}
+
 std::list<std::shared_ptr<TransferJob> >::const_iterator Engine::getTransferJobsBegin() const {
   return alltransferjobs.begin();
 }

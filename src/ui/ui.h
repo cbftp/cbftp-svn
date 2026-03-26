@@ -156,6 +156,10 @@ private:
   LegendMode legendmode;
   bool highlightentireline;
   bool showfreetext;
+  int maxmainscreenspreadjobs;
+  int maxmainscreentransferjobs;
+  int maxmainscreenspreadjobage;
+  int maxmainscreentransferjobage;
   bool showxmastree;
   bool split;
   bool fullscreentoggle;
@@ -196,6 +200,14 @@ public:
   void setHighlightEntireLine(bool highlight);
   bool getShowFreeText() const;
   void setShowFreeText(bool show);
+  int getMaxMainScreenSpreadJobs() const;
+  void setMaxMainScreenSpreadJobs(int maxjobs);
+  int getMaxMainScreenTransferJobs() const;
+  void setMaxMainScreenTransferJobs(int maxjobs);
+  int getMaxMainScreenSpreadJobAge() const;
+  void setMaxMainScreenSpreadJobAge(int ageseconds);
+  int getMaxMainScreenTransferJobAge() const;
+  void setMaxMainScreenTransferJobAge(int ageseconds);
   bool getShowXmasTree() const;
   void setShowXmasTree(bool show);
   void returnToLast();

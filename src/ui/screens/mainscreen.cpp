@@ -202,9 +202,8 @@ void MainScreen::redraw() {
   }
   numsitestext = "Sites: " + std::to_string(totalsitessize);
   int listpreparedraces = global->getEngine()->preparedRaces();
-  int listraces = global->getEngine()->allRaces();
-  int listtransferjobs = global->getEngine()->allTransferJobs();
-
+  bool listspreadjobs = false;
+  bool listtransferjobs = false;
   unsigned int irow = 0;
   msop.clear();
   msosj.clear();
@@ -221,36 +220,79 @@ void MainScreen::redraw() {
     msop.adjustLines(col - 3);
     irow++;
   }
-  if (listraces) {
-
-    AllRacesScreen::addRaceTableHeader(irow++, msosj, std::string("SPREAD JOB NAME") + (listraces > 3 ? " (Showing latest 3)" : ""));
-    std::list<std::shared_ptr<Race> >::const_iterator it;
+  unsigned long long int epochnow = util::getEpochNow();
+  {
+    int maxjobs = ui->getMaxMainScreenSpreadJobs();
+    int maxage = ui->getMaxMainScreenSpreadJobAge();
+    std::list<std::shared_ptr<Race>> shownjobs;
     int i = 0;
-    for (it = --global->getEngine()->getRacesEnd(); it != --global->getEngine()->getRacesBegin() && i < 3; it--, i++) {
-      AllRacesScreen::addRaceDetails(irow++, msosj, *it);
+    std::list<std::shared_ptr<Race>>::const_iterator it;
+    std::unordered_set<unsigned int> addedjobs;
+    for (it = --global->getEngine()->getCurrentRacesEnd(); it != --global->getEngine()->getCurrentRacesBegin() && i < maxjobs; it--, i++) {
+      shownjobs.emplace_back(*it);
+      addedjobs.insert((*it)->getId());
     }
-    msosj.checkPointer();
-    msosj.adjustLines(col - 3);
-    irow++;
+    for (it = --global->getEngine()->getRacesEnd(); it != --global->getEngine()->getRacesBegin() && (int)shownjobs.size() < maxjobs; it--) {
+      if (maxage > 0 && epochnow - (*it)->getCreatedEpoch() > (unsigned long long int)maxage) {
+        break;
+      }
+      if (addedjobs.find((*it)->getId()) == addedjobs.end()) {
+        shownjobs.emplace_back(*it);
+        addedjobs.insert((*it)->getId());
+      }
+    }
+    int numshownjobs = shownjobs.size();
+    int totaljobs = global->getEngine()->allRaces();
+    if (numshownjobs) {
+      listspreadjobs = true;
+      AllRacesScreen::addRaceTableHeader(irow++, msosj, std::string("SPREAD JOB NAME") + (totaljobs > numshownjobs  ? " (Showing latest " + std::to_string(numshownjobs) + ")" : ""));
+      for (it = shownjobs.begin(); it != shownjobs.end(); ++it) {
+        AllRacesScreen::addRaceDetails(irow++, msosj, *it);
+      }
+      msosj.checkPointer();
+      msosj.adjustLines(col - 3);
+      irow++;
+    }
   }
-  if (listtransferjobs) {
-
-    AllTransferJobsScreen::addJobTableHeader(irow++, msotj, std::string("TRANSFER JOB NAME") + (listtransferjobs > 3 ? " (Showing latest 3)" : ""));
+  {
+    int maxjobs = ui->getMaxMainScreenTransferJobs();
+    int maxage = ui->getMaxMainScreenTransferJobAge();
+    std::list<std::shared_ptr<TransferJob>> shownjobs;
+    int i = 0;
     std::list<std::shared_ptr<TransferJob> >::const_iterator it;
-    int i = 0;
-    for (it = --global->getEngine()->getTransferJobsEnd(); it != --global->getEngine()->getTransferJobsBegin() && i < 3; it--, i++) {
-      AllTransferJobsScreen::addJobDetails(irow++, msotj, *it);
+    std::unordered_set<unsigned int> addedjobs;
+    for (it = --global->getEngine()->getCurrentTransferJobsEnd(); it != --global->getEngine()->getCurrentTransferJobsBegin() && i < maxjobs; it--, i++) {
+      shownjobs.emplace_back(*it);
+      addedjobs.insert((*it)->getId());
     }
-    msotj.checkPointer();
-    msotj.adjustLines(col - 3);
-    irow++;
+    for (it = --global->getEngine()->getTransferJobsEnd(); it != --global->getEngine()->getTransferJobsBegin() && (int)shownjobs.size() < maxjobs; it--) {
+      if (maxage > 0 && epochnow - (*it)->getStartedEpoch() > (unsigned long long int)maxage) {
+        break;
+      }
+      if (addedjobs.find((*it)->getId()) == addedjobs.end()) {
+        shownjobs.emplace_back(*it);
+        addedjobs.insert((*it)->getId());
+      }
+    }
+    int numshownjobs = shownjobs.size();
+    int totaljobs = global->getEngine()->allTransferJobs();
+    if (numshownjobs) {
+      listtransferjobs = true;
+      AllTransferJobsScreen::addJobTableHeader(irow++, msotj, std::string("TRANSFER JOB NAME") + (totaljobs > numshownjobs ? " (Showing latest " + std::to_string(numshownjobs) + ")" : ""));
+      for (it = shownjobs.begin(); it != shownjobs.end(); ++it) {
+        AllTransferJobsScreen::addJobDetails(irow++, msotj, *it);
+      }
+      msotj.checkPointer();
+      msotj.adjustLines(col - 3);
+      irow++;
+    }
   }
-  msop.makeLeavableDown(listraces || listtransferjobs || totalsitessize);
+  msop.makeLeavableDown(listspreadjobs || listtransferjobs || totalsitessize);
   msosj.makeLeavableUp(listpreparedraces);
   msosj.makeLeavableDown(listtransferjobs || totalsitessize);
-  msotj.makeLeavableUp(listpreparedraces || listraces);
+  msotj.makeLeavableUp(listpreparedraces || listspreadjobs);
   msotj.makeLeavableDown(totalsitessize);
-  msos.makeLeavableUp(listpreparedraces || listraces || listtransferjobs);
+  msos.makeLeavableUp(listpreparedraces || listspreadjobs || listtransferjobs);
 
   if (!totalsitessize) {
     vv->putStr(irow, 1, "Press '" + keybinds.getKeyRepr(keybinds.getKey(KEYACTION_ADD_SITE)).repr + "' to add a site");

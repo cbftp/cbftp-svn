@@ -4,6 +4,7 @@
 #include <csignal>
 #include <cstdio>
 #include <cctype>
+#include <ctime>
 
 namespace util {
 
@@ -431,6 +432,10 @@ bool naturalComparator::operator()(const std::string& a, const std::string& b) c
     }
   }
   return a.length() < b.length();
+}
+
+unsigned long long int getEpochNow() {
+  return time(nullptr);
 }
 
 }

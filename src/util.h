@@ -46,4 +46,5 @@ std::regex regexParse(const std::string & pattern);
 struct naturalComparator {
   bool operator()(const std::string& a, const std::string& b) const;
 };
+unsigned long long int getEpochNow();
 }

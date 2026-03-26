@@ -89,6 +89,7 @@ class Race : public Core::EventReceiver, public TransferStatusCallback {
     int checkcount;
     std::string timestamp;
     std::string timestampfull;
+    unsigned long long int createdepoch;
     unsigned int timespent;
     RaceStatus status;
     unsigned int worst;
@@ -126,6 +127,7 @@ class Race : public Core::EventReceiver, public TransferStatusCallback {
     bool isDone() const;
     std::string getTimeStamp() const;
     std::string getTimeStampFull() const;
+    unsigned long long int getCreatedEpoch() const;
     unsigned int getTimeSpent() const;
     std::string getSiteListText(SiteListType = SiteListType::ALL) const;
     std::shared_ptr<SiteRace> getSiteRace(const std::string& site) const;

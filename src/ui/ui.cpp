@@ -95,6 +95,10 @@ Ui::Ui() :
   legendmode(LEGEND_SCROLLING),
   highlightentireline(false),
   showfreetext(true),
+  maxmainscreenspreadjobs(3),
+  maxmainscreentransferjobs(3),
+  maxmainscreenspreadjobage(86400),
+  maxmainscreentransferjobage(86400),
   showxmastree(true),
   split(false),
   fullscreentoggle(false),
@@ -309,6 +313,38 @@ bool Ui::getShowFreeText() const {
 
 void Ui::setShowFreeText(bool show) {
   showfreetext = show;
+}
+
+int Ui::getMaxMainScreenSpreadJobs() const {
+  return maxmainscreenspreadjobs;
+}
+
+void Ui::setMaxMainScreenSpreadJobs(int maxjobs) {
+  maxmainscreenspreadjobs = maxjobs;
+}
+
+int Ui::getMaxMainScreenTransferJobs() const {
+  return maxmainscreentransferjobs;
+}
+
+void Ui::setMaxMainScreenTransferJobs(int maxjobs) {
+  maxmainscreentransferjobs = maxjobs;
+}
+
+int Ui::getMaxMainScreenSpreadJobAge() const {
+  return maxmainscreenspreadjobage;
+}
+
+void Ui::setMaxMainScreenSpreadJobAge(int ageseconds) {
+  maxmainscreenspreadjobage = ageseconds;
+}
+
+int Ui::getMaxMainScreenTransferJobAge() const {
+  return maxmainscreentransferjobage;
+}
+
+void Ui::setMaxMainScreenTransferJobAge(int ageseconds) {
+  maxmainscreentransferjobage = ageseconds;
 }
 
 bool Ui::getShowXmasTree() const {
@@ -1031,6 +1067,18 @@ void Ui::loadSettings(std::shared_ptr<DataFileHandler> dfh) {
     else if (!setting.compare("showfreetext")) {
       setShowFreeText(!value.compare("true"));
     }
+    else if (!setting.compare("maxmainscreenspreadjobs")) {
+      setMaxMainScreenSpreadJobs(std::stoi(value));
+    }
+    else if (!setting.compare("maxmainscreentransferjobs")) {
+      setMaxMainScreenTransferJobs(std::stoi(value));
+    }
+    else if (!setting.compare("maxmainscreenspreadjobage")) {
+      setMaxMainScreenSpreadJobAge(std::stoi(value));
+    }
+    else if (!setting.compare("maxmainscreentransferjobage")) {
+      setMaxMainScreenTransferJobAge(std::stoi(value));
+    }
     else if (!setting.compare("keybind")) {
       std::vector<std::string> tokens = util::splitVec(value, "$");
       int keyaction = std::stoi(tokens[1]);
@@ -1076,6 +1124,10 @@ void Ui::saveSettings(std::shared_ptr<DataFileHandler> dfh) {
   dfh->addOutputLine("UI", "legendmode=" + std::to_string(getLegendMode()));
   dfh->addOutputLine("UI", "highlightentireline=" + std::string(getHighlightEntireLine() ? "true" : "false"));
   dfh->addOutputLine("UI", "showfreetext=" + getShowFreeText());
+  dfh->addOutputLine("UI", "maxmainscreenspreadjobs=" + std::to_string(getMaxMainScreenSpreadJobs()));
+  dfh->addOutputLine("UI", "maxmainscreentransferjobs=" + std::to_string(getMaxMainScreenTransferJobs()));
+  dfh->addOutputLine("UI", "maxmainscreenspreadjobage=" + std::to_string(getMaxMainScreenSpreadJobAge()));
+  dfh->addOutputLine("UI", "maxmainscreentransferjobage=" + std::to_string(getMaxMainScreenTransferJobAge()));
   for (const KeyBinds* keybinds : allkeybinds) {
     for (std::list<KeyBinds::KeyData>::const_iterator it = keybinds->begin(); it != keybinds->end(); ++it) {
       if (it->configuredkeys != it->originalkeys) {

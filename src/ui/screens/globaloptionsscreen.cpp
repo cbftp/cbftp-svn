@@ -32,7 +32,7 @@ enum class UdpEnable {
   ENCRYPTED
 };
 
-void addHistoryOptions(std::shared_ptr<MenuSelectOptionTextArrow>& arrow, bool includelow = true) {
+void setHistoryOptions(const std::shared_ptr<MenuSelectOptionTextArrow>& arrow, int selected, bool includelow = true) {
   if (includelow) {
     arrow->addOption("10", 10);
     arrow->addOption("25", 25);
@@ -49,9 +49,10 @@ void addHistoryOptions(std::shared_ptr<MenuSelectOptionTextArrow>& arrow, bool i
     arrow->addOption("100000", 100000);
   }
   arrow->addOption("Unlimited", -1);
+  arrow->setOption(selected);
 }
 
-void addRuntimeOptions(std::shared_ptr<MenuSelectOptionTextArrow>& arrow) {
+void setRuntimeOptions(const std::shared_ptr<MenuSelectOptionTextArrow>& arrow, int selected) {
   arrow->addOption("10s", 10);
   arrow->addOption("30s", 30);
   arrow->addOption("1m", 60);
@@ -64,6 +65,17 @@ void addRuntimeOptions(std::shared_ptr<MenuSelectOptionTextArrow>& arrow) {
   arrow->addOption("8h", 28800);
   arrow->addOption("24h", 86400);
   arrow->addOption("Unlimited", 0);
+  arrow->setOption(selected);
+}
+
+void setJobAgeOptions(const std::shared_ptr<MenuSelectOptionTextArrow>& arrow, int selected) {
+  arrow->addOption("5m", 300);
+  arrow->addOption("20m", 1200);
+  arrow->addOption("1h", 3600);
+  arrow->addOption("6h", 21600);
+  arrow->addOption("24h", 86400);
+  arrow->addOption("Unlimited", -1);
+  arrow->setOption(selected);
 }
 
 }
@@ -160,20 +172,15 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   y++;
   std::shared_ptr<MenuSelectOptionTextArrow> maxspreadjobtimeseconds = mso.addTextArrow(y++, x, "maxspreadjobtimeseconds", "Max spread job runtime:");
   std::shared_ptr<MenuSelectOptionTextArrow> maxtransfertimeseconds = mso.addTextArrow(y++, x, "maxtransfertimeseconds", "Max transfer runtime:");
-  addRuntimeOptions(maxspreadjobtimeseconds);
-  addRuntimeOptions(maxtransfertimeseconds);
-  maxspreadjobtimeseconds->setOption(global->getEngine()->getMaxSpreadJobTimeSeconds());
-  maxtransfertimeseconds->setOption(global->getTransferManager()->getMaxTransferTimeSeconds());
+  setRuntimeOptions(maxspreadjobtimeseconds, global->getEngine()->getMaxSpreadJobTimeSeconds());
+  setRuntimeOptions(maxtransfertimeseconds, global->getTransferManager()->getMaxTransferTimeSeconds());
   y++;
   std::shared_ptr<MenuSelectOptionTextArrow> spreadjobhistory = mso.addTextArrow(y++, x, "spreadjobhistory", "Spread job history:");
   std::shared_ptr<MenuSelectOptionTextArrow> transferjobhistory = mso.addTextArrow(y++, x, "transferjobhistory", "Transfer job history:");
   std::shared_ptr<MenuSelectOptionTextArrow> transferhistory = mso.addTextArrow(y++, x, "transferhistory", "Transfer history:");
-  addHistoryOptions(spreadjobhistory);
-  addHistoryOptions(transferjobhistory);
-  addHistoryOptions(transferhistory, false);
-  spreadjobhistory->setOption(global->getEngine()->getMaxSpreadJobsHistory());
-  transferjobhistory->setOption(global->getEngine()->getMaxTransferJobsHistory());
-  transferhistory->setOption(global->getTransferManager()->getMaxTransferHistory());
+  setHistoryOptions(spreadjobhistory, global->getEngine()->getMaxSpreadJobsHistory());
+  setHistoryOptions(transferjobhistory, global->getEngine()->getMaxTransferJobsHistory());
+  setHistoryOptions(transferhistory, global->getTransferManager()->getMaxTransferHistory(), false);
   std::shared_ptr<MenuSelectOptionTextArrow> logbufferhistory = mso.addTextArrow(y++, x, "logbufferhistory", "Log buffer history:");
   logbufferhistory->addOption("16", 16);
   logbufferhistory->addOption("64", 64);
@@ -196,6 +203,12 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   legendmode->setOption(ui->getLegendMode());
   mso.addCheckBox(y++, x, "highlightentireline", "Highlight entire lines:", ui->getHighlightEntireLine());
   mso.addCheckBox(y++, x, "showfreetext", "Show freetext on mainscreen:", ui->getShowFreeText());
+  mso.addIntArrow(y++, x, "maxmainscreenspreadjobs", "Max spread jobs on mainscreen:", ui->getMaxMainScreenSpreadJobs(), 0, 64);
+  std::shared_ptr<MenuSelectOptionTextArrow> spreadjobage = mso.addTextArrow(y++, x, "maxmainscreenspreadjobage", "Max spread job age on main screen:");
+  mso.addIntArrow(y++, x, "maxmainscreentransferjobs", "Max transfer jobs on mainscreen:", ui->getMaxMainScreenTransferJobs(), 0, 64);
+  std::shared_ptr<MenuSelectOptionTextArrow> transferjobage = mso.addTextArrow(y++, x, "maxmainscreentransferjobage", "Max transfer job age on main screen:");
+  setJobAgeOptions(spreadjobage, ui->getMaxMainScreenSpreadJobAge());
+  setJobAgeOptions(transferjobage, ui->getMaxMainScreenTransferJobAge());
   if (isYearEnd()) {
     mso.addCheckBox(y++, x, "xmastree", "Show xmas tree:", ui->getShowXmasTree());
   }
@@ -459,6 +472,18 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "showfreetext") {
           ui->setShowFreeText(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
+        }
+        else if (identifier == "maxmainscreenspreadjobs") {
+          ui->setMaxMainScreenSpreadJobs(std::static_pointer_cast<MenuSelectOptionNumArrow>(msoe)->getData());
+        }
+        else if (identifier == "maxmainscreentransferjobs") {
+          ui->setMaxMainScreenTransferJobs(std::static_pointer_cast<MenuSelectOptionNumArrow>(msoe)->getData());
+        }
+        else if (identifier == "maxmainscreenspreadjobage") {
+          ui->setMaxMainScreenSpreadJobAge(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
+        }
+        else if (identifier == "maxmainscreentransferjobage") {
+          ui->setMaxMainScreenTransferJobAge(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
         }
         else if (identifier == "xmastree") {
           ui->setShowXmasTree(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
