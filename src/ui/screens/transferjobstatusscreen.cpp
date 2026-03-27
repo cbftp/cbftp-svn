@@ -22,14 +22,14 @@
 namespace {
 
 enum KeyScopes {
-  KEYSCOPE_RUNNING
+  KEYSCOPE_UNFINISHED
 };
 
 }
 
 TransferJobStatusScreen::TransferJobStatusScreen(Ui* ui) : UIWindow(ui, "TransferJobStatusScreen"), table(*vv), mso(*vv) {
-  keybinds.addScope(KEYSCOPE_RUNNING, "While job is running");
-  keybinds.addBind(10, KEYACTION_ENTER, "Modify", KEYSCOPE_RUNNING);
+  keybinds.addScope(KEYSCOPE_UNFINISHED, "While job remains unfinished");
+  keybinds.addBind(10, KEYACTION_ENTER, "Modify", KEYSCOPE_UNFINISHED);
   keybinds.addBind('b', KEYACTION_BROWSE, "Browse");
   keybinds.addBind('B', KEYACTION_ABORT, "Abort transfer job");
   keybinds.addBind('t', KEYACTION_TRANSFERS, "Transfers");
@@ -303,8 +303,8 @@ std::string TransferJobStatusScreen::getRoute(std::shared_ptr<TransferJob> tj) {
 }
 
 int TransferJobStatusScreen::getCurrentScope() const {
-  if (transferjob->getStatus() == TRANSFERJOB_RUNNING) {
-    return KEYSCOPE_RUNNING;
+  if (transferjob->getStatus() == TRANSFERJOB_QUEUED || transferjob->getStatus() == TRANSFERJOB_RUNNING) {
+    return KEYSCOPE_UNFINISHED;
   }
   return KEYSCOPE_ALL;
 }

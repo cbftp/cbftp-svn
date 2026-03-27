@@ -606,6 +606,10 @@ void TransferMonitor::finish() {
   if (!!ts) {
     ts->setFinished();
   }
+  if (lt != nullptr) {
+    lt->deactivate();
+    lt = nullptr;
+  }
   tm->transferSuccessful(ts);
   setStatus(TM_STATUS_IDLE);
 }
@@ -845,6 +849,10 @@ void TransferMonitor::transferFailed(const std::shared_ptr<TransferStatus> & ts,
       sls->getSite()->pushTransferSpeed(sld->getSite()->getName(), 0, 0);
     }
   }
+  if (lt != nullptr) {
+    lt->deactivate();
+    lt = nullptr;
+  }
   tm->transferFailed(ts, err);
   setStatus(TM_STATUS_IDLE);
 }
@@ -890,10 +898,13 @@ void TransferMonitor::lateDownloadFailure(const std::string& reason, bool dupe) 
   else {
     ts->setFailed();
   }
+  if (lt != nullptr) {
+    lt->deactivate();
+    lt = nullptr;
+  }
   tm->transferFailed(ts, dupe ? TM_ERR_DUPE : TM_ERR_OTHER);
   sls->returnConn(src, true);
   setStatus(TM_STATUS_IDLE);
-  return;
 }
 
 void TransferMonitor::lateUploadFailure(const std::string& reason, bool dupe) {
@@ -904,10 +915,13 @@ void TransferMonitor::lateUploadFailure(const std::string& reason, bool dupe) {
   else {
     ts->setFailed();
   }
+  if (lt != nullptr) {
+    lt->deactivate();
+    lt = nullptr;
+  }
   tm->transferFailed(ts, dupe ? TM_ERR_DUPE : TM_ERR_OTHER);
   sld->returnConn(dst, true);
   setStatus(TM_STATUS_IDLE);
-  return;
 }
 
 void TransferMonitor::setStatus(Status status) {

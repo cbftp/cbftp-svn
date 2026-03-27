@@ -20,9 +20,9 @@ public:
   virtual void disconnect() = 0;
   virtual unsigned long long int size() const = 0;
   FTPConn * getConn() const;
+  void deactivate();
 protected:
   void activate(int localtransferid);
-  void deactivate();
   bool ssl;
   bool inmemory;
   bool passivemode;

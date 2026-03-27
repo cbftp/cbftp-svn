@@ -85,6 +85,9 @@ void LocalTransfer::activate(int localtransferid) {
 }
 
 void LocalTransfer::deactivate() {
+  if (!inuse) {
+    return;
+  }
   inuse = false;
   sockid = -1;
   if (timeoutticker) {

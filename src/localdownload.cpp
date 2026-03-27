@@ -93,7 +93,6 @@ void LocalDownload::FDInterDisconnected(int sockid, Core::DisconnectType reason,
       filestream.close();
     }
   }
-  deactivate();
   if (inmemory) {
     Core::BinaryData out(buf, buf + bufpos);
     ls->storeContent(storeid, out);
@@ -137,7 +136,6 @@ void LocalDownload::FDFail(int sockid, const std::string& error) {
   if (this->sockid == -1 || sockid != this->sockid) {
     return;
   }
-  deactivate();
   tm->localError(error);
   tm->targetError(TM_ERR_OTHER);
   this->sockid = -1;
@@ -196,7 +194,6 @@ void LocalDownload::disconnect() {
   if (fileopened) {
     filestream.close();
   }
-  deactivate();
   global->getIOManager()->closeSocket(sockid);
   tm->localInfo("Closing connection");
   tm->targetError(TM_ERR_OTHER);

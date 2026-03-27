@@ -2,6 +2,8 @@
 
 #include <cctype>
 #include <memory>
+#include <unordered_set>
+#include <cassert>
 
 #include "../../globalcontext.h"
 #include "../../site.h"
@@ -18,8 +20,6 @@
 #include "../../sectionmanager.h"
 #include "../../section.h"
 #include "../../hourlyalltracking.h"
-
-#include <cassert>
 
 #include "../menuselectoptioncheckbox.h"
 #include "../ui.h"
