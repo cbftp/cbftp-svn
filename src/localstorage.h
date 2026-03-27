@@ -83,6 +83,12 @@ public:
   TransferProtocol getTransferProtocol() const;
   void setTransferProtocol(TransferProtocol protocol);
   void executeAsyncRequest(LocalStorageRequestData * data);
+  unsigned int getMaxDownloadSlots() const;
+  unsigned int getMaxUploadSlots() const;
+  void setMaxDownloadSlots(unsigned int slots);
+  void setMaxUploadSlots(unsigned int slots);
+  bool downloadSlotAvailable() const;
+  bool uploadSlotAvailable() const;
 private:
   void deleteRequestData(LocalStorageRequestData * reqdata);
   static LocalPathInfo getPathInfo(const Path & path, int currentdepth);
@@ -104,4 +110,6 @@ private:
   int requestidcounter;
   TransferProtocol transferprotocol;
   int nextlocaltransferid;
+  unsigned int maxdownloadslots;
+  unsigned int maxuploadslots;
 };

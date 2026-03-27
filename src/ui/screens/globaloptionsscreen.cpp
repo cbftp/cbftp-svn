@@ -245,7 +245,9 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   sslfxp->setOption(sm->getDefaultSSLTransferPolicy());
   mso.addStringField(y++, x, "defidletime", "Default site max idle time (s):", std::to_string(sm->getDefaultMaxIdleTime()), false);
   y++;
-  mso.addStringField(y++, x, "dlpath", "Download path:", ls->getDownloadPath().toString(), false, 53, 128);
+  mso.addStringField(y++, x, "dlpath", "Local download path:", ls->getDownloadPath().toString(), false, 53, 128);
+  mso.addIntArrow(y++, x, "dlslots", "Max local download slots:", ls->getMaxDownloadSlots(), 1, 64);
+  mso.addIntArrow(y++, x, "ulslots", "Max local upload slots:", ls->getMaxUploadSlots(), 1, 64);
   y++;
   mso.addTextButtonNoContent(y++, x, "skiplist", "Configure skiplist...");
   mso.addTextButtonNoContent(y++, x, "proxy", "Configure proxy settings...");
@@ -490,6 +492,12 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "dlpath") {
           ls->setDownloadPath(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData());
+        }
+        else if (identifier == "dlslots") {
+          ls->setMaxDownloadSlots(std::static_pointer_cast<MenuSelectOptionNumArrow>(msoe)->getData());
+        }
+        else if (identifier == "ulslots") {
+          ls->setMaxUploadSlots(std::static_pointer_cast<MenuSelectOptionNumArrow>(msoe)->getData());
         }
         else if (identifier == "preparedraceexpirytime") {
           global->getEngine()->setPreparedRaceExpiryTime(std::stoi(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData()));

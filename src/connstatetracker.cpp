@@ -216,9 +216,9 @@ std::string ConnStateTracker::getTransferFile() const {
   return file;
 }
 
-int ConnStateTracker::getTransferType() const {
+TransferType ConnStateTracker::getTransferType() const {
   if (listtransfer) {
-    return CST_LIST;
+    return TransferType::LIST;
   }
   return type;
 }
@@ -286,7 +286,7 @@ void ConnStateTracker::lockForTransfer(TransferMonitor * tm, const std::shared_p
   this->co = co;
   aborted = false;
   transferlocked = true;
-  type = download ? CST_DOWNLOAD : CST_UPLOAD;
+  type = download ? TransferType::DOWNLOAD : TransferType::UPLOAD;
 }
 
 bool ConnStateTracker::isListLocked() const {

@@ -963,7 +963,10 @@ bool Engine::transferJobActionRequest(const std::shared_ptr<SiteTransferJob> & s
     switch (pt.type()) {
       case PENDINGTRANSFER_DOWNLOAD:
       {
-        if (!pt.getSrc()->downloadSlotAvailable(TransferType::TRANSFERJOB)) {
+        if (!pt.getSrc()->downloadSlotAvailable(TransferOriginType::TRANSFERJOB)) {
+          return false;
+        }
+        if (!global->getLocalStorage()->downloadSlotAvailable()) {
           return false;
         }
         std::shared_ptr<TransferStatus> ts = global->getTransferManager()->attemptDownload(pt.getSrcFileName(),
@@ -976,7 +979,12 @@ bool Engine::transferJobActionRequest(const std::shared_ptr<SiteTransferJob> & s
       }
       case PENDINGTRANSFER_UPLOAD:
       {
-        if (!pt.getDst()->uploadSlotAvailable()) return false;
+        if (!pt.getDst()->uploadSlotAvailable()) {
+          return false;
+        }
+        if (!global->getLocalStorage()->uploadSlotAvailable()) {
+          return false;
+        }
         std::shared_ptr<TransferStatus> ts = global->getTransferManager()->attemptUpload(pt.getSrcFileName(),
             pt.getLocalFileList(), pt.getDst(), pt.getDstFileList(), tj->getDstTransferJob());
         if (!!ts) {
@@ -987,7 +995,7 @@ bool Engine::transferJobActionRequest(const std::shared_ptr<SiteTransferJob> & s
       }
       case PENDINGTRANSFER_FXP:
       {
-        if (!pt.getSrc()->downloadSlotAvailable(TransferType::TRANSFERJOB)) {
+        if (!pt.getSrc()->downloadSlotAvailable(TransferOriginType::TRANSFERJOB)) {
           return false;
         }
         if (!pt.getDst()->uploadSlotAvailable()) {
@@ -1599,12 +1607,12 @@ void Engine::issueOptimalTransfers() {
     if (sbe->getPriorityType() == PrioType::NORMAL) { // priority files shouldn't affect the potential tracking
       sls->pushPotential(sbe->getScore(), filename, sld);
     }
-    TransferType type(TransferType::REGULAR);
+    TransferOriginType type(TransferOriginType::REGULAR);
     if (sbe->getSourceSiteRace()->isDownloadOnly()) {
-      type = TransferType::PRE;
+      type = TransferOriginType::PRE;
     }
     else if (sbe->getSourceSiteRace()->isDone()) {
-      type = TransferType::COMPLETE;
+      type = TransferOriginType::COMPLETE;
     }
     if (!sls->downloadSlotAvailable(type)) {
       continue;

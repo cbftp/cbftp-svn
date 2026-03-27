@@ -322,6 +322,12 @@ void SettingsLoaderSaver::loadSettings() {
     else if (!setting.compare("downloadpath")) {
       global->getLocalStorage()->setDownloadPath(value);
     }
+    else if (!setting.compare("maxdownloadslots")) {
+      global->getLocalStorage()->setMaxDownloadSlots(std::stoi(value));
+    }
+    else if (!setting.compare("maxuploadslots")) {
+      global->getLocalStorage()->setMaxUploadSlots(std::stoi(value));
+    }
     else if (!setting.compare("transferprotocol")) {
       global->getLocalStorage()->setTransferProtocol(static_cast<TransferProtocol>(std::stoi(value)));
     }
@@ -912,6 +918,8 @@ void SettingsLoaderSaver::saveSettings() {
     std::string filetag = "LocalStorage";
     dfh->addOutputLine(filetag, "temppath=" + global->getLocalStorage()->getTempPath().toString());
     dfh->addOutputLine(filetag, "downloadpath=" + global->getLocalStorage()->getDownloadPath().toString());
+    dfh->addOutputLine(filetag, "maxdownloadslots=" + std::to_string(global->getLocalStorage()->getMaxDownloadSlots()));
+    dfh->addOutputLine(filetag, "maxuploadslots=" + std::to_string(global->getLocalStorage()->getMaxUploadSlots()));
     dfh->addOutputLine(filetag, "transferprotocol=" + std::to_string(static_cast<int>(global->getLocalStorage()->getTransferProtocol())));
     if (global->getLocalStorage()->getUseActiveModeAddress()) dfh->addOutputLine(filetag, "useactivemodeaddr=true");
     dfh->addOutputLine(filetag, "activemodeaddr4=" + global->getLocalStorage()->getActiveModeAddress4());

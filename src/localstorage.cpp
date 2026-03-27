@@ -46,7 +46,9 @@ LocalStorage::LocalStorage() :
   currentactiveport(activeportfirst),
   requestidcounter(0),
   transferprotocol(TransferProtocol::PREFER_IPV4),
-  nextlocaltransferid(0)
+  nextlocaltransferid(0),
+  maxdownloadslots(3),
+  maxuploadslots(3)
 {
 
 }
@@ -633,4 +635,40 @@ TransferProtocol LocalStorage::getTransferProtocol() const {
 
 void LocalStorage::setTransferProtocol(TransferProtocol protocol) {
   transferprotocol = protocol;
+}
+
+unsigned int LocalStorage::getMaxDownloadSlots() const {
+  return maxdownloadslots;
+}
+
+unsigned int LocalStorage::getMaxUploadSlots() const {
+  return maxuploadslots;
+}
+
+void LocalStorage::setMaxDownloadSlots(unsigned int slots) {
+  maxdownloadslots = slots;
+}
+
+void LocalStorage::setMaxUploadSlots(unsigned int slots) {
+  maxuploadslots = slots;
+}
+
+bool LocalStorage::downloadSlotAvailable() const {
+  unsigned int current = 0;
+  for (std::list<LocalDownload *>::const_iterator it = localdownloads.begin(); it != localdownloads.end(); it++) {
+    if ((*it)->active()) {
+      ++current;
+    }
+  }
+  return current < getMaxDownloadSlots();
+}
+
+bool LocalStorage::uploadSlotAvailable() const {
+  unsigned int current = 0;
+  for (std::list<LocalUpload *>::const_iterator it = localuploads.begin(); it != localuploads.end(); it++) {
+    if ((*it)->active()) {
+      ++current;
+    }
+  }
+  return current < getMaxUploadSlots();
 }

@@ -30,8 +30,9 @@ class RequestCallback;
 struct DownloadFileData;
 enum class FTPConnState;
 enum class FailureType;
+enum class TransferType;
 
-enum class TransferType {
+enum class TransferOriginType {
   REGULAR,
   PRE,
   COMPLETE,
@@ -77,10 +78,10 @@ class SiteLogic : public Core::EventReceiver {
     void refreshChangePath(int, const std::shared_ptr<SiteRace> & race, bool);
     void initTransfer(int);
     void handleFail(int);
-    void handleTransferFail(int, int);
-    void handleTransferFail(int, int, int);
-    void reportTransferErrorAndFinish(int, int);
-    void reportTransferErrorAndFinish(int, int, int);
+    void handleTransferFail(int id, int err);
+    void handleTransferFail(int id, TransferType type, int err);
+    void reportTransferErrorAndFinish(int id, int err);
+    void reportTransferErrorAndFinish(int id, TransferType type, int err);
     void getFileListConn(int id, bool hiddenfiles = false);
     void getFileListConn(int, const std::shared_ptr<CommandOwner>& co, const std::shared_ptr<FileList>& fl);
     void passiveModeCommand(int);
@@ -98,7 +99,7 @@ class SiteLogic : public Core::EventReceiver {
     std::shared_ptr<SiteRace> getRace(unsigned int id) const;
     void antiAntiIdle(int id);
     void transferComplete(int, bool isdownload, bool returntransferslot = true);
-    bool getSlot(bool isdownload, TransferType type);
+    bool getSlot(bool isdownload, TransferOriginType type);
     void handlePostUpload(int id, const std::shared_ptr<FileList>& fl);
     void handlePostDownload(int id);
     std::string expandVariables(const std::string& text) const;
@@ -139,14 +140,16 @@ class SiteLogic : public Core::EventReceiver {
     void returnConn(int, bool);
     void registerDownloadLock(int id, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner>& co, TransferMonitor* tm);
     void setNumConnections(unsigned int);
-    int downloadSlotsAvailable(TransferType type = TransferType::REGULAR) const;
-    bool downloadSlotAvailable(TransferType type = TransferType::REGULAR) const;
+    int downloadSlotsAvailable(TransferOriginType type = TransferOriginType::REGULAR) const;
+    bool downloadSlotAvailable(TransferOriginType type = TransferOriginType::REGULAR) const;
     int getAvailableDownloadSlots() const;
     bool uploadSlotAvailable() const;
     int slotsAvailable() const;
     int getCurrLogins() const;
     int getCurrDown() const;
     int getCurrUp() const;
+    int getCurrDown(const std::shared_ptr<CommandOwner>& co) const;
+    int getCurrUp(const std::shared_ptr<CommandOwner>& co) const;
     int getCleanlyClosedConnectionsCount() const;
     void connectConn(int);
     void disconnectConn(int id, bool hard = false);
@@ -181,7 +184,7 @@ class SiteLogic : public Core::EventReceiver {
     std::string getRawCommandResult(int requestid);
     bool finishRequest(int);
     void pushPotential(int, const std::string &, const std::shared_ptr<SiteLogic> &);
-    bool potentialCheck(int score, TransferType type);
+    bool potentialCheck(int score, TransferOriginType type);
     int getPotential();
     void siteUpdated();
     void updateName();

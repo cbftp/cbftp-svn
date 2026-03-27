@@ -1,5 +1,6 @@
 #include "transferjob.h"
 
+#include <algorithm>
 #include <cassert>
 
 #include "core/tickpoke.h"
@@ -491,10 +492,11 @@ void TransferJob::setSlots(int slots) {
 int TransferJob::maxPossibleSlots() const {
   switch (type) {
     case TRANSFERJOB_UPLOAD:
-      return dst->getSite()->getMaxUp();
+      return std::min(global->getLocalStorage()->getMaxUploadSlots(), dst->getSite()->getMaxUp());
     case TRANSFERJOB_FXP:
+      return std::min(src->getSite()->getMaxDownTransferJob(), dst->getSite()->getMaxUp());
     case TRANSFERJOB_DOWNLOAD:
-      return src->getSite()->getMaxDownTransferJob();
+      return std::min(global->getLocalStorage()->getMaxDownloadSlots(), src->getSite()->getMaxDownTransferJob());
   }
   return 0;
 }
@@ -1070,7 +1072,7 @@ void TransferJob::resetValues() {
   timequeued = global->getTimeReference()->getCurrentLogTimeStamp();
   timequeuedfull = global->getTimeReference()->getCurrentFullTimeStamp();
   almostdone = false;
-  slots = !!src ? src->getSite()->getMaxDownTransferJob() : 1;
+  slots = maxPossibleSlots();
   expectedfinalsize = 0;
   sizeprogress = 0;
   timeremaining = -1;

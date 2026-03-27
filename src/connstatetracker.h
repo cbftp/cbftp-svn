@@ -6,9 +6,11 @@
 
 #include "delayedcommand.h"
 
-#define CST_DOWNLOAD 981
-#define CST_UPLOAD 982
-#define CST_LIST 983
+enum class TransferType {
+  DOWNLOAD,
+  UPLOAD,
+  LIST
+};
 
 class CommandOwner;
 class SiteRace;
@@ -30,7 +32,7 @@ private:
   TransferMonitor* tm;
   std::shared_ptr<FileList> fl;
   std::string file;
-  int type;
+  TransferType type;
   bool passive;
   bool ssl;
   bool sslclient;
@@ -99,7 +101,7 @@ public:
   TransferMonitor* getTransferMonitor() const;
   std::shared_ptr<FileList> getTransferFileList() const;
   std::string getTransferFile() const;
-  int getTransferType() const;
+  TransferType getTransferType() const;
   bool getTransferPassive() const;
   bool getTransferSSL() const;
   bool getTransferIPv6() const;
