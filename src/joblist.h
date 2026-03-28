@@ -27,6 +27,7 @@ public:
   void push_back(const T& t) {
     items.push_back(t);
     typename std::pair<typename std::unordered_map<unsigned int, typename std::list<T>::iterator>::iterator, bool> res = index.emplace(t->getId(), --items.end());
+    (void)(res); // unused
     assert(res.second);
   }
   bool empty() const {

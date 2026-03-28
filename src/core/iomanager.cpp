@@ -981,6 +981,7 @@ void IOManager::handleTCPSSLNegotiationOut(SocketInfo& socketinfo) {
     auto it = sessions.find(socketinfo.sessionkey);
     if (it != sessions.end()) {
       int ret = SSL_set_session(ssl, it->second);
+      (void)(ret); // unused
       assert(ret == 1);
     }
   }

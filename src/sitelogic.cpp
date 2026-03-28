@@ -2032,7 +2032,9 @@ void SiteLogic::returnConn(int id, bool istransfer) {
 void SiteLogic::registerDownloadLock(int id, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner>& co, TransferMonitor* tm) {
   TransferOriginType type = getTransferOriginType(true, co);
   available++;
-  assert(getSlot(true, type));
+  bool success = getSlot(true, type);
+  (void)(success); // unused
+  assert(success);
   connstatetracker[id].lockForTransfer(tm, fl, co, true);
   conns[id]->setRawBufferCallback(tm);
   handleConnection(id);

@@ -141,6 +141,7 @@ void KeyBinds::addBind(const std::list<int>& keys, int keyaction, const std::str
   for (int key : keys) {
     KeyAndScope token(key, scope);
     std::map<KeyAndScope, std::list<KeyData>::iterator>::const_iterator it = keybinds.find(token);
+    (void)(it); // unused
     assert(it == keybinds.end());
   }
   applyQueuedReplaceBinds();
