@@ -78,6 +78,7 @@ An example body when POST/PATCH'ing a site:
     "SITE3"
   ],
   "force_binary_mode": false,
+  "freetextb64": "aGkgbmVyZA==",
   "leave_free_slot": true,
   "list_command": "STAT_L",          // (STAT_L/LIST)
   "max_idle_time": 60,

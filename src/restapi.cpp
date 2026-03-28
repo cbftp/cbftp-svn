@@ -804,7 +804,8 @@ void updateSite(std::shared_ptr<Site>& site, nlohmann::json jsondata, bool add) 
       site->setBrokenPASV(it.value());
     }
     else if (it.key() == "freetextb64") {
-      Core::BinaryData indata(it.value().begin(), it.value().end());
+      std::string rawdata = it.value();
+      Core::BinaryData indata(rawdata.begin(), rawdata.end());
       Core::BinaryData outdata;
       Crypto::base64Decode(indata, outdata);
       site->setFreeText(std::string(outdata.begin(), outdata.end()));
