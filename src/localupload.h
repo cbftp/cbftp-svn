@@ -10,6 +10,7 @@ public:
   void engage(TransferMonitor* tm, int localtransferid, const Path& path, const std::string& filename, bool ipv6, const std::string& addr, int port, bool ssl, FTPConn* ftpconn);
   bool engage(TransferMonitor* tm, int localtransferid, const Path& path, const std::string& filename, bool ipv6, bool ssl, FTPConn* ftpconn);
   unsigned long long int size() const override;
+  void reserve() override;
 private:
   void FDInterConnected(int sockid) override;
   void FDInterDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) override;

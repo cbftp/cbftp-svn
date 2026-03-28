@@ -266,8 +266,11 @@ void MainScreen::redraw() {
       addedjobs.insert((*it)->getId());
     }
     for (it = --global->getEngine()->getTransferJobsEnd(); it != --global->getEngine()->getTransferJobsBegin() && (int)shownjobs.size() < maxjobs; it--) {
-      if (maxage > 0 && epochnow - (*it)->getStartedEpoch() > (unsigned long long int)maxage) {
-        break;
+      if (maxage > 0) {
+        unsigned long long int startedepoch = (*it)->getStartedEpoch();
+        if (startedepoch != 0 && epochnow - startedepoch > (unsigned long long int)maxage) {
+          break;
+        }
       }
       if (addedjobs.find((*it)->getId()) == addedjobs.end()) {
         shownjobs.emplace_back(*it);

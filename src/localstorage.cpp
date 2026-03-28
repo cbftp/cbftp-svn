@@ -57,27 +57,33 @@ LocalStorage::~LocalStorage() {
 
 }
 
-LocalTransfer * LocalStorage::passiveModeDownload(TransferMonitor* tm, const std::string& file, bool ipv6, const std::string& host, int port, bool ssl, FTPConn* ftpconn) {
-  return passiveModeDownload(tm, temppath, file, ipv6, host, port, ssl, ftpconn);
-}
-
-LocalTransfer * LocalStorage::passiveModeDownload(TransferMonitor* tm, const Path& path, const std::string & file, bool ipv6, const std::string & host, int port, bool ssl, FTPConn* ftpconn) {
+LocalTransfer* LocalStorage::preparePassiveDownload() {
   LocalDownload* ld = getAvailableLocalDownload();
-  ld->engage(tm, nextlocaltransferid++, path, file, ipv6, host, port, ssl, ftpconn);
-  return ld;
+  ld->reserve();
+  return static_cast<LocalTransfer*>(ld);
 }
 
-LocalTransfer * LocalStorage::passiveModeDownload(TransferMonitor* tm, bool ipv6, const std::string& host, int port, bool ssl, FTPConn* ftpconn) {
-  int storeid = storeidcounter++;
-  LocalDownload* ld = getAvailableLocalDownload();
-  ld->engage(tm, nextlocaltransferid++, storeid, ipv6, host, port, ssl, ftpconn);
-  return ld;
-}
-
-LocalTransfer * LocalStorage::passiveModeUpload(TransferMonitor* tm, const Path& path, const std::string& file, bool ipv6, const std::string& host, int port, bool ssl, FTPConn* ftpconn) {
+LocalTransfer* LocalStorage::preparePassiveUpload() {
   LocalUpload* lu = getAvailableLocalUpload();
-  lu->engage(tm, nextlocaltransferid++, path, file, ipv6, host, port, ssl, ftpconn);
-  return lu;
+  lu->reserve();
+  return static_cast<LocalTransfer*>(lu);
+}
+
+void LocalStorage::passiveModeDownload(TransferMonitor* tm, LocalTransfer* lt, const std::string& file, bool ipv6, const std::string& host, int port, bool ssl, FTPConn* ftpconn) {
+  passiveModeDownload(tm, static_cast<LocalDownload*>(lt), temppath, file, ipv6, host, port, ssl, ftpconn);
+}
+
+void LocalStorage::passiveModeDownload(TransferMonitor* tm, LocalTransfer* lt, const Path& path, const std::string & file, bool ipv6, const std::string & host, int port, bool ssl, FTPConn* ftpconn) {
+  static_cast<LocalDownload*>(lt)->engage(tm, nextlocaltransferid++, path, file, ipv6, host, port, ssl, ftpconn);
+}
+
+void LocalStorage::passiveModeDownload(TransferMonitor* tm, LocalTransfer* lt, bool ipv6, const std::string& host, int port, bool ssl, FTPConn* ftpconn) {
+  int storeid = storeidcounter++;
+  static_cast<LocalDownload*>(lt)->engage(tm, nextlocaltransferid++, storeid, ipv6, host, port, ssl, ftpconn);
+}
+
+void LocalStorage::passiveModeUpload(TransferMonitor* tm, LocalTransfer* lt, const Path& path, const std::string& file, bool ipv6, const std::string& host, int port, bool ssl, FTPConn* ftpconn) {
+  static_cast<LocalUpload*>(lt)->engage(tm, nextlocaltransferid++, path, file, ipv6, host, port, ssl, ftpconn);
 }
 
 LocalTransfer* LocalStorage::activeModeDownload(TransferMonitor* tm, const Path& path, const std::string& file, bool ipv6, bool ssl, FTPConn* ftpconn) {

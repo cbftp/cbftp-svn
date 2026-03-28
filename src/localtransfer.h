@@ -20,6 +20,7 @@ public:
   virtual void disconnect() = 0;
   virtual unsigned long long int size() const = 0;
   FTPConn * getConn() const;
+  virtual void reserve() = 0;
   void deactivate();
 protected:
   void activate(int localtransferid);
@@ -37,10 +38,10 @@ protected:
   unsigned int buflen;
   unsigned int bufpos;
   bool timeoutticker;
+  bool inuse;
 private:
   void FDInterNew(int sockid, int newsockid) override;
   void FDInterInfo(int sockid, const std::string& info) override;
   void tick(int) override;
-  bool inuse;
   int localtransferid;
 };

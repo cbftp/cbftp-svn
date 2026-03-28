@@ -32,6 +32,16 @@ bool LocalUpload::engage(TransferMonitor* tm, int localtransferid, const Path& p
   return sockid != -1;
 }
 
+void LocalUpload::reserve() {
+  tm = nullptr;
+  ftpconn = nullptr;
+  path = "";
+  filename = "";
+  inuse = true;
+  filepos = 0;
+  fileopened = false;
+}
+
 void LocalUpload::init(TransferMonitor* tm, int localtransferid, FTPConn* ftpconn, const Path& path, const std::string& filename, bool ssl, bool passivemode, int port) {
   this->tm = tm;
   this->ftpconn = ftpconn;

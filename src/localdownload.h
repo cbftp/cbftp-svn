@@ -15,6 +15,7 @@ public:
   bool engage(TransferMonitor* tm, int localtransferid, int storeid, bool ipv6, bool ssl, FTPConn* ftpconn);
   unsigned long long int size() const override;
   int getStoreId() const;
+  void reserve() override;
 private:
   void FDInterConnected(int sockid) override;
   void FDInterDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) override;

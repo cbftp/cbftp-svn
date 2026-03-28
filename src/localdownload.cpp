@@ -46,6 +46,16 @@ bool LocalDownload::engage(TransferMonitor* tm, int localtransferid, int storeid
   return sockid != -1;
 }
 
+void LocalDownload::reserve() {
+  tm = nullptr;
+  ftpconn = nullptr;
+  path = "";
+  filename = "";
+  bufpos = 0;
+  filesize = 0;
+  fileopened = false;
+}
+
 void LocalDownload::init(TransferMonitor* tm, int localtransferid, FTPConn* ftpconn, const Path& path, const std::string& filename, bool inmemory, int storeid, bool ssl, bool passivemode, int port) {
   this->tm = tm;
   this->ftpconn = ftpconn;

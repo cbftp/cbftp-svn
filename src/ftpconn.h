@@ -270,4 +270,5 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     void unsetRawBufferCallback();
     const std::list<std::string> & getXDUPEList() const;
     Proxy* getDataProxy() const;
+    void debugPrint(const std::string& text);
 };

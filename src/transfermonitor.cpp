@@ -215,6 +215,7 @@ void TransferMonitor::engageDownload(
   }
   if (clientactive) {
     sls->preparePassiveTransfer(src, sfile, false, ipv6, ssl);
+    lt = global->getLocalStorage()->preparePassiveDownload();
   }
   else {
     FTPConn* conn = sls->getConn(src);
@@ -288,6 +289,7 @@ void TransferMonitor::engageUpload(
   }
   if (clientactive) {
     sld->preparePassiveTransfer(dst, dfile, false, ipv6, ssl);
+    lt = global->getLocalStorage()->preparePassiveUpload();
   }
   else {
     FTPConn* conn = sld->getConn(dst);
@@ -328,6 +330,7 @@ void TransferMonitor::engageList(int transferid, const std::shared_ptr<SiteLogic
   setStatus(TM_STATUS_AWAITING_PASSIVE);
   if (!sls->getSite()->hasBrokenPASV()) {
     sls->preparePassiveList(src, this, ipv6, ssl);
+    lt = global->getLocalStorage()->preparePassiveDownload();
   }
   else {
     clientactive = false;
@@ -402,10 +405,10 @@ void TransferMonitor::passiveReady(const std::string & host, int port) {
     case TM_TYPE_DOWNLOAD:
       if (clientactive) {
         if (localfl) {
-          lt = global->getLocalStorage()->passiveModeDownload(this, dpath, dfile, ipv6, host, port, ssl, sls->getConn(src));
+          global->getLocalStorage()->passiveModeDownload(this, lt, dpath, dfile, ipv6, host, port, ssl, sls->getConn(src));
         }
         else {
-          lt = global->getLocalStorage()->passiveModeDownload(this, ipv6, host, port, ssl, sls->getConn(src));
+          global->getLocalStorage()->passiveModeDownload(this, lt, ipv6, host, port, ssl, sls->getConn(src));
           storeid = static_cast<LocalDownload *>(lt)->getStoreId();
         }
       }
@@ -415,7 +418,7 @@ void TransferMonitor::passiveReady(const std::string & host, int port) {
       break;
     case TM_TYPE_UPLOAD:
       if (clientactive) {
-        lt = global->getLocalStorage()->passiveModeUpload(this, spath, sfile, ipv6, host, port, ssl, sld->getConn(dst));
+        global->getLocalStorage()->passiveModeUpload(this, lt, spath, sfile, ipv6, host, port, ssl, sld->getConn(dst));
       }
       else {
         sld->prepareActiveTransfer(dst, dfile, false, ipv6, host, port, ssl);
@@ -423,7 +426,7 @@ void TransferMonitor::passiveReady(const std::string & host, int port) {
       break;
     case TM_TYPE_LIST:
       if (clientactive) {
-        lt = global->getLocalStorage()->passiveModeDownload(this, ipv6, host, port, ssl, sls->getConn(src));
+        global->getLocalStorage()->passiveModeDownload(this, lt, ipv6, host, port, ssl, sls->getConn(src));
         storeid = static_cast<LocalDownload *>(lt)->getStoreId();
       }
       else {
@@ -633,8 +636,7 @@ void TransferMonitor::sourceError(TransferError err) {
     }
   }
   if (status == TM_STATUS_TRANSFERRING_TARGET_COMPLETE ||
-      status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE ||
-      (type == TM_TYPE_DOWNLOAD && lt == nullptr))
+      status == TM_STATUS_TARGET_ERROR_AWAITING_SOURCE)
   {
     transferFailed(ts, err);
     return;
@@ -672,8 +674,7 @@ void TransferMonitor::targetError(TransferError err) {
     }
   }
   if (status == TM_STATUS_TRANSFERRING_SOURCE_COMPLETE ||
-      status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET ||
-      (type == TM_TYPE_UPLOAD && lt == nullptr))
+      status == TM_STATUS_SOURCE_ERROR_AWAITING_TARGET)
   {
     transferFailed(ts, err);
     return;

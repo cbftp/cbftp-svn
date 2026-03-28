@@ -1552,3 +1552,7 @@ void FTPConn::unsetRawBufferCallback() {
 const std::list<std::string> & FTPConn::getXDUPEList() const {
   return xdupelist;
 }
+
+void FTPConn::debugPrint(const std::string& text) {
+  rawBufWriteLine(text);
+}
