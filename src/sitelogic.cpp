@@ -841,6 +841,10 @@ void SiteLogic::commandFail(int id, FailureType failuretype) {
         handleConnection(id);
         return;
       }
+      if (currentco && currentco->classType() == COMMANDOWNER_TRANSFERJOB) {
+        handleConnection(id);
+        return;
+      }
       if (connstatetracker[id].hasTransfer() && !connstatetracker[id].transferInitialized()) {
         handleConnection(id);
         return;
