@@ -50,7 +50,9 @@ LocalStorage::LocalStorage() :
   maxdownloadslots(3),
   maxuploadslots(3)
 {
-
+  if (!Core::IOManager::ipv6Enabled()) {
+    transferprotocol = TransferProtocol::IPV4_ONLY;
+  }
 }
 
 LocalStorage::~LocalStorage() {
@@ -640,6 +642,9 @@ TransferProtocol LocalStorage::getTransferProtocol() const {
 }
 
 void LocalStorage::setTransferProtocol(TransferProtocol protocol) {
+  if (!Core::IOManager::ipv6Enabled()) {
+    protocol = TransferProtocol::IPV4_ONLY;
+  }
   transferprotocol = protocol;
 }
 

@@ -9,6 +9,7 @@
 #include "../../loadmonitor.h"
 #include "../../sitemanager.h"
 
+#include "../../core/iomanager.h"
 #include "../../core/polling.h"
 #include "../../core/sslmanager.h"
 
@@ -59,6 +60,7 @@ void InfoScreen::redraw() {
   vv->putStr(i++, 1, "Distribution tag: " + BuildInfo::tag());
   vv->putStr(i++, 1, "OpenSSL version: " + Core::SSLManager::version());
   vv->putStr(i++, 1, "Polling syscall: " + Core::Polling::type());
+  vv->putStr(i++, 1, std::string("System IPv6 support: ") + (Core::IOManager::ipv6Enabled() ? "yes" : "no"));
   vv->putStr(i++, 1, std::string("Data file encryption: ") + (global->getSettingsLoaderSaver()->getState() == DataFileState::EXISTS_DECRYPTED ? "Enabled" : "Disabled"));
   i++;
   vv->putStr(i++, 1, "Traffic measurements");

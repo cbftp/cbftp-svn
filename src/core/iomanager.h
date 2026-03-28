@@ -377,6 +377,11 @@ public:
    */
   static std::string compactIPv6Address(const std::string& address);
 
+  /* Return whether the host system has IPv6 support enabled
+   * @return: whether IPv6 support is enabled in the host system
+  */
+  static bool ipv6Enabled();
+
   /* Used internally */
   void run();
   void tick(int message);

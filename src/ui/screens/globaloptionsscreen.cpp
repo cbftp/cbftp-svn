@@ -120,12 +120,14 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
       bindinterface->setOption(interfaceid - 1);
     }
   }
-  std::shared_ptr<MenuSelectOptionTextArrow> transferproto = mso.addTextArrow(y++, x, "transferprotocol", "Local transfer protocol:");
-  transferproto->addOption("IPv4 only", static_cast<int>(TransferProtocol::IPV4_ONLY));
-  transferproto->addOption("Prefer IPv4", static_cast<int>(TransferProtocol::PREFER_IPV4));
-  transferproto->addOption("Prefer IPv6", static_cast<int>(TransferProtocol::PREFER_IPV6));
-  transferproto->addOption("IPv6 only", static_cast<int>(TransferProtocol::IPV6_ONLY));
-  transferproto->setOption(static_cast<int>(ls->getTransferProtocol()));
+  if (Core::IOManager::ipv6Enabled()) {
+    std::shared_ptr<MenuSelectOptionTextArrow> transferproto = mso.addTextArrow(y++, x, "transferprotocol", "Local transfer protocol:");
+    transferproto->addOption("IPv4 only", static_cast<int>(TransferProtocol::IPV4_ONLY));
+    transferproto->addOption("Prefer IPv4", static_cast<int>(TransferProtocol::PREFER_IPV4));
+    transferproto->addOption("Prefer IPv6", static_cast<int>(TransferProtocol::PREFER_IPV6));
+    transferproto->addOption("IPv6 only", static_cast<int>(TransferProtocol::IPV6_ONLY));
+    transferproto->setOption(static_cast<int>(ls->getTransferProtocol()));
+  }
   int firstport = ls->getActivePortFirst();
   int lastport = ls->getActivePortLast();
   std::string portrange = std::to_string(firstport) + ":" + std::to_string(lastport);

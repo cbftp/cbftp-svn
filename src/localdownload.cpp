@@ -51,6 +51,7 @@ void LocalDownload::reserve() {
   ftpconn = nullptr;
   path = "";
   filename = "";
+  inuse = true;
   bufpos = 0;
   filesize = 0;
   fileopened = false;

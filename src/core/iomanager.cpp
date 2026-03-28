@@ -1389,6 +1389,23 @@ std::string IOManager::compactIPv6Address(const std::string& address) {
   return buf;
 }
 
+bool IOManager::ipv6Enabled() {
+  struct ifaddrs *ifaddr, *ifa;
+  if (getifaddrs(&ifaddr) == -1) { 
+    getLogger()->log("IOManager", std::string("Failed to list network interfaces: ") + util::getStrError(errno), LogLevel::ERROR);
+    return false;
+  }
+  bool ret = false;
+  for (ifa = ifaddr; ifa != nullptr && ifa->ifa_addr != nullptr; ifa = ifa->ifa_next) {
+    if (ifa->ifa_addr->sa_family == AF_INET6) {
+      ret = true;
+      break;
+    }
+  }
+  freeifaddrs(ifaddr);
+  return ret;
+}
+
 StringResult IOManager::getInterfaceName(const std::string& address) const {
   struct ifaddrs *ifaddr, *ifa;
   int s;

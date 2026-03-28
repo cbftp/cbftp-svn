@@ -48,14 +48,22 @@ void HTTPServer::setPort(int port) {
 void HTTPServer::bindListen() {
   bool listenall = global->getRemoteCommandHandler()->getListenAll();
   sockid4 = global->getIOManager()->registerTCPServerSocket(this, port, Core::AddressFamily::IPV4, !listenall);
-  sockid6 = global->getIOManager()->registerTCPServerSocket(this, port, Core::AddressFamily::IPV6, !listenall);
+  if (Core::IOManager::ipv6Enabled()) {
+    sockid6 = global->getIOManager()->registerTCPServerSocket(this, port, Core::AddressFamily::IPV6, !listenall);
+  }
   std::string listeninterface = listenall ? "all interfaces" : "localhost";
   global->getEventLog()->log("HTTPServer", "Listening on " + listeninterface + " TCP port " + std::to_string(port));
 }
 
 void HTTPServer::close() {
-  global->getIOManager()->closeSocket(sockid4);
-  global->getIOManager()->closeSocket(sockid6);
+  if (sockid4 != -1) {
+    global->getIOManager()->closeSocket(sockid4);
+    sockid4 = -1;
+  }
+  if (sockid6 != -1) {
+    global->getIOManager()->closeSocket(sockid6);
+    sockid6 = -1;
+  }
   global->getEventLog()->log("HTTPServer", "Closing TCP sockets.");
 }
 
