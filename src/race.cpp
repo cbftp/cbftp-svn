@@ -90,7 +90,8 @@ Race::Race(unsigned int id, SpreadProfile profile, const std::string& release, c
   id(id),
   profile(profile),
   transferredsize(0),
-  transferredfiles(0)
+  transferredfiles(0),
+  pokeregistered(false)
 {
   estimatedsubpaths.insert("");
   guessedfilelists[""] = std::unordered_map<std::string, unsigned long long int>();
@@ -273,6 +274,10 @@ void Race::reportSemiDone(const std::shared_ptr<SiteRace>& sr) {
     return;
   }
   semidonesites.insert(sr);
+  checkIfAllSemiDone();
+}
+
+void Race::checkIfAllSemiDone() {
   if (semidonesites.size() == sites.size() || remainingSitesAreDownloadOnly(sites, semidonesites)) {
     setDone();
     for (auto it = sites.begin(); it != sites.end(); it++) {
@@ -285,7 +290,10 @@ void Race::setUndone() {
   status = RaceStatus::RUNNING;
   clearTransferAttempts(false);
   resetUpdateCheckCounter();
-  global->getTickPoke()->startPoke(this, "Race", RACE_UPDATE_INTERVAL_MS, 0);
+  if (!pokeregistered) {
+    global->getTickPoke()->startPoke(this, "Race", RACE_UPDATE_INTERVAL_MS, 0);
+    pokeregistered = true;
+  }
 }
 
 void Race::reset() {
@@ -490,7 +498,10 @@ unsigned long long int Race::getCreatedEpoch() const {
 
 void Race::setDone() {
   status = RaceStatus::DONE;
-  global->getTickPoke()->stopPoke(this, 0);
+  if (pokeregistered) {
+    global->getTickPoke()->stopPoke(this, 0);
+    pokeregistered = false;
+  }
   calculatePercentages();
 }
 

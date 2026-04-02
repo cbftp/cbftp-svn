@@ -71,7 +71,7 @@ public:
   typename std::list<T>::iterator erase(const T& t) {
     return erase(t->getId());
   }
-  typename std::list<T>::iterator erase(typename std::list<T>::iterator it) {
+  typename std::list<T>::iterator erase(typename std::list<T>::const_iterator it) {
     return erase((*it)->getId());
   }
   typename std::list<T>::iterator remove(const T& t) {

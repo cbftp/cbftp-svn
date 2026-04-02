@@ -1,4 +1,3 @@
-
 #include "engine.h"
 
 #include <cassert>
@@ -406,8 +405,10 @@ JobStartResult Engine::newSpreadJob(int profile, const std::string& release, con
       else {
         logAndAppendInfo(infomessages, "Reactivating spread job: " + section + "/" + release);
         race->setUndone();
-        for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
-          it->second->activateAll();
+        if (!reset) { // need to call resetRace to readd the SiteRaces to the SiteLogics, even if the race isn't supposed to be fully reset
+          for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it = race->begin(); it != race->end(); it++) {
+            it->second->resetRace(it->first);
+          }
         }
       }
     }
@@ -1982,10 +1983,10 @@ void Engine::tick(int message) {
           its->second->raceLocalComplete(its->first, 0, false);
         }
         race->setTimeout();
-        currentraces.erase(it);
+        it = currentraces.erase(it);
         finishedraces.push_back(race);
         issueGlobalComplete(race);
-        break;
+        continue;
       }
       else {
         if (race->clearTransferAttempts()) {
@@ -2005,10 +2006,10 @@ void Engine::tick(int message) {
         its->second->raceLocalComplete(its->first, 0, false);
       }
       race->setTimeout();
-      currentraces.erase(it);
+      it = currentraces.erase(it);
       finishedraces.push_back(race);
       issueGlobalComplete(race);
-      break;
+      continue;
     }
     for (std::set<std::pair<std::shared_ptr<SiteRace>, std::shared_ptr<SiteLogic> > >::const_iterator it2 = race->begin(); it2 != race->end(); it2++) {
       int wantedlogins = it2->second->getSite()->getMaxDown();
@@ -2028,11 +2029,18 @@ void Engine::tick(int message) {
         it2->second->activateAll();
       }
     }
+    race->checkIfAllSemiDone();
+    if (race->isDone()) {
+      it = currentraces.erase(it);
+      finishedraces.push_back(race);
+      raceComplete(race);
+      continue;
+    }
   }
   for (std::list<std::shared_ptr<TransferJob> >::const_iterator it = currenttransferjobs.begin(); it != currenttransferjobs.end(); it++) {
     if ((*it)->isDone()) {
+      it = currenttransferjobs.erase(it);
       transferJobComplete(*it);
-      break;
     }
     else {
       if (!!(*it)->getSrc() && !(*it)->getSrc()->getCurrLogins()) {

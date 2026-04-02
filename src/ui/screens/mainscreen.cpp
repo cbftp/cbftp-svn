@@ -232,7 +232,7 @@ void MainScreen::redraw() {
       shownjobs.emplace_back(*it);
       addedjobs.insert((*it)->getId());
     }
-    for (it = --global->getEngine()->getRacesEnd(); it != --global->getEngine()->getRacesBegin() && (int)shownjobs.size() < maxjobs; it--) {
+    for (it = --global->getEngine()->getFinishedRacesEnd(); it != --global->getEngine()->getFinishedRacesBegin() && (int)shownjobs.size() < maxjobs; it--) {
       if (maxage > 0 && epochnow - (*it)->getCreatedEpoch() > (unsigned long long int)maxage) {
         break;
       }

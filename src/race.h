@@ -100,6 +100,7 @@ class Race : public Core::EventReceiver, public TransferStatusCallback {
     SpreadProfile profile;
     unsigned long long int transferredsize;
     unsigned int transferredfiles;
+    bool pokeregistered;
   public:
     Race(unsigned int, SpreadProfile, const std::string &, const std::string &);
     ~Race();
@@ -140,6 +141,7 @@ class Race : public Core::EventReceiver, public TransferStatusCallback {
     void reportSFV(const std::shared_ptr<SiteRace>& sr, const std::string&);
     void reportDone(const std::shared_ptr<SiteRace>& sr);
     void reportSemiDone(const std::shared_ptr<SiteRace>& sr);
+    void checkIfAllSemiDone();
     void reportSize(const std::shared_ptr<SiteRace>& sr, const std::shared_ptr<FileList>& fl, const std::string&, const std::unordered_set<std::string>&, bool);
     void setUndone();
     void reset();
