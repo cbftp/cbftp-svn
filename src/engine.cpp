@@ -1967,12 +1967,13 @@ void Engine::tick(int message) {
       global->getEventLog()->log("Engine", "Next prepared spread job starter timed out.");
     }
   }
-  for (std::list<std::shared_ptr<Race> >::iterator it = currentraces.begin(); it != currentraces.end(); it++) {
+  for (std::list<std::shared_ptr<Race> >::iterator it = currentraces.begin(); it != currentraces.end();) {
     std::shared_ptr<Race> race = *it;
     int timeoutafterseconds = race->timeoutCheck();
     if (timeoutafterseconds != -1) {
       if (waitingInScoreBoard(race)) {
         race->resetUpdateCheckCounter();
+        ++it;
         continue;
       }
       if (race->failedTransfersCleared()) {
@@ -2036,20 +2037,24 @@ void Engine::tick(int message) {
       raceComplete(race);
       continue;
     }
+    ++it;
   }
-  for (std::list<std::shared_ptr<TransferJob> >::const_iterator it = currenttransferjobs.begin(); it != currenttransferjobs.end(); it++) {
-    if ((*it)->isDone()) {
+  for (std::list<std::shared_ptr<TransferJob> >::const_iterator it = currenttransferjobs.begin(); it != currenttransferjobs.end();) {
+    std::shared_ptr<TransferJob> tj = *it;
+    if (tj->isDone()) {
       it = currenttransferjobs.erase(it);
-      transferJobComplete(*it);
+      transferJobComplete(tj);
+      continue;
     }
     else {
-      if (!!(*it)->getSrc() && !(*it)->getSrc()->getCurrLogins()) {
-        (*it)->getSrc()->haveConnectedActivate((*it)->maxSlots());
+      if (!!tj->getSrc() && !tj->getSrc()->getCurrLogins()) {
+        tj->getSrc()->haveConnectedActivate(tj->maxSlots());
       }
-      if (!!(*it)->getDst() && !(*it)->getDst()->getCurrLogins()) {
-        (*it)->getDst()->haveConnectedActivate((*it)->maxSlots());
+      if (!!tj->getDst() && !tj->getDst()->getCurrLogins()) {
+        tj->getDst()->haveConnectedActivate(tj->maxSlots());
       }
     }
+    ++it;
   }
   std::list<unsigned int> removeids;
   for (std::list<std::shared_ptr<PreparedRace> >::const_iterator it = preparedraces.begin(); it != preparedraces.end(); it++) {
