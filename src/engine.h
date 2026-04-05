@@ -144,7 +144,6 @@ public:
   unsigned short calculateScore(ScoreBoardElement* sbe) const;
   void checkIfRaceComplete(const std::shared_ptr<SiteLogic>& sls, std::shared_ptr<Race>& race);
   void raceComplete(const std::shared_ptr<Race>& race);
-  void transferJobComplete(const std::shared_ptr<TransferJob>& tj);
   void issueGlobalComplete(const std::shared_ptr<Race>& race);
   void refreshPendingTransferList(const std::shared_ptr<TransferJob>& tj);
   void checkStartPoke();

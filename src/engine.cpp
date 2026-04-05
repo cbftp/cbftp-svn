@@ -1737,12 +1737,6 @@ void Engine::raceComplete(const std::shared_ptr<Race>& race) {
   return;
 }
 
-void Engine::transferJobComplete(const std::shared_ptr<TransferJob>& tj) {
-  global->getEventLog()->log("Engine", tj->typeString() + " job complete: " + tj->getSrcFileName());
-  currenttransferjobs.erase(tj);
-  rotateTransferJobsHistory();
-}
-
 unsigned short Engine::calculateScore(ScoreBoardElement * sbe) const {
   const std::shared_ptr<Race> & race = sbe->getRace();
   SitePriority priority = sbe->getDestination()->getSite()->getPriority();
@@ -2039,11 +2033,13 @@ void Engine::tick(int message) {
     }
     ++it;
   }
+  bool transferjobremoved = false;
   for (std::list<std::shared_ptr<TransferJob> >::const_iterator it = currenttransferjobs.begin(); it != currenttransferjobs.end();) {
     std::shared_ptr<TransferJob> tj = *it;
     if (tj->isDone()) {
       it = currenttransferjobs.erase(it);
-      transferJobComplete(tj);
+      global->getEventLog()->log("Engine", tj->typeString() + " job complete: " + tj->getSrcFileName());
+      transferjobremoved = true;
       continue;
     }
     else {
@@ -2055,6 +2051,9 @@ void Engine::tick(int message) {
       }
     }
     ++it;
+  }
+  if (transferjobremoved) {
+    rotateTransferJobsHistory();
   }
   std::list<unsigned int> removeids;
   for (std::list<std::shared_ptr<PreparedRace> >::const_iterator it = preparedraces.begin(); it != preparedraces.end(); it++) {
@@ -2219,10 +2218,8 @@ void Engine::rotateTransferJobsHistory() {
     return;
   }
   for (std::list<std::shared_ptr<TransferJob>>::iterator it = alltransferjobs.begin(); it != alltransferjobs.end() && alltransferjobs.size() > (unsigned int)maxtransferjobshistory;) {
-    if ((*it)->isDone()) {
-      std::string name = (*it)->getName();
+    if ((*it)->isDone() && currenttransferjobs.find(*it) == currenttransferjobs.end()) {
       pendingtransfers.erase(*it);
-      currenttransferjobs.erase(*it);
       it = alltransferjobs.erase(it);
     }
     else {
