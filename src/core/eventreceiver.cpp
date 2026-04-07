@@ -50,7 +50,7 @@ void EventReceiver::FDFail(int sockid, const std::string& error) {
 
 }
 
-void EventReceiver::FDSSLSuccess(int sockid, const std::string& cipher) {
+void EventReceiver::FDSSLSuccess(int sockid, const std::string& cipher, const std::string& fingerprint) {
 
 }
 

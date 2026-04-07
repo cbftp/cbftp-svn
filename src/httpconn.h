@@ -41,7 +41,7 @@ private:
     void FDDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) override;
     void FDData(int sockid, char* data, unsigned int datalen) override;
     void FDSendComplete(int sockid) override;
-    void FDSSLSuccess(int sockid, const std::string& cipher) override;
+    void FDSSLSuccess(int sockid, const std::string& cipher, const std::string& fingerprint) override;
 
     // RestApi callback
     void requestHandled(int requestid, const http::Response& response) override;

@@ -15,7 +15,7 @@ private:
   void FDInterConnected(int sockid) override;
   void FDInterDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) override;
   void FDInterData(int sockid, char* data, unsigned int len) override;
-  void FDSSLSuccess(int sockid, const std::string& cipher) override;
+  void FDSSLSuccess(int sockid, const std::string& cipher, const std::string& fingerprint) override;
   void FDInterSendComplete(int sockid) override;
   void FDInterListening(int sockid, const Address& addr) override;
   void FDFail(int sockid, const std::string& error) override;

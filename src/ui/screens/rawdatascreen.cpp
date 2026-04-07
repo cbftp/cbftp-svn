@@ -65,9 +65,7 @@ void RawDataScreen::initialize(unsigned int row, unsigned int col, std::string s
 
 void RawDataScreen::redraw() {
   vv->clear();
-  unsigned int rownum = row;
   if (rawcommandmode) {
-    --rownum;
     std::string oldtext = rawcommandfield.getData();
     rawcommandfield = MenuSelectOptionTextField("rawcommand", row-1, 10, "", oldtext, col-15, 65536, false);
   }

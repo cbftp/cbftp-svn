@@ -50,7 +50,7 @@ bool HTTPConn::activate(int sockid, Core::AddressFamily addrfam, bool tls) {
   return true;
 }
 
-void HTTPConn::FDSSLSuccess(int sockid, const std::string& cipher) {
+void HTTPConn::FDSSLSuccess(int sockid, const std::string& cipher, const std::string& fingerprint) {
   global->getEventLog()->log("HTTPConn", "Server-side TLS negotiation successful.", Core::LogLevel::DEBUG);
 }
 

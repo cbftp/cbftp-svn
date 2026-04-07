@@ -47,4 +47,7 @@ struct naturalComparator {
   bool operator()(const std::string& a, const std::string& b) const;
 };
 unsigned long long int getEpochNow();
+std::string fingerprintToHex(const unsigned char* md, unsigned int len);
+std::string formatFingerprint(const std::string& hexFingerprint);
+std::string parseFingerprint(const std::string& formattedFingerprint);
 }

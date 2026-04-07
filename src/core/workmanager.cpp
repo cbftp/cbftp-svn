@@ -82,9 +82,10 @@ void WorkManager::dispatchEventDisconnected(EventReceiver* er, int sockid, const
   event.post();
 }
 
-void WorkManager::dispatchEventSSLSuccess(EventReceiver* er, int sockid, const std::string & cipher, Prio prio) {
+void WorkManager::dispatchEventSSLSuccess(EventReceiver* er, int sockid, const std::string & cipher, const std::string & fingerprint, Prio prio) {
   er->bindWorkManager(this);
-  eventqueues[static_cast<int>(prio)]->push(Event(er, EventType::SSL_SUCCESS, sockid, cipher));
+  std::string data = cipher + "|" + fingerprint;
+  eventqueues[static_cast<int>(prio)]->push(Event(er, EventType::SSL_SUCCESS, sockid, data));
   event.post();
 }
 
@@ -245,9 +246,14 @@ void WorkManager::run() {
         case EventType::DISCONNECTED:
           er->FDDisconnected(numdata, static_cast<DisconnectType>(event.getNumericalData2()), event.getStrData());
           break;
-        case EventType::SSL_SUCCESS:
-          er->FDSSLSuccess(numdata, event.getStrData());
+        case EventType::SSL_SUCCESS: {
+          std::string data = event.getStrData();
+          size_t pos = data.find("|");
+          std::string cipher = data.substr(0, pos);
+          std::string fingerprint = (pos != std::string::npos) ? data.substr(pos + 1) : "";
+          er->FDSSLSuccess(numdata, cipher, fingerprint);
           break;
+        }
         case EventType::NEW:
           er->FDNew(numdata, event.getNumericalData2());
           break;

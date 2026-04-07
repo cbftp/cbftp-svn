@@ -125,7 +125,10 @@ An example body when POST/PATCH'ing a site:
   "transfer_source_policy": "ALLOW",   // (ALLOW/BLOCK)
   "transfer_target_policy": "BLOCK",   
   "user": "myusername",
-  "xdupe": true
+  "xdupe": true,
+  "tlsfingerprint": "3D:35:C3:CB:18:7D:87:2B:E1:67:BA:26:61:B5:86:93:F9:FC:3E:4B:46:A2:9A:69:C2:EC:A2:6B:97:8A:3D:31",
+  "tlsfingerprintverification": true,
+  "tlsfingerprintautoretry": false
 }
 
 All values do not have to be included. When modifying a site, only the edited
@@ -155,6 +158,120 @@ their default values. Example:
 
 - Delete a site
     DELETE /sites/SITE1
+
+TLS FINGERPRINT VERIFICATION
+
+When TLS is enabled for a site (tls_mode set to AUTH_TLS or IMPLICIT), cbftp
+automatically verifies SSL certificate fingerprints to detect man-in-the-middle
+attacks or certificate changes.
+
+The following fields are available in site responses and can be modified:
+
+  tlsfingerprint                - Current SHA-256 fingerprint (read-only)
+                                  Format: hex bytes separated by colons
+                                  Example: "3D:35:C3:CB:18:7D:87:2B..."
+  
+  tlsfingerprintverification    - Enable/disable fingerprint verification
+                                  Default: true
+                                  Values: true/false
+  
+  tlsfingerprintautoretry       - Auto-retry operations on fingerprint change
+                                  Default: false
+                                  Values: true/false
+                                  Only applies to API operations
+  
+  tlsfingerprinthistory         - List of previous fingerprints (read-only)
+                                  Each entry has: fingerprint, timestamp
+
+On first connection to a site, cbftp automatically saves the certificate
+fingerprint. On subsequent connections, it verifies the fingerprint matches.
+
+FINGERPRINT CHANGE SCENARIOS
+
+When a site's SSL certificate changes (normal renewal or malicious attack):
+
+1. Terminal (UI) connections:
+   - User sees interactive prompt with options:
+     * [a] Accept new fingerprint and continue
+     * [d] Disable verification and continue
+     * [c] Cancel connection
+
+2. API connections with tlsfingerprintverification=true:
+   
+   If tlsfingerprintautoretry=false (default):
+     {
+       "status": "error",
+       "error": "tls_fingerprint_changed",
+       "error_code": "TLS_FINGERPRINT_CHANGED",
+       "site": "SITE1",
+       "verification_enabled": true,
+       "old_fingerprint": "3D:35:C3:CB...",
+       "new_fingerprint": "31:50:77:07...",
+       "auto_accepted": true,
+       "auto_retry_enabled": false,
+       "retry_recommended": true,
+       "message": "TLS certificate fingerprint changed. Operation failed. Retry required."
+     }
+   
+   If tlsfingerprintautoretry=true:
+     {
+       "status": "ok",
+       "info": "tls_fingerprint_changed_retrying",
+       "info_code": "TLS_FINGERPRINT_CHANGED_RETRYING",
+       "site": "SITE1",
+       "verification_enabled": true,
+       "old_fingerprint": "3D:35:C3:CB...",
+       "new_fingerprint": "31:50:77:07...",
+       "auto_accepted": true,
+       "auto_retry_enabled": true,
+       "message": "TLS certificate fingerprint changed. Automatically accepted and retrying."
+     }
+
+3. API connections with tlsfingerprintverification=false:
+   
+   The operation proceeds normally with a warning:
+     {
+       "status": "ok",
+       "warning": "tls_fingerprint_auto_accepted",
+       "warning_code": "TLS_FINGERPRINT_AUTO_ACCEPTED",
+       "site": "SITE1",
+       "verification_enabled": false,
+       "old_fingerprint": "3D:35:C3:CB...",
+       "new_fingerprint": "31:50:77:07...",
+       "auto_accepted": true,
+       "message": "TLS certificate fingerprint changed. Automatically accepted (verification disabled)."
+     }
+
+EXAMPLES
+
+Get site with fingerprint info:
+  curl -k -u :bestpass https://localhost:55477/sites/SITE1
+
+Response includes:
+  {
+    "name": "SITE1",
+    ...
+    "tlsfingerprint": "3D:35:C3:CB:18:7D:87:2B:...",
+    "tlsfingerprintverification": true,
+    "tlsfingerprintautoretry": false,
+    "tlsfingerprinthistory": [
+      {
+        "fingerprint": "AB:CD:EF:12:34:56...",
+        "timestamp": 1704067200
+      }
+    ]
+  }
+
+Disable fingerprint verification for a site:
+  curl -k -u :bestpass -X PATCH https://localhost:55477/sites/SITE1 \
+    -d '{"tlsfingerprintverification": false}'
+
+Enable auto-retry on fingerprint change:
+  curl -k -u :bestpass -X PATCH https://localhost:55477/sites/SITE1 \
+    -d '{"tlsfingerprintautoretry": true}'
+
+IMPORTANT: Setting tlsfingerprintverification to false reduces security.
+Only use this for testing or when certificate changes are expected and trusted.
 
 - Send a raw command
     POST /raw

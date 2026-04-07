@@ -27,6 +27,36 @@
 
 namespace Core {
 
+namespace {
+  std::string getPeerFingerprint(SSL* ssl) {
+    if (!ssl) {
+      return "";
+    }
+    X509* cert = SSL_get_peer_certificate(ssl);
+    if (!cert) {
+      return "";
+    }
+    unsigned char md[EVP_MAX_MD_SIZE];
+    unsigned int n;
+    if (X509_digest(cert, EVP_sha256(), md, &n) != 1) {
+      X509_free(cert);
+      return "";
+    }
+    X509_free(cert);
+    std::string result;
+    result.reserve(n *3);
+    char buf[4];
+    for (unsigned int i = 0; i < n; ++i) {
+      if (i > 0) {
+        result += ':';
+      }
+      sprintf(buf, "%02X", md[i]);
+      result += buf;
+    }
+    return result;
+  }
+}
+
 enum class ResolverResult {
   SUCCESS,
   WOULD_BLOCK,
@@ -944,7 +974,8 @@ void IOManager::handleTCPSSLNegotiationIn(SocketInfo& socketinfo) {
     socketinfo.type = SocketType::TCP_SSL;
     if (!socketinfo.closing) {
       const char* cipher = SSLManager::getCipher(ssl);
-      workmanager.dispatchEventSSLSuccess(socketinfo.receiver, socketinfo.id, cipher, socketinfo.prio);
+      std::string fingerprint = getPeerFingerprint(ssl);
+      workmanager.dispatchEventSSLSuccess(socketinfo.receiver, socketinfo.id, cipher, fingerprint, socketinfo.prio);
     }
     if (!socketinfo.sendqueue.empty()) {
       setPollWrite(socketinfo);
@@ -999,7 +1030,8 @@ void IOManager::handleTCPSSLNegotiationOut(SocketInfo& socketinfo) {
     socketinfo.type = SocketType::TCP_SSL;
     if (!socketinfo.closing) {
       const char* cipher = SSLManager::getCipher(ssl);
-      workmanager.dispatchEventSSLSuccess(socketinfo.receiver, socketinfo.id, cipher, socketinfo.prio);
+      std::string fingerprint = getPeerFingerprint(ssl);
+      workmanager.dispatchEventSSLSuccess(socketinfo.receiver, socketinfo.id, cipher, fingerprint, socketinfo.prio);
     }
     if (!socketinfo.sendqueue.empty()) {
       return;

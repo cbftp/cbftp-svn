@@ -438,4 +438,45 @@ unsigned long long int getEpochNow() {
   return time(nullptr);
 }
 
+std::string fingerprintToHex(const unsigned char* md, unsigned int len) {
+  std::string result;
+  result.reserve(len *3);
+  char buf[4];
+  for (unsigned int i = 0; i < len; ++i) {
+    if (i > 0) {
+      result += ':';
+    }
+    sprintf(buf, "%02X", md[i]);
+    result += buf;
+  }
+  return result;
+}
+
+std::string formatFingerprint(const std::string& hexFingerprint) {
+  std::string formatted;
+  formatted.reserve(hexFingerprint.length() * 3 / 2);
+  for (size_t i = 0; i < hexFingerprint.length(); i += 2) {
+    if (i > 0) {
+      formatted += ':';
+    }
+    formatted += toupper(hexFingerprint[i]);
+    if (i + 1 < hexFingerprint.length()) {
+      formatted += toupper(hexFingerprint[i + 1]);
+    }
+  }
+  return formatted;
+}
+
+std::string parseFingerprint(const std::string& formattedFingerprint) {
+  std::string parsed;
+  parsed.reserve(formattedFingerprint.length());
+  for (size_t i = 0; i < formattedFingerprint.length(); ++i) {
+    char c = toupper(formattedFingerprint[i]);
+    if (c != ':') {
+      parsed += c;
+    }
+  }
+  return parsed;
+}
+
 }

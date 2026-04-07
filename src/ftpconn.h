@@ -56,7 +56,12 @@ enum class FTPConnState {
   XDUPE,
   RNFR,
   RNTO,
-  IDLE
+  IDLE,
+  TLS_FINGERPRINT_PROMPT,
+  TLS_FINGERPRINT_CHANGED_ERROR,
+  TLS_FINGERPRINT_CHANGED_RETRY,
+  TLS_FINGERPRINT_AUTO_ACCEPTED,
+  TLS_FINGERPRINT_SAVED
 };
 
 enum class ProtMode {
@@ -123,11 +128,13 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     RawBuffer * cwdrawbuf;
     int ticker;
     std::list<std::string> xdupelist;
-    bool xduperun;
-    bool typeirun;
-    bool cleanlyclosed;
-    Address connectedaddr;
-    void AUTHTLSResponse();
+bool xduperun;
+  bool typeirun;
+  bool cleanlyclosed;
+  Address connectedaddr;
+  std::string pendingFingerprint;
+  std::string oldFingerprint;
+  void AUTHTLSResponse();
     void USERResponse();
     void PASSResponse();
     void STATResponse();
@@ -179,7 +186,7 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     void finishLogin();
     void FDData(int sockid, char* data, unsigned int datalen) override;
     void FDDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) override;
-    void FDSSLSuccess(int sockid, const std::string& cipher) override;
+    void FDSSLSuccess(int sockid, const std::string& cipher, const std::string& fingerprint) override;
     void ftpConnectInfo(int id, const std::string& info) override;
     void ftpConnectSuccess(int id, const Address& addr) override;
     void ftpConnectFail(int id) override;
@@ -268,7 +275,12 @@ class FTPConn : private Core::EventReceiver, public FTPConnectOwner {
     bool isConnected() const;
     void setRawBufferCallback(RawBufferCallback *);
     void unsetRawBufferCallback();
-    const std::list<std::string> & getXDUPEList() const;
-    Proxy* getDataProxy() const;
-    void debugPrint(const std::string& text);
+const std::list<std::string> & getXDUPEList() const;
+  Proxy* getDataProxy() const;
+  void debugPrint(const std::string& text);
+  void resumeAfterFingerprintDecision(bool accept, bool disable_verification);
+  bool isAPIConnection() const;
+  bool shouldAutoRetry() const;
+  std::string getPendingFingerprint() const;
+  std::string getOldFingerprint() const;
 };

@@ -104,6 +104,7 @@ public:
     void dispatchEventSSLSuccess(EventReceiver* er,
                                  int sockid,
                                  const std::string& cipher,
+                                 const std::string& fingerprint,
                                  Prio prio = Prio::NORMAL);
     void dispatchEventFail(EventReceiver* er,
                            int sockid,

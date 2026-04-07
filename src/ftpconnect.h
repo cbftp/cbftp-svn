@@ -29,7 +29,7 @@ private:
   void FDInterInfo(int sockid, const std::string& info) override;
   void FDInterDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) override;
   void FDFail(int sockid, const std::string& error) override;
-  void FDSSLSuccess(int sockid, const std::string& cipher) override;
+  void FDSSLSuccess(int sockid, const std::string& cipher, const std::string& fingerprint) override;
   void proxySessionInit();
   int id;
   FTPConnectOwner * owner;

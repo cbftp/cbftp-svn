@@ -245,6 +245,17 @@ void GlobalOptionsScreen::initialize(unsigned int row, unsigned int col) {
   sslfxp->addOption("Prefer on", SITE_SSL_PREFER_ON);
   sslfxp->addOption("Always on", SITE_SSL_ALWAYS_ON);
   sslfxp->setOption(sm->getDefaultSSLTransferPolicy());
+  std::shared_ptr<MenuSelectOptionTextArrow> tlsfphistlimit = mso.addTextArrow(y++, x, "tlsfphistlimit", "Default TLS fingerprint history limit:");
+  tlsfphistlimit->addOption("5", 5);
+  tlsfphistlimit->addOption("10", 10);
+  tlsfphistlimit->addOption("20", 20);
+  tlsfphistlimit->addOption("50", 50);
+  tlsfphistlimit->addOption("Unlimited", -1);
+  tlsfphistlimit->setOption(sm->getDefaultTLSFingerprintHistoryLimit());
+  std::shared_ptr<MenuSelectOptionCheckBox> tlsfpver = mso.addCheckBox(y++, x, "tlsfpver", "Default TLS fingerprint verification:",
+                                                                        sm->getDefaultTLSFingerprintVerification());
+  std::shared_ptr<MenuSelectOptionCheckBox> tlsfpretry = mso.addCheckBox(y++, x, "tlsfpretry", "Default TLS fingerprint auto-retry:",
+                                                                          sm->getDefaultTLSFingerprintAutoRetry());
   mso.addStringField(y++, x, "defidletime", "Default site max idle time (s):", std::to_string(sm->getDefaultMaxIdleTime()), false);
   y++;
   mso.addStringField(y++, x, "dlpath", "Local download path:", ls->getDownloadPath().toString(), false, 53, 128);
@@ -461,6 +472,15 @@ bool GlobalOptionsScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "tlsfxp") {
           sm->setDefaultSSLTransferPolicy(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
+        }
+        else if (identifier == "tlsfphistlimit") {
+          sm->setDefaultTLSFingerprintHistoryLimit(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
+        }
+        else if (identifier == "tlsfpver") {
+          sm->setDefaultTLSFingerprintVerification(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
+        }
+        else if (identifier == "tlsfpretry") {
+          sm->setDefaultTLSFingerprintAutoRetry(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
         }
         else if (identifier == "defidletime") {
           sm->setDefaultMaxIdleTime(std::stoi(std::static_pointer_cast<MenuSelectOptionTextField>(msoe)->getData()));

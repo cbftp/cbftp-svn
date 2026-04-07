@@ -87,7 +87,7 @@ void LocalUpload::FDInterDisconnected(int sockid, Core::DisconnectType reason, c
   this->sockid = -1;
 }
 
-void LocalUpload::FDSSLSuccess(int sockid, const std::string& cipher) {
+void LocalUpload::FDSSLSuccess(int sockid, const std::string& cipher, const std::string& fingerprint) {
   if (sockid != this->sockid) {
     return;
   }

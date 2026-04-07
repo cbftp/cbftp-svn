@@ -11,6 +11,7 @@
 #include "../settingsloadersaver.h"
 #include "../path.h"
 #include "../requestcallback.h"
+#include "../fingerprintpromptcallback.h"
 
 #include "externalfileviewing.h"
 #include "renderer.h"
@@ -78,6 +79,7 @@ class TransferPairingScreen;
 class ExternalScriptsScreen;
 class TransferJobsFilterScreen;
 class SpreadJobsFilterScreen;
+class TLSFingerprintPromptScreen;
 
 class LegendPrinterKeybinds;
 struct TransferFilteringParameters;
@@ -90,7 +92,7 @@ enum LegendMode {
   LEGEND_STATIC = 125
 };
 
-class Ui : public Core::EventReceiver, public UIBase, public SettingsAdder, public RequestCallback {
+class Ui : public Core::EventReceiver, public UIBase, public SettingsAdder, public RequestCallback, public FingerprintPromptCallback {
 private:
   Renderer renderer;
   VirtualView vv;
@@ -145,6 +147,7 @@ private:
   std::shared_ptr<ExternalScriptsScreen> externalscriptsscreen;
   std::shared_ptr<TransferJobsFilterScreen> transferjobsfilterscreen;
   std::shared_ptr<SpreadJobsFilterScreen> spreadjobsfilterscreen;
+  std::shared_ptr<TLSFingerprintPromptScreen> tlsfingerprintpromptscreen;
   std::shared_ptr<LegendPrinterKeybinds> legendprinterkeybinds;
   unsigned int mainrow;
   unsigned int col;
@@ -167,6 +170,7 @@ private:
   std::list<std::shared_ptr<UIWindow> > history;
   std::shared_ptr<KeyBinds> globalkeybinds;
   std::set<KeyBinds*> allkeybinds;
+  std::map<int, std::pair<void*, std::string>> pending_fingerprint_logics;
   void enableInfo();
   void disableInfo();
   void enableLegend();
@@ -310,5 +314,13 @@ public:
   void addKeyBinds(KeyBinds* keybinds);
   void removeKeyBinds(KeyBinds* keybinds);
   bool isTop(const UIWindow* window) const;
+  
+  void fingerprintPromptRequired(void* logic, int connid,
+                                 const std::string& sitename,
+                                 const std::string& oldfingerprint,
+                                 const std::string& newfingerprint) override;
+  void fingerprintPromptAccept(int connid);
+  void fingerprintPromptDisable(int connid);
+  void fingerprintPromptCancel(int connid);
 };
 

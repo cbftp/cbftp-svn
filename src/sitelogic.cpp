@@ -28,6 +28,7 @@
 #include "recursivecommandlogic.h"
 #include "transfermanager.h"
 #include "localstorage.h"
+#include "fingerprintpromptcallback.h"
 #include "transferjob.h"
 #include "commandowner.h"
 #include "race.h"
@@ -170,7 +171,8 @@ SiteLogic::SiteLogic(const std::string & sitename) :
   poke(false),
   currtime(0),
   timesincelastrequestready(0),
-  refreshgovernor(site)
+  refreshgovernor(site),
+  fingerprint_prompt_callback(nullptr)
 {
   global->getTickPoke()->startPoke(this, "SiteLogic", TICK_INTERVAL, 0);
 
@@ -2585,6 +2587,14 @@ const ConnStateTracker * SiteLogic::getConnStateTracker(int id) const {
 void SiteLogic::setRequestReady(unsigned int id, void* data, bool status, bool returnslot) {
   const std::shared_ptr<SiteLogicRequest> & request = connstatetracker[id].getRequest();
   int requestid = request->getId();
+  
+  // Check for fingerprint error
+  auto fpit = pending_fingerprints.find(id);
+  if (fpit != pending_fingerprints.end() && !status) {
+    fingerprint_errors[requestid] = std::make_pair(fpit->second.oldfingerprint, fpit->second.newfingerprint);
+    pending_fingerprints.erase(fpit);
+  }
+  
   requestsready.push_back(SiteLogicRequestReady(request->getType(), requestid, data, status));
   clearExpiredReadyRequests();
   timesincelastrequestready = 0;
@@ -2668,4 +2678,64 @@ std::string SiteLogic::expandVariables(const std::string& text) const {
     }
   }
   return expanded;
+}
+
+void SiteLogic::fingerprintPrompt(int connid, const std::string& sitename, const std::string& oldfp, const std::string& newfp) {
+  FingerprintDecision decision;
+  decision.connid = connid;
+  decision.sitename = sitename;
+  decision.oldfingerprint = oldfp;
+  decision.newfingerprint = newfp;
+  decision.decision_made = false;
+  decision.accept = false;
+  decision.disable_verification = false;
+  pending_fingerprints[connid] = decision;
+  global->getEventLog()->log("SiteLogic", site->getName() + " " + std::to_string(connid) + 
+      ": TLS fingerprint change detected, prompting user", Core::LogLevel::WARNING);
+  
+  if (fingerprint_prompt_callback) {
+    fingerprint_prompt_callback->fingerprintPromptRequired(this, connid, sitename, oldfp, newfp);
+  }
+}
+
+void SiteLogic::fingerprintChangedError(int connid, const std::string& sitename, const std::string& oldfp, const std::string& newfp) {
+  global->getEventLog()->log("SiteLogic", site->getName() + " " + std::to_string(connid) + 
+      ": TLS fingerprint change error: " + oldfp + " -> " + newfp, Core::LogLevel::ERROR);
+  pending_fingerprints[connid].connid = connid;
+  pending_fingerprints[connid].sitename = sitename;
+  pending_fingerprints[connid].oldfingerprint = oldfp;
+  pending_fingerprints[connid].newfingerprint = newfp;
+}
+
+void SiteLogic::resumeWithFingerprintDecision(int connid, bool accept, bool disable_verification) {
+  auto it = pending_fingerprints.find(connid);
+  if (it == pending_fingerprints.end()) return;
+  
+  it->second.decision_made = true;
+  it->second.accept = accept;
+  it->second.disable_verification = disable_verification;
+  
+  if (connid >= 0 && connid < (int)conns.size() && conns[connid]) {
+    conns[connid]->resumeAfterFingerprintDecision(accept, disable_verification);
+  }
+  
+  pending_fingerprints.erase(it);
+}
+
+bool SiteLogic::hasFingerprintError(int requestid) const {
+  return fingerprint_errors.find(requestid) != fingerprint_errors.end();
+}
+
+std::string SiteLogic::getFingerprintErrorOld(int requestid) const {
+  auto it = fingerprint_errors.find(requestid);
+  return it != fingerprint_errors.end() ? it->second.first : "";
+}
+
+std::string SiteLogic::getFingerprintErrorNew(int requestid) const {
+  auto it = fingerprint_errors.find(requestid);
+  return it != fingerprint_errors.end() ? it->second.second : "";
+}
+
+void SiteLogic::setFingerprintPromptCallback(FingerprintPromptCallback* cb) {
+  fingerprint_prompt_callback = cb;
 }

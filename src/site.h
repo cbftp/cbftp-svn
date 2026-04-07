@@ -119,10 +119,15 @@ private:
   bool freeslot;
   bool stayloggedin;
   TransferPairing transferpairing;
-  int maxtransfertimeseconds;
+int maxtransfertimeseconds;
   int maxspreadjobtimeseconds;
   std::string freetext;
-public:
+  std::string tlsfingerprint;
+  bool tlsfingerprintverification;
+  bool tlsfingerprintautoretry;
+  unsigned int tlsfingerprinthistorylimit;
+  std::list<std::pair<std::string, std::time_t>> tlsfingerprinthistory;
+ public:
   Site();
   Site(const std::string &);
   Site(const Site &);
@@ -286,4 +291,14 @@ public:
   void setMaxSpreadJobTimeSeconds(int seconds);
   std::string getFreeText() const;
   void setFreeText(const std::string& freetext);
+  std::string getTLSFingerprint() const;
+  void setTLSFingerprint(const std::string& fp);
+  bool getTLSFingerprintVerification() const;
+  void setTLSFingerprintVerification(bool enabled);
+  bool getTLSFingerprintAutoRetry() const;
+  void setTLSFingerprintAutoRetry(bool enabled);
+  unsigned int getTLSFingerprintHistoryLimit() const;
+  void setTLSFingerprintHistoryLimit(unsigned int limit);
+  const std::list<std::pair<std::string, std::time_t>>& getTLSFingerprintHistory() const;
+  void updateTLSFingerprint(const std::string& newfp);
 };

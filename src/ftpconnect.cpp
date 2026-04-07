@@ -90,7 +90,7 @@ void FTPConnect::FDFail(int sockid, const std::string& error) {
   }
 }
 
-void FTPConnect::FDSSLSuccess(int sockid, const std::string& cipher) {
+void FTPConnect::FDSSLSuccess(int sockid, const std::string& cipher, const std::string& fingerprint) {
   owner->ftpConnectInfo(id, "[Cipher: " + cipher + "]");
 }
 

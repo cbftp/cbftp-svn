@@ -98,7 +98,11 @@ Site::Site(const std::string& name) :
   freeslot(false),
   stayloggedin(false),
   maxtransfertimeseconds(-1),
-  maxspreadjobtimeseconds(-1)
+  maxspreadjobtimeseconds(-1),
+  tlsfingerprint(""),
+  tlsfingerprintverification(true),
+  tlsfingerprintautoretry(false),
+  tlsfingerprinthistorylimit(0)
 {
   Address addr;
   addr.host = "ftp.sunet.se";
@@ -149,6 +153,11 @@ Site::Site(const Site& other) {
   maxtransfertimeseconds = other.maxtransfertimeseconds;
   maxspreadjobtimeseconds = other.maxspreadjobtimeseconds;
   freetext = other.freetext;
+  tlsfingerprint = other.tlsfingerprint;
+  tlsfingerprintverification = other.tlsfingerprintverification;
+  tlsfingerprintautoretry = other.tlsfingerprintautoretry;
+  tlsfingerprinthistorylimit = other.tlsfingerprinthistorylimit;
+  tlsfingerprinthistory = other.tlsfingerprinthistory;
 }
 
 std::map<std::string, Path>::const_iterator Site::sectionsBegin() const {
@@ -1043,4 +1052,51 @@ std::string Site::getFreeText() const {
 
 void Site::setFreeText(const std::string& freetext) {
   this->freetext = freetext;
+}
+
+std::string Site::getTLSFingerprint() const {
+  return tlsfingerprint;
+}
+
+void Site::setTLSFingerprint(const std::string& fp) {
+  tlsfingerprint = fp;
+}
+
+bool Site::getTLSFingerprintVerification() const {
+  return tlsfingerprintverification;
+}
+
+void Site::setTLSFingerprintVerification(bool enabled) {
+  tlsfingerprintverification = enabled;
+}
+
+bool Site::getTLSFingerprintAutoRetry() const {
+  return tlsfingerprintautoretry;
+}
+
+void Site::setTLSFingerprintAutoRetry(bool enabled) {
+  tlsfingerprintautoretry = enabled;
+}
+
+unsigned int Site::getTLSFingerprintHistoryLimit() const {
+  return tlsfingerprinthistorylimit;
+}
+
+void Site::setTLSFingerprintHistoryLimit(unsigned int limit) {
+  tlsfingerprinthistorylimit = limit;
+}
+
+const std::list<std::pair<std::string, std::time_t>>& Site::getTLSFingerprintHistory() const {
+  return tlsfingerprinthistory;
+}
+
+void Site::updateTLSFingerprint(const std::string& newfp) {
+  if (!tlsfingerprint.empty() && tlsfingerprint != newfp) {
+    tlsfingerprinthistory.push_back({tlsfingerprint + " -> " + newfp, std::time(nullptr)});
+    unsigned int limit = tlsfingerprinthistorylimit;
+    if (limit > 0 && tlsfingerprinthistory.size() > limit) {
+      tlsfingerprinthistory.pop_front();
+    }
+  }
+  tlsfingerprint = newfp;
 }

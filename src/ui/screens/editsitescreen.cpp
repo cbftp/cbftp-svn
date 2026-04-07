@@ -143,7 +143,18 @@ void EditSiteScreen::initialize(unsigned int row, unsigned int col, const std::s
   sslfxp->addOption("Prefer on", SITE_SSL_PREFER_ON);
   sslfxp->addOption("Always on", SITE_SSL_ALWAYS_ON);
   sslfxp->setOption(this->site->getSSLTransferPolicy());
-  std::shared_ptr<MenuSelectOptionTextArrow> transferproto = mso.addTextArrow(y++, x + 30, "transferprotocol", "Transfer protocol:");
+  y++;
+  std::shared_ptr<MenuSelectOptionCheckBox> tlsfpver = mso.addCheckBox(y++, x, "tlsfpver", "TLS fingerprint verification:", this->site->getTLSFingerprintVerification());
+  std::shared_ptr<MenuSelectOptionCheckBox> tlsfpretry = mso.addCheckBox(y++, x, "tlsfpretry", "TLS fingerprint auto-retry:", this->site->getTLSFingerprintAutoRetry());
+  std::shared_ptr<MenuSelectOptionTextArrow> tlsfphistlimit = mso.addTextArrow(y++, x, "tlsfphistlimit", "History limit:");
+  tlsfphistlimit->addOption("Use global", 0);
+  tlsfphistlimit->addOption("5", 5);
+  tlsfphistlimit->addOption("10", 10);
+  tlsfphistlimit->addOption("20", 20);
+  tlsfphistlimit->addOption("50", 50);
+  tlsfphistlimit->addOption("Unlimited", -1);
+  tlsfphistlimit->setOption(this->site->getTLSFingerprintHistoryLimit());
+  std::shared_ptr<MenuSelectOptionTextArrow> transferproto = mso.addTextArrow(y++, x, "transferprotocol", "Transfer protocol:");
   transferproto->addOption("IPv4 only", static_cast<int>(TransferProtocol::IPV4_ONLY));
   transferproto->addOption("Prefer IPv4", static_cast<int>(TransferProtocol::PREFER_IPV4));
   transferproto->addOption("Prefer IPv6", static_cast<int>(TransferProtocol::PREFER_IPV6));
@@ -471,6 +482,15 @@ bool EditSiteScreen::keyPressed(unsigned int ch) {
         }
         else if (identifier == "tlstransfer") {
           site->setSSLTransferPolicy(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
+        }
+        else if (identifier == "tlsfpver") {
+          site->setTLSFingerprintVerification(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
+        }
+        else if (identifier == "tlsfpretry") {
+          site->setTLSFingerprintAutoRetry(std::static_pointer_cast<MenuSelectOptionCheckBox>(msoe)->getData());
+        }
+        else if (identifier == "tlsfphistlimit") {
+          site->setTLSFingerprintHistoryLimit(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData());
         }
         else if (identifier == "transferprotocol") {
           site->setTransferProtocol(static_cast<TransferProtocol>(std::static_pointer_cast<MenuSelectOptionTextArrow>(msoe)->getData()));

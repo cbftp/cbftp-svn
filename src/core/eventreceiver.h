@@ -84,11 +84,12 @@ public:
   virtual void FDFail(int sockid, const std::string& error);
 
   /* FDSSLSuccess is called when the SSL negotiation for a socket registered
-   * through IOManager has completed.
-   * @param sockid: the identifier for the socket.
-   * @param cipher: The negotiated cipher.
-   */
-  virtual void FDSSLSuccess(int sockid, const std::string& cipher);
+        * through IOManager has completed.
+        * @param sockid: the identifier for the socket.
+        * @param cipher: The negotiated cipher.
+        * @param fingerprint: The peer certificate fingerprint (SHA-256, colon-separated hex).
+        */
+       virtual void FDSSLSuccess(int sockid, const std::string& cipher, const std::string& fingerprint);
 
   /* FDSendComplete is called when a socket registered through IOManager
    * has finished sending data.

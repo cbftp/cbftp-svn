@@ -4,6 +4,8 @@
 #include "site.h"
 #include "globalcontext.h"
 #include "sitemanager.h"
+#include "uibase.h"
+#include "fingerprintpromptcallback.h"
 
 SiteLogicManager::SiteLogicManager() {
 }
@@ -18,6 +20,15 @@ const std::shared_ptr<SiteLogic> SiteLogicManager::getSiteLogic(const std::strin
   }
   std::shared_ptr<SiteLogic> x = std::make_shared<SiteLogic>(name);
   sitelogics.push_back(x);
+  
+  // Register fingerprint prompt callback if UI implements it
+  if (global->getUIBase()) {
+    FingerprintPromptCallback* fpcb = dynamic_cast<FingerprintPromptCallback*>(global->getUIBase());
+    if (fpcb) {
+      x->setFingerprintPromptCallback(fpcb);
+    }
+  }
+  
   return x;
 }
 

@@ -372,6 +372,35 @@ std::string proxyTypeToString(int type) {
   return "<unknown proxy type " + std::to_string(type) + ">";
 }
 
+nlohmann::json createFingerprintChangedError(const std::string& sitename,
+                                              const std::string& oldfp,
+                                              const std::string& newfp,
+                                              bool willRetry) {
+  nlohmann::json response;
+  
+  if (willRetry) {
+    response["status"] = "ok";
+    response["info"] = "tls_fingerprint_changed_retrying";
+    response["info_code"] = "TLS_FINGERPRINT_CHANGED_RETRYING";
+    response["message"] = "TLS certificate fingerprint changed. Automatically accepted and retrying.";
+  } else {
+    response["status"] = "error";
+    response["error"] = "tls_fingerprint_changed";
+    response["error_code"] = "TLS_FINGERPRINT_CHANGED";
+    response["message"] = "TLS certificate fingerprint changed. Automatically accepted but operation failed. Retry required.";
+  }
+  
+  response["site"] = sitename;
+  response["verification_enabled"] = true;
+  response["old_fingerprint"] = oldfp;
+  response["new_fingerprint"] = newfp;
+  response["auto_accepted"] = true;
+  response["auto_retry_enabled"] = willRetry;
+  response["retry_recommended"] = !willRetry;
+  
+  return response;
+}
+
 std::string profileToString(SpreadProfile profile) {
   switch (profile) {
     case SPREAD_RACE:
@@ -1179,6 +1208,11 @@ void RestApi::handleSiteGet(RestApiCallback* cb, int connrequestid, const http::
   j["list_command"] = listCommandToString(site->getListCommand());
   j["tls_mode"] = tlsModeToString(site->getTLSMode());
   j["tls_transfer_policy"] = tlsTransferPolicyToString(site->getSSLTransferPolicy());
+  j["tls_fingerprint"] = site->getTLSFingerprint();
+  j["tls_fingerprint_verification"] = site->getTLSFingerprintVerification();
+  j["tls_fingerprint_auto_retry"] = site->getTLSFingerprintAutoRetry();
+  j["tls_fingerprint_history_limit"] = site->getTLSFingerprintHistoryLimit();
+  j["tls_fingerprint_history_count"] = site->getTLSFingerprintHistory().size();
   j["transfer_protocol"] = transferProtocolToString(site->getTransferProtocol());
   j["sscn"] = site->supportsSSCN();
   j["cpsv"] = site->supportsCPSV();
@@ -2230,7 +2264,22 @@ void RestApi::requestReady(void* service, int servicerequestid) {
       SiteLogic* sl = static_cast<SiteLogic*>(service);
       bool status = sl->requestStatus(servicerequestid);
       if (!status) {
-        request->failures.emplace_back(service, "failed");
+        if (sl->hasFingerprintError(servicerequestid)) {
+          std::string oldfp = sl->getFingerprintErrorOld(servicerequestid);
+          std::string newfp = sl->getFingerprintErrorNew(servicerequestid);
+          std::shared_ptr<Site> site = sl->getSite();
+          nlohmann::json response;
+          if (site && site->getTLSFingerprintAutoRetry()) {
+            response = createFingerprintChangedError(site->getName(), oldfp, newfp, true);
+          }
+          else {
+            response = createFingerprintChangedError(site->getName(), oldfp, newfp, false);
+          }
+          request->failures.emplace_back(service, response.dump());
+        }
+        else {
+          request->failures.emplace_back(service, "failed");
+        }
       }
       else {
         std::string result = sl->getRawCommandResult(servicerequestid);
@@ -2248,8 +2297,27 @@ void RestApi::requestReady(void* service, int servicerequestid) {
       SiteLogic* sl = static_cast<SiteLogic*>(service);
       bool status = sl->requestStatus(servicerequestid);
       if (!status) {
-        http::Response response(502);
-        response.appendHeader("Content-Length", "0");
+        http::Response response;
+        if (sl->hasFingerprintError(servicerequestid)) {
+          std::string oldfp = sl->getFingerprintErrorOld(servicerequestid);
+          std::string newfp = sl->getFingerprintErrorNew(servicerequestid);
+          std::shared_ptr<Site> site = sl->getSite();
+          nlohmann::json j;
+          if (site && site->getTLSFingerprintAutoRetry()) {
+            j = createFingerprintChangedError(site->getName(), oldfp, newfp, true);
+          }
+          else {
+            j = createFingerprintChangedError(site->getName(), oldfp, newfp, false);
+          }
+          response = http::Response(200);
+          std::string jsondump = j.dump(2, ' ', false, nlohmann::json::error_handler_t::replace);
+          response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
+          response.addHeader("Content-Type", "application/json");
+        }
+        else {
+          response = http::Response(502);
+          response.appendHeader("Content-Length", "0");
+        }
         request->cb->requestHandled(request->connrequestid, response);
       }
       else {
@@ -2289,8 +2357,27 @@ void RestApi::requestReady(void* service, int servicerequestid) {
       SiteLogic* sl = static_cast<SiteLogic*>(service);
       bool status = sl->requestStatus(servicerequestid);
       if (!status) {
-        http::Response response(502);
-        response.appendHeader("Content-Length", "0");
+        http::Response response;
+        if (sl->hasFingerprintError(servicerequestid)) {
+          std::string oldfp = sl->getFingerprintErrorOld(servicerequestid);
+          std::string newfp = sl->getFingerprintErrorNew(servicerequestid);
+          std::shared_ptr<Site> site = sl->getSite();
+          nlohmann::json j;
+          if (site && site->getTLSFingerprintAutoRetry()) {
+            j = createFingerprintChangedError(site->getName(), oldfp, newfp, true);
+          }
+          else {
+            j = createFingerprintChangedError(site->getName(), oldfp, newfp, false);
+          }
+          response = http::Response(200);
+          std::string jsondump = j.dump(2, ' ', false, nlohmann::json::error_handler_t::replace);
+          response.setBody(std::vector<char>(jsondump.begin(), jsondump.end()));
+          response.addHeader("Content-Type", "application/json");
+        }
+        else {
+          response = http::Response(502);
+          response.appendHeader("Content-Length", "0");
+        }
         request->cb->requestHandled(request->connrequestid, response);
       }
       else {

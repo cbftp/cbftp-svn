@@ -21,7 +21,7 @@ private:
   void FDInterDisconnected(int sockid, Core::DisconnectType reason, const std::string& details) override;
   void FDInterData(int sockid, char* data, unsigned int len) override;
   void FDInterListening(int sockid, const Address& addr) override;
-  void FDSSLSuccess(int sockid, const std::string& cipher) override;
+  void FDSSLSuccess(int sockid, const std::string& cipher, const std::string& fingerprint) override;
   void FDFail(int sockid, const std::string& error) override;
   void disconnect() override;
   void init(TransferMonitor* tm, int localtransferid, FTPConn* ftpconn, const Path& path, const std::string& filename, bool inmemory, int storeid, bool ssl, bool passivemode, int port = 0);
