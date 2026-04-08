@@ -125,8 +125,6 @@ int maxtransfertimeseconds;
   std::string tlsfingerprint;
   bool tlsfingerprintverification;
   bool tlsfingerprintautoretry;
-  unsigned int tlsfingerprinthistorylimit;
-  std::list<std::pair<std::string, std::time_t>> tlsfingerprinthistory;
  public:
   Site();
   Site(const std::string &);

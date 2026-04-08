@@ -20,7 +20,6 @@ class SiteManager {
 unsigned int defaultmaxidletime;
   int defaultssltransfer;
   TLSMode defaulttlsmode;
-  unsigned int defaulttlsfingerprinthistorylimit;
   bool defaulttlsfingerprintverification;
   bool defaulttlsfingerprintautoretry;
  public:
@@ -50,8 +49,6 @@ unsigned int defaultmaxidletime;
     void setDefaultTLSMode(TLSMode mode);
 int getDefaultSSLTransferPolicy() const;
   void setDefaultSSLTransferPolicy(int);
-  unsigned int getDefaultTLSFingerprintHistoryLimit() const;
-  void setDefaultTLSFingerprintHistoryLimit(unsigned int limit);
   bool getDefaultTLSFingerprintVerification() const;
   void setDefaultTLSFingerprintVerification(bool enabled);
   bool getDefaultTLSFingerprintAutoRetry() const;

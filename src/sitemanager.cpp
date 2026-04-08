@@ -21,7 +21,6 @@
 #define DEFAULTMAXIDLETIME 60
 #define DEFAULTTLSMODE TLSMode::AUTH_TLS
 #define DEFAULTSSLTRANSFER SITE_SSL_PREFER_OFF
-#define DEFAULTTLSFINGERPRINTHISTORYLIMIT 10
 #define DEFAULTTLSFINGERPRINTVERIFICATION true
 #define DEFAULTTLSFINGERPRINTAUTOTRY false
 
@@ -38,7 +37,6 @@ SiteManager::SiteManager() :
   defaultmaxidletime(DEFAULTMAXIDLETIME),
   defaultssltransfer(DEFAULTSSLTRANSFER),
   defaulttlsmode(DEFAULTTLSMODE),
-  defaulttlsfingerprinthistorylimit(DEFAULTTLSFINGERPRINTHISTORYLIMIT),
   defaulttlsfingerprintverification(DEFAULTTLSFINGERPRINTVERIFICATION),
   defaulttlsfingerprintautoretry(DEFAULTTLSFINGERPRINTAUTOTRY)
 {
@@ -270,14 +268,6 @@ void SiteManager::resetAllStats() {
   for (it = sites.begin(); it != sites.end(); it++) {
     (*it)->resetAllStats();
   }
-}
-
-unsigned int SiteManager::getDefaultTLSFingerprintHistoryLimit() const {
-  return defaulttlsfingerprinthistorylimit;
-}
-
-void SiteManager::setDefaultTLSFingerprintHistoryLimit(unsigned int limit) {
-  defaulttlsfingerprinthistorylimit = limit;
 }
 
 bool SiteManager::getDefaultTLSFingerprintVerification() const {

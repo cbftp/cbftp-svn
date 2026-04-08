@@ -101,8 +101,7 @@ Site::Site(const std::string& name) :
   maxspreadjobtimeseconds(-1),
   tlsfingerprint(""),
   tlsfingerprintverification(true),
-  tlsfingerprintautoretry(false),
-  tlsfingerprinthistorylimit(0)
+  tlsfingerprintautoretry(false)
 {
   Address addr;
   addr.host = "ftp.sunet.se";
@@ -156,8 +155,6 @@ Site::Site(const Site& other) {
   tlsfingerprint = other.tlsfingerprint;
   tlsfingerprintverification = other.tlsfingerprintverification;
   tlsfingerprintautoretry = other.tlsfingerprintautoretry;
-  tlsfingerprinthistorylimit = other.tlsfingerprinthistorylimit;
-  tlsfingerprinthistory = other.tlsfingerprinthistory;
 }
 
 std::map<std::string, Path>::const_iterator Site::sectionsBegin() const {
@@ -1078,25 +1075,6 @@ void Site::setTLSFingerprintAutoRetry(bool enabled) {
   tlsfingerprintautoretry = enabled;
 }
 
-unsigned int Site::getTLSFingerprintHistoryLimit() const {
-  return tlsfingerprinthistorylimit;
-}
-
-void Site::setTLSFingerprintHistoryLimit(unsigned int limit) {
-  tlsfingerprinthistorylimit = limit;
-}
-
-const std::list<std::pair<std::string, std::time_t>>& Site::getTLSFingerprintHistory() const {
-  return tlsfingerprinthistory;
-}
-
 void Site::updateTLSFingerprint(const std::string& newfp) {
-  if (!tlsfingerprint.empty() && tlsfingerprint != newfp) {
-    tlsfingerprinthistory.push_back({tlsfingerprint + " -> " + newfp, std::time(nullptr)});
-    unsigned int limit = tlsfingerprinthistorylimit;
-    if (limit > 0 && tlsfingerprinthistory.size() > limit) {
-      tlsfingerprinthistory.pop_front();
-    }
-  }
   tlsfingerprint = newfp;
 }

@@ -106,10 +106,6 @@ vv->putStr(i++, 1, "Download last 24 hours: " + util::parseSize(sizedownday) + "
       vv->putStr(i++, 1, "TLS Fingerprint:");
       vv->putStr(i++, 1, "  " + tlsfp);
       vv->putStr(i++, 1, "  Verification: " + std::string(site->getTLSFingerprintVerification() ? "Enabled" : "Disabled"));
-      const auto& history = site->getTLSFingerprintHistory();
-      if (!history.empty()) {
-        vv->putStr(i++, 1, "  History: " + std::to_string(history.size()) + " change(s)");
-      }
     }
   }
 }

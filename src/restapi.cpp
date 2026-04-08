@@ -1211,8 +1211,6 @@ void RestApi::handleSiteGet(RestApiCallback* cb, int connrequestid, const http::
   j["tls_fingerprint"] = site->getTLSFingerprint();
   j["tls_fingerprint_verification"] = site->getTLSFingerprintVerification();
   j["tls_fingerprint_auto_retry"] = site->getTLSFingerprintAutoRetry();
-  j["tls_fingerprint_history_limit"] = site->getTLSFingerprintHistoryLimit();
-  j["tls_fingerprint_history_count"] = site->getTLSFingerprintHistory().size();
   j["transfer_protocol"] = transferProtocolToString(site->getTransferProtocol());
   j["sscn"] = site->supportsSSCN();
   j["cpsv"] = site->supportsCPSV();
