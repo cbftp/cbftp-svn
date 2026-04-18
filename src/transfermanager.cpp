@@ -144,7 +144,7 @@ void TransferManager::moveTransferStatusToFinished(const std::shared_ptr<Transfe
       break;
     }
   }
-  if (maxtransferhistory != -1 && finishedtransfers.size() > (unsigned int)maxtransferhistory) {
+  if (maxtransferhistory != -1 && finishedtransfers.size() >= (unsigned int)maxtransferhistory) {
     finishedtransfers.pop_back();
   }
   finishedtransfers.push_front(movets);

@@ -42,7 +42,7 @@ private:
   struct sockaddr_in* saddr;
   struct sockaddr_in6* saddr6;
   AddressMode addressmode;
-  char senddata[256];
+  char senddata[1024];
   int senddatalen;
   Proxy * proxy;
   int state;

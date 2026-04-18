@@ -2097,12 +2097,7 @@ void RestApi::handleSectionDelete(RestApiCallback* cb, int connrequestid, const 
 }
 
 std::string RestApi::createTemporaryAuthToken() {
-  srand(time(NULL));
-  Core::BinaryData data;
-  data.resize(16);
-  for (int i = 0; i < 16; ++i) {
-    data[i] = static_cast<unsigned char>(rand() % 256);
-  }
+  Core::BinaryData data = Crypto::randomBytes(16);
   std::string token = Crypto::toHex(data);
   tempauthtokens.insert(token);
   return token;

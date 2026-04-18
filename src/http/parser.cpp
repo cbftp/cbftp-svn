@@ -1,6 +1,7 @@
 #include "parser.h"
 
 #include <cstring>
+#include <strings.h>
 #include <vector>
 
 #include "message.h"
@@ -112,7 +113,7 @@ void Parser::clear() {
 void Parser::parseHeaders(Message& msg, struct phr_header* headers, size_t numheaders) {
     for (unsigned int i = 0; i < numheaders; i++)
     {
-        if (headers[i].name_len == 14 && !strncmp(headers[i].name, "Content-Length", 14))
+        if (headers[i].name_len == 14 && !strncasecmp(headers[i].name, "Content-Length", 14))
         {
             contentlen = parseContentLength(std::string(headers[i].value, headers[i].value_len));
         }

@@ -169,7 +169,7 @@ void LocalDownload::append(char* data, unsigned int datalen) {
       char* newbuf = static_cast<char*>(malloc(buflen));
       global->getEventLog()->log("test", "Increasing to " + std::to_string(buflen));
       memcpy(newbuf, buf, bufpos);
-      delete buf;
+      free(buf);
       buf = newbuf;
     }
     else {

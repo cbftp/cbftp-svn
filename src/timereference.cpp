@@ -13,7 +13,7 @@ static int currentyear = 0;
 static int currentmonth = 0;
 static int currentday = 0;
 
-TimeReference::TimeReference() : logtimestampms(false) {
+TimeReference::TimeReference() : timeticker(0), logtimestampms(false) {
   global->getTickPoke()->startPoke(this, "TimeReference", INTERVAL, 0);
 }
 

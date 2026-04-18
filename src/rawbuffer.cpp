@@ -11,7 +11,9 @@
 
 RawBuffer::RawBuffer(const std::string& site, const std::string& id) :
   latestp(0),
+  latestpfiltered(0),
   latestpcopy(0),
+  latestpcopyfiltered(0),
   maxlength(global->getLogManager()->getMaxRawbufLines()),
   bookmarklines(0),
   site(site),
@@ -28,7 +30,9 @@ RawBuffer::RawBuffer(const std::string& site, const std::string& id) :
 
 RawBuffer::RawBuffer(const std::string& site) :
   latestp(0),
+  latestpfiltered(0),
   latestpcopy(0),
+  latestpcopyfiltered(0),
   maxlength(global->getLogManager()->getMaxRawbufLines()),
   bookmarklines(0),
   site(site),
@@ -44,7 +48,9 @@ RawBuffer::RawBuffer(const std::string& site) :
 
 RawBuffer::RawBuffer() :
   latestp(0),
+  latestpfiltered(0),
   latestpcopy(0),
+  latestpcopyfiltered(0),
   maxlength(1024),
   bookmarklines(0),
   inprogress(false),
@@ -209,7 +215,9 @@ void RawBuffer::clear() {
   logcopy.clear();
   unsetFilters();
   latestp = 0;
+  latestpfiltered = 0;
   latestpcopy = 0;
+  latestpcopyfiltered = 0;
   inprogress = false;
 }
 

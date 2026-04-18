@@ -17,9 +17,6 @@ inline bool encrypt(const Core::BinaryData& indata, const Core::BinaryData& pass
 
 inline bool decrypt(const Core::BinaryData& indata, const Core::BinaryData& pass, Core::BinaryData& outdata) {
   Crypto::decrypt(indata, pass, outdata);
-  if (!Crypto::isMostlyASCII(outdata)) {
-    Crypto::decryptOld(indata, pass, outdata);
-  }
   return Crypto::isMostlyASCII(outdata);
 }
 

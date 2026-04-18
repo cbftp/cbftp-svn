@@ -34,6 +34,12 @@ Proxy* ProxyManager::getProxy(const std::string& name) const {
 void ProxyManager::removeProxy(const std::string& name) {
   for (std::vector<Proxy *>::iterator it = proxies.begin(); it != proxies.end(); it++) {
     if ((*it)->getName() == name) {
+      if (*it == defaultproxy) {
+        defaultproxy = nullptr;
+      }
+      if (*it == defaultdataproxy) {
+        defaultdataproxy = nullptr;
+      }
       delete *it;
       proxies.erase(it);
       return;

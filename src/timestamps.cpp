@@ -39,6 +39,9 @@ std::string Timestamp::toString() const {
 }
 
 Timestamp parseTimestamp(const std::string& uglytime) {
+  if (uglytime.length() < 2) {
+    return Timestamp();
+  }
   if (isdigit(uglytime[0]) && isdigit(uglytime[1])) {
     return parseWindowsTimestamp(uglytime);
   }

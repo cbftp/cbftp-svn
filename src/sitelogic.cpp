@@ -253,7 +253,7 @@ void SiteLogic::tick(int message) {
   unsigned long long int prevtime = currtime;
   currtime += TICK_INTERVAL;
   int activateslots = 0;
-  for (std::list<DelayedCommand>::iterator it = delayedcommands.begin(); it != delayedcommands.end(); ++it) {
+  for (std::list<DelayedCommand>::iterator it = delayedcommands.begin(); it != delayedcommands.end();) {
     DelayedCommand & delayedcommand = *it;
     if (delayedcommand.isActive()) {
       delayedcommand.currentTime(currtime);
@@ -268,8 +268,10 @@ void SiteLogic::tick(int message) {
           ++activateslots;
         }
         it = delayedcommands.erase(it);
+        continue;
       }
     }
+    ++it;
   }
   if (activateslots) {
     haveConnectedActivate(activateslots);
@@ -287,6 +289,9 @@ void SiteLogic::tick(int message) {
       }
       else if (event == "reconnect") {
         conns[i]->reconnect();
+      }
+      else if (event == "antiantiidle") {
+        antiAntiIdle(i);
       }
       else if (event == "quit") {
         disconnectConn(i);
@@ -2339,8 +2344,10 @@ void SiteLogic::finishTransferGracefullyPrematurely(int id) {
 
 void SiteLogic::listCompleted(int id, int storeid, const std::shared_ptr<FileList>& fl, const std::shared_ptr<CommandOwner> & co) {
   const Core::BinaryData& data = global->getLocalStorage()->getStoreContent(storeid);
-  conns[id]->setListData(co, fl);
-  conns[id]->parseFileList((char *) &data[0], data.size());
+  if (!data.empty()) {
+    conns[id]->setListData(co, fl);
+    conns[id]->parseFileList((char *) data.data(), data.size());
+  }
   listRefreshed(id);
   global->getLocalStorage()->purgeStoreContent(storeid);
 }
@@ -2364,7 +2371,7 @@ void SiteLogic::downloadCompleted(int id, int storeid, const std::shared_ptr<Fil
 void SiteLogic::issueRawCommand(unsigned int id, const std::string & command) {
   int requestid = requestidcounter++;
   std::string expandedcommand = expandVariables(command);
-  SiteLogicRequest request(nullptr, requestid, REQ_RAW, conns[id]->getCurrentPath().toString(), command);
+  SiteLogicRequest request(nullptr, requestid, REQ_RAW, conns[id]->getCurrentPath().toString(), expandedcommand);
   request.setConnId(id);
   requests.push_back(request);
   if (!conns[id]->isConnected()) {

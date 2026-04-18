@@ -91,7 +91,7 @@ FTPConn::~FTPConn() {
     iom->closeSocket(sockid);
   }
   delete rawbuf;
-  delete databuf;
+  free(databuf);
   clearConnectors();
 }
 
@@ -215,7 +215,7 @@ bool FTPConn::parseData(char * data, unsigned int datalen, char ** databuf, unsi
     }
     char * newdatabuf = (char *) malloc(databuflen);
     memcpy(newdatabuf, *databuf, databufpos);
-    delete *databuf;
+    free(*databuf);
     *databuf = newdatabuf;
   }
   memcpy(*databuf + databufpos, data, datalen);

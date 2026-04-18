@@ -6,6 +6,7 @@
 #include <cstring>
 #include <openssl/sha.h>
 #include <openssl/evp.h>
+#include <openssl/rand.h>
 
 #define SALT_LENGTH 8
 #define SALT_STRING_LENGTH 16
@@ -60,17 +61,15 @@ void Crypto::encrypt(const Core::BinaryData & indata, const Core::BinaryData & p
   unsigned char* iv = tmpkeyiv + keylen;
   outdata.resize(SALT_STRING_LENGTH + indata.size() + blockSize());
   memcpy(&outdata[0], "Salted__", SALT_STRING_LENGTH - SALT_LENGTH);
-  srand(time(NULL));
-  for (int i = SALT_LENGTH; i < SALT_STRING_LENGTH; ++i) {
-    outdata[i] = (unsigned char)(rand() % UCHAR_MAX);
-  }
+  Core::BinaryData salt = randomBytes(SALT_LENGTH);
+  memcpy(&outdata[SALT_STRING_LENGTH - SALT_LENGTH], salt.data(), SALT_LENGTH);
 #if OPENSSL_VERSION_NUMBER < 0x10000000L
-  EVP_BytesToKey(cipherp, digest(), &outdata[SALT_STRING_LENGTH - SALT_LENGTH], !pass.empty() ? pass.data() : NULL,
+  EVP_BytesToKey(cipherp, digest(), salt.data(), !pass.empty() ? pass.data() : NULL,
                  pass.size(), 1, key, iv);
 #else
   int ivlen = EVP_CIPHER_iv_length(cipherp);
   PKCS5_PBKDF2_HMAC(reinterpret_cast<const char*>(pass.data()), pass.size(),
-                    &outdata[SALT_STRING_LENGTH - SALT_LENGTH], SALT_LENGTH,
+                    salt.data(), SALT_LENGTH,
                     DEFAULT_ITER, digest(), keylen + ivlen, tmpkeyiv);
 #endif
   int resultlen;
@@ -83,7 +82,7 @@ void Crypto::encrypt(const Core::BinaryData & indata, const Core::BinaryData & p
 }
 
 void Crypto::decrypt(const Core::BinaryData & indata, const Core::BinaryData & pass, Core::BinaryData & outdata) {
-  if (indata.empty()) {
+  if (indata.size() < SALT_STRING_LENGTH) {
     outdata.resize(0);
     return;
   }
@@ -103,30 +102,6 @@ void Crypto::decrypt(const Core::BinaryData & indata, const Core::BinaryData & p
                     &indata[SALT_STRING_LENGTH - SALT_LENGTH], SALT_LENGTH,
                     DEFAULT_ITER, digest(), keylen + ivlen, tmpkeyiv);
 #endif
-  outdata.resize(indata.size() + blockSize());
-  int writelen;
-  int finalwritelen;
-  EVP_DecryptInit_ex(ctx, cipherp, NULL, key, iv);
-  EVP_DecryptUpdate(ctx, &outdata[0], &writelen, &indata[SALT_STRING_LENGTH],
-                    indata.size() - SALT_STRING_LENGTH);
-  EVP_DecryptFinal_ex(ctx, &outdata[writelen], &finalwritelen);
-  outdata.resize(writelen + finalwritelen);
-  EVP_CIPHER_CTX_free(ctx);
-}
-
-void Crypto::decryptOld(const Core::BinaryData & indata, const Core::BinaryData & pass, Core::BinaryData & outdata) {
-  if (indata.empty()) {
-    outdata.resize(0);
-    return;
-  }
-  EVP_CIPHER_CTX * ctx = EVP_CIPHER_CTX_new();
-  const EVP_CIPHER * cipherp = cipher();
-  int keylen = EVP_CIPHER_key_length(cipherp);
-  unsigned char tmpkeyiv[EVP_MAX_KEY_LENGTH + EVP_MAX_IV_LENGTH];
-  unsigned char* key = tmpkeyiv;
-  unsigned char* iv = tmpkeyiv + keylen;
-  EVP_BytesToKey(cipherp, digest(), &indata[SALT_STRING_LENGTH - SALT_LENGTH], !pass.empty() ? pass.data() : NULL,
-                 pass.size(), 1, key, iv);
   outdata.resize(indata.size() + blockSize());
   int writelen;
   int finalwritelen;
@@ -207,4 +182,8 @@ void Crypto::fromHex(const std::string& indata, Core::BinaryData& outdata) {
   }
 }
 
-
+Core::BinaryData Crypto::randomBytes(int len) {
+  Core::BinaryData data((size_t)len);
+  RAND_bytes(data.data(), len);
+  return data;
+}

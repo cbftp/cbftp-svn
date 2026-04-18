@@ -351,8 +351,11 @@ std::unordered_set<std::string> merge(const std::unordered_map<std::string, unsi
 }
 
 int chrstrfind(const char * buf, unsigned int buflen, const char * pattern, unsigned int patternlen) {
+  if (buflen < patternlen) {
+    return -1;
+  }
   unsigned int matchedchars = 0;
-  for (unsigned int i = 0; i < buflen;) {
+  for (unsigned int i = 0; i < buflen - patternlen + 1;) {
     if (buf[i + matchedchars] == pattern[matchedchars]) {
       ++matchedchars;
       if (matchedchars == patternlen) {

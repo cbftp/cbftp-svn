@@ -576,12 +576,12 @@ void TransferJob::start() {
   global->getTickPoke()->startPoke(this, "TransferJob", TRANSFERJOB_UPDATE_INTERVAL, 0);
 }
 
-void TransferJob::addPendingTransfer(const Path& name, unsigned long long int size) {
-  pendingtransfers[name.toString()] = size;
+void TransferJob::addPendingTransfer(const Path& subpathfile, unsigned long long int size) {
+  pendingtransfers[subpathfile.toString()] = size;
 }
 
-void TransferJob::addSkippedTransfer(const Path& name, unsigned long long int size) {
-  skippedtransfers[name.toString()] = size;
+void TransferJob::addSkippedTransfer(const Path& subpathfile, unsigned long long int size) {
+  skippedtransfers[subpathfile.toString()] = size;
 }
 
 void TransferJob::addTransfer(const std::shared_ptr<TransferStatus>& ts) {
@@ -628,11 +628,12 @@ void TransferJob::updateStatus() {
   std::unordered_set<std::string> filesdupe;
   std::unordered_set<std::string> filesfailed;
   for (std::list<std::shared_ptr<TransferStatus> >::const_iterator it = transfersBegin(); it != transfersEnd(); it++) {
-    if (pendingtransfers.find((*it)->getFile()) != pendingtransfers.end()) {
-      pendingtransfers.erase((*it)->getFile());
+    Path subpathfile = ((*it)->getSourcePath() - srcpath) / (*it)->getFile();
+    if (pendingtransfers.find(subpathfile.toString()) != pendingtransfers.end()) {
+      pendingtransfers.erase(subpathfile.toString());
     }
-    if (skippedtransfers.find((*it)->getFile()) != skippedtransfers.end()) {
-      skippedtransfers.erase((*it)->getFile());
+    if (skippedtransfers.find(subpathfile.toString()) != skippedtransfers.end()) {
+      skippedtransfers.erase(subpathfile.toString());
     }
     int state = (*it)->getState();
     if (state == TRANSFERSTATUS_STATE_IN_PROGRESS) {
@@ -647,7 +648,6 @@ void TransferJob::updateStatus() {
       aggregatedsize += (*it)->sourceSize();
       aggregatedsizetransferred += (*it)->targetSize();
     }
-    Path subpathfile = ((*it)->getSourcePath() - srcpath) / (*it)->getFile();
     if (state == TRANSFERSTATUS_STATE_SUCCESSFUL) {
       existingtargets.erase(subpathfile.toString());
       filescompleted.insert(subpathfile.toString());

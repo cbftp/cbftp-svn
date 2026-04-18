@@ -959,8 +959,8 @@ bool Engine::transferJobActionRequest(const std::shared_ptr<SiteTransferJob> & s
   }
   tj->clearRefreshLists();
   bool started = false;
-  while (!it->second.empty() && !started) {
-    PendingTransfer pt = it->second.front();
+  for (std::list<PendingTransfer>::const_iterator it2 = it->second.begin(); !started && it2 != it->second.end(); ++it2) {
+    PendingTransfer pt = *it2;
     switch (pt.type()) {
       case PENDINGTRANSFER_DOWNLOAD:
       {
@@ -1015,6 +1015,9 @@ bool Engine::transferJobActionRequest(const std::shared_ptr<SiteTransferJob> & s
         break;
       }
     }
+  }
+  if (!started) {
+    return false;
   }
   if (tj->getStatus() == TRANSFERJOB_QUEUED) {
     tj->start();

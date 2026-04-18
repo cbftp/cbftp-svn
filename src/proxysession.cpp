@@ -65,8 +65,8 @@ ParsedAddress parseAddress(char* data) {
   }
   else if (data[0] == PROXYSESSION_ADDR_DNS) {
     size_t len = data[1];
-    out.addr.host = std::string(data + 1, len);
-    out.addr.port = ntohs(*reinterpret_cast<unsigned short*>(data + 1 + len));
+    out.addr.host = std::string(data + 2, len);
+    out.addr.port = ntohs(*reinterpret_cast<unsigned short*>(data + 2 + len));
     out.size = len + 3;
   }
   else if (data[0] == PROXYSESSION_ADDR_IPV6) {
@@ -225,10 +225,16 @@ void ProxySession::received(char* data, int datalen) {
       senddata[0] = PROXYSESSION_AUTH_VERSION;
       if (proxy->getAuthMethod() == PROXY_AUTH_USERPASS) {
         int pos = proxy->getUser().length();
+        if (pos > 255) {
+          pos = 255;
+        }
         senddata[1] = (char) pos;
         memcpy((void *) &senddata[2], proxy->getUser().c_str(), pos);
         pos = pos + 2;
         int passlen = proxy->getPass().length();
+        if (passlen > 255) {
+          passlen = 255;
+        }
         senddata[pos] = (char) passlen;
         pos = pos + 1;
         memcpy((void *) &senddata[pos], proxy->getPass().c_str(), passlen);
@@ -352,7 +358,7 @@ void ProxySession::setConnectRequestData() {
   else if (addressmode == AddressMode::IPV6) {
     senddata[3] = PROXYSESSION_ADDR_IPV6;
     memcpy((void *) &senddata[4], &saddr6->sin6_addr.s6_addr, 16);
-    memcpy((void *) &senddata[20], &saddr->sin_port, 2);
+    memcpy((void *) &senddata[20], &saddr6->sin6_port, 2);
     senddatalen = 22;
   }
   else {

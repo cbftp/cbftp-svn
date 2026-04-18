@@ -50,6 +50,9 @@ std::shared_ptr<SubProcess> SubProcessManager::runProcess(SubProcessCallback* cb
   };
   int pid = fork();
   if (!pid) {
+    close(stdinpipe[1]);
+    close(stdoutpipe[0]);
+    close(stderrpipe[0]);
     const char* cargs[256];
     int i = 0;
     cargs[i++] = path.toString().c_str();
@@ -68,7 +71,9 @@ std::shared_ptr<SubProcess> SubProcessManager::runProcess(SubProcessCallback* cb
     exit(1);
   }
   else {
-
+    close(stdinpipe[0]);
+    close(stdoutpipe[1]);
+    close(stderrpipe[1]);
     std::shared_ptr<SubProcess> subprocess = std::make_shared<SubProcess>();
     subprocess->pid = pid;
     subprocess->cb = cb;

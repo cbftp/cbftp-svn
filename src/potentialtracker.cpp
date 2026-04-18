@@ -36,6 +36,9 @@ int PotentialTracker::getMaxAvailablePotential() {
 }
 
 void PotentialTracker::calculateMaxAvailablePotential() {
+  if (top.empty()) {
+    return;
+  }
   std::list<PotentialElement *>::iterator ittop;
   std::list<PotentialElement *>::iterator ittop2;
   std::list<PotentialListElement *>::iterator itple;
@@ -50,6 +53,9 @@ void PotentialTracker::calculateMaxAvailablePotential() {
       std::list<PotentialElement *>::iterator itrpe = top.begin();
       if (!!(*itpe)->getSite() && allTopSlotsUsedForSite(*itpe)) {
         itrpe = findFirstOfSite((*itpe)->getSite());
+      }
+      if (itrpe == top.end()) {
+        return;
       }
       mpe = *itrpe;
       bool inserted = false;
